@@ -1,0 +1,19 @@
+# Ignore back-up files.
+*~
+
+# Ignore compiled Python files.
+*.pyc
+*.pyo
+
+# Don't include build related files.
+/dependencies/
+/dist/
+/build/
+
+# And don't care about the 'egg'.
+/Turbinia.egg-info
+
+# Test files
+.coverage
+tests-coverage.txt
+

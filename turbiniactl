@@ -1,0 +1,59 @@
+#!/usr/bin/python
+#
+# Copyright 2015 Google Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+"""Command line interface for Turbinia."""
+
+import argparse
+
+from turbinia.jobs.be import BulkExtractorJob
+from turbinia.jobs.plaso import PlasoJob
+from turbinia import VERSION
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-v', '--verbose', action='store_true', help='verbose')
+    parser.add_argument(
+        '-V', '--version', action='version', version=VERSION,
+        help='Show the version')
+
+    subparsers = parser.add_subparsers(
+        dest='command', title='Commands', metavar="<command>")
+
+    # Bulk Extractor
+    parser_bulk_extractor = subparsers.add_parser(
+        'be', help='Run bulk_extractor')
+    parser_bulk_extractor.add_argument(
+        '-s', '--source', help='Path to source data to process', required=True)
+    parser_bulk_extractor.add_argument(
+        '-o', '--output', help='Path to temporary storage (Default: /tmp)',
+        default='/tmp', required=False)
+    parser_bulk_extractor.add_argument(
+        '-n', '--num_tasks', help='Number of tasks to run (Default: 1)',
+        default=1, required=False)
+    parser_bulk_extractor.set_defaults(func=BulkExtractorJob().cli)
+
+    # Plaso
+    parser_plaso = subparsers.add_parser(
+        'plaso', help='Run Plaso (log2timeline)')
+    parser_plaso.add_argument(
+        '-s', '--source', help='Path to source data to process', required=True)
+    parser_plaso.add_argument(
+        '-o', '--output', help='Path to temporary storage (Default: /tmp)',
+        default='/tmp', required=False)
+    parser_plaso.set_defaults(func=PlasoJob().cli)
+
+    args = parser.parse_args()
+    args.func(args)
