@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block logo %}
+    <span class="mdl-layout-title turbine-logo"><a href="/">turbinia</a></span>
+{% endblock %}
+
+{% block main %}
+<button style="float:right;" onclick="display_element('turbine-upload-card')" class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--colored"><i class="fa fa-cloud-upload"></i> Upload</button>
+<h3>Inventory</h3>
+<div id="turbine-upload-card" class="mdl-card mdl-shadow--2dp turbine-full-width" style="display:none; margin-bottom: 30px;">
+    <div class="mdl-card__title" style="background: #f5f5f5;">
+        How do I upload new data to the inventory?
+    </div>
+    <div class="mdl-card__supporting-text">
+        <p>
+            Upload instructions goes here.
+        </p>
+    </div>
+    <div class="mdl-card__actions mdl-card--border">
+        <a onclick="toggle_visibility('turbine-upload-card')" class="mdl-button mdl-button--colored mdl-js-button mdl-js-ripple-effect">
+            Ok, got it
+        </a>
+    </div>
+</div>
+<table class="mdl-data-table mdl-js-data-table turbine-table turbine-full-width">
+    <thead>
+    <tr>
+        <th class="mdl-data-table__cell--non-numeric">Name</th>
+        <th class="mdl-data-table__cell--non-numeric" width="80px">Size</th>
+        <th class="mdl-data-table__cell--non-numeric" width="150px">Last updated</th>
+        <th class="mdl-data-table__cell--non-numeric" width="150px">Status</th>
+    </tr>
+    </thead>
+
+    <tbody>
+    {% for item in items|sort(reverse=True, attribute='updated_at') %}
+    <tr>
+        <td class="mdl-data-table__cell--non-numeric"><a href="/items/{{ item.id }}">{{ item.name }}</a></td>
+        <td class="mdl-data-table__cell--non-numeric">{{ item.src_data_size|filesizeformat }}</td>
+        <td class="mdl-data-table__cell--non-numeric">{{ item.created_at }}</td>
+        <td class="mdl-data-table__cell--non-numeric">
+            {% if item.status != "ready" %}
+                <i class="fa fa-circle-o-notch fa-spin" style="margin-right:5px;"></i> {{ item.status|capitalize}}
+            {% else %}
+                {{ item.status|capitalize }}
+            {% endif %}
+        </td>
+
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% endblock %}
