@@ -19,47 +19,47 @@ from celery import Task
 
 
 class TurbiniaTaskResult(object):
-    """Object to store task results to be returned by a TurbiniaTask."""
-    def __init__(
-            self, results=None, version=None, metadata=None):
-        """Initialize the TurbiniaTaskResult object.
+  """Object to store task results to be returned by a TurbiniaTask."""
 
-        Args:
-            results: List of task execution results.
-            version: Version of the program being executed.
-            metadata: Dictionary of metadata from the task.
-        """
+  def __init__(self, results=None, version=None, metadata=None):
+    """Initialize the TurbiniaTaskResult object.
 
-        self.results = results
-        self.version = version
-        self.metadata = metadata
+    Args:
+        results: List of task execution results.
+        version: Version of the program being executed.
+        metadata: Dictionary of metadata from the task.
+    """
 
-        if not self.results:
-            self.results = list()
-        if not self.metadata:
-            self.metadata = dict()
+    self.results = results
+    self.version = version
+    self.metadata = metadata
 
-    def add_result(self, result_type, result):
-        """Populate the results list.
+    if not self.results:
+      self.results = list()
+    if not self.metadata:
+      self.metadata = dict()
 
-        Args:
-            result_type: Type of result, e.g. URL or filesystem path.
-            result: Result string from the task.
-        """
-        self.results.append(dict(type=result_type, result=result))
+  def add_result(self, result_type, result):
+    """Populate the results list.
 
-    def to_json(self):
-        """Convert object to JSON."""
-        return json.dumps(self.__dict__)
+    Args:
+        result_type: Type of result, e.g. URL or filesystem path.
+        result: Result string from the task.
+    """
+    self.results.append(dict(type=result_type, result=result))
+
+  def to_json(self):
+    """Convert object to JSON."""
+    return json.dumps(self.__dict__)
 
 
 class TurbiniaTask(Task):
-    """Base class for Turbinia tasks."""
-    abstract = True
+  """Base class for Turbinia tasks."""
+  abstract = True
 
-    def __init__(self):
-        super(TurbiniaTask, self).__init__()
+  def __init__(self):
+    super(TurbiniaTask, self).__init__()
 
-    def run(self, *args, **kwargs):
-        """Entry point the Celery worker uses to execute the task."""
-        raise NotImplementedError
+  def run(self, *args, **kwargs):
+    """Entry point the Celery worker uses to execute the task."""
+    raise NotImplementedError

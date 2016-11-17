@@ -31,8 +31,4 @@ setup(
     include_package_data=True,
     zip_safe=False,
     scripts=['turbiniactl'],
-    install_requires=frozenset([
-        'celery',
-        'redis'
-    ])
-)
+    install_requires=frozenset(['celery', 'redis']))

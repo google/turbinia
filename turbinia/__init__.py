@@ -38,4 +38,4 @@ app.conf.CELERY_TASK_SERIALIZER = 'json'
 app.conf.CELERY_RESULT_SERIALIZER = 'json'
 
 if __name__ == '__main__':
-    app.start()
+  app.start()

@@ -21,98 +21,99 @@ from turbinia.workers import TurbiniaTaskResult
 
 
 class BulkExtractorTask(TurbiniaTask):
-    """Task to run bulk_extractor."""
+  """Task to run bulk_extractor."""
 
-    @staticmethod
-    def run(src_path, out_path, offsets, job_id, **kwargs):
-        """Task that process data with bulk_extractor.
+  @staticmethod
+  def run(src_path, out_path, offsets, job_id, **kwargs):
+    """Task that process data with bulk_extractor.
 
-        Args:
-            src_path: Path to data to process.
-            out_path: Path to temporary storage of results.
-            offsets: Where in the data to process.
-            job_id: Unique ID for this task.
-        Returns:
-            job_id: The job_id provided.
-        """
-        out_path = '{0:s}/{1:s}/{2}_{3}'.format(
-            out_path, job_id, offsets[0], offsets[1])
-        if not os.path.exists(out_path):
-            os.makedirs(out_path)
-        cmd_output = subprocess.check_output(
-            ['/usr/local/bin/be_wrapper.sh', src_path, out_path,
-             '{0}-{1}'.format(offsets[0], offsets[1]), job_id])
-        return job_id
+    Args:
+        src_path: Path to data to process.
+        out_path: Path to temporary storage of results.
+        offsets: Where in the data to process.
+        job_id: Unique ID for this task.
+    Returns:
+        job_id: The job_id provided.
+    """
+    out_path = '{0:s}/{1:s}/{2}_{3}'.format(out_path, job_id, offsets[0],
+                                            offsets[1])
+    if not os.path.exists(out_path):
+      os.makedirs(out_path)
+    cmd_output = subprocess.check_output([
+        '/usr/local/bin/be_wrapper.sh', src_path, out_path,
+        '{0}-{1}'.format(offsets[0], offsets[1]), job_id
+    ])
+    return job_id
 
 
 class BulkExtractorCalcOffsetsTask(TurbiniaTask):
-    """Task to calculate offsets for Bulk extractor."""
+  """Task to calculate offsets for Bulk extractor."""
 
-    @staticmethod
-    def run(src_path, num_workers, page_size=16777216):
-        """Reads data and calculates offsets based on page_size.
+  @staticmethod
+  def run(src_path, num_workers, page_size=16777216):
+    """Reads data and calculates offsets based on page_size.
 
-        Args:
-          src_path: Path to image to be processed.
-          num_workers: Number of workers that will be used in processing.
-          page_size: Page size used in bulk_extractor.
+    Args:
+      src_path: Path to image to be processed.
+      num_workers: Number of workers that will be used in processing.
+      page_size: Page size used in bulk_extractor.
 
-        Returns:
-          List of offsets.
-        """
-        disk_size = os.path.getsize(src_path)
-        offset1 = 0
-        offset2 = page_size
-        parts = []
-        offsets = []
+    Returns:
+      List of offsets.
+    """
+    disk_size = os.path.getsize(src_path)
+    offset1 = 0
+    offset2 = page_size
+    parts = []
+    offsets = []
 
-        while offset1 < disk_size:
-            parts.append((offset1, offset2))
-            offset1 = offset2
-            offset2 += page_size
+    while offset1 < disk_size:
+      parts.append((offset1, offset2))
+      offset1 = offset2
+      offset2 += page_size
 
-        if num_workers > len(parts):
-            parts_per_worker = 1
-            num_workers = len(parts)
-        else:
-            parts_per_worker = len(parts) / num_workers
+    if num_workers > len(parts):
+      parts_per_worker = 1
+      num_workers = len(parts)
+    else:
+      parts_per_worker = len(parts) / num_workers
 
-        extra = len(parts) % (parts_per_worker * num_workers)
-        if extra:
-            num_workers -= 1
+    extra = len(parts) % (parts_per_worker * num_workers)
+    if extra:
+      num_workers -= 1
 
-        for i in range(num_workers):
-            index_start = i * parts_per_worker
-            index_stop = index_start + parts_per_worker
-            instance_parts = parts[index_start:index_stop]
-            o1 = instance_parts[0][0]
-            o2 = instance_parts[-1][1]
-            offsets.append((o1, o2),)
+    for i in range(num_workers):
+      index_start = i * parts_per_worker
+      index_stop = index_start + parts_per_worker
+      instance_parts = parts[index_start:index_stop]
+      o1 = instance_parts[0][0]
+      o2 = instance_parts[-1][1]
+      offsets.append((o1, o2),)
 
-        if extra:
-            last_instance_parts = parts[index_stop:]
-            o1 = last_instance_parts[0][0]
-            o2 = last_instance_parts[-1][1]
-            offsets.append((o1, o2),)
+    if extra:
+      last_instance_parts = parts[index_stop:]
+      o1 = last_instance_parts[0][0]
+      o2 = last_instance_parts[-1][1]
+      offsets.append((o1, o2),)
 
-        return offsets
+    return offsets
 
 
 class BulkExtractorReducerTask(TurbiniaTask):
-    """Reduce bulk extractor outputs."""
+  """Reduce bulk extractor outputs."""
 
-    @staticmethod
-    def run(results):
-        """Celery task that reduces the results into one SQLite database.
+  @staticmethod
+  def run(results):
+    """Celery task that reduces the results into one SQLite database.
 
-        Args:
-            results: List of returned values from Celery tasks.
-        Returns:
-            Task result object (instance of TurbiniaTaskResult) as JSON.
-        """
-        job_id = results[0]
-        cmd_output = subprocess.check_output(
-            ['/usr/local/bin/be_reducer.sh', job_id])
-        result = TurbiniaTaskResult()
-        result.add_result(result_type="PATH", result=cmd_output)
-        return result.to_json()
+    Args:
+        results: List of returned values from Celery tasks.
+    Returns:
+        Task result object (instance of TurbiniaTaskResult) as JSON.
+    """
+    job_id = results[0]
+    cmd_output = subprocess.check_output(
+        ['/usr/local/bin/be_reducer.sh', job_id])
+    result = TurbiniaTaskResult()
+    result.add_result(result_type='PATH', result=cmd_output)
+    return result.to_json()
