@@ -22,27 +22,26 @@ from turbinia.workers import TurbiniaTaskResult
 
 
 class PlasoTask(TurbiniaTask):
-    """Task to run Plaso (log2timeline)."""
+  """Task to run Plaso (log2timeline)."""
 
-    @staticmethod
-    def run(src_path, out_path, job_id, **kwargs):
-        """Task that process data with Plaso.
+  @staticmethod
+  def run(src_path, out_path, job_id, **kwargs):
+    """Task that process data with Plaso.
 
-        Args:
-            src_path: Path to data to process.
-            out_path: Path to temporary storage of results.
-            job_id: Unique ID for this task.
+    Args:
+        src_path: Path to data to process.
+        out_path: Path to temporary storage of results.
+        job_id: Unique ID for this task.
 
-        Returns:
-            Task result object (instance of TurbiniaTaskResult) as JSON.
-        """
-        out_path = '{0:s}/{1:s}'.format(out_path, job_id)
-        if not os.path.exists(out_path):
-            os.makedirs(out_path)
-        cmd_output = subprocess.check_output(
-            ['/usr/local/bin/plaso_wrapper.sh', src_path, out_path, job_id])
-        res, version, metadata = cmd_output.split(' ', 2)
-        result = TurbiniaTaskResult(
-            version=version, metadata=json.loads(metadata))
-        result.add_result(result_type="PATH", result=res)
-        return result.to_json()
+    Returns:
+        Task result object (instance of TurbiniaTaskResult) as JSON.
+    """
+    out_path = '{0:s}/{1:s}'.format(out_path, job_id)
+    if not os.path.exists(out_path):
+      os.makedirs(out_path)
+    cmd_output = subprocess.check_output(
+        ['/usr/local/bin/plaso_wrapper.sh', src_path, out_path, job_id])
+    res, version, metadata = cmd_output.split(' ', 2)
+    result = TurbiniaTaskResult(version=version, metadata=json.loads(metadata))
+    result.add_result(result_type='PATH', result=res)
+    return result.to_json()
