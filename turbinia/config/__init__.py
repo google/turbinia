@@ -47,30 +47,30 @@ def LoadConfig():
 
   config_file = None
   # Load first file found
-  for dir_, file_ in itertools.product(CONFIGPATH, CONFIGFILES):
-    if os.path.exists(os.path.join(dir_, file_)):
-      config_file = os.path.join(dir_, file_)
+  for _dir, _file in itertools.product(CONFIGPATH, CONFIGFILES):
+    if os.path.exists(os.path.join(_dir, _file)):
+      config_file = os.path.join(_dir, _file)
       break
 
   if config_file is None:
     raise TurbiniaConfigException(u'No config files found')
 
-  config_ = imp.load_source('config', config_file)
-  config_.configSource = config_file
-  ValidateAndSetConfig(config_)
-  return config_
+  _config = imp.load_source('config', config_file)
+  _config.configSource = config_file
+  ValidateAndSetConfig(_config)
+  return _config
 
 
-def ValidateAndSetConfig(config_):
+def ValidateAndSetConfig(_config):
   """Makes sure that the config has the vars loaded and set in the module."""
   for var in CONFIGVARS:
-    if not hasattr(config_, var):
+    if not hasattr(_config, var):
       raise TurbiniaConfigException(
-          u'No config attribute {0:s}:{1:s}'.format(config_.configSource, var))
-    if getattr(config_, var) is None:
+          u'No config attribute {0:s}:{1:s}'.format(_config.configSource, var))
+    if getattr(_config, var) is None:
       raise TurbiniaConfigException(
           u'Config attribute {0:s}:{1:s} is not set'.format(
-              config_.configSource, var))
+              _config.configSource, var))
 
     # Set the attribute in the current module
-    setattr(sys.modules[__name__], var, getattr(config_, var))
+    setattr(sys.modules[__name__], var, getattr(_config, var))
