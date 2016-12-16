@@ -22,6 +22,10 @@ from turbinia import config
 
 class TestTurbiniaConfig(unittest.TestCase):
 
+  @classmethod
+  def setUpClass(cls):
+    [delattr(config, a) for a in config.CONFIGVARS if hasattr(config, a)]
+
   def setUp(self):
     # Record the module attributes so we can remove them after the test to
     # simulate a reload() since it's non-trivial to remove/import the module
