@@ -32,7 +32,7 @@ CONFIGVARS = [
     'DEVICE_NAME',
     'SCRATCH_PATH',
     'BUCKET_NAME',
-    # GCE CONFIG
+    # REDIS CONFIG
     'REDIS_HOST',
     'REDIS_PORT',
 ]

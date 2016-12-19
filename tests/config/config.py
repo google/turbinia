@@ -24,6 +24,9 @@ class TestTurbiniaConfig(unittest.TestCase):
 
   @classmethod
   def setUpClass(cls):
+    # Remove the loaded attributes because the module is loaded before the
+    # tests start by turbinia __init__.
+    # pylint: disable=expression-not-assigned
     [delattr(config, a) for a in config.CONFIGVARS if hasattr(config, a)]
 
   def setUp(self):
