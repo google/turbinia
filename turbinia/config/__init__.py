@@ -25,6 +25,8 @@ CONFIGPATH = [os.path.expanduser('~'),
               os.path.dirname(os.path.abspath(__file__))]
 # Config vars that we expect to exist in the configuration
 CONFIGVARS = [
+    # Turbinia Config
+    'TASK_MANAGER',
     # GCE CONFIG
     'PROJECT',
     'ZONE',
@@ -51,6 +53,8 @@ class TurbiniaConfigException(Exception):
 
 def LoadConfig():
   """Finds Turbinia config file and loads it."""
+  # TODO(aarontp): Check if module has already loaded so calling load multiple
+  # times is cheap.
   if os.environ.has_key(ENVCONFIGVAR):
     CONFIGPATH.extend(os.environ[ENVCONFIGVAR].split(':'))
 

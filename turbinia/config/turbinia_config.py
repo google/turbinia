@@ -13,6 +13,9 @@
 # limitations under the License.
 """Dummy Turbinia config file."""
 
+# Turbinia Config
+# Valid values are 'PubSub' or 'Celery'
+TASK_MANAGER = 'PubSub'
 
 # GCE configuration
 PROJECT = None
