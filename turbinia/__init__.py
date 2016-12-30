@@ -13,18 +13,27 @@
 # limitations under the License.
 """Main Turbinia application."""
 
+import logging
 import os
+import sys
 
 from celery import Celery
 
+from turbinia import config
+
 VERSION = '20150916'
-REDIS_HOST = os.environ['REDIS_SVC_PORT_6379_TCP_ADDR']
-REDIS_PORT = os.environ['REDIS_SVC_PORT_6379_TCP_PORT']
+
+try:
+  config.LoadConfig()
+except config.TurbiniaConfigException as e:
+  # pylint: disable=logging-format-interpolation
+  logging.fatal('Could not load Turbinia config: {0:s}'.format(str(e)))
+  sys.exit(1)
 
 app = Celery(
     'turbinia',
-    broker='redis://{0}:{1}/0'.format(REDIS_HOST, REDIS_PORT),
-    backend='redis://{0}:{1}/0'.format(REDIS_HOST, REDIS_PORT),
+    broker='redis://{0}:{1}/0'.format(config.REDIS_HOST, config.REDIS_PORT),
+    backend='redis://{0}:{1}/0'.format(config.REDIS_HOST, config.REDIS_PORT),
     include=['turbinia.workers.be', 'turbinia.workers.plaso'])
 
 app.conf.CELERY_ROUTES = {

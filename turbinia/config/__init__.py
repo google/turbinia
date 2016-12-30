@@ -25,12 +25,16 @@ CONFIGPATH = [os.path.expanduser('~'),
               os.path.dirname(os.path.abspath(__file__))]
 # Config vars that we expect to exist in the configuration
 CONFIGVARS = [
+    # GCE CONFIG
     'PROJECT',
     'ZONE',
     'INSTANCE',
     'DEVICE_NAME',
     'SCRATCH_PATH',
     'BUCKET_NAME',
+    # REDIS CONFIG
+    'REDIS_HOST',
+    'REDIS_PORT',
 ]
 # Environment variable to look for path data in
 ENVCONFIGVAR = 'TURBINIA_CONFIG_PATH'
