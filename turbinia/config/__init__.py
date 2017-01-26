@@ -32,6 +32,7 @@ CONFIGVARS = [
     'DEVICE_NAME',
     'SCRATCH_PATH',
     'BUCKET_NAME',
+    'PUBSUB_NAME',
     # REDIS CONFIG
     'REDIS_HOST',
     'REDIS_PORT',
