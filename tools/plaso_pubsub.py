@@ -42,12 +42,22 @@ import log2timeline
 # Turbinia
 from turbinia import config
 
+_SLEEP_TIME_SEC = 1
+
 
 def GetCurrentTimeUTC():
   return datetime.datetime.utcnow().strftime(u'%Y-%m-%dT%H:%M:%S+0000')
 
 
 def IsBlockDevice(path):
+  """Checks path to determine whether it is a block device.
+
+  Args:
+      path: String of path to check.
+
+  Returns:
+      Bool indicating success.
+  """
   if not os.path.exists(path):
     return
   mode = os.stat(path).st_mode
@@ -55,6 +65,11 @@ def IsBlockDevice(path):
 
 
 def WriteToStdOut(message):
+  """Logging function to write to stdout.
+
+  Args:
+      message: String of message to write.
+  """
   # TODO(aarontp): Convert to standard logging mechanism
   msg = u'{0:s} {1:s}\n'.format(GetCurrentTimeUTC(), message)
   sys.stdout.write(msg)
@@ -62,13 +77,25 @@ def WriteToStdOut(message):
 
 
 def WriteToStdErr(message):
+  """Logging function to write to stderr.
+
+  Args:
+      message: String of message to write.
+  """
+  # TODO(aarontp): Convert to standard logging mechanism
   msg = u'{0:s} {1:s}\n'.format(GetCurrentTimeUTC(), message)
   sys.stderr.write(msg)
   sys.stderr.flush()
 
 
 def CreateServiceClient(service):
-  """Creates an API client for talking to Google Cloud."""
+  """Creates an API client for talking to Google Cloud.
+
+  Args:
+      service: String of service name.
+  Returns:
+      A client object for interacting with the cloud service.
+  """
   WriteToStdOut(u'Create API client for service: {0:s}'.format(service))
   credentials = oauth2client.GoogleCredentials.get_application_default()
   http = httplib2.Http()
@@ -77,6 +104,7 @@ def CreateServiceClient(service):
 
 
 class TimesketchApiClient(object):
+  """Client for interacting with Timesketch."""
 
   def __init__(self, server_ip, username, password):
     self.server_ip = server_ip
@@ -84,6 +112,15 @@ class TimesketchApiClient(object):
     self.session = self._CreateSession(username, password)
 
   def _CreateSession(self, username, password):
+    """Creates an HTTP session to Timesketch.
+
+    Args:
+        username: String of username
+        password: String of password
+
+    Returns:
+        Requests module HTTP session object
+    """
     session = requests.Session()
     session.verify = False  # Depending on SSL cert is verifiable
 
@@ -102,6 +139,15 @@ class TimesketchApiClient(object):
     return session
 
   def CreateSketch(self, name, description):
+    """Creates a new Timesketch sketch.
+
+    Args:
+        name: Name of sketch to create.
+        description: Description of sketch to create.
+
+    Returns:
+        Sketch Id
+    """
     resource_url = u'{0:s}/api/v1/sketches/'.format(self.host_url)
     form_data = {u'name': name, u'description': description}
     response = self.session.post(resource_url, json=form_data)
@@ -110,6 +156,15 @@ class TimesketchApiClient(object):
     return sketch_id
 
   def UploadTimeline(self, timeline_name, plaso_storage_path):
+    """Uploads a plaso file to Timesketch to create a timeline.
+
+    Args:
+        timeline_name: Timeline name String.
+        plaso_storage_path: Path String to plaso file to upload.
+
+    Returns:
+        Timeline Id
+    """
     resource_url = u'{0:s}/api/v1/upload/'.format(self.host_url)
     files = {'file': open(plaso_storage_path, 'rb')}
     form_data = {u'name': timeline_name}
@@ -119,6 +174,15 @@ class TimesketchApiClient(object):
     return index_id
 
   def AddTimelineToSketch(self, sketch_id, index_id):
+    """Links existing timeline to a sketch.
+
+    Args:
+        sketch_id: The Id of the sketch to link timline to.
+        index_id: The Id of the timeline.
+
+    Returns:
+        The timeline Id.
+    """
     resource_url = u'{0:s}/api/v1/sketches/{0:d}/'.format(self.host_url,
                                                           sketch_id)
     form_data = {u'timelines': [index_id]}
@@ -129,12 +193,27 @@ class TimesketchApiClient(object):
 
 
 class PlasoProcessor(object):
+  """Handles Plaso processing of disk image.
+
+  Attaches a disk to compute instance and runs Plaso processing on it. Also
+  manages Timesketch sketch creation and timeline uploads with the Timesketch
+  client.
+  """
 
   def __init__(self):
     config.LoadConfig()
 
   def _WaitForOperation(self, client, operation):
-    """Wait for an operation to complete."""
+    """Wait for a Cloud operation.
+
+    Args:
+      client: Google Cloud service client object.
+      operation: Operation to run and wait for.
+    Returns:
+      Operation exection results.
+    Raises:
+      RuntimeError: If operation has an error.
+    """
     WriteToStdOut(u'Waiting for operation to complete')
     while True:
       result = client.zoneOperations().get(project=config.PROJECT,
@@ -146,10 +225,15 @@ class PlasoProcessor(object):
           WriteToStdErr(result)
           raise RuntimeError(result[u'error'][u'errors'][0][u'message'])
         return result
-      time.sleep(1)
+      time.sleep(_SLEEP_TIME_SEC)
 
   def _AttachDisk(self, client, disk):
-    """Attaches a persistent disk to the machine."""
+    """Attaches a persistent disk to the machine.
+
+    Args:
+        client: Google Cloud service client object.
+        disk: String of cloud path to disk
+    """
     WriteToStdOut(u'Attaching disk')
     operation = client.instances().attachDisk(
         instance=config.INSTANCE,
@@ -160,7 +244,11 @@ class PlasoProcessor(object):
     self._WaitForOperation(client, operation[u'name'])
 
   def _DetachDisk(self, client):
-    """Detaches the disk from the machine."""
+    """Detaches the disk from the machine.
+
+    Args:
+        client: Google Cloud service client object.
+    """
     WriteToStdOut(u'Detaching disk')
     operation = client.instances().detachDisk(
         instance=config.INSTANCE,
@@ -170,6 +258,15 @@ class PlasoProcessor(object):
     self._WaitForOperation(client, operation[u'name'])
 
   def _CopyFileToBucket(self, client, filename, object_name):
+    """Copies file to Google Cloud storage bucket.
+
+    Args:
+        client: Google Cloud service client object.
+        filename: String path to local file to copy.
+        object_name: String name of file to copy.
+    Returns:
+        Boolean indicating success.
+    """
     WriteToStdOut(u'Uploading file: {0:s}'.format(filename))
     media = storage_http.MediaFileUpload(
         filename, resumable=True, chunksize=1024000)
@@ -200,6 +297,13 @@ class PlasoProcessor(object):
     return True
 
   def Process(self, persistent_disk_name, project_name, disk_name):
+    """Configure and run Plaso processing.
+
+    Args:
+        persistent_disk_name: Name of disk to process (created from snapshot).
+        project_name: Project name of remote project being processed.
+        disk_name: Name of remote disk that the snapshot was created from.
+    """
     compute_client = CreateServiceClient(u'compute')
     path = u'/dev/disk/by-id/google-' + config.DEVICE_NAME
 
