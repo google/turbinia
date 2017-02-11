@@ -16,6 +16,10 @@
 # Turbinia Config
 # Valid values are 'PubSub' or 'Celery'
 TASK_MANAGER = 'PubSub'
+# Time between heartbeats in seconds
+WORKER_HEARTBEAT = 600
+# Timeout between heartbeats for Workers to be considered inactive
+WORKER_TIMEOUT = 3600
 
 # GCE configuration
 PROJECT = None
@@ -24,7 +28,9 @@ INSTANCE = None
 DEVICE_NAME = None
 SCRATCH_PATH = None
 BUCKET_NAME = None
-PUBSUB_TOPIC = None
+PUBSUB_SERVER_TOPIC = None
+PUBSUB_WORKER_TOPIC = None
+PUBSUB_TASK_TOPIC = None
 
 # Redis configuration
 REDIS_HOST = None

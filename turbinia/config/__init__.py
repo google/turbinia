@@ -27,6 +27,8 @@ CONFIGPATH = [os.path.expanduser('~'),
 CONFIGVARS = [
     # Turbinia Config
     'TASK_MANAGER',
+    'WORKER_HEARTBEAT',
+    'WORKER_TIMEOUT',
     # GCE CONFIG
     'PROJECT',
     'ZONE',
@@ -34,7 +36,9 @@ CONFIGVARS = [
     'DEVICE_NAME',
     'SCRATCH_PATH',
     'BUCKET_NAME',
-    'PUBSUB_TOPIC',
+    'PUBSUB_SERVER_TOPIC',
+    'PUBSUB_WORKER_TOPIC',
+    'PUBSUB_TASK_TOPIC',
     # REDIS CONFIG
     'REDIS_HOST',
     'REDIS_PORT',
