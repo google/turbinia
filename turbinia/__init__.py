@@ -23,6 +23,9 @@ from turbinia import config
 
 VERSION = '20150916'
 
+class TurbiniaException(Exception):
+  pass
+
 try:
   config.LoadConfig()
 except config.TurbiniaConfigException as e:

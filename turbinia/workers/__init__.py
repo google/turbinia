@@ -13,9 +13,9 @@
 # limitations under the License.
 """Turbinia task."""
 
+import datetime
 import json
-
-from celery import Task
+import uuid
 
 
 class TurbiniaTaskResult(object):
@@ -53,13 +53,74 @@ class TurbiniaTaskResult(object):
     return json.dumps(self.__dict__)
 
 
-class TurbiniaTask(Task):
-  """Base class for Turbinia tasks."""
-  abstract = True
+class TurbiniaTaskGroup(object):
 
   def __init__(self):
-    super(TurbiniaTask, self).__init__()
+    self.current_task_id = None
+    self.tasks = []
+
+  @property
+  def active_task(self):
+    if self.current_task_id:
+      return self.tasks[self.current_task_id]
+    else:
+      return None
+
+  @active_task.setter
+  def active_task(self, value):
+    if value in self.tasks:
+      self.current_task_id = self.tasks.index(value)
+      return value
+    else:
+      return False
+
+  def next_task(self):
+    if len(self.tasks) - 1 > self.current_task_id:
+      self.current_task_id += 1
+      return self.tasks[self.current_task_id]
+    else:
+      self.current_task_id = None
+      return False
+
+  def add_task(self, task):
+    self.tasks.append(task)
+
+
+class TurbiniaTask(object):
+  """Base class for Turbinia tasks."""
+
+  def __init__(self, name=None):
+    self.id = uuid.uuid4().hex
+    self.name = name
+    # Task is considered completed (or failed) if it has a result.
+    self.result = None
 
   def run(self, *args, **kwargs):
-    """Entry point the Celery worker uses to execute the task."""
+    """Entry point to execute the task."""
     raise NotImplementedError
+
+
+class TurbiniaWorkerStub(object):
+  """Server side stub to hold remote worker data."""
+
+  def __init__(self, id_=None, hostname=None):
+    self.id = id_
+    self.hostname = hostname
+    self.creation_time = datetime.now()
+    self.last_checkin_time = None
+    # Data known from last heartbeat (and possibly stale)
+    self.in_use = False
+    # Id of the active job (or None if no active job)
+    self.active_job = None
+
+  def update_worker(self, in_use, active_job):
+    """Updates the worker data from heartbeat data.
+
+    Args:
+      in_use: Boolean indicating whether the worker is in use by a task
+      active_job: The id of the active job running in the Worker
+    """
+    self.last_checkin_time = datetime.now()
+    self.in_use = in_use
+    self.active_job = active_job
+

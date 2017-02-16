@@ -20,6 +20,9 @@ import json
 import sys
 import time
 import traceback as tb
+import uuid
+
+from turbinia.workers import TurbiniaTaskGroup
 
 
 class TurbiniaJobResult(object):
@@ -83,8 +86,15 @@ class TurbiniaJobResult(object):
 class TurbiniaJob(object):
   """Base class for Turbinia CLI commands."""
 
-  @staticmethod
-  def _calc_runtime(start_time):
+  def __init__(self, name=None):
+    self.name = name
+    self.id = uuid.uuid4().hex
+    self.result = None
+    self.tasks = TurbiniaTaskGroup()
+    # Job priority from 0-100, lowest == highest priority
+    self.priority = 100
+
+  def _calc_runtime(self, start_time):
     """Calculate the time delta between two datetimes.
 
     Args:
@@ -114,6 +124,7 @@ class TurbiniaJob(object):
         result.runtime = self._calc_runtime(start_time)
         try:
           task.get()
+        # TODO(aarontp): Scope this more narrowly
         except Exception as e:
           result.set_error(error=repr(e), traceback=tb.format_exc())
         return result

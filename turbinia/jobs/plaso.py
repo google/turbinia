@@ -18,11 +18,16 @@ import uuid
 from turbinia.jobs import TurbiniaJob
 from turbinia.workers.plaso import PlasoTask
 
+from tubinia.artifact import RawDisk, GoogleCloudDisk, PlasoFile
+
 
 class PlasoJob(TurbiniaJob):
 
-  @staticmethod
-  def create_task(src_path, out_path, job_id=None, workers=1):
+  # The types of artifacts that this Job will process
+  artifact_input = [type(RawDisk()), type(GoogleCloudDisk())]
+  artifact_output = [type(PlasoFile())]
+
+  def create_task(self, src_path, out_path, job_id=None, workers=1):
     """Create task for bulk_extractor.
 
     Args:
@@ -38,9 +43,12 @@ class PlasoJob(TurbiniaJob):
     task = PlasoTask().delay(src_path, out_path, job_id, workers=workers)
     return task, job_id
 
+  def __init__(self):
+    super(PlasoJob, self).__init__(name='PlasoJob')
+
   def cli(self, cmd_args):
     """Run Plaso job from the command line.
-        
+
     Args:
         cmd_args: Arguments from argparse (instance of argparse.Namespace).
     """
