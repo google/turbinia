@@ -28,6 +28,18 @@ from oauth2client import client as oauth2client
 # Turbinia
 from turbinia import config
 
+# PubSub Message types
+[
+  TASKNEW,
+  TASKABORT,
+  TASKSTART,
+  TASKUPDATE,
+  TASKSTOP,
+  WORKERSTART,
+  WORKERUPDATE,
+  WORKERSTOP,
+] = xrange(8)
+
 
 class GoogleCloudClient(object):
 
@@ -60,11 +72,46 @@ class PubSubClient(GoogleCloudClient):
   def _setup(self):
     self._client_setup()
 
+  def _validate_message(self, message):
+    """Validates pubsub messages to ensure required fields are available.
+
+    Args:
+      message: dict of pubsub message
+
+    Returns:
+      Bool indicating whether message is properly validated
+    """
+    required_fields = {
+        # Turbinia to workers
+        TASKNEW: [u'task_id', u'job_id', u'evidence'],
+        TASKABORT: [u'task_id', u'job_id'],
+        # Tasks to Turbinia
+        TASKSTART: [u'task_id', u'job_id'],
+        TASKUPDATE: [u'task_id', u'job_id', u'update_text'],
+        TASKSTOP: [u'task_id', u'job_id', u'result'],
+        # Workers to Turbinia
+        WORKERSTART: [u'worker_id'],
+        WORKERUPDATE: [u'worker_id', u'update_text'],
+        WORKERSTOP: [u'worker_id'],
+    }
+
+    if not message.has_key(u'message_type'):
+      logging.error(u'Message has no message_type: {0:s}'.format(str(message)))
+      return False
+
+    for field in required_fields.get(message[u'message_type'], []):
+      if not message.has_key(field):
+        logging.error(u'Message type {0:s} must have field {1:s}: {2:s}'.format(
+            message.get(u'message_type'), field, str(message)))
+        return False
+
+    return True
+
   def check_message(self):
     """Checks for a pubsub message.
 
     Returns:
-      Data dict if message, else None
+      Data dict if message is received, else None
     """
     data = None
     body = {
@@ -99,4 +146,11 @@ class PubSubClient(GoogleCloudClient):
         self.client.projects().subscriptions().acknowledge(
             self.subscription=subscription, body=ack_body).execute()
 
+    if not self._validate_message(data):
+      logging.error('Error processing invalid message: {0:s}'.format(data))
+
     return data
+
+  # TODO(aarontp): fill in
+  def send_message(self, message):
+    pass
