@@ -30,15 +30,14 @@ from turbinia import config
 
 # PubSub Message types
 [
-  TASKNEW,
-  TASKABORT,
-  TASKSTART,
-  TASKUPDATE,
-  TASKSTOP,
-  WORKERSTART,
+  # Messages sent to server
+  ARTIFACTNEW,
   WORKERUPDATE,
-  WORKERSTOP,
-] = xrange(8)
+  TASKUPDATE,
+  # Messages sent to workers
+  TASKSTART,
+  TASKSTOP,
+] = xrange(5)
 
 
 class GoogleCloudClient(object):
@@ -59,6 +58,12 @@ class GoogleCloudClient(object):
     credentials.authorize(http)
     self.client = discovery.build(self.service, 'v1', http=http)
     return self.client
+
+
+class PubSubMessage(dict):
+  def __init__(self, message_type):
+    self['message_type'] = message_type
+    super(PubSubMessage, self).__init__()
 
 
 class PubSubClient(GoogleCloudClient):
@@ -82,17 +87,20 @@ class PubSubClient(GoogleCloudClient):
       Bool indicating whether message is properly validated
     """
     required_fields = {
-        # Turbinia to workers
-        TASKNEW: [u'task_id', u'job_id', u'evidence'],
-        TASKABORT: [u'task_id', u'job_id'],
-        # Tasks to Turbinia
+        ARTIFACTNEW: [u'artifact'],
+        TASKUPDATE: [u'task_id', u'job_id', u'status'],
+        WORKERUPDATE: [u'worker_id', u'status'],
         TASKSTART: [u'task_id', u'job_id'],
-        TASKUPDATE: [u'task_id', u'job_id', u'update_text'],
-        TASKSTOP: [u'task_id', u'job_id', u'result'],
-        # Workers to Turbinia
-        WORKERSTART: [u'worker_id'],
-        WORKERUPDATE: [u'worker_id', u'update_text'],
-        WORKERSTOP: [u'worker_id'],
+        TASKSTOP: [u'task_id', u'job_id'],
+    }
+
+    # TODO(aarontp): Enforce these
+    optional_fields = {
+        ARTIFACTNEW: [],
+        TASKUPDATE: [u'update_text', u'result'],
+        WORKERUPDATE: [u'update_text', u'result'],
+        TASKSTART: [],
+        TASKSTOP: [],
     }
 
     if not message.has_key(u'message_type'):

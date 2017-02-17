@@ -53,39 +53,6 @@ class TurbiniaTaskResult(object):
     return json.dumps(self.__dict__)
 
 
-class TurbiniaTaskGroup(object):
-
-  def __init__(self):
-    self.current_task_id = None
-    self.tasks = []
-
-  @property
-  def active_task(self):
-    if self.current_task_id:
-      return self.tasks[self.current_task_id]
-    else:
-      return None
-
-  @active_task.setter
-  def active_task(self, value):
-    if value in self.tasks:
-      self.current_task_id = self.tasks.index(value)
-      return value
-    else:
-      return False
-
-  def next_task(self):
-    if len(self.tasks) - 1 > self.current_task_id:
-      self.current_task_id += 1
-      return self.tasks[self.current_task_id]
-    else:
-      self.current_task_id = None
-      return False
-
-  def add_task(self, task):
-    self.tasks.append(task)
-
-
 class TurbiniaTask(object):
   """Base class for Turbinia tasks."""
 

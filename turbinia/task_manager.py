@@ -44,6 +44,10 @@ class TaskManager(object):
     # Queue of (job, artifact) tuples to process.
     self.job_queue = []
 
+  def setup(self):
+    """Does setup of Task manager dependencies."""
+    self._backend_setup()
+
   def get_status(self):
     """Gets a status report of all running tasks.
 
@@ -126,11 +130,13 @@ class PubSubTaskManager(TaskManager):
   """PubSub implementation of TaskManager."""
 
   def __init__(self):
+    config.LoadConfig()
     super(PubSubTaskManager, self).__init__()
 
-  def _setup_pubsub(self):
+  def _backend_setup(self):
     """Set up pubsub topics."""
-    pass
+    self.server_pubsub = pubsub.PubSubClient(config.PUBSUB_SERVER_TOPIC)
+    self.worker_pubsub = pubsub.PubSubClient(config.PUBSUB_WORKER_TOPIC)
 
   def _send_message(self, message):
     # Wait for message here? or have queue of messages to ack?
@@ -146,7 +152,7 @@ class PubSubTaskManager(TaskManager):
   def _process_task_message(self, message):
     """Process messages relating to task acceptance/update/completion."""
     # TODO(aarontp): fix
-    if message[u'message_type'] == pubsub.TASKSTOP:
+    if message[u'message_type'] == pubsub.TASKUPDATE:
       self._complete_task(message[u'job_id'], message[u'task_id'])
     elif message[u'message_type'] == pubsub.TASKSTART:
       self._complete_task(message[u'job_id'], message[u'task_id'])

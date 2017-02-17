@@ -90,9 +90,43 @@ class TurbiniaJob(object):
     self.name = name
     self.id = uuid.uuid4().hex
     self.result = None
-    self.tasks = TurbiniaTaskGroup()
+    self.current_task_id = None
+    self.tasks = []
     # Job priority from 0-100, lowest == highest priority
     self.priority = 100
+
+  @property
+  def active_task(self):
+    if self.current_task_id:
+      return self.tasks[self.current_task_id]
+    else:
+      return None
+
+  @active_task.setter
+  def active_task(self, value):
+    if value in self.tasks:
+      self.current_task_id = self.tasks.index(value)
+      return value
+    else:
+      return False
+
+  def get_next_task(self):
+    if len(self.tasks) - 1 > self.current_task_id:
+      return self.tasks[self.current_task_id + 1]
+    else:
+      return False
+
+  def set_next_task(self):
+    next_task = self.get_next_task()
+    if next_task:
+      self.current_task_id += 1
+      return self.tasks[self.current_task_id]
+    else:
+      self.current_task_id = None
+      return False
+
+  def add_task(self, task):
+    self.tasks.append(task)
 
   def _calc_runtime(self, start_time):
     """Calculate the time delta between two datetimes.
