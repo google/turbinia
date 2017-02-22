@@ -30,7 +30,6 @@ SCRATCH_PATH = None
 BUCKET_NAME = None
 PUBSUB_SERVER_TOPIC = None
 PUBSUB_WORKER_TOPIC = None
-PUBSUB_TASK_TOPIC = None
 
 # Redis configuration
 REDIS_HOST = None

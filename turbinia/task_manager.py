@@ -38,11 +38,8 @@ class TaskManager(object):
 
   def __init__(self):
     self.jobs = []
-    self.workers = []
     # List of artifact objects to process
     self.artifacts = []
-    # Queue of (job, artifact) tuples to process.
-    self.job_queue = []
 
   def setup(self):
     """Does setup of Task manager dependencies."""
@@ -61,14 +58,6 @@ class TaskManager(object):
     for job in self.jobs:
       report_data.append(
           u'\t{0:s}\t{1:s}'.format(job.name, job.active_task.name))
-
-    report_data.append(u'Workers:')
-    report_data.append(u'\tId:\tHostname:\tActive Job:')
-    for worker in self.workers:
-      job = self.get_job(worker.active_job)
-      job_name = u'No Active Job' if not job else job.name
-      report_data.append(u'\t{0:s}\t{1:s}\t{2:s}'.format(
-          worker.id, worker.hostname, job_name))
 
     return '\n'.join(report_data)
 
@@ -107,17 +96,8 @@ class TaskManager(object):
         return job
     return None
 
-  def add_worker(self, worker):
-    self.worker.append(worker)
-
-  def get_num_active_workers(self):
-    return sum([1 for worker in self.workers if worker.in_use])
-
-  def get_free_worker_count(self):
-    return len(self.workers) - self.get_num_active_workers()
-
-  def start_task(self, task):
-    pass
+  def add_task(self
+    raise NotImplementedError
 
   def process_jobs(self):
     # Check queue for jobs
@@ -130,13 +110,17 @@ class PubSubTaskManager(TaskManager):
   """PubSub implementation of TaskManager."""
 
   def __init__(self):
+    self.workers = []
     config.LoadConfig()
+    # Queue of (job, artifact) tuples to process.
+    self.job_queue = []
     super(PubSubTaskManager, self).__init__()
 
   def _backend_setup(self):
     """Set up pubsub topics."""
     self.server_pubsub = pubsub.PubSubClient(config.PUBSUB_SERVER_TOPIC)
     self.worker_pubsub = pubsub.PubSubClient(config.PUBSUB_WORKER_TOPIC)
+
 
   def _send_message(self, message):
     # Wait for message here? or have queue of messages to ack?
@@ -166,8 +150,28 @@ class PubSubTaskManager(TaskManager):
           'Task {0:s} was not succesful, so not scheduling subsequent '
           'tasks'.format(task_id))
     if job.tasks.set_next_task():
-      self.start_task(job.tasks.active_task)
+      self.add_task(job.tasks.active_task)
     # Add output as new artifact to process
     # Check for child task and schedule.
     # If not child task, set job to complete.
 
+  def add_worker(self, worker):
+    self.worker.append(worker)
+
+  def get_num_active_workers(self):
+    return sum([1 for worker in self.workers if worker.in_use])
+
+  def get_free_worker_count(self):
+    return len(self.workers) - self.get_num_active_workers()
+
+  def get_status(self):
+    report_data = super(PubSubTaskManager, self).get_status().split('\n')
+    report_data.append(u'Workers:')
+    report_data.append(u'\tId:\tHostname:\tActive Job:')
+    for worker in self.workers:
+      job = self.get_job(worker.active_job)
+      job_name = u'No Active Job' if not job else job.name
+      report_data.append(u'\t{0:s}\t{1:s}\t{2:s}'.format(
+          worker.id, worker.hostname, job_name))
+
+    return '\n'.join(report_data)
