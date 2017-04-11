@@ -14,8 +14,8 @@
 """Dummy Turbinia config file."""
 
 # Turbinia Config
-# Valid values are 'PubSub' or 'Celery'
-TASK_MANAGER = 'PubSub'
+# Valid values are 'PSQ' or 'Celery'
+TASK_MANAGER = 'PSQ'
 # Time between heartbeats in seconds
 WORKER_HEARTBEAT = 600
 # Timeout between heartbeats for Workers to be considered inactive
@@ -28,8 +28,9 @@ INSTANCE = None
 DEVICE_NAME = None
 SCRATCH_PATH = None
 BUCKET_NAME = None
-PUBSUB_SERVER_TOPIC = None
-PUBSUB_WORKER_TOPIC = None
+PSQ_TOPIC = None
+# Topic Turbinia will listen on for new Artifact events
+PUBSUB_TOPIC = None
 
 # Redis configuration
 REDIS_HOST = None

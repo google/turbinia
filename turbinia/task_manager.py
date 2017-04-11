@@ -15,28 +15,35 @@
 
 import logging
 
+import psq
+from google.cloud import datastore
+from google.cloud import pubsub
+
 import turbinia
+from turbinia import artifact
 from turbinia import config
-from turbinia import pubsub
+from turbinia import pubsub as turbinia_pubsub
 
 
 def get_task_manager():
   config.LoadConfig()
-  if config.TASK_MANAGER == 'PubSub':
-    return PubSubTaskManager()
+  if config.TASK_MANAGER == 'PSQ':
+    return PSQTaskManager()
   else:
     msg = u'Task Manager type "{0:s}" not implemented'.format(
         config.TASK_MANAGER)
     raise turbinia.TurbiniaException(msg)
 
 
-class PubSubClient(object):
-  pass
+def task_runner(obj, *args, **kwargs):
+  # TODO(aarontp): Add proper error checks/handling
+  return obj.run(*args, **kwargs)
 
 
 class TaskManager(object):
 
   def __init__(self):
+    # Registered and instantiated job objects
     self.jobs = []
     # List of artifact objects to process
     self.artifacts = []
@@ -45,24 +52,11 @@ class TaskManager(object):
     """Does setup of Task manager dependencies."""
     self._backend_setup()
 
-  def get_status(self):
-    """Gets a status report of all running tasks.
-
-    Returns:
-      A human readable string of report data from the existing tasks and
-      workers.
-    """
-    report_data = []
-    report_data.append(u'Jobs:')
-    report_data.append(u'\tName:\tActive Task:')
-    for job in self.jobs:
-      report_data.append(
-          u'\t{0:s}\t{1:s}'.format(job.name, job.active_task.name))
-
-    return '\n'.join(report_data)
-
   def add_artifact(self, artifact):
     """Add new artifact instance to process.
+
+    This creates a new task for each Job that has this Artifact type as an
+    input.
 
     Args:
       artifact: artifact object to add.
@@ -74,9 +68,9 @@ class TaskManager(object):
     self.artifacts.append(artifact)
     for job in self.jobs:
       if [True for t in job.artifact_input if isinstance(artifact, t)]:
-        logging.info(u'Adding {0:s} job to queue to process {1:s}'.format(
+        logging.info(u'Adding {0:s} job to process {1:s}'.format(
             job.name, artifact.name))
-        self.job_queue.append((job, artifact))
+        self.add_task(job.create_task(), artifact)
 
   def add_job(self, job):
     # TODO(aarontp): Insert jobs according to priority
@@ -96,42 +90,95 @@ class TaskManager(object):
         return job
     return None
 
-  def add_task(self
+  def add_task(self, task=None, artifact=None):
     raise NotImplementedError
 
   def process_jobs(self):
-    # Check queue for jobs
-    # Check for free task
-    # Schedule job
+    # Check for new artifacts
+    # queue new tasks from new artifacts
+    # Check for completed tasks
+    self.check_done_tasks()
+    #   Update results
     pass
 
 
-class PubSubTaskManager(TaskManager):
+class PSQTaskManager(TaskManager):
   """PubSub implementation of TaskManager."""
 
   def __init__(self):
-    self.workers = []
+    self.task_results = []
     config.LoadConfig()
-    # Queue of (job, artifact) tuples to process.
-    self.job_queue = []
-    super(PubSubTaskManager, self).__init__()
+    super(PSQTaskManager, self).__init__()
 
   def _backend_setup(self):
-    """Set up pubsub topics."""
-    self.server_pubsub = pubsub.PubSubClient(config.PUBSUB_SERVER_TOPIC)
-    self.worker_pubsub = pubsub.PubSubClient(config.PUBSUB_WORKER_TOPIC)
+    """Set up backend dependencies."""
+    self.server_pubsub = turbinia_pubsub.PubSubClient(config.PUBSUB_TOPIC)
+    psq_pubsub_client = pubsub.Client(project=config.PROJECT)
+    datastore_client = datastore.Client(project=config.PROJECT)
+    self.psq = psq.Queue(
+        psq_pubsub_client, config.PSQ_TOPIC,
+        storage=psq.DatastoreStorage(datastore_client))
+
+  def _complete_task(self, psq_task, task):
+    """Runs final task data recording.
+
+    Args:
+      psq_task: An instance of the psq_task that ran
+      task: The Turbinia Task object
+    """
+    # TODO(aarontp): Make sure this is set by the task
+    if not task.result.successful:
+      logging.error('Task {0:s} was not succesful'.format(task.name))
+    else:
+      logging.info('Task {0:s} executed with status {1:d}'.format(
+          task.name, task.result))
+
+    # Add output as new artifact to process
+    if not task.output:
+      logging.info('Task {0:s} did not return output'.format(task.name))
+    elif isinstance(task.output, artifact.Artifact):
+      logging.info('Task {0:s} returned non-Artifact output type {1:s}'.format(
+          task.name, type(task.output)))
+    else:
+      self.add_artifact(task.output)
+
+  def check_done_tasks(self):
+    """Checks for tasks that have completed.
+
+    Returns:
+      The number of tasks that have completed.
+    """
+    completed_tasks = []
+    for result in self.task_results:
+      psq_task = result.get_task()
+      if not psq_task:
+        logging.debug('Task {0:d} not yet created'.format(result.task_id))
+      elif psq_task.status not in (psq.task.FINISHED, psq.task.FAILED):
+        logging.debug('Task {0:d} still running').format(psq_task.id)
+      elif psq_task.status == psq.task.FAILED:
+        logging.debug('Task {0:d} failed.').format(psq_task.id)
+        # TODO(aarontp): handle failures
+      else:
+        output = result.result()
+        completed_tasks.append(result)
+        self._complete_task(psq_task, output)
+
+    # pylint: disable=expression-not-assigned
+    return len([self.task_results.pop(task) for task in completed_tasks])
+
+  def add_task(self, task, artifact_):
+    """Adds a task to be queued along with the artifact it will process.
+
+    Args:
+      task: A Turbinia Task
+      artifact: An Artifact object to be processed.
+    """
+    logging.info('Adding task {0:s} with artifact {1:s} to queue').format(
+        task.name, artifact_.name)
+    self.task_results.append(self.psq.enqueue(task_runner(task, artifact_)))
 
 
-  def _send_message(self, message):
-    # Wait for message here? or have queue of messages to ack?
-    pass
-
-  def _process_message(self, message):
-    pass
-
-  def _process_worker_message(self, message):
-    """Process messages relating to worker start/stop/heartbeat."""
-    pass
+class PubSubTaskManager(TaskManager):
 
   def _process_task_message(self, message):
     """Process messages relating to task acceptance/update/completion."""
@@ -140,20 +187,6 @@ class PubSubTaskManager(TaskManager):
       self._complete_task(message[u'job_id'], message[u'task_id'])
     elif message[u'message_type'] == pubsub.TASKSTART:
       self._complete_task(message[u'job_id'], message[u'task_id'])
-
-  def _complete_task(self, job_id, task_id, result):
-    # Set task to complete.
-    job = self.get_job(job_id)
-    job.active_task.result = result
-    if not result.successful and job.tasks.get_next_task():
-      logging.error(
-          'Task {0:s} was not succesful, so not scheduling subsequent '
-          'tasks'.format(task_id))
-    if job.tasks.set_next_task():
-      self.add_task(job.tasks.active_task)
-    # Add output as new artifact to process
-    # Check for child task and schedule.
-    # If not child task, set job to complete.
 
   def add_worker(self, worker):
     self.worker.append(worker)
@@ -165,7 +198,13 @@ class PubSubTaskManager(TaskManager):
     return len(self.workers) - self.get_num_active_workers()
 
   def get_status(self):
-    report_data = super(PubSubTaskManager, self).get_status().split('\n')
+    report_data = []
+    report_data.append(u'Jobs:')
+    report_data.append(u'\tName:\tActive Task:')
+    for job in self.jobs:
+      report_data.append(
+          u'\t{0:s}\t{1:s}'.format(job.name, job.active_task.name))
+
     report_data.append(u'Workers:')
     report_data.append(u'\tId:\tHostname:\tActive Job:')
     for worker in self.workers:
@@ -175,3 +214,4 @@ class PubSubTaskManager(TaskManager):
           worker.id, worker.hostname, job_name))
 
     return '\n'.join(report_data)
+

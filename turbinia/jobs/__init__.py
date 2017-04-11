@@ -86,12 +86,14 @@ class TurbiniaJobResult(object):
 class TurbiniaJob(object):
   """Base class for Turbinia CLI commands."""
 
-  def __init__(self, name=None):
+  def __init__(self, name=None, output_path=None):
     self.name = name
+    self.output_path = output_path
     self.id = uuid.uuid4().hex
+
     self.result = None
     self.current_task_id = None
-    self.tasks = []
+    self.task = None
     # Job priority from 0-100, lowest == highest priority
     self.priority = 100
 
@@ -110,6 +112,17 @@ class TurbiniaJob(object):
     else:
       return False
 
+  def _calc_runtime(self, start_time):
+    """Calculate the time delta between two datetimes.
+
+    Args:
+        start_time: Datetime object.
+
+    Returns:
+        Time delta in seconds from start_time to now.
+    """
+    return (datetime.now() - start_time).seconds
+
   def get_next_task(self):
     if len(self.tasks) - 1 > self.current_task_id:
       return self.tasks[self.current_task_id + 1]
@@ -127,17 +140,6 @@ class TurbiniaJob(object):
 
   def add_task(self, task):
     self.tasks.append(task)
-
-  def _calc_runtime(self, start_time):
-    """Calculate the time delta between two datetimes.
-
-    Args:
-        start_time: Datetime object.
-
-    Returns:
-        Time delta in seconds from start_time to now.
-    """
-    return (datetime.now() - start_time).seconds
 
   def run(self, task, job_id):
     """Start a task execution.

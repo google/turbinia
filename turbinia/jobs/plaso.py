@@ -27,31 +27,14 @@ class PlasoJob(TurbiniaJob):
   artifact_input = [type(RawDisk()), type(GoogleCloudDisk())]
   artifact_output = [type(PlasoFile())]
 
-  def create_task(self, src_path, out_path, job_id=None, workers=1):
-    """Create task for bulk_extractor.
-
-    Args:
-        src_path: Path to the data to process.
-        out_path: Path to where to put the result.
-        job_id: Unique identifier for the job (optional).
-        workers: Number of workers to run the Job on.
-    Returns:
-        A Celery task (instance of celery.Task).
-    """
-    if not job_id:
-      job_id = uuid.uuid4().hex
-    task = PlasoTask().delay(src_path, out_path, job_id, workers=workers)
-    return task, job_id
-
   def __init__(self):
     super(PlasoJob, self).__init__(name='PlasoJob')
 
-  def cli(self, cmd_args):
-    """Run Plaso job from the command line.
+  def create_task(self):
+    """Create task for bulk_extractor.
 
-    Args:
-        cmd_args: Arguments from argparse (instance of argparse.Namespace).
+    Returns:
+        A Plaso task (instance TurbiniaTask).
     """
-    task, job_id = self.create_task(
-        src_path=cmd_args.source, out_path=cmd_args.output)
-    self.run_cli(task, job_id)
+    self.task = PlasoTask()
+    return self.task
