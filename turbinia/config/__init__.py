@@ -32,9 +32,14 @@ CONFIGVARS = [
     'DEVICE_NAME',
     'SCRATCH_PATH',
     'BUCKET_NAME',
+    'PUBSUB_TOPIC',
     # REDIS CONFIG
     'REDIS_HOST',
     'REDIS_PORT',
+    # Timesketch config
+    'TIMESKETCH_HOST',
+    'TIMESKETCH_USER',
+    'TIMESKETCH_PASSWORD',
 ]
 # Environment variable to look for path data in
 ENVCONFIGVAR = 'TURBINIA_CONFIG_PATH'

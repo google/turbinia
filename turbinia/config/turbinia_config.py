@@ -21,7 +21,13 @@ INSTANCE = None
 DEVICE_NAME = None
 SCRATCH_PATH = None
 BUCKET_NAME = None
+PUBSUB_TOPIC = None
 
 # Redis configuration
 REDIS_HOST = None
 REDIS_PORT = None
+
+# Timesketch configuration
+TIMESKETCH_HOST = None
+TIMESKETCH_USER = None
+TIMESKETCH_PASSWORD = None
