@@ -14,13 +14,14 @@
 """Task manager for Turbinia."""
 
 import logging
+import time
 
 import psq
 from google.cloud import datastore
 from google.cloud import pubsub
 
 import turbinia
-from turbinia import artifact
+from turbinia import evidence
 from turbinia import config
 from turbinia import pubsub as turbinia_pubsub
 
@@ -45,32 +46,40 @@ class TaskManager(object):
   def __init__(self):
     # Registered and instantiated job objects
     self.jobs = []
-    # List of artifact objects to process
-    self.artifacts = []
+    # List of evidence objects to process
+    self.evidence = []
 
   def setup(self):
     """Does setup of Task manager dependencies."""
     self._backend_setup()
 
-  def add_artifact(self, artifact):
-    """Add new artifact instance to process.
+  def add_evidence(self, evidence):
+    """Add new evidence instance to process.
 
-    This creates a new task for each Job that has this Artifact type as an
+    This creates a new task for each Job that has this Evidence type as an
     input.
 
     Args:
-      artifact: artifact object to add.
+      evidence: evidence object to add.
     """
     if not self.jobs:
       raise turbinia.TurbiniaException(
-          u'Jobs must be registered before artifacts can be added')
-    logging.info(u'Adding new artifact: {0:s}'.format(str(artifact)))
-    self.artifacts.append(artifact)
+          u'Jobs must be registered before evidence can be added')
+    logging.info(u'Adding new evidence: {0:s}'.format(str(evidence)))
+    self.evidence.append(evidence)
     for job in self.jobs:
-      if [True for t in job.artifact_input if isinstance(artifact, t)]:
+      if [True for t in job.evidence_input if isinstance(evidence, t)]:
         logging.info(u'Adding {0:s} job to process {1:s}'.format(
-            job.name, artifact.name))
-        self.add_task(job.create_task(), artifact)
+            job.name, evidence.name))
+        self.add_task(job.create_task(), evidence)
+
+  def get_evidence(self):
+    """Checks for new evidence.
+
+    Returns:
+      A list of Evidence objects
+    """
+    raise NotImplementedError
 
   def add_job(self, job):
     # TODO(aarontp): Insert jobs according to priority
@@ -90,20 +99,23 @@ class TaskManager(object):
         return job
     return None
 
-  def add_task(self, task=None, artifact=None):
+  def add_task(self, task=None, evidence=None):
+    raise NotImplementedError
+
+  def process_tasks(self):
+    """Process any tasks that need to be processed."""
     raise NotImplementedError
 
   def process_jobs(self):
-    # Check for new artifacts
-    # queue new tasks from new artifacts
-    # Check for completed tasks
-    self.check_done_tasks()
-    #   Update results
-    pass
+    # pylint: disable=expression-not-assigned
+    [self.add_evidence(x) for x in self.get_evidence()]
+    self.process_tasks()
+    # TODO(aarontp): Add config var for this.
+    time.sleep(30)
 
 
 class PSQTaskManager(TaskManager):
-  """PubSub implementation of TaskManager."""
+  """PSQ implementation of TaskManager."""
 
   def __init__(self):
     self.task_results = []
@@ -133,16 +145,16 @@ class PSQTaskManager(TaskManager):
       logging.info('Task {0:s} executed with status {1:d}'.format(
           task.name, task.result))
 
-    # Add output as new artifact to process
+    # Add output as new evidence to process
     if not task.output:
       logging.info('Task {0:s} did not return output'.format(task.name))
-    elif isinstance(task.output, artifact.Artifact):
-      logging.info('Task {0:s} returned non-Artifact output type {1:s}'.format(
+    elif isinstance(task.output, evidence.Evidence):
+      logging.info('Task {0:s} returned non-Evidence output type {1:s}'.format(
           task.name, type(task.output)))
     else:
-      self.add_artifact(task.output)
+      self.add_evidence(task.output)
 
-  def check_done_tasks(self):
+  def process_tasks(self):
     """Checks for tasks that have completed.
 
     Returns:
@@ -166,16 +178,20 @@ class PSQTaskManager(TaskManager):
     # pylint: disable=expression-not-assigned
     return len([self.task_results.pop(task) for task in completed_tasks])
 
-  def add_task(self, task, artifact_):
-    """Adds a task to be queued along with the artifact it will process.
+  def get_evidence(self):
+    # Check pubsub for new evidence messages
+    pass
+
+  def add_task(self, task, evidence_):
+    """Adds a task to be queued along with the evidence it will process.
 
     Args:
       task: A Turbinia Task
-      artifact: An Artifact object to be processed.
+      evidence: An Evidence object to be processed.
     """
-    logging.info('Adding task {0:s} with artifact {1:s} to queue').format(
-        task.name, artifact_.name)
-    self.task_results.append(self.psq.enqueue(task_runner(task, artifact_)))
+    logging.info('Adding task {0:s} with evidence {1:s} to queue').format(
+        task.name, evidence_.name)
+    self.task_results.append(self.psq.enqueue(task_runner(task, evidence_)))
 
 
 class PubSubTaskManager(TaskManager):

@@ -20,6 +20,7 @@ import argparse
 from turbinia.jobs.be import BulkExtractorJob
 from turbinia.jobs.plaso import PlasoJob
 from turbinia import VERSION
+from turbinia.turbinia import task_manager
 
 if __name__ == '__main__':
   parser = argparse.ArgumentParser()
@@ -51,6 +52,11 @@ if __name__ == '__main__':
       '-o', '--output', help='Path to temporary storage (Default: /tmp)',
       default='/tmp', required=False)
   parser_plaso.set_defaults(func=PlasoJob().cli)
+
+  # TaskManager
+  task_manager_ = task_manager.get_task_manager()
+  task_manager_.setup()
+  task_manager.process_jobs()
 
   args = parser.parse_args()
   args.func(args)
