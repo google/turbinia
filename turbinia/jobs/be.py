@@ -13,47 +13,47 @@
 # limitations under the License.
 """Job to execute bulk_extractor task."""
 
-import uuid
-
-from celery import group
-from celery import chord
-
 from turbinia.jobs import TurbiniaJob
-from turbinia.workers.be import BulkExtractorTask
-from turbinia.workers.be import BulkExtractorReducerTask
 from turbinia.workers.be import BulkExtractorCalcOffsetsTask
+from turbinia.workers.be import BulkExtractorReducerTask
+from turbinia.workers.be import BulkExtractorTask
 
 
-class BulkExtractorJob(TurbiniaJob):
+class BulkExtractorPreprocessJob(TurbiniaJob):
 
-  @staticmethod
-  def create_task(src_path, out_path, job_id=None, workers=1):
+  evidence_input = []
+  evidence_output = []
+
+  def create_tasks(self, evidence, out_path, workers=1):
     """Create task for bulk_extractor.
 
     Args:
         src_path: Path to the data to process.
         out_path: Path to where to put the result.
-        job_id: Unique identifier for the job (optional).
         workers: Number of workers to run the Job on.
     Returns:
-        A Celery task (instance of celery.Task).
+        A list of TurbiniaTasks.
     """
-    if not job_id:
-      job_id = uuid.uuid4().hex
-    offsets_task = BulkExtractorCalcOffsetsTask().delay(src_path, workers)
-    offsets = offsets_task.get()
-    task_group = group(BulkExtractorTask().s(src_path, out_path, offset, job_id)
-                       for offset in offsets)
-    task_chord = chord(task_group)(BulkExtractorReducerTask().s())
-    return task_chord, job_id
+    # TODO(aarontp): Fix up this method.  Refactor out method args into config
+    # or options.
+    self.tasks.append(BulkExtractorCalcOffsetsTask(evidence))
+    return self.tasks
 
-  def cli(self, cmd_args):
-    """Run bulk_extractor job from the command line.
+
+class BulkExtractorJob(TurbiniaJob):
+
+  evidence_input = []
+  evidence_output = []
+
+  def create_tasks(self, evidence):
+    """Create task for bulk_extractor.
 
     Args:
-        cmd_args: Arguments from argparse (instance of argparse.Namespace).
+      Evidence object to process
+
+    Returns:
+        A list of BulkExtractorTasks.
     """
-    task, job_id = self.create_task(
-        src_path=cmd_args.source, out_path=cmd_args.output,
-        workers=int(cmd_args.num_tasks))
-    self.run_cli(task, job_id)
+    # TODO(aarontp): Put offset into evidence type for this job
+    self.tasks.extend([BulkExtractorTask(e) for e in evidence])
+    return self.tasks

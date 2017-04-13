@@ -18,23 +18,26 @@ import uuid
 from turbinia.jobs import TurbiniaJob
 from turbinia.workers.plaso import PlasoTask
 
-from tubinia.artifact import RawDisk, GoogleCloudDisk, PlasoFile
+from tubinia.evidence import RawDisk, GoogleCloudDisk, PlasoFile
 
 
 class PlasoJob(TurbiniaJob):
 
-  # The types of artifacts that this Job will process
-  artifact_input = [type(RawDisk()), type(GoogleCloudDisk())]
-  artifact_output = [type(PlasoFile())]
+  # The types of evidence that this Job will process
+  evidence_input = [type(RawDisk()), type(GoogleCloudDisk())]
+  evidence_output = [type(PlasoFile())]
 
   def __init__(self):
     super(PlasoJob, self).__init__(name='PlasoJob')
 
-  def create_task(self):
-    """Create task for bulk_extractor.
+  def create_tasks(self, evidence):
+    """Create task for Plaso.
+
+    Args:
+      Evidence object to process
 
     Returns:
-        A Plaso task (instance TurbiniaTask).
+        A list of PlasoTasks.
     """
-    self.task = PlasoTask()
-    return self.task
+    self.tasks.extend([PlasoTask(e) for e in evidence])
+    return self.tasks
