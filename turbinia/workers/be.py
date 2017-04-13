@@ -23,18 +23,19 @@ from turbinia.workers import TurbiniaTaskResult
 class BulkExtractorTask(TurbiniaTask):
   """Task to run bulk_extractor."""
 
-  @staticmethod
-  def run(src_path, out_path, offsets, job_id, **kwargs):
+  def run(self, evidence, out_path, offsets, job_id, **kwargs):
     """Task that process data with bulk_extractor.
 
     Args:
-        src_path: Path to data to process.
+        evidence: Path to data to process.
         out_path: Path to temporary storage of results.
         offsets: Where in the data to process.
         job_id: Unique ID for this task.
     Returns:
         job_id: The job_id provided.
     """
+    # TODO(aarontp): Fix all these methods to take evidence
+    # TODO(aarontp): Standardize output path format
     out_path = '{0:s}/{1:s}/{2}_{3}'.format(out_path, job_id, offsets[0],
                                             offsets[1])
     if not os.path.exists(out_path):
@@ -49,8 +50,7 @@ class BulkExtractorTask(TurbiniaTask):
 class BulkExtractorCalcOffsetsTask(TurbiniaTask):
   """Task to calculate offsets for Bulk extractor."""
 
-  @staticmethod
-  def run(src_path, num_workers, page_size=16777216):
+  def run(self, evidence, num_workers, page_size=16777216):
     """Reads data and calculates offsets based on page_size.
 
     Args:
@@ -102,8 +102,7 @@ class BulkExtractorCalcOffsetsTask(TurbiniaTask):
 class BulkExtractorReducerTask(TurbiniaTask):
   """Reduce bulk extractor outputs."""
 
-  @staticmethod
-  def run(results):
+  def run(self, evidence, results):
     """Celery task that reduces the results into one SQLite database.
 
     Args:
@@ -116,4 +115,4 @@ class BulkExtractorReducerTask(TurbiniaTask):
         ['/usr/local/bin/be_reducer.sh', job_id])
     result = TurbiniaTaskResult()
     result.add_result(result_type='PATH', result=cmd_output)
-    return result.to_json()
+    return result

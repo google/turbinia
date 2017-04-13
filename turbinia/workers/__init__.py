@@ -21,36 +21,38 @@ import uuid
 class TurbiniaTaskResult(object):
   """Object to store task results to be returned by a TurbiniaTask."""
 
-  def __init__(self, results=None, version=None, metadata=None):
+  def __init__(self, evidence=None, task_id=None, task_type=None):
     """Initialize the TurbiniaTaskResult object.
 
     Args:
-        results: List of task execution results.
-        version: Version of the program being executed.
-        metadata: Dictionary of metadata from the task.
+        evidence: List of task execution Evidence objects.
     """
 
-    self.results = results
-    self.version = version
-    self.metadata = metadata
+    self.evidence = evidence if evidence else []
+    self.task_id = task_id
+    self.task_type = task_type
 
-    if not self.results:
-      self.results = list()
-    if not self.metadata:
-      self.metadata = dict()
+    self.runtime = None
+    self.successful = None
+    self.error = None
 
-  def add_result(self, result_type, result):
+  def add_evidence(self, evidence):
     """Populate the results list.
 
     Args:
-        result_type: Type of result, e.g. URL or filesystem path.
-        result: Result string from the task.
+        evidence: Evidence object
     """
-    self.results.append(dict(type=result_type, result=result))
+    self.evidence.append(evidence)
 
-  def to_json(self):
-    """Convert object to JSON."""
-    return json.dumps(self.__dict__)
+  def set_error(self, error, traceback):
+    """Add error and traceback.
+
+    Args:
+        error: Short string describing the error.
+        traceback: Traceback of the error.
+    """
+    self.error['error'] = error
+    self.error['traceback'] = traceback
 
 
 class TurbiniaTask(object):

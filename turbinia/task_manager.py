@@ -23,6 +23,7 @@ from google.cloud import pubsub
 import turbinia
 from turbinia import evidence
 from turbinia import config
+from turbinia import jobs
 from turbinia import pubsub as turbinia_pubsub
 
 
@@ -50,8 +51,9 @@ class TaskManager(object):
     self.evidence = []
 
   def setup(self):
-    """Does setup of Task manager dependencies."""
+    """Does setup of Task manager and its dependencies."""
     self._backend_setup()
+    self.jobs = jobs.GetJobs()
 
   def add_evidence(self, evidence):
     """Add new evidence instance to process.
@@ -106,12 +108,13 @@ class TaskManager(object):
     """Process any tasks that need to be processed."""
     raise NotImplementedError
 
-  def process_jobs(self):
-    # pylint: disable=expression-not-assigned
-    [self.add_evidence(x) for x in self.get_evidence()]
-    self.process_tasks()
-    # TODO(aarontp): Add config var for this.
-    time.sleep(30)
+  def run(self):
+    while True:
+      # pylint: disable=expression-not-assigned
+      [self.add_evidence(x) for x in self.get_evidence()]
+      self.process_tasks()
+      # TODO(aarontp): Add config var for this.
+      time.sleep(30)
 
 
 class PSQTaskManager(TaskManager):

@@ -56,7 +56,7 @@ if __name__ == '__main__':
   # TaskManager
   task_manager_ = task_manager.get_task_manager()
   task_manager_.setup()
-  task_manager.process_jobs()
+  task_manager.run()
 
   args = parser.parse_args()
   args.func(args)
