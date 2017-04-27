@@ -38,16 +38,32 @@ def get_task_manager():
 
 
 def task_runner(obj, *args, **kwargs):
+  """Wrapper function to run specified TurbiniaTask object.
+
+  Args:
+    obj: An instantiated TurbiniaTask object.
+    *args: Any Args to pass to obj.
+    **kwargs: Any keyword args to pass to obj.
+
+  Returns:
+    Output from TurbiniaTask (should be TurbiniaTaskReslt).
+  """
   # TODO(aarontp): Add proper error checks/handling
   return obj.run(*args, **kwargs)
 
 
 class TaskManager(object):
+  """Class to manage Turbinia Tasks.
+
+  Handles incoming new Evidence messages and adds new Tasks to the queue.
+
+  Attributes:
+    jobs: A list of registered and instantiated job objects
+    evidence: A list of evidence objects to process
+  """
 
   def __init__(self):
-    # Registered and instantiated job objects
     self.jobs = []
-    # List of evidence objects to process
     self.evidence = []
 
   def setup(self):
@@ -55,25 +71,25 @@ class TaskManager(object):
     self._backend_setup()
     self.jobs = jobs.GetJobs()
 
-  def add_evidence(self, evidence):
-    """Add new evidence instance to process.
+  def add_evidence(self, evidence_):
+    """Adds new evidence and creates tasks to process it.
 
-    This creates a new task for each Job that has this Evidence type as an
-    input.
+    This creates all tasks configured to process the given type of evidence.
 
     Args:
-      evidence: evidence object to add.
+      evidence_: evidence object to add.
     """
     if not self.jobs:
       raise turbinia.TurbiniaException(
           u'Jobs must be registered before evidence can be added')
-    logging.info(u'Adding new evidence: {0:s}'.format(str(evidence)))
-    self.evidence.append(evidence)
+    logging.info(u'Adding new evidence: {0:s}'.format(str(evidence_)))
+    self.evidence.append(evidence_)
     for job in self.jobs:
-      if [True for t in job.evidence_input if isinstance(evidence, t)]:
+      if [True for t in job.evidence_input if isinstance(evidence_, t)]:
         logging.info(u'Adding {0:s} job to process {1:s}'.format(
-            job.name, evidence.name))
-        self.add_task(job.create_task(), evidence)
+            job.name, evidence_.name))
+        # pylint: disable=expression-not-assigned
+        [self.add_task(t) for t in job.create_tasks([evidence_])]
 
   def get_evidence(self):
     """Checks for new evidence.
@@ -101,11 +117,21 @@ class TaskManager(object):
         return job
     return None
 
-  def add_task(self, task=None, evidence=None):
+  def add_task(self, task=None, evidence_=None):
+    """Adds a task to be queued along with the evidence it will process.
+
+    Args:
+      task: An instantiated Turbinia Task
+      evidence_: An Evidence object to be processed.
+    """
     raise NotImplementedError
 
   def process_tasks(self):
-    """Process any tasks that need to be processed."""
+    """Process any tasks that need to be processed.
+
+    Returns:
+      The number of tasks that have completed.
+    """
     raise NotImplementedError
 
   def run(self):
@@ -118,7 +144,13 @@ class TaskManager(object):
 
 
 class PSQTaskManager(TaskManager):
-  """PSQ implementation of TaskManager."""
+  """PSQ implementation of TaskManager.
+
+  Attributes:
+    psq: PSQ Queue object.
+    server_pubsub: A PubSubClient object for receiving new evidence messages.
+    task_results: A list of outstanding PSQ task results.
+  """
 
   def __init__(self):
     self.task_results = []
@@ -158,20 +190,15 @@ class PSQTaskManager(TaskManager):
       self.add_evidence(task.output)
 
   def process_tasks(self):
-    """Checks for tasks that have completed.
-
-    Returns:
-      The number of tasks that have completed.
-    """
     completed_tasks = []
     for result in self.task_results:
       psq_task = result.get_task()
       if not psq_task:
         logging.debug('Task {0:d} not yet created'.format(result.task_id))
       elif psq_task.status not in (psq.task.FINISHED, psq.task.FAILED):
-        logging.debug('Task {0:d} still running').format(psq_task.id)
+        logging.debug('Task {0:d} still running'.format(psq_task.id))
       elif psq_task.status == psq.task.FAILED:
-        logging.debug('Task {0:d} failed.').format(psq_task.id)
+        logging.debug('Task {0:d} failed.'.format(psq_task.id))
         # TODO(aarontp): handle failures
       else:
         output = result.result()
@@ -182,19 +209,13 @@ class PSQTaskManager(TaskManager):
     return len([self.task_results.pop(task) for task in completed_tasks])
 
   def get_evidence(self):
-    # Check pubsub for new evidence messages
+    # TODO(aarontp): code goes here.
     pass
 
   def add_task(self, task, evidence_):
-    """Adds a task to be queued along with the evidence it will process.
-
-    Args:
-      task: A Turbinia Task
-      evidence: An Evidence object to be processed.
-    """
     logging.info('Adding task {0:s} with evidence {1:s} to queue').format(
         task.name, evidence_.name)
-    self.task_results.append(self.psq.enqueue(task_runner(task, evidence_)))
+    self.task_results.append(self.psq.enqueue(task_runner, task, evidence_))
 
 
 class PubSubTaskManager(TaskManager):
