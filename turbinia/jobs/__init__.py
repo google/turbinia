@@ -22,22 +22,48 @@ import time
 import traceback as tb
 import uuid
 
-import PlasoJob
-import BulkExtractorJob
 
-
-def GetJobs():
+def get_jobs():
   """Gets a list of all job objects.
 
   Returns:
     A list of TurbiniaJobs.
   """
+  # Defer imports to prevent circular dependencies during init.
+  from turbinia.jobs.be import BulkExtractorJob
+  from turbinia.jobs.plaso import PlasoJob
+  from turbinia.jobs.worker_stat import StatJob
   # TODO(aarontp): Dynamically look up job objects
-  return [PlasoJob]
+  # return [PlasoJob()]
+  return [StatJob()]
+
+
+class TurbiniaJob(object):
+  """Base class for Turbinia Jobs."""
+
+  def __init__(self, name=None, output_path=None):
+    self.name = name
+    self.output_path = output_path
+    self.id = uuid.uuid4().hex
+
+    # Job priority from 0-100, lowest == highest priority
+    self.priority = 100
+
+  def create_tasks(self, evidence_):
+    """Create Turbinia tasks to be run.
+
+    Args:
+      evidence_: A list of evidence objects
+
+    Returns:
+      A List of TurbiniaTask objects.
+    """
+    raise NotImplementedError
 
 
 class TurbiniaJobResult(object):
   """Class to hold a Turbinia job results."""
+
   def __init__(self, task_results=None):
     """Initialize the TurbiniaJobResult class.
 
@@ -54,27 +80,3 @@ class TurbiniaJobResult(object):
     """
     self.results.append(result)
 
-
-class TurbiniaJob(object):
-  """Base class for Turbinia Jobs."""
-
-  def __init__(self, name=None, output_path=None):
-    self.name = name
-    self.output_path = output_path
-    self.id = uuid.uuid4().hex
-
-    self.tasks = []
-    # Job priority from 0-100, lowest == highest priority
-    self.priority = 100
-
-  def add_task(self, task):
-    self.tasks.append(task)
-
-  def setup(self):
-    """Sets up Job."""
-    # pylint: disable=no-value-for-parameter
-    [self.add_task(task) for task in self.create_tasks()]
-
-  def create_tasks(self, task):
-    """Create Turbinia tasks to be run."""
-    raise NotImplementedError

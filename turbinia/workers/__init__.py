@@ -19,22 +19,43 @@ import uuid
 
 
 class TurbiniaTaskResult(object):
-  """Object to store task results to be returned by a TurbiniaTask."""
+  """Object to store task results to be returned by a TurbiniaTask.
 
-  def __init__(self, evidence=None, task_id=None, task_type=None):
-    """Initialize the TurbiniaTaskResult object.
+  Attributes:
+        evidence: List of newly created Evidence objects.
+        input_evidence: The evidence this task processed.
+        task_id: Task ID of the parent task.
+        task_name: Name of parent task.
+        start_time: Datetime object of when the task was started
+        run_time: Length of time the task ran for.
+        successful: Bool indicating success status.
+        error: Dict of error data ('error' and 'traceback' are some valid keys)
+        _log: A list of log messages
+  """
 
-    Args:
-        evidence: List of task execution Evidence objects.
-    """
+  def __init__(self, evidence=None, input_evidence=None, task_id=None,
+               task_name=None):
+    """Initialize the TurbiniaTaskResult object."""
 
     self.evidence = evidence if evidence else []
+    self.input_evidence = input_evidence if input_evidence else []
     self.task_id = task_id
-    self.task_type = task_type
+    self.task_name = task_name
 
-    self.runtime = None
+    self.start_time = datetime.datetime.now()
+    self.run_time = None
     self.successful = None
-    self.error = None
+    self.error = {}
+    # TODO(aarontp): Create mechanism to grab actual python logging data.
+    self._log = []
+
+  def log(self, log_msg):
+    """Add a log message to the result object.
+
+    Args:
+      log_msg: A log message string.
+    """
+    self._log.append(log_msg)
 
   def add_evidence(self, evidence):
     """Populate the results list.
@@ -61,21 +82,34 @@ class TurbiniaTask(object):
   def __init__(self, name=None):
     self.id = uuid.uuid4().hex
     self.name = name
-    # Task is considered completed (or failed) if it has a result.
     self.result = None
+
+  def create_result(self, input_evidence):
+    """Generate a TurbiniaTaskResult object.
+
+    Args:
+      input_evidence: Turbinia Evidence object
+
+    Returns:
+      A TurbiniaTaskResult object.
+    """
+    self.result = TurbiniaTaskResult(task_id=self.id, task_name=self.name,
+                                     input_evidence=input_evidence)
+    return self.result
 
   def run(self, *args, **kwargs):
     """Entry point to execute the task."""
     raise NotImplementedError
 
 
+# TODO(aarontp): Remove this?  Is there any use when using PSQ?
 class TurbiniaWorkerStub(object):
   """Server side stub to hold remote worker data."""
 
   def __init__(self, id_=None, hostname=None):
     self.id = id_
     self.hostname = hostname
-    self.creation_time = datetime.now()
+    self.creation_time = datetime.datetime.now()
     self.last_checkin_time = None
     # Data known from last heartbeat (and possibly stale)
     self.in_use = False
@@ -89,7 +123,7 @@ class TurbiniaWorkerStub(object):
       in_use: Boolean indicating whether the worker is in use by a task
       active_job: The id of the active job running in the Worker
     """
-    self.last_checkin_time = datetime.now()
+    self.last_checkin_time = datetime.datetime.now()
     self.in_use = in_use
     self.active_job = active_job
 
