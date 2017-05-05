@@ -72,9 +72,13 @@ if __name__ == '__main__':
   parser_directory.add_argument(
       '-n', '--name', help='Descriptive name of the evidence', required=False)
 
+  # List Jobs
+  parser_listjobs = subparsers.add_parser(
+      'listjobs', help='List all available jobs')
+
   # PSQ Worker
-  parser_plaso = subparsers.add_parser('psqworker', help='Run PSQ worker')
-  parser_plaso.add_argument(
+  parser_psqworker = subparsers.add_parser('psqworker', help='Run PSQ worker')
+  parser_psqworker.add_argument(
       '-S', '--single_threaded', help='Run PSQ Worker in a single thread',
       required=False)
 
@@ -106,6 +110,9 @@ if __name__ == '__main__':
     print u'Starting PSQ listener on queue {0:s}'.format(task_manager_.psq.name)
 
     worker.listen()
+  elif args.command == 'listjobs':
+    print 'Available Jobs:'
+    print '\n'.join(['\t{0:s}'.format(job.name) for job in task_manager_.jobs])
 
   else:
     print 'Command {0:s} not implemented.'.format(args.command)
