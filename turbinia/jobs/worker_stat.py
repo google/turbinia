@@ -11,8 +11,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Job for running a test evidence stat call on the supplied evidence."""
+"""Job for running a stat call on the supplied evidence."""
 
+from turbinia.evidence import Directory
 from turbinia.evidence import RawDisk
 from turbinia.evidence import ReportText
 from turbinia.jobs import TurbiniaJob
@@ -23,7 +24,7 @@ class StatJob(TurbiniaJob):
   """Job to run Stat."""
 
   # The types of evidence that this Job will process
-  evidence_input = [type(RawDisk())]
+  evidence_input = [type(RawDisk()), type(Directory())]
   evidence_output = [type(ReportText())]
 
   def __init__(self):

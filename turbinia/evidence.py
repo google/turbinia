@@ -53,6 +53,11 @@ class Evidence(object):
     return json.dumps(self.__dict__)
 
 
+class Directory(Evidence):
+  """Filesystem directory evidence."""
+  pass
+
+
 class RawDisk(Evidence):
   """Evidence object for Disk based evidence."""
 
