@@ -13,12 +13,11 @@
 # limitations under the License.
 """Job to execute Plaso task."""
 
-import uuid
-
+from turbinia.evidence import GoogleCloudDisk
+from turbinia.evidence import PlasoFile
+from turbinia.evidence import RawDisk
 from turbinia.jobs import TurbiniaJob
 from turbinia.workers.plaso import PlasoTask
-
-from tubinia.evidence import RawDisk, GoogleCloudDisk, PlasoFile
 
 
 class PlasoJob(TurbiniaJob):
@@ -34,7 +33,7 @@ class PlasoJob(TurbiniaJob):
     """Create task for Plaso.
 
     Args:
-      Evidence object to process
+      evidence: List of evidence object to process
 
     Returns:
         A list of PlasoTasks.
