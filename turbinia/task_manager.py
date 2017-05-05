@@ -19,6 +19,7 @@ import time
 import psq
 from google.cloud import datastore
 from google.cloud import pubsub
+from google.gax.errors import GaxError
 
 import turbinia
 from turbinia import evidence
@@ -28,6 +29,11 @@ from turbinia import pubsub as turbinia_pubsub
 
 
 def get_task_manager():
+  """Return task manager object based on config.
+
+  Returns
+    Initialized TaskManager object.
+  """
   config.LoadConfig()
   if config.TASK_MANAGER == 'PSQ':
     return PSQTaskManager()
@@ -58,7 +64,7 @@ class TaskManager(object):
   Handles incoming new Evidence messages and adds new Tasks to the queue.
 
   Attributes:
-    jobs: A list of registered and instantiated job objects
+    jobs: A list of instantiated job objects
     evidence: A list of evidence objects to process
   """
 
@@ -66,10 +72,15 @@ class TaskManager(object):
     self.jobs = []
     self.evidence = []
 
+  def _backend_setup(self):
+    """Sets up backend dependencies."""
+    raise NotImplementedError
+
   def setup(self):
     """Does setup of Task manager and its dependencies."""
     self._backend_setup()
-    self.jobs = jobs.GetJobs()
+    # TODO(aarontp): Consider instantiating a job per evidence object
+    self.jobs = jobs.get_jobs()
 
   def add_evidence(self, evidence_):
     """Adds new evidence and creates tasks to process it.
@@ -84,40 +95,33 @@ class TaskManager(object):
           u'Jobs must be registered before evidence can be added')
     logging.info(u'Adding new evidence: {0:s}'.format(str(evidence_)))
     self.evidence.append(evidence_)
+    job_count = 0
+    # TODO(aarontp): Add some kind of loop detection in here so that jobs can
+    # register for Evidence(), or or other evidence types that may be a super
+    # class of the output of the job itself.  Short term we could potentially
+    # have a run time check for this upon Job instantiation to prevent it.
     for job in self.jobs:
       if [True for t in job.evidence_input if isinstance(evidence_, t)]:
         logging.info(u'Adding {0:s} job to process {1:s}'.format(
             job.name, evidence_.name))
-        # pylint: disable=expression-not-assigned
-        [self.add_task(t) for t in job.create_tasks([evidence_])]
+        job_count += 1
+        for task in job.create_tasks([evidence_]):
+          self.add_task(task, evidence_)
+
+    if not job_count:
+      logging.warning('No Jobs/Tasks were created for Evidence [{0:s}]. '
+                      'Jobs may need to be configured to allow this type of '
+                      'Evidence as input'.format(evidence_.name))
 
   def get_evidence(self):
-    """Checks for new evidence.
+    """Checks for new evidence to process.
 
     Returns:
       A list of Evidence objects
     """
     raise NotImplementedError
 
-  def add_job(self, job):
-    # TODO(aarontp): Insert jobs according to priority
-    self.jobs.append(job)
-
-  def get_job(self, job_id):
-    """Returns an active job instance for a given job id.
-
-    Args:
-      job_id: The id of the job to search for.
-
-    Returns:
-      Job object if job is found, else None.
-    """
-    for job in self.jobs:
-      if self.job.id == job_id:
-        return job
-    return None
-
-  def add_task(self, task=None, evidence_=None):
+  def add_task(self, task, evidence_):
     """Adds a task to be queued along with the evidence it will process.
 
     Args:
@@ -135,6 +139,9 @@ class TaskManager(object):
     raise NotImplementedError
 
   def run(self):
+    """Main run loop for TaskManager."""
+    logging.info('Starting PSQ Task Manager run loop')
+    # TODO(aarontp): Add early exit option.
     while True:
       # pylint: disable=expression-not-assigned
       [self.add_evidence(x) for x in self.get_evidence()]
@@ -148,110 +155,88 @@ class PSQTaskManager(TaskManager):
 
   Attributes:
     psq: PSQ Queue object.
+    psq_task_results: A list of outstanding PSQ task results.
     server_pubsub: A PubSubClient object for receiving new evidence messages.
-    task_results: A list of outstanding PSQ task results.
   """
 
   def __init__(self):
-    self.task_results = []
+    self.psq = None
+    self.psq_task_results = []
+    self.server_pubsub = None
     config.LoadConfig()
     super(PSQTaskManager, self).__init__()
 
   def _backend_setup(self):
-    """Set up backend dependencies."""
     self.server_pubsub = turbinia_pubsub.PubSubClient(config.PUBSUB_TOPIC)
     psq_pubsub_client = pubsub.Client(project=config.PROJECT)
     datastore_client = datastore.Client(project=config.PROJECT)
-    self.psq = psq.Queue(
-        psq_pubsub_client, config.PSQ_TOPIC,
-        storage=psq.DatastoreStorage(datastore_client))
+    try:
+      self.psq = psq.Queue(
+          psq_pubsub_client, config.PSQ_TOPIC,
+          storage=psq.DatastoreStorage(datastore_client))
+    except GaxError as e:
+      msg = 'Error creating PSQ Queue: {0:s}'.format(str(e))
+      logging.error(msg)
+      raise turbinia.TurbiniaException(msg)
 
-  def _complete_task(self, psq_task, task):
-    """Runs final task data recording.
+  def _finalize_result(self, task_result):
+    """Runs final task results recording.
+
+    self.process_tasks handles things that have failed at the PSQ layer, and
+    this function handles tasks that have failed below that layer (i.e.
+    somewhere in our Task code).
 
     Args:
-      psq_task: An instance of the psq_task that ran
-      task: The Turbinia Task object
+      task_result: The TurbiniaTaskResult object
     """
     # TODO(aarontp): Make sure this is set by the task
-    if not task.result.successful:
-      logging.error('Task {0:s} was not succesful'.format(task.name))
+    if not task_result.successful:
+      logging.error(
+          'Task {0:s} was not succesful'.format(task_result.task_name))
     else:
       logging.info('Task {0:s} executed with status {1:d}'.format(
-          task.name, task.result))
+          task_result.task_name, task_result.result))
 
-    # Add output as new evidence to process
-    if not task.output:
-      logging.info('Task {0:s} did not return output'.format(task.name))
-    elif isinstance(task.output, evidence.Evidence):
-      logging.info('Task {0:s} returned non-Evidence output type {1:s}'.format(
-          task.name, type(task.output)))
-    else:
-      self.add_evidence(task.output)
+    if not isinstance(task_result.evidence, list):
+      logging.info(
+          'Task {0:s} did not return list'.format(task_result.task_name))
+      return
+
+    for evidence_ in task_result.evidence:
+      if isinstance(evidence_, evidence.Evidence):
+        logging.info(u'Task {0:s} returned Evidence {1:s}'.format(
+            task_result.task_name, evidence_.name))
+        self.add_evidence(evidence_)
+      else:
+        logging.error(
+            u'Task {0:s} returned non-Evidence output type {1:s}'.format(
+                task_result.task_name, type(task_result.evidence)))
 
   def process_tasks(self):
     completed_tasks = []
-    for result in self.task_results:
-      psq_task = result.get_task()
+    for psq_task_result in self.psq_task_results:
+      psq_task = psq_task_result.get_task()
+      # This handles tasks that have failed at the PSQ layer.
       if not psq_task:
-        logging.debug('Task {0:d} not yet created'.format(result.task_id))
+        logging.debug(
+            'Task {0:s} not yet created'.format(psq_task_result.task_id))
       elif psq_task.status not in (psq.task.FINISHED, psq.task.FAILED):
-        logging.debug('Task {0:d} still running'.format(psq_task.id))
+        logging.debug('Task {0:d} not finished'.format(psq_task.id))
       elif psq_task.status == psq.task.FAILED:
         logging.debug('Task {0:d} failed.'.format(psq_task.id))
         # TODO(aarontp): handle failures
       else:
-        output = result.result()
-        completed_tasks.append(result)
-        self._complete_task(psq_task, output)
+        completed_tasks.append(psq_task_result)
+        self._finalize_result(psq_task_result.result())
 
     # pylint: disable=expression-not-assigned
-    return len([self.task_results.pop(task) for task in completed_tasks])
+    return len([self.psq_task_results.remove(task) for task in completed_tasks])
 
   def get_evidence(self):
     # TODO(aarontp): code goes here.
-    pass
+    return []
 
   def add_task(self, task, evidence_):
-    logging.info('Adding task {0:s} with evidence {1:s} to queue').format(
-        task.name, evidence_.name)
-    self.task_results.append(self.psq.enqueue(task_runner, task, evidence_))
-
-
-class PubSubTaskManager(TaskManager):
-
-  def _process_task_message(self, message):
-    """Process messages relating to task acceptance/update/completion."""
-    # TODO(aarontp): fix
-    if message[u'message_type'] == pubsub.TASKUPDATE:
-      self._complete_task(message[u'job_id'], message[u'task_id'])
-    elif message[u'message_type'] == pubsub.TASKSTART:
-      self._complete_task(message[u'job_id'], message[u'task_id'])
-
-  def add_worker(self, worker):
-    self.worker.append(worker)
-
-  def get_num_active_workers(self):
-    return sum([1 for worker in self.workers if worker.in_use])
-
-  def get_free_worker_count(self):
-    return len(self.workers) - self.get_num_active_workers()
-
-  def get_status(self):
-    report_data = []
-    report_data.append(u'Jobs:')
-    report_data.append(u'\tName:\tActive Task:')
-    for job in self.jobs:
-      report_data.append(
-          u'\t{0:s}\t{1:s}'.format(job.name, job.active_task.name))
-
-    report_data.append(u'Workers:')
-    report_data.append(u'\tId:\tHostname:\tActive Job:')
-    for worker in self.workers:
-      job = self.get_job(worker.active_job)
-      job_name = u'No Active Job' if not job else job.name
-      report_data.append(u'\t{0:s}\t{1:s}\t{2:s}'.format(
-          worker.id, worker.hostname, job_name))
-
-    return '\n'.join(report_data)
-
+    logging.info('Adding PSQ task {0:s} with evidence {1:s} to queue'.format(
+        task.name, evidence_.name))
+    self.psq_task_results.append(self.psq.enqueue(task_runner, task, evidence_))
