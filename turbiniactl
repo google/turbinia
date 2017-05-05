@@ -36,7 +36,10 @@ if __name__ == '__main__':
 
   parser = argparse.ArgumentParser()
   parser.add_argument('-v', '--verbose', action='store_true', help='verbose')
-  parser.add_argument('-d', '--debug', action='store_true', help='debug')
+  # TODO(aarontp): Turn off debug by default later
+  parser.add_argument('-d', '--debug', action='store_true', help='debug',
+                      default=True)
+  parser.add_argument('-o', '--output_dir', help='Directory path for output')
   parser.add_argument(
       '-V', '--version', action='version', version=VERSION,
       help='Show the version')
@@ -44,13 +47,30 @@ if __name__ == '__main__':
   subparsers = parser.add_subparsers(
       dest='command', title='Commands', metavar='<command>')
 
-  # Evidence
-  parser_evidence = subparsers.add_parser('evidence', help='Process Evidence')
-  parser_evidence.add_argument(
-      '-s', '--source', help='Path to source data to process', required=True)
-  parser_evidence.add_argument(
-      '-o', '--output', help='Path to temporary storage (Default: /tmp)',
-      default='/tmp', required=False)
+  # TODO(aarontp): Find better way to specify these that allows for multiple
+  # pieces of evidence to be submitted. Maybe automagically create different
+  # commands based on introspection of evidence objects?
+  # RawDisk
+  parser_rawdisk = subparsers.add_parser(
+      'rawdisk', help='Process RawDisk as Evidence')
+  parser_rawdisk.add_argument(
+      '-l', '--local_path', help='Local path to the evidence', required=True)
+  parser_rawdisk.add_argument(
+      '-s', '--source', help='Description of the source of the evidence',
+      required=False)
+  parser_rawdisk.add_argument(
+      '-n', '--name', help='Descriptive name of the evidence', required=False)
+
+  # Directory
+  parser_directory = subparsers.add_parser(
+      'directory', help='Process a directory as Evidence')
+  parser_directory.add_argument(
+      '-l', '--local_path', help='Local path to the evidence', required=True)
+  parser_directory.add_argument(
+      '-s', '--source', help='Description of the source of the evidence',
+      required=False)
+  parser_directory.add_argument(
+      '-n', '--name', help='Descriptive name of the evidence', required=False)
 
   # PSQ Worker
   parser_plaso = subparsers.add_parser('psqworker', help='Run PSQ worker')
@@ -69,19 +89,16 @@ if __name__ == '__main__':
   task_manager_ = task_manager.get_task_manager()
   task_manager_.setup()
 
-  if args.command == 'evidence':
-    # Manually add evidence object
-    # TODO(aarontp): Fix this up better.  Maybe add different commands per
-    # evidence type?  Or Automagically create different commands based on
-    # introspection of evidence objects?
-    disk = evidence.RawDisk(name='CLI specified test evidence',
-                            local_path=args.source)
-    task_manager_.add_evidence(disk)
-    task_manager_.run()
+  evidence_ = None
+  if args.command == 'rawdisk':
+    args.name = args.name if args.name else args.local_path
+    evidence_ = evidence.RawDisk(name=args.name, local_path=args.local_path,
+                                 source=args.source)
+  if args.command == 'directory':
+    args.name = args.name if args.name else args.local_path
+    evidence_ = evidence.Directory(name=args.name, local_path=args.local_path,
+                                   source=args.source)
   elif args.command == 'psqworker':
-    # Deferring import so that we can add evidence through pubsub without
-    # requiring it later.
-
     if args.single_threaded:
       worker = psq.Worker(queue=task_manager_.psq)
     else:
@@ -92,3 +109,7 @@ if __name__ == '__main__':
 
   else:
     print 'Command {0:s} not implemented.'.format(args.command)
+
+if evidence_:
+    task_manager_.add_evidence(evidence_)
+    task_manager_.run()
