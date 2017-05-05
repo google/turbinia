@@ -113,3 +113,11 @@ class PlasoFile(Evidence):
   def __init__(self, plaso_version=None, *args, **kwargs):
     self.plaso_version = plaso_version
     super(PlasoFile, self).__init__(*args, **kwargs)
+
+
+# TODO(aarontp): Find a way to integrate this into TurbiniaTaskResult instead.
+class ReportText(Evidence):
+  """Text data for general reporting."""
+  def __init__(self, text_data=None, *args, **kwargs):
+    self.text_data = text_data
+    super(ReportText, self).__init__(*args, **kwargs)
