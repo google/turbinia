@@ -15,7 +15,7 @@
 
 # Turbinia Config
 # Valid values are 'PSQ' or 'Celery'
-TASK_MANAGER = 'PSQ'
+TASK_MANAGER = u'PSQ'
 # Time between heartbeats in seconds
 WORKER_HEARTBEAT = 600
 # Timeout between heartbeats for Workers to be considered inactive
@@ -28,7 +28,7 @@ INSTANCE = None
 DEVICE_NAME = None
 SCRATCH_PATH = None
 BUCKET_NAME = None
-PSQ_TOPIC = None
+PSQ_TOPIC = u'turbinia-psq'
 # Topic Turbinia will listen on for new Artifact events
 PUBSUB_TOPIC = None
 
