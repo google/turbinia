@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 #
 # Copyright 2015 Google Inc.
 #
@@ -16,15 +16,27 @@
 """Command line interface for Turbinia."""
 
 import argparse
+import logging
+import sys
 
-from turbinia.jobs.be import BulkExtractorJob
-from turbinia.jobs.plaso import PlasoJob
+try:
+  import psq
+except ImportError:
+  print 'PSQ Module cannot be loaded, please see:'
+  print 'https://github.com/GoogleCloudPlatform/psq'
+  sys.exit(1)
+
+from turbinia import config
+from turbinia import evidence
+from turbinia import task_manager
 from turbinia import VERSION
-from turbinia.turbinia import task_manager
 
 if __name__ == '__main__':
+  config.LoadConfig()
+
   parser = argparse.ArgumentParser()
   parser.add_argument('-v', '--verbose', action='store_true', help='verbose')
+  parser.add_argument('-d', '--debug', action='store_true', help='debug')
   parser.add_argument(
       '-V', '--version', action='version', version=VERSION,
       help='Show the version')
@@ -32,31 +44,51 @@ if __name__ == '__main__':
   subparsers = parser.add_subparsers(
       dest='command', title='Commands', metavar='<command>')
 
-  # Bulk Extractor
-  parser_bulk_extractor = subparsers.add_parser('be', help='Run bulk_extractor')
-  parser_bulk_extractor.add_argument(
+  # Evidence
+  parser_evidence = subparsers.add_parser('evidence', help='Process Evidence')
+  parser_evidence.add_argument(
       '-s', '--source', help='Path to source data to process', required=True)
-  parser_bulk_extractor.add_argument(
+  parser_evidence.add_argument(
       '-o', '--output', help='Path to temporary storage (Default: /tmp)',
       default='/tmp', required=False)
-  parser_bulk_extractor.add_argument(
-      '-n', '--num_tasks', help='Number of tasks to run (Default: 1)',
-      default=1, required=False)
-  parser_bulk_extractor.set_defaults(func=BulkExtractorJob().cli)
 
-  # Plaso
-  parser_plaso = subparsers.add_parser('plaso', help='Run Plaso (log2timeline)')
+  # PSQ Worker
+  parser_plaso = subparsers.add_parser('psqworker', help='Run PSQ worker')
   parser_plaso.add_argument(
-      '-s', '--source', help='Path to source data to process', required=True)
-  parser_plaso.add_argument(
-      '-o', '--output', help='Path to temporary storage (Default: /tmp)',
-      default='/tmp', required=False)
-  parser_plaso.set_defaults(func=PlasoJob().cli)
-
-  # TaskManager
-  task_manager_ = task_manager.get_task_manager()
-  task_manager_.setup()
-  task_manager.run()
+      '-S', '--single_threaded', help='Run PSQ Worker in a single thread',
+      required=False)
 
   args = parser.parse_args()
-  args.func(args)
+  if args.verbose:
+    logging.basicConfig(level=logging.INFO)
+  if args.debug:
+    logging.basicConfig(level=logging.DEBUG)
+
+  # TaskManager
+  # TODO(aarontp): Move some of this to turbinia/__init__.py
+  task_manager_ = task_manager.get_task_manager()
+  task_manager_.setup()
+
+  if args.command == 'evidence':
+    # Manually add evidence object
+    # TODO(aarontp): Fix this up better.  Maybe add different commands per
+    # evidence type?  Or Automagically create different commands based on
+    # introspection of evidence objects?
+    disk = evidence.RawDisk(name='CLI specified test evidence',
+                            local_path=args.source)
+    task_manager_.add_evidence(disk)
+    task_manager_.run()
+  elif args.command == 'psqworker':
+    # Deferring import so that we can add evidence through pubsub without
+    # requiring it later.
+
+    if args.single_threaded:
+      worker = psq.Worker(queue=task_manager_.psq)
+    else:
+      worker = psq.MultiprocessWorker(queue=task_manager_.psq)
+    print u'Starting PSQ listener on queue {0:s}'.format(task_manager_.psq.name)
+
+    worker.listen()
+
+  else:
+    print 'Command {0:s} not implemented.'.format(args.command)
