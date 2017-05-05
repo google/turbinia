@@ -15,9 +15,8 @@
 
 import base64
 import httplib2
-import logging
-
 import json
+import logging
 
 # Google API
 from googleapiclient import discovery
@@ -30,13 +29,13 @@ from turbinia import config
 
 # PubSub Message types
 [
-  # Messages sent to server
-  ARTIFACTNEW,
-  WORKERUPDATE,
-  TASKUPDATE,
-  # Messages sent to workers
-  TASKSTART,
-  TASKSTOP,
+    # Messages sent to server
+    ARTIFACTNEW,
+    WORKERUPDATE,
+    TASKUPDATE,
+    # Messages sent to workers
+    TASKSTART,
+    TASKSTOP,
 ] = xrange(5)
 
 
@@ -152,7 +151,7 @@ class PubSubClient(GoogleCloudClient):
 
         # Acknowledge the message.
         self.client.projects().subscriptions().acknowledge(
-            self.subscription=subscription, body=ack_body).execute()
+            subscription=self.subscription, body=ack_body).execute()
 
     if not self._validate_message(data):
       logging.error('Error processing invalid message: {0:s}'.format(data))
