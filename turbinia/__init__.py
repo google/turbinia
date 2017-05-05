@@ -17,11 +17,10 @@ import logging
 import os
 import sys
 
-from celery import Celery
-
 from turbinia import config
 
-VERSION = '20150916'
+VERSION = '20170501'
+
 
 class TurbiniaException(Exception):
   pass
@@ -32,22 +31,3 @@ except config.TurbiniaConfigException as e:
   # pylint: disable=logging-format-interpolation
   logging.fatal('Could not load Turbinia config: {0:s}'.format(str(e)))
   sys.exit(1)
-
-app = Celery(
-    'turbinia',
-    broker='redis://{0}:{1}/0'.format(config.REDIS_HOST, config.REDIS_PORT),
-    backend='redis://{0}:{1}/0'.format(config.REDIS_HOST, config.REDIS_PORT),
-    include=['turbinia.workers.be', 'turbinia.workers.plaso'])
-
-app.conf.CELERY_ROUTES = {
-    'turbinia.workers.be.BulkExtractorCalcOffsetsTask': {'queue': 'be-worker'},
-    'turbinia.workers.be.BulkExtractorReducerTask': {'queue': 'be-worker'},
-    'turbinia.workers.be.BulkExtractorTask': {'queue': 'be-worker'},
-    'turbinia.workers.plaso.PlasoTask': {'queue': 'plaso-worker'}
-}
-app.conf.CELERY_ACCEPT_CONTENT = ['json']
-app.conf.CELERY_TASK_SERIALIZER = 'json'
-app.conf.CELERY_RESULT_SERIALIZER = 'json'
-
-if __name__ == '__main__':
-  app.start()
