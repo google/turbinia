@@ -19,6 +19,8 @@ import sys
 
 from turbinia import config
 
+log = logging.getLogger('turbinia')
+
 VERSION = '20170501'
 
 
@@ -29,5 +31,5 @@ try:
   config.LoadConfig()
 except config.TurbiniaConfigException as e:
   # pylint: disable=logging-format-interpolation
-  logging.fatal('Could not load Turbinia config: {0:s}'.format(str(e)))
+  log.fatal('Could not load Turbinia config: {0:s}'.format(str(e)))
   sys.exit(1)

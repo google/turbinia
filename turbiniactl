@@ -27,13 +27,16 @@ except ImportError:
   sys.exit(1)
 
 from turbinia import config
+from turbinia.config import logger
 from turbinia import evidence
 from turbinia import task_manager
 from turbinia import VERSION
 
-if __name__ == '__main__':
-  config.LoadConfig()
+log = logging.getLogger('turbinia')
+logger.setup()
 
+
+if __name__ == '__main__':
   parser = argparse.ArgumentParser()
   parser.add_argument('-v', '--verbose', action='store_true', help='verbose')
   # TODO(aarontp): Turn off debug by default later
@@ -84,12 +87,15 @@ if __name__ == '__main__':
 
   args = parser.parse_args()
   if args.verbose:
-    logging.basicConfig(level=logging.INFO)
-  if args.debug:
-    logging.basicConfig(level=logging.DEBUG)
+    log.setLevel(logging.INFO)
+  elif args.debug:
+    log.setLevel(logging.DEBUG)
+  else:
+    log.setLevel(logging.WARNING)
 
   # TaskManager
   # TODO(aarontp): Move some of this to turbinia/__init__.py
+  config.LoadConfig()
   task_manager_ = task_manager.get_task_manager()
   task_manager_.setup()
 
@@ -98,22 +104,24 @@ if __name__ == '__main__':
     args.name = args.name if args.name else args.local_path
     evidence_ = evidence.RawDisk(name=args.name, local_path=args.local_path,
                                  source=args.source)
-  if args.command == 'directory':
+  elif args.command == 'directory':
     args.name = args.name if args.name else args.local_path
     evidence_ = evidence.Directory(name=args.name, local_path=args.local_path,
                                    source=args.source)
   elif args.command == 'psqworker':
+    # Set up root logger level which is normally set by the psqworker command
+    # which we are bypassing.
+    logger.setup(root=True)
     if args.single_threaded:
       worker = psq.Worker(queue=task_manager_.psq)
     else:
       worker = psq.MultiprocessWorker(queue=task_manager_.psq)
-    print u'Starting PSQ listener on queue {0:s}'.format(task_manager_.psq.name)
-
+    log.info(u'Starting PSQ listener on queue {0:s}'.format(
+        task_manager_.psq.name))
     worker.listen()
   elif args.command == 'listjobs':
     print 'Available Jobs:'
     print '\n'.join(['\t{0:s}'.format(job.name) for job in task_manager_.jobs])
-
   else:
     print 'Command {0:s} not implemented.'.format(args.command)
 

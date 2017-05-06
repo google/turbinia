@@ -27,6 +27,8 @@ from oauth2client import client as oauth2client
 # Turbinia
 from turbinia import config
 
+log = logging.getLogger('turbinia')
+
 # PubSub Message types
 [
     # Messages sent to server
@@ -51,7 +53,7 @@ class GoogleCloudClient(object):
     Returns:
         A client object for interacting with the cloud service.
     """
-    logging.info(u'Creating API client for service: {0:s}'.format(self.service))
+    log.info(u'Creating API client for service: {0:s}'.format(self.service))
     credentials = oauth2client.GoogleCredentials.get_application_default()
     http = httplib2.Http()
     credentials.authorize(http)
@@ -103,12 +105,12 @@ class PubSubClient(GoogleCloudClient):
     }
 
     if not message.has_key(u'message_type'):
-      logging.error(u'Message has no message_type: {0:s}'.format(str(message)))
+      log.error(u'Message has no message_type: {0:s}'.format(str(message)))
       return False
 
     for field in required_fields.get(message[u'message_type'], []):
       if not message.has_key(field):
-        logging.error(u'Message type {0:s} must have field {1:s}: {2:s}'.format(
+        log.error(u'Message type {0:s} must have field {1:s}: {2:s}'.format(
             message.get(u'message_type'), field, str(message)))
         return False
 
@@ -134,14 +136,14 @@ class PubSubClient(GoogleCloudClient):
       received_message = received_messages[0]
       pubsub_message = received_message.get(u'message')
       if pubsub_message:
-        logging.info(u'PubSub message received')
+        log.info(u'PubSub message received')
         # Process messages
         data = base64.b64decode(str(pubsub_message.get(u'data')))
         try:
           data = json.loads(data)
-          logging.info(u'Message body: {0:s}'.format(data))
+          log.info(u'Message body: {0:s}'.format(data))
         except (ValueError, KeyError) as e:
-          logging.error(u'Error processing message: {0:s}'.format(e))
+          log.error(u'Error processing message: {0:s}'.format(e))
 
         # Get the message's ack ID
         ack_ids.append(received_message.get(u'ackId'))
@@ -154,7 +156,7 @@ class PubSubClient(GoogleCloudClient):
             subscription=self.subscription, body=ack_body).execute()
 
     if not self._validate_message(data):
-      logging.error('Error processing invalid message: {0:s}'.format(data))
+      log.error('Error processing invalid message: {0:s}'.format(data))
 
     return data
 
