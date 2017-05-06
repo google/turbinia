@@ -45,5 +45,6 @@ class StatTask(TurbiniaTask):
     report = ReportText()
     report.text_data = str(os.stat(evidence.local_path))
     result.add_evidence(report)
+    result.close(success=True)
 
     return result

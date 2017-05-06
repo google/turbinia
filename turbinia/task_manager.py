@@ -27,6 +27,7 @@ from turbinia import config
 from turbinia import jobs
 from turbinia import pubsub as turbinia_pubsub
 
+log = logging.getLogger('turbinia')
 
 def get_task_manager():
   """Return task manager object based on config.
@@ -93,7 +94,7 @@ class TaskManager(object):
     if not self.jobs:
       raise turbinia.TurbiniaException(
           u'Jobs must be registered before evidence can be added')
-    logging.info(u'Adding new evidence: {0:s}'.format(str(evidence_)))
+    log.info(u'Adding new evidence: {0:s}'.format(str(evidence_)))
     self.evidence.append(evidence_)
     job_count = 0
     # TODO(aarontp): Add some kind of loop detection in here so that jobs can
@@ -102,16 +103,16 @@ class TaskManager(object):
     # have a run time check for this upon Job instantiation to prevent it.
     for job in self.jobs:
       if [True for t in job.evidence_input if isinstance(evidence_, t)]:
-        logging.info(u'Adding {0:s} job to process {1:s}'.format(
+        log.info(u'Adding {0:s} job to process {1:s}'.format(
             job.name, evidence_.name))
         job_count += 1
         for task in job.create_tasks([evidence_]):
           self.add_task(task, evidence_)
 
     if not job_count:
-      logging.warning('No Jobs/Tasks were created for Evidence [{0:s}]. '
-                      'Jobs may need to be configured to allow this type of '
-                      'Evidence as input'.format(evidence_.name))
+      log.warning('No Jobs/Tasks were created for Evidence [{0:s}]. '
+                  'Jobs may need to be configured to allow this type of '
+                  'Evidence as input'.format(evidence_.name))
 
   def get_evidence(self):
     """Checks for new evidence to process.
@@ -140,14 +141,14 @@ class TaskManager(object):
 
   def run(self):
     """Main run loop for TaskManager."""
-    logging.info('Starting PSQ Task Manager run loop')
+    log.info('Starting PSQ Task Manager run loop')
     # TODO(aarontp): Add early exit option.
     while True:
       # pylint: disable=expression-not-assigned
       [self.add_evidence(x) for x in self.get_evidence()]
       self.process_tasks()
       # TODO(aarontp): Add config var for this.
-      time.sleep(30)
+      time.sleep(10)
 
 
 class PSQTaskManager(TaskManager):
@@ -167,6 +168,9 @@ class PSQTaskManager(TaskManager):
     super(PSQTaskManager, self).__init__()
 
   def _backend_setup(self):
+    log.debug(
+        'Setting up PSQ Task Manager requirements on project {0:s}'.format(
+            config.PROJECT))
     self.server_pubsub = turbinia_pubsub.PubSubClient(config.PUBSUB_TOPIC)
     psq_pubsub_client = pubsub.Client(project=config.PROJECT)
     datastore_client = datastore.Client(project=config.PROJECT)
@@ -176,7 +180,7 @@ class PSQTaskManager(TaskManager):
           storage=psq.DatastoreStorage(datastore_client))
     except GaxError as e:
       msg = 'Error creating PSQ Queue: {0:s}'.format(str(e))
-      logging.error(msg)
+      log.error(msg)
       raise turbinia.TurbiniaException(msg)
 
   def _finalize_result(self, task_result):
@@ -191,24 +195,24 @@ class PSQTaskManager(TaskManager):
     """
     # TODO(aarontp): Make sure this is set by the task
     if not task_result.successful:
-      logging.error(
-          'Task {0:s} was not succesful'.format(task_result.task_name))
+      log.error(
+          'Task {0:s} was not successful'.format(task_result.task_name))
     else:
-      logging.info('Task {0:s} executed with status {1:d}'.format(
-          task_result.task_name, task_result.result))
+      log.info('Task {0:s} executed with status [{1:s}]'.format(
+          task_result.task_name, task_result.status))
 
     if not isinstance(task_result.evidence, list):
-      logging.info(
+      log.info(
           'Task {0:s} did not return list'.format(task_result.task_name))
       return
 
     for evidence_ in task_result.evidence:
       if isinstance(evidence_, evidence.Evidence):
-        logging.info(u'Task {0:s} returned Evidence {1:s}'.format(
+        log.info(u'Task {0:s} returned Evidence {1:s}'.format(
             task_result.task_name, evidence_.name))
         self.add_evidence(evidence_)
       else:
-        logging.error(
+        log.error(
             u'Task {0:s} returned non-Evidence output type {1:s}'.format(
                 task_result.task_name, type(task_result.evidence)))
 
@@ -218,12 +222,12 @@ class PSQTaskManager(TaskManager):
       psq_task = psq_task_result.get_task()
       # This handles tasks that have failed at the PSQ layer.
       if not psq_task:
-        logging.debug(
+        log.debug(
             'Task {0:s} not yet created'.format(psq_task_result.task_id))
       elif psq_task.status not in (psq.task.FINISHED, psq.task.FAILED):
-        logging.debug('Task {0:d} not finished'.format(psq_task.id))
+        log.debug('Task {0:d} not finished'.format(psq_task.id))
       elif psq_task.status == psq.task.FAILED:
-        logging.debug('Task {0:d} failed.'.format(psq_task.id))
+        log.debug('Task {0:d} failed.'.format(psq_task.id))
         # TODO(aarontp): handle failures
       else:
         completed_tasks.append(psq_task_result)
@@ -237,6 +241,6 @@ class PSQTaskManager(TaskManager):
     return []
 
   def add_task(self, task, evidence_):
-    logging.info('Adding PSQ task {0:s} with evidence {1:s} to queue'.format(
+    log.info('Adding PSQ task {0:s} with evidence {1:s} to queue'.format(
         task.name, evidence_.name))
     self.psq_task_results.append(self.psq.enqueue(task_runner, task, evidence_))
