@@ -13,7 +13,7 @@
 # limitations under the License.
 """Turbinia task."""
 
-import datetime
+from datetime import datetime
 import json
 import uuid
 
@@ -29,6 +29,7 @@ class TurbiniaTaskResult(object):
         start_time: Datetime object of when the task was started
         run_time: Length of time the task ran for.
         successful: Bool indicating success status.
+        status: A one line descriptive task status.
         error: Dict of error data ('error' and 'traceback' are some valid keys)
         _log: A list of log messages
   """
@@ -42,12 +43,26 @@ class TurbiniaTaskResult(object):
     self.task_id = task_id
     self.task_name = task_name
 
-    self.start_time = datetime.datetime.now()
+    self.start_time = datetime.now()
     self.run_time = None
     self.successful = None
+    self.status = None
     self.error = {}
     # TODO(aarontp): Create mechanism to grab actual python logging data.
     self._log = []
+
+  def close(self, success, status=None):
+    """Handles closing of this result.
+
+    Args:
+      success: Bool indicating task success
+      status: One line descriptive task status.
+    """
+    self.successful = success
+    self.run_time = datetime.now() - self.start_time
+    if not status:
+      status = u'Completed successfully in {0:s}'.format(str(self.run_time))
+    self.status = status
 
   def log(self, log_msg):
     """Add a log message to the result object.
@@ -109,7 +124,7 @@ class TurbiniaWorkerStub(object):
   def __init__(self, id_=None, hostname=None):
     self.id = id_
     self.hostname = hostname
-    self.creation_time = datetime.datetime.now()
+    self.creation_time = datetime.now()
     self.last_checkin_time = None
     # Data known from last heartbeat (and possibly stale)
     self.in_use = False
@@ -123,7 +138,7 @@ class TurbiniaWorkerStub(object):
       in_use: Boolean indicating whether the worker is in use by a task
       active_job: The id of the active job running in the Worker
     """
-    self.last_checkin_time = datetime.datetime.now()
+    self.last_checkin_time = datetime.now()
     self.in_use = in_use
     self.active_job = active_job
 
