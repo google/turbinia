@@ -35,7 +35,7 @@ class Evidence(object):
       local_path: A string of the local_path to the evidence.
       tags: dict of extra tags assocated with this evidence.
     """
-    self.name = name
+    self.name = name if name else self.__class__.__name__
     self.local_path = local_path
     self.source = source
     self.description = description
@@ -43,10 +43,9 @@ class Evidence(object):
 
     # List of jobs that have processed this evidence
     self.processed_by = []
-    self.type = self.__class__.__name__
 
   def __str__(self):
-    return u'{0:s} {1:s}'.format(self.type, self.name)
+    return u'{0:s}'.format(self.name)
 
   def to_json(self):
     """Convert object to JSON."""
