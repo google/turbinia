@@ -14,7 +14,9 @@
 """Task manager for Turbinia."""
 
 import logging
+import sys
 import time
+import traceback
 
 import psq
 from google.cloud import datastore
@@ -54,9 +56,20 @@ def task_runner(obj, *args, **kwargs):
 
   Returns:
     Output from TurbiniaTask (should be TurbiniaTaskReslt).
+
+  Raises:
+    Re-raises exceptions that are thrown from the task.
   """
   # TODO(aarontp): Add proper error checks/handling
-  return obj.run(*args, **kwargs)
+  res = None
+  try:
+    res = obj.run(*args, **kwargs)
+  except Exception as e:
+    logging.warning(u'Exception thrown from Task: {0:s}'.format(
+        traceback.format_exc()))
+    raise e
+
+  return res
 
 
 class TaskManager(object):
@@ -107,6 +120,7 @@ class TaskManager(object):
             job.name, evidence_.name))
         job_count += 1
         for task in job.create_tasks([evidence_]):
+          task.base_output_dir = config.OUTPUT_DIR
           self.add_task(task, evidence_)
 
     if not job_count:
@@ -225,10 +239,10 @@ class PSQTaskManager(TaskManager):
         log.debug(
             'Task {0:s} not yet created'.format(psq_task_result.task_id))
       elif psq_task.status not in (psq.task.FINISHED, psq.task.FAILED):
-        log.debug('Task {0:d} not finished'.format(psq_task.id))
+        log.debug('Task {0:s} not finished'.format(psq_task.id))
       elif psq_task.status == psq.task.FAILED:
-        log.debug('Task {0:d} failed.'.format(psq_task.id))
-        # TODO(aarontp): handle failures
+        log.warning('Task {0:s} failed.'.format(psq_task.id))
+        completed_tasks.append(psq_task_result)
       else:
         completed_tasks.append(psq_task_result)
         self._finalize_result(psq_task_result.result())
