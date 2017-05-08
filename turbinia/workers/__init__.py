@@ -14,34 +14,40 @@
 """Turbinia task."""
 
 from datetime import datetime
+import errno
 import json
+import logging
+import os
+import time
 import uuid
 
+from turbinia import TurbiniaException
 
 class TurbiniaTaskResult(object):
   """Object to store task results to be returned by a TurbiniaTask.
 
   Attributes:
+        error: Dict of error data ('error' and 'traceback' are some valid keys)
         evidence: List of newly created Evidence objects.
         input_evidence: The evidence this task processed.
+        run_time: Length of time the task ran for.
+        start_time: Datetime object of when the task was started
+        status: A one line descriptive task status.
+        successful: Bool indicating success status.
         task_id: Task ID of the parent task.
         task_name: Name of parent task.
-        start_time: Datetime object of when the task was started
-        run_time: Length of time the task ran for.
-        successful: Bool indicating success status.
-        status: A one line descriptive task status.
-        error: Dict of error data ('error' and 'traceback' are some valid keys)
         _log: A list of log messages
   """
 
   def __init__(self, evidence=None, input_evidence=None, task_id=None,
-               task_name=None):
+               task_name=None, output_dir=None):
     """Initialize the TurbiniaTaskResult object."""
 
     self.evidence = evidence if evidence else []
     self.input_evidence = input_evidence if input_evidence else []
     self.task_id = task_id
     self.task_name = task_name
+    self.output_dir = output_dir
 
     self.start_time = datetime.now()
     self.run_time = None
@@ -52,7 +58,7 @@ class TurbiniaTaskResult(object):
     self._log = []
 
   def close(self, success, status=None):
-    """Handles closing of this result.
+    """Handles closing of this result and writing logs.
 
     Args:
       success: Bool indicating task success
@@ -62,6 +68,10 @@ class TurbiniaTaskResult(object):
     self.run_time = datetime.now() - self.start_time
     if not status:
       status = u'Completed successfully in {0:s}'.format(str(self.run_time))
+    if self.output_dir and os.path.exists(self.output_dir):
+      logfile = os.path.join(self.output_dir, u'log.txt')
+      with open(logfile, 'w') as f:
+        f.write('\n'.join(self._log))
     self.status = status
 
   def log(self, log_msg):
@@ -94,23 +104,52 @@ class TurbiniaTaskResult(object):
 class TurbiniaTask(object):
   """Base class for Turbinia tasks."""
 
-  def __init__(self, name=None):
+  def __init__(self, name=None, base_output_dir=None):
     self.id = uuid.uuid4().hex
-    self.name = name
+    self.name = name if name else self.__class__.__name__
+    self.base_output_dir = base_output_dir
+    self.output_dir = None
     self.result = None
 
-  def create_result(self, input_evidence):
-    """Generate a TurbiniaTaskResult object.
-
-    Args:
-      input_evidence: Turbinia Evidence object
+  def setup(self, evidence):
+    """Perform common setup operations when task starts up.
 
     Returns:
-      A TurbiniaTaskResult object.
+      A TurbiniaTaskResult().
     """
+    self.get_output_dir()
     self.result = TurbiniaTaskResult(task_id=self.id, task_name=self.name,
-                                     input_evidence=input_evidence)
+                                     input_evidence=evidence,
+                                     output_dir=self.output_dir)
     return self.result
+
+  def get_output_dir(self):
+    """Generates a unique output path for this task and creates directories.
+
+    Needs to be run at runtime so that the task creates the directory locally.
+
+    Returns:
+      A local output path string.
+    """
+    epoch = str(int(time.time()))
+    logging.info('%s %s %s' % (epoch, str(self.id), self.name))
+    dir_name = u'{0:s}-{1:s}-{2:s}'.format(epoch, str(self.id), self.name)
+    new_dir = os.path.join(self.base_output_dir, dir_name)
+    self.output_dir = new_dir
+    if not os.path.exists(new_dir):
+      try:
+        logging.info('Creating new directory {0:s}'.format(new_dir))
+        os.makedirs(new_dir)
+        if self.result:
+          self.result.log('Created output directory {0:s}'.format(new_dir))
+      except OSError as e:
+        if e.errno == errno.EACCESS:
+          msg = u'Permission error ({0:s})'.format(str(e))
+        else:
+          msg = str(e)
+        raise TurbiniaException(msg)
+
+    return new_dir
 
   def run(self, *args, **kwargs):
     """Entry point to execute the task."""

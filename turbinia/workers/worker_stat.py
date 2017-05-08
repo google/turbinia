@@ -36,14 +36,19 @@ class StatTask(TurbiniaTask):
     Returns:
         TurbiniaTaskResult object.
     """
-    result = self.create_result(input_evidence=evidence)
+    result = self.setup(evidence)
+
     if not os.path.exists(evidence.local_path):
       result.log('Evidence local path {0:s} does not exist'.format(
           evidence.local_path))
       return result
 
     report = ReportText()
+    result.log('Running stat on evidence {0:s}'.format(evidence.local_path))
     report.text_data = str(os.stat(evidence.local_path))
+    with open(os.path.join(self.output_dir, 'report.txt'), 'w') as f:
+      f.write(report.text_data)
+
     result.add_evidence(report)
     result.close(success=True)
 
