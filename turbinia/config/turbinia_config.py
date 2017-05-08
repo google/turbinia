@@ -20,6 +20,10 @@ TASK_MANAGER = u'PSQ'
 WORKER_HEARTBEAT = 600
 # Timeout between heartbeats for Workers to be considered inactive
 WORKER_TIMEOUT = 3600
+# File to log to
+LOG_FILE = None
+# Default output directory
+OUTPUT_DIR = None
 
 # GCE configuration
 PROJECT = None

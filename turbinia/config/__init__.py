@@ -33,6 +33,7 @@ CONFIGVARS = [
     'WORKER_HEARTBEAT',
     'WORKER_TIMEOUT',
     'LOG_FILE',
+    'OUTPUT_DIR',
     # GCE CONFIG
     'PROJECT',
     'ZONE',
