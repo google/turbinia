@@ -33,20 +33,23 @@ def get_jobs():
   from turbinia.jobs.be import BulkExtractorJob
   from turbinia.jobs.plaso import PlasoJob
   from turbinia.jobs.worker_stat import StatJob
-  # TODO(aarontp): Dynamically look up job objects
-  # return [PlasoJob()]
+  # TODO(aarontp): Dynamically look up job objects and make enabling/disabling
+  #                configurable through config and/or recipes.
   return [StatJob()]
 
 
 class TurbiniaJob(object):
-  """Base class for Turbinia Jobs."""
+  """Base class for Turbinia Jobs.
 
-  def __init__(self, name=None, output_path=None):
+  Attributes:
+    name: Name of Job
+    id: Id of job
+    priority: Job priority from 0-100, lowest == highest priority
+  """
+
+  def __init__(self, name=None):
     self.name = name
-    self.output_path = output_path
     self.id = uuid.uuid4().hex
-
-    # Job priority from 0-100, lowest == highest priority
     self.priority = 100
 
   def create_tasks(self, evidence_):
@@ -59,24 +62,3 @@ class TurbiniaJob(object):
       A List of TurbiniaTask objects.
     """
     raise NotImplementedError
-
-
-class TurbiniaJobResult(object):
-  """Class to hold a Turbinia job results."""
-
-  def __init__(self, task_results=None):
-    """Initialize the TurbiniaJobResult class.
-
-    Args:
-        task_results: List of task execution results.
-    """
-    self.results = task_results if task_results else []
-
-  def add_result(self, result):
-    """Add task result.
-
-    Args:
-      result: TurbiniaTaskResult to add.
-    """
-    self.results.append(result)
-
