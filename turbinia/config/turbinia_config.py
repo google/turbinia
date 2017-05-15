@@ -16,10 +16,6 @@
 # Turbinia Config
 # Valid values are 'PSQ' or 'Celery'
 TASK_MANAGER = u'PSQ'
-# Time between heartbeats in seconds
-WORKER_HEARTBEAT = 600
-# Timeout between heartbeats for Workers to be considered inactive
-WORKER_TIMEOUT = 3600
 # File to log to
 LOG_FILE = None
 # Default output directory

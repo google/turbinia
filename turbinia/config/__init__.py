@@ -30,8 +30,6 @@ CONFIGPATH = [os.path.expanduser('~'),
 CONFIGVARS = [
     # Turbinia Config
     'TASK_MANAGER',
-    'WORKER_HEARTBEAT',
-    'WORKER_TIMEOUT',
     'LOG_FILE',
     'OUTPUT_DIR',
     # GCE CONFIG
