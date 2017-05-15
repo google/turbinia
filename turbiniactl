@@ -38,6 +38,10 @@ logger.setup()
 
 
 if __name__ == '__main__':
+  # TODO(aarontp): Add 'startserver' command
+  # TODO(aarontp): Allow for single run mode when specifying evidence
+  #                which will also terminate the task manager after evidence has
+  #                been processed.
   parser = argparse.ArgumentParser()
   parser.add_argument('-v', '--verbose', action='store_true', help='verbose')
   # TODO(aarontp): Turn off debug by default later
