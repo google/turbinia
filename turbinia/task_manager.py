@@ -14,7 +14,6 @@
 """Task manager for Turbinia."""
 
 import logging
-import sys
 import time
 import traceback
 
@@ -31,6 +30,7 @@ from turbinia import pubsub as turbinia_pubsub
 
 log = logging.getLogger('turbinia')
 
+
 def get_task_manager():
   """Return task manager object based on config.
 
@@ -38,7 +38,7 @@ def get_task_manager():
     Initialized TaskManager object.
   """
   config.LoadConfig()
-  if config.TASK_MANAGER == 'PSQ':
+  if config.TASK_MANAGER == u'PSQ':
     return PSQTaskManager()
   else:
     msg = u'Task Manager type "{0:s}" not implemented'.format(
@@ -77,7 +77,8 @@ def task_runner(obj, *args, **kwargs):
 class TaskManager(object):
   """Class to manage Turbinia Tasks.
 
-  Handles incoming new Evidence messages and adds new Tasks to the queue.
+  Handles incoming new Evidence messages, adds new Tasks to the queue and
+  processes results from Tasks that have run.
 
   Attributes:
     jobs: A list of instantiated job objects
@@ -89,7 +90,11 @@ class TaskManager(object):
     self.evidence = []
 
   def _backend_setup(self):
-    """Sets up backend dependencies."""
+    """Sets up backend dependencies.
+
+    Raises:
+      TurbiniaException: When encountering fatal errors setting up dependencies.
+    """
     raise NotImplementedError
 
   def setup(self):
@@ -105,6 +110,9 @@ class TaskManager(object):
 
     Args:
       evidence_: evidence object to add.
+
+    Raises:
+      TurbiniaException: When no Jobs are found.
     """
     if not self.jobs:
       raise turbinia.TurbiniaException(
@@ -126,7 +134,7 @@ class TaskManager(object):
           self.add_task(task, evidence_)
 
     if not job_count:
-      log.warning('No Jobs/Tasks were created for Evidence [{0:s}]. '
+      log.warning(u'No Jobs/Tasks were created for Evidence [{0:s}]. '
                   'Jobs may need to be configured to allow this type of '
                   'Evidence as input'.format(evidence_.name))
 
@@ -157,7 +165,7 @@ class TaskManager(object):
 
   def run(self):
     """Main run loop for TaskManager."""
-    log.info('Starting PSQ Task Manager run loop')
+    log.info(u'Starting PSQ Task Manager run loop')
     # TODO(aarontp): Add early exit option.
     while True:
       # pylint: disable=expression-not-assigned
@@ -185,7 +193,7 @@ class PSQTaskManager(TaskManager):
 
   def _backend_setup(self):
     log.debug(
-        'Setting up PSQ Task Manager requirements on project {0:s}'.format(
+        u'Setting up PSQ Task Manager requirements on project {0:s}'.format(
             config.PROJECT))
     self.server_pubsub = turbinia_pubsub.PubSubClient(config.PUBSUB_TOPIC)
     psq_pubsub_client = pubsub.Client(project=config.PROJECT)
@@ -195,7 +203,7 @@ class PSQTaskManager(TaskManager):
           psq_pubsub_client, config.PSQ_TOPIC,
           storage=psq.DatastoreStorage(datastore_client))
     except GaxError as e:
-      msg = 'Error creating PSQ Queue: {0:s}'.format(str(e))
+      msg = u'Error creating PSQ Queue: {0:s}'.format(str(e))
       log.error(msg)
       raise turbinia.TurbiniaException(msg)
 
@@ -209,17 +217,17 @@ class PSQTaskManager(TaskManager):
     Args:
       task_result: The TurbiniaTaskResult object
     """
-    # TODO(aarontp): Make sure this is set by the task
     if not task_result.successful:
       log.error(
-          'Task {0:s} was not successful'.format(task_result.task_name))
+          u'Task {0:s} was not successful'.format(task_result.task_name))
     else:
-      log.info('Task {0:s} executed with status [{1:s}]'.format(
+      log.info(u'Task {0:s} executed with status [{1:s}]'.format(
           task_result.task_name, task_result.status))
 
     if not isinstance(task_result.evidence, list):
       log.info(
-          'Task {0:s} did not return list'.format(task_result.task_name))
+          u'Task {0:s} did not return evidence list'.format(
+              task_result.task_name))
       return
 
     for evidence_ in task_result.evidence:
@@ -253,7 +261,7 @@ class PSQTaskManager(TaskManager):
     return len([self.psq_task_results.remove(task) for task in completed_tasks])
 
   def get_evidence(self):
-    # TODO(aarontp): code goes here.
+    # TODO(aarontp): Code to check for new PubSub messages goes here.
     return []
 
   def add_task(self, task, evidence_):
