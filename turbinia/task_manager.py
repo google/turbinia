@@ -65,6 +65,8 @@ def task_runner(obj, *args, **kwargs):
   try:
     res = obj.run(*args, **kwargs)
   except Exception as e:
+    # TODO(aarontp): Create synthetic TurbiniaTaskResult upon failure to
+    # propogate errors to the Task Manager
     logging.warning(u'Exception thrown from Task: {0:s}'.format(
         traceback.format_exc()))
     raise e

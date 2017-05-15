@@ -112,24 +112,38 @@ class TurbiniaTask(object):
     self.result = None
 
   def setup(self, evidence):
-    """Perform common setup operations when task starts up.
+    """Perform common setup operations and runtime environment.
+
+    Even though TurbiniaTasks are initially instantiated by the Jobs under the
+    Task Manager, this setup method needs to be run from the task on the worker
+    because it handles setting up the task runtime environment.
 
     Returns:
-      A TurbiniaTaskResult().
+      A TurbiniaTaskResult object.
+
+    Raises:
+      TurbiniaException: If the evidence can not be found.
     """
-    self.get_output_dir()
+    self.create_output_dir()
     self.result = TurbiniaTaskResult(task_id=self.id, task_name=self.name,
                                      input_evidence=evidence,
                                      output_dir=self.output_dir)
+    if evidence.local_path and not os.path.exists(evidence.local_path):
+      raise TurbiniaException(
+          'Evidence local path {0:s} does not exist'.format(
+              evidence.local_path))
     return self.result
 
-  def get_output_dir(self):
+  def create_output_dir(self):
     """Generates a unique output path for this task and creates directories.
 
     Needs to be run at runtime so that the task creates the directory locally.
 
     Returns:
       A local output path string.
+
+    Raises:
+      TurbiniaException: If there are failures creating the directory.
     """
     epoch = str(int(time.time()))
     logging.info('%s %s %s' % (epoch, str(self.id), self.name))
@@ -151,8 +165,15 @@ class TurbiniaTask(object):
 
     return new_dir
 
-  def run(self, *args, **kwargs):
-    """Entry point to execute the task."""
+  def run(self, evidence):
+    """Entry point to execute the task.
+
+    Args:
+      evidence: Evidence object.
+
+    Returns:
+        TurbiniaTaskResult object.
+    """
     raise NotImplementedError
 
 
