@@ -18,7 +18,17 @@ import logging
 from turbinia import config
 
 def setup(root=False):
-  """Set up logging parameters."""
+  """Set up logging parameters.
+
+  By default this will not set the root logger, which is the default logger when
+  a named logger is not specified.  We currently use 'turbinia' as the named
+  logger, however some external modules that are called by Turbinia can use the
+  root logger, so we want to be able to optionally configure that as well.
+
+  Args:
+    root: Boolean indicating whether root logger should also be configured.
+  """
+  # TODO(aarontp): Add a config option to set the log level
   config.LoadConfig()
   log = logging.getLogger('turbinia')
 
