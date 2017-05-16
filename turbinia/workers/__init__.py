@@ -175,30 +175,3 @@ class TurbiniaTask(object):
         TurbiniaTaskResult object.
     """
     raise NotImplementedError
-
-
-# TODO(aarontp): Remove this?  Is there any use when using PSQ?
-class TurbiniaWorkerStub(object):
-  """Server side stub to hold remote worker data."""
-
-  def __init__(self, id_=None, hostname=None):
-    self.id = id_
-    self.hostname = hostname
-    self.creation_time = datetime.now()
-    self.last_checkin_time = None
-    # Data known from last heartbeat (and possibly stale)
-    self.in_use = False
-    # Id of the active job (or None if no active job)
-    self.active_job = None
-
-  def update_worker(self, in_use, active_job):
-    """Updates the worker data from heartbeat data.
-
-    Args:
-      in_use: Boolean indicating whether the worker is in use by a task
-      active_job: The id of the active job running in the Worker
-    """
-    self.last_checkin_time = datetime.now()
-    self.in_use = in_use
-    self.active_job = active_job
-
