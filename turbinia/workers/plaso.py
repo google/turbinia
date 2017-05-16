@@ -13,34 +13,55 @@
 # limitations under the License.
 """Task for running Plaso."""
 
-import json
 import os
 import subprocess
 
 from turbinia.workers import TurbiniaTask
-from turbinia.workers import TurbiniaTaskResult
+from turbinia.evidence import PlasoFile
 
 
 class PlasoTask(TurbiniaTask):
   """Task to run Plaso (log2timeline)."""
 
-  def run(self, evidence, out_path, job_id, **kwargs):
+  def run(self, evidence):
     """Task that process data with Plaso.
 
     Args:
         evidence: Path to data to process.
-        out_path: Path to temporary storage of results.
-        job_id: Unique ID for this task.
 
     Returns:
         TurbiniaTaskResult object.
     """
-    out_path = '{0:s}/{1:s}'.format(out_path, job_id)
-    if not os.path.exists(out_path):
-      os.makedirs(out_path)
-    cmd_output = subprocess.check_output(
-        ['/usr/local/bin/plaso_wrapper.sh', src_path, out_path, job_id])
-    res, version, metadata = cmd_output.split(' ', 2)
-    result = TurbiniaTaskResult(version=version, metadata=json.loads(metadata))
-    result.add_result(result_type='PATH', result=res)
+    result = self.setup(evidence)
+    plaso_result = PlasoFile()
+
+    plaso_file = os.path.join(self.output_dir, u'{0:s}.plaso'.format(self.id))
+    plaso_log = os.path.join(self.output_dir, u'{0:s}.log'.format(self.id))
+
+    # TODO(aarontp): Move these flags into a recipe
+    cmd = (u'log2timeline.py -q --status_view none --hashers all '
+           u'--partition all --vss_stores all').split()
+    cmd.extend([u'--logfile', plaso_log])
+    cmd.extend([plaso_file, evidence.local_path])
+
+    result.log(u'Running plaso as [{0:s}]'.format(' '.join(cmd)))
+
+    # TODO(aarontp): Create helper function to do all this
+    plaso_proc = subprocess.Popen(cmd)
+    stdout, stderr = plaso_proc.communicate()
+    result.error['stdout'] = stdout
+    result.error['stderr'] = stderr
+    ret = plaso_proc.returncode
+
+    if ret:
+      msg = u'Plaso execution failed with status {0:s}'.format(ret)
+      result.log(msg)
+      result.close(success=False, status=msg)
+    else:
+      # TODO(aarontp): Get and set plaso version here
+      result.log('Plaso output file in {0:s}'.format(plaso_file))
+      plaso_result.local_path = plaso_file
+      result.add_evidence(plaso_result)
+      result.close(success=True)
+
     return result

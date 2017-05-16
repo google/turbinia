@@ -35,7 +35,7 @@ def get_jobs():
   from turbinia.jobs.worker_stat import StatJob
   # TODO(aarontp): Dynamically look up job objects and make enabling/disabling
   #                configurable through config and/or recipes.
-  return [StatJob()]
+  return [StatJob(), PlasoJob()]
 
 
 class TurbiniaJob(object):

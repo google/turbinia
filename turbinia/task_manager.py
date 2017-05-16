@@ -126,7 +126,7 @@ class TaskManager(object):
     # have a run time check for this upon Job instantiation to prevent it.
     for job in self.jobs:
       if [True for t in job.evidence_input if isinstance(evidence_, t)]:
-        log.info(u'Adding {0:s} job to process {1:s}'.format(
+        log.info(u'Using {0:s} job to process {1:s}'.format(
             job.name, evidence_.name))
         job_count += 1
         for task in job.create_tasks([evidence_]):
@@ -136,7 +136,7 @@ class TaskManager(object):
     if not job_count:
       log.warning(u'No Jobs/Tasks were created for Evidence [{0:s}]. '
                   'Jobs may need to be configured to allow this type of '
-                  'Evidence as input'.format(evidence_.name))
+                  'Evidence as input'.format(str(evidence_)))
 
   def get_evidence(self):
     """Checks for new evidence to process.

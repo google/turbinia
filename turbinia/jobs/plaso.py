@@ -13,6 +13,7 @@
 # limitations under the License.
 """Job to execute Plaso task."""
 
+from turbinia.evidence import Directory
 from turbinia.evidence import GoogleCloudDisk
 from turbinia.evidence import PlasoFile
 from turbinia.evidence import RawDisk
@@ -23,7 +24,7 @@ from turbinia.workers.plaso import PlasoTask
 class PlasoJob(TurbiniaJob):
 
   # The types of evidence that this Job will process
-  evidence_input = [type(RawDisk()), type(GoogleCloudDisk())]
+  evidence_input = [type(Directory()), type(RawDisk()), type(GoogleCloudDisk())]
   evidence_output = [type(PlasoFile())]
 
   def __init__(self):
@@ -38,5 +39,4 @@ class PlasoJob(TurbiniaJob):
     Returns:
         A list of PlasoTasks.
     """
-    self.tasks.extend([PlasoTask(e) for e in evidence])
-    return self.tasks
+    return [PlasoTask() for e in evidence]
