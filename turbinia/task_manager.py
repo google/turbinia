@@ -138,6 +138,14 @@ class TaskManager(object):
                   'Jobs may need to be configured to allow this type of '
                   'Evidence as input'.format(str(evidence_)))
 
+  def check_done(self):
+    """Checks to see if we have any outstanding tasks.
+
+    Returns:
+      Bool indicating whether we are done.
+    """
+    raise NotImplementedError
+
   def get_evidence(self):
     """Checks for new evidence to process.
 
@@ -166,11 +174,14 @@ class TaskManager(object):
   def run(self):
     """Main run loop for TaskManager."""
     log.info(u'Starting PSQ Task Manager run loop')
-    # TODO(aarontp): Add early exit option.
     while True:
       # pylint: disable=expression-not-assigned
       [self.add_evidence(x) for x in self.get_evidence()]
       self.process_tasks()
+      if config.SINGLE_RUN and self.check_done():
+        log.info(u'No more tasks to process.  Exiting now.')
+        return
+
       # TODO(aarontp): Add config var for this.
       time.sleep(10)
 
@@ -239,6 +250,9 @@ class PSQTaskManager(TaskManager):
         log.error(
             u'Task {0:s} returned non-Evidence output type {1:s}'.format(
                 task_result.task_name, type(task_result.evidence)))
+
+  def check_done(self):
+    return not bool(len(self.psq_task_results))
 
   def process_tasks(self):
     completed_tasks = []
