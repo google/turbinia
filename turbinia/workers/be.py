@@ -19,6 +19,8 @@ import subprocess
 from turbinia.workers import TurbiniaTask
 from turbinia.workers import TurbiniaTaskResult
 
+PAGE_SIZE = 16777216
+
 
 class BulkExtractorTask(TurbiniaTask):
   """Task to run bulk_extractor."""
@@ -50,7 +52,7 @@ class BulkExtractorTask(TurbiniaTask):
 class BulkExtractorCalcOffsetsTask(TurbiniaTask):
   """Task to calculate offsets for Bulk extractor."""
 
-  def run(self, evidence, num_workers, page_size=16777216):
+  def run(self, evidence, num_workers, page_size=PAGE_SIZE):
     """Reads data and calculates offsets based on page_size.
 
     Args:
@@ -103,10 +105,11 @@ class BulkExtractorReducerTask(TurbiniaTask):
   """Reduce bulk extractor outputs."""
 
   def run(self, evidence, results):
-    """Celery task that reduces the results into one SQLite database.
+    """Task that reduces the results into one SQLite database.
 
     Args:
-        results: List of returned values from Celery tasks.
+        results: List of returned values from tasks.
+
     Returns:
         Task result object (instance of TurbiniaTaskResult) as JSON.
     """

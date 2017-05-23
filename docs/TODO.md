@@ -1,6 +1,7 @@
 ## TODO List
 TODO items in no particular order
 
+* Convert this list of items to github issues
 * Fix up Plaso Task code
 * Add requirements.txt
 * Propagate hard task failures and exception data back to task manager
@@ -11,5 +12,3 @@ TODO items in no particular order
 * Add directory watcher to automatically add evidence
 * Add recipe mechanism to specify Job configuration
 * Fix up docker config
-* Add support for multi-worker-pool
-* More Job/Task types

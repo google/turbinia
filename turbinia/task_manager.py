@@ -55,7 +55,7 @@ def task_runner(obj, *args, **kwargs):
     **kwargs: Any keyword args to pass to obj.
 
   Returns:
-    Output from TurbiniaTask (should be TurbiniaTaskReslt).
+    Output from TurbiniaTask (should be TurbiniaTaskResult).
 
   Raises:
     Re-raises exceptions that are thrown from the task.
@@ -74,7 +74,7 @@ def task_runner(obj, *args, **kwargs):
   return res
 
 
-class TaskManager(object):
+class BaseTaskManager(object):
   """Class to manage Turbinia Tasks.
 
   Handles incoming new Evidence messages, adds new Tasks to the queue and
@@ -165,7 +165,7 @@ class TaskManager(object):
 
   def run(self):
     """Main run loop for TaskManager."""
-    log.info(u'Starting PSQ Task Manager run loop')
+    log.info(u'Starting Task Manager run loop')
     # TODO(aarontp): Add early exit option.
     while True:
       # pylint: disable=expression-not-assigned
@@ -175,8 +175,8 @@ class TaskManager(object):
       time.sleep(10)
 
 
-class PSQTaskManager(TaskManager):
-  """PSQ implementation of TaskManager.
+class PSQTaskManager(BaseTaskManager):
+  """PSQ implementation of BaseTaskManager.
 
   Attributes:
     psq: PSQ Queue object.

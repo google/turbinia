@@ -60,6 +60,8 @@ class TurbiniaConfigException(Exception):
 
 def LoadConfig():
   """Finds Turbinia config file and loads it."""
+  # TODO(aarontp): Find way to not require global var here.  Maybe a singleton
+  # pattern on the config class.
   global CONFIG
   if CONFIG:
     return CONFIG
