@@ -32,21 +32,21 @@ def setup(root=False):
   config.LoadConfig()
   log = logging.getLogger('turbinia')
 
-  fh = logging.FileHandler(config.LOG_FILE)
+  file_handler = logging.FileHandler(config.LOG_FILE)
   formatter = logging.Formatter(u'%(asctime)s:%(levelname)s:%(message)s')
-  fh.setFormatter(formatter)
-  fh.setLevel(logging.DEBUG)
+  file_handler.setFormatter(formatter)
+  file_handler.setLevel(logging.DEBUG)
 
-  ch = logging.StreamHandler()
+  console_handler = logging.StreamHandler()
   formatter = logging.Formatter(u'[%(levelname)s] %(message)s')
-  ch.setFormatter(formatter)
+  console_handler.setFormatter(formatter)
 
-  log.addHandler(fh)
-  log.addHandler(ch)
+  log.addHandler(file_handler)
+  log.addHandler(console_handler)
 
   # Optionally configure the root logger because other modules like PSQ use
   # this, and we want to see log messages from it when executing from CLI.
   if root:
     root_log = logging.getLogger()
-    root_log.addHandler(ch)
+    root_log.addHandler(console_handler)
     root_log.setLevel(logging.DEBUG)

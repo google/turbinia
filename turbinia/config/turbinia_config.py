@@ -13,6 +13,13 @@
 # limitations under the License.
 """Dummy Turbinia config file."""
 
+# Turbinia Config
+# Valid values are 'PSQ' or 'Celery'
+TASK_MANAGER = u'PSQ'
+# File to log to
+LOG_FILE = None
+# Default output directory
+OUTPUT_DIR = None
 
 # GCE configuration
 PROJECT = None
@@ -21,6 +28,8 @@ INSTANCE = None
 DEVICE_NAME = None
 SCRATCH_PATH = None
 BUCKET_NAME = None
+PSQ_TOPIC = u'turbinia-psq'
+# Topic Turbinia will listen on for new Artifact events
 PUBSUB_TOPIC = None
 
 # Redis configuration

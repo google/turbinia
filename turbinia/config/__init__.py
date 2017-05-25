@@ -15,8 +15,11 @@
 
 import imp
 import itertools
+import logging
 import os
 import sys
+
+log = logging.getLogger('turbinia')
 
 # Look for config files with these names
 CONFIGFILES = ['.turbiniarc', 'turbinia_config.py']
@@ -25,6 +28,10 @@ CONFIGPATH = [os.path.expanduser('~'),
               os.path.dirname(os.path.abspath(__file__))]
 # Config vars that we expect to exist in the configuration
 CONFIGVARS = [
+    # Turbinia Config
+    'TASK_MANAGER',
+    'LOG_FILE',
+    'OUTPUT_DIR',
     # GCE CONFIG
     'PROJECT',
     'ZONE',
@@ -32,6 +39,7 @@ CONFIGVARS = [
     'DEVICE_NAME',
     'SCRATCH_PATH',
     'BUCKET_NAME',
+    'PSQ_TOPIC',
     'PUBSUB_TOPIC',
     # REDIS CONFIG
     'REDIS_HOST',
@@ -44,6 +52,7 @@ CONFIGVARS = [
 # Environment variable to look for path data in
 ENVCONFIGVAR = 'TURBINIA_CONFIG_PATH'
 
+CONFIG = None
 
 class TurbiniaConfigException(Exception):
   pass
@@ -51,6 +60,12 @@ class TurbiniaConfigException(Exception):
 
 def LoadConfig():
   """Finds Turbinia config file and loads it."""
+  # TODO(aarontp): Find way to not require global var here.  Maybe a singleton
+  # pattern on the config class.
+  global CONFIG
+  if CONFIG:
+    return CONFIG
+
   if os.environ.has_key(ENVCONFIGVAR):
     CONFIGPATH.extend(os.environ[ENVCONFIGVAR].split(':'))
 
@@ -64,14 +79,17 @@ def LoadConfig():
   if config_file is None:
     raise TurbiniaConfigException(u'No config files found')
 
+  log.info('Loading config from {0:s}'.format(config_file))
   _config = imp.load_source('config', config_file)
   _config.configSource = config_file
   ValidateAndSetConfig(_config)
+  CONFIG = _config
   return _config
 
 
 def ValidateAndSetConfig(_config):
   """Makes sure that the config has the vars loaded and set in the module."""
+  # TODO(aarontp): Allow for non-mandatory config options
   for var in CONFIGVARS:
     if not hasattr(_config, var):
       raise TurbiniaConfigException(

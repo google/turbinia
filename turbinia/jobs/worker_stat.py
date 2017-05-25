@@ -11,32 +11,32 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Job to execute Plaso task."""
+"""Job for running a stat call on the supplied evidence."""
 
-from turbinia.evidence import GoogleCloudDisk
-from turbinia.evidence import PlasoFile
+from turbinia.evidence import Directory
 from turbinia.evidence import RawDisk
+from turbinia.evidence import ReportText
 from turbinia.jobs import TurbiniaJob
-from turbinia.workers.plaso import PlasoTask
+from turbinia.workers.worker_stat import StatTask
 
 
-class PlasoJob(TurbiniaJob):
+class StatJob(TurbiniaJob):
+  """Job to run Stat."""
 
   # The types of evidence that this Job will process
-  evidence_input = [type(RawDisk()), type(GoogleCloudDisk())]
-  evidence_output = [type(PlasoFile())]
+  evidence_input = [type(RawDisk()), type(Directory())]
+  evidence_output = [type(ReportText())]
 
   def __init__(self):
-    super(PlasoJob, self).__init__(name='PlasoJob')
+    super(StatJob, self).__init__(name='StatJob')
 
   def create_tasks(self, evidence):
-    """Create task for Plaso.
+    """Create task for Stat.
 
     Args:
       evidence: List of evidence object to process
 
     Returns:
-        A list of PlasoTasks.
+        A list of StatTasks.
     """
-    self.tasks.extend([PlasoTask(e) for e in evidence])
-    return self.tasks
+    return [StatTask() for e in evidence]
