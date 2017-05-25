@@ -104,9 +104,19 @@ class TurbiniaTaskResult(object):
 
 
 class TurbiniaTask(object):
-  """Base class for Turbinia tasks."""
+  """Base class for Turbinia tasks.
+
+  Attributes:
+      id: Unique Id of task (string of hex)
+      name: Name of task
+      base_output_dir: The base directory that output will go into.  Per-task
+                       directories will be created under this.
+      output_dir: The directory output will go into (including per-task folder).
+      result: A TurbiniaTaskResult object.
+  """
 
   def __init__(self, name=None, base_output_dir=None):
+    """Initialization for TurbiniaTask."""
     self.id = uuid.uuid4().hex
     self.name = name if name else self.__class__.__name__
     self.base_output_dir = base_output_dir
@@ -119,6 +129,9 @@ class TurbiniaTask(object):
     Even though TurbiniaTasks are initially instantiated by the Jobs under the
     Task Manager, this setup method needs to be run from the task on the worker
     because it handles setting up the task runtime environment.
+
+    Args:
+      evidence: An Evidence object to process.
 
     Returns:
       A TurbiniaTaskResult object.
