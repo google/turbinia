@@ -15,7 +15,7 @@
 # limitations under the License.
 
 # This script is not intended to be run manually by a human, but invoked from
-# turbinia. The scripts takes four arguments. The source data path, temprary
+# turbinia. The scripts takes four arguments. The source data path, temporary
 # output path, calculated offsets and turbinia job_id.
 
 readonly IMAGE_PATH="$1"
