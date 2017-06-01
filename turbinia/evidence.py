@@ -30,7 +30,7 @@ class Evidence(object):
     source: String indicating where evidence came from (including tool version
             that created it, if appropriate).
     local_path: A string of the local_path to the evidence.
-    tags: dict of extra tags assocated with this evidence.
+    tags: dict of extra tags associated with this evidence.
   """
 
   def __init__(self, name=None, description=None, source=None, local_path=None,
