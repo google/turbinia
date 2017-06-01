@@ -32,6 +32,8 @@ CONFIGVARS = [
     'TASK_MANAGER',
     'LOG_FILE',
     'OUTPUT_DIR',
+    'SLEEP_TIME',
+    'SINGLE_RUN',
     # GCE CONFIG
     'PROJECT',
     'ZONE',

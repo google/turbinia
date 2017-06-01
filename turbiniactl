@@ -49,9 +49,10 @@ if __name__ == '__main__':
                       default=True)
   parser.add_argument('-o', '--output_dir', help='Directory path for output')
   parser.add_argument('-L', '--log_file', help='Log file')
-  parser.add_argument(
-      '-V', '--version', action='version', version=VERSION,
-      help='Show the version')
+  parser.add_argument('-S', '--server', action='store_true',
+                      help='Run Turbinia Server indefinitely')
+  parser.add_argument('-V', '--version', action='version', version=VERSION,
+                      help='Show the version')
 
   subparsers = parser.add_subparsers(
       dest='command', title='Commands', metavar='<command>')
@@ -139,5 +140,6 @@ if __name__ == '__main__':
     print 'Command {0:s} not implemented.'.format(args.command)
 
 if evidence_:
+    config.SINGLE_RUN = True if not args.server else False
     task_manager_.add_evidence(evidence_)
     task_manager_.run()

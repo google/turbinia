@@ -20,6 +20,10 @@ TASK_MANAGER = u'PSQ'
 LOG_FILE = None
 # Default output directory
 OUTPUT_DIR = None
+# Time to sleep in task management loops
+SLEEP_TIME = 10
+# Whether to run as a single run, or to keep server running indefinitely
+SINGLE_RUN = False
 
 # GCE configuration
 PROJECT = None

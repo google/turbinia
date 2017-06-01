@@ -72,6 +72,7 @@ class TurbiniaTaskResult(object):
       logfile = os.path.join(self.output_dir, u'log.txt')
       with open(logfile, 'w') as f:
         f.write('\n'.join(self._log))
+        f.write('\n')
     self.status = status
 
   def log(self, log_msg):
@@ -80,6 +81,7 @@ class TurbiniaTaskResult(object):
     Args:
       log_msg: A log message string.
     """
+    logging.info(log_msg)
     self._log.append(log_msg)
 
   def add_evidence(self, evidence):

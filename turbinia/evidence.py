@@ -36,7 +36,6 @@ class Evidence(object):
   def __init__(self, name=None, description=None, source=None, local_path=None,
                tags=None):
     """Initialization for Evidence."""
-    self.name = name
     self.description = description
     self.source = source
     self.local_path = local_path
@@ -45,9 +44,10 @@ class Evidence(object):
     # List of jobs that have processed this evidence
     self.processed_by = []
     self.type = self.__class__.__name__
+    self.name = name if name else self.type
 
   def __str__(self):
-    return u'{0:s} {1:s}'.format(self.type, self.name)
+    return u'{0:s}:{1:s}:{2:s}'.format(self.type, self.name, self.local_path)
 
   def to_json(self):
     """Convert object to JSON.
@@ -67,6 +67,11 @@ class Evidence(object):
       raise TurbiniaException(msg)
 
     return serialized
+
+
+class Directory(Evidence):
+  """Filesystem directory evidence."""
+  pass
 
 
 class RawDisk(Evidence):
