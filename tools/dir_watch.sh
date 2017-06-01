@@ -20,8 +20,13 @@ if [[ ! -f $turbiniactl ]] ; then
 fi
 
 echo "Watching directory $watchdir"
-inotifywait -mqr -e close_write --format "%w%f" $watchdir | while read dir ; do
-	echo "Processing new file $dir"
-	$turbiniactl rawdisk -l $dir
-	echo "Processing $dir complete.  Continuing watch of $watchdir."
+inotifywait -mqr -e close_write --format "%w%f" $watchdir | while read newfile ; do
+	echo "Processing new file $newfile"
+        if [[ -h "$newfile" ]] ; then
+                echo "Following symlink for new file $newfile."
+                newfile=$( readlink -e $newfile )
+                echo "Now processing new file $newfile"
+        fi
+	$turbiniactl rawdisk -l $newfile
+	echo "Processing $newfile complete.  Continuing watch of $watchdir."
 done
