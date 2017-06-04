@@ -130,8 +130,7 @@ class TimesketchApiClient(object):
     csrf_token = soup.find(id='csrf_token').get('value')
     session.headers.update({
         'x-csrftoken': csrf_token,
-        'referer': self.server_ip
-    })
+        'referer': self.server_ip})
 
     # Do a POST to the login handler to set up the session cookies
     form_data = {u'username': username, u'password': password}
@@ -183,8 +182,8 @@ class TimesketchApiClient(object):
     Returns:
         The timeline Id.
     """
-    resource_url = u'{0:s}/api/v1/sketches/{0:d}/'.format(self.host_url,
-                                                          sketch_id)
+    resource_url = u'{0:s}/api/v1/sketches/{0:d}/'.format(
+        self.host_url, sketch_id)
     form_data = {u'timelines': [index_id]}
     response = self.session.post(resource_url, json=form_data)
     response_dict = response.json()
@@ -216,9 +215,9 @@ class PlasoProcessor(object):
     """
     WriteToStdOut(u'Waiting for operation to complete')
     while True:
-      result = client.zoneOperations().get(project=config.PROJECT,
-                                           zone=config.ZONE,
-                                           operation=operation).execute()
+      result = client.zoneOperations().get(
+          project=config.PROJECT, zone=config.ZONE,
+          operation=operation).execute()
       WriteToStdOut(u'Status: {0:s}'.format(result[u'status']))
       if result[u'status'] == u'DONE':
         if u'error' in result:
@@ -312,8 +311,9 @@ class PlasoProcessor(object):
       self._DetachDisk(compute_client)
 
     # Mount the disk
-    disk_path = (u'projects/' + config.PROJECT + u'/zones/'
-                 + config.ZONE + u'/disks/' + persistent_disk_name)
+    disk_path = (
+        u'projects/' + config.PROJECT + u'/zones/' + config.ZONE + u'/disks/' +
+        persistent_disk_name)
     self._AttachDisk(compute_client, disk_path)
     output_file_basename = project_name + disk_name + GetCurrentTimeUTC()
 
@@ -325,8 +325,8 @@ class PlasoProcessor(object):
         WriteToStdOut(u'Block device: OK')
         break
       if os.path.exists(path):
-        WriteToStdOut(u'Block device: Current mode is {0}'.format(
-            os.stat(path).st_mode))
+        WriteToStdOut(
+            u'Block device: Current mode is {0}'.format(os.stat(path).st_mode))
       _RETRY_COUNT += 1
       time.sleep(1)
 
@@ -340,19 +340,19 @@ class PlasoProcessor(object):
     options.status_view_mode = u'none'
     options.vss_stores = u'all'
     options.partition_number = u'all'
-    options.log_file = os.path.join(config.SCRATCH_PATH,
-                                    output_file_basename + u'.log')
+    options.log_file = os.path.join(
+        config.SCRATCH_PATH, output_file_basename + u'.log')
     # Let plaso choose the appropriate number of workers
     options.workers = 0
     options.source = u'/dev/disk/by-id/google-' + config.DEVICE_NAME
-    options.output = os.path.join(config.SCRATCH_PATH,
-                                  output_file_basename + u'.plaso')
+    options.output = os.path.join(
+        config.SCRATCH_PATH, output_file_basename + u'.plaso')
     tool.ParseOptions(options)
-    WriteToStdOut(u'Plaso {0:s} {1:s} START'.format(plaso.GetVersion(),
-                                                    project_name))
+    WriteToStdOut(
+        u'Plaso {0:s} {1:s} START'.format(plaso.GetVersion(), project_name))
     tool.ProcessSources()
-    WriteToStdOut(u'Plaso {0:s} {1:s} END'.format(plaso.GetVersion(),
-                                                  project_name))
+    WriteToStdOut(
+        u'Plaso {0:s} {1:s} END'.format(plaso.GetVersion(), project_name))
 
     # Add to timesketch
     timesketch_client = TimesketchApiClient(
@@ -369,10 +369,10 @@ class PlasoProcessor(object):
 
     # Upload to GCS
     storage_client = CreateServiceClient(u'storage')
-    self._CopyFileToBucket(storage_client, options.log_file,
-                           output_file_basename + u'.log')
-    self._CopyFileToBucket(storage_client, options.output,
-                           output_file_basename + u'.plaso')
+    self._CopyFileToBucket(
+        storage_client, options.log_file, output_file_basename + u'.log')
+    self._CopyFileToBucket(
+        storage_client, options.output, output_file_basename + u'.plaso')
     self._DetachDisk(compute_client)
 
 
@@ -384,8 +384,7 @@ if __name__ == '__main__':
       config.PROJECT, config.PUBSUB_TOPIC)
   body = {
       u'returnImmediately': False,
-      u'maxMessages': 1,
-  }
+      u'maxMessages': 1,}
 
   WriteToStdOut(u'Listen for messages')
   while True:
