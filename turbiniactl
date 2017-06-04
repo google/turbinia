@@ -36,7 +36,6 @@ from turbinia import VERSION
 log = logging.getLogger('turbinia')
 logger.setup()
 
-
 if __name__ == '__main__':
   # TODO(aarontp): Add 'startserver' command
   # TODO(aarontp): Allow for single run mode when specifying evidence
@@ -45,12 +44,15 @@ if __name__ == '__main__':
   parser = argparse.ArgumentParser()
   parser.add_argument('-v', '--verbose', action='store_true', help='verbose')
   # TODO(aarontp): Turn off debug by default later
-  parser.add_argument('-d', '--debug', action='store_true', help='debug',
-                      default=True)
+  parser.add_argument(
+      '-d', '--debug', action='store_true', help='debug', default=True)
   parser.add_argument('-o', '--output_dir', help='Directory path for output')
   parser.add_argument('-L', '--log_file', help='Log file')
   parser.add_argument(
-      '-V', '--version', action='version', version=VERSION,
+      '-V',
+      '--version',
+      action='version',
+      version=VERSION,
       help='Show the version')
 
   subparsers = parser.add_subparsers(
@@ -65,7 +67,9 @@ if __name__ == '__main__':
   parser_rawdisk.add_argument(
       '-l', '--local_path', help='Local path to the evidence', required=True)
   parser_rawdisk.add_argument(
-      '-s', '--source', help='Description of the source of the evidence',
+      '-s',
+      '--source',
+      help='Description of the source of the evidence',
       required=False)
   parser_rawdisk.add_argument(
       '-n', '--name', help='Descriptive name of the evidence', required=False)
@@ -76,7 +80,9 @@ if __name__ == '__main__':
   parser_directory.add_argument(
       '-l', '--local_path', help='Local path to the evidence', required=True)
   parser_directory.add_argument(
-      '-s', '--source', help='Description of the source of the evidence',
+      '-s',
+      '--source',
+      help='Description of the source of the evidence',
       required=False)
   parser_directory.add_argument(
       '-n', '--name', help='Descriptive name of the evidence', required=False)
@@ -88,7 +94,9 @@ if __name__ == '__main__':
   # PSQ Worker
   parser_psqworker = subparsers.add_parser('psqworker', help='Run PSQ worker')
   parser_psqworker.add_argument(
-      '-S', '--single_threaded', help='Run PSQ Worker in a single thread',
+      '-S',
+      '--single_threaded',
+      help='Run PSQ Worker in a single thread',
       required=False)
 
   args = parser.parse_args()
@@ -113,12 +121,12 @@ if __name__ == '__main__':
   evidence_ = None
   if args.command == 'rawdisk':
     args.name = args.name if args.name else args.local_path
-    evidence_ = evidence.RawDisk(name=args.name, local_path=args.local_path,
-                                 source=args.source)
+    evidence_ = evidence.RawDisk(
+        name=args.name, local_path=args.local_path, source=args.source)
   elif args.command == 'directory':
     args.name = args.name if args.name else args.local_path
-    evidence_ = evidence.Directory(name=args.name, local_path=args.local_path,
-                                   source=args.source)
+    evidence_ = evidence.Directory(
+        name=args.name, local_path=args.local_path, source=args.source)
   elif args.command == 'psqworker':
     # Set up root logger level which is normally set by the psqworker command
     # which we are bypassing.
@@ -129,8 +137,8 @@ if __name__ == '__main__':
       worker = psq.MultiprocessWorker(queue=task_manager_.psq)
     # Log here instead of print to stay consistent with all the rest of the PSQ
     # output which is logged.
-    log.info(u'Starting PSQ listener on queue {0:s}'.format(
-        task_manager_.psq.name))
+    log.info(
+        u'Starting PSQ listener on queue {0:s}'.format(task_manager_.psq.name))
     worker.listen()
   elif args.command == 'listjobs':
     print 'Available Jobs:'
@@ -139,5 +147,5 @@ if __name__ == '__main__':
     print 'Command {0:s} not implemented.'.format(args.command)
 
 if evidence_:
-    task_manager_.add_evidence(evidence_)
-    task_manager_.run()
+  task_manager_.add_evidence(evidence_)
+  task_manager_.run()

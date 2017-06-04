@@ -33,8 +33,13 @@ class Evidence(object):
     tags: dict of extra tags assocated with this evidence.
   """
 
-  def __init__(self, name=None, description=None, source=None, local_path=None,
-               tags=None):
+  def __init__(
+      self,
+      name=None,
+      description=None,
+      source=None,
+      local_path=None,
+      tags=None):
     """Initialization for Evidence."""
     self.name = name
     self.description = description
@@ -93,8 +98,13 @@ class EncryptedDisk(RawDisk):
     unencrypted_path: A string to the unencrypted local path
   """
 
-  def __init__(self, encryption_type=None, encryption_key=None,
-               unencrypted_path=None, *args, **kwargs):
+  def __init__(
+      self,
+      encryption_type=None,
+      encryption_key=None,
+      unencrypted_path=None,
+      *args,
+      **kwargs):
     """Initialization for Encrypted disk evidence objects."""
     # TODO(aarontp): Make this an enum, or limited list
     self.encryption_type = encryption_type
@@ -114,8 +124,14 @@ class GoogleCloudDisk(RawDisk):
     type: The type of cloud disk.
   """
 
-  def __init__(self, project=None, zone=None, disk_name=None, type_=None,
-               *args, **kwargs):
+  def __init__(
+      self,
+      project=None,
+      zone=None,
+      disk_name=None,
+      type_=None,
+      *args,
+      **kwargs):
     """Initialization for Google Cloud Disk."""
     self.project = project
     self.zone = zone
@@ -140,6 +156,7 @@ class PlasoFile(Evidence):
 # TODO(aarontp): Find a way to integrate this into TurbiniaTaskResult instead.
 class ReportText(Evidence):
   """Text data for general reporting."""
+
   def __init__(self, text_data=None, *args, **kwargs):
     self.text_data = text_data
     super(ReportText, self).__init__(*args, **kwargs)

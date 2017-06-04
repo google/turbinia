@@ -67,8 +67,8 @@ def task_runner(obj, *args, **kwargs):
   except Exception as e:
     # TODO(aarontp): Create synthetic TurbiniaTaskResult upon failure to
     # propogate errors to the Task Manager
-    logging.warning(u'Exception thrown from Task: {0:s}'.format(
-        traceback.format_exc()))
+    logging.warning(
+        u'Exception thrown from Task: {0:s}'.format(traceback.format_exc()))
     raise e
 
   return res
@@ -126,17 +126,19 @@ class BaseTaskManager(object):
     # have a run time check for this upon Job instantiation to prevent it.
     for job in self.jobs:
       if [True for t in job.evidence_input if isinstance(evidence_, t)]:
-        log.info(u'Adding {0:s} job to process {1:s}'.format(
-            job.name, evidence_.name))
+        log.info(
+            u'Adding {0:s} job to process {1:s}'.format(
+                job.name, evidence_.name))
         job_count += 1
         for task in job.create_tasks([evidence_]):
           task.base_output_dir = config.OUTPUT_DIR
           self.add_task(task, evidence_)
 
     if not job_count:
-      log.warning(u'No Jobs/Tasks were created for Evidence [{0:s}]. '
-                  'Jobs may need to be configured to allow this type of '
-                  'Evidence as input'.format(evidence_.name))
+      log.warning(
+          u'No Jobs/Tasks were created for Evidence [{0:s}]. '
+          'Jobs may need to be configured to allow this type of '
+          'Evidence as input'.format(evidence_.name))
 
   def get_evidence(self):
     """Checks for new evidence to process.
@@ -200,7 +202,8 @@ class PSQTaskManager(BaseTaskManager):
     datastore_client = datastore.Client(project=config.PROJECT)
     try:
       self.psq = psq.Queue(
-          psq_pubsub_client, config.PSQ_TOPIC,
+          psq_pubsub_client,
+          config.PSQ_TOPIC,
           storage=psq.DatastoreStorage(datastore_client))
     except GaxError as e:
       msg = u'Error creating PSQ Queue: {0:s}'.format(str(e))
@@ -218,11 +221,11 @@ class PSQTaskManager(BaseTaskManager):
       task_result: The TurbiniaTaskResult object
     """
     if not task_result.successful:
-      log.error(
-          u'Task {0:s} was not successful'.format(task_result.task_name))
+      log.error(u'Task {0:s} was not successful'.format(task_result.task_name))
     else:
-      log.info(u'Task {0:s} executed with status [{1:s}]'.format(
-          task_result.task_name, task_result.status))
+      log.info(
+          u'Task {0:s} executed with status [{1:s}]'.format(
+              task_result.task_name, task_result.status))
 
     if not isinstance(task_result.evidence, list):
       log.info(
@@ -232,8 +235,9 @@ class PSQTaskManager(BaseTaskManager):
 
     for evidence_ in task_result.evidence:
       if isinstance(evidence_, evidence.Evidence):
-        log.info(u'Task {0:s} returned Evidence {1:s}'.format(
-            task_result.task_name, evidence_.name))
+        log.info(
+            u'Task {0:s} returned Evidence {1:s}'.format(
+                task_result.task_name, evidence_.name))
         self.add_evidence(evidence_)
       else:
         log.error(
@@ -246,8 +250,7 @@ class PSQTaskManager(BaseTaskManager):
       psq_task = psq_task_result.get_task()
       # This handles tasks that have failed at the PSQ layer.
       if not psq_task:
-        log.debug(
-            'Task {0:s} not yet created'.format(psq_task_result.task_id))
+        log.debug('Task {0:s} not yet created'.format(psq_task_result.task_id))
       elif psq_task.status not in (psq.task.FINISHED, psq.task.FAILED):
         log.debug('Task {0:s} not finished'.format(psq_task.id))
       elif psq_task.status == psq.task.FAILED:
@@ -265,6 +268,7 @@ class PSQTaskManager(BaseTaskManager):
     return []
 
   def add_task(self, task, evidence_):
-    log.info('Adding PSQ task {0:s} with evidence {1:s} to queue'.format(
-        task.name, evidence_.name))
+    log.info(
+        'Adding PSQ task {0:s} with evidence {1:s} to queue'.format(
+            task.name, evidence_.name))
     self.psq_task_results.append(self.psq.enqueue(task_runner, task, evidence_))

@@ -38,8 +38,8 @@ class PlasoTask(TurbiniaTask):
     out_path = '{0:s}/{1:s}'.format(out_path, job_id)
     if not os.path.exists(out_path):
       os.makedirs(out_path)
-    cmd_output = subprocess.check_output(
-        ['/usr/local/bin/plaso_wrapper.sh', src_path, out_path, job_id])
+    cmd_output = subprocess.check_output([
+        '/usr/local/bin/plaso_wrapper.sh', src_path, out_path, job_id])
     res, version, metadata = cmd_output.split(' ', 2)
     result = TurbiniaTaskResult(version=version, metadata=json.loads(metadata))
     result.add_result(result_type='PATH', result=res)
