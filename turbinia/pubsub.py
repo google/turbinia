@@ -37,8 +37,7 @@ log = logging.getLogger('turbinia')
     TASKUPDATE,
     # Messages sent to workers
     TASKSTART,
-    TASKSTOP,
-] = xrange(5)
+    TASKSTOP,] = xrange(5)
 
 
 class GoogleCloudClient(object):
@@ -62,12 +61,14 @@ class GoogleCloudClient(object):
 
 
 class PubSubMessage(dict):
+
   def __init__(self, message_type):
     self['message_type'] = message_type
     super(PubSubMessage, self).__init__()
 
 
 class PubSubClient(GoogleCloudClient):
+
   def __init__(self, topic):
     self.topic = topic
     super(PubSubClient, self).__init__(u'pubsub')
@@ -92,8 +93,7 @@ class PubSubClient(GoogleCloudClient):
         TASKUPDATE: [u'task_id', u'job_id', u'status'],
         WORKERUPDATE: [u'worker_id', u'status'],
         TASKSTART: [u'task_id', u'job_id'],
-        TASKSTOP: [u'task_id', u'job_id'],
-    }
+        TASKSTOP: [u'task_id', u'job_id'],}
 
     # TODO(aarontp): Enforce these
     optional_fields = {
@@ -101,8 +101,7 @@ class PubSubClient(GoogleCloudClient):
         TASKUPDATE: [u'update_text', u'result'],
         WORKERUPDATE: [u'update_text', u'result'],
         TASKSTART: [],
-        TASKSTOP: [],
-    }
+        TASKSTOP: [],}
 
     if not message.has_key(u'message_type'):
       log.error(u'Message has no message_type: {0:s}'.format(str(message)))
@@ -110,8 +109,9 @@ class PubSubClient(GoogleCloudClient):
 
     for field in required_fields.get(message[u'message_type'], []):
       if not message.has_key(field):
-        log.error(u'Message type {0:s} must have field {1:s}: {2:s}'.format(
-            message.get(u'message_type'), field, str(message)))
+        log.error(
+            u'Message type {0:s} must have field {1:s}: {2:s}'.format(
+                message.get(u'message_type'), field, str(message)))
         return False
 
     return True
@@ -125,8 +125,7 @@ class PubSubClient(GoogleCloudClient):
     data = None
     body = {
         u'returnImmediately': False,
-        u'maxMessages': 1,
-    }
+        u'maxMessages': 1,}
 
     resp = self.client.projects().subscriptions().pull(
         subscription=self.subscription, body=body).execute()

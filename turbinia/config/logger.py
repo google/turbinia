@@ -17,6 +17,7 @@ import logging
 
 from turbinia import config
 
+
 def setup(root=False):
   """Set up logging parameters.
 

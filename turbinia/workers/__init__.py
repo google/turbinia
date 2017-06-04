@@ -23,6 +23,7 @@ import uuid
 
 from turbinia import TurbiniaException
 
+
 class TurbiniaTaskResult(object):
   """Object to store task results to be returned by a TurbiniaTask.
 
@@ -39,8 +40,13 @@ class TurbiniaTaskResult(object):
         _log: A list of log messages
   """
 
-  def __init__(self, evidence=None, input_evidence=None, task_id=None,
-               task_name=None, output_dir=None):
+  def __init__(
+      self,
+      evidence=None,
+      input_evidence=None,
+      task_id=None,
+      task_name=None,
+      output_dir=None):
     """Initialize the TurbiniaTaskResult object."""
 
     self.evidence = evidence if evidence else []
@@ -140,9 +146,11 @@ class TurbiniaTask(object):
       TurbiniaException: If the evidence can not be found.
     """
     self.create_output_dir()
-    self.result = TurbiniaTaskResult(task_id=self.id, task_name=self.name,
-                                     input_evidence=evidence,
-                                     output_dir=self.output_dir)
+    self.result = TurbiniaTaskResult(
+        task_id=self.id,
+        task_name=self.name,
+        input_evidence=evidence,
+        output_dir=self.output_dir)
     if evidence.local_path and not os.path.exists(evidence.local_path):
       raise TurbiniaException(
           'Evidence local path {0:s} does not exist'.format(

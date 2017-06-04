@@ -27,6 +27,7 @@ VERSION = '20170501'
 class TurbiniaException(Exception):
   pass
 
+
 try:
   config.LoadConfig()
 except config.TurbiniaConfigException as e:
