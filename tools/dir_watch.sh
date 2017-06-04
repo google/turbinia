@@ -5,28 +5,28 @@
 
 
 if [[ -z "$1" ]] ; then
-	echo "Usage: $0 <dir to watch>"
-	exit 1
+        echo "Usage: $0 <dir to watch>"
+        exit 1
 else
-	watchdir=$1
+        watchdir=$1
 fi
 
-turbiniactl="$( dirname $0 )/../turbiniactl"
+turbiniactl="$( dirname "$0" )/../turbiniactl"
 
 if [[ ! -f $turbiniactl ]] ; then
-	echo "Turbiactl script not found at $turbiniactl.  $0 should be run "
+        echo "Turbiactl script not found at $turbiniactl.  $0 should be run "
         echo "from turbinia/tools directory"
-	exit 1
+        exit 1
 fi
 
 echo "Watching directory $watchdir"
-inotifywait -mqr -e close_write --format "%w%f" $watchdir | while read newfile ; do
-	echo "Processing new file $newfile"
+inotifywait -mqr -e close_write --format "%w%f" "$watchdir" | while read newfile ; do
+        echo "Processing new file $newfile"
         if [[ -h "$newfile" ]] ; then
                 echo "Following symlink for new file $newfile."
-                newfile=$( readlink -e $newfile )
+                newfile=$( readlink -e "$newfile" )
                 echo "Now processing new file $newfile"
         fi
-	$turbiniactl rawdisk -l $newfile
-	echo "Processing $newfile complete.  Continuing watch of $watchdir."
+        $turbiniactl rawdisk -l "$newfile"
+        echo "Processing $newfile complete.  Continuing watch of $watchdir."
 done
