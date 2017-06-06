@@ -14,8 +14,43 @@
 """Turbinia Evidence objects."""
 
 import json
+import sys
 
 from turbinia import TurbiniaException
+
+
+def evidence_decode(evidence_dict):
+  """Decode JSON into appropriate Evidence object.
+
+  Args:
+    evidence_str: Serialized evidence (i.e. a __dict__ post JSON decoding).
+
+  Returns:
+    An instantiated Evidence object (or a sub-class of it).
+
+  Raises:
+    TurbiniaException: If input is not a dict, does not have a type attribute,
+                       or does not deserialize to an evidence object.
+  """
+  if not isinstance(evidence_dict, dict):
+    raise TurbiniaException(
+        u'Evidence_dict is not a dictionary, type is {0:s}'.format(
+            str(type(evidence_dict))))
+
+  type_ = evidence_dict.get(u'type', None)
+  if not type_:
+    raise TurbiniaException(
+        u'No Type attribute for evidence object [{0:s}]'.format(
+            str(evidence_dict)))
+
+  try:
+    evidence = getattr(sys.modules[__name__], type_)()
+  except AttributeError:
+    raise TurbiniaException(
+        u'No Evidence object of type {0:s} in evidence module'.format(type_))
+
+  evidence.__dict__ = evidence_dict
+  return evidence
 
 
 class Evidence(object):
@@ -31,6 +66,7 @@ class Evidence(object):
             that created it, if appropriate).
     local_path: A string of the local_path to the evidence.
     tags: dict of extra tags associated with this evidence.
+    request_id: The id of the request this evidence came from, if any
   """
 
   def __init__(
@@ -39,12 +75,14 @@ class Evidence(object):
       description=None,
       source=None,
       local_path=None,
-      tags=None):
+      tags=None
+      request_id=None):
     """Initialization for Evidence."""
     self.description = description
     self.source = source
     self.local_path = local_path
     self.tags = tags if tags else {}
+    self.request_id = request_id
 
     # List of jobs that have processed this evidence
     self.processed_by = []
@@ -53,6 +91,10 @@ class Evidence(object):
 
   def __str__(self):
     return u'{0:s}:{1:s}:{2:s}'.format(self.type, self.name, self.local_path)
+
+  def serialize(self):
+    """Return JSON serializable object."""
+    return self.__dict__
 
   def to_json(self):
     """Convert object to JSON.
@@ -65,7 +107,7 @@ class Evidence(object):
     """
     serialized = None
     try:
-      serialized = json.dumps(self.__dict__)
+      serialized = json.dumps(self.serialize())
     except TypeError as e:
       msg = 'JSON serialization of evidence object {0:s} failed: {1:s}'.format(
           self.type, str(e))

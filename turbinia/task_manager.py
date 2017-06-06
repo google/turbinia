@@ -208,7 +208,8 @@ class PSQTaskManager(BaseTaskManager):
     log.debug(
         u'Setting up PSQ Task Manager requirements on project {0:s}'.format(
             config.PROJECT))
-    self.server_pubsub = turbinia_pubsub.PubSubClient(config.PUBSUB_TOPIC)
+    self.server_pubsub = turbinia_pubsub.TurbiniaPubSub(config.PUBSUB_TOPIC)
+    self.server_pubsub.setup()
     psq_pubsub_client = pubsub.Client(project=config.PROJECT)
     datastore_client = datastore.Client(project=config.PROJECT)
     try:
@@ -278,8 +279,16 @@ class PSQTaskManager(BaseTaskManager):
     return len([self.psq_task_results.remove(task) for task in completed_tasks])
 
   def get_evidence(self):
-    # TODO(aarontp): Code to check for new PubSub messages goes here.
-    return []
+    requests = self.server_pubsub.check_messages()
+    evidence_list = []
+    for request in requests:
+      for evidence_ in request.evidence:
+        if not evidence_.request_id:
+          evidence_.request_id = request.request_id
+        log.info(u'Received evidence [{0:s}] from PubSub message.'.format(
+            str(evidence_)))
+        evidence_list.append(evidence_)
+    return evidence_list
 
   def add_task(self, task, evidence_):
     log.info(
