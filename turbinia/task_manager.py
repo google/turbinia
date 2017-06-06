@@ -127,7 +127,7 @@ class BaseTaskManager(object):
     for job in self.jobs:
       if [True for t in job.evidence_input if isinstance(evidence_, t)]:
         log.info(
-            u'Using {0:s} job to process {1:s}'.format(
+            u'Adding {0:s} job to process {1:s}'.format(
                 job.name, evidence_.name))
         job_count += 1
         for task in job.create_tasks([evidence_]):
@@ -285,8 +285,9 @@ class PSQTaskManager(BaseTaskManager):
       for evidence_ in request.evidence:
         if not evidence_.request_id:
           evidence_.request_id = request.request_id
-        log.info(u'Received evidence [{0:s}] from PubSub message.'.format(
-            str(evidence_)))
+        log.info(
+            u'Received evidence [{0:s}] from PubSub message.'.format(
+                str(evidence_)))
         evidence_list.append(evidence_)
     return evidence_list
 
