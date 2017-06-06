@@ -75,7 +75,7 @@ class Evidence(object):
       description=None,
       source=None,
       local_path=None,
-      tags=None
+      tags=None,
       request_id=None):
     """Initialization for Evidence."""
     self.description = description
