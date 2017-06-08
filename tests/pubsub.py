@@ -52,7 +52,7 @@ class MockPubSubResults(list):
 
 
 class TestTurbiniaRequest(unittest.TestCase):
-  """Test pubsub module."""
+  """Test TurbiniaRequest class."""
 
   def testTurbiniaRequestSerialization(self):
     """Test that TurbiniaRequests serializes/unserializes."""
