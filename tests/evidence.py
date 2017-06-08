@@ -17,6 +17,7 @@ import json
 import unittest
 
 from turbinia import evidence
+from turbinia import TurbiniaException
 
 
 class TestTurbiniaEvidence(unittest.TestCase):
@@ -33,3 +34,12 @@ class TestTurbiniaEvidence(unittest.TestCase):
     self.assertTrue(isinstance(e_new, evidence.RawDisk))
     self.assertEqual(e_new.name, u'My Evidence')
     self.assertEqual(e_new.mount_path, u'/mnt/foo')
+
+  def testEvidenceSerializationBadType(self):
+    """Test that evidence_decode throws error on non-dict type."""
+    self.assertRaises(TurbiniaException, evidence.evidence_decode, [1, 2])
+
+  def testEvidenceSerializationNoTypeAttribute(self):
+    """Test that evidence_decode throws error on dict with no type attribute."""
+    test = {1: 2, 3: 4}
+    self.assertRaises(TurbiniaException, evidence.evidence_decode, test)

@@ -23,7 +23,8 @@ def evidence_decode(evidence_dict):
   """Decode JSON into appropriate Evidence object.
 
   Args:
-    evidence_str: Serialized evidence (i.e. a __dict__ post JSON decoding).
+    evidence_dict: JSON serializeable evidence object (i.e. a dict post JSON
+                   decoding).
 
   Returns:
     An instantiated Evidence object (or a sub-class of it).
