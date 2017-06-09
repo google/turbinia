@@ -11,11 +11,12 @@ else
         watchdir=$1
 fi
 
-turbiniactl="$( dirname "$0" )/../turbiniactl"
+turbiniactl="$( which turbiniactl )"
+turbiniactl=${turbiniactl:-"$( dirname "$0" )/../turbiniactl"}
 
 if [[ ! -f $turbiniactl ]] ; then
-        echo "Turbiactl script not found at $turbiniactl.  $0 should be run "
-        echo "from turbinia/tools directory"
+        echo "Turbiactl script not found in PATH or at $turbiniactl. $0 should "
+        echo "be run from turbinia/tools directory"
         exit 1
 fi
 
