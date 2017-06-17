@@ -79,6 +79,7 @@ class TurbiniaTaskResult(object):
       with open(logfile, 'w') as f:
         f.write('\n'.join(self._log))
         f.write('\n')
+    self.input_evidence.postprocess()
     self.status = status
 
   def log(self, log_msg):
@@ -155,6 +156,7 @@ class TurbiniaTask(object):
       raise TurbiniaException(
           'Evidence local path {0:s} does not exist'.format(
               evidence.local_path))
+    evidence.preprocess()
     return self.result
 
   def create_output_dir(self):

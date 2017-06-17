@@ -73,6 +73,24 @@ class Evidence(object):
 
     return serialized
 
+  def preprocess(self):
+    """Preprocess this evidence prior to task running.
+
+    This gets run in the context of the local task execution on the worker
+    nodes prior to the task itself running.  This can be used to prepare the
+    evidence to be processed (e.g. attach a cloud disk, mount a local disk etc).
+    """
+    pass
+
+  def postprocess(self):
+    """Postprocess this evidence after the task runs.
+
+    This gets run in the context of the local task execution on the worker
+    nodes after the task itself runs.  This can be used to clean-up after the
+    evidence is processed (e.g. detach a cloud disk, etc,).
+    """
+    pass
+
 
 class Directory(Evidence):
   """Filesystem directory evidence."""
