@@ -86,7 +86,7 @@ class Evidence(object):
     """Postprocess this evidence after the task runs.
 
     This gets run in the context of the local task execution on the worker
-    nodes after the task itself runs.  This can be used to clean-up after the
+    nodes after the task has finished.  This can be used to clean-up after the
     evidence is processed (e.g. detach a cloud disk, etc,).
     """
     pass
