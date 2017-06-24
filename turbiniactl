@@ -49,8 +49,6 @@ if __name__ == '__main__':
       '-d', '--debug', action='store_true', help='debug', default=True)
   parser.add_argument('-o', '--output_dir', help='Directory path for output')
   parser.add_argument('-L', '--log_file', help='Log file')
-  parser.add_argument('-S', '--server', action='store_true',
-                      help='Run Turbinia Server indefinitely')
   parser.add_argument(
       '-S',
       '--server',
@@ -146,19 +144,18 @@ if __name__ == '__main__':
       worker = psq.Worker(queue=task_manager_.psq)
     else:
       worker = psq.MultiprocessWorker(queue=task_manager_.psq)
-    # Log here instead of print to stay consistent with all the rest of the PSQ
-    # output which is logged.
     log.info(
         u'Starting PSQ listener on queue {0:s}'.format(task_manager_.psq.name))
     worker.listen()
   elif args.command == 'server':
-    print 'Running Turbinia Server.'
+    log.info(u'Running Turbinia Server.')
     task_manager_.run()
   elif args.command == 'listjobs':
-    print 'Available Jobs:'
-    print '\n'.join(['\t{0:s}'.format(job.name) for job in task_manager_.jobs])
+    log.info(u'Available Jobs:')
+    log.info(
+        '\n'.join(['\t{0:s}'.format(job.name) for job in task_manager_.jobs]))
   else:
-    print 'Command {0:s} not implemented.'.format(args.command)
+    log.warning(u'Command {0:s} not implemented.'.format(args.command))
 
   # If we have evidence to process and we also want to run as a server, then
   # we'll just process the evidence directly rather than send it through the
@@ -170,8 +167,9 @@ if __name__ == '__main__':
   elif evidence_:
     request = TurbiniaRequest()
     request.evidence.append(evidence_)
-    print u'Creating PubSub request with evidence {0:s}'.format(evidence_.name)
+    log.info(
+        u'Creating PubSub request with evidence {0:s}'.format(evidence_.name))
     task_manager_.server_pubsub.send_request(request)
 
-  print 'Done.'
+  log.info(u'Done.')
   sys.exit(0)
