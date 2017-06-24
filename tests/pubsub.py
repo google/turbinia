@@ -28,11 +28,12 @@ def getTurbiniaRequest():
   Returns:
     TurbiniaRequest object.
   """
-  tr = pubsub.TurbiniaRequest(request_id=u'deadbeef', context={'kw': [1, 2]})
-  e = evidence.RawDisk(
+  request = pubsub.TurbiniaRequest(
+      request_id=u'deadbeef', context={'kw': [1, 2]})
+  rawdisk = evidence.RawDisk(
       name=u'My Evidence', local_path=u'/tmp/foo', mount_path=u'/mnt/foo')
-  tr.evidence.append(e)
-  return tr
+  request.evidence.append(rawdisk)
+  return request
 
 
 class MockPubSubMessage(object):
@@ -56,45 +57,45 @@ class TestTurbiniaRequest(unittest.TestCase):
 
   def testTurbiniaRequestSerialization(self):
     """Test that TurbiniaRequests serializes/unserializes."""
-    tr = getTurbiniaRequest()
-    tr_json = tr.to_json()
-    self.assertTrue(isinstance(tr_json, str))
+    request = getTurbiniaRequest()
+    request_json = request.to_json()
+    self.assertTrue(isinstance(request_json, str))
 
     # Create a new Turbinia Request object to load our results into
-    tr_new = pubsub.TurbiniaRequest()
-    tr_new.from_json(tr_json)
+    request_new = pubsub.TurbiniaRequest()
+    request_new.from_json(request_json)
 
-    self.assertTrue(isinstance(tr_new, pubsub.TurbiniaRequest))
-    self.assertTrue(tr_new.context['kw'][1], 2)
-    self.assertTrue(tr_new.request_id, u'deadbeef')
-    self.assertTrue(isinstance(tr_new.evidence[0], evidence.RawDisk))
-    self.assertEqual(tr_new.evidence[0].name, u'My Evidence')
+    self.assertTrue(isinstance(request_new, pubsub.TurbiniaRequest))
+    self.assertTrue(request_new.context['kw'][1], 2)
+    self.assertTrue(request_new.request_id, u'deadbeef')
+    self.assertTrue(isinstance(request_new.evidence[0], evidence.RawDisk))
+    self.assertEqual(request_new.evidence[0].name, u'My Evidence')
 
   def testTurbiniaRequestSerializationBadData(self):
     """Tests that TurbiniaRequest will raise error on non-json data."""
-    tr_new = pubsub.TurbiniaRequest()
-    self.assertRaises(TurbiniaException, tr_new.from_json, 'non-json-data')
+    request_new = pubsub.TurbiniaRequest()
+    self.assertRaises(TurbiniaException, request_new.from_json, 'non-json-data')
 
   def testTurbiniaRequestSerializationBadJSON(self):
     """Tests that TurbiniaRequest will raise error on wrong JSON object."""
-    e = evidence.RawDisk(name=u'My Evidence', local_path=u'/tmp/foo')
-    e_json = e.to_json()
-    self.assertTrue(isinstance(e_json, str))
+    rawdisk = evidence.RawDisk(name=u'My Evidence', local_path=u'/tmp/foo')
+    rawdisk_json = rawdisk.to_json()
+    self.assertTrue(isinstance(rawdisk_json, str))
 
-    tr_new = pubsub.TurbiniaRequest()
+    request_new = pubsub.TurbiniaRequest()
     # Try to load serialization RawDisk() into a TurbiniaRequest, which should
     # error because this is not the correct type.
-    self.assertRaises(TurbiniaException, tr_new.from_json, e_json)
+    self.assertRaises(TurbiniaException, request_new.from_json, rawdisk_json)
 
 
 class TestTurbiniaPubSub(unittest.TestCase):
   """Test turbinia.pubsub module."""
 
   def setUp(self):
-    tr = getTurbiniaRequest()
+    request = getTurbiniaRequest()
     self.pubsub = pubsub.TurbiniaPubSub(u'fake_topic')
     results = MockPubSubResults(
-        ack_id=u'1234', message=MockPubSubMessage(tr.to_json(), u'msg id'))
+        ack_id=u'1234', message=MockPubSubMessage(request.to_json(), u'msg id'))
     self.pubsub.subscription = mock.MagicMock()
     self.pubsub.subscription.pull.return_value = results
 
@@ -102,14 +103,14 @@ class TestTurbiniaPubSub(unittest.TestCase):
     """Test check_messages to make sure it returns the expected results."""
     results = self.pubsub.check_messages()
     self.assertTrue(len(results) == 1)
-    tr_new = results[0]
+    request_new = results[0]
 
     # Make sure that the TurbiniaRequest object is as expected
-    self.assertTrue(isinstance(tr_new, pubsub.TurbiniaRequest))
-    self.assertTrue(tr_new.context['kw'][1], 2)
-    self.assertTrue(tr_new.request_id, u'deadbeef')
-    self.assertTrue(isinstance(tr_new.evidence[0], evidence.RawDisk))
-    self.assertEqual(tr_new.evidence[0].name, u'My Evidence')
+    self.assertTrue(isinstance(request_new, pubsub.TurbiniaRequest))
+    self.assertTrue(request_new.context['kw'][1], 2)
+    self.assertTrue(request_new.request_id, u'deadbeef')
+    self.assertTrue(isinstance(request_new.evidence[0], evidence.RawDisk))
+    self.assertEqual(request_new.evidence[0].name, u'My Evidence')
 
     # Make sure that the test message was acknowledged
     self.pubsub.subscription.acknowledge.assert_called_with([u'1234'])
