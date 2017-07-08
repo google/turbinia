@@ -11,7 +11,7 @@ Communication from the client to the server is currently done transparently with
 ## Status
 Turbinia is still pre-Alpha.  There is currently a [GitHub Milestone](https://github.com/google/turbinia/milestone/1) tracking the remaining items for the Alpha release.  It was mostly re-written since the initial proof of concept, so some things may be broken at this time.
 
-## Instalation
+## Installation
 There is an [extremely rough installation guide](https://github.com/google/turbinia/wiki/Installation), but it needs to be updated and fixed up.
 
 ## Usage
