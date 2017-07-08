@@ -4,16 +4,23 @@
 Turbinia is an open-source framework for deploying, managing, and running forensic workloads on cloud platforms.
 
 ## How it works
-Turbinia has different components for the client, server and the workers.  The Turibnia client makes requests to process evidence to the Turbinia server.  The Turbinia server is a single process that runs (on a cloud instance or a physical machine) and processes incoming user requests and then schedules forensic processing jobs to be processed by the workers.  The workers run on multiple cloud instances or physical machines continuously to process requests from the Server.   
+Turbinia is composed of different components for the client, server and the workers.  These components can be run on local physical machines or in the Cloud.  The Turbinia client makes requests to process evidence to the Turbinia server.  The Turbinia server creates logical jobs from these incoming user requests, which creates and schedules forensic processing tasks to be run by the workers.  The evidence to be processed will be split up by the jobs when possible, and many tasks can be created in order to process the evidence in parallel.  One or more workers run continuously to process tasks from the server.  Any new evidence created or discovered by the tasks will be fed back into Turbinia for further processing.
+
+Communication from the client to the server is currently done transparently with Google Cloud PubSub.  The worker implementation uses [PSQ](https://github.com/GoogleCloudPlatform/psq) (a Google Cloud PubSub Task Queue) for task scheduling.
 
 ## Status
-Turbinia is still considered pre-Alpha.  There is currently a [GitHub Milestone](https://github.com/google/turbinia/milestone/1) tracking the remaining items for the Alpha release.  It was mostly re-written since the initial proof of concept, so some things may be broken at this time.
+Turbinia is still pre-Alpha.  There is currently a [GitHub Milestone](https://github.com/google/turbinia/milestone/1) tracking the remaining items for the Alpha release.  It was mostly re-written since the initial proof of concept, so some things may be broken at this time.
 
 ## Instalation
-There is an [extremly rough installation guide](https://github.com/google/turbinia/wiki/Installation), but it definitely needs updating.
+There is an [extremely rough installation guide](https://github.com/google/turbinia/wiki/Installation), but it needs to be updated and fixed up.
 
 ## Usage
-Turbinia has different commands to run the different components of Turbinia.
+The basic steps to get things running after the initial installation and configuration are:
+* Start Turbinia server component with ```turbiniactl server``` command
+* Start one or more Turbinia workers with ```turbiniactl psqworker```
+* Send evidence to be processed from the turbinia client with ```turbiniactl ${evidencetype}```
+
+turbiniactl can be used to start the different components, and here is the basic usage:
 ```
 $ ./turbiniactl -h
 usage: turbiniactl [-h] [-v] [-d] [-o OUTPUT_DIR] [-L LOG_FILE] [-S] [-V]
@@ -39,7 +46,7 @@ Commands:
     server              Run Turbinia Server
 ```
 
-The commands for processing the evidence types of rawdisk and directory specify information about evidence that Turbinia should process. By default, when adding new evidence to be processed will act as a client and send a request to the configured Turbinia server, otherwise if ```--server``` is specified, it will start up it's own Turbinia Server process.  Here's a help listing for a raw disk type of evidence to be processed by Turibnia:
+The commands for processing the evidence types of rawdisk and directory specify information about evidence that Turbinia should process. By default, when adding new evidence to be processed, turbiniactl will act as a client and send a request to the configured Turbinia server, otherwise if ```--server``` is specified, it will start up its own Turbinia server process.  Here's the turbiniactl usage for adding a raw disk type of evidence to be processed by Turibnia:
 ```
 $ ./turbiniactl rawdisk -h
 usage: turbiniactl rawdisk [-h] -l LOCAL_PATH [-s SOURCE] [-n NAME]
@@ -52,6 +59,11 @@ optional arguments:
                         Description of the source of the evidence
   -n NAME, --name NAME  Descriptive name of the evidence
 ```
+
+## Notes
+* Turbinia currently assumes that Evidence is equally available to all worker nodes (e.g. through locally mapped storage, or through attachable persistent Google Cloud Disks, etc).
+* Not all evidence types are supported yet
+* Still only a small number of processing job types supported, but more are being developed.
 
 ##### Obligatory Fine Print
 This is not an official Google product (experimental or otherwise), it is just code that happens to be owned by Google.
