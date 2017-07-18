@@ -17,6 +17,7 @@ import json
 import sys
 
 from turbinia import TurbiniaException
+from turbinia.processors import google_cloud
 
 
 def evidence_decode(evidence_dict):
@@ -204,6 +205,12 @@ class GoogleCloudDisk(RawDisk):
     self.disk_name = disk_name
     self.type = type_
     super(GoogleCloudDisk, self).__init__(*args, **kwargs)
+
+  def preprocess(self):
+    google_cloud.PreprocessAttachDisk(self)
+
+  def postprocess(self):
+    google_cloud.PostprocessDetachDisk(self)
 
 
 class PlasoFile(Evidence):
