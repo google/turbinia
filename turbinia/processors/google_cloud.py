@@ -14,6 +14,8 @@
 """Evidence processor for Google Cloud resources."""
 
 import logging
+import os
+import stat
 import time
 import urllib2
 
@@ -288,7 +290,22 @@ class GoogleComputeDisk(GoogleComputeBaseResource):
     return operation
 
 
-def GetInstanceName():
+def IsBlockDevice(path):
+  """Checks path to determine whether it is a block device.
+
+  Args:
+      path: String of path to check.
+
+  Returns:
+      Bool indicating success.
+  """
+  if not os.path.exists(path):
+    return
+  mode = os.stat(path).st_mode
+  return stat.S_ISBLK(mode)
+
+
+def GetLocalInstanceName():
   """Gets the instance name of the current machine.
 
   Returns:
@@ -313,15 +330,36 @@ def PreprocessAttachDisk(evidence):
   Args:
     evidence: A turbinia.evidence.GoogleCloudProject object.
   """
+  path = u'/dev/disk/by-id/google-' + evidence.disk_name
+  if IsBlockDevice(path):
+    log.info(u'Disk {0:s} already attached!'.format(evidence.disk_name))
+    evidence.local_path = path
+    return
+
   config.LoadConfig()
-  instance_name = GetInstanceName()
+  instance_name = GetLocalInstanceName()
   project = GoogleCloudProject(project_id=config.PROJECT,
                                default_zone=config.ZONE)
   instance = project.GetInstance(instance_name, zone=config.ZONE)
   disk = instance.GetDisk(evidence.disk_name)
-  log.info('Attaching disk {0:s} to instance {1:s}'.format(
+  log.info(u'Attaching disk {0:s} to instance {1:s}'.format(
       evidence.disk_name, instance_name))
   instance.AttachDisk(disk)
+
+  # Make sure we have a proper block device
+  _RETRY_MAX = 10
+  _RETRY_COUNT = 0
+  while _RETRY_COUNT < _RETRY_MAX:
+    if IsBlockDevice(path):
+      log.info(u'Block device {0:s} successfully attached'.format(path))
+      break
+    if os.path.exists(path):
+      log.info(
+          u'Block device {0:s} mode is {1}'.format(path, os.stat(path).st_mode))
+    _RETRY_COUNT += 1
+    time.sleep(1)
+
+  evidence.local_path = path
 
 
 def PostprocessDetachDisk(evidence):
