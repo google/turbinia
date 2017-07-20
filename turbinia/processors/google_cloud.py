@@ -73,7 +73,7 @@ class GoogleCloudProject(object):
       Operation result in JSON format.
 
     Raises:
-      RuntimeError: If API call failed.
+      TurbiniaException: If API call failed.
     """
     if not block:
       return operation
@@ -88,7 +88,7 @@ class GoogleCloudProject(object):
             project=self.project_id, operation=operation[u'name']).execute()
 
       if u'error' in result:
-        raise RuntimeError(result[u'error'])
+        raise TurbiniaException(result[u'error'])
 
       if not block or result[u'status'] == u'DONE':
         return result
@@ -145,7 +145,7 @@ class GoogleCloudProject(object):
       A Google Compute Instance object (instance of GoogleComputeInstance).
 
     Raises:
-      KeyError: If instance does not exist.
+      TurbiniaException: If instance does not exist.
     """
     instances = self.ListInstances()
     try:
@@ -154,7 +154,7 @@ class GoogleCloudProject(object):
         zone = instance[u'zone']
       return GoogleComputeInstance(project=self, zone=zone, name=instance_name)
     except KeyError:
-      raise KeyError(u'Unknown instance')
+      raise TurbiniaException(u'Unknown instance')
 
 
 class GoogleComputeBaseResource(object):
@@ -253,6 +253,7 @@ class GoogleComputeInstance(GoogleComputeBaseResource):
         disk.name, self.name, mode))
 
     operation_config = {
+        'deviceName': disk.name,
         'mode': mode,
         'source': disk.GetSourceString(),
         'boot': False,
@@ -263,6 +264,21 @@ class GoogleComputeInstance(GoogleComputeBaseResource):
         project=self.project.project_id,
         zone=self.zone,
         body=operation_config).execute()
+    self.project.GceOperation(operation, zone=self.zone, block=True)
+
+  def DetachDisk(self, disk):
+    """Detach a disk from the virtual machine.
+
+    Args:
+      disk: Disk to detach (instance of GoogleComputeDisk).
+    """
+    log.info(u'Detaching {0:s} from VM {1:s}'.format(disk.name, self.name))
+
+    operation = self.project.GceApi().instances().detachDisk(
+        instance=self.name,
+        project=self.project.project_id,
+        zone=self.zone,
+        deviceName=disk.name).execute()
     self.project.GceOperation(operation, zone=self.zone, block=True)
 
 
@@ -300,7 +316,7 @@ def IsBlockDevice(path):
       Bool indicating success.
   """
   if not os.path.exists(path):
-    return
+    return False
   mode = os.stat(path).st_mode
   return stat.S_ISBLK(mode)
 
@@ -363,4 +379,37 @@ def PreprocessAttachDisk(evidence):
 
 
 def PostprocessDetachDisk(evidence):
-  pass
+  """Detaches Google Cloud Disk from an instance.
+
+  Args:
+    evidence: A turbinia.evidence.GoogleCloudProject object.
+  """
+  if evidence.local_path:
+    path = evidence.local_path
+  else:
+    path = u'/dev/disk/by-id/google-' + evidence.disk_name
+
+  if not IsBlockDevice(path):
+    log.info(u'Disk {0:s} already detached!'.format(evidence.disk_name))
+    return
+
+  config.LoadConfig()
+  instance_name = GetLocalInstanceName()
+  project = GoogleCloudProject(project_id=config.PROJECT,
+                               default_zone=config.ZONE)
+  instance = project.GetInstance(instance_name, zone=config.ZONE)
+  disk = instance.GetDisk(evidence.disk_name)
+  log.info(u'Detaching disk {0:s} from instance {1:s}'.format(
+      evidence.disk_name, instance_name))
+  instance.DetachDisk(disk)
+
+  # Make sure device is Detached
+  _RETRY_MAX = 10
+  _RETRY_COUNT = 0
+  while _RETRY_COUNT < _RETRY_MAX:
+    if not os.path.exists(path):
+      log.info(
+          u'Block device {0:s} mode is {1}'.format(path, os.stat(path).st_mode))
+      break
+    _RETRY_COUNT += 1
+    time.sleep(1)
