@@ -110,7 +110,7 @@ class GoogleCloudProject(object):
 
     Args:
       operation: Operation to be executed.
-      zone: GCP zone to execute the operation in. None means global operation.
+      zone: GCP zone to execute the operation in. 'None' means global operation.
       block: Boolean indicating if the opearation shuld block before return.
 
     Returns:
@@ -349,7 +349,7 @@ def PreprocessAttachDisk(evidence):
   Args:
     evidence: A turbinia.evidence.GoogleCloudProject object.
   """
-  path = u'/dev/disk/by-id/google-' + evidence.disk_name
+  path = u'/dev/disk/by-id/google-{0:s}'.format(evidence.disk_name)
   if IsBlockDevice(path):
     log.info(u'Disk {0:s} already attached!'.format(evidence.disk_name))
     evidence.local_path = path
@@ -387,7 +387,7 @@ def PostprocessDetachDisk(evidence):
   if evidence.local_path:
     path = evidence.local_path
   else:
-    path = u'/dev/disk/by-id/google-' + evidence.disk_name
+    path = u'/dev/disk/by-id/google-{0:s}'.format(evidence.disk_name)
 
   if not IsBlockDevice(path):
     log.info(u'Disk {0:s} already detached!'.format(evidence.disk_name))
@@ -409,4 +409,4 @@ def PostprocessDetachDisk(evidence):
       log.info(u'Block device {0:s} is no longer attached'.format(path))
       evidence.local_path = None
       break
-    time.sleep(1)
+    time.sleep(5)
