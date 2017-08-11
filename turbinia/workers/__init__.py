@@ -21,6 +21,8 @@ import os
 import time
 import uuid
 
+from turbinia import config
+from turbinia import output_writers
 from turbinia import TurbiniaException
 
 
@@ -28,6 +30,8 @@ class TurbiniaTaskResult(object):
   """Object to store task results to be returned by a TurbiniaTask.
 
   Attributes:
+        base_output_dir: Base path for local output
+        output_dir: Full path for local output
         error: Dict of error data ('error' and 'traceback' are some valid keys)
         evidence: List of newly created Evidence objects.
         input_evidence: The evidence this task processed.
@@ -38,6 +42,7 @@ class TurbiniaTaskResult(object):
         task_id: Task ID of the parent task.
         task_name: Name of parent task.
         _log: A list of log messages
+        _output_writers: A list of output writer objects
   """
 
   def __init__(
@@ -46,14 +51,14 @@ class TurbiniaTaskResult(object):
       input_evidence=None,
       task_id=None,
       task_name=None,
-      output_dir=None):
+      base_output_dir=None):
     """Initialize the TurbiniaTaskResult object."""
 
     self.evidence = evidence if evidence else []
     self.input_evidence = input_evidence if input_evidence else []
     self.task_id = task_id
     self.task_name = task_name
-    self.output_dir = output_dir
+    self.base_output_dir = base_output_dir
 
     self.start_time = datetime.now()
     self.run_time = None
@@ -62,6 +67,8 @@ class TurbiniaTaskResult(object):
     self.error = {}
     # TODO(aarontp): Create mechanism to grab actual python logging data.
     self._log = []
+    self._output_writers = output_writers.GetOutputWriters(self)
+    self.output_dir = self.get_local_output_dir()
 
   def close(self, success, status=None):
     """Handles closing of this result and writing logs.
@@ -74,13 +81,41 @@ class TurbiniaTaskResult(object):
     self.run_time = datetime.now() - self.start_time
     if not status:
       status = u'Completed successfully in {0:s}'.format(str(self.run_time))
+
+    # Write result log info to file
+    logfile = os.path.join(self.output_dir, u'worker-log.txt')
     if self.output_dir and os.path.exists(self.output_dir):
-      logfile = os.path.join(self.output_dir, u'log.txt')
       with open(logfile, 'w') as f:
         f.write('\n'.join(self._log))
         f.write('\n')
+    self.save_local_file(logfile)
+
+    [self.save_local_file(e.local_path) for e in self.evidence]
+    [writer.close() for writer in self._output_writers]
+
     self.input_evidence.postprocess()
     self.status = status
+
+  def get_local_output_dir(self):
+    """Gets the local output dir from the local output writer.
+
+    Returns:
+      String to locally created output directory.
+
+    Raises:
+      TurbiniaException: If no local output writer with output_dir is found.
+    """
+    if not self._output_writers:
+      raise TurbiniaException('No output writers found.')
+
+    # Get the local writer
+    writer = [w for w in self._output_writers if w.name == 'LocalWriter'][0]
+    if not hasattr(writer, 'output_dir'):
+      raise TurbiniaException(
+          'Local output writer does not have output_dir attribute.')
+
+    return writer.output_dir
+
 
   def log(self, log_msg):
     """Add a log message to the result object.
@@ -98,6 +133,16 @@ class TurbiniaTaskResult(object):
         evidence: Evidence object
     """
     self.evidence.append(evidence)
+
+  def save_local_file(self, file_):
+    """Saves local file by writing to all non-local output writers.
+
+    Args:
+      file_ (string): Path to file to save.
+    """
+    for writer in self._output_writers:
+      if writer.name != 'LocalOutputWriter':
+        writer.write(file_)
 
   def set_error(self, error, traceback):
     """Add error and traceback.
@@ -146,12 +191,12 @@ class TurbiniaTask(object):
     Raises:
       TurbiniaException: If the evidence can not be found.
     """
-    self.create_output_dir()
     self.result = TurbiniaTaskResult(
         task_id=self.id,
         task_name=self.name,
         input_evidence=evidence,
-        output_dir=self.output_dir)
+        base_output_dir=self.base_output_dir)
+    self.output_dir = self.result.output_dir
     if evidence.local_path and not os.path.exists(evidence.local_path):
       raise TurbiniaException(
           'Evidence local path {0:s} does not exist'.format(
@@ -159,36 +204,6 @@ class TurbiniaTask(object):
     evidence.preprocess()
     return self.result
 
-  def create_output_dir(self):
-    """Generates a unique output path for this task and creates directories.
-
-    Needs to be run at runtime so that the task creates the directory locally.
-
-    Returns:
-      A local output path string.
-
-    Raises:
-      TurbiniaException: If there are failures creating the directory.
-    """
-    epoch = str(int(time.time()))
-    logging.info('%s %s %s' % (epoch, str(self.id), self.name))
-    dir_name = u'{0:s}-{1:s}-{2:s}'.format(epoch, str(self.id), self.name)
-    new_dir = os.path.join(self.base_output_dir, dir_name)
-    self.output_dir = new_dir
-    if not os.path.exists(new_dir):
-      try:
-        logging.info('Creating new directory {0:s}'.format(new_dir))
-        os.makedirs(new_dir)
-        if self.result:
-          self.result.log('Created output directory {0:s}'.format(new_dir))
-      except OSError as e:
-        if e.errno == errno.EACCESS:
-          msg = u'Permission error ({0:s})'.format(str(e))
-        else:
-          msg = str(e)
-        raise TurbiniaException(msg)
-
-    return new_dir
 
   def run(self, evidence):
     """Entry point to execute the task.

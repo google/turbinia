@@ -35,6 +35,8 @@ BUCKET_NAME = None
 PSQ_TOPIC = u'turbinia-psq'
 # Topic Turbinia will listen on for new Artifact events
 PUBSUB_TOPIC = None
+# Name of bucket to copy result output to
+GCS_OUTPUT_BUCKET = False
 
 # Redis configuration
 REDIS_HOST = None
