@@ -111,7 +111,8 @@ class TurbiniaPubSub(object):
     config.LoadConfig()
     client = pubsub.Client(project=config.PROJECT)
     self.topic = client.topic(self.topic_name)
-    log.debug('Connecting to PubSub Subscription on {0:s}'.format(self.topic))
+    log.debug('Connecting to PubSub Subscription on {0:s}'.format(
+        self.topic_name))
     self.subscription = self.topic.subscription(self.topic_name)
 
   def _validate_message(self, message):
@@ -133,7 +134,7 @@ class TurbiniaPubSub(object):
     return request
 
   def check_messages(self):
-    """Checks for a pubsub message.
+    """Checks for pubsub messages.
 
     Returns:
       A list of any TurbiniaRequest objects received, else an empty list
