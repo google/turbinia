@@ -102,6 +102,7 @@ if __name__ == '__main__':
   parser_psqworker.add_argument(
       '-S',
       '--single_threaded',
+      action='store_true',
       help='Run PSQ Worker in a single thread',
       required=False)
 
