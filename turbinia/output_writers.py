@@ -16,11 +16,14 @@
 import errno
 import logging
 import os
+import re
 import shutil
 import time
 
 from turbinia import config
 from turbinia import TurbiniaException
+
+from google.cloud import storage
 
 log = logging.getLogger('turbinia')
 
@@ -42,9 +45,9 @@ def GetOutputWriters(result):
   writers = [LocalOutputWriter(base_output_dir=result.base_output_dir,
                                unique_dir=unique_dir)]
   config.LoadConfig()
-  if config.GCS_OUTPUT_BUCKET:
+  if config.GCS_OUTPUT_PATH:
     writer = GCSOutputWriter(
-        unique_dir=unique_dir, bucket=config.GCS_OUTPUT_BUCKET)
+        unique_dir=unique_dir, gcs_path=config.GCS_OUTPUT_PATH)
     writers.append(writer)
 
   return writers
@@ -57,6 +60,7 @@ class OutputWriter(object):
   any other files expclicitly written with write().
 
   Attributes:
+    base_output_dir (string): The base path for output
     name (string): Name of this output writer
     unique_dir (string): A psuedo-unique string to be used in paths.
   """
@@ -90,16 +94,11 @@ class OutputWriter(object):
     """
     raise NotImplementedError
 
-  def close(self):
-    """Writes the final output and closes the output writer object."""
-    pass
-
 
 class LocalOutputWriter(OutputWriter):
   """Class for writing to local filesystem output.
 
   Attributes:
-    base_output_dir: The base path for output
     output_dir: The full path for output.
   """
 
@@ -141,19 +140,32 @@ class GCSOutputWriter(OutputWriter):
   """Output writer for Google Cloud Storage.
 
   attributes:
-    bucket: Storage bucket to put output results into.
+    bucket (string): Storage bucket to put output results into.
+    gcs_path (string): GCS path to put output results into.
   """
 
-  def __init__(self, bucket=None, *args, **kwargs):
+  def __init__(self, gcs_path=None, *args, **kwargs):
     super(GCSOutputWriter, self).__init__(*args, **kwargs)
-    self.bucket = bucket
     self.name = u'GCSWriter'
+    config.LoadConfig()
+    self.client = storage.Client(project=config.PROJECT)
 
-  def close(self):
-    pass
+    match = re.search(r'gs://(.*)/(.*)', gcs_path)
+    if not match:
+      raise TurbiniaException(
+          'Cannot find bucket and path from GCS config {0:s}'.format(gcs_path))
+    self.bucket = match.group(1)
+    self.base_output_dir = match.group(2)
 
   def create_output_dir(self):
+    # Directories in GCS are artificial, so any path can be written as part of
+    # the object name.
     pass
 
-  def write(self, _):
-    pass
+  def write(self, file_):
+    bucket = self.client.get_bucket(self.bucket)
+    full_path = os.path.join(
+        self.base_output_dir, self.unique_dir, os.path.basename(file_))
+    log.info('Writing {0:s} to GCS path {1:s}'.format(file_, full_path))
+    blob = storage.Blob(full_path, bucket)
+    blob.upload_from_filename(file_, client=self.client)
