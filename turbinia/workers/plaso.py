@@ -55,7 +55,7 @@ class PlasoTask(TurbiniaTask):
     ret = plaso_proc.returncode
 
     if ret:
-      msg = u'Plaso execution failed with status {0:s}'.format(ret)
+      msg = u'Plaso execution failed with status {0:d}'.format(ret)
       result.log(msg)
       result.close(success=False, status=msg)
     else:
