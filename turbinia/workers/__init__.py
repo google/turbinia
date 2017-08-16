@@ -18,6 +18,7 @@ import errno
 import json
 import logging
 import os
+import platform
 import time
 import uuid
 
@@ -37,6 +38,7 @@ class TurbiniaTaskResult(object):
         successful: Bool indicating success status.
         task_id: Task ID of the parent task.
         task_name: Name of parent task.
+        worker_name: Name of worker task executed on.
         _log: A list of log messages
   """
 
@@ -60,6 +62,7 @@ class TurbiniaTaskResult(object):
     self.successful = None
     self.status = None
     self.error = {}
+    self.worker_name = platform.node()
     # TODO(aarontp): Create mechanism to grab actual python logging data.
     self._log = []
 
@@ -73,7 +76,8 @@ class TurbiniaTaskResult(object):
     self.successful = success
     self.run_time = datetime.now() - self.start_time
     if not status:
-      status = u'Completed successfully in {0:s}'.format(str(self.run_time))
+      status = u'Completed successfully in {0:s} on {1:s}'.format(
+          str(self.run_time), self.worker_name)
     if self.output_dir and os.path.exists(self.output_dir):
       logfile = os.path.join(self.output_dir, u'log.txt')
       with open(logfile, 'w') as f:
