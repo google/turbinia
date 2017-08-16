@@ -13,24 +13,4 @@
 # limitations under the License.
 """Main Turbinia application."""
 
-import logging
-import os
-import sys
-
-from turbinia import config
-
-log = logging.getLogger('turbinia')
-
 VERSION = '20170501'
-
-
-class TurbiniaException(Exception):
-  pass
-
-
-try:
-  config.LoadConfig()
-except config.TurbiniaConfigException as e:
-  # pylint: disable=logging-format-interpolation
-  log.fatal('Could not load Turbinia config: {0:s}'.format(str(e)))
-  sys.exit(1)
