@@ -275,6 +275,8 @@ class PSQTaskManager(BaseTaskManager):
         completed_tasks.append(psq_task_result)
         self._finalize_result(psq_task_result.result())
 
+    outstanding_task_count = len(self.psq_task_results) - len(completed_tasks)
+    log.info('{0:d} Tasks still outstanding.'.format(outstanding_task_count))
     # pylint: disable=expression-not-assigned
     return len([self.psq_task_results.remove(task) for task in completed_tasks])
 
