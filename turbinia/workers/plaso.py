@@ -40,7 +40,7 @@ class PlasoTask(TurbiniaTask):
 
     # TODO(aarontp): Move these flags into a recipe
     cmd = (
-        u'log2timeline.py -q --status_view none --hashers all '
+        u'log2timeline.py -d --status_view none --hashers all '
         u'--partition all --vss_stores all').split()
     cmd.extend([u'--logfile', plaso_log])
     cmd.extend([plaso_file, evidence.local_path])
