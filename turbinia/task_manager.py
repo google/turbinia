@@ -233,28 +233,32 @@ class PSQTaskManager(BaseTaskManager):
       task_result: The TurbiniaTaskResult object
     """
     if not task_result.successful:
-      log.error(u'Task {0:s} was not successful'.format(task_result.task_name))
+      log.error(u'Task {0:s} from {1:s} was not successful'.format(
+          task_result.task_name, task_result.worker_name))
     else:
       log.info(
-          u'Task {0:s} executed with status [{1:s}]'.format(
-              task_result.task_name, task_result.status))
+          u'Task {0:s} from {1:s} executed with status [{2:s}]'.format(
+              task_result.task_name, task_result.worker_name,
+              task_result.status))
 
     if not isinstance(task_result.evidence, list):
       log.info(
-          u'Task {0:s} did not return evidence list'.format(
-              task_result.task_name))
+          u'Task {0:s} from {1:s} did not return evidence list'.format(
+              task_result.task_name, task_result.worker_name))
       return
 
     for evidence_ in task_result.evidence:
       if isinstance(evidence_, evidence.Evidence):
         log.info(
-            u'Task {0:s} returned Evidence {1:s}'.format(
-                task_result.task_name, evidence_.name))
+            u'Task {0:s} from {1:s} returned Evidence {2:s}'.format(
+                task_result.task_name, task_result.worker_name, evidence_.name))
         self.add_evidence(evidence_)
       else:
         log.error(
-            u'Task {0:s} returned non-Evidence output type {1:s}'.format(
-                task_result.task_name, type(task_result.evidence)))
+            u'Task {0:s} from {1:s} returned non-Evidence output type '
+            u'{2:s}'.format(
+                task_result.task_name, task_result.worker_name,
+                type(task_result.evidence)))
 
   def check_done(self):
     return not bool(len(self.psq_task_results))
