@@ -14,3 +14,7 @@
 """Main Turbinia application."""
 
 VERSION = '20170501'
+
+
+class TurbiniaException(Exception):
+  pass
