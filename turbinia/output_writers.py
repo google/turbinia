@@ -49,7 +49,6 @@ def GetOutputWriters(result):
     writer = GCSOutputWriter(
         unique_dir=unique_dir, gcs_path=config.GCS_OUTPUT_PATH)
     writers.append(writer)
-
   return writers
 
 
@@ -104,8 +103,8 @@ class LocalOutputWriter(OutputWriter):
 
   def __init__(self, base_output_dir=None, *args, **kwargs):
     self.base_output_dir = base_output_dir
-    super(LocalOutputWriter, self).__init__(*args, **kwargs)
     self.output_dir = None
+    super(LocalOutputWriter, self).__init__(*args, **kwargs)
     self.name = u'LocalWriter'
 
   def create_output_dir(self):

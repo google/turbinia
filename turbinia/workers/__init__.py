@@ -85,6 +85,7 @@ class TurbiniaTaskResult(object):
     if not status:
       status = u'Completed successfully in {0:s} on {1:s}'.format(
           str(self.run_time), self.worker_name)
+    self.log(status)
 
     # Write result log info to file
     logfile = os.path.join(self.output_dir, u'worker-log.txt')
@@ -94,8 +95,7 @@ class TurbiniaTaskResult(object):
         f.write('\n')
     self.save_local_file(logfile)
 
-    [self.save_local_file(e.local_path) for e in self.evidence]
-    [writer.close() for writer in self._output_writers]
+    [self.save_local_file(e.local_path) for e in self.evidence if e.local_path]
 
     self.input_evidence.postprocess()
     self.status = status
@@ -117,6 +117,10 @@ class TurbiniaTaskResult(object):
     if not hasattr(writer, 'output_dir'):
       raise TurbiniaException(
           'Local output writer does not have output_dir attribute.')
+
+    if not writer.output_dir:
+      raise TurbiniaException(
+          'Local output writer attribute output_dir is not set')
 
     return writer.output_dir
 
