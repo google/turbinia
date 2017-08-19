@@ -80,6 +80,10 @@ class TurbiniaTaskResult(object):
       success: Bool indicating task success
       status: One line descriptive task status.
     """
+    # TODO(aarontp): Running this close() method is now mandatory to make sure
+    # output is copied and that the results object can be serialized properly.
+    # We should move this to be part of a closure or decorator on the main
+    # TurbiniaTask.run function.
     self.successful = success
     self.run_time = datetime.now() - self.start_time
     if not status:
@@ -98,6 +102,8 @@ class TurbiniaTaskResult(object):
     [self.save_local_file(e.local_path) for e in self.evidence if e.local_path]
 
     self.input_evidence.postprocess()
+    # Unset the writers during the close because they don't serialize
+    self._output_writers = None
     self.status = status
 
   def get_local_output_dir(self):
