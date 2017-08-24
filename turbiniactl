@@ -80,6 +80,26 @@ if __name__ == '__main__':
   parser_rawdisk.add_argument(
       '-n', '--name', help='Descriptive name of the evidence', required=False)
 
+  # Google Cloud Disk
+  parser_googleclouddisk = subparsers.add_parser(
+      'googleclouddisk',
+      help='Process Google Cloud Persistent Disk as Evidence')
+  parser_googleclouddisk.add_argument(
+      '-d', '--disk_name', help='Google Cloud name for disk', required=True)
+  parser_googleclouddisk.add_argument(
+      '-p', '--project', help='Project that the disk is associated with',
+      required=True)
+  parser_googleclouddisk.add_argument(
+      '-z', '--zone', help='Geographic zone the disk exists in',
+      required=True)
+  parser_googleclouddisk.add_argument(
+      '-s',
+      '--source',
+      help='Description of the source of the evidence',
+      required=False)
+  parser_googleclouddisk.add_argument(
+      '-n', '--name', help='Descriptive name of the evidence', required=False)
+
   # Directory
   parser_directory = subparsers.add_parser(
       'directory', help='Process a directory as Evidence')
@@ -137,6 +157,11 @@ if __name__ == '__main__':
     args.name = args.name if args.name else args.local_path
     evidence_ = evidence.Directory(
         name=args.name, local_path=args.local_path, source=args.source)
+  elif args.command == 'googleclouddisk':
+    args.name = args.name if args.name else args.disk_name
+    evidence_ = evidence.Directory(
+        name=args.name, disk_name=args.disk_name, project=args.project,
+        zone=args.zone, source=args.source)
   elif args.command == 'psqworker':
     # Set up root logger level which is normally set by the psqworker command
     # which we are bypassing.
