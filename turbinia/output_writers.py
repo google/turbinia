@@ -13,6 +13,8 @@
 # limitations under the License.
 """Classes to write output to various location types."""
 
+from __future__ import unicode_literals
+
 import errno
 import logging
 import os
@@ -38,8 +40,8 @@ def GetOutputWriters(result):
     A list of OutputWriter objects.
   """
   epoch = str(int(time.time()))
-  log.info(u'%s %s %s' % (epoch, str(result.task_id), result.task_name))
-  unique_dir = u'{0:s}-{1:s}-{2:s}'.format(
+  log.info('%s %s %s' % (epoch, str(result.task_id), result.task_name))
+  unique_dir = '{0:s}-{1:s}-{2:s}'.format(
       epoch, str(result.task_id), result.task_name)
 
   writers = [LocalOutputWriter(base_output_dir=result.base_output_dir,
@@ -105,33 +107,33 @@ class LocalOutputWriter(OutputWriter):
     self.base_output_dir = base_output_dir
     self.output_dir = None
     super(LocalOutputWriter, self).__init__(*args, **kwargs)
-    self.name = u'LocalWriter'
+    self.name = 'LocalWriter'
 
   def create_output_dir(self):
     self.output_dir = os.path.join(self.base_output_dir, self.unique_dir)
     if not os.path.exists(self.output_dir):
       try:
-        log.info(u'Creating new directory {0:s}'.format(self.output_dir))
+        log.info('Creating new directory {0:s}'.format(self.output_dir))
         os.makedirs(self.output_dir)
       except OSError as e:
         if e.errno == errno.EACCESS:
-          msg = u'Permission error ({0:s})'.format(str(e))
+          msg = 'Permission error ({0:s})'.format(str(e))
         else:
           msg = str(e)
         raise TurbiniaException(msg)
 
     return self.output_dir
 
-  def write(self, file_):
-    output_file = os.path.join(self.output_dir, os.path.basename(file_))
-    if not os.path.exists(file_):
-      log.warning(u'File [{0:s}] does not exist.'.format(file_))
+  def write(self, file_path):
+    output_file = os.path.join(self.output_dir, os.path.basename(file_path))
+    if not os.path.exists(file_path):
+      log.warning('File [{0:s}] does not exist.'.format(file_path))
       return False
     if os.path.exists(output_file):
-      log.warning(u'New file path [{0:s}] already exists.'.format(output_file))
+      log.warning('New file path [{0:s}] already exists.'.format(output_file))
       return False
 
-    shutil.copy(file_, output_file)
+    shutil.copy(file_path, output_file)
     return True
 
 
@@ -140,12 +142,17 @@ class GCSOutputWriter(OutputWriter):
 
   attributes:
     bucket (string): Storage bucket to put output results into.
-    gcs_path (string): GCS path to put output results into.
+    client (google.cloud.storage.Client): GCS Client
   """
 
   def __init__(self, gcs_path=None, *args, **kwargs):
+    """Initialization for GCSOutputWriter.
+
+    Args:
+      gcs_path (string): GCS path to put output results into.
+    """
     super(GCSOutputWriter, self).__init__(*args, **kwargs)
-    self.name = u'GCSWriter'
+    self.name = 'GCSWriter'
     config.LoadConfig()
     self.client = storage.Client(project=config.PROJECT)
 

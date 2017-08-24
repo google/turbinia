@@ -13,6 +13,8 @@
 # limitations under the License.
 """Turbinia task."""
 
+from __future__ import unicode_literals
+
 from datetime import datetime
 import errno
 import json
