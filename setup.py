@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-# Copyright 2015 Google Inc.
+# Copyright 2017 Google Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -25,10 +25,10 @@ from setuptools import setup
 
 setup(
     name='Turbinia',
-    version='20150916',
+    version='20170801',
     long_description=__doc__,
     packages=find_packages(),
     include_package_data=True,
     zip_safe=False,
     scripts=['turbiniactl'],
-    install_requires=frozenset(['celery', 'redis']))
+    install_requires=frozenset(['google-api-python-client', 'plaso', 'psq']))
