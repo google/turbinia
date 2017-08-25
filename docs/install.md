@@ -1,5 +1,5 @@
 ## Install
-Basic installation steps (very rough for now)
+### Basic installation steps (very rough for now)
 
 * Install virtualenv
   * `sudo apt-get install python-virtualenv git`
@@ -18,6 +18,22 @@ Basic installation steps (very rough for now)
 * `curl -O https://raw.githubusercontent.com/log2timeline/plaso/master/requirements.txt`
 * `pip install -r requirements.txt`
 * Copy and update Turbinia config (can either put into `~/.turbiniarc` or just keep the copy in `turbinia/config/turbinia_config.py`)
+* Create a new PubSub topic and subscription with the same name as configured in your Turbinia config (default is 'turbinia')
+* If you are running in GCP, you may also want to install [GCS FUSE](https://cloud.google.com/storage/docs/gcs-fuse).
+
+### GCP Setup
+The following is a one possible configuration and setup for Turbinia in GCP.  This is still a rough process and future versions will be containerized.
+* Create a server VM from a recent version of Ubuntu or Debian (it should work on other Linux flavors, but these are untested)
+* Create a turbinia user in your VM, and put the Turbinia source and virtualenvs in the home directory following the instructions above (inluding the installation of GCS FUSE)
+* Create a new image from the server VM's disk
+* Create a new Instance Template using the newly created image
+* Create a new Managed Instance Group from the newly created Instance Template
+* Create a new GCS bucket and create new directories for `scripts` and `output/logs`
+* Mount your GCS bucket on your server VM
+* cp `turbinia/tools/gcp_init/*.sh` into your locally mounted copy of `$your_bucket/scripts`
+* Edit the variables in `scripts/start-wrapper.sh` and `scripts/start-turbinia-common.sh` as appropriate
+* In your worker VM, add a new custom metadata key `startup-script-url` pointing to `gs://$your_bucket/scripts/start-wrapper.sh`
+* Upon start, your VM should mount your GCS Bucket, and copy the start scripts into the home directory of the Turbinia user and will then start the Turbinia worker.
 
 ## Setup
 Turbinia can be run either in the cloud, or on local machines.  If you run Turbinia on local machines, it will still use cloud PubSub for the client to talk to the server, and for the server to talk to the worker nodes.
