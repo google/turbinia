@@ -25,6 +25,8 @@
 The following is a one possible configuration and setup for Turbinia in GCP.  This is still a rough process and future versions will be containerized.
 * Create a server VM from a recent version of Ubuntu or Debian (it should work on other Linux flavors, but these are untested)
 * Create a turbinia user in your VM, and put the Turbinia source and virtualenvs in the home directory following the instructions above (inluding the installation of GCS FUSE)
+* Add your turbinia user to the `disk` group so that you will have permissions to read attached Persistent Disks
+  * `sudo adduser turbinia disk`
 * Create a new image from the server VM's disk
 * Create a new Instance Template using the newly created image
 * Create a new Managed Instance Group from the newly created Instance Template
