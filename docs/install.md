@@ -7,18 +7,22 @@
   * `virtualenv turbinia-env && . turbinia-env/bin/activate` 
 * Install [google-cloud-sdk](https://cloud.google.com/sdk/docs/quickstart-linux) 
 * Get auth credentials
-  * Create a [scoped service account](https://cloud.google.com/compute/docs/access/service-accounts) (this is the best option).
+  * Create a [scoped service account](https://cloud.google.com/compute/docs/access/service-accounts) (this is the best option) with the following roles:
+    * Cloud Datastore User (Used by PSQ to store result data, and in the future by the Task Manager to store queriable task data)
+    * Pub/Sub Editor (Used by clients to talk to Turbinia, and by the Task Manager to talk to workers)
+    * Storage Object Admin (only required on the GCS bucket used by Turbinia, if any.  See GCP Setup for details.)
   * Create a new key for your service account, and then point to it with an environment variable:
     * `export GOOGLE_APPLICATION_CREDENTIALS="/home/foo/service_account_creds.json"`
   * Alternately you can run Turbinia under your own credentials (not recommended).  Run 'gcloud auth login' (may require you to copy/paste url to browser).
   * Or run 'gcloud auth application-default login'
+* Make sure that the Pub/Sub API is enabled in your project by going to Pub/Sub in the cloud console and selecting `Enable API`. 
 * `sudo apt-get install liblzma-dev`
 * `pip install --upgrade pip google-api-python-client psq`
 * `git clone https://github.com/google/turbinia.git`
 * `curl -O https://raw.githubusercontent.com/log2timeline/plaso/master/requirements.txt`
 * `pip install -r requirements.txt`
 * Copy and update Turbinia config (can either put into `~/.turbiniarc` or just keep the copy in `turbinia/config/turbinia_config.py`)
-* Create a new PubSub topic and subscription with the same name as configured in your Turbinia config (default is 'turbinia')
+* Create a new PubSub topic and subscription to match the `PUBSUB_TOPIC` variable configured in your Turbinia config.
 * If you are running in GCP, you may also want to install [GCS FUSE](https://cloud.google.com/storage/docs/gcs-fuse).
 
 ### GCP Setup
@@ -33,7 +37,7 @@ The following is a one possible configuration and setup for Turbinia in GCP.  Th
 * Create a new GCS bucket and create new directories for `scripts` and `output/logs`
 * Mount your GCS bucket on your server VM
 * cp `turbinia/tools/gcp_init/*.sh` into your locally mounted copy of `$your_bucket/scripts`
-* Edit the variables in `scripts/start-wrapper.sh` and `scripts/start-turbinia-common.sh` as appropriate
+* Edit the variables in `scripts/start-wrapper.sh` and `scripts/start-turbinia-common.sh` as appropriate (please note that the `start-wrapper.sh` script has a `GOOGLE_APPLICATION_CREDENTIALS` environment var in the middle of the script that needs to be updated). 
 * In your worker VM, add a new custom metadata key `startup-script-url` pointing to `gs://$your_bucket/scripts/start-wrapper.sh`
 * Upon start, your VM should mount your GCS Bucket, and copy the start scripts into the home directory of the Turbinia user and will then start the Turbinia worker.
 
