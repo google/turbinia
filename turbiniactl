@@ -159,7 +159,7 @@ if __name__ == '__main__':
         name=args.name, local_path=args.local_path, source=args.source)
   elif args.command == 'googleclouddisk':
     args.name = args.name if args.name else args.disk_name
-    evidence_ = evidence.Directory(
+    evidence_ = evidence.GoogleCloudDisk(
         name=args.name, disk_name=args.disk_name, project=args.project,
         zone=args.zone, source=args.source)
   elif args.command == 'psqworker':
