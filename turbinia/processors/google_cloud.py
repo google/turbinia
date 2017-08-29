@@ -61,7 +61,8 @@ class GoogleCloudProject(object):
       API service resource (apiclient.discovery.Resource)
     """
     credentials = GoogleCredentials.get_application_default()
-    return build(service_name, api_version, credentials=credentials)
+    return build(service_name, api_version, credentials=credentials,
+                 cache_discovery=False)
 
   def _ExecuteOperation(self, service, operation, zone, block):
     """Executes API calls.
