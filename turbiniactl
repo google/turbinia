@@ -38,15 +38,18 @@ log = logging.getLogger('turbinia')
 logger.setup()
 
 if __name__ == '__main__':
-  # TODO(aarontp): Add 'startserver' command
   # TODO(aarontp): Allow for single run mode when specifying evidence
   #                which will also terminate the task manager after evidence has
   #                been processed.
   parser = argparse.ArgumentParser()
-  parser.add_argument('-v', '--verbose', action='store_true', help='verbose')
+  parser.add_argument(
+      '-q', '--quiet', action='store_true', help='Show minimal output')
+  parser.add_argument(
+      '-v', '--verbose', action='store_true', help='Show verbose output')
   # TODO(aarontp): Turn off debug by default later
   parser.add_argument(
-      '-d', '--debug', action='store_true', help='debug', default=True)
+      '-d', '--debug', action='store_true', help='Show debug output',
+      default=True)
   parser.add_argument('-o', '--output_dir', help='Directory path for output')
   parser.add_argument('-L', '--log_file', help='Log file')
   parser.add_argument(
@@ -60,6 +63,11 @@ if __name__ == '__main__':
       action='version',
       version=VERSION,
       help='Show the version')
+  parser.add_argument(
+      '-D',
+      '--dump_json',
+      action='store_true',
+      help='Dump JSON output of Turbinia Request instead of sending it')
 
   subparsers = parser.add_subparsers(
       dest='command', title='Commands', metavar='<command>')
@@ -130,7 +138,9 @@ if __name__ == '__main__':
   parser_server = subparsers.add_parser('server', help='Run Turbinia Server')
 
   args = parser.parse_args()
-  if args.verbose:
+  if args.quiet:
+    log.setLevel(logging.ERROR)
+  elif args.verbose:
     log.setLevel(logging.INFO)
   elif args.debug:
     log.setLevel(logging.DEBUG)
@@ -193,9 +203,12 @@ if __name__ == '__main__':
   elif evidence_:
     request = TurbiniaRequest()
     request.evidence.append(evidence_)
-    log.info(
-        u'Creating PubSub request with evidence {0:s}'.format(evidence_.name))
-    task_manager_.server_pubsub.send_request(request)
+    if args.dump_json:
+      print request.to_json().encode('utf-8')
+    else:
+      log.info(
+          u'Creating PubSub request with evidence {0:s}'.format(evidence_.name))
+      task_manager_.server_pubsub.send_request(request)
 
   log.info(u'Done.')
   sys.exit(0)
