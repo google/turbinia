@@ -8,9 +8,11 @@
 * Install [google-cloud-sdk](https://cloud.google.com/sdk/docs/quickstart-linux) 
 * Get auth credentials
   * Create a [scoped service account](https://cloud.google.com/compute/docs/access/service-accounts) (this is the best option) with the following roles:
-    * `Cloud Datastore User` (Used by PSQ to store result data, and in the future by the Task Manager to store queriable task data)
-    * `Pub/Sub Editor` (Used by clients to talk to Turbinia, and by the Task Manager to talk to workers)
-    * `Storage Object Admin`, and `Storage Legacy Bucket Reader` (only required on the GCS bucket used by Turbinia, if any.  See GCP Setup for details.)
+    * `Cloud Datastore User`: Used by PSQ to store result data, and in the future by the Task Manager to store queriable task data
+    * `Pub/Sub Editor`: Used by clients to talk to Turbinia, and by the Task Manager to talk to workers
+    * `Storage Object Admin` and `Storage Legacy Bucket Reader`: Only required on the GCS bucket used by Turbinia, if any.  See GCP Setup for details.
+    * `Compute Instance Admin`: Used to list instances and to attach disks to instances
+    * `Service Account User`: Used when attaching disks
   * Create a new key for your service account, and then point to it with an environment variable:
     * `export GOOGLE_APPLICATION_CREDENTIALS="/home/foo/service_account_creds.json"`
   * Alternately you can run Turbinia under your own credentials (not recommended).  Run 'gcloud auth login' (may require you to copy/paste url to browser).
