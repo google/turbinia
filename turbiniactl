@@ -96,7 +96,7 @@ if __name__ == '__main__':
       help='Process Google Cloud Persistent Disk as Evidence')
   parser_googleclouddisk.add_argument(
       '-d', '--disk_name', help='Google Cloud name for disk', required=True)
-  parser_rawdisk.add_argument(
+  parser_googleclouddisk.add_argument(
       '-P', '--partition', help='Partition number')
   parser_googleclouddisk.add_argument(
       '-p', '--project', help='Project that the disk is associated with',
@@ -123,7 +123,7 @@ if __name__ == '__main__':
       required=True)
   parser_googleclouddiskembedded.add_argument(
       '-d', '--disk_name', help='Google Cloud name for disk', required=True)
-  parser_rawdisk.add_argument(
+  parser_googleclouddiskembedded.add_argument(
       '-P', '--partition', help='Partition number')
   parser_googleclouddiskembedded.add_argument(
       '-p', '--project', help='Project that the disk is associated with',
