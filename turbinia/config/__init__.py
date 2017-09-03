@@ -35,6 +35,7 @@ CONFIGVARS = [
     'OUTPUT_DIR',
     'SLEEP_TIME',
     'SINGLE_RUN',
+    'MOUNT_DIR_PREFIX',
     # GCE CONFIG
     'PROJECT',
     'ZONE',
