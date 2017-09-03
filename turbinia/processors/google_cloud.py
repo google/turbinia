@@ -351,6 +351,8 @@ def PreprocessAttachDisk(evidence):
     evidence: A turbinia.evidence.GoogleCloudProject object.
   """
   path = u'/dev/disk/by-id/google-{0:s}'.format(evidence.disk_name)
+  if evidence.partition:
+    path = '{0:s}-part{1:s}'.format(path, str(evidence.partition))
   if IsBlockDevice(path):
     log.info(u'Disk {0:s} already attached!'.format(evidence.disk_name))
     evidence.local_path = path
@@ -389,6 +391,8 @@ def PostprocessDetachDisk(evidence):
     path = evidence.local_path
   else:
     path = u'/dev/disk/by-id/google-{0:s}'.format(evidence.disk_name)
+    if evidence.partition:
+      path = '{0:s}-part{1:s}'.format(path, str(evidence.partition))
 
   if not IsBlockDevice(path):
     log.info(u'Disk {0:s} already detached!'.format(evidence.disk_name))

@@ -148,12 +148,17 @@ class RawDisk(Evidence):
 
   Attributes:
     mount_path: The mount path for this disk (if any).
+    partition: The partition number to process (if any).
     size:  The size of the disk in bytes.
   """
 
-  def __init__(self, mount_path=None, size=None, *args, **kwargs):
+  def __init__(self, mount_path=None, partition=None, size=None, *args,
+               **kwargs):
     """Initialization for raw disk evidence object."""
     self.mount_path = mount_path
+    # By default Turbinia will process the entire raw disk, but if a partition
+    # is selected it will attempt to process only this partition.
+    self.partition = partition
     self.size = size
     super(RawDisk, self).__init__(*args, **kwargs)
 

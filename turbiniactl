@@ -81,6 +81,8 @@ if __name__ == '__main__':
   parser_rawdisk.add_argument(
       '-l', '--local_path', help='Local path to the evidence', required=True)
   parser_rawdisk.add_argument(
+      '-P', '--partition', help='Partition number')
+  parser_rawdisk.add_argument(
       '-s',
       '--source',
       help='Description of the source of the evidence',
@@ -94,6 +96,8 @@ if __name__ == '__main__':
       help='Process Google Cloud Persistent Disk as Evidence')
   parser_googleclouddisk.add_argument(
       '-d', '--disk_name', help='Google Cloud name for disk', required=True)
+  parser_rawdisk.add_argument(
+      '-P', '--partition', help='Partition number')
   parser_googleclouddisk.add_argument(
       '-p', '--project', help='Project that the disk is associated with',
       required=True)
@@ -119,6 +123,8 @@ if __name__ == '__main__':
       required=True)
   parser_googleclouddiskembedded.add_argument(
       '-d', '--disk_name', help='Google Cloud name for disk', required=True)
+  parser_rawdisk.add_argument(
+      '-P', '--partition', help='Partition number')
   parser_googleclouddiskembedded.add_argument(
       '-p', '--project', help='Project that the disk is associated with',
       required=True)
@@ -187,7 +193,8 @@ if __name__ == '__main__':
   if args.command == 'rawdisk':
     args.name = args.name if args.name else args.local_path
     evidence_ = evidence.RawDisk(
-        name=args.name, local_path=args.local_path, source=args.source)
+        name=args.name, local_path=args.local_path, partition=args.partition,
+        source=args.source)
   elif args.command == 'directory':
     args.name = args.name if args.name else args.local_path
     evidence_ = evidence.Directory(
@@ -195,13 +202,14 @@ if __name__ == '__main__':
   elif args.command == 'googleclouddisk':
     args.name = args.name if args.name else args.disk_name
     evidence_ = evidence.GoogleCloudDisk(
-        name=args.name, disk_name=args.disk_name, project=args.project,
-        zone=args.zone, source=args.source)
+        name=args.name, disk_name=args.disk_name, partition=args.partition,
+        project=args.project, zone=args.zone, source=args.source)
   elif args.command == 'googleclouddiskembedded':
     args.name = args.name if args.name else args.disk_name
     evidence_ = evidence.GoogleCloudDiskRawEmbedded(
         name=args.name, disk_name=args.disk_name,
-        embedded_path=args.embedded_path, project=args.project, zone=args.zone,
+        embedded_path=args.embedded_path, partition=args.partition,
+        project=args.project, zone=args.zone,
         source=args.source)
   elif args.command == 'psqworker':
     # Set up root logger level which is normally set by the psqworker command
