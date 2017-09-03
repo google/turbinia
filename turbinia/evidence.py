@@ -14,10 +14,12 @@
 """Turbinia Evidence objects."""
 
 import json
+import os
 import sys
 
 from turbinia import TurbiniaException
 from turbinia.processors import google_cloud
+from turbinia.processors import mount_local
 
 
 def evidence_decode(evidence_dict):
@@ -232,10 +234,12 @@ class GoogleCloudDiskRawEmbedded(GoogleCloudDisk):
 
   def preprocess(self):
     google_cloud.PreprocessAttachDisk(self)
-    self.local_path = self.embedded_path
+    mount_local.PreprocessMountDisk(self)
+    self.local_path = os.path.join(self.mount_path, self.embedded_path)
 
   def postprocess(self):
     google_cloud.PostprocessDetachDisk(self)
+    mount_local.PreprocessUnmountDisk(self)
 
 
 class PlasoFile(Evidence):
