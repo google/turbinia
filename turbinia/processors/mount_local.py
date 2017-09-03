@@ -32,7 +32,7 @@ def PreprocessMountDisk(evidence):
   config.LoadConfig()
   mount_prefix = config.MOUNT_DIR_PREFIX
 
-  if os.path.exists(mount_prefix) and not os.isdir(mount_prefix):
+  if os.path.exists(mount_prefix) and not os.path.isdir(mount_prefix):
     raise TurbiniaException(
         'Mount dir {0:s} exists, but is not a directory'.format(mount_prefix))
   if not os.path.exists(mount_prefix):
@@ -52,7 +52,7 @@ def PreprocessMountDisk(evidence):
   try:
     subprocess.check_call(mount_cmd)
   except subprocess.CalledProcessError as e:
-    raise TurbiniaException('Could not mount directory {1!s}'.format(e))
+    raise TurbiniaException('Could not mount directory {0!s}'.format(e))
 
 def PostprocessUnmountDisk(evidence):
   """Locally unmounts disk in an instance.
@@ -67,7 +67,7 @@ def PostprocessUnmountDisk(evidence):
   try:
     subprocess.check_call(umount_cmd)
   except subprocess.CalledProcessError as e:
-    raise TurbiniaException('Could not unmount directory {1!s}'.format(e))
+    raise TurbiniaException('Could not unmount directory {0!s}'.format(e))
 
   log.info('Removing mount path {0:s}'.format(evidence.mount_path))
   try:
