@@ -233,8 +233,8 @@ class PSQTaskManager(BaseTaskManager):
       task_result: The TurbiniaTaskResult object
     """
     if not task_result.successful:
-      log.error(u'Task {0:s} from {1:s} was not successful'.format(
-          task_result.task_name, task_result.worker_name))
+      log.error(u'Task {0:s} from {1:s} failed: [{2:s}]'.format(
+          task_result.task_name, task_result.worker_name, task_result.status))
     else:
       log.info(
           u'Task {0:s} from {1:s} executed with status [{2:s}]'.format(
