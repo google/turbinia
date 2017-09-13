@@ -50,7 +50,7 @@ def results_handler(func, *args, **kwargs):
       result = func(self, evidence=evidence, result=result, *args, **kwargs)
     # pylint: disable=broad-except
     except Exception as e:
-      msg = 'Task failed with exeption: [{0!s}]'.format(e)
+      msg = 'Task failed with exception: [{0!s}]'.format(e)
       result.close(success=False, status=msg)
       result.set_error(e.message, traceback.format_exc())
 
