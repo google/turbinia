@@ -22,11 +22,41 @@ import logging
 import os
 import platform
 import time
+import traceback
 import uuid
 
 from turbinia import config
 from turbinia import output_writers
 from turbinia import TurbiniaException
+
+
+# pylint: disable=unused-argument
+def results_handler(func, *args, **kwargs):
+  """Decorator to manage TurbiniaTaskResults and exception handling.
+
+  All TurbiniaTask.run() methods need to use this decorator in order to handle
+  the management of TurbiniaTaskResults and the exception handling and logging.
+  Otherwise details from exceptions in the worker cannot be propogated back to
+  the Turbinia TaskManager.
+  """
+  def decorator(self, evidence, *args, **kwargs):
+    """Function wrapper returned by decorator."""
+    if not isinstance(self, TurbiniaTask):
+      raise TurbiniaException(
+          'results_handler decorator can only be set on TurbiniaTask methods')
+
+    result = self.setup(evidence)
+    try:
+      result = func(self, evidence=evidence, result=result, *args, **kwargs)
+    # pylint: disable=broad-except
+    except Exception as e:
+      msg = 'Task failed with exeption: [{0!s}]'.format(e)
+      result.close(success=False, status=msg)
+      result.set_error(e.message, traceback.format_exc())
+
+    return result
+
+  return decorator
 
 
 class TurbiniaTaskResult(object):
@@ -160,7 +190,7 @@ class TurbiniaTaskResult(object):
       if writer.name != 'LocalOutputWriter':
         writer.write(file_)
 
-  def set_error(self, error, traceback):
+  def set_error(self, error, traceback_):
     """Add error and traceback.
 
     Args:
@@ -168,7 +198,7 @@ class TurbiniaTaskResult(object):
         traceback: Traceback of the error.
     """
     self.error['error'] = error
-    self.error['traceback'] = traceback
+    self.error['traceback'] = traceback_
 
 
 class TurbiniaTask(object):
@@ -221,11 +251,14 @@ class TurbiniaTask(object):
     return self.result
 
 
-  def run(self, evidence):
+  def run(self, evidence, result):
     """Entry point to execute the task.
+
+    This method needs to be wrapped in the @results_handler decorator.
 
     Args:
       evidence: Evidence object.
+      result: A TurbiniaTaskResult object to place task results into.
 
     Returns:
         TurbiniaTaskResult object.
