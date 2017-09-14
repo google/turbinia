@@ -201,6 +201,7 @@ class TurbiniaTask(object):
     self.base_output_dir = base_output_dir
     self.output_dir = None
     self.result = None
+    self.state_key = None
     self.stub = None
 
   def setup(self, evidence):
