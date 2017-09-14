@@ -27,6 +27,7 @@ from turbinia import evidence
 from turbinia import config
 from turbinia import jobs
 from turbinia import pubsub as turbinia_pubsub
+from turbinia import state_manager
 
 log = logging.getLogger('turbinia')
 
@@ -83,6 +84,7 @@ class BaseTaskManager(object):
   Attributes:
     jobs: A list of instantiated job objects
     evidence: A list of evidence objects to process
+    state_manager: State manager object to handle syncing with storage
     tasks: A list of outstanding TurbiniaTask objects
   """
 
@@ -90,6 +92,7 @@ class BaseTaskManager(object):
     self.jobs = []
     self.evidence = []
     self.tasks = []
+    self.state_manager = state_manager.get_state_manager()
 
   def _backend_setup(self):
     """Sets up backend dependencies.
@@ -166,10 +169,20 @@ class BaseTaskManager(object):
       evidence_: An Evidence object to be processed.
     """
     self.tasks.append(task)
+    self.state_manager.write_new_task(task)
     self.enqueue_task(task, evidence_)
 
+  def remove_task(self, task):
+    """Removes a task from the queue; Usually after completion or failure.
+
+    Args:
+      task: A TurbiniaTask object
+    """
+    self.state_manager.update_task(task)
+    self.tasks.remove(task)
+
   def enqueue_task(self, task, evidence_):
-    """Enqueues a task and evidence with the implementation specific task queue.
+    """Enqueues a task and evidence in the implementation specific task queue.
 
     Args:
       task: An instantiated Turbinia Task
@@ -177,11 +190,49 @@ class BaseTaskManager(object):
     """
     raise NotImplementedError
 
+  def finalize_result(self, task_result):
+    """Runs final task results recording.
+
+    self.process_tasks handles things that have failed at the task queue layer
+    (i.e. PSQ), and this method handles tasks that have potentially failed
+    below that layer (i.e. somewhere in our Task code).
+
+    Args:
+      task_result: The TurbiniaTaskResult object
+    """
+    if not task_result.successful:
+      log.error(u'Task {0:s} from {1:s} was not successful'.format(
+          task_result.task_name, task_result.worker_name))
+    else:
+      log.info(
+          u'Task {0:s} from {1:s} executed with status [{2:s}]'.format(
+              task_result.task_name, task_result.worker_name,
+              task_result.status))
+
+    if not isinstance(task_result.evidence, list):
+      log.info(
+          u'Task {0:s} from {1:s} did not return evidence list'.format(
+              task_result.task_name, task_result.worker_name))
+      return
+
+    for evidence_ in task_result.evidence:
+      if isinstance(evidence_, evidence.Evidence):
+        log.info(
+            u'Task {0:s} from {1:s} returned Evidence {2:s}'.format(
+                task_result.task_name, task_result.worker_name, evidence_.name))
+        self.add_evidence(evidence_)
+      else:
+        log.error(
+            u'Task {0:s} from {1:s} returned non-Evidence output type '
+            u'{2:s}'.format(
+                task_result.task_name, task_result.worker_name,
+                type(task_result.evidence)))
+
   def process_tasks(self):
     """Process any tasks that need to be processed.
 
     Returns:
-      The number of tasks that have completed.
+      A list of tasks that have completed.
     """
     raise NotImplementedError
 
@@ -191,7 +242,13 @@ class BaseTaskManager(object):
     while True:
       # pylint: disable=expression-not-assigned
       [self.add_evidence(x) for x in self.get_evidence()]
-      self.process_tasks()
+
+      for task in self.process_tasks():
+        if task.result:
+          self.finalize_result(task.result)
+        self.remove_task(task)
+
+      [self.state_manager.update_task(t) for t in self.tasks]
       if config.SINGLE_RUN and self.check_done():
         log.info(u'No more tasks to process.  Exiting now.')
         return
@@ -232,43 +289,6 @@ class PSQTaskManager(BaseTaskManager):
       log.error(msg)
       raise turbinia.TurbiniaException(msg)
 
-  def _finalize_result(self, task_result):
-    """Runs final task results recording.
-
-    self.process_tasks handles things that have failed at the PSQ layer, and
-    this function handles tasks that have failed below that layer (i.e.
-    somewhere in our Task code).
-
-    Args:
-      task_result: The TurbiniaTaskResult object
-    """
-    if not task_result.successful:
-      log.error(u'Task {0:s} from {1:s} was not successful'.format(
-          task_result.task_name, task_result.worker_name))
-    else:
-      log.info(
-          u'Task {0:s} from {1:s} executed with status [{2:s}]'.format(
-              task_result.task_name, task_result.worker_name,
-              task_result.status))
-
-    if not isinstance(task_result.evidence, list):
-      log.info(
-          u'Task {0:s} from {1:s} did not return evidence list'.format(
-              task_result.task_name, task_result.worker_name))
-      return
-
-    for evidence_ in task_result.evidence:
-      if isinstance(evidence_, evidence.Evidence):
-        log.info(
-            u'Task {0:s} from {1:s} returned Evidence {2:s}'.format(
-                task_result.task_name, task_result.worker_name, evidence_.name))
-        self.add_evidence(evidence_)
-      else:
-        log.error(
-            u'Task {0:s} from {1:s} returned non-Evidence output type '
-            u'{2:s}'.format(
-                task_result.task_name, task_result.worker_name,
-                type(task_result.evidence)))
 
   def process_tasks(self):
     completed_tasks = []
@@ -283,13 +303,13 @@ class PSQTaskManager(BaseTaskManager):
         log.warning('Task {0:s} failed.'.format(psq_task.id))
         completed_tasks.append(task)
       else:
+        task.result = task.stub.result()
         completed_tasks.append(task)
-        self._finalize_result(task.stub.result())
 
     outstanding_task_count = len(self.tasks) - len(completed_tasks)
     log.info('{0:d} Tasks still outstanding.'.format(outstanding_task_count))
     # pylint: disable=expression-not-assigned
-    return len([self.tasks.remove(task) for task in completed_tasks])
+    return completed_tasks
 
   def get_evidence(self):
     requests = self.server_pubsub.check_messages()
