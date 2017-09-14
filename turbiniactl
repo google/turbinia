@@ -88,7 +88,7 @@ if __name__ == '__main__':
   parser_rawdisk.add_argument(
       '-n', '--name', help='Descriptive name of the evidence', required=False)
 
-  # Google Cloud Disk
+  # Parser options for Google Cloud Disk Evidence type
   parser_googleclouddisk = subparsers.add_parser(
       'googleclouddisk',
       help='Process Google Cloud Persistent Disk as Evidence')
@@ -108,7 +108,7 @@ if __name__ == '__main__':
   parser_googleclouddisk.add_argument(
       '-n', '--name', help='Descriptive name of the evidence', required=False)
 
-  # Google Cloud Persistent Disk Embedded Raw Image
+  # Parser options for Google Cloud Persistent Disk Embedded Raw Image
   parser_googleclouddiskembedded = subparsers.add_parser(
       'googleclouddiskembedded',
       help='Process Google Cloud Persistent Disk with an embedded raw disk '
@@ -133,7 +133,7 @@ if __name__ == '__main__':
   parser_googleclouddiskembedded.add_argument(
       '-n', '--name', help='Descriptive name of the evidence', required=False)
 
-  # Directory
+  # Parser options for Directory evidence type
   parser_directory = subparsers.add_parser(
       'directory', help='Process a directory as Evidence')
   parser_directory.add_argument(
