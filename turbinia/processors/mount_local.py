@@ -27,7 +27,7 @@ def PreprocessMountDisk(evidence):
   """Locally mounts disk in an instance.
 
   Args:
-    evidence: A turbinia.evidence.RawDisk or subclass object.
+    evidence: A turbinia.evidence.RawDisk object or a subclass of it.
   """
   config.LoadConfig()
   mount_prefix = config.MOUNT_DIR_PREFIX
