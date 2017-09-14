@@ -83,11 +83,13 @@ class BaseTaskManager(object):
   Attributes:
     jobs: A list of instantiated job objects
     evidence: A list of evidence objects to process
+    tasks: A list of outstanding TurbiniaTask objects
   """
 
   def __init__(self):
     self.jobs = []
     self.evidence = []
+    self.tasks = []
 
   def _backend_setup(self):
     """Sets up backend dependencies.
@@ -146,7 +148,7 @@ class BaseTaskManager(object):
     Returns:
       Bool indicating whether we are done.
     """
-    raise NotImplementedError
+    return not bool(len(self.tasks))
 
   def get_evidence(self):
     """Checks for new evidence to process.
@@ -157,7 +159,17 @@ class BaseTaskManager(object):
     raise NotImplementedError
 
   def add_task(self, task, evidence_):
-    """Adds a task to be queued along with the evidence it will process.
+    """Adds a task and evidence to process to the task manager.
+
+    Args:
+      task: An instantiated Turbinia Task
+      evidence_: An Evidence object to be processed.
+    """
+    self.tasks.append(task)
+    self.enqueue_task(task, evidence_)
+
+  def enqueue_task(self, task, evidence_):
+    """Enqueues a task and evidence with the implementation specific task queue.
 
     Args:
       task: An instantiated Turbinia Task
@@ -193,13 +205,11 @@ class PSQTaskManager(BaseTaskManager):
 
   Attributes:
     psq: PSQ Queue object.
-    psq_task_results: A list of outstanding PSQ task results.
     server_pubsub: A PubSubClient object for receiving new evidence messages.
   """
 
   def __init__(self):
     self.psq = None
-    self.psq_task_results = []
     self.server_pubsub = None
     config.LoadConfig()
     super(PSQTaskManager, self).__init__()
@@ -260,29 +270,26 @@ class PSQTaskManager(BaseTaskManager):
                 task_result.task_name, task_result.worker_name,
                 type(task_result.evidence)))
 
-  def check_done(self):
-    return not bool(len(self.psq_task_results))
-
   def process_tasks(self):
     completed_tasks = []
-    for psq_task_result in self.psq_task_results:
-      psq_task = psq_task_result.get_task()
+    for task in self.tasks:
+      psq_task = task.stub.get_task()
       # This handles tasks that have failed at the PSQ layer.
       if not psq_task:
-        log.debug('Task {0:s} not yet created'.format(psq_task_result.task_id))
+        log.debug('Task {0:s} not yet created'.format(task.stub.task_id))
       elif psq_task.status not in (psq.task.FINISHED, psq.task.FAILED):
         log.debug('Task {0:s} not finished'.format(psq_task.id))
       elif psq_task.status == psq.task.FAILED:
         log.warning('Task {0:s} failed.'.format(psq_task.id))
-        completed_tasks.append(psq_task_result)
+        completed_tasks.append(task)
       else:
-        completed_tasks.append(psq_task_result)
-        self._finalize_result(psq_task_result.result())
+        completed_tasks.append(task)
+        self._finalize_result(task.stub.result())
 
-    outstanding_task_count = len(self.psq_task_results) - len(completed_tasks)
+    outstanding_task_count = len(self.tasks) - len(completed_tasks)
     log.info('{0:d} Tasks still outstanding.'.format(outstanding_task_count))
     # pylint: disable=expression-not-assigned
-    return len([self.psq_task_results.remove(task) for task in completed_tasks])
+    return len([self.tasks.remove(task) for task in completed_tasks])
 
   def get_evidence(self):
     requests = self.server_pubsub.check_messages()
@@ -297,8 +304,8 @@ class PSQTaskManager(BaseTaskManager):
         evidence_list.append(evidence_)
     return evidence_list
 
-  def add_task(self, task, evidence_):
+  def enqueue_task(self, task, evidence_):
     log.info(
         'Adding PSQ task {0:s} with evidence {1:s} to queue'.format(
             task.name, evidence_.name))
-    self.psq_task_results.append(self.psq.enqueue(task_runner, task, evidence_))
+    task.stub = self.psq.enqueue(task_runner, task, evidence_)
