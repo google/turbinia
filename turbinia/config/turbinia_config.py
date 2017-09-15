@@ -40,6 +40,8 @@ PSQ_TOPIC = u'turbinia-psq'
 PUBSUB_TOPIC = None
 # GCS Path to copy worker results and Evidence output to
 GCS_OUTPUT_PATH = False
+# Which state manager to use
+STATE_MANAGER = u'Datastore'
 
 # Redis configuration
 REDIS_HOST = None

@@ -50,6 +50,9 @@ class TurbiniaTaskResult(object):
         _output_writers: A list of output writer objects
   """
 
+  # The list of attributes that we will persist into storage
+  STORED_ATTRIBUTES = ['status', 'successful']
+
   def __init__(
       self,
       evidence=None,
@@ -182,7 +185,15 @@ class TurbiniaTask(object):
                        directories will be created under this.
       output_dir: The directory output will go into (including per-task folder).
       result: A TurbiniaTaskResult object.
+      state_key: A key used to manage task state
+      stub: The task manager implementation specific task stub that exists
+            server side to keep a reference to the remote task objects.  For PSQ
+            this is a task result object, but other implementations have their
+            own stub objects.
   """
+
+  # The list of attributes that we will persist into storage
+  STORED_ATTRIBUTES = ['id', 'name']
 
   def __init__(self, name=None, base_output_dir=None):
     """Initialization for TurbiniaTask."""
@@ -191,6 +202,8 @@ class TurbiniaTask(object):
     self.base_output_dir = base_output_dir
     self.output_dir = None
     self.result = None
+    self.state_key = None
+    self.stub = None
 
   def setup(self, evidence):
     """Perform common setup operations and runtime environment.

@@ -27,6 +27,7 @@ from turbinia import evidence
 from turbinia import config
 from turbinia import jobs
 from turbinia import pubsub as turbinia_pubsub
+from turbinia import state_manager
 
 log = logging.getLogger('turbinia')
 
@@ -69,11 +70,15 @@ class BaseTaskManager(object):
   Attributes:
     jobs: A list of instantiated job objects
     evidence: A list of evidence objects to process
+    state_manager: State manager object to handle syncing with storage
+    tasks: A list of outstanding TurbiniaTask objects
   """
 
   def __init__(self):
     self.jobs = []
     self.evidence = []
+    self.tasks = []
+    self.state_manager = state_manager.get_state_manager()
 
   def _backend_setup(self):
     """Sets up backend dependencies.
@@ -132,7 +137,7 @@ class BaseTaskManager(object):
     Returns:
       Bool indicating whether we are done.
     """
-    raise NotImplementedError
+    return not bool(len(self.tasks))
 
   def get_evidence(self):
     """Checks for new evidence to process.
@@ -143,7 +148,27 @@ class BaseTaskManager(object):
     raise NotImplementedError
 
   def add_task(self, task, evidence_):
-    """Adds a task to be queued along with the evidence it will process.
+    """Adds a task and evidence to process to the task manager.
+
+    Args:
+      task: An instantiated Turbinia Task
+      evidence_: An Evidence object to be processed.
+    """
+    self.tasks.append(task)
+    self.state_manager.write_new_task(task)
+    self.enqueue_task(task, evidence_)
+
+  def remove_task(self, task):
+    """Removes a task from the queue; Usually after completion or failure.
+
+    Args:
+      task: A TurbiniaTask object
+    """
+    self.state_manager.update_task(task)
+    self.tasks.remove(task)
+
+  def enqueue_task(self, task, evidence_):
+    """Enqueues a task and evidence in the implementation specific task queue.
 
     Args:
       task: An instantiated Turbinia Task
@@ -151,76 +176,19 @@ class BaseTaskManager(object):
     """
     raise NotImplementedError
 
-  def process_tasks(self):
-    """Process any tasks that need to be processed.
-
-    Returns:
-      The number of tasks that have completed.
-    """
-    raise NotImplementedError
-
-  def run(self):
-    """Main run loop for TaskManager."""
-    log.info(u'Starting Task Manager run loop')
-    while True:
-      # pylint: disable=expression-not-assigned
-      [self.add_evidence(x) for x in self.get_evidence()]
-      self.process_tasks()
-      if config.SINGLE_RUN and self.check_done():
-        log.info(u'No more tasks to process.  Exiting now.')
-        return
-
-      # TODO(aarontp): Add config var for this.
-      time.sleep(10)
-
-
-class PSQTaskManager(BaseTaskManager):
-  """PSQ implementation of BaseTaskManager.
-
-  Attributes:
-    psq: PSQ Queue object.
-    psq_task_results: A list of outstanding PSQ task results.
-    server_pubsub: A PubSubClient object for receiving new evidence messages.
-  """
-
-  def __init__(self):
-    self.psq = None
-    self.psq_task_results = []
-    self.server_pubsub = None
-    config.LoadConfig()
-    super(PSQTaskManager, self).__init__()
-
-  def _backend_setup(self):
-    log.debug(
-        u'Setting up PSQ Task Manager requirements on project {0:s}'.format(
-            config.PROJECT))
-    self.server_pubsub = turbinia_pubsub.TurbiniaPubSub(config.PUBSUB_TOPIC)
-    self.server_pubsub.setup()
-    psq_pubsub_client = pubsub.Client(project=config.PROJECT)
-    datastore_client = datastore.Client(project=config.PROJECT)
-    try:
-      self.psq = psq.Queue(
-          psq_pubsub_client,
-          config.PSQ_TOPIC,
-          storage=psq.DatastoreStorage(datastore_client))
-    except GaxError as e:
-      msg = u'Error creating PSQ Queue: {0:s}'.format(str(e))
-      log.error(msg)
-      raise turbinia.TurbiniaException(msg)
-
-  def _finalize_result(self, task_result):
+  def finalize_result(self, task_result):
     """Runs final task results recording.
 
-    self.process_tasks handles things that have failed at the PSQ layer, and
-    this function handles tasks that have failed below that layer (i.e.
-    somewhere in our Task code).
+    self.process_tasks handles things that have failed at the task queue layer
+    (i.e. PSQ), and this method handles tasks that have potentially failed
+    below that layer (i.e. somewhere in our Task code).
 
     Args:
       task_result: The TurbiniaTaskResult object
     """
     if not task_result.successful:
-      log.error(u'Task {0:s} from {1:s} failed: [{2:s}]'.format(
-          task_result.task_name, task_result.worker_name, task_result.status))
+      log.error(u'Task {0:s} from {1:s} was not successful'.format(
+          task_result.task_name, task_result.worker_name))
     else:
       log.info(
           u'Task {0:s} from {1:s} executed with status [{2:s}]'.format(
@@ -246,29 +214,87 @@ class PSQTaskManager(BaseTaskManager):
                 task_result.task_name, task_result.worker_name,
                 type(task_result.evidence)))
 
-  def check_done(self):
-    return not bool(len(self.psq_task_results))
+  def process_tasks(self):
+    """Process any tasks that need to be processed.
+
+    Returns:
+      A list of tasks that have completed.
+    """
+    raise NotImplementedError
+
+  def run(self):
+    """Main run loop for TaskManager."""
+    log.info(u'Starting Task Manager run loop')
+    while True:
+      # pylint: disable=expression-not-assigned
+      [self.add_evidence(x) for x in self.get_evidence()]
+
+      for task in self.process_tasks():
+        if task.result:
+          self.finalize_result(task.result)
+        self.remove_task(task)
+
+      [self.state_manager.update_task(t) for t in self.tasks]
+      if config.SINGLE_RUN and self.check_done():
+        log.info(u'No more tasks to process.  Exiting now.')
+        return
+
+      # TODO(aarontp): Add config var for this.
+      time.sleep(10)
+
+
+class PSQTaskManager(BaseTaskManager):
+  """PSQ implementation of BaseTaskManager.
+
+  Attributes:
+    psq: PSQ Queue object.
+    server_pubsub: A PubSubClient object for receiving new evidence messages.
+  """
+
+  def __init__(self):
+    self.psq = None
+    self.server_pubsub = None
+    config.LoadConfig()
+    super(PSQTaskManager, self).__init__()
+
+  def _backend_setup(self):
+    log.debug(
+        u'Setting up PSQ Task Manager requirements on project {0:s}'.format(
+            config.PROJECT))
+    self.server_pubsub = turbinia_pubsub.TurbiniaPubSub(config.PUBSUB_TOPIC)
+    self.server_pubsub.setup()
+    psq_pubsub_client = pubsub.Client(project=config.PROJECT)
+    datastore_client = datastore.Client(project=config.PROJECT)
+    try:
+      self.psq = psq.Queue(
+          psq_pubsub_client,
+          config.PSQ_TOPIC,
+          storage=psq.DatastoreStorage(datastore_client))
+    except GaxError as e:
+      msg = u'Error creating PSQ Queue: {0:s}'.format(str(e))
+      log.error(msg)
+      raise turbinia.TurbiniaException(msg)
 
   def process_tasks(self):
     completed_tasks = []
-    for psq_task_result in self.psq_task_results:
-      psq_task = psq_task_result.get_task()
+    for task in self.tasks:
+      psq_task = task.stub.get_task()
       # This handles tasks that have failed at the PSQ layer.
       if not psq_task:
-        log.debug('Task {0:s} not yet created'.format(psq_task_result.task_id))
+        log.debug('Task {0:s} not yet created'.format(task.stub.task_id))
       elif psq_task.status not in (psq.task.FINISHED, psq.task.FAILED):
         log.debug('Task {0:s} not finished'.format(psq_task.id))
       elif psq_task.status == psq.task.FAILED:
         log.warning('Task {0:s} failed.'.format(psq_task.id))
-        completed_tasks.append(psq_task_result)
+        completed_tasks.append(task)
       else:
-        completed_tasks.append(psq_task_result)
-        self._finalize_result(psq_task_result.result())
+        task.result = task.stub.result()
+        completed_tasks.append(task)
 
-    outstanding_task_count = len(self.psq_task_results) - len(completed_tasks)
+    outstanding_task_count = len(self.tasks) - len(completed_tasks)
     log.info('{0:d} Tasks still outstanding.'.format(outstanding_task_count))
     # pylint: disable=expression-not-assigned
-    return len([self.psq_task_results.remove(task) for task in completed_tasks])
+    return completed_tasks
 
   def get_evidence(self):
     requests = self.server_pubsub.check_messages()
@@ -283,8 +309,8 @@ class PSQTaskManager(BaseTaskManager):
         evidence_list.append(evidence_)
     return evidence_list
 
-  def add_task(self, task, evidence_):
+  def enqueue_task(self, task, evidence_):
     log.info(
         'Adding PSQ task {0:s} with evidence {1:s} to queue'.format(
             task.name, evidence_.name))
-    self.psq_task_results.append(self.psq.enqueue(task_runner, task, evidence_))
+    task.stub = self.psq.enqueue(task_runner, task, evidence_)
