@@ -14,10 +14,12 @@
 """Turbinia Evidence objects."""
 
 import json
+import os
 import sys
 
 from turbinia import TurbiniaException
 from turbinia.processors import google_cloud
+from turbinia.processors import mount_local
 
 
 def evidence_decode(evidence_dict):
@@ -211,6 +213,33 @@ class GoogleCloudDisk(RawDisk):
 
   def postprocess(self):
     google_cloud.PostprocessDetachDisk(self)
+
+
+class GoogleCloudDiskRawEmbedded(GoogleCloudDisk):
+  """Evidence object for raw disks embedded in Persistent Disks.
+
+  This is for a raw image file that is located in the filesystem of a mounted
+  GCP Persistent Disk.  This can be useful if you want to process a raw disk
+  image originating from outside cloud, and it is much more performant and
+  reliable option than reading it directly from GCS FUSE.
+
+  Attributes:
+    embedded_path: The path of the raw disk image inside the Persistent Disk
+  """
+
+  def __init__(self, embedded_path=None, *args, **kwargs):
+    """Initialization for Google Cloud Disk."""
+    self.embedded_path = embedded_path
+    super(GoogleCloudDiskRawEmbedded, self).__init__(*args, **kwargs)
+
+  def preprocess(self):
+    google_cloud.PreprocessAttachDisk(self)
+    mount_local.PreprocessMountDisk(self)
+    self.local_path = os.path.join(self.mount_path, self.embedded_path)
+
+  def postprocess(self):
+    google_cloud.PostprocessDetachDisk(self)
+    mount_local.PreprocessUnmountDisk(self)
 
 
 class PlasoFile(Evidence):

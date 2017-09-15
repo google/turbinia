@@ -22,6 +22,7 @@ import logging
 import os
 import platform
 import time
+import traceback
 import uuid
 
 from turbinia import config
@@ -163,7 +164,7 @@ class TurbiniaTaskResult(object):
       if writer.name != 'LocalOutputWriter':
         writer.write(file_)
 
-  def set_error(self, error, traceback):
+  def set_error(self, error, traceback_):
     """Add error and traceback.
 
     Args:
@@ -171,7 +172,7 @@ class TurbiniaTaskResult(object):
         traceback: Traceback of the error.
     """
     self.error['error'] = error
-    self.error['traceback'] = traceback
+    self.error['traceback'] = traceback_
 
 
 class TurbiniaTask(object):
@@ -233,12 +234,37 @@ class TurbiniaTask(object):
     evidence.preprocess()
     return self.result
 
+  def run_wrapper(self, evidence):
+    """Wrapper to manage TurbiniaTaskResults and exception handling.
 
-  def run(self, evidence):
+    This wrapper should be called to invoke the run() methods so it can handle
+    the management of TurbiniaTaskResults and the exception handling.  Otherwise
+    details from exceptions in the worker cannot be propogated back to the
+    Turbinia TaskManager.
+
+    Args:
+      evidence: Evidence object
+
+    Returns:
+      A TurbiniaTaskResult object
+    """
+    result = self.setup(evidence)
+    try:
+      result = self.run(evidence, result)
+    # pylint: disable=broad-except
+    except Exception as e:
+      msg = 'Task failed with exception: [{0!s}]'.format(e)
+      result.close(success=False, status=msg)
+      result.set_error(e.message, traceback.format_exc())
+
+    return result
+
+  def run(self, evidence, result):
     """Entry point to execute the task.
 
     Args:
       evidence: Evidence object.
+      result: A TurbiniaTaskResult object to place task results into.
 
     Returns:
         TurbiniaTaskResult object.

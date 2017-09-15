@@ -23,16 +23,16 @@ from turbinia.evidence import PlasoFile
 class PlasoTask(TurbiniaTask):
   """Task to run Plaso (log2timeline)."""
 
-  def run(self, evidence):
+  def run(self, evidence, result):
     """Task that process data with Plaso.
 
     Args:
         evidence: Path to data to process.
+        result: A TurbiniaTaskResult object to place task results into.
 
     Returns:
         TurbiniaTaskResult object.
     """
-    result = self.setup(evidence)
     plaso_result = PlasoFile()
 
     plaso_file = os.path.join(self.output_dir, u'{0:s}.plaso'.format(self.id))

@@ -24,6 +24,9 @@ OUTPUT_DIR = None
 SLEEP_TIME = 10
 # Whether to run as a single run, or to keep server running indefinitely
 SINGLE_RUN = False
+# Local directory in the worker to put other mount directories for locally
+# mounting images/disks
+MOUNT_DIR_PREFIX = u'/mnt/turbinia-mounts'
 
 # GCE configuration
 PROJECT = None
