@@ -17,14 +17,12 @@ import os
 import subprocess
 
 from turbinia.workers import TurbiniaTask
-from turbinia.workers import results_handler
 from turbinia.evidence import PlasoFile
 
 
 class PlasoTask(TurbiniaTask):
   """Task to run Plaso (log2timeline)."""
 
-  @results_handler
   def run(self, evidence, result):
     """Task that process data with Plaso.
 
