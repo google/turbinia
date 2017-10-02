@@ -17,7 +17,7 @@
     * `export GOOGLE_APPLICATION_CREDENTIALS="/home/foo/service_account_creds.json"`
   * Alternately you can run Turbinia under your own credentials (not recommended).  Run 'gcloud auth login' (may require you to copy/paste url to browser).
   * Or run 'gcloud auth application-default login'
-* Make sure that the Pub/Sub API is enabled in your project by going to Pub/Sub in the cloud console and selecting `Enable API`.
+* Make sure that the [Pub/Sub](https://console.cloud.google.com/apis/library/pubsub.googleapis.com/) and [Cloud Functions](https://console.cloud.google.com/apis/library/cloudfunctions.googleapis.com/) APIs are enabled in your project.
 * Make sure that Datastore is enabled and setup by going to Datastore in the cloud console, and if the `Create Entity` button exists, click that and select the region that your data should be in.  No need to create any Entities after selecting your region.
 * `sudo apt-get install liblzma-dev`
 * `pip install --upgrade pip google-api-python-client psq`
