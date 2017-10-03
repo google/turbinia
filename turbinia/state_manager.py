@@ -61,6 +61,8 @@ class BaseStateManager(object):
         raise TurbiniaException(
             'Task {0:s} does not have attribute {1:s}'.format(task.name, attr))
       task_dict[attr] = getattr(task, attr)
+      if isinstance(task_dict[attr], str):
+        task_dict[attr] = unicode(task_dict[attr])
 
     if task.result:
       for attr in task.result.STORED_ATTRIBUTES:
@@ -69,6 +71,8 @@ class BaseStateManager(object):
               'Task {0:s} result does not have attribute {1:s}'.format(
                   task.name, attr))
         task_dict[attr] = getattr(task.result, attr)
+        if isinstance(task_dict[attr], str):
+          task_dict[attr] = unicode(task_dict[attr])
 
     return task_dict
 
