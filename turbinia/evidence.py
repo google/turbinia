@@ -13,6 +13,8 @@
 # limitations under the License.
 """Turbinia Evidence objects."""
 
+from __future__ import unicode_literals
+
 import json
 import os
 import sys
@@ -38,20 +40,20 @@ def evidence_decode(evidence_dict):
   """
   if not isinstance(evidence_dict, dict):
     raise TurbiniaException(
-        u'Evidence_dict is not a dictionary, type is {0:s}'.format(
+        'Evidence_dict is not a dictionary, type is {0:s}'.format(
             str(type(evidence_dict))))
 
-  type_ = evidence_dict.get(u'type', None)
+  type_ = evidence_dict.get('type', None)
   if not type_:
     raise TurbiniaException(
-        u'No Type attribute for evidence object [{0:s}]'.format(
+        'No Type attribute for evidence object [{0:s}]'.format(
             str(evidence_dict)))
 
   try:
     evidence = getattr(sys.modules[__name__], type_)()
   except AttributeError:
     raise TurbiniaException(
-        u'No Evidence object of type {0:s} in evidence module'.format(type_))
+        'No Evidence object of type {0:s} in evidence module'.format(type_))
 
   evidence.__dict__ = evidence_dict
   return evidence
@@ -94,7 +96,7 @@ class Evidence(object):
     self.name = name if name else self.type
 
   def __str__(self):
-    return u'{0:s}:{1:s}:{2:s}'.format(self.type, self.name, self.local_path)
+    return '{0:s}:{1:s}:{2:s}'.format(self.type, self.name, self.local_path)
 
   def serialize(self):
     """Return JSON serializable object."""

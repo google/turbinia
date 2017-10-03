@@ -17,6 +17,8 @@ This handles management of task state and persists this information to Cloud
 storage.
 """
 
+from __future__ import unicode_literals
+
 import logging
 
 from google.cloud import datastore
@@ -33,10 +35,10 @@ def get_state_manager():
     Initialized StateManager object.
   """
   config.LoadConfig()
-  if config.STATE_MANAGER == u'Datastore':
+  if config.STATE_MANAGER == 'Datastore':
     return DatastoreStateManager()
   else:
-    msg = u'State Manager type "{0:s}" not implemented'.format(
+    msg = 'State Manager type "{0:s}" not implemented'.format(
         config.STATE_MANAGER)
     raise TurbiniaException(msg)
 

@@ -13,6 +13,8 @@
 # limitations under the License.
 """Task manager for Turbinia."""
 
+from __future__ import unicode_literals
+
 import logging
 import time
 import traceback
@@ -39,10 +41,10 @@ def get_task_manager():
     Initialized TaskManager object.
   """
   config.LoadConfig()
-  if config.TASK_MANAGER == u'PSQ':
+  if config.TASK_MANAGER == 'PSQ':
     return PSQTaskManager()
   else:
-    msg = u'Task Manager type "{0:s}" not implemented'.format(
+    msg = 'Task Manager type "{0:s}" not implemented'.format(
         config.TASK_MANAGER)
     raise turbinia.TurbiniaException(msg)
 
@@ -107,8 +109,8 @@ class BaseTaskManager(object):
     """
     if not self.jobs:
       raise turbinia.TurbiniaException(
-          u'Jobs must be registered before evidence can be added')
-    log.info(u'Adding new evidence: {0:s}'.format(str(evidence_)))
+          'Jobs must be registered before evidence can be added')
+    log.info('Adding new evidence: {0:s}'.format(str(evidence_)))
     self.evidence.append(evidence_)
     job_count = 0
     # TODO(aarontp): Add some kind of loop detection in here so that jobs can
@@ -118,7 +120,7 @@ class BaseTaskManager(object):
     for job in self.jobs:
       if [True for t in job.evidence_input if isinstance(evidence_, t)]:
         log.info(
-            u'Adding {0:s} job to process {1:s}'.format(
+            'Adding {0:s} job to process {1:s}'.format(
                 job.name, evidence_.name))
         job_count += 1
         for task in job.create_tasks([evidence_]):
@@ -127,7 +129,7 @@ class BaseTaskManager(object):
 
     if not job_count:
       log.warning(
-          u'No Jobs/Tasks were created for Evidence [{0:s}]. '
+          'No Jobs/Tasks were created for Evidence [{0:s}]. '
           'Jobs may need to be configured to allow this type of '
           'Evidence as input'.format(str(evidence_)))
 
@@ -187,30 +189,30 @@ class BaseTaskManager(object):
       task_result: The TurbiniaTaskResult object
     """
     if not task_result.successful:
-      log.error(u'Task {0:s} from {1:s} was not successful'.format(
+      log.error('Task {0:s} from {1:s} was not successful'.format(
           task_result.task_name, task_result.worker_name))
     else:
       log.info(
-          u'Task {0:s} from {1:s} executed with status [{2:s}]'.format(
+          'Task {0:s} from {1:s} executed with status [{2:s}]'.format(
               task_result.task_name, task_result.worker_name,
               task_result.status))
 
     if not isinstance(task_result.evidence, list):
       log.info(
-          u'Task {0:s} from {1:s} did not return evidence list'.format(
+          'Task {0:s} from {1:s} did not return evidence list'.format(
               task_result.task_name, task_result.worker_name))
       return
 
     for evidence_ in task_result.evidence:
       if isinstance(evidence_, evidence.Evidence):
         log.info(
-            u'Task {0:s} from {1:s} returned Evidence {2:s}'.format(
+            'Task {0:s} from {1:s} returned Evidence {2:s}'.format(
                 task_result.task_name, task_result.worker_name, evidence_.name))
         self.add_evidence(evidence_)
       else:
         log.error(
-            u'Task {0:s} from {1:s} returned non-Evidence output type '
-            u'{2:s}'.format(
+            'Task {0:s} from {1:s} returned non-Evidence output type '
+            '{2:s}'.format(
                 task_result.task_name, task_result.worker_name,
                 type(task_result.evidence)))
 
@@ -224,7 +226,7 @@ class BaseTaskManager(object):
 
   def run(self):
     """Main run loop for TaskManager."""
-    log.info(u'Starting Task Manager run loop')
+    log.info('Starting Task Manager run loop')
     while True:
       # pylint: disable=expression-not-assigned
       [self.add_evidence(x) for x in self.get_evidence()]
@@ -236,7 +238,7 @@ class BaseTaskManager(object):
 
       [self.state_manager.update_task(t) for t in self.tasks]
       if config.SINGLE_RUN and self.check_done():
-        log.info(u'No more tasks to process.  Exiting now.')
+        log.info('No more tasks to process.  Exiting now.')
         return
 
       # TODO(aarontp): Add config var for this.
@@ -259,7 +261,7 @@ class PSQTaskManager(BaseTaskManager):
 
   def _backend_setup(self):
     log.debug(
-        u'Setting up PSQ Task Manager requirements on project {0:s}'.format(
+        'Setting up PSQ Task Manager requirements on project {0:s}'.format(
             config.PROJECT))
     self.server_pubsub = turbinia_pubsub.TurbiniaPubSub(config.PUBSUB_TOPIC)
     self.server_pubsub.setup()
@@ -271,7 +273,7 @@ class PSQTaskManager(BaseTaskManager):
           config.PSQ_TOPIC,
           storage=psq.DatastoreStorage(datastore_client))
     except GaxError as e:
-      msg = u'Error creating PSQ Queue: {0:s}'.format(str(e))
+      msg = 'Error creating PSQ Queue: {0:s}'.format(str(e))
       log.error(msg)
       raise turbinia.TurbiniaException(msg)
 
@@ -304,7 +306,7 @@ class PSQTaskManager(BaseTaskManager):
         if not evidence_.request_id:
           evidence_.request_id = request.request_id
         log.info(
-            u'Received evidence [{0:s}] from PubSub message.'.format(
+            'Received evidence [{0:s}] from PubSub message.'.format(
                 str(evidence_)))
         evidence_list.append(evidence_)
     return evidence_list
