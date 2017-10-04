@@ -13,6 +13,8 @@
 # limitations under the License.
 """Google PubSub Listener for requests to Turbinia to process evidence."""
 
+from __future__ import unicode_literals
+
 import copy
 import json
 import logging
@@ -80,11 +82,11 @@ class TurbiniaRequest(object):
       obj = json.loads(json_str)
     except ValueError as e:
       raise TurbiniaException(
-          u'Can not load json from string {0:s}'.format(str(e)))
+          'Can not load json from string {0:s}'.format(str(e)))
 
     if obj.get('type', None) != self.type:
       raise TurbiniaException(
-          u'Deserialized object does not have type of {0:s}'.format(self.type))
+          'Deserialized object does not have type of {0:s}'.format(self.type))
 
     obj['evidence'] = [evidence.evidence_decode(e) for e in obj['evidence']]
     # pylint: disable=attribute-defined-outside-init
@@ -128,7 +130,7 @@ class TurbiniaPubSub(object):
     try:
       request.from_json(message)
     except TurbiniaException as e:
-      log.error(u'Error decoding pubsub message: {0:s}'.format(str(e)))
+      log.error('Error decoding pubsub message: {0:s}'.format(str(e)))
       return None
 
     return request
@@ -140,21 +142,21 @@ class TurbiniaPubSub(object):
       A list of any TurbiniaRequest objects received, else an empty list
     """
     results = self.subscription.pull(return_immediately=True)
-    logging.info(u'Recieved {0:d} pubsub messages'.format(len(results)))
+    logging.info('Recieved {0:d} pubsub messages'.format(len(results)))
 
     ack_ids = []
     requests = []
     for ack_id, message in results:
       data = message.data
-      log.info(u'Processing PubSub Message {0:s}'.format(message.message_id))
-      log.debug(u'PubSub Message body: {0:s}'.format(data))
+      log.info('Processing PubSub Message {0:s}'.format(message.message_id))
+      log.debug('PubSub Message body: {0:s}'.format(data))
 
       request = self._validate_message(data)
       if request:
         requests.append(request)
         ack_ids.append(ack_id)
       else:
-        log.error(u'Error processing PubSub message: {0:s}'.format(data))
+        log.error('Error processing PubSub message: {0:s}'.format(data))
 
     if results:
       self.subscription.acknowledge(ack_ids)
@@ -169,7 +171,7 @@ class TurbiniaPubSub(object):
     data = message.encode('utf-8')
     msg_id = self.topic.publish(data)
     logging.info(
-        u'Published message {0:s} to topic {1:s}'.format(
+        'Published message {0:s} to topic {1:s}'.format(
             msg_id, self.topic_name))
 
   def send_request(self, request):
