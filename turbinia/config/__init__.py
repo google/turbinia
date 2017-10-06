@@ -74,7 +74,7 @@ def LoadConfig():
   if CONFIG:
     return CONFIG
 
-  if os.environ.has_key(ENVCONFIGVAR):
+  if ENVCONFIGVAR in os.environ:
     CONFIGPATH.extend(os.environ[ENVCONFIGVAR].split(':'))
 
   config_file = None
