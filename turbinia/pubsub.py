@@ -40,8 +40,11 @@ class TurbiniaRequest(object):
     evidence: A list of Evidence objects.
   """
 
-  def __init__(
-      self, request_id=None, recipe=None, context=None, evidence_=None):
+  def __init__(self,
+               request_id=None,
+               recipe=None,
+               context=None,
+               evidence_=None):
     """Initialization for TurbiniaRequest."""
     self.request_id = request_id if request_id else uuid.uuid4().hex
     self.recipe = recipe
@@ -56,14 +59,15 @@ class TurbiniaRequest(object):
       A JSON serialized object.
     """
     serializable = copy.deepcopy(self.__dict__)
-    serializable['evidence'] = [x.serialize() for x in serializable['evidence']]
+    serializable['evidence'] = [
+        x.serialize() for x in serializable['evidence']
+    ]
 
     try:
       serialized = json.dumps(serializable)
     except TypeError as e:
-      msg = (
-          'JSON serialization of TurbiniaRequest object {0:s} failed: '
-          '{1:s}'.format(self.type, str(e)))
+      msg = ('JSON serialization of TurbiniaRequest object {0:s} failed: '
+             '{1:s}'.format(self.type, str(e)))
       raise TurbiniaException(msg)
 
     return serialized
@@ -113,8 +117,8 @@ class TurbiniaPubSub(object):
     config.LoadConfig()
     client = pubsub.Client(project=config.PROJECT)
     self.topic = client.topic(self.topic_name)
-    log.debug('Connecting to PubSub Subscription on {0:s}'.format(
-        self.topic_name))
+    log.debug(
+        'Connecting to PubSub Subscription on {0:s}'.format(self.topic_name))
     self.subscription = self.topic.subscription(self.topic_name)
 
   def _validate_message(self, message):
@@ -170,9 +174,8 @@ class TurbiniaPubSub(object):
     """
     data = message.encode('utf-8')
     msg_id = self.topic.publish(data)
-    logging.info(
-        'Published message {0:s} to topic {1:s}'.format(
-            msg_id, self.topic_name))
+    logging.info('Published message {0:s} to topic {1:s}'.format(
+        msg_id, self.topic_name))
 
   def send_request(self, request):
     """Sends a TurbiniaRequest message.

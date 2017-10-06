@@ -28,6 +28,7 @@ from turbinia import TurbiniaException
 
 log = logging.getLogger('turbinia')
 
+
 def get_state_manager():
   """Return state manager object based on config.
 
@@ -115,7 +116,6 @@ class DatastoreStateManager(BaseStateManager):
       entity.update(self.get_task_dict(task))
       log.debug('Updating task {0:s} in Datastore'.format(task.name))
       self.client.put(entity)
-
 
   def write_new_task(self, task):
     key = self.client.key('TurbiniaTask', task.id)

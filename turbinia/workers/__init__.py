@@ -53,13 +53,12 @@ class TurbiniaTaskResult(object):
   # The list of attributes that we will persist into storage
   STORED_ATTRIBUTES = ['status', 'successful']
 
-  def __init__(
-      self,
-      evidence=None,
-      input_evidence=None,
-      task_id=None,
-      task_name=None,
-      base_output_dir=None):
+  def __init__(self,
+               evidence=None,
+               input_evidence=None,
+               task_id=None,
+               task_name=None,
+               base_output_dir=None):
     """Initialize the TurbiniaTaskResult object."""
 
     self.evidence = evidence if evidence else []
@@ -135,7 +134,6 @@ class TurbiniaTaskResult(object):
           'Local output writer attribute output_dir is not set')
 
     return writer.output_dir
-
 
   def log(self, log_msg):
     """Add a log message to the result object.
@@ -228,9 +226,8 @@ class TurbiniaTask(object):
         base_output_dir=self.base_output_dir)
     self.output_dir = self.result.output_dir
     if evidence.local_path and not os.path.exists(evidence.local_path):
-      raise TurbiniaException(
-          'Evidence local path {0:s} does not exist'.format(
-              evidence.local_path))
+      raise TurbiniaException('Evidence local path {0:s} does not exist'.
+                              format(evidence.local_path))
     evidence.preprocess()
     return self.result
 

@@ -39,9 +39,8 @@ class PlasoTask(TurbiniaTask):
     plaso_log = os.path.join(self.output_dir, u'{0:s}.log'.format(self.id))
 
     # TODO(aarontp): Move these flags into a recipe
-    cmd = (
-        u'log2timeline.py --status_view none --hashers all '
-        u'--partition all --vss_stores all').split()
+    cmd = (u'log2timeline.py --status_view none --hashers all '
+           u'--partition all --vss_stores all').split()
     cmd.extend([u'--logfile', plaso_log])
     cmd.extend([plaso_file, evidence.local_path])
 

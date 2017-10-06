@@ -38,13 +38,14 @@ class BulkExtractorTask(TurbiniaTask):
     """
     # TODO(aarontp): Fix all these methods to take evidence
     # TODO(aarontp): Standardize output path format
-    out_path = '{0:s}/{1:s}/{2}_{3}'.format(
-        out_path, job_id, offsets[0], offsets[1])
+    out_path = '{0:s}/{1:s}/{2}_{3}'.format(out_path, job_id, offsets[0],
+                                            offsets[1])
     if not os.path.exists(out_path):
       os.makedirs(out_path)
     cmd_output = subprocess.check_output([
         '/usr/local/bin/be_wrapper.sh', src_path, out_path, '{0}-{1}'.format(
-            offsets[0], offsets[1]), job_id])
+            offsets[0], offsets[1]), job_id
+    ])
     return job_id
 
 
@@ -89,15 +90,13 @@ class BulkExtractorCalcOffsetsTask(TurbiniaTask):
       instance_parts = parts[index_start:index_stop]
       o1 = instance_parts[0][0]
       o2 = instance_parts[-1][1]
-      offsets.append(
-          (o1, o2),)
+      offsets.append((o1, o2), )
 
     if extra:
       last_instance_parts = parts[index_stop:]
       o1 = last_instance_parts[0][0]
       o2 = last_instance_parts[-1][1]
-      offsets.append(
-          (o1, o2),)
+      offsets.append((o1, o2), )
 
     return offsets
 
@@ -115,8 +114,8 @@ class BulkExtractorReducerTask(TurbiniaTask):
         Task result object (instance of TurbiniaTaskResult) as JSON.
     """
     job_id = results[0]
-    cmd_output = subprocess.check_output([
-        '/usr/local/bin/be_reducer.sh', job_id])
+    cmd_output = subprocess.check_output(
+        ['/usr/local/bin/be_reducer.sh', job_id])
     result = TurbiniaTaskResult()
     result.add_result(result_type='PATH', result=cmd_output)
     return result

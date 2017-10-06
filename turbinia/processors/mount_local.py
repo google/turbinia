@@ -23,6 +23,7 @@ from turbinia import TurbiniaException
 
 log = logging.getLogger('turbinia')
 
+
 def PreprocessMountDisk(evidence):
   """Locally mounts disk in an instance.
 
@@ -36,13 +37,13 @@ def PreprocessMountDisk(evidence):
     raise TurbiniaException(
         'Mount dir {0:s} exists, but is not a directory'.format(mount_prefix))
   if not os.path.exists(mount_prefix):
-    log.info('Creating local mount parent directory {0:s}'.format(mount_prefix))
+    log.info(
+        'Creating local mount parent directory {0:s}'.format(mount_prefix))
     try:
       os.makedirs(mount_prefix)
     except OSError as e:
-      raise TurbiniaException(
-          'Could not create mount directory {0:s}: {1!s}'.format(
-              mount_prefix, e))
+      raise TurbiniaException('Could not create mount directory {0:s}: {1!s}'.
+                              format(mount_prefix, e))
 
   evidence.mount_path = tempfile.mkdtemp(prefix='turbinia', dir=mount_prefix)
   # TODO(aarontp): Remove hard-coded sudo in commands:
@@ -53,6 +54,7 @@ def PreprocessMountDisk(evidence):
     subprocess.check_call(mount_cmd)
   except subprocess.CalledProcessError as e:
     raise TurbiniaException('Could not mount directory {0!s}'.format(e))
+
 
 def PostprocessUnmountDisk(evidence):
   """Locally unmounts disk in an instance.

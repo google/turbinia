@@ -48,7 +48,10 @@ if __name__ == '__main__':
       '-v', '--verbose', action='store_true', help='Show verbose output')
   # TODO(aarontp): Turn off debug by default later
   parser.add_argument(
-      '-d', '--debug', action='store_true', help='Show debug output',
+      '-d',
+      '--debug',
+      action='store_true',
+      help='Show debug output',
       default=True)
   parser.add_argument('-o', '--output_dir', help='Directory path for output')
   parser.add_argument('-L', '--log_file', help='Log file')
@@ -95,11 +98,12 @@ if __name__ == '__main__':
   parser_googleclouddisk.add_argument(
       '-d', '--disk_name', help='Google Cloud name for disk', required=True)
   parser_googleclouddisk.add_argument(
-      '-p', '--project', help='Project that the disk is associated with',
+      '-p',
+      '--project',
+      help='Project that the disk is associated with',
       required=True)
   parser_googleclouddisk.add_argument(
-      '-z', '--zone', help='Geographic zone the disk exists in',
-      required=True)
+      '-z', '--zone', help='Geographic zone the disk exists in', required=True)
   parser_googleclouddisk.add_argument(
       '-s',
       '--source',
@@ -112,19 +116,21 @@ if __name__ == '__main__':
   parser_googleclouddiskembedded = subparsers.add_parser(
       'googleclouddiskembedded',
       help='Process Google Cloud Persistent Disk with an embedded raw disk '
-           'image as Evidence')
+      'image as Evidence')
   parser_googleclouddiskembedded.add_argument(
-      '-e', '--embedded_path',
+      '-e',
+      '--embedded_path',
       help='Path within the Persistent Disk that points to the raw image file',
       required=True)
   parser_googleclouddiskembedded.add_argument(
       '-d', '--disk_name', help='Google Cloud name for disk', required=True)
   parser_googleclouddiskembedded.add_argument(
-      '-p', '--project', help='Project that the disk is associated with',
+      '-p',
+      '--project',
+      help='Project that the disk is associated with',
       required=True)
   parser_googleclouddiskembedded.add_argument(
-      '-z', '--zone', help='Geographic zone the disk exists in',
-      required=True)
+      '-z', '--zone', help='Geographic zone the disk exists in', required=True)
   parser_googleclouddiskembedded.add_argument(
       '-s',
       '--source',
@@ -195,13 +201,19 @@ if __name__ == '__main__':
   elif args.command == 'googleclouddisk':
     args.name = args.name if args.name else args.disk_name
     evidence_ = evidence.GoogleCloudDisk(
-        name=args.name, disk_name=args.disk_name, project=args.project,
-        zone=args.zone, source=args.source)
+        name=args.name,
+        disk_name=args.disk_name,
+        project=args.project,
+        zone=args.zone,
+        source=args.source)
   elif args.command == 'googleclouddiskembedded':
     args.name = args.name if args.name else args.disk_name
     evidence_ = evidence.GoogleCloudDiskRawEmbedded(
-        name=args.name, disk_name=args.disk_name,
-        embedded_path=args.embedded_path, project=args.project, zone=args.zone,
+        name=args.name,
+        disk_name=args.disk_name,
+        embedded_path=args.embedded_path,
+        project=args.project,
+        zone=args.zone,
         source=args.source)
   elif args.command == 'psqworker':
     # Set up root logger level which is normally set by the psqworker command
@@ -237,8 +249,8 @@ if __name__ == '__main__':
     if args.dump_json:
       print request.to_json().encode('utf-8')
     else:
-      log.info(
-          u'Creating PubSub request with evidence {0:s}'.format(evidence_.name))
+      log.info(u'Creating PubSub request with evidence {0:s}'.format(
+          evidence_.name))
       task_manager_.server_pubsub.send_request(request)
 
   log.info(u'Done.')
