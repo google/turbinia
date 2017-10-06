@@ -74,7 +74,8 @@ class TestTurbiniaRequest(unittest.TestCase):
   def testTurbiniaRequestSerializationBadData(self):
     """Tests that TurbiniaRequest will raise error on non-json data."""
     request_new = pubsub.TurbiniaRequest()
-    self.assertRaises(TurbiniaException, request_new.from_json, 'non-json-data')
+    self.assertRaises(TurbiniaException, request_new.from_json,
+                      'non-json-data')
 
   def testTurbiniaRequestSerializationBadJSON(self):
     """Tests that TurbiniaRequest will raise error on wrong JSON object."""
@@ -95,7 +96,8 @@ class TestTurbiniaPubSub(unittest.TestCase):
     request = getTurbiniaRequest()
     self.pubsub = pubsub.TurbiniaPubSub(u'fake_topic')
     results = MockPubSubResults(
-        ack_id=u'1234', message=MockPubSubMessage(request.to_json(), u'msg id'))
+        ack_id=u'1234',
+        message=MockPubSubMessage(request.to_json(), u'msg id'))
     self.pubsub.subscription = mock.MagicMock()
     self.pubsub.subscription.pull.return_value = results
 
@@ -118,7 +120,8 @@ class TestTurbiniaPubSub(unittest.TestCase):
   def testBadCheckMessages(self):
     """Test check_messages returns empty list for an invalid message."""
     results = MockPubSubResults(
-        ack_id=u'2345', message=MockPubSubMessage(u'non-json-data', u'msg id2'))
+        ack_id=u'2345',
+        message=MockPubSubMessage(u'non-json-data', u'msg id2'))
     self.pubsub.subscription.pull.return_value = results
 
     self.assertListEqual(self.pubsub.check_messages(), [])

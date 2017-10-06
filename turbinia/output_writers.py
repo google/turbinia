@@ -41,11 +41,14 @@ def GetOutputWriters(result):
   """
   epoch = str(int(time.time()))
   log.info('%s %s %s' % (epoch, str(result.task_id), result.task_name))
-  unique_dir = '{0:s}-{1:s}-{2:s}'.format(
-      epoch, str(result.task_id), result.task_name)
+  unique_dir = '{0:s}-{1:s}-{2:s}'.format(epoch,
+                                          str(result.task_id),
+                                          result.task_name)
 
-  writers = [LocalOutputWriter(base_output_dir=result.base_output_dir,
-                               unique_dir=unique_dir)]
+  writers = [
+      LocalOutputWriter(
+          base_output_dir=result.base_output_dir, unique_dir=unique_dir)
+  ]
   config.LoadConfig()
   if config.GCS_OUTPUT_PATH:
     writer = GCSOutputWriter(
@@ -170,8 +173,8 @@ class GCSOutputWriter(OutputWriter):
 
   def write(self, file_):
     bucket = self.client.get_bucket(self.bucket)
-    full_path = os.path.join(
-        self.base_output_dir, self.unique_dir, os.path.basename(file_))
+    full_path = os.path.join(self.base_output_dir, self.unique_dir,
+                             os.path.basename(file_))
     log.info('Writing {0:s} to GCS path {1:s}'.format(file_, full_path))
     blob = storage.Blob(full_path, bucket)
     blob.upload_from_filename(file_, client=self.client)

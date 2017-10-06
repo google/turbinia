@@ -61,8 +61,11 @@ class GoogleCloudProject(object):
       API service resource (apiclient.discovery.Resource)
     """
     credentials = GoogleCredentials.get_application_default()
-    return build(service_name, api_version, credentials=credentials,
-                 cache_discovery=False)
+    return build(
+        service_name,
+        api_version,
+        credentials=credentials,
+        cache_discovery=False)
 
   def _ExecuteOperation(self, service, operation, zone, block):
     """Executes API calls.
@@ -334,8 +337,8 @@ def GetLocalInstanceName():
   instance = None
   # TODO(aarontp): Use cloud API instead of manual requests to metadata service.
   req = urllib2.Request(
-      'http://metadata.google.internal/computeMetadata/v1/instance/name',
-      None, {'Metadata-Flavor': 'Google'})
+      'http://metadata.google.internal/computeMetadata/v1/instance/name', None,
+      {'Metadata-Flavor': 'Google'})
   try:
     instance = urllib2.urlopen(req).read()
   except urllib2.HTTPError as e:
@@ -358,8 +361,8 @@ def PreprocessAttachDisk(evidence):
 
   config.LoadConfig()
   instance_name = GetLocalInstanceName()
-  project = GoogleCloudProject(project_id=config.PROJECT,
-                               default_zone=config.ZONE)
+  project = GoogleCloudProject(
+      project_id=config.PROJECT, default_zone=config.ZONE)
   instance = project.GetInstance(instance_name, zone=config.ZONE)
   disk = instance.GetDisk(evidence.disk_name)
   log.info(u'Attaching disk {0:s} to instance {1:s}'.format(
@@ -372,8 +375,8 @@ def PreprocessAttachDisk(evidence):
       log.info(u'Block device {0:s} successfully attached'.format(path))
       break
     if os.path.exists(path):
-      log.info(
-          u'Block device {0:s} mode is {1}'.format(path, os.stat(path).st_mode))
+      log.info(u'Block device {0:s} mode is {1}'.format(
+          path, os.stat(path).st_mode))
     time.sleep(1)
 
   evidence.local_path = path
@@ -396,8 +399,8 @@ def PostprocessDetachDisk(evidence):
 
   config.LoadConfig()
   instance_name = GetLocalInstanceName()
-  project = GoogleCloudProject(project_id=config.PROJECT,
-                               default_zone=config.ZONE)
+  project = GoogleCloudProject(
+      project_id=config.PROJECT, default_zone=config.ZONE)
   instance = project.GetInstance(instance_name, zone=config.ZONE)
   disk = instance.GetDisk(evidence.disk_name)
   log.info(u'Detaching disk {0:s} from instance {1:s}'.format(

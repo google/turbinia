@@ -119,19 +119,17 @@ class BaseTaskManager(object):
     # have a run time check for this upon Job instantiation to prevent it.
     for job in self.jobs:
       if [True for t in job.evidence_input if isinstance(evidence_, t)]:
-        log.info(
-            'Adding {0:s} job to process {1:s}'.format(
-                job.name, evidence_.name))
+        log.info('Adding {0:s} job to process {1:s}'.format(
+            job.name, evidence_.name))
         job_count += 1
         for task in job.create_tasks([evidence_]):
           task.base_output_dir = config.OUTPUT_DIR
           self.add_task(task, evidence_)
 
     if not job_count:
-      log.warning(
-          'No Jobs/Tasks were created for Evidence [{0:s}]. '
-          'Jobs may need to be configured to allow this type of '
-          'Evidence as input'.format(str(evidence_)))
+      log.warning('No Jobs/Tasks were created for Evidence [{0:s}]. '
+                  'Jobs may need to be configured to allow this type of '
+                  'Evidence as input'.format(str(evidence_)))
 
   def check_done(self):
     """Checks to see if we have any outstanding tasks.
@@ -192,29 +190,24 @@ class BaseTaskManager(object):
       log.error('Task {0:s} from {1:s} was not successful'.format(
           task_result.task_name, task_result.worker_name))
     else:
-      log.info(
-          'Task {0:s} from {1:s} executed with status [{2:s}]'.format(
-              task_result.task_name, task_result.worker_name,
-              task_result.status))
+      log.info('Task {0:s} from {1:s} executed with status [{2:s}]'.format(
+          task_result.task_name, task_result.worker_name, task_result.status))
 
     if not isinstance(task_result.evidence, list):
-      log.info(
-          'Task {0:s} from {1:s} did not return evidence list'.format(
-              task_result.task_name, task_result.worker_name))
+      log.info('Task {0:s} from {1:s} did not return evidence list'.format(
+          task_result.task_name, task_result.worker_name))
       return
 
     for evidence_ in task_result.evidence:
       if isinstance(evidence_, evidence.Evidence):
-        log.info(
-            'Task {0:s} from {1:s} returned Evidence {2:s}'.format(
-                task_result.task_name, task_result.worker_name, evidence_.name))
+        log.info('Task {0:s} from {1:s} returned Evidence {2:s}'.format(
+            task_result.task_name, task_result.worker_name, evidence_.name))
         self.add_evidence(evidence_)
       else:
-        log.error(
-            'Task {0:s} from {1:s} returned non-Evidence output type '
-            '{2:s}'.format(
-                task_result.task_name, task_result.worker_name,
-                type(task_result.evidence)))
+        log.error('Task {0:s} from {1:s} returned non-Evidence output type '
+                  '{2:s}'.format(task_result.task_name,
+                                 task_result.worker_name,
+                                 type(task_result.evidence)))
 
   def process_tasks(self):
     """Process any tasks that need to be processed.
@@ -260,9 +253,8 @@ class PSQTaskManager(BaseTaskManager):
     super(PSQTaskManager, self).__init__()
 
   def _backend_setup(self):
-    log.debug(
-        'Setting up PSQ Task Manager requirements on project {0:s}'.format(
-            config.PROJECT))
+    log.debug('Setting up PSQ Task Manager requirements on project {0:s}'.
+              format(config.PROJECT))
     self.server_pubsub = turbinia_pubsub.TurbiniaPubSub(config.PUBSUB_TOPIC)
     self.server_pubsub.setup()
     psq_pubsub_client = pubsub.Client(project=config.PROJECT)
@@ -305,14 +297,12 @@ class PSQTaskManager(BaseTaskManager):
       for evidence_ in request.evidence:
         if not evidence_.request_id:
           evidence_.request_id = request.request_id
-        log.info(
-            'Received evidence [{0:s}] from PubSub message.'.format(
-                str(evidence_)))
+        log.info('Received evidence [{0:s}] from PubSub message.'.format(
+            str(evidence_)))
         evidence_list.append(evidence_)
     return evidence_list
 
   def enqueue_task(self, task, evidence_):
-    log.info(
-        'Adding PSQ task {0:s} with evidence {1:s} to queue'.format(
-            task.name, evidence_.name))
+    log.info('Adding PSQ task {0:s} with evidence {1:s} to queue'.format(
+        task.name, evidence_.name))
     task.stub = self.psq.enqueue(task_runner, task, evidence_)

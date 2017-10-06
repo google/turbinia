@@ -26,7 +26,8 @@ CONFIGFILES = ['.turbiniarc', 'turbinia_config.py']
 # Look in homedir and in the current config dir for config files
 CONFIGPATH = [
     os.path.expanduser('~'),
-    os.path.dirname(os.path.abspath(__file__))]
+    os.path.dirname(os.path.abspath(__file__))
+]
 # Config vars that we expect to exist in the configuration
 CONFIGVARS = [
     # Turbinia Config
@@ -53,7 +54,8 @@ CONFIGVARS = [
     # Timesketch config
     'TIMESKETCH_HOST',
     'TIMESKETCH_USER',
-    'TIMESKETCH_PASSWORD',]
+    'TIMESKETCH_PASSWORD',
+]
 # Environment variable to look for path data in
 ENVCONFIGVAR = 'TURBINIA_CONFIG_PATH'
 
@@ -101,9 +103,8 @@ def ValidateAndSetConfig(_config):
       raise TurbiniaConfigException(
           u'No config attribute {0:s}:{1:s}'.format(_config.configSource, var))
     if getattr(_config, var) is None:
-      raise TurbiniaConfigException(
-          u'Config attribute {0:s}:{1:s} is not set'.format(
-              _config.configSource, var))
+      raise TurbiniaConfigException(u'Config attribute {0:s}:{1:s} is not set'.
+                                    format(_config.configSource, var))
 
     # Set the attribute in the current module
     setattr(sys.modules[__name__], var, getattr(_config, var))

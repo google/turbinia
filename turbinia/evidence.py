@@ -39,15 +39,13 @@ def evidence_decode(evidence_dict):
                        or does not deserialize to an evidence object.
   """
   if not isinstance(evidence_dict, dict):
-    raise TurbiniaException(
-        'Evidence_dict is not a dictionary, type is {0:s}'.format(
-            str(type(evidence_dict))))
+    raise TurbiniaException('Evidence_dict is not a dictionary, type is {0:s}'.
+                            format(str(type(evidence_dict))))
 
   type_ = evidence_dict.get('type', None)
   if not type_:
-    raise TurbiniaException(
-        'No Type attribute for evidence object [{0:s}]'.format(
-            str(evidence_dict)))
+    raise TurbiniaException('No Type attribute for evidence object [{0:s}]'.
+                            format(str(evidence_dict)))
 
   try:
     evidence = getattr(sys.modules[__name__], type_)()
@@ -75,14 +73,13 @@ class Evidence(object):
     request_id: The id of the request this evidence came from, if any
   """
 
-  def __init__(
-      self,
-      name=None,
-      description=None,
-      source=None,
-      local_path=None,
-      tags=None,
-      request_id=None):
+  def __init__(self,
+               name=None,
+               description=None,
+               source=None,
+               local_path=None,
+               tags=None,
+               request_id=None):
     """Initialization for Evidence."""
     self.description = description
     self.source = source
@@ -169,13 +166,12 @@ class EncryptedDisk(RawDisk):
     unencrypted_path: A string to the unencrypted local path
   """
 
-  def __init__(
-      self,
-      encryption_type=None,
-      encryption_key=None,
-      unencrypted_path=None,
-      *args,
-      **kwargs):
+  def __init__(self,
+               encryption_type=None,
+               encryption_key=None,
+               unencrypted_path=None,
+               *args,
+               **kwargs):
     """Initialization for Encrypted disk evidence objects."""
     # TODO(aarontp): Make this an enum, or limited list
     self.encryption_type = encryption_type
@@ -195,14 +191,13 @@ class GoogleCloudDisk(RawDisk):
     type: The type of cloud disk.
   """
 
-  def __init__(
-      self,
-      project=None,
-      zone=None,
-      disk_name=None,
-      type_=None,
-      *args,
-      **kwargs):
+  def __init__(self,
+               project=None,
+               zone=None,
+               disk_name=None,
+               type_=None,
+               *args,
+               **kwargs):
     """Initialization for Google Cloud Disk."""
     self.project = project
     self.zone = zone
