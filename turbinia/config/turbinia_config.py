@@ -14,22 +14,16 @@
 """Dummy Turbinia config file."""
 
 # Turbinia Config
-
 # Valid values are 'PSQ' or 'Celery'
 TASK_MANAGER = u'PSQ'
-
 # File to log to
 LOG_FILE = None
-
 # Default output directory
 OUTPUT_DIR = None
-
 # Time to sleep in task management loops
 SLEEP_TIME = 10
-
 # Whether to run as a single run, or to keep server running indefinitely
 SINGLE_RUN = False
-
 # Local directory in the worker to put other mount directories for locally
 # mounting images/disks
 MOUNT_DIR_PREFIX = u'/mnt/turbinia-mounts'
@@ -42,12 +36,18 @@ DEVICE_NAME = None
 SCRATCH_PATH = None
 BUCKET_NAME = None
 PSQ_TOPIC = u'turbinia-psq'
-
 # Topic Turbinia will listen on for new Artifact events
 PUBSUB_TOPIC = None
-
 # GCS Path to copy worker results and Evidence output to
 GCS_OUTPUT_PATH = False
-
 # Which state manager to use
 STATE_MANAGER = u'Datastore'
+
+# Redis configuration
+REDIS_HOST = None
+REDIS_PORT = None
+
+# Timesketch configuration
+TIMESKETCH_HOST = None
+TIMESKETCH_USER = None
+TIMESKETCH_PASSWORD = None
