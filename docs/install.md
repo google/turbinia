@@ -20,11 +20,14 @@
 * Make sure that the [Pub/Sub](https://console.cloud.google.com/apis/library/pubsub.googleapis.com/) and [Cloud Functions](https://console.cloud.google.com/apis/library/cloudfunctions.googleapis.com/) APIs are enabled in your project.
 * Make sure that Datastore is enabled and setup by going to Datastore in the cloud console, and if the `Create Entity` button exists, click that and select the region that your data should be in.  No need to create any Entities after selecting your region.
 * `sudo apt-get install liblzma-dev`
-* `pip install --upgrade pip google-api-python-client psq`
 * `git clone https://github.com/google/turbinia.git`
-* `curl -O https://raw.githubusercontent.com/log2timeline/plaso/master/requirements.txt`
-* `pip install -r requirements.txt`
-* Copy and update Turbinia config (can either put into `~/.turbiniarc` or just keep the copy in `turbinia/config/turbinia_config.py`)
+* Install Turbinia requirements
+  * `pip install --upgrade pip`
+  * `pip install -r turbinia/requirements.txt`
+* Install Plaso requirements
+  * `curl -o plaso-requirements.txt https://raw.githubusercontent.com/log2timeline/plaso/master/requirements.txt`
+  * `pip install -r plaso-requirements.txt`
+* Update the Turbinia config by either configuring the version in `turbinia/config/turbinia_config.py` or copying it into `~/.turbiniarc` and configuring it there.
 * Create a new PubSub topic and subscription to match the `PUBSUB_TOPIC` variable configured in your Turbinia config.
 * If you are running in GCP, you may also want to install [GCS FUSE](https://cloud.google.com/storage/docs/gcs-fuse).
 
