@@ -24,7 +24,7 @@ from oauth2client.client import GoogleCredentials
 
 from turbinia import config
 from turbinia import TurbiniaException
-from turbinia.lib import google_cloud
+from turbinia.lib.google_cloud import GoogleCloudProject
 
 log = logging.getLogger('turbinia')
 
@@ -79,8 +79,8 @@ def PreprocessAttachDisk(evidence):
 
   config.LoadConfig()
   instance_name = GetLocalInstanceName()
-  project = google_cloud.GoogleCloudProject(project_id=config.PROJECT,
-                                            default_zone=config.ZONE)
+  project = GoogleCloudProject(project_id=config.PROJECT,
+                               default_zone=config.ZONE)
   instance = project.GetInstance(instance_name, zone=config.ZONE)
   disk = instance.GetDisk(evidence.disk_name)
   log.info(u'Attaching disk {0:s} to instance {1:s}'.format(
@@ -117,8 +117,8 @@ def PostprocessDetachDisk(evidence):
 
   config.LoadConfig()
   instance_name = GetLocalInstanceName()
-  project = google_cloud.GoogleCloudProject(project_id=config.PROJECT,
-                                            default_zone=config.ZONE)
+  project = GoogleCloudProject(project_id=config.PROJECT,
+                               default_zone=config.ZONE)
   instance = project.GetInstance(instance_name, zone=config.ZONE)
   disk = instance.GetDisk(evidence.disk_name)
   log.info(u'Detaching disk {0:s} from instance {1:s}'.format(
