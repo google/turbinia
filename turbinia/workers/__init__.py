@@ -179,10 +179,11 @@ class TurbiniaTask(object):
   """Base class for Turbinia tasks.
 
   Attributes:
-      id: Unique Id of task (string of hex)
-      name: Name of task
       base_output_dir: The base directory that output will go into.  Per-task
                        directories will be created under this.
+      id: Unique Id of task (string of hex)
+      last_update: A datetime object with the last time the task was updated.
+      name: Name of task
       output_dir: The directory output will go into (including per-task folder).
       result: A TurbiniaTaskResult object.
       state_key: A key used to manage task state
@@ -193,13 +194,14 @@ class TurbiniaTask(object):
   """
 
   # The list of attributes that we will persist into storage
-  STORED_ATTRIBUTES = ['id', 'name']
+  STORED_ATTRIBUTES = ['id', 'last_update', 'name']
 
   def __init__(self, name=None, base_output_dir=None):
     """Initialization for TurbiniaTask."""
-    self.id = uuid.uuid4().hex
-    self.name = name if name else self.__class__.__name__
     self.base_output_dir = base_output_dir
+    self.id = uuid.uuid4().hex
+    self.last_update = datetime.now()
+    self.name = name if name else self.__class__.__name__
     self.output_dir = None
     self.result = None
     self.state_key = None
@@ -233,6 +235,10 @@ class TurbiniaTask(object):
               evidence.local_path))
     evidence.preprocess()
     return self.result
+
+  def touch(self):
+    """Updates the last_update time of the task."""
+    self.last_update = datetime.now()
 
   def run_wrapper(self, evidence):
     """Wrapper to manage TurbiniaTaskResults and exception handling.
