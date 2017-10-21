@@ -29,6 +29,7 @@ except ImportError:
 
 from turbinia import config
 from turbinia.config import logger
+from turbinia.lib.google_cloud import GoogleCloudFunction
 from turbinia import evidence
 from turbinia import task_manager
 from turbinia import VERSION
@@ -36,6 +37,19 @@ from turbinia.pubsub import TurbiniaRequest
 
 log = logging.getLogger('turbinia')
 logger.setup()
+
+
+def PrintTaskStatus(project, region, days=1):
+  """Prints the recent history for Turbinia Tasks.
+
+  Args:
+    project (string): The name of the project.
+    region (string): The name of the zone to execute in.
+  """
+  function = GoogleCloudFunction(project_id=project, region=region)
+  # TODO(aarontp): Parse and pretty print.
+  print function.ExecuteFunction('get', {'kind': 'TurbiniaTask', 'days':days})
+
 
 if __name__ == '__main__':
   # TODO(aarontp): Allow for single run mode when specifying evidence
@@ -159,6 +173,18 @@ if __name__ == '__main__':
       help='Run PSQ Worker in a single thread',
       required=False)
 
+  # Parser options for Turbinia status command
+  parser_status = subparsers.add_parser(
+      'status',
+      help='Get Turbinia Task status')
+  parser_status.add_argument(
+      '-d',
+      '--days_history',
+      default=1,
+      type=int,
+      help='Number of days of history to show',
+      required=False)
+
   # Server
   parser_server = subparsers.add_parser('server', help='Run Turbinia Server')
 
@@ -217,6 +243,12 @@ if __name__ == '__main__':
   elif args.command == 'server':
     log.info(u'Running Turbinia Server.')
     task_manager_.run()
+  elif args.command == 'status':
+    # TODO(aarontp): This seems to be a valid assumption right now, but we
+    # should figure out a better way to do this in case it changes.
+    region = config.ZONE[:-2]
+    PrintTaskStatus(
+        project=config.PROJECT, region=region, days=args.days_history)
   elif args.command == 'listjobs':
     log.info(u'Available Jobs:')
     log.info(
