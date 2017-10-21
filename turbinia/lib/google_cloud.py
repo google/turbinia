@@ -161,18 +161,23 @@ class GoogleCloudProject(object):
 
 
 class GoogleCloudFunction(GoogleCloudProject):
-  """Class to call Google Cloud Functions."""
+  """Class to call Google Cloud Functions.
+
+  Attributes:
+    region (str): Region to execute functions in.
+  """
 
   CLOUD_FUNCTIONS_API_VERSION = 'v1beta2'
 
-  def __init__(self, project_id, default_zone):
+  def __init__(self, project_id, region):
     """Initialize the GoogleCloudFunction object.
 
     Args:
       project_id: The name of the project.
-      default_zone: Default zone to run functions in.
+      region: Region to run functions in.
     """
-    super(GoogleCloudFunction, self).__init__(project_id, default_zone)
+    self.region = region
+    super(GoogleCloudFunction, self).__init__(project_id)
 
   def GcfApi(self):
     """Get a Google Cloud Function service object.
@@ -208,8 +213,9 @@ class GoogleCloudFunction(GoogleCloudProject):
               str(args), e))
 
     function_path = 'projects/{0:s}/locations/{1:s}/functions/{2:s}'.format(
-        self.project_id, self.default_zone, function_name)
+        self.project_id, self.region, function_name)
 
+    log.debug('Calling Cloud Function [{0:s}]'.format(function_name))
     try:
       function_return = function.call(
           name=function_path, body={'data':json_args}).execute()
