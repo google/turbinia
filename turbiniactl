@@ -17,6 +17,8 @@
 # pylint: disable=bad-indentation
 
 import argparse
+from datetime import datetime
+from datetime import timedelta
 import logging
 import sys
 
@@ -47,8 +49,14 @@ def PrintTaskStatus(project, region, days=1):
     region (string): The name of the zone to execute in.
   """
   function = GoogleCloudFunction(project_id=project, region=region)
+  start = datetime.now() - timedelta(days=days)
   # TODO(aarontp): Parse and pretty print.
-  print function.ExecuteFunction('get', {'kind': 'TurbiniaTask', 'days':days})
+  print function.ExecuteFunction('getrecenttasks',
+                                 {'kind': 'TurbiniaTask', 'start':start})
+
+
+def WaitTaskStatus():
+  pass
 
 
 if __name__ == '__main__':
@@ -183,6 +191,24 @@ if __name__ == '__main__':
       default=1,
       type=int,
       help='Number of days of history to show',
+      required=False)
+  parser_status.add_argument(
+      '-r',
+      '--request_id',
+      action='store_true',
+      help='Show tasks for given Request ID',
+      required=False)
+  parser_status.add_argument(
+      '-t',
+      '--task_id',
+      action='store_true',
+      help='Show task for given Task ID',
+      required=False)
+  parser_status.add_argument(
+      '-w',
+      '--wait',
+      action='store_true',
+      help='Wait until given task has completed execution to exit',
       required=False)
 
   # Server
