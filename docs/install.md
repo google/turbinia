@@ -18,7 +18,7 @@
 * Create a new PubSub topic and subscription to match the `PUBSUB_TOPIC` variable configured in your Turbinia config.
 
 
-#### Get auth credentials 
+#### Setup IAM roles and auth credentials 
 * Create a [scoped service account](https://cloud.google.com/compute/docs/access/service-accounts) (this is the best option) with the following roles:
     * `Cloud Datastore User`: Used by PSQ to store result data, and in the future by the Task Manager to store queriable task data
     * `Pub/Sub Editor`: Used by clients to talk to Turbinia, and by the Task Manager to talk to workers
