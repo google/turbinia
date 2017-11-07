@@ -5,9 +5,21 @@
   * `sudo apt-get install python-virtualenv git`
 * Create and activate Virtualenv
   * `virtualenv turbinia-env && . turbinia-env/bin/activate` 
-* Install [google-cloud-sdk](https://cloud.google.com/sdk/docs/quickstart-linux) 
-* Get auth credentials
-  * Create a [scoped service account](https://cloud.google.com/compute/docs/access/service-accounts) (this is the best option) with the following roles:
+* Install [google-cloud-sdk](https://cloud.google.com/sdk/docs/quickstart-linux)
+* Install Turbinia
+  * `sudo apt-get install liblzma-dev`
+  * `git clone https://github.com/google/turbinia.git`
+  * `pip install --upgrade pip`
+  * `pip install -r turbinia/requirements.txt`
+* Install Plaso
+  * `curl -o plaso-requirements.txt https://raw.githubusercontent.com/log2timeline/plaso/master/requirements.txt`
+  * `pip install -r plaso-requirements.txt`
+* Update the Turbinia config by either configuring the version in `turbinia/config/turbinia_config.py` or copying it into `~/.turbiniarc` and configuring it there.
+* Create a new PubSub topic and subscription to match the `PUBSUB_TOPIC` variable configured in your Turbinia config.
+
+
+#### Setup IAM roles and auth credentials 
+* Create a [scoped service account](https://cloud.google.com/compute/docs/access/service-accounts) (this is the best option) with the following roles:
     * `Cloud Datastore User`: Used by PSQ to store result data, and in the future by the Task Manager to store queriable task data
     * `Pub/Sub Editor`: Used by clients to talk to Turbinia, and by the Task Manager to talk to workers
     * `Storage Object Admin` and `Storage Legacy Bucket Reader`: Only required on the GCS bucket used by Turbinia, if any.  See GCP Setup for details.
@@ -15,21 +27,11 @@
     * `Service Account User`: Used when attaching disks
   * Create a new key for your service account, and then point to it with an environment variable:
     * `export GOOGLE_APPLICATION_CREDENTIALS="/home/foo/service_account_creds.json"`
-  * Alternately you can run Turbinia under your own credentials (not recommended).  Run 'gcloud auth login' (may require you to copy/paste url to browser).
-  * Or run 'gcloud auth application-default login'
+* Alternately you can run Turbinia under your own credentials (not recommended).  Run 'gcloud auth login' (may require you to copy/paste url to browser). Or run 'gcloud auth application-default login'.
+
+#### Configure GCP services (datastore and pubsub)
 * Make sure that the [Pub/Sub](https://console.cloud.google.com/apis/library/pubsub.googleapis.com/) and [Cloud Functions](https://console.cloud.google.com/apis/library/cloudfunctions.googleapis.com/) APIs are enabled in your project.
 * Make sure that Datastore is enabled and setup by going to Datastore in the cloud console, and if the `Create Entity` button exists, click that and select the region that your data should be in.  No need to create any Entities after selecting your region.
-* `sudo apt-get install liblzma-dev`
-* `git clone https://github.com/google/turbinia.git`
-* Install Turbinia requirements
-  * `pip install --upgrade pip`
-  * `pip install -r turbinia/requirements.txt`
-* Install Plaso requirements
-  * `curl -o plaso-requirements.txt https://raw.githubusercontent.com/log2timeline/plaso/master/requirements.txt`
-  * `pip install -r plaso-requirements.txt`
-* Update the Turbinia config by either configuring the version in `turbinia/config/turbinia_config.py` or copying it into `~/.turbiniarc` and configuring it there.
-* Create a new PubSub topic and subscription to match the `PUBSUB_TOPIC` variable configured in your Turbinia config.
-* If you are running in GCP, you may also want to install [GCS FUSE](https://cloud.google.com/storage/docs/gcs-fuse).
 
 ### GCP Setup
 The following is a one possible configuration and setup for Turbinia in GCP.  This is still a rough process and future versions will be containerized.
@@ -47,6 +49,7 @@ The following is a one possible configuration and setup for Turbinia in GCP.  Th
 * Edit the variables in `scripts/start-wrapper.sh` and `scripts/start-turbinia-common.sh` as appropriate (please note that the `start-wrapper.sh` script has a `GOOGLE_APPLICATION_CREDENTIALS` environment var in the middle of the script that needs to be updated). 
 * In your worker VM, add a new custom metadata key `startup-script-url` pointing to `gs://$your_bucket/scripts/start-wrapper.sh`
 * Upon start, your VM should mount your GCS Bucket, and copy the start scripts into the home directory of the Turbinia user and will then start the Turbinia worker.
+* If you are running in GCP, you may also want to install [GCS FUSE](https://cloud.google.com/storage/docs/gcs-fuse).
 
 ## Setup
 Turbinia can be run either in the cloud, or on local machines.  If you run Turbinia on local machines, it will still use cloud PubSub for the client to talk to the server, and for the server to talk to the worker nodes.
