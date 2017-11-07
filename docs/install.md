@@ -27,7 +27,7 @@
     * `Service Account User`: Used when attaching disks
   * Create a new key for your service account, and then point to it with an environment variable:
     * `export GOOGLE_APPLICATION_CREDENTIALS="/home/foo/service_account_creds.json"`
-* Alternately you can run Turbinia under your own credentials (not recommended).  Run 'gcloud auth login' (may require you to copy/paste url to browser). Or run 'gcloud auth application-default login'.
+* Alternately you can run Turbinia under your own credentials (not recommended).  Run `gcloud auth login` (may require you to copy/paste url to browser). Or run `gcloud auth application-default login`.
 
 #### Configure GCP services (datastore and pubsub)
 * Make sure that the [Pub/Sub](https://console.cloud.google.com/apis/library/pubsub.googleapis.com/) and [Cloud Functions](https://console.cloud.google.com/apis/library/cloudfunctions.googleapis.com/) APIs are enabled in your project.
@@ -55,10 +55,10 @@ The following is a one possible configuration and setup for Turbinia in GCP.  Th
 Turbinia can be run either in the cloud, or on local machines.  If you run Turbinia on local machines, it will still use cloud PubSub for the client to talk to the server, and for the server to talk to the worker nodes.
 
 ### Local Setup
-Turbinia requires all worker nodes to have direct access to all Evidence data.  The easiest way to set this up on local machines is to have a NFS or SAN mounted on a common path on each worker.  All output should also be written to the common directory so that when Evidence is added back into Turbinia that the other worker nodes can process it.  Turbinia can also write output to GCS even when running locally (set the GCS_OUTPUT_PATH variable in the config).
+Turbinia requires all worker nodes to have direct access to all Evidence data.  The easiest way to set this up on local machines is to have a NFS or SAN mounted on a common path on each worker.  All output should also be written to the common directory so that when Evidence is added back into Turbinia that the other worker nodes can process it.  Turbinia can also write output to GCS even when running locally (set the `GCS_OUTPUT_PATH` variable in the config).
 
 ### Google Cloud Platform Setup 
-Turbinia can read Evidence from either cloud Persistent Disks, or from GCS objects.  Turbinia can also write output to GCS (set the GCS_OUTPUT_PATH variable in the config).  Note that you can operate multiple Turbinia instances within the same GCP Project as long as your careful to make sure your config (pubsub topics/subscriptions, output paths, etc) doesn't overlap.
+Turbinia can read Evidence from either cloud Persistent Disks, or from GCS objects.  Turbinia can also write output to GCS (set the `GCS_OUTPUT_PATH` variable in the config).  Note that you can operate multiple Turbinia instances within the same GCP Project as long as your careful to make sure your config (pubsub topics/subscriptions, output paths, etc) doesn't overlap.
 
 #### Persistent Disks
 Persistent disks should be the default when processing disks that come from the Cloud.  The account you run Turbinia as must have access to the Persistent Disks that you want to process.  If you add a GoogleCloudDisk Evidence type, the worker node will attach the disk automatically before it runs its tasks.
