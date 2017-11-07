@@ -15,6 +15,7 @@
 
 import json
 import logging
+import ssl
 import time
 
 from apiclient.discovery import build
@@ -219,7 +220,7 @@ class GoogleCloudFunction(GoogleCloudProject):
     try:
       function_return = function.call(
           name=function_path, body={'data':json_args}).execute()
-    except HttpError as e:
+    except (HttpError, ssl.SSLError) as e:
       raise TurbiniaException(
           'Error calling cloud function [{0:s}]: {1!s}'.format(
               function_name, e))
