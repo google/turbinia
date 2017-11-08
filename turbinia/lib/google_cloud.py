@@ -13,10 +13,14 @@
 # limitations under the License.
 """Google Cloud resources library."""
 
+import json
 import logging
+import ssl
 import time
 
 from apiclient.discovery import build
+from apiclient.http import HttpError
+
 from oauth2client.client import GoogleCredentials
 
 from turbinia import config
@@ -156,6 +160,73 @@ class GoogleCloudProject(object):
       return GoogleComputeInstance(project=self, zone=zone, name=instance_name)
     except KeyError:
       raise TurbiniaException(u'Unknown instance')
+
+
+class GoogleCloudFunction(GoogleCloudProject):
+  """Class to call Google Cloud Functions.
+
+  Attributes:
+    region (str): Region to execute functions in.
+  """
+
+  CLOUD_FUNCTIONS_API_VERSION = 'v1beta2'
+
+  def __init__(self, project_id, region):
+    """Initialize the GoogleCloudFunction object.
+
+    Args:
+      project_id: The name of the project.
+      region: Region to run functions in.
+    """
+    self.region = region
+    super(GoogleCloudFunction, self).__init__(project_id)
+
+  def GcfApi(self):
+    """Get a Google Cloud Function service object.
+
+    Returns:
+      A Google Cloud Function service object.
+    """
+    return self._CreateService(u'cloudfunctions',
+                               self.CLOUD_FUNCTIONS_API_VERSION)
+
+  def ExecuteFunction(self, function_name, args):
+    """Executes a Google Cloud Function.
+
+    Args:
+      function_name (str): The name of the function to call.
+      args (dict): Arguments to pass to the function.
+
+    Returns:
+      Dict: Return value from function call.
+
+    Raises:
+      TurbiniaException: When cloud function arguments can not be serialized.
+      TurbiniaException: When an HttpError is encountered.
+    """
+    service = self.GcfApi()
+    function = service.projects().locations().functions()
+
+    try:
+      json_args = json.dumps(args)
+    except TypeError as e:
+      raise TurbiniaException(
+          'Cloud function args [{0:s}] could not be serialized: {1!s}'.format(
+              str(args), e))
+
+    function_path = 'projects/{0:s}/locations/{1:s}/functions/{2:s}'.format(
+        self.project_id, self.region, function_name)
+
+    log.debug('Calling Cloud Function [{0:s}]'.format(function_name))
+    try:
+      function_return = function.call(
+          name=function_path, body={'data':json_args}).execute()
+    except (HttpError, ssl.SSLError) as e:
+      raise TurbiniaException(
+          'Error calling cloud function [{0:s}]: {1!s}'.format(
+              function_name, e))
+
+    return function_return
 
 
 class GoogleComputeBaseResource(object):

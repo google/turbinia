@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# Copyright 2015 Google Inc.
+# Copyright 2017 Google Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,6 +17,9 @@
 # pylint: disable=bad-indentation
 
 import argparse
+from datetime import datetime
+from datetime import timedelta
+import json
 import logging
 import sys
 
@@ -29,6 +32,7 @@ except ImportError:
 
 from turbinia import config
 from turbinia.config import logger
+from turbinia.lib.google_cloud import GoogleCloudFunction
 from turbinia import evidence
 from turbinia import task_manager
 from turbinia import VERSION
@@ -36,6 +40,46 @@ from turbinia.pubsub import TurbiniaRequest
 
 log = logging.getLogger('turbinia')
 logger.setup()
+
+
+def PrintTaskStatus(project, region, days=1):
+  """Prints the recent history for Turbinia Tasks.
+
+  Args:
+    project (string): The name of the project.
+    region (string): The name of the zone to execute in.
+  """
+  function = GoogleCloudFunction(project_id=project, region=region)
+  start = datetime.now() - timedelta(days=days)
+  # Format this like '1990-01-01T00:00:00z' so we can cast it directly to a
+  # javascript Date() object in the cloud function.
+  start_string = start.strftime('%Y-%m-%dT%H:%M:%S')
+  response = function.ExecuteFunction(
+      'getrecenttasks', {'kind': 'TurbiniaTask', 'start':start_string})
+
+  if not response.has_key('result'):
+    log.error('Return from GCF does not contain a "result" key.')
+    sys.exit(1)
+
+  try:
+    results = json.loads(response['result'])
+  except ValueError as e:
+    log.error('Could not deserialize result from GCF: [{0!s}]'.format(e))
+    sys.exit(1)
+
+  task_results = results[0]
+  num_results = len(task_results)
+  if not num_results:
+    print 'No Tasks found.'
+    return
+
+  print '\nRetrieved {0:d} Task results:'.format(num_results)
+  for task in task_results:
+    success = 'Successful' if task['successful'] else 'Failed'
+    print '{0:s} {1:s} {2:s} {3:s}: {4:s} '.format(
+        task['last_update'], task['id'], task['name'], success,
+        task['status'])
+
 
 if __name__ == '__main__':
   # TODO(aarontp): Allow for single run mode when specifying evidence
@@ -159,6 +203,36 @@ if __name__ == '__main__':
       help='Run PSQ Worker in a single thread',
       required=False)
 
+  # Parser options for Turbinia status command
+  parser_status = subparsers.add_parser(
+      'status',
+      help='Get Turbinia Task status')
+  parser_status.add_argument(
+      '-d',
+      '--days_history',
+      default=1,
+      type=int,
+      help='Number of days of history to show',
+      required=False)
+  parser_status.add_argument(
+      '-r',
+      '--request_id',
+      action='store_true',
+      help='Show tasks for given Request ID',
+      required=False)
+  parser_status.add_argument(
+      '-t',
+      '--task_id',
+      action='store_true',
+      help='Show task for given Task ID',
+      required=False)
+  parser_status.add_argument(
+      '-w',
+      '--wait',
+      action='store_true',
+      help='Wait until given task has completed execution to exit',
+      required=False)
+
   # Server
   parser_server = subparsers.add_parser('server', help='Run Turbinia Server')
 
@@ -217,6 +291,12 @@ if __name__ == '__main__':
   elif args.command == 'server':
     log.info(u'Running Turbinia Server.')
     task_manager_.run()
+  elif args.command == 'status':
+    # TODO(aarontp): This seems to be a valid assumption right now, but we
+    # should figure out a better way to do this in case it changes.
+    region = config.ZONE[:-2]
+    PrintTaskStatus(
+        project=config.PROJECT, region=region, days=args.days_history)
   elif args.command == 'listjobs':
     log.info(u'Available Jobs:')
     log.info(

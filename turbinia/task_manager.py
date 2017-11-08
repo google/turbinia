@@ -166,6 +166,7 @@ class BaseTaskManager(object):
     Args:
       task: A TurbiniaTask object
     """
+    task.touch()
     self.state_manager.update_task(task)
     self.tasks.remove(task)
 
