@@ -12,37 +12,47 @@ Communication from the client to the server is currently done transparently with
 Turbinia is still pre-Alpha.  There is currently a [GitHub Milestone](https://github.com/google/turbinia/milestone/1) tracking the remaining items for the Alpha release.  It was mostly re-written since the initial proof of concept, so some things may be broken at this time.
 
 ## Installation
-There is an [extremely rough installation guide](docs/install.md), but it needs to be updated and fixed up.
+There is an [extremely rough installation guide](docs/install.md), but it needs to be [updated and fixed up](https://github.com/google/turbinia/issues/23).
 
 ## Usage
 The basic steps to get things running after the initial installation and configuration are:
 * Start Turbinia server component with ```turbiniactl server``` command
 * Start one or more Turbinia workers with ```turbiniactl psqworker```
 * Send evidence to be processed from the turbinia client with ```turbiniactl ${evidencetype}```
+* Check status of running tasks with ```turbiniactl status```
 
 turbiniactl can be used to start the different components, and here is the basic usage:
 ```
 $ ./turbiniactl -h
-usage: turbiniactl [-h] [-v] [-d] [-o OUTPUT_DIR] [-L LOG_FILE] [-S] [-V]
+usage: turbiniactl [-h] [-q] [-v] [-d] [-o OUTPUT_DIR] [-L LOG_FILE] [-S] [-V]
+                   [-D]
                    <command> ...
 
 optional arguments:
   -h, --help            show this help message and exit
-  -v, --verbose         verbose
-  -d, --debug           debug
+  -q, --quiet           Show minimal output
+  -v, --verbose         Show verbose output
+  -d, --debug           Show debug output
   -o OUTPUT_DIR, --output_dir OUTPUT_DIR
                         Directory path for output
   -L LOG_FILE, --log_file LOG_FILE
                         Log file
   -S, --server          Run Turbinia Server indefinitely
   -V, --version         Show the version
+  -D, --dump_json       Dump JSON output of Turbinia Request instead of
+                        sending it
 
 Commands:
   <command>
     rawdisk             Process RawDisk as Evidence
+    googleclouddisk     Process Google Cloud Persistent Disk as Evidence
+    googleclouddiskembedded
+                        Process Google Cloud Persistent Disk with an embedded
+                        raw disk image as Evidence
     directory           Process a directory as Evidence
     listjobs            List all available jobs
     psqworker           Run PSQ worker
+    status              Get Turbinia Task status
     server              Run Turbinia Server
 ```
 
