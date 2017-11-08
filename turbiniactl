@@ -75,7 +75,7 @@ def PrintTaskStatus(project, region, days=1):
 
   print '\nRetrieved {0:d} Task results:'.format(num_results)
   for task in task_results:
-    success = "Successful" if task['successful'] else "Failed"
+    success = 'Successful' if task['successful'] else 'Failed'
     print '{0:s} {1:s} {2:s} {3:s}: {4:s} '.format(
         task['last_update'], task['id'], task['name'], success,
         task['status'])
