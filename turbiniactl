@@ -153,21 +153,13 @@ def PrintTaskStatus(instance, project, region, days=0, task_id=None,
 
   print '\nRetrieved {0:d} Task results:'.format(num_results)
   for task in task_results:
-    if task.get('successful', None):
-      success = 'Successful'
-    elif task.get('successful', None) is None:
+    if task.has_key('successful'):
+      success = 'Successful' if task['successful'] else 'Failed'
+    else:
       success = 'Running'
-    else:
-      success = 'Failed'
-
-    status = task.get('status') if task.get('status') else 'Task in Progress'
-    if all_fields:
-      print '{0:s} request: {1:s} task: {2:s} {3:s} {4:s}: {5:s}'.format(
-          task['last_update'], task['request_id'], task['id'], task['name'],
-          success, status)
-    else:
-      print '{0:s} {1:s} {2:s}: {3:s}'.format(
-          task['last_update'], task['name'], success, status)
+    status = task.get('status', 'Task in Progress')
+    print '{0:s} {1:s} {2:s} {3:s}: {4:s} '.format(
+        task['last_update'], task['id'], task['name'], success, status)
 
 
 if __name__ == '__main__':
