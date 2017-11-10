@@ -156,6 +156,7 @@ class BaseTaskManager(object):
       task: An instantiated Turbinia Task
       evidence_: An Evidence object to be processed.
     """
+    task.request_id = evidence_.request_id
     self.tasks.append(task)
     self.state_manager.write_new_task(task)
     self.enqueue_task(task, evidence_)

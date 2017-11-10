@@ -42,7 +42,7 @@ log = logging.getLogger('turbinia')
 logger.setup()
 
 
-def PrintTaskStatus(project, region, days=1):
+def PrintTaskStatus(project, region, days=1, all_fields=False):
   """Prints the recent history for Turbinia Tasks.
 
   Args:
@@ -70,7 +70,7 @@ def PrintTaskStatus(project, region, days=1):
   task_results = results[0]
   num_results = len(task_results)
   if not num_results:
-    print 'No Tasks found.'
+    print '\nNo Tasks found.'
     return
 
   print '\nRetrieved {0:d} Task results:'.format(num_results)
@@ -80,8 +80,14 @@ def PrintTaskStatus(project, region, days=1):
     else:
       success = 'Running'
     status = task.get('status', 'Task in Progress')
-    print '{0:s} {1:s} {2:s} {3:s}: {4:s} '.format(
-        task['last_update'], task['id'], task['name'], success, status)
+    if all_fields:
+      print '{0:s} request: {1:s} task: {2:s} {3:s} {4:s}: {5:s}'.format(
+          task['last_update'], task['request_id'], task['id'], task['name'],
+          success, status)
+    else:
+      print '{0:s} {1:s} {2:s}: {3:s}'.format(
+          task['last_update'], task['name'], success, status)
+
 
 
 if __name__ == '__main__':
@@ -211,6 +217,12 @@ if __name__ == '__main__':
       'status',
       help='Get Turbinia Task status')
   parser_status.add_argument(
+      '-a',
+      '--all_fields',
+      action='store_true',
+      help='Show all task status fields in output',
+      required=False)
+  parser_status.add_argument(
       '-d',
       '--days_history',
       default=1,
@@ -299,7 +311,8 @@ if __name__ == '__main__':
     # should figure out a better way to do this in case it changes.
     region = config.ZONE[:-2]
     PrintTaskStatus(
-        project=config.PROJECT, region=region, days=args.days_history)
+        project=config.PROJECT, region=region, days=args.days_history,
+        all_fields=args.all_fields)
   elif args.command == 'listjobs':
     log.info(u'Available Jobs:')
     log.info(
@@ -321,7 +334,8 @@ if __name__ == '__main__':
       print request.to_json().encode('utf-8')
     else:
       log.info(
-          u'Creating PubSub request with evidence {0:s}'.format(evidence_.name))
+          u'Creating PubSub request {0:s} with evidence {1:s}'.format(
+              request.request_id, evidence_.name))
       task_manager_.server_pubsub.send_request(request)
 
   log.info(u'Done.')
