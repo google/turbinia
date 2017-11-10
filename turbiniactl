@@ -389,20 +389,9 @@ if __name__ == '__main__':
       print request.to_json().encode('utf-8')
     else:
       log.info(
-          u'Creating PubSub request {0:s} with evidence {1:s}'.format(
+          'Creating PubSub request {0:s} with evidence {1:s}'.format(
               request.request_id, evidence_.name))
       task_manager_.server_pubsub.send_request(request)
-
-    if args.wait:
-      log.info('Waiting for request {0:s} to complete'.format(
-          request.request_id))
-      region = config.ZONE[:-2]
-      WaitForRequest(
-          instance=config.PUBSUB_TOPIC, project=config.PROJECT, region=region,
-          request_id=request.request_id)
-      PrintTaskStatus(
-          instance=config.PUBSUB_TOPIC, project=config.PROJECT, region=region,
-          request_id=request.request_id, all_fields=args.all_fields)
 
   log.info('Done.')
   sys.exit(0)
