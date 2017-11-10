@@ -186,6 +186,7 @@ class TurbiniaTask(object):
       name: Name of task
       output_dir: The directory output will go into (including per-task folder).
       result: A TurbiniaTaskResult object.
+      request_id: The id of the initial request to process this evidence.
       state_key: A key used to manage task state
       stub: The task manager implementation specific task stub that exists
             server side to keep a reference to the remote task objects.  For PSQ
@@ -194,9 +195,9 @@ class TurbiniaTask(object):
   """
 
   # The list of attributes that we will persist into storage
-  STORED_ATTRIBUTES = ['id', 'last_update', 'name']
+  STORED_ATTRIBUTES = ['id', 'last_update', 'name', 'request_id']
 
-  def __init__(self, name=None, base_output_dir=None):
+  def __init__(self, name=None, base_output_dir=None, request_id=None):
     """Initialization for TurbiniaTask."""
     self.base_output_dir = base_output_dir
     self.id = uuid.uuid4().hex
@@ -204,6 +205,7 @@ class TurbiniaTask(object):
     self.name = name if name else self.__class__.__name__
     self.output_dir = None
     self.result = None
+    self.request_id = request_id
     self.state_key = None
     self.stub = None
 

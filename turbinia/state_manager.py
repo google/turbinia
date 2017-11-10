@@ -49,6 +49,9 @@ class BaseStateManager(object):
   def get_task_dict(self, task):
     """Creates a dict of the fields we want to persist into storage.
 
+    This combines attributes from both the Task and the TaskResult into one flat
+    object representing the overall state.
+
     Args:
       task: A TurbiniaTask object.
 
