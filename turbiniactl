@@ -16,6 +16,8 @@
 """Command line interface for Turbinia."""
 # pylint: disable=bad-indentation
 
+from __future__ import unicode_literals
+
 import argparse
 from datetime import datetime
 from datetime import timedelta
@@ -300,10 +302,10 @@ if __name__ == '__main__':
     else:
       worker = psq.MultiprocessWorker(queue=task_manager_.psq)
     log.info(
-        u'Starting PSQ listener on queue {0:s}'.format(task_manager_.psq.name))
+        'Starting PSQ listener on queue {0:s}'.format(task_manager_.psq.name))
     worker.listen()
   elif args.command == 'server':
-    log.info(u'Running Turbinia Server.')
+    log.info('Running Turbinia Server.')
     task_manager_.run()
   elif args.command == 'status':
     # TODO(aarontp): This seems to be a valid assumption right now, but we
@@ -313,11 +315,11 @@ if __name__ == '__main__':
         project=config.PROJECT, region=region, days=args.days_history,
         all_fields=args.all_fields)
   elif args.command == 'listjobs':
-    log.info(u'Available Jobs:')
+    log.info('Available Jobs:')
     log.info(
         '\n'.join(['\t{0:s}'.format(job.name) for job in task_manager_.jobs]))
   else:
-    log.warning(u'Command {0:s} not implemented.'.format(args.command))
+    log.warning('Command {0:s} not implemented.'.format(args.command))
 
   # If we have evidence to process and we also want to run as a server, then
   # we'll just process the evidence directly rather than send it through the
@@ -333,9 +335,9 @@ if __name__ == '__main__':
       print request.to_json().encode('utf-8')
     else:
       log.info(
-          u'Creating PubSub request {0:s} with evidence {1:s}'.format(
+          'Creating PubSub request {0:s} with evidence {1:s}'.format(
               request.request_id, evidence_.name))
       task_manager_.server_pubsub.send_request(request)
 
-  log.info(u'Done.')
+  log.info('Done.')
   sys.exit(0)
