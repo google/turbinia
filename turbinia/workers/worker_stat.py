@@ -27,7 +27,7 @@ from turbinia.evidence import ReportText
 class StatTask(TurbiniaTask):
   """Task to run Stat."""
 
-  def run(self, evidence):
+  def run(self, evidence, result):
     """Test Stat task.
 
     Args:
@@ -36,8 +36,6 @@ class StatTask(TurbiniaTask):
     Returns:
         TurbiniaTaskResult object.
     """
-    result = self.setup(evidence)
-
     report = ReportText()
     result.log('Running stat on evidence {0:s}'.format(evidence.local_path))
     report.text_data = str(os.stat(evidence.local_path))
