@@ -308,6 +308,12 @@ if __name__ == '__main__':
       'status',
       help='Get Turbinia Task status')
   parser_status.add_argument(
+      '-a',
+      '--all_fields',
+      action='store_true',
+      help='Show all task status fields in output',
+      required=False)
+  parser_status.add_argument(
       '-d',
       '--days_history',
       default=1,
