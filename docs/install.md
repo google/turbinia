@@ -29,9 +29,11 @@
     * `export GOOGLE_APPLICATION_CREDENTIALS="/home/foo/service_account_creds.json"`
 * Alternately you can run Turbinia under your own credentials (not recommended).  Run `gcloud auth login` (may require you to copy/paste url to browser). Or run `gcloud auth application-default login`.
 
-#### Configure GCP services (datastore and pubsub)
+#### Configure GCP services (Datastore, Pubsub and Cloud Functions)
 * Make sure that the [Pub/Sub](https://console.cloud.google.com/apis/library/pubsub.googleapis.com/) and [Cloud Functions](https://console.cloud.google.com/apis/library/cloudfunctions.googleapis.com/) APIs are enabled in your project.
 * Make sure that Datastore is enabled and setup by going to Datastore in the cloud console, and if the `Create Entity` button exists, click that and select the region that your data should be in.  No need to create any Entities after selecting your region.
+* Deploy the Cloud Functions
+  * `cd turbinia/tools/gcf_init && ./deploy_gcf.py`
 
 ### GCP Setup
 The following is a one possible configuration and setup for Turbinia in GCP.  This is still a rough process and future versions will be containerized.
