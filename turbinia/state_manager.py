@@ -77,6 +77,11 @@ class BaseStateManager(object):
         if isinstance(task_dict[attr], str):
           task_dict[attr] = unicode(task_dict[attr])
 
+    # Using the pubsub topic as an instance attribute in order to have a unique
+    # namepace per Turbinia installation.
+    # TODO(aarontp): Migrate this to actual Datastore namespaces
+    config.LoadConfig()
+    task_dict.update({'instance': config.PUBSUB_TOPIC})
     return task_dict
 
   def update_task(self, task):
@@ -121,6 +126,8 @@ class DatastoreStateManager(BaseStateManager):
 
 
   def write_new_task(self, task):
+    # Using the pubsub topic as part of the key in order to have unique entities
+    # per Turbinia installation.
     key = self.client.key('TurbiniaTask', task.id)
     entity = datastore.Entity(key)
     entity.update(self.get_task_dict(task))

@@ -44,23 +44,43 @@ log = logging.getLogger('turbinia')
 logger.setup()
 
 
-def PrintTaskStatus(project, region, days=1, all_fields=False):
+def PrintTaskStatus(instance, project, region, days=0, task_id=None,
+                    request_id=None, all_fields=False):
   """Prints the recent history for Turbinia Tasks.
 
   Args:
+    instance (string): The Turbinia instance name (by default the same as the
+        PUBSUB_TOPIC in the config).
     project (string): The name of the project.
     region (string): The name of the zone to execute in.
+    days (int): The number of days we want history for.
+    task_id (string): The Id of the task.
+    request_id (string): The Id of the request we want tasks for.
   """
   function = GoogleCloudFunction(project_id=project, region=region)
-  start = datetime.now() - timedelta(days=days)
-  # Format this like '1990-01-01T00:00:00z' so we can cast it directly to a
-  # javascript Date() object in the cloud function.
-  start_string = start.strftime('%Y-%m-%dT%H:%M:%S')
-  response = function.ExecuteFunction(
-      'getrecenttasks', {'kind': 'TurbiniaTask', 'start':start_string})
+  func_args = {'instance': instance, 'kind': 'TurbiniaTask'}
 
+  if days:
+    start_time = datetime.now() - timedelta(days=days)
+    # Format this like '1990-01-01T00:00:00z' so we can cast it directly to a
+    # javascript Date() object in the cloud function.
+    start_string = start_time.strftime('%Y-%m-%dT%H:%M:%S')
+    func_args.update({'start_time': start_string})
+  elif task_id:
+    func_args.update({'task_id': task_id})
+  elif request_id:
+    func_args.update({'request_id': request_id})
+
+  response = function.ExecuteFunction('gettasks', func_args)
   if not response.has_key('result'):
-    log.error('Return from GCF does not contain a "result" key.')
+    log.error('No results found')
+    print '\nNo results found.\n'
+    if response.get('error', '{}') != '{}':
+      msg = 'Error executing Cloud Function: [{0!s}].'.format(
+          response.get('error'))
+      print '{0:s}\n'.format(msg)
+      log.error(msg)
+    log.debug('GCF response: {0!s}'.format(response))
     sys.exit(1)
 
   try:
@@ -233,13 +253,11 @@ if __name__ == '__main__':
   parser_status.add_argument(
       '-r',
       '--request_id',
-      action='store_true',
       help='Show tasks for given Request ID',
       required=False)
   parser_status.add_argument(
       '-t',
       '--task_id',
-      action='store_true',
       help='Show task for given Task ID',
       required=False)
   parser_status.add_argument(
@@ -312,8 +330,9 @@ if __name__ == '__main__':
     # should figure out a better way to do this in case it changes.
     region = config.ZONE[:-2]
     PrintTaskStatus(
-        project=config.PROJECT, region=region, days=args.days_history,
-        all_fields=args.all_fields)
+        instance=config.PUBSUB_TOPIC, project=config.PROJECT, region=region,
+        days=args.days_history, task_id=args.task_id,
+        request_id=args.request_id, all_fields=args.all_fields)
   elif args.command == 'listjobs':
     log.info('Available Jobs:')
     log.info(

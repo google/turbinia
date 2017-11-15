@@ -217,7 +217,8 @@ class GoogleCloudFunction(GoogleCloudProject):
     function_path = 'projects/{0:s}/locations/{1:s}/functions/{2:s}'.format(
         self.project_id, self.region, function_name)
 
-    log.debug('Calling Cloud Function [{0:s}]'.format(function_name))
+    log.debug('Calling Cloud Function [{0:s}] with args [{1!s}]'.format(
+        function_name, args))
     try:
       function_return = function.call(
           name=function_path, body={'data':json_args}).execute()
