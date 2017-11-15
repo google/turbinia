@@ -249,7 +249,7 @@ if __name__ == '__main__':
   parser_status.add_argument(
       '-d',
       '--days_history',
-      default=0,
+      default=1,
       type=int,
       help='Number of days of history to show',
       required=False)
