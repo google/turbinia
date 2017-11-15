@@ -43,7 +43,9 @@ SCRATCH_PATH = None
 BUCKET_NAME = None
 PSQ_TOPIC = u'turbinia-psq'
 
-# Topic Turbinia will listen on for new Artifact events
+# Topic Turbinia will listen on for new Artifact events.  This is also used as
+# the Turbinia instance/namespace as it is a unique string per Turbinia
+# instance and Cloud Project.
 PUBSUB_TOPIC = None
 
 # GCS Path to copy worker results and Evidence output to

@@ -49,7 +49,8 @@ def PrintTaskStatus(instance, project, region, days=0, task_id=None,
   """Prints the recent history for Turbinia Tasks.
 
   Args:
-    instance (string): The Turbinia instance name.
+    instance (string): The Turbinia instance name (by default the same as the
+        PUBSUB_TOPIC in the config).
     project (string): The name of the project.
     region (string): The name of the zone to execute in.
     days (int): The number of days we want history for.
@@ -60,11 +61,11 @@ def PrintTaskStatus(instance, project, region, days=0, task_id=None,
   func_args = {'instance': instance, 'kind': 'TurbiniaTask'}
 
   if days:
-    start = datetime.now() - timedelta(days=days)
+    start_time = datetime.now() - timedelta(days=days)
     # Format this like '1990-01-01T00:00:00z' so we can cast it directly to a
     # javascript Date() object in the cloud function.
-    start_string = start.strftime('%Y-%m-%dT%H:%M:%S')
-    func_args.update({'start': start_string})
+    start_string = start_time.strftime('%Y-%m-%dT%H:%M:%S')
+    func_args.update({'start_time': start_string})
   elif task_id:
     func_args.update({'task_id': task_id})
   elif request_id:
@@ -245,7 +246,7 @@ if __name__ == '__main__':
   parser_status.add_argument(
       '-d',
       '--days_history',
-      default=0,
+      default=1,
       type=int,
       help='Number of days of history to show',
       required=False)
