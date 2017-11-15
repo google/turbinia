@@ -13,14 +13,6 @@ indexes:
   ancestor: no
   properties:
   - name: instance
-  - name: successful
-  - name: last_update
-    direction: desc
-
-- kind: TurbiniaTask
-  ancestor: no
-  properties:
-  - name: instance
   - name: request_id
   - name: last_update
     direction: desc
