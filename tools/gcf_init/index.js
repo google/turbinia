@@ -32,7 +32,8 @@ const datastore = Datastore();
  * @param {object} req Cloud Function request context.
  * @param {object} req.body The request body.
  * @param {string} req.body.kind The kind of Datastore Entity to request
- * @param {string} req.body.start A date string in ISO 8601 format for the start
+ * @param {string} req.body.start_time A date string in ISO 8601 format of the
+ *                 beginning of the time window to query for
  * @param {string} req.body.task_id Id of task to retrieve
  * @param {string} req.body.request_id of tasks to retrieve
  * @param {object} res Cloud Function response context.
@@ -46,7 +47,7 @@ exports.gettasks = function gettasks (req, res) {
   }
 
   var query;
-  var start;
+  var start_time;
   if (req.body.task_id) {
     console.log('Getting Turbinia Tasks by Task Id');
     query = datastore.createQuery(req.body.kind)
@@ -61,16 +62,16 @@ exports.gettasks = function gettasks (req, res) {
       .filter('request_id', '=', req.body.request_id)
       .order('last_update', {descending: true }
       );
-  } else if (req.body.start) {
+  } else if (req.body.start_time) {
     console.log('Getting Turbinia Tasks by last_updated range');
     try {
-      start = new Date(req.body.start)
+      start_time = new Date(req.body.start_time)
     } catch(err) {
-      throw new Error('Could not convert start parameter into Date object')
+      throw new Error('Could not convert start_time parameter into Date object')
     }
     query = datastore.createQuery(req.body.kind)
       .filter('instance', '=', req.body.instance)
-      .filter('last_update', '>=', start)
+      .filter('last_update', '>=', start_time)
       .order('last_update', {descending: true }
       );
   } else {
@@ -78,6 +79,7 @@ exports.gettasks = function gettasks (req, res) {
     query = datastore.createQuery(req.body.kind)
       .filter('instance', '=', req.body.instance)
       .filter('successful', '!=', true)
+      .filter('successful', '!=', false)
       .order('last_update', {descending: true }
       );
   }
@@ -109,8 +111,8 @@ exports.gettasks = function gettasks (req, res) {
  * @param {object} req.body The request body.
  * @param {string} req.body.instance The Turbinia instance
  * @param {string} req.body.kind The kind of Datastore Entity to request
- * @param {string} req.body.start A date string in ISO 8601 format for the start
- *                 of the time window of tasks to return.
+ * @param {string} req.body.start_time A date string in ISO 8601 format of the
+ *                 beginning of the time window to query for
  * @param {object} res Cloud Function response context.
  */
 exports.getrecenttasks = function getrecenttasks (req, res) {
@@ -133,7 +135,7 @@ exports.getrecenttasks = function getrecenttasks (req, res) {
 
   const query = datastore.createQuery(req.body.kind)
     .filter('instance', '=', req.body.instance)
-    .filter('last_update', '>=', start)
+    .filter('last_update', '>=', start_time)
     .order('last_update', {descending: true }
     );
 
