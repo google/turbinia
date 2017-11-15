@@ -1,0 +1,26 @@
+# This file is to create composite indexes for Datastore, and can be deployed with deploy_gcf.py
+
+indexes:
+
+- kind: TurbiniaTask
+  ancestor: no
+  properties:
+  - name: instance
+  - name: last_update
+    direction: desc
+
+- kind: TurbiniaTask
+  ancestor: no
+  properties:
+  - name: instance
+  - name: request_id
+  - name: last_update
+    direction: desc
+
+- kind: TurbiniaTask
+  ancestor: no
+  properties:
+  - name: instance
+  - name: id
+  - name: last_update
+    direction: desc

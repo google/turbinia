@@ -22,38 +22,77 @@ const datastore = Datastore();
 
 
 /**
- * Retrieves a record.
+ * Retrieves tasks given a start time, task Id or Request Id.
  *
  * @example
- * gcloud beta functions call gettask \
- *     --data '{"kind":"Task","id":"abcd1234"}'
+ * gcloud beta functions call gettasks \
+ *     --data '{"instance": "turbinia-prod", "kind":"TurbiniaTask",
+ *              "task_id":"abcd1234"}'
  *
  * @param {object} req Cloud Function request context.
  * @param {object} req.body The request body.
- * @param {string} req.body.kind The Datastore kind of the data to retrieve, e.g. "TurbiniaTask".
- * @param {string} req.body.id Id of task to retrieve
+ * @param {string} req.body.kind The kind of Datastore Entity to request
+ * @param {string} req.body.start A date string in ISO 8601 format for the start
+ * @param {string} req.body.task_id Id of task to retrieve
+ * @param {string} req.body.request_id of tasks to retrieve
  * @param {object} res Cloud Function response context.
  */
-exports.gettask = function gettask (req, res) {
+exports.gettasks = function gettasks (req, res) {
+  if (!req.body.instance) {
+    throw new Error('Instance parameter not provided in request.');
+  }
   if (!req.body.kind) {
     throw new Error('Kind parameter not provided in request.');
   }
-  if (!req.body.id) {
-    throw new Error('Id parameter not provided in request.');
+
+  var query;
+  var start;
+  if (req.body.task_id) {
+    console.log('Getting Turbinia Tasks by Task Id');
+    query = datastore.createQuery(req.body.kind)
+      .filter('instance', '=', req.body.instance)
+      .filter('id', '=', req.body.task_id)
+      .order('last_update', {descending: true }
+      );
+  } else if (req.body.request_id) {
+    console.log('Getting Turbinia Tasks by Request Id');
+    query = datastore.createQuery(req.body.kind)
+      .filter('instance', '=', req.body.instance)
+      .filter('request_id', '=', req.body.request_id)
+      .order('last_update', {descending: true }
+      );
+  } else if (req.body.start) {
+    console.log('Getting Turbinia Tasks by last_updated range');
+    try {
+      start = new Date(req.body.start)
+    } catch(err) {
+      throw new Error('Could not convert start parameter into Date object')
+    }
+    query = datastore.createQuery(req.body.kind)
+      .filter('instance', '=', req.body.instance)
+      .filter('last_update', '>=', start)
+      .order('last_update', {descending: true }
+      );
+  } else {
+    console.log('Getting open Turbinia Tasks.');
+    query = datastore.createQuery(req.body.kind)
+      .filter('instance', '=', req.body.instance)
+      .filter('successful', '!=', true)
+      .order('last_update', {descending: true }
+      );
   }
 
-  return datastore.get(id)
-    .then(([entity]) => {
-      // The get operation will not fail for a non-existent entity, it just
-      // returns null.
-      if (!entity) {
-        throw new Error(`No entity found for id ${id.path.join('/')}.`);
-      }
+  return datastore.runQuery(query)
+    .then((results) => {
+      // Task entities found.
+      const tasks = results[0];
 
-      res.status(200).send(entity);
+      console.log('Turbinia Tasks:');
+      tasks.forEach((task) => console.log(task));
+      res.status(200).send(results);
     })
     .catch((err) => {
-      console.error(err);
+      console.error('Error in runQuery' + err);
       res.status(500).send(err);
       return Promise.reject(err);
     });
@@ -68,10 +107,16 @@ exports.gettask = function gettask (req, res) {
  *
  * @param {object} req Cloud Function request context.
  * @param {object} req.body The request body.
- * @param {string} req.body.key Key at which to retrieve the data, e.g. "sampletask1".
+ * @param {string} req.body.instance The Turbinia instance
+ * @param {string} req.body.kind The kind of Datastore Entity to request
+ * @param {string} req.body.start A date string in ISO 8601 format for the start
+ *                 of the time window of tasks to return.
  * @param {object} res Cloud Function response context.
  */
 exports.getrecenttasks = function getrecenttasks (req, res) {
+  if (!req.body.instance) {
+    throw new Error('Instance parameter not provided in request.');
+  }
   if (!req.body.kind) {
     throw new Error('Kind parameter not provided in request.');
   }
@@ -87,10 +132,12 @@ exports.getrecenttasks = function getrecenttasks (req, res) {
   }
 
   const query = datastore.createQuery(req.body.kind)
+    .filter('instance', '=', req.body.instance)
     .filter('last_update', '>=', start)
     .order('last_update', {descending: true }
     );
 
+  console.log(query);
   return datastore.runQuery(query)
     .then((results) => {
       // Task entities found.
@@ -105,5 +152,4 @@ exports.getrecenttasks = function getrecenttasks (req, res) {
       res.status(500).send(err);
       return Promise.reject(err);
     });
-
 };
