@@ -24,6 +24,7 @@ from datetime import timedelta
 import json
 import logging
 import sys
+import time
 
 try:
   import psq
@@ -44,8 +45,41 @@ log = logging.getLogger('turbinia')
 logger.setup()
 
 
-def PrintTaskStatus(instance, project, region, days=0, task_id=None,
-                    request_id=None, all_fields=False):
+def WaitForRequest(instance, project, region, request_id=None,
+                   poll_interval=60):
+  """Prints the recent history for Turbinia Tasks.
+
+  Args:
+    instance (string): The Turbinia instance name (by default the same as the
+        PUBSUB_TOPIC in the config).
+    project (string): The name of the project.
+    region (string): The name of the zone to execute in.
+    request_id (string): The Id of the request we want tasks for.
+    poll_interval (int): Interval of seconds between polling cycles.
+  """
+  while True:
+    task_results = GetTaskData(instance, project, region, request_id=request_id)
+    completed_count = 0
+    uncompleted_count = 0
+    for task in task_results:
+      if task.get('successful') is not None:
+        completed_count += 1
+      else:
+        uncompleted_count += 1
+
+    if completed_count and completed_count == len(task_results):
+      break
+
+    log.info(
+        '{0:d} Tasks found, {1:d} completed. Waiting {2:d} seconds.'.format(
+            len(task_results), completed_count, poll_interval))
+    time.sleep(poll_interval)
+
+  log.info('All {0:d} Tasks completed'.format(len(task_results)))
+
+
+def GetTaskData(instance, project, region, days=0, task_id=None,
+                request_id=None):
   """Prints the recent history for Turbinia Tasks.
 
   Args:
@@ -56,6 +90,9 @@ def PrintTaskStatus(instance, project, region, days=0, task_id=None,
     days (int): The number of days we want history for.
     task_id (string): The Id of the task.
     request_id (string): The Id of the request we want tasks for.
+
+  Returns:
+    List of Task dict objects.
   """
   function = GoogleCloudFunction(project_id=project, region=region)
   func_args = {'instance': instance, 'kind': 'TurbiniaTask'}
@@ -89,7 +126,26 @@ def PrintTaskStatus(instance, project, region, days=0, task_id=None,
     log.error('Could not deserialize result from GCF: [{0!s}]'.format(e))
     sys.exit(1)
 
-  task_results = results[0]
+  return results[0]
+
+
+def PrintTaskStatus(instance, project, region, days=0, task_id=None,
+                    request_id=None, all_fields=False):
+  """Prints the recent history for Turbinia Tasks.
+
+  Args:
+    instance (string): The Turbinia instance name (by default the same as the
+        PUBSUB_TOPIC in the config).
+    project (string): The name of the project.
+    region (string): The name of the zone to execute in.
+    days (int): The number of days we want history for.
+    task_id (string): The Id of the task.
+    request_id (string): The Id of the request we want tasks for.
+    all_fields (bool): Print all fields for the task, including task and request
+        ids.
+  """
+  task_results = GetTaskData(instance, project, region, days, task_id,
+                             request_id)
   num_results = len(task_results)
   if not num_results:
     print '\nNo Tasks found.'
@@ -127,6 +183,12 @@ if __name__ == '__main__':
   parser.add_argument(
       '-d', '--debug', action='store_true', help='Show debug output',
       default=True)
+  parser.add_argument(
+      '-a',
+      '--all_fields',
+      action='store_true',
+      help='Show all task status fields in output',
+      required=False)
   parser.add_argument('-o', '--output_dir', help='Directory path for output')
   parser.add_argument('-L', '--log_file', help='Log file')
   parser.add_argument(
@@ -145,6 +207,11 @@ if __name__ == '__main__':
       '--dump_json',
       action='store_true',
       help='Dump JSON output of Turbinia Request instead of sending it')
+  parser.add_argument(
+      '-w',
+      '--wait',
+      action='store_true',
+      help='Wait to exit until all tasks for the given request have completed')
 
   subparsers = parser.add_subparsers(
       dest='command', title='Commands', metavar='<command>')
@@ -241,12 +308,6 @@ if __name__ == '__main__':
       'status',
       help='Get Turbinia Task status')
   parser_status.add_argument(
-      '-a',
-      '--all_fields',
-      action='store_true',
-      help='Show all task status fields in output',
-      required=False)
-  parser_status.add_argument(
       '-d',
       '--days_history',
       default=1,
@@ -262,12 +323,6 @@ if __name__ == '__main__':
       '-t',
       '--task_id',
       help='Show task for given Task ID',
-      required=False)
-  parser_status.add_argument(
-      '-w',
-      '--wait',
-      action='store_true',
-      help='Wait until given task has completed execution to exit',
       required=False)
 
   # Server
@@ -332,6 +387,14 @@ if __name__ == '__main__':
     # TODO(aarontp): This seems to be a valid assumption right now, but we
     # should figure out a better way to do this in case it changes.
     region = config.ZONE[:-2]
+    if args.wait and args.request_id:
+      WaitForRequest(
+          instance=config.PUBSUB_TOPIC, project=config.PROJECT, region=region,
+          request_id=args.request_id)
+    elif args.wait and not args.request_id:
+      log.info('--wait requires --request_id, which is not specified. '
+               'turbiniactl will exit without waiting.')
+
     PrintTaskStatus(
         instance=config.PUBSUB_TOPIC, project=config.PROJECT, region=region,
         days=args.days_history, task_id=args.task_id,
@@ -360,6 +423,17 @@ if __name__ == '__main__':
           'Creating PubSub request {0:s} with evidence {1:s}'.format(
               request.request_id, evidence_.name))
       task_manager_.server_pubsub.send_request(request)
+
+    if args.wait:
+      log.info('Waiting for request {0:s} to complete'.format(
+          request.request_id))
+      region = config.ZONE[:-2]
+      WaitForRequest(
+          instance=config.PUBSUB_TOPIC, project=config.PROJECT, region=region,
+          request_id=request.request_id)
+      PrintTaskStatus(
+          instance=config.PUBSUB_TOPIC, project=config.PROJECT, region=region,
+          request_id=request.request_id, all_fields=args.all_fields)
 
   log.info('Done.')
   sys.exit(0)
