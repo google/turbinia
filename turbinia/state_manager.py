@@ -79,6 +79,11 @@ class BaseStateManager(object):
         if isinstance(task_dict[attr], str):
           task_dict[attr] = unicode(task_dict[attr])
 
+    # Set all non-existent keys to None
+    all_attrs = set(TurbiniaTask.STORED_ATTRIBUTES +
+                    TurbiniaTaskResult.STORED_ATTRIBUTES)
+    task_dict.update({k: None for k in all_attrs if not task_dict.has_key(k)})
+
     # Using the pubsub topic as an instance attribute in order to have a unique
     # namepace per Turbinia installation.
     # TODO(aarontp): Migrate this to actual Datastore namespaces

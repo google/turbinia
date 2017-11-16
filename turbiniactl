@@ -117,11 +117,14 @@ def PrintTaskStatus(instance, project, region, days=0, task_id=None,
 
   print '\nRetrieved {0:d} Task results:'.format(num_results)
   for task in task_results:
-    if task.has_key('successful'):
-      success = 'Successful' if task['successful'] else 'Failed'
-    else:
+    if task.get('successful', None):
+      success = 'Successful'
+    elif task.get('successful', None) is None:
       success = 'Running'
-    status = task.get('status', 'Task in Progress')
+    else:
+      success = 'Failed'
+
+    status = task.get('status') if task.get('status') else 'Task in Progress'
     if all_fields:
       print '{0:s} request: {1:s} task: {2:s} {3:s} {4:s}: {5:s}'.format(
           task['last_update'], task['request_id'], task['id'], task['name'],
@@ -278,7 +281,7 @@ if __name__ == '__main__':
   parser_status.add_argument(
       '-d',
       '--days_history',
-      default=1,
+      default=0,
       type=int,
       help='Number of days of history to show',
       required=False)
