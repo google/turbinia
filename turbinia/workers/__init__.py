@@ -34,20 +34,21 @@ class TurbiniaTaskResult(object):
   """Object to store task results to be returned by a TurbiniaTask.
 
   Attributes:
-        base_output_dir: Base path for local output
-        output_dir: Full path for local output
-        error: Dict of error data ('error' and 'traceback' are some valid keys)
-        evidence: List of newly created Evidence objects.
-        input_evidence: The evidence this task processed.
-        run_time: Length of time the task ran for.
-        start_time: Datetime object of when the task was started
-        status: A one line descriptive task status.
-        successful: Bool indicating success status.
-        task_id: Task ID of the parent task.
-        task_name: Name of parent task.
-        worker_name: Name of worker task executed on.
-        _log: A list of log messages
-        _output_writers: A list of output writer objects
+      base_output_dir: Base path for local output
+      output_dir: Full path for local output
+      error: Dict of error data ('error' and 'traceback' are some valid keys)
+      evidence: List of newly created Evidence objects.
+      input_evidence: The evidence this task processed.
+      request_id: The id of the initial request to process this evidence.
+      run_time: Length of time the task ran for.
+      start_time: Datetime object of when the task was started
+      status: A one line descriptive task status.
+      successful: Bool indicating success status.
+      task_id: Task ID of the parent task.
+      task_name: Name of parent task.
+      worker_name: Name of worker task executed on.
+      _log: A list of log messages
+      _output_writers: A list of output writer objects
   """
 
   # The list of attributes that we will persist into storage
@@ -59,7 +60,8 @@ class TurbiniaTaskResult(object):
       input_evidence=None,
       task_id=None,
       task_name=None,
-      base_output_dir=None):
+      base_output_dir=None,
+      request_id=None):
     """Initialize the TurbiniaTaskResult object."""
 
     self.evidence = evidence if evidence else []
@@ -67,6 +69,7 @@ class TurbiniaTaskResult(object):
     self.task_id = task_id
     self.task_name = task_name
     self.base_output_dir = base_output_dir
+    self.request_id = request_id
 
     self.start_time = datetime.now()
     self.run_time = None
@@ -82,14 +85,15 @@ class TurbiniaTaskResult(object):
   def close(self, success, status=None):
     """Handles closing of this result and writing logs.
 
+    Normally this should be called by the Run method to make sure that the
+    status, etc are set correctly, but if there is an exception thrown when the
+    task executes, then run_wrapper will call this with default arguments
+    indicating a failure.
+
     Args:
       success: Bool indicating task success
       status: One line descriptive task status.
     """
-    # TODO(aarontp): Running this close() method is now mandatory to make sure
-    # output is copied and that the results object can be serialized properly.
-    # We should move this to be part of a closure or decorator on the main
-    # TurbiniaTask.run function.
     self.successful = success
     self.run_time = datetime.now() - self.start_time
     if not status:
@@ -106,6 +110,10 @@ class TurbiniaTaskResult(object):
     self.save_local_file(logfile)
 
     [self.save_local_file(e.local_path) for e in self.evidence if e.local_path]
+
+    for evidence in self.evidence:
+      if not evidence.request_id:
+        evidence.request_id = self.request_id
 
     self.input_evidence.postprocess()
     # Unset the writers during the close because they don't serialize
@@ -229,7 +237,8 @@ class TurbiniaTask(object):
         task_id=self.id,
         task_name=self.name,
         input_evidence=evidence,
-        base_output_dir=self.base_output_dir)
+        base_output_dir=self.base_output_dir,
+        request_id=request_id)
     self.output_dir = self.result.output_dir
     if evidence.local_path and not os.path.exists(evidence.local_path):
       raise TurbiniaException(
