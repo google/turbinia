@@ -91,7 +91,7 @@ class OutputWriter(object):
       file_: A string path to a file.
 
     Returns:
-      Bool indicating success
+      The path the file was saved to, or None if file was not written.
     """
     raise NotImplementedError
 
@@ -128,13 +128,13 @@ class LocalOutputWriter(OutputWriter):
     output_file = os.path.join(self.output_dir, os.path.basename(file_path))
     if not os.path.exists(file_path):
       log.warning('File [{0:s}] does not exist.'.format(file_path))
-      return False
+      return None
     if os.path.exists(output_file):
       log.warning('New file path [{0:s}] already exists.'.format(output_file))
-      return False
+      return None
 
     shutil.copy(file_path, output_file)
-    return True
+    return output_file
 
 
 class GCSOutputWriter(OutputWriter):

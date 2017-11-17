@@ -141,8 +141,8 @@ def PrintTaskStatus(instance, project, region, days=0, task_id=None,
     days (int): The number of days we want history for.
     task_id (string): The Id of the task.
     request_id (string): The Id of the request we want tasks for.
-    all_fields (bool): Print all fields for the task, including task and request
-        ids.
+    all_fields (bool): Print all fields for the task, including task, request
+        ids and saved file paths.
   """
   task_results = GetTaskData(instance, project, region, days, task_id,
                              request_id)
@@ -165,6 +165,9 @@ def PrintTaskStatus(instance, project, region, days=0, task_id=None,
       print '{0:s} request: {1:s} task: {2:s} {3:s} {4:s}: {5:s}'.format(
           task['last_update'], task['request_id'], task['id'], task['name'],
           success, status)
+      saved_paths = task.get('saved_paths') if task.get('saved_paths') else []
+      for path in saved_paths:
+        print '\t{0:s}'.format(path)
     else:
       print '{0:s} {1:s} {2:s}: {3:s}'.format(
           task['last_update'], task['name'], success, status)
