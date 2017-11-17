@@ -142,7 +142,7 @@ class TurbiniaPubSub(object):
       A list of any TurbiniaRequest objects received, else an empty list
     """
     results = self.subscription.pull(return_immediately=True)
-    logging.info('Recieved {0:d} pubsub messages'.format(len(results)))
+    log.debug('Recieved {0:d} pubsub messages'.format(len(results)))
 
     ack_ids = []
     requests = []
@@ -170,7 +170,7 @@ class TurbiniaPubSub(object):
     """
     data = message.encode('utf-8')
     msg_id = self.topic.publish(data)
-    logging.info(
+    log.info(
         'Published message {0:s} to topic {1:s}'.format(
             msg_id, self.topic_name))
 

@@ -40,7 +40,6 @@ def GetOutputWriters(result):
     A list of OutputWriter objects.
   """
   epoch = str(int(time.time()))
-  log.info('%s %s %s' % (epoch, str(result.task_id), result.task_name))
   unique_dir = '{0:s}-{1:s}-{2:s}'.format(
       epoch, str(result.task_id), result.task_name)
 

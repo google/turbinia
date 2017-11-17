@@ -29,6 +29,7 @@ from turbinia import config
 from turbinia import output_writers
 from turbinia import TurbiniaException
 
+log = logging.getLogger('turbinia')
 
 class TurbiniaTaskResult(object):
   """Object to store task results to be returned by a TurbiniaTask.
@@ -143,7 +144,7 @@ class TurbiniaTaskResult(object):
     Args:
       log_msg: A log message string.
     """
-    logging.info(log_msg)
+    log.info(log_msg)
     self._log.append(log_msg)
 
   def add_evidence(self, evidence):
@@ -256,6 +257,7 @@ class TurbiniaTask(object):
     Returns:
       A TurbiniaTaskResult object
     """
+    log.info('Starting Task {0:s} {1:s}'.format(self.name, self.id))
     result = self.setup(evidence)
     try:
       result = self.run(evidence, result)
