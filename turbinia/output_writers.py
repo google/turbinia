@@ -175,3 +175,4 @@ class GCSOutputWriter(OutputWriter):
     log.info('Writing {0:s} to GCS path {1:s}'.format(file_, full_path))
     blob = storage.Blob(full_path, bucket)
     blob.upload_from_filename(file_, client=self.client)
+    return os.path.join('gs://', self.bucket, full_path)
