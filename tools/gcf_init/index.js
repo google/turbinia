@@ -48,27 +48,30 @@ exports.gettasks = function gettasks (req, res) {
 
   var query;
   var start_time;
+
+  // Note: If you change any of these filter properties, you must also update
+  // the tools/gcf_init/index.yaml and re-run tools/gcf_init/deploy_gcf.py
   if (req.body.task_id) {
-    console.log('Getting Turbinia Tasks by Task Id');
+    console.log('Getting Turbinia Tasks by Task Id: ' + req.body.task_id);
     query = datastore.createQuery(req.body.kind)
       .filter('instance', '=', req.body.instance)
       .filter('id', '=', req.body.task_id)
       .order('last_update', {descending: true }
       );
   } else if (req.body.request_id) {
-    console.log('Getting Turbinia Tasks by Request Id');
+    console.log('Getting Turbinia Tasks by Request Id: ' + req.body.request_id);
     query = datastore.createQuery(req.body.kind)
       .filter('instance', '=', req.body.instance)
       .filter('request_id', '=', req.body.request_id)
       .order('last_update', {descending: true }
       );
   } else if (req.body.start_time) {
-    console.log('Getting Turbinia Tasks by last_updated range');
     try {
       start_time = new Date(req.body.start_time)
     } catch(err) {
       throw new Error('Could not convert start_time parameter into Date object')
     }
+    console.log('Getting Turbinia Tasks by last_updated range: ' + start_time);
     query = datastore.createQuery(req.body.kind)
       .filter('instance', '=', req.body.instance)
       .filter('last_update', '>=', start_time)
@@ -78,8 +81,7 @@ exports.gettasks = function gettasks (req, res) {
     console.log('Getting open Turbinia Tasks.');
     query = datastore.createQuery(req.body.kind)
       .filter('instance', '=', req.body.instance)
-      .filter('successful', '!=', true)
-      .filter('successful', '!=', false)
+      .filter('successful', '=', null)
       .order('last_update', {descending: true }
       );
   }
