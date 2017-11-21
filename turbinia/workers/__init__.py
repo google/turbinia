@@ -41,6 +41,7 @@ class TurbiniaTaskResult(object):
       input_evidence: The evidence this task processed.
       request_id: The id of the initial request to process this evidence.
       run_time: Length of time the task ran for.
+      saved_paths: Paths where output has been saved.
       start_time: Datetime object of when the task was started
       status: A one line descriptive task status.
       successful: Bool indicating success status.
@@ -52,7 +53,7 @@ class TurbiniaTaskResult(object):
   """
 
   # The list of attributes that we will persist into storage
-  STORED_ATTRIBUTES = ['status', 'successful']
+  STORED_ATTRIBUTES = ['status', 'saved_paths', 'successful']
 
   def __init__(
       self,
@@ -73,6 +74,7 @@ class TurbiniaTaskResult(object):
 
     self.start_time = datetime.now()
     self.run_time = None
+    self.saved_paths = []
     self.successful = None
     self.status = None
     self.error = {}
@@ -170,7 +172,9 @@ class TurbiniaTaskResult(object):
     """
     for writer in self._output_writers:
       if writer.name != 'LocalOutputWriter':
-        writer.write(file_)
+        new_path = writer.write(file_)
+        if new_path:
+          self.saved_paths.append(new_path)
 
   def set_error(self, error, traceback_):
     """Add error and traceback.
@@ -238,7 +242,7 @@ class TurbiniaTask(object):
         task_name=self.name,
         input_evidence=evidence,
         base_output_dir=self.base_output_dir,
-        request_id=request_id)
+        request_id=self.request_id)
     self.output_dir = self.result.output_dir
     if evidence.local_path and not os.path.exists(evidence.local_path):
       raise TurbiniaException(
