@@ -376,7 +376,7 @@ if __name__ == '__main__':
   elif args.command == 'psqworker':
     # Set up root logger level which is normally set by the psqworker command
     # which we are bypassing.
-    logger.setup(root=True)
+    logger.setup()
     if args.single_threaded:
       worker = psq.Worker(queue=task_manager_.psq)
     else:
