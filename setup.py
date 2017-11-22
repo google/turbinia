@@ -34,5 +34,5 @@ setup(
     zip_safe=False,
     scripts=['turbiniactl'],
     install_requires=[str(req.req) for req in parse_requirements(
-        "requirements.txt", session=PipSession())
+        'requirements.txt', session=PipSession())
     ])
