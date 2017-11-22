@@ -1,3 +1,4 @@
-plaso>=1.5.1
+plaso>=20171118
 psq>=0.5.0
 google-api-python-client>=1.6.2
+google-cloud-pubsub==0.26.0
