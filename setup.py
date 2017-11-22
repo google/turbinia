@@ -22,6 +22,8 @@ sudo python setup.py install
 
 from setuptools import find_packages
 from setuptools import setup
+from pip.req import parse_requirements
+from pip.download import PipSession
 
 setup(
     name='Turbinia',
@@ -31,4 +33,6 @@ setup(
     include_package_data=True,
     zip_safe=False,
     scripts=['turbiniactl'],
-    install_requires=frozenset(['google-api-python-client', 'plaso', 'psq']))
+    install_requires=[str(req.req) for req in parse_requirements(
+        'requirements.txt', session=PipSession())
+    ])
