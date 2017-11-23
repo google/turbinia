@@ -346,8 +346,9 @@ class PSQTaskManager(BaseTaskManager):
         'Setting up PSQ Task Manager requirements on project {0:s}'.format(
             config.PROJECT))
     self.server_pubsub = turbinia_pubsub.TurbiniaPubSub(config.PUBSUB_TOPIC)
-    self.server_pubsub.setup()
-    psq_pubsub_client = pubsub.Client(project=config.PROJECT)
+    self.server_pubsub.setup_subscriber()
+    self.server_pubsub.setup_publisher()
+    psq_pubsub_client = pubsub.PublisherClient()
     datastore_client = datastore.Client(project=config.PROJECT)
     try:
       self.psq = psq.Queue(
