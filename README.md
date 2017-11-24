@@ -24,8 +24,8 @@ The basic steps to get things running after the initial installation and configu
 turbiniactl can be used to start the different components, and here is the basic usage:
 ```
 $ ./turbiniactl -h
-usage: turbiniactl [-h] [-q] [-v] [-d] [-o OUTPUT_DIR] [-L LOG_FILE] [-S] [-V]
-                   [-D]
+usage: turbiniactl [-h] [-q] [-v] [-d] [-a] [-o OUTPUT_DIR] [-L LOG_FILE] [-S]
+                   [-V] [-D] [-w]
                    <command> ...
 
 optional arguments:
@@ -33,6 +33,7 @@ optional arguments:
   -q, --quiet           Show minimal output
   -v, --verbose         Show verbose output
   -d, --debug           Show debug output
+  -a, --all_fields      Show all task status fields in output
   -o OUTPUT_DIR, --output_dir OUTPUT_DIR
                         Directory path for output
   -L LOG_FILE, --log_file LOG_FILE
@@ -41,6 +42,8 @@ optional arguments:
   -V, --version         Show the version
   -D, --dump_json       Dump JSON output of Turbinia Request instead of
                         sending it
+  -w, --wait            Wait to exit until all tasks for the given request
+                        have completed
 
 Commands:
   <command>
