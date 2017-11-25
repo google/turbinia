@@ -313,6 +313,7 @@ class TurbiniaTask(object):
     # pylint: disable=broad-except
     except Exception as e:
       msg = 'Task failed with exception: [{0!s}]'.format(e)
+      print "DEBUG: traceback.format_exc(): %s" % traceback.format_exc()
       result.close(success=False, status=msg)
       result.set_error(e.message, traceback.format_exc())
 
