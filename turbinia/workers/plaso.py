@@ -14,7 +14,6 @@
 """Task for running Plaso."""
 
 import os
-import subprocess
 
 from turbinia.workers import TurbiniaTask
 from turbinia.evidence import PlasoFile
@@ -33,7 +32,7 @@ class PlasoTask(TurbiniaTask):
     Returns:
         TurbiniaTaskResult object.
     """
-    plaso_result = PlasoFile()
+    plaso_evidence = PlasoFile()
 
     plaso_file = os.path.join(self.output_dir, u'{0:s}.plaso'.format(self.id))
     plaso_log = os.path.join(self.output_dir, u'{0:s}.log'.format(self.id))
@@ -47,22 +46,9 @@ class PlasoTask(TurbiniaTask):
 
     result.log(u'Running plaso as [{0:s}]'.format(' '.join(cmd)))
 
-    # TODO(aarontp): Create helper function to do all this
-    plaso_proc = subprocess.Popen(cmd)
-    stdout, stderr = plaso_proc.communicate()
-    result.error['stdout'] = stdout
-    result.error['stderr'] = stderr
-    ret = plaso_proc.returncode
-
-    if ret:
-      msg = u'Plaso execution failed with status {0:d}'.format(ret)
-      result.log(msg)
-      result.close(success=False, status=msg)
-    else:
-      # TODO(aarontp): Get and set plaso version here
-      result.log('Plaso output file in {0:s}'.format(plaso_file))
-      plaso_result.local_path = plaso_file
-      result.add_evidence(plaso_result)
-      result.close(success=True)
+    ret, result = self.execute(cmd, result, save_files=[plaso_log], close=True)
+    if not ret:
+      plaso_evidence.local_path = plaso_file
+      result.add_evidence(plaso_evidence)
 
     return result

@@ -21,6 +21,7 @@ import json
 import logging
 import os
 import platform
+import subprocess
 import time
 import traceback
 import uuid
@@ -222,6 +223,41 @@ class TurbiniaTask(object):
     self.state_key = None
     self.stub = None
 
+  def execute(self, cmd, result, save_files=None, close=False):
+    """Executes a given binary and saves output.
+
+    Args:
+      cmd (list): Command arguments to run
+      result (TurbiniaTaskResult): The result object to put data into.
+      save_files (list): A list of files to save (files referenced by Evidence
+          objects are automatically saved, so no need to include them).
+      close (bool): Whether to close out the result.
+
+    Returns:
+      Tuple of the return code, and the TurbiniaTaskResult object
+    """
+    save_files = save_files if save_files else []
+    proc = subprocess.Popen(cmd)
+    stdout, stderr = proc.communicate()
+    result.error['stdout'] = stdout
+    result.error['stderr'] = stderr
+    ret = proc.returncode
+
+    if ret:
+      msg = u'Execution failed with status {0:d}'.format(ret)
+      result.log(msg)
+      if close:
+        result.close(success=False, status=msg)
+    else:
+      for file_ in save_files:
+        result.log('Output file at {0:s}'.format(file_))
+        result.save_local_file(file_)
+
+      if close:
+        result.close(success=True)
+
+    return (ret, result)
+
   def setup(self, evidence):
     """Perform common setup operations and runtime environment.
 
@@ -277,6 +313,7 @@ class TurbiniaTask(object):
     # pylint: disable=broad-except
     except Exception as e:
       msg = 'Task failed with exception: [{0!s}]'.format(e)
+      print "DEBUG: traceback.format_exc(): %s" % traceback.format_exc()
       result.close(success=False, status=msg)
       result.set_error(e.message, traceback.format_exc())
 
