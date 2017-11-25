@@ -111,7 +111,7 @@ class TurbiniaTaskResult(object):
       with open(logfile, 'w') as f:
         f.write('\n'.join(self._log))
         f.write('\n')
-    self.save_local_file(logfile)
+      self.save_local_file(logfile)
 
     [self.save_local_file(e.local_path) for e in self.evidence if e.local_path]
 
