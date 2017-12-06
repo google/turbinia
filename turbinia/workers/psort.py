@@ -22,10 +22,10 @@ from turbinia.evidence import PlasoCsvFile
 
 
 class PsortTask(TurbiniaTask):
-  """Task to run Psort to generate CSV output from plaso files."""
+  """Task to run Psort to generate CSV output from plaso storage files."""
 
   def run(self, evidence, result):
-    """Task that processes Plaso files with Psort.
+    """Task that processes Plaso storage files with Psort.
 
     Args:
         evidence: Path to data to process.
