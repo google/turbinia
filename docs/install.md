@@ -25,6 +25,7 @@
     * `Storage Object Admin` and `Storage Legacy Bucket Reader`: Only required on the GCS bucket used by Turbinia, if any.  See GCP Setup for details.
     * `Compute Instance Admin`: Used to list instances and to attach disks to instances
     * `Service Account User`: Used when attaching disks
+    * `Cloud Functions Developer`: Used by turbiniactl to query task status
   * Create a new key for your service account, and then point to it with an environment variable:
     * `export GOOGLE_APPLICATION_CREDENTIALS="/home/foo/service_account_creds.json"`
 * Alternately you can run Turbinia under your own credentials (not recommended).  Run `gcloud auth login` (may require you to copy/paste url to browser). Or run `gcloud auth application-default login`.
