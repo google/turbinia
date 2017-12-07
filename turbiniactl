@@ -212,6 +212,12 @@ if __name__ == '__main__':
       action='store_true',
       help='Dump JSON output of Turbinia Request instead of sending it')
   parser.add_argument(
+      '-p',
+      '--poll_interval',
+      default=60,
+      type=int,
+      help='Number of seconds to wait between polling for task state info')
+  parser.add_argument(
       '-w',
       '--wait',
       action='store_true',
@@ -394,7 +400,7 @@ if __name__ == '__main__':
     if args.wait and args.request_id:
       WaitForRequest(
           instance=config.PUBSUB_TOPIC, project=config.PROJECT, region=region,
-          request_id=args.request_id)
+          request_id=args.request_id, poll_interval=args.poll_interval)
     elif args.wait and not args.request_id:
       log.info('--wait requires --request_id, which is not specified. '
                'turbiniactl will exit without waiting.')
@@ -434,7 +440,7 @@ if __name__ == '__main__':
       region = config.ZONE[:-2]
       WaitForRequest(
           instance=config.PUBSUB_TOPIC, project=config.PROJECT, region=region,
-          request_id=request.request_id)
+          request_id=request.request_id, poll_interval=args.poll_interval)
       PrintTaskStatus(
           instance=config.PUBSUB_TOPIC, project=config.PROJECT, region=region,
           request_id=request.request_id, all_fields=args.all_fields)
