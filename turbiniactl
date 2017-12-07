@@ -216,7 +216,7 @@ if __name__ == '__main__':
       '--poll_interval',
       default=60,
       type=int,
-      help='Number of seconds to wait between poll cycles')
+      help='Number of seconds to wait between polling for task state info')
   parser.add_argument(
       '-w',
       '--wait',
