@@ -118,7 +118,10 @@ class BaseTaskManager(object):
     # class of the output of the job itself.  Short term we could potentially
     # have a run time check for this upon Job instantiation to prevent it.
     for job in self.jobs:
-      if [True for t in job.evidence_input if isinstance(evidence_, t)]:
+      # Doing a strict type check here for now until we can get the above
+      # comment figured out.
+      # pylint: disable=unidiomatic-typecheck
+      if [True for t in job.evidence_input if type(evidence_) == t]:
         log.info(
             'Adding {0:s} job to process {1:s}'.format(
                 job.name, evidence_.name))
