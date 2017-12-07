@@ -35,6 +35,7 @@ class PlasoTask(TurbiniaTask):
     plaso_evidence = PlasoFile()
 
     plaso_file = os.path.join(self.output_dir, u'{0:s}.plaso'.format(self.id))
+    plaso_evidence.local_path = plaso_file
     plaso_log = os.path.join(self.output_dir, u'{0:s}.log'.format(self.id))
 
     # TODO(aarontp): Move these flags into a recipe
@@ -46,9 +47,7 @@ class PlasoTask(TurbiniaTask):
 
     result.log(u'Running plaso as [{0:s}]'.format(' '.join(cmd)))
 
-    ret, result = self.execute(cmd, result, save_files=[plaso_log], close=True)
-    if not ret:
-      plaso_evidence.local_path = plaso_file
-      result.add_evidence(plaso_evidence)
+    self.execute(cmd, result, save_files=[plaso_log],
+                 new_evidence=[plaso_evidence], close=True)
 
     return result
