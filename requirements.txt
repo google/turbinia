@@ -3,3 +3,4 @@ psq>=0.5.0
 google-api-python-client>=1.6.2
 google-cloud-pubsub==0.26.0
 google-cloud-core==0.26.0
+urllib3[secure]
