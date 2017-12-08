@@ -435,6 +435,7 @@ if __name__ == '__main__':
                 'Turbinia. Consider wrapping it in a '
                 'GoogleCloudDiskRawEmbedded or other Cloud compatible '
                 'object'.format(evidence_.type))
+      sys.exit(1)
 
   if is_cloud_disk and evidence_.project != config.PROJECT:
     msg = ('Turbinia project {0:s} is different from evidence project {1:s}. '
