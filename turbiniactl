@@ -193,6 +193,12 @@ if __name__ == '__main__':
       action='store_true',
       help='Show all task status fields in output',
       required=False)
+  parser.add_argument(
+      '-f',
+      '--force_evidence',
+      action='store_true',
+      help='Force evidence processing attempt on incompatible platform',
+      required=False)
   parser.add_argument('-o', '--output_dir', help='Directory path for output')
   parser.add_argument('-L', '--log_file', help='Log file')
   parser.add_argument(
@@ -417,7 +423,7 @@ if __name__ == '__main__':
     log.warning('Command {0:s} not implemented.'.format(args.command))
 
 
-  if evidence_:
+  if evidence_ and not args.force_evidence:
     if config.SHARED_FILESYSTEM and evidence_.cloud_only:
       log.error('The evidence type {0:s} is Cloud only, and this instance of '
                 'Turbinia is not a cloud instance.'.format(evidence_.type))
