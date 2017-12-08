@@ -14,6 +14,11 @@
 * Install Plaso
   * `curl -o plaso-requirements.txt https://raw.githubusercontent.com/log2timeline/plaso/master/requirements.txt`
   * `pip install -r plaso-requirements.txt`
+* Update Python Path
+  * Until [Issue #39](https://github.com/google/turbinia/issues/39) is fixed, we need to adjust the `$PYTHONPATH` from the root of the Turbinia repository:
+    * ``cd turbinia; export PYTHONPATH=$PYTHONPATH:`pwd`; cd - ``
+  * And set it in your .bashrc file:
+    * ``cd turbinia; echo "export PYTHONPATH=$PYTHONPATH:`pwd`" >> ~/.bashrc ; cd -``
 * Update the Turbinia config by either configuring the version in `turbinia/config/turbinia_config.py` or copying it into `~/.turbiniarc` and configuring it there.
 * Create a new PubSub topic and subscription to match the `PUBSUB_TOPIC` variable configured in your Turbinia config.
 
