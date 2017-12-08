@@ -416,6 +416,19 @@ if __name__ == '__main__':
   else:
     log.warning('Command {0:s} not implemented.'.format(args.command))
 
+
+  if evidence_:
+    if config.SHARED_FILESYSTEM and evidence_.cloud_only:
+      log.error('The evidence type {0:s} is Cloud only, and this instance of '
+                'Turbinia is not a cloud instance.'.format(evidence_.type))
+      sys.exit(1)
+    elif not config.SHARED_FILESYSTEM and not evidence_.cloud_only:
+      log.error('The evidence type {0:s} cannot run on Cloud instances of '
+                'Turbinia. Consider wrapping it in a '
+                'GoogleCloudDiskRawEmbedded or other Cloud compatible '
+                'object'.format(evidence_.type))
+      sys.exit(1)
+
   # If we have evidence to process and we also want to run as a server, then
   # we'll just process the evidence directly rather than send it through the
   # PubSub frontend interface.  If we're not running as a server then we will
