@@ -192,7 +192,6 @@ class GoogleCloudDisk(RawDisk):
     project: The cloud project name this disk is associated with.
     zone: The geographic zone.
     disk_name: The cloud disk name.
-    type: The type of cloud disk.
   """
 
   def __init__(
@@ -200,14 +199,12 @@ class GoogleCloudDisk(RawDisk):
       project=None,
       zone=None,
       disk_name=None,
-      type_=None,
       *args,
       **kwargs):
     """Initialization for Google Cloud Disk."""
     self.project = project
     self.zone = zone
     self.disk_name = disk_name
-    self.type = type_
     super(GoogleCloudDisk, self).__init__(*args, **kwargs)
 
   def preprocess(self):
