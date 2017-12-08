@@ -23,6 +23,7 @@ from datetime import datetime
 from datetime import timedelta
 import json
 import logging
+import os
 import sys
 import time
 
@@ -368,12 +369,14 @@ if __name__ == '__main__':
   evidence_ = None
   if args.command == 'rawdisk':
     args.name = args.name if args.name else args.local_path
+    local_path = os.path.abspath(args.local_path)
     evidence_ = evidence.RawDisk(
-        name=args.name, local_path=args.local_path, source=args.source)
+        name=args.name, local_path=local_path, source=args.source)
   elif args.command == 'directory':
     args.name = args.name if args.name else args.local_path
+    local_path = os.path.abspath(args.local_path)
     evidence_ = evidence.Directory(
-        name=args.name, local_path=args.local_path, source=args.source)
+        name=args.name, local_path=local_path, source=args.source)
   elif args.command == 'googleclouddisk':
     args.name = args.name if args.name else args.disk_name
     evidence_ = evidence.GoogleCloudDisk(
