@@ -313,12 +313,13 @@ class TurbiniaTask(object):
       A TurbiniaTaskResult object
     """
     log.info('Starting Task {0:s} {1:s}'.format(self.name, self.id))
-    result = self.setup(evidence)
     try:
+      result = self.setup(evidence)
       result = self.run(evidence, result)
     # pylint: disable=broad-except
     except Exception as e:
       msg = 'Task failed with exception: [{0!s}]'.format(e)
+      log.error(msg)
       result.close(success=False, status=msg)
       result.set_error(e.message, traceback.format_exc())
 
