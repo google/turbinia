@@ -197,7 +197,7 @@ if __name__ == '__main__':
       '-f',
       '--force_evidence',
       action='store_true',
-      help='Force evidence processing attempt on incompatible platform',
+      help='Force evidence processing request in potentially unsafe conditions',
       required=False)
   parser.add_argument('-o', '--output_dir', help='Directory path for output')
   parser.add_argument('-L', '--log_file', help='Log file')
@@ -366,6 +366,7 @@ if __name__ == '__main__':
     config.LOG_FILE = args.log_file
 
   evidence_ = None
+  is_cloud_disk = False
   if args.command == 'rawdisk':
     args.name = args.name if args.name else args.local_path
     evidence_ = evidence.RawDisk(
@@ -375,11 +376,13 @@ if __name__ == '__main__':
     evidence_ = evidence.Directory(
         name=args.name, local_path=args.local_path, source=args.source)
   elif args.command == 'googleclouddisk':
+    is_cloud_disk = True
     args.name = args.name if args.name else args.disk_name
     evidence_ = evidence.GoogleCloudDisk(
         name=args.name, disk_name=args.disk_name, project=args.project,
         zone=args.zone, source=args.source)
   elif args.command == 'googleclouddiskembedded':
+    is_cloud_disk = True
     args.name = args.name if args.name else args.disk_name
     evidence_ = evidence.GoogleCloudDiskRawEmbedded(
         name=args.name, disk_name=args.disk_name,
@@ -422,7 +425,6 @@ if __name__ == '__main__':
   else:
     log.warning('Command {0:s} not implemented.'.format(args.command))
 
-
   if evidence_ and not args.force_evidence:
     if config.SHARED_FILESYSTEM and evidence_.cloud_only:
       log.error('The evidence type {0:s} is Cloud only, and this instance of '
@@ -433,6 +435,18 @@ if __name__ == '__main__':
                 'Turbinia. Consider wrapping it in a '
                 'GoogleCloudDiskRawEmbedded or other Cloud compatible '
                 'object'.format(evidence_.type))
+      sys.exit(1)
+
+  if is_cloud_disk and evidence_.project != config.PROJECT:
+    msg = ('Turbinia project {0:s} is different from evidence project {1:s}. '
+           'This processing request will fail unless the Turbinia service '
+           'account has permissions to this project.'.format(
+               config.PROJECT, evidence_.project))
+    if args.force_evidence:
+      log.warning(msg)
+    else:
+      msg += ' Use --force_evidence if you are sure you want to do this.'
+      log.warning(msg)
       sys.exit(1)
 
   # If we have evidence to process and we also want to run as a server, then
