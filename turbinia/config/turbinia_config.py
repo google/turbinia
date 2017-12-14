@@ -15,7 +15,7 @@
 
 # Turbinia Config
 
-# Valid values are 'PSQ' or 'Celery'
+# 'PSQ' is currently the only valid option
 TASK_MANAGER = u'PSQ'
 
 # File to log to
@@ -33,6 +33,12 @@ SINGLE_RUN = False
 # Local directory in the worker to put other mount directories for locally
 # mounting images/disks
 MOUNT_DIR_PREFIX = u'/mnt/turbinia-mounts'
+
+# This indicates whether the workers are running in an environment with a shared
+# filesystem.  This should be False for environments with workers running in
+# GCE, and True for environments that have workers on dedicated machines with
+# NFS or a SAN for Evidence objects.
+SHARED_FILESYSTEM = False
 
 # GCE configuration
 PROJECT = None

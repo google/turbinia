@@ -66,6 +66,11 @@ class Evidence(object):
   evidence.
 
   Attributes:
+    cloud_only: Set to True for evidence types that can only be processed in a
+        cloud environment, e.g. GoogleCloudDisk.
+    copyable: Whether this evidence can be copied.  This will be set to True for
+        object types that we want to copy to/from storage (e.g. PlasoFile, but
+        not RawDisk).
     name: Name of evidence.
     description: Description of evidence.
     source: String indicating where evidence came from (including tool version
@@ -84,6 +89,8 @@ class Evidence(object):
       tags=None,
       request_id=None):
     """Initialization for Evidence."""
+    self.copyable = False
+    self.cloud_only = False
     self.description = description
     self.source = source
     self.local_path = local_path
@@ -206,6 +213,7 @@ class GoogleCloudDisk(RawDisk):
     self.zone = zone
     self.disk_name = disk_name
     super(GoogleCloudDisk, self).__init__(*args, **kwargs)
+    self.cloud_only = True
 
   def preprocess(self):
     google_cloud.PreprocessAttachDisk(self)
@@ -252,6 +260,7 @@ class PlasoFile(Evidence):
     """Initialization for Plaso File evidence."""
     self.plaso_version = plaso_version
     super(PlasoFile, self).__init__(*args, **kwargs)
+    self.copyable = True
 
 
 class PlasoCsvFile(PlasoFile):
@@ -270,3 +279,4 @@ class ReportText(Evidence):
   def __init__(self, text_data=None, *args, **kwargs):
     self.text_data = text_data
     super(ReportText, self).__init__(*args, **kwargs)
+    self.copyable = True

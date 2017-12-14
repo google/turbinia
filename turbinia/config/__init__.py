@@ -36,6 +36,7 @@ CONFIGVARS = [
     'SLEEP_TIME',
     'SINGLE_RUN',
     'MOUNT_DIR_PREFIX',
+    'SHARED_FILESYSTEM',
     # GCE CONFIG
     'PROJECT',
     'ZONE',
