@@ -280,12 +280,13 @@ class TurbiniaTask(object):
     Raises:
       TurbiniaException: If the evidence can not be found.
     """
-    self.result = TurbiniaTaskResult(
-        task_id=self.id,
-        task_name=self.name,
-        input_evidence=evidence,
-        base_output_dir=self.base_output_dir,
-        request_id=self.request_id)
+    if not self.result:
+      self.result = TurbiniaTaskResult(
+          task_id=self.id,
+          task_name=self.name,
+          input_evidence=evidence,
+          base_output_dir=self.base_output_dir,
+          request_id=self.request_id)
     self.output_dir = self.result.output_dir
     if evidence.local_path and not os.path.exists(evidence.local_path):
       raise TurbiniaException(
@@ -313,16 +314,24 @@ class TurbiniaTask(object):
       A TurbiniaTaskResult object
     """
     log.info('Starting Task {0:s} {1:s}'.format(self.name, self.id))
-    result = self.setup(evidence)
+    if not self.result:
+      self.result = TurbiniaTaskResult(
+          task_id=self.id,
+          task_name=self.name,
+          input_evidence=evidence,
+          base_output_dir=self.base_output_dir,
+          request_id=self.request_id)
     try:
-      result = self.run(evidence, result)
+      self.result = self.setup(evidence)
+      self.result = self.run(evidence, self.result)
     # pylint: disable=broad-except
     except Exception as e:
       msg = 'Task failed with exception: [{0!s}]'.format(e)
-      result.close(success=False, status=msg)
-      result.set_error(e.message, traceback.format_exc())
+      log.error(msg)
+      self.result.close(success=False, status=msg)
+      self.result.set_error(e.message, traceback.format_exc())
 
-    return result
+    return self.result
 
   def run(self, evidence, result):
     """Entry point to execute the task.
