@@ -27,7 +27,7 @@ import traceback
 import uuid
 
 from turbinia import config
-from turbinia import output_writers
+from turbinia import output_manager
 from turbinia import TurbiniaException
 
 log = logging.getLogger('turbinia')
@@ -83,7 +83,7 @@ class TurbiniaTaskResult(object):
     self.worker_name = platform.node()
     # TODO(aarontp): Create mechanism to grab actual python logging data.
     self._log = []
-    self._output_writers = output_writers.GetOutputWriters(self)
+    self._output_writers = output_manager.GetOutputWriters(self)
     self.output_dir = self.get_local_output_dir()
 
   def close(self, success, status=None):

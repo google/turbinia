@@ -17,7 +17,7 @@ import unittest
 import os
 import tempfile
 
-from turbinia import output_writers
+from turbinia import output_manager
 
 
 class TestLocalOutputWriter(unittest.TestCase):
@@ -35,7 +35,7 @@ class TestLocalOutputWriter(unittest.TestCase):
 
   def testCreateOutput(self):
     """Test that output directories are created."""
-    writer = output_writers.LocalOutputWriter(
+    writer = output_manager.LocalOutputWriter(
         base_output_dir=self.base_output_dir, unique_dir='unique_dir')
     output_dir = writer.create_output_dir()
     self.remove_dirs.append(output_dir)
@@ -46,7 +46,7 @@ class TestLocalOutputWriter(unittest.TestCase):
     """Test that file contents are written."""
     contents = 'test contents'
     test_file = 'test.txt'
-    writer = output_writers.LocalOutputWriter(
+    writer = output_manager.LocalOutputWriter(
         base_output_dir=self.base_output_dir, unique_dir='unique_dir')
     output_dir = writer.create_output_dir()
     self.remove_dirs.append(output_dir)
@@ -64,7 +64,7 @@ class TestLocalOutputWriter(unittest.TestCase):
   def testNoFileWrite(self):
     """Test that write fails when no source file exists."""
     test_file = 'test.txt'
-    writer = output_writers.LocalOutputWriter(
+    writer = output_manager.LocalOutputWriter(
         base_output_dir=self.base_output_dir, unique_dir='unique_dir')
     output_dir = writer.create_output_dir()
     self.remove_dirs.append(output_dir)
@@ -79,7 +79,7 @@ class TestLocalOutputWriter(unittest.TestCase):
     contents = 'test contents'
     other_contents = 'other test contents'
     test_file = 'test.txt'
-    writer = output_writers.LocalOutputWriter(
+    writer = output_manager.LocalOutputWriter(
         base_output_dir=self.base_output_dir, unique_dir='unique_dir')
     output_dir = writer.create_output_dir()
     self.remove_dirs.append(output_dir)
