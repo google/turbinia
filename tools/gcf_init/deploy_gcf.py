@@ -16,10 +16,12 @@ config.LoadConfig()
 
 for function in function_names:
   print 'Deploying function {0:s}'.format(function)
-  cmd = ('gcloud beta functions deploy {0:s} --stage-bucket {1:s} '
-         '--trigger-http'.format(function, config.BUCKET_NAME))
+  cmd = ('gcloud --project {0:s} beta functions deploy {1:s} --stage-bucket '
+         '{2:s} --trigger-http'.format(config.PROJECT, function,
+                                       config.BUCKET_NAME))
   print subprocess.check_call(cmd, shell=True)
 
 print '/nCreating Datastore index from {0:s}'.format(index_file)
-cmd = 'yes | gcloud datastore create-indexes {0:s}'.format(index_file)
+cmd = 'yes | gcloud --project {0:s} datastore create-indexes {1:s}'.format(
+    config.PROJECT, index_file)
 subprocess.check_call(cmd, shell=True)
