@@ -20,6 +20,7 @@ import errno
 import json
 import logging
 import os
+import pickle
 import platform
 import subprocess
 import time
@@ -299,6 +300,40 @@ class TurbiniaTask(object):
     """Updates the last_update time of the task."""
     self.last_update = datetime.now()
 
+  def result_check(self, result):
+    """Checks to make sure that the result is serializeable.
+
+    We occasionally get something added into a TurbiniaTaskResult that makes
+    it unpickleable.  We don't necessarily know what caused it to be in that
+    state, so we need to create a new, mostly empty result so that the client
+    is able to get the error message (otherwise the task will stay pending
+    indefinitely).
+
+    Args:
+      result (TurbiniaTaskResult): Result object to check
+
+    Returns:
+      The original result object if it is OK, otherwise an empty result object
+      indicating a failure.
+    """
+    try:
+      pickle.dumps(result)
+    except (TypeError, pickle.PicklingError) as e:
+      msg = ('Error pickling TurbiniaTaskResult object. Returning a new result '
+             'with the pickling error, and all previous result data will be '
+             'lost. Pickle Error: {0!s}'.format(e))
+      log.error(msg)
+      log.error('Pickle error traceback: {0:s}'.format(traceback.format_exc()))
+      result = TurbiniaTaskResult(
+          task_id=self.id,
+          task_name=self.name,
+          base_output_dir=self.base_output_dir,
+          request_id=self.request_id)
+      result.set_error(e.message, traceback.format_exc())
+      result.close(False, status=msg)
+
+    return result
+
   def run_wrapper(self, evidence):
     """Wrapper to manage TurbiniaTaskResults and exception handling.
 
@@ -331,7 +366,9 @@ class TurbiniaTask(object):
       self.result.close(success=False, status=msg)
       self.result.set_error(e.message, traceback.format_exc())
 
-    return self.result
+    result = self.result_check(self.result)
+
+    return result
 
   def run(self, evidence, result):
     """Entry point to execute the task.
