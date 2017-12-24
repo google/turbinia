@@ -1,6 +1,8 @@
 ## Install
 ### Basic installation steps (very rough for now)
 
+* Install python-dev and build essential
+  * `sudo apt-get install python-dev build-essential`
 * Install virtualenv
   * `sudo apt-get install python-virtualenv git`
 * Create and activate Virtualenv
