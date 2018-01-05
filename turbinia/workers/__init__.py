@@ -108,6 +108,7 @@ class TurbiniaTaskResult(object):
 
     for evidence in self.evidence:
       if evidence.local_path:
+        self.saved_paths.append(evidence.local_path)
         self.save_local_file(evidence.local_path)
       if not evidence.request_id:
         evidence.request_id = self.request_id
