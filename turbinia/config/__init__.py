@@ -22,10 +22,11 @@ import sys
 log = logging.getLogger('turbinia')
 
 # Look for config files with these names
-CONFIGFILES = ['.turbiniarc', 'turbinia_config.py']
+CONFIGFILES = ['.turbiniarc', 'turbiniarc', 'turbinia_config.py']
 # Look in homedir and in the current config dir for config files
 CONFIGPATH = [
     os.path.expanduser('~'),
+    '/etc/turbinia',
     os.path.dirname(os.path.abspath(__file__))]
 # Config vars that we expect to exist in the configuration
 CONFIGVARS = [
