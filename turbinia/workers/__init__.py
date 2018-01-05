@@ -106,6 +106,24 @@ class TurbiniaTaskResult(object):
           str(self.run_time), self.worker_name)
     self.log(status)
 
+    for evidence in self.evidence:
+      if evidence.local_path:
+        self.save_local_file(evidence.local_path)
+      if not evidence.request_id:
+        evidence.request_id = self.request_id
+
+    try:
+      self.input_evidence.postprocess()
+    # Adding a broad exception here because we want to try post-processing
+    # to clean things up even after other failures in the task, so this could
+    # also fail.
+    # pylint: disable=broad-except
+    except Exception as e:
+      msg = 'Evidence post-processing for {0:s} failed: {1!s}'.format(
+          self.input_evidence.name, e)
+      log.error(msg)
+      self.log(msg)
+
     # Write result log info to file
     logfile = os.path.join(self.output_dir, u'worker-log.txt')
     if self.output_dir and os.path.exists(self.output_dir):
@@ -114,13 +132,6 @@ class TurbiniaTaskResult(object):
         f.write('\n')
       self.save_local_file(logfile)
 
-    for evidence in self.evidence:
-      if evidence.local_path:
-        self.save_local_file(evidence.local_path)
-      if not evidence.request_id:
-        evidence.request_id = self.request_id
-
-    self.input_evidence.postprocess()
     # Unset the writers during the close because they don't serialize
     self._output_writers = None
     self.status = status
