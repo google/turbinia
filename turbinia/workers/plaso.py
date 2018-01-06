@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # Copyright 2015 Google Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,6 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Task for running Plaso."""
+
+from __future__ import unicode_literals
 
 import os
 
@@ -34,18 +37,18 @@ class PlasoTask(TurbiniaTask):
     """
     plaso_evidence = PlasoFile()
 
-    plaso_file = os.path.join(self.output_dir, u'{0:s}.plaso'.format(self.id))
+    plaso_file = os.path.join(self.output_dir, '{0:s}.plaso'.format(self.id))
     plaso_evidence.local_path = plaso_file
-    plaso_log = os.path.join(self.output_dir, u'{0:s}.log'.format(self.id))
+    plaso_log = os.path.join(self.output_dir, '{0:s}.log'.format(self.id))
 
     # TODO(aarontp): Move these flags into a recipe
     cmd = (
-        u'log2timeline.py --status_view none --hashers all '
-        u'--partition all --vss_stores all').split()
-    cmd.extend([u'--logfile', plaso_log])
+        'log2timeline.py --status_view none --hashers all '
+        '--partition all --vss_stores all').split()
+    cmd.extend(['--logfile', plaso_log])
     cmd.extend([plaso_file, evidence.local_path])
 
-    result.log(u'Running plaso as [{0:s}]'.format(' '.join(cmd)))
+    result.log('Running plaso as [{0:s}]'.format(' '.join(cmd)))
 
     self.execute(cmd, result, save_files=[plaso_log],
                  new_evidence=[plaso_evidence], close=True)
