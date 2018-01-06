@@ -51,14 +51,14 @@ def setup():
         need_stream_handler = False
 
   file_handler = logging.FileHandler(config.LOG_FILE)
-  formatter = logging.Formatter('g%(asctime)s:%(levelname)s:%(message)s')
+  formatter = logging.Formatter('%(asctime)s:%(levelname)s:%(message)s')
   file_handler.setFormatter(formatter)
   file_handler.setLevel(logging.DEBUG)
   if need_file_handler:
     logger.addHandler(file_handler)
 
   console_handler = logging.StreamHandler()
-  formatter = logging.Formatter('g[%(levelname)s] %(message)s')
+  formatter = logging.Formatter('[%(levelname)s] %(message)s')
   console_handler.setFormatter(formatter)
   if need_stream_handler:
     logger.addHandler(console_handler)
