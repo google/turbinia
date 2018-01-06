@@ -98,7 +98,7 @@ class GoogleCloudProject(object):
       if 'error' in result:
         raise TurbiniaException(result['error'])
 
-      if not block or result['status'] == u'DONE':
+      if not block or result['status'] == 'DONE':
         return result
       time.sleep(1)  # Seconds between requests
 
