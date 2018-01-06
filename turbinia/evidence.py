@@ -246,7 +246,7 @@ class GoogleCloudDiskRawEmbedded(GoogleCloudDisk):
 
   def postprocess(self):
     google_cloud.PostprocessDetachDisk(self)
-    mount_local.PreprocessUnmountDisk(self)
+    mount_local.PostprocessUnmountDisk(self)
 
 
 class PlasoFile(Evidence):
