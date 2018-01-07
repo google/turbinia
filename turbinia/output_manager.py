@@ -206,6 +206,16 @@ class OutputWriter(object):
 
 
 
+    Args:
+      file_: A string path to a source file.
+
+    Returns:
+      The path the file was saved to, or None if file was not written.
+    """
+    raise NotImplementedError
+
+
+
 class LocalOutputWriter(OutputWriter):
   """Class for writing to local filesystem output."""
 
@@ -239,8 +249,7 @@ class LocalOutputWriter(OutputWriter):
     Returns:
       The path the file was saved to, or None if file was not written.
     """
-    output_file = os.path.join(self.local_output_dir,
-                               os.path.basename(file_path))
+    output_file = os.path.join(self.output_dir, os.path.basename(file_path))
     if not os.path.exists(file_path):
       log.warning('File [{0:s}] does not exist.'.format(file_path))
       return None
@@ -310,14 +319,10 @@ class GCSOutputWriter(OutputWriter):
 
   def copy_from(self, file_):
     bucket = self.client.get_bucket(self.bucket)
-    gcs_path = self._parse_gcs_path(file_)[1]
-    full_path = os.path.join(self.local_output_dir, os.path.basename(file_))
+    full_path = os.path.join(
+        self.base_output_dir, self.unique_dir, os.path.basename(file_))
     log.info('Writing GCS file {0:s} to local path {1:s}'.format(
         file_, full_path))
-    blob = storage.Blob(gcs_path, bucket)
-    blob.download_to_filename(full_path, client=self.client)
-    if not os.path.exists(full_path):
-      raise TurbiniaException(
-          'File retrieval from GCS failed: Local file {0:s} does not '
-          'exist'.format(full_path))
+    blob = storage.Blob(full_path, bucket)
+    blob.download_to_filename(file_, client=self.client)
     return full_path
