@@ -58,7 +58,7 @@ class OutputWriter(object):
   """Base class.
 
   By default this will write the files the Evidence objects point to along with
-  any other files expclicitly written with write().
+  any other files expclicitly written with copy_to().
 
   Attributes:
     base_output_dir (string): The base path for output
@@ -84,16 +84,28 @@ class OutputWriter(object):
     """
     raise NotImplementedError
 
-  def write(self, file_):
-    """Writes output file.
+  def copy_to(self, file_):
+    """Copies output file to the managed location.
 
     Args:
-      file_: A string path to a file.
+      file_: A string path to a source file.
 
     Returns:
       The path the file was saved to, or None if file was not written.
     """
     raise NotImplementedError
+
+  def copy_from(self, file_):
+    """Copies output file from the managed location.
+
+    Args:
+      file_: A string path to a source file.
+
+    Returns:
+      The path the file was saved to, or None if file was not written.
+    """
+    raise NotImplementedError
+
 
 
 class LocalOutputWriter(OutputWriter):
@@ -124,7 +136,15 @@ class LocalOutputWriter(OutputWriter):
 
     return self.output_dir
 
-  def write(self, file_path):
+  def _copy(self, file_path):
+    """Copies file to local output dir.
+
+    Args:
+      file_: A string path to a source file.
+
+    Returns:
+      The path the file was saved to, or None if file was not written.
+    """
     output_file = os.path.join(self.output_dir, os.path.basename(file_path))
     if not os.path.exists(file_path):
       log.warning('File [{0:s}] does not exist.'.format(file_path))
@@ -135,6 +155,12 @@ class LocalOutputWriter(OutputWriter):
 
     shutil.copy(file_path, output_file)
     return output_file
+
+  def copy_to(self, file_path):
+    return self._copy(file_path)
+
+  def copy_from(self, file_path):
+    return self._copy(file_path)
 
 
 class GCSOutputWriter(OutputWriter):
@@ -168,7 +194,7 @@ class GCSOutputWriter(OutputWriter):
     # the object name.
     pass
 
-  def write(self, file_):
+  def copy_to(self, file_):
     bucket = self.client.get_bucket(self.bucket)
     full_path = os.path.join(
         self.base_output_dir, self.unique_dir, os.path.basename(file_))
@@ -176,3 +202,13 @@ class GCSOutputWriter(OutputWriter):
     blob = storage.Blob(full_path, bucket)
     blob.upload_from_filename(file_, client=self.client)
     return os.path.join('gs://', self.bucket, full_path)
+
+  def copy_from(self, file_):
+    bucket = self.client.get_bucket(self.bucket)
+    full_path = os.path.join(
+        self.base_output_dir, self.unique_dir, os.path.basename(file_))
+    log.info('Writing GCS file {0:s} to local path {1:s}'.format(
+        file_, full_path))
+    blob = storage.Blob(full_path, bucket)
+    blob.download_to_filename(file_, client=self.client)
+    return full_path
