@@ -59,3 +59,10 @@ GCS_OUTPUT_PATH = False
 
 # Which state manager to use
 STATE_MANAGER = u'Datastore'
+
+#Optional 
+REDIS_HOST = u'NA'
+REDIS_PORT = u'NA'
+TIMESKETCH_HOST = u'NA'
+TIMESKETCH_USER = u'NA'
+TIMESKETCH_PASSWORD = u'NA'
