@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # Copyright 2015 Google Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -102,7 +103,7 @@ class TurbiniaTaskResult(object):
     self.successful = success
     self.run_time = datetime.now() - self.start_time
     if not status:
-      status = u'Completed successfully in {0:s} on {1:s}'.format(
+      status = 'Completed successfully in {0:s} on {1:s}'.format(
           str(self.run_time), self.worker_name)
     self.log(status)
 
@@ -126,7 +127,7 @@ class TurbiniaTaskResult(object):
       self.log(msg)
 
     # Write result log info to file
-    logfile = os.path.join(self.output_dir, u'worker-log.txt')
+    logfile = os.path.join(self.output_dir, 'worker-log.txt')
     if self.output_dir and os.path.exists(self.output_dir):
       with open(logfile, 'w') as f:
         f.write('\n'.join(self._log))
@@ -261,7 +262,7 @@ class TurbiniaTask(object):
     ret = proc.returncode
 
     if ret:
-      msg = u'Execution failed with status {0:d}'.format(ret)
+      msg = 'Execution failed with status {0:d}'.format(ret)
       result.log(msg)
       if close:
         result.close(success=False, status=msg)

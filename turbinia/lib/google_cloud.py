@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # Copyright 2017 Google Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,6 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Google Cloud resources library."""
+
+from __future__ import unicode_literals
 
 import json
 import logging
@@ -87,15 +90,15 @@ class GoogleCloudProject(object):
       if zone:
         result = service.zoneOperations().get(
             project=self.project_id, zone=zone,
-            operation=operation[u'name']).execute()
+            operation=operation['name']).execute()
       else:
         result = service.globalOperations().get(
-            project=self.project_id, operation=operation[u'name']).execute()
+            project=self.project_id, operation=operation['name']).execute()
 
-      if u'error' in result:
-        raise TurbiniaException(result[u'error'])
+      if 'error' in result:
+        raise TurbiniaException(result['error'])
 
-      if not block or result[u'status'] == u'DONE':
+      if not block or result['status'] == 'DONE':
         return result
       time.sleep(1)  # Seconds between requests
 
@@ -105,7 +108,7 @@ class GoogleCloudProject(object):
     Returns:
       A Google Compute Engine service object.
     """
-    return self._CreateService(u'compute', self.COMPUTE_ENGINE_API_VERSION)
+    return self._CreateService('compute', self.COMPUTE_ENGINE_API_VERSION)
 
   def GceOperation(self, operation, zone=None, block=False):
     """Convinient method for GCE operation.
@@ -130,11 +133,11 @@ class GoogleCloudProject(object):
         project=self.project_id).execute()
     result = self.GceOperation(operation, zone=self.default_zone)
     instances = dict()
-    for zone in result[u'items']:
+    for zone in result['items']:
       try:
-        for instance in result[u'items'][zone][u'instances']:
-          zone = instance[u'zone'].split('/')[-1:][0]
-          instances[instance[u'name']] = dict(zone=zone)
+        for instance in result['items'][zone]['instances']:
+          zone = instance['zone'].split('/')[-1:][0]
+          instances[instance['name']] = dict(zone=zone)
       except KeyError:
         pass
     return instances
@@ -156,10 +159,10 @@ class GoogleCloudProject(object):
     try:
       instance = instances[instance_name]
       if not zone:
-        zone = instance[u'zone']
+        zone = instance['zone']
       return GoogleComputeInstance(project=self, zone=zone, name=instance_name)
     except KeyError:
-      raise TurbiniaException(u'Unknown instance')
+      raise TurbiniaException('Unknown instance')
 
 
 class GoogleCloudFunction(GoogleCloudProject):
@@ -187,7 +190,7 @@ class GoogleCloudFunction(GoogleCloudProject):
     Returns:
       A Google Cloud Function service object.
     """
-    return self._CreateService(u'cloudfunctions',
+    return self._CreateService('cloudfunctions',
                                self.CLOUD_FUNCTIONS_API_VERSION)
 
   def ExecuteFunction(self, function_name, args):
@@ -273,7 +276,7 @@ class GoogleComputeBaseResource(object):
     Returns:
       The full API URL to the resource.
     """
-    return self.GetValue(u'selfLink')
+    return self.GetValue('selfLink')
 
 
 class GoogleComputeInstance(GoogleComputeBaseResource):
@@ -318,11 +321,11 @@ class GoogleComputeInstance(GoogleComputeBaseResource):
       disk: Disk to attach (instance of GoogleComputeDisk).
       read_write: Boolean saying if the disk should be attached in RW mode.
     """
-    mode = u'READ_ONLY'  # Default mode
+    mode = 'READ_ONLY'  # Default mode
     if read_write:
-      mode = u'READ_WRITE'
+      mode = 'READ_WRITE'
 
-    log.info(u'Attaching {0:s} to VM {1:s} in {2:s} mode'.format(
+    log.info('Attaching {0:s} to VM {1:s} in {2:s} mode'.format(
         disk.name, self.name, mode))
 
     operation_config = {
@@ -345,7 +348,7 @@ class GoogleComputeInstance(GoogleComputeBaseResource):
     Args:
       disk: Disk to detach (instance of GoogleComputeDisk).
     """
-    log.info(u'Detaching {0:s} from VM {1:s}'.format(disk.name, self.name))
+    log.info('Detaching {0:s} from VM {1:s}'.format(disk.name, self.name))
 
     operation = self.project.GceApi().instances().detachDisk(
         instance=self.name,

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # Copyright 2016 Google Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,6 +14,8 @@
 # limitations under the License.
 """Tests for Turbinia evidence."""
 
+from __future__ import unicode_literals
+
 import json
 import unittest
 
@@ -26,14 +29,14 @@ class TestTurbiniaEvidence(unittest.TestCase):
   def testEvidenceSerialization(self):
     """Test that evidence serializes/unserializes."""
     rawdisk = evidence.RawDisk(
-        name=u'My Evidence', local_path=u'/tmp/foo', mount_path=u'/mnt/foo')
+        name='My Evidence', local_path='/tmp/foo', mount_path='/mnt/foo')
     rawdisk_json = rawdisk.to_json()
     self.assertTrue(isinstance(rawdisk_json, str))
 
     rawdisk_new = evidence.evidence_decode(json.loads(rawdisk_json))
     self.assertTrue(isinstance(rawdisk_new, evidence.RawDisk))
-    self.assertEqual(rawdisk_new.name, u'My Evidence')
-    self.assertEqual(rawdisk_new.mount_path, u'/mnt/foo')
+    self.assertEqual(rawdisk_new.name, 'My Evidence')
+    self.assertEqual(rawdisk_new.mount_path, '/mnt/foo')
 
   def testEvidenceSerializationBadType(self):
     """Test that evidence_decode throws error on non-dict type."""

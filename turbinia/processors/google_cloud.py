@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # Copyright 2017 Google Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,6 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Evidence processor for Google Cloud resources."""
+
+from __future__ import unicode_literals
 
 import logging
 import os
@@ -71,9 +74,9 @@ def PreprocessAttachDisk(evidence):
   Args:
     evidence: A turbinia.evidence.GoogleCloudProject object.
   """
-  path = u'/dev/disk/by-id/google-{0:s}'.format(evidence.disk_name)
+  path = '/dev/disk/by-id/google-{0:s}'.format(evidence.disk_name)
   if IsBlockDevice(path):
-    log.info(u'Disk {0:s} already attached!'.format(evidence.disk_name))
+    log.info('Disk {0:s} already attached!'.format(evidence.disk_name))
     evidence.local_path = path
     return
 
@@ -83,18 +86,18 @@ def PreprocessAttachDisk(evidence):
                                default_zone=config.ZONE)
   instance = project.GetInstance(instance_name, zone=config.ZONE)
   disk = instance.GetDisk(evidence.disk_name)
-  log.info(u'Attaching disk {0:s} to instance {1:s}'.format(
+  log.info('Attaching disk {0:s} to instance {1:s}'.format(
       evidence.disk_name, instance_name))
   instance.AttachDisk(disk)
 
   # Make sure we have a proper block device
   for _ in xrange(RETRY_MAX):
     if IsBlockDevice(path):
-      log.info(u'Block device {0:s} successfully attached'.format(path))
+      log.info('Block device {0:s} successfully attached'.format(path))
       break
     if os.path.exists(path):
       log.info(
-          u'Block device {0:s} mode is {1}'.format(path, os.stat(path).st_mode))
+          'Block device {0:s} mode is {1}'.format(path, os.stat(path).st_mode))
     time.sleep(1)
 
   evidence.local_path = path
@@ -109,10 +112,10 @@ def PostprocessDetachDisk(evidence):
   if evidence.local_path:
     path = evidence.local_path
   else:
-    path = u'/dev/disk/by-id/google-{0:s}'.format(evidence.disk_name)
+    path = '/dev/disk/by-id/google-{0:s}'.format(evidence.disk_name)
 
   if not IsBlockDevice(path):
-    log.info(u'Disk {0:s} already detached!'.format(evidence.disk_name))
+    log.info('Disk {0:s} already detached!'.format(evidence.disk_name))
     return
 
   config.LoadConfig()
@@ -121,14 +124,14 @@ def PostprocessDetachDisk(evidence):
                                default_zone=config.ZONE)
   instance = project.GetInstance(instance_name, zone=config.ZONE)
   disk = instance.GetDisk(evidence.disk_name)
-  log.info(u'Detaching disk {0:s} from instance {1:s}'.format(
+  log.info('Detaching disk {0:s} from instance {1:s}'.format(
       evidence.disk_name, instance_name))
   instance.DetachDisk(disk)
 
   # Make sure device is Detached
   for _ in xrange(RETRY_MAX):
     if not os.path.exists(path):
-      log.info(u'Block device {0:s} is no longer attached'.format(path))
+      log.info('Block device {0:s} is no longer attached'.format(path))
       evidence.local_path = None
       break
     time.sleep(5)

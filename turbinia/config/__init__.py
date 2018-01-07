@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 # Copyright 2016 Google Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,6 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Basic Turbinia config."""
+
+from __future__ import unicode_literal
 
 import imp
 import itertools
@@ -86,7 +89,7 @@ def LoadConfig():
       break
 
   if config_file is None:
-    raise TurbiniaConfigException(u'No config files found')
+    raise TurbiniaConfigException('No config files found')
 
   log.info('Loading config from {0:s}'.format(config_file))
   _config = imp.load_source('config', config_file)
@@ -102,10 +105,10 @@ def ValidateAndSetConfig(_config):
   for var in CONFIGVARS:
     if not hasattr(_config, var):
       raise TurbiniaConfigException(
-          u'No config attribute {0:s}:{1:s}'.format(_config.configSource, var))
+          'No config attribute {0:s}:{1:s}'.format(_config.configSource, var))
     if getattr(_config, var) is None:
       raise TurbiniaConfigException(
-          u'Config attribute {0:s}:{1:s} is not set'.format(
+          'Config attribute {0:s}:{1:s} is not set'.format(
               _config.configSource, var))
 
     # Set the attribute in the current module
