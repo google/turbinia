@@ -110,7 +110,7 @@ class TurbiniaTaskResult(object):
     for evidence in self.evidence:
       if evidence.local_path:
         self.saved_paths.append(evidence.local_path)
-        self.save_local_file(evidence.local_path)
+        self.save_evidence(evidence)
       if not evidence.request_id:
         evidence.request_id = self.request_id
 
@@ -180,17 +180,45 @@ class TurbiniaTaskResult(object):
     """
     self.evidence.append(evidence)
 
+  def save_evidence(self, evidence_):
+    """Saves local evidence files.
+
+    evidence_: Evidence object
+    """
+    (path, path_type) = self.save_local_file(evidence_.local_file)
+    evidence_.saved_path = path
+    evidence_.saved_path_type = path_type
+
+  def retrieve_evidence(self, evidence_):
+    """Retrieves local evidence files.
+
+    evidence_: Evidence object
+    """
+    for writer in self._output_writers:
+      if writer.name == evidence_.saved_path_type:
+        evidence_.local_path = writer.copy_from(evidence_.saved_path)
+
   def save_local_file(self, file_):
     """Saves local file by writing to all non-local output writers.
 
     Args:
       file_ (string): Path to file to save.
+
+    Returns:
+      Tuple of (String of last written file path,
+                String of last written file destination output type)
     """
+    saved_path = None
+    saved_path_type = None
     for writer in self._output_writers:
       if writer.name != 'LocalOutputWriter':
-        new_path = writer.write(file_)
+        new_path = writer.copy_to(file_)
         if new_path:
           self.saved_paths.append(new_path)
+          saved_path = new_path
+          saved_path_type = writer.name
+
+    return (saved_path, saved_path_type)
 
   def set_error(self, error, traceback_):
     """Add error and traceback.
@@ -302,6 +330,10 @@ class TurbiniaTask(object):
           base_output_dir=self.base_output_dir,
           request_id=self.request_id)
     self.output_dir = self.result.output_dir
+
+    if evidence.copyable and not config.SHARED_FILESYSTEM:
+      self.result.retrieve_evidence(evidence)
+
     if evidence.local_path and not os.path.exists(evidence.local_path):
       raise TurbiniaException(
           'Evidence local path {0:s} does not exist'.format(
