@@ -14,7 +14,7 @@
 # limitations under the License.
 """Basic Turbinia config."""
 
-from __future__ import unicode_literal
+from __future__ import unicode_literals
 
 import imp
 import itertools
