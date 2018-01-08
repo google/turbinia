@@ -233,7 +233,7 @@ class TurbiniaTask(object):
     else:
       for file_ in save_files:
         result.log('Output file at {0:s}'.format(file_))
-        result.output_manager.save_local_file(file_)
+        result.output_manager.save_local_file(file_, result)
       for evidence in new_evidence:
         result.add_evidence(evidence)
 
