@@ -116,7 +116,7 @@ class OutputManager(object):
     Returns:
       An evidence object
     """
-    (path, path_type) = self.save_local_file(evidence_.local_file, result)
+    (path, path_type) = self.save_local_file(evidence_.local_path, result)
     evidence_.saved_path = path
     evidence_.saved_path_type = path_type
     log.info('Saved copyable evidence data to {0:s}'.format(
