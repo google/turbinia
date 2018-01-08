@@ -31,27 +31,120 @@ from google.cloud import storage
 log = logging.getLogger('turbinia')
 
 
-def GetOutputWriters(result):
-  """Get a list of output writers.
+class OutputManager(object):
+  """Manages output data.
 
-  Args:
-    result: A TurbiniaTaskResult object
+  Manages the configured output writers.  Also saves and retrieves evidence data
+  as well as other files that are created when running tasks.
 
-  Returns:
-    A list of OutputWriter objects.
+  Attributes:
+    _output_writers (list): The configured output writers
   """
-  epoch = str(int(time.time()))
-  unique_dir = '{0:s}-{1:s}-{2:s}'.format(
-      epoch, str(result.task_id), result.task_name)
 
-  writers = [LocalOutputWriter(base_output_dir=result.base_output_dir,
-                               unique_dir=unique_dir)]
-  config.LoadConfig()
-  if config.GCS_OUTPUT_PATH:
-    writer = GCSOutputWriter(
-        unique_dir=unique_dir, gcs_path=config.GCS_OUTPUT_PATH)
-    writers.append(writer)
-  return writers
+  def __init__(self, result):
+    self._output_writers = self.get_output_writers(result)
+
+  def get_output_writers(self, result):
+    """Get a list of output writers.
+
+    Args:
+      result: A TurbiniaTaskResult object
+
+    Returns:
+      A list of OutputWriter objects.
+    """
+    epoch = str(int(time.time()))
+    unique_dir = '{0:s}-{1:s}-{2:s}'.format(
+        epoch, str(result.task_id), result.task_name)
+
+    writers = [LocalOutputWriter(base_output_dir=result.base_output_dir,
+                                 unique_dir=unique_dir)]
+    config.LoadConfig()
+    if config.GCS_OUTPUT_PATH:
+      writer = GCSOutputWriter(
+          unique_dir=unique_dir, gcs_path=config.GCS_OUTPUT_PATH)
+      writers.append(writer)
+    return writers
+
+  def get_local_output_dir(self):
+    """Gets the local output dir from the local output writer.
+
+    Returns:
+      String to locally created output directory.
+
+    Raises:
+      TurbiniaException: If no local output writer with output_dir is found.
+    """
+    if not self._output_writers:
+      raise TurbiniaException('No output writers found.')
+
+    # Get the local writer
+    writer = [w for w in self._output_writers if w.name == 'LocalWriter'][0]
+    if not hasattr(writer, 'output_dir'):
+      raise TurbiniaException(
+          'Local output writer does not have output_dir attribute.')
+
+    if not writer.output_dir:
+      raise TurbiniaException(
+          'Local output writer attribute output_dir is not set')
+
+    return writer.output_dir
+
+  def retrieve_evidence(self, evidence_):
+    """Retrieves evidence data from remote location.
+
+    Args:
+      evidence_: Evidence object
+
+    Returns:
+      An evidence object
+    """
+    for writer in self._output_writers:
+      if writer.name == evidence_.saved_path_type:
+        log.info('Retrieving copyable evidence data from {0:s}'.format(
+            evidence_.saved_path))
+        evidence_.local_path = writer.copy_from(evidence_.saved_path)
+    return evidence_
+
+  def save_evidence(self, evidence_, result):
+    """Saves local evidence data to remote location.
+
+    Args:
+      evidence_ (Evidence): Evidence to save data from
+      result (TurbiniaTaskResult): Result object to save path data to
+
+    Returns:
+      An evidence object
+    """
+    (path, path_type) = self.save_local_file(evidence_.local_file, result)
+    evidence_.saved_path = path
+    evidence_.saved_path_type = path_type
+    log.info('Saved copyable evidence data to {0:s}'.format(
+        evidence_.saved_path))
+    return evidence_
+
+  def save_local_file(self, file_, result):
+    """Saves local file by writing to all non-local output writers.
+
+    Args:
+      file_ (string): Path to file to save.
+      result (TurbiniaTaskResult): Result object to save path data to
+
+    Returns:
+      Tuple of (String of last written file path,
+                String of last written file destination output type)
+    """
+    saved_path = None
+    saved_path_type = None
+    for writer in self._output_writers:
+      if writer.name != 'LocalOutputWriter':
+        new_path = writer.copy_to(file_)
+        if new_path:
+          result.saved_paths.append(new_path)
+          saved_path = new_path
+          saved_path_type = writer.name
+
+    return (saved_path, saved_path_type)
 
 
 class OutputWriter(object):

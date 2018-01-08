@@ -53,7 +53,7 @@ class TurbiniaTaskResult(object):
       task_name: Name of parent task.
       worker_name: Name of worker task executed on.
       _log: A list of log messages
-      _output_writers: A list of output writer objects
+      _output_manager: An output manager object
   """
 
   # The list of attributes that we will persist into storage
@@ -85,8 +85,8 @@ class TurbiniaTaskResult(object):
     self.worker_name = platform.node()
     # TODO(aarontp): Create mechanism to grab actual python logging data.
     self._log = []
-    self._output_writers = output_manager.GetOutputWriters(self)
-    self.output_dir = self.get_local_output_dir()
+    self.output_manager = output_manager.OutputManager(self)
+    self.output_dir = self.output_manager.get_local_output_dir()
 
   def close(self, success, status=None):
     """Handles closing of this result and writing logs.
@@ -110,7 +110,7 @@ class TurbiniaTaskResult(object):
     for evidence in self.evidence:
       if evidence.local_path:
         self.saved_paths.append(evidence.local_path)
-        self.save_evidence(evidence)
+        self.output_manager.save_evidence(evidence, self)
       if not evidence.request_id:
         evidence.request_id = self.request_id
 
@@ -132,35 +132,11 @@ class TurbiniaTaskResult(object):
       with open(logfile, 'w') as f:
         f.write('\n'.join(self._log))
         f.write('\n')
-      self.save_local_file(logfile)
+      self.output_manager.save_local_file(logfile, self)
 
-    # Unset the writers during the close because they don't serialize
-    self._output_writers = None
+    # Unset the output manager during the close because it won't serialize
+    self.output_manager = None
     self.status = status
-
-  def get_local_output_dir(self):
-    """Gets the local output dir from the local output writer.
-
-    Returns:
-      String to locally created output directory.
-
-    Raises:
-      TurbiniaException: If no local output writer with output_dir is found.
-    """
-    if not self._output_writers:
-      raise TurbiniaException('No output writers found.')
-
-    # Get the local writer
-    writer = [w for w in self._output_writers if w.name == 'LocalWriter'][0]
-    if not hasattr(writer, 'output_dir'):
-      raise TurbiniaException(
-          'Local output writer does not have output_dir attribute.')
-
-    if not writer.output_dir:
-      raise TurbiniaException(
-          'Local output writer attribute output_dir is not set')
-
-    return writer.output_dir
 
 
   def log(self, log_msg):
@@ -179,46 +155,6 @@ class TurbiniaTaskResult(object):
         evidence: Evidence object
     """
     self.evidence.append(evidence)
-
-  def save_evidence(self, evidence_):
-    """Saves local evidence files.
-
-    evidence_: Evidence object
-    """
-    (path, path_type) = self.save_local_file(evidence_.local_file)
-    evidence_.saved_path = path
-    evidence_.saved_path_type = path_type
-
-  def retrieve_evidence(self, evidence_):
-    """Retrieves local evidence files.
-
-    evidence_: Evidence object
-    """
-    for writer in self._output_writers:
-      if writer.name == evidence_.saved_path_type:
-        evidence_.local_path = writer.copy_from(evidence_.saved_path)
-
-  def save_local_file(self, file_):
-    """Saves local file by writing to all non-local output writers.
-
-    Args:
-      file_ (string): Path to file to save.
-
-    Returns:
-      Tuple of (String of last written file path,
-                String of last written file destination output type)
-    """
-    saved_path = None
-    saved_path_type = None
-    for writer in self._output_writers:
-      if writer.name != 'LocalOutputWriter':
-        new_path = writer.copy_to(file_)
-        if new_path:
-          self.saved_paths.append(new_path)
-          saved_path = new_path
-          saved_path_type = writer.name
-
-    return (saved_path, saved_path_type)
 
   def set_error(self, error, traceback_):
     """Add error and traceback.
@@ -297,7 +233,7 @@ class TurbiniaTask(object):
     else:
       for file_ in save_files:
         result.log('Output file at {0:s}'.format(file_))
-        result.save_local_file(file_)
+        result.output_manager.save_local_file(file_)
       for evidence in new_evidence:
         result.add_evidence(evidence)
 
@@ -332,7 +268,7 @@ class TurbiniaTask(object):
     self.output_dir = self.result.output_dir
 
     if evidence.copyable and not config.SHARED_FILESYSTEM:
-      self.result.retrieve_evidence(evidence)
+      self.result.output_manager.retrieve_evidence(evidence)
 
     if evidence.local_path and not os.path.exists(evidence.local_path):
       raise TurbiniaException(
