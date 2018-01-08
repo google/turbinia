@@ -59,12 +59,10 @@ class OutputManager(object):
 
     writers = [LocalOutputWriter(base_output_dir=result.base_output_dir,
                                  unique_dir=unique_dir)]
-    local_output_dir = writers[0].local_output_dir
     config.LoadConfig()
     if config.GCS_OUTPUT_PATH:
       writer = GCSOutputWriter(
-          unique_dir=unique_dir, gcs_path=config.GCS_OUTPUT_PATH,
-          local_output_dir=local_output_dir)
+          unique_dir=unique_dir, gcs_path=config.GCS_OUTPUT_PATH)
       writers.append(writer)
     return writers
 
@@ -82,15 +80,15 @@ class OutputManager(object):
 
     # Get the local writer
     writer = [w for w in self._output_writers if w.name == 'LocalWriter'][0]
-    if not hasattr(writer, 'local_output_dir'):
+    if not hasattr(writer, 'output_dir'):
       raise TurbiniaException(
-          'Local output writer does not have local_output_dir attribute.')
+          'Local output writer does not have output_dir attribute.')
 
-    if not writer.local_output_dir:
+    if not writer.output_dir:
       raise TurbiniaException(
-          'Local output writer attribute local_output_dir is not set')
+          'Local output writer attribute output_dir is not set')
 
-    return writer.local_output_dir
+    return writer.output_dir
 
   def retrieve_evidence(self, evidence_):
     """Retrieves evidence data from remote location.
@@ -118,7 +116,7 @@ class OutputManager(object):
     Returns:
       An evidence object
     """
-    (path, path_type) = self.save_local_file(evidence_.local_path, result)
+    (path, path_type) = self.save_local_file(evidence_.local_file, result)
     evidence_.saved_path = path
     evidence_.saved_path_type = path_type
     log.info('Saved copyable evidence data to {0:s}'.format(
