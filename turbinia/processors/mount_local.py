@@ -46,9 +46,16 @@ def PreprocessMountDisk(evidence):
               mount_prefix, e))
 
   evidence.mount_path = tempfile.mkdtemp(prefix='turbinia', dir=mount_prefix)
+
+  if hasattr(evidence, 'mount_partition') and evidence.mount_partition:
+    src_path = '{0:s}-part{1:d}'.format(
+        evidence.local_path, evidence.mount_partition)
+  else:
+    src_path = evidence.local_path
+
   # TODO(aarontp): Remove hard-coded sudo in commands:
   # https://github.com/google/turbinia/issues/73
-  mount_cmd = ['sudo', 'mount', evidence.local_path, evidence.mount_path]
+  mount_cmd = ['sudo', 'mount', src_path, evidence.mount_path]
   log.info('Running: {0:s}'.format(' '.join(mount_cmd)))
   try:
     subprocess.check_call(mount_cmd)
