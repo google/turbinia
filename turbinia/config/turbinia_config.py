@@ -13,7 +13,13 @@
 # limitations under the License.
 """Dummy Turbinia config file."""
 
+import os
+import json
+
 # Turbinia Config
+
+# set config values below and then comment out, delete, or set to False
+UNCONFIGURED = True
 
 # 'PSQ' is currently the only valid option
 TASK_MANAGER = u'PSQ'
@@ -48,6 +54,29 @@ DEVICE_NAME = None
 SCRATCH_PATH = None
 BUCKET_NAME = None
 PSQ_TOPIC = u'turbinia-psq'
+
+GCE_SERVICE_ACCOUNT = 'turbinia-mgr'
+GCE_SERVICE_ACCOUNT_KEYS_FILE = '../../../../../etc/%s-keys.json' % GCE_SERVICE_ACCOUNT
+
+GCE_SSH_KEY_FILE = '%s/.ssh/google_compute_engine' % os.getenv('HOME')
+GCE_INSTANCE_NAME_PREFIX = None
+GCE_IMAGE_FAMILY = 'debian-9'
+GCE_IMAGE_PROJECT = 'debian-cloud'
+GCE_BOOT_DISK_SIZE = '200GB'
+
+GCE_REQUIRED_ROLES = ['roles/datastore.user',
+                      'roles/pubsub.editor',
+                      'roles/storage.objectAdmin',
+                      'roles/compute.instanceAdmin',]
+
+GCE_REQUIRED_SERVICES = ['pubsub.googleapis.com',
+                         'cloudfunctions.googleapis.com',
+                         'datastore.googleapis.com',]
+
+GCE_SERVER_INSTANCE = 'turbinia-server'
+
+GCE_WORKER_INSTANCE = 'turbinia-worker'
+GCE_WORKER_POOL_SIZE = 2
 
 # Topic Turbinia will listen on for new Artifact events.  This is also used as
 # the Turbinia instance/namespace as it is a unique string per Turbinia
