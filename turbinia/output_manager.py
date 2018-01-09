@@ -59,10 +59,12 @@ class OutputManager(object):
 
     writers = [LocalOutputWriter(base_output_dir=result.base_output_dir,
                                  unique_dir=unique_dir)]
+    local_output_dir = writers[0].local_output_dir
     config.LoadConfig()
     if config.GCS_OUTPUT_PATH:
       writer = GCSOutputWriter(
-          unique_dir=unique_dir, gcs_path=config.GCS_OUTPUT_PATH)
+          unique_dir=unique_dir, gcs_path=config.GCS_OUTPUT_PATH,
+          local_output_dir=local_output_dir)
       writers.append(writer)
     return writers
 
@@ -80,15 +82,15 @@ class OutputManager(object):
 
     # Get the local writer
     writer = [w for w in self._output_writers if w.name == 'LocalWriter'][0]
-    if not hasattr(writer, 'output_dir'):
+    if not hasattr(writer, 'local_output_dir'):
       raise TurbiniaException(
-          'Local output writer does not have output_dir attribute.')
+          'Local output writer does not have local_output_dir attribute.')
 
-    if not writer.output_dir:
+    if not writer.local_output_dir:
       raise TurbiniaException(
-          'Local output writer attribute output_dir is not set')
+          'Local output writer attribute local_output_dir is not set')
 
-    return writer.output_dir
+    return writer.local_output_dir
 
   def retrieve_evidence(self, evidence_):
     """Retrieves evidence data from remote location.
@@ -154,14 +156,17 @@ class OutputWriter(object):
   any other files expclicitly written with copy_to().
 
   Attributes:
-    base_output_dir (string): The base path for output
+    base_output_dir (string): The base path for output.  The value is specific
+        to the output writer object type.
+    local_output_dir: The full path for the local output dir.
     name (string): Name of this output writer
     unique_dir (string): A psuedo-unique string to be used in paths.
   """
 
-  def __init__(self, unique_dir=None):
+  def __init__(self, unique_dir=None, local_output_dir=None):
     """Initialization for OutputWriter."""
     self.unique_dir = unique_dir
+    self.local_output_dir = local_output_dir
     self.create_output_dir()
 
   def create_output_dir(self):
@@ -202,24 +207,20 @@ class OutputWriter(object):
 
 
 class LocalOutputWriter(OutputWriter):
-  """Class for writing to local filesystem output.
-
-  Attributes:
-    output_dir: The full path for output.
-  """
+  """Class for writing to local filesystem output."""
 
   def __init__(self, base_output_dir=None, *args, **kwargs):
     self.base_output_dir = base_output_dir
-    self.output_dir = None
+    self.local_output_dir = None
     super(LocalOutputWriter, self).__init__(*args, **kwargs)
     self.name = 'LocalWriter'
 
   def create_output_dir(self):
-    self.output_dir = os.path.join(self.base_output_dir, self.unique_dir)
-    if not os.path.exists(self.output_dir):
+    self.local_output_dir = os.path.join(self.base_output_dir, self.unique_dir)
+    if not os.path.exists(self.local_output_dir):
       try:
-        log.info('Creating new directory {0:s}'.format(self.output_dir))
-        os.makedirs(self.output_dir)
+        log.info('Creating new directory {0:s}'.format(self.local_output_dir))
+        os.makedirs(self.local_output_dir)
       except OSError as e:
         if e.errno == errno.EACCESS:
           msg = 'Permission error ({0:s})'.format(str(e))
@@ -227,7 +228,7 @@ class LocalOutputWriter(OutputWriter):
           msg = str(e)
         raise TurbiniaException(msg)
 
-    return self.output_dir
+    return self.local_output_dir
 
   def _copy(self, file_path):
     """Copies file to local output dir.
@@ -238,7 +239,8 @@ class LocalOutputWriter(OutputWriter):
     Returns:
       The path the file was saved to, or None if file was not written.
     """
-    output_file = os.path.join(self.output_dir, os.path.basename(file_path))
+    output_file = os.path.join(self.local_output_dir,
+                               os.path.basename(file_path))
     if not os.path.exists(file_path):
       log.warning('File [{0:s}] does not exist.'.format(file_path))
       return None
@@ -298,8 +300,7 @@ class GCSOutputWriter(OutputWriter):
 
   def copy_from(self, file_):
     bucket = self.client.get_bucket(self.bucket)
-    full_path = os.path.join(
-        self.base_output_dir, self.unique_dir, os.path.basename(file_))
+    full_path = os.path.join(self.local_output_dir, os.path.basename(file_))
     log.info('Writing GCS file {0:s} to local path {1:s}'.format(
         file_, full_path))
     blob = storage.Blob(full_path, bucket)
