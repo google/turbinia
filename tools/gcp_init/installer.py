@@ -55,6 +55,8 @@ def Init():
                  default='../../../turbinia')
   p.add_argument('--tdir', help='set remote root directory',
                  default='/usr/local/turbinia')
+  p.add_argument('--gce_key_file', help='GCE service account keys file path',
+                 default=None)
   opts = p.parse_args()
 
   if opts.debug:
@@ -79,7 +81,7 @@ def Init():
 class GcloudCmd(object):
   """Provides interface to gcloud CLI tool for manipulating gcloud service."""
 
-  def __init__(self):
+  def __init__(self, opts=None):
     """Initializes the Google Cloud (gcloud) Command CLI tool wrapper object.
 
     Returns:
@@ -103,7 +105,10 @@ class GcloudCmd(object):
     self.worker_prefix = tcfg.GCE_WORKER_INSTANCE
     self.worker_pool_size = tcfg.GCE_WORKER_POOL_SIZE
 
-    self.svc_account_keys_file = tcfg.GCE_SERVICE_ACCOUNT_KEYS_FILE
+    if opts and opts.gce_key_file:
+      self.svc_account_keys_file = opts.gce_key_file
+    else:
+      self.svc_account_keys_file = tcfg.GCE_SERVICE_ACCOUNT_KEYS_FILE
     self.gce_ssh_key_file = tcfg.GCE_SSH_KEY_FILE
 
     self.gcloud_cmd = 'gcloud'
@@ -231,9 +236,6 @@ class GcloudCmd(object):
 
   def CreateServiceAccount(self):
     """Gets IAM policy for gcloud project."""
-    self.svc_account_keys_file = ('../../../../../etc/'
-                                  '{0:s}-keys.json'.format(self.svc_account))
-
     for acct in self.iam_svc_accounts:
       acct_name = os.path.basename(acct['name'])
       log.debug(acct_name)
@@ -518,7 +520,7 @@ def LocalSetup(opts):
     fab.local('install -d {0:s}'.format(opts.cache))
 
     log.info('installing local dependencies')
-    fab.local('sudo apt-get -fy install build-essential git'
+    fab.local('sudo apt-get -fy install build-essential git '
               'liblzma-dev python-dev python-virtualenv '
               'python-pip python-openssl')
 
@@ -656,7 +658,7 @@ def main():
   opts = Init()
   LocalSetup(opts)
 
-  turbinia_cloud = GcloudCmd()
+  turbinia_cloud = GcloudCmd(opts)
   turbinia_cloud.CreateServiceAccount()
   turbinia_cloud.SetRequiredRoles()
   turbinia_cloud.CreateServiceAccountKeys()

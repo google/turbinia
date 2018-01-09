@@ -56,7 +56,7 @@ BUCKET_NAME = None
 PSQ_TOPIC = u'turbinia-psq'
 
 GCE_SERVICE_ACCOUNT = 'turbinia-mgr'
-GCE_SERVICE_ACCOUNT_KEYS_FILE = '../../../../../etc/%s-keys.json' % GCE_SERVICE_ACCOUNT
+GCE_SERVICE_ACCOUNT_KEYS_FILE = '%s/.gcloud/%s-keys.json' % (os.getenv('HOME'), GCE_SERVICE_ACCOUNT)
 
 GCE_SSH_KEY_FILE = '%s/.ssh/google_compute_engine' % os.getenv('HOME')
 GCE_INSTANCE_NAME_PREFIX = None
