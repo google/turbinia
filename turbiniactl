@@ -203,6 +203,11 @@ if __name__ == '__main__':
   parser.add_argument('-o', '--output_dir', help='Directory path for output')
   parser.add_argument('-L', '--log_file', help='Log file')
   parser.add_argument(
+      '-r',
+      '--request_id',
+      help='Create new requests with this Request ID',
+      required=False)
+  parser.add_argument(
       '-S',
       '--server',
       action='store_true',
@@ -358,7 +363,7 @@ if __name__ == '__main__':
   parser_status.add_argument(
       '-r',
       '--request_id',
-      help='Show tasks for given Request ID',
+      help='Show tasks with this Request ID',
       required=False)
   parser_status.add_argument(
       '-t',
@@ -487,7 +492,7 @@ if __name__ == '__main__':
     task_manager_.add_evidence(evidence_)
     task_manager_.run()
   elif evidence_:
-    request = TurbiniaRequest()
+    request = TurbiniaRequest(request_id=args.request_id)
     request.evidence.append(evidence_)
     if args.dump_json:
       print request.to_json().encode('utf-8')
