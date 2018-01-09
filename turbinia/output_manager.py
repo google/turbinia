@@ -303,6 +303,10 @@ class GCSOutputWriter(OutputWriter):
     full_path = os.path.join(self.local_output_dir, os.path.basename(file_))
     log.info('Writing GCS file {0:s} to local path {1:s}'.format(
         file_, full_path))
-    blob = storage.Blob(full_path, bucket)
-    blob.download_to_filename(file_, client=self.client)
+    blob = storage.Blob(file_, bucket)
+    blob.download_to_filename(full_path, client=self.client)
+    if not os.path.exists(full_path):
+      raise TurbiniaException(
+          'File retrieval from GCS failed: Local file {0:s} does not '
+          'exist'.format(full_path))
     return full_path
