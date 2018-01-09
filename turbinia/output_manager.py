@@ -59,10 +59,12 @@ class OutputManager(object):
 
     writers = [LocalOutputWriter(base_output_dir=result.base_output_dir,
                                  unique_dir=unique_dir)]
+    local_output_dir = writers[0].local_output_dir
     config.LoadConfig()
     if config.GCS_OUTPUT_PATH:
       writer = GCSOutputWriter(
-          unique_dir=unique_dir, gcs_path=config.GCS_OUTPUT_PATH)
+          unique_dir=unique_dir, gcs_path=config.GCS_OUTPUT_PATH,
+          local_output_dir=local_output_dir)
       writers.append(writer)
     return writers
 
@@ -80,15 +82,15 @@ class OutputManager(object):
 
     # Get the local writer
     writer = [w for w in self._output_writers if w.name == 'LocalWriter'][0]
-    if not hasattr(writer, 'output_dir'):
+    if not hasattr(writer, 'local_output_dir'):
       raise TurbiniaException(
-          'Local output writer does not have output_dir attribute.')
+          'Local output writer does not have local_output_dir attribute.')
 
-    if not writer.output_dir:
+    if not writer.local_output_dir:
       raise TurbiniaException(
-          'Local output writer attribute output_dir is not set')
+          'Local output writer attribute local_output_dir is not set')
 
-    return writer.output_dir
+    return writer.local_output_dir
 
   def retrieve_evidence(self, evidence_):
     """Retrieves evidence data from remote location.
@@ -204,16 +206,6 @@ class OutputWriter(object):
 
 
 
-    Args:
-      file_: A string path to a source file.
-
-    Returns:
-      The path the file was saved to, or None if file was not written.
-    """
-    raise NotImplementedError
-
-
-
 class LocalOutputWriter(OutputWriter):
   """Class for writing to local filesystem output."""
 
@@ -247,7 +239,8 @@ class LocalOutputWriter(OutputWriter):
     Returns:
       The path the file was saved to, or None if file was not written.
     """
-    output_file = os.path.join(self.output_dir, os.path.basename(file_path))
+    output_file = os.path.join(self.local_output_dir,
+                               os.path.basename(file_path))
     if not os.path.exists(file_path):
       log.warning('File [{0:s}] does not exist.'.format(file_path))
       return None
@@ -317,8 +310,7 @@ class GCSOutputWriter(OutputWriter):
 
   def copy_from(self, file_):
     bucket = self.client.get_bucket(self.bucket)
-    full_path = os.path.join(
-        self.base_output_dir, self.unique_dir, os.path.basename(file_))
+    full_path = os.path.join(self.local_output_dir, os.path.basename(file_))
     log.info('Writing GCS file {0:s} to local path {1:s}'.format(
         file_, full_path))
     blob = storage.Blob(full_path, bucket)
