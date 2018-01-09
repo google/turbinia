@@ -266,7 +266,7 @@ class GCSOutputWriter(OutputWriter):
     client (google.cloud.storage.Client): GCS Client
   """
 
-  def __init__(self, gcs_path=None, *args, **kwargs):
+  def __init__(self, gcs_path, *args, **kwargs):
     """Initialization for GCSOutputWriter.
 
     Args:
@@ -277,12 +277,22 @@ class GCSOutputWriter(OutputWriter):
     config.LoadConfig()
     self.client = storage.Client(project=config.PROJECT)
 
-    match = re.search(r'gs://(.*)/(.*)', gcs_path)
+    self.bucket, self.base_output_dir = self._parse_gcs_path(gcs_path)
+
+  def _parse_gcs_path(self, file_):
+    """Get the bucket and path values from a GCS path.
+
+    Args:
+      file_ (string): GCS file path.
+
+    Returns:
+      A tuple of ((string) bucket, (string) path)
+    """
+    match = re.search(r'gs://(.*?)/(.*$)', file_)
     if not match:
       raise TurbiniaException(
-          'Cannot find bucket and path from GCS config {0:s}'.format(gcs_path))
-    self.bucket = match.group(1)
-    self.base_output_dir = match.group(2)
+          'Cannot find bucket and path from GCS config {0:s}'.format(file_))
+    return (match.group(1), match.group(2))
 
   def create_output_dir(self):
     # Directories in GCS are artificial, so any path can be written as part of
@@ -300,10 +310,11 @@ class GCSOutputWriter(OutputWriter):
 
   def copy_from(self, file_):
     bucket = self.client.get_bucket(self.bucket)
+    gcs_path = self._parse_gcs_path(file_)[1]
     full_path = os.path.join(self.local_output_dir, os.path.basename(file_))
     log.info('Writing GCS file {0:s} to local path {1:s}'.format(
         file_, full_path))
-    blob = storage.Blob(file_, bucket)
+    blob = storage.Blob(gcs_path, bucket)
     blob.download_to_filename(full_path, client=self.client)
     if not os.path.exists(full_path):
       raise TurbiniaException(
