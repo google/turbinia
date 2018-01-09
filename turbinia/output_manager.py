@@ -310,10 +310,11 @@ class GCSOutputWriter(OutputWriter):
 
   def copy_from(self, file_):
     bucket = self.client.get_bucket(self.bucket)
+    gcs_path = self._parse_gcs_path(file_)[1]
     full_path = os.path.join(self.local_output_dir, os.path.basename(file_))
     log.info('Writing GCS file {0:s} to local path {1:s}'.format(
         file_, full_path))
-    blob = storage.Blob(file_, bucket)
+    blob = storage.Blob(gcs_path, bucket)
     blob.download_to_filename(full_path, client=self.client)
     if not os.path.exists(full_path):
       raise TurbiniaException(
