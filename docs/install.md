@@ -192,6 +192,6 @@ This is still a rough process and future versions will be containerized.
 
 ### Deploy the Cloud Functions
 
-*   `cd turbinia/tools/gcf_init && ./deploy_gcf.py`
+*   `cd <localgitpath>/turbinia/tools/gcf_init && ./deploy_gcf.py`
 *   If you're doing GCP Turbinia, don't forget to return to [GCP
     Turbinia](#gcp-turbinia) and finish the rest of it.
