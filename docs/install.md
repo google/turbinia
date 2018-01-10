@@ -114,13 +114,15 @@ This is still a rough process and future versions will be containerized.
     *   Add your turbinia user to the `disk` group so that you will have
         permissions to read attached Persistent Disks
     *   `sudo adduser turbinia disk`
-    *   Add the turbinia user to /etc/sudoers
-    *   Insert this line: turbinia ALL=(ALL:ALL) NOPASSWD: ALL
+    *   Add the turbinia user to `/etc/sudoers` by inserting this line:
+        `turbinia ALL=(ALL:ALL) NOPASSWD: ALL`
 *   Log in as turbinia
-    *   su - turbinia
+    *   `su - turbinia`
 *   Create (once) and activate Virtualenv
     *   `virtualenv turbinia-env && . turbinia-env/bin/activate`
-    *   ***Note:*** the next time you need to use virtualenv, just activiate it.
+    *   ***Note:*** the next time you need to use virtualenv, just log in as
+        turbinia and activiate virtualenv without recreating it.
+*   Do not exit the Virtualenv until you have completed all the steps!
 *   Continue to [Inside the Virtualenv](#inside-the-virtualenv)
 
 ### Inside the Virtualenv
@@ -150,10 +152,11 @@ This is still a rough process and future versions will be containerized.
     *   `gcloud auth list`
     *   `gcloud auth activate-service-account
         --key-file=$GOOGLE_APPLICATION_CREDENTIALS`
-*   Alternately you can run Turbinia under your own credentials (not
-    recommended).
-    *   Run `gcloud auth login` (may require you to copy/paste url to browser).
-        Or run `gcloud auth application-default login`.
+*   Alternately you can run Turbinia under your own credentials *(NOT
+    RECOMMENDED)*
+    *   Run `gcloud auth login` (may require you to copy/paste url to browser)
+    *   Or run `gcloud auth application-default login`
+    *   Continue to [Build and Configure](#build-and-configure)
 
 #### Build and Configure
 
@@ -178,15 +181,14 @@ This is still a rough process and future versions will be containerized.
     from there:
     *   `/etc/turbinia/` *(RECOMMENDED)*
         *   sudo mkdir /etc/turbinia
-        *   cp `turbinia/config/turbinia_config.py` to `/etc/turbinia/`
+        *   cp `<localgitpath>/turbinia/config/turbinia_config.py` to `/etc/turbinia/`
     *   `/home/turbinia/.turbinia`
-        *   cp `turbinia/config/turbinia_config.py` to
+        *   cp `<localgitpath>/turbinia/config/turbinia_config.py` to
             '/home/turbinia/.turbiniarc`
-    *   Directly configure `turbinia/config/turbinia_config.py`
+    *   Directly configure `<localgitpath>/turbinia/config/turbinia_config.py`
     *   NOTE: Match the `PUBSUB_TOPIC` variable in the configuration to the name
         of the topic and subscription you created in the GCP.
-*   Do not exit the Virtualenv until you have completed all the steps!
-*   Continue to [the last section](#deploy-the-cloud-functions)
+*   Continue to [Deploy the Cloud Functions](#deploy-the-cloud-functions)
 
 ### Deploy the Cloud Functions
 
