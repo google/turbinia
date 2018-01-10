@@ -184,7 +184,7 @@ This is still a rough process and future versions will be containerized.
         *   cp `<localgitpath>/turbinia/config/turbinia_config.py` to `/etc/turbinia/`
     *   `/home/turbinia/.turbinia`
         *   cp `<localgitpath>/turbinia/config/turbinia_config.py` to
-            '/home/turbinia/.turbiniarc`
+            `/home/turbinia/.turbiniarc`
     *   Directly configure `<localgitpath>/turbinia/config/turbinia_config.py`
     *   NOTE: Match the `PUBSUB_TOPIC` variable in the configuration to the name
         of the topic and subscription you created in the GCP.
