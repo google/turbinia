@@ -156,7 +156,7 @@ This is still a rough process and future versions will be containerized.
     RECOMMENDED)*
     *   Run `gcloud auth login` (may require you to copy/paste url to browser)
     *   Or run `gcloud auth application-default login`
-    *   Continue to [Build and Configure](#build-and-configure)
+*   Continue to [Build and Configure](#build-and-configure)
 
 #### Build and Configure
 
@@ -192,7 +192,6 @@ This is still a rough process and future versions will be containerized.
 
 ### Deploy the Cloud Functions
 
-*   Make sure you're currently in the Virtualenv
 *   `cd turbinia/tools/gcf_init && ./deploy_gcf.py`
 *   If you're doing GCP Turbinia, don't forget to return to [GCP
     Turbinia](#gcp-turbinia) and finish the rest of it.
