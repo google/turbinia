@@ -56,7 +56,7 @@ process these images as 'rawdisk' Evidence.
         Pub/Sub](https://console.cloud.google.com/apis/library/pubsub.googleapis.com)
     *   Create a new Pub/Sub topic and subscription **(pull type)**
     *   Please take a note of the topic and subscription name for the
-        configuration steps.
+        configuration steps
 *   Enable [Cloud
     Datastore](https://console.cloud.google.com/apis/api/datastore.googleapis.com)
     *   Go to Datastore in the cloud console
@@ -94,14 +94,14 @@ This is still a rough process and future versions will be containerized.
     `scripts/start-turbinia-common.sh` as appropriate
 *   ***NOTE:*** Please note that the `start-wrapper.sh` script has a
     `GOOGLE_APPLICATION_CREDENTIALS` environment var in the middle of the script
-    that needs to be updated.
+    that needs to be updated
 *   In your worker VM, add a new custom metadata key `startup-script-url`
     pointing to `gs://$your_bucket/scripts/start-wrapper.sh`
 *   Upon start, your VM should mount your GCS Bucket, and copy the start scripts
     into the home directory of the Turbinia user and will then start the
-    Turbinia worker.
+    Turbinia worker
 *   If you are running in GCP, you may also want to install [GCS
-    FUSE](https://cloud.google.com/storage/docs/gcs-fuse).
+    FUSE](https://cloud.google.com/storage/docs/gcs-fuse)
 
 ## Core Installation Steps
 
@@ -110,7 +110,7 @@ This is still a rough process and future versions will be containerized.
         python-pip`
 *   Install virtualenv and git
     *   `sudo apt-get install python-virtualenv git`
-*   Create a turbinia user with password-less sudo access **(IMPORTANT)**.
+*   Create a turbinia user with password-less sudo access **(IMPORTANT)**
     *   Add your turbinia user to the `disk` group so that you will have
         permissions to read attached Persistent Disks
     *   `sudo adduser turbinia disk`
@@ -121,7 +121,7 @@ This is still a rough process and future versions will be containerized.
 *   Create (once) and activate Virtualenv
     *   `virtualenv turbinia-env && . turbinia-env/bin/activate`
     *   ***NOTE:*** the next time you need to use virtualenv, just log in as
-        turbinia and activiate virtualenv without recreating it.
+        turbinia and activiate virtualenv without recreating it
 *   Do not exit the Virtualenv until you have completed all the steps!
 *   Continue to [Inside the Virtualenv](#inside-the-virtualenv)
 
@@ -139,7 +139,8 @@ This is still a rough process and future versions will be containerized.
     *   `Pub/Sub Editor`: Used by clients to talk to Turbinia, and by the Task
         Manager to talk to workers
     *   `Storage Object Admin` and `Storage Legacy Bucket Reader`: Only required
-        on the GCS bucket used by Turbinia, if any. See GCP Setup for details.
+        on the GCS bucket used by Turbinia, if any. See [GCP Turbinia](#gcp-turbinia)
+        for details
     *   `Compute Instance Admin`: Used to list instances and to attach disks to
         instances
     *   `Service Account User`: Used when attaching disks
@@ -193,4 +194,4 @@ This is still a rough process and future versions will be containerized.
 
 *   `cd <localgitpath>/turbinia/tools/gcf_init && ./deploy_gcf.py`
 *   If you're doing GCP Turbinia, don't forget to return to [GCP
-    Turbinia](#gcp-turbinia) and finish the rest of it.
+    Turbinia](#gcp-turbinia) and finish the rest of it
