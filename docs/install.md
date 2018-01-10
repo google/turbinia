@@ -21,6 +21,7 @@ Turbinia can read Evidence from either cloud Persistent Disks, or from GCS
 objects. Turbinia can also write output to GCS (set the `GCS_OUTPUT_PATH`
 variable in the config). Note that you can operate multiple Turbinia instances
 within the same GCP Project as long as you're careful to make sure your config
+within the same GCP Project as long as your careful to make sure your config
 (Pub/Sub topics/subscriptions, output paths, etc) doesn't overlap.
 
 ### Persistent Disks
@@ -145,7 +146,6 @@ means to save logging data.
 *   Continue to [Google Cloud SDK](#2-google-cloud-sdk)
 
 ### 2. Google Cloud SDK
-
 *   Install
     [google-cloud-sdk](https://cloud.google.com/sdk/docs/quickstart-linux)
 *   Create a [scoped service
