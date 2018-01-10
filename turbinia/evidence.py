@@ -158,12 +158,15 @@ class RawDisk(Evidence):
 
   Attributes:
     mount_path: The mount path for this disk (if any).
+    mount_partition: The mount partition for this disk (if any).
     size:  The size of the disk in bytes.
   """
 
-  def __init__(self, mount_path=None, size=None, *args, **kwargs):
+  def __init__(self, mount_path=None, mount_partition=None, size=None, *args,
+               **kwargs):
     """Initialization for raw disk evidence object."""
     self.mount_path = mount_path
+    self.mount_partition = mount_partition
     self.size = size
     super(RawDisk, self).__init__(*args, **kwargs)
 
@@ -247,7 +250,7 @@ class GoogleCloudDiskRawEmbedded(GoogleCloudDisk):
 
   def postprocess(self):
     google_cloud.PostprocessDetachDisk(self)
-    mount_local.PreprocessUnmountDisk(self)
+    mount_local.PostprocessUnmountDisk(self)
 
 
 class PlasoFile(Evidence):
