@@ -35,7 +35,7 @@ If you have raw disk images from physical machines or otherwise that you want to
 
 
 ### Local Install
-* [Skip GCP Install](#basic-installation-steps)
+* [Jump to Core installation steps](#core-installation-steps)
 
 
 ### GCP Install
@@ -90,14 +90,14 @@ The following is a one possible configuration and setup for Turbinia in GCP. Thi
       * ``cd turbinia; echo "export PYTHONPATH=$PYTHONPATH:`pwd`" >> ~/.bashrc ; cd -``
   * Choose one of the locations for storing the Turbinia config and configure
     from there:
-    * *RECOMMENDED* `/etc/turbinia/`
+    * `/etc/turbinia/` *(RECOMMENDED)*
       * sudo mkdir /etc/turbinia
       * cp `turbinia/config/turbinia_config.py` to `/etc/turbinia/`
     * `/home/turbinia/.turbinia`
       * cp `turbinia/config/turbinia_config.py` to '/home/turbinia/.turbiniarc`
     * Directly configure `turbinia/config/turbinia_config.py`
-    NOTE: Match the `PUBSUB_TOPIC` variable in the configuration to the name of
-    the topic and subscription you created in the GCP.
+    * NOTE: Match the `PUBSUB_TOPIC` variable in the configuration to the name of
+      the topic and subscription you created in the GCP.
   * Do not exit the Virtualenv until you have completed all the steps!
   * Continue to [Setup IAM roles and auth credentials](#setup-iam-roles-and-auth-credentials)
 
@@ -112,7 +112,7 @@ The following is a one possible configuration and setup for Turbinia in GCP. Thi
   * `Cloud Functions Developer`: Used by turbiniactl to query task status
 * Create a new key for your service account, and then point to it with an environment variable:
   * `export GOOGLE_APPLICATION_CREDENTIALS="/home/turbinia/turbinia-service-account-creds.json"`
-* *Recommended* Add the service account to the gcloud auth
+* Add the service account to the gcloud auth *(RECOMMENDED)*
   * `gcloud auth list`
   * `gcloud auth activate-service-account --key-file=$GOOGLE_APPLICATION_CREDENTIALS`
 * Alternately you can run Turbinia under your own credentials (not recommended).
