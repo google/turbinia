@@ -51,6 +51,8 @@ def Init():
                  default=tempf.mkdtemp(dir='/var/tmp', prefix='turbc-'))
   p.add_argument('--no_prune_tc', help='don\'t prune cache and tmp directories',
                  action='store_true', default=False)
+  p.add_argument('--no_build', help='skip wheel build',
+                 action='store_true', default=False)
   p.add_argument('--troot', help='set local turbinia root directory',
                  default='../../../turbinia')
   p.add_argument('--tdir', help='set remote root directory',
@@ -83,6 +85,9 @@ class GcloudCmd(object):
 
   def __init__(self, opts=None):
     """Initializes the Google Cloud (gcloud) Command CLI tool wrapper object.
+
+    Args:
+      opts (dict): cli options data structure
 
     Returns:
       GcloudCmd object instance
@@ -488,25 +493,29 @@ def BuildWheels(opts):
   Args:
     opts (dict): cli options data structure
   """
-  with fab.hide('running'):
-    log.info('building plaso wheels locally')
-    fab.local(('curl -o {0:s}/plaso-reqts.txt '
-               'https://raw.githubusercontent.com/'
-               'log2timeline/plaso/master/requirements.txt').format(opts.cache))
-    fab.local(('pip wheel --wheel-dir={0:s} '
-               '-r {0:s}/plaso-reqts.txt').format(opts.cache))
+  if opts.no_build:
+    log.info('skipping wheel build')
+  else:
+    with fab.hide('running'):
+      log.info('building plaso wheels locally')
+      fab.local(('curl -o {0:s}/plaso-reqts.txt '
+                 'https://raw.githubusercontent.com/'
+                 'log2timeline/plaso/master/'
+                 'requirements.txt').format(opts.cache))
+      fab.local(('pip wheel --wheel-dir={0:s} '
+                 '-r {0:s}/plaso-reqts.txt').format(opts.cache))
 
-    log.info('building turbinia wheels locally')
-    fab.local(('curl -o {0:s}/turbinia-reqts.txt '
-               'https://raw.githubusercontent.com/google/'
-               'turbinia/master/requirements.txt').format(opts.cache))
-    fab.local(('pip wheel --wheel-dir={0:s} '
-               '-r {0:s}/turbinia-reqts.txt').format(opts.cache))
+      log.info('building turbinia wheels locally')
+      fab.local(('curl -o {0:s}/turbinia-reqts.txt '
+                 'https://raw.githubusercontent.com/google/'
+                 'turbinia/master/requirements.txt').format(opts.cache))
+      fab.local(('pip wheel --wheel-dir={0:s} '
+                 '-r {0:s}/turbinia-reqts.txt').format(opts.cache))
 
-    log.info('fetching turbinia dependency wheels')
-    fab.local('pip wheel --wheel-dir={0:s} '
-              'pyasn1 pyasn1-modules google-auth-oauthlib '
-              'google-cloud'.format(opts.cache))
+      log.info('fetching turbinia dependency wheels')
+      fab.local('pip wheel --wheel-dir={0:s} '
+                'pyasn1 pyasn1-modules google-auth-oauthlib '
+                'google-cloud'.format(opts.cache))
 
 
 def LocalSetup(opts):
@@ -521,8 +530,8 @@ def LocalSetup(opts):
 
     log.info('installing local dependencies')
     fab.local('sudo apt-get -fy install build-essential git '
-              'liblzma-dev python-dev python-virtualenv '
-              'python-pip python-openssl')
+              'liblzma-dev python-dev python-openssl '
+              'python-virtualenv python-pip python-setuptools ')
 
     log.info('upgrading local pip')
     fab.local('sudo pip install --upgrade pip')
@@ -553,14 +562,27 @@ def RemoteOsSetup(host=None):
         fab.sudo('apt-get -y update; apt-get -fy dist-upgrade')
 
         log.info('installing remote dependencies')
-        fab.sudo('apt-get -fy install python-virtualenv git liblzma-dev '
-                 'rsync python-pip python-wheel socat pv vim-nox sudo '
-                 'wget curl python-openssl')
+        fab.sudo('apt-get -fy install git liblzma-dev sudo '
+                 'cpio pax rsync socat pv vim-nox wget curl '
+                 'tmux screen tcpdump '
+                 'python-pip python-wheel python-virtualenv '
+                 'python-openssl ')
 
         log.info('upgrading remote pip')
         fab.sudo('pip install --upgrade pip')
         log.info('installing remote wheel')
         fab.sudo('pip install wheel')
+
+        log.info('adding turbinia user')
+        fab.sudo('grep -q turbinia /etc/group || '
+                 'groupadd -g {0:d} turbinia'.format(tcfg.TURBINIA_GID))
+        fab.sudo(('grep -q turbinia /etc/passwd || '
+                  'useradd -u {0:d} -g {1:d} -G disk -c turbinia '
+                  '-s /bin/bash -m -d /home/turbinia '
+                  'turbinia').format(tcfg.TURBINIA_UID, tcfg.TURBINIA_GID))
+        fab.sudo('passwd -l turbinia')
+        fab.sudo('grep -q turbinia /etc/sudoers || '
+                 'echo "turbinia ALL=(ALL:ALL) NOPASSWD: ALL" >> /etc/sudoers')
 
 
 def RemoteTurbiniaSetup(opts, host=None):
@@ -591,11 +613,21 @@ def RemoteTurbiniaSetup(opts, host=None):
 
         # update to symlink to new directory
         fab.sudo('ln -s {0:s}-{1:s} {0:s}'.format(opts.tdir, date_suffix))
+        # update ownership
+        fab.sudo(('chown -R turbinia:turbinia '
+                  '{0:s}-{1:s}').format(opts.tdir, date_suffix))
+
         with fab.cd(opts.tdir):
           log.info('installing remote turbinia')
           fab.sudo(('sudo pip install --use-wheel --no-index '
                     '--find-links={0:s} '
                     '-r {0:s}/turbinia-reqts.txt').format(remote_cache))
+
+        log.info('adding /etc/turbinia and config file')
+        fab.sudo('install -d -m 0755 /etc/turbinia')
+        fab.sudo(('install -b --suffix {0:d} -m 0755 '
+                  '/usr/local/turbinia/turbinia/config/turbinia_config.py '
+                  '/etc/turbinia').format(int(time.time())))
 
         # ensure google oauthlib and python asn1 modules are fully upgraded to
         # avoid:
@@ -633,7 +665,6 @@ def InstallTurbinia(opts, instances):
                            extra_opts='-P',
                            ssh_opts='-o \"stricthostkeychecking no\"')
         RemoteTurbiniaSetup(opts, host)
-        fab.sudo('chown -R 0:0 {0:s}'.format(opts.tdir))
 
         # prune remote
         if opts.no_prune_tc:

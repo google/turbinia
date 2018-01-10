@@ -55,6 +55,9 @@ SCRATCH_PATH = None
 BUCKET_NAME = None
 PSQ_TOPIC = u'turbinia-psq'
 
+TURBINIA_UID = 25000
+TURBINIA_GID = 25000
+
 GCE_SERVICE_ACCOUNT = 'turbinia-mgr'
 GCE_SERVICE_ACCOUNT_KEYS_FILE = '%s/.gcloud/%s-keys.json' % (os.getenv('HOME'), GCE_SERVICE_ACCOUNT)
 
