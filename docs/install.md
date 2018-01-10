@@ -54,7 +54,7 @@ process these images as 'rawdisk' Evidence.
     [instruction](https://cloud.google.com/pubsub/docs/quickstart-console) to:
     *   Enable [Cloud
         Pub/Sub](https://console.cloud.google.com/apis/library/pubsub.googleapis.com)
-    *   Create a new Pub/Sub topic and subscription (pull type)
+    *   Create a new Pub/Sub topic and subscription **(pull type)**
     *   Please take a note of the topic and subscription name for the
         configuration steps.
 *   Enable [Cloud
@@ -92,7 +92,7 @@ This is still a rough process and future versions will be containerized.
     `$your_bucket/scripts`
 *   Edit the variables in `scripts/start-wrapper.sh` and
     `scripts/start-turbinia-common.sh` as appropriate
-*   NOTE: Please note that the `start-wrapper.sh` script has a
+*   ***NOTE:*** Please note that the `start-wrapper.sh` script has a
     `GOOGLE_APPLICATION_CREDENTIALS` environment var in the middle of the script
     that needs to be updated.
 *   In your worker VM, add a new custom metadata key `startup-script-url`
@@ -110,7 +110,7 @@ This is still a rough process and future versions will be containerized.
         python-pip`
 *   Install virtualenv and git
     *   `sudo apt-get install python-virtualenv git`
-*   Create a turbinia user with password-less sudo access (important).
+*   Create a turbinia user with password-less sudo access **(IMPORTANT)**.
     *   Add your turbinia user to the `disk` group so that you will have
         permissions to read attached Persistent Disks
     *   `sudo adduser turbinia disk`
@@ -120,7 +120,7 @@ This is still a rough process and future versions will be containerized.
     *   `su - turbinia`
 *   Create (once) and activate Virtualenv
     *   `virtualenv turbinia-env && . turbinia-env/bin/activate`
-    *   ***Note:*** the next time you need to use virtualenv, just log in as
+    *   ***NOTE:*** the next time you need to use virtualenv, just log in as
         turbinia and activiate virtualenv without recreating it.
 *   Do not exit the Virtualenv until you have completed all the steps!
 *   Continue to [Inside the Virtualenv](#inside-the-virtualenv)
@@ -148,12 +148,12 @@ This is still a rough process and future versions will be containerized.
     environment variable:
     *   `export
         GOOGLE_APPLICATION_CREDENTIALS="/home/turbinia/turbinia-service-account-creds.json"`
-*   Add the service account to the gcloud auth *(RECOMMENDED)*
+*   Add the service account to the gcloud auth **(RECOMMENDED)**
     *   `gcloud auth list`
     *   `gcloud auth activate-service-account
         --key-file=$GOOGLE_APPLICATION_CREDENTIALS`
-*   Alternately you can run Turbinia under your own credentials *(NOT
-    RECOMMENDED)*
+*   Alternately you can run Turbinia under your own credentials **(NOT
+    RECOMMENDED)**
     *   Run `gcloud auth login` (may require you to copy/paste url to browser)
     *   Or run `gcloud auth application-default login`
 *   Continue to [Build and Configure](#build-and-configure)
@@ -179,14 +179,13 @@ This is still a rough process and future versions will be containerized.
             ~/.bashrc ; cd -``
 *   Choose one of the locations for storing the Turbinia config and configure
     from there:
-    *   `/etc/turbinia/` *(RECOMMENDED)*
-        *   sudo mkdir /etc/turbinia
-        *   cp `<localgitpath>/turbinia/config/turbinia_config.py` to `/etc/turbinia/`
+    *   `/etc/turbinia/` **(RECOMMENDED)**
+        *   `sudo mkdir /etc/turbinia`
+        *   `cp <localgitpath>/turbinia/config/turbinia_config.py /etc/turbinia/`
     *   `/home/turbinia/.turbinia`
-        *   cp `<localgitpath>/turbinia/config/turbinia_config.py` to
-            `/home/turbinia/.turbiniarc`
+        *   `cp <localgitpath>/turbinia/config/turbinia_config.py /home/turbinia/.turbiniarc`
     *   Directly configure `<localgitpath>/turbinia/config/turbinia_config.py`
-    *   NOTE: Match the `PUBSUB_TOPIC` variable in the configuration to the name
+    *   ***NOTE***: Match the `PUBSUB_TOPIC` variable in the configuration to the name
         of the topic and subscription you created in the GCP.
 *   Continue to [Deploy the Cloud Functions](#deploy-the-cloud-functions)
 
