@@ -37,7 +37,7 @@ If you have raw disk images from physical machines or otherwise that you want to
 
 
 ## Local Install
-* If Turbinia will run on local machines, [jump to Core installation steps](#core-installation-steps)
+* If Turbinia will run on local machines, [jump to Core Installation Steps](#core-installation-steps)
 * Otherwise, follow [GCP Install](#gcp-install)
 
 
@@ -45,7 +45,7 @@ If you have raw disk images from physical machines or otherwise that you want to
 The following is a one possible configuration and setup for Turbinia in GCP. This is still a rough process and future versions will be containerized.
 * Create a new GCE server VM from a recent version of Debian or Ubuntu
   * This should work on other Linux flavors, but these are untested. Feel free to test and fix them ;)
-* Follow the [core installation steps](#core-installation-steps)
+* Follow [Core Installation Steps](#core-installation-steps)
 * Create a new image from the server VM's disk
 * Create a new Instance Template using the newly created image
 * Create a new Managed Instance Group from the newly created Instance Template
@@ -59,7 +59,7 @@ The following is a one possible configuration and setup for Turbinia in GCP. Thi
 * If you are running in GCP, you may also want to install [GCS FUSE](https://cloud.google.com/storage/docs/gcs-fuse).
 
 
-## Core installation steps
+## Core Installation Steps
 * Install python-dev, build essential, pip and setuptools
   * `sudo apt-get install python-dev build-essential python-setuptools python-pip`
 * Install virtualenv and git
@@ -95,7 +95,7 @@ The following is a one possible configuration and setup for Turbinia in GCP. Thi
 * Alternately you can run Turbinia under your own credentials (not recommended).
   * Run `gcloud auth login` (may require you to copy/paste url to browser). Or run `gcloud auth application-default login`.
 
-#### 
+#### Build and Configure 
   * Install Turbinia
     * `sudo apt-get install liblzma-dev`
     * `git clone https://github.com/google/turbinia.git`
