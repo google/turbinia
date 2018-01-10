@@ -1,20 +1,22 @@
-## High-Level Setup
+# High-Level Setup
 Turbinia can be run either in the Google Cloud, or on local machines. If you run Turbinia on local machines, it will still use [Cloud Pub/Sub](https://cloud.google.com/pubsub) and [Cloud Functions](https://cloud.google.com/functions) for the client to talk to the server, and for the server to talk to the worker nodes.
 
-### Local Setup
+## Local Setup
 Turbinia requires all worker nodes to have direct access to all Evidence data. The easiest way to set this up on local machines is to have a NFS or SAN mounted on a common path on each worker. All output should also be written to the common directory so that when Evidence is added back into Turbinia that the other worker nodes can process it. Turbinia can also write output to GCS even when running locally (set the `GCS_OUTPUT_PATH` variable in the config).
 
-### Google Cloud Platform (GCP) Setup
+## Google Cloud Platform (GCP) Setup
 Turbinia can read Evidence from either cloud Persistent Disks, or from GCS objects. Turbinia can also write output to GCS (set the `GCS_OUTPUT_PATH` variable in the config). Note that you can operate multiple Turbinia instances within the same GCP Project as long as your careful to make sure your config (Pub/Sub topics/subscriptions, output paths, etc) doesn't overlap.
 
-#### Persistent Disks
+### Persistent Disks
 Persistent disks should be the default when processing disks that come from the Cloud. The account you run Turbinia as must have access to the Persistent Disks that you want to process. If you add a GoogleCloudDisk Evidence type, the worker node will attach the disk automatically before it runs its tasks.
 
-#### GCS objects
+### GCS objects
 If you have raw disk images from physical machines or otherwise that you want to process in the cloud, you can process them directly from GCS. This can be used when the images do not originate from VMs/containers that are running in the cloud. You can potentially convert raw images to Persistent Disks, but that requires processing the image first, and so using GCS is recommended in this case. Processing Evidence directly from GCS requires that you use [GCS FUSE](https://cloud.google.com/storage/docs/gcs-fuse) and mount your bucket at a common path on each worker node. Once your GCS bucket is mounted, you can process these images as 'rawdisk' Evidence.
 
 
-### Google Cloud Platform project (Cloud Pub/Sub, Cloud Function, Cloud Datastore setup)
+# Instructions
+
+## Google Cloud Platform project (Cloud Pub/Sub, Cloud Function, Cloud Datastore setup)
 * Create or select a Google Cloud Platform project on the
   [Google Developers Console](https://console.developers.google.com)
 * Enable [Cloud
@@ -34,11 +36,12 @@ If you have raw disk images from physical machines or otherwise that you want to
   V2](https://console.cloud.google.com/apis/library/deploymentmanager.googleapis.com) for `gcloud`
 
 
-### Local Install
-* [Jump to Core installation steps](#core-installation-steps)
+## Local Install
+* If Turbinia will run on local machines, [jump to Core installation steps](#core-installation-steps)
+* Otherwise, follow [GCP Install](#gcp-install)
 
 
-### GCP Install
+## GCP Install
 The following is a one possible configuration and setup for Turbinia in GCP. This is still a rough process and future versions will be containerized.
 * Create a new GCE server VM from a recent version of Debian or Ubuntu
   * This should work on other Linux flavors, but these are untested. Feel free to test and fix them ;)
@@ -56,7 +59,7 @@ The following is a one possible configuration and setup for Turbinia in GCP. Thi
 * If you are running in GCP, you may also want to install [GCS FUSE](https://cloud.google.com/storage/docs/gcs-fuse).
 
 
-### Core installation steps
+## Core installation steps
 * Install python-dev, build essential, pip and setuptools
   * `sudo apt-get install python-dev build-essential python-setuptools python-pip`
 * Install virtualenv and git
@@ -73,8 +76,26 @@ The following is a one possible configuration and setup for Turbinia in GCP. Thi
   * ***Note:*** the next time you need to use virtualenv, just activiate it.
 * Continue to [Inside the Virtualenv](#inside-the-virtualenv)
 
-#### Inside the Virtualenv
-  * Install [google-cloud-sdk](https://cloud.google.com/sdk/docs/quickstart-linux)
+### Inside the Virtualenv
+
+#### Google Cloud SDK, IAM roles, auth credentials
+* Install [google-cloud-sdk](https://cloud.google.com/sdk/docs/quickstart-linux)
+* Create a [scoped service account](https://cloud.google.com/compute/docs/access/service-accounts) (this is the best option) with the following roles:
+  * `Cloud Datastore User`: Used by PSQ to store result data, and in the future by the Task Manager to store queriable task data
+  * `Pub/Sub Editor`: Used by clients to talk to Turbinia, and by the Task Manager to talk to workers
+  * `Storage Object Admin` and `Storage Legacy Bucket Reader`: Only required on the GCS bucket used by Turbinia, if any. See GCP Setup for details.
+  * `Compute Instance Admin`: Used to list instances and to attach disks to instances
+  * `Service Account User`: Used when attaching disks
+  * `Cloud Functions Developer`: Used by turbiniactl to query task status
+* Create a new key for your service account, and then point to it with an environment variable:
+  * `export GOOGLE_APPLICATION_CREDENTIALS="/home/turbinia/turbinia-service-account-creds.json"`
+* Add the service account to the gcloud auth *(RECOMMENDED)*
+  * `gcloud auth list`
+  * `gcloud auth activate-service-account --key-file=$GOOGLE_APPLICATION_CREDENTIALS`
+* Alternately you can run Turbinia under your own credentials (not recommended).
+  * Run `gcloud auth login` (may require you to copy/paste url to browser). Or run `gcloud auth application-default login`.
+
+#### 
   * Install Turbinia
     * `sudo apt-get install liblzma-dev`
     * `git clone https://github.com/google/turbinia.git`
@@ -99,26 +120,8 @@ The following is a one possible configuration and setup for Turbinia in GCP. Thi
     * NOTE: Match the `PUBSUB_TOPIC` variable in the configuration to the name of
       the topic and subscription you created in the GCP.
   * Do not exit the Virtualenv until you have completed all the steps!
-  * Continue to [Setup IAM roles and auth credentials](#setup-iam-roles-and-auth-credentials)
+  * Continue to [the last section](#deploy-the-cloud-functions)
 
-#### Setup IAM roles and auth credentials
-* Make sure you're currently in the Virtualenv
-* Create a [scoped service account](https://cloud.google.com/compute/docs/access/service-accounts) (this is the best option) with the following roles:
-  * `Cloud Datastore User`: Used by PSQ to store result data, and in the future by the Task Manager to store queriable task data
-  * `Pub/Sub Editor`: Used by clients to talk to Turbinia, and by the Task Manager to talk to workers
-  * `Storage Object Admin` and `Storage Legacy Bucket Reader`: Only required on the GCS bucket used by Turbinia, if any. See GCP Setup for details.
-  * `Compute Instance Admin`: Used to list instances and to attach disks to instances
-  * `Service Account User`: Used when attaching disks
-  * `Cloud Functions Developer`: Used by turbiniactl to query task status
-* Create a new key for your service account, and then point to it with an environment variable:
-  * `export GOOGLE_APPLICATION_CREDENTIALS="/home/turbinia/turbinia-service-account-creds.json"`
-* Add the service account to the gcloud auth *(RECOMMENDED)*
-  * `gcloud auth list`
-  * `gcloud auth activate-service-account --key-file=$GOOGLE_APPLICATION_CREDENTIALS`
-* Alternately you can run Turbinia under your own credentials (not recommended).
-  * Run `gcloud auth login` (may require you to copy/paste url to browser). Or run `gcloud auth application-default login`.
-* Continue to [the last section](#configure-gcp-services-datastore-pubsub-and-cloud-functions)
-
-#### Deploy the Cloud Functions
+### Deploy the Cloud Functions
 * Make sure you're currently in the Virtualenv
 * `cd turbinia/tools/gcf_init && ./deploy_gcf.py`
