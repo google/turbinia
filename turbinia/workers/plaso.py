@@ -18,8 +18,9 @@ from __future__ import unicode_literals
 
 import os
 
-from turbinia.workers import TurbiniaTask
+from turbinia import config
 from turbinia.evidence import PlasoFile
+from turbinia.workers import TurbiniaTask
 
 
 class PlasoTask(TurbiniaTask):
@@ -35,6 +36,7 @@ class PlasoTask(TurbiniaTask):
     Returns:
         TurbiniaTaskResult object.
     """
+    config.LoadConfig()
     plaso_evidence = PlasoFile()
 
     plaso_file = os.path.join(self.output_dir, '{0:s}.plaso'.format(self.id))
@@ -45,6 +47,8 @@ class PlasoTask(TurbiniaTask):
     cmd = (
         'log2timeline.py --status_view none --hashers all '
         '--partition all --vss_stores all').split()
+    if config.DEBUG_TASKS:
+      cmd.append('-d')
     cmd.extend(['--logfile', plaso_log])
     cmd.extend([plaso_file, evidence.local_path])
 

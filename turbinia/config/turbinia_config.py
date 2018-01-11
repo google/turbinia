@@ -45,6 +45,11 @@ MOUNT_DIR_PREFIX = '/mnt/turbinia-mounts'
 # NFS or a SAN for Evidence objects.
 SHARED_FILESYSTEM = False
 
+# This will set debugging flags and file output on processes executed by Tasks.
+# This could cause performance issues with some tasks, so it is recommended to
+# only set this to True when debugging problems.
+DEBUG_TASKS = False
+
 # GCE configuration
 PROJECT = None
 ZONE = None
