@@ -21,7 +21,6 @@ Turbinia can read Evidence from either cloud Persistent Disks, or from GCS
 objects. Turbinia can also write output to GCS (set the `GCS_OUTPUT_PATH`
 variable in the config). Note that you can operate multiple Turbinia instances
 within the same GCP Project as long as you're careful to make sure your config
-within the same GCP Project as long as your careful to make sure your config
 (Pub/Sub topics/subscriptions, output paths, etc) doesn't overlap.
 
 ### Persistent Disks
@@ -48,6 +47,9 @@ process these images as 'rawdisk' Evidence.
 # Instructions
 
 ## GCP Project Setup (Cloud Pub/Sub, Cloud Function, Cloud Datastore)
+
+**NOTE:** This section is mandatory for Turbinia running on GCP or local
+machines.
 
 **NOTE:** This section is mandatory for Turbinia running on GCP or local
 machines.
