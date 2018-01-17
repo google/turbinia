@@ -39,6 +39,7 @@ class TurbiniaTaskResult(object):
 
   Attributes:
       base_output_dir: Base path for local output
+      closed: Boolean indicating whether this result is closed
       output_dir: Full path for local output
       error: Dict of error data ('error' and 'traceback' are some valid keys)
       evidence: List of newly created Evidence objects.
@@ -69,6 +70,7 @@ class TurbiniaTaskResult(object):
       request_id=None):
     """Initialize the TurbiniaTaskResult object."""
 
+    self.closed = False
     self.evidence = evidence if evidence else []
     self.input_evidence = input_evidence if input_evidence else []
     self.task_id = task_id
@@ -134,8 +136,9 @@ class TurbiniaTaskResult(object):
         f.write('\n')
       self.output_manager.save_local_file(logfile, self)
 
-    # Unset the output manager during the close because it won't serialize
-    self.output_manager = None
+    # Unset the writers during the close because they don't serialize
+    self._output_writers = None
+    self.closed = True
     self.status = status
 
 
@@ -298,6 +301,7 @@ class TurbiniaTask(object):
       indicating a failure.
     """
     try:
+      log.debug('Checking TurbiniaTaskResult for serializability')
       pickle.dumps(result)
     except (TypeError, pickle.PicklingError) as e:
       msg = ('Error pickling TurbiniaTaskResult object. Returning a new result '
@@ -344,9 +348,20 @@ class TurbiniaTask(object):
     except Exception as e:
       msg = 'Task failed with exception: [{0!s}]'.format(e)
       log.error(msg)
-      self.result.close(success=False, status=msg)
-      self.result.set_error(e.message, traceback.format_exc())
+      log.error(traceback.format_exc())
+      if self.result:
+        self.result.log(msg)
+        self.result.log(traceback.format_exc())
+        self.result.close(success=False, status=msg)
+        self.result.set_error(e.message, traceback.format_exc())
+      else:
+        log.error(
+            'No TurbiniaTaskResult object found after task execution.')
 
+    if self.result and not self.result.closed:
+      msg = 'Task Result was auto-closed from task executor without status'
+      self.result.log(msg)
+      self.result.close(False, msg)
     result = self.result_check(self.result)
 
     return result
