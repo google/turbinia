@@ -352,8 +352,21 @@ class TurbiniaTask(object):
       if self.result:
         self.result.log(msg)
         self.result.log(traceback.format_exc())
-        self.result.close(success=False, status=msg)
         self.result.set_error(e.message, traceback.format_exc())
+        # Trying to close the result if possible, so that we clean up what we
+        # can.  This has a higher liklihood of failing though because we're
+        # already in a failure condition because the task previously failed.
+        if not self.result.closed:
+          msg = 'Attempting to close result after task exception'
+          log.warning(msg)
+          self.result.log(msg)
+          try:
+            self.result.close(success=False, status=msg)
+          # Using broad except here because lots can go wrong due to the reasons
+          # listed above.
+          # pylint: disable=broad-except
+          except Exception as e:
+            log.error('TurbiniaTaskResult close failed: {0!s}'.format(e))
       else:
         log.error(
             'No TurbiniaTaskResult object found after task execution.')
