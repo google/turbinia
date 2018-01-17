@@ -20,7 +20,7 @@ running locally (set the `GCS_OUTPUT_PATH` variable in the config).
 Turbinia can read Evidence from either cloud Persistent Disks, or from GCS
 objects. Turbinia can also write output to GCS (set the `GCS_OUTPUT_PATH`
 variable in the config). Note that you can operate multiple Turbinia instances
-within the same GCP Project as long as your careful to make sure your config
+within the same GCP Project as long as you're careful to make sure your config
 (Pub/Sub topics/subscriptions, output paths, etc) doesn't overlap.
 
 ### Persistent Disks
@@ -30,7 +30,7 @@ Cloud. The account you run Turbinia as must have access to the Persistent Disks
 that you want to process. If you add a GoogleCloudDisk Evidence type, the worker
 node will attach the disk automatically before it runs its tasks.
 
-### GCS Objects
+### Google Cloud Storage (GCS) Objects
 
 If you have raw disk images from physical machines or otherwise that you want to
 process in the cloud, you can process them directly from GCS. This can be used
@@ -42,9 +42,14 @@ FUSE](https://cloud.google.com/storage/docs/gcs-fuse) and mount your bucket at a
 common path on each worker node. Once your GCS bucket is mounted, you can
 process these images as 'rawdisk' Evidence.
 
+TODO(beamcodeup): Document how to use GoogleCloudDiskRawEmbedded.
+
 # Instructions
 
 ## GCP Project (Cloud Pub/Sub, Cloud Function, Cloud Datastore Setup)
+
+**NOTE:** This section is mandatory for Turbinia running on GCP or local
+machines.
 
 *   Create or select a Google Cloud Platform project on the [Google Developers
     Console](https://console.developers.google.com)
@@ -65,7 +70,7 @@ process these images as 'rawdisk' Evidence.
         Entities after selecting your region
 *   Enable [Cloud Deployment Manager
     V2](https://console.cloud.google.com/apis/library/deploymentmanager.googleapis.com)
-    for `gcloud`
+    for managing the GCP via the CLI tool `gclou`
 
 ## Local Turbinia
 
@@ -78,38 +83,56 @@ process these images as 'rawdisk' Evidence.
 The following is a one possible configuration and setup for Turbinia in GCP.
 This is still a rough process and future versions will be containerized.
 
-*   Create a new GCE server VM from a recent version of Debian or Ubuntu
+**NOTE:** GCP Turbinia requires two Google Cloud Engine (GCE) instance types:
+1 server and 1 or more workers
+
+### 1. Create a GCE Instance as Server
+*   Create a [new GCE
+    instance](https://console.cloud.google.com/compute/instances) from a recent version
+    of Debian or Ubuntu
     *   This should work on other Linux flavors, but these are untested. Feel
         free to test and fix them ;)
 *   Follow [Core Installation Steps](#core-installation-steps)
-*   Create a new image from the server VM's disk
-*   Create a new Instance Template using the newly created image
-*   Create a new Managed Instance Group from the newly created Instance Template
-*   Create a new GCS bucket and create new directories for `scripts` and
-    `output/logs`
-*   Mount your GCS bucket on your server VM
+
+### 2. Create a Google Cloud Storage (GCS) Bucket
+
+**NOTE:** GCS FUSE is used here for convenience to keep scripts and log files,
+but this isn't strictly necessary for Turbinia to run if you have an alternate
+means to save logging data.
+
+*   [Create a new GCS
+    bucket](https://cloud.google.com/storage/docs/creating-buckets) and create
+    directories for `scripts` and `output/logs`
+*   Mount your GCS bucket on your server instance using [GCS
+    FUSE](https://cloud.google.com/storage/docs/gcs-fuse)
 *   cp `turbinia/tools/gcp_init/*.sh` into your locally mounted copy of
     `$your_bucket/scripts`
 *   Edit the variables in `scripts/start-wrapper.sh` and
     `scripts/start-turbinia-common.sh` as appropriate
-*   ***NOTE:*** Please note that the `start-wrapper.sh` script has a
-    `GOOGLE_APPLICATION_CREDENTIALS` environment var in the middle of the script
-    that needs to be updated
+*   ***NOTE:*** The `start-wrapper.sh` script has a `GOOGLE_APPLICATION_CREDENTIALS`
+    environment var in the middle of the script that needs to be updated
+
+### 3. Create an Instance Template (Prep Work for Worker)
+*   Stop the server instance
+*   Create a new image from the server VM's disk
+*   Create a new Instance Template using the newly created image
+
+### 4. Create a GCE Instance as Worker
+*   Create a new Managed Instance Group from the newly created Instance Template
 *   In your worker VM, add a new custom metadata key `startup-script-url`
     pointing to `gs://$your_bucket/scripts/start-wrapper.sh`
+    TODO(beamcodeup): Update this section when Issue #132 is resolved.
 *   Upon start, your VM should mount your GCS Bucket, and copy the start scripts
     into the home directory of the Turbinia user and will then start the
     Turbinia worker
-*   If you are running in GCP, you may also want to install [GCS
-    FUSE](https://cloud.google.com/storage/docs/gcs-fuse)
 
 ## Core Installation Steps
 
-*   Install python-dev, build essential, pip and setuptools
+### 1. Preparation Work
+
+*   Install dependencies
     *   `sudo apt-get install python-dev build-essential python-setuptools
-        python-pip`
-*   Install virtualenv and git
-    *   `sudo apt-get install python-virtualenv git`
+        python-pip python-virtualenv liblzma-dev git`
 *   Create a turbinia user with password-less sudo access **(IMPORTANT)**
     *   Add your turbinia user to the `disk` group so that you will have
         permissions to read attached Persistent Disks
@@ -118,16 +141,9 @@ This is still a rough process and future versions will be containerized.
         `turbinia ALL=(ALL:ALL) NOPASSWD: ALL`
 *   Log in as turbinia
     *   `su - turbinia`
-*   Create (once) and activate Virtualenv
-    *   `virtualenv turbinia-env && . turbinia-env/bin/activate`
-    *   ***NOTE:*** the next time you need to use virtualenv, just log in as
-        turbinia and activiate virtualenv without recreating it
-*   Do not exit the Virtualenv until you have completed all the steps!
-*   Continue to [Inside the Virtualenv](#inside-the-virtualenv)
+*   Continue to [Google Cloud SDK](#2-google-cloud-sdk)
 
-### Inside the Virtualenv
-
-#### Google Cloud SDK, IAM roles, auth credentials
+### 2. Google Cloud SDK
 
 *   Install
     [google-cloud-sdk](https://cloud.google.com/sdk/docs/quickstart-linux)
@@ -157,12 +173,18 @@ This is still a rough process and future versions will be containerized.
     RECOMMENDED)**
     *   Run `gcloud auth login` (may require you to copy/paste url to browser)
     *   Or run `gcloud auth application-default login`
-*   Continue to [Build and Configure](#build-and-configure)
+*   Create (once) and activate Virtualenv
+    *   `virtualenv turbinia-env && . turbinia-env/bin/activate`
+    *   ***NOTE:*** the next time you need to use virtualenv, just log in as
+        turbinia and activiate virtualenv without recreating it
+*   Do not exit the Virtualenv until you have completed all the steps!
+*   Continue to [Inside the Virtualenv](#3-inside-the-virtualenv)
+
+### 3. Inside the Virtualenv
 
 #### Build and Configure
 
 *   Install Turbinia
-    *   `sudo apt-get install liblzma-dev`
     *   `git clone https://github.com/google/turbinia.git`
     *   `pip install --upgrade pip`
     *   `pip install -r turbinia/requirements.txt`
@@ -176,8 +198,7 @@ This is still a rough process and future versions will be containerized.
         repository:
         *   ``cd turbinia; export PYTHONPATH=$PYTHONPATH:`pwd`; cd -``
     *   And set it in your .bashrc file:
-        *   ``cd turbinia; echo "export PYTHONPATH=$PYTHONPATH:`pwd`" >>
-            ~/.bashrc ; cd -``
+        *   ``cd turbinia; echo "export PYTHONPATH=$PYTHONPATH" >> ~/.bashrc ; cd -``
 *   Choose one of the locations for storing the Turbinia config and configure
     from there:
     *   `/etc/turbinia/` **(RECOMMENDED)**
@@ -190,7 +211,7 @@ This is still a rough process and future versions will be containerized.
         of the topic and subscription you created in the GCP.
 *   Continue to [Deploy the Cloud Functions](#deploy-the-cloud-functions)
 
-### Deploy the Cloud Functions
+#### Deploy the Cloud Functions
 
 *   `cd <localgitpath>/turbinia/tools/gcf_init && ./deploy_gcf.py`
 *   If you're doing GCP Turbinia, don't forget to return to [GCP
