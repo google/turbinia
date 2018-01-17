@@ -177,7 +177,7 @@ means to save logging data.
     *   Or run `gcloud auth application-default login`
 *   Create (once) and activate Virtualenv
     *   `virtualenv turbinia-env && . turbinia-env/bin/activate`
-    *   ***NOTE:*** the next time you need to use virtualenv, just log in as
+    *   ***NOTE:*** The next time you need to use virtualenv, just log in as
         turbinia and activiate virtualenv without recreating it
 *   Do not exit the Virtualenv until you have completed all the steps!
 *   Continue to [Inside the Virtualenv](#3-inside-the-virtualenv)
