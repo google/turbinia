@@ -138,8 +138,9 @@ class TurbiniaTaskResult(object):
         f.write('\n')
       self.output_manager.save_local_file(logfile, self)
 
-    # Unset the output manager during the close because it won't serialize
-    self.output_manager = None
+    # Unset the writers during the close because they don't serialize
+    self._output_writers = None
+    self.closed = True
     self.status = status
 
 
@@ -357,34 +358,16 @@ class TurbiniaTask(object):
       if self.result:
         self.result.log(msg)
         self.result.log(traceback.format_exc())
+        self.result.close(success=False, status=msg)
         self.result.set_error(e.message, traceback.format_exc())
       else:
         log.error(
             'No TurbiniaTaskResult object found after task execution.')
 
-    # Trying to close the result if possible so that we clean up what we can.
-    # This has a higher liklihood of failing because something must have gone
-    # wrong as the Task should have already closed this.
     if self.result and not self.result.closed:
-      msg = 'Trying last ditch attempt to close result'
-      log.warning(msg)
+      msg = 'Task Result was auto-closed from task executor without status'
       self.result.log(msg)
-
-      if self.result.status:
-        status = self.result.status
-      else:
-        status = 'No previous status'
-      msg = ('Task Result was auto-closed from task executor on {0:s}.'
-             ' {1:s}'.format(self.worker_name, status))
-      self.result.log(msg)
-      try:
-        self.result.close(False, msg)
-      # Using broad except here because lots can go wrong due to the reasons
-      # listed above.
-      # pylint: disable=broad-except
-      except Exception as e:
-        log.error('TurbiniaTaskResult close failed: {0!s}'.format(e))
-
+      self.result.close(False, msg)
     result = self.result_check(self.result)
     if original_result_id != self.result.id:
       log.debug(
