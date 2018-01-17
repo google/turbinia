@@ -121,10 +121,12 @@ means to save logging data.
 *   Create a new Managed Instance Group from the newly created Instance Template
 *   In your worker VM, add a new custom metadata key `startup-script-url`
     pointing to `gs://$your_bucket/scripts/start-wrapper.sh`
-    TODO(beamcodeup): Update this section when Issue #132 is resolved.
+*   TODO(beamcodeup): Update this section when Issue #132 is resolved.
 *   Upon start, your VM should mount your GCS Bucket, and copy the start scripts
     into the home directory of the Turbinia user and will then start the
     Turbinia worker
+*   ***NOTE:*** If the GCS FUSE is used for log files, update the Turbinia config
+    file with a new `LOG_FILE` path to avoid writing to the server logs.
 
 ## Core Installation Steps
 
