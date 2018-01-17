@@ -163,9 +163,9 @@ def PrintTaskStatus(instance, project, region, days=0, task_id=None,
 
     status = task.get('status') if task.get('status') else 'Task in Progress'
     if all_fields:
-      print '{0:s} request: {1:s} task: {2:s} {3:s} {4:s}: {5:s}'.format(
+      print '{0:s} request: {1:s} task: {2:s} {3:s} {4:s} {5:s}: {6:s}'.format(
           task['last_update'], task['request_id'], task['id'], task['name'],
-          success, status)
+          task['worker_name'], success, status)
       saved_paths = task.get('saved_paths') if task.get('saved_paths') else []
       for path in saved_paths:
         print '\t{0:s}'.format(path)

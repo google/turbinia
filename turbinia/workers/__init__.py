@@ -57,7 +57,7 @@ class TurbiniaTaskResult(object):
   """
 
   # The list of attributes that we will persist into storage
-  STORED_ATTRIBUTES = ['status', 'saved_paths', 'successful']
+  STORED_ATTRIBUTES = ['worker_name', 'status', 'saved_paths', 'successful']
 
   def __init__(
       self,
