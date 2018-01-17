@@ -359,38 +359,34 @@ class TurbiniaTask(object):
         self.result.log(msg)
         self.result.log(traceback.format_exc())
         self.result.set_error(e.message, traceback.format_exc())
-        # Trying to close the result if possible, so that we clean up what we
-        # can.  This has a higher liklihood of failing though because we're
-        # already in a failure condition because the task previously failed.
-        if not self.result.closed:
-          msg = 'Attempting to close result after task exception'
-          log.warning(msg)
-          self.result.log(msg)
-          try:
-            self.result.close(success=False, status=msg)
-          # Using broad except here because lots can go wrong due to the reasons
-          # listed above.
-          # pylint: disable=broad-except
-          except Exception as e:
-            log.error('TurbiniaTaskResult close failed: {0!s}'.format(e))
       else:
         log.error(
             'No TurbiniaTaskResult object found after task execution.')
 
+    # Trying to close the result if possible so that we clean up what we can.
+    # This has a higher liklihood of failing because something must have gone
+    # wrong as the Task should have already closed this.
     if self.result and not self.result.closed:
-      msg = 'Task Result was auto-closed from task executor without status'
+      msg = 'Attempting last ditch attempt to close result'
+      log.warning(msg)
       self.result.log(msg)
-      self.result.close(False, msg)
+
+      if self.result.status:
+        status = self.result.status
+      else:
+        status = 'No previous status'
+      msg = 'Task Result was auto-closed from task executor. {0:s}'.format(
+          status)
+      self.result.log(msg)
+      try:
+        self.result.close(False, msg)
+      # Using broad except here because lots can go wrong due to the reasons
+      # listed above.
+      # pylint: disable=broad-except
+      except Exception as e:
+        log.error('TurbiniaTaskResult close failed: {0!s}'.format(e))
+
     result = self.result_check(self.result)
-    if original_result_id != self.result.id:
-      log.debug(
-          'Result object {0:s} is different from original {1:s} after task '
-          'execution which indicates errors during execution'.format(
-              self.result.id, original_result_id))
-    else:
-      log.debug(
-          'Returning original result object {0:s} after task execution'.format(
-              self.result.id))
     return result
 
   def run(self, evidence, result):
