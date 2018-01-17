@@ -369,8 +369,8 @@ class TurbiniaTask(object):
         status = self.result.status
       else:
         status = 'No previous status'
-      msg = 'Task Result was auto-closed from task executor. {0:s}'.format(
-          status)
+      msg = ('Task Result was auto-closed from task executor on {0:s}.'
+             ' {1:s}.'.format(self.worker_name, status))
       self.result.log(msg)
       try:
         self.result.close(False, msg)
