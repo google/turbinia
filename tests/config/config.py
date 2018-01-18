@@ -45,6 +45,7 @@ class TestTurbiniaConfig(unittest.TestCase):
     # Remove the added module attributes
     # pylint: disable=expression-not-assigned
     [delattr(config, a) for a in dir(config) if a not in self.config_attrs]
+    config.CONFIG = None
 
   def WriteConfig(self, data):
     with open(self.config_file, 'w') as config_file:
