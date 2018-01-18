@@ -18,6 +18,7 @@ from __future__ import unicode_literals
 
 import os
 
+from turbinia import config
 from turbinia.workers import TurbiniaTask
 from turbinia.evidence import PlasoCsvFile
 
@@ -35,6 +36,7 @@ class PsortTask(TurbiniaTask):
     Returns:
         TurbiniaTaskResult object.
     """
+    config.LoadConfig()
     psort_evidence = PlasoCsvFile()
 
     psort_file = os.path.join(self.output_dir, '{0:s}.csv'.format(self.id))
@@ -42,6 +44,8 @@ class PsortTask(TurbiniaTask):
     psort_log = os.path.join(self.output_dir, '{0:s}.log'.format(self.id))
 
     cmd = ['psort.py', '--status_view', 'none', '--logfile', psort_log]
+    if config.DEBUG_TASKS:
+      cmd.append('-d')
     cmd.extend(['-w', psort_file, evidence.local_path])
 
     result.log('Running psort as [{0:s}]'.format(' '.join(cmd)))
