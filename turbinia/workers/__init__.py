@@ -142,6 +142,7 @@ class TurbiniaTaskResult(object):
     self._output_writers = None
     self.closed = True
     self.status = status
+    log.debug('Result close successful. Status is [{0:s}]'.format(self.status))
 
 
   def log(self, log_msg):
