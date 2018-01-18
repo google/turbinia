@@ -43,6 +43,7 @@ class TurbiniaTaskResult(object):
       output_dir: Full path for local output
       error: Dict of error data ('error' and 'traceback' are some valid keys)
       evidence: List of newly created Evidence objects.
+      id: Unique Id of result (string of hex)
       input_evidence: The evidence this task processed.
       request_id: The id of the initial request to process this evidence.
       run_time: Length of time the task ran for.
@@ -73,6 +74,7 @@ class TurbiniaTaskResult(object):
     self.closed = False
     self.evidence = evidence if evidence else []
     self.input_evidence = input_evidence if input_evidence else []
+    self.id = uuid.uuid4().hex
     self.task_id = task_id
     self.task_name = task_name
     self.base_output_dir = base_output_dir
@@ -345,6 +347,7 @@ class TurbiniaTask(object):
           input_evidence=evidence,
           base_output_dir=self.base_output_dir,
           request_id=self.request_id)
+    original_result_id = self.result.id
     try:
       self.result = self.setup(evidence)
       self.result = self.run(evidence, self.result)
@@ -365,7 +368,7 @@ class TurbiniaTask(object):
     # This has a higher liklihood of failing because something must have gone
     # wrong as the Task should have already closed this.
     if self.result and not self.result.closed:
-      msg = 'Attempting last ditch attempt to close result'
+      msg = 'Trying last ditch attempt to close result'
       log.warning(msg)
       self.result.log(msg)
 
@@ -385,6 +388,15 @@ class TurbiniaTask(object):
         log.error('TurbiniaTaskResult close failed: {0!s}'.format(e))
 
     result = self.result_check(self.result)
+    if original_result_id != self.result.id:
+      log.debug(
+          'Result object {0:s} is different from original {1:s} after task '
+          'execution which indicates errors during execution'.format(
+              self.result.id, original_result_id))
+    else:
+      log.debug(
+          'Returning original result object {0:s} after task execution'.format(
+              self.result.id))
     return result
 
   def run(self, evidence, result):
