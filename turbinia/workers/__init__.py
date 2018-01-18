@@ -368,7 +368,7 @@ class TurbiniaTask(object):
     # This has a higher liklihood of failing because something must have gone
     # wrong as the Task should have already closed this.
     if self.result and not self.result.closed:
-      msg = 'Attempting last ditch attempt to close result'
+      msg = 'Trying last ditch attempt to close result'
       log.warning(msg)
       self.result.log(msg)
 
@@ -388,6 +388,15 @@ class TurbiniaTask(object):
         log.error('TurbiniaTaskResult close failed: {0!s}'.format(e))
 
     result = self.result_check(self.result)
+    if original_result_id != self.result.id:
+      log.debug(
+          'Result object {0:s} is different from original {1:s} after task '
+          'execution which indicates errors during execution'.format(
+              self.result.id, original_result_id))
+    else:
+      log.debug(
+          'Returning original result object {0:s} after task execution'.format(
+              self.result.id))
     return result
 
   def run(self, evidence, result):
