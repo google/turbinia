@@ -140,6 +140,7 @@ class TurbiniaTaskResult(object):
     self._output_writers = None
     self.closed = True
     self.status = status
+    log.debug('Result close successful. Status is [{0:s}]'.format(self.status))
 
 
   def log(self, log_msg):
@@ -303,6 +304,7 @@ class TurbiniaTask(object):
     try:
       log.debug('Checking TurbiniaTaskResult for serializability')
       pickle.dumps(result)
+      dump_status = 'Successful'
     except (TypeError, pickle.PicklingError) as e:
       msg = ('Error pickling TurbiniaTaskResult object. Returning a new result '
              'with the pickling error, and all previous result data will be '
@@ -316,7 +318,9 @@ class TurbiniaTask(object):
           request_id=self.request_id)
       result.set_error(e.message, traceback.format_exc())
       result.close(False, status=msg)
+      dump_status = 'Failed, but replaced with new result object'
 
+    log.info('Result check: {0:s}'.format(dump_status))
     return result
 
   def run_wrapper(self, evidence):
