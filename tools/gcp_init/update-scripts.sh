@@ -5,7 +5,7 @@
 
 output_dir="/home/turbinia/"
 scripts_dir="/mnt/turbinia/scripts"
-scripts="start-wrapper.sh start-turbinia-common.sh start-turbinia-server.sh start-turbinia-worker.sh update-scripts.sh"
+scripts="start-wrapper.sh start-turbinia-common.sh start-turbinia-server.sh start-turbinia-worker.sh update-scripts.sh venvcmd.sh"
 
 for script in $scripts ; do
 	echo "Copying $script to $output_dir"
