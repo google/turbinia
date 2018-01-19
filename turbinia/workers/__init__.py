@@ -45,6 +45,7 @@ class TurbiniaTaskResult(object):
       evidence: List of newly created Evidence objects.
       id: Unique Id of result (string of hex)
       input_evidence: The evidence this task processed.
+      output_manager: An output manager object
       request_id: The id of the initial request to process this evidence.
       run_time: Length of time the task ran for.
       saved_paths: Paths where output has been saved.
@@ -55,7 +56,6 @@ class TurbiniaTaskResult(object):
       task_name: Name of parent task.
       worker_name: Name of worker task executed on.
       _log: A list of log messages
-      _output_manager: An output manager object
   """
 
   # The list of attributes that we will persist into storage
@@ -139,7 +139,7 @@ class TurbiniaTaskResult(object):
       self.output_manager.save_local_file(logfile, self)
 
     # Unset the writers during the close because they don't serialize
-    self._output_writers = None
+    self.output_manager = None
     self.closed = True
     self.status = status
     log.debug('Result close successful. Status is [{0:s}]'.format(self.status))
