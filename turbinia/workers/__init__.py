@@ -118,17 +118,18 @@ class TurbiniaTaskResult(object):
       if not evidence.request_id:
         evidence.request_id = self.request_id
 
-    try:
-      self.input_evidence.postprocess()
-    # Adding a broad exception here because we want to try post-processing
-    # to clean things up even after other failures in the task, so this could
-    # also fail.
-    # pylint: disable=broad-except
-    except Exception as e:
-      msg = 'Evidence post-processing for {0:s} failed: {1!s}'.format(
-          self.input_evidence.name, e)
-      log.error(msg)
-      self.log(msg)
+    for evidence in self.input_evidence:
+      try:
+        evidence.postprocess()
+      # Adding a broad exception here because we want to try post-processing
+      # to clean things up even after other failures in the task, so this could
+      # also fail.
+      # pylint: disable=broad-except
+      except Exception as e:
+        msg = 'Evidence post-processing for {0:s} failed: {1!s}'.format(
+            evidence.name, e)
+        log.error(msg)
+        self.log(msg)
 
     # Write result log info to file
     logfile = os.path.join(self.output_dir, 'worker-log.txt')
@@ -387,7 +388,7 @@ class TurbiniaTask(object):
       except Exception as e:
         log.error('TurbiniaTaskResult close failed: {0!s}'.format(e))
 
-    result = self.result_check(self.result)
+    self.result = self.result_check(self.result)
     if original_result_id != self.result.id:
       log.debug(
           'Result object {0:s} is different from original {1:s} after task '
@@ -397,7 +398,7 @@ class TurbiniaTask(object):
       log.debug(
           'Returning original result object {0:s} after task execution'.format(
               self.result.id))
-    return result
+    return self.result
 
   def run(self, evidence, result):
     """Entry point to execute the task.
