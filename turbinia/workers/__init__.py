@@ -269,7 +269,7 @@ class TurbiniaTask(object):
       self.result = TurbiniaTaskResult(
           task_id=self.id,
           task_name=self.name,
-          input_evidence=evidence,
+          input_evidence=[evidence],
           base_output_dir=self.base_output_dir,
           request_id=self.request_id)
     self.output_dir = self.result.output_dir
@@ -345,7 +345,7 @@ class TurbiniaTask(object):
       self.result = TurbiniaTaskResult(
           task_id=self.id,
           task_name=self.name,
-          input_evidence=evidence,
+          input_evidence=[evidence],
           base_output_dir=self.base_output_dir,
           request_id=self.request_id)
     original_result_id = self.result.id
@@ -378,7 +378,7 @@ class TurbiniaTask(object):
       else:
         status = 'No previous status'
       msg = ('Task Result was auto-closed from task executor on {0:s}.'
-             ' {1:s}'.format(self.worker_name, status))
+             ' {1:s}'.format(self.result.worker_name, status))
       self.result.log(msg)
       try:
         self.result.close(False, msg)
