@@ -44,6 +44,6 @@ class StatTask(TurbiniaTask):
       f.write(report.text_data)
 
     result.add_evidence(report)
-    result.close(success=True)
+    result.close(self, success=True)
 
     return result

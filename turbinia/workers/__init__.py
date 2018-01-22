@@ -45,7 +45,6 @@ class TurbiniaTaskResult(object):
       evidence: List of newly created Evidence objects.
       id: Unique Id of result (string of hex)
       input_evidence: The evidence this task processed.
-      output_manager: An output manager object
       request_id: The id of the initial request to process this evidence.
       run_time: Length of time the task ran for.
       saved_paths: Paths where output has been saved.
@@ -63,20 +62,23 @@ class TurbiniaTaskResult(object):
 
   def __init__(
       self,
+      task,
       evidence=None,
       input_evidence=None,
-      task_id=None,
-      task_name=None,
       base_output_dir=None,
       request_id=None):
-    """Initialize the TurbiniaTaskResult object."""
+    """Initialize the TurbiniaTaskResult object.
+
+    Args:
+      task (TurbiniaTask): The calling Task object
+    """
 
     self.closed = False
     self.evidence = evidence if evidence else []
     self.input_evidence = input_evidence if input_evidence else []
     self.id = uuid.uuid4().hex
-    self.task_id = task_id
-    self.task_name = task_name
+    self.task_id = task.id
+    self.task_name = task.name
     self.base_output_dir = base_output_dir
     self.request_id = request_id
 
@@ -89,10 +91,9 @@ class TurbiniaTaskResult(object):
     self.worker_name = platform.node()
     # TODO(aarontp): Create mechanism to grab actual python logging data.
     self._log = []
-    self.output_manager = output_manager.OutputManager(self)
-    self.output_dir = self.output_manager.get_local_output_dir()
+    self.output_dir = task.output_manager.get_local_output_dir()
 
-  def close(self, success, status=None):
+  def close(self, task, success, status=None):
     """Handles closing of this result and writing logs.
 
     Normally this should be called by the Run method to make sure that the
@@ -101,6 +102,7 @@ class TurbiniaTaskResult(object):
     indicating a failure.
 
     Args:
+      task (TurbiniaTask): The calling Task object
       success: Bool indicating task success
       status: One line descriptive task status.
     """
@@ -114,7 +116,7 @@ class TurbiniaTaskResult(object):
     for evidence in self.evidence:
       if evidence.local_path:
         self.saved_paths.append(evidence.local_path)
-        self.output_manager.save_evidence(evidence, self)
+        task.output_manager.save_evidence(evidence, self)
       if not evidence.request_id:
         evidence.request_id = self.request_id
 
@@ -137,10 +139,8 @@ class TurbiniaTaskResult(object):
       with open(logfile, 'w') as f:
         f.write('\n'.join(self._log))
         f.write('\n')
-      self.output_manager.save_local_file(logfile, self)
+      task.output_manager.save_local_file(logfile, self)
 
-    # Unset the writers during the close because they don't serialize
-    self.output_manager = None
     self.closed = True
     self.status = status
     log.debug('Result close successful. Status is [{0:s}]'.format(self.status))
@@ -184,6 +184,7 @@ class TurbiniaTask(object):
       last_update: A datetime object with the last time the task was updated.
       name: Name of task
       output_dir: The directory output will go into (including per-task folder).
+      output_manager: An output manager object
       result: A TurbiniaTaskResult object.
       request_id: The id of the initial request to process this evidence.
       state_key: A key used to manage task state
@@ -198,11 +199,15 @@ class TurbiniaTask(object):
 
   def __init__(self, name=None, base_output_dir=None, request_id=None):
     """Initialization for TurbiniaTask."""
-    self.base_output_dir = base_output_dir
+    if base_output_dir:
+      self.base_output_dir = base_output_dir
+    else:
+      self.base_output_dir = config.OUTPUT_DIR
     self.id = uuid.uuid4().hex
     self.last_update = datetime.now()
     self.name = name if name else self.__class__.__name__
     self.output_dir = None
+    self.output_manager = output_manager.OutputManager()
     self.result = None
     self.request_id = request_id
     self.state_key = None
@@ -236,16 +241,16 @@ class TurbiniaTask(object):
       msg = 'Execution failed with status {0:d}'.format(ret)
       result.log(msg)
       if close:
-        result.close(success=False, status=msg)
+        result.close(self, success=False, status=msg)
     else:
       for file_ in save_files:
         result.log('Output file at {0:s}'.format(file_))
-        result.output_manager.save_local_file(file_, result)
+        self.output_manager.save_local_file(file_, result)
       for evidence in new_evidence:
         result.add_evidence(evidence)
 
       if close:
-        result.close(success=True)
+        result.close(self, success=True)
 
     return (ret, result)
 
@@ -265,17 +270,17 @@ class TurbiniaTask(object):
     Raises:
       TurbiniaException: If the evidence can not be found.
     """
+    self.output_manager.setup(self)
     if not self.result:
       self.result = TurbiniaTaskResult(
-          task_id=self.id,
-          task_name=self.name,
+          task=self,
           input_evidence=[evidence],
           base_output_dir=self.base_output_dir,
           request_id=self.request_id)
     self.output_dir = self.result.output_dir
 
     if evidence.copyable and not config.SHARED_FILESYSTEM:
-      self.result.output_manager.retrieve_evidence(evidence)
+      self.output_manager.retrieve_evidence(evidence)
 
     if evidence.local_path and not os.path.exists(evidence.local_path):
       raise TurbiniaException(
@@ -315,12 +320,11 @@ class TurbiniaTask(object):
       log.error(msg)
       log.error('Pickle error traceback: {0:s}'.format(traceback.format_exc()))
       result = TurbiniaTaskResult(
-          task_id=self.id,
-          task_name=self.name,
+          task=self,
           base_output_dir=self.base_output_dir,
           request_id=self.request_id)
       result.set_error(e.message, traceback.format_exc())
-      result.close(False, status=msg)
+      result.close(self, False, status=msg)
       dump_status = 'Failed, but replaced with new result object'
 
     log.info('Result check: {0:s}'.format(dump_status))
@@ -341,16 +345,10 @@ class TurbiniaTask(object):
       A TurbiniaTaskResult object
     """
     log.info('Starting Task {0:s} {1:s}'.format(self.name, self.id))
-    if not self.result:
-      self.result = TurbiniaTaskResult(
-          task_id=self.id,
-          task_name=self.name,
-          input_evidence=[evidence],
-          base_output_dir=self.base_output_dir,
-          request_id=self.request_id)
-    original_result_id = self.result.id
+    original_result_id = None
     try:
       self.result = self.setup(evidence)
+      original_result_id = self.result.id
       self.result = self.run(evidence, self.result)
     # pylint: disable=broad-except
     except Exception as e:
@@ -381,7 +379,7 @@ class TurbiniaTask(object):
              ' {1:s}'.format(self.result.worker_name, status))
       self.result.log(msg)
       try:
-        self.result.close(False, msg)
+        self.result.close(self, False, msg)
       # Using broad except here because lots can go wrong due to the reasons
       # listed above.
       # pylint: disable=broad-except
@@ -398,6 +396,8 @@ class TurbiniaTask(object):
       log.debug(
           'Returning original result object {0:s} after task execution'.format(
               self.result.id))
+    # TODO(aarontp): Find a better way to ensure this gets unset.
+    self.output_manager = None
     return self.result
 
   def run(self, evidence, result):

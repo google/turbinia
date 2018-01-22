@@ -41,23 +41,23 @@ class OutputManager(object):
     _output_writers (list): The configured output writers
   """
 
-  def __init__(self, result):
-    self._output_writers = self.get_output_writers(result)
+  def __init__(self):
+    self._output_writers = None
 
-  def get_output_writers(self, result):
+  def get_output_writers(self, task):
     """Get a list of output writers.
 
     Args:
-      result: A TurbiniaTaskResult object
+      task: A TurbiniaTask object
 
     Returns:
       A list of OutputWriter objects.
     """
     epoch = str(int(time.time()))
     unique_dir = '{0:s}-{1:s}-{2:s}'.format(
-        epoch, str(result.task_id), result.task_name)
+        epoch, str(task.id), task.name)
 
-    writers = [LocalOutputWriter(base_output_dir=result.base_output_dir,
+    writers = [LocalOutputWriter(base_output_dir=task.base_output_dir,
                                  unique_dir=unique_dir)]
     local_output_dir = writers[0].local_output_dir
     config.LoadConfig()
@@ -147,6 +147,10 @@ class OutputManager(object):
           saved_path_type = writer.name
 
     return (saved_path, saved_path_type)
+
+  def setup(self, task):
+    """Setup OutputManager object."""
+    self._output_writers = self.get_output_writers(task)
 
 
 class OutputWriter(object):
