@@ -364,6 +364,8 @@ class TurbiniaTask(object):
         self.result.log(msg)
         self.result.log(traceback.format_exc())
         self.result.set_error(e.message, traceback.format_exc())
+        if not self.result.status:
+          self.result.status = msg
       else:
         log.error(
             'No TurbiniaTaskResult object found after task execution.')
@@ -380,8 +382,9 @@ class TurbiniaTask(object):
         status = self.result.status
       else:
         status = 'No previous status'
-      msg = ('Task Result was auto-closed from task executor on {0:s}.'
-             ' {1:s}'.format(self.result.worker_name, status))
+      msg = ('Task Result was auto-closed from task executor on {0:s} likely '
+             'due to previous failures.  Previous status: [{1:s}]'.format(
+                 self.result.worker_name, status))
       self.result.log(msg)
       try:
         self.result.close(self, False, msg)
