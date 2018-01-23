@@ -39,9 +39,11 @@ class TurbiniaTaskResult(object):
 
   Attributes:
       base_output_dir: Base path for local output
+      closed: Boolean indicating whether this result is closed
       output_dir: Full path for local output
       error: Dict of error data ('error' and 'traceback' are some valid keys)
       evidence: List of newly created Evidence objects.
+      id: Unique Id of result (string of hex)
       input_evidence: The evidence this task processed.
       request_id: The id of the initial request to process this evidence.
       run_time: Length of time the task ran for.
@@ -69,8 +71,10 @@ class TurbiniaTaskResult(object):
       request_id=None):
     """Initialize the TurbiniaTaskResult object."""
 
+    self.closed = False
     self.evidence = evidence if evidence else []
     self.input_evidence = input_evidence if input_evidence else []
+    self.id = uuid.uuid4().hex
     self.task_id = task_id
     self.task_name = task_name
     self.base_output_dir = base_output_dir
@@ -134,9 +138,11 @@ class TurbiniaTaskResult(object):
         f.write('\n')
       self.output_manager.save_local_file(logfile, self)
 
-    # Unset the output manager during the close because it won't serialize
-    self.output_manager = None
+    # Unset the writers during the close because they don't serialize
+    self._output_writers = None
+    self.closed = True
     self.status = status
+    log.debug('Result close successful. Status is [{0:s}]'.format(self.status))
 
 
   def log(self, log_msg):
@@ -298,7 +304,9 @@ class TurbiniaTask(object):
       indicating a failure.
     """
     try:
+      log.debug('Checking TurbiniaTaskResult for serializability')
       pickle.dumps(result)
+      dump_status = 'Successful'
     except (TypeError, pickle.PicklingError) as e:
       msg = ('Error pickling TurbiniaTaskResult object. Returning a new result '
              'with the pickling error, and all previous result data will be '
@@ -312,7 +320,9 @@ class TurbiniaTask(object):
           request_id=self.request_id)
       result.set_error(e.message, traceback.format_exc())
       result.close(False, status=msg)
+      dump_status = 'Failed, but replaced with new result object'
 
+    log.info('Result check: {0:s}'.format(dump_status))
     return result
 
   def run_wrapper(self, evidence):
@@ -337,6 +347,7 @@ class TurbiniaTask(object):
           input_evidence=evidence,
           base_output_dir=self.base_output_dir,
           request_id=self.request_id)
+    original_result_id = self.result.id
     try:
       self.result = self.setup(evidence)
       self.result = self.run(evidence, self.result)
@@ -344,11 +355,48 @@ class TurbiniaTask(object):
     except Exception as e:
       msg = 'Task failed with exception: [{0!s}]'.format(e)
       log.error(msg)
-      self.result.close(success=False, status=msg)
-      self.result.set_error(e.message, traceback.format_exc())
+      log.error(traceback.format_exc())
+      if self.result:
+        self.result.log(msg)
+        self.result.log(traceback.format_exc())
+        self.result.set_error(e.message, traceback.format_exc())
+      else:
+        log.error(
+            'No TurbiniaTaskResult object found after task execution.')
+
+    # Trying to close the result if possible so that we clean up what we can.
+    # This has a higher liklihood of failing because something must have gone
+    # wrong as the Task should have already closed this.
+    if self.result and not self.result.closed:
+      msg = 'Trying last ditch attempt to close result'
+      log.warning(msg)
+      self.result.log(msg)
+
+      if self.result.status:
+        status = self.result.status
+      else:
+        status = 'No previous status'
+      msg = ('Task Result was auto-closed from task executor on {0:s}.'
+             ' {1:s}'.format(self.worker_name, status))
+      self.result.log(msg)
+      try:
+        self.result.close(False, msg)
+      # Using broad except here because lots can go wrong due to the reasons
+      # listed above.
+      # pylint: disable=broad-except
+      except Exception as e:
+        log.error('TurbiniaTaskResult close failed: {0!s}'.format(e))
 
     result = self.result_check(self.result)
-
+    if original_result_id != self.result.id:
+      log.debug(
+          'Result object {0:s} is different from original {1:s} after task '
+          'execution which indicates errors during execution'.format(
+              self.result.id, original_result_id))
+    else:
+      log.debug(
+          'Returning original result object {0:s} after task execution'.format(
+              self.result.id))
     return result
 
   def run(self, evidence, result):
