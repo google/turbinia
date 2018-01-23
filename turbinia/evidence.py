@@ -74,8 +74,12 @@ class Evidence(object):
         not RawDisk).
     name: Name of evidence.
     description: Description of evidence.
+    saved_path (string): Path to secondary location evidence is saved for later
+        retrieval (e.g. GCS).
+    saved_path_type (string): The name of the output writer that saved evidence
+        to the saved_path location.
     source: String indicating where evidence came from (including tool version
-            that created it, if appropriate).
+        that created it, if appropriate).
     local_path: A string of the local_path to the evidence.
     tags: dict of extra tags associated with this evidence.
     request_id: The id of the request this evidence came from, if any
@@ -102,6 +106,8 @@ class Evidence(object):
     self.processed_by = []
     self.type = self.__class__.__name__
     self.name = name if name else self.type
+    self.saved_path = None
+    self.saved_path_type = None
 
   def __str__(self):
     return '{0:s}:{1:s}:{2:s}'.format(self.type, self.name, self.local_path)
