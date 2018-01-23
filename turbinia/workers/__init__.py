@@ -390,6 +390,8 @@ class TurbiniaTask(object):
       # pylint: disable=broad-except
       except Exception as e:
         log.error('TurbiniaTaskResult close failed: {0!s}'.format(e))
+        if not self.result.status:
+          self.result.status = msg
 
     self.result = self.result_check(self.result)
     if original_result_id != self.result.id:
