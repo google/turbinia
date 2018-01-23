@@ -364,8 +364,7 @@ class TurbiniaTask(object):
         self.result.log(msg)
         self.result.log(traceback.format_exc())
         self.result.set_error(e.message, traceback.format_exc())
-        if not self.result.status:
-          self.result.status = msg
+        self.result.status = msg
       else:
         log.error(
             'No TurbiniaTaskResult object found after task execution.')
