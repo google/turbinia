@@ -112,6 +112,7 @@ class TurbiniaTaskResult(object):
       status = 'Completed successfully in {0:s} on {1:s}'.format(
           str(self.run_time), self.worker_name)
     self.log(status)
+    self.status = status
 
     for evidence in self.evidence:
       if evidence.local_path:
@@ -142,7 +143,6 @@ class TurbiniaTaskResult(object):
       task.output_manager.save_local_file(logfile, self)
 
     self.closed = True
-    self.status = status
     log.debug('Result close successful. Status is [{0:s}]'.format(self.status))
 
 
