@@ -319,10 +319,15 @@ class TurbiniaTask(object):
              'lost. Pickle Error: {0!s}'.format(e))
       log.error(msg)
       log.error('Pickle error traceback: {0:s}'.format(traceback.format_exc()))
+      if result and hasattr(result, 'status') and result.status:
+        old_status = result.status
+      else:
+        old_status = 'No previous status'
       result = TurbiniaTaskResult(
           task=self,
           base_output_dir=self.base_output_dir,
           request_id=self.request_id)
+      result.status = '{0:s}. Previous status: [{1:s}]'.format(msg, old_status)
       result.set_error(e.message, traceback.format_exc())
       result.close(self, False, status=msg)
       dump_status = 'Failed, but replaced with new result object'
