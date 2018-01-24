@@ -266,6 +266,9 @@ class GCSOutputWriter(OutputWriter):
     client (google.cloud.storage.Client): GCS Client
   """
 
+  # 10MB by default
+  CHUNK_SIZE = 10 * (2 ** 20)
+
   def __init__(self, gcs_path, *args, **kwargs):
     """Initialization for GCSOutputWriter.
 
@@ -304,7 +307,7 @@ class GCSOutputWriter(OutputWriter):
     full_path = os.path.join(
         self.base_output_dir, self.unique_dir, os.path.basename(file_))
     log.info('Writing {0:s} to GCS path {1:s}'.format(file_, full_path))
-    blob = storage.Blob(full_path, bucket)
+    blob = storage.Blob(full_path, bucket, chunk_size=self.CHUNK_SIZE)
     blob.upload_from_filename(file_, client=self.client)
     return os.path.join('gs://', self.bucket, full_path)
 
@@ -314,7 +317,7 @@ class GCSOutputWriter(OutputWriter):
     full_path = os.path.join(self.local_output_dir, os.path.basename(file_))
     log.info('Writing GCS file {0:s} to local path {1:s}'.format(
         file_, full_path))
-    blob = storage.Blob(gcs_path, bucket)
+    blob = storage.Blob(gcs_path, bucket, chunk_size=self.CHUNK_SIZE)
     blob.download_to_filename(full_path, client=self.client)
     if not os.path.exists(full_path):
       raise TurbiniaException(
