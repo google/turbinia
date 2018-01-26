@@ -112,6 +112,7 @@ class TurbiniaTaskResult(object):
       status = 'Completed successfully in {0:s} on {1:s}'.format(
           str(self.run_time), self.worker_name)
     self.log(status)
+    self.status = status
 
     for evidence in self.evidence:
       if evidence.local_path:
@@ -142,7 +143,6 @@ class TurbiniaTaskResult(object):
       task.output_manager.save_local_file(logfile, self)
 
     self.closed = True
-    self.status = status
     log.debug('Result close successful. Status is [{0:s}]'.format(self.status))
 
 
@@ -319,10 +319,15 @@ class TurbiniaTask(object):
              'lost. Pickle Error: {0!s}'.format(e))
       log.error(msg)
       log.error('Pickle error traceback: {0:s}'.format(traceback.format_exc()))
+      if result and hasattr(result, 'status') and result.status:
+        old_status = result.status
+      else:
+        old_status = 'No previous status'
       result = TurbiniaTaskResult(
           task=self,
           base_output_dir=self.base_output_dir,
           request_id=self.request_id)
+      result.status = '{0:s}. Previous status: [{1:s}]'.format(msg, old_status)
       result.set_error(e.message, traceback.format_exc())
       result.close(self, False, status=msg)
       dump_status = 'Failed, but replaced with new result object'
@@ -359,6 +364,7 @@ class TurbiniaTask(object):
         self.result.log(msg)
         self.result.log(traceback.format_exc())
         self.result.set_error(e.message, traceback.format_exc())
+        self.result.status = msg
       else:
         log.error(
             'No TurbiniaTaskResult object found after task execution.')
@@ -375,8 +381,9 @@ class TurbiniaTask(object):
         status = self.result.status
       else:
         status = 'No previous status'
-      msg = ('Task Result was auto-closed from task executor on {0:s}.'
-             ' {1:s}'.format(self.result.worker_name, status))
+      msg = ('Task Result was auto-closed from task executor on {0:s} likely '
+             'due to previous failures.  Previous status: [{1:s}]'.format(
+                 self.result.worker_name, status))
       self.result.log(msg)
       try:
         self.result.close(self, False, msg)
@@ -385,6 +392,8 @@ class TurbiniaTask(object):
       # pylint: disable=broad-except
       except Exception as e:
         log.error('TurbiniaTaskResult close failed: {0!s}'.format(e))
+        if not self.result.status:
+          self.result.status = msg
 
     self.result = self.result_check(self.result)
     if original_result_id != self.result.id:

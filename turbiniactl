@@ -161,7 +161,7 @@ def PrintTaskStatus(instance, project, region, days=0, task_id=None,
     else:
       success = 'Failed'
 
-    status = task.get('status') if task.get('status') else 'Task in Progress'
+    status = task.get('status') if task.get('status') else 'No task status'
     if all_fields:
       print '{0:s} request: {1:s} task: {2:s} {3:s} {4:s} {5:s}: {6:s}'.format(
           task['last_update'], task['request_id'], task['id'], task['name'],
