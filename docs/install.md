@@ -46,7 +46,7 @@ TODO(beamcodeup): Document how to use GoogleCloudDiskRawEmbedded.
 
 # Instructions
 
-## GCP Project (Cloud Pub/Sub, Cloud Function, Cloud Datastore Setup)
+## GCP Project Setup (Cloud Pub/Sub, Cloud Function, Cloud Datastore)
 
 **NOTE:** This section is mandatory for Turbinia running on GCP or local
 machines.
@@ -70,7 +70,7 @@ machines.
         Entities after selecting your region
 *   Enable [Cloud Deployment Manager
     V2](https://console.cloud.google.com/apis/library/deploymentmanager.googleapis.com)
-    for managing the GCP via the CLI tool `gclou`
+    for managing the GCP via the CLI tool `gcloud`
 
 ## Local Turbinia
 
@@ -83,8 +83,10 @@ machines.
 The following is a one possible configuration and setup for Turbinia in GCP.
 This is still a rough process and future versions will be containerized.
 
-**NOTE:** GCP Turbinia requires two Google Cloud Engine (GCE) instance types:
-1 server and 1 or more workers
+**NOTE:** When running Turbinia on GCP, it's recommended that you have at least
+two Google Cloud Engine (GCE) instances, respectively for the server and
+1 or more workers. In a small setup, you can also both the server and worker
+on a single instance.
 
 ### 1. Create a GCE Instance as Server
 *   Create a [new GCE
@@ -126,7 +128,7 @@ means to save logging data.
     into the home directory of the Turbinia user and will then start the
     Turbinia worker
 *   ***NOTE:*** If the GCS FUSE is used for log files, update the Turbinia config
-    file with a new `LOG_FILE` path to avoid writing to the server logs.
+    file with a new `LOG_FILE` path to write worker logs directly into GCS.
 
 ## Core Installation Steps
 
@@ -175,14 +177,16 @@ means to save logging data.
     RECOMMENDED)**
     *   Run `gcloud auth login` (may require you to copy/paste url to browser)
     *   Or run `gcloud auth application-default login`
+*   Continue to [Inside the Virtualenv](#3-inside-the-virtualenv)
+
+### 3. Inside the Virtualenv
+
+#### Create a Virtualenv Instance
 *   Create (once) and activate Virtualenv
     *   `virtualenv turbinia-env && . turbinia-env/bin/activate`
     *   ***NOTE:*** The next time you need to use virtualenv, just log in as
         turbinia and activiate virtualenv without recreating it
 *   Do not exit the Virtualenv until you have completed all the steps!
-*   Continue to [Inside the Virtualenv](#3-inside-the-virtualenv)
-
-### 3. Inside the Virtualenv
 
 #### Build and Configure
 
@@ -203,7 +207,7 @@ means to save logging data.
         *   ``cd turbinia; echo "export PYTHONPATH=$PYTHONPATH" >> ~/.bashrc ; cd -``
 *   Choose one of the locations for storing the Turbinia config and configure
     from there:
-    *   `/etc/turbinia/` **(RECOMMENDED)**
+    *   `/etc/turbinia/turbinia.conf` **(RECOMMENDED)**
         *   `sudo mkdir /etc/turbinia`
         *   `cp <localgitpath>/turbinia/config/turbinia_config.py /etc/turbinia/`
     *   `/home/turbinia/.turbinia`
