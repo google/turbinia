@@ -16,7 +16,7 @@
 from __future__ import unicode_literals
 
 
-"""Turbinia Config Template"""
+"""Dummy Turbinia config file."""
 
 ############
 # TURBINIA #
