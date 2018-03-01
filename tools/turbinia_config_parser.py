@@ -22,10 +22,11 @@ import itertools
 import os
 import sys
 
-# This Turbinia config parser can be invoked by any scripts to get the config.
-# Note that this will not look for config files anywhere, except for
-# /etc/turbinia. If there's a need to run Turbinia based on the config file in
-# a homedir, you will need to run manually Turbinia.
+# This Turbinia config parser can be invoked by any scripts to get the
+# key:value from the Turbinia config file. Note that this will not look
+# for config files anywhere, except for /etc/turbinia. If there's a need
+# to run Turbinia based on the config file in a homedir, you will need
+# to run manually Turbinia.
 
 # Look for config files with these names
 CONFIGFILES = ['turbinia.conf', 'turbinia_config.py']
