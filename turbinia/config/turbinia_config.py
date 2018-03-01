@@ -101,6 +101,7 @@ PUBSUB_TOPIC = 'turbinia-pubsub'
 
 # GCS Path to copy worker results and Evidence output to
 # This is required if OUTPUT_DIR is pointing to a GCSFuse mount.
+# Otherwise, set this as None if outputs will be stored locally.
 GCS_OUTPUT_PATH = 'gs://%s/output' % BUCKET_NAME
 
 # Which state manager to use
