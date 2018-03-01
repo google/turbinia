@@ -16,20 +16,57 @@
 from __future__ import unicode_literals
 
 
-"""Dummy Turbinia config file."""
+"""Turbinia Config Template"""
 
-# Turbinia Config
+##########
+# COMMON #
+##########
 
-# 'PSQ' is currently the only valid option
+# Which user account Turbinia runs as
+USER = 'turbinia'
+
+# Turbinia's installion directory
+TURBINIA_DIR = '/opt/turbinia'
+
+# Turbinia source code directory (local git repository)
+SRC_DIR = '%s/src' % TURBINIA_DIR
+
+# GCSFuse mount for Turbinia scripts & logging and Google Cloud Functions
+MOUNT_POINT = '/mnt/turbinia'
+
+# Turbinia CLI
+TURBINIACTL = '%s/turbinia/turbiniactl' % SRC_DIR
+
+# Virtualenv directory
+TURBINIAENV = '%s/turbinia-env' % HOME_DIR
+
+# Virtualenv activator
+VIRTUALENV_ACTIVATE = '%s/bin/activate' % TURBINIAENV
+
+# GCS bucket that has Turbinia-specific scripts and
+# that can be used to store logs.
+BUCKET = 'turbinia'
+
+# Local directory for temporary data
+TMP_DIR = '/var/tmp'
+
+############
+# TURBINIA #
+############
+
+# 'PSQ' is currently the only valid option as
+# a distributed task queue using Google Cloud Pub/Sub
 TASK_MANAGER = 'PSQ'
 
-# File to log to
-LOG_FILE = None
+# File to log to; set this as None if log file is not desired
+# By default, Turbinia logs are written to a directory (MOUNT_POINT) in the GCS mount
+LOG_FILE = '%s/output/logs/turbinia.log' % MOUNT_POINT
 
-# Default output directory
-OUTPUT_DIR = None
+# Default base output directory for worker results and evidences
+# For local, you can set this to, for example, %/turbinia_output' % TMP_DIR
+OUTPUT_DIR = '%s/output' % MOUNT_POINT
 
-# Time to sleep in task management loops
+# Time in second to sleep in task management loops
 SLEEP_TIME = 10
 
 # Whether to run as a single run, or to keep server running indefinitely
@@ -45,28 +82,26 @@ MOUNT_DIR_PREFIX = '/mnt/turbinia-mounts'
 # NFS or a SAN for Evidence objects.
 SHARED_FILESYSTEM = False
 
-# This will set debugging flags for processes executed by Tasks (for
-# Tasks/binaries that support it).  This could cause performance issues with
-# some tasks, so it is recommended to only set this to True when debugging
-# problems.
-DEBUG_TASKS = False
+###############
+# GCP AND GCE #
+###############
 
-# GCE configuration
 PROJECT = None
 ZONE = None
 INSTANCE = None
 DEVICE_NAME = None
 SCRATCH_PATH = None
-BUCKET_NAME = None
+BUCKET_NAME = 'turbinia'
 PSQ_TOPIC = 'turbinia-psq'
 
-# Topic Turbinia will listen on for new Artifact events.  This is also used as
+# Topic Turbinia will listen on for new Artifact events. This is also used as
 # the Turbinia instance/namespace as it is a unique string per Turbinia
 # instance and Cloud Project.
-PUBSUB_TOPIC = None
+PUBSUB_TOPIC = 'turbinia-pubsub'
 
 # GCS Path to copy worker results and Evidence output to
-GCS_OUTPUT_PATH = False
+# This is required if OUTPUT_DIR is pointing to a GCSFuse mount.
+GCS_OUTPUT_PATH = 'gs://%s/output' % BUCKET_NAME
 
 # Which state manager to use
 STATE_MANAGER = 'Datastore'
