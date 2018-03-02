@@ -81,7 +81,7 @@ INSTANCE = None
 DEVICE_NAME = None
 SCRATCH_PATH = None
 # GCS bucket that has Turbinia-specific scripts and can be used to store logs.
-BUCKET_NAME = 'turbinia'
+BUCKET_NAME = None
 PSQ_TOPIC = 'turbinia-psq'
 
 # Topic Turbinia will listen on for new Artifact events. This is also used as
@@ -90,7 +90,6 @@ PSQ_TOPIC = 'turbinia-psq'
 PUBSUB_TOPIC = 'turbinia-pubsub'
 
 # GCS Path to copy worker results and Evidence output to
-# This is required if OUTPUT_DIR is pointing to a GCSFuse mount.
 # Otherwise, set this as None if output will be stored locally.
 GCS_OUTPUT_PATH = 'gs://%s/output' % BUCKET_NAME
 
