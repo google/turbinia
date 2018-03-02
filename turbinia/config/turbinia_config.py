@@ -18,9 +18,9 @@ from __future__ import unicode_literals
 
 """Turbinia Config Template"""
 
-##########
-# COMMON #
-##########
+############
+# TURBINIA #
+############
 
 # Which user account Turbinia runs as
 USER = 'turbinia'
@@ -28,31 +28,16 @@ USER = 'turbinia'
 # Turbinia's installion directory
 TURBINIA_DIR = '/opt/turbinia'
 
-# Turbinia source code directory (local git repository)
-SRC_DIR = '%s/src' % TURBINIA_DIR
-
-# GCSFuse mount for Turbinia scripts & logging and Google Cloud Functions
-MOUNT_POINT = '/mnt/turbinia'
-
-# Turbinia CLI
-TURBINIACTL = '%s/turbinia/turbiniactl' % SRC_DIR
+# GCSFuse mount for Turbinia scripts and logging.
+# Note: this GCS instance is where Google Cloud Functions should
+# be deployed to.
+GCS_MOUNT_POINT = '/mnt/turbinia'
 
 # Virtualenv directory
 TURBINIAENV = '%s/turbinia-env' % HOME_DIR
 
-# Virtualenv activator
-VIRTUALENV_ACTIVATE = '%s/bin/activate' % TURBINIAENV
-
-# GCS bucket that has Turbinia-specific scripts and
-# that can be used to store logs.
-BUCKET = 'turbinia'
-
 # Local directory for temporary data
 TMP_DIR = '/var/tmp'
-
-############
-# TURBINIA #
-############
 
 # 'PSQ' is currently the only valid option as
 # a distributed task queue using Google Cloud Pub/Sub
@@ -62,11 +47,12 @@ TASK_MANAGER = 'PSQ'
 # By default, Turbinia logs are written to a directory (MOUNT_POINT) in the GCS mount
 LOG_FILE = '%s/output/logs/turbinia.log' % MOUNT_POINT
 
-# Default base output directory for worker results and evidences
-# For local, you can set this to, for example, %/turbinia_output' % TMP_DIR
+# Default base output directory for worker results and evidence
+# When running Turbinia locally, you can set this to, for example,
+# %/turbinia_output' % TMP_DIR
 OUTPUT_DIR = '%s/output' % MOUNT_POINT
 
-# Time in second to sleep in task management loops
+# Time in seconds to sleep in task management loops
 SLEEP_TIME = 10
 
 # Whether to run as a single run, or to keep server running indefinitely
@@ -91,6 +77,7 @@ ZONE = None
 INSTANCE = None
 DEVICE_NAME = None
 SCRATCH_PATH = None
+# GCS bucket that has Turbinia-specific scripts and can be used to store logs.
 BUCKET_NAME = 'turbinia'
 PSQ_TOPIC = 'turbinia-psq'
 
@@ -101,7 +88,7 @@ PUBSUB_TOPIC = 'turbinia-pubsub'
 
 # GCS Path to copy worker results and Evidence output to
 # This is required if OUTPUT_DIR is pointing to a GCSFuse mount.
-# Otherwise, set this as None if outputs will be stored locally.
+# Otherwise, set this as None if output will be stored locally.
 GCS_OUTPUT_PATH = 'gs://%s/output' % BUCKET_NAME
 
 # Which state manager to use
