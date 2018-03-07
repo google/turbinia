@@ -1,0 +1,29 @@
+# This file should be in /etc/systemd/system/turbinia.service
+# sudo systemctl enable turbinia
+# sudo systemctl status turbinia
+# sudo systemctl start turbinia
+# sudo systemctl stop turbinia
+# sudo systemctl daemon-reload
+
+[Unit]
+Description=Turbinia Daemon
+Documentation=https://github.com/google/turbinia
+Before=multi-user.target
+After=network.target
+After=remote-fs.target
+
+[Service]
+Type=simple
+PIDFile=/var/run/turbinia-daemon.pid
+User=turbinia
+Group=turbinia
+Restart=always
+RestartSec=10
+ExecStartPre=/bin/sh -c 'sudo systemctl set-environment GOOGLE_APPLICATION_CREDENTIALS=/home/turbinia/turbinia-service-account-creds.json'
+ExecStartPre=/bin/sh -c 'sudo systemctl set-environment TURBINIA_ROLE=$(/usr/bin/python /home/turbinia/turbinia_config_parser.py ROLE)'
+ExecStart=/bin/sh -c '/home/turbinia/turbinia-dev2/bin/python /home/turbinia/turbinia/turbiniactl -L /tmp/turbinia-$TURBINIA_ROLE.log -o /tmp $TURBINIA_ROLE 2>> /tmp/turbinia-$TURBINIA_ROLE.stdout.log'
+ExecStopPost=/bin/sh -c 'sudo systemctl unset-environment GOOGLE_APPLICATION_CREDENTIALS'
+ExecStopPost=/bin/sh -c 'sudo systemctl unset-environment TURBINIA_ROLE'
+
+[Install]
+WantedBy=multi-user.target
