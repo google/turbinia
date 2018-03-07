@@ -71,6 +71,13 @@ MOUNT_DIR_PREFIX = '/mnt/turbinia-mounts'
 # NFS or a SAN for Evidence objects.
 SHARED_FILESYSTEM = False
 
+# This will set debugging flags for processes executed by Tasks (for
+# Tasks/binaries that support it).  This could cause performance issues with
+# some tasks, so it is recommended to only set this to True when debugging
+# problems.
+DEBUG_TASKS = False
+
+
 ###############
 # GCP AND GCE #
 ###############
@@ -95,3 +102,8 @@ GCS_OUTPUT_PATH = 'gs://%s/output' % BUCKET_NAME
 
 # Which state manager to use
 STATE_MANAGER = 'Datastore'
+
+REDIS_HOST = 'None'
+REDIS_PORT = 'None'
+TIMESKETCH_HOST = 'None'
+TIMESKETCH_USER = 'None'
