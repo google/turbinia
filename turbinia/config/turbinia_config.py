@@ -22,7 +22,7 @@ from __future__ import unicode_literals
 # TURBINIA #
 ############
 
-# Turbinia Role as 'server' or 'worker'
+# Turbinia Role as 'server' or 'psqworker'
 ROLE = 'server'
 
 # Which user account Turbinia runs as
