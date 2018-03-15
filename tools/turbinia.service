@@ -19,11 +19,12 @@ User=turbinia
 Group=turbinia
 Restart=always
 RestartSec=10
-ExecStartPre=/bin/sh -c 'sudo systemctl set-environment GOOGLE_APPLICATION_CREDENTIALS=/home/turbinia/turbinia-service-account-creds.json'
-ExecStartPre=/bin/sh -c 'sudo systemctl set-environment TURBINIA_ROLE=$(/usr/bin/python /home/turbinia/turbinia_config_parser.py ROLE)'
-ExecStart=/bin/sh -c '/home/turbinia/turbinia-dev2/bin/python /home/turbinia/turbinia/turbiniactl -L /tmp/turbinia-$TURBINIA_ROLE.log -o /tmp $TURBINIA_ROLE 2>> /tmp/turbinia-$TURBINIA_ROLE.stdout.log'
-ExecStopPost=/bin/sh -c 'sudo systemctl unset-environment GOOGLE_APPLICATION_CREDENTIALS'
-ExecStopPost=/bin/sh -c 'sudo systemctl unset-environment TURBINIA_ROLE'
+ExecStartPre=+/bin/sh -c 'systemctl set-environment GOOGLE_APPLICATION_CREDENTIALS=$(/usr/bin/python /home/turbinia/turbinia_config_parser.py GCE_SERVICE_ACCOUNT_KEYS_FILE)'
+ExecStartPre=+/bin/sh -c 'systemctl set-environment TURBINIA_ROLE=$(/usr/bin/python /home/turbinia/turbinia_config_parser.py ROLE)'
+ExecStartPre=+/bin/sh -c 'systemctl set-environment TURBINIA_TMPDIR=$(/usr/bin/python /home/turbinia/turbinia_config_parser.py TMP_DIR)'
+ExecStart=/bin/sh -c '/home/turbinia/turbinia-dev2/bin/python /home/turbinia/turbinia/turbiniactl -L /tmp/turbinia-$TURBINIA_ROLE.log -o $TURBINIA_TMPDIR $TURBINIA_ROLE 2>> /tmp/turbinia-$TURBINIA_ROLE.stdout.log'
+ExecStopPost=+/bin/sh -c 'systemctl unset-environment GOOGLE_APPLICATION_CREDENTIALS'
+ExecStopPost=+/bin/sh -c 'systemctl unset-environment TURBINIA_ROLE'
 
 [Install]
 WantedBy=multi-user.target
