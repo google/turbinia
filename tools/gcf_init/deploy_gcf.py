@@ -23,6 +23,6 @@ for function in function_names:
   print subprocess.check_call(cmd, shell=True)
 
 print '/nCreating Datastore index from {0:s}'.format(index_file)
-cmd = 'yes | gcloud --project {0:s} datastore create-indexes {1:s}'.format(
+cmd = 'gcloud --quiet --project {0:s} datastore create-indexes {1:s}'.format(
     config.PROJECT, index_file)
 subprocess.check_call(cmd, shell=True)
