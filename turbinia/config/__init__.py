@@ -47,6 +47,7 @@ CONFIGVARS = [
     # GCE CONFIG
     'PROJECT',
     'ZONE',
+    'GCF_REGION',
     'INSTANCE',
     'DEVICE_NAME',
     'SCRATCH_PATH',
