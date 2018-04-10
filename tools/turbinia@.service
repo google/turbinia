@@ -36,7 +36,7 @@ Type=simple
 PIDFile=/var/run/turbinia-%i.pid
 User=turbinia
 Group=turbinia
-Restart=always
+Restart=on-abnormal
 RestartSec=10
 RestartPreventExitStatus=100 101 102
 ExecStartPre=+/bin/sh -c 'GOOGLE_APPLICATION_CREDENTIALS=$(/usr/bin/python /home/turbinia/turbinia_config_parser.py GCE_SERVICE_ACCOUNT_KEYS_FILE) && /bin/systemctl set-environment GOOGLE_APPLICATION_CREDENTIALS=$GOOGLE_APPLICATION_CREDENTIALS'
