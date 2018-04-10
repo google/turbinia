@@ -36,7 +36,7 @@ CONFIGPATH = ['/etc/turbinia']
 def main():
   if len(sys.argv) < 2:
     print '%s <key name>' % sys.argv[0]
-    sys.exit(1)
+    sys.exit(100)
   key = sys.argv[1]
   if key:
     config_file = None
@@ -45,14 +45,14 @@ def main():
         config_file = os.path.join(dirname, filename)
         break
     if config_file is None:
-      sys.exit(100)
+      sys.exit(101)
     config = imp.load_source('config', config_file)
 
     try:
       print getattr(config, key.upper())
     except AttributeError:
       print 'Key not found: %s' % key
-      sys.exit(101)
+      sys.exit(102)
 
 
 if __name__ == '__main__':
