@@ -25,8 +25,8 @@ import sys
 # This Turbinia config parser can be invoked by any scripts to get the
 # key:value from the Turbinia config file. Note that this will not look
 # for config files anywhere, except for /etc/turbinia. If there's a need
-# to run Turbinia based on the config file in a homedir, you will need
-# to run manually Turbinia.
+# to run Turbinia based on the config file in a homedir, either you can
+# create a symlink to the file in the homedir or manually run Turbinia.
 
 # Look for config files with these names
 CONFIGFILES = ['turbinia.conf', 'turbinia_config.py']
@@ -45,14 +45,14 @@ def main():
         config_file = os.path.join(dirname, filename)
         break
     if config_file is None:
-      sys.exit(2)
+      sys.exit(100)
     config = imp.load_source('config', config_file)
-    import config  # pylint: disable=g-import-not-at-top
+
     try:
       print getattr(config, key.upper())
     except AttributeError:
       print 'Key not found: %s' % key
-      sys.exit(3)
+      sys.exit(101)
 
 
 if __name__ == '__main__':
