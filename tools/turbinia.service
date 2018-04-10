@@ -19,6 +19,7 @@ User=turbinia
 Group=turbinia
 Restart=always
 RestartSec=10
+RestartPreventExitStatus=100 101 102
 ExecStartPre=+/bin/sh -c 'systemctl set-environment GOOGLE_APPLICATION_CREDENTIALS=$(/usr/bin/python /home/turbinia/turbinia_config_parser.py GCE_SERVICE_ACCOUNT_KEYS_FILE)'
 ExecStartPre=+/bin/sh -c 'systemctl set-environment TURBINIA_ROLE=$(/usr/bin/python /home/turbinia/turbinia_config_parser.py ROLE)'
 ExecStartPre=+/bin/sh -c 'systemctl set-environment TURBINIA_TMPDIR=$(/usr/bin/python /home/turbinia/turbinia_config_parser.py TMP_DIR)'
