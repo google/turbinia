@@ -42,7 +42,7 @@ FUSE](https://cloud.google.com/storage/docs/gcs-fuse) and mount your bucket at a
 common path on each worker node. Once your GCS bucket is mounted, you can
 process these images as 'rawdisk' Evidence.
 
-TODO(beamcodeup): Document how to use GoogleCloudDiskRawEmbedded.
+<!-- TODO(beamcodeup): Document how to use GoogleCloudDiskRawEmbedded. -->
 
 # Instructions
 
@@ -56,7 +56,7 @@ machines.
 *   Enable [Cloud
     Functions](https://console.cloud.google.com/apis/library/cloudfunctions.googleapis.com)
 *   Follow the
-    [instruction](https://cloud.google.com/pubsub/docs/quickstart-console) to:
+    [instructions](https://cloud.google.com/pubsub/docs/quickstart-console) to:
     *   Enable [Cloud
         Pub/Sub](https://console.cloud.google.com/apis/library/pubsub.googleapis.com)
     *   Create a new Pub/Sub topic and subscription **(pull type)**
@@ -68,9 +68,6 @@ machines.
     *   Hit the `Create Entity` button
     *   Select the region that your data should be in. No need to create any
         Entities after selecting your region
-*   Enable [Cloud Deployment Manager
-    V2](https://console.cloud.google.com/apis/library/deploymentmanager.googleapis.com)
-    for managing the GCP via the CLI tool `gcloud`
 
 ## Local Turbinia
 
