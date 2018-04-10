@@ -438,7 +438,7 @@ if __name__ == '__main__':
     log.info('Running Turbinia Server.')
     task_manager_.run()
   elif args.command == 'status':
-    region = config.GCF_REGION
+    region = config.TURBINIA_REGION
     if args.wait and args.request_id:
       WaitForRequest(
           instance=config.PUBSUB_TOPIC, project=config.PROJECT, region=region,
