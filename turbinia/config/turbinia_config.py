@@ -34,7 +34,7 @@ TURBINIA_DIR = '/opt/turbinia'
 # GCSFuse mount for Turbinia scripts and logging.
 # Note: this GCS instance is where Google Cloud Functions should
 # be deployed to.
-GCS_MOUNT_POINT = '/mnt/turbinia'
+GCS_MOUNT_DIR = '/mnt/turbinia'
 
 # Virtualenv directory
 TURBINIAENV = '%s/turbinia-env' % HOME_DIR
@@ -47,13 +47,13 @@ TMP_DIR = '/var/tmp'
 TASK_MANAGER = 'PSQ'
 
 # File to log to; set this as None if log file is not desired
-# By default, Turbinia logs are written to a directory (MOUNT_POINT) in the GCS mount
-LOG_FILE = '%s/output/logs/turbinia.log' % MOUNT_POINT
+# By default, Turbinia logs are written to a directory (GCS_MOUNT_DIR) in the GCS mount
+LOG_FILE = '%s/output/logs/turbinia.log' % GCS_MOUNT_DIR
 
 # Default base output directory for worker results and evidence
 # When running Turbinia locally, you can set this to, for example,
 # %/turbinia_output' % TMP_DIR
-OUTPUT_DIR = '%s/output' % MOUNT_POINT
+OUTPUT_DIR = '%s/output' % GCS_MOUNT_DIR
 
 # Time in seconds to sleep in task management loops
 SLEEP_TIME = 10
