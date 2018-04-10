@@ -62,7 +62,7 @@ PSQ_TOPIC = 'turbinia-psq'
 # TODO(beamcodeup): Per https://github.com/google/turbinia/issues/172, Cloud
 # Functions are only available on us-central1. Thus, hardcoding this for now.
 # Fix this when CF starts supporting more regions.
-GCF_REGION = 'us-central1'
+TURBINIA_REGION = 'us-central1'
 
 
 # Topic Turbinia will listen on for new Artifact events.  This is also used as
