@@ -51,9 +51,6 @@ process these images as 'rawdisk' Evidence.
 **NOTE:** This section is mandatory for Turbinia running on GCP or local
 machines.
 
-**NOTE:** This section is mandatory for Turbinia running on GCP or local
-machines.
-
 *   Create or select a Google Cloud Platform project on the [Google Developers
     Console](https://console.developers.google.com)
 *   Enable [Cloud

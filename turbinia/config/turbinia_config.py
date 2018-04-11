@@ -81,12 +81,6 @@ DEBUG_TASKS = False
 ###############
 # GCP AND GCE #
 ###############
-PROJECT = None
-ZONE = None
-INSTANCE = None
-DEVICE_NAME = None
-SCRATCH_PATH = None
-# GCS bucket that has Turbinia-specific scripts and can be used to store logs.
 BUCKET_NAME = 'turbinia'
 PSQ_TOPIC = 'turbinia-psq'
 
