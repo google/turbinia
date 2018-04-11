@@ -438,9 +438,7 @@ if __name__ == '__main__':
     log.info('Running Turbinia Server.')
     task_manager_.run()
   elif args.command == 'status':
-    # TODO(aarontp): This seems to be a valid assumption right now, but we
-    # should figure out a better way to do this in case it changes.
-    region = config.ZONE[:-2]
+    region = config.TURBINIA_REGION
     if args.wait and args.request_id:
       WaitForRequest(
           instance=config.PUBSUB_TOPIC, project=config.PROJECT, region=region,

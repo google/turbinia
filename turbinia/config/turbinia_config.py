@@ -90,6 +90,11 @@ SCRATCH_PATH = None
 # GCS bucket that has Turbinia-specific scripts and can be used to store logs.
 BUCKET_NAME = None
 PSQ_TOPIC = 'turbinia-psq'
+# TODO(beamcodeup): Per https://github.com/google/turbinia/issues/172, Cloud
+# Functions are only available on us-central1. Thus, hardcoding this for now.
+# Fix this when CF starts supporting more regions.
+TURBINIA_REGION = 'us-central1'
+
 
 # Topic Turbinia will listen on for new Artifact events. This is also used as
 # the Turbinia instance/namespace as it is a unique string per Turbinia

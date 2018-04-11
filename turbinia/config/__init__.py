@@ -47,6 +47,7 @@ CONFIGVARS = [
     # GCE CONFIG
     'PROJECT',
     'ZONE',
+    'TURBINIA_REGION',
     'INSTANCE',
     'DEVICE_NAME',
     'SCRATCH_PATH',
