@@ -134,8 +134,6 @@ means to save logging data.
 *   Install dependencies
     *   `sudo apt-get install python-dev build-essential python-setuptools
         python-pip python-virtualenv liblzma-dev git`
-    *   `sudo apt-get install python-dev build-essential python-setuptools
-        python-pip python-virtualenv liblzma-dev git`
 *   Create a turbinia user with password-less sudo access **(IMPORTANT)**
     *   Add your turbinia user to the `disk` group so that you will have
         permissions to read attached Persistent Disks
