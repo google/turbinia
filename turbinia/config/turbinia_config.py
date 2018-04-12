@@ -58,7 +58,7 @@ OUTPUT_DIR = '%s/output' % GCS_MOUNT_DIR
 # Time in seconds to sleep in task management loops
 SLEEP_TIME = 10
 
-# True if running as a single run, or False if keeping server running indefinitely
+# Whether to run as a single run, or to keep server running indefinitely
 SINGLE_RUN = False
 
 # Local directory in the worker to put other mount directories for locally
@@ -66,7 +66,7 @@ SINGLE_RUN = False
 MOUNT_DIR_PREFIX = '/mnt/turbinia-mounts'
 
 # This indicates whether the workers are running in an environment with a shared
-# filesystem. This should be False for environments with workers running in
+# filesystem.  This should be False for environments with workers running in
 # GCE, and True for environments that have workers on dedicated machines with
 # NFS or a SAN for Evidence objects.
 SHARED_FILESYSTEM = False
@@ -81,13 +81,14 @@ DEBUG_TASKS = False
 ###############
 # GCP AND GCE #
 ###############
+
 PROJECT = None
 ZONE = None
 INSTANCE = None
 DEVICE_NAME = None
 SCRATCH_PATH = None
 # GCS bucket that has Turbinia-specific scripts and can be used to store logs.
-BUCKET_NAME = 'turbinia'
+BUCKET_NAME = None
 PSQ_TOPIC = 'turbinia-psq'
 
 # Topic Turbinia will listen on for new Artifact events. This is also used as
