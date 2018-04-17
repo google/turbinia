@@ -503,7 +503,7 @@ if __name__ == '__main__':
     if args.wait:
       log.info('Waiting for request {0:s} to complete'.format(
           request.request_id))
-      region = config.ZONE[:-2]
+      region = config.TURBINIA_REGION
       WaitForRequest(
           instance=config.PUBSUB_TOPIC, project=config.PROJECT, region=region,
           request_id=request.request_id, poll_interval=args.poll_interval)
