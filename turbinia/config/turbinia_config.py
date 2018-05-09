@@ -82,7 +82,7 @@ DEBUG_TASKS = False
 # GCP AND GCE #
 ###############
 
-PROJECT = None
+PROJECT = 'foo'
 ZONE = None
 INSTANCE = None
 DEVICE_NAME = None
