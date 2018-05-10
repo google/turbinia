@@ -123,8 +123,6 @@ class TurbiniaClient(object):
       func_args.update({'request_id': request_id})
 
     response = function.ExecuteFunction(function_name, func_args)
-    print 'DEBUG: response', response
-    return
     if not response.has_key('result'):
       log.error('No results found')
       print '\nNo results found.\n'

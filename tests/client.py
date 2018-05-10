@@ -38,7 +38,8 @@ class TestTurbiniaClient(unittest.TestCase):
     self.assertTrue(hasattr(client, 'task_manager_'))
 
   @mock.patch('turbinia.client.GoogleCloudFunction.ExecuteFunction')
-  def testTurbiniaClientGetTaskData(self, mock_cloud_function):
+  @mock.patch('turbinia.client.task_manager.PSQTaskManager.setup')
+  def testTurbiniaClientGetTaskData(self, _, mock_cloud_function):
     """Basic test for client.get_task_data"""
     # ExecuteFunction returns a dict with a 'result' key that has a json-encoded
     # list.
@@ -47,10 +48,10 @@ class TestTurbiniaClient(unittest.TestCase):
     client = TurbiniaClient()
     self.assertEqual(client.get_task_data("inst", "proj", "reg"), "bar")
 
-  def testTurbiniaClientGetTaskDataNoResults(self, mock_cloud_function):
+  def testTurbiniaClientGetTaskDataNoResults(self):
     pass
 
-  def testTurbiniaClientGetTaskDataInvalidJson(self, mock_cloud_function):
+  def testTurbiniaClientGetTaskDataInvalidJson(self):
     pass
 
 
