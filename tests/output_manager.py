@@ -58,7 +58,7 @@ class TestLocalOutputWriter(unittest.TestCase):
     with open(src, 'w') as file_handle:
       file_handle.write(contents)
 
-    self.assertTrue(writer.write(src))
+    self.assertTrue(writer.copy_to(src))
     self.assertTrue(os.path.exists(dst))
     self.assertEqual(contents, open(dst).read())
 
@@ -72,7 +72,7 @@ class TestLocalOutputWriter(unittest.TestCase):
     src = os.path.join(self.base_output_dir, test_file)
     dst = os.path.join(output_dir, test_file)
 
-    self.assertFalse(writer.write(src))
+    self.assertFalse(writer.copy_to(src))
     self.assertFalse(os.path.exists(dst))
 
   def testFileExistsWrite(self):
@@ -94,5 +94,5 @@ class TestLocalOutputWriter(unittest.TestCase):
     with open(dst, 'w') as file_handle:
       file_handle.write(other_contents)
 
-    self.assertFalse(writer.write(src))
+    self.assertFalse(writer.copy_to(src))
     self.assertEqual(other_contents, open(dst).read())
