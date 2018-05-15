@@ -39,6 +39,7 @@ class TestTurbiniaConfig(unittest.TestCase):
     # when it has a other references.
     self.config_attrs = dir(config)
     self.config_file = tempfile.mkstemp()[1]
+    config.CONFIG = None
     config.CONFIGPATH = [os.path.dirname(self.config_file)]
     config.CONFIGFILES = [os.path.basename(self.config_file)]
     config.CONFIGVARS = []
