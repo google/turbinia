@@ -13,7 +13,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Client object for Turbinia."""
+"""Client objects for Turbinia."""
 
 from __future__ import unicode_literals
 
@@ -49,13 +49,13 @@ class TurbiniaClient(object):
   """
   def __init__(self):
     config.LoadConfig()
-    self.task_manager_ = task_manager.get_task_manager()
-    self.task_manager_.setup()
+    self.task_manager = task_manager.get_task_manager()
+    self.task_manager.setup()
 
   def list_jobs(self):
     """List the available jobs."""
     log.info('Available Jobs:')
-    for job in self.task_manager_.jobs:
+    for job in self.task_manager.jobs:
       log.info('\t{0:s}'.format(job.name))
 
   def wait_for_request(self, instance, project, region, request_id=None,
@@ -133,13 +133,13 @@ class TurbiniaClient(object):
         log.error(msg)
       log.debug('GCF response: {0!s}'.format(response))
       raise TurbiniaException(
-          'Cloud Function {0:s} returned no results.').format(function_name)
+          'Cloud Function {0:s} returned no results.'.format(function_name))
 
     try:
       results = json.loads(response['result'])
-    except ValueError as e:
-      log.error('Could not deserialize result from GCF: [{0!s}]'.format(e))
-      sys.exit(1)
+    except (TypeError, ValueError) as e:
+      raise TurbiniaException(
+          'Could not deserialize result from GCF: [{0!s}]'.format(e))
 
     return results[0]
 
@@ -194,7 +194,7 @@ class TurbiniaClient(object):
     Args:
       request: A TurbiniaRequest object.
     """
-    self.task_manager_.server_pubsub.send_request(request)
+    self.task_manager.server_pubsub.send_request(request)
 
 
 class TurbiniaServer(TurbiniaClient):
@@ -202,7 +202,7 @@ class TurbiniaServer(TurbiniaClient):
   def start(self):
     """Start Turbinia Server."""
     log.info('Running Turbinia Server.')
-    self.task_manager_.run()
+    self.task_manager.run()
 
   def add_evidence(self, evidence_):
     """Add evidence to be processed."""
@@ -220,8 +220,8 @@ class TurbiniaPsqWorker(TurbiniaClient):
     super(TurbiniaPsqWorker, self).__init__(*args, **kwargs)
     log.info(
         'Starting PSQ listener on queue {0:s}'.format(
-            self.task_manager_.psq.name))
-    self.worker = psq.Worker(queue=self.task_manager_.psq)
+            self.task_manager.psq.name))
+    self.worker = psq.Worker(queue=self.task_manager.psq)
 
   def start(self):
     """Start Turbinia PSQ Worker."""

@@ -18,7 +18,6 @@ from __future__ import unicode_literals
 
 import unittest
 
-import json
 import mock
 
 from turbinia import config
@@ -31,11 +30,12 @@ from turbinia import TurbiniaException
 class TestTurbiniaClient(unittest.TestCase):
   """Test Turbinia client class."""
 
-  def testTurbiniaClientInit(self):
+  @mock.patch('turbinia.client.task_manager.PSQTaskManager.setup')
+  def testTurbiniaClientInit(self, _):
     """Basic test for client."""
     config.LoadConfig()
     client = TurbiniaClient()
-    self.assertTrue(hasattr(client, 'task_manager_'))
+    self.assertTrue(hasattr(client, 'task_manager'))
 
   @mock.patch('turbinia.client.GoogleCloudFunction.ExecuteFunction')
   @mock.patch('turbinia.client.task_manager.PSQTaskManager.setup')
@@ -48,26 +48,41 @@ class TestTurbiniaClient(unittest.TestCase):
     client = TurbiniaClient()
     self.assertEqual(client.get_task_data("inst", "proj", "reg"), "bar")
 
-  def testTurbiniaClientGetTaskDataNoResults(self):
-    pass
+  @mock.patch('turbinia.client.GoogleCloudFunction.ExecuteFunction')
+  @mock.patch('turbinia.client.task_manager.PSQTaskManager.setup')
+  def testTurbiniaClientGetTaskDataNoResults(self, _, mock_cloud_function):
+    """Test for exception after empty results from cloud functions."""
+    mock_cloud_function.return_value = {}
+    client = TurbiniaClient()
+    self.assertRaises(TurbiniaException,
+                      client.get_task_data, "inst", "proj", "reg")
 
-  def testTurbiniaClientGetTaskDataInvalidJson(self):
-    pass
+  @mock.patch('turbinia.client.GoogleCloudFunction.ExecuteFunction')
+  @mock.patch('turbinia.client.task_manager.PSQTaskManager.setup')
+  def testTurbiniaClientGetTaskDataInvalidJson(self, _, mock_cloud_function):
+    """Test for exception after bad json results from cloud functions."""
+    mock_cloud_function.return_value = {'result': None}
+    client = TurbiniaClient()
+    self.assertRaises(TurbiniaException,
+                      client.get_task_data, "inst", "proj", "reg")
 
 
 class TestTurbiniaServer(unittest.TestCase):
   """Test Turbinia Server class."""
 
-  def testTurbiniaServerInit(self):
+  @mock.patch('turbinia.client.task_manager.PSQTaskManager.setup')
+  def testTurbiniaServerInit(self, _):
     """Basic test for Turbinia Server init."""
     server = TurbiniaServer()
-    self.assertTrue(hasattr(server, 'task_manager_'))
+    self.assertTrue(hasattr(server, 'task_manager'))
 
 
 class TestTurbiniaPsqWorker(unittest.TestCase):
   """Test Turbinia PSQ Worker class."""
 
-  def testTurbiniaPsqWorkerInit(self):
+  @mock.patch('turbinia.client.task_manager.PSQTaskManager')
+  @mock.patch('turbinia.client.psq.Worker')
+  def testTurbiniaPsqWorkerInit(self, _, __):
     """Basic test for client."""
     worker = TurbiniaPsqWorker()
     self.assertTrue(hasattr(worker, 'worker'))
