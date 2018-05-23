@@ -33,42 +33,40 @@ class TurbiniaPubSub(TurbiniaMessageBase):
 
   Attributes:
     _queue: A Queue object for storing pubsub messages
-    topic_name (str): The full pubsub topic name
-    topic_subpath (str): The partial name of the last
-    subscriber: The pubsub subscriber client object
     publisher: The pubsub publisher client object
+    subscriber: The pubsub subscriber client object
     subscription: The pubsub subscription object
+    topic_name (str): The pubsub topic name
+    topic_path (str): The full path of the pubsub topic
   """
 
-  def __init__(self, topic_subpath):
+  def __init__(self, topic_name):
     """Initialization for PubSubClient."""
     self._queue = Queue()
     self.publisher = None
     self.subscriber = None
     self.subscription = None
-    self.subscription_name = None
-    self.topic_name = None
-    self.topic_subpath = topic_subpath
+    self.topic_name = topic_name
+    self.topic_path = None
 
   def setup_publisher(self):
     """Set up the pubsub publisher client."""
     config.LoadConfig()
-    print "DEBUG: in setup_publisher()"
     self.publisher = pubsub.PublisherClient()
-    self.topic_name = self.publisher.topic_path(
-        config.PROJECT, self.topic_subpath)
-    log.debug('Setup PubSub publisher {0:s}'.format(self.topic_name))
+    self.topic_path = self.publisher.topic_path(
+        config.PROJECT, self.topic_name)
+    log.debug('Setup PubSub publisher at {0:s}'.format(self.topic_path))
 
   def setup_subscriber(self):
     """Set up the pubsub subscriber client."""
     config.LoadConfig()
     self.subscriber = pubsub.SubscriberClient()
-    self.subscription_name = self.subscriber.subscription_path(
-        config.PROJECT, self.topic_subpath)
+    subscription_path = self.subscriber.subscription_path(
+        config.PROJECT, self.topic_path)
 
     log.debug('Setup PubSub Subscription {0:s}'.format(
-        self.subscription_name))
-    self.subscription = self.subscriber.subscribe(self.subscription_name)
+        subscription_path))
+    self.subscription = self.subscriber.subscribe(subscription_path)
     self.subscription.open(self._callback)
 
   def _callback(self, message):
@@ -108,7 +106,7 @@ class TurbiniaPubSub(TurbiniaMessageBase):
     message: The message to send.
     """
     data = message.encode('utf-8')
-    future = self.publisher.publish(self.topic_name, data)
+    future = self.publisher.publish(self.topic_path, data)
     msg_id = future.result()
     log.info('Published message {0:s} to topic {1:s}'.format(
         msg_id, self.topic_name))
