@@ -1,5 +1,4 @@
-#!/usr/bin/env python
-#
+# -*- coding: utf-8 -*-
 # Copyright 2017 Google Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -24,12 +23,8 @@ import logging
 import sys
 import time
 
-try:
-  import psq
-except ImportError:
-  print 'PSQ Module cannot be loaded, please see:'
-  print 'https://github.com/GoogleCloudPlatform/psq'
-  sys.exit(1)
+# TODO(aarontp): Selectively load dependencies based on configured backends
+import psq
 
 from turbinia import config
 from turbinia.config import logger
@@ -60,13 +55,13 @@ class TurbiniaClient(object):
 
   def wait_for_request(self, instance, project, region, request_id=None,
                        poll_interval=60):
-    """Prints the recent history for Turbinia Tasks.
+    """Polls and waits for Turbinia Request to complete.
 
     Args:
       instance (string): The Turbinia instance name (by default the same as the
           PUBSUB_TOPIC in the config).
       project (string): The name of the project.
-      region (string): The name of the zone to execute in.
+      region (string): The name of the region to execute in.
       request_id (string): The Id of the request we want tasks for.
       poll_interval (int): Interval of seconds between polling cycles.
     """
@@ -94,13 +89,13 @@ class TurbiniaClient(object):
 
   def get_task_data(self, instance, project, region, days=0, task_id=None,
                     request_id=None, function_name='gettasks'):
-    """Prints the recent history for Turbinia Tasks.
+    """Gets task data from Google Cloud Functions.
 
     Args:
       instance (string): The Turbinia instance name (by default the same as the
           PUBSUB_TOPIC in the config).
       project (string): The name of the project.
-      region (string): The name of the zone to execute in.
+      region (string): The name of the region to execute in.
       days (int): The number of days we want history for.
       task_id (string): The Id of the task.
       request_id (string): The Id of the request we want tasks for.
@@ -125,11 +120,9 @@ class TurbiniaClient(object):
     response = function.ExecuteFunction(function_name, func_args)
     if not response.has_key('result'):
       log.error('No results found')
-      print '\nNo results found.\n'
       if response.get('error', '{}') != '{}':
         msg = 'Error executing Cloud Function: [{0!s}].'.format(
             response.get('error'))
-        print '{0:s}\n'.format(msg)
         log.error(msg)
       log.debug('GCF response: {0!s}'.format(response))
       raise TurbiniaException(
@@ -144,9 +137,9 @@ class TurbiniaClient(object):
     return results[0]
 
 
-  def print_task_status(self, instance, project, region, days=0, task_id=None,
-                        request_id=None, all_fields=False):
-    """Prints the recent history for Turbinia Tasks.
+  def format_task_status(self, instance, project, region, days=0, task_id=None,
+                         request_id=None, all_fields=False):
+    """Formats the recent history for Turbinia Tasks.
 
     Args:
       instance (string): The Turbinia instance name (by default the same as the
@@ -156,17 +149,21 @@ class TurbiniaClient(object):
       days (int): The number of days we want history for.
       task_id (string): The Id of the task.
       request_id (string): The Id of the request we want tasks for.
-      all_fields (bool): Print all fields for the task, including task, request
-          ids and saved file paths.
+      all_fields (bool): Include all fields for the task, including task,
+          request ids and saved file paths.
+
+    Returns: String of task status
     """
     task_results = self.get_task_data(instance, project, region, days, task_id,
                                       request_id)
     num_results = len(task_results)
+    results = []
     if not num_results:
-      print '\nNo Tasks found.'
-      return
+      msg = '\nNo Tasks found.'
+      log.info(msg)
+      return msg
 
-    print '\nRetrieved {0:d} Task results:'.format(num_results)
+    results.append('\nRetrieved {0:d} Task results:'.format(num_results))
     for task in task_results:
       if task.get('successful', None):
         success = 'Successful'
@@ -177,16 +174,18 @@ class TurbiniaClient(object):
 
       status = task.get('status') if task.get('status') else 'No task status'
       if all_fields:
-        print (
+        results.append(
             '{0:s} request: {1:s} task: {2:s} {3:s} {4:s} {5:s}: {6:s}'.format(
                 task['last_update'], task['request_id'], task['id'],
                 task['name'], task['worker_name'], success, status))
         saved_paths = task.get('saved_paths') if task.get('saved_paths') else []
         for path in saved_paths:
-          print '\t{0:s}'.format(path)
+          results.append('\t{0:s}'.format(path))
       else:
-        print '{0:s} {1:s} {2:s}: {3:s}'.format(
-            task['last_update'], task['name'], success, status)
+        results.append('{0:s} {1:s} {2:s}: {3:s}'.format(
+            task['last_update'], task['name'], success, status))
+
+    return '\n'.join(results)
 
   def send_request(self, request):
     """Sends a TurbiniaRequest message.

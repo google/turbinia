@@ -301,7 +301,7 @@ if __name__ == '__main__':
       log.info('--wait requires --request_id, which is not specified. '
                'turbiniactl will exit without waiting.')
 
-    client.print_task_status(
+    print client.format_task_status(
         instance=config.PUBSUB_TOPIC, project=config.PROJECT, region=region,
         days=args.days_history, task_id=args.task_id,
         request_id=args.request_id, all_fields=args.all_fields)
@@ -361,7 +361,7 @@ if __name__ == '__main__':
       client.wait_for_request(
           instance=config.PUBSUB_TOPIC, project=config.PROJECT, region=region,
           request_id=request.request_id, poll_interval=args.poll_interval)
-      client.print_task_status(
+      print client.format_task_status(
           instance=config.PUBSUB_TOPIC, project=config.PROJECT, region=region,
           request_id=request.request_id, all_fields=args.all_fields)
 
