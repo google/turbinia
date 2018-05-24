@@ -24,14 +24,12 @@ import json
 import logging
 from datetime import datetime
 from datetime import timedelta
-import sys
 
 from google.cloud import datastore
 import redis
 
 from turbinia import config
 from turbinia import TurbiniaException
-from turbinia.lib.google_cloud import GoogleCloudFunction
 from turbinia.workers import TurbiniaTask
 from turbinia.workers import TurbiniaTaskResult
 
@@ -100,23 +98,6 @@ class BaseStateManager(object):
     task_dict.update({'instance': config.INSTANCE_ID})
     return task_dict
 
-  def get_tasks(self, ds_arguments, instance, days=None, task_id=None,
-                request_id=None):
-    """Retrieves task statuses that match the specified criteria.
-
-    Args:
-      ds_arguments (dict): optionally populated with details specific to how
-          datastore retreives task statuses, or an empty dict
-      instance (str): identifies the instance to filter on
-      days (int): number of days of task history
-      task_id (str): specific task id to filter on
-      requet_id (str): specific request id to filter on
-
-    Returns:
-      List of TurbiniaTask status dicts
-    """
-    raise NotImplementedError
-
   def update_task(self, task):
     """Updates data for existing task.
 
@@ -146,46 +127,6 @@ class DatastoreStateManager(BaseStateManager):
 
   def __init__(self):
     self.client = datastore.Client()
-
-  def get_tasks(self, ds_arguments, instance, days=None, task_id=None,
-                request_id=None):
-    function = GoogleCloudFunction(
-        project_id=ds_arguments.get('project'),
-        region=ds_arguments.get('region'))
-    func_args = {'instance': instance, 'kind': 'TurbiniaTask'}
-
-    if days:
-      start_time = datetime.now() - timedelta(days=days)
-      # Format this like '1990-01-01T00:00:00z' so we can cast it directly to a
-      # javascript Date() object in the cloud function.
-      start_string = start_time.strftime('%Y-%m-%dT%H:%M:%S')
-      func_args.update({'start_time': start_string})
-    elif task_id:
-      func_args.update({'task_id': task_id})
-    elif request_id:
-      func_args.update({'request_id': request_id})
-
-    response = function.ExecuteFunction('gettasks', func_args)
-    if not response.has_key('result'):
-      log.error('No results found')
-      print '\nNo results found.\n'
-      if response.get('error', '{}') != '{}':
-        msg = 'Error executing Cloud Function: [{0!s}].'.format(
-            response.get('error'))
-        print '{0:s}\n'.format(msg)
-        log.error(msg)
-      log.debug('GCF response: {0!s}'.format(response))
-      # TODO should be in turbiniactl?
-      sys.exit(1)
-
-    try:
-      results = json.loads(response['result'])
-    except ValueError as e:
-      log.error('Could not deserialize result from GCF: [{0!s}]'.format(e))
-      # TODO should be in turbiniactl?
-      sys.exit(1)
-
-    return results[0]
 
   def update_task(self, task):
     with self.client.transaction():
@@ -221,11 +162,23 @@ class RedisStateManager(BaseStateManager):
         port=config.REDIS_PORT,
         db=config.REDIS_DB)
 
-  def get_tasks(self, _, instance, days=None, task_id=None,
-                request_id=None):
+  def get_task_data(self, instance, days=0, task_id=None, request_id=None):
+    """Gets task data from Redis.
 
-    tasks = [json.loads(self.client.get(task)) for task in self.client.scan_iter('TurbiniaTask:*')
-             if json.loads(self.client.get(task)).get('instance') == instance or not instance]
+    Args:
+      instance (string): The Turbinia instance name (by default the same as the
+          PUBSUB_TOPIC in the config).
+      days (int): The number of days we want history for.
+      task_id (string): The Id of the task.
+      request_id (string): The Id of the request we want tasks for.
+
+    Returns:
+      List of Task dict objects.
+    """
+    tasks = [json.loads(self.client.get(task))
+             for task in self.client.scan_iter('TurbiniaTask:*')
+             if json.loads(self.client.get(task)).get('instance') == instance
+             or not instance]
     if days:
       start_time = datetime.now() - timedelta(days=days)
       return [task for task in tasks
@@ -244,7 +197,8 @@ class RedisStateManager(BaseStateManager):
       return
     log.info('Updating task {0:s} in Datastore'.format(task.name))
     task_data = self.get_task_dict(task)
-    task_data['last_update'] = task_data['last_update'].strftime('%Y-%m-%dT%H:%M:%S')
+    task_data['last_update'] = task_data['last_update'].strftime(
+        '%Y-%m-%dT%H:%M:%S')
     # Need to use json.dumps, else redis returns single quoted string which
     # is invalid json
     if not self.client.set(key, json.dumps(task_data)):
@@ -256,7 +210,8 @@ class RedisStateManager(BaseStateManager):
     key = ":".join(['TurbiniaTask', task.id])
     log.info('Writing new task {0:s} into Datastore'.format(task.name))
     task_data = self.get_task_dict(task)
-    task_data['last_update'] = task_data['last_update'].strftime('%Y-%m-%dT%H:%M:%S')
+    task_data['last_update'] = task_data['last_update'].strftime(
+        '%Y-%m-%dT%H:%M:%S')
     if not self.client.set(key, json.dumps(task_data), nx=True):
       log.error(
           'Unsuccessful in writing new task {0:s} into Datastore'.format(

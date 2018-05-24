@@ -137,7 +137,9 @@ class TurbiniaCelery(object):
         result_serializer='pickle',
         task_serializer='pickle',
         accept_content=['pickle'],
+        task_acks_late=True,
         task_track_started=True,
+        worker_concurrency=1,
         worker_prefetch_multiplier=1,
     )
     self.fexec = self._fexec()

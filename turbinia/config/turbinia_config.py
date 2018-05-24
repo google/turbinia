@@ -82,8 +82,6 @@ DEBUG_TASKS = False
 # GCP AND GCE #
 ###############
 
-# TODO(ericzinnikas) handle None vs. False state properly
-
 PROJECT = 'None'
 ZONE = 'None'
 INSTANCE = 'None'

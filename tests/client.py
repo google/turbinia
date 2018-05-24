@@ -33,7 +33,8 @@ class TestTurbiniaClient(unittest.TestCase):
   @mock.patch('turbinia.client.task_manager.PSQTaskManager.setup')
   def testTurbiniaClientInit(self, _):
     """Basic test for client."""
-    config.LoadConfig() client = TurbiniaClient()
+    config.LoadConfig()
+    client = TurbiniaClient()
     self.assertTrue(hasattr(client, 'task_manager'))
 
   @mock.patch('turbinia.client.GoogleCloudFunction.ExecuteFunction')

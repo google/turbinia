@@ -20,7 +20,6 @@ from datetime import datetime
 from datetime import timedelta
 import json
 import logging
-import sys
 import time
 
 # TODO(aarontp): Selectively load dependencies based on configured backends
@@ -29,6 +28,7 @@ import psq
 from turbinia import config
 from turbinia.config import logger
 from turbinia.lib.google_cloud import GoogleCloudFunction
+from turbinia.state_manager import RedisStateManager
 from turbinia import task_manager
 from turbinia import TurbiniaException
 
@@ -196,6 +196,44 @@ class TurbiniaClient(object):
     self.task_manager.server_pubsub.send_request(request)
 
 
+class TurbiniaCeleryClient(TurbiniaClient):
+  """Client class for Turbinia (Celery).
+
+  Overriding some things specific to Celery operation.
+
+  Attributes:
+    redis (RedisStateManager): Redis datastore object
+  """
+  def __init__(self, *args, **kwargs):
+    super(TurbiniaCeleryClient, self).__init__(*args, **kwargs)
+    self.redis = RedisStateManager()
+
+  def send_request(self, request):
+    """Sends a TurbiniaRequest message.
+
+    Args:
+      request: A TurbiniaRequest object.
+    """
+    self.task_manager.kombu.send_request(request)
+
+  def get_task_data(self, instance, _, __, days=0, task_id=None,
+                    request_id=None, function_name='gettasks'):
+    """Gets task data from Redis. We keep the same function signature,
+        but ignore arguments passed for GCP.
+
+    Args:
+      instance (string): The Turbinia instance name (by default the same as the
+          PUBSUB_TOPIC in the config).
+      days (int): The number of days we want history for.
+      task_id (string): The Id of the task.
+      request_id (string): The Id of the request we want tasks for.
+
+    Returns:
+      List of Task dict objects.
+    """
+    return self.redis.get_task_data(instance, days, task_id, request_id)
+
+
 class TurbiniaServer(TurbiniaClient):
   """Turbinia Server class."""
   def start(self):
@@ -206,6 +244,27 @@ class TurbiniaServer(TurbiniaClient):
   def add_evidence(self, evidence_):
     """Add evidence to be processed."""
     self.task_manger.add_evidence(evidence_)
+
+
+class TurbiniaCeleryWorker(TurbiniaClient):
+  """Turbinia Celery Worker class.
+
+  Attributes:
+    worker (celery.app): Celery worker app
+  """
+  def __init__(self, *args, **kwargs):
+    """Initialization for Celery worker."""
+    super(TurbiniaCeleryWorker, self).__init__(*args, **kwargs)
+    self.worker = self.task_manager.celery.app
+
+  def start(self):
+    """Start Turbinia Celery Worker."""
+    log.info('Running Turbinia Celery Worker.')
+    argv = [
+        'celery',
+        'worker',
+        '--loglevel=info']
+    self.worker.start(argv)
 
 
 class TurbiniaPsqWorker(TurbiniaClient):

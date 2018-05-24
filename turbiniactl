@@ -24,7 +24,9 @@ import os
 import sys
 
 from turbinia.client import TurbiniaClient
+from turbinia.client import TurbiniaCeleryClient
 from turbinia.client import TurbiniaServer
+from turbinia.client import TurbiniaCeleryWorker
 from turbinia.client import TurbiniaPsqWorker
 from turbinia import config
 from turbinia.config import logger
@@ -208,8 +210,8 @@ if __name__ == '__main__':
       'listjobs', help='List all available jobs')
 
   # PSQ Worker
-  parser_worker = subparsers.add_parser('psqworker', help='Run PSQ worker')
-  parser_worker.add_argument(
+  parser_psqworker = subparsers.add_parser('psqworker', help='Run PSQ worker')
+  parser_psqworker.add_argument(
       '-S',
       '--single_threaded',
       action='store_true',
@@ -217,7 +219,7 @@ if __name__ == '__main__':
       required=False)
 
   # Celery Worker
-  parser_worker = subparsers.add_parser('celeryworker', help='Run Celery worker')
+  parser_celeryworker = subparsers.add_parser('celeryworker', help='Run Celery worker')
 
   # Parser options for Turbinia status command
   parser_status = subparsers.add_parser(
@@ -256,7 +258,10 @@ if __name__ == '__main__':
 
   # Client
   config.LoadConfig()
-  client = TurbiniaClient()
+  if args.use_celery:
+    client = TurbiniaCeleryClient()
+  else:
+    client = TurbiniaClient()
 
   if args.output_dir:
     config.OUTPUT_DIR = args.output_dir
@@ -298,12 +303,14 @@ if __name__ == '__main__':
     worker = TurbiniaPsqWorker()
     worker.start()
   elif args.command == 'celeryworker':
+    logger.setup()
     worker = TurbiniaCeleryWorker()
     worker.start()
   elif args.command == 'server':
     server = TurbiniaServer()
     server.start()
   elif args.command == 'status':
+    region = config.TURBINIA_REGION
     if args.wait and args.request_id:
       client.wait_for_request(
           instance=config.PUBSUB_TOPIC, project=config.PROJECT, region=region,
@@ -360,16 +367,10 @@ if __name__ == '__main__':
     if args.dump_json:
       print request.to_json().encode('utf-8')
     else:
-      if args.use_celery:
-        log.info(
-            'Creating Kombu request {0:s} with evidence {1:s}'.format(
-                request.request_id, evidence_.name))
-        task_manager_.kombu.send_request(request)
-      else:
-        log.info(
-            'Creating PubSub request {0:s} with evidence {1:s}'.format(
-                request.request_id, evidence_.name))
-        task_manager_.server_pubsub.send_request(request)
+      log.info(
+          'Creating request {0:s} with evidence {1:s}'.format(
+              request.request_id, evidence_.name))
+      client.send_request(request)
 
     if args.wait:
       log.info('Waiting for request {0:s} to complete'.format(
