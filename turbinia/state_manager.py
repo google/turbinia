@@ -20,12 +20,18 @@ storage.
 
 from __future__ import unicode_literals
 
+import json
 import logging
+from datetime import datetime
+from datetime import timedelta
+import sys
 
 from google.cloud import datastore
+import redis
 
 from turbinia import config
 from turbinia import TurbiniaException
+from turbinia.lib.google_cloud import GoogleCloudFunction
 from turbinia.workers import TurbiniaTask
 from turbinia.workers import TurbiniaTaskResult
 
@@ -40,8 +46,8 @@ def get_state_manager():
   config.LoadConfig()
   if config.STATE_MANAGER == 'Datastore':
     return DatastoreStateManager()
-  elif config.STATE_MANAGER == 'None':
-    return NullStateManager()
+  elif config.STATE_MANAGER == 'redis':
+    return RedisStateManager()
   else:
     msg = 'State Manager type "{0:s}" not implemented'.format(
         config.STATE_MANAGER)
@@ -91,8 +97,25 @@ class BaseStateManager(object):
     # namepace per Turbinia installation.
     # TODO(aarontp): Migrate this to actual Datastore namespaces
     config.LoadConfig()
-    task_dict.update({'instance': config.PUBSUB_TOPIC})
+    task_dict.update({'instance': config.INSTANCE_ID})
     return task_dict
+
+  def get_tasks(self, ds_arguments, instance, days=None, task_id=None,
+                request_id=None):
+    """Retrieves task statuses that match the specified criteria.
+
+    Args:
+      ds_arguments (dict): optionally populated with details specific to how
+          datastore retreives task statuses, or an empty dict
+      instance (str): identifies the instance to filter on
+      days (int): number of days of task history
+      task_id (str): specific task id to filter on
+      requet_id (str): specific request id to filter on
+
+    Returns:
+      List of TurbiniaTask status dicts
+    """
+    raise NotImplementedError
 
   def update_task(self, task):
     """Updates data for existing task.
@@ -124,6 +147,46 @@ class DatastoreStateManager(BaseStateManager):
   def __init__(self):
     self.client = datastore.Client()
 
+  def get_tasks(self, ds_arguments, instance, days=None, task_id=None,
+                request_id=None):
+    function = GoogleCloudFunction(
+        project_id=ds_arguments.get('project'),
+        region=ds_arguments.get('region'))
+    func_args = {'instance': instance, 'kind': 'TurbiniaTask'}
+
+    if days:
+      start_time = datetime.now() - timedelta(days=days)
+      # Format this like '1990-01-01T00:00:00z' so we can cast it directly to a
+      # javascript Date() object in the cloud function.
+      start_string = start_time.strftime('%Y-%m-%dT%H:%M:%S')
+      func_args.update({'start_time': start_string})
+    elif task_id:
+      func_args.update({'task_id': task_id})
+    elif request_id:
+      func_args.update({'request_id': request_id})
+
+    response = function.ExecuteFunction('gettasks', func_args)
+    if not response.has_key('result'):
+      log.error('No results found')
+      print '\nNo results found.\n'
+      if response.get('error', '{}') != '{}':
+        msg = 'Error executing Cloud Function: [{0!s}].'.format(
+            response.get('error'))
+        print '{0:s}\n'.format(msg)
+        log.error(msg)
+      log.debug('GCF response: {0!s}'.format(response))
+      # TODO should be in turbiniactl?
+      sys.exit(1)
+
+    try:
+      results = json.loads(response['result'])
+    except ValueError as e:
+      log.error('Could not deserialize result from GCF: [{0!s}]'.format(e))
+      # TODO should be in turbiniactl?
+      sys.exit(1)
+
+    return results[0]
+
   def update_task(self, task):
     with self.client.transaction():
       entity = self.client.get(task.state_key)
@@ -134,10 +197,7 @@ class DatastoreStateManager(BaseStateManager):
       log.debug('Updating task {0:s} in Datastore'.format(task.name))
       self.client.put(entity)
 
-
   def write_new_task(self, task):
-    # Using the pubsub topic as part of the key in order to have unique entities
-    # per Turbinia installation.
     key = self.client.key('TurbiniaTask', task.id)
     entity = datastore.Entity(key)
     entity.update(self.get_task_dict(task))
@@ -147,17 +207,59 @@ class DatastoreStateManager(BaseStateManager):
     return key
 
 
-class NullStateManager(BaseStateManager):
-  """Does nothing, until an alternate datastore is added."""
+class RedisStateManager(BaseStateManager):
+  """Use redis for task state storage.
+
+  Attributes:
+    client: Redis database object.
+  """
 
   def __init__(self):
-    self.client = None
+    config.LoadConfig()
+    self.client = redis.StrictRedis(
+        host=config.REDIS_HOST,
+        port=config.REDIS_PORT,
+        db=config.REDIS_DB)
+
+  def get_tasks(self, _, instance, days=None, task_id=None,
+                request_id=None):
+
+    tasks = [json.loads(self.client.get(task)) for task in self.client.scan_iter('TurbiniaTask:*')
+             if json.loads(self.client.get(task)).get('instance') == instance or not instance]
+    if days:
+      start_time = datetime.now() - timedelta(days=days)
+      return [task for task in tasks
+              if datetime.strptime(task.get('last_update'), '%Y-%m-%dT%H:%M:%S')
+              > start_time]
+    elif task_id:
+      return [task for task in tasks if task.get('task_id') == task_id]
+    elif request_id:
+      return [task for task in tasks if task.get('request_id') == request_id]
+    return tasks
 
   def update_task(self, task):
-    log.debug(
-        'Not updating task {0:s} (StateManager undefined)'.format(task.name))
+    key = task.state_key
+    if not self.client.get(key):
+      self.write_new_task(task)
+      return
+    log.info('Updating task {0:s} in Datastore'.format(task.name))
+    task_data = self.get_task_dict(task)
+    task_data['last_update'] = task_data['last_update'].strftime('%Y-%m-%dT%H:%M:%S')
+    # Need to use json.dumps, else redis returns single quoted string which
+    # is invalid json
+    if not self.client.set(key, json.dumps(task_data)):
+      log.error(
+          'Unsuccessful in updating task {0:s} in Datastore'.format(
+              task.name))
 
   def write_new_task(self, task):
-    log.info(
-        'Not writing new task {0:s} (StateManager undefined)'.format(task.name))
-    return 0
+    key = ":".join(['TurbiniaTask', task.id])
+    log.info('Writing new task {0:s} into Datastore'.format(task.name))
+    task_data = self.get_task_dict(task)
+    task_data['last_update'] = task_data['last_update'].strftime('%Y-%m-%dT%H:%M:%S')
+    if not self.client.set(key, json.dumps(task_data), nx=True):
+      log.error(
+          'Unsuccessful in writing new task {0:s} into Datastore'.format(
+              task.name))
+    task.state_key = key
+    return key

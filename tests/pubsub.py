@@ -131,3 +131,35 @@ class TestTurbiniaPubSub(unittest.TestCase):
     self.pubsub.topic = mock.MagicMock()
     self.pubsub.send_message('test message text')
     self.pubsub.topic.publish.assert_called_with('test message text')
+
+
+class TestTurbiniaKombu(unittest.TestCase):
+  """Test turbinia.pubsub Kombu module."""
+
+  def setUp(self):
+    request = getTurbiniaRequest()
+    self.kombu = pubsub.TurbiniaKombu('fake_topic')
+    result = mock.MagicMock()
+    result.body = request.to_json()
+    self.kombu.queue = mock.MagicMock()
+    self.kombu.queue.__len__.return_value = 1
+    self.kombu.queue.get.return_value = result
+
+  def testCheckMessages(self):
+    results = self.kombu.check_messages()
+    self.assertTrue(len(results) == 1)
+    request_new = results[0]
+
+    # Make sure that the TurbiniaRequest object is as expected
+    self.assertTrue(isinstance(request_new, pubsub.TurbiniaRequest))
+    self.assertTrue(request_new.context['kw'][1], 2)
+    self.assertTrue(request_new.request_id, 'deadbeef')
+    self.assertTrue(isinstance(request_new.evidence[0], evidence.RawDisk))
+    self.assertEqual(request_new.evidence[0].name, 'My Evidence')
+
+  def testBadCheckMessages(self):
+    result = mock.MagicMock()
+    result.body = 'non-json-data'
+    self.kombu.queue.get.return_value = result
+
+    self.assertListEqual(self.kombu.check_messages(), [])

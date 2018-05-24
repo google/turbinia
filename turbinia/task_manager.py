@@ -272,7 +272,7 @@ class CeleryTaskManager(BaseTaskManager):
   def _backend_setup(self):
     self.celery = turbinia_pubsub.TurbiniaCelery()
     self.celery.setup()
-    self.kombu = turbinia_pubsub.TurbiniaKombu()
+    self.kombu = turbinia_pubsub.TurbiniaKombu(config.KOMBU_CHANNEL)
     self.kombu.setup()
 
   def process_tasks(self):

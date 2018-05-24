@@ -56,9 +56,11 @@ CONFIGVARS = [
     'PUBSUB_TOPIC',
     'GCS_OUTPUT_PATH',
     'STATE_MANAGER',
+    'INSTANCE_ID',
     # REDIS CONFIG
     'REDIS_HOST',
     'REDIS_PORT',
+    'REDIS_DB',
     # Timesketch config
     'TIMESKETCH_HOST',
     'TIMESKETCH_USER',

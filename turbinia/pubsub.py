@@ -138,6 +138,7 @@ class TurbiniaCelery(object):
         task_serializer='pickle',
         accept_content=['pickle'],
         task_track_started=True,
+        worker_prefetch_multiplier=1,
     )
     self.fexec = self._fexec()
 
@@ -149,15 +150,16 @@ class TurbiniaKombu(object):
     queue (Kombu.SimpleBuffer): evidence queue.
   """
 
-  def __init__(self):
+  def __init__(self, routing_key):
     """Kombu config."""
     self.queue = None
+    self.routing_key = routing_key
 
   def setup(self):
     """Set up Kombu SimpleBuffer"""
     config.LoadConfig()
     conn = kombu.Connection(config.KOMBU_BROKER)
-    self.queue = conn.SimpleBuffer(name=config.KOMBU_CHANNEL)
+    self.queue = conn.SimpleBuffer(name=self.routing_key)
 
   def check_messages(self):
     """See if we have any messages in the queue.
