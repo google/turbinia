@@ -5,3 +5,6 @@ google-cloud-pubsub==0.26.0
 google-cloud-storage==1.6.0
 google-cloud-core==0.26.0
 urllib3[secure]
+celery==4.1.0
+kombu==4.1.0
+redis==2.10.6
