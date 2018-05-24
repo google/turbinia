@@ -95,11 +95,13 @@ PSQ_TOPIC = 'turbinia-psq'
 # Fix this when CF starts supporting more regions.
 TURBINIA_REGION = 'us-central1'
 
+# A unique ID per Turbinia instance. Used to namespace datastore entries.
+INSTANCE_ID = 'turbinia-pubsub'
 
 # Topic Turbinia will listen on for new Artifact events. This is also used as
 # the Turbinia instance/namespace as it is a unique string per Turbinia
 # instance and Cloud Project.
-PUBSUB_TOPIC = 'turbinia-pubsub'
+PUBSUB_TOPIC = INSTANCE_ID
 
 # GCS Path to copy worker results and Evidence output to
 # Otherwise, set this as 'None' if output will be stored locally.
@@ -110,6 +112,23 @@ STATE_MANAGER = 'Datastore'
 
 REDIS_HOST = 'None'
 REDIS_PORT = 'None'
+REDIS_DB = 'None'
 TIMESKETCH_HOST = 'None'
 TIMESKETCH_USER = 'None'
 TIMESKETCH_PASSWORD = 'None'
+
+##########
+# CELERY #
+##########
+
+# Method for communication between nodes
+CELERY_BROKER = 'None'
+
+# Storage for task results/status
+CELERY_BACKEND = 'None'
+
+# Can be the same as CELERY_BROKER
+KOMBU_BROKER = 'None'
+
+# Used to namespace communications.
+KOMBU_CHANNEL = INSTANCE_ID
