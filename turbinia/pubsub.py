@@ -23,6 +23,10 @@ import uuid
 
 from google.cloud import pubsub
 
+import celery
+import kombu
+from amqp.exceptions import ChannelError
+
 # Turbinia
 from turbinia import config
 from turbinia import evidence
@@ -92,6 +96,112 @@ class TurbiniaRequest(object):
     obj['evidence'] = [evidence.evidence_decode(e) for e in obj['evidence']]
     # pylint: disable=attribute-defined-outside-init
     self.__dict__ = obj
+
+
+class TurbiniaCelery(object):
+  """Celery app object.
+
+  Attributes:
+    app (Celery): The Celery app itself.
+    _fexec: Lets us initialize the Celery task after configuring the app, since
+        the Celery 'app.task' decorator is unknown before initialization.
+    fexec (function, args, kwargs): Celery task, which can run functions
+        without needing to pre-register them (similar to PSQ). Takes in a
+        function name, as well as any arguments (named or otherwise). All
+        workers must have this function defined.
+  """
+
+  def __init__(self):
+    """Celery configurations."""
+    self.app = None
+    self.fexec = None
+
+  def _fexec(self):
+    """Closure used to pass functions to workers."""
+    @self.app.task(name='fexec')
+    def fexec(f, *args, **kwargs):
+      """Lets us pass in an arbitrary function without Celery annotations"""
+      return f(*args, **kwargs)
+    return fexec
+
+  def setup(self):
+    """Set up Celery"""
+    config.LoadConfig()
+    self.app = celery.Celery(
+        'turbinia',
+        broker=config.CELERY_BROKER,
+        backend=config.CELERY_BACKEND
+    )
+    self.app.conf.update(
+        event_serializer='pickle',
+        result_serializer='pickle',
+        task_serializer='pickle',
+        accept_content=['pickle'],
+        task_track_started=True,
+    )
+    self.fexec = self._fexec()
+
+
+class TurbiniaKombu(object):
+  """Queue object for receiving evidence messages.
+
+  Attributes:
+    queue (Kombu.SimpleBuffer): evidence queue.
+  """
+
+  def __init__(self):
+    """Kombu config."""
+    self.queue = None
+
+  def setup(self):
+    """Set up Kombu SimpleBuffer"""
+    config.LoadConfig()
+    conn = kombu.Connection(config.KOMBU_BROKER)
+    self.queue = conn.SimpleBuffer(name=config.KOMBU_CHANNEL)
+
+  def check_messages(self):
+    """See if we have any messages in the queue.
+
+    Returns:
+      list[TurbiniaRequest]: all evidence requests.
+    """
+    try:
+      results = [self.queue.get(block=False).body
+                 for _ in xrange(len(self.queue))]
+    except ChannelError:
+      results = []
+    log.debug('Received {0:d} messages'.format(len(results)))
+    return [self._validate_message(result)
+            for result in results
+            if self._validate_message(result)]
+
+  def send_message(self, message):
+    """Enqueues a message with Kombu"""
+    data = message.encode('utf-8')
+    self.queue.put(data)
+    log.info('Sent message to queue')
+
+  def send_request(self, request):
+    """Sends a TurbiniaRequest request"""
+    self.send_message(request.to_json())
+
+  def _validate_message(self, message):
+    """Validates pubsub messages and returns them as a new TurbiniaRequest obj.
+
+    Args:
+      message: PubSub message string
+
+    Returns:
+      A TurbiniaRequest object or None if there are decoding failures.
+    """
+    request = TurbiniaRequest()
+    try:
+      request.from_json(message)
+    except TurbiniaException as e:
+      log.error('Error decoding message: {0:s}'.format(str(e)))
+      return None
+
+    return request
 
 
 class TurbiniaPubSub(object):

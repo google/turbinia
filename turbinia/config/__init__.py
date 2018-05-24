@@ -62,7 +62,12 @@ CONFIGVARS = [
     # Timesketch config
     'TIMESKETCH_HOST',
     'TIMESKETCH_USER',
-    'TIMESKETCH_PASSWORD',]
+    'TIMESKETCH_PASSWORD',
+    # Celery config
+    'CELERY_BROKER',
+    'CELERY_BACKEND',
+    'KOMBU_BROKER',
+    'KOMBU_CHANNEL',]
 # Environment variable to look for path data in
 ENVCONFIGVAR = 'TURBINIA_CONFIG_PATH'
 

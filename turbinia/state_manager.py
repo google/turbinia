@@ -40,6 +40,8 @@ def get_state_manager():
   config.LoadConfig()
   if config.STATE_MANAGER == 'Datastore':
     return DatastoreStateManager()
+  elif config.STATE_MANAGER == 'None':
+    return NullStateManager()
   else:
     msg = 'State Manager type "{0:s}" not implemented'.format(
         config.STATE_MANAGER)
@@ -143,3 +145,19 @@ class DatastoreStateManager(BaseStateManager):
     self.client.put(entity)
     task.state_key = key
     return key
+
+
+class NullStateManager(BaseStateManager):
+  """Does nothing, until an alternate datastore is added."""
+
+  def __init__(self):
+    self.client = None
+
+  def update_task(self, task):
+    log.debug(
+        'Not updating task {0:s} (StateManager undefined)'.format(task.name))
+
+  def write_new_task(self, task):
+    log.info(
+        'Not writing new task {0:s} (StateManager undefined)'.format(task.name))
+    return 0

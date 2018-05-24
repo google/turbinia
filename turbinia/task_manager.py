@@ -25,6 +25,8 @@ from google.cloud import datastore
 from google.cloud import pubsub
 from google.gax.errors import GaxError
 
+from celery import states as celery_states
+
 import turbinia
 from turbinia import evidence
 from turbinia import config
@@ -44,6 +46,8 @@ def get_task_manager():
   config.LoadConfig()
   if config.TASK_MANAGER == 'PSQ':
     return PSQTaskManager()
+  elif config.TASK_MANAGER == 'Celery':
+    return CeleryTaskManager()
   else:
     msg = 'Task Manager type "{0:s}" not implemented'.format(
         config.TASK_MANAGER)
@@ -249,6 +253,78 @@ class BaseTaskManager(object):
 
       # TODO(aarontp): Add config var for this.
       time.sleep(10)
+
+
+class CeleryTaskManager(BaseTaskManager):
+  """Celery implementation of BaseTaskManager.
+
+  Attributes:
+    celery (TurbiniaCelery): Celery task queue, handles worker tasks.
+    kombu (TurbiniaKombu): Kombu queue, handles receiving evidence.
+  """
+
+  def __init__(self):
+    self.celery = None
+    self.kombu = None
+    config.LoadConfig()
+    super(CeleryTaskManager, self).__init__()
+
+  def _backend_setup(self):
+    self.celery = turbinia_pubsub.TurbiniaCelery()
+    self.celery.setup()
+    self.kombu = turbinia_pubsub.TurbiniaKombu()
+    self.kombu.setup()
+
+  def process_tasks(self):
+    """Determine the current state of our tasks.
+
+    Returns:
+      list[TurbiniaTask]: all completed tasks
+    """
+    completed_tasks = []
+    for task in self.tasks:
+      celery_task = task.stub
+      if not celery_task:
+        log.debug('Task {0:s} not yet created'.format(task.stub.task_id))
+      elif celery_task.status == celery_states.STARTED:
+        log.debug('Task {0:s} not finished'.format(celery_task.id))
+      elif celery_task.status == celery_states.FAILURE:
+        log.warning('Task {0:s} failed.'.format(celery_task.id))
+        completed_tasks.append(task)
+      elif celery_task.status == celery_states.SUCCESS:
+        task.result = celery_task.result
+        completed_tasks.append(task)
+      else:
+        log.debug('Task {0:s} status unknown'.format(celery_task.id))
+
+    outstanding_task_count = len(self.tasks) - len(completed_tasks)
+    log.info('{0:d} Tasks still outstanding.'.format(outstanding_task_count))
+    # pylint: disable=expression-not-assigned
+    return completed_tasks
+
+  def get_evidence(self):
+    """Receives new evidence.
+
+    Returns:
+      list[Evidence]: evidence to process.
+    """
+    requests = self.kombu.check_messages()
+    evidence_list = []
+    for request in requests:
+      for evidence_ in request.evidence:
+        if not evidence_.request_id:
+          evidence_.request_id = request.request_id
+        log.info(
+            'Received evidence [{0:s}] from Kombu message.'.format(
+                str(evidence_)))
+        evidence_list.append(evidence_)
+    return evidence_list
+
+  def enqueue_task(self, task, evidence_):
+    log.info(
+        'Adding Celery task {0:s} with evidence {1:s} to queue'.format(
+            task.name, evidence_.name))
+    task.stub = self.celery.fexec.delay(task_runner, task, evidence_)
 
 
 class PSQTaskManager(BaseTaskManager):
