@@ -19,6 +19,7 @@ from __future__ import unicode_literals
 import copy
 import json
 import logging
+import Queue
 import uuid
 
 from google.cloud import pubsub
@@ -169,11 +170,14 @@ class TurbiniaKombu(object):
     Returns:
       list[TurbiniaRequest]: all evidence requests.
     """
-    try:
-      results = [self.queue.get(block=False).body
-                 for _ in xrange(len(self.queue))]
-    except ChannelError:
-      results = []
+    results = []
+    while True:
+      try:
+        results.append(self.queue.get(block=False).payload)
+      except Queue.Empty:
+        break
+      except ChannelError:
+        break
     log.debug('Received {0:d} messages'.format(len(results)))
     return [self._validate_message(result)
             for result in results
