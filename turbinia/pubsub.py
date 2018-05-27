@@ -162,7 +162,10 @@ class TurbiniaKombu(object):
     """Set up Kombu SimpleBuffer"""
     config.LoadConfig()
     conn = kombu.Connection(config.KOMBU_BROKER)
-    self.queue = conn.SimpleBuffer(name=self.routing_key)
+    if config.KOMBU_DURABLE:
+      self.queue = conn.SimpleQueue(name=self.routing_key)
+    else:
+      self.queue = conn.SimpleBuffer(name=self.routing_key)
 
   def check_messages(self):
     """See if we have any messages in the queue.
@@ -173,7 +176,10 @@ class TurbiniaKombu(object):
     results = []
     while True:
       try:
-        results.append(self.queue.get(block=False).payload)
+        message = self.queue.get(block=False)
+        results.append(message.payload)
+        if self.queue.queue.durable:
+          message.ack()
       except Queue.Empty:
         break
       except ChannelError:

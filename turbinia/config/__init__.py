@@ -69,7 +69,8 @@ CONFIGVARS = [
     'CELERY_BROKER',
     'CELERY_BACKEND',
     'KOMBU_BROKER',
-    'KOMBU_CHANNEL',]
+    'KOMBU_CHANNEL',
+    'KOMBU_DURABLE',]
 # Environment variable to look for path data in
 ENVCONFIGVAR = 'TURBINIA_CONFIG_PATH'
 

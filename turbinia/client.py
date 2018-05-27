@@ -243,7 +243,7 @@ class TurbiniaServer(TurbiniaClient):
 
   def add_evidence(self, evidence_):
     """Add evidence to be processed."""
-    self.task_manger.add_evidence(evidence_)
+    self.task_manager.add_evidence(evidence_)
 
 
 class TurbiniaCeleryWorker(TurbiniaClient):
