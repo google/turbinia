@@ -19,160 +19,21 @@
 from __future__ import unicode_literals
 
 import argparse
-from datetime import datetime
-from datetime import timedelta
-import json
 import logging
 import os
 import sys
-import time
 
-try:
-  import psq
-except ImportError:
-  print 'PSQ Module cannot be loaded, please see:'
-  print 'https://github.com/GoogleCloudPlatform/psq'
-  sys.exit(1)
-
+from turbinia.client import TurbiniaClient
+from turbinia.client import TurbiniaServer
+from turbinia.client import TurbiniaPsqWorker
 from turbinia import config
 from turbinia.config import logger
-from turbinia.lib.google_cloud import GoogleCloudFunction
 from turbinia import evidence
-from turbinia import task_manager
 from turbinia import VERSION
 from turbinia.pubsub import TurbiniaRequest
 
 log = logging.getLogger('turbinia')
 logger.setup()
-
-
-def WaitForRequest(instance, project, region, request_id=None,
-                   poll_interval=60):
-  """Prints the recent history for Turbinia Tasks.
-
-  Args:
-    instance (string): The Turbinia instance name (by default the same as the
-        PUBSUB_TOPIC in the config).
-    project (string): The name of the project.
-    region (string): The name of the zone to execute in.
-    request_id (string): The Id of the request we want tasks for.
-    poll_interval (int): Interval of seconds between polling cycles.
-  """
-  while True:
-    task_results = GetTaskData(instance, project, region, request_id=request_id)
-    completed_count = 0
-    uncompleted_count = 0
-    for task in task_results:
-      if task.get('successful') is not None:
-        completed_count += 1
-      else:
-        uncompleted_count += 1
-
-    if completed_count and completed_count == len(task_results):
-      break
-
-    log.info(
-        '{0:d} Tasks found, {1:d} completed. Waiting {2:d} seconds.'.format(
-            len(task_results), completed_count, poll_interval))
-    time.sleep(poll_interval)
-
-  log.info('All {0:d} Tasks completed'.format(len(task_results)))
-
-
-def GetTaskData(instance, project, region, days=0, task_id=None,
-                request_id=None):
-  """Prints the recent history for Turbinia Tasks.
-
-  Args:
-    instance (string): The Turbinia instance name (by default the same as the
-        PUBSUB_TOPIC in the config).
-    project (string): The name of the project.
-    region (string): The name of the zone to execute in.
-    days (int): The number of days we want history for.
-    task_id (string): The Id of the task.
-    request_id (string): The Id of the request we want tasks for.
-
-  Returns:
-    List of Task dict objects.
-  """
-  function = GoogleCloudFunction(project_id=project, region=region)
-  func_args = {'instance': instance, 'kind': 'TurbiniaTask'}
-
-  if days:
-    start_time = datetime.now() - timedelta(days=days)
-    # Format this like '1990-01-01T00:00:00z' so we can cast it directly to a
-    # javascript Date() object in the cloud function.
-    start_string = start_time.strftime('%Y-%m-%dT%H:%M:%S')
-    func_args.update({'start_time': start_string})
-  elif task_id:
-    func_args.update({'task_id': task_id})
-  elif request_id:
-    func_args.update({'request_id': request_id})
-
-  response = function.ExecuteFunction('gettasks', func_args)
-  if not response.has_key('result'):
-    log.error('No results found')
-    print '\nNo results found.\n'
-    if response.get('error', '{}') != '{}':
-      msg = 'Error executing Cloud Function: [{0!s}].'.format(
-          response.get('error'))
-      print '{0:s}\n'.format(msg)
-      log.error(msg)
-    log.debug('GCF response: {0!s}'.format(response))
-    sys.exit(1)
-
-  try:
-    results = json.loads(response['result'])
-  except ValueError as e:
-    log.error('Could not deserialize result from GCF: [{0!s}]'.format(e))
-    sys.exit(1)
-
-  return results[0]
-
-
-def PrintTaskStatus(instance, project, region, days=0, task_id=None,
-                    request_id=None, all_fields=False):
-  """Prints the recent history for Turbinia Tasks.
-
-  Args:
-    instance (string): The Turbinia instance name (by default the same as the
-        PUBSUB_TOPIC in the config).
-    project (string): The name of the project.
-    region (string): The name of the zone to execute in.
-    days (int): The number of days we want history for.
-    task_id (string): The Id of the task.
-    request_id (string): The Id of the request we want tasks for.
-    all_fields (bool): Print all fields for the task, including task, request
-        ids and saved file paths.
-  """
-  task_results = GetTaskData(instance, project, region, days, task_id,
-                             request_id)
-  num_results = len(task_results)
-  if not num_results:
-    print '\nNo Tasks found.'
-    return
-
-  print '\nRetrieved {0:d} Task results:'.format(num_results)
-  for task in task_results:
-    if task.get('successful', None):
-      success = 'Successful'
-    elif task.get('successful', None) is None:
-      success = 'Running'
-    else:
-      success = 'Failed'
-
-    status = task.get('status') if task.get('status') else 'No task status'
-    if all_fields:
-      print '{0:s} request: {1:s} task: {2:s} {3:s} {4:s} {5:s}: {6:s}'.format(
-          task['last_update'], task['request_id'], task['id'], task['name'],
-          task['worker_name'], success, status)
-      saved_paths = task.get('saved_paths') if task.get('saved_paths') else []
-      for path in saved_paths:
-        print '\t{0:s}'.format(path)
-    else:
-      print '{0:s} {1:s} {2:s}: {3:s}'.format(
-          task['last_update'], task['name'], success, status)
-
 
 
 if __name__ == '__main__':
@@ -384,11 +245,9 @@ if __name__ == '__main__':
   else:
     log.setLevel(logging.WARNING)
 
-  # TaskManager
-  # TODO(aarontp): Move some of this to turbinia/__init__.py
+  # Client
   config.LoadConfig()
-  task_manager_ = task_manager.get_task_manager()
-  task_manager_.setup()
+  client = TurbiniaClient()
 
   if args.output_dir:
     config.OUTPUT_DIR = args.output_dir
@@ -427,34 +286,28 @@ if __name__ == '__main__':
     # Set up root logger level which is normally set by the psqworker command
     # which we are bypassing.
     logger.setup()
-    if args.single_threaded:
-      worker = psq.Worker(queue=task_manager_.psq)
-    else:
-      worker = psq.MultiprocessWorker(queue=task_manager_.psq)
-    log.info(
-        'Starting PSQ listener on queue {0:s}'.format(task_manager_.psq.name))
-    worker.listen()
+    worker = TurbiniaPsqWorker()
+    worker.start()
   elif args.command == 'server':
-    log.info('Running Turbinia Server.')
-    task_manager_.run()
+    server = TurbiniaServer()
+    server.start()
   elif args.command == 'status':
     region = config.TURBINIA_REGION
     if args.wait and args.request_id:
-      WaitForRequest(
+      client.wait_for_request(
           instance=config.PUBSUB_TOPIC, project=config.PROJECT, region=region,
           request_id=args.request_id, poll_interval=args.poll_interval)
     elif args.wait and not args.request_id:
       log.info('--wait requires --request_id, which is not specified. '
                'turbiniactl will exit without waiting.')
 
-    PrintTaskStatus(
+    print client.format_task_status(
         instance=config.PUBSUB_TOPIC, project=config.PROJECT, region=region,
         days=args.days_history, task_id=args.task_id,
         request_id=args.request_id, all_fields=args.all_fields)
   elif args.command == 'listjobs':
     log.info('Available Jobs:')
-    log.info(
-        '\n'.join(['\t{0:s}'.format(job.name) for job in task_manager_.jobs]))
+    client.list_jobs()
   else:
     log.warning('Command {0:s} not implemented.'.format(args.command))
 
@@ -487,8 +340,9 @@ if __name__ == '__main__':
   # PubSub frontend interface.  If we're not running as a server then we will
   # create a new TurbiniaRequest and send it over PubSub.
   if evidence_ and args.server:
-    task_manager_.add_evidence(evidence_)
-    task_manager_.run()
+    server = TurbiniaServer()
+    server.add_evidence(evidence_)
+    server.start()
   elif evidence_:
     request = TurbiniaRequest(request_id=args.request_id)
     request.evidence.append(evidence_)
@@ -498,16 +352,16 @@ if __name__ == '__main__':
       log.info(
           'Creating PubSub request {0:s} with evidence {1:s}'.format(
               request.request_id, evidence_.name))
-      task_manager_.server_pubsub.send_request(request)
+      client.send_request(request)
 
     if args.wait:
       log.info('Waiting for request {0:s} to complete'.format(
           request.request_id))
       region = config.TURBINIA_REGION
-      WaitForRequest(
+      client.wait_for_request(
           instance=config.PUBSUB_TOPIC, project=config.PROJECT, region=region,
           request_id=request.request_id, poll_interval=args.poll_interval)
-      PrintTaskStatus(
+      print client.format_task_status(
           instance=config.PUBSUB_TOPIC, project=config.PROJECT, region=region,
           request_id=request.request_id, all_fields=args.all_fields)
 
