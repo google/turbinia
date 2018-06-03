@@ -32,3 +32,13 @@ indexes:
   - name: id
   - name: last_update
     direction: desc
+
+- kind: TurbiniaTask
+  ancestor: no
+  properties:
+  - name: instance
+  - name: request_id
+  - name: successful
+  - name: last_update
+    direction: desc
+
