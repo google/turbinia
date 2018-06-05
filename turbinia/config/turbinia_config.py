@@ -131,7 +131,7 @@ CELERY_BACKEND = 'None'
 KOMBU_BROKER = 'None'
 
 # Used to namespace communications.
-KOMBU_CHANNEL = INSTANCE_ID
+KOMBU_CHANNEL = '%s-kombu' % INSTANCE_ID
 
 # Will messages be persistent and require acknowledgment?
 # http://docs.celeryproject.org/projects/kombu/en/4.0/reference/kombu.html#kombu.Connection.SimpleBuffer
