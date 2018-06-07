@@ -104,12 +104,6 @@ class TurbiniaCelery(object):
 
   Attributes:
     app (Celery): The Celery app itself.
-    _fexec: Lets us initialize the Celery task after configuring the app, since
-        the Celery 'app.task' decorator is unknown before initialization.
-    fexec (function, args, kwargs): Celery task, which can run functions
-        without needing to pre-register them (similar to PSQ). Takes in a
-        function name, as well as any arguments (named or otherwise). All
-        workers must have this function defined.
   """
 
   def __init__(self):
@@ -117,8 +111,27 @@ class TurbiniaCelery(object):
     self.app = None
     self.fexec = None
 
+  def fexec(f, *args, **kwargs):
+    # pylint: disable=no-self-argument,method-hidden
+    """Placeholder function, overwritten with the _fexec closure once setup()
+    is called. Once overwritten, will call the specified function with
+    whichever arguments you pass it.
+
+    Arguments:
+      f (function): an arbitrary function
+      args: any positional arguments to be passsed to the function
+      kwargs: any keyword arguments to be passed to the function
+    """
+    raise NotImplementedError
+
   def _fexec(self):
-    """Closure used to pass functions to workers."""
+    """Closure used to pass functions to workers. We use this instead of having
+    to annotate each individual TurbiniaTask with the Celery @app.task
+    decorator.
+
+    Returns:
+      function: the fexec() function.
+    """
     @self.app.task(name='fexec')
     def fexec(f, *args, **kwargs):
       """Lets us pass in an arbitrary function without Celery annotations"""
@@ -135,6 +148,9 @@ class TurbiniaCelery(object):
     )
     self.app.conf.update(
         task_default_queue=config.INSTANCE_ID,
+        # TODO(ericzinnikas): pickle is not secure, we need to replace it with
+        # the default json serializer, but need to figure out how to register
+        # the TurbiniaTask objects with Celery
         event_serializer='pickle',
         result_serializer='pickle',
         task_serializer='pickle',
@@ -155,7 +171,7 @@ class TurbiniaKombu(object):
   """Queue object for receiving evidence messages.
 
   Attributes:
-    queue (Kombu.SimpleBuffer): evidence queue.
+    queue (Kombu.SimpleBuffer|Kombu.SimpleQueue): evidence queue.
   """
 
   def __init__(self, routing_key):
@@ -178,21 +194,22 @@ class TurbiniaKombu(object):
     Returns:
       list[TurbiniaRequest]: all evidence requests.
     """
-    results = []
+    requests = []
     while True:
       try:
         message = self.queue.get(block=False)
-        results.append(message.payload)
-        if self.queue.queue.durable:
-          message.ack()
+        request = self._validate_message(message.payload)
+        if request:
+          requests.append(request)
+          if self.queue.queue.durable:
+            message.ack()
       except Queue.Empty:
         break
       except ChannelError:
         break
-    log.debug('Received {0:d} messages'.format(len(results)))
-    return [self._validate_message(result)
-            for result in results
-            if self._validate_message(result)]
+
+    log.debug('Received {0:d} messages'.format(len(requests)))
+    return requests
 
   def send_message(self, message):
     """Enqueues a message with Kombu"""
@@ -272,7 +289,6 @@ class TurbiniaPubSub(object):
       A list of any TurbiniaRequest objects received, else an empty list
     """
     results = self.subscription.pull(return_immediately=True)
-    log.debug('Recieved {0:d} pubsub messages'.format(len(results)))
 
     ack_ids = []
     requests = []
@@ -291,6 +307,7 @@ class TurbiniaPubSub(object):
     if results:
       self.subscription.acknowledge(ack_ids)
 
+    log.debug('Recieved {0:d} pubsub messages'.format(len(requests)))
     return requests
 
   def send_message(self, message):

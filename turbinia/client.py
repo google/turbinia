@@ -217,7 +217,7 @@ class TurbiniaCeleryClient(TurbiniaClient):
     self.task_manager.kombu.send_request(request)
 
   def get_task_data(self, instance, _, __, days=0, task_id=None,
-                    request_id=None, function_name='gettasks'):
+                    request_id=None, function_name=None):
     """Gets task data from Redis. We keep the same function signature,
         but ignore arguments passed for GCP.
 

@@ -33,6 +33,7 @@ from turbinia import TurbiniaException
 from turbinia.workers import TurbiniaTask
 from turbinia.workers import TurbiniaTaskResult
 
+DATETIME_FORMAT = '%Y-%m-%dT%H:%M:%S'
 log = logging.getLogger('turbinia')
 
 def get_state_manager():
@@ -181,8 +182,9 @@ class RedisStateManager(BaseStateManager):
              or not instance]
     if days:
       start_time = datetime.now() - timedelta(days=days)
+      # Redis only supports strings; we convert to/from datetime here and below
       return [task for task in tasks
-              if datetime.strptime(task.get('last_update'), '%Y-%m-%dT%H:%M:%S')
+              if datetime.strptime(task.get('last_update'), DATETIME_FORMAT)
               > start_time]
     elif task_id:
       return [task for task in tasks if task.get('task_id') == task_id]
@@ -195,26 +197,27 @@ class RedisStateManager(BaseStateManager):
     if not self.client.get(key):
       self.write_new_task(task)
       return
-    log.info('Updating task {0:s} in Datastore'.format(task.name))
+    log.info('Updating task {0:s} in Redis'.format(task.name))
     task_data = self.get_task_dict(task)
     task_data['last_update'] = task_data['last_update'].strftime(
-        '%Y-%m-%dT%H:%M:%S')
+        DATETIME_FORMAT)
     # Need to use json.dumps, else redis returns single quoted string which
     # is invalid json
     if not self.client.set(key, json.dumps(task_data)):
       log.error(
-          'Unsuccessful in updating task {0:s} in Datastore'.format(
+          'Unsuccessful in updating task {0:s} in Redis'.format(
               task.name))
 
   def write_new_task(self, task):
     key = ":".join(['TurbiniaTask', task.id])
-    log.info('Writing new task {0:s} into Datastore'.format(task.name))
+    log.info('Writing new task {0:s} into Redis'.format(task.name))
     task_data = self.get_task_dict(task)
     task_data['last_update'] = task_data['last_update'].strftime(
-        '%Y-%m-%dT%H:%M:%S')
+        DATETIME_FORMAT)
+    # nx=True prevents overwriting (i.e. no unintentional task clobbering)
     if not self.client.set(key, json.dumps(task_data), nx=True):
       log.error(
-          'Unsuccessful in writing new task {0:s} into Datastore'.format(
+          'Unsuccessful in writing new task {0:s} into Redis'.format(
               task.name))
     task.state_key = key
     return key

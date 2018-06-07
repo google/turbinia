@@ -299,7 +299,6 @@ class CeleryTaskManager(BaseTaskManager):
 
     outstanding_task_count = len(self.tasks) - len(completed_tasks)
     log.info('{0:d} Tasks still outstanding.'.format(outstanding_task_count))
-    # pylint: disable=expression-not-assigned
     return completed_tasks
 
   def get_evidence(self):
@@ -377,7 +376,6 @@ class PSQTaskManager(BaseTaskManager):
 
     outstanding_task_count = len(self.tasks) - len(completed_tasks)
     log.info('{0:d} Tasks still outstanding.'.format(outstanding_task_count))
-    # pylint: disable=expression-not-assigned
     return completed_tasks
 
   def get_evidence(self):

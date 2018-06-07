@@ -82,6 +82,7 @@ DEBUG_TASKS = False
 # GCP AND GCE #
 ###############
 
+# TODO Add optonal config parameters -- see Issue #181
 PROJECT = 'None'
 ZONE = 'None'
 INSTANCE = 'None'
