@@ -36,7 +36,7 @@ log = logging.getLogger('turbinia')
 logger.setup()
 
 
-if __name__ == '__main__':
+def main():
   # TODO(aarontp): Allow for single run mode when specifying evidence
   #                which will also terminate the task manager after evidence has
   #                been processed.
