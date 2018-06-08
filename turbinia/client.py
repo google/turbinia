@@ -42,6 +42,7 @@ class TurbiniaClient(object):
   Attributes:
     task_manager (TaskManager): Turbinia task manager
   """
+
   def __init__(self):
     config.LoadConfig()
     self.task_manager = task_manager.get_task_manager()
@@ -85,7 +86,6 @@ class TurbiniaClient(object):
       time.sleep(poll_interval)
 
     log.info('All {0:d} Tasks completed'.format(len(task_results)))
-
 
   def get_task_data(self, instance, project, region, days=0, task_id=None,
                     request_id=None, function_name='gettasks'):
@@ -136,7 +136,6 @@ class TurbiniaClient(object):
 
     return results[0]
 
-
   def format_task_status(self, instance, project, region, days=0, task_id=None,
                          request_id=None, all_fields=False):
     """Formats the recent history for Turbinia Tasks.
@@ -178,7 +177,8 @@ class TurbiniaClient(object):
             '{0:s} request: {1:s} task: {2:s} {3:s} {4:s} {5:s}: {6:s}'.format(
                 task['last_update'], task['request_id'], task['id'],
                 task['name'], task['worker_name'], success, status))
-        saved_paths = task.get('saved_paths') if task.get('saved_paths') else []
+        saved_paths = task.get('saved_paths') if task.get(
+            'saved_paths') else []
         for path in saved_paths:
           results.append('\t{0:s}'.format(path))
       else:
@@ -195,9 +195,47 @@ class TurbiniaClient(object):
     """
     self.task_manager.server_pubsub.send_request(request)
 
+  def close_tasks_by_request_id(self, instance, project, region, request_id=None):
+    """Close Turbinia Tasks based on Request ID.
+
+    Args:
+      instance (string): The Turbinia instance name (by default the same as the
+          PUBSUB_TOPIC in the config).
+      project (string): The name of the project.
+      region (string): The name of the zone to execute in.
+      request_id (string): The Id of the request we want tasks for.
+
+    Returns: String of closed Task IDs.
+    """
+
+    function = GoogleCloudFunction(project_id=project, region=region)
+    func_args = {'instance': instance, 'kind': 'TurbiniaTask'}
+    func_args.update({'request_id': request_id})
+    response = function.ExecuteFunction('closetasksbyrequestid', func_args)
+    return 'Closed Task IDs: %s' % response.get('result')
+
+  def close_task_by_task_id(self, instance, project, region, task_id=None):
+    """Close Turbinia Task based on Task ID.
+
+    Args:
+      instance (string): The Turbinia instance name (by default the same as the
+          PUBSUB_TOPIC in the config).
+      project (string): The name of the project.
+      region (string): The name of the zone to execute in.
+      task_id (string): The Id of the request we want task for.
+
+    Returns: String of closed Task ID.
+    """
+    function = GoogleCloudFunction(project_id=project, region=region)
+    func_args = {'instance': instance, 'kind': 'TurbiniaTask'}
+    func_args.update({'task_id': task_id})
+    response = function.ExecuteFunction('closetaskbytaskid', func_args)
+    return 'Closed Task ID: %s' % response.get('result')
+
 
 class TurbiniaServer(TurbiniaClient):
   """Turbinia Server class."""
+
   def start(self):
     """Start Turbinia Server."""
     log.info('Running Turbinia Server.')
@@ -214,6 +252,7 @@ class TurbiniaPsqWorker(TurbiniaClient):
   Attributes:
     worker (psq.Worker): PSQ Worker object
   """
+
   def __init__(self, *args, **kwargs):
     """Initialization for PSQ Worker."""
     super(TurbiniaPsqWorker, self).__init__(*args, **kwargs)

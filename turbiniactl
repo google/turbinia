@@ -47,7 +47,10 @@ if __name__ == '__main__':
       '-v', '--verbose', action='store_true', help='Show verbose output')
   # TODO(aarontp): Turn off debug by default later
   parser.add_argument(
-      '-d', '--debug', action='store_true', help='Show debug output',
+      '-d',
+      '--debug',
+      action='store_true',
+      help='Show debug output',
       default=True)
   parser.add_argument(
       '-a',
@@ -113,8 +116,8 @@ if __name__ == '__main__':
       default=0,
       type=int,
       help='The partition number to use when mounting this disk.  Defaults to '
-           'the entire raw disk.  Only affects mounting, and not what gets '
-           'processed.')
+      'the entire raw disk.  Only affects mounting, and not what gets '
+      'processed.')
   parser_rawdisk.add_argument(
       '-s',
       '--source',
@@ -130,7 +133,9 @@ if __name__ == '__main__':
   parser_googleclouddisk.add_argument(
       '-d', '--disk_name', help='Google Cloud name for disk', required=True)
   parser_googleclouddisk.add_argument(
-      '-p', '--project', help='Project that the disk is associated with',
+      '-p',
+      '--project',
+      help='Project that the disk is associated with',
       required=True)
   parser_googleclouddisk.add_argument(
       '-P',
@@ -138,11 +143,10 @@ if __name__ == '__main__':
       default=0,
       type=int,
       help='The partition number to use when mounting this disk.  Defaults to '
-           'the entire raw disk.  Only affects mounting, and not what gets '
-           'processed.')
+      'the entire raw disk.  Only affects mounting, and not what gets '
+      'processed.')
   parser_googleclouddisk.add_argument(
-      '-z', '--zone', help='Geographic zone the disk exists in',
-      required=True)
+      '-z', '--zone', help='Geographic zone the disk exists in', required=True)
   parser_googleclouddisk.add_argument(
       '-s',
       '--source',
@@ -155,15 +159,18 @@ if __name__ == '__main__':
   parser_googleclouddiskembedded = subparsers.add_parser(
       'googleclouddiskembedded',
       help='Process Google Cloud Persistent Disk with an embedded raw disk '
-           'image as Evidence')
+      'image as Evidence')
   parser_googleclouddiskembedded.add_argument(
-      '-e', '--embedded_path',
+      '-e',
+      '--embedded_path',
       help='Path within the Persistent Disk that points to the raw image file',
       required=True)
   parser_googleclouddiskembedded.add_argument(
       '-d', '--disk_name', help='Google Cloud name for disk', required=True)
   parser_googleclouddiskembedded.add_argument(
-      '-p', '--project', help='Project that the disk is associated with',
+      '-p',
+      '--project',
+      help='Project that the disk is associated with',
       required=True)
   parser_googleclouddiskembedded.add_argument(
       '-P',
@@ -171,11 +178,10 @@ if __name__ == '__main__':
       default=0,
       type=int,
       help='The partition number to use when mounting this disk.  Defaults to '
-           'the entire raw disk.  Only affects mounting, and not what gets '
-           'processed.')
+      'the entire raw disk.  Only affects mounting, and not what gets '
+      'processed.')
   parser_googleclouddiskembedded.add_argument(
-      '-z', '--zone', help='Geographic zone the disk exists in',
-      required=True)
+      '-z', '--zone', help='Geographic zone the disk exists in', required=True)
   parser_googleclouddiskembedded.add_argument(
       '-s',
       '--source',
@@ -212,8 +218,13 @@ if __name__ == '__main__':
 
   # Parser options for Turbinia status command
   parser_status = subparsers.add_parser(
-      'status',
-      help='Get Turbinia Task status')
+      'status', help='Get Turbinia Task status')
+  parser_status.add_argument(
+      '-c',
+      '--close_tasks',
+      action='store_true',
+      help='Close tasks based on Request ID or a task based on Task ID',
+      required=False)
   parser_status.add_argument(
       '-d',
       '--days_history',
@@ -230,6 +241,12 @@ if __name__ == '__main__':
       '-t',
       '--task_id',
       help='Show task for given Task ID',
+      required=False)
+  parser_status.add_argument(
+      '-f',
+      '--force',
+      help='Gatekeeper for --close_tasks',
+      action='store_true',
       required=False)
 
   # Server
@@ -260,8 +277,10 @@ if __name__ == '__main__':
     args.name = args.name if args.name else args.local_path
     local_path = os.path.abspath(args.local_path)
     evidence_ = evidence.RawDisk(
-        name=args.name, local_path=local_path,
-        mount_partition=args.mount_partition, source=args.source)
+        name=args.name,
+        local_path=local_path,
+        mount_partition=args.mount_partition,
+        source=args.source)
   elif args.command == 'directory':
     args.name = args.name if args.name else args.local_path
     local_path = os.path.abspath(args.local_path)
@@ -271,17 +290,23 @@ if __name__ == '__main__':
     is_cloud_disk = True
     args.name = args.name if args.name else args.disk_name
     evidence_ = evidence.GoogleCloudDisk(
-        name=args.name, disk_name=args.disk_name, project=args.project,
-        mount_partition=args.mount_partition, zone=args.zone,
+        name=args.name,
+        disk_name=args.disk_name,
+        project=args.project,
+        mount_partition=args.mount_partition,
+        zone=args.zone,
         source=args.source)
   elif args.command == 'googleclouddiskembedded':
     is_cloud_disk = True
     args.name = args.name if args.name else args.disk_name
     evidence_ = evidence.GoogleCloudDiskRawEmbedded(
-        name=args.name, disk_name=args.disk_name,
+        name=args.name,
+        disk_name=args.disk_name,
         embedded_path=args.embedded_path,
-        mount_partition=args.mount_partition, project=args.project,
-        zone=args.zone, source=args.source)
+        mount_partition=args.mount_partition,
+        project=args.project,
+        zone=args.zone,
+        source=args.source)
   elif args.command == 'psqworker':
     # Set up root logger level which is normally set by the psqworker command
     # which we are bypassing.
@@ -293,6 +318,23 @@ if __name__ == '__main__':
     server.start()
   elif args.command == 'status':
     region = config.TURBINIA_REGION
+    if args.close_tasks and (args.request_id or args.task_id) and not args.force:
+      log.info('Please use --force (-f) in conjuction with --close_task (-c)')
+      sys.exit(0)
+    if args.close_tasks and args.request_id:
+      print client.close_tasks_by_request_id(
+          instance=config.PUBSUB_TOPIC,
+          project=config.PROJECT,
+          region=region,
+          request_id=args.request_id)
+      sys.exit(0)
+    if args.close_tasks and args.task_id:
+      print client.close_task_by_task_id(
+          instance=config.PUBSUB_TOPIC,
+          project=config.PROJECT,
+          region=region,
+          task_id=args.task_id)
+      sys.exit(0)
     if args.wait and args.request_id:
       client.wait_for_request(
           instance=config.PUBSUB_TOPIC, project=config.PROJECT, region=region,
