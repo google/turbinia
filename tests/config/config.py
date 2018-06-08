@@ -29,6 +29,9 @@ class TestTurbiniaConfig(unittest.TestCase):
     # tests start by turbinia __init__.
     # pylint: disable=expression-not-assigned
     [delattr(config, a) for a in config.CONFIGVARS if hasattr(config, a)]
+    cls.CONFIGPATH_SAVE = config.CONFIGPATH
+    cls.CONFIGFILES_SAVE = config.CONFIGFILES
+    cls.CONFIGVARS_SAVE = config.CONFIGVARS
 
   def setUp(self):
     # Record the module attributes so we can remove them after the test to
@@ -36,9 +39,16 @@ class TestTurbiniaConfig(unittest.TestCase):
     # when it has a other references.
     self.config_attrs = dir(config)
     self.config_file = tempfile.mkstemp()[1]
+    config.CONFIG = None
     config.CONFIGPATH = [os.path.dirname(self.config_file)]
     config.CONFIGFILES = [os.path.basename(self.config_file)]
     config.CONFIGVARS = []
+
+  @classmethod
+  def tearDownClass(cls):
+    config.CONFIGPATH = cls.CONFIGPATH_SAVE
+    config.CONFIGFILES = cls.CONFIGFILES_SAVE
+    config.CONFIGVARS = cls.CONFIGVARS_SAVE
 
   def tearDown(self):
     os.remove(self.config_file)

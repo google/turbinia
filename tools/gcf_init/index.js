@@ -190,19 +190,15 @@ exports.closetasksbyrequestid = function closetasksbyrequestid(req, res) {
     return datastore.runQuery(query)
       .then((results) => {
           // Task entities found.
-          console.log("results....");
-          console.log(results.length);
           const tasks = results[0];
           var uncompleted_tasks = [];
           tasks.forEach((task) => {
               console.log(task);
               uncompleted_tasks.push(task.id);
               });
-          console.log("done task.forEach");
           return uncompleted_tasks;
           })
       .then((uncompleted_tasks) => {
-          console.log("uncompleted_tasks.forEach");
           uncompleted_tasks.forEach((id) => {
               module.exports.closetask(id);
               });
@@ -250,25 +246,22 @@ exports.closetaskbytaskid = function closetaskbytaskid(req, res) {
     .filter('instance', '=', req.body.instance)
     .filter('__key__', '=', datastore.key([turbiniaKind, req.body.task_id]))
     .filter('successful', '=', null);
-    //.order('last_update', {descending: true });
 
   return datastore.runQuery(query)
     .then((results) => {
         // Task entity found
-        console.log("results....");
-        console.log(results);
-        console.log(results.length);
         const tasks = results[0];
         const task = tasks[0];
-        console.log(tasks);
-        console.log(task);
         if (tasks) {
+          console.log(tasks);
           module.exports.closetask(task.id);
         }
-        return results;
+        return task;
         })
-    .then((results) => {
-        res.status(200).send(results);
+    .then((task) => {
+        const request_id = task.request_id
+        const task_id = task.id
+        res.status(200).send({'request_id': request_id, 'task_id': task_id});
         })
     .catch((err) => {
         console.error('Error in runQuery' + err);
@@ -281,19 +274,15 @@ exports.closetask = function closetask(id) {
   if (!id) {
     throw new Error('Entity Key not provided in request.');
   }
-  console.log("closetask(" + id + ") invoked");
   const transaction = datastore.transaction();
   const taskKey = datastore.key([turbiniaKind, id]);
-  console.log("key: %o", taskKey);
-  console.log("prep for transacation");
+  console.log("Preparing transaction.");
   transaction
     .run()
     .then(() => transaction.get(taskKey))
     .then(results => {
-      console.log("results: %o", results);
       const taskEntity = results[0];
       taskEntity.successful = false;
-      console.log("updated taskEntity: %o", taskEntity);
       var updatedEntity = {
         key: taskKey,
         data: taskEntity,
@@ -319,7 +308,3 @@ exports.closetask = function closetask(id) {
     });
 };
 
-// Export the functions to be used by other functions.
-// module.exports = {
-//  closetask: closetask
-//}
