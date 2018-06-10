@@ -18,6 +18,7 @@ from __future__ import unicode_literals
 
 from datetime import datetime
 import errno
+import getpass
 import json
 import logging
 import os
@@ -32,7 +33,9 @@ from turbinia import config
 from turbinia import output_manager
 from turbinia import TurbiniaException
 
+
 log = logging.getLogger('turbinia')
+
 
 class TurbiniaTaskResult(object):
   """Object to store task results to be returned by a TurbiniaTask.
@@ -81,6 +84,7 @@ class TurbiniaTaskResult(object):
     self.task_name = task.name
     self.base_output_dir = base_output_dir
     self.request_id = request_id
+    self.user = task.user
 
     self.start_time = datetime.now()
     self.run_time = None
@@ -195,9 +199,9 @@ class TurbiniaTask(object):
   """
 
   # The list of attributes that we will persist into storage
-  STORED_ATTRIBUTES = ['id', 'last_update', 'name', 'request_id']
+  STORED_ATTRIBUTES = ['id', 'last_update', 'name', 'request_id', 'user']
 
-  def __init__(self, name=None, base_output_dir=None, request_id=None):
+  def __init__(self, name=None, base_output_dir=None, request_id=None, user=None):
     """Initialization for TurbiniaTask."""
     if base_output_dir:
       self.base_output_dir = base_output_dir
@@ -212,6 +216,7 @@ class TurbiniaTask(object):
     self.request_id = request_id
     self.state_key = None
     self.stub = None
+    self.user = user if user else getpass.getuser()
 
   def execute(self, cmd, result, save_files=None, new_evidence=None,
               close=False):

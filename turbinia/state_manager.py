@@ -132,7 +132,6 @@ class DatastoreStateManager(BaseStateManager):
       log.debug('Updating task {0:s} in Datastore'.format(task.name))
       self.client.put(entity)
 
-
   def write_new_task(self, task):
     # Using the pubsub topic as part of the key in order to have unique entities
     # per Turbinia installation.
