@@ -36,7 +36,6 @@ from turbinia.pubsub import TurbiniaRequest
 log = logging.getLogger('turbinia')
 logger.setup()
 
-
 if __name__ == '__main__':
   # TODO(aarontp): Allow for single run mode when specifying evidence
   #                which will also terminate the task manager after evidence has
@@ -245,15 +244,9 @@ if __name__ == '__main__':
       help='Show tasks with this Request ID',
       required=False)
   parser_status.add_argument(
-      '-t',
-      '--task_id',
-      help='Show task for given Task ID',
-      required=False)
+      '-t', '--task_id', help='Show task for given Task ID', required=False)
   parser_status.add_argument(
-      '-u',
-      '--user',
-      help='Show task for given user',
-      required=False)
+      '-u', '--user', help='Show task for given user', required=False)
 
   # Server
   parser_server = subparsers.add_parser('server', help='Run Turbinia Server')
@@ -324,35 +317,43 @@ if __name__ == '__main__':
     server.start()
   elif args.command == 'status':
     region = config.TURBINIA_REGION
-    if args.close_tasks and not args.force:
-      log.info('Please use --force (-f) in conjuction with --close_task (-c)')
-      sys.exit(0)
-    if args.close_tasks and (args.user or args.request_id or args.task_id):
-      print client.close_tasks(
+    if args.close_tasks:
+      if args.user or args.request_id or args.task_id:
+        print client.close_tasks(
+            instance=config.PUBSUB_TOPIC,
+            project=config.PROJECT,
+            region=region,
+            request_id=args.request_id,
+            task_id=args.task_id,
+            user=args.user,
+            requester=getpass.getuser())
+        sys.exit(0)
+      else:
+        log.info(
+            '--close_tasks (-c) requires --user, --request_id, or/and --task_id')
+        sys.exit(1)
+
+    if args.wait and args.request_id:
+      client.wait_for_request(
           instance=config.PUBSUB_TOPIC,
           project=config.PROJECT,
           region=region,
           request_id=args.request_id,
-          task_id=args.task_id,
           user=args.user,
-          requester=getpass.getuser())
-      sys.exit(0)
-    else:
-      log.info('--close_tasks (-c) requires --user, --request_id, or/and --task_id')
-      sys.exit(1)
-
-    if args.wait and args.request_id:
-      client.wait_for_request(
-          instance=config.PUBSUB_TOPIC, project=config.PROJECT, region=region,
-          request_id=args.request_id, user=args.user, poll_interval=args.poll_interval)
+          poll_interval=args.poll_interval)
     elif args.wait and not args.request_id:
       log.info('--wait requires --request_id, which is not specified. '
                'turbiniactl will exit without waiting.')
 
     print client.format_task_status(
-        instance=config.PUBSUB_TOPIC, project=config.PROJECT, region=region,
-        days=args.days_history, task_id=args.task_id, request_id=args.request_id,
-        user=args.user, all_fields=args.all_fields)
+        instance=config.PUBSUB_TOPIC,
+        project=config.PROJECT,
+        region=region,
+        days=args.days_history,
+        task_id=args.task_id,
+        request_id=args.request_id,
+        user=args.user,
+        all_fields=args.all_fields)
   elif args.command == 'listjobs':
     log.info('Available Jobs:')
     client.list_jobs()
@@ -397,9 +398,8 @@ if __name__ == '__main__':
     if args.dump_json:
       print request.to_json().encode('utf-8')
     else:
-      log.info(
-          'Creating PubSub request {0:s} with evidence {1:s}'.format(
-              request.request_id, evidence_.name))
+      log.info('Creating PubSub request {0:s} with evidence {1:s}'.format(
+          request.request_id, evidence_.name))
       client.send_request(request)
 
     if args.wait:
@@ -407,11 +407,17 @@ if __name__ == '__main__':
           request.request_id))
       region = config.TURBINIA_REGION
       client.wait_for_request(
-          instance=config.PUBSUB_TOPIC, project=config.PROJECT, region=region,
-          request_id=request.request_id, poll_interval=args.poll_interval)
+          instance=config.PUBSUB_TOPIC,
+          project=config.PROJECT,
+          region=region,
+          request_id=request.request_id,
+          poll_interval=args.poll_interval)
       print client.format_task_status(
-          instance=config.PUBSUB_TOPIC, project=config.PROJECT, region=region,
-          request_id=request.request_id, all_fields=args.all_fields)
+          instance=config.PUBSUB_TOPIC,
+          project=config.PROJECT,
+          region=region,
+          request_id=request.request_id,
+          all_fields=args.all_fields)
 
   log.info('Done.')
   sys.exit(0)
