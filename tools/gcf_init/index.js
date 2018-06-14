@@ -51,8 +51,8 @@ exports.gettasks = function gettasks(req, res) {
   }
 
   var query = datastore.createQuery(req.body.kind)
-    .filter('instance', '=', req.body.instance)
-    .order('last_update', {descending: true});
+                  .filter('instance', '=', req.body.instance)
+                  .order('last_update', {descending: true});
   var start_time;
 
   // Note: If you change any of these filter properties, you must also update
@@ -184,20 +184,22 @@ exports.closetasks = function closetasks(req, res) {
     throw new Error('Requester parameter not provided in request.');
   }
   if (!req.body.request_id && !req.body.task_id && !req.body.user) {
-    throw new Error('None of Request ID, Task ID, or user provided in request.');
+    throw new Error(
+        'None of Request ID, Task ID, or user provided in request.');
   }
-  
+
   var query = datastore.createQuery(req.body.kind)
-      .filter('instance', '=', req.body.instance)
-      .filter('successful', '=', null)
-      .order('last_update', {descending: true });
+                  .filter('instance', '=', req.body.instance)
+                  .filter('successful', '=', null)
+                  .order('last_update', {descending: true});
   if (req.body.request_id) {
     console.log('Adding filter - Request Id: ' + req.body.request_id);
     query = query.filter('request_id', '=', req.body.request_id)
   }
   if (req.body.task_id) {
     console.log('Adding filter - Task Id: ' + req.body.task_id);
-    query = query.filter('__key__', '=', datastore.key([turbiniaKind, req.body.task_id]))
+    query = query.filter(
+        '__key__', '=', datastore.key([turbiniaKind, req.body.task_id]))
   }
   if (req.body.user) {
     console.log('Adding filter - user: ' + req.body.user);
@@ -207,31 +209,31 @@ exports.closetasks = function closetasks(req, res) {
   console.log(query);
 
   return datastore.runQuery(query)
-    .then((results) => {
+      .then((results) => {
         // Task entities found.
         const tasks = results[0];
         var uncompleted_tasks = [];
         tasks.forEach((task) => {
-            console.log(task);
-            uncompleted_tasks.push({'request_id': task.request_id,
-                                    'id': task.id});
-            });
+          console.log(task);
+          uncompleted_tasks.push(
+              {'request_id': task.request_id, 'id': task.id});
+        });
         return uncompleted_tasks;
-        })
-    .then((uncompleted_tasks) => {
+      })
+      .then((uncompleted_tasks) => {
         uncompleted_tasks.forEach((task) => {
-            module.exports.closetask(task.id, req.body.requester);
-            });
+          module.exports.closetask(task.id, req.body.requester);
+        });
         return uncompleted_tasks;
-        })
-    .then((uncompleted_tasks) => {
+      })
+      .then((uncompleted_tasks) => {
         res.status(200).send(uncompleted_tasks);
-        })
-    .catch((err) => {
+      })
+      .catch((err) => {
         console.error('Error in runQuery' + err);
         res.status(500).send(err);
         return Promise.reject(err);
-        });
+      });
 };
 
 exports.closetask = function closetask(id, requester) {
@@ -244,35 +246,34 @@ exports.closetask = function closetask(id, requester) {
   const transaction = datastore.transaction();
   const taskKey = datastore.key([turbiniaKind, id]);
   console.log('Preparing transaction.');
-  transaction
-    .run()
-    .then(() => transaction.get(taskKey))
-    .then(results => {
-      const taskEntity = results[0];
-      taskEntity.successful = false;
-      taskEntity.status = 'Task forcefully closed by ' + requester + '.';
-      var updatedEntity = {
-        key: taskKey,
-        data: taskEntity,
-      };
-      transaction.save(updatedEntity);
+  transaction.run()
+      .then(() => transaction.get(taskKey))
+      .then(results => {
+        const taskEntity = results[0];
+        taskEntity.successful = false;
+        taskEntity.status = 'Task forcefully closed by ' + requester + '.';
+        var updatedEntity = {
+          key: taskKey,
+          data: taskEntity,
+        };
+        transaction.save(updatedEntity);
 
-      console.log('Committing transaction: %o', updatedEntity);
-      transaction.commit()
-        .then(() => {
-          console.log('Entity successfully saved.');
-          return updatedEntity;
-        })
-        .catch(err => {
-            console.error('Rolling back - Error in transaction (Failure)')
-            console.error(err);
-            transaction.rollback();
-        });
-    })
-    .catch((err) => {
-      console.error('Rolling back - Error in transaction (Other Reasons)')
-      console.error(err);
-      transaction.rollback();
-    });
+        console.log('Committing transaction: %o', updatedEntity);
+        transaction.commit()
+            .then(() => {
+              console.log('Entity successfully saved.');
+              return updatedEntity;
+            })
+            .catch(err => {
+              console.error('Rolling back - Error in transaction (Failure)')
+              console.error(err);
+              transaction.rollback();
+            });
+      })
+      .catch((err) => {
+        console.error('Rolling back - Error in transaction (Other Reasons)')
+        console.error(err);
+        transaction.rollback();
+      });
 };
 

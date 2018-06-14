@@ -54,8 +54,13 @@ class TurbiniaClient(object):
     for job in self.task_manager.jobs:
       log.info('\t{0:s}'.format(job.name))
 
-  def wait_for_request(self, instance, project, region, request_id=None,
-                       user=None, poll_interval=60):
+  def wait_for_request(self,
+                       instance,
+                       project,
+                       region,
+                       request_id=None,
+                       user=None,
+                       poll_interval=60):
     """Polls and waits for Turbinia Request to complete.
 
     Args:
@@ -88,8 +93,15 @@ class TurbiniaClient(object):
 
     log.info('All {0:d} Tasks completed'.format(len(task_results)))
 
-  def get_task_data(self, instance, project, region, days=0, task_id=None,
-                    request_id=None, user=None, function_name='gettasks'):
+  def get_task_data(self,
+                    instance,
+                    project,
+                    region,
+                    days=0,
+                    task_id=None,
+                    request_id=None,
+                    user=None,
+                    function_name='gettasks'):
     """Gets task data from Google Cloud Functions.
 
     Args:
@@ -142,8 +154,15 @@ class TurbiniaClient(object):
 
     return results[0]
 
-  def format_task_status(self, instance, project, region, days=0, task_id=None,
-                         request_id=None, user=None, all_fields=False):
+  def format_task_status(self,
+                         instance,
+                         project,
+                         region,
+                         days=0,
+                         task_id=None,
+                         request_id=None,
+                         user=None,
+                         all_fields=False):
     """Formats the recent history for Turbinia Tasks.
 
     Args:
@@ -181,10 +200,11 @@ class TurbiniaClient(object):
       status = task.get('status', 'No task status')
       if all_fields:
         results.append(
-            '{0:s} request: {1:s} task: {2:s} {3:s} {4:s} {5:s} {6:s}: {7:s}'.format(
-                task.get('last_update'), task.get(
-                    'request_id'), task.get('id'),
-                task.get('name'), task.get('user'), task.get('worker_name'), success, status))
+            '{0:s} request: {1:s} task: {2:s} {3:s} {4:s} {5:s} {6:s}: {7:s}'.
+            format(
+                task.get('last_update'), task.get('request_id'), task.get('id'),
+                task.get('name'), task.get('user'), task.get('worker_name'),
+                success, status))
         saved_paths = task.get('saved_paths', [])
         for path in saved_paths:
           results.append('\t{0:s}'.format(path))
@@ -202,8 +222,14 @@ class TurbiniaClient(object):
     """
     self.task_manager.server_pubsub.send_request(request)
 
-  def close_tasks(self, instance, project, region, request_id=None, task_id=None,
-                  user=None, requester=None):
+  def close_tasks(self,
+                  instance,
+                  project,
+                  region,
+                  request_id=None,
+                  task_id=None,
+                  user=None,
+                  requester=None):
     """Close Turbinia Tasks based on Request ID.
 
     Args:
@@ -220,8 +246,12 @@ class TurbiniaClient(object):
     """
     function = GoogleCloudFunction(project_id=project, region=region)
     func_args = {'instance': instance, 'kind': 'TurbiniaTask'}
-    func_args.update({'request_id': request_id, 'task_id': task_id,
-                      'user': user, 'requester': requester})
+    func_args.update({
+        'request_id': request_id,
+        'task_id': task_id,
+        'user': user,
+        'requester': requester
+    })
     response = function.ExecuteFunction('closetasks', func_args)
     return 'Closed Task IDs: %s' % response.get('result')
 
@@ -249,12 +279,12 @@ class TurbiniaPsqWorker(TurbiniaClient):
   def __init__(self, *args, **kwargs):
     """Initialization for PSQ Worker."""
     super(TurbiniaPsqWorker, self).__init__(*args, **kwargs)
-    log.info(
-        'Starting PSQ listener on queue {0:s}'.format(
-            self.task_manager.psq.name))
+    log.info('Starting PSQ listener on queue {0:s}'.format(
+        self.task_manager.psq.name))
     self.worker = psq.Worker(queue=self.task_manager.psq)
 
   def start(self):
     """Start Turbinia PSQ Worker."""
     log.info('Running Turbinia PSQ Worker.')
     self.worker.listen()
+

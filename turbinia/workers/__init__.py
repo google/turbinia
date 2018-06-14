@@ -33,7 +33,6 @@ from turbinia import config
 from turbinia import output_manager
 from turbinia import TurbiniaException
 
-
 log = logging.getLogger('turbinia')
 
 
@@ -63,13 +62,12 @@ class TurbiniaTaskResult(object):
   # The list of attributes that we will persist into storage
   STORED_ATTRIBUTES = ['worker_name', 'status', 'saved_paths', 'successful']
 
-  def __init__(
-      self,
-      task,
-      evidence=None,
-      input_evidence=None,
-      base_output_dir=None,
-      request_id=None):
+  def __init__(self,
+               task,
+               evidence=None,
+               input_evidence=None,
+               base_output_dir=None,
+               request_id=None):
     """Initialize the TurbiniaTaskResult object.
 
     Args:
@@ -149,7 +147,6 @@ class TurbiniaTaskResult(object):
     self.closed = True
     log.debug('Result close successful. Status is [{0:s}]'.format(self.status))
 
-
   def log(self, log_msg):
     """Add a log message to the result object.
 
@@ -201,7 +198,11 @@ class TurbiniaTask(object):
   # The list of attributes that we will persist into storage
   STORED_ATTRIBUTES = ['id', 'last_update', 'name', 'request_id', 'user']
 
-  def __init__(self, name=None, base_output_dir=None, request_id=None, user=None):
+  def __init__(self,
+               name=None,
+               base_output_dir=None,
+               request_id=None,
+               user=None):
     """Initialization for TurbiniaTask."""
     if base_output_dir:
       self.base_output_dir = base_output_dir
@@ -218,7 +219,11 @@ class TurbiniaTask(object):
     self.stub = None
     self.user = user if user else getpass.getuser()
 
-  def execute(self, cmd, result, save_files=None, new_evidence=None,
+  def execute(self,
+              cmd,
+              result,
+              save_files=None,
+              new_evidence=None,
               close=False):
     """Executes a given binary and saves output.
 
@@ -288,9 +293,8 @@ class TurbiniaTask(object):
       self.output_manager.retrieve_evidence(evidence)
 
     if evidence.local_path and not os.path.exists(evidence.local_path):
-      raise TurbiniaException(
-          'Evidence local path {0:s} does not exist'.format(
-              evidence.local_path))
+      raise TurbiniaException('Evidence local path {0:s} does not exist'.format(
+          evidence.local_path))
     evidence.preprocess()
     return self.result
 
@@ -371,8 +375,7 @@ class TurbiniaTask(object):
         self.result.set_error(e.message, traceback.format_exc())
         self.result.status = msg
       else:
-        log.error(
-            'No TurbiniaTaskResult object found after task execution.')
+        log.error('No TurbiniaTaskResult object found after task execution.')
 
     # Trying to close the result if possible so that we clean up what we can.
     # This has a higher liklihood of failing because something must have gone
@@ -425,3 +428,4 @@ class TurbiniaTask(object):
         TurbiniaTaskResult object.
     """
     raise NotImplementedError
+

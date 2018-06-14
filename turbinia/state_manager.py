@@ -31,6 +31,7 @@ from turbinia.workers import TurbiniaTaskResult
 
 log = logging.getLogger('turbinia')
 
+
 def get_state_manager():
   """Return state manager object based on config.
 
@@ -142,3 +143,4 @@ class DatastoreStateManager(BaseStateManager):
     self.client.put(entity)
     task.state_key = key
     return key
+
