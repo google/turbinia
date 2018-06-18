@@ -14,24 +14,25 @@
 # limitations under the License.
 """Task manager for Turbinia."""
 
-from __future__ import unicode_literals
+from __future__ import unicode_literals, absolute_import
 
 import logging
 import time
 import traceback
 
+from celery import states as celery_states
 import psq
+
 from google.cloud import datastore
 from google.cloud import pubsub
 from google.gax.errors import GaxError
-
-from celery import states as celery_states
 
 import turbinia
 from turbinia import evidence
 from turbinia import config
 from turbinia import jobs
 from turbinia import pubsub as turbinia_pubsub
+from turbinia import celery as turbinia_celery
 from turbinia import state_manager
 
 log = logging.getLogger('turbinia')
@@ -270,9 +271,9 @@ class CeleryTaskManager(BaseTaskManager):
     super(CeleryTaskManager, self).__init__()
 
   def _backend_setup(self):
-    self.celery = turbinia_pubsub.TurbiniaCelery()
+    self.celery = turbinia_celery.TurbiniaCelery()
     self.celery.setup()
-    self.kombu = turbinia_pubsub.TurbiniaKombu(config.KOMBU_CHANNEL)
+    self.kombu = turbinia_celery.TurbiniaKombu(config.KOMBU_CHANNEL)
     self.kombu.setup()
 
   def process_tasks(self):

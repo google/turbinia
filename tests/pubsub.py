@@ -22,6 +22,8 @@ import mock
 
 from turbinia import evidence
 from turbinia import pubsub
+from turbinia import message
+from turbinia import celery
 from turbinia import TurbiniaException
 
 
@@ -31,7 +33,7 @@ def getTurbiniaRequest():
   Returns:
     TurbiniaRequest object.
   """
-  request = pubsub.TurbiniaRequest(
+  request = message.TurbiniaRequest(
       request_id='deadbeef', context={'kw': [1, 2]})
   rawdisk = evidence.RawDisk(
       name='My Evidence', local_path='/tmp/foo', mount_path='/mnt/foo')
@@ -65,10 +67,10 @@ class TestTurbiniaRequest(unittest.TestCase):
     self.assertTrue(isinstance(request_json, str))
 
     # Create a new Turbinia Request object to load our results into
-    request_new = pubsub.TurbiniaRequest()
+    request_new = message.TurbiniaRequest()
     request_new.from_json(request_json)
 
-    self.assertTrue(isinstance(request_new, pubsub.TurbiniaRequest))
+    self.assertTrue(isinstance(request_new, message.TurbiniaRequest))
     self.assertTrue(request_new.context['kw'][1], 2)
     self.assertTrue(request_new.request_id, 'deadbeef')
     self.assertTrue(isinstance(request_new.evidence[0], evidence.RawDisk))
@@ -76,7 +78,7 @@ class TestTurbiniaRequest(unittest.TestCase):
 
   def testTurbiniaRequestSerializationBadData(self):
     """Tests that TurbiniaRequest will raise error on non-json data."""
-    request_new = pubsub.TurbiniaRequest()
+    request_new = message.TurbiniaRequest()
     self.assertRaises(TurbiniaException, request_new.from_json, 'non-json-data')
 
   def testTurbiniaRequestSerializationBadJSON(self):
@@ -85,7 +87,7 @@ class TestTurbiniaRequest(unittest.TestCase):
     rawdisk_json = rawdisk.to_json()
     self.assertTrue(isinstance(rawdisk_json, str))
 
-    request_new = pubsub.TurbiniaRequest()
+    request_new = message.TurbiniaRequest()
     # Try to load serialization RawDisk() into a TurbiniaRequest, which should
     # error because this is not the correct type.
     self.assertRaises(TurbiniaException, request_new.from_json, rawdisk_json)
@@ -109,7 +111,7 @@ class TestTurbiniaPubSub(unittest.TestCase):
     request_new = results[0]
 
     # Make sure that the TurbiniaRequest object is as expected
-    self.assertTrue(isinstance(request_new, pubsub.TurbiniaRequest))
+    self.assertTrue(isinstance(request_new, message.TurbiniaRequest))
     self.assertTrue(request_new.context['kw'][1], 2)
     self.assertTrue(request_new.request_id, 'deadbeef')
     self.assertTrue(isinstance(request_new.evidence[0], evidence.RawDisk))
@@ -138,7 +140,7 @@ class TestTurbiniaKombu(unittest.TestCase):
 
   def setUp(self):
     request = getTurbiniaRequest()
-    self.kombu = pubsub.TurbiniaKombu('fake_topic')
+    self.kombu = celery.TurbiniaKombu('fake_topic')
     result = mock.MagicMock()
     result.body = request.to_json()
     self.kombu.queue = mock.MagicMock()
@@ -151,7 +153,7 @@ class TestTurbiniaKombu(unittest.TestCase):
     request_new = results[0]
 
     # Make sure that the TurbiniaRequest object is as expected
-    self.assertTrue(isinstance(request_new, pubsub.TurbiniaRequest))
+    self.assertTrue(isinstance(request_new, message.TurbiniaRequest))
     self.assertTrue(request_new.context['kw'][1], 2)
     self.assertTrue(request_new.request_id, 'deadbeef')
     self.assertTrue(isinstance(request_new.evidence[0], evidence.RawDisk))

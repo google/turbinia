@@ -32,7 +32,7 @@ from turbinia import config
 from turbinia.config import logger
 from turbinia import evidence
 from turbinia import VERSION
-from turbinia.pubsub import TurbiniaRequest
+from turbinia.message import TurbiniaRequest
 
 log = logging.getLogger('turbinia')
 logger.setup()
