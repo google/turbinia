@@ -1,5 +1,5 @@
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
-#!/usr/bin/python
 #
 # Copyright 2017 Google Inc.
 #
@@ -18,18 +18,19 @@
 
 The standard setup rules apply:
 python setup.py build
-sudo python setup.py install
+sudo python setup.py install 
 """
 
 from setuptools import find_packages
 from setuptools import setup
 
-try: # for pip >= 10
+try:  # for pip >= 10
   from pip._internal.download import PipSession
   from pip._internal.req import parse_requirements
-except ImportError: # for pip <= 9.0.3
+except ImportError:  # for pip <= 9.0.3
   from pip.download import PipSession
   from pip.req import parse_requirements
+
 
 setup(
     name='Turbinia',
@@ -42,6 +43,6 @@ setup(
     install_requires=[str(req.req) for req in parse_requirements(
         'requirements.txt', session=PipSession())
     ],
-    extras_require = {
-      'worker': ['plaso>=20171118'],
+    extras_require={
+      'worker': ['plaso>=20171118']
     })
