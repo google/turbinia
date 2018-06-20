@@ -36,9 +36,6 @@ TURBINIA_DIR = '/opt/turbinia'
 # be deployed to.
 GCS_MOUNT_DIR = '/mnt/turbinia'
 
-# Virtualenv directory
-TURBINIAENV = '%s/turbinia-env' % HOME_DIR
-
 # Local directory for temporary data
 TMP_DIR = '/var/tmp'
 
@@ -47,8 +44,10 @@ TMP_DIR = '/var/tmp'
 TASK_MANAGER = 'PSQ'
 
 # File to log to; set this as None if log file is not desired
-# By default, Turbinia logs are written to a directory (GCS_MOUNT_DIR) in the GCS mount
-LOG_FILE = '%s/output/logs/turbinia.log' % GCS_MOUNT_DIR
+# By default, Turbinia logs are written to a directory (GCS_MOUNT_DIR)
+# in the GCS mount
+#LOG_FILE = '%s/output/logs/turbinia.log' % GCS_MOUNT_DIR
+LOG_FILE = '/dev/null'
 
 # Default base output directory for worker results and evidence
 # When running Turbinia locally, you can set this to, for example,
@@ -82,24 +81,23 @@ DEBUG_TASKS = False
 # GCP AND GCE #
 ###############
 
-PROJECT = None
-ZONE = None
-INSTANCE = None
-DEVICE_NAME = None
-SCRATCH_PATH = None
+PROJECT = 'None'
+ZONE = 'None'
+INSTANCE = 'None'
+DEVICE_NAME = 'None'
+SCRATCH_PATH = 'None'
 # GCS bucket that has Turbinia-specific scripts and can be used to store logs.
-BUCKET_NAME = None
-PSQ_TOPIC = 'turbinia-psq'
+BUCKET_NAME = 'None'
+PSQ_TOPIC = 'None'
 # TODO(beamcodeup): Per https://github.com/google/turbinia/issues/172, Cloud
 # Functions are only available on us-central1. Thus, hardcoding this for now.
 # Fix this when CF starts supporting more regions.
-TURBINIA_REGION = 'us-central1'
-
+TURBINIA_REGION = 'None'
 
 # Topic Turbinia will listen on for new Artifact events. This is also used as
 # the Turbinia instance/namespace as it is a unique string per Turbinia
 # instance and Cloud Project.
-PUBSUB_TOPIC = 'turbinia-pubsub'
+PUBSUB_TOPIC = 'None'
 
 # GCS Path to copy worker results and Evidence output to
 # Otherwise, set this as None if output will be stored locally.
@@ -112,3 +110,4 @@ REDIS_HOST = 'None'
 REDIS_PORT = 'None'
 TIMESKETCH_HOST = 'None'
 TIMESKETCH_USER = 'None'
+TIMESKETCH_PASSWORD = 'None'
