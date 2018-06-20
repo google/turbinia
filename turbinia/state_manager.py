@@ -120,7 +120,8 @@ class DatastoreStateManager(BaseStateManager):
   """
 
   def __init__(self):
-    self.client = datastore.Client()
+    config.LoadConfig()
+    self.client = datastore.Client(project=config.PROJECT)
 
   def update_task(self, task):
     with self.client.transaction():
