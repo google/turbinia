@@ -4,7 +4,7 @@ cache:
   - pip
 
 install:
-  - pip install mock
+  - pip install mock nose coverage
   - pip install .
 
 script:
