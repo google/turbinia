@@ -11,7 +11,7 @@ index_file = './index.yaml'
 if len(sys.argv) > 1:
   function_names = [sys.argv[1]]
 else:
-  function_names = ['gettasks', 'getrecenttasks', 'closetasks']
+  function_names = ['gettasks', 'closetasks']
 
 config.LoadConfig()
 
