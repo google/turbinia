@@ -223,7 +223,7 @@ if __name__ == '__main__':
       '-c',
       '--close_tasks',
       action='store_true',
-      help='Close tasks based on Request ID or a task based on Task ID',
+      help='Close tasks based on Request ID or Task ID',
       required=False)
   parser_status.add_argument(
       '-d',
@@ -330,7 +330,8 @@ if __name__ == '__main__':
         sys.exit(0)
       else:
         log.info(
-            '--close_tasks (-c) requires --user, --request_id, or/and --task_id')
+            '--close_tasks (-c) requires --user, --request_id, or/and --task_id'
+        )
         sys.exit(1)
 
     if args.wait and args.request_id:

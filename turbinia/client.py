@@ -240,18 +240,19 @@ class TurbiniaClient(object):
       request_id (string): The Id of the request we want tasks for.
       task_id (string): The Id of the request we want task for.
       user (string): The user of the request we want tasks for.
-      requester (string): The user who makes the request to close tasks.
+      requester (string): The user making the request to close tasks.
 
     Returns: String of closed Task IDs.
     """
     function = GoogleCloudFunction(project_id=project, region=region)
-    func_args = {'instance': instance, 'kind': 'TurbiniaTask'}
-    func_args.update({
+    func_args = {
+        'instance': instance,
+        'kind': 'TurbiniaTask',
         'request_id': request_id,
         'task_id': task_id,
         'user': user,
         'requester': requester
-    })
+    }
     response = function.ExecuteFunction('closetasks', func_args)
     return 'Closed Task IDs: %s' % response.get('result')
 
@@ -287,4 +288,3 @@ class TurbiniaPsqWorker(TurbiniaClient):
     """Start Turbinia PSQ Worker."""
     log.info('Running Turbinia PSQ Worker.')
     self.worker.listen()
-

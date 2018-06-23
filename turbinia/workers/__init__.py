@@ -55,6 +55,7 @@ class TurbiniaTaskResult(object):
       successful: Bool indicating success status.
       task_id: Task ID of the parent task.
       task_name: Name of parent task.
+      user: The user who requested the task.
       worker_name: Name of worker task executed on.
       _log: A list of log messages
   """
@@ -193,6 +194,7 @@ class TurbiniaTask(object):
             server side to keep a reference to the remote task objects.  For PSQ
             this is a task result object, but other implementations have their
             own stub objects.
+      user: The user who requested the task.
   """
 
   # The list of attributes that we will persist into storage
@@ -428,4 +430,3 @@ class TurbiniaTask(object):
         TurbiniaTaskResult object.
     """
     raise NotImplementedError
-

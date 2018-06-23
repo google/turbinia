@@ -101,65 +101,10 @@ exports.gettasks = function gettasks(req, res) {
 };
 
 /**
- * Retrieves recent Turbinia Task state records from Datastore.
- *
- * @example
- * gcloud beta functions call getrecenttasks --data \
- *     '{"kind":"TurbiniaTask","start_time":"1990-01-01T00:00:00z"}'
- *
- * @param {object} req Cloud Function request context.
- * @param {object} req.body The request body.
- * @param {string} req.body.instance The Turbinia instance
- * @param {string} req.body.kind The kind of Datastore Entity to request
- * @param {string} req.body.start_time A date string in ISO 8601 format of the
- *                 beginning of the time window to query for
- * @param {object} res Cloud Function response context.
- */
-exports.getrecenttasks = function getrecenttasks(req, res) {
-  if (!req.body.instance) {
-    throw new Error('Instance parameter not provided in request.');
-  }
-  if (!req.body.kind) {
-    throw new Error('Kind parameter not provided in request.');
-  }
-  if (!req.body.start_time) {
-    throw new Error('Start_time parameter not provided in request.');
-  }
-
-  var start_time;
-  try {
-    start_time = new Date(req.body.start_time)
-  } catch (err) {
-    throw new Error('Could not convert start_time parameter into Date object')
-  }
-
-  const query = datastore.createQuery(req.body.kind)
-                    .filter('instance', '=', req.body.instance)
-                    .filter('last_update', '>=', start_time)
-                    .order('last_update', {descending: true});
-
-  console.log(query);
-  return datastore.runQuery(query)
-      .then((results) => {
-        // Task entities found.
-        const tasks = results[0];
-
-        console.log('Turbinia Tasks:');
-        tasks.forEach((task) => console.log(task));
-        res.status(200).send(results);
-      })
-      .catch((err) => {
-        console.error(err);
-        res.status(500).send(err);
-        return Promise.reject(err);
-      });
-};
-
-/**
  * Closes tasks based on Request ID, Task ID, or/and user.
  *
  * @example
- * gcloud beta functions call closetasksbyrequestid \
+ * gcloud beta functions call closetasks \
  *     --data '{"instance": "turbinia-prod", "kind":"TurbiniaTask",
  *              "request_id":"abcd1234"}'
  *

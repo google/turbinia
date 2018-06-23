@@ -11,7 +11,7 @@ index_file = './index.yaml'
 if len(sys.argv) > 1:
   function_names = [sys.argv[1]]
 else:
-  function_names = ['gettasks', 'getrecenttasks', 'closetask', 'closetasks']
+  function_names = ['gettasks', 'getrecenttasks', 'closetasks']
 
 config.LoadConfig()
 
@@ -27,4 +27,3 @@ print '/nCreating Datastore index from {0:s}'.format(index_file)
 cmd = 'gcloud --quiet --project {0:s} datastore create-indexes {1:s}'.format(
     config.PROJECT, index_file)
 subprocess.check_call(cmd, shell=True)
-
