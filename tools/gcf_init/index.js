@@ -19,24 +19,23 @@
 const Datastore = require('@google-cloud/datastore');
 // Instantiates a client
 const datastore = Datastore();
-const turbiniaKind = 'TurbiniaTask'
-
+const turbiniaKind = 'TurbiniaTask';
 
 /**
- * Retrieves tasks given a combination of start time, task id,
- * request id, or/and user or given no filter. If no filter,
- * only open Turbinia Tasks will be retrieved.
+ * Retrieves tasks given a combination of start time, task
+ * id, request id, or/and user or given no filter. If no
+ * filter, only open Turbinia Tasks will be retrieved.
  *
  * @example
  * gcloud beta functions call gettasks \
- *     --data '{"instance": "turbinia-prod", "kind":"TurbiniaTask",
- *              "task_id":"abcd1234"}'
+ *    --data '{"instance": "turbinia-prod", "kind":"TurbiniaTask",
+ *    "task_id":"abcd1234"}'
  *
  * @param {object} req Cloud Function request context.
  * @param {object} req.body The request body.
  * @param {string} req.body.kind The kind of Datastore Entity to request
  * @param {string} req.body.start_time A date string in ISO 8601 format of the
- *                 beginning of the time window to query for
+ *    beginning of the time window to query for
  * @param {string} req.body.task_id Id of task to retrieve
  * @param {string} req.body.request_id of tasks to retrieve
  * @param {string} req.body.user of tasks to retrieve
@@ -55,7 +54,8 @@ exports.gettasks = function gettasks(req, res) {
                   .order('last_update', {descending: true});
   var start_time;
 
-  // Note: If you change any of these filter properties, you must also update
+  // Note: If you change any of these filter properties, you must also
+  // update
   // the tools/gcf_init/index.yaml and re-run tools/gcf_init/deploy_gcf.py
   if (req.body.task_id) {
     console.log('Getting Turbinia Tasks by Task Id: ' + req.body.task_id);
@@ -77,7 +77,9 @@ exports.gettasks = function gettasks(req, res) {
     }
     console.log('Getting Turbinia Tasks by last_updated range: ' + start_time);
     query = query.filter('last_update', '>=', start_time)
-  } else {
+  }
+  if (!req.body.task_id && !req.body.request_id && !req.body.user &&
+      !req.start_time) {
     console.log('Getting open Turbinia Tasks.');
     query = query.filter('successful', '=', null)
   }
@@ -111,7 +113,8 @@ exports.gettasks = function gettasks(req, res) {
  * @param {object} req Cloud Function request context.
  * @param {object} req.body The request body.
  * @param {string} req.body.kind The kind of Datastore Entity to request
- * @param {string} req.body.requester The user who makes the request to close tasks
+ * @param {string} req.body.requester The user who makes the request to close
+ *    tasks
  * @param {string} req.body.request_id of tasks to retrieve
  * @param {string} req.body.task_id of task to retrieve
  * @param {string} req.body.user of tasks to retrieve
@@ -171,9 +174,7 @@ exports.closetasks = function closetasks(req, res) {
         });
         return uncompleted_tasks;
       })
-      .then((uncompleted_tasks) => {
-        res.status(200).send(uncompleted_tasks);
-      })
+      .then((uncompleted_tasks) => { res.status(200).send(uncompleted_tasks); })
       .catch((err) => {
         console.error('Error in runQuery' + err);
         res.status(500).send(err);
@@ -210,15 +211,16 @@ exports.closetask = function closetask(id, requester) {
               return updatedEntity;
             })
             .catch(err => {
-              console.error('Rolling back - Error in transaction (Failure)')
-              console.error(err);
+              console
+                  .error('Rolling back - Error in transaction (Failure)')
+                      console.error(err);
               transaction.rollback();
             });
       })
       .catch((err) => {
-        console.error('Rolling back - Error in transaction (Other Reasons)')
-        console.error(err);
+        console
+            .error('Rolling back - Error in transaction (Other Reasons)')
+                console.error(err);
         transaction.rollback();
       });
 };
-
