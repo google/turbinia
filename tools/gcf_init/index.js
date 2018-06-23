@@ -113,7 +113,7 @@ exports.gettasks = function gettasks(req, res) {
  * @param {object} req Cloud Function request context.
  * @param {object} req.body The request body.
  * @param {string} req.body.kind The kind of Datastore Entity to request
- * @param {string} req.body.requester The user who makes the request to close
+ * @param {string} req.body.requester The user making the request to close
  *    tasks
  * @param {string} req.body.request_id of tasks to retrieve
  * @param {string} req.body.task_id of task to retrieve
@@ -211,16 +211,14 @@ exports.closetask = function closetask(id, requester) {
               return updatedEntity;
             })
             .catch(err => {
-              console
-                  .error('Rolling back - Error in transaction (Failure)')
-                      console.error(err);
+              console.error('Rolling back - Error in transaction (Failure)');
+              console.error(err);
               transaction.rollback();
             });
       })
       .catch((err) => {
-        console
-            .error('Rolling back - Error in transaction (Other Reasons)')
-                console.error(err);
+        console.error('Rolling back - Error in transaction (Other Reasons)');
+        console.error(err);
         transaction.rollback();
       });
 };
