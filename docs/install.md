@@ -205,9 +205,9 @@ means to save logging data.
     from there:
     *   `/etc/turbinia/turbinia.conf` **(RECOMMENDED)**
         *   `sudo mkdir /etc/turbinia`
-        *   `cp <localgitpath>/turbinia/config/turbinia_config.py /etc/turbinia/`
-    *   `/home/turbinia/.turbinia`
-        *   `cp <localgitpath>/turbinia/config/turbinia_config.py /home/turbinia/.turbiniarc`
+        *   `cp <localgitpath>/turbinia/config/turbinia_config.py /etc/turbinia/turbinia.conf`
+    *   `/home/$USER/.turbiniarc`
+        *   `cp <localgitpath>/turbinia/config/turbinia_config.py /home/$USER/.turbiniarc`
     *   Directly configure `<localgitpath>/turbinia/config/turbinia_config.py`
     *   ***NOTE***: Match the `PUBSUB_TOPIC` variable in the configuration to the name
         of the topic and subscription you created in the GCP.
