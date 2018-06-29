@@ -49,25 +49,29 @@ class TurbiniaPubSub(TurbiniaMessageBase):
     self.topic_name = topic_name
     self.topic_path = None
 
-  def setup_publisher(self):
-    """Set up the pubsub publisher client."""
+  def setup(self):
+    """Set up the pubsub clients."""
     config.LoadConfig()
+    # Start with setting up the publisher
     self.publisher = pubsub.PublisherClient()
     self.topic_path = self.publisher.topic_path(
         config.PROJECT, self.topic_name)
     log.debug('Setup PubSub publisher at {0:s}'.format(self.topic_path))
 
-  def setup_subscriber(self):
-    """Set up the pubsub subscriber client."""
-    config.LoadConfig()
+    # Set up the subscriber
     self.subscriber = pubsub.SubscriberClient()
     subscription_path = self.subscriber.subscription_path(
         config.PROJECT, self.topic_path)
 
+    # TODO FIXME try/excpt protect this.
+    log.debug('Trying to create subscription {0:s} on topic {1:s}'.format(
+        subscription_path, self.topic_path))
+    self.subscriber.create_subscription(subscription_path, self.topic_path)
+
     log.debug('Setup PubSub Subscription {0:s}'.format(
         subscription_path))
-    self.subscription = self.subscriber.subscribe(subscription_path)
-    self.subscription.open(self._callback)
+    self.subscription = self.subscriber.subscribe(
+        subscription_path, self._callback)
 
   def _callback(self, message):
     """Callback function that places messages in the queue.
