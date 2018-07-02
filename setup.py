@@ -62,6 +62,7 @@ setup(
     'requirements.txt', session=PipSession())
   ],
   extras_require={
+    'local': ['celery>=4.1.0', 'kombu>=4.1.0', 'redis>=2.10.6'],
     'worker': ['plaso>=20171118']
   }
 )
