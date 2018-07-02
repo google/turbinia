@@ -25,7 +25,7 @@ import psq
 
 from google.cloud import datastore
 from google.cloud import pubsub
-from google.cloud import exceptions
+from google.api_core import exceptions
 
 import turbinia
 from turbinia import evidence
@@ -347,12 +347,12 @@ class PSQTaskManager(BaseTaskManager):
             config.PROJECT))
     self.server_pubsub = turbinia_pubsub.TurbiniaPubSub(config.PUBSUB_TOPIC)
     self.server_pubsub.setup()
-    psq_pubsub_client = pubsub.PublisherClient()
     datastore_client = datastore.Client(project=config.PROJECT)
     try:
       self.psq = psq.Queue(
-          psq_pubsub_client,
-          config.PSQ_TOPIC,
+          self.server_pubsub.publisher,
+          self.server_pubsub.subscriber,
+          config.PROJECT,
           storage=psq.DatastoreStorage(datastore_client))
     except exceptions.GoogleAPIError as e:
       msg = 'Error creating PSQ Queue: {0:s}'.format(str(e))

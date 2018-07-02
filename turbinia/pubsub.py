@@ -19,6 +19,7 @@ from __future__ import unicode_literals
 import logging
 from Queue import Queue
 
+from google.api_core import exceptions
 from google.cloud import pubsub
 
 # Turbinia
@@ -56,17 +57,23 @@ class TurbiniaPubSub(TurbiniaMessageBase):
     self.publisher = pubsub.PublisherClient()
     self.topic_path = self.publisher.topic_path(
         config.PROJECT, self.topic_name)
+    try:
+      log.debug('Trying to create pubsub topic {0:s}'.format(self.topic_path))
+      self.publisher.create_topic(self.topic_path)
+    except exceptions.AlreadyExists:
+      log.debug('PubSub topic {0:s} already exists.'.format(self.topic_path))
     log.debug('Setup PubSub publisher at {0:s}'.format(self.topic_path))
 
     # Set up the subscriber
     self.subscriber = pubsub.SubscriberClient()
     subscription_path = self.subscriber.subscription_path(
-        config.PROJECT, self.topic_path)
-
-    # TODO FIXME try/excpt protect this.
-    log.debug('Trying to create subscription {0:s} on topic {1:s}'.format(
-        subscription_path, self.topic_path))
-    self.subscriber.create_subscription(subscription_path, self.topic_path)
+        config.PROJECT, self.topic_name)
+    try:
+      log.debug('Trying to create subscription {0:s} on topic {1:s}'.format(
+          subscription_path, self.topic_path))
+      self.subscriber.create_subscription(subscription_path, self.topic_path)
+    except exceptions.AlreadyExists:
+      log.debug('Subscription {0:s} already exists.'.format(subscription_path))
 
     log.debug('Setup PubSub Subscription {0:s}'.format(
         subscription_path))
