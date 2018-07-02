@@ -11,7 +11,7 @@
 /build/
 
 # And don't care about the 'egg'.
-/Turbinia.egg-info
+/turbinia.egg-info
 
 # Test files
 .coverage
