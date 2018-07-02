@@ -20,8 +20,12 @@ storage.
 
 from __future__ import unicode_literals
 
+import json
 import logging
+from datetime import datetime
+from datetime import timedelta
 
+import redis
 from google.cloud import datastore
 
 from turbinia import config
@@ -29,6 +33,7 @@ from turbinia import TurbiniaException
 from turbinia.workers import TurbiniaTask
 from turbinia.workers import TurbiniaTaskResult
 
+DATETIME_FORMAT = '%Y-%m-%dT%H:%M:%S'
 log = logging.getLogger('turbinia')
 
 def get_state_manager():
@@ -40,6 +45,8 @@ def get_state_manager():
   config.LoadConfig()
   if config.STATE_MANAGER == 'Datastore':
     return DatastoreStateManager()
+  elif config.STATE_MANAGER == 'redis':
+    return RedisStateManager()
   else:
     msg = 'State Manager type "{0:s}" not implemented'.format(
         config.STATE_MANAGER)
@@ -89,7 +96,7 @@ class BaseStateManager(object):
     # namepace per Turbinia installation.
     # TODO(aarontp): Migrate this to actual Datastore namespaces
     config.LoadConfig()
-    task_dict.update({'instance': config.PUBSUB_TOPIC})
+    task_dict.update({'instance': config.INSTANCE_ID})
     return task_dict
 
   def update_task(self, task):
@@ -133,14 +140,85 @@ class DatastoreStateManager(BaseStateManager):
       log.debug('Updating task {0:s} in Datastore'.format(task.name))
       self.client.put(entity)
 
-
   def write_new_task(self, task):
-    # Using the pubsub topic as part of the key in order to have unique entities
-    # per Turbinia installation.
     key = self.client.key('TurbiniaTask', task.id)
     entity = datastore.Entity(key)
     entity.update(self.get_task_dict(task))
     log.info('Writing new task {0:s} into Datastore'.format(task.name))
     self.client.put(entity)
+    task.state_key = key
+    return key
+
+
+class RedisStateManager(BaseStateManager):
+  """Use redis for task state storage.
+
+  Attributes:
+    client: Redis database object.
+  """
+
+  def __init__(self):
+    config.LoadConfig()
+    self.client = redis.StrictRedis(
+        host=config.REDIS_HOST,
+        port=config.REDIS_PORT,
+        db=config.REDIS_DB)
+
+  def get_task_data(self, instance, days=0, task_id=None, request_id=None):
+    """Gets task data from Redis.
+
+    Args:
+      instance (string): The Turbinia instance name (by default the same as the
+          PUBSUB_TOPIC in the config).
+      days (int): The number of days we want history for.
+      task_id (string): The Id of the task.
+      request_id (string): The Id of the request we want tasks for.
+
+    Returns:
+      List of Task dict objects.
+    """
+    tasks = [json.loads(self.client.get(task))
+             for task in self.client.scan_iter('TurbiniaTask:*')
+             if json.loads(self.client.get(task)).get('instance') == instance
+             or not instance]
+    if days:
+      start_time = datetime.now() - timedelta(days=days)
+      # Redis only supports strings; we convert to/from datetime here and below
+      return [task for task in tasks
+              if datetime.strptime(task.get('last_update'), DATETIME_FORMAT)
+              > start_time]
+    elif task_id:
+      return [task for task in tasks if task.get('task_id') == task_id]
+    elif request_id:
+      return [task for task in tasks if task.get('request_id') == request_id]
+    return tasks
+
+  def update_task(self, task):
+    key = task.state_key
+    if not self.client.get(key):
+      self.write_new_task(task)
+      return
+    log.info('Updating task {0:s} in Redis'.format(task.name))
+    task_data = self.get_task_dict(task)
+    task_data['last_update'] = task_data['last_update'].strftime(
+        DATETIME_FORMAT)
+    # Need to use json.dumps, else redis returns single quoted string which
+    # is invalid json
+    if not self.client.set(key, json.dumps(task_data)):
+      log.error(
+          'Unsuccessful in updating task {0:s} in Redis'.format(
+              task.name))
+
+  def write_new_task(self, task):
+    key = ":".join(['TurbiniaTask', task.id])
+    log.info('Writing new task {0:s} into Redis'.format(task.name))
+    task_data = self.get_task_dict(task)
+    task_data['last_update'] = task_data['last_update'].strftime(
+        DATETIME_FORMAT)
+    # nx=True prevents overwriting (i.e. no unintentional task clobbering)
+    if not self.client.set(key, json.dumps(task_data), nx=True):
+      log.error(
+          'Unsuccessful in writing new task {0:s} into Redis'.format(
+              task.name))
     task.state_key = key
     return key
