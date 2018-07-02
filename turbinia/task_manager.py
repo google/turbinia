@@ -347,11 +347,13 @@ class PSQTaskManager(BaseTaskManager):
             config.PROJECT))
     self.server_pubsub = turbinia_pubsub.TurbiniaPubSub(config.PUBSUB_TOPIC)
     self.server_pubsub.setup()
+    psq_publisher = pubsub.PublisherClient()
+    psq_subscriber = pubsub.SubscriberClient()
     datastore_client = datastore.Client(project=config.PROJECT)
     try:
       self.psq = psq.Queue(
-          self.server_pubsub.publisher,
-          self.server_pubsub.subscriber,
+          psq_publisher,
+          psq_subscriber,
           config.PROJECT,
           storage=psq.DatastoreStorage(datastore_client))
     except exceptions.GoogleAPIError as e:
