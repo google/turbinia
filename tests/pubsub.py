@@ -19,6 +19,7 @@ from __future__ import unicode_literals
 import unittest
 
 import mock
+import Queue
 
 from turbinia import evidence
 from turbinia import pubsub
@@ -142,10 +143,10 @@ class TestTurbiniaKombu(unittest.TestCase):
     request = getTurbiniaRequest()
     self.kombu = celery.TurbiniaKombu('fake_topic')
     result = mock.MagicMock()
-    result.body = request.to_json()
+    result.payload = request.to_json()
     self.kombu.queue = mock.MagicMock()
     self.kombu.queue.__len__.return_value = 1
-    self.kombu.queue.get.return_value = result
+    self.kombu.queue.get.side_effect = [result, Queue.Empty('Empty Queue')]
 
   def testCheckMessages(self):
     results = self.kombu.check_messages()
@@ -161,7 +162,7 @@ class TestTurbiniaKombu(unittest.TestCase):
 
   def testBadCheckMessages(self):
     result = mock.MagicMock()
-    result.body = 'non-json-data'
-    self.kombu.queue.get.return_value = result
+    result.payload = 'non-json-data'
+    self.kombu.queue.get.side_effect = [result, Queue.Empty('Empty Queue')]
 
     self.assertListEqual(self.kombu.check_messages(), [])
