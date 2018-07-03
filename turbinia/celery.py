@@ -23,9 +23,12 @@ import Queue
 
 import logging
 
-import celery
-import kombu
-from amqp.exceptions import ChannelError
+try:
+  import celery
+  import kombu
+  from amqp.exceptions import ChannelError
+except ImportError:
+  pass
 
 from turbinia import config
 from turbinia.message import TurbiniaMessageBase

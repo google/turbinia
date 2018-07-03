@@ -25,7 +25,11 @@ import logging
 from datetime import datetime
 from datetime import timedelta
 
-import redis
+try:
+  import redis
+except ImportError:
+  pass
+
 from google.cloud import datastore
 
 from turbinia import config

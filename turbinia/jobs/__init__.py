@@ -31,7 +31,6 @@ def get_jobs():
     A list of TurbiniaJobs.
   """
   # Defer imports to prevent circular dependencies during init.
-  from turbinia.jobs.be import BulkExtractorJob
   from turbinia.jobs.plaso import PlasoJob
   from turbinia.jobs.psort import PsortJob
   from turbinia.jobs.worker_stat import StatJob

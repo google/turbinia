@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Copyright 2016 Google Inc.
 #
@@ -14,17 +15,9 @@
 # limitations under the License.
 """Script to run the tests."""
 
-import os
-import sys
-import unittest
+import subprocess
 
 if __name__ == '__main__':
-  base_dir = os.path.dirname(os.path.abspath(__file__))
-  # Change PYTHONPATH to include full path to turbinia.
-  sys.path.insert(0, base_dir)
-
-  test_suite = unittest.TestLoader().discover(
-      os.path.join(base_dir, 'tests'), pattern='*.py')
-  test_results = unittest.TextTestRunner(verbosity=2).run(test_suite)
-  if not test_results.wasSuccessful():
-    sys.exit(1)
+  subprocess.check_call([
+    'nosetests', '-vv', '--with-coverage', '--cover-package=turbinia'
+  ])

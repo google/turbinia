@@ -36,9 +36,6 @@ TURBINIA_DIR = '/opt/turbinia'
 # be deployed to.
 GCS_MOUNT_DIR = '/mnt/turbinia'
 
-# Virtualenv directory
-TURBINIAENV = '%s/turbinia-env' % TURBINIA_DIR
-
 # Local directory for temporary data
 TMP_DIR = '/var/tmp'
 
@@ -46,9 +43,10 @@ TMP_DIR = '/var/tmp'
 # a distributed task queue using Google Cloud Pub/Sub
 TASK_MANAGER = 'PSQ'
 
-# File to log to; set this as 'None' if log file is not desired
-# By default, Turbinia logs are written to a directory (GCS_MOUNT_DIR) in the GCS mount
-LOG_FILE = '%s/output/logs/turbinia.log' % GCS_MOUNT_DIR
+# File to log to; set this as None if log file is not desired
+# By default, Turbinia logs are written to a directory (GCS_MOUNT_DIR)
+# in the GCS mount
+LOG_FILE = '/tmp/turbinia.log'
 
 # Default base output directory for worker results and evidence
 # When running Turbinia locally, you can set this to, for example,
@@ -91,10 +89,7 @@ SCRATCH_PATH = 'None'
 # GCS bucket that has Turbinia-specific scripts and can be used to store logs.
 BUCKET_NAME = 'None'
 PSQ_TOPIC = 'turbinia-psq'
-# TODO(beamcodeup): Per https://github.com/google/turbinia/issues/172, Cloud
-# Functions are only available on us-central1. Thus, hardcoding this for now.
-# Fix this when CF starts supporting more regions.
-TURBINIA_REGION = 'us-central1'
+TURBINIA_REGION = 'None'
 
 # A unique ID per Turbinia instance. Used to namespace datastore entries.
 INSTANCE_ID = 'turbinia-pubsub'
