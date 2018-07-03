@@ -19,7 +19,7 @@ from __future__ import unicode_literals
 import logging
 from Queue import Queue
 
-from google.api_core import exceptions
+from google.cloud import exceptions
 from google.cloud import pubsub
 
 # Turbinia
@@ -60,7 +60,7 @@ class TurbiniaPubSub(TurbiniaMessageBase):
     try:
       log.debug('Trying to create pubsub topic {0:s}'.format(self.topic_path))
       self.publisher.create_topic(self.topic_path)
-    except exceptions.AlreadyExists:
+    except exceptions.Conflict:
       log.debug('PubSub topic {0:s} already exists.'.format(self.topic_path))
     log.debug('Setup PubSub publisher at {0:s}'.format(self.topic_path))
 
@@ -72,7 +72,7 @@ class TurbiniaPubSub(TurbiniaMessageBase):
       log.debug('Trying to create subscription {0:s} on topic {1:s}'.format(
           subscription_path, self.topic_path))
       self.subscriber.create_subscription(subscription_path, self.topic_path)
-    except exceptions.AlreadyExists:
+    except exceptions.Conflict:
       log.debug('Subscription {0:s} already exists.'.format(subscription_path))
 
     log.debug('Setup PubSub Subscription {0:s}'.format(
