@@ -18,9 +18,12 @@ from __future__ import unicode_literals, absolute_import
 
 import logging
 import time
-import traceback
 
-from celery import states as celery_states
+try:
+  from celery import states as celery_states
+except ImportError:
+  pass
+
 import psq
 
 from google.cloud import datastore
@@ -32,7 +35,12 @@ from turbinia import evidence
 from turbinia import config
 from turbinia import jobs
 from turbinia import pubsub as turbinia_pubsub
-from turbinia import celery as turbinia_celery
+
+try:
+  from turbinia import celery as turbinia_celery
+except ImportError:
+  pass
+
 from turbinia import state_manager
 
 log = logging.getLogger('turbinia')
