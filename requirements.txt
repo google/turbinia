@@ -1,6 +1,7 @@
-psq==0.5.0
+psq
 google-api-python-client>=1.6.2
-google-cloud-pubsub==0.26.0
-google-cloud-storage==1.6.0
-google-cloud-core==0.26.0
+google-cloud-pubsub
+google-cloud-storage
+google-cloud-core
+oauth2client
 urllib3[secure]

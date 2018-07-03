@@ -24,13 +24,15 @@ import os
 import sys
 
 from turbinia.client import TurbiniaClient
+from turbinia.client import TurbiniaCeleryClient
 from turbinia.client import TurbiniaServer
+from turbinia.client import TurbiniaCeleryWorker
 from turbinia.client import TurbiniaPsqWorker
 from turbinia import config
 from turbinia.config import logger
 from turbinia import evidence
 from turbinia import VERSION
-from turbinia.pubsub import TurbiniaRequest
+from turbinia.message import TurbiniaRequest
 
 log = logging.getLogger('turbinia')
 logger.setup()
@@ -73,6 +75,12 @@ def main():
       '--server',
       action='store_true',
       help='Run Turbinia Server indefinitely')
+  parser.add_argument(
+      '-C',
+      '--use_celery',
+      action='store_true',
+      help='Pass this flag when using Celery/Kombu for task queuing and '
+           'messaging (instead of Google PSQ/pubsub)')
   parser.add_argument(
       '-V',
       '--version',
@@ -210,6 +218,9 @@ def main():
       help='Run PSQ Worker in a single thread',
       required=False)
 
+  # Celery Worker
+  parser_celeryworker = subparsers.add_parser('celeryworker', help='Run Celery worker')
+
   # Parser options for Turbinia status command
   parser_status = subparsers.add_parser(
       'status',
@@ -247,7 +258,10 @@ def main():
 
   # Client
   config.LoadConfig()
-  client = TurbiniaClient()
+  if args.use_celery:
+    client = TurbiniaCeleryClient()
+  else:
+    client = TurbiniaClient()
 
   if args.output_dir:
     config.OUTPUT_DIR = args.output_dir
@@ -287,6 +301,10 @@ def main():
     # which we are bypassing.
     logger.setup()
     worker = TurbiniaPsqWorker()
+    worker.start()
+  elif args.command == 'celeryworker':
+    logger.setup()
+    worker = TurbiniaCeleryWorker()
     worker.start()
   elif args.command == 'server':
     server = TurbiniaServer()
@@ -350,7 +368,7 @@ def main():
       print request.to_json().encode('utf-8')
     else:
       log.info(
-          'Creating PubSub request {0:s} with evidence {1:s}'.format(
+          'Creating request {0:s} with evidence {1:s}'.format(
               request.request_id, evidence_.name))
       client.send_request(request)
 
