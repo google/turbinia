@@ -50,14 +50,6 @@ class MockPubSubMessage(object):
     self.message_id = message_id
 
 
-class MockPubSubResults(list):
-  """Mock of a PubSub Results list that can contain MockPubSubMessages."""
-
-  def __init__(self, ack_id='54321', message='fake message'):
-    super(MockPubSubResults, self).__init__()
-    self.append((ack_id, message))
-
-
 class TestTurbiniaRequest(unittest.TestCase):
   """Test TurbiniaRequest class."""
 
@@ -100,10 +92,9 @@ class TestTurbiniaPubSub(unittest.TestCase):
   def setUp(self):
     request = getTurbiniaRequest()
     self.pubsub = pubsub.TurbiniaPubSub('fake_topic')
-    results = MockPubSubResults(
-        ack_id='1234', message=MockPubSubMessage(request.to_json(), 'msg id'))
-    self.pubsub.subscription = mock.MagicMock()
-    self.pubsub.subscription.pull.return_value = results
+    message = MockPubSubMessage(request.to_json(), 'msg id')
+    self.pubsub._queue.put(message)
+    self.pubsub.topic_path = 'faketopicpath'
 
   def testCheckMessages(self):
     """Test check_messages to make sure it returns the expected results."""
@@ -118,22 +109,21 @@ class TestTurbiniaPubSub(unittest.TestCase):
     self.assertTrue(isinstance(request_new.evidence[0], evidence.RawDisk))
     self.assertEqual(request_new.evidence[0].name, 'My Evidence')
 
-    # Make sure that the test message was acknowledged
-    self.pubsub.subscription.acknowledge.assert_called_with(['1234'])
-
   def testBadCheckMessages(self):
     """Test check_messages returns empty list for an invalid message."""
-    results = MockPubSubResults(
-        ack_id='2345', message=MockPubSubMessage('non-json-data', 'msg id2'))
-    self.pubsub.subscription.pull.return_value = results
+    message = MockPubSubMessage('non-json-data', 'msg id2')
+    # Clear the queue so we can add an invalid message
+    self.pubsub._queue.get()
+    self.pubsub._queue.put(message)
 
     self.assertListEqual(self.pubsub.check_messages(), [])
 
   def testSendMessage(self):
     """Test sending a message."""
-    self.pubsub.topic = mock.MagicMock()
+    self.pubsub.publisher = mock.MagicMock()
     self.pubsub.send_message('test message text')
-    self.pubsub.topic.publish.assert_called_with('test message text')
+    self.pubsub.publisher.publish.assert_called_with(
+        'faketopicpath', 'test message text')
 
 
 class TestTurbiniaKombu(unittest.TestCase):

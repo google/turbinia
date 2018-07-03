@@ -17,7 +17,9 @@
 from __future__ import unicode_literals
 
 import logging
+from Queue import Queue
 
+from google.api_core import exceptions
 from google.cloud import pubsub
 
 # Turbinia
@@ -31,25 +33,62 @@ class TurbiniaPubSub(TurbiniaMessageBase):
   """PubSub client object for Google Cloud.
 
   Attributes:
-    topic: The pubsub topic object
-    topic_name: The pubsub topic name
+    _queue: A Queue object for storing pubsub messages
+    publisher: The pubsub publisher client object
+    subscriber: The pubsub subscriber client object
     subscription: The pubsub subscription object
+    topic_name (str): The pubsub topic name
+    topic_path (str): The full path of the pubsub topic
   """
 
   def __init__(self, topic_name):
     """Initialization for PubSubClient."""
-    self.topic_name = topic_name
-    self.topic = None
+    self._queue = Queue()
+    self.publisher = None
+    self.subscriber = None
     self.subscription = None
+    self.topic_name = topic_name
+    self.topic_path = None
 
   def setup(self):
-    """Set up the client."""
+    """Set up the pubsub clients."""
     config.LoadConfig()
-    client = pubsub.Client(project=config.PROJECT)
-    self.topic = client.topic(self.topic_name)
-    log.debug('Connecting to PubSub Subscription on {0:s}'.format(
-        self.topic_name))
-    self.subscription = self.topic.subscription(self.topic_name)
+    # Start with setting up the publisher
+    self.publisher = pubsub.PublisherClient()
+    self.topic_path = self.publisher.topic_path(
+        config.PROJECT, self.topic_name)
+    try:
+      log.debug('Trying to create pubsub topic {0:s}'.format(self.topic_path))
+      self.publisher.create_topic(self.topic_path)
+    except exceptions.AlreadyExists:
+      log.debug('PubSub topic {0:s} already exists.'.format(self.topic_path))
+    log.debug('Setup PubSub publisher at {0:s}'.format(self.topic_path))
+
+    # Set up the subscriber
+    self.subscriber = pubsub.SubscriberClient()
+    subscription_path = self.subscriber.subscription_path(
+        config.PROJECT, self.topic_name)
+    try:
+      log.debug('Trying to create subscription {0:s} on topic {1:s}'.format(
+          subscription_path, self.topic_path))
+      self.subscriber.create_subscription(subscription_path, self.topic_path)
+    except exceptions.AlreadyExists:
+      log.debug('Subscription {0:s} already exists.'.format(subscription_path))
+
+    log.debug('Setup PubSub Subscription {0:s}'.format(
+        subscription_path))
+    self.subscription = self.subscriber.subscribe(
+        subscription_path, self._callback)
+
+  def _callback(self, message):
+    """Callback function that places messages in the queue.
+
+    Args:
+      message: A pubsub message object
+    """
+    log.debug('Recieved pubsub message: {0:s}'.format(message.data))
+    message.ack()
+    self._queue.put(message)
 
   def check_messages(self):
     """Checks for pubsub messages.
@@ -57,26 +96,19 @@ class TurbiniaPubSub(TurbiniaMessageBase):
     Returns:
       A list of any TurbiniaRequest objects received, else an empty list
     """
-    results = self.subscription.pull(return_immediately=True)
-
-    ack_ids = []
     requests = []
-    for ack_id, message in results:
+    for _ in xrange(self._queue.qsize()):
+      message = self._queue.get()
       data = message.data
-      log.info('Processing PubSub Message {0:s}'.format(message.message_id))
-      log.debug('PubSub Message body: {0:s}'.format(data))
+      log.info('Processing PubSub message {0:s}'.format(message.message_id))
+      log.debug('PubSub message body: {0:s}'.format(data))
 
       request = self._validate_message(data)
       if request:
         requests.append(request)
-        ack_ids.append(ack_id)
       else:
         log.error('Error processing PubSub message: {0:s}'.format(data))
 
-    if results:
-      self.subscription.acknowledge(ack_ids)
-
-    log.debug('Recieved {0:d} pubsub messages'.format(len(requests)))
     return requests
 
   def send_message(self, message):
@@ -85,7 +117,15 @@ class TurbiniaPubSub(TurbiniaMessageBase):
     message: The message to send.
     """
     data = message.encode('utf-8')
-    msg_id = self.topic.publish(data)
-    log.info(
-        'Published message {0:s} to topic {1:s}'.format(
-            msg_id, self.topic_name))
+    future = self.publisher.publish(self.topic_path, data)
+    msg_id = future.result()
+    log.info('Published message {0:s} to topic {1:s}'.format(
+        msg_id, self.topic_name))
+
+  def send_request(self, request):
+    """Sends a TurbiniaRequest message.
+
+    Args:
+      request: A TurbiniaRequest object.
+    """
+    self.send_message(request.to_json())

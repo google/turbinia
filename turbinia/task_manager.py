@@ -25,7 +25,7 @@ import psq
 
 from google.cloud import datastore
 from google.cloud import pubsub
-from google.gax.errors import GaxError
+from google.api_core import exceptions
 
 import turbinia
 from turbinia import evidence
@@ -347,14 +347,16 @@ class PSQTaskManager(BaseTaskManager):
             config.PROJECT))
     self.server_pubsub = turbinia_pubsub.TurbiniaPubSub(config.PUBSUB_TOPIC)
     self.server_pubsub.setup()
-    psq_pubsub_client = pubsub.Client(project=config.PROJECT)
+    psq_publisher = pubsub.PublisherClient()
+    psq_subscriber = pubsub.SubscriberClient()
     datastore_client = datastore.Client(project=config.PROJECT)
     try:
       self.psq = psq.Queue(
-          psq_pubsub_client,
-          config.PSQ_TOPIC,
+          psq_publisher,
+          psq_subscriber,
+          config.PROJECT,
           storage=psq.DatastoreStorage(datastore_client))
-    except GaxError as e:
+    except exceptions.GoogleAPIError as e:
       msg = 'Error creating PSQ Queue: {0:s}'.format(str(e))
       log.error(msg)
       raise turbinia.TurbiniaException(msg)
