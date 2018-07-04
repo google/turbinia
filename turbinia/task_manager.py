@@ -96,7 +96,7 @@ class BaseTaskManager(object):
     self.tasks = []
     self.state_manager = state_manager.get_state_manager()
 
-  def _backend_setup(self):
+  def _backend_setup(self, *args, **kwargs):
     """Sets up backend dependencies.
 
     Raises:
@@ -104,9 +104,9 @@ class BaseTaskManager(object):
     """
     raise NotImplementedError
 
-  def setup(self):
+  def setup(self, *args, **kwargs):
     """Does setup of Task manager and its dependencies."""
-    self._backend_setup()
+    self._backend_setup(*args, **kwargs)
     # TODO(aarontp): Consider instantiating a job per evidence object
     self.jobs = jobs.get_jobs()
 
@@ -278,7 +278,7 @@ class CeleryTaskManager(BaseTaskManager):
     config.LoadConfig()
     super(CeleryTaskManager, self).__init__()
 
-  def _backend_setup(self):
+  def _backend_setup(self, *args, **kwargs):
     self.celery = turbinia_celery.TurbiniaCelery()
     self.celery.setup()
     self.kombu = turbinia_celery.TurbiniaKombu(config.KOMBU_CHANNEL)
@@ -349,12 +349,20 @@ class PSQTaskManager(BaseTaskManager):
     config.LoadConfig()
     super(PSQTaskManager, self).__init__()
 
-  def _backend_setup(self):
+  def _backend_setup(self, server=True, *args, **kwargs):
+    """
+    Args:
+      server (bool): Whether this is the client or a server
+    """
+
     log.debug(
         'Setting up PSQ Task Manager requirements on project {0:s}'.format(
             config.PROJECT))
     self.server_pubsub = turbinia_pubsub.TurbiniaPubSub(config.PUBSUB_TOPIC)
-    self.server_pubsub.setup()
+    if server:
+      self.server_pubsub.setup_subscriber()
+    else:
+      self.server_pubsub.setup_publisher()
     psq_publisher = pubsub.PublisherClient()
     psq_subscriber = pubsub.SubscriberClient()
     datastore_client = datastore.Client(project=config.PROJECT)

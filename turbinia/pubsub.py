@@ -52,8 +52,12 @@ class TurbiniaPubSub(TurbiniaMessageBase):
 
   def setup(self):
     """Set up the pubsub clients."""
+    self.setup_publisher()
+    self.setup_subscriber()
+
+  def setup_publisher(self):
+    """Set up the pubsub publisher."""
     config.LoadConfig()
-    # Start with setting up the publisher
     self.publisher = pubsub.PublisherClient()
     self.topic_path = self.publisher.topic_path(
         config.PROJECT, self.topic_name)
@@ -64,10 +68,15 @@ class TurbiniaPubSub(TurbiniaMessageBase):
       log.debug('PubSub topic {0:s} already exists.'.format(self.topic_path))
     log.debug('Setup PubSub publisher at {0:s}'.format(self.topic_path))
 
-    # Set up the subscriber
+  def setup_subscriber(self):
+    """Set up the pubsub subscriber."""
+    config.LoadConfig()
     self.subscriber = pubsub.SubscriberClient()
     subscription_path = self.subscriber.subscription_path(
         config.PROJECT, self.topic_name)
+    if not self.topic_path:
+      self.topic_path = self.subscriber.topic_path(
+          config.PROJECT, self.topic_name)
     try:
       log.debug('Trying to create subscription {0:s} on topic {1:s}'.format(
           subscription_path, self.topic_path))
@@ -101,7 +110,6 @@ class TurbiniaPubSub(TurbiniaMessageBase):
       message = self._queue.get()
       data = message.data
       log.info('Processing PubSub message {0:s}'.format(message.message_id))
-      log.debug('PubSub message body: {0:s}'.format(data))
 
       request = self._validate_message(data)
       if request:
