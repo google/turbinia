@@ -88,6 +88,9 @@ DEVICE_NAME = 'None'
 SCRATCH_PATH = 'None'
 # GCS bucket that has Turbinia-specific scripts and can be used to store logs.
 BUCKET_NAME = 'None'
+# This is the internal PubSub topic that PSQ will use.  This should be different
+# than the PUBSUB_TOPIC variable.  The actual PubSub topic created will be this
+# variable prefixed with 'psq-'.
 PSQ_TOPIC = 'turbinia-psq'
 TURBINIA_REGION = 'None'
 
@@ -96,7 +99,8 @@ INSTANCE_ID = 'turbinia-pubsub'
 
 # Topic Turbinia will listen on for new Artifact events. This is also used as
 # the Turbinia instance/namespace as it is a unique string per Turbinia
-# instance and Cloud Project.
+# instance and Cloud Project.  This should be different than the PSQ_TOPIC
+# variable.
 PUBSUB_TOPIC = INSTANCE_ID
 
 # GCS Path to copy worker results and Evidence output to
