@@ -363,6 +363,7 @@ class PSQTaskManager(BaseTaskManager):
           psq_publisher,
           psq_subscriber,
           config.PROJECT,
+          name=config.PSQ_TOPIC,
           storage=psq.DatastoreStorage(datastore_client))
     except exceptions.GoogleAPIError as e:
       msg = 'Error creating PSQ Queue: {0:s}'.format(str(e))
