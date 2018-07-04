@@ -245,7 +245,11 @@ class TurbiniaCeleryClient(TurbiniaClient):
 
 
 class TurbiniaServer(object):
-  """Turbinia Server class."""
+  """Turbinia Server class.
+
+  Attributes:
+    task_manager (TaskManager): An object to manage turbinia tasks.
+  """
 
   def __init__(self):
     """Initialize Turbinia Server."""
