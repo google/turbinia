@@ -219,7 +219,8 @@ def main():
       required=False)
 
   # Celery Worker
-  parser_celeryworker = subparsers.add_parser('celeryworker', help='Run Celery worker')
+  parser_celeryworker = subparsers.add_parser(
+      'celeryworker', help='Run Celery worker')
 
   # Parser options for Turbinia status command
   parser_status = subparsers.add_parser(
@@ -258,10 +259,13 @@ def main():
 
   # Client
   config.LoadConfig()
-  if args.use_celery:
-    client = TurbiniaCeleryClient()
+  if args.command not in ('psqworker', 'server'):
+    if args.use_celery:
+      client = TurbiniaCeleryClient()
+    else:
+      client = TurbiniaClient()
   else:
-    client = TurbiniaClient()
+    client = None
 
   if args.output_dir:
     config.OUTPUT_DIR = args.output_dir

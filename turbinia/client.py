@@ -25,6 +25,10 @@ import time
 # TODO(aarontp): Selectively load dependencies based on configured backends
 import psq
 
+from google.cloud import exceptions
+from google.cloud import datastore
+from google.cloud import pubsub
+
 from turbinia import config
 from turbinia.config import logger
 from turbinia.lib.google_cloud import GoogleCloudFunction
@@ -42,13 +46,16 @@ class TurbiniaClient(object):
   Attributes:
     task_manager (TaskManager): Turbinia task manager
   """
+
   def __init__(self):
     config.LoadConfig()
     self.task_manager = task_manager.get_task_manager()
-    self.task_manager.setup()
+    self.task_manager.setup(server=False)
 
   def list_jobs(self):
     """List the available jobs."""
+    # TODO(aarontp): Refactor this out so that we don't need to depend on
+    # the task manager from the client.
     log.info('Available Jobs:')
     for job in self.task_manager.jobs:
       log.info('\t{0:s}'.format(job.name))
@@ -99,6 +106,7 @@ class TurbiniaClient(object):
       days (int): The number of days we want history for.
       task_id (string): The Id of the task.
       request_id (string): The Id of the request we want tasks for.
+      function_name (string): The GCF function we want to call
 
     Returns:
       List of Task dict objects.
@@ -136,7 +144,6 @@ class TurbiniaClient(object):
 
     return results[0]
 
-
   def format_task_status(self, instance, project, region, days=0, task_id=None,
                          request_id=None, all_fields=False):
     """Formats the recent history for Turbinia Tasks.
@@ -152,7 +159,8 @@ class TurbiniaClient(object):
       all_fields (bool): Include all fields for the task, including task,
           request ids and saved file paths.
 
-    Returns: String of task status
+    Returns:
+      String of task status
     """
     task_results = self.get_task_data(instance, project, region, days, task_id,
                                       request_id)
@@ -204,6 +212,7 @@ class TurbiniaCeleryClient(TurbiniaClient):
   Attributes:
     redis (RedisStateManager): Redis datastore object
   """
+
   def __init__(self, *args, **kwargs):
     super(TurbiniaCeleryClient, self).__init__(*args, **kwargs)
     self.redis = RedisStateManager()
@@ -218,8 +227,9 @@ class TurbiniaCeleryClient(TurbiniaClient):
 
   def get_task_data(self, instance, _, __, days=0, task_id=None,
                     request_id=None, function_name=None):
-    """Gets task data from Redis. We keep the same function signature,
-        but ignore arguments passed for GCP.
+    """Gets task data from Redis.
+
+    We keep the same function signature, but ignore arguments passed for GCP.
 
     Args:
       instance (string): The Turbinia instance name (by default the same as the
@@ -234,8 +244,19 @@ class TurbiniaCeleryClient(TurbiniaClient):
     return self.redis.get_task_data(instance, days, task_id, request_id)
 
 
-class TurbiniaServer(TurbiniaClient):
-  """Turbinia Server class."""
+class TurbiniaServer(object):
+  """Turbinia Server class.
+
+  Attributes:
+    task_manager (TaskManager): An object to manage turbinia tasks.
+  """
+
+  def __init__(self):
+    """Initialize Turbinia Server."""
+    config.LoadConfig()
+    self.task_manager = task_manager.get_task_manager()
+    self.task_manager.setup()
+
   def start(self):
     """Start Turbinia Server."""
     log.info('Running Turbinia Server.')
@@ -252,6 +273,7 @@ class TurbiniaCeleryWorker(TurbiniaClient):
   Attributes:
     worker (celery.app): Celery worker app
   """
+
   def __init__(self, *args, **kwargs):
     """Initialization for Celery worker."""
     super(TurbiniaCeleryWorker, self).__init__(*args, **kwargs)
@@ -267,19 +289,34 @@ class TurbiniaCeleryWorker(TurbiniaClient):
     self.worker.start(argv)
 
 
-class TurbiniaPsqWorker(TurbiniaClient):
+class TurbiniaPsqWorker(object):
   """Turbinia PSQ Worker class.
 
   Attributes:
     worker (psq.Worker): PSQ Worker object
+    psq (psq.Queue): A Task queue object
   """
+
   def __init__(self, *args, **kwargs):
     """Initialization for PSQ Worker."""
-    super(TurbiniaPsqWorker, self).__init__(*args, **kwargs)
-    log.info(
-        'Starting PSQ listener on queue {0:s}'.format(
-            self.task_manager.psq.name))
-    self.worker = psq.Worker(queue=self.task_manager.psq)
+    config.LoadConfig()
+    psq_publisher = pubsub.PublisherClient()
+    psq_subscriber = pubsub.SubscriberClient()
+    datastore_client = datastore.Client(project=config.PROJECT)
+    try:
+      self.psq = psq.Queue(
+          psq_publisher,
+          psq_subscriber,
+          config.PROJECT,
+          name=config.PSQ_TOPIC,
+          storage=psq.DatastoreStorage(datastore_client))
+    except exceptions.GoogleAPIError as e:
+      msg = 'Error creating PSQ Queue: {0:s}'.format(str(e))
+      log.error(msg)
+      raise TurbiniaException(msg)
+
+    log.info('Starting PSQ listener on queue {0:s}'.format(self.psq.name))
+    self.worker = psq.Worker(queue=self.psq)
 
   def start(self):
     """Start Turbinia PSQ Worker."""

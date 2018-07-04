@@ -85,9 +85,10 @@ class TestTurbiniaServer(unittest.TestCase):
 class TestTurbiniaPsqWorker(unittest.TestCase):
   """Test Turbinia PSQ Worker class."""
 
-  @mock.patch('turbinia.client.task_manager.PSQTaskManager')
+  @mock.patch('turbinia.client.pubsub')
+  @mock.patch('turbinia.client.datastore.Client')
   @mock.patch('turbinia.client.psq.Worker')
-  def testTurbiniaPsqWorkerInit(self, _, __):
-    """Basic test for client."""
+  def testTurbiniaPsqWorkerInit(self, _, __, ___):
+    """Basic test for PSQ worker."""
     worker = TurbiniaPsqWorker()
     self.assertTrue(hasattr(worker, 'worker'))
