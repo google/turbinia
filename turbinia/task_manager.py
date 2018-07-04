@@ -26,9 +26,9 @@ except ImportError:
 
 import psq
 
+from google.cloud import exceptions
 from google.cloud import datastore
 from google.cloud import pubsub
-from google.api_core import exceptions
 
 import turbinia
 from turbinia import evidence
