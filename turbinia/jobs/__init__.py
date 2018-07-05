@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-#!/usr/bin/python
-#
 # Copyright 2015 Google Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,11 +14,6 @@
 # limitations under the License.
 """Turbinia jobs."""
 
-from datetime import datetime
-import json
-import sys
-import time
-import traceback as tb
 import uuid
 
 
