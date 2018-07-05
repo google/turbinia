@@ -16,7 +16,7 @@
 
 from __future__ import unicode_literals
 
-from turbinia.evidence import TextFile
+from turbinia.evidence import FilteredTextFile
 from turbinia.evidence import PlasoCsvFile
 from turbinia.jobs import TurbiniaJob
 from turbinia.workers.grep import GrepTask
@@ -27,7 +27,7 @@ class GrepJob(TurbiniaJob):
 
   # The types of evidence that this Job will process
   evidence_input = [type(PlasoCsvFile())]
-  evidence_output = [type(TextFile())]
+  evidence_output = [type(FilteredTextFile())]
 
   def __init__(self):
     super(GrepJob, self).__init__(name='GrepJob')
