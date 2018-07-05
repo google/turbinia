@@ -85,14 +85,8 @@ class Evidence(object):
     request_id: The id of the request this evidence came from, if any
   """
 
-  def __init__(
-      self,
-      name=None,
-      description=None,
-      source=None,
-      local_path=None,
-      tags=None,
-      request_id=None):
+  def __init__(self, name=None, description=None, source=None, local_path=None,
+               tags=None, request_id=None):
     """Initialization for Evidence."""
     self.copyable = False
     self.cloud_only = False
@@ -125,7 +119,6 @@ class Evidence(object):
     Raises:
       TurbiniaException: If serialization error occurs.
     """
-    serialized = None
     try:
       serialized = json.dumps(self.serialize())
     except TypeError as e:
@@ -186,13 +179,8 @@ class EncryptedDisk(RawDisk):
     unencrypted_path: A string to the unencrypted local path
   """
 
-  def __init__(
-      self,
-      encryption_type=None,
-      encryption_key=None,
-      unencrypted_path=None,
-      *args,
-      **kwargs):
+  def __init__(self, encryption_type=None, encryption_key=None,
+               unencrypted_path=None, *args, **kwargs):
     """Initialization for Encrypted disk evidence objects."""
     # TODO(aarontp): Make this an enum, or limited list
     self.encryption_type = encryption_type
@@ -211,13 +199,7 @@ class GoogleCloudDisk(RawDisk):
     disk_name: The cloud disk name.
   """
 
-  def __init__(
-      self,
-      project=None,
-      zone=None,
-      disk_name=None,
-      *args,
-      **kwargs):
+  def __init__(self, project=None, zone=None, disk_name=None, *args, **kwargs):
     """Initialization for Google Cloud Disk."""
     self.project = project
     self.zone = zone

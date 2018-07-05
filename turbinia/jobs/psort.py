@@ -39,4 +39,4 @@ class PsortJob(TurbiniaJob):
     Returns:
         A list of PsortTasks.
     """
-    return [PsortTask() for e in evidence]
+    return [PsortTask() for _ in evidence]

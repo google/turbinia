@@ -40,6 +40,7 @@ from turbinia.workers import TurbiniaTaskResult
 DATETIME_FORMAT = '%Y-%m-%dT%H:%M:%S'
 log = logging.getLogger('turbinia')
 
+
 def get_state_manager():
   """Return state manager object based on config.
 
@@ -60,7 +61,8 @@ def get_state_manager():
 class BaseStateManager(object):
   """Class to manage Turbinia state persistence."""
 
-  def get_task_dict(self, task):
+  @staticmethod
+  def get_task_dict(task):
     """Creates a dict of the fields we want to persist into storage.
 
     This combines attributes from both the Task and the TaskResult into one flat
@@ -97,7 +99,7 @@ class BaseStateManager(object):
     task_dict.update({k: None for k in all_attrs if not task_dict.has_key(k)})
 
     # Using the pubsub topic as an instance attribute in order to have a unique
-    # namepace per Turbinia installation.
+    # namespace per Turbinia installation.
     # TODO(aarontp): Migrate this to actual Datastore namespaces
     config.LoadConfig()
     task_dict.update({'instance': config.INSTANCE_ID})

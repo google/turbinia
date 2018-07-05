@@ -39,15 +39,15 @@ logger.setup()
 
 
 def main():
-  # TODO(aarontp): Allow for single run mode when specifying evidence
-  #                which will also terminate the task manager after evidence has
-  #                been processed.
+  # TODO(aarontp): Allow for single run mode when
+  # by specifying evidence which will also terminate the task manager after
+  # evidence has been processed.
   parser = argparse.ArgumentParser()
   parser.add_argument(
       '-q', '--quiet', action='store_true', help='Show minimal output')
   parser.add_argument(
       '-v', '--verbose', action='store_true', help='Show verbose output')
-  # TODO(aarontp): Turn off debug by default later
+  # TODO(aarontp): Turn off debug by default
   parser.add_argument(
       '-d', '--debug', action='store_true', help='Show debug output',
       default=True)
@@ -389,6 +389,7 @@ def main():
 
   log.info('Done.')
   sys.exit(0)
+
 
 if __name__ == '__main__':
   main()
