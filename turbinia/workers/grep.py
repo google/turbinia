@@ -17,6 +17,7 @@
 from __future__ import unicode_literals
 
 import os
+from tempfile import NamedTemporaryFile
 
 from turbinia.evidence import TextFile
 from turbinia.workers import TurbiniaTask
@@ -37,9 +38,16 @@ class GrepTask(TurbiniaTask):
     """
     output_evidence = TextFile()
 
-    # TODO(jbn): Pick this up from evidence.recipe instead.
-    patterns = ['foo', 'bar']
-    with open('foo.txt', 'wb') as fh:
+    # TODO(jbn): Pick this up from evidence recipe instead.
+    patterns = ['Create Volatile Files and Directories']
+    if not patterns:
+      result.status('No patterns supplied, exit task.')
+      return
+
+    # Create temporary file to write patterns to.
+    # Used as input to grep (-f).
+    with NamedTemporaryFile(dir=self.output_dir, delete=False) as fh:
+      patterns_file_path = fh.name
       fh.write('\n'.join(patterns))
 
     # Create a path that we can write the new file to.
@@ -48,11 +56,10 @@ class GrepTask(TurbiniaTask):
         self.output_dir, '{0:s}.filtered'.format(base_name))
 
     output_evidence.local_path = output_file_path
-    cmd = 'grep -E -b -n -f {0:s} > {1:s}'.format(
-      evidence.local_path, output_file_path)
+    cmd = 'grep -E -b -n -f {0:s} {1:s} > {2:s}'.format(
+      patterns_file_path, evidence.local_path, output_file_path)
 
     result.log('Running [{0:s}]'.format(cmd))
-
     self.execute(
       cmd, result, new_evidence=[output_evidence], close=True, shell=True)
 
