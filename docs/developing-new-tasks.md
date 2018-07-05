@@ -75,6 +75,9 @@ add the files you linked to the Evidence earlier, it will save those
 automatically).  This is used for non-Evidence files that you want to save (for
 example log files).
 
+If you want to write temporary files from your task, you should do this relative
+to the self.output_dir.  This is a directory that is unique for this Task.
+
 After the `run()` method returns, the TurbiniaResults object will be
 returned to the server, and the new Evidence will be considered to see if there
 are other Tasks that are listening for it, and if there are, those Tasks will be
