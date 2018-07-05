@@ -283,3 +283,8 @@ class TextFile(Evidence):
   def __init__(self, *args, **kwargs):
     super(TextFile, self).__init__(*args, **kwargs)
     self.copyable = True
+
+
+class FilteredTextFile(TextFile):
+  """Filtered text data."""
+  pass

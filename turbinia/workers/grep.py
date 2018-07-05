@@ -12,19 +12,19 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Task for filter a text file using regular expression patterns."""
+"""Task to filter a text file using extended regular expression patterns."""
 
 from __future__ import unicode_literals
 
 import os
 from tempfile import NamedTemporaryFile
 
-from turbinia.evidence import TextFile
+from turbinia.evidence import FilteredTextFile
 from turbinia.workers import TurbiniaTask
 
 
 class GrepTask(TurbiniaTask):
-  """Filter input based on regular expression patterns."""
+  """Filter input based on extended regular expression patterns."""
 
   def run(self, evidence, result):
     """Run grep binary.
@@ -36,7 +36,7 @@ class GrepTask(TurbiniaTask):
     Returns:
         TurbiniaTaskResult object.
     """
-    output_evidence = TextFile()
+    output_evidence = FilteredTextFile()
 
     patterns = evidence.config.get('filter_patterns')
     if not patterns:
