@@ -16,6 +16,7 @@
 
 from __future__ import unicode_literals
 
+from turbinia.evidence import TextFile
 from turbinia.evidence import FilteredTextFile
 from turbinia.evidence import PlasoCsvFile
 from turbinia.jobs import TurbiniaJob
@@ -26,7 +27,7 @@ class GrepJob(TurbiniaJob):
   """Filter input based on regular expression patterns."""
 
   # The types of evidence that this Job will process
-  evidence_input = [type(PlasoCsvFile())]
+  evidence_input = [type(TextFile()), type(PlasoCsvFile())]
   evidence_output = [type(FilteredTextFile())]
 
   def __init__(self):
