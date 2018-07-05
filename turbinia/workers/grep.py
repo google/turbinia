@@ -38,10 +38,9 @@ class GrepTask(TurbiniaTask):
     """
     output_evidence = TextFile()
 
-    # TODO(jbn): Pick this up from evidence recipe instead.
-    patterns = ['Create Volatile Files and Directories']
+    patterns = evidence.config.get('filter_patterns')
     if not patterns:
-      result.status('No patterns supplied, exit task.')
+      result.close(self, False, status='No patterns supplied, exit task')
       return
 
     # Create temporary file to write patterns to.
