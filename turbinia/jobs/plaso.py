@@ -42,4 +42,4 @@ class PlasoJob(TurbiniaJob):
     Returns:
         A list of PlasoTasks.
     """
-    return [PlasoTask() for e in evidence]
+    return [PlasoTask() for _ in evidence]

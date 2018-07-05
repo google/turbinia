@@ -40,4 +40,4 @@ class StatJob(TurbiniaJob):
     Returns:
         A list of StatTasks.
     """
-    return [StatTask() for e in evidence]
+    return [StatTask() for _ in evidence]

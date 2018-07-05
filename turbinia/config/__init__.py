@@ -61,10 +61,6 @@ CONFIGVARS = [
     'REDIS_HOST',
     'REDIS_PORT',
     'REDIS_DB',
-    # Timesketch config
-    'TIMESKETCH_HOST',
-    'TIMESKETCH_USER',
-    'TIMESKETCH_PASSWORD',
     # Celery config
     'CELERY_BROKER',
     'CELERY_BACKEND',

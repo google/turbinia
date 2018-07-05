@@ -12,15 +12,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+"""Turbinia Config Template"""
 
 from __future__ import unicode_literals
 
-
-"""Turbinia Config Template"""
-
-############
-# TURBINIA #
-############
 
 # Turbinia Role as 'server' or 'psqworker'
 ROLE = 'server'
@@ -28,7 +23,7 @@ ROLE = 'server'
 # Which user account Turbinia runs as
 USER = 'turbinia'
 
-# Turbinia's installion directory
+# Turbinia's installation directory
 TURBINIA_DIR = '/opt/turbinia'
 
 # GCSFuse mount for Turbinia scripts and logging.
@@ -76,22 +71,24 @@ SHARED_FILESYSTEM = False
 DEBUG_TASKS = False
 
 
-###############
-# GCP AND GCE #
-###############
+###############################
+# Google Cloud Platform (GCP) #
+###############################
 
-# TODO Add optonal config parameters -- see Issue #181
 PROJECT = 'None'
 ZONE = 'None'
 INSTANCE = 'None'
 DEVICE_NAME = 'None'
 SCRATCH_PATH = 'None'
-# GCS bucket that has Turbinia-specific scripts and can be used to store logs.
+
+# GCS bucket that has Turbinia specific scripts and can be used to store logs.
 BUCKET_NAME = 'None'
+
 # This is the internal PubSub topic that PSQ will use.  This should be different
 # than the PUBSUB_TOPIC variable.  The actual PubSub topic created will be this
 # variable prefixed with 'psq-'.
 PSQ_TOPIC = 'turbinia-psq'
+
 TURBINIA_REGION = 'None'
 
 # A unique ID per Turbinia instance. Used to namespace datastore entries.
@@ -110,12 +107,6 @@ GCS_OUTPUT_PATH = 'gs://%s/output' % BUCKET_NAME
 # Which state manager to use
 STATE_MANAGER = 'Datastore'
 
-REDIS_HOST = 'None'
-REDIS_PORT = 'None'
-REDIS_DB = 'None'
-TIMESKETCH_HOST = 'None'
-TIMESKETCH_USER = 'None'
-TIMESKETCH_PASSWORD = 'None'
 
 ##########
 # CELERY #
@@ -136,3 +127,8 @@ KOMBU_CHANNEL = '%s-kombu' % INSTANCE_ID
 # Will messages be persistent and require acknowledgment?
 # http://docs.celeryproject.org/projects/kombu/en/4.0/reference/kombu.html#kombu.Connection.SimpleBuffer
 KOMBU_DURABLE = True
+
+# Use Redis for state management
+REDIS_HOST = 'None'
+REDIS_PORT = 'None'
+REDIS_DB = 'None'

@@ -44,7 +44,8 @@ class OutputManager(object):
   def __init__(self):
     self._output_writers = None
 
-  def get_output_writers(self, task):
+  @staticmethod
+  def get_output_writers(task):
     """Get a list of output writers.
 
     Args:
@@ -146,7 +147,7 @@ class OutputManager(object):
           saved_path = new_path
           saved_path_type = writer.name
 
-    return (saved_path, saved_path_type)
+    return saved_path, saved_path_type
 
   def setup(self, task):
     """Setup OutputManager object."""
@@ -209,7 +210,6 @@ class OutputWriter(object):
     raise NotImplementedError
 
 
-
 class LocalOutputWriter(OutputWriter):
   """Class for writing to local filesystem output."""
 
@@ -270,8 +270,7 @@ class GCSOutputWriter(OutputWriter):
     client (google.cloud.storage.Client): GCS Client
   """
 
-  # 10MB by default
-  CHUNK_SIZE = 10 * (2 ** 20)
+  CHUNK_SIZE = 10 * (2 ** 20)  # 10MB by default
 
   def __init__(self, gcs_path, *args, **kwargs):
     """Initialization for GCSOutputWriter.
@@ -286,7 +285,8 @@ class GCSOutputWriter(OutputWriter):
 
     self.bucket, self.base_output_dir = self._parse_gcs_path(gcs_path)
 
-  def _parse_gcs_path(self, file_):
+  @staticmethod
+  def _parse_gcs_path(file_):
     """Get the bucket and path values from a GCS path.
 
     Args:
@@ -299,7 +299,7 @@ class GCSOutputWriter(OutputWriter):
     if not match:
       raise TurbiniaException(
           'Cannot find bucket and path from GCS config {0:s}'.format(file_))
-    return (match.group(1), match.group(2))
+    return match.group(1), match.group(2)
 
   def create_output_dir(self):
     # Directories in GCS are artificial, so any path can be written as part of

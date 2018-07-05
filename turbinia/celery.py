@@ -35,6 +35,7 @@ from turbinia.message import TurbiniaMessageBase
 
 log = logging.getLogger('turbinia')
 
+
 class TurbiniaCelery(object):
   """Celery app object.
 
