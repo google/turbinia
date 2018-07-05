@@ -322,6 +322,7 @@ class CeleryTaskManager(BaseTaskManager):
       for evidence_ in request.evidence:
         if not evidence_.request_id:
           evidence_.request_id = request.request_id
+        evidence_.config = request.recipe
         log.info(
             'Received evidence [{0:s}] from Kombu message.'.format(
                 str(evidence_)))
@@ -405,6 +406,7 @@ class PSQTaskManager(BaseTaskManager):
       for evidence_ in request.evidence:
         if not evidence_.request_id:
           evidence_.request_id = request.request_id
+        evidence_.config = request.recipe
         log.info(
             'Received evidence [{0:s}] from PubSub message.'.format(
                 str(evidence_)))
