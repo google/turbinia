@@ -41,7 +41,7 @@ class GrepTask(TurbiniaTask):
     patterns = evidence.config.get('filter_patterns')
     if not patterns:
       result.close(self, False, status='No patterns supplied, exit task')
-      return
+      return result
 
     # Create temporary file to write patterns to.
     # Used as input to grep (-f).
