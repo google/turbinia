@@ -155,12 +155,21 @@ class TurbiniaTaskResult(object):
     log.info(log_msg)
     self._log.append(log_msg)
 
-  def add_evidence(self, evidence):
+  def add_evidence(self, evidence, config):
     """Populate the results list.
 
     Args:
         evidence: Evidence object
+        config (dict): The evidence config we want to associate with this
+            object.  This will be passed in with the original evidence that was
+            supplied to the task, so likely the caller will always want to use
+            evidence_.config for this parameter.
     """
+    # We want to enforce this here to make sure that any new Evidence objects
+    # created also contain the config.  We could create a closure to do this
+    # automatically, but the real fix is to attach this to a separate object.
+    # See https://github.com/google/turbinia/issues/211 for more details.
+    evidence.config = config
     self.evidence.append(evidence)
 
   def set_error(self, error, traceback_):
@@ -192,6 +201,8 @@ class TurbiniaTask(object):
             server side to keep a reference to the remote task objects.  For PSQ
             this is a task result object, but other implementations have their
             own stub objects.
+      _evidence_config (dict): The config that we want to pass to all new
+            evidence created from this task.
   """
 
   # The list of attributes that we will persist into storage
@@ -212,6 +223,7 @@ class TurbiniaTask(object):
     self.request_id = request_id
     self.state_key = None
     self.stub = None
+    self._evidence_config = {}
 
   def execute(self, cmd, result, save_files=None, new_evidence=None,
               close=False, shell=False):
@@ -251,7 +263,7 @@ class TurbiniaTask(object):
         result.log('Output file at {0:s}'.format(file_))
         self.output_manager.save_local_file(file_, result)
       for evidence in new_evidence:
-        result.add_evidence(evidence)
+        result.add_evidence(evidence, self._evidence_config)
 
       if close:
         result.close(self, success=True)
@@ -358,6 +370,7 @@ class TurbiniaTask(object):
     try:
       self.result = self.setup(evidence)
       original_result_id = self.result.id
+      self._evidence_config = evidence.config
       self.result = self.run(evidence, self.result)
     # pylint: disable=broad-except
     except Exception as e:

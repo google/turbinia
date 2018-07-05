@@ -93,6 +93,21 @@ def main():
       action='store_true',
       help='Dump JSON output of Turbinia Request instead of sending it')
   parser.add_argument(
+      '-F',
+      '--filter_patterns_file',
+      help='A file containing newline separated string patterns to filter '
+           'text based evidence files with (in extended grep regex format). '
+           'This filtered output will be in addition to the complete output')
+  parser.add_argument(
+      '-j',
+      '--jobs_whitelist',
+      help='A whitelist for Jobs that we will allow to run (note that it '
+           'will not force them to run).')
+  parser.add_argument(
+      '-J',
+      '--jobs_blacklist',
+      help='A blacklist for Jobs we will not allow to run')
+  parser.add_argument(
       '-p',
       '--poll_interval',
       default=60,
@@ -257,6 +272,23 @@ def main():
   else:
     log.setLevel(logging.WARNING)
 
+  if args.jobs_whitelist and args.jobs_blacklist:
+    log.warning('A Job filter whitelist and blacklist cannot be specified '
+                'at the same time')
+    sys.exit(1)
+
+  filter_patterns = None
+  if (args.filter_patterns_file
+      and not os.path.exists(args.filter_patterns_file)):
+    log.warning('Filter patterns file {0:s} does not exist.')
+    sys.exit(1)
+  elif args.filter_patterns_file:
+    try:
+      filter_patterns = open(args.filter_patterns_file).read().splitlines()
+    except IOError as e:
+      log.warning('Cannot open file {0:s} [{1!s}]'.format(
+          args.filter_patterns_file, e))
+
   # Client
   config.LoadConfig()
   if args.command not in ('psqworker', 'server'):
@@ -368,6 +400,8 @@ def main():
   elif evidence_:
     request = TurbiniaRequest(request_id=args.request_id)
     request.evidence.append(evidence_)
+    if filter_patterns:
+      request.recipe['filter_patterns'] = filter_patterns
     if args.dump_json:
       print request.to_json().encode('utf-8')
     else:

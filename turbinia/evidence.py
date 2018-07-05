@@ -67,6 +67,8 @@ class Evidence(object):
   evidence.
 
   Attributes:
+    config (dict): Configuration options from the request to be used when
+        processing this evidence.
     cloud_only: Set to True for evidence types that can only be processed in a
         cloud environment, e.g. GoogleCloudDisk.
     copyable: Whether this evidence can be copied.  This will be set to True for
@@ -89,6 +91,7 @@ class Evidence(object):
                tags=None, request_id=None):
     """Initialization for Evidence."""
     self.copyable = False
+    self.config = {}
     self.cloud_only = False
     self.description = description
     self.source = source
