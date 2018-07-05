@@ -43,7 +43,7 @@ class StatTask(TurbiniaTask):
     with open(os.path.join(self.output_dir, 'report.txt'), 'w') as f:
       f.write(report.text_data)
 
-    result.add_evidence(report)
+    result.add_evidence(report, evidence.config)
     result.close(self, success=True)
 
     return result

@@ -42,7 +42,7 @@ class TurbiniaRequest(object):
                evidence_=None):
     """Initialization for TurbiniaRequest."""
     self.request_id = request_id if request_id else uuid.uuid4().hex
-    self.recipe = recipe
+    self.recipe = recipe if recipe else {}
     self.context = context if context else {}
     self.evidence = evidence_ if evidence_ else []
     self.type = self.__class__.__name__
