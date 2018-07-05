@@ -33,10 +33,11 @@ def get_jobs():
   # Defer imports to prevent circular dependencies during init.
   from turbinia.jobs.plaso import PlasoJob
   from turbinia.jobs.psort import PsortJob
+  from turbinia.jobs.grep import GrepJob
   from turbinia.jobs.worker_stat import StatJob
   # TODO(aarontp): Dynamically look up job objects and make enabling/disabling
-  #                configurable through config and/or recipes.
-  return [StatJob(), PlasoJob(), PsortJob()]
+  # configurable through config and/or recipes.
+  return [StatJob(), PlasoJob(), PsortJob(), GrepJob()]
 
 
 class TurbiniaJob(object):
