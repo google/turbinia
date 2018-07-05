@@ -272,3 +272,11 @@ class ReportText(Evidence):
     self.text_data = text_data
     super(ReportText, self).__init__(*args, **kwargs)
     self.copyable = True
+
+
+class TextFile(Evidence):
+  """Text data."""
+
+  def __init__(self, *args, **kwargs):
+    super(TextFile, self).__init__(*args, **kwargs)
+    self.copyable = True
