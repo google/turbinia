@@ -3,7 +3,7 @@
 This page contains some of the details on the internals of how Turbinia works.
 
 ## Tasks
-A Task is the smallest discrete unit of schedulable work.  Tasks are sheduled
+A Task is the smallest discrete unit of schedulable work.  Tasks are scheduled
 and executed on remote Workers.  A Task can generate more Evidence that is
 returned back to the Turbinia server for possible further processing.
 
@@ -20,17 +20,6 @@ local machines.  They run continuously and wait for new Tasks to be scheduled.
 When a new Task is scheduled, a pseudo-random worker will pick up the Task and
 execute it.  After the Task is complete (successfully or not), the Worker will
 return the status, any error logs and results.
-
-## Task Manager
-The Task Manager Acts as a broker between the clients and workers
-and handles management of Evidence, Jobs, Tasks and Workers
-
-## Task manager flow
-Tasks are configured to "listen" for specific Evidence types, and if the Task
-Maanger sees a new piece of Evidence (either from a new Turbinia request, or
-because another Task generated a new piece of Evidence), and there is a Task
-that configured to run for that type of Evidence, then the Task Maanger will
-schedule a new Task for it.
 
 ## Evidence 
 Evidence can be anything that Turbinia can process.  Examples include disk
@@ -58,3 +47,14 @@ only storage that the Output Manager supports is Google Cloud Storage.  If
 Evidence is not copyable (like a RawDisk) and not a Cloud Evidence type (as
 denoted by the `cloud_only` attribute), then you will need to have a shared disk
 that is available to all Workers.
+
+## Task Manager
+The Task Manager Acts as a broker between the clients and workers
+and handles management of Evidence, Jobs, Tasks and Workers
+
+## Task manager flow
+Tasks are configured to "listen" for specific Evidence types, and if the Task
+Manager sees a new piece of Evidence (either from a new Turbinia request, or
+because another Task generated a new piece of Evidence), and there is a Task
+that configured to run for that type of Evidence, then the Task Mananger will
+schedule a new Task for it.

@@ -59,7 +59,7 @@ little more explaining is this one:
 
 This will:
 *   Run the command as specified
-*   Save the stdout and stderr in the results object specifed
+*   Save the stdout and stderr in the results object specified
 
 Also, because `close=True` is set in this call, it will finalze the results in
 order to prepare them to be returned to to the Task Manager.  Closing a result
@@ -82,7 +82,7 @@ scheduled.
 
 ## Boilerplate and Glue
 The only two interesting bits for the Job definition in
-`turbinia/jobs/strings.py` are this one that sets the input and ouput evidence
+`turbinia/jobs/strings.py` are this one that sets the input and output evidence
 types for the Task (so the Task Manager knows what kinds of Tasks to schedule):
 ```python
   evidence_input = [type(RawDisk()), type(GoogleCloudDisk()),
