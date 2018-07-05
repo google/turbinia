@@ -20,10 +20,15 @@ from turbinia.evidence import RawDisk
 from turbinia.evidence import TextFile
 from turbinia.jobs import TurbiniaJob
 from turbinia.workers.strings import StringsAsciiTask
-from turbinia.workers.strings import StringsUniTask
+from turbinia.workers.strings import StringsUnicodeTask
 
 
 class StringsJob(TurbiniaJob):
+  """Strings collection Job.
+
+  This will generate a Unicode and ASCII string collection task for each piece
+  of evidence.
+  """
 
   # The types of evidence that this Job will process
   evidence_input = [type(RawDisk()), type(GoogleCloudDisk()),
@@ -44,5 +49,5 @@ class StringsJob(TurbiniaJob):
     """
     # Generate tasks for both types of Strings jobs
     tasks = [StringsAsciiTask() for _ in evidence]
-    tasks.extend([StringsUniTask() for _ in evidence])
+    tasks.extend([StringsUnicodeTask() for _ in evidence])
     return tasks

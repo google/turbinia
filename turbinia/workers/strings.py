@@ -57,7 +57,7 @@ class StringsAsciiTask(TurbiniaTask):
     return result
 
 
-class StringsUniTask(TurbiniaTask):
+class StringsUnicodeTask(TurbiniaTask):
   """Task to generate Unicode (16 bit little endian) strings."""
 
   def run(self, evidence, result):
