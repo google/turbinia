@@ -14,6 +14,8 @@
 # limitations under the License.
 """Tests for Turbinia config."""
 
+from __future__ import unicode_literals
+
 import os
 import tempfile
 import unittest

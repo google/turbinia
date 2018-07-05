@@ -22,7 +22,6 @@ from Queue import Queue
 from google.cloud import exceptions
 from google.cloud import pubsub
 
-# Turbinia
 from turbinia import config
 from turbinia.message import TurbiniaMessageBase
 

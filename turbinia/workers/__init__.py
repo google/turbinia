@@ -214,24 +214,28 @@ class TurbiniaTask(object):
     self.stub = None
 
   def execute(self, cmd, result, save_files=None, new_evidence=None,
-              close=False):
+              close=False, shell=False):
     """Executes a given binary and saves output.
 
     Args:
-      cmd (list): Command arguments to run
+      cmd (list|string): Command arguments to run
       result (TurbiniaTaskResult): The result object to put data into.
       save_files (list): A list of files to save (files referenced by Evidence
           objects are automatically saved, so no need to include them).
       new_evidence (list): These are new evidence objects created by the task.
           If the task is successful, they will be added to the result.
       close (bool): Whether to close out the result.
+      shell (bool): Whether the cmd is in the form of a string or a list.
 
     Returns:
       Tuple of the return code, and the TurbiniaTaskResult object
     """
     save_files = save_files if save_files else []
     new_evidence = new_evidence if new_evidence else []
-    proc = subprocess.Popen(cmd)
+    if shell:
+      proc = subprocess.Popen(cmd, shell=True)
+    else:
+      proc = subprocess.Popen(cmd)
     stdout, stderr = proc.communicate()
     result.error['stdout'] = stdout
     result.error['stderr'] = stderr

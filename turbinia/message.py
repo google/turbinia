@@ -14,6 +14,8 @@
 # limitations under the License.
 """Core classes for Turbinia Requests and Messaging components."""
 
+from __future__ import unicode_literals
+
 import copy
 import json
 import uuid
@@ -25,6 +27,7 @@ from turbinia import TurbiniaException
 
 log = logging.getLogger('turbinia')
 
+
 class TurbiniaRequest(object):
   """An object to request evidence to be processed.
 
@@ -35,8 +38,8 @@ class TurbiniaRequest(object):
     evidence: A list of Evidence objects.
   """
 
-  def __init__(
-      self, request_id=None, recipe=None, context=None, evidence_=None):
+  def __init__(self, request_id=None, recipe=None, context=None,
+               evidence_=None):
     """Initialization for TurbiniaRequest."""
     self.request_id = request_id if request_id else uuid.uuid4().hex
     self.recipe = recipe
@@ -102,7 +105,8 @@ class TurbiniaMessageBase(object):
 
     raise NotImplementedError
 
-  def _validate_message(self, message):
+  @staticmethod
+  def _validate_message(message):
     """Validates incoming messages, returns them as a new TurbiniaRequest
     object.
 

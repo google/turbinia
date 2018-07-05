@@ -93,7 +93,6 @@ class TurbiniaClient(object):
 
     log.info('All {0:d} Tasks completed'.format(len(task_results)))
 
-
   def get_task_data(self, instance, project, region, days=0, task_id=None,
                     request_id=None, function_name='gettasks'):
     """Gets task data from Google Cloud Functions.

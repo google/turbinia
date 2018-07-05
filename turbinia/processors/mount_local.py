@@ -24,6 +24,7 @@ from turbinia import TurbiniaException
 
 log = logging.getLogger('turbinia')
 
+
 def PreprocessMountDisk(evidence):
   """Locally mounts disk in an instance.
 
@@ -61,6 +62,7 @@ def PreprocessMountDisk(evidence):
     subprocess.check_call(mount_cmd)
   except subprocess.CalledProcessError as e:
     raise TurbiniaException('Could not mount directory {0!s}'.format(e))
+
 
 def PostprocessUnmountDisk(evidence):
   """Locally unmounts disk in an instance.
