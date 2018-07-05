@@ -36,7 +36,7 @@ class StringsJob(TurbiniaJob):
   evidence_output = [type(TextFile())]
 
   def __init__(self):
-    super(StringsJob, self).__init__(name='StringsAsciiJob')
+    super(StringsJob, self).__init__(name='StringsJob')
 
   def create_tasks(self, evidence):
     """Create task for Strings.
