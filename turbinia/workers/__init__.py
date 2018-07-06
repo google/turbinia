@@ -371,9 +371,16 @@ class TurbiniaTask(object):
       self.result = self.setup(evidence)
       original_result_id = self.result.id
       self._evidence_config = evidence.config
-      self.result = self.run(evidence, self.result)
+      # Passing the result through the run function explicitly, but failing back
+      # to the original result object if there is a problem.
+      tmp_result = self.run(evidence, self.result)
+      if not isinstance(tmp_result, TurbiniaTaskResult):
+        raise TurbiniaException(
+            'Task returned type [{0:s}] instead of TurbiniaTaskResult.').format(
+                type(tmp_result))
+      self.result = tmp_result
     # pylint: disable=broad-except
-    except Exception as e:
+    except (TurbiniaException, Exception) as e:
       msg = 'Task failed with exception: [{0!s}]'.format(e)
       log.error(msg)
       log.error(traceback.format_exc())
