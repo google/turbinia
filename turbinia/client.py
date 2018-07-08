@@ -309,7 +309,7 @@ class TurbiniaPsqWorker(object):
           config.PROJECT,
           name=config.PSQ_TOPIC,
           storage=psq.DatastoreStorage(datastore_client))
-    except exceptions.GoogleAPIError as e:
+    except exceptions.GoogleCloudError as e:
       msg = 'Error creating PSQ Queue: {0:s}'.format(str(e))
       log.error(msg)
       raise TurbiniaException(msg)

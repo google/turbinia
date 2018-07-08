@@ -22,6 +22,7 @@ from __future__ import unicode_literals
 
 import json
 import logging
+import sys
 from datetime import datetime
 from datetime import timedelta
 
@@ -31,6 +32,7 @@ except ImportError:
   pass
 
 from google.cloud import datastore
+from google.cloud import exceptions
 
 from turbinia import config
 from turbinia import TurbiniaException
@@ -38,13 +40,14 @@ from turbinia.workers import TurbiniaTask
 from turbinia.workers import TurbiniaTaskResult
 
 DATETIME_FORMAT = '%Y-%m-%dT%H:%M:%S'
+MAX_DATASTORE_STRLEN = 1500
 log = logging.getLogger('turbinia')
 
 
 def get_state_manager():
   """Return state manager object based on config.
 
-  Returns
+  Returns:
     Initialized StateManager object.
   """
   config.LoadConfig()
@@ -61,8 +64,7 @@ def get_state_manager():
 class BaseStateManager(object):
   """Class to manage Turbinia state persistence."""
 
-  @staticmethod
-  def get_task_dict(task):
+  def get_task_dict(self, task):
     """Creates a dict of the fields we want to persist into storage.
 
     This combines attributes from both the Task and the TaskResult into one flat
@@ -97,6 +99,7 @@ class BaseStateManager(object):
     all_attrs = set(TurbiniaTask.STORED_ATTRIBUTES +
                     TurbiniaTaskResult.STORED_ATTRIBUTES)
     task_dict.update({k: None for k in all_attrs if not task_dict.has_key(k)})
+    task_dict = self._validate_data(task_dict)
 
     # Using the pubsub topic as an instance attribute in order to have a unique
     # namespace per Turbinia installation.
@@ -104,6 +107,17 @@ class BaseStateManager(object):
     config.LoadConfig()
     task_dict.update({'instance': config.INSTANCE_ID})
     return task_dict
+
+  def _validate_data(self, data):
+    """This validates the task dict before persisting into storage.
+
+    Args:
+      data (dict): The data we are going to send to Datastore.
+
+    Returns:
+      data (dict): The validated data
+    """
+    raise NotImplementedError
 
   def update_task(self, task):
     """Updates data for existing task.
@@ -136,23 +150,44 @@ class DatastoreStateManager(BaseStateManager):
     config.LoadConfig()
     self.client = datastore.Client(project=config.PROJECT)
 
+  def _validate_data(self, data):
+    for key, value in data.iteritems():
+      if (isinstance(value, (str, unicode))
+          and len(value) >= MAX_DATASTORE_STRLEN):
+        log.warning(
+            'Warning: key {0:s} with value {1:s} is longer than {2:d} bytes. '
+            'Truncating in order to fit in Datastore.'.format(
+                key, value, MAX_DATASTORE_STRLEN))
+        suffix = '[...]'
+        data[key] = value[:MAX_DATASTORE_STRLEN - len(suffix)] + suffix
+
+    return data
+
   def update_task(self, task):
-    with self.client.transaction():
-      entity = self.client.get(task.state_key)
-      if not entity:
-        self.write_new_task(task)
-        return
-      entity.update(self.get_task_dict(task))
-      log.debug('Updating task {0:s} in Datastore'.format(task.name))
-      self.client.put(entity)
+    try:
+      with self.client.transaction():
+        entity = self.client.get(task.state_key)
+        if not entity:
+          self.write_new_task(task)
+          return
+        entity.update(self.get_task_dict(task))
+        log.debug('Updating Task {0:s} in Datastore'.format(task.name))
+        self.client.put(entity)
+    except exceptions.GoogleCloudError as e:
+      log.error('Failed to update task {0:s} in datastore: {1!s}'.format(
+          task.name, e))
 
   def write_new_task(self, task):
     key = self.client.key('TurbiniaTask', task.id)
-    entity = datastore.Entity(key)
-    entity.update(self.get_task_dict(task))
-    log.info('Writing new task {0:s} into Datastore'.format(task.name))
-    self.client.put(entity)
-    task.state_key = key
+    try:
+      entity = datastore.Entity(key)
+      entity.update(self.get_task_dict(task))
+      log.info('Writing new task {0:s} into Datastore'.format(task.name))
+      self.client.put(entity)
+      task.state_key = key
+    except exceptions.GoogleAPIError as e:
+      log.error('Failed to update task {0:s} in datastore: {1!s}'.format(
+          task.name, e))
     return key
 
 
@@ -169,6 +204,9 @@ class RedisStateManager(BaseStateManager):
         host=config.REDIS_HOST,
         port=config.REDIS_PORT,
         db=config.REDIS_DB)
+
+  def _validate_data(self, data):
+    return data
 
   def get_task_data(self, instance, days=0, task_id=None, request_id=None):
     """Gets task data from Redis.
@@ -216,7 +254,7 @@ class RedisStateManager(BaseStateManager):
               task.name))
 
   def write_new_task(self, task):
-    key = ":".join(['TurbiniaTask', task.id])
+    key = ':'.join(['TurbiniaTask', task.id])
     log.info('Writing new task {0:s} into Redis'.format(task.name))
     task_data = self.get_task_dict(task)
     task_data['last_update'] = task_data['last_update'].strftime(
