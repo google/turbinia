@@ -32,14 +32,18 @@ from turbinia import state_manager
 class TestPSQStateManager(unittest.TestCase):
   """Test PSQStateManager class."""
 
+  def _get_state_manager(self):
+    """Gets a Datastore State Manager object for test."""
+    config.STATE_MANAGER = 'Datastore'
+    return state_manager.get_state_manager()
+
   def setUp(self):
     self.remove_files = []
     self.remove_dirs = []
+    self.state_manager = None
 
     config.LoadConfig()
     self.state_manager_save = config.STATE_MANAGER
-    config.STATE_MANAGER = 'Datastore'
-    self.state_manager = state_manager.get_state_manager()
 
     self.test_data = {
         'name': 'TestTask',
@@ -70,8 +74,11 @@ class TestPSQStateManager(unittest.TestCase):
     [os.rmdir(d) for d in self.remove_dirs if os.path.exists(d)]
     os.rmdir(self.base_output_dir)
 
-  def testStateManagerGetTaskDict(self):
+  @mock.patch('turbinia.state_manager.datastore.Client')
+  def testStateManagerGetTaskDict(self, _):
     """Test State Manger get_task_dict()."""
+    self.state_manager = self._get_state_manager()
+
     task_dict = self.state_manager.get_task_dict(self.task)
 
     # Make the returned task_dict contains all of our test data
@@ -83,13 +90,17 @@ class TestPSQStateManager(unittest.TestCase):
     self.assertIn(
         self.test_data['saved_paths'][0], task_dict['saved_paths'])
 
-  def testStateManagerValidateDataValidDict(self):
+  @mock.patch('turbinia.state_manager.datastore.Client')
+  def testStateManagerValidateDataValidDict(self, _):
     """Test State Manger _validate_data() base case."""
+    self.state_manager = self._get_state_manager()
     test_data = self.state_manager._validate_data(self.test_data)
     self.assertDictEqual(test_data, self.test_data)
 
-  def testStateManagerValidateDataInvalidDict(self):
+  @mock.patch('turbinia.state_manager.datastore.Client')
+  def testStateManagerValidateDataInvalidDict(self, _):
     """Test State Manger _validate_data() base case."""
+    self.state_manager = self._get_state_manager()
     invalid_dict = copy.deepcopy(self.test_data)
     invalid_dict['status'] = 'A' * state_manager.MAX_DATASTORE_STRLEN + 'BORKEN'
     test_data = self.state_manager._validate_data(invalid_dict)
