@@ -67,7 +67,11 @@ does a few things like set task stats, save all of the output files, and run the
 post-processor to free up the Evidence (e.g. unmount disks, etc).  If you have
 other external commands that you want to run and save the output from, you
 should not close the results until after these are all complete (i.e. just don't
-set `close=True`)
+set `close=True`).  If you are not calling the `execute()` function and closing
+the results that way, you'll need to close them similar to this:
+```
+result.close(self, success=True, status='My message about the Task status')
+```
 
 One important parameter that was not set in the call for `self.close()` is
 `save_files`.  It takes a list of file paths that you want to save (no need to
@@ -78,10 +82,13 @@ example log files).
 If you want to write temporary files from your task, you should do this relative
 to the self.output_dir.  This is a directory that is unique for this Task.
 
-After the `run()` method returns, the TurbiniaResults object will be
-returned to the server, and the new Evidence will be considered to see if there
-are other Tasks that are listening for it, and if there are, those Tasks will be
-scheduled.
+If you are not using the `self.execute()` method, then you will need to close
+the result object before exiting.  
+
+The `run()` function should return the result object and these will also be
+serialized and returned to the server. The new Evidence created and included
+in the results will be checked by the Task Manager to see if there are other
+Tasks that should be scheduled to process it.
 
 ## Boilerplate and Glue
 The only two interesting bits for the Job definition in
@@ -111,5 +118,6 @@ to split it up.  Then you just need to add a reference to the new job in
     so we can do them in parallel and save on wall-time.
 *   One caveat about Task development is that it is possible to create a cycle
     in the Task Manager by generating Evidence types that your Task (or any of
-    its parent's tasks) also listens to.  See [the
-    following](https://github.com/google/turbinia/issues/200) for more details.
+    its parent's tasks) also listens to.  Check out the [Job and Evidence
+    graph generator](https://github.com/google/turbinia/blob/master/tools/turbinia_job_graph.py)
+    if you want to verify that there aren't any cycles in the graph.
