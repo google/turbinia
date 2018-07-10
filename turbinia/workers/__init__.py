@@ -34,6 +34,7 @@ from turbinia import TurbiniaException
 
 log = logging.getLogger('turbinia')
 
+
 class TurbiniaTaskResult(object):
   """Object to store task results to be returned by a TurbiniaTask.
 
@@ -145,7 +146,6 @@ class TurbiniaTaskResult(object):
     self.closed = True
     log.debug('Result close successful. Status is [{0:s}]'.format(self.status))
 
-
   def log(self, log_msg):
     """Add a log message to the result object.
 
@@ -177,7 +177,7 @@ class TurbiniaTaskResult(object):
 
     Args:
         error: Short string describing the error.
-        traceback: Traceback of the error.
+        traceback_: Traceback of the error.
     """
     self.error['error'] = error
     self.error['traceback'] = traceback_
@@ -263,7 +263,23 @@ class TurbiniaTask(object):
         result.log('Output file at {0:s}'.format(file_))
         self.output_manager.save_local_file(file_, result)
       for evidence in new_evidence:
-        result.add_evidence(evidence, self._evidence_config)
+        # If the local path is set in the Evidence, we check to make sure that
+        # the path exists and is not empty before adding it.
+        if evidence.local_path and not os.path.exists(evidence.local_path):
+          msg = (
+              'Evidence {0:s} local_path {1:s} does not exist. Not returning '
+              'empty Evidence.'.format(evidence.name, evidence.local_path))
+          result.log(msg)
+          log.warning(msg)
+        elif (evidence.local_path and os.path.exists(evidence.local_path) and
+              os.path.getsize(evidence.local_path) == 0):
+          msg = (
+              'Evidence {0:s} local_path {1:s} is empty. Not returning '
+              'empty new Evidence.'.format(evidence.name, evidence.local_path))
+          result.log(msg)
+          log.warning(msg)
+        else:
+          result.add_evidence(evidence, self._evidence_config)
 
       if close:
         result.close(self, success=True)
@@ -345,7 +361,7 @@ class TurbiniaTask(object):
           request_id=self.request_id)
       result.status = '{0:s}. Previous status: [{1:s}]'.format(msg, old_status)
       result.set_error(e.message, traceback.format_exc())
-      result.close(self, False, status=msg)
+      result.close(self, success=False, status=msg)
       dump_status = 'Failed, but replaced with new result object'
 
     log.info('Result check: {0:s}'.format(dump_status))
@@ -371,10 +387,17 @@ class TurbiniaTask(object):
       self.result = self.setup(evidence)
       original_result_id = self.result.id
       self._evidence_config = evidence.config
-      self.result = self.run(evidence, self.result)
+      # Passing the result through the run function explicitly, but failing back
+      # to the original result object if there is a problem.
+      tmp_result = self.run(evidence, self.result)
+      if not isinstance(tmp_result, TurbiniaTaskResult):
+        raise TurbiniaException(
+            'Task returned type [{0:s}] instead of TurbiniaTaskResult.').format(
+                type(tmp_result))
+      self.result = tmp_result
     # pylint: disable=broad-except
-    except Exception as e:
-      msg = 'Task failed with exception: [{0!s}]'.format(e)
+    except (TurbiniaException, Exception) as e:
+      msg = '{0:s} Task failed with exception: [{1!s}]'.format(self.name, e)
       log.error(msg)
       log.error(traceback.format_exc())
       if self.result:
