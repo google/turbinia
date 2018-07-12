@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright 2015 Google Inc.
+# Copyright 2018 Google Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,31 +12,35 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Job to execute Psort task."""
+"""Job to execute grep task."""
 
-from turbinia.evidence import PlasoFile
+from __future__ import unicode_literals
+
+from turbinia.evidence import TextFile
+from turbinia.evidence import FilteredTextFile
 from turbinia.evidence import PlasoCsvFile
 from turbinia.jobs import TurbiniaJob
-from turbinia.workers.psort import PsortTask
+from turbinia.workers.grep import GrepTask
 
 
-class PsortJob(TurbiniaJob):
-  """Run psort on PlasoFile to generate a CSV file."""
+class GrepJob(TurbiniaJob):
+  """Filter input based on regular expression patterns."""
 
   # The types of evidence that this Job will process
-  evidence_input = [type(PlasoFile())]
-  evidence_output = [type(PlasoCsvFile())]
+  evidence_input = [type(TextFile()), type(PlasoCsvFile())]
+  evidence_output = [type(FilteredTextFile())]
 
   def __init__(self):
-    super(PsortJob, self).__init__(name='PsortJob')
+    super(GrepJob, self).__init__(name='GrepJob')
 
   def create_tasks(self, evidence):
-    """Create task for Psort.
+    """Create task.
 
     Args:
       evidence: List of evidence object to process
 
     Returns:
-        A list of PsortTasks.
+        A list of tasks to schedule.
     """
-    return [PsortTask() for _ in evidence]
+    tasks = [GrepTask() for _ in evidence]
+    return tasks

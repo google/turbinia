@@ -19,9 +19,12 @@ from __future__ import unicode_literals
 import unittest
 
 import mock
+import Queue
 
 from turbinia import evidence
 from turbinia import pubsub
+from turbinia import message
+from turbinia import celery
 from turbinia import TurbiniaException
 
 
@@ -31,7 +34,7 @@ def getTurbiniaRequest():
   Returns:
     TurbiniaRequest object.
   """
-  request = pubsub.TurbiniaRequest(
+  request = message.TurbiniaRequest(
       request_id='deadbeef', context={'kw': [1, 2]})
   rawdisk = evidence.RawDisk(
       name='My Evidence', local_path='/tmp/foo', mount_path='/mnt/foo')
@@ -47,14 +50,6 @@ class MockPubSubMessage(object):
     self.message_id = message_id
 
 
-class MockPubSubResults(list):
-  """Mock of a PubSub Results list that can contain MockPubSubMessages."""
-
-  def __init__(self, ack_id='54321', message='fake message'):
-    super(MockPubSubResults, self).__init__()
-    self.append((ack_id, message))
-
-
 class TestTurbiniaRequest(unittest.TestCase):
   """Test TurbiniaRequest class."""
 
@@ -65,10 +60,10 @@ class TestTurbiniaRequest(unittest.TestCase):
     self.assertTrue(isinstance(request_json, str))
 
     # Create a new Turbinia Request object to load our results into
-    request_new = pubsub.TurbiniaRequest()
+    request_new = message.TurbiniaRequest()
     request_new.from_json(request_json)
 
-    self.assertTrue(isinstance(request_new, pubsub.TurbiniaRequest))
+    self.assertTrue(isinstance(request_new, message.TurbiniaRequest))
     self.assertTrue(request_new.context['kw'][1], 2)
     self.assertTrue(request_new.request_id, 'deadbeef')
     self.assertTrue(isinstance(request_new.evidence[0], evidence.RawDisk))
@@ -76,7 +71,7 @@ class TestTurbiniaRequest(unittest.TestCase):
 
   def testTurbiniaRequestSerializationBadData(self):
     """Tests that TurbiniaRequest will raise error on non-json data."""
-    request_new = pubsub.TurbiniaRequest()
+    request_new = message.TurbiniaRequest()
     self.assertRaises(TurbiniaException, request_new.from_json, 'non-json-data')
 
   def testTurbiniaRequestSerializationBadJSON(self):
@@ -85,7 +80,7 @@ class TestTurbiniaRequest(unittest.TestCase):
     rawdisk_json = rawdisk.to_json()
     self.assertTrue(isinstance(rawdisk_json, str))
 
-    request_new = pubsub.TurbiniaRequest()
+    request_new = message.TurbiniaRequest()
     # Try to load serialization RawDisk() into a TurbiniaRequest, which should
     # error because this is not the correct type.
     self.assertRaises(TurbiniaException, request_new.from_json, rawdisk_json)
@@ -97,10 +92,9 @@ class TestTurbiniaPubSub(unittest.TestCase):
   def setUp(self):
     request = getTurbiniaRequest()
     self.pubsub = pubsub.TurbiniaPubSub('fake_topic')
-    results = MockPubSubResults(
-        ack_id='1234', message=MockPubSubMessage(request.to_json(), 'msg id'))
-    self.pubsub.subscription = mock.MagicMock()
-    self.pubsub.subscription.pull.return_value = results
+    message = MockPubSubMessage(request.to_json(), 'msg id')
+    self.pubsub._queue.put(message)
+    self.pubsub.topic_path = 'faketopicpath'
 
   def testCheckMessages(self):
     """Test check_messages to make sure it returns the expected results."""
@@ -109,25 +103,56 @@ class TestTurbiniaPubSub(unittest.TestCase):
     request_new = results[0]
 
     # Make sure that the TurbiniaRequest object is as expected
-    self.assertTrue(isinstance(request_new, pubsub.TurbiniaRequest))
+    self.assertTrue(isinstance(request_new, message.TurbiniaRequest))
     self.assertTrue(request_new.context['kw'][1], 2)
     self.assertTrue(request_new.request_id, 'deadbeef')
     self.assertTrue(isinstance(request_new.evidence[0], evidence.RawDisk))
     self.assertEqual(request_new.evidence[0].name, 'My Evidence')
 
-    # Make sure that the test message was acknowledged
-    self.pubsub.subscription.acknowledge.assert_called_with(['1234'])
-
   def testBadCheckMessages(self):
     """Test check_messages returns empty list for an invalid message."""
-    results = MockPubSubResults(
-        ack_id='2345', message=MockPubSubMessage('non-json-data', 'msg id2'))
-    self.pubsub.subscription.pull.return_value = results
+    message = MockPubSubMessage('non-json-data', 'msg id2')
+    # Clear the queue so we can add an invalid message
+    self.pubsub._queue.get()
+    self.pubsub._queue.put(message)
 
     self.assertListEqual(self.pubsub.check_messages(), [])
 
   def testSendMessage(self):
     """Test sending a message."""
-    self.pubsub.topic = mock.MagicMock()
+    self.pubsub.publisher = mock.MagicMock()
     self.pubsub.send_message('test message text')
-    self.pubsub.topic.publish.assert_called_with('test message text')
+    self.pubsub.publisher.publish.assert_called_with(
+        'faketopicpath', 'test message text')
+
+
+class TestTurbiniaKombu(unittest.TestCase):
+  """Test turbinia.pubsub Kombu module."""
+
+  def setUp(self):
+    request = getTurbiniaRequest()
+    self.kombu = celery.TurbiniaKombu('fake_topic')
+    result = mock.MagicMock()
+    result.payload = request.to_json()
+    self.kombu.queue = mock.MagicMock()
+    self.kombu.queue.__len__.return_value = 1
+    self.kombu.queue.get.side_effect = [result, Queue.Empty('Empty Queue')]
+
+  def testCheckMessages(self):
+    results = self.kombu.check_messages()
+    self.assertTrue(len(results) == 1)
+    request_new = results[0]
+
+    # Make sure that the TurbiniaRequest object is as expected
+    self.assertTrue(isinstance(request_new, message.TurbiniaRequest))
+    self.assertTrue(request_new.context['kw'][1], 2)
+    self.assertTrue(request_new.request_id, 'deadbeef')
+    self.assertTrue(isinstance(request_new.evidence[0], evidence.RawDisk))
+    self.assertEqual(request_new.evidence[0].name, 'My Evidence')
+
+  def testBadCheckMessages(self):
+    result = mock.MagicMock()
+    result.payload = 'non-json-data'
+    self.kombu.queue.get.side_effect = [result, Queue.Empty('Empty Queue')]
+
+    self.assertListEqual(self.kombu.check_messages(), [])

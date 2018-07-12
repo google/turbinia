@@ -14,22 +14,33 @@
 # limitations under the License.
 """Task manager for Turbinia."""
 
-from __future__ import unicode_literals
+from __future__ import unicode_literals, absolute_import
 
 import logging
 import time
-import traceback
+
+try:
+  from celery import states as celery_states
+except ImportError:
+  pass
 
 import psq
+
+from google.cloud import exceptions
 from google.cloud import datastore
 from google.cloud import pubsub
-from google.gax.errors import GaxError
 
 import turbinia
 from turbinia import evidence
 from turbinia import config
 from turbinia import jobs
 from turbinia import pubsub as turbinia_pubsub
+
+try:
+  from turbinia import celery as turbinia_celery
+except ImportError:
+  pass
+
 from turbinia import state_manager
 
 log = logging.getLogger('turbinia')
@@ -44,6 +55,8 @@ def get_task_manager():
   config.LoadConfig()
   if config.TASK_MANAGER == 'PSQ':
     return PSQTaskManager()
+  elif config.TASK_MANAGER == 'Celery':
+    return CeleryTaskManager()
   else:
     msg = 'Task Manager type "{0:s}" not implemented'.format(
         config.TASK_MANAGER)
@@ -83,7 +96,7 @@ class BaseTaskManager(object):
     self.tasks = []
     self.state_manager = state_manager.get_state_manager()
 
-  def _backend_setup(self):
+  def _backend_setup(self, *args, **kwargs):
     """Sets up backend dependencies.
 
     Raises:
@@ -91,9 +104,9 @@ class BaseTaskManager(object):
     """
     raise NotImplementedError
 
-  def setup(self):
+  def setup(self, *args, **kwargs):
     """Does setup of Task manager and its dependencies."""
-    self._backend_setup()
+    self._backend_setup(*args, **kwargs)
     # TODO(aarontp): Consider instantiating a job per evidence object
     self.jobs = jobs.get_jobs()
 
@@ -251,6 +264,78 @@ class BaseTaskManager(object):
       time.sleep(10)
 
 
+class CeleryTaskManager(BaseTaskManager):
+  """Celery implementation of BaseTaskManager.
+
+  Attributes:
+    celery (TurbiniaCelery): Celery task queue, handles worker tasks.
+    kombu (TurbiniaKombu): Kombu queue, handles receiving evidence.
+  """
+
+  def __init__(self):
+    self.celery = None
+    self.kombu = None
+    config.LoadConfig()
+    super(CeleryTaskManager, self).__init__()
+
+  def _backend_setup(self, *args, **kwargs):
+    self.celery = turbinia_celery.TurbiniaCelery()
+    self.celery.setup()
+    self.kombu = turbinia_celery.TurbiniaKombu(config.KOMBU_CHANNEL)
+    self.kombu.setup()
+
+  def process_tasks(self):
+    """Determine the current state of our tasks.
+
+    Returns:
+      list[TurbiniaTask]: all completed tasks
+    """
+    completed_tasks = []
+    for task in self.tasks:
+      celery_task = task.stub
+      if not celery_task:
+        log.debug('Task {0:s} not yet created'.format(task.stub.task_id))
+      elif celery_task.status == celery_states.STARTED:
+        log.debug('Task {0:s} not finished'.format(celery_task.id))
+      elif celery_task.status == celery_states.FAILURE:
+        log.warning('Task {0:s} failed.'.format(celery_task.id))
+        completed_tasks.append(task)
+      elif celery_task.status == celery_states.SUCCESS:
+        task.result = celery_task.result
+        completed_tasks.append(task)
+      else:
+        log.debug('Task {0:s} status unknown'.format(celery_task.id))
+
+    outstanding_task_count = len(self.tasks) - len(completed_tasks)
+    log.info('{0:d} Tasks still outstanding.'.format(outstanding_task_count))
+    return completed_tasks
+
+  def get_evidence(self):
+    """Receives new evidence.
+
+    Returns:
+      list[Evidence]: evidence to process.
+    """
+    requests = self.kombu.check_messages()
+    evidence_list = []
+    for request in requests:
+      for evidence_ in request.evidence:
+        if not evidence_.request_id:
+          evidence_.request_id = request.request_id
+        evidence_.config = request.recipe
+        log.info(
+            'Received evidence [{0:s}] from Kombu message.'.format(
+                str(evidence_)))
+        evidence_list.append(evidence_)
+    return evidence_list
+
+  def enqueue_task(self, task, evidence_):
+    log.info(
+        'Adding Celery task {0:s} with evidence {1:s} to queue'.format(
+            task.name, evidence_.name))
+    task.stub = self.celery.fexec.delay(task_runner, task, evidence_)
+
+
 class PSQTaskManager(BaseTaskManager):
   """PSQ implementation of BaseTaskManager.
 
@@ -265,20 +350,31 @@ class PSQTaskManager(BaseTaskManager):
     config.LoadConfig()
     super(PSQTaskManager, self).__init__()
 
-  def _backend_setup(self):
+  def _backend_setup(self, server=True, *args, **kwargs):
+    """
+    Args:
+      server (bool): Whether this is the client or a server
+    """
+
     log.debug(
         'Setting up PSQ Task Manager requirements on project {0:s}'.format(
             config.PROJECT))
     self.server_pubsub = turbinia_pubsub.TurbiniaPubSub(config.PUBSUB_TOPIC)
-    self.server_pubsub.setup()
-    psq_pubsub_client = pubsub.Client(project=config.PROJECT)
+    if server:
+      self.server_pubsub.setup_subscriber()
+    else:
+      self.server_pubsub.setup_publisher()
+    psq_publisher = pubsub.PublisherClient()
+    psq_subscriber = pubsub.SubscriberClient()
     datastore_client = datastore.Client(project=config.PROJECT)
     try:
       self.psq = psq.Queue(
-          psq_pubsub_client,
-          config.PSQ_TOPIC,
+          psq_publisher,
+          psq_subscriber,
+          config.PROJECT,
+          name=config.PSQ_TOPIC,
           storage=psq.DatastoreStorage(datastore_client))
-    except GaxError as e:
+    except exceptions.GoogleAPIError as e:
       msg = 'Error creating PSQ Queue: {0:s}'.format(str(e))
       log.error(msg)
       raise turbinia.TurbiniaException(msg)
@@ -301,7 +397,6 @@ class PSQTaskManager(BaseTaskManager):
 
     outstanding_task_count = len(self.tasks) - len(completed_tasks)
     log.info('{0:d} Tasks still outstanding.'.format(outstanding_task_count))
-    # pylint: disable=expression-not-assigned
     return completed_tasks
 
   def get_evidence(self):
@@ -311,6 +406,7 @@ class PSQTaskManager(BaseTaskManager):
       for evidence_ in request.evidence:
         if not evidence_.request_id:
           evidence_.request_id = request.request_id
+        evidence_.config = request.recipe
         log.info(
             'Received evidence [{0:s}] from PubSub message.'.format(
                 str(evidence_)))

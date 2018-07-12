@@ -1,0 +1,11 @@
+language: python
+python: '2.7'
+cache:
+  - pip
+
+install:
+  - pip install mock nose coverage
+  - pip install .
+
+script:
+  - ./run_tests.py

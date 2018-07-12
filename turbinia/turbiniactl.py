@@ -25,27 +25,30 @@ import os
 import sys
 
 from turbinia.client import TurbiniaClient
+from turbinia.client import TurbiniaCeleryClient
 from turbinia.client import TurbiniaServer
+from turbinia.client import TurbiniaCeleryWorker
 from turbinia.client import TurbiniaPsqWorker
 from turbinia import config
 from turbinia.config import logger
 from turbinia import evidence
 from turbinia import VERSION
-from turbinia.pubsub import TurbiniaRequest
+from turbinia.message import TurbiniaRequest
 
 log = logging.getLogger('turbinia')
 logger.setup()
 
-if __name__ == '__main__':
-  # TODO(aarontp): Allow for single run mode when specifying evidence
-  #                which will also terminate the task manager after evidence has
-  #                been processed.
+
+def main():
+  # TODO(aarontp): Allow for single run mode when
+  # by specifying evidence which will also terminate the task manager after
+  # evidence has been processed.
   parser = argparse.ArgumentParser()
   parser.add_argument(
       '-q', '--quiet', action='store_true', help='Show minimal output')
   parser.add_argument(
       '-v', '--verbose', action='store_true', help='Show verbose output')
-  # TODO(aarontp): Turn off debug by default later
+  # TODO(aarontp): Turn off debug by default
   parser.add_argument(
       '-d',
       '--debug',
@@ -77,6 +80,12 @@ if __name__ == '__main__':
       action='store_true',
       help='Run Turbinia Server indefinitely')
   parser.add_argument(
+      '-C',
+      '--use_celery',
+      action='store_true',
+      help='Pass this flag when using Celery/Kombu for task queuing and '
+      'messaging (instead of Google PSQ/pubsub)')
+  parser.add_argument(
       '-V',
       '--version',
       action='version',
@@ -87,6 +96,21 @@ if __name__ == '__main__':
       '--dump_json',
       action='store_true',
       help='Dump JSON output of Turbinia Request instead of sending it')
+  parser.add_argument(
+      '-F',
+      '--filter_patterns_file',
+      help='A file containing newline separated string patterns to filter '
+      'text based evidence files with (in extended grep regex format). '
+      'This filtered output will be in addition to the complete output')
+  parser.add_argument(
+      '-j',
+      '--jobs_whitelist',
+      help='A whitelist for Jobs that we will allow to run (note that it '
+      'will not force them to run).')
+  parser.add_argument(
+      '-J',
+      '--jobs_blacklist',
+      help='A blacklist for Jobs we will not allow to run')
   parser.add_argument(
       '-p',
       '--poll_interval',
@@ -216,6 +240,10 @@ if __name__ == '__main__':
       help='Run PSQ Worker in a single thread',
       required=False)
 
+  # Celery Worker
+  parser_celeryworker = subparsers.add_parser(
+      'celeryworker', help='Run Celery worker')
+
   # Parser options for Turbinia status command
   parser_status = subparsers.add_parser(
       'status', help='Get Turbinia Task status')
@@ -261,9 +289,32 @@ if __name__ == '__main__':
   else:
     log.setLevel(logging.WARNING)
 
+  if args.jobs_whitelist and args.jobs_blacklist:
+    log.warning('A Job filter whitelist and blacklist cannot be specified '
+                'at the same time')
+    sys.exit(1)
+
+  filter_patterns = None
+  if (args.filter_patterns_file and
+      not os.path.exists(args.filter_patterns_file)):
+    log.warning('Filter patterns file {0:s} does not exist.')
+    sys.exit(1)
+  elif args.filter_patterns_file:
+    try:
+      filter_patterns = open(args.filter_patterns_file).read().splitlines()
+    except IOError as e:
+      log.warning('Cannot open file {0:s} [{1!s}]'.format(
+          args.filter_patterns_file, e))
+
   # Client
   config.LoadConfig()
-  client = TurbiniaClient()
+  if args.command not in ('psqworker', 'server'):
+    if args.use_celery:
+      client = TurbiniaCeleryClient()
+    else:
+      client = TurbiniaClient()
+  else:
+    client = None
 
   if args.output_dir:
     config.OUTPUT_DIR = args.output_dir
@@ -311,6 +362,10 @@ if __name__ == '__main__':
     # which we are bypassing.
     logger.setup()
     worker = TurbiniaPsqWorker()
+    worker.start()
+  elif args.command == 'celeryworker':
+    logger.setup()
+    worker = TurbiniaCeleryWorker()
     worker.start()
   elif args.command == 'server':
     server = TurbiniaServer()
@@ -396,10 +451,12 @@ if __name__ == '__main__':
   elif evidence_:
     request = TurbiniaRequest(request_id=args.request_id)
     request.evidence.append(evidence_)
+    if filter_patterns:
+      request.recipe['filter_patterns'] = filter_patterns
     if args.dump_json:
       print request.to_json().encode('utf-8')
     else:
-      log.info('Creating PubSub request {0:s} with evidence {1:s}'.format(
+      log.info('Creating request {0:s} with evidence {1:s}'.format(
           request.request_id, evidence_.name))
       client.send_request(request)
 
@@ -422,3 +479,7 @@ if __name__ == '__main__':
 
   log.info('Done.')
   sys.exit(0)
+
+
+if __name__ == '__main__':
+  main()

@@ -22,9 +22,6 @@ import stat
 import time
 import urllib2
 
-from apiclient.discovery import build
-from oauth2client.client import GoogleCredentials
-
 from turbinia import config
 from turbinia import TurbiniaException
 from turbinia.lib.google_cloud import GoogleCloudProject

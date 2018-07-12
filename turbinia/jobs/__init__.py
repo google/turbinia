@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-#!/usr/bin/python
-#
 # Copyright 2015 Google Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,11 +14,6 @@
 # limitations under the License.
 """Turbinia jobs."""
 
-from datetime import datetime
-import json
-import sys
-import time
-import traceback as tb
 import uuid
 
 
@@ -31,13 +24,14 @@ def get_jobs():
     A list of TurbiniaJobs.
   """
   # Defer imports to prevent circular dependencies during init.
-  from turbinia.jobs.be import BulkExtractorJob
   from turbinia.jobs.plaso import PlasoJob
   from turbinia.jobs.psort import PsortJob
+  from turbinia.jobs.grep import GrepJob
   from turbinia.jobs.worker_stat import StatJob
+  from turbinia.jobs.strings import StringsJob
   # TODO(aarontp): Dynamically look up job objects and make enabling/disabling
-  #                configurable through config and/or recipes.
-  return [StatJob(), PlasoJob(), PsortJob()]
+  # configurable through config and/or recipes.
+  return [StatJob(), PlasoJob(), PsortJob(), StringsJob(), GrepJob()]
 
 
 class TurbiniaJob(object):

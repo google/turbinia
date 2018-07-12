@@ -56,13 +56,17 @@ CONFIGVARS = [
     'PUBSUB_TOPIC',
     'GCS_OUTPUT_PATH',
     'STATE_MANAGER',
+    'INSTANCE_ID',
     # REDIS CONFIG
     'REDIS_HOST',
     'REDIS_PORT',
-    # Timesketch config
-    'TIMESKETCH_HOST',
-    'TIMESKETCH_USER',
-    'TIMESKETCH_PASSWORD',]
+    'REDIS_DB',
+    # Celery config
+    'CELERY_BROKER',
+    'CELERY_BACKEND',
+    'KOMBU_BROKER',
+    'KOMBU_CHANNEL',
+    'KOMBU_DURABLE',]
 # Environment variable to look for path data in
 ENVCONFIGVAR = 'TURBINIA_CONFIG_PATH'
 

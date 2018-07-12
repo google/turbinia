@@ -67,6 +67,8 @@ class Evidence(object):
   evidence.
 
   Attributes:
+    config (dict): Configuration options from the request to be used when
+        processing this evidence.
     cloud_only: Set to True for evidence types that can only be processed in a
         cloud environment, e.g. GoogleCloudDisk.
     copyable: Whether this evidence can be copied.  This will be set to True for
@@ -85,16 +87,11 @@ class Evidence(object):
     request_id: The id of the request this evidence came from, if any
   """
 
-  def __init__(
-      self,
-      name=None,
-      description=None,
-      source=None,
-      local_path=None,
-      tags=None,
-      request_id=None):
+  def __init__(self, name=None, description=None, source=None, local_path=None,
+               tags=None, request_id=None):
     """Initialization for Evidence."""
     self.copyable = False
+    self.config = {}
     self.cloud_only = False
     self.description = description
     self.source = source
@@ -125,7 +122,6 @@ class Evidence(object):
     Raises:
       TurbiniaException: If serialization error occurs.
     """
-    serialized = None
     try:
       serialized = json.dumps(self.serialize())
     except TypeError as e:
@@ -186,13 +182,8 @@ class EncryptedDisk(RawDisk):
     unencrypted_path: A string to the unencrypted local path
   """
 
-  def __init__(
-      self,
-      encryption_type=None,
-      encryption_key=None,
-      unencrypted_path=None,
-      *args,
-      **kwargs):
+  def __init__(self, encryption_type=None, encryption_key=None,
+               unencrypted_path=None, *args, **kwargs):
     """Initialization for Encrypted disk evidence objects."""
     # TODO(aarontp): Make this an enum, or limited list
     self.encryption_type = encryption_type
@@ -211,13 +202,7 @@ class GoogleCloudDisk(RawDisk):
     disk_name: The cloud disk name.
   """
 
-  def __init__(
-      self,
-      project=None,
-      zone=None,
-      disk_name=None,
-      *args,
-      **kwargs):
+  def __init__(self, project=None, zone=None, disk_name=None, *args, **kwargs):
     """Initialization for Google Cloud Disk."""
     self.project = project
     self.zone = zone
@@ -290,3 +275,16 @@ class ReportText(Evidence):
     self.text_data = text_data
     super(ReportText, self).__init__(*args, **kwargs)
     self.copyable = True
+
+
+class TextFile(Evidence):
+  """Text data."""
+
+  def __init__(self, *args, **kwargs):
+    super(TextFile, self).__init__(*args, **kwargs)
+    self.copyable = True
+
+
+class FilteredTextFile(TextFile):
+  """Filtered text data."""
+  pass

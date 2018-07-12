@@ -157,12 +157,21 @@ class TurbiniaTaskResult(object):
     log.info(log_msg)
     self._log.append(log_msg)
 
-  def add_evidence(self, evidence):
+  def add_evidence(self, evidence, config):
     """Populate the results list.
 
     Args:
         evidence: Evidence object
+        config (dict): The evidence config we want to associate with this
+            object.  This will be passed in with the original evidence that was
+            supplied to the task, so likely the caller will always want to use
+            evidence_.config for this parameter.
     """
+    # We want to enforce this here to make sure that any new Evidence objects
+    # created also contain the config.  We could create a closure to do this
+    # automatically, but the real fix is to attach this to a separate object.
+    # See https://github.com/google/turbinia/issues/211 for more details.
+    evidence.config = config
     self.evidence.append(evidence)
 
   def set_error(self, error, traceback_):
@@ -170,7 +179,7 @@ class TurbiniaTaskResult(object):
 
     Args:
         error: Short string describing the error.
-        traceback: Traceback of the error.
+        traceback_: Traceback of the error.
     """
     self.error['error'] = error
     self.error['traceback'] = traceback_
@@ -195,6 +204,8 @@ class TurbiniaTask(object):
             this is a task result object, but other implementations have their
             own stub objects.
       user: The user who requested the task.
+      _evidence_config (dict): The config that we want to pass to all new
+            evidence created from this task.
   """
 
   # The list of attributes that we will persist into storage
@@ -220,30 +231,36 @@ class TurbiniaTask(object):
     self.state_key = None
     self.stub = None
     self.user = user if user else getpass.getuser()
+    self._evidence_config = {}
 
   def execute(self,
               cmd,
               result,
               save_files=None,
               new_evidence=None,
-              close=False):
+              close=False,
+              shell=False):
     """Executes a given binary and saves output.
 
     Args:
-      cmd (list): Command arguments to run
+      cmd (list|string): Command arguments to run
       result (TurbiniaTaskResult): The result object to put data into.
       save_files (list): A list of files to save (files referenced by Evidence
           objects are automatically saved, so no need to include them).
       new_evidence (list): These are new evidence objects created by the task.
           If the task is successful, they will be added to the result.
       close (bool): Whether to close out the result.
+      shell (bool): Whether the cmd is in the form of a string or a list.
 
     Returns:
       Tuple of the return code, and the TurbiniaTaskResult object
     """
     save_files = save_files if save_files else []
     new_evidence = new_evidence if new_evidence else []
-    proc = subprocess.Popen(cmd)
+    if shell:
+      proc = subprocess.Popen(cmd, shell=True)
+    else:
+      proc = subprocess.Popen(cmd)
     stdout, stderr = proc.communicate()
     result.error['stdout'] = stdout
     result.error['stderr'] = stderr
@@ -259,7 +276,23 @@ class TurbiniaTask(object):
         result.log('Output file at {0:s}'.format(file_))
         self.output_manager.save_local_file(file_, result)
       for evidence in new_evidence:
-        result.add_evidence(evidence)
+        # If the local path is set in the Evidence, we check to make sure that
+        # the path exists and is not empty before adding it.
+        if evidence.local_path and not os.path.exists(evidence.local_path):
+          msg = (
+              'Evidence {0:s} local_path {1:s} does not exist. Not returning '
+              'empty Evidence.'.format(evidence.name, evidence.local_path))
+          result.log(msg)
+          log.warning(msg)
+        elif (evidence.local_path and os.path.exists(evidence.local_path) and
+              os.path.getsize(evidence.local_path) == 0):
+          msg = ('Evidence {0:s} local_path {1:s} is empty. Not returning '
+                 'empty new Evidence.'.format(evidence.name,
+                                              evidence.local_path))
+          result.log(msg)
+          log.warning(msg)
+        else:
+          result.add_evidence(evidence, self._evidence_config)
 
       if close:
         result.close(self, success=True)
@@ -340,7 +373,7 @@ class TurbiniaTask(object):
           request_id=self.request_id)
       result.status = '{0:s}. Previous status: [{1:s}]'.format(msg, old_status)
       result.set_error(e.message, traceback.format_exc())
-      result.close(self, False, status=msg)
+      result.close(self, success=False, status=msg)
       dump_status = 'Failed, but replaced with new result object'
 
     log.info('Result check: {0:s}'.format(dump_status))
@@ -365,10 +398,18 @@ class TurbiniaTask(object):
     try:
       self.result = self.setup(evidence)
       original_result_id = self.result.id
-      self.result = self.run(evidence, self.result)
+      self._evidence_config = evidence.config
+      # Passing the result through the run function explicitly, but failing back
+      # to the original result object if there is a problem.
+      tmp_result = self.run(evidence, self.result)
+      if not isinstance(tmp_result, TurbiniaTaskResult):
+        raise TurbiniaException(
+            'Task returned type [{0:s}] instead of TurbiniaTaskResult.').format(
+                type(tmp_result))
+      self.result = tmp_result
     # pylint: disable=broad-except
-    except Exception as e:
-      msg = 'Task failed with exception: [{0!s}]'.format(e)
+    except (TurbiniaException, Exception) as e:
+      msg = '{0:s} Task failed with exception: [{1!s}]'.format(self.name, e)
       log.error(msg)
       log.error(traceback.format_exc())
       if self.result:

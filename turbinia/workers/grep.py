@@ -1,0 +1,66 @@
+# -*- coding: utf-8 -*-
+# Copyright 2015 Google Inc.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+"""Task to filter a text file using extended regular expression patterns."""
+
+from __future__ import unicode_literals
+
+import os
+from tempfile import NamedTemporaryFile
+
+from turbinia.evidence import FilteredTextFile
+from turbinia.workers import TurbiniaTask
+
+
+class GrepTask(TurbiniaTask):
+  """Filter input based on extended regular expression patterns."""
+
+  def run(self, evidence, result):
+    """Run grep binary.
+
+    Args:
+        evidence (Evidence object):  The evidence we will process
+        result (TurbiniaTaskResult): The object to place task results into.
+
+    Returns:
+        TurbiniaTaskResult object.
+    """
+    output_evidence = FilteredTextFile()
+
+    patterns = evidence.config.get('filter_patterns')
+    if not patterns:
+      result.close(
+          self, success=False, status='No patterns supplied, exit task')
+      return result
+
+    # Create temporary file to write patterns to.
+    # Used as input to grep (-f).
+    with NamedTemporaryFile(dir=self.output_dir, delete=False) as fh:
+      patterns_file_path = fh.name
+      fh.write('\n'.join(patterns))
+
+    # Create a path that we can write the new file to.
+    base_name = os.path.basename(evidence.local_path)
+    output_file_path = os.path.join(
+        self.output_dir, '{0:s}.filtered'.format(base_name))
+
+    output_evidence.local_path = output_file_path
+    cmd = 'grep -E -b -n -f {0:s} {1:s} > {2:s}'.format(
+      patterns_file_path, evidence.local_path, output_file_path)
+
+    result.log('Running [{0:s}]'.format(cmd))
+    self.execute(
+      cmd, result, new_evidence=[output_evidence], close=True, shell=True)
+
+    return result
