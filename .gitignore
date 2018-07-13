@@ -17,3 +17,9 @@
 .coverage
 tests-coverage.txt
 
+# Exclude Terraform runtime files
+terraform/gcp/.terraform/
+terraform/gcp/terraform.tfstate
+terraform/gcp/terraform.tfstate.backup
+terraform/gcp/terraform.tfvars
+terraform/gcp/*.auto.tfvars
