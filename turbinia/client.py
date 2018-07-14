@@ -60,7 +60,12 @@ class TurbiniaClient(object):
     for job in self.task_manager.jobs:
       log.info('\t{0:s}'.format(job.name))
 
-  def wait_for_request(self, instance, project, region, request_id=None,
+  def wait_for_request(self,
+                       instance,
+                       project,
+                       region,
+                       request_id=None,
+                       user=None,
                        poll_interval=60):
     """Polls and waits for Turbinia Request to complete.
 
@@ -70,11 +75,12 @@ class TurbiniaClient(object):
       project (string): The name of the project.
       region (string): The name of the region to execute in.
       request_id (string): The Id of the request we want tasks for.
+      user (string): The user of the request we want tasks for.
       poll_interval (int): Interval of seconds between polling cycles.
     """
     while True:
       task_results = self.get_task_data(
-          instance, project, region, request_id=request_id)
+          instance, project, region, request_id=request_id, user=user)
       completed_count = 0
       uncompleted_count = 0
       for task in task_results:
@@ -93,8 +99,15 @@ class TurbiniaClient(object):
 
     log.info('All {0:d} Tasks completed'.format(len(task_results)))
 
-  def get_task_data(self, instance, project, region, days=0, task_id=None,
-                    request_id=None, function_name='gettasks'):
+  def get_task_data(self,
+                    instance,
+                    project,
+                    region,
+                    days=0,
+                    task_id=None,
+                    request_id=None,
+                    user=None,
+                    function_name='gettasks'):
     """Gets task data from Google Cloud Functions.
 
     Args:
@@ -105,6 +118,7 @@ class TurbiniaClient(object):
       days (int): The number of days we want history for.
       task_id (string): The Id of the task.
       request_id (string): The Id of the request we want tasks for.
+      user (string): The user of the request we want tasks for.
       function_name (string): The GCF function we want to call
 
     Returns:
@@ -123,6 +137,9 @@ class TurbiniaClient(object):
       func_args.update({'task_id': task_id})
     elif request_id:
       func_args.update({'request_id': request_id})
+
+    if user:
+      func_args.update({'user': user})
 
     response = function.ExecuteFunction(function_name, func_args)
     if not response.has_key('result'):
@@ -143,8 +160,15 @@ class TurbiniaClient(object):
 
     return results[0]
 
-  def format_task_status(self, instance, project, region, days=0, task_id=None,
-                         request_id=None, all_fields=False):
+  def format_task_status(self,
+                         instance,
+                         project,
+                         region,
+                         days=0,
+                         task_id=None,
+                         request_id=None,
+                         user=None,
+                         all_fields=False):
     """Formats the recent history for Turbinia Tasks.
 
     Args:
@@ -155,6 +179,7 @@ class TurbiniaClient(object):
       days (int): The number of days we want history for.
       task_id (string): The Id of the task.
       request_id (string): The Id of the request we want tasks for.
+      user (string): The user of the request we want tasks for.
       all_fields (bool): Include all fields for the task, including task,
           request ids and saved file paths.
 
@@ -162,7 +187,7 @@ class TurbiniaClient(object):
       String of task status
     """
     task_results = self.get_task_data(instance, project, region, days, task_id,
-                                      request_id)
+                                      request_id, user)
     num_results = len(task_results)
     results = []
     if not num_results:
@@ -172,25 +197,27 @@ class TurbiniaClient(object):
 
     results.append('\nRetrieved {0:d} Task results:'.format(num_results))
     for task in task_results:
-      if task.get('successful', None):
+      if task.get('successful'):
         success = 'Successful'
-      elif task.get('successful', None) is None:
+      elif task.get('successful') is None:
         success = 'Running'
       else:
         success = 'Failed'
 
-      status = task.get('status') if task.get('status') else 'No task status'
+      status = task.get('status', 'No task status')
       if all_fields:
         results.append(
-            '{0:s} request: {1:s} task: {2:s} {3:s} {4:s} {5:s}: {6:s}'.format(
-                task['last_update'], task['request_id'], task['id'],
-                task['name'], task['worker_name'], success, status))
-        saved_paths = task.get('saved_paths') if task.get('saved_paths') else []
+            '{0:s} request: {1:s} task: {2:s} {3:s} {4:s} {5:s} {6:s}: {7:s}'.
+            format(
+                task.get('last_update'), task.get('request_id'), task.get('id'),
+                task.get('name'), task.get('user'), task.get('worker_name'),
+                success, status))
+        saved_paths = task.get('saved_paths', [])
         for path in saved_paths:
           results.append('\t{0:s}'.format(path))
       else:
         results.append('{0:s} {1:s} {2:s}: {3:s}'.format(
-            task['last_update'], task['name'], success, status))
+            task.get('last_update'), task.get('name'), success, status))
 
     return '\n'.join(results)
 
@@ -201,6 +228,40 @@ class TurbiniaClient(object):
       request: A TurbiniaRequest object.
     """
     self.task_manager.server_pubsub.send_request(request)
+
+  def close_tasks(self,
+                  instance,
+                  project,
+                  region,
+                  request_id=None,
+                  task_id=None,
+                  user=None,
+                  requester=None):
+    """Close Turbinia Tasks based on Request ID.
+
+    Args:
+      instance (string): The Turbinia instance name (by default the same as the
+          PUBSUB_TOPIC in the config).
+      project (string): The name of the project.
+      region (string): The name of the zone to execute in.
+      request_id (string): The Id of the request we want tasks for.
+      task_id (string): The Id of the request we want task for.
+      user (string): The user of the request we want tasks for.
+      requester (string): The user making the request to close tasks.
+
+    Returns: String of closed Task IDs.
+    """
+    function = GoogleCloudFunction(project_id=project, region=region)
+    func_args = {
+        'instance': instance,
+        'kind': 'TurbiniaTask',
+        'request_id': request_id,
+        'task_id': task_id,
+        'user': user,
+        'requester': requester
+    }
+    response = function.ExecuteFunction('closetasks', func_args)
+    return 'Closed Task IDs: %s' % response.get('result')
 
 
 class TurbiniaCeleryClient(TurbiniaClient):
@@ -224,8 +285,14 @@ class TurbiniaCeleryClient(TurbiniaClient):
     """
     self.task_manager.kombu.send_request(request)
 
-  def get_task_data(self, instance, _, __, days=0, task_id=None,
-                    request_id=None, function_name=None):
+  def get_task_data(self,
+                    instance,
+                    _,
+                    __,
+                    days=0,
+                    task_id=None,
+                    request_id=None,
+                    function_name=None):
     """Gets task data from Redis.
 
     We keep the same function signature, but ignore arguments passed for GCP.
@@ -281,10 +348,7 @@ class TurbiniaCeleryWorker(TurbiniaClient):
   def start(self):
     """Start Turbinia Celery Worker."""
     log.info('Running Turbinia Celery Worker.')
-    argv = [
-        'celery',
-        'worker',
-        '--loglevel=info']
+    argv = ['celery', 'worker', '--loglevel=info']
     self.worker.start(argv)
 
 

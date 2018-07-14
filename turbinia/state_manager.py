@@ -96,8 +96,8 @@ class BaseStateManager(object):
           task_dict[attr] = unicode(task_dict[attr])
 
     # Set all non-existent keys to None
-    all_attrs = set(TurbiniaTask.STORED_ATTRIBUTES +
-                    TurbiniaTaskResult.STORED_ATTRIBUTES)
+    all_attrs = set(
+        TurbiniaTask.STORED_ATTRIBUTES + TurbiniaTaskResult.STORED_ATTRIBUTES)
     task_dict.update({k: None for k in all_attrs if not task_dict.has_key(k)})
     task_dict = self._validate_data(task_dict)
 
@@ -152,8 +152,8 @@ class DatastoreStateManager(BaseStateManager):
 
   def _validate_data(self, data):
     for key, value in data.iteritems():
-      if (isinstance(value, (str, unicode))
-          and len(value) >= MAX_DATASTORE_STRLEN):
+      if (isinstance(value, (str, unicode)) and
+          len(value) >= MAX_DATASTORE_STRLEN):
         log.warning(
             'Warning: key {0:s} with value {1:s} is longer than {2:d} bytes. '
             'Truncating in order to fit in Datastore.'.format(
@@ -201,9 +201,7 @@ class RedisStateManager(BaseStateManager):
   def __init__(self):
     config.LoadConfig()
     self.client = redis.StrictRedis(
-        host=config.REDIS_HOST,
-        port=config.REDIS_PORT,
-        db=config.REDIS_DB)
+        host=config.REDIS_HOST, port=config.REDIS_PORT, db=config.REDIS_DB)
 
   def _validate_data(self, data):
     return data
@@ -221,16 +219,19 @@ class RedisStateManager(BaseStateManager):
     Returns:
       List of Task dict objects.
     """
-    tasks = [json.loads(self.client.get(task))
-             for task in self.client.scan_iter('TurbiniaTask:*')
-             if json.loads(self.client.get(task)).get('instance') == instance
-             or not instance]
+    tasks = [
+        json.loads(self.client.get(task))
+        for task in self.client.scan_iter('TurbiniaTask:*')
+        if json.loads(self.client.get(task)).get('instance') == instance or
+        not instance
+    ]
     if days:
       start_time = datetime.now() - timedelta(days=days)
       # Redis only supports strings; we convert to/from datetime here and below
-      return [task for task in tasks
-              if datetime.strptime(task.get('last_update'), DATETIME_FORMAT)
-              > start_time]
+      return [
+          task for task in tasks if datetime.strptime(
+              task.get('last_update'), DATETIME_FORMAT) > start_time
+      ]
     elif task_id:
       return [task for task in tasks if task.get('task_id') == task_id]
     elif request_id:
@@ -249,9 +250,8 @@ class RedisStateManager(BaseStateManager):
     # Need to use json.dumps, else redis returns single quoted string which
     # is invalid json
     if not self.client.set(key, json.dumps(task_data)):
-      log.error(
-          'Unsuccessful in updating task {0:s} in Redis'.format(
-              task.name))
+      log.error('Unsuccessful in updating task {0:s} in Redis'.format(
+          task.name))
 
   def write_new_task(self, task):
     key = ':'.join(['TurbiniaTask', task.id])
@@ -261,8 +261,7 @@ class RedisStateManager(BaseStateManager):
         DATETIME_FORMAT)
     # nx=True prevents overwriting (i.e. no unintentional task clobbering)
     if not self.client.set(key, json.dumps(task_data), nx=True):
-      log.error(
-          'Unsuccessful in writing new task {0:s} into Redis'.format(
-              task.name))
+      log.error('Unsuccessful in writing new task {0:s} into Redis'.format(
+          task.name))
     task.state_key = key
     return key

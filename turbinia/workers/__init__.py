@@ -18,6 +18,7 @@ from __future__ import unicode_literals
 
 from datetime import datetime
 import errno
+import getpass
 import json
 import logging
 import os
@@ -54,6 +55,7 @@ class TurbiniaTaskResult(object):
       successful: Bool indicating success status.
       task_id: Task ID of the parent task.
       task_name: Name of parent task.
+      user: The user who requested the task.
       worker_name: Name of worker task executed on.
       _log: A list of log messages
   """
@@ -61,13 +63,12 @@ class TurbiniaTaskResult(object):
   # The list of attributes that we will persist into storage
   STORED_ATTRIBUTES = ['worker_name', 'status', 'saved_paths', 'successful']
 
-  def __init__(
-      self,
-      task,
-      evidence=None,
-      input_evidence=None,
-      base_output_dir=None,
-      request_id=None):
+  def __init__(self,
+               task,
+               evidence=None,
+               input_evidence=None,
+               base_output_dir=None,
+               request_id=None):
     """Initialize the TurbiniaTaskResult object.
 
     Args:
@@ -82,6 +83,7 @@ class TurbiniaTaskResult(object):
     self.task_name = task.name
     self.base_output_dir = base_output_dir
     self.request_id = request_id
+    self.user = task.user
 
     self.start_time = datetime.now()
     self.run_time = None
@@ -201,14 +203,19 @@ class TurbiniaTask(object):
             server side to keep a reference to the remote task objects.  For PSQ
             this is a task result object, but other implementations have their
             own stub objects.
+      user: The user who requested the task.
       _evidence_config (dict): The config that we want to pass to all new
             evidence created from this task.
   """
 
   # The list of attributes that we will persist into storage
-  STORED_ATTRIBUTES = ['id', 'last_update', 'name', 'request_id']
+  STORED_ATTRIBUTES = ['id', 'last_update', 'name', 'request_id', 'user']
 
-  def __init__(self, name=None, base_output_dir=None, request_id=None):
+  def __init__(self,
+               name=None,
+               base_output_dir=None,
+               request_id=None,
+               user=None):
     """Initialization for TurbiniaTask."""
     if base_output_dir:
       self.base_output_dir = base_output_dir
@@ -223,10 +230,16 @@ class TurbiniaTask(object):
     self.request_id = request_id
     self.state_key = None
     self.stub = None
+    self.user = user if user else getpass.getuser()
     self._evidence_config = {}
 
-  def execute(self, cmd, result, save_files=None, new_evidence=None,
-              close=False, shell=False):
+  def execute(self,
+              cmd,
+              result,
+              save_files=None,
+              new_evidence=None,
+              close=False,
+              shell=False):
     """Executes a given binary and saves output.
 
     Args:
@@ -273,9 +286,9 @@ class TurbiniaTask(object):
           log.warning(msg)
         elif (evidence.local_path and os.path.exists(evidence.local_path) and
               os.path.getsize(evidence.local_path) == 0):
-          msg = (
-              'Evidence {0:s} local_path {1:s} is empty. Not returning '
-              'empty new Evidence.'.format(evidence.name, evidence.local_path))
+          msg = ('Evidence {0:s} local_path {1:s} is empty. Not returning '
+                 'empty new Evidence.'.format(evidence.name,
+                                              evidence.local_path))
           result.log(msg)
           log.warning(msg)
         else:
@@ -315,9 +328,8 @@ class TurbiniaTask(object):
       self.output_manager.retrieve_evidence(evidence)
 
     if evidence.local_path and not os.path.exists(evidence.local_path):
-      raise TurbiniaException(
-          'Evidence local path {0:s} does not exist'.format(
-              evidence.local_path))
+      raise TurbiniaException('Evidence local path {0:s} does not exist'.format(
+          evidence.local_path))
     evidence.preprocess()
     return self.result
 
@@ -406,8 +418,7 @@ class TurbiniaTask(object):
         self.result.set_error(e.message, traceback.format_exc())
         self.result.status = msg
       else:
-        log.error(
-            'No TurbiniaTaskResult object found after task execution.')
+        log.error('No TurbiniaTaskResult object found after task execution.')
 
     # Trying to close the result if possible so that we clean up what we can.
     # This has a higher liklihood of failing because something must have gone

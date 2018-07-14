@@ -19,6 +19,7 @@
 from __future__ import unicode_literals
 
 import argparse
+import getpass
 import logging
 import os
 import sys
@@ -49,7 +50,10 @@ def main():
       '-v', '--verbose', action='store_true', help='Show verbose output')
   # TODO(aarontp): Turn off debug by default
   parser.add_argument(
-      '-d', '--debug', action='store_true', help='Show debug output',
+      '-d',
+      '--debug',
+      action='store_true',
+      help='Show debug output',
       default=True)
   parser.add_argument(
       '-a',
@@ -80,7 +84,7 @@ def main():
       '--use_celery',
       action='store_true',
       help='Pass this flag when using Celery/Kombu for task queuing and '
-           'messaging (instead of Google PSQ/pubsub)')
+      'messaging (instead of Google PSQ/pubsub)')
   parser.add_argument(
       '-V',
       '--version',
@@ -96,13 +100,13 @@ def main():
       '-F',
       '--filter_patterns_file',
       help='A file containing newline separated string patterns to filter '
-           'text based evidence files with (in extended grep regex format). '
-           'This filtered output will be in addition to the complete output')
+      'text based evidence files with (in extended grep regex format). '
+      'This filtered output will be in addition to the complete output')
   parser.add_argument(
       '-j',
       '--jobs_whitelist',
       help='A whitelist for Jobs that we will allow to run (note that it '
-           'will not force them to run).')
+      'will not force them to run).')
   parser.add_argument(
       '-J',
       '--jobs_blacklist',
@@ -136,8 +140,8 @@ def main():
       default=0,
       type=int,
       help='The partition number to use when mounting this disk.  Defaults to '
-           'the entire raw disk.  Only affects mounting, and not what gets '
-           'processed.')
+      'the entire raw disk.  Only affects mounting, and not what gets '
+      'processed.')
   parser_rawdisk.add_argument(
       '-s',
       '--source',
@@ -153,7 +157,9 @@ def main():
   parser_googleclouddisk.add_argument(
       '-d', '--disk_name', help='Google Cloud name for disk', required=True)
   parser_googleclouddisk.add_argument(
-      '-p', '--project', help='Project that the disk is associated with',
+      '-p',
+      '--project',
+      help='Project that the disk is associated with',
       required=True)
   parser_googleclouddisk.add_argument(
       '-P',
@@ -161,11 +167,10 @@ def main():
       default=0,
       type=int,
       help='The partition number to use when mounting this disk.  Defaults to '
-           'the entire raw disk.  Only affects mounting, and not what gets '
-           'processed.')
+      'the entire raw disk.  Only affects mounting, and not what gets '
+      'processed.')
   parser_googleclouddisk.add_argument(
-      '-z', '--zone', help='Geographic zone the disk exists in',
-      required=True)
+      '-z', '--zone', help='Geographic zone the disk exists in', required=True)
   parser_googleclouddisk.add_argument(
       '-s',
       '--source',
@@ -178,15 +183,18 @@ def main():
   parser_googleclouddiskembedded = subparsers.add_parser(
       'googleclouddiskembedded',
       help='Process Google Cloud Persistent Disk with an embedded raw disk '
-           'image as Evidence')
+      'image as Evidence')
   parser_googleclouddiskembedded.add_argument(
-      '-e', '--embedded_path',
+      '-e',
+      '--embedded_path',
       help='Path within the Persistent Disk that points to the raw image file',
       required=True)
   parser_googleclouddiskembedded.add_argument(
       '-d', '--disk_name', help='Google Cloud name for disk', required=True)
   parser_googleclouddiskembedded.add_argument(
-      '-p', '--project', help='Project that the disk is associated with',
+      '-p',
+      '--project',
+      help='Project that the disk is associated with',
       required=True)
   parser_googleclouddiskembedded.add_argument(
       '-P',
@@ -194,11 +202,10 @@ def main():
       default=0,
       type=int,
       help='The partition number to use when mounting this disk.  Defaults to '
-           'the entire raw disk.  Only affects mounting, and not what gets '
-           'processed.')
+      'the entire raw disk.  Only affects mounting, and not what gets '
+      'processed.')
   parser_googleclouddiskembedded.add_argument(
-      '-z', '--zone', help='Geographic zone the disk exists in',
-      required=True)
+      '-z', '--zone', help='Geographic zone the disk exists in', required=True)
   parser_googleclouddiskembedded.add_argument(
       '-s',
       '--source',
@@ -239,8 +246,13 @@ def main():
 
   # Parser options for Turbinia status command
   parser_status = subparsers.add_parser(
-      'status',
-      help='Get Turbinia Task status')
+      'status', help='Get Turbinia Task status')
+  parser_status.add_argument(
+      '-c',
+      '--close_tasks',
+      action='store_true',
+      help='Close tasks based on Request ID or Task ID',
+      required=False)
   parser_status.add_argument(
       '-d',
       '--days_history',
@@ -249,15 +261,20 @@ def main():
       help='Number of days of history to show',
       required=False)
   parser_status.add_argument(
+      '-f',
+      '--force',
+      help='Gatekeeper for --close_tasks',
+      action='store_true',
+      required=False)
+  parser_status.add_argument(
       '-r',
       '--request_id',
       help='Show tasks with this Request ID',
       required=False)
   parser_status.add_argument(
-      '-t',
-      '--task_id',
-      help='Show task for given Task ID',
-      required=False)
+      '-t', '--task_id', help='Show task for given Task ID', required=False)
+  parser_status.add_argument(
+      '-u', '--user', help='Show task for given user', required=False)
 
   # Server
   parser_server = subparsers.add_parser('server', help='Run Turbinia Server')
@@ -278,8 +295,8 @@ def main():
     sys.exit(1)
 
   filter_patterns = None
-  if (args.filter_patterns_file
-      and not os.path.exists(args.filter_patterns_file)):
+  if (args.filter_patterns_file and
+      not os.path.exists(args.filter_patterns_file)):
     log.warning('Filter patterns file {0:s} does not exist.')
     sys.exit(1)
   elif args.filter_patterns_file:
@@ -310,8 +327,10 @@ def main():
     args.name = args.name if args.name else args.local_path
     local_path = os.path.abspath(args.local_path)
     evidence_ = evidence.RawDisk(
-        name=args.name, local_path=local_path,
-        mount_partition=args.mount_partition, source=args.source)
+        name=args.name,
+        local_path=local_path,
+        mount_partition=args.mount_partition,
+        source=args.source)
   elif args.command == 'directory':
     args.name = args.name if args.name else args.local_path
     local_path = os.path.abspath(args.local_path)
@@ -321,17 +340,23 @@ def main():
     is_cloud_disk = True
     args.name = args.name if args.name else args.disk_name
     evidence_ = evidence.GoogleCloudDisk(
-        name=args.name, disk_name=args.disk_name, project=args.project,
-        mount_partition=args.mount_partition, zone=args.zone,
+        name=args.name,
+        disk_name=args.disk_name,
+        project=args.project,
+        mount_partition=args.mount_partition,
+        zone=args.zone,
         source=args.source)
   elif args.command == 'googleclouddiskembedded':
     is_cloud_disk = True
     args.name = args.name if args.name else args.disk_name
     evidence_ = evidence.GoogleCloudDiskRawEmbedded(
-        name=args.name, disk_name=args.disk_name,
+        name=args.name,
+        disk_name=args.disk_name,
         embedded_path=args.embedded_path,
-        mount_partition=args.mount_partition, project=args.project,
-        zone=args.zone, source=args.source)
+        mount_partition=args.mount_partition,
+        project=args.project,
+        zone=args.zone,
+        source=args.source)
   elif args.command == 'psqworker':
     # Set up root logger level which is normally set by the psqworker command
     # which we are bypassing.
@@ -347,18 +372,44 @@ def main():
     server.start()
   elif args.command == 'status':
     region = config.TURBINIA_REGION
+    if args.close_tasks:
+      if args.user or args.request_id or args.task_id:
+        print client.close_tasks(
+            instance=config.PUBSUB_TOPIC,
+            project=config.PROJECT,
+            region=region,
+            request_id=args.request_id,
+            task_id=args.task_id,
+            user=args.user,
+            requester=getpass.getuser())
+        sys.exit(0)
+      else:
+        log.info(
+            '--close_tasks (-c) requires --user, --request_id, or/and --task_id'
+        )
+        sys.exit(1)
+
     if args.wait and args.request_id:
       client.wait_for_request(
-          instance=config.PUBSUB_TOPIC, project=config.PROJECT, region=region,
-          request_id=args.request_id, poll_interval=args.poll_interval)
+          instance=config.PUBSUB_TOPIC,
+          project=config.PROJECT,
+          region=region,
+          request_id=args.request_id,
+          user=args.user,
+          poll_interval=args.poll_interval)
     elif args.wait and not args.request_id:
       log.info('--wait requires --request_id, which is not specified. '
                'turbiniactl will exit without waiting.')
 
     print client.format_task_status(
-        instance=config.PUBSUB_TOPIC, project=config.PROJECT, region=region,
-        days=args.days_history, task_id=args.task_id,
-        request_id=args.request_id, all_fields=args.all_fields)
+        instance=config.PUBSUB_TOPIC,
+        project=config.PROJECT,
+        region=region,
+        days=args.days_history,
+        task_id=args.task_id,
+        request_id=args.request_id,
+        user=args.user,
+        all_fields=args.all_fields)
   elif args.command == 'listjobs':
     log.info('Available Jobs:')
     client.list_jobs()
@@ -405,9 +456,8 @@ def main():
     if args.dump_json:
       print request.to_json().encode('utf-8')
     else:
-      log.info(
-          'Creating request {0:s} with evidence {1:s}'.format(
-              request.request_id, evidence_.name))
+      log.info('Creating request {0:s} with evidence {1:s}'.format(
+          request.request_id, evidence_.name))
       client.send_request(request)
 
     if args.wait:
@@ -415,11 +465,17 @@ def main():
           request.request_id))
       region = config.TURBINIA_REGION
       client.wait_for_request(
-          instance=config.PUBSUB_TOPIC, project=config.PROJECT, region=region,
-          request_id=request.request_id, poll_interval=args.poll_interval)
+          instance=config.PUBSUB_TOPIC,
+          project=config.PROJECT,
+          region=region,
+          request_id=request.request_id,
+          poll_interval=args.poll_interval)
       print client.format_task_status(
-          instance=config.PUBSUB_TOPIC, project=config.PROJECT, region=region,
-          request_id=request.request_id, all_fields=args.all_fields)
+          instance=config.PUBSUB_TOPIC,
+          project=config.PROJECT,
+          region=region,
+          request_id=request.request_id,
+          all_fields=args.all_fields)
 
   log.info('Done.')
   sys.exit(0)
