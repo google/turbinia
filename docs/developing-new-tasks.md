@@ -76,7 +76,10 @@ other external commands that you want to run and save the output from, you
 should not close the results until after these are all complete (i.e. just don't
 set `close=True`). If you are not calling the `execute()` function and closing
 the results that way, you'll need to close them similar to this:
-`result.close(self, success=True, status='My message about the Task status')`
+
+```python
+result.close(self, success=True, status='My message about the Task status')
+```
 
 One important parameter that was not set in the call for `self.close()` is
 `save_files`. It takes a list of file paths that you want to save (no need to

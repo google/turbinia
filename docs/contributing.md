@@ -29,7 +29,7 @@ check out your personal fork:
 Add an upstream remote so you can easily keep up to date with the main
 repository:
 
-$ git remote add upstream https://github.com/google/turbinia.git
+    $ git remote add upstream https://github.com/google/turbinia.git
 
 To update your local repo from the main:
 
