@@ -226,7 +226,7 @@ class LocalOutputWriter(OutputWriter):
         log.info('Creating new directory {0:s}'.format(self.local_output_dir))
         os.makedirs(self.local_output_dir)
       except OSError as e:
-        if e.errno == errno.EACCESS:
+        if e.errno == errno.EACCES:
           msg = 'Permission error ({0:s})'.format(str(e))
         else:
           msg = str(e)
