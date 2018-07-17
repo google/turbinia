@@ -26,18 +26,17 @@ import sys
 from datetime import datetime
 from datetime import timedelta
 
-try:
-  import redis
-except ImportError:
-  pass
-
-from google.cloud import datastore
-from google.cloud import exceptions
-
 from turbinia import config
 from turbinia import TurbiniaException
 from turbinia.workers import TurbiniaTask
 from turbinia.workers import TurbiniaTaskResult
+
+config.LoadConfig()
+if config.TASK_MANAGER == 'PSQ':
+  from google.cloud import datastore
+  from google.cloud import exceptions
+elif config.TASK_MANAGER == 'Celery':
+  import redis
 
 DATETIME_FORMAT = '%Y-%m-%dT%H:%M:%S'
 MAX_DATASTORE_STRLEN = 1500

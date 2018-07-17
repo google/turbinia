@@ -26,7 +26,9 @@ import time
 from turbinia import config
 from turbinia import TurbiniaException
 
-from google.cloud import storage
+config.LoadConfig()
+if config.TASK_MANAGER == 'PSQ':
+  from google.cloud import storage
 
 log = logging.getLogger('turbinia')
 

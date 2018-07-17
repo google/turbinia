@@ -19,29 +19,25 @@ from __future__ import unicode_literals, absolute_import
 import logging
 import time
 
-try:
-  from celery import states as celery_states
-except ImportError:
-  pass
-
-import psq
-
-from google.cloud import exceptions
-from google.cloud import datastore
-from google.cloud import pubsub
-
 import turbinia
 from turbinia import evidence
 from turbinia import config
 from turbinia import jobs
-from turbinia import pubsub as turbinia_pubsub
-
-try:
-  from turbinia import celery as turbinia_celery
-except ImportError:
-  pass
-
 from turbinia import state_manager
+
+config.LoadConfig()
+if config.TASK_MANAGER == 'PSQ':
+  import psq
+
+  from google.cloud import exceptions
+  from google.cloud import datastore
+  from google.cloud import pubsub
+
+  from turbinia import pubsub as turbinia_pubsub
+elif config.TASK_MANAGER == 'Celery':
+  from celery import states as celery_states
+
+  from turbinia import celery as turbinia_celery
 
 log = logging.getLogger('turbinia')
 
