@@ -19,16 +19,13 @@ Handles worker communication and new evidence requests.
 
 # fix celery naming collision (this file vs. module)
 from __future__ import absolute_import
-import Queue
 
 import logging
+import Queue
 
-try:
-  import celery
-  import kombu
-  from amqp.exceptions import ChannelError
-except ImportError:
-  pass
+import celery
+import kombu
+from amqp.exceptions import ChannelError
 
 from turbinia import config
 from turbinia.message import TurbiniaMessageBase

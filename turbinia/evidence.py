@@ -20,10 +20,13 @@ import json
 import os
 import sys
 
+from turbinia import config
 from turbinia import TurbiniaException
-from turbinia.processors import google_cloud
 from turbinia.processors import mount_local
 
+config.LoadConfig()
+if config.TASK_MANAGER == 'PSQ':
+  from turbinia.processors import google_cloud
 
 def evidence_decode(evidence_dict):
   """Decode JSON into appropriate Evidence object.

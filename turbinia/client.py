@@ -22,19 +22,23 @@ import json
 import logging
 import time
 
-# TODO(aarontp): Selectively load dependencies based on configured backends
-import psq
-
-from google.cloud import exceptions
-from google.cloud import datastore
-from google.cloud import pubsub
-
 from turbinia import config
 from turbinia.config import logger
-from turbinia.lib.google_cloud import GoogleCloudFunction
-from turbinia.state_manager import RedisStateManager
 from turbinia import task_manager
 from turbinia import TurbiniaException
+
+config.LoadConfig()
+if config.TASK_MANAGER == 'PSQ':
+  # TODO(aarontp): Selectively load dependencies based on configured backends
+  import psq
+
+  from google.cloud import exceptions
+  from google.cloud import datastore
+  from google.cloud import pubsub
+
+  from turbinia.lib.google_cloud import GoogleCloudFunction
+elif config.TASK_MANAGER == 'Celery':
+  from turbinia.state_manager import RedisStateManager
 
 log = logging.getLogger('turbinia')
 logger.setup()
