@@ -20,6 +20,8 @@ from datetime import datetime
 from datetime import timedelta
 import json
 import logging
+import os
+import stat
 import time
 
 from turbinia import config
@@ -43,21 +45,33 @@ log = logging.getLogger('turbinia')
 logger.setup()
 
 
-def check_directory(self, directory):
+def check_directory(directory):
   """Checks directory to make sure it exists and is writable.
 
   Args:
     directory (string): Path to directory
 
-  Returns:
-    Boolean indicating success
-
   Raises:
-    TurbiniaException: When directory does not exists or is not writeable.
+    TurbiniaException: When directory cannot be created or used.
   """
-  if not os.path.exists(directory) and os.access(directory, os.W_OK):
+  if os.path.exists(directory) and not os.path.isdir(directory):
     raise TurbiniaException(
-        'Directory {0:s} does not exist, or is not writeable'.format(directory))
+        'File {0:s} exists, but is not a directory'.format(directory))
+
+  if not os.path.exists(directory):
+    try:
+      os.makedirs(directory)
+    except OSError:
+      raise TurbiniaException(
+          'Can not create Directory {0:s}'.format(directory))
+
+  if not os.access(directory, os.W_OK):
+    try:
+      mode = os.stat(directory)[0]
+      os.chmod(directory, mode | stat.S_IWUSR)
+    except OSError:
+      raise TurbiniaException(
+          'Can not add write permissions to {0:s}'.format(directory))
 
 
 class TurbiniaClient(object):
@@ -305,6 +319,7 @@ class TurbiniaCeleryClient(TurbiniaClient):
     """
     self.task_manager.kombu.send_request(request)
 
+  # pylint: disable=arguments-differ
   def get_task_data(self,
                     instance,
                     _,
@@ -363,8 +378,8 @@ class TurbiniaCeleryWorker(TurbiniaClient):
   def __init__(self, *args, **kwargs):
     """Initialization for Celery worker."""
     super(TurbiniaCeleryWorker, self).__init__(*args, **kwargs)
-    check_directory(config.TMP_DIR)
     check_directory(config.MOUNT_DIR_PREFIX)
+    check_directory(config.OUTPUT_DIR)
     self.worker = self.task_manager.celery.app
 
   def start(self):
@@ -385,7 +400,7 @@ class TurbiniaPsqWorker(object):
     TurbiniaException: When errors occur
   """
 
-  def __init__(self, *args, **kwargs):
+  def __init__(self, *_, **__):
     """Initialization for PSQ Worker."""
     config.LoadConfig()
     psq_publisher = pubsub.PublisherClient()
@@ -403,10 +418,8 @@ class TurbiniaPsqWorker(object):
       log.error(msg)
       raise TurbiniaException(msg)
 
-    if config.GCS_MOUNT_DIR:
-      check_directory(config.GCS_MOUNT_DIR)
-    check_directory(config.TMP_DIR)
     check_directory(config.MOUNT_DIR_PREFIX)
+    check_directory(config.OUTPUT_DIR)
 
     log.info('Starting PSQ listener on queue {0:s}'.format(self.psq.name))
     self.worker = psq.Worker(queue=self.psq)
