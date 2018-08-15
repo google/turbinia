@@ -29,7 +29,6 @@ from turbinia import TurbiniaException
 
 config.LoadConfig()
 if config.TASK_MANAGER == 'PSQ':
-  # TODO(aarontp): Selectively load dependencies based on configured backends
   import psq
 
   from google.cloud import exceptions
@@ -42,6 +41,23 @@ elif config.TASK_MANAGER == 'Celery':
 
 log = logging.getLogger('turbinia')
 logger.setup()
+
+
+def check_directory(self, directory):
+  """Checks directory to make sure it exists and is writable.
+
+  Args:
+    directory (string): Path to directory
+
+  Returns:
+    Boolean indicating success
+
+  Raises:
+    TurbiniaException: When directory does not exists or is not writeable.
+  """
+  if not os.path.exists(directory) and os.access(directory, os.W_OK):
+    raise TurbiniaException(
+        'Directory {0:s} does not exist, or is not writeable'.format(directory))
 
 
 class TurbiniaClient(object):
@@ -347,6 +363,8 @@ class TurbiniaCeleryWorker(TurbiniaClient):
   def __init__(self, *args, **kwargs):
     """Initialization for Celery worker."""
     super(TurbiniaCeleryWorker, self).__init__(*args, **kwargs)
+    check_directory(config.TMP_DIR)
+    check_directory(config.MOUNT_DIR_PREFIX)
     self.worker = self.task_manager.celery.app
 
   def start(self):
@@ -362,6 +380,9 @@ class TurbiniaPsqWorker(object):
   Attributes:
     worker (psq.Worker): PSQ Worker object
     psq (psq.Queue): A Task queue object
+
+  Raises:
+    TurbiniaException: When errors occur
   """
 
   def __init__(self, *args, **kwargs):
@@ -381,6 +402,11 @@ class TurbiniaPsqWorker(object):
       msg = 'Error creating PSQ Queue: {0:s}'.format(str(e))
       log.error(msg)
       raise TurbiniaException(msg)
+
+    if config.GCS_MOUNT_DIR:
+      check_directory(config.GCS_MOUNT_DIR)
+    check_directory(config.TMP_DIR)
+    check_directory(config.MOUNT_DIR_PREFIX)
 
     log.info('Starting PSQ listener on queue {0:s}'.format(self.psq.name))
     self.worker = psq.Worker(queue=self.psq)
