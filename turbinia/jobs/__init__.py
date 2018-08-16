@@ -27,11 +27,13 @@ def get_jobs():
   from turbinia.jobs.plaso import PlasoJob
   from turbinia.jobs.psort import PsortJob
   from turbinia.jobs.grep import GrepJob
+  from turbinia.jobs.sshd import SSHDAnalysisJob
   from turbinia.jobs.worker_stat import StatJob
   from turbinia.jobs.strings import StringsJob
   # TODO(aarontp): Dynamically look up job objects and make enabling/disabling
   # configurable through config and/or recipes.
-  return [StatJob(), PlasoJob(), PsortJob(), StringsJob(), GrepJob()]
+  return [StatJob(), PlasoJob(), PsortJob(), StringsJob(), GrepJob(),
+          SSHDAnalysisJob()]
 
 
 class TurbiniaJob(object):
