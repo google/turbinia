@@ -91,5 +91,5 @@ class SSHDAnalysisTask(TurbiniaTask):
     if findings:
       findings.insert(0, 'Insecure SSH configuration found.')
       return '\n'.join(findings)
-    else:
-      return 'No issues found in SSH configuration'
+
+    return 'No issues found in SSH configuration'
