@@ -33,6 +33,7 @@ class SSHDExtractionJob(TurbiniaJob):
   # The types of evidence that this Job will process
   evidence_input = [
     Directory, RawDisk, GoogleCloudDisk, GoogleCloudDiskRawEmbedded]
+
   evidence_output = [ExportedFileArtifact]
 
   def __init__(self):
@@ -55,8 +56,8 @@ class SSHDExtractionJob(TurbiniaJob):
 class SSHDAnalysisJob(TurbiniaJob):
   """Filter input based on regular expression patterns."""
 
-  evidence_output = [ReportText]
   evidence_input = [ExportedFileArtifact]
+  evidence_output = [ReportText]
 
   def __init__(self):
     super(SSHDAnalysisJob, self).__init__(name='SSHDAnalysisJob')

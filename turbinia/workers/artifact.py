@@ -42,13 +42,6 @@ class FileArtifactExtractionTask(TurbiniaTask):
     """
     config.LoadConfig()
 
-    # For testing
-    artifact = 'SshdConfigFile'
-    if not artifact:
-      result.close(
-          self, success=False, status='No artifact supplied, exiting task')
-      return result
-
     export_directory = os.path.join(self.output_dir, 'export')
     image_export_log = os.path.join(self.output_dir, '{0:s}.log'.format(self.id))
 
@@ -67,10 +60,6 @@ class FileArtifactExtractionTask(TurbiniaTask):
     # Path to the source image/directory.
     cmd.append(evidence.local_path)
 
-    result.log('dirpath {0:s}'.format(export_directory))
-
-
-    result.log('export directory {0:s}'.format(export_directory))
     result.log('Running image_export as [{0:s}]'.format(' '.join(cmd)))
 
     ret, _ = self.execute(cmd, result, save_files=[image_export_log])
@@ -78,9 +67,9 @@ class FileArtifactExtractionTask(TurbiniaTask):
       result.close(False, "image_export.py failed.")
 
     for dirpath, _, filenames in os.walk(export_directory):
-      result.log('dirpath {0:s}'.format(dirpath))
       for filename in filenames:
-        exported_artifact = ExportedFileArtifact(artifact_name=artifact)
+        exported_artifact = ExportedFileArtifact(
+            artifact_name=self.artifact_name)
         exported_artifact.local_path = os.path.join(dirpath, filename)
         # exported_artifact.copyable = True
         result.log('Adding artifact {0:s}'.format(filename))

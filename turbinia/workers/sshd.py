@@ -51,7 +51,6 @@ class SSHDAnalysisTask(TurbiniaTask):
     analysis = self.analyse_sshd_config(sshd_config)
     output_evidence.text_data = analysis
 
-
     # Write the report to the output file.
     with open(output_file_path, 'w') as fh:
       fh.write(output_evidence.text_data.encode('utf-8'))
@@ -61,8 +60,7 @@ class SSHDAnalysisTask(TurbiniaTask):
     result.close(self, success=True)
     return result
 
-
-  def analyse_sshd_config(self,  config):
+  def analyse_sshd_config(self, config):
     """Analyses an SSH configuration.
 
     Args:
@@ -71,13 +69,26 @@ class SSHDAnalysisTask(TurbiniaTask):
     Returns:
       str: description of security of SSHD configuration file.
     """
+    findings = []
     permit_root_login_re = re.compile(
-        '^\s*PermitRootLogin\s*yes', re.IGNORECASE|re.MULTILINE)
+        '^\s*PermitRootLogin\s*(yes|prohibit-password|without-password)',
+        re.IGNORECASE | re.MULTILINE)
     password_authentication_re = re.compile(
-        '^\s*PasswordAuthentication[\s"]*Yes', re.IGNORECASE|re.MULTILINE)
-    if re.match(permit_root_login_re, config):
-      return 'Root login'
-    if re.match(password_authentication_re, config):
-      return 'password auth'
+        '^\s*PasswordAuthentication[\s"]*No', re.IGNORECASE | re.MULTILINE)
+    permit_empty_passwords_re = re.compile(
+        '^\s*PermitEmptyPasswords[\s"]*Yes', re.IGNORECASE | re.MULTILINE)
 
-    return 'all good'
+    if re.search(permit_root_login_re, config):
+      findings.append('\tRoot login enabled.')
+
+    if not re.search(password_authentication_re, config):
+      findings.append('\tPassword authentication enabled.')
+
+    if re.search(permit_empty_passwords_re, config):
+      findings.append('\tEmpty passwords permitted.')
+
+    if findings:
+      findings.insert(0, 'Insecure SSH configuration found.')
+      return '\n'.join(findings)
+    else:
+      return 'No issues found in SSH configuration'

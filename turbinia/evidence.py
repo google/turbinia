@@ -294,9 +294,9 @@ class FilteredTextFile(TextFile):
 
 
 class ExportedFileArtifact(Evidence):
-  """Exported artifact."""
+  """Exported file artifact."""
 
   def __init__(self, artifact_name):
-    """Initializes an Exported Artifact."""
+    """Initializes an exported file artifact."""
     super(ExportedFileArtifact, self).__init__()
     self.artifact_name = artifact_name
