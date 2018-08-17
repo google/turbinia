@@ -16,10 +16,10 @@
 from __future__ import unicode_literals
 
 import os
+import re
 
 from turbinia.evidence import ReportText
 from turbinia.workers import TurbiniaTask
-from turbinia.lib.utils import get_artifacts
 
 
 class SSHDAnalysisTask(TurbiniaTask):
@@ -44,14 +44,14 @@ class SSHDAnalysisTask(TurbiniaTask):
     # Set the output file as the data source for the output evidence.
     output_evidence.local_path = output_file_path
 
-    collected_files = get_artifacts(
-        artifact_names=['SshdConfigFile'],
-        disk_path=evidence.local_path,
-        output_dir=os.path.join(self.output_dir, 'artifacts')
-    )
-    # Populate the text_data attribute so anyone who picks up this evidence
-    # doesn't have to fetch and read the file again.
-    output_evidence.text_data = '\n'.join(collected_files)
+    # Read the input file
+    with open(evidence.local_path, 'r') as input_file:
+      sshd_config = input_file.read()
+
+    analysis = self.analyse_sshd_config(sshd_config)
+    output_evidence.text_data = analysis
+
+
     # Write the report to the output file.
     with open(output_file_path, 'w') as fh:
       fh.write(output_evidence.text_data.encode('utf-8'))
@@ -60,3 +60,24 @@ class SSHDAnalysisTask(TurbiniaTask):
     result.add_evidence(output_evidence, evidence.config)
     result.close(self, success=True)
     return result
+
+
+  def analyse_sshd_config(self,  config):
+    """Analyses an SSH configuration.
+
+    Args:
+      config (str): configuration file content.
+
+    Returns:
+      str: description of security of SSHD configuration file.
+    """
+    permit_root_login_re = re.compile(
+        '^\s*PermitRootLogin\s*yes', re.IGNORECASE|re.MULTILINE)
+    password_authentication_re = re.compile(
+        '^\s*PasswordAuthentication[\s"]*Yes', re.IGNORECASE|re.MULTILINE)
+    if re.match(permit_root_login_re, config):
+      return 'Root login'
+    if re.match(password_authentication_re, config):
+      return 'password auth'
+
+    return 'all good'

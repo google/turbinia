@@ -291,3 +291,12 @@ class TextFile(Evidence):
 class FilteredTextFile(TextFile):
   """Filtered text data."""
   pass
+
+
+class ExportedFileArtifact(Evidence):
+  """Exported artifact."""
+
+  def __init__(self, artifact_name):
+    """Initializes an Exported Artifact."""
+    super(ExportedFileArtifact, self).__init__()
+    self.artifact_name = artifact_name

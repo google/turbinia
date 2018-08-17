@@ -27,13 +27,16 @@ def get_jobs():
   from turbinia.jobs.plaso import PlasoJob
   from turbinia.jobs.psort import PsortJob
   from turbinia.jobs.grep import GrepJob
-  from turbinia.jobs.sshd import SSHDAnalysisJob
   from turbinia.jobs.worker_stat import StatJob
   from turbinia.jobs.strings import StringsJob
+  from turbinia.jobs.sshd import SSHDExtractionJob
+  from turbinia.jobs.sshd import SSHDAnalysisJob
   # TODO(aarontp): Dynamically look up job objects and make enabling/disabling
   # configurable through config and/or recipes.
-  return [StatJob(), PlasoJob(), PsortJob(), StringsJob(), GrepJob(),
-          SSHDAnalysisJob()]
+
+
+  #return [StatJob(), PlasoJob(), PsortJob(), StringsJob(), GrepJob()]
+  return [SSHDExtractionJob(), SSHDAnalysisJob()]
 
 
 class TurbiniaJob(object):
@@ -43,12 +46,16 @@ class TurbiniaJob(object):
     name: Name of Job
     id: Id of job
     priority: Job priority from 0-100, lowest == highest priority
+    evidence_input (list[Evidence]): the types of evidence that this Job will process.
+    evidence_output (list[Evidence]): the types of evidence that this JOb will produce.
   """
 
   def __init__(self, name=None):
     self.name = name
     self.id = uuid.uuid4().hex
     self.priority = 100
+    # self.evidence_input = None
+    # self.evidence_output = None
 
   def create_tasks(self, evidence_):
     """Create Turbinia tasks to be run.
