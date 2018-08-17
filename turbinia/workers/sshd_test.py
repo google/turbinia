@@ -18,6 +18,7 @@ from __future__ import unicode_literals
 
 import unittest
 
+from turbinia import config
 from turbinia.workers import sshd
 
 
@@ -40,6 +41,7 @@ PermitEmptyPasswords no"""
 
   def test_analyse_sshd_config(self):
     """Tests the analyze_sshd_config method."""
+    config.LoadConfig()
     task = sshd.SSHDAnalysisTask()
 
     report = task.analyse_sshd_config(self.SSH_INSECURE_EVERYTHING)
