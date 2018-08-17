@@ -22,7 +22,6 @@ from __future__ import unicode_literals
 
 import json
 import logging
-import sys
 from datetime import datetime
 from datetime import timedelta
 
