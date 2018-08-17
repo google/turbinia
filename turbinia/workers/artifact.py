@@ -71,7 +71,6 @@ class FileArtifactExtractionTask(TurbiniaTask):
         exported_artifact = ExportedFileArtifact(
             artifact_name=self.artifact_name)
         exported_artifact.local_path = os.path.join(dirpath, filename)
-        # exported_artifact.copyable = True
         result.log('Adding artifact {0:s}'.format(filename))
         result.add_evidence(exported_artifact, evidence.config)
 

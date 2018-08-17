@@ -74,5 +74,5 @@ class SSHDAnalysisJob(TurbiniaJob):
     tasks = []
     for evidence_item in evidence:
       if evidence_item.artifact_name == 'SshdConfigFile':
-       tasks.append(sshd.SSHDAnalysisTask())
+        tasks.append(sshd.SSHDAnalysisTask())
     return tasks
