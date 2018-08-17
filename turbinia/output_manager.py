@@ -240,7 +240,7 @@ class LocalOutputWriter(OutputWriter):
     """Copies file to local output dir.
 
     Args:
-      file_: A string path to a source file.
+      file_path: A string path to a source file.
 
     Returns:
       The path the file was saved to, or None if file was not written.

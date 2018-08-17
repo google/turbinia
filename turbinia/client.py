@@ -128,7 +128,7 @@ class TurbiniaClient(object):
     Returns:
       List of Task dict objects.
     """
-    function = GoogleCloudFunction(project_id=project, region=region)
+    cloud_function = GoogleCloudFunction(project_id=project, region=region)
     func_args = {'instance': instance, 'kind': 'TurbiniaTask'}
 
     if days:
@@ -145,7 +145,7 @@ class TurbiniaClient(object):
     if user:
       func_args.update({'user': user})
 
-    response = function.ExecuteFunction(function_name, func_args)
+    response = cloud_function.ExecuteFunction(function_name, func_args)
     if not response.has_key('result'):
       log.error('No results found')
       if response.get('error', '{}') != '{}':
@@ -255,7 +255,7 @@ class TurbiniaClient(object):
 
     Returns: String of closed Task IDs.
     """
-    function = GoogleCloudFunction(project_id=project, region=region)
+    cloud_function = GoogleCloudFunction(project_id=project, region=region)
     func_args = {
         'instance': instance,
         'kind': 'TurbiniaTask',
@@ -264,7 +264,7 @@ class TurbiniaClient(object):
         'user': user,
         'requester': requester
     }
-    response = function.ExecuteFunction('closetasks', func_args)
+    response = cloud_function.ExecuteFunction('closetasks', func_args)
     return 'Closed Task IDs: %s' % response.get('result')
 
 
@@ -278,7 +278,7 @@ class TurbiniaCeleryClient(TurbiniaClient):
   """
 
   def __init__(self, *args, **kwargs):
-    super(TurbiniaCeleryClient, self).__init__(*args, **kwargs)
+    super(TurbiniaCeleryClient, self).__init__()
     self.redis = RedisStateManager()
 
   def send_request(self, request):
@@ -346,7 +346,7 @@ class TurbiniaCeleryWorker(TurbiniaClient):
 
   def __init__(self, *args, **kwargs):
     """Initialization for Celery worker."""
-    super(TurbiniaCeleryWorker, self).__init__(*args, **kwargs)
+    super(TurbiniaCeleryWorker, self).__init__()
     self.worker = self.task_manager.celery.app
 
   def start(self):
