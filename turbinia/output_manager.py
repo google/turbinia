@@ -174,7 +174,7 @@ class OutputWriter(object):
 
   def __init__(self, unique_dir=None, local_output_dir=None):
     """Initialization for OutputWriter."""
-    self.base_output_dir = None
+    self.base_output_dir = ''
     self.unique_dir = unique_dir
     self.local_output_dir = local_output_dir
     self.name = self.NAME
