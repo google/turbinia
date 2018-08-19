@@ -16,10 +16,11 @@
 
 from __future__ import unicode_literals
 
-import mock
+import json
 import os
 import tempfile
 import unittest
+import mock
 
 from turbinia import evidence
 from turbinia.workers import TurbiniaTask
@@ -53,6 +54,95 @@ class TestTurbiniaTask(unittest.TestCase):
     [os.remove(f) for f in self.remove_files if os.path.exists(f)]
     [os.rmdir(d) for d in self.remove_dirs if os.path.exists(d)]
     os.rmdir(self.base_output_dir)
+
+  def setResults(self, setup=None, run=None, result_check=None):
+    """Set up mock returns.
+
+    Args:
+      setup: What value to return from setup()
+      run: What value to return from run()
+      result_check: What value to return result_check setup()
+    """
+    if setup is None:
+      setup = self.result
+    if run is None:
+      run = self.result
+    if result_check is None:
+      result_check = self.result
+
+    self.result.status = 'TestStatus'
+    self.result.close = mock.MagicMock()
+    self.task.setup = mock.MagicMock(return_value=setup)
+    self.task.run = mock.MagicMock(return_value=run)
+    self.task.result_check = mock.MagicMock(return_value=result_check)
+
+  def testTurbiniaTaskRunWrapper(self):
+    """Test that the run wrapper executes task run."""
+    self.setResults()
+    self.result.closed = True
+    new_result = self.task.run_wrapper(self.evidence)
+    self.assertEqual(new_result.status, 'TestStatus')
+    self.result.close.assert_not_called()
+
+  def testTurbiniaTaskRunWrapperAutoClose(self):
+    """Test that the run wrapper closes the task."""
+    self.setResults()
+    new_result = self.task.run_wrapper(self.evidence)
+    self.assertEqual(new_result.status, 'TestStatus')
+    self.result.close.assert_called()
+
+  def testTurbiniaTaskRunWrapperBadResult(self):
+    """Test that the run wrapper recovers from run returning bad result."""
+    bad_result = 'Not a TurbiniaTaskResult'
+    checked_result = TurbiniaTaskResult(
+        task=self.task, base_output_dir=self.base_output_dir)
+    checked_result.status = 'CheckedResult'
+    self.setResults(run=bad_result, result_check=checked_result)
+
+    new_result = self.task.run_wrapper(self.evidence)
+
+    self.task.result_check.assert_any_call(bad_result)
+    self.assertEqual(type(new_result), TurbiniaTaskResult)
+    self.assertIn('CheckedResult', new_result.status)
+
+  def testTurbiniaTaskRunWrapperExceptionThrown(self):
+    """Test that the run wrapper recovers from run throwing an exception."""
+    self.setResults()
+    self.task.run = mock.MagicMock(side_effect=TurbiniaException)
+
+    new_result = self.task.run_wrapper(self.evidence)
+    self.assertEqual(type(new_result), TurbiniaTaskResult)
+    self.assertIn('failed', new_result.status)
+
+  def testTurbiniaTaskRunWrapperSetupFail(self):
+    """Test that the run wrapper recovers from setup failing."""
+    self.task.result = None
+    canary_status = 'ReturnedFromResultCheck'
+    self.result.status = canary_status
+    self.task.result_check = mock.MagicMock(return_value=self.result)
+    self.task.setup = mock.MagicMock(side_effect=TurbiniaException)
+    self.remove_files.append(os.path.join(
+        self.task.base_output_dir, 'worker-log.txt'))
+
+    new_result = self.task.run_wrapper(self.evidence)
+    self.assertEqual(type(new_result), TurbiniaTaskResult)
+    self.assertIn(canary_status, new_result.status)
+
+  def testTurbiniaTaskResultCheckGoodResult(self):
+    """Tests result_check with good result."""
+    self.result.status = 'GoodStatus'
+    new_result = self.task.result_check(self.result)
+    self.assertEqual(new_result.status, 'GoodStatus')
+    self.assertDictEqual(new_result.error, {})
+
+  @mock.patch('turbinia.workers.TurbiniaTaskResult.close')
+  def testTurbiniaTaskResultCheckBadResult(self, _):
+    """Tests result_check with bad result."""
+    # Passing in an unpickleable object (json module) and getting back a
+    # TurbiniaTaskResult
+    new_result = self.task.result_check(json)
+    self.assertEqual(type(new_result), TurbiniaTaskResult)
+    self.assertNotEqual(new_result.error, {})
 
   @mock.patch('turbinia.workers.subprocess.Popen')
   def testTurbiniaTaskExecute(self, popen_mock):
