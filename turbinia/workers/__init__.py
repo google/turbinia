@@ -157,12 +157,12 @@ class TurbiniaTaskResult(object):
     log.info(log_msg)
     self._log.append(log_msg)
 
-  def add_evidence(self, evidence, config):
+  def add_evidence(self, evidence, config_):
     """Populate the results list.
 
     Args:
         evidence: Evidence object
-        config (dict): The evidence config we want to associate with this
+        config_ (dict): The evidence config we want to associate with this
             object.  This will be passed in with the original evidence that was
             supplied to the task, so likely the caller will always want to use
             evidence_.config for this parameter.
@@ -171,7 +171,7 @@ class TurbiniaTaskResult(object):
     # created also contain the config.  We could create a closure to do this
     # automatically, but the real fix is to attach this to a separate object.
     # See https://github.com/google/turbinia/issues/211 for more details.
-    evidence.config = config
+    evidence.config = config_
     self.evidence.append(evidence)
 
   def set_error(self, error, traceback_):
@@ -338,7 +338,7 @@ class TurbiniaTask(object):
     self.last_update = datetime.now()
 
   def result_check(self, result):
-    """Checks to make sure that the result is serializeable.
+    """Checks to make sure that the result is valid.
 
     We occasionally get something added into a TurbiniaTaskResult that makes
     it unpickleable.  We don't necessarily know what caused it to be in that
@@ -353,30 +353,41 @@ class TurbiniaTask(object):
       The original result object if it is OK, otherwise an empty result object
       indicating a failure.
     """
-    try:
-      log.debug('Checking TurbiniaTaskResult for serializability')
-      pickle.dumps(result)
-      dump_status = 'Successful'
-    except (TypeError, pickle.PicklingError) as e:
-      msg = ('Error pickling TurbiniaTaskResult object. Returning a new result '
-             'with the pickling error, and all previous result data will be '
-             'lost. Pickle Error: {0!s}'.format(e))
-      log.error(msg)
-      log.error('Pickle error traceback: {0:s}'.format(traceback.format_exc()))
+    bad_message = None
+    check_status = 'Successful'
+
+    if not isinstance(result, TurbiniaTaskResult):
+      bad_message = (
+          'Task returned type [{0:s}] instead of TurbiniaTaskResult.').format(
+              type(result))
+    else:
+      try:
+        log.debug('Checking TurbiniaTaskResult for serializability')
+        pickle.dumps(result)
+      except (TypeError, pickle.PicklingError) as e:
+        bad_message = (
+            'Error pickling TurbiniaTaskResult object. Returning a new result '
+            'with the pickling error, and all previous result data will be '
+            'lost. Pickle Error: {0!s}'.format(e))
+
+    if bad_message:
+      log.error(bad_message)
       if result and hasattr(result, 'status') and result.status:
         old_status = result.status
       else:
         old_status = 'No previous status'
+
       result = TurbiniaTaskResult(
           task=self,
           base_output_dir=self.base_output_dir,
           request_id=self.request_id)
-      result.status = '{0:s}. Previous status: [{1:s}]'.format(msg, old_status)
-      result.set_error(e.message, traceback.format_exc())
-      result.close(self, success=False, status=msg)
-      dump_status = 'Failed, but replaced with new result object'
+      result.status = '{0:s}. Previous status: [{1:s}]'.format(
+          bad_message, old_status)
+      result.set_error(bad_message, traceback.format_exc())
+      result.close(self, success=False, status=bad_message)
+      check_status = 'Failed, but replaced with empty result'
 
-    log.info('Result check: {0:s}'.format(dump_status))
+    log.info('Result check: {0:s}'.format(check_status))
     return result
 
   def run_wrapper(self, evidence):
@@ -386,6 +397,14 @@ class TurbiniaTask(object):
     the management of TurbiniaTaskResults and the exception handling.  Otherwise
     details from exceptions in the worker cannot be propogated back to the
     Turbinia TaskManager.
+
+    This method should handle (in no particular order):
+      - Exceptions thrown from run()
+      - Verifing valid TurbiniaTaskResult object is returned
+          - Check for bad results (non TurbiniaTaskResults) returned from run()
+          - Auto-close results that haven't been closed
+          - Verifying that the results are serializeable
+      - Locking to make sure only one task is active at a time
 
     Args:
       evidence: Evidence object
@@ -399,17 +418,11 @@ class TurbiniaTask(object):
       self.result = self.setup(evidence)
       original_result_id = self.result.id
       self._evidence_config = evidence.config
-      # Passing the result through the run function explicitly, but failing back
-      # to the original result object if there is a problem.
-      tmp_result = self.run(evidence, self.result)
-      if not isinstance(tmp_result, TurbiniaTaskResult):
-        raise TurbiniaException(
-            'Task returned type [{0:s}] instead of TurbiniaTaskResult.').format(
-                type(tmp_result))
-      self.result = tmp_result
+      self.result = self.run(evidence, self.result)
     # pylint: disable=broad-except
     except (TurbiniaException, Exception) as e:
-      msg = '{0:s} Task failed with exception: [{1!s}]'.format(self.name, e)
+      msg = '{0:s} Task failed with exception: [{1:s}]'.format(
+          self.name, str(e))
       log.error(msg)
       log.error(traceback.format_exc())
       if self.result:
@@ -419,6 +432,8 @@ class TurbiniaTask(object):
         self.result.status = msg
       else:
         log.error('No TurbiniaTaskResult object found after task execution.')
+
+    self.result = self.result_check(self.result)
 
     # Trying to close the result if possible so that we clean up what we can.
     # This has a higher liklihood of failing because something must have gone
@@ -445,8 +460,9 @@ class TurbiniaTask(object):
         log.error('TurbiniaTaskResult close failed: {0!s}'.format(e))
         if not self.result.status:
           self.result.status = msg
+      # Check the result again after closing to make sure it's still good.
+      self.result = self.result_check(self.result)
 
-    self.result = self.result_check(self.result)
     if original_result_id != self.result.id:
       log.debug(
           'Result object {0:s} is different from original {1:s} after task '
