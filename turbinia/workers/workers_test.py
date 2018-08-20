@@ -56,26 +56,26 @@ class TestTurbiniaTask(unittest.TestCase):
     [os.rmdir(d) for d in self.remove_dirs if os.path.exists(d)]
     os.rmdir(self.base_output_dir)
 
-  def setResults(self, setup=None, run=None, result_check=None):
+  def setResults(self, setup=None, run=None, validate_result=None):
     """Set up mock returns.
 
     Args:
       setup: What value to return from setup()
       run: What value to return from run()
-      result_check: What value to return result_check setup()
+      validate_result: What value to return from validate_result()
     """
     if setup is None:
       setup = self.result
     if run is None:
       run = self.result
-    if result_check is None:
-      result_check = self.result
+    if validate_result is None:
+      validate_result = self.result
 
     self.result.status = 'TestStatus'
     self.result.close = mock.MagicMock()
     self.task.setup = mock.MagicMock(return_value=setup)
     self.task.run = mock.MagicMock(return_value=run)
-    self.task.result_check = mock.MagicMock(return_value=result_check)
+    self.task.validate_result = mock.MagicMock(return_value=validate_result)
 
   def testTurbiniaTaskRunWrapper(self):
     """Test that the run wrapper executes task run."""
@@ -98,11 +98,11 @@ class TestTurbiniaTask(unittest.TestCase):
     checked_result = TurbiniaTaskResult(
         task=self.task, base_output_dir=self.base_output_dir)
     checked_result.status = 'CheckedResult'
-    self.setResults(run=bad_result, result_check=checked_result)
+    self.setResults(run=bad_result, validate_result=checked_result)
 
     new_result = self.task.run_wrapper(self.evidence)
 
-    self.task.result_check.assert_any_call(bad_result)
+    self.task.validate_result.assert_any_call(bad_result)
     self.assertEqual(type(new_result), TurbiniaTaskResult)
     self.assertIn('CheckedResult', new_result.status)
 
@@ -118,9 +118,9 @@ class TestTurbiniaTask(unittest.TestCase):
   def testTurbiniaTaskRunWrapperSetupFail(self):
     """Test that the run wrapper recovers from setup failing."""
     self.task.result = None
-    canary_status = 'ReturnedFromResultCheck'
+    canary_status = 'ReturnedFromValidateResult'
     self.result.status = canary_status
-    self.task.result_check = mock.MagicMock(return_value=self.result)
+    self.task.validate_result = mock.MagicMock(return_value=self.result)
     self.task.setup = mock.MagicMock(side_effect=TurbiniaException)
     self.remove_files.append(os.path.join(
         self.task.base_output_dir, 'worker-log.txt'))
@@ -129,19 +129,19 @@ class TestTurbiniaTask(unittest.TestCase):
     self.assertEqual(type(new_result), TurbiniaTaskResult)
     self.assertIn(canary_status, new_result.status)
 
-  def testTurbiniaTaskResultCheckGoodResult(self):
-    """Tests result_check with good result."""
+  def testTurbiniaTaskValidateResultGoodResult(self):
+    """Tests validate_result with good result."""
     self.result.status = 'GoodStatus'
-    new_result = self.task.result_check(self.result)
+    new_result = self.task.validate_result(self.result)
     self.assertEqual(new_result.status, 'GoodStatus')
     self.assertDictEqual(new_result.error, {})
 
   @mock.patch('turbinia.workers.TurbiniaTaskResult.close')
-  def testTurbiniaTaskResultCheckBadResult(self, _):
-    """Tests result_check with bad result."""
+  def testTurbiniaTaskValidateResultBadResult(self, _):
+    """Tests validate_result with bad result."""
     # Passing in an unpickleable object (json module) and getting back a
     # TurbiniaTaskResult
-    new_result = self.task.result_check(json)
+    new_result = self.task.validate_result(json)
     self.assertEqual(type(new_result), TurbiniaTaskResult)
     self.assertNotEqual(new_result.error, {})
 
