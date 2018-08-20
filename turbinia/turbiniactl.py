@@ -373,7 +373,7 @@ def main():
     if args.close_tasks:
       if args.user or args.request_id or args.task_id:
         print client.close_tasks(
-            instance=config.PUBSUB_TOPIC,
+            instance=config.INSTANCE_ID,
             project=config.PROJECT,
             region=region,
             request_id=args.request_id,
@@ -389,7 +389,7 @@ def main():
 
     if args.wait and args.request_id:
       client.wait_for_request(
-          instance=config.PUBSUB_TOPIC,
+          instance=config.INSTANCE_ID,
           project=config.PROJECT,
           region=region,
           request_id=args.request_id,
@@ -400,7 +400,7 @@ def main():
                'turbiniactl will exit without waiting.')
 
     print client.format_task_status(
-        instance=config.PUBSUB_TOPIC,
+        instance=config.INSTANCE_ID,
         project=config.PROJECT,
         region=region,
         days=args.days_history,
@@ -463,13 +463,13 @@ def main():
           request.request_id))
       region = config.TURBINIA_REGION
       client.wait_for_request(
-          instance=config.PUBSUB_TOPIC,
+          instance=config.INSTANCE_ID,
           project=config.PROJECT,
           region=region,
           request_id=request.request_id,
           poll_interval=args.poll_interval)
       print client.format_task_status(
-          instance=config.PUBSUB_TOPIC,
+          instance=config.INSTANCE_ID,
           project=config.PROJECT,
           region=region,
           request_id=request.request_id,

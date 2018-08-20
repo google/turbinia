@@ -209,7 +209,7 @@ class RedisStateManager(BaseStateManager):
 
     Args:
       instance (string): The Turbinia instance name (by default the same as the
-          PUBSUB_TOPIC in the config).
+          INSTANCE_ID in the config).
       days (int): The number of days we want history for.
       task_id (string): The Id of the task.
       request_id (string): The Id of the request we want tasks for.
