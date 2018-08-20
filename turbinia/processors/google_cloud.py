@@ -52,7 +52,6 @@ def GetLocalInstanceName():
   Returns:
     The instance name as a string
   """
-  instance = None
   # TODO(aarontp): Use cloud API instead of manual requests to metadata service.
   req = urllib2.Request(
       'http://metadata.google.internal/computeMetadata/v1/instance/name',

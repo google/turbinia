@@ -228,8 +228,7 @@ def main():
       '-n', '--name', help='Descriptive name of the evidence', required=False)
 
   # List Jobs
-  parser_listjobs = subparsers.add_parser(
-      'listjobs', help='List all available jobs')
+  subparsers.add_parser('listjobs', help='List all available jobs')
 
   # PSQ Worker
   parser_psqworker = subparsers.add_parser('psqworker', help='Run PSQ worker')
@@ -241,8 +240,7 @@ def main():
       required=False)
 
   # Celery Worker
-  parser_celeryworker = subparsers.add_parser(
-      'celeryworker', help='Run Celery worker')
+  subparsers.add_parser('celeryworker', help='Run Celery worker')
 
   # Parser options for Turbinia status command
   parser_status = subparsers.add_parser(
@@ -277,7 +275,7 @@ def main():
       '-u', '--user', help='Show task for given user', required=False)
 
   # Server
-  parser_server = subparsers.add_parser('server', help='Run Turbinia Server')
+  subparsers.add_parser('server', help='Run Turbinia Server')
 
   args = parser.parse_args()
   if args.quiet:
