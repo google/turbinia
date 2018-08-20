@@ -337,7 +337,7 @@ class TurbiniaTask(object):
     """Updates the last_update time of the task."""
     self.last_update = datetime.now()
 
-  def result_check(self, result):
+  def validate_result(self, result):
     """Checks to make sure that the result is valid.
 
     We occasionally get something added into a TurbiniaTaskResult that makes
@@ -412,6 +412,7 @@ class TurbiniaTask(object):
     Returns:
       A TurbiniaTaskResult object
     """
+    # TODO(aarontp): Add locking: https://github.com/google/turbinia/issues/221
     log.info('Starting Task {0:s} {1:s}'.format(self.name, self.id))
     original_result_id = None
     try:
@@ -436,7 +437,7 @@ class TurbiniaTask(object):
       else:
         log.error('No TurbiniaTaskResult object found after task execution.')
 
-    self.result = self.result_check(self.result)
+    self.result = self.validate_result(self.result)
 
     # Trying to close the result if possible so that we clean up what we can.
     # This has a higher likelihood of failing because something must have gone
@@ -464,7 +465,7 @@ class TurbiniaTask(object):
         if not self.result.status:
           self.result.status = msg
       # Check the result again after closing to make sure it's still good.
-      self.result = self.result_check(self.result)
+      self.result = self.validate_result(self.result)
 
     if original_result_id != self.result.id:
       log.debug(
