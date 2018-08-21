@@ -48,9 +48,6 @@ CONFIGVARS = [
     'PROJECT',
     'ZONE',
     'TURBINIA_REGION',
-    'INSTANCE',
-    'DEVICE_NAME',
-    'SCRATCH_PATH',
     'BUCKET_NAME',
     'PSQ_TOPIC',
     'PUBSUB_TOPIC',
@@ -74,6 +71,7 @@ CONFIG = None
 
 
 class TurbiniaConfigException(Exception):
+  """Exception for Turbinia configuration."""
   pass
 
 
@@ -81,6 +79,7 @@ def LoadConfig():
   """Finds Turbinia config file and loads it."""
   # TODO(aarontp): Find way to not require global var here.  Maybe a singleton
   # pattern on the config class.
+  # pylint: disable=global-statement
   global CONFIG
   if CONFIG:
     return CONFIG

@@ -14,6 +14,9 @@
 # limitations under the License.
 """Job to execute strings task."""
 
+
+from __future__ import unicode_literals
+
 from turbinia.evidence import GoogleCloudDisk
 from turbinia.evidence import GoogleCloudDiskRawEmbedded
 from turbinia.evidence import RawDisk

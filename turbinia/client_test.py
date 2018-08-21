@@ -17,6 +17,10 @@
 from __future__ import unicode_literals
 
 import unittest
+import os
+import shutil
+import stat
+import tempfile
 
 import mock
 
@@ -63,7 +67,8 @@ class TestTurbiniaClient(unittest.TestCase):
   @mock.patch('turbinia.client.GoogleCloudFunction.ExecuteFunction')
   @mock.patch('turbinia.client.task_manager.PSQTaskManager._backend_setup')
   @mock.patch('turbinia.state_manager.get_state_manager')
-  def testTurbiniaClientGetTaskDataInvalidJson(self, _, __, mock_cloud_function):
+  def testTurbiniaClientGetTaskDataInvalidJson(
+      self, _, __, mock_cloud_function):
     """Test for exception after bad json results from cloud functions."""
     mock_cloud_function.return_value = {'result': None}
     client = TurbiniaClient()
@@ -85,6 +90,16 @@ class TestTurbiniaServer(unittest.TestCase):
 class TestTurbiniaPsqWorker(unittest.TestCase):
   """Test Turbinia PSQ Worker class."""
 
+  def setUp(self):
+    self.tmp_dir = tempfile.mkdtemp(prefix='turbinia-test')
+    config.LoadConfig()
+    config.OUTPUT_DIR = self.tmp_dir
+    config.MOUNT_DIR_PREFIX = self.tmp_dir
+
+  def tearDown(self):
+    if 'turbinia-test' in self.tmp_dir:
+      shutil.rmtree(self.tmp_dir)
+
   @mock.patch('turbinia.client.pubsub')
   @mock.patch('turbinia.client.datastore.Client')
   @mock.patch('turbinia.client.psq.Worker')
@@ -92,3 +107,21 @@ class TestTurbiniaPsqWorker(unittest.TestCase):
     """Basic test for PSQ worker."""
     worker = TurbiniaPsqWorker()
     self.assertTrue(hasattr(worker, 'worker'))
+
+  @mock.patch('turbinia.client.pubsub')
+  @mock.patch('turbinia.client.datastore.Client')
+  @mock.patch('turbinia.client.psq.Worker')
+  def testTurbiniaClientNoDir(self, _, __, ___):
+    """Test that OUTPUT_DIR path is created."""
+    config.OUTPUT_DIR = os.path.join(self.tmp_dir, 'no_such_dir')
+    TurbiniaPsqWorker()
+    self.assertTrue(os.path.exists(config.OUTPUT_DIR))
+
+  @mock.patch('turbinia.client.pubsub')
+  @mock.patch('turbinia.client.datastore.Client')
+  @mock.patch('turbinia.client.psq.Worker')
+  def testTurbiniaClientIsNonDir(self, _, __, ___):
+    """Test that OUTPUT_DIR does not point to an existing non-directory."""
+    config.OUTPUT_DIR = os.path.join(self.tmp_dir, 'empty_file')
+    open(config.OUTPUT_DIR, 'a').close()
+    self.assertRaises(TurbiniaException, TurbiniaPsqWorker)

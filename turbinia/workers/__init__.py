@@ -395,7 +395,7 @@ class TurbiniaTask(object):
 
     This wrapper should be called to invoke the run() methods so it can handle
     the management of TurbiniaTaskResults and the exception handling.  Otherwise
-    details from exceptions in the worker cannot be propogated back to the
+    details from exceptions in the worker cannot be propagated back to the
     Turbinia TaskManager.
 
     This method should handle (in no particular order):
@@ -437,7 +437,7 @@ class TurbiniaTask(object):
     self.result = self.validate_result(self.result)
 
     # Trying to close the result if possible so that we clean up what we can.
-    # This has a higher liklihood of failing because something must have gone
+    # This has a higher likelihood of failing because something must have gone
     # wrong as the Task should have already closed this.
     if self.result and not self.result.closed:
       msg = 'Trying last ditch attempt to close result'
