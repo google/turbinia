@@ -31,10 +31,10 @@ class FileArtifactExtractionTask(TurbiniaTask):
     self.artifact_name = artifact_name
 
   def run(self, evidence, result):
-    """Task that process data with Plaso.
+    """Extracts artifacts using Plaso image_export.py.
 
     Args:
-        evidence: Path to data to process.
+        evidence: evidence to be processed.
         result: A TurbiniaTaskResult object to place task results into.
 
     Returns:
@@ -64,7 +64,7 @@ class FileArtifactExtractionTask(TurbiniaTask):
 
     ret, _ = self.execute(cmd, result, save_files=[image_export_log])
     if ret:
-      result.close(False, "image_export.py failed.")
+      result.close(False, 'image_export.py failed.')
 
     for dirpath, _, filenames in os.walk(export_directory):
       for filename in filenames:
@@ -74,6 +74,8 @@ class FileArtifactExtractionTask(TurbiniaTask):
         result.log('Adding artifact {0:s}'.format(filename))
         result.add_evidence(exported_artifact, evidence.config)
 
-    result.close(self, True, "Created new evidence")
+    result.close(
+        self, True, 'Extracted {0:d} new {1:s} artifacts'.format(
+            len(result.evidence), self.artifact_name))
 
     return result
