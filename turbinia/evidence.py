@@ -291,7 +291,7 @@ class TextFile(Evidence):
 class FilteredTextFile(TextFile):
   """Filtered text data."""
   pass
-  
+
 
 class ExportedFileArtifact(Evidence):
   """Exported file artifact."""
