@@ -19,6 +19,8 @@ TODO(aarontp): In the future we can use this for doing a count and healthcheck
                in PSQ.
 """
 
+from __future__ import unicode_literals
+
 import os
 
 from turbinia.workers import TurbiniaTask
@@ -36,7 +38,7 @@ class StatTask(TurbiniaTask):
         result: TurbiniaTaskResult to populate with results.
 
     Returns:
-        TurbiniaTaskResult object.
+        TurbiniaTaskResult: object.
     """
     report = ReportText()
     result.log('Running stat on evidence {0:s}'.format(evidence.local_path))

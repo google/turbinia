@@ -32,7 +32,7 @@ def evidence_decode(evidence_dict):
   """Decode JSON into appropriate Evidence object.
 
   Args:
-    evidence_dict: JSON serializeable evidence object (i.e. a dict post JSON
+    evidence_dict: JSON serializable evidence object (i.e. a dict post JSON
                    decoding).
 
   Returns:
@@ -291,3 +291,12 @@ class TextFile(Evidence):
 class FilteredTextFile(TextFile):
   """Filtered text data."""
   pass
+
+
+class ExportedFileArtifact(Evidence):
+  """Exported file artifact."""
+
+  def __init__(self, artifact_name):
+    """Initializes an exported file artifact."""
+    super(ExportedFileArtifact, self).__init__()
+    self.artifact_name = artifact_name
