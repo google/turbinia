@@ -157,21 +157,21 @@ class TurbiniaTaskResult(object):
     log.info(log_msg)
     self._log.append(log_msg)
 
-  def add_evidence(self, evidence, config):
+  def add_evidence(self, evidence, evidence_config):
     """Populate the results list.
 
     Args:
         evidence: Evidence object
-        config (dict): The evidence config we want to associate with this
-            object.  This will be passed in with the original evidence that was
-            supplied to the task, so likely the caller will always want to use
-            evidence_.config for this parameter.
+        evidence_config (dict): The evidence config we want to associate with
+            this object.  This will be passed in with the original evidence that
+            was supplied to the task, so likely the caller will always want to
+            use evidence_.config for this parameter.
     """
     # We want to enforce this here to make sure that any new Evidence objects
     # created also contain the config.  We could create a closure to do this
     # automatically, but the real fix is to attach this to a separate object.
     # See https://github.com/google/turbinia/issues/211 for more details.
-    evidence.config = config
+    evidence.config = evidence_config
     self.evidence.append(evidence)
 
   def set_error(self, error, traceback_):
@@ -297,7 +297,7 @@ class TurbiniaTask(object):
       if close:
         result.close(self, success=True)
 
-    return (ret, result)
+    return ret, result
 
   def setup(self, evidence):
     """Perform common setup operations and runtime environment.
