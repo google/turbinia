@@ -281,7 +281,7 @@ class GCSOutputWriter(OutputWriter):
       gcs_path (string): GCS path to put output results into.
     """
     super(GCSOutputWriter, self).__init__(*args, **kwargs)
-    self.name = 'GCSWriter'
+    #self.name = 'GCSWriter'
     config.LoadConfig()
     self.client = storage.Client(project=config.PROJECT)
 

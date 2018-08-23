@@ -29,9 +29,12 @@ def get_jobs():
   from turbinia.jobs.grep import GrepJob
   from turbinia.jobs.worker_stat import StatJob
   from turbinia.jobs.strings import StringsJob
+  from turbinia.jobs.tomcat import TomcatExtractionJob
+  from turbinia.jobs.tomcat import TomcatAnalysisJob
   # TODO(aarontp): Dynamically look up job objects and make enabling/disabling
   # configurable through config and/or recipes.
-  return [StatJob(), PlasoJob(), PsortJob(), StringsJob(), GrepJob()]
+  return [StatJob(), PlasoJob(), PsortJob(), StringsJob(), GrepJob(), TomcatExtractionJob(), TomcatAnalysisJob()]
+  
 
 
 class TurbiniaJob(object):
