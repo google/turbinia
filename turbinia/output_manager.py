@@ -160,7 +160,7 @@ class OutputWriter(object):
   """Base class.
 
   By default this will write the files the Evidence objects point to along with
-  any other files expclicitly written with copy_to().
+  any other files explicitly written with copy_to().
 
   Attributes:
     base_output_dir (string): The base path for output.  The value is specific
@@ -170,10 +170,14 @@ class OutputWriter(object):
     unique_dir (string): A psuedo-unique string to be used in paths.
   """
 
+  NAME = 'base_output_writer'
+
   def __init__(self, unique_dir=None, local_output_dir=None):
     """Initialization for OutputWriter."""
+    self.base_output_dir = ''
     self.unique_dir = unique_dir
     self.local_output_dir = local_output_dir
+    self.name = self.NAME
     self.create_output_dir()
 
   def create_output_dir(self):
@@ -215,11 +219,12 @@ class OutputWriter(object):
 class LocalOutputWriter(OutputWriter):
   """Class for writing to local filesystem output."""
 
+  NAME = 'LocalWriter'
+
   def __init__(self, base_output_dir=None, *args, **kwargs):
     self.base_output_dir = base_output_dir
     self.local_output_dir = None
     super(LocalOutputWriter, self).__init__(*args, **kwargs)
-    self.name = 'LocalWriter'
 
   def create_output_dir(self):
     self.local_output_dir = os.path.join(self.base_output_dir, self.unique_dir)
@@ -240,7 +245,7 @@ class LocalOutputWriter(OutputWriter):
     """Copies file to local output dir.
 
     Args:
-      file_: A string path to a source file.
+      file_path: A string path to a source file.
 
     Returns:
       The path the file was saved to, or None if file was not written.
@@ -274,6 +279,8 @@ class GCSOutputWriter(OutputWriter):
 
   CHUNK_SIZE = 10 * (2 ** 20)  # 10MB by default
 
+  NAME = 'GCSWriter'
+
   def __init__(self, gcs_path, *args, **kwargs):
     """Initialization for GCSOutputWriter.
 
@@ -281,7 +288,6 @@ class GCSOutputWriter(OutputWriter):
       gcs_path (string): GCS path to put output results into.
     """
     super(GCSOutputWriter, self).__init__(*args, **kwargs)
-    #self.name = 'GCSWriter'
     config.LoadConfig()
     self.client = storage.Client(project=config.PROJECT)
 
