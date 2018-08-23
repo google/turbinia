@@ -52,7 +52,6 @@ class TomcatAnalysisJob(TurbiniaJob):
   """Filter input based on regular expression patterns."""
 
   evidence_input = [ExportedFileArtifact]
-
   evidence_output = [ReportText]
   
   def __init__(self):
