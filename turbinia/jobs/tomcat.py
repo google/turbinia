@@ -73,3 +73,4 @@ class TomcatAnalysisJob(TurbiniaJob):
       if evidence_item.artifact_name == 'TomcatFile':
         tasks.append(sshd.TomcatAnalysisTask())
     return tasks
+    

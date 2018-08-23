@@ -91,3 +91,4 @@ class TomcatAnalysisTask(TurbiniaTask):
       return '\n'.join(findings)
 
     return 'No issues found in Tomcat files.'
+    
