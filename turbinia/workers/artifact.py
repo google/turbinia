@@ -31,10 +31,17 @@ class FileArtifactExtractionTask(TurbiniaTask):
     self.artifact_name = artifact_name
 
   def run(self, evidence, result):
+<<<<<<< HEAD
     """Extracts artifacts using Plaso image_export.py.
 
     Args:
         evidence: evidence to be processed.
+=======
+    """Task that process data with Plaso.
+
+    Args:
+        evidence: Path to data to process.
+>>>>>>> Docker & Wordpress
         result: A TurbiniaTaskResult object to place task results into.
 
     Returns:
@@ -43,7 +50,12 @@ class FileArtifactExtractionTask(TurbiniaTask):
     config.LoadConfig()
 
     export_directory = os.path.join(self.output_dir, 'export')
+<<<<<<< HEAD
     image_export_log = os.path.join(self.output_dir, '{0:s}.log'.format(self.id))
+=======
+    image_export_log = os.path.join(
+        self.output_dir, '{0:s}.log'.format(self.id))
+>>>>>>> Docker & Wordpress
 
     cmd = [
         'image_export.py',
@@ -74,8 +86,12 @@ class FileArtifactExtractionTask(TurbiniaTask):
         result.log('Adding artifact {0:s}'.format(filename))
         result.add_evidence(exported_artifact, evidence.config)
 
+<<<<<<< HEAD
     result.close(
         self, True, 'Extracted {0:d} new {1:s} artifacts'.format(
             len(result.evidence), self.artifact_name))
+=======
+    result.close(self, True, 'Created new evidence')
+>>>>>>> Docker & Wordpress
 
     return result
