@@ -12,7 +12,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Job to execute sshd_config analysis task."""
+"""Job to execute Apache Tomcat analysis task."""
 from __future__ import unicode_literals
 from turbinia.workers import artifact
 from turbinia.workers import tomcat
@@ -71,5 +71,5 @@ class TomcatAnalysisJob(TurbiniaJob):
 
     for evidence_item in evidence:
       if evidence_item.artifact_name == 'TomcatFile':
-        tasks.append(sshd.TomcatAnalysisTask())
+        tasks.append(tomcat.TomcatAnalysisTask())
     return tasks
