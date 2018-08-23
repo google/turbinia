@@ -66,4 +66,3 @@ Tomcat Management: 1.2.3.4 - admin [12/Apr/2018:14:01:39 -0100] "POST /manager/h
 
 if __name__ == '__main__':
   unittest.main()
-  
