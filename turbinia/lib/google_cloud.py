@@ -207,7 +207,7 @@ class GoogleCloudFunction(GoogleCloudProject):
       TurbiniaException: When an HttpError is encountered.
     """
     service = self.GcfApi()
-    function = service.projects().locations().functions()
+    cloud_function = service.projects().locations().functions()
 
     try:
       json_args = json.dumps(args)
@@ -222,7 +222,7 @@ class GoogleCloudFunction(GoogleCloudProject):
     log.debug('Calling Cloud Function [{0:s}] with args [{1!s}]'.format(
         function_name, args))
     try:
-      function_return = function.call(
+      function_return = cloud_function.call(
           name=function_path, body={'data':json_args}).execute()
     except (HttpError, ssl.SSLError) as e:
       raise TurbiniaException(

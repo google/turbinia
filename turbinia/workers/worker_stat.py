@@ -35,6 +35,7 @@ class StatTask(TurbiniaTask):
 
     Args:
         evidence: Path to data to process.
+        result: TurbiniaTaskResult to populate with results.
 
     Returns:
         TurbiniaTaskResult: object.
