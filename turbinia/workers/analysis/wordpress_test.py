@@ -45,7 +45,6 @@ class WordpressAccessLogAnalysisTaskTest(unittest.TestCase):
     task = wordpress.WordpressAccessLogAnalysisTask()
 
     report = task.analyze_wp_access_logs(self.WORDPRESS_ACCESS_LOGS)
-    print report
     self.assertEqual(report, self.WORDPRESS_PWNED_REPORT)
 
 
