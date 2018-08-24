@@ -86,7 +86,7 @@ class TestPSQStateManager(unittest.TestCase):
     self.assertEqual(task_dict['request_id'], self.test_data['request_id'])
     self.assertEqual(task_dict['status'], self.test_data['status'])
     self.assertEqual(len(task_dict['saved_paths']), 2)
-    self.assertTrue(task_dict.has_key('instance'))
+    self.assertTrue('instance' in task_dict)
     self.assertIn(
         self.test_data['saved_paths'][0], task_dict['saved_paths'])
 

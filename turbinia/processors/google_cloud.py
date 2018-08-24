@@ -20,7 +20,9 @@ import logging
 import os
 import stat
 import time
-import urllib2
+
+from six.moves import urllib
+from six.moves import xrange
 
 from turbinia import config
 from turbinia import TurbiniaException
@@ -53,12 +55,12 @@ def GetLocalInstanceName():
     The instance name as a string
   """
   # TODO(aarontp): Use cloud API instead of manual requests to metadata service.
-  req = urllib2.Request(
+  req = urllib.request.Request(
       'http://metadata.google.internal/computeMetadata/v1/instance/name',
       None, {'Metadata-Flavor': 'Google'})
   try:
-    instance = urllib2.urlopen(req).read()
-  except urllib2.HTTPError as e:
+    instance = urllib.request.urlopen(req).read()
+  except urllib.error.HTTPError as e:
     raise TurbiniaException('Could not get instance name: {0!s}'.format(e))
 
   return instance

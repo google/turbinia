@@ -25,6 +25,8 @@ import logging
 from datetime import datetime
 from datetime import timedelta
 
+import six
+
 from turbinia import config
 from turbinia import TurbiniaException
 from turbinia.workers import TurbiniaTask
@@ -80,8 +82,8 @@ class BaseStateManager(object):
         raise TurbiniaException(
             'Task {0:s} does not have attribute {1:s}'.format(task.name, attr))
       task_dict[attr] = getattr(task, attr)
-      if isinstance(task_dict[attr], str):
-        task_dict[attr] = unicode(task_dict[attr])
+      if isinstance(task_dict[attr], six.string_types):
+        task_dict[attr] = six.u(task_dict[attr])
 
     if task.result:
       for attr in task.result.STORED_ATTRIBUTES:
@@ -90,13 +92,13 @@ class BaseStateManager(object):
               'Task {0:s} result does not have attribute {1:s}'.format(
                   task.name, attr))
         task_dict[attr] = getattr(task.result, attr)
-        if isinstance(task_dict[attr], str):
-          task_dict[attr] = unicode(task_dict[attr])
+        if isinstance(task_dict[attr], six.string_types):
+          task_dict[attr] = six.u(task_dict[attr])
 
     # Set all non-existent keys to None
     all_attrs = set(
         TurbiniaTask.STORED_ATTRIBUTES + TurbiniaTaskResult.STORED_ATTRIBUTES)
-    task_dict.update({k: None for k in all_attrs if not task_dict.has_key(k)})
+    task_dict.update({k: None for k in all_attrs if k not in task_dict})
     task_dict = self._validate_data(task_dict)
 
     # Using the pubsub topic as an instance attribute in order to have a unique
@@ -149,8 +151,8 @@ class DatastoreStateManager(BaseStateManager):
     self.client = datastore.Client(project=config.PROJECT)
 
   def _validate_data(self, data):
-    for key, value in data.iteritems():
-      if (isinstance(value, (str, unicode)) and
+    for key, value in iter(data.items()):
+      if (isinstance(value, six.string_types) and
           len(value) >= MAX_DATASTORE_STRLEN):
         log.warning(
             'Warning: key {0:s} with value {1:s} is longer than {2:d} bytes. '
