@@ -110,7 +110,7 @@ class Evidence(object):
     self.saved_path_type = None
 
   def __str__(self):
-    return '{0:s}:{1:s}:{2:s}'.format(self.type, self.name, self.local_path)
+    return '{0:s}:{1:s}:{2!s}'.format(self.type, self.name, self.local_path)
 
   def serialize(self):
     """Return JSON serializable object."""
