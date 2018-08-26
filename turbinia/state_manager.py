@@ -93,7 +93,8 @@ class BaseStateManager(object):
                   task.name, attr))
         task_dict[attr] = getattr(task.result, attr)
         if isinstance(task_dict[attr], six.string_types):
-          task_dict[attr] = six.u(task_dict[attr])
+          if six.PY2:
+            task_dict[attr] = six.u(task_dict[attr])
 
     # Set all non-existent keys to None
     all_attrs = set(

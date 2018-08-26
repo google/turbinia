@@ -80,7 +80,7 @@ class TurbiniaRequest(object):
           not of the correct type.
     """
     try:
-      if json_str in six.binary_type:
+      if isinstance(json_str, six.binary_type):
         json_str = codecs.decode(json_str, 'utf-8')
       obj = json.loads(json_str)
     except ValueError as e:
