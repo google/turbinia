@@ -92,9 +92,8 @@ class BaseStateManager(object):
               'Task {0:s} result does not have attribute {1:s}'.format(
                   task.name, attr))
         task_dict[attr] = getattr(task.result, attr)
-        if isinstance(task_dict[attr], six.string_types):
-          if six.PY2:
-            task_dict[attr] = six.u(task_dict[attr])
+        if isinstance(task_dict[attr], six.binary_type):
+          task_dict[attr] = six.u(task_dict[attr])
 
     # Set all non-existent keys to None
     all_attrs = set(

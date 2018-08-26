@@ -130,7 +130,7 @@ class TurbiniaPubSub(TurbiniaMessageBase):
     data = message.encode('utf-8')
     future = self.publisher.publish(self.topic_path, data)
     msg_id = future.result()
-    log.info('Published message {0:s} to topic {1!s}'.format(
+    log.info('Published message {0!s} to topic {1!s}'.format(
         msg_id, self.topic_name))
 
   def send_request(self, request):
