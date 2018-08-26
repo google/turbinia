@@ -21,6 +21,8 @@ import copy
 import json
 import uuid
 
+import six
+
 import logging
 
 from turbinia import evidence
@@ -78,7 +80,8 @@ class TurbiniaRequest(object):
           not of the correct type.
     """
     try:
-      json_str = codecs.decode(json_str, 'utf-8')
+      if json_str in six.binary_type:
+        json_str = codecs.decode(json_str, 'utf-8')
       obj = json.loads(json_str)
     except ValueError as e:
       raise TurbiniaException(
