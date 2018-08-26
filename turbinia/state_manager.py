@@ -20,6 +20,7 @@ storage.
 
 from __future__ import unicode_literals
 
+import codecs
 import json
 import logging
 from datetime import datetime
@@ -82,8 +83,8 @@ class BaseStateManager(object):
         raise TurbiniaException(
             'Task {0:s} does not have attribute {1:s}'.format(task.name, attr))
       task_dict[attr] = getattr(task, attr)
-      if isinstance(task_dict[attr], six.string_types):
-        task_dict[attr] = six.u(task_dict[attr])
+      if isinstance(task_dict[attr], six.binary_type):
+        task_dict[attr] = codecs.decode(task_dict[attr], 'utf-8')
 
     if task.result:
       for attr in task.result.STORED_ATTRIBUTES:

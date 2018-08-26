@@ -124,7 +124,7 @@ class TestTurbiniaPubSub(unittest.TestCase):
     self.pubsub.publisher = mock.MagicMock()
     self.pubsub.send_message('test message text')
     self.pubsub.publisher.publish.assert_called_with(
-        'faketopicpath', 'test message text')
+        'faketopicpath', b'test message text')
 
 
 class TestTurbiniaKombu(unittest.TestCase):
