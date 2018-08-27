@@ -28,7 +28,7 @@ from turbinia.jobs import TurbiniaJob
 from turbinia.workers.analysis import wordpress
 
 class DockerLogExtractionJob(TurbiniaJob):
-  """Wordpress configuration extraction job."""
+  """Docker log extraction job."""
 
   evidence_input = [
       Directory, RawDisk, GoogleCloudDisk, GoogleCloudDiskRawEmbedded]
@@ -53,7 +53,7 @@ class DockerLogExtractionJob(TurbiniaJob):
     return tasks
 
 class DockerLogAnalysisJob(TurbiniaJob):
-  """Wordpress analysis job."""
+  """Docker log analysis job."""
    # Types of evidence that this Job will process.
   evidence_input = [ExportedFileArtifact]
   evidence_output = [ReportText]
@@ -69,9 +69,7 @@ class DockerLogAnalysisJob(TurbiniaJob):
         A list of tasks to schedule.
     """
     tasks = []
-    print "DockerLogAnalysisJob invoked"
     for evidence_item in evidence:
-      print "Found evidence:", evidence_item.artifact_name
       if evidence_item.artifact_name == 'DockerContainerLogs':
         tasks.append(wordpress.WordpressAccessLogAnalysisTask())
     return tasks

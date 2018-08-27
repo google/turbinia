@@ -36,7 +36,7 @@ class WordpressAccessLogAnalysisTaskTest(unittest.TestCase):
     filedir = os.path.dirname(os.path.realpath(__file__))
     test_data = os.path.join(
         filedir, '..', '..', '..', 'test_data', 'wordpress_access_logs.txt')
-    with open(test_data) as data:
+    with open(test_data, 'r') as data:
       self.WORDPRESS_ACCESS_LOGS = data.read()
 
   def test_analyze_wp_access_logs(self):
