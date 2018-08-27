@@ -35,10 +35,10 @@ class TomcatAnalysisTaskTest(unittest.TestCase):
 Tomcat user: <user username="tomcat" password="tomcat" roles="tomcat"/>
 Tomcat user: <user username="both" password="tomcat" roles="tomcat,role1"/>"""
 
-  TOMCAT_APP_DEPLOY_LOG = """21-Mar-2017 19:21:08.140 INFO [localhost-startStop-2] org.apache.catalina.startup.HostConfig.deployWAR Deploying web application archive C:\Program Files\Apache Software Foundation\Tomcat 9.0\webapps\MyAwesomeApp.war
+  TOMCAT_APP_DEPLOY_LOG = r"""21-Mar-2017 19:21:08.140 INFO [localhost-startStop-2] org.apache.catalina.startup.HostConfig.deployWAR Deploying web application archive C:\Program Files\Apache Software Foundation\Tomcat 9.0\webapps\MyAwesomeApp.war
 10-Sep-2012 11:41:12.283 INFO [localhost-startStop-1] org.apache.catalina.startup.HostConfig.deployWAR Deploying web application archive /opt/apache-tomcat-8.0.32/webapps/badboy.war"""
 
-  TOMCAT_APP_DEPLOY_LOG_REPORT = """Tomcat analysis output:
+  TOMCAT_APP_DEPLOY_LOG_REPORT = r"""Tomcat analysis output:
 Tomcat App Deployed: 21-Mar-2017 19:21:08.140 INFO [localhost-startStop-2] org.apache.catalina.startup.HostConfig.deployWAR Deploying web application archive C:\Program Files\Apache Software Foundation\Tomcat 9.0\webapps\MyAwesomeApp.war
 Tomcat App Deployed: 10-Sep-2012 11:41:12.283 INFO [localhost-startStop-1] org.apache.catalina.startup.HostConfig.deployWAR Deploying web application archive /opt/apache-tomcat-8.0.32/webapps/badboy.war"""
 

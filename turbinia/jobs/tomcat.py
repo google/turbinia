@@ -24,12 +24,12 @@ from turbinia.evidence import RawDisk
 from turbinia.evidence import ReportText
 from turbinia.jobs import TurbiniaJob
 class TomcatExtractionJob(TurbiniaJob):
-  """Filter input based on regular expression patterns."""
+  """Extract Apache Tomcat files for analysis."""
 
   # The types of evidence that this Job will process
   evidence_input = [
-    Directory, RawDisk, GoogleCloudDisk, GoogleCloudDiskRawEmbedded]
-  
+      Directory, RawDisk, GoogleCloudDisk, GoogleCloudDiskRawEmbedded]
+
   evidence_output = [ExportedFileArtifact]
 
   def __init__(self):
@@ -45,18 +45,18 @@ class TomcatExtractionJob(TurbiniaJob):
         A list of tasks to schedule.
     """
     tasks = [
-      artifact.FileArtifactExtractionTask('TomcatFile') for _ in evidence]
+        artifact.FileArtifactExtractionTask('TomcatFiles') for _ in evidence]
     return tasks
 
 class TomcatAnalysisJob(TurbiniaJob):
-  """Filter input based on regular expression patterns."""
+  """Create tasks to analyse Apache Tomcat files."""
 
   evidence_input = [ExportedFileArtifact]
   evidence_output = [ReportText]
-  
+
   def __init__(self):
     super(TomcatAnalysisJob, self).__init__(name='TomcatAnalysisJob')
-  
+
   def create_tasks(self, evidence):
     """Create task.
 

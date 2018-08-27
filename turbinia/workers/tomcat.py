@@ -65,7 +65,7 @@ class TomcatAnalysisTask(TurbiniaTask):
     - Search for clear text password entries in user configuration file
     - Search for .war deployment
     - Search for management control panel activity
-    
+
     Args:
       tomcat_file (str): Tomcat file content.
     Returns:
@@ -74,15 +74,17 @@ class TomcatAnalysisTask(TurbiniaTask):
     findings = []
 
     tomcat_user_passwords_re = re.compile('(^.*password.*)', re.MULTILINE)
-    tomcat_app_deploy_re = re.compile('(^.*Deploying web application archive.*)', re.MULTILINE)
-    tomcat_manager_activity_re = re.compile('(^.*POST /manager/html/upload.*)',re.MULTILINE)
+    tomcat_deploy_re = re.compile('(^.*Deploying web application archive.*)',
+                                  re.MULTILINE)
+    tomcat_manager_activity_re = re.compile('(^.*POST /manager/html/upload.*)',
+                                            re.MULTILINE)
 
     for password_entry in re.findall(tomcat_user_passwords_re, tomcat_file):
       findings.append('Tomcat user: ' + password_entry.strip())
 
-    for deployment_entry in re.findall(tomcat_app_deploy_re, tomcat_file):
+    for deployment_entry in re.findall(tomcat_deploy_re, tomcat_file):
       findings.append('Tomcat App Deployed: ' + deployment_entry.strip())
-    
+
     for mgmt_entry in re.findall(tomcat_manager_activity_re, tomcat_file):
       findings.append('Tomcat Management: ' + mgmt_entry.strip())
 
