@@ -29,13 +29,13 @@ def get_jobs():
   from turbinia.jobs.grep import GrepJob
   from turbinia.jobs.worker_stat import StatJob
   from turbinia.jobs.strings import StringsJob
-  from turbinia.jobs.analysis.jenkins import JenkinsAnalysisJob
+  from turbinia.jobs.sshd import SSHDExtractionJob
+  from turbinia.jobs.sshd import SSHDAnalysisJob
   # TODO(aarontp): Dynamically look up job objects and make enabling/disabling
   # configurable through config and/or recipes.
-  #return [StatJob(), PlasoJob(), PsortJob(), StringsJob(), GrepJob(),
-  #        JenkinsAnalysisJob()]
-  # TODO(jberggren) Remove when PR is done. This is just to speed up testing.
-  return [JenkinsAnalysisJob()]
+  return [
+    StatJob(), PlasoJob(), PsortJob(), StringsJob(), GrepJob(),
+    SSHDExtractionJob(), SSHDAnalysisJob()]
 
 
 class TurbiniaJob(object):

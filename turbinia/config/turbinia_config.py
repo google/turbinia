@@ -26,27 +26,17 @@ USER = 'turbinia'
 # Turbinia's installation directory
 TURBINIA_DIR = '/opt/turbinia'
 
-# GCSFuse mount for Turbinia scripts and logging.
-# Note: this GCS instance is where Google Cloud Functions should
-# be deployed to.
-GCS_MOUNT_DIR = '/mnt/turbinia'
-
-# Local directory for temporary data
-TMP_DIR = '/var/tmp'
-
 # 'PSQ' is currently the only valid option as
 # a distributed task queue using Google Cloud Pub/Sub
 TASK_MANAGER = 'PSQ'
 
-# File to log to; set this as None if log file is not desired
-# By default, Turbinia logs are written to a directory (GCS_MOUNT_DIR)
-# in the GCS mount
-LOG_FILE = '/tmp/turbinia.log'
+# Default base output directory for worker results and evidence.
+OUTPUT_DIR = '/var/tmp'
 
-# Default base output directory for worker results and evidence
-# When running Turbinia locally, you can set this to, for example,
-# %/turbinia_output' % TMP_DIR
-OUTPUT_DIR = '%s/output' % GCS_MOUNT_DIR
+# File to log to; set this as None if log file is not desired
+# By default, Turbinia logs are written to a directory (GCS_OUTPUT_DIR)
+# in the GCS mount
+LOG_FILE = '%s/turbinia.log' % OUTPUT_DIR
 
 # Time in seconds to sleep in task management loops
 SLEEP_TIME = 10
@@ -75,13 +65,17 @@ DEBUG_TASKS = False
 # Google Cloud Platform (GCP) #
 ###############################
 
+# GCP project, region and zone where Turbinia will run.  Note that Turbinia does
+# not currently support multi-zone operation.  Even if you are running Turbinia
+# in Hybrid mode (with the Server and Workers running on local machines), you
+# will still need to provide these three parameters.
+# TODO(aarontp): Refactor these (and *PATH) var names to be consistent
 PROJECT = 'None'
 ZONE = 'None'
-INSTANCE = 'None'
-DEVICE_NAME = 'None'
-SCRATCH_PATH = 'None'
+TURBINIA_REGION = 'None'
 
 # GCS bucket that has Turbinia specific scripts and can be used to store logs.
+# This must be globally unique within GCP.
 BUCKET_NAME = 'None'
 
 # This is the internal PubSub topic that PSQ will use.  This should be different
@@ -89,15 +83,11 @@ BUCKET_NAME = 'None'
 # variable prefixed with 'psq-'.
 PSQ_TOPIC = 'turbinia-psq'
 
-TURBINIA_REGION = 'None'
-
 # A unique ID per Turbinia instance. Used to namespace datastore entries.
 INSTANCE_ID = 'turbinia-pubsub'
 
-# Topic Turbinia will listen on for new Artifact events. This is also used as
-# the Turbinia instance/namespace as it is a unique string per Turbinia
-# instance and Cloud Project.  This should be different than the PSQ_TOPIC
-# variable.
+# Topic Turbinia will listen on for new requests.  This should be different than
+# the PSQ_TOPIC variable.
 PUBSUB_TOPIC = INSTANCE_ID
 
 # GCS Path to copy worker results and Evidence output to

@@ -92,8 +92,8 @@ class TestTurbiniaPubSub(unittest.TestCase):
   def setUp(self):
     request = getTurbiniaRequest()
     self.pubsub = pubsub.TurbiniaPubSub('fake_topic')
-    message = MockPubSubMessage(request.to_json(), 'msg id')
-    self.pubsub._queue.put(message)
+    pub_sub_message = MockPubSubMessage(request.to_json(), 'msg id')
+    self.pubsub._queue.put(pub_sub_message)
     self.pubsub.topic_path = 'faketopicpath'
 
   def testCheckMessages(self):
@@ -111,10 +111,10 @@ class TestTurbiniaPubSub(unittest.TestCase):
 
   def testBadCheckMessages(self):
     """Test check_messages returns empty list for an invalid message."""
-    message = MockPubSubMessage('non-json-data', 'msg id2')
+    pub_sub_message = MockPubSubMessage('non-json-data', 'msg id2')
     # Clear the queue so we can add an invalid message
     self.pubsub._queue.get()
-    self.pubsub._queue.put(message)
+    self.pubsub._queue.put(pub_sub_message)
 
     self.assertListEqual(self.pubsub.check_messages(), [])
 

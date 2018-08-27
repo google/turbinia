@@ -14,6 +14,8 @@
 # limitations under the License.
 """Job to execute Plaso task."""
 
+from __future__ import unicode_literals
+
 from turbinia.evidence import Directory
 from turbinia.evidence import GoogleCloudDisk
 from turbinia.evidence import GoogleCloudDiskRawEmbedded

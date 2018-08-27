@@ -20,6 +20,8 @@ from datetime import datetime
 from datetime import timedelta
 import json
 import logging
+import os
+import stat
 import time
 
 from turbinia import config
@@ -29,7 +31,6 @@ from turbinia import TurbiniaException
 
 config.LoadConfig()
 if config.TASK_MANAGER == 'PSQ':
-  # TODO(aarontp): Selectively load dependencies based on configured backends
   import psq
 
   from google.cloud import exceptions
@@ -42,6 +43,35 @@ elif config.TASK_MANAGER == 'Celery':
 
 log = logging.getLogger('turbinia')
 logger.setup()
+
+
+def check_directory(directory):
+  """Checks directory to make sure it exists and is writable.
+
+  Args:
+    directory (string): Path to directory
+
+  Raises:
+    TurbiniaException: When directory cannot be created or used.
+  """
+  if os.path.exists(directory) and not os.path.isdir(directory):
+    raise TurbiniaException(
+        'File {0:s} exists, but is not a directory'.format(directory))
+
+  if not os.path.exists(directory):
+    try:
+      os.makedirs(directory)
+    except OSError:
+      raise TurbiniaException(
+          'Can not create Directory {0:s}'.format(directory))
+
+  if not os.access(directory, os.W_OK):
+    try:
+      mode = os.stat(directory)[0]
+      os.chmod(directory, mode | stat.S_IWUSR)
+    except OSError:
+      raise TurbiniaException(
+          'Can not add write permissions to {0:s}'.format(directory))
 
 
 class TurbiniaClient(object):
@@ -75,7 +105,7 @@ class TurbiniaClient(object):
 
     Args:
       instance (string): The Turbinia instance name (by default the same as the
-          PUBSUB_TOPIC in the config).
+          INSTANCE_ID in the config).
       project (string): The name of the project.
       region (string): The name of the region to execute in.
       request_id (string): The Id of the request we want tasks for.
@@ -116,7 +146,7 @@ class TurbiniaClient(object):
 
     Args:
       instance (string): The Turbinia instance name (by default the same as the
-          PUBSUB_TOPIC in the config).
+          INSTANCE_ID in the config).
       project (string): The name of the project.
       region (string): The name of the region to execute in.
       days (int): The number of days we want history for.
@@ -128,7 +158,7 @@ class TurbiniaClient(object):
     Returns:
       List of Task dict objects.
     """
-    function = GoogleCloudFunction(project_id=project, region=region)
+    cloud_function = GoogleCloudFunction(project_id=project, region=region)
     func_args = {'instance': instance, 'kind': 'TurbiniaTask'}
 
     if days:
@@ -145,7 +175,7 @@ class TurbiniaClient(object):
     if user:
       func_args.update({'user': user})
 
-    response = function.ExecuteFunction(function_name, func_args)
+    response = cloud_function.ExecuteFunction(function_name, func_args)
     if not response.has_key('result'):
       log.error('No results found')
       if response.get('error', '{}') != '{}':
@@ -177,7 +207,7 @@ class TurbiniaClient(object):
 
     Args:
       instance (string): The Turbinia instance name (by default the same as the
-          PUBSUB_TOPIC in the config).
+          INSTANCE_ID in the config).
       project (string): The name of the project.
       region (string): The name of the zone to execute in.
       days (int): The number of days we want history for.
@@ -245,7 +275,7 @@ class TurbiniaClient(object):
 
     Args:
       instance (string): The Turbinia instance name (by default the same as the
-          PUBSUB_TOPIC in the config).
+          INSTANCE_ID in the config).
       project (string): The name of the project.
       region (string): The name of the zone to execute in.
       request_id (string): The Id of the request we want tasks for.
@@ -255,7 +285,7 @@ class TurbiniaClient(object):
 
     Returns: String of closed Task IDs.
     """
-    function = GoogleCloudFunction(project_id=project, region=region)
+    cloud_function = GoogleCloudFunction(project_id=project, region=region)
     func_args = {
         'instance': instance,
         'kind': 'TurbiniaTask',
@@ -264,7 +294,7 @@ class TurbiniaClient(object):
         'user': user,
         'requester': requester
     }
-    response = function.ExecuteFunction('closetasks', func_args)
+    response = cloud_function.ExecuteFunction('closetasks', func_args)
     return 'Closed Task IDs: %s' % response.get('result')
 
 
@@ -278,7 +308,7 @@ class TurbiniaCeleryClient(TurbiniaClient):
   """
 
   def __init__(self, *args, **kwargs):
-    super(TurbiniaCeleryClient, self).__init__(*args, **kwargs)
+    super(TurbiniaCeleryClient, self).__init__()
     self.redis = RedisStateManager()
 
   def send_request(self, request):
@@ -289,6 +319,7 @@ class TurbiniaCeleryClient(TurbiniaClient):
     """
     self.task_manager.kombu.send_request(request)
 
+  # pylint: disable=arguments-differ
   def get_task_data(self,
                     instance,
                     _,
@@ -303,7 +334,7 @@ class TurbiniaCeleryClient(TurbiniaClient):
 
     Args:
       instance (string): The Turbinia instance name (by default the same as the
-          PUBSUB_TOPIC in the config).
+          INSTANCE_ID in the config).
       days (int): The number of days we want history for.
       task_id (string): The Id of the task.
       request_id (string): The Id of the request we want tasks for.
@@ -346,7 +377,9 @@ class TurbiniaCeleryWorker(TurbiniaClient):
 
   def __init__(self, *args, **kwargs):
     """Initialization for Celery worker."""
-    super(TurbiniaCeleryWorker, self).__init__(*args, **kwargs)
+    super(TurbiniaCeleryWorker, self).__init__()
+    check_directory(config.MOUNT_DIR_PREFIX)
+    check_directory(config.OUTPUT_DIR)
     self.worker = self.task_manager.celery.app
 
   def start(self):
@@ -362,9 +395,12 @@ class TurbiniaPsqWorker(object):
   Attributes:
     worker (psq.Worker): PSQ Worker object
     psq (psq.Queue): A Task queue object
+
+  Raises:
+    TurbiniaException: When errors occur
   """
 
-  def __init__(self, *args, **kwargs):
+  def __init__(self, *_, **__):
     """Initialization for PSQ Worker."""
     config.LoadConfig()
     psq_publisher = pubsub.PublisherClient()
@@ -381,6 +417,9 @@ class TurbiniaPsqWorker(object):
       msg = 'Error creating PSQ Queue: {0:s}'.format(str(e))
       log.error(msg)
       raise TurbiniaException(msg)
+
+    check_directory(config.MOUNT_DIR_PREFIX)
+    check_directory(config.OUTPUT_DIR)
 
     log.info('Starting PSQ listener on queue {0:s}'.format(self.psq.name))
     self.worker = psq.Worker(queue=self.psq)

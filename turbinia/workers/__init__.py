@@ -157,21 +157,21 @@ class TurbiniaTaskResult(object):
     log.info(log_msg)
     self._log.append(log_msg)
 
-  def add_evidence(self, evidence, config):
+  def add_evidence(self, evidence, evidence_config):
     """Populate the results list.
 
     Args:
         evidence: Evidence object
-        config (dict): The evidence config we want to associate with this
-            object.  This will be passed in with the original evidence that was
-            supplied to the task, so likely the caller will always want to use
-            evidence_.config for this parameter.
+        evidence_config (dict): The evidence config we want to associate with
+            this object.  This will be passed in with the original evidence that
+            was supplied to the task, so likely the caller will always want to
+            use evidence_.config for this parameter.
     """
     # We want to enforce this here to make sure that any new Evidence objects
     # created also contain the config.  We could create a closure to do this
     # automatically, but the real fix is to attach this to a separate object.
     # See https://github.com/google/turbinia/issues/211 for more details.
-    evidence.config = config
+    evidence.config = evidence_config
     self.evidence.append(evidence)
 
   def set_error(self, error, traceback_):
@@ -297,7 +297,7 @@ class TurbiniaTask(object):
       if close:
         result.close(self, success=True)
 
-    return (ret, result)
+    return ret, result
 
   def setup(self, evidence):
     """Perform common setup operations and runtime environment.
@@ -338,7 +338,7 @@ class TurbiniaTask(object):
     self.last_update = datetime.now()
 
   def result_check(self, result):
-    """Checks to make sure that the result is serializeable.
+    """Checks to make sure that the result is serializable.
 
     We occasionally get something added into a TurbiniaTaskResult that makes
     it unpickleable.  We don't necessarily know what caused it to be in that
@@ -384,7 +384,7 @@ class TurbiniaTask(object):
 
     This wrapper should be called to invoke the run() methods so it can handle
     the management of TurbiniaTaskResults and the exception handling.  Otherwise
-    details from exceptions in the worker cannot be propogated back to the
+    details from exceptions in the worker cannot be propagated back to the
     Turbinia TaskManager.
 
     Args:
@@ -404,8 +404,8 @@ class TurbiniaTask(object):
       tmp_result = self.run(evidence, self.result)
       if not isinstance(tmp_result, TurbiniaTaskResult):
         raise TurbiniaException(
-            'Task returned type [{0:s}] instead of TurbiniaTaskResult.').format(
-                type(tmp_result))
+            'Task returned type [{0:s}] instead of TurbiniaTaskResult.'.format(
+                type(tmp_result)))
       self.result = tmp_result
     # pylint: disable=broad-except
     except (TurbiniaException, Exception) as e:
@@ -421,7 +421,7 @@ class TurbiniaTask(object):
         log.error('No TurbiniaTaskResult object found after task execution.')
 
     # Trying to close the result if possible so that we clean up what we can.
-    # This has a higher liklihood of failing because something must have gone
+    # This has a higher likelihood of failing because something must have gone
     # wrong as the Task should have already closed this.
     if self.result and not self.result.closed:
       msg = 'Trying last ditch attempt to close result'
