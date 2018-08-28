@@ -16,8 +16,11 @@
 
 from __future__ import unicode_literals
 
+import codecs
 import logging
-from Queue import Queue
+
+from six.moves import queue
+from six.moves import xrange
 
 from google.cloud import exceptions
 from google.cloud import pubsub
@@ -42,7 +45,7 @@ class TurbiniaPubSub(TurbiniaMessageBase):
 
   def __init__(self, topic_name):
     """Initialization for PubSubClient."""
-    self._queue = Queue()
+    self._queue = queue.Queue()
     self.publisher = None
     self.subscriber = None
     self.subscription = None
@@ -94,7 +97,8 @@ class TurbiniaPubSub(TurbiniaMessageBase):
     Args:
       message: A pubsub message object
     """
-    log.debug('Recieved pubsub message: {0:s}'.format(message.data))
+    data = codecs.decode(message.data, 'utf-8')
+    log.debug('Received pubsub message: {0:s}'.format(data))
     message.ack()
     self._queue.put(message)
 
@@ -126,7 +130,7 @@ class TurbiniaPubSub(TurbiniaMessageBase):
     data = message.encode('utf-8')
     future = self.publisher.publish(self.topic_path, data)
     msg_id = future.result()
-    log.info('Published message {0:s} to topic {1:s}'.format(
+    log.info('Published message {0!s} to topic {1!s}'.format(
         msg_id, self.topic_name))
 
   def send_request(self, request):

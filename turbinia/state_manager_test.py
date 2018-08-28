@@ -86,7 +86,7 @@ class TestPSQStateManager(unittest.TestCase):
     self.assertEqual(task_dict['request_id'], self.test_data['request_id'])
     self.assertEqual(task_dict['status'], self.test_data['status'])
     self.assertEqual(len(task_dict['saved_paths']), 2)
-    self.assertTrue(task_dict.has_key('instance'))
+    self.assertTrue('instance' in task_dict)
     self.assertIn(
         self.test_data['saved_paths'][0], task_dict['saved_paths'])
 
@@ -104,7 +104,7 @@ class TestPSQStateManager(unittest.TestCase):
     invalid_dict = copy.deepcopy(self.test_data)
     invalid_dict['status'] = 'A' * state_manager.MAX_DATASTORE_STRLEN + 'BORKEN'
     test_data = self.state_manager._validate_data(invalid_dict)
-    self.assertListEqual(test_data.keys(), self.test_data.keys())
+    self.assertListEqual(list(test_data.keys()), list(self.test_data.keys()))
     self.assertNotEqual(test_data['status'], self.test_data['status'])
     self.assertLessEqual(
         len(test_data['status']), state_manager.MAX_DATASTORE_STRLEN)

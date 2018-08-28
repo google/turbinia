@@ -176,7 +176,7 @@ class TurbiniaClient(object):
       func_args.update({'user': user})
 
     response = cloud_function.ExecuteFunction(function_name, func_args)
-    if not response.has_key('result'):
+    if 'result' not in response:
       log.error('No results found')
       if response.get('error', '{}') != '{}':
         msg = 'Error executing Cloud Function: [{0!s}].'.format(
