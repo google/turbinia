@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright 2016 Google Inc.
+# Copyright 2018 Google Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -27,7 +27,7 @@ class WordpressAccessLogAnalysisTaskTest(unittest.TestCase):
   """Tests for WordpressAccessLogAnalysis Task."""
 
   WORDPRESS_ACCESS_LOGS = None
-  WORDPRESS_PWNED_REPORT = """Potential Wordpress compromise found:
+  WORDPRESS_PWNED_REPORT = """Wordpress access logs found (theme_edit, install)
 \t27/Jun/2018:19:29:54 +0000: Wordpress installation successful
 \t27/Jun/2018:19:31:15 +0000: Wordpress file edited with theme editor (header.php)
 """ # pylint: disable=line-too-long

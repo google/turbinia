@@ -12,7 +12,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Job to execute Docker analysis task."""
+"""Job to execute HTTP Access logs analysis task."""
 from __future__ import unicode_literals
 
 from turbinia.workers import artifact
@@ -27,8 +27,14 @@ from turbinia.evidence import ReportText
 from turbinia.jobs import TurbiniaJob
 from turbinia.workers.analysis import wordpress
 
-class DockerLogExtractionJob(TurbiniaJob):
-  """Docker log extraction job."""
+ACCESS_LOG_ARTIFACTS = [
+    'DockerContainerLogs',
+    'NginxAccessLogs',
+    'ApacheAccessLogs'
+]
+
+class HTTPAccessLogExtractionJob(TurbiniaJob):
+  """HTTP Access log extraction job."""
 
   evidence_input = [
       Directory, RawDisk, GoogleCloudDisk, GoogleCloudDiskRawEmbedded]
@@ -36,8 +42,8 @@ class DockerLogExtractionJob(TurbiniaJob):
   evidence_output = [ExportedFileArtifact]
 
   def __init__(self):
-    super(DockerLogExtractionJob, self).__init__(
-        name='DockerLogExtractionJob')
+    super(HTTPAccessLogExtractionJob, self).__init__(
+        name='HTTPAccessLogExtractionJob')
 
   def create_tasks(self, evidence):
     """Create task.
@@ -48,18 +54,21 @@ class DockerLogExtractionJob(TurbiniaJob):
     Returns:
         A list of tasks to schedule.
     """
-    tasks = [artifact.FileArtifactExtractionTask('DockerContainerLogs') for _
-             in evidence]
+    tasks = []
+    for artifact_name in ACCESS_LOG_ARTIFACTS:
+      tasks.extend([artifact.FileArtifactExtractionTask(artifact_name) for _
+                    in evidence])
     return tasks
 
-class DockerLogAnalysisJob(TurbiniaJob):
-  """Docker log analysis job."""
+class HTTPAccessLogAnalysisJob(TurbiniaJob):
+  """HTTP Access log analysis job."""
    # Types of evidence that this Job will process.
   evidence_input = [ExportedFileArtifact]
   evidence_output = [ReportText]
 
   def __init__(self):
-    super(DockerLogAnalysisJob, self).__init__(name='DockerLogAnalysisJob')
+    super(HTTPAccessLogAnalysisJob, self).__init__(
+        name='HTTPAccessLogAnalysisJob')
 
   def create_tasks(self, evidence):
     """Create task.
@@ -70,6 +79,6 @@ class DockerLogAnalysisJob(TurbiniaJob):
     """
     tasks = []
     for evidence_item in evidence:
-      if evidence_item.artifact_name == 'DockerContainerLogs':
+      if evidence_item.artifact_name in ACCESS_LOG_ARTIFACTS:
         tasks.append(wordpress.WordpressAccessLogAnalysisTask())
     return tasks

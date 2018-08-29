@@ -31,14 +31,13 @@ def get_jobs():
   from turbinia.jobs.strings import StringsJob
   from turbinia.jobs.sshd import SSHDExtractionJob
   from turbinia.jobs.sshd import SSHDAnalysisJob
-  from turbinia.jobs.analysis.docker_logs import DockerLogExtractionJob
-  from turbinia.jobs.analysis.docker_logs import DockerLogAnalysisJob
+  from turbinia.jobs.analysis.http_access_logs import HTTPAccessLogExtractionJob
+  from turbinia.jobs.analysis.http_access_logs import HTTPAccessLogAnalysisJob
   # TODO(aarontp): Dynamically look up job objects and make enabling/disabling
   # configurable through config and/or recipes.
-  return [
-      StatJob(), PlasoJob(), PsortJob(), StringsJob(), GrepJob(),
-      SSHDExtractionJob(), SSHDAnalysisJob(), DockerLogExtractionJob(),
-      DockerLogAnalysisJob()]
+  return [StatJob(), PlasoJob(), PsortJob(), StringsJob(), GrepJob(),
+      SSHDExtractionJob(), SSHDAnalysisJob(), HTTPAccessLogExtractionJob(),
+      HTTPAccessLogAnalysisJob()]
 
 
 

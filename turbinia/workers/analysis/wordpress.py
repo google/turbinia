@@ -66,7 +66,8 @@ class WordpressAccessLogAnalysisTask(TurbiniaTask):
 
     # Add the resulting evidence to the result object.
     result.add_evidence(output_evidence, evidence.config)
-    result.close(self, success=True)
+    status = analysis.split('\n')[0]
+    result.close(self, success=True, status=status)
     return result
 
   def _get_timestamp(self, log_line):
@@ -86,6 +87,7 @@ class WordpressAccessLogAnalysisTask(TurbiniaTask):
       str: Activity summary of the wordpress installation.
     """
     findings = []
+    findings_summary = set()
 
     for log_line in config.split('\n'):
 
@@ -93,6 +95,7 @@ class WordpressAccessLogAnalysisTask(TurbiniaTask):
         timestamp = self._get_timestamp(log_line)
         findings.append(
             '\t{0:s}: Wordpress installation successful'.format(timestamp))
+        findings_summary.add('install')
 
       if self.theme_editor_regex.search(log_line):
         edited_file = self.theme_editor_regex.search(log_line).group(
@@ -100,9 +103,11 @@ class WordpressAccessLogAnalysisTask(TurbiniaTask):
         findings.append(
             '\t{0:s}: Wordpress file edited with theme editor ({1:s})\n'.format(
                 self._get_timestamp(log_line), edited_file))
+        findings_summary.add('theme_edit')
 
     if findings:
-      findings.insert(0, 'Potential Wordpress compromise found:')
+      findings.insert(0, 'Wordpress access logs found ({0:s})'.format(
+          ', '.join(list(findings_summary))))
       return '\n'.join(findings)
 
-    return 'No theme editing found in Wordpress access logs'
+    return 'No Wordpress install or theme editing found in access logs'
