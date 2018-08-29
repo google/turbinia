@@ -12,16 +12,24 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-""""""
+"""TODO"""
 
 from __future__ import unicode_literals
 
-from turbinia.evidence import FilteredTextFile
+from turbinia.evidence import ReportText
 from turbinia.workers import TurbiniaTask
 
 
 class GKEHadoopTask(TurbiniaTask):
-  """ """
+  """ TODO """
+
+  def _IsHadoopNode(self):
+    """ TODO """
+    return False
+
+  def _IsHadoopMaster(self):
+    """ TODO """
+    return False
 
   def run(self, evidence, result):
     """TODO
@@ -33,3 +41,30 @@ class GKEHadoopTask(TurbiniaTask):
     Returns:
         TurbiniaTaskResult object.
     """
+
+    # What type of evidence we should output.
+    output_evidence = ReportText()
+
+    # Where to store the resulting output file.
+    output_file_name = 'hadoop_analysis.txt'
+    output_file_path = os.path.join(self.output_dir, output_file_name)
+
+    output_evidence.local_path = output_file_path
+
+    if self._IsHadoopNode():
+      self._AnalyzeNode()
+    elif self._IsHadoopMaster():
+      self._AnalyzeNode()
+    else:
+      result.close(self, success=False)
+      return result
+
+    # Write the report to the output file.
+    with open(output_file_path, 'w') as fh:
+      fh.write(output_evidence.text_data.encode('utf8'))
+      fh.write('\n'.encode('utf8'))
+
+
+    result.add_evidence(output_evidence, evidence.config)
+    result.close(self, success=True)
+    return result
