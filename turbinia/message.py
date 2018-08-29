@@ -16,9 +16,12 @@
 
 from __future__ import unicode_literals
 
+import codecs
 import copy
 import json
 import uuid
+
+import six
 
 import logging
 
@@ -77,6 +80,8 @@ class TurbiniaRequest(object):
           not of the correct type.
     """
     try:
+      if isinstance(json_str, six.binary_type):
+        json_str = codecs.decode(json_str, 'utf-8')
       obj = json.loads(json_str)
     except ValueError as e:
       raise TurbiniaException(

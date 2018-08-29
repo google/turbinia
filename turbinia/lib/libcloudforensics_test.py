@@ -19,6 +19,8 @@ from __future__ import unicode_literals
 import mock
 import unittest
 
+import six
+
 from turbinia.lib import libcloudforensics
 
 
@@ -26,15 +28,15 @@ class GoogleCloudProjectTest(unittest.TestCase):
   """Test Google Cloud project class."""
 
   def setUp(self):
-    self.project = libcloudforensics.GoogleCloudProject(u'test-project')
+    self.project = libcloudforensics.GoogleCloudProject('test-project')
     self.project.GceApi = mock.MagicMock()
     self.project.GceOperation = mock.MagicMock()
 
   def testFormatLogMessage(self):
     """Test formatting log message"""
-    msg = u'Test message'
+    msg = 'Test message'
     formatted_msg = self.project.format_log_message(msg)
-    self.assertIsInstance(formatted_msg, basestring)
+    self.assertIsInstance(formatted_msg, six.string_types)
     self.assertEqual(
         formatted_msg, u'project:{0:s} {1:s}'.format(
             self.project.project_id, msg))
