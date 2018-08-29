@@ -18,37 +18,83 @@ from __future__ import unicode_literals
 
 import os
 import subprocess
+import tempfile
+import threading
 
 
-def get_artifacts(artifact_names, disk_path, output_dir):
-  """Extract artifacts from the disk using image_export from Plaso.
+def extract_artifacts(artifact_names, disk_path, output_dir):
+  """Extract artifacts using image_export from Plaso.
 
   Args:
     artifact_names: List of artifact definition names.
-    disk_path: Path to either a raw disk image or a device.
+    disk_path: Path to either a raw disk image or a block device.
     output_dir: Path to directory to store the the extracted files.
 
   Returns:
-    Dictionary with of file names and paths to extracted files.
+    dict: file names and paths to extracted files.
   """
   # Plaso image_export expects artifact names as a comma separated string.
   artifacts = ','.join(artifact_names)
 
-  # Generate the command we want to run.
-  cmd = [
+  image_export_cmd = [
     'image_export.py',
     '--artifact_filters', artifacts,
     '--write', output_dir,
     disk_path
   ]
 
-  # TODO(jberggren) Catch any errors here.
-  subprocess.call(cmd)
+  try:
+    subprocess.check_call(image_export_cmd)
+  except subprocess.CalledProcessError:
+    raise RuntimeError('image_export.py failed.')
 
-  # List all files collected, excluding directories.
-  files = []
-  for dir_path, _, file_names in os.walk(output_dir):
-    for file_name in file_names:
-      files.append(os.path.join(dir_path, file_name))
+  collected_file_paths = []
+  for dirpath, _, filenames in os.walk(output_dir):
+    for filename in filenames:
+      collected_file_paths.append(os.path.join(dirpath, filename))
 
-  return files
+  return collected_file_paths
+
+
+def bruteforce_password_hashes(password_hashes, timeout=90):
+  """Bruteforce password hashes using John the Ripper.
+
+  Args:
+    password_hashes (list): List of password hashes.
+    timeout (int): Number of seconds to run for before terminating the process.
+
+  Returns:
+    list: of tuples with hashes and plain text passwords.
+
+  Raises:
+    RuntimeError if execution failed.
+  """
+
+  with tempfile.NamedTemporaryFile(delete=False) as fh:
+    password_hashes_file_path = fh.name
+    fh.write('\n'.join(password_hashes))
+
+  cmd = ['john', password_hashes_file_path]
+
+  with open(os.devnull, 'w') as devnull:
+    try:
+      child = subprocess.Popen(cmd, stdout=devnull, stderr=devnull)
+      timer = threading.Timer(timeout, child.terminate)
+      timer.start()
+      child.communicate()
+      # Cancel the timer if the process is done before the timer.
+      if timer.is_alive():
+        timer.cancel()
+    except OSError:
+      raise RuntimeError('john the ripper failed.')
+
+  result = []
+  pot_file = os.path.expanduser('~/.john/john.pot')
+
+  if os.path.isfile(pot_file):
+    with open(pot_file, 'r') as fh:
+      for line in fh.readlines():
+        hash, plaintext = line.rsplit(':', 1)
+        result.append((hash, plaintext.rstrip()))
+
+  return result
