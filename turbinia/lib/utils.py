@@ -94,7 +94,7 @@ def bruteforce_password_hashes(password_hashes, timeout=90):
   if os.path.isfile(pot_file):
     with open(pot_file, 'r') as fh:
       for line in fh.readlines():
-        hash, plaintext = line.rsplit(':', 1)
-        result.append((hash, plaintext.rstrip()))
+        password_hash, plaintext = line.rsplit(':', 1)
+        result.append((password_hash, plaintext.rstrip()))
 
   return result

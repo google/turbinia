@@ -145,9 +145,8 @@ class JenkinsAnalysisTask(TurbiniaTask):
     credentials_registry = {hash: username for username, hash in credentials}
     weak_passwords = bruteforce_password_hashes(credentials_registry.keys())
 
-    # TODO: Consider checking version against known vulnerable versions (CVE)
     if not version:
-      version = 'Unknown Jenkins version'
+      version = 'Unknown'
     findings.append('Jenkins version: {0:s}'.format(version))
 
     if weak_passwords:
@@ -159,4 +158,3 @@ class JenkinsAnalysisTask(TurbiniaTask):
             credentials_registry.get(password_hash), plaintext))
 
     return '\n'.join(findings)
-
