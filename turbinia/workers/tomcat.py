@@ -56,7 +56,9 @@ class TomcatAnalysisTask(TurbiniaTask):
 
     # Add the resulting evidence to the result object.
     result.add_evidence(output_evidence, evidence.config)
-    result.close(self, success=True)
+    result.close(self,
+                 success=True,
+                 status=output_evidence.text_data.splitlines()[0])
     return result
 
   def analyse_tomcat_file(self, tomcat_file):
@@ -79,17 +81,21 @@ class TomcatAnalysisTask(TurbiniaTask):
     tomcat_manager_activity_re = re.compile('(^.*POST /manager/html/upload.*)',
                                             re.MULTILINE)
 
+    count = 0
     for password_entry in re.findall(tomcat_user_passwords_re, tomcat_file):
       findings.append('Tomcat user: ' + password_entry.strip())
+      count += 1
 
     for deployment_entry in re.findall(tomcat_deploy_re, tomcat_file):
       findings.append('Tomcat App Deployed: ' + deployment_entry.strip())
+      count += 1
 
     for mgmt_entry in re.findall(tomcat_manager_activity_re, tomcat_file):
       findings.append('Tomcat Management: ' + mgmt_entry.strip())
+      count += 1
 
     if findings:
-      findings.insert(0, 'Tomcat analysis output:')
+      findings.insert(0, 'Tomcat found ({0:d} hits):'.format(count))
       return '\n'.join(findings)
 
-    return 'No issues found in Tomcat files.'
+    return 'No Tomcat found.'

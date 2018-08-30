@@ -31,14 +31,14 @@ class TomcatAnalysisTaskTest(unittest.TestCase):
     <user username="both" password="tomcat" roles="tomcat,role1"/>
 </tomcat-users>"""
 
-  TOMCAT_PASSWORD_FILE_REPORT = """Tomcat analysis output:
+  TOMCAT_PASSWORD_FILE_REPORT = """Tomcat found (2 hits):
 Tomcat user: <user username="tomcat" password="tomcat" roles="tomcat"/>
 Tomcat user: <user username="both" password="tomcat" roles="tomcat,role1"/>"""
 
   TOMCAT_APP_DEPLOY_LOG = r"""21-Mar-2017 19:21:08.140 INFO [localhost-startStop-2] org.apache.catalina.startup.HostConfig.deployWAR Deploying web application archive C:\Program Files\Apache Software Foundation\Tomcat 9.0\webapps\MyAwesomeApp.war
 10-Sep-2012 11:41:12.283 INFO [localhost-startStop-1] org.apache.catalina.startup.HostConfig.deployWAR Deploying web application archive /opt/apache-tomcat-8.0.32/webapps/badboy.war"""
 
-  TOMCAT_APP_DEPLOY_LOG_REPORT = r"""Tomcat analysis output:
+  TOMCAT_APP_DEPLOY_LOG_REPORT = r"""Tomcat found (2 hits):
 Tomcat App Deployed: 21-Mar-2017 19:21:08.140 INFO [localhost-startStop-2] org.apache.catalina.startup.HostConfig.deployWAR Deploying web application archive C:\Program Files\Apache Software Foundation\Tomcat 9.0\webapps\MyAwesomeApp.war
 Tomcat App Deployed: 10-Sep-2012 11:41:12.283 INFO [localhost-startStop-1] org.apache.catalina.startup.HostConfig.deployWAR Deploying web application archive /opt/apache-tomcat-8.0.32/webapps/badboy.war"""
 
@@ -46,7 +46,7 @@ Tomcat App Deployed: 10-Sep-2012 11:41:12.283 INFO [localhost-startStop-1] org.a
 1.2.3.4 - admin [12/Apr/2018:14:01:09 -0100] "GET /manager/html HTTP/1.1" 200 22130
 1.2.3.4 - admin [12/Apr/2018:14:01:39 -0100] "POST /manager/html/upload?org.apache.catalina.filters.CSRF_NONCE=1ABCDEFGKLMONPQRSTIRQKD240384739 HTTP/1.1" 200 27809"""
 
-  TOMCAT_ACCESS_LOG_REPORT = """Tomcat analysis output:
+  TOMCAT_ACCESS_LOG_REPORT = """Tomcat found (1 hits):
 Tomcat Management: 1.2.3.4 - admin [12/Apr/2018:14:01:39 -0100] "POST /manager/html/upload?org.apache.catalina.filters.CSRF_NONCE=1ABCDEFGKLMONPQRSTIRQKD240384739 HTTP/1.1" 200 27809"""
 
   def test_analyse_tomcat_file(self):
