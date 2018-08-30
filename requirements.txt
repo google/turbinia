@@ -1,3 +1,4 @@
+lockfile
 psq
 google-api-python-client>=1.6.2
 google-cloud-pubsub

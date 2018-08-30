@@ -37,6 +37,7 @@ CONFIGVARS = [
     # Turbinia Config
     'TASK_MANAGER',
     'LOG_FILE',
+    'LOCK_FILE',
     'OUTPUT_DIR',
     'SLEEP_TIME',
     'SINGLE_RUN',
