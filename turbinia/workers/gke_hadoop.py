@@ -17,19 +17,20 @@
 from __future__ import unicode_literals
 
 from turbinia.evidence import ReportText
+from turbinia.lib.utils import extract_artifacts
 from turbinia.workers import TurbiniaTask
 
 
 class GKEHadoopTask(TurbiniaTask):
   """ TODO """
 
-  def _IsHadoopNode(self):
-    """ TODO """
-    return False
 
-  def _IsHadoopMaster(self):
-    """ TODO """
-    return False
+  def _AnalyzeHadoopAppRoot(self, collected_artifacts):
+    """TODO"""
+    for filepath in collected_artifacts:
+
+
+
 
   def run(self, evidence, result):
     """TODO
@@ -51,19 +52,23 @@ class GKEHadoopTask(TurbiniaTask):
 
     output_evidence.local_path = output_file_path
 
-    if self._IsHadoopNode():
-      self._AnalyzeNode()
-    elif self._IsHadoopMaster():
-      self._AnalyzeNode()
-    else:
-      result.close(self, success=False)
+
+    try:
+      collected_artifacts = extract_artifacts(
+        artifact_names=['HadoopAppRoot'],
+        disk_path=evidence.local_path,
+        output_dir=os.path.join(self.output_dir, 'artifacts')
+      )
+    except RuntimeError as e:
+      result.close(self, success=False, status=str(e))
       return result
+
+    findings = self._AnalyzeHadoopAppRoot(collected_artifacts)
 
     # Write the report to the output file.
     with open(output_file_path, 'w') as fh:
       fh.write(output_evidence.text_data.encode('utf8'))
       fh.write('\n'.encode('utf8'))
-
 
     result.add_evidence(output_evidence, evidence.config)
     result.close(self, success=True)
