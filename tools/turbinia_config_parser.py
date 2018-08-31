@@ -17,6 +17,8 @@
 """Turbinia Config Parser."""
 
 from __future__ import unicode_literals
+from __future__ import print_function
+
 import imp
 import itertools
 import os
@@ -35,7 +37,7 @@ CONFIGPATH = ['/etc/turbinia']
 
 def main():
   if len(sys.argv) < 2:
-    print '%s <key name>' % sys.argv[0]
+    print('%s <key name>' % sys.argv[0])
     sys.exit(100)
   key = sys.argv[1]
   if key:
@@ -49,9 +51,9 @@ def main():
     config = imp.load_source('config', config_file)
 
     try:
-      print getattr(config, key.upper())
+      print(getattr(config, key.upper()))
     except AttributeError:
-      print 'Key not found: %s' % key
+      print('Key not found: %s' % key)
       sys.exit(102)
 
 

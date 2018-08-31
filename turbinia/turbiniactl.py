@@ -16,6 +16,7 @@
 """Command line interface for Turbinia."""
 # pylint: disable=bad-indentation
 
+from __future__ import print_function
 from __future__ import unicode_literals
 
 import argparse
@@ -372,14 +373,14 @@ def main():
     region = config.TURBINIA_REGION
     if args.close_tasks:
       if args.user or args.request_id or args.task_id:
-        print client.close_tasks(
+        print(client.close_tasks(
             instance=config.INSTANCE_ID,
             project=config.PROJECT,
             region=region,
             request_id=args.request_id,
             task_id=args.task_id,
             user=args.user,
-            requester=getpass.getuser())
+            requester=getpass.getuser()))
         sys.exit(0)
       else:
         log.info(
@@ -399,7 +400,7 @@ def main():
       log.info('--wait requires --request_id, which is not specified. '
                'turbiniactl will exit without waiting.')
 
-    print client.format_task_status(
+    print(client.format_task_status(
         instance=config.INSTANCE_ID,
         project=config.PROJECT,
         region=region,
@@ -407,7 +408,7 @@ def main():
         task_id=args.task_id,
         request_id=args.request_id,
         user=args.user,
-        all_fields=args.all_fields)
+        all_fields=args.all_fields))
   elif args.command == 'listjobs':
     log.info('Available Jobs:')
     client.list_jobs()
@@ -452,7 +453,7 @@ def main():
     if filter_patterns:
       request.recipe['filter_patterns'] = filter_patterns
     if args.dump_json:
-      print request.to_json().encode('utf-8')
+      print(request.to_json().encode('utf-8'))
     else:
       log.info('Creating request {0:s} with evidence {1:s}'.format(
           request.request_id, evidence_.name))
@@ -468,12 +469,12 @@ def main():
           region=region,
           request_id=request.request_id,
           poll_interval=args.poll_interval)
-      print client.format_task_status(
+      print(client.format_task_status(
           instance=config.INSTANCE_ID,
           project=config.PROJECT,
           region=region,
           request_id=request.request_id,
-          all_fields=args.all_fields)
+          all_fields=args.all_fields))
 
   log.info('Done.')
   sys.exit(0)
