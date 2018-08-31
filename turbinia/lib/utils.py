@@ -21,6 +21,8 @@ import subprocess
 import tempfile
 import threading
 
+from turbinia import TurbiniaException
+
 
 def extract_artifacts(artifact_names, disk_path, output_dir):
   """Extract artifacts using image_export from Plaso.
@@ -43,10 +45,11 @@ def extract_artifacts(artifact_names, disk_path, output_dir):
     disk_path
   ]
 
+  # TODO: Consider break the exec helper to gather stdin/err.
   try:
     subprocess.check_call(image_export_cmd)
   except subprocess.CalledProcessError:
-    raise RuntimeError('image_export.py failed.')
+    raise TurbiniaException('image_export.py failed.')
 
   collected_file_paths = []
   for dirpath, _, filenames in os.walk(output_dir):
@@ -56,18 +59,18 @@ def extract_artifacts(artifact_names, disk_path, output_dir):
   return collected_file_paths
 
 
-def bruteforce_password_hashes(password_hashes, timeout=90):
+def bruteforce_password_hashes(password_hashes, timeout=300):
   """Bruteforce password hashes using John the Ripper.
 
   Args:
-    password_hashes (list): List of password hashes.
+    password_hashes (list): Password hashes as strings.
     timeout (int): Number of seconds to run for before terminating the process.
 
   Returns:
     list: of tuples with hashes and plain text passwords.
 
   Raises:
-    RuntimeError if execution failed.
+    TurbiniaException if execution failed.
   """
 
   with tempfile.NamedTemporaryFile(delete=False) as fh:
@@ -86,9 +89,10 @@ def bruteforce_password_hashes(password_hashes, timeout=90):
       if timer.is_alive():
         timer.cancel()
     except OSError:
-      raise RuntimeError('john the ripper failed.')
+      raise TurbiniaException('john the ripper failed.')
 
   result = []
+  # Default location of the result file, no way to change it.
   pot_file = os.path.expanduser('~/.john/john.pot')
 
   if os.path.isfile(pot_file):
@@ -96,5 +100,6 @@ def bruteforce_password_hashes(password_hashes, timeout=90):
       for line in fh.readlines():
         password_hash, plaintext = line.rsplit(':', 1)
         result.append((password_hash, plaintext.rstrip()))
+    os.remove(pot_file)
 
   return result

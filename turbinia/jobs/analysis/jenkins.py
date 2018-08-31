@@ -16,7 +16,10 @@
 
 from __future__ import unicode_literals
 
+from turbinia.evidence import Directory
 from turbinia.evidence import RawDisk
+from turbinia.evidence import GoogleCloudDisk
+from turbinia.evidence import GoogleCloudDiskRawEmbedded
 from turbinia.evidence import ReportText
 from turbinia.jobs import TurbiniaJob
 from turbinia.workers.analysis.jenkins import JenkinsAnalysisTask
@@ -26,8 +29,9 @@ class JenkinsAnalysisJob(TurbiniaJob):
   """Jenkins analysis job."""
 
   # Types of evidence that this Job will process.
-  evidence_input = [type(RawDisk())]
-  evidence_output = [type(ReportText())]
+  evidence_input = [
+    Directory, RawDisk, GoogleCloudDisk, GoogleCloudDiskRawEmbedded]
+  evidence_output = [ReportText]
 
   def __init__(self):
     super(JenkinsAnalysisJob, self).__init__(name='JenkinsAnalysisJob')

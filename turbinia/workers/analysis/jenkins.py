@@ -19,6 +19,7 @@ from __future__ import unicode_literals
 import os
 import re
 
+from turbinia import TurbiniaException
 from turbinia.evidence import ReportText
 from turbinia.workers import TurbiniaTask
 from turbinia.lib.utils import extract_artifacts
@@ -54,7 +55,7 @@ class JenkinsAnalysisTask(TurbiniaTask):
         disk_path=evidence.local_path,
         output_dir=os.path.join(self.output_dir, 'artifacts')
       )
-    except RuntimeError as e:
+    except TurbiniaException as e:
       result.close(self, success=False, status=str(e))
       return result
 
@@ -72,7 +73,7 @@ class JenkinsAnalysisTask(TurbiniaTask):
 
         credentials.extend(extracted_credentials)
 
-    analysis_report = self.analyse_jenkins(version, credentials)
+    analysis_report = self.analyze_jenkins(version, credentials)
     output_evidence.text_data = analysis_report
 
     # Write the report to the output file.
@@ -130,7 +131,7 @@ class JenkinsAnalysisTask(TurbiniaTask):
     return credentials
 
   @staticmethod
-  def analyse_jenkins(version, credentials):
+  def analyze_jenkins(version, credentials):
     """Analyses a Jenkins configuration.
 
     Args:
@@ -140,9 +141,10 @@ class JenkinsAnalysisTask(TurbiniaTask):
     Returns:
       str: of description of security of Jenkins configuration file.
     """
-
     findings = []
     credentials_registry = {hash: username for username, hash in credentials}
+    # TODO: Add timeout parameter when dynamic configuration is ready.
+    # Ref: https://github.com/google/turbinia/issues/244
     weak_passwords = bruteforce_password_hashes(credentials_registry.keys())
 
     if not version:
