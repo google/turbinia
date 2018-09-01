@@ -20,6 +20,8 @@ There are a few different logs that may be useful when debugging:
 
 ## Task Debugging
 
+### Task Failures
+
 The following is an example of debugging a task failure:
 
 Running turbiniactl, we see a failure of the PsortTask:
@@ -59,6 +61,16 @@ $ gsutil cat gs://my-turbinia-bucket/output/1512601742-1f8c4b321f444614bde296b0a
 Running psort as [psort.py --status_view none --logfile /var/tmp/1512601742-1f8c4b321f444614bde296b0a00bb91f-PsortTask/1f8c4b321f444614bde296b0a00bb91f.log -w /var/tmp/1512601742-1f8c4b321f444614bde296b0a00bb91f-PsortTask/1f8c4b321f444614bde296b0a00bb91f.csv /var/tmp/1512601730-b04f479ef9094954968474431aa30e8a-PsortTask/b04f479ef9094954968474431aa30e8a.csv]
 Execution failed with status 1
 ```
+
+### Disappearing Tasks
+
+If the Turbinia server is scheduling Tasks, but you're not seeing the
+Tasks or their output for some reason, the most common scenario is that
+either a second Turbinia server or a second set of Workers is running
+and operating on the same PubSub queues.  Make sure that you have unique
+values per each Turbinia instance for the following config variables:
+`PSQ_TOPIC`, `INSTANCE_ID`, `PUBSUB_TOPIC` and `KOMBU_CHANNEL` (if you
+are using a local Turbinia installation type.
 
 ## Common Errors
 
