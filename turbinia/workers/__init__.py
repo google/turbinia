@@ -173,6 +173,7 @@ class TurbiniaTaskResult(object):
     # automatically, but the real fix is to attach this to a separate object.
     # See https://github.com/google/turbinia/issues/211 for more details.
     evidence.config = evidence_config
+
     self.evidence.append(evidence)
 
   def set_error(self, error, traceback_):
