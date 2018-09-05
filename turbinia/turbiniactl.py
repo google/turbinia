@@ -315,13 +315,6 @@ def main():
   else:
     client = None
 
-  if (args.command in ('psqworker', 'celeryworker') and
-      config.LOCK_FILE and os.path.exists(config.LOCK_FILE)):
-    log.error(
-        'Lock file {0:s} exists, so another Worker may be running. Delete '
-        'the file and restart if no other Worker is running.')
-    sys.exit(1)
-
   if args.output_dir:
     config.OUTPUT_DIR = args.output_dir
   if args.log_file:

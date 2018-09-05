@@ -414,10 +414,6 @@ class TurbiniaTask(object):
     Returns:
       A TurbiniaTaskResult object
     """
-    if config.LOCK_FILE and os.path.exists(config.LOCK_FILE):
-      log.debug(
-          'Task {0:s} locked by {1:s}. Waiting for unlock.'.format(
-              self.name, config.LOCK_FILE))
     with filelock.FileLock(config.LOCK_FILE):
       log.info('Starting Task {0:s} {1:s}'.format(self.name, self.id))
       original_result_id = None
