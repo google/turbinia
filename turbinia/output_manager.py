@@ -174,7 +174,16 @@ class OutputWriter(object):
 
   def __init__(self, base_output_dir=None, unique_dir=None,
                local_output_dir=None):
-    """Initialization for OutputWriter."""
+    """Initialization for OutputWriter.
+
+    Args:
+      base_output_dir (string): The base path for output.  Set to the configured
+          OUTPUT_DIR by default.
+      local_output_dir: The full path for the local output dir.  This will be
+          generated automatically if not set.
+      unique_dir (string):  A psuedo-unique string to be used in paths. This
+          will be generated automatically if not set.
+    """
     self.unique_dir = unique_dir
     self.local_output_dir = local_output_dir
     self.name = self.NAME
