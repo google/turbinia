@@ -359,7 +359,7 @@ class TurbiniaTask(object):
 
     if not isinstance(result, TurbiniaTaskResult):
       bad_message = (
-          'Task returned type [{0:s}] instead of TurbiniaTaskResult.').format(
+          'Task returned type [{0!s}] instead of TurbiniaTaskResult.').format(
               type(result))
     else:
       try:
@@ -470,7 +470,7 @@ class TurbiniaTask(object):
 
     if original_result_id != self.result.id:
       log.debug(
-          'Result object {0:s} is different from original {1:s} after task '
+          'Result object {0:s} is different from original {1!s} after task '
           'execution which indicates errors during execution'.format(
               self.result.id, original_result_id))
     else:
