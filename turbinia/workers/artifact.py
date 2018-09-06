@@ -43,7 +43,8 @@ class FileArtifactExtractionTask(TurbiniaTask):
     config.LoadConfig()
 
     export_directory = os.path.join(self.output_dir, 'export')
-    image_export_log = os.path.join(self.output_dir, '{0:s}.log'.format(self.id))
+    image_export_log = os.path.join(
+        self.output_dir, '{0:s}.log'.format(self.id))
 
     cmd = [
         'image_export.py',
@@ -64,7 +65,7 @@ class FileArtifactExtractionTask(TurbiniaTask):
 
     ret, _ = self.execute(cmd, result, save_files=[image_export_log])
     if ret:
-      result.close(False, 'image_export.py failed.')
+      result.close(self, False, 'image_export.py failed.')
 
     for dirpath, _, filenames in os.walk(export_directory):
       for filename in filenames:

@@ -172,12 +172,26 @@ class OutputWriter(object):
 
   NAME = 'base_output_writer'
 
-  def __init__(self, unique_dir=None, local_output_dir=None):
-    """Initialization for OutputWriter."""
-    self.base_output_dir = ''
+  def __init__(self, base_output_dir=None, unique_dir=None,
+               local_output_dir=None):
+    """Initialization for OutputWriter.
+
+    Args:
+      base_output_dir (string): The base path for output.  Set to the configured
+          OUTPUT_DIR by default.
+      local_output_dir: The full path for the local output dir.  This will be
+          generated automatically if not set.
+      unique_dir (string):  A psuedo-unique string to be used in paths. This
+          will be generated automatically if not set.
+    """
     self.unique_dir = unique_dir
     self.local_output_dir = local_output_dir
     self.name = self.NAME
+    if base_output_dir:
+      self.base_output_dir = base_output_dir
+    else:
+      config.LoadConfig()
+      self.base_output_dir = config.OUTPUT_DIR
     self.create_output_dir()
 
   def create_output_dir(self):
@@ -222,9 +236,8 @@ class LocalOutputWriter(OutputWriter):
   NAME = 'LocalWriter'
 
   def __init__(self, base_output_dir=None, *args, **kwargs):
-    self.base_output_dir = base_output_dir
-    self.local_output_dir = None
-    super(LocalOutputWriter, self).__init__(*args, **kwargs)
+    super(LocalOutputWriter, self).__init__(base_output_dir=base_output_dir,
+                                            *args, **kwargs)
 
   def create_output_dir(self):
     self.local_output_dir = os.path.join(self.base_output_dir, self.unique_dir)
