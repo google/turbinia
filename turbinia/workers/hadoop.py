@@ -46,11 +46,11 @@ class HadoopTask(TurbiniaTask):
     strings_report = ''
     evil_commands = []
     for filepath in collected_artifacts:
-      strings_report += 'Strings for %s:\n'%filepath
+      strings_report += 'Strings for {0}:\n'.format(filepath)
       strings = subprocess.check_output(['strings', '-a', filepath])
       strings_report += strings
       for line in strings.splitlines():
-        if line.find('curl') > 0 or line.find('wget') > 0 :
+        if (line.find('curl')>0) or (line.find('wget')>0):
           evil_commands.append((filepath, line))
 
     report = 'Extracted commands from Yarn tasks\n'
