@@ -38,7 +38,7 @@ def get_jobs():
   # configurable through config and/or recipes.
   return [
     StatJob(), PlasoJob(), PsortJob(), StringsJob(), GrepJob(),
-    SSHDExtractionJob(), SSHDAnalysisJob(), TomcatExtractionJob()
+    SSHDExtractionJob(), SSHDAnalysisJob(), TomcatExtractionJob(),
     TomcatAnalysisJob()]
 
 
