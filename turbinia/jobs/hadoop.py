@@ -16,7 +16,6 @@
 
 from __future__ import unicode_literals
 
-from turbinia.evidence import ExportedFileArtifact
 from turbinia.evidence import GoogleCloudDisk
 from turbinia.evidence import GoogleCloudDiskRawEmbedded
 from turbinia.evidence import RawDisk
@@ -30,7 +29,7 @@ class HadoopJob(TurbiniaJob):
 
   # The types of evidence that this Job will process
   evidence_input = [GoogleCloudDisk, GoogleCloudDiskRawEmbedded, RawDisk]
-  evidence_output = [ExportedFileArtifact]
+  evidence_output = [ReportText]
 
   def __init__(self):
     super(HadoopJob, self).__init__(name='HadoopJob')
