@@ -94,9 +94,8 @@ class HadoopTask(TurbiniaTask):
         output_dir=os.path.join(self.output_dir, 'artifacts')
       )
 
-      findings = self._AnalyzeHadoopAppRoot(collected_artifacts)
-
-      output_evidence.text_data = findings
+      text_report = self._AnalyzeHadoopAppRoot(collected_artifacts)
+      output_evidence.text_data = text_report
 
       # Write the report to the output file.
       with open(output_file_path, 'w') as fh:
