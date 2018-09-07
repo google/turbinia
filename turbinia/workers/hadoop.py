@@ -47,7 +47,7 @@ class HadoopTask(TurbiniaTask):
     evil_commands = []
     for filepath in collected_artifacts:
       strings_report += 'Strings for {0}:\n'.format(filepath)
-      strings = subprocess.check_output(['strings', '-a', filepath])
+      strings = subprocess.check_output(['/usr/bin/strings', '-a', filepath])
       strings_report += strings
       for line in strings.splitlines():
         if (line.find('curl')>0) or (line.find('wget')>0):
