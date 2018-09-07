@@ -16,11 +16,45 @@
 
 from __future__ import unicode_literals
 
+from turbinia import TurbiniaException
+
 
 class JobsManager(object):
   """The jobs manager."""
 
   _job_classes = {}
+
+  @classmethod
+  def FilterJobNames(cls, job_names, jobs_blacklist=None, jobs_whitelist=None):
+    """Filters a list of job names against white/black lists.
+
+    Exactly one whitelist or blacklist must be specified.
+
+    Args:
+      job_names (list[str]): The names of the jobs to filter.
+      jobs_blacklist (list[str]): Job names to exclude.
+      jobs_whitelist (list[str]): Job names to include.
+
+    Returns:
+     list[str]: Job names
+
+    Raises:
+      TurbiniaException if both jobs_blacklist and jobs_whitelist are specified.
+    """
+    jobs_blacklist = jobs_blacklist if jobs_blacklist else []
+    jobs_whitelist = jobs_whitelist if jobs_whitelist else []
+
+    if jobs_whitelist and jobs_blacklist:
+      raise TurbiniaException(
+          'jobs_whitelist and jobs_blacklist cannot be specified at the same '
+          'time.')
+    elif jobs_blacklist:
+      return [job for job in job_names if job not in jobs_blacklist]
+    elif jobs_whitelist:
+      return [job for job in job_names if job in jobs_whitelist]
+    else:
+      return job_names
+
 
   @classmethod
   def DeregisterJob(cls, job_class):
@@ -61,15 +95,20 @@ class JobsManager(object):
     return job_class()
 
   @classmethod
-  def GetJobInstances(cls, job_names):
+  def GetJobInstances(
+      cls, job_names, jobs_blacklist=None, jobs_whitelist=None):
     """Retrieves instances for all the specified jobs.
 
     Args:
       job_names (list[str]): names of the jobs to retrieve.
+      jobs_blacklist (list[str]): Job names that will be excluded.
+      jobs_whitelist (list[str]): The only Job names eligible for return.
 
     Returns:
       list[BaseJob]: job instances.
     """
+    jobs_blacklist = jobs_blacklist if jobs_blacklist else []
+    jobs_whitelist = jobs_whitelist if jobs_whitelist else []
     job_instances = []
     for job_name, job_class in iter(cls.GetJobs()):
       if job_name in job_names:
