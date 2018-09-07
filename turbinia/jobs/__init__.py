@@ -24,18 +24,20 @@ def get_jobs():
     A list of TurbiniaJobs.
   """
   # Defer imports to prevent circular dependencies during init.
+  from turbinia.jobs.grep import GrepJob
+  from turbinia.jobs.hadoop import HadoopJob
   from turbinia.jobs.plaso import PlasoJob
   from turbinia.jobs.psort import PsortJob
-  from turbinia.jobs.grep import GrepJob
-  from turbinia.jobs.worker_stat import StatJob
-  from turbinia.jobs.strings import StringsJob
   from turbinia.jobs.sshd import SSHDExtractionJob
   from turbinia.jobs.sshd import SSHDAnalysisJob
+  from turbinia.jobs.strings import StringsJob
+  from turbinia.jobs.worker_stat import StatJob
   # TODO(aarontp): Dynamically look up job objects and make enabling/disabling
   # configurable through config and/or recipes.
   return [
     StatJob(), PlasoJob(), PsortJob(), StringsJob(), GrepJob(),
-    SSHDExtractionJob(), SSHDAnalysisJob()]
+    SSHDExtractionJob(), SSHDAnalysisJob(), HadoopJob()
+  ]
 
 
 class TurbiniaJob(object):
