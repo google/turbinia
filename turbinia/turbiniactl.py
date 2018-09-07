@@ -106,11 +106,15 @@ def main():
   parser.add_argument(
       '-j',
       '--jobs_whitelist',
+      default=[],
+      nargs='*',
       help='A whitelist for Jobs that we will allow to run (note that it '
       'will not force them to run).')
   parser.add_argument(
       '-J',
       '--jobs_blacklist',
+      default=[],
+      nargs='*',
       help='A blacklist for Jobs we will not allow to run')
   parser.add_argument(
       '-p',
@@ -229,7 +233,10 @@ def main():
       '-n', '--name', help='Descriptive name of the evidence', required=False)
 
   # List Jobs
-  subparsers.add_parser('listjobs', help='List all available jobs')
+  subparsers.add_parser(
+      'listjobs',
+      help='List all available Jobs. These Job names can be used by '
+      '--jobs_whitelist and --jobs_blacklist')
 
   # PSQ Worker
   parser_psqworker = subparsers.add_parser('psqworker', help='Run PSQ worker')
@@ -367,7 +374,8 @@ def main():
     worker = TurbiniaCeleryWorker()
     worker.start()
   elif args.command == 'server':
-    server = TurbiniaServer()
+    server = TurbiniaServer(
+        jobs_blacklist=args.jobs_blacklist, jobs_whitelist=args.jobs_whitelist)
     server.start()
   elif args.command == 'status':
     region = config.TURBINIA_REGION
@@ -452,6 +460,10 @@ def main():
     request.evidence.append(evidence_)
     if filter_patterns:
       request.recipe['filter_patterns'] = filter_patterns
+    if args.jobs_blacklist:
+      request.recipe['jobs_blacklist'] = args.jobs_blacklist
+    if args.jobs_whitelist:
+      request.recipe['jobs_whitelist'] = args.jobs_whitelist
     if args.dump_json:
       print(request.to_json().encode('utf-8'))
     else:

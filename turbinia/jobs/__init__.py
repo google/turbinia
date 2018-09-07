@@ -14,11 +14,22 @@
 # limitations under the License.
 """Turbinia jobs."""
 
+import logging
 import uuid
 
+log = logging.getLogger('turbinia')
 
-def get_jobs():
+
+def get_jobs(jobs_blacklist=None, jobs_whitelist=None, jobs_list=None):
   """Gets a list of all job objects.
+
+  Only one of jobs_blacklist and jobs_whitelist can be specified at a time,
+  and all Jobs will be returned if both are specified.
+
+  Args:
+    jobs_blacklist (list): Jobs that will be excluded from running
+    jobs_whitelist (list): The only Jobs will be included to run
+    jobs_list (list): Instantiated jobs to select from (mostly used for testing)
 
   Returns:
     A list of TurbiniaJobs.
@@ -33,11 +44,28 @@ def get_jobs():
   from turbinia.jobs.sshd import SSHDAnalysisJob
   from turbinia.jobs.tomcat import TomcatExtractionJob
   from turbinia.jobs.tomcat import TomcatAnalysisJob
+
+  jobs_blacklist = jobs_blacklist if jobs_blacklist else []
+  jobs_whitelist = jobs_whitelist if jobs_whitelist else []
+
   # TODO(aarontp): Dynamically look up job objects and make enabling/disabling
   # configurable through config and/or recipes.
-  return [
-    StatJob(), PlasoJob(), PsortJob(), StringsJob(), GrepJob(),
-    SSHDExtractionJob(), SSHDAnalysisJob(), TomcatExtractionJob(), TomcatAnalysisJob()]
+  jobs = jobs_list if jobs_list else [
+      StatJob(), PlasoJob(), PsortJob(), StringsJob(), GrepJob(),
+      SSHDExtractionJob(), SSHDAnalysisJob(), TomcatExtractionJob(),
+      TomcatAnalysisJob()]
+
+  if jobs_whitelist and jobs_blacklist:
+    log.info(
+        'jobs_whitelist and jobs_blacklist cannot be specified at the same '
+        'time.  Returning all Jobs instead.')
+    return jobs
+  elif jobs_blacklist:
+    return [job for job in jobs if job.name not in jobs_blacklist]
+  elif jobs_whitelist:
+    return [job for job in jobs if job.name in jobs_whitelist]
+
+  return jobs
 
 
 class TurbiniaJob(object):

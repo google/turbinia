@@ -100,11 +100,16 @@ class BaseTaskManager(object):
     """
     raise NotImplementedError
 
-  def setup(self, *args, **kwargs):
-    """Does setup of Task manager and its dependencies."""
+  def setup(self, jobs_blacklist=None, jobs_whitelist=None, *args, **kwargs):
+    """Does setup of Task manager and its dependencies.
+
+    Args:
+      jobs_blacklist (list): Jobs that will be excluded from running
+      jobs_whitelist (list): The only Jobs will be included to run
+    """
     self._backend_setup(*args, **kwargs)
     # TODO(aarontp): Consider instantiating a job per evidence object
-    self.jobs = jobs.get_jobs()
+    self.jobs = jobs.get_jobs(jobs_blacklist, jobs_whitelist)
 
   def add_evidence(self, evidence_):
     """Adds new evidence and creates tasks to process it.
@@ -123,11 +128,23 @@ class BaseTaskManager(object):
     log.info('Adding new evidence: {0:s}'.format(str(evidence_)))
     self.evidence.append(evidence_)
     job_count = 0
+    jobs_whitelist = evidence_.config.get('jobs_whitelist', [])
+    jobs_blacklist = evidence_.config.get('jobs_blacklist', [])
+    jobs_list = self.jobs
+    if jobs_whitelist and jobs_blacklist:
+      log.info(
+          'jobs_whitelist and jobs_blacklist cannot be specified at the same '
+          'time.  Returning all Jobs instead.')
+    elif jobs_blacklist:
+      jobs_list = [job for job in jobs_list if job.name not in jobs_blacklist]
+    elif jobs_whitelist:
+      jobs_list = [job for job in jobs_list if job.name in jobs_whitelist]
+
     # TODO(aarontp): Add some kind of loop detection in here so that jobs can
     # register for Evidence(), or or other evidence types that may be a super
     # class of the output of the job itself.  Short term we could potentially
     # have a run time check for this upon Job instantiation to prevent it.
-    for job in self.jobs:
+    for job in jobs_list:
       # Doing a strict type check here for now until we can get the above
       # comment figured out.
       # pylint: disable=unidiomatic-typecheck
