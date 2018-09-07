@@ -104,6 +104,9 @@ optional arguments:
 * [How it works](docs/how-it-works.md)
 * [Contributing to Turbinia](docs/contributing.md)
 * [Developing new Tasks](docs/how-it-works.md)
+* [FAQ](docs/faq.md)
+* [Debugging and Common Errors](docs/debugging.md)
+
 
 ## Notes
 * Turbinia currently assumes that Evidence is equally available to all worker nodes (e.g. through locally mapped storage, or through attachable persistent Google Cloud Disks, etc).
