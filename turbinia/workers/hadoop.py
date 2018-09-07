@@ -51,7 +51,7 @@ class HadoopTask(TurbiniaTask):
       strings_report += strings
       for line in strings.splitlines():
         if line.find('curl') > 0 or line.find('wget') > 0 :
-          evil_commands.append((filepath.replace(self.output_dir, ''), line))
+          evil_commands.append((filepath, line))
 
     report = 'Extracted commands from Yarn tasks\n'
     if evil_commands:
