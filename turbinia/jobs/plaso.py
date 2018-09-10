@@ -21,19 +21,19 @@ from turbinia.evidence import GoogleCloudDisk
 from turbinia.evidence import GoogleCloudDiskRawEmbedded
 from turbinia.evidence import PlasoFile
 from turbinia.evidence import RawDisk
-from turbinia.jobs import TurbiniaJob
+from turbinia.jobs import interface
+from turbinia.jobs import manager
 from turbinia.workers.plaso import PlasoTask
 
 
-class PlasoJob(TurbiniaJob):
-
+class PlasoJob(interface.TurbiniaJob):
+  """Runs Plaso on some evidence to generate a Plaso file."""
   # The types of evidence that this Job will process
   evidence_input = [type(Directory()), type(RawDisk()), type(GoogleCloudDisk()),
                     type(GoogleCloudDiskRawEmbedded())]
   evidence_output = [type(PlasoFile())]
 
-  def __init__(self):
-    super(PlasoJob, self).__init__(name='PlasoJob')
+  NAME = 'PlasoJob'
 
   def create_tasks(self, evidence):
     """Create task for Plaso.
@@ -45,3 +45,6 @@ class PlasoJob(TurbiniaJob):
         A list of PlasoTasks.
     """
     return [PlasoTask() for _ in evidence]
+
+
+manager.JobsManager.RegisterJob(PlasoJob)

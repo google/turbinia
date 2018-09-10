@@ -19,19 +19,20 @@ from __future__ import unicode_literals
 
 from turbinia.evidence import PlasoFile
 from turbinia.evidence import PlasoCsvFile
-from turbinia.jobs import TurbiniaJob
+from turbinia.jobs import interface
+from turbinia.jobs import manager
 from turbinia.workers.psort import PsortTask
 
 
-class PsortJob(TurbiniaJob):
+class PsortJob(interface.TurbiniaJob):
   """Run psort on PlasoFile to generate a CSV file."""
 
   # The types of evidence that this Job will process
   evidence_input = [type(PlasoFile())]
   evidence_output = [type(PlasoCsvFile())]
 
-  def __init__(self):
-    super(PsortJob, self).__init__(name='PsortJob')
+  NAME = 'PsortJob'
+
 
   def create_tasks(self, evidence):
     """Create task for Psort.
@@ -43,3 +44,6 @@ class PsortJob(TurbiniaJob):
         A list of PsortTasks.
     """
     return [PsortTask() for _ in evidence]
+
+
+manager.JobsManager.RegisterJob(PsortJob)
