@@ -62,7 +62,7 @@ class JobsManagerTest(unittest.TestCase):
     number_of_jobs = len(manager.JobsManager._job_classes)
     manager.JobsManager.RegisterJobs([TestJob1, TestJob2])
     self.assertEqual(
-        number_of_jobs + 1, len(
+        number_of_jobs + 2, len(
             manager.JobsManager._job_classes))
 
     with self.assertRaises(KeyError):
@@ -71,7 +71,7 @@ class JobsManagerTest(unittest.TestCase):
     manager.JobsManager.DeregisterJob(TestJob2)
 
     self.assertEqual(
-        number_of_jobs, len(manager.JobsManager._job_classes))
+        number_of_jobs + 1, len(manager.JobsManager._job_classes))
 
 
   def testGetJobInstance(self):
