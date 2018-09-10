@@ -13,7 +13,10 @@ from turbinia.jobs import manager
 class TestJob1(interface.TurbiniaJob):
   """Test job."""
 
-  NAME = 'testjob1'
+  def __init__(self):
+    """Initializes a test job."""
+    super(TestJob1, self).__init__()
+    self.name = 'testjob'
 
   # pylint: disable=unused-argument
   def create_tasks(self, evidence):
@@ -23,7 +26,10 @@ class TestJob1(interface.TurbiniaJob):
 class TestJob2(interface.TurbiniaJob):
   """Test job."""
 
-  NAME = 'testjob2'
+  def __init__(self):
+    """Initializes a test job."""
+    super(TestJob2, self).__init__()
+    self.name = 'testjob2'
 
   # pylint: disable=unused-argument
   def create_tasks(self, evidence):
@@ -62,7 +68,7 @@ class JobsManagerTest(unittest.TestCase):
     number_of_jobs = len(manager.JobsManager._job_classes)
     manager.JobsManager.RegisterJobs([TestJob1, TestJob2])
     self.assertEqual(
-        number_of_jobs + 2, len(
+        number_of_jobs + 1, len(
             manager.JobsManager._job_classes))
 
     with self.assertRaises(KeyError):
@@ -71,7 +77,7 @@ class JobsManagerTest(unittest.TestCase):
     manager.JobsManager.DeregisterJob(TestJob2)
 
     self.assertEqual(
-        number_of_jobs + 1, len(manager.JobsManager._job_classes))
+        number_of_jobs, len(manager.JobsManager._job_classes))
 
 
   def testGetJobInstance(self):
