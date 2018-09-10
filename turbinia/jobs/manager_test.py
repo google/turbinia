@@ -13,10 +13,7 @@ from turbinia.jobs import manager
 class TestJob1(interface.TurbiniaJob):
   """Test job."""
 
-  def __init__(self):
-    """Initializes a test job."""
-    super(TestJob1, self).__init__()
-    self.name = 'testjob'
+  NAME = 'testjob1'
 
   # pylint: disable=unused-argument
   def create_tasks(self, evidence):
@@ -26,10 +23,7 @@ class TestJob1(interface.TurbiniaJob):
 class TestJob2(interface.TurbiniaJob):
   """Test job."""
 
-  def __init__(self):
-    """Initializes a test job."""
-    super(TestJob2, self).__init__()
-    self.name = 'testjob2'
+  NAME = 'testjob2'
 
   # pylint: disable=unused-argument
   def create_tasks(self, evidence):
