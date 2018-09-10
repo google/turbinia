@@ -25,7 +25,7 @@ class TurbiniaJob(object):
     priority: Job priority from 0-100, lowest == highest priority
   """
 
-  NAME = ''
+  NAME = 'name'
 
   def __init__(self):
     self.name = self.NAME
