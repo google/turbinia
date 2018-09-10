@@ -20,19 +20,19 @@ from __future__ import unicode_literals
 from turbinia.evidence import Directory
 from turbinia.evidence import RawDisk
 from turbinia.evidence import ReportText
-from turbinia.jobs import TurbiniaJob
+from turbinia.jobs import interface
+from turbinia.jobs import manager
 from turbinia.workers.worker_stat import StatTask
 
 
-class StatJob(TurbiniaJob):
+class StatJob(interface.TurbiniaJob):
   """Job to run Stat."""
 
   # The types of evidence that this Job will process
   evidence_input = [RawDisk, Directory]
   evidence_output = [ReportText]
 
-  def __init__(self):
-    super(StatJob, self).__init__(name='StatJob')
+  NAME = 'StatJob'
 
   def create_tasks(self, evidence):
     """Create task for Stat.
@@ -44,3 +44,6 @@ class StatJob(TurbiniaJob):
         A list of StatTasks.
     """
     return [StatTask() for _ in evidence]
+
+
+manager.JobsManager.RegisterJob(StatJob)
