@@ -77,8 +77,5 @@ class HTTPAccessLogAnalysisJob(TurbiniaJob):
     Returns:
         A list of tasks to schedule.
     """
-    tasks = []
-    for evidence_item in evidence:
-      if evidence_item.artifact_name in ACCESS_LOG_ARTIFACTS:
-        tasks.append(wordpress.WordpressAccessLogAnalysisTask())
-    return tasks
+    evidence = [e for e in evidence if e.artifact_name in ACCESS_LOG_ARTIFACTS]
+    return [wordpress.WordpressAccessLogAnalysisTask() for _ in evidence]

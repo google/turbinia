@@ -16,6 +16,7 @@
 
 from __future__ import unicode_literals
 
+import gzip
 import os
 import re
 
@@ -53,11 +54,16 @@ class WordpressAccessLogAnalysisTask(TurbiniaTask):
     # Set the output file as the data source for the output evidence.
     output_evidence.local_path = output_file_path
 
-    # Read the input file
-    with open(evidence.local_path, 'r') as input_file:
-      wp_config_content = input_file.read()
+    # Change open function if file is GZIP compressed.
+    open_function = open
+    if evidence.local_path.lower().endswith('gz'):
+      open_function = gzip.open
 
-    analysis = self.analyze_wp_access_logs(wp_config_content)
+    # Read the input file
+    with open_function(evidence.local_path, 'rb') as input_file:
+      access_logs_content = input_file.read().decode('utf-8')
+
+    analysis = self.analyze_wp_access_logs(access_logs_content)
     output_evidence.text_data = analysis
 
     # Write the report to the output file.
@@ -92,17 +98,16 @@ class WordpressAccessLogAnalysisTask(TurbiniaTask):
     for log_line in config.split('\n'):
 
       if self.install_step_regex.search(log_line):
-        timestamp = self._get_timestamp(log_line)
         findings.append(
-            '\t{0:s}: Wordpress installation successful'.format(timestamp))
+            '\t{0:s}: Wordpress installation successful'.format(
+                self._get_timestamp(log_line)))
         findings_summary.add('install')
 
-      if self.theme_editor_regex.search(log_line):
-        edited_file = self.theme_editor_regex.search(log_line).group(
-            'edited_file')
+      match = self.theme_editor_regex.search(log_line)
+      if match:
         findings.append(
-            '\t{0:s}: Wordpress file edited with theme editor ({1:s})\n'.format(
-                self._get_timestamp(log_line), edited_file))
+            '\t{0:s}: Wordpress theme editor edited file ({1:s})\n'.format(
+                self._get_timestamp(log_line), match.group('edited_file')))
         findings_summary.add('theme_edit')
 
     if findings:
