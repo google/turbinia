@@ -52,8 +52,14 @@ class TestTurbiniaTask(unittest.TestCase):
     self.result.output_dir = self.base_output_dir
 
   def tearDown(self):
-    [os.remove(f) for f in self.remove_files if os.path.exists(f)]
-    [os.rmdir(d) for d in self.remove_dirs if os.path.exists(d)]
+    for remove_file in self.remove_files:
+      if os.path.exists(remove_file):
+        os.remove(remove_file)
+
+    for directory in self.remove_dirs:
+      if os.path.exists(directory):
+        os.rmdir(directory)
+
     os.rmdir(self.base_output_dir)
 
   def setResults(self, setup=None, run=None, validate_result=None):
