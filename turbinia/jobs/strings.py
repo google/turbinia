@@ -34,9 +34,8 @@ class StringsJob(TurbiniaJob):
   """
 
   # The types of evidence that this Job will process
-  evidence_input = [type(RawDisk()), type(GoogleCloudDisk()),
-                    type(GoogleCloudDiskRawEmbedded())]
-  evidence_output = [type(TextFile())]
+  evidence_input = [RawDisk, GoogleCloudDisk, GoogleCloudDiskRawEmbedded]
+  evidence_output = [TextFile]
 
   def __init__(self):
     super(StringsJob, self).__init__(name='StringsJob')

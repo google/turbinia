@@ -27,8 +27,8 @@ class PsortJob(TurbiniaJob):
   """Run psort on PlasoFile to generate a CSV file."""
 
   # The types of evidence that this Job will process
-  evidence_input = [type(PlasoFile())]
-  evidence_output = [type(PlasoCsvFile())]
+  evidence_input = [PlasoFile]
+  evidence_output = [PlasoCsvFile]
 
   def __init__(self):
     super(PsortJob, self).__init__(name='PsortJob')
