@@ -12,11 +12,33 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Turbinia jobs."""
-from turbinia.jobs import grep
-from turbinia.jobs import plaso
-from turbinia.jobs import psort
-from turbinia.jobs import sshd
-from turbinia.jobs import strings
-from turbinia.jobs import tomcat
-from turbinia.jobs import worker_stat
+"""Interface for Jobs."""
+import uuid
+
+
+class TurbiniaJob(object):
+  """Base class for Turbinia Jobs.
+
+  Attributes:
+    name: Name of Job
+    id: Id of job
+    priority: Job priority from 0-100, lowest == highest priority
+  """
+
+  NAME = ''
+
+  def __init__(self):
+    self.name = self.NAME
+    self.id = uuid.uuid4().hex
+    self.priority = 100
+
+  def create_tasks(self, evidence):
+    """Create Turbinia tasks to be run.
+
+    Args:
+      evidence: A list of evidence objects
+
+    Returns:
+      A List of TurbiniaTask objects.
+    """
+    raise NotImplementedError

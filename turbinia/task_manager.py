@@ -22,8 +22,8 @@ import time
 import turbinia
 from turbinia import evidence
 from turbinia import config
-from turbinia import jobs
 from turbinia import state_manager
+from turbinia.jobs import manager as jobs_manager
 
 config.LoadConfig()
 if config.TASK_MANAGER == 'PSQ':
@@ -104,7 +104,7 @@ class BaseTaskManager(object):
     """Does setup of Task manager and its dependencies."""
     self._backend_setup(*args, **kwargs)
     # TODO(aarontp): Consider instantiating a job per evidence object
-    self.jobs = jobs.get_jobs()
+    self.jobs = jobs_manager.JobsManager.GetJobs()
 
   def add_evidence(self, evidence_):
     """Adds new evidence and creates tasks to process it.
