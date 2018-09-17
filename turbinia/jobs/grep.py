@@ -28,8 +28,8 @@ class GrepJob(interface.TurbiniaJob):
   """Filter input based on regular expression patterns."""
 
   # The types of evidence that this Job will process
-  evidence_input = [type(TextFile()), type(PlasoCsvFile())]
-  evidence_output = [type(FilteredTextFile())]
+  evidence_input = [TextFile, PlasoCsvFile]
+  evidence_output = [FilteredTextFile]
 
   NAME = 'GrepJob'
 
