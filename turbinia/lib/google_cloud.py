@@ -281,16 +281,6 @@ class GoogleComputeBaseResource(object):
 class GoogleComputeInstance(GoogleComputeBaseResource):
   """Class representing a Google Compute Engine virtual machine."""
 
-  def __init__(self, project, zone, name):
-    """Initialize the virtual machine object.
-
-    Args:
-      project: Cloud project for the instance (instance of GoogleCloudProject).
-      zone: What zone the instance is in.
-      name: Name of the instance.
-    """
-    super(GoogleComputeInstance, self).__init__(project, zone, name)
-
   def GetOperation(self):
     """Get API operation object for the virtual machine.
 
@@ -359,16 +349,6 @@ class GoogleComputeInstance(GoogleComputeBaseResource):
 
 class GoogleComputeDisk(GoogleComputeBaseResource):
   """Class representing a Compute Engine disk."""
-
-  def __init__(self, project, zone, name):
-    """Initialize the disk object.
-
-    Args:
-      project: Cloud project for the disk (instance of GoogleCloudProject).
-      zone: What zone the disk is in.
-      name: Name of the disk.
-    """
-    super(GoogleComputeDisk, self).__init__(project, zone, name)
 
   def GetOperation(self):
     """Get API operation object for the disk.

@@ -23,6 +23,8 @@ from turbinia.workers import sshd
 
 
 class SSHDAnalysisTaskTest(unittest.TestCase):
+  """test for the SSHD analysis task."""
+
   SSH_INSECURE_EVERYTHING = """PermitRootLogin Yes
 PasswordAuthentication yes
 PermitEmptyPasswords Yes
