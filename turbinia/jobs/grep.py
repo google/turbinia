@@ -27,8 +27,8 @@ class GrepJob(TurbiniaJob):
   """Filter input based on regular expression patterns."""
 
   # The types of evidence that this Job will process
-  evidence_input = [type(TextFile()), type(PlasoCsvFile())]
-  evidence_output = [type(FilteredTextFile())]
+  evidence_input = [TextFile, PlasoCsvFile]
+  evidence_output = [FilteredTextFile]
 
   def __init__(self):
     super(GrepJob, self).__init__(name='GrepJob')
