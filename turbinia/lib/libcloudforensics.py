@@ -421,12 +421,14 @@ class GoogleComputeInstance(GoogleComputeBaseResource):
     """Get the virtual machine boot disk.
 
     Returns:
-      Disk object (instance of GoogleComputeDisk).
+      Disk object (instance of GoogleComputeDisk) or None if no disk can be
+          found.
     """
     for disk in self.get_value('disks'):
       if disk['boot']:
         disk_name = disk['source'].split('/')[-1]
         return self.project.get_disk(disk_name=disk_name)
+    return None
 
   def get_disk(self, disk_name):
     """Gets a disk attached to this virtual machine disk by name.
@@ -629,7 +631,7 @@ def start_analysis_vm(project, vm_name, zone, boot_disk_size, attach_disk=None):
   """
   project = GoogleCloudProject(project, default_zone=zone)
   analysis_vm, created = project.get_or_create_analysis_vm(
-    vm_name, boot_disk_size)
+      vm_name, boot_disk_size)
   if attach_disk:
     analysis_vm.attach_disk(attach_disk)
   return analysis_vm, created

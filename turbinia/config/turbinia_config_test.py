@@ -24,6 +24,7 @@ from turbinia import config
 
 
 class TestTurbiniaConfig(unittest.TestCase):
+  """Tests for the Turbinia configuration module."""
 
   @classmethod
   def setUpClass(cls):
@@ -48,6 +49,7 @@ class TestTurbiniaConfig(unittest.TestCase):
 
   @classmethod
   def tearDownClass(cls):
+    """Called after tests in the class have been run."""
     config.CONFIGPATH = cls.CONFIGPATH_SAVE
     config.CONFIGFILES = cls.CONFIGFILES_SAVE
     config.CONFIGVARS = cls.CONFIGVARS_SAVE
@@ -59,9 +61,14 @@ class TestTurbiniaConfig(unittest.TestCase):
     [delattr(config, a) for a in dir(config) if a not in self.config_attrs]
     config.CONFIG = None
 
-  def WriteConfig(self, data):
+  def WriteConfig(self, text):
+    """Helper to write text to a configuration file.
+
+    Args:
+      text (str): data to write to the file.
+    """
     with open(self.config_file, 'w') as config_file:
-      config_file.write(data)
+      config_file.write(text)
 
   def testBasicConfig(self):
     """Test out a basic config."""
