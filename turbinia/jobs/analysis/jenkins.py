@@ -12,29 +12,32 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Job to execute grep task."""
+"""Job to execute Jenkins analysis task."""
 
 from __future__ import unicode_literals
 
-from turbinia.evidence import TextFile
-from turbinia.evidence import FilteredTextFile
-from turbinia.evidence import PlasoCsvFile
+from turbinia.evidence import Directory
+from turbinia.evidence import RawDisk
+from turbinia.evidence import GoogleCloudDisk
+from turbinia.evidence import GoogleCloudDiskRawEmbedded
+from turbinia.evidence import ReportText
 from turbinia.jobs import TurbiniaJob
-from turbinia.workers.grep import GrepTask
+from turbinia.workers.analysis.jenkins import JenkinsAnalysisTask
 
 
-class GrepJob(TurbiniaJob):
-  """Filter input based on regular expression patterns."""
+class JenkinsAnalysisJob(TurbiniaJob):
+  """Jenkins analysis job."""
 
-  # The types of evidence that this Job will process
-  evidence_input = [TextFile, PlasoCsvFile]
-  evidence_output = [FilteredTextFile]
+  # Types of evidence that this Job will process.
+  evidence_input = [
+    Directory, RawDisk, GoogleCloudDisk, GoogleCloudDiskRawEmbedded]
+  evidence_output = [ReportText]
 
   def __init__(self):
-    super(GrepJob, self).__init__(name='GrepJob')
+    super(JenkinsAnalysisJob, self).__init__(name='JenkinsAnalysisJob')
 
   def create_tasks(self, evidence):
-    """Create task.
+    """Create task for Jenkins analysis job.
 
     Args:
       evidence: List of evidence object to process
@@ -42,5 +45,5 @@ class GrepJob(TurbiniaJob):
     Returns:
         A list of tasks to schedule.
     """
-    tasks = [GrepTask() for _ in evidence]
+    tasks = [JenkinsAnalysisTask() for _ in evidence]
     return tasks

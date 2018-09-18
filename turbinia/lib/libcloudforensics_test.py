@@ -16,9 +16,9 @@
 
 from __future__ import unicode_literals
 
-import mock
 import unittest
 
+import mock
 import six
 
 from turbinia.lib import libcloudforensics
