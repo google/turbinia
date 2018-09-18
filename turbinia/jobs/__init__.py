@@ -35,12 +35,14 @@ def get_jobs():
   from turbinia.jobs.tomcat import TomcatAnalysisJob
   from turbinia.jobs.analysis.http_access_logs import HTTPAccessLogExtractionJob
   from turbinia.jobs.analysis.http_access_logs import HTTPAccessLogAnalysisJob
+  from turbinia.jobs.analysis.jenkins import JenkinsAnalysisJob
   # TODO(aarontp): Dynamically look up job objects and make enabling/disabling
   # configurable through config and/or recipes.
   return [
       StatJob(), PlasoJob(), PsortJob(), StringsJob(), GrepJob(),
       SSHDExtractionJob(), SSHDAnalysisJob(), HTTPAccessLogExtractionJob(),
-      HTTPAccessLogAnalysisJob(), TomcatExtractionJob(), TomcatAnalysisJob()]
+      HTTPAccessLogAnalysisJob(), TomcatExtractionJob(), TomcatAnalysisJob(),
+      JenkinsAnalysisJob()]
 
 
 class TurbiniaJob(object):
