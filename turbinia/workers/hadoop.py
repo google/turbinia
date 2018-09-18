@@ -16,23 +16,23 @@
 
 from __future__ import unicode_literals
 
+import os
+import subprocess
+
 from turbinia import TurbiniaException
 
 from turbinia.evidence import ReportText
 from turbinia.lib.utils import extract_artifacts
 from turbinia.workers import TurbiniaTask
 
-import os
-import subprocess
 
-
-class HadoopTask(TurbiniaTask):
+class HadoopAnalysisTask(TurbiniaTask):
   """Task to analyse Hadoop AppRoot files."""
 
   def _AnalyzeHadoopAppRoot(self, collected_artifacts):
     """Runs a naive AppRoot files parsing method.
 
-    This extracts strings from the saved task file, and search usual
+    This extracts strings from the saved task file, and searches for usual
     post-compromise suspicious patterns.
 
     TODO: properly parse the Proto. Some documentation can be found over there:
@@ -43,27 +43,29 @@ class HadoopTask(TurbiniaTask):
     Returns:
       str: the result report.
     """
-    strings_report = ''
+    report = ['Extracted commands from Yarn tasks']
+    strings_report = []
     evil_commands = []
     for filepath in collected_artifacts:
-      strings_report += 'Strings for {0}:\n'.format(filepath)
-      strings = subprocess.check_output(['/usr/bin/strings', '-a', filepath])
-      strings_report += strings
-      for line in strings.splitlines():
-        if (line.find('curl')>0) or (line.find('wget')>0):
+      strings_report.append('Strings for {0:s}:'.format(filepath))
+      strings_output = subprocess.check_output(
+          ['/usr/bin/strings', '-a', filepath])
+      strings_report.append(strings_output)
+      for line in strings_output.splitlines():
+        if (line.find('curl') > 0) or (line.find('wget') > 0):
           evil_commands.append((filepath, line))
 
-    report = 'Extracted commands from Yarn tasks\n'
     if evil_commands:
-      report += 'Found suspicious commands:\n'
-    for file_path, command in evil_commands:
-      report += '\tFile: {0}\n'.format(filepath)
-      report += 'Command: "{0}"\n'.format(command)
+      report.append('Found suspicious commands:')
+    for filepath, command in evil_commands:
+      report.append('\tFile: {0:s}'.format(filepath))
+      report.append('Command: "{0:s}"'.format(command))
 
-    report += '\nAll strings from Yarn Tasks:\n'
-    report += strings_report
+    report.append('')
+    report.append('All strings from Yarn Tasks:')
+    report.extend(strings_report)
 
-    return report
+    return '\n'.join(report)
 
   def run(self, evidence, result):
     """Run Hadoop specific analysis on the evidences.
@@ -89,9 +91,9 @@ class HadoopTask(TurbiniaTask):
       # We don't use FileArtifactExtractionTask as it export one evidence per
       # file extracted
       collected_artifacts = extract_artifacts(
-        artifact_names=['HadoopAppRoot'],
-        disk_path=evidence.local_path,
-        output_dir=os.path.join(self.output_dir, 'artifacts')
+          artifact_names=['HadoopAppRoot'],
+          disk_path=evidence.local_path,
+          output_dir=os.path.join(self.output_dir, 'artifacts')
       )
 
       text_report = self._AnalyzeHadoopAppRoot(collected_artifacts)

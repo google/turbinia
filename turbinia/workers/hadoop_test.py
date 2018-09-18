@@ -23,8 +23,8 @@ from turbinia import config
 from turbinia.workers import hadoop
 
 
-class HadoopTest(unittest.TestCase):
-  """Tests for HadoopTask."""
+class HadoopAnalysisTest(unittest.TestCase):
+  """Tests for HadoopAnalysisTask."""
 
   _EXPECTED_REPORT = """Extracted commands from Yarn tasks
 Found suspicious commands:
@@ -56,9 +56,9 @@ Failing this attempt.Diagnostics: For more detailed output, check the applicatio
         filedir, '..', '..', 'test_data', 'bad_yarn_saved_task')
 
   def testAnalyzeHadoopAppRoot(self):
-     """Tests the _AnalyzeHadoopAppRoot method."""
-     config.LoadConfig()
-     task = hadoop.HadoopTask()
-     self.maxDiff = None
-     report = task._AnalyzeHadoopAppRoot([self.test_file])
-     self.assertEqual(report, self._EXPECTED_REPORT)
+    """Tests the _AnalyzeHadoopAppRoot method."""
+    config.LoadConfig()
+    task = hadoop.HadoopAnalysisTask()
+    self.maxDiff = None
+    report = task._AnalyzeHadoopAppRoot([self.test_file])
+    self.assertEqual(report, self._EXPECTED_REPORT)

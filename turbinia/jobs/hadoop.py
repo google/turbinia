@@ -21,10 +21,10 @@ from turbinia.evidence import GoogleCloudDiskRawEmbedded
 from turbinia.evidence import RawDisk
 from turbinia.evidence import ReportText
 from turbinia.jobs import TurbiniaJob
-from turbinia.workers.hadoop import HadoopTask
+from turbinia.workers.hadoop import HadoopAnalysisTask
 
 
-class HadoopJob(TurbiniaJob):
+class HadoopAnalysisJob(TurbiniaJob):
   """Analyzes Hadoop AppRoot files."""
 
   # The types of evidence that this Job will process
@@ -32,7 +32,7 @@ class HadoopJob(TurbiniaJob):
   evidence_output = [ReportText]
 
   def __init__(self):
-    super(HadoopJob, self).__init__(name='HadoopJob')
+    super(HadoopAnalysisJob, self).__init__(name='HadoopAnalysisJob')
 
   def create_tasks(self, evidence):
     """Create task.
@@ -43,5 +43,5 @@ class HadoopJob(TurbiniaJob):
     Returns:
         A list of tasks to schedule.
     """
-    tasks = [HadoopTask() for _ in evidence]
+    tasks = [HadoopAnalysisTask() for _ in evidence]
     return tasks
