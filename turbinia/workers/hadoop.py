@@ -54,7 +54,7 @@ class HadoopAnalysisTask(TurbiniaTask):
       strings_output, _ = proc.communicate()
       strings_report.append(strings_output)
       for line in strings_output.splitlines():
-        if (line.find('curl') > 0) or (line.find('wget') > 0):
+        if (line.find(b'curl') > 0) or (line.find(b'wget') > 0):
           evil_commands.append((filepath, line))
 
     if evil_commands:
