@@ -12,7 +12,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Task for analysing sshd_config files."""
+"""Task for analysing Tomcat files."""
 
 from __future__ import unicode_literals
 
@@ -23,16 +23,14 @@ from turbinia.evidence import ReportText
 from turbinia.workers import TurbiniaTask
 
 
-class SSHDAnalysisTask(TurbiniaTask):
-  """Task to analyze a sshd_config file."""
+class TomcatAnalysisTask(TurbiniaTask):
+  """Task to analyze a Tomcat file."""
 
   def run(self, evidence, result):
-    """Run the sshd_config analysis worker.
-
+    """Run the Tomcat analysis worker.
     Args:
        evidence (Evidence object):  The evidence to process
        result (TurbiniaTaskResult): The object to place task results into.
-
     Returns:
       TurbiniaTaskResult object.
     """
@@ -40,16 +38,16 @@ class SSHDAnalysisTask(TurbiniaTask):
     output_evidence = ReportText()
 
     # Where to store the resulting output file.
-    output_file_name = 'sshd_config_analysis.txt'
+    output_file_name = 'tomcat_analysis.txt'
     output_file_path = os.path.join(self.output_dir, output_file_name)
     # Set the output file as the data source for the output evidence.
     output_evidence.local_path = output_file_path
 
     # Read the input file
     with open(evidence.local_path, 'r') as input_file:
-      sshd_config = input_file.read()
+      tomcat_file = input_file.read()
 
-    analysis = self.analyse_sshd_config(sshd_config)
+    analysis = self.analyse_tomcat_file(tomcat_file)
     output_evidence.text_data = analysis
 
     # Write the report to the output file.
@@ -58,38 +56,46 @@ class SSHDAnalysisTask(TurbiniaTask):
 
     # Add the resulting evidence to the result object.
     result.add_evidence(output_evidence, evidence.config)
-    result.close(self, success=True)
+    result.close(self,
+                 success=True,
+                 status=output_evidence.text_data.splitlines()[0])
     return result
 
-  def analyse_sshd_config(self, config):
-    """Analyses an SSH configuration.
+  def analyse_tomcat_file(self, tomcat_file):
+    """Analyse a Tomcat file.
+
+    - Search for clear text password entries in user configuration file
+    - Search for .war deployment
+    - Search for management control panel activity
 
     Args:
-      config (str): configuration file content.
-
+      tomcat_file (str): Tomcat file content.
     Returns:
-      str: description of security of SSHD configuration file.
+      str: description of findings of Tomcat file.
     """
     findings = []
-    permit_root_login_re = re.compile(
-        r'^\s*PermitRootLogin\s*(yes|prohibit-password|without-password)',
-        re.IGNORECASE | re.MULTILINE)
-    password_authentication_re = re.compile(
-        r'^\s*PasswordAuthentication[\s"]*No', re.IGNORECASE | re.MULTILINE)
-    permit_empty_passwords_re = re.compile(
-        r'^\s*PermitEmptyPasswords[\s"]*Yes', re.IGNORECASE | re.MULTILINE)
 
-    if re.search(permit_root_login_re, config):
-      findings.append('\tRoot login enabled.')
+    tomcat_user_passwords_re = re.compile('(^.*password.*)', re.MULTILINE)
+    tomcat_deploy_re = re.compile('(^.*Deploying web application archive.*)',
+                                  re.MULTILINE)
+    tomcat_manager_activity_re = re.compile('(^.*POST /manager/html/upload.*)',
+                                            re.MULTILINE)
 
-    if not re.search(password_authentication_re, config):
-      findings.append('\tPassword authentication enabled.')
+    count = 0
+    for password_entry in re.findall(tomcat_user_passwords_re, tomcat_file):
+      findings.append('Tomcat user: ' + password_entry.strip())
+      count += 1
 
-    if re.search(permit_empty_passwords_re, config):
-      findings.append('\tEmpty passwords permitted.')
+    for deployment_entry in re.findall(tomcat_deploy_re, tomcat_file):
+      findings.append('Tomcat App Deployed: ' + deployment_entry.strip())
+      count += 1
+
+    for mgmt_entry in re.findall(tomcat_manager_activity_re, tomcat_file):
+      findings.append('Tomcat Management: ' + mgmt_entry.strip())
+      count += 1
 
     if findings:
-      findings.insert(0, 'Insecure SSH configuration found.')
+      findings.insert(0, 'Tomcat found ({0:d} hits):'.format(count))
       return '\n'.join(findings)
 
-    return 'No issues found in SSH configuration'
+    return 'No Tomcat found.'

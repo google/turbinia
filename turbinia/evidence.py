@@ -300,3 +300,4 @@ class ExportedFileArtifact(Evidence):
     """Initializes an exported file artifact."""
     super(ExportedFileArtifact, self).__init__()
     self.artifact_name = artifact_name
+    self.copyable = True

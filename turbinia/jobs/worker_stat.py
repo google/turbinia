@@ -28,8 +28,8 @@ class StatJob(TurbiniaJob):
   """Job to run Stat."""
 
   # The types of evidence that this Job will process
-  evidence_input = [type(RawDisk()), type(Directory())]
-  evidence_output = [type(ReportText())]
+  evidence_input = [RawDisk, Directory]
+  evidence_output = [ReportText]
 
   def __init__(self):
     super(StatJob, self).__init__(name='StatJob')

@@ -57,10 +57,10 @@ class GrepTask(TurbiniaTask):
 
     output_evidence.local_path = output_file_path
     cmd = 'grep -E -b -n -f {0:s} {1:s} > {2:s}'.format(
-      patterns_file_path, evidence.local_path, output_file_path)
+        patterns_file_path, evidence.local_path, output_file_path)
 
     result.log('Running [{0:s}]'.format(cmd))
     self.execute(
-      cmd, result, new_evidence=[output_evidence], close=True, shell=True)
+        cmd, result, new_evidence=[output_evidence], close=True, shell=True)
 
     return result
