@@ -27,7 +27,7 @@ class WordpressAccessLogAnalysisTaskTest(unittest.TestCase):
   """Tests for WordpressAccessLogAnalysis Task."""
 
   WORDPRESS_ACCESS_LOGS = None
-  WORDPRESS_PWNED_REPORT = """Wordpress access logs found (theme_edit, install)
+  WORDPRESS_PWNED_REPORT = """Wordpress access logs found (install, theme_edit)
 \t27/Jun/2018:19:29:54 +0000: Wordpress installation successful
 \t27/Jun/2018:19:31:15 +0000: Wordpress theme editor edited file (header.php)
 """ # pylint: disable=line-too-long
