@@ -112,7 +112,7 @@ class WordpressAccessLogAnalysisTask(TurbiniaTask):
 
     if findings:
       findings.insert(0, 'Wordpress access logs found ({0:s})'.format(
-          ', '.join(list(findings_summary))))
+          ', '.join(sorted(list(findings_summary)))))
       return '\n'.join(findings)
 
     return 'No Wordpress install or theme editing found in access logs'
