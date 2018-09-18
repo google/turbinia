@@ -16,6 +16,7 @@
 
 from __future__ import unicode_literals
 
+import codecs
 import os
 import subprocess
 
@@ -52,6 +53,7 @@ class HadoopAnalysisTask(TurbiniaTask):
           'strings -a "{0:s}"'.format(filepath), shell=True,
           stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
       strings_output, _ = proc.communicate()
+      strings_output = codecs.decode(strings_output, 'utf-8')
       strings_report.append(strings_output)
       for line in strings_output.splitlines():
         if (line.find(b'curl') > 0) or (line.find(b'wget') > 0):
