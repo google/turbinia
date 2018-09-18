@@ -93,7 +93,7 @@ class WordpressAccessLogAnalysisTask(TurbiniaTask):
       str: Activity summary of the wordpress installation.
     """
     findings = []
-    findings_summary = []
+    findings_summary = set()
 
     for log_line in config.split('\n'):
 
@@ -101,18 +101,18 @@ class WordpressAccessLogAnalysisTask(TurbiniaTask):
         findings.append(
             '\t{0:s}: Wordpress installation successful'.format(
                 self._get_timestamp(log_line)))
-        findings_summary.append('install')
+        findings_summary.add('install')
 
       match = self.theme_editor_regex.search(log_line)
       if match:
         findings.append(
             '\t{0:s}: Wordpress theme editor edited file ({1:s})\n'.format(
                 self._get_timestamp(log_line), match.group('edited_file')))
-        findings_summary.append('theme_edit')
+        findings_summary.add('theme_edit')
 
     if findings:
       findings.insert(0, 'Wordpress access logs found ({0:s})'.format(
-          ', '.join(findings_summary)))
+          ', '.join(sorted(list(findings_summary)))))
       return '\n'.join(findings)
 
     return 'No Wordpress install or theme editing found in access logs'
