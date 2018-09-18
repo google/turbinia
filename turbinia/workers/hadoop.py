@@ -43,20 +43,24 @@ class HadoopAnalysisTask(TurbiniaTask):
     Returns:
       str: the result report.
     """
-    report = ['Extracted commands from Yarn tasks']
+    report = []
     strings_report = []
     evil_commands = []
     for filepath in collected_artifacts:
       strings_report.append('Strings for {0:s}:'.format(filepath))
-      strings_output = subprocess.check_output(
-          ['/usr/bin/strings', '-a', filepath])
+      proc = subprocess.Popen(
+          'strings -a "{0:s}"'.format(filepath), shell=True,
+          stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+      strings_output, _ = proc.communicate()
       strings_report.append(strings_output)
       for line in strings_output.splitlines():
         if (line.find('curl') > 0) or (line.find('wget') > 0):
           evil_commands.append((filepath, line))
 
     if evil_commands:
-      report.append('Found suspicious commands:')
+      report.append('Found suspicious commands!')
+    else:
+      report.append('Did not find any suspicious commands.')
     for filepath, command in evil_commands:
       report.append('\tFile: {0:s}'.format(filepath))
       report.append('Command: "{0:s}"'.format(command))
