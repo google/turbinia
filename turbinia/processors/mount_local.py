@@ -57,11 +57,10 @@ def PreprocessMountDisk(evidence):
 
   # TODO(aarontp): Remove hard-coded sudo in commands:
   # https://github.com/google/turbinia/issues/73
-  losetup_command = 'sudo losetup --show --nooverlap --find -P "{0:s}"'.format(
-      evidence.local_path)
-  log.info('Running command '+losetup_command)
+  losetup_command = ['sudo', 'losetup', '--show', '--nooverlap', '--find', '-P,'  evidence.local_path]
+  log.info('Running command {0:s}'.format(' '.join(losetup_command)))
   try:
-    losetup_device, _ = subprocess.Popen(losetup_command).communicate()
+    losetup_device = subprocess.check_output(losetup_command)
   except subprocess.CalledProcessError as e:
     raise TurbiniaException('Could not set losetup devices {0!s}'.format(e))
   evidence.losetup_device = losetup_device.strip()
