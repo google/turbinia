@@ -162,14 +162,16 @@ class RawDisk(Evidence):
   """Evidence object for Disk based evidence.
 
   Attributes:
+    losetup_path: Path to the losetup device for this disk.
     mount_path: The mount path for this disk (if any).
     mount_partition: The mount partition for this disk (if any).
     size:  The size of the disk in bytes.
   """
 
-  def __init__(self, mount_path=None, mount_partition=None, size=None, *args,
+  def __init__(self, mount_path=None, mount_partition=1, size=None, *args,
                **kwargs):
     """Initialization for raw disk evidence object."""
+    self.losetup_path = None
     self.mount_path = mount_path
     self.mount_partition = mount_partition
     self.size = size

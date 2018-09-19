@@ -51,15 +51,32 @@ def PreprocessMountDisk(evidence):
 
   evidence.mount_path = tempfile.mkdtemp(prefix='turbinia', dir=mount_prefix)
 
-  if hasattr(evidence, 'mount_partition') and evidence.mount_partition:
-    src_path = '{0:s}-part{1:d}'.format(
-        evidence.local_path, evidence.mount_partition)
-  else:
-    src_path = evidence.local_path
+  # Two steps: first use losetup to parse the RawDisk eventual partition table
+  # and make block devices per partitions.
+  # Then we mount the partition provideed, or the first one we find.
 
   # TODO(aarontp): Remove hard-coded sudo in commands:
   # https://github.com/google/turbinia/issues/73
-  mount_cmd = ['sudo', 'mount', src_path, evidence.mount_path]
+  losetup_command = 'sudo losetup --show --nooverlap --find -P "{0:s}"'.format(
+      evidence.local_path)
+  log('Running command '+losetup_command)
+  try:
+    losetup_device, _ = subprocess.Popen(losetup_command).communicate()
+  except subprocess.CalledProcessError as e:
+    raise TurbiniaException('Could not set losetup devices {0!s}'.format(e))
+  evidence.losetup_device = losetup_device.strip()
+
+  # Here, evidence.losetup_device is something like '/dev/loopX'.
+
+  path_to_partition = '{0:s}p{0:d}'.format(
+      evidence.losetup_device, evidence.mount_partition)
+  # If evidence.local_path points to something with a partition table, we have
+  # block devices at /dev/loopXpY.
+  if not os.path.exists(path_to_partition):
+    # Else, we only have /dev/loopX
+    path_to_partition = evidence.losetup_device
+
+  mount_cmd = ['sudo', 'mount', path_to_partition, evidence.mount_path]
   log.info('Running: {0:s}'.format(' '.join(mount_cmd)))
   try:
     subprocess.check_call(mount_cmd)
@@ -81,6 +98,13 @@ def PostprocessUnmountDisk(evidence):
     subprocess.check_call(umount_cmd)
   except subprocess.CalledProcessError as e:
     raise TurbiniaException('Could not unmount directory {0!s}'.format(e))
+
+  losetup_cmd = ['losetup', '-d', evidence.losetup_device]
+  log.info('Running: {0:s}'.format(' '.join(losetup_cmd)))
+  try:
+    subprocess.check_call(losetup_cmd)
+  except subprocess.CalledProcessError as e:
+    raise TurbiniaException('Could not delete losetup device {0!s}'.format(e))
 
   log.info('Removing mount path {0:s}'.format(evidence.mount_path))
   try:
