@@ -99,7 +99,7 @@ def PostprocessUnmountDisk(evidence):
   except subprocess.CalledProcessError as e:
     raise TurbiniaException('Could not unmount directory {0!s}'.format(e))
 
-  losetup_cmd = ['losetup', '-d', evidence.losetup_device]
+  losetup_cmd = ['sudo', 'losetup', '-d', evidence.losetup_device]
   log.info('Running: {0:s}'.format(' '.join(losetup_cmd)))
   try:
     subprocess.check_call(losetup_cmd)
