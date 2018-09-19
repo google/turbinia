@@ -24,6 +24,8 @@ from turbinia import config
 from turbinia import TurbiniaException
 from turbinia.processors import mount_local
 
+# pylint: disable=keyword-arg-before-vararg
+
 config.LoadConfig()
 if config.TASK_MANAGER == 'PSQ':
   from turbinia.processors import google_cloud
