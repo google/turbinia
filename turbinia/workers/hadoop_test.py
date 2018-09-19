@@ -59,5 +59,5 @@ Failing this attempt.Diagnostics: For more detailed output, check the applicatio
     config.LoadConfig()
     task = hadoop.HadoopAnalysisTask()
     self.maxDiff = None
-    report = task._AnalyzeHadoopAppRoot([self.test_file])
+    report = '\n'.join(task._AnalyzeHadoopAppRoot([self.test_file]))
     self.assertEqual(report.replace(self.filedir, ''), self._EXPECTED_REPORT)
