@@ -30,7 +30,8 @@ class JenkinsAnalysisJob(TurbiniaJob):
 
   # Types of evidence that this Job will process.
   evidence_input = [
-    Directory, RawDisk, GoogleCloudDisk, GoogleCloudDiskRawEmbedded]
+      Directory, RawDisk, GoogleCloudDisk, GoogleCloudDiskRawEmbedded
+  ]
   evidence_output = [ReportText]
 
   def __init__(self):

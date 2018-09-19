@@ -56,9 +56,8 @@ class TomcatAnalysisTask(TurbiniaTask):
 
     # Add the resulting evidence to the result object.
     result.add_evidence(output_evidence, evidence.config)
-    result.close(self,
-                 success=True,
-                 status=output_evidence.text_data.splitlines()[0])
+    result.close(
+        self, success=True, status=output_evidence.text_data.splitlines()[0])
     return result
 
   def analyse_tomcat_file(self, tomcat_file):
@@ -76,10 +75,10 @@ class TomcatAnalysisTask(TurbiniaTask):
     findings = []
 
     tomcat_user_passwords_re = re.compile('(^.*password.*)', re.MULTILINE)
-    tomcat_deploy_re = re.compile('(^.*Deploying web application archive.*)',
-                                  re.MULTILINE)
-    tomcat_manager_activity_re = re.compile('(^.*POST /manager/html/upload.*)',
-                                            re.MULTILINE)
+    tomcat_deploy_re = re.compile(
+        '(^.*Deploying web application archive.*)', re.MULTILINE)
+    tomcat_manager_activity_re = re.compile(
+        '(^.*POST /manager/html/upload.*)', re.MULTILINE)
 
     count = 0
     for password_entry in re.findall(tomcat_user_passwords_re, tomcat_file):

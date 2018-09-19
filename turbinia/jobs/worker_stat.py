@@ -14,7 +14,6 @@
 # limitations under the License.
 """Job for running a stat call on the supplied evidence."""
 
-
 from __future__ import unicode_literals
 
 from turbinia.evidence import Directory

@@ -215,15 +215,16 @@ class GoogleCloudProject(object):
     disks = self.list_disks()
     disk = disks.get(disk_name)
     if not disk:
-      raise RuntimeError('Disk {0:s} was not found in project {1:s}'.format(
-          disk_name, self.project_id))
+      raise RuntimeError(
+          'Disk {0:s} was not found in project {1:s}'.format(
+              disk_name, self.project_id))
 
     if not zone:
       zone = disk['zone']
     return GoogleComputeDisk(self, zone, disk_name)
 
-  def create_disk_from_snapshot(self, snapshot, disk_name=None,
-                                disk_name_prefix=''):
+  def create_disk_from_snapshot(
+      self, snapshot, disk_name=None, disk_name_prefix=''):
     """Create a new disk based on a snapshot.
 
     Args:
@@ -246,8 +247,7 @@ class GoogleCloudProject(object):
     if not disk_name:
       disk_name = '{0:s}{1:s}-{2:s}-copy'.format(
           disk_name_prefix, disk_id_crc32, snapshot.name[:truncate_at])
-    body = dict(
-        name=disk_name, sourceSnapshot=snapshot.get_source_string())
+    body = dict(name=disk_name, sourceSnapshot=snapshot.get_source_string())
     operation = self.gce_api().disks().insert(
         project=self.project_id, zone=self.default_zone, body=body).execute()
     self.gce_operation(operation, zone=self.default_zone, block=True)
@@ -293,17 +293,8 @@ class GoogleCloudProject(object):
 
     # Analysis software to install.
     packages_to_install = [
-        'python-plaso',
-        'xmount',
-        'sleuthkit',
-        'libfvde-tools',
-        'libbde-tools',
-        'plaso-tools',
-        'jq',
-        'ncdu',
-        'htop',
-        'binutils',
-        'upx-ucl'
+        'python-plaso', 'xmount', 'sleuthkit', 'libfvde-tools', 'libbde-tools',
+        'plaso-tools', 'jq', 'ncdu', 'htop', 'binutils', 'upx-ucl'
     ]
 
     startup_script = """
@@ -349,8 +340,7 @@ class GoogleCloudProject(object):
         }
     }
     operation = self.gce_api().instances().insert(
-        project=self.project_id, zone=self.default_zone,
-        body=config).execute()
+        project=self.project_id, zone=self.default_zone, body=config).execute()
     self.gce_operation(operation, zone=self.default_zone, block=True)
     instance = GoogleComputeInstance(
         project=self, zone=self.default_zone, name=vm_name)
@@ -461,7 +451,8 @@ class GoogleComputeInstance(GoogleComputeBaseResource):
     devnull = open(os.devnull, 'w')
     subprocess.check_call([
         'gcloud', 'compute', '--project', self.project.project_id, 'ssh',
-        '--zone', self.zone, self.name], stderr=devnull)
+        '--zone', self.zone, self.name
+    ], stderr=devnull)
 
   def ssh(self):
     """Connect to the virtual machine over SSH."""
@@ -502,9 +493,7 @@ class GoogleComputeInstance(GoogleComputeBaseResource):
         'autoDelete': False,
     }
     operation = self.project.gce_api().instances().attachDisk(
-        instance=self.name,
-        project=self.project.project_id,
-        zone=self.zone,
+        instance=self.name, project=self.project.project_id, zone=self.zone,
         body=operation_config).execute()
     self.project.gce_operation(operation, zone=self.zone, block=True)
 
@@ -541,9 +530,7 @@ class GoogleComputeDisk(GoogleComputeBaseResource):
             'New snapshot: {0}'.format(snapshot_name)))
     operation_config = dict(name=snapshot_name)
     operation = self.project.gce_api().disks().createSnapshot(
-        disk=self.name,
-        project=self.project.project_id,
-        zone=self.zone,
+        disk=self.name, project=self.project.project_id, zone=self.zone,
         body=operation_config).execute()
     self.project.gce_operation(operation, zone=self.zone, block=True)
     return GoogleComputeSnapshot(disk=self, name=snapshot_name)

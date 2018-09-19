@@ -28,8 +28,9 @@ from turbinia.workers.plaso import PlasoTask
 class PlasoJob(TurbiniaJob):
 
   # The types of evidence that this Job will process
-  evidence_input = [Directory, RawDisk, GoogleCloudDisk,
-                    GoogleCloudDiskRawEmbedded]
+  evidence_input = [
+      Directory, RawDisk, GoogleCloudDisk, GoogleCloudDiskRawEmbedded
+  ]
   evidence_output = [PlasoFile]
 
   def __init__(self):

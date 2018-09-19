@@ -14,7 +14,6 @@
 # limitations under the License.
 """Evidence processor to mount local images or disks."""
 
-
 from __future__ import unicode_literals
 
 import logging

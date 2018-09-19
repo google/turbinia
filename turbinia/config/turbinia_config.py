@@ -16,7 +16,6 @@
 
 from __future__ import unicode_literals
 
-
 # Turbinia Role as 'server' or 'psqworker'
 ROLE = 'server'
 
@@ -60,7 +59,6 @@ SHARED_FILESYSTEM = False
 # problems.
 DEBUG_TASKS = False
 
-
 ###############################
 # Google Cloud Platform (GCP) #
 ###############################
@@ -96,7 +94,6 @@ GCS_OUTPUT_PATH = 'gs://%s/output' % BUCKET_NAME
 
 # Which state manager to use
 STATE_MANAGER = 'Datastore'
-
 
 ##########
 # CELERY #

@@ -28,22 +28,22 @@ from turbinia.jobs import TurbiniaJob
 from turbinia.workers.analysis import wordpress
 
 ACCESS_LOG_ARTIFACTS = [
-    'DockerContainerLogs',
-    'NginxAccessLogs',
-    'ApacheAccessLogs'
+    'DockerContainerLogs', 'NginxAccessLogs', 'ApacheAccessLogs'
 ]
+
 
 class HTTPAccessLogExtractionJob(TurbiniaJob):
   """HTTP Access log extraction job."""
 
   evidence_input = [
-      Directory, RawDisk, GoogleCloudDisk, GoogleCloudDiskRawEmbedded]
+      Directory, RawDisk, GoogleCloudDisk, GoogleCloudDiskRawEmbedded
+  ]
 
   evidence_output = [ExportedFileArtifact]
 
   def __init__(self):
-    super(HTTPAccessLogExtractionJob, self).__init__(
-        name='HTTPAccessLogExtractionJob')
+    super(HTTPAccessLogExtractionJob,
+          self).__init__(name='HTTPAccessLogExtractionJob')
 
   def create_tasks(self, evidence):
     """Create task.
@@ -56,19 +56,21 @@ class HTTPAccessLogExtractionJob(TurbiniaJob):
     """
     tasks = []
     for artifact_name in ACCESS_LOG_ARTIFACTS:
-      tasks.extend([artifact.FileArtifactExtractionTask(artifact_name) for _
-                    in evidence])
+      tasks.extend([
+          artifact.FileArtifactExtractionTask(artifact_name) for _ in evidence
+      ])
     return tasks
+
 
 class HTTPAccessLogAnalysisJob(TurbiniaJob):
   """HTTP Access log analysis job."""
-   # Types of evidence that this Job will process.
+  # Types of evidence that this Job will process.
   evidence_input = [ExportedFileArtifact]
   evidence_output = [ReportText]
 
   def __init__(self):
-    super(HTTPAccessLogAnalysisJob, self).__init__(
-        name='HTTPAccessLogAnalysisJob')
+    super(HTTPAccessLogAnalysisJob,
+          self).__init__(name='HTTPAccessLogAnalysisJob')
 
   def create_tasks(self, evidence):
     """Create task.

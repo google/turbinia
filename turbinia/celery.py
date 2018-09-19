@@ -68,20 +68,19 @@ class TurbiniaCelery(object):
     Returns:
       function: the fexec() function.
     """
+
     @self.app.task(name='fexec')
     def fexec(f, *args, **kwargs):
       """Lets us pass in an arbitrary function without Celery annotations"""
       return f(*args, **kwargs)
+
     return fexec
 
   def setup(self):
     """Set up Celery"""
     config.LoadConfig()
     self.app = celery.Celery(
-        'turbinia',
-        broker=config.CELERY_BROKER,
-        backend=config.CELERY_BACKEND
-    )
+        'turbinia', broker=config.CELERY_BROKER, backend=config.CELERY_BACKEND)
     self.app.conf.update(
         task_default_queue=config.INSTANCE_ID,
         # TODO(ericzinnikas): pickle is not secure, we need to replace it with

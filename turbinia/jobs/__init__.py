@@ -39,10 +39,19 @@ def get_jobs():
   # TODO(aarontp): Dynamically look up job objects and make enabling/disabling
   # configurable through config and/or recipes.
   return [
-      StatJob(), PlasoJob(), PsortJob(), StringsJob(), GrepJob(),
-      SSHDExtractionJob(), SSHDAnalysisJob(), HTTPAccessLogExtractionJob(),
-      HTTPAccessLogAnalysisJob(), TomcatExtractionJob(), TomcatAnalysisJob(),
-      JenkinsAnalysisJob()]
+      StatJob(),
+      PlasoJob(),
+      PsortJob(),
+      StringsJob(),
+      GrepJob(),
+      SSHDExtractionJob(),
+      SSHDAnalysisJob(),
+      HTTPAccessLogExtractionJob(),
+      HTTPAccessLogAnalysisJob(),
+      TomcatExtractionJob(),
+      TomcatAnalysisJob(),
+      JenkinsAnalysisJob()
+  ]
 
 
 class TurbiniaJob(object):

@@ -87,8 +87,7 @@ class TestPSQStateManager(unittest.TestCase):
     self.assertEqual(task_dict['status'], self.test_data['status'])
     self.assertEqual(len(task_dict['saved_paths']), 2)
     self.assertTrue('instance' in task_dict)
-    self.assertIn(
-        self.test_data['saved_paths'][0], task_dict['saved_paths'])
+    self.assertIn(self.test_data['saved_paths'][0], task_dict['saved_paths'])
 
   @mock.patch('turbinia.state_manager.datastore.Client')
   def testStateManagerValidateDataValidDict(self, _):

@@ -111,8 +111,7 @@ class JenkinsAnalysisTaskTest(unittest.TestCase):
     config.LoadConfig()
     task = jenkins.JenkinsAnalysisTask()
 
-    version = task._extract_jenkins_version(
-      str(self.JENKINS_SYSTEM_CONFIG))
+    version = task._extract_jenkins_version(str(self.JENKINS_SYSTEM_CONFIG))
 
     self.assertEqual(version, self.EXPECTED_VERSION)
 
@@ -122,7 +121,7 @@ class JenkinsAnalysisTaskTest(unittest.TestCase):
     task = jenkins.JenkinsAnalysisTask()
 
     credentials = task._extract_jenkins_credentials(
-      str(self.JENKINS_USER_CONFIG))
+        str(self.JENKINS_USER_CONFIG))
 
     self.assertEqual(credentials, self.EXPECTED_CREDENTIALS)
 

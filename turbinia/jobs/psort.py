@@ -14,7 +14,6 @@
 # limitations under the License.
 """Job to execute Psort task."""
 
-
 from __future__ import unicode_literals
 
 from turbinia.evidence import PlasoFile

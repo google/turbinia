@@ -63,12 +63,9 @@ class TurbiniaTaskResult(object):
   # The list of attributes that we will persist into storage
   STORED_ATTRIBUTES = ['worker_name', 'status', 'saved_paths', 'successful']
 
-  def __init__(self,
-               task,
-               evidence=None,
-               input_evidence=None,
-               base_output_dir=None,
-               request_id=None):
+  def __init__(
+      self, task, evidence=None, input_evidence=None, base_output_dir=None,
+      request_id=None):
     """Initialize the TurbiniaTaskResult object.
 
     Args:
@@ -212,11 +209,8 @@ class TurbiniaTask(object):
   # The list of attributes that we will persist into storage
   STORED_ATTRIBUTES = ['id', 'last_update', 'name', 'request_id', 'user']
 
-  def __init__(self,
-               name=None,
-               base_output_dir=None,
-               request_id=None,
-               user=None):
+  def __init__(
+      self, name=None, base_output_dir=None, request_id=None, user=None):
     """Initialization for TurbiniaTask."""
     if base_output_dir:
       self.base_output_dir = base_output_dir
@@ -234,13 +228,9 @@ class TurbiniaTask(object):
     self.user = user if user else getpass.getuser()
     self._evidence_config = {}
 
-  def execute(self,
-              cmd,
-              result,
-              save_files=None,
-              new_evidence=None,
-              close=False,
-              shell=False):
+  def execute(
+      self, cmd, result, save_files=None, new_evidence=None, close=False,
+      shell=False):
     """Executes a given binary and saves output.
 
     Args:
@@ -287,9 +277,9 @@ class TurbiniaTask(object):
           log.warning(msg)
         elif (evidence.local_path and os.path.exists(evidence.local_path) and
               os.path.getsize(evidence.local_path) == 0):
-          msg = ('Evidence {0:s} local_path {1:s} is empty. Not returning '
-                 'empty new Evidence.'.format(evidence.name,
-                                              evidence.local_path))
+          msg = (
+              'Evidence {0:s} local_path {1:s} is empty. Not returning '
+              'empty new Evidence.'.format(evidence.name, evidence.local_path))
           result.log(msg)
           log.warning(msg)
         else:
@@ -319,18 +309,17 @@ class TurbiniaTask(object):
     self.output_manager.setup(self)
     if not self.result:
       self.result = TurbiniaTaskResult(
-          task=self,
-          input_evidence=[evidence],
-          base_output_dir=self.base_output_dir,
-          request_id=self.request_id)
+          task=self, input_evidence=[evidence],
+          base_output_dir=self.base_output_dir, request_id=self.request_id)
     self.output_dir = self.result.output_dir
 
     if evidence.copyable and not config.SHARED_FILESYSTEM:
       self.output_manager.retrieve_evidence(evidence)
 
     if evidence.local_path and not os.path.exists(evidence.local_path):
-      raise TurbiniaException('Evidence local path {0:s} does not exist'.format(
-          evidence.local_path))
+      raise TurbiniaException(
+          'Evidence local path {0:s} does not exist'.format(
+              evidence.local_path))
     evidence.preprocess()
     return self.result
 
@@ -379,8 +368,7 @@ class TurbiniaTask(object):
         old_status = 'No previous status'
 
       result = TurbiniaTaskResult(
-          task=self,
-          base_output_dir=self.base_output_dir,
+          task=self, base_output_dir=self.base_output_dir,
           request_id=self.request_id)
       result.status = '{0:s}. Previous status: [{1:s}]'.format(
           bad_message, old_status)
@@ -452,9 +440,10 @@ class TurbiniaTask(object):
         status = self.result.status
       else:
         status = 'No previous status'
-      msg = ('Task Result was auto-closed from task executor on {0:s} likely '
-             'due to previous failures.  Previous status: [{1:s}]'.format(
-                 self.result.worker_name, status))
+      msg = (
+          'Task Result was auto-closed from task executor on {0:s} likely '
+          'due to previous failures.  Previous status: [{1:s}]'.format(
+              self.result.worker_name, status))
       self.result.log(msg)
       try:
         self.result.close(self, False, msg)

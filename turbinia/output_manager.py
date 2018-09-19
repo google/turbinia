@@ -57,11 +57,12 @@ class OutputManager(object):
       A list of OutputWriter objects.
     """
     epoch = str(int(time.time()))
-    unique_dir = '{0:s}-{1:s}-{2:s}'.format(
-        epoch, str(task.id), task.name)
+    unique_dir = '{0:s}-{1:s}-{2:s}'.format(epoch, str(task.id), task.name)
 
-    writers = [LocalOutputWriter(base_output_dir=task.base_output_dir,
-                                 unique_dir=unique_dir)]
+    writers = [
+        LocalOutputWriter(
+            base_output_dir=task.base_output_dir, unique_dir=unique_dir)
+    ]
     local_output_dir = writers[0].local_output_dir
     config.LoadConfig()
     if config.GCS_OUTPUT_PATH:
@@ -106,8 +107,9 @@ class OutputManager(object):
     """
     for writer in self._output_writers:
       if writer.name == evidence_.saved_path_type:
-        log.info('Retrieving copyable evidence data from {0:s}'.format(
-            evidence_.saved_path))
+        log.info(
+            'Retrieving copyable evidence data from {0:s}'.format(
+                evidence_.saved_path))
         evidence_.local_path = writer.copy_from(evidence_.saved_path)
     return evidence_
 
@@ -124,8 +126,8 @@ class OutputManager(object):
     (path, path_type) = self.save_local_file(evidence_.local_path, result)
     evidence_.saved_path = path
     evidence_.saved_path_type = path_type
-    log.info('Saved copyable evidence data to {0:s}'.format(
-        evidence_.saved_path))
+    log.info(
+        'Saved copyable evidence data to {0:s}'.format(evidence_.saved_path))
     return evidence_
 
   def save_local_file(self, file_, result):
@@ -172,8 +174,8 @@ class OutputWriter(object):
 
   NAME = 'base_output_writer'
 
-  def __init__(self, base_output_dir=None, unique_dir=None,
-               local_output_dir=None):
+  def __init__(
+      self, base_output_dir=None, unique_dir=None, local_output_dir=None):
     """Initialization for OutputWriter.
 
     Args:
@@ -236,8 +238,8 @@ class LocalOutputWriter(OutputWriter):
   NAME = 'LocalWriter'
 
   def __init__(self, base_output_dir=None, *args, **kwargs):
-    super(LocalOutputWriter, self).__init__(base_output_dir=base_output_dir,
-                                            *args, **kwargs)
+    super(LocalOutputWriter, self).__init__(
+        base_output_dir=base_output_dir, *args, **kwargs)
 
   def create_output_dir(self):
     self.local_output_dir = os.path.join(self.base_output_dir, self.unique_dir)
@@ -263,8 +265,8 @@ class LocalOutputWriter(OutputWriter):
     Returns:
       The path the file was saved to, or None if file was not written.
     """
-    output_file = os.path.join(self.local_output_dir,
-                               os.path.basename(file_path))
+    output_file = os.path.join(
+        self.local_output_dir, os.path.basename(file_path))
     if not os.path.exists(file_path):
       log.warning('File [{0:s}] does not exist.'.format(file_path))
       return None
@@ -290,7 +292,7 @@ class GCSOutputWriter(OutputWriter):
     client (google.cloud.storage.Client): GCS Client
   """
 
-  CHUNK_SIZE = 10 * (2 ** 20)  # 10MB by default
+  CHUNK_SIZE = 10 * (2**20)  # 10MB by default
 
   NAME = 'GCSWriter'
 
@@ -340,8 +342,8 @@ class GCSOutputWriter(OutputWriter):
     bucket = self.client.get_bucket(self.bucket)
     gcs_path = self._parse_gcs_path(file_)[1]
     full_path = os.path.join(self.local_output_dir, os.path.basename(file_))
-    log.info('Writing GCS file {0:s} to local path {1:s}'.format(
-        file_, full_path))
+    log.info(
+        'Writing GCS file {0:s} to local path {1:s}'.format(file_, full_path))
     blob = storage.Blob(gcs_path, bucket, chunk_size=self.CHUNK_SIZE)
     blob.download_to_filename(full_path, client=self.client)
     if not os.path.exists(full_path):
