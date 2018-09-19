@@ -64,7 +64,7 @@ class HadoopAnalysisTask(TurbiniaTask):
     else:
       report.append('Did not find any suspicious commands.')
     for filepath, command in evil_commands:
-      report.append('\tFile: {0:s}'.format(filepath))
+      report.append('File: {0:s}'.format(filepath))
       report.append('Command: "{0:s}"'.format(command))
 
     report.append('')
