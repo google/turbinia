@@ -68,7 +68,7 @@ def PreprocessMountDisk(evidence):
 
   # Here, evidence.losetup_device is something like '/dev/loopX'.
 
-  path_to_partition = '{0:s}p{0:d}'.format(
+  path_to_partition = '{0:s}p{1:d}'.format(
       evidence.losetup_device, evidence.mount_partition)
   # If evidence.local_path points to something with a partition table, we have
   # block devices at /dev/loopXpY.
