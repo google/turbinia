@@ -59,7 +59,7 @@ def PreprocessMountDisk(evidence):
   # https://github.com/google/turbinia/issues/73
   losetup_command = 'sudo losetup --show --nooverlap --find -P "{0:s}"'.format(
       evidence.local_path)
-  log('Running command '+losetup_command)
+  log.info('Running command '+losetup_command)
   try:
     losetup_device, _ = subprocess.Popen(losetup_command).communicate()
   except subprocess.CalledProcessError as e:
