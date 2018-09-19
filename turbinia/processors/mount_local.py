@@ -57,7 +57,9 @@ def PreprocessMountDisk(evidence):
 
   # TODO(aarontp): Remove hard-coded sudo in commands:
   # https://github.com/google/turbinia/issues/73
-  losetup_command = ['sudo', 'losetup', '--show', '--nooverlap', '--find', '-P',  evidence.local_path]
+  losetup_command = [
+      'sudo', 'losetup', '--show', '--nooverlap', '--find', '-P',
+      evidence.local_path]
   log.info('Running command {0:s}'.format(' '.join(losetup_command)))
   try:
     losetup_device = subprocess.check_output(losetup_command)
@@ -72,7 +74,8 @@ def PreprocessMountDisk(evidence):
   # If evidence.local_path points to something with a partition table, we have
   # block devices at /dev/loopXpY.
   if not os.path.exists(path_to_partition):
-    log.info("Could not find {0:s}, trying {1:s}".format(path_to_partition, evidence.losetup_device))
+    log.info('Could not find {0:s}, trying {1:s}'.format(
+        path_to_partition, evidence.losetup_device))
     # Else, we only have /dev/loopX
     path_to_partition = evidence.losetup_device
 
