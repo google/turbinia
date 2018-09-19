@@ -51,9 +51,9 @@ class JenkinsAnalysisTask(TurbiniaTask):
 
     try:
       collected_artifacts = extract_artifacts(
-        artifact_names=['JenkinsConfigFile'],
-        disk_path=evidence.local_path,
-        output_dir=os.path.join(self.output_dir, 'artifacts')
+          artifact_names=['JenkinsConfigFile'],
+          disk_path=evidence.local_path,
+          output_dir=os.path.join(self.output_dir, 'artifacts')
       )
     except TurbiniaException as e:
       result.close(self, success=False, status=str(e))
@@ -62,16 +62,16 @@ class JenkinsAnalysisTask(TurbiniaTask):
     version = None
     credentials = []
     for filepath in collected_artifacts:
-        with open(filepath, 'r') as input_file:
-          config = input_file.read()
+      with open(filepath, 'r') as input_file:
+        config = input_file.read()
 
-        extracted_version = self._extract_jenkins_version(config)
-        extracted_credentials = self._extract_jenkins_credentials(config)
+      extracted_version = self._extract_jenkins_version(config)
+      extracted_credentials = self._extract_jenkins_credentials(config)
 
-        if extracted_version:
-          version = extracted_version
+      if extracted_version:
+        version = extracted_version
 
-        credentials.extend(extracted_credentials)
+      credentials.extend(extracted_credentials)
 
     analysis_report = self.analyze_jenkins(version, credentials)
     output_evidence.text_data = analysis_report
@@ -83,7 +83,11 @@ class JenkinsAnalysisTask(TurbiniaTask):
 
     # Add the resulting evidence to the result object.
     result.add_evidence(output_evidence, evidence.config)
-    result.close(self, success=True)
+    if analysis_report:
+      status = analysis_report[0].strip()
+    else:
+      status = 'Jenkins analysis found no potential issues'
+    result.close(self, success=True, status=status)
 
     return result
 
@@ -153,10 +157,10 @@ class JenkinsAnalysisTask(TurbiniaTask):
 
     if weak_passwords:
       findings.insert(0, 'Jenkins analysis found potential issues.\n')
-      findings.append('{0:n} weak password(s) found:'.format(len(weak_passwords)))
+      findings.append(
+          '{0:n} weak password(s) found:'.format(len(weak_passwords)))
       for password_hash, plaintext in weak_passwords:
-        findings.append(
-          ' - User "{0:s}" with password "{1:s}"'.format(
+        findings.append(' - User "{0:s}" with password "{1:s}"'.format(
             credentials_registry.get(password_hash), plaintext))
 
     return '\n'.join(findings)
