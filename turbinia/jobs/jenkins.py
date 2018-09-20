@@ -21,20 +21,19 @@ from turbinia.evidence import RawDisk
 from turbinia.evidence import GoogleCloudDisk
 from turbinia.evidence import GoogleCloudDiskRawEmbedded
 from turbinia.evidence import ReportText
-from turbinia.jobs import TurbiniaJob
+from turbinia.jobs import interface
 from turbinia.workers.analysis.jenkins import JenkinsAnalysisTask
 
 
-class JenkinsAnalysisJob(TurbiniaJob):
+class JenkinsAnalysisJob(interface.TurbiniaJob):
   """Jenkins analysis job."""
 
-  # Types of evidence that this Job will process.
   evidence_input = [
     Directory, RawDisk, GoogleCloudDisk, GoogleCloudDiskRawEmbedded]
   evidence_output = [ReportText]
 
-  def __init__(self):
-    super(JenkinsAnalysisJob, self).__init__(name='JenkinsAnalysisJob')
+  NAME = 'JenkinsAnalysisJob'
+
 
   def create_tasks(self, evidence):
     """Create task for Jenkins analysis job.
