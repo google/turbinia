@@ -37,6 +37,8 @@ class SSHDExtractionJob(interface.TurbiniaJob):
 
   evidence_output = [ExportedFileArtifact]
 
+  NAME = 'SSHDExtractionJob'
+
   def create_tasks(self, evidence):
     """Create task.
 
