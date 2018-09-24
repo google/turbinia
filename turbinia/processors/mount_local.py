@@ -69,6 +69,10 @@ def PreprocessMountDisk(evidence):
 
   # Here, evidence.losetup_device is something like '/dev/loopX'.
 
+  if not evidence.mount_partition:
+    # The first partition loop-device made by losetup is loopXp1
+    evidence.mount_partition = 1
+
   path_to_partition = '{0:s}p{1:d}'.format(
       evidence.losetup_device, evidence.mount_partition)
   # If evidence.local_path points to something with a partition table, we have
