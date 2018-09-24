@@ -24,15 +24,16 @@ def get_jobs():
     A list of TurbiniaJobs.
   """
   # Defer imports to prevent circular dependencies during init.
+  from turbinia.jobs.docker import DockerContainerEnumerationJob
+  from turbinia.jobs.grep import GrepJob
   from turbinia.jobs.plaso import PlasoJob
   from turbinia.jobs.psort import PsortJob
-  from turbinia.jobs.grep import GrepJob
-  from turbinia.jobs.worker_stat import StatJob
-  from turbinia.jobs.strings import StringsJob
   from turbinia.jobs.sshd import SSHDExtractionJob
   from turbinia.jobs.sshd import SSHDAnalysisJob
+  from turbinia.jobs.strings import StringsJob
   from turbinia.jobs.tomcat import TomcatExtractionJob
   from turbinia.jobs.tomcat import TomcatAnalysisJob
+  from turbinia.jobs.worker_stat import StatJob
   from turbinia.jobs.analysis.http_access_logs import HTTPAccessLogExtractionJob
   from turbinia.jobs.analysis.http_access_logs import HTTPAccessLogAnalysisJob
   from turbinia.jobs.analysis.jenkins import JenkinsAnalysisJob
@@ -42,7 +43,7 @@ def get_jobs():
       StatJob(), PlasoJob(), PsortJob(), StringsJob(), GrepJob(),
       SSHDExtractionJob(), SSHDAnalysisJob(), HTTPAccessLogExtractionJob(),
       HTTPAccessLogAnalysisJob(), TomcatExtractionJob(), TomcatAnalysisJob(),
-      JenkinsAnalysisJob()]
+      JenkinsAnalysisJob(), DockerContainerEnumerationJob()]
 
 
 class TurbiniaJob(object):

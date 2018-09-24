@@ -22,6 +22,7 @@ import sys
 
 from turbinia import config
 from turbinia import TurbiniaException
+from turbinia.processors import docker
 from turbinia.processors import mount_local
 
 # pylint: disable=keyword-arg-before-vararg
@@ -281,6 +282,40 @@ class GoogleCloudDiskRawEmbedded(GoogleCloudDisk):
 
   def postprocess(self):
     super(GoogleCloudDiskRawEmbedded, self).post()
+
+
+class DockerContainer(RawDisk):
+  """Evidence object for a DockerContainer filesystem.
+
+  Attributes:
+    container_id(str): The ID of the container to mount.
+  """
+
+  def __init__(self, container_id=None, *args, **kwargs):
+    """Initialization for Docker Container."""
+    super(DockerContainer, self).__init__(*args, **kwargs)
+    self.container_id = container_id
+    self._docker_dir = None
+    self._container_fs_path = None
+
+  def copy_context(self, target_evidence):
+    super(DockerContainer, self).copy_context(target_evidence)
+    target_evidence.container_id = self.container_id
+    target_evidence._docker_dir = self._docker_dir
+    target_evidence._container_fs_path = self._container_fs_path
+
+  def preprocess(self):
+    super(DockerContainer, self).preprocess()
+    self._docker_dir = os.path.join(
+        self.disk_mount_path, 'var', 'lib', 'docker')
+    self._container_fs_path = docker.PreprocessMountDockerFS(
+        self._docker_dir, self.container_id)
+    self.local_path = self._container_fs_path
+
+  def postprocess(self):
+    mount_local.PostprocessUnmountPath(self._container_fs_path)
+    self._container_fs_path = None
+    super(DockerContainer, self).postprocess()
 
 
 class PlasoFile(Evidence):
