@@ -136,6 +136,14 @@ class Evidence(object):
 
     return serialized
 
+  def copy_context(self):
+    """Copies attributes needed for saving the context (ie: for cleanup).
+
+    This is used when a Task generates a new Evidence from an input Evidence,
+    and wants to make sure the new Evidence will be pre&post processed properly.
+    """
+    pass
+
   def preprocess(self):
     """Preprocess this evidence prior to task running.
 
@@ -164,20 +172,43 @@ class RawDisk(Evidence):
   """Evidence object for Disk based evidence.
 
   Attributes:
-    losetup_path: Path to the losetup device for this disk.
-    mount_path: The mount path for this disk (if any).
     mount_partition: The mount partition for this disk (if any).
+    path_to_disk: The path to the underlying data (block device or disk image).
     size:  The size of the disk in bytes.
   """
 
-  def __init__(self, mount_path=None, mount_partition=None, size=None, *args,
+  def __init__(self, mount_partition=None, size=None, *args,
                **kwargs):
     """Initialization for raw disk evidence object."""
-    self.loopdevice_path = None
-    self.mount_path = mount_path
-    self.mount_partition = mount_partition
-    self.size = size
     super(RawDisk, self).__init__(*args, **kwargs)
+    self.mount_partition = mount_partition
+    self.path_to_disk = self.local_path
+    self.size = size
+    self._loopdevice_path = None
+    self._disk_mount_path = None
+
+  def copy_context(self, target_evidence):
+    target_evidence.mount_partition = self.mount_partition
+    target_evidence.path_to_disk = self.path_to_disk
+    target_evidence.size = self.size
+    target_evidence._disk_mount_path = self._disk_mount_path
+    target_evidence._loopdevice_path = self._loopdevice_path
+
+  def preprocess(self):
+    # First use losetup to parse the RawDisk eventual partition table
+    # and make block devices per partitions.
+    self._losetup_device = mount_local.PreprocessLoSetup(self.path_to_disk)
+    # Then we mount the partition
+    self._disk_mount_path = mount_local.PreprocessMountDisk(
+        self._losetup_device, self.mount_partition)
+    self.local_path = self._disk_mount_path
+
+  def postprocess(self):
+    mount_local.PostprocessUnmountPath(self._disk_mount_path)
+    self._disk_mount_path = None
+    mount_local.PostprocessDeleteLosetup(self._losetup_device)
+    self._losetup_device = None
+    self.local_path = None
 
 
 class EncryptedDisk(RawDisk):
@@ -219,8 +250,10 @@ class GoogleCloudDisk(RawDisk):
 
   def preprocess(self):
     self.local_path = google_cloud.PreprocessAttachDisk(self.disk_name)
+    super(GoogleCloudDisk, self).preprocess()
 
   def postprocess(self):
+    super(GoogleCloudDisk, self).postprocess()
     google_cloud.PostprocessDetachDisk(self.disk_name, self.local_path)
     self.local_path = None
 
@@ -243,16 +276,11 @@ class GoogleCloudDiskRawEmbedded(GoogleCloudDisk):
     super(GoogleCloudDiskRawEmbedded, self).__init__(*args, **kwargs)
 
   def preprocess(self):
-    self.local_path = google_cloud.PreprocessAttachDisk(self.disk_name)
-    self.loopdevice_path = mount_local.PreprocessLosetup(self.local_path)
-    self.mount_path = mount_local.PreprocessMountDisk(
-        self.loopdevice_path, self.mount_partition)
-    self.local_path = os.path.join(self.mount_path, self.embedded_path)
+    super(GoogleCloudDiskRawEmbedded, self).preprocess()
+    self.local_path = os.path.join(self._disk_mount_path, self.embedded_path)
 
   def postprocess(self):
-    google_cloud.PostprocessDetachDisk(self.disk_name, self.local_path)
-    mount_local.PostprocessUnmountPath(self.mount_path)
-    mount_local.PostprocessDeleteLosetup(self.loopdevice_path)
+    super(GoogleCloudDiskRawEmbedded, self).post()
 
 
 class PlasoFile(Evidence):
