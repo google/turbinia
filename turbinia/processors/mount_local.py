@@ -51,7 +51,7 @@ def PreprocessMountDisk(evidence):
 
   evidence.mount_path = tempfile.mkdtemp(prefix='turbinia', dir=mount_prefix)
 
-  # Two steps: first use losetup to parse the RawDisk eventual partition table
+  # Two steps: first use losetup to parse the RawDisk potential partition table
   # and make block devices per partitions.
   # Then we mount the partition provideed, or the first one we find.
 
