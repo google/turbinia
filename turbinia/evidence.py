@@ -173,7 +173,7 @@ class RawDisk(Evidence):
   def __init__(self, mount_path=None, mount_partition=None, size=None, *args,
                **kwargs):
     """Initialization for raw disk evidence object."""
-    self.losetup_path = None
+    self.loopdevice_path = None
     self.mount_path = mount_path
     self.mount_partition = mount_partition
     self.size = size
@@ -218,10 +218,11 @@ class GoogleCloudDisk(RawDisk):
     self.cloud_only = True
 
   def preprocess(self):
-    google_cloud.PreprocessAttachDisk(self)
+    self.local_path = google_cloud.PreprocessAttachDisk(self.disk_name)
 
   def postprocess(self):
-    google_cloud.PostprocessDetachDisk(self)
+    google_cloud.PostprocessDetachDisk(self.disk_name, self.local_path)
+    self.local_path = None
 
 
 class GoogleCloudDiskRawEmbedded(GoogleCloudDisk):
@@ -242,13 +243,16 @@ class GoogleCloudDiskRawEmbedded(GoogleCloudDisk):
     super(GoogleCloudDiskRawEmbedded, self).__init__(*args, **kwargs)
 
   def preprocess(self):
-    google_cloud.PreprocessAttachDisk(self)
-    mount_local.PreprocessMountDisk(self)
+    self.local_path = google_cloud.PreprocessAttachDisk(self.disk_name)
+    self.loopdevice_path = mount_local.PreprocessLosetup(self.local_path)
+    self.mount_path = mount_local.PreprocessMountDisk(
+        self.loopdevice_path, self.mount_partition)
     self.local_path = os.path.join(self.mount_path, self.embedded_path)
 
   def postprocess(self):
-    google_cloud.PostprocessDetachDisk(self)
-    mount_local.PostprocessUnmountDisk(self)
+    google_cloud.PostprocessDetachDisk(self.disk_name, self.local_path)
+    mount_local.PostprocessUnmountPath(self.mount_path)
+    mount_local.PostprocessDeleteLosetup(self.loopdevice_path)
 
 
 class PlasoFile(Evidence):

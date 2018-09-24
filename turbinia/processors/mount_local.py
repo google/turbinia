@@ -28,11 +28,43 @@ from turbinia import TurbiniaException
 log = logging.getLogger('turbinia')
 
 
-def PreprocessMountDisk(evidence):
+def PreprocessLosetup(source_path):
+  """Runs Losetup on a target block device or image file.
+
+  Args:
+    source_path(str): the source path to run losetup on.
+
+  Raises:
+    TurbiniaException: if the losetup command failed to run.
+
+  Returns:
+    str: the path to the created loopdevice (ie: /dev/loopX)
+  """
+  losetup_device = None
+  # TODO(aarontp): Remove hard-coded sudo in commands:
+  # https://github.com/google/turbinia/issues/73
+  losetup_command = [
+      'sudo', 'losetup', '--show', '--find', '-P', source_path]
+  log.info('Running command {0:s}'.format(' '.join(losetup_command)))
+  try:
+    losetup_device = subprocess.check_output(losetup_command).strip()
+  except subprocess.CalledProcessError as e:
+    raise TurbiniaException('Could not set losetup devices {0!s}'.format(e))
+
+  return losetup_device
+
+def PreprocessMountDisk(loopdevice_path, partition_number):
   """Locally mounts disk in an instance.
 
   Args:
-    evidence: A turbinia.evidence.RawDisk object or a subclass of it.
+    loopdevice_path(str): The path to the block device to mount.
+    partition_number(int): The partition number.
+
+  Raises:
+    TurbiniaException: if the mount command failed to run.
+
+  Returns:
+    str: the path to the mounted filesystem.
   """
   config.LoadConfig()
   mount_prefix = config.MOUNT_DIR_PREFIX
@@ -49,75 +81,71 @@ def PreprocessMountDisk(evidence):
           'Could not create mount directory {0:s}: {1!s}'.format(
               mount_prefix, e))
 
-  evidence.mount_path = tempfile.mkdtemp(prefix='turbinia', dir=mount_prefix)
+  mount_path = tempfile.mkdtemp(prefix='turbinia', dir=mount_prefix)
 
-  # Two steps: first use losetup to parse the RawDisk potential partition table
-  # and make block devices per partitions.
-  # Then we mount the partition provideed, or the first one we find.
-
-  # TODO(aarontp): Remove hard-coded sudo in commands:
-  # https://github.com/google/turbinia/issues/73
-  losetup_command = [
-      'sudo', 'losetup', '--show', '--find', '-P', evidence.local_path]
-  log.info('Running command {0:s}'.format(' '.join(losetup_command)))
-  try:
-    losetup_device = subprocess.check_output(losetup_command)
-  except subprocess.CalledProcessError as e:
-    raise TurbiniaException('Could not set losetup devices {0!s}'.format(e))
-  evidence.losetup_device = losetup_device.strip()
-
-  # Here, evidence.losetup_device is something like '/dev/loopX'.
-
-  if not evidence.mount_partition:
+  if not partition_number:
     # The first partition loop-device made by losetup is loopXp1
-    evidence.mount_partition = 1
+    partition_number = 1
 
-  path_to_partition = '{0:s}p{1:d}'.format(
-      evidence.losetup_device, evidence.mount_partition)
-  # If evidence.local_path points to something with a partition table, we have
-  # block devices at /dev/loopXpY.
+  path_to_partition = '{0:s}p{1:d}'.format(loopdevice_path, partition_number)
+
   if not os.path.exists(path_to_partition):
     log.info('Could not find {0:s}, trying {1:s}'.format(
-        path_to_partition, evidence.losetup_device))
-    # Else, we only have /dev/loopX
-    path_to_partition = evidence.losetup_device
+        path_to_partition, loopdevice_path))
+    # Else, the partition's block device is actually /dev/loopX
+    path_to_partition = loopdevice_path
 
-  mount_cmd = ['sudo', 'mount', path_to_partition, evidence.mount_path]
+  mount_cmd = ['sudo', 'mount', path_to_partition, mount_path]
   log.info('Running: {0:s}'.format(' '.join(mount_cmd)))
   try:
     subprocess.check_call(mount_cmd)
   except subprocess.CalledProcessError as e:
     raise TurbiniaException('Could not mount directory {0!s}'.format(e))
 
+  return mount_path
 
-def PostprocessUnmountDisk(evidence):
-  """Locally unmounts disk in an instance.
+
+def PostprocessDeleteLosetup(loopdevice_path):
+  """Removes a loop device.
 
   Args:
-    evidence: A turbinia.evidence.RawDisk or subclass object.
+    loopdevice_path(str): the path to the block device to remove
+      (ie: /dev/loopX).
+
+  Raises:
+    TurbiniaException: if the losetup command failed to run.
   """
   # TODO(aarontp): Remove hard-coded sudo in commands:
   # https://github.com/google/turbinia/issues/73
-  umount_cmd = ['sudo', 'umount', evidence.mount_path]
-  log.info('Running: {0:s}'.format(' '.join(umount_cmd)))
-  try:
-    subprocess.check_call(umount_cmd)
-  except subprocess.CalledProcessError as e:
-    raise TurbiniaException('Could not unmount directory {0!s}'.format(e))
-
-  losetup_cmd = ['sudo', 'losetup', '-d', evidence.losetup_device]
+  losetup_cmd = ['sudo', 'losetup', '-d', loopdevice_path]
   log.info('Running: {0:s}'.format(' '.join(losetup_cmd)))
   try:
     subprocess.check_call(losetup_cmd)
   except subprocess.CalledProcessError as e:
     raise TurbiniaException('Could not delete losetup device {0!s}'.format(e))
 
-  log.info('Removing mount path {0:s}'.format(evidence.mount_path))
+def PostprocessUnmountPath(mount_path):
+  """Unmounts a local disk.
+
+  Args:
+    mount_path(str): The path to the mount point to unmount.
+
+  Raises:
+    TurbiniaException: if the umount command failed to run.
+  """
+  # TODO(aarontp): Remove hard-coded sudo in commands:
+  # https://github.com/google/turbinia/issues/73
+  umount_cmd = ['sudo', 'umount', mount_path]
+  log.info('Running: {0:s}'.format(' '.join(umount_cmd)))
   try:
-    os.rmdir(evidence.mount_path)
+    subprocess.check_call(umount_cmd)
+  except subprocess.CalledProcessError as e:
+    raise TurbiniaException('Could not unmount directory {0!s}'.format(e))
+
+  log.info('Removing mount path {0:s}'.format(mount_path))
+  try:
+    os.rmdir(mount_path)
   except OSError as e:
     raise TurbiniaException(
         'Could not remove mount path directory {0:s}: {1!s}'.format(
-            evidence.mount_path, e))
-
-  evidence.mount_path = None
+            mount_path, e))
