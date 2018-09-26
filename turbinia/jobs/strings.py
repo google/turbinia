@@ -21,12 +21,13 @@ from turbinia.evidence import GoogleCloudDisk
 from turbinia.evidence import GoogleCloudDiskRawEmbedded
 from turbinia.evidence import RawDisk
 from turbinia.evidence import TextFile
-from turbinia.jobs import TurbiniaJob
+from turbinia.jobs import interface
+from turbinia.jobs import manager
 from turbinia.workers.strings import StringsAsciiTask
 from turbinia.workers.strings import StringsUnicodeTask
 
 
-class StringsJob(TurbiniaJob):
+class StringsJob(interface.TurbiniaJob):
   """Strings collection Job.
 
   This will generate a Unicode and ASCII string collection task for each piece
@@ -37,8 +38,8 @@ class StringsJob(TurbiniaJob):
   evidence_input = [RawDisk, GoogleCloudDisk, GoogleCloudDiskRawEmbedded]
   evidence_output = [TextFile]
 
-  def __init__(self):
-    super(StringsJob, self).__init__(name='StringsJob')
+  NAME = 'StringsJob'
+
 
   def create_tasks(self, evidence):
     """Create task for Strings.
@@ -53,3 +54,6 @@ class StringsJob(TurbiniaJob):
     tasks = [StringsAsciiTask() for _ in evidence]
     tasks.extend([StringsUnicodeTask() for _ in evidence])
     return tasks
+
+
+manager.JobsManager.RegisterJob(StringsJob)
