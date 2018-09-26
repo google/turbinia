@@ -142,18 +142,7 @@ def PostprocessUnmountPath(mount_path):
   except subprocess.CalledProcessError as e:
     raise TurbiniaException('Could not unmount directory {0!s}'.format(e))
 
-<<<<<<< HEAD
   log.info('Removing mount path {0:s}'.format(mount_path))
-=======
-  losetup_cmd = ['sudo', 'losetup', '-d', evidence.losetup_device]
-  log.info('Running: {0:s}'.format(' '.join(losetup_cmd)))
-  try:
-    subprocess.check_call(losetup_cmd)
-  except subprocess.CalledProcessError as e:
-    raise TurbiniaException('Could not delete losetup device {0!s}'.format(e))
-
-  log.info('Removing mount path {0:s}'.format(evidence.mount_path))
->>>>>>> 065b82a50a443d412b15104a103e40820a1d2c95
   try:
     os.rmdir(mount_path)
   except OSError as e:
