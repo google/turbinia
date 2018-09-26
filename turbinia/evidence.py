@@ -24,6 +24,8 @@ from turbinia import config
 from turbinia import TurbiniaException
 from turbinia.processors import mount_local
 
+# pylint: disable=keyword-arg-before-vararg
+
 config.LoadConfig()
 if config.TASK_MANAGER == 'PSQ':
   from turbinia.processors import google_cloud
@@ -162,6 +164,7 @@ class RawDisk(Evidence):
   """Evidence object for Disk based evidence.
 
   Attributes:
+    losetup_path: Path to the losetup device for this disk.
     mount_path: The mount path for this disk (if any).
     mount_partition: The mount partition for this disk (if any).
     size:  The size of the disk in bytes.
@@ -170,6 +173,7 @@ class RawDisk(Evidence):
   def __init__(self, mount_path=None, mount_partition=None, size=None, *args,
                **kwargs):
     """Initialization for raw disk evidence object."""
+    self.losetup_path = None
     self.mount_path = mount_path
     self.mount_partition = mount_partition
     self.size = size

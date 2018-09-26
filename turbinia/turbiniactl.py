@@ -138,7 +138,7 @@ def main():
   parser_rawdisk.add_argument(
       '-P',
       '--mount_partition',
-      default=0,
+      default=1,
       type=int,
       help='The partition number to use when mounting this disk.  Defaults to '
       'the entire raw disk.  Only affects mounting, and not what gets '
