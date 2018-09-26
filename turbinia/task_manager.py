@@ -104,7 +104,8 @@ class BaseTaskManager(object):
     """Does setup of Task manager and its dependencies."""
     self._backend_setup(*args, **kwargs)
     # TODO(aarontp): Consider instantiating a job per evidence object
-    self.jobs = jobs_manager.JobsManager.GetJobs()
+    job_names = jobs_manager.JobsManager.GetJobNames()
+    self.jobs = jobs_manager.JobsManager.GetJobInstances(job_names)
 
   def add_evidence(self, evidence_):
     """Adds new evidence and creates tasks to process it.
