@@ -22,8 +22,11 @@ from turbinia.evidence import GoogleCloudDiskRawEmbedded
 from turbinia.evidence import ExportedFileArtifact
 from turbinia.evidence import RawDisk
 from turbinia.evidence import ReportText
-from turbinia.jobs import TurbiniaJob
-class TomcatExtractionJob(TurbiniaJob):
+from turbinia.jobs import interface
+from turbinia.jobs import manager
+
+
+class TomcatExtractionJob(interface.TurbiniaJob):
   """Extract Apache Tomcat files for analysis."""
 
   # The types of evidence that this Job will process
@@ -32,8 +35,7 @@ class TomcatExtractionJob(TurbiniaJob):
 
   evidence_output = [ExportedFileArtifact]
 
-  def __init__(self):
-    super(TomcatExtractionJob, self).__init__(name='TomcatExtractionJob')
+  NAME = 'TomcatExtractionJob'
 
   def create_tasks(self, evidence):
     """Create task.
@@ -48,14 +50,14 @@ class TomcatExtractionJob(TurbiniaJob):
         artifact.FileArtifactExtractionTask('TomcatFiles') for _ in evidence]
     return tasks
 
-class TomcatAnalysisJob(TurbiniaJob):
+
+class TomcatAnalysisJob(interface.TurbiniaJob):
   """Create tasks to analyse Apache Tomcat files."""
 
   evidence_input = [ExportedFileArtifact]
   evidence_output = [ReportText]
 
-  def __init__(self):
-    super(TomcatAnalysisJob, self).__init__(name='TomcatAnalysisJob')
+  NAME = 'TomcatAnalysisJob'
 
   def create_tasks(self, evidence):
     """Create task.
@@ -72,3 +74,6 @@ class TomcatAnalysisJob(TurbiniaJob):
       if evidence_item.artifact_name == 'TomcatFile':
         tasks.append(tomcat.TomcatAnalysisTask())
     return tasks
+
+
+manager.JobsManager.RegisterJobs([TomcatExtractionJob, TomcatAnalysisJob])

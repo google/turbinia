@@ -19,19 +19,19 @@ from __future__ import unicode_literals
 from turbinia.evidence import TextFile
 from turbinia.evidence import FilteredTextFile
 from turbinia.evidence import PlasoCsvFile
-from turbinia.jobs import TurbiniaJob
+from turbinia.jobs import interface
+from turbinia.jobs import manager
 from turbinia.workers.grep import GrepTask
 
 
-class GrepJob(TurbiniaJob):
+class GrepJob(interface.TurbiniaJob):
   """Filter input based on regular expression patterns."""
 
   # The types of evidence that this Job will process
   evidence_input = [TextFile, PlasoCsvFile]
   evidence_output = [FilteredTextFile]
 
-  def __init__(self):
-    super(GrepJob, self).__init__(name='GrepJob')
+  NAME = 'GrepJob'
 
   def create_tasks(self, evidence):
     """Create task.
@@ -44,3 +44,6 @@ class GrepJob(TurbiniaJob):
     """
     tasks = [GrepTask() for _ in evidence]
     return tasks
+
+
+manager.JobsManager.RegisterJob(GrepJob)

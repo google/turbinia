@@ -164,7 +164,7 @@ class RawDisk(Evidence):
   """Evidence object for Disk based evidence.
 
   Attributes:
-    losetup_path: Path to the losetup device for this disk.
+    loopdevice_path: Path to the losetup device for this disk.
     mount_path: The mount path for this disk (if any).
     mount_partition: The mount partition for this disk (if any).
     size:  The size of the disk in bytes.
