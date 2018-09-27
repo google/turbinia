@@ -66,26 +66,28 @@ def GetLocalInstanceName():
   return instance
 
 
-def PreprocessAttachDisk(evidence):
+def PreprocessAttachDisk(disk_name):
   """Attaches Google Cloud Disk to an instance.
 
   Args:
-    evidence: A turbinia.evidence.GoogleCloudProject object.
+    disk_name(str): The name of the Cloud Disk to attach.
+
+  Returns:
+    str: the path to the attached block device.
   """
-  path = '/dev/disk/by-id/google-{0:s}'.format(evidence.disk_name)
+  path = '/dev/disk/by-id/google-{0:s}'.format(disk_name)
   if IsBlockDevice(path):
-    log.info('Disk {0:s} already attached!'.format(evidence.disk_name))
-    evidence.local_path = path
-    return
+    log.info('Disk {0:s} already attached!'.format(disk_name))
+    return path
 
   config.LoadConfig()
   instance_name = GetLocalInstanceName()
   project = GoogleCloudProject(project_id=config.PROJECT,
                                default_zone=config.ZONE)
   instance = project.GetInstance(instance_name, zone=config.ZONE)
-  disk = instance.GetDisk(evidence.disk_name)
+  disk = instance.GetDisk(disk_name)
   log.info('Attaching disk {0:s} to instance {1:s}'.format(
-      evidence.disk_name, instance_name))
+      disk_name, instance_name))
   instance.AttachDisk(disk)
 
   # Make sure we have a proper block device
@@ -98,22 +100,24 @@ def PreprocessAttachDisk(evidence):
           'Block device {0:s} mode is {1}'.format(path, os.stat(path).st_mode))
     time.sleep(1)
 
-  evidence.local_path = path
+  return path
 
 
-def PostprocessDetachDisk(evidence):
+def PostprocessDetachDisk(disk_name, local_path):
   """Detaches Google Cloud Disk from an instance.
 
   Args:
-    evidence: A turbinia.evidence.GoogleCloudProject object.
+    disk_name(str): The name of the Cloud Disk to dettach.
+    local_path(str): The local path to the block device to detach.
   """
-  if evidence.local_path:
-    path = evidence.local_path
+  #TODO: can local_path be something diffferent than the /dev/disk/by-id/google*
+  if local_path:
+    path = local_path
   else:
-    path = '/dev/disk/by-id/google-{0:s}'.format(evidence.disk_name)
+    path = '/dev/disk/by-id/google-{0:s}'.format(disk_name)
 
   if not IsBlockDevice(path):
-    log.info('Disk {0:s} already detached!'.format(evidence.disk_name))
+    log.info('Disk {0:s} already detached!'.format(disk_name))
     return
 
   config.LoadConfig()
@@ -121,15 +125,14 @@ def PostprocessDetachDisk(evidence):
   project = GoogleCloudProject(project_id=config.PROJECT,
                                default_zone=config.ZONE)
   instance = project.GetInstance(instance_name, zone=config.ZONE)
-  disk = instance.GetDisk(evidence.disk_name)
+  disk = instance.GetDisk(disk_name)
   log.info('Detaching disk {0:s} from instance {1:s}'.format(
-      evidence.disk_name, instance_name))
+      disk_name, instance_name))
   instance.DetachDisk(disk)
 
   # Make sure device is Detached
   for _ in xrange(RETRY_MAX):
     if not os.path.exists(path):
       log.info('Block device {0:s} is no longer attached'.format(path))
-      evidence.local_path = None
       break
     time.sleep(5)
