@@ -18,9 +18,9 @@ from __future__ import unicode_literals
 
 import unittest
 
-import mock
-
 from six.moves import queue
+
+import mock
 
 from turbinia import evidence
 from turbinia import pubsub
@@ -28,6 +28,7 @@ from turbinia import message
 from turbinia import celery
 from turbinia import TurbiniaException
 
+# pylint: disable=protected-access
 
 def getTurbiniaRequest():
   """Get a Turbinia Request object with valid evidence attached.
@@ -38,7 +39,7 @@ def getTurbiniaRequest():
   request = message.TurbiniaRequest(
       request_id='deadbeef', context={'kw': [1, 2]})
   rawdisk = evidence.RawDisk(
-      name='My Evidence', local_path='/tmp/foo')
+      name='My Evidence', local_path='tmp/foo')
   request.evidence.append(rawdisk)
   return request
 
@@ -141,6 +142,7 @@ class TestTurbiniaKombu(unittest.TestCase):
         result, queue.Empty('Empty Queue')]
 
   def testCheckMessages(self):
+    """Tests for check_messages()."""
     results = self.kombu.check_messages()
     self.assertTrue(len(results) == 1)
     request_new = results[0]
@@ -153,6 +155,7 @@ class TestTurbiniaKombu(unittest.TestCase):
     self.assertEqual(request_new.evidence[0].name, 'My Evidence')
 
   def testBadCheckMessages(self):
+    """Tests for check_messages() on bad messages."""
     result = mock.MagicMock()
     result.payload = 'non-json-data'
     self.kombu.queue.get.side_effect = [result, queue.Empty('Empty Queue')]

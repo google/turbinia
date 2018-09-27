@@ -41,6 +41,7 @@ logger.setup()
 
 
 def main():
+  """Main method for TurbiniaCtl."""
   # TODO(aarontp): Allow for single run mode when
   # by specifying evidence which will also terminate the task manager after
   # evidence has been processed.

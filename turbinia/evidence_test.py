@@ -22,6 +22,7 @@ import unittest
 from turbinia import evidence
 from turbinia import TurbiniaException
 
+# pylint: disable=protected-access
 
 class TestTurbiniaEvidence(unittest.TestCase):
   """Test evidence module."""
@@ -29,7 +30,7 @@ class TestTurbiniaEvidence(unittest.TestCase):
   def testEvidenceSerialization(self):
     """Test that evidence serializes/unserializes."""
     rawdisk = evidence.RawDisk(
-        name='My Evidence', local_path='/tmp/foo')
+        name='My Evidence', local_path='tmp/foo')
     rawdisk._disk_mount_path = '/mnt/foo'
     rawdisk_json = rawdisk.to_json()
     self.assertTrue(isinstance(rawdisk_json, str))

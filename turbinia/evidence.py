@@ -136,11 +136,14 @@ class Evidence(object):
 
     return serialized
 
-  def copy_context(self):
+  def copy_context(self, target_evidence):
     """Copies attributes needed for saving the context (ie: for cleanup).
 
     This is used when a Task generates a new Evidence from an input Evidence,
     and wants to make sure the new Evidence will be pre&post processed properly.
+
+    Args:
+      target_evidence(Evidence): the Evidence to copy current state to.
     """
     pass
 
@@ -188,26 +191,28 @@ class RawDisk(Evidence):
     self._disk_mount_path = None
 
   def copy_context(self, target_evidence):
+    # pylint: disable=protected-access
     target_evidence.mount_partition = self.mount_partition
     target_evidence.path_to_disk = self.path_to_disk
     target_evidence.size = self.size
     target_evidence._disk_mount_path = self._disk_mount_path
     target_evidence._loopdevice_path = self._loopdevice_path
+    # pylint: enable=protected-access
 
   def preprocess(self):
     # First use losetup to parse the RawDisk eventual partition table
     # and make block devices per partitions.
-    self._losetup_device = mount_local.PreprocessLoSetup(self.path_to_disk)
+    self._loopdevice_path = mount_local.PreprocessLoSetup(self.path_to_disk)
     # Then we mount the partition
     self._disk_mount_path = mount_local.PreprocessMountDisk(
-        self._losetup_device, self.mount_partition)
+        self._loopdevice_path, self.mount_partition)
     self.local_path = self._disk_mount_path
 
   def postprocess(self):
     mount_local.PostprocessUnmountPath(self._disk_mount_path)
     self._disk_mount_path = None
-    mount_local.PostprocessDeleteLosetup(self._losetup_device)
-    self._losetup_device = None
+    mount_local.PostprocessDeleteLosetup(self._loopdevice_path)
+    self._loopdevice_path = None
     self.local_path = None
 
 
