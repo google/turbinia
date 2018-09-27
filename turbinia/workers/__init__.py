@@ -18,6 +18,7 @@ from __future__ import unicode_literals
 
 from datetime import datetime
 import errno
+import filelock
 import getpass
 import json
 import logging
@@ -414,60 +415,60 @@ class TurbiniaTask(object):
     Returns:
       A TurbiniaTaskResult object
     """
-    # TODO(aarontp): Add locking: https://github.com/google/turbinia/issues/221
-    log.info('Starting Task {0:s} {1:s}'.format(self.name, self.id))
-    original_result_id = None
-    try:
-      self.result = self.setup(evidence)
-      original_result_id = self.result.id
-      self._evidence_config = evidence.config
-      self.result = self.run(evidence, self.result)
-    # pylint: disable=broad-except
-    except (TurbiniaException, Exception) as e:
-      msg = '{0:s} Task failed with exception: [{1:s}]'.format(
-          self.name, str(e))
-      log.error(msg)
-      log.error(traceback.format_exc())
-      if self.result:
-        self.result.log(msg)
-        self.result.log(traceback.format_exc())
-        if hasattr(e, 'message'):
-          self.result.set_error(e.message, traceback.format_exc())
-        else:
-          self.result.set_error(e.__class__, traceback.format_exc())
-        self.result.status = msg
-      else:
-        log.error('No TurbiniaTaskResult object found after task execution.')
-
-    self.result = self.validate_result(self.result)
-
-    # Trying to close the result if possible so that we clean up what we can.
-    # This has a higher likelihood of failing because something must have gone
-    # wrong as the Task should have already closed this.
-    if self.result and not self.result.closed:
-      msg = 'Trying last ditch attempt to close result'
-      log.warning(msg)
-      self.result.log(msg)
-
-      if self.result.status:
-        status = self.result.status
-      else:
-        status = 'No previous status'
-      msg = ('Task Result was auto-closed from task executor on {0:s} likely '
-             'due to previous failures.  Previous status: [{1:s}]'.format(
-                 self.result.worker_name, status))
-      self.result.log(msg)
+    with filelock.FileLock(config.LOCK_FILE):
+      log.info('Starting Task {0:s} {1:s}'.format(self.name, self.id))
+      original_result_id = None
       try:
-        self.result.close(self, False, msg)
-      # Using broad except here because lots can go wrong due to the reasons
-      # listed above.
+        self.result = self.setup(evidence)
+        original_result_id = self.result.id
+        self._evidence_config = evidence.config
+        self.result = self.run(evidence, self.result)
       # pylint: disable=broad-except
       except Exception as e:
-        log.error('TurbiniaTaskResult close failed: {0!s}'.format(e))
-        if not self.result.status:
+        msg = '{0:s} Task failed with exception: [{1!s}]'.format(
+            self.name, e)
+        log.error(msg)
+        log.error(traceback.format_exc())
+        if self.result:
+          self.result.log(msg)
+          self.result.log(traceback.format_exc())
+          if hasattr(e, 'message'):
+            self.result.set_error(e.message, traceback.format_exc())
+          else:
+            self.result.set_error(e.__class__, traceback.format_exc())
           self.result.status = msg
-      # Check the result again after closing to make sure it's still good.
+        else:
+          log.error('No TurbiniaTaskResult object found after task execution.')
+
       self.result = self.validate_result(self.result)
+
+      # Trying to close the result if possible so that we clean up what we can.
+      # This has a higher likelihood of failing because something must have gone
+      # wrong as the Task should have already closed this.
+      if self.result and not self.result.closed:
+        msg = 'Trying last ditch attempt to close result'
+        log.warning(msg)
+        self.result.log(msg)
+
+        if self.result.status:
+          status = self.result.status
+        else:
+          status = 'No previous status'
+        msg = ('Task Result was auto-closed from task executor on {0:s} likely '
+               'due to previous failures.  Previous status: [{1:s}]'.format(
+                   self.result.worker_name, status))
+        self.result.log(msg)
+        try:
+          self.result.close(self, False, msg)
+        # Using broad except here because lots can go wrong due to the reasons
+        # listed above.
+        # pylint: disable=broad-except
+        except Exception as e:
+          log.error('TurbiniaTaskResult close failed: {0!s}'.format(e))
+          if not self.result.status:
+            self.result.status = msg
+        # Check the result again after closing to make sure it's still good.
+        self.result = self.validate_result(self.result)
 
     if original_result_id != self.result.id:
       log.debug(

@@ -1,8 +1,9 @@
-psq
+filelock
 google-api-python-client>=1.6.2
 google-cloud-pubsub
 google-cloud-storage
 google-cloud-core
 oauth2client
-urllib3[secure]
+psq
 six
+urllib3[secure]
