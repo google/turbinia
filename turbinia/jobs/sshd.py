@@ -24,20 +24,20 @@ from turbinia.evidence import GoogleCloudDiskRawEmbedded
 from turbinia.evidence import ExportedFileArtifact
 from turbinia.evidence import RawDisk
 from turbinia.evidence import ReportText
-from turbinia.jobs import TurbiniaJob
+from turbinia.jobs import interface
+from turbinia.jobs import manager
 
 
-class SSHDExtractionJob(TurbiniaJob):
+class SSHDExtractionJob(interface.TurbiniaJob):
   """Filter input based on regular expression patterns."""
 
   # The types of evidence that this Job will process
   evidence_input = [
-    Directory, RawDisk, GoogleCloudDisk, GoogleCloudDiskRawEmbedded]
+      Directory, RawDisk, GoogleCloudDisk, GoogleCloudDiskRawEmbedded]
 
   evidence_output = [ExportedFileArtifact]
 
-  def __init__(self):
-    super(SSHDExtractionJob, self).__init__(name='SSHDExtractionJob')
+  NAME = 'SSHDExtractionJob'
 
   def create_tasks(self, evidence):
     """Create task.
@@ -49,18 +49,17 @@ class SSHDExtractionJob(TurbiniaJob):
         A list of tasks to schedule.
     """
     tasks = [
-      artifact.FileArtifactExtractionTask('SshdConfigFile') for _ in evidence]
+        artifact.FileArtifactExtractionTask('SshdConfigFile') for _ in evidence]
     return tasks
 
 
-class SSHDAnalysisJob(TurbiniaJob):
+class SSHDAnalysisJob(interface.TurbiniaJob):
   """Filter input based on regular expression patterns."""
 
   evidence_input = [ExportedFileArtifact]
   evidence_output = [ReportText]
 
-  def __init__(self):
-    super(SSHDAnalysisJob, self).__init__(name='SSHDAnalysisJob')
+  NAME = 'SSHDAnalysisJob'
 
   def create_tasks(self, evidence):
     """Create task.
@@ -76,3 +75,6 @@ class SSHDAnalysisJob(TurbiniaJob):
       if evidence_item.artifact_name == 'SshdConfigFile':
         tasks.append(sshd.SSHDAnalysisTask())
     return tasks
+
+
+manager.JobsManager.RegisterJobs([SSHDAnalysisJob, SSHDExtractionJob])

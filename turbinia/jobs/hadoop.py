@@ -12,37 +12,30 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Job to execute strings task."""
-
+"""Job to execute Hadoop task."""
 
 from __future__ import unicode_literals
 
 from turbinia.evidence import GoogleCloudDisk
 from turbinia.evidence import GoogleCloudDiskRawEmbedded
 from turbinia.evidence import RawDisk
-from turbinia.evidence import TextFile
+from turbinia.evidence import ReportText
 from turbinia.jobs import interface
 from turbinia.jobs import manager
-from turbinia.workers.strings import StringsAsciiTask
-from turbinia.workers.strings import StringsUnicodeTask
+from turbinia.workers.hadoop import HadoopAnalysisTask
 
 
-class StringsJob(interface.TurbiniaJob):
-  """Strings collection Job.
+class HadoopAnalysisJob(interface.TurbiniaJob):
+  """Analyzes Hadoop AppRoot files."""
 
-  This will generate a Unicode and ASCII string collection task for each piece
-  of evidence.
-  """
+  evidence_input = [GoogleCloudDisk, GoogleCloudDiskRawEmbedded, RawDisk]
+  evidence_output = [ReportText]
 
-  # The types of evidence that this Job will process
-  evidence_input = [RawDisk, GoogleCloudDisk, GoogleCloudDiskRawEmbedded]
-  evidence_output = [TextFile]
-
-  NAME = 'StringsJob'
+  NAME = 'HadoopAnalysisJob'
 
 
   def create_tasks(self, evidence):
-    """Create task for Strings.
+    """Create task.
 
     Args:
       evidence: List of evidence object to process
@@ -50,10 +43,7 @@ class StringsJob(interface.TurbiniaJob):
     Returns:
         A list of tasks to schedule.
     """
-    # Generate tasks for both types of Strings jobs
-    tasks = [StringsAsciiTask() for _ in evidence]
-    tasks.extend([StringsUnicodeTask() for _ in evidence])
+    tasks = [HadoopAnalysisTask() for _ in evidence]
     return tasks
 
-
-manager.JobsManager.RegisterJob(StringsJob)
+manager.JobsManager.RegisterJob(HadoopAnalysisJob)

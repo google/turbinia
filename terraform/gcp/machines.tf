@@ -9,7 +9,7 @@ resource "google_compute_instance" "turbinia-server" {
   # Use default Ubuntu image as operating system.
   boot_disk {
     initialize_params {
-      image = "${var.ubuntu_1604_image}"
+      image = "${var.ubuntu_image}"
     }
   }
 
@@ -37,7 +37,7 @@ resource "google_compute_instance" "turbinia-worker" {
   # Use default Ubuntu image as operating system.
   boot_disk {
     initialize_params {
-      image = "${var.ubuntu_1604_image}"
+      image = "${var.ubuntu_image}"
     }
   }
 
@@ -49,4 +49,42 @@ resource "google_compute_instance" "turbinia-worker" {
 
   # Provision the machine with a script.
   metadata_startup_script = "${data.template_file.turbinia-worker.rendered}"
+}
+
+# Enabling GCP services individually because the google_project_services
+# resource type will disable services not in the list.
+resource "google_project_service" "project" {
+  project = "${var.project}"
+  service = "cloudfunctions.googleapis.com"
+  disable_on_destroy = false
+}
+
+resource "google_project_service" "project" {
+  project = "${var.project}"
+  service = "compute.googleapis.com"
+  disable_on_destroy = false
+}
+
+resource "google_project_service" "project" {
+  project = "${var.project}"
+  service = "datastore.googleapis.com"
+  disable_on_destroy = false
+}
+
+resource "google_project_service" "project" {
+  project = "${var.project}"
+  service = "iam.googleapis.com"
+  disable_on_destroy = false
+}
+
+resource "google_project_service" "project" {
+  project = "${var.project}"
+  service = "pubsub.googleapis.com"
+  disable_on_destroy = false
+}
+
+resource "google_project_service" "project" {
+  project = "${var.project}"
+  service = "storage-component.googleapis.com"
+  disable_on_destroy = false
 }

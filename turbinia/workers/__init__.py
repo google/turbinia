@@ -120,7 +120,8 @@ class TurbiniaTaskResult(object):
     for evidence in self.evidence:
       if evidence.local_path:
         self.saved_paths.append(evidence.local_path)
-        task.output_manager.save_evidence(evidence, self)
+        if evidence.copyable and not config.SHARED_FILESYSTEM:
+          task.output_manager.save_evidence(evidence, self)
       if not evidence.request_id:
         evidence.request_id = self.request_id
 

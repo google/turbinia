@@ -23,8 +23,8 @@ from turbinia.evidence import GoogleCloudDisk
 from turbinia.evidence import GoogleCloudDiskRawEmbedded
 from turbinia.evidence import ExportedFileArtifact
 from turbinia.evidence import ReportText
-
-from turbinia.jobs import TurbiniaJob
+from turbinia.jobs import interface
+from turbinia.jobs import manager
 from turbinia.workers.analysis import wordpress
 
 ACCESS_LOG_ARTIFACTS = [
@@ -33,7 +33,7 @@ ACCESS_LOG_ARTIFACTS = [
     'ApacheAccessLogs'
 ]
 
-class HTTPAccessLogExtractionJob(TurbiniaJob):
+class HTTPAccessLogExtractionJob(interface.TurbiniaJob):
   """HTTP Access log extraction job."""
 
   evidence_input = [
@@ -41,9 +41,8 @@ class HTTPAccessLogExtractionJob(TurbiniaJob):
 
   evidence_output = [ExportedFileArtifact]
 
-  def __init__(self):
-    super(HTTPAccessLogExtractionJob, self).__init__(
-        name='HTTPAccessLogExtractionJob')
+  NAME = 'HTTPAccessLogExtractionJob'
+
 
   def create_tasks(self, evidence):
     """Create task.
@@ -60,15 +59,13 @@ class HTTPAccessLogExtractionJob(TurbiniaJob):
                     in evidence])
     return tasks
 
-class HTTPAccessLogAnalysisJob(TurbiniaJob):
+class HTTPAccessLogAnalysisJob(interface.TurbiniaJob):
   """HTTP Access log analysis job."""
-   # Types of evidence that this Job will process.
+
   evidence_input = [ExportedFileArtifact]
   evidence_output = [ReportText]
 
-  def __init__(self):
-    super(HTTPAccessLogAnalysisJob, self).__init__(
-        name='HTTPAccessLogAnalysisJob')
+  NAME = 'HTTPAccessLogAnalysisJob'
 
   def create_tasks(self, evidence):
     """Create task.
@@ -79,3 +76,6 @@ class HTTPAccessLogAnalysisJob(TurbiniaJob):
     """
     evidence = [e for e in evidence if e.artifact_name in ACCESS_LOG_ARTIFACTS]
     return [wordpress.WordpressAccessLogAnalysisTask() for _ in evidence]
+
+manager.JobsManager.RegisterJobs(
+    [HTTPAccessLogExtractionJob, HTTPAccessLogAnalysisJob])

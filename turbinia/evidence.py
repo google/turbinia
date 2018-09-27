@@ -172,6 +172,7 @@ class RawDisk(Evidence):
   """Evidence object for Disk based evidence.
 
   Attributes:
+    mount_path: The mount path for this disk (if any).
     mount_partition: The mount partition for this disk (if any).
     path_to_disk: The path to the underlying data (block device or disk image).
     size:  The size of the disk in bytes.
