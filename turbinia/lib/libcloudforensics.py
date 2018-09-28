@@ -411,16 +411,16 @@ class GoogleCloudFunction(GoogleCloudProject):
     self.region = region
     super(GoogleCloudFunction, self).__init__(project_id)
 
-  def GcfApi(self):
+  def gcf_api(self):
     """Get a Google Cloud Function service object.
 
     Returns:
       A Google Cloud Function service object.
     """
-    return self._CreateService('cloudfunctions',
-                               self.CLOUD_FUNCTIONS_API_VERSION)
+    return self._create_service('cloudfunctions',
+                                self.CLOUD_FUNCTIONS_API_VERSION)
 
-  def ExecuteFunction(self, function_name, args):
+  def execute_function(self, function_name, args):
     """Executes a Google Cloud Function.
 
     Args:
@@ -434,7 +434,7 @@ class GoogleCloudFunction(GoogleCloudProject):
       TurbiniaException: When cloud function arguments can not be serialized.
       TurbiniaException: When an HttpError is encountered.
     """
-    service = self.GcfApi()
+    service = self.gcf_api()
     cloud_function = service.projects().locations().functions()
 
     try:
