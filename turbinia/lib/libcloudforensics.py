@@ -22,12 +22,15 @@ from __future__ import unicode_literals
 
 import binascii
 import datetime
+import json
 import logging
 import os
+import ssl
 import subprocess
 import time
 
 from apiclient.discovery import build
+from googleapiclient.errors import HttpError
 from oauth2client.client import GoogleCredentials
 
 log = logging.getLogger('turbinia')
@@ -44,7 +47,8 @@ def create_service(service_name, api_version):
     API service resource (apiclient.discovery.Resource)
   """
   credentials = GoogleCredentials.get_application_default()
-  return build(service_name, api_version, credentials=credentials)
+  return build(service_name, api_version, credentials=credentials,
+               cache_discovery=False)
 
 
 class GoogleCloudProject(object):
@@ -143,17 +147,29 @@ class GoogleCloudProject(object):
     Returns:
       Dictionary with name and metadata for each instance.
     """
-    operation = self.gce_api().instances().aggregatedList(
-        project=self.project_id).execute()
-    result = self.gce_operation(operation, zone=self.default_zone)
+    have_all = False
+    page_token = None
     instances = dict()
-    for zone in result['items']:
-      try:
-        for instance in result['items'][zone]['instances']:
-          _, zone = instance['zone'].rsplit('/', 1)
-          instances[instance['name']] = dict(zone=zone)
-      except KeyError:
-        pass
+    while not have_all:
+      if page_token:
+        operation = self.gce_api().instances().aggregatedList(
+            project=self.project_id, pageToken=page_token).execute()
+      else:
+        operation = self.gce_api().instances().aggregatedList(
+            project=self.project_id).execute()
+      result = self.gce_operation(operation, zone=self.default_zone)
+      page_token = result.get('nextPageToken')
+      if not page_token:
+        have_all = True
+
+      for zone in result['items']:
+        try:
+          for instance in result['items'][zone]['instances']:
+            _, zone = instance['zone'].rsplit('/', 1)
+            instances[instance['name']] = dict(zone=zone)
+        except KeyError:
+          pass
+
     return instances
 
   def list_disks(self):
@@ -162,17 +178,28 @@ class GoogleCloudProject(object):
     Returns:
       Dictionary with name and metadata for each instance.
     """
-    operation = self.gce_api().disks().aggregatedList(
-        project=self.project_id).execute()
-    result = self.gce_operation(operation, zone=self.default_zone)
+    have_all = False
+    page_token = None
     disks = dict()
-    for zone in result['items']:
-      try:
-        for instance in result['items'][zone]['disks']:
-          _, zone = instance['zone'].rsplit('/', 1)
-          disks[instance['name']] = dict(zone=zone)
-      except KeyError:
-        pass
+    while not have_all:
+      if page_token:
+        operation = self.gce_api().disks().aggregatedList(
+            project=self.project_id, pageToken=page_token).execute()
+      else:
+        operation = self.gce_api().disks().aggregatedList(
+            project=self.project_id).execute()
+      result = self.gce_operation(operation, zone=self.default_zone)
+      page_token = result.get('nextPageToken')
+      if not page_token:
+        have_all = True
+      for zone in result['items']:
+        try:
+          for instance in result['items'][zone]['disks']:
+            _, zone = instance['zone'].rsplit('/', 1)
+            disks[instance['name']] = dict(zone=zone)
+        except KeyError:
+          pass
+
     return disks
 
   def get_instance(self, instance_name, zone=None):
@@ -233,6 +260,9 @@ class GoogleCloudProject(object):
 
     Returns:
       Google Compute Disk (instance of GoogleComputeDisk).
+
+    Raises:
+      RuntimeError: If the disk exists already.
     """
 
     # Max length of disk names in GCP is 63 characters
@@ -248,8 +278,12 @@ class GoogleCloudProject(object):
           disk_name_prefix, disk_id_crc32, snapshot.name[:truncate_at])
     body = dict(
         name=disk_name, sourceSnapshot=snapshot.get_source_string())
-    operation = self.gce_api().disks().insert(
-        project=self.project_id, zone=self.default_zone, body=body).execute()
+    try:
+      operation = self.gce_api().disks().insert(
+          project=self.project_id, zone=self.default_zone, body=body).execute()
+    except HttpError as exception:
+      if exception.resp.status == 409:
+        raise RuntimeError('Disk {0:s} already exists'.format(disk_name))
     self.gce_operation(operation, zone=self.default_zone, block=True)
     return GoogleComputeDisk(
         project=self, zone=self.default_zone, name=disk_name)
@@ -356,6 +390,74 @@ class GoogleCloudProject(object):
         project=self, zone=self.default_zone, name=vm_name)
     created = True
     return instance, created
+
+
+class GoogleCloudFunction(GoogleCloudProject):
+  """Class to call Google Cloud Functions.
+
+  Attributes:
+    region (str): Region to execute functions in.
+  """
+
+  CLOUD_FUNCTIONS_API_VERSION = 'v1beta2'
+
+  def __init__(self, project_id, region):
+    """Initialize the GoogleCloudFunction object.
+
+    Args:
+      project_id: The name of the project.
+      region: Region to run functions in.
+    """
+    self.region = region
+    super(GoogleCloudFunction, self).__init__(project_id)
+
+  def GcfApi(self):
+    """Get a Google Cloud Function service object.
+
+    Returns:
+      A Google Cloud Function service object.
+    """
+    return self._CreateService('cloudfunctions',
+                               self.CLOUD_FUNCTIONS_API_VERSION)
+
+  def ExecuteFunction(self, function_name, args):
+    """Executes a Google Cloud Function.
+
+    Args:
+      function_name (str): The name of the function to call.
+      args (dict): Arguments to pass to the function.
+
+    Returns:
+      Dict: Return value from function call.
+
+    Raises:
+      TurbiniaException: When cloud function arguments can not be serialized.
+      TurbiniaException: When an HttpError is encountered.
+    """
+    service = self.GcfApi()
+    cloud_function = service.projects().locations().functions()
+
+    try:
+      json_args = json.dumps(args)
+    except TypeError as e:
+      raise TurbiniaException(
+          'Cloud function args [{0:s}] could not be serialized: {1!s}'.format(
+              str(args), e))
+
+    function_path = 'projects/{0:s}/locations/{1:s}/functions/{2:s}'.format(
+        self.project_id, self.region, function_name)
+
+    log.debug('Calling Cloud Function [{0:s}] with args [{1!s}]'.format(
+        function_name, args))
+    try:
+      function_return = cloud_function.call(
+          name=function_path, body={'data':json_args}).execute()
+    except (HttpError, ssl.SSLError) as e:
+      raise TurbiniaException(
+          'Error calling cloud function [{0:s}]: {1!s}'.format(
+              function_name, e))
+
+    return function_return
 
 
 class GoogleComputeBaseResource(object):
