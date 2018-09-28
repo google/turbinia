@@ -431,8 +431,8 @@ class GoogleCloudFunction(GoogleCloudProject):
       Dict: Return value from function call.
 
     Raises:
-      TurbiniaException: When cloud function arguments can not be serialized.
-      TurbiniaException: When an HttpError is encountered.
+      RuntimeError: When cloud function arguments can not be serialized.
+      RuntimeError: When an HttpError is encountered.
     """
     service = self.gcf_api()
     cloud_function = service.projects().locations().functions()
@@ -440,7 +440,7 @@ class GoogleCloudFunction(GoogleCloudProject):
     try:
       json_args = json.dumps(args)
     except TypeError as e:
-      raise TurbiniaException(
+      raise RuntimeError(
           'Cloud function args [{0:s}] could not be serialized: {1!s}'.format(
               str(args), e))
 
@@ -453,7 +453,7 @@ class GoogleCloudFunction(GoogleCloudProject):
       function_return = cloud_function.call(
           name=function_path, body={'data':json_args}).execute()
     except (HttpError, ssl.SSLError) as e:
-      raise TurbiniaException(
+      raise RuntimeError(
           'Error calling cloud function [{0:s}]: {1!s}'.format(
               function_name, e))
 
