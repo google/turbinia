@@ -29,7 +29,7 @@ except ImportError:  # for pip <= 9.0.3
   from pip.req import parse_requirements
 
 
-turbinia_version = '20180620'
+turbinia_version = '20181003'
 
 turbinia_description = (
   'Turbinia is an open-source framework for deploying, managing, and running'
