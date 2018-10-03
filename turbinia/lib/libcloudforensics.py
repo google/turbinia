@@ -147,10 +147,11 @@ class GoogleCloudProject(object):
     Returns:
       Dictionary with name and metadata for each instance.
     """
-    have_all = False
+    TODO(aarontp): Refactor out the duplicate code used by multiple methods
+    have_all_tokens = False
     page_token = None
     instances = dict()
-    while not have_all:
+    while not have_all_tokens:
       if page_token:
         operation = self.gce_api().instances().aggregatedList(
             project=self.project_id, pageToken=page_token).execute()
@@ -160,7 +161,7 @@ class GoogleCloudProject(object):
       result = self.gce_operation(operation, zone=self.default_zone)
       page_token = result.get('nextPageToken')
       if not page_token:
-        have_all = True
+        have_all_tokens = True
 
       for zone in result['items']:
         try:
@@ -178,10 +179,10 @@ class GoogleCloudProject(object):
     Returns:
       Dictionary with name and metadata for each instance.
     """
-    have_all = False
+    have_all_tokens = False
     page_token = None
     disks = dict()
-    while not have_all:
+    while not have_all_tokens:
       if page_token:
         operation = self.gce_api().disks().aggregatedList(
             project=self.project_id, pageToken=page_token).execute()
@@ -191,7 +192,7 @@ class GoogleCloudProject(object):
       result = self.gce_operation(operation, zone=self.default_zone)
       page_token = result.get('nextPageToken')
       if not page_token:
-        have_all = True
+        have_all_tokens = True
       for zone in result['items']:
         try:
           for instance in result['items'][zone]['disks']:
