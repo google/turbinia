@@ -1,6 +1,6 @@
 filelock
 google-api-python-client>=1.6.2
-google-cloud-pubsub
+google-cloud-pubsub==0.35.4
 google-cloud-storage
 google-cloud-core
 oauth2client
