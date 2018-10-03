@@ -18,4 +18,5 @@ VERSION = '20181003'
 
 
 class TurbiniaException(Exception):
+  """Turbinia Exception class."""
   pass
