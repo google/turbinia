@@ -29,7 +29,7 @@ except ImportError:  # for pip <= 9.0.3
   from pip.req import parse_requirements
 
 
-turbinia_version = '20180620'
+turbinia_version = '20181003'
 
 turbinia_description = (
   'Turbinia is an open-source framework for deploying, managing, and running'
@@ -57,7 +57,7 @@ setup(
   packages=find_packages(),
   include_package_data=True,
   zip_safe=False,
-  entry_points = {"console_scripts": ["turbiniactl=turbinia.turbiniactl:main"]},
+  entry_points={"console_scripts": ["turbiniactl=turbinia.turbiniactl:main"]},
   install_requires=[str(req.req) for req in parse_requirements(
     'requirements.txt', session=PipSession())
   ],
