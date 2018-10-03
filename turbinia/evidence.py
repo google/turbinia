@@ -285,7 +285,7 @@ class GoogleCloudDiskRawEmbedded(GoogleCloudDisk):
     self.local_path = os.path.join(self._disk_mount_path, self.embedded_path)
 
   def postprocess(self):
-    super(GoogleCloudDiskRawEmbedded, self).post()
+    super(GoogleCloudDiskRawEmbedded, self).postprocess()
 
 
 class PlasoFile(Evidence):
