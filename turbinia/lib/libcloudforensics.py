@@ -147,7 +147,7 @@ class GoogleCloudProject(object):
     Returns:
       Dictionary with name and metadata for each instance.
     """
-    TODO(aarontp): Refactor out the duplicate code used by multiple methods
+    # TODO(aarontp): Refactor out the duplicate code used by multiple methods
     have_all_tokens = False
     page_token = None
     instances = dict()
