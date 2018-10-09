@@ -33,7 +33,7 @@ from turbinia.client import TurbiniaPsqWorker
 from turbinia import config
 from turbinia.config import logger
 from turbinia import evidence
-from turbinia import VERSION
+from turbinia import __version__
 from turbinia.message import TurbiniaRequest
 
 log = logging.getLogger('turbinia')
@@ -90,7 +90,7 @@ def main():
       '-V',
       '--version',
       action='version',
-      version=VERSION,
+      version=__version__,
       help='Show the version')
   parser.add_argument(
       '-D',

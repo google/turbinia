@@ -18,6 +18,8 @@
 
 from __future__ import unicode_literals
 
+import sys
+
 from setuptools import find_packages
 from setuptools import setup
 
@@ -29,7 +31,10 @@ except ImportError:  # for pip <= 9.0.3
   from pip.req import parse_requirements
 
 
-turbinia_version = '20181004'
+# make sure turbinia is in path
+sys.path.insert(0, '.')
+
+import turbinia  # pylint: disable=wrong-import-position
 
 turbinia_description = (
   'Turbinia is an open-source framework for deploying, managing, and running'
@@ -41,7 +46,7 @@ turbinia_description = (
 
 setup(
   name='turbinia',
-  version=turbinia_version,
+  version=turbinia.__version__,
   description='Automation and Scaling of Digital Forensics Tools',
   long_description=turbinia_description,
   license='Apache License, Version 2.0',
