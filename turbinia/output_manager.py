@@ -64,7 +64,7 @@ class OutputManager(object):
                                  unique_dir=unique_dir)]
     local_output_dir = writers[0].local_output_dir
     config.LoadConfig()
-    if config.GCS_OUTPUT_PATH:
+    if config.GCS_OUTPUT_PATH != 'None':
       writer = GCSOutputWriter(
           unique_dir=unique_dir, gcs_path=config.GCS_OUTPUT_PATH,
           local_output_dir=local_output_dir)
