@@ -25,6 +25,7 @@ import logging
 import os
 import pickle
 import platform
+import shutil
 import subprocess
 import time
 import traceback
@@ -242,7 +243,8 @@ class TurbiniaTask(object):
               save_files=None,
               new_evidence=None,
               close=False,
-              shell=False):
+              shell=False,
+              tmp_dir=None):
     """Executes a given binary and saves output.
 
     Args:
@@ -254,6 +256,8 @@ class TurbiniaTask(object):
           If the task is successful, they will be added to the result.
       close (bool): Whether to close out the result.
       shell (bool): Whether the cmd is in the form of a string or a list.
+      tmp_dir (string): If set, this worker placed output files here. We'll
+          move them from here to the true output directory.
 
     Returns:
       Tuple of the return code, and the TurbiniaTaskResult object
@@ -268,6 +272,11 @@ class TurbiniaTask(object):
     result.error['stdout'] = stdout
     result.error['stderr'] = stderr
     ret = proc.returncode
+
+    if tmp_dir:
+      for name in os.listdir(tmp_dir):
+        srcname = os.path.join(tmp_dir, name)
+        shutil.move(srcname, self.output_dir)
 
     if ret:
       msg = 'Execution failed with status {0:d}'.format(ret)

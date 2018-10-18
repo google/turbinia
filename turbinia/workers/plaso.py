@@ -17,6 +17,7 @@
 from __future__ import unicode_literals
 
 import os
+import tempfile
 
 from turbinia import config
 from turbinia.evidence import PlasoFile
@@ -39,6 +40,10 @@ class PlasoTask(TurbiniaTask):
     config.LoadConfig()
     plaso_evidence = PlasoFile()
 
+    if config.WORKERS_USE_TMP:
+      orig_output = self.output_dir
+      self.output_dir = tempfile.mkdtemp()
+
     plaso_file = os.path.join(self.output_dir, '{0:s}.plaso'.format(self.id))
     plaso_evidence.local_path = plaso_file
     plaso_log = os.path.join(self.output_dir, '{0:s}.log'.format(self.id))
@@ -54,7 +59,16 @@ class PlasoTask(TurbiniaTask):
 
     result.log('Running plaso as [{0:s}]'.format(' '.join(cmd)))
 
+    if config.WORKERS_USE_TMP:
+      tmp_output = self.output_dir
+      self.output_dir = orig_output
+
+      plaso_file = os.path.join(self.output_dir, '{0:s}.plaso'.format(self.id))
+      plaso_evidence.local_path = plaso_file
+      plaso_log = os.path.join(self.output_dir, '{0:s}.log'.format(self.id))
+
+
     self.execute(cmd, result, save_files=[plaso_log],
-                 new_evidence=[plaso_evidence], close=True)
+                 new_evidence=[plaso_evidence], close=True, tmp_dir=tmp_output)
 
     return result

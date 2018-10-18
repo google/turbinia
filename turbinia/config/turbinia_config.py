@@ -57,6 +57,12 @@ MOUNT_DIR_PREFIX = '/mnt/turbinia-mounts'
 # NFS or a SAN for Evidence objects.
 SHARED_FILESYSTEM = False
 
+# This will cause workers to output data to a temporary directory and then upon
+# completion, copy it to the expected OUTPUT_DIR. Useful when your output
+# directory is an NFS mount, since Plaso and other tools that operate on
+# sqlite files will not work over NFS.
+WORKERS_USE_TMP = True
+
 # This will set debugging flags for processes executed by Tasks (for
 # Tasks/binaries that support it).  This could cause performance issues with
 # some tasks, so it is recommended to only set this to True when debugging
