@@ -307,7 +307,7 @@ class TurbiniaCeleryClient(TurbiniaClient):
     redis (RedisStateManager): Redis datastore object
   """
 
-  def __init__(self, *args, **kwargs):
+  def __init__(self, *_, **__):
     super(TurbiniaCeleryClient, self).__init__()
     self.redis = RedisStateManager()
 
@@ -375,7 +375,7 @@ class TurbiniaCeleryWorker(TurbiniaClient):
     worker (celery.app): Celery worker app
   """
 
-  def __init__(self, *args, **kwargs):
+  def __init__(self, *_, **__):
     """Initialization for Celery worker."""
     super(TurbiniaCeleryWorker, self).__init__()
     check_directory(config.MOUNT_DIR_PREFIX)

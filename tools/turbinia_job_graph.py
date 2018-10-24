@@ -42,7 +42,8 @@ def create_graph():
 
 
 if __name__ == '__main__':
-  parser = argparse.ArgumentParser(description='Create Turbinia evidence graph.')
+  parser = argparse.ArgumentParser(
+      description='Create Turbinia evidence graph.')
   parser.add_argument('filename', type=unicode, help='where to save the file')
   args = parser.parse_args()
 

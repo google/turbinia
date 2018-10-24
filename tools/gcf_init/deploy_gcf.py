@@ -1,5 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+"""
+Script for deploying cloud functions.  Must be run from the this directory.
+"""
 
 
 from __future__ import print_function
@@ -20,10 +23,11 @@ config.LoadConfig()
 
 for cloud_function in function_names:
   print('Deploying function {0:s}'.format(cloud_function))
-  cmd = ('gcloud --project {0:s} beta functions deploy {1:s} --stage-bucket '
-         '{2:s} --region {3:s} --trigger-http'.format(config.PROJECT, cloud_function,
-                                                      config.BUCKET_NAME,
-                                                      config.TURBINIA_REGION))
+  cmd = (
+      'gcloud --project {0:s} beta functions deploy {1:s} --stage-bucket {2:s} '
+      '--region {3:s} --trigger-http'.format(
+          config.PROJECT, cloud_function, config.BUCKET_NAME,
+          config.TURBINIA_REGION))
   print(subprocess.check_call(cmd, shell=True))
 
 print('/nCreating Datastore index from {0:s}'.format(index_file))

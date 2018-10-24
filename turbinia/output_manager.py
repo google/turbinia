@@ -235,6 +235,7 @@ class LocalOutputWriter(OutputWriter):
 
   NAME = 'LocalWriter'
 
+  # pylint: disable=keyword-arg-before-vararg
   def __init__(self, base_output_dir=None, *args, **kwargs):
     super(LocalOutputWriter, self).__init__(base_output_dir=base_output_dir,
                                             *args, **kwargs)
