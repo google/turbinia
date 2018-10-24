@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-"""
-Script for deploying cloud functions.  Must be run from the this directory.
-"""
+"""Script for deploying cloud functions."""
 
 
 from __future__ import print_function
