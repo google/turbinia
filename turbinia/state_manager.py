@@ -52,6 +52,7 @@ def get_state_manager():
     Initialized StateManager object.
   """
   config.LoadConfig()
+  # pylint: disable=no-else-return
   if config.STATE_MANAGER == 'Datastore':
     return DatastoreStateManager()
   elif config.STATE_MANAGER == 'redis':
@@ -226,6 +227,7 @@ class RedisStateManager(BaseStateManager):
         if json.loads(self.client.get(task)).get('instance') == instance or
         not instance
     ]
+    # pylint: disable=no-else-return
     if days:
       start_time = datetime.now() - timedelta(days=days)
       # Redis only supports strings; we convert to/from datetime here and below

@@ -37,38 +37,38 @@ sys.path.insert(0, '.')
 import turbinia  # pylint: disable=wrong-import-position
 
 turbinia_description = (
-  'Turbinia is an open-source framework for deploying, managing, and running'
-  'forensic workloads on cloud platforms. It is intended to automate running of'
-  'common forensic processing tools (i.e. Plaso, TSK, strings, etc) to help'
-  'with processing evidence in the Cloud, scaling the processing of large'
-  'amounts of evidence, and decreasing response time by parallelizing'
-  'processing where possible.')
+    'Turbinia is an open-source framework for deploying, managing, and running'
+    'forensic workloads on cloud platforms. It is intended to automate running '
+    'of common forensic processing tools (i.e. Plaso, TSK, strings, etc) to '
+    'help with processing evidence in the Cloud, scaling the processing of '
+    'large amounts of evidence, and decreasing response time by parallelizing'
+    'processing where possible.')
 
 setup(
-  name='turbinia',
-  version=turbinia.__version__,
-  description='Automation and Scaling of Digital Forensics Tools',
-  long_description=turbinia_description,
-  license='Apache License, Version 2.0',
-  url='http://turbinia.plumbing/',
-  maintainer='Turbinia development team',
-  maintainer_email='turbinia-dev@googlegroups.com',
-  classifiers=[
-    'Development Status :: 4 - Beta',
-    'Environment :: Console',
-    'Operating System :: OS Independent',
-    'Programming Language :: Python',
-  ],
-  packages=find_packages(),
-  include_package_data=True,
-  zip_safe=False,
-  entry_points={"console_scripts": ["turbiniactl=turbinia.turbiniactl:main"]},
-  install_requires=[str(req.req) for req in parse_requirements(
-    'requirements.txt', session=PipSession())
-  ],
-  extras_require={
-    'dev': ['mock', 'nose'],
-    'local': ['celery>=4.1.0', 'kombu>=4.1.0', 'redis>=2.10.6'],
-    'worker': ['plaso>=20171118']
-  }
+    name='turbinia',
+    version=turbinia.__version__,
+    description='Automation and Scaling of Digital Forensics Tools',
+    long_description=turbinia_description,
+    license='Apache License, Version 2.0',
+    url='http://turbinia.plumbing/',
+    maintainer='Turbinia development team',
+    maintainer_email='turbinia-dev@googlegroups.com',
+    classifiers=[
+        'Development Status :: 4 - Beta',
+        'Environment :: Console',
+        'Operating System :: OS Independent',
+        'Programming Language :: Python',
+    ],
+    packages=find_packages(),
+    include_package_data=True,
+    zip_safe=False,
+    entry_points={'console_scripts': ['turbiniactl=turbinia.turbiniactl:main']},
+    install_requires=[str(req.req) for req in parse_requirements(
+        'requirements.txt', session=PipSession())
+    ],
+    extras_require={
+        'dev': ['mock', 'nose'],
+        'local': ['celery>=4.1.0', 'kombu>=4.1.0', 'redis>=2.10.6'],
+        'worker': ['plaso>=20171118']
+    }
 )

@@ -94,6 +94,7 @@ class TestPSQStateManager(unittest.TestCase):
   def testStateManagerValidateDataValidDict(self, _):
     """Test State Manger _validate_data() base case."""
     self.state_manager = self._get_state_manager()
+    # pylint: disable=protected-access
     test_data = self.state_manager._validate_data(self.test_data)
     self.assertDictEqual(test_data, self.test_data)
 
@@ -103,6 +104,7 @@ class TestPSQStateManager(unittest.TestCase):
     self.state_manager = self._get_state_manager()
     invalid_dict = copy.deepcopy(self.test_data)
     invalid_dict['status'] = 'A' * state_manager.MAX_DATASTORE_STRLEN + 'BORKEN'
+    # pylint: disable=protected-access
     test_data = self.state_manager._validate_data(invalid_dict)
     self.assertListEqual(list(test_data.keys()), list(self.test_data.keys()))
     self.assertNotEqual(test_data['status'], self.test_data['status'])

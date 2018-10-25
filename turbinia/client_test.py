@@ -19,7 +19,6 @@ from __future__ import unicode_literals
 import unittest
 import os
 import shutil
-import stat
 import tempfile
 
 import mock
