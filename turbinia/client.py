@@ -385,7 +385,7 @@ class TurbiniaCeleryWorker(TurbiniaClient):
   def start(self):
     """Start Turbinia Celery Worker."""
     log.info('Running Turbinia Celery Worker.')
-    argv = ['celery', 'worker', '--loglevel=info']
+    argv = ['celery', 'worker', '--loglevel=info', '--pool=solo']
     self.worker.start(argv)
 
 
