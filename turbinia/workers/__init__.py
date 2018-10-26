@@ -101,7 +101,7 @@ class TurbiniaTaskResult(object):
 
 
   def __str__(self):
-    return pprint.pformat(vars(self))
+    return pprint.pformat(vars(self), depth=3)
 
 
   def close(self, task, success, status=None):
@@ -288,7 +288,8 @@ class TurbiniaTask(object):
     else:
       for file_ in save_files:
         result.log('Output file at {0:s}'.format(file_))
-        self.output_manager.save_local_file(file_, result)
+        if not self.run_local:
+          self.output_manager.save_local_file(file_, result)
       for evidence in new_evidence:
         # If the local path is set in the Evidence, we check to make sure that
         # the path exists and is not empty before adding it.

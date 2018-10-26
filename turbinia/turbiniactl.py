@@ -512,7 +512,7 @@ def main():
     sys.exit(1)
   if args.run_local and evidence_:
     result = client.run_local_task(args.task, request)
-    log.info(result)
+    log.info('Task execution result: {0:s}'.format(result))
 
   log.info('Done.')
   sys.exit(0)
