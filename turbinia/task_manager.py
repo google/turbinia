@@ -49,6 +49,7 @@ def get_task_manager():
     Initialized TaskManager object.
   """
   config.LoadConfig()
+  # pylint: disable=no-else-return
   if config.TASK_MANAGER == 'PSQ':
     return PSQTaskManager()
   elif config.TASK_MANAGER == 'Celery':
@@ -347,6 +348,7 @@ class PSQTaskManager(BaseTaskManager):
     config.LoadConfig()
     super(PSQTaskManager, self).__init__()
 
+  # pylint: disable=keyword-arg-before-vararg
   def _backend_setup(self, server=True, *args, **kwargs):
     """
     Args:
