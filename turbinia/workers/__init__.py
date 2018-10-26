@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright 2015 Google Inc.
+# Copyright 2018 Google Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,17 +18,19 @@ from __future__ import unicode_literals
 
 from datetime import datetime
 import errno
-import filelock
 import getpass
 import json
 import logging
 import os
 import pickle
 import platform
+import pprint
 import subprocess
 import time
 import traceback
 import uuid
+
+import filelock
 
 from turbinia import config
 from turbinia import output_manager
@@ -97,6 +99,11 @@ class TurbiniaTaskResult(object):
     self._log = []
     self.output_dir = task.output_manager.get_local_output_dir()
 
+
+  def __str__(self):
+    return pprint.pformat(vars(self))
+
+
   def close(self, task, success, status=None):
     """Handles closing of this result and writing logs.
 
@@ -121,7 +128,8 @@ class TurbiniaTaskResult(object):
     for evidence in self.evidence:
       if evidence.local_path:
         self.saved_paths.append(evidence.local_path)
-        if evidence.copyable and not config.SHARED_FILESYSTEM:
+        if (evidence.copyable and not config.SHARED_FILESYSTEM
+            and not task.run_local):
           task.output_manager.save_evidence(evidence, self)
       if not evidence.request_id:
         evidence.request_id = self.request_id
@@ -145,7 +153,8 @@ class TurbiniaTaskResult(object):
       with open(logfile, 'w') as f:
         f.write('\n'.join(self._log))
         f.write('\n')
-      task.output_manager.save_local_file(logfile, self)
+      if not task.run_local:
+        task.output_manager.save_local_file(logfile, self)
 
     self.closed = True
     log.debug('Result close successful. Status is [{0:s}]'.format(self.status))
@@ -201,6 +210,7 @@ class TurbiniaTask(object):
       output_manager: An output manager object
       result: A TurbiniaTaskResult object.
       request_id: The id of the initial request to process this evidence.
+      run_local: Whether we are running locally without a Worker or not.
       state_key: A key used to manage task state
       stub: The task manager implementation specific task stub that exists
             server side to keep a reference to the remote task objects.  For PSQ
@@ -231,6 +241,7 @@ class TurbiniaTask(object):
     self.output_manager = output_manager.OutputManager()
     self.result = None
     self.request_id = request_id
+    self.run_local = False
     self.state_key = None
     self.stub = None
     self.user = user if user else getpass.getuser()
@@ -327,7 +338,8 @@ class TurbiniaTask(object):
           request_id=self.request_id)
     self.output_dir = self.result.output_dir
 
-    if evidence.copyable and not config.SHARED_FILESYSTEM:
+    if (not self.run_local and evidence.copyable and not
+        config.SHARED_FILESYSTEM):
       self.output_manager.retrieve_evidence(evidence)
 
     if evidence.local_path and not os.path.exists(evidence.local_path):
@@ -392,6 +404,7 @@ class TurbiniaTask(object):
 
     log.info('Result check: {0:s}'.format(check_status))
     return result
+
 
   def run_wrapper(self, evidence):
     """Wrapper to manage TurbiniaTaskResults and exception handling.

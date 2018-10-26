@@ -27,7 +27,39 @@ import time
 from turbinia import config
 from turbinia.config import logger
 from turbinia import task_manager
+from turbinia import workers
 from turbinia import TurbiniaException
+from turbinia.workers.artifact import FileArtifactExtractionTask
+from turbinia.workers.analysis.wordpress import WordpressAccessLogAnalysisTask
+from turbinia.workers.analysis.jenkins import JenkinsAnalysisTask
+from turbinia.workers.grep import GrepTask
+from turbinia.workers.hadoop import HadoopAnalysisTask
+from turbinia.workers.plaso import PlasoTask
+from turbinia.workers.psort import PsortTask
+from turbinia.workers.sshd import SSHDAnalysisTask
+from turbinia.workers.strings import StringsAsciiTask
+from turbinia.workers.strings import StringsUnicodeTask
+from turbinia.workers.tomcat import TomcatAnalysisTask
+from turbinia.workers.worker_stat import StatTask
+
+
+# TODO(aarontp): Remove this map after
+# https://github.com/google/turbinia/issues/278 is fixed.
+TASK_MAP = {
+    'fileartifactextractiontask': FileArtifactExtractionTask,
+    'wordpressaccessloganalysistask': WordpressAccessLogAnalysisTask,
+    'jenkinsanalysistask': JenkinsAnalysisTask,
+    'greptask': GrepTask,
+    'hadoopanalysistask': HadoopAnalysisTask,
+    'plasotask': PlasoTask,
+    'psorttask': PsortTask,
+    'sshdanalysistask': SSHDAnalysisTask,
+    'stringsasciitask': StringsAsciiTask,
+    'stringsunicodetask': StringsUnicodeTask,
+    'tomcatanalysistask': TomcatAnalysisTask,
+    'stattask': StatTask,
+}
+
 
 config.LoadConfig()
 if config.TASK_MANAGER == 'PSQ':
@@ -81,10 +113,32 @@ class TurbiniaClient(object):
     task_manager (TaskManager): Turbinia task manager
   """
 
-  def __init__(self):
+  def __init__(self, run_local=False):
     config.LoadConfig()
-    self.task_manager = task_manager.get_task_manager()
-    self.task_manager.setup(server=False)
+    if run_local:
+      self.task_manager = None
+    else:
+      self.task_manager = task_manager.get_task_manager()
+      self.task_manager.setup(server=False)
+
+  def create_task(self, task_name):
+    """Creates a Turbinia Task by name.
+
+    Args:
+      task_name(string): Name of the Task we are going to run
+
+    Returns:
+      TurbiniaTask: An instantiated Task object.
+
+    Raises:
+      TurbiniaException: When no Task object matching task_name is found.
+    """
+    task_obj = TASK_MAP.get(task_name.lower())
+    log.debug('Looking up Task {0:s} by name'.format(task_name))
+    if not task_obj:
+      raise TurbiniaException('No Task named {0:s} found'.format(task_name))
+    return task_obj()
+
 
   def list_jobs(self):
     """List the available jobs."""
@@ -254,6 +308,26 @@ class TurbiniaClient(object):
             task.get('last_update'), task.get('name'), success, status))
 
     return '\n'.join(results)
+
+  def run_local_task(self, task_name, request):
+    """Runs a Turbinia Task locally.
+
+    Args:
+      task_name(string): Name of the Task we are going to run
+      request (TurbiniaRequest): Object containing request and evidence info.
+
+    Returns:
+      TurbiniaTaskResult: The result returned by the Task Execution.
+    """
+    task = self.create_task(task_name)
+    task.request_id = request.request_id
+    task.base_output_dir = config.OUTPUT_DIR
+    task.run_local = True
+    if not request.evidence:
+      raise TurbiniaException('TurbiniaRequest does not contain evidence.')
+    log.info('Running Task {0:s} locally'.format(task_name))
+    result = task.run_wrapper(request.evidence[0])
+    return result
 
   def send_request(self, request):
     """Sends a TurbiniaRequest message.
