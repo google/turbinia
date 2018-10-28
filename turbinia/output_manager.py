@@ -361,7 +361,7 @@ class GCSOutputWriter(OutputWriter):
           'Cannot find bucket and path from GCS config {0:s}'.format(file_))
     return match.group(1), match.group(2)
 
-  def create_output_dir(self):
+  def create_output_dir(self, base_path=None):
     # Directories in GCS are artificial, so any path can be written as part of
     # the object name.
     pass

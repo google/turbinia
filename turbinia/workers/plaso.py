@@ -44,7 +44,6 @@ class PlasoTask(TurbiniaTask):
     plaso_file = os.path.join(self.tmp_dir, '{0:s}.plaso'.format(self.id))
     plaso_evidence.local_path = plaso_file
     plaso_log = os.path.join(self.output_dir, '{0:s}.log'.format(self.id))
-    print('DEBUG tmp_dir', self.tmp_dir, 'output_dir', self.output_dir)
 
     # TODO(aarontp): Move these flags into a recipe
     cmd = (
