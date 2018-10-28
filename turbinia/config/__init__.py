@@ -39,6 +39,7 @@ CONFIGVARS = [
     'LOG_FILE',
     'LOCK_FILE',
     'OUTPUT_DIR',
+    'TMP_DIR',
     'SLEEP_TIME',
     'SINGLE_RUN',
     'MOUNT_DIR_PREFIX',

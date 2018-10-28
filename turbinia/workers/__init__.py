@@ -95,7 +95,7 @@ class TurbiniaTaskResult(object):
     self.worker_name = platform.node()
     # TODO(aarontp): Create mechanism to grab actual python logging data.
     self._log = []
-    self.output_dir = task.output_manager.get_local_output_dir()
+    _, self.output_dir = task.output_manager.get_local_output_dirs()
 
   def close(self, task, success, status=None):
     """Handles closing of this result and writing logs.
@@ -206,6 +206,7 @@ class TurbiniaTask(object):
             server side to keep a reference to the remote task objects.  For PSQ
             this is a task result object, but other implementations have their
             own stub objects.
+      tmp_dir: Temporary directory for Task to write to.
       user: The user who requested the task.
       _evidence_config (dict): The config that we want to pass to all new
             evidence created from this task.
@@ -233,6 +234,7 @@ class TurbiniaTask(object):
     self.request_id = request_id
     self.state_key = None
     self.stub = None
+    self.tmp_dir = None
     self.user = user if user else getpass.getuser()
     self._evidence_config = {}
 
@@ -319,13 +321,13 @@ class TurbiniaTask(object):
       TurbiniaException: If the evidence can not be found.
     """
     self.output_manager.setup(self)
+    self.tmp_dir, self.output_dir = self.output_manager.get_local_output_dirs()
     if not self.result:
       self.result = TurbiniaTaskResult(
           task=self,
           input_evidence=[evidence],
           base_output_dir=self.base_output_dir,
           request_id=self.request_id)
-    self.output_dir = self.result.output_dir
 
     if evidence.copyable and not config.SHARED_FILESYSTEM:
       self.output_manager.retrieve_evidence(evidence)
