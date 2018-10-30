@@ -191,6 +191,7 @@ class Evidence(object):
     self._postprocess()
     if self.parent_evidence:
       self.parent_evidence.postprocess()
+    self.local_path = None
 
 
 class Directory(Evidence):
@@ -203,17 +204,36 @@ class RawDisk(Evidence):
 
   Attributes:
     mount_partition: The mount partition for this disk (if any).
+    path_to_disk: The mount path for the underlying evidence (block device or
+      disk image).
     size:  The size of the disk in bytes.
   """
 
   def __init__(
       self, mount_path=None, mount_partition=None, size=None, *args, **kwargs):
     """Initialization for raw disk evidence object."""
-    self.loopdevice_path = None
-    self.mount_path = mount_path
-    self.mount_partition = mount_partition
-    self.size = size
     super(RawDisk, self).__init__(*args, **kwargs)
+    self.mount_partition = mount_partition
+    self.path_to_disk = self.local_path
+    self.size = size
+    self._loopdevice_path = None
+    self._disk_mount_path = None
+
+  def preprocess(self):
+    # First use losetup to parse the RawDisk eventual partition table
+    # and make block devices per partitions.
+    self._loopdevice_path = mount_local.PreprocessLoSetup(self.path_to_disk)
+    # Then we mount the partition
+    self._disk_mount_path = mount_local.PreprocessMountDisk(
+        self._loopdevice_path, self.mount_partition)
+    self.local_path = self._disk_mount_path
+
+  def _postprocess(self):
+    mount_local.PostprocessUnmountPath(self._disk_mount_path)
+    self._disk_mount_path = None
+    mount_local.PostprocessDeleteLosetup(self._loopdevice_path)
+    self._loopdevice_path = None
+    self.local_path = None
 
   def _preprocess(self):
     self.loopdevice_path = mount_local.PreprocessLosetup(self.local_path)
@@ -236,12 +256,12 @@ class EncryptedDisk(RawDisk):
       self, encryption_type=None, encryption_key=None, unencrypted_path=None,
       *args, **kwargs):
     """Initialization for Encrypted disk evidence objects."""
+    super(EncryptedDisk, self).__init__(*args, **kwargs)
     # TODO(aarontp): Make this an enum, or limited list
     self.encryption_type = encryption_type
     self.encryption_key = encryption_key
     # self.local_path will be the encrypted path
     self.unencrypted_path = unencrypted_path
-    super(EncryptedDisk, self).__init__(*args, **kwargs)
 
 
 class GoogleCloudDisk(RawDisk):
@@ -266,7 +286,6 @@ class GoogleCloudDisk(RawDisk):
 
   def _postprocess(self):
     google_cloud.PostprocessDetachDisk(self.disk_name, self.local_path)
-    self.local_path = None
 
 
 class GoogleCloudDiskRawEmbedded(GoogleCloudDisk):
@@ -286,7 +305,6 @@ class GoogleCloudDiskRawEmbedded(GoogleCloudDisk):
     self.embedded_path = embedded_path
     super(GoogleCloudDiskRawEmbedded, self).__init__(*args, **kwargs)
 
-  def _preprocess(self):
     self.local_path = google_cloud.PreprocessAttachDisk(self.disk_name)
     self.loopdevice_path = mount_local.PreprocessLosetup(self.local_path)
     self.mount_path = mount_local.PreprocessMountDisk(
