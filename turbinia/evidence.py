@@ -22,6 +22,7 @@ import sys
 
 from turbinia import config
 from turbinia import TurbiniaException
+from turbinia.processors import docker
 from turbinia.processors import mount_local
 
 # pylint: disable=keyword-arg-before-vararg
@@ -315,6 +316,32 @@ class GoogleCloudDiskRawEmbedded(GoogleCloudDisk):
     google_cloud.PostprocessDetachDisk(self.disk_name, self.local_path)
     mount_local.PostprocessUnmountPath(self.mount_path)
     mount_local.PostprocessDeleteLosetup(self.loopdevice_path)
+
+
+class DockerContainer(RawDisk):
+   """Evidence object for a DockerContainer filesystem.
+
+   Attributes:
+     container_id(str): The ID of the container to mount.
+   """
+
+   def __init__(self, container_id=None, *args, **kwargs):
+     """Initialization for Docker Container."""
+     super(DockerContainer, self).__init__(*args, **kwargs)
+     self.container_id = container_id
+     self._docker_dir = None
+     self._container_fs_path = None
+
+   def preprocess(self):
+     self._docker_dir = os.path.join(
+         self.disk_mount_path, 'var', 'lib', 'docker')
+     self._container_fs_path = docker.PreprocessMountDockerFS(
+         self._docker_dir, self.container_id)
+     self.local_path = self._container_fs_path
+
+   def postprocess(self):
+     mount_local.PostprocessUnmountPath(self._container_fs_path)
+     self._container_fs_path = None
 
 
 class PlasoFile(Evidence):

@@ -12,7 +12,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Job to execute Hadoop task."""
+"""Job to execute TODO"""
 
 from __future__ import unicode_literals
 
@@ -20,23 +20,22 @@ from turbinia.evidence import DockerContainer
 from turbinia.evidence import GoogleCloudDisk
 from turbinia.evidence import GoogleCloudDiskRawEmbedded
 from turbinia.evidence import RawDisk
-from turbinia.evidence import ReportText
 from turbinia.jobs import interface
 from turbinia.jobs import manager
-from turbinia.workers.hadoop import HadoopAnalysisTask
+from turbinia.workers.docker import DockerContainersEnumerationTask
 
 
-class HadoopAnalysisJob(interface.TurbiniaJob):
-  """Analyzes Hadoop AppRoot files."""
+class DockerContainersEnumerationJob(interface.TurbiniaJob):
+  """TODO"""
 
-  evidence_input = [
-      DockerContainer, GoogleCloudDisk, GoogleCloudDiskRawEmbedded, RawDisk]
-  evidence_output = [ReportText]
+  # Types of evidence that this Job will process.
+  evidence_input = [GoogleCloudDisk, GoogleCloudDiskRawEmbedded, RawDisk]
+  evidence_output = [DockerContainer]
 
-  NAME = 'HadoopAnalysisJob'
+  NAME = 'DockerContainersEnumerationJob'
 
   def create_tasks(self, evidence):
-    """Create task.
+    """Create task for TODO.
 
     Args:
       evidence: List of evidence object to process
@@ -44,8 +43,8 @@ class HadoopAnalysisJob(interface.TurbiniaJob):
     Returns:
         A list of tasks to schedule.
     """
-    tasks = [HadoopAnalysisTask() for _ in evidence]
+    tasks = [DockerContainersEnumerationTask() for _ in evidence]
     return tasks
 
 
-manager.JobsManager.RegisterJob(HadoopAnalysisJob)
+manager.JobsManager.RegisterJob(DockerContainersEnumerationJob)
