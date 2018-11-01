@@ -110,6 +110,9 @@ class TurbiniaTaskResult(object):
       success: Bool indicating task success
       status: One line descriptive task status.
     """
+    if self.closed:
+      # Don't try to close twice.
+      return
     self.successful = success
     self.run_time = datetime.now() - self.start_time
     if not status:
