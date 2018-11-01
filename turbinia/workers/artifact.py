@@ -66,6 +66,7 @@ class FileArtifactExtractionTask(TurbiniaTask):
     ret, _ = self.execute(cmd, result, save_files=[image_export_log])
     if ret:
       result.close(self, False, 'image_export.py failed.')
+      return result
 
     for dirpath, _, filenames in os.walk(export_directory):
       for filename in filenames:
