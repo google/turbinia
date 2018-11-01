@@ -85,15 +85,16 @@ def LoadConfig():
   if CONFIG:
     return CONFIG
 
+  # If the environment variable is set, take precedence over the pre-defined
+  # CONFIGPATHs.
+  configpath = CONFIGPATH
   if ENVCONFIGVAR in os.environ:
-    # If the environment variable is set, take precedence over the pre-defined
-    # CONFIGPATHs.
-    # pylint: disable=redefined-outer-name
-    CONFIGPATH = os.environ[ENVCONFIGVAR].split(':')
+    configpath = os.environ[ENVCONFIGVAR].split(':')
+
 
   config_file = None
   # Load first file found
-  for _dir, _file in itertools.product(CONFIGPATH, CONFIGFILES):
+  for _dir, _file in itertools.product(configpath, CONFIGFILES):
     if os.path.exists(os.path.join(_dir, _file)):
       config_file = os.path.join(_dir, _file)
       break
