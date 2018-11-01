@@ -86,7 +86,10 @@ def LoadConfig():
     return CONFIG
 
   if ENVCONFIGVAR in os.environ:
-    CONFIGPATH.extend(os.environ[ENVCONFIGVAR].split(':'))
+    # If the environment variable is set, take precedence over the pre-defined
+    # CONFIGPATHs.
+    # pylint: disable=redefined-outer-name
+    CONFIGPATH = os.environ[ENVCONFIGVAR].split(':')
 
   config_file = None
   # Load first file found
