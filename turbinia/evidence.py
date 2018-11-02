@@ -198,13 +198,14 @@ class RawDisk(Evidence):
     size:  The size of the disk in bytes.
   """
 
-      self, mount_partition=None, size=None, *args, **kwargs):
+  def __init__(self, mount_path=None, mount_partition=None, size=None, *args,
+               **kwargs):
     """Initialization for raw disk evidence object."""
-    super(RawDisk, self).__init__(*args, **kwargs)
-    self.mount_partition = mount_partition
-    self.size = size
     self.loopdevice_path = None
-    self._mount_path = None
+    self.mount_partition = mount_partition
+    self.mount_path = mount_path
+    self.size = size
+    super(RawDisk, self).__init__(*args, **kwargs)
 
   def _preprocess(self):
     self.loopdevice_path = mount_local.PreprocessLosetup(self.local_path)

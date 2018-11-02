@@ -28,8 +28,8 @@ class TestTurbiniaEvidence(unittest.TestCase):
 
   def testEvidenceSerialization(self):
     """Test that evidence serializes/unserializes."""
-    rawdisk = evidence.RawDisk(name='My Evidence', local_path='/tmp/foo')
-    rawdisk.mount_path='/mnt/foo'
+    rawdisk = evidence.RawDisk(
+        name='My Evidence', local_path='/tmp/foo', mount_path='/mnt/foo')
     rawdisk_json = rawdisk.to_json()
     self.assertTrue(isinstance(rawdisk_json, str))
 
