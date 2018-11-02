@@ -217,24 +217,14 @@ class RawDisk(Evidence):
     self.mount_partition = mount_partition
     self.path_to_disk = self.local_path
     self.size = size
-    self._loopdevice_path = None
-    self._disk_mount_path = None
+    self.loopdevice_path = None
 
-  def preprocess(self):
-    # First use losetup to parse the RawDisk eventual partition table
-    # and make block devices per partitions.
-    self._loopdevice_path = mount_local.PreprocessLoSetup(self.path_to_disk)
-    # Then we mount the partition
-    self._disk_mount_path = mount_local.PreprocessMountDisk(
-        self._loopdevice_path, self.mount_partition)
-    self.local_path = self._disk_mount_path
+  def _preprocess(self):
+    self.loopdevice_path = mount_local.PreprocessLosetup(self.path_to_disk)
 
   def _postprocess(self):
-    mount_local.PostprocessUnmountPath(self._disk_mount_path)
-    self._disk_mount_path = None
-    mount_local.PostprocessDeleteLosetup(self._loopdevice_path)
-    self._loopdevice_path = None
-    self.local_path = None
+    mount_local.PostprocessDeleteLosetup(self.loopdevice_path)
+    self.loopdevice_path = None
 
   def _preprocess(self):
     self.loopdevice_path = mount_local.PreprocessLosetup(self.local_path)
@@ -305,43 +295,64 @@ class GoogleCloudDiskRawEmbedded(GoogleCloudDisk):
     """Initialization for Google Cloud Disk."""
     self.embedded_path = embedded_path
     super(GoogleCloudDiskRawEmbedded, self).__init__(*args, **kwargs)
+    self._disk_mount_path = None
 
+  def _preprocess(self):
     self.local_path = google_cloud.PreprocessAttachDisk(self.disk_name)
     self.loopdevice_path = mount_local.PreprocessLosetup(self.local_path)
     self.mount_path = mount_local.PreprocessMountDisk(
         self.loopdevice_path, self.mount_partition)
     self.local_path = os.path.join(self.mount_path, self.embedded_path)
 
+
   def _postprocess(self):
     google_cloud.PostprocessDetachDisk(self.disk_name, self.local_path)
-    mount_local.PostprocessUnmountPath(self.mount_path)
+    mount_local.PostprocessUnmountPath(self._disk_mount_path)
+    self._disk_mount_path = None
     mount_local.PostprocessDeleteLosetup(self.loopdevice_path)
 
 
-class DockerContainer(RawDisk):
-   """Evidence object for a DockerContainer filesystem.
+class DockerContainer(Evidence):
+  """Evidence object for a DockerContainer filesystem.
 
-   Attributes:
-     container_id(str): The ID of the container to mount.
-   """
+  Attributes:
+    container_id(str): The ID of the container to mount.
+  """
 
-   def __init__(self, container_id=None, *args, **kwargs):
-     """Initialization for Docker Container."""
-     super(DockerContainer, self).__init__(*args, **kwargs)
-     self.container_id = container_id
-     self._docker_dir = None
-     self._container_fs_path = None
+  def __init__(self, container_id=None, *args, **kwargs):
+    """Initialization for Docker Container."""
+    super(DockerContainer, self).__init__(*args, **kwargs)
+    self.container_id = container_id
+    self._container_fs_path = None
+    self._docker_root_directory = None
+    self._mount_path = None
 
-   def preprocess(self):
-     self._docker_dir = os.path.join(
-         self.disk_mount_path, 'var', 'lib', 'docker')
-     self._container_fs_path = docker.PreprocessMountDockerFS(
-         self._docker_dir, self.container_id)
-     self.local_path = self._container_fs_path
+    if not self.parent_evidence:
+      raise TurbiniaException('DockerContainer need either a parent evidence')
 
-   def postprocess(self):
-     mount_local.PostprocessUnmountPath(self._container_fs_path)
-     self._container_fs_path = None
+  def preprocess(self):
+    self.parent_evidence.preprocess()
+    self._mount_path = self.parent_evidence.local_path
+    if type(self.parent_evidence).__name__ == 'RawDisk':
+      # Mounting the filesystem on the disk
+      self._mount_path = mount_local.PreprocessMountDisk(
+          self.parent_evidence.loopdevice_path,
+          self.parent_evidence.mount_partition)
+
+    self._docker_root_directory = os.path.join(
+        self._mount_path, 'var', 'lib', 'docker')
+    # Mounting the container's filesystem
+    self._container_fs_path = docker.PreprocessMountDockerFS(
+        self._docker_root_directory, self.container_id)
+    self.local_path = self._container_fs_path
+
+  def _postprocess(self):
+    # Unmount the container's filesystem
+    mount_local.PostprocessUnmountPath(self.local_path)
+    self._container_fs_path = None
+    if type(self.parent_evidence).__name__ == 'RawDisk':
+      # Unmount any underlying mount path
+      mount_local.PostprocessUnmountPath(self._mount_path)
 
 
 class PlasoFile(Evidence):
