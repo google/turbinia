@@ -125,7 +125,7 @@ class TurbiniaClient(object):
     """Creates a Turbinia Task by name.
 
     Args:
-      task_name(string): Name of the Task we are going to run
+      task_name(string): Name of the Task we are going to run.
 
     Returns:
       TurbiniaTask: An instantiated Task object.
