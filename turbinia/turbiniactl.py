@@ -301,14 +301,14 @@ def main():
     log.setLevel(logging.WARNING)
 
   if args.jobs_whitelist and args.jobs_blacklist:
-    log.warning('A Job filter whitelist and blacklist cannot be specified '
-                'at the same time')
+    log.error('A Job filter whitelist and blacklist cannot be specified '
+              'at the same time')
     sys.exit(1)
 
   filter_patterns = None
   if (args.filter_patterns_file and
       not os.path.exists(args.filter_patterns_file)):
-    log.warning('Filter patterns file {0:s} does not exist.')
+    log.error('Filter patterns file {0:s} does not exist.')
     sys.exit(1)
   elif args.filter_patterns_file:
     try:
@@ -333,11 +333,11 @@ def main():
   worker_flags_set = (
       args.use_celery or args.command in ('psqworker', 'celeryworker'))
   if args.run_local and (server_flags_set or worker_flags_set):
-    log.warning('--run_local flag is not compatible with server/worker flags')
+    log.error('--run_local flag is not compatible with server/worker flags')
     sys.exit(1)
 
   if args.run_local and not args.task:
-    log.warning('--run_local flag requires --task flag')
+    log.error('--run_local flag requires --task flag')
     sys.exit(1)
 
   if args.output_dir:
@@ -461,7 +461,7 @@ def main():
       log.warning(msg)
     else:
       msg += ' Use --force_evidence if you are sure you want to do this.'
-      log.warning(msg)
+      log.error(msg)
       sys.exit(1)
 
   # If we have evidence to process and we also want to run as a server, then
@@ -506,10 +506,10 @@ def main():
           all_fields=args.all_fields))
 
   if args.run_local and not evidence_:
-    log.warning('Evidence must be specified if using --run_local')
+    log.error('Evidence must be specified if using --run_local')
     sys.exit(1)
   if args.run_local and evidence_.cloud_only:
-    log.warning('--run_local cannot be used with Cloud only Evidence types')
+    log.error('--run_local cannot be used with Cloud only Evidence types')
     sys.exit(1)
   if args.run_local and evidence_:
     result = client.run_local_task(args.task, request)

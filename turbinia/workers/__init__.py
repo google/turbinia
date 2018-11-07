@@ -125,9 +125,9 @@ class TurbiniaTaskResult(object):
     for evidence in self.evidence:
       if evidence.local_path:
         self.saved_paths.append(evidence.local_path)
-        if (evidence.copyable and not config.SHARED_FILESYSTEM
-            and not task.run_local):
-          task.output_manager.save_evidence(evidence, self)
+        if not task.run_local:
+          if evidence.copyable and not config.SHARED_FILESYSTEM:
+            task.output_manager.save_evidence(evidence, self)
       if not evidence.request_id:
         evidence.request_id = self.request_id
 
@@ -336,9 +336,9 @@ class TurbiniaTask(object):
           request_id=self.request_id)
     self.output_dir = self.result.output_dir
 
-    if (not self.run_local and evidence.copyable and not
-        config.SHARED_FILESYSTEM):
-      self.output_manager.retrieve_evidence(evidence)
+    if not self.run_local:
+      if evidence.copyable and not config.SHARED_FILESYSTEM:
+        self.output_manager.retrieve_evidence(evidence)
 
     if evidence.local_path and not os.path.exists(evidence.local_path):
       raise TurbiniaException('Evidence local path {0:s} does not exist'.format(
