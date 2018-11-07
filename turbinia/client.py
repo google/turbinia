@@ -313,7 +313,7 @@ class TurbiniaClient(object):
     """Runs a Turbinia Task locally.
 
     Args:
-      task_name(string): Name of the Task we are going to run
+      task_name(string): Name of the Task we are going to run.
       request (TurbiniaRequest): Object containing request and evidence info.
 
     Returns:
