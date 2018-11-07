@@ -39,6 +39,7 @@ class TestTurbiniaTask(unittest.TestCase):
     self.base_output_dir = tempfile.mkdtemp()
     self.task = TurbiniaTask(base_output_dir=self.base_output_dir)
     self.task.output_manager = mock.MagicMock()
+    self.task.output_manager.get_local_output_dirs.return_value = (None, None)
 
     # Set up RawDisk Evidence
     test_disk_path = tempfile.mkstemp(dir=self.base_output_dir)[1]

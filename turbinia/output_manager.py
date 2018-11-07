@@ -41,10 +41,12 @@ class OutputManager(object):
 
   Attributes:
     _output_writers (list): The configured output writers
+    initialized (bool): Whether this object has been initialized or not.
   """
 
   def __init__(self):
     self._output_writers = None
+    self.initialized = False
 
   @staticmethod
   def get_output_writers(task):
@@ -165,6 +167,7 @@ class OutputManager(object):
   def setup(self, task):
     """Setup OutputManager object."""
     self._output_writers = self.get_output_writers(task)
+    self.initialized = True
 
 
 class OutputWriter(object):

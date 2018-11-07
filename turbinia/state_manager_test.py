@@ -58,6 +58,8 @@ class TestPSQStateManager(unittest.TestCase):
         base_output_dir=self.base_output_dir, name=self.test_data['name'],
         request_id=self.test_data['request_id'])
     self.task.output_manager = mock.MagicMock()
+    self.task.output_manager.get_local_output_dirs.return_value = (
+        '/fake/tmp/dir', self.base_output_dir)
 
     # Set up TurbiniaTaskResult
     self.result = TurbiniaTaskResult(
@@ -65,8 +67,6 @@ class TestPSQStateManager(unittest.TestCase):
     self.result.status = self.test_data['status']
     self.result.saved_paths = self.test_data['saved_paths']
     self.task.result = self.result
-
-    self.result.output_dir = self.base_output_dir
 
   def tearDown(self):
     config.STATE_MANAGER = self.state_manager_save
