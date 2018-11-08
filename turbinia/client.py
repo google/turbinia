@@ -396,8 +396,8 @@ class TurbiniaServer(object):
 
   Attributes:
     task_manager (TaskManager): An object to manage turbinia tasks.
-    jobs_blacklist (list): Jobs we will exclude from running
-    jobs_whitelist (list): The only Jobs we will include to run
+    jobs_blacklist (list(str)): Jobs we will exclude from running
+    jobs_whitelist (list(str)): The only Jobs we will include to run
   """
 
   def __init__(self, jobs_blacklist=None, jobs_whitelist=None):
