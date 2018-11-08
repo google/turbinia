@@ -28,7 +28,7 @@ class JobsManager(object):
   def FilterJobNames(cls, job_names, jobs_blacklist=None, jobs_whitelist=None):
     """Filters a list of job names against white/black lists.
 
-    Exactly one whitelist or blacklist must be specified.
+    jobs_whitelist and jobs_blacklist must not be specified at the same time.
 
     Args:
       job_names (list[str]): The names of the jobs to filter.
