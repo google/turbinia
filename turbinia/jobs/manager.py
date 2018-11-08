@@ -25,35 +25,43 @@ class JobsManager(object):
   _job_classes = {}
 
   @classmethod
-  def FilterJobNames(cls, job_names, jobs_blacklist=None, jobs_whitelist=None):
+  def FilterJobNames(
+      cls, jobs, jobs_blacklist=None, jobs_whitelist=None, objects=False):
     """Filters a list of job names against white/black lists.
 
     jobs_whitelist and jobs_blacklist must not be specified at the same time.
 
     Args:
-      job_names (list[str]): The names of the jobs to filter.
+      jobs (list[str|TurbiniaJob]): The names of the jobs to filter.
       jobs_blacklist (list[str]): Job names to exclude.
       jobs_whitelist (list[str]): Job names to include.
+      objects (bool): Whether jobs are job objects or job names
 
     Returns:
-     list[str]: Job names
+     list[str|TurbiniaJob]: Job names or Job objects
 
     Raises:
       TurbiniaException if both jobs_blacklist and jobs_whitelist are specified.
     """
     jobs_blacklist = jobs_blacklist if jobs_blacklist else []
+    jobs_blacklist = [job.lower() for job in jobs_blacklist]
     jobs_whitelist = jobs_whitelist if jobs_whitelist else []
+    jobs_whitelist = [job.lower() for job in jobs_whitelist]
 
     if jobs_whitelist and jobs_blacklist:
       raise TurbiniaException(
           'jobs_whitelist and jobs_blacklist cannot be specified at the same '
           'time.')
-    elif jobs_blacklist:
-      return [job for job in job_names if job not in jobs_blacklist]
-    elif jobs_whitelist:
-      return [job for job in job_names if job in jobs_whitelist]
+    elif jobs_blacklist and objects:
+      return [job for job in jobs if job.name.lower() not in jobs_blacklist]
+    elif jobs_blacklist and not objects:
+      return [job for job in jobs if job.lower() not in jobs_blacklist]
+    elif jobs_whitelist and objects:
+      return [job for job in jobs if job.name.lower() in jobs_whitelist]
+    elif jobs_whitelist and not objects:
+      return [job for job in jobs if job.lower() in jobs_whitelist]
     else:
-      return job_names
+      return jobs
 
 
   @classmethod

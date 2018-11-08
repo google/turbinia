@@ -111,8 +111,12 @@ class BaseTaskManager(object):
     self._backend_setup(*args, **kwargs)
     # TODO(aarontp): Consider instantiating a job per evidence object
     job_names = jobs_manager.JobsManager.GetJobNames()
-    job_names = jobs_manager.JobsManager.FilterJobNames(
-        job_names, jobs_blacklist, jobs_whitelist)
+    if jobs_blacklist or jobs_whitelist:
+      log.info(
+          'Filtering Jobs with whitelist {0!s} and blacklist {1!s}'.format(
+              jobs_whitelist, jobs_blacklist))
+      job_names = jobs_manager.JobsManager.FilterJobNames(
+          job_names, jobs_blacklist, jobs_whitelist)
     self.jobs = jobs_manager.JobsManager.GetJobInstances(job_names)
 
   def add_evidence(self, evidence_):
@@ -134,8 +138,14 @@ class BaseTaskManager(object):
     job_count = 0
     jobs_whitelist = evidence_.config.get('jobs_whitelist', [])
     jobs_blacklist = evidence_.config.get('jobs_blacklist', [])
-    jobs_list = jobs_manager.JobsManager.FilterJobNames(
-        self.jobs, jobs_blacklist, jobs_whitelist)
+    if jobs_blacklist or jobs_whitelist:
+      log.info(
+          'Filtering Jobs with whitelist {0!s} and blacklist {1!s}'.format(
+              jobs_whitelist, jobs_blacklist))
+      jobs_list = jobs_manager.JobsManager.FilterJobNames(
+          self.jobs, jobs_blacklist, jobs_whitelist, objects=True)
+    else:
+      jobs_list = self.jobs
 
     # TODO(aarontp): Add some kind of loop detection in here so that jobs can
     # register for Evidence(), or or other evidence types that may be a super
