@@ -92,9 +92,9 @@ class Evidence(object):
     local_path: A string of the local_path to the evidence.
     tags: dict of extra tags associated with this evidence.
     request_id: The id of the request this evidence came from, if any.
-    parent_evidence: An Evidence that was used to generate this one, and which
-      pre/post process methods we need to re-execute to access data relevant
-      to us.
+    parent_evidence: The Evidence object that was used to generate this one, and
+      which pre/post process methods we need to re-execute to access data
+      relevant to us.
   """
 
   def __init__(
