@@ -62,6 +62,8 @@ def evidence_decode(evidence_dict):
         'No Evidence object of type {0:s} in evidence module'.format(type_))
 
   evidence.__dict__ = evidence_dict
+  if evidence_dict['parent_evidence']:
+    evidence.parent_evidence = evidence_decode(evidence_dict['parent_evidence'])
   return evidence
 
 
@@ -124,7 +126,10 @@ class Evidence(object):
 
   def serialize(self):
     """Return JSON serializable object."""
-    return self.__dict__
+    serialized_evidence = self.__dict__
+    if self.parent_evidence:
+      serialized_evidence['parent_evidence'] = self.parent_evidence.serialize()
+    return serialized_evidence
 
   def to_json(self):
     """Convert object to JSON.
