@@ -76,7 +76,7 @@ class TurbiniaTaskResult(object):
       task (TurbiniaTask): The calling Task object
 
     Raises:
-      TurbiniaException: If the Output Manager is not initialized.
+      TurbiniaException: If the Output Manager is not setup.
     """
 
     self.closed = False
@@ -98,10 +98,10 @@ class TurbiniaTaskResult(object):
     self.worker_name = platform.node()
     # TODO(aarontp): Create mechanism to grab actual python logging data.
     self._log = []
-    if task.output_manager.initialized:
+    if task.output_manager.is_setup:
       _, self.output_dir = task.output_manager.get_local_output_dirs()
     else:
-      raise TurbiniaException('Output Manager is not initialized yet.')
+      raise TurbiniaException('Output Manager is not setup yet.')
 
   def close(self, task, success, status=None):
     """Handles closing of this result and writing logs.

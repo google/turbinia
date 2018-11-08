@@ -69,7 +69,7 @@ class TestLocalOutputManager(unittest.TestCase):
     self.task.output_manager.setup(self.task)
     tmp_dir, local_dir = self.task.output_manager.get_local_output_dirs()
 
-    self.assertTrue(self.task.output_manager.initialized)
+    self.assertTrue(self.task.output_manager.is_setup)
     self.assertTrue(os.path.isdir(tmp_dir))
     self.assertTrue(os.path.isdir(local_dir))
     self.assertTrue(tmp_dir.startswith(self.tmp_dir))

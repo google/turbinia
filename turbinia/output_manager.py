@@ -41,12 +41,12 @@ class OutputManager(object):
 
   Attributes:
     _output_writers (list): The configured output writers
-    initialized (bool): Whether this object has been initialized or not.
+    is_setup (bool): Whether this object has been setup or not.
   """
 
   def __init__(self):
     self._output_writers = None
-    self.initialized = False
+    self.is_setup = False
 
   @staticmethod
   def get_output_writers(task):
@@ -167,7 +167,7 @@ class OutputManager(object):
   def setup(self, task):
     """Setup OutputManager object."""
     self._output_writers = self.get_output_writers(task)
-    self.initialized = True
+    self.is_setup = True
 
 
 class OutputWriter(object):
@@ -380,6 +380,20 @@ class GCSOutputWriter(OutputWriter):
     return os.path.join('gs://', self.bucket, destination_path)
 
   def copy_from(self, source_path):
+    """Copies output file from the managed location to the local output dir.
+
+    Args:
+      source_file (string): A path to a source file in the managed storage
+          location.  This path should be in a format matching the storage type
+          (e.g. GCS paths are formatted like 'gs://bucketfoo/' and local paths
+          are like '/foo/bar'.
+
+    Returns:
+      The path the file was saved to, or None if file was not written.
+
+    Raises:
+      TurbiniaException: If file retrieval fails.
+    """
     bucket = self.client.get_bucket(self.bucket)
     gcs_path = self._parse_gcs_path(source_path)[1]
     destination_path = os.path.join(
