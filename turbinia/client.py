@@ -380,6 +380,7 @@ class TurbiniaCeleryWorker(TurbiniaClient):
     super(TurbiniaCeleryWorker, self).__init__()
     check_directory(config.MOUNT_DIR_PREFIX)
     check_directory(config.OUTPUT_DIR)
+    check_directory(config.TMP_DIR)
     self.worker = self.task_manager.celery.app
 
   def start(self):
@@ -420,6 +421,7 @@ class TurbiniaPsqWorker(object):
 
     check_directory(config.MOUNT_DIR_PREFIX)
     check_directory(config.OUTPUT_DIR)
+    check_directory(config.TMP_DIR)
 
     log.info('Starting PSQ listener on queue {0:s}'.format(self.psq.name))
     self.worker = psq.Worker(queue=self.psq)

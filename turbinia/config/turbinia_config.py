@@ -23,15 +23,21 @@ ROLE = 'server'
 # Which user account Turbinia runs as
 USER = 'turbinia'
 
-# Turbinia's installation directory
-TURBINIA_DIR = '/opt/turbinia'
-
 # 'PSQ' is currently the only valid option as
 # a distributed task queue using Google Cloud Pub/Sub
 TASK_MANAGER = 'PSQ'
 
+# Turbinia's installation directory
+TURBINIA_DIR = '/opt/turbinia'
+
 # Default base output directory for worker results and evidence.
 OUTPUT_DIR = '/var/tmp'
+
+# Directory for temporary files.  Some temporary files can be quite large (e.g.
+# Plaso files can easily be multiple gigabytes), so make sure there is enough
+# space.  Nothing from this directory will be saved.  This directory should be
+# different from the OUTPUT_DIR.
+TMP_DIR = '/tmp'
 
 # File to log to; set this as None if log file is not desired
 # By default, Turbinia logs are written to a directory (GCS_OUTPUT_DIR)

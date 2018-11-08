@@ -41,10 +41,12 @@ class OutputManager(object):
 
   Attributes:
     _output_writers (list): The configured output writers
+    is_setup (bool): Whether this object has been setup or not.
   """
 
   def __init__(self):
     self._output_writers = None
+    self.is_setup = False
 
   @staticmethod
   def get_output_writers(task):
@@ -71,11 +73,11 @@ class OutputManager(object):
       writers.append(writer)
     return writers
 
-  def get_local_output_dir(self):
-    """Gets the local output dir from the local output writer.
+  def get_local_output_dirs(self):
+    """Gets the local output directories from the local output writer.
 
     Returns:
-      String to locally created output directory.
+      Tuple(string): (Path to temp directory, path to local output directory)
 
     Raises:
       TurbiniaException: If no local output writer with output_dir is found.
@@ -93,7 +95,15 @@ class OutputManager(object):
       raise TurbiniaException(
           'Local output writer attribute local_output_dir is not set')
 
-    return writer.local_output_dir
+    if not hasattr(writer, 'tmp_dir'):
+      raise TurbiniaException(
+          'Local output writer does not have tmp_dir attribute.')
+
+    if not writer.tmp_dir:
+      raise TurbiniaException(
+          'Local output writer attribute tmp_dir is not set')
+
+    return (writer.tmp_dir, writer.local_output_dir)
 
   def retrieve_evidence(self, evidence_):
     """Retrieves evidence data from remote location.
@@ -129,7 +139,11 @@ class OutputManager(object):
     return evidence_
 
   def save_local_file(self, file_, result):
-    """Saves local file by writing to all non-local output writers.
+    """Saves local file by writing to all output writers.
+
+    Most local files will already be in the local output directory and won't
+    need to be copied by the LocalOutputWriter, but any files outside of this
+    directory (e.g. files in the tmp_dir) will still be copied locally.
 
     Args:
       file_ (string): Path to file to save.
@@ -142,18 +156,18 @@ class OutputManager(object):
     saved_path = None
     saved_path_type = None
     for writer in self._output_writers:
-      if writer.name != 'LocalOutputWriter':
-        new_path = writer.copy_to(file_)
-        if new_path:
-          result.saved_paths.append(new_path)
-          saved_path = new_path
-          saved_path_type = writer.name
+      new_path = writer.copy_to(file_)
+      if new_path:
+        result.saved_paths.append(new_path)
+        saved_path = new_path
+        saved_path_type = writer.name
 
     return saved_path, saved_path_type
 
   def setup(self, task):
     """Setup OutputManager object."""
     self._output_writers = self.get_output_writers(task)
+    self.is_setup = True
 
 
 class OutputWriter(object):
@@ -185,19 +199,27 @@ class OutputWriter(object):
           will be generated automatically if not set.
     """
     self.unique_dir = unique_dir
-    self.local_output_dir = local_output_dir
     self.name = self.NAME
+
     if base_output_dir:
       self.base_output_dir = base_output_dir
     else:
       config.LoadConfig()
       self.base_output_dir = config.OUTPUT_DIR
-    self.create_output_dir()
 
-  def create_output_dir(self):
+    if local_output_dir:
+      self.local_output_dir = local_output_dir
+    else:
+      self.local_output_dir = self.create_output_dir()
+
+
+  def create_output_dir(self, base_path=None):
     """Creates a unique output path for this task and creates directories.
 
     Needs to be run at runtime so that the task creates the directory locally.
+
+    Args:
+      base_path(string): Base directory output directory will be created in.
 
     Returns:
       A local output path string.
@@ -207,22 +229,28 @@ class OutputWriter(object):
     """
     raise NotImplementedError
 
-  def copy_to(self, file_):
-    """Copies output file to the managed location.
+  def copy_to(self, source_file):
+    """Copies file to the managed location.
+
+    Files will be copied into base_output_dir with a filename set to the
+    basename of the source file.
 
     Args:
-      file_: A string path to a source file.
+      source_file (string): A path to a local source file.
 
     Returns:
       The path the file was saved to, or None if file was not written.
     """
     raise NotImplementedError
 
-  def copy_from(self, file_):
-    """Copies output file from the managed location.
+  def copy_from(self, source_file):
+    """Copies output file from the managed location to the local output dir.
 
     Args:
-      file_: A string path to a source file.
+      source_file (string): A path to a source file in the managed storage
+          location.  This path should be in a format matching the storage type
+          (e.g. GCS paths are formatted like 'gs://bucketfoo/' and local paths
+          are like '/foo/bar'.
 
     Returns:
       The path the file was saved to, or None if file was not written.
@@ -231,7 +259,11 @@ class OutputWriter(object):
 
 
 class LocalOutputWriter(OutputWriter):
-  """Class for writing to local filesystem output."""
+  """Class for writing to local filesystem output.
+
+  Attributes:
+    tmp_dir (string): Path to temp directory
+  """
 
   NAME = 'LocalWriter'
 
@@ -239,13 +271,16 @@ class LocalOutputWriter(OutputWriter):
   def __init__(self, base_output_dir=None, *args, **kwargs):
     super(LocalOutputWriter, self).__init__(base_output_dir=base_output_dir,
                                             *args, **kwargs)
+    config.LoadConfig()
+    self.tmp_dir = self.create_output_dir(base_path=config.TMP_DIR)
 
-  def create_output_dir(self):
-    self.local_output_dir = os.path.join(self.base_output_dir, self.unique_dir)
-    if not os.path.exists(self.local_output_dir):
+  def create_output_dir(self, base_path=None):
+    base_path = base_path if base_path else self.base_output_dir
+    output_dir = os.path.join(base_path, self.unique_dir)
+    if not os.path.exists(output_dir):
       try:
-        log.info('Creating new directory {0:s}'.format(self.local_output_dir))
-        os.makedirs(self.local_output_dir)
+        log.debug('Creating new directory {0:s}'.format(output_dir))
+        os.makedirs(output_dir)
       except OSError as e:
         if e.errno == errno.EACCES:
           msg = 'Permission error ({0:s})'.format(str(e))
@@ -253,34 +288,41 @@ class LocalOutputWriter(OutputWriter):
           msg = str(e)
         raise TurbiniaException(msg)
 
-    return self.local_output_dir
+    return output_dir
 
   def _copy(self, file_path):
     """Copies file to local output dir.
 
     Args:
-      file_path: A string path to a source file.
+      file_path(string): Source path to the file to copy.
 
     Returns:
       The path the file was saved to, or None if file was not written.
     """
-    output_file = os.path.join(self.local_output_dir,
-                               os.path.basename(file_path))
+    destination_file = os.path.join(
+        self.local_output_dir, os.path.basename(file_path))
+
+    if self.local_output_dir in os.path.commonprefix(
+        [file_path, destination_file]):
+      log.debug('Not copying file {0:s} in output dir {1:s}'.format(
+          file_path, self.local_output_dir))
+      return None
     if not os.path.exists(file_path):
       log.warning('File [{0:s}] does not exist.'.format(file_path))
       return None
-    if os.path.exists(output_file):
-      log.warning('New file path [{0:s}] already exists.'.format(output_file))
+    if os.path.exists(destination_file):
+      log.warning('New file path [{0:s}] already exists.'.format(
+          destination_file))
       return None
 
-    shutil.copy(file_path, output_file)
-    return output_file
+    shutil.copy(file_path, destination_file)
+    return destination_file
 
-  def copy_to(self, file_path):
-    return self._copy(file_path)
+  def copy_to(self, source_file):
+    return self._copy(source_file)
 
-  def copy_from(self, file_path):
-    return self._copy(file_path)
+  def copy_from(self, source_file):
+    return self._copy(source_file)
 
 
 class GCSOutputWriter(OutputWriter):
@@ -323,30 +365,46 @@ class GCSOutputWriter(OutputWriter):
           'Cannot find bucket and path from GCS config {0:s}'.format(file_))
     return match.group(1), match.group(2)
 
-  def create_output_dir(self):
+  def create_output_dir(self, base_path=None):
     # Directories in GCS are artificial, so any path can be written as part of
     # the object name.
     pass
 
-  def copy_to(self, file_):
+  def copy_to(self, source_path):
     bucket = self.client.get_bucket(self.bucket)
-    full_path = os.path.join(
-        self.base_output_dir, self.unique_dir, os.path.basename(file_))
-    log.info('Writing {0:s} to GCS path {1:s}'.format(file_, full_path))
-    blob = storage.Blob(full_path, bucket, chunk_size=self.CHUNK_SIZE)
-    blob.upload_from_filename(file_, client=self.client)
-    return os.path.join('gs://', self.bucket, full_path)
+    destination_path = os.path.join(
+        self.base_output_dir, self.unique_dir, os.path.basename(source_path))
+    log.info(
+        'Writing {0:s} to GCS path {1:s}'.format(source_path, destination_path))
+    blob = storage.Blob(destination_path, bucket, chunk_size=self.CHUNK_SIZE)
+    blob.upload_from_filename(source_path, client=self.client)
+    return os.path.join('gs://', self.bucket, destination_path)
 
-  def copy_from(self, file_):
+  def copy_from(self, source_path):
+    """Copies output file from the managed location to the local output dir.
+
+    Args:
+      source_file (string): A path to a source file in the managed storage
+          location.  This path should be in a format matching the storage type
+          (e.g. GCS paths are formatted like 'gs://bucketfoo/' and local paths
+          are like '/foo/bar'.
+
+    Returns:
+      The path the file was saved to, or None if file was not written.
+
+    Raises:
+      TurbiniaException: If file retrieval fails.
+    """
     bucket = self.client.get_bucket(self.bucket)
-    gcs_path = self._parse_gcs_path(file_)[1]
-    full_path = os.path.join(self.local_output_dir, os.path.basename(file_))
+    gcs_path = self._parse_gcs_path(source_path)[1]
+    destination_path = os.path.join(
+        self.local_output_dir, os.path.basename(source_path))
     log.info('Writing GCS file {0:s} to local path {1:s}'.format(
-        file_, full_path))
+        source_path, destination_path))
     blob = storage.Blob(gcs_path, bucket, chunk_size=self.CHUNK_SIZE)
-    blob.download_to_filename(full_path, client=self.client)
-    if not os.path.exists(full_path):
+    blob.download_to_filename(destination_path, client=self.client)
+    if not os.path.exists(destination_path):
       raise TurbiniaException(
           'File retrieval from GCS failed: Local file {0:s} does not '
-          'exist'.format(full_path))
-    return full_path
+          'exist'.format(destination_path))
+    return destination_path
