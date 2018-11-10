@@ -28,21 +28,20 @@ from turbinia.jobs import manager
 from turbinia.workers.analysis import wordpress
 
 ACCESS_LOG_ARTIFACTS = [
-    'DockerContainerLogs',
-    'NginxAccessLogs',
-    'ApacheAccessLogs'
+    'DockerContainerLogs', 'NginxAccessLogs', 'ApacheAccessLogs'
 ]
+
 
 class HTTPAccessLogExtractionJob(interface.TurbiniaJob):
   """HTTP Access log extraction job."""
 
   evidence_input = [
-      Directory, RawDisk, GoogleCloudDisk, GoogleCloudDiskRawEmbedded]
+      Directory, RawDisk, GoogleCloudDisk, GoogleCloudDiskRawEmbedded
+  ]
 
   evidence_output = [ExportedFileArtifact]
 
   NAME = 'HTTPAccessLogExtractionJob'
-
 
   def create_tasks(self, evidence):
     """Create task.
@@ -55,9 +54,11 @@ class HTTPAccessLogExtractionJob(interface.TurbiniaJob):
     """
     tasks = []
     for artifact_name in ACCESS_LOG_ARTIFACTS:
-      tasks.extend([artifact.FileArtifactExtractionTask(artifact_name) for _
-                    in evidence])
+      tasks.extend([
+          artifact.FileArtifactExtractionTask(artifact_name) for _ in evidence
+      ])
     return tasks
+
 
 class HTTPAccessLogAnalysisJob(interface.TurbiniaJob):
   """HTTP Access log analysis job."""
@@ -76,6 +77,7 @@ class HTTPAccessLogAnalysisJob(interface.TurbiniaJob):
     """
     evidence = [e for e in evidence if e.artifact_name in ACCESS_LOG_ARTIFACTS]
     return [wordpress.WordpressAccessLogAnalysisTask() for _ in evidence]
+
 
 manager.JobsManager.RegisterJobs(
     [HTTPAccessLogExtractionJob, HTTPAccessLogAnalysisJob])

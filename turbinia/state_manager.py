@@ -176,8 +176,9 @@ class DatastoreStateManager(BaseStateManager):
         log.debug('Updating Task {0:s} in Datastore'.format(task.name))
         self.client.put(entity)
     except exceptions.GoogleCloudError as e:
-      log.error('Failed to update task {0:s} in datastore: {1!s}'.format(
-          task.name, e))
+      log.error(
+          'Failed to update task {0:s} in datastore: {1!s}'.format(
+              task.name, e))
 
   def write_new_task(self, task):
     key = self.client.key('TurbiniaTask', task.id)
@@ -188,8 +189,9 @@ class DatastoreStateManager(BaseStateManager):
       self.client.put(entity)
       task.state_key = key
     except exceptions.GoogleAPIError as e:
-      log.error('Failed to update task {0:s} in datastore: {1!s}'.format(
-          task.name, e))
+      log.error(
+          'Failed to update task {0:s} in datastore: {1!s}'.format(
+              task.name, e))
     return key
 
 
@@ -232,8 +234,9 @@ class RedisStateManager(BaseStateManager):
       start_time = datetime.now() - timedelta(days=days)
       # Redis only supports strings; we convert to/from datetime here and below
       return [
-          task for task in tasks if datetime.strptime(
-              task.get('last_update'), DATETIME_FORMAT) > start_time
+          task for task in tasks
+          if datetime.strptime(task.get('last_update'), DATETIME_FORMAT) >
+          start_time
       ]
     elif task_id:
       return [task for task in tasks if task.get('task_id') == task_id]
@@ -253,8 +256,8 @@ class RedisStateManager(BaseStateManager):
     # Need to use json.dumps, else redis returns single quoted string which
     # is invalid json
     if not self.client.set(key, json.dumps(task_data)):
-      log.error('Unsuccessful in updating task {0:s} in Redis'.format(
-          task.name))
+      log.error(
+          'Unsuccessful in updating task {0:s} in Redis'.format(task.name))
 
   def write_new_task(self, task):
     key = ':'.join(['TurbiniaTask', task.id])
@@ -264,7 +267,7 @@ class RedisStateManager(BaseStateManager):
         DATETIME_FORMAT)
     # nx=True prevents overwriting (i.e. no unintentional task clobbering)
     if not self.client.set(key, json.dumps(task_data), nx=True):
-      log.error('Unsuccessful in writing new task {0:s} into Redis'.format(
-          task.name))
+      log.error(
+          'Unsuccessful in writing new task {0:s} into Redis'.format(task.name))
     task.state_key = key
     return key

@@ -29,8 +29,9 @@ from turbinia.workers.plaso import PlasoTask
 class PlasoJob(interface.TurbiniaJob):
   """Runs Plaso on some evidence to generate a Plaso file."""
   # The types of evidence that this Job will process
-  evidence_input = [Directory, RawDisk, GoogleCloudDisk,
-                    GoogleCloudDiskRawEmbedded]
+  evidence_input = [
+      Directory, RawDisk, GoogleCloudDisk, GoogleCloudDiskRawEmbedded
+  ]
   evidence_output = [PlasoFile]
 
   NAME = 'PlasoJob'

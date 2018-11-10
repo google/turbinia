@@ -113,8 +113,7 @@ class JenkinsAnalysisTaskTest(unittest.TestCase):
     task = jenkins.JenkinsAnalysisTask()
 
     # pylint: disable=protected-access
-    version = task._extract_jenkins_version(
-        str(self.JENKINS_SYSTEM_CONFIG))
+    version = task._extract_jenkins_version(str(self.JENKINS_SYSTEM_CONFIG))
 
     self.assertEqual(version, self.EXPECTED_VERSION)
 

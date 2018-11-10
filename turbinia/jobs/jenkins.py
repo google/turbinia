@@ -29,11 +29,11 @@ class JenkinsAnalysisJob(interface.TurbiniaJob):
   """Jenkins analysis job."""
 
   evidence_input = [
-      Directory, RawDisk, GoogleCloudDisk, GoogleCloudDiskRawEmbedded]
+      Directory, RawDisk, GoogleCloudDisk, GoogleCloudDiskRawEmbedded
+  ]
   evidence_output = [ReportText]
 
   NAME = 'JenkinsAnalysisJob'
-
 
   def create_tasks(self, evidence):
     """Create task for Jenkins analysis job.

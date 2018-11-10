@@ -29,9 +29,9 @@ CONFIGFILES = ['.turbiniarc', 'turbinia.conf', 'turbinia_config.py']
 # Look in homedir first, then /etc/turbinia, and finally in the source
 # config dir for config files
 CONFIGPATH = [
-    os.path.expanduser('~'),
-    '/etc/turbinia',
-    os.path.dirname(os.path.abspath(__file__))]
+    os.path.expanduser('~'), '/etc/turbinia',
+    os.path.dirname(os.path.abspath(__file__))
+]
 # Config vars that we expect to exist in the configuration
 CONFIGVARS = [
     # Turbinia Config
@@ -65,7 +65,8 @@ CONFIGVARS = [
     'CELERY_BACKEND',
     'KOMBU_BROKER',
     'KOMBU_CHANNEL',
-    'KOMBU_DURABLE',]
+    'KOMBU_DURABLE',
+]
 # Environment variable to look for path data in
 ENVCONFIGVAR = 'TURBINIA_CONFIG_PATH'
 
@@ -91,7 +92,6 @@ def LoadConfig():
   configpath = CONFIGPATH
   if ENVCONFIGVAR in os.environ:
     configpath = os.environ[ENVCONFIGVAR].split(':')
-
 
   config_file = None
   # Load first file found
