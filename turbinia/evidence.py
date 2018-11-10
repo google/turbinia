@@ -114,6 +114,9 @@ class Evidence(object):
   def __str__(self):
     return '{0:s}:{1:s}:{2!s}'.format(self.type, self.name, self.local_path)
 
+  def __repr__(self):
+    return self.__str__()
+
   def serialize(self):
     """Return JSON serializable object."""
     return self.__dict__

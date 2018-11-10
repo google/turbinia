@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright 2015 Google Inc.
+# Copyright 2018 Google Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@ import logging
 import os
 import pickle
 import platform
+import pprint
 import subprocess
 import traceback
 import uuid
@@ -101,6 +102,11 @@ class TurbiniaTaskResult(object):
     else:
       raise TurbiniaException('Output Manager is not setup yet.')
 
+
+  def __str__(self):
+    return pprint.pformat(vars(self), depth=3)
+
+
   def close(self, task, success, status=None):
     """Handles closing of this result and writing logs.
 
@@ -128,8 +134,9 @@ class TurbiniaTaskResult(object):
     for evidence in self.evidence:
       if evidence.local_path:
         self.saved_paths.append(evidence.local_path)
-        if evidence.copyable and not config.SHARED_FILESYSTEM:
-          task.output_manager.save_evidence(evidence, self)
+        if not task.run_local:
+          if evidence.copyable and not config.SHARED_FILESYSTEM:
+            task.output_manager.save_evidence(evidence, self)
       if not evidence.request_id:
         evidence.request_id = self.request_id
 
@@ -152,7 +159,8 @@ class TurbiniaTaskResult(object):
       with open(logfile, 'w') as f:
         f.write('\n'.join(self._log))
         f.write('\n')
-      task.output_manager.save_local_file(logfile, self)
+      if not task.run_local:
+        task.output_manager.save_local_file(logfile, self)
 
     self.closed = True
     log.debug('Result close successful. Status is [{0:s}]'.format(self.status))
@@ -208,6 +216,7 @@ class TurbiniaTask(object):
       output_manager: An output manager object
       result: A TurbiniaTaskResult object.
       request_id: The id of the initial request to process this evidence.
+      run_local: Whether we are running locally without a Worker or not.
       state_key: A key used to manage task state
       stub: The task manager implementation specific task stub that exists
             server side to keep a reference to the remote task objects.  For PSQ
@@ -239,6 +248,7 @@ class TurbiniaTask(object):
     self.output_manager = output_manager.OutputManager()
     self.result = None
     self.request_id = request_id
+    self.run_local = False
     self.state_key = None
     self.stub = None
     self.tmp_dir = None
@@ -286,7 +296,8 @@ class TurbiniaTask(object):
     else:
       for file_ in save_files:
         result.log('Output file at {0:s}'.format(file_))
-        self.output_manager.save_local_file(file_, result)
+        if not self.run_local:
+          self.output_manager.save_local_file(file_, result)
       for evidence in new_evidence:
         # If the local path is set in the Evidence, we check to make sure that
         # the path exists and is not empty before adding it.
@@ -336,8 +347,9 @@ class TurbiniaTask(object):
           base_output_dir=self.base_output_dir,
           request_id=self.request_id)
 
-    if evidence.copyable and not config.SHARED_FILESYSTEM:
-      self.output_manager.retrieve_evidence(evidence)
+    if not self.run_local:
+      if evidence.copyable and not config.SHARED_FILESYSTEM:
+        self.output_manager.retrieve_evidence(evidence)
 
     if evidence.local_path and not os.path.exists(evidence.local_path):
       raise TurbiniaException('Evidence local path {0:s} does not exist'.format(
@@ -401,6 +413,7 @@ class TurbiniaTask(object):
 
     log.info('Result check: {0:s}'.format(check_status))
     return result
+
 
   def run_wrapper(self, evidence):
     """Wrapper to manage TurbiniaTaskResults and exception handling.
