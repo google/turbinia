@@ -234,9 +234,8 @@ class RedisStateManager(BaseStateManager):
       start_time = datetime.now() - timedelta(days=days)
       # Redis only supports strings; we convert to/from datetime here and below
       return [
-          task for task in tasks
-          if datetime.strptime(task.get('last_update'), DATETIME_FORMAT) >
-          start_time
+          task for task in tasks if datetime.strptime(
+              task.get('last_update'), DATETIME_FORMAT) > start_time
       ]
     elif task_id:
       return [task for task in tasks if task.get('task_id') == task_id]

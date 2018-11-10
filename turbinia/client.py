@@ -276,13 +276,11 @@ class TurbiniaClient(object):
       status = task.get('status', 'No task status')
       if all_fields:
         results.append(
-            '{0:s} request: {1:s} task: {2:s} {3:s} {4:s} {5:s} {6:s}: {7:s}'.
-            format(
-                task.get('last_update'),
-                task.get('request_id'),
-                task.get('id'),
-                task.get('name'),
-                task.get('user'), task.get('worker_name'), success, status))
+            '{0:s} request: {1:s} task: {2:s} {3:s} {4:s} {5:s} {6:s}: {7:s}'
+            .format(
+                task.get('last_update'), task.get('request_id'), task.get('id'),
+                task.get('name'), task.get('user'), task.get('worker_name'),
+                success, status))
         saved_paths = task.get('saved_paths', [])
         for path in saved_paths:
           results.append('\t{0:s}'.format(path))
