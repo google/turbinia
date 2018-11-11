@@ -20,10 +20,11 @@ from __future__ import unicode_literals
 ################################################################################
 #                          Base Turbinia configuration
 #
-# All options in this section are required.
+# All options in this section are required to be set to non-empty values.
 ################################################################################
 
-# A unique ID per Turbinia instance. Used to namespace datastore entries.
+# A unique ID per Turbinia instance. Used to keep multiple Turbinia instances
+# separate when running with the same Cloud projects or backend servers.
 INSTANCE_ID = 'turbinia-instance1'
 
 # Which state manager to use. Valid options are 'Datastore' or 'Redis'.
