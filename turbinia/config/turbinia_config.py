@@ -24,7 +24,7 @@ from __future__ import unicode_literals
 ################################################################################
 
 # A unique ID per Turbinia instance. Used to namespace datastore entries.
-INSTANCE_ID = 'turbinia-pubsub'
+INSTANCE_ID = 'turbinia-instance1'
 
 # Which state manager to use. Valid options are 'Datastore' or 'Redis'.
 STATE_MANAGER = 'Datastore'
