@@ -62,7 +62,7 @@ class TurbiniaPubSub(TurbiniaMessageBase):
     config.LoadConfig()
     self.publisher = pubsub.PublisherClient()
     self.topic_path = self.publisher.topic_path(
-        config.PROJECT, self.topic_name)
+        config.TURBINIA_PROJECT, self.topic_name)
     try:
       log.debug('Trying to create pubsub topic {0:s}'.format(self.topic_path))
       self.publisher.create_topic(self.topic_path)
@@ -75,10 +75,10 @@ class TurbiniaPubSub(TurbiniaMessageBase):
     config.LoadConfig()
     self.subscriber = pubsub.SubscriberClient()
     subscription_path = self.subscriber.subscription_path(
-        config.PROJECT, self.topic_name)
+        config.TURBINIA_PROJECT, self.topic_name)
     if not self.topic_path:
       self.topic_path = self.subscriber.topic_path(
-          config.PROJECT, self.topic_name)
+          config.TURBINIA_PROJECT, self.topic_name)
     try:
       log.debug('Trying to create subscription {0:s} on topic {1:s}'.format(
           subscription_path, self.topic_path))

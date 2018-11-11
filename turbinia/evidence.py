@@ -27,7 +27,7 @@ from turbinia.processors import mount_local
 # pylint: disable=keyword-arg-before-vararg
 
 config.LoadConfig()
-if config.TASK_MANAGER == 'PSQ':
+if config.TASK_MANAGER.lower() == 'psq':
   from turbinia.processors import google_cloud
 
 def evidence_decode(evidence_dict):

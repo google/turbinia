@@ -400,7 +400,7 @@ def main():
       if args.user or args.request_id or args.task_id:
         print(client.close_tasks(
             instance=config.INSTANCE_ID,
-            project=config.PROJECT,
+            project=config.TURBINIA_PROJECT,
             region=region,
             request_id=args.request_id,
             task_id=args.task_id,
@@ -416,7 +416,7 @@ def main():
     if args.wait and args.request_id:
       client.wait_for_request(
           instance=config.INSTANCE_ID,
-          project=config.PROJECT,
+          project=config.TURBINIA_PROJECT,
           region=region,
           request_id=args.request_id,
           user=args.user,
@@ -427,7 +427,7 @@ def main():
 
     print(client.format_task_status(
         instance=config.INSTANCE_ID,
-        project=config.PROJECT,
+        project=config.TURBINIA_PROJECT,
         region=region,
         days=args.days_history,
         task_id=args.task_id,
@@ -452,11 +452,11 @@ def main():
                 'object'.format(evidence_.type))
       sys.exit(1)
 
-  if is_cloud_disk and evidence_.project != config.PROJECT:
+  if is_cloud_disk and evidence_.project != config.TURBINIA_PROJECT:
     msg = ('Turbinia project {0:s} is different from evidence project {1:s}. '
            'This processing request will fail unless the Turbinia service '
            'account has permissions to this project.'.format(
-               config.PROJECT, evidence_.project))
+               config.TURBINIA_PROJECT, evidence_.project))
     if args.force_evidence:
       log.warning(msg)
     else:
@@ -494,13 +494,13 @@ def main():
       region = config.TURBINIA_REGION
       client.wait_for_request(
           instance=config.INSTANCE_ID,
-          project=config.PROJECT,
+          project=config.TURBINIA_PROJECT,
           region=region,
           request_id=request.request_id,
           poll_interval=args.poll_interval)
       print(client.format_task_status(
           instance=config.INSTANCE_ID,
-          project=config.PROJECT,
+          project=config.TURBINIA_PROJECT,
           region=region,
           request_id=request.request_id,
           all_fields=args.all_fields))

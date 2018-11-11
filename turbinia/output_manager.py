@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright 2015 Google Inc.
+# Copyright 2018 Google Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -27,7 +27,7 @@ from turbinia import config
 from turbinia import TurbiniaException
 
 config.LoadConfig()
-if config.TASK_MANAGER == 'PSQ':
+if config.TASK_MANAGER.lower() == 'psq':
   from google.cloud import storage
 
 log = logging.getLogger('turbinia')
@@ -345,7 +345,7 @@ class GCSOutputWriter(OutputWriter):
     """
     super(GCSOutputWriter, self).__init__(*args, **kwargs)
     config.LoadConfig()
-    self.client = storage.Client(project=config.PROJECT)
+    self.client = storage.Client(project=config.TURBINIA_PROJECT)
 
     self.bucket, self.base_output_dir = self._parse_gcs_path(gcs_path)
 

@@ -62,7 +62,7 @@ TASK_MAP = {
 
 
 config.LoadConfig()
-if config.TASK_MANAGER == 'PSQ':
+if config.TASK_MANAGER.lower() == 'psq':
   import psq
 
   from google.cloud import exceptions
@@ -70,7 +70,7 @@ if config.TASK_MANAGER == 'PSQ':
   from google.cloud import pubsub
 
   from turbinia.lib.google_cloud import GoogleCloudFunction
-elif config.TASK_MANAGER == 'Celery':
+elif config.TASK_MANAGER.lower() == 'celery':
   from turbinia.state_manager import RedisStateManager
 
 log = logging.getLogger('turbinia')
@@ -480,12 +480,12 @@ class TurbiniaPsqWorker(object):
     config.LoadConfig()
     psq_publisher = pubsub.PublisherClient()
     psq_subscriber = pubsub.SubscriberClient()
-    datastore_client = datastore.Client(project=config.PROJECT)
+    datastore_client = datastore.Client(project=config.TURBINIA_PROJECT)
     try:
       self.psq = psq.Queue(
           psq_publisher,
           psq_subscriber,
-          config.PROJECT,
+          config.TURBINIA_PROJECT,
           name=config.PSQ_TOPIC,
           storage=psq.DatastoreStorage(datastore_client))
     except exceptions.GoogleCloudError as e:
