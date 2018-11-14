@@ -39,9 +39,7 @@ def extract_artifacts(artifact_names, disk_path, output_dir):
   artifacts = ','.join(artifact_names)
 
   image_export_cmd = [
-      'image_export.py',
-      '--artifact_filters', artifacts,
-      '--write', output_dir,
+      'image_export.py', '--artifact_filters', artifacts, '--write', output_dir,
       disk_path
   ]
 

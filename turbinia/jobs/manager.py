@@ -36,8 +36,7 @@ class JobsManager(object):
     """
     job_name = job_class.NAME.lower()
     if job_name not in cls._job_classes:
-      raise KeyError('job class not set for name: {0:s}'.format(
-          job_class.NAME))
+      raise KeyError('job class not set for name: {0:s}'.format(job_class.NAME))
 
     del cls._job_classes[job_name]
 
@@ -56,8 +55,7 @@ class JobsManager(object):
     """
     job_name = job_name.lower()
     if job_name not in cls._job_classes:
-      raise KeyError(
-          'job class not set for name: {0:s}.'.format(job_name))
+      raise KeyError('job class not set for name: {0:s}.'.format(job_name))
 
     job_class = cls._job_classes[job_name]
     return job_class()
@@ -115,8 +113,8 @@ class JobsManager(object):
     """
     job_name = job_class.NAME.lower()
     if job_name in cls._job_classes:
-      raise KeyError('job class already set for name: {0:s}.'.format(
-          job_class.NAME))
+      raise KeyError(
+          'job class already set for name: {0:s}.'.format(job_class.NAME))
 
     cls._job_classes[job_name] = job_class
 

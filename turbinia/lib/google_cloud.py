@@ -64,8 +64,9 @@ class GoogleCloudProject(object):
       API service resource (apiclient.discovery.Resource)
     """
     credentials = GoogleCredentials.get_application_default()
-    return build(service_name, api_version, credentials=credentials,
-                 cache_discovery=False)
+    return build(
+        service_name, api_version, credentials=credentials,
+        cache_discovery=False)
 
   def _ExecuteOperation(self, service, operation, zone, block):
     """Executes API calls.
@@ -189,8 +190,8 @@ class GoogleCloudFunction(GoogleCloudProject):
     Returns:
       A Google Cloud Function service object.
     """
-    return self._CreateService('cloudfunctions',
-                               self.CLOUD_FUNCTIONS_API_VERSION)
+    return self._CreateService(
+        'cloudfunctions', self.CLOUD_FUNCTIONS_API_VERSION)
 
   def ExecuteFunction(self, function_name, args):
     """Executes a Google Cloud Function.
@@ -219,11 +220,14 @@ class GoogleCloudFunction(GoogleCloudProject):
     function_path = 'projects/{0:s}/locations/{1:s}/functions/{2:s}'.format(
         self.project_id, self.region, function_name)
 
-    log.debug('Calling Cloud Function [{0:s}] with args [{1!s}]'.format(
-        function_name, args))
+    log.debug(
+        'Calling Cloud Function [{0:s}] with args [{1!s}]'.format(
+            function_name, args))
     try:
       function_return = cloud_function.call(
-          name=function_path, body={'data':json_args}).execute()
+          name=function_path, body={
+              'data': json_args
+          }).execute()
     except (HttpError, ssl.SSLError) as e:
       raise TurbiniaException(
           'Error calling cloud function [{0:s}]: {1!s}'.format(
@@ -314,8 +318,9 @@ class GoogleComputeInstance(GoogleComputeBaseResource):
     if read_write:
       mode = 'READ_WRITE'
 
-    log.info('Attaching {0:s} to VM {1:s} in {2:s} mode'.format(
-        disk.name, self.name, mode))
+    log.info(
+        'Attaching {0:s} to VM {1:s} in {2:s} mode'.format(
+            disk.name, self.name, mode))
 
     operation_config = {
         'deviceName': disk.name,
@@ -325,9 +330,7 @@ class GoogleComputeInstance(GoogleComputeBaseResource):
         'autoDelete': False,
     }
     operation = self.project.GceApi().instances().attachDisk(
-        instance=self.name,
-        project=self.project.project_id,
-        zone=self.zone,
+        instance=self.name, project=self.project.project_id, zone=self.zone,
         body=operation_config).execute()
     self.project.GceOperation(operation, zone=self.zone, block=True)
 
@@ -340,9 +343,7 @@ class GoogleComputeInstance(GoogleComputeBaseResource):
     log.info('Detaching {0:s} from VM {1:s}'.format(disk.name, self.name))
 
     operation = self.project.GceApi().instances().detachDisk(
-        instance=self.name,
-        project=self.project.project_id,
-        zone=self.zone,
+        instance=self.name, project=self.project.project_id, zone=self.zone,
         deviceName=disk.name).execute()
     self.project.GceOperation(operation, zone=self.zone, block=True)
 

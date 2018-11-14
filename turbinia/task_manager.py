@@ -206,8 +206,9 @@ class BaseTaskManager(object):
       task_result: The TurbiniaTaskResult object
     """
     if not task_result.successful:
-      log.error('Task {0:s} from {1:s} was not successful'.format(
-          task_result.task_name, task_result.worker_name))
+      log.error(
+          'Task {0:s} from {1:s} was not successful'.format(
+              task_result.task_name, task_result.worker_name))
     else:
       log.info(
           'Task {0:s} from {1:s} executed with status [{2:s}]'.format(
@@ -368,10 +369,7 @@ class PSQTaskManager(BaseTaskManager):
     datastore_client = datastore.Client(project=config.PROJECT)
     try:
       self.psq = psq.Queue(
-          psq_publisher,
-          psq_subscriber,
-          config.PROJECT,
-          name=config.PSQ_TOPIC,
+          psq_publisher, psq_subscriber, config.PROJECT, name=config.PSQ_TOPIC,
           storage=psq.DatastoreStorage(datastore_client))
     except exceptions.GoogleAPIError as e:
       msg = 'Error creating PSQ Queue: {0:s}'.format(str(e))

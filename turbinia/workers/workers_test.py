@@ -129,8 +129,8 @@ class TestTurbiniaTask(unittest.TestCase):
     self.result.status = canary_status
     self.task.validate_result = mock.MagicMock(return_value=self.result)
     self.task.setup = mock.MagicMock(side_effect=TurbiniaException)
-    self.remove_files.append(os.path.join(
-        self.task.base_output_dir, 'worker-log.txt'))
+    self.remove_files.append(
+        os.path.join(self.task.base_output_dir, 'worker-log.txt'))
 
     new_result = self.task.run_wrapper(self.evidence)
     self.assertEqual(type(new_result), TurbiniaTaskResult)
@@ -209,8 +209,8 @@ class TestTurbiniaTask(unittest.TestCase):
     with open(self.evidence.local_path, 'w') as evidence_path:
       evidence_path.write('test')
 
-    self.task.execute(cmd, self.result, new_evidence=[self.evidence],
-                      close=True)
+    self.task.execute(
+        cmd, self.result, new_evidence=[self.evidence], close=True)
     self.assertIn(self.evidence, self.result.evidence)
 
   @mock.patch('turbinia.workers.subprocess.Popen')
@@ -227,8 +227,8 @@ class TestTurbiniaTask(unittest.TestCase):
 
     os.remove(self.evidence.local_path)
 
-    self.task.execute(cmd, self.result, new_evidence=[self.evidence],
-                      close=True)
+    self.task.execute(
+        cmd, self.result, new_evidence=[self.evidence], close=True)
     self.assertNotIn(self.evidence, self.result.evidence)
 
   @mock.patch('turbinia.workers.subprocess.Popen')
@@ -247,6 +247,6 @@ class TestTurbiniaTask(unittest.TestCase):
     self.assertTrue(os.path.exists(self.evidence.local_path))
     self.assertEqual(os.path.getsize(self.evidence.local_path), 0)
 
-    self.task.execute(cmd, self.result, new_evidence=[self.evidence],
-                      close=True)
+    self.task.execute(
+        cmd, self.result, new_evidence=[self.evidence], close=True)
     self.assertNotIn(self.evidence, self.result.evidence)
