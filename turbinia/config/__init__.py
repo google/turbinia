@@ -32,9 +32,12 @@ CONFIGPATH = [
     os.path.expanduser('~'), '/etc/turbinia',
     os.path.dirname(os.path.abspath(__file__))
 ]
-# Config vars that we expect to exist in the configuration
-CONFIGVARS = [
+
+# Required config vars
+REQUIRED_VARS = [
     # Turbinia Config
+    'INSTANCE_ID',
+    'STATE_MANAGER',
     'TASK_MANAGER',
     'LOG_FILE',
     'LOCK_FILE',
@@ -46,16 +49,20 @@ CONFIGVARS = [
     'SHARED_FILESYSTEM',
     # TODO(aarontp): Move this to the recipe config when it's available.
     'DEBUG_TASKS',
+]
+
+# Optional config vars.  Some may be mandatory depending on the configuration
+# (e.g. if TASK_MANAGER is set to 'PSQ', then the GCE Config variables are
+# required), but these requirements are not enforced.
+OPTIONAL_VARS = [
     # GCE CONFIG
-    'PROJECT',
-    'ZONE',
+    'TURBINIA_PROJECT',
+    'TURBINIA_ZONE',
     'TURBINIA_REGION',
     'BUCKET_NAME',
     'PSQ_TOPIC',
     'PUBSUB_TOPIC',
     'GCS_OUTPUT_PATH',
-    'STATE_MANAGER',
-    'INSTANCE_ID',
     # REDIS CONFIG
     'REDIS_HOST',
     'REDIS_PORT',
@@ -67,6 +74,7 @@ CONFIGVARS = [
     'KOMBU_CHANNEL',
     'KOMBU_DURABLE',
 ]
+
 # Environment variable to look for path data in
 ENVCONFIGVAR = 'TURBINIA_CONFIG_PATH'
 
@@ -113,12 +121,12 @@ def LoadConfig():
 
 def ValidateAndSetConfig(_config):
   """Makes sure that the config has the vars loaded and set in the module."""
-  # TODO(aarontp): Allow for non-mandatory config options
+  CONFIGVARS = REQUIRED_VARS + OPTIONAL_VARS
   for var in CONFIGVARS:
     if not hasattr(_config, var):
       raise TurbiniaConfigException(
           'No config attribute {0:s}:{1:s}'.format(_config.configSource, var))
-    if getattr(_config, var) is None:
+    if var in REQUIRED_VARS and getattr(_config, var) is None:
       raise TurbiniaConfigException(
           'Config attribute {0:s}:{1:s} is not set'.format(
               _config.configSource, var))

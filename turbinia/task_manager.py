@@ -26,7 +26,7 @@ from turbinia import state_manager
 from turbinia.jobs import manager as jobs_manager
 
 config.LoadConfig()
-if config.TASK_MANAGER == 'PSQ':
+if config.TASK_MANAGER.lower() == 'psq':
   import psq
 
   from google.cloud import exceptions
@@ -34,7 +34,7 @@ if config.TASK_MANAGER == 'PSQ':
   from google.cloud import pubsub
 
   from turbinia import pubsub as turbinia_pubsub
-elif config.TASK_MANAGER == 'Celery':
+elif config.TASK_MANAGER.lower() == 'celery':
   from celery import states as celery_states
 
   from turbinia import celery as turbinia_celery
@@ -50,9 +50,9 @@ def get_task_manager():
   """
   config.LoadConfig()
   # pylint: disable=no-else-return
-  if config.TASK_MANAGER == 'PSQ':
+  if config.TASK_MANAGER.lower() == 'psq':
     return PSQTaskManager()
-  elif config.TASK_MANAGER == 'Celery':
+  elif config.TASK_MANAGER.lower() == 'celery':
     return CeleryTaskManager()
   else:
     msg = 'Task Manager type "{0:s}" not implemented'.format(
@@ -358,7 +358,7 @@ class PSQTaskManager(BaseTaskManager):
 
     log.debug(
         'Setting up PSQ Task Manager requirements on project {0:s}'.format(
-            config.PROJECT))
+            config.TURBINIA_PROJECT))
     self.server_pubsub = turbinia_pubsub.TurbiniaPubSub(config.PUBSUB_TOPIC)
     if server:
       self.server_pubsub.setup_subscriber()
@@ -366,11 +366,11 @@ class PSQTaskManager(BaseTaskManager):
       self.server_pubsub.setup_publisher()
     psq_publisher = pubsub.PublisherClient()
     psq_subscriber = pubsub.SubscriberClient()
-    datastore_client = datastore.Client(project=config.PROJECT)
+    datastore_client = datastore.Client(project=config.TURBINIA_PROJECT)
     try:
       self.psq = psq.Queue(
-          psq_publisher, psq_subscriber, config.PROJECT, name=config.PSQ_TOPIC,
-          storage=psq.DatastoreStorage(datastore_client))
+          psq_publisher, psq_subscriber, config.TURBINIA_PROJECT,
+          name=config.PSQ_TOPIC, storage=psq.DatastoreStorage(datastore_client))
     except exceptions.GoogleAPIError as e:
       msg = 'Error creating PSQ Queue: {0:s}'.format(str(e))
       log.error(msg)

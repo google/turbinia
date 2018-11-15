@@ -34,10 +34,10 @@ from turbinia.workers import TurbiniaTask
 from turbinia.workers import TurbiniaTaskResult
 
 config.LoadConfig()
-if config.TASK_MANAGER == 'PSQ':
+if config.TASK_MANAGER.lower() == 'psq':
   from google.cloud import datastore
   from google.cloud import exceptions
-elif config.TASK_MANAGER == 'Celery':
+elif config.TASK_MANAGER.lower() == 'celery':
   import redis
 
 DATETIME_FORMAT = '%Y-%m-%dT%H:%M:%S'
@@ -53,9 +53,9 @@ def get_state_manager():
   """
   config.LoadConfig()
   # pylint: disable=no-else-return
-  if config.STATE_MANAGER == 'Datastore':
+  if config.STATE_MANAGER.lower() == 'datastore':
     return DatastoreStateManager()
-  elif config.STATE_MANAGER == 'redis':
+  elif config.STATE_MANAGER.lower() == 'redis':
     return RedisStateManager()
   else:
     msg = 'State Manager type "{0:s}" not implemented'.format(
@@ -150,7 +150,7 @@ class DatastoreStateManager(BaseStateManager):
 
   def __init__(self):
     config.LoadConfig()
-    self.client = datastore.Client(project=config.PROJECT)
+    self.client = datastore.Client(project=config.TURBINIA_PROJECT)
 
   def _validate_data(self, data):
     for key, value in iter(data.items()):

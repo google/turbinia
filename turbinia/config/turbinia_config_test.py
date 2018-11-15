@@ -31,10 +31,12 @@ class TestTurbiniaConfig(unittest.TestCase):
     # Remove the loaded attributes because the module is loaded before the
     # tests start by turbinia __init__.
     # pylint: disable=expression-not-assigned
-    [delattr(config, a) for a in config.CONFIGVARS if hasattr(config, a)]
+    config_vars = config.REQUIRED_VARS + config.OPTIONAL_VARS
+    [delattr(config, a) for a in config_vars if hasattr(config, a)]
     cls.CONFIGPATH_SAVE = config.CONFIGPATH
     cls.CONFIGFILES_SAVE = config.CONFIGFILES
-    cls.CONFIGVARS_SAVE = config.CONFIGVARS
+    cls.REQUIRED_VARS_SAVE = config.REQUIRED_VARS
+    cls.OPTIONAL_VARS_SAVE = config.OPTIONAL_VARS
 
   def setUp(self):
     # Record the module attributes so we can remove them after the test to
@@ -45,14 +47,16 @@ class TestTurbiniaConfig(unittest.TestCase):
     config.CONFIG = None
     config.CONFIGPATH = [os.path.dirname(self.config_file)]
     config.CONFIGFILES = [os.path.basename(self.config_file)]
-    config.CONFIGVARS = []
+    config.REQUIRED_VARS = []
+    config.OPTIONAL_VARS = []
 
   @classmethod
   def tearDownClass(cls):
     """Called after tests in the class have been run."""
     config.CONFIGPATH = cls.CONFIGPATH_SAVE
     config.CONFIGFILES = cls.CONFIGFILES_SAVE
-    config.CONFIGVARS = cls.CONFIGVARS_SAVE
+    config.REQUIRED_VARS = cls.REQUIRED_VARS_SAVE
+    config.OPTIONAL_VARS = cls.OPTIONAL_VARS_SAVE
 
   def tearDown(self):
     os.remove(self.config_file)
@@ -72,26 +76,35 @@ class TestTurbiniaConfig(unittest.TestCase):
 
   def testBasicConfig(self):
     """Test out a basic config."""
-    self.WriteConfig('PROJECT = "foo"\nZONE = "bar"\n')
-    config.CONFIGVARS = ['PROJECT', 'ZONE']
-    self.assertFalse(hasattr(config, 'PROJECT'))
+    self.WriteConfig('TURBINIA_PROJECT = "foo"\nTURBINIA_ZONE = "bar"\n')
+    config.REQUIRED_VARS = ['TURBINIA_PROJECT', 'TURBINIA_ZONE']
+    self.assertFalse(hasattr(config, 'TURBINIA_PROJECT'))
     config.LoadConfig()
-    self.assertTrue(hasattr(config, 'PROJECT'))
-    self.assertTrue(hasattr(config, 'ZONE'))
-    self.assertEqual(config.PROJECT, 'foo')
-    self.assertEqual(config.ZONE, 'bar')
+    self.assertTrue(hasattr(config, 'TURBINIA_PROJECT'))
+    self.assertTrue(hasattr(config, 'TURBINIA_ZONE'))
+    self.assertEqual(config.TURBINIA_PROJECT, 'foo')
+    self.assertEqual(config.TURBINIA_ZONE, 'bar')
 
-  def testMissingKeyConfig(self):
-    """Test that config errors out when not all variables exist."""
+  def testMissingRequiredKeyConfig(self):
+    """Test that config errors out when not all required variables exist."""
     self.WriteConfig('EXISTS = "bar"\n')
-    config.CONFIGVARS = ['DOESNOTEXIST', 'EXISTS']
+    config.REQUIRED_VARS = ['DOESNOTEXIST', 'EXISTS']
     self.assertRaises(config.TurbiniaConfigException, config.LoadConfig)
 
-  def testUnsetKeyConfig(self):
-    """Test that config errors out when not all variables are set."""
+  def testUnsetRequiredKeyConfig(self):
+    """Test that config errors out when not all required variables are set."""
     self.WriteConfig('UNSETKEY = None\nSETKEY = "bar"\n')
-    config.CONFIGVARS = ['UNSETKEY', 'SETKEY']
+    config.REQUIRED_VARS = ['UNSETKEY', 'SETKEY']
     self.assertRaises(config.TurbiniaConfigException, config.LoadConfig)
+
+  def testUnsetOptionalKeyConfig(self):
+    """Test that config errors out when not all optional variables are set."""
+    self.WriteConfig('UNSETKEY = None\nSETKEY = "bar"\n')
+    config.REQUIRED_VARS = ['SETKEY']
+    config.OPTIONAL_VARS = ['UNSETKEY']
+    config.LoadConfig()
+    self.assertEqual(config.UNSETKEY, None)
+    self.assertEqual(config.SETKEY, 'bar')
 
   def testMissingConfig(self):
     """Test non-existent config."""
@@ -103,11 +116,11 @@ class TestTurbiniaConfig(unittest.TestCase):
     os.environ[config.ENVCONFIGVAR] = config.CONFIGPATH[0]
     config.CONFIGPATH = ['DOESNOTEXIST']
 
-    self.WriteConfig('PROJECT = "foo"\nZONE = "bar"\n')
-    config.CONFIGVARS = ['PROJECT', 'ZONE']
+    self.WriteConfig('TURBINIA_PROJECT = "foo"\nTURBINIA_ZONE = "bar"\n')
+    config.REQUIRED_VARS = ['TURBINIA_PROJECT', 'TURBINIA_ZONE']
     config.LoadConfig()
-    self.assertTrue(hasattr(config, 'PROJECT'))
-    self.assertTrue(hasattr(config, 'ZONE'))
-    self.assertEqual(config.PROJECT, 'foo')
-    self.assertEqual(config.ZONE, 'bar')
+    self.assertTrue(hasattr(config, 'TURBINIA_PROJECT'))
+    self.assertTrue(hasattr(config, 'TURBINIA_ZONE'))
+    self.assertEqual(config.TURBINIA_PROJECT, 'foo')
+    self.assertEqual(config.TURBINIA_ZONE, 'bar')
     os.environ.pop(config.ENVCONFIGVAR)
