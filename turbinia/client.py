@@ -146,8 +146,7 @@ class TurbiniaClient(object):
       log.info('\t{0:s}'.format(job.name))
 
   def wait_for_request(
-      self, instance, 
-   , region, request_id=None, user=None,
+      self, instance, region, request_id=None, user=None,
       poll_interval=60):
     """Polls and waits for Turbinia Request to complete.
 
