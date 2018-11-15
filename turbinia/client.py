@@ -455,8 +455,8 @@ class TurbiniaPsqWorker(object):
     datastore_client = datastore.Client(project=config.TURBINIA_PROJECT)
     try:
       self.psq = psq.Queue(
-          psq_publisher, psq_subscriber, config.TURBINIA_PROJECT, name=config.PSQ_TOPIC,
-          storage=psq.DatastoreStorage(datastore_client))
+          psq_publisher, psq_subscriber, config.TURBINIA_PROJECT,
+          name=config.PSQ_TOPIC, storage=psq.DatastoreStorage(datastore_client))
     except exceptions.GoogleCloudError as e:
       msg = 'Error creating PSQ Queue: {0:s}'.format(str(e))
       log.error(msg)
