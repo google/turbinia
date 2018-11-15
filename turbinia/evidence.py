@@ -30,6 +30,7 @@ config.LoadConfig()
 if config.TASK_MANAGER.lower() == 'psq':
   from turbinia.processors import google_cloud
 
+
 def evidence_decode(evidence_dict):
   """Decode JSON into appropriate Evidence object.
 
@@ -92,8 +93,9 @@ class Evidence(object):
     request_id: The id of the request this evidence came from, if any
   """
 
-  def __init__(self, name=None, description=None, source=None, local_path=None,
-               tags=None, request_id=None):
+  def __init__(
+      self, name=None, description=None, source=None, local_path=None,
+      tags=None, request_id=None):
     """Initialization for Evidence."""
     self.copyable = False
     self.config = {}
@@ -173,8 +175,8 @@ class RawDisk(Evidence):
     size:  The size of the disk in bytes.
   """
 
-  def __init__(self, mount_path=None, mount_partition=None, size=None, *args,
-               **kwargs):
+  def __init__(
+      self, mount_path=None, mount_partition=None, size=None, *args, **kwargs):
     """Initialization for raw disk evidence object."""
     self.loopdevice_path = None
     self.mount_path = mount_path
@@ -192,8 +194,9 @@ class EncryptedDisk(RawDisk):
     unencrypted_path: A string to the unencrypted local path
   """
 
-  def __init__(self, encryption_type=None, encryption_key=None,
-               unencrypted_path=None, *args, **kwargs):
+  def __init__(
+      self, encryption_type=None, encryption_key=None, unencrypted_path=None,
+      *args, **kwargs):
     """Initialization for Encrypted disk evidence objects."""
     # TODO(aarontp): Make this an enum, or limited list
     self.encryption_type = encryption_type

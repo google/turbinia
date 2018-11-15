@@ -51,10 +51,8 @@ class JenkinsAnalysisTask(TurbiniaTask):
 
     try:
       collected_artifacts = extract_artifacts(
-          artifact_names=['JenkinsConfigFile'],
-          disk_path=evidence.local_path,
-          output_dir=os.path.join(self.output_dir, 'artifacts')
-      )
+          artifact_names=['JenkinsConfigFile'], disk_path=evidence.local_path,
+          output_dir=os.path.join(self.output_dir, 'artifacts'))
     except TurbiniaException as e:
       result.close(self, success=False, status=str(e))
       return result
@@ -160,7 +158,8 @@ class JenkinsAnalysisTask(TurbiniaTask):
       findings.append(
           '{0:n} weak password(s) found:'.format(len(weak_passwords)))
       for password_hash, plaintext in weak_passwords:
-        findings.append(' - User "{0:s}" with password "{1:s}"'.format(
-            credentials_registry.get(password_hash), plaintext))
+        findings.append(
+            ' - User "{0:s}" with password "{1:s}"'.format(
+                credentials_registry.get(password_hash), plaintext))
 
     return '\n'.join(findings)

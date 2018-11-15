@@ -33,7 +33,6 @@ class HadoopAnalysisJob(interface.TurbiniaJob):
 
   NAME = 'HadoopAnalysisJob'
 
-
   def create_tasks(self, evidence):
     """Create task.
 
@@ -45,5 +44,6 @@ class HadoopAnalysisJob(interface.TurbiniaJob):
     """
     tasks = [HadoopAnalysisTask() for _ in evidence]
     return tasks
+
 
 manager.JobsManager.RegisterJob(HadoopAnalysisJob)

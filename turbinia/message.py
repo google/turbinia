@@ -41,8 +41,8 @@ class TurbiniaRequest(object):
     evidence: A list of Evidence objects.
   """
 
-  def __init__(self, request_id=None, recipe=None, context=None,
-               evidence_=None):
+  def __init__(
+      self, request_id=None, recipe=None, context=None, evidence_=None):
     """Initialization for TurbiniaRequest."""
     self.request_id = request_id if request_id else uuid.uuid4().hex
     self.recipe = recipe if recipe else {}

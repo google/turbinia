@@ -60,8 +60,8 @@ class TestTurbiniaClient(unittest.TestCase):
     """Test for exception after empty results from cloud functions."""
     mock_cloud_function.return_value = {}
     client = TurbiniaClient()
-    self.assertRaises(TurbiniaException,
-                      client.get_task_data, "inst", "proj", "reg")
+    self.assertRaises(
+        TurbiniaException, client.get_task_data, "inst", "proj", "reg")
 
   @mock.patch('turbinia.client.GoogleCloudFunction.ExecuteFunction')
   @mock.patch('turbinia.client.task_manager.PSQTaskManager._backend_setup')
@@ -71,8 +71,8 @@ class TestTurbiniaClient(unittest.TestCase):
     """Test for exception after bad json results from cloud functions."""
     mock_cloud_function.return_value = {'result': None}
     client = TurbiniaClient()
-    self.assertRaises(TurbiniaException,
-                      client.get_task_data, "inst", "proj", "reg")
+    self.assertRaises(
+        TurbiniaException, client.get_task_data, "inst", "proj", "reg")
 
 
 class TestTurbiniaServer(unittest.TestCase):

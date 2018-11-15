@@ -80,14 +80,14 @@ class TurbiniaPubSub(TurbiniaMessageBase):
       self.topic_path = self.subscriber.topic_path(
           config.TURBINIA_PROJECT, self.topic_name)
     try:
-      log.debug('Trying to create subscription {0:s} on topic {1:s}'.format(
-          subscription_path, self.topic_path))
+      log.debug(
+          'Trying to create subscription {0:s} on topic {1:s}'.format(
+              subscription_path, self.topic_path))
       self.subscriber.create_subscription(subscription_path, self.topic_path)
     except exceptions.Conflict:
       log.debug('Subscription {0:s} already exists.'.format(subscription_path))
 
-    log.debug('Setup PubSub Subscription {0:s}'.format(
-        subscription_path))
+    log.debug('Setup PubSub Subscription {0:s}'.format(subscription_path))
     self.subscription = self.subscriber.subscribe(
         subscription_path, self._callback)
 
@@ -130,8 +130,9 @@ class TurbiniaPubSub(TurbiniaMessageBase):
     data = message.encode('utf-8')
     future = self.publisher.publish(self.topic_path, data)
     msg_id = future.result()
-    log.info('Published message {0!s} to topic {1!s}'.format(
-        msg_id, self.topic_name))
+    log.info(
+        'Published message {0!s} to topic {1!s}'.format(
+            msg_id, self.topic_name))
 
   def send_request(self, request):
     """Sends a TurbiniaRequest message.

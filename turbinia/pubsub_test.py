@@ -140,8 +140,7 @@ class TestTurbiniaKombu(unittest.TestCase):
     result.payload = request.to_json()
     self.kombu.queue = mock.MagicMock()
     self.kombu.queue.__len__.return_value = 1
-    self.kombu.queue.get.side_effect = [
-        result, queue.Empty('Empty Queue')]
+    self.kombu.queue.get.side_effect = [result, queue.Empty('Empty Queue')]
 
   def testCheckMessages(self):
     """Test check_messages method."""

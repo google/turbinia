@@ -54,7 +54,7 @@ class FileArtifactExtractionTask(TurbiniaTask):
         export_directory,
         '--artifact_filters',
         self.artifact_name,
-        ]
+    ]
     if config.DEBUG_TASKS:
       cmd.append('-d')
 
