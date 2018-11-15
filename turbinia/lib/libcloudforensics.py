@@ -289,13 +289,20 @@ class GoogleCloudProject(object):
     return GoogleComputeDisk(
         project=self, zone=self.default_zone, name=disk_name)
 
-  def get_or_create_analysis_vm(self, vm_name, boot_disk_size, cpu_cores=4):
+  def get_or_create_analysis_vm(self,
+                                vm_name,
+                                boot_disk_size,
+                                cpu_cores=4,
+                                image_project='ubuntu-os-cloud',
+                                image_family='ubuntu-1604-lts'):
     """Get or create a new virtual machine for analysis purposes.
 
     Args:
       vm_name: Name of the virtual machine.
       boot_disk_size: The size of the analysis VM boot disk (in GB).
       cpu_cores: Number of CPU cores for the virtual machine.
+      image_project: Name of the project where the analysis VM image is hosted.
+      image_family: Name of the image to use to create the analysis VM.
 
     Returns:
       A tuple with a virtual machine object (instance of GoogleComputeInstance)
@@ -315,14 +322,12 @@ class GoogleCloudProject(object):
     except RuntimeError:
       pass
 
-    ubuntu_project = 'ubuntu-os-cloud'
-    ubuntu_version = 'ubuntu-1604-lts'
     gift_ppa_track = 'stable'
 
     machine_type = 'zones/{0}/machineTypes/n1-standard-{1:d}'.format(
         self.default_zone, cpu_cores)
     get_image_operation = self.gce_api().images().getFromFamily(
-        project=ubuntu_project, family=ubuntu_version).execute()
+        project=image_project, family=image_family).execute()
     ubuntu_image = self.gce_operation(get_image_operation, block=False)
     source_disk_image = ubuntu_image['selfLink']
 
@@ -718,7 +723,13 @@ def create_disk_copy(src_proj, dst_proj, instance_name, zone, disk_name=None):
   return new_disk
 
 
-def start_analysis_vm(project, vm_name, zone, boot_disk_size, attach_disk=None):
+def start_analysis_vm(project,
+                      vm_name,
+                      zone,
+                      boot_disk_size,
+                      attach_disk=None,
+                      image_project='ubuntu-os-cloud',
+                      image_family='ubuntu-1604-lts'):
   """Start a virtual machine for analysis purposes.
 
   Args:
@@ -727,6 +738,8 @@ def start_analysis_vm(project, vm_name, zone, boot_disk_size, attach_disk=None):
     zone: Zone for the virtual machine.
     boot_disk_size: The size of the analysis VM boot disk (in GB).
     attach_disk: Disk to attach (instance of GoogleComputeDisk).
+    image_project: Name of the project where the analysis VM image is hosted.
+    image_family: Name of the image to use to create the analysis VM.
 
   Returns:
     A tuple with a virtual machine object (instance of GoogleComputeInstance)
@@ -734,7 +747,7 @@ def start_analysis_vm(project, vm_name, zone, boot_disk_size, attach_disk=None):
   """
   project = GoogleCloudProject(project, default_zone=zone)
   analysis_vm, created = project.get_or_create_analysis_vm(
-      vm_name, boot_disk_size)
+      vm_name, boot_disk_size, image_project, image_family)
   if attach_disk:
     analysis_vm.attach_disk(attach_disk)
   return analysis_vm, created
