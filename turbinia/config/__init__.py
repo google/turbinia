@@ -30,7 +30,8 @@ CONFIGFILES = ['.turbiniarc', 'turbinia.conf', 'turbinia_config.py']
 # config dir for config files
 CONFIGPATH = [
     os.path.expanduser('~'), '/etc/turbinia',
-    os.path.dirname(os.path.abspath(__file__))]
+    os.path.dirname(os.path.abspath(__file__))
+]
 
 # Required config vars
 REQUIRED_VARS = [
