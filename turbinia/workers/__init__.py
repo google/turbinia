@@ -303,6 +303,10 @@ class TurbiniaTask(object):
           result.log(msg)
           log.warning(msg)
         else:
+          new_path, _ = self.output_manager.save_local_file(
+              evidence.local_path, result)
+          if new_path:
+            evidence.local_path = new_path
           result.add_evidence(evidence, self._evidence_config)
 
       if close:
