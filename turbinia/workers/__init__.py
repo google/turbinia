@@ -227,11 +227,9 @@ class TurbiniaTaskResult(object):
     Returns:
       dict: Object dictionary that is JSON serializable.
     """
-    self.run_time = self.run_time.total_seconds()
+    self.run_time = self.run_time.total_seconds() if self.run_time else None
     self.start_time = str(self.start_time)
-    self.input_evidence = [
-        x.serialize() for x in self.input_evidence
-    ]
+    self.input_evidence = [x.serialize() for x in self.input_evidence]
     self.evidence = [x.serialize() for x in self.evidence]
     return self.__dict__
 
@@ -247,7 +245,8 @@ class TurbiniaTaskResult(object):
     """
     result = TurbiniaTaskResult(None, mock=True)
     result.__dict__ = input_dict
-    result.run_time = timedelta(seconds=result.run_time)
+    result.run_time = timedelta(
+        seconds=result.run_time) if result.run_time else None
     result.start_time = datetime.strptime(
         result.start_time, '%Y-%m-%d %H:%M:%S.%f')
     result.input_evidence = [evidence_decode(x) for x in result.input_evidence]
@@ -503,7 +502,7 @@ class TurbiniaTask(object):
       - Locking to make sure only one task is active at a time
 
     Args:
-      evidence: Evidence object
+      evidence (dict): To be decoded into Evidence object
 
     Returns:
       A TurbiniaTaskResult object

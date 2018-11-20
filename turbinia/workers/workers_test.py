@@ -88,14 +88,16 @@ class TestTurbiniaTask(unittest.TestCase):
     """Test that the run wrapper executes task run."""
     self.setResults()
     self.result.closed = True
-    new_result = self.task.run_wrapper(self.evidence)
+    new_result = self.task.run_wrapper(self.evidence.__dict__)
+    new_result = TurbiniaTaskResult.deserialize(new_result)
     self.assertEqual(new_result.status, 'TestStatus')
     self.result.close.assert_not_called()
 
   def testTurbiniaTaskRunWrapperAutoClose(self):
     """Test that the run wrapper closes the task."""
     self.setResults()
-    new_result = self.task.run_wrapper(self.evidence)
+    new_result = self.task.run_wrapper(self.evidence.__dict__)
+    new_result = TurbiniaTaskResult.deserialize(new_result)
     self.assertEqual(new_result.status, 'TestStatus')
     self.result.close.assert_called()
 
@@ -107,7 +109,8 @@ class TestTurbiniaTask(unittest.TestCase):
     checked_result.status = 'CheckedResult'
     self.setResults(run=bad_result, validate_result=checked_result)
 
-    new_result = self.task.run_wrapper(self.evidence)
+    new_result = self.task.run_wrapper(self.evidence.__dict__)
+    new_result = TurbiniaTaskResult.deserialize(new_result)
 
     self.task.validate_result.assert_any_call(bad_result)
     self.assertEqual(type(new_result), TurbiniaTaskResult)
@@ -118,7 +121,8 @@ class TestTurbiniaTask(unittest.TestCase):
     self.setResults()
     self.task.run = mock.MagicMock(side_effect=TurbiniaException)
 
-    new_result = self.task.run_wrapper(self.evidence)
+    new_result = self.task.run_wrapper(self.evidence.__dict__)
+    new_result = TurbiniaTaskResult.deserialize(new_result)
     self.assertEqual(type(new_result), TurbiniaTaskResult)
     self.assertIn('failed', new_result.status)
 
@@ -132,7 +136,8 @@ class TestTurbiniaTask(unittest.TestCase):
     self.remove_files.append(
         os.path.join(self.task.base_output_dir, 'worker-log.txt'))
 
-    new_result = self.task.run_wrapper(self.evidence)
+    new_result = self.task.run_wrapper(self.evidence.__dict__)
+    new_result = TurbiniaTaskResult.deserialize(new_result)
     self.assertEqual(type(new_result), TurbiniaTaskResult)
     self.assertIn(canary_status, new_result.status)
 
