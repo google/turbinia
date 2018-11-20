@@ -16,7 +16,8 @@
 
 from __future__ import unicode_literals
 
-from datetime import datetime
+from copy import deepcopy
+from datetime import datetime, timedelta
 import getpass
 import logging
 import os
@@ -31,6 +32,7 @@ import turbinia
 import filelock
 
 from turbinia import config
+from turbinia.evidence import evidence_decode
 from turbinia import output_manager
 from turbinia import TurbiniaException
 
@@ -66,7 +68,7 @@ class TurbiniaTaskResult(object):
 
   def __init__(
       self, task, evidence=None, input_evidence=None, base_output_dir=None,
-      request_id=None):
+      request_id=None, mock=False):
     """Initialize the TurbiniaTaskResult object.
 
     Args:
@@ -76,6 +78,8 @@ class TurbiniaTaskResult(object):
       TurbiniaException: If the Output Manager is not setup.
     """
 
+    if mock:
+      return
     self.closed = False
     self.evidence = evidence if evidence else []
     self.input_evidence = input_evidence
@@ -217,6 +221,40 @@ class TurbiniaTaskResult(object):
     self.error['error'] = error
     self.error['traceback'] = traceback_
 
+  def serialize(self):
+    """Prepares result object for serialization.
+
+    Returns:
+      dict: Object dictionary that is JSON serializable.
+    """
+    self.run_time = self.run_time.total_seconds()
+    self.start_time = str(self.start_time)
+    self.input_evidence = [
+        x.serialize() for x in self.input_evidence
+    ]
+    self.evidence = [x.serialize() for x in self.evidence]
+    return self.__dict__
+
+  @classmethod
+  def deserialize(cls, input_dict):
+    """Converts an input dictionary back into a TurbiniaTaskResult object.
+
+    Args:
+      input_dict (dict): TurbiniaTaskResult object dictionary.
+
+    Returns:
+      TurbiniaTaskResult: Deserialized object.
+    """
+    result = TurbiniaTaskResult(None, mock=True)
+    result.__dict__ = input_dict
+    result.run_time = timedelta(seconds=result.run_time)
+    result.start_time = datetime.strptime(
+        result.start_time, '%Y-%m-%d %H:%M:%S.%f')
+    result.input_evidence = [evidence_decode(x) for x in result.input_evidence]
+    result.evidence = [evidence_decode(x) for x in result.evidence]
+
+    return result
+
 
 class TurbiniaTask(object):
   """Base class for Turbinia tasks.
@@ -267,6 +305,20 @@ class TurbiniaTask(object):
     self.turbinia_version = turbinia.__version__
     self.user = user if user else getpass.getuser()
     self._evidence_config = {}
+
+  def serialize(self):
+    """Converts the TurbiniaTask object into a serializable dict.
+
+    Returns:
+      Dict: Dictionary representing this object, ready to be serialized.
+    """
+    orig = (self.output_manager, self.last_update)
+    self.output_manager = self.output_manager.__dict__
+    self.last_update = str(self.last_update)
+    copy = deepcopy(self.__dict__)
+    self.output_manager = orig[0]
+    self.last_update = orig[1]
+    return copy
 
   def execute(
       self, cmd, result, save_files=None, log_files=None, new_evidence=None,
@@ -457,6 +509,7 @@ class TurbiniaTask(object):
       A TurbiniaTaskResult object
     """
     log.debug('Task {0:s} {1:s} awaiting execution'.format(self.name, self.id))
+    evidence = evidence_decode(evidence)
     with filelock.FileLock(config.LOCK_FILE):
       log.info('Starting Task {0:s} {1:s}'.format(self.name, self.id))
       original_result_id = None
@@ -533,8 +586,7 @@ class TurbiniaTask(object):
           'Returning original result object {0:s} after task execution'.format(
               self.result.id))
     # TODO(aarontp): Find a better way to ensure this gets unset.
-    self.output_manager = None
-    return self.result
+    return self.result.serialize()
 
   def run(self, evidence, result):
     """Entry point to execute the task.

@@ -20,6 +20,7 @@ import logging
 import time
 
 import turbinia
+from turbinia import workers
 from turbinia import evidence
 from turbinia import config
 from turbinia import state_manager
@@ -73,6 +74,7 @@ def task_runner(obj, *args, **kwargs):
   Returns:
     Output from TurbiniaTask (should be TurbiniaTaskResult).
   """
+  obj = turbinia.client.task_decode(obj)
   return obj.run_wrapper(*args, **kwargs)
 
 
@@ -302,10 +304,12 @@ class CeleryTaskManager(BaseTaskManager):
     super(CeleryTaskManager, self).__init__()
 
   def _backend_setup(self, *args, **kwargs):
+    global task_runner
     self.celery = turbinia_celery.TurbiniaCelery()
     self.celery.setup()
     self.kombu = turbinia_celery.TurbiniaKombu(config.KOMBU_CHANNEL)
     self.kombu.setup()
+    task_runner = self.celery.app.task(task_runner, name="task_runner")
 
   def process_tasks(self):
     """Determine the current state of our tasks.
@@ -324,7 +328,7 @@ class CeleryTaskManager(BaseTaskManager):
         log.warning('Task {0:s} failed.'.format(celery_task.id))
         completed_tasks.append(task)
       elif celery_task.status == celery_states.SUCCESS:
-        task.result = celery_task.result
+        task.result = workers.TurbiniaTaskResult.deserialize(celery_task.result)
         completed_tasks.append(task)
       else:
         log.debug('Task {0:s} status unknown'.format(celery_task.id))
@@ -356,7 +360,7 @@ class CeleryTaskManager(BaseTaskManager):
     log.info(
         'Adding Celery task {0:s} with evidence {1:s} to queue'.format(
             task.name, evidence_.name))
-    task.stub = self.celery.fexec.delay(task_runner, task, evidence_)
+    task.stub = task_runner.delay(task.serialize(), evidence_.__dict__)
 
 
 class PSQTaskManager(BaseTaskManager):
@@ -413,7 +417,7 @@ class PSQTaskManager(BaseTaskManager):
         log.warning('Task {0:s} failed.'.format(psq_task.id))
         completed_tasks.append(task)
       else:
-        task.result = task.stub.result(timeout=PSQ_TASK_TIMEOUT)
+        task.result = workers.TurbiniaTaskResult.deserialize(task.stub.result(timeout=PSQ_TASK_TIMEOUT))
         completed_tasks.append(task)
 
     outstanding_task_count = len(self.tasks) - len(completed_tasks)
@@ -438,4 +442,5 @@ class PSQTaskManager(BaseTaskManager):
     log.info(
         'Adding PSQ task {0:s} with evidence {1:s} to queue'.format(
             task.name, evidence_.name))
-    task.stub = self.psq.enqueue(task_runner, task, evidence_)
+    task.stub = self.psq.enqueue(
+        task_runner, task.serialize(), evidence_.__dict__)

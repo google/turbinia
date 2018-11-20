@@ -22,6 +22,7 @@ import json
 import logging
 import os
 import stat
+import sys
 import time
 
 from turbinia import config
@@ -29,6 +30,7 @@ from turbinia.config import logger
 from turbinia import task_manager
 from turbinia import workers
 from turbinia import TurbiniaException
+from turbinia import output_manager
 from turbinia.workers.artifact import FileArtifactExtractionTask
 from turbinia.workers.analysis.wordpress import WordpressAccessLogAnalysisTask
 from turbinia.workers.analysis.jenkins import JenkinsAnalysisTask
@@ -73,6 +75,27 @@ elif config.TASK_MANAGER.lower() == 'celery':
 
 log = logging.getLogger('turbinia')
 logger.setup()
+
+
+def task_decode(task_dict):
+  """Decodes serialized dictionary back into a specific Task object.
+
+  Args:
+    task_dict (dict): Task object dict
+
+  Returns:
+    T: Some type of Task object.
+  """
+
+  task_dict = task_dict
+  type_ = task_dict['name']
+  task = getattr(sys.modules[__name__], type_)()
+  task.__dict__ == task_dict
+  task.output_manager = output_manager.OutputManager()
+  task.output_manager.__dict__ = task_dict['output_manager']
+  task.last_update = datetime.strptime(
+      task_dict['last_update'], '%Y-%m-%d %H:%M:%S.%f')
+  return task
 
 
 def check_directory(directory):
@@ -439,7 +462,8 @@ class TurbiniaCeleryWorker(TurbiniaClient):
   def start(self):
     """Start Turbinia Celery Worker."""
     log.info('Running Turbinia Celery Worker.')
-    argv = ['celery', 'worker', '--loglevel=info']
+    self.worker.task(task_manager.task_runner, name="task_runner")
+    argv = ['celery', 'worker', '--loglevel=info', '--pool=solo']
     self.worker.start(argv)
 
 

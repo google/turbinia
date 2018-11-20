@@ -26,7 +26,7 @@ from turbinia.workers import TurbiniaTask
 class FileArtifactExtractionTask(TurbiniaTask):
   """Task to run image_export (log2timeline)."""
 
-  def __init__(self, artifact_name):
+  def __init__(self, artifact_name='FileArtifact'):
     super(FileArtifactExtractionTask, self).__init__()
     self.artifact_name = artifact_name
 
