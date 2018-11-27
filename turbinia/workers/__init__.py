@@ -77,7 +77,7 @@ class TurbiniaTaskResult(object):
 
     self.closed = False
     self.evidence = evidence if evidence else []
-    self.input_evidence = input_evidence if input_evidence else []
+    self.input_evidence = input_evidence
     self.id = uuid.uuid4().hex
     self.task_id = task.id
     self.task_name = task.name
@@ -135,18 +135,17 @@ class TurbiniaTaskResult(object):
       if not evidence.request_id:
         evidence.request_id = self.request_id
 
-    for evidence in self.input_evidence:
-      try:
-        evidence.postprocess()
-      # Adding a broad exception here because we want to try post-processing
-      # to clean things up even after other failures in the task, so this could
-      # also fail.
-      # pylint: disable=broad-except
-      except Exception as e:
-        msg = 'Evidence post-processing for {0:s} failed: {1!s}'.format(
-            evidence.name, e)
-        log.error(msg)
-        self.log(msg)
+    try:
+      self.input_evidence.postprocess()
+    # Adding a broad exception here because we want to try post-processing
+    # to clean things up even after other failures in the task, so this could
+    # also fail.
+    # pylint: disable=broad-except
+    except Exception as e:
+      msg = 'Evidence post-processing for {0:s} failed: {1!s}'.format(
+          evidence.name, e)
+      log.error(msg)
+      self.log(msg)
 
     # Write result log info to file
     logfile = os.path.join(self.output_dir, 'worker-log.txt')
@@ -330,7 +329,7 @@ class TurbiniaTask(object):
     self.tmp_dir, self.output_dir = self.output_manager.get_local_output_dirs()
     if not self.result:
       self.result = TurbiniaTaskResult(
-          task=self, input_evidence=[evidence],
+          task=self, input_evidence=evidence,
           base_output_dir=self.base_output_dir, request_id=self.request_id)
 
     if not self.run_local:
