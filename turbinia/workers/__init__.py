@@ -143,7 +143,7 @@ class TurbiniaTaskResult(object):
     # pylint: disable=broad-except
     except Exception as e:
       msg = 'Evidence post-processing for {0:s} failed: {1!s}'.format(
-          evidence.name, e)
+          self.input_evidence.name, e)
       log.error(msg)
       self.log(msg)
 
