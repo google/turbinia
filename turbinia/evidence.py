@@ -101,7 +101,7 @@ class Evidence(object):
 
   def __init__(
       self, name=None, description=None, source=None, local_path=None,
-      tags=None, request_id=None, parent_evidence=None):
+      tags=None, request_id=None):
     """Initialization for Evidence."""
     self.copyable = False
     self.config = {}
@@ -112,7 +112,7 @@ class Evidence(object):
     self.local_path = local_path
     self.tags = tags if tags else {}
     self.request_id = request_id
-    self.parent_evidence = parent_evidence
+    self.parent_evidence = None
 
     # List of jobs that have processed this evidence
     self.processed_by = []
