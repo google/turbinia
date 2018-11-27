@@ -12,7 +12,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Job to execute TODO"""
+"""Job to execute docker-explorer, and generate new Evidence per container"""
 
 from __future__ import unicode_literals
 
@@ -26,7 +26,7 @@ from turbinia.workers.docker import DockerContainersEnumerationTask
 
 
 class DockerContainersEnumerationJob(interface.TurbiniaJob):
-  """TODO"""
+  """Use docker-explorer to list all containers in a Linux docker environment"""
 
   # Types of evidence that this Job will process.
   evidence_input = [GoogleCloudDisk, GoogleCloudDiskRawEmbedded, RawDisk]
@@ -35,7 +35,7 @@ class DockerContainersEnumerationJob(interface.TurbiniaJob):
   NAME = 'DockerContainersEnumerationJob'
 
   def create_tasks(self, evidence):
-    """Create task for TODO.
+    """Create task.
 
     Args:
       evidence: List of evidence object to process

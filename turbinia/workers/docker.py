@@ -12,7 +12,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Task for running Docker Explorer."""
+"""Task for running docker-explorer."""
 
 from __future__ import unicode_literals
 
@@ -30,10 +30,20 @@ log = logging.getLogger('turbinia')
 
 
 class DockerContainersEnumerationTask(TurbiniaTask):
-  """TODO"""
+  """Enumerates Docker containers on Linux"""
 
   def GetContainers(self, evidence):
-    """TODO"""
+    """Lists the containers from an input Evidence.
+
+    Args:
+      evidence: the input Evidence.
+
+    Returns:
+      a list(dict) containing information about the containers found.
+
+    Raises:
+      TurbiniaException: when the docker-explorer tool failed to run.
+    """
 
     mount_path = evidence.local_path
     if type(evidence).__name__ == 'RawDisk':
@@ -67,7 +77,7 @@ class DockerContainersEnumerationTask(TurbiniaTask):
 
 
   def run(self, evidence, result):
-    """Run the TODO
+    """Run the docker-explorer tool to list containerss.
 
     Args:
        evidence (Evidence object):  The evidence to process
