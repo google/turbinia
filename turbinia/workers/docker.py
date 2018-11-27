@@ -80,9 +80,7 @@ class DockerContainersEnumerationTask(TurbiniaTask):
     containers_info = self.GetContainers(evidence)
     for container_info in containers_info:
       container_id = container_info.get('container_id')
-      # Parent evidence need to be set.
-      container_evidence = DockerContainer(
-          container_id=container_id, parent_evidence=evidence)
+      container_evidence = DockerContainer(container_id=container_id)
       result.add_evidence(container_evidence, evidence.config)
 
     result.close(self, success=True)
