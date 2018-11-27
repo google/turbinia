@@ -78,6 +78,8 @@ class Evidence(object):
         processing this evidence.
     cloud_only: Set to True for evidence types that can only be processed in a
         cloud environment, e.g. GoogleCloudDisk.
+    context_dependant: Whethere this evidence required to be built upon the
+        context of a parent evidence.
     copyable: Whether this evidence can be copied.  This will be set to True for
         object types that we want to copy to/from storage (e.g. PlasoFile, but
         not RawDisk).
@@ -103,6 +105,7 @@ class Evidence(object):
     """Initialization for Evidence."""
     self.copyable = False
     self.config = {}
+    self.context_dependant = False
     self.cloud_only = False
     self.description = description
     self.source = source
