@@ -4,7 +4,7 @@ google-cloud-datastore==1.7.0
 google-api-python-client>=1.6.2
 google-cloud-pubsub==0.35.4
 google-cloud-storage
-google-cloud-core
+google-cloud-core==0.28.1
 oauth2client
 psq
 six
