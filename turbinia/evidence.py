@@ -173,9 +173,9 @@ class Evidence(object):
   def preprocess(self):
     """Runs the possible parent's evidence preprocessing code, then ours.
 
-    This gets run in the context of the local task execution on the worker
-    nodes prior to the task itself running.  This can be used to prepare the
-    evidence to be processed (e.g. attach a cloud disk, mount a local disk etc).
+    This is a wrapper function that will call the chain of pre-processors
+    starting with the most distant ancestor.  After all of the ancestors have
+    been processed, then we run our pre-processor.
     """
     if self.parent_evidence:
       self.parent_evidence.preprocess()
@@ -184,9 +184,9 @@ class Evidence(object):
   def postprocess(self):
     """Runs our postprocessing code, then our possible parent's evidence.
 
-    This gets run in the context of the local task execution on the worker
-    nodes after the task has finished.  This can be used to clean-up after the
-    evidence is processed (e.g. detach a cloud disk, etc,).
+    This is is a wrapper function that will run our post-processor, and will
+    then recurse down the chain of parent Evidence and run those post-processors
+    in order.
     """
     self._postprocess()
     if self.parent_evidence:
