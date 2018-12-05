@@ -92,9 +92,11 @@ class TestLocalOutputManager(unittest.TestCase):
       fh.write(test_contents)
 
     self.assertFalse(os.path.exists(dst_file))
-    self.task.output_manager.save_local_file(src_file, self.task.result)
+    _, __, local_file = self.task.output_manager.save_local_file(
+        src_file, self.task.result)
     self.assertTrue(os.path.exists(dst_file))
     self.assertIn(dst_file, self.task.result.saved_paths)
+    self.assertEqual(local_file, dst_file)
 
   def testSaveEvidence(self):
     """Test the save_evidence method."""

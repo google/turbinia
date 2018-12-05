@@ -133,7 +133,13 @@ class OutputManager(object):
     Returns:
       An evidence object
     """
-    (path, path_type) = self.save_local_file(evidence_.local_path, result)
+    path, path_type, local_path = self.save_local_file(
+        evidence_.local_path, result)
+    # Set the evidence local_path from the saved path info so that in cases
+    # where tasks are saving evidence into the temp dir, we'll get the newly
+    # copied version from the saved output path.
+    if local_path:
+      evidence_.local_path = local_path
     evidence_.saved_path = path
     evidence_.saved_path_type = path_type
     log.info(
@@ -153,18 +159,22 @@ class OutputManager(object):
 
     Returns:
       Tuple of (String of last written file path,
-                String of last written file destination output type)
+                String of last written file destination output type,
+                Local path if saved locally, else None)
     """
     saved_path = None
     saved_path_type = None
+    local_path = None
     for writer in self._output_writers:
       new_path = writer.copy_to(file_)
       if new_path:
         result.saved_paths.append(new_path)
         saved_path = new_path
         saved_path_type = writer.name
+      if writer.name == LocalOutputWriter.NAME:
+        local_path = new_path
 
-    return saved_path, saved_path_type
+    return saved_path, saved_path_type, local_path
 
   def setup(self, task):
     """Setup OutputManager object."""
