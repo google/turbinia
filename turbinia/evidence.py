@@ -30,7 +30,6 @@ config.LoadConfig()
 if config.TASK_MANAGER.lower() == 'psq':
   from turbinia.processors import google_cloud
 
-
 def evidence_decode(evidence_dict):
   """Decode JSON into appropriate Evidence object.
 
@@ -63,6 +62,8 @@ def evidence_decode(evidence_dict):
         'No Evidence object of type {0:s} in evidence module'.format(type_))
 
   evidence.__dict__ = evidence_dict
+  if evidence_dict['parent_evidence']:
+    evidence.parent_evidence = evidence_decode(evidence_dict['parent_evidence'])
   return evidence
 
 
@@ -77,6 +78,8 @@ class Evidence(object):
         processing this evidence.
     cloud_only: Set to True for evidence types that can only be processed in a
         cloud environment, e.g. GoogleCloudDisk.
+    context_dependent: Whether this evidence is required to be built upon the
+        context of a parent evidence.
     copyable: Whether this evidence can be copied.  This will be set to True for
         object types that we want to copy to/from storage (e.g. PlasoFile, but
         not RawDisk).
@@ -90,7 +93,10 @@ class Evidence(object):
         that created it, if appropriate).
     local_path: A string of the local_path to the evidence.
     tags: dict of extra tags associated with this evidence.
-    request_id: The id of the request this evidence came from, if any
+    request_id: The id of the request this evidence came from, if any.
+    parent_evidence: The Evidence object that was used to generate this one, and
+        which pre/post process methods we need to re-execute to access data
+        relevant to us.
   """
 
   def __init__(
@@ -99,12 +105,14 @@ class Evidence(object):
     """Initialization for Evidence."""
     self.copyable = False
     self.config = {}
+    self.context_dependent = False
     self.cloud_only = False
     self.description = description
     self.source = source
     self.local_path = local_path
     self.tags = tags if tags else {}
     self.request_id = request_id
+    self.parent_evidence = None
 
     # List of jobs that have processed this evidence
     self.processed_by = []
@@ -121,7 +129,10 @@ class Evidence(object):
 
   def serialize(self):
     """Return JSON serializable object."""
-    return self.__dict__
+    serialized_evidence = self.__dict__
+    if self.parent_evidence:
+      serialized_evidence['parent_evidence'] = self.parent_evidence.serialize()
+    return serialized_evidence
 
   def to_json(self):
     """Convert object to JSON.
@@ -141,7 +152,7 @@ class Evidence(object):
 
     return serialized
 
-  def preprocess(self):
+  def _preprocess(self):
     """Preprocess this evidence prior to task running.
 
     This gets run in the context of the local task execution on the worker
@@ -150,7 +161,7 @@ class Evidence(object):
     """
     pass
 
-  def postprocess(self):
+  def _postprocess(self):
     """Postprocess this evidence after the task runs.
 
     This gets run in the context of the local task execution on the worker
@@ -158,6 +169,28 @@ class Evidence(object):
     evidence is processed (e.g. detach a cloud disk, etc,).
     """
     pass
+
+  def preprocess(self):
+    """Runs the possible parent's evidence preprocessing code, then ours.
+
+    This gets run in the context of the local task execution on the worker
+    nodes prior to the task itself running.  This can be used to prepare the
+    evidence to be processed (e.g. attach a cloud disk, mount a local disk etc).
+    """
+    if self.parent_evidence:
+      self.parent_evidence.preprocess()
+    self._preprocess()
+
+  def postprocess(self):
+    """Runs our postprocessing code, then our possible parent's evidence.
+
+    This gets run in the context of the local task execution on the worker
+    nodes after the task has finished.  This can be used to clean-up after the
+    evidence is processed (e.g. detach a cloud disk, etc,).
+    """
+    self._postprocess()
+    if self.parent_evidence:
+      self.parent_evidence.postprocess()
 
 
 class Directory(Evidence):
@@ -183,6 +216,13 @@ class RawDisk(Evidence):
     self.mount_partition = mount_partition
     self.size = size
     super(RawDisk, self).__init__(*args, **kwargs)
+
+  def _preprocess(self):
+    self.loopdevice_path = mount_local.PreprocessLosetup(self.local_path)
+
+  def _postprocess(self):
+    mount_local.PostprocessDeleteLosetup(self.loopdevice_path)
+    self.loopdevice_path = None
 
 
 class EncryptedDisk(RawDisk):
@@ -223,10 +263,10 @@ class GoogleCloudDisk(RawDisk):
     super(GoogleCloudDisk, self).__init__(*args, **kwargs)
     self.cloud_only = True
 
-  def preprocess(self):
+  def _preprocess(self):
     self.local_path = google_cloud.PreprocessAttachDisk(self.disk_name)
 
-  def postprocess(self):
+  def _postprocess(self):
     google_cloud.PostprocessDetachDisk(self.disk_name, self.local_path)
     self.local_path = None
 
@@ -248,14 +288,14 @@ class GoogleCloudDiskRawEmbedded(GoogleCloudDisk):
     self.embedded_path = embedded_path
     super(GoogleCloudDiskRawEmbedded, self).__init__(*args, **kwargs)
 
-  def preprocess(self):
+  def _preprocess(self):
     self.local_path = google_cloud.PreprocessAttachDisk(self.disk_name)
     self.loopdevice_path = mount_local.PreprocessLosetup(self.local_path)
     self.mount_path = mount_local.PreprocessMountDisk(
         self.loopdevice_path, self.mount_partition)
     self.local_path = os.path.join(self.mount_path, self.embedded_path)
 
-  def postprocess(self):
+  def _postprocess(self):
     google_cloud.PostprocessDetachDisk(self.disk_name, self.local_path)
     mount_local.PostprocessUnmountPath(self.mount_path)
     mount_local.PostprocessDeleteLosetup(self.loopdevice_path)

@@ -183,6 +183,8 @@ class TurbiniaTaskResult(object):
     # automatically, but the real fix is to attach this to a separate object.
     # See https://github.com/google/turbinia/issues/211 for more details.
     evidence.config = evidence_config
+    if evidence.context_dependent:
+      evidence.parent_evidence = self.input_evidence
 
     self.evidence.append(evidence)
 
