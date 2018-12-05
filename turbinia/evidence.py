@@ -78,7 +78,7 @@ class Evidence(object):
         processing this evidence.
     cloud_only: Set to True for evidence types that can only be processed in a
         cloud environment, e.g. GoogleCloudDisk.
-    context_dependant: Whethere this evidence required to be built upon the
+    context_dependent: Whether this evidence is required to be built upon the
         context of a parent evidence.
     copyable: Whether this evidence can be copied.  This will be set to True for
         object types that we want to copy to/from storage (e.g. PlasoFile, but
@@ -95,8 +95,8 @@ class Evidence(object):
     tags: dict of extra tags associated with this evidence.
     request_id: The id of the request this evidence came from, if any.
     parent_evidence: The Evidence object that was used to generate this one, and
-      which pre/post process methods we need to re-execute to access data
-      relevant to us.
+        which pre/post process methods we need to re-execute to access data
+        relevant to us.
   """
 
   def __init__(
@@ -105,7 +105,7 @@ class Evidence(object):
     """Initialization for Evidence."""
     self.copyable = False
     self.config = {}
-    self.context_dependant = False
+    self.context_dependent = False
     self.cloud_only = False
     self.description = description
     self.source = source
@@ -202,6 +202,8 @@ class RawDisk(Evidence):
   """Evidence object for Disk based evidence.
 
   Attributes:
+    loopdevice_path: Path to the losetup device for this disk.
+    mount_path: The mount path for this disk (if any).
     mount_partition: The mount partition for this disk (if any).
     size:  The size of the disk in bytes.
   """
