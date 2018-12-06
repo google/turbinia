@@ -109,11 +109,11 @@ class JobsManagerTest(unittest.TestCase):
         job_names, jobs_blacklist=[job_names[0]], jobs_whitelist=[])
     self.assertListEqual(job_names[1:], return_job_names)
 
-  def testFilterJobNamesBlackListObjects(self):
-    """Test FilterJobNames() with jobs_blacklist and objects."""
+  def testFilterJobObjectsBlackList(self):
+    """Test FilterJobObjects() with jobs_blacklist and objects."""
     jobs = [TestJob1(), TestJob2()]
-    return_jobs = manager.JobsManager.FilterJobNames(
-        jobs, jobs_blacklist=[jobs[0].name], jobs_whitelist=[], objects=True)
+    return_jobs = manager.JobsManager.FilterJobObjects(
+        jobs, jobs_blacklist=[jobs[0].name], jobs_whitelist=[])
     self.assertListEqual(jobs[1:], return_jobs)
 
   def testFilterJobNamesWhiteList(self):
@@ -123,11 +123,11 @@ class JobsManagerTest(unittest.TestCase):
         job_names, jobs_blacklist=[], jobs_whitelist=[job_names[0]])
     self.assertListEqual(job_names[:1], return_job_names)
 
-  def testFilterJobNamesWhiteListObjects(self):
-    """Test FilterJobNames() with jobs_whitelist and objects."""
+  def testFilterJobObjectsWhiteList(self):
+    """Test FilterJobObjects() with jobs_whitelist."""
     jobs = [TestJob1(), TestJob2()]
-    return_jobs = manager.JobsManager.FilterJobNames(
-        jobs, jobs_blacklist=[], jobs_whitelist=[jobs[1].name], objects=True)
+    return_jobs = manager.JobsManager.FilterJobObjects(
+        jobs, jobs_blacklist=[], jobs_whitelist=[jobs[1].name])
     self.assertListEqual(jobs[1:], return_jobs)
 
   def testFilterJobNamesException(self):
