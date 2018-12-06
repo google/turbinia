@@ -79,10 +79,13 @@ def main():
       '-r', '--request_id', help='Create new requests with this Request ID',
       required=False)
   parser.add_argument(
+<<<<<<< HEAD
       '-R', '--run_local', action='store_true',
       help='Run completely locally without any server or other infrastructure. '
       'This can be used to run one-off Tasks to process data locally.')
   parser.add_argument(
+=======
+>>>>>>> Update YAPF
       '-S', '--server', action='store_true',
       help='Run Turbinia Server indefinitely')
   parser.add_argument(
@@ -116,10 +119,13 @@ def main():
       '-p', '--poll_interval', default=60, type=int,
       help='Number of seconds to wait between polling for task state info')
   parser.add_argument(
+<<<<<<< HEAD
       '-t', '--task',
       help='The name of a single Task to run locally (must be used with '
       '--run_local.')
   parser.add_argument(
+=======
+>>>>>>> Update YAPF
       '-w', '--wait', action='store_true',
       help='Wait to exit until all tasks for the given request have completed')
 
