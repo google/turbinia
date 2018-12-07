@@ -278,6 +278,9 @@ def main():
   # Server
   subparsers.add_parser('server', help='Run Turbinia Server')
 
+  #print version
+  log.info('Turbinia version: {0:s}'.format(__version__))
+
   args = parser.parse_args()
   if args.quiet:
     log.setLevel(logging.ERROR)
