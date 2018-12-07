@@ -25,15 +25,15 @@ class JobsManager(object):
   _job_classes = {}
 
   @classmethod
-  def FilterJobNames(cls, jobs, jobs_blacklist=None, jobs_whitelist=None):
+  def FilterJobNames(cls, job_names, jobs_blacklist=None, jobs_whitelist=None):
     """Filters a list of job names against white/black lists.
 
     jobs_whitelist and jobs_blacklist must not be specified at the same time.
 
     Args:
-      jobs (list[str]): The names of the jobs to filter.
-      jobs_blacklist (list[str]): Job names to exclude.
-      jobs_whitelist (list[str]): Job names to include.
+      job_names (list[str]): The names of the job_names to filter.
+      jobs_blacklist (Optional[list[str]]): Job names to exclude.
+      jobs_whitelist (Optional[list[str]]): Job names to include.
 
     Returns:
      list[str]: Job names
@@ -51,11 +51,11 @@ class JobsManager(object):
           'jobs_whitelist and jobs_blacklist cannot be specified at the same '
           'time.')
     elif jobs_blacklist:
-      return [job for job in jobs if job.lower() not in jobs_blacklist]
+      return [job for job in job_names if job.lower() not in jobs_blacklist]
     elif jobs_whitelist:
-      return [job for job in jobs if job.lower() in jobs_whitelist]
+      return [job for job in job_names if job.lower() in jobs_whitelist]
     else:
-      return jobs
+      return job_names
 
   @classmethod
   def FilterJobObjects(cls, jobs, jobs_blacklist=None, jobs_whitelist=None):
@@ -64,9 +64,9 @@ class JobsManager(object):
     jobs_whitelist and jobs_blacklist must not be specified at the same time.
 
     Args:
-      jobs (list[TurbiniaJob]): The names of the jobs to filter.
-      jobs_blacklist (list[str]): Job names to exclude.
-      jobs_whitelist (list[str]): Job names to include.
+      jobs (list[TurbiniaJob]): The jobs to filter.
+      jobs_blacklist (Optional[list[str]]): Job names to exclude.
+      jobs_whitelist (Optional[list[str]]): Job names to include.
 
     Returns:
      list[TurbiniaJob]: Job objects
