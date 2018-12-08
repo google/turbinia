@@ -19,7 +19,7 @@ from __future__ import unicode_literals
 import argparse
 import graphviz
 
-from turbinia.jobs import get_jobs as turbinia_jobs
+from turbinia.jobs import manager as jobs_manager
 
 
 def create_graph():
@@ -29,15 +29,15 @@ def create_graph():
     Instance of graphviz.dot.Digraph
   """
   dot = graphviz.Digraph(comment='Turbinia Evidence graph', format='png')
-  for job in turbinia_jobs():
-    dot.node(job.name)
+  for _, job in jobs_manager.JobsManager.GetJobs():
+    dot.node(job.NAME)
     for evidence in job.evidence_input:
       dot.node(evidence.__name__, shape='box')
-      dot.edge(evidence.__name__, job.name)
+      dot.edge(evidence.__name__, job.NAME)
 
     for evidence in job.evidence_output:
       dot.node(evidence.__name__, shape='box')
-      dot.edge(job.name, evidence.__name__)
+      dot.edge(job.NAME, evidence.__name__)
   return dot
 
 
