@@ -39,10 +39,8 @@ def extract_artifacts(artifact_names, disk_path, output_dir):
   artifacts = ','.join(artifact_names)
 
   image_export_cmd = [
-      'image_export.py',
-      '--artifact_filters', artifacts,
-      '--write', output_dir,
-      disk_path
+      'image_export.py', '--artifact_filters', artifacts, '--write', output_dir,
+      '--partitions', 'all', disk_path
   ]
 
   # TODO: Consider break the exec helper to gather stdin/err.
