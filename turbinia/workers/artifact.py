@@ -53,7 +53,7 @@ class FileArtifactExtractionTask(TurbiniaTask):
         '-w',
         export_directory,
         '--partitions',
-        'all'
+        'all',
         '--artifact_filters',
         self.artifact_name,
     ]
