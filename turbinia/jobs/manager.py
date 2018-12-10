@@ -16,11 +16,64 @@
 
 from __future__ import unicode_literals
 
+from turbinia import TurbiniaException
+
 
 class JobsManager(object):
   """The jobs manager."""
 
   _job_classes = {}
+
+  @classmethod
+  def FilterJobNames(cls, job_names, jobs_blacklist=None, jobs_whitelist=None):
+    """Filters a list of job names against white/black lists.
+
+    jobs_whitelist and jobs_blacklist must not be specified at the same time.
+
+    Args:
+      job_names (list[str]): The names of the job_names to filter.
+      jobs_blacklist (Optional[list[str]]): Job names to exclude.
+      jobs_whitelist (Optional[list[str]]): Job names to include.
+
+    Returns:
+     list[str]: Job names
+
+    Raises:
+      TurbiniaException if both jobs_blacklist and jobs_whitelist are specified.
+    """
+    jobs_blacklist = jobs_blacklist if jobs_blacklist else []
+    jobs_blacklist = [job.lower() for job in jobs_blacklist]
+    jobs_whitelist = jobs_whitelist if jobs_whitelist else []
+    jobs_whitelist = [job.lower() for job in jobs_whitelist]
+
+    if jobs_whitelist and jobs_blacklist:
+      raise TurbiniaException(
+          'jobs_whitelist and jobs_blacklist cannot be specified at the same '
+          'time.')
+    elif jobs_blacklist:
+      return [job for job in job_names if job.lower() not in jobs_blacklist]
+    elif jobs_whitelist:
+      return [job for job in job_names if job.lower() in jobs_whitelist]
+    else:
+      return job_names
+
+  @classmethod
+  def FilterJobObjects(cls, jobs, jobs_blacklist=None, jobs_whitelist=None):
+    """Filters a list of job objects against white/black lists.
+
+    jobs_whitelist and jobs_blacklist must not be specified at the same time.
+
+    Args:
+      jobs (list[TurbiniaJob]): The jobs to filter.
+      jobs_blacklist (Optional[list[str]]): Job names to exclude.
+      jobs_whitelist (Optional[list[str]]): Job names to include.
+
+    Returns:
+     list[TurbiniaJob]: Job objects
+    """
+    job_names = [job.name.lower() for job in jobs]
+    job_names = cls.FilterJobNames(job_names, jobs_blacklist, jobs_whitelist)
+    return [job for job in jobs if job.name.lower() in job_names]
 
   @classmethod
   def DeregisterJob(cls, job_class):

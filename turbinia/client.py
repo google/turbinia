@@ -398,11 +398,16 @@ class TurbiniaServer(object):
     task_manager (TaskManager): An object to manage turbinia tasks.
   """
 
-  def __init__(self):
-    """Initialize Turbinia Server."""
+  def __init__(self, jobs_blacklist=None, jobs_whitelist=None):
+    """Initializes Turbinia Server.
+
+    Args:
+      jobs_blacklist (Optional[list[str]]): Jobs we will exclude from running
+      jobs_whitelist (Optional[list[str]]): The only Jobs we will include to run
+    """
     config.LoadConfig()
     self.task_manager = task_manager.get_task_manager()
-    self.task_manager.setup()
+    self.task_manager.setup(jobs_blacklist, jobs_whitelist)
 
   def start(self):
     """Start Turbinia Server."""

@@ -6,6 +6,7 @@ from __future__ import unicode_literals
 
 import unittest
 
+from turbinia import TurbiniaException
 from turbinia.jobs import interface
 from turbinia.jobs import manager
 
@@ -93,6 +94,55 @@ class JobsManagerTest(unittest.TestCase):
     self.assertEqual(len(job_names), len(jobs))
     for job in jobs:
       self.assertIsInstance(job, interface.TurbiniaJob)
+
+  def testFilterJobNamesEmptyLists(self):
+    """Test FilterJobNames() with no filters."""
+    job_names = ['testjob1', 'testjob2']
+    return_job_names = manager.JobsManager.FilterJobNames(
+        job_names, jobs_blacklist=[], jobs_whitelist=[])
+    self.assertListEqual(job_names, return_job_names)
+
+  def testFilterJobNamesBlackList(self):
+    """Test FilterJobNames() with jobs_blacklist."""
+    job_names = ['testjob1', 'testjob2']
+    return_job_names = manager.JobsManager.FilterJobNames(
+        job_names, jobs_blacklist=[job_names[0]], jobs_whitelist=[])
+    self.assertListEqual(job_names[1:], return_job_names)
+
+  def testFilterJobObjectsBlackList(self):
+    """Test FilterJobObjects() with jobs_blacklist and objects."""
+    jobs = [TestJob1(), TestJob2()]
+    return_jobs = manager.JobsManager.FilterJobObjects(
+        jobs, jobs_blacklist=[jobs[0].name], jobs_whitelist=[])
+    self.assertListEqual(jobs[1:], return_jobs)
+
+  def testFilterJobNamesWhiteList(self):
+    """Test FilterJobNames() with jobs_whitelist."""
+    job_names = ['testjob1', 'testjob2']
+    return_job_names = manager.JobsManager.FilterJobNames(
+        job_names, jobs_blacklist=[], jobs_whitelist=[job_names[0]])
+    self.assertListEqual(job_names[:1], return_job_names)
+
+  def testFilterJobObjectsWhiteList(self):
+    """Test FilterJobObjects() with jobs_whitelist."""
+    jobs = [TestJob1(), TestJob2()]
+    return_jobs = manager.JobsManager.FilterJobObjects(
+        jobs, jobs_blacklist=[], jobs_whitelist=[jobs[1].name])
+    self.assertListEqual(jobs[1:], return_jobs)
+
+  def testFilterJobNamesException(self):
+    """Test FilterJobNames() with both jobs_blacklist and jobs_whitelist."""
+    job_names = ['testjob1', 'testjob2']
+    self.assertRaises(
+        TurbiniaException, manager.JobsManager.FilterJobNames, job_names,
+        jobs_blacklist=['a'], jobs_whitelist=['b'])
+
+  def testFilterJobNamesMixedCase(self):
+    """Test FilterJobNames() with mixed case inputs."""
+    job_names = ['testjob1', 'testjob2']
+    return_job_names = manager.JobsManager.FilterJobNames(
+        job_names, jobs_blacklist=[], jobs_whitelist=['TESTJOB1'])
+    self.assertListEqual(job_names[:1], return_job_names)
 
 
 if __name__ == '__main__':

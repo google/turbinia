@@ -40,6 +40,18 @@ log = logging.getLogger('turbinia')
 logger.setup()
 
 
+def csv_list(string):
+  """Helper method for having CSV argparse types.
+
+  Args:
+    string(str): Comma separated string to parse.
+
+  Returns:
+    list[str]: The parsed strings.
+  """
+  return string.split(',')
+
+
 def main():
   """Main function for turbiniactl"""
   # TODO(aarontp): Allow for single run mode when
@@ -89,12 +101,17 @@ def main():
       'text based evidence files with (in extended grep regex format). '
       'This filtered output will be in addition to the complete output')
   parser.add_argument(
-      '-j', '--jobs_whitelist',
-      help='A whitelist for Jobs that we will allow to run (note that it '
-      'will not force them to run).')
+      '-j', '--jobs_whitelist', default=[], type=csv_list,
+      help='A whitelist for Jobs that will be allowed to run (in CSV format, '
+      'no spaces). This will not force them to run if they are not configured '
+      'to. This is applied both at server start time and when the client makes '
+      'a processing request. When applied at server start time the change is '
+      'persistent while the server is running.  When applied by the client, it '
+      'will only affect that processing request.')
   parser.add_argument(
-      '-J', '--jobs_blacklist',
-      help='A blacklist for Jobs we will not allow to run')
+      '-J', '--jobs_blacklist', default=[], type=csv_list,
+      help='A blacklist for Jobs we will not allow to run.  See '
+      '--jobs_whitelist help for details on format and when it is applied.')
   parser.add_argument(
       '-p', '--poll_interval', default=60, type=int,
       help='Number of seconds to wait between polling for task state info')
@@ -189,7 +206,10 @@ def main():
       '-n', '--name', help='Descriptive name of the evidence', required=False)
 
   # List Jobs
-  subparsers.add_parser('listjobs', help='List all available jobs')
+  subparsers.add_parser(
+      'listjobs',
+      help='List all available Jobs. These Job names can be used by '
+      '--jobs_whitelist and --jobs_blacklist')
 
   # PSQ Worker
   parser_psqworker = subparsers.add_parser('psqworker', help='Run PSQ worker')
@@ -238,8 +258,8 @@ def main():
 
   if args.jobs_whitelist and args.jobs_blacklist:
     log.error(
-        'A Job filter whitelist and blacklist cannot be specified '
-        'at the same time')
+        'A Job filter whitelist and blacklist cannot be specified at the same '
+        'time')
     sys.exit(1)
 
   filter_patterns = None
@@ -320,7 +340,8 @@ def main():
     worker = TurbiniaCeleryWorker()
     worker.start()
   elif args.command == 'server':
-    server = TurbiniaServer()
+    server = TurbiniaServer(
+        jobs_blacklist=args.jobs_blacklist, jobs_whitelist=args.jobs_whitelist)
     server.start()
   elif args.command == 'status':
     region = config.TURBINIA_REGION
@@ -401,6 +422,10 @@ def main():
     request.evidence.append(evidence_)
     if filter_patterns:
       request.recipe['filter_patterns'] = filter_patterns
+    if args.jobs_blacklist:
+      request.recipe['jobs_blacklist'] = args.jobs_blacklist
+    if args.jobs_whitelist:
+      request.recipe['jobs_whitelist'] = args.jobs_whitelist
     if args.dump_json:
       print(request.to_json().encode('utf-8'))
     else:

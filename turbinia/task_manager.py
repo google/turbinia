@@ -101,12 +101,24 @@ class BaseTaskManager(object):
     """
     raise NotImplementedError
 
-  def setup(self, *args, **kwargs):
-    """Does setup of Task manager and its dependencies."""
+  def setup(self, jobs_blacklist=None, jobs_whitelist=None, *args, **kwargs):
+    """Does setup of Task manager and its dependencies.
+
+    Args:
+      jobs_blacklist (list): Jobs that will be excluded from running
+      jobs_whitelist (list): The only Jobs will be included to run
+    """
     self._backend_setup(*args, **kwargs)
     # TODO(aarontp): Consider instantiating a job per evidence object
     job_names = jobs_manager.JobsManager.GetJobNames()
+    if jobs_blacklist or jobs_whitelist:
+      log.info(
+          'Filtering Jobs with whitelist {0!s} and blacklist {1!s}'.format(
+              jobs_whitelist, jobs_blacklist))
+      job_names = jobs_manager.JobsManager.FilterJobNames(
+          job_names, jobs_blacklist, jobs_whitelist)
     self.jobs = jobs_manager.JobsManager.GetJobInstances(job_names)
+    log.debug('Registered job list: {0:s}'.format(str(job_names)))
 
   def add_evidence(self, evidence_):
     """Adds new evidence and creates tasks to process it.
@@ -125,11 +137,22 @@ class BaseTaskManager(object):
     log.info('Adding new evidence: {0:s}'.format(str(evidence_)))
     self.evidence.append(evidence_)
     job_count = 0
+    jobs_whitelist = evidence_.config.get('jobs_whitelist', [])
+    jobs_blacklist = evidence_.config.get('jobs_blacklist', [])
+    if jobs_blacklist or jobs_whitelist:
+      log.info(
+          'Filtering Jobs with whitelist {0!s} and blacklist {1!s}'.format(
+              jobs_whitelist, jobs_blacklist))
+      jobs_list = jobs_manager.JobsManager.FilterJobObjects(
+          self.jobs, jobs_blacklist, jobs_whitelist)
+    else:
+      jobs_list = self.jobs
+
     # TODO(aarontp): Add some kind of loop detection in here so that jobs can
     # register for Evidence(), or or other evidence types that may be a super
     # class of the output of the job itself.  Short term we could potentially
     # have a run time check for this upon Job instantiation to prevent it.
-    for job in self.jobs:
+    for job in jobs_list:
       # Doing a strict type check here for now until we can get the above
       # comment figured out.
       # pylint: disable=unidiomatic-typecheck
