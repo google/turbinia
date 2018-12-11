@@ -254,7 +254,7 @@ def main():
     log.setLevel(logging.WARNING)
 
   log.info('Turbinia version: {0:s}'.format(__version__))
-    
+
   if args.jobs_whitelist and args.jobs_blacklist:
     log.error(
         'A Job filter whitelist and blacklist cannot be specified at the same '
