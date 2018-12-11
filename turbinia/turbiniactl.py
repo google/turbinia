@@ -278,9 +278,6 @@ def main():
   # Server
   subparsers.add_parser('server', help='Run Turbinia Server')
 
-  #print version
-  log.info('Turbinia version: {0:s}'.format(__version__))
-
   args = parser.parse_args()
   if args.quiet:
     log.setLevel(logging.ERROR)
@@ -290,6 +287,8 @@ def main():
     log.setLevel(logging.DEBUG)
   else:
     log.setLevel(logging.WARNING)
+
+  log.info('Turbinia version: {0:s}'.format(__version__))
 
   if args.jobs_whitelist and args.jobs_blacklist:
     log.warning('A Job filter whitelist and blacklist cannot be specified '
