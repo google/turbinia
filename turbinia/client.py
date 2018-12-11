@@ -247,6 +247,8 @@ class TurbiniaClient(object):
                 task.get('name'), task.get('user'), task.get('worker_name'),
                 success, status))
         saved_paths = task.get('saved_paths', [])
+        if saved_paths is None:
+          saved_paths = []
         for path in saved_paths:
           results.append('\t{0:s}'.format(path))
       else:
