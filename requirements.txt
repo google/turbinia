@@ -2,8 +2,8 @@ filelock
 google-api-core>=1.2.1,<=1.4.0
 google-api-python-client>=1.6.2
 google-cloud-pubsub==0.35.4
-google-cloud-storage
-google-cloud-core
+google-cloud-storage==1.13.0
+google-cloud-core==0.28.1
 oauth2client
 psq
 six
