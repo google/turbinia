@@ -31,7 +31,8 @@ class TomcatExtractionJob(interface.TurbiniaJob):
 
   # The types of evidence that this Job will process
   evidence_input = [
-      Directory, RawDisk, GoogleCloudDisk, GoogleCloudDiskRawEmbedded]
+      Directory, RawDisk, GoogleCloudDisk, GoogleCloudDiskRawEmbedded
+  ]
 
   evidence_output = [ExportedFileArtifact]
 
@@ -47,7 +48,8 @@ class TomcatExtractionJob(interface.TurbiniaJob):
         A list of tasks to schedule.
     """
     tasks = [
-        artifact.FileArtifactExtractionTask('TomcatFiles') for _ in evidence]
+        artifact.FileArtifactExtractionTask('TomcatFiles') for _ in evidence
+    ]
     return tasks
 
 

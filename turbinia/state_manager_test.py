@@ -58,6 +58,8 @@ class TestPSQStateManager(unittest.TestCase):
         base_output_dir=self.base_output_dir, name=self.test_data['name'],
         request_id=self.test_data['request_id'])
     self.task.output_manager = mock.MagicMock()
+    self.task.output_manager.get_local_output_dirs.return_value = (
+        '/fake/tmp/dir', self.base_output_dir)
 
     # Set up TurbiniaTaskResult
     self.result = TurbiniaTaskResult(
@@ -65,8 +67,6 @@ class TestPSQStateManager(unittest.TestCase):
     self.result.status = self.test_data['status']
     self.result.saved_paths = self.test_data['saved_paths']
     self.task.result = self.result
-
-    self.result.output_dir = self.base_output_dir
 
   def tearDown(self):
     config.STATE_MANAGER = self.state_manager_save
@@ -87,13 +87,13 @@ class TestPSQStateManager(unittest.TestCase):
     self.assertEqual(task_dict['status'], self.test_data['status'])
     self.assertEqual(len(task_dict['saved_paths']), 2)
     self.assertTrue('instance' in task_dict)
-    self.assertIn(
-        self.test_data['saved_paths'][0], task_dict['saved_paths'])
+    self.assertIn(self.test_data['saved_paths'][0], task_dict['saved_paths'])
 
   @mock.patch('turbinia.state_manager.datastore.Client')
   def testStateManagerValidateDataValidDict(self, _):
     """Test State Manger _validate_data() base case."""
     self.state_manager = self._get_state_manager()
+    # pylint: disable=protected-access
     test_data = self.state_manager._validate_data(self.test_data)
     self.assertDictEqual(test_data, self.test_data)
 
@@ -103,6 +103,7 @@ class TestPSQStateManager(unittest.TestCase):
     self.state_manager = self._get_state_manager()
     invalid_dict = copy.deepcopy(self.test_data)
     invalid_dict['status'] = 'A' * state_manager.MAX_DATASTORE_STRLEN + 'BORKEN'
+    # pylint: disable=protected-access
     test_data = self.state_manager._validate_data(invalid_dict)
     self.assertListEqual(list(test_data.keys()), list(self.test_data.keys()))
     self.assertNotEqual(test_data['status'], self.test_data['status'])

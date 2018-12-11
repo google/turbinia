@@ -23,6 +23,7 @@ from turbinia.workers.analysis import jenkins
 
 
 class JenkinsAnalysisTaskTest(unittest.TestCase):
+  """Test class for JenkinsAnalysisTask"""
 
   JENKINS_SYSTEM_CONFIG = """<?xml version='1.1' encoding='UTF-8'?>
   <hudson>
@@ -111,8 +112,8 @@ class JenkinsAnalysisTaskTest(unittest.TestCase):
     config.LoadConfig()
     task = jenkins.JenkinsAnalysisTask()
 
-    version = task._extract_jenkins_version(
-      str(self.JENKINS_SYSTEM_CONFIG))
+    # pylint: disable=protected-access
+    version = task._extract_jenkins_version(str(self.JENKINS_SYSTEM_CONFIG))
 
     self.assertEqual(version, self.EXPECTED_VERSION)
 
@@ -121,8 +122,9 @@ class JenkinsAnalysisTaskTest(unittest.TestCase):
     config.LoadConfig()
     task = jenkins.JenkinsAnalysisTask()
 
+    # pylint: disable=protected-access
     credentials = task._extract_jenkins_credentials(
-      str(self.JENKINS_USER_CONFIG))
+        str(self.JENKINS_USER_CONFIG))
 
     self.assertEqual(credentials, self.EXPECTED_CREDENTIALS)
 

@@ -14,7 +14,6 @@
 # limitations under the License.
 """Job to execute strings task."""
 
-
 from __future__ import unicode_literals
 
 from turbinia.evidence import GoogleCloudDisk
@@ -39,7 +38,6 @@ class StringsJob(interface.TurbiniaJob):
   evidence_output = [TextFile]
 
   NAME = 'StringsJob'
-
 
   def create_tasks(self, evidence):
     """Create task for Strings.

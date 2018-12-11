@@ -17,25 +17,32 @@
 from __future__ import unicode_literals
 
 
-# Turbinia Role as 'server' or 'psqworker'
-ROLE = 'server'
+################################################################################
+#                          Base Turbinia configuration
+#
+# All options in this section are required to be set to non-empty values.
+################################################################################
 
-# Which user account Turbinia runs as
-USER = 'turbinia'
+# A unique ID per Turbinia instance. Used to keep multiple Turbinia instances
+# separate when running with the same Cloud projects or backend servers.
+INSTANCE_ID = 'turbinia-instance1'
 
-# Turbinia's installation directory
-TURBINIA_DIR = '/opt/turbinia'
+# Which state manager to use. Valid options are 'Datastore' or 'Redis'.
+STATE_MANAGER = 'Datastore'
 
-# 'PSQ' is currently the only valid option as
-# a distributed task queue using Google Cloud Pub/Sub
+# Which Task manager to use. Valid options are 'PSQ' and 'Celery'.
 TASK_MANAGER = 'PSQ'
 
 # Default base output directory for worker results and evidence.
 OUTPUT_DIR = '/var/tmp'
 
-# File to log to; set this as None if log file is not desired
-# By default, Turbinia logs are written to a directory (GCS_OUTPUT_DIR)
-# in the GCS mount
+# Directory for temporary files.  Some temporary files can be quite large (e.g.
+# Plaso files can easily be multiple gigabytes), so make sure there is enough
+# space.  Nothing from this directory will be saved.  This directory should be
+# different from the OUTPUT_DIR.
+TMP_DIR = '/tmp'
+
+# File to log debugging output to.
 LOG_FILE = '%s/turbinia.log' % OUTPUT_DIR
 
 # Path to a lock file used for the worker tasks.
@@ -54,7 +61,7 @@ MOUNT_DIR_PREFIX = '/mnt/turbinia-mounts'
 # This indicates whether the workers are running in an environment with a shared
 # filesystem.  This should be False for environments with workers running in
 # GCE, and True for environments that have workers on dedicated machines with
-# NFS or a SAN for Evidence objects.
+# NFS or a SAN for storing Evidence objects.
 SHARED_FILESYSTEM = False
 
 # This will set debugging flags for processes executed by Tasks (for
@@ -64,55 +71,52 @@ SHARED_FILESYSTEM = False
 DEBUG_TASKS = False
 
 
-###############################
-# Google Cloud Platform (GCP) #
-###############################
+################################################################################
+#                        Google Cloud Platform (GCP)
+#
+# Options in this section are required if the TASK_MANAGER is set to 'PSQ'.
+################################################################################
 
 # GCP project, region and zone where Turbinia will run.  Note that Turbinia does
 # not currently support multi-zone operation.  Even if you are running Turbinia
 # in Hybrid mode (with the Server and Workers running on local machines), you
 # will still need to provide these three parameters.
-# TODO(aarontp): Refactor these (and *PATH) var names to be consistent
-PROJECT = 'None'
-ZONE = 'None'
-TURBINIA_REGION = 'None'
+TURBINIA_PROJECT = None
+TURBINIA_ZONE = None
+TURBINIA_REGION = None
 
 # GCS bucket that has Turbinia specific scripts and can be used to store logs.
 # This must be globally unique within GCP.
-BUCKET_NAME = 'None'
+BUCKET_NAME = None
 
 # This is the internal PubSub topic that PSQ will use.  This should be different
 # than the PUBSUB_TOPIC variable.  The actual PubSub topic created will be this
 # variable prefixed with 'psq-'.
 PSQ_TOPIC = 'turbinia-psq'
 
-# A unique ID per Turbinia instance. Used to namespace datastore entries.
-INSTANCE_ID = 'turbinia-pubsub'
-
-# Topic Turbinia will listen on for new requests.  This should be different than
-# the PSQ_TOPIC variable.
+# The PubSub topic Turbinia will listen on for new requests.  This should be
+# different than the PSQ_TOPIC variable.
 PUBSUB_TOPIC = INSTANCE_ID
 
-# GCS Path to copy worker results and Evidence output to
-# Otherwise, set this as 'None' if output will be stored locally.
+# GCS Path to copy worker results and Evidence output to.
+# Otherwise, set this as 'None' if output will be stored in shared storage.
 GCS_OUTPUT_PATH = 'gs://%s/output' % BUCKET_NAME
 
-# Which state manager to use
-STATE_MANAGER = 'Datastore'
 
-
-##########
-# CELERY #
-##########
+################################################################################
+#                           Celery / Redis / Kombu
+#
+# Options in this section are required if TASK_MANAGER is set to 'Celery'
+################################################################################
 
 # Method for communication between nodes
-CELERY_BROKER = 'None'
+CELERY_BROKER = None
 
 # Storage for task results/status
-CELERY_BACKEND = 'None'
+CELERY_BACKEND = None
 
 # Can be the same as CELERY_BROKER
-KOMBU_BROKER = 'None'
+KOMBU_BROKER = None
 
 # Used to namespace communications.
 KOMBU_CHANNEL = '%s-kombu' % INSTANCE_ID
@@ -122,6 +126,6 @@ KOMBU_CHANNEL = '%s-kombu' % INSTANCE_ID
 KOMBU_DURABLE = True
 
 # Use Redis for state management
-REDIS_HOST = 'None'
-REDIS_PORT = 'None'
-REDIS_DB = 'None'
+REDIS_HOST = None
+REDIS_PORT = None
+REDIS_DB = None

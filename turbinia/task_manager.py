@@ -26,7 +26,7 @@ from turbinia import state_manager
 from turbinia.jobs import manager as jobs_manager
 
 config.LoadConfig()
-if config.TASK_MANAGER == 'PSQ':
+if config.TASK_MANAGER.lower() == 'psq':
   import psq
 
   from google.cloud import exceptions
@@ -34,7 +34,7 @@ if config.TASK_MANAGER == 'PSQ':
   from google.cloud import pubsub
 
   from turbinia import pubsub as turbinia_pubsub
-elif config.TASK_MANAGER == 'Celery':
+elif config.TASK_MANAGER.lower() == 'celery':
   from celery import states as celery_states
 
   from turbinia import celery as turbinia_celery
@@ -49,9 +49,10 @@ def get_task_manager():
     Initialized TaskManager object.
   """
   config.LoadConfig()
-  if config.TASK_MANAGER == 'PSQ':
+  # pylint: disable=no-else-return
+  if config.TASK_MANAGER.lower() == 'psq':
     return PSQTaskManager()
-  elif config.TASK_MANAGER == 'Celery':
+  elif config.TASK_MANAGER.lower() == 'celery':
     return CeleryTaskManager()
   else:
     msg = 'Task Manager type "{0:s}" not implemented'.format(
@@ -100,12 +101,24 @@ class BaseTaskManager(object):
     """
     raise NotImplementedError
 
-  def setup(self, *args, **kwargs):
-    """Does setup of Task manager and its dependencies."""
+  def setup(self, jobs_blacklist=None, jobs_whitelist=None, *args, **kwargs):
+    """Does setup of Task manager and its dependencies.
+
+    Args:
+      jobs_blacklist (list): Jobs that will be excluded from running
+      jobs_whitelist (list): The only Jobs will be included to run
+    """
     self._backend_setup(*args, **kwargs)
     # TODO(aarontp): Consider instantiating a job per evidence object
     job_names = jobs_manager.JobsManager.GetJobNames()
+    if jobs_blacklist or jobs_whitelist:
+      log.info(
+          'Filtering Jobs with whitelist {0!s} and blacklist {1!s}'.format(
+              jobs_whitelist, jobs_blacklist))
+      job_names = jobs_manager.JobsManager.FilterJobNames(
+          job_names, jobs_blacklist, jobs_whitelist)
     self.jobs = jobs_manager.JobsManager.GetJobInstances(job_names)
+    log.debug('Registered job list: {0:s}'.format(str(job_names)))
 
   def add_evidence(self, evidence_):
     """Adds new evidence and creates tasks to process it.
@@ -124,11 +137,22 @@ class BaseTaskManager(object):
     log.info('Adding new evidence: {0:s}'.format(str(evidence_)))
     self.evidence.append(evidence_)
     job_count = 0
+    jobs_whitelist = evidence_.config.get('jobs_whitelist', [])
+    jobs_blacklist = evidence_.config.get('jobs_blacklist', [])
+    if jobs_blacklist or jobs_whitelist:
+      log.info(
+          'Filtering Jobs with whitelist {0!s} and blacklist {1!s}'.format(
+              jobs_whitelist, jobs_blacklist))
+      jobs_list = jobs_manager.JobsManager.FilterJobObjects(
+          self.jobs, jobs_blacklist, jobs_whitelist)
+    else:
+      jobs_list = self.jobs
+
     # TODO(aarontp): Add some kind of loop detection in here so that jobs can
     # register for Evidence(), or or other evidence types that may be a super
     # class of the output of the job itself.  Short term we could potentially
     # have a run time check for this upon Job instantiation to prevent it.
-    for job in self.jobs:
+    for job in jobs_list:
       # Doing a strict type check here for now until we can get the above
       # comment figured out.
       # pylint: disable=unidiomatic-typecheck
@@ -205,8 +229,9 @@ class BaseTaskManager(object):
       task_result: The TurbiniaTaskResult object
     """
     if not task_result.successful:
-      log.error('Task {0:s} from {1:s} was not successful'.format(
-          task_result.task_name, task_result.worker_name))
+      log.error(
+          'Task {0:s} from {1:s} was not successful'.format(
+              task_result.task_name, task_result.worker_name))
     else:
       log.info(
           'Task {0:s} from {1:s} executed with status [{2:s}]'.format(
@@ -347,6 +372,7 @@ class PSQTaskManager(BaseTaskManager):
     config.LoadConfig()
     super(PSQTaskManager, self).__init__()
 
+  # pylint: disable=keyword-arg-before-vararg
   def _backend_setup(self, server=True, *args, **kwargs):
     """
     Args:
@@ -355,7 +381,7 @@ class PSQTaskManager(BaseTaskManager):
 
     log.debug(
         'Setting up PSQ Task Manager requirements on project {0:s}'.format(
-            config.PROJECT))
+            config.TURBINIA_PROJECT))
     self.server_pubsub = turbinia_pubsub.TurbiniaPubSub(config.PUBSUB_TOPIC)
     if server:
       self.server_pubsub.setup_subscriber()
@@ -363,14 +389,11 @@ class PSQTaskManager(BaseTaskManager):
       self.server_pubsub.setup_publisher()
     psq_publisher = pubsub.PublisherClient()
     psq_subscriber = pubsub.SubscriberClient()
-    datastore_client = datastore.Client(project=config.PROJECT)
+    datastore_client = datastore.Client(project=config.TURBINIA_PROJECT)
     try:
       self.psq = psq.Queue(
-          psq_publisher,
-          psq_subscriber,
-          config.PROJECT,
-          name=config.PSQ_TOPIC,
-          storage=psq.DatastoreStorage(datastore_client))
+          psq_publisher, psq_subscriber, config.TURBINIA_PROJECT,
+          name=config.PSQ_TOPIC, storage=psq.DatastoreStorage(datastore_client))
     except exceptions.GoogleAPIError as e:
       msg = 'Error creating PSQ Queue: {0:s}'.format(str(e))
       log.error(msg)

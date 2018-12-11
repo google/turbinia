@@ -27,10 +27,40 @@ import time
 from turbinia import config
 from turbinia.config import logger
 from turbinia import task_manager
+from turbinia import workers
 from turbinia import TurbiniaException
+from turbinia.workers.artifact import FileArtifactExtractionTask
+from turbinia.workers.analysis.wordpress import WordpressAccessLogAnalysisTask
+from turbinia.workers.analysis.jenkins import JenkinsAnalysisTask
+from turbinia.workers.grep import GrepTask
+from turbinia.workers.hadoop import HadoopAnalysisTask
+from turbinia.workers.plaso import PlasoTask
+from turbinia.workers.psort import PsortTask
+from turbinia.workers.sshd import SSHDAnalysisTask
+from turbinia.workers.strings import StringsAsciiTask
+from turbinia.workers.strings import StringsUnicodeTask
+from turbinia.workers.tomcat import TomcatAnalysisTask
+from turbinia.workers.worker_stat import StatTask
+
+# TODO(aarontp): Remove this map after
+# https://github.com/google/turbinia/issues/278 is fixed.
+TASK_MAP = {
+    'fileartifactextractiontask': FileArtifactExtractionTask,
+    'wordpressaccessloganalysistask': WordpressAccessLogAnalysisTask,
+    'jenkinsanalysistask': JenkinsAnalysisTask,
+    'greptask': GrepTask,
+    'hadoopanalysistask': HadoopAnalysisTask,
+    'plasotask': PlasoTask,
+    'psorttask': PsortTask,
+    'sshdanalysistask': SSHDAnalysisTask,
+    'stringsasciitask': StringsAsciiTask,
+    'stringsunicodetask': StringsUnicodeTask,
+    'tomcatanalysistask': TomcatAnalysisTask,
+    'stattask': StatTask,
+}
 
 config.LoadConfig()
-if config.TASK_MANAGER == 'PSQ':
+if config.TASK_MANAGER.lower() == 'psq':
   import psq
 
   from google.cloud import exceptions
@@ -38,7 +68,7 @@ if config.TASK_MANAGER == 'PSQ':
   from google.cloud import pubsub
 
   from turbinia.lib.google_cloud import GoogleCloudFunction
-elif config.TASK_MANAGER == 'Celery':
+elif config.TASK_MANAGER.lower() == 'celery':
   from turbinia.state_manager import RedisStateManager
 
 log = logging.getLogger('turbinia')
@@ -81,10 +111,31 @@ class TurbiniaClient(object):
     task_manager (TaskManager): Turbinia task manager
   """
 
-  def __init__(self):
+  def __init__(self, run_local=False):
     config.LoadConfig()
-    self.task_manager = task_manager.get_task_manager()
-    self.task_manager.setup(server=False)
+    if run_local:
+      self.task_manager = None
+    else:
+      self.task_manager = task_manager.get_task_manager()
+      self.task_manager.setup(server=False)
+
+  def create_task(self, task_name):
+    """Creates a Turbinia Task by name.
+
+    Args:
+      task_name(string): Name of the Task we are going to run.
+
+    Returns:
+      TurbiniaTask: An instantiated Task object.
+
+    Raises:
+      TurbiniaException: When no Task object matching task_name is found.
+    """
+    task_obj = TASK_MAP.get(task_name.lower())
+    log.debug('Looking up Task {0:s} by name'.format(task_name))
+    if not task_obj:
+      raise TurbiniaException('No Task named {0:s} found'.format(task_name))
+    return task_obj()
 
   def list_jobs(self):
     """List the available jobs."""
@@ -94,13 +145,9 @@ class TurbiniaClient(object):
     for job in self.task_manager.jobs:
       log.info('\t{0:s}'.format(job.name))
 
-  def wait_for_request(self,
-                       instance,
-                       project,
-                       region,
-                       request_id=None,
-                       user=None,
-                       poll_interval=60):
+  def wait_for_request(
+      self, instance, project, region, request_id=None, user=None,
+      poll_interval=60):
     """Polls and waits for Turbinia Request to complete.
 
     Args:
@@ -133,15 +180,9 @@ class TurbiniaClient(object):
 
     log.info('All {0:d} Tasks completed'.format(len(task_results)))
 
-  def get_task_data(self,
-                    instance,
-                    project,
-                    region,
-                    days=0,
-                    task_id=None,
-                    request_id=None,
-                    user=None,
-                    function_name='gettasks'):
+  def get_task_data(
+      self, instance, project, region, days=0, task_id=None, request_id=None,
+      user=None, function_name='gettasks'):
     """Gets task data from Google Cloud Functions.
 
     Args:
@@ -194,15 +235,9 @@ class TurbiniaClient(object):
 
     return results[0]
 
-  def format_task_status(self,
-                         instance,
-                         project,
-                         region,
-                         days=0,
-                         task_id=None,
-                         request_id=None,
-                         user=None,
-                         all_fields=False):
+  def format_task_status(
+      self, instance, project, region, days=0, task_id=None, request_id=None,
+      user=None, all_fields=False):
     """Formats the recent history for Turbinia Tasks.
 
     Args:
@@ -220,8 +255,8 @@ class TurbiniaClient(object):
     Returns:
       String of task status
     """
-    task_results = self.get_task_data(instance, project, region, days, task_id,
-                                      request_id, user)
+    task_results = self.get_task_data(
+        instance, project, region, days, task_id, request_id, user)
     num_results = len(task_results)
     results = []
     if not num_results:
@@ -241,8 +276,8 @@ class TurbiniaClient(object):
       status = task.get('status', 'No task status')
       if all_fields:
         results.append(
-            '{0:s} request: {1:s} task: {2:s} {3:s} {4:s} {5:s} {6:s}: {7:s}'.
-            format(
+            '{0:s} request: {1:s} task: {2:s} {3:s} {4:s} {5:s} {6:s}: {7:s}'
+            .format(
                 task.get('last_update'), task.get('request_id'), task.get('id'),
                 task.get('name'), task.get('user'), task.get('worker_name'),
                 success, status))
@@ -250,10 +285,31 @@ class TurbiniaClient(object):
         for path in saved_paths:
           results.append('\t{0:s}'.format(path))
       else:
-        results.append('{0:s} {1:s} {2:s}: {3:s}'.format(
-            task.get('last_update'), task.get('name'), success, status))
+        results.append(
+            '{0:s} {1:s} {2:s}: {3:s}'.format(
+                task.get('last_update'), task.get('name'), success, status))
 
     return '\n'.join(results)
+
+  def run_local_task(self, task_name, request):
+    """Runs a Turbinia Task locally.
+
+    Args:
+      task_name(string): Name of the Task we are going to run.
+      request (TurbiniaRequest): Object containing request and evidence info.
+
+    Returns:
+      TurbiniaTaskResult: The result returned by the Task Execution.
+    """
+    task = self.create_task(task_name)
+    task.request_id = request.request_id
+    task.base_output_dir = config.OUTPUT_DIR
+    task.run_local = True
+    if not request.evidence:
+      raise TurbiniaException('TurbiniaRequest does not contain evidence.')
+    log.info('Running Task {0:s} locally'.format(task_name))
+    result = task.run_wrapper(request.evidence[0])
+    return result
 
   def send_request(self, request):
     """Sends a TurbiniaRequest message.
@@ -263,14 +319,9 @@ class TurbiniaClient(object):
     """
     self.task_manager.server_pubsub.send_request(request)
 
-  def close_tasks(self,
-                  instance,
-                  project,
-                  region,
-                  request_id=None,
-                  task_id=None,
-                  user=None,
-                  requester=None):
+  def close_tasks(
+      self, instance, project, region, request_id=None, task_id=None, user=None,
+      requester=None):
     """Close Turbinia Tasks based on Request ID.
 
     Args:
@@ -307,7 +358,7 @@ class TurbiniaCeleryClient(TurbiniaClient):
     redis (RedisStateManager): Redis datastore object
   """
 
-  def __init__(self, *args, **kwargs):
+  def __init__(self, *_, **__):
     super(TurbiniaCeleryClient, self).__init__()
     self.redis = RedisStateManager()
 
@@ -320,14 +371,9 @@ class TurbiniaCeleryClient(TurbiniaClient):
     self.task_manager.kombu.send_request(request)
 
   # pylint: disable=arguments-differ
-  def get_task_data(self,
-                    instance,
-                    _,
-                    __,
-                    days=0,
-                    task_id=None,
-                    request_id=None,
-                    function_name=None):
+  def get_task_data(
+      self, instance, _, __, days=0, task_id=None, request_id=None,
+      function_name=None):
     """Gets task data from Redis.
 
     We keep the same function signature, but ignore arguments passed for GCP.
@@ -352,11 +398,16 @@ class TurbiniaServer(object):
     task_manager (TaskManager): An object to manage turbinia tasks.
   """
 
-  def __init__(self):
-    """Initialize Turbinia Server."""
+  def __init__(self, jobs_blacklist=None, jobs_whitelist=None):
+    """Initializes Turbinia Server.
+
+    Args:
+      jobs_blacklist (Optional[list[str]]): Jobs we will exclude from running
+      jobs_whitelist (Optional[list[str]]): The only Jobs we will include to run
+    """
     config.LoadConfig()
     self.task_manager = task_manager.get_task_manager()
-    self.task_manager.setup()
+    self.task_manager.setup(jobs_blacklist, jobs_whitelist)
 
   def start(self):
     """Start Turbinia Server."""
@@ -375,17 +426,18 @@ class TurbiniaCeleryWorker(TurbiniaClient):
     worker (celery.app): Celery worker app
   """
 
-  def __init__(self, *args, **kwargs):
+  def __init__(self, *_, **__):
     """Initialization for Celery worker."""
     super(TurbiniaCeleryWorker, self).__init__()
     check_directory(config.MOUNT_DIR_PREFIX)
     check_directory(config.OUTPUT_DIR)
+    check_directory(config.TMP_DIR)
     self.worker = self.task_manager.celery.app
 
   def start(self):
     """Start Turbinia Celery Worker."""
     log.info('Running Turbinia Celery Worker.')
-    argv = ['celery', 'worker', '--loglevel=info']
+    argv = ['celery', 'worker', '--loglevel=info', '--pool=solo']
     self.worker.start(argv)
 
 
@@ -405,14 +457,11 @@ class TurbiniaPsqWorker(object):
     config.LoadConfig()
     psq_publisher = pubsub.PublisherClient()
     psq_subscriber = pubsub.SubscriberClient()
-    datastore_client = datastore.Client(project=config.PROJECT)
+    datastore_client = datastore.Client(project=config.TURBINIA_PROJECT)
     try:
       self.psq = psq.Queue(
-          psq_publisher,
-          psq_subscriber,
-          config.PROJECT,
-          name=config.PSQ_TOPIC,
-          storage=psq.DatastoreStorage(datastore_client))
+          psq_publisher, psq_subscriber, config.TURBINIA_PROJECT,
+          name=config.PSQ_TOPIC, storage=psq.DatastoreStorage(datastore_client))
     except exceptions.GoogleCloudError as e:
       msg = 'Error creating PSQ Queue: {0:s}'.format(str(e))
       log.error(msg)
@@ -420,6 +469,7 @@ class TurbiniaPsqWorker(object):
 
     check_directory(config.MOUNT_DIR_PREFIX)
     check_directory(config.OUTPUT_DIR)
+    check_directory(config.TMP_DIR)
 
     log.info('Starting PSQ listener on queue {0:s}'.format(self.psq.name))
     self.worker = psq.Worker(queue=self.psq)

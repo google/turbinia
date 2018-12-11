@@ -94,6 +94,7 @@ class TestTurbiniaPubSub(unittest.TestCase):
     request = getTurbiniaRequest()
     self.pubsub = pubsub.TurbiniaPubSub('fake_topic')
     pub_sub_message = MockPubSubMessage(request.to_json(), 'msg id')
+    # pylint: disable=protected-access
     self.pubsub._queue.put(pub_sub_message)
     self.pubsub.topic_path = 'faketopicpath'
 
@@ -114,6 +115,7 @@ class TestTurbiniaPubSub(unittest.TestCase):
     """Test check_messages returns empty list for an invalid message."""
     pub_sub_message = MockPubSubMessage('non-json-data', 'msg id2')
     # Clear the queue so we can add an invalid message
+    # pylint: disable=protected-access
     self.pubsub._queue.get()
     self.pubsub._queue.put(pub_sub_message)
 
@@ -131,16 +133,17 @@ class TestTurbiniaKombu(unittest.TestCase):
   """Test turbinia.pubsub Kombu module."""
 
   def setUp(self):
+    """Sets up test class."""
     request = getTurbiniaRequest()
     self.kombu = celery.TurbiniaKombu('fake_topic')
     result = mock.MagicMock()
     result.payload = request.to_json()
     self.kombu.queue = mock.MagicMock()
     self.kombu.queue.__len__.return_value = 1
-    self.kombu.queue.get.side_effect = [
-        result, queue.Empty('Empty Queue')]
+    self.kombu.queue.get.side_effect = [result, queue.Empty('Empty Queue')]
 
   def testCheckMessages(self):
+    """Test check_messages method."""
     results = self.kombu.check_messages()
     self.assertTrue(len(results) == 1)
     request_new = results[0]
@@ -153,6 +156,7 @@ class TestTurbiniaKombu(unittest.TestCase):
     self.assertEqual(request_new.evidence[0].name, 'My Evidence')
 
   def testBadCheckMessages(self):
+    """Test check_messages method with non-json data."""
     result = mock.MagicMock()
     result.payload = 'non-json-data'
     self.kombu.queue.get.side_effect = [result, queue.Empty('Empty Queue')]

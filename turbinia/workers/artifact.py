@@ -54,7 +54,7 @@ class FileArtifactExtractionTask(TurbiniaTask):
         export_directory,
         '--artifact_filters',
         self.artifact_name,
-        ]
+    ]
     if config.DEBUG_TASKS:
       cmd.append('-d')
 
@@ -66,6 +66,7 @@ class FileArtifactExtractionTask(TurbiniaTask):
     ret, _ = self.execute(cmd, result, save_files=[image_export_log])
     if ret:
       result.close(self, False, 'image_export.py failed.')
+      return result
 
     for dirpath, _, filenames in os.walk(export_directory):
       for filename in filenames:

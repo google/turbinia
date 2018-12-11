@@ -34,10 +34,10 @@ from turbinia.workers import TurbiniaTask
 from turbinia.workers import TurbiniaTaskResult
 
 config.LoadConfig()
-if config.TASK_MANAGER == 'PSQ':
+if config.TASK_MANAGER.lower() == 'psq':
   from google.cloud import datastore
   from google.cloud import exceptions
-elif config.TASK_MANAGER == 'Celery':
+elif config.TASK_MANAGER.lower() == 'celery':
   import redis
 
 DATETIME_FORMAT = '%Y-%m-%dT%H:%M:%S'
@@ -52,9 +52,10 @@ def get_state_manager():
     Initialized StateManager object.
   """
   config.LoadConfig()
-  if config.STATE_MANAGER == 'Datastore':
+  # pylint: disable=no-else-return
+  if config.STATE_MANAGER.lower() == 'datastore':
     return DatastoreStateManager()
-  elif config.STATE_MANAGER == 'redis':
+  elif config.STATE_MANAGER.lower() == 'redis':
     return RedisStateManager()
   else:
     msg = 'State Manager type "{0:s}" not implemented'.format(
@@ -149,7 +150,7 @@ class DatastoreStateManager(BaseStateManager):
 
   def __init__(self):
     config.LoadConfig()
-    self.client = datastore.Client(project=config.PROJECT)
+    self.client = datastore.Client(project=config.TURBINIA_PROJECT)
 
   def _validate_data(self, data):
     for key, value in iter(data.items()):
@@ -175,8 +176,9 @@ class DatastoreStateManager(BaseStateManager):
         log.debug('Updating Task {0:s} in Datastore'.format(task.name))
         self.client.put(entity)
     except exceptions.GoogleCloudError as e:
-      log.error('Failed to update task {0:s} in datastore: {1!s}'.format(
-          task.name, e))
+      log.error(
+          'Failed to update task {0:s} in datastore: {1!s}'.format(
+              task.name, e))
 
   def write_new_task(self, task):
     key = self.client.key('TurbiniaTask', task.id)
@@ -187,8 +189,9 @@ class DatastoreStateManager(BaseStateManager):
       self.client.put(entity)
       task.state_key = key
     except exceptions.GoogleAPIError as e:
-      log.error('Failed to update task {0:s} in datastore: {1!s}'.format(
-          task.name, e))
+      log.error(
+          'Failed to update task {0:s} in datastore: {1!s}'.format(
+              task.name, e))
     return key
 
 
@@ -226,6 +229,7 @@ class RedisStateManager(BaseStateManager):
         if json.loads(self.client.get(task)).get('instance') == instance or
         not instance
     ]
+    # pylint: disable=no-else-return
     if days:
       start_time = datetime.now() - timedelta(days=days)
       # Redis only supports strings; we convert to/from datetime here and below
@@ -251,8 +255,8 @@ class RedisStateManager(BaseStateManager):
     # Need to use json.dumps, else redis returns single quoted string which
     # is invalid json
     if not self.client.set(key, json.dumps(task_data)):
-      log.error('Unsuccessful in updating task {0:s} in Redis'.format(
-          task.name))
+      log.error(
+          'Unsuccessful in updating task {0:s} in Redis'.format(task.name))
 
   def write_new_task(self, task):
     key = ':'.join(['TurbiniaTask', task.id])
@@ -262,7 +266,7 @@ class RedisStateManager(BaseStateManager):
         DATETIME_FORMAT)
     # nx=True prevents overwriting (i.e. no unintentional task clobbering)
     if not self.client.set(key, json.dumps(task_data), nx=True):
-      log.error('Unsuccessful in writing new task {0:s} into Redis'.format(
-          task.name))
+      log.error(
+          'Unsuccessful in writing new task {0:s} into Redis'.format(task.name))
     task.state_key = key
     return key

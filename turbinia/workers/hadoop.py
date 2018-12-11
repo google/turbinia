@@ -97,10 +97,8 @@ class HadoopAnalysisTask(TurbiniaTask):
       # We don't use FileArtifactExtractionTask as it export one evidence per
       # file extracted
       collected_artifacts = extract_artifacts(
-          artifact_names=['HadoopAppRoot'],
-          disk_path=evidence.local_path,
-          output_dir=os.path.join(self.output_dir, 'artifacts')
-      )
+          artifact_names=['HadoopAppRoot'], disk_path=evidence.local_path,
+          output_dir=os.path.join(self.output_dir, 'artifacts'))
 
       text_report_lines = self._AnalyzeHadoopAppRoot(collected_artifacts)
       if not text_report_lines:

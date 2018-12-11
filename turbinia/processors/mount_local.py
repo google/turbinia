@@ -14,7 +14,6 @@
 # limitations under the License.
 """Evidence processor to mount local images or disks."""
 
-
 from __future__ import unicode_literals
 
 import logging
@@ -43,8 +42,7 @@ def PreprocessLosetup(source_path):
   losetup_device = None
   # TODO(aarontp): Remove hard-coded sudo in commands:
   # https://github.com/google/turbinia/issues/73
-  losetup_command = [
-      'sudo', 'losetup', '--show', '--find', '-P', source_path]
+  losetup_command = ['sudo', 'losetup', '--show', '--find', '-P', source_path]
   log.info('Running command {0:s}'.format(' '.join(losetup_command)))
   try:
     losetup_device = subprocess.check_output(losetup_command).strip()
@@ -52,6 +50,7 @@ def PreprocessLosetup(source_path):
     raise TurbiniaException('Could not set losetup devices {0!s}'.format(e))
 
   return losetup_device
+
 
 def PreprocessMountDisk(loopdevice_path, partition_number):
   """Locally mounts disk in an instance.
@@ -90,8 +89,9 @@ def PreprocessMountDisk(loopdevice_path, partition_number):
   path_to_partition = '{0:s}p{1:d}'.format(loopdevice_path, partition_number)
 
   if not os.path.exists(path_to_partition):
-    log.info('Could not find {0:s}, trying {1:s}'.format(
-        path_to_partition, loopdevice_path))
+    log.info(
+        'Could not find {0:s}, trying {1:s}'.format(
+            path_to_partition, loopdevice_path))
     # Else, the partition's block device is actually /dev/loopX
     path_to_partition = loopdevice_path
 
@@ -123,6 +123,7 @@ def PostprocessDeleteLosetup(loopdevice_path):
     subprocess.check_call(losetup_cmd)
   except subprocess.CalledProcessError as e:
     raise TurbiniaException('Could not delete losetup device {0!s}'.format(e))
+
 
 def PostprocessUnmountPath(mount_path):
   """Unmounts a local disk.

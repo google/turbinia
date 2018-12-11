@@ -29,9 +29,9 @@ turbiniactl can be used to start the different components, and here is the basic
 ``` 
 $ turbiniactl --help
 usage: turbiniactl [-h] [-q] [-v] [-d] [-a] [-f] [-o OUTPUT_DIR] [-L LOG_FILE]
-                   [-r REQUEST_ID] [-S] [-C] [-V] [-D]
+                   [-r REQUEST_ID] [-R] [-S] [-C] [-V] [-D]
                    [-F FILTER_PATTERNS_FILE] [-j JOBS_WHITELIST]
-                   [-J JOBS_BLACKLIST] [-p POLL_INTERVAL] [-w]
+                   [-J JOBS_BLACKLIST] [-p POLL_INTERVAL] [-t TASK] [-w]
                    <command> ...
 
 optional arguments:
@@ -48,6 +48,9 @@ optional arguments:
                         Log file
   -r REQUEST_ID, --request_id REQUEST_ID
                         Create new requests with this Request ID
+  -R, --run_local       Run completely locally without any server or other
+                        infrastructure. This can be used to run one-off Tasks
+                        to process data locally.
   -S, --server          Run Turbinia Server indefinitely
   -C, --use_celery      Pass this flag when using Celery/Kombu for task
                         queuing and messaging (instead of Google PSQ/pubsub)
@@ -67,6 +70,8 @@ optional arguments:
   -p POLL_INTERVAL, --poll_interval POLL_INTERVAL
                         Number of seconds to wait between polling for task
                         state info
+  -t TASK, --task TASK  The name of a single Task to run locally (must be used
+                        with --run_local.
   -w, --wait            Wait to exit until all tasks for the given request
                         have completed
 
@@ -82,7 +87,7 @@ Commands:
     psqworker           Run PSQ worker
     celeryworker        Run Celery worker
     status              Get Turbinia Task status
-    server              Run Turbinia Server    
+    server              Run Turbinia Server
 ```
 
 The commands for processing the evidence types of rawdisk and directory specify information about evidence that Turbinia should process. By default, when adding new evidence to be processed, turbiniactl will act as a client and send a request to the configured Turbinia server, otherwise if ```--server``` is specified, it will start up its own Turbinia server process.  Here's the turbiniactl usage for adding a raw disk type of evidence to be processed by Turbinia:

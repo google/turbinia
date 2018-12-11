@@ -36,6 +36,7 @@ CONFIGPATH = ['/etc/turbinia']
 
 
 def main():
+  """Main function for config parser"""
   if len(sys.argv) < 2:
     print('%s <key name>' % sys.argv[0])
     sys.exit(100)
