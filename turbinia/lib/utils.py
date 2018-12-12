@@ -16,12 +16,15 @@
 
 from __future__ import unicode_literals
 
+import logging
 import os
 import subprocess
 import tempfile
 import threading
 
 from turbinia import TurbiniaException
+
+log = logging.getLogger('turbinia')
 
 
 def extract_artifacts(artifact_names, disk_path, output_dir):
@@ -43,7 +46,9 @@ def extract_artifacts(artifact_names, disk_path, output_dir):
       '--partitions', 'all', disk_path
   ]
 
-  # TODO: Consider break the exec helper to gather stdin/err.
+  # TODO: Consider using the exec helper to gather stdin/err.
+  log.debug(
+      'Running image_export as [{0:s}]'.format(' '.join(image_export_cmd)))
   try:
     subprocess.check_call(image_export_cmd)
   except subprocess.CalledProcessError:
