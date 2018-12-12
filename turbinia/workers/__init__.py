@@ -25,6 +25,7 @@ import platform
 import pprint
 import subprocess
 import traceback
+import turbinia
 import uuid
 
 import filelock
@@ -245,6 +246,7 @@ class TurbiniaTask(object):
     self.state_key = None
     self.stub = None
     self.tmp_dir = None
+    self.turbina_version = turbinia.__version__
     self.user = user if user else getpass.getuser()
     self._evidence_config = {}
 
