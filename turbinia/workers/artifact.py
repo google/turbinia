@@ -52,6 +52,8 @@ class FileArtifactExtractionTask(TurbiniaTask):
         image_export_log,
         '-w',
         export_directory,
+        '--partitions',
+        'all',
         '--artifact_filters',
         self.artifact_name,
     ]
