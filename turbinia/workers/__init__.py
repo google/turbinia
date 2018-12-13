@@ -25,8 +25,8 @@ import platform
 import pprint
 import subprocess
 import traceback
-import turbinia
 import uuid
+import turbinia
 
 import filelock
 
@@ -431,8 +431,12 @@ class TurbiniaTask(object):
       try:
         self.result = self.setup(evidence)
         original_result_id = self.result.id
+
+        if not self.turbina_version == turbinia.__version__:
+          msg = 'Worker and server versions do not match'
+          raise TurbiniaException(msg)
+
         self._evidence_config = evidence.config
-        self.result = self.run(evidence, self.result)
       # pylint: disable=broad-except
       except Exception as e:
         msg = '{0:s} Task failed with exception: [{1!s}]'.format(self.name, e)
