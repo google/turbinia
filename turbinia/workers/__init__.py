@@ -246,7 +246,7 @@ class TurbiniaTask(object):
     self.state_key = None
     self.stub = None
     self.tmp_dir = None
-    self.turbina_version = turbinia.__version__
+    self.turbinia_version = turbinia.__version__
     self.user = user if user else getpass.getuser()
     self._evidence_config = {}
 
@@ -432,9 +432,16 @@ class TurbiniaTask(object):
         self.result = self.setup(evidence)
         original_result_id = self.result.id
 
-        if not self.turbina_version == turbinia.__version__:
-          msg = 'Worker and server versions do not match'
-          raise TurbiniaException(msg)
+        if self.turbinia_version != turbinia.__version__:
+          msg = 'Worker V-{} and server V-{} versions do not match'.format(
+            self.turbinia_version,
+            turbinia.__version__
+          )
+          log.error(msg)
+          self.result.log(msg)
+          self.result.set_error(msg)
+          self.result.status = msg
+          return self.result
 
         self._evidence_config = evidence.config
       # pylint: disable=broad-except
