@@ -444,6 +444,7 @@ class TurbiniaTask(object):
           return self.result
 
         self._evidence_config = evidence.config
+        self.result = self.run(evidence, self.result)
       # pylint: disable=broad-except
       except Exception as e:
         msg = '{0:s} Task failed with exception: [{1!s}]'.format(self.name, e)
