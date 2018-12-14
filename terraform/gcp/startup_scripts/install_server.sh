@@ -33,7 +33,7 @@ apt update
 apt -y install python-pip
 
 # Install Turbinia
-pip install turbinia
+pip install https://github.com/google/turbinia/archive/master.zip
 
 # Turbinia needs a recent version of urllib3
 pip install urllib3 --upgrade
@@ -42,10 +42,14 @@ pip install urllib3 --upgrade
 useradd -r -s /bin/nologin turbinia
 
 # Enable systemd Turbinia service
-curl -o turbinia@.service https://raw.githubusercontent.com/google/turbinia/master/tools/turbinia%40.service
+curl -o /etc/systemd/system/turbinia@.service https://raw.githubusercontent.com/google/turbinia/master/tools/turbinia%40.service
 systemctl daemon-reload
 systemctl enable turbinia@server
 systemctl restart turbinia@server
+
+# Configure
+mkdir /etc/turbinia
+echo "${config}" > /etc/turbinia/turbinia.conf
 
 # --- END MAIN ---
 

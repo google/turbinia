@@ -19,7 +19,7 @@ resource "google_project_service" "datastore" {
   disable_on_destroy = false
 }
 
-resource "google_project_service" "iam_" {
+resource "google_project_service" "iam" {
   project = "${var.project}"
   service = "iam.googleapis.com"
   disable_on_destroy = false
@@ -38,17 +38,28 @@ resource "google_project_service" "storage-component" {
 }
 
 resource "google_pubsub_topic" "pubsub-topic" {
-  name = "turbinia-pubsub"
+  name = "turbinia-${random_id.turbinia-instance-id.hex}"
 }
 
-data "local_file" "cloud-datastore-index" {
-  filename = "../../turbinia/tools/gcf_init/index.yaml"
+resource "google_pubsub_topic" "pubsub-topic-psq" {
+  name = "turbinia-${random_id.turbinia-instance-id.hex}-psq"
+}
+
+resource "random_id" "turbinia-instance-id" {
+  byte_length = 8
+}
+
+resource "google_storage_bucket" "output-bucket" {
+  name = "turbinia-${random_id.turbinia-instance-id.hex}"
 }
 
 data "local_file" "datastore-index-file" {
-  filename = "../../turbinia/tools/gcf_init/index.yaml"
+  filename = "../../tools/gcf_init/index.yaml"
 }
 
-data "local_file" "cloudfunction-zip-file" {
-  filename = "../../turbinia/tools/gcf_init/index.yaml"
+resource "null_resource" "cloud-datastore-create-index" {
+  provisioner "local-exec" {
+    command = "gcloud datastore indexes create ${data.local_file.datastore-index-file.filename} --project=${var.project}"
+  }
 }
+
