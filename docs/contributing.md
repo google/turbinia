@@ -69,7 +69,7 @@ that every developer knows to (largely) expect the same coding style.
 #### Style guide
 
 We primarily follow the
-[Google Python Style Guide](https://google-styleguide.googlecode.com/svn/trunk/pyguide.html).
+[Google Python Style Guide](https://google.github.io/styleguide/pyguide.html).
 Various Turbinia specific additions/variations are:
 
 *   Using two spaces instead of four
