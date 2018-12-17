@@ -41,6 +41,8 @@ elif config.TASK_MANAGER.lower() == 'celery':
 
 log = logging.getLogger('turbinia')
 
+PSQ_TASK_TIMEOUT = 604800
+
 
 def get_task_manager():
   """Return task manager object based on config.
@@ -412,7 +414,7 @@ class PSQTaskManager(BaseTaskManager):
         log.warning('Task {0:s} failed.'.format(psq_task.id))
         completed_tasks.append(task)
       else:
-        task.result = task.stub.result()
+        task.result = task.stub.result(timeout=PSQ_TASK_TIMEOUT)
         completed_tasks.append(task)
 
     outstanding_task_count = len(self.tasks) - len(completed_tasks)
