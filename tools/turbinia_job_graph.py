@@ -21,6 +21,11 @@ import graphviz
 
 from turbinia.jobs import manager as jobs_manager
 
+try:
+  unicode
+except NameError:
+  unicode = str
+
 
 def create_graph():
   """Create graph of relationships between Turbinia jobs and evidence.
