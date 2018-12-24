@@ -24,7 +24,7 @@ from turbinia.jobs import manager as jobs_manager
 try:
   unicode
 except NameError:
-  unicode = str
+  unicode = str  # pylint: disable=redefined-builtin
 
 
 def create_graph():
