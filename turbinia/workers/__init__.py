@@ -26,6 +26,7 @@ import pprint
 import subprocess
 import traceback
 import uuid
+import turbinia
 
 import filelock
 
@@ -245,6 +246,7 @@ class TurbiniaTask(object):
     self.state_key = None
     self.stub = None
     self.tmp_dir = None
+    self.turbinia_version = turbinia.__version__
     self.user = user if user else getpass.getuser()
     self._evidence_config = {}
 
@@ -429,6 +431,18 @@ class TurbiniaTask(object):
       try:
         self.result = self.setup(evidence)
         original_result_id = self.result.id
+
+        if self.turbinia_version != turbinia.__version__:
+          msg = 'Worker V-{0:s} and server V-{1:s} version do not match'.format(
+            self.turbinia_version,
+            turbinia.__version__
+          )
+          log.error(msg)
+          self.result.log(msg)
+          self.result.set_error(msg)
+          self.result.status = msg
+          return self.result
+
         self._evidence_config = evidence.config
         self.result = self.run(evidence, self.result)
       # pylint: disable=broad-except
