@@ -57,9 +57,7 @@ def GetLocalInstanceName():
   # TODO(aarontp): Use cloud API instead of manual requests to metadata service.
   req = urllib.request.Request(
       'http://metadata.google.internal/computeMetadata/v1/instance/name', None,
-      {
-          'Metadata-Flavor': 'Google'
-      })
+      {'Metadata-Flavor': 'Google'})
   try:
     instance = urllib.request.urlopen(req).read()
   except urllib.error.HTTPError as e:
@@ -100,7 +98,8 @@ def PreprocessAttachDisk(disk_name):
       break
     if os.path.exists(path):
       log.info(
-          'Block device {0:s} mode is {1}'.format(path, os.stat(path).st_mode))
+          'Block device {0:s} mode is {1}'.format(path,
+                                                  os.stat(path).st_mode))
     time.sleep(1)
 
   return path
