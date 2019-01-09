@@ -434,9 +434,7 @@ class TurbiniaTask(object):
 
         if self.turbinia_version != turbinia.__version__:
           msg = 'Worker V-{0:s} and server V-{1:s} version do not match'.format(
-            self.turbinia_version,
-            turbinia.__version__
-          )
+              self.turbinia_version, turbinia.__version__)
           log.error(msg)
           self.result.log(msg)
           self.result.set_error(msg)

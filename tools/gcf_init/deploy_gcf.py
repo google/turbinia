@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 """Script for deploying cloud functions."""
 
-
 from __future__ import print_function
 
 import subprocess

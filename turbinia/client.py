@@ -278,9 +278,11 @@ class TurbiniaClient(object):
         results.append(
             '{0:s} request: {1:s} task: {2:s} {3:s} {4:s} {5:s} {6:s}: {7:s}'
             .format(
-                task.get('last_update'), task.get('request_id'), task.get('id'),
-                task.get('name'), task.get('user'), task.get('worker_name'),
-                success, status))
+                task.get('last_update'),
+                task.get('request_id'),
+                task.get('id'),
+                task.get('name'),
+                task.get('user'), task.get('worker_name'), success, status))
         saved_paths = task.get('saved_paths', [])
         if saved_paths is None:
           saved_paths = []
