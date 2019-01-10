@@ -32,6 +32,7 @@ from turbinia import TurbiniaException
 from turbinia.workers.artifact import FileArtifactExtractionTask
 from turbinia.workers.analysis.wordpress import WordpressAccessLogAnalysisTask
 from turbinia.workers.analysis.jenkins import JenkinsAnalysisTask
+from turbinia.workers.docker import DockerContainersEnumerationTask
 from turbinia.workers.grep import GrepTask
 from turbinia.workers.hadoop import HadoopAnalysisTask
 from turbinia.workers.plaso import PlasoTask
@@ -48,6 +49,7 @@ TASK_MAP = {
     'fileartifactextractiontask': FileArtifactExtractionTask,
     'wordpressaccessloganalysistask': WordpressAccessLogAnalysisTask,
     'jenkinsanalysistask': JenkinsAnalysisTask,
+    'dockertask': DockerContainersEnumerationTask,
     'greptask': GrepTask,
     'hadoopanalysistask': HadoopAnalysisTask,
     'plasotask': PlasoTask,

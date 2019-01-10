@@ -22,6 +22,7 @@ import sys
 
 from turbinia import config
 from turbinia import TurbiniaException
+from turbinia.processors import docker
 from turbinia.processors import mount_local
 
 # pylint: disable=keyword-arg-before-vararg
@@ -355,3 +356,45 @@ class ExportedFileArtifact(Evidence):
     super(ExportedFileArtifact, self).__init__()
     self.artifact_name = artifact_name
     self.copyable = True
+
+
+class DockerContainer(Evidence):
+  """Evidence object for a DockerContainer filesystem.
+
+  Attributes:
+    container_id(str): The ID of the container to mount.
+  """
+
+  def __init__(self, container_id=None, *args, **kwargs):
+    """Initialization for Docker Container."""
+    super(DockerContainer, self).__init__(*args, **kwargs)
+    self.container_id = container_id
+    self._container_fs_path = None
+    self._docker_root_directory = None
+    self._mount_path = None
+    self.context_dependent = True
+
+  def _preprocess(self):
+    log.info('YOOOO DockerContainer evidence for ID {0:s} being preprocessed'.format(self.container_id))
+    self._mount_path = self.parent_evidence.local_path
+    if issubclass(type(self.parent_evidence), RawDisk):
+      # Mounting the filesystem on the disk, as this is not done by the RawDisk
+      # evidence preprocessor
+      self._mount_path = mount_local.PreprocessMountDisk(
+          self.parent_evidence.loopdevice_path,
+          self.parent_evidence.mount_partition)
+
+    self._docker_root_directory = os.path.join(
+        self._mount_path, 'var', 'lib', 'docker')
+    # Mounting the container's filesystem
+    self._container_fs_path = docker.PreprocessMountDockerFS(
+        self._docker_root_directory, self.container_id)
+    self.local_path = self._container_fs_path
+
+  def _postprocess(self):
+    # Unmount the container's filesystem
+    mount_local.PostprocessUnmountPath(self.local_path)
+    self._container_fs_path = None
+    if type(self.parent_evidence).__name__ == 'RawDisk':
+      # Unmount any underlying mount path, as we had to mount the disk ourselves
+      mount_local.PostprocessUnmountPath(self._mount_path)

@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Turbinia jobs."""
+from turbinia.jobs import docker
 from turbinia.jobs import grep
 from turbinia.jobs import hadoop
 from turbinia.jobs import http_access_logs
