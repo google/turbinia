@@ -67,7 +67,7 @@ setup(
         'requirements.txt', session=PipSession())
     ],
     extras_require={
-        'dev': ['mock', 'nose'],
+        'dev': ['mock', 'nose', 'yapf'],
         'local': ['celery~=4.1', 'kombu~=4.1', 'redis~=2.10'],
         'worker': ['plaso>=20171118']
     }

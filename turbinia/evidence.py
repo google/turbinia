@@ -30,6 +30,7 @@ config.LoadConfig()
 if config.TASK_MANAGER.lower() == 'psq':
   from turbinia.processors import google_cloud
 
+
 def evidence_decode(evidence_dict):
   """Decode JSON into appropriate Evidence object.
 
