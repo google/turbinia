@@ -251,8 +251,8 @@ class TurbiniaTask(object):
     self._evidence_config = {}
 
   def execute(
-      self, cmd, result, save_files=None, new_evidence=None, close=False,
-      shell=False):
+      self, cmd, result, save_files=None, log_files=None, new_evidence=None,
+      close=False, shell=False):
     """Executes a given binary and saves output.
 
     Args:
@@ -260,6 +260,7 @@ class TurbiniaTask(object):
       result (TurbiniaTaskResult): The result object to put data into.
       save_files (list): A list of files to save (files referenced by Evidence
           objects are automatically saved, so no need to include them).
+      log_files (list): A list of files to save even if execution fails.
       new_evidence (list): These are new evidence objects created by the task.
           If the task is successful, they will be added to the result.
       close (bool): Whether to close out the result.
@@ -269,6 +270,7 @@ class TurbiniaTask(object):
       Tuple of the return code, and the TurbiniaTaskResult object
     """
     save_files = save_files if save_files else []
+    log_files = log_files if log_files else []
     new_evidence = new_evidence if new_evidence else []
     if shell:
       proc = subprocess.Popen(cmd, shell=True)
@@ -278,6 +280,11 @@ class TurbiniaTask(object):
     result.error['stdout'] = stdout
     result.error['stderr'] = stderr
     ret = proc.returncode
+
+    for file_ in log_files:
+      result.log('Output file at {0:s}'.format(file_))
+      if not self.run_local:
+        self.output_manager.save_local_file(file_, result)
 
     if ret:
       msg = 'Execution failed with status {0:d}'.format(ret)
