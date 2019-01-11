@@ -92,7 +92,6 @@ class DockerContainersEnumerationTask(TurbiniaTask):
       container_id = container_info.get('container_id')
       container_evidence = DockerContainer(container_id=container_id)
       result.add_evidence(container_evidence, evidence.config)
-      log.info('Turns out our new evidence has a parent {0!s}'.format(container_evidence.parent_evidence))
 
     result.close(self, success=True)
     return result

@@ -375,7 +375,6 @@ class DockerContainer(Evidence):
     self.context_dependent = True
 
   def _preprocess(self):
-    log.info('YOOOO DockerContainer evidence for ID {0:s} being preprocessed'.format(self.container_id))
     self._mount_path = self.parent_evidence.local_path
     if issubclass(type(self.parent_evidence), RawDisk):
       # Mounting the filesystem on the disk, as this is not done by the RawDisk
