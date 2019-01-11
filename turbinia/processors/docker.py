@@ -50,8 +50,9 @@ def PreprocessMountDockerFS(docker_dir, container_id):
   # TODO(aarontp): Remove hard-coded sudo in commands:
   # https://github.com/google/turbinia/issues/73
   mount_cmd = [
-      'sudo', '/usr/local/bin/de.py', '-r',  docker_dir, 'mount', container_id,
-      mount_path]
+      'sudo', '/usr/local/bin/de.py', '-r', docker_dir, 'mount', container_id,
+      mount_path
+  ]
   log.info('Running: {0:s}'.format(' '.join(mount_cmd)))
   try:
     subprocess.check_call(mount_cmd)

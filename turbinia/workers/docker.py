@@ -54,7 +54,8 @@ class DockerContainersEnumerationTask(TurbiniaTask):
     containers_info = None
     docker_explorer_command = [
         'sudo', '/usr/local/bin/de.py', '-r', docker_dir, 'list',
-        'all_containers']
+        'all_containers'
+    ]
     try:
       log.info('Running {0:s}'.format(' '.join(docker_explorer_command)))
       json_string = subprocess.check_output(docker_explorer_command)
@@ -74,7 +75,6 @@ class DockerContainersEnumerationTask(TurbiniaTask):
 
     mount_local.PostprocessUnmountPath(mount_path)
     return containers_info
-
 
   def run(self, evidence, result):
     """Run the docker-explorer tool to list containerss.
