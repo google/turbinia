@@ -28,7 +28,16 @@ log = logging.getLogger('turbinia')
 
 
 def PreprocessMountDockerFS(docker_dir, container_id):
-  # TODO: Most of the code is copied from PreprocessMountDisk
+  """Mounts a Docker container Filesystem locally.
+
+  Args:
+    docker_dir: the root Docker directory, as string.
+    container_id: the complete ID of the container, as string.
+
+  Raises:
+    TurbiniaException: if there was an error trying to mount the filesystem.
+  """
+  # Most of the code is copied from PreprocessMountDisk
   # Only the mount command changes
   config.LoadConfig()
   mount_prefix = config.MOUNT_DIR_PREFIX
