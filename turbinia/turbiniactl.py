@@ -431,6 +431,9 @@ def main():
       log.info(
           'Creating request {0:s} with evidence {1:s}'.format(
               request.request_id, evidence_.name))
+      log.info(
+          'Run command "turbiniactl status -r {0:s}" to see the status of '
+          'this request and associated tasks'.format(request.request_id))
       if not args.run_local:
         client.send_request(request)
       else:
