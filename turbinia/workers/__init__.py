@@ -317,13 +317,10 @@ class TurbiniaTask(object):
     Returns:
       Dict: Dictionary representing this object, ready to be serialized.
     """
-    orig = (self.output_manager, self.last_update)
-    self.output_manager = self.output_manager.__dict__
-    self.last_update = str(self.last_update)
-    copy = deepcopy(self.__dict__)
-    self.output_manager = orig[0]
-    self.last_update = orig[1]
-    return copy
+    task_copy = deepcopy(self.__dict__)
+    task_copy['output_manager'] = self.output_manager.__dict__
+    task_copy['last_update'] = str(self.last_update)
+    return task_copy
 
   def execute(
       self, cmd, result, save_files=None, log_files=None, new_evidence=None,
