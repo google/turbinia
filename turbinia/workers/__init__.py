@@ -25,6 +25,7 @@ import pickle
 import platform
 import pprint
 import subprocess
+import sys
 import traceback
 import uuid
 import turbinia
@@ -333,7 +334,7 @@ class TurbiniaTask(object):
     Returns:
       TurbiniaTask: Deserialized object.
     """
-    type_ = task_dict['name']
+    type_ = input_dict['name']
     try:
       task = getattr(sys.modules[__name__], type_)()
     except AttributeError:
@@ -342,11 +343,11 @@ class TurbiniaTask(object):
           "this method is defined.".format(type_))
       log.error(msg)
       raise TurbiniaException(msg)
-    task.__dict__.update(task_dict)
+    task.__dict__.update(input_dict)
     task.output_manager = output_manager.OutputManager()
-    task.output_manager.__dict__.update(task_dict['output_manager'])
+    task.output_manager.__dict__.update(input_dict['output_manager'])
     task.last_update = datetime.strptime(
-        task_dict['last_update'], '%Y-%m-%d %H:%M:%S.%f')
+        input_dict['last_update'], '%Y-%m-%d %H:%M:%S.%f')
     return task
 
   def execute(

@@ -22,7 +22,6 @@ import json
 import logging
 import os
 import stat
-import sys
 import time
 
 from turbinia import config
@@ -30,7 +29,6 @@ from turbinia.config import logger
 from turbinia import task_manager
 from turbinia import workers
 from turbinia import TurbiniaException
-from turbinia import output_manager
 from turbinia.workers.artifact import FileArtifactExtractionTask
 from turbinia.workers.analysis.wordpress import WordpressAccessLogAnalysisTask
 from turbinia.workers.analysis.jenkins import JenkinsAnalysisTask
