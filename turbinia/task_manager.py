@@ -74,7 +74,7 @@ def task_runner(obj, *args, **kwargs):
   Returns:
     Output from TurbiniaTask (should be TurbiniaTaskResult).
   """
-  obj = turbinia.client.task_decode(obj)
+  obj = workers.TurbiniaTask.deserialize(obj)
   return obj.run_wrapper(*args, **kwargs)
 
 

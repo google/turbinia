@@ -77,32 +77,6 @@ log = logging.getLogger('turbinia')
 logger.setup()
 
 
-def task_decode(task_dict):
-  """Decodes serialized dictionary back into a specific Task object.
-
-  Args:
-    task_dict (dict): Task object dict
-
-  Returns:
-    TurbiniaTask: Some type of Task object.
-  """
-  type_ = task_dict['name']
-  try:
-    task = getattr(sys.modules[__name__], type_)()
-  except AttributeError:
-    msg = (
-        "Could not import {0:s} object! Make sure it is imported where "
-        "task_decode is defined.".format(type_))
-    log.error(msg)
-    raise TurbiniaException(msg)
-  task.__dict__.update(task_dict)
-  task.output_manager = output_manager.OutputManager()
-  task.output_manager.__dict__.update(task_dict['output_manager'])
-  task.last_update = datetime.strptime(
-      task_dict['last_update'], '%Y-%m-%d %H:%M:%S.%f')
-  return task
-
-
 def check_directory(directory):
   """Checks directory to make sure it exists and is writable.
 

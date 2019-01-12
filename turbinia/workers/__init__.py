@@ -322,6 +322,33 @@ class TurbiniaTask(object):
     task_copy['last_update'] = str(self.last_update)
     return task_copy
 
+  @classmethod
+  def deserialize(cls, input_dict):
+    # TODO(eriwcz) import Task objects (like client.py)
+    """Converts an input dictionary back into a TurbiniaTask object.
+
+    Args:
+      input_dict (dict): TurbiniaTask object dictionary.
+
+    Returns:
+      TurbiniaTask: Deserialized object.
+    """
+    type_ = task_dict['name']
+    try:
+      task = getattr(sys.modules[__name__], type_)()
+    except AttributeError:
+      msg = (
+          "Could not import {0:s} object! Make sure it is imported where "
+          "this method is defined.".format(type_))
+      log.error(msg)
+      raise TurbiniaException(msg)
+    task.__dict__.update(task_dict)
+    task.output_manager = output_manager.OutputManager()
+    task.output_manager.__dict__.update(task_dict['output_manager'])
+    task.last_update = datetime.strptime(
+        task_dict['last_update'], '%Y-%m-%d %H:%M:%S.%f')
+    return task
+
   def execute(
       self, cmd, result, save_files=None, log_files=None, new_evidence=None,
       close=False, shell=False, success_codes=None):
