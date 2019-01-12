@@ -68,7 +68,7 @@ class TurbiniaTaskResult(object):
 
   def __init__(
       self, evidence=None, input_evidence=None, base_output_dir=None,
-      request_id=None, mock=False):
+      request_id=None):
     """Initialize the TurbiniaTaskResult object.
 
     Args:
