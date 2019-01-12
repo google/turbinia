@@ -229,7 +229,7 @@ class TurbiniaTaskResult(object):
     """
     self.run_time = self.run_time.total_seconds() if self.run_time else None
     self.start_time = str(self.start_time)
-    self.input_evidence = [x.serialize() for x in self.input_evidence]
+    self.input_evidence = self.input_evidence.serialize()
     self.evidence = [x.serialize() for x in self.evidence]
     return self.__dict__
 
@@ -245,11 +245,11 @@ class TurbiniaTaskResult(object):
     """
     result = TurbiniaTaskResult(None, mock=True)
     result.__dict__ = input_dict
-    result.run_time = timedelta(
-        seconds=result.run_time) if result.run_time else None
+    if result.run_time:
+      result.run_time = timedelta(seconds=result.run_time)
     result.start_time = datetime.strptime(
         result.start_time, '%Y-%m-%d %H:%M:%S.%f')
-    result.input_evidence = [evidence_decode(x) for x in result.input_evidence]
+    result.input_evidence = evidence_decode(result.input_evidence)
     result.evidence = [evidence_decode(x) for x in result.evidence]
 
     return result
@@ -584,7 +584,6 @@ class TurbiniaTask(object):
       log.debug(
           'Returning original result object {0:s} after task execution'.format(
               self.result.id))
-    # TODO(aarontp): Find a better way to ensure this gets unset.
     return self.result.serialize()
 
   def run(self, evidence, result):

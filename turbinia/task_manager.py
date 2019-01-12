@@ -360,7 +360,7 @@ class CeleryTaskManager(BaseTaskManager):
     log.info(
         'Adding Celery task {0:s} with evidence {1:s} to queue'.format(
             task.name, evidence_.name))
-    task.stub = task_runner.delay(task.serialize(), evidence_.__dict__)
+    task.stub = task_runner.delay(task.serialize(), evidence_.serialize())
 
 
 class PSQTaskManager(BaseTaskManager):
@@ -417,7 +417,8 @@ class PSQTaskManager(BaseTaskManager):
         log.warning('Task {0:s} failed.'.format(psq_task.id))
         completed_tasks.append(task)
       else:
-        task.result = workers.TurbiniaTaskResult.deserialize(task.stub.result(timeout=PSQ_TASK_TIMEOUT))
+        task.result = workers.TurbiniaTaskResult.deserialize(
+            task.stub.result(timeout=PSQ_TASK_TIMEOUT))
         completed_tasks.append(task)
 
     outstanding_task_count = len(self.tasks) - len(completed_tasks)
@@ -443,4 +444,4 @@ class PSQTaskManager(BaseTaskManager):
         'Adding PSQ task {0:s} with evidence {1:s} to queue'.format(
             task.name, evidence_.name))
     task.stub = self.psq.enqueue(
-        task_runner, task.serialize(), evidence_.__dict__)
+        task_runner, task.serialize(), evidence_.serialize())

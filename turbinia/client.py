@@ -84,12 +84,16 @@ def task_decode(task_dict):
     task_dict (dict): Task object dict
 
   Returns:
-    T: Some type of Task object.
+    TurbiniaTask: Some type of Task object.
   """
-
-  task_dict = task_dict
   type_ = task_dict['name']
-  task = getattr(sys.modules[__name__], type_)()
+  try:
+    task = getattr(sys.modules[__name__], type_)()
+  except AttributeError as e:
+    log.error(
+        "Could not import {0:s} object! Make sure it is imported where task_decode is defined."
+        .format(type_))
+    raise
   task.__dict__ == task_dict
   task.output_manager = output_manager.OutputManager()
   task.output_manager.__dict__ = task_dict['output_manager']
