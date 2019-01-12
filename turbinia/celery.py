@@ -142,6 +142,11 @@ class TurbiniaKombu(TurbiniaMessageBase):
         break
       except ChannelError:
         break
+      except Exception as e:
+        log.warning(
+            "Caught unexpected exception while fetching from queue: {0!s}"
+            .format(e))
+        break
 
     log.debug('Received {0:d} messages'.format(len(requests)))
     return requests
