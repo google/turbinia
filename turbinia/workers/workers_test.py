@@ -47,8 +47,8 @@ class TestTurbiniaTask(unittest.TestCase):
     self.evidence = evidence.RawDisk(local_path=test_disk_path)
 
     # Set up TurbiniaTaskResult
-    self.result = TurbiniaTaskResult(
-        task=self.task, base_output_dir=self.base_output_dir)
+    self.result = TurbiniaTaskResult(base_output_dir=self.base_output_dir)
+    self.result.setup(self.task)
 
     self.result.output_dir = self.base_output_dir
 
@@ -104,8 +104,8 @@ class TestTurbiniaTask(unittest.TestCase):
   def testTurbiniaTaskRunWrapperBadResult(self):
     """Test that the run wrapper recovers from run returning bad result."""
     bad_result = 'Not a TurbiniaTaskResult'
-    checked_result = TurbiniaTaskResult(
-        task=self.task, base_output_dir=self.base_output_dir)
+    checked_result = TurbiniaTaskResult(base_output_dir=self.base_output_dir)
+    checked_result.setup(self.task)
     checked_result.status = 'CheckedResult'
     self.setResults(run=bad_result, validate_result=checked_result)
 

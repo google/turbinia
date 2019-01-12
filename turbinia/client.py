@@ -94,9 +94,9 @@ def task_decode(task_dict):
         "Could not import {0:s} object! Make sure it is imported where task_decode is defined."
         .format(type_))
     raise
-  task.__dict__ == task_dict
+  task.__dict__.update(task_dict)
   task.output_manager = output_manager.OutputManager()
-  task.output_manager.__dict__ = task_dict['output_manager']
+  task.output_manager.__dict__.update(task_dict['output_manager'])
   task.last_update = datetime.strptime(
       task_dict['last_update'], '%Y-%m-%d %H:%M:%S.%f')
   return task

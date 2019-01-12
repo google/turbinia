@@ -67,7 +67,7 @@ class TurbiniaTaskResult(object):
   STORED_ATTRIBUTES = ['worker_name', 'status', 'saved_paths', 'successful']
 
   def __init__(
-      self, task, evidence=None, input_evidence=None, base_output_dir=None,
+      self, evidence=None, input_evidence=None, base_output_dir=None,
       request_id=None, mock=False):
     """Initialize the TurbiniaTaskResult object.
 
@@ -78,17 +78,17 @@ class TurbiniaTaskResult(object):
       TurbiniaException: If the Output Manager is not setup.
     """
 
-    if mock:
-      return
     self.closed = False
     self.evidence = evidence if evidence else []
     self.input_evidence = input_evidence
     self.id = uuid.uuid4().hex
-    self.task_id = task.id
-    self.task_name = task.name
     self.base_output_dir = base_output_dir
     self.request_id = request_id
-    self.user = task.user
+
+    self.task_id = None
+    self.task_name = None
+    self.user = None
+    self.output_dir = None
 
     self.start_time = datetime.now()
     self.run_time = None
@@ -99,13 +99,19 @@ class TurbiniaTaskResult(object):
     self.worker_name = platform.node()
     # TODO(aarontp): Create mechanism to grab actual python logging data.
     self._log = []
+
+  def __str__(self):
+    return pprint.pformat(vars(self), depth=3)
+
+  def setup(self, task):
+    """Handles initializing task based attributes, after object creation."""
+    self.task_id = task.id
+    self.task_name = task.name
+    self.user = task.user
     if task.output_manager.is_setup:
       _, self.output_dir = task.output_manager.get_local_output_dirs()
     else:
       raise TurbiniaException('Output Manager is not setup yet.')
-
-  def __str__(self):
-    return pprint.pformat(vars(self), depth=3)
 
   def close(self, task, success, status=None):
     """Handles closing of this result and writing logs.
@@ -243,8 +249,8 @@ class TurbiniaTaskResult(object):
     Returns:
       TurbiniaTaskResult: Deserialized object.
     """
-    result = TurbiniaTaskResult(None, mock=True)
-    result.__dict__ = input_dict
+    result = TurbiniaTaskResult()
+    result.__dict__.update(input_dict)
     if result.run_time:
       result.run_time = timedelta(seconds=result.run_time)
     result.start_time = datetime.strptime(
@@ -415,8 +421,9 @@ class TurbiniaTask(object):
     self.tmp_dir, self.output_dir = self.output_manager.get_local_output_dirs()
     if not self.result:
       self.result = TurbiniaTaskResult(
-          task=self, input_evidence=evidence,
-          base_output_dir=self.base_output_dir, request_id=self.request_id)
+          input_evidence=evidence, base_output_dir=self.base_output_dir,
+          request_id=self.request_id)
+      self.result.setup(self)
 
     if not self.run_local:
       if evidence.copyable and not config.SHARED_FILESYSTEM:
@@ -474,8 +481,8 @@ class TurbiniaTask(object):
         old_status = 'No previous status'
 
       result = TurbiniaTaskResult(
-          task=self, base_output_dir=self.base_output_dir,
-          request_id=self.request_id)
+          base_output_dir=self.base_output_dir, request_id=self.request_id)
+      result.setup(self)
       result.status = '{0:s}. Previous status: [{1:s}]'.format(
           bad_message, old_status)
       result.set_error(bad_message, traceback.format_exc())
