@@ -9,3 +9,4 @@ oauth2client
 psq
 six
 urllib3[secure]
+libbde-python==20190102
