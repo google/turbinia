@@ -287,7 +287,6 @@ class TurbiniaClient(object):
         for path in saved_paths:
           results.append('\t{0:s}'.format(path))
       else:
-        print(task.get('last_update'), task.get('name'), success, status)
         results.append(
             '{0:s} {1:s} {2:s}: {3:s}'.format(
                 task.get('last_update'), task.get('name'), success, status))
