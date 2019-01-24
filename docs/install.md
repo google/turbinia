@@ -71,9 +71,26 @@ machines.
 
 ## Local Turbinia
 
-*   If Turbinia will run on local machines, jump to
-    [Core Installation Steps](#core-installation-steps)
-*   Otherwise, follow [GCP Turbinia](#gcp-turbinia)
+The following is one possible configuration and setup for running Turbinia
+locally using Celery and Redis on Ubuntu 18.04. This setup does not require
+Google Cloud Platform, although a configuration to write output to GCS is
+possible.
+
+### 1. Install and configure Turbinia
+
+*    Follow [Core Installation Steps](#core-installation-steps).
+
+### 2. Install additional dependencies
+
+*    Make sure you are still in the Virtualenv
+*    `cd <localgitpath>`
+*    `pip install .[worker]`
+*    `pip install .[local]`
+
+### 3. Run Redis and Turbinia
+*    `redis-server` to start Redis server.
+*    `turbiniactl -C -S server` to start Turbinia server.
+*    `turbiniactl -C celeryworker` to start Turbinia Celery worker.
 
 ## GCP Turbinia
 
@@ -146,7 +163,8 @@ means to save logging data.
         `turbinia ALL=(ALL:ALL) NOPASSWD: ALL`
 *   Log in as turbinia
     *   `su - turbinia`
-*   Continue to [Google Cloud SDK](#2-google-cloud-sdk)
+*   Continue to [Google Cloud SDK](#2-google-cloud-sdk). If you are running
+    Turbinia locally, skip to [Inside the Virtualenv](#3-inside-the-virtualenv)
 
 ### 2. Google Cloud SDK
 
@@ -220,7 +238,12 @@ means to save logging data.
     *   Directly configure `<localgitpath>/turbinia/config/turbinia_config.py`
     *   ***NOTE***: Match the `PUBSUB_TOPIC` variable in the configuration to
         the name of the topic and subscription you created in the GCP.
-*   Continue to [Deploy the Cloud Functions](#deploy-the-cloud-functions)
+    *   ***Note***: If you are running Turbinia locally with Celery and Redis,
+        copy `<localgitpath>/turbinia/config/turbinia_config_local.py` instead
+        to avoid additional configurations for Redis and Celery.
+*   Continue to [Deploy the Cloud Functions](#deploy-the-cloud-functions).
+    If you are running Turbinia locally, return to
+    [Install additional dependencies](#2-install-additional-dependencies).
 
 #### Deploy the Cloud Functions
 
