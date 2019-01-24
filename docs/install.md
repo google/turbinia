@@ -61,6 +61,9 @@ possible.
 *    `pip install .[local]`
 
 ### 3. Run Redis and Turbinia
+
+Start any workers and servers in their own separate screen/tmux windows.
+
 *    `redis-server` to start Redis server.
 *    `turbiniactl -C -S server` to start Turbinia server.
 *    `turbiniactl -C celeryworker` to start Turbinia Celery worker.
