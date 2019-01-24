@@ -30,8 +30,8 @@ class JenkinsAnalysisJob(interface.TurbiniaJob):
   """Jenkins analysis job."""
 
   evidence_input = [
-    Directory, RawDisk, GoogleCloudDisk, GoogleCloudDiskRawEmbedded,
-    BitlockerDisk
+      Directory, RawDisk, GoogleCloudDisk, GoogleCloudDiskRawEmbedded,
+      BitlockerDisk
   ]
   evidence_output = [ReportText]
 

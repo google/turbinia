@@ -37,8 +37,8 @@ class HTTPAccessLogExtractionJob(interface.TurbiniaJob):
   """HTTP Access log extraction job."""
 
   evidence_input = [
-    Directory, RawDisk, GoogleCloudDisk, GoogleCloudDiskRawEmbedded,
-    BitlockerDisk
+      Directory, RawDisk, GoogleCloudDisk, GoogleCloudDiskRawEmbedded,
+      BitlockerDisk
   ]
 
   evidence_output = [ExportedFileArtifact]

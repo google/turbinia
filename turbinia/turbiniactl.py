@@ -155,12 +155,10 @@ def main():
   parser_bitlocker.add_argument(
       '-u', '--unencrypted_path', help='Local path to the unencrypted evidence.'
       '  Defaults to a temporary file.  This file will be deleted after all '
-      'tasks are completed.',
-      required=False)
+      'tasks are completed.', required=False)
   parser_bitlocker.add_argument(
       '-r', '--recovery_key', help='Recovery key for the Bitlocker evidence.  '
-      'Either recovery key or password must be specified.',
-      required=False)
+      'Either recovery key or password must be specified.', required=False)
   parser_bitlocker.add_argument(
       '-p', '--password', help='Password for the Bitlocker evidence.  '
       'If a recovery key is specified concurrently, password will be ignored.',
@@ -343,8 +341,8 @@ def main():
     encrypted_path = os.path.abspath(args.encrypted_path)
     unencrypted_path = args.unencrypted_path \
       if args.unencrypted_path else tempfile.mkstemp()[1]
-    log.info("Decrypted Bitlocker disk will be at {0:s}"
-             .format(unencrypted_path))
+    log.info(
+        "Decrypted Bitlocker disk will be at {0:s}".format(unencrypted_path))
     evidence_ = evidence.BitlockerDisk(
         name=args.name, encrypted_path=encrypted_path,
         unencrypted_path=unencrypted_path, recovery_key=args.recovery_key,
@@ -473,8 +471,8 @@ def main():
               request.request_id, evidence_.name))
       log.info(
           'Run command "turbiniactl {0:s} status -r {1:s}" to see the status of'
-          ' this request and associated tasks'
-          .format("-C" if args.use_celery else "", request.request_id))
+          ' this request and associated tasks'.format(
+              "-C" if args.use_celery else "", request.request_id))
       if not args.run_local:
         client.send_request(request)
       else:

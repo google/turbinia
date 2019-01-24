@@ -32,8 +32,8 @@ class TomcatExtractionJob(interface.TurbiniaJob):
 
   # The types of evidence that this Job will process
   evidence_input = [
-    Directory, RawDisk, GoogleCloudDisk, GoogleCloudDiskRawEmbedded,
-    BitlockerDisk
+      Directory, RawDisk, GoogleCloudDisk, GoogleCloudDiskRawEmbedded,
+      BitlockerDisk
   ]
 
   evidence_output = [ExportedFileArtifact]

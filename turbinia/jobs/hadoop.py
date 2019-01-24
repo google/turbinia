@@ -30,7 +30,7 @@ class HadoopAnalysisJob(interface.TurbiniaJob):
   """Analyzes Hadoop AppRoot files."""
 
   evidence_input = [
-    GoogleCloudDisk, GoogleCloudDiskRawEmbedded, RawDisk, BitlockerDisk
+      GoogleCloudDisk, GoogleCloudDiskRawEmbedded, RawDisk, BitlockerDisk
   ]
   evidence_output = [ReportText]
 

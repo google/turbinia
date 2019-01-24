@@ -36,7 +36,7 @@ class StringsJob(interface.TurbiniaJob):
 
   # The types of evidence that this Job will process
   evidence_input = [
-    RawDisk, GoogleCloudDisk, GoogleCloudDiskRawEmbedded, BitlockerDisk
+      RawDisk, GoogleCloudDisk, GoogleCloudDiskRawEmbedded, BitlockerDisk
   ]
   evidence_output = [TextFile]
 

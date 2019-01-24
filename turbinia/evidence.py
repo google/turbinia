@@ -238,11 +238,12 @@ class EncryptedDisk(RawDisk):
 
   def __init__(
       self, encryption_type=None, encryption_key=None, unencrypted_path=None,
-      *args, **kwargs):
+      encrypted_path=None, *args, **kwargs):
     """Initialization for Encrypted disk evidence objects."""
     # TODO(aarontp): Make this an enum, or limited list
     self.encryption_type = encryption_type
     self.encryption_key = encryption_key
+    self.encrypted_path = encrypted_path
     self.unencrypted_path = unencrypted_path
     super(EncryptedDisk, self).__init__(*args, **kwargs)
 
@@ -257,14 +258,10 @@ class BitlockerDisk(EncryptedDisk):
     unencrypted_path: A string to the unencrypted local path
   """
 
-  def __init__(
-      self, recovery_key=None, password=None, encrypted_path=None,
-      unencrypted_path=None, *args, **kwargs):
+  def __init__(self, recovery_key=None, password=None, *args, **kwargs):
     """Initialization for Bitlocker disk evidence object"""
     self.recovery_key = recovery_key
     self.password = password
-    self.encrypted_path = encrypted_path
-    self.unencrypted_path = unencrypted_path
     super(BitlockerDisk, self).__init__(*args, **kwargs)
 
   def _preprocess(self):
@@ -292,8 +289,7 @@ class BitlockerDisk(EncryptedDisk):
           pass
 
         raise TurbiniaException(
-          'Failed to decrypt a given Bitlocker evidence: {0:s}'
-          .format(e))
+            'Failed to decrypt a given Bitlocker evidence: {0:s}'.format(e))
 
     self.local_path = self.unencrypted_path
 
