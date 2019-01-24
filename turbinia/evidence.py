@@ -261,9 +261,6 @@ class BitlockerDisk(EncryptedDisk):
       self, recovery_key=None, password=None, encrypted_path=None,
       unencrypted_path=None, *args, **kwargs):
     """Initialization for Bitlocker disk evidence object"""
-    #if not recovery_key and not password:
-    #  raise TurbiniaException(
-    #    'Neither recovery key nor password was provided')
     self.recovery_key = recovery_key
     self.password = password
     self.encrypted_path = encrypted_path
