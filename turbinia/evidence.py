@@ -18,8 +18,8 @@ from __future__ import unicode_literals
 
 import json
 import os
-import pybde
 import sys
+import pybde
 
 from turbinia import config
 from turbinia import TurbiniaException
@@ -265,10 +265,9 @@ class BitlockerDisk(EncryptedDisk):
     self.password = password
     self.encrypted_path = encrypted_path
     self.unencrypted_path = unencrypted_path
-    super(EncryptedDisk, self).__init__(*args, **kwargs)
+    super(BitlockerDisk, self).__init__(*args, **kwargs)
 
   def _preprocess(self):
-    print("Decrypting Bitlocker image: {0:s}".format(self.encrypted_path))
     with open(self.encrypted_path, 'rb') as src_enc:
       src = pybde.volume()
       if self.recovery_key:
@@ -295,7 +294,6 @@ class BitlockerDisk(EncryptedDisk):
         raise TurbiniaException(
           'Failed to decrypt a given Bitlocker evidence: {0:s}'
           .format(e))
-    print("Decrypted {0:s} successfully".format(self.encrypted_path))
 
     self.local_path = self.unencrypted_path
 

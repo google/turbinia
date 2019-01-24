@@ -472,8 +472,8 @@ def main():
           'Creating request {0:s} with evidence {1:s}'.format(
               request.request_id, evidence_.name))
       log.info(
-          'Run command "turbiniactl {0:s} status -r {1:s}" to see the status of '
-          'this request and associated tasks'
+          'Run command "turbiniactl {0:s} status -r {1:s}" to see the status of'
+          ' this request and associated tasks'
           .format("-C" if args.use_celery else "", request.request_id))
       if not args.run_local:
         client.send_request(request)
