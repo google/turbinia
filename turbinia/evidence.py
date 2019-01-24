@@ -18,6 +18,7 @@ from __future__ import unicode_literals
 
 import json
 import os
+import pybde
 import sys
 
 from turbinia import config
@@ -260,6 +261,9 @@ class BitlockerDisk(EncryptedDisk):
       self, recovery_key=None, password=None, encrypted_path=None,
       unencrypted_path=None, *args, **kwargs):
     """Initialization for Bitlocker disk evidence object"""
+    if not recovery_key and not password:
+      raise TurbiniaException(
+        'Neither recovery key nor password was provided')
     self.recovery_key = recovery_key
     self.password = password
     self.encrypted_path = encrypted_path
@@ -267,10 +271,42 @@ class BitlockerDisk(EncryptedDisk):
     super(EncryptedDisk, self).__init__(*args, **kwargs)
 
   def _preprocess(self):
-    pass
+    with open(self.encrypted_path, 'rb') as src_enc:
+      src = pybde.volume()
+      if self.recovery_key:
+        src.set_recovery_password(self.recovery_key)
+      else:
+        src.set_password(self.password)
+
+      src.open_file_object(src_enc)
+
+      try:
+        with open(self.unencrypted_path, 'wb') as dst:
+          bufsize = 1024 * 1024
+          while True:
+            buf = src.read_buffer(bufsize)
+            if not buf:
+              break
+            dst.write(buf)
+      except OSError as e:
+        try:
+          os.remove(self.unencrypted_path)
+        except OSError:
+          pass
+
+        raise TurbiniaException(
+          'Failed to decrypt a given Bitlocker evidence: {}'
+          .format(e))
+
+    self.local_path = self.unencrypted_path
 
   def _postprocess(self):
-    pass
+    try:
+      os.remove(self.local_path)
+    except OSError:
+      pass
+    self.local_path = None
+
 
 class GoogleCloudDisk(RawDisk):
   """Evidence object for Google Cloud Disks.
