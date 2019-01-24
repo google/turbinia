@@ -24,6 +24,7 @@ import getpass
 import logging
 import os
 import sys
+import tempfile
 
 from turbinia.client import TurbiniaClient
 from turbinia.client import TurbiniaCeleryClient
@@ -143,6 +144,28 @@ def main():
       '-s', '--source', help='Description of the source of the evidence',
       required=False)
   parser_rawdisk.add_argument(
+      '-n', '--name', help='Descriptive name of the evidence', required=False)
+
+  # Parser options for Bitlocker Disk Evidence type
+  parser_bitlocker = subparsers.add_parser(
+      'bitlocker', help='Process Bitlocker Disk as Evidence')
+  parser_bitlocker.add_argument(
+      '-e', '--encrypted_path', help='Local path to the Bitlocker evidence',
+      required=True)
+  parser_bitlocker.add_argument(
+      '-u', '--unencrypted_path', help='Local path to the unencrypted evidence.'
+      'Defaults to a temporary file.',
+      required=False)
+  parser_bitlocker.add_argument(
+      '-r', '--recovery_key', help='Recovery key for the Bitlocker evidence',
+      required=False)
+  parser_bitlocker.add_argument(
+      '-p', '--password', help='Password for the Bitlocker evidence',
+      required=False)
+  parser_bitlocker.add_argument(
+      '-s', '--source', help='Description of the source of the evidence',
+      required=False)
+  parser_bitlocker.add_argument(
       '-n', '--name', help='Descriptive name of the evidence', required=False)
 
   # Parser options for Google Cloud Disk Evidence type
@@ -309,6 +332,15 @@ def main():
     evidence_ = evidence.RawDisk(
         name=args.name, local_path=local_path,
         mount_partition=args.mount_partition, source=args.source)
+  elif args.command == 'bitlocker':
+    args.name = args.name if args.name else args.encrypted_path
+    encrypted_path = os.path.abspath(args.encrypted_path)
+    unencrypted_path = args.unencrypted_path \
+      if args.unencrypted_path else tempfile.mkstemp()
+    evidence_ = evidence.BitlockerDisk(
+        name=args.name, encrypted_path=encrypted_path,
+        unencrypted_path=unencrypted_path, recovery_key=args.recovery_key,
+        password=args.password, source=args.source)
   elif args.command == 'directory':
     args.name = args.name if args.name else args.local_path
     local_path = os.path.abspath(args.local_path)
