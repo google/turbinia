@@ -1,10 +1,6 @@
 # High-Level Setup
 
-Turbinia can be run either in the Google Cloud, or on local machines. If you run
-Turbinia on local machines, it will still use
-[Cloud Pub/Sub](https://cloud.google.com/pubsub) and
-[Cloud Functions](https://cloud.google.com/functions) for the client to talk to
-the server, and for the server to talk to the worker nodes.
+Turbinia can be run either in the Google Cloud, or on local machines.
 
 ## Local Setup
 
@@ -46,29 +42,6 @@ process these images as 'rawdisk' Evidence.
 
 # Instructions
 
-## GCP Project Setup (Cloud Pub/Sub, Cloud Function, Cloud Datastore)
-
-**NOTE:** This section is mandatory for Turbinia running on GCP or local
-machines.
-
-*   Create or select a Google Cloud Platform project on the
-    [Google Developers Console](https://console.developers.google.com)
-*   Enable
-    [Cloud Functions](https://console.cloud.google.com/apis/library/cloudfunctions.googleapis.com)
-*   Follow the
-    [instructions](https://cloud.google.com/pubsub/docs/quickstart-console) to:
-    *   Enable
-        [Cloud Pub/Sub](https://console.cloud.google.com/apis/library/pubsub.googleapis.com)
-    *   Create a new Pub/Sub topic and subscription **(pull type)**
-    *   Please take a note of the topic and subscription name for the
-        configuration steps
-*   Enable
-    [Cloud Datastore](https://console.cloud.google.com/apis/api/datastore.googleapis.com)
-    *   Go to Datastore in the cloud console
-    *   Hit the `Create Entity` button
-    *   Select the region that your data should be in. No need to create any
-        Entities after selecting your region
-
 ## Local Turbinia
 
 The following is one possible configuration and setup for running Turbinia
@@ -102,7 +75,29 @@ two Google Cloud Engine (GCE) instances, respectively for the server and 1 or
 more workers. In a small setup, you can also both the server and worker on a
 single instance.
 
-### 1. Create a GCE Instance as Server
+### 1. GCP Project Setup (Cloud Pub/Sub, Cloud Function, Cloud Datastore)
+
+**NOTE:** This section is mandatory for Turbinia running on GCP.
+
+*   Create or select a Google Cloud Platform project on the
+    [Google Developers Console](https://console.developers.google.com)
+*   Enable
+    [Cloud Functions](https://console.cloud.google.com/apis/library/cloudfunctions.googleapis.com)
+*   Follow the
+    [instructions](https://cloud.google.com/pubsub/docs/quickstart-console) to:
+    *   Enable
+        [Cloud Pub/Sub](https://console.cloud.google.com/apis/library/pubsub.googleapis.com)
+    *   Create a new Pub/Sub topic and subscription **(pull type)**
+    *   Please take a note of the topic and subscription name for the
+        configuration steps
+*   Enable
+    [Cloud Datastore](https://console.cloud.google.com/apis/api/datastore.googleapis.com)
+    *   Go to Datastore in the cloud console
+    *   Hit the `Create Entity` button
+    *   Select the region that your data should be in. No need to create any
+        Entities after selecting your region
+
+### 2. Create a GCE Instance as Server
 
 *   Create a
     [new GCE instance](https://console.cloud.google.com/compute/instances) from
@@ -111,7 +106,7 @@ single instance.
         free to test and fix them ;)
 *   Follow [Core Installation Steps](#core-installation-steps)
 
-### 2. Create a Google Cloud Storage (GCS) Bucket
+### 3. Create a Google Cloud Storage (GCS) Bucket
 
 **NOTE:** GCS FUSE is used here for convenience to keep scripts and log files,
 but this isn't strictly necessary for Turbinia to run if you have an alternate
@@ -129,13 +124,13 @@ means to save logging data.
     `GOOGLE_APPLICATION_CREDENTIALS` environment var in the middle of the script
     that needs to be updated
 
-### 3. Create an Instance Template (Prep Work for Worker)
+### 4. Create an Instance Template (Prep Work for Worker)
 
 *   Stop the server instance
 *   Create a new image from the server VM's disk
 *   Create a new Instance Template using the newly created image
 
-### 4. Create a GCE Instance as Worker
+### 5. Create a GCE Instance as Worker
 
 *   Create a new Managed Instance Group from the newly created Instance Template
 *   In your worker VM, add a new custom metadata key `startup-script-url`
@@ -238,9 +233,9 @@ means to save logging data.
     *   Directly configure `<localgitpath>/turbinia/config/turbinia_config.py`
     *   ***NOTE***: Match the `PUBSUB_TOPIC` variable in the configuration to
         the name of the topic and subscription you created in the GCP.
-    *   ***Note***: If you are running Turbinia locally with Celery and Redis,
+    *   ***Note***: If you are running Turbinia locally,
         copy `<localgitpath>/turbinia/config/turbinia_config_local.py` instead
-        to avoid additional configurations for Redis and Celery.
+        to avoid additional configurations for Celery and Redis.
 *   Continue to [Deploy the Cloud Functions](#deploy-the-cloud-functions).
     If you are running Turbinia locally, return to
     [Install additional dependencies](#2-install-additional-dependencies).
