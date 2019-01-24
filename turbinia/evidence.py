@@ -261,9 +261,9 @@ class BitlockerDisk(EncryptedDisk):
       self, recovery_key=None, password=None, encrypted_path=None,
       unencrypted_path=None, *args, **kwargs):
     """Initialization for Bitlocker disk evidence object"""
-    if not recovery_key and not password:
-      raise TurbiniaException(
-        'Neither recovery key nor password was provided')
+    #if not recovery_key and not password:
+    #  raise TurbiniaException(
+    #    'Neither recovery key nor password was provided')
     self.recovery_key = recovery_key
     self.password = password
     self.encrypted_path = encrypted_path
@@ -271,6 +271,7 @@ class BitlockerDisk(EncryptedDisk):
     super(EncryptedDisk, self).__init__(*args, **kwargs)
 
   def _preprocess(self):
+    print("Decrypting Bitlocker image: {}".format(self.encrypted_path))
     with open(self.encrypted_path, 'rb') as src_enc:
       src = pybde.volume()
       if self.recovery_key:
@@ -297,6 +298,7 @@ class BitlockerDisk(EncryptedDisk):
         raise TurbiniaException(
           'Failed to decrypt a given Bitlocker evidence: {}'
           .format(e))
+    print("Decrypted {} successfully".format(self.encrypted_path))
 
     self.local_path = self.unencrypted_path
 
