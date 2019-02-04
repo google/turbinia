@@ -273,7 +273,7 @@ class TurbiniaClient(object):
       else:
         success = 'Failed'
 
-      status = task.get('status', 'No task status')
+      status = task.get('status') or 'No task status'
       if all_fields:
         results.append(
             '{0:s} request: {1:s} task: {2:s} {3:s} {4:s} {5:s} {6:s}: {7:s}'
