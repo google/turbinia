@@ -19,7 +19,6 @@ from __future__ import unicode_literals
 import json
 import os
 import sys
-import pybde
 
 from turbinia import config
 from turbinia import TurbiniaException

@@ -53,7 +53,7 @@ class PlasoTask(TurbiniaTask):
     if config.DEBUG_TASKS:
       cmd.append('-d')
 
-    if type(evidence) == BitlockerDisk:
+    if isinstance(evidence, BitlockerDisk):
       if evidence.recovery_key:
         cmd.extend(['--credential',
                     'recovery_password:{0:s}'.format(evidence.recovery_key)])
