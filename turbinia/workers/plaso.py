@@ -55,14 +55,16 @@ class PlasoTask(TurbiniaTask):
 
     if isinstance(evidence, BitlockerDisk):
       if evidence.recovery_key:
-        cmd.extend(['--credential',
-                    'recovery_password:{0:s}'.format(evidence.recovery_key)])
+        cmd.extend([
+            '--credential', 'recovery_password:{0:s}'.format(
+                evidence.recovery_key)
+        ])
       elif evidence.password:
-        cmd.extend(['--credential',
-                    'password:{0:s}'.format(evidence.password)])
+        cmd.extend(['--credential', 'password:{0:s}'.format(evidence.password)])
       else:
-        result.close(self, False, 'No credentials were provided '
-                     'for a bitlocker disk.')
+        result.close(
+            self, False, 'No credentials were provided '
+            'for a bitlocker disk.')
         return result
 
     cmd.extend(['--logfile', plaso_log])
