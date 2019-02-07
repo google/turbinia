@@ -125,7 +125,7 @@ class TurbiniaTaskResult(object):
       status = 'Completed successfully in {0:s} on {1:s}'.format(
           str(self.run_time), self.worker_name)
     elif not status and not self.successful:
-      status = 'Completed unsuccessfully in {0:s} on {1:s}'.format(
+      status = 'Run failed in {0:s} on {1:s}'.format(
           str(self.run_time), self.worker_name)
     self.log(status)
     self.status = status
