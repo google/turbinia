@@ -24,7 +24,6 @@ import getpass
 import logging
 import os
 import sys
-import tempfile
 
 from turbinia.client import TurbiniaClient
 from turbinia.client import TurbiniaCeleryClient
@@ -152,10 +151,6 @@ def main():
   parser_bitlocker.add_argument(
       '-e', '--encrypted_path', help='Local path to the Bitlocker evidence',
       required=True)
-  parser_bitlocker.add_argument(
-      '-u', '--unencrypted_path', help='Local path to the unencrypted evidence.'
-      '  Defaults to a temporary file.  This file will be deleted after all '
-      'tasks are completed.', required=False)
   parser_bitlocker.add_argument(
       '-r', '--recovery_key', help='Recovery key for the Bitlocker evidence.  '
       'Either recovery key or password must be specified.', required=False)
@@ -339,14 +334,10 @@ def main():
       sys.exit(1)
     args.name = args.name if args.name else args.encrypted_path
     encrypted_path = os.path.abspath(args.encrypted_path)
-    unencrypted_path = args.unencrypted_path \
-      if args.unencrypted_path else tempfile.mkstemp()[1]
-    log.info(
-        "Decrypted Bitlocker disk will be at {0:s}".format(unencrypted_path))
     evidence_ = evidence.BitlockerDisk(
         name=args.name, local_path=encrypted_path,
-        unencrypted_path=unencrypted_path, recovery_key=args.recovery_key,
-        password=args.password, source=args.source)
+        recovery_key=args.recovery_key, password=args.password,
+        source=args.source)
   elif args.command == 'directory':
     args.name = args.name if args.name else args.local_path
     local_path = os.path.abspath(args.local_path)
