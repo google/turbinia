@@ -304,12 +304,12 @@ class CeleryTaskManager(BaseTaskManager):
     super(CeleryTaskManager, self).__init__()
 
   def _backend_setup(self, *args, **kwargs):
-    global task_runner
     self.celery = turbinia_celery.TurbiniaCelery()
     self.celery.setup()
     self.kombu = turbinia_celery.TurbiniaKombu(config.KOMBU_CHANNEL)
     self.kombu.setup()
-    task_runner = self.celery.app.task(task_runner, name="task_runner")
+    # Defines a Celery task that will call task_runner
+    self.celery_runner = self.celery.app.task(task_runner, name="task_runner")
 
   def process_tasks(self):
     """Determine the current state of our tasks.
@@ -360,7 +360,7 @@ class CeleryTaskManager(BaseTaskManager):
     log.info(
         'Adding Celery task {0:s} with evidence {1:s} to queue'.format(
             task.name, evidence_.name))
-    task.stub = task_runner.delay(task.serialize(), evidence_.serialize())
+    task.stub = self.celery_runner.delay(task.serialize(), evidence_.serialize())
 
 
 class PSQTaskManager(BaseTaskManager):
