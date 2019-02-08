@@ -145,8 +145,8 @@ class TurbiniaKombu(TurbiniaMessageBase):
         break
       except OperationalError as e:
         log.warning(
-            "Caught recoverable message transport connection error when " +
-            "fetching from queue: {0!s}".format(e))
+            'Caught recoverable message transport connection error when ' +
+            'fetching from queue: {0!s}'.format(e))
         break
 
     log.debug('Received {0:d} messages'.format(len(requests)))
