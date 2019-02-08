@@ -45,7 +45,8 @@ def PreprocessLosetup(source_path):
   losetup_command = ['sudo', 'losetup', '--show', '--find', '-P', source_path]
   log.info('Running command {0:s}'.format(' '.join(losetup_command)))
   try:
-    losetup_device = subprocess.check_output(losetup_command, universal_newlines=True).strip()
+    losetup_device = subprocess.check_output(
+        losetup_command, universal_newlines=True).strip()
   except subprocess.CalledProcessError as e:
     raise TurbiniaException('Could not set losetup devices {0!s}'.format(e))
 
