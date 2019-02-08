@@ -26,6 +26,7 @@ from turbinia import evidence
 from turbinia import TurbiniaException
 from turbinia.workers import TurbiniaTask
 from turbinia.workers import TurbiniaTaskResult
+from turbinia.workers.plaso import PlasoTask
 
 
 class TestTurbiniaTask(unittest.TestCase):
@@ -37,6 +38,10 @@ class TestTurbiniaTask(unittest.TestCase):
 
     # Set up TurbiniaTask
     self.base_output_dir = tempfile.mkdtemp()
+    self.plaso_task = PlasoTask(base_output_dir=self.base_output_dir)
+    self.plaso_task.output_manager = mock.MagicMock()
+    self.plaso_task.output_manager.get_local_output_dirs.return_value = (
+        None, None)
     self.task = TurbiniaTask(base_output_dir=self.base_output_dir)
     self.task.output_manager = mock.MagicMock()
     self.task.output_manager.get_local_output_dirs.return_value = (None, None)
@@ -83,6 +88,16 @@ class TestTurbiniaTask(unittest.TestCase):
     self.task.setup = mock.MagicMock(return_value=setup)
     self.task.run = mock.MagicMock(return_value=run)
     self.task.validate_result = mock.MagicMock(return_value=validate_result)
+
+  def testTurbiniaTaskSerialize(self):
+    """Test that we can properly serialize/deserialize tasks."""
+    out_dict = self.plaso_task.serialize()
+    out_obj = TurbiniaTask.deserialize(out_dict)
+    self.assertIsInstance(out_obj, PlasoTask)
+    # Nuke output_manager so we don't deal with class equality
+    self.plaso_task.output_manager = None
+    out_obj.output_manager = None
+    self.assertEqual(out_obj.__dict__, self.plaso_task.__dict__)
 
   def testTurbiniaTaskRunWrapper(self):
     """Test that the run wrapper executes task run."""

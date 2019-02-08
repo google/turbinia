@@ -70,14 +70,7 @@ class TurbiniaTaskResult(object):
   def __init__(
       self, evidence=None, input_evidence=None, base_output_dir=None,
       request_id=None):
-    """Initialize the TurbiniaTaskResult object.
-
-    Args:
-      task (TurbiniaTask): The calling Task object
-
-    Raises:
-      TurbiniaException: If the Output Manager is not setup.
-    """
+    """Initialize the TurbiniaTaskResult object."""
 
     self.closed = False
     self.evidence = evidence if evidence else []
@@ -105,7 +98,15 @@ class TurbiniaTaskResult(object):
     return pprint.pformat(vars(self), depth=3)
 
   def setup(self, task):
-    """Handles initializing task based attributes, after object creation."""
+    """Handles initializing task based attributes, after object creation.
+
+    Args:
+      task (TurbiniaTask): The calling Task object
+
+    Raises:
+      TurbiniaException: If the Output Manager is not setup.
+    """
+
     self.task_id = task.id
     self.task_name = task.name
     self.user = task.user
@@ -327,7 +328,6 @@ class TurbiniaTask(object):
 
   @classmethod
   def deserialize(cls, input_dict):
-    # TODO(eriwcz) import Task objects (like client.py)
     """Converts an input dictionary back into a TurbiniaTask object.
 
     Args:
@@ -336,9 +336,11 @@ class TurbiniaTask(object):
     Returns:
       TurbiniaTask: Deserialized object.
     """
+    from turbinia import client  # Avoid circular imports
+
     type_ = input_dict['name']
     try:
-      task = getattr(sys.modules[__name__], type_)()
+      task = getattr(sys.modules['turbinia.client'], type_)()
     except AttributeError:
       msg = (
           "Could not import {0:s} object! Make sure it is imported where "
