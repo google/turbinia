@@ -30,7 +30,7 @@ class WordpressAccessLogAnalysisTaskTest(unittest.TestCase):
   WORDPRESS_PWNED_REPORT = """Wordpress access logs found (install, theme_edit)
 \t27/Jun/2018:19:29:54 +0000: Wordpress installation successful
 \t27/Jun/2018:19:31:15 +0000: Wordpress theme editor edited file (header.php)
-""" # pylint: disable=line-too-long
+"""  # pylint: disable=line-too-long
 
   def setUp(self):
     filedir = os.path.dirname(os.path.realpath(__file__))
