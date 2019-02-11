@@ -450,6 +450,7 @@ class TurbiniaTask(object):
     Returns:
       A TurbiniaTaskResult object
     """
+    log.debug('Task {0:s} {1:s} awaiting execution'.format(self.name, self.id))
     with filelock.FileLock(config.LOCK_FILE):
       log.info('Starting Task {0:s} {1:s}'.format(self.name, self.id))
       original_result_id = None
