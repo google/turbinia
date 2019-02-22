@@ -16,10 +16,12 @@
 
 from __future__ import unicode_literals
 
+from collections import defaultdict
 from datetime import datetime
 from datetime import timedelta
 import json
 import logging
+from operator import itemgetter
 import os
 import stat
 import time
@@ -27,8 +29,8 @@ import time
 from turbinia import config
 from turbinia.config import logger
 from turbinia import task_manager
-from turbinia import workers
 from turbinia import TurbiniaException
+from turbinia.lib import text_formatter as fmt
 from turbinia.workers.artifact import FileArtifactExtractionTask
 from turbinia.workers.analysis.wordpress import WordpressAccessLogAnalysisTask
 from turbinia.workers.analysis.jenkins import JenkinsAnalysisTask
@@ -237,7 +239,7 @@ class TurbiniaClient(object):
 
   def format_task_status(
       self, instance, project, region, days=0, task_id=None, request_id=None,
-      user=None, all_fields=False):
+      user=None, all_fields=False, full_report=False):
     """Formats the recent history for Turbinia Tasks.
 
     Args:
@@ -251,47 +253,67 @@ class TurbiniaClient(object):
       user (string): The user of the request we want tasks for.
       all_fields (bool): Include all fields for the task, including task,
           request ids and saved file paths.
+      full_report (bool): Generate a full markdown report instead of just a
+          summary.
 
     Returns:
       String of task status
     """
     task_results = self.get_task_data(
         instance, project, region, days, task_id, request_id, user)
+    # Sort all tasks by the report_priority so that tasks with a higher
+    # priority are listed first in the report.
+    task_results = sorted(
+        task_results, key=itemgetter('report_priority'), reverse=True)
     num_results = len(task_results)
-    results = []
     if not num_results:
-      msg = '\nNo Tasks found.'
+      msg = 'No Turbinia Tasks found.'
       log.info(msg)
-      return msg
+      return '\n{0:s}'.format(msg)
 
-    results.append('\nRetrieved {0:d} Task results:'.format(num_results))
+    # Build up data
+    report = []
+    user = task_results[0].get('user')
+    request_id = task_results[0].get('request_id')
+    success_types = ['Successful', 'Failed', 'Scheduled or Running']
+    success_values = [True, False, None]
+    success_map = dict(zip(success_values, success_types))
+    task_map = defaultdict(list)
     for task in task_results:
-      if task.get('successful'):
-        success = 'Successful'
-      elif task.get('successful') is None:
-        success = 'Running'
-      else:
-        success = 'Failed'
+      task_map[success_map[task.get('successful')]].append(task)
 
-      status = task.get('status', 'No task status')
-      if all_fields:
-        results.append(
-            '{0:s} request: {1:s} task: {2:s} {3:s} {4:s} {5:s} {6:s}: {7:s}'
-            .format(
-                task.get('last_update'), task.get('request_id'), task.get('id'),
-                task.get('name'), task.get('user'), task.get('worker_name'),
-                success, status))
-        saved_paths = task.get('saved_paths', [])
-        if saved_paths is None:
-          saved_paths = []
-        for path in saved_paths:
-          results.append('\t{0:s}'.format(path))
-      else:
-        results.append(
-            '{0:s} {1:s} {2:s}: {3:s}'.format(
-                task.get('last_update'), task.get('name'), success, status))
+    # Generate report
+    report.append('\n')
+    report.append(fmt.heading1('Turbinia report {0:s}'.format(request_id)))
+    report.append(fmt.bullet('Processed {0:d} Tasks for {1:s}:'.format(
+        num_results, user)))
+    for success_type in success_types:
+      report.append(fmt.heading1('{0:s} Tasks'.format(success_type)))
+      for task in task_map[success_type]:
+        status = task.get('status') or 'No task status'
+        saved_paths = task.get('saved_paths') or []
 
-    return '\n'.join(results)
+        if full_report:
+          report.append(fmt.heading2(task.name))
+          line = '{0:s} {1:s}'.format(fmt.bold('Status:'), task.status)
+          report.append(fmt.bullet(line))
+          report.append(fmt.bullet('Task Id: {0:s}'.format(task.id)))
+          report.append(
+              fmt.bullet('Executed on worker {0:s}'.format(task.worker_name)))
+          if task.report_data:
+            report.append(fmt.heading3('Task Reported Data'))
+            report.extend(task.report_data.splitlines())
+          if all_fields:
+            report.append(fmt.heading3('Saved Task Files:'))
+            for path in saved_paths:
+              report.append(fmt.bullet(fmt.code(path)))
+        else:
+          report.append(fmt.heading2('{0:s}: {1:s}'.format(task.name, status)))
+          if all_fields:
+            for path in saved_paths:
+              report.append(fmt.bullet(fmt.code(path), level=2))
+
+    return '\n'.join(report)
 
   def run_local_task(self, task_name, request):
     """Runs a Turbinia Task locally.

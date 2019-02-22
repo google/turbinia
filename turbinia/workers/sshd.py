@@ -51,6 +51,7 @@ class SSHDAnalysisTask(TurbiniaTask):
 
     analysis = self.analyse_sshd_config(sshd_config)
     output_evidence.text_data = analysis
+    result.report_data = analysis
 
     # Write the report to the output file.
     with open(output_file_path, 'w') as fh:
@@ -80,16 +81,16 @@ class SSHDAnalysisTask(TurbiniaTask):
         r'^\s*PermitEmptyPasswords[\s"]*Yes', re.IGNORECASE | re.MULTILINE)
 
     if re.search(permit_root_login_re, config):
-      findings.append('\tRoot login enabled.')
+      findings.append('**Root login enabled.**')
 
     if not re.search(password_authentication_re, config):
-      findings.append('\tPassword authentication enabled.')
+      findings.append('**Password authentication enabled.**')
 
     if re.search(permit_empty_passwords_re, config):
-      findings.append('\tEmpty passwords permitted.')
+      findings.append('**Empty passwords permitted.**')
 
     if findings:
-      findings.insert(0, 'Insecure SSH configuration found.')
+      findings.insert(0, '## Insecure SSH configuration found.')
       return '\n'.join(findings)
 
     return 'No issues found in SSH configuration'

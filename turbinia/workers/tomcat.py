@@ -48,6 +48,7 @@ class TomcatAnalysisTask(TurbiniaTask):
       tomcat_file = input_file.read()
 
     analysis = self.analyse_tomcat_file(tomcat_file)
+    result.report_data = analysis
     output_evidence.text_data = analysis
 
     # Write the report to the output file.
@@ -82,19 +83,19 @@ class TomcatAnalysisTask(TurbiniaTask):
 
     count = 0
     for password_entry in re.findall(tomcat_user_passwords_re, tomcat_file):
-      findings.append('Tomcat user: ' + password_entry.strip())
+      findings.append('## Tomcat user: ' + password_entry.strip())
       count += 1
 
     for deployment_entry in re.findall(tomcat_deploy_re, tomcat_file):
-      findings.append('Tomcat App Deployed: ' + deployment_entry.strip())
+      findings.append('## Tomcat App Deployed: ' + deployment_entry.strip())
       count += 1
 
     for mgmt_entry in re.findall(tomcat_manager_activity_re, tomcat_file):
-      findings.append('Tomcat Management: ' + mgmt_entry.strip())
+      findings.append('## Tomcat Management: ' + mgmt_entry.strip())
       count += 1
 
     if findings:
-      findings.insert(0, 'Tomcat found ({0:d} hits):'.format(count))
+      findings.insert(0, '## Tomcat found ({0:d} hits):'.format(count))
       return '\n'.join(findings)
 
     return 'No Tomcat found.'
