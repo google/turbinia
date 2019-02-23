@@ -294,21 +294,22 @@ class TurbiniaClient(object):
         saved_paths = task.get('saved_paths') or []
 
         if full_report:
-          report.append(fmt.heading2(task.name))
-          line = '{0:s} {1:s}'.format(fmt.bold('Status:'), task.status)
+          report.append(fmt.heading2(task.get('name')))
+          line = '{0:s} {1:s}'.format(fmt.bold('Status:'), status)
           report.append(fmt.bullet(line))
-          report.append(fmt.bullet('Task Id: {0:s}'.format(task.id)))
-          report.append(
-              fmt.bullet('Executed on worker {0:s}'.format(task.worker_name)))
-          if task.report_data:
+          report.append(fmt.bullet('Task Id: {0:s}'.format(task.get('id'))))
+          report.append(fmt.bullet(
+              'Executed on worker {0:s}'.format(task.get('worker_name'))))
+          if task.get('report_data'):
             report.append(fmt.heading3('Task Reported Data'))
-            report.extend(task.report_data.splitlines())
+            report.extend(task.get('report_data').splitlines())
           if all_fields:
             report.append(fmt.heading3('Saved Task Files:'))
             for path in saved_paths:
               report.append(fmt.bullet(fmt.code(path)))
         else:
-          report.append(fmt.heading2('{0:s}: {1:s}'.format(task.name, status)))
+          report.append(
+              fmt.heading2('{0:s}: {1:s}'.format(task.get('name'), status)))
           if all_fields:
             for path in saved_paths:
               report.append(fmt.bullet(fmt.code(path), level=2))

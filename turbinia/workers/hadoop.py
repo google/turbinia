@@ -53,7 +53,7 @@ class HadoopAnalysisTask(TurbiniaTask):
     evil_commands = []
     for filepath in collected_artifacts:
       command = 'strings -a "{0:s}"'.format(filepath)
-      strings_report.append(fmt.header4('Strings for {0:s}:'.format(filepath)))
+      strings_report.append(fmt.heading4('Strings for {0:s}:'.format(filepath)))
       log.debug('Running command [{0:s}]'.format(command))
       proc = subprocess.Popen(
           command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
