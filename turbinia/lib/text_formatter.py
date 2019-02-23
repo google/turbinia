@@ -38,7 +38,7 @@ def heading5(text):
   return '##### {0:s}'.format(text.strip())
 
 def bullet(text, level=1):
-  return '{0:s}* {1:s}'.format('    ' * level - 1, text.strip())
+  return '{0:s}* {1:s}'.format('    ' * (level - 1), text.strip())
 
 def code(text):
   return '`{0:s}`'.format(text.strip())
