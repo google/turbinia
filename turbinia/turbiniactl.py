@@ -236,7 +236,8 @@ def main():
       '-r', '--request_id', help='Show tasks with this Request ID',
       required=False)
   parser_status.add_argument(
-      '-R', '--full_report', help='Generate full markdown report',
+      '-R', '--full_report',
+      help='Generate full markdown report instead of just a summary',
       required=False)
   parser_status.add_argument(
       '-t', '--task_id', help='Show task for given Task ID', required=False)
@@ -376,7 +377,7 @@ def main():
             instance=config.INSTANCE_ID, project=config.TURBINIA_PROJECT,
             region=region, days=args.days_history, task_id=args.task_id,
             request_id=args.request_id, user=args.user,
-            all_fields=args.all_fields))
+            all_fields=args.all_fields, full_report=args.full_report))
   elif args.command == 'listjobs':
     log.info('Available Jobs:')
     client.list_jobs()
