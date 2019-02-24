@@ -290,6 +290,8 @@ class TurbiniaClient(object):
     for success_type in success_types:
       report.append('')
       report.append(fmt.heading1('{0:s} Tasks'.format(success_type)))
+      if not task_map[success_type]:
+        report.append(fmt.bullet('None'))
       for task in task_map[success_type]:
         status = task.get('status') or 'No task status'
         saved_paths = task.get('saved_paths') or []

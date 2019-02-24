@@ -50,7 +50,7 @@ class HadoopAnalysisTask(TurbiniaTask):
     """
     report = []
     evil_commands = []
-    strings_count = None
+    strings_count = 0
     for filepath in collected_artifacts:
       command = 'strings -a "{0:s}"'.format(filepath)
       log.debug('Running command [{0:s}]'.format(command))
