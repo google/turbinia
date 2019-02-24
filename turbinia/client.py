@@ -288,6 +288,7 @@ class TurbiniaClient(object):
     report.append(fmt.bullet('Processed {0:d} Tasks for {1:s}:'.format(
         num_results, user)))
     for success_type in success_types:
+      report.append('\n')
       report.append(fmt.heading1('{0:s} Tasks'.format(success_type)))
       for task in task_map[success_type]:
         status = task.get('status') or 'No task status'
@@ -313,6 +314,7 @@ class TurbiniaClient(object):
           if all_fields:
             for path in saved_paths:
               report.append(fmt.bullet(fmt.code(path), level=2))
+        report.append('\n')
 
     return '\n'.join(report)
 
