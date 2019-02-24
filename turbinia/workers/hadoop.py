@@ -49,35 +49,32 @@ class HadoopAnalysisTask(TurbiniaTask):
       list(str): the result report, as a list of lines.
     """
     report = []
-    strings_report = []
     evil_commands = []
+    strings_count = None
     for filepath in collected_artifacts:
       command = 'strings -a "{0:s}"'.format(filepath)
-      strings_report.append(fmt.heading4('Strings for {0:s}:'.format(filepath)))
       log.debug('Running command [{0:s}]'.format(command))
       proc = subprocess.Popen(
           command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
       strings_output, _ = proc.communicate()
       strings_output = codecs.decode(strings_output, 'utf-8')
-      strings_report.append(strings_output)
       for line in strings_output.splitlines():
+        strings_count += 1
         if (line.find('curl') >= 0) or (line.find('wget') >= 0):
           evil_commands.append((filepath, line))
 
     if evil_commands:
-      report.append(fmt.bold('Found suspicious commands!'))
+      report.append(fmt.heading4(fmt.bold('Found suspicious commands!')))
     else:
-      report.append('Did not find any suspicious commands.')
+      report.append(fmt.heading4('Did not find any suspicious commands.'))
     for filepath, command in evil_commands:
       report.append(fmt.bullet(fmt.bold('Command:')))
       report.append(fmt.code(command))
       report.append('Found in file:')
       report.append(fmt.code(filepath))
 
-    # TODO(aarontp): Determine if we need to keep these anywhere
-    report.append('')
-    report.append('All strings from Yarn Tasks:')
-    report.extend(strings_report)
+    report.extend(fmt.bullet('Extracted {0:d} strings from {1:d} files'.format(
+        strings_count, len(collected_artifacts))))
 
     return report
 
