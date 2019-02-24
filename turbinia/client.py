@@ -308,13 +308,13 @@ class TurbiniaClient(object):
             report.append(fmt.heading3('Saved Task Files:'))
             for path in saved_paths:
               report.append(fmt.bullet(fmt.code(path)))
+          report.append('\n')
         else:
           report.append(
-              fmt.heading2('{0:s}: {1:s}'.format(task.get('name'), status)))
+              fmt.bullet('{0:s}: {1:s}'.format(task.get('name'), status)))
           if all_fields:
             for path in saved_paths:
               report.append(fmt.bullet(fmt.code(path), level=2))
-        report.append('\n')
 
     return '\n'.join(report)
 
