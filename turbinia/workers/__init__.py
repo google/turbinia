@@ -48,6 +48,9 @@ class TurbiniaTaskResult(object):
       evidence: List of newly created Evidence objects.
       id: Unique Id of result (string of hex)
       input_evidence: The evidence this task processed.
+      report_data (string): Markdown data that can be used in a Turbinia report.
+      report_priority (int): Value between 0-100 (0 is the highest priority) to
+          be used to order report sections.
       request_id: The id of the initial request to process this evidence.
       run_time: Length of time the task ran for.
       saved_paths: Paths where output has been saved.
@@ -62,7 +65,10 @@ class TurbiniaTaskResult(object):
   """
 
   # The list of attributes that we will persist into storage
-  STORED_ATTRIBUTES = ['worker_name', 'status', 'saved_paths', 'successful']
+  STORED_ATTRIBUTES = [
+      'worker_name', 'report_data', 'report_priority', 'status', 'saved_paths',
+      'successful'
+  ]
 
   def __init__(
       self, task, evidence=None, input_evidence=None, base_output_dir=None,
@@ -86,6 +92,8 @@ class TurbiniaTaskResult(object):
     self.request_id = request_id
     self.user = task.user
 
+    self.report_data = None
+    self.report_priority = 50
     self.start_time = datetime.now()
     self.run_time = None
     self.saved_paths = []
@@ -230,9 +238,6 @@ class TurbiniaTask(object):
       output_dir: The directory output will go into (including per-task folder).
       output_manager: An output manager object
       result: A TurbiniaTaskResult object.
-      report_data (string): Markdown data that can be used in a Turbinia report.
-      report_priority (int): Value between 0-100 (0 is the highest priority) to
-          be used to order report sections.
       request_id: The id of the initial request to process this evidence.
       run_local: Whether we are running locally without a Worker or not.
       state_key: A key used to manage task state
@@ -247,10 +252,7 @@ class TurbiniaTask(object):
   """
 
   # The list of attributes that we will persist into storage
-  STORED_ATTRIBUTES = [
-      'id', 'last_update', 'name', 'report_data', 'report_priority',
-      'request_id', 'user'
-  ]
+  STORED_ATTRIBUTES = ['id', 'last_update', 'name', 'request_id', 'user']
 
   def __init__(
       self, name=None, base_output_dir=None, request_id=None, user=None):
@@ -265,8 +267,6 @@ class TurbiniaTask(object):
     self.output_dir = None
     self.output_manager = output_manager.OutputManager()
     self.result = None
-    self.report_data = None
-    self.report_priority = 50
     self.request_id = request_id
     self.run_local = False
     self.state_key = None
