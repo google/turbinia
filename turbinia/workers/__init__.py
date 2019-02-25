@@ -249,7 +249,8 @@ class TurbiniaTask(object):
   # The list of attributes that we will persist into storage
   STORED_ATTRIBUTES = [
       'id', 'last_update', 'name', 'report_data', 'report_priority',
-      'request_id', 'user']
+      'request_id', 'user'
+  ]
 
   def __init__(
       self, name=None, base_output_dir=None, request_id=None, user=None):

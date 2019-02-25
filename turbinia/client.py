@@ -285,8 +285,9 @@ class TurbiniaClient(object):
     # Generate report
     report.append('\n')
     report.append(fmt.heading1('Turbinia report {0:s}'.format(request_id)))
-    report.append(fmt.bullet('Processed {0:d} Tasks for {1:s}:'.format(
-        num_results, user)))
+    report.append(
+        fmt.bullet(
+            'Processed {0:d} Tasks for {1:s}:'.format(num_results, user)))
     for success_type in success_types:
       report.append('')
       report.append(fmt.heading1('{0:s} Tasks'.format(success_type)))
@@ -301,8 +302,9 @@ class TurbiniaClient(object):
           line = '{0:s} {1:s}'.format(fmt.bold('Status:'), status)
           report.append(fmt.bullet(line))
           report.append(fmt.bullet('Task Id: {0:s}'.format(task.get('id'))))
-          report.append(fmt.bullet(
-              'Executed on worker {0:s}'.format(task.get('worker_name'))))
+          report.append(
+              fmt.bullet(
+                  'Executed on worker {0:s}'.format(task.get('worker_name'))))
           if task.get('report_data'):
             report.append(fmt.heading3('Task Reported Data'))
             report.extend(task.get('report_data').splitlines())

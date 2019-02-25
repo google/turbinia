@@ -238,7 +238,7 @@ def main():
   parser_status.add_argument(
       '-R', '--full_report',
       help='Generate full markdown report instead of just a summary',
-      required=False)
+      action='store_true', required=False)
   parser_status.add_argument(
       '-t', '--task_id', help='Show task for given Task ID', required=False)
   parser_status.add_argument(

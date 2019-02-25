@@ -22,23 +22,30 @@ from __future__ import unicode_literals
 def bold(text):
   return '**{0:s}**'.format(text.strip())
 
+
 def heading1(text):
   return '# {0:s}'.format(text.strip())
+
 
 def heading2(text):
   return '## {0:s}'.format(text.strip())
 
+
 def heading3(text):
   return '### {0:s}'.format(text.strip())
+
 
 def heading4(text):
   return '#### {0:s}'.format(text.strip())
 
+
 def heading5(text):
   return '##### {0:s}'.format(text.strip())
 
+
 def bullet(text, level=1):
   return '{0:s}* {1:s}'.format('    ' * (level - 1), text.strip())
+
 
 def code(text):
   return '`{0:s}`'.format(text.strip())
