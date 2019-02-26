@@ -60,7 +60,19 @@ class GrepTask(TurbiniaTask):
         patterns_file_path, evidence.local_path, output_file_path)
 
     result.log('Running [{0:s}]'.format(cmd))
-    self.execute(
-        cmd, result, new_evidence=[output_evidence], close=True, shell=True)
+    ret, result = self.execute(
+        cmd, result, new_evidence=[output_evidence], shell=True,
+        success_codes=[0, 1])
+
+    # Grep returns 0 on success and 1 if no results are found.
+    if ret == 0:
+      status = 'Grep Task found results in {0:s}'.format(evidence.name)
+      result.close(self, success=True, status=status)
+    elif ret == 1:
+      status = 'Grep Task did not find any results in {0:s}'.format(
+          evidence.name)
+      result.close(self, success=True, status=status)
+    else:
+      result.close(self, success=False)
 
     return result

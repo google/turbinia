@@ -330,7 +330,7 @@ class GoogleCloudProject(object):
 
     # Analysis software to install.
     packages_to_install = [
-        'python-plaso', 'xmount', 'sleuthkit', 'libfvde-tools', 'libbde-tools',
+        'python-plaso', 'xmount', 'libfvde-tools', 'libbde-tools',
         'plaso-tools', 'jq', 'ncdu', 'htop', 'binutils', 'upx-ucl'
     ]
 
@@ -341,10 +341,8 @@ class GoogleCloudProject(object):
         apt-get install -y {1}
         """.format(gift_ppa_track, ' '.join(packages_to_install))
     config = {
-        'name':
-            vm_name,
-        'machineType':
-            machine_type,
+        'name': vm_name,
+        'machineType': machine_type,
         'disks': [{
             'boot': True,
             'autoDelete': True,

@@ -284,8 +284,7 @@ class BaseTaskManager(object):
         log.info('No more tasks to process.  Exiting now.')
         return
 
-      # TODO(aarontp): Add config var for this.
-      time.sleep(10)
+      time.sleep(config.SLEEP_TIME)
 
 
 class CeleryTaskManager(BaseTaskManager):

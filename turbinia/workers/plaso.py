@@ -73,7 +73,7 @@ class PlasoTask(TurbiniaTask):
     result.log('Running plaso as [{0:s}]'.format(' '.join(cmd)))
 
     self.execute(
-        cmd, result, save_files=[plaso_log], new_evidence=[plaso_evidence],
+        cmd, result, log_files=[plaso_log], new_evidence=[plaso_evidence],
         close=True)
 
     return result

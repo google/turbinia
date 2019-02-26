@@ -121,8 +121,11 @@ class TurbiniaTaskResult(object):
       return
     self.successful = success
     self.run_time = datetime.now() - self.start_time
-    if not status:
+    if not status and self.successful:
       status = 'Completed successfully in {0:s} on {1:s}'.format(
+          str(self.run_time), self.worker_name)
+    elif not status and not self.successful:
+      status = 'Run failed in {0:s} on {1:s}'.format(
           str(self.run_time), self.worker_name)
     self.log(status)
     self.status = status
@@ -145,8 +148,7 @@ class TurbiniaTaskResult(object):
     except Exception as e:
       msg = 'Evidence post-processing for {0:s} failed: {1!s}'.format(
           self.input_evidence.name, e)
-      log.error(msg)
-      self.log(msg)
+      self.log(msg, level=logging.ERROR)
 
     # Write result log info to file
     logfile = os.path.join(self.output_dir, 'worker-log.txt')
@@ -160,14 +162,30 @@ class TurbiniaTaskResult(object):
     self.closed = True
     log.debug('Result close successful. Status is [{0:s}]'.format(self.status))
 
-  def log(self, log_msg):
-    """Add a log message to the result object.
+  def log(self, message, level=logging.INFO, traceback_=None):
+    """Log Task messages.
+
+    Logs to both the result and the normal logging mechanism.
 
     Args:
-      log_msg: A log message string.
+      message (string): Message to log.
+      level (int): Log level as defined by logging enums (e.g. logging.INFO)
+      traceback (string): Trace message to log
     """
-    log.info(log_msg)
-    self._log.append(log_msg)
+    self._log.append(message)
+    if level == logging.DEBUG:
+      log.debug(message)
+    elif level == logging.INFO:
+      log.info(message)
+    elif level == logging.WARN:
+      log.warn(message)
+    elif level == logging.ERROR:
+      log.error(message)
+    elif level == logging.CRITICAL:
+      log.critical(message)
+
+    if traceback_:
+      self.result.set_error(message, traceback_)
 
   def add_evidence(self, evidence, evidence_config):
     """Populate the results list.
@@ -251,8 +269,8 @@ class TurbiniaTask(object):
     self._evidence_config = {}
 
   def execute(
-      self, cmd, result, save_files=None, new_evidence=None, close=False,
-      shell=False):
+      self, cmd, result, save_files=None, log_files=None, new_evidence=None,
+      close=False, shell=False, success_codes=None):
     """Executes a given binary and saves output.
 
     Args:
@@ -260,16 +278,20 @@ class TurbiniaTask(object):
       result (TurbiniaTaskResult): The result object to put data into.
       save_files (list): A list of files to save (files referenced by Evidence
           objects are automatically saved, so no need to include them).
+      log_files (list): A list of files to save even if execution fails.
       new_evidence (list): These are new evidence objects created by the task.
           If the task is successful, they will be added to the result.
       close (bool): Whether to close out the result.
       shell (bool): Whether the cmd is in the form of a string or a list.
+      success_codes (list(int)): Which return codes are considered successful.
 
     Returns:
       Tuple of the return code, and the TurbiniaTaskResult object
     """
     save_files = save_files if save_files else []
+    log_files = log_files if log_files else []
     new_evidence = new_evidence if new_evidence else []
+    success_codes = success_codes if success_codes else [0]
     if shell:
       proc = subprocess.Popen(cmd, shell=True)
     else:
@@ -279,12 +301,23 @@ class TurbiniaTask(object):
     result.error['stderr'] = stderr
     ret = proc.returncode
 
-    if ret:
-      msg = 'Execution failed with status {0:d}'.format(ret)
+    for file_ in log_files:
+      if not os.path.exists(file_):
+        result.log(
+            'Log file {0:s} does not exist to save'.format(file_),
+            level=logging.DEBUG)
+        continue
+      result.log('Output file at {0:s}'.format(file_))
+      if not self.run_local:
+        self.output_manager.save_local_file(file_, result)
+
+    if ret not in success_codes:
+      msg = 'Execution of [{0!s}] failed with status {1:d}'.format(cmd, ret)
       result.log(msg)
       if close:
         result.close(self, success=False, status=msg)
     else:
+      result.log('Execution of [{0!s}] succeeded'.format(cmd))
       for file_ in save_files:
         result.log('Output file at {0:s}'.format(file_))
         if not self.run_local:
@@ -296,15 +329,13 @@ class TurbiniaTask(object):
           msg = (
               'Evidence {0:s} local_path {1:s} does not exist. Not returning '
               'empty Evidence.'.format(evidence.name, evidence.local_path))
-          result.log(msg)
-          log.warning(msg)
+          result.log(msg, level=logging.WARN)
         elif (evidence.local_path and os.path.exists(evidence.local_path) and
               os.path.getsize(evidence.local_path) == 0):
           msg = (
               'Evidence {0:s} local_path {1:s} is empty. Not returning '
               'empty new Evidence.'.format(evidence.name, evidence.local_path))
-          result.log(msg)
-          log.warning(msg)
+          result.log(msg, level=logging.WARN)
         else:
           result.add_evidence(evidence, self._evidence_config)
 
@@ -425,6 +456,7 @@ class TurbiniaTask(object):
     Returns:
       A TurbiniaTaskResult object
     """
+    log.debug('Task {0:s} {1:s} awaiting execution'.format(self.name, self.id))
     with filelock.FileLock(config.LOCK_FILE):
       log.info('Starting Task {0:s} {1:s}'.format(self.name, self.id))
       original_result_id = None
@@ -433,11 +465,10 @@ class TurbiniaTask(object):
         original_result_id = self.result.id
 
         if self.turbinia_version != turbinia.__version__:
-          msg = 'Worker V-{0:s} and server V-{1:s} version do not match'.format(
-              self.turbinia_version, turbinia.__version__)
-          log.error(msg)
-          self.result.log(msg)
-          self.result.set_error(msg)
+          msg = (
+              'Worker and Server versions do not match: {0:s} != {1:s}'.format(
+                  self.turbinia_version, turbinia.__version__))
+          self.result.log(msg, level=logging.ERROR)
           self.result.status = msg
           return self.result
 
@@ -446,11 +477,13 @@ class TurbiniaTask(object):
       # pylint: disable=broad-except
       except Exception as e:
         msg = '{0:s} Task failed with exception: [{1!s}]'.format(self.name, e)
+        # Logging explicitly here because the result is in an unknown state
+        trace = traceback.format_exc()
         log.error(msg)
-        log.error(traceback.format_exc())
+        log.error(trace)
         if self.result:
-          self.result.log(msg)
-          self.result.log(traceback.format_exc())
+          self.result.log(msg, level=logging.ERROR)
+          self.result.log(trace)
           if hasattr(e, 'message'):
             self.result.set_error(e.message, traceback.format_exc())
           else:

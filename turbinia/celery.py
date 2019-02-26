@@ -27,6 +27,7 @@ from six.moves import queue
 
 import celery
 import kombu
+from kombu.exceptions import OperationalError
 from amqp.exceptions import ChannelError
 
 from turbinia import config
@@ -141,6 +142,11 @@ class TurbiniaKombu(TurbiniaMessageBase):
       except queue.Empty:
         break
       except ChannelError:
+        break
+      except OperationalError as e:
+        log.warning(
+            'Caught recoverable message transport connection error when ' +
+            'fetching from queue: {0!s}'.format(e))
         break
 
     log.debug('Received {0:d} messages'.format(len(requests)))
