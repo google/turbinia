@@ -149,8 +149,8 @@ def main():
   parser_bitlocker = subparsers.add_parser(
       'bitlocker', help='Process Bitlocker Disk as Evidence')
   parser_bitlocker.add_argument(
-      '-e', '--encrypted_path', help='Local path to the Bitlocker evidence',
-      required=True)
+      '-l', '--local_path',
+      help='Local path to the encrypted Bitlocker evidence', required=True)
   parser_bitlocker.add_argument(
       '-r', '--recovery_key', help='Recovery key for the Bitlocker evidence.  '
       'Either recovery key or password must be specified.', required=False)
@@ -330,12 +330,12 @@ def main():
         mount_partition=args.mount_partition, source=args.source)
   elif args.command == 'bitlocker':
     if not args.password and not args.recovery_key:
-      log.error("Neither recovery key nor password is specified.")
+      log.error('Neither recovery key nor password is specified.')
       sys.exit(1)
-    args.name = args.name if args.name else args.encrypted_path
-    encrypted_path = os.path.abspath(args.encrypted_path)
+    args.name = args.name if args.name else args.local_path
+    local_path = os.path.abspath(args.local_path)
     evidence_ = evidence.BitlockerDisk(
-        name=args.name, local_path=encrypted_path,
+        name=args.name, local_path=local_path,
         recovery_key=args.recovery_key, password=args.password,
         source=args.source)
   elif args.command == 'directory':
@@ -463,7 +463,7 @@ def main():
       log.info(
           'Run command "turbiniactl {0:s} status -r {1:s}" to see the status of'
           ' this request and associated tasks'.format(
-              "-C" if args.use_celery else "", request.request_id))
+              '-C' if args.use_celery else '', request.request_id))
       if not args.run_local:
         client.send_request(request)
       else:

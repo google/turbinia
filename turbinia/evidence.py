@@ -262,6 +262,7 @@ class BitlockerDisk(EncryptedDisk):
     self.recovery_key = recovery_key
     self.password = password
     super(BitlockerDisk, self).__init__(*args, **kwargs)
+    self.encryption_type = self.__class__.__name__
 
 
 class GoogleCloudDisk(RawDisk):
