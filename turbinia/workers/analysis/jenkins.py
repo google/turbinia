@@ -21,6 +21,7 @@ import re
 
 from turbinia import TurbiniaException
 from turbinia.evidence import ReportText
+from turbinia.lib import text_formatter as fmt
 from turbinia.workers import TurbiniaTask
 from turbinia.lib.utils import extract_artifacts
 from turbinia.lib.utils import bruteforce_password_hashes
@@ -71,8 +72,10 @@ class JenkinsAnalysisTask(TurbiniaTask):
 
       credentials.extend(extracted_credentials)
 
-    analysis_report = self.analyze_jenkins(version, credentials)
-    output_evidence.text_data = analysis_report
+    (report, priority, summary) = self.analyze_jenkins(version, credentials)
+    output_evidence.text_data = report
+    result.report_data = report
+    result.report_priority = priority
 
     # Write the report to the output file.
     with open(output_file_path, 'w') as fh:
@@ -81,11 +84,7 @@ class JenkinsAnalysisTask(TurbiniaTask):
 
     # Add the resulting evidence to the result object.
     result.add_evidence(output_evidence, evidence.config)
-    if analysis_report:
-      status = analysis_report[0].strip()
-    else:
-      status = 'Jenkins analysis found no potential issues'
-    result.close(self, success=True, status=status)
+    result.close(self, success=True, status=summary)
 
     return result
 
@@ -141,9 +140,15 @@ class JenkinsAnalysisTask(TurbiniaTask):
       credentials (list): of tuples with username and password hash.
 
     Returns:
-      str: of description of security of Jenkins configuration file.
+      Tuple(
+        report_text(str): The report data
+        report_priority(int): The priority of the report (0 - 100)
+        summary(str): A summary of the report (used for task status)
+      )
     """
-    findings = []
+    report = []
+    summary = ''
+    priority = 50
     credentials_registry = {hash: username for username, hash in credentials}
     # TODO: Add timeout parameter when dynamic configuration is ready.
     # Ref: https://github.com/google/turbinia/issues/244
@@ -151,15 +156,22 @@ class JenkinsAnalysisTask(TurbiniaTask):
 
     if not version:
       version = 'Unknown'
-    findings.append('Jenkins version: {0:s}'.format(version))
+    report.append(fmt.bullet('Jenkins version: {0:s}'.format(version)))
 
     if weak_passwords:
-      findings.insert(0, 'Jenkins analysis found potential issues.\n')
-      findings.append(
-          '{0:n} weak password(s) found:'.format(len(weak_passwords)))
+      priority = 10
+      summary = 'Jenkins analysis found potential issues'
+      report.insert(0, fmt.heading4(fmt.bold(summary)))
+      line = '{0:n} weak password(s) found:'.format(len(weak_passwords))
+      report.append(fmt.bullet(fmt.bold(line)))
       for password_hash, plaintext in weak_passwords:
-        findings.append(
-            ' - User "{0:s}" with password "{1:s}"'.format(
-                credentials_registry.get(password_hash), plaintext))
+        line = 'User "{0:s}" with password "{1:s}"'.format(
+            credentials_registry.get(password_hash), plaintext)
+        report.append(fmt.bullet(line, level=2))
+    else:
+      summary = 'Jenkins analysis found no issues'
+      priority = 80
+      report.insert(0, fmt.heading4(summary))
 
-    return '\n'.join(findings)
+    report = '\n'.join(report)
+    return (report, priority, summary)

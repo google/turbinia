@@ -287,7 +287,7 @@ class TurbiniaClient(object):
     report.append(fmt.heading1('Turbinia report {0:s}'.format(request_id)))
     report.append(
         fmt.bullet(
-            'Processed {0:d} Tasks for {1:s}:'.format(num_results, user)))
+            'Processed {0:d} Tasks for user {1:s}'.format(num_results, user)))
     for success_type in success_types:
       report.append('')
       report.append(fmt.heading1('{0:s} Tasks'.format(success_type)))

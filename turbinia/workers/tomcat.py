@@ -20,6 +20,7 @@ import os
 import re
 
 from turbinia.evidence import ReportText
+from turbinia.lib import text_formatter as fmt
 from turbinia.workers import TurbiniaTask
 
 
@@ -47,9 +48,10 @@ class TomcatAnalysisTask(TurbiniaTask):
     with open(evidence.local_path, 'r') as input_file:
       tomcat_file = input_file.read()
 
-    analysis = self.analyse_tomcat_file(tomcat_file)
-    result.report_data = analysis
-    output_evidence.text_data = analysis
+    (report, priority, summary) = self.analyse_tomcat_file(tomcat_file)
+    result.report_priority = priority
+    result.report_data = report
+    output_evidence.text_data = report
 
     # Write the report to the output file.
     with open(output_file_path, 'w') as fh:
@@ -57,8 +59,7 @@ class TomcatAnalysisTask(TurbiniaTask):
 
     # Add the resulting evidence to the result object.
     result.add_evidence(output_evidence, evidence.config)
-    result.close(
-        self, success=True, status=output_evidence.text_data.splitlines()[0])
+    result.close(self, success=True, status=summary)
     return result
 
   def analyse_tomcat_file(self, tomcat_file):
@@ -71,7 +72,11 @@ class TomcatAnalysisTask(TurbiniaTask):
     Args:
       tomcat_file (str): Tomcat file content.
     Returns:
-      str: description of findings of Tomcat file.
+      Tuple(
+        report_text(str): The report data
+        report_priority(int): The priority of the report (0 - 100)
+        summary(str): A summary of the report (used for task status)
+      )
     """
     findings = []
 
@@ -83,19 +88,23 @@ class TomcatAnalysisTask(TurbiniaTask):
 
     count = 0
     for password_entry in re.findall(tomcat_user_passwords_re, tomcat_file):
-      findings.append('## Tomcat user: ' + password_entry.strip())
+      findings.append(fmt.bullet('Tomcat user: ' + password_entry.strip()))
       count += 1
 
     for deployment_entry in re.findall(tomcat_deploy_re, tomcat_file):
-      findings.append('## Tomcat App Deployed: ' + deployment_entry.strip())
+      findings.append(
+          fmt.bullet('Tomcat App Deployed: ' + deployment_entry.strip()))
       count += 1
 
     for mgmt_entry in re.findall(tomcat_manager_activity_re, tomcat_file):
-      findings.append('## Tomcat Management: ' + mgmt_entry.strip())
+      findings.append(fmt.bullet('Tomcat Management: ' + mgmt_entry.strip()))
       count += 1
 
     if findings:
-      findings.insert(0, '## Tomcat found ({0:d} hits):'.format(count))
-      return '\n'.join(findings)
+      msg = 'Tomcat analysis found {0:d} results'.format(count)
+      findings.insert(0, fmt.heading4(fmt.bold(msg)))
+      report = '\n'.join(findings)
+      return (report, 20, msg)
 
-    return 'No Tomcat found.'
+    report = 'No Tomcat findings to report'
+    return (report, 80, report)

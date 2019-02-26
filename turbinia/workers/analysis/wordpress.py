@@ -21,6 +21,7 @@ import os
 import re
 
 from turbinia.evidence import ReportText
+from turbinia.lib import text_formatter as fmt
 from turbinia.workers import TurbiniaTask
 
 
@@ -63,8 +64,11 @@ class WordpressAccessLogAnalysisTask(TurbiniaTask):
     with open_function(evidence.local_path, 'rb') as input_file:
       access_logs_content = input_file.read().decode('utf-8')
 
-    analysis = self.analyze_wp_access_logs(access_logs_content)
-    output_evidence.text_data = analysis
+    (report, priority, summary) = self.analyze_wp_access_logs(
+        access_logs_content)
+    output_evidence.text_data = report
+    result.report_data = report
+    result.report_priority = priority
 
     # Write the report to the output file.
     with open(output_file_path, 'w') as fh:
@@ -72,8 +76,7 @@ class WordpressAccessLogAnalysisTask(TurbiniaTask):
 
     # Add the resulting evidence to the result object.
     result.add_evidence(output_evidence, evidence.config)
-    status = analysis.split('\n')[0]
-    result.close(self, success=True, status=status)
+    result.close(self, success=True, status=summary)
     return result
 
   def _get_timestamp(self, log_line):
@@ -90,30 +93,37 @@ class WordpressAccessLogAnalysisTask(TurbiniaTask):
       config (str): access log file content.
 
     Returns:
-      str: Activity summary of the wordpress installation.
+      Tuple(
+        report_text(str): The report data
+        report_priority(int): The priority of the report (0 - 100)
+        summary(str): A summary of the report (used for task status)
+      )
     """
-    findings = []
+    report = []
     findings_summary = set()
 
     for log_line in config.split('\n'):
 
       if self.install_step_regex.search(log_line):
-        findings.append(
-            '\t{0:s}: Wordpress installation successful'.format(
-                self._get_timestamp(log_line)))
+        line = '{0:s}: Wordpress installation successful'.format(
+            self._get_timestamp(log_line))
+        report.append(fmt.bullet(line))
         findings_summary.add('install')
 
       match = self.theme_editor_regex.search(log_line)
       if match:
-        findings.append(
-            '\t{0:s}: Wordpress theme editor edited file ({1:s})\n'.format(
-                self._get_timestamp(log_line), match.group('edited_file')))
+        line = '{0:s}: Wordpress theme editor edited file ({1:s})'.format(
+            self._get_timestamp(log_line), match.group('edited_file'))
+        report.append(fmt.bullet(line))
         findings_summary.add('theme_edit')
 
-    if findings:
-      findings.insert(
-          0, 'Wordpress access logs found ({0:s})'.format(
-              ', '.join(sorted(list(findings_summary)))))
-      return '\n'.join(findings)
+    if report:
+      findings_summary = ', '.join(sorted(list(findings_summary)))
+      summary = 'Wordpress access logs found ({0:s})'.format(findings_summary)
 
-    return 'No Wordpress install or theme editing found in access logs'
+      report.insert(0, fmt.heading4(fmt.bold(summary)))
+      report_text = '\n'.join(report)
+      return (report_text, 20, summary)
+
+    report_text = 'No Wordpress install or theme editing found in access logs'
+    return (fmt.heading4(report_text), 80, report_text)

@@ -27,10 +27,10 @@ class WordpressAccessLogAnalysisTaskTest(unittest.TestCase):
   """Tests for WordpressAccessLogAnalysis Task."""
 
   WORDPRESS_ACCESS_LOGS = None
-  WORDPRESS_PWNED_REPORT = """Wordpress access logs found (install, theme_edit)
-\t27/Jun/2018:19:29:54 +0000: Wordpress installation successful
-\t27/Jun/2018:19:31:15 +0000: Wordpress theme editor edited file (header.php)
-"""  # pylint: disable=line-too-long
+  # pylint: disable=line-too-long
+  WORDPRESS_PWNED_REPORT = """#### **Wordpress access logs found (install, theme_edit)**
+* 27/Jun/2018:19:29:54 +0000: Wordpress installation successful
+* 27/Jun/2018:19:31:15 +0000: Wordpress theme editor edited file (header.php)"""
 
   def setUp(self):
     filedir = os.path.dirname(os.path.realpath(__file__))
@@ -44,8 +44,12 @@ class WordpressAccessLogAnalysisTaskTest(unittest.TestCase):
     config.LoadConfig()
     task = wordpress.WordpressAccessLogAnalysisTask()
 
-    report = task.analyze_wp_access_logs(self.WORDPRESS_ACCESS_LOGS)
+    (report, priority, summary) = task.analyze_wp_access_logs(
+        self.WORDPRESS_ACCESS_LOGS)
     self.assertEqual(report, self.WORDPRESS_PWNED_REPORT)
+    self.assertEqual(priority, 20)
+    self.assertEqual(
+        summary, 'Wordpress access logs found (install, theme_edit)')
 
 
 if __name__ == '__main__':

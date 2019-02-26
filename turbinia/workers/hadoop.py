@@ -48,7 +48,7 @@ class HadoopAnalysisTask(TurbiniaTask):
       output_dir(str): The base directory the artfacts are in.
 
     Returns:
-      Tuple of (
+      Tuple(
         list(str): The report data as a list of lines
         report_priority(int): The priority of the report (0 - 100)
         summary(str): A summary of the report (used for task status)
