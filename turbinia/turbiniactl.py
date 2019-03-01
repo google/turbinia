@@ -335,9 +335,8 @@ def main():
     args.name = args.name if args.name else args.local_path
     local_path = os.path.abspath(args.local_path)
     evidence_ = evidence.BitlockerDisk(
-        name=args.name, local_path=local_path,
-        recovery_key=args.recovery_key, password=args.password,
-        source=args.source)
+        name=args.name, local_path=local_path, recovery_key=args.recovery_key,
+        password=args.password, source=args.source)
   elif args.command == 'directory':
     args.name = args.name if args.name else args.local_path
     local_path = os.path.abspath(args.local_path)
