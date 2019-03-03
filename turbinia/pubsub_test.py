@@ -36,7 +36,9 @@ def getTurbiniaRequest():
     TurbiniaRequest object.
   """
   request = message.TurbiniaRequest(
-      request_id='deadbeef', context={'kw': [1, 2]})
+      request_id='deadbeef', context={
+          'kw': [1, 2]
+      })
   rawdisk = evidence.RawDisk(
       name='My Evidence', local_path='/tmp/foo', mount_path='/mnt/foo')
   request.evidence.append(rawdisk)
