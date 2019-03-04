@@ -64,8 +64,8 @@ class WordpressAccessLogAnalysisTask(TurbiniaTask):
     with open_function(evidence.local_path, 'rb') as input_file:
       access_logs_content = input_file.read().decode('utf-8')
 
-    (report, priority, summary) = self.analyze_wp_access_logs(
-        access_logs_content)
+    (report, priority,
+     summary) = self.analyze_wp_access_logs(access_logs_content)
     output_evidence.text_data = report
     result.report_data = report
     result.report_priority = priority

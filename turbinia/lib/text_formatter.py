@@ -20,32 +20,96 @@ from __future__ import unicode_literals
 
 
 def bold(text):
+  """Formats text as bold in Markdown format.
+
+  Args:
+    text(string): Text to format
+
+  Return:
+    string: Formatted text.
+  """
   return '**{0:s}**'.format(text.strip())
 
 
 def heading1(text):
+  """Formats text as heading 1 in Markdown format.
+
+  Args:
+    text(string): Text to format
+
+  Return:
+    string: Formatted text.
+  """
   return '# {0:s}'.format(text.strip())
 
 
 def heading2(text):
+  """Formats text as heading 2 in Markdown format.
+
+  Args:
+    text(string): Text to format
+
+  Return:
+    string: Formatted text.
+  """
   return '## {0:s}'.format(text.strip())
 
 
 def heading3(text):
+  """Formats text as heading 3 in Markdown format.
+
+  Args:
+    text(string): Text to format
+
+  Return:
+    string: Formatted text.
+  """
   return '### {0:s}'.format(text.strip())
 
 
 def heading4(text):
+  """Formats text as heading 4 in Markdown format.
+
+  Args:
+    text(string): Text to format
+
+  Return:
+    string: Formatted text.
+  """
   return '#### {0:s}'.format(text.strip())
 
 
 def heading5(text):
+  """Formats text as heading 5 in Markdown format.
+
+  Args:
+    text(string): Text to format
+
+  Return:
+    string: Formatted text.
+  """
   return '##### {0:s}'.format(text.strip())
 
 
 def bullet(text, level=1):
+  """Formats text as a bullet in Markdown format.
+
+  Args:
+    text(string): Text to format
+
+  Return:
+    string: Formatted text.
+  """
   return '{0:s}* {1:s}'.format('    ' * (level - 1), text.strip())
 
 
 def code(text):
+  """Formats text as code in Markdown format.
+
+  Args:
+    text(string): Text to format
+
+  Return:
+    string: Formatted text.
+  """
   return '`{0:s}`'.format(text.strip())

@@ -145,7 +145,8 @@ class JenkinsAnalysisTaskTest(unittest.TestCase):
     task = jenkins.JenkinsAnalysisTask()
 
     bruteforce_mock.return_value = [
-        ('$2a$10$DSltvO4YXZuoLuUU77R871627TEST', 'weakpassword')]
+        ('$2a$10$DSltvO4YXZuoLuUU77R871627TEST', 'weakpassword')
+    ]
     (report, priority, summary) = task.analyze_jenkins(
         self.EXPECTED_VERSION, self.EXPECTED_CREDENTIALS)
 
@@ -167,6 +168,7 @@ class JenkinsAnalysisTaskTest(unittest.TestCase):
     self.assertEqual(report, self.JENKINS_ANALYSIS_EMPTY_REPORT)
     self.assertEqual(priority, 80)
     self.assertEqual(summary, 'Jenkins analysis found no issues')
+
 
 if __name__ == '__main__':
   unittest.main()
