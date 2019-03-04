@@ -46,36 +46,6 @@ class TurbiniaCelery(object):
   def __init__(self):
     """Celery configurations."""
     self.app = None
-    self.fexec = None
-
-  def fexec(f, *args, **kwargs):
-    # pylint: disable=no-self-argument,method-hidden
-    """Placeholder function, overwritten with the _fexec closure once setup()
-    is called. Once overwritten, will call the specified function with
-    whichever arguments you pass it.
-
-    Arguments:
-      f (function): an arbitrary function
-      args: any positional arguments to be passsed to the function
-      kwargs: any keyword arguments to be passed to the function
-    """
-    raise NotImplementedError
-
-  def _fexec(self):
-    """Closure used to pass functions to workers. We use this instead of having
-    to annotate each individual TurbiniaTask with the Celery @app.task
-    decorator.
-
-    Returns:
-      function: the fexec() function.
-    """
-
-    @self.app.task(name='fexec')
-    def fexec(f, *args, **kwargs):
-      """Lets us pass in an arbitrary function without Celery annotations"""
-      return f(*args, **kwargs)
-
-    return fexec
 
   def setup(self):
     """Set up Celery"""
@@ -84,13 +54,7 @@ class TurbiniaCelery(object):
         'turbinia', broker=config.CELERY_BROKER, backend=config.CELERY_BACKEND)
     self.app.conf.update(
         task_default_queue=config.INSTANCE_ID,
-        # TODO(ericzinnikas): pickle is not secure, we need to replace it with
-        # the default json serializer, but need to figure out how to register
-        # the TurbiniaTask objects with Celery
-        event_serializer='pickle',
-        result_serializer='pickle',
-        task_serializer='pickle',
-        accept_content=['pickle'],
+        accept_content=['json'],
         # TODO(ericzinnikas): Without task_acks_late Celery workers will start
         # on one task and prefetch another (i.e. can result in 1 worker getting
         # 2 plaso jobs while another worker is free). But enabling this causes
@@ -100,7 +64,6 @@ class TurbiniaCelery(object):
         worker_concurrency=1,
         worker_prefetch_multiplier=1,
     )
-    self.fexec = self._fexec()
 
 
 class TurbiniaKombu(TurbiniaMessageBase):
