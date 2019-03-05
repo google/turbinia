@@ -306,9 +306,11 @@ class TurbiniaClient(object):
               fmt.bullet(
                   'Executed on worker {0:s}'.format(task.get('worker_name'))))
           if task.get('report_data'):
+            report.append('')
             report.append(fmt.heading3('Task Reported Data'))
             report.extend(task.get('report_data').splitlines())
           if all_fields:
+            report.append('')
             report.append(fmt.heading3('Saved Task Files:'))
             for path in saved_paths:
               report.append(fmt.bullet(fmt.code(path)))
@@ -320,6 +322,12 @@ class TurbiniaClient(object):
             for path in saved_paths:
               report.append(fmt.bullet(fmt.code(path), level=2))
 
+    print '*' * 140
+    print '*' * 140
+    print '\n'.join(report)
+    print '*' * 140
+    print '*' * 140
+    print '*' * 140
     return '\n'.join(report)
 
   def run_local_task(self, task_name, request):

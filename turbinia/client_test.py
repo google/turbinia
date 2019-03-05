@@ -16,10 +16,12 @@
 
 from __future__ import unicode_literals
 
+from datetime import datetime
 import unittest
 import os
 import shutil
 import tempfile
+import textwrap
 
 import mock
 
@@ -30,8 +32,126 @@ from turbinia.client import TurbiniaPsqWorker
 from turbinia import TurbiniaException
 
 
+SHORT_REPORT = textwrap.dedent("""\
+		# Turbinia report 0xFakeRequestId
+		* Processed 2 Tasks for user myuser
+
+		# Successful Tasks
+		* TaskName: This fake task executed
+		* TaskName2: This second fake task executed
+
+		# Failed Tasks
+		* None
+
+		# Scheduled or Running Tasks
+		* None
+""")
+
+LONG_REPORT = textwrap.dedent("""\
+    # Turbinia report 0xFakeRequestId
+    * Processed 2 Tasks for user myuser
+    
+    # Successful Tasks
+    ## TaskName
+    * **Status:** This fake task executed
+    * Task Id: 0xfakeTaskId
+    * Executed on worker fake_worker
+    
+    ### Task Reported Data
+    #### Fake Low priority Report
+    * Fake Bullet
+    
+    ## TaskName2
+    * **Status:** This second fake task executed
+    * Task Id: 0xfakeTaskId2
+    * Executed on worker fake_worker
+    
+    ### Task Reported Data
+    #### Fake High priority Report
+    * Fake Bullet
+    
+    
+    # Failed Tasks
+    * None
+    
+    # Scheduled or Running Tasks
+    * None
+""")
+
+
+LONG_REPORT_FILES = textwrap.dedent("""\
+    # Turbinia report 0xFakeRequestId
+    * Processed 2 Tasks for user myuser
+    
+    # Successful Tasks
+    ## TaskName
+    * **Status:** This fake task executed
+    * Task Id: 0xfakeTaskId
+    * Executed on worker fake_worker
+
+    ### Task Reported Data
+    #### Fake Low priority Report
+    * Fake Bullet
+
+    ### Saved Task Files:
+    * `/no/path/`
+    * `/fake/path`
+    
+    ## TaskName2
+    * **Status:** This second fake task executed
+    * Task Id: 0xfakeTaskId2
+    * Executed on worker fake_worker
+
+    ### Task Reported Data
+    #### Fake High priority Report
+    * Fake Bullet
+
+    ### Saved Task Files:
+    * `/no/path/2`
+    * `/fake/path/2`
+    
+    
+    # Failed Tasks
+    * None
+    
+    # Scheduled or Running Tasks
+    * None
+""")
+
 class TestTurbiniaClient(unittest.TestCase):
   """Test Turbinia client class."""
+
+  def setUp(self):
+    self.task_data = [
+        {
+            'id': '0xfakeTaskId',
+            'instance': 'MyTurbiniaInstance',
+            'last_update': datetime.now(),
+            'name': 'TaskName',
+            'report_data': '#### Fake Low priority Report\n* Fake Bullet',
+            'report_priority': 80,
+            'request_id': '0xFakeRequestId',
+            'saved_paths': ['/no/path/', '/fake/path'],
+            'status': 'This fake task executed',
+            'successful': True,
+            'user': 'myuser',
+            'worker_name': 'fake_worker'
+        }, {
+            'id': '0xfakeTaskId2',
+            'instance': 'MyTurbiniaInstance',
+            'last_update': datetime.now(),
+            'name': 'TaskName2',
+            'report_data': '#### Fake High priority Report\n* Fake Bullet',
+            'report_priority': 10,
+            'request_id': '0xFakeRequestId2',
+            'saved_paths': ['/no/path/2', '/fake/path/2'],
+            'status': 'This second fake task executed',
+            'successful': True,
+            'user': 'myuser',
+            'worker_name': 'fake_worker'
+        }
+    ]
+
 
   @mock.patch('turbinia.client.task_manager.PSQTaskManager._backend_setup')
   @mock.patch('turbinia.state_manager.get_state_manager')
@@ -73,6 +193,40 @@ class TestTurbiniaClient(unittest.TestCase):
     client = TurbiniaClient()
     self.assertRaises(
         TurbiniaException, client.get_task_data, "inst", "proj", "reg")
+
+  @mock.patch('turbinia.client.GoogleCloudFunction.ExecuteFunction')
+  @mock.patch('turbinia.client.task_manager.PSQTaskManager._backend_setup')
+  @mock.patch('turbinia.state_manager.get_state_manager')
+  def testClientFormatTaskStatus(self, _, __, ___):
+    """Tests format_task_status() has valid output."""
+    client = TurbiniaClient()
+    client.get_task_data = mock.MagicMock()
+    client.get_task_data.return_value = self.task_data
+    result = client.format_task_status('inst', 'proj', 'reg')
+    self.assertEqual(result.strip(), SHORT_REPORT.strip())
+
+  @mock.patch('turbinia.client.GoogleCloudFunction.ExecuteFunction')
+  @mock.patch('turbinia.client.task_manager.PSQTaskManager._backend_setup')
+  @mock.patch('turbinia.state_manager.get_state_manager')
+  def testClientFormatTaskStatusFullReport(self, _, __, ___):
+    """Tests format_task_status() has valid output with full report."""
+    client = TurbiniaClient()
+    client.get_task_data = mock.MagicMock()
+    client.get_task_data.return_value = self.task_data
+    result = client.format_task_status('inst', 'proj', 'reg', full_report=True)
+    self.assertEqual(result.strip(), LONG_REPORT.strip())
+
+  @mock.patch('turbinia.client.GoogleCloudFunction.ExecuteFunction')
+  @mock.patch('turbinia.client.task_manager.PSQTaskManager._backend_setup')
+  @mock.patch('turbinia.state_manager.get_state_manager')
+  def testClientFormatTaskStatusFiles(self, _, __, ___):
+    """Tests format_task_status() has valid output with report and files."""
+    client = TurbiniaClient()
+    client.get_task_data = mock.MagicMock()
+    client.get_task_data.return_value = self.task_data
+    result = client.format_task_status(
+        'inst', 'proj', 'reg', all_fields=True, full_report=True)
+    self.assertEqual(result.strip(), LONG_REPORT_FILES.strip())
 
 
 class TestTurbiniaServer(unittest.TestCase):
