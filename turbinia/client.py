@@ -322,12 +322,6 @@ class TurbiniaClient(object):
             for path in saved_paths:
               report.append(fmt.bullet(fmt.code(path), level=2))
 
-    print '*' * 140
-    print '*' * 140
-    print '\n'.join(report)
-    print '*' * 140
-    print '*' * 140
-    print '*' * 140
     return '\n'.join(report)
 
   def run_local_task(self, task_name, request):
