@@ -92,16 +92,19 @@ LONG_REPORT_FILES = textwrap.dedent("""\
     ### Saved Task Files:
     * `/no/path/2`
     * `/fake/path/2`
+
     
     # Successful Tasks
     * TaskName: This fake task executed
         * `/no/path/`
         * `/fake/path`
+
     
     # Failed Tasks
     * TaskName3: Third Task Failed...
         * `/no/path/3`
         * `/fake/path/3`
+
     
     # Scheduled or Running Tasks
     * None

@@ -267,6 +267,7 @@ class TurbiniaClient(object):
       report.append(fmt.heading3('Saved Task Files:'))
       for path in saved_paths:
         report.append(fmt.bullet(fmt.code(path)))
+      report.append('')
     return report
 
   def format_task(self, task, show_files=False):
@@ -287,6 +288,7 @@ class TurbiniaClient(object):
     if show_files:
       for path in saved_paths:
         report.append(fmt.bullet(fmt.code(path), level=2))
+      report.append('')
     return report
 
   def format_task_status(
