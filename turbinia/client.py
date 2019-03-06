@@ -239,7 +239,7 @@ class TurbiniaClient(object):
 
   def format_task_status(
       self, instance, project, region, days=0, task_id=None, request_id=None,
-      user=None, all_fields=False, full_report=False):
+      user=None, all_fields=False, full_report=False, priority_filter=20):
     """Formats the recent history for Turbinia Tasks.
 
     Args:
@@ -255,6 +255,8 @@ class TurbiniaClient(object):
           request ids and saved file paths.
       full_report (bool): Generate a full markdown report instead of just a
           summary.
+      priority_filter (int): Output only a summary for Tasks with a value
+          greater than the priority_filter.
 
     Returns:
       String of task status
@@ -263,8 +265,7 @@ class TurbiniaClient(object):
         instance, project, region, days, task_id, request_id, user)
     # Sort all tasks by the report_priority so that tasks with a higher
     # priority are listed first in the report.
-    task_results = sorted(
-        task_results, key=itemgetter('report_priority'), reverse=True)
+    task_results = sorted(task_results, key=itemgetter('report_priority'))
     num_results = len(task_results)
     if not num_results:
       msg = 'No Turbinia Tasks found.'
@@ -297,7 +298,7 @@ class TurbiniaClient(object):
         status = task.get('status') or 'No task status'
         saved_paths = task.get('saved_paths') or []
 
-        if full_report:
+        if full_report and task.get('report_priority') <= priority_filter:
           report.append(fmt.heading2(task.get('name')))
           line = '{0:s} {1:s}'.format(fmt.bold('Status:'), status)
           report.append(fmt.bullet(line))
@@ -315,6 +316,9 @@ class TurbiniaClient(object):
             for path in saved_paths:
               report.append(fmt.bullet(fmt.code(path)))
           report.append('')
+        elif full_report:
+          report.append(
+              fmt.heading4('{0:s}: {1:s}'.format(task.get('name'), status)))
         else:
           report.append(
               fmt.bullet('{0:s}: {1:s}'.format(task.get('name'), status)))

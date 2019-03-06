@@ -37,8 +37,8 @@ SHORT_REPORT = textwrap.dedent("""\
 		* Processed 2 Tasks for user myuser
 
 		# Successful Tasks
-		* TaskName: This fake task executed
 		* TaskName2: This second fake task executed
+		* TaskName: This fake task executed
 
 		# Failed Tasks
 		* None
@@ -52,15 +52,6 @@ LONG_REPORT = textwrap.dedent("""\
     * Processed 2 Tasks for user myuser
     
     # Successful Tasks
-    ## TaskName
-    * **Status:** This fake task executed
-    * Task Id: 0xfakeTaskId
-    * Executed on worker fake_worker
-    
-    ### Task Reported Data
-    #### Fake Low priority Report
-    * Fake Bullet
-    
     ## TaskName2
     * **Status:** This second fake task executed
     * Task Id: 0xfakeTaskId2
@@ -68,6 +59,15 @@ LONG_REPORT = textwrap.dedent("""\
     
     ### Task Reported Data
     #### Fake High priority Report
+    * Fake Bullet
+    
+    ## TaskName
+    * **Status:** This fake task executed
+    * Task Id: 0xfakeTaskId
+    * Executed on worker fake_worker
+    
+    ### Task Reported Data
+    #### Fake Low priority Report
     * Fake Bullet
     
     
@@ -84,19 +84,6 @@ LONG_REPORT_FILES = textwrap.dedent("""\
     * Processed 2 Tasks for user myuser
     
     # Successful Tasks
-    ## TaskName
-    * **Status:** This fake task executed
-    * Task Id: 0xfakeTaskId
-    * Executed on worker fake_worker
-
-    ### Task Reported Data
-    #### Fake Low priority Report
-    * Fake Bullet
-
-    ### Saved Task Files:
-    * `/no/path/`
-    * `/fake/path`
-    
     ## TaskName2
     * **Status:** This second fake task executed
     * Task Id: 0xfakeTaskId2
@@ -109,6 +96,19 @@ LONG_REPORT_FILES = textwrap.dedent("""\
     ### Saved Task Files:
     * `/no/path/2`
     * `/fake/path/2`
+    
+    ## TaskName
+    * **Status:** This fake task executed
+    * Task Id: 0xfakeTaskId
+    * Executed on worker fake_worker
+
+    ### Task Reported Data
+    #### Fake Low priority Report
+    * Fake Bullet
+
+    ### Saved Task Files:
+    * `/no/path/`
+    * `/fake/path`
     
     
     # Failed Tasks
@@ -143,7 +143,7 @@ class TestTurbiniaClient(unittest.TestCase):
             'name': 'TaskName2',
             'report_data': '#### Fake High priority Report\n* Fake Bullet',
             'report_priority': 10,
-            'request_id': '0xFakeRequestId2',
+            'request_id': '0xFakeRequestId',
             'saved_paths': ['/no/path/2', '/fake/path/2'],
             'status': 'This second fake task executed',
             'successful': True,
