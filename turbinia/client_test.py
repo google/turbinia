@@ -33,25 +33,28 @@ from turbinia import TurbiniaException
 
 
 SHORT_REPORT = textwrap.dedent("""\
-		# Turbinia report 0xFakeRequestId
-		* Processed 2 Tasks for user myuser
-
-		# Successful Tasks
-		* TaskName2: This second fake task executed
-		* TaskName: This fake task executed
-
-		# Failed Tasks
-		* None
-
-		# Scheduled or Running Tasks
-		* None
+    # Turbinia report 0xFakeRequestId
+    * Processed 3 Tasks for user myuser
+    
+    # High Priority Tasks
+    * TaskName2: This second fake task executed
+    
+    # Successful Tasks
+    * TaskName: This fake task executed
+    
+    # Failed Tasks
+    * TaskName3: Third Task Failed...
+    
+    # Scheduled or Running Tasks
+    * None
 """)
+
 
 LONG_REPORT = textwrap.dedent("""\
     # Turbinia report 0xFakeRequestId
-    * Processed 2 Tasks for user myuser
+    * Processed 3 Tasks for user myuser
     
-    # Successful Tasks
+    # High Priority Tasks
     ## TaskName2
     * **Status:** This second fake task executed
     * Task Id: 0xfakeTaskId2
@@ -61,18 +64,11 @@ LONG_REPORT = textwrap.dedent("""\
     #### Fake High priority Report
     * Fake Bullet
     
-    ## TaskName
-    * **Status:** This fake task executed
-    * Task Id: 0xfakeTaskId
-    * Executed on worker fake_worker
-    
-    ### Task Reported Data
-    #### Fake Low priority Report
-    * Fake Bullet
-    
+    # Successful Tasks
+    * TaskName: This fake task executed
     
     # Failed Tasks
-    * None
+    * TaskName3: Third Task Failed...
     
     # Scheduled or Running Tasks
     * None
@@ -81,42 +77,36 @@ LONG_REPORT = textwrap.dedent("""\
 
 LONG_REPORT_FILES = textwrap.dedent("""\
     # Turbinia report 0xFakeRequestId
-    * Processed 2 Tasks for user myuser
+    * Processed 3 Tasks for user myuser
     
-    # Successful Tasks
+    # High Priority Tasks
     ## TaskName2
     * **Status:** This second fake task executed
     * Task Id: 0xfakeTaskId2
     * Executed on worker fake_worker
-
+    
     ### Task Reported Data
     #### Fake High priority Report
     * Fake Bullet
-
+    
     ### Saved Task Files:
     * `/no/path/2`
     * `/fake/path/2`
     
-    ## TaskName
-    * **Status:** This fake task executed
-    * Task Id: 0xfakeTaskId
-    * Executed on worker fake_worker
-
-    ### Task Reported Data
-    #### Fake Low priority Report
-    * Fake Bullet
-
-    ### Saved Task Files:
-    * `/no/path/`
-    * `/fake/path`
-    
+    # Successful Tasks
+    * TaskName: This fake task executed
+        * `/no/path/`
+        * `/fake/path`
     
     # Failed Tasks
-    * None
+    * TaskName3: Third Task Failed...
+        * `/no/path/3`
+        * `/fake/path/3`
     
     # Scheduled or Running Tasks
     * None
 """)
+
 
 class TestTurbiniaClient(unittest.TestCase):
   """Test Turbinia client class."""
@@ -147,6 +137,19 @@ class TestTurbiniaClient(unittest.TestCase):
             'saved_paths': ['/no/path/2', '/fake/path/2'],
             'status': 'This second fake task executed',
             'successful': True,
+            'user': 'myuser',
+            'worker_name': 'fake_worker'
+        }, {
+            'id': '0xfakeTaskId3',
+            'instance': 'MyTurbiniaInstance',
+            'last_update': datetime.now(),
+            'name': 'TaskName3',
+            'report_data': '',
+            'report_priority': 80,
+            'request_id': '0xFakeRequestId',
+            'saved_paths': ['/no/path/3', '/fake/path/3'],
+            'status': 'Third Task Failed...',
+            'successful': False,
             'user': 'myuser',
             'worker_name': 'fake_worker'
         }

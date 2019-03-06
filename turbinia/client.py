@@ -237,6 +237,58 @@ class TurbiniaClient(object):
 
     return results[0]
 
+  def format_task_detail(self, task, show_files=False):
+    """Formats a single task in detail.
+
+    Args:
+      task (dict): The task to format data for
+      show_files (bool): Whether we want to print out log file paths
+
+    Returns:
+      list: Formatted task data
+    """
+    report = []
+    saved_paths = task.get('saved_paths') or []
+    status = task.get('status') or 'No task status'
+
+    report.append(fmt.heading2(task.get('name')))
+    line = '{0:s} {1:s}'.format(fmt.bold('Status:'), status)
+    report.append(fmt.bullet(line))
+    report.append(fmt.bullet('Task Id: {0:s}'.format(task.get('id'))))
+    report.append(
+        fmt.bullet(
+            'Executed on worker {0:s}'.format(task.get('worker_name'))))
+    if task.get('report_data'):
+      report.append('')
+      report.append(fmt.heading3('Task Reported Data'))
+      report.extend(task.get('report_data').splitlines())
+    if show_files:
+      report.append('')
+      report.append(fmt.heading3('Saved Task Files:'))
+      for path in saved_paths:
+        report.append(fmt.bullet(fmt.code(path)))
+    return report
+
+  def format_task(self, task, show_files=False):
+    """Formats a single task in short form.
+
+    Args:
+      task (dict): The task to format data for
+      show_files (bool): Whether we want to print out log file paths
+
+    Returns:
+      list: Formatted task data
+    """
+    report = []
+    saved_paths = task.get('saved_paths') or []
+    status = task.get('status') or 'No task status'
+    report.append(
+        fmt.bullet('{0:s}: {1:s}'.format(task.get('name'), status)))
+    if show_files:
+      for path in saved_paths:
+        report.append(fmt.bullet(fmt.code(path), level=2))
+    return report
+
   def format_task_status(
       self, instance, project, region, days=0, task_id=None, request_id=None,
       user=None, all_fields=False, full_report=False, priority_filter=20):
@@ -278,53 +330,34 @@ class TurbiniaClient(object):
     request_id = task_results[0].get('request_id')
     success_types = ['Successful', 'Failed', 'Scheduled or Running']
     success_values = [True, False, None]
+    # Reverse mapping values to types
     success_map = dict(zip(success_values, success_types))
     task_map = defaultdict(list)
+    success_types.insert(0, 'High Priority')
     for task in task_results:
-      task_map[success_map[task.get('successful')]].append(task)
+      if task.get('report_priority') <= priority_filter:
+        task_map['High Priority'].append(task)
+      else:
+        task_map[success_map[task.get('successful')]].append(task)
 
-    # Generate report
+    # Generate report header
     report.append('\n')
     report.append(fmt.heading1('Turbinia report {0:s}'.format(request_id)))
     report.append(
         fmt.bullet(
             'Processed {0:d} Tasks for user {1:s}'.format(num_results, user)))
+
+    # Print report data for tasks
     for success_type in success_types:
       report.append('')
       report.append(fmt.heading1('{0:s} Tasks'.format(success_type)))
       if not task_map[success_type]:
         report.append(fmt.bullet('None'))
       for task in task_map[success_type]:
-        status = task.get('status') or 'No task status'
-        saved_paths = task.get('saved_paths') or []
-
-        if full_report and task.get('report_priority') <= priority_filter:
-          report.append(fmt.heading2(task.get('name')))
-          line = '{0:s} {1:s}'.format(fmt.bold('Status:'), status)
-          report.append(fmt.bullet(line))
-          report.append(fmt.bullet('Task Id: {0:s}'.format(task.get('id'))))
-          report.append(
-              fmt.bullet(
-                  'Executed on worker {0:s}'.format(task.get('worker_name'))))
-          if task.get('report_data'):
-            report.append('')
-            report.append(fmt.heading3('Task Reported Data'))
-            report.extend(task.get('report_data').splitlines())
-          if all_fields:
-            report.append('')
-            report.append(fmt.heading3('Saved Task Files:'))
-            for path in saved_paths:
-              report.append(fmt.bullet(fmt.code(path)))
-          report.append('')
-        elif full_report:
-          report.append(
-              fmt.heading4('{0:s}: {1:s}'.format(task.get('name'), status)))
+        if full_report and success_type == success_types[0]:
+          report.extend(self.format_task_detail(task, show_files=all_fields))
         else:
-          report.append(
-              fmt.bullet('{0:s}: {1:s}'.format(task.get('name'), status)))
-          if all_fields:
-            for path in saved_paths:
-              report.append(fmt.bullet(fmt.code(path), level=2))
+          report.extend(self.format_task(task, show_files=all_fields))
 
     return '\n'.join(report)
 
