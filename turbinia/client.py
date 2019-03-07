@@ -256,8 +256,7 @@ class TurbiniaClient(object):
     report.append(fmt.bullet(line))
     report.append(fmt.bullet('Task Id: {0:s}'.format(task.get('id'))))
     report.append(
-        fmt.bullet(
-            'Executed on worker {0:s}'.format(task.get('worker_name'))))
+        fmt.bullet('Executed on worker {0:s}'.format(task.get('worker_name'))))
     if task.get('report_data'):
       report.append('')
       report.append(fmt.heading3('Task Reported Data'))
@@ -283,8 +282,7 @@ class TurbiniaClient(object):
     report = []
     saved_paths = task.get('saved_paths') or []
     status = task.get('status') or 'No task status'
-    report.append(
-        fmt.bullet('{0:s}: {1:s}'.format(task.get('name'), status)))
+    report.append(fmt.bullet('{0:s}: {1:s}'.format(task.get('name'), status)))
     if show_files:
       for path in saved_paths:
         report.append(fmt.bullet(fmt.code(path), level=2))

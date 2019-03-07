@@ -31,8 +31,8 @@ from turbinia.client import TurbiniaServer
 from turbinia.client import TurbiniaPsqWorker
 from turbinia import TurbiniaException
 
-
-SHORT_REPORT = textwrap.dedent("""\
+SHORT_REPORT = textwrap.dedent(
+    """\
     # Turbinia report 0xFakeRequestId
     * Processed 3 Tasks for user myuser
     
@@ -49,8 +49,8 @@ SHORT_REPORT = textwrap.dedent("""\
     * None
 """)
 
-
-LONG_REPORT = textwrap.dedent("""\
+LONG_REPORT = textwrap.dedent(
+    """\
     # Turbinia report 0xFakeRequestId
     * Processed 3 Tasks for user myuser
     
@@ -74,8 +74,8 @@ LONG_REPORT = textwrap.dedent("""\
     * None
 """)
 
-
-LONG_REPORT_FILES = textwrap.dedent("""\
+LONG_REPORT_FILES = textwrap.dedent(
+    """\
     # Turbinia report 0xFakeRequestId
     * Processed 3 Tasks for user myuser
     
@@ -156,7 +156,7 @@ class TestTurbiniaClient(unittest.TestCase):
             'user': 'myuser',
             'worker_name': 'fake_worker'
         }
-    ]
+    ] # yapf: disable
 
 
   @mock.patch('turbinia.client.task_manager.PSQTaskManager._backend_setup')
