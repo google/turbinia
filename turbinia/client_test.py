@@ -35,16 +35,16 @@ SHORT_REPORT = textwrap.dedent(
     """\
     # Turbinia report 0xFakeRequestId
     * Processed 3 Tasks for user myuser
-    
+
     # High Priority Tasks
     * TaskName2: This second fake task executed
-    
+
     # Successful Tasks
     * TaskName: This fake task executed
-    
+
     # Failed Tasks
     * TaskName3: Third Task Failed...
-    
+
     # Scheduled or Running Tasks
     * None
 """)
@@ -53,23 +53,23 @@ LONG_REPORT = textwrap.dedent(
     """\
     # Turbinia report 0xFakeRequestId
     * Processed 3 Tasks for user myuser
-    
+
     # High Priority Tasks
     ## TaskName2
     * **Status:** This second fake task executed
     * Task Id: 0xfakeTaskId2
     * Executed on worker fake_worker
-    
+
     ### Task Reported Data
     #### Fake High priority Report
     * Fake Bullet
-    
+
     # Successful Tasks
     * TaskName: This fake task executed
-    
+
     # Failed Tasks
     * TaskName3: Third Task Failed...
-    
+
     # Scheduled or Running Tasks
     * None
 """)
@@ -78,34 +78,34 @@ LONG_REPORT_FILES = textwrap.dedent(
     """\
     # Turbinia report 0xFakeRequestId
     * Processed 3 Tasks for user myuser
-    
+
     # High Priority Tasks
     ## TaskName2
     * **Status:** This second fake task executed
     * Task Id: 0xfakeTaskId2
     * Executed on worker fake_worker
-    
+
     ### Task Reported Data
     #### Fake High priority Report
     * Fake Bullet
-    
+
     ### Saved Task Files:
     * `/no/path/2`
     * `/fake/path/2`
 
-    
+
     # Successful Tasks
     * TaskName: This fake task executed
         * `/no/path/`
         * `/fake/path`
 
-    
+
     # Failed Tasks
     * TaskName3: Third Task Failed...
         * `/no/path/3`
         * `/fake/path/3`
 
-    
+
     # Scheduled or Running Tasks
     * None
 """)
