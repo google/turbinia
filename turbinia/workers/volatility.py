@@ -17,8 +17,6 @@
 from __future__ import unicode_literals
 
 import os
-import re
-import subprocess
 
 from turbinia.evidence import TextFile
 from turbinia.workers import TurbiniaTask

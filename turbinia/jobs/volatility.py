@@ -16,7 +16,6 @@
 
 from __future__ import unicode_literals
 
-from turbinia.evidence import RawMemory
 from turbinia.evidence import VolatilityOutput
 from turbinia.jobs import interface
 from turbinia.jobs import manager
@@ -24,27 +23,28 @@ from turbinia.workers.volatility import VolatilityTask
 
 
 class VolatilityJob(interface.TurbiniaJob):
-    """Volatility analysis job.
+  """Volatility analysis job.
     This will execute volatility against a piece of evidence.
     """
 
-    evidence_input = [RawMemory]
-    evidence_output = [VolatilityOutput]
+  evidence_input = [RawMemory]
+  evidence_output = [VolatilityOutput]
 
-    NAME = 'VolatilityJob'
+  NAME = 'VolatilityJob'
 
-    def create_tasks(self, evidence):
-        """Create task.
+  def create_tasks(self, evidence):
+    """Create task.
         Args:
             evidence: List of evidence objects to process
         Returns:
             A list of tasks to schedule.
         """
 
-        tasks = []
-        for evidence_item in evidence:
-            for mod in evidence_item.module:
-                tasks.append(VolatilityTask(mod))
-        return tasks
+    tasks = []
+    for evidence_item in evidence:
+      for mod in evidence_item.module:
+        tasks.append(VolatilityTask(mod))
+    return tasks
+
 
 manager.JobsManager.RegisterJob(VolatilityJob)
