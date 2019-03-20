@@ -336,9 +336,14 @@ class GoogleCloudProject(object):
 
     startup_script = """
         #!/bin/bash
-        add-apt-repository -y ppa:gift/{0}
-        apt-get update
-        apt-get install -y {1}
+        function install_packages(){{
+          add-apt-repository -y -u ppa:gift/{0} && apt -y install {1}
+        }}
+
+        while ! install_packages ; do
+          logger "Failed to install forensics packages, retrying in 3 seconds."
+          sleep 3
+        done
         """.format(gift_ppa_track, ' '.join(packages_to_install))
     config = {
         'name': vm_name,
@@ -709,7 +714,7 @@ def create_disk_copy(src_proj, dst_proj, instance_name, zone, disk_name=None):
 
 
 def start_analysis_vm(
-    project, vm_name, zone, boot_disk_size, attach_disk=None,
+    project, vm_name, zone, boot_disk_size, cpu_cores, attach_disk=None,
     image_project='ubuntu-os-cloud', image_family='ubuntu-1604-lts'):
   """Start a virtual machine for analysis purposes.
 
@@ -718,6 +723,7 @@ def start_analysis_vm(
     vm_name: The name of the virtual machine.
     zone: Zone for the virtual machine.
     boot_disk_size: The size of the analysis VM boot disk (in GB).
+    cpu_cores: The number of CPU cores to create the machine with.
     attach_disk: Disk to attach (instance of GoogleComputeDisk).
     image_project: Name of the project where the analysis VM image is hosted.
     image_family: Name of the image to use to create the analysis VM.
@@ -728,7 +734,7 @@ def start_analysis_vm(
   """
   project = GoogleCloudProject(project, default_zone=zone)
   analysis_vm, created = project.get_or_create_analysis_vm(
-      vm_name, boot_disk_size, image_project, image_family)
+      vm_name, boot_disk_size, cpu_cores, image_project, image_family)
   if attach_disk:
     analysis_vm.attach_disk(attach_disk)
   return analysis_vm, created
