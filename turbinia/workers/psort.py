@@ -51,7 +51,7 @@ class PsortTask(TurbiniaTask):
     result.log('Running psort as [{0:s}]'.format(' '.join(cmd)))
 
     self.execute(
-        cmd, result, save_files=[psort_log], new_evidence=[psort_evidence],
+        cmd, result, log_files=[psort_log], new_evidence=[psort_evidence],
         close=True)
 
     return result

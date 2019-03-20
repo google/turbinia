@@ -289,12 +289,9 @@ class GoogleCloudProject(object):
     return GoogleComputeDisk(
         project=self, zone=self.default_zone, name=disk_name)
 
-  def get_or_create_analysis_vm(self,
-                                vm_name,
-                                boot_disk_size,
-                                cpu_cores=4,
-                                image_project='ubuntu-os-cloud',
-                                image_family='ubuntu-1604-lts'):
+  def get_or_create_analysis_vm(
+      self, vm_name, boot_disk_size, cpu_cores=4,
+      image_project='ubuntu-os-cloud', image_family='ubuntu-1604-lts'):
     """Get or create a new virtual machine for analysis purposes.
 
     Args:
@@ -333,7 +330,7 @@ class GoogleCloudProject(object):
 
     # Analysis software to install.
     packages_to_install = [
-        'python-plaso', 'xmount', 'sleuthkit', 'libfvde-tools', 'libbde-tools',
+        'python-plaso', 'xmount', 'libfvde-tools', 'libbde-tools',
         'plaso-tools', 'jq', 'ncdu', 'htop', 'binutils', 'upx-ucl'
     ]
 
@@ -344,10 +341,8 @@ class GoogleCloudProject(object):
         apt-get install -y {1}
         """.format(gift_ppa_track, ' '.join(packages_to_install))
     config = {
-        'name':
-            vm_name,
-        'machineType':
-            machine_type,
+        'name': vm_name,
+        'machineType': machine_type,
         'disks': [{
             'boot': True,
             'autoDelete': True,
@@ -713,13 +708,9 @@ def create_disk_copy(src_proj, dst_proj, instance_name, zone, disk_name=None):
   return new_disk
 
 
-def start_analysis_vm(project,
-                      vm_name,
-                      zone,
-                      boot_disk_size,
-                      attach_disk=None,
-                      image_project='ubuntu-os-cloud',
-                      image_family='ubuntu-1604-lts'):
+def start_analysis_vm(
+    project, vm_name, zone, boot_disk_size, attach_disk=None,
+    image_project='ubuntu-os-cloud', image_family='ubuntu-1604-lts'):
   """Start a virtual machine for analysis purposes.
 
   Args:
