@@ -43,6 +43,7 @@ elif config.TASK_MANAGER.lower() == 'celery':
 log = logging.getLogger('turbinia')
 
 PSQ_TASK_TIMEOUT = 604800
+PSQ_QUEUE_WAIT = 2
 
 
 def get_task_manager():
@@ -447,3 +448,4 @@ class PSQTaskManager(BaseTaskManager):
             task.name, evidence_.name))
     task.stub = self.psq.enqueue(
         task_runner, task.serialize(), evidence_.serialize())
+    time.sleep(PSQ_QUEUE_WAIT)
