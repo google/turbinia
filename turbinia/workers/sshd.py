@@ -20,6 +20,7 @@ import os
 import re
 
 from turbinia.evidence import ReportText
+from turbinia.lib import text_formatter as fmt
 from turbinia.workers import TurbiniaTask
 
 
@@ -49,8 +50,10 @@ class SSHDAnalysisTask(TurbiniaTask):
     with open(evidence.local_path, 'r') as input_file:
       sshd_config = input_file.read()
 
-    analysis = self.analyse_sshd_config(sshd_config)
-    output_evidence.text_data = analysis
+    (report, priority, summary) = self.analyse_sshd_config(sshd_config)
+    output_evidence.text_data = report
+    result.report_priority = priority
+    result.report_data = report
 
     # Write the report to the output file.
     with open(output_file_path, 'w') as fh:
@@ -58,7 +61,7 @@ class SSHDAnalysisTask(TurbiniaTask):
 
     # Add the resulting evidence to the result object.
     result.add_evidence(output_evidence, evidence.config)
-    result.close(self, success=True)
+    result.close(self, success=True, status=summary)
     return result
 
   def analyse_sshd_config(self, config):
@@ -68,7 +71,11 @@ class SSHDAnalysisTask(TurbiniaTask):
       config (str): configuration file content.
 
     Returns:
-      str: description of security of SSHD configuration file.
+      Tuple(
+        report_text(str): The report data
+        report_priority(int): The priority of the report (0 - 100)
+        summary(str): A summary of the report (used for task status)
+      )
     """
     findings = []
     permit_root_login_re = re.compile(
@@ -80,16 +87,19 @@ class SSHDAnalysisTask(TurbiniaTask):
         r'^\s*PermitEmptyPasswords[\s"]*Yes', re.IGNORECASE | re.MULTILINE)
 
     if re.search(permit_root_login_re, config):
-      findings.append('\tRoot login enabled.')
+      findings.append(fmt.bullet('Root login enabled.'))
 
     if not re.search(password_authentication_re, config):
-      findings.append('\tPassword authentication enabled.')
+      findings.append(fmt.bullet('Password authentication enabled.'))
 
     if re.search(permit_empty_passwords_re, config):
-      findings.append('\tEmpty passwords permitted.')
+      findings.append(fmt.bullet('Empty passwords permitted.'))
 
     if findings:
-      findings.insert(0, 'Insecure SSH configuration found.')
-      return '\n'.join(findings)
+      summary = 'Insecure SSH configuration found.'
+      findings.insert(0, fmt.heading4(fmt.bold(summary)))
+      report = '\n'.join(findings)
+      return (report, 20, summary)
 
-    return 'No issues found in SSH configuration'
+    report = 'No issues found in SSH configuration'
+    return (report, 60, report)

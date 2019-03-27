@@ -124,6 +124,20 @@ it's possible that there could be more or less depending on how much you want to
 split it up. Then you just need to add a reference to the new job in
 `turbinia/jobs/__init__.py`.
 
+## Reporting
+
+Tasks can return report data in Markdown format by adding it as a string to
+`result.report_data`.  If high priority findings are found, you can change
+`result.report_priority`.  Priorites are 0 - 100, and the highest priority is 0.
+This will affect the ordering in the report, and if the priority is a value less
+than what is set with `--priority_filter` (i.e. a higher priority), then the
+full report data will be printed out when `--full_report` is specified.
+
+Tasks can use the helper methods in turbinia.lib.text_formatter to help format
+the text with formatting like bold and code.  Note that when setting headings in
+a task report, do not use heading1 through heading3 because these are used in
+other sections of the report, but you can use heading4 and above.
+
 ## Notes
 
 *   The reason we separate out the strings processing into two separate Tasks is

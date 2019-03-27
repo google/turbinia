@@ -17,6 +17,7 @@
 from __future__ import unicode_literals
 
 import unittest
+import mock
 
 from turbinia import config
 from turbinia.workers.analysis import jenkins
@@ -104,6 +105,15 @@ class JenkinsAnalysisTaskTest(unittest.TestCase):
   </user>
   """
 
+  JENKINS_ANALYSIS_REPORT = """#### **Jenkins analysis found potential issues**
+* Jenkins version: 2.121.2
+* **1 weak password(s) found:**
+    * User \"admin\" with password \"weakpassword\"
+"""
+
+  JENKINS_ANALYSIS_EMPTY_REPORT = """#### Jenkins analysis found no issues
+* Jenkins version: 2.121.2"""
+
   EXPECTED_VERSION = '2.121.2'
   EXPECTED_CREDENTIALS = [('admin', '$2a$10$DSltvO4YXZuoLuUU77R871627TEST')]
 
@@ -127,6 +137,37 @@ class JenkinsAnalysisTaskTest(unittest.TestCase):
         str(self.JENKINS_USER_CONFIG))
 
     self.assertEqual(credentials, self.EXPECTED_CREDENTIALS)
+
+  @mock.patch('turbinia.workers.analysis.jenkins.bruteforce_password_hashes')
+  def test_analyze_jenkins(self, bruteforce_mock):
+    """Test that analyze_jenkins returns valid output with findings."""
+    config.LoadConfig()
+    task = jenkins.JenkinsAnalysisTask()
+
+    bruteforce_mock.return_value = [
+        ('$2a$10$DSltvO4YXZuoLuUU77R871627TEST', 'weakpassword')
+    ]
+    (report, priority, summary) = task.analyze_jenkins(
+        self.EXPECTED_VERSION, self.EXPECTED_CREDENTIALS)
+
+    report = report + '\n'
+    self.assertEqual(report, self.JENKINS_ANALYSIS_REPORT)
+    self.assertEqual(priority, 10)
+    self.assertEqual(summary, 'Jenkins analysis found potential issues')
+
+  @mock.patch('turbinia.workers.analysis.jenkins.bruteforce_password_hashes')
+  def test_analyze_jenkins_no_findings(self, bruteforce_mock):
+    """Test that analyze_jenkins returns valid output with no findings."""
+    config.LoadConfig()
+    task = jenkins.JenkinsAnalysisTask()
+
+    bruteforce_mock.return_value = []
+    (report, priority, summary) = task.analyze_jenkins(
+        self.EXPECTED_VERSION, self.EXPECTED_CREDENTIALS)
+
+    self.assertEqual(report, self.JENKINS_ANALYSIS_EMPTY_REPORT)
+    self.assertEqual(priority, 80)
+    self.assertEqual(summary, 'Jenkins analysis found no issues')
 
 
 if __name__ == '__main__':
