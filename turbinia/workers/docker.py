@@ -19,7 +19,6 @@ from __future__ import unicode_literals
 import json
 import logging
 import os
-import subprocess
 
 from turbinia import TurbiniaException
 from turbinia.evidence import DockerContainer
@@ -32,11 +31,12 @@ log = logging.getLogger('turbinia')
 class DockerContainersEnumerationTask(TurbiniaTask):
   """Enumerates Docker containers on Linux"""
 
-  def GetContainers(self, evidence):
+  def GetContainers(self, evidence, result):
     """Lists the containers from an input Evidence.
 
     Args:
-      evidence: the input Evidence.
+      evidence (Evidence): the input Evidence.
+      result (TurbiniaTaskResult): The object to place task results into.
 
     Returns:
       a list(dict) containing information about the containers found.
@@ -58,7 +58,7 @@ class DockerContainersEnumerationTask(TurbiniaTask):
     ]
     try:
       log.info('Running {0:s}'.format(' '.join(docker_explorer_command)))
-      json_string = subprocess.check_output(docker_explorer_command)
+      json_string = self.execute(docker_explorer_command)
     except Exception as e:
       mount_local.PostprocessUnmountPath(mount_path)
       raise TurbiniaException(
@@ -87,11 +87,24 @@ class DockerContainersEnumerationTask(TurbiniaTask):
       TurbiniaTaskResult object.
     """
 
-    containers_info = self.GetContainers(evidence)
-    for container_info in containers_info:
-      container_id = container_info.get('container_id')
-      container_evidence = DockerContainer(container_id=container_id)
-      result.add_evidence(container_evidence, evidence.config)
+    status_report = ''
+    success = False
+    try:
+      containers_info = self.GetContainers(evidence, result)
+      found_containers = []
+      for container_info in containers_info:
+        container_id = container_info.get('container_id')
+        found_containers.append(container_id)
+        log.info('DockerContainersEnumerationTask found container %s'%container_id)
+        container_evidence = DockerContainer(container_id=container_id)
+        result.add_evidence(container_evidence, evidence.config)
+      success = True
+    except TurbiniaException as e:
+      status_report = 'Error enumerating Docker containers: {0!s}'.format(e)
 
-    result.close(self, success=True)
+    status_report = 'Found {0:s} containers: {1}'.format(
+        len(found_containers), ' '.join(found_containers))
+
+    result.close(self, success=success, status=status_report)
+
     return result

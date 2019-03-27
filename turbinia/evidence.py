@@ -384,6 +384,8 @@ class DockerContainer(Evidence):
     container_id(str): The ID of the container to mount.
   """
 
+  DEFAULT_DOCKER_DIRECTORY_PATH = '/var/lib/docker'
+
   def __init__(self, container_id=None, *args, **kwargs):
     """Initialization for Docker Container."""
     super(DockerContainer, self).__init__(*args, **kwargs)
@@ -394,25 +396,33 @@ class DockerContainer(Evidence):
     self.context_dependent = True
 
   def _preprocess(self):
+    if not self.parent_evidence:
+      raise TurbiniaException(
+          'Evidence of type DockerContainer should have a parent_evidence set.')
     self._mount_path = self.parent_evidence.local_path
     if issubclass(type(self.parent_evidence), RawDisk):
       # Mounting the filesystem on the disk, as this is not done by the RawDisk
       # evidence preprocessor
+      # TODO: consider making the RawDisk preprocessor always mount the
+      # partition
       self._mount_path = mount_local.PreprocessMountDisk(
           self.parent_evidence.loopdevice_path,
           self.parent_evidence.mount_partition)
 
     self._docker_root_directory = os.path.join(
-        self._mount_path, 'var', 'lib', 'docker')
+        self._mount_path, self.DEFAULT_DOCKER_DIRECTORY_PATH)
     # Mounting the container's filesystem
     self._container_fs_path = docker.PreprocessMountDockerFS(
-        self._docker_root_directory, self.container_id)
+        self.DEFAULT_DOCKER_DIRECTORY_PATH, self.container_id)
     self.local_path = self._container_fs_path
 
   def _postprocess(self):
     # Unmount the container's filesystem
     mount_local.PostprocessUnmountPath(self.local_path)
     self._container_fs_path = None
-    if type(self.parent_evidence).__name__ == 'RawDisk':
+    if not self.parent_evidence:
+      raise TurbiniaException(
+          'Evidence of type DockerContainer should have a parent_evidence set.')
+    if type(self.parent_evidence) == 'RawDisk':
       # Unmount any underlying mount path, as we had to mount the disk ourselves
       mount_local.PostprocessUnmountPath(self._mount_path)

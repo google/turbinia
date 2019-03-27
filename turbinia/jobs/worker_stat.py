@@ -17,6 +17,7 @@
 from __future__ import unicode_literals
 
 from turbinia.evidence import Directory
+from turbinia.evidence import DockerContainer
 from turbinia.evidence import RawDisk
 from turbinia.evidence import ReportText
 from turbinia.jobs import interface
@@ -28,7 +29,7 @@ class StatJob(interface.TurbiniaJob):
   """Job to run Stat."""
 
   # The types of evidence that this Job will process
-  evidence_input = [RawDisk, Directory]
+  evidence_input = [RawDisk, Directory, DockerContainer]
   evidence_output = [ReportText]
 
   NAME = 'StatJob'
