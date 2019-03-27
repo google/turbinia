@@ -107,13 +107,13 @@ GCS_OUTPUT_PATH = 'gs://%s/output' % BUCKET_NAME
 ################################################################################
 
 # Method for communication between nodes
-CELERY_BROKER = None
+CELERY_BROKER = 'redis://localhost'
 
 # Storage for task results/status
-CELERY_BACKEND = None
+CELERY_BACKEND = 'redis://localhost'
 
 # Can be the same as CELERY_BROKER
-KOMBU_BROKER = None
+KOMBU_BROKER = CELERY_BROKER
 
 # Used to namespace communications.
 KOMBU_CHANNEL = '%s-kombu' % INSTANCE_ID
@@ -123,6 +123,6 @@ KOMBU_CHANNEL = '%s-kombu' % INSTANCE_ID
 KOMBU_DURABLE = True
 
 # Use Redis for state management
-REDIS_HOST = None
-REDIS_PORT = None
-REDIS_DB = None
+REDIS_HOST = 'localhost'
+REDIS_PORT = '6379'
+REDIS_DB = '0'
