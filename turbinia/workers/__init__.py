@@ -26,6 +26,7 @@ import platform
 import pprint
 import subprocess
 import sys
+import time
 import traceback
 import uuid
 import turbinia
@@ -380,15 +381,17 @@ class TurbiniaTask(object):
     new_evidence = new_evidence if new_evidence else []
     success_codes = success_codes if success_codes else [0]
     if shell:
-      proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+      proc = subprocess.Popen(
+          cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     else:
-      proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+      proc = subprocess.Popen(
+          cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
     state = state_manager.get_state_manager()
     while proc.poll() is None:
-        self.last_update = datetime.now()
-        state_mgr.update_task(self)
-        time.sleep(config.SLEEP_TIME)
+      self.last_update = datetime.now()
+      state.update_task(self)
+      time.sleep(config.SLEEP_TIME)
 
     stdout, stderr = proc.communicate()
     result.error['stdout'] = stdout
