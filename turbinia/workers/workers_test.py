@@ -26,6 +26,7 @@ from turbinia import evidence
 from turbinia import TurbiniaException
 from turbinia.workers import TurbiniaTask
 from turbinia.workers import TurbiniaTaskResult
+from turbinia.workers.plaso import PlasoTask
 
 
 class TestTurbiniaTask(unittest.TestCase):
@@ -37,6 +38,10 @@ class TestTurbiniaTask(unittest.TestCase):
 
     # Set up TurbiniaTask
     self.base_output_dir = tempfile.mkdtemp()
+    self.plaso_task = PlasoTask(base_output_dir=self.base_output_dir)
+    self.plaso_task.output_manager = mock.MagicMock()
+    self.plaso_task.output_manager.get_local_output_dirs.return_value = (
+        None, None)
     self.task = TurbiniaTask(base_output_dir=self.base_output_dir)
     self.task.output_manager = mock.MagicMock()
     self.task.output_manager.get_local_output_dirs.return_value = (None, None)
@@ -47,8 +52,8 @@ class TestTurbiniaTask(unittest.TestCase):
     self.evidence = evidence.RawDisk(local_path=test_disk_path)
 
     # Set up TurbiniaTaskResult
-    self.result = TurbiniaTaskResult(
-        task=self.task, base_output_dir=self.base_output_dir)
+    self.result = TurbiniaTaskResult(base_output_dir=self.base_output_dir)
+    self.result.setup(self.task)
 
     self.result.output_dir = self.base_output_dir
 
@@ -84,30 +89,43 @@ class TestTurbiniaTask(unittest.TestCase):
     self.task.run = mock.MagicMock(return_value=run)
     self.task.validate_result = mock.MagicMock(return_value=validate_result)
 
+  def testTurbiniaTaskSerialize(self):
+    """Test that we can properly serialize/deserialize tasks."""
+    out_dict = self.plaso_task.serialize()
+    out_obj = TurbiniaTask.deserialize(out_dict)
+    self.assertIsInstance(out_obj, PlasoTask)
+    # Nuke output_manager so we don't deal with class equality
+    self.plaso_task.output_manager = None
+    out_obj.output_manager = None
+    self.assertEqual(out_obj.__dict__, self.plaso_task.__dict__)
+
   def testTurbiniaTaskRunWrapper(self):
     """Test that the run wrapper executes task run."""
     self.setResults()
     self.result.closed = True
-    new_result = self.task.run_wrapper(self.evidence)
+    new_result = self.task.run_wrapper(self.evidence.__dict__)
+    new_result = TurbiniaTaskResult.deserialize(new_result)
     self.assertEqual(new_result.status, 'TestStatus')
     self.result.close.assert_not_called()
 
   def testTurbiniaTaskRunWrapperAutoClose(self):
     """Test that the run wrapper closes the task."""
     self.setResults()
-    new_result = self.task.run_wrapper(self.evidence)
+    new_result = self.task.run_wrapper(self.evidence.__dict__)
+    new_result = TurbiniaTaskResult.deserialize(new_result)
     self.assertEqual(new_result.status, 'TestStatus')
     self.result.close.assert_called()
 
   def testTurbiniaTaskRunWrapperBadResult(self):
     """Test that the run wrapper recovers from run returning bad result."""
     bad_result = 'Not a TurbiniaTaskResult'
-    checked_result = TurbiniaTaskResult(
-        task=self.task, base_output_dir=self.base_output_dir)
+    checked_result = TurbiniaTaskResult(base_output_dir=self.base_output_dir)
+    checked_result.setup(self.task)
     checked_result.status = 'CheckedResult'
     self.setResults(run=bad_result, validate_result=checked_result)
 
-    new_result = self.task.run_wrapper(self.evidence)
+    new_result = self.task.run_wrapper(self.evidence.__dict__)
+    new_result = TurbiniaTaskResult.deserialize(new_result)
 
     self.task.validate_result.assert_any_call(bad_result)
     self.assertEqual(type(new_result), TurbiniaTaskResult)
@@ -118,7 +136,8 @@ class TestTurbiniaTask(unittest.TestCase):
     self.setResults()
     self.task.run = mock.MagicMock(side_effect=TurbiniaException)
 
-    new_result = self.task.run_wrapper(self.evidence)
+    new_result = self.task.run_wrapper(self.evidence.__dict__)
+    new_result = TurbiniaTaskResult.deserialize(new_result)
     self.assertEqual(type(new_result), TurbiniaTaskResult)
     self.assertIn('failed', new_result.status)
 
@@ -132,7 +151,8 @@ class TestTurbiniaTask(unittest.TestCase):
     self.remove_files.append(
         os.path.join(self.task.base_output_dir, 'worker-log.txt'))
 
-    new_result = self.task.run_wrapper(self.evidence)
+    new_result = self.task.run_wrapper(self.evidence.__dict__)
+    new_result = TurbiniaTaskResult.deserialize(new_result)
     self.assertEqual(type(new_result), TurbiniaTaskResult)
     self.assertIn(canary_status, new_result.status)
 

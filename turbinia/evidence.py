@@ -247,6 +247,24 @@ class EncryptedDisk(RawDisk):
     super(EncryptedDisk, self).__init__(*args, **kwargs)
 
 
+class BitlockerDisk(EncryptedDisk):
+  """Bitlocker encrypted disk file evidence.
+
+  Attributes:
+    recovery_key: A string of the recovery key for this disk
+    password: A string of the password used for this disk. If recovery key
+        is used, this argument is ignored
+    unencrypted_path: A string to the unencrypted local path
+  """
+
+  def __init__(self, recovery_key=None, password=None, *args, **kwargs):
+    """Initialization for Bitlocker disk evidence object"""
+    self.recovery_key = recovery_key
+    self.password = password
+    super(BitlockerDisk, self).__init__(*args, **kwargs)
+    self.encryption_type = self.__class__.__name__
+
+
 class GoogleCloudDisk(RawDisk):
   """Evidence object for Google Cloud Disks.
 

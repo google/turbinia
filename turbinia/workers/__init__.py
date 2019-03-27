@@ -16,7 +16,8 @@
 
 from __future__ import unicode_literals
 
-from datetime import datetime
+from copy import deepcopy
+from datetime import datetime, timedelta
 import getpass
 import logging
 import os
@@ -24,6 +25,7 @@ import pickle
 import platform
 import pprint
 import subprocess
+import sys
 import traceback
 import uuid
 import turbinia
@@ -31,6 +33,7 @@ import turbinia
 import filelock
 
 from turbinia import config
+from turbinia.evidence import evidence_decode
 from turbinia import output_manager
 from turbinia import TurbiniaException
 
@@ -71,26 +74,21 @@ class TurbiniaTaskResult(object):
   ]
 
   def __init__(
-      self, task, evidence=None, input_evidence=None, base_output_dir=None,
+      self, evidence=None, input_evidence=None, base_output_dir=None,
       request_id=None):
-    """Initialize the TurbiniaTaskResult object.
-
-    Args:
-      task (TurbiniaTask): The calling Task object
-
-    Raises:
-      TurbiniaException: If the Output Manager is not setup.
-    """
+    """Initialize the TurbiniaTaskResult object."""
 
     self.closed = False
     self.evidence = evidence if evidence else []
     self.input_evidence = input_evidence
     self.id = uuid.uuid4().hex
-    self.task_id = task.id
-    self.task_name = task.name
     self.base_output_dir = base_output_dir
     self.request_id = request_id
-    self.user = task.user
+
+    self.task_id = None
+    self.task_name = None
+    self.user = None
+    self.output_dir = None
 
     self.report_data = None
     self.report_priority = 50
@@ -103,13 +101,27 @@ class TurbiniaTaskResult(object):
     self.worker_name = platform.node()
     # TODO(aarontp): Create mechanism to grab actual python logging data.
     self._log = []
+
+  def __str__(self):
+    return pprint.pformat(vars(self), depth=3)
+
+  def setup(self, task):
+    """Handles initializing task based attributes, after object creation.
+
+    Args:
+      task (TurbiniaTask): The calling Task object
+
+    Raises:
+      TurbiniaException: If the Output Manager is not setup.
+    """
+
+    self.task_id = task.id
+    self.task_name = task.name
+    self.user = task.user
     if task.output_manager.is_setup:
       _, self.output_dir = task.output_manager.get_local_output_dirs()
     else:
       raise TurbiniaException('Output Manager is not setup yet.')
-
-  def __str__(self):
-    return pprint.pformat(vars(self), depth=3)
 
   def close(self, task, success, status=None):
     """Handles closing of this result and writing logs.
@@ -225,6 +237,41 @@ class TurbiniaTaskResult(object):
     self.error['error'] = error
     self.error['traceback'] = traceback_
 
+  def serialize(self):
+    """Prepares result object for serialization.
+
+    Returns:
+      dict: Object dictionary that is JSON serializable.
+    """
+    self.run_time = self.run_time.total_seconds() if self.run_time else None
+    self.start_time = str(self.start_time)
+    if self.input_evidence:
+      self.input_evidence = self.input_evidence.serialize()
+    self.evidence = [x.serialize() for x in self.evidence]
+    return self.__dict__
+
+  @classmethod
+  def deserialize(cls, input_dict):
+    """Converts an input dictionary back into a TurbiniaTaskResult object.
+
+    Args:
+      input_dict (dict): TurbiniaTaskResult object dictionary.
+
+    Returns:
+      TurbiniaTaskResult: Deserialized object.
+    """
+    result = TurbiniaTaskResult()
+    result.__dict__.update(input_dict)
+    if result.run_time:
+      result.run_time = timedelta(seconds=result.run_time)
+    result.start_time = datetime.strptime(
+        result.start_time, '%Y-%m-%d %H:%M:%S.%f')
+    if result.input_evidence:
+      result.input_evidence = evidence_decode(result.input_evidence)
+    result.evidence = [evidence_decode(x) for x in result.evidence]
+
+    return result
+
 
 class TurbiniaTask(object):
   """Base class for Turbinia tasks.
@@ -275,6 +322,45 @@ class TurbiniaTask(object):
     self.turbinia_version = turbinia.__version__
     self.user = user if user else getpass.getuser()
     self._evidence_config = {}
+
+  def serialize(self):
+    """Converts the TurbiniaTask object into a serializable dict.
+
+    Returns:
+      Dict: Dictionary representing this object, ready to be serialized.
+    """
+    task_copy = deepcopy(self.__dict__)
+    task_copy['output_manager'] = self.output_manager.__dict__
+    task_copy['last_update'] = str(self.last_update)
+    return task_copy
+
+  @classmethod
+  def deserialize(cls, input_dict):
+    """Converts an input dictionary back into a TurbiniaTask object.
+
+    Args:
+      input_dict (dict): TurbiniaTask object dictionary.
+
+    Returns:
+      TurbiniaTask: Deserialized object.
+    """
+    from turbinia import client  # Avoid circular imports
+
+    type_ = input_dict['name']
+    try:
+      task = getattr(sys.modules['turbinia.client'], type_)()
+    except AttributeError:
+      msg = (
+          "Could not import {0:s} object! Make sure it is imported where "
+          "this method is defined.".format(type_))
+      log.error(msg)
+      raise TurbiniaException(msg)
+    task.__dict__.update(input_dict)
+    task.output_manager = output_manager.OutputManager()
+    task.output_manager.__dict__.update(input_dict['output_manager'])
+    task.last_update = datetime.strptime(
+        input_dict['last_update'], '%Y-%m-%d %H:%M:%S.%f')
+    return task
 
   def execute(
       self, cmd, result, save_files=None, log_files=None, new_evidence=None,
@@ -372,8 +458,9 @@ class TurbiniaTask(object):
     self.tmp_dir, self.output_dir = self.output_manager.get_local_output_dirs()
     if not self.result:
       self.result = TurbiniaTaskResult(
-          task=self, input_evidence=evidence,
-          base_output_dir=self.base_output_dir, request_id=self.request_id)
+          input_evidence=evidence, base_output_dir=self.base_output_dir,
+          request_id=self.request_id)
+      self.result.setup(self)
 
     if not self.run_local:
       if evidence.copyable and not config.SHARED_FILESYSTEM:
@@ -431,8 +518,8 @@ class TurbiniaTask(object):
         old_status = 'No previous status'
 
       result = TurbiniaTaskResult(
-          task=self, base_output_dir=self.base_output_dir,
-          request_id=self.request_id)
+          base_output_dir=self.base_output_dir, request_id=self.request_id)
+      result.setup(self)
       result.status = '{0:s}. Previous status: [{1:s}]'.format(
           bad_message, old_status)
       result.set_error(bad_message, traceback.format_exc())
@@ -459,12 +546,13 @@ class TurbiniaTask(object):
       - Locking to make sure only one task is active at a time
 
     Args:
-      evidence: Evidence object
+      evidence (dict): To be decoded into Evidence object
 
     Returns:
       A TurbiniaTaskResult object
     """
     log.debug('Task {0:s} {1:s} awaiting execution'.format(self.name, self.id))
+    evidence = evidence_decode(evidence)
     with filelock.FileLock(config.LOCK_FILE):
       log.info('Starting Task {0:s} {1:s}'.format(self.name, self.id))
       original_result_id = None
@@ -540,9 +628,7 @@ class TurbiniaTask(object):
       log.debug(
           'Returning original result object {0:s} after task execution'.format(
               self.result.id))
-    # TODO(aarontp): Find a better way to ensure this gets unset.
-    self.output_manager = None
-    return self.result
+    return self.result.serialize()
 
   def run(self, evidence, result):
     """Entry point to execute the task.
