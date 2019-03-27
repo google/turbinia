@@ -179,9 +179,10 @@ class TurbiniaClient(object):
       uncompleted_names = [t.get('name') for t in uncompleted_tasks]
       uncompleted_names = ', '.join(sorted(uncompleted_names))
       total_count = len(completed_tasks) + len(uncompleted_tasks)
-      msg = ('Tasks completed ({0:d}/{1:d}): [{2:s}], waiting for [{3:s}].'
-             .format(len(completed_tasks), total_count, completed_names,
-                     uncompleted_names))
+      msg = (
+          'Tasks completed ({0:d}/{1:d}): [{2:s}], waiting for [{3:s}].'.format(
+              len(completed_tasks), total_count, completed_names,
+              uncompleted_names))
       if len(completed_tasks) > last_count:
         log.info(msg)
       else:
