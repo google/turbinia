@@ -273,7 +273,7 @@ class TurbiniaClient(object):
       else:
         success = 'Failed'
 
-      status = task.get('status', 'No task status')
+      status = task.get('status') or 'No task status'
       if all_fields:
         results.append(
             '{0:s} request: {1:s} task: {2:s} {3:s} {4:s} {5:s} {6:s}: {7:s}'
@@ -439,6 +439,7 @@ class TurbiniaCeleryWorker(TurbiniaClient):
   def start(self):
     """Start Turbinia Celery Worker."""
     log.info('Running Turbinia Celery Worker.')
+    self.worker.task(task_manager.task_runner, name='task_runner')
     argv = ['celery', 'worker', '--loglevel=info', '--pool=solo']
     self.worker.start(argv)
 

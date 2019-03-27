@@ -19,6 +19,7 @@ from __future__ import unicode_literals
 import os
 
 from turbinia import config
+from turbinia.evidence import BitlockerDisk
 from turbinia.evidence import PlasoFile
 from turbinia.workers import TurbiniaTask
 
@@ -51,13 +52,28 @@ class PlasoTask(TurbiniaTask):
         '--partition all --vss_stores all').split()
     if config.DEBUG_TASKS:
       cmd.append('-d')
+
+    if isinstance(evidence, BitlockerDisk):
+      if evidence.recovery_key:
+        cmd.extend([
+            '--credential', 'recovery_password:{0:s}'.format(
+                evidence.recovery_key)
+        ])
+      elif evidence.password:
+        cmd.extend(['--credential', 'password:{0:s}'.format(evidence.password)])
+      else:
+        result.close(
+            self, False, 'No credentials were provided '
+            'for a bitlocker disk.')
+        return result
+
     cmd.extend(['--logfile', plaso_log])
     cmd.extend([plaso_file, evidence.local_path])
 
     result.log('Running plaso as [{0:s}]'.format(' '.join(cmd)))
 
     self.execute(
-        cmd, result, save_files=[plaso_log], new_evidence=[plaso_evidence],
+        cmd, result, log_files=[plaso_log], new_evidence=[plaso_evidence],
         close=True)
 
     return result

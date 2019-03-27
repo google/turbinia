@@ -62,8 +62,8 @@ class TestPSQStateManager(unittest.TestCase):
         '/fake/tmp/dir', self.base_output_dir)
 
     # Set up TurbiniaTaskResult
-    self.result = TurbiniaTaskResult(
-        task=self.task, base_output_dir=self.base_output_dir)
+    self.result = TurbiniaTaskResult(base_output_dir=self.base_output_dir)
+    self.result.setup(self.task)
     self.result.status = self.test_data['status']
     self.result.saved_paths = self.test_data['saved_paths']
     self.task.result = self.result

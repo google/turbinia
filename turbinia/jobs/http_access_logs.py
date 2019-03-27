@@ -28,7 +28,7 @@ from turbinia.jobs import manager
 from turbinia.workers.analysis import wordpress
 
 ACCESS_LOG_ARTIFACTS = [
-    'DockerContainerLogs', 'NginxAccessLogs', 'ApacheAccessLogs'
+    'GKEDockerContainerLogs', 'NginxAccessLogs', 'ApacheAccessLogs'
 ]
 
 
