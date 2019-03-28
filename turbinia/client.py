@@ -164,20 +164,33 @@ class TurbiniaClient(object):
     while True:
       task_results = self.get_task_data(
           instance, project, region, request_id=request_id, user=user)
-      completed_count = 0
-      uncompleted_count = 0
+      completed_tasks = []
+      uncompleted_tasks = []
+      last_count = 0
       for task in task_results:
         if task.get('successful') is not None:
-          completed_count += 1
+          completed_tasks.append(task)
         else:
-          uncompleted_count += 1
+          uncompleted_tasks.append(task)
 
-      if completed_count and completed_count == len(task_results):
+      if completed_tasks and len(completed_tasks) == len(task_results):
         break
 
-      log.info(
-          '{0:d} Tasks found, {1:d} completed. Waiting {2:d} seconds.'.format(
-              len(task_results), completed_count, poll_interval))
+      completed_names = [t.get('name') for t in completed_tasks]
+      completed_names = ', '.join(sorted(completed_names))
+      uncompleted_names = [t.get('name') for t in uncompleted_tasks]
+      uncompleted_names = ', '.join(sorted(uncompleted_names))
+      total_count = len(completed_tasks) + len(uncompleted_tasks)
+      msg = (
+          'Tasks completed ({0:d}/{1:d}): [{2:s}], waiting for [{3:s}].'.format(
+              len(completed_tasks), total_count, completed_names,
+              uncompleted_names))
+      if len(completed_tasks) > last_count:
+        log.info(msg)
+      else:
+        log.debug(msg)
+
+      last_count = len(completed_tasks)
       time.sleep(poll_interval)
 
     log.info('All {0:d} Tasks completed'.format(len(task_results)))

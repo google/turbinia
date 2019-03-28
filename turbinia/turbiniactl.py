@@ -61,11 +61,11 @@ def main():
   parser.add_argument(
       '-q', '--quiet', action='store_true', help='Show minimal output')
   parser.add_argument(
-      '-v', '--verbose', action='store_true', help='Show verbose output')
-  # TODO(aarontp): Turn off debug by default
+      '-v', '--verbose', action='store_true', help='Show verbose output',
+      default=True)
   parser.add_argument(
       '-d', '--debug', action='store_true', help='Show debug output',
-      default=True)
+      default=False)
   parser.add_argument(
       '-a', '--all_fields', action='store_true',
       help='Show all task status fields in output', required=False)
