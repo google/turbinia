@@ -42,8 +42,8 @@ elif config.TASK_MANAGER.lower() == 'celery':
 
 log = logging.getLogger('turbinia')
 
-PSQ_TASK_TIMEOUT = 604800
-PSQ_QUEUE_WAIT = 2
+PSQ_TASK_TIMEOUT_SECONDS = 604800
+PSQ_QUEUE_WAIT_SECONDS = 2
 
 
 def get_task_manager():
@@ -421,7 +421,7 @@ class PSQTaskManager(BaseTaskManager):
         completed_tasks.append(task)
       else:
         task.result = workers.TurbiniaTaskResult.deserialize(
-            task.stub.result(timeout=PSQ_TASK_TIMEOUT))
+            task.stub.result(timeout=PSQ_TASK_TIMEOUT_SECONDS))
         completed_tasks.append(task)
 
     outstanding_task_count = len(self.tasks) - len(completed_tasks)
@@ -448,4 +448,4 @@ class PSQTaskManager(BaseTaskManager):
             task.name, evidence_.name))
     task.stub = self.psq.enqueue(
         task_runner, task.serialize(), evidence_.serialize())
-    time.sleep(PSQ_QUEUE_WAIT)
+    time.sleep(PSQ_QUEUE_WAIT_SECONDS)
