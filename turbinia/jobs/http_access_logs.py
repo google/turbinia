@@ -47,7 +47,7 @@ class HTTPAccessLogExtractionJob(interface.TurbiniaJob):
     """Create task.
 
     Args:
-      evidence: List of evidence object to process
+      evidence: List of evidence objects to process
 
     Returns:
         A list of tasks to schedule.
@@ -71,7 +71,7 @@ class HTTPAccessLogAnalysisJob(interface.TurbiniaJob):
   def create_tasks(self, evidence):
     """Create task.
     Args:
-      evidence: List of evidence object to process
+      evidence: List of evidence objects to process
     Returns:
         A list of tasks to schedule.
     """

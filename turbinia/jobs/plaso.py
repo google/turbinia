@@ -42,7 +42,7 @@ class PlasoJob(interface.TurbiniaJob):
     """Create task for Plaso.
 
     Args:
-      evidence: List of evidence object to process
+      evidence: List of evidence objects to process
 
     Returns:
         A list of PlasoTasks.
