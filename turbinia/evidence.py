@@ -384,7 +384,8 @@ class DockerContainer(Evidence):
     container_id(str): The ID of the container to mount.
   """
 
-  DEFAULT_DOCKER_DIRECTORY_PATH = '/var/lib/docker'
+  # ABSOLUTELY NO LEADING / HERE
+  DEFAULT_DOCKER_DIRECTORY_PATH = 'var/lib/docker'
 
   def __init__(self, container_id=None, *args, **kwargs):
     """Initialization for Docker Container."""
@@ -413,7 +414,7 @@ class DockerContainer(Evidence):
         self._mount_path, self.DEFAULT_DOCKER_DIRECTORY_PATH)
     # Mounting the container's filesystem
     self._container_fs_path = docker.PreprocessMountDockerFS(
-        self.DEFAULT_DOCKER_DIRECTORY_PATH, self.container_id)
+        self._docker_root_directory, self.container_id)
     self.local_path = self._container_fs_path
 
   def _postprocess(self):
@@ -423,6 +424,6 @@ class DockerContainer(Evidence):
     if not self.parent_evidence:
       raise TurbiniaException(
           'Evidence of type DockerContainer should have a parent_evidence set.')
-    if type(self.parent_evidence) == 'RawDisk':
+    if type(self.parent_evidence) == RawDisk:
       # Unmount any underlying mount path, as we had to mount the disk ourselves
       mount_local.PostprocessUnmountPath(self._mount_path)
