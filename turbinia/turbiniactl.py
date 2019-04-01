@@ -61,11 +61,11 @@ def main():
   parser.add_argument(
       '-q', '--quiet', action='store_true', help='Show minimal output')
   parser.add_argument(
-      '-v', '--verbose', action='store_true', help='Show verbose output')
-  # TODO(aarontp): Turn off debug by default
+      '-v', '--verbose', action='store_true', help='Show verbose output',
+      default=True)
   parser.add_argument(
       '-d', '--debug', action='store_true', help='Show debug output',
-      default=True)
+      default=False)
   parser.add_argument(
       '-a', '--all_fields', action='store_true',
       help='Show all task status fields in output', required=False)
@@ -255,6 +255,17 @@ def main():
       '-r', '--request_id', help='Show tasks with this Request ID',
       required=False)
   parser_status.add_argument(
+      '-p', '--priority_filter', default=20, type=int, required=False,
+      help='This sets what report sections are shown in full detail in '
+      'report output.  Any tasks that have set a report_priority value '
+      'equal to or lower than this setting will be shown in full detail, and '
+      'tasks with a higher value will only have a summary shown.  To see all '
+      'tasks report output in full detail, set --priority_filter=100')
+  parser_status.add_argument(
+      '-R', '--full_report',
+      help='Generate full markdown report instead of just a summary',
+      action='store_true', required=False)
+  parser_status.add_argument(
       '-t', '--task_id', help='Show task for given Task ID', required=False)
   parser_status.add_argument(
       '-u', '--user', help='Show task for given user', required=False)
@@ -401,7 +412,8 @@ def main():
             instance=config.INSTANCE_ID, project=config.TURBINIA_PROJECT,
             region=region, days=args.days_history, task_id=args.task_id,
             request_id=args.request_id, user=args.user,
-            all_fields=args.all_fields))
+            all_fields=args.all_fields, full_report=args.full_report,
+            priority_filter=args.priority_filter))
   elif args.command == 'listjobs':
     log.info('Available Jobs:')
     client.list_jobs()

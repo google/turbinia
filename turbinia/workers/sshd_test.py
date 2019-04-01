@@ -30,10 +30,12 @@ PasswordAuthentication yes
 PermitEmptyPasswords Yes
   """
 
-  SSH_INSECURE_EVERYTHING_REPORT = """Insecure SSH configuration found.
-\tRoot login enabled.
-\tPassword authentication enabled.
-\tEmpty passwords permitted."""
+  SSH_INSECURE_EVERYTHING_REPORT = """#### **Insecure SSH configuration found.**
+* Root login enabled.
+* Password authentication enabled.
+* Empty passwords permitted."""
+
+  SSH_INSECURE_EVERYTHING_SUMMARY = 'Insecure SSH configuration found.'
 
   SSH_SECURE_EVERYTHING = """PermitRootLogin No
 PasswordAuthentication no
@@ -46,10 +48,13 @@ PermitEmptyPasswords no"""
     config.LoadConfig()
     task = sshd.SSHDAnalysisTask()
 
-    report = task.analyse_sshd_config(self.SSH_INSECURE_EVERYTHING)
+    (report, priority, summary) = task.analyse_sshd_config(
+        self.SSH_INSECURE_EVERYTHING)
     self.assertEqual(report, self.SSH_INSECURE_EVERYTHING_REPORT)
+    self.assertEqual(priority, 20)
+    self.assertEqual(summary, self.SSH_INSECURE_EVERYTHING_SUMMARY)
 
-    report = task.analyse_sshd_config(self.SSH_SECURE_EVERYTHING)
+    report = task.analyse_sshd_config(self.SSH_SECURE_EVERYTHING)[0]
     self.assertEqual(report, self.SSH_SECURE_EVERYTHING_REPORT)
 
 

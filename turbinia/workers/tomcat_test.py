@@ -34,18 +34,20 @@ class TomcatAnalysisTaskTest(unittest.TestCase):
 </tomcat-users>"""
 
   # pylint: disable=line-too-long
-  TOMCAT_PASSWORD_FILE_REPORT = """Tomcat found (2 hits):
-Tomcat user: <user username="tomcat" password="tomcat" roles="tomcat"/>
-Tomcat user: <user username="both" password="tomcat" roles="tomcat,role1"/>"""
+  TOMCAT_PASSWORD_FILE_REPORT = """#### **Tomcat analysis found 2 results**
+* Tomcat user: <user username="tomcat" password="tomcat" roles="tomcat"/>
+* Tomcat user: <user username="both" password="tomcat" roles="tomcat,role1"/>"""
+
+  TOMCAT_PASSWORD_FILE_REPORT_SUMMARY = 'Tomcat analysis found 2 results'
 
   # pylint: disable=line-too-long
   TOMCAT_APP_DEPLOY_LOG = r"""21-Mar-2017 19:21:08.140 INFO [localhost-startStop-2] org.apache.catalina.startup.HostConfig.deployWAR Deploying web application archive C:\Program Files\Apache Software Foundation\Tomcat 9.0\webapps\MyAwesomeApp.war
 10-Sep-2012 11:41:12.283 INFO [localhost-startStop-1] org.apache.catalina.startup.HostConfig.deployWAR Deploying web application archive /opt/apache-tomcat-8.0.32/webapps/badboy.war"""
 
   # pylint: disable=line-too-long
-  TOMCAT_APP_DEPLOY_LOG_REPORT = r"""Tomcat found (2 hits):
-Tomcat App Deployed: 21-Mar-2017 19:21:08.140 INFO [localhost-startStop-2] org.apache.catalina.startup.HostConfig.deployWAR Deploying web application archive C:\Program Files\Apache Software Foundation\Tomcat 9.0\webapps\MyAwesomeApp.war
-Tomcat App Deployed: 10-Sep-2012 11:41:12.283 INFO [localhost-startStop-1] org.apache.catalina.startup.HostConfig.deployWAR Deploying web application archive /opt/apache-tomcat-8.0.32/webapps/badboy.war"""
+  TOMCAT_APP_DEPLOY_LOG_REPORT = r"""#### **Tomcat analysis found 2 results**
+* Tomcat App Deployed: 21-Mar-2017 19:21:08.140 INFO [localhost-startStop-2] org.apache.catalina.startup.HostConfig.deployWAR Deploying web application archive C:\Program Files\Apache Software Foundation\Tomcat 9.0\webapps\MyAwesomeApp.war
+* Tomcat App Deployed: 10-Sep-2012 11:41:12.283 INFO [localhost-startStop-1] org.apache.catalina.startup.HostConfig.deployWAR Deploying web application archive /opt/apache-tomcat-8.0.32/webapps/badboy.war"""
 
   # pylint: disable=line-too-long
   TOMCAT_ACCESS_LOG = """1.2.3.4 - - [12/Apr/2018:14:01:08 -0100] "GET /manager/html HTTP/1.1" 401 2001
@@ -53,21 +55,24 @@ Tomcat App Deployed: 10-Sep-2012 11:41:12.283 INFO [localhost-startStop-1] org.a
 1.2.3.4 - admin [12/Apr/2018:14:01:39 -0100] "POST /manager/html/upload?org.apache.catalina.filters.CSRF_NONCE=1ABCDEFGKLMONPQRSTIRQKD240384739 HTTP/1.1" 200 27809"""
 
   # pylint: disable=line-too-long
-  TOMCAT_ACCESS_LOG_REPORT = """Tomcat found (1 hits):
-Tomcat Management: 1.2.3.4 - admin [12/Apr/2018:14:01:39 -0100] "POST /manager/html/upload?org.apache.catalina.filters.CSRF_NONCE=1ABCDEFGKLMONPQRSTIRQKD240384739 HTTP/1.1" 200 27809"""
+  TOMCAT_ACCESS_LOG_REPORT = """#### **Tomcat analysis found 1 results**
+* Tomcat Management: 1.2.3.4 - admin [12/Apr/2018:14:01:39 -0100] "POST /manager/html/upload?org.apache.catalina.filters.CSRF_NONCE=1ABCDEFGKLMONPQRSTIRQKD240384739 HTTP/1.1" 200 27809"""
 
   def test_analyse_tomcat_file(self):
     """Tests the analyze_tomcat_file method."""
     config.LoadConfig()
     task = tomcat.TomcatAnalysisTask()
 
-    report = task.analyse_tomcat_file(self.TOMCAT_PASSWORD_FILE)
+    (report, priority, summary) = task.analyse_tomcat_file(
+        self.TOMCAT_PASSWORD_FILE)
     self.assertEqual(report, self.TOMCAT_PASSWORD_FILE_REPORT)
+    self.assertEqual(priority, 20)
+    self.assertEqual(summary, self.TOMCAT_PASSWORD_FILE_REPORT_SUMMARY)
 
-    report = task.analyse_tomcat_file(self.TOMCAT_APP_DEPLOY_LOG)
+    report = task.analyse_tomcat_file(self.TOMCAT_APP_DEPLOY_LOG)[0]
     self.assertEqual(report, self.TOMCAT_APP_DEPLOY_LOG_REPORT)
 
-    report = task.analyse_tomcat_file(self.TOMCAT_ACCESS_LOG)
+    report = task.analyse_tomcat_file(self.TOMCAT_ACCESS_LOG)[0]
     self.assertEqual(report, self.TOMCAT_ACCESS_LOG_REPORT)
 
 

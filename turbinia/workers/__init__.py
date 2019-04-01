@@ -51,6 +51,9 @@ class TurbiniaTaskResult(object):
       evidence: List of newly created Evidence objects.
       id: Unique Id of result (string of hex)
       input_evidence: The evidence this task processed.
+      report_data (string): Markdown data that can be used in a Turbinia report.
+      report_priority (int): Value between 0-100 (0 is the highest priority) to
+          be used to order report sections.
       request_id: The id of the initial request to process this evidence.
       run_time: Length of time the task ran for.
       saved_paths: Paths where output has been saved.
@@ -65,7 +68,10 @@ class TurbiniaTaskResult(object):
   """
 
   # The list of attributes that we will persist into storage
-  STORED_ATTRIBUTES = ['worker_name', 'status', 'saved_paths', 'successful']
+  STORED_ATTRIBUTES = [
+      'worker_name', 'report_data', 'report_priority', 'status', 'saved_paths',
+      'successful'
+  ]
 
   def __init__(
       self, evidence=None, input_evidence=None, base_output_dir=None,
@@ -84,6 +90,8 @@ class TurbiniaTaskResult(object):
     self.user = None
     self.output_dir = None
 
+    self.report_data = None
+    self.report_priority = 50
     self.start_time = datetime.now()
     self.run_time = None
     self.saved_paths = []
@@ -270,7 +278,7 @@ class TurbiniaTask(object):
 
   Attributes:
       base_output_dir: The base directory that output will go into.  Per-task
-                       directories will be created under this.
+          directories will be created under this.
       id: Unique Id of task (string of hex)
       last_update: A datetime object with the last time the task was updated.
       name: Name of task
@@ -281,9 +289,9 @@ class TurbiniaTask(object):
       run_local: Whether we are running locally without a Worker or not.
       state_key: A key used to manage task state
       stub: The task manager implementation specific task stub that exists
-            server side to keep a reference to the remote task objects.  For PSQ
-            this is a task result object, but other implementations have their
-            own stub objects.
+          server side to keep a reference to the remote task objects.  For PSQ
+          this is a task result object, but other implementations have their
+          own stub objects.
       tmp_dir: Temporary directory for Task to write to.
       user: The user who requested the task.
       _evidence_config (dict): The config that we want to pass to all new

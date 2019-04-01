@@ -44,7 +44,7 @@ class TomcatExtractionJob(interface.TurbiniaJob):
     """Create task.
 
      Args:
-      evidence: List of evidence object to process
+      evidence: List of evidence objects to process
 
      Returns:
         A list of tasks to schedule.
@@ -67,7 +67,7 @@ class TomcatAnalysisJob(interface.TurbiniaJob):
     """Create task.
 
      Args:
-      evidence: List of evidence object to process
+      evidence: List of evidence objects to process
 
      Returns:
         A list of tasks to schedule.
