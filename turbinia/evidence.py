@@ -133,7 +133,7 @@ class Evidence(object):
     """Return JSON serializable object."""
     serialized_evidence = self.__dict__
     if self.parent_evidence:
-      if type(self.parent_evidence) == dict:
+      if isinstance(self.parent_evidence, dict):
         # The parent evidence may have been serialized already
         serialized_evidence['parent_evidence'] = self.parent_evidence
       else:
@@ -429,6 +429,6 @@ class DockerContainer(Evidence):
     if not self.parent_evidence:
       raise TurbiniaException(
           'Evidence of type DockerContainer should have a parent_evidence set.')
-    if type(self.parent_evidence) == RawDisk:
+    if isinstance(self.parent_evidence, RawDisk):
       # Unmount any underlying mount path, as we had to mount the disk ourselves
       mount_local.PostprocessUnmountPath(self._mount_path)

@@ -32,12 +32,11 @@ log = logging.getLogger('turbinia')
 class DockerContainersEnumerationTask(TurbiniaTask):
   """Enumerates Docker containers on Linux"""
 
-  def GetContainers(self, evidence, result):
+  def GetContainers(self, evidence):
     """Lists the containers from an input Evidence.
 
     Args:
       evidence (Evidence): the input Evidence.
-      result (TurbiniaTaskResult): The object to place task results into.
 
     Returns:
       a list(dict) containing information about the containers found.

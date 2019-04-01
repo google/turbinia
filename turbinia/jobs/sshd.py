@@ -34,7 +34,8 @@ class SSHDExtractionJob(interface.TurbiniaJob):
 
   # The types of evidence that this Job will process
   evidence_input = [
-      Directory, DockerContainer, RawDisk, GoogleCloudDisk, GoogleCloudDiskRawEmbedded
+      Directory, DockerContainer, RawDisk, GoogleCloudDisk,
+      GoogleCloudDiskRawEmbedded
   ]
 
   evidence_output = [ExportedFileArtifact]

@@ -29,7 +29,8 @@ from turbinia.workers.hadoop import HadoopAnalysisTask
 class HadoopAnalysisJob(interface.TurbiniaJob):
   """Analyzes Hadoop AppRoot files."""
 
-  evidence_input = [DockerContainer, GoogleCloudDisk, GoogleCloudDiskRawEmbedded, RawDisk]
+  evidence_input = [
+      DockerContainer, GoogleCloudDisk, GoogleCloudDiskRawEmbedded, RawDisk]
   evidence_output = [ReportText]
 
   NAME = 'HadoopAnalysisJob'
