@@ -133,7 +133,12 @@ class Evidence(object):
     """Return JSON serializable object."""
     serialized_evidence = self.__dict__
     if self.parent_evidence:
-      serialized_evidence['parent_evidence'] = self.parent_evidence.serialize()
+      if type(self.parent_evidence) == dict:
+        # The parent evidence may have been serialized already
+        serialized_evidence['parent_evidence'] = self.parent_evidence
+      else:
+        serialized_evidence[
+            'parent_evidence'] = self.parent_evidence.serialize()
     return serialized_evidence
 
   def to_json(self):
@@ -370,7 +375,7 @@ class FilteredTextFile(TextFile):
 class ExportedFileArtifact(Evidence):
   """Exported file artifact."""
 
-  def __init__(self, artifact_name):
+  def __init__(self, artifact_name=None):
     """Initializes an exported file artifact."""
     super(ExportedFileArtifact, self).__init__()
     self.artifact_name = artifact_name

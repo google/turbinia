@@ -19,6 +19,7 @@ from __future__ import unicode_literals
 import json
 import logging
 import os
+import subprocess
 
 from turbinia import TurbiniaException
 from turbinia.evidence import DockerContainer
@@ -47,22 +48,27 @@ class DockerContainersEnumerationTask(TurbiniaTask):
 
     mount_path = evidence.local_path
     if type(evidence).__name__ == 'RawDisk':
+      # RawDisk doesn't mount the underlying partition
       mount_path = mount_local.PreprocessMountDisk(
           evidence.loopdevice_path, evidence.mount_partition)
 
     docker_dir = os.path.join(mount_path, 'var', 'lib', 'docker')
     containers_info = None
+    de_paths = [path for path in [
+        '/usr/local/bin/de.py', '/usr/bin/de.py'] if os.path.isfile(path)]
+    if not de_paths:
+      raise TurbiniaException('Could not find docker-explorer script: de.py')
+    de_binary = de_paths[0]
     docker_explorer_command = [
-        'sudo', '/usr/local/bin/de.py', '-r', docker_dir, 'list',
-        'all_containers'
+        'sudo', de_binary, '-r', docker_dir, 'list', 'all_containers'
     ]
     try:
-      log.info('Running {0:s}'.format(' '.join(docker_explorer_command)))
-      json_string = self.execute(docker_explorer_command)
+      log.info('Running {0}'.format(' '.join(docker_explorer_command)))
+      json_string = subprocess.check_output(docker_explorer_command)
     except Exception as e:
       mount_local.PostprocessUnmountPath(mount_path)
       raise TurbiniaException(
-          'Failed to run {0:s} {1!s}'.format(
+          'Failed to run {0} {1!s}'.format(
               ' '.join(docker_explorer_command), e))
 
     try:
@@ -70,7 +76,7 @@ class DockerContainersEnumerationTask(TurbiniaTask):
     except ValueError as e:
       mount_local.PostprocessUnmountPath(mount_path)
       raise TurbiniaException(
-          'Could not parse output of {0:s} : {1!s} .'.format(
+          'Could not parse output of {0} : {1!s} .'.format(
               ' '.join(docker_explorer_command), e))
 
     mount_local.PostprocessUnmountPath(mount_path)
@@ -89,20 +95,20 @@ class DockerContainersEnumerationTask(TurbiniaTask):
 
     status_report = ''
     success = False
+
+    found_containers = []
     try:
       containers_info = self.GetContainers(evidence, result)
-      found_containers = []
       for container_info in containers_info:
         container_id = container_info.get('container_id')
         found_containers.append(container_id)
-        log.info('DockerContainersEnumerationTask found container %s'%container_id)
         container_evidence = DockerContainer(container_id=container_id)
         result.add_evidence(container_evidence, evidence.config)
       success = True
     except TurbiniaException as e:
       status_report = 'Error enumerating Docker containers: {0!s}'.format(e)
 
-    status_report = 'Found {0:s} containers: {1}'.format(
+    status_report = 'Found {0!s} containers: {1}'.format(
         len(found_containers), ' '.join(found_containers))
 
     result.close(self, success=success, status=status_report)
