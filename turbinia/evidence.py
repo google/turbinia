@@ -369,7 +369,7 @@ class FilteredTextFile(TextFile):
 class ExportedFileArtifact(Evidence):
   """Exported file artifact."""
 
-  def __init__(self, artifact_name):
+  def __init__(self, artifact_name=None):
     """Initializes an exported file artifact."""
     super(ExportedFileArtifact, self).__init__()
     self.artifact_name = artifact_name
