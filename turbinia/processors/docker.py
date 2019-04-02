@@ -58,8 +58,10 @@ def PreprocessMountDockerFS(docker_dir, container_id):
 
   # TODO(aarontp): Remove hard-coded sudo in commands:
   # https://github.com/google/turbinia/issues/73
-  de_paths = [path for path in [
-      '/usr/local/bin/de.py', '/usr/bin/de.py'] if os.path.isfile(path)]
+  de_paths = [
+      path for path in ['/usr/local/bin/de.py', '/usr/bin/de.py']
+      if os.path.isfile(path)
+  ]
   if not de_paths:
     raise TurbiniaException('Could not find docker-explorer script: de.py')
 

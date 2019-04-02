@@ -53,8 +53,10 @@ class DockerContainersEnumerationTask(TurbiniaTask):
 
     docker_dir = os.path.join(mount_path, 'var', 'lib', 'docker')
     containers_info = None
-    de_paths = [path for path in [
-        '/usr/local/bin/de.py', '/usr/bin/de.py'] if os.path.isfile(path)]
+    de_paths = [
+        path for path in ['/usr/local/bin/de.py', '/usr/bin/de.py']
+        if os.path.isfile(path)
+    ]
     if not de_paths:
       raise TurbiniaException('Could not find docker-explorer script: de.py')
     de_binary = de_paths[0]
