@@ -34,11 +34,15 @@ from turbinia.workers import TurbiniaTask
 from turbinia.workers import TurbiniaTaskResult
 
 config.LoadConfig()
-if config.TASK_MANAGER.lower() == 'psq':
+if config.STATE_MANAGER.lower() == 'datastore':
   from google.cloud import datastore
   from google.cloud import exceptions
-elif config.TASK_MANAGER.lower() == 'celery':
+elif config.STATE_MANAGER.lower() == 'redis':
   import redis
+else:
+  msg = 'State Manager type "{0:s}" not implemented'.format(
+      config.STATE_MANAGER)
+  raise TurbiniaException(msg)
 
 DATETIME_FORMAT = '%Y-%m-%dT%H:%M:%S'
 MAX_DATASTORE_STRLEN = 1500
