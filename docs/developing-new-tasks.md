@@ -138,6 +138,24 @@ the text with formatting like bold and code.  Note that when setting headings in
 a task report, do not use heading1 through heading3 because these are used in
 other sections of the report, but you can use heading4 and above.
 
+## Tips
+*   If possible, set a meaningful `status` message that summarizes the Task
+    execution or output.  This can be done by either by setting the `status`
+    parameter when calling `result.close()`, or by explicitly setting the
+    `result.status` attribute.  This is the line of output that shows up
+    for each task when running `turbiniactl status`.  If a Task has a
+    low `report_priority`, then the full report data will not show up in
+    the `turbiniactl status`, and so the status may be the only place that
+    Task info will bubble up in the output by default, so setting it to
+    something useful can be important.
+*   If your Task executes an external command that can generate a log file,
+    it's helpful to specify the appropriate flags to generate this and then
+    automatically save it by setting the `log_files` paramter when calling
+    `self.execute()`.  Additionally, if there are flags that control the
+    verbosity of this log file, it's helpful to check the `config.DEBUG_TASKS`
+    config parameter and log accordingly, and this way all tasks can generate
+    debug output when this is configured.
+
 ## Notes
 
 *   The reason we separate out the strings processing into two separate Tasks is
