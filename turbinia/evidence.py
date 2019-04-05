@@ -376,21 +376,17 @@ class ExportedFileArtifact(Evidence):
     self.copyable = True
 
 
-class VolatilityOutput(TextFile):
-  """Volatility output file data.
-      Attributes:
-        profile: Profile used for the analysis
-        module: Module used for the analysis
-    """
-
-  def __init__(self, profile, module, *args, **kwargs):
-    super(VolatilityOutput, self).__init__(*args, **kwargs)
-    self.profile = profile
-    self.module = module
+class VolatilityReport(TextFile):
+  """Volatility output file data."""
+  pass
 
 
 class RawMemory(Evidence):
   """Evidence object for Memory based evidence.
+
+  Attributes:
+    profile (string): Profile used for the analysis
+    module (string): Module used for the analysis
     """
 
   def __init__(self, module=None, profile=None, *args, **kwargs):

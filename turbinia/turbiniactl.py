@@ -223,7 +223,7 @@ def main():
   parser_rawmemory.add_argument(
       '-n', '--name', help='Descriptive name of the evidence', required=False)
   parser_rawmemory.add_argument(
-      '-m', '--module', nargs='+', help='Volatility module to execute',
+      '-m', '--module', type=csv_list, help='Volatility module(s) to execute',
       required=True)
 
   # Parser options for Directory evidence type
