@@ -43,12 +43,11 @@ class VolatilityTask(TurbiniaTask):
 
     # TODO: Add in config options for Turbinia
     cmd = (
-        'python2 /bin/vol -f {0:s} --profile={1:s} {2:s} '
-        '--output=text --output-file={3:s}').format(
+        'vol -f {0:s} --profile={1:s} {2:s} --output=text '
+        '--output-file={3:s}').format(
             evidence.local_path, evidence.profile, self.module,
-            output_file_path)
-    result.log('Running vol as [{0:s}]'.format(cmd))
-    self.execute(
-        cmd, result, new_evidence=[output_evidence], close=True, shell=True)
+            output_file_path).split()
+    result.log('Running vol as [{0:s}]'.format(' '.join(cmd)))
+    self.execute(cmd, result, new_evidence=[output_evidence], close=True)
 
     return result
