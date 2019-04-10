@@ -276,12 +276,10 @@ def main():
   args = parser.parse_args()
   if args.quiet:
     log.setLevel(logging.ERROR)
-  elif args.verbose:
-    log.setLevel(logging.INFO)
   elif args.debug:
     log.setLevel(logging.DEBUG)
   else:
-    log.setLevel(logging.WARNING)
+    log.setLevel(logging.INFO)
 
   log.info('Turbinia version: {0:s}'.format(__version__))
 
