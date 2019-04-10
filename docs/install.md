@@ -236,6 +236,7 @@ means to save logging data.
     *   Directly configure `<localgitpath>/turbinia/config/turbinia_config.py`
     *   ***NOTE***: Match the `PUBSUB_TOPIC` variable in the configuration to
         the name of the topic and subscription you created in the GCP.
+    *   ***NOTE***: If you are running Turbinia locally, make sure to set `GCS_OUTPUT_PATH` to `None`.
 *   If you are running Turbinia locally, return to 
     [Install additional dependencies](#2-install-additional-dependencies),
     otherwise continue to [Deploy the Cloud Functions](#deploy-the-cloud-functions).
