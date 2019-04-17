@@ -98,7 +98,8 @@ PUBSUB_TOPIC = INSTANCE_ID
 
 # GCS Path to copy worker results and Evidence output to.
 # Otherwise, set this as 'None' if output will be stored in shared storage.
-GCS_OUTPUT_PATH = 'gs://%s/output' % BUCKET_NAME
+# GCS_OUTPUT_PATH = 'gs://%s/output' % BUCKET_NAME
+GCS_OUTPUT_PATH = None
 
 ################################################################################
 #                           Celery / Redis / Kombu
