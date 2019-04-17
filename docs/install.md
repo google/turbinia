@@ -1,10 +1,7 @@
 # High-Level Setup
 
-Turbinia can be run either in the Google Cloud, or on local machines. If you run
-Turbinia on local machines, it will still use
-[Cloud Pub/Sub](https://cloud.google.com/pubsub) and
-[Cloud Functions](https://cloud.google.com/functions) for the client to talk to
-the server, and for the server to talk to the worker nodes.
+Turbinia can be run either in the Google Cloud, on local machines, or in a
+hybrid mode.
 
 ## Local Setup
 
@@ -46,10 +43,43 @@ process these images as 'rawdisk' Evidence.
 
 # Instructions
 
-## GCP Project Setup (Cloud Pub/Sub, Cloud Function, Cloud Datastore)
+## Local Turbinia
 
-**NOTE:** This section is mandatory for Turbinia running on GCP or local
-machines.
+The following is one possible configuration and setup for running Turbinia
+locally using Celery and Redis on Ubuntu 18.04. This setup does not require
+Google Cloud Platform, although a configuration to write output to GCS is
+possible.
+
+### 1. Install and configure Turbinia
+
+*    Follow [Core Installation Steps](#core-installation-steps).
+
+### 2. Install additional dependencies
+
+*    Make sure you are still in the Virtualenv
+*    `cd <localgitpath>`
+*    `pip install .[worker]`
+*    `pip install .[local]`
+
+### 3. Run Redis and Turbinia
+
+*    Start Redis server on the local machine by following the instructions [here](https://redis.io/topics/quickstart).
+*    Run `turbiniactl -C -S server` to start Turbinia server.
+*    Run `turbiniactl -C celeryworker` to start Turbinia Celery worker.
+
+## GCP Turbinia
+
+The following is a one possible configuration and setup for Turbinia in GCP.
+This is still a rough process and future versions will be containerized.
+
+**NOTE:** When running Turbinia on GCP, it's recommended that you have at least
+two Google Cloud Engine (GCE) instances, respectively for the server and 1 or
+more workers. In a small setup, you can also both the server and worker on a
+single instance.
+
+### 1. GCP Project Setup (Cloud Pub/Sub, Cloud Function, Cloud Datastore)
+
+**NOTE:** This section is mandatory for Turbinia running on GCP.
 
 *   Create or select a Google Cloud Platform project on the
     [Google Developers Console](https://console.developers.google.com)
@@ -69,23 +99,7 @@ machines.
     *   Select the region that your data should be in. No need to create any
         Entities after selecting your region
 
-## Local Turbinia
-
-*   If Turbinia will run on local machines, jump to
-    [Core Installation Steps](#core-installation-steps)
-*   Otherwise, follow [GCP Turbinia](#gcp-turbinia)
-
-## GCP Turbinia
-
-The following is a one possible configuration and setup for Turbinia in GCP.
-This is still a rough process and future versions will be containerized.
-
-**NOTE:** When running Turbinia on GCP, it's recommended that you have at least
-two Google Cloud Engine (GCE) instances, respectively for the server and 1 or
-more workers. In a small setup, you can also both the server and worker on a
-single instance.
-
-### 1. Create a GCE Instance as Server
+### 2. Create a GCE Instance as Server
 
 *   Create a
     [new GCE instance](https://console.cloud.google.com/compute/instances) from
@@ -94,7 +108,7 @@ single instance.
         free to test and fix them ;)
 *   Follow [Core Installation Steps](#core-installation-steps)
 
-### 2. Create a Google Cloud Storage (GCS) Bucket
+### 3. Create a Google Cloud Storage (GCS) Bucket
 
 **NOTE:** GCS FUSE is used here for convenience to keep scripts and log files,
 but this isn't strictly necessary for Turbinia to run if you have an alternate
@@ -112,13 +126,13 @@ means to save logging data.
     `GOOGLE_APPLICATION_CREDENTIALS` environment var in the middle of the script
     that needs to be updated
 
-### 3. Create an Instance Template (Prep Work for Worker)
+### 4. Create an Instance Template (Prep Work for Worker)
 
 *   Stop the server instance
 *   Create a new image from the server VM's disk
 *   Create a new Instance Template using the newly created image
 
-### 4. Create a GCE Instance as Worker
+### 5. Create a GCE Instance as Worker
 
 *   Create a new Managed Instance Group from the newly created Instance Template
 *   In your worker VM, add a new custom metadata key `startup-script-url`
@@ -146,7 +160,9 @@ means to save logging data.
         `turbinia ALL=(ALL:ALL) NOPASSWD: ALL`
 *   Log in as turbinia
     *   `su - turbinia`
-*   Continue to [Google Cloud SDK](#2-google-cloud-sdk)
+*   If you are running Turbinia locally, skip to
+    [Inside the Virtualenv](#3-inside-the-virtualenv), otherwise continue to
+    [Google Cloud SDK](#2-google-cloud-sdk).
 
 ### 2. Google Cloud SDK
 
@@ -220,7 +236,10 @@ means to save logging data.
     *   Directly configure `<localgitpath>/turbinia/config/turbinia_config.py`
     *   ***NOTE***: Match the `PUBSUB_TOPIC` variable in the configuration to
         the name of the topic and subscription you created in the GCP.
-*   Continue to [Deploy the Cloud Functions](#deploy-the-cloud-functions)
+    *   ***NOTE***: If you are running Turbinia locally, make sure to set `GCS_OUTPUT_PATH` to `None`.
+*   If you are running Turbinia locally, return to 
+    [Install additional dependencies](#2-install-additional-dependencies),
+    otherwise continue to [Deploy the Cloud Functions](#deploy-the-cloud-functions).
 
 #### Deploy the Cloud Functions
 
