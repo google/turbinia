@@ -86,10 +86,6 @@ def main():
       '-S', '--server', action='store_true',
       help='Run Turbinia Server indefinitely')
   parser.add_argument(
-      '-C', '--use_celery', action='store_true',
-      help='Pass this flag when using Celery/Kombu for task queuing and '
-      'messaging (instead of Google PSQ/pubsub)')
-  parser.add_argument(
       '-V', '--version', action='version', version=__version__,
       help='Show the version')
   parser.add_argument(
@@ -304,7 +300,7 @@ def main():
   # Client
   config.LoadConfig()
   if args.command not in ('psqworker', 'server'):
-    if args.use_celery:
+    if config.TASK_MANAGER.lower() == 'celery':
       client = TurbiniaCeleryClient()
     elif args.run_local:
       client = TurbiniaClient(run_local=True)
@@ -313,9 +309,8 @@ def main():
   else:
     client = None
 
-  server_flags_set = args.server or args.use_celery or args.command == 'server'
-  worker_flags_set = (
-      args.use_celery or args.command in ('psqworker', 'celeryworker'))
+  server_flags_set = args.server or args.command == 'server'
+  worker_flags_set = args.command in ('psqworker', 'celeryworker')
   if args.run_local and (server_flags_set or worker_flags_set):
     log.error('--run_local flag is not compatible with server/worker flags')
     sys.exit(1)
@@ -470,9 +465,8 @@ def main():
           'Creating request {0:s} with evidence {1:s}'.format(
               request.request_id, evidence_.name))
       log.info(
-          'Run command "turbiniactl {0:s} status -r {1:s}" to see the status of'
-          ' this request and associated tasks'.format(
-              '-C' if args.use_celery else '', request.request_id))
+          'Run command "turbiniactl status -r {0:s}" to see the status of'
+          ' this request and associated tasks'.format(request.request_id))
       if not args.run_local:
         client.send_request(request)
       else:
