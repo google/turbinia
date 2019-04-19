@@ -62,7 +62,7 @@ class TurbiniaTaskResult(object):
       successful: Bool indicating success status.
       task_id: Task ID of the parent task.
       task_name: Name of parent task.
-      user: The user who requested the task.
+      requester: The user who requested the task.
       worker_name: Name of worker task executed on.
       _log: A list of log messages
   """
@@ -87,7 +87,7 @@ class TurbiniaTaskResult(object):
 
     self.task_id = None
     self.task_name = None
-    self.user = None
+    self.requester = None
     self.output_dir = None
 
     self.report_data = None
@@ -117,7 +117,7 @@ class TurbiniaTaskResult(object):
 
     self.task_id = task.id
     self.task_name = task.name
-    self.user = task.user
+    self.requester = task.requester
     if task.output_manager.is_setup:
       _, self.output_dir = task.output_manager.get_local_output_dirs()
     else:
@@ -293,16 +293,16 @@ class TurbiniaTask(object):
           this is a task result object, but other implementations have their
           own stub objects.
       tmp_dir: Temporary directory for Task to write to.
-      user: The user who requested the task.
+      requester: The user who requested the task.
       _evidence_config (dict): The config that we want to pass to all new
             evidence created from this task.
   """
 
   # The list of attributes that we will persist into storage
-  STORED_ATTRIBUTES = ['id', 'last_update', 'name', 'request_id', 'user']
+  STORED_ATTRIBUTES = ['id', 'last_update', 'name', 'request_id', 'requester']
 
   def __init__(
-      self, name=None, base_output_dir=None, request_id=None, user=None):
+      self, name=None, base_output_dir=None, request_id=None, requester=None):
     """Initialization for TurbiniaTask."""
     if base_output_dir:
       self.base_output_dir = base_output_dir
@@ -320,7 +320,7 @@ class TurbiniaTask(object):
     self.stub = None
     self.tmp_dir = None
     self.turbinia_version = turbinia.__version__
-    self.user = user if user else getpass.getuser()
+    self.requester = requester if requester else 'user_unspecified'
     self._evidence_config = {}
 
   def serialize(self):
