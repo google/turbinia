@@ -456,9 +456,7 @@ def main():
     server.start()
   elif evidence_:
     request = TurbiniaRequest(
-        #  request_id=args.request_id, requester=getpass.getuser())
-        # DEBUG DONOTSUBMIT
-        request_id=args.request_id, requester='morty')
+        request_id=args.request_id, requester=getpass.getuser())
     request.evidence.append(evidence_)
     if filter_patterns:
       request.recipe['filter_patterns'] = filter_patterns

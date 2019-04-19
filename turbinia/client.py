@@ -356,8 +356,10 @@ class TurbiniaClient(object):
     # Generate report header
     report.append('\n')
     report.append(fmt.heading1('Turbinia report {0:s}'.format(request_id)))
-    report.append(fmt.bullet('Processed {0:d} Tasks for user {1:s}'.format(
-        num_results, requester)))
+    report.append(
+        fmt.bullet(
+            'Processed {0:d} Tasks for user {1:s}'.format(
+                num_results, requester)))
 
     # Print report data for tasks
     for success_type in success_types:
