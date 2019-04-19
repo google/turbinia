@@ -59,6 +59,7 @@ class TestLocalOutputManager(unittest.TestCase):
 
   def testGetOutputWriters(self):
     """Tests get_output_writers function for valid response."""
+    output_manager.storage = mock.MagicMock()
     writers = output_manager.OutputManager.get_output_writers(self.task)
     self.assertEquals(len(writers), 2)
     for writer in writers:
@@ -66,6 +67,7 @@ class TestLocalOutputManager(unittest.TestCase):
 
   def testGetLocalOutputDirs(self):
     """Tests get_local_output_dirs function for valid response."""
+    output_manager.storage = mock.MagicMock()
     self.task.output_manager.setup(self.task)
     tmp_dir, local_dir = self.task.output_manager.get_local_output_dirs()
 

@@ -27,7 +27,7 @@ from turbinia import config
 from turbinia import TurbiniaException
 
 config.LoadConfig()
-if config.TASK_MANAGER.lower() == 'psq':
+if config.GCS_OUTPUT_PATH and config.GCS_OUTPUT_PATH.lower() is not 'none':
   from google.cloud import storage
 
 log = logging.getLogger('turbinia')
