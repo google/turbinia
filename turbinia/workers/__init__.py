@@ -151,11 +151,16 @@ class TurbiniaTaskResult(object):
     self.status = status
 
     for evidence in self.evidence:
-      if evidence.local_path:
+      if evidence.local_path and os.path.exists(evidence.local_path):
         self.saved_paths.append(evidence.local_path)
         if not task.run_local:
           if evidence.copyable and not config.SHARED_FILESYSTEM:
             task.output_manager.save_evidence(evidence, self)
+      else:
+        self.log(
+            'Evidence {0:s} has empty or missing file at local_path {1:s} so '
+            'not saving.'.format(evidence.name, evidence.local_path))
+
       if not evidence.request_id:
         evidence.request_id = self.request_id
 
@@ -172,6 +177,10 @@ class TurbiniaTaskResult(object):
 
     # Write result log info to file
     logfile = os.path.join(self.output_dir, 'worker-log.txt')
+    # Create default log text just so that the worker log is created to
+    # avoid confusion if it doesn't exist.
+    if not self._log:
+      self._log.append('No worker messages were logged.')
     if self.output_dir and os.path.exists(self.output_dir):
       with open(logfile, 'w') as f:
         f.write('\n'.join(self._log))
@@ -401,6 +410,11 @@ class TurbiniaTask(object):
             'Log file {0:s} does not exist to save'.format(file_),
             level=logging.DEBUG)
         continue
+      if os.path.getsize(file_) == 0:
+        result.log(
+            'Log file {0:s} is empty. Not saving'.format(file_),
+            level=logging.DEBUG)
+        continue
       result.log('Output file at {0:s}'.format(file_))
       if not self.run_local:
         self.output_manager.save_local_file(file_, result)
@@ -413,9 +427,15 @@ class TurbiniaTask(object):
     else:
       result.log('Execution of [{0!s}] succeeded'.format(cmd))
       for file_ in save_files:
+        if os.path.getsize(file_) == 0:
+          result.log(
+              'Output file {0:s} is empty. Not saving'.format(file_),
+              level=logging.DEBUG)
+          continue
         result.log('Output file at {0:s}'.format(file_))
         if not self.run_local:
           self.output_manager.save_local_file(file_, result)
+
       for evidence in new_evidence:
         # If the local path is set in the Evidence, we check to make sure that
         # the path exists and is not empty before adding it.
