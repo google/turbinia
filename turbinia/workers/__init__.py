@@ -18,6 +18,7 @@ from __future__ import unicode_literals
 
 from copy import deepcopy
 from datetime import datetime, timedelta
+from enum import IntEnum
 import getpass
 import logging
 import os
@@ -38,6 +39,18 @@ from turbinia import output_manager
 from turbinia import TurbiniaException
 
 log = logging.getLogger('turbinia')
+
+
+class Priority(IntEnum):
+  """Reporting priority enum to store common values.
+
+  Priorities can be anything in the range of 0-100, where 0 is the highest
+  priority.
+  """
+  LOW = 80
+  MEDIUM = 50
+  HIGH = 20
+  CRITICAL = 10
 
 
 class TurbiniaTaskResult(object):
@@ -91,7 +104,7 @@ class TurbiniaTaskResult(object):
     self.output_dir = None
 
     self.report_data = None
-    self.report_priority = 50
+    self.report_priority = Priority.MEDIUM
     self.start_time = datetime.now()
     self.run_time = None
     self.saved_paths = []

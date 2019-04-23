@@ -204,6 +204,20 @@ class TestTurbiniaClient(unittest.TestCase):
   @mock.patch('turbinia.client.task_manager.PSQTaskManager._backend_setup')
   @mock.patch('turbinia.state_manager.get_state_manager')
   def testClientFormatTaskStatus(self, _, __, ___):
+    """Tests format_task_status() with empty report_priority."""
+    client = TurbiniaClient()
+    client.get_task_data = mock.MagicMock()
+    self.task_data[0]['report_priority'] = None
+    self.task_data[1]['report_priority'] = ''
+    self.task_data[2].pop('report_priority')
+    client.get_task_data.return_value = self.task_data
+    result = client.format_task_status('inst', 'proj', 'reg')
+    self.assertIn('Processed 3 Tasks', result.strip())
+
+  @mock.patch('turbinia.client.GoogleCloudFunction.ExecuteFunction')
+  @mock.patch('turbinia.client.task_manager.PSQTaskManager._backend_setup')
+  @mock.patch('turbinia.state_manager.get_state_manager')
+  def testClientFormatTaskStatus(self, _, __, ___):
     """Tests format_task_status() has valid output."""
     client = TurbiniaClient()
     client.get_task_data = mock.MagicMock()

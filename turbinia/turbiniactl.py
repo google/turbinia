@@ -35,6 +35,7 @@ from turbinia.config import logger
 from turbinia import evidence
 from turbinia import __version__
 from turbinia.message import TurbiniaRequest
+from turbinia.workers import Priority
 
 log = logging.getLogger('turbinia')
 logger.setup()
@@ -251,7 +252,8 @@ def main():
       '-r', '--request_id', help='Show tasks with this Request ID',
       required=False)
   parser_status.add_argument(
-      '-p', '--priority_filter', default=20, type=int, required=False,
+      '-p', '--priority_filter', default=Priority.HIGH, type=int,
+      required=False,
       help='This sets what report sections are shown in full detail in '
       'report output.  Any tasks that have set a report_priority value '
       'equal to or lower than this setting will be shown in full detail, and '
