@@ -162,12 +162,12 @@ class TurbiniaClient(object):
       user (string): The user of the request we want tasks for.
       poll_interval (int): Interval of seconds between polling cycles.
     """
+    last_count = 0
     while True:
       task_results = self.get_task_data(
           instance, project, region, request_id=request_id, user=user)
       completed_tasks = []
       uncompleted_tasks = []
-      last_count = 0
       for task in task_results:
         if task.get('successful') is not None:
           completed_tasks.append(task)
