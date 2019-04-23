@@ -31,6 +31,7 @@ from turbinia.config import logger
 from turbinia import task_manager
 from turbinia import TurbiniaException
 from turbinia.lib import text_formatter as fmt
+from turbinia.workers import Priority
 from turbinia.workers.artifact import FileArtifactExtractionTask
 from turbinia.workers.analysis.wordpress import WordpressAccessLogAnalysisTask
 from turbinia.workers.analysis.jenkins import JenkinsAnalysisTask
@@ -161,12 +162,12 @@ class TurbiniaClient(object):
       user (string): The user of the request we want tasks for.
       poll_interval (int): Interval of seconds between polling cycles.
     """
+    last_count = 0
     while True:
       task_results = self.get_task_data(
           instance, project, region, request_id=request_id, user=user)
       completed_tasks = []
       uncompleted_tasks = []
-      last_count = 0
       for task in task_results:
         if task.get('successful') is not None:
           completed_tasks.append(task)
@@ -304,7 +305,8 @@ class TurbiniaClient(object):
 
   def format_task_status(
       self, instance, project, region, days=0, task_id=None, request_id=None,
-      user=None, all_fields=False, full_report=False, priority_filter=20):
+      user=None, all_fields=False, full_report=False,
+      priority_filter=Priority.HIGH):
     """Formats the recent history for Turbinia Tasks.
 
     Args:
@@ -328,8 +330,14 @@ class TurbiniaClient(object):
     """
     task_results = self.get_task_data(
         instance, project, region, days, task_id, request_id, user)
+    if not task_results:
+      return ''
     # Sort all tasks by the report_priority so that tasks with a higher
     # priority are listed first in the report.
+    for result in task_results:
+      # 0 is a valid value, so checking against specific values
+      if result.get('report_priority') in (None, ''):
+        result['report_priority'] = Priority.LOW
     task_results = sorted(task_results, key=itemgetter('report_priority'))
     num_results = len(task_results)
     if not num_results:

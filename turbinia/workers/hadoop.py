@@ -27,6 +27,7 @@ from turbinia.lib import text_formatter as fmt
 from turbinia.evidence import ReportText
 from turbinia.lib.utils import extract_artifacts
 from turbinia.workers import TurbiniaTask
+from turbinia.workers import Priority
 
 log = logging.getLogger('turbinia')
 
@@ -57,7 +58,7 @@ class HadoopAnalysisTask(TurbiniaTask):
     report = []
     evil_commands = []
     strings_count = 0
-    priority = 50
+    priority = Priority.MEDIUM
     summary = ''
     for filepath in collected_artifacts:
       relpath = os.path.relpath(filepath, output_dir)
@@ -76,7 +77,7 @@ class HadoopAnalysisTask(TurbiniaTask):
       msg = 'Found suspicious commands!'
       report.append(fmt.heading4(fmt.bold(msg)))
       summary = msg
-      priority = 10
+      priority = Priority.CRITICAL
     else:
       msg = 'Did not find any suspicious commands.'
       report.append(fmt.heading4(msg))

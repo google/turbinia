@@ -23,6 +23,7 @@ from turbinia import TurbiniaException
 from turbinia.evidence import ReportText
 from turbinia.lib import text_formatter as fmt
 from turbinia.workers import TurbiniaTask
+from turbinia.workers import Priority
 from turbinia.lib.utils import extract_artifacts
 from turbinia.lib.utils import bruteforce_password_hashes
 
@@ -148,7 +149,7 @@ class JenkinsAnalysisTask(TurbiniaTask):
     """
     report = []
     summary = ''
-    priority = 50
+    priority = Priority.LOW
     credentials_registry = {hash: username for username, hash in credentials}
     # TODO: Add timeout parameter when dynamic configuration is ready.
     # Ref: https://github.com/google/turbinia/issues/244
@@ -159,7 +160,7 @@ class JenkinsAnalysisTask(TurbiniaTask):
     report.append(fmt.bullet('Jenkins version: {0:s}'.format(version)))
 
     if weak_passwords:
-      priority = 10
+      priority = Priority.CRITICAL
       summary = 'Jenkins analysis found potential issues'
       report.insert(0, fmt.heading4(fmt.bold(summary)))
       line = '{0:n} weak password(s) found:'.format(len(weak_passwords))
@@ -170,7 +171,7 @@ class JenkinsAnalysisTask(TurbiniaTask):
         report.append(fmt.bullet(line, level=2))
     else:
       summary = 'Jenkins analysis found no issues'
-      priority = 80
+      priority = Priority.LOW
       report.insert(0, fmt.heading4(summary))
 
     report = '\n'.join(report)

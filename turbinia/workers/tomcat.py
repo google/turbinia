@@ -22,6 +22,7 @@ import re
 from turbinia.evidence import ReportText
 from turbinia.lib import text_formatter as fmt
 from turbinia.workers import TurbiniaTask
+from turbinia.workers import Priority
 
 
 class TomcatAnalysisTask(TurbiniaTask):
@@ -104,7 +105,7 @@ class TomcatAnalysisTask(TurbiniaTask):
       msg = 'Tomcat analysis found {0:d} results'.format(count)
       findings.insert(0, fmt.heading4(fmt.bold(msg)))
       report = '\n'.join(findings)
-      return (report, 20, msg)
+      return (report, Priority.HIGH, msg)
 
     report = 'No Tomcat findings to report'
-    return (report, 80, report)
+    return (report, Priority.LOW, report)

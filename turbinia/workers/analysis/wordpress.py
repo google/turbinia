@@ -23,6 +23,7 @@ import re
 from turbinia.evidence import ReportText
 from turbinia.lib import text_formatter as fmt
 from turbinia.workers import TurbiniaTask
+from turbinia.workers import Priority
 
 
 class WordpressAccessLogAnalysisTask(TurbiniaTask):
@@ -123,7 +124,7 @@ class WordpressAccessLogAnalysisTask(TurbiniaTask):
 
       report.insert(0, fmt.heading4(fmt.bold(summary)))
       report_text = '\n'.join(report)
-      return (report_text, 20, summary)
+      return (report_text, Priority.HIGH, summary)
 
     report_text = 'No Wordpress install or theme editing found in access logs'
-    return (fmt.heading4(report_text), 80, report_text)
+    return (fmt.heading4(report_text), Priority.LOW, report_text)
