@@ -21,6 +21,9 @@ import os
 import subprocess
 import tempfile
 
+from docker_explorer import container
+from docker_explorer import explorer
+
 from turbinia import config
 from turbinia import TurbiniaException
 
@@ -54,25 +57,16 @@ def PreprocessMountDockerFS(docker_dir, container_id):
           'Could not create mount directory {0:s}: {1!s}'.format(
               mount_prefix, e))
 
-  mount_path = tempfile.mkdtemp(prefix='turbinia', dir=mount_prefix)
+  container_mount_path = tempfile.mkdtemp(prefix='turbinia', dir=mount_prefix)
 
-  # TODO(aarontp): Remove hard-coded sudo in commands:
-  # https://github.com/google/turbinia/issues/73
-  de_paths = [
-      path for path in ['/usr/local/bin/de.py', '/usr/bin/de.py']
-      if os.path.isfile(path)
-  ]
-  if not de_paths:
-    raise TurbiniaException('Could not find docker-explorer script: de.py')
-
-  de_binary = de_paths[0]
-  mount_cmd = [
-      'sudo', de_binary, '-r', docker_dir, 'mount', container_id, mount_path
-  ]
-  log.info('Running: {0:s}'.format(' '.join(mount_cmd)))
+  log.info('Using docker_explorer to mount container {0:s} on {1:s}'.format(
+      container_id, container_mount_path))
   try:
-    subprocess.check_call(mount_cmd)
+    explorer_object = explorer.Explorer()
+    explorer_object.SetDockerDirectory(docker_dir)
+    container_object = explorer_object.GetContainer(container_id)
+    container_object.Mount(container_mount_path)
   except Exception as e:
-    raise TurbiniaException('Could not mount directory {0!s}'.format(e))
+    raise TurbiniaException('Could not mount container: {0!s}'.format(e))
 
   return mount_path

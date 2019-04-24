@@ -19,7 +19,9 @@ from __future__ import unicode_literals
 import json
 import logging
 import os
-import subprocess
+
+from docker_explorer import explorer
+from docker_explorer.errors import BadStorageException
 
 from turbinia import TurbiniaException
 from turbinia.evidence import DockerContainer
@@ -39,7 +41,7 @@ class DockerContainersEnumerationTask(TurbiniaTask):
       evidence (Evidence): the input Evidence.
 
     Returns:
-      a list(dict) containing information about the containers found.
+      list(docker_explorer.Container): list of containers objects.
 
     Raises:
       TurbiniaException: when the docker-explorer tool failed to run.
@@ -52,33 +54,19 @@ class DockerContainersEnumerationTask(TurbiniaTask):
           evidence.loopdevice_path, evidence.mount_partition)
 
     docker_dir = os.path.join(mount_path, 'var', 'lib', 'docker')
-    containers_info = None
-    de_paths = [
-        path for path in ['/usr/local/bin/de.py', '/usr/bin/de.py']
-        if os.path.isfile(path)
-    ]
-    if not de_paths:
-      raise TurbiniaException('Could not find docker-explorer script: de.py')
-    de_binary = de_paths[0]
-    docker_explorer_command = [
-        'sudo', de_binary, '-r', docker_dir, 'list', 'all_containers'
-    ]
-    try:
-      log.info('Running {0}'.format(' '.join(docker_explorer_command)))
-      json_string = subprocess.check_output(docker_explorer_command)
-    except Exception as e:
-      mount_local.PostprocessUnmountPath(mount_path)
-      raise TurbiniaException(
-          'Failed to run {0} {1!s}'.format(
-              ' '.join(docker_explorer_command), e))
 
+    containers_info = []
+    log.info('Searching for Docker containers in {0}'.format(docker_dir))
+    log.info('things there: {0}'.format(' '.join(os.listdir(docker_dir))))
     try:
-      containers_info = json.loads(json_string)
-    except ValueError as e:
+      explorer_object = explorer.Explorer()
+      explorer_object.SetDockerDirectory(docker_dir)
+      containers_info = explorer_object.GetAllContainers()
+    except BadStorageException as e:
       mount_local.PostprocessUnmountPath(mount_path)
+      log.info('error docker pute {0!s}'.format(e))
       raise TurbiniaException(
-          'Could not parse output of {0} : {1!s} .'.format(
-              ' '.join(docker_explorer_command), e))
+          'Failed to get Docker containers: {0!s}'.format(e))
 
     mount_local.PostprocessUnmountPath(mount_path)
     return containers_info
@@ -99,9 +87,9 @@ class DockerContainersEnumerationTask(TurbiniaTask):
 
     found_containers = []
     try:
-      containers_info = self.GetContainers(evidence, result)
+      containers_info = self.GetContainers(evidence)
       for container_info in containers_info:
-        container_id = container_info.get('container_id')
+        container_id = container_info.container_id
         found_containers.append(container_id)
         container_evidence = DockerContainer(container_id=container_id)
         result.add_evidence(container_evidence, evidence.config)
