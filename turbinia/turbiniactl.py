@@ -35,6 +35,7 @@ from turbinia.config import logger
 from turbinia import evidence
 from turbinia import __version__
 from turbinia.message import TurbiniaRequest
+from turbinia.workers import Priority
 
 log = logging.getLogger('turbinia')
 logger.setup()
@@ -85,10 +86,6 @@ def main():
   parser.add_argument(
       '-S', '--server', action='store_true',
       help='Run Turbinia Server indefinitely')
-  parser.add_argument(
-      '-C', '--use_celery', action='store_true',
-      help='Pass this flag when using Celery/Kombu for task queuing and '
-      'messaging (instead of Google PSQ/pubsub)')
   parser.add_argument(
       '-V', '--version', action='version', version=__version__,
       help='Show the version')
@@ -255,7 +252,8 @@ def main():
       '-r', '--request_id', help='Show tasks with this Request ID',
       required=False)
   parser_status.add_argument(
-      '-p', '--priority_filter', default=20, type=int, required=False,
+      '-p', '--priority_filter', default=Priority.HIGH, type=int,
+      required=False,
       help='This sets what report sections are shown in full detail in '
       'report output.  Any tasks that have set a report_priority value '
       'equal to or lower than this setting will be shown in full detail, and '
@@ -276,12 +274,10 @@ def main():
   args = parser.parse_args()
   if args.quiet:
     log.setLevel(logging.ERROR)
-  elif args.verbose:
-    log.setLevel(logging.INFO)
   elif args.debug:
     log.setLevel(logging.DEBUG)
   else:
-    log.setLevel(logging.WARNING)
+    log.setLevel(logging.INFO)
 
   log.info('Turbinia version: {0:s}'.format(__version__))
 
@@ -306,7 +302,7 @@ def main():
   # Client
   config.LoadConfig()
   if args.command not in ('psqworker', 'server'):
-    if args.use_celery:
+    if config.TASK_MANAGER.lower() == 'celery':
       client = TurbiniaCeleryClient()
     elif args.run_local:
       client = TurbiniaClient(run_local=True)
@@ -315,9 +311,8 @@ def main():
   else:
     client = None
 
-  server_flags_set = args.server or args.use_celery or args.command == 'server'
-  worker_flags_set = (
-      args.use_celery or args.command in ('psqworker', 'celeryworker'))
+  server_flags_set = args.server or args.command == 'server'
+  worker_flags_set = args.command in ('psqworker', 'celeryworker')
   if args.run_local and (server_flags_set or worker_flags_set):
     log.error('--run_local flag is not compatible with server/worker flags')
     sys.exit(1)
@@ -472,9 +467,8 @@ def main():
           'Creating request {0:s} with evidence {1:s}'.format(
               request.request_id, evidence_.name))
       log.info(
-          'Run command "turbiniactl {0:s} status -r {1:s}" to see the status of'
-          ' this request and associated tasks'.format(
-              '-C' if args.use_celery else '', request.request_id))
+          'Run command "turbiniactl status -r {0:s}" to see the status of'
+          ' this request and associated tasks'.format(request.request_id))
       if not args.run_local:
         client.send_request(request)
       else:

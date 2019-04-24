@@ -22,6 +22,7 @@ import re
 from turbinia.evidence import ReportText
 from turbinia.lib import text_formatter as fmt
 from turbinia.workers import TurbiniaTask
+from turbinia.workers import Priority
 
 
 class SSHDAnalysisTask(TurbiniaTask):
@@ -99,7 +100,7 @@ class SSHDAnalysisTask(TurbiniaTask):
       summary = 'Insecure SSH configuration found.'
       findings.insert(0, fmt.heading4(fmt.bold(summary)))
       report = '\n'.join(findings)
-      return (report, 20, summary)
+      return (report, Priority.HIGH, summary)
 
     report = 'No issues found in SSH configuration'
-    return (report, 60, report)
+    return (report, Priority.LOW, report)
