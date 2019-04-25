@@ -32,35 +32,35 @@ from turbinia import task_manager
 from turbinia import TurbiniaException
 from turbinia.lib import text_formatter as fmt
 from turbinia.workers import Priority
-from turbinia.workers.artifact import FileArtifactExtractionTask
+#from turbinia.workers.artifact import FileArtifactExtractionTask
 from turbinia.workers.analysis.wordpress import WordpressAccessLogAnalysisTask
-from turbinia.workers.analysis.jenkins import JenkinsAnalysisTask
+#from turbinia.workers.analysis.jenkins import JenkinsAnalysisTask
 from turbinia.workers.docker import DockerContainersEnumerationTask
-from turbinia.workers.grep import GrepTask
+#from turbinia.workers.grep import GrepTask
 from turbinia.workers.hadoop import HadoopAnalysisTask
-from turbinia.workers.plaso import PlasoTask
-from turbinia.workers.psort import PsortTask
-from turbinia.workers.sshd import SSHDAnalysisTask
-from turbinia.workers.strings import StringsAsciiTask
-from turbinia.workers.strings import StringsUnicodeTask
-from turbinia.workers.tomcat import TomcatAnalysisTask
+#from turbinia.workers.plaso import PlasoTask
+#from turbinia.workers.psort import PsortTask
+#from turbinia.workers.sshd import SSHDAnalysisTask
+#from turbinia.workers.strings import StringsAsciiTask
+#from turbinia.workers.strings import StringsUnicodeTask
+#from turbinia.workers.tomcat import TomcatAnalysisTask
 from turbinia.workers.worker_stat import StatTask
 
 # TODO(aarontp): Remove this map after
 # https://github.com/google/turbinia/issues/278 is fixed.
 TASK_MAP = {
-    'fileartifactextractiontask': FileArtifactExtractionTask,
+#    'fileartifactextractiontask': FileArtifactExtractionTask,
     'wordpressaccessloganalysistask': WordpressAccessLogAnalysisTask,
-    'jenkinsanalysistask': JenkinsAnalysisTask,
+#    'jenkinsanalysistask': JenkinsAnalysisTask,
     'dockertask': DockerContainersEnumerationTask,
-    'greptask': GrepTask,
+#    'greptask': GrepTask,
     'hadoopanalysistask': HadoopAnalysisTask,
-    'plasotask': PlasoTask,
-    'psorttask': PsortTask,
-    'sshdanalysistask': SSHDAnalysisTask,
-    'stringsasciitask': StringsAsciiTask,
-    'stringsunicodetask': StringsUnicodeTask,
-    'tomcatanalysistask': TomcatAnalysisTask,
+#    'plasotask': PlasoTask,
+#    'psorttask': PsortTask,
+#    'sshdanalysistask': SSHDAnalysisTask,
+#    'stringsasciitask': StringsAsciiTask,
+#    'stringsunicodetask': StringsUnicodeTask,
+#    'tomcatanalysistask': TomcatAnalysisTask,
     'stattask': StatTask,
 }
 
