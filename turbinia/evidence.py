@@ -142,8 +142,8 @@ class Evidence(object):
         # The parent evidence may have been serialized already
         serialized_evidence['parent_evidence'] = self.parent_evidence
       else:
-        serialized_evidence[
-            'parent_evidence'] = self.parent_evidence.serialize()
+        serialized_evidence['parent_evidence'] = self.parent_evidence.serialize(
+        )
     return serialized_evidence
 
   def to_json(self):

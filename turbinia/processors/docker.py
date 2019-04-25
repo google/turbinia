@@ -62,8 +62,9 @@ def PreprocessMountDockerFS(docker_dir, container_id):
 
   container_mount_path = tempfile.mkdtemp(prefix='turbinia', dir=mount_prefix)
 
-  log.info('Using docker_explorer to mount container {0:s} on {1:s}'.format(
-      container_id, container_mount_path))
+  log.info(
+      'Using docker_explorer to mount container {0:s} on {1:s}'.format(
+          container_id, container_mount_path))
   try:
     explorer_object = explorer.Explorer()
     explorer_object.SetDockerDirectory(docker_dir)
