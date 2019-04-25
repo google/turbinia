@@ -203,6 +203,7 @@ class RawDisk(Evidence):
   """Evidence object for Disk based evidence.
 
   Attributes:
+    is_mounted(bool): whether the filesystem is mounted.
     loopdevice_path: Path to the losetup device for this disk.
     mount_path: The mount path for this disk (if any).
     mount_partition: The mount partition for this disk (if any).
@@ -212,6 +213,7 @@ class RawDisk(Evidence):
   def __init__(
       self, mount_path=None, mount_partition=None, size=None, *args, **kwargs):
     """Initialization for raw disk evidence object."""
+    self.is_mounted = False
     self.loopdevice_path = None
     self.mount_path = mount_path
     self.mount_partition = mount_partition
@@ -220,10 +222,25 @@ class RawDisk(Evidence):
 
   def _preprocess(self):
     self.loopdevice_path = mount_local.PreprocessLosetup(self.local_path)
+    # In case mounting the underlying filesystem fails, keep pointing to the
+    # loopdevice
+    self.local_path = self.loopdevice_path
+    try:
+      self.local_path = mount_local.PreprocessMountDisk(
+          self.loopdevice_path, self.partition_number)
+      self.is_mounted = True
+    except TurbiniaException as e:
+      log.error(
+          'Could not mount partition {0:d} of RawDisk {1!s}: {2!s}'.format(
+              self.partition_number, self, e))
 
   def _postprocess(self):
+    if self.is_mounted:
+      mount_local.PostprocessUnmountPath(self.mount_path)
+      self.is_mounted = False
     mount_local.PostprocessDeleteLosetup(self.loopdevice_path)
     self.loopdevice_path = None
+    self.local_path = None
 
 
 class EncryptedDisk(RawDisk):
@@ -283,10 +300,27 @@ class GoogleCloudDisk(RawDisk):
     self.cloud_only = True
 
   def _preprocess(self):
-    self.local_path = google_cloud.PreprocessAttachDisk(self.disk_name)
+    self._attached_path = google_cloud.PreprocessAttachDisk(self.disk_name)
+    self.loopdevice_path = mount_local.PreprocessLosetup(self._attached_path)
+
+    # If the mounting step fails, at least local_path still points to a device
+    # and can be picked up by PlasoTask for example
+    self.local_path = self.loopdevice_path
+    try:
+      self.local_path = mount_local.PreprocessMountDisk(
+          self.loopdevice_path, self.mount_partition)
+      self.is_mounted = True
+    except TurbiniaException as e:
+      log.error(
+          'Could not mount partition {0:d} for GoogleCloudDisk {1:s}: '
+          '{2!s}'.format(self.mount_partition, self.disk_name, e))
 
   def _postprocess(self):
-    google_cloud.PostprocessDetachDisk(self.disk_name, self.local_path)
+    if self.is_mounted:
+      mount_local.PostprocessUnmountPath(self.mount_path)
+      self.is_mounted = False
+    mount_local.PostprocessDeleteLosetup(self.loopdevice_path)
+    google_cloud.PostprocessDetachDisk(self.disk_name, self._attached_path)
     self.local_path = None
 
 
@@ -308,16 +342,32 @@ class GoogleCloudDiskRawEmbedded(GoogleCloudDisk):
     super(GoogleCloudDiskRawEmbedded, self).__init__(*args, **kwargs)
 
   def _preprocess(self):
-    self.local_path = google_cloud.PreprocessAttachDisk(self.disk_name)
-    self.loopdevice_path = mount_local.PreprocessLosetup(self.local_path)
-    self.mount_path = mount_local.PreprocessMountDisk(
+    self._attached_path = google_cloud.PreprocessAttachDisk(self.disk_name)
+    self.loopdevice_path = mount_local.PreprocessLosetup(self._attached_path)
+    self._clouddisk_mount_path = mount_local.PreprocessMountDisk(
         self.loopdevice_path, self.mount_partition)
-    self.local_path = os.path.join(self.mount_path, self.embedded_path)
+
+    # If the mounting of the embedded image step fails, at least local_path
+    # still points to the image.
+    self.local_path = os.path.join(
+        self._clouddisk_mount_path, self.embedded_path)
+
+    try:
+      # We now try to mount the image pointed by self.embedded_path
+      self.local_path = mount_local.PreprocessMountDisk(
+          self.embedded_path, self.mount_partition)
+      self.is_mounted = True
+    except TurbiniaException as e:
+      log.error(
+          'Could not mount partition {0:d} for GoogleCloudDiskRawEmbedded '
+          '"{1:s}": {2!s}'.format(self.mount_partition, self.disk_name, e))
 
   def _postprocess(self):
-    google_cloud.PostprocessDetachDisk(self.disk_name, self.local_path)
-    mount_local.PostprocessUnmountPath(self.mount_path)
+    if self.is_mounted:
+      mount_local.PostprocessUnmountPath(self.local_path)
+    mount_local.PostprocessUnmountPath(self._clouddisk_mount_path)
     mount_local.PostprocessDeleteLosetup(self.loopdevice_path)
+    google_cloud.PostprocessDetachDisk(self.disk_name, self.local_path)
 
 
 class PlasoFile(Evidence):
