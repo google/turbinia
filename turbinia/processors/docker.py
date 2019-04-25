@@ -18,10 +18,8 @@ from __future__ import unicode_literals
 
 import logging
 import os
-import subprocess
 import tempfile
 
-from docker_explorer import container
 from docker_explorer import explorer
 
 from turbinia import config
