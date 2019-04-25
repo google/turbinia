@@ -25,7 +25,6 @@ from docker_explorer.errors import BadStorageException
 
 from turbinia import TurbiniaException
 from turbinia.evidence import DockerContainer
-from turbinia.processors import mount_local
 from turbinia.workers import TurbiniaTask
 
 log = logging.getLogger('turbinia')
@@ -48,27 +47,20 @@ class DockerContainersEnumerationTask(TurbiniaTask):
     """
 
     mount_path = evidence.local_path
-    if type(evidence).__name__ == 'RawDisk':
-      # RawDisk doesn't mount the underlying partition
-      mount_path = mount_local.PreprocessMountDisk(
-          evidence.loopdevice_path, evidence.mount_partition)
 
+    # TODO(rgayon): use docker-explorer exposed constant when
+    # https://github.com/google/docker-explorer/issues/80 is in.
     docker_dir = os.path.join(mount_path, 'var', 'lib', 'docker')
 
     containers_info = []
-    log.info('Searching for Docker containers in {0}'.format(docker_dir))
-    log.info('things there: {0}'.format(' '.join(os.listdir(docker_dir))))
     try:
       explorer_object = explorer.Explorer()
       explorer_object.SetDockerDirectory(docker_dir)
       containers_info = explorer_object.GetAllContainers()
     except BadStorageException as e:
-      mount_local.PostprocessUnmountPath(mount_path)
-      log.info('error docker pute {0!s}'.format(e))
       raise TurbiniaException(
           'Failed to get Docker containers: {0!s}'.format(e))
 
-    mount_local.PostprocessUnmountPath(mount_path)
     return containers_info
 
   def run(self, evidence, result):
@@ -85,20 +77,25 @@ class DockerContainersEnumerationTask(TurbiniaTask):
     status_report = ''
     success = False
 
-    found_containers = []
-    try:
-      containers_info = self.GetContainers(evidence)
-      for container_info in containers_info:
-        container_id = container_info.container_id
-        found_containers.append(container_id)
-        container_evidence = DockerContainer(container_id=container_id)
-        result.add_evidence(container_evidence, evidence.config)
-      success = True
-    except TurbiniaException as e:
+    if evidence.is_mounted:
       status_report = 'Error enumerating Docker containers: {0!s}'.format(e)
-
-    status_report = 'Found {0!s} containers: {1}'.format(
-        len(found_containers), ' '.join(found_containers))
+      found_containers = []
+      try:
+        containers_info = self.GetContainers(evidence)
+        for container_info in containers_info:
+          container_id = container_info.container_id
+          found_containers.append(container_id)
+          container_evidence = DockerContainer(container_id=container_id)
+          result.add_evidence(container_evidence, evidence.config)
+        success = True
+        status_report = 'Found {0!s} containers: {1:s}'.format(
+            len(found_containers), ' '.join(found_containers))
+      except TurbiniaException as e:
+        status_report = 'Error enumerating Docker containers: {0!s}'.format(e)
+    else:
+      status_report = (
+          'Evidence {0!s} did not expose a mounted file system'.format(
+              evidence))
 
     result.close(self, success=success, status=status_report)
 

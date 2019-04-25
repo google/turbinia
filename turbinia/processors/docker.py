@@ -34,8 +34,11 @@ def PreprocessMountDockerFS(docker_dir, container_id):
   """Mounts a Docker container Filesystem locally.
 
   Args:
-    docker_dir: the root Docker directory, as string.
-    container_id: the complete ID of the container, as string.
+    docker_dir(str): the root Docker directory.
+    container_id(str): the complete ID of the container.
+
+  Returns:
+    The path to the mounted container file system, as a string.
 
   Raises:
     TurbiniaException: if there was an error trying to mount the filesystem.
@@ -69,4 +72,4 @@ def PreprocessMountDockerFS(docker_dir, container_id):
   except Exception as e:
     raise TurbiniaException('Could not mount container: {0!s}'.format(e))
 
-  return mount_path
+  return container_mount_path

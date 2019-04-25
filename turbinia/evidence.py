@@ -17,6 +17,7 @@
 from __future__ import unicode_literals
 
 import json
+import logging
 import os
 import sys
 
@@ -26,6 +27,8 @@ from turbinia.processors import docker
 from turbinia.processors import mount_local
 
 # pylint: disable=keyword-arg-before-vararg
+
+log = logging.getLogger('turbinia')
 
 config.LoadConfig()
 if config.TASK_MANAGER.lower() == 'psq':
@@ -85,6 +88,7 @@ class Evidence(object):
     copyable: Whether this evidence can be copied.  This will be set to True for
         object types that we want to copy to/from storage (e.g. PlasoFile, but
         not RawDisk).
+    is_mounted(bool): Whether this evidence points to a mounted file system.
     name: Name of evidence.
     description: Description of evidence.
     saved_path (string): Path to secondary location evidence is saved for later
@@ -110,6 +114,7 @@ class Evidence(object):
     self.context_dependent = False
     self.cloud_only = False
     self.description = description
+    self.is_mounted = False
     self.source = source
     self.local_path = local_path
     self.tags = tags if tags else {}
@@ -226,9 +231,18 @@ class RawDisk(Evidence):
 
   def _preprocess(self):
     self.loopdevice_path = mount_local.PreprocessLosetup(self.local_path)
+    try:
+      self.local_path = mount_local.PreprocessMountDisk(
+          self.loopdevice_path, self.partition_number)
+      self.is_mounted = True
+    except TurbiniaException as e:
+      log.error('Could not mount partition {0:d} on {1}'.format(self._pa))
 
   def _postprocess(self):
-    mount_local.PostprocessDeleteLosetup(self.loopdevice_path)
+    if self.is_mounted:
+      mount_local.PostprocessUnmountPath(self.local_path)
+      self.is_mounted = False
+    mount_local.PostprocessDeleteLosetup(self.mount_path)
     self.loopdevice_path = None
 
 
@@ -289,10 +303,28 @@ class GoogleCloudDisk(RawDisk):
     self.cloud_only = True
 
   def _preprocess(self):
-    self.local_path = google_cloud.PreprocessAttachDisk(self.disk_name)
+    self._attached_path = google_cloud.PreprocessAttachDisk(self.disk_name)
+    self.loopdevice_path = mount_local.PreprocessLosetup(self._attached_path)
+
+    # If the mounting step fails, at least local_path still points to a device
+    # and can be picked up by PlasoTask for example
+    self.local_path = self.loopdevice_path
+    try:
+      self.mount_path = mount_local.PreprocessMountDisk(
+          self.loopdevice_path, self.mount_partition)
+      self.local_path = self.mount_path
+      self.is_mounted = True
+    except TurbiniaException as e:
+      log.error(
+          'Could not mount partition {0:d} for GoogleCloudDisk {1:s}: '
+          '{2!s}'.format(self.mount_partition, self.disk_name, e))
 
   def _postprocess(self):
-    google_cloud.PostprocessDetachDisk(self.disk_name, self.local_path)
+    if self.is_mounted:
+      mount_local.PostprocessUnmountPath(self.mount_path)
+      self.is_mounted = False
+    mount_local.PostprocessDeleteLosetup(self.loopdevice_path)
+    google_cloud.PostprocessDetachDisk(self.disk_name, self._attached_path)
     self.local_path = None
 
 
@@ -314,11 +346,26 @@ class GoogleCloudDiskRawEmbedded(GoogleCloudDisk):
     super(GoogleCloudDiskRawEmbedded, self).__init__(*args, **kwargs)
 
   def _preprocess(self):
-    self.local_path = google_cloud.PreprocessAttachDisk(self.disk_name)
-    self.loopdevice_path = mount_local.PreprocessLosetup(self.local_path)
-    self.mount_path = mount_local.PreprocessMountDisk(
+    self._attached_path = google_cloud.PreprocessAttachDisk(self.disk_name)
+    self.loopdevice_path = mount_local.PreprocessLosetup(self._attached_path)
+    self._clouddisk_mount_path = mount_local.PreprocessMountDisk(
         self.loopdevice_path, self.mount_partition)
-    self.local_path = os.path.join(self.mount_path, self.embedded_path)
+
+    # If the mounting of the embedded image step fails, at least local_path
+    # still points to the image.
+    self.local_path = os.path.join(
+        self._clouddisk_mount_path, self.embedded_path)
+
+    try:
+      # We now try to mount the image pointed by self.embedded_path
+      self.mount_path = mount_local.PreprocessMountDisk(
+          self.embedded_path, self.mount_partition)
+      self.local_path = self.mount_path
+      self.is_mounted = True
+    except TurbiniaException as e:
+      log.error(
+          'Could not mount partition {0:d} for GoogleCloudDiskRawEmbedded '
+          '"{1:s}": {2!s}'.format(self.mount_partition, self.disk_name, e))
 
   def _postprocess(self):
     google_cloud.PostprocessDetachDisk(self.disk_name, self.local_path)
@@ -387,6 +434,9 @@ class DockerContainer(Evidence):
 
   Attributes:
     container_id(str): The ID of the container to mount.
+    _container_fs_path(str): Full path to where the container filesystem will
+      be mounted.
+    _docker_root_directory(str): Full path to the docker root directory.
   """
 
   # ABSOLUTELY NO LEADING / HERE
@@ -398,25 +448,20 @@ class DockerContainer(Evidence):
     self.container_id = container_id
     self._container_fs_path = None
     self._docker_root_directory = None
-    self._mount_path = None
+
     self.context_dependent = True
 
   def _preprocess(self):
     if not self.parent_evidence:
       raise TurbiniaException(
           'Evidence of type DockerContainer should have a parent_evidence set.')
-    self._mount_path = self.parent_evidence.local_path
-    if issubclass(type(self.parent_evidence), RawDisk):
-      # Mounting the filesystem on the disk, as this is not done by the RawDisk
-      # evidence preprocessor
-      # TODO: consider making the RawDisk preprocessor always mount the
-      # partition
-      self._mount_path = mount_local.PreprocessMountDisk(
-          self.parent_evidence.loopdevice_path,
-          self.parent_evidence.mount_partition)
+    if not self.parent_evidence.is_mounted:
+      raise TurbiniaException(
+          'Parent Evidence ({0}) does not have a mounted filesystem'.format(
+              self.parent_evidence))
 
     self._docker_root_directory = os.path.join(
-        self._mount_path, self.DEFAULT_DOCKER_DIRECTORY_PATH)
+        self.parent_evidence.mount_path, self.DEFAULT_DOCKER_DIRECTORY_PATH)
     # Mounting the container's filesystem
     self._container_fs_path = docker.PreprocessMountDockerFS(
         self._docker_root_directory, self.container_id)
@@ -426,9 +471,3 @@ class DockerContainer(Evidence):
     # Unmount the container's filesystem
     mount_local.PostprocessUnmountPath(self.local_path)
     self._container_fs_path = None
-    if not self.parent_evidence:
-      raise TurbiniaException(
-          'Evidence of type DockerContainer should have a parent_evidence set.')
-    if isinstance(self.parent_evidence, RawDisk):
-      # Unmount any underlying mount path, as we had to mount the disk ourselves
-      mount_local.PostprocessUnmountPath(self._mount_path)
