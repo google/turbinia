@@ -77,7 +77,9 @@ class DockerContainersEnumerationTask(TurbiniaTask):
     success = False
 
     if evidence.is_mounted:
-      status_report = 'Error enumerating Docker containers: {0!s}'.format(e)
+      status_report = (
+          'Error enumerating Docker containers, evidence has no mounted '
+          'filesystem')
       found_containers = []
       try:
         containers_info = self.GetContainers(evidence)
