@@ -17,12 +17,15 @@
 from __future__ import unicode_literals
 
 import json
+import logging
 import os
 import sys
 
 from turbinia import config
 from turbinia import TurbiniaException
 from turbinia.processors import mount_local
+
+log = logging.getLogger('turbinia')
 
 # pylint: disable=keyword-arg-before-vararg
 
@@ -289,6 +292,7 @@ class GoogleCloudDisk(RawDisk):
     project: The cloud project name this disk is associated with.
     zone: The geographic zone.
     disk_name: The cloud disk name.
+    _attached_path(str): the path to the block device once the disk is attached.
   """
 
   def __init__(self, project=None, zone=None, disk_name=None, *args, **kwargs):
@@ -298,6 +302,8 @@ class GoogleCloudDisk(RawDisk):
     self.disk_name = disk_name
     super(GoogleCloudDisk, self).__init__(*args, **kwargs)
     self.cloud_only = True
+
+    self._attached_path = None
 
   def _preprocess(self):
     self._attached_path = google_cloud.PreprocessAttachDisk(self.disk_name)
@@ -334,12 +340,15 @@ class GoogleCloudDiskRawEmbedded(GoogleCloudDisk):
 
   Attributes:
     embedded_path: The path of the raw disk image inside the Persistent Disk
+    _clouddisk_mount_path(str): the path where the attached disk is mounted.
   """
 
   def __init__(self, embedded_path=None, *args, **kwargs):
     """Initialization for Google Cloud Disk."""
     self.embedded_path = embedded_path
     super(GoogleCloudDiskRawEmbedded, self).__init__(*args, **kwargs)
+
+    self._clouddisk_mount_path = None
 
   def _preprocess(self):
     self._attached_path = google_cloud.PreprocessAttachDisk(self.disk_name)
