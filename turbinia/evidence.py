@@ -221,31 +221,31 @@ class RawDisk(Evidence):
   """
 
   def __init__(
-      self, mount_path=None, mount_partition=None, size=None, *args, **kwargs):
+      self, mount_partition=None, size=None, *args, **kwargs):
     """Initialization for raw disk evidence object."""
     self.loopdevice_path = None
-    self.mount_path = mount_path
     self.mount_partition = mount_partition
     self.size = size
     super(RawDisk, self).__init__(*args, **kwargs)
 
+    self.mount_path = None
+
   def _preprocess(self):
     self.loopdevice_path = mount_local.PreprocessLosetup(self.local_path)
     try:
-      self.local_path = mount_local.PreprocessMountDisk(
-          self.loopdevice_path, self.partition_number)
+      self.mount_path = mount_local.PreprocessMountDisk(
+          self.loopdevice_path, self.mount_partition)
       self.is_mounted = True
     except TurbiniaException as e:
       log.error(
           'Could not mount partition {0:d} of RawDisk {1!s}: {2!s}'.format(
-              self.partition_number, self, e))
+              self.mount_partition, self, e))
 
   def _postprocess(self):
     if self.is_mounted:
-      mount_local.PostprocessUnmountPath(self.local_path)
+      mount_local.PostprocessUnmountPath(self.mount_path)
       self.is_mounted = False
-    mount_local.PostprocessDeleteLosetup(self.mount_path)
-    self.loopdevice_path = None
+    mount_local.PostprocessDeleteLosetup(self.loopdevice_path)
 
 
 class EncryptedDisk(RawDisk):
@@ -330,7 +330,6 @@ class GoogleCloudDisk(RawDisk):
       self.is_mounted = False
     mount_local.PostprocessDeleteLosetup(self.loopdevice_path)
     google_cloud.PostprocessDetachDisk(self.disk_name, self._attached_path)
-    self.local_path = None
 
 
 class GoogleCloudDiskRawEmbedded(GoogleCloudDisk):
@@ -477,5 +476,4 @@ class DockerContainer(Evidence):
 
   def _postprocess(self):
     # Unmount the container's filesystem
-    mount_local.PostprocessUnmountPath(self.local_path)
-    self._container_fs_path = None
+    mount_local.PostprocessUnmountPath(self._container_fs_path)

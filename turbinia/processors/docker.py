@@ -18,9 +18,8 @@ from __future__ import unicode_literals
 
 import logging
 import os
+import subprocess
 import tempfile
-
-from docker_explorer import explorer
 
 from turbinia import config
 from turbinia import TurbiniaException
@@ -30,6 +29,10 @@ log = logging.getLogger('turbinia')
 
 def PreprocessMountDockerFS(docker_dir, container_id):
   """Mounts a Docker container Filesystem locally.
+
+  We use subprocess to run the DockerExplorer script, instead of using the
+  Python module, because we need to make sure all DockerExplorer code runs
+  as root.
 
   Args:
     docker_dir(str): the root Docker directory.
@@ -63,11 +66,24 @@ def PreprocessMountDockerFS(docker_dir, container_id):
   log.info(
       'Using docker_explorer to mount container {0:s} on {1:s}'.format(
           container_id, container_mount_path))
+  # TODO(aarontp): Remove hard-coded sudo in commands:
+  # https://github.com/google/turbinia/issues/73
+  de_paths = [
+      path for path in ['/usr/local/bin/de.py', '/usr/bin/de.py']
+      if os.path.isfile(path)
+  ]
+  if not de_paths:
+    raise TurbiniaException('Could not find docker-explorer script: de.py')
+
+  de_binary = de_paths[0]
+  mount_cmd = [
+      'sudo', de_binary, '-r', docker_dir, 'mount', container_id,
+      container_mount_path
+  ]
+  log.info('Running: {0:s}'.format(' '.join(mount_cmd)))
+
   try:
-    explorer_object = explorer.Explorer()
-    explorer_object.SetDockerDirectory(docker_dir)
-    container_object = explorer_object.GetContainer(container_id)
-    container_object.Mount(container_mount_path)
+    subprocess.check_call(mount_cmd)
   except Exception as e:
     raise TurbiniaException('Could not mount container: {0!s}'.format(e))
 
