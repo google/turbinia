@@ -26,9 +26,9 @@ from turbinia import TurbiniaException
 from turbinia.processors import docker
 from turbinia.processors import mount_local
 
-# pylint: disable=keyword-arg-before-vararg
-
 log = logging.getLogger('turbinia')
+
+# pylint: disable=keyword-arg-before-vararg
 
 config.LoadConfig()
 if config.TASK_MANAGER.lower() == 'psq':
@@ -88,7 +88,6 @@ class Evidence(object):
     copyable: Whether this evidence can be copied.  This will be set to True for
         object types that we want to copy to/from storage (e.g. PlasoFile, but
         not RawDisk).
-    is_mounted(bool): Whether this evidence points to a mounted file system.
     name: Name of evidence.
     description: Description of evidence.
     saved_path (string): Path to secondary location evidence is saved for later
@@ -114,7 +113,6 @@ class Evidence(object):
     self.context_dependent = False
     self.cloud_only = False
     self.description = description
-    self.is_mounted = False
     self.source = source
     self.local_path = local_path
     self.tags = tags if tags else {}
@@ -214,6 +212,7 @@ class RawDisk(Evidence):
   """Evidence object for Disk based evidence.
 
   Attributes:
+    is_mounted(bool): Whether this evidence points to a mounted file system.
     loopdevice_path: Path to the losetup device for this disk.
     mount_path: The mount path for this disk (if any).
     mount_partition: The mount partition for this disk (if any).
@@ -227,6 +226,7 @@ class RawDisk(Evidence):
     self.size = size
     super(RawDisk, self).__init__(*args, **kwargs)
 
+    self.is_mounted = False
     self.mount_path = None
 
   def _preprocess(self):
