@@ -28,15 +28,13 @@ class TestTurbiniaEvidence(unittest.TestCase):
 
   def testEvidenceSerialization(self):
     """Test that evidence serializes/unserializes."""
-    rawdisk = evidence.RawDisk(
-        name='My Evidence', local_path='/tmp/foo', mount_path='/mnt/foo')
+    rawdisk = evidence.RawDisk(name='My Evidence', local_path='/tmp/foo')
     rawdisk_json = rawdisk.to_json()
     self.assertTrue(isinstance(rawdisk_json, str))
 
     rawdisk_new = evidence.evidence_decode(json.loads(rawdisk_json))
     self.assertTrue(isinstance(rawdisk_new, evidence.RawDisk))
     self.assertEqual(rawdisk_new.name, 'My Evidence')
-    self.assertEqual(rawdisk_new.mount_path, '/mnt/foo')
 
   def testEvidenceSerializationBadType(self):
     """Test that evidence_decode throws error on non-dict type."""
