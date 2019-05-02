@@ -22,6 +22,7 @@ from turbinia.evidence import GoogleCloudDisk
 from turbinia.evidence import GoogleCloudDiskRawEmbedded
 from turbinia.evidence import ReportText
 from turbinia.jobs import interface
+from turbinia.jobs import manager
 from turbinia.workers.analysis.jenkins import JenkinsAnalysisTask
 
 
@@ -46,3 +47,5 @@ class JenkinsAnalysisJob(interface.TurbiniaJob):
     """
     tasks = [JenkinsAnalysisTask() for _ in evidence]
     return tasks
+
+manager.JobsManager.RegisterJob(JenkinsAnalysisJob)
