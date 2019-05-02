@@ -24,7 +24,7 @@ from turbinia.evidence import ReportText
 from turbinia.lib import text_formatter as fmt
 from turbinia.workers import TurbiniaTask
 from turbinia.workers import Priority
-from turbinia.lib.utils import extract_artifacts
+from turbinia.lib.utils import extract_files
 from turbinia.lib.utils import bruteforce_password_hashes
 
 
@@ -52,16 +52,22 @@ class JenkinsAnalysisTask(TurbiniaTask):
     output_evidence.local_path = output_file_path
 
     try:
-      collected_artifacts = extract_artifacts(
-          artifact_names=['JenkinsConfigFile'], disk_path=evidence.local_path,
+      collected_artifacts = extract_files(
+          file_name='config.xml', disk_path=evidence.local_path,
           output_dir=os.path.join(self.output_dir, 'artifacts'))
     except TurbiniaException as e:
       result.close(self, success=False, status=str(e))
       return result
 
+    jenkins_artifacts = []
+    jenkins_re = re.compile(r'^.*jenkins[^\/]*(\/users\/[^\/]+)*\/config\.xml$')
+    for collected_artifact in collected_artifacts:
+      if re.match(jenkins_re, collected_artifact):
+        jenkins_artifacts.append(collected_artifact)
+
     version = None
     credentials = []
-    for filepath in collected_artifacts:
+    for filepath in jenkins_artifacts:
       with open(filepath, 'r') as input_file:
         config = input_file.read()
 
@@ -159,6 +165,12 @@ class JenkinsAnalysisTask(TurbiniaTask):
       version = 'Unknown'
     report.append(fmt.bullet('Jenkins version: {0:s}'.format(version)))
 
+    if credentials_registry or version:
+      # Bump up the priority a bit if we have extracted a version or credentials
+      # even if they are not weak since having jenkins at all can be
+      # interesting.
+      priority = Priority.MEDIUM
+
     if weak_passwords:
       priority = Priority.CRITICAL
       summary = 'Jenkins analysis found potential issues'
@@ -171,7 +183,6 @@ class JenkinsAnalysisTask(TurbiniaTask):
         report.append(fmt.bullet(line, level=2))
     else:
       summary = 'Jenkins analysis found no issues'
-      priority = Priority.LOW
       report.insert(0, fmt.heading4(summary))
 
     report = '\n'.join(report)

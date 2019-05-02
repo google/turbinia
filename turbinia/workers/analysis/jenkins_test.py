@@ -166,7 +166,7 @@ class JenkinsAnalysisTaskTest(unittest.TestCase):
         self.EXPECTED_VERSION, self.EXPECTED_CREDENTIALS)
 
     self.assertEqual(report, self.JENKINS_ANALYSIS_EMPTY_REPORT)
-    self.assertEqual(priority, 80)
+    self.assertEqual(priority, 50)
     self.assertEqual(summary, 'Jenkins analysis found no issues')
 
 
