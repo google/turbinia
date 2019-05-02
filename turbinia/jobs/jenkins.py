@@ -48,4 +48,5 @@ class JenkinsAnalysisJob(interface.TurbiniaJob):
     tasks = [JenkinsAnalysisTask() for _ in evidence]
     return tasks
 
+
 manager.JobsManager.RegisterJob(JenkinsAnalysisJob)
