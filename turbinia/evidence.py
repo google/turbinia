@@ -330,7 +330,7 @@ class APFSEncryptedDisk(EncryptedDisk):
 
 
 class GoogleCloudDisk(RawDisk):
-  """Evidence object for Google Cloud Disks.
+  """Evidence object for a Google Cloud Disk.
 
   Attributes:
     project: The cloud project name this disk is associated with.
