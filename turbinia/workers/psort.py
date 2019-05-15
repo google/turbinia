@@ -40,7 +40,7 @@ class PsortTask(TurbiniaTask):
     psort_evidence = PlasoCsvFile()
 
     psort_file = os.path.join(self.output_dir, '{0:s}.csv'.format(self.id))
-    psort_evidence.local_path = psort_file
+    psort_evidence.source_path = psort_file
     psort_log = os.path.join(self.output_dir, '{0:s}.log'.format(self.id))
 
     cmd = ['psort.py', '--status_view', 'none', '--logfile', psort_log]

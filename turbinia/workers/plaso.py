@@ -44,7 +44,7 @@ class PlasoTask(TurbiniaTask):
     # Write plaso file into tmp_dir because sqlite has issues with some shared
     # filesystems (e.g NFS).
     plaso_file = os.path.join(self.tmp_dir, '{0:s}.plaso'.format(self.id))
-    plaso_evidence.local_path = plaso_file
+    plaso_evidence.source_path = plaso_file
     plaso_log = os.path.join(self.output_dir, '{0:s}.log'.format(self.id))
 
     # TODO(aarontp): Move these flags into a recipe

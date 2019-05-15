@@ -113,7 +113,7 @@ class HadoopAnalysisTask(TurbiniaTask):
     output_file_name = 'hadoop_analysis.txt'
     output_file_path = os.path.join(self.output_dir, output_file_name)
 
-    output_evidence.local_path = output_file_path
+    output_evidence.source_path = output_file_path
 
     try:
       # We don't use FileArtifactExtractionTask as it export one evidence per

@@ -45,7 +45,7 @@ class SSHDAnalysisTask(TurbiniaTask):
     output_file_name = 'sshd_config_analysis.txt'
     output_file_path = os.path.join(self.output_dir, output_file_name)
     # Set the output file as the data source for the output evidence.
-    output_evidence.local_path = output_file_path
+    output_evidence.source_path = output_file_path
 
     # Read the input file
     with open(evidence.local_path, 'r') as input_file:

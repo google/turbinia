@@ -385,7 +385,7 @@ def main():
     args.name = args.name if args.name else args.local_path
     local_path = os.path.abspath(args.local_path)
     evidence_ = evidence.RawDisk(
-        name=args.name, local_path=local_path,
+        name=args.name, source_path=local_path,
         mount_partition=args.mount_partition, source=args.source)
   elif args.command == 'apfs':
     if not args.password and not args.recovery_key:
@@ -403,13 +403,13 @@ def main():
     args.name = args.name if args.name else args.local_path
     local_path = os.path.abspath(args.local_path)
     evidence_ = evidence.BitlockerDisk(
-        name=args.name, local_path=local_path, recovery_key=args.recovery_key,
+        name=args.name, source_path=local_path, recovery_key=args.recovery_key,
         password=args.password, source=args.source)
   elif args.command == 'directory':
     args.name = args.name if args.name else args.local_path
     local_path = os.path.abspath(args.local_path)
     evidence_ = evidence.Directory(
-        name=args.name, local_path=local_path, source=args.source)
+        name=args.name, source_path=local_path, source=args.source)
   elif args.command == 'googleclouddisk':
     is_cloud_disk = True
     args.name = args.name if args.name else args.disk_name
@@ -420,10 +420,16 @@ def main():
   elif args.command == 'googleclouddiskembedded':
     is_cloud_disk = True
     args.name = args.name if args.name else args.disk_name
+    parent_evidence_ = evidence.GoogleCloudDisk(
+        name=args.name, disk_name=args.disk_name, project=args.project,
+        mount_partition=args.mount_partition, zone=args.zone,
+        source=args.source)
+    # TODO: have a way to provide the partition in the parent evidence to get
+    # access to the embedded disk image, and the partition in that disk image
+    # that contains the data we want to process.
     evidence_ = evidence.GoogleCloudDiskRawEmbedded(
-        name=args.name, disk_name=args.disk_name,
         embedded_path=args.embedded_path, mount_partition=args.mount_partition,
-        project=args.project, zone=args.zone, source=args.source)
+        parent_evidence=parent_evidence_)
   elif args.command == 'hindsight':
     if args.format not in ['xlsx', 'sqlite', 'jsonl']:
       log.error('Invalid output format.')

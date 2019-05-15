@@ -84,15 +84,20 @@ class Evidence(object):
     copyable: Whether this evidence can be copied.  This will be set to True for
         object types that we want to copy to/from storage (e.g. PlasoFile, but
         not RawDisk).
-    name: Name of evidence.
     description: Description of evidence.
+    device_path: Path to a relevant 'raw' data source (ie: a block device or a
+        raw disk image).
+    mount_path: Path to a mounted file system (if relevant).
+    name: Name of evidence.
+    local_path (string): Path to the processed data (can be a blockdevice or a
+        directory).
     saved_path (string): Path to secondary location evidence is saved for later
         retrieval (e.g. GCS).
     saved_path_type (string): The name of the output writer that saved evidence
         to the saved_path location.
     source: String indicating where evidence came from (including tool version
         that created it, if appropriate).
-    local_path: A string of the local_path to the evidence.
+    source_path (string): Path to the un-processed source data for the Evidence.
     tags: dict of extra tags associated with this evidence.
     request_id: The id of the request this evidence came from, if any.
     parent_evidence: The Evidence object that was used to generate this one, and
@@ -104,7 +109,7 @@ class Evidence(object):
   REQUIRED_ATTRIBUTES = []
 
   def __init__(
-      self, name=None, description=None, source=None, local_path=None,
+      self, name=None, description=None, source=None, source_path=None,
       tags=None, request_id=None):
     """Initialization for Evidence."""
     self.copyable = False
@@ -112,8 +117,11 @@ class Evidence(object):
     self.context_dependent = False
     self.cloud_only = False
     self.description = description
+    self.device_path = None
+    self.local_path = None
+    self.mount_path = None
     self.source = source
-    self.local_path = local_path
+    self.source_path = source_path
     self.tags = tags if tags else {}
     self.request_id = request_id
     self.parent_evidence = None
@@ -126,7 +134,7 @@ class Evidence(object):
     self.saved_path_type = None
 
   def __str__(self):
-    return '{0:s}:{1:s}:{2!s}'.format(self.type, self.name, self.local_path)
+    return '{0:s}:{1:s}:{2!s}'.format(self.type, self.name, self.source_path)
 
   def __repr__(self):
     return self.__str__()
@@ -181,7 +189,11 @@ class Evidence(object):
     starting with the most distant ancestor.  After all of the ancestors have
     been processed, then we run our pre-processor.
     """
-    if self.parent_evidence:
+    if self.context_dependent:
+      if not self.parent_evidence:
+        raise TurbiniaException(
+            'Evidence of type {0:s} needs a parent evidence'.format(
+                self.__class__.__name__))
       self.parent_evidence.preprocess()
     self._preprocess()
 
@@ -245,8 +257,6 @@ class RawDisk(Evidence):
   """Evidence object for Disk based evidence.
 
   Attributes:
-    loopdevice_path: Path to the losetup device for this disk.
-    mount_path: The mount path for this disk (if any).
     mount_partition: The mount partition for this disk (if any).
     size:  The size of the disk in bytes.
   """
@@ -254,18 +264,17 @@ class RawDisk(Evidence):
   def __init__(
       self, mount_path=None, mount_partition=None, size=None, *args, **kwargs):
     """Initialization for raw disk evidence object."""
-    self.loopdevice_path = None
     self.mount_path = mount_path
     self.mount_partition = mount_partition
     self.size = size
     super(RawDisk, self).__init__(*args, **kwargs)
 
   def _preprocess(self):
-    self.loopdevice_path = mount_local.PreprocessLosetup(self.local_path)
+    self.device_path = mount_local.PreprocessLosetup(self.source_path)
+    self.local_path = self.device_path
 
   def _postprocess(self):
-    mount_local.PostprocessDeleteLosetup(self.loopdevice_path)
-    self.loopdevice_path = None
+    mount_local.PostprocessDeleteLosetup(self.device_path)
 
 
 class EncryptedDisk(RawDisk):
@@ -349,14 +358,14 @@ class GoogleCloudDisk(RawDisk):
     self.cloud_only = True
 
   def _preprocess(self):
-    self.local_path = google_cloud.PreprocessAttachDisk(self.disk_name)
+    self.device_path = google_cloud.PreprocessAttachDisk(self.disk_name)
+    self.local_path = self.device_path
 
   def _postprocess(self):
-    google_cloud.PostprocessDetachDisk(self.disk_name, self.local_path)
-    self.local_path = None
+    google_cloud.PostprocessDetachDisk(self.disk_name, self.device_path)
 
 
-class GoogleCloudDiskRawEmbedded(GoogleCloudDisk):
+class GoogleCloudDiskRawEmbedded(RawDisk):
   """Evidence object for raw disks embedded in Persistent Disks.
 
   This is for a raw image file that is located in the filesystem of a mounted
@@ -371,21 +380,24 @@ class GoogleCloudDiskRawEmbedded(GoogleCloudDisk):
   REQUIRED_ATTRIBUTES = ['disk_name', 'project', 'zone', 'embedded_path']
 
   def __init__(self, embedded_path=None, *args, **kwargs):
-    """Initialization for Google Cloud Disk."""
+    """Initialization for Google Cloud Disk containing a raw disk image."""
     self.embedded_path = embedded_path
     super(GoogleCloudDiskRawEmbedded, self).__init__(*args, **kwargs)
 
+    # This Evidence needs to have a GoogleCloudDisk as a parent
+    self.context_dependent = True
+
   def _preprocess(self):
-    self.local_path = google_cloud.PreprocessAttachDisk(self.disk_name)
-    self.loopdevice_path = mount_local.PreprocessLosetup(self.local_path)
+    # TODO, after we make all Disks Evidence try to mount their filesystem,
+    # the following mounting will be done in the parent evidence.
+    # and we'll set mount_path as the path to the mounted embedded disk image.
     self.mount_path = mount_local.PreprocessMountDisk(
-        self.loopdevice_path, self.mount_partition)
-    self.local_path = os.path.join(self.mount_path, self.embedded_path)
+        self.parent_evidence.device_path, 1)
+    self.device_path = os.path.join(self.mount_path, self.embedded_path)
+    self.local_path = self.device_path
 
   def _postprocess(self):
-    google_cloud.PostprocessDetachDisk(self.disk_name, self.local_path)
     mount_local.PostprocessUnmountPath(self.mount_path)
-    mount_local.PostprocessDeleteLosetup(self.loopdevice_path)
 
 
 class PlasoFile(Evidence):

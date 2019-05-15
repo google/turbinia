@@ -165,15 +165,15 @@ class TurbiniaTaskResult(object):
     self.status = status
 
     for evidence in self.evidence:
-      if evidence.local_path and os.path.exists(evidence.local_path):
-        self.saved_paths.append(evidence.local_path)
+      if evidence.source_path and os.path.exists(evidence.source_path):
+        self.saved_paths.append(evidence.source_path)
         if not task.run_local:
           if evidence.copyable and not config.SHARED_FILESYSTEM:
             task.output_manager.save_evidence(evidence, self)
       else:
         self.log(
-            'Evidence {0:s} has empty or missing file at local_path {1:s} so '
-            'not saving.'.format(evidence.name, evidence.local_path))
+            'Evidence {0:s} has empty or missing file at source_path {1:s} so '
+            'not saving.'.format(evidence.name, evidence.source_path))
 
       if not evidence.request_id:
         evidence.request_id = self.request_id
@@ -453,16 +453,16 @@ class TurbiniaTask(object):
       for evidence in new_evidence:
         # If the local path is set in the Evidence, we check to make sure that
         # the path exists and is not empty before adding it.
-        if evidence.local_path and not os.path.exists(evidence.local_path):
+        if evidence.source_path and not os.path.exists(evidence.source_path):
           message = (
-              'Evidence {0:s} local_path {1:s} does not exist. Not returning '
-              'empty Evidence.'.format(evidence.name, evidence.local_path))
+              'Evidence {0:s} source_path {1:s} does not exist. Not returning '
+              'empty Evidence.'.format(evidence.name, evidence.source_path))
           result.log(message, level=logging.WARN)
-        elif (evidence.local_path and os.path.exists(evidence.local_path) and
-              os.path.getsize(evidence.local_path) == 0):
+        elif (evidence.source_path and os.path.exists(evidence.source_path) and
+              os.path.getsize(evidence.source_path) == 0):
           message = (
-              'Evidence {0:s} local_path {1:s} is empty. Not returning '
-              'empty new Evidence.'.format(evidence.name, evidence.local_path))
+              'Evidence {0:s} source_path {1:s} is empty. Not returning '
+              'empty new Evidence.'.format(evidence.name, evidence.source_path))
           result.log(message, level=logging.WARN)
         else:
           result.add_evidence(evidence, self._evidence_config)
@@ -500,10 +500,10 @@ class TurbiniaTask(object):
       if evidence.copyable and not config.SHARED_FILESYSTEM:
         self.output_manager.retrieve_evidence(evidence)
 
-    if evidence.local_path and not os.path.exists(evidence.local_path):
+    if evidence.source_path and not os.path.exists(evidence.source_path):
       raise TurbiniaException(
           'Evidence local path {0:s} does not exist'.format(
-              evidence.local_path))
+              evidence.source_path))
     evidence.preprocess()
     return self.result
 

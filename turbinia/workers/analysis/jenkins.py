@@ -49,7 +49,7 @@ class JenkinsAnalysisTask(TurbiniaTask):
     output_file_path = os.path.join(self.output_dir, output_file_name)
 
     # Set the output file as the data source for the output evidence.
-    output_evidence.local_path = output_file_path
+    output_evidence.source_path = output_file_path
 
     # TODO(aarontp): We should find a more optimal solution for this because
     # this requires traversing the entire filesystem and extracting more files
