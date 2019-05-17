@@ -258,7 +258,8 @@ class RawDisk(Evidence):
 
   Attributes:
     mount_partition: The mount partition for this disk (if any).
-    size:  The size of the disk in bytes.
+    mount_path: The mount path for this disk (if any).
+    size: The size of the disk in bytes.
   """
 
   def __init__(
