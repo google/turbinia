@@ -19,6 +19,7 @@ from __future__ import unicode_literals
 import os
 
 from turbinia import config
+from turbinia.evidence import APFSEncryptedDisk
 from turbinia.evidence import BitlockerDisk
 from turbinia.evidence import PlasoFile
 from turbinia.workers import TurbiniaTask
@@ -53,7 +54,8 @@ class PlasoTask(TurbiniaTask):
     if config.DEBUG_TASKS:
       cmd.append('-d')
 
-    if isinstance(evidence, BitlockerDisk):
+    if isinstance(evidence, BitlockerDisk) or \
+            isinstance(evidence, APFSEncryptedDisk):
       if evidence.recovery_key:
         cmd.extend([
             '--credential', 'recovery_password:{0:s}'.format(
