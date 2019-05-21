@@ -146,8 +146,8 @@ def main():
   parser_apfs = subparsers.add_parser(
       'apfs', help='Process APFSEncryptedDisk as Evidence')
   parser_apfs.add_argument(
-      '-l', '--local_path',
-      help='Local path to the encrypted APFS evidence', required=True)
+      '-l', '--local_path', help='Local path to the encrypted APFS evidence',
+      required=True)
   parser_apfs.add_argument(
       '-r', '--recovery_key', help='Recovery key for the APFS evidence.  '
       'Either recovery key or password must be specified.', required=False)
