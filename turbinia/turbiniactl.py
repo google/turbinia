@@ -275,12 +275,12 @@ def main():
 
   args = parser.parse_args()
   if args.config:
-      try:
-          with open("config/turbinia_config.py", "r") as f:
-              conf = f.read()
-              print(conf)
-      except:
-          log.info("failed to print config, Check if config exists")
+    try:
+      with open(config.configSource(), "r") as f:
+        conf = f.read()
+        print(conf)
+    except:
+      log.info("failed to print config, Check if config exists")
   if args.quiet:
     log.setLevel(logging.ERROR)
   elif args.debug:
