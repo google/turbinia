@@ -276,7 +276,7 @@ def main():
   args = parser.parse_args()
   if args.config:
     try:
-      with open(config.configSource(), "r") as f:
+      with open(config.configSource, "r") as f:
         conf = f.read()
         print(conf)
     except:
