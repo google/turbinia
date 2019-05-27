@@ -25,8 +25,10 @@ from turbinia.workers.volatility import VolatilityTask
 
 class VolatilityJob(interface.TurbiniaJob):
   """Volatility analysis job.
-    This will execute volatility against a piece of evidence.
-    """
+
+  This will generate a Volatility task for every module per each peice of
+  evidence.
+  """
 
   evidence_input = [RawMemory]
   evidence_output = [VolatilityReport]
@@ -34,16 +36,18 @@ class VolatilityJob(interface.TurbiniaJob):
   NAME = 'VolatilityJob'
 
   def create_tasks(self, evidence):
-    """Create task.
-        Args:
-            evidence: List of evidence objects to process
-        Returns:
-            A list of tasks to schedule.
-        """
+    """Create task for Volatility.
+
+    Args:
+      evidence: List of evidence objects to process
+
+    Returns:
+      A list of tasks to schedule.
+    """
 
     tasks = []
     for evidence_item in evidence:
-      for mod in evidence_item.module:
+      for mod in evidence_item.module_list:
         tasks.append(VolatilityTask(mod))
     return tasks
 

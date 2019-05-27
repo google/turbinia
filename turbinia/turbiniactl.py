@@ -223,7 +223,7 @@ def main():
   parser_rawmemory.add_argument(
       '-n', '--name', help='Descriptive name of the evidence', required=False)
   parser_rawmemory.add_argument(
-      '-m', '--module', type=csv_list, help='Volatility module(s) to execute',
+      '-m', '--module_list', type=csv_list, help='Volatility module(s) to execute',
       required=True)
 
   # Parser options for Directory evidence type
@@ -374,7 +374,7 @@ def main():
     local_path = os.path.abspath(args.local_path)
     evidence_ = evidence.RawMemory(
         name=args.name, local_path=local_path, profile=args.profile,
-        module=args.module)
+        module_list=args.module_list)
   elif args.command == 'psqworker':
     # Set up root logger level which is normally set by the psqworker command
     # which we are bypassing.

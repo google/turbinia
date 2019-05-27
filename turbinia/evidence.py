@@ -385,12 +385,12 @@ class RawMemory(Evidence):
   """Evidence object for Memory based evidence.
 
   Attributes:
-    profile (string): Profile used for the analysis
-    module (string): Module used for the analysis
+    profile (string): Volatility profile used for the analysis
+    module_list (list): Module used for the analysis
     """
 
-  def __init__(self, module=None, profile=None, *args, **kwargs):
+  def __init__(self, module_list=None, profile=None, *args, **kwargs):
     """Initialization for raw memory evidence object."""
     super(RawMemory, self).__init__(*args, **kwargs)
     self.profile = profile
-    self.module = module
+    self.module_list = module_list
