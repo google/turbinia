@@ -52,7 +52,6 @@ class VolatilityTask(TurbiniaTask):
     output_evidence.local_path = output_file_path
     debug_log = os.path.join(self.output_dir, '{0:s}.log'.format(self.id))
 
-
     # TODO: Add in config options for Turbinia
     cmd = (
         'vol2 -f {0:s} --profile={1:s} {2:s} --output=text '
@@ -61,21 +60,22 @@ class VolatilityTask(TurbiniaTask):
             output_file_path).split()
 
     result.log('Running vol as [{0:s}]'.format(' '.join(cmd)))
-    res = self.execute(cmd, result, log_files=[debug_log],
-        new_evidence=[output_evidence], close=True)
+    res = self.execute(
+        cmd, result, log_files=[debug_log], new_evidence=[output_evidence],
+        close=True)
 
     if res == 0:
-        # Write the report to the output file.
-        with open(output_file_path, 'w') as fh:
-            fh.write(output_evidence.text_data.encode('utf-8'))
+      # Write the report to the output file.
+      with open(output_file_path, 'w') as fh:
+        fh.write(output_evidence.text_data.encode('utf-8'))
 
-        # Add the resulting evidence to the result object.
-        result.add_evidence(output_evidence, evidence.config)
-        result.report_data = output_evidence
-        summary  = 'Volatility module {0} successfully ran.'.format(self.module)
-        result.close(self, success=True, status=summary)
+      # Add the resulting evidence to the result object.
+      result.add_evidence(output_evidence, evidence.config)
+      result.report_data = output_evidence
+      summary = 'Volatility module {0} successfully ran.'.format(self.module)
+      result.close(self, success=True, status=summary)
     else:
-        summary = 'Volatility module {0} failed to run.'.format(self.module)
-        result.close(self, success=False, status=summary)
+      summary = 'Volatility module {0} failed to run.'.format(self.module)
+      result.close(self, success=False, status=summary)
 
     return result

@@ -223,8 +223,8 @@ def main():
   parser_rawmemory.add_argument(
       '-n', '--name', help='Descriptive name of the evidence', required=False)
   parser_rawmemory.add_argument(
-      '-m', '--module_list', type=csv_list, help='Volatility module(s) to execute',
-      required=True)
+      '-m', '--module_list', type=csv_list,
+      help='Volatility module(s) to execute', required=True)
 
   # Parser options for Directory evidence type
   parser_directory = subparsers.add_parser(
