@@ -271,7 +271,7 @@ class GoogleCloudProject(object):
     project_id = snapshot.project.project_id
     disk_id = project_id + snapshot.disk.name
     disk_id_crc32 = '{0:08x}'.format(
-      binascii.crc32(disk_id.encode()) & 0xffffffff)
+        binascii.crc32(disk_id.encode()) & 0xffffffff)
     truncate_at = 62 - len(disk_id_crc32) - len('-copy') - len(project_id)
     if disk_name_prefix:
       disk_name_prefix += '-'
