@@ -331,7 +331,8 @@ class GoogleCloudProject(object):
     # Analysis software to install.
     packages_to_install = [
         'python-plaso', 'xmount', 'libfvde-tools', 'libbde-tools',
-        'plaso-tools', 'jq', 'ncdu', 'htop', 'binutils', 'upx-ucl'
+        'plaso-tools', 'jq', 'ncdu', 'htop', 'binutils', 'upx-ucl',
+        'docker-explorer-tools'
     ]
 
     startup_script = """
@@ -346,8 +347,10 @@ class GoogleCloudProject(object):
         done
         """.format(gift_ppa_track, ' '.join(packages_to_install))
     config = {
-        'name': vm_name,
-        'machineType': machine_type,
+        'name':
+            vm_name,
+        'machineType':
+            machine_type,
         'disks': [{
             'boot': True,
             'autoDelete': True,
