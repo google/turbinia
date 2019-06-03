@@ -490,6 +490,7 @@ def main():
       request.recipe['jobs_whitelist'] = args.jobs_whitelist
     if args.dump_json:
       print(request.to_json().encode('utf-8'))
+      sys.exit(0)
     else:
       log.info(
           'Creating request {0:s} with evidence {1:s}'.format(
