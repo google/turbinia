@@ -45,7 +45,7 @@ indexes:
 - kind: TurbiniaTask
   ancestor: no
   properties:
-  - name: user
+  - name: requester
   - name: last_update
     direction: desc
 
@@ -54,7 +54,7 @@ indexes:
   properties:
   - name: instance
   - name: id
-  - name: user
+  - name: requester
   - name: last_update
     direction: desc
 
@@ -63,7 +63,7 @@ indexes:
   properties:
   - name: instance
   - name: request_id
-  - name: user
+  - name: requester
   - name: last_update
     direction: desc
 

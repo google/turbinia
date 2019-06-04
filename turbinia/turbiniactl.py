@@ -480,7 +480,8 @@ def main():
     server.add_evidence(evidence_)
     server.start()
   elif evidence_:
-    request = TurbiniaRequest(request_id=args.request_id)
+    request = TurbiniaRequest(
+        request_id=args.request_id, requester=getpass.getuser())
     request.evidence.append(evidence_)
     if filter_patterns:
       request.recipe['filter_patterns'] = filter_patterns

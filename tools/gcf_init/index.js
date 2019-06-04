@@ -67,7 +67,7 @@ exports.gettasks = function gettasks(req, res) {
   }
   if (req.body.user) {
     console.log('Getting Turbinia Tasks by user: ' + req.body.user);
-    query = query.filter('user', '=', req.body.user);
+    query = query.filter('requester', '=', req.body.user);
   }
   if (req.body.start_time) {
     try {
@@ -150,8 +150,8 @@ exports.closetasks = function closetasks(req, res) {
         '__key__', '=', datastore.key([turbiniaKind, req.body.task_id]))
   }
   if (req.body.user) {
-    console.log('Adding filter - user: ' + req.body.user);
-    query = query.filter('user', '=', req.body.user)
+    console.log('Adding filter - requester: ' + req.body.user);
+    query = query.filter('requester', '=', req.body.user)
   }
 
   console.log(query);

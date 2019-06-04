@@ -127,7 +127,7 @@ class TestTurbiniaClient(unittest.TestCase):
             'saved_paths': ['/no/path/', '/fake/path'],
             'status': 'This fake task executed',
             'successful': True,
-            'user': 'myuser',
+            'requester': 'myuser',
             'worker_name': 'fake_worker'
         }, {
             'id': '0xfakeTaskId2',
@@ -140,7 +140,7 @@ class TestTurbiniaClient(unittest.TestCase):
             'saved_paths': ['/no/path/2', '/fake/path/2'],
             'status': 'This second fake task executed',
             'successful': True,
-            'user': 'myuser',
+            'requester': 'myuser',
             'worker_name': 'fake_worker'
         }, {
             'id': '0xfakeTaskId3',
@@ -153,7 +153,7 @@ class TestTurbiniaClient(unittest.TestCase):
             'saved_paths': ['/no/path/3', '/fake/path/3'],
             'status': 'Third Task Failed...',
             'successful': False,
-            'user': 'myuser',
+            'requester': 'myuser',
             'worker_name': 'fake_worker'
         }
     ] # yapf: disable
