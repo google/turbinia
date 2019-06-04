@@ -332,7 +332,8 @@ class GoogleCloudProject(object):
     # Analysis software to install.
     packages_to_install = [
         'python-plaso', 'xmount', 'sleuthkit', 'libfvde-tools', 'libbde-tools',
-        'plaso-tools', 'jq', 'ncdu', 'htop', 'binutils', 'upx-ucl'
+        'plaso-tools', 'jq', 'ncdu', 'htop', 'binutils', 'upx-ucl',
+        'docker-explorer-tools'
     ]
 
     startup_script = """
