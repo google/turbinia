@@ -165,12 +165,6 @@ class JenkinsAnalysisTask(TurbiniaTask):
       version = 'Unknown'
     report.append(fmt.bullet('Jenkins version: {0:s}'.format(version)))
 
-    if credentials_registry or version:
-      # Bump up the priority a bit if we have extracted a version or credentials
-      # even if they are not weak since having jenkins at all can be
-      # interesting.
-      priority = Priority.MEDIUM
-
     if weak_passwords:
       priority = Priority.CRITICAL
       summary = 'Jenkins analysis found potential issues'
@@ -181,8 +175,14 @@ class JenkinsAnalysisTask(TurbiniaTask):
         line = 'User "{0:s}" with password "{1:s}"'.format(
             credentials_registry.get(password_hash), plaintext)
         report.append(fmt.bullet(line, level=2))
+    elif credentials_registry or version != 'Unknown':
+      summary = (
+          'Jenkins version {0:s} found with {1:d} credentials, but no issues '
+          'detected'.format(version, len(credentials_registry)))
+      report.insert(0, fmt.heading4(summary))
+      priority = Priority.MEDIUM
     else:
-      summary = 'Jenkins analysis found no issues'
+      summary = 'No Jenkins instance found'
       report.insert(0, fmt.heading4(summary))
 
     report = '\n'.join(report)
