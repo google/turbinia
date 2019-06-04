@@ -168,6 +168,7 @@ class BaseTaskManager(object):
         job_count += 1
         for task in job.create_tasks([evidence_]):
           task.base_output_dir = config.OUTPUT_DIR
+          task.requester = evidence_.config.get('requester')
           self.add_task(task, evidence_)
 
     if not job_count:
@@ -352,6 +353,7 @@ class CeleryTaskManager(BaseTaskManager):
         if not evidence_.request_id:
           evidence_.request_id = request.request_id
         evidence_.config = request.recipe
+        evidence_.config['requester'] = request.requester
         log.info(
             'Received evidence [{0:s}] from Kombu message.'.format(
                 str(evidence_)))
@@ -436,6 +438,7 @@ class PSQTaskManager(BaseTaskManager):
         if not evidence_.request_id:
           evidence_.request_id = request.request_id
         evidence_.config = request.recipe
+        evidence_.config['requester'] = request.requester
         log.info(
             'Received evidence [{0:s}] from PubSub message.'.format(
                 str(evidence_)))
