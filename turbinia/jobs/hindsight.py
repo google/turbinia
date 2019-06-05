@@ -31,7 +31,6 @@ class HindsightJob(interface.TurbiniaJob):
   evidence_input = [ChromiumProfile]
   evidence_output = [TextFile]
 
-
   NAME = 'HindsightJob'
 
   def create_tasks(self, evidence):

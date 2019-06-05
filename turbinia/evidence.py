@@ -208,8 +208,7 @@ class ChromiumProfile(Evidence):
     format: Output format (default is XLSX, other option is SQLite)
   """
 
-  def __init__(
-      self, browser_type=None, format=None, *args, **kwargs):
+  def __init__(self, browser_type=None, format=None, *args, **kwargs):
     """Initialization for chromium profile evidence object."""
     super(ChromiumProfile, self).__init__(*args, **kwargs)
     self.browser_type = browser_type

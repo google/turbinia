@@ -35,19 +35,20 @@ class HindsightTask(TurbiniaTask):
     output_evidence = TextFile()
 
     # Create a path that we can write the new file to.
-    output_file_path = os.path.join(
-        self.output_dir, '{0:s}'.format(self.id))
+    output_file_path = os.path.join(self.output_dir, '{0:s}'.format(self.id))
     output_evidence.local_path = output_file_path
 
     # Create a path for the log file
     hindsight_log = os.path.join(self.output_dir, '{0:s}.log'.format(self.id))
 
-    cmd = ('hindsight.py -i {0:s} --format={1:s} --browser_type={2:s} '
+    cmd = (
+        'hindsight.py -i {0:s} --format={1:s} --browser_type={2:s} '
         ' --output={3:s} -l={4:s}').format(
             evidence.local_path, evidence.format, evidence.browser_type,
             output_file_path, hindsight_log).split()
     result.log('Running hindsight as [{0:s}]'.format(' '.join(cmd)))
-    self.execute(cmd, result, log_files=[hindsight_log],
-        new_evidence=[output_evidence], close=True)
+    self.execute(
+        cmd, result, log_files=[hindsight_log], new_evidence=[output_evidence],
+        close=True)
 
     return result
