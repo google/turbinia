@@ -198,7 +198,7 @@ class Directory(Evidence):
   """Filesystem directory evidence."""
   pass
 
-# class ChromiumProfile(Directory):
+
 class ChromiumProfile(Evidence):
   """Chromium based browser profile evidence.
 
