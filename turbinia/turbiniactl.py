@@ -246,7 +246,8 @@ def main():
   parser_hindsight.add_argument(
       '-l', '--local_path', help='Local path to the evidence', required=True)
   parser_hindsight.add_argument(
-      '-f', '--format', help='Output format (XLSX, SQLite)', required=True)
+      '-f', '--format', help='Output format (xlsx, sqlite, jsonl)',
+      required=True)
   parser_hindsight.add_argument(
       '-b', '--browser_type', help='The type of browser the input files belong'
       'to(Chrome, Brave)', required=True)
@@ -404,6 +405,12 @@ def main():
         embedded_path=args.embedded_path, mount_partition=args.mount_partition,
         project=args.project, zone=args.zone, source=args.source)
   elif args.command == 'hindsight':
+    if args.format not in ['xlsx', 'sqlite', 'jsonl']:
+      log.error('Invalid output format.')
+      sys.exit(1)
+    if args.browser_type not in ['Chrome', 'Brave']:
+      log.error('Broser type not supported.')
+      sys.exit(1)
     args.name = args.name if args.name else args.local_path
     local_path = os.path.abspath(args.local_path)
     evidence_ = evidence.ChromiumProfile(
