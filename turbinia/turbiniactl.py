@@ -414,7 +414,7 @@ def main():
     args.name = args.name if args.name else args.local_path
     local_path = os.path.abspath(args.local_path)
     evidence_ = evidence.ChromiumProfile(
-        name=args.name, local_path=local_path, format=args.format,
+        name=args.name, local_path=local_path, output_format=args.format,
         browser_type=args.browser_type)
   elif args.command == 'psqworker':
     # Set up root logger level which is normally set by the psqworker command
