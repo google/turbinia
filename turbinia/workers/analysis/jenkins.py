@@ -24,7 +24,7 @@ from turbinia.evidence import ReportText
 from turbinia.lib import text_formatter as fmt
 from turbinia.workers import TurbiniaTask
 from turbinia.workers import Priority
-from turbinia.lib.utils import extract_artifacts
+from turbinia.lib.utils import extract_files
 from turbinia.lib.utils import bruteforce_password_hashes
 
 
@@ -51,17 +51,26 @@ class JenkinsAnalysisTask(TurbiniaTask):
     # Set the output file as the data source for the output evidence.
     output_evidence.local_path = output_file_path
 
+    # TODO(aarontp): We should find a more optimal solution for this because
+    # this requires traversing the entire filesystem and extracting more files
+    # than we need.  Tracked in https://github.com/google/turbinia/issues/402
     try:
-      collected_artifacts = extract_artifacts(
-          artifact_names=['JenkinsConfigFile'], disk_path=evidence.local_path,
+      collected_artifacts = extract_files(
+          file_name='config.xml', disk_path=evidence.local_path,
           output_dir=os.path.join(self.output_dir, 'artifacts'))
     except TurbiniaException as e:
       result.close(self, success=False, status=str(e))
       return result
 
+    jenkins_artifacts = []
+    jenkins_re = re.compile(r'^.*jenkins[^\/]*(\/users\/[^\/]+)*\/config\.xml$')
+    for collected_artifact in collected_artifacts:
+      if re.match(jenkins_re, collected_artifact):
+        jenkins_artifacts.append(collected_artifact)
+
     version = None
     credentials = []
-    for filepath in collected_artifacts:
+    for filepath in jenkins_artifacts:
       with open(filepath, 'r') as input_file:
         config = input_file.read()
 
@@ -169,9 +178,14 @@ class JenkinsAnalysisTask(TurbiniaTask):
         line = 'User "{0:s}" with password "{1:s}"'.format(
             credentials_registry.get(password_hash), plaintext)
         report.append(fmt.bullet(line, level=2))
+    elif credentials_registry or version != 'Unknown':
+      summary = (
+          'Jenkins version {0:s} found with {1:d} credentials, but no issues '
+          'detected'.format(version, len(credentials_registry)))
+      report.insert(0, fmt.heading4(summary))
+      priority = Priority.MEDIUM
     else:
-      summary = 'Jenkins analysis found no issues'
-      priority = Priority.LOW
+      summary = 'No Jenkins instance found'
       report.insert(0, fmt.heading4(summary))
 
     report = '\n'.join(report)
