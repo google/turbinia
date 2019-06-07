@@ -111,7 +111,7 @@ class JenkinsAnalysisTaskTest(unittest.TestCase):
     * User \"admin\" with password \"weakpassword\"
 """
 
-  JENKINS_ANALYSIS_EMPTY_REPORT = """#### Jenkins analysis found no issues
+  JENKINS_ANALYSIS_EMPTY_REPORT = """#### Jenkins version 2.121.2 found with 1 credentials, but no issues detected
 * Jenkins version: 2.121.2"""
 
   EXPECTED_VERSION = '2.121.2'
@@ -166,8 +166,11 @@ class JenkinsAnalysisTaskTest(unittest.TestCase):
         self.EXPECTED_VERSION, self.EXPECTED_CREDENTIALS)
 
     self.assertEqual(report, self.JENKINS_ANALYSIS_EMPTY_REPORT)
-    self.assertEqual(priority, 80)
-    self.assertEqual(summary, 'Jenkins analysis found no issues')
+    self.assertEqual(priority, 50)
+    self.assertEqual(
+        summary,
+        'Jenkins version 2.121.2 found with 1 credentials, but no issues '
+        'detected')
 
 
 if __name__ == '__main__':
