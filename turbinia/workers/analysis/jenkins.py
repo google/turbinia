@@ -51,6 +51,9 @@ class JenkinsAnalysisTask(TurbiniaTask):
     # Set the output file as the data source for the output evidence.
     output_evidence.local_path = output_file_path
 
+    # TODO(aarontp): We should find a more optimal solution for this because
+    # this requires traversing the entire filesystem and extracting more files
+    # than we need.  Tracked in https://github.com/google/turbinia/issues/402
     try:
       collected_artifacts = extract_files(
           file_name='config.xml', disk_path=evidence.local_path,
