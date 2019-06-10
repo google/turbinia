@@ -229,6 +229,19 @@ def main():
   parser_googleclouddiskembedded.add_argument(
       '-n', '--name', help='Descriptive name of the evidence', required=False)
 
+  # RawMemory
+  parser_rawmemory = subparsers.add_parser(
+      'rawmemory', help='Process RawMemory as Evidence')
+  parser_rawmemory.add_argument(
+      '-l', '--local_path', help='Local path to the evidence', required=True)
+  parser_rawmemory.add_argument(
+      '-P', '--profile', help='Profile to use with Volatility', required=True)
+  parser_rawmemory.add_argument(
+      '-n', '--name', help='Descriptive name of the evidence', required=False)
+  parser_rawmemory.add_argument(
+      '-m', '--module_list', type=csv_list,
+      help='Volatility module(s) to execute', required=True)
+
   # Parser options for Directory evidence type
   parser_directory = subparsers.add_parser(
       'directory', help='Process a directory as Evidence')
@@ -390,6 +403,12 @@ def main():
         name=args.name, disk_name=args.disk_name,
         embedded_path=args.embedded_path, mount_partition=args.mount_partition,
         project=args.project, zone=args.zone, source=args.source)
+  elif args.command == 'rawmemory':
+    args.name = args.name if args.name else args.local_path
+    local_path = os.path.abspath(args.local_path)
+    evidence_ = evidence.RawMemory(
+        name=args.name, local_path=local_path, profile=args.profile,
+        module_list=args.module_list)
   elif args.command == 'psqworker':
     # Set up root logger level which is normally set by the psqworker command
     # which we are bypassing.

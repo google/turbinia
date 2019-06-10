@@ -43,6 +43,7 @@ from turbinia.workers.sshd import SSHDAnalysisTask
 from turbinia.workers.strings import StringsAsciiTask
 from turbinia.workers.strings import StringsUnicodeTask
 from turbinia.workers.tomcat import TomcatAnalysisTask
+from turbinia.workers.volatility import VolatilityTask
 from turbinia.workers.worker_stat import StatTask
 
 # TODO(aarontp): Remove this map after
@@ -59,6 +60,7 @@ TASK_MAP = {
     'stringsasciitask': StringsAsciiTask,
     'stringsunicodetask': StringsUnicodeTask,
     'tomcatanalysistask': TomcatAnalysisTask,
+    'volatilitytask': VolatilityTask,
     'stattask': StatTask,
 }
 
