@@ -12,41 +12,44 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Job to execute Jenkins analysis task."""
+"""Job to execute volatility tasks."""
 
 from __future__ import unicode_literals
 
-from turbinia.evidence import Directory
-from turbinia.evidence import RawDisk
-from turbinia.evidence import GoogleCloudDisk
-from turbinia.evidence import GoogleCloudDiskRawEmbedded
-from turbinia.evidence import ReportText
+from turbinia.evidence import RawMemory
+from turbinia.evidence import VolatilityReport
 from turbinia.jobs import interface
 from turbinia.jobs import manager
-from turbinia.workers.analysis.jenkins import JenkinsAnalysisTask
+from turbinia.workers.volatility import VolatilityTask
 
 
-class JenkinsAnalysisJob(interface.TurbiniaJob):
-  """Jenkins analysis job."""
+class VolatilityJob(interface.TurbiniaJob):
+  """Volatility analysis job.
 
-  evidence_input = [
-      Directory, RawDisk, GoogleCloudDisk, GoogleCloudDiskRawEmbedded
-  ]
-  evidence_output = [ReportText]
+  This will generate a Volatility task for every module per each peice of
+  evidence.
+  """
 
-  NAME = 'JenkinsAnalysisJob'
+  evidence_input = [RawMemory]
+  evidence_output = [VolatilityReport]
+
+  NAME = 'VolatilityJob'
 
   def create_tasks(self, evidence):
-    """Create task for Jenkins analysis job.
+    """Create task for Volatility.
 
     Args:
       evidence: List of evidence objects to process
 
     Returns:
-        A list of tasks to schedule.
+      A list of tasks to schedule.
     """
-    tasks = [JenkinsAnalysisTask() for _ in evidence]
+
+    tasks = []
+    for evidence_item in evidence:
+      for mod in evidence_item.module_list:
+        tasks.append(VolatilityTask(mod))
     return tasks
 
 
-manager.JobsManager.RegisterJob(JenkinsAnalysisJob)
+manager.JobsManager.RegisterJob(VolatilityJob)

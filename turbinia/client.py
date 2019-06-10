@@ -44,6 +44,7 @@ from turbinia.workers.sshd import SSHDAnalysisTask
 from turbinia.workers.strings import StringsAsciiTask
 from turbinia.workers.strings import StringsUnicodeTask
 from turbinia.workers.tomcat import TomcatAnalysisTask
+from turbinia.workers.volatility import VolatilityTask
 from turbinia.workers.worker_stat import StatTask
 
 # TODO(aarontp): Remove this map after
@@ -61,6 +62,7 @@ TASK_MAP = {
     'stringsasciitask': StringsAsciiTask,
     'stringsunicodetask': StringsUnicodeTask,
     'tomcatanalysistask': TomcatAnalysisTask,
+    'volatilitytask': VolatilityTask,
     'stattask': StatTask,
 }
 
@@ -164,7 +166,8 @@ class TurbiniaClient(object):
       user (string): The user of the request we want tasks for.
       poll_interval (int): Interval of seconds between polling cycles.
     """
-    last_count = 0
+    last_completed_count = -1
+    last_uncompleted_count = -1
     while True:
       task_results = self.get_task_data(
           instance, project, region, request_id=request_id, user=user)
@@ -188,12 +191,14 @@ class TurbiniaClient(object):
           'Tasks completed ({0:d}/{1:d}): [{2:s}], waiting for [{3:s}].'.format(
               len(completed_tasks), total_count, completed_names,
               uncompleted_names))
-      if len(completed_tasks) > last_count:
+      if (len(completed_tasks) > last_completed_count or
+          len(uncompleted_tasks) > last_uncompleted_count):
         log.info(msg)
       else:
         log.debug(msg)
 
-      last_count = len(completed_tasks)
+      last_completed_count = len(completed_tasks)
+      last_uncompleted_count = len(uncompleted_tasks)
       time.sleep(poll_interval)
 
     log.info('All {0:d} Tasks completed'.format(len(task_results)))

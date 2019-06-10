@@ -409,3 +409,23 @@ class ExportedFileArtifact(Evidence):
     super(ExportedFileArtifact, self).__init__()
     self.artifact_name = artifact_name
     self.copyable = True
+
+
+class VolatilityReport(TextFile):
+  """Volatility output file data."""
+  pass
+
+
+class RawMemory(Evidence):
+  """Evidence object for Memory based evidence.
+
+  Attributes:
+    profile (string): Volatility profile used for the analysis
+    module_list (list): Module used for the analysis
+    """
+
+  def __init__(self, module_list=None, profile=None, *args, **kwargs):
+    """Initialization for raw memory evidence object."""
+    super(RawMemory, self).__init__(*args, **kwargs)
+    self.profile = profile
+    self.module_list = module_list
