@@ -59,8 +59,7 @@ class VolatilityTask(TurbiniaTask):
             output_file_path).split()
 
     result.log('Running vol as [{0:s}]'.format(' '.join(cmd)))
-    res = self.execute(
-        cmd, result, new_evidence=[output_evidence], close=True)
+    res = self.execute(cmd, result, new_evidence=[output_evidence], close=True)
 
     if res == 0:
       # Get report from the output file.
