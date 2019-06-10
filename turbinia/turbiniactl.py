@@ -417,7 +417,7 @@ def main():
         name=args.name, disk_name=args.disk_name,
         embedded_path=args.embedded_path, mount_partition=args.mount_partition,
         project=args.project, zone=args.zone, source=args.source)
-   elif args.command == 'hindsight':
+  elif args.command == 'hindsight':
     if args.format not in ['xlsx', 'sqlite', 'jsonl']:
       log.error('Invalid output format.')
       sys.exit(1)
@@ -435,8 +435,7 @@ def main():
     evidence_ = evidence.RawMemory(
         name=args.name, local_path=local_path, profile=args.profile,
         module_list=args.module_list)
-
-    elif args.command == 'psqworker':
+  elif args.command == 'psqworker':
     # Set up root logger level which is normally set by the psqworker command
     # which we are bypassing.
     logger.setup()
