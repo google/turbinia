@@ -205,7 +205,7 @@ class ChromiumProfile(Evidence):
   Attributes:
     browser_type: The type of browser.
       Supported options are Chrome (default) and Brave.
-    format: Output format (default is XLSX, other option is SQLite)
+    format: Output format (default is sqlite, other options are xlsx and jsonl)
   """
 
   def __init__(self, browser_type=None, output_format=None, *args, **kwargs):
