@@ -1,14 +1,44 @@
-language: python
-python:
-  - '2.7'
-  - '3.6'
+matrix:
+  include:
+  - name: "Ubuntu Xenial (16.04) with Python 2.7 (pip)"
+    env: TARGET="linux-python27"
+    os: linux
+    dist: xenial
+    group: edge
+    language: python
+    python: 2.7
+    node_js: '8'
+  - name: "Ubuntu Xenial (16.04) with Python 3.6 (pip)"
+    env: TARGET="linux-python36"
+    os: linux
+    dist: xenial
+    group: edge
+    language: python
+    python: 3.6
+    node_js: '8'
+  - name: "Ubuntu Bionic (18.04) (Docker) with Python 2.7"
+    env: UBUNTU_VERSION="18.04"
+    os: linux
+    dist: xenial
+    sudo: required
+    group: edge
+    language: python
+    python: 2.7
+    services:
+    - docker
+  - name: "Ubuntu Bionic (18.04) (Docker) with Python 3.6"
+    env: UBUNTU_VERSION="18.04"
+    os: linux
+    dist: xenial
+    sudo: required
+    group: edge
+    language: python
+    python: 3.6
+    services:
+    - docker
 cache:
-  - pip
-
+- pip
 install:
-  - pip install mock nose coverage yapf
-  - pip install .
-  - pip install .[local]
-
+- ./config/travis/install.sh
 script:
-  - ./run_tests.py
+- ./config/travis/run_with_timeout.sh 30 ./config/travis/runtests.sh
