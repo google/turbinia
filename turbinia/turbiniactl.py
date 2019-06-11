@@ -259,11 +259,11 @@ def main():
   parser_hindsight.add_argument(
       '-l', '--local_path', help='Local path to the evidence', required=True)
   parser_hindsight.add_argument(
-      '-f', '--format', help='Output format (xlsx, sqlite, jsonl)',
-      required=True)
+      '-f', '--format', help='Output format (supported types are '
+      'xlsx, sqlite, jsonl)', default='sqlite')
   parser_hindsight.add_argument(
       '-b', '--browser_type', help='The type of browser the input files belong'
-      'to(Chrome, Brave)', required=True)
+      'to (supported types are Chrome, Brave)', default='Chrome')
   parser_hindsight.add_argument(
       '-n', '--name', help='Descriptive name of the evidence', required=False)
 
@@ -422,7 +422,7 @@ def main():
       log.error('Invalid output format.')
       sys.exit(1)
     if args.browser_type not in ['Chrome', 'Brave']:
-      log.error('Broser type not supported.')
+      log.error('Browser type not supported.')
       sys.exit(1)
     args.name = args.name if args.name else args.local_path
     local_path = os.path.abspath(args.local_path)

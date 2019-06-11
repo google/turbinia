@@ -35,11 +35,11 @@ class HindsightTask(TurbiniaTask):
     output_evidence = TextFile()
 
     # Create a path that we can write the new file to.
-    output_file_path = os.path.join(self.output_dir, '{0:s}'.format(self.id))
+    output_file_path = os.path.join(self.output_dir, 'hindsight_report')
     output_evidence.local_path = output_file_path
 
     # Create a path for the log file
-    hindsight_log = os.path.join(self.output_dir, '{0:s}.log'.format(self.id))
+    hindsight_log = os.path.join(self.output_dir, 'hindsight.log')
 
     cmd = [
         'hindsight.py', '-i', evidence.local_path, '--format',
