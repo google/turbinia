@@ -108,7 +108,7 @@ optional arguments:
 * [Installation](docs/install.md)
 * [How it works](docs/how-it-works.md)
 * [Contributing to Turbinia](docs/contributing.md)
-* [Developing new Tasks](docs/how-it-works.md)
+* [Developing new Tasks](docs/developing-new-tasks.md)
 * [FAQ](docs/faq.md)
 * [Debugging and Common Errors](docs/debugging.md)
 
