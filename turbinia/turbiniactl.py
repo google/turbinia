@@ -253,6 +253,20 @@ def main():
   parser_directory.add_argument(
       '-n', '--name', help='Descriptive name of the evidence', required=False)
 
+  # Parser options for ChromiumProfile evidence type
+  parser_hindsight = subparsers.add_parser(
+      'hindsight', help='Process ChromiumProfile as Evidence')
+  parser_hindsight.add_argument(
+      '-l', '--local_path', help='Local path to the evidence', required=True)
+  parser_hindsight.add_argument(
+      '-f', '--format', help='Output format (supported types are '
+      'xlsx, sqlite, jsonl)', default='sqlite')
+  parser_hindsight.add_argument(
+      '-b', '--browser_type', help='The type of browser the input files belong'
+      'to (supported types are Chrome, Brave)', default='Chrome')
+  parser_hindsight.add_argument(
+      '-n', '--name', help='Descriptive name of the evidence', required=False)
+
   # List Jobs
   subparsers.add_parser(
       'listjobs',
@@ -403,6 +417,18 @@ def main():
         name=args.name, disk_name=args.disk_name,
         embedded_path=args.embedded_path, mount_partition=args.mount_partition,
         project=args.project, zone=args.zone, source=args.source)
+  elif args.command == 'hindsight':
+    if args.format not in ['xlsx', 'sqlite', 'jsonl']:
+      log.error('Invalid output format.')
+      sys.exit(1)
+    if args.browser_type not in ['Chrome', 'Brave']:
+      log.error('Browser type not supported.')
+      sys.exit(1)
+    args.name = args.name if args.name else args.local_path
+    local_path = os.path.abspath(args.local_path)
+    evidence_ = evidence.ChromiumProfile(
+        name=args.name, local_path=local_path, output_format=args.format,
+        browser_type=args.browser_type)
   elif args.command == 'rawmemory':
     args.name = args.name if args.name else args.local_path
     local_path = os.path.abspath(args.local_path)

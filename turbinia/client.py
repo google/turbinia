@@ -37,6 +37,7 @@ from turbinia.workers.analysis.wordpress import WordpressAccessLogAnalysisTask
 from turbinia.workers.analysis.jenkins import JenkinsAnalysisTask
 from turbinia.workers.grep import GrepTask
 from turbinia.workers.hadoop import HadoopAnalysisTask
+from turbinia.workers.hindsight import HindsightTask
 from turbinia.workers.plaso import PlasoTask
 from turbinia.workers.psort import PsortTask
 from turbinia.workers.sshd import SSHDAnalysisTask
@@ -54,6 +55,7 @@ TASK_MAP = {
     'jenkinsanalysistask': JenkinsAnalysisTask,
     'greptask': GrepTask,
     'hadoopanalysistask': HadoopAnalysisTask,
+    'hindsighttask': HindsightTask,
     'plasotask': PlasoTask,
     'psorttask': PsortTask,
     'sshdanalysistask': SSHDAnalysisTask,

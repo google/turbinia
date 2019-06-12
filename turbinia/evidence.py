@@ -199,6 +199,23 @@ class Directory(Evidence):
   pass
 
 
+class ChromiumProfile(Evidence):
+  """Chromium based browser profile evidence.
+
+  Attributes:
+    browser_type: The type of browser.
+      Supported options are Chrome (default) and Brave.
+    format: Output format (default is sqlite, other options are xlsx and jsonl)
+  """
+
+  def __init__(self, browser_type=None, output_format=None, *args, **kwargs):
+    """Initialization for chromium profile evidence object."""
+    super(ChromiumProfile, self).__init__(*args, **kwargs)
+    self.browser_type = browser_type
+    self.output_format = output_format
+    self.copyable = True
+
+
 class RawDisk(Evidence):
   """Evidence object for Disk based evidence.
 
