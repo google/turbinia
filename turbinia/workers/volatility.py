@@ -22,6 +22,8 @@ from turbinia import config
 from turbinia.evidence import VolatilityReport
 from turbinia.workers import TurbiniaTask
 
+MAX_REPORT_SIZE = 2 ** 30 # 1 GiB
+
 
 class VolatilityTask(TurbiniaTask):
   """Task to execute volatility."""
@@ -58,19 +60,40 @@ class VolatilityTask(TurbiniaTask):
             evidence.local_path, evidence.profile, self.module,
             output_file_path).split()
 
-    result.log('Running vol as [{0:s}]'.format(' '.join(cmd)))
+    result.log('Running volatility as [{0:s}]'.format(' '.join(cmd)))
     res = self.execute(cmd, result, new_evidence=[output_evidence], close=True)
 
     if res == 0:
-      # Get report from the output file.
+      # Get report data from the output file.
+      try:
+        file_size = os.stat(output_file_path).st_size
+      except OSError as exception:
+        msg = 'Cannot read output file {0:s}: {1!s}'.format(
+            output_file_path, exception)
+        summary = 'Volatility ran successfully, but no output file was created'
+        result.log(msg)
+        result.close(self, success=False, status=summary)
+        return result
+
+      if file_size > MAX_REPORT_SIZE:
+        result.log(
+            'Volatility report output size ({0:d}) is greater than max report '
+            'size ({1:d}). Truncating report to max size'.format(
+                file_size, MAX_REPORT_SIZE))
+        summary = (
+            'Volatility module {0:s} successfuly ran (report truncated)'.format(
+                self.module))
+      else:
+        summary = 'Volatility module {0:s} successfully ran'.format(
+            self.module)
+
       with open(output_file_path, 'r') as fh:
-        output_evidence.text_data = fh.read().decode('utf-8')
+        output_evidence.text_data = fh.read(MAX_REPORT_SIZE).decode('utf-8')
 
       result.report_data = output_evidence.text_data
-      summary = 'Volatility module {0} successfully ran.'.format(self.module)
       result.close(self, success=True, status=summary)
     else:
-      summary = 'Volatility module {0} failed to run.'.format(self.module)
+      summary = 'Volatility module {0:s} failed to run'.format(self.module)
       result.close(self, success=False, status=summary)
 
     return result
