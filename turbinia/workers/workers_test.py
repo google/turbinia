@@ -29,27 +29,39 @@ from turbinia.workers import TurbiniaTaskResult
 from turbinia.workers.plaso import PlasoTask
 
 
-class TestTurbiniaTask(unittest.TestCase):
-  """Test TurbiniaTask class."""
+class TestTurbiniaTaskBase(unittest.TestCase):
+  """Test TurbiniaTask class.
 
-  def setUp(self):
+  Attributes:
+    class_task(TurbiniaTask): The class the test should instantiated
+    remove_file(list(str)): Files that will be removed after the test run
+    remove_dirs(list(str)): Dirs that will be removed after the test run
+    base_output_dir(str): The base output directory used by the Task
+    task(TurbiniaTask): The instantiated Task under test
+    evidence(Evidence): The test evidence object used by the Task
+    result(TurbiniaResult): The result object used by the Task
+  """
+
+  def setUp(self, task_class=TurbiniaTask, evidence_class=evidence.RawDisk):
+    self.task_class = task_class
+    self.evidence_class = evidence_class
     self.remove_files = []
     self.remove_dirs = []
 
-    # Set up TurbiniaTask
+    # Set up Tasks under test
     self.base_output_dir = tempfile.mkdtemp()
     self.plaso_task = PlasoTask(base_output_dir=self.base_output_dir)
     self.plaso_task.output_manager = mock.MagicMock()
     self.plaso_task.output_manager.get_local_output_dirs.return_value = (
         None, None)
-    self.task = TurbiniaTask(base_output_dir=self.base_output_dir)
+    self.task = self.task_class(base_output_dir=self.base_output_dir)
     self.task.output_manager = mock.MagicMock()
     self.task.output_manager.get_local_output_dirs.return_value = (None, None)
 
-    # Set up RawDisk Evidence
-    test_disk_path = tempfile.mkstemp(dir=self.base_output_dir)[1]
-    self.remove_files.append(test_disk_path)
-    self.evidence = evidence.RawDisk(local_path=test_disk_path)
+    # Set up Evidence
+    test_artifact_path = tempfile.mkstemp(dir=self.base_output_dir)[1]
+    self.remove_files.append(test_artifact_path)
+    self.evidence = self.evidence_class(local_path=test_artifact_path)
 
     # Set up TurbiniaTaskResult
     self.result = TurbiniaTaskResult(base_output_dir=self.base_output_dir)
@@ -68,13 +80,15 @@ class TestTurbiniaTask(unittest.TestCase):
 
     os.rmdir(self.base_output_dir)
 
-  def setResults(self, setup=None, run=None, validate_result=None):
-    """Set up mock returns.
+  def setResults(
+      self, setup=None, run=None, validate_result=None, mock_run=True):
+    """Set up mock returns in TurbiniaTaskResult object.
 
     Args:
       setup: What value to return from setup()
       run: What value to return from run()
       validate_result: What value to return from validate_result()
+      mock_run(bool): Whether to mock out the run method
     """
     if setup is None:
       setup = self.result
@@ -86,8 +100,13 @@ class TestTurbiniaTask(unittest.TestCase):
     self.result.status = 'TestStatus'
     self.result.close = mock.MagicMock()
     self.task.setup = mock.MagicMock(return_value=setup)
-    self.task.run = mock.MagicMock(return_value=run)
+    if mock_run:
+      self.task.run = mock.MagicMock(return_value=run)
     self.task.validate_result = mock.MagicMock(return_value=validate_result)
+
+
+class TestTurbiniaTask(TestTurbiniaTaskBase):
+  """Test TurbiniaTask class."""
 
   def testTurbiniaTaskSerialize(self):
     """Test that we can properly serialize/deserialize tasks."""
