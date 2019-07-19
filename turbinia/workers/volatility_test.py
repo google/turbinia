@@ -17,11 +17,8 @@
 from __future__ import unicode_literals
 
 import os
-import textwrap
-import unittest
 import mock
 
-from turbinia import config
 from turbinia.evidence import RawMemory
 from turbinia.workers.workers_test import TestTurbiniaTaskBase
 from turbinia.workers import volatility
