@@ -329,10 +329,22 @@ class GoogleCloudProject(object):
     source_disk_image = ubuntu_image['selfLink']
 
     # Analysis software to install.
+    # yapf: disable
     packages_to_install = [
-        'python-plaso', 'xmount', 'sleuthkit', 'libfvde-tools', 'libbde-tools',
-        'plaso-tools', 'jq', 'ncdu', 'htop', 'binutils', 'upx-ucl'
-    ]
+        'binutils',
+        'docker-explorer-tools'
+        'htop',
+        'jq',
+        'libbde-tools',
+        'libfsapfs-tools',
+        'libfvde-tools',
+        'ncdu',
+        'plaso-tools',
+        'sleuthkit',
+        'upx-ucl',
+        'xmount']
+
+    # yapf: enable
 
     startup_script = """
         #!/bin/bash
