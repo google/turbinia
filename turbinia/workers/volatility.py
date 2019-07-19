@@ -86,7 +86,7 @@ class VolatilityTask(TurbiniaTask):
       else:
         summary = 'Volatility module {0:s} successfully ran'.format(self.module)
 
-      with open(output_file_path, 'r') as fh:
+      with open(output_file_path, 'rb') as fh:
         output_evidence.text_data = codecs.decode(
             fh.read(MAX_REPORT_SIZE), 'utf-8')
 
