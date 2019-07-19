@@ -16,6 +16,7 @@
 
 from __future__ import unicode_literals
 
+import codecs
 import os
 
 from turbinia import config
@@ -86,7 +87,8 @@ class VolatilityTask(TurbiniaTask):
         summary = 'Volatility module {0:s} successfully ran'.format(self.module)
 
       with open(output_file_path, 'r') as fh:
-        output_evidence.text_data = fh.read(MAX_REPORT_SIZE).decode('utf-8')
+        output_evidence.text_data = codecs.decode(
+            fh.read(MAX_REPORT_SIZE), 'utf-8')
 
       result.report_data = output_evidence.text_data
       result.close(self, success=True, status=summary)
