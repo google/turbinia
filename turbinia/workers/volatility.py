@@ -16,7 +16,6 @@
 
 from __future__ import unicode_literals
 
-import codecs
 import os
 
 from turbinia import config
@@ -27,7 +26,11 @@ MAX_REPORT_SIZE = 2**30  # 1 GiB
 
 
 class VolatilityTask(TurbiniaTask):
-  """Task to execute volatility."""
+  """Task to execute volatility.
+
+  Attributes:
+    module(str): The name of the volatility module to run.
+  """
 
   def __init__(self, module='test', *args, **kwargs):
     super(VolatilityTask, self).__init__(*args, **kwargs)
@@ -64,11 +67,12 @@ class VolatilityTask(TurbiniaTask):
     res = self.execute(cmd, result, new_evidence=[output_evidence], close=True)
 
     if res == 0:
+      success = True
       # Get report data from the output file.
       try:
         file_size = os.stat(output_file_path).st_size
-      except OSError as exception:
-        msg = 'Cannot read output file {0:s}: {1!s}'.format(
+      except (IOError, OSError) as exception:
+        msg = 'Unable to determine size of output file {0:s}: {1!s}'.format(
             output_file_path, exception)
         summary = 'Volatility ran successfully, but no output file was created'
         result.log(msg)
@@ -87,11 +91,15 @@ class VolatilityTask(TurbiniaTask):
         summary = 'Volatility module {0:s} successfully ran'.format(self.module)
 
       with open(output_file_path, 'rb') as fh:
-        output_evidence.text_data = codecs.decode(
-            fh.read(MAX_REPORT_SIZE), 'utf-8')
+        report_data = fh.read(MAX_REPORT_SIZE)
+        try:
+          output_evidence.text_data = report_data.decode('utf-8')
+        except UnicodeDecodeError as e:
+          success = False
+          summary = 'Volatility report could not be read: {0!s}'.format(e)
 
       result.report_data = output_evidence.text_data
-      result.close(self, success=True, status=summary)
+      result.close(self, success=success, status=summary)
     else:
       summary = 'Volatility module {0:s} failed to run'.format(self.module)
       result.close(self, success=False, status=summary)
