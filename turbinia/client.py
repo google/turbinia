@@ -111,6 +111,26 @@ def check_directory(directory):
           'Can not add write permissions to {0:s}'.format(directory))
 
 
+class TurbiniaStats(object):
+  """Statistics for Turbinia task execution.
+
+  Attributes:
+    type(str): Can be either 'count' or 'seconds'
+    count(
+  """
+  def __init__(self, description=None):
+    self.description = description
+    self.type = None
+    self.count = None
+    self.min = None
+    self.mean = None
+    self.max = None
+    self.tasks = []
+
+  def calculate_stats(self):
+    pass
+
+
 class TurbiniaClient(object):
   """Client class for Turbinia.
 
@@ -309,6 +329,67 @@ class TurbiniaClient(object):
         report.append(fmt.bullet(fmt.code(path), level=2))
       report.append('')
     return report
+
+  def get_task_statistics(
+      self, instance, project, region, days=0, task_id=None, request_id=None,
+      user=None):
+    """Gathers statistics for Turbinia execution data.
+
+    Args:
+      instance (string): The Turbinia instance name (by default the same as the
+          INSTANCE_ID in the config).
+      project (string): The name of the project.
+      region (string): The name of the zone to execute in.
+      days (int): The number of days we want history for.
+      task_id (string): The Id of the task.
+      request_id (string): The Id of the request we want tasks for.
+      user (string): The user of the request we want tasks for.
+
+    Returns:
+      task_stats(dict): Mapping of statistic names to values
+    """
+    task_results = self.get_task_data(
+        instance, project, region, days, task_id, request_id, user)
+    if not task_results:
+      return 'No tasks found'
+
+    task_stats = {
+        'all_tasks': TurbiniaStats(
+            'Total wall-time for all tasks to complete'),
+        'failed_tasks': TurbiniaStats(
+            'Total wall-time for failed tasks to complete'),
+        'successful_tasks': TurbiniaStats(
+            'Total wall-time for successful tasks to complete'),
+        'requests': TurbiniaStats(
+            'Total wall-time for all tasks in the request to complete'),
+        'users': TurbiniaStats(),
+        'workers': TurbiniaStats(),
+        'tasks_per_type': {},
+        'tasks_per_worker': {},
+        'tasks_per_user': {},
+    }
+
+
+
+  def format_task_statistics(self, task_stats):
+    """Formats statistics for Turbinia execution data.
+
+    Args:
+      task_stats(dict): Mapping of statistics to counts
+
+    Returns:
+      String of task statistics report
+    """
+    task_results = self.get_task_data(
+        instance, project, region, days, task_id, request_id, user)
+    if not task_results:
+      return 'No tasks found'
+
+    # Build up data
+    report = []
+
+
+    return '\n'.join(report)
 
   def format_task_status(
       self, instance, project, region, days=0, task_id=None, request_id=None,
