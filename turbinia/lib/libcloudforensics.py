@@ -45,8 +45,15 @@ def create_service(service_name, api_version):
 
   Returns:
     API service resource (apiclient.discovery.Resource)
+
+  Raises:
+    RuntimeError: If Application Default Credentials could not be obtained.
   """
-  credentials = GoogleCredentials.get_application_default()
+  try:
+    credentials = GoogleCredentials.get_application_default()
+  except ApplicationDefaultCredentialsError as error:
+    raise RuntimeError(
+      'Could not get application default credentials: {0!s}'.format(error))
   return build(
       service_name, api_version, credentials=credentials, cache_discovery=False)
 
