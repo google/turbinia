@@ -53,7 +53,7 @@ def create_service(service_name, api_version):
     credentials = GoogleCredentials.get_application_default()
   except ApplicationDefaultCredentialsError as error:
     raise RuntimeError(
-      'Could not get application default credentials: {0!s}'.format(error))
+        'Could not get application default credentials: {0!s}'.format(error))
   return build(
       service_name, api_version, credentials=credentials, cache_discovery=False)
 
