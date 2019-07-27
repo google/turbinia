@@ -32,7 +32,6 @@ from turbinia import task_manager
 from turbinia import TurbiniaException
 from turbinia.lib import text_formatter as fmt
 from turbinia.workers import Priority
-from turbinia.workers import TurbiniaTask
 from turbinia.workers.artifact import FileArtifactExtractionTask
 from turbinia.workers.analysis.wordpress import WordpressAccessLogAnalysisTask
 from turbinia.workers.analysis.jenkins import JenkinsAnalysisTask
@@ -151,7 +150,7 @@ class TurbiniaStats(object):
     sorted_tasks = sorted(self.tasks, key=itemgetter('run_time'))
     self.min = sorted_tasks[0]['run_time']
     self.max = sorted_tasks[len(sorted_tasks) - 1]['run_time']
-    self.mean = sorted_tasks[len(sorted_tasks) / 2]['run_time']
+    self.mean = sorted_tasks[len(sorted_tasks) // 2]['run_time']
 
   def format_stats(self):
     """Formats statistics data.
