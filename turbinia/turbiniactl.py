@@ -289,6 +289,10 @@ def main():
       '-c', '--close_tasks', action='store_true',
       help='Close tasks based on Request ID or Task ID', required=False)
   parser_status.add_argument(
+      '-C', '--csv', action='store_true',
+      help='When used with --statistics, the output will be in CSV format',
+      required=False)
+  parser_status.add_argument(
       '-d', '--days_history', default=0, type=int,
       help='Number of days of history to show', required=False)
   parser_status.add_argument(
@@ -308,6 +312,9 @@ def main():
   parser_status.add_argument(
       '-R', '--full_report',
       help='Generate full markdown report instead of just a summary',
+      action='store_true', required=False)
+  parser_status.add_argument(
+      '-s', '--statistics', help='Generate statistics only',
       action='store_true', required=False)
   parser_status.add_argument(
       '-t', '--task_id', help='Show task for given Task ID', required=False)
@@ -464,6 +471,14 @@ def main():
             '--close_tasks (-c) requires --user, --request_id, or/and --task_id'
         )
         sys.exit(1)
+
+    if args.statistics:
+      print(
+          client.format_task_statistics(
+              instance=config.INSTANCE_ID, project=config.TURBINIA_PROJECT,
+              region=region, days=args.days_history, task_id=args.task_id,
+              request_id=args.request_id, user=args.user, csv=args.csv))
+      sys.exit(0)
 
     if args.wait and args.request_id:
       client.wait_for_request(

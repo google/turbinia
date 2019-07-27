@@ -82,8 +82,8 @@ class TurbiniaTaskResult(object):
 
   # The list of attributes that we will persist into storage
   STORED_ATTRIBUTES = [
-      'worker_name', 'report_data', 'report_priority', 'status', 'saved_paths',
-      'successful'
+      'worker_name', 'report_data', 'report_priority', 'run_time', 'status',
+      'saved_paths', 'successful'
   ]
 
   def __init__(
@@ -330,6 +330,7 @@ class TurbiniaTask(object):
       self.base_output_dir = base_output_dir
     else:
       self.base_output_dir = config.OUTPUT_DIR
+
     self.id = uuid.uuid4().hex
     self.last_update = datetime.now()
     self.name = name if name else self.__class__.__name__

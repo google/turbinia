@@ -17,6 +17,7 @@
 from __future__ import unicode_literals
 
 from datetime import datetime
+from datetime import timedelta
 import unittest
 import os
 import shutil
@@ -28,6 +29,7 @@ import mock
 from turbinia import config
 from turbinia.client import TurbiniaClient
 from turbinia.client import TurbiniaServer
+from turbinia.client import TurbiniaStats
 from turbinia.client import TurbiniaPsqWorker
 from turbinia import TurbiniaException
 
@@ -58,7 +60,7 @@ LONG_REPORT = textwrap.dedent(
     ## TaskName2
     * **Status:** This second fake task executed
     * Task Id: 0xfakeTaskId2
-    * Executed on worker fake_worker
+    * Executed on worker fake_worker2
 
     ### Task Reported Data
     #### Fake High priority Report
@@ -83,7 +85,7 @@ LONG_REPORT_FILES = textwrap.dedent(
     ## TaskName2
     * **Status:** This second fake task executed
     * Task Id: 0xfakeTaskId2
-    * Executed on worker fake_worker
+    * Executed on worker fake_worker2
 
     ### Task Reported Data
     #### Fake High priority Report
@@ -110,20 +112,56 @@ LONG_REPORT_FILES = textwrap.dedent(
     * None
 """)
 
+STATISTICS_REPORT = textwrap.dedent(
+    """\
+    Execution time statistics for Turbinia:
+
+    All Tasks: Count: 3, Min: 0:01:00, Mean: 0:03:00, Max: 0:05:00
+    Successful Tasks: Count: 2, Min: 0:01:00, Mean: 0:05:00, Max: 0:05:00
+    Failed Tasks: Count: 1, Min: 0:03:00, Mean: 0:03:00, Max: 0:03:00
+    Total Request Time: Count: 2, Min: 0:03:00, Mean: 0:21:00, Max: 0:21:00
+    Task type TaskName: Count: 1, Min: 0:01:00, Mean: 0:01:00, Max: 0:01:00
+    Task type TaskName3: Count: 1, Min: 0:03:00, Mean: 0:03:00, Max: 0:03:00
+    Task type TaskName2: Count: 1, Min: 0:05:00, Mean: 0:05:00, Max: 0:05:00
+    Worker fake_worker2: Count: 1, Min: 0:05:00, Mean: 0:05:00, Max: 0:05:00
+    Worker fake_worker: Count: 2, Min: 0:01:00, Mean: 0:03:00, Max: 0:03:00
+    User myuser2: Count: 1, Min: 0:03:00, Mean: 0:03:00, Max: 0:03:00
+    User myuser: Count: 2, Min: 0:01:00, Mean: 0:05:00, Max: 0:05:00
+""")
+
+STATISTICS_REPORT_CSV = textwrap.dedent(
+    """\
+    Execution time statistics for Turbinia:
+
+    All Tasks, 3, 0:01:00, 0:03:00, 0:05:00
+    Successful Tasks, 2, 0:01:00, 0:05:00, 0:05:00
+    Failed Tasks, 1, 0:03:00, 0:03:00, 0:03:00
+    Total Request Time, 2, 0:03:00, 0:21:00, 0:21:00
+    Task type TaskName, 1, 0:01:00, 0:01:00, 0:01:00
+    Task type TaskName3, 1, 0:03:00, 0:03:00, 0:03:00
+    Task type TaskName2, 1, 0:05:00, 0:05:00, 0:05:00
+    Worker fake_worker2, 1, 0:05:00, 0:05:00, 0:05:00
+    Worker fake_worker, 2, 0:01:00, 0:03:00, 0:03:00
+    User myuser2, 1, 0:03:00, 0:03:00, 0:03:00
+    User myuser, 2, 0:01:00, 0:05:00, 0:05:00
+""")
+
 
 class TestTurbiniaClient(unittest.TestCase):
   """Test Turbinia client class."""
 
   def setUp(self):
+    last_update = datetime.now()
     self.task_data = [
         {
             'id': '0xfakeTaskId',
             'instance': 'MyTurbiniaInstance',
-            'last_update': datetime.now(),
+            'last_update': last_update,
             'name': 'TaskName',
             'report_data': '#### Fake Low priority Report\n* Fake Bullet',
             'report_priority': 80,
             'request_id': '0xFakeRequestId',
+            'run_time': timedelta(minutes=1),
             'saved_paths': ['/no/path/', '/fake/path'],
             'status': 'This fake task executed',
             'successful': True,
@@ -132,28 +170,30 @@ class TestTurbiniaClient(unittest.TestCase):
         }, {
             'id': '0xfakeTaskId2',
             'instance': 'MyTurbiniaInstance',
-            'last_update': datetime.now(),
+            'last_update': last_update + timedelta(minutes=20),
             'name': 'TaskName2',
             'report_data': '#### Fake High priority Report\n* Fake Bullet',
             'report_priority': 10,
             'request_id': '0xFakeRequestId',
+            'run_time': timedelta(minutes=5),
             'saved_paths': ['/no/path/2', '/fake/path/2'],
             'status': 'This second fake task executed',
             'successful': True,
             'requester': 'myuser',
-            'worker_name': 'fake_worker'
+            'worker_name': 'fake_worker2'
         }, {
             'id': '0xfakeTaskId3',
             'instance': 'MyTurbiniaInstance',
-            'last_update': datetime.now(),
+            'last_update': last_update,
             'name': 'TaskName3',
             'report_data': '',
             'report_priority': 80,
-            'request_id': '0xFakeRequestId',
+            'request_id': '0xFakeRequestId2',
+            'run_time': timedelta(minutes=3),
             'saved_paths': ['/no/path/3', '/fake/path/3'],
             'status': 'Third Task Failed...',
             'successful': False,
-            'requester': 'myuser',
+            'requester': 'myuser2',
             'worker_name': 'fake_worker'
         }
     ] # yapf: disable
@@ -203,16 +243,60 @@ class TestTurbiniaClient(unittest.TestCase):
   @mock.patch('turbinia.client.GoogleCloudFunction.ExecuteFunction')
   @mock.patch('turbinia.client.task_manager.PSQTaskManager._backend_setup')
   @mock.patch('turbinia.state_manager.get_state_manager')
-  def testClientFormatTaskStatus(self, _, __, ___):
-    """Tests format_task_status() with empty report_priority."""
+  def testClientFormatTaskStatistics(self, _, __, ___):
+    """Tests format_task_statistics() report output."""
     client = TurbiniaClient()
     client.get_task_data = mock.MagicMock()
-    self.task_data[0]['report_priority'] = None
-    self.task_data[1]['report_priority'] = ''
-    self.task_data[2].pop('report_priority')
     client.get_task_data.return_value = self.task_data
-    result = client.format_task_status('inst', 'proj', 'reg')
-    self.assertIn('Processed 3 Tasks', result.strip())
+    stats_report = client.format_task_statistics('inst', 'proj', 'reg')
+    self.maxDiff = None
+    self.assertEqual(stats_report, STATISTICS_REPORT)
+
+  @mock.patch('turbinia.client.GoogleCloudFunction.ExecuteFunction')
+  @mock.patch('turbinia.client.task_manager.PSQTaskManager._backend_setup')
+  @mock.patch('turbinia.state_manager.get_state_manager')
+  def testClientFormatTaskStatisticsCsv(self, _, __, ___):
+    """Tests format_task_statistics() CSV report output."""
+    client = TurbiniaClient()
+    client.get_task_data = mock.MagicMock()
+    client.get_task_data.return_value = self.task_data
+    stats_report = client.format_task_statistics(
+        'inst', 'proj', 'reg', csv=True)
+    self.maxDiff = None
+    self.assertEqual(stats_report, STATISTICS_REPORT_CSV)
+
+  @mock.patch('turbinia.client.GoogleCloudFunction.ExecuteFunction')
+  @mock.patch('turbinia.client.task_manager.PSQTaskManager._backend_setup')
+  @mock.patch('turbinia.state_manager.get_state_manager')
+  def testClientGetTaskStatistics(self, _, __, ___):
+    """Tests get_task_statistics() basic functionality."""
+    client = TurbiniaClient()
+    client.get_task_data = mock.MagicMock()
+    client.get_task_data.return_value = self.task_data
+    task_stats = client.get_task_statistics('inst', 'proj', 'reg')
+
+    # Make sure we have the right number of tasks for all sections
+    self.assertEqual(task_stats['all_tasks'].count, 3)
+    self.assertEqual(task_stats['successful_tasks'].count, 2)
+    self.assertEqual(task_stats['failed_tasks'].count, 1)
+    self.assertEqual(task_stats['requests'].count, 2)
+    self.assertEqual(len(task_stats['tasks_per_user']), 2)
+    self.assertEqual(len(task_stats['tasks_per_worker']), 2)
+    self.assertEqual(len(task_stats['tasks_per_type']), 3)
+
+    # Checking min/mean/max
+    self.assertEqual(task_stats['all_tasks'].min, timedelta(minutes=1))
+    self.assertEqual(task_stats['all_tasks'].mean, timedelta(minutes=3))
+    self.assertEqual(task_stats['all_tasks'].max, timedelta(minutes=5))
+    # This is because the last_update for 0xfakeTaskId2 is 20 minutes later than
+    # the first task, and the first task ran for 1 minute.
+    self.assertEqual(task_stats['requests'].max, timedelta(minutes=21))
+    self.assertEqual(
+        task_stats['tasks_per_user']['myuser'].max, timedelta(minutes=5))
+    self.assertEqual(
+        task_stats['tasks_per_worker']['fake_worker'].max, timedelta(minutes=3))
+    self.assertEqual(
+        task_stats['tasks_per_type']['TaskName2'].mean, timedelta(minutes=5))
 
   @mock.patch('turbinia.client.GoogleCloudFunction.ExecuteFunction')
   @mock.patch('turbinia.client.task_manager.PSQTaskManager._backend_setup')
@@ -247,6 +331,75 @@ class TestTurbiniaClient(unittest.TestCase):
     result = client.format_task_status(
         'inst', 'proj', 'reg', all_fields=True, full_report=True)
     self.assertEqual(result.strip(), LONG_REPORT_FILES.strip())
+
+
+class TestTurbiniaStats(unittest.TestCase):
+  """Test TurbiniaStats class."""
+
+  def testTurbiniaStatsAddTask(self):
+    """Tests TurbiniaStats.add_task() method."""
+    test_task = {'run_time': None, 'last_update': None}
+    stats = TurbiniaStats()
+    stats.add_task(test_task)
+    self.assertIn(test_task, stats.tasks)
+    self.assertEqual(stats.count, 1)
+
+  def testTurbiniaStatsCalculateStats(self):
+    """Tests TurbiniaStats.calculateStats() method."""
+    test_task1 = {'run_time': None, 'last_update': None}
+    test_task2 = {'run_time': None, 'last_update': None}
+    test_task3 = {'run_time': None, 'last_update': None}
+    test_task1['last_update'] = datetime.now()
+    test_task1['run_time'] = timedelta(minutes=3)
+    test_task2['last_update'] = test_task1['last_update']
+    test_task2['run_time'] = timedelta(minutes=5)
+    test_task3['last_update'] = test_task1['last_update']
+    test_task3['run_time'] = timedelta(minutes=1)
+    stats = TurbiniaStats()
+    stats.add_task(test_task1)
+    stats.add_task(test_task2)
+    stats.add_task(test_task3)
+    stats.calculate_stats()
+
+    self.assertEqual(stats.min, timedelta(minutes=1))
+    self.assertEqual(stats.mean, timedelta(minutes=3))
+    self.assertEqual(stats.max, timedelta(minutes=5))
+    self.assertEqual(stats.count, 3)
+
+  def testTurbiniaStatsCalculateStatsEmpty(self):
+    """Tests that calculate_stats() works when no tasks are added."""
+    stats = TurbiniaStats()
+    stats.calculate_stats()
+    self.assertEqual(stats.count, 0)
+    self.assertEqual(stats.min, None)
+
+  def testTurbiniaStatsFormatStats(self):
+    """Tests TurbiniaStats.format_stats() returns valid output."""
+    test_output = (
+        'Test Task Results: Count: 1, Min: 0:03:00, Mean: 0:03:00, '
+        'Max: 0:03:00')
+    test_task1 = {
+        'run_time': timedelta(minutes=3),
+        'last_update': datetime.now()
+    }
+    stats = TurbiniaStats('Test Task Results')
+    stats.add_task(test_task1)
+    stats.calculate_stats()
+    report = stats.format_stats()
+    self.assertEqual(report, test_output)
+
+  def testTurbiniaStatsFormatStatsCsv(self):
+    """Tests TurbiniaStats.format_stats() returns valid CSV output."""
+    test_output = ('Test Task Results, 1, 0:03:00, 0:03:00, 0:03:00')
+    test_task1 = {
+        'run_time': timedelta(minutes=3),
+        'last_update': datetime.now()
+    }
+    stats = TurbiniaStats('Test Task Results')
+    stats.add_task(test_task1)
+    stats.calculate_stats()
+    report = stats.format_stats_csv()
+    self.assertEqual(report, test_output)
 
 
 class TestTurbiniaServer(unittest.TestCase):
