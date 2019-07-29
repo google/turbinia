@@ -359,15 +359,11 @@ class TestTurbiniaStats(unittest.TestCase):
 
   def testTurbiniaStatsCalculateStats(self):
     """Tests TurbiniaStats.calculateStats() method."""
-    test_task1 = {'run_time': None, 'last_update': None}
-    test_task2 = {'run_time': None, 'last_update': None}
-    test_task3 = {'run_time': None, 'last_update': None}
-    test_task1['last_update'] = datetime.now()
-    test_task1['run_time'] = timedelta(minutes=3)
-    test_task2['last_update'] = test_task1['last_update']
-    test_task2['run_time'] = timedelta(minutes=5)
-    test_task3['last_update'] = test_task1['last_update']
-    test_task3['run_time'] = timedelta(minutes=1)
+    last_update = datetime.now()
+    test_task1 = {'run_time': timedelta(minutes=3), 'last_update': last_update}
+    test_task2 = {'run_time': timedelta(minutes=5), 'last_update': last_update}
+    test_task3 = {'run_time': timedelta(minutes=1), 'last_update': last_update}
+
     stats = TurbiniaStats()
     stats.add_task(test_task1)
     stats.add_task(test_task2)
