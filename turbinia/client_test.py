@@ -121,29 +121,28 @@ STATISTICS_REPORT = textwrap.dedent(
     Failed Tasks: Count: 1, Min: 0:03:00, Mean: 0:03:00, Max: 0:03:00
     Total Request Time: Count: 2, Min: 0:03:00, Mean: 0:21:00, Max: 0:21:00
     Task type TaskName: Count: 1, Min: 0:01:00, Mean: 0:01:00, Max: 0:01:00
-    Task type TaskName3: Count: 1, Min: 0:03:00, Mean: 0:03:00, Max: 0:03:00
     Task type TaskName2: Count: 1, Min: 0:05:00, Mean: 0:05:00, Max: 0:05:00
-    Worker fake_worker2: Count: 1, Min: 0:05:00, Mean: 0:05:00, Max: 0:05:00
+    Task type TaskName3: Count: 1, Min: 0:03:00, Mean: 0:03:00, Max: 0:03:00
     Worker fake_worker: Count: 2, Min: 0:01:00, Mean: 0:03:00, Max: 0:03:00
-    User myuser2: Count: 1, Min: 0:03:00, Mean: 0:03:00, Max: 0:03:00
+    Worker fake_worker2: Count: 1, Min: 0:05:00, Mean: 0:05:00, Max: 0:05:00
     User myuser: Count: 2, Min: 0:01:00, Mean: 0:05:00, Max: 0:05:00
+    User myuser2: Count: 1, Min: 0:03:00, Mean: 0:03:00, Max: 0:03:00
 """)
 
 STATISTICS_REPORT_CSV = textwrap.dedent(
     """\
-    Execution time statistics for Turbinia:
-
+    stat_type, count, min, mean, max
     All Tasks, 3, 0:01:00, 0:03:00, 0:05:00
     Successful Tasks, 2, 0:01:00, 0:05:00, 0:05:00
     Failed Tasks, 1, 0:03:00, 0:03:00, 0:03:00
     Total Request Time, 2, 0:03:00, 0:21:00, 0:21:00
     Task type TaskName, 1, 0:01:00, 0:01:00, 0:01:00
-    Task type TaskName3, 1, 0:03:00, 0:03:00, 0:03:00
     Task type TaskName2, 1, 0:05:00, 0:05:00, 0:05:00
-    Worker fake_worker2, 1, 0:05:00, 0:05:00, 0:05:00
+    Task type TaskName3, 1, 0:03:00, 0:03:00, 0:03:00
     Worker fake_worker, 2, 0:01:00, 0:03:00, 0:03:00
-    User myuser2, 1, 0:03:00, 0:03:00, 0:03:00
+    Worker fake_worker2, 1, 0:05:00, 0:05:00, 0:05:00
     User myuser, 2, 0:01:00, 0:05:00, 0:05:00
+    User myuser2, 1, 0:03:00, 0:03:00, 0:03:00
 """)
 
 

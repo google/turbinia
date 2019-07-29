@@ -22,6 +22,7 @@ from datetime import timedelta
 import json
 import logging
 from operator import itemgetter
+from operator import attrgetter
 import os
 import stat
 import time
@@ -158,7 +159,7 @@ class TurbiniaStats(object):
     Returns:
       String of statistics data
     """
-    return '{0:s}: Count: {1:d}, Min: {2:s}, Mean: {3:s}, Max: {4:s}'.format(
+    return '{0:s}: Count: {1:d}, Min: {2!s}, Mean: {3!s}, Max: {4!s}'.format(
         self.description, self.count, self.min, self.mean, self.max)
 
   def format_stats_csv(self):
@@ -167,7 +168,7 @@ class TurbiniaStats(object):
     Returns:
       String of statistics data in CSV format
     """
-    return '{0:s}, {1:d}, {2:s}, {3:s}, {4:s}'.format(
+    return '{0:s}, {1:d}, {2!s}, {3!s}, {4!s}'.format(
         self.description, self.count, self.min, self.mean, self.max)
 
 
@@ -508,11 +509,17 @@ class TurbiniaClient(object):
         'tasks_per_type', 'tasks_per_worker', 'tasks_per_user'
     ]
 
-    report = ['Execution time statistics for Turbinia:', '']
+    if csv:
+      report = ['stat_type, count, min, mean, max']
+    else:
+      report = ['Execution time statistics for Turbinia:', '']
     for stat_name in stats_order:
       stat_obj = task_stats[stat_name]
       if isinstance(stat_obj, dict):
-        for inner_stat_obj in stat_obj.values():
+        # Sort by description so that we get consistent report output
+        inner_stat_objs = sorted(
+            stat_obj.values(), key=attrgetter('description'))
+        for inner_stat_obj in inner_stat_objs:
           if csv:
             report.append(inner_stat_obj.format_stats_csv())
           else:
