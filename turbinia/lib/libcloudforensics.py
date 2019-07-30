@@ -296,7 +296,7 @@ class GoogleCloudProject(object):
       if exception.resp.status == 409:
         raise RuntimeError('Disk {0:s} already exists'.format(disk_name))
       raise RuntimeError(
-          'Unknown error (status: {0:d}) ocurred when creating '
+          'Unknown error (status: {0:d}) occurred when creating '
           'disk from snapshot:\n{1!s}'.format(exception.resp.status, exception))
     self.gce_operation(operation, zone=self.default_zone, block=True)
     return GoogleComputeDisk(
