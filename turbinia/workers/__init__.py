@@ -39,7 +39,6 @@ from turbinia.evidence import evidence_decode
 from turbinia import output_manager
 from turbinia import TurbiniaException
 
-
 log = logging.getLogger('turbinia')
 
 
@@ -268,7 +267,7 @@ class TurbiniaTaskResult(object):
       dict: Object dictionary that is JSON serializable.
     """
     self.run_time = self.run_time.total_seconds() if self.run_time else None
-    self.start_time = str(self.start_time)
+    self.start_time = self.start_time.strftime(DATETIME_FORMAT)
     if self.input_evidence:
       self.input_evidence = self.input_evidence.serialize()
     self.evidence = [x.serialize() for x in self.evidence]
@@ -288,8 +287,7 @@ class TurbiniaTaskResult(object):
     result.__dict__.update(input_dict)
     if result.run_time:
       result.run_time = timedelta(seconds=result.run_time)
-    result.start_time = datetime.strptime(
-        result.start_time, DATETIME_FORMAT)
+    result.start_time = datetime.strptime(result.start_time, DATETIME_FORMAT)
     if result.input_evidence:
       result.input_evidence = evidence_decode(result.input_evidence)
     result.evidence = [evidence_decode(x) for x in result.evidence]
@@ -356,7 +354,7 @@ class TurbiniaTask(object):
     """
     task_copy = deepcopy(self.__dict__)
     task_copy['output_manager'] = self.output_manager.__dict__
-    task_copy['last_update'] = str(self.last_update)
+    task_copy['last_update'] = self.last_update.strftime(DATETIME_FORMAT)
     return task_copy
 
   @classmethod
