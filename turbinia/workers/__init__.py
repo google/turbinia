@@ -38,6 +38,7 @@ from turbinia.evidence import evidence_decode
 from turbinia import output_manager
 from turbinia import TurbiniaException
 
+
 log = logging.getLogger('turbinia')
 
 
@@ -287,7 +288,7 @@ class TurbiniaTaskResult(object):
     if result.run_time:
       result.run_time = timedelta(seconds=result.run_time)
     result.start_time = datetime.strptime(
-        result.start_time, '%Y-%m-%d %H:%M:%S.%f')
+        result.start_time, config.DATETIME_FORMAT)
     if result.input_evidence:
       result.input_evidence = evidence_decode(result.input_evidence)
     result.evidence = [evidence_decode(x) for x in result.evidence]
@@ -382,7 +383,7 @@ class TurbiniaTask(object):
     task.output_manager = output_manager.OutputManager()
     task.output_manager.__dict__.update(input_dict['output_manager'])
     task.last_update = datetime.strptime(
-        input_dict['last_update'], '%Y-%m-%d %H:%M:%S.%f')
+        input_dict['last_update'], config.DATETIME_FORMAT)
     return task
 
   def execute(

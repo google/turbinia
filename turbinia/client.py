@@ -290,7 +290,7 @@ class TurbiniaClient(object):
       start_time = datetime.now() - timedelta(days=days)
       # Format this like '1990-01-01T00:00:00z' so we can cast it directly to a
       # javascript Date() object in the cloud function.
-      start_string = start_time.strftime('%Y-%m-%dT%H:%M:%S')
+      start_string = start_time.strftime(config.DATETIME_FORMAT)
       func_args.update({'start_time': start_string})
     elif task_id:
       func_args.update({'task_id': task_id})
@@ -316,13 +316,16 @@ class TurbiniaClient(object):
     except (TypeError, ValueError) as e:
       raise TurbiniaException(
           'Could not deserialize result ({0!s}) from GCF: [{1!s}]'.format(
-              response['result'], e))
+              response.get('result'), e))
 
-    # Convert run_time back into timedelta.
+    # Convert run_time/last_update back into datetime objects
     task_data = results[0]
     for task in task_data:
       if task.get('run_time'):
         task['run_time'] = timedelta(seconds=task['run_time'])
+      if task.get('last_update'):
+        task['last_update'] = datetime.strptime(
+            task['last_update'], config.DATETIME_FORMAT)
 
     return task_data
 
@@ -399,7 +402,7 @@ class TurbiniaClient(object):
     task_results = self.get_task_data(
         instance, project, region, days, task_id, request_id, user)
     if not task_results:
-      return 'No tasks found'
+      return {}
 
     task_stats = {
         'all_tasks': TurbiniaStats('All Tasks'),

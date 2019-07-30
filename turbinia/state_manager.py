@@ -44,7 +44,6 @@ else:
       config.STATE_MANAGER)
   raise TurbiniaException(msg)
 
-DATETIME_FORMAT = '%Y-%m-%dT%H:%M:%S'
 MAX_DATASTORE_STRLEN = 1500
 log = logging.getLogger('turbinia')
 
@@ -242,7 +241,7 @@ class RedisStateManager(BaseStateManager):
     for task in tasks:
       if task.get('last_update'):
         task['last_update'] = datetime.strptime(
-            task.get('last_update'), DATETIME_FORMAT)
+            task.get('last_update'), config.DATETIME_FORMAT)
       if task.get('run_time'):
         task['run_time'] = datetime.timedelta(seconds=task['run_time'])
 
@@ -265,7 +264,7 @@ class RedisStateManager(BaseStateManager):
     log.info('Updating task {0:s} in Redis'.format(task.name))
     task_data = self.get_task_dict(task)
     task_data['last_update'] = task_data['last_update'].strftime(
-        DATETIME_FORMAT)
+        config.DATETIME_FORMAT)
     if task_data['run_time']:
       task_data['run_time'] = task_data['run_time'].total_seconds()
     # Need to use json.dumps, else redis returns single quoted string which
@@ -279,7 +278,7 @@ class RedisStateManager(BaseStateManager):
     log.info('Writing new task {0:s} into Redis'.format(task.name))
     task_data = self.get_task_dict(task)
     task_data['last_update'] = task_data['last_update'].strftime(
-        DATETIME_FORMAT)
+        config.DATETIME_FORMAT)
     if task_data['run_time']:
       task_data['run_time'] = task_data['run_time'].total_seconds()
     # nx=True prevents overwriting (i.e. no unintentional task clobbering)
