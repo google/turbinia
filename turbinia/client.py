@@ -154,6 +154,11 @@ class TurbiniaStats(object):
     self.max = sorted_tasks[len(sorted_tasks) - 1]['run_time']
     self.mean = sorted_tasks[len(sorted_tasks) // 2]['run_time']
 
+    # Remove the microseconds to keep things cleaner
+    self.min = self.min - timedelta(microseconds=self.min.microseconds)
+    self.max = self.max - timedelta(microseconds=self.max.microseconds)
+    self.mean = self.mean - timedelta(microseconds=self.mean.microseconds)
+
   def format_stats(self):
     """Formats statistics data.
 
