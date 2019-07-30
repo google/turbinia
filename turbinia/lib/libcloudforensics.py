@@ -32,6 +32,7 @@ import time
 from apiclient.discovery import build
 from googleapiclient.errors import HttpError
 from oauth2client.client import GoogleCredentials
+from oauth2client.client import ApplicationDefaultCredentialsError
 
 log = logging.getLogger('turbinia')
 
@@ -45,8 +46,16 @@ def create_service(service_name, api_version):
 
   Returns:
     API service resource (apiclient.discovery.Resource)
+
+  Raises:
+    RuntimeError: If Application Default Credentials could not be obtained.
   """
-  credentials = GoogleCredentials.get_application_default()
+  try:
+    credentials = GoogleCredentials.get_application_default()
+  except ApplicationDefaultCredentialsError as error:
+    raise RuntimeError(
+        'Could not get application default credentials: {0!s}\n'
+        'Have you run $ gcloud auth application-default login?'.format(error))
   return build(
       service_name, api_version, credentials=credentials, cache_discovery=False)
 
@@ -286,6 +295,9 @@ class GoogleCloudProject(object):
     except HttpError as exception:
       if exception.resp.status == 409:
         raise RuntimeError('Disk {0:s} already exists'.format(disk_name))
+      raise RuntimeError(
+          'Unknown error (status: {0:d}) occurred when creating '
+          'disk from snapshot:\n{1!s}'.format(exception.resp.status, exception))
     self.gce_operation(operation, zone=self.default_zone, block=True)
     return GoogleComputeDisk(
         project=self, zone=self.default_zone, name=disk_name)
