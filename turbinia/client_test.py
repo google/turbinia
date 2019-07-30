@@ -297,8 +297,8 @@ class TestTurbiniaClient(unittest.TestCase):
     self.assertEqual(task_stats['all_tasks'].min, timedelta(minutes=1))
     self.assertEqual(task_stats['all_tasks'].mean, timedelta(minutes=3))
     self.assertEqual(task_stats['all_tasks'].max, timedelta(minutes=5))
-    # This is because the last_update for 0xfakeTaskId2 is 20 minutes later than
-    # the first task, and the first task ran for 1 minute.
+    # Delta for this is 21 minutes because the last_update for 0xfakeTaskId2 is
+    # 20 minutes later than the first task, and the first task ran for 1 minute.
     self.assertEqual(task_stats['requests'].max, timedelta(minutes=21))
     self.assertEqual(
         task_stats['tasks_per_user']['myuser'].max, timedelta(minutes=5))

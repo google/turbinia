@@ -321,7 +321,7 @@ class TurbiniaClient(object):
       results = json.loads(response['result'])
     except (TypeError, ValueError) as e:
       raise TurbiniaException(
-          'Could not deserialize result ({0!s}) from GCF: [{1!s}]'.format(
+          'Could not deserialize result [{0!s}] from GCF: [{1!s}]'.format(
               response.get('result'), e))
 
     # Convert run_time/last_update back into datetime objects
