@@ -18,6 +18,7 @@ from __future__ import unicode_literals
 
 from datetime import datetime
 from datetime import timedelta
+import json
 import unittest
 import os
 import shutil
@@ -212,11 +213,20 @@ class TestTurbiniaClient(unittest.TestCase):
   def testTurbiniaClientGetTaskData(self, _, __, mock_cloud_function):
     """Basic test for client.get_task_data"""
     # ExecuteFunction returns a dict with a 'result' key that has a json-encoded
-    # list.
-    function_return = {'result': '["bar", "baz"]'}
+    # list.  This contains our task data, which is a list of dicts.
+    run_time = timedelta(seconds=3)
+    test_task_data = [{'bar': 'bar2', 'run_time': run_time.total_seconds()}]
+    gcf_result = [test_task_data, 'Unused GCF data']
+    gcf_result = json.dumps(gcf_result)
+    function_return = {'result': gcf_result}
     mock_cloud_function.return_value = function_return
     client = TurbiniaClient()
-    self.assertEqual(client.get_task_data("inst", "proj", "reg"), "bar")
+    task_data = client.get_task_data('inst', 'proj', 'reg')
+    # get_task_data() converts this back into a timedelta(). We returned it
+    # seconds from the GCF function call because that is what it is stored in
+    # Datastore as.
+    test_task_data[0]['run_time'] = run_time
+    self.assertEqual(task_data, test_task_data)
 
   @mock.patch('turbinia.client.GoogleCloudFunction.ExecuteFunction')
   @mock.patch('turbinia.client.task_manager.PSQTaskManager._backend_setup')

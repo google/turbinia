@@ -315,9 +315,16 @@ class TurbiniaClient(object):
       results = json.loads(response['result'])
     except (TypeError, ValueError) as e:
       raise TurbiniaException(
-          'Could not deserialize result from GCF: [{0!s}]'.format(e))
+          'Could not deserialize result ({0:s}) from GCF: [{1!s}]'.format(
+              response['result'], e))
 
-    return results[0]
+    # Convert run_time back into timedelta.
+    task_data = results[0]
+    for task in task_data:
+      if task.get('run_time'):
+        task['run_time'] = timedelta(seconds=task['run_time'])
+
+    return task_data
 
   def format_task_detail(self, task, show_files=False):
     """Formats a single task in detail.
@@ -417,6 +424,12 @@ class TurbiniaClient(object):
       task_type = task.get('name')
       worker = task.get('worker_name')
       user = task.get('requester')
+      if not task.get('run_time'):
+        log.debug(
+            'Ignoring task {0:s} in statistics because the run_time is not '
+            'set, and it is required to calculate stats'.format(
+                task.get('name')))
+        continue
 
       # Stats for all/successful/failed tasks
       task_stats['all_tasks'].add_task(task)
