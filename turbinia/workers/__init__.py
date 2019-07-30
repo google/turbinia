@@ -34,6 +34,7 @@ import turbinia
 import filelock
 
 from turbinia import config
+from turbinia.config import DATETIME_FORMAT
 from turbinia.evidence import evidence_decode
 from turbinia import output_manager
 from turbinia import TurbiniaException
@@ -288,7 +289,7 @@ class TurbiniaTaskResult(object):
     if result.run_time:
       result.run_time = timedelta(seconds=result.run_time)
     result.start_time = datetime.strptime(
-        result.start_time, config.DATETIME_FORMAT)
+        result.start_time, DATETIME_FORMAT)
     if result.input_evidence:
       result.input_evidence = evidence_decode(result.input_evidence)
     result.evidence = [evidence_decode(x) for x in result.evidence]
@@ -383,7 +384,7 @@ class TurbiniaTask(object):
     task.output_manager = output_manager.OutputManager()
     task.output_manager.__dict__.update(input_dict['output_manager'])
     task.last_update = datetime.strptime(
-        input_dict['last_update'], config.DATETIME_FORMAT)
+        input_dict['last_update'], DATETIME_FORMAT)
     return task
 
   def execute(

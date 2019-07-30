@@ -29,6 +29,7 @@ from datetime import timedelta
 import six
 
 from turbinia import config
+from turbinia.config import DATETIME_FORMAT
 from turbinia import TurbiniaException
 from turbinia.workers import TurbiniaTask
 from turbinia.workers import TurbiniaTaskResult
@@ -157,7 +158,13 @@ class DatastoreStateManager(BaseStateManager):
 
   def __init__(self):
     config.LoadConfig()
-    self.client = datastore.Client(project=config.TURBINIA_PROJECT)
+    try:
+      self.client = datastore.Client(project=config.TURBINIA_PROJECT)
+    except EnvironmentError as e:
+      message = (
+          'Could not create Datastore client: {0!s}\n'
+          'Have you run $ gcloud auth application-default login?'.format(e))
+      raise TurbiniaException(message)
 
   def _validate_data(self, data):
     for key, value in iter(data.items()):
@@ -241,7 +248,7 @@ class RedisStateManager(BaseStateManager):
     for task in tasks:
       if task.get('last_update'):
         task['last_update'] = datetime.strptime(
-            task.get('last_update'), config.DATETIME_FORMAT)
+            task.get('last_update'), DATETIME_FORMAT)
       if task.get('run_time'):
         task['run_time'] = datetime.timedelta(seconds=task['run_time'])
 
@@ -264,7 +271,7 @@ class RedisStateManager(BaseStateManager):
     log.info('Updating task {0:s} in Redis'.format(task.name))
     task_data = self.get_task_dict(task)
     task_data['last_update'] = task_data['last_update'].strftime(
-        config.DATETIME_FORMAT)
+        DATETIME_FORMAT)
     if task_data['run_time']:
       task_data['run_time'] = task_data['run_time'].total_seconds()
     # Need to use json.dumps, else redis returns single quoted string which
@@ -278,7 +285,7 @@ class RedisStateManager(BaseStateManager):
     log.info('Writing new task {0:s} into Redis'.format(task.name))
     task_data = self.get_task_dict(task)
     task_data['last_update'] = task_data['last_update'].strftime(
-        config.DATETIME_FORMAT)
+        DATETIME_FORMAT)
     if task_data['run_time']:
       task_data['run_time'] = task_data['run_time'].total_seconds()
     # nx=True prevents overwriting (i.e. no unintentional task clobbering)

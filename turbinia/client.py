@@ -29,6 +29,7 @@ import time
 
 from turbinia import config
 from turbinia.config import logger
+from turbinia.config import DATETIME_FORMAT
 from turbinia import task_manager
 from turbinia import TurbiniaException
 from turbinia.lib import text_formatter as fmt
@@ -290,7 +291,7 @@ class TurbiniaClient(object):
       start_time = datetime.now() - timedelta(days=days)
       # Format this like '1990-01-01T00:00:00z' so we can cast it directly to a
       # javascript Date() object in the cloud function.
-      start_string = start_time.strftime(config.DATETIME_FORMAT)
+      start_string = start_time.strftime(DATETIME_FORMAT)
       func_args.update({'start_time': start_string})
     elif task_id:
       func_args.update({'task_id': task_id})
@@ -325,7 +326,7 @@ class TurbiniaClient(object):
         task['run_time'] = timedelta(seconds=task['run_time'])
       if task.get('last_update'):
         task['last_update'] = datetime.strptime(
-            task['last_update'], config.DATETIME_FORMAT)
+            task['last_update'], DATETIME_FORMAT)
 
     return task_data
 

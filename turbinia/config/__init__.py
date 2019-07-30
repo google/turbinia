@@ -22,7 +22,7 @@ import logging
 import os
 import sys
 
-log = logging.getLogger('turbinia')
+DATETIME_FORMAT = '%Y-%m-%dT%H:%M:%S'
 
 # Look for config files with these names
 CONFIGFILES = ['.turbiniarc', 'turbinia.conf', 'turbinia_config.py']
@@ -79,6 +79,8 @@ OPTIONAL_VARS = [
 ENVCONFIGVAR = 'TURBINIA_CONFIG_PATH'
 
 CONFIG = None
+
+log = logging.getLogger('turbinia')
 
 
 class TurbiniaConfigException(Exception):
