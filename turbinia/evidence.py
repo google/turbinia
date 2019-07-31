@@ -199,6 +199,11 @@ class Evidence(object):
   def validate(self):
     """Runs validation to verify evidence meets minimum requirements.
 
+    This default implementation will just check that the attributes listed in
+    REQUIRED_ATTRIBUTES are set, but other evidence types can override this
+    method to implement their own more stringent checks as needed.  This is
+    called by the worker, prior to the pre/post-processors running.
+
     Raises:
       TurbiniaException: If validation fails
     """
