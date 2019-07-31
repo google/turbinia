@@ -126,7 +126,6 @@ class TurbiniaStats(object):
 
   def __init__(self, description=None):
     self.description = description
-    self.count = 0
     self.min = None
     self.mean = None
     self.max = None
@@ -135,6 +134,15 @@ class TurbiniaStats(object):
   def __str__(self):
     return self.format_stats()
 
+  @property
+  def count(self):
+    """Gets a count of the tasks in this stats object.
+
+    Returns:
+      Int of task count.
+    """
+    return len(self.tasks)
+
   def add_task(self, task):
     """Add a task result dict.
 
@@ -142,7 +150,6 @@ class TurbiniaStats(object):
       task(dict): The task results we want to count stats for.
     """
     self.tasks.append(task)
-    self.count += 1
 
   def calculate_stats(self):
     """Calculates statistics of the current tasks."""
