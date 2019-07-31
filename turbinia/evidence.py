@@ -85,9 +85,9 @@ class Evidence(object):
         object types that we want to copy to/from storage (e.g. PlasoFile, but
         not RawDisk).
     description: Description of evidence.
-    device_path: Path to a relevant 'raw' data source (ie: a block device or a
-        raw disk image).
-    mount_path: Path to a mounted file system (if relevant).
+    device_path (string): Path to a relevant 'raw' data source (ie: a block
+        device or a raw disk image).
+    mount_path (string): Path to a mounted file system (if relevant).
     name: Name of evidence.
     local_path (string): Path to the processed data (can be a blockdevice or a
         directory).
@@ -192,8 +192,8 @@ class Evidence(object):
     if self.context_dependent:
       if not self.parent_evidence:
         raise TurbiniaException(
-            'Evidence of type {0:s} needs a parent evidence'.format(
-                self.__class__.__name__))
+            'Evidence of type {0:s} needs parent_evidence to be set'.format(
+                self.type))
       self.parent_evidence.preprocess()
     self._preprocess()
 
@@ -258,14 +258,11 @@ class RawDisk(Evidence):
 
   Attributes:
     mount_partition: The mount partition for this disk (if any).
-    mount_path: The mount path for this disk (if any).
     size: The size of the disk in bytes.
   """
 
-  def __init__(
-      self, mount_path=None, mount_partition=None, size=None, *args, **kwargs):
+  def __init__(self, mount_partition=None, size=None, *args, **kwargs):
     """Initialization for raw disk evidence object."""
-    self.mount_path = mount_path
     self.mount_partition = mount_partition
     self.size = size
     super(RawDisk, self).__init__(*args, **kwargs)
@@ -378,11 +375,14 @@ class GoogleCloudDiskRawEmbedded(RawDisk):
     embedded_path: The path of the raw disk image inside the Persistent Disk
   """
 
-  REQUIRED_ATTRIBUTES = ['disk_name', 'project', 'zone', 'embedded_path']
+  REQUIRED_ATTRIBUTES = ['disk_name', 'project', 'zone', 'embedded_partition',
+                         'embedded_path']
 
-  def __init__(self, embedded_path=None, *args, **kwargs):
+  def __init__(
+      self, embedded_path=None, embedded_partition=None, *args, **kwargs):
     """Initialization for Google Cloud Disk containing a raw disk image."""
     self.embedded_path = embedded_path
+    self.embedded_partition = embedded_partition
     super(GoogleCloudDiskRawEmbedded, self).__init__(*args, **kwargs)
 
     # This Evidence needs to have a GoogleCloudDisk as a parent
@@ -393,7 +393,7 @@ class GoogleCloudDiskRawEmbedded(RawDisk):
     # the following mounting will be done in the parent evidence.
     # and we'll set mount_path as the path to the mounted embedded disk image.
     self.mount_path = mount_local.PreprocessMountDisk(
-        self.parent_evidence.device_path, 1)
+        self.parent_evidence.device_path, self.mount_partition)
     self.device_path = os.path.join(self.mount_path, self.embedded_path)
     self.local_path = self.device_path
 

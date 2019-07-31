@@ -222,6 +222,10 @@ def main():
       'the entire raw disk.  Only affects mounting, and not what gets '
       'processed.')
   parser_googleclouddiskembedded.add_argument(
+      '-P', '--embedded_mount_partition', default=1, type=int,
+      help='The partition number to use when mounting this embedded disk image.'
+      ' Defaults to the first partition')
+  parser_googleclouddiskembedded.add_argument(
       '-z', '--zone', help='Geographic zone the disk exists in', required=True)
   parser_googleclouddiskembedded.add_argument(
       '-s', '--source', help='Description of the source of the evidence',
@@ -424,11 +428,9 @@ def main():
         name=args.name, disk_name=args.disk_name, project=args.project,
         mount_partition=args.mount_partition, zone=args.zone,
         source=args.source)
-    # TODO: have a way to provide the partition in the parent evidence to get
-    # access to the embedded disk image, and the partition in that disk image
-    # that contains the data we want to process.
     evidence_ = evidence.GoogleCloudDiskRawEmbedded(
-        embedded_path=args.embedded_path, mount_partition=args.mount_partition,
+        embedded_path=args.embedded_path,
+        embedded_partition=args.embedded_mount_partition,
         parent_evidence=parent_evidence_)
   elif args.command == 'hindsight':
     if args.format not in ['xlsx', 'sqlite', 'jsonl']:
