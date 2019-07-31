@@ -46,3 +46,24 @@ class TestTurbiniaEvidence(unittest.TestCase):
     """Test that evidence_decode throws error on dict with no type attribute."""
     test = {1: 2, 3: 4}
     self.assertRaises(TurbiniaException, evidence.evidence_decode, test)
+
+  def testEvidenceValidation(self):
+    """Test successful evidence validation."""
+    rawdisk = evidence.RawDisk(
+        name='My Evidence', local_path='/tmp/foo', mount_path='/mnt/foo')
+    rawdisk.REQUIRED_ATTRIBUTES = ['name', 'local_path', 'mount_path']
+    rawdisk.validate()
+
+  def testEvidenceValidationEmptyAttribute(self):
+    """Test failed evidence validation with an empty attribute."""
+    rawdisk = evidence.RawDisk(
+        name='My Evidence', local_path=None, mount_path='/mnt/foo')
+    rawdisk.REQUIRED_ATTRIBUTES = ['name', 'local_path', 'mount_path']
+    self.assertRaises(TurbiniaException, rawdisk.validate)
+
+  def testEvidenceValidationNoAttribute(self):
+    """Test failed evidence validation with no attribute."""
+    rawdisk = evidence.RawDisk(
+        name='My Evidence', local_path='/tmp/foo', mount_path='/mnt/foo')
+    rawdisk.REQUIRED_ATTRIBUTES = ['doesnotexist']
+    self.assertRaises(TurbiniaException, rawdisk.validate)

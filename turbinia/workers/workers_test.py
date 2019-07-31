@@ -191,6 +191,18 @@ class TestTurbiniaTask(TestTurbiniaTaskBase):
     self.assertEqual(type(new_result), TurbiniaTaskResult)
     self.assertNotEqual(new_result.error, {})
 
+  @mock.patch('turbinia.workers.evidence_decode')
+  def testTurbiniaTaskEvidenceValidationFailure(self, evidence_decode_mock):
+    """Tests Task fails when evidence validation fails."""
+    self.setResults()
+    test_evidence = evidence.RawDisk()
+    test_evidence.REQUIRED_ATTRIBUTES = ['doesnotexist']
+    evidence_decode_mock.return_value = test_evidence
+    test_result = self.task.run_wrapper(test_evidence.__dict__)
+    test_result = TurbiniaTaskResult.deserialize(test_result)
+    self.assertFalse(test_result.successful)
+    self.assertIn('validation failed', test_result.status)
+
   @mock.patch('turbinia.workers.subprocess.Popen')
   def testTurbiniaTaskExecute(self, popen_mock):
     """Test execution with success case."""
