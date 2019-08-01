@@ -100,6 +100,9 @@ class Evidence(object):
         relevant to us.
   """
 
+  # The list of attributes a given piece of Evidence requires to be set
+  REQUIRED_ATTRIBUTES = []
+
   def __init__(
       self, name=None, description=None, source=None, local_path=None,
       tags=None, request_id=None):
@@ -193,6 +196,26 @@ class Evidence(object):
     if self.parent_evidence:
       self.parent_evidence.postprocess()
 
+  def validate(self):
+    """Runs validation to verify evidence meets minimum requirements.
+
+    This default implementation will just check that the attributes listed in
+    REQUIRED_ATTRIBUTES are set, but other evidence types can override this
+    method to implement their own more stringent checks as needed.  This is
+    called by the worker, prior to the pre/post-processors running.
+
+    Raises:
+      TurbiniaException: If validation fails
+    """
+    for attribute in self.REQUIRED_ATTRIBUTES:
+      attribute_value = getattr(self, attribute, None)
+      if not attribute_value:
+        message = (
+            'Evidence validation failed: Required attribute {0:s} for class '
+            '{1:s} is not set. Please check original request.'.format(
+                attribute, self.name))
+        raise TurbiniaException(message)
+
 
 class Directory(Evidence):
   """Filesystem directory evidence."""
@@ -207,6 +230,8 @@ class ChromiumProfile(Evidence):
       Supported options are Chrome (default) and Brave.
     format: Output format (default is sqlite, other options are xlsx and jsonl)
   """
+
+  REQUIRED_ATTRIBUTES = ['browser_type', 'output_format']
 
   def __init__(self, browser_type=None, output_format=None, *args, **kwargs):
     """Initialization for chromium profile evidence object."""
@@ -274,6 +299,8 @@ class BitlockerDisk(EncryptedDisk):
     unencrypted_path: A string to the unencrypted local path
   """
 
+  REQUIRED_ATTRIBUTES = ['recovery_key', 'password']
+
   def __init__(self, recovery_key=None, password=None, *args, **kwargs):
     """Initialization for Bitlocker disk evidence object"""
     self.recovery_key = recovery_key
@@ -292,6 +319,8 @@ class APFSEncryptedDisk(EncryptedDisk):
     unencrypted_path: A string to the unencrypted local path
   """
 
+  REQUIRED_ATTRIBUTES = ['recovery_key', 'password']
+
   def __init__(self, recovery_key=None, password=None, *args, **kwargs):
     """Initialization for Bitlocker disk evidence object"""
     self.recovery_key = recovery_key
@@ -308,6 +337,8 @@ class GoogleCloudDisk(RawDisk):
     zone: The geographic zone.
     disk_name: The cloud disk name.
   """
+
+  REQUIRED_ATTRIBUTES = ['disk_name', 'project', 'zone']
 
   def __init__(self, project=None, zone=None, disk_name=None, *args, **kwargs):
     """Initialization for Google Cloud Disk."""
@@ -336,6 +367,8 @@ class GoogleCloudDiskRawEmbedded(GoogleCloudDisk):
   Attributes:
     embedded_path: The path of the raw disk image inside the Persistent Disk
   """
+
+  REQUIRED_ATTRIBUTES = ['disk_name', 'project', 'zone', 'embedded_path']
 
   def __init__(self, embedded_path=None, *args, **kwargs):
     """Initialization for Google Cloud Disk."""
@@ -404,6 +437,8 @@ class FilteredTextFile(TextFile):
 class ExportedFileArtifact(Evidence):
   """Exported file artifact."""
 
+  REQUIRED_ATTRIBUTES = ['artifact_name']
+
   def __init__(self, artifact_name=None):
     """Initializes an exported file artifact."""
     super(ExportedFileArtifact, self).__init__()
@@ -423,6 +458,8 @@ class RawMemory(Evidence):
     profile (string): Volatility profile used for the analysis
     module_list (list): Module used for the analysis
     """
+
+  REQUIRED_ATTRIBUTES = ['module_list', 'profile']
 
   def __init__(self, module_list=None, profile=None, *args, **kwargs):
     """Initialization for raw memory evidence object."""

@@ -592,6 +592,7 @@ class TurbiniaTask(object):
       try:
         self.result = self.setup(evidence)
         original_result_id = self.result.id
+        evidence.validate()
 
         if self.turbinia_version != turbinia.__version__:
           message = (
