@@ -34,6 +34,7 @@ import turbinia
 import filelock
 
 from turbinia import config
+from turbinia.config import DATETIME_FORMAT
 from turbinia.evidence import evidence_decode
 from turbinia import output_manager
 from turbinia import TurbiniaException
@@ -82,8 +83,8 @@ class TurbiniaTaskResult(object):
 
   # The list of attributes that we will persist into storage
   STORED_ATTRIBUTES = [
-      'worker_name', 'report_data', 'report_priority', 'status', 'saved_paths',
-      'successful'
+      'worker_name', 'report_data', 'report_priority', 'run_time', 'status',
+      'saved_paths', 'successful'
   ]
 
   def __init__(
@@ -266,7 +267,7 @@ class TurbiniaTaskResult(object):
       dict: Object dictionary that is JSON serializable.
     """
     self.run_time = self.run_time.total_seconds() if self.run_time else None
-    self.start_time = str(self.start_time)
+    self.start_time = self.start_time.strftime(DATETIME_FORMAT)
     if self.input_evidence:
       self.input_evidence = self.input_evidence.serialize()
     self.evidence = [x.serialize() for x in self.evidence]
@@ -286,8 +287,7 @@ class TurbiniaTaskResult(object):
     result.__dict__.update(input_dict)
     if result.run_time:
       result.run_time = timedelta(seconds=result.run_time)
-    result.start_time = datetime.strptime(
-        result.start_time, '%Y-%m-%d %H:%M:%S.%f')
+    result.start_time = datetime.strptime(result.start_time, DATETIME_FORMAT)
     if result.input_evidence:
       result.input_evidence = evidence_decode(result.input_evidence)
     result.evidence = [evidence_decode(x) for x in result.evidence]
@@ -330,6 +330,7 @@ class TurbiniaTask(object):
       self.base_output_dir = base_output_dir
     else:
       self.base_output_dir = config.OUTPUT_DIR
+
     self.id = uuid.uuid4().hex
     self.last_update = datetime.now()
     self.name = name if name else self.__class__.__name__
@@ -353,7 +354,7 @@ class TurbiniaTask(object):
     """
     task_copy = deepcopy(self.__dict__)
     task_copy['output_manager'] = self.output_manager.__dict__
-    task_copy['last_update'] = str(self.last_update)
+    task_copy['last_update'] = self.last_update.strftime(DATETIME_FORMAT)
     return task_copy
 
   @classmethod
@@ -381,7 +382,7 @@ class TurbiniaTask(object):
     task.output_manager = output_manager.OutputManager()
     task.output_manager.__dict__.update(input_dict['output_manager'])
     task.last_update = datetime.strptime(
-        input_dict['last_update'], '%Y-%m-%d %H:%M:%S.%f')
+        input_dict['last_update'], DATETIME_FORMAT)
     return task
 
   def execute(
