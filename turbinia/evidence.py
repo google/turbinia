@@ -357,9 +357,12 @@ class GoogleCloudDisk(RawDisk):
 
   def _preprocess(self):
     self.device_path = google_cloud.PreprocessAttachDisk(self.disk_name)
+    self.mount_path = mount_local.PreprocessMountDisk(
+        self.device_path, self.mount_partition)
     self.local_path = self.device_path
 
   def _postprocess(self):
+    mount_local.PostprocessUnmountPath(self.mount_path)
     google_cloud.PostprocessDetachDisk(self.disk_name, self.device_path)
 
 
@@ -389,16 +392,16 @@ class GoogleCloudDiskRawEmbedded(RawDisk):
     self.context_dependent = True
 
   def _preprocess(self):
-    # TODO, after we make all Disks Evidence try to mount their filesystem,
-    # the following mounting will be done in the parent evidence.
-    # and we'll set mount_path as the path to the mounted embedded disk image.
+    rawdisk_path = os.path.join(
+        self.parent_evidence.mount_path, self.embedded_path)
+    self.device_path = mount_local.PreprocessLosetup(rawdisk_path)
     self.mount_path = mount_local.PreprocessMountDisk(
-        self.parent_evidence.device_path, self.mount_partition)
-    self.device_path = os.path.join(self.mount_path, self.embedded_path)
+        self.device_path, self.mount_partition)
     self.local_path = self.device_path
 
   def _postprocess(self):
     mount_local.PostprocessUnmountPath(self.mount_path)
+    mount_local.PostprocessDeleteLosetup(self.device_path)
 
 
 class PlasoFile(Evidence):
