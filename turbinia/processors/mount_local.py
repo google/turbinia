@@ -37,7 +37,7 @@ def PreprocessLosetup(source_path):
     TurbiniaException: if the losetup command failed to run.
 
   Returns:
-    str: the path to the created loopdevice (ie: /dev/loopX)
+    str: the path to the created device (ie: /dev/loopX)
   """
   losetup_device = None
   # TODO(aarontp): Remove hard-coded sudo in commands:
@@ -53,11 +53,11 @@ def PreprocessLosetup(source_path):
   return losetup_device
 
 
-def PreprocessMountDisk(loopdevice_path, partition_number):
+def PreprocessMountDisk(device_path, partition_number=1):
   """Locally mounts disk in an instance.
 
   Args:
-    loopdevice_path(str): The path to the block device to mount.
+    device_path(str): The path to the blockdevice to mount.
     partition_number(int): The partition number.
 
   Raises:
@@ -87,14 +87,14 @@ def PreprocessMountDisk(loopdevice_path, partition_number):
     # The first partition loop-device made by losetup is loopXp1
     partition_number = 1
 
-  path_to_partition = '{0:s}p{1:d}'.format(loopdevice_path, partition_number)
+  path_to_partition = '{0:s}p{1:d}'.format(device_path, partition_number)
 
   if not os.path.exists(path_to_partition):
     log.info(
         'Could not find {0:s}, trying {1:s}'.format(
-            path_to_partition, loopdevice_path))
+            path_to_partition, device_path))
     # Else, the partition's block device is actually /dev/loopX
-    path_to_partition = loopdevice_path
+    path_to_partition = device_path
 
   mount_cmd = ['sudo', 'mount', path_to_partition, mount_path]
   log.info('Running: {0:s}'.format(' '.join(mount_cmd)))
@@ -106,11 +106,11 @@ def PreprocessMountDisk(loopdevice_path, partition_number):
   return mount_path
 
 
-def PostprocessDeleteLosetup(loopdevice_path):
+def PostprocessDeleteLosetup(device_path):
   """Removes a loop device.
 
   Args:
-    loopdevice_path(str): the path to the block device to remove
+    device_path(str): the path to the block device to remove
       (ie: /dev/loopX).
 
   Raises:
@@ -118,7 +118,7 @@ def PostprocessDeleteLosetup(loopdevice_path):
   """
   # TODO(aarontp): Remove hard-coded sudo in commands:
   # https://github.com/google/turbinia/issues/73
-  losetup_cmd = ['sudo', 'losetup', '-d', loopdevice_path]
+  losetup_cmd = ['sudo', 'losetup', '-d', device_path]
   log.info('Running: {0:s}'.format(' '.join(losetup_cmd)))
   try:
     subprocess.check_call(losetup_cmd)
