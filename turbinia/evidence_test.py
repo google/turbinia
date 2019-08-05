@@ -47,21 +47,18 @@ class TestTurbiniaEvidence(unittest.TestCase):
 
   def testEvidenceValidation(self):
     """Test successful evidence validation."""
-    rawdisk = evidence.RawDisk(
-        name='My Evidence', local_path='/tmp/foo', mount_path='/mnt/foo')
-    rawdisk.REQUIRED_ATTRIBUTES = ['name', 'local_path', 'mount_path']
+    rawdisk = evidence.RawDisk(name='My Evidence', source_path='/tmp/foo')
+    rawdisk.REQUIRED_ATTRIBUTES = ['name', 'source_path']
     rawdisk.validate()
 
   def testEvidenceValidationEmptyAttribute(self):
     """Test failed evidence validation with an empty attribute."""
-    rawdisk = evidence.RawDisk(
-        name='My Evidence', local_path=None, mount_path='/mnt/foo')
-    rawdisk.REQUIRED_ATTRIBUTES = ['name', 'local_path', 'mount_path']
+    rawdisk = evidence.RawDisk(name='My Evidence', source_path=None)
+    rawdisk.REQUIRED_ATTRIBUTES = ['name', 'source_path']
     self.assertRaises(TurbiniaException, rawdisk.validate)
 
   def testEvidenceValidationNoAttribute(self):
     """Test failed evidence validation with no attribute."""
-    rawdisk = evidence.RawDisk(
-        name='My Evidence', local_path='/tmp/foo', mount_path='/mnt/foo')
+    rawdisk = evidence.RawDisk(name='My Evidence', source_path='/tmp/foo')
     rawdisk.REQUIRED_ATTRIBUTES = ['doesnotexist']
     self.assertRaises(TurbiniaException, rawdisk.validate)
