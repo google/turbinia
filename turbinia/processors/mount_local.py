@@ -16,6 +16,7 @@
 
 from __future__ import unicode_literals
 
+import glob
 import logging
 import os
 import subprocess
@@ -37,7 +38,9 @@ def PreprocessLosetup(source_path):
     TurbiniaException: if the losetup command failed to run.
 
   Returns:
-    str: the path to the created device (ie: /dev/loopX)
+    (str, list(str)): a tuple consisting of the path to the 'disk' block device
+      and a list of paths to partition block decices. For example:
+      ('/dev/loop0', ['/dev/loop0p1', '/dev/loop0p2'])
   """
   losetup_device = None
   # TODO(aarontp): Remove hard-coded sudo in commands:
@@ -50,15 +53,14 @@ def PreprocessLosetup(source_path):
   except subprocess.CalledProcessError as e:
     raise TurbiniaException('Could not set losetup devices {0!s}'.format(e))
 
-  return losetup_device
+  return (losetup_device, glob.glob('{0:s}p*'.format(losetup_device)))
 
 
-def PreprocessMountDisk(device_path, partition_number=1):
+def PreprocessMountDisk(partition_path):
   """Locally mounts disk in an instance.
 
   Args:
-    device_path(str): The path to the blockdevice to mount.
-    partition_number(int): The partition number.
+    partition_path(str): The path to the partition block device to mount.
 
   Raises:
     TurbiniaException: if the mount command failed to run.
@@ -68,6 +70,11 @@ def PreprocessMountDisk(device_path, partition_number=1):
   """
   config.LoadConfig()
   mount_prefix = config.MOUNT_DIR_PREFIX
+
+  if not os.path.exists(partition_path):
+    raise TurbiniaException(
+        'Could not mount partition {0:s}, the path does not exist'.format(
+            partition_path))
 
   if os.path.exists(mount_prefix) and not os.path.isdir(mount_prefix):
     raise TurbiniaException(
@@ -83,20 +90,7 @@ def PreprocessMountDisk(device_path, partition_number=1):
 
   mount_path = tempfile.mkdtemp(prefix='turbinia', dir=mount_prefix)
 
-  if not partition_number:
-    # The first partition loop-device made by losetup is loopXp1
-    partition_number = 1
-
-  path_to_partition = '{0:s}p{1:d}'.format(device_path, partition_number)
-
-  if not os.path.exists(path_to_partition):
-    log.info(
-        'Could not find {0:s}, trying {1:s}'.format(
-            path_to_partition, device_path))
-    # Else, the partition's block device is actually /dev/loopX
-    path_to_partition = device_path
-
-  mount_cmd = ['sudo', 'mount', path_to_partition, mount_path]
+  mount_cmd = ['sudo', 'mount', partition_path, mount_path]
   log.info('Running: {0:s}'.format(' '.join(mount_cmd)))
   try:
     subprocess.check_call(mount_cmd)

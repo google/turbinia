@@ -261,17 +261,33 @@ class RawDisk(Evidence):
     size: The size of the disk in bytes.
   """
 
-  def __init__(self, mount_partition=None, size=None, *args, **kwargs):
+  def __init__(self, mount_partition=1, size=None, *args, **kwargs):
     """Initialization for raw disk evidence object."""
+
+    if partition_number < 1:
+      raise TurbiniaException(
+          'Partition numbers start at 1, but was given {0:d}'.format(
+              partition_number))
+
     self.mount_partition = mount_partition
     self.size = size
     super(RawDisk, self).__init__(*args, **kwargs)
 
   def _preprocess(self):
-    self.device_path = mount_local.PreprocessLosetup(self.source_path)
+    self.device_path, partition_paths = mount_local.PreprocessLosetup(
+        self.source_path)
+    if self.mount_partition > len(partition_paths):
+      raise TurbiniaException(
+          ('Can not mount partition {0:d}: found only {1:d} partitions in '
+          'raw disk {0:s}').format(
+              self.mount_partition, len(partition_paths), self.source_path))
+
+    partition_path = partition_paths[self.mount_partition]
+    self.mount_path = mount_local.PreprocessMountDisk(partition_path)
     self.local_path = self.device_path
 
   def _postprocess(self):
+    mount_local.PostprocessUnmountPath(self.mount_path)
     mount_local.PostprocessDeleteLosetup(self.device_path)
 
 
@@ -356,9 +372,16 @@ class GoogleCloudDisk(RawDisk):
     self.cloud_only = True
 
   def _preprocess(self):
-    self.device_path = google_cloud.PreprocessAttachDisk(self.disk_name)
-    self.mount_path = mount_local.PreprocessMountDisk(
-        self.device_path, self.mount_partition)
+    self.device_path, partition_paths = google_cloud.PreprocessAttachDisk(
+        self.disk_name)
+    if self.mount_partition > len(partition_paths):
+      raise TurbiniaException(
+          ('Can not mount partition {0:d}: found only {1:d} partitions in '
+          'Google Cloud Disk {0:s}').format(
+              self.mount_partition, len(partition_paths), self.disk_name))
+
+    partition_path = partition_paths[self.mount_partition]
+    self.mount_path = mount_local.PreprocessMountDisk(partition_path)
     self.local_path = self.device_path
 
   def _postprocess(self):
@@ -394,9 +417,17 @@ class GoogleCloudDiskRawEmbedded(RawDisk):
   def _preprocess(self):
     rawdisk_path = os.path.join(
         self.parent_evidence.mount_path, self.embedded_path)
-    self.device_path = mount_local.PreprocessLosetup(rawdisk_path)
-    self.mount_path = mount_local.PreprocessMountDisk(
-        self.device_path, self.mount_partition)
+    self.device_path, partition_paths = mount_local.PreprocessLosetup(
+        rawdisk_path)
+
+    if self.mount_partition > len(partition_paths):
+      raise TurbiniaException(
+          ('Can not mount partition {0:d}: found only {1:d} partitions in '
+          'embedded raw disk {0:s}').format(
+              self.mount_partition, len(partition_paths), rawdisk_path))
+
+    partition_path = partition_paths[self.mount_partition]
+    self.mount_path = mount_local.PreprocessMountDisk(partition_paths)
     self.local_path = self.device_path
 
   def _postprocess(self):
