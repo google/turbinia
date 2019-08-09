@@ -267,7 +267,7 @@ class RawDisk(Evidence):
     if mount_partition < 1:
       raise TurbiniaException(
           'Partition numbers start at 1, but was given {0:d}'.format(
-              partition_number))
+              mount_partition))
 
     self.mount_partition = mount_partition
     self.size = size
