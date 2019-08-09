@@ -39,7 +39,7 @@ def PreprocessLosetup(source_path):
 
   Returns:
     (str, list(str)): a tuple consisting of the path to the 'disk' block device
-      and a list of paths to partition block decices. For example:
+      and a list of paths to partition block devices. For example:
       ('/dev/loop0', ['/dev/loop0p1', '/dev/loop0p2'])
   """
   losetup_device = None
@@ -56,11 +56,13 @@ def PreprocessLosetup(source_path):
   return (losetup_device, glob.glob('{0:s}p*'.format(losetup_device)))
 
 
-def PreprocessMountDisk(partition_path):
+def PreprocessMountDisk(partition_paths, partition_number):
   """Locally mounts disk in an instance.
 
   Args:
-    partition_path(str): The path to the partition block device to mount.
+    partition_paths(list(str)): A list of paths to partition block devices;
+    partition_number(int): the number of the partition to mount. Remember these
+      are 1-indexed (first partition is 1).
 
   Raises:
     TurbiniaException: if the mount command failed to run.
@@ -70,6 +72,19 @@ def PreprocessMountDisk(partition_path):
   """
   config.LoadConfig()
   mount_prefix = config.MOUNT_DIR_PREFIX
+
+  if partition_number > len(partition_paths):
+    raise TurbiniaException(
+        'Can not mount partition {0:d}: found only {1:d} partitions in '
+        'Evidence.'.format(partition_number, len(partition_paths)))
+
+  # Partitions are 1-indexed for the user and the system
+  if partition_number < 1:
+    raise TurbiniaException(
+        'Can not mount partition {0:d}: partition numbering starts at 1'.format(
+            partition_number)
+
+  partition_path = partition_paths[self.mount_partition - 1]
 
   if not os.path.exists(partition_path):
     raise TurbiniaException(

@@ -264,7 +264,7 @@ class RawDisk(Evidence):
   def __init__(self, mount_partition=1, size=None, *args, **kwargs):
     """Initialization for raw disk evidence object."""
 
-    if partition_number < 1:
+    if mount_partition < 1:
       raise TurbiniaException(
           'Partition numbers start at 1, but was given {0:d}'.format(
               partition_number))
@@ -276,14 +276,8 @@ class RawDisk(Evidence):
   def _preprocess(self):
     self.device_path, partition_paths = mount_local.PreprocessLosetup(
         self.source_path)
-    if self.mount_partition > len(partition_paths):
-      raise TurbiniaException(
-          ('Can not mount partition {0:d}: found only {1:d} partitions in '
-          'raw disk {0:s}').format(
-              self.mount_partition, len(partition_paths), self.source_path))
-
-    partition_path = partition_paths[self.mount_partition]
-    self.mount_path = mount_local.PreprocessMountDisk(partition_path)
+    self.mount_path = mount_local.PreprocessMountDisk(
+        partition_path, self.mount_partition)
     self.local_path = self.device_path
 
   def _postprocess(self):
@@ -374,14 +368,9 @@ class GoogleCloudDisk(RawDisk):
   def _preprocess(self):
     self.device_path, partition_paths = google_cloud.PreprocessAttachDisk(
         self.disk_name)
-    if self.mount_partition > len(partition_paths):
-      raise TurbiniaException(
-          ('Can not mount partition {0:d}: found only {1:d} partitions in '
-          'Google Cloud Disk {0:s}').format(
-              self.mount_partition, len(partition_paths), self.disk_name))
 
-    partition_path = partition_paths[self.mount_partition]
-    self.mount_path = mount_local.PreprocessMountDisk(partition_path)
+    self.mount_path = mount_local.PreprocessMountDisk(
+        partition_path, self.mount_partition)
     self.local_path = self.device_path
 
   def _postprocess(self):
@@ -420,14 +409,8 @@ class GoogleCloudDiskRawEmbedded(RawDisk):
     self.device_path, partition_paths = mount_local.PreprocessLosetup(
         rawdisk_path)
 
-    if self.mount_partition > len(partition_paths):
-      raise TurbiniaException(
-          ('Can not mount partition {0:d}: found only {1:d} partitions in '
-          'embedded raw disk {0:s}').format(
-              self.mount_partition, len(partition_paths), rawdisk_path))
-
-    partition_path = partition_paths[self.mount_partition]
-    self.mount_path = mount_local.PreprocessMountDisk(partition_paths)
+    self.mount_path = mount_local.PreprocessMountDisk(
+        partition_path, self.mount_partition)
     self.local_path = self.device_path
 
   def _postprocess(self):

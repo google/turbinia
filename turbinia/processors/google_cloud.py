@@ -75,7 +75,7 @@ def PreprocessAttachDisk(disk_name):
 
   Returns:
     (str, list(str)): a tuple consisting of the path to the 'disk' block device
-      and a list of paths to partition block decices. For example:
+      and a list of paths to partition block devices. For example:
       (
        '/dev/disk/by-id/google-disk0',
        ['/dev/disk/by-id/google-disk0-part1', '/dev/disk/by-id/google-disk0-p2']
