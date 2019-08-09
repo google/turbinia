@@ -277,7 +277,7 @@ class RawDisk(Evidence):
     self.device_path, partition_paths = mount_local.PreprocessLosetup(
         self.source_path)
     self.mount_path = mount_local.PreprocessMountDisk(
-        partition_path, self.mount_partition)
+        partition_paths, self.mount_partition)
     self.local_path = self.device_path
 
   def _postprocess(self):
@@ -370,7 +370,7 @@ class GoogleCloudDisk(RawDisk):
         self.disk_name)
 
     self.mount_path = mount_local.PreprocessMountDisk(
-        partition_path, self.mount_partition)
+        partition_paths, self.mount_partition)
     self.local_path = self.device_path
 
   def _postprocess(self):
@@ -410,7 +410,7 @@ class GoogleCloudDiskRawEmbedded(RawDisk):
         rawdisk_path)
 
     self.mount_path = mount_local.PreprocessMountDisk(
-        partition_path, self.mount_partition)
+        partition_paths, self.mount_partition)
     self.local_path = self.device_path
 
   def _postprocess(self):
