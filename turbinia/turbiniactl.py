@@ -190,7 +190,7 @@ def main():
       '-p', '--project', help='Project that the disk is associated with',
       required=True)
   parser_googleclouddisk.add_argument(
-      '--mount_partition', default=0, type=int,
+      '--mount_partition', default=1, type=int,
       help='The partition number to use when mounting this disk.  Defaults to '
       'the entire raw disk.  Only affects mounting, and not what gets '
       'processed.')
@@ -217,7 +217,7 @@ def main():
       '-p', '--project', help='Project that the disk is associated with',
       required=True)
   parser_googleclouddiskembedded.add_argument(
-      '--mount_partition', default=0, type=int,
+      '--mount_partition', default=1, type=int,
       help='The partition number to use when mounting this disk.  Defaults to '
       'the entire raw disk.  Only affects mounting, and not what gets '
       'processed.')
