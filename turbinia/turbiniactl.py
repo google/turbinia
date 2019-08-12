@@ -429,6 +429,8 @@ def main():
         mount_partition=args.mount_partition, zone=args.zone,
         source=args.source)
     evidence_ = evidence.GoogleCloudDiskRawEmbedded(
+        name=args.name, disk_name=args.disk_name, project=args.project,
+        mount_partition=args.mount_partition, zone=args.zone,
         embedded_path=args.embedded_path,
         embedded_partition=args.embedded_mount_partition)
     evidence_.parent_evidence = parent_evidence_
