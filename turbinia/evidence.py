@@ -496,3 +496,4 @@ class RawMemory(Evidence):
     super(RawMemory, self).__init__(*args, **kwargs)
     self.profile = profile
     self.module_list = module_list
+    self.local_path = self.source_path
