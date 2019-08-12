@@ -378,7 +378,7 @@ class GoogleCloudDisk(RawDisk):
     google_cloud.PostprocessDetachDisk(self.disk_name, self.device_path)
 
 
-class GoogleCloudDiskRawEmbedded(RawDisk):
+class GoogleCloudDiskRawEmbedded(GoogleCloudDisk):
   """Evidence object for raw disks embedded in Persistent Disks.
 
   This is for a raw image file that is located in the filesystem of a mounted
@@ -399,8 +399,6 @@ class GoogleCloudDiskRawEmbedded(RawDisk):
     self.embedded_path = embedded_path
     self.embedded_partition = embedded_partition
     super(GoogleCloudDiskRawEmbedded, self).__init__(*args, **kwargs)
-
-    self.cloud_only = True
 
     # This Evidence needs to have a GoogleCloudDisk as a parent
     self.context_dependent = True
