@@ -84,7 +84,7 @@ def PreprocessAttachDisk(disk_name):
   path = '/dev/disk/by-id/google-{0:s}'.format(disk_name)
   if IsBlockDevice(path):
     log.info('Disk {0:s} already attached!'.format(disk_name))
-    return path
+    return (path, glob.glob('{0:s}-part*'.format(path)))
 
   config.LoadConfig()
   instance_name = GetLocalInstanceName()
