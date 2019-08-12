@@ -430,8 +430,8 @@ def main():
         source=args.source)
     evidence_ = evidence.GoogleCloudDiskRawEmbedded(
         embedded_path=args.embedded_path,
-        embedded_partition=args.embedded_mount_partition,
-        parent_evidence=parent_evidence_)
+        embedded_partition=args.embedded_mount_partition)
+    evidence_.parent_evidence = parent_evidence_
   elif args.command == 'hindsight':
     if args.format not in ['xlsx', 'sqlite', 'jsonl']:
       log.error('Invalid output format.')
