@@ -143,7 +143,12 @@ class Evidence(object):
     """Return JSON serializable object."""
     serialized_evidence = self.__dict__
     if self.parent_evidence:
-      serialized_evidence['parent_evidence'] = self.parent_evidence.serialize()
+      if isinstance(self.parent_evidence, dict):
+        # The parent evidence may have been serialized already
+        serialized_evidence['parent_evidence'] = self.parent_evidence
+      else:
+        serialized_evidence[
+            'parent_evidence'] = self.parent_evidence.serialize()
     return serialized_evidence
 
   def to_json(self):
