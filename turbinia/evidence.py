@@ -411,6 +411,10 @@ class GoogleCloudDiskRawEmbedded(GoogleCloudDisk):
   def _preprocess(self):
     rawdisk_path = os.path.join(
         self.parent_evidence.mount_path, self.embedded_path)
+    if not os.path.exists(rawdisk_path):
+      raise TurbiniaException(
+          'Unable to find raw disk image {0:s} in GoogleCloudDisk'.format(
+              rawdisk_path))
     self.device_path, partition_paths = mount_local.PreprocessLosetup(
         rawdisk_path)
 
