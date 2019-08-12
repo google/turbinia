@@ -400,6 +400,8 @@ class GoogleCloudDiskRawEmbedded(RawDisk):
     self.embedded_partition = embedded_partition
     super(GoogleCloudDiskRawEmbedded, self).__init__(*args, **kwargs)
 
+    self.cloud_only = True
+
     # This Evidence needs to have a GoogleCloudDisk as a parent
     self.context_dependent = True
 
