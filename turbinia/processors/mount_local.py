@@ -82,9 +82,9 @@ def PreprocessMountDisk(partition_paths, partition_number):
   if partition_number < 1:
     raise TurbiniaException(
         'Can not mount partition {0:d}: partition numbering starts at 1'.format(
-            partition_number)
+            partition_number))
 
-  partition_path = partition_paths[self.mount_partition - 1]
+  partition_path = partition_paths[partition_number - 1]
 
   if not os.path.exists(partition_path):
     raise TurbiniaException(
