@@ -304,7 +304,7 @@ class GoogleCloudProject(object):
 
   def get_or_create_analysis_vm(
       self, vm_name, boot_disk_size, cpu_cores=4,
-      image_project='ubuntu-os-cloud', image_family='ubuntu-1604-lts'):
+      image_project='ubuntu-os-cloud', image_family='ubuntu-1804-lts'):
     """Get or create a new virtual machine for analysis purposes.
 
     Args:
@@ -345,7 +345,7 @@ class GoogleCloudProject(object):
     # yapf: disable
     packages_to_install = [
         'binutils',
-        'docker-explorer-tools'
+        'docker-explorer-tools',
         'htop',
         'jq',
         'libbde-tools',
@@ -740,7 +740,7 @@ def create_disk_copy(src_proj, dst_proj, instance_name, zone, disk_name=None):
 
 def start_analysis_vm(
     project, vm_name, zone, boot_disk_size, cpu_cores, attach_disk=None,
-    image_project='ubuntu-os-cloud', image_family='ubuntu-1604-lts'):
+    image_project='ubuntu-os-cloud', image_family='ubuntu-1804-lts'):
   """Start a virtual machine for analysis purposes.
 
   Args:
