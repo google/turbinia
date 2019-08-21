@@ -129,6 +129,9 @@ def LoadConfig():
 
 def ValidateAndSetConfig(_config):
   """Makes sure that the config has the vars loaded and set in the module."""
+  # Explicitly set the config path
+  setattr(sys.modules[__name__], 'configSource', _config.configSource)
+
   CONFIGVARS = REQUIRED_VARS + OPTIONAL_VARS
   for var in CONFIGVARS:
     if not hasattr(_config, var):
