@@ -118,7 +118,6 @@ class Evidence(object):
     self.cloud_only = False
     self.description = description
     self.device_path = None
-    self.local_path = None
     self.mount_path = None
     self.source = source
     self.source_path = source_path
@@ -126,12 +125,17 @@ class Evidence(object):
     self.request_id = request_id
     self.parent_evidence = None
 
+    self.local_path = source_path
+
     # List of jobs that have processed this evidence
     self.processed_by = []
     self.type = self.__class__.__name__
     self.name = name if name else self.type
     self.saved_path = None
     self.saved_path_type = None
+
+    if self.copyable and not self.local_path:
+      raise TurbiniaException('A copyable evidence needs a source_path')
 
   def __str__(self):
     return '{0:s}:{1:s}:{2!s}'.format(self.type, self.name, self.source_path)
@@ -252,10 +256,10 @@ class ChromiumProfile(Evidence):
 
   def __init__(self, browser_type=None, output_format=None, *args, **kwargs):
     """Initialization for chromium profile evidence object."""
+    self.copyable = True
     super(ChromiumProfile, self).__init__(*args, **kwargs)
     self.browser_type = browser_type
     self.output_format = output_format
-    self.copyable = True
 
 
 class RawDisk(Evidence):
@@ -437,8 +441,8 @@ class PlasoFile(Evidence):
   def __init__(self, plaso_version=None, *args, **kwargs):
     """Initialization for Plaso File evidence."""
     self.plaso_version = plaso_version
-    super(PlasoFile, self).__init__(*args, **kwargs)
     self.copyable = True
+    super(PlasoFile, self).__init__(*args, **kwargs)
 
 
 class PlasoCsvFile(PlasoFile):
@@ -456,16 +460,16 @@ class ReportText(Evidence):
 
   def __init__(self, text_data=None, *args, **kwargs):
     self.text_data = text_data
-    super(ReportText, self).__init__(*args, **kwargs)
     self.copyable = True
+    super(ReportText, self).__init__(*args, **kwargs)
 
 
 class TextFile(Evidence):
   """Text data."""
 
   def __init__(self, *args, **kwargs):
-    super(TextFile, self).__init__(*args, **kwargs)
     self.copyable = True
+    super(TextFile, self).__init__(*args, **kwargs)
 
 
 class FilteredTextFile(TextFile):
@@ -480,9 +484,9 @@ class ExportedFileArtifact(Evidence):
 
   def __init__(self, artifact_name=None):
     """Initializes an exported file artifact."""
+    self.copyable = True
     super(ExportedFileArtifact, self).__init__()
     self.artifact_name = artifact_name
-    self.copyable = True
 
 
 class VolatilityReport(TextFile):
@@ -505,4 +509,3 @@ class RawMemory(Evidence):
     super(RawMemory, self).__init__(*args, **kwargs)
     self.profile = profile
     self.module_list = module_list
-    self.local_path = self.source_path

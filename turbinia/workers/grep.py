@@ -36,7 +36,6 @@ class GrepTask(TurbiniaTask):
     Returns:
         TurbiniaTaskResult object.
     """
-    output_evidence = FilteredTextFile()
 
     patterns = evidence.config.get('filter_patterns')
     if not patterns:
@@ -55,7 +54,7 @@ class GrepTask(TurbiniaTask):
     output_file_path = os.path.join(
         self.output_dir, '{0:s}.filtered'.format(base_name))
 
-    output_evidence.source_path = output_file_path
+    output_evidence = FilteredTextFile(source_path=output_file_path)
     cmd = 'grep -E -b -n -f {0:s} {1:s} > {2:s}'.format(
         patterns_file_path, evidence.local_path, output_file_path)
 

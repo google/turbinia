@@ -47,6 +47,7 @@ class FileArtifactExtractionTask(TurbiniaTask):
         self.output_dir, '{0:s}.log'.format(self.id))
 
     cmd = [
+        'sudo',
         'image_export.py',
         '--logfile',
         image_export_log,
