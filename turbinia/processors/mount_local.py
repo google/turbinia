@@ -43,9 +43,15 @@ def PreprocessLosetup(source_path):
       ('/dev/loop0', ['/dev/loop0p1', '/dev/loop0p2'])
   """
   losetup_device = None
+
+  if not os.path.exists(source_path):
+    raise TurbiniaException(
+        'Cannot process non-existing source_path {0!s}'.format(source_path))
+
   # TODO(aarontp): Remove hard-coded sudo in commands:
   # https://github.com/google/turbinia/issues/73
-  losetup_command = ['sudo', 'losetup', '--show', '--find', '-P', source_path]
+  losetup_command = [
+      'sudo', 'losetup', '--show', '--find', '-P', '-r', source_path]
   log.info('Running command {0:s}'.format(' '.join(losetup_command)))
   try:
     losetup_device = subprocess.check_output(
