@@ -399,8 +399,9 @@ class GoogleCloudDiskRawEmbedded(GoogleCloudDisk):
     embedded_path: The path of the raw disk image inside the Persistent Disk
   """
 
-  REQUIRED_ATTRIBUTES = ['disk_name', 'project', 'zone', 'embedded_partition',
-                         'embedded_path']
+  REQUIRED_ATTRIBUTES = [
+      'disk_name', 'project', 'zone', 'embedded_partition', 'embedded_path'
+  ]
 
   def __init__(
       self, embedded_path=None, embedded_partition=None, *args, **kwargs):

@@ -106,7 +106,6 @@ class HadoopAnalysisTask(TurbiniaTask):
         TurbiniaTaskResult object.
     """
 
-
     # Where to store the resulting output file.
     output_file_name = 'hadoop_analysis.txt'
     output_file_path = os.path.join(self.output_dir, output_file_name)

@@ -51,7 +51,8 @@ def PreprocessLosetup(source_path):
   # TODO(aarontp): Remove hard-coded sudo in commands:
   # https://github.com/google/turbinia/issues/73
   losetup_command = [
-      'sudo', 'losetup', '--show', '--find', '-P', '-r', source_path]
+      'sudo', 'losetup', '--show', '--find', '-P', '-r', source_path
+  ]
   log.info('Running command {0:s}'.format(' '.join(losetup_command)))
   try:
     losetup_device = subprocess.check_output(
