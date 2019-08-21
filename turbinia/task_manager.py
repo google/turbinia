@@ -51,6 +51,9 @@ def get_task_manager():
 
   Returns
     Initialized TaskManager object.
+
+  Raises:
+    TurbiniaException: When an unknown task manager type is specified
   """
   config.LoadConfig()
   # pylint: disable=no-else-return
@@ -387,6 +390,9 @@ class PSQTaskManager(BaseTaskManager):
     """
     Args:
       server (bool): Whether this is the client or a server
+
+    Raises:
+      TurbiniaException: When there are errors creating PSQ Queue
     """
 
     log.debug(
@@ -404,7 +410,7 @@ class PSQTaskManager(BaseTaskManager):
       self.psq = psq.Queue(
           psq_publisher, psq_subscriber, config.TURBINIA_PROJECT,
           name=config.PSQ_TOPIC, storage=psq.DatastoreStorage(datastore_client))
-    except exceptions.GoogleAPIError as e:
+    except exceptions.GoogleCloudError as e:
       msg = 'Error creating PSQ Queue: {0:s}'.format(str(e))
       log.error(msg)
       raise turbinia.TurbiniaException(msg)
