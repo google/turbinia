@@ -60,6 +60,8 @@ def main():
   # evidence has been processed.
   parser = argparse.ArgumentParser()
   parser.add_argument(
+      '-c', '--config', action='store_true', help='Print config file')
+  parser.add_argument(
       '-q', '--quiet', action='store_true', help='Show minimal output')
   parser.add_argument(
       '-v', '--verbose', action='store_true', help='Show verbose output',
@@ -325,6 +327,13 @@ def main():
   subparsers.add_parser('server', help='Run Turbinia Server')
 
   args = parser.parse_args()
+  if args.config:
+    try:
+      with open(config.configSource, "r") as f:
+        conf = f.read()
+        print(conf)
+    except:
+      log.info("failed to print config, Check if config exists")
   if args.quiet:
     log.setLevel(logging.ERROR)
   elif args.debug:
