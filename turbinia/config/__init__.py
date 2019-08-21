@@ -117,6 +117,12 @@ def LoadConfig():
   _config = imp.load_source('config', config_file)
   _config.configSource = config_file
   ValidateAndSetConfig(_config)
+
+  # Set the environment var for this so that we don't see the "No project ID
+  # could be determined." warning later.
+  if hasattr(_config, 'TURBINIA_PROJECT') and _config.TURBINIA_PROJECT:
+    os.environ['GOOGLE_CLOUD_PROJECT'] = _config.TURBINIA_PROJECT
+
   CONFIG = _config
   return _config
 
