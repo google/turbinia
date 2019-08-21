@@ -21,6 +21,7 @@ import logging
 import os
 import subprocess
 import tempfile
+import time
 
 from turbinia import config
 from turbinia import TurbiniaException
@@ -118,7 +119,14 @@ def PreprocessMountDisk(partition_paths, partition_number):
 
   mount_path = tempfile.mkdtemp(prefix='turbinia', dir=mount_prefix)
 
-  mount_cmd = ['sudo', 'mount', partition_path, mount_path]
+  mount_cmd = ['sudo', 'mount', '-o', 'ro']
+  fsstype = GetFilesystem(partition_path)
+  if fsstype in ['ext3', 'ext4']:
+    # This is in case the underlying filesystem is dirty, as we want to mount
+    # everything read-only.
+    mount_cmd.extend(['-o', 'noload'])
+  mount_cmd.extend([partition_path, mount_path])
+
   log.info('Running: {0:s}'.format(' '.join(mount_cmd)))
   try:
     subprocess.check_call(mount_cmd)
@@ -126,6 +134,29 @@ def PreprocessMountDisk(partition_paths, partition_number):
     raise TurbiniaException('Could not mount directory {0!s}'.format(e))
 
   return mount_path
+
+
+def GetFilesystem(path):
+  """Uses lsblk to detect the filesystem of a partition block device.
+
+  Args:
+    path(str): the full path to the block device.
+  Returns:
+    str: the filesystem detected (for example: 'ext4')
+  """
+  cmd = ['lsblk', path, '-f', '-o', 'FSTYPE', '-n']
+  log.info('Running {0!s}'.format(cmd))
+  fsstype = subprocess.check_output(cmd).split()
+  if not fsstype:
+    # Lets wait a bit for any previous blockdevice operation to settle
+    time.sleep(2)
+    fsstype = subprocess.check_output(cmd).split()
+
+  if len(fsstype) != 1:
+    raise TurbiniaException(
+        '{0:s} should contain exactly one partition, found {1:d}'.format(
+            path, len(fsstype)))
+  return fsstype[0].decode('utf-8').strip()
 
 
 def PostprocessDeleteLosetup(device_path):
