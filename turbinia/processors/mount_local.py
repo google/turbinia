@@ -59,7 +59,13 @@ def PreprocessLosetup(source_path):
   except subprocess.CalledProcessError as e:
     raise TurbiniaException('Could not set losetup devices {0!s}'.format(e))
 
-  return (losetup_device, glob.glob('{0:s}p*'.format(losetup_device)))
+  partitions = glob.glob('{0:s}p*'.format(losetup_device))
+  if not partitions:
+    # In this case, the image was of a partition, and not a full disk with a
+    # partition table
+    return (losetup_device, [losetup_device])
+
+  return (losetup_device, partitions)
 
 
 def PreprocessMountDisk(partition_paths, partition_number):
