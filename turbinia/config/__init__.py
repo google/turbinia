@@ -120,7 +120,7 @@ def LoadConfig():
 
   # Set the environment var for this so that we don't see the "No project ID
   # could be determined." warning later.
-  if hasattr(_config, 'TURBINIA_PROJECT'):
+  if hasattr(_config, 'TURBINIA_PROJECT') and _config.TURBINIA_PROJECT:
     os.environ['GOOGLE_CLOUD_PROJECT'] = _config.TURBINIA_PROJECT
 
   CONFIG = _config
