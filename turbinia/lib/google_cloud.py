@@ -18,6 +18,7 @@ from __future__ import unicode_literals
 
 import json
 import logging
+from socket import timeout
 import ssl
 import time
 
@@ -62,11 +63,38 @@ class GoogleCloudProject(object):
 
     Returns:
       API service resource (apiclient.discovery.Resource)
+
+    Raises:
+      TurbiniaException: If the service cannot be built
     """
-    credentials = GoogleCredentials.get_application_default()
-    return build(
-        service_name, api_version, credentials=credentials,
-        cache_discovery=False)
+    try:
+      credentials = GoogleCredentials.get_application_default()
+    except ApplicationDefaultCredentialsError as error:
+      raise RuntimeError(
+          'Could not get application default credentials: {0!s}\n'
+          'Have you run $ gcloud auth application-default login?'.format(error))
+
+    service_built = False
+    for retry in range(RETRY_MAX):
+      try:
+        service = build(
+            service_name, api_version, credentials=credentials,
+            cache_discovery=False)
+        service_built = True
+      except timeout:
+        log.info(
+            'Timeout trying to build service {0:s} (try {1:s} of {2:s})'.format(
+                service_name, retry, RETRY_MAX))
+
+      if service_built:
+        break
+
+    if not service_built:
+      raise TurbiniaException(
+          'Failures building service {0:s} caused by multiple timeouts'.format(
+              service_name))
+
+    return service
 
   def _ExecuteOperation(self, service, operation, zone, block):
     """Executes API calls.
@@ -162,7 +190,7 @@ class GoogleCloudProject(object):
         zone = instance['zone']
       return GoogleComputeInstance(project=self, zone=zone, name=instance_name)
     except KeyError:
-      raise TurbiniaException('Unknown instance')
+      raise TurbiniaException('Unknown instance {0:s}'.format(instance_name))
 
 
 class GoogleCloudFunction(GoogleCloudProject):
