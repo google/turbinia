@@ -121,8 +121,8 @@ def PreprocessMountDisk(partition_paths, partition_number):
   mount_path = tempfile.mkdtemp(prefix='turbinia', dir=mount_prefix)
 
   mount_cmd = ['sudo', 'mount', '-o', 'ro']
-  fsstype = GetFilesystem(partition_path)
-  if fsstype in ['ext3', 'ext4']:
+  fstype = GetFilesystem(partition_path)
+  if fstype in ['ext3', 'ext4']:
     # This is in case the underlying filesystem is dirty, as we want to mount
     # everything read-only.
     mount_cmd.extend(['-o', 'noload'])
@@ -147,17 +147,17 @@ def GetFilesystem(path):
   """
   cmd = ['lsblk', path, '-f', '-o', 'FSTYPE', '-n']
   log.info('Running {0!s}'.format(cmd))
-  fsstype = subprocess.check_output(cmd).split()
-  if not fsstype:
+  fstype = subprocess.check_output(cmd).split()
+  if not fstype:
     # Lets wait a bit for any previous blockdevice operation to settle
     time.sleep(2)
-    fsstype = subprocess.check_output(cmd).split()
+    fstype = subprocess.check_output(cmd).split()
 
-  if len(fsstype) != 1:
+  if len(fstype) != 1:
     raise TurbiniaException(
         '{0:s} should contain exactly one partition, found {1:d}'.format(
-            path, len(fsstype)))
-  return fsstype[0].decode('utf-8').strip()
+            path, len(fstype)))
+  return fstype[0].decode('utf-8').strip()
 
 
 def PostprocessDeleteLosetup(device_path):
