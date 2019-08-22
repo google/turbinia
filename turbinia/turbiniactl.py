@@ -60,8 +60,6 @@ def main():
   # evidence has been processed.
   parser = argparse.ArgumentParser()
   parser.add_argument(
-      '-c', '--config', action='store_true', help='Print config file')
-  parser.add_argument(
       '-q', '--quiet', action='store_true', help='Show minimal output')
   parser.add_argument(
       '-v', '--verbose', action='store_true', help='Show verbose output',
@@ -124,6 +122,11 @@ def main():
 
   subparsers = parser.add_subparsers(
       dest='command', title='Commands', metavar='<command>')
+
+  # Action for printing config
+  parser_config = subparsers.add_parser('config', help='Print out config file')
+  parser_config.add_argument(
+      '-f', '--file_only', action='store_true', help='Print out file path only')
 
   # TODO(aarontp): Find better way to specify these that allows for multiple
   # pieces of evidence to be submitted. Maybe automagically create different
@@ -327,13 +330,6 @@ def main():
   subparsers.add_parser('server', help='Run Turbinia Server')
 
   args = parser.parse_args()
-  if args.config:
-    try:
-      with open(config.configSource, "r") as f:
-        conf = f.read()
-        print(conf)
-    except:
-      log.info("failed to print config, Check if config exists")
   if args.quiet:
     log.setLevel(logging.ERROR)
   elif args.debug:
@@ -361,8 +357,23 @@ def main():
       log.warning(
           'Cannot open file {0:s} [{1!s}]'.format(args.filter_patterns_file, e))
 
-  # Client
   config.LoadConfig()
+  if args.command == 'config':
+    print('Config file path is {0:s}\n'.format(config.configSource))
+    if args.file_only:
+      sys.exit(0)
+
+    try:
+      with open(config.configSource, "r") as f:
+        print(f.read())
+        sys.exit(0)
+    except IOError as exception:
+      log.info(
+          "Failed to read config file {0:s}: {1!s}".format(
+              config.configSource, exception))
+      sys.exit(1)
+
+  # Client
   if args.command not in ('psqworker', 'server'):
     if config.TASK_MANAGER.lower() == 'celery':
       client = TurbiniaCeleryClient()
