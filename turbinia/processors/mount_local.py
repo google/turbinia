@@ -36,7 +36,8 @@ def PreprocessLosetup(source_path):
     source_path(str): the source path to run losetup on.
 
   Raises:
-    TurbiniaException: if the losetup command failed to run.
+    TurbiniaException: if source_path doesn't exist or if the losetup command
+      failed to run in anyway.
 
   Returns:
     (str, list(str)): a tuple consisting of the path to the 'disk' block device
