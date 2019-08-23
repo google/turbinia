@@ -65,14 +65,16 @@ class TestTurbiniaConfig(unittest.TestCase):
     [delattr(config, a) for a in dir(config) if a not in self.config_attrs]
     config.CONFIG = None
 
-  def WriteConfig(self, text):
+  def WriteConfig(self, text, config_file=None):
     """Helper to write text to a configuration file.
 
     Args:
       text (str): data to write to the file.
     """
-    with open(self.config_file, 'w') as config_file:
-      config_file.write(text)
+    if not config_file:
+      config_file = self.config_file
+    with open(config_file, 'w') as config_file_handle:
+      config_file_handle.write(text)
 
   def testBasicConfig(self):
     """Test out a basic config."""
@@ -98,7 +100,7 @@ class TestTurbiniaConfig(unittest.TestCase):
     self.assertRaises(config.TurbiniaConfigException, config.LoadConfig)
 
   def testUnsetOptionalKeyConfig(self):
-    """Test that config errors out when not all optional variables are set."""
+    """Test that optional vars don't need to be set."""
     self.WriteConfig('UNSETKEY = None\nSETKEY = "bar"\n')
     config.REQUIRED_VARS = ['SETKEY']
     config.OPTIONAL_VARS = ['UNSETKEY']
@@ -106,10 +108,27 @@ class TestTurbiniaConfig(unittest.TestCase):
     self.assertEqual(config.UNSETKEY, None)
     self.assertEqual(config.SETKEY, 'bar')
 
-  def testMissingConfig(self):
-    """Test non-existent config."""
+  def testMissingConfigPath(self):
+    """Test non-existent config path."""
     config.CONFIGPATH = ['DOESNOTEXIST']
     self.assertRaises(config.TurbiniaConfigException, config.LoadConfig)
+
+  def testMissingConfigFile(self):
+    """Test non-existent config file."""
+    self.assertRaises(
+        config.TurbiniaConfigException, config.LoadConfig, '/does/not/exist')
+
+  def testExplicitConfigPath(self):
+    """Test setting direct config file path."""
+    config_file = tempfile.mkstemp()[1]
+    config.REQUIRED_VARS = ['KEY', 'EX']
+    # Write to default config file
+    self.WriteConfig('KEY = "oldkey"\nEX = "bar"\n')
+    # write to explicit config file
+    self.WriteConfig('KEY = "newkey"\nEX = "bar"\n', config_file=config_file)
+    config.LoadConfig(config_file=config_file)
+    self.assertEqual(config.KEY, 'newkey')
+    os.remove(config_file)
 
   def testEnvPathConfig(self):
     """Test that config path can be read from the environment."""
