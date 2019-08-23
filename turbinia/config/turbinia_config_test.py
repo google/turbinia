@@ -70,6 +70,7 @@ class TestTurbiniaConfig(unittest.TestCase):
 
     Args:
       text (str): data to write to the file.
+      config_file(str): Alternate path to write config file to.
     """
     if not config_file:
       config_file = self.config_file
@@ -127,6 +128,7 @@ class TestTurbiniaConfig(unittest.TestCase):
     # write to explicit config file
     self.WriteConfig('KEY = "newkey"\nEX = "bar"\n', config_file=config_file)
     config.LoadConfig(config_file=config_file)
+    # Make sure the config data is from the specified file and not the default
     self.assertEqual(config.KEY, 'newkey')
     os.remove(config_file)
 

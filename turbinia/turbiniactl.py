@@ -30,6 +30,8 @@ from turbinia.config import logger
 from turbinia import __version__
 
 log = logging.getLogger('turbinia')
+# We set up the logger first with out the file handler, and we will set up the
+# file handler later once we have read the log path from the config.
 logger.setup(need_file_handler=False)
 
 
@@ -301,8 +303,8 @@ def main():
   parser_status.add_argument(
       '-r', '--request_id', help='Show tasks with this Request ID',
       required=False)
-  # 20 == Priority.High, but we don't want to load the worker module to grab
-  # this yet.
+  # 20 == Priority.High. We are setting this manually here because we don't want
+  # to load the worker module yet in order to access this Enum.
   parser_status.add_argument(
       '-p', '--priority_filter', default=20, type=int,
       required=False,
@@ -328,7 +330,8 @@ def main():
 
   args = parser.parse_args()
 
-  # Load config before logger setup so that we can find the log file.
+  # Load the config before final logger setup so we can the find the path to the
+  # log file.
   if args.config_file:
     config.LoadConfig(config_file=args.config_file)
   else:
@@ -350,9 +353,10 @@ def main():
 
   log.info('Turbinia version: {0:s}'.format(__version__))
 
-  # Do late import of other needed Turbinia modules.  This needed so that the
-  # config loaded by these modules can be loaded after we parse the args so
-  # that we can use config variables to point to log files and such.
+  # Do late import of other needed Turbinia modules.  This is needed because the
+  # config is loaded by these modules at load time, and we want to wait to load
+  # the config until after we parse the args so that we can use those arguments
+  # to point to config paths.
   from turbinia.client import TurbiniaClient
   from turbinia.client import TurbiniaCeleryClient
   from turbinia.client import TurbiniaServer
@@ -423,7 +427,7 @@ def main():
     if not args.zone and config.TURBINIA_ZONE:
       args.zone = config.TURBINIA_ZONE
     elif not args.zone and not config.TURBINIA_ZONE:
-      log.error('Turbinia Zone must be set by --zone or in config')
+      log.error('Turbinia zone must be set by --zone or in config')
       sys.exit(1)
 
     if not args.project and config.TURBINIA_PROJECT:
