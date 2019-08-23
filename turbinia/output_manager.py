@@ -160,7 +160,7 @@ class OutputManager(object):
             'Could not write metadata file {0:s}: {1:s}'.format(
                 metadata_path, exception))
 
-      self.save_local_file(metadata_path, None)
+      self.save_local_file(metadata_path, result)
 
     # Set the evidence local_path from the saved path info so that in cases
     # where tasks are saving evidence into the temp dir, we'll get the newly

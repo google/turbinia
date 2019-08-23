@@ -415,6 +415,7 @@ class PlasoCsvFile(PlasoFile):
     """Initialization for Plaso File evidence."""
     self.plaso_version = plaso_version
     super(PlasoCsvFile, self).__init__(*args, **kwargs)
+    self.save_metadata = False
 
 
 # TODO(aarontp): Find a way to integrate this into TurbiniaTaskResult instead.
