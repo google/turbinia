@@ -124,6 +124,40 @@ class TestLocalOutputManager(unittest.TestCase):
     self.assertTrue(os.path.exists(dst_file))
     self.assertIsInstance(return_evidence, evidence.Evidence)
     self.assertIn(dst_file, return_evidence.saved_path)
+    # Makes sure evidence without save_metadata set does not generate a
+    # metadata file
+    self.assertFalse(os.path.exists('{0:s}.metadata.json'.format(dst_file)))
+
+  def testSaveEvidenceWithMetadata(self):
+    """Test the save_evidence method with metadata file."""
+    # Set path to None so we don't try to initialize GCS outout writer.
+    config.GCS_OUTPUT_PATH = None
+    self.task.output_manager.setup(self.task)
+    tmp_dir, local_dir = self.task.output_manager.get_local_output_dirs()
+    self.task.result = mock.MagicMock()
+    self.task.result.saved_paths = []
+    test_contents = 'test_contents'
+    test_file = 'test-file.out'
+    src_file = os.path.join(tmp_dir, test_file)
+    dst_file = os.path.join(local_dir, test_file)
+    test_evidence = evidence.Evidence()
+    test_evidence.save_metadata = True
+    test_evidence.config = {'foo': 'bar'}
+
+    with open(src_file, 'w') as fh:
+      fh.write(test_contents)
+    test_evidence.local_path = src_file
+
+    self.assertFalse(os.path.exists(dst_file))
+    return_evidence = self.task.output_manager.save_evidence(
+        test_evidence, self.task.result)
+    self.assertTrue(os.path.exists(dst_file))
+    self.assertIsInstance(return_evidence, evidence.Evidence)
+    self.assertIn(dst_file, return_evidence.saved_path)
+    metadata_file = '{0:s}.metadata.json'.format(dst_file)
+    metadata_contents = '{"foo": "bar"}'
+    self.assertTrue(os.path.exists(metadata_file))
+    self.assertEqual(open(metadata_file, 'rb').read(), metadata_contents)
 
 
 class TestLocalOutputWriter(unittest.TestCase):

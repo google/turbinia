@@ -17,6 +17,7 @@
 from __future__ import unicode_literals
 
 import errno
+import json
 import logging
 import os
 import re
@@ -133,9 +134,34 @@ class OutputManager(object):
 
     Returns:
       An evidence object
+
+    Raises:
+      TurbiniaException: If serialization or writing of evidence config fails
     """
     path, path_type, local_path = self.save_local_file(
         evidence_.local_path, result)
+
+    if evidence_.save_metadata:
+      metadata = evidence_.config.copy()
+      metadata_path = '{0:s}.metadata.json'.format(local_path)
+      try:
+        json_str = json.dumps(metadata)
+      except TypeError as exception:
+        raise TurbiniaException(
+            'Could not serialize Evidence config for {0:s}: {1:s}'.format(
+                evidence_.name, exception))
+
+      try:
+        log.debug('Writing metadata file to {0:s}'.format(metadata_path))
+        with open(metadata_path, 'wb') as file_handle:
+          file_handle.write(json_str)
+      except IOError as exception:
+        raise TurbiniaException(
+            'Could not write metadata file {0:s}: {1:s}'.format(
+                metadata_path, exception))
+
+      self.save_local_file(metadata_path, None)
+
     # Set the evidence local_path from the saved path info so that in cases
     # where tasks are saving evidence into the temp dir, we'll get the newly
     # copied version from the saved output path.
@@ -168,7 +194,7 @@ class OutputManager(object):
     local_path = None
     for writer in self._output_writers:
       new_path = writer.copy_to(file_)
-      if new_path:
+      if new_path and result:
         result.saved_paths.append(new_path)
         saved_path = new_path
         saved_path_type = writer.name
