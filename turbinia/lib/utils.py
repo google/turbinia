@@ -117,7 +117,7 @@ def bruteforce_password_hashes(password_hashes, timeout=300):
     TurbiniaException if execution failed.
   """
 
-  with tempfile.NamedTemporaryFile(delete=False) as fh:
+  with tempfile.NamedTemporaryFile(delete=False, mode='w+') as fh:
     password_hashes_file_path = fh.name
     fh.write('\n'.join(password_hashes))
 

@@ -54,6 +54,9 @@ def get_state_manager():
 
   Returns:
     Initialized StateManager object.
+
+  Raises:
+    TurbiniaException: When an unknown State Manager is specified.
   """
   config.LoadConfig()
   # pylint: disable=no-else-return
@@ -81,6 +84,10 @@ class BaseStateManager(object):
 
     Returns:
       A dict of task attributes.
+
+    Raises:
+      TurbiniaException: When task objects or task results are missing expected
+          attributes
     """
     task_dict = {}
     for attr in task.STORED_ATTRIBUTES:
@@ -202,7 +209,7 @@ class DatastoreStateManager(BaseStateManager):
       log.info('Writing new task {0:s} into Datastore'.format(task.name))
       self.client.put(entity)
       task.state_key = key
-    except exceptions.GoogleAPIError as e:
+    except exceptions.GoogleCloudError as e:
       log.error(
           'Failed to update task {0:s} in datastore: {1!s}'.format(
               task.name, e))

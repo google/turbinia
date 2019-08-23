@@ -16,6 +16,7 @@
 
 from __future__ import unicode_literals
 import logging
+import warnings
 
 from turbinia import config
 
@@ -28,6 +29,10 @@ def setup():
   however some external modules that are called by Turbinia can use the root
   logger, so we want to be able to optionally configure that as well.
   """
+  # Remove known warning about credentials
+  warnings.filterwarnings(
+      'ignore', 'Your application has authenticated using end user credentials')
+
   # TODO(aarontp): Add a config option to set the log level
   config.LoadConfig()
   logger = logging.getLogger('turbinia')

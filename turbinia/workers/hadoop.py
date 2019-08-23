@@ -131,7 +131,7 @@ class HadoopAnalysisTask(TurbiniaTask):
       result.report_data = output_evidence.text_data
 
       # Write the report to the output file.
-      with open(output_file_path, 'w') as fh:
+      with open(output_file_path, 'wb') as fh:
         fh.write(output_evidence.text_data.encode('utf8'))
         fh.write('\n'.encode('utf8'))
 
