@@ -154,7 +154,7 @@ class OutputManager(object):
       try:
         log.debug('Writing metadata file to {0:s}'.format(metadata_path))
         with open(metadata_path, 'wb') as file_handle:
-          file_handle.write(json_str)
+          file_handle.write(json_str.encode('utf-8'))
       except IOError as exception:
         raise TurbiniaException(
             'Could not write metadata file {0:s}: {1:s}'.format(
