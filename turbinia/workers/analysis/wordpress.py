@@ -72,7 +72,7 @@ class WordpressAccessLogAnalysisTask(TurbiniaTask):
     result.report_priority = priority
 
     # Write the report to the output file.
-    with open(output_file_path, 'w') as fh:
+    with open(output_file_path, 'wb') as fh:
       fh.write(output_evidence.text_data.encode('utf-8'))
 
     # Add the resulting evidence to the result object.
