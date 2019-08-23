@@ -306,8 +306,7 @@ def main():
   # 20 == Priority.High. We are setting this manually here because we don't want
   # to load the worker module yet in order to access this Enum.
   parser_status.add_argument(
-      '-p', '--priority_filter', default=20, type=int,
-      required=False,
+      '-p', '--priority_filter', default=20, type=int, required=False,
       help='This sets what report sections are shown in full detail in '
       'report output.  Any tasks that have set a report_priority value '
       'equal to or lower than this setting will be shown in full detail, and '
