@@ -32,6 +32,7 @@ from turbinia.client import TurbiniaCeleryWorker
 from turbinia.client import TurbiniaPsqWorker
 from turbinia import config
 from turbinia.config import logger
+from turbinia.lib import libcloudforensics
 from turbinia import evidence
 from turbinia import __version__
 from turbinia.message import TurbiniaRequest
@@ -192,8 +193,9 @@ def main():
   parser_googleclouddisk.add_argument(
       '-d', '--disk_name', help='Google Cloud name for disk', required=True)
   parser_googleclouddisk.add_argument(
-      '-p', '--project', help='Project that the disk is associated with',
-      required=True)
+      '-p', '--project', help='Project that the disk to process is associated '
+      'with. If this is different from the project that Turbinia is running '
+      'in, it will be copied to the Turbinia project.', required=True)
   parser_googleclouddisk.add_argument(
       '-P', '--mount_partition', default=0, type=int,
       help='The partition number to use when mounting this disk.  Defaults to '
@@ -219,8 +221,9 @@ def main():
   parser_googleclouddiskembedded.add_argument(
       '-d', '--disk_name', help='Google Cloud name for disk', required=True)
   parser_googleclouddiskembedded.add_argument(
-      '-p', '--project', help='Project that the disk is associated with',
-      required=True)
+      '-p', '--project', help='Project that the disk to process is associated '
+      'with. If this is different from the project that Turbinia is running '
+      'in, it will be copied to the Turbinia project.', required=True)
   parser_googleclouddiskembedded.add_argument(
       '-P', '--mount_partition', default=0, type=int,
       help='The partition number to use when mounting this disk.  Defaults to '
@@ -399,6 +402,13 @@ def main():
   if args.log_file:
     config.LOG_FILE = args.log_file
 
+  if args.command in ('googleclouddisk', 'googleclouddiskrawembedded'):
+    if args.project and args.project != config.TURBINIA_PROJECT:
+      new_disk = libcloudforensics.create_disk_copy(
+          args.project, config.TURBINIA_PROJECT, None, config.TURBINIA_ZONE,
+          args.disk_name)
+      args.disk_name = new_disk.name
+
   evidence_ = None
   is_cloud_disk = False
   if args.command == 'rawdisk':
@@ -535,19 +545,6 @@ def main():
           'Turbinia. Consider wrapping it in a '
           'GoogleCloudDiskRawEmbedded or other Cloud compatible '
           'object'.format(evidence_.type))
-      sys.exit(1)
-
-  if is_cloud_disk and evidence_.project != config.TURBINIA_PROJECT:
-    msg = (
-        'Turbinia project {0:s} is different from evidence project {1:s}. '
-        'This processing request will fail unless the Turbinia service '
-        'account has permissions to this project.'.format(
-            config.TURBINIA_PROJECT, evidence_.project))
-    if args.force_evidence:
-      log.warning(msg)
-    else:
-      msg += ' Use --force_evidence if you are sure you want to do this.'
-      log.error(msg)
       sys.exit(1)
 
   # If we have evidence to process and we also want to run as a server, then
