@@ -155,7 +155,7 @@ class TestLocalOutputManager(unittest.TestCase):
     self.assertIsInstance(return_evidence, evidence.Evidence)
     self.assertIn(dst_file, return_evidence.saved_path)
     metadata_file = '{0:s}.metadata.json'.format(dst_file)
-    metadata_contents = '{"foo": "bar"}'
+    metadata_contents = b'{"foo": "bar"}'
     self.assertTrue(os.path.exists(metadata_file))
     self.assertEqual(open(metadata_file, 'rb').read(), metadata_contents)
 
