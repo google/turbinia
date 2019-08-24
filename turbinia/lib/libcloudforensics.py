@@ -742,8 +742,9 @@ def create_disk_copy(src_proj, dst_proj, instance_name, zone, disk_name=None):
     new_disk = dst_proj.create_disk_from_snapshot(
         snapshot, disk_name_prefix='evidence')
     snapshot.delete()
-    log.info('Disk {0:s} successfully copied to {1:s}'.format(
-        disk_to_copy.name, new_disk.name))
+    log.info(
+        'Disk {0:s} successfully copied to {1:s}'.format(
+            disk_to_copy.name, new_disk.name))
 
   except AccessTokenRefreshError as exception:
     raise RuntimeError(
