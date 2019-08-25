@@ -77,27 +77,31 @@ class Evidence(object):
   Attributes:
     config (dict): Configuration options from the request to be used when
         processing this evidence.
-    cloud_only: Set to True for evidence types that can only be processed in a
-        cloud environment, e.g. GoogleCloudDisk.
-    context_dependent: Whether this evidence is required to be built upon the
-        context of a parent evidence.
-    copyable: Whether this evidence can be copied.  This will be set to True for
-        object types that we want to copy to/from storage (e.g. PlasoFile, but
-        not RawDisk).
-    name: Name of evidence.
-    description: Description of evidence.
-    saved_path (string): Path to secondary location evidence is saved for later
+    cloud_only (bool): Set to True for evidence types that can only be processed
+        in a cloud environment, e.g. GoogleCloudDisk.
+    context_dependent (bool): Whether this evidence is required to be built upon
+        the context of a parent evidence.
+    copyable (bool): Whether this evidence can be copied.  This will be set to
+        True for object types that we want to copy to/from storage (e.g.
+        PlasoFile, but not RawDisk).
+    name (str): Name of evidence.
+    description (str): Description of evidence.
+    saved_path (str): Path to secondary location evidence is saved for later
         retrieval (e.g. GCS).
-    saved_path_type (string): The name of the output writer that saved evidence
+    saved_path_type (str): The name of the output writer that saved evidence
         to the saved_path location.
-    source: String indicating where evidence came from (including tool version
-        that created it, if appropriate).
-    local_path: A string of the local_path to the evidence.
-    tags: dict of extra tags associated with this evidence.
-    request_id: The id of the request this evidence came from, if any.
-    parent_evidence: The Evidence object that was used to generate this one, and
-        which pre/post process methods we need to re-execute to access data
-        relevant to us.
+    source (str): String indicating where evidence came from (including tool
+        version that created it, if appropriate).
+    local_path (str): A string of the local_path to the evidence.
+    tags (dict): Extra tags associated with this evidence.
+    request_id (str): The id of the request this evidence came from, if any.
+    parent_evidence (Evidence): The Evidence object that was used to generate
+        this one, and which pre/post process methods we need to re-execute to
+        access data relevant to us.
+    save_metadata (bool): Evidence with this property set will save a metadata
+        file alongside the Evidence when saving to external storage.  The
+        metadata file will contain all of the key=value pairs sent along with
+        the processing request in the recipe.  The output is in JSON format
   """
 
   # The list of attributes a given piece of Evidence requires to be set
@@ -117,6 +121,7 @@ class Evidence(object):
     self.tags = tags if tags else {}
     self.request_id = request_id
     self.parent_evidence = None
+    self.save_metadata = False
 
     # List of jobs that have processed this evidence
     self.processed_by = []
@@ -400,6 +405,7 @@ class PlasoFile(Evidence):
     self.plaso_version = plaso_version
     super(PlasoFile, self).__init__(*args, **kwargs)
     self.copyable = True
+    self.save_metadata = True
 
 
 class PlasoCsvFile(PlasoFile):
@@ -409,6 +415,7 @@ class PlasoCsvFile(PlasoFile):
     """Initialization for Plaso File evidence."""
     self.plaso_version = plaso_version
     super(PlasoCsvFile, self).__init__(*args, **kwargs)
+    self.save_metadata = False
 
 
 # TODO(aarontp): Find a way to integrate this into TurbiniaTaskResult instead.
