@@ -25,6 +25,7 @@ import datetime
 import json
 import logging
 import os
+import socket
 import ssl
 import subprocess
 import time
@@ -35,6 +36,8 @@ from oauth2client.client import GoogleCredentials
 from oauth2client.client import ApplicationDefaultCredentialsError
 
 log = logging.getLogger('turbinia')
+
+RETRY_MAX = 10
 
 
 def create_service(service_name, api_version):
@@ -48,7 +51,8 @@ def create_service(service_name, api_version):
     API service resource (apiclient.discovery.Resource)
 
   Raises:
-    RuntimeError: If Application Default Credentials could not be obtained.
+    RuntimeError: If Application Default Credentials could not be obtained or if
+        service build times out.
   """
   try:
     credentials = GoogleCredentials.get_application_default()
@@ -56,8 +60,28 @@ def create_service(service_name, api_version):
     raise RuntimeError(
         'Could not get application default credentials: {0!s}\n'
         'Have you run $ gcloud auth application-default login?'.format(error))
-  return build(
-      service_name, api_version, credentials=credentials, cache_discovery=False)
+
+  service_built = False
+  for retry in range(RETRY_MAX):
+    try:
+      service = build(
+          service_name, api_version, credentials=credentials,
+          cache_discovery=False)
+      service_built = True
+    except socket.timeout:
+      log.info(
+          'Timeout trying to build service {0:s} (try {1:s} of {2:s})'.format(
+              service_name, retry, RETRY_MAX))
+
+    if service_built:
+      break
+
+  if not service_built:
+    raise RuntimeError(
+        'Failures building service {0:s} caused by multiple timeouts'.format(
+            service_name))
+
+  return service
 
 
 class GoogleCloudProject(object):
