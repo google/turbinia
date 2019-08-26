@@ -30,7 +30,7 @@ from turbinia.config import logger
 from turbinia import __version__
 
 log = logging.getLogger('turbinia')
-# We set up the logger first with out the file handler, and we will set up the
+# We set up the logger first without the file handler, and we will set up the
 # file handler later once we have read the log path from the config.
 logger.setup(need_file_handler=False)
 
