@@ -27,6 +27,7 @@ import sys
 
 from turbinia import config
 from turbinia.config import logger
+from turbinia.lib import libcloudforensics
 from turbinia import __version__
 
 log = logging.getLogger('turbinia')
@@ -191,7 +192,9 @@ def main():
   parser_googleclouddisk.add_argument(
       '-d', '--disk_name', help='Google Cloud name for disk', required=True)
   parser_googleclouddisk.add_argument(
-      '-p', '--project', help='Project that the disk is associated with')
+      '-p', '--project', help='Project that the disk to process is associated '
+      'with. If this is different from the project that Turbinia is running '
+      'in, it will be copied to the Turbinia project.', required=True)
   parser_googleclouddisk.add_argument(
       '-P', '--mount_partition', default=0, type=int,
       help='The partition number to use when mounting this disk.  Defaults to '
@@ -217,7 +220,9 @@ def main():
   parser_googleclouddiskembedded.add_argument(
       '-d', '--disk_name', help='Google Cloud name for disk', required=True)
   parser_googleclouddiskembedded.add_argument(
-      '-p', '--project', help='Project that the disk is associated with')
+      '-p', '--project', help='Project that the disk to process is associated '
+      'with. If this is different from the project that Turbinia is running '
+      'in, it will be copied to the Turbinia project.', required=True)
   parser_googleclouddiskembedded.add_argument(
       '-P', '--mount_partition', default=0, type=int,
       help='The partition number to use when mounting this disk.  Defaults to '
@@ -421,7 +426,8 @@ def main():
     log.error('--run_local flag requires --task flag')
     sys.exit(1)
 
-  # Set zone/project to defaults if flags are not set
+  # Set zone/project to defaults if flags are not set, and also copy remote
+  # disk if needed.
   if args.command in ('googleclouddisk', 'googleclouddiskrawembedded'):
     if not args.zone and config.TURBINIA_ZONE:
       args.zone = config.TURBINIA_ZONE
@@ -435,9 +441,14 @@ def main():
       log.error('Turbinia project must be set by --project or in config')
       sys.exit(1)
 
+    if args.project and args.project != config.TURBINIA_PROJECT:
+      new_disk = libcloudforensics.create_disk_copy(
+          args.project, config.TURBINIA_PROJECT, None, config.TURBINIA_ZONE,
+          args.disk_name)
+      args.disk_name = new_disk.name
+
   # Start Evidence configuration
   evidence_ = None
-  is_cloud_disk = False
   if args.command == 'rawdisk':
     args.name = args.name if args.name else args.local_path
     local_path = os.path.abspath(args.local_path)
@@ -468,14 +479,12 @@ def main():
     evidence_ = evidence.Directory(
         name=args.name, local_path=local_path, source=args.source)
   elif args.command == 'googleclouddisk':
-    is_cloud_disk = True
     args.name = args.name if args.name else args.disk_name
     evidence_ = evidence.GoogleCloudDisk(
         name=args.name, disk_name=args.disk_name, project=args.project,
         mount_partition=args.mount_partition, zone=args.zone,
         source=args.source)
   elif args.command == 'googleclouddiskembedded':
-    is_cloud_disk = True
     args.name = args.name if args.name else args.disk_name
     evidence_ = evidence.GoogleCloudDiskRawEmbedded(
         name=args.name, disk_name=args.disk_name,
@@ -572,19 +581,6 @@ def main():
           'Turbinia. Consider wrapping it in a '
           'GoogleCloudDiskRawEmbedded or other Cloud compatible '
           'object'.format(evidence_.type))
-      sys.exit(1)
-
-  if is_cloud_disk and evidence_.project != config.TURBINIA_PROJECT:
-    msg = (
-        'Turbinia project {0:s} is different from evidence project {1:s}. '
-        'This processing request will fail unless the Turbinia service '
-        'account has permissions to this project.'.format(
-            config.TURBINIA_PROJECT, evidence_.project))
-    if args.force_evidence:
-      log.warning(msg)
-    else:
-      msg += ' Use --force_evidence if you are sure you want to do this.'
-      log.error(msg)
       sys.exit(1)
 
   # If we have evidence to process and we also want to run as a server, then
