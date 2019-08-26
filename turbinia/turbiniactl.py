@@ -410,7 +410,6 @@ def main():
       args.disk_name = new_disk.name
 
   evidence_ = None
-  is_cloud_disk = False
   if args.command == 'rawdisk':
     args.name = args.name if args.name else args.local_path
     local_path = os.path.abspath(args.local_path)
@@ -441,14 +440,12 @@ def main():
     evidence_ = evidence.Directory(
         name=args.name, local_path=local_path, source=args.source)
   elif args.command == 'googleclouddisk':
-    is_cloud_disk = True
     args.name = args.name if args.name else args.disk_name
     evidence_ = evidence.GoogleCloudDisk(
         name=args.name, disk_name=args.disk_name, project=args.project,
         mount_partition=args.mount_partition, zone=args.zone,
         source=args.source)
   elif args.command == 'googleclouddiskembedded':
-    is_cloud_disk = True
     args.name = args.name if args.name else args.disk_name
     evidence_ = evidence.GoogleCloudDiskRawEmbedded(
         name=args.name, disk_name=args.disk_name,
