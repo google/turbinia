@@ -71,6 +71,12 @@ def main():
       '(/etc/turbinia.conf, ~/.turbiniarc, or in paths referenced in '
       'environment variable TURBINIA_CONFIG_PATH)', required=False)
   parser.add_argument(
+      '-C', '--recipe_config', help='Recipe configuration data passed in as '
+      'comma separated key=value pairs (e.g. '
+      '"-C key=value,otherkey=othervalue").  These will get passed to tasks '
+      'as evidence config, and will also be written to the metadata.json file '
+      'for Evidence types that write it', default=[], type=csv_list)
+  parser.add_argument(
       '-f', '--force_evidence', action='store_true',
       help='Force evidence processing request in potentially unsafe conditions',
       required=False)
@@ -602,6 +608,16 @@ def main():
       request.recipe['jobs_blacklist'] = args.jobs_blacklist
     if args.jobs_whitelist:
       request.recipe['jobs_whitelist'] = args.jobs_whitelist
+    if args.recipe_config:
+      for pair in args.recipe_config:
+        try:
+          key, value = pair.split('=')
+        except ValueError as exception:
+          log.error(
+              'Could not parse key=value pair [{0:s}] from recipe config '
+              '{1:s}: {2!s}'.format(pair, args.recipe_config, exception))
+          sys.exit(1)
+        request.recipe[key] = value
     if args.dump_json:
       print(request.to_json().encode('utf-8'))
       sys.exit(0)
