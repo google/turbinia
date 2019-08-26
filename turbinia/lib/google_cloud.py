@@ -18,7 +18,7 @@ from __future__ import unicode_literals
 
 import json
 import logging
-from socket import timeout
+import socket
 import ssl
 import time
 
@@ -81,7 +81,7 @@ class GoogleCloudProject(object):
             service_name, api_version, credentials=credentials,
             cache_discovery=False)
         service_built = True
-      except timeout:
+      except socket.timeout:
         log.info(
             'Timeout trying to build service {0:s} (try {1:s} of {2:s})'.format(
                 service_name, retry, RETRY_MAX))
