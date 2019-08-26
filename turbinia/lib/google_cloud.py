@@ -26,6 +26,7 @@ from apiclient.discovery import build
 from apiclient.http import HttpError
 
 from oauth2client.client import GoogleCredentials
+from oauth2client.client import ApplicationDefaultCredentialsError
 
 from turbinia import TurbiniaException
 
