@@ -25,21 +25,15 @@ import logging
 import os
 import sys
 
-from turbinia.client import TurbiniaClient
-from turbinia.client import TurbiniaCeleryClient
-from turbinia.client import TurbiniaServer
-from turbinia.client import TurbiniaCeleryWorker
-from turbinia.client import TurbiniaPsqWorker
 from turbinia import config
 from turbinia.config import logger
 from turbinia.lib import libcloudforensics
-from turbinia import evidence
 from turbinia import __version__
-from turbinia.message import TurbiniaRequest
-from turbinia.workers import Priority
 
 log = logging.getLogger('turbinia')
-logger.setup()
+# We set up the logger first without the file handler, and we will set up the
+# file handler later once we have read the log path from the config.
+logger.setup(need_file_handler=False)
 
 
 def csv_list(string):
@@ -71,6 +65,11 @@ def main():
   parser.add_argument(
       '-a', '--all_fields', action='store_true',
       help='Show all task status fields in output', required=False)
+  parser.add_argument(
+      '-c', '--config_file', help='Load explicit config file. If specified it '
+      'will ignore config files in other default locations '
+      '(/etc/turbinia.conf, ~/.turbiniarc, or in paths referenced in '
+      'environment variable TURBINIA_CONFIG_PATH)', required=False)
   parser.add_argument(
       '-f', '--force_evidence', action='store_true',
       help='Force evidence processing request in potentially unsafe conditions',
@@ -202,7 +201,7 @@ def main():
       'the entire raw disk.  Only affects mounting, and not what gets '
       'processed.')
   parser_googleclouddisk.add_argument(
-      '-z', '--zone', help='Geographic zone the disk exists in', required=True)
+      '-z', '--zone', help='Geographic zone the disk exists in')
   parser_googleclouddisk.add_argument(
       '-s', '--source', help='Description of the source of the evidence',
       required=False)
@@ -230,7 +229,7 @@ def main():
       'the entire raw disk.  Only affects mounting, and not what gets '
       'processed.')
   parser_googleclouddiskembedded.add_argument(
-      '-z', '--zone', help='Geographic zone the disk exists in', required=True)
+      '-z', '--zone', help='Geographic zone the disk exists in')
   parser_googleclouddiskembedded.add_argument(
       '-s', '--source', help='Description of the source of the evidence',
       required=False)
@@ -309,9 +308,10 @@ def main():
   parser_status.add_argument(
       '-r', '--request_id', help='Show tasks with this Request ID',
       required=False)
+  # 20 == Priority.High. We are setting this manually here because we don't want
+  # to load the worker module yet in order to access this Enum.
   parser_status.add_argument(
-      '-p', '--priority_filter', default=Priority.HIGH, type=int,
-      required=False,
+      '-p', '--priority_filter', default=20, type=int, required=False,
       help='This sets what report sections are shown in full detail in '
       'report output.  Any tasks that have set a report_priority value '
       'equal to or lower than this setting will be shown in full detail, and '
@@ -333,6 +333,21 @@ def main():
   subparsers.add_parser('server', help='Run Turbinia Server')
 
   args = parser.parse_args()
+
+  # Load the config before final logger setup so we can the find the path to the
+  # log file.
+  if args.config_file:
+    config.LoadConfig(config_file=args.config_file)
+  else:
+    config.LoadConfig()
+  if args.log_file:
+    config.LOG_FILE = args.log_file
+  if args.output_dir:
+    config.OUTPUT_DIR = args.output_dir
+
+  # Run logger setup again to get file-handler now that we have the logfile path
+  # from the config.
+  logger.setup()
   if args.quiet:
     log.setLevel(logging.ERROR)
   elif args.debug:
@@ -342,28 +357,22 @@ def main():
 
   log.info('Turbinia version: {0:s}'.format(__version__))
 
-  if args.jobs_whitelist and args.jobs_blacklist:
-    log.error(
-        'A Job filter whitelist and blacklist cannot be specified at the same '
-        'time')
-    sys.exit(1)
+  # Do late import of other needed Turbinia modules.  This is needed because the
+  # config is loaded by these modules at load time, and we want to wait to load
+  # the config until after we parse the args so that we can use those arguments
+  # to point to config paths.
+  from turbinia.client import TurbiniaClient
+  from turbinia.client import TurbiniaCeleryClient
+  from turbinia.client import TurbiniaServer
+  from turbinia.client import TurbiniaCeleryWorker
+  from turbinia.client import TurbiniaPsqWorker
+  from turbinia import evidence
+  from turbinia.message import TurbiniaRequest
 
-  filter_patterns = None
-  if (args.filter_patterns_file and
-      not os.path.exists(args.filter_patterns_file)):
-    log.error('Filter patterns file {0:s} does not exist.')
-    sys.exit(1)
-  elif args.filter_patterns_file:
-    try:
-      filter_patterns = open(args.filter_patterns_file).read().splitlines()
-    except IOError as e:
-      log.warning(
-          'Cannot open file {0:s} [{1!s}]'.format(args.filter_patterns_file, e))
-
-  config.LoadConfig()
+  # Print out config if requested
   if args.command == 'config':
-    print('Config file path is {0:s}\n'.format(config.configSource))
     if args.file_only:
+      log.info('Config file path is {0:s}\n'.format(config.configSource))
       sys.exit(0)
 
     try:
@@ -376,7 +385,26 @@ def main():
               config.configSource, exception))
       sys.exit(1)
 
-  # Client
+  if args.jobs_whitelist and args.jobs_blacklist:
+    log.error(
+        'A Job filter whitelist and blacklist cannot be specified at the same '
+        'time')
+    sys.exit(1)
+
+  # Read set set filter_patterns
+  filter_patterns = None
+  if (args.filter_patterns_file and
+      not os.path.exists(args.filter_patterns_file)):
+    log.error('Filter patterns file {0:s} does not exist.')
+    sys.exit(1)
+  elif args.filter_patterns_file:
+    try:
+      filter_patterns = open(args.filter_patterns_file).read().splitlines()
+    except IOError as e:
+      log.warning(
+          'Cannot open file {0:s} [{1!s}]'.format(args.filter_patterns_file, e))
+
+  # Create Client object
   if args.command not in ('psqworker', 'server'):
     if config.TASK_MANAGER.lower() == 'celery':
       client = TurbiniaCeleryClient()
@@ -387,6 +415,7 @@ def main():
   else:
     client = None
 
+  # Make sure run_local flags aren't conflicting with other server/client flags
   server_flags_set = args.server or args.command == 'server'
   worker_flags_set = args.command in ('psqworker', 'celeryworker')
   if args.run_local and (server_flags_set or worker_flags_set):
@@ -397,18 +426,28 @@ def main():
     log.error('--run_local flag requires --task flag')
     sys.exit(1)
 
-  if args.output_dir:
-    config.OUTPUT_DIR = args.output_dir
-  if args.log_file:
-    config.LOG_FILE = args.log_file
-
+  # Set zone/project to defaults if flags are not set, and also copy remote
+  # disk if needed.
   if args.command in ('googleclouddisk', 'googleclouddiskrawembedded'):
+    if not args.zone and config.TURBINIA_ZONE:
+      args.zone = config.TURBINIA_ZONE
+    elif not args.zone and not config.TURBINIA_ZONE:
+      log.error('Turbinia zone must be set by --zone or in config')
+      sys.exit(1)
+
+    if not args.project and config.TURBINIA_PROJECT:
+      args.project = config.TURBINIA_PROJECT
+    elif not args.project and not config.TURBINIA_PROJECT:
+      log.error('Turbinia project must be set by --project or in config')
+      sys.exit(1)
+
     if args.project and args.project != config.TURBINIA_PROJECT:
       new_disk = libcloudforensics.create_disk_copy(
           args.project, config.TURBINIA_PROJECT, None, config.TURBINIA_ZONE,
           args.disk_name)
       args.disk_name = new_disk.name
 
+  # Start Evidence configuration
   evidence_ = None
   if args.command == 'rawdisk':
     args.name = args.name if args.name else args.local_path
