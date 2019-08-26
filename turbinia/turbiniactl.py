@@ -196,6 +196,10 @@ def main():
       'googleclouddisk',
       help='Process Google Cloud Persistent Disk as Evidence')
   parser_googleclouddisk.add_argument(
+      '-C', '--copy_only', help='Only copy disk and do not process with '
+      'Turbinia. This only takes effect when a source --project is defined '
+      'and can be run without any Turbinia server or workers configured.')
+  parser_googleclouddisk.add_argument(
       '-d', '--disk_name', help='Google Cloud name for disk', required=True)
   parser_googleclouddisk.add_argument(
       '-p', '--project', help='Project that the disk to process is associated '
@@ -219,6 +223,10 @@ def main():
       'googleclouddiskembedded',
       help='Process Google Cloud Persistent Disk with an embedded raw disk '
       'image as Evidence')
+  parser_googleclouddiskembedded.add_argument(
+      '-C', '--copy_only', help='Only copy disk and do not process with '
+      'Turbinia. This only takes effect when a source --project is defined '
+      'and can be run without any Turbinia server or workers configured.')
   parser_googleclouddiskembedded.add_argument(
       '-e', '--embedded_path',
       help='Path within the Persistent Disk that points to the raw image file',
@@ -452,6 +460,9 @@ def main():
           args.project, config.TURBINIA_PROJECT, None, config.TURBINIA_ZONE,
           args.disk_name)
       args.disk_name = new_disk.name
+      if args.copy_only:
+        log.info('--copy_only specified, so not processing with Turbinia')
+        sys.exit(0)
 
   # Start Evidence configuration
   evidence_ = None
