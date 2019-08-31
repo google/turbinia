@@ -242,9 +242,7 @@ class EvidenceCollection(Evidence):
   def serialize(self):
     """Return JSON serializable object."""
     serialized_evidence = super(EvidenceCollection, self).serialize()
-    serialized_evidence['collection'] = [
-        e.serialize() for e in self.collection
-    ]
+    serialized_evidence['collection'] = [e.serialize() for e in self.collection]
     return serialized_evidence
 
   def add_evidence(self, evidence_):
