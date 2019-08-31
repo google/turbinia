@@ -37,6 +37,7 @@ from turbinia.workers import Priority
 from turbinia.workers.artifact import FileArtifactExtractionTask
 from turbinia.workers.analysis.wordpress import WordpressAccessLogAnalysisTask
 from turbinia.workers.analysis.jenkins import JenkinsAnalysisTask
+from turbinia.workers.finalize_request import RequestFinalizeTask
 from turbinia.workers.grep import GrepTask
 from turbinia.workers.hadoop import HadoopAnalysisTask
 from turbinia.workers.hindsight import HindsightTask
@@ -54,6 +55,7 @@ from turbinia.workers.worker_stat import StatTask
 TASK_MAP = {
     'fileartifactextractiontask': FileArtifactExtractionTask,
     'wordpressaccessloganalysistask': WordpressAccessLogAnalysisTask,
+    'finalizerequest': RequestFinalizeTask,
     'jenkinsanalysistask': JenkinsAnalysisTask,
     'greptask': GrepTask,
     'hadoopanalysistask': HadoopAnalysisTask,

@@ -34,9 +34,42 @@ class TestTurbiniaEvidence(unittest.TestCase):
     self.assertTrue(isinstance(rawdisk_json, str))
 
     rawdisk_new = evidence.evidence_decode(json.loads(rawdisk_json))
-    self.assertTrue(isinstance(rawdisk_new, evidence.RawDisk))
+    self.assertIsInstance(rawdisk_new, evidence.RawDisk)
     self.assertEqual(rawdisk_new.name, 'My Evidence')
     self.assertEqual(rawdisk_new.mount_path, '/mnt/foo')
+
+  def testEvidenceCollectionDeserialization(self):
+    """Test that EvidenceCollection deserializes."""
+    rawdisk = evidence.RawDisk(
+        name='My Evidence', local_path='/tmp/foo', mount_path='/mnt/foo')
+    collection = evidence.EvidenceCollection()
+    collection.name = 'testCollection'
+    collection.add_evidence(rawdisk)
+    collection_json = collection.to_json()
+    self.assertTrue(isinstance(collection_json, str))
+
+    collection_new = evidence.evidence_decode(json.loads(collection_json))
+    rawdisk_new = collection_new.collection[0]
+    # Make sure that both the collection, and the things in the collection
+    # deserializd to the correct types.
+    self.assertIsInstance(collection_new, evidence.EvidenceCollection)
+    self.assertIsInstance(rawdisk_new, evidence.RawDisk)
+    self.assertEqual(collection_new.name, 'testCollection')
+    self.assertEqual(rawdisk_new.name, 'My Evidence')
+    self.assertEqual(rawdisk_new.mount_path, '/mnt/foo')
+
+  def testEvidenceCollectionSerialization(self):
+    """Test that EvidenceCollection serializes/unserializes."""
+    evidence_ = evidence.EvidenceCollection()
+    rawdisk = evidence.RawDisk(
+        name='My Evidence', local_path='/tmp/foo', mount_path='/mnt/foo')
+    evidence_.add_evidence(rawdisk)
+    serialized_evidence = evidence_.serialize()
+    collection_evidence = serialized_evidence['collection'][0]
+
+    self.assertIsInstance(serialized_evidence, dict)
+    self.assertEqual(collection_evidence['name'], 'My Evidence')
+
 
   def testEvidenceSerializationBadType(self):
     """Test that evidence_decode throws error on non-dict type."""
