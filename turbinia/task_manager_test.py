@@ -174,17 +174,18 @@ class TestTaskManager(TestTurbiniaTaskBase):
     task_id = 'testTaskID'
     self.task.id = task_id
     self.job1.request_id = 'testRequestID'
-    self.job1.create_final_tasks = mock.MagicMock()
+    self.job1.create_final_task = mock.MagicMock()
     self.job1.evidence.add_evidence(self.evidence)
     self.manager.add_task = mock.MagicMock()
     self.job1.tasks.append(self.task)
     self.manager.running_jobs.append(self.job1)
     self.manager.finalize_job(self.job1, task_id)
 
-    self.job1.create_final_tasks.assert_called()
+    self.job1.create_final_task.assert_called()
     self.manager.add_task.assert_called()
     _, __, test_evidence = self.manager.add_task.call_args[0]
     self.assertListEqual(test_evidence.collection, [self.evidence])
+    self.assertListEqual(self.manager.running_jobs[0].tasks, [])
 
   def testRun(self):
     """Test the run() method."""

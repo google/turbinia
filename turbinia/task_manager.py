@@ -380,9 +380,10 @@ class BaseTaskManager(object):
       job (TurbiniaJob): The Job to process
       task_id (str): The ID of the Task that just completed.
     """
+    log.debug('Finalizing Job {0:s} for Task {1:s}'.format(job.name, task_id))
     job.remove_task(task_id)
     if job.check_done():
-      final_task = job.create_final_tasks()
+      final_task = job.create_final_task()
       if final_task:
         self.add_task(final_task, job, job.evidence)
 
