@@ -15,7 +15,11 @@
 """Interface for Jobs."""
 import uuid
 
+import logging
+
 from turbinia.evidence import EvidenceCollection
+
+log = logging.getLogger('turbinia')
 
 
 class TurbiniaJob(object):
@@ -46,7 +50,7 @@ class TurbiniaJob(object):
     Returns:
       (bool): True if all Tasks have completed, else False
     """
-    if self.evidence.collection and len(self.tasks) == 0:
+    if self.evidence.collection and not self.tasks:
       return True
     else:
       return False
@@ -94,4 +98,9 @@ class TurbiniaJob(object):
 
     if remove_task:
       self.tasks.remove(remove_task)
+      log.debug('Removed task {0:s} from Job {1:s}'.format(task_id, self.name))
+    else:
+      log.debug(
+          'Could not find task {0:s} to remove from Job {1:s}'.format(
+              task_id, self.name))
     return bool(remove_task)

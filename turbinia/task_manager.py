@@ -278,6 +278,9 @@ class BaseTaskManager(object):
       request_id (str): The ID of the request we want to remove jobs for.
     """
     remove_jobs = [j for j in self.running_jobs if j.request_id == request_id]
+    log.debug(
+        'Request ID {0:s} has completed. Removing {1:d} completed Jobs.'.format(
+            request_id, len(remove_jobs)))
     # pylint: disable=expression-not-assigned
     [self.remove_job(j) for j in remove_jobs]
 
