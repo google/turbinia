@@ -138,7 +138,7 @@ class BaseTaskManager(object):
               jobs_whitelist, jobs_blacklist))
       job_names = jobs_manager.JobsManager.FilterJobNames(
           job_names, jobs_blacklist, jobs_whitelist)
-    self.jobs = [job for job, _ in jobs_manager.JobsManager.GetJobs(job_names)]
+    self.jobs = [job for _, job in jobs_manager.JobsManager.GetJobs(job_names)]
     log.debug('Registered job list: {0:s}'.format(str(job_names)))
 
   def add_evidence(self, evidence_):
