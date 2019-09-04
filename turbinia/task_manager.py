@@ -265,8 +265,8 @@ class BaseTaskManager(object):
 
     task.base_output_dir = config.OUTPUT_DIR
     task.requester = evidence_.config.get('requester')
-    task.job_id = job.id
     if job:
+      task.job_id = job.id
       job.tasks.append(task)
     self.state_manager.write_new_task(task)
     self.enqueue_task(task, evidence_)
