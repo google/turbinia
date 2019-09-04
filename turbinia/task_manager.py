@@ -369,7 +369,7 @@ class BaseTaskManager(object):
 
     return job
 
-  def finalize_job(self, job, task_id):
+  def finalize_job(self, job, task):
     """Processes the Job after Task completes.
 
     This removes the Task from the running Job and generates the "finalize"
@@ -378,10 +378,11 @@ class BaseTaskManager(object):
 
     Args:
       job (TurbiniaJob): The Job to process
-      task_id (str): The ID of the Task that just completed.
+      task (TurbiniaTask): The Task that just completed.
     """
-    log.debug('Finalizing Job {0:s} for Task {1:s}'.format(job.name, task_id))
-    job.remove_task(task_id)
+    log.debug('Finalizing Job {0:s} for Task {1:s}'.format(job.name, task.id))
+    self.state_manager.update_task(task)
+    job.remove_task(task.id)
     if job.check_done():
       log.debug(
           'Job {0:s} completed, creating Job finalize tasks'.format(job.name))
@@ -426,7 +427,7 @@ class BaseTaskManager(object):
         if task.result:
           job = self.finalize_result(task.result)
           if job:
-            self.finalize_job(job, task.id)
+            self.finalize_job(job, task)
 
       [self.state_manager.update_task(t) for t in self.tasks]
       if config.SINGLE_RUN and self.check_done():
