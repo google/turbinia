@@ -384,7 +384,7 @@ class BaseTaskManager(object):
     job.remove_task(task_id)
     if job.check_done():
       log.debug(
-          'Job {0:s} completed, creating Job finalize tasks'.format(job.id))
+          'Job {0:s} completed, creating Job finalize tasks'.format(job.name))
       final_task = job.create_final_task()
       if final_task:
         self.add_task(final_task, job, job.evidence)

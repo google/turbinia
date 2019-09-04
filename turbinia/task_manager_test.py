@@ -101,20 +101,32 @@ class TestTaskManager(TestTurbiniaTaskBase):
     request_id = 'testId'
     self.job1.request_id = request_id
     self.job2.request_id = request_id
-    # We want evidence associated with each Job, but no Tasks so that it thinks
-    # they are completed.
-    self.job1.evidence.collection.append(self.evidence)
-    self.job2.evidence.collection.append(self.evidence)
+    # We want completed tasks for each Job, but no Tasks pending so that it
+    # thinks they are completed.
+    self.job1.completed_task_count = 1
+    self.job2.completed_task_count = 1
     self.manager.running_jobs = [self.job1, self.job2]
     self.assertTrue(self.manager.check_request_done(request_id))
 
-  def testCheckRequestDoneIsNotDone(self):
-    """Basic test for check_request_done for when the request is done."""
+  def testCheckRequestDoneNoCompletedTasks(self):
+    """Test for check_request_done no tasks have been completed."""
     request_id = 'testId'
     self.job1.request_id = request_id
     self.job2.request_id = request_id
     self.manager.running_jobs = [self.job1, self.job2]
-    # With no associated evidence the Jobs will show as not yet done.
+    # With no completed tasks the Jobs will show as not yet done.
+    self.assertFalse(self.manager.check_request_done(request_id))
+
+  def testCheckRequestDonePendingTasks(self):
+    """Test for check_request_done when Tasks are pending."""
+    request_id = 'testId'
+    self.job1.request_id = request_id
+    self.job2.request_id = request_id
+    self.job1.completed_task_count = 1
+    self.job2.completed_task_count = 1
+    self.job1.tasks = [self.task]
+    self.manager.running_jobs = [self.job1, self.job2]
+    # With no completed tasks the Jobs will show as not yet done.
     self.assertFalse(self.manager.check_request_done(request_id))
 
   def testGetJob(self):

@@ -30,16 +30,16 @@ class TestJobsInterface(TestTurbiniaTaskBase):
 
   def testCheckDone(self):
     """Tests check_done() method."""
-    evidence_ = evidence.RawDisk()
-    self.job.evidence.add_evidence(evidence_)
+    self.job.completed_task_count = 1
     self.assertTrue(self.job.check_done())
 
-  def testCheckDoneNoEvidence(self):
+  def testCheckDoneNoCompletedCount(self):
     """Tests check_done() method."""
     self.assertFalse(self.job.check_done())
 
   def testCheckDoneWithTasks(self):
     """Tests check_done() method."""
+    self.job.completed_task_count = 1
     self.job.tasks.append(self.task)
     self.assertFalse(self.job.check_done())
 
