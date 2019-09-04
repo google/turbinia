@@ -183,9 +183,8 @@ class TestTaskManager(TestTurbiniaTaskBase):
 
   def testFinalizeJob(self):
     """Tests finalize_job method."""
-    #  task_id = 'testTaskID'
-    #  self.task.id = task_id
-    #  self.job1.request_id = 'testRequestID'
+    request_id = 'testRequestID'
+    self.job1.request_id = request_id
     self.job1.create_final_task = mock.MagicMock()
     self.job1.evidence.add_evidence(self.evidence)
     self.manager.add_task = mock.MagicMock()
@@ -197,6 +196,7 @@ class TestTaskManager(TestTurbiniaTaskBase):
     self.manager.add_task.assert_called()
     _, __, test_evidence = self.manager.add_task.call_args[0]
     self.assertListEqual(test_evidence.collection, [self.evidence])
+    self.assertEqual(test_evidence.request_id, request_id)
     self.assertListEqual(self.manager.running_jobs[0].tasks, [])
 
   def testRun(self):

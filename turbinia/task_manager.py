@@ -402,6 +402,7 @@ class BaseTaskManager(object):
       # Finalize tasks use EvidenceCollection with all evidence created by the
       # request or job.
       final_evidence = evidence.EvidenceCollection()
+      final_evidence.request_id = request_id
       for running_job in self.running_jobs:
         if running_job.request_id == request_id:
           final_evidence.collection.extend(running_job.evidence.collection)
