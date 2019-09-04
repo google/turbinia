@@ -279,8 +279,8 @@ class BaseTaskManager(object):
     """
     remove_jobs = [j for j in self.running_jobs if j.request_id == request_id]
     log.debug(
-        'Request ID {0:s} has completed. Removing {1:d} completed Jobs.'.format(
-            request_id, len(remove_jobs)))
+        'Removing {0:d} completed Jobs for request ID {1:s}.'.format(
+            len(remove_jobs), request_id))
     # pylint: disable=expression-not-assigned
     [self.remove_job(j) for j in remove_jobs]
 
@@ -383,6 +383,8 @@ class BaseTaskManager(object):
     log.debug('Finalizing Job {0:s} for Task {1:s}'.format(job.name, task_id))
     job.remove_task(task_id)
     if job.check_done():
+      log.debug(
+          'Job {0:s} completed, creating Job finalize tasks'.format(job.id))
       final_task = job.create_final_task()
       if final_task:
         self.add_task(final_task, job, job.evidence)
@@ -393,6 +395,11 @@ class BaseTaskManager(object):
     request_id = job.request_id
     if self.check_request_done(request_id):
       final_task = RequestFinalizeTask()
+      log.debug(
+          'Request {0:s} completed, creating RequestFinalizeTask {1:s}'.format(
+              request_id, final_task.id))
+      # Finalize tasks use EvidenceCollection with all evidence created by the
+      # request or job.
       final_evidence = evidence.EvidenceCollection()
       for running_job in self.running_jobs:
         if running_job.request_id == request_id:
@@ -419,7 +426,7 @@ class BaseTaskManager(object):
         if task.result:
           job = self.finalize_result(task.result)
           if job:
-            self.finalize_job(job, task.result.id)
+            self.finalize_job(job, task.id)
 
       [self.state_manager.update_task(t) for t in self.tasks]
       if config.SINGLE_RUN and self.check_done():

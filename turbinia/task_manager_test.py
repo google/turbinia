@@ -189,10 +189,10 @@ class TestTaskManager(TestTurbiniaTaskBase):
 
   def testRun(self):
     """Test the run() method."""
-    result_id = 'testResultID'
+    task_id = 'testResultID'
     self.manager.get_evidence = mock.MagicMock(return_value=[self.evidence])
     self.manager.add_evidence = mock.MagicMock()
-    self.result.id = result_id
+    self.task.id = task_id
     self.task.result = self.result
     self.manager.process_tasks = mock.MagicMock(return_value=[self.task])
     self.manager.finalize_result = mock.MagicMock(return_value=self.job1)
@@ -201,4 +201,4 @@ class TestTaskManager(TestTurbiniaTaskBase):
 
     self.manager.add_evidence.assert_called_with(self.evidence)
     self.manager.finalize_result.assert_called_with(self.result)
-    self.manager.finalize_job.assert_called_with(self.job1, result_id)
+    self.manager.finalize_job.assert_called_with(self.job1, task_id)
