@@ -25,16 +25,20 @@ import datetime
 import json
 import logging
 import os
+import socket
 import ssl
 import subprocess
 import time
 
 from apiclient.discovery import build
 from googleapiclient.errors import HttpError
+from oauth2client.client import AccessTokenRefreshError
 from oauth2client.client import GoogleCredentials
 from oauth2client.client import ApplicationDefaultCredentialsError
 
 log = logging.getLogger('turbinia')
+
+RETRY_MAX = 10
 
 
 def create_service(service_name, api_version):
@@ -48,7 +52,8 @@ def create_service(service_name, api_version):
     API service resource (apiclient.discovery.Resource)
 
   Raises:
-    RuntimeError: If Application Default Credentials could not be obtained.
+    RuntimeError: If Application Default Credentials could not be obtained or if
+        service build times out.
   """
   try:
     credentials = GoogleCredentials.get_application_default()
@@ -56,8 +61,28 @@ def create_service(service_name, api_version):
     raise RuntimeError(
         'Could not get application default credentials: {0!s}\n'
         'Have you run $ gcloud auth application-default login?'.format(error))
-  return build(
-      service_name, api_version, credentials=credentials, cache_discovery=False)
+
+  service_built = False
+  for retry in range(RETRY_MAX):
+    try:
+      service = build(
+          service_name, api_version, credentials=credentials,
+          cache_discovery=False)
+      service_built = True
+    except socket.timeout:
+      log.info(
+          'Timeout trying to build service {0:s} (try {1:s} of {2:s})'.format(
+              service_name, retry, RETRY_MAX))
+
+    if service_built:
+      break
+
+  if not service_built:
+    raise RuntimeError(
+        'Failures building service {0:s} caused by multiple timeouts'.format(
+            service_name))
+
+  return service
 
 
 class GoogleCloudProject(object):
@@ -722,19 +747,50 @@ def create_disk_copy(src_proj, dst_proj, instance_name, zone, disk_name=None):
 
   Returns:
     A Google Compute Disk object (instance of GoogleComputeDisk)
+
+  Raises:
+    RuntimeError: If there are errors copying the disk
   """
   src_proj = GoogleCloudProject(src_proj)
   dst_proj = GoogleCloudProject(dst_proj, default_zone=zone)
-  instance = src_proj.get_instance(instance_name)
+  instance = src_proj.get_instance(instance_name) if instance_name else None
 
-  if disk_name:
-    disk_to_copy = instance.get_disk(disk_name)
-  else:
-    disk_to_copy = instance.get_boot_disk()
+  try:
+    if disk_name:
+      disk_to_copy = src_proj.get_disk(disk_name)
+    else:
+      disk_to_copy = instance.get_boot_disk()
 
-  snapshot = disk_to_copy.snapshot()
-  new_disk = dst_proj.create_disk_from_snapshot(snapshot)
-  snapshot.delete()
+    log.info('Disk copy of {0:s} started...'.format(disk_to_copy.name))
+    snapshot = disk_to_copy.snapshot()
+    new_disk = dst_proj.create_disk_from_snapshot(
+        snapshot, disk_name_prefix='evidence')
+    snapshot.delete()
+    log.info(
+        'Disk {0:s} successfully copied to {1:s}'.format(
+            disk_to_copy.name, new_disk.name))
+
+  except AccessTokenRefreshError as exception:
+    raise RuntimeError(
+        'Something is wrong with your gcloud access token: {0:s}.'.format(
+            exception))
+  except ApplicationDefaultCredentialsError as exception:
+    raise RuntimeError(
+        'Something is wrong with your Application Default Credentials. '
+        'Try running:\n  $ gcloud auth application-default login')
+  except HttpError as exception:
+    if exception.resp.status == 403:
+      raise RuntimeError(
+          'Make sure you have the appropriate permissions on the project')
+    if exception.resp.status == 404:
+      raise RuntimeError(
+          'GCP resource not found. Maybe a typo in the project / instance / '
+          'disk name?')
+    raise RuntimeError(exception, critical=True)
+  except RuntimeError as exception:
+    raise RuntimeError(
+        'Error copying disk "{0:s}": {1!s}'.format(disk_name, exception))
+
   return new_disk
 
 

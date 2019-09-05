@@ -88,33 +88,49 @@ class TurbiniaConfigException(Exception):
   pass
 
 
-def LoadConfig():
-  """Finds Turbinia config file and loads it."""
+def LoadConfig(config_file=None):
+  """Finds Turbinia config file and loads it.
+
+  Args:
+    config_file(str): full path to config file
+  """
   # TODO(aarontp): Find way to not require global var here.  Maybe a singleton
   # pattern on the config class.
   # pylint: disable=global-statement
   global CONFIG
   if CONFIG:
+    log.debug(
+        'Returning cached config from {0:s} instead of reloading config'.format(
+            CONFIG.configSource))
     return CONFIG
 
-  # If the environment variable is set, take precedence over the pre-defined
-  # CONFIGPATHs.
-  configpath = CONFIGPATH
-  if ENVCONFIGVAR in os.environ:
-    configpath = os.environ[ENVCONFIGVAR].split(':')
+  if not config_file:
+    log.debug('No config specified. Looking in default locations for config.')
+    # If the environment variable is set, take precedence over the pre-defined
+    # CONFIGPATHs.
+    configpath = CONFIGPATH
+    if ENVCONFIGVAR in os.environ:
+      configpath = os.environ[ENVCONFIGVAR].split(':')
 
-  config_file = None
-  # Load first file found
-  for _dir, _file in itertools.product(configpath, CONFIGFILES):
-    if os.path.exists(os.path.join(_dir, _file)):
-      config_file = os.path.join(_dir, _file)
-      break
+    # Load first file found
+    for _dir, _file in itertools.product(configpath, CONFIGFILES):
+      if os.path.exists(os.path.join(_dir, _file)):
+        config_file = os.path.join(_dir, _file)
+        break
 
   if config_file is None:
     raise TurbiniaConfigException('No config files found')
 
-  log.info('Loading config from {0:s}'.format(config_file))
-  _config = imp.load_source('config', config_file)
+  log.debug('Loading config from {0:s}'.format(config_file))
+  try:
+    _config = imp.load_source('config', config_file)
+  except IOError as exception:
+    message = (
+        'Could not load config file {0:s}: {1!s}'.format(
+            config_file, exception))
+    log.error(message)
+    raise TurbiniaConfigException(message)
+
   _config.configSource = config_file
   ValidateAndSetConfig(_config)
 
@@ -124,6 +140,8 @@ def LoadConfig():
     os.environ['GOOGLE_CLOUD_PROJECT'] = _config.TURBINIA_PROJECT
 
   CONFIG = _config
+  log.debug(
+      'Returning parsed config loaded from {0:s}'.format(CONFIG.configSource))
   return _config
 
 
