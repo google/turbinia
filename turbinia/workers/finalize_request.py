@@ -37,7 +37,7 @@ class FinalizeRequestTask(TurbiniaTask):
         result (TurbiniaTaskResult): The result to place task output into.
 
     Returns:
-        TurbiniaTaskResult object.
+        TurbiniaTaskResult: Task execution results.
     """
     # Doing a delayed import to avoid circular dependencies.
     from turbinia.client import TurbiniaClient
