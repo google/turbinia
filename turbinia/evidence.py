@@ -446,9 +446,9 @@ class ExportedFileArtifact(Evidence):
 
   REQUIRED_ATTRIBUTES = ['artifact_name']
 
-  def __init__(self, artifact_name=None):
+  def __init__(self, artifact_name=None, *args, **kwargs):
     """Initializes an exported file artifact."""
-    super(ExportedFileArtifact, self).__init__()
+    super(ExportedFileArtifact, self).__init__(*args, **kwargs)
     self.artifact_name = artifact_name
     self.copyable = True
 
