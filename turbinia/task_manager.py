@@ -282,6 +282,7 @@ class BaseTaskManager(object):
     # request or job.
     final_evidence = evidence.EvidenceCollection()
     final_evidence.request_id = request_id
+    self.running_jobs.append(final_job)
 
     # Gather evidence created by every Job in the request.
     for running_job in self.running_jobs:
@@ -427,7 +428,9 @@ class BaseTaskManager(object):
       job (TurbiniaJob): The Job to process
       task (TurbiniaTask): The Task that just completed.
     """
-    log.debug('Finalizing Job {0:s} for Task {1:s}'.format(job.name, task.id))
+    log.debug(
+        'Processing Job {0:s} for completed Task {1:s}'.format(
+            job.name, task.id))
     self.state_manager.update_task(task)
     job.remove_task(task.id)
     if job.check_done() and not (job.is_finalize_job or task.is_finalize_task):
