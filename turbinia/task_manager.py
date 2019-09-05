@@ -100,17 +100,16 @@ class BaseTaskManager(object):
   """
 
   def __init__(self):
-    #  self.evidence = []
     self.jobs = []
     self.running_jobs = []
     self.state_manager = state_manager.get_state_manager()
 
   @property
   def tasks(self):
-    """A property that returns all running Tasks.
+    """A property that returns all outstanding Tasks.
 
     Returns:
-      list: All running Tasks.
+      list[TurbiniaTask]: All outstanding Tasks.
     """
     return [task for job in self.running_jobs for task in job.tasks]
 
@@ -155,7 +154,6 @@ class BaseTaskManager(object):
       raise turbinia.TurbiniaException(
           'Jobs must be registered before evidence can be added')
     log.info('Adding new evidence: {0:s}'.format(str(evidence_)))
-    #  self.evidence.append(evidence_)
     job_count = 0
     jobs_whitelist = evidence_.config.get('jobs_whitelist', [])
     jobs_blacklist = evidence_.config.get('jobs_blacklist', [])
@@ -394,9 +392,9 @@ class BaseTaskManager(object):
 
     job = self.get_job(task_result.job_id)
     if not job:
-      log.debug(
-          'Received task results for unknown Job from Task ID {0:s}.  This was '
-          'likely the request finalize Task'.format(task_result.task_id))
+      log.warning(
+          'Received task results for unknown Job from Task ID {0:s}'.format(
+              task_result.task_id))
 
     # Reprocess new evidence and save instance for later consumption by finalize
     # tasks.
