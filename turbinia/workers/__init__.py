@@ -304,6 +304,7 @@ class TurbiniaTask(object):
       base_output_dir (str): The base directory that output will go into.
           Per-task directories will be created under this.
       id (str): Unique Id of task (string of hex)
+      is_finalize_task (bool): Whether this is a finalize Task or not.
       job_id (str): Job ID the Task was created by.
       last_update (datetime): A datetime object with the last time the task was
           updated.
@@ -339,6 +340,7 @@ class TurbiniaTask(object):
       self.base_output_dir = config.OUTPUT_DIR
 
     self.id = uuid.uuid4().hex
+    self.is_finalize_task = False
     self.job_id = None
     self.last_update = datetime.now()
     self.name = name if name else self.__class__.__name__

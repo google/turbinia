@@ -26,7 +26,6 @@ from turbinia import config
 from turbinia import state_manager
 from turbinia import TurbiniaException
 from turbinia.jobs import manager as jobs_manager
-from turbinia.workers.finalize_request import RequestFinalizeTask
 
 config.LoadConfig()
 if config.TASK_MANAGER.lower() == 'psq':
@@ -196,7 +195,7 @@ class BaseTaskManager(object):
           'Evidence as input'.format(str(evidence_)))
 
   def check_done(self):
-    """Checks to see if we have any outstanding tasks.
+    """Checks if we have any outstanding tasks.
 
     Returns:
       (bool): Indicating whether we are done.
@@ -204,7 +203,7 @@ class BaseTaskManager(object):
     return not bool(len(self.tasks))
 
   def check_request_done(self, request_id):
-    """Checks to see if we have any outstanding tasks for the request ID.
+    """Checks if we have any outstanding tasks for the request ID.
 
     Args:
       request_id (str): The request ID to check for completion
@@ -218,6 +217,29 @@ class BaseTaskManager(object):
         job_completion.append(job.check_done())
 
     return min(job_completion)
+
+  def check_request_finalized(self, request_id):
+    """Checks if the the request is done and finalized.
+
+    A request can be done but not finalized if all of the Tasks created by the
+    original Jobs have completed, but the "finalize" Job/Tasks have not been
+    run.  These finalize Job/Tasks are created after all of the original
+    Jobs/Tasks have completed. Only one Job needs to be marked as finalized for
+    the entire request to be considered finalized.
+
+    Args:
+      request_id (str): The request ID to check for finalization.
+
+    Returns:
+      (bool): Indicating whether all Jobs are done.
+    """
+    request_finalized = False
+    for job in self.running_jobs:
+      if request_id == job.request_id and job.is_finalized:
+        request_finalized = True
+        break
+
+    return request_finalized and self.check_request_done(request_id)
 
   def get_evidence(self):
     """Checks for new evidence to process.
@@ -243,6 +265,31 @@ class BaseTaskManager(object):
         break
 
     return job
+
+  def generate_request_finalize_tasks(self, request_id):
+    """Generates the Tasks to finalize the given request ID.
+
+    Args:
+      request_id (str): The request to generate Tasks for.
+    """
+    final_job = jobs_manager.JobsManager.GetJobInstance('FinalizeRequestJob')
+    final_job.request_id = request_id
+    log.debug(
+        'Request {0:s} done, but not finalized, creating FinalizeRequestJob '
+        '{1:s}'.format(request_id, final_job.id))
+
+    # Finalize tasks use EvidenceCollection with all evidence created by the
+    # request or job.
+    final_evidence = evidence.EvidenceCollection()
+    final_evidence.request_id = request_id
+
+    # Gather evidence created by every Job in the request.
+    for running_job in self.running_jobs:
+      if running_job.request_id == request_id:
+        final_evidence.collection.extend(running_job.evidence.collection)
+
+    for finalize_task in final_job.create_tasks([final_evidence]):
+      self.add_task(finalize_task, final_job, final_evidence)
 
   def add_task(self, task, job, evidence_):
     """Adds a task and evidence to process to the task manager.
@@ -279,10 +326,10 @@ class BaseTaskManager(object):
     """
     remove_jobs = [j for j in self.running_jobs if j.request_id == request_id]
     log.debug(
-        'Removing {0:d} completed Jobs for request ID {1:s}.'.format(
+        'Removing {0:d} completed Job(s) for request ID {1:s}.'.format(
             len(remove_jobs), request_id))
     # pylint: disable=expression-not-assigned
-    [self.remove_job(j) for j in remove_jobs]
+    [self.remove_job(j.id) for j in remove_jobs]
 
   def remove_job(self, job_id):
     """Removes a Job from the running jobs list.
@@ -312,7 +359,7 @@ class BaseTaskManager(object):
     """
     raise NotImplementedError
 
-  def finalize_result(self, task_result):
+  def process_result(self, task_result):
     """Runs final task results recording.
 
     self.process_tasks handles things that have failed at the task queue layer
@@ -369,12 +416,12 @@ class BaseTaskManager(object):
 
     return job
 
-  def finalize_job(self, job, task):
+  def process_job(self, job, task):
     """Processes the Job after Task completes.
 
     This removes the Task from the running Job and generates the "finalize"
     Tasks after all the Tasks for the Job and Request have completed.  It also
-    removes all Jobs from the running Job list once it is complete.
+    removes all Jobs from the running Job list once everything is complete.
 
     Args:
       job (TurbiniaJob): The Job to process
@@ -383,30 +430,26 @@ class BaseTaskManager(object):
     log.debug('Finalizing Job {0:s} for Task {1:s}'.format(job.name, task.id))
     self.state_manager.update_task(task)
     job.remove_task(task.id)
-    if job.check_done():
+    if job.check_done() and not (job.is_finalize_job or task.is_finalize_task):
       log.debug(
           'Job {0:s} completed, creating Job finalize tasks'.format(job.name))
       final_task = job.create_final_task()
       if final_task:
+        final_task.is_finalize_task = True
         self.add_task(final_task, job, job.evidence)
+    elif job.check_done() and job.is_finalize_job:
+      job.is_finalized = True
 
-    # Check if request is complete, and if so schedule the final task with all
-    # of the evidence from the related jobs.  Then remove jobs from running
-    # list.
     request_id = job.request_id
-    if self.check_request_done(request_id):
-      final_task = RequestFinalizeTask()
-      log.debug(
-          'Request {0:s} completed, creating RequestFinalizeTask {1:s}'.format(
-              request_id, final_task.id))
-      # Finalize tasks use EvidenceCollection with all evidence created by the
-      # request or job.
-      final_evidence = evidence.EvidenceCollection()
-      final_evidence.request_id = request_id
-      for running_job in self.running_jobs:
-        if running_job.request_id == request_id:
-          final_evidence.collection.extend(running_job.evidence.collection)
-      self.add_task(final_task, None, final_evidence)
+    request_done = self.check_request_done(request_id)
+    request_finalized = self.check_request_finalized(request_id)
+    # If the request is done but not finalized, we generate the finalize tasks.
+    if request_done and not request_finalized:
+      self.generate_request_finalize_tasks(request_id)
+
+    # If the Job has been finalized then we can remove all the Jobs for this
+    # request since everything is complete.
+    elif request_done and request_finalized:
       self.remove_jobs(request_id)
 
   def process_tasks(self):
@@ -426,9 +469,9 @@ class BaseTaskManager(object):
 
       for task in self.process_tasks():
         if task.result:
-          job = self.finalize_result(task.result)
+          job = self.process_result(task.result)
           if job:
-            self.finalize_job(job, task)
+            self.process_job(job, task)
 
       [self.state_manager.update_task(t) for t in self.tasks]
       if config.SINGLE_RUN and self.check_done():

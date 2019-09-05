@@ -159,45 +159,96 @@ class TestTaskManager(TestTurbiniaTaskBase):
     self.assertListEqual(self.manager.running_jobs, [self.job2])
 
   def testFinalizeResult(self):
-    """Tests finalize_result method."""
+    """Tests process_result method."""
     job_id = 'testJobID'
     self.job1.id = job_id
     self.result.job_id = job_id
     self.result.evidence.append(self.evidence)
     self.manager.add_evidence = mock.MagicMock()
     self.manager.running_jobs.append(self.job1)
-    test_job = self.manager.finalize_result(self.result)
+    test_job = self.manager.process_result(self.result)
     self.assertEqual(test_job.id, job_id)
     self.assertEqual(test_job, self.manager.running_jobs[0])
     self.assertEqual(test_job.evidence.collection[0], self.evidence)
     self.manager.add_evidence.assert_called_with(self.evidence)
 
   def testFinalizeResultBadEvidence(self):
-    """Tests finalize_result method with bad input evidence."""
+    """Tests process_result method with bad input evidence."""
     job_id = 'testJobID'
     self.job1.id = job_id
     self.result.job_id = job_id
     self.result.evidence = None
-    self.assertIsNone(self.manager.finalize_result(self.result))
+    self.assertIsNone(self.manager.process_result(self.result))
     self.assertIsInstance(self.result.evidence, list)
 
-  def testFinalizeJob(self):
-    """Tests finalize_job method."""
+  def testFinalizeJobGenerateJobFinalizeTasks(self):
+    """Tests process_job method generates Job finalize Task."""
     request_id = 'testRequestID'
+    self.task.id = 'createdFinalizeTask'
+    self.plaso_task.id = 'originalTask'
     self.job1.request_id = request_id
-    self.job1.create_final_task = mock.MagicMock()
+    # We'll use self.task as the finalize task that gets created.
+    self.job1.create_final_task = mock.MagicMock(return_value=self.task)
     self.job1.evidence.add_evidence(self.evidence)
-    self.manager.add_task = mock.MagicMock()
-    self.job1.tasks.append(self.task)
+    self.manager.enqueue_task = mock.MagicMock()
+    self.job1.tasks.append(self.plaso_task)
     self.manager.running_jobs.append(self.job1)
-    self.manager.finalize_job(self.job1, self.task)
+    # Job has one task that is not a finalize task, so it will generate job
+    # finalize tasks.
+    self.manager.process_job(self.job1, self.plaso_task)
 
     self.job1.create_final_task.assert_called()
-    self.manager.add_task.assert_called()
-    _, __, test_evidence = self.manager.add_task.call_args[0]
+    self.manager.enqueue_task.assert_called()
+    test_task, test_evidence = self.manager.enqueue_task.call_args[0]
+    # Make sure the evidence originally associated with the job is the same as
+    # the new evidence collection.
     self.assertListEqual(test_evidence.collection, [self.evidence])
-    self.assertEqual(test_evidence.request_id, request_id)
-    self.assertListEqual(self.manager.running_jobs[0].tasks, [])
+    self.assertEqual(test_task.id, 'createdFinalizeTask')
+    self.assertFalse(self.job1.is_finalized)
+    # We should only have our new finalize task running, and the old task should
+    # be gone.
+    self.assertListEqual(self.manager.running_jobs[0].tasks, [self.task])
+
+  def testFinalizeJobGenerateRequestFinalizeTasks(self):
+    """Tests process_job method generates Request finalize Task."""
+    request_id = 'testRequestID'
+    self.task.is_finalize_task = True
+    self.job1.request_id = request_id
+    self.job1.evidence.add_evidence(self.evidence)
+    self.job1.create_final_task = mock.MagicMock()
+    self.job1.tasks.append(self.task)
+    self.manager.generate_request_finalize_tasks = mock.MagicMock()
+    self.manager.remove_jobs = mock.MagicMock()
+    self.manager.running_jobs.append(self.job1)
+    # Job has one task, and it is a finalze_task.
+    self.manager.process_job(self.job1, self.task)
+
+    # Job won't be finalized because the finalize job task has not completed.
+    self.assertFalse(self.job1.is_finalized)
+    # Because the task is a finalize task it shouldn't generate job finalize.
+    self.job1.create_final_task.assert_not_called()
+    self.manager.generate_request_finalize_tasks.assert_called_with(request_id)
+    self.manager.remove_jobs.assert_not_called()
+
+  def testFinalizeJobClosingRequest(self):
+    """Tests that process_job method removes jobs when request is finalized."""
+    request_id = 'testRequestID'
+    self.plaso_task.request_id = request_id
+    self.job1.request_id = request_id
+    self.job2.request_id = 'ThisIsADifferentRequest'
+    self.job1.evidence.add_evidence(self.evidence)
+    self.job1.tasks.append(self.plaso_task)
+    self.job1.completed_task_count = 1
+    self.job1.is_finalize_job = True
+    self.manager.generate_request_finalize_tasks = mock.MagicMock()
+    self.manager.running_jobs.extend([self.job1, self.job2])
+    self.manager.process_job(self.job1, self.plaso_task)
+
+    self.manager.generate_request_finalize_tasks.assert_not_called()
+    # The Job for our request was removed, but the second job still remains
+    self.assertListEqual(self.manager.running_jobs, [self.job2])
+    self.assertListEqual(self.job1.tasks, [])
+    self.assertTrue(self.job1.is_finalized)
 
   def testRun(self):
     """Test the run() method."""
@@ -205,10 +256,10 @@ class TestTaskManager(TestTurbiniaTaskBase):
     self.manager.add_evidence = mock.MagicMock()
     self.task.result = self.result
     self.manager.process_tasks = mock.MagicMock(return_value=[self.task])
-    self.manager.finalize_result = mock.MagicMock(return_value=self.job1)
-    self.manager.finalize_job = mock.MagicMock()
+    self.manager.process_result = mock.MagicMock(return_value=self.job1)
+    self.manager.process_job = mock.MagicMock()
     self.manager.run(under_test=True)
 
     self.manager.add_evidence.assert_called_with(self.evidence)
-    self.manager.finalize_result.assert_called_with(self.result)
-    self.manager.finalize_job.assert_called_with(self.job1, self.task)
+    self.manager.process_result.assert_called_with(self.result)
+    self.manager.process_job.assert_called_with(self.job1, self.task)

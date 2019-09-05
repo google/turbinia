@@ -23,7 +23,7 @@ from turbinia.evidence import FinalReport
 from turbinia.workers import TurbiniaTask
 
 
-class RequestFinalizeTask(TurbiniaTask):
+class FinalizeRequestTask(TurbiniaTask):
   """Task to finalize the Turbinia request."""
 
   def run(self, evidence, result):
