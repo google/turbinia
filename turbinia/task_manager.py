@@ -175,9 +175,8 @@ class BaseTaskManager(object):
       # comment figured out.
       # pylint: disable=unidiomatic-typecheck
       if [True for t in job.evidence_input if type(evidence_) == t]:
-        job_instance = job()
-        job_instance.request_id = evidence_.request_id
-        job_instance.evidence.request_id = evidence_.request_id
+        job_instance = job(
+            request_id=evidence_.request_id, evidence_config=evidence_.config)
         self.running_jobs.append(job_instance)
         log.info(
             'Adding {0:s} job to process {1:s}'.format(
@@ -264,14 +263,16 @@ class BaseTaskManager(object):
 
     return job
 
-  def generate_request_finalize_tasks(self, request_id):
+  def generate_request_finalize_tasks(self, job):
     """Generates the Tasks to finalize the given request ID.
 
     Args:
-      request_id (str): The request to generate Tasks for.
+      job (TurbiniaJob): The last Job that was run for this request.
     """
+    request_id = job.request_id
     final_job = jobs_manager.JobsManager.GetJobInstance('FinalizeRequestJob')
     final_job.request_id = request_id
+    final_job.evidence.config = job.evidence.config
     log.debug(
         'Request {0:s} done, but not finalized, creating FinalizeRequestJob '
         '{1:s}'.format(request_id, final_job.id))
@@ -309,6 +310,7 @@ class BaseTaskManager(object):
           'Request ID not found in Evidence {0!s} or Task {1!s}'.format(
               evidence_, task))
 
+    evidence_.config = job.evidence.config
     task.base_output_dir = config.OUTPUT_DIR
     task.requester = evidence_.config.get('requester')
     if job:
@@ -446,7 +448,7 @@ class BaseTaskManager(object):
     request_finalized = self.check_request_finalized(request_id)
     # If the request is done but not finalized, we generate the finalize tasks.
     if request_done and not request_finalized:
-      self.generate_request_finalize_tasks(request_id)
+      self.generate_request_finalize_tasks(job)
 
     # If the Job has been finalized then we can remove all the Jobs for this
     # request since everything is complete.

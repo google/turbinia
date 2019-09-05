@@ -39,16 +39,18 @@ class TurbiniaJob(object):
 
   NAME = 'name'
 
-  def __init__(self):
+  def __init__(self, request_id=None, evidence_config=None):
     self.name = self.NAME
     self.id = uuid.uuid4().hex
     self.is_finalize_job = False
     self.is_finalized = False
     self.priority = 100
-    self.request_id = None
+    self.request_id = request_id
     self.tasks = []
     self.completed_task_count = 0
     self.evidence = EvidenceCollection()
+    self.evidence.request_id = request_id
+    self.evidence.config = evidence_config if evidence_config else {}
 
   def check_done(self):
     """Check to see if all Tasks for this Job have completed.

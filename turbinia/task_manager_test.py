@@ -227,7 +227,7 @@ class TestTaskManager(TestTurbiniaTaskBase):
     self.assertFalse(self.job1.is_finalized)
     # Because the task is a finalize task it shouldn't generate job finalize.
     self.job1.create_final_task.assert_not_called()
-    self.manager.generate_request_finalize_tasks.assert_called_with(request_id)
+    self.manager.generate_request_finalize_tasks.assert_called_with(self.job1)
     self.manager.remove_jobs.assert_not_called()
 
   def testFinalizeJobClosingRequest(self):
