@@ -54,7 +54,7 @@ class TurbiniaJob(object):
     """Check to see if all Tasks for this Job have completed.
 
     Returns:
-      (bool): True if all Tasks have completed, else False
+      bool: True if all Tasks have completed, else False.
     """
     if self.completed_task_count and not self.tasks:
       return True
@@ -68,7 +68,7 @@ class TurbiniaJob(object):
       evidence: A list of evidence objects
 
     Returns:
-      A List of TurbiniaTask objects.
+      list[TurbiniaTask]: The newly created Tasks.
     """
     raise NotImplementedError
 
@@ -83,7 +83,7 @@ class TurbiniaJob(object):
     `output_evidence` class variable.
 
     Returns:
-      (TurbiniaTask): The Task to run
+      TurbiniaTask: The Task to run
     """
     return None
 
@@ -94,7 +94,7 @@ class TurbiniaJob(object):
       task_id (str): The ID of the task to remove.
 
     Returns:
-      (bool) True for success, else False.
+      bool: True for success, else False.
     """
     remove_task = None
     for task in self.tasks:

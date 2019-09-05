@@ -110,7 +110,7 @@ class BaseTaskManager(object):
     """A property that returns all running Tasks.
 
     Returns:
-      (list) All running Tasks.
+      list: All running Tasks.
     """
     return [task for job in self.running_jobs for task in job.tasks]
 
@@ -198,7 +198,7 @@ class BaseTaskManager(object):
     """Checks if we have any outstanding tasks.
 
     Returns:
-      (bool): Indicating whether we are done.
+      bool: Indicating whether we are done.
     """
     return not bool(len(self.tasks))
 
@@ -209,7 +209,7 @@ class BaseTaskManager(object):
       request_id (str): The request ID to check for completion
 
     Returns:
-      (bool): Indicating whether all Jobs are done.
+      bool: Indicating whether all Jobs are done.
     """
     job_completion = []
     for job in self.running_jobs:
@@ -231,7 +231,7 @@ class BaseTaskManager(object):
       request_id (str): The request ID to check for finalization.
 
     Returns:
-      (bool): Indicating whether all Jobs are done.
+      bool: Indicating whether all Jobs are done.
     """
     request_finalized = False
     for job in self.running_jobs:
@@ -245,7 +245,7 @@ class BaseTaskManager(object):
     """Checks for new evidence to process.
 
     Returns:
-      A list of Evidence objects
+      list[evidence.Evidence]: The evidence to process.
     """
     raise NotImplementedError
 
@@ -256,7 +256,7 @@ class BaseTaskManager(object):
       job_id (str): The Job id to get the job for.
 
     Returns:
-      (TurbiniaJob|None) Job instance if found, else None
+      TurbiniaJob|None: Job instance if found, else None
     """
     job = None
     for job_instance in self.running_jobs:
@@ -339,7 +339,7 @@ class BaseTaskManager(object):
       job_id (str): The ID of the job to remove.
 
     Returns:
-      (bool): True if Job removed, else False.
+      bool: True if Job removed, else False.
     """
     remove_job = None
     for job in self.running_jobs:
@@ -374,7 +374,7 @@ class BaseTaskManager(object):
       task_result: The TurbiniaTaskResult object
 
     Returns:
-      (TurbiniaJob|None): The Job for the processed task, else None
+      TurbiniaJob|None: The Job for the processed task, else None
     """
     if not task_result.successful:
       log.error(
@@ -459,7 +459,7 @@ class BaseTaskManager(object):
     """Process any tasks that need to be processed.
 
     Returns:
-      A list of tasks that have completed.
+      list[TurbiniaTask]: Tasks to process that have completed.
     """
     raise NotImplementedError
 
