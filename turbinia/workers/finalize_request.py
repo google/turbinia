@@ -55,5 +55,6 @@ class FinalizeRequestTask(TurbiniaTask):
     with open(report.local_path, 'wb') as file_handle:
       file_handle.write(report_data.encode('utf-8'))
 
+    result.add_evidence(report)
     result.close(self, True)
     return result
