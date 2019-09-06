@@ -24,6 +24,7 @@ from turbinia import workers
 from turbinia import evidence
 from turbinia import config
 from turbinia import state_manager
+from turbinia import TurbiniaException
 from turbinia.jobs import manager as jobs_manager
 
 config.LoadConfig()
@@ -89,17 +90,28 @@ class BaseTaskManager(object):
   processes results from Tasks that have run.
 
   Attributes:
-    jobs: A list of instantiated job objects
-    evidence: A list of evidence objects to process
-    state_manager: State manager object to handle syncing with storage
-    tasks: A list of outstanding TurbiniaTask objects
+    jobs (list[TurbiniaJob]): Uninstantiated job classes.
+    running_jobs (list[TurbiniaJob]): A list of jobs that are
+        currently running.
+    evidence (list): A list of evidence objects to process.
+    state_manager (DatastoreStateManager|RedisStateManager): State manager
+        object to handle syncing with storage.
+    tasks (list[TurbiniaTask]): Running tasks.
   """
 
   def __init__(self):
     self.jobs = []
-    self.evidence = []
-    self.tasks = []
+    self.running_jobs = []
     self.state_manager = state_manager.get_state_manager()
+
+  @property
+  def tasks(self):
+    """A property that returns all outstanding Tasks.
+
+    Returns:
+      list[TurbiniaTask]: All outstanding Tasks.
+    """
+    return [task for job in self.running_jobs for task in job.tasks]
 
   def _backend_setup(self, *args, **kwargs):
     """Sets up backend dependencies.
@@ -117,7 +129,6 @@ class BaseTaskManager(object):
       jobs_whitelist (list): The only Jobs will be included to run
     """
     self._backend_setup(*args, **kwargs)
-    # TODO(aarontp): Consider instantiating a job per evidence object
     job_names = jobs_manager.JobsManager.GetJobNames()
     if jobs_blacklist or jobs_whitelist:
       log.info(
@@ -125,7 +136,7 @@ class BaseTaskManager(object):
               jobs_whitelist, jobs_blacklist))
       job_names = jobs_manager.JobsManager.FilterJobNames(
           job_names, jobs_blacklist, jobs_whitelist)
-    self.jobs = jobs_manager.JobsManager.GetJobInstances(job_names)
+    self.jobs = [job for _, job in jobs_manager.JobsManager.GetJobs(job_names)]
     log.debug('Registered job list: {0:s}'.format(str(job_names)))
 
   def add_evidence(self, evidence_):
@@ -143,7 +154,6 @@ class BaseTaskManager(object):
       raise turbinia.TurbiniaException(
           'Jobs must be registered before evidence can be added')
     log.info('Adding new evidence: {0:s}'.format(str(evidence_)))
-    self.evidence.append(evidence_)
     job_count = 0
     jobs_whitelist = evidence_.config.get('jobs_whitelist', [])
     jobs_blacklist = evidence_.config.get('jobs_blacklist', [])
@@ -165,14 +175,15 @@ class BaseTaskManager(object):
       # comment figured out.
       # pylint: disable=unidiomatic-typecheck
       if [True for t in job.evidence_input if type(evidence_) == t]:
+        job_instance = job(
+            request_id=evidence_.request_id, evidence_config=evidence_.config)
+        self.running_jobs.append(job_instance)
         log.info(
             'Adding {0:s} job to process {1:s}'.format(
-                job.name, evidence_.name))
+                job_instance.name, evidence_.name))
         job_count += 1
-        for task in job.create_tasks([evidence_]):
-          task.base_output_dir = config.OUTPUT_DIR
-          task.requester = evidence_.config.get('requester')
-          self.add_task(task, evidence_)
+        for task in job_instance.create_tasks([evidence_]):
+          self.add_task(task, job_instance, evidence_)
 
     if not job_count:
       log.warning(
@@ -181,42 +192,164 @@ class BaseTaskManager(object):
           'Evidence as input'.format(str(evidence_)))
 
   def check_done(self):
-    """Checks to see if we have any outstanding tasks.
+    """Checks if we have any outstanding tasks.
 
     Returns:
-      Bool indicating whether we are done.
+      bool: Indicating whether we are done.
     """
     return not bool(len(self.tasks))
+
+  def check_request_done(self, request_id):
+    """Checks if we have any outstanding tasks for the request ID.
+
+    Args:
+      request_id (str): The request ID to check for completion
+
+    Returns:
+      bool: Indicating whether all Jobs are done.
+    """
+    job_completion = []
+    for job in self.running_jobs:
+      if request_id == job.request_id:
+        job_completion.append(job.check_done())
+
+    return min(job_completion)
+
+  def check_request_finalized(self, request_id):
+    """Checks if the the request is done and finalized.
+
+    A request can be done but not finalized if all of the Tasks created by the
+    original Jobs have completed, but the "finalize" Job/Tasks have not been
+    run.  These finalize Job/Tasks are created after all of the original
+    Jobs/Tasks have completed. Only one Job needs to be marked as finalized for
+    the entire request to be considered finalized.
+
+    Args:
+      request_id (str): The request ID to check for finalization.
+
+    Returns:
+      bool: Indicating whether all Jobs are done.
+    """
+    request_finalized = False
+    for job in self.running_jobs:
+      if request_id == job.request_id and job.is_finalized:
+        request_finalized = True
+        break
+
+    return request_finalized and self.check_request_done(request_id)
 
   def get_evidence(self):
     """Checks for new evidence to process.
 
     Returns:
-      A list of Evidence objects
+      list[evidence.Evidence]: The evidence to process.
     """
     raise NotImplementedError
 
-  def add_task(self, task, evidence_):
+  def get_job(self, job_id):
+    """Gets the running Job instance from the given Job ID
+
+    Args:
+      job_id (str): The Job id to get the job for.
+
+    Returns:
+      TurbiniaJob|None: Job instance if found, else None
+    """
+    job = None
+    for job_instance in self.running_jobs:
+      if job_id == job_instance.id:
+        job = job_instance
+        break
+
+    return job
+
+  def generate_request_finalize_tasks(self, job):
+    """Generates the Tasks to finalize the given request ID.
+
+    Args:
+      job (TurbiniaJob): The last Job that was run for this request.
+    """
+    request_id = job.request_id
+    final_job = jobs_manager.JobsManager.GetJobInstance('FinalizeRequestJob')
+    final_job.request_id = request_id
+    final_job.evidence.config = job.evidence.config
+    log.debug(
+        'Request {0:s} done, but not finalized, creating FinalizeRequestJob '
+        '{1:s}'.format(request_id, final_job.id))
+
+    # Finalize tasks use EvidenceCollection with all evidence created by the
+    # request or job.
+    final_evidence = evidence.EvidenceCollection()
+    final_evidence.request_id = request_id
+    self.running_jobs.append(final_job)
+
+    # Gather evidence created by every Job in the request.
+    for running_job in self.running_jobs:
+      if running_job.request_id == request_id:
+        final_evidence.collection.extend(running_job.evidence.collection)
+
+    for finalize_task in final_job.create_tasks([final_evidence]):
+      self.add_task(finalize_task, final_job, final_evidence)
+
+  def add_task(self, task, job, evidence_):
     """Adds a task and evidence to process to the task manager.
 
     Args:
       task: An instantiated Turbinia Task
       evidence_: An Evidence object to be processed.
+
+    Raises:
+      TurbiniaException: If the request_id cannot be found.
     """
-    task.request_id = evidence_.request_id
-    self.tasks.append(task)
+    if evidence_.request_id:
+      task.request_id = evidence_.request_id
+    elif job and job.request_id:
+      task.request_id = job.request_id
+    else:
+      raise TurbiniaException(
+          'Request ID not found in Evidence {0!s} or Task {1!s}'.format(
+              evidence_, task))
+
+    evidence_.config = job.evidence.config
+    task.base_output_dir = config.OUTPUT_DIR
+    task.requester = evidence_.config.get('requester')
+    if job:
+      task.job_id = job.id
+      job.tasks.append(task)
     self.state_manager.write_new_task(task)
     self.enqueue_task(task, evidence_)
 
-  def remove_task(self, task):
-    """Removes a task from the queue; Usually after completion or failure.
+  def remove_jobs(self, request_id):
+    """Removes the all Jobs for the given request ID.
 
     Args:
-      task: A TurbiniaTask object
+      request_id (str): The ID of the request we want to remove jobs for.
     """
-    task.touch()
-    self.state_manager.update_task(task)
-    self.tasks.remove(task)
+    remove_jobs = [j for j in self.running_jobs if j.request_id == request_id]
+    log.debug(
+        'Removing {0:d} completed Job(s) for request ID {1:s}.'.format(
+            len(remove_jobs), request_id))
+    # pylint: disable=expression-not-assigned
+    [self.remove_job(j.id) for j in remove_jobs]
+
+  def remove_job(self, job_id):
+    """Removes a Job from the running jobs list.
+
+    Args:
+      job_id (str): The ID of the job to remove.
+
+    Returns:
+      bool: True if Job removed, else False.
+    """
+    remove_job = None
+    for job in self.running_jobs:
+      if job_id == job.id:
+        remove_job = job
+        break
+
+    if remove_job:
+      self.running_jobs.remove(remove_job)
+    return bool(remove_job)
 
   def enqueue_task(self, task, evidence_):
     """Enqueues a task and evidence in the implementation specific task queue.
@@ -227,15 +360,21 @@ class BaseTaskManager(object):
     """
     raise NotImplementedError
 
-  def finalize_result(self, task_result):
+  def process_result(self, task_result):
     """Runs final task results recording.
 
     self.process_tasks handles things that have failed at the task queue layer
     (i.e. PSQ), and this method handles tasks that have potentially failed
     below that layer (i.e. somewhere in our Task code).
 
+    This also adds the Evidence to the running jobs and running requests so we
+    can process those later in 'finalize' Tasks.
+
     Args:
       task_result: The TurbiniaTaskResult object
+
+    Returns:
+      TurbiniaJob|None: The Job for the processed task, else None
     """
     if not task_result.successful:
       log.error(
@@ -248,17 +387,27 @@ class BaseTaskManager(object):
               task_result.status))
 
     if not isinstance(task_result.evidence, list):
-      log.info(
+      log.warning(
           'Task {0:s} from {1:s} did not return evidence list'.format(
               task_result.task_name, task_result.worker_name))
-      return
+      task_result.evidence = []
 
+    job = self.get_job(task_result.job_id)
+    if not job:
+      log.warning(
+          'Received task results for unknown Job from Task ID {0:s}'.format(
+              task_result.task_id))
+
+    # Reprocess new evidence and save instance for later consumption by finalize
+    # tasks.
     for evidence_ in task_result.evidence:
       if isinstance(evidence_, evidence.Evidence):
         log.info(
             'Task {0:s} from {1:s} returned Evidence {2:s}'.format(
                 task_result.task_name, task_result.worker_name, evidence_.name))
         self.add_evidence(evidence_)
+        if job:
+          job.evidence.add_evidence(evidence_)
       else:
         log.error(
             'Task {0:s} from {1:s} returned non-Evidence output type '
@@ -266,15 +415,55 @@ class BaseTaskManager(object):
                 task_result.task_name, task_result.worker_name,
                 type(task_result.evidence)))
 
+    return job
+
+  def process_job(self, job, task):
+    """Processes the Job after Task completes.
+
+    This removes the Task from the running Job and generates the "finalize"
+    Tasks after all the Tasks for the Job and Request have completed.  It also
+    removes all Jobs from the running Job list once everything is complete.
+
+    Args:
+      job (TurbiniaJob): The Job to process
+      task (TurbiniaTask): The Task that just completed.
+    """
+    log.debug(
+        'Processing Job {0:s} for completed Task {1:s}'.format(
+            job.name, task.id))
+    self.state_manager.update_task(task)
+    job.remove_task(task.id)
+    if job.check_done() and not (job.is_finalize_job or task.is_finalize_task):
+      log.debug(
+          'Job {0:s} completed, creating Job finalize tasks'.format(job.name))
+      final_task = job.create_final_task()
+      if final_task:
+        final_task.is_finalize_task = True
+        self.add_task(final_task, job, job.evidence)
+    elif job.check_done() and job.is_finalize_job:
+      job.is_finalized = True
+
+    request_id = job.request_id
+    request_done = self.check_request_done(request_id)
+    request_finalized = self.check_request_finalized(request_id)
+    # If the request is done but not finalized, we generate the finalize tasks.
+    if request_done and not request_finalized:
+      self.generate_request_finalize_tasks(job)
+
+    # If the Job has been finalized then we can remove all the Jobs for this
+    # request since everything is complete.
+    elif request_done and request_finalized:
+      self.remove_jobs(request_id)
+
   def process_tasks(self):
     """Process any tasks that need to be processed.
 
     Returns:
-      A list of tasks that have completed.
+      list[TurbiniaTask]: Tasks to process that have completed.
     """
     raise NotImplementedError
 
-  def run(self):
+  def run(self, under_test=False):
     """Main run loop for TaskManager."""
     log.info('Starting Task Manager run loop')
     while True:
@@ -283,13 +472,17 @@ class BaseTaskManager(object):
 
       for task in self.process_tasks():
         if task.result:
-          self.finalize_result(task.result)
-        self.remove_task(task)
+          job = self.process_result(task.result)
+          if job:
+            self.process_job(job, task)
 
       [self.state_manager.update_task(t) for t in self.tasks]
       if config.SINGLE_RUN and self.check_done():
         log.info('No more tasks to process.  Exiting now.')
         return
+
+      if under_test:
+        break
 
       time.sleep(config.SLEEP_TIME)
 
