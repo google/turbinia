@@ -76,8 +76,8 @@ class FileArtifactExtractionTask(TurbiniaTask):
     for dirpath, _, filenames in os.walk(export_directory):
       for filename in filenames:
         exported_artifact = ExportedFileArtifact(
-            artifact_name=self.artifact_name)
-        exported_artifact.source_path = os.path.join(dirpath, filename)
+            artifact_name=self.artifact_name,
+            source_path=os.path.join(dirpath, filename))
         result.log('Adding artifact {0:s}'.format(filename))
         result.add_evidence(exported_artifact, evidence.config)
 

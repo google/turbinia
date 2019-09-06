@@ -40,10 +40,11 @@ class StatTask(TurbiniaTask):
     Returns:
         TurbiniaTaskResult: object.
     """
-    report = ReportText()
     result.log('Running stat on evidence {0:s}'.format(evidence.source_path))
+    report_path = os.path.join(self.output_dir, 'report.txt')
+    report = ReportText(source_path=report_path)
     report.text_data = str(os.stat(evidence.source_path))
-    with open(os.path.join(self.output_dir, 'report.txt'), 'w') as f:
+    with open(report_path, 'w') as f:
       f.write(report.text_data)
 
     result.add_evidence(report, evidence.config)

@@ -50,19 +50,19 @@ def evidence_decode(evidence_dict):
         'Evidence_dict is not a dictionary, type is {0:s}'.format(
             str(type(evidence_dict))))
 
-  type_ = evidence_dict.get('type', None)
+  type_ = evidence_dict.pop('type', None)
   if not type_:
     raise TurbiniaException(
         'No Type attribute for evidence object [{0:s}]'.format(
             str(evidence_dict)))
 
   try:
-    evidence = getattr(sys.modules[__name__], type_)()
+    evidence_class = getattr(sys.modules[__name__], type_)
+    evidence = evidence_class.from_dict(evidence_dict)
   except AttributeError:
     raise TurbiniaException(
         'No Evidence object of type {0:s} in evidence module'.format(type_))
 
-  evidence.__dict__ = evidence_dict
   if evidence_dict['parent_evidence']:
     evidence.parent_evidence = evidence_decode(evidence_dict['parent_evidence'])
   return evidence
@@ -114,9 +114,9 @@ class Evidence(object):
 
   def __init__(
       self, name=None, description=None, source=None, source_path=None,
-      tags=None, request_id=None):
+      tags=None, request_id=None, copyable=False):
     """Initialization for Evidence."""
-    self.copyable = False
+    self.copyable = copyable
     self.config = {}
     self.context_dependent = False
     self.cloud_only = False
@@ -140,13 +140,36 @@ class Evidence(object):
     self.saved_path_type = None
 
     if self.copyable and not self.local_path:
-      raise TurbiniaException('A copyable evidence needs a source_path')
+      raise TurbiniaException(
+          '{0:s} is a copyable evidence and needs a source_path'.format(
+              self.type))
 
   def __str__(self):
     return '{0:s}:{1:s}:{2!s}'.format(self.type, self.name, self.source_path)
 
   def __repr__(self):
     return self.__str__()
+
+  @classmethod
+  def from_dict(cls, dictionary):
+    """Instanciate an Evidence object from a dictionary of attributes.
+
+    Args:
+      dictionary(dict): the attributes to set for this object.
+    Returns:
+      Evidence: the instantiated evidence.
+    """
+    name = dictionary.pop('name', None)
+    description = dictionary.pop('description', None)
+    source = dictionary.pop('source', None)
+    source_path = dictionary.pop('source_path', None)
+    tags = dictionary.pop('tag', None)
+    request_id = dictionary.pop('request_id', None)
+    new_object = cls(
+        name=name, description=description, source=source,
+        source_path=source_path, tags=tags, request_id=request_id)
+    new_object.__dict__.update(dictionary)
+    return new_object
 
   def serialize(self):
     """Return JSON serializable object."""
@@ -256,8 +279,7 @@ class ChromiumProfile(Evidence):
 
   def __init__(self, browser_type=None, output_format=None, *args, **kwargs):
     """Initialization for chromium profile evidence object."""
-    self.copyable = True
-    super(ChromiumProfile, self).__init__(*args, **kwargs)
+    super(ChromiumProfile, self).__init__(copyable=True, *args, **kwargs)
     self.browser_type = browser_type
     self.output_format = output_format
 
@@ -442,8 +464,7 @@ class PlasoFile(Evidence):
   def __init__(self, plaso_version=None, *args, **kwargs):
     """Initialization for Plaso File evidence."""
     self.plaso_version = plaso_version
-    self.copyable = True
-    super(PlasoFile, self).__init__(*args, **kwargs)
+    super(PlasoFile, self).__init__(copyable=True, *args, **kwargs)
     self.save_metadata = True
 
 
@@ -453,7 +474,7 @@ class PlasoCsvFile(PlasoFile):
   def __init__(self, plaso_version=None, *args, **kwargs):
     """Initialization for Plaso File evidence."""
     self.plaso_version = plaso_version
-    super(PlasoCsvFile, self).__init__(*args, **kwargs)
+    super(PlasoCsvFile, self).__init__(copyable=True, *args, **kwargs)
     self.save_metadata = False
 
 
@@ -463,16 +484,14 @@ class ReportText(Evidence):
 
   def __init__(self, text_data=None, *args, **kwargs):
     self.text_data = text_data
-    self.copyable = True
-    super(ReportText, self).__init__(*args, **kwargs)
+    super(ReportText, self).__init__(copyable=True, *args, **kwargs)
 
 
 class TextFile(Evidence):
   """Text data."""
 
   def __init__(self, *args, **kwargs):
-    self.copyable = True
-    super(TextFile, self).__init__(*args, **kwargs)
+    super(TextFile, self).__init__(copyable=True, *args, **kwargs)
 
 
 class FilteredTextFile(TextFile):
@@ -485,10 +504,9 @@ class ExportedFileArtifact(Evidence):
 
   REQUIRED_ATTRIBUTES = ['artifact_name']
 
-  def __init__(self, artifact_name=None):
+  def __init__(self, artifact_name=None, *args, **kwargs):
     """Initializes an exported file artifact."""
-    self.copyable = True
-    super(ExportedFileArtifact, self).__init__()
+    super(ExportedFileArtifact, self).__init__(copyable=True, *args, **kwargs)
     self.artifact_name = artifact_name
 
 
