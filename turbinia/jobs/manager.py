@@ -71,9 +71,9 @@ class JobsManager(object):
     Returns:
      list[TurbiniaJob]: Job objects
     """
-    job_names = [job.name.lower() for job in jobs]
+    job_names = [job.NAME.lower() for job in jobs]
     job_names = cls.FilterJobNames(job_names, jobs_blacklist, jobs_whitelist)
-    return [job for job in jobs if job.name.lower() in job_names]
+    return [job for job in jobs if job.NAME.lower() in job_names]
 
   @classmethod
   def DeregisterJob(cls, job_class):
@@ -140,8 +140,11 @@ class JobsManager(object):
     return cls._job_classes.keys()
 
   @classmethod
-  def GetJobs(cls):
+  def GetJobs(cls, job_names=None):
     """Retrieves the registered jobs.
+
+    Args:
+      job_names (list[str]): names of the jobs to retrieve.
 
     Yields:
       tuple: containing:
@@ -150,7 +153,11 @@ class JobsManager(object):
         type: the job class.
     """
     for job_name, job_class in iter(cls._job_classes.items()):
-      yield job_name, job_class
+      if job_names:
+        if job_name in job_names:
+          yield job_name, job_class
+      else:
+        yield job_name, job_class
 
   @classmethod
   def RegisterJob(cls, job_class):
