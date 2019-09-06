@@ -245,13 +245,13 @@ class EvidenceCollection(Evidence):
     serialized_evidence['collection'] = [e.serialize() for e in self.collection]
     return serialized_evidence
 
-  def add_evidence(self, evidence_):
+  def add_evidence(self, evidence):
     """Adds evidence to the collection.
 
     Args:
-      evidence_ (Evidence): The evidence to add.
+      evidence (Evidence): The evidence to add.
     """
-    self.collection.append(evidence_)
+    self.collection.append(evidence)
 
 
 class Directory(Evidence):
