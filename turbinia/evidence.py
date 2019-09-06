@@ -16,6 +16,7 @@
 
 from __future__ import unicode_literals
 
+import copy
 import json
 import os
 import sys
@@ -63,8 +64,12 @@ def evidence_decode(evidence_dict):
         'No Evidence object of type {0:s} in evidence module'.format(type_))
 
   evidence.__dict__ = evidence_dict
-  if evidence_dict['parent_evidence']:
+  if evidence_dict.get('parent_evidence'):
     evidence.parent_evidence = evidence_decode(evidence_dict['parent_evidence'])
+  if evidence_dict.get('collection'):
+    evidence.collection = [
+        evidence_decode(e) for e in evidence_dict['collection']
+    ]
   return evidence
 
 
@@ -138,7 +143,7 @@ class Evidence(object):
 
   def serialize(self):
     """Return JSON serializable object."""
-    serialized_evidence = self.__dict__
+    serialized_evidence = copy.deepcopy(self.__dict__)
     if self.parent_evidence:
       serialized_evidence['parent_evidence'] = self.parent_evidence.serialize()
     return serialized_evidence
@@ -220,6 +225,33 @@ class Evidence(object):
             '{1:s} is not set. Please check original request.'.format(
                 attribute, self.name))
         raise TurbiniaException(message)
+
+
+class EvidenceCollection(Evidence):
+  """A Collection of Evidence objects.
+
+  Attributes:
+    collection(list): The underlying Evidence objects
+  """
+
+  def __init__(self, collection=None, *args, **kwargs):
+    """Initialization for Evidence Collection object."""
+    super(EvidenceCollection, self).__init__(*args, **kwargs)
+    self.collection = collection if collection else []
+
+  def serialize(self):
+    """Return JSON serializable object."""
+    serialized_evidence = super(EvidenceCollection, self).serialize()
+    serialized_evidence['collection'] = [e.serialize() for e in self.collection]
+    return serialized_evidence
+
+  def add_evidence(self, evidence):
+    """Adds evidence to the collection.
+
+    Args:
+      evidence (Evidence): The evidence to add.
+    """
+    self.collection.append(evidence)
 
 
 class Directory(Evidence):
@@ -426,6 +458,14 @@ class ReportText(Evidence):
     self.text_data = text_data
     super(ReportText, self).__init__(*args, **kwargs)
     self.copyable = True
+
+
+class FinalReport(ReportText):
+  """Report format for the final complete Turbinia request report."""
+
+  def __init__(self, *args, **kwargs):
+    super(FinalReport, self).__init__(*args, **kwargs)
+    self.save_metadata = True
 
 
 class TextFile(Evidence):
