@@ -21,7 +21,7 @@ class StyleTest(unittest.TestCase):
             'From the root directory of the repository, run '
             '"yapf --style {0:s} -i -r {1:s}" to correct '
             'these problems: {2:s}'.format(
-                config_path, turbinia_path, e.output))
+                config_path, turbinia_path, e.output.encode('utf-8')))
       raise
 
 
