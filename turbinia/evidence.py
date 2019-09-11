@@ -24,6 +24,7 @@ import sys
 from turbinia import config
 from turbinia import TurbiniaException
 from turbinia.processors import mount_local
+from turbinia.processors import archive
 
 # pylint: disable=keyword-arg-before-vararg
 
@@ -258,6 +259,16 @@ class Directory(Evidence):
   """Filesystem directory evidence."""
   pass
 
+class CompressedDirectory(Evidence):
+  """A compressed directory containing data."""
+
+  def __init__(self, *args, **kwargs):
+    super(CompressedDirectory, self).__init__(*args, **kwargs)
+    self.copyable = True
+
+  def _postprocess(self):
+    # Compress a given directory and return the compressed directory path.
+    self.local_path = archive.CompressFolder(self.local_path)
 
 class ChromiumProfile(Evidence):
   """Chromium based browser profile evidence.

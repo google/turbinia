@@ -461,6 +461,7 @@ class TurbiniaTask(object):
           self.output_manager.save_local_file(file_, result)
 
       for evidence in new_evidence:
+        evidence.postprocess()
         # If the local path is set in the Evidence, we check to make sure that
         # the path exists and is not empty before adding it.
         if evidence.local_path and not os.path.exists(evidence.local_path):
