@@ -37,8 +37,7 @@ class BulkExtractorTask(TurbiniaTask):
     output_evidence = CompressedDirectory()
     # Create a path that we can write the new file to.
     base_name = os.path.basename(evidence.local_path)
-    output_file_path = os.path.join(
-        self.output_dir, '{0:s}'.format(base_name))
+    output_file_path = os.path.join(self.output_dir, '{0:s}'.format(base_name))
     # Add the output path to the evidence so we can automatically save it
     # later.
     output_evidence.local_path = output_file_path
@@ -53,4 +52,3 @@ class BulkExtractorTask(TurbiniaTask):
         cmd, result, new_evidence=[output_evidence], close=True, shell=True)
 
     return result
-    

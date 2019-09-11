@@ -24,6 +24,7 @@ from turbinia import TurbiniaException
 
 log = logging.getLogger('turbinia')
 
+
 def CompressFolder(local_path):
   """Compress a given directory into a gzip file.
 
@@ -53,6 +54,7 @@ def CompressFolder(local_path):
         'An error has occured during compression: {0:s}'.format(e))
   return archive_path
 
+
 def DecompressArchive(local_path):
   """Decompress a provided gzip file.
 
@@ -69,7 +71,8 @@ def DecompressArchive(local_path):
     tar = tarfile.TarFile.open(local_path)
     tar.extractall(extract_path)
     tar.close()
-    log.info('The file has been decompressed to the following\
+    log.info(
+        'The file has been decompressed to the following\
       directory: {0:s}'.format(extract_path))
   except IOError as e:
     raise TurbiniaException(

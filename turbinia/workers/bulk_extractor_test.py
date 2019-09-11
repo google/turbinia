@@ -24,6 +24,7 @@ from turbinia.workers import bulk_extractor
 from turbinia.workers.workers_test import TestTurbiniaTaskBase
 from turbinia.workers import TurbiniaTaskResult
 
+
 class BulkExtractorTaskTest(TestTurbiniaTaskBase):
   """Tests for BulkExtractorTask."""
 
@@ -44,6 +45,7 @@ class BulkExtractorTaskTest(TestTurbiniaTaskBase):
     self.task.execute.assert_called_once()
     # Ensure run method returns a TurbiniaTaskResult instance.
     self.assertIsInstance(result, TurbiniaTaskResult)
+
 
 if __name__ == '__main__':
   unittest.main()

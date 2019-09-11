@@ -25,6 +25,7 @@ from shutil import rmtree
 from turbinia.processors import archive
 from turbinia import TurbiniaException
 
+
 class ArchiveProcessorTest(unittest.TestCase):
   """Tests for Archive Processor."""
   filedir = os.path.dirname(os.path.realpath(__file__))
@@ -44,8 +45,8 @@ class ArchiveProcessorTest(unittest.TestCase):
     file_max = 10
     counter = 0
     while counter <= file_max:
-      file_name = os.path.join(self.testfiles,
-                               'file{0:s}.txt'.format(str(counter)))
+      file_name = os.path.join(
+          self.testfiles, 'file{0:s}.txt'.format(str(counter)))
       file_open = open(file_name, 'w+')
       rand_nums = [randint(0, 1000) for i in range(50)]
       for i in rand_nums:
@@ -74,12 +75,13 @@ class ArchiveProcessorTest(unittest.TestCase):
     """Tests the decompression function"""
     # Check to confirm that the decompressed directory matches
     # the expected output path.
-    self.assertEqual(archive.DecompressArchive(self.testarchive),
-                     self.testfiles)
+    self.assertEqual(
+        archive.DecompressArchive(self.testarchive), self.testfiles)
 
     # Raise an exception if the file being uncompressed is not a gzip format.
     with self.assertRaises(TurbiniaException):
       archive.DecompressArchive(self.testfiles)
+
 
 if __name__ == '__main__':
   unittest.main()

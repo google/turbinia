@@ -259,6 +259,7 @@ class Directory(Evidence):
   """Filesystem directory evidence."""
   pass
 
+
 class CompressedDirectory(Evidence):
   """A compressed directory containing data."""
 
@@ -269,6 +270,7 @@ class CompressedDirectory(Evidence):
   def _postprocess(self):
     # Compress a given directory and return the compressed directory path.
     self.local_path = archive.CompressFolder(self.local_path)
+
 
 class ChromiumProfile(Evidence):
   """Chromium based browser profile evidence.

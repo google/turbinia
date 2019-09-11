@@ -152,6 +152,14 @@ class TurbiniaTaskResult(object):
       success: Bool indicating task success
       status: One line descriptive task status.
     """
+
+    # Calls postprocess on output evidence types that never
+    # TODO (wyassine): come up with a better way to call this as
+    # this may cause some issues with future evidence types in
+    # which postprocess should not be called.
+    for out_evidence in self.evidence:
+      out_evidence.postprocess()
+
     if self.closed:
       # Don't try to close twice.
       return
@@ -461,7 +469,6 @@ class TurbiniaTask(object):
           self.output_manager.save_local_file(file_, result)
 
       for evidence in new_evidence:
-        evidence.postprocess()
         # If the local path is set in the Evidence, we check to make sure that
         # the path exists and is not empty before adding it.
         if evidence.local_path and not os.path.exists(evidence.local_path):
