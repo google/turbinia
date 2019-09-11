@@ -41,12 +41,11 @@ class FinalizeRequestTask(TurbiniaTask):
     """
     # Doing a delayed import to avoid circular dependencies.
     from turbinia.client import TurbiniaClient
-    report = FinalReport()
     client = TurbiniaClient()
 
     report_file = os.path.join(
         self.tmp_dir, 'final_turbinia_report_{0:s}.md'.format(self.id))
-    report.local_path = report_file
+    report = FinalReport(source_path=report_file)
     report_data = client.format_task_status(
         config.INSTANCE_ID, config.TURBINIA_PROJECT, config.TURBINIA_REGION,
         request_id=evidence.request_id, full_report=True)
