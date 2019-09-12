@@ -78,10 +78,6 @@ class ArchiveProcessorTest(unittest.TestCase):
     self.assertEqual(
         archive.DecompressArchive(self.testarchive), self.testfiles)
 
-    # Raise an exception if the file being uncompressed is not a gzip format.
-    with self.assertRaises(TurbiniaException):
-      archive.DecompressArchive(self.testfiles)
-
 
 if __name__ == '__main__':
   unittest.main()
