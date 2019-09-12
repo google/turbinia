@@ -512,7 +512,7 @@ class TurbiniaTask(object):
 
     if evidence.source_path and not os.path.exists(evidence.source_path):
       raise TurbiniaException(
-          'Evidence local path {0:s} does not exist'.format(
+          'Evidence source path {0:s} does not exist'.format(
               evidence.source_path))
     evidence.preprocess()
     return self.result
