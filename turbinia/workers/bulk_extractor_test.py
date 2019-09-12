@@ -29,6 +29,7 @@ class BulkExtractorTaskTest(TestTurbiniaTaskBase):
   """Tests for BulkExtractorTask."""
 
   def setUp(self):
+    # pylint: disable=arguments-differ
     super(BulkExtractorTaskTest, self).setUp(
         task_class=bulk_extractor.BulkExtractorTask, evidence_class=RawDisk)
     self.evidence.profile = 'TestProfile'
