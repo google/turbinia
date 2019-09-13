@@ -16,11 +16,12 @@
 
 from __future__ import unicode_literals
 import logging
+import warnings
 
 from turbinia import config
 
 
-def setup():
+def setup(need_file_handler=True, need_stream_handler=True):
   """Set up logging parameters.
 
   This will also set the root logger, which is the default logger when a named
@@ -28,13 +29,13 @@ def setup():
   however some external modules that are called by Turbinia can use the root
   logger, so we want to be able to optionally configure that as well.
   """
-  # TODO(aarontp): Add a config option to set the log level
-  config.LoadConfig()
+  # Remove known warning about credentials
+  warnings.filterwarnings(
+      'ignore', 'Your application has authenticated using end user credentials')
+
   logger = logging.getLogger('turbinia')
   # Eliminate double logging from root logger
   logger.propagate = False
-  need_file_handler = True
-  need_stream_handler = True
 
   # We only need a handler if one of that type doesn't exist already
   if logger.handlers:
@@ -50,11 +51,12 @@ def setup():
       if type(handler) == logging.StreamHandler:
         need_stream_handler = False
 
-  file_handler = logging.FileHandler(config.LOG_FILE)
-  formatter = logging.Formatter('%(asctime)s:%(levelname)s:%(message)s')
-  file_handler.setFormatter(formatter)
-  file_handler.setLevel(logging.DEBUG)
   if need_file_handler:
+    config.LoadConfig()
+    file_handler = logging.FileHandler(config.LOG_FILE)
+    formatter = logging.Formatter('%(asctime)s:%(levelname)s:%(message)s')
+    file_handler.setFormatter(formatter)
+    file_handler.setLevel(logging.DEBUG)
     logger.addHandler(file_handler)
 
   console_handler = logging.StreamHandler()
@@ -70,4 +72,5 @@ def setup():
   for handler in root_log.handlers:
     root_log.removeHandler(handler)
   root_log.addHandler(console_handler)
-  root_log.addHandler(file_handler)
+  if need_file_handler:
+    root_log.addHandler(file_handler)

@@ -16,6 +16,7 @@
 
 from __future__ import unicode_literals
 
+import copy
 import json
 import os
 import sys
@@ -63,8 +64,12 @@ def evidence_decode(evidence_dict):
         'No Evidence object of type {0:s} in evidence module'.format(type_))
 
   evidence.__dict__ = evidence_dict
-  if evidence_dict['parent_evidence']:
+  if evidence_dict.get('parent_evidence'):
     evidence.parent_evidence = evidence_decode(evidence_dict['parent_evidence'])
+  if evidence_dict.get('collection'):
+    evidence.collection = [
+        evidence_decode(e) for e in evidence_dict['collection']
+    ]
   return evidence
 
 
@@ -77,28 +82,35 @@ class Evidence(object):
   Attributes:
     config (dict): Configuration options from the request to be used when
         processing this evidence.
-    cloud_only: Set to True for evidence types that can only be processed in a
-        cloud environment, e.g. GoogleCloudDisk.
-    context_dependent: Whether this evidence is required to be built upon the
-        context of a parent evidence.
-    copyable: Whether this evidence can be copied.  This will be set to True for
-        object types that we want to copy to/from storage (e.g. PlasoFile, but
-        not RawDisk).
-    name: Name of evidence.
-    description: Description of evidence.
-    saved_path (string): Path to secondary location evidence is saved for later
+    cloud_only (bool): Set to True for evidence types that can only be processed
+        in a cloud environment, e.g. GoogleCloudDisk.
+    context_dependent (bool): Whether this evidence is required to be built upon
+        the context of a parent evidence.
+    copyable (bool): Whether this evidence can be copied.  This will be set to
+        True for object types that we want to copy to/from storage (e.g.
+        PlasoFile, but not RawDisk).
+    name (str): Name of evidence.
+    description (str): Description of evidence.
+    saved_path (str): Path to secondary location evidence is saved for later
         retrieval (e.g. GCS).
-    saved_path_type (string): The name of the output writer that saved evidence
+    saved_path_type (str): The name of the output writer that saved evidence
         to the saved_path location.
-    source: String indicating where evidence came from (including tool version
-        that created it, if appropriate).
-    local_path: A string of the local_path to the evidence.
-    tags: dict of extra tags associated with this evidence.
-    request_id: The id of the request this evidence came from, if any.
-    parent_evidence: The Evidence object that was used to generate this one, and
-        which pre/post process methods we need to re-execute to access data
-        relevant to us.
+    source (str): String indicating where evidence came from (including tool
+        version that created it, if appropriate).
+    local_path (str): A string of the local_path to the evidence.
+    tags (dict): Extra tags associated with this evidence.
+    request_id (str): The id of the request this evidence came from, if any.
+    parent_evidence (Evidence): The Evidence object that was used to generate
+        this one, and which pre/post process methods we need to re-execute to
+        access data relevant to us.
+    save_metadata (bool): Evidence with this property set will save a metadata
+        file alongside the Evidence when saving to external storage.  The
+        metadata file will contain all of the key=value pairs sent along with
+        the processing request in the recipe.  The output is in JSON format
   """
+
+  # The list of attributes a given piece of Evidence requires to be set
+  REQUIRED_ATTRIBUTES = []
 
   def __init__(
       self, name=None, description=None, source=None, local_path=None,
@@ -114,6 +126,7 @@ class Evidence(object):
     self.tags = tags if tags else {}
     self.request_id = request_id
     self.parent_evidence = None
+    self.save_metadata = False
 
     # List of jobs that have processed this evidence
     self.processed_by = []
@@ -130,7 +143,7 @@ class Evidence(object):
 
   def serialize(self):
     """Return JSON serializable object."""
-    serialized_evidence = self.__dict__
+    serialized_evidence = copy.deepcopy(self.__dict__)
     if self.parent_evidence:
       serialized_evidence['parent_evidence'] = self.parent_evidence.serialize()
     return serialized_evidence
@@ -193,6 +206,53 @@ class Evidence(object):
     if self.parent_evidence:
       self.parent_evidence.postprocess()
 
+  def validate(self):
+    """Runs validation to verify evidence meets minimum requirements.
+
+    This default implementation will just check that the attributes listed in
+    REQUIRED_ATTRIBUTES are set, but other evidence types can override this
+    method to implement their own more stringent checks as needed.  This is
+    called by the worker, prior to the pre/post-processors running.
+
+    Raises:
+      TurbiniaException: If validation fails
+    """
+    for attribute in self.REQUIRED_ATTRIBUTES:
+      attribute_value = getattr(self, attribute, None)
+      if not attribute_value:
+        message = (
+            'Evidence validation failed: Required attribute {0:s} for class '
+            '{1:s} is not set. Please check original request.'.format(
+                attribute, self.name))
+        raise TurbiniaException(message)
+
+
+class EvidenceCollection(Evidence):
+  """A Collection of Evidence objects.
+
+  Attributes:
+    collection(list): The underlying Evidence objects
+  """
+
+  def __init__(self, collection=None, *args, **kwargs):
+    """Initialization for Evidence Collection object."""
+    super(EvidenceCollection, self).__init__(*args, **kwargs)
+    self.collection = collection if collection else []
+
+  def serialize(self):
+    """Return JSON serializable object."""
+    serialized_evidence = super(EvidenceCollection, self).serialize()
+    serialized_evidence['collection'] = [e.serialize() for e in self.collection]
+    return serialized_evidence
+
+  def add_evidence(self, evidence):
+    """Adds evidence to the collection.
+
+    Args:
+      evidence (Evidence): The evidence to add.
+    """
+    self.collection.append(evidence)
+
 
 class Directory(Evidence):
   """Filesystem directory evidence."""
@@ -207,6 +267,8 @@ class ChromiumProfile(Evidence):
       Supported options are Chrome (default) and Brave.
     format: Output format (default is sqlite, other options are xlsx and jsonl)
   """
+
+  REQUIRED_ATTRIBUTES = ['browser_type', 'output_format']
 
   def __init__(self, browser_type=None, output_format=None, *args, **kwargs):
     """Initialization for chromium profile evidence object."""
@@ -274,6 +336,8 @@ class BitlockerDisk(EncryptedDisk):
     unencrypted_path: A string to the unencrypted local path
   """
 
+  REQUIRED_ATTRIBUTES = ['recovery_key', 'password']
+
   def __init__(self, recovery_key=None, password=None, *args, **kwargs):
     """Initialization for Bitlocker disk evidence object"""
     self.recovery_key = recovery_key
@@ -292,6 +356,8 @@ class APFSEncryptedDisk(EncryptedDisk):
     unencrypted_path: A string to the unencrypted local path
   """
 
+  REQUIRED_ATTRIBUTES = ['recovery_key', 'password']
+
   def __init__(self, recovery_key=None, password=None, *args, **kwargs):
     """Initialization for Bitlocker disk evidence object"""
     self.recovery_key = recovery_key
@@ -308,6 +374,8 @@ class GoogleCloudDisk(RawDisk):
     zone: The geographic zone.
     disk_name: The cloud disk name.
   """
+
+  REQUIRED_ATTRIBUTES = ['disk_name', 'project', 'zone']
 
   def __init__(self, project=None, zone=None, disk_name=None, *args, **kwargs):
     """Initialization for Google Cloud Disk."""
@@ -336,6 +404,8 @@ class GoogleCloudDiskRawEmbedded(GoogleCloudDisk):
   Attributes:
     embedded_path: The path of the raw disk image inside the Persistent Disk
   """
+
+  REQUIRED_ATTRIBUTES = ['disk_name', 'project', 'zone', 'embedded_path']
 
   def __init__(self, embedded_path=None, *args, **kwargs):
     """Initialization for Google Cloud Disk."""
@@ -367,6 +437,7 @@ class PlasoFile(Evidence):
     self.plaso_version = plaso_version
     super(PlasoFile, self).__init__(*args, **kwargs)
     self.copyable = True
+    self.save_metadata = True
 
 
 class PlasoCsvFile(PlasoFile):
@@ -376,6 +447,7 @@ class PlasoCsvFile(PlasoFile):
     """Initialization for Plaso File evidence."""
     self.plaso_version = plaso_version
     super(PlasoCsvFile, self).__init__(*args, **kwargs)
+    self.save_metadata = False
 
 
 # TODO(aarontp): Find a way to integrate this into TurbiniaTaskResult instead.
@@ -386,6 +458,14 @@ class ReportText(Evidence):
     self.text_data = text_data
     super(ReportText, self).__init__(*args, **kwargs)
     self.copyable = True
+
+
+class FinalReport(ReportText):
+  """Report format for the final complete Turbinia request report."""
+
+  def __init__(self, *args, **kwargs):
+    super(FinalReport, self).__init__(*args, **kwargs)
+    self.save_metadata = True
 
 
 class TextFile(Evidence):
@@ -404,9 +484,11 @@ class FilteredTextFile(TextFile):
 class ExportedFileArtifact(Evidence):
   """Exported file artifact."""
 
-  def __init__(self, artifact_name=None):
+  REQUIRED_ATTRIBUTES = ['artifact_name']
+
+  def __init__(self, artifact_name=None, *args, **kwargs):
     """Initializes an exported file artifact."""
-    super(ExportedFileArtifact, self).__init__()
+    super(ExportedFileArtifact, self).__init__(*args, **kwargs)
     self.artifact_name = artifact_name
     self.copyable = True
 
@@ -423,6 +505,8 @@ class RawMemory(Evidence):
     profile (string): Volatility profile used for the analysis
     module_list (list): Module used for the analysis
     """
+
+  REQUIRED_ATTRIBUTES = ['module_list', 'profile']
 
   def __init__(self, module_list=None, profile=None, *args, **kwargs):
     """Initialization for raw memory evidence object."""

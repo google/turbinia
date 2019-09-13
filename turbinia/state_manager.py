@@ -29,6 +29,7 @@ from datetime import timedelta
 import six
 
 from turbinia import config
+from turbinia.config import DATETIME_FORMAT
 from turbinia import TurbiniaException
 from turbinia.workers import TurbiniaTask
 from turbinia.workers import TurbiniaTaskResult
@@ -44,7 +45,6 @@ else:
       config.STATE_MANAGER)
   raise TurbiniaException(msg)
 
-DATETIME_FORMAT = '%Y-%m-%dT%H:%M:%S'
 MAX_DATASTORE_STRLEN = 1500
 log = logging.getLogger('turbinia')
 
@@ -54,6 +54,9 @@ def get_state_manager():
 
   Returns:
     Initialized StateManager object.
+
+  Raises:
+    TurbiniaException: When an unknown State Manager is specified.
   """
   config.LoadConfig()
   # pylint: disable=no-else-return
@@ -81,6 +84,10 @@ class BaseStateManager(object):
 
     Returns:
       A dict of task attributes.
+
+    Raises:
+      TurbiniaException: When task objects or task results are missing expected
+          attributes
     """
     task_dict = {}
     for attr in task.STORED_ATTRIBUTES:
@@ -100,6 +107,10 @@ class BaseStateManager(object):
         task_dict[attr] = getattr(task.result, attr)
         if isinstance(task_dict[attr], six.binary_type):
           task_dict[attr] = six.u(task_dict[attr])
+
+    # We'll store the run_time as seconds instead of a timedelta()
+    if task_dict.get('run_time'):
+      task_dict['run_time'] = task_dict['run_time'].total_seconds()
 
     # Set all non-existent keys to None
     all_attrs = set(
@@ -154,7 +165,13 @@ class DatastoreStateManager(BaseStateManager):
 
   def __init__(self):
     config.LoadConfig()
-    self.client = datastore.Client(project=config.TURBINIA_PROJECT)
+    try:
+      self.client = datastore.Client(project=config.TURBINIA_PROJECT)
+    except EnvironmentError as e:
+      message = (
+          'Could not create Datastore client: {0!s}\n'
+          'Have you run $ gcloud auth application-default login?'.format(e))
+      raise TurbiniaException(message)
 
   def _validate_data(self, data):
     for key, value in iter(data.items()):
@@ -170,6 +187,7 @@ class DatastoreStateManager(BaseStateManager):
     return data
 
   def update_task(self, task):
+    task.touch()
     try:
       with self.client.transaction():
         entity = self.client.get(task.state_key)
@@ -192,7 +210,7 @@ class DatastoreStateManager(BaseStateManager):
       log.info('Writing new task {0:s} into Datastore'.format(task.name))
       self.client.put(entity)
       task.state_key = key
-    except exceptions.GoogleAPIError as e:
+    except exceptions.GoogleCloudError as e:
       log.error(
           'Failed to update task {0:s} in datastore: {1!s}'.format(
               task.name, e))
@@ -233,14 +251,20 @@ class RedisStateManager(BaseStateManager):
         if json.loads(self.client.get(task)).get('instance') == instance or
         not instance
     ]
+
+    # Convert relevant date attributes back into dates/timedeltas
+    for task in tasks:
+      if task.get('last_update'):
+        task['last_update'] = datetime.strptime(
+            task.get('last_update'), DATETIME_FORMAT)
+      if task.get('run_time'):
+        task['run_time'] = datetime.timedelta(seconds=task['run_time'])
+
     # pylint: disable=no-else-return
     if days:
       start_time = datetime.now() - timedelta(days=days)
       # Redis only supports strings; we convert to/from datetime here and below
-      return [
-          task for task in tasks if datetime.strptime(
-              task.get('last_update'), DATETIME_FORMAT) > start_time
-      ]
+      return [task for task in tasks if task.get('last_update') > start_time]
     elif task_id:
       return [task for task in tasks if task.get('task_id') == task_id]
     elif request_id:
@@ -248,6 +272,7 @@ class RedisStateManager(BaseStateManager):
     return tasks
 
   def update_task(self, task):
+    task.touch()
     key = task.state_key
     if not self.client.get(key):
       self.write_new_task(task)
@@ -256,6 +281,8 @@ class RedisStateManager(BaseStateManager):
     task_data = self.get_task_dict(task)
     task_data['last_update'] = task_data['last_update'].strftime(
         DATETIME_FORMAT)
+    if task_data['run_time']:
+      task_data['run_time'] = task_data['run_time'].total_seconds()
     # Need to use json.dumps, else redis returns single quoted string which
     # is invalid json
     if not self.client.set(key, json.dumps(task_data)):
@@ -268,6 +295,8 @@ class RedisStateManager(BaseStateManager):
     task_data = self.get_task_dict(task)
     task_data['last_update'] = task_data['last_update'].strftime(
         DATETIME_FORMAT)
+    if task_data['run_time']:
+      task_data['run_time'] = task_data['run_time'].total_seconds()
     # nx=True prevents overwriting (i.e. no unintentional task clobbering)
     if not self.client.set(key, json.dumps(task_data), nx=True):
       log.error(

@@ -22,7 +22,7 @@ import logging
 import os
 import sys
 
-log = logging.getLogger('turbinia')
+DATETIME_FORMAT = '%Y-%m-%dT%H:%M:%S.%fZ'
 
 # Look for config files with these names
 CONFIGFILES = ['.turbiniarc', 'turbinia.conf', 'turbinia_config.py']
@@ -80,47 +80,76 @@ ENVCONFIGVAR = 'TURBINIA_CONFIG_PATH'
 
 CONFIG = None
 
+log = logging.getLogger('turbinia')
+
 
 class TurbiniaConfigException(Exception):
   """Exception for Turbinia configuration."""
   pass
 
 
-def LoadConfig():
-  """Finds Turbinia config file and loads it."""
+def LoadConfig(config_file=None):
+  """Finds Turbinia config file and loads it.
+
+  Args:
+    config_file(str): full path to config file
+  """
   # TODO(aarontp): Find way to not require global var here.  Maybe a singleton
   # pattern on the config class.
   # pylint: disable=global-statement
   global CONFIG
   if CONFIG:
+    log.debug(
+        'Returning cached config from {0:s} instead of reloading config'.format(
+            CONFIG.configSource))
     return CONFIG
 
-  # If the environment variable is set, take precedence over the pre-defined
-  # CONFIGPATHs.
-  configpath = CONFIGPATH
-  if ENVCONFIGVAR in os.environ:
-    configpath = os.environ[ENVCONFIGVAR].split(':')
+  if not config_file:
+    log.debug('No config specified. Looking in default locations for config.')
+    # If the environment variable is set, take precedence over the pre-defined
+    # CONFIGPATHs.
+    configpath = CONFIGPATH
+    if ENVCONFIGVAR in os.environ:
+      configpath = os.environ[ENVCONFIGVAR].split(':')
 
-  config_file = None
-  # Load first file found
-  for _dir, _file in itertools.product(configpath, CONFIGFILES):
-    if os.path.exists(os.path.join(_dir, _file)):
-      config_file = os.path.join(_dir, _file)
-      break
+    # Load first file found
+    for _dir, _file in itertools.product(configpath, CONFIGFILES):
+      if os.path.exists(os.path.join(_dir, _file)):
+        config_file = os.path.join(_dir, _file)
+        break
 
   if config_file is None:
     raise TurbiniaConfigException('No config files found')
 
-  log.info('Loading config from {0:s}'.format(config_file))
-  _config = imp.load_source('config', config_file)
+  log.debug('Loading config from {0:s}'.format(config_file))
+  try:
+    _config = imp.load_source('config', config_file)
+  except IOError as exception:
+    message = (
+        'Could not load config file {0:s}: {1!s}'.format(
+            config_file, exception))
+    log.error(message)
+    raise TurbiniaConfigException(message)
+
   _config.configSource = config_file
   ValidateAndSetConfig(_config)
+
+  # Set the environment var for this so that we don't see the "No project ID
+  # could be determined." warning later.
+  if hasattr(_config, 'TURBINIA_PROJECT') and _config.TURBINIA_PROJECT:
+    os.environ['GOOGLE_CLOUD_PROJECT'] = _config.TURBINIA_PROJECT
+
   CONFIG = _config
+  log.debug(
+      'Returning parsed config loaded from {0:s}'.format(CONFIG.configSource))
   return _config
 
 
 def ValidateAndSetConfig(_config):
   """Makes sure that the config has the vars loaded and set in the module."""
+  # Explicitly set the config path
+  setattr(sys.modules[__name__], 'configSource', _config.configSource)
+
   CONFIGVARS = REQUIRED_VARS + OPTIONAL_VARS
   for var in CONFIGVARS:
     if not hasattr(_config, var):

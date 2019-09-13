@@ -59,7 +59,7 @@ def GetLocalInstanceName():
       'http://metadata.google.internal/computeMetadata/v1/instance/name', None,
       {'Metadata-Flavor': 'Google'})
   try:
-    instance = urllib.request.urlopen(req).read()
+    instance = urllib.request.urlopen(req).read().decode('utf-8')
   except urllib.error.HTTPError as e:
     raise TurbiniaException('Could not get instance name: {0!s}'.format(e))
 

@@ -34,6 +34,7 @@ import turbinia
 import filelock
 
 from turbinia import config
+from turbinia.config import DATETIME_FORMAT
 from turbinia.evidence import evidence_decode
 from turbinia import output_manager
 from turbinia import TurbiniaException
@@ -64,6 +65,7 @@ class TurbiniaTaskResult(object):
       evidence: List of newly created Evidence objects.
       id: Unique Id of result (string of hex)
       input_evidence: The evidence this task processed.
+      job_id (str): The ID of the Job that generated this Task/TaskResult
       report_data (string): Markdown data that can be used in a Turbinia report.
       report_priority (int): Value between 0-100 (0 is the highest priority) to
           be used to order report sections.
@@ -82,19 +84,20 @@ class TurbiniaTaskResult(object):
 
   # The list of attributes that we will persist into storage
   STORED_ATTRIBUTES = [
-      'worker_name', 'report_data', 'report_priority', 'status', 'saved_paths',
-      'successful'
+      'worker_name', 'report_data', 'report_priority', 'run_time', 'status',
+      'saved_paths', 'successful'
   ]
 
   def __init__(
       self, evidence=None, input_evidence=None, base_output_dir=None,
-      request_id=None):
+      request_id=None, job_id=None):
     """Initialize the TurbiniaTaskResult object."""
 
     self.closed = False
     self.evidence = evidence if evidence else []
     self.input_evidence = input_evidence
     self.id = uuid.uuid4().hex
+    self.job_id = job_id
     self.base_output_dir = base_output_dir
     self.request_id = request_id
 
@@ -266,7 +269,7 @@ class TurbiniaTaskResult(object):
       dict: Object dictionary that is JSON serializable.
     """
     self.run_time = self.run_time.total_seconds() if self.run_time else None
-    self.start_time = str(self.start_time)
+    self.start_time = self.start_time.strftime(DATETIME_FORMAT)
     if self.input_evidence:
       self.input_evidence = self.input_evidence.serialize()
     self.evidence = [x.serialize() for x in self.evidence]
@@ -286,8 +289,7 @@ class TurbiniaTaskResult(object):
     result.__dict__.update(input_dict)
     if result.run_time:
       result.run_time = timedelta(seconds=result.run_time)
-    result.start_time = datetime.strptime(
-        result.start_time, '%Y-%m-%d %H:%M:%S.%f')
+    result.start_time = datetime.strptime(result.start_time, DATETIME_FORMAT)
     if result.input_evidence:
       result.input_evidence = evidence_decode(result.input_evidence)
     result.evidence = [evidence_decode(x) for x in result.evidence]
@@ -299,29 +301,35 @@ class TurbiniaTask(object):
   """Base class for Turbinia tasks.
 
   Attributes:
-      base_output_dir: The base directory that output will go into.  Per-task
-          directories will be created under this.
-      id: Unique Id of task (string of hex)
-      last_update: A datetime object with the last time the task was updated.
-      name: Name of task
-      output_dir: The directory output will go into (including per-task folder).
-      output_manager: An output manager object
-      result: A TurbiniaTaskResult object.
-      request_id: The id of the initial request to process this evidence.
-      run_local: Whether we are running locally without a Worker or not.
-      state_key: A key used to manage task state
-      stub: The task manager implementation specific task stub that exists
-          server side to keep a reference to the remote task objects.  For PSQ
-          this is a task result object, but other implementations have their
-          own stub objects.
-      tmp_dir: Temporary directory for Task to write to.
-      requester: The user who requested the task.
+      base_output_dir (str): The base directory that output will go into.
+          Per-task directories will be created under this.
+      id (str): Unique Id of task (string of hex)
+      is_finalize_task (bool): Whether this is a finalize Task or not.
+      job_id (str): Job ID the Task was created by.
+      last_update (datetime): A datetime object with the last time the task was
+          updated.
+      name (str): Name of task
+      output_dir (str): The directory output will go into (including per-task
+          folder).
+      output_manager (OutputManager): The object that manages saving output.
+      result (TurbiniaTaskResult): A TurbiniaTaskResult object.
+      request_id (str): The id of the initial request to process this evidence.
+      run_local (bool): Whether we are running locally without a Worker or not.
+      state_key (str): A key used to manage task state
+      stub (psq.task.TaskResult|celery.app.Task): The task manager
+          implementation specific task stub that exists server side to keep a
+          reference to the remote task objects.  For PSQ this is a task result
+          object, but other implementations have their own stub objects.
+      tmp_dir (str): Temporary directory for Task to write to.
+      requester (str): The user who requested the task.
       _evidence_config (dict): The config that we want to pass to all new
             evidence created from this task.
   """
 
   # The list of attributes that we will persist into storage
-  STORED_ATTRIBUTES = ['id', 'last_update', 'name', 'request_id', 'requester']
+  STORED_ATTRIBUTES = [
+      'id', 'job_id', 'last_update', 'name', 'request_id', 'requester'
+  ]
 
   def __init__(
       self, name=None, base_output_dir=None, request_id=None, requester=None):
@@ -330,7 +338,10 @@ class TurbiniaTask(object):
       self.base_output_dir = base_output_dir
     else:
       self.base_output_dir = config.OUTPUT_DIR
+
     self.id = uuid.uuid4().hex
+    self.is_finalize_task = False
+    self.job_id = None
     self.last_update = datetime.now()
     self.name = name if name else self.__class__.__name__
     self.output_dir = None
@@ -353,7 +364,7 @@ class TurbiniaTask(object):
     """
     task_copy = deepcopy(self.__dict__)
     task_copy['output_manager'] = self.output_manager.__dict__
-    task_copy['last_update'] = str(self.last_update)
+    task_copy['last_update'] = self.last_update.strftime(DATETIME_FORMAT)
     return task_copy
 
   @classmethod
@@ -381,7 +392,7 @@ class TurbiniaTask(object):
     task.output_manager = output_manager.OutputManager()
     task.output_manager.__dict__.update(input_dict['output_manager'])
     task.last_update = datetime.strptime(
-        input_dict['last_update'], '%Y-%m-%d %H:%M:%S.%f')
+        input_dict['last_update'], DATETIME_FORMAT)
     return task
 
   def execute(
@@ -492,7 +503,7 @@ class TurbiniaTask(object):
     if not self.result:
       self.result = TurbiniaTaskResult(
           input_evidence=evidence, base_output_dir=self.base_output_dir,
-          request_id=self.request_id)
+          request_id=self.request_id, job_id=self.job_id)
       self.result.setup(self)
 
     if not self.run_local:
@@ -551,7 +562,8 @@ class TurbiniaTask(object):
         old_status = 'No previous status'
 
       result = TurbiniaTaskResult(
-          base_output_dir=self.base_output_dir, request_id=self.request_id)
+          base_output_dir=self.base_output_dir, request_id=self.request_id,
+          job_id=self.job_id)
       result.setup(self)
       result.status = '{0:s}. Previous status: [{1:s}]'.format(
           bad_message, old_status)
@@ -592,6 +604,7 @@ class TurbiniaTask(object):
       try:
         self.result = self.setup(evidence)
         original_result_id = self.result.id
+        evidence.validate()
 
         if self.turbinia_version != turbinia.__version__:
           message = (

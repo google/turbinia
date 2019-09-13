@@ -22,12 +22,14 @@ from datetime import timedelta
 import json
 import logging
 from operator import itemgetter
+from operator import attrgetter
 import os
 import stat
 import time
 
 from turbinia import config
 from turbinia.config import logger
+from turbinia.config import DATETIME_FORMAT
 from turbinia import task_manager
 from turbinia import TurbiniaException
 from turbinia.lib import text_formatter as fmt
@@ -35,6 +37,7 @@ from turbinia.workers import Priority
 from turbinia.workers.artifact import FileArtifactExtractionTask
 from turbinia.workers.analysis.wordpress import WordpressAccessLogAnalysisTask
 from turbinia.workers.analysis.jenkins import JenkinsAnalysisTask
+from turbinia.workers.finalize_request import FinalizeRequestTask
 from turbinia.workers.grep import GrepTask
 from turbinia.workers.hadoop import HadoopAnalysisTask
 from turbinia.workers.hindsight import HindsightTask
@@ -52,6 +55,7 @@ from turbinia.workers.worker_stat import StatTask
 TASK_MAP = {
     'fileartifactextractiontask': FileArtifactExtractionTask,
     'wordpressaccessloganalysistask': WordpressAccessLogAnalysisTask,
+    'finalizerequesttask': FinalizeRequestTask,
     'jenkinsanalysistask': JenkinsAnalysisTask,
     'greptask': GrepTask,
     'hadoopanalysistask': HadoopAnalysisTask,
@@ -109,6 +113,78 @@ def check_directory(directory):
     except OSError:
       raise TurbiniaException(
           'Can not add write permissions to {0:s}'.format(directory))
+
+
+class TurbiniaStats(object):
+  """Statistics for Turbinia task execution.
+
+  Attributes:
+    count(int): The number of tasks
+    min(datetime.timedelta): The minimum run time of all tasks
+    max(datetime.timedelta): The maximum run time of all tasks
+    mean(datetime.timedelta): The mean run time of all tasks
+    tasks(list): A list of tasks to calculate stats for
+  """
+
+  def __init__(self, description=None):
+    self.description = description
+    self.min = None
+    self.mean = None
+    self.max = None
+    self.tasks = []
+
+  def __str__(self):
+    return self.format_stats()
+
+  @property
+  def count(self):
+    """Gets a count of the tasks in this stats object.
+
+    Returns:
+      Int of task count.
+    """
+    return len(self.tasks)
+
+  def add_task(self, task):
+    """Add a task result dict.
+
+    Args:
+      task(dict): The task results we want to count stats for.
+    """
+    self.tasks.append(task)
+
+  def calculate_stats(self):
+    """Calculates statistics of the current tasks."""
+    if not self.tasks:
+      return
+
+    sorted_tasks = sorted(self.tasks, key=itemgetter('run_time'))
+    self.min = sorted_tasks[0]['run_time']
+    self.max = sorted_tasks[len(sorted_tasks) - 1]['run_time']
+    self.mean = sorted_tasks[len(sorted_tasks) // 2]['run_time']
+
+    # Remove the microseconds to keep things cleaner
+    self.min = self.min - timedelta(microseconds=self.min.microseconds)
+    self.max = self.max - timedelta(microseconds=self.max.microseconds)
+    self.mean = self.mean - timedelta(microseconds=self.mean.microseconds)
+
+  def format_stats(self):
+    """Formats statistics data.
+
+    Returns:
+      String of statistics data
+    """
+    return '{0:s}: Count: {1:d}, Min: {2!s}, Mean: {3!s}, Max: {4!s}'.format(
+        self.description, self.count, self.min, self.mean, self.max)
+
+  def format_stats_csv(self):
+    """Formats statistics data into CSV output.
+
+    Returns:
+      String of statistics data in CSV format
+    """
+    return '{0:s}, {1:d}, {2!s}, {3!s}, {4!s}'.format(
+        self.description, self.count, self.min, self.mean, self.max)
 
 
 class TurbiniaClient(object):
@@ -229,7 +305,7 @@ class TurbiniaClient(object):
       start_time = datetime.now() - timedelta(days=days)
       # Format this like '1990-01-01T00:00:00z' so we can cast it directly to a
       # javascript Date() object in the cloud function.
-      start_string = start_time.strftime('%Y-%m-%dT%H:%M:%S')
+      start_string = start_time.strftime(DATETIME_FORMAT)
       func_args.update({'start_time': start_string})
     elif task_id:
       func_args.update({'task_id': task_id})
@@ -254,9 +330,19 @@ class TurbiniaClient(object):
       results = json.loads(response['result'])
     except (TypeError, ValueError) as e:
       raise TurbiniaException(
-          'Could not deserialize result from GCF: [{0!s}]'.format(e))
+          'Could not deserialize result [{0!s}] from GCF: [{1!s}]'.format(
+              response.get('result'), e))
 
-    return results[0]
+    # Convert run_time/last_update back into datetime objects
+    task_data = results[0]
+    for task in task_data:
+      if task.get('run_time'):
+        task['run_time'] = timedelta(seconds=task['run_time'])
+      if task.get('last_update'):
+        task['last_update'] = datetime.strptime(
+            task['last_update'], DATETIME_FORMAT)
+
+    return task_data
 
   def format_task_detail(self, task, show_files=False):
     """Formats a single task in detail.
@@ -309,6 +395,174 @@ class TurbiniaClient(object):
         report.append(fmt.bullet(fmt.code(path), level=2))
       report.append('')
     return report
+
+  def get_task_statistics(
+      self, instance, project, region, days=0, task_id=None, request_id=None,
+      user=None):
+    """Gathers statistics for Turbinia execution data.
+
+    Args:
+      instance (string): The Turbinia instance name (by default the same as the
+          INSTANCE_ID in the config).
+      project (string): The name of the project.
+      region (string): The name of the zone to execute in.
+      days (int): The number of days we want history for.
+      task_id (string): The Id of the task.
+      request_id (string): The Id of the request we want tasks for.
+      user (string): The user of the request we want tasks for.
+
+    Returns:
+      task_stats(dict): Mapping of statistic names to values
+    """
+    task_results = self.get_task_data(
+        instance, project, region, days, task_id, request_id, user)
+    if not task_results:
+      return {}
+
+    task_stats = {
+        'all_tasks': TurbiniaStats('All Tasks'),
+        'successful_tasks': TurbiniaStats('Successful Tasks'),
+        'failed_tasks': TurbiniaStats('Failed Tasks'),
+        'requests': TurbiniaStats('Total Request Time'),
+        # The following are dicts mapping the user/worker/type names to their
+        # respective TurbiniaStats() objects.
+        # Total wall-time for all tasks of a given type
+        'tasks_per_type': {},
+        # Total wall-time for all tasks per Worker
+        'tasks_per_worker': {},
+        # Total wall-time for all tasks per User
+        'tasks_per_user': {},
+    }
+
+    # map of request ids to [min time, max time]
+    requests = {}
+
+    for task in task_results:
+      request_id = task.get('request_id')
+      task_type = task.get('name')
+      worker = task.get('worker_name')
+      user = task.get('requester')
+      if not task.get('run_time'):
+        log.debug(
+            'Ignoring task {0:s} in statistics because the run_time is not '
+            'set, and it is required to calculate stats'.format(
+                task.get('name')))
+        continue
+
+      # Stats for all/successful/failed tasks
+      task_stats['all_tasks'].add_task(task)
+      if task.get('successful') is True:
+        task_stats['successful_tasks'].add_task(task)
+      elif task.get('successful') is False:
+        task_stats['failed_tasks'].add_task(task)
+
+      # Stats for Tasks per Task type.
+      if task_type in task_stats['tasks_per_type']:
+        task_type_stats = task_stats['tasks_per_type'].get(task_type)
+      else:
+        task_type_stats = TurbiniaStats('Task type {0:s}'.format(task_type))
+        task_stats['tasks_per_type'][task_type] = task_type_stats
+      task_type_stats.add_task(task)
+
+      # Stats per worker.
+      if worker in task_stats['tasks_per_worker']:
+        worker_stats = task_stats['tasks_per_worker'].get(worker)
+      else:
+        worker_stats = TurbiniaStats('Worker {0:s}'.format(worker))
+        task_stats['tasks_per_worker'][worker] = worker_stats
+      worker_stats.add_task(task)
+
+      # Stats per submitting User.
+      if user in task_stats['tasks_per_user']:
+        user_stats = task_stats['tasks_per_user'].get(user)
+      else:
+        user_stats = TurbiniaStats('User {0:s}'.format(user))
+        task_stats['tasks_per_user'][user] = user_stats
+      user_stats.add_task(task)
+
+      # Stats for the total request.  This will, for each request, calculate the
+      # start time of the earliest task and the stop time of the latest task.
+      # This will give the overall run time covering all tasks in the request.
+      task_start_time = task['last_update'] - task['run_time']
+      task_stop_time = task['last_update']
+      if request_id in requests:
+        start_time, stop_time = requests[request_id]
+        if task_start_time < start_time:
+          requests[request_id][0] = task_start_time
+        if task_stop_time > stop_time:
+          requests[request_id][1] = task_stop_time
+      else:
+        requests[request_id] = [task_start_time, task_stop_time]
+
+    # Add a fake task result for each request with our calculated times to the
+    # stats module
+    for min_time, max_time in requests.values():
+      task = {}
+      task['run_time'] = max_time - min_time
+      task_stats['requests'].add_task(task)
+
+    # Go over all stat objects and calculate them
+    for stat_obj in task_stats.values():
+      if isinstance(stat_obj, dict):
+        for inner_stat_obj in stat_obj.values():
+          inner_stat_obj.calculate_stats()
+      else:
+        stat_obj.calculate_stats()
+
+    return task_stats
+
+  def format_task_statistics(
+      self, instance, project, region, days=0, task_id=None, request_id=None,
+      user=None, csv=False):
+    """Formats statistics for Turbinia execution data.
+
+    Args:
+      instance (string): The Turbinia instance name (by default the same as the
+          INSTANCE_ID in the config).
+      project (string): The name of the project.
+      region (string): The name of the zone to execute in.
+      days (int): The number of days we want history for.
+      task_id (string): The Id of the task.
+      request_id (string): The Id of the request we want tasks for.
+      user (string): The user of the request we want tasks for.
+      csv (bool): Whether we want the output in CSV format.
+
+    Returns:
+      String of task statistics report
+    """
+    task_stats = self.get_task_statistics(
+        instance, project, region, days, task_id, request_id, user)
+    if not task_stats:
+      return 'No tasks found'
+
+    stats_order = [
+        'all_tasks', 'successful_tasks', 'failed_tasks', 'requests',
+        'tasks_per_type', 'tasks_per_worker', 'tasks_per_user'
+    ]
+
+    if csv:
+      report = ['stat_type, count, min, mean, max']
+    else:
+      report = ['Execution time statistics for Turbinia:', '']
+    for stat_name in stats_order:
+      stat_obj = task_stats[stat_name]
+      if isinstance(stat_obj, dict):
+        # Sort by description so that we get consistent report output
+        inner_stat_objs = sorted(
+            stat_obj.values(), key=attrgetter('description'))
+        for inner_stat_obj in inner_stat_objs:
+          if csv:
+            report.append(inner_stat_obj.format_stats_csv())
+          else:
+            report.append(inner_stat_obj.format_stats())
+      else:
+        if csv:
+          report.append(stat_obj.format_stats_csv())
+        else:
+          report.append(stat_obj.format_stats())
+
+    report.append('')
+    return '\n'.join(report)
 
   def format_task_status(
       self, instance, project, region, days=0, task_id=None, request_id=None,
