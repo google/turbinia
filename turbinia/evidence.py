@@ -167,7 +167,7 @@ class Evidence(object):
     description = dictionary.pop('description', None)
     source = dictionary.pop('source', None)
     source_path = dictionary.pop('source_path', None)
-    tags = dictionary.pop('tag', None)
+    tags = dictionary.pop('tags', None)
     request_id = dictionary.pop('request_id', None)
     new_object = cls(
         name=name, description=description, source=source,

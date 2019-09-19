@@ -206,7 +206,7 @@ def main():
       'with. If this is different from the project that Turbinia is running '
       'in, it will be copied to the Turbinia project.')
   parser_googleclouddisk.add_argument(
-      '--mount_partition', default=1, type=int,
+      '-P', '--mount_partition', default=1, type=int,
       help='The partition number to use when mounting this disk.  Defaults to '
       'the entire raw disk.  Only affects mounting, and not what gets '
       'processed.')
@@ -238,7 +238,7 @@ def main():
       'with. If this is different from the project that Turbinia is running '
       'in, it will be copied to the Turbinia project.')
   parser_googleclouddiskembedded.add_argument(
-      '--mount_partition', default=1, type=int,
+      '-P', '--mount_partition', default=1, type=int,
       help='The partition number to use when mounting this disk.  Defaults to '
       'the entire raw disk.  Only affects mounting, and not what gets '
       'processed.')
