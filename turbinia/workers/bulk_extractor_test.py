@@ -19,7 +19,7 @@ from __future__ import unicode_literals
 import unittest
 import mock
 
-from turbinia.evidence import RawDisk
+from turbinia.evidence import CompressedDirectory
 from turbinia.workers import bulk_extractor
 from turbinia.workers.workers_test import TestTurbiniaTaskBase
 from turbinia.workers import TurbiniaTaskResult
@@ -31,13 +31,12 @@ class BulkExtractorTaskTest(TestTurbiniaTaskBase):
   def setUp(self):
     # pylint: disable=arguments-differ
     super(BulkExtractorTaskTest, self).setUp(
-        task_class=bulk_extractor.BulkExtractorTask, evidence_class=RawDisk)
-    self.evidence.profile = 'TestProfile'
-    self.evidence.module_list = ['TestModule']
+        task_class=bulk_extractor.BulkExtractorTask,
+        evidence_class=CompressedDirectory)
     self.task.output_dir = self.task.base_output_dir
     self.setResults(mock_run=False)
 
-  def testVolatilityTaskRunNoOutput(self):
+  def testBulkExtractorRun(self):
     """Test BulkExtractor task run."""
     self.task.execute = mock.MagicMock(return_value=0)
     result = self.task.run(self.evidence, self.result)

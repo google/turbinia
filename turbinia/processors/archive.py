@@ -12,7 +12,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Processor for compressing and decompressing directories."""
+"""File archiving processor"""
 
 from __future__ import unicode_literals
 
@@ -20,64 +20,95 @@ import os
 import tarfile
 import logging
 
+from time import time
 from turbinia import TurbiniaException
 
 log = logging.getLogger('turbinia')
 
 
-def CompressFolder(local_path):
-  """Compress a given directory into a gzip file.
+def CompressDirectory(uncompressed_directory):
+  """Compress a given directory into a tar file.
 
   Args:
-    local_path(str): The path to the directory.
+    uncompressed_directory(str): The path to the uncompressed directory.
 
   Returns:
-    str: The path to the gzip file.
+    str: The path to the tar file.
   """
-  # Check if the File or Directory exists.
-  if not os.path.exists(local_path):
+  # Error handling check for a non-existent file or directory.
+  if not os.path.exists(uncompressed_directory):
     raise TurbiniaException(
-        'The File or Directory does not exist: {0:s}'.format(local_path))
+        'The File or Directory does not exist: {0:s}'.format(
+            uncompressed_directory))
 
   # Iterate through a given list of files and compress them.
-  file_names = os.listdir(local_path)
-  archive_path = local_path + '.tar.gz'
+  file_names = os.listdir(uncompressed_directory)
+  compressed_directory = uncompressed_directory + '.tar.gz'
   try:
-    with tarfile.TarFile.open(archive_path, 'w:gz') as tar:
+    with tarfile.TarFile.open(compressed_directory, 'w:gz') as tar:
       for f in file_names:
-        tar.add(os.path.join(local_path, f), arcname=f)
+        tar.add(os.path.join(uncompressed_directory, f), arcname=f)
       tar.close()
-      log.info('The gzip file has been created and can be found: {0:s}'.\
-        format(archive_path))
+      log.info(
+          'The tar file has been created and '
+          'can be found at: {0:s}'.format(compressed_directory))
+  except IOError as exception:
+    raise TurbiniaException('An error has occured: {0:s}'.format(exception))
   except tarfile.CompressionError as e:
     raise TurbiniaException(
         'An error has occured during compression: {0:s}'.format(e))
-  return archive_path
+  return compressed_directory
 
 
-def DecompressArchive(local_path):
-  """Decompress a provided gzip file.
+def UncompressTarFile(compressed_directory):
+  """Uncompress a provided tar file.
 
   Args:
-    local_path(str): The path to the gzip file.
+    compressed_directory(str): The path to the tar file.
 
   Returns:
     str: The path to the uncompressed directory.
   """
-  extract_path = local_path.strip('.tar.gz')
+  # Error handling check for a non-existent file or directory.
+  if not os.path.exists(compressed_directory):
+    raise TurbiniaException(
+        'The File or Directory does not exist: {0:s}'.format(
+            compressed_directory))
 
+  # Check if file extension is in list of accepted extensions.
+  # TODO(wyassine): rewrite this check so it is not dependant
+  # on a list of hard coded extensions and instead have a
+  # check to determine whether or not it is a tar file format.
+  accepted_extensions = ['.tar.gz', '.tgz']
+  if not any(ext in compressed_directory for ext in accepted_extensions):
+    raise TurbiniaException(
+        'The file is not a supported format. The list of '
+        'acceptable exensions are: {0:s}'.format(','.join(accepted_extensions)))
+
+  # Path files will be extracted to.
+  uncompressed_directory = compressed_directory.strip(
+      ''.join(accepted_extensions))
+
+  # Check to see if directory exists and adjust if needed.
+  if os.path.exists(uncompressed_directory):
+    log.info(
+        'The extraction path {0:s} already exists. Appending the '
+        'current timestamp to file name.'.format(uncompressed_directory))
+    # Retrieve current time to append to end of file.
+    timest = int(time())
+    uncompressed_directory = uncompressed_directory + '-' + str(timest)
+
+  # Uncompress the tar file.
   try:
-    # Check if it is a tar file and extract contents if true.
-    tar = tarfile.TarFile.open(local_path)
-    tar.extractall(extract_path)
+    tar = tarfile.TarFile.open(compressed_directory)
+    tar.extractall(path=uncompressed_directory)
     tar.close()
     log.info(
-        'The file has been decompressed to the following\
-      directory: {0:s}'.format(extract_path))
-  except IOError as e:
-    raise TurbiniaException(
-        'The file is not a readable gzip format: {0:s}'.format(e))
+        'The tar file has been uncompressed to the following directory: {0:s}'
+        .format(uncompressed_directory))
+  except IOError as exception:
+    raise TurbiniaException('The file is not readable: {0:s}'.format(exception))
   except tarfile.ExtractError as e:
     raise TurbiniaException(
         'An error has occured during extraction: {0:s}'.format(e))
-  return extract_path
+  return uncompressed_directory

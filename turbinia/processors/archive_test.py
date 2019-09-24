@@ -19,6 +19,7 @@ from __future__ import unicode_literals
 import os
 import tarfile
 import unittest
+import tempfile
 
 from random import randint
 from shutil import rmtree
@@ -28,55 +29,72 @@ from turbinia import TurbiniaException
 
 class ArchiveProcessorTest(unittest.TestCase):
   """Tests for Archive Processor."""
-  filedir = os.path.dirname(os.path.realpath(__file__))
-  testdir = os.path.join(filedir, '..', '..', 'test_data', "archive_test")
-  testfiles = os.path.join(testdir, 'files')
-  testarchive = os.path.join(testdir, 'files.tar.gz')
 
   def setUp(self):
-    # Setup testing directories.
-    if not os.path.exists(self.testdir):
-      os.makedirs(self.testdir)
-    if not os.path.exists(self.testfiles):
-      os.makedirs(self.testfiles)
-    archive.CompressFolder(self.testfiles)
+    # Setup testing directories/variables.
+    self.test_files = []
+    self.base_output_dir = tempfile.mkdtemp(prefix='turbinia-test-local')
+    self.tmp_files_dir = os.path.join(self.base_output_dir, 'files')
+    self.tmp_archive = os.path.join(self.base_output_dir, 'files.tar.gz')
+    if not os.path.exists(self.tmp_files_dir):
+      os.makedirs(self.tmp_files_dir)
 
     # Generate text files containing random numbers.
     file_max = 10
     counter = 0
     while counter <= file_max:
-      file_name = os.path.join(
-          self.testfiles, 'file{0:s}.txt'.format(str(counter)))
-      file_open = open(file_name, 'w+')
+      file_name = 'file{0:s}.txt'.format(str(counter))
+      file_path = os.path.join(self.tmp_files_dir, file_name)
+      file_open = open(file_path, 'w+')
       rand_nums = [randint(0, 1000) for i in range(50)]
       for i in rand_nums:
         file_open.write('%s\n' % str(i))
       file_open.close()
       counter += 1
+      self.test_files.append(file_name)
+    archive.CompressDirectory(self.tmp_files_dir)
 
   def tearDown(self):
     # Remove testing directory for this unit test.
-    if os.path.exists(self.testdir):
-      rmtree(self.testdir)
+    if os.path.exists(self.base_output_dir):
+      rmtree(self.base_output_dir)
 
   def test_compressed_dir(self):
     """Tests the compression function"""
     # Check if compressed directory matches expected output path.
-    self.assertEqual(archive.CompressFolder(self.testfiles), self.testarchive)
+    self.assertEqual(
+        archive.CompressDirectory(self.tmp_files_dir), self.tmp_archive)
 
     # Check to confirm that the archive is gzip format.
-    self.assertEqual(tarfile.is_tarfile(self.testarchive), True)
+    self.assertEqual(tarfile.is_tarfile(self.tmp_archive), True)
 
     # Raise assertion if folder does not exist.
     with self.assertRaises(TurbiniaException):
-      archive.CompressFolder('blah')
+      archive.CompressDirectory('blah')
 
   def test_uncompressed_dir(self):
     """Tests the decompression function"""
+
+    # Remove test directory as it will get recreated.
+    if os.path.exists(self.tmp_files_dir):
+      rmtree(self.tmp_files_dir)
+
     # Check to confirm that the decompressed directory matches
     # the expected output path.
     self.assertEqual(
-        archive.DecompressArchive(self.testarchive), self.testfiles)
+        archive.UncompressTarFile(self.tmp_archive), self.tmp_files_dir)
+
+    # Second run should take into account a pre-existing directory.
+    self.assertNotEqual(
+        archive.UncompressTarFile(self.tmp_archive), self.tmp_files_dir)
+
+    # Raise exception for file that does not exist.
+    with self.assertRaises(TurbiniaException):
+      archive.UncompressTarFile('blah.no')
+
+    # Raise exception for a file with unsupported extension
+    with self.assertRaises(TurbiniaException):
+      archive.UncompressTarFile(self.tmp_files_dir)
 
 
 if __name__ == '__main__':

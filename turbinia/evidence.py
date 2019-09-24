@@ -261,15 +261,31 @@ class Directory(Evidence):
 
 
 class CompressedDirectory(Evidence):
-  """A compressed directory containing data."""
+  """Evidence object for CompressedDirectory based evidence.
 
-  def __init__(self, *args, **kwargs):
+  Attributes:
+    compressed_directory: The path to the compressed directory.
+    uncompressed_directory: The path to the uncompressed directory.
+  """
+
+  def __init__(
+      self, compressed_directory=None, uncompressed_directory=None, *args,
+      **kwargs):
+    """Initialization for CompressedDirectory evidence object."""
     super(CompressedDirectory, self).__init__(*args, **kwargs)
+    self.compressed_directory = compressed_directory
+    self.uncompressed_directory = uncompressed_directory
     self.copyable = True
 
+  def _preprocess(self):
+    # Uncompress a given tar file and return the uncompressed path.
+    self.uncompressed_directory = archive.UncompressTarFile(self.local_path)
+    self.local_path = self.uncompressed_path
+
   def _postprocess(self):
-    # Compress a given directory and return the compressed directory path.
-    self.local_path = archive.CompressFolder(self.local_path)
+    # Compress a given directory and return the compressed path.
+    self.compressed_directory = archive.CompressDirectory(self.source)
+    self.local_path = self.compressed_directory
 
 
 class ChromiumProfile(Evidence):

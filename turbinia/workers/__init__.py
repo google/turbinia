@@ -153,13 +153,6 @@ class TurbiniaTaskResult(object):
       status: One line descriptive task status.
     """
 
-    # Calls postprocess on output evidence types that never
-    # TODO (wyassine): come up with a better way to call this as
-    # this may cause some issues with future evidence types in
-    # which postprocess should not be called.
-    for out_evidence in self.evidence:
-      out_evidence.postprocess()
-
     if self.closed:
       # Don't try to close twice.
       return
@@ -175,6 +168,10 @@ class TurbiniaTaskResult(object):
     self.status = status
 
     for evidence in self.evidence:
+      # TODO (wyassine): come up with a better way to call postprocess
+      # on newly created evidence types. this way may cause some issues
+      # with future evidence types in which postprocess should not be called.
+      evidence.postprocess()
       if evidence.local_path and os.path.exists(evidence.local_path):
         self.saved_paths.append(evidence.local_path)
         if not task.run_local:
