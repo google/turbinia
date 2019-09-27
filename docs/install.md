@@ -36,7 +36,7 @@ the GoogleCloudDiskRawEmbedded evidence type.  This can be used
 when the images do not originate from VMs/containers that are running in the
 cloud.
 
-Another option is to 
+Another option is to
 [convert the raw image to a cloud image](https://cloud.google.com/compute/docs/images/import-existing-image),
 and then create a Persistent Disk from that and process it as the GoogleCloudDisk
 Evidence type.
@@ -92,7 +92,7 @@ single instance.
 *   Select a GCP region that you wish to deploy Turbinia into.  Note
     that one of the GCP dependencies is Cloud Functions, and that
     only works in certain regions, so you will need to deploy in one
-    of [those supported regions](https://cloud.google.com/functions/docs/locations).     
+    of [those supported regions](https://cloud.google.com/functions/docs/locations).
 *   Enable
     [Cloud Functions](https://console.cloud.google.com/apis/library/cloudfunctions.googleapis.com)
 *   Follow the
@@ -150,7 +150,7 @@ single instance.
 *   Configure the init scripts to run Turbinia on start by copying the
     file [turbinia/tools/turbinia@.service](https://github.com/google/turbinia/blob/master/tools/turbinia%40.service)
     to `/etc/systemd/system/turbinia@server` for the server or
-    `/etc/systemd/system/turbinia@psqworker` for a GCP worker or 
+    `/etc/systemd/system/turbinia@psqworker` for a GCP worker or
     `/etc/systemd/system/turbinia@celeryworker` for a local (non-cloud)
     installation.
 *   If you are running Turbinia locally, skip to
@@ -202,7 +202,7 @@ single instance.
         for other packaged installation.
 *   Create and configure the Turbinia configuration file in `/etc/turbinia/turbinia.conf`.
     *   `sudo mkdir /etc/turbinia`
-    *   `wget -nd https://raw.githubusercontent.com/google/turbinia/master/turbinia/config/turbinia_config.py -O /etc/turbinia/turbinia.conf`
+    *   `wget -nd https://raw.githubusercontent.com/google/turbinia/master/turbinia/config/turbinia_config_tmpl.py -O /etc/turbinia/turbinia.conf`
         * ***Note*** This is the configuration file from HEAD, but
           make sure to copy the correct version for the release you
           are installing.
@@ -212,7 +212,7 @@ single instance.
     *   ***NOTE***: Match the `PUBSUB_TOPIC` variable in the configuration to
         the name of the topic you created in GCP.
     *   ***NOTE***: If you are running Turbinia locally, make sure to set `GCS_OUTPUT_PATH` to `None`.
-*   If you are running Turbinia locally, return to 
+*   If you are running Turbinia locally, return to
     [Install additional dependencies](#2-install-additional-dependencies),
     otherwise continue to [Deploy the Cloud Functions](#deploy-the-cloud-functions).
 

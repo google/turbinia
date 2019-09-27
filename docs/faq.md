@@ -7,8 +7,8 @@ Configuration can either go into `~/.turbiniarc` or `/etc/turbinia/turbinia.conf
 
 ## Where are the configuration options documented?
 
-The configuration options are documented in [turbinia_config.py](
-https://github.com/google/turbinia/blob/master/turbinia/config/turbinia_config.py)
+The configuration options are documented in [turbinia_config_tmpl.py](
+https://github.com/google/turbinia/blob/master/turbinia/config/turbinia_config_tmpl.py)
 
 ## How can I write new Tasks?
 
@@ -27,4 +27,3 @@ to the Workers that ran that Task.  Files with paths starting with gs:// are
 in the Google Cloud Storage bucket (as specified by `GCS_OUTPUT_PATH` in the
 config).  Only Evidence types with the `copyable` property will actually be
 copied into Cloud Storage.
-
