@@ -35,10 +35,9 @@ CONFIGPATH = [
     os.path.dirname(os.path.abspath(__file__)),
 ]
 # Config setup reminder for cleaner error handling on empty configs.
-# TODO(johngalvin): Link out to install guide anchors instead?
 CONFIG_MSG = (
-    'Copy turbinia/config/turbinia_config_tmpl.py to ~/.turbiniarc, '
-    'edit, and re-run.')
+    'Copy turbinia/config/turbinia_config_tmpl.py to ~/.turbiniarc '
+    'or /etc/turbinia/turbinia.conf, edit, and re-run.')
 
 # Required config vars
 REQUIRED_VARS = [
