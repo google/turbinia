@@ -21,6 +21,7 @@ import tempfile
 import unittest
 
 from turbinia import config
+from turbinia import TurbiniaException
 
 
 class TestTurbiniaConfig(unittest.TestCase):
@@ -92,13 +93,13 @@ class TestTurbiniaConfig(unittest.TestCase):
     """Test that config errors out when not all required variables exist."""
     self.WriteConfig('EXISTS = "bar"\n')
     config.REQUIRED_VARS = ['DOESNOTEXIST', 'EXISTS']
-    self.assertRaises(config.TurbiniaConfigException, config.LoadConfig)
+    self.assertRaises(TurbiniaException, config.LoadConfig)
 
   def testUnsetRequiredKeyConfig(self):
     """Test that config errors out when not all required variables are set."""
     self.WriteConfig('UNSETKEY = None\nSETKEY = "bar"\n')
     config.REQUIRED_VARS = ['UNSETKEY', 'SETKEY']
-    self.assertRaises(config.TurbiniaConfigException, config.LoadConfig)
+    self.assertRaises(TurbiniaException, config.LoadConfig)
 
   def testUnsetOptionalKeyConfig(self):
     """Test that optional vars don't need to be set."""
@@ -112,12 +113,11 @@ class TestTurbiniaConfig(unittest.TestCase):
   def testMissingConfigPath(self):
     """Test non-existent config path."""
     config.CONFIGPATH = ['DOESNOTEXIST']
-    self.assertRaises(config.TurbiniaConfigException, config.LoadConfig)
+    self.assertRaises(TurbiniaException, config.LoadConfig)
 
   def testMissingConfigFile(self):
     """Test non-existent config file."""
-    self.assertRaises(
-        config.TurbiniaConfigException, config.LoadConfig, '/does/not/exist')
+    self.assertRaises(TurbiniaException, config.LoadConfig, '/does/not/exist')
 
   def testExplicitConfigPath(self):
     """Test setting direct config file path."""
