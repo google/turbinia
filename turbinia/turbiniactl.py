@@ -26,6 +26,7 @@ import os
 import sys
 
 from turbinia import config
+from turbinia import TurbiniaException
 from turbinia.config import logger
 from turbinia.lib import libcloudforensics
 from turbinia import __version__
@@ -350,10 +351,17 @@ def main():
 
   # Load the config before final logger setup so we can the find the path to the
   # log file.
-  if args.config_file:
-    config.LoadConfig(config_file=args.config_file)
-  else:
-    config.LoadConfig()
+  try:
+    if args.config_file:
+      config.LoadConfig(config_file=args.config_file)
+    else:
+      config.LoadConfig()
+  except TurbiniaException as exception:
+    print(
+        'Could not load config file ({0:s}).\n{1:s}'.format(
+            exception, config.CONFIG_MSG))
+    sys.exit(1)
+
   if args.log_file:
     config.LOG_FILE = args.log_file
   if args.output_dir:

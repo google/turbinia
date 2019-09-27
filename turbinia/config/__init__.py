@@ -27,12 +27,18 @@ from turbinia import TurbiniaException
 DATETIME_FORMAT = '%Y-%m-%dT%H:%M:%S.%fZ'
 
 # Look for config files with these names
-CONFIGFILES = ['.turbiniarc', 'turbinia.conf']
+CONFIGFILES = ['.turbiniarc', 'turbinia.conf', 'turbinia_config_tmpl.py']
 # Look in homedir first, then /etc/turbinia
 CONFIGPATH = [
     os.path.expanduser('~'),
     '/etc/turbinia',
+    os.path.dirname(os.path.abspath(__file__)),
 ]
+# Config setup reminder for cleaner error handling on empty configs.
+# TODO(johngalvin): Link out to install guide anchors instead?
+CONFIG_MSG = (
+    'Copy turbinia/config/turbinia_config_tmpl.py to ~/.turbiniarc, '
+    'edit, and re-run.')
 
 # Required config vars
 REQUIRED_VARS = [
@@ -118,6 +124,10 @@ def LoadConfig(config_file=None):
     raise TurbiniaException('No config files found')
 
   log.debug('Loading config from {0:s}'.format(config_file))
+  # Warn about using fallback source config, but it's currently necessary for
+  # tests. See issue #446.
+  if 'turbinia_config_tmpl' in config_file:
+    log.warning('Using fallback source config. {0:s}'.format(CONFIG_MSG))
   try:
     _config = imp.load_source('config', config_file)
   except IOError as exception:
