@@ -167,7 +167,7 @@ class Evidence(object):
 
     return serialized
 
-  def _preprocess(self):
+  def _preprocess(self, output_tmp):
     """Preprocess this evidence prior to task running.
 
     This gets run in the context of the local task execution on the worker
@@ -185,16 +185,20 @@ class Evidence(object):
     """
     pass
 
-  def preprocess(self):
+  def preprocess(self, output_tmp=None):
     """Runs the possible parent's evidence preprocessing code, then ours.
 
     This is a wrapper function that will call the chain of pre-processors
     starting with the most distant ancestor.  After all of the ancestors have
     been processed, then we run our pre-processor.
+
+    Args:
+      output_tmp(str): The path of the temporary directory that evidence
+                       will output to.
     """
     if self.parent_evidence:
       self.parent_evidence.preprocess()
-    self._preprocess()
+    self._preprocess(output_tmp)
 
   def postprocess(self):
     """Runs our postprocessing code, then our possible parent's evidence.
@@ -260,6 +264,38 @@ class Directory(Evidence):
   pass
 
 
+class BulkExtractorOutput(Evidence):
+  """Evidence object for BulkExtractorOutput based evidence.
+
+  Attributes:
+    compressed_directory: The path to the compressed directory.
+    uncompressed_directory: The path to the uncompressed directory.
+  """
+
+  def __init__(
+      self, compressed_directory=None, uncompressed_directory=None, *args,
+      **kwargs):
+    """Initialization for BulkExtractorOutput evidence object."""
+    super(BulkExtractorOutput, self).__init__(*args, **kwargs)
+    self.compressed_directory = compressed_directory
+    self.uncompressed_directory = uncompressed_directory
+    self.copyable = True
+
+  def _preprocess(self, output_tmp):
+    # Uncompress a given tar file and return the uncompressed path.
+    self.uncompressed_directory = archive.UncompressTarFile(
+        self.local_path, output_tmp)
+    self.local_path = self.uncompressed_directory
+
+  def compress(self):
+    """
+    Compresssion method for resulting bulk extractor output.
+    """
+    # Compress a given directory and return the compressed path.
+    self.compressed_directory = archive.CompressDirectory(self.local_path)
+    self.local_path = self.compressed_directory
+
+
 class CompressedDirectory(Evidence):
   """Evidence object for CompressedDirectory based evidence.
 
@@ -277,14 +313,15 @@ class CompressedDirectory(Evidence):
     self.uncompressed_directory = uncompressed_directory
     self.copyable = True
 
-  def _preprocess(self):
+  def _preprocess(self, output_tmp):
     # Uncompress a given tar file and return the uncompressed path.
-    self.uncompressed_directory = archive.UncompressTarFile(self.local_path)
-    self.local_path = self.uncompressed_path
+    self.uncompressed_directory = archive.UncompressTarFile(
+        self.local_path, output_tmp)
+    self.local_path = self.uncompressed_directory
 
   def _postprocess(self):
     # Compress a given directory and return the compressed path.
-    self.compressed_directory = archive.CompressDirectory(self.source)
+    self.compressed_directory = archive.CompressDirectory(self.local_path)
     self.local_path = self.compressed_directory
 
 
@@ -326,7 +363,7 @@ class RawDisk(Evidence):
     self.size = size
     super(RawDisk, self).__init__(*args, **kwargs)
 
-  def _preprocess(self):
+  def _preprocess(self, output_tmp):
     self.loopdevice_path = mount_local.PreprocessLosetup(self.local_path)
 
   def _postprocess(self):
@@ -414,7 +451,7 @@ class GoogleCloudDisk(RawDisk):
     super(GoogleCloudDisk, self).__init__(*args, **kwargs)
     self.cloud_only = True
 
-  def _preprocess(self):
+  def _preprocess(self, output_tmp):
     self.local_path = google_cloud.PreprocessAttachDisk(self.disk_name)
 
   def _postprocess(self):
@@ -441,7 +478,7 @@ class GoogleCloudDiskRawEmbedded(GoogleCloudDisk):
     self.embedded_path = embedded_path
     super(GoogleCloudDiskRawEmbedded, self).__init__(*args, **kwargs)
 
-  def _preprocess(self):
+  def _preprocess(self, output_tmp):
     self.local_path = google_cloud.PreprocessAttachDisk(self.disk_name)
     self.loopdevice_path = mount_local.PreprocessLosetup(self.local_path)
     self.mount_path = mount_local.PreprocessMountDisk(

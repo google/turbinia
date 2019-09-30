@@ -274,6 +274,17 @@ def main():
   parser_directory.add_argument(
       '-n', '--name', help='Descriptive name of the evidence', required=False)
 
+  # Parser options for CompressedDirectory evidence type
+  parser_directory = subparsers.add_parser(
+      'compressedirectory', help='Process a compressed tar file as Evidence')
+  parser_directory.add_argument(
+      '-l', '--local_path', help='Local path to the evidence', required=True)
+  parser_directory.add_argument(
+      '-s', '--source', help='Description of the source of the evidence',
+      required=False)
+  parser_directory.add_argument(
+      '-n', '--name', help='Descriptive name of the evidence', required=False)
+
   # Parser options for ChromiumProfile evidence type
   parser_hindsight = subparsers.add_parser(
       'hindsight', help='Process ChromiumProfile as Evidence')
@@ -382,6 +393,7 @@ def main():
   from turbinia.client import TurbiniaPsqWorker
   from turbinia import evidence
   from turbinia.message import TurbiniaRequest
+  from turbinia.processors import archive
 
   # Print out config if requested
   if args.command == 'config':
@@ -494,6 +506,12 @@ def main():
     args.name = args.name if args.name else args.local_path
     local_path = os.path.abspath(args.local_path)
     evidence_ = evidence.Directory(
+        name=args.name, local_path=local_path, source=args.source)
+  elif args.command == 'compressedirectory':
+    archive.ValidateTarFile(args.local_path)
+    args.name = args.name if args.name else args.local_path
+    local_path = os.path.abspath(args.local_path)
+    evidence_ = evidence.CompressedDirectory(
         name=args.name, local_path=local_path, source=args.source)
   elif args.command == 'googleclouddisk':
     args.name = args.name if args.name else args.disk_name

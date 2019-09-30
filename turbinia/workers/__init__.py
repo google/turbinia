@@ -168,10 +168,6 @@ class TurbiniaTaskResult(object):
     self.status = status
 
     for evidence in self.evidence:
-      # TODO (wyassine): come up with a better way to call postprocess
-      # on newly created evidence types. this way may cause some issues
-      # with future evidence types in which postprocess should not be called.
-      evidence.postprocess()
       if evidence.local_path and os.path.exists(evidence.local_path):
         self.saved_paths.append(evidence.local_path)
         if not task.run_local:
@@ -519,7 +515,7 @@ class TurbiniaTask(object):
       raise TurbiniaException(
           'Evidence local path {0:s} does not exist'.format(
               evidence.local_path))
-    evidence.preprocess()
+    evidence.preprocess(self.output_dir)
     return self.result
 
   def touch(self):

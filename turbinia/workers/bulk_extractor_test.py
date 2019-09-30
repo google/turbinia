@@ -18,8 +18,10 @@ from __future__ import unicode_literals
 
 import unittest
 import mock
+import os
 
-from turbinia.evidence import CompressedDirectory
+from shutil import rmtree
+from turbinia.evidence import BulkExtractorOutput
 from turbinia.workers import bulk_extractor
 from turbinia.workers.workers_test import TestTurbiniaTaskBase
 from turbinia.workers import TurbiniaTaskResult
@@ -32,9 +34,14 @@ class BulkExtractorTaskTest(TestTurbiniaTaskBase):
     # pylint: disable=arguments-differ
     super(BulkExtractorTaskTest, self).setUp(
         task_class=bulk_extractor.BulkExtractorTask,
-        evidence_class=CompressedDirectory)
+        evidence_class=BulkExtractorOutput)
     self.task.output_dir = self.task.base_output_dir
     self.setResults(mock_run=False)
+
+  def tearDown(self):
+    # Remove testing directory for this unit test.
+    if os.path.exists(self.base_output_dir):
+      rmtree(self.base_output_dir)
 
   def testBulkExtractorRun(self):
     """Test BulkExtractor task run."""

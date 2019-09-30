@@ -72,29 +72,16 @@ class ArchiveProcessorTest(unittest.TestCase):
     with self.assertRaises(TurbiniaException):
       archive.CompressDirectory('blah')
 
-  def test_uncompressed_dir(self):
-    """Tests the decompression function"""
-
-    # Remove test directory as it will get recreated.
-    if os.path.exists(self.tmp_files_dir):
-      rmtree(self.tmp_files_dir)
-
-    # Check to confirm that the decompressed directory matches
-    # the expected output path.
-    self.assertEqual(
-        archive.UncompressTarFile(self.tmp_archive), self.tmp_files_dir)
-
-    # Second run should take into account a pre-existing directory.
-    self.assertNotEqual(
-        archive.UncompressTarFile(self.tmp_archive), self.tmp_files_dir)
+  def test_validate_tarfile(self):
+    """Tests the validate function used to decompress tar files"""
 
     # Raise exception for file that does not exist.
     with self.assertRaises(TurbiniaException):
-      archive.UncompressTarFile('blah.no')
+      archive.ValidateTarFile('blah.no')
 
-    # Raise exception for a file with unsupported extension
+    # Raise exception for a file with unsupported extension.
     with self.assertRaises(TurbiniaException):
-      archive.UncompressTarFile(self.tmp_files_dir)
+      archive.ValidateTarFile(self.tmp_files_dir)
 
 
 if __name__ == '__main__':
