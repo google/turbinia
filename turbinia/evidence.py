@@ -513,3 +513,11 @@ class RawMemory(Evidence):
     super(RawMemory, self).__init__(*args, **kwargs)
     self.profile = profile
     self.module_list = module_list
+
+
+class BinaryExtraction(Evidence):
+  """Binaries extracted from evidence."""
+
+  def __init__(self, *args, **kwargs):
+    super(BinaryExtraction, self).__init__(*args, **kwargs)
+    self.copyable = True
