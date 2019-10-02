@@ -29,7 +29,7 @@ from turbinia.workers.binary_extractor import BinaryExtractorTask
 
 
 class BinaryExtractorJob(interface.TurbiniaJob):
-  """Run image_export.py on envidence to extract binaries."""
+  """Run image_export.py on evidence to extract binaries."""
 
   # The types of evidence that this Job will process.
   evidence_input = [
