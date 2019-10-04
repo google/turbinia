@@ -23,13 +23,14 @@ import logging
 from time import time
 from turbinia import TurbiniaException
 
-ACCEPTED_EXTENSIONS = ['.tar.gz', '.tgz']
 log = logging.getLogger('turbinia')
 
 
 def ValidateTarFile(compressed_directory):
-  """Check if the path exists and if the file extension
-      is in the list of accepted extensions.
+  """ Validates a given compressed directory path.
+
+  Performs a check to determine if the path exists and if
+  the file extension is in the list of accepted extensions.
 
   Args:
     compressed_directory(str): The path to the compressed tar file.
@@ -45,12 +46,11 @@ def ValidateTarFile(compressed_directory):
   # TODO(wyassine): rewrite this check so it is not dependant
   # on a list of hard coded extensions and instead have a
   # check to determine whether or not it is a tar file format.
-  split_path = os.path.splitext(compressed_directory)
-  accepted_extensions = ['.tar.gz', '.gz', '.tgz']
-  if split_path[-1] not in accepted_extensions:
+  if not (compressed_directory.endswith('.tgz') or
+          compressed_directory.endswith('.tar.gz')):
     raise TurbiniaException(
         'The file is not a supported format. The list of '
-        'acceptable exensions are: {0:s}'.format(','.join(accepted_extensions)))
+        'acceptable exensions are: .tgz or .tar.gz')
 
 
 def CompressDirectory(uncompressed_directory):
@@ -68,20 +68,11 @@ def CompressDirectory(uncompressed_directory):
         'The File or Directory does not exist: {0:s}'.format(
             uncompressed_directory))
 
-  # If it is a directory, list files to create compressed folder structure.
-  file_names = False
-  if os.path.isdir(uncompressed_directory):
-    file_names = os.listdir(uncompressed_directory)
-
   # Iterate through a given list of files and compress them.
   compressed_directory = uncompressed_directory + '.tar.gz'
   try:
     with tarfile.TarFile.open(compressed_directory, 'w:gz') as tar:
-      if not file_names:
-        tar.add(uncompressed_directory)
-      else:
-        for f in file_names:
-          tar.add(os.path.join(uncompressed_directory, f), arcname=f)
+      tar.add(uncompressed_directory, arcname='')
       tar.close()
       log.info(
           'The tar file has been created and '

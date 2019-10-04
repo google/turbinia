@@ -29,6 +29,7 @@ from turbinia import config
 from turbinia.config import logger
 from turbinia.lib import libcloudforensics
 from turbinia import __version__
+from turbinia.processors import archive
 
 log = logging.getLogger('turbinia')
 # We set up the logger first without the file handler, and we will set up the
@@ -393,7 +394,6 @@ def main():
   from turbinia.client import TurbiniaPsqWorker
   from turbinia import evidence
   from turbinia.message import TurbiniaRequest
-  from turbinia.processors import archive
 
   # Print out config if requested
   if args.command == 'config':

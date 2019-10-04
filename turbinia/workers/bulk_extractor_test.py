@@ -15,12 +15,13 @@
 """Tests for the Bulk Extractor job."""
 
 from __future__ import unicode_literals
+from shutil import rmtree
+from io import StringIO
 
+import os
 import unittest
 import mock
-import os
 
-from shutil import rmtree
 from turbinia.evidence import BulkExtractorOutput
 from turbinia.workers import bulk_extractor
 from turbinia.workers.workers_test import TestTurbiniaTaskBase
@@ -52,6 +53,33 @@ class BulkExtractorTaskTest(TestTurbiniaTaskBase):
     self.task.execute.assert_called_once()
     # Ensure run method returns a TurbiniaTaskResult instance.
     self.assertIsInstance(result, TurbiniaTaskResult)
+
+  @mock.patch('os.path')
+  def test_generate_report(self, mock_path):
+    """Tests Bulk Extractor report generation."""
+    report_sample = """#### Bulk Extractor Results
+##### Run Summary
+* Program: BULK_EXTRACTOR - 1.6.0-dev
+* Command Line: bulk_extractor /tmp/test-small.img -o /output/test-small.img
+* Start Time: 2019-09-27T16:34:48Z"""
+    summary_sample = "0 artifacts have been extracted."
+
+    xml_sample = """<dfxml xmloutputversion="1.0">
+    <creator version="1.0">
+      <program>BULK_EXTRACTOR</program>
+      <version>1.6.0-dev</version>
+      <execution_environment>
+        <command_line>bulk_extractor /tmp/test-small.img -o /output/test-small.img</command_line>
+        <start_time>2019-09-27T16:34:48Z</start_time>
+      </execution_environment>
+    </creator>
+    </dfxml>"""
+    str_io = StringIO(xml_sample)
+    mock_path.join.return_value = str_io
+    mock_path.exists.return_value = True
+    (report, summary) = self.task.generate_summary_report(str_io)
+    self.assertEqual(report_sample, report)
+    self.assertEqual(summary_sample, summary)
 
 
 if __name__ == '__main__':
