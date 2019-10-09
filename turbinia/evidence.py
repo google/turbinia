@@ -98,8 +98,6 @@ class Evidence(object):
         version that created it, if appropriate).
     local_path (str): Path to the processed data (can be a blockdevice or a
         directory).
-    device_path (str): Path to a relevant 'raw' data source (ie: a block
-        device or a raw disk image).
     source_path (str): Path to the un-processed source data for the Evidence.
     mount_path (str): Path to a mounted file system (if relevant).
     tags (dict): Extra tags associated with this evidence.
@@ -125,7 +123,6 @@ class Evidence(object):
     self.context_dependent = False
     self.cloud_only = False
     self.description = description
-    self.device_path = None
     self.mount_path = None
     self.source = source
     self.source_path = source_path
@@ -319,6 +316,8 @@ class RawDisk(Evidence):
   """Evidence object for Disk based evidence.
 
   Attributes:
+    device_path (str): Path to a relevant 'raw' data source (ie: a block
+        device or a raw disk image).
     mount_partition: The mount partition for this disk (if any).
     size: The size of the disk in bytes.
   """
@@ -331,6 +330,7 @@ class RawDisk(Evidence):
           'Partition numbers start at 1, but was given {0:d}'.format(
               mount_partition))
 
+    self.device_path = None
     self.mount_partition = mount_partition
     self.size = size
     super(RawDisk, self).__init__(*args, **kwargs)
