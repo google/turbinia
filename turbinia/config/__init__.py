@@ -22,16 +22,22 @@ import logging
 import os
 import sys
 
+from turbinia import TurbiniaException
+
 DATETIME_FORMAT = '%Y-%m-%dT%H:%M:%S.%fZ'
 
 # Look for config files with these names
-CONFIGFILES = ['.turbiniarc', 'turbinia.conf', 'turbinia_config.py']
-# Look in homedir first, then /etc/turbinia, and finally in the source
-# config dir for config files
+CONFIGFILES = ['.turbiniarc', 'turbinia.conf', 'turbinia_config_tmpl.py']
+# Look in homedir first, then /etc/turbinia
 CONFIGPATH = [
-    os.path.expanduser('~'), '/etc/turbinia',
-    os.path.dirname(os.path.abspath(__file__))
+    os.path.expanduser('~'),
+    '/etc/turbinia',
+    os.path.dirname(os.path.abspath(__file__)),
 ]
+# Config setup reminder for cleaner error handling on empty configs.
+CONFIG_MSG = (
+    'Copy turbinia/config/turbinia_config_tmpl.py to ~/.turbiniarc '
+    'or /etc/turbinia/turbinia.conf, edit, and re-run.')
 
 # Required config vars
 REQUIRED_VARS = [
@@ -83,11 +89,6 @@ CONFIG = None
 log = logging.getLogger('turbinia')
 
 
-class TurbiniaConfigException(Exception):
-  """Exception for Turbinia configuration."""
-  pass
-
-
 def LoadConfig(config_file=None):
   """Finds Turbinia config file and loads it.
 
@@ -119,9 +120,13 @@ def LoadConfig(config_file=None):
         break
 
   if config_file is None:
-    raise TurbiniaConfigException('No config files found')
+    raise TurbiniaException('No config files found')
 
   log.debug('Loading config from {0:s}'.format(config_file))
+  # Warn about using fallback source config, but it's currently necessary for
+  # tests. See issue #446.
+  if 'turbinia_config_tmpl' in config_file:
+    log.warning('Using fallback source config. {0:s}'.format(CONFIG_MSG))
   try:
     _config = imp.load_source('config', config_file)
   except IOError as exception:
@@ -129,7 +134,7 @@ def LoadConfig(config_file=None):
         'Could not load config file {0:s}: {1!s}'.format(
             config_file, exception))
     log.error(message)
-    raise TurbiniaConfigException(message)
+    raise TurbiniaException(message)
 
   _config.configSource = config_file
   ValidateAndSetConfig(_config)
@@ -153,10 +158,10 @@ def ValidateAndSetConfig(_config):
   CONFIGVARS = REQUIRED_VARS + OPTIONAL_VARS
   for var in CONFIGVARS:
     if not hasattr(_config, var):
-      raise TurbiniaConfigException(
+      raise TurbiniaException(
           'No config attribute {0:s}:{1:s}'.format(_config.configSource, var))
     if var in REQUIRED_VARS and getattr(_config, var) is None:
-      raise TurbiniaConfigException(
+      raise TurbiniaException(
           'Config attribute {0:s}:{1:s} is not set'.format(
               _config.configSource, var))
 
