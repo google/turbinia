@@ -152,6 +152,7 @@ class TurbiniaTaskResult(object):
       success: Bool indicating task success
       status: One line descriptive task status.
     """
+
     if self.closed:
       # Don't try to close twice.
       return
@@ -514,7 +515,7 @@ class TurbiniaTask(object):
       raise TurbiniaException(
           'Evidence local path {0:s} does not exist'.format(
               evidence.local_path))
-    evidence.preprocess()
+    evidence.preprocess(self.tmp_dir)
     return self.result
 
   def touch(self):

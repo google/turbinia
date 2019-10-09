@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright 2015 Google Inc.
+# Copyright 2019 Google Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,44 +12,44 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Job to execute Plaso task."""
+"""Job to execute Bulk Extractor task."""
 
 from __future__ import unicode_literals
 
-from turbinia.evidence import APFSEncryptedDisk
-from turbinia.evidence import BitlockerDisk
-from turbinia.evidence import CompressedDirectory
-from turbinia.evidence import Directory
 from turbinia.evidence import GoogleCloudDisk
 from turbinia.evidence import GoogleCloudDiskRawEmbedded
-from turbinia.evidence import PlasoFile
 from turbinia.evidence import RawDisk
+from turbinia.evidence import BulkExtractorOutput
 from turbinia.jobs import interface
 from turbinia.jobs import manager
-from turbinia.workers.plaso import PlasoTask
+from turbinia.workers.bulk_extractor import BulkExtractorTask
 
 
-class PlasoJob(interface.TurbiniaJob):
-  """Runs Plaso on some evidence to generate a Plaso file."""
+class BulkExtractorJob(interface.TurbiniaJob):
+  """Bulk Extractor Job.
+
+  This will generate a compressed directory containing the resulting
+  Bulk Extractor output.
+  """
+
   # The types of evidence that this Job will process
-  evidence_input = [
-      Directory, RawDisk, GoogleCloudDisk, GoogleCloudDiskRawEmbedded,
-      BitlockerDisk, APFSEncryptedDisk, CompressedDirectory
-  ]
-  evidence_output = [PlasoFile]
+  evidence_input = [RawDisk, GoogleCloudDisk, GoogleCloudDiskRawEmbedded]
+  evidence_output = [BulkExtractorOutput]
 
-  NAME = 'PlasoJob'
+  NAME = 'BulkExtractorJob'
 
   def create_tasks(self, evidence):
-    """Create task for Plaso.
+    """Create task for Bulk Extractor.
 
     Args:
       evidence: List of evidence objects to process
 
     Returns:
-        A list of PlasoTasks.
+        A list of tasks to schedule.
     """
-    return [PlasoTask() for _ in evidence]
+    # Generate tasks for Bulk Extractor job
+    tasks = [BulkExtractorTask() for _ in evidence]
+    return tasks
 
 
-manager.JobsManager.RegisterJob(PlasoJob)
+manager.JobsManager.RegisterJob(BulkExtractorJob)
