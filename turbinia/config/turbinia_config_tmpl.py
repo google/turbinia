@@ -131,3 +131,24 @@ KOMBU_DURABLE = True
 REDIS_HOST = 'localhost'
 REDIS_PORT = '6379'
 REDIS_DB = '0'
+
+################################################################################
+#                           Email Config
+#
+# These options are required if you wish to use email notifications
+################################################################################
+
+# Will emails notifcations be enabled
+EMAIL_NOTIFICATIONS = False
+
+#Host Address and port number
+EMAIL_HOST_ADDRESS = 'example.address.com'
+EMAIL_PORT = '837'
+
+#Email address and password
+EMAIL_ADDRESS = 'example@address.com'
+EMAIL_PASSWORD = 'Hunter2'
+
+#This is the address you plan on using for recieving email notifications
+RECIEVING_ADDRESS = "example2@address.com'
+
