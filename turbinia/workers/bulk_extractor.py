@@ -120,22 +120,22 @@ class BulkExtractorTask(TurbiniaTask):
                   xml.find('report/elapsed_seconds').text)))
 
       # Retrieve results from each of the scanner runs
-      findings.append(fmt.heading5('Scanner Results'))
-      xml_iter = xml.find('feature_files').iter()
-      for f in xml_iter:
-        if f.tag == 'feature_file':
-          name = next(xml_iter)
-          count = next(xml_iter)
-          findings.append(fmt.bullet('{0}:{1}'.format(name.text, count.text)))
-          features_count += int(count.text)
+      feature_files = xml.find('feature_files')
+      if feature_files is not None:
+        feature_iter = feature_files.iter()
+        findings.append(fmt.heading5('Scanner Results'))
+        for f in feature_iter:
+          if f.tag == 'feature_file':
+            name = next(feature_iter)
+            count = next(feature_iter)
+            findings.append(fmt.bullet('{0}:{1}'.format(name.text, count.text)))
+            features_count += int(count.text)
+      else:
+        findings.append(fmt.heading5("There are no findings to report."))
     except AttributeError as exception:
       log.warning(
           'Error parsing feature from Bulk Extractor report: {0!s}'.format(
               exception))
-      findings.append(
-          fmt.heading5(
-              'The report has been truncated due to an '
-              'error parsing the Bulk Extractor xml report'))
     summary = '{0} artifacts have been extracted.'.format(features_count)
     report = '\n'.join(findings)
     return (report, summary)

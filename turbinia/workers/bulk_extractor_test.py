@@ -59,33 +59,39 @@ class BulkExtractorTaskTest(TestTurbiniaTaskBase):
   def test_generate_report(self, mock_path):
     """Tests Bulk Extractor report generation."""
     # pylint: disable=line-too-long
-    report_sample = textwrap.dedent(
+    empty_report_sample = textwrap.dedent(
         """\
         #### Bulk Extractor Results
         ##### Run Summary
         * Program: BULK_EXTRACTOR - 1.6.0-dev
         * Command Line: bulk_extractor /tmp/test-small.img -o /output/test-small.img
         * Start Time: 2019-09-27T16:34:48Z
-        ##### The report has been truncated due to an error parsing the Bulk Extractor xml report"""
-    )
+        * Elapsed Time: 2.389155
+        ##### There are no findings to report.""")
 
     summary_sample = "0 artifacts have been extracted."
 
-    xml_sample = """<dfxml xmloutputversion="1.0">
-    <creator version="1.0">
-      <program>BULK_EXTRACTOR</program>
-      <version>1.6.0-dev</version>
-      <execution_environment>
-        <command_line>bulk_extractor /tmp/test-small.img -o /output/test-small.img</command_line>
-        <start_time>2019-09-27T16:34:48Z</start_time>
-      </execution_environment>
-    </creator>
-    </dfxml>"""
+    xml_sample = textwrap.dedent(
+        """\
+        <dfxml xmloutputversion="1.0">
+        <creator version="1.0">
+          <program>BULK_EXTRACTOR</program>
+          <version>1.6.0-dev</version>
+          <execution_environment>
+            <command_line>bulk_extractor /tmp/test-small.img -o /output/test-small.img</command_line>
+            <start_time>2019-09-27T16:34:48Z</start_time>
+          </execution_environment>
+        </creator>
+        <report>
+          <elapsed_seconds>2.389155</elapsed_seconds>
+        </report>
+        </dfxml>""")
+
     str_io = StringIO(xml_sample)
     mock_path.join.return_value = str_io
     mock_path.exists.return_value = True
     (report, summary) = self.task.generate_summary_report(str_io)
-    self.assertEqual(report_sample, report)
+    self.assertEqual(empty_report_sample, report)
     self.assertEqual(summary_sample, summary)
 
 
