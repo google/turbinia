@@ -21,6 +21,7 @@ from io import StringIO
 import os
 import unittest
 import mock
+import textwrap
 
 from turbinia.evidence import BulkExtractorOutput
 from turbinia.workers import bulk_extractor
@@ -57,11 +58,17 @@ class BulkExtractorTaskTest(TestTurbiniaTaskBase):
   @mock.patch('os.path')
   def test_generate_report(self, mock_path):
     """Tests Bulk Extractor report generation."""
-    report_sample = """#### Bulk Extractor Results
-##### Run Summary
-* Program: BULK_EXTRACTOR - 1.6.0-dev
-* Command Line: bulk_extractor /tmp/test-small.img -o /output/test-small.img
-* Start Time: 2019-09-27T16:34:48Z"""
+    # pylint: disable=line-too-long
+    report_sample = textwrap.dedent(
+        """\
+        #### Bulk Extractor Results
+        ##### Run Summary
+        * Program: BULK_EXTRACTOR - 1.6.0-dev
+        * Command Line: bulk_extractor /tmp/test-small.img -o /output/test-small.img
+        * Start Time: 2019-09-27T16:34:48Z
+        ##### The report has been truncated due to an error parsing the Bulk Extractor xml report"""
+    )
+
     summary_sample = "0 artifacts have been extracted."
 
     xml_sample = """<dfxml xmloutputversion="1.0">

@@ -15,6 +15,7 @@
 """Task for running Bulk Extractor."""
 
 import os
+import logging
 import xml.etree.ElementTree as xml_tree
 
 from turbinia import TurbiniaException
@@ -22,6 +23,8 @@ from turbinia import TurbiniaException
 from turbinia.evidence import BulkExtractorOutput
 from turbinia.workers import TurbiniaTask
 from turbinia.lib import text_formatter as fmt
+
+log = logging.getLogger('turbinia')
 
 
 class BulkExtractorTask(TurbiniaTask):
@@ -58,7 +61,7 @@ class BulkExtractorTask(TurbiniaTask):
 
       # Generate bulk extractor report
       (report, summary) = self.generate_summary_report(output_file_path)
-      output_evidence.text_data = '\n'.join(report)
+      output_evidence.text_data = report
       result.report_data = output_evidence.text_data
 
       # Compress the bulk extractor output directory.
@@ -126,8 +129,13 @@ class BulkExtractorTask(TurbiniaTask):
           findings.append(fmt.bullet('{0}:{1}'.format(name.text, count.text)))
           features_count += int(count.text)
     except AttributeError as exception:
-      pass
-
+      log.warning(
+          'Error parsing feature from Bulk Extractor report: {0!s}'.format(
+              exception))
+      findings.append(
+          fmt.heading5(
+              'The report has been truncated due to an '
+              'error parsing the Bulk Extractor xml report'))
     summary = '{0} artifacts have been extracted.'.format(features_count)
     report = '\n'.join(findings)
     return (report, summary)

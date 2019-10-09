@@ -90,6 +90,8 @@ def UncompressTarFile(compressed_directory, output_tmp):
 
   Args:
     compressed_directory(str): The path to the tar file.
+    output_tmp(str): The path to the temporary directory that the
+                      uncompressed tar file will be placed into.
 
   Returns:
     str: The path to the uncompressed directory.
@@ -113,6 +115,6 @@ def UncompressTarFile(compressed_directory, output_tmp):
     raise TurbiniaException('An error has occured: {0:s}'.format(exception))
   except tarfile.TarError as exception:
     raise TurbiniaException(
-        'An error has occured while uncompressing the tar'
+        'An error has occured while uncompressing the tar '
         'file: {0:s}'.format(exception))
   return uncompressed_directory
