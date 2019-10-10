@@ -4,7 +4,9 @@
 def sendmail(message):
     import logging
     from turbinia import config
+
     log=logging.getLogger('turbinia')
+
     EMAIL_NOTIFICATIONS = config.EMAIL_NOTIFCATIONS
     EMAIL_HOST_ADDRESS = config.EMAIL_HOST_ADDRESS
     EMAIL_PORT = int(config.EMAIL_PORT)
@@ -44,11 +46,11 @@ def sendmail(message):
 
             #terminate connection
             server.quit()
-            print('Email notification sent')
+            log.info('Email notification sent')
         else:
-            print('Email notifications are disabled')
+            log.info('Email notifications are disabled')
             pass
     except Exception as e:
-            print(e)
-            print('Email failed to send, check config')
+            log.error(e)
+            log.info('Email failed to send, check config')
             pass

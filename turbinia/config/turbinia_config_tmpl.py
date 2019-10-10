@@ -150,5 +150,5 @@ EMAIL_ADDRESS = 'example@address.com'
 EMAIL_PASSWORD = 'Hunter2'
 
 #This is the address you plan on using for recieving email notifications
-RECIEVING_ADDRESS = "example2@address.com'
+RECIEVING_ADDRESS = 'example2@address.com'
 
