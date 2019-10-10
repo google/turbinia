@@ -19,13 +19,17 @@ def sendmail(message):
             from email.mime.multipart import MIMEMultipart
             from email.mime.text import MIMEText
             import smtplib
+
+            #Puts message in MIME format
             msg = MIMEMultipart()
-            #makes message
             msg['From'] = EMAIL_ADDRESS
             msg['To'] = RECIEVING_ADDRESS
             msg['Subject'] = 'Notifcation from Turbina'
             msg.attach(MIMEText(message))
+
+            #start SMTP
             server = smtplib.SMTP(EMAIL_HOST_ADDRESS,EMAIL_PORT)
+
             # identify to mail server
             server.ehlo()
 
@@ -38,10 +42,13 @@ def sendmail(message):
 
             server.sendmail(EMAIL_ADDRESS, RECIEVING_ADDRESS,msg.as_string())
 
+            #terminate connection
             server.quit()
+            print('Email notification sent')
         else:
+            print('Email notifications are disabled')
             pass
     except Exception as e:
             print(e)
             print('Email failed to send, check config')
-            pass        
+            pass
