@@ -1,11 +1,10 @@
-import smtplib
-from turbinia import config
-from turbinia import 
 
 
 #Sends notfications via email
-
 def sendmail(message):
+    import logging
+    from turbinia import config
+    log=logging.getLogger('turbinia')
     EMAIL_NOTIFICATIONS = config.EMAIL_NOTIFCATIONS
     EMAIL_HOST_ADDRESS = config.EMAIL_HOST_ADDRESS
     EMAIL_PORT = int(config.EMAIL_PORT)
@@ -16,17 +15,17 @@ def sendmail(message):
     RECIEVING_ADDRESS = config.RECIEVING_ADDRESS
     try:
         if EMAIL_NOTIFICATIONS == True:
-            from email.mime.multipart import MIMEMultipart 
+            #Imports SMTP and  MIME(The format used for emails)
+            from email.mime.multipart import MIMEMultipart
             from email.mime.text import MIMEText
             import smtplib
             msg = MIMEMultipart()
-            #Creates message
+            #makes message
             msg['From'] = EMAIL_ADDRESS
             msg['To'] = RECIEVING_ADDRESS
             msg['Subject'] = 'Notifcation from Turbina'
             msg.attach(MIMEText(message))
             server = smtplib.SMTP(EMAIL_HOST_ADDRESS,EMAIL_PORT)
-
             # identify to mail server
             server.ehlo()
 
@@ -45,7 +44,4 @@ def sendmail(message):
     except Exception as e:
             print(e)
             print('Email failed to send, check config')
-            pass
-        
-
-config.EMAIL_HOST_ADDRESS
+            pass        
