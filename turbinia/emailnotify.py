@@ -6,16 +6,15 @@ def sendmail(message):
     from turbinia import config
 
     log=logging.getLogger('turbinia')
-
-    EMAIL_NOTIFICATIONS = config.EMAIL_NOTIFCATIONS
-    EMAIL_HOST_ADDRESS = config.EMAIL_HOST_ADDRESS
-    EMAIL_PORT = int(config.EMAIL_PORT)
-
-    EMAIL_ADDRESS = config.EMAIL_ADDRESS
-    EMAIL_PASSWORD = config.EMAIL_PASSWORD
-
-    RECIEVING_ADDRESS = config.RECIEVING_ADDRESS
     try:
+        EMAIL_NOTIFICATIONS = config.EMAIL_NOTIFCATIONS
+        EMAIL_HOST_ADDRESS = config.EMAIL_HOST_ADDRESS
+        EMAIL_PORT = int(config.EMAIL_PORT)
+
+        EMAIL_ADDRESS = config.EMAIL_ADDRESS
+        EMAIL_PASSWORD = config.EMAIL_PASSWORD
+
+        RECIEVING_ADDRESS = config.RECIEVING_ADDRESS
         if EMAIL_NOTIFICATIONS == True:
             #Imports SMTP and  MIME(The format used for emails)
             from email.mime.multipart import MIMEMultipart
