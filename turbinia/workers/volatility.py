@@ -26,11 +26,7 @@ MAX_REPORT_SIZE = 2**30  # 1 GiB
 
 
 class VolatilityTask(TurbiniaTask):
-  """Task to execute volatility.
-
-  Attributes:
-    module(str): The name of the volatility module to run.
-  """
+  """Task to execute volatility."""
 
   def __init__(self, module='test', *args, **kwargs):
     super(VolatilityTask, self).__init__(*args, **kwargs)
@@ -40,7 +36,7 @@ class VolatilityTask(TurbiniaTask):
     """Run volatility against evidence.
 
     Args:
-        evidence (Evidence object): The evidence we will process
+        evidence (Evidence object):  The evidence we will process.
         result (TurbiniaTaskResult): The object to place task results into.
 
     Returns:

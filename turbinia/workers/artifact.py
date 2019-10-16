@@ -34,8 +34,8 @@ class FileArtifactExtractionTask(TurbiniaTask):
     """Extracts artifacts using Plaso image_export.py.
 
     Args:
-        evidence: evidence to be processed.
-        result: A TurbiniaTaskResult object to place task results into.
+        evidence (Evidence object):  The evidence we will process.
+        result (TurbiniaTaskResult): The object to place task results into.
 
     Returns:
         TurbiniaTaskResult object.
