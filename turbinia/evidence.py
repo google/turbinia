@@ -556,9 +556,7 @@ class RawMemory(Evidence):
     self.module_list = module_list
 
 
-class BinaryExtraction(Evidence):
+class BinaryExtraction(CompressedDirectory):
   """Binaries extracted from evidence."""
+  pass
 
-  def __init__(self, *args, **kwargs):
-    super(BinaryExtraction, self).__init__(*args, **kwargs)
-    self.copyable = True

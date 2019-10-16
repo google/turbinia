@@ -74,14 +74,14 @@ class BinaryExtractorTask(TurbiniaTask):
     binary_cnt = len(files)-1
 
     result.status = 'Extracted {0:d} hashes and {1:d} binaries from the ' \
-    'evidence.'.format(hash_cnt, binary_cnt)
-    #result.log('Extracted {0:d} hashes from the evidence.'.format(hash_cnt))
-    #result.log('Extracted {0:d} binaries from the evidence.'.format(file_cnt))
+                    'evidence.'.format(hash_cnt, binary_cnt)
 
     if hash_cnt != binary_cnt:
-      result.log('Number of extracted binaries does is not equal to the number '
-                 'of extracted hashes. This might incidate issues with '
+      result.log('Number of extracted binaries is not equal to the number '
+                 'of extracted hashes. This might indicate issues with '
                  'image_export.py. Check binary_extraction.log for more '
-                 'details', logging.WARNING)
+                 'details.', logging.WARNING)
+
+    binary_extraction_evidence.compress()
 
     return result
