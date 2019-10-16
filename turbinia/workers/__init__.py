@@ -420,7 +420,7 @@ class TurbiniaTask(object):
     log_files = log_files if log_files else []
     new_evidence = new_evidence if new_evidence else []
     success_codes = success_codes if success_codes else [0]
-    
+
     if shell:
       proc = subprocess.Popen(cmd, shell=True)
     else:

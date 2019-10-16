@@ -20,7 +20,6 @@ import logging
 import json
 import os
 
-
 from turbinia import config
 from turbinia.workers import TurbiniaTask
 from turbinia.evidence import BinaryExtraction
@@ -44,8 +43,7 @@ class BinaryExtractorTask(TurbiniaTask):
     binary_extraction_evidence = BinaryExtraction()
 
     binary_extraction_evidence.local_path = self.output_dir
-    image_export_log = os.path.join(
-        self.output_dir, 'binary_extraction.log')
+    image_export_log = os.path.join(self.output_dir, 'binary_extraction.log')
 
     binary_extraction_dir = os.path.join(self.output_dir, 'extracted_binaries')
 
@@ -63,24 +61,25 @@ class BinaryExtractorTask(TurbiniaTask):
         cmd, result, log_files=[image_export_log],
         new_evidence=[binary_extraction_evidence], close=True)
 
-    json_path = os.path.join(self.output_dir, 'extracted_binaries',
-                             'hashes.json')
+    json_path = os.path.join(
+        self.output_dir, 'extracted_binaries', 'hashes.json')
 
     with open(json_path) as json_file:
       hashes = json.load(json_file)
 
     files = next(os.walk(binary_extraction_dir))[2]
     hash_cnt = len(hashes)
-    binary_cnt = len(files)-1
+    binary_cnt = len(files) - 1
 
     result.status = 'Extracted {0:d} hashes and {1:d} binaries from the ' \
                     'evidence.'.format(hash_cnt, binary_cnt)
 
     if hash_cnt != binary_cnt:
-      result.log('Number of extracted binaries is not equal to the number '
-                 'of extracted hashes. This might indicate issues with '
-                 'image_export.py. Check binary_extraction.log for more '
-                 'details.', logging.WARNING)
+      result.log(
+          'Number of extracted binaries is not equal to the number '
+          'of extracted hashes. This might indicate issues with '
+          'image_export.py. Check binary_extraction.log for more '
+          'details.', logging.WARNING)
 
     binary_extraction_evidence.compress()
 

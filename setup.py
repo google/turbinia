@@ -30,7 +30,6 @@ except ImportError:  # for pip <= 9.0.3
   from pip.download import PipSession
   from pip.req import parse_requirements
 
-
 # make sure turbinia is in path
 sys.path.insert(0, '.')
 
@@ -45,30 +44,24 @@ turbinia_description = (
     'processing where possible.')
 
 setup(
-    name='turbinia',
-    version=turbinia.__version__,
+    name='turbinia', version=turbinia.__version__,
     description='Automation and Scaling of Digital Forensics Tools',
     long_description=turbinia_description,
-    license='Apache License, Version 2.0',
-    url='http://turbinia.plumbing/',
+    license='Apache License, Version 2.0', url='http://turbinia.plumbing/',
     maintainer='Turbinia development team',
-    maintainer_email='turbinia-dev@googlegroups.com',
-    classifiers=[
+    maintainer_email='turbinia-dev@googlegroups.com', classifiers=[
         'Development Status :: 4 - Beta',
         'Environment :: Console',
         'Operating System :: OS Independent',
         'Programming Language :: Python',
-    ],
-    packages=find_packages(),
-    include_package_data=True,
-    zip_safe=False,
-    entry_points={'console_scripts': ['turbiniactl=turbinia.turbiniactl:main']},
-    install_requires=[str(req.req) for req in parse_requirements(
-        'requirements.txt', session=PipSession())
-    ],
-    extras_require={
+    ], packages=find_packages(), include_package_data=True,
+    zip_safe=False, entry_points={
+        'console_scripts': ['turbiniactl=turbinia.turbiniactl:main']
+    }, install_requires=[
+        str(req.req)
+        for req in parse_requirements('requirements.txt', session=PipSession())
+    ], extras_require={
         'dev': ['mock', 'nose', 'yapf'],
         'local': ['celery~=4.1', 'kombu~=4.1', 'redis~=3.0'],
         'worker': ['plaso>=20171118', 'pyhindsight>=2.2.0']
-    }
-)
+    })

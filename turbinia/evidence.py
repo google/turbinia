@@ -559,4 +559,3 @@ class RawMemory(Evidence):
 class BinaryExtraction(CompressedDirectory):
   """Binaries extracted from evidence."""
   pass
-
