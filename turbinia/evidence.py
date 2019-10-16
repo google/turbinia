@@ -24,6 +24,7 @@ import sys
 from turbinia import config
 from turbinia import TurbiniaException
 from turbinia.processors import mount_local
+from turbinia.processors import archive
 
 # pylint: disable=keyword-arg-before-vararg
 
@@ -166,7 +167,7 @@ class Evidence(object):
 
     return serialized
 
-  def _preprocess(self):
+  def _preprocess(self, _):
     """Preprocess this evidence prior to task running.
 
     This gets run in the context of the local task execution on the worker
@@ -184,16 +185,21 @@ class Evidence(object):
     """
     pass
 
-  def preprocess(self):
+  def preprocess(self, tmp_dir=None):
     """Runs the possible parent's evidence preprocessing code, then ours.
 
     This is a wrapper function that will call the chain of pre-processors
     starting with the most distant ancestor.  After all of the ancestors have
     been processed, then we run our pre-processor.
+
+    Args:
+      tmp_dir(str): The path to the temporary directory that the
+                       Task will write to.
+
     """
     if self.parent_evidence:
       self.parent_evidence.preprocess()
-    self._preprocess()
+    self._preprocess(tmp_dir)
 
   def postprocess(self):
     """Runs our postprocessing code, then our possible parent's evidence.
@@ -259,6 +265,41 @@ class Directory(Evidence):
   pass
 
 
+class CompressedDirectory(Evidence):
+  """CompressedDirectory based evidence.
+
+  Attributes:
+    compressed_directory: The path to the compressed directory.
+    uncompressed_directory: The path to the uncompressed directory.
+  """
+
+  def __init__(
+      self, compressed_directory=None, uncompressed_directory=None, *args,
+      **kwargs):
+    """Initialization for CompressedDirectory evidence object."""
+    super(CompressedDirectory, self).__init__(*args, **kwargs)
+    self.compressed_directory = compressed_directory
+    self.uncompressed_directory = uncompressed_directory
+    self.copyable = True
+
+  def _preprocess(self, tmp_dir):
+    # Uncompress a given tar file and return the uncompressed path.
+    self.uncompressed_directory = archive.UncompressTarFile(
+        self.local_path, tmp_dir)
+    self.local_path = self.uncompressed_directory
+
+  def compress(self):
+    """ Compresses a file or directory."""
+    # Compress a given directory and return the compressed path.
+    self.compressed_directory = archive.CompressDirectory(self.local_path)
+    self.local_path = self.compressed_directory
+
+
+class BulkExtractorOutput(CompressedDirectory):
+  """Bulk Extractor based evidence."""
+  pass
+
+
 class ChromiumProfile(Evidence):
   """Chromium based browser profile evidence.
 
@@ -297,7 +338,7 @@ class RawDisk(Evidence):
     self.size = size
     super(RawDisk, self).__init__(*args, **kwargs)
 
-  def _preprocess(self):
+  def _preprocess(self, _):
     self.loopdevice_path = mount_local.PreprocessLosetup(self.local_path)
 
   def _postprocess(self):
@@ -385,7 +426,7 @@ class GoogleCloudDisk(RawDisk):
     super(GoogleCloudDisk, self).__init__(*args, **kwargs)
     self.cloud_only = True
 
-  def _preprocess(self):
+  def _preprocess(self, _):
     self.local_path = google_cloud.PreprocessAttachDisk(self.disk_name)
 
   def _postprocess(self):
@@ -412,7 +453,7 @@ class GoogleCloudDiskRawEmbedded(GoogleCloudDisk):
     self.embedded_path = embedded_path
     super(GoogleCloudDiskRawEmbedded, self).__init__(*args, **kwargs)
 
-  def _preprocess(self):
+  def _preprocess(self, _):
     self.local_path = google_cloud.PreprocessAttachDisk(self.disk_name)
     self.loopdevice_path = mount_local.PreprocessLosetup(self.local_path)
     self.mount_path = mount_local.PreprocessMountDisk(
