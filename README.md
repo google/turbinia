@@ -88,6 +88,7 @@ Commands:
     celeryworker        Run Celery worker
     status              Get Turbinia Task status
     server              Run Turbinia Server
+    config              Prints out config file
 ```
 
 The commands for processing the evidence types of rawdisk and directory specify information about evidence that Turbinia should process. By default, when adding new evidence to be processed, turbiniactl will act as a client and send a request to the configured Turbinia server, otherwise if ```--server``` is specified, it will start up its own Turbinia server process.  Here's the turbiniactl usage for adding a raw disk type of evidence to be processed by Turbinia:
