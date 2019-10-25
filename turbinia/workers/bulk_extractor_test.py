@@ -66,7 +66,7 @@ class BulkExtractorTaskTest(TestTurbiniaTaskBase):
         * Program: BULK_EXTRACTOR - 1.6.0-dev
         * Command Line: bulk_extractor /tmp/test-small.img -o /output/test-small.img
         * Start Time: 2019-09-27T16:34:48Z
-        * Elapsed Time: 2.389155
+        * Elapsed Time: N/A
         ##### There are no findings to report.""")
 
     summary_sample = "0 artifacts have been extracted."
@@ -82,9 +82,6 @@ class BulkExtractorTaskTest(TestTurbiniaTaskBase):
             <start_time>2019-09-27T16:34:48Z</start_time>
           </execution_environment>
         </creator>
-        <report>
-          <elapsed_seconds>2.389155</elapsed_seconds>
-        </report>
         </dfxml>""")
 
     str_io = StringIO(xml_sample)
