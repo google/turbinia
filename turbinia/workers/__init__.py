@@ -170,9 +170,8 @@ class TurbiniaTaskResult(object):
     for evidence in self.evidence:
       if evidence.local_path and os.path.exists(evidence.local_path):
         self.saved_paths.append(evidence.local_path)
-        if not task.run_local:
-          if evidence.copyable and not config.SHARED_FILESYSTEM:
-            task.output_manager.save_evidence(evidence, self)
+        if not task.run_local and evidence.copyable:
+          task.output_manager.save_evidence(evidence, self)
       else:
         self.log(
             'Evidence {0:s} has empty or missing file at local_path {1:s} so '
@@ -440,7 +439,7 @@ class TurbiniaTask(object):
             'Log file {0:s} is empty. Not saving'.format(file_),
             level=logging.DEBUG)
         continue
-      result.log('Output file at {0:s}'.format(file_))
+      result.log('Output log file found at {0:s}'.format(file_))
       if not self.run_local:
         self.output_manager.save_local_file(file_, result)
 
