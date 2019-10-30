@@ -7,7 +7,7 @@ def sendmail(message):
     log=logging.getLogger('turbinia')
     try:
         EMAIL_NOTIFICATIONS = config.EMAIL_NOTIFCATIONS
-        if EMAIL_NOTIFICATIONS == True:
+        if EMAIL_NOTIFICATIONS == 'true':
             EMAIL_HOST_ADDRESS = config.EMAIL_HOST_ADDRESS
             EMAIL_PORT = int(config.EMAIL_PORT)
 
