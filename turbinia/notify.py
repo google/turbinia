@@ -1,21 +1,20 @@
-
+import logging
+from turbinia import config
 
 #Sends notfications via email
 def sendmail(message):
-    import logging
-    from turbinia import config
 
     log=logging.getLogger('turbinia')
     try:
         EMAIL_NOTIFICATIONS = config.EMAIL_NOTIFCATIONS
-        EMAIL_HOST_ADDRESS = config.EMAIL_HOST_ADDRESS
-        EMAIL_PORT = int(config.EMAIL_PORT)
-
-        EMAIL_ADDRESS = config.EMAIL_ADDRESS
-        EMAIL_PASSWORD = config.EMAIL_PASSWORD
-
-        RECIEVING_ADDRESS = config.RECIEVING_ADDRESS
         if EMAIL_NOTIFICATIONS == True:
+            EMAIL_HOST_ADDRESS = config.EMAIL_HOST_ADDRESS
+            EMAIL_PORT = int(config.EMAIL_PORT)
+
+            EMAIL_ADDRESS = config.EMAIL_ADDRESS
+            EMAIL_PASSWORD = config.EMAIL_PASSWORD
+
+            RECIEVING_ADDRESS = config.RECIEVING_ADDRESS
             #Imports SMTP and  MIME(The format used for emails)
             from email.mime.multipart import MIMEMultipart
             from email.mime.text import MIMEText
@@ -53,3 +52,6 @@ def sendmail(message):
             log.error(e)
             log.info('Email failed to send, check config')
             pass
+
+def main(message):
+    sendmail(message)
