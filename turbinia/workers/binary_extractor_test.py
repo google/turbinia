@@ -63,9 +63,9 @@ class BinaryExtractorTaskTest(unittest.TestCase):
     }
 
     for subfolder, files in test_files.items():
-      os.makedirs(os.path.join(test_dir, subfolder), 0755)
+      os.makedirs(os.path.join(test_dir, subfolder))
       for file in files:
-        os.mknod(os.path.join(test_dir, subfolder, file), 0755)
+        os.mknod(os.path.join(test_dir, subfolder, file))
 
     task = binary_extractor.BinaryExtractorTask()
     binary_cnt, hash_cnt = task.check_extraction(test_dir)
