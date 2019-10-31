@@ -22,7 +22,7 @@ import smtplib
 log=logging.getLogger('turbinia')
 
 #Sends notfications via email
-def sendmail(message):
+def sendmail(subject, message):
     '''Sends an Email notification via SMTP'''
     try:
         if config.EMAIL_NOTIFICATIONS == True:
@@ -31,7 +31,7 @@ def sendmail(message):
             msg = MIMEMultipart()
             msg['From'] = config.EMAIL_ADDRESS
             msg['To'] = config.EMAIL_RECIEVING_ADDRESS
-            msg['Subject'] = config.EMAIL_SUBJECT
+            msg['Subject'] = subject
             msg.attach(MIMEText(message))
 
             #start SMTP
@@ -63,5 +63,5 @@ def sendmail(message):
             log.error(e)
             log.info('Email failed to send, check config')
 
-def main(message):
-    sendmail(message)
+def main(subject, message):
+    sendmail(subject, message)

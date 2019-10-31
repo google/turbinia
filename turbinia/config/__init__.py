@@ -86,7 +86,6 @@ OPTIONAL_VARS = [
     'EMAIL_ADDRESS',
     'EMAIL_PASSWORD',
     'EMAIL_RECIEVING_ADDRESS',
-    'EMAIL_SUBJECT'
 ]
 
 # Environment variable to look for path data in
