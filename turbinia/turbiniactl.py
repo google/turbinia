@@ -31,6 +31,7 @@ from turbinia.config import logger
 from turbinia.lib import libcloudforensics
 from turbinia import __version__
 from turbinia.processors import archive
+from turbinia import notify
 
 log = logging.getLogger('turbinia')
 # We set up the logger first without the file handler, and we will set up the
@@ -135,6 +136,9 @@ def main():
   parser_config = subparsers.add_parser('config', help='Print out config file')
   parser_config.add_argument(
       '-f', '--file_only', action='store_true', help='Print out file path only')
+
+  #Sends Test Notification
+  parser_testnotify = subparsers.add_parser('testnotify', help='Sends test notification')
 
   # TODO(aarontp): Find better way to specify these that allows for multiple
   # pieces of evidence to be submitted. Maybe automagically create different
@@ -418,6 +422,9 @@ def main():
           "Failed to read config file {0:s}: {1!s}".format(
               config.configSource, exception))
       sys.exit(1)
+  #sends test notification
+  if args.command == 'testnotify':
+    notify.main('This is a test noticiation')
 
   if args.jobs_whitelist and args.jobs_blacklist:
     log.error(

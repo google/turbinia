@@ -138,17 +138,20 @@ REDIS_DB = '0'
 # These options are required if you wish to use email notifications
 ################################################################################
 
-# Will emails notifcations be enabled, set to 'true' to enable
-EMAIL_NOTIFICATIONS = 'false'
+# Will emails notifcations be enabled
+EMAIL_NOTIFICATIONS = False
 
-#Host Address and port number
+#Host Address and port number(TLS)
 EMAIL_HOST_ADDRESS = 'example.address.com'
-EMAIL_PORT = '837'
+EMAIL_PORT = 587
 
 #Email address and password
 EMAIL_ADDRESS = 'example@address.com'
 EMAIL_PASSWORD = 'Hunter2'
 
 #This is the address you plan on using for recieving email notifications
-RECIEVING_ADDRESS = 'example2@address.com'
+EMAIL_RECIEVING_ADDRESS = 'example2@address.com'
+
+#This will be the subject of the emails
+EMAIL_SUBJECT = 'Notifcation From Turbinia'
 
