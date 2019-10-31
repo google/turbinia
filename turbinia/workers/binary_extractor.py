@@ -28,6 +28,29 @@ from turbinia.evidence import BinaryExtraction
 class BinaryExtractorTask(TurbiniaTask):
   """Extract binaries out of evidence and provide JSON file with hashes."""
 
+  def check_extraction(self, binary_extraction_dir):
+    """Checks counts for extracted binaries and hashes.
+
+    Args:
+      binary_extraction_dir (str): path to folder with extracted binaries.
+
+    Returns:
+      Tuple(
+        binary_cnt(int): Number of extracted binaries.
+        hash_cnt(int): Number of extracted hashes.
+      )
+    """
+    json_path = os.path.join(binary_extraction_dir, 'hashes.json')
+
+    with open(json_path) as json_file:
+      hashes = json.load(json_file)
+
+    binary_cnt = sum(
+        len(files) for _, _, files in os.walk(binary_extraction_dir)) - 1
+    hash_cnt = len(hashes)
+
+    return (binary_cnt, hash_cnt)
+
   def run(self, evidence, result):
     """Task that extracts binaries with image_export.py.
 
@@ -44,7 +67,6 @@ class BinaryExtractorTask(TurbiniaTask):
 
     binary_extraction_evidence.local_path = self.output_dir
     image_export_log = os.path.join(self.output_dir, 'binary_extraction.log')
-
     binary_extraction_dir = os.path.join(self.output_dir, 'extracted_binaries')
 
     cmd = [
@@ -61,18 +83,11 @@ class BinaryExtractorTask(TurbiniaTask):
         cmd, result, log_files=[image_export_log],
         new_evidence=[binary_extraction_evidence], close=True)
 
-    json_path = os.path.join(
-        self.output_dir, 'extracted_binaries', 'hashes.json')
+    binary_cnt, hash_cnt = self.check_extraction(binary_extraction_dir)
 
-    with open(json_path) as json_file:
-      hashes = json.load(json_file)
-
-    files = next(os.walk(binary_extraction_dir))[2]
-    hash_cnt = len(hashes)
-    binary_cnt = len(files) - 1
-
-    result.status = 'Extracted {0:d} hashes and {1:d} binaries from the ' \
-                    'evidence.'.format(hash_cnt, binary_cnt)
+    result.status = (
+        'Extracted {0:d} hashes and {1:d} binaries from the '
+        'evidence.'.format(hash_cnt, binary_cnt))
 
     if hash_cnt != binary_cnt:
       result.log(

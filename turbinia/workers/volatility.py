@@ -26,7 +26,11 @@ MAX_REPORT_SIZE = 2**30  # 1 GiB
 
 
 class VolatilityTask(TurbiniaTask):
-  """Task to execute volatility."""
+  """Task to execute volatility.
+
+  Attributes:
+    module(str): The name of the volatility module to run.
+  """
 
   def __init__(self, module='test', *args, **kwargs):
     super(VolatilityTask, self).__init__(*args, **kwargs)
