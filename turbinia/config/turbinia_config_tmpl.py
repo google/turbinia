@@ -152,6 +152,3 @@ EMAIL_PASSWORD = 'Hunter2'
 #This is the address you plan on using for recieving email notifications
 EMAIL_RECIEVING_ADDRESS = 'example2@address.com'
 
-#This will be the subject of the emails
-EMAIL_SUBJECT = 'Notifcation From Turbinia'
-
