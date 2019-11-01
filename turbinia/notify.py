@@ -53,15 +53,24 @@ def sendmail(subject, message):
                 log.info('EMAIL_ADDRESS or EMAIL_PASSWORD is not definied, attempting to continue without logging in')
 
             server.sendmail(config.EMAIL_ADDRESS, config.EMAIL_RECIEVING_ADDRESS,msg.as_string())
-
-            #terminate connection
-            server.quit()
             log.info('Email notification sent')
         else:
             log.info('Email notifications are disabled')
-    except Exception as e:
-            log.error(e)
-            log.info('Email failed to send, check config')
+    except smtplib.SMTPException as e:
+        log.error(e)
+        log.error('Email failed to send, SMTP has raised an error, this likely means that their is a problem with the config')
+    except TypeError:
+        log.error('Email failed to send, There is likely a problem with the config')
+    except NameError:
+        log.error('Email failed to send, A value which is required for email notifications is not defined in the config')
+    finally:
+        #Terminate connection to server if active
+        try:
+            server.quit()
+        except UnboundLocalError:
+            pass
+            
+            
 
 def main(subject, message):
     sendmail(subject, message)
