@@ -20,8 +20,8 @@ from io import StringIO
 
 import os
 import unittest
-import mock
 import textwrap
+import mock
 
 from turbinia.evidence import BulkExtractorOutput
 from turbinia.workers import bulk_extractor

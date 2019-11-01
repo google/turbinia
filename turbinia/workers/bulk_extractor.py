@@ -73,21 +73,20 @@ class BulkExtractorTask(TurbiniaTask):
     return result
 
   def check_xml_attrib(self, xml_key):
-    """Checks if a key exists within the xml report
+    """Checks if a key exists within the xml report.
 
-    Args: 
+    Args:
       xml_key(str): the xml key to check for.
-    
+
     Returns:
       xml_hit(str): the xml value else return N/A.
     """
-    xml_hit = "N/A"
+    xml_hit = 'N/A'
     xml_search = self.xml.find(xml_key)
 
     # If exists, return the text value.
     if xml_search is not None:
       xml_hit = xml_search.text
-      return xml_hit
     return xml_hit
 
   def generate_summary_report(self, output_file_path):
