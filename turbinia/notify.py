@@ -20,7 +20,6 @@ from email.mime.text import MIMEText
 from turbinia import config
 log = logging.getLogger('turbinia')
 
-
 #Sends notfications via email
 def sendmail(subject, message):
   '''Sends an Email notification via SMTP'''
@@ -81,4 +80,5 @@ def sendmail(subject, message):
 
 
 def main(subject, message):
+  '''main'''
   sendmail(subject, message)
