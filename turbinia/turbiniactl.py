@@ -138,7 +138,8 @@ def main():
       '-f', '--file_only', action='store_true', help='Print out file path only')
 
   #Sends Test Notification
-  parser_testnotify = subparsers.add_parser('testnotify', help='Sends test notification')
+  parser_testnotify = subparsers.add_parser(
+      'testnotify', help='Sends test notification')
 
   # TODO(aarontp): Find better way to specify these that allows for multiple
   # pieces of evidence to be submitted. Maybe automagically create different
