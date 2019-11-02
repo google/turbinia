@@ -72,6 +72,23 @@ class BulkExtractorTask(TurbiniaTask):
       return result
     return result
 
+  def check_xml_attrib(self, xml_key):
+    """Checks if a key exists within the xml report.
+
+    Args:
+      xml_key(str): the xml key to check for.
+
+    Returns:
+      xml_hit(str): the xml value else return N/A.
+    """
+    xml_hit = 'N/A'
+    xml_search = self.xml.find(xml_key)
+
+    # If exists, return the text value.
+    if xml_search is not None:
+      xml_hit = xml_search.text
+    return xml_hit
+
   def generate_summary_report(self, output_file_path):
     """Generate a summary report from the resulting bulk extractor run.
 
@@ -93,7 +110,7 @@ class BulkExtractorTask(TurbiniaTask):
       return (report, report)
 
     # Parse existing XML file.
-    xml = xml_tree.parse(report_path)
+    self.xml = xml_tree.parse(report_path)
 
     # Place in try/except statement to continue execution when
     # an attribute is not found and NoneType is returned.
@@ -104,23 +121,25 @@ class BulkExtractorTask(TurbiniaTask):
       findings.append(
           fmt.bullet(
               'Program: {0} - {1}'.format(
-                  xml.find('creator/program').text,
-                  xml.find('creator/version').text)))
+                  self.check_xml_attrib('creator/program'),
+                  self.check_xml_attrib('creator/version'))))
       findings.append(
           fmt.bullet(
               'Command Line: {0}'.format(
-                  xml.find('creator/execution_environment/command_line').text)))
+                  self.check_xml_attrib(
+                      'creator/execution_environment/command_line'))))
       findings.append(
           fmt.bullet(
               'Start Time: {0}'.format(
-                  xml.find('creator/execution_environment/start_time').text)))
+                  self.check_xml_attrib(
+                      'creator/execution_environment/start_time'))))
       findings.append(
           fmt.bullet(
               'Elapsed Time: {0}'.format(
-                  xml.find('report/elapsed_seconds').text)))
+                  self.check_xml_attrib('report/elapsed_seconds'))))
 
       # Retrieve results from each of the scanner runs
-      feature_files = xml.find('feature_files')
+      feature_files = self.xml.find('feature_files')
       if feature_files is not None:
         feature_iter = feature_files.iter()
         findings.append(fmt.heading5('Scanner Results'))
