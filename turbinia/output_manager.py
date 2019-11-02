@@ -194,10 +194,15 @@ class OutputManager(object):
     local_path = None
     for writer in self._output_writers:
       new_path = writer.copy_to(file_)
-      if new_path and result:
-        result.saved_paths.append(new_path)
-        saved_path = new_path
-        saved_path_type = writer.name
+      if result:
+        if new_path:
+          result.saved_paths.append(new_path)
+          saved_path = new_path
+          saved_path_type = writer.name
+        elif os.path.exists(file_) and os.path.getsize(file_) > 0:
+          # We want to save the old path if the path is still valid.
+          result.saved_paths.append(file_)
+
       if writer.name == LocalOutputWriter.NAME:
         local_path = new_path
 

@@ -456,7 +456,7 @@ class TurbiniaTask(object):
               'Output file {0:s} is empty. Not saving'.format(file_),
               level=logging.DEBUG)
           continue
-        result.log('Output file at {0:s}'.format(file_))
+        result.log('Output save file at {0:s}'.format(file_))
         if not self.run_local:
           self.output_manager.save_local_file(file_, result)
 
