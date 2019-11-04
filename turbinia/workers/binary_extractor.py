@@ -26,13 +26,21 @@ from turbinia.evidence import BinaryExtraction
 
 
 class BinaryExtractorTask(TurbiniaTask):
-  """Extract binaries out of evidence and provide JSON file with hashes."""
+  """Extract binaries out of evidence and provide JSON file with hashes.
+  
+  Attributes:
+    json_path(str): path to output JSON file.
+    binary_extraction_dir(str): path to extraction directory. 
+  """
 
-  def check_extraction(self, binary_extraction_dir):
+  def __init__(self, *args, **kwargs):
+    """Initializes BinaryExtractorTask."""
+    super(BinaryExtractorTask, self).__init__(*args, **kwargs)
+    self.json_path = None
+    self.binary_extraction_dir = None
+
+  def check_extraction(self):
     """Checks counts for extracted binaries and hashes.
-
-    Args:
-      binary_extraction_dir (str): path to folder with extracted binaries.
 
     Returns:
       Tuple(
@@ -40,13 +48,12 @@ class BinaryExtractorTask(TurbiniaTask):
         hash_cnt(int): Number of extracted hashes.
       )
     """
-    json_path = os.path.join(binary_extraction_dir, 'hashes.json')
 
-    with open(json_path) as json_file:
+    with open(self.json_path) as json_file:
       hashes = json.load(json_file)
 
     binary_cnt = sum(
-        len(files) for _, _, files in os.walk(binary_extraction_dir)) - 1
+        len(files) for _, _, files in os.walk(self.binary_extraction_dir)) - 1
     hash_cnt = len(hashes)
 
     return (binary_cnt, hash_cnt)
@@ -67,7 +74,9 @@ class BinaryExtractorTask(TurbiniaTask):
 
     binary_extraction_evidence.local_path = self.output_dir
     image_export_log = os.path.join(self.output_dir, 'binary_extraction.log')
-    binary_extraction_dir = os.path.join(self.output_dir, 'extracted_binaries')
+    self.binary_extraction_dir = os.path.join(
+        self.output_dir, 'extracted_binaries')
+    self.json_path = os.path.join(self.binary_extraction_dir, 'hashes.json')
 
     cmd = [
         'image_export.py', '--partitions', 'all', '--no_vss', '--signatures',
@@ -75,15 +84,14 @@ class BinaryExtractorTask(TurbiniaTask):
     ]
     if config.DEBUG_TASKS:
       cmd.append('-d')
-    cmd.extend(['-w', binary_extraction_dir, evidence.local_path])
+    cmd.extend(['-w', self.binary_extraction_dir, evidence.local_path])
 
     result.log('Running image_export as [{0:s}]'.format(' '.join(cmd)))
-
     self.execute(
-        cmd, result, log_files=[image_export_log],
+        cmd, result, log_files=[image_export_log, self.json_path],
         new_evidence=[binary_extraction_evidence], close=True)
 
-    binary_cnt, hash_cnt = self.check_extraction(binary_extraction_dir)
+    binary_cnt, hash_cnt = self.check_extraction()
 
     result.status = (
         'Extracted {0:d} hashes and {1:d} binaries from the '
