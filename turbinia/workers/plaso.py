@@ -32,8 +32,8 @@ class PlasoTask(TurbiniaTask):
     """Task that process data with Plaso.
 
     Args:
-        evidence: Path to data to process.
-        result: A TurbiniaTaskResult object to place task results into.
+        evidence (Evidence object):  The evidence we will process.
+        result (TurbiniaTaskResult): The object to place task results into.
 
     Returns:
         TurbiniaTaskResult object.

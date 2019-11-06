@@ -30,11 +30,13 @@ class TomcatAnalysisTask(TurbiniaTask):
 
   def run(self, evidence, result):
     """Run the Tomcat analysis worker.
+
     Args:
-       evidence (Evidence object):  The evidence to process
-       result (TurbiniaTaskResult): The object to place task results into.
+        evidence (Evidence object):  The evidence we will process.
+        result (TurbiniaTaskResult): The object to place task results into.
+
     Returns:
-      TurbiniaTaskResult object.
+        TurbiniaTaskResult object.
     """
     # What type of evidence we should output.
     output_evidence = ReportText()

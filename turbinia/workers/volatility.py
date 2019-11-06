@@ -40,7 +40,7 @@ class VolatilityTask(TurbiniaTask):
     """Run volatility against evidence.
 
     Args:
-        evidence (Evidence object): The evidence we will process
+        evidence (Evidence object):  The evidence we will process.
         result (TurbiniaTaskResult): The object to place task results into.
 
     Returns:
