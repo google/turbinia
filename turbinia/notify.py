@@ -22,6 +22,7 @@ from turbinia import config
 
 log = logging.getLogger('turbinia')
 
+
 #Sends notfications via email
 def sendmail(subject, message):
   """Sends an Email notification via SMTP
