@@ -554,3 +554,8 @@ class RawMemory(Evidence):
     super(RawMemory, self).__init__(*args, **kwargs)
     self.profile = profile
     self.module_list = module_list
+
+
+class BinaryExtraction(CompressedDirectory):
+  """Binaries extracted from evidence."""
+  pass

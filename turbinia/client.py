@@ -49,6 +49,7 @@ from turbinia.workers.strings import StringsUnicodeTask
 from turbinia.workers.tomcat import TomcatAnalysisTask
 from turbinia.workers.volatility import VolatilityTask
 from turbinia.workers.worker_stat import StatTask
+from turbinia.workers.binary_extractor import BinaryExtractorTask
 from turbinia.workers.bulk_extractor import BulkExtractorTask
 
 # TODO(aarontp): Remove this map after
@@ -69,6 +70,7 @@ TASK_MAP = {
     'tomcatanalysistask': TomcatAnalysisTask,
     'volatilitytask': VolatilityTask,
     'stattask': StatTask,
+    'binaryextractor': BinaryExtractorTask,
     'bulkextractortask': BulkExtractorTask
 }
 
