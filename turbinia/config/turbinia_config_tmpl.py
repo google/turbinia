@@ -141,13 +141,13 @@ REDIS_DB = '0'
 # Will emails notifcations be enabled
 EMAIL_NOTIFICATIONS = False
 
-#Host Address and port number(TLS)
+# Host Address and port number(TLS)
 EMAIL_HOST_ADDRESS = 'example.address.com'
 EMAIL_PORT = 587
 
-#Email address and password
+# Email address and password
 EMAIL_ADDRESS = 'example@address.com'
 EMAIL_PASSWORD = 'Hunter2'
 
-#This is the address you plan on using for recieving email notifications
+# This is the address you plan on using for recieving email notifications
 EMAIL_RECIEVING_ADDRESS = 'example2@address.com'

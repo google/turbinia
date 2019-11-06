@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-'''Sends email notifications'''
+"""Sends email notifications"""
 
 import logging
 import smtplib
@@ -24,7 +24,11 @@ log = logging.getLogger('turbinia')
 
 #Sends notfications via email
 def sendmail(subject, message):
-  '''Sends an Email notification via SMTP'''
+  """Sends an Email notification via SMTP
+     Args:
+         subject: This will be the subject of the email
+         message: This will be the message of the email
+  """
   try:
     if config.EMAIL_NOTIFICATIONS is True:
 
@@ -52,7 +56,7 @@ def sendmail(subject, message):
         server.login(config.EMAIL_ADDRESS, config.EMAIL_PASSWORD)
       except NameError:
         log.info(
-            'EMAIL_ADDRESS or EMAIL_PASSWORD is not definied, ' +
+            'EMAIL_ADDRESS or EMAIL_PASSWORD is not definied, '
             'attempting to continue without logging in')
 
       server.sendmail(
@@ -64,13 +68,13 @@ def sendmail(subject, message):
   except smtplib.SMTPException as e:
     log.error(e)
     log.error(
-        'Email failed to send, SMTP has raised an error,' +
+        'Email failed to send, SMTP has raised an error,'
         'this likely means that their is a problem with the config')
   except TypeError:
     log.error('Email failed to send, There is likely a problem with the config')
   except NameError:
     log.error(
-        'Email failed to send, A value which is required' +
+        'Email failed to send, A value which is required'
         ' for email notifications is not defined in the config')
 
   finally:
@@ -82,5 +86,5 @@ def sendmail(subject, message):
 
 
 def main(subject, message):
-  '''main'''
+  """main"""
   sendmail(subject, message)
