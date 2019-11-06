@@ -72,7 +72,7 @@ def sendmail(subject, message):
         'Email failed to send, SMTP has raised an error,'
         ' this likely means that there is a problem with the config')
   except TypeError:
-    log.error('Email failed to send, There is likely a problem with the config')
+    log.error('Email failed to send, there is likely a problem with the config')
   except NameError:
     log.error(
         'Email failed to send, A value which is required'
