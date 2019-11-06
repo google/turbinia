@@ -396,10 +396,8 @@ class GoogleCloudProject(object):
         done
         """.format(gift_ppa_track, ' '.join(packages_to_install))
     config = {
-        'name':
-            vm_name,
-        'machineType':
-            machine_type,
+        'name': vm_name,
+        'machineType': machine_type,
         'disks': [{
             'boot': True,
             'autoDelete': True,
