@@ -174,7 +174,7 @@ class TurbiniaTaskResult(object):
           task.output_manager.save_evidence(evidence, self)
       else:
         self.log(
-            'Evidence {0:s} has empty or missing file at local_path {1:s} so '
+            'Evidence {0!s:s} has empty or missing file at local_path {1!s:s} so '
             'not saving.'.format(evidence.name, evidence.local_path))
 
       if not evidence.request_id:
