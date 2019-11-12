@@ -152,6 +152,7 @@ class TurbiniaTaskResult(object):
       success: Bool indicating task success
       status: One line descriptive task status.
     """
+
     if self.closed:
       # Don't try to close twice.
       return
@@ -169,9 +170,8 @@ class TurbiniaTaskResult(object):
     for evidence in self.evidence:
       if evidence.source_path and os.path.exists(evidence.source_path):
         self.saved_paths.append(evidence.source_path)
-        if not task.run_local:
-          if evidence.copyable and not config.SHARED_FILESYSTEM:
-            task.output_manager.save_evidence(evidence, self)
+        if not task.run_local and evidence.copyable:
+          task.output_manager.save_evidence(evidence, self)
       else:
         self.log(
             'Evidence {0:s} has empty or missing file at source_path {1:s} so '
@@ -419,6 +419,7 @@ class TurbiniaTask(object):
     log_files = log_files if log_files else []
     new_evidence = new_evidence if new_evidence else []
     success_codes = success_codes if success_codes else [0]
+
     if shell:
       proc = subprocess.Popen(cmd, shell=True)
     else:
@@ -439,7 +440,7 @@ class TurbiniaTask(object):
             'Log file {0:s} is empty. Not saving'.format(file_),
             level=logging.DEBUG)
         continue
-      result.log('Output file at {0:s}'.format(file_))
+      result.log('Output log file found at {0:s}'.format(file_))
       if not self.run_local:
         self.output_manager.save_local_file(file_, result)
 
@@ -456,7 +457,7 @@ class TurbiniaTask(object):
               'Output file {0:s} is empty. Not saving'.format(file_),
               level=logging.DEBUG)
           continue
-        result.log('Output file at {0:s}'.format(file_))
+        result.log('Output save file at {0:s}'.format(file_))
         if not self.run_local:
           self.output_manager.save_local_file(file_, result)
 
@@ -514,7 +515,7 @@ class TurbiniaTask(object):
       raise TurbiniaException(
           'Evidence source path {0:s} does not exist'.format(
               evidence.source_path))
-    evidence.preprocess()
+    evidence.preprocess(self.tmp_dir)
     return self.result
 
   def touch(self):

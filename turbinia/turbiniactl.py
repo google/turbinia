@@ -26,9 +26,11 @@ import os
 import sys
 
 from turbinia import config
+from turbinia import TurbiniaException
 from turbinia.config import logger
 from turbinia.lib import libcloudforensics
 from turbinia import __version__
+from turbinia.processors import archive
 
 log = logging.getLogger('turbinia')
 # We set up the logger first without the file handler, and we will set up the
@@ -278,6 +280,17 @@ def main():
   parser_directory.add_argument(
       '-n', '--name', help='Descriptive name of the evidence', required=False)
 
+  # Parser options for CompressedDirectory evidence type
+  parser_directory = subparsers.add_parser(
+      'compressedirectory', help='Process a compressed tar file as Evidence')
+  parser_directory.add_argument(
+      '-l', '--local_path', help='Local path to the evidence', required=True)
+  parser_directory.add_argument(
+      '-s', '--source', help='Description of the source of the evidence',
+      required=False)
+  parser_directory.add_argument(
+      '-n', '--name', help='Descriptive name of the evidence', required=False)
+
   # Parser options for ChromiumProfile evidence type
   parser_hindsight = subparsers.add_parser(
       'hindsight', help='Process ChromiumProfile as Evidence')
@@ -354,10 +367,17 @@ def main():
 
   # Load the config before final logger setup so we can the find the path to the
   # log file.
-  if args.config_file:
-    config.LoadConfig(config_file=args.config_file)
-  else:
-    config.LoadConfig()
+  try:
+    if args.config_file:
+      config.LoadConfig(config_file=args.config_file)
+    else:
+      config.LoadConfig()
+  except TurbiniaException as exception:
+    print(
+        'Could not load config file ({0:s}).\n{1:s}'.format(
+            exception, config.CONFIG_MSG))
+    sys.exit(1)
+
   if args.log_file:
     config.LOG_FILE = args.log_file
   if args.output_dir:
@@ -498,6 +518,12 @@ def main():
     args.name = args.name if args.name else args.source_path
     source_path = os.path.abspath(args.source_path)
     evidence_ = evidence.Directory(
+        name=args.name, source_path=source_path, source=args.source)
+  elif args.command == 'compressedirectory':
+    archive.ValidateTarFile(args.source_path)
+    args.name = args.name if args.name else args.source_path
+    source_path = os.path.abspath(args.source_path)
+    evidence_ = evidence.CompressedDirectory(
         name=args.name, source_path=source_path, source=args.source)
   elif args.command == 'googleclouddisk':
     args.name = args.name if args.name else args.disk_name

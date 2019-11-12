@@ -30,8 +30,8 @@ class PsortTask(TurbiniaTask):
     """Task that processes Plaso storage files with Psort.
 
     Args:
-        evidence: Path to data to process.
-        result: A TurbiniaTaskResult object to place task results into.
+        evidence (Evidence object):  The evidence we will process.
+        result (TurbiniaTaskResult): The object to place task results into.
 
     Returns:
         TurbiniaTaskResult object.

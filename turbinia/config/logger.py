@@ -19,6 +19,7 @@ import logging
 import warnings
 
 from turbinia import config
+from turbinia import TurbiniaException
 
 
 def setup(need_file_handler=True, need_stream_handler=True):
@@ -52,7 +53,14 @@ def setup(need_file_handler=True, need_stream_handler=True):
         need_stream_handler = False
 
   if need_file_handler:
-    config.LoadConfig()
+    try:
+      config.LoadConfig()
+    except TurbiniaException as exception:
+      print(
+          'Could not load config file ({0:s}).\n{1:s}'.format(
+              exception, config.CONFIG_MSG))
+      sys.exit(1)
+
     file_handler = logging.FileHandler(config.LOG_FILE)
     formatter = logging.Formatter('%(asctime)s:%(levelname)s:%(message)s')
     file_handler.setFormatter(formatter)

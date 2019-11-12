@@ -29,7 +29,15 @@ class HindsightTask(TurbiniaTask):
     super(HindsightTask, self).__init__()
 
   def run(self, evidence, result):
-    """Task to execute hindsight."""
+    """Task to execute hindsight.
+
+    Args:
+        evidence (Evidence object):  The evidence we will process.
+        result (TurbiniaTaskResult): The object to place task results into.
+
+    Returns:
+        TurbiniaTaskResult object.
+    """
 
     # Create a path that we can write the new file to.
     output_file_path = os.path.join(self.output_dir, 'hindsight_report')

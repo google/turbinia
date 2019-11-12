@@ -32,11 +32,11 @@ class SSHDAnalysisTask(TurbiniaTask):
     """Run the sshd_config analysis worker.
 
     Args:
-       evidence (Evidence object):  The evidence to process
-       result (TurbiniaTaskResult): The object to place task results into.
+        evidence (Evidence object):  The evidence we will process.
+        result (TurbiniaTaskResult): The object to place task results into.
 
     Returns:
-      TurbiniaTaskResult object.
+        TurbiniaTaskResult object.
     """
     # Where to store the resulting output file.
     output_file_name = 'sshd_config_analysis.txt'
