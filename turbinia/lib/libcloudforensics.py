@@ -554,6 +554,106 @@ class GoogleComputeBaseResource(object):
     """
     return self.get_value('selfLink')
 
+  def get_resource_type(self):
+    """Get the resource type from the resource key-value store.This can be found in the metadata['kind'] key.
+
+    Returns:
+      Resource Type which is a string with one of the following values:
+      compute#instance
+      compute#disk
+      compute#snapshot
+    """
+    if not self._data:
+      operation = self.get_operation().execute()
+      self._data = self.project.gce_operation(
+          operation, zone=self.zone, block=False)
+    return self._data['kind']
+
+  def form_operation(self, operation_name):
+    """form an API operation object for the compute resource (instance, disk or snapshot) depending on the arguments passed ex: disk.form_operation('setLabels')(**kargs).
+
+    Args:
+      operation_name: the name of the API operation you need to perform
+    Returns:
+      an API operation object for the referenced compute resource
+    Raises RuntimeError:
+      if resource type is not defined as a type which extends the
+      GoogleGomputeBaseResource class
+    """
+    resource_type = self.get_resource_type()
+    module = None
+    if resource_type == 'compute#instance':
+      module = self.project.gce_api().instances()
+    elif resource_type == 'compute#disk':
+      module = self.project.gce_api().disks()
+    elif resource_type == 'compute#snapshot':
+      module = self.project.gce_api().snapshots()
+    else:
+      raise RuntimeError((
+          'Compute resource Type {0:s} is not on of the defined types in '
+          'libcloudforensics library (Instance, Disk or Snapshot) '
+      ).format(resource_type))
+
+    operation_func_to_call = getattr(module, operation_name)
+    return operation_func_to_call
+
+  def get_labels(self):
+    """get all labels of a compute resource.Example instance.get_labels().
+
+    Returns:
+      A dictionary of all labels.
+    """
+    log.info('Get labels value from resource {0:s}'.format(self.name))
+
+    operation = self.get_operation().execute()
+
+    resource_response = self.project.gce_operation(
+        operation, zone=self.zone, block=False)
+    return resource_response.get('labels')
+
+  def add_labels(self, new_labels_dict):
+    """add labels to a compute resource if not existing, update label value if existing.
+
+    Args:
+      new_labels_dict: dictionary containing the labels to be added. ex:
+        {"incident_id":"1234abcd"}
+
+    Returns:
+      response of the API operation
+    """
+
+    get_operation = self.get_operation().execute()
+    labelFingerprint = self.project.gce_operation(
+        get_operation, zone=self.zone, block=False)['labelFingerprint']
+
+    exisitng_labels_dict = self.get_labels()
+    exisitng_labels_dict.update(new_labels_dict)
+    labels_dict = exisitng_labels_dict
+    # labels_dict = {**exisitng_labels_dict, **new_labels_dict}  #PY3 only
+    request_body = {'labels': labels_dict, 'labelFingerprint': labelFingerprint}
+
+    resource_type = self.get_resource_type()
+    operation = None
+    if resource_type == 'compute#instance':
+      operation = self.form_operation('setLabels')(
+          instance=self.name, project=self.project.project_id, zone=self.zone,
+          body=request_body).execute()
+    elif resource_type == 'compute#disk':
+      operation = self.form_operation('setLabels')(
+          resource=self.name, project=self.project.project_id, zone=self.zone,
+          body=request_body).execute()
+    elif resource_type == 'compute#snapshot':
+      operation = self.form_operation('setLabels')(
+          resource=self.name, project=self.project.project_id,
+          body=request_body).execute()
+    else:
+      raise RuntimeError((
+          'Compute resource Type {0:s} is not on of the defined types in '
+          'libcloudforensics library (Instance, Disk or Snapshot) '
+      ).format(resource_type))
+
+    return self.project.gce_operation(operation, zone=self.zone, block=False)
+
 
 class GoogleComputeInstance(GoogleComputeBaseResource):
   """Class representing a Google Compute Engine virtual machine."""
