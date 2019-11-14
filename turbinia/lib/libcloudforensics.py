@@ -464,7 +464,7 @@ class GoogleCloudProject(object):
     return self.__list_by_label(labels_filter, disk_service_object)
 
   def __list_by_label(self, labels_filter, service_object):
-    """lists Disks or VMs in a project with on of the provided labels.
+    """List Disks or VMs in a project with one of the provided labels.
 
     Args:
       labels_filter:
