@@ -555,7 +555,7 @@ class GoogleComputeBaseResource(object):
     return self.get_value('selfLink')
 
   def get_resource_type(self):
-    """Get the resource type from the resource key-value store.This can be found in the metadata['kind'] key.
+    """Get the resource type from the resource key-value store.
 
     Returns:
       Resource Type which is a string with one of the following values:
@@ -570,7 +570,10 @@ class GoogleComputeBaseResource(object):
     return self._data['kind']
 
   def form_operation(self, operation_name):
-    """form an API operation object for the compute resource (instance, disk or snapshot) depending on the arguments passed ex: disk.form_operation('setLabels')(**kargs).
+    """Form an API operation object for the compute resource.
+
+    Example:[RESOURCE].form_operation('setLabels')(**kargs)
+    [RESOURCE] can be type "instance", disk or "snapshot".
 
     Args:
       operation_name: the name of the API operation you need to perform
@@ -598,7 +601,7 @@ class GoogleComputeBaseResource(object):
     return operation_func_to_call
 
   def get_labels(self):
-    """get all labels of a compute resource.Example instance.get_labels().
+    """Get all labels of a compute resource.
 
     Returns:
       A dictionary of all labels.
@@ -612,7 +615,7 @@ class GoogleComputeBaseResource(object):
     return resource_response.get('labels')
 
   def add_labels(self, new_labels_dict):
-    """add labels to a compute resource if not existing, update label value if existing.
+    """Add or update labels of a compute resource.
 
     Args:
       new_labels_dict: dictionary containing the labels to be added. ex:
