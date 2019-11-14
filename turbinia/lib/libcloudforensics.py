@@ -437,6 +437,66 @@ class GoogleCloudProject(object):
     created = True
     return instance, created
 
+  def list_instance_by_label(self, labels_filter=''):
+    """Lists VMs in a project with on of the provided labels.
+
+    Args:
+      labels_filter: a dict of labels to find --> {'id': '123'}
+
+    Returns:
+      A call to __list_by_label with the proper instance_service_object
+    """
+
+    instance_service_object = self.gce_api().instances()
+    return self.__list_by_label(labels_filter, instance_service_object)
+
+  def list_disk_by_label(self, labels_filter=''):
+    """Lists Disks in a project with on of the provided labels.
+
+    Args:
+      labels_filter: a dict of labels to find --> {'id': '123'}
+
+    Returns:
+      A call to __list_by_label with the proper instance_service_object
+    """
+
+    disk_service_object = self.gce_api().disks()
+    return self.__list_by_label(labels_filter, disk_service_object)
+
+  def __list_by_label(self, labels_filter, service_object):
+    """lists Disks or VMs in a project with on of the provided labels.
+
+    Args:
+      labels_filter:
+      service_object: Google Compute Engine (Disk | Instance) service object
+
+    Returns:
+      Dictionary with name and metadata(zone, labels) for each instance.
+      ex: {'instance-1': {'zone': 'us-central1-a', 'labels': {'id': '123'}}
+    """
+    resource_dict = dict()
+    filter_expression = ''
+    for key, value in labels_filter.items():
+      filter_expression = 'labels.' + key + '=' + value
+      request = service_object.aggregatedList(
+          project=self.project_id, filter=filter_expression)
+      while request is not None:
+        response = request.execute()
+        result = self.gce_operation(response, zone=self.default_zone)
+
+        for region_or_zone_string, resource_scoped_list in result[
+            'items'].items():
+          for resource_key in resource_scoped_list:
+            if resource_key in ['disks', 'instances']:
+              for item in resource_scoped_list[resource_key]:
+                _, zone = region_or_zone_string.rsplit('/', 1)
+                resource_dict[item['name']] = dict(
+                    zone=zone, labels=item['labels'])
+
+        request = service_object.aggregatedList_next(
+            previous_request=request, previous_response=response)
+    return resource_dict
+
 
 class GoogleCloudFunction(GoogleCloudProject):
   """Class to call Google Cloud Functions.
