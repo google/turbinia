@@ -572,7 +572,7 @@ class GoogleComputeBaseResource(object):
   def form_operation(self, operation_name):
     """Form an API operation object for the compute resource.
 
-    Example:[RESOURCE].form_operation('setLabels')(**kargs)
+    Example:[RESOURCE].form_operation('setLabels')(*kargs)
     [RESOURCE] can be type "instance", disk or "snapshot".
 
     Args:
@@ -632,7 +632,6 @@ class GoogleComputeBaseResource(object):
     exisitng_labels_dict = self.get_labels()
     exisitng_labels_dict.update(new_labels_dict)
     labels_dict = exisitng_labels_dict
-    # labels_dict = {**exisitng_labels_dict, **new_labels_dict}  #PY3 only
     request_body = {'labels': labels_dict, 'labelFingerprint': labelFingerprint}
 
     resource_type = self.get_resource_type()
