@@ -457,7 +457,7 @@ class GoogleCloudProject(object):
       labels_filter: a dict of labels to find --> {'id': '123'}
 
     Returns:
-      A call to __list_by_label with the proper instance_service_object
+      A call to __list_by_label with the proper disk_service_object
     """
 
     disk_service_object = self.gce_api().disks()
