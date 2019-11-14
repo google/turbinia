@@ -572,7 +572,7 @@ class GoogleComputeBaseResource(object):
   def form_operation(self, operation_name):
     """Form an API operation object for the compute resource.
 
-    Example:[RESOURCE].form_operation('setLabels')(*kargs)
+    Example:[RESOURCE].form_operation('setLabels')(*args)
     [RESOURCE] can be type "instance", disk or "snapshot".
 
     Args:
