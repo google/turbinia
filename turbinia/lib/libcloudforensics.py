@@ -666,7 +666,6 @@ class GoogleComputeBaseResource(object):
     Returns:
       A dictionary of all labels.
     """
-    log.info('Get labels value from resource {0:s}'.format(self.name))
 
     operation = self.get_operation().execute()
 
@@ -689,7 +688,9 @@ class GoogleComputeBaseResource(object):
     labelFingerprint = self.project.gce_operation(
         get_operation, zone=self.zone, block=False)['labelFingerprint']
 
-    exisitng_labels_dict = self.get_labels()
+    exisitng_labels_dict = dict()
+    if self.get_labels() is not None:
+      exisitng_labels_dict = self.get_labels()
     exisitng_labels_dict.update(new_labels_dict)
     labels_dict = exisitng_labels_dict
     request_body = {'labels': labels_dict, 'labelFingerprint': labelFingerprint}
