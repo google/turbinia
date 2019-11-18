@@ -637,6 +637,7 @@ class GoogleComputeBaseResource(object):
 
     Args:
       operation_name: the name of the API operation you need to perform
+    
     Returns:
       an API operation object for the referenced compute resource
     Raises RuntimeError:
