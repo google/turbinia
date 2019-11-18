@@ -477,7 +477,7 @@ class GoogleCloudProject(object):
     resource_dict = dict()
     filter_expression = ''
     for key, value in labels_filter.items():
-      filter_expression = 'labels.' + key + '=' + value
+      filter_expression = 'labels.{0:s}={1:s}'.format(key, value)
       request = service_object.aggregatedList(
           project=self.project_id, filter=filter_expression)
       while request is not None:
