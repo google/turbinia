@@ -437,27 +437,33 @@ class GoogleCloudProject(object):
     created = True
     return instance, created
 
-  def list_instance_by_label(self, labels_filter=''):
+  def list_instance_by_label(self, labels_filter):
     """Lists VMs in a project with on of the provided labels.
 
     Args:
       labels_filter: a dict of labels to find --> {'id': '123'}
 
     Returns:
-      A call to __list_by_label with the proper instance_service_object
+      A call to __list_by_label with the proper instance_service_object,
+      which returns a dictionary with name and metadata(zone, labels) 
+      for each instance.
+      ex: {'instance-1': {'zone': 'us-central1-a', 'labels': {'id': '123'}}
     """
 
     instance_service_object = self.gce_api().instances()
     return self.__list_by_label(labels_filter, instance_service_object)
 
-  def list_disk_by_label(self, labels_filter=''):
+  def list_disk_by_label(self, labels_filter):
     """Lists Disks in a project with on of the provided labels.
 
     Args:
       labels_filter: a dict of labels to find --> {'id': '123'}
 
     Returns:
-      A call to __list_by_label with the proper disk_service_object
+      A call to __list_by_label with the proper disk_service_object,
+      which returns a dictionary with name and metadata(zone, labels) 
+      for each disk.
+      ex: {'disk-1': {'zone': 'us-central1-a', 'labels': {'id': '123'}}
     """
 
     disk_service_object = self.gce_api().disks()
@@ -632,7 +638,7 @@ class GoogleComputeBaseResource(object):
   def form_operation(self, operation_name):
     """Form an API operation object for the compute resource.
 
-    Example:[RESOURCE].form_operation('setLabels')(*args)
+    Example:[RESOURCE].form_operation('setLabels')(**kwargs)
     [RESOURCE] can be type "instance", disk or "snapshot".
 
     Args:
@@ -640,23 +646,24 @@ class GoogleComputeBaseResource(object):
     
     Returns:
       an API operation object for the referenced compute resource
+
     Raises RuntimeError:
       if resource type is not defined as a type which extends the
       GoogleGomputeBaseResource class
     """
     resource_type = self.get_resource_type()
     module = None
-    if resource_type == 'compute#instance':
+    if resource_type not in ['compute#instance', 'compute#snapshot', 'compute#disk']:
+      raise RuntimeError((
+          'Compute resource Type {0:s} is not one of the defined types in '
+          'libcloudforensics library (Instance, Disk or Snapshot) '
+      ).format(resource_type))
+    elif resource_type == 'compute#instance':
       module = self.project.gce_api().instances()
     elif resource_type == 'compute#disk':
       module = self.project.gce_api().disks()
     elif resource_type == 'compute#snapshot':
       module = self.project.gce_api().snapshots()
-    else:
-      raise RuntimeError((
-          'Compute resource Type {0:s} is not on of the defined types in '
-          'libcloudforensics library (Instance, Disk or Snapshot) '
-      ).format(resource_type))
 
     operation_func_to_call = getattr(module, operation_name)
     return operation_func_to_call
@@ -674,7 +681,7 @@ class GoogleComputeBaseResource(object):
         operation, zone=self.zone, block=False)
     return resource_response.get('labels')
 
-  def add_labels(self, new_labels_dict):
+  def add_labels(self, new_labels_dict, blocking_call=False):
     """Add or update labels of a compute resource.
 
     Args:
@@ -698,7 +705,12 @@ class GoogleComputeBaseResource(object):
 
     resource_type = self.get_resource_type()
     operation = None
-    if resource_type == 'compute#instance':
+    if resource_type not in ['compute#instance', 'compute#snapshot', 'compute#disk']:
+      raise RuntimeError((
+          'Compute resource Type {0:s} is not one of the defined types in '
+          'libcloudforensics library (Instance, Disk or Snapshot) '
+      ).format(resource_type))
+    elif resource_type == 'compute#instance':
       operation = self.form_operation('setLabels')(
           instance=self.name, project=self.project.project_id, zone=self.zone,
           body=request_body).execute()
@@ -710,13 +722,8 @@ class GoogleComputeBaseResource(object):
       operation = self.form_operation('setLabels')(
           resource=self.name, project=self.project.project_id,
           body=request_body).execute()
-    else:
-      raise RuntimeError((
-          'Compute resource Type {0:s} is not on of the defined types in '
-          'libcloudforensics library (Instance, Disk or Snapshot) '
-      ).format(resource_type))
 
-    return self.project.gce_operation(operation, zone=self.zone, block=False)
+    return self.project.gce_operation(operation, zone=self.zone, block=blocking_call)
 
 
 class GoogleComputeInstance(GoogleComputeBaseResource):
