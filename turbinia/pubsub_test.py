@@ -37,8 +37,7 @@ def getTurbiniaRequest():
   """
   request = message.TurbiniaRequest(
       request_id='deadbeef', context={'kw': [1, 2]})
-  rawdisk = evidence.RawDisk(
-      name='My Evidence', local_path='/tmp/foo', mount_path='/mnt/foo')
+  rawdisk = evidence.RawDisk(name='My Evidence', source_path='/tmp/foo')
   request.evidence.append(rawdisk)
   return request
 
@@ -77,7 +76,7 @@ class TestTurbiniaRequest(unittest.TestCase):
 
   def testTurbiniaRequestSerializationBadJSON(self):
     """Tests that TurbiniaRequest will raise error on wrong JSON object."""
-    rawdisk = evidence.RawDisk(name='My Evidence', local_path='/tmp/foo')
+    rawdisk = evidence.RawDisk(name='My Evidence', source_path='/tmp/foo')
     rawdisk_json = rawdisk.to_json()
     self.assertTrue(isinstance(rawdisk_json, str))
 

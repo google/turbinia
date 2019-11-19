@@ -75,8 +75,8 @@ def extract_artifacts(artifact_names, disk_path, output_dir):
   # Plaso image_export expects artifact names as a comma separated string.
   artifacts = ','.join(artifact_names)
   image_export_cmd = [
-      'image_export.py', '--artifact_filters', artifacts, '--write', output_dir,
-      '--partitions', 'all', disk_path
+      'sudo', 'image_export.py', '--artifact_filters', artifacts, '--write',
+      output_dir, '--partitions', 'all', disk_path
   ]
 
   return _image_export(image_export_cmd, output_dir)
