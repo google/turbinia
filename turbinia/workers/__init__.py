@@ -116,7 +116,6 @@ class TurbiniaTaskResult(object):
     self.worker_name = platform.node()
     # TODO(aarontp): Create mechanism to grab actual python logging data.
     self._log = []
-    #self.state_manager = None
 
   def __str__(self):
     return pprint.pformat(vars(self), depth=3)
