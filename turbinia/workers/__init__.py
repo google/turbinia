@@ -227,6 +227,11 @@ class TurbiniaTaskResult(object):
       self.result.set_error(message, traceback_)
 
   def task_status_update(self, task, status):
+    """Handles updating the task status and writing it to datastore.
+    Args:
+      task (TurbiniaTask): The calling Task object
+      status: One line descriptive task status.
+    """
     stat_manager = state_manager.get_state_manager()
     if status == 'Queued':
       task.result.status = 'Task {0!s:s} is queued on {1!s:s}.'.format(
