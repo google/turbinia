@@ -529,15 +529,16 @@ class GoogleCloudProject(object):
       ex: {'instance-1': {'zone': 'us-central1-a', 'labels': {'id': '123'}}
     """
     if operation not in ['OR', 'AND']:
-      raise RuntimeError(('__list_by_label third argument must be "OR" or "AND"'
-                          ' {0:s} is an invalid argument.').format(operation))
+      raise RuntimeError((
+          '__list_by_label third argument must be "OR" or "AND"'
+          ' {0:s} is an invalid argument.').format(operation))
 
     resource_dict = dict()
     filter_expression = ''
     for key, value in labels_filter.items():
       filter_expression += 'labels.{0:s}={1:s} {2:s} '.format(
           key, value, operation)
-    filter_expression = filter_expression[:-(len(operation)+1)]
+    filter_expression = filter_expression[:-(len(operation) + 1)]
 
     request = service_object.aggregatedList(
         project=self.project_id, filter=filter_expression)
@@ -545,19 +546,19 @@ class GoogleCloudProject(object):
       response = request.execute()
       result = self.gce_operation(response, zone=self.default_zone)
 
-      for region_or_zone_string, resource_scoped_list in result[
-          'items'].items():
+      for region_or_zone_string, resource_scoped_list in result['items'].items(
+      ):
 
         if 'warning' not in resource_scoped_list.keys():
           _, zone = region_or_zone_string.rsplit('/', 1)
           for item in resource_scoped_list.get(
               'instances', []) or resource_scoped_list.get('disks', []):
-            resource_dict[item['name']] = dict(
-                zone=zone, labels=item['labels'])
+            resource_dict[item['name']] = dict(zone=zone, labels=item['labels'])
 
       request = service_object.aggregatedList_next(
           previous_request=request, previous_response=response)
     return resource_dict
+
 
 class GoogleCloudFunction(GoogleCloudProject):
   """Class to call Google Cloud Functions.
@@ -707,13 +708,12 @@ class GoogleComputeBaseResource(object):
     """
     resource_type = self.get_resource_type()
     module = None
-    if resource_type not in [
-        'compute#instance', 'compute#snapshot', 'compute#disk'
-    ]:
-      raise RuntimeError(
-          ('Compute resource Type {0:s} is not one of the defined types in '
-           'libcloudforensics library (Instance, Disk or Snapshot) '
-          ).format(resource_type))
+    if resource_type not in ['compute#instance', 'compute#snapshot',
+                             'compute#disk']:
+      raise RuntimeError((
+          'Compute resource Type {0:s} is not one of the defined types in '
+          'libcloudforensics library (Instance, Disk or Snapshot) '
+      ).format(resource_type))
     if resource_type == 'compute#instance':
       module = self.project.gce_api().instances()
     elif resource_type == 'compute#disk':
@@ -760,8 +760,8 @@ class GoogleComputeBaseResource(object):
 
     resource_type = self.get_resource_type()
     operation = None
-    if resource_type not in ['compute#instance',
-                             'compute#snapshot', 'compute#disk']:
+    if resource_type not in ['compute#instance', 'compute#snapshot',
+                             'compute#disk']:
       raise RuntimeError((
           'Compute resource Type {0:s} is not one of the defined types in '
           'libcloudforensics library (Instance, Disk or Snapshot) '
