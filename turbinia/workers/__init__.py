@@ -37,6 +37,7 @@ from turbinia import config
 from turbinia.config import DATETIME_FORMAT
 from turbinia.evidence import evidence_decode
 from turbinia import output_manager
+from turbinia import state_manager
 from turbinia import TurbiniaException
 
 log = logging.getLogger('turbinia')
@@ -44,7 +45,6 @@ log = logging.getLogger('turbinia')
 
 class Priority(IntEnum):
   """Reporting priority enum to store common values.
-
   Priorities can be anything in the range of 0-100, where 0 is the highest
   priority.
   """
@@ -56,7 +56,6 @@ class Priority(IntEnum):
 
 class TurbiniaTaskResult(object):
   """Object to store task results to be returned by a TurbiniaTask.
-
   Attributes:
       base_output_dir: Base path for local output
       closed: Boolean indicating whether this result is closed
@@ -117,16 +116,15 @@ class TurbiniaTaskResult(object):
     self.worker_name = platform.node()
     # TODO(aarontp): Create mechanism to grab actual python logging data.
     self._log = []
+    #self.state_manager = None
 
   def __str__(self):
     return pprint.pformat(vars(self), depth=3)
 
   def setup(self, task):
     """Handles initializing task based attributes, after object creation.
-
     Args:
       task (TurbiniaTask): The calling Task object
-
     Raises:
       TurbiniaException: If the Output Manager is not setup.
     """
@@ -141,12 +139,10 @@ class TurbiniaTaskResult(object):
 
   def close(self, task, success, status=None):
     """Handles closing of this result and writing logs.
-
     Normally this should be called by the Run method to make sure that the
     status, etc are set correctly, but if there is an exception thrown when the
     task executes, then run_wrapper will call this with default arguments
     indicating a failure.
-
     Args:
       task (TurbiniaTask): The calling Task object
       success: Bool indicating task success
@@ -187,7 +183,7 @@ class TurbiniaTaskResult(object):
     # also fail.
     # pylint: disable=broad-except
     except Exception as exception:
-      message = 'Evidence post-processing for {0:s} failed: {1!s}'.format(
+      message = 'Evidence post-processing for {0!s:s} failed: {1!s}'.format(
           self.input_evidence.name, exception)
       self.log(message, level=logging.ERROR)
 
@@ -209,9 +205,7 @@ class TurbiniaTaskResult(object):
 
   def log(self, message, level=logging.INFO, traceback_=None):
     """Log Task messages.
-
     Logs to both the result and the normal logging mechanism.
-
     Args:
       message (string): Message to log.
       level (int): Log level as defined by logging enums (e.g. logging.INFO)
@@ -232,9 +226,19 @@ class TurbiniaTaskResult(object):
     if traceback_:
       self.result.set_error(message, traceback_)
 
+  def task_status_update(self, task, status):
+    stat_manager = state_manager.get_state_manager()
+    if status == 'Queued':
+      task.result.status = 'Task {0!s:s} is queued on {1!s:s}.'.format(
+        self.task_name, self.worker_name)
+    elif status == 'Running':
+      task.result.status = 'Task {0!s:s} is running on {0!s:s}'.format(
+        self.task_name, self.worker_name)
+    
+    stat_manager.update_task(task)
+
   def add_evidence(self, evidence, evidence_config):
     """Populate the results list.
-
     Args:
         evidence: Evidence object
         evidence_config (dict): The evidence config we want to associate with
@@ -254,7 +258,6 @@ class TurbiniaTaskResult(object):
 
   def set_error(self, error, traceback_):
     """Add error and traceback.
-
     Args:
         error: Short string describing the error.
         traceback_: Traceback of the error.
@@ -264,7 +267,6 @@ class TurbiniaTaskResult(object):
 
   def serialize(self):
     """Prepares result object for serialization.
-
     Returns:
       dict: Object dictionary that is JSON serializable.
     """
@@ -278,10 +280,8 @@ class TurbiniaTaskResult(object):
   @classmethod
   def deserialize(cls, input_dict):
     """Converts an input dictionary back into a TurbiniaTaskResult object.
-
     Args:
       input_dict (dict): TurbiniaTaskResult object dictionary.
-
     Returns:
       TurbiniaTaskResult: Deserialized object.
     """
@@ -299,7 +299,6 @@ class TurbiniaTaskResult(object):
 
 class TurbiniaTask(object):
   """Base class for Turbinia tasks.
-
   Attributes:
       base_output_dir (str): The base directory that output will go into.
           Per-task directories will be created under this.
@@ -358,7 +357,6 @@ class TurbiniaTask(object):
 
   def serialize(self):
     """Converts the TurbiniaTask object into a serializable dict.
-
     Returns:
       Dict: Dictionary representing this object, ready to be serialized.
     """
@@ -370,10 +368,8 @@ class TurbiniaTask(object):
   @classmethod
   def deserialize(cls, input_dict):
     """Converts an input dictionary back into a TurbiniaTask object.
-
     Args:
       input_dict (dict): TurbiniaTask object dictionary.
-
     Returns:
       TurbiniaTask: Deserialized object.
     """
@@ -399,7 +395,6 @@ class TurbiniaTask(object):
       self, cmd, result, save_files=None, log_files=None, new_evidence=None,
       close=False, shell=False, success_codes=None):
     """Executes a given binary and saves output.
-
     Args:
       cmd (list|string): Command arguments to run
       result (TurbiniaTaskResult): The result object to put data into.
@@ -411,7 +406,6 @@ class TurbiniaTask(object):
       close (bool): Whether to close out the result.
       shell (bool): Whether the cmd is in the form of a string or a list.
       success_codes (list(int)): Which return codes are considered successful.
-
     Returns:
       Tuple of the return code, and the TurbiniaTaskResult object
     """
@@ -485,17 +479,13 @@ class TurbiniaTask(object):
 
   def setup(self, evidence):
     """Perform common setup operations and runtime environment.
-
     Even though TurbiniaTasks are initially instantiated by the Jobs under the
     Task Manager, this setup method needs to be run from the task on the worker
     because it handles setting up the task runtime environment.
-
     Args:
       evidence: An Evidence object to process.
-
     Returns:
       A TurbiniaTaskResult object.
-
     Raises:
       TurbiniaException: If the evidence can not be found.
     """
@@ -524,16 +514,13 @@ class TurbiniaTask(object):
 
   def validate_result(self, result):
     """Checks to make sure that the result is valid.
-
     We occasionally get something added into a TurbiniaTaskResult that makes
     it unpickleable.  We don't necessarily know what caused it to be in that
     state, so we need to create a new, mostly empty result so that the client
     is able to get the error message (otherwise the task will stay pending
     indefinitely).
-
     Args:
       result (TurbiniaTaskResult): Result object to check
-
     Returns:
       The original result object if it is OK, otherwise an empty result object
       indicating a failure.
@@ -577,12 +564,10 @@ class TurbiniaTask(object):
 
   def run_wrapper(self, evidence):
     """Wrapper to manage TurbiniaTaskResults and exception handling.
-
     This wrapper should be called to invoke the run() methods so it can handle
     the management of TurbiniaTaskResults and the exception handling.  Otherwise
     details from exceptions in the worker cannot be propagated back to the
     Turbinia TaskManager.
-
     This method should handle (in no particular order):
       - Exceptions thrown from run()
       - Verifing valid TurbiniaTaskResult object is returned
@@ -590,23 +575,21 @@ class TurbiniaTask(object):
           - Auto-close results that haven't been closed
           - Verifying that the results are serializeable
       - Locking to make sure only one task is active at a time
-
     Args:
       evidence (dict): To be decoded into Evidence object
-
     Returns:
       A TurbiniaTaskResult object
     """
     log.debug('Task {0:s} {1:s} awaiting execution'.format(self.name, self.id))
     evidence = evidence_decode(evidence)
+    self.result = self.setup(evidence)
+    self.result.task_status_update(self, 'Queued')
     with filelock.FileLock(config.LOCK_FILE):
       log.info('Starting Task {0:s} {1:s}'.format(self.name, self.id))
       original_result_id = None
       try:
-        self.result = self.setup(evidence)
         original_result_id = self.result.id
         evidence.validate()
-
         if self.turbinia_version != turbinia.__version__:
           message = (
               'Worker and Server versions do not match: {0:s} != {1:s}'.format(
@@ -615,6 +598,7 @@ class TurbiniaTask(object):
           self.result.status = message
           return self.result
 
+        self.result.task_status_update(self, 'Running')
         self._evidence_config = evidence.config
         self.result = self.run(evidence, self.result)
       # pylint: disable=broad-except
@@ -681,11 +665,9 @@ class TurbiniaTask(object):
 
   def run(self, evidence, result):
     """Entry point to execute the task.
-
     Args:
       evidence: Evidence object.
       result: A TurbiniaTaskResult object to place task results into.
-
     Returns:
         TurbiniaTaskResult object.
     """

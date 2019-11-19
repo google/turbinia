@@ -401,7 +401,7 @@ class TurbiniaClient(object):
     return report
 
   def get_task_statistics(
-      self, instance, project, region, days=1000, task_id=None, request_id=None,
+      self, instance, project, region, days=0, task_id=None, request_id=None,
       user=None):
     """Gathers statistics for Turbinia execution data.
 
@@ -516,7 +516,7 @@ class TurbiniaClient(object):
     return task_stats
 
   def format_task_statistics(
-      self, instance, project, region, days=1000, task_id=None, request_id=None,
+      self, instance, project, region, days=0, task_id=None, request_id=None,
       user=None, csv=False):
     """Formats statistics for Turbinia execution data.
 
@@ -729,7 +729,7 @@ class TurbiniaCeleryClient(TurbiniaClient):
 
   # pylint: disable=arguments-differ
   def get_task_data(
-      self, instance, _, __, days=1000, task_id=None, request_id=None,
+      self, instance, _, __, days=0, task_id=None, request_id=None,
       function_name=None):
     """Gets task data from Redis.
 
