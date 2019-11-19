@@ -437,72 +437,127 @@ class GoogleCloudProject(object):
     created = True
     return instance, created
 
-  def list_instance_by_label(self, labels_filter):
-    """Lists VMs in a project with on of the provided labels.
+  def list_instance_by_labels_anded(self, labels_filter):
+    """Lists VMs in a project with all of the provided labels.
+
+    This will call the __list_by_label on instances() API object
+    with the proper "operation" parameterer.
 
     Args:
       labels_filter: a dict of labels to find --> {'id': '123'}
 
     Returns:
       A call to __list_by_label with the proper instance_service_object,
-      which returns a dictionary with name and metadata(zone, labels) 
+      which returns a dictionary with name and metadata(zone, labels)
       for each instance.
       ex: {'instance-1': {'zone': 'us-central1-a', 'labels': {'id': '123'}}
     """
 
     instance_service_object = self.gce_api().instances()
-    return self.__list_by_label(labels_filter, instance_service_object)
+    return self.__list_by_label(labels_filter, instance_service_object, 'AND')
 
-  def list_disk_by_label(self, labels_filter):
-    """Lists Disks in a project with on of the provided labels.
+  def list_disk_by_labels_anded(self, labels_filter):
+    """Lists Disks in a project with all of the provided labels.
+
+    This will call the __list_by_label on disks() API object
+    with the proper "operation" parameterer.
 
     Args:
       labels_filter: a dict of labels to find --> {'id': '123'}
 
     Returns:
-      A call to __list_by_label with the proper disk_service_object,
-      which returns a dictionary with name and metadata(zone, labels) 
+      A call to __list_by_label with the proper instance_service_object,
+      which returns a dictionary with name and metadata(zone, labels)
       for each disk.
       ex: {'disk-1': {'zone': 'us-central1-a', 'labels': {'id': '123'}}
     """
 
     disk_service_object = self.gce_api().disks()
-    return self.__list_by_label(labels_filter, disk_service_object)
+    return self.__list_by_label(labels_filter, disk_service_object, 'AND')
 
-  def __list_by_label(self, labels_filter, service_object):
-    """List Disks or VMs in a project with one of the provided labels.
+  def list_instance_by_labels_ored(self, labels_filter):
+    """Lists VMs in a project with one of the provided labels.
+
+    This will call the __list_by_label on instances() API object
+    with the proper "operation" parameter.
 
     Args:
-      labels_filter:
-      service_object: Google Compute Engine (Disk | Instance) service object
+      labels_filter: a dict of labels to find --> {'id': '123'}
 
     Returns:
-      Dictionary with name and metadata(zone, labels) for each instance.
+      A call to __list_by_label with the proper instance_service_object,
+      which returns a dictionary with name and metadata(zone, labels)
+      for each instance.
       ex: {'instance-1': {'zone': 'us-central1-a', 'labels': {'id': '123'}}
     """
+
+    instance_service_object = self.gce_api().instances()
+    return self.__list_by_label(labels_filter, instance_service_object, 'OR')
+
+  def list_disk_by_labels_ored(self, labels_filter):
+    """Lists Disks in a project with one of the provided labels.
+
+    This will call the __list_by_label on disks() API object
+    with the proper "operation" parameterer.
+
+    Args:
+      labels_filter: a dict of labels to find --> {'id': '123'}
+
+    Returns:
+      A call to __list_by_label with the proper instance_service_object,
+      which returns a dictionary with name and metadata(zone, labels)
+      for each disk.
+      ex: {'disk-1': {'zone': 'us-central1-a', 'labels': {'id': '12
+    """
+
+    disk_service_object = self.gce_api().disks()
+    return self.__list_by_label(labels_filter, disk_service_object, 'OR')
+
+  def __list_by_label(self, labels_filter, service_object, operation):
+    """lists Disks/VMs in a project with one/all of the provided labels.
+
+    The operation parameter will determine if the labels will be ored or anded.
+
+    Args:
+      labels_filter:  a dict of labels to find --> {'id': '123'}
+      service_object: Google Compute Engine (Disk | Instance) service object
+      operation: a string with the value "OR" or "AND" determining how the
+      labels should be compined.
+
+    Returns:
+      Dictionary with name and metadata(zone, labels) for each instance/disk.
+      ex: {'instance-1': {'zone': 'us-central1-a', 'labels': {'id': '123'}}
+    """
+    if operation not in ['OR', 'AND']:
+      raise RuntimeError(('__list_by_label third argument must be "OR" or "AND"'
+                          ' {0:s} is an invalid argument.').format(operation))
+
     resource_dict = dict()
     filter_expression = ''
     for key, value in labels_filter.items():
-      filter_expression = 'labels.{0:s}={1:s}'.format(key, value)
-      request = service_object.aggregatedList(
-          project=self.project_id, filter=filter_expression)
-      while request is not None:
-        response = request.execute()
-        result = self.gce_operation(response, zone=self.default_zone)
+      filter_expression += 'labels.{0:s}={1:s} {2:s} '.format(
+          key, value, operation)
+    filter_expression = filter_expression[:-(len(operation)+1)]
 
-        for region_or_zone_string, resource_scoped_list in result[
-            'items'].items():
-          for resource_key in resource_scoped_list:
-            if resource_key in ['disks', 'instances']:
-              for item in resource_scoped_list[resource_key]:
-                _, zone = region_or_zone_string.rsplit('/', 1)
-                resource_dict[item['name']] = dict(
-                    zone=zone, labels=item['labels'])
+    request = service_object.aggregatedList(
+        project=self.project_id, filter=filter_expression)
+    while request is not None:
+      response = request.execute()
+      result = self.gce_operation(response, zone=self.default_zone)
 
-        request = service_object.aggregatedList_next(
-            previous_request=request, previous_response=response)
+      for region_or_zone_string, resource_scoped_list in result[
+          'items'].items():
+
+        if 'warning' not in resource_scoped_list.keys():
+          _, zone = region_or_zone_string.rsplit('/', 1)
+          for item in resource_scoped_list.get(
+              'instances', []) or resource_scoped_list.get('disks', []):
+            resource_dict[item['name']] = dict(
+                zone=zone, labels=item['labels'])
+
+      request = service_object.aggregatedList_next(
+          previous_request=request, previous_response=response)
     return resource_dict
-
 
 class GoogleCloudFunction(GoogleCloudProject):
   """Class to call Google Cloud Functions.
@@ -631,8 +686,7 @@ class GoogleComputeBaseResource(object):
     """
     if not self._data:
       operation = self.get_operation().execute()
-      self._data = self.project.gce_operation(
-          operation, zone=self.zone, block=False)
+      self._data = operation
     return self._data['kind']
 
   def form_operation(self, operation_name):
@@ -643,7 +697,7 @@ class GoogleComputeBaseResource(object):
 
     Args:
       operation_name: the name of the API operation you need to perform
-    
+
     Returns:
       an API operation object for the referenced compute resource
 
@@ -653,12 +707,14 @@ class GoogleComputeBaseResource(object):
     """
     resource_type = self.get_resource_type()
     module = None
-    if resource_type not in ['compute#instance', 'compute#snapshot', 'compute#disk']:
-      raise RuntimeError((
-          'Compute resource Type {0:s} is not one of the defined types in '
-          'libcloudforensics library (Instance, Disk or Snapshot) '
-      ).format(resource_type))
-    elif resource_type == 'compute#instance':
+    if resource_type not in [
+        'compute#instance', 'compute#snapshot', 'compute#disk'
+    ]:
+      raise RuntimeError(
+          ('Compute resource Type {0:s} is not one of the defined types in '
+           'libcloudforensics library (Instance, Disk or Snapshot) '
+          ).format(resource_type))
+    if resource_type == 'compute#instance':
       module = self.project.gce_api().instances()
     elif resource_type == 'compute#disk':
       module = self.project.gce_api().disks()
@@ -677,9 +733,7 @@ class GoogleComputeBaseResource(object):
 
     operation = self.get_operation().execute()
 
-    resource_response = self.project.gce_operation(
-        operation, zone=self.zone, block=False)
-    return resource_response.get('labels')
+    return operation.get('labels')
 
   def add_labels(self, new_labels_dict, blocking_call=False):
     """Add or update labels of a compute resource.
@@ -687,14 +741,15 @@ class GoogleComputeBaseResource(object):
     Args:
       new_labels_dict: dictionary containing the labels to be added. ex:
         {"incident_id":"1234abcd"}
+      blocking_call: to decide if the API should be blocking or not, default is
+        false
 
     Returns:
       response of the API operation
     """
 
     get_operation = self.get_operation().execute()
-    labelFingerprint = self.project.gce_operation(
-        get_operation, zone=self.zone, block=False)['labelFingerprint']
+    labelFingerprint = get_operation['labelFingerprint']
 
     exisitng_labels_dict = dict()
     if self.get_labels() is not None:
@@ -705,12 +760,13 @@ class GoogleComputeBaseResource(object):
 
     resource_type = self.get_resource_type()
     operation = None
-    if resource_type not in ['compute#instance', 'compute#snapshot', 'compute#disk']:
+    if resource_type not in ['compute#instance',
+                             'compute#snapshot', 'compute#disk']:
       raise RuntimeError((
           'Compute resource Type {0:s} is not one of the defined types in '
           'libcloudforensics library (Instance, Disk or Snapshot) '
       ).format(resource_type))
-    elif resource_type == 'compute#instance':
+    if resource_type == 'compute#instance':
       operation = self.form_operation('setLabels')(
           instance=self.name, project=self.project.project_id, zone=self.zone,
           body=request_body).execute()
@@ -723,7 +779,8 @@ class GoogleComputeBaseResource(object):
           resource=self.name, project=self.project.project_id,
           body=request_body).execute()
 
-    return self.project.gce_operation(operation, zone=self.zone, block=blocking_call)
+    return self.project.gce_operation(
+        operation, zone=self.zone, block=blocking_call)
 
 
 class GoogleComputeInstance(GoogleComputeBaseResource):
