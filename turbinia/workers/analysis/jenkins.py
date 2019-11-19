@@ -41,15 +41,13 @@ class JenkinsAnalysisTask(TurbiniaTask):
     Returns:
         TurbiniaTaskResult object.
     """
-    # What type of evidence we should output.
-    output_evidence = ReportText()
 
     # Where to store the resulting output file.
     output_file_name = 'jenkins_analysis.txt'
     output_file_path = os.path.join(self.output_dir, output_file_name)
 
-    # Set the output file as the data source for the output evidence.
-    output_evidence.local_path = output_file_path
+    # What type of evidence we should output.
+    output_evidence = ReportText(source_path=output_file_path)
 
     # TODO(aarontp): We should find a more optimal solution for this because
     # this requires traversing the entire filesystem and extracting more files
