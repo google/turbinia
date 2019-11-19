@@ -191,7 +191,7 @@ class GoogleCloudProject(object):
         zone = instance['zone']
       return GoogleComputeInstance(project=self, zone=zone, name=instance_name)
     except KeyError:
-      raise TurbiniaException('Unknown instance {0:s}'.format(instance_name))
+      raise TurbiniaException('Unknown instance: {0!s}'.format(instance_name))
 
 
 class GoogleCloudFunction(GoogleCloudProject):

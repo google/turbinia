@@ -39,12 +39,11 @@ class PlasoTask(TurbiniaTask):
         TurbiniaTaskResult object.
     """
     config.LoadConfig()
-    plaso_evidence = PlasoFile()
 
     # Write plaso file into tmp_dir because sqlite has issues with some shared
     # filesystems (e.g NFS).
     plaso_file = os.path.join(self.tmp_dir, '{0:s}.plaso'.format(self.id))
-    plaso_evidence.local_path = plaso_file
+    plaso_evidence = PlasoFile(source_path=plaso_file)
     plaso_log = os.path.join(self.output_dir, '{0:s}.log'.format(self.id))
 
     # TODO(aarontp): Move these flags into a recipe
@@ -69,7 +68,7 @@ class PlasoTask(TurbiniaTask):
         return result
 
     cmd.extend(['--logfile', plaso_log])
-    cmd.extend([plaso_file, evidence.local_path])
+    cmd.extend([plaso_file, evidence.device_path])
 
     result.log('Running plaso as [{0:s}]'.format(' '.join(cmd)))
 
