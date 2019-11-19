@@ -38,14 +38,12 @@ class TomcatAnalysisTask(TurbiniaTask):
     Returns:
         TurbiniaTaskResult object.
     """
-    # What type of evidence we should output.
-    output_evidence = ReportText()
 
     # Where to store the resulting output file.
     output_file_name = 'tomcat_analysis.txt'
     output_file_path = os.path.join(self.output_dir, output_file_name)
     # Set the output file as the data source for the output evidence.
-    output_evidence.local_path = output_file_path
+    output_evidence = ReportText(source_path=output_file_path)
 
     # Read the input file
     with open(evidence.local_path, 'r') as input_file:

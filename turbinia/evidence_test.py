@@ -28,20 +28,17 @@ class TestTurbiniaEvidence(unittest.TestCase):
 
   def testEvidenceSerialization(self):
     """Test that evidence serializes/unserializes."""
-    rawdisk = evidence.RawDisk(
-        name='My Evidence', local_path='/tmp/foo', mount_path='/mnt/foo')
+    rawdisk = evidence.RawDisk(name='My Evidence', source_path='/tmp/foo')
     rawdisk_json = rawdisk.to_json()
     self.assertTrue(isinstance(rawdisk_json, str))
 
     rawdisk_new = evidence.evidence_decode(json.loads(rawdisk_json))
     self.assertIsInstance(rawdisk_new, evidence.RawDisk)
     self.assertEqual(rawdisk_new.name, 'My Evidence')
-    self.assertEqual(rawdisk_new.mount_path, '/mnt/foo')
 
   def testEvidenceCollectionDeserialization(self):
     """Test that EvidenceCollection deserializes."""
-    rawdisk = evidence.RawDisk(
-        name='My Evidence', local_path='/tmp/foo', mount_path='/mnt/foo')
+    rawdisk = evidence.RawDisk(name='My Evidence', source_path='/tmp/foo.img')
     collection = evidence.EvidenceCollection()
     collection.name = 'testCollection'
     collection.add_evidence(rawdisk)
@@ -56,13 +53,12 @@ class TestTurbiniaEvidence(unittest.TestCase):
     self.assertIsInstance(rawdisk_new, evidence.RawDisk)
     self.assertEqual(collection_new.name, 'testCollection')
     self.assertEqual(rawdisk_new.name, 'My Evidence')
-    self.assertEqual(rawdisk_new.mount_path, '/mnt/foo')
+    self.assertEqual(rawdisk_new.source_path, '/tmp/foo.img')
 
   def testEvidenceCollectionSerialization(self):
     """Test that EvidenceCollection serializes/unserializes."""
     evidence_ = evidence.EvidenceCollection()
-    rawdisk = evidence.RawDisk(
-        name='My Evidence', local_path='/tmp/foo', mount_path='/mnt/foo')
+    rawdisk = evidence.RawDisk(name='My Evidence', source_path='/tmp/foo.img')
     evidence_.add_evidence(rawdisk)
     serialized_evidence = evidence_.serialize()
     collection_evidence = serialized_evidence['collection'][0]
@@ -81,21 +77,18 @@ class TestTurbiniaEvidence(unittest.TestCase):
 
   def testEvidenceValidation(self):
     """Test successful evidence validation."""
-    rawdisk = evidence.RawDisk(
-        name='My Evidence', local_path='/tmp/foo', mount_path='/mnt/foo')
-    rawdisk.REQUIRED_ATTRIBUTES = ['name', 'local_path', 'mount_path']
+    rawdisk = evidence.RawDisk(name='My Evidence', source_path='/tmp/foo')
+    rawdisk.REQUIRED_ATTRIBUTES = ['name', 'source_path']
     rawdisk.validate()
 
   def testEvidenceValidationEmptyAttribute(self):
     """Test failed evidence validation with an empty attribute."""
-    rawdisk = evidence.RawDisk(
-        name='My Evidence', local_path=None, mount_path='/mnt/foo')
-    rawdisk.REQUIRED_ATTRIBUTES = ['name', 'local_path', 'mount_path']
+    rawdisk = evidence.RawDisk(name='My Evidence', source_path=None)
+    rawdisk.REQUIRED_ATTRIBUTES = ['name', 'source_path']
     self.assertRaises(TurbiniaException, rawdisk.validate)
 
   def testEvidenceValidationNoAttribute(self):
     """Test failed evidence validation with no attribute."""
-    rawdisk = evidence.RawDisk(
-        name='My Evidence', local_path='/tmp/foo', mount_path='/mnt/foo')
+    rawdisk = evidence.RawDisk(name='My Evidence', source_path='/tmp/foo')
     rawdisk.REQUIRED_ATTRIBUTES = ['doesnotexist']
     self.assertRaises(TurbiniaException, rawdisk.validate)

@@ -106,21 +106,19 @@ class HadoopAnalysisTask(TurbiniaTask):
         TurbiniaTaskResult object.
     """
 
-    # What type of evidence we should output.
-    output_evidence = ReportText()
-
     # Where to store the resulting output file.
     output_file_name = 'hadoop_analysis.txt'
     output_file_path = os.path.join(self.output_dir, output_file_name)
 
-    output_evidence.local_path = output_file_path
+    # What type of evidence we should output.
+    output_evidence = ReportText(source_path=output_file_path)
 
     try:
       # We don't use FileArtifactExtractionTask as it export one evidence per
       # file extracted
       output_dir = os.path.join(self.output_dir, 'artifacts')
       collected_artifacts = extract_artifacts(
-          artifact_names=['HadoopAppRoot'], disk_path=evidence.local_path,
+          artifact_names=['HadoopAppRoot'], disk_path=evidence.device_path,
           output_dir=output_dir)
 
       (report, priority, summary) = self._AnalyzeHadoopAppRoot(
