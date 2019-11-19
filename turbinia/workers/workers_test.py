@@ -97,7 +97,7 @@ class TestTurbiniaTaskBase(unittest.TestCase):
     if validate_result is None:
       validate_result = self.result
 
-    self.result.status = 'TestStatus'
+    self.result.status = 'Task TurbiniaTask is running on TurbiniaTask'
     self.result.close = mock.MagicMock()
     self.task.setup = mock.MagicMock(return_value=setup)
     if mock_run:
@@ -132,7 +132,7 @@ class TestTurbiniaTask(TestTurbiniaTaskBase):
     self.setResults()
     new_result = self.task.run_wrapper(self.evidence.__dict__)
     new_result = TurbiniaTaskResult.deserialize(new_result)
-    self.assertEqual(new_result.status, 'TestStatus')
+    self.assertEqual(new_result.status, 'Task TurbiniaTask is running on TurbiniaTask')
     self.result.close.assert_called()
 
   def testTurbiniaTaskRunWrapperBadResult(self):
