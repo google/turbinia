@@ -116,7 +116,7 @@ class BaseStateManager(object):
 
     # Set all non-existent keys to None
     all_attrs = set(
-        TurbiniaTask.STORED_ATTRIBUTES + TurbiniaTaskResult.STORED_ATTRIBUTES)  
+        TurbiniaTask.STORED_ATTRIBUTES + TurbiniaTaskResult.STORED_ATTRIBUTES)
     task_dict.update({k: None for k in all_attrs if k not in task_dict})
     task_dict = self._validate_data(task_dict)
 
