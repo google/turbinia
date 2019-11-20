@@ -454,8 +454,8 @@ class GoogleCloudProject(object):
     """
 
     instance_service_object = self.gce_api().instances()
-    return self.__list_by_label(labels_filter, instance_service_object,
-                                filter_union)
+    return self.__list_by_label(
+        labels_filter, instance_service_object, filter_union)
 
   def list_disk_by_labels(self, labels_filter, filter_union=True):
     """Lists Disks in a project with one/all of the provided labels.
@@ -474,8 +474,8 @@ class GoogleCloudProject(object):
     """
 
     disk_service_object = self.gce_api().disks()
-    return self.__list_by_label(labels_filter, disk_service_object,
-                                filter_union)
+    return self.__list_by_label(
+        labels_filter, disk_service_object, filter_union)
 
   def __list_by_label(self, labels_filter, service_object, filter_union):
     """lists Disks/VMs in a project with one/all of the provided labels.
