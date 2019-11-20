@@ -175,7 +175,7 @@ class DatastoreStateManager(BaseStateManager):
 
   def _validate_data(self, data):
     for key, value in iter(data.items()):
-      if (isinstance(value,  six.string_types) and
+      if (isinstance(value, six.string_types) and
           len(value) >= MAX_DATASTORE_STRLEN):
         log.warning(
             'Warning: key {0:s} with value {1:s} is longer than {2:d} bytes. '
