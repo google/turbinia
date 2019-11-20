@@ -437,14 +437,16 @@ class GoogleCloudProject(object):
     created = True
     return instance, created
 
-  def list_instance_by_labels_anded(self, labels_filter):
-    """Lists VMs in a project with all of the provided labels.
+  def list_instance_by_labels(self, labels_filter, filter_union=True):
+    """Lists VMs in a project with one/all of the provided labels.
 
     This will call the __list_by_label on instances() API object
-    with the proper "operation" parameter.
+    with the proper labels filter.
 
     Args:
-      labels_filter: A dict of labels to find e.g. {'id': '123'}
+      labels_filter: A dict of labels to find e.g. {'id': '123'}.
+      filter_union: A Boolean; True to get the union of all filters,
+          False to get the intersection.
 
     Returns:
       A dictionary with name and metadata (zone, labels) for each instance.
@@ -452,16 +454,19 @@ class GoogleCloudProject(object):
     """
 
     instance_service_object = self.gce_api().instances()
-    return self.__list_by_label(labels_filter, instance_service_object, 'AND')
+    return self.__list_by_label(labels_filter, instance_service_object,
+                                filter_union)
 
-  def list_disk_by_labels_anded(self, labels_filter):
-    """Lists Disks in a project with all of the provided labels.
+  def list_disk_by_labels(self, labels_filter, filter_union=True):
+    """Lists Disks in a project with one/all of the provided labels.
 
     This will call the __list_by_label on disks() API object
-    with the proper "operation" parameter.
+    with the proper labels filter.
 
     Args:
-      labels_filter: a dict of labels to find e.g. {'id': '123'}.
+      labels_filter: A dict of labels to find e.g. {'id': '123'}.
+      filter_union: A Boolean; True to get the union of all filters,
+          False to get the intersection.
 
     Returns:
       A dictionary with name and metadata (zone, labels) for each disk.
@@ -469,64 +474,32 @@ class GoogleCloudProject(object):
     """
 
     disk_service_object = self.gce_api().disks()
-    return self.__list_by_label(labels_filter, disk_service_object, 'AND')
+    return self.__list_by_label(labels_filter, disk_service_object,
+                                filter_union)
 
-  def list_instance_by_labels_ored(self, labels_filter):
-    """Lists VMs in a project with one of the provided labels.
-
-    This will call the __list_by_label on instances() API object
-    with the proper "operation" parameter.
-
-    Args:
-      labels_filter: A dict of labels to find e.g. {'id': '123'}.
-
-    Returns:
-      A dictionary with name and metadata (zone, labels) for each instance.
-      ex: {'instance-1': {'zone': 'us-central1-a', 'labels': {'id': '123'}}
-    """
-
-    instance_service_object = self.gce_api().instances()
-    return self.__list_by_label(labels_filter, instance_service_object, 'OR')
-
-  def list_disk_by_labels_ored(self, labels_filter):
-    """Lists Disks in a project with one of the provided labels.
-
-    This will call the __list_by_label on disks() API object
-    with the proper "operation" parameter.
-
-    Args:
-      labels_filter: A dict of labels to find e.g. {'id': '123'}.
-
-    Returns:
-      A dictionary with name and metadata (zone, labels) for each disk.
-      ex: {'disk-1': {'zone': 'us-central1-a', 'labels': {'id': '123'}}
-    """
-
-    disk_service_object = self.gce_api().disks()
-    return self.__list_by_label(labels_filter, disk_service_object, 'OR')
-
-  def __list_by_label(self, labels_filter, service_object, operation):
+  def __list_by_label(self, labels_filter, service_object, filter_union):
     """lists Disks/VMs in a project with one/all of the provided labels.
 
-    The operation parameter will determine if the labels will be ored or anded.
+    Private method used to select different compute resources by labels.
 
     Args:
       labels_filter:  A dict of labels to find e.g. {'id': '123'}.
       service_object: Google Compute Engine (Disk | Instance) service object.
-      operation: A string with the value "OR" or "AND" determining how the
-          labels should be combined.
+      filter_union: A boolean; True to get the union of all filters,
+          False to get the intersection.
 
     Returns:
       Dictionary with name and metadata (zone, labels) for each instance/disk.
       ex: {'instance-1': {'zone': 'us-central1-a', 'labels': {'id': '123'}}
     """
-    if operation not in ['OR', 'AND']:
+    if not isinstance(filter_union, bool):
       raise RuntimeError((
-          '__list_by_label third argument must be "OR" or "AND"'
-          ' {0:s} is an invalid argument.').format(operation))
+          'filter_union parameter must be of Type boolean'
+          ' {0:s} is an invalid argument.').format(filter_union))
 
     resource_dict = dict()
     filter_expression = ''
+    operation = 'AND' if filter_union else 'OR'
     for key, value in labels_filter.items():
       filter_expression += 'labels.{0:s}={1:s} {2:s} '.format(
           key, value, operation)
@@ -538,14 +511,15 @@ class GoogleCloudProject(object):
       response = request.execute()
       result = self.gce_operation(response, zone=self.default_zone)
 
-      for region_or_zone_string, resource_scoped_list in result['items'].items(
-      ):
+      for item in result['items'].items():
+        region_or_zone_string, resource_scoped_list = item
 
         if 'warning' not in resource_scoped_list.keys():
           _, zone = region_or_zone_string.rsplit('/', 1)
-          for item in resource_scoped_list.get(
+          for resource in resource_scoped_list.get(
               'instances', []) or resource_scoped_list.get('disks', []):
-            resource_dict[item['name']] = dict(zone=zone, labels=item['labels'])
+            resource_dict[resource['name']] = dict(
+                zone=zone, labels=resource['labels'])
 
       request = service_object.aggregatedList_next(
           previous_request=request, previous_response=response)
@@ -649,15 +623,12 @@ class GoogleComputeBaseResource(object):
     """Get specific value from the resource key value store.
 
     Args:
-      key: Key to get value from.
+      key: A key type String to get itscorresponding value.
 
     Returns:
       Value of key or None if key is missing.
     """
-    if not self._data:
-      operation = self.get_operation().execute()
-      self._data = self.project.gce_operation(
-          operation, zone=self.zone, block=False)
+    self._data = self.get_operation().execute()
     return self._data.get(key)
 
   def get_source_string(self):
@@ -666,6 +637,8 @@ class GoogleComputeBaseResource(object):
     Returns:
       The full API URL to the resource.
     """
+    if self._data:
+      return self._data['selfLink']
     return self.get_value('selfLink')
 
   def get_resource_type(self):
@@ -677,10 +650,9 @@ class GoogleComputeBaseResource(object):
         compute#disk
         compute#snapshot
     """
-    if not self._data:
-      operation = self.get_operation().execute()
-      self._data = operation
-    return self._data['kind']
+    if self._data:
+      return self._data['kind']
+    return self.get_value('kind')
 
   def form_operation(self, operation_name):
     """Form an API operation object for the compute resource.
@@ -737,7 +709,7 @@ class GoogleComputeBaseResource(object):
           False.
 
     Returns:
-      response of the API operation
+      The response of the API operation.
     """
 
     get_operation = self.get_operation().execute()
