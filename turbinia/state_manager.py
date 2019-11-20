@@ -31,6 +31,8 @@ import six
 from turbinia import config
 from turbinia.config import DATETIME_FORMAT
 from turbinia import TurbiniaException
+from turbinia.workers import TurbiniaTask
+from turbinia.workers import TurbiniaTaskResult
 
 config.LoadConfig()
 if config.STATE_MANAGER.lower() == 'datastore':
@@ -110,10 +112,6 @@ class BaseStateManager(object):
     if task_dict.get('run_time'):
       task_dict['run_time'] = task_dict['run_time'].total_seconds()
 
-    # Importing these here to avoid circular dependencies.
-    from turbinia.workers import TurbiniaTask
-    from turbinia.workers import TurbiniaTaskResult
-
     # Set all non-existent keys to None
     all_attrs = set(
         TurbiniaTask.STORED_ATTRIBUTES + TurbiniaTaskResult.STORED_ATTRIBUTES)
@@ -177,7 +175,7 @@ class DatastoreStateManager(BaseStateManager):
 
   def _validate_data(self, data):
     for key, value in iter(data.items()):
-      if (isinstance(value, six.string_types) and
+      if (isinstance(value,  six.string_types) and
           len(value) >= MAX_DATASTORE_STRLEN):
         log.warning(
             'Warning: key {0:s} with value {1:s} is longer than {2:d} bytes. '
