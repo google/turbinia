@@ -37,7 +37,6 @@ from turbinia import config
 from turbinia.config import DATETIME_FORMAT
 from turbinia.evidence import evidence_decode
 from turbinia import output_manager
-from turbinia import state_manager
 from turbinia import TurbiniaException
 
 log = logging.getLogger('turbinia')
@@ -169,8 +168,8 @@ class TurbiniaTaskResult(object):
           task.output_manager.save_evidence(evidence, self)
       else:
         self.log(
-            'Evidence {0!s:s} has empty or missing file at local_path {1!s:s} so '
-            'not saving.'.format(evidence.name, evidence.local_path))
+            'Evidence {0!s:s} has empty or missing file at source_path {1!s:s} so '
+            'not saving.'.format(evidence.name, evidence.source_path))
 
       if not evidence.request_id:
         evidence.request_id = self.request_id
@@ -182,7 +181,7 @@ class TurbiniaTaskResult(object):
     # also fail.
     # pylint: disable=broad-except
     except Exception as exception:
-      message = 'Evidence post-processing for {0!s:s} failed: {1!s}'.format(
+      message = 'Evidence post-processing for {0:s} failed: {1!s}'.format(
           self.input_evidence.name, exception)
       self.log(message, level=logging.ERROR)
 
@@ -224,26 +223,6 @@ class TurbiniaTaskResult(object):
 
     if traceback_:
       self.result.set_error(message, traceback_)
-
-  def task_status_update(self, task, status):
-    """Handles updating the task status and writing it to datastore.
-    Args:
-<<<<<<< HEAD
-      task (TurbiniaTask): The calling Task object
-=======
-      task (TurbiniaTask): The calling Task object  
->>>>>>> b16f0ee7385f2c03456c3578a6207eacbce775ee
-      status: One line descriptive task status.
-    """
-    stat_manager = state_manager.get_state_manager()
-    if status == 'Queued':
-      task.result.status = 'Task {0!s:s} is queued on {1!s:s}.'.format(
-        self.task_name, self.worker_name)
-    elif status == 'Running':
-      task.result.status = 'Task {0!s:s} is running on {0!s:s}'.format(
-        self.task_name, self.worker_name)
-    
-    stat_manager.update_task(task)
 
   def add_evidence(self, evidence, evidence_config):
     """Populate the results list.
@@ -590,14 +569,14 @@ class TurbiniaTask(object):
     """
     log.debug('Task {0:s} {1:s} awaiting execution'.format(self.name, self.id))
     evidence = evidence_decode(evidence)
-    self.result = self.setup(evidence)
-    self.result.task_status_update(self, 'Queued')
     with filelock.FileLock(config.LOCK_FILE):
       log.info('Starting Task {0:s} {1:s}'.format(self.name, self.id))
       original_result_id = None
       try:
+        self.result = self.setup(evidence)
         original_result_id = self.result.id
         evidence.validate()
+
         if self.turbinia_version != turbinia.__version__:
           message = (
               'Worker and Server versions do not match: {0:s} != {1:s}'.format(
@@ -606,7 +585,6 @@ class TurbiniaTask(object):
           self.result.status = message
           return self.result
 
-        self.result.task_status_update(self, 'Running')
         self._evidence_config = evidence.config
         self.result = self.run(evidence, self.result)
       # pylint: disable=broad-except

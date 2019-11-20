@@ -31,7 +31,6 @@ from turbinia.workers.plaso import PlasoTask
 
 class TestTurbiniaTaskBase(unittest.TestCase):
   """Test TurbiniaTask class.
-
   Attributes:
     class_task(TurbiniaTask): The class the test should instantiated
     remove_file(list(str)): Files that will be removed after the test run
@@ -83,7 +82,6 @@ class TestTurbiniaTaskBase(unittest.TestCase):
   def setResults(
       self, setup=None, run=None, validate_result=None, mock_run=True):
     """Set up mock returns in TurbiniaTaskResult object.
-
     Args:
       setup: What value to return from setup()
       run: What value to return from run()
@@ -97,7 +95,7 @@ class TestTurbiniaTaskBase(unittest.TestCase):
     if validate_result is None:
       validate_result = self.result
 
-    self.result.status = 'Task TurbiniaTask is running on TurbiniaTask'
+    self.result.status = 'TestStatus'
     self.result.close = mock.MagicMock()
     self.task.setup = mock.MagicMock(return_value=setup)
     if mock_run:
@@ -124,7 +122,7 @@ class TestTurbiniaTask(TestTurbiniaTaskBase):
     self.result.closed = True
     new_result = self.task.run_wrapper(self.evidence.__dict__)
     new_result = TurbiniaTaskResult.deserialize(new_result)
-    self.assertEqual(new_result.status, 'Task TurbiniaTask is running on TurbiniaTask')
+    self.assertEqual(new_result.status, 'TestStatus')
     self.result.close.assert_not_called()
 
   def testTurbiniaTaskRunWrapperAutoClose(self):
@@ -132,7 +130,7 @@ class TestTurbiniaTask(TestTurbiniaTaskBase):
     self.setResults()
     new_result = self.task.run_wrapper(self.evidence.__dict__)
     new_result = TurbiniaTaskResult.deserialize(new_result)
-    self.assertEqual(new_result.status, 'Task TurbiniaTask is running on TurbiniaTask')
+    self.assertEqual(new_result.status, 'TestStatus')
     self.result.close.assert_called()
 
   def testTurbiniaTaskRunWrapperBadResult(self):
