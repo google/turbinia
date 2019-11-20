@@ -438,7 +438,7 @@ class GoogleCloudProject(object):
     return instance, created
 
   def list_instance_by_labels(self, labels_filter, filter_union=True):
-    """Lists VMs in a project with one/all of the provided labels.
+    """List VMs in a project with one/all of the provided labels.
 
     This will call the __list_by_label on instances() API object
     with the proper labels filter.
@@ -458,7 +458,7 @@ class GoogleCloudProject(object):
         labels_filter, instance_service_object, filter_union)
 
   def list_disk_by_labels(self, labels_filter, filter_union=True):
-    """Lists Disks in a project with one/all of the provided labels.
+    """List Disks in a project with one/all of the provided labels.
 
     This will call the __list_by_label on disks() API object
     with the proper labels filter.
@@ -478,7 +478,7 @@ class GoogleCloudProject(object):
         labels_filter, disk_service_object, filter_union)
 
   def __list_by_label(self, labels_filter, service_object, filter_union):
-    """lists Disks/VMs in a project with one/all of the provided labels.
+    """List Disks/VMs in a project with one/all of the provided labels.
 
     Private method used to select different compute resources by labels.
 
@@ -623,7 +623,7 @@ class GoogleComputeBaseResource(object):
     """Get specific value from the resource key value store.
 
     Args:
-      key: A key type String to get itscorresponding value.
+      key: A key of type String to get key's corresponding value.
 
     Returns:
       Value of key or None if key is missing.
