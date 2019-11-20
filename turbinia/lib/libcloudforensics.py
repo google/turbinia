@@ -705,8 +705,8 @@ class GoogleComputeBaseResource(object):
     Args:
       new_labels_dict: A dictionary containing the labels to be added.
           ex: {"incident_id": "1234abcd"}.
-      blocking_call: Whether the API call should be blocking or not, default is
-          False.
+      blocking_call: A boolean to decide whether the API call should
+          be blocking or not, default is False.
 
     Returns:
       The response of the API operation.
