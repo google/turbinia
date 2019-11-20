@@ -441,15 +441,13 @@ class GoogleCloudProject(object):
     """Lists VMs in a project with all of the provided labels.
 
     This will call the __list_by_label on instances() API object
-    with the proper "operation" parameterer.
+    with the proper "operation" parameter.
 
     Args:
-      labels_filter: a dict of labels to find --> {'id': '123'}
+      labels_filter: A dict of labels to find e.g. {'id': '123'}
 
     Returns:
-      A call to __list_by_label with the proper instance_service_object,
-      which returns a dictionary with name and metadata(zone, labels)
-      for each instance.
+      A dictionary with name and metadata (zone, labels) for each instance.
       ex: {'instance-1': {'zone': 'us-central1-a', 'labels': {'id': '123'}}
     """
 
@@ -460,15 +458,13 @@ class GoogleCloudProject(object):
     """Lists Disks in a project with all of the provided labels.
 
     This will call the __list_by_label on disks() API object
-    with the proper "operation" parameterer.
+    with the proper "operation" parameter.
 
     Args:
-      labels_filter: a dict of labels to find --> {'id': '123'}
+      labels_filter: a dict of labels to find e.g. {'id': '123'}.
 
     Returns:
-      A call to __list_by_label with the proper instance_service_object,
-      which returns a dictionary with name and metadata(zone, labels)
-      for each disk.
+      A dictionary with name and metadata (zone, labels) for each disk.
       ex: {'disk-1': {'zone': 'us-central1-a', 'labels': {'id': '123'}}
     """
 
@@ -482,12 +478,10 @@ class GoogleCloudProject(object):
     with the proper "operation" parameter.
 
     Args:
-      labels_filter: a dict of labels to find --> {'id': '123'}
+      labels_filter: A dict of labels to find e.g. {'id': '123'}.
 
     Returns:
-      A call to __list_by_label with the proper instance_service_object,
-      which returns a dictionary with name and metadata(zone, labels)
-      for each instance.
+      A dictionary with name and metadata (zone, labels) for each instance.
       ex: {'instance-1': {'zone': 'us-central1-a', 'labels': {'id': '123'}}
     """
 
@@ -498,16 +492,14 @@ class GoogleCloudProject(object):
     """Lists Disks in a project with one of the provided labels.
 
     This will call the __list_by_label on disks() API object
-    with the proper "operation" parameterer.
+    with the proper "operation" parameter.
 
     Args:
-      labels_filter: a dict of labels to find --> {'id': '123'}
+      labels_filter: A dict of labels to find e.g. {'id': '123'}.
 
     Returns:
-      A call to __list_by_label with the proper instance_service_object,
-      which returns a dictionary with name and metadata(zone, labels)
-      for each disk.
-      ex: {'disk-1': {'zone': 'us-central1-a', 'labels': {'id': '12
+      A dictionary with name and metadata (zone, labels) for each disk.
+      ex: {'disk-1': {'zone': 'us-central1-a', 'labels': {'id': '123'}}
     """
 
     disk_service_object = self.gce_api().disks()
@@ -519,13 +511,13 @@ class GoogleCloudProject(object):
     The operation parameter will determine if the labels will be ored or anded.
 
     Args:
-      labels_filter:  a dict of labels to find --> {'id': '123'}
-      service_object: Google Compute Engine (Disk | Instance) service object
-      operation: a string with the value "OR" or "AND" determining how the
-      labels should be compined.
+      labels_filter:  A dict of labels to find e.g. {'id': '123'}.
+      service_object: Google Compute Engine (Disk | Instance) service object.
+      operation: A string with the value "OR" or "AND" determining how the
+          labels should be combined.
 
     Returns:
-      Dictionary with name and metadata(zone, labels) for each instance/disk.
+      Dictionary with name and metadata (zone, labels) for each instance/disk.
       ex: {'instance-1': {'zone': 'us-central1-a', 'labels': {'id': '123'}}
     """
     if operation not in ['OR', 'AND']:
@@ -681,9 +673,9 @@ class GoogleComputeBaseResource(object):
 
     Returns:
       Resource Type which is a string with one of the following values:
-      compute#instance
-      compute#disk
-      compute#snapshot
+        compute#instance
+        compute#disk
+        compute#snapshot
     """
     if not self._data:
       operation = self.get_operation().execute()
@@ -697,14 +689,14 @@ class GoogleComputeBaseResource(object):
     [RESOURCE] can be type "instance", disk or "snapshot".
 
     Args:
-      operation_name: the name of the API operation you need to perform
+      operation_name: The name of the API operation you need to perform.
 
     Returns:
-      an API operation object for the referenced compute resource
+      An API operation object for the referenced compute resource.
 
     Raises RuntimeError:
-      if resource type is not defined as a type which extends the
-      GoogleGomputeBaseResource class
+      If resource type is not defined as a type which extends the
+      GoogleGomputeBaseResource class.
     """
     resource_type = self.get_resource_type()
     module = None
@@ -739,10 +731,10 @@ class GoogleComputeBaseResource(object):
     """Add or update labels of a compute resource.
 
     Args:
-      new_labels_dict: dictionary containing the labels to be added. ex:
-        {"incident_id":"1234abcd"}
-      blocking_call: to decide if the API should be blocking or not, default is
-        false
+      new_labels_dict: A dictionary containing the labels to be added.
+          ex: {"incident_id": "1234abcd"}.
+      blocking_call: Whether the API call should be blocking or not, default is
+          False.
 
     Returns:
       response of the API operation
