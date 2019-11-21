@@ -24,7 +24,7 @@ log = logging.getLogger('turbinia')
 
 
 #Sends notfications via email
-def sendmail(subject, message):
+def sendmail(address, subject, message):
   """Sends an Email notification via SMTP
      Args:
          subject: This will be the subject of the email
@@ -36,7 +36,7 @@ def sendmail(subject, message):
       #Puts message in MIME format
       msg = MIMEMultipart()
       msg['From'] = config.EMAIL_ADDRESS
-      msg['To'] = config.EMAIL_RECIEVING_ADDRESS
+      msg['To'] = address
       msg['Subject'] = subject
       msg.attach(MIMEText(message))
 
@@ -61,7 +61,7 @@ def sendmail(subject, message):
             'attempting to continue without logging in')
 
       server.sendmail(
-          config.EMAIL_ADDRESS, config.EMAIL_RECIEVING_ADDRESS, msg.as_string())
+          config.EMAIL_ADDRESS, address, msg.as_string())
       log.info('Email notification sent')
     else:
       log.info('Email notifications are disabled')

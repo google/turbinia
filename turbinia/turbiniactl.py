@@ -425,7 +425,7 @@ def main():
       sys.exit(1)
   #sends test notification
   if args.command == 'testnotify':
-    notify.sendmail('Turbinia test notification', 'This is a test noticiation')
+    notify.sendmail(config.EMAIL_ADDRESS ,'Turbinia test notification', 'This is a test noticiation')
     sys.exit(0)
 
   if args.jobs_whitelist and args.jobs_blacklist:

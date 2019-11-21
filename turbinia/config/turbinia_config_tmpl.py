@@ -148,6 +148,3 @@ EMAIL_PORT = 587
 # Email address and password
 EMAIL_ADDRESS = 'example@address.com'
 EMAIL_PASSWORD = 'Hunter2'
-
-# This is the address you plan on using for recieving email notifications
-EMAIL_RECIEVING_ADDRESS = 'example2@address.com'
