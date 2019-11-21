@@ -9,4 +9,3 @@ oauth2client
 psq
 six
 urllib3[secure]
-smtplib
