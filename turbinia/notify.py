@@ -53,16 +53,16 @@ def sendmail(address, subject, message):
       server.ehlo()
 
       #Attempt to login
-      try:
+      if config.EMAIL_PASSWORD != '':
         server.login(config.EMAIL_ADDRESS, config.EMAIL_PASSWORD)
-      except NameError:
-        log.info(
-            'EMAIL_ADDRESS or EMAIL_PASSWORD is not definied, '
+      
+      else:
+            log.info('Email password is blank, '
             'attempting to continue without logging in')
 
       server.sendmail(
           config.EMAIL_ADDRESS, address, msg.as_string())
-      log.info('Email notification sent')
+      log.info('Email notification sent to '+ address)
     else:
       log.info('Email notifications are disabled')
 
