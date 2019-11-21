@@ -27,6 +27,7 @@ log = logging.getLogger('turbinia')
 def sendmail(address, subject, message):
   """Sends an Email notification via SMTP
      Args:
+         address: This is the address that the email will be sent to
          subject: This will be the subject of the email
          message: This will be the message of the email
   """
