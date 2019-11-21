@@ -142,7 +142,7 @@ class TestTurbiniaTask(TestTurbiniaTaskBase):
     checked_result.setup(self.task)
     checked_result.status = 'CheckedResult'
     self.setResults(run=bad_result, validate_result=checked_result)
-
+    state_manager = mock.MagicMock()
     new_result = self.task.run_wrapper(self.evidence.__dict__)
     new_result = TurbiniaTaskResult.deserialize(new_result)
 
