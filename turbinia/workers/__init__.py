@@ -233,7 +233,7 @@ class TurbiniaTaskResult(object):
     if traceback_:
       self.result.set_error(message, traceback_)
 
-  def task_status_update(self, task, status):
+  def update_task_status(self, task, status):
     """Updates the task status and pushes it directly to datastor.
 
     Args:
@@ -242,11 +242,11 @@ class TurbiniaTaskResult(object):
     """
     stat_manager = state_manager.get_state_manager()
     if status == 'Queued':
-      task.result.status = 'Task {0!s:s} is queued on {1!s:s}.'.format(
-        self.task_name, self.worker_name)
+      task.result.status = 'Task {0!s} is queued on {1!s}.'.format(
+          self.task_name, self.worker_name)
     elif status == 'Running':
-      task.result.status = 'Task {0!s:s} is running on {0!s:s}'.format(
-        self.task_name, self.worker_name)
+      task.result.status = 'Task {0!s} is running on {1!s}'.format(
+          self.task_name, self.worker_name)
 
     stat_manager.update_task(task)
 
@@ -373,7 +373,6 @@ class TurbiniaTask(object):
     self.turbinia_version = turbinia.__version__
     self.requester = requester if requester else 'user_unspecified'
     self._evidence_config = {}
-   # self.state_manager = state_manager.get_state_manager()
 
   def serialize(self):
     """Converts the TurbiniaTask object into a serializable dict.
@@ -383,7 +382,6 @@ class TurbiniaTask(object):
     """
     task_copy = deepcopy(self.__dict__)
     task_copy['output_manager'] = self.output_manager.__dict__
-    #task_copy['state_manager'] = self.state_manager.__dict__
     task_copy['last_update'] = self.last_update.strftime(DATETIME_FORMAT)
     return task_copy
 
@@ -411,8 +409,6 @@ class TurbiniaTask(object):
     task.__dict__.update(input_dict)
     task.output_manager = output_manager.OutputManager()
     task.output_manager.__dict__.update(input_dict['output_manager'])
-    #task.state_manager = state_manager.get_state_manager()
-    #task.state_manager.__dict__.update(input_dict['state_manager'])
     task.last_update = datetime.strptime(
         input_dict['last_update'], DATETIME_FORMAT)
     return task
@@ -623,30 +619,29 @@ class TurbiniaTask(object):
     evidence = evidence_decode(evidence)
     try:
       self.result = self.setup(evidence)
-      self.result.task_status_update(self, 'Queued')
+      self.result.update_task_status(self, 'Queued')
     except Exception as exception:
-        message = (
-            '{0:s} Task failed with exception: [{1!s}]'.format(
-                self.name, exception))
-        # Logging explicitly here because the result is in an unknown state
-        trace = traceback.format_exc()
-        log.error(message)
-        log.error(trace)
-        if self.result:
-          self.result.log(message, level=logging.ERROR)
-          self.result.log(trace)
-          if hasattr(exception, 'message'):
-            self.result.set_error(exception.message, traceback.format_exc())
-          else:
-            self.result.set_error(exception.__class__, traceback.format_exc())
-          self.result.status = message
+      message = (
+          '{0:s} Task failed with exception: [{1!s}]'.format(
+              self.name, exception))
+      # Logging explicitly here because the result is in an unknown state
+      trace = traceback.format_exc()
+      log.error(message)
+      log.error(trace)
+      if self.result:
+        self.result.log(message, level=logging.ERROR)
+        self.result.log(trace)
+        if hasattr(exception, 'message'):
+          self.result.set_error(exception.message, traceback.format_exc())
         else:
-          log.error('No TurbiniaTaskResult object found after task execution.')
+          self.result.set_error(exception.__class__, traceback.format_exc())
+        self.result.status = message
+      else:
+        log.error('No TurbiniaTaskResult object found after task execution.')
     with filelock.FileLock(config.LOCK_FILE):
       log.info('Starting Task {0:s} {1:s}'.format(self.name, self.id))
       original_result_id = None
       try:
-        #self.result = self.setup(evidence)
         original_result_id = self.result.id
         evidence.validate()
 
@@ -658,7 +653,7 @@ class TurbiniaTask(object):
           self.result.status = message
           return self.result
 
-        self.result.task_status_update(self, 'Running')
+        self.result.update_task_status(self, 'Running')
         self._evidence_config = evidence.config
         self.result = self.run(evidence, self.result)
       # pylint: disable=broad-except
