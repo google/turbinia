@@ -516,8 +516,13 @@ class GoogleCloudProject(object):
 
         if 'warning' not in resource_scoped_list.keys():
           _, zone = region_or_zone_string.rsplit('/', 1)
-          for resource in resource_scoped_list.get(
-              'instances', []) or resource_scoped_list.get('disks', []):
+          # Only one of the following loops will execute since the method is
+          # called either with a service object Instances or Disks
+          for resource in resource_scoped_list.get('instances', []):
+            resource_dict[resource['name']] = dict(
+                zone=zone, labels=resource['labels'])
+
+          for resource in resource_scoped_list.get('disks', []):
             resource_dict[resource['name']] = dict(
                 zone=zone, labels=resource['labels'])
 
