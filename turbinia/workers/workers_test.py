@@ -27,6 +27,7 @@ from turbinia import TurbiniaException
 from turbinia.workers import TurbiniaTask
 from turbinia.workers import TurbiniaTaskResult
 from turbinia.workers.plaso import PlasoTask
+from turbinia import state_manager
 
 
 class TestTurbiniaTaskBase(unittest.TestCase):
@@ -118,24 +119,32 @@ class TestTurbiniaTask(TestTurbiniaTaskBase):
     out_obj.output_manager = None
     self.assertEqual(out_obj.__dict__, self.plaso_task.__dict__)
 
-  def testTurbiniaTaskRunWrapper(self):
+  @mock.patch('turbinia.state_manager.get_state_manager')
+  @mock.patch('turbinia.state_manager.datastore.Client')
+  def testTurbiniaTaskRunWrapper(self,_,__):
     """Test that the run wrapper executes task run."""
     self.setResults()
     self.result.closed = True
     new_result = self.task.run_wrapper(self.evidence.__dict__)
     new_result = TurbiniaTaskResult.deserialize(new_result)
-    self.assertEqual(new_result.status, 'TestStatus')
+    self.assertEqual(new_result.status,
+        'Task TurbiniaTask is running on TurbiniaTask')
     self.result.close.assert_not_called()
 
-  def testTurbiniaTaskRunWrapperAutoClose(self):
+  @mock.patch('turbinia.state_manager.get_state_manager')
+  @mock.patch('turbinia.state_manager.datastore.Client')
+  def testTurbiniaTaskRunWrapperAutoClose(self,_,__):
     """Test that the run wrapper closes the task."""
     self.setResults()
     new_result = self.task.run_wrapper(self.evidence.__dict__)
     new_result = TurbiniaTaskResult.deserialize(new_result)
-    self.assertEqual(new_result.status, 'TestStatus')
+    self.assertEqual(new_result.status,
+        'Task TurbiniaTask is running on TurbiniaTask')
     self.result.close.assert_called()
 
-  def testTurbiniaTaskRunWrapperBadResult(self):
+  @mock.patch('turbinia.state_manager.get_state_manager')
+  @mock.patch('turbinia.state_manager.datastore.Client')
+  def testTurbiniaTaskRunWrapperBadResult(self,_,__):
     """Test that the run wrapper recovers from run returning bad result."""
     bad_result = 'Not a TurbiniaTaskResult'
     checked_result = TurbiniaTaskResult(base_output_dir=self.base_output_dir)
@@ -160,7 +169,9 @@ class TestTurbiniaTask(TestTurbiniaTaskBase):
     self.assertEqual(type(new_result), TurbiniaTaskResult)
     self.assertIn('failed', new_result.status)
 
-  def testTurbiniaTaskRunWrapperSetupFail(self):
+  @mock.patch('turbinia.state_manager.get_state_manager')
+  @mock.patch('turbinia.state_manager')
+  def testTurbiniaTaskRunWrapperSetupFail(self,_,__):
     """Test that the run wrapper recovers from setup failing."""
     self.task.result = None
     canary_status = 'ReturnedFromValidateResult'
