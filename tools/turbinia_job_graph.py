@@ -1,3 +1,4 @@
+#!/usr/bin/env python -v
 # -*- coding: utf-8 -*-
 # Copyright 2018 Google Inc.
 #
@@ -14,10 +15,12 @@
 # limitations under the License.
 """Graph to visualise job/evidence relationships."""
 
+from __future__ import print_function
 from __future__ import unicode_literals
 
 import argparse
 import graphviz
+import sys
 
 from turbinia.jobs import manager as jobs_manager
 
@@ -49,14 +52,23 @@ def create_graph():
 if __name__ == '__main__':
   parser = argparse.ArgumentParser(
       description='Create Turbinia evidence graph.')
+  parser.add_argument(
+      '-f', '--format', default='png',
+      help='The format of the output file you wish to generate.  Supported '
+      'types are here: http://www.graphviz.org/doc/info/output.html')
   parser.add_argument('filename', type=unicode, help='where to save the file')
   args = parser.parse_args()
+
+  if args.format not in graphviz.FORMATS:
+    print('Format type {0:s} is not supported'.format(args.format))
+    sys.exit(1)
 
   graph = create_graph()
   output_file = args.filename.replace('.png', '')
 
   try:
-    rendered_graph = graph.render(filename=output_file, cleanup=True)
+    rendered_graph = graph.render(
+        filename=output_file, format=args.format, cleanup=True)
     print('Graph generated and saved to: {0}'.format(rendered_graph))
   except graphviz.ExecutableNotFound:
     print('Graphviz is not installed - Run: apt-get install graphviz')
