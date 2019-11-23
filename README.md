@@ -139,12 +139,12 @@ Commands:
     server              Run Turbinia Server
 ```
 
-The commands for processing the evidence types of rawdisk and directory specify
-information about evidence that Turbinia should process. By default, when adding
-new evidence to be processed, turbiniactl will act as a client and send a
-request to the configured Turbinia server, otherwise if `server` is specified,
-it will start up its own Turbinia server process. Here's the turbiniactl usage
-for adding a raw disk type of evidence to be processed by Turbinia:
+The commands for processing evidence specify the metadata about that evidence
+for Turbinia to process. By default, when adding new evidence to be processed,
+turbiniactl will act as a client and send a request to the configured Turbinia
+server, otherwise if `server` is specified, it will start up its own Turbinia
+server process. Here's the turbiniactl usage for adding a raw disk type of
+evidence to be processed by Turbinia:
 
 ```
 $ ./turbiniactl rawdisk -h
@@ -157,6 +157,44 @@ optional arguments:
   -s SOURCE, --source SOURCE
                         Description of the source of the evidence
   -n NAME, --name NAME  Descriptive name of the evidence
+```
+
+Status information about the requests that are being or have been processed can
+be viewed with the `turbiniactl status` command.  You can specify the request ID
+that was generated, or other filters like the username of the requester, or how
+many days of processing history you want to view.  You can also generate
+statistics and reports (in markdown format) with other flags.
+
+```
+$ turbiniactl status -h
+usage: turbiniactl status [-h] [-c] [-C] [-d DAYS_HISTORY] [-f]
+                          [-r REQUEST_ID] [-p PRIORITY_FILTER] [-R] [-s]
+                          [-t TASK_ID] [-u USER]
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -c, --close_tasks     Close tasks based on Request ID or Task ID
+  -C, --csv             When used with --statistics, the output will be in CSV
+                        format
+  -d DAYS_HISTORY, --days_history DAYS_HISTORY
+                        Number of days of history to show
+  -f, --force           Gatekeeper for --close_tasks
+  -r REQUEST_ID, --request_id REQUEST_ID
+                        Show tasks with this Request ID
+  -p PRIORITY_FILTER, --priority_filter PRIORITY_FILTER
+                        This sets what report sections are shown in full
+                        detail in report output. Any tasks that have set a
+                        report_priority value equal to or lower than this
+                        setting will be shown in full detail, and tasks with a
+                        higher value will only have a summary shown. To see
+                        all tasks report output in full detail, set
+                        --priority_filter=100
+  -R, --full_report     Generate full markdown report instead of just a
+                        summary
+  -s, --statistics      Generate statistics only
+  -t TASK_ID, --task_id TASK_ID
+                        Show task for given Task ID
+  -u USER, --user USER  Show task for given user
 ```
 
 ## Other documentation
