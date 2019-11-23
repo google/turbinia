@@ -44,10 +44,13 @@ There is an [rough installation guide here](docs/install.md).
 ## Usage
 
 The basic steps to get things running after the initial installation and
-configuration are: * Start Turbinia server component with `turbiniactl server`
-command * Start one or more Turbinia workers with `turbiniactl psqworker` * Send
-evidence to be processed from the turbinia client with `turbiniactl
-${evidencetype}` * Check status of running tasks with `turbiniactl status`
+configuration are:
+
+*   Start Turbinia server component with `turbiniactl server` command
+*   Start one or more Turbinia workers with `turbiniactl psqworker`
+*   Send evidence to be processed from the turbinia client with `turbiniactl
+    ${evidencetype}`
+*   Check status of running tasks with `turbiniactl status`
 
 turbiniactl can be used to start the different components, and here is the basic
 usage:
