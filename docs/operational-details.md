@@ -2,22 +2,47 @@
 
 ## Google Cloud Platform (GCP) Processing Details
 
-Turbinia can read Evidence from either cloud Persistent Disks, or from other Evidence types saved as GCS objects. Turbinia can also write output to GCS. Note that you can operate multiple Turbinia instances within the same GCP Project as long as you're careful to make sure your config options (Pub/Sub topics/subscriptions, output paths, instance name, etc) don't overlap.
-
+Turbinia can read Evidence from either cloud Persistent Disks, or from other
+Evidence types saved as GCS objects. Turbinia can also write output to GCS. Note
+that you can operate multiple Turbinia instances within the same GCP Project as
+long as you're careful to make sure your config options (Pub/Sub
+topics/subscriptions, output paths, instance name, etc) don't overlap.
 
 ### Persistent Disks
 
-Persistent disks are the default when processing disks that come from the Cloud. The account you run Turbinia as must have access to the persistent disks that you want to process, and those disks must also be in the same zone as the Turbinia workers. If you process GoogleCloudDisk Evidence with Turbinia, the worker node will attach the disk automatically before it runs its tasks.  If you already have access to a persistent disk in a separate project, Turbinia can copy this into the project where Turbinia is being run.
-
+Persistent disks are the default when processing disks that come from the Cloud.
+The account you run Turbinia as must have access to the persistent disks that
+you want to process, and those disks must also be in the same zone as the
+Turbinia workers. If you process GoogleCloudDisk Evidence with Turbinia, the
+worker node will attach the disk automatically before it runs its tasks. If you
+already have access to a persistent disk in a separate project, Turbinia can
+copy this into the project where Turbinia is being run.
 
 ### Processing non-cloud disks in GCP
 
-If you have raw disk images from physical machines or elsewhere that you want to process in the cloud, the best option is to create a new Cloud Persistent Disk, and then copy the image into the filesystem of the new disk. Then you can use the GoogleCloudDiskRawEmbedded Evidence type. 
+If you have raw disk images from physical machines or elsewhere that you want to
+process in the cloud, the best option is to create a new Cloud Persistent Disk,
+and then copy the image into the filesystem of the new disk. Then you can use
+the GoogleCloudDiskRawEmbedded Evidence type.
 
-Another option is to [convert the raw image to a cloud image](https://cloud.google.com/compute/docs/images/import-existing-image), and then create a Persistent Disk from that and process it as the GoogleCloudDisk Evidence type, but this is not generally recommended as it requires zero-padding the disk to a GB boundary which can change the hash of the disk, and isn't considered forensically sound.
+Another option is to
+[convert the raw image to a cloud image](https://cloud.google.com/compute/docs/images/import-existing-image),
+and then create a Persistent Disk from that and process it as the
+GoogleCloudDisk Evidence type, but this is not generally recommended as it
+requires zero-padding the disk to a GB boundary which can change the hash of the
+disk, and isn't considered forensically sound.
 
-One last option is to copy the image into GCS and process them directly from there, but the GoogleCloudDiskRawEmbeded option is generally recommended because this method requires setting up [GCS FUSE](https://cloud.google.com/storage/docs/gcs-fuse), and this is less stable than using Persistent Disks. If you do choose this option you will need to configure all of your worker nodes to mounting your GCS bucket at a common path. Once your GCS bucket is mounted, you can process these images as the 'rawdisk' Evidence type.
-
+One last option is to copy the image into GCS and process them directly from
+there, but the GoogleCloudDiskRawEmbeded option is generally recommended because
+this method requires setting up
+[GCS FUSE](https://cloud.google.com/storage/docs/gcs-fuse), and this is less
+stable than using Persistent Disks. If you do choose this option you will need
+to configure all of your worker nodes to mounting your GCS bucket at a common
+path. Once your GCS bucket is mounted, you can process these images as the
+'rawdisk' Evidence type.
 
 ## General Notes
-* Turbinia currently assumes that Evidence is equally available to all worker nodes (e.g. through locally mapped storage, or through attachable persistent Google Cloud Disks, etc).
+
+*   Turbinia currently assumes that Evidence is equally available to all worker
+    nodes (e.g. through locally mapped storage, or through attachable persistent
+    Google Cloud Disks, etc).
