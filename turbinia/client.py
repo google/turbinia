@@ -150,7 +150,7 @@ def check_dependencies(dependencies):
             'will not be performed for it.'.format(dep['job']))
   except (KeyError, TypeError) as exception:
     raise TurbiniaException('An issue has occured while parsing the '\
-                            'dependency config:{0:s} '.format(exception))
+                            'dependency config:{0!s} '.format(exception))
 
 
 def check_directory(directory):

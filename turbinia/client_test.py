@@ -499,4 +499,4 @@ class TestTurbiniaPsqWorker(unittest.TestCase):
         'will not be performed for it.')
 
     # Bad dependency config.
-    self.assertRaises(TypeError, check_dependencies, [{'test: test'}])
+    self.assertRaises(TurbiniaException, check_dependencies, [{'test': 'test'}])
