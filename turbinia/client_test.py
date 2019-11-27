@@ -441,6 +441,7 @@ class TestTurbiniaPsqWorker(unittest.TestCase):
     config.LoadConfig()
     config.OUTPUT_DIR = self.tmp_dir
     config.MOUNT_DIR_PREFIX = self.tmp_dir
+    config.DEPENDENCIES = []
 
   def tearDown(self):
     if 'turbinia-test' in self.tmp_dir:
