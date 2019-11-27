@@ -32,6 +32,7 @@ from turbinia.client import TurbiniaClient
 from turbinia.client import TurbiniaServer
 from turbinia.client import TurbiniaStats
 from turbinia.client import TurbiniaPsqWorker
+from turbinia.client import check_dependencies
 from turbinia import TurbiniaException
 
 SHORT_REPORT = textwrap.dedent(
@@ -450,7 +451,7 @@ class TestTurbiniaPsqWorker(unittest.TestCase):
   @mock.patch('turbinia.client.psq.Worker')
   def testTurbiniaPsqWorkerInit(self, _, __, ___):
     """Basic test for PSQ worker."""
-    worker = TurbiniaPsqWorker()
+    worker = TurbiniaPsqWorker([], [])
     self.assertTrue(hasattr(worker, 'worker'))
 
   @mock.patch('turbinia.client.pubsub')
@@ -459,7 +460,7 @@ class TestTurbiniaPsqWorker(unittest.TestCase):
   def testTurbiniaClientNoDir(self, _, __, ___):
     """Test that OUTPUT_DIR path is created."""
     config.OUTPUT_DIR = os.path.join(self.tmp_dir, 'no_such_dir')
-    TurbiniaPsqWorker()
+    TurbiniaPsqWorker([], [])
     self.assertTrue(os.path.exists(config.OUTPUT_DIR))
 
   @mock.patch('turbinia.client.pubsub')
@@ -470,3 +471,31 @@ class TestTurbiniaPsqWorker(unittest.TestCase):
     config.OUTPUT_DIR = os.path.join(self.tmp_dir, 'empty_file')
     open(config.OUTPUT_DIR, 'a').close()
     self.assertRaises(TurbiniaException, TurbiniaPsqWorker)
+
+  @mock.patch('turbinia.client.shutil')
+  @mock.patch('logging.Logger.warning')
+  def testDependencyCheck(self, logger, mock_shutil):
+    """Test system dependency check."""
+    dependencies = [{
+        'job': 'PlasoJob',
+        'programs': ['non_exist'],
+        'docker_image': None
+    }]
+
+    # Dependency not found.
+    mock_shutil.which.return_value = None
+    self.assertRaises(TurbiniaException, check_dependencies, dependencies)
+
+    # Normal run.
+    mock_shutil.which.return_value = True
+    check_dependencies(dependencies)
+
+    # Job not found.
+    dependencies[0]['job'] = 'non_exist'
+    check_dependencies(dependencies)
+    logger.assert_called_with(
+        'Job: non_exist not found and a dependency check '
+        'will not be performed for it.')
+
+    # Bad dependency config.
+    self.assertRaises(TypeError, check_dependencies, [{'test: test'}])

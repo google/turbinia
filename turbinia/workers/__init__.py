@@ -306,6 +306,7 @@ class TurbiniaTask(object):
       id (str): Unique Id of task (string of hex)
       is_finalize_task (bool): Whether this is a finalize Task or not.
       job_id (str): Job ID the Task was created by.
+      job_name (str): The name of the Job.
       last_update (datetime): A datetime object with the last time the task was
           updated.
       name (str): Name of task
@@ -342,6 +343,7 @@ class TurbiniaTask(object):
     self.id = uuid.uuid4().hex
     self.is_finalize_task = False
     self.job_id = None
+    self.job_name = None
     self.last_update = datetime.now()
     self.name = name if name else self.__class__.__name__
     self.output_dir = None
@@ -597,6 +599,8 @@ class TurbiniaTask(object):
     Returns:
       A TurbiniaTaskResult object
     """
+    from turbinia.jobs import manager as job_manager  # calls workers job manager
+
     log.debug('Task {0:s} {1:s} awaiting execution'.format(self.name, self.id))
     evidence = evidence_decode(evidence)
     with filelock.FileLock(config.LOCK_FILE):
@@ -606,6 +610,19 @@ class TurbiniaTask(object):
         self.result = self.setup(evidence)
         original_result_id = self.result.id
         evidence.validate()
+
+        # TODO(wyassine): refactor it so the result task does not
+        # have to go through the preprocess stage. At the moment
+        # self.results.setup is required to be called to set it's status.
+        # Check if Task's job is available for the worker.
+        psq_job_manager = list(job_manager.JobsManager.GetJobNames())
+        if self.job_name.lower() not in psq_job_manager:
+          message = (
+              'Task will not run due to the job: {0:s} being disabled '
+              'on the worker.'.format(self.job_name))
+          self.result.log(message, level=logging.ERROR)
+          self.result.status = message
+          return self.result.serialize()
 
         if self.turbinia_version != turbinia.__version__:
           message = (

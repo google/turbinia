@@ -315,6 +315,7 @@ class BaseTaskManager(object):
     task.requester = evidence_.config.get('requester')
     if job:
       task.job_id = job.id
+      task.job_name = job.name
       job.tasks.append(task)
     self.state_manager.write_new_task(task)
     self.enqueue_task(task, evidence_)

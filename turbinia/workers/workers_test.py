@@ -55,6 +55,7 @@ class TestTurbiniaTaskBase(unittest.TestCase):
     self.plaso_task.output_manager.get_local_output_dirs.return_value = (
         None, None)
     self.task = self.task_class(base_output_dir=self.base_output_dir)
+    self.task.job_name = 'PlasoJob'
     self.task.output_manager = mock.MagicMock()
     self.task.output_manager.get_local_output_dirs.return_value = (None, None)
 
@@ -149,6 +150,16 @@ class TestTurbiniaTask(TestTurbiniaTaskBase):
     self.task.validate_result.assert_any_call(bad_result)
     self.assertEqual(type(new_result), TurbiniaTaskResult)
     self.assertIn('CheckedResult', new_result.status)
+
+  def testTurbiniaTaskJobUnavailable(self):
+    """Test that the run wrapper can fail if the job doesn't exist."""
+    self.setResults()
+    self.task.job_name = 'non_exist'
+    canary_status = 'Task will not run due to the job: '\
+                    'non_exist being disabled on the worker.'
+    new_result = self.task.run_wrapper(self.evidence.__dict__)
+    new_result = TurbiniaTaskResult.deserialize(new_result)
+    self.assertEqual(new_result.status, canary_status)
 
   def testTurbiniaTaskRunWrapperExceptionThrown(self):
     """Test that the run wrapper recovers from run throwing an exception."""
