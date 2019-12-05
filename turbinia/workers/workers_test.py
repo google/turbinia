@@ -58,10 +58,10 @@ class TestTurbiniaTaskBase(unittest.TestCase):
     self.task.output_manager = mock.MagicMock()
     self.task.output_manager.get_local_output_dirs.return_value = (None, None)
 
-    # Set up Evidence
-    test_artifact_path = tempfile.mkstemp(dir=self.base_output_dir)[1]
-    self.remove_files.append(test_artifact_path)
-    self.evidence = self.evidence_class(local_path=test_artifact_path)
+    # Set up RawDisk Evidence
+    test_disk_path = tempfile.mkstemp(dir=self.base_output_dir)[1]
+    self.remove_files.append(test_disk_path)
+    self.evidence = evidence.RawDisk(source_path=test_disk_path)
 
     # Set up TurbiniaTaskResult
     self.result = TurbiniaTaskResult(base_output_dir=self.base_output_dir)
@@ -246,7 +246,7 @@ class TestTurbiniaTask(TestTurbiniaTaskBase):
 
   @mock.patch('turbinia.workers.subprocess.Popen')
   def testTurbiniaTaskExecuteEvidenceExists(self, popen_mock):
-    """Test execution with new evidence that has valid a local_path."""
+    """Test execution with new evidence that has valid a source_path."""
     cmd = 'test cmd'
     output = ('test stdout', 'test stderr')
 
@@ -257,7 +257,7 @@ class TestTurbiniaTask(TestTurbiniaTaskBase):
     popen_mock.return_value = proc_mock
 
     # Create our evidence local path file
-    with open(self.evidence.local_path, 'w') as evidence_path:
+    with open(self.evidence.source_path, 'w') as evidence_path:
       evidence_path.write('test')
 
     self.task.execute(
@@ -266,7 +266,7 @@ class TestTurbiniaTask(TestTurbiniaTaskBase):
 
   @mock.patch('turbinia.workers.subprocess.Popen')
   def testTurbiniaTaskExecuteEvidenceDoesNotExist(self, popen_mock):
-    """Test execution with new evidence that does not have a local_path."""
+    """Test execution with new evidence that does not have a source_path."""
     cmd = 'test cmd'
     output = ('test stdout', 'test stderr')
 
@@ -276,15 +276,13 @@ class TestTurbiniaTask(TestTurbiniaTaskBase):
     proc_mock.returncode = 0
     popen_mock.return_value = proc_mock
 
-    os.remove(self.evidence.local_path)
-
     self.task.execute(
         cmd, self.result, new_evidence=[self.evidence], close=True)
     self.assertNotIn(self.evidence, self.result.evidence)
 
   @mock.patch('turbinia.workers.subprocess.Popen')
   def testTurbiniaTaskExecuteEvidenceExistsButEmpty(self, popen_mock):
-    """Test execution with new evidence local_path that exists but is empty."""
+    """Test execution with new evidence source_path that exists but is empty."""
     cmd = 'test cmd'
     output = ('test stdout', 'test stderr')
 
@@ -295,8 +293,8 @@ class TestTurbiniaTask(TestTurbiniaTaskBase):
     popen_mock.return_value = proc_mock
 
     # Exists and is empty
-    self.assertTrue(os.path.exists(self.evidence.local_path))
-    self.assertEqual(os.path.getsize(self.evidence.local_path), 0)
+    self.assertTrue(os.path.exists(self.evidence.source_path))
+    self.assertEqual(os.path.getsize(self.evidence.source_path), 0)
 
     self.task.execute(
         cmd, self.result, new_evidence=[self.evidence], close=True)
