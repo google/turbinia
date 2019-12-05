@@ -31,6 +31,8 @@ import six
 from turbinia import config
 from turbinia.config import DATETIME_FORMAT
 from turbinia import TurbiniaException
+from turbinia.workers import TurbiniaTask
+from turbinia.workers import TurbiniaTaskResult
 
 config.LoadConfig()
 if config.STATE_MANAGER.lower() == 'datastore':
@@ -109,10 +111,6 @@ class BaseStateManager(object):
     # We'll store the run_time as seconds instead of a timedelta()
     if task_dict.get('run_time'):
       task_dict['run_time'] = task_dict['run_time'].total_seconds()
-
-    # Importing these here to avoid circular dependencies.
-    from turbinia.workers import TurbiniaTask
-    from turbinia.workers import TurbiniaTaskResult
 
     # Set all non-existent keys to None
     all_attrs = set(
