@@ -56,14 +56,14 @@ def sendmail(address, subject, message):
       #Attempt to login
       if config.EMAIL_PASSWORD != '':
         server.login(config.EMAIL_ADDRESS, config.EMAIL_PASSWORD)
-      
-      else:
-        log.info('Email password is blank, '
-        'attempting to continue without logging in')
 
-      server.sendmail(
-      config.EMAIL_ADDRESS, address, msg.as_string())
-      log.info('Email notification sent to '+ address)
+      else:
+        log.info(
+            'Email password is blank, '
+            'attempting to continue without logging in')
+
+      server.sendmail(config.EMAIL_ADDRESS, address, msg.as_string())
+      log.info('Email notification sent to ' + address)
     else:
       log.info('Email notifications are disabled')
 
