@@ -44,6 +44,7 @@ log = logging.getLogger('turbinia')
 
 class Priority(IntEnum):
   """Reporting priority enum to store common values.
+
   Priorities can be anything in the range of 0-100, where 0 is the highest
   priority.
   """
@@ -55,6 +56,7 @@ class Priority(IntEnum):
 
 class TurbiniaTaskResult(object):
   """Object to store task results to be returned by a TurbiniaTask.
+
   Attributes:
       base_output_dir: Base path for local output
       closed: Boolean indicating whether this result is closed
@@ -121,8 +123,10 @@ class TurbiniaTaskResult(object):
 
   def setup(self, task):
     """Handles initializing task based attributes, after object creation.
+
     Args:
       task (TurbiniaTask): The calling Task object
+
     Raises:
       TurbiniaException: If the Output Manager is not setup.
     """
@@ -137,10 +141,12 @@ class TurbiniaTaskResult(object):
 
   def close(self, task, success, status=None):
     """Handles closing of this result and writing logs.
+
     Normally this should be called by the Run method to make sure that the
     status, etc are set correctly, but if there is an exception thrown when the
     task executes, then run_wrapper will call this with default arguments
     indicating a failure.
+
     Args:
       task (TurbiniaTask): The calling Task object
       success: Bool indicating task success
@@ -162,14 +168,15 @@ class TurbiniaTaskResult(object):
     self.status = status
 
     for evidence in self.evidence:
-      if evidence.source_path and os.path.exists(evidence.source_path):
-        self.saved_paths.append(evidence.source_path)
+      if evidence.local_path and os.path.exists(evidence.local_path):
+        self.saved_paths.append(evidence.local_path)
         if not task.run_local and evidence.copyable:
           task.output_manager.save_evidence(evidence, self)
       else:
         self.log(
-            'Evidence {0!s:s} has empty or missing file at source_path {1!s:s} so '
+            'Evidence {0!s} has empty or missing file at source_path {1!s} so '
             'not saving.'.format(evidence.name, evidence.source_path))
+
 
       if not evidence.request_id:
         evidence.request_id = self.request_id
@@ -203,7 +210,9 @@ class TurbiniaTaskResult(object):
 
   def log(self, message, level=logging.INFO, traceback_=None):
     """Log Task messages.
+
     Logs to both the result and the normal logging mechanism.
+
     Args:
       message (string): Message to log.
       level (int): Log level as defined by logging enums (e.g. logging.INFO)
@@ -226,6 +235,7 @@ class TurbiniaTaskResult(object):
 
   def add_evidence(self, evidence, evidence_config):
     """Populate the results list.
+
     Args:
         evidence: Evidence object
         evidence_config (dict): The evidence config we want to associate with
@@ -245,6 +255,7 @@ class TurbiniaTaskResult(object):
 
   def set_error(self, error, traceback_):
     """Add error and traceback.
+
     Args:
         error: Short string describing the error.
         traceback_: Traceback of the error.
@@ -254,6 +265,7 @@ class TurbiniaTaskResult(object):
 
   def serialize(self):
     """Prepares result object for serialization.
+
     Returns:
       dict: Object dictionary that is JSON serializable.
     """
@@ -267,8 +279,10 @@ class TurbiniaTaskResult(object):
   @classmethod
   def deserialize(cls, input_dict):
     """Converts an input dictionary back into a TurbiniaTaskResult object.
+
     Args:
       input_dict (dict): TurbiniaTaskResult object dictionary.
+
     Returns:
       TurbiniaTaskResult: Deserialized object.
     """
@@ -286,6 +300,7 @@ class TurbiniaTaskResult(object):
 
 class TurbiniaTask(object):
   """Base class for Turbinia tasks.
+
   Attributes:
       base_output_dir (str): The base directory that output will go into.
           Per-task directories will be created under this.
@@ -344,6 +359,7 @@ class TurbiniaTask(object):
 
   def serialize(self):
     """Converts the TurbiniaTask object into a serializable dict.
+
     Returns:
       Dict: Dictionary representing this object, ready to be serialized.
     """
@@ -355,8 +371,10 @@ class TurbiniaTask(object):
   @classmethod
   def deserialize(cls, input_dict):
     """Converts an input dictionary back into a TurbiniaTask object.
+
     Args:
       input_dict (dict): TurbiniaTask object dictionary.
+
     Returns:
       TurbiniaTask: Deserialized object.
     """
@@ -382,6 +400,7 @@ class TurbiniaTask(object):
       self, cmd, result, save_files=None, log_files=None, new_evidence=None,
       close=False, shell=False, success_codes=None):
     """Executes a given binary and saves output.
+
     Args:
       cmd (list|string): Command arguments to run
       result (TurbiniaTaskResult): The result object to put data into.
@@ -393,6 +412,7 @@ class TurbiniaTask(object):
       close (bool): Whether to close out the result.
       shell (bool): Whether the cmd is in the form of a string or a list.
       success_codes (list(int)): Which return codes are considered successful.
+
     Returns:
       Tuple of the return code, and the TurbiniaTaskResult object
     """
@@ -445,16 +465,16 @@ class TurbiniaTask(object):
       for evidence in new_evidence:
         # If the local path is set in the Evidence, we check to make sure that
         # the path exists and is not empty before adding it.
-        if evidence.source_path and not os.path.exists(evidence.source_path):
+        if evidence.local_path and not os.path.exists(evidence.local_path):
           message = (
-              'Evidence {0:s} source_path {1:s} does not exist. Not returning '
-              'empty Evidence.'.format(evidence.name, evidence.source_path))
+              'Evidence {0:s} local_path {1:s} does not exist. Not returning '
+              'empty Evidence.'.format(evidence.name, evidence.local_path))
           result.log(message, level=logging.WARN)
-        elif (evidence.source_path and os.path.exists(evidence.source_path) and
-              os.path.getsize(evidence.source_path) == 0):
+        elif (evidence.local_path and os.path.exists(evidence.local_path) and
+              os.path.getsize(evidence.local_path) == 0):
           message = (
-              'Evidence {0:s} source_path {1:s} is empty. Not returning '
-              'empty new Evidence.'.format(evidence.name, evidence.source_path))
+              'Evidence {0:s} local_path {1:s} is empty. Not returning '
+              'empty new Evidence.'.format(evidence.name, evidence.local_path))
           result.log(message, level=logging.WARN)
         else:
           result.add_evidence(evidence, self._evidence_config)
@@ -466,13 +486,17 @@ class TurbiniaTask(object):
 
   def setup(self, evidence):
     """Perform common setup operations and runtime environment.
+
     Even though TurbiniaTasks are initially instantiated by the Jobs under the
     Task Manager, this setup method needs to be run from the task on the worker
     because it handles setting up the task runtime environment.
+
     Args:
       evidence: An Evidence object to process.
+
     Returns:
       A TurbiniaTaskResult object.
+
     Raises:
       TurbiniaException: If the evidence can not be found.
     """
@@ -488,10 +512,10 @@ class TurbiniaTask(object):
       if evidence.copyable and not config.SHARED_FILESYSTEM:
         self.output_manager.retrieve_evidence(evidence)
 
-    if evidence.source_path and not os.path.exists(evidence.source_path):
+    if evidence.local_path and not os.path.exists(evidence.local_path):
       raise TurbiniaException(
-          'Evidence source path {0:s} does not exist'.format(
-              evidence.source_path))
+          'Evidence local path {0:s} does not exist'.format(
+              evidence.local_path))
     evidence.preprocess(self.tmp_dir)
     return self.result
 
@@ -501,13 +525,16 @@ class TurbiniaTask(object):
 
   def validate_result(self, result):
     """Checks to make sure that the result is valid.
+
     We occasionally get something added into a TurbiniaTaskResult that makes
     it unpickleable.  We don't necessarily know what caused it to be in that
     state, so we need to create a new, mostly empty result so that the client
     is able to get the error message (otherwise the task will stay pending
     indefinitely).
+
     Args:
       result (TurbiniaTaskResult): Result object to check
+
     Returns:
       The original result object if it is OK, otherwise an empty result object
       indicating a failure.
@@ -551,10 +578,12 @@ class TurbiniaTask(object):
 
   def run_wrapper(self, evidence):
     """Wrapper to manage TurbiniaTaskResults and exception handling.
+
     This wrapper should be called to invoke the run() methods so it can handle
     the management of TurbiniaTaskResults and the exception handling.  Otherwise
     details from exceptions in the worker cannot be propagated back to the
     Turbinia TaskManager.
+
     This method should handle (in no particular order):
       - Exceptions thrown from run()
       - Verifing valid TurbiniaTaskResult object is returned
@@ -562,8 +591,10 @@ class TurbiniaTask(object):
           - Auto-close results that haven't been closed
           - Verifying that the results are serializeable
       - Locking to make sure only one task is active at a time
+
     Args:
       evidence (dict): To be decoded into Evidence object
+
     Returns:
       A TurbiniaTaskResult object
     """
@@ -651,9 +682,11 @@ class TurbiniaTask(object):
 
   def run(self, evidence, result):
     """Entry point to execute the task.
+
     Args:
       evidence: Evidence object.
       result: A TurbiniaTaskResult object to place task results into.
+
     Returns:
         TurbiniaTaskResult object.
     """
