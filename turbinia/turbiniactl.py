@@ -620,7 +620,7 @@ def main():
     log.info('Available Jobs:')
     client.list_jobs()
   else:
-    log.warning('Command {!s} not implemented.'.format(args.command))
+    log.warning('Command {0!s} not implemented.'.format(args.command))
 
   if evidence_ and not args.force_evidence:
     if config.SHARED_FILESYSTEM and evidence_.cloud_only:
