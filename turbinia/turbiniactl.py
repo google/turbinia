@@ -426,8 +426,8 @@ def main():
   #sends test notification
   if args.command == 'testnotify':
     notify.sendmail(
-        config.EMAIL_ADDRESS, ' s/noticiation/notification/.',
-        ' s/noticiation/notification/.')
+        config.EMAIL_ADDRESS, 'notification',
+        'notification')
     sys.exit(0)
 
   if args.jobs_whitelist and args.jobs_blacklist:
