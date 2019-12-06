@@ -305,8 +305,7 @@ class BaseTaskManager(object):
     else:
       log.error(
           'Request ID not found in Evidence {0!s} or Task {1!s}. Not adding '
-          'new Task because of undefined state'.format(
-              evidence_, task))
+          'new Task because of undefined state'.format(evidence_, task))
       return
 
     evidence_.config = job.evidence.config
