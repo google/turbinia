@@ -297,18 +297,17 @@ class BaseTaskManager(object):
     Args:
       task: An instantiated Turbinia Task
       evidence_: An Evidence object to be processed.
-
-    Raises:
-      TurbiniaException: If the request_id cannot be found.
     """
     if evidence_.request_id:
       task.request_id = evidence_.request_id
     elif job and job.request_id:
       task.request_id = job.request_id
     else:
-      raise TurbiniaException(
-          'Request ID not found in Evidence {0!s} or Task {1!s}'.format(
+      log.error(
+          'Request ID not found in Evidence {0!s} or Task {1!s}. Not adding '
+          'new Task because of undefined state'.format(
               evidence_, task))
+      return
 
     evidence_.config = job.evidence.config
     task.base_output_dir = config.OUTPUT_DIR
