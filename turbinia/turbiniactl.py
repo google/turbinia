@@ -426,8 +426,8 @@ def main():
   #sends test notification
   if args.command == 'testnotify':
     notify.sendmail(
-        config.EMAIL_ADDRESS, 'notification',
-        'notification')
+        config.EMAIL_ADDRESS, 'Turbinia test notification',
+        'This is a test notification')
     sys.exit(0)
 
   if args.jobs_whitelist and args.jobs_blacklist:
