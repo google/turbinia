@@ -155,8 +155,9 @@ class TestTurbiniaTask(TestTurbiniaTaskBase):
     """Test that the run wrapper can fail if the job doesn't exist."""
     self.setResults()
     self.task.job_name = 'non_exist'
-    canary_status = 'Task will not run due to the job: '\
-                    'non_exist being disabled on the worker.'
+    canary_status = (
+        'Task will not run due to the job: '
+        'non_exist being disabled on the worker.')
     new_result = self.task.run_wrapper(self.evidence.__dict__)
     new_result = TurbiniaTaskResult.deserialize(new_result)
     self.assertEqual(new_result.status, canary_status)

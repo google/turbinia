@@ -475,7 +475,7 @@ class TestTurbiniaPsqWorker(unittest.TestCase):
 
   @mock.patch('turbinia.client.shutil')
   @mock.patch('logging.Logger.warning')
-  def testDependencyCheck(self, logger, mock_shutil):
+  def testDependencyCheck(self, mock_logger, mock_shutil):
     """Test system dependency check."""
     dependencies = [{
         'job': 'PlasoJob',
@@ -494,9 +494,9 @@ class TestTurbiniaPsqWorker(unittest.TestCase):
     # Job not found.
     dependencies[0]['job'] = 'non_exist'
     check_dependencies(dependencies)
-    logger.assert_called_with(
-        'Job: non_exist not found and a dependency check '
-        'will not be performed for it.')
+    mock_logger.assert_called_with(
+        'The job: non_exist was not found or has been disabled. '
+        'Skipping dependency check...')
 
     # Bad dependency config.
     self.assertRaises(TurbiniaException, check_dependencies, [{'test': 'test'}])

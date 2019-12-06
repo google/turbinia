@@ -93,46 +93,18 @@ log = logging.getLogger('turbinia')
 logger.setup()
 
 
-def filter_jobs(jobs_blacklist, jobs_whitelist):
-  """Filter jobs based on provided whitelist/blacklist.
-
-  Args:
-    jobs_blacklist (Optional[list[str]]): Jobs we will exclude from running
-    jobs_whitelist (Optional[list[str]]): The only Jobs we will include to run
-  """
-  job_names = list(job_manager.JobsManager.GetJobNames())
-  jobs = []
-  if jobs_blacklist or jobs_whitelist:
-    log.info(
-        'Filtering Jobs with whitelist {0!s} and blacklist {1!s}'.format(
-            jobs_whitelist, jobs_blacklist))
-
-  # Create a list of jobs to deregister.
-  if jobs_whitelist:
-    jobs_whitelist = [j.lower() for j in jobs_whitelist]
-    jobs = [j for j in job_names if j not in jobs_whitelist]
-  else:
-    if jobs_blacklist:
-      jobs_blacklist.extend(config.DISABLED_JOBS)
-    else:
-      jobs_blacklist = list(config.DISABLED_JOBS)
-    jobs = [j for j in jobs_blacklist if j.lower() in job_names]
-
-  # Deregister the jobs.
-  for job in jobs:
-    job_inst = job_manager.JobsManager.GetJobInstance(job)
-    job_manager.JobsManager.DeregisterJob(job_inst)
-
-
 def check_dependencies(dependencies):
   """Checks system dependencies.
 
   Args:
     dependencies(dict): dictionary of dependencies to check for.
+
+  Raises:
+    TurbiniaException: if dependency is not met or a bad config file.
   """
+
   log.info('Performing system dependency check.')
   job_names = list(job_manager.JobsManager.GetJobNames())
-
   # Iterate through dependency config and perform a system check.
   try:
     for dep in dependencies:
@@ -141,16 +113,21 @@ def check_dependencies(dependencies):
           # Program can not be found.
           if shutil.which(p) is None:
             raise TurbiniaException(
-                'Dependency check not met for job: {0:s}. Please install '
-                'the required dependency or disable the job'.format(dep['job']))
+                'Job dependency {0:s} not found for job: {1:s}. Please install '
+                'the dependency or disable the job.'.format(p, dep['job']))
       # If job is not found in list of registered jobs.
       else:
         log.warning(
-            'Job: {0:s} not found and a dependency check '
-            'will not be performed for it.'.format(dep['job']))
+            'The job: {0:s} was not found or has been disabled. Skipping '
+            'dependency check...'.format(dep['job']))
   except (KeyError, TypeError) as exception:
-    raise TurbiniaException('An issue has occured while parsing the '\
-                            'dependency config:{0!s} '.format(exception))
+    raise TurbiniaException(
+        'An issue has occured while parsing the '
+        'dependency config:{0!s} '.format(exception))
+
+  log.info(
+      'Dependency check complete. The following jobs will be active:'
+      'for this worker: {0:s}'.format(', '.join(job_names)))
 
 
 def check_directory(directory):
@@ -854,7 +831,16 @@ class TurbiniaCeleryWorker(TurbiniaClient):
       jobs_whitelist (Optional[list[str]]): The only Jobs we will include to run
     """
     super(TurbiniaCeleryWorker, self).__init__()
-    filter_jobs(jobs_blacklist, jobs_whitelist)
+    # Deregister jobs from blacklist/whitelist.
+    disabled_jobs = list(config.DISABLED_JOBS)
+    job_manager.JobsManager.DeregisterJobs(jobs_blacklist, jobs_whitelist)
+    if disabled_jobs != []:
+      log.info(
+          'Disabling jobs that were configured to be disabled in the '
+          'config file: {0:s}'.format(', '.join(disabled_jobs)))
+      job_manager.JobsManager.DeregisterJobs(jobs_blacklist=disabled_jobs)
+
+    # Check for valid dependencies/directories.
     check_dependencies(config.DEPENDENCIES)
     check_directory(config.MOUNT_DIR_PREFIX)
     check_directory(config.OUTPUT_DIR)
@@ -899,7 +885,17 @@ class TurbiniaPsqWorker(object):
       msg = 'Error creating PSQ Queue: {0:s}'.format(str(e))
       log.error(msg)
       raise TurbiniaException(msg)
-    filter_jobs(jobs_blacklist, jobs_whitelist)
+
+    # Deregister jobs from blacklist/whitelist.
+    disabled_jobs = list(config.DISABLED_JOBS)
+    job_manager.JobsManager.DeregisterJobs(jobs_blacklist, jobs_whitelist)
+    if disabled_jobs != []:
+      log.info(
+          'Disabling jobs that were configured to be disabled in the '
+          'config file: {0:s}'.format(', '.join(disabled_jobs)))
+      job_manager.JobsManager.DeregisterJobs(jobs_blacklist=disabled_jobs)
+
+    # Check for valid dependencies/directories.
     check_dependencies(config.DEPENDENCIES)
     check_directory(config.MOUNT_DIR_PREFIX)
     check_directory(config.OUTPUT_DIR)

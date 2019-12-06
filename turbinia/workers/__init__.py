@@ -599,7 +599,8 @@ class TurbiniaTask(object):
     Returns:
       A TurbiniaTaskResult object
     """
-    from turbinia.jobs import manager as job_manager  # calls workers job manager
+    # Avoid circular dependency.
+    from turbinia.jobs import manager as job_manager
 
     log.debug('Task {0:s} {1:s} awaiting execution'.format(self.name, self.id))
     evidence = evidence_decode(evidence)
@@ -613,10 +614,10 @@ class TurbiniaTask(object):
 
         # TODO(wyassine): refactor it so the result task does not
         # have to go through the preprocess stage. At the moment
-        # self.results.setup is required to be called to set it's status.
+        # self.results.setup is required to be called to set its status.
         # Check if Task's job is available for the worker.
-        psq_job_manager = list(job_manager.JobsManager.GetJobNames())
-        if self.job_name.lower() not in psq_job_manager:
+        active_jobs = list(job_manager.JobsManager.GetJobNames())
+        if self.job_name.lower() not in active_jobs:
           message = (
               'Task will not run due to the job: {0:s} being disabled '
               'on the worker.'.format(self.job_name))
