@@ -331,7 +331,7 @@ def main():
       help='When used with --statistics, the output will be in CSV format',
       required=False)
   parser_status.add_argument(
-      '-d', '--days_history', default=0, type=int,
+      '-d', '--days_history', default=1000, type=int,
       help='Number of days of history to show', required=False)
   parser_status.add_argument(
       '-f', '--force', help='Gatekeeper for --close_tasks', action='store_true',
@@ -622,7 +622,7 @@ def main():
     log.info('Available Jobs:')
     client.list_jobs()
   else:
-    log.warning('Command {0:s} not implemented.'.format(args.command))
+    log.warning('Command {0!s} not implemented.'.format(args.command))
 
   if evidence_ and not args.force_evidence:
     if config.SHARED_FILESYSTEM and evidence_.cloud_only:
