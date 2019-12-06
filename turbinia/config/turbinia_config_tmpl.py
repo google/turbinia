@@ -117,6 +117,10 @@ DEPENDENCIES = [{
     'programs': ['hindsight.py'],
     'docker_image': None
 }, {
+    'job': 'JenkinsAnalysisJob',
+    'programs': ['john'],
+    'docker_image': None
+}, {
     'job': 'PlasoJob',
     'programs': ['log2timeline.py'],
     'docker_image': None
