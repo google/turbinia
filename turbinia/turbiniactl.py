@@ -31,7 +31,6 @@ from turbinia.config import logger
 from turbinia.lib import libcloudforensics
 from turbinia import __version__
 from turbinia.processors import archive
-from turbinia import notify
 
 log = logging.getLogger('turbinia')
 # We set up the logger first without the file handler, and we will set up the
@@ -400,6 +399,7 @@ def main():
   # config is loaded by these modules at load time, and we want to wait to load
   # the config until after we parse the args so that we can use those arguments
   # to point to config paths.
+  from turbinia import notify
   from turbinia.client import TurbiniaClient
   from turbinia.client import TurbiniaCeleryClient
   from turbinia.client import TurbiniaServer
@@ -426,8 +426,8 @@ def main():
   #sends test notification
   if args.command == 'testnotify':
     notify.sendmail(
-        config.EMAIL_ADDRESS, 'Turbinia test notification',
-        'This is a test noticiation')
+        config.EMAIL_ADDRESS, ' s/noticiation/notification/.',
+        ' s/noticiation/notification/.')
     sys.exit(0)
 
   if args.jobs_whitelist and args.jobs_blacklist:

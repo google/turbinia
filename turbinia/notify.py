@@ -85,8 +85,3 @@ def sendmail(address, subject, message):
       server.quit()
     except UnboundLocalError:
       pass
-
-
-def main(subject, message):
-  """main"""
-  sendmail(subject, message)
