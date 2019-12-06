@@ -172,7 +172,8 @@ def ValidateAndSetConfig(_config):
         empty_value = True
       else:
         raise TurbiniaException(
-            'No config attribute {0:s}:{1:s}'.format(_config.configSource, var))
+            'Required config attribute {0:s}:{1:s} not in config'.format(
+                _config.configSource, var))
     if var in REQUIRED_VARS and getattr(_config, var) is None:
       raise TurbiniaException(
           'Config attribute {0:s}:{1:s} is not set'.format(
