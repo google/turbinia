@@ -613,7 +613,7 @@ class TurbiniaTask(object):
                   self.turbinia_version, turbinia.__version__))
           self.result.log(message, level=logging.ERROR)
           self.result.status = message
-          return self.result
+          return self.result.serialize()
 
         self._evidence_config = evidence.config
         self.result = self.run(evidence, self.result)
