@@ -832,9 +832,9 @@ class TurbiniaCeleryWorker(TurbiniaClient):
     """
     super(TurbiniaCeleryWorker, self).__init__()
     # Deregister jobs from blacklist/whitelist.
-    disabled_jobs = list(config.DISABLED_JOBS)
+    disabled_jobs = list(config.DISABLED_JOBS) if config.DISABLED_JOBS else []
     job_manager.JobsManager.DeregisterJobs(jobs_blacklist, jobs_whitelist)
-    if disabled_jobs != []:
+    if disabled_jobs:
       log.info(
           'Disabling jobs that were configured to be disabled in the '
           'config file: {0:s}'.format(', '.join(disabled_jobs)))
@@ -887,9 +887,9 @@ class TurbiniaPsqWorker(object):
       raise TurbiniaException(msg)
 
     # Deregister jobs from blacklist/whitelist.
-    disabled_jobs = list(config.DISABLED_JOBS)
+    disabled_jobs = list(config.DISABLED_JOBS) if config.DISABLED_JOBS else []
     job_manager.JobsManager.DeregisterJobs(jobs_blacklist, jobs_whitelist)
-    if disabled_jobs != []:
+    if disabled_jobs:
       log.info(
           'Disabling jobs that were configured to be disabled in the '
           'config file: {0:s}'.format(', '.join(disabled_jobs)))

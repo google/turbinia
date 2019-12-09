@@ -85,8 +85,7 @@ DEBUG_TASKS = False
 # {
 #   'job': 'MyJob'
 #   'programs': ['list', 'of', 'required', 'programs']
-#   'docker_image': 'ImageID' # Can also be set to None if there is
-#                                     not an image for this Job.
+#   'docker_image': 'ImageID' # Or None if no image configured for this job.
 # }
 
 # This will enable the usage of docker containers for the worker.

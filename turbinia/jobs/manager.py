@@ -122,6 +122,7 @@ class JobsManager(object):
       jobs_remove = [j for j in jobs_blacklist if j in registered_jobs]
 
     # Deregister the jobs.
+    jobs_remove = [j.lower() for j in jobs_remove]
     for job_name in jobs_remove:
       del cls._job_classes[job_name]
 
