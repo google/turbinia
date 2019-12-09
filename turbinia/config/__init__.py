@@ -163,13 +163,24 @@ def ValidateAndSetConfig(_config):
 
   CONFIGVARS = REQUIRED_VARS + OPTIONAL_VARS
   for var in CONFIGVARS:
+    empty_value = False
     if not hasattr(_config, var):
-      raise TurbiniaException(
-          'No config attribute {0:s}:{1:s}'.format(_config.configSource, var))
+      if var in OPTIONAL_VARS:
+        log.debug(
+            'Setting non-existent but optional config variable {0:s} to '
+            'None'.format(var))
+        empty_value = True
+      else:
+        raise TurbiniaException(
+            'Required config attribute {0:s}:{1:s} not in config'.format(
+                _config.configSource, var))
     if var in REQUIRED_VARS and getattr(_config, var) is None:
       raise TurbiniaException(
           'Config attribute {0:s}:{1:s} is not set'.format(
               _config.configSource, var))
 
     # Set the attribute in the current module
-    setattr(sys.modules[__name__], var, getattr(_config, var))
+    if empty_value:
+      setattr(sys.modules[__name__], var, None)
+    else:
+      setattr(sys.modules[__name__], var, getattr(_config, var))
