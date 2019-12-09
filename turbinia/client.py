@@ -226,7 +226,7 @@ class TurbiniaClient(object):
     # the task manager from the client.
     log.info('Available Jobs:')
     for job in self.task_manager.jobs:
-      log.info('\t{0:s}'.format(job.name))
+      log.info('\t{0:s}'.format(job.NAME))
 
   def wait_for_request(
       self, instance, project, region, request_id=None, user=None,
