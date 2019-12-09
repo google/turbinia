@@ -576,11 +576,13 @@ def main():
     # Set up root logger level which is normally set by the psqworker command
     # which we are bypassing.
     logger.setup()
-    worker = TurbiniaPsqWorker()
+    worker = TurbiniaPsqWorker(
+        jobs_blacklist=args.jobs_blacklist, jobs_whitelist=args.jobs_whitelist)
     worker.start()
   elif args.command == 'celeryworker':
     logger.setup()
-    worker = TurbiniaCeleryWorker()
+    worker = TurbiniaCeleryWorker(
+        jobs_blacklist=args.jobs_blacklist, jobs_whitelist=args.jobs_whitelist)
     worker.start()
   elif args.command == 'server':
     server = TurbiniaServer(

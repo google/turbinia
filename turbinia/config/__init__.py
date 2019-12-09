@@ -55,6 +55,9 @@ REQUIRED_VARS = [
     'SHARED_FILESYSTEM',
     # TODO(aarontp): Move this to the recipe config when it's available.
     'DEBUG_TASKS',
+    'DEPENDENCIES',
+    'DOCKER_ENABLED',
+    'DISABLED_JOBS',
 ]
 
 # Optional config vars.  Some may be mandatory depending on the configuration

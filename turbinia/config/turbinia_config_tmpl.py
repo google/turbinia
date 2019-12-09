@@ -74,6 +74,70 @@ SHARED_FILESYSTEM = False
 DEBUG_TASKS = False
 
 ################################################################################
+#                         External Dependency Configurations
+#
+# Options in this section are used to configure system and docker dependencies.
+################################################################################
+
+# This will allow for the configuration of system dependencies and docker
+# containers. The following configuration will need to be set per job config.
+# Please use the example below as a guide to add additional job checks.
+# {
+#   'job': 'MyJob'
+#   'programs': ['list', 'of', 'required', 'programs']
+#   'docker_image': 'ImageID' # Or None if no image configured for this job.
+# }
+
+# This will enable the usage of docker containers for the worker.
+DOCKER_ENABLED = False
+
+# Any jobs added to this list will disable it from being used.
+DISABLED_JOBS = []
+
+# Configure additional job dependency checks below.
+DEPENDENCIES = [{
+    'job': 'BinaryExtractorJob',
+    'programs': ['image_export.py'],
+    'docker_image': None
+}, {
+    'job': 'BulkExtractorJob',
+    'programs': ['bulk_extractor'],
+    'docker_image': None
+}, {
+    'job': 'GrepJob',
+    'programs': ['grep'],
+    'docker_image': None
+}, {
+    'job': 'HadoopAnalysisJob',
+    'programs': ['strings'],
+    'docker_image': None
+}, {
+    'job': 'HindsightJob',
+    'programs': ['hindsight.py'],
+    'docker_image': None
+}, {
+    'job': 'JenkinsAnalysisJob',
+    'programs': ['john'],
+    'docker_image': None
+}, {
+    'job': 'PlasoJob',
+    'programs': ['log2timeline.py'],
+    'docker_image': None
+}, {
+    'job': 'PsortJob',
+    'programs': ['psort.py'],
+    'docker_image': None
+}, {
+    'job': 'StringsJob',
+    'programs': ['strings'],
+    'docker_image': None
+}, {
+    'job': 'VolatilityJob',
+    'programs': ['vol.py'],
+    'docker_image': None
+}]
+
+################################################################################
 #                        Google Cloud Platform (GCP)
 #
 # Options in this section are required if the TASK_MANAGER is set to 'PSQ'.
