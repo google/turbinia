@@ -136,6 +136,10 @@ def main():
   parser_config.add_argument(
       '-f', '--file_only', action='store_true', help='Print out file path only')
 
+  #Sends Test Notification
+  parser_testnotify = subparsers.add_parser(
+      'testnotify', help='Sends test notification')
+
   # TODO(aarontp): Find better way to specify these that allows for multiple
   # pieces of evidence to be submitted. Maybe automagically create different
   # commands based on introspection of evidence objects?
@@ -399,6 +403,7 @@ def main():
   # config is loaded by these modules at load time, and we want to wait to load
   # the config until after we parse the args so that we can use those arguments
   # to point to config paths.
+  from turbinia import notify
   from turbinia.client import TurbiniaClient
   from turbinia.client import TurbiniaCeleryClient
   from turbinia.client import TurbiniaServer
@@ -422,6 +427,12 @@ def main():
           "Failed to read config file {0:s}: {1!s}".format(
               config.configSource, exception))
       sys.exit(1)
+  #sends test notification
+  if args.command == 'testnotify':
+    notify.sendmail(
+        config.EMAIL_ADDRESS, 'Turbinia test notification',
+        'This is a test notification')
+    sys.exit(0)
 
   if args.jobs_whitelist and args.jobs_blacklist:
     log.error(

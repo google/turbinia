@@ -82,6 +82,12 @@ OPTIONAL_VARS = [
     'KOMBU_BROKER',
     'KOMBU_CHANNEL',
     'KOMBU_DURABLE',
+    # Email config
+    'EMAIL_NOTIFICATIONS',
+    'EMAIL_HOST_ADDRESS',
+    'EMAIL_PORT',
+    'EMAIL_ADDRESS',
+    'EMAIL_PASSWORD',
 ]
 
 # Environment variable to look for path data in
