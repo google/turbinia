@@ -291,7 +291,8 @@ class GoogleCloudProject(object):
 
     Args:
       snapshot: Snapshot to use (instance of GoogleComputeSnapshot).
-      disk_name: Optional string to use as new disk name.
+      disk_name: Optional string to use as new disk name. If not provided, a
+          random disk name will be used.
       disk_name_prefix: Optional string to prefix the disk name with.
 
     Returns:
@@ -301,19 +302,11 @@ class GoogleCloudProject(object):
       RuntimeError: If the disk exists already.
     """
 
-    # Max length of disk names in GCP is 63 characters
-    project_id = snapshot.project.project_id
-    disk_id = project_id + snapshot.disk.name
-    disk_id_crc32 = '{0:08x}'.format(
-        binascii.crc32(disk_id.encode()) & 0xffffffff)
-    truncate_at = 62 - len(disk_id_crc32) - len('-copy') - len(project_id)
-    if disk_name_prefix:
-      disk_name_prefix += '-'
-      truncate_at -= len(disk_name_prefix)
     if not disk_name:
-      disk_name = '{0:s}{1:s}-{2:s}-copy'.format(
-          disk_name_prefix, disk_id_crc32, snapshot.name[:truncate_at])
+      disk_name = binascii.hexlify(os.urandom(5))
+    disk_name = '{0:s}{1:s}'.format(disk_name_prefix, disk_name)
     body = dict(name=disk_name, sourceSnapshot=snapshot.get_source_string())
+
     try:
       operation = self.gce_api().disks().insert(
           project=self.project_id, zone=self.default_zone, body=body).execute()
