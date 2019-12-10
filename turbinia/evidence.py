@@ -641,9 +641,6 @@ class DockerContainer(Evidence):
     self.context_dependent = True
 
   def _preprocess(self, _):
-    if not self.parent_evidence:
-      raise TurbiniaException(
-          'Evidence of type DockerContainer should have a parent_evidence set.')
 
     self._docker_root_directory = os.path.join(
         self.parent_evidence.mount_path, self.DEFAULT_DOCKER_DIRECTORY_PATH)
