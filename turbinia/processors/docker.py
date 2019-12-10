@@ -86,7 +86,8 @@ def PreprocessMountDockerFS(docker_dir, container_id):
 
   try:
     subprocess.check_call(mount_cmd)
-  except Exception as e:
-    raise TurbiniaException('Could not mount container: {0!s}'.format(e))
+  except subprocess.CalledProcessError as e:
+    raise TurbiniaException('Could not mount container {0:s}: {1!s}'.format(
+        container_id, e))
 
   return container_mount_path
