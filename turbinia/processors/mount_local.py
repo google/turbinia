@@ -16,10 +16,12 @@
 
 from __future__ import unicode_literals
 
+import glob
 import logging
 import os
 import subprocess
 import tempfile
+import time
 
 from turbinia import config
 from turbinia import TurbiniaException
@@ -34,15 +36,29 @@ def PreprocessLosetup(source_path):
     source_path(str): the source path to run losetup on.
 
   Raises:
-    TurbiniaException: if the losetup command failed to run.
+    TurbiniaException: if source_path doesn't exist or if the losetup command
+      failed to run in anyway.
 
   Returns:
-    str: the path to the created loopdevice (ie: /dev/loopX)
+    (str, list(str)): a tuple consisting of the path to the 'disk' block device
+      and a list of paths to partition block devices. For example:
+      ('/dev/loop0', ['/dev/loop0p1', '/dev/loop0p2'])
   """
   losetup_device = None
+
+  if not os.path.exists(source_path):
+    raise TurbiniaException(
+        'Cannot process non-existing source_path {0!s}'.format(source_path))
+
   # TODO(aarontp): Remove hard-coded sudo in commands:
   # https://github.com/google/turbinia/issues/73
-  losetup_command = ['sudo', 'losetup', '--show', '--find', '-P', source_path]
+  if not os.path.exists(source_path):
+    raise TurbiniaException(
+        'Cannot mount non-existing source_path {0!s}'.format(source_path))
+
+  losetup_command = [
+      'sudo', 'losetup', '--show', '--find', '-P', '-r', source_path
+  ]
   log.info('Running command {0:s}'.format(' '.join(losetup_command)))
   try:
     losetup_device = subprocess.check_output(
@@ -50,15 +66,22 @@ def PreprocessLosetup(source_path):
   except subprocess.CalledProcessError as e:
     raise TurbiniaException('Could not set losetup devices {0!s}'.format(e))
 
-  return losetup_device
+  partitions = glob.glob('{0:s}p*'.format(losetup_device))
+  if not partitions:
+    # In this case, the image was of a partition, and not a full disk with a
+    # partition table
+    return (losetup_device, [losetup_device])
+
+  return (losetup_device, partitions)
 
 
-def PreprocessMountDisk(loopdevice_path, partition_number):
+def PreprocessMountDisk(partition_paths, partition_number):
   """Locally mounts disk in an instance.
 
   Args:
-    loopdevice_path(str): The path to the block device to mount.
-    partition_number(int): The partition number.
+    partition_paths(list(str)): A list of paths to partition block devices;
+    partition_number(int): the number of the partition to mount. Remember these
+      are 1-indexed (first partition is 1).
 
   Raises:
     TurbiniaException: if the mount command failed to run.
@@ -68,6 +91,24 @@ def PreprocessMountDisk(loopdevice_path, partition_number):
   """
   config.LoadConfig()
   mount_prefix = config.MOUNT_DIR_PREFIX
+
+  if partition_number > len(partition_paths):
+    raise TurbiniaException(
+        'Can not mount partition {0:d}: found only {1:d} partitions in '
+        'Evidence.'.format(partition_number, len(partition_paths)))
+
+  # Partitions are 1-indexed for the user and the system
+  if partition_number < 1:
+    raise TurbiniaException(
+        'Can not mount partition {0:d}: partition numbering starts at 1'.format(
+            partition_number))
+
+  partition_path = partition_paths[partition_number - 1]
+
+  if not os.path.exists(partition_path):
+    raise TurbiniaException(
+        'Could not mount partition {0:s}, the path does not exist'.format(
+            partition_path))
 
   if os.path.exists(mount_prefix) and not os.path.isdir(mount_prefix):
     raise TurbiniaException(
@@ -83,20 +124,14 @@ def PreprocessMountDisk(loopdevice_path, partition_number):
 
   mount_path = tempfile.mkdtemp(prefix='turbinia', dir=mount_prefix)
 
-  if not partition_number:
-    # The first partition loop-device made by losetup is loopXp1
-    partition_number = 1
+  mount_cmd = ['sudo', 'mount', '-o', 'ro']
+  fstype = GetFilesystem(partition_path)
+  if fstype in ['ext3', 'ext4']:
+    # This is in case the underlying filesystem is dirty, as we want to mount
+    # everything read-only.
+    mount_cmd.extend(['-o', 'noload'])
+  mount_cmd.extend([partition_path, mount_path])
 
-  path_to_partition = '{0:s}p{1:d}'.format(loopdevice_path, partition_number)
-
-  if not os.path.exists(path_to_partition):
-    log.info(
-        'Could not find {0:s}, trying {1:s}'.format(
-            path_to_partition, loopdevice_path))
-    # Else, the partition's block device is actually /dev/loopX
-    path_to_partition = loopdevice_path
-
-  mount_cmd = ['sudo', 'mount', path_to_partition, mount_path]
   log.info('Running: {0:s}'.format(' '.join(mount_cmd)))
   try:
     subprocess.check_call(mount_cmd)
@@ -106,11 +141,34 @@ def PreprocessMountDisk(loopdevice_path, partition_number):
   return mount_path
 
 
-def PostprocessDeleteLosetup(loopdevice_path):
+def GetFilesystem(path):
+  """Uses lsblk to detect the filesystem of a partition block device.
+
+  Args:
+    path(str): the full path to the block device.
+  Returns:
+    str: the filesystem detected (for example: 'ext4')
+  """
+  cmd = ['lsblk', path, '-f', '-o', 'FSTYPE', '-n']
+  log.info('Running {0!s}'.format(cmd))
+  fstype = subprocess.check_output(cmd).split()
+  if not fstype:
+    # Lets wait a bit for any previous blockdevice operation to settle
+    time.sleep(2)
+    fstype = subprocess.check_output(cmd).split()
+
+  if len(fstype) != 1:
+    raise TurbiniaException(
+        '{0:s} should contain exactly one partition, found {1:d}'.format(
+            path, len(fstype)))
+  return fstype[0].decode('utf-8').strip()
+
+
+def PostprocessDeleteLosetup(device_path):
   """Removes a loop device.
 
   Args:
-    loopdevice_path(str): the path to the block device to remove
+    device_path(str): the path to the block device to remove
       (ie: /dev/loopX).
 
   Raises:
@@ -118,7 +176,7 @@ def PostprocessDeleteLosetup(loopdevice_path):
   """
   # TODO(aarontp): Remove hard-coded sudo in commands:
   # https://github.com/google/turbinia/issues/73
-  losetup_cmd = ['sudo', 'losetup', '-d', loopdevice_path]
+  losetup_cmd = ['sudo', 'losetup', '-d', device_path]
   log.info('Running: {0:s}'.format(' '.join(losetup_cmd)))
   try:
     subprocess.check_call(losetup_cmd)

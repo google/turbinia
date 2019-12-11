@@ -32,6 +32,7 @@ from turbinia.client import TurbiniaClient
 from turbinia.client import TurbiniaServer
 from turbinia.client import TurbiniaStats
 from turbinia.client import TurbiniaPsqWorker
+from turbinia.client import check_dependencies
 from turbinia import TurbiniaException
 
 SHORT_REPORT = textwrap.dedent(
@@ -440,6 +441,7 @@ class TestTurbiniaPsqWorker(unittest.TestCase):
     config.LoadConfig()
     config.OUTPUT_DIR = self.tmp_dir
     config.MOUNT_DIR_PREFIX = self.tmp_dir
+    config.DEPENDENCIES = []
 
   def tearDown(self):
     if 'turbinia-test' in self.tmp_dir:
@@ -450,7 +452,7 @@ class TestTurbiniaPsqWorker(unittest.TestCase):
   @mock.patch('turbinia.client.psq.Worker')
   def testTurbiniaPsqWorkerInit(self, _, __, ___):
     """Basic test for PSQ worker."""
-    worker = TurbiniaPsqWorker()
+    worker = TurbiniaPsqWorker([], [])
     self.assertTrue(hasattr(worker, 'worker'))
 
   @mock.patch('turbinia.client.pubsub')
@@ -459,7 +461,7 @@ class TestTurbiniaPsqWorker(unittest.TestCase):
   def testTurbiniaClientNoDir(self, _, __, ___):
     """Test that OUTPUT_DIR path is created."""
     config.OUTPUT_DIR = os.path.join(self.tmp_dir, 'no_such_dir')
-    TurbiniaPsqWorker()
+    TurbiniaPsqWorker([], [])
     self.assertTrue(os.path.exists(config.OUTPUT_DIR))
 
   @mock.patch('turbinia.client.pubsub')
@@ -470,3 +472,31 @@ class TestTurbiniaPsqWorker(unittest.TestCase):
     config.OUTPUT_DIR = os.path.join(self.tmp_dir, 'empty_file')
     open(config.OUTPUT_DIR, 'a').close()
     self.assertRaises(TurbiniaException, TurbiniaPsqWorker)
+
+  @mock.patch('turbinia.client.shutil')
+  @mock.patch('logging.Logger.warning')
+  def testDependencyCheck(self, mock_logger, mock_shutil):
+    """Test system dependency check."""
+    dependencies = [{
+        'job': 'PlasoJob',
+        'programs': ['non_exist'],
+        'docker_image': None
+    }]
+
+    # Dependency not found.
+    mock_shutil.which.return_value = None
+    self.assertRaises(TurbiniaException, check_dependencies, dependencies)
+
+    # Normal run.
+    mock_shutil.which.return_value = True
+    check_dependencies(dependencies)
+
+    # Job not found.
+    dependencies[0]['job'] = 'non_exist'
+    check_dependencies(dependencies)
+    mock_logger.assert_called_with(
+        'The job: non_exist was not found or has been disabled. '
+        'Skipping dependency check...')
+
+    # Bad dependency config.
+    self.assertRaises(TurbiniaException, check_dependencies, [{'test': 'test'}])

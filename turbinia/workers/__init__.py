@@ -171,14 +171,14 @@ class TurbiniaTaskResult(object):
     self.status = status
 
     for evidence in self.evidence:
-      if evidence.local_path and os.path.exists(evidence.local_path):
-        self.saved_paths.append(evidence.local_path)
+      if evidence.source_path and os.path.exists(evidence.source_path):
+        self.saved_paths.append(evidence.source_path)
         if not task.run_local and evidence.copyable:
           task.output_manager.save_evidence(evidence, self)
       else:
         self.log(
-            'Evidence {0!s} has empty or missing file at local_path {1:s} so '
-            'not saving.'.format(evidence.name, evidence.local_path))
+            'Evidence {0!s} has empty or missing file at source_path {1!s} so '
+            'not saving.'.format(evidence.name, evidence.source_path))
 
       if not evidence.request_id:
         evidence.request_id = self.request_id
@@ -327,6 +327,7 @@ class TurbiniaTask(object):
       id (str): Unique Id of task (string of hex)
       is_finalize_task (bool): Whether this is a finalize Task or not.
       job_id (str): Job ID the Task was created by.
+      job_name (str): The name of the Job.
       last_update (datetime): A datetime object with the last time the task was
           updated.
       name (str): Name of task
@@ -363,6 +364,7 @@ class TurbiniaTask(object):
     self.id = uuid.uuid4().hex
     self.is_finalize_task = False
     self.job_id = None
+    self.job_name = None
     self.last_update = datetime.now()
     self.name = name if name else self.__class__.__name__
     self.output_dir = None
@@ -485,16 +487,16 @@ class TurbiniaTask(object):
       for evidence in new_evidence:
         # If the local path is set in the Evidence, we check to make sure that
         # the path exists and is not empty before adding it.
-        if evidence.local_path and not os.path.exists(evidence.local_path):
+        if evidence.source_path and not os.path.exists(evidence.source_path):
           message = (
-              'Evidence {0:s} local_path {1:s} does not exist. Not returning '
-              'empty Evidence.'.format(evidence.name, evidence.local_path))
+              'Evidence {0:s} source_path {1:s} does not exist. Not returning '
+              'empty Evidence.'.format(evidence.name, evidence.source_path))
           result.log(message, level=logging.WARN)
-        elif (evidence.local_path and os.path.exists(evidence.local_path) and
-              os.path.getsize(evidence.local_path) == 0):
+        elif (evidence.source_path and os.path.exists(evidence.source_path) and
+              os.path.getsize(evidence.source_path) == 0):
           message = (
-              'Evidence {0:s} local_path {1:s} is empty. Not returning '
-              'empty new Evidence.'.format(evidence.name, evidence.local_path))
+              'Evidence {0:s} source_path {1:s} is empty. Not returning '
+              'empty new Evidence.'.format(evidence.name, evidence.source_path))
           result.log(message, level=logging.WARN)
         else:
           result.add_evidence(evidence, self._evidence_config)
@@ -532,11 +534,11 @@ class TurbiniaTask(object):
       if evidence.copyable and not config.SHARED_FILESYSTEM:
         self.output_manager.retrieve_evidence(evidence)
 
-    if evidence.local_path and not os.path.exists(evidence.local_path):
+    if evidence.source_path and not os.path.exists(evidence.source_path):
       raise TurbiniaException(
-          'Evidence local path {0:s} does not exist'.format(
-              evidence.local_path))
-    
+          'Evidence source path {0:s} does not exist'.format(
+              evidence.source_path))
+    evidence.preprocess(self.tmp_dir)
     return self.result
 
   def touch(self):
@@ -618,6 +620,9 @@ class TurbiniaTask(object):
     Returns:
       A TurbiniaTaskResult object
     """
+    # Avoid circular dependency.
+    from turbinia.jobs import manager as job_manager
+
     log.debug('Task {0:s} {1:s} awaiting execution'.format(self.name, self.id))
     evidence = evidence_decode(evidence)
     try:
@@ -649,13 +654,26 @@ class TurbiniaTask(object):
         original_result_id = self.result.id
         evidence.validate()
 
+        # TODO(wyassine): refactor it so the result task does not
+        # have to go through the preprocess stage. At the moment
+        # self.results.setup is required to be called to set its status.
+        # Check if Task's job is available for the worker.
+        active_jobs = list(job_manager.JobsManager.GetJobNames())
+        if self.job_name.lower() not in active_jobs:
+          message = (
+              'Task will not run due to the job: {0:s} being disabled '
+              'on the worker.'.format(self.job_name))
+          self.result.log(message, level=logging.ERROR)
+          self.result.status = message
+          return self.result.serialize()
+
         if self.turbinia_version != turbinia.__version__:
           message = (
               'Worker and Server versions do not match: {0:s} != {1:s}'.format(
                   self.turbinia_version, turbinia.__version__))
           self.result.log(message, level=logging.ERROR)
           self.result.status = message
-          return self.result
+          return self.result.serialize()
 
         self.result.update_task_status(self, 'Running')
         self._evidence_config = evidence.config

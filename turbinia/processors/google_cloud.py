@@ -16,6 +16,7 @@
 
 from __future__ import unicode_literals
 
+import glob
 import logging
 import os
 import stat
@@ -73,12 +74,17 @@ def PreprocessAttachDisk(disk_name):
     disk_name(str): The name of the Cloud Disk to attach.
 
   Returns:
-    str: the path to the attached block device.
+    (str, list(str)): a tuple consisting of the path to the 'disk' block device
+      and a list of paths to partition block devices. For example:
+      (
+       '/dev/disk/by-id/google-disk0',
+       ['/dev/disk/by-id/google-disk0-part1', '/dev/disk/by-id/google-disk0-p2']
+      )
   """
   path = '/dev/disk/by-id/google-{0:s}'.format(disk_name)
   if IsBlockDevice(path):
     log.info('Disk {0:s} already attached!'.format(disk_name))
-    return path
+    return (path, glob.glob('{0:s}-part*'.format(path)))
 
   config.LoadConfig()
   instance_name = GetLocalInstanceName()
@@ -102,7 +108,7 @@ def PreprocessAttachDisk(disk_name):
                                                   os.stat(path).st_mode))
     time.sleep(1)
 
-  return path
+  return (path, glob.glob('{0:s}-part*'.format(path)))
 
 
 def PostprocessDetachDisk(disk_name, local_path):

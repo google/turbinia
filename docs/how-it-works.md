@@ -87,12 +87,14 @@ that is available to all Workers.
 
 ## Task Manager
 
-The Task Manager Acts as a broker between the clients and workers and handles
-management of Evidence, Jobs, Tasks and Workers.
+The Task Manager runs in the server and acts as a broker between the clients and
+workers and handles management of Evidence, Jobs, Tasks and Workers.  It will keep
+state on these objects while the processing request that generated them is still
+ongoing.
 
 ## Task Manager Flow
 
-Jobs are configured to run for specific Evidence types, and if the Task
+Jobs are configured to process specific Evidence types, and if the Task
 Manager sees a new piece of Evidence (either from a new Turbinia request, or
 because another Task generated a new piece of Evidence), and there is a Job
 that is configured to run for that type of Evidence, then the Task Mananger will

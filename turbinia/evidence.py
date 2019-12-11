@@ -16,7 +16,6 @@
 
 from __future__ import unicode_literals
 
-import copy
 import json
 import os
 import sys
@@ -52,19 +51,19 @@ def evidence_decode(evidence_dict):
         'Evidence_dict is not a dictionary, type is {0:s}'.format(
             str(type(evidence_dict))))
 
-  type_ = evidence_dict.get('type', None)
+  type_ = evidence_dict.pop('type', None)
   if not type_:
     raise TurbiniaException(
         'No Type attribute for evidence object [{0:s}]'.format(
             str(evidence_dict)))
 
   try:
-    evidence = getattr(sys.modules[__name__], type_)()
+    evidence_class = getattr(sys.modules[__name__], type_)
+    evidence = evidence_class.from_dict(evidence_dict)
   except AttributeError:
     raise TurbiniaException(
         'No Evidence object of type {0:s} in evidence module'.format(type_))
 
-  evidence.__dict__ = evidence_dict
   if evidence_dict.get('parent_evidence'):
     evidence.parent_evidence = evidence_decode(evidence_dict['parent_evidence'])
   if evidence_dict.get('collection'):
@@ -98,7 +97,10 @@ class Evidence(object):
         to the saved_path location.
     source (str): String indicating where evidence came from (including tool
         version that created it, if appropriate).
-    local_path (str): A string of the local_path to the evidence.
+    local_path (str): Path to the processed data (can be a blockdevice or a
+        directory).
+    source_path (str): Path to the un-processed source data for the Evidence.
+    mount_path (str): Path to a mounted file system (if relevant).
     tags (dict): Extra tags associated with this evidence.
     request_id (str): The id of the request this evidence came from, if any.
     parent_evidence (Evidence): The Evidence object that was used to generate
@@ -114,20 +116,23 @@ class Evidence(object):
   REQUIRED_ATTRIBUTES = []
 
   def __init__(
-      self, name=None, description=None, source=None, local_path=None,
-      tags=None, request_id=None):
+      self, name=None, description=None, source=None, source_path=None,
+      tags=None, request_id=None, copyable=False):
     """Initialization for Evidence."""
-    self.copyable = False
+    self.copyable = copyable
     self.config = {}
     self.context_dependent = False
     self.cloud_only = False
     self.description = description
+    self.mount_path = None
     self.source = source
-    self.local_path = local_path
+    self.source_path = source_path
     self.tags = tags if tags else {}
     self.request_id = request_id
     self.parent_evidence = None
     self.save_metadata = False
+
+    self.local_path = source_path
 
     # List of jobs that have processed this evidence
     self.processed_by = []
@@ -136,15 +141,41 @@ class Evidence(object):
     self.saved_path = None
     self.saved_path_type = None
 
+    if self.copyable and not self.local_path:
+      raise TurbiniaException(
+          '{0:s} is a copyable evidence and needs a source_path'.format(
+              self.type))
+
   def __str__(self):
-    return '{0:s}:{1:s}:{2!s}'.format(self.type, self.name, self.local_path)
+    return '{0:s}:{1:s}:{2!s}'.format(self.type, self.name, self.source_path)
 
   def __repr__(self):
     return self.__str__()
 
+  @classmethod
+  def from_dict(cls, dictionary):
+    """Instanciate an Evidence object from a dictionary of attributes.
+
+    Args:
+      dictionary(dict): the attributes to set for this object.
+    Returns:
+      Evidence: the instantiated evidence.
+    """
+    name = dictionary.pop('name', None)
+    description = dictionary.pop('description', None)
+    source = dictionary.pop('source', None)
+    source_path = dictionary.pop('source_path', None)
+    tags = dictionary.pop('tags', None)
+    request_id = dictionary.pop('request_id', None)
+    new_object = cls(
+        name=name, description=description, source=source,
+        source_path=source_path, tags=tags, request_id=request_id)
+    new_object.__dict__.update(dictionary)
+    return new_object
+
   def serialize(self):
     """Return JSON serializable object."""
-    serialized_evidence = copy.deepcopy(self.__dict__)
+    serialized_evidence = self.__dict__.copy()
     if self.parent_evidence:
       serialized_evidence['parent_evidence'] = self.parent_evidence.serialize()
     return serialized_evidence
@@ -197,7 +228,11 @@ class Evidence(object):
                        Task will write to.
 
     """
-    if self.parent_evidence:
+    if self.context_dependent:
+      if not self.parent_evidence:
+        raise TurbiniaException(
+            'Evidence of type {0:s} needs parent_evidence to be set'.format(
+                self.type))
       self.parent_evidence.preprocess()
     self._preprocess(tmp_dir)
 
@@ -313,37 +348,44 @@ class ChromiumProfile(Evidence):
 
   def __init__(self, browser_type=None, output_format=None, *args, **kwargs):
     """Initialization for chromium profile evidence object."""
-    super(ChromiumProfile, self).__init__(*args, **kwargs)
+    super(ChromiumProfile, self).__init__(copyable=True, *args, **kwargs)
     self.browser_type = browser_type
     self.output_format = output_format
-    self.copyable = True
 
 
 class RawDisk(Evidence):
   """Evidence object for Disk based evidence.
 
   Attributes:
-    loopdevice_path: Path to the losetup device for this disk.
-    mount_path: The mount path for this disk (if any).
+    device_path (str): Path to a relevant 'raw' data source (ie: a block
+        device or a raw disk image).
     mount_partition: The mount partition for this disk (if any).
-    size:  The size of the disk in bytes.
+    size: The size of the disk in bytes.
   """
 
-  def __init__(
-      self, mount_path=None, mount_partition=None, size=None, *args, **kwargs):
+  def __init__(self, mount_partition=1, size=None, *args, **kwargs):
     """Initialization for raw disk evidence object."""
-    self.loopdevice_path = None
-    self.mount_path = mount_path
+
+    if mount_partition < 1:
+      raise TurbiniaException(
+          'Partition numbers start at 1, but was given {0:d}'.format(
+              mount_partition))
+
+    self.device_path = None
     self.mount_partition = mount_partition
     self.size = size
     super(RawDisk, self).__init__(*args, **kwargs)
 
   def _preprocess(self, _):
-    self.loopdevice_path = mount_local.PreprocessLosetup(self.local_path)
+    self.device_path, partition_paths = mount_local.PreprocessLosetup(
+        self.source_path)
+    self.mount_path = mount_local.PreprocessMountDisk(
+        partition_paths, self.mount_partition)
+    self.local_path = self.device_path
 
   def _postprocess(self):
-    mount_local.PostprocessDeleteLosetup(self.loopdevice_path)
-    self.loopdevice_path = None
+    mount_local.PostprocessUnmountPath(self.mount_path)
+    mount_local.PostprocessDeleteLosetup(self.device_path)
 
 
 class EncryptedDisk(RawDisk):
@@ -408,7 +450,7 @@ class APFSEncryptedDisk(EncryptedDisk):
 
 
 class GoogleCloudDisk(RawDisk):
-  """Evidence object for Google Cloud Disks.
+  """Evidence object for a Google Cloud Disk.
 
   Attributes:
     project: The cloud project name this disk is associated with.
@@ -427,11 +469,16 @@ class GoogleCloudDisk(RawDisk):
     self.cloud_only = True
 
   def _preprocess(self, _):
-    self.local_path = google_cloud.PreprocessAttachDisk(self.disk_name)
+    self.device_path, partition_paths = google_cloud.PreprocessAttachDisk(
+        self.disk_name)
+
+    self.mount_path = mount_local.PreprocessMountDisk(
+        partition_paths, self.mount_partition)
+    self.local_path = self.device_path
 
   def _postprocess(self):
-    google_cloud.PostprocessDetachDisk(self.disk_name, self.local_path)
-    self.local_path = None
+    mount_local.PostprocessUnmountPath(self.mount_path)
+    google_cloud.PostprocessDetachDisk(self.disk_name, self.device_path)
 
 
 class GoogleCloudDiskRawEmbedded(GoogleCloudDisk):
@@ -446,24 +493,37 @@ class GoogleCloudDiskRawEmbedded(GoogleCloudDisk):
     embedded_path: The path of the raw disk image inside the Persistent Disk
   """
 
-  REQUIRED_ATTRIBUTES = ['disk_name', 'project', 'zone', 'embedded_path']
+  REQUIRED_ATTRIBUTES = [
+      'disk_name', 'project', 'zone', 'embedded_partition', 'embedded_path'
+  ]
 
-  def __init__(self, embedded_path=None, *args, **kwargs):
-    """Initialization for Google Cloud Disk."""
+  def __init__(
+      self, embedded_path=None, embedded_partition=None, *args, **kwargs):
+    """Initialization for Google Cloud Disk containing a raw disk image."""
     self.embedded_path = embedded_path
+    self.embedded_partition = embedded_partition
     super(GoogleCloudDiskRawEmbedded, self).__init__(*args, **kwargs)
 
+    # This Evidence needs to have a GoogleCloudDisk as a parent
+    self.context_dependent = True
+
   def _preprocess(self, _):
-    self.local_path = google_cloud.PreprocessAttachDisk(self.disk_name)
-    self.loopdevice_path = mount_local.PreprocessLosetup(self.local_path)
+    rawdisk_path = os.path.join(
+        self.parent_evidence.mount_path, self.embedded_path)
+    if not os.path.exists(rawdisk_path):
+      raise TurbiniaException(
+          'Unable to find raw disk image {0:s} in GoogleCloudDisk'.format(
+              rawdisk_path))
+    self.device_path, partition_paths = mount_local.PreprocessLosetup(
+        rawdisk_path)
+
     self.mount_path = mount_local.PreprocessMountDisk(
-        self.loopdevice_path, self.mount_partition)
-    self.local_path = os.path.join(self.mount_path, self.embedded_path)
+        partition_paths, self.mount_partition)
+    self.local_path = self.device_path
 
   def _postprocess(self):
-    google_cloud.PostprocessDetachDisk(self.disk_name, self.local_path)
     mount_local.PostprocessUnmountPath(self.mount_path)
-    mount_local.PostprocessDeleteLosetup(self.loopdevice_path)
+    mount_local.PostprocessDeleteLosetup(self.device_path)
 
 
 class PlasoFile(Evidence):
@@ -476,18 +536,17 @@ class PlasoFile(Evidence):
   def __init__(self, plaso_version=None, *args, **kwargs):
     """Initialization for Plaso File evidence."""
     self.plaso_version = plaso_version
-    super(PlasoFile, self).__init__(*args, **kwargs)
-    self.copyable = True
+    super(PlasoFile, self).__init__(copyable=True, *args, **kwargs)
     self.save_metadata = True
 
 
-class PlasoCsvFile(PlasoFile):
+class PlasoCsvFile(Evidence):
   """Psort output file evidence.  """
 
   def __init__(self, plaso_version=None, *args, **kwargs):
     """Initialization for Plaso File evidence."""
     self.plaso_version = plaso_version
-    super(PlasoCsvFile, self).__init__(*args, **kwargs)
+    super(PlasoCsvFile, self).__init__(copyable=True, *args, **kwargs)
     self.save_metadata = False
 
 
@@ -497,8 +556,7 @@ class ReportText(Evidence):
 
   def __init__(self, text_data=None, *args, **kwargs):
     self.text_data = text_data
-    super(ReportText, self).__init__(*args, **kwargs)
-    self.copyable = True
+    super(ReportText, self).__init__(copyable=True, *args, **kwargs)
 
 
 class FinalReport(ReportText):
@@ -513,8 +571,7 @@ class TextFile(Evidence):
   """Text data."""
 
   def __init__(self, *args, **kwargs):
-    super(TextFile, self).__init__(*args, **kwargs)
-    self.copyable = True
+    super(TextFile, self).__init__(copyable=True, *args, **kwargs)
 
 
 class FilteredTextFile(TextFile):
@@ -529,9 +586,8 @@ class ExportedFileArtifact(Evidence):
 
   def __init__(self, artifact_name=None, *args, **kwargs):
     """Initializes an exported file artifact."""
-    super(ExportedFileArtifact, self).__init__(*args, **kwargs)
+    super(ExportedFileArtifact, self).__init__(copyable=True, *args, **kwargs)
     self.artifact_name = artifact_name
-    self.copyable = True
 
 
 class VolatilityReport(TextFile):

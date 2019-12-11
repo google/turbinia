@@ -136,6 +136,10 @@ def main():
   parser_config.add_argument(
       '-f', '--file_only', action='store_true', help='Print out file path only')
 
+  #Sends Test Notification
+  parser_testnotify = subparsers.add_parser(
+      'testnotify', help='Sends test notification')
+
   # TODO(aarontp): Find better way to specify these that allows for multiple
   # pieces of evidence to be submitted. Maybe automagically create different
   # commands based on introspection of evidence objects?
@@ -143,7 +147,7 @@ def main():
   parser_rawdisk = subparsers.add_parser(
       'rawdisk', help='Process RawDisk as Evidence')
   parser_rawdisk.add_argument(
-      '-l', '--local_path', help='Local path to the evidence', required=True)
+      '-l', '--source_path', help='Local path to the evidence', required=True)
   parser_rawdisk.add_argument(
       '-P', '--mount_partition', default=1, type=int,
       help='The partition number to use when mounting this disk.  Defaults to '
@@ -159,7 +163,7 @@ def main():
   parser_apfs = subparsers.add_parser(
       'apfs', help='Process APFSEncryptedDisk as Evidence')
   parser_apfs.add_argument(
-      '-l', '--local_path', help='Local path to the encrypted APFS evidence',
+      '-l', '--source_path', help='Local path to the encrypted APFS evidence',
       required=True)
   parser_apfs.add_argument(
       '-r', '--recovery_key', help='Recovery key for the APFS evidence.  '
@@ -178,7 +182,7 @@ def main():
   parser_bitlocker = subparsers.add_parser(
       'bitlocker', help='Process Bitlocker Disk as Evidence')
   parser_bitlocker.add_argument(
-      '-l', '--local_path',
+      '-l', '--source_path',
       help='Local path to the encrypted Bitlocker evidence', required=True)
   parser_bitlocker.add_argument(
       '-r', '--recovery_key', help='Recovery key for the Bitlocker evidence.  '
@@ -208,7 +212,7 @@ def main():
       'with. If this is different from the project that Turbinia is running '
       'in, it will be copied to the Turbinia project.')
   parser_googleclouddisk.add_argument(
-      '-P', '--mount_partition', default=0, type=int,
+      '-P', '--mount_partition', default=1, type=int,
       help='The partition number to use when mounting this disk.  Defaults to '
       'the entire raw disk.  Only affects mounting, and not what gets '
       'processed.')
@@ -240,10 +244,14 @@ def main():
       'with. If this is different from the project that Turbinia is running '
       'in, it will be copied to the Turbinia project.')
   parser_googleclouddiskembedded.add_argument(
-      '-P', '--mount_partition', default=0, type=int,
+      '-P', '--mount_partition', default=1, type=int,
       help='The partition number to use when mounting this disk.  Defaults to '
       'the entire raw disk.  Only affects mounting, and not what gets '
       'processed.')
+  parser_googleclouddiskembedded.add_argument(
+      '--embedded_mount_partition', default=1, type=int,
+      help='The partition number to use when mounting this embedded disk image.'
+      ' Defaults to the first partition')
   parser_googleclouddiskembedded.add_argument(
       '-z', '--zone', help='Geographic zone the disk exists in')
   parser_googleclouddiskembedded.add_argument(
@@ -256,7 +264,7 @@ def main():
   parser_rawmemory = subparsers.add_parser(
       'rawmemory', help='Process RawMemory as Evidence')
   parser_rawmemory.add_argument(
-      '-l', '--local_path', help='Local path to the evidence', required=True)
+      '-l', '--source_path', help='Local path to the evidence', required=True)
   parser_rawmemory.add_argument(
       '-P', '--profile', help='Profile to use with Volatility', required=True)
   parser_rawmemory.add_argument(
@@ -269,7 +277,7 @@ def main():
   parser_directory = subparsers.add_parser(
       'directory', help='Process a directory as Evidence')
   parser_directory.add_argument(
-      '-l', '--local_path', help='Local path to the evidence', required=True)
+      '-l', '--source_path', help='Local path to the evidence', required=True)
   parser_directory.add_argument(
       '-s', '--source', help='Description of the source of the evidence',
       required=False)
@@ -291,7 +299,7 @@ def main():
   parser_hindsight = subparsers.add_parser(
       'hindsight', help='Process ChromiumProfile as Evidence')
   parser_hindsight.add_argument(
-      '-l', '--local_path', help='Local path to the evidence', required=True)
+      '-l', '--source_path', help='Local path to the evidence', required=True)
   parser_hindsight.add_argument(
       '-f', '--format', help='Output format (supported types are '
       'xlsx, sqlite, jsonl)', default='sqlite')
@@ -395,6 +403,7 @@ def main():
   # config is loaded by these modules at load time, and we want to wait to load
   # the config until after we parse the args so that we can use those arguments
   # to point to config paths.
+  from turbinia import notify
   from turbinia.client import TurbiniaClient
   from turbinia.client import TurbiniaCeleryClient
   from turbinia.client import TurbiniaServer
@@ -418,6 +427,12 @@ def main():
           "Failed to read config file {0:s}: {1!s}".format(
               config.configSource, exception))
       sys.exit(1)
+  #sends test notification
+  if args.command == 'testnotify':
+    notify.sendmail(
+        config.EMAIL_ADDRESS, 'Turbinia test notification',
+        'This is a test notification')
+    sys.exit(0)
 
   if args.jobs_whitelist and args.jobs_blacklist:
     log.error(
@@ -487,40 +502,40 @@ def main():
   # Start Evidence configuration
   evidence_ = None
   if args.command == 'rawdisk':
-    args.name = args.name if args.name else args.local_path
-    local_path = os.path.abspath(args.local_path)
+    args.name = args.name if args.name else args.source_path
+    source_path = os.path.abspath(args.source_path)
     evidence_ = evidence.RawDisk(
-        name=args.name, local_path=local_path,
+        name=args.name, source_path=source_path,
         mount_partition=args.mount_partition, source=args.source)
   elif args.command == 'apfs':
     if not args.password and not args.recovery_key:
       log.error('Neither recovery key nor password is specified.')
       sys.exit(1)
-    args.name = args.name if args.name else args.local_path
-    local_path = os.path.abspath(args.local_path)
+    args.name = args.name if args.name else args.source_path
+    source_path = os.path.abspath(args.source_path)
     evidence_ = evidence.APFSEncryptedDisk(
-        name=args.name, local_path=local_path, recovery_key=args.recovery_key,
+        name=args.name, source_path=source_path, recovery_key=args.recovery_key,
         password=args.password, source=args.source)
   elif args.command == 'bitlocker':
     if not args.password and not args.recovery_key:
       log.error('Neither recovery key nor password is specified.')
       sys.exit(1)
-    args.name = args.name if args.name else args.local_path
-    local_path = os.path.abspath(args.local_path)
+    args.name = args.name if args.name else args.source_path
+    source_path = os.path.abspath(args.source_path)
     evidence_ = evidence.BitlockerDisk(
-        name=args.name, local_path=local_path, recovery_key=args.recovery_key,
+        name=args.name, source_path=source_path, recovery_key=args.recovery_key,
         password=args.password, source=args.source)
   elif args.command == 'directory':
-    args.name = args.name if args.name else args.local_path
-    local_path = os.path.abspath(args.local_path)
+    args.name = args.name if args.name else args.source_path
+    source_path = os.path.abspath(args.source_path)
     evidence_ = evidence.Directory(
-        name=args.name, local_path=local_path, source=args.source)
+        name=args.name, source_path=source_path, source=args.source)
   elif args.command == 'compressedirectory':
-    archive.ValidateTarFile(args.local_path)
-    args.name = args.name if args.name else args.local_path
-    local_path = os.path.abspath(args.local_path)
+    archive.ValidateTarFile(args.source_path)
+    args.name = args.name if args.name else args.source_path
+    source_path = os.path.abspath(args.source_path)
     evidence_ = evidence.CompressedDirectory(
-        name=args.name, local_path=local_path, source=args.source)
+        name=args.name, source_path=source_path, source=args.source)
   elif args.command == 'googleclouddisk':
     args.name = args.name if args.name else args.disk_name
     evidence_ = evidence.GoogleCloudDisk(
@@ -529,10 +544,16 @@ def main():
         source=args.source)
   elif args.command == 'googleclouddiskembedded':
     args.name = args.name if args.name else args.disk_name
+    parent_evidence_ = evidence.GoogleCloudDisk(
+        name=args.name, disk_name=args.disk_name, project=args.project,
+        mount_partition=args.mount_partition, zone=args.zone,
+        source=args.source)
     evidence_ = evidence.GoogleCloudDiskRawEmbedded(
-        name=args.name, disk_name=args.disk_name,
-        embedded_path=args.embedded_path, mount_partition=args.mount_partition,
-        project=args.project, zone=args.zone, source=args.source)
+        name=args.name, disk_name=args.disk_name, project=args.project,
+        mount_partition=args.mount_partition, zone=args.zone,
+        embedded_path=args.embedded_path,
+        embedded_partition=args.embedded_mount_partition)
+    evidence_.parent_evidence = parent_evidence_
   elif args.command == 'hindsight':
     if args.format not in ['xlsx', 'sqlite', 'jsonl']:
       log.error('Invalid output format.')
@@ -540,26 +561,28 @@ def main():
     if args.browser_type not in ['Chrome', 'Brave']:
       log.error('Browser type not supported.')
       sys.exit(1)
-    args.name = args.name if args.name else args.local_path
-    local_path = os.path.abspath(args.local_path)
+    args.name = args.name if args.name else args.source_path
+    source_path = os.path.abspath(args.source_path)
     evidence_ = evidence.ChromiumProfile(
-        name=args.name, local_path=local_path, output_format=args.format,
+        name=args.name, source_path=source_path, output_format=args.format,
         browser_type=args.browser_type)
   elif args.command == 'rawmemory':
-    args.name = args.name if args.name else args.local_path
-    local_path = os.path.abspath(args.local_path)
+    args.name = args.name if args.name else args.source_path
+    source_path = os.path.abspath(args.source_path)
     evidence_ = evidence.RawMemory(
-        name=args.name, local_path=local_path, profile=args.profile,
+        name=args.name, source_path=source_path, profile=args.profile,
         module_list=args.module_list)
   elif args.command == 'psqworker':
     # Set up root logger level which is normally set by the psqworker command
     # which we are bypassing.
     logger.setup()
-    worker = TurbiniaPsqWorker()
+    worker = TurbiniaPsqWorker(
+        jobs_blacklist=args.jobs_blacklist, jobs_whitelist=args.jobs_whitelist)
     worker.start()
   elif args.command == 'celeryworker':
     logger.setup()
-    worker = TurbiniaCeleryWorker()
+    worker = TurbiniaCeleryWorker(
+        jobs_blacklist=args.jobs_blacklist, jobs_whitelist=args.jobs_whitelist)
     worker.start()
   elif args.command == 'server':
     server = TurbiniaServer(
@@ -610,7 +633,7 @@ def main():
     log.info('Available Jobs:')
     client.list_jobs()
   else:
-    log.warning('Command {0:s} not implemented.'.format(args.command))
+    log.warning('Command {0!s} not implemented.'.format(args.command))
 
   if evidence_ and not args.force_evidence:
     if config.SHARED_FILESYSTEM and evidence_.cloud_only:

@@ -124,6 +124,8 @@ class BaseStateManager(object):
     # TODO(aarontp): Migrate this to actual Datastore namespaces
     config.LoadConfig()
     task_dict.update({'instance': config.INSTANCE_ID})
+    if isinstance(task_dict['instance'], six.binary_type):
+      task_dict['instance'] = codecs.decode(task_dict['instance'], 'utf-8')
     return task_dict
 
   def _validate_data(self, data):

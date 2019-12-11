@@ -437,6 +437,99 @@ class GoogleCloudProject(object):
     created = True
     return instance, created
 
+  def list_instance_by_labels(self, labels_filter, filter_union=True):
+    """List VMs in a project with one/all of the provided labels.
+
+    This will call the __list_by_label on instances() API object
+    with the proper labels filter.
+
+    Args:
+      labels_filter: A dict of labels to find e.g. {'id': '123'}.
+      filter_union: A Boolean; True to get the union of all filters,
+          False to get the intersection.
+
+    Returns:
+      A dictionary with name and metadata (zone, labels) for each instance.
+      ex: {'instance-1': {'zone': 'us-central1-a', 'labels': {'id': '123'}}
+    """
+
+    instance_service_object = self.gce_api().instances()
+    return self.__list_by_label(
+        labels_filter, instance_service_object, filter_union)
+
+  def list_disk_by_labels(self, labels_filter, filter_union=True):
+    """List Disks in a project with one/all of the provided labels.
+
+    This will call the __list_by_label on disks() API object
+    with the proper labels filter.
+
+    Args:
+      labels_filter: A dict of labels to find e.g. {'id': '123'}.
+      filter_union: A Boolean; True to get the union of all filters,
+          False to get the intersection.
+
+    Returns:
+      A dictionary with name and metadata (zone, labels) for each disk.
+      ex: {'disk-1': {'zone': 'us-central1-a', 'labels': {'id': '123'}}
+    """
+
+    disk_service_object = self.gce_api().disks()
+    return self.__list_by_label(
+        labels_filter, disk_service_object, filter_union)
+
+  def __list_by_label(self, labels_filter, service_object, filter_union):
+    """List Disks/VMs in a project with one/all of the provided labels.
+
+    Private method used to select different compute resources by labels.
+
+    Args:
+      labels_filter:  A dict of labels to find e.g. {'id': '123'}.
+      service_object: Google Compute Engine (Disk | Instance) service object.
+      filter_union: A boolean; True to get the union of all filters,
+          False to get the intersection.
+
+    Returns:
+      Dictionary with name and metadata (zone, labels) for each instance/disk.
+      ex: {'instance-1': {'zone': 'us-central1-a', 'labels': {'id': '123'}}
+    """
+    if not isinstance(filter_union, bool):
+      raise RuntimeError((
+          'filter_union parameter must be of Type boolean'
+          ' {0:s} is an invalid argument.').format(filter_union))
+
+    resource_dict = dict()
+    filter_expression = ''
+    operation = 'AND' if filter_union else 'OR'
+    for key, value in labels_filter.items():
+      filter_expression += 'labels.{0:s}={1:s} {2:s} '.format(
+          key, value, operation)
+    filter_expression = filter_expression[:-(len(operation) + 1)]
+
+    request = service_object.aggregatedList(
+        project=self.project_id, filter=filter_expression)
+    while request is not None:
+      response = request.execute()
+      result = self.gce_operation(response, zone=self.default_zone)
+
+      for item in result['items'].items():
+        region_or_zone_string, resource_scoped_list = item
+
+        if 'warning' not in resource_scoped_list.keys():
+          _, zone = region_or_zone_string.rsplit('/', 1)
+          # Only one of the following loops will execute since the method is
+          # called either with a service object Instances or Disks
+          for resource in resource_scoped_list.get('instances', []):
+            resource_dict[resource['name']] = dict(
+                zone=zone, labels=resource['labels'])
+
+          for resource in resource_scoped_list.get('disks', []):
+            resource_dict[resource['name']] = dict(
+                zone=zone, labels=resource['labels'])
+
+      request = service_object.aggregatedList_next(
+          previous_request=request, previous_response=response)
+    return resource_dict
+
 
 class GoogleCloudFunction(GoogleCloudProject):
   """Class to call Google Cloud Functions.
@@ -535,15 +628,12 @@ class GoogleComputeBaseResource(object):
     """Get specific value from the resource key value store.
 
     Args:
-      key: Key to get value from.
+      key: A key of type String to get key's corresponding value.
 
     Returns:
       Value of key or None if key is missing.
     """
-    if not self._data:
-      operation = self.get_operation().execute()
-      self._data = self.project.gce_operation(
-          operation, zone=self.zone, block=False)
+    self._data = self.get_operation().execute()
     return self._data.get(key)
 
   def get_source_string(self):
@@ -552,7 +642,114 @@ class GoogleComputeBaseResource(object):
     Returns:
       The full API URL to the resource.
     """
+    if self._data:
+      return self._data['selfLink']
     return self.get_value('selfLink')
+
+  def get_resource_type(self):
+    """Get the resource type from the resource key-value store.
+
+    Returns:
+      Resource Type which is a string with one of the following values:
+        compute#instance
+        compute#disk
+        compute#snapshot
+    """
+    if self._data:
+      return self._data['kind']
+    return self.get_value('kind')
+
+  def form_operation(self, operation_name):
+    """Form an API operation object for the compute resource.
+
+    Example:[RESOURCE].form_operation('setLabels')(**kwargs)
+    [RESOURCE] can be type "instance", disk or "snapshot".
+
+    Args:
+      operation_name: The name of the API operation you need to perform.
+
+    Returns:
+      An API operation object for the referenced compute resource.
+
+    Raises RuntimeError:
+      If resource type is not defined as a type which extends the
+      GoogleGomputeBaseResource class.
+    """
+    resource_type = self.get_resource_type()
+    module = None
+    if resource_type not in ['compute#instance', 'compute#snapshot',
+                             'compute#disk']:
+      raise RuntimeError((
+          'Compute resource Type {0:s} is not one of the defined types in '
+          'libcloudforensics library (Instance, Disk or Snapshot) '
+      ).format(resource_type))
+    if resource_type == 'compute#instance':
+      module = self.project.gce_api().instances()
+    elif resource_type == 'compute#disk':
+      module = self.project.gce_api().disks()
+    elif resource_type == 'compute#snapshot':
+      module = self.project.gce_api().snapshots()
+
+    operation_func_to_call = getattr(module, operation_name)
+    return operation_func_to_call
+
+  def get_labels(self):
+    """Get all labels of a compute resource.
+
+    Returns:
+      A dictionary of all labels.
+    """
+
+    operation = self.get_operation().execute()
+
+    return operation.get('labels')
+
+  def add_labels(self, new_labels_dict, blocking_call=False):
+    """Add or update labels of a compute resource.
+
+    Args:
+      new_labels_dict: A dictionary containing the labels to be added.
+          ex: {"incident_id": "1234abcd"}.
+      blocking_call: A boolean to decide whether the API call should
+          be blocking or not, default is False.
+
+    Returns:
+      The response of the API operation.
+    """
+
+    get_operation = self.get_operation().execute()
+    labelFingerprint = get_operation['labelFingerprint']
+
+    exisitng_labels_dict = dict()
+    if self.get_labels() is not None:
+      exisitng_labels_dict = self.get_labels()
+    exisitng_labels_dict.update(new_labels_dict)
+    labels_dict = exisitng_labels_dict
+    request_body = {'labels': labels_dict, 'labelFingerprint': labelFingerprint}
+
+    resource_type = self.get_resource_type()
+    operation = None
+    if resource_type not in ['compute#instance', 'compute#snapshot',
+                             'compute#disk']:
+      raise RuntimeError((
+          'Compute resource Type {0:s} is not one of the defined types in '
+          'libcloudforensics library (Instance, Disk or Snapshot) '
+      ).format(resource_type))
+    if resource_type == 'compute#instance':
+      operation = self.form_operation('setLabels')(
+          instance=self.name, project=self.project.project_id, zone=self.zone,
+          body=request_body).execute()
+    elif resource_type == 'compute#disk':
+      operation = self.form_operation('setLabels')(
+          resource=self.name, project=self.project.project_id, zone=self.zone,
+          body=request_body).execute()
+    elif resource_type == 'compute#snapshot':
+      operation = self.form_operation('setLabels')(
+          resource=self.name, project=self.project.project_id,
+          body=request_body).execute()
+
+    return self.project.gce_operation(
+        operation, zone=self.zone, block=blocking_call)
 
 
 class GoogleComputeInstance(GoogleComputeBaseResource):
