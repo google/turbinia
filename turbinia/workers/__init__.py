@@ -116,6 +116,7 @@ class TurbiniaTaskResult(object):
     self.status = None
     self.error = {}
     self.worker_name = platform.node()
+    self.state_manager = None
     # TODO(aarontp): Create mechanism to grab actual python logging data.
     self._log = []
 
@@ -135,6 +136,7 @@ class TurbiniaTaskResult(object):
     self.task_id = task.id
     self.task_name = task.name
     self.requester = task.requester
+    self.state_manager = state_manager.get_state_manager()
     if task.output_manager.is_setup:
       _, self.output_dir = task.output_manager.get_local_output_dirs()
     else:
@@ -175,7 +177,7 @@ class TurbiniaTaskResult(object):
           task.output_manager.save_evidence(evidence, self)
       else:
         self.log(
-            'Evidence {0:s} has empty or missing file at local_path {1:s} so '
+            'Evidence {0!s} has empty or missing file at local_path {1:s} so '
             'not saving.'.format(evidence.name, evidence.local_path))
 
       if not evidence.request_id:
@@ -240,7 +242,7 @@ class TurbiniaTaskResult(object):
         task: The calling Task object
       status: One line descriptive task status.
     """
-    stat_manager = state_manager.get_state_manager()
+    #stat_manager = state_manager.get_state_manager()
     if status == 'Queued':
       task.result.status = 'Task {0!s} is queued on {1!s}.'.format(
           self.task_name, self.worker_name)
@@ -248,7 +250,7 @@ class TurbiniaTaskResult(object):
       task.result.status = 'Task {0!s} is running on {1!s}'.format(
           self.task_name, self.worker_name)
 
-    stat_manager.update_task(task)
+    self.state_manager.update_task(task)
 
   def add_evidence(self, evidence, evidence_config):
     """Populate the results list.
@@ -291,6 +293,7 @@ class TurbiniaTaskResult(object):
     if self.input_evidence:
       self.input_evidence = self.input_evidence.serialize()
     self.evidence = [x.serialize() for x in self.evidence]
+    self.state_manager = None
     return self.__dict__
 
   @classmethod
@@ -533,7 +536,7 @@ class TurbiniaTask(object):
       raise TurbiniaException(
           'Evidence local path {0:s} does not exist'.format(
               evidence.local_path))
-    evidence.preprocess(self.tmp_dir)
+    
     return self.result
 
   def touch(self):
@@ -642,6 +645,7 @@ class TurbiniaTask(object):
       log.info('Starting Task {0:s} {1:s}'.format(self.name, self.id))
       original_result_id = None
       try:
+        evidence.preprocess(self.tmp_dir)
         original_result_id = self.result.id
         evidence.validate()
 
