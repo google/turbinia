@@ -314,7 +314,7 @@ def main():
       help='When used with --statistics, the output will be in CSV format',
       required=False)
   parser_status.add_argument(
-      '-d', '--days_history', default=1000, type=int,
+      '-d', '--days_history', default=0, type=int,
       help='Number of days of history to show', required=False)
   parser_status.add_argument(
       '-f', '--force', help='Gatekeeper for --close_tasks', action='store_true',
