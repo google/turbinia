@@ -149,13 +149,13 @@ VM at this point, and we will later clone this instance to create the workers.
         your local system. On the worker nodes, create the corresponding
         directories and make sure they are owned by the turbinia user.
 *   Configure the init scripts to run Turbinia on start
-    *   `cp turbinia/tools/turbinia@.service
+    *   `cp <git clone path>/turbinia/tools/turbinia@.service
         /etc/systemd/system/turbinia@server` for the server
-    *   `cp turbinia/tools/turbinia@.service
+    *   `cp <git clone path>/turbinia/tools/turbinia@.service
         /etc/systemd/system/turbinia@psqworker` for a GCP worker
-    *   `cp
-        turbinia/tools/turbinia@.service`/etc/systemd/system/turbinia@celeryworker`
-        for a local (non-cloud) installation.
+    *   `cp <git clone path>/turbinia/tools/turbinia@.service
+        /etc/systemd/system/turbinia@celeryworker` for a local (non-cloud)
+        installation.
     *   Follow the instructions at the top of the
         `turbinia/tools/turbinia@.service` file to enable these services.
 
