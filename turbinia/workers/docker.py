@@ -51,13 +51,15 @@ class DockerContainersEnumerationTask(TurbiniaTask):
     docker_dir = os.path.join(evidence.mount_path, 'var', 'lib', 'docker')
 
     containers_info = None
-    de_paths = [
-        path for path in ['/usr/local/bin/de.py', '/usr/bin/de.py']
-        if os.path.isfile(path)
-    ]
-    if not de_paths:
+
+    de_binary = None
+    for path in os.environ['PATH'].split(os.pathsep):
+      tentative_path = os.path.join(path, 'de.py')
+      if os.path.exists(tentative_path):
+        de_binary = tentative_path
+        break
+    if not de_binary:
       raise TurbiniaException('Could not find docker-explorer script: de.py')
-    de_binary = de_paths[0]
 
     # TODO(rgayon): use docker-explorer exposed constant when
     # https://github.com/google/docker-explorer/issues/80 is in.
