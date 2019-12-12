@@ -19,6 +19,7 @@ from __future__ import unicode_literals
 from collections import defaultdict
 from datetime import datetime
 from datetime import timedelta
+
 import json
 import logging
 from operator import itemgetter
@@ -26,6 +27,7 @@ from operator import attrgetter
 import os
 import stat
 import time
+import shutil
 
 from turbinia import config
 from turbinia.config import logger
@@ -33,6 +35,7 @@ from turbinia.config import DATETIME_FORMAT
 from turbinia import task_manager
 from turbinia import TurbiniaException
 from turbinia.lib import text_formatter as fmt
+from turbinia.jobs import manager as job_manager
 from turbinia.workers import Priority
 from turbinia.workers.artifact import FileArtifactExtractionTask
 from turbinia.workers.analysis.wordpress import WordpressAccessLogAnalysisTask
@@ -90,6 +93,43 @@ elif config.TASK_MANAGER.lower() == 'celery':
 
 log = logging.getLogger('turbinia')
 logger.setup()
+
+
+def check_dependencies(dependencies):
+  """Checks system dependencies.
+
+  Args:
+    dependencies(dict): dictionary of dependencies to check for.
+
+  Raises:
+    TurbiniaException: if dependency is not met or a bad config file.
+  """
+
+  log.info('Performing system dependency check.')
+  job_names = list(job_manager.JobsManager.GetJobNames())
+  # Iterate through dependency config and perform a system check.
+  try:
+    for dep in dependencies:
+      if dep['job'].lower() in job_names:
+        for p in dep['programs']:
+          # Program can not be found.
+          if shutil.which(p) is None:
+            raise TurbiniaException(
+                'Job dependency {0:s} not found for job: {1:s}. Please install '
+                'the dependency or disable the job.'.format(p, dep['job']))
+      # If job is not found in list of registered jobs.
+      else:
+        log.warning(
+            'The job: {0:s} was not found or has been disabled. Skipping '
+            'dependency check...'.format(dep['job']))
+  except (KeyError, TypeError) as exception:
+    raise TurbiniaException(
+        'An issue has occured while parsing the '
+        'dependency config:{0!s} '.format(exception))
+
+  log.info(
+      'Dependency check complete. The following jobs will be active:'
+      'for this worker: {0:s}'.format(', '.join(job_names)))
 
 
 def check_directory(directory):
@@ -232,7 +272,7 @@ class TurbiniaClient(object):
     # the task manager from the client.
     log.info('Available Jobs:')
     for job in self.task_manager.jobs:
-      log.info('\t{0:s}'.format(job.name))
+      log.info('\t{0:s}'.format(job.NAME))
 
   def wait_for_request(
       self, instance, project, region, request_id=None, user=None,
@@ -785,9 +825,25 @@ class TurbiniaCeleryWorker(TurbiniaClient):
     worker (celery.app): Celery worker app
   """
 
-  def __init__(self, *_, **__):
-    """Initialization for Celery worker."""
+  def __init__(self, jobs_blacklist=None, jobs_whitelist=None):
+    """Initialization for celery worker.
+
+    Args:
+      jobs_blacklist (Optional[list[str]]): Jobs we will exclude from running
+      jobs_whitelist (Optional[list[str]]): The only Jobs we will include to run
+    """
     super(TurbiniaCeleryWorker, self).__init__()
+    # Deregister jobs from blacklist/whitelist.
+    disabled_jobs = list(config.DISABLED_JOBS) if config.DISABLED_JOBS else []
+    job_manager.JobsManager.DeregisterJobs(jobs_blacklist, jobs_whitelist)
+    if disabled_jobs:
+      log.info(
+          'Disabling jobs that were configured to be disabled in the '
+          'config file: {0:s}'.format(', '.join(disabled_jobs)))
+      job_manager.JobsManager.DeregisterJobs(jobs_blacklist=disabled_jobs)
+
+    # Check for valid dependencies/directories.
+    check_dependencies(config.DEPENDENCIES)
     check_directory(config.MOUNT_DIR_PREFIX)
     check_directory(config.OUTPUT_DIR)
     check_directory(config.TMP_DIR)
@@ -812,8 +868,13 @@ class TurbiniaPsqWorker(object):
     TurbiniaException: When errors occur
   """
 
-  def __init__(self, *_, **__):
-    """Initialization for PSQ Worker."""
+  def __init__(self, jobs_blacklist=None, jobs_whitelist=None):
+    """Initialization for PSQ Worker.
+
+    Args:
+      jobs_blacklist (Optional[list[str]]): Jobs we will exclude from running
+      jobs_whitelist (Optional[list[str]]): The only Jobs we will include to run
+    """
     config.LoadConfig()
     psq_publisher = pubsub.PublisherClient()
     psq_subscriber = pubsub.SubscriberClient()
@@ -827,6 +888,17 @@ class TurbiniaPsqWorker(object):
       log.error(msg)
       raise TurbiniaException(msg)
 
+    # Deregister jobs from blacklist/whitelist.
+    disabled_jobs = list(config.DISABLED_JOBS) if config.DISABLED_JOBS else []
+    job_manager.JobsManager.DeregisterJobs(jobs_blacklist, jobs_whitelist)
+    if disabled_jobs:
+      log.info(
+          'Disabling jobs that were configured to be disabled in the '
+          'config file: {0:s}'.format(', '.join(disabled_jobs)))
+      job_manager.JobsManager.DeregisterJobs(jobs_blacklist=disabled_jobs)
+
+    # Check for valid dependencies/directories.
+    check_dependencies(config.DEPENDENCIES)
     check_directory(config.MOUNT_DIR_PREFIX)
     check_directory(config.OUTPUT_DIR)
     check_directory(config.TMP_DIR)

@@ -541,7 +541,7 @@ class PlasoFile(Evidence):
     self.save_metadata = True
 
 
-class PlasoCsvFile(PlasoFile):
+class PlasoCsvFile(Evidence):
   """Psort output file evidence.  """
 
   def __init__(self, plaso_version=None, *args, **kwargs):

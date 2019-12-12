@@ -110,6 +110,15 @@ class TestTurbiniaConfig(unittest.TestCase):
     self.assertEqual(config.UNSETKEY, None)
     self.assertEqual(config.SETKEY, 'bar')
 
+  def testNonexistentOptionalKeyConfig(self):
+    """Test that optional vars don't need to exist."""
+    self.WriteConfig('SETKEY = "bar"\n')
+    config.REQUIRED_VARS = ['SETKEY']
+    config.OPTIONAL_VARS = ['UNSETKEY']
+    config.LoadConfig()
+    self.assertEqual(config.UNSETKEY, None)
+    self.assertEqual(config.SETKEY, 'bar')
+
   def testMissingConfigPath(self):
     """Test non-existent config path."""
     config.CONFIGPATH = ['DOESNOTEXIST']
