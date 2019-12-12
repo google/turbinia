@@ -101,9 +101,8 @@ VM at this point, and we will later clone this instance to create the workers.
 *   Prepare configuration directory:
     *   `sudo mkdir /etc/turbinia`
     *   `sudo chown turbinia /etc/turbinia`
-*   `Checkout git at release branch for config and other setup`
-    *   `git clone
-        [https://github.com/google/turbinia.git](https://github.com/google/turbinia.git)`
+*   Checkout git at release branch for config and other setup
+    *   `git clone https://github.com/google/turbinia.git`
     *   `cd turbinia`
     *   `git branch -l | grep release`
     *   `git checkout <latest release branch from previous step>`
@@ -111,7 +110,7 @@ VM at this point, and we will later clone this instance to create the workers.
 #### **Installation and Configuration**
 
 *   Log in as turbinia
-    *   `su - turbinia`
+    *   `sudo su - turbinia`
 *   Install Turbinia
     *   Note: You may want to install this into a virtual-environment with venv
         or pipenv to reduce potential dependency conflicts and isolate these
@@ -149,12 +148,16 @@ VM at this point, and we will later clone this instance to create the workers.
     *   Configure the `OUTPUT_DIR`, `TMP_DIR`, and `MOUNT_DIR_PREFIX` to match
         your local system. On the worker nodes, create the corresponding
         directories and make sure they are owned by the turbinia user.
-*   Configure the init scripts to run Turbinia on start by copying the file
-    [turbinia/tools/turbinia@.service](https://github.com/google/turbinia/blob/master/tools/turbinia%40.service)
-    to `/etc/systemd/system/turbinia@server` for the server or
-    `/etc/systemd/system/turbinia@psqworker` for a GCP worker and
-    `/etc/systemd/system/turbinia@celeryworker` for a local (non-cloud)
-    installation.
+*   Configure the init scripts to run Turbinia on start
+    *   `cp turbinia/tools/turbinia@.service
+        /etc/systemd/system/turbinia@server` for the server
+    *   `cp turbinia/tools/turbinia@.service
+        /etc/systemd/system/turbinia@psqworker` for a GCP worker
+    *   `cp
+        turbinia/tools/turbinia@.service`/etc/systemd/system/turbinia@celeryworker`
+        for a local (non-cloud) installation.
+    *   Follow the instructions at the top of the
+        `turbinia/tools/turbinia@.service` file to enable these services.
 
 ### **GCP Installation**
 

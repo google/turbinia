@@ -58,7 +58,7 @@ so users can specify those when making Turbinia requests.
 
 Recipes are a collection of these dynamic config options and some other global
 config options. They are implemented as a dict with the global options (e.g.
-‘jobs_whitelist’) and a mapping of Task names to dicts of configuration options
+`jobs_whitelist`) and a mapping of Task names to dicts of configuration options
 we want to specify for those Tasks. These configuration options must correspond
 to options that the Task itself exports in the TurbiniaTask.config attribute.
 
@@ -90,7 +90,7 @@ configure.
 ```
 
 Having no configuration options for some Tasks does not mean that the other
-Jobs/Tasks will not be run. The global ‘jobs_whitelist’ and ‘jobs_blacklist’
+Jobs/Tasks will not be run. The global `jobs_whitelist` and `jobs_blacklist`
 options (only one can be specified at a time) will be used to control which Jobs
 are run.
 

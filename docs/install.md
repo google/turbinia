@@ -45,20 +45,16 @@ to get a shell with access to your GCP resources.
     [Terraform CLI from here](https://www.terraform.io/downloads.html).
 *   Clone the Forseti Security repository and change to the path containing the
     configs
-    *   `git clone
-        [https://github.com/forseti-security/forseti-security/](https://github.com/forseti-security/forseti-security/)`
-    *   `cd
-        forseti-security/contrib/incident-response/infrastructure`
+    *   `git clone https://github.com/forseti-security/forseti-security/`
+    *   `cd forseti-security/contrib/incident-response/infrastructure`
 *   Configuration
     *   By default this will create one Turbinia server instance and one worker
         instance. If you want to change the number of workers, edit the
-        `turbinia/variables.tf` file and set the
-        `turbinia_worker_count` variable to the number of workers you
-        want to deploy.
+        `turbinia/variables.tf` file and set the `turbinia_worker_count`
+        variable to the number of workers you want to deploy.
     *   To adjust the GCP zone and region you want to run Turbinia in, edit the
-        `turbinia/variables.tf` file and change the
-        `gcp_zone` and `gcp_region` variables as
-        appropriate.
+        `turbinia/variables.tf` file and change the `gcp_zone` and `gcp_region`
+        variables as appropriate.
     *   Running the following commands will leave some state information under
         the current directory, so if you wish to continue to manage the number
         of workers via Terraform you should keep this directory for later use.
@@ -70,10 +66,10 @@ to get a shell with access to your GCP resources.
 *   Initialize terraform and apply the configuration
     *   `terraform init`
     *   `terraform apply --target=module.turbinia`
-        *   If the `target` parameter is not supplied, Terraform
-            will also create a [Timesketch](http://timesketch.org) instance in
-            the same project, and this can be configured to ingest Turbinia
-            timeline output and report data. See the
+        *   If the `target` parameter is not supplied, Terraform will also
+            create a [Timesketch](http://timesketch.org) instance in the same
+            project, and this can be configured to ingest Turbinia timeline
+            output and report data. See the
             [Forseti documentation on this](https://github.com/forseti-security/forseti-security/blob/master/contrib/incident-response/infrastructure/README.md)
             for more details.
         *   When prompted for the project name, enter the project you selected
@@ -82,9 +78,9 @@ to get a shell with access to your GCP resources.
 This should result in the appropriate cloud services being enabled and
 configured and GCE instances for the server and the worker(s) being started and
 configured. The Turbinia configuration file will be deployed on these instances
-as `etc/turbinia/turbinia.conf`. If you later want to increase the
-number of workers, you can edit the `turbinia/variables.tf` file
-mentioned above and re-run `terraform apply`
+as `etc/turbinia/turbinia.conf`. If you later want to increase the number of
+workers, you can edit the `turbinia/variables.tf` file mentioned above and
+re-run `terraform apply`
 
 ### Client configuration (optional)
 
