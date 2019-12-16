@@ -40,13 +40,18 @@ class DockerTaskTest(TestTurbiniaTaskBase):
     self.evidence.mount_path = 'non_existent'
 
   # pylint: disable=line-too-long
-  @mock.patch('turbinia.workers.docker.DockerContainersEnumerationTask.GetContainers')
+  @mock.patch(
+      'turbinia.workers.docker.DockerContainersEnumerationTask.GetContainers')
   def testDockerContainersEnumerationRun(self, get_containers_mock):
     """Test DockerContainersEnumeration task run."""
 
     get_containers_mock.return_value = [
-        {'container_id': '12'},
-        {'container_id': '3a'},
+        {
+            'container_id': '12'
+        },
+        {
+            'container_id': '3a'
+        },
     ]
     result = self.task.run(self.evidence, self.result)
 
