@@ -168,14 +168,19 @@ class TurbiniaTaskResult(object):
     self.status = status
 
     for evidence in self.evidence:
-      if evidence.source_path and os.path.exists(evidence.source_path):
-        self.saved_paths.append(evidence.source_path)
-        if not task.run_local and evidence.copyable:
-          task.output_manager.save_evidence(evidence, self)
+      if evidence.source_path:
+        if os.path.exists(evidence.source_path):
+          self.saved_paths.append(evidence.source_path)
+          if not task.run_local and evidence.copyable:
+            task.output_manager.save_evidence(evidence, self)
+        else:
+          self.log(
+              'Evidence {0:s} has missing file at source_path {1!s} so '
+              'not saving.'.format(evidence.name, evidence.source_path))
       else:
         self.log(
-            'Evidence {0!s} has empty or missing file at source_path {1!s} so '
-            'not saving.'.format(evidence.name, evidence.source_path))
+            'Evidence {0:s} has empty source_path so '
+            'not saving.'.format(evidence.name))
 
       if not evidence.request_id:
         evidence.request_id = self.request_id
