@@ -457,8 +457,8 @@ class TurbiniaTask(object):
             'to be in state {2:s}, but earlier pre-processors may have '
             'failed.  Current status is {3:s}. See previous logs for more '
             'information.'.format(
-                evidence, self.name, status.name,
-                pprint.pformat(evidence.status)))
+                evidence, self.name, status.name, pprint.pformat(
+                    evidence.status)))
 
   def execute(
       self, cmd, result, save_files=None, log_files=None, new_evidence=None,
