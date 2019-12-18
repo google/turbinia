@@ -16,7 +16,9 @@
 
 from __future__ import unicode_literals
 
+from enum import IntEnum
 import json
+import logging
 import os
 import sys
 
@@ -32,6 +34,8 @@ from turbinia.lib.docker_manager import GetDockerPath
 config.LoadConfig()
 if config.TASK_MANAGER.lower() == 'psq':
   from turbinia.processors import google_cloud
+
+log = logging.getLogger('turbinia')
 
 
 def evidence_decode(evidence_dict):
@@ -75,6 +79,16 @@ def evidence_decode(evidence_dict):
   return evidence
 
 
+class EvidenceStatus(IntEnum):
+  """Runtime status of Evidence.
+
+  Each Evidence object will have
+  """
+  MOUNTED = 1
+  ATTACHED = 2
+  DECOMPRESSED = 3
+
+
 class Evidence(object):
   """Evidence object for processing.
 
@@ -112,6 +126,10 @@ class Evidence(object):
         file alongside the Evidence when saving to external storage.  The
         metadata file will contain all of the key=value pairs sent along with
         the processing request in the recipe.  The output is in JSON format
+    status (dict): A map of each EvidenceStatus type to a boolean to indicate
+        if that status state is true.  This is used by the preprocessors to set
+        the current state and Tasks can use this to determine if the Evidence is
+        in the correct state for processing.
   """
 
   # The list of attributes a given piece of Evidence requires to be set
@@ -142,6 +160,10 @@ class Evidence(object):
     self.name = name if name else self.type
     self.saved_path = None
     self.saved_path_type = None
+
+    self.status = {}
+    for status in EvidenceStatus:
+      self.status[status] = False
 
     if self.copyable and not self.local_path:
       raise TurbiniaException(
@@ -236,7 +258,12 @@ class Evidence(object):
             'Evidence of type {0:s} needs parent_evidence to be set'.format(
                 self.type))
       self.parent_evidence.preprocess()
-    self._preprocess(tmp_dir)
+    try:
+      self._preprocess(tmp_dir)
+    except TurbiniaException as exception:
+      log.error(
+          'Error running preprocessor for {0:s}: {1:s}'.format(
+              self.name, exception))
 
   def postprocess(self):
     """Runs our postprocessing code, then our possible parent's evidence.
@@ -324,12 +351,14 @@ class CompressedDirectory(Evidence):
     self.uncompressed_directory = archive.UncompressTarFile(
         self.local_path, tmp_dir)
     self.local_path = self.uncompressed_directory
+    self.status[EvidenceStatus.DECOMPRESSED] = True
 
   def compress(self):
     """ Compresses a file or directory."""
     # Compress a given directory and return the compressed path.
     self.compressed_directory = archive.CompressDirectory(self.local_path)
     self.local_path = self.compressed_directory
+    self.status[EvidenceStatus.DECOMPRESSED] = False
 
 
 class BulkExtractorOutput(CompressedDirectory):
@@ -386,13 +415,19 @@ class RawDisk(Evidence):
   def _preprocess(self, _):
     self.device_path, partition_paths = mount_local.PreprocessLosetup(
         self.source_path)
+    self.status[EvidenceStatus.ATTACHED] = True
     self.mount_path = mount_local.PreprocessMountDisk(
         partition_paths, self.mount_partition)
     self.local_path = self.device_path
+    self.status[EvidenceStatus.MOUNTED] = True
 
   def _postprocess(self):
-    mount_local.PostprocessUnmountPath(self.mount_path)
-    mount_local.PostprocessDeleteLosetup(self.device_path)
+    if self.status[EvidenceStatus.MOUNTED]:
+      mount_local.PostprocessUnmountPath(self.mount_path)
+      self.status[EvidenceStatus.MOUNTED] = False
+    if self.status[EvidenceStatus.ATTACHED]:
+      mount_local.PostprocessDeleteLosetup(self.device_path)
+      self.status[EvidenceStatus.ATTACHED] = False
 
 
 class EncryptedDisk(RawDisk):
@@ -478,14 +513,20 @@ class GoogleCloudDisk(RawDisk):
   def _preprocess(self, _):
     self.device_path, partition_paths = google_cloud.PreprocessAttachDisk(
         self.disk_name)
+    self.status[EvidenceStatus.ATTACHED] = True
 
     self.mount_path = mount_local.PreprocessMountDisk(
         partition_paths, self.mount_partition)
     self.local_path = self.device_path
+    self.status[EvidenceStatus.MOUNTED] = True
 
   def _postprocess(self):
-    mount_local.PostprocessUnmountPath(self.mount_path)
-    google_cloud.PostprocessDetachDisk(self.disk_name, self.device_path)
+    if self.status[EvidenceStatus.MOUNTED]:
+      mount_local.PostprocessUnmountPath(self.mount_path)
+      self.status[EvidenceStatus.MOUNTED] = False
+    if self.status[EvidenceStatus.ATTACHED]:
+      google_cloud.PostprocessDetachDisk(self.disk_name, self.device_path)
+      self.status[EvidenceStatus.ATTACHED] = False
 
 
 class GoogleCloudDiskRawEmbedded(GoogleCloudDisk):
@@ -523,14 +564,20 @@ class GoogleCloudDiskRawEmbedded(GoogleCloudDisk):
               rawdisk_path))
     self.device_path, partition_paths = mount_local.PreprocessLosetup(
         rawdisk_path)
+    self.status[EvidenceStatus.ATTACHED] = True
 
     self.mount_path = mount_local.PreprocessMountDisk(
         partition_paths, self.mount_partition)
     self.local_path = self.device_path
+    self.status[EvidenceStatus.MOUNTED] = True
 
   def _postprocess(self):
-    mount_local.PostprocessUnmountPath(self.mount_path)
-    mount_local.PostprocessDeleteLosetup(self.device_path)
+    if self.status[EvidenceStatus.MOUNTED]:
+      mount_local.PostprocessUnmountPath(self.mount_path)
+      self.status[EvidenceStatus.MOUNTED] = False
+    if self.status[EvidenceStatus.ATTACHED]:
+      mount_local.PostprocessDeleteLosetup(self.device_path)
+      self.status[EvidenceStatus.ATTACHED] = False
 
 
 class PlasoFile(Evidence):
