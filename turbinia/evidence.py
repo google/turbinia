@@ -82,7 +82,8 @@ def evidence_decode(evidence_dict):
 class EvidenceStatus(IntEnum):
   """Runtime status of Evidence.
 
-  Each Evidence object will have
+  Evidence objects will map each of these to a boolean indicating the current
+  status for the given object.
   """
   MOUNTED = 1
   ATTACHED = 2
