@@ -449,7 +449,7 @@ class TurbiniaTask(object):
           status does not meet the required status.
     """
     evidence.validate()
-    evidence.preprocess(self.tmp_dir)
+    evidence.preprocess(self.tmp_dir, requirements=self.REQUIRED_STATUS)
     for status in self.REQUIRED_STATUS:
       if not evidence.status[status]:
         raise TurbiniaException(
