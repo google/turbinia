@@ -177,20 +177,21 @@ class TurbiniaTaskResult(object):
           task.output_manager.save_evidence(evidence, self)
       else:
         self.log(
-            'Evidence {0!s} has empty or missing file at source_path {1!s} so '
+            'Evidence {0:s} has empty or missing file at source_path {1!s} so '
             'not saving.'.format(evidence.name, evidence.source_path))
 
       if not evidence.request_id:
         evidence.request_id = self.request_id
 
     try:
+      self.state_manager = None
       self.input_evidence.postprocess()
     # Adding a broad exception here because we want to try post-processing
     # to clean things up even after other failures in the task, so this could
     # also fail.
     # pylint: disable=broad-except
     except Exception as exception:
-      message = 'Evidence post-processing for {0:s} failed: {1!s}'.format(
+      message = 'Evidence post-processing for {0!s} failed: {1!s}'.format(
           self.input_evidence.name, exception)
       self.log(message, level=logging.ERROR)
 
@@ -239,16 +240,11 @@ class TurbiniaTaskResult(object):
     """Updates the task status and pushes it directly to datastor.
 
     Args:
-        task: The calling Task object
+      task: The calling Task object
       status: One line descriptive task status.
     """
-    #stat_manager = state_manager.get_state_manager()
-    if status == 'Queued':
-      task.result.status = 'Task {0!s} is queued on {1!s}.'.format(
-          self.task_name, self.worker_name)
-    elif status == 'Running':
-      task.result.status = 'Task {0!s} is running on {1!s}'.format(
-          self.task_name, self.worker_name)
+    task.result.status = 'Task {0!s} is {1!s} on {2!s}'.format(
+        self.task_name, status, self.worker_name)
 
     self.state_manager.update_task(task)
 
@@ -288,12 +284,13 @@ class TurbiniaTaskResult(object):
     Returns:
       dict: Object dictionary that is JSON serializable.
     """
+    self.state_manager = None
     self.run_time = self.run_time.total_seconds() if self.run_time else None
     self.start_time = self.start_time.strftime(DATETIME_FORMAT)
     if self.input_evidence:
       self.input_evidence = self.input_evidence.serialize()
     self.evidence = [x.serialize() for x in self.evidence]
-    self.state_manager = None
+
     return self.__dict__
 
   @classmethod
@@ -308,6 +305,8 @@ class TurbiniaTaskResult(object):
     """
     result = TurbiniaTaskResult()
     result.__dict__.update(input_dict)
+    if result.state_manager:
+      result.state_manager = None
     if result.run_time:
       result.run_time = timedelta(seconds=result.run_time)
     result.start_time = datetime.strptime(result.start_time, DATETIME_FORMAT)
@@ -538,7 +537,6 @@ class TurbiniaTask(object):
       raise TurbiniaException(
           'Evidence source path {0:s} does not exist'.format(
               evidence.source_path))
-    evidence.preprocess(self.tmp_dir)
     return self.result
 
   def touch(self):
@@ -628,24 +626,14 @@ class TurbiniaTask(object):
     try:
       self.result = self.setup(evidence)
       self.result.update_task_status(self, 'Queued')
-    except Exception as exception:
+    except TurbiniaException as exception:
       message = (
-          '{0:s} Task failed with exception: [{1!s}]'.format(
+          '{0:s} Task setup failed with exception: [{1!s}]'.format(
               self.name, exception))
       # Logging explicitly here because the result is in an unknown state
       trace = traceback.format_exc()
       log.error(message)
       log.error(trace)
-      if self.result:
-        self.result.log(message, level=logging.ERROR)
-        self.result.log(trace)
-        if hasattr(exception, 'message'):
-          self.result.set_error(exception.message, traceback.format_exc())
-        else:
-          self.result.set_error(exception.__class__, traceback.format_exc())
-        self.result.status = message
-      else:
-        log.error('No TurbiniaTaskResult object found after task execution.')
     with filelock.FileLock(config.LOCK_FILE):
       log.info('Starting Task {0:s} {1:s}'.format(self.name, self.id))
       original_result_id = None
@@ -653,7 +641,6 @@ class TurbiniaTask(object):
         evidence.preprocess(self.tmp_dir)
         original_result_id = self.result.id
         evidence.validate()
-
         # TODO(wyassine): refactor it so the result task does not
         # have to go through the preprocess stage. At the moment
         # self.results.setup is required to be called to set its status.
@@ -674,7 +661,6 @@ class TurbiniaTask(object):
           self.result.log(message, level=logging.ERROR)
           self.result.status = message
           return self.result.serialize()
-
         self.result.update_task_status(self, 'Running')
         self._evidence_config = evidence.config
         self.result = self.run(evidence, self.result)

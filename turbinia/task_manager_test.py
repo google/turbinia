@@ -35,6 +35,7 @@ class TestTaskManager(TestTurbiniaTaskBase):
     self.manager = task_manager.BaseTaskManager()
     self.job1 = plaso.PlasoJob()
     self.job2 = strings.StringsJob()
+    self.state_manager = mock.MagicMock()
 
   def testTaskManagerTasksProperty(self):
     """Basic test for task_manager Tasks property."""
@@ -181,7 +182,8 @@ class TestTaskManager(TestTurbiniaTaskBase):
     self.assertIsNone(self.manager.process_result(self.result))
     self.assertIsInstance(self.result.evidence, list)
 
-  def testFinalizeJobGenerateJobFinalizeTasks(self):
+  @mock.patch('turbinia.task_manager.state_manager.get_state_manager')
+  def testFinalizeJobGenerateJobFinalizeTasks(self, _):
     """Tests process_job method generates Job finalize Task."""
     request_id = 'testRequestID'
     self.task.id = 'createdFinalizeTask'
