@@ -82,10 +82,6 @@ class TestTurbiniaTaskBase(unittest.TestCase):
 
     os.rmdir(self.base_output_dir)
 
-  #@mock.patch('turbinia.state_manager.get_state_manager')
-
-# @mock.patch('turbinia.state_manager')
-
   def setResults(
       self, setup=None, run=None, validate_result=None, mock_run=True):
     """Set up mock returns in TurbiniaTaskResult object.
