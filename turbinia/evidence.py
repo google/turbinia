@@ -205,6 +205,10 @@ class Evidence(object):
 
   def serialize(self):
     """Return JSON serializable object."""
+    # Set all statuses to False because if we are serializing the Evidence it is
+    # because this is about to be returned, and the status has no meaning
+    # outside of the context on the Worker.
+    self.status = {status: False for status in self.status}
     serialized_evidence = self.__dict__.copy()
     if self.parent_evidence:
       serialized_evidence['parent_evidence'] = self.parent_evidence.serialize()
