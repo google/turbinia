@@ -31,7 +31,7 @@ class PlasoTask(TurbiniaTask):
   """Task to run Plaso (log2timeline)."""
 
   # Plaso requires the Disk to be attached, but doesn't require it be mounted.
-  REQUIRED_STATUS = [EvidenceStatus.ATTACHED]
+  REQUIRED_STATUS = [EvidenceStatus.ATTACHED, EvidenceStatus.DECOMPRESSED]
 
   def run(self, evidence, result):
     """Task that process data with Plaso.

@@ -450,8 +450,11 @@ class TurbiniaTask(object):
     """
     evidence.validate()
     evidence.preprocess(self.tmp_dir, requirements=self.REQUIRED_STATUS)
+
+    # Final check to make sure that the required evidence status has been met
+    # for Evidence types that have those capabilities.
     for status in self.REQUIRED_STATUS:
-      if not evidence.status[status]:
+      if status in evidence.CAPABILITIES and not evidence.status[status]:
         raise TurbiniaException(
             'Evidence {0!s} being processed by Task {1:s} requires Evidence '
             'to be in state {2:s}, but earlier pre-processors may have '
