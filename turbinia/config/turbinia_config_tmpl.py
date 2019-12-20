@@ -73,6 +73,12 @@ SHARED_FILESYSTEM = False
 # problems.
 DEBUG_TASKS = False
 
+# Directory keeping all eligible recipes that may be called from any part of turbinia via the TurbiniaRecipe class
+RECIPE_FILE_DIR = ''
+ 
+# File containing the base configuration constraints for a given task, single place to keep and maintain these sets of constraints
+BASE_TASK_CONFIG_FILE = ''
+
 ################################################################################
 #                         External Dependency Configurations
 #

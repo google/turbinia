@@ -26,6 +26,7 @@ import os
 import sys
 
 from turbinia import config
+from turbinia.config import TurbiniaRecipe
 from turbinia import TurbiniaException
 from turbinia.config import logger
 from turbinia.lib import libcloudforensics
@@ -72,6 +73,10 @@ def main():
       'will ignore config files in other default locations '
       '(/etc/turbinia.conf, ~/.turbiniarc, or in paths referenced in '
       'environment variable TURBINIA_CONFIG_PATH)', required=False)
+  parser.add_argument(
+      '-I', '--recipe_file', help='Recipe configuration data passed in as '
+      'json file. Contains the parameters to be fed to a speficic task.'
+      , required=False)
   parser.add_argument(
       '-C', '--recipe_config', help='Recipe configuration data passed in as '
       'comma separated key=value pairs (e.g. '
@@ -662,22 +667,18 @@ def main():
     request = TurbiniaRequest(
         request_id=args.request_id, requester=getpass.getuser())
     request.evidence.append(evidence_)
-    if filter_patterns:
-      request.recipe['filter_patterns'] = filter_patterns
-    if args.jobs_blacklist:
-      request.recipe['jobs_blacklist'] = args.jobs_blacklist
-    if args.jobs_whitelist:
-      request.recipe['jobs_whitelist'] = args.jobs_whitelist
-    if args.recipe_config:
-      for pair in args.recipe_config:
-        try:
-          key, value = pair.split('=')
-        except ValueError as exception:
-          log.error(
-              'Could not parse key=value pair [{0:s}] from recipe config '
-              '{1:s}: {2!s}'.format(pair, args.recipe_config, exception))
-          sys.exit(1)
-        request.recipe[key] = value
+    if args.recipe_file:
+      recipe_obj = TurbiniaRecipe(os.path.join(config.RECIPE_FILE_DIR, args.recipe_file))
+      recipe_obj.load()
+      request.recipe = recipe_obj.serialize()
+    else:
+      request.recipe = {}
+      if args.filter_patterns:
+        request.recipe['filter_patterns'] = args.filter_patterns
+      if args.jobs_blacklist:
+        request.recipe['jobs_blacklist'] = args.jobs_blacklist
+      if args.jobs_whitelist:
+        request.recipe['jobs_whitelist'] = args.jobs_whitelist
     if args.dump_json:
       print(request.to_json().encode('utf-8'))
       sys.exit(0)

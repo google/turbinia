@@ -18,6 +18,7 @@ import uuid
 import logging
 
 from turbinia.evidence import EvidenceCollection
+from turbinia import config
 
 log = logging.getLogger('turbinia')
 
@@ -113,3 +114,43 @@ class TurbiniaJob(object):
           'Could not find task {0:s} to remove from Job {1:s}'.format(
               task_id, self.name))
     return bool(remove_task)
+
+  def get_base_config(self, task_name):
+    #Check whether base task config has been specified
+    g_config = config.LoadConfig()
+    if config.BASE_TASK_CONFIG_FILE:
+      base_configs = config.TurbiniaBaseTaskConfig(g_config)
+      base_configs.load()
+      base_config = base_configs.retrieve_base_config(task_name)
+      return base_config
+    return None
+
+  def get_task_recipe(self, evidence_config, task_name):
+    if task_name in evidence_config.task_recipes:
+      return evidence_config.task_recipes[task_name]
+    return None
+
+  def validate_task_recipe_instance(self, recipe_instance, base_recipe_obj, strict_params=True):
+    """ Enforce minimum set of checks to ensure recipe contains the necessary parameters for the tool to function and no obvious errors are present in recipe."""
+    valid = True
+    # Checking for flags and params marked as required.
+    if recipe_instance and base_recipe_obj:
+      for param in base_recipe_obj['required_params']:
+        if param not in recipe_obj['params']:
+          log.debug('Param {0:s} missing, marked as required'.format(param))
+          valid = False
+      for flag in base_recipe_obj['required_flags']:
+        if flag not in recipe_obj['flags']:
+          log.debug('Flag {0:s} missing, marked as required'.format(flag))
+          valid = False
+      # Checking for the presence of flags or params not marked as allowed
+      if strict_params:
+        for param in recipe_obj['params']:
+          if param not in base_recipe_obj['allowed_params']:
+            log.debug('Strict param checking enabled. Provided param {0:s} not incuded in the list of allowed params.'.format(param))  
+            valid = False
+        for flag in recipe_obj['flags']:
+          if flag not in base_recipe_obj['allowed_flags']:
+            log.debug('Strict flag checking enabled. Provided flag {0:s} not incuded in the list of allowed params.'.format(flag))  
+            valid = False
+    return valid

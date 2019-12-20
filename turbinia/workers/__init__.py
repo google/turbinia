@@ -1,5 +1,4 @@
-# -*- coding: utf-8 -*-
-# Copyright 2018 Google Inc.
+# -*- coding: utf-8 -*- Copyright 2018 Google Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -24,7 +23,6 @@ import logging
 import os
 import pickle
 import platform
-import pprint
 import subprocess
 import sys
 import traceback
@@ -34,7 +32,7 @@ import turbinia
 import filelock
 
 from turbinia import config
-from turbinia.config import DATETIME_FORMAT
+from turbinia.config import DATETIME_FORMAT, BASE_TASK_CONFIG_FILE
 from turbinia.evidence import evidence_decode
 from turbinia import output_manager
 from turbinia import TurbiniaException
@@ -112,7 +110,7 @@ class TurbiniaTaskResult(object):
     self.run_time = None
     self.saved_paths = []
     self.successful = None
-    self.status = None
+    self.status = None 
     self.error = {}
     self.worker_name = platform.node()
     # TODO(aarontp): Create mechanism to grab actual python logging data.
@@ -338,7 +336,7 @@ class TurbiniaTask(object):
   ]
 
   def __init__(
-      self, name=None, base_output_dir=None, request_id=None, requester=None):
+      self, name=None, recipe=None, base_task_config=None, base_output_dir=None, request_id=None, requester=None):
     """Initialization for TurbiniaTask."""
     if base_output_dir:
       self.base_output_dir = base_output_dir
@@ -362,6 +360,36 @@ class TurbiniaTask(object):
     self.turbinia_version = turbinia.__version__
     self.requester = requester if requester else 'user_unspecified'
     self._evidence_config = {}
+    self.recipe = recipe
+    self.base_task_config = base_task_config
+
+  def build_command(self, param_value_separator=','):
+    """ Build standard command based on allowed/required flags and commands 
+    covers the standard flag and parameter convention, should be overriden
+    if the task instance requires it."""
+    #Perform validation against base task config, if available.
+    if self.recipe:
+      recipe = self.recipe
+      command = [recipe['meta_params']['command_string']]
+    for flag in recipe['flags']:
+      command.append(' -' + flag)
+    for p, p_value in recipe['params'].items():
+      if isinstance(p_value, list):
+        for subvalue in p_value: value = param_value_separator.join(subvalue) 
+      else:
+        value = p_value
+      if len(p) > 1:
+        p = '--' + p
+      else:
+        p = '-' + p
+      command.extend([p, value])
+    return command 
+
+  def update_command_params(self):
+    if self.recipe:
+      for k in self.recipe:
+        self.default_recipe[k].update(self.recipe[k])
+    self.recipe = self.default_recipe
 
   def serialize(self):
     """Converts the TurbiniaTask object into a serializable dict.
@@ -404,7 +432,7 @@ class TurbiniaTask(object):
 
   def execute(
       self, cmd, result, save_files=None, log_files=None, new_evidence=None,
-      close=False, shell=False, success_codes=None):
+      close=False, shell=False, success_codes=None, executable=None):
     """Executes a given binary and saves output.
 
     Args:
@@ -426,11 +454,10 @@ class TurbiniaTask(object):
     log_files = log_files if log_files else []
     new_evidence = new_evidence if new_evidence else []
     success_codes = success_codes if success_codes else [0]
+    command = ["/bin/bash", "-i", "-c"]
+    command.append(" ".join(cmd))
+    proc = subprocess.Popen(command)
 
-    if shell:
-      proc = subprocess.Popen(cmd, shell=True)
-    else:
-      proc = subprocess.Popen(cmd)
     stdout, stderr = proc.communicate()
     result.error['stdout'] = stdout
     result.error['stderr'] = stderr

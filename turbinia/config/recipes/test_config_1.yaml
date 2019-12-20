@@ -1,0 +1,40 @@
+jobs_whitelist: 
+  - ArtifactExtractionJob
+tasks:
+  Log2timelinetask:
+    meta_params:
+      shell_executable: "/bin/bash"
+      command_string: 'log2timeline.py'
+    params:
+      artifact_filters: 
+        - WindowsAMCacheHveFile
+        - WindowsAppCompatCache
+        - WindowsUserRegistryFiles
+        - WindowsPrefetchFiles
+        - WindowsActivitiesCache
+        - WindowsMostRecentApplication
+        - WindowsUserJumpLists
+        - WindowsOpenSavePidlMRU
+      volumes: all
+      partitions: all
+    flags: ['no-vss']
+
+  FileArtifactExtractionTask:
+    meta_params:
+      shell_executable: "/bin/bash"
+      evidence_type: "ExportedFileArtifact"
+      output_dir: "amcache_hives"
+      command_string: 'image_export.py'
+    instances:
+      amcache_install_win10_180x:
+        params:
+          custom_artifact_definitions: /data/artifact_definitions/generic.yaml
+          artifact_filters: WindowsAMCacheInstallFile
+          w: /data/results
+      amcache_hive_win10_180x:
+        meta_params:
+          evidence_type: "ExportedFileArtifact"
+          output_dir: "amcache_hives"
+        params:
+          artifact_filters: WindowsAMCacheHveFile
+          w: /data/results 

@@ -29,3 +29,4 @@ from turbinia.jobs import volatility
 from turbinia.jobs import worker_stat
 from turbinia.jobs import binary_extractor
 from turbinia.jobs import bulk_extractor
+from turbinia.jobs import artifact_extraction
