@@ -378,7 +378,7 @@ def main():
       config.LoadConfig()
   except TurbiniaException as exception:
     print(
-        'Could not load config file ({0!s}).\n{1!s}'.format(
+        'Could not load config file ({0!s}).\n{1:s}'.format(
             exception, config.CONFIG_MSG))
     sys.exit(1)
 
