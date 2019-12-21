@@ -219,7 +219,7 @@ class TestTurbiniaTask(TestTurbiniaTaskBase):
     test_result = self.task.run_wrapper(test_evidence.__dict__)
     test_result = TurbiniaTaskResult.deserialize(test_result)
     self.assertFalse(test_result.successful)
-    self.assertIn('TestStatus', test_result.status)
+    self.assertIn('validation failed', test_result.status)
 
   @mock.patch('turbinia.workers.subprocess.Popen')
   def testTurbiniaTaskExecute(self, popen_mock):
