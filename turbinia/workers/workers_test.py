@@ -82,10 +82,6 @@ class TestTurbiniaTaskBase(unittest.TestCase):
 
     os.rmdir(self.base_output_dir)
 
-  #@mock.patch('turbinia.state_manager.get_state_manager')
-
-# @mock.patch('turbinia.state_manager')
-
   def setResults(
       self, setup=None, run=None, validate_result=None, mock_run=True):
     """Set up mock returns in TurbiniaTaskResult object.
@@ -212,7 +208,6 @@ class TestTurbiniaTask(TestTurbiniaTaskBase):
     self.assertEqual(type(new_result), TurbiniaTaskResult)
     self.assertNotEqual(new_result.error, {})
 
-  @mock.patch('turbinia.workers.evidence_decode')
   @mock.patch('turbinia.workers.evidence_decode')
   def testTurbiniaTaskEvidenceValidationFailure(self, evidence_decode_mock, _):
     """Tests Task fails when evidence validation fails."""

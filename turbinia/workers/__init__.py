@@ -79,6 +79,8 @@ class TurbiniaTaskResult(object):
       task_id: Task ID of the parent task.
       task_name: Name of parent task.
       requester: The user who requested the task.
+      state_manager: (DatastoreStateManager|RedisStateManager): State manager
+        object to handle syncing with storage.
       worker_name: Name of worker task executed on.
       _log: A list of log messages
   """
@@ -184,7 +186,6 @@ class TurbiniaTaskResult(object):
         evidence.request_id = self.request_id
 
     try:
-      self.state_manager = None
       self.input_evidence.postprocess()
     # Adding a broad exception here because we want to try post-processing
     # to clean things up even after other failures in the task, so this could
@@ -625,7 +626,7 @@ class TurbiniaTask(object):
     evidence = evidence_decode(evidence)
     try:
       self.result = self.setup(evidence)
-      self.result.update_task_status(self, 'Queued')
+      self.result.update_task_status(self, 'queued')
     except TurbiniaException as exception:
       message = (
           '{0:s} Task setup failed with exception: [{1!s}]'.format(
@@ -661,7 +662,7 @@ class TurbiniaTask(object):
           self.result.log(message, level=logging.ERROR)
           self.result.status = message
           return self.result.serialize()
-        self.result.update_task_status(self, 'Running')
+        self.result.update_task_status(self, 'running')
         self._evidence_config = evidence.config
         self.result = self.run(evidence, self.result)
       # pylint: disable=broad-except

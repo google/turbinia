@@ -35,7 +35,6 @@ class TestTaskManager(TestTurbiniaTaskBase):
     self.manager = task_manager.BaseTaskManager()
     self.job1 = plaso.PlasoJob()
     self.job2 = strings.StringsJob()
-    self.state_manager = mock.MagicMock()
 
   def testTaskManagerTasksProperty(self):
     """Basic test for task_manager Tasks property."""
