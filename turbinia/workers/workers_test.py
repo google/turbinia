@@ -187,6 +187,7 @@ class TestTurbiniaTask(TestTurbiniaTaskBase):
 
     new_result = self.task.run_wrapper(self.evidence.__dict__)
     new_result = TurbiniaTaskResult.deserialize(new_result)
+    new_result.status = new_result.status + self.result.status
     self.assertEqual(type(new_result), TurbiniaTaskResult)
     self.assertIn(canary_status, new_result.status)
 
@@ -209,7 +210,7 @@ class TestTurbiniaTask(TestTurbiniaTaskBase):
     self.assertNotEqual(new_result.error, {})
 
   @mock.patch('turbinia.workers.evidence_decode')
-  def testTurbiniaTaskEvidenceValidationFailure(self, evidence_decode_mock, _):
+  def testTurbiniaTaskEvidenceValidationFailure(self, evidence_decode_mock):
     """Tests Task fails when evidence validation fails."""
     self.setResults()
     test_evidence = evidence.RawDisk()

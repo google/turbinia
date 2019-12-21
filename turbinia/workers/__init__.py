@@ -640,6 +640,21 @@ class TurbiniaTask(object):
       trace = traceback.format_exc()
       log.error(message)
       log.error(trace)
+      if self.result:
+          if hasattr(exception, 'message'):
+            self.result.set_error(exception.message, traceback.format_exc())
+          else:
+            self.result.set_error(exception.__class__, traceback.format_exc())
+          self.result.status = message
+      else:
+        self.result = self.validate_result(self.result)
+        self.result = TurbiniaTaskResult(
+          base_output_dir=self.base_output_dir, request_id=self.request_id,
+          job_id=self.job_id)
+        self.result.setup(self)
+        self.result.status = message
+        self.result.set_error(message, traceback.format_exc())
+        return self.result.serialize()
     with filelock.FileLock(config.LOCK_FILE):
       log.info('Starting Task {0:s} {1:s}'.format(self.name, self.id))
       original_result_id = None
