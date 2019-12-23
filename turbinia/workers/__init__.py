@@ -641,16 +641,15 @@ class TurbiniaTask(object):
       log.error(message)
       log.error(trace)
       if self.result:
-          if hasattr(exception, 'message'):
-            self.result.set_error(exception.message, traceback.format_exc())
-          else:
-            self.result.set_error(exception.__class__, traceback.format_exc())
-          self.result.status = message
+        if hasattr(exception, 'message'):
+          self.result.set_error(exception.message, traceback.format_exc())
+        else:
+          self.result.set_error(exception.__class__, traceback.format_exc())
+        self.result.status = message
       else:
-        self.result = self.validate_result(self.result)
         self.result = TurbiniaTaskResult(
-          base_output_dir=self.base_output_dir, request_id=self.request_id,
-          job_id=self.job_id)
+            base_output_dir=self.base_output_dir, request_id=self.request_id,
+            job_id=self.job_id)
         self.result.setup(self)
         self.result.status = message
         self.result.set_error(message, traceback.format_exc())
@@ -659,9 +658,11 @@ class TurbiniaTask(object):
       log.info('Starting Task {0:s} {1:s}'.format(self.name, self.id))
       original_result_id = None
       try:
-        evidence.preprocess(self.tmp_dir)
         original_result_id = self.result.id
         evidence.validate()
+
+        # Preprocessor must be called after evidence validation.
+        evidence.preprocess(self.tmp_dir)
         # TODO(wyassine): refactor it so the result task does not
         # have to go through the preprocess stage. At the moment
         # self.results.setup is required to be called to set its status.
