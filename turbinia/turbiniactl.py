@@ -454,15 +454,10 @@ def main():
           'Cannot open file {0:s} [{1!s}]'.format(args.filter_patterns_file, e))
 
   # Create Client object
+  client = None
   if args.command not in ('psqworker', 'server'):
-    if config.TASK_MANAGER.lower() == 'celery':
-      client = TurbiniaCeleryClient()
-    elif args.run_local:
-      client = TurbiniaClient(run_local=True)
-    else:
-      client = TurbiniaClient()
-  else:
-    client = None
+    client_factory = TurbiniaClient(run_local=args.run_local)
+    client = client_factory.get_turbinia_client()
 
   # Make sure run_local flags aren't conflicting with other server/client flags
   server_flags_set = args.server or args.command == 'server'

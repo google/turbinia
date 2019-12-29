@@ -234,6 +234,29 @@ class TurbiniaStats(object):
 
 
 class TurbiniaClient(object):
+  """Factory class for Turbinia clients """
+
+  def __init__(self, run_local=False):
+    self.run_local = run_local
+
+  def get_turbinia_client(self):
+    """Return Turbinia client based on config.
+
+    Returns:
+      Initialized TurbiniaDSClient or TurbiniaCeleryClient object.
+    """
+    config.LoadConfig()
+    if config.STATE_MANAGER.lower() == 'datastore':
+      return BaseTurbiniaClient(run_local=self.run_local)
+    elif config.STATE_MANAGER.lower() == 'redis':
+      return TurbiniaCeleryClient()
+    else:
+      msg = 'State Manager type "{0:s}" not implemented'.format(
+          config.STATE_MANAGER)
+      raise TurbiniaException(msg)
+
+
+class BaseTurbiniaClient(object):
   """Client class for Turbinia.
 
   Attributes:
@@ -748,7 +771,7 @@ class TurbiniaClient(object):
     return 'Closed Task IDs: %s' % response.get('result')
 
 
-class TurbiniaCeleryClient(TurbiniaClient):
+class TurbiniaCeleryClient(BaseTurbiniaClient):
   """Client class for Turbinia (Celery).
 
   Overriding some things specific to Celery operation.
@@ -818,7 +841,7 @@ class TurbiniaServer(object):
     self.task_manager.add_evidence(evidence_)
 
 
-class TurbiniaCeleryWorker(TurbiniaClient):
+class TurbiniaCeleryWorker(BaseTurbiniaClient):
   """Turbinia Celery Worker class.
 
   Attributes:
