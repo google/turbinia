@@ -404,7 +404,7 @@ def main():
   # the config until after we parse the args so that we can use those arguments
   # to point to config paths.
   from turbinia import notify
-  from turbinia.client import TurbiniaClient
+  from turbinia import client as TurbiniaClientProvider
   from turbinia.client import TurbiniaCeleryClient
   from turbinia.client import TurbiniaServer
   from turbinia.client import TurbiniaCeleryWorker
@@ -456,8 +456,7 @@ def main():
   # Create Client object
   client = None
   if args.command not in ('psqworker', 'server'):
-    client_factory = TurbiniaClient(run_local=args.run_local)
-    client = client_factory.get_turbinia_client()
+    client = TurbiniaClientProvider.get_turbinia_client(args.run_local)
 
   # Make sure run_local flags aren't conflicting with other server/client flags
   server_flags_set = args.server or args.command == 'server'

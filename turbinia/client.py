@@ -95,6 +95,22 @@ log = logging.getLogger('turbinia')
 logger.setup()
 
 
+def get_turbinia_client(run_local=False):
+  """Return Turbinia client based on config.
+
+  Returns:
+    Initialized TurbiniaDSClient or TurbiniaCeleryClient object.
+  """
+  config.LoadConfig()
+  if config.STATE_MANAGER.lower() == 'datastore':
+    return BaseTurbiniaClient(run_local=run_local)
+  elif config.STATE_MANAGER.lower() == 'redis':
+    return TurbiniaCeleryClient()
+  else:
+    msg = 'State Manager type "{0:s}" not implemented'.format(
+        config.STATE_MANAGER)
+    raise TurbiniaException(msg)
+
 def check_dependencies(dependencies):
   """Checks system dependencies.
 
@@ -231,29 +247,6 @@ class TurbiniaStats(object):
     """
     return '{0:s}, {1:d}, {2!s}, {3!s}, {4!s}'.format(
         self.description, self.count, self.min, self.mean, self.max)
-
-
-class TurbiniaClient(object):
-  """Factory class for Turbinia clients """
-
-  def __init__(self, run_local=False):
-    self.run_local = run_local
-
-  def get_turbinia_client(self):
-    """Return Turbinia client based on config.
-
-    Returns:
-      Initialized TurbiniaDSClient or TurbiniaCeleryClient object.
-    """
-    config.LoadConfig()
-    if config.STATE_MANAGER.lower() == 'datastore':
-      return BaseTurbiniaClient(run_local=self.run_local)
-    elif config.STATE_MANAGER.lower() == 'redis':
-      return TurbiniaCeleryClient()
-    else:
-      msg = 'State Manager type "{0:s}" not implemented'.format(
-          config.STATE_MANAGER)
-      raise TurbiniaException(msg)
 
 
 class BaseTurbiniaClient(object):

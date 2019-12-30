@@ -40,9 +40,8 @@ class FinalizeRequestTask(TurbiniaTask):
         TurbiniaTaskResult: Task execution results.
     """
     # Doing a delayed import to avoid circular dependencies.
-    from turbinia.client import TurbiniaClient
-    client_factory = TurbiniaClient()
-    client = client_factory.get_turbinia_client()
+    from turbinia import client as TurbiniaClientProvider
+    client = TurbiniaClientProvider.get_turbinia_client()
 
     report_file = os.path.join(
         self.tmp_dir, 'final_turbinia_report_{0:s}.md'.format(self.id))

@@ -28,7 +28,7 @@ import textwrap
 import mock
 
 from turbinia import config
-from turbinia.client import TurbiniaClient
+from turbinia import client as TurbiniaClientProvider
 from turbinia.client import TurbiniaServer
 from turbinia.client import TurbiniaStats
 from turbinia.client import TurbiniaPsqWorker
@@ -205,8 +205,7 @@ class TestTurbiniaClient(unittest.TestCase):
   def testTurbiniaClientInit(self, _, __):
     """Basic test for client."""
     config.LoadConfig()
-    client_factory = TurbiniaClient()
-    client = client_factory.get_turbinia_client()
+    client = TurbiniaClientProvider.get_turbinia_client()
     self.assertTrue(hasattr(client, 'task_manager'))
 
   @mock.patch('turbinia.client.GoogleCloudFunction.ExecuteFunction')
@@ -222,8 +221,7 @@ class TestTurbiniaClient(unittest.TestCase):
     gcf_result = json.dumps(gcf_result)
     function_return = {'result': gcf_result}
     mock_cloud_function.return_value = function_return
-    client_factory = TurbiniaClient()
-    client = client_factory.get_turbinia_client()
+    client = TurbiniaClientProvider.get_turbinia_client()
     task_data = client.get_task_data('inst', 'proj', 'reg')
     # get_task_data() converts this back into a timedelta(). We returned it
     # seconds from the GCF function call because that is what it is stored in
@@ -237,8 +235,7 @@ class TestTurbiniaClient(unittest.TestCase):
   def testTurbiniaClientGetTaskDataNoResults(self, _, __, mock_cloud_function):
     """Test for exception after empty results from cloud functions."""
     mock_cloud_function.return_value = {}
-    client_factory = TurbiniaClient()
-    client = client_factory.get_turbinia_client()
+    client = TurbiniaClientProvider.get_turbinia_client()
     self.assertRaises(
         TurbiniaException, client.get_task_data, "inst", "proj", "reg")
 
@@ -249,8 +246,7 @@ class TestTurbiniaClient(unittest.TestCase):
       self, _, __, mock_cloud_function):
     """Test for exception after bad json results from cloud functions."""
     mock_cloud_function.return_value = {'result': None}
-    client_factory = TurbiniaClient()
-    client = client_factory.get_turbinia_client()
+    client = TurbiniaClientProvider.get_turbinia_client()
     self.assertRaises(
         TurbiniaException, client.get_task_data, "inst", "proj", "reg")
 
@@ -259,8 +255,7 @@ class TestTurbiniaClient(unittest.TestCase):
   @mock.patch('turbinia.state_manager.get_state_manager')
   def testClientFormatTaskStatistics(self, _, __, ___):
     """Tests format_task_statistics() report output."""
-    client_factory = TurbiniaClient()
-    client = client_factory.get_turbinia_client()
+    client = TurbiniaClientProvider.get_turbinia_client()
     client.get_task_data = mock.MagicMock()
     client.get_task_data.return_value = self.task_data
     stats_report = client.format_task_statistics('inst', 'proj', 'reg')
@@ -272,8 +267,7 @@ class TestTurbiniaClient(unittest.TestCase):
   @mock.patch('turbinia.state_manager.get_state_manager')
   def testClientFormatTaskStatisticsCsv(self, _, __, ___):
     """Tests format_task_statistics() CSV report output."""
-    client_factory = TurbiniaClient()
-    client = client_factory.get_turbinia_client()
+    client = TurbiniaClientProvider.get_turbinia_client()
     client.get_task_data = mock.MagicMock()
     client.get_task_data.return_value = self.task_data
     stats_report = client.format_task_statistics(
@@ -286,8 +280,7 @@ class TestTurbiniaClient(unittest.TestCase):
   @mock.patch('turbinia.state_manager.get_state_manager')
   def testClientGetTaskStatistics(self, _, __, ___):
     """Tests get_task_statistics() basic functionality."""
-    client_factory = TurbiniaClient()
-    client = client_factory.get_turbinia_client()
+    client = TurbiniaClientProvider.get_turbinia_client()
     client.get_task_data = mock.MagicMock()
     client.get_task_data.return_value = self.task_data
     task_stats = client.get_task_statistics('inst', 'proj', 'reg')
@@ -320,8 +313,7 @@ class TestTurbiniaClient(unittest.TestCase):
   @mock.patch('turbinia.state_manager.get_state_manager')
   def testClientFormatTaskStatus(self, _, __, ___):
     """Tests format_task_status() with empty report_priority."""
-    client_factory = TurbiniaClient()
-    client = client_factory.get_turbinia_client()
+    client = TurbiniaClientProvider.get_turbinia_client()
     client.get_task_data = mock.MagicMock()
     self.task_data[0]['report_priority'] = None
     self.task_data[1]['report_priority'] = ''
@@ -335,8 +327,7 @@ class TestTurbiniaClient(unittest.TestCase):
   @mock.patch('turbinia.state_manager.get_state_manager')
   def testClientFormatTaskStatusShortReport(self, _, __, ___):
     """Tests format_task_status() has valid output with short report."""
-    client_factory = TurbiniaClient()
-    client = client_factory.get_turbinia_client()
+    client = TurbiniaClientProvider.get_turbinia_client()
     client.get_task_data = mock.MagicMock()
     client.get_task_data.return_value = self.task_data
     result = client.format_task_status('inst', 'proj', 'reg')
@@ -347,8 +338,7 @@ class TestTurbiniaClient(unittest.TestCase):
   @mock.patch('turbinia.state_manager.get_state_manager')
   def testClientFormatTaskStatusFullReport(self, _, __, ___):
     """Tests format_task_status() has valid output with full report."""
-    client_factory = TurbiniaClient()
-    client = client_factory.get_turbinia_client()
+    client = TurbiniaClientProvider.get_turbinia_client()
     client.get_task_data = mock.MagicMock()
     client.get_task_data.return_value = self.task_data
     result = client.format_task_status('inst', 'proj', 'reg', full_report=True)
@@ -359,8 +349,7 @@ class TestTurbiniaClient(unittest.TestCase):
   @mock.patch('turbinia.state_manager.get_state_manager')
   def testClientFormatTaskStatusFiles(self, _, __, ___):
     """Tests format_task_status() has valid output with report and files."""
-    client_factory = TurbiniaClient()
-    client = client_factory.get_turbinia_client()
+    client = TurbiniaClientProvider.get_turbinia_client()
     client.get_task_data = mock.MagicMock()
     client.get_task_data.return_value = self.task_data
     result = client.format_task_status(
