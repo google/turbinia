@@ -99,9 +99,10 @@ def get_turbinia_client(run_local=False):
   """Return Turbinia client based on config.
 
   Returns:
-    Initialized TurbiniaDSClient or TurbiniaCeleryClient object.
+    Initialized BaseTurbiniaClient or TurbiniaCeleryClient object.
   """
   config.LoadConfig()
+  # pylint: disable=no-else-return
   if config.STATE_MANAGER.lower() == 'datastore':
     return BaseTurbiniaClient(run_local=run_local)
   elif config.STATE_MANAGER.lower() == 'redis':
@@ -110,6 +111,7 @@ def get_turbinia_client(run_local=False):
     msg = 'State Manager type "{0:s}" not implemented'.format(
         config.STATE_MANAGER)
     raise TurbiniaException(msg)
+
 
 def check_dependencies(dependencies):
   """Checks system dependencies.
