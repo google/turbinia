@@ -304,7 +304,7 @@ class GoogleCloudProject(object):
 
     if not disk_name:
       disk_name = binascii.hexlify(os.urandom(5))
-    disk_name = '{0:s}{1:s}'.format(disk_name_prefix, disk_name)
+    disk_name = '{0:s}{1:s}'.format(disk_name_prefix, disk_name)[:63]
     body = dict(name=disk_name, sourceSnapshot=snapshot.get_source_string())
 
     try:
