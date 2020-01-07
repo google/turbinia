@@ -22,6 +22,7 @@ import sys
 
 from turbinia import config
 from turbinia import TurbiniaException
+from turbinia.processors import docker
 from turbinia.processors import mount_local
 from turbinia.processors import archive
 
@@ -540,7 +541,7 @@ class PlasoFile(Evidence):
     self.save_metadata = True
 
 
-class PlasoCsvFile(PlasoFile):
+class PlasoCsvFile(Evidence):
   """Psort output file evidence.  """
 
   def __init__(self, plaso_version=None, *args, **kwargs):
@@ -615,3 +616,40 @@ class RawMemory(Evidence):
 class BinaryExtraction(CompressedDirectory):
   """Binaries extracted from evidence."""
   pass
+
+
+class DockerContainer(Evidence):
+  """Evidence object for a DockerContainer filesystem.
+
+  Attributes:
+    container_id(str): The ID of the container to mount.
+    _container_fs_path(str): Full path to where the container filesystem will
+      be mounted.
+    _docker_root_directory(str): Full path to the docker root directory.
+  """
+
+  # ABSOLUTELY NO LEADING / HERE
+  DEFAULT_DOCKER_DIRECTORY_PATH = 'var/lib/docker'
+
+  def __init__(self, container_id=None, *args, **kwargs):
+    """Initialization for Docker Container."""
+    super(DockerContainer, self).__init__(*args, **kwargs)
+    self.container_id = container_id
+    self._container_fs_path = None
+    self._docker_root_directory = None
+
+    self.context_dependent = True
+
+  def _preprocess(self, _):
+
+    self._docker_root_directory = os.path.join(
+        self.parent_evidence.mount_path, self.DEFAULT_DOCKER_DIRECTORY_PATH)
+    # Mounting the container's filesystem
+    self._container_fs_path = docker.PreprocessMountDockerFS(
+        self._docker_root_directory, self.container_id)
+    self.mount_path = self._container_fs_path
+    self.local_path = self.mount_path
+
+  def _postprocess(self):
+    # Unmount the container's filesystem
+    mount_local.PostprocessUnmountPath(self._container_fs_path)

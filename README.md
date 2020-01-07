@@ -137,6 +137,8 @@ Commands:
     celeryworker        Run Celery worker
     status              Get Turbinia Task status
     server              Run Turbinia Server
+    config              Prints out config file
+    testnotify          Sends test notification
 ```
 
 The commands for processing evidence specify the metadata about that evidence

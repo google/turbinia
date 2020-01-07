@@ -136,6 +136,10 @@ def main():
   parser_config.add_argument(
       '-f', '--file_only', action='store_true', help='Print out file path only')
 
+  #Sends Test Notification
+  parser_testnotify = subparsers.add_parser(
+      'testnotify', help='Sends test notification')
+
   # TODO(aarontp): Find better way to specify these that allows for multiple
   # pieces of evidence to be submitted. Maybe automagically create different
   # commands based on introspection of evidence objects?
@@ -374,7 +378,7 @@ def main():
       config.LoadConfig()
   except TurbiniaException as exception:
     print(
-        'Could not load config file ({0:s}).\n{1:s}'.format(
+        'Could not load config file ({0!s}).\n{1:s}'.format(
             exception, config.CONFIG_MSG))
     sys.exit(1)
 
@@ -399,6 +403,7 @@ def main():
   # config is loaded by these modules at load time, and we want to wait to load
   # the config until after we parse the args so that we can use those arguments
   # to point to config paths.
+  from turbinia import notify
   from turbinia.client import TurbiniaClient
   from turbinia.client import TurbiniaCeleryClient
   from turbinia.client import TurbiniaServer
@@ -422,6 +427,12 @@ def main():
           "Failed to read config file {0:s}: {1!s}".format(
               config.configSource, exception))
       sys.exit(1)
+  #sends test notification
+  if args.command == 'testnotify':
+    notify.sendmail(
+        config.EMAIL_ADDRESS, 'Turbinia test notification',
+        'This is a test notification')
+    sys.exit(0)
 
   if args.jobs_whitelist and args.jobs_blacklist:
     log.error(
@@ -565,11 +576,13 @@ def main():
     # Set up root logger level which is normally set by the psqworker command
     # which we are bypassing.
     logger.setup()
-    worker = TurbiniaPsqWorker()
+    worker = TurbiniaPsqWorker(
+        jobs_blacklist=args.jobs_blacklist, jobs_whitelist=args.jobs_whitelist)
     worker.start()
   elif args.command == 'celeryworker':
     logger.setup()
-    worker = TurbiniaCeleryWorker()
+    worker = TurbiniaCeleryWorker(
+        jobs_blacklist=args.jobs_blacklist, jobs_whitelist=args.jobs_whitelist)
     worker.start()
   elif args.command == 'server':
     server = TurbiniaServer(
@@ -620,7 +633,7 @@ def main():
     log.info('Available Jobs:')
     client.list_jobs()
   else:
-    log.warning('Command {0:s} not implemented.'.format(args.command))
+    log.warning('Command {0!s} not implemented.'.format(args.command))
 
   if evidence_ and not args.force_evidence:
     if config.SHARED_FILESYSTEM and evidence_.cloud_only:

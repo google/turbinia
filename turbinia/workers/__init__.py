@@ -168,14 +168,19 @@ class TurbiniaTaskResult(object):
     self.status = status
 
     for evidence in self.evidence:
-      if evidence.source_path and os.path.exists(evidence.source_path):
-        self.saved_paths.append(evidence.source_path)
-        if not task.run_local and evidence.copyable:
-          task.output_manager.save_evidence(evidence, self)
+      if evidence.source_path:
+        if os.path.exists(evidence.source_path):
+          self.saved_paths.append(evidence.source_path)
+          if not task.run_local and evidence.copyable:
+            task.output_manager.save_evidence(evidence, self)
+        else:
+          self.log(
+              'Evidence {0:s} has missing file at source_path {1!s} so '
+              'not saving.'.format(evidence.name, evidence.source_path))
       else:
         self.log(
-            'Evidence {0:s} has empty or missing file at source_path {1:s} so '
-            'not saving.'.format(evidence.name, evidence.source_path))
+            'Evidence {0:s} has empty source_path so '
+            'not saving.'.format(evidence.name))
 
       if not evidence.request_id:
         evidence.request_id = self.request_id
@@ -306,6 +311,7 @@ class TurbiniaTask(object):
       id (str): Unique Id of task (string of hex)
       is_finalize_task (bool): Whether this is a finalize Task or not.
       job_id (str): Job ID the Task was created by.
+      job_name (str): The name of the Job.
       last_update (datetime): A datetime object with the last time the task was
           updated.
       name (str): Name of task
@@ -342,6 +348,7 @@ class TurbiniaTask(object):
     self.id = uuid.uuid4().hex
     self.is_finalize_task = False
     self.job_id = None
+    self.job_name = None
     self.last_update = datetime.now()
     self.name = name if name else self.__class__.__name__
     self.output_dir = None
@@ -597,6 +604,9 @@ class TurbiniaTask(object):
     Returns:
       A TurbiniaTaskResult object
     """
+    # Avoid circular dependency.
+    from turbinia.jobs import manager as job_manager
+
     log.debug('Task {0:s} {1:s} awaiting execution'.format(self.name, self.id))
     evidence = evidence_decode(evidence)
     with filelock.FileLock(config.LOCK_FILE):
@@ -607,13 +617,26 @@ class TurbiniaTask(object):
         original_result_id = self.result.id
         evidence.validate()
 
+        # TODO(wyassine): refactor it so the result task does not
+        # have to go through the preprocess stage. At the moment
+        # self.results.setup is required to be called to set its status.
+        # Check if Task's job is available for the worker.
+        active_jobs = list(job_manager.JobsManager.GetJobNames())
+        if self.job_name.lower() not in active_jobs:
+          message = (
+              'Task will not run due to the job: {0:s} being disabled '
+              'on the worker.'.format(self.job_name))
+          self.result.log(message, level=logging.ERROR)
+          self.result.status = message
+          return self.result.serialize()
+
         if self.turbinia_version != turbinia.__version__:
           message = (
               'Worker and Server versions do not match: {0:s} != {1:s}'.format(
                   self.turbinia_version, turbinia.__version__))
           self.result.log(message, level=logging.ERROR)
           self.result.status = message
-          return self.result
+          return self.result.serialize()
 
         self._evidence_config = evidence.config
         self.result = self.run(evidence, self.result)

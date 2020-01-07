@@ -94,6 +94,39 @@ class JobsManager(object):
     del cls._job_classes[job_name]
 
   @classmethod
+  def DeregisterJobs(cls, jobs_blacklist=None, jobs_whitelist=None):
+    """Deregisters a list of job names against white/black lists.
+
+    jobs_whitelist and jobs_blacklist must not be specified at the same time.
+
+    Args:
+      jobs_blacklist (Optional[list[str]]): Job names to deregister.
+      jobs_whitelist (Optional[list[str]]): Job names to register.
+
+    Raises:
+      TurbiniaException if both jobs_blacklist and jobs_whitelist are specified.
+    """
+    registered_jobs = list(cls.GetJobNames())
+    jobs_remove = []
+
+    # Create a list of jobs to deregister.
+    if jobs_whitelist and jobs_blacklist:
+      raise TurbiniaException(
+          'jobs_whitelist and jobs_blacklist cannot be specified at the same '
+          'time.')
+    elif jobs_whitelist:
+      jobs_whitelist = [j.lower() for j in jobs_whitelist]
+      jobs_remove = [j for j in registered_jobs if j not in jobs_whitelist]
+    elif jobs_blacklist:
+      jobs_blacklist = [j.lower() for j in jobs_blacklist]
+      jobs_remove = [j for j in jobs_blacklist if j in registered_jobs]
+
+    # Deregister the jobs.
+    jobs_remove = [j.lower() for j in jobs_remove]
+    for job_name in jobs_remove:
+      del cls._job_classes[job_name]
+
+  @classmethod
   def GetJobInstance(cls, job_name):
     """Retrieves an instance of a specific job.
 

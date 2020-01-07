@@ -169,8 +169,9 @@ class OutputManager(object):
       evidence_.local_path = local_path
     evidence_.saved_path = path
     evidence_.saved_path_type = path_type
-    log.info(
-        'Saved copyable evidence data to {0:s}'.format(evidence_.saved_path))
+    if evidence_.saved_path:
+      log.info(
+          'Saved copyable evidence data to {0:s}'.format(evidence_.saved_path))
     return evidence_
 
   def save_local_file(self, file_, result):
