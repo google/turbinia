@@ -150,7 +150,7 @@ class TestContainerManager(unittest.TestCase):
     # Ensure correct device formatting.
     mock_blockcheck.return_value = True
     device_smpl = ['/path/to/device']
-    device_formatted = ['{0:s}:{0:s}:rw'.format(device_smpl[0])]
+    device_formatted = ['{0:s}:{0:s}:r'.format(device_smpl[0])]
     device_paths, _ = self.container_mgr._create_mount_points(device_smpl)
     assert device_formatted == device_paths
 

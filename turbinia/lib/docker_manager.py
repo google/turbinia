@@ -131,12 +131,14 @@ class ContainerManager(DockerManager):
     super(ContainerManager, self).__init__()
     self.image_id = self.verify_image(image_id)
 
-  def _create_mount_points(self, mount_paths, mode='rw'):
+  def _create_mount_points(self, mount_paths):
     """Creates file and device mounting arguments.
+
+    The arguments will be passed into the container and all device blocks
+    will be mounted as ro while file paths would be mounted as rw.
 
     Attributes:
       mount_paths(list): The paths on the host system to be mounted.
-      mode(str): The mode that they will be mounted in.
 
     Returns:
       device_paths(list): device blocks that will be mounted.
@@ -148,10 +150,10 @@ class ContainerManager(DockerManager):
     for mpath in mount_paths:
       if mpath not in file_paths.keys() or mpath not in device_paths:
         if IsBlockDevice(mpath):
-          formatted_path = '{0:s}:{0:s}:{1:s}'.format(mpath, mode)
+          formatted_path = '{0:s}:{0:s}:{1:s}'.format(mpath, 'r')
           device_paths.append(formatted_path)
         else:
-          file_paths[mpath] = {'bind': mpath, 'mode': mode}
+          file_paths[mpath] = {'bind': mpath, 'mode': 'rw'}
     return device_paths, file_paths
 
   def execute_container(self, cmd, mount_paths=None, **kwargs):
@@ -193,7 +195,7 @@ class ContainerManager(DockerManager):
       # Stream program stdout from container
       stdstream = container.logs(stream=True)
       for stdo in stdstream:
-        stdo = codecs.decode(stdo, 'utf-8')
+        stdo = codecs.decode(stdo, 'utf-8').strip()
         log.info(stdo)
         stdout += stdo
       results = container.wait()
