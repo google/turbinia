@@ -78,13 +78,13 @@ class TestDockerManager(unittest.TestCase):
 
   @mock.patch('turbinia.lib.docker_manager.docker')
   def setUp(self, mock_docker):
-    mock_docker.from_env.return_value = docker.client.DockerClient
+    mock_docker.from_env.return_value = docker.DockerClient
     self.docker_mgr = docker_manager.DockerManager()
 
   def testDockerManagerInit(self):
     """Tests __init__ method of DockerManager."""
     # Test that a DockerClient is being returned
-    assert self.docker_mgr.client == docker.client.DockerClient
+    assert self.docker_mgr.client == docker.DockerClient
 
   def testVerifyImages(self):
     """Tests DockerManager.verify_image() method."""
