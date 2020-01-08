@@ -121,10 +121,8 @@ def check_docker_dependencies(dependencies):
     elif vals['docker_image'] in images:
       for program in vals['programs']:
         cmd = 'which {0:s}'.format(program)
-        kwargs = {'entrypoint': '/bin/bash'}
         stdout, stderr, ret = docker_manager.ContainerManager(
-            vals['docker_image']).execute_container(
-                cmd, mount_paths=None, **kwargs)
+            vals['docker_image']).execute_container(cmd)
         if stdout == '':
           raise TurbiniaException(
               'Job dependency {0:s} not found for job {1:s}. Please install '

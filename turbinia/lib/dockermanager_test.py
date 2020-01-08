@@ -165,7 +165,7 @@ class TestContainerManager(unittest.TestCase):
   def testExecuteContainer(self):
     """Tests ContainerManager.execute_container() method."""
     # sample output
-    s_logs = [b'this ', b'is ', b'a ', b'mock ', b'test']
+    s_logs = [b'this', b'is', b'a', b'mock', b'test']
     s_wait = {'Error': None, 'StatusCode': 0}
     self.container_mgr.client = mock.MagicMock()
     self.container_mgr.client.containers.create.return_value = MockContainer(

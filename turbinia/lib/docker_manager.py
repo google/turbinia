@@ -179,6 +179,14 @@ class ContainerManager(DockerManager):
     args = {}
     stdout = ''
 
+    # Override the entrypoint to /bin/sh
+    kwargs['entrypoint'] = '/bin/sh'
+    if isinstance(cmd, str):
+      cmd = '-c ' + '\"{0:s}\"'.format(cmd)
+    elif isinstance(cmd, list):
+      cmd = ' '.join(cmd)
+      cmd = '-c ' + '\"{0:s}\"'.format(cmd)
+
     # Create the device and file mount paths
     if mount_paths:
       device_paths, file_paths = self._create_mount_points(mount_paths)
