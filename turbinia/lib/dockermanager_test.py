@@ -78,8 +78,13 @@ class TestDockerManager(unittest.TestCase):
 
   @mock.patch('turbinia.lib.docker_manager.docker')
   def setUp(self, mock_docker):
-    mock_docker.from_env.return_value = mock.MagicMock()
+    mock_docker.from_env.return_value = docker.client.DockerClient
     self.docker_mgr = docker_manager.DockerManager()
+
+  def testDockerManagerInit(self):
+    """Tests __init__ method of DockerManager."""
+    # Test that a DockerClient is being returned
+    assert self.docker_mgr.client == docker.client.DockerClient
 
   def testVerifyImages(self):
     """Tests DockerManager.verify_image() method."""
@@ -129,13 +134,14 @@ class TestContainerManager(unittest.TestCase):
   @mock.patch('turbinia.lib.docker_manager.DockerManager.verify_image')
   def setUp(self, mock_verify, mock_docker):
     self.test_img = '1234'
-    mock_docker.from_env.return_value = mock.MagicMock()
+    mock_docker.from_env.return_value = docker.client.DockerClient
     mock_verify.return_value = self.test_img
     self.container_mgr = docker_manager.ContainerManager(self.test_img)
 
   def testContainerManagerInit(self):
     """Tests __init__ method of ContainerManager."""
     # Ensure correct instance and image id
+    assert self.container_mgr.client == docker.client.DockerClient
     assert self.container_mgr.image_id == self.test_img
 
   @mock.patch('turbinia.lib.docker_manager.IsBlockDevice')
