@@ -38,6 +38,7 @@ from turbinia.config import DATETIME_FORMAT
 from turbinia.evidence import evidence_decode
 from turbinia import output_manager
 from turbinia import TurbiniaException
+from turbinia.lib import docker_manager
 
 log = logging.getLogger('turbinia')
 
@@ -417,19 +418,37 @@ class TurbiniaTask(object):
     Returns:
       Tuple of the return code, and the TurbiniaTaskResult object
     """
+    # Avoid circular dependency.
+    from turbinia.jobs import manager as job_manager
+
     save_files = save_files if save_files else []
     log_files = log_files if log_files else []
     new_evidence = new_evidence if new_evidence else []
     success_codes = success_codes if success_codes else [0]
 
-    if shell:
-      proc = subprocess.Popen(cmd, shell=True)
+    # Execute the job via docker.
+    docker_image = job_manager.JobsManager.GetDockerImage(self.job_name)
+    if docker_image:
+      mount_paths = [
+          result.input_evidence.device_path, result.input_evidence.local_path,
+          result.input_evidence.source_path, result.input_evidence.mount_path,
+          self.output_dir, self.tmp_dir
+      ]
+      container_manager = docker_manager.ContainerManager(docker_image)
+      stdout, stderr, ret = container_manager.execute_container(
+          cmd, mount_paths=mount_paths)
+
+    # Execute the job on the host system.
     else:
-      proc = subprocess.Popen(cmd)
-    stdout, stderr = proc.communicate()
+      if shell:
+        proc = subprocess.Popen(cmd, shell=True)
+      else:
+        proc = subprocess.Popen(cmd)
+      stdout, stderr = proc.communicate()
+      ret = proc.returncode
+
     result.error['stdout'] = stdout
     result.error['stderr'] = stderr
-    ret = proc.returncode
 
     for file_ in log_files:
       if not os.path.exists(file_):

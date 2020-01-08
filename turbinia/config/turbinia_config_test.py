@@ -154,3 +154,19 @@ class TestTurbiniaConfig(unittest.TestCase):
     self.assertEqual(config.TURBINIA_PROJECT, 'foo')
     self.assertEqual(config.TURBINIA_ZONE, 'bar')
     os.environ.pop(config.ENVCONFIGVAR)
+
+  def testParseDependencies(self):
+    """Tests the ParseDependencies() method."""
+    # Ensure config is being parsed correctly.
+    smpl_depends = [{
+        'job': 'PlasoJob',
+        'programs': ['test'],
+        'docker_image': 'test'
+    }]
+    smpl_out = {'plasojob': {'programs': ['test'], 'docker_image': 'test'}}
+    smpl_test = config.ParseDependencies(smpl_depends)
+    self.assertEqual(smpl_out, smpl_test)
+
+    # Ensure exception is being called with bad config.
+    bad_config = [{'bad_config'}]
+    self.assertRaises(TurbiniaException, config.ParseDependencies, bad_config)

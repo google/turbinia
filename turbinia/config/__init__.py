@@ -187,3 +187,29 @@ def ValidateAndSetConfig(_config):
       setattr(sys.modules[__name__], var, None)
     else:
       setattr(sys.modules[__name__], var, getattr(_config, var))
+
+
+def ParseDependencies(dep_config):
+  """Parses the dependencies config list
+
+  Args:
+    dependencies(list): dependencies retrieved config file.
+
+  Raises:
+    TurbiniaException: If bad config file.
+
+  Returns:
+   dependencies(dict): The parsed dependency arguments.
+  """
+  dependencies = {}
+  try:
+    for dep in dep_config:
+      job = dep['job'].lower()
+      dependencies[job] = {}
+      dependencies[job]['programs'] = dep['programs']
+      dependencies[job]['docker_image'] = dep['docker_image']
+  except (KeyError, TypeError) as exception:
+    raise TurbiniaException(
+        'An issue has occured while parsing the '
+        'dependency config: {0!s}'.format(exception))
+  return dependencies

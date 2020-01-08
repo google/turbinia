@@ -32,7 +32,8 @@ from turbinia.client import TurbiniaClient
 from turbinia.client import TurbiniaServer
 from turbinia.client import TurbiniaStats
 from turbinia.client import TurbiniaPsqWorker
-from turbinia.client import check_dependencies
+from turbinia.client import check_system_dependencies
+from turbinia.client import check_docker_dependencies
 from turbinia import TurbiniaException
 
 SHORT_REPORT = textwrap.dedent(
@@ -450,7 +451,8 @@ class TestTurbiniaPsqWorker(unittest.TestCase):
   @mock.patch('turbinia.client.pubsub')
   @mock.patch('turbinia.client.datastore.Client')
   @mock.patch('turbinia.client.psq.Worker')
-  def testTurbiniaPsqWorkerInit(self, _, __, ___):
+  @mock.patch('turbinia.lib.docker_manager.DockerManager')
+  def testTurbiniaPsqWorkerInit(self, _, __, ___, ____):
     """Basic test for PSQ worker."""
     worker = TurbiniaPsqWorker([], [])
     self.assertTrue(hasattr(worker, 'worker'))
@@ -458,7 +460,8 @@ class TestTurbiniaPsqWorker(unittest.TestCase):
   @mock.patch('turbinia.client.pubsub')
   @mock.patch('turbinia.client.datastore.Client')
   @mock.patch('turbinia.client.psq.Worker')
-  def testTurbiniaClientNoDir(self, _, __, ___):
+  @mock.patch('turbinia.lib.docker_manager.DockerManager')
+  def testTurbiniaClientNoDir(self, _, __, ___, ____):
     """Test that OUTPUT_DIR path is created."""
     config.OUTPUT_DIR = os.path.join(self.tmp_dir, 'no_such_dir')
     TurbiniaPsqWorker([], [])
@@ -467,7 +470,8 @@ class TestTurbiniaPsqWorker(unittest.TestCase):
   @mock.patch('turbinia.client.pubsub')
   @mock.patch('turbinia.client.datastore.Client')
   @mock.patch('turbinia.client.psq.Worker')
-  def testTurbiniaClientIsNonDir(self, _, __, ___):
+  @mock.patch('turbinia.lib.docker_manager.DockerManager')
+  def testTurbiniaClientIsNonDir(self, _, __, ___, ____):
     """Test that OUTPUT_DIR does not point to an existing non-directory."""
     config.OUTPUT_DIR = os.path.join(self.tmp_dir, 'empty_file')
     open(config.OUTPUT_DIR, 'a').close()
@@ -475,28 +479,66 @@ class TestTurbiniaPsqWorker(unittest.TestCase):
 
   @mock.patch('turbinia.client.shutil')
   @mock.patch('logging.Logger.warning')
-  def testDependencyCheck(self, mock_logger, mock_shutil):
+  def testSystemDependencyCheck(self, mock_logger, mock_shutil):
     """Test system dependency check."""
-    dependencies = [{
-        'job': 'PlasoJob',
-        'programs': ['non_exist'],
-        'docker_image': None
-    }]
+    dependencies = {
+        'plasojob': {
+            'programs': ['non_exist'],
+            'docker_image': None
+        }
+    }
 
     # Dependency not found.
     mock_shutil.which.return_value = None
-    self.assertRaises(TurbiniaException, check_dependencies, dependencies)
+    self.assertRaises(
+        TurbiniaException, check_system_dependencies, dependencies)
 
     # Normal run.
     mock_shutil.which.return_value = True
-    check_dependencies(dependencies)
+    check_system_dependencies(dependencies)
 
     # Job not found.
-    dependencies[0]['job'] = 'non_exist'
-    check_dependencies(dependencies)
+    dependencies['non_exist'] = dependencies.pop('plasojob')
+    check_system_dependencies(dependencies)
     mock_logger.assert_called_with(
-        'The job: non_exist was not found or has been disabled. '
+        'The job non_exist was not found or has been disabled. '
         'Skipping dependency check...')
 
-    # Bad dependency config.
-    self.assertRaises(TurbiniaException, check_dependencies, [{'test': 'test'}])
+  @mock.patch('turbinia.lib.docker_manager.DockerManager')
+  @mock.patch('turbinia.lib.docker_manager.ContainerManager')
+  @mock.patch('logging.Logger.warning')
+  def testDockerDependencyCheck(
+      self, mock_logger, mock_contmgr, mock_dockermgr):
+    """Test Docker dependency check."""
+    dependencies = {
+        'plasojob': {
+            'programs': ['non_exist'],
+            'docker_image': 'test_img'
+        }
+    }
+
+    # Set up mock objects
+    mock_dm = mock_dockermgr.return_value
+    mock_dm.list_images.return_value = ['test_img']
+    mock_cm = mock_contmgr.return_value
+
+    # Dependency not found.
+    mock_cm.execute_container.return_value = ['', None, 0]
+    self.assertRaises(
+        TurbiniaException, check_docker_dependencies, dependencies)
+
+    # Normal run
+    mock_cm.execute_container.return_value = ['exists', None, 0]
+    check_docker_dependencies(dependencies)
+
+    # Docker image not found
+    mock_dm.list_images.return_value = ['non_exist']
+    self.assertRaises(
+        TurbiniaException, check_docker_dependencies, dependencies)
+
+    # Job not found.
+    dependencies['non_exist'] = dependencies.pop('plasojob')
+    check_docker_dependencies(dependencies)
+    mock_logger.assert_called_with(
+        'The job non_exist was not found or has been disabled. '
+        'Skipping dependency check...')

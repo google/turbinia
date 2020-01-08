@@ -225,3 +225,36 @@ class JobsManager(object):
     """
     for job_class in job_classes:
       cls.RegisterJob(job_class)
+
+  @classmethod
+  def RegisterDockerImage(cls, job_name, docker_image):
+    """Registers a Docker image for the job.
+
+    Args:
+      job_name(str): name of the job.
+      docker_image(str): name of the Docker image to be registered.
+
+    Raises:
+      KeyError: If job class is already set for the corresponding name.
+    """
+    job_name = job_name.lower()
+    cls._job_classes[job_name].docker_image = docker_image
+
+  @classmethod
+  def GetDockerImage(cls, job_name):
+    """Retrieves the Docker image associated with the job.
+
+    Args:
+      job_name(str): name of the job.
+
+    Returns:
+      docker_image(str): The Docker image if available.
+
+    Raises:
+      KeyError: If job class is already set for the corresponding name.
+    """
+    docker_image = None
+    job_class = cls._job_classes[job_name.lower()]
+    if hasattr(job_class, 'docker_image'):
+      docker_image = job_class.docker_image
+    return docker_image
