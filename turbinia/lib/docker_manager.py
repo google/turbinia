@@ -211,7 +211,4 @@ class ContainerManager(DockerManager):
     if container:
       container.remove(v=True)
 
-    # Docker treats unknown commands as successful execution.
-    if stdout.startswith('Unsupported command: '):
-      ret = 1
     return stdout, stderr, ret
