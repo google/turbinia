@@ -103,12 +103,12 @@ def get_turbinia_client(run_local=False):
   """
   config.LoadConfig()
   # pylint: disable=no-else-return
-  if config.STATE_MANAGER.lower() == 'datastore':
+  if config.TASK_MANAGER.lower() == 'datastore':
     return BaseTurbiniaClient(run_local=run_local)
-  elif config.STATE_MANAGER.lower() == 'redis':
-    return TurbiniaCeleryClient()
+  elif config.TASK_MANAGER.lower() == 'redis':
+    return TurbiniaCeleryClient(run_local=run_local)
   else:
-    msg = 'State Manager type "{0:s}" not implemented'.format(
+    msg = 'Task Manager type "{0:s}" not implemented'.format(
         config.STATE_MANAGER)
     raise TurbiniaException(msg)
 
@@ -775,8 +775,8 @@ class TurbiniaCeleryClient(BaseTurbiniaClient):
     redis (RedisStateManager): Redis datastore object
   """
 
-  def __init__(self, *_, **__):
-    super(TurbiniaCeleryClient, self).__init__()
+  def __init__(self, *args, **kwargs):
+    super(TurbiniaCeleryClient, self).__init__(*args, **kwargs)
     self.redis = RedisStateManager()
 
   def send_request(self, request):
