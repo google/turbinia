@@ -103,7 +103,7 @@ def get_turbinia_client(run_local=False):
   """
   config.LoadConfig()
   # pylint: disable=no-else-return
-  if config.TASK_MANAGER.lower() == 'datastore':
+  if config.TASK_MANAGER.lower() == 'psq':
     return BaseTurbiniaClient(run_local=run_local)
   elif config.TASK_MANAGER.lower() == 'redis':
     return TurbiniaCeleryClient(run_local=run_local)
