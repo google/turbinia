@@ -105,11 +105,11 @@ def get_turbinia_client(run_local=False):
   # pylint: disable=no-else-return
   if config.TASK_MANAGER.lower() == 'psq':
     return BaseTurbiniaClient(run_local=run_local)
-  elif config.TASK_MANAGER.lower() == 'redis':
+  elif config.TASK_MANAGER.lower() == 'celery':
     return TurbiniaCeleryClient(run_local=run_local)
   else:
     msg = 'Task Manager type "{0:s}" not implemented'.format(
-        config.STATE_MANAGER)
+        config.TASK_MANAGER)
     raise TurbiniaException(msg)
 
 
