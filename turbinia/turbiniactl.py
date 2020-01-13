@@ -404,7 +404,7 @@ def main():
   # the config until after we parse the args so that we can use those arguments
   # to point to config paths.
   from turbinia import notify
-  from turbinia.client import TurbiniaClient
+  from turbinia import client as TurbiniaClientProvider
   from turbinia.client import TurbiniaCeleryClient
   from turbinia.client import TurbiniaServer
   from turbinia.client import TurbiniaCeleryWorker
@@ -454,15 +454,9 @@ def main():
           'Cannot open file {0:s} [{1!s}]'.format(args.filter_patterns_file, e))
 
   # Create Client object
+  client = None
   if args.command not in ('psqworker', 'server'):
-    if config.TASK_MANAGER.lower() == 'celery':
-      client = TurbiniaCeleryClient()
-    elif args.run_local:
-      client = TurbiniaClient(run_local=True)
-    else:
-      client = TurbiniaClient()
-  else:
-    client = None
+    client = TurbiniaClientProvider.get_turbinia_client(args.run_local)
 
   # Make sure run_local flags aren't conflicting with other server/client flags
   server_flags_set = args.server or args.command == 'server'
