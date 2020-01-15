@@ -653,7 +653,7 @@ class TurbiniaTask(object):
         self.result.setup(self)
         self.result.status = message
         self.result.set_error(message, traceback.format_exc())
-        return self.result.serialize()
+      return self.result.serialize()
     with filelock.FileLock(config.LOCK_FILE):
       log.info('Starting Task {0:s} {1:s}'.format(self.name, self.id))
       original_result_id = None

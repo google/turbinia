@@ -178,16 +178,14 @@ class TestTurbiniaTask(TestTurbiniaTaskBase):
   def testTurbiniaTaskRunWrapperSetupFail(self):
     """Test that the run wrapper recovers from setup failing."""
     self.task.result = None
-    canary_status = 'ReturnedFromValidateResult'
-    self.result.status = canary_status
-    self.task.validate_result = mock.MagicMock(return_value=self.result)
-    self.task.setup = mock.MagicMock(side_effect=TurbiniaException)
+    canary_status = 'exception_message'
+    self.task.setup = mock.MagicMock(
+        side_effect=TurbiniaException('exception_message'))
     self.remove_files.append(
         os.path.join(self.task.base_output_dir, 'worker-log.txt'))
 
     new_result = self.task.run_wrapper(self.evidence.__dict__)
     new_result = TurbiniaTaskResult.deserialize(new_result)
-    new_result.status = new_result.status + self.result.status
     self.assertEqual(type(new_result), TurbiniaTaskResult)
     self.assertIn(canary_status, new_result.status)
 
