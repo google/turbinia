@@ -156,17 +156,17 @@ class TestTurbiniaConfig(unittest.TestCase):
     os.environ.pop(config.ENVCONFIGVAR)
 
   def testParseDependencies(self):
-    """Tests the ParseDependencies() method."""
-    # Ensure config is being parsed correctly.
-    smpl_depends = [{
-        'job': 'PlasoJob',
-        'programs': ['test'],
-        'docker_image': 'test'
-    }]
+    """Tests a valid config for the ParseDependencies() method."""
+    smpl_depends = 'DEPENDENCIES = [{"job": "PlasoJob","programs": ["test"], "docker_image": "test"}]'
+    self.WriteConfig(smpl_depends)
+    config.LoadConfig()
     smpl_out = {'plasojob': {'programs': ['test'], 'docker_image': 'test'}}
-    smpl_test = config.ParseDependencies(smpl_depends)
+    smpl_test = config.ParseDependencies()
     self.assertEqual(smpl_out, smpl_test)
 
-    # Ensure exception is being called with bad config.
-    bad_config = [{'bad_config'}]
-    self.assertRaises(TurbiniaException, config.ParseDependencies, bad_config)
+  def testBadDependenciesConfig(self):
+    """Tests a bad config for the ParseDependencies() method."""
+    bad_config = 'DEPENDENCIES = [{"bad_config"}]'
+    self.WriteConfig(bad_config)
+    config.LoadConfig()
+    self.assertRaises(TurbiniaException, config.ParseDependencies)

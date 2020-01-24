@@ -87,17 +87,17 @@ class TestDockerManager(unittest.TestCase):
     assert self.docker_mgr.client == docker.client.DockerClient
 
   def testVerifyImages(self):
-    """Tests DockerManager.verify_image() method."""
+    """Tests DockerManager.get_image() method."""
     # Test normal execution.
     test_img = '1234'
     self.docker_mgr.client = mock.MagicMock()
     self.docker_mgr.client.images.get.return_value = test_img
-    assert test_img == self.docker_mgr.verify_image(test_img)
+    assert test_img == self.docker_mgr.get_image(test_img)
 
     # Ensure exception is being handled when image doesn't exist.
     self.docker_mgr.client.images.get.side_effect = docker.errors.ImageNotFound(
         'mock test fail.')
-    self.assertRaises(TurbiniaException, self.docker_mgr.verify_image, test_img)
+    self.assertRaises(TurbiniaException, self.docker_mgr.get_image, test_img)
 
   def testListImages(self):
     """Tests DockerManager.list_images() method."""
@@ -114,11 +114,11 @@ class TestDockerManager(unittest.TestCase):
     assert isinstance(self.docker_mgr.list_images(), list)
 
     # Ensure values are properly being stripped off.
-    assert self.docker_mgr.list_images(filters='short_id') == sid_smpl
-    assert self.docker_mgr.list_images(filters='id') == id_smpl
+    assert self.docker_mgr.list_images(return_filter='short_id') == sid_smpl
+    assert self.docker_mgr.list_images(return_filter='id') == id_smpl
 
     # Ensure img object is being returned if incorrect filter is provided.
-    img = self.docker_mgr.list_images(filters='non_exist')
+    img = self.docker_mgr.list_images(return_filter='non_exist')
     assert isinstance(img[0], MockImage)
 
     # Ensure exception is being handled.
@@ -131,18 +131,18 @@ class TestContainerManager(unittest.TestCase):
   """Test ContainerManager class."""
 
   @mock.patch('turbinia.lib.docker_manager.docker')
-  @mock.patch('turbinia.lib.docker_manager.DockerManager.verify_image')
-  def setUp(self, mock_verify, mock_docker):
+  @mock.patch('turbinia.lib.docker_manager.DockerManager.get_image')
+  def setUp(self, mock_get, mock_docker):
     self.test_img = '1234'
     mock_docker.from_env.return_value = docker.client.DockerClient
-    mock_verify.return_value = self.test_img
+    mock_get.return_value = self.test_img
     self.container_mgr = docker_manager.ContainerManager(self.test_img)
 
   def testContainerManagerInit(self):
     """Tests __init__ method of ContainerManager."""
     # Ensure correct instance and image id
     assert self.container_mgr.client == docker.client.DockerClient
-    assert self.container_mgr.image_id == self.test_img
+    assert self.container_mgr.image == self.test_img
 
   @mock.patch('turbinia.lib.docker_manager.IsBlockDevice')
   def testCreateMountPoints(self, mock_blockcheck):
@@ -170,7 +170,7 @@ class TestContainerManager(unittest.TestCase):
     self.container_mgr.client = mock.MagicMock()
     self.container_mgr.client.containers.create.return_value = MockContainer(
         s_logs=s_logs, s_wait=s_wait)
-    stdout, stderr, ret = self.container_mgr.execute_container('cmd')
+    stdout, stderr, ret = self.container_mgr.execute_container('cm', shell=True)
 
     # Ensure correct output
     out = [codecs.decode(w, 'utf-8') for w in s_logs]
@@ -182,4 +182,5 @@ class TestContainerManager(unittest.TestCase):
     exception = docker.errors.APIError('mock test fail.')
     self.container_mgr.client.containers.create.side_effect = exception
     self.assertRaises(
-        TurbiniaException, self.container_mgr.execute_container, 'cmd')
+        TurbiniaException, self.container_mgr.execute_container, 'cmd',
+        shell=True)

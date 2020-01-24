@@ -27,7 +27,8 @@ from operator import attrgetter
 import os
 import stat
 import time
-import shutil
+import subprocess
+import codecs
 
 from turbinia import config
 from turbinia.config import logger
@@ -109,31 +110,32 @@ def check_docker_dependencies(dependencies):
   # does not have bash or which installed. (no linux fs layer).
   log.info('Performing docker dependency check.')
   job_names = list(job_manager.JobsManager.GetJobNames())
-  images = docker_manager.DockerManager().list_images(filters='short_id')
+  images = docker_manager.DockerManager().list_images(return_filter='short_id')
 
   # Iterate through list of jobs
-  for job, vals in dependencies.items():
+  for job, values in dependencies.items():
     if job not in job_names:
       log.warning(
           'The job {0:s} was not found or has been disabled. Skipping '
           'dependency check...'.format(job))
       continue
-    elif vals['docker_image'] in images:
-      for program in vals['programs']:
-        cmd = 'which {0:s}'.format(program)
+    elif values.get('docker_image') in images:
+      for program in values['programs']:
+        cmd = 'type {0:s}'.format(program)
         stdout, stderr, ret = docker_manager.ContainerManager(
-            vals['docker_image']).execute_container(cmd)
-        if stdout == '':
+            values['docker_image']).execute_container(cmd, shell=True)
+        not_avail = 'type: {0:s}: not found'.format(program)
+        if stdout in not_avail:
           raise TurbiniaException(
               'Job dependency {0:s} not found for job {1:s}. Please install '
               'the dependency for the container or disable the job.'.format(
                   program, job))
-      job_manager.JobsManager.RegisterDockerImage(job, vals['docker_image'])
-    elif vals['docker_image'] is not None:
+      job_manager.JobsManager.RegisterDockerImage(job, values['docker_image'])
+    elif values.get('docker_image'):
       raise TurbiniaException(
           'Docker image {0:s} was not found for the job {1:s}. Please '
           'update the config with the correct image id'.format(
-              vals['docker_image'], job))
+              values['docker_image'], job))
 
 
 def check_system_dependencies(dependencies):
@@ -149,18 +151,24 @@ def check_system_dependencies(dependencies):
   job_names = list(job_manager.JobsManager.GetJobNames())
 
   # Iterate through list of jobs
-  for job, vals in dependencies.items():
+  for job, values in dependencies.items():
     if job not in job_names:
       log.warning(
           'The job {0:s} was not found or has been disabled. Skipping '
           'dependency check...'.format(job))
       continue
-    elif vals['docker_image'] is None:
-      for program in vals['programs']:
-        if shutil.which(program) is None:
+    elif not values.get('docker_image'):
+      for program in values['programs']:
+        cmd = 'type {0:s}'.format(program)
+        proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
+        stdout, stderr = proc.communicate()
+        stdout = codecs.decode(stdout, 'utf-8').strip()
+        not_avail = 'type: {0:s}: not found'.format(program)
+        if stdout in not_avail:
           raise TurbiniaException(
-              'Job dependency {0:s} not found for job {1:s}. Please install '
-              'the dependency or disable the job'.format(program, job))
+              'Job dependency {0:s} not found in $PATH for the job {1:s}. '
+              'Please install the dependency or disable the job.'.format(
+                  program, job))
 
 
 def check_directory(directory):
@@ -874,7 +882,7 @@ class TurbiniaCeleryWorker(TurbiniaClient):
       job_manager.JobsManager.DeregisterJobs(jobs_blacklist=disabled_jobs)
 
     # Check for valid dependencies/directories.
-    dependencies = config.ParseDependencies(config.DEPENDENCIES)
+    dependencies = config.ParseDependencies()
     if config.DOCKER_ENABLED:
       check_docker_dependencies(dependencies)
     check_system_dependencies(config.DEPENDENCIES)
@@ -937,7 +945,7 @@ class TurbiniaPsqWorker(object):
       job_manager.JobsManager.DeregisterJobs(jobs_blacklist=disabled_jobs)
 
     # Check for valid dependencies/directories.
-    dependencies = config.ParseDependencies(config.DEPENDENCIES)
+    dependencies = config.ParseDependencies()
     if config.DOCKER_ENABLED:
       check_docker_dependencies(dependencies)
     check_system_dependencies(dependencies)

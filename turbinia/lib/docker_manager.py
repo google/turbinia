@@ -65,53 +65,55 @@ class DockerManager(object):
       docker_client = docker.from_env()
     except docker.errors.APIError as exception:
       raise TurbiniaException(
-          'An issue has occured connecting to the Docker daemon: {0!s}'.format(
+          'An issue has occurred connecting to the Docker daemon: {0!s}'.format(
               exception))
     return docker_client
 
-  def verify_image(self, image_id):
-    """Verify that the Docker image exists.
+  def get_image(self, image_id):
+    """Retrieve the Docker Image object.
 
     Args:
-      image_id(str): The short image id to check for.
+      image_id(str): The short image id.
 
     Returns:
-      image_verif(Image): The Image object.
+      image(Image): The Image object.
 
     Raises:
-      TurbiniaException: If the Docker image is not found.
+      TurbiniaException: If the Docker Image is not found.
     """
     try:
-      image_verif = self.client.images.get(image_id)
+      image = self.client.images.get(image_id)
     except docker.errors.ImageNotFound as exception:
       message = 'The Docker image {0!s} could not be found: {1!s}'
       raise TurbiniaException(message.format(image_id, exception))
-    return image_verif
+    return image
 
-  def list_images(self, filters=None):
+  def list_images(self, return_filter=None):
     """Lists all available Docker images.
 
     Args:
-     filters(str): If provided, will return a subset of the Images data.
+     return_filter(str): If provided, will return a subset of the Images data.
         Allowed values are 'short_id' and 'id'.
 
     Returns:
-      images(list): A list of available Docker images.
+      list: containing:
+        Images: The Image objects
+        str: The Image ids if a filter was specified.
 
     Raises:
-      TurbiniaException: If an error occured retrieving the images.
+      TurbiniaException: If an error occurred retrieving the images.
     """
     accepted_vars = ['short_id', 'id']
     try:
       images = self.client.images.list()
-      if filters in accepted_vars:
+      if return_filter in accepted_vars:
         # short_id and id will always start with sha256:
         images = [
-            getattr(img, filters).replace('sha256:', '') for img in images
+            getattr(img, return_filter).replace('sha256:', '') for img in images
         ]
     except docker.errors.APIError as exception:
       raise TurbiniaException(
-          'An error occured retrieving the images: {0!s}'.format(exception))
+          'An error occurred retrieving the images: {0!s}'.format(exception))
     return images
 
 
@@ -129,7 +131,7 @@ class ContainerManager(DockerManager):
       image_id(str): The image id to create a container from.
     """
     super(ContainerManager, self).__init__()
-    self.image_id = self.verify_image(image_id)
+    self.image = self.get_image(image_id)
 
   def _create_mount_points(self, mount_paths):
     """Creates file and device mounting arguments.
@@ -141,14 +143,15 @@ class ContainerManager(DockerManager):
       mount_paths(list): The paths on the host system to be mounted.
 
     Returns:
-      device_paths(list): device blocks that will be mounted.
-      file_paths(dict): file paths that will be mounted.
+      tuple: containing:
+        list: The device blocks that will be mounted.
+        dict: The file paths that will be mounted.
     """
     device_paths = []
     file_paths = {}
 
     for mpath in mount_paths:
-      if mpath not in file_paths.keys() or mpath not in device_paths:
+      if mpath not in file_paths.keys() and mpath not in device_paths:
         if IsBlockDevice(mpath):
           formatted_path = '{0:s}:{0:s}:{1:s}'.format(mpath, 'r')
           device_paths.append(formatted_path)
@@ -156,7 +159,7 @@ class ContainerManager(DockerManager):
           file_paths[mpath] = {'bind': mpath, 'mode': 'rw'}
     return device_paths, file_paths
 
-  def execute_container(self, cmd, mount_paths=None, **kwargs):
+  def execute_container(self, cmd, shell, mount_paths=None, **kwargs):
     """Executes a Docker container.
 
     A new Docker container will be created from the image id,
@@ -164,16 +167,17 @@ class ContainerManager(DockerManager):
 
     Attributes:
       cmd(str|list): command to be executed.
+      shell (bool): Whether the cmd is in the form of a string or a list.
       mount_paths(list): A list of paths to mount to the container.
       **kwargs: Any additional keywords to pass to the container.
 
     Returns:
       stdout(str): stdout of the container.
       stderr(str): stderr of the container.
-      ret(str): the return code of process run.
+      ret(int): the return code of process run.
 
     Raises:
-      TurbiniaException: If an error occured with the Docker container.
+      TurbiniaException: If an error occurred with the Docker container.
     """
     container = None
     args = {}
@@ -181,9 +185,9 @@ class ContainerManager(DockerManager):
 
     # Override the entrypoint to /bin/sh
     kwargs['entrypoint'] = '/bin/sh'
-    if isinstance(cmd, str):
+    if shell:
       cmd = '-c ' + '\"{0:s}\"'.format(cmd)
-    elif isinstance(cmd, list):
+    else:
       cmd = ' '.join(cmd)
       cmd = '-c ' + '\"{0:s}\"'.format(cmd)
 
@@ -198,20 +202,20 @@ class ContainerManager(DockerManager):
       args[key] = value
 
     try:
-      container = self.client.containers.create(self.image_id, cmd, **args)
+      container = self.client.containers.create(self.image, cmd, **args)
       container.start()
       # Stream program stdout from container
       stdstream = container.logs(stream=True)
       for stdo in stdstream:
         stdo = codecs.decode(stdo, 'utf-8').strip()
-        log.info(stdo)
+        print(stdo)
         stdout += stdo
       results = container.wait()
     except docker.errors.APIError as exception:
       if container:
         container.remove(v=True)
       message = (
-          'An error has occured with the container: {0!s}'.format(exception))
+          'An error has occurred with the container: {0!s}'.format(exception))
       log.error(message)
       raise TurbiniaException(message)
 

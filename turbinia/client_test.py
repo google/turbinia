@@ -442,7 +442,7 @@ class TestTurbiniaPsqWorker(unittest.TestCase):
     config.LoadConfig()
     config.OUTPUT_DIR = self.tmp_dir
     config.MOUNT_DIR_PREFIX = self.tmp_dir
-    config.DEPENDENCIES = []
+    config.ParseDependencies = mock.MagicMock(return_value={})
 
   def tearDown(self):
     if 'turbinia-test' in self.tmp_dir:
@@ -477,9 +477,9 @@ class TestTurbiniaPsqWorker(unittest.TestCase):
     open(config.OUTPUT_DIR, 'a').close()
     self.assertRaises(TurbiniaException, TurbiniaPsqWorker)
 
-  @mock.patch('turbinia.client.shutil')
+  @mock.patch('turbinia.client.subprocess.Popen')
   @mock.patch('logging.Logger.warning')
-  def testSystemDependencyCheck(self, mock_logger, mock_shutil):
+  def testSystemDependencyCheck(self, mock_logger, peopen_mock):
     """Test system dependency check."""
     dependencies = {
         'plasojob': {
@@ -487,14 +487,15 @@ class TestTurbiniaPsqWorker(unittest.TestCase):
             'docker_image': None
         }
     }
-
     # Dependency not found.
-    mock_shutil.which.return_value = None
+    proc_mock = mock.MagicMock()
+    proc_mock.communicate.return_value = (b'type: non_exist: not found', None)
+    peopen_mock.return_value = proc_mock
     self.assertRaises(
         TurbiniaException, check_system_dependencies, dependencies)
 
     # Normal run.
-    mock_shutil.which.return_value = True
+    proc_mock.communicate.return_value = (b'program_exists', None)
     check_system_dependencies(dependencies)
 
     # Job not found.
