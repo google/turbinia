@@ -378,15 +378,17 @@ class RawDisk(Evidence):
     super(RawDisk, self).__init__(*args, **kwargs)
 
   def _preprocess(self, _):
-    self.device_path, partition_paths = mount_local.PreprocessLosetup(
-        self.source_path)
-    self.mount_path = mount_local.PreprocessMountDisk(
-        partition_paths, self.mount_partition)
-    self.local_path = self.device_path
+    pass
+#    self.device_path, partition_paths = mount_local.PreprocessLosetup(
+#        self.source_path)
+#    self.mount_path = mount_local.PreprocessMountDisk(
+#        partition_paths, self.mount_partition)
+#    self.local_path = self.device_path
 
   def _postprocess(self):
-    mount_local.PostprocessUnmountPath(self.mount_path)
-    mount_local.PostprocessDeleteLosetup(self.device_path)
+    pass
+#    mount_local.PostprocessUnmountPath(self.mount_path)
+#    mount_local.PostprocessDeleteLosetup(self.device_path)
 
 
 class EncryptedDisk(RawDisk):

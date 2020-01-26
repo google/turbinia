@@ -108,24 +108,24 @@ def check_dependencies(dependencies):
   log.info('Performing system dependency check.')
   job_names = list(job_manager.JobsManager.GetJobNames())
   # Iterate through dependency config and perform a system check.
-  try:
-    for dep in dependencies:
-      if dep['job'].lower() in job_names:
-        for p in dep['programs']:
-          # Program can not be found.
-          if shutil.which(p) is None:
-            raise TurbiniaException(
-                'Job dependency {0:s} not found for job: {1:s}. Please install '
-                'the dependency or disable the job.'.format(p, dep['job']))
-      # If job is not found in list of registered jobs.
-      else:
-        log.warning(
-            'The job: {0:s} was not found or has been disabled. Skipping '
-            'dependency check...'.format(dep['job']))
-  except (KeyError, TypeError) as exception:
-    raise TurbiniaException(
-        'An issue has occured while parsing the '
-        'dependency config:{0!s} '.format(exception))
+#  try:
+#    for dep in dependencies:
+#      if dep['job'].lower() in job_names:
+#        for p in dep['programs']:
+#          # Program can not be found.
+#          if shutil.which(p) is None:
+#            raise TurbiniaException(
+#                'Job dependency {0:s} not found for job: {1:s}. Please install '
+#                'the dependency or disable the job.'.format(p, dep['job']))
+#      # If job is not found in list of registered jobs.
+#      else:
+#        log.warning(
+#            'The job: {0:s} was not found or has been disabled. Skipping '
+#            'dependency check...'.format(dep['job']))
+#  except (KeyError, TypeError) as exception:
+#    raise TurbiniaException(
+#        'An issue has occured while parsing the '
+#        'dependency config:{0!s} '.format(exception))
 
   log.info(
       'Dependency check complete. The following jobs will be active:'

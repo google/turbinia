@@ -53,6 +53,12 @@ class TurbiniaJob(object):
     self.evidence.request_id = request_id
     self.evidence.config = evidence_config if evidence_config else {}
 
+  def validate_task_conf(task_defaul_conf, proposed_conf):
+    for k in proposed_conf.keys():
+      if k not in task_defaul_conf:
+        return False
+    return True
+
   def check_done(self):
     """Check to see if all Tasks for this Job have completed.
 
@@ -129,28 +135,3 @@ class TurbiniaJob(object):
     if task_name in evidence_config.task_recipes:
       return evidence_config.task_recipes[task_name]
     return None
-
-  def validate_task_recipe_instance(self, recipe_instance, base_recipe_obj, strict_params=True):
-    """ Enforce minimum set of checks to ensure recipe contains the necessary parameters for the tool to function and no obvious errors are present in recipe."""
-    valid = True
-    # Checking for flags and params marked as required.
-    if recipe_instance and base_recipe_obj:
-      for param in base_recipe_obj['required_params']:
-        if param not in recipe_obj['params']:
-          log.debug('Param {0:s} missing, marked as required'.format(param))
-          valid = False
-      for flag in base_recipe_obj['required_flags']:
-        if flag not in recipe_obj['flags']:
-          log.debug('Flag {0:s} missing, marked as required'.format(flag))
-          valid = False
-      # Checking for the presence of flags or params not marked as allowed
-      if strict_params:
-        for param in recipe_obj['params']:
-          if param not in base_recipe_obj['allowed_params']:
-            log.debug('Strict param checking enabled. Provided param {0:s} not incuded in the list of allowed params.'.format(param))  
-            valid = False
-        for flag in recipe_obj['flags']:
-          if flag not in base_recipe_obj['allowed_flags']:
-            log.debug('Strict flag checking enabled. Provided flag {0:s} not incuded in the list of allowed params.'.format(flag))  
-            valid = False
-    return valid

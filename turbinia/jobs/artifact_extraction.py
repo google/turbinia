@@ -12,7 +12,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """job to conditionally extract artifacts from a filesystem image"""
 
 from __future__ import unicode_literals
@@ -47,11 +46,17 @@ class ArtifactExtractionJob(interface.TurbiniaJob):
         A list of tasks to schedule.
     """
     #Retrieve appropriabe base config
-    base_config = self.get_base_config('FileArtifactExtractionTask')
-    task_recipe = self.evidence.config['task_recipes']['FileArtifactExtractionTask'] 
-    for instance, instance_recipe in task_recipe['instances'].items():
-      if self.validate_task_recipe_instance(instance_recipe, base_config):
-        tasks = [FileArtifactExtractionTask(recipe=instance_recipe, base_task_config=base_config) for _ in evidence]
+    task_recipe = self.evidence.config.get('FileArtifactExtractionTask', None)
+    if task_recipe:
+      tasks = []
+      for variant in task_recipe['variant']:
+        for _ in evidence:
+          new_task = FileArtifactExtractionTask(task_variant=variant)
+          if self.validate_task_conf(new_task.task_conf, task_recipe[variant]):
+            tasks.append(new_task)
+    else:
+      tasks = [FileArtifactExtractionTask() for _ in evidence]
     return tasks
-        
+
+
 manager.JobsManager.RegisterJobs([ArtifactExtractionJob])

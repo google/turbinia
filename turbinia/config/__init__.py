@@ -92,7 +92,6 @@ OPTIONAL_VARS = [
     'EMAIL_PASSWORD',
     # Recipe Config
     'BASE_TASK_CONFIG_FILE',
-    'RECIPE_FILE_DIR'
 ]
 
 # Environment variable to look for path data in
@@ -193,6 +192,7 @@ def ValidateAndSetConfig(_config):
     else:
       setattr(sys.modules[__name__], var, getattr(_config, var))
 
+
 class TurbiniaRecipe(object):
   """ Base class for Turbinia recipes
 
@@ -213,45 +213,46 @@ class TurbiniaRecipe(object):
     self.name = ""
     self.jobs_whitelist = []
     self.jobs_blacklist = []
-    self.filter_patterns = []    
+    self.filter_patterns = []
     self.task_recipes = {}
- 
+
   def load(self):
-    # Assumes a main turbinia config is available, as recipe and pattern file directories must be present.
-    if not CONFIG:
-      LoadConfig()
+    LoadConfig()
     with open(self.recipe_file, 'r') as r_file:
       recipe_contents = r_file.read()
     recipe_dict = load(recipe_contents, Loader=Loader)
-    try:
-      self.jobs_whitelist = recipe_dict['jobs_whitelist']
-      self.jobs_blacklist = recipe_dict['jobs_blacklist']
-    except KeyError as e:
-      setattr(self, e.args[0], [])
-
+    self.jobs_whitelist = recipe_dict.get('jobs_whitelist', [])
+    self.jobs_blacklist = recipe_dict.get('jobs_blacklist', [])
     for _file in self.filter_patterns_files:
       with open(_file) as pattern_file:
         line = pattern_file.readline()
         if line not in self.filter_patterns:
           self.filter_patterns.append(line)
     for task, task_content in recipe_dict['tasks'].items():
-      aux_task_recipe = TurbiniaTaskRecipe(self.name)  
-      aux_task_recipe.load(task_content, parent_meta_params=task_content['meta_params'])
+      aux_task_recipe = TurbiniaTaskRecipe(self.name)
+      aux_task_recipe.load(
+          task_content, parent_meta_params=task_content['meta_params'])
       if task in self.task_recipes:
-        raise TurbiniaException('Two recipes for the same tool {0:s} have been found. If you wish to specify several task runs of the same tools, please add several task instances to the same tool recipe.')
+        raise TurbiniaException(
+            'Two recipes for the same tool {0:s} have been found. If you wish to specify several task runs of the same tools, please add several task instances to the same tool recipe.'
+        )
       self.task_recipes[task] = aux_task_recipe
 
   def retrieve_task_recipe(self, task):
     if task in self.task_recipes:
       return self.task_recipes[task]
-        
+
   def serialize(self):
     serialized_data = self.__dict__.copy()
-    serialized_data['task_recipes'] = {k:v.serialize() for k, v in self.task_recipes.items()}
+    serialized_data['task_recipes'] = {
+        k: v.serialize() for k, v in self.task_recipes.items()
+    }
     return serialized_data
+
 
 class TurbiniaTaskRecipe(object):
   """ Base class for task recipe container"""
+
   def __init__(self, name):
     self.name = name
     self.meta_params = {}
@@ -267,10 +268,10 @@ class TurbiniaTaskRecipe(object):
     # specify only one task instance.
     if 'instances' not in data:
       data["instances"] = {
-              self.name: {
-                    "params": data["params"],
-                    "meta_params": data["meta_params"]
-              }
+          self.name: {
+              "params": data["params"],
+              "meta_params": data["meta_params"]
+          }
       }
     for instance, instance_config in data['instances'].items():
       aux_instance = TaskRecipeInstance(name=instance)
@@ -281,12 +282,15 @@ class TurbiniaTaskRecipe(object):
     serialized_data = {}
     serialized_data['name'] = self.name
     serialized_data['meta_params'] = self.meta_params
-    serialized_data['instances'] = {k:v.__dict__ for k, v in self.instances.items()}
+    serialized_data['instances'] = {
+        k: v.__dict__ for k, v in self.instances.items()
+    }
     return serialized_data
 
 
 class TaskRecipeInstance(object):
   """ Class to house an instance of a task recipe """
+
   def __init__(self, name):
     self.name = name
     self.meta_params = {}
@@ -310,7 +314,8 @@ class TurbiniaBaseTaskConfig(object):
       base_task_config_file(str): path to base task recipe file
       base_task_config_instances(list): list of TurbiniaTaskConfigInstance
       each containing the base task recipe config for the relevant task.
-  """ 
+  """
+
   def __new__(cls, *args, **kwargs):
     if not hasattr(cls, 'instance'):
       cls.instance = super().__new__(cls)
@@ -326,19 +331,24 @@ class TurbiniaBaseTaskConfig(object):
     self.base_task_config = load(base_config_file_contents, Loader=Loader)
     for base_config_name, base_task_config in self.base_task_config.items():
       if base_config_name in self.base_task_config_instances:
-        raise TurbiniaException('Two instances of base task config for {0:s} found. Only one can be specified'.format(base_config_name))
-      aux_base_config = TurbiniaTaskConfigInstance(base_config_name, base_task_config)
+        raise TurbiniaException(
+            'Two instances of base task config for {0:s} found. Only one can be specified'
+            .format(base_config_name))
+      aux_base_config = TurbiniaTaskConfigInstance(
+          base_config_name, base_task_config)
       self.base_task_config_instances[base_config_name] = aux_base_config
 
   def retrieve_base_config(self, task_name):
     return self.base_task_config_instances.get(task_name, None)
 
+
 class TurbiniaTaskConfigInstance(object):
   """ Intance of a base task config. """
+
   def __init__(self, name, base_task_config):
     self.name = name
     try:
-      self.required_flags =  base_task_config['required_flags']
+      self.required_flags = base_task_config['required_flags']
       self.required_params = base_task_config['required_params']
       self.allowed_flags = base_task_config['allowed_flags']
       self.allowed_params = base_task_config['allowed_params']

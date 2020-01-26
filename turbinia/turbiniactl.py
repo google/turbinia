@@ -74,9 +74,8 @@ def main():
       '(/etc/turbinia.conf, ~/.turbiniarc, or in paths referenced in '
       'environment variable TURBINIA_CONFIG_PATH)', required=False)
   parser.add_argument(
-      '-I', '--recipe_file', help='Recipe configuration data passed in as '
-      'json file. Contains the parameters to be fed to a speficic task.'
-      , required=False)
+      '-I', '--recipe', help='Name of Recipe to be employed on evidence',
+      required=False)
   parser.add_argument(
       '-C', '--recipe_config', help='Recipe configuration data passed in as '
       'comma separated key=value pairs (e.g. '
@@ -667,14 +666,19 @@ def main():
     request = TurbiniaRequest(
         request_id=args.request_id, requester=getpass.getuser())
     request.evidence.append(evidence_)
-    if args.recipe_file:
-      recipe_obj = TurbiniaRecipe(os.path.join(config.RECIPE_FILE_DIR, args.recipe_file))
+    if args.recipe:
+      if args.jobs_blacklist or args.jobs_whitelist or args.filter_patterns_file:
+        raise TurbiniaException(
+            'Specifying a recipe is incompatible with defining'
+            ' jobs white/black lists and filter patterns separately.')
+      recipe_obj = TurbiniaRecipe(
+          os.path.join(config.RECIPE_FILE_DIR, args.recipe))
       recipe_obj.load()
       request.recipe = recipe_obj.serialize()
     else:
       request.recipe = {}
-      if args.filter_patterns:
-        request.recipe['filter_patterns'] = args.filter_patterns
+      if args.filter_patterns_file:
+        request.recipe['filter_patterns'] = filter_patterns
       if args.jobs_blacklist:
         request.recipe['jobs_blacklist'] = args.jobs_blacklist
       if args.jobs_whitelist:
