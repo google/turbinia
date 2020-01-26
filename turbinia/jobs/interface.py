@@ -121,16 +121,6 @@ class TurbiniaJob(object):
               task_id, self.name))
     return bool(remove_task)
 
-  def get_base_config(self, task_name):
-    #Check whether base task config has been specified
-    g_config = config.LoadConfig()
-    if config.BASE_TASK_CONFIG_FILE:
-      base_configs = config.TurbiniaBaseTaskConfig(g_config)
-      base_configs.load()
-      base_config = base_configs.retrieve_base_config(task_name)
-      return base_config
-    return None
-
   def get_task_recipe(self, evidence_config, task_name):
     if task_name in evidence_config.task_recipes:
       return evidence_config.task_recipes[task_name]
