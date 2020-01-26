@@ -667,10 +667,11 @@ def main():
         request_id=args.request_id, requester=getpass.getuser())
     request.evidence.append(evidence_)
     if args.recipe:
-      if args.jobs_blacklist or args.jobs_whitelist or args.filter_patterns_file:
+      if args.jobs_blacklist or args.jobs_whitelist or args.filter_patterns_file or args.recipe_config:
         raise TurbiniaException(
             'Specifying a recipe is incompatible with defining'
-            ' jobs white/black lists and filter patterns separately.')
+            ' jobs white/black lists, filter patterns or recipe_config parameters separately.'
+        )
       recipe_obj = TurbiniaRecipe(
           os.path.join(config.RECIPE_FILE_DIR, args.recipe))
       recipe_obj.load()
