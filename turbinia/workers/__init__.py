@@ -434,14 +434,14 @@ class TurbiniaTask(object):
     # Execute the job via docker.
     docker_image = job_manager.JobsManager.GetDockerImage(self.job_name)
     if docker_image:
-      paths = [
-          result.input_evidence.device_path, result.input_evidence.local_path,
-          result.input_evidence.source_path, result.input_evidence.mount_path,
-          self.output_dir, self.tmp_dir
+      ro_paths = [
+          result.input_evidence.local_path, result.input_evidence.source_path,
+          result.input_evidence.device_path, result.input_evidence.mount_path
       ]
+      rw_paths = [self.output_dir, self.tmp_dir]
       container_manager = docker_manager.ContainerManager(docker_image)
       stdout, stderr, ret = container_manager.execute_container(
-          cmd, shell, mount_paths=paths)
+          cmd, shell, ro_paths=ro_paths, rw_paths=rw_paths)
 
     # Execute the job on the host system.
     else:

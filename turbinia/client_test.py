@@ -489,13 +489,13 @@ class TestTurbiniaPsqWorker(unittest.TestCase):
     }
     # Dependency not found.
     proc_mock = mock.MagicMock()
-    proc_mock.communicate.return_value = (b'type: non_exist: not found', None)
+    proc_mock.returncode = 1
     peopen_mock.return_value = proc_mock
     self.assertRaises(
         TurbiniaException, check_system_dependencies, dependencies)
 
     # Normal run.
-    proc_mock.communicate.return_value = (b'program_exists', None)
+    proc_mock.returncode = 0
     check_system_dependencies(dependencies)
 
     # Job not found.
@@ -524,7 +524,7 @@ class TestTurbiniaPsqWorker(unittest.TestCase):
     mock_cm = mock_contmgr.return_value
 
     # Dependency not found.
-    mock_cm.execute_container.return_value = ['', None, 0]
+    mock_cm.execute_container.return_value = ['non_exist', None, 1]
     self.assertRaises(
         TurbiniaException, check_docker_dependencies, dependencies)
 

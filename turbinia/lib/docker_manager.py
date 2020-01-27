@@ -133,14 +133,17 @@ class ContainerManager(DockerManager):
     super(ContainerManager, self).__init__()
     self.image = self.get_image(image_id)
 
-  def _create_mount_points(self, mount_paths):
+  def _create_mount_points(self, mount_paths, mode='rw'):
     """Creates file and device mounting arguments.
 
-    The arguments will be passed into the container and all device blocks
-    will be mounted as ro while file paths would be mounted as rw.
+    The arguments will be passed into the container with the appropiate
+    mounting parameters. All device blocks will be mounted as read only,
+    regardless of the specified mode.
 
     Attributes:
       mount_paths(list): The paths on the host system to be mounted.
+      mode(str): The mode the path will be mounted in. The acceptable
+                 parameters are rw for read write and ro for read only.
 
     Returns:
       tuple: containing:
@@ -156,10 +159,11 @@ class ContainerManager(DockerManager):
           formatted_path = '{0:s}:{0:s}:{1:s}'.format(mpath, 'r')
           device_paths.append(formatted_path)
         else:
-          file_paths[mpath] = {'bind': mpath, 'mode': 'rw'}
+          file_paths[mpath] = {'bind': mpath, 'mode': mode}
     return device_paths, file_paths
 
-  def execute_container(self, cmd, shell, mount_paths=None, **kwargs):
+  def execute_container(
+      self, cmd, shell, ro_paths=None, rw_paths=None, **kwargs):
     """Executes a Docker container.
 
     A new Docker container will be created from the image id,
@@ -192,10 +196,19 @@ class ContainerManager(DockerManager):
       cmd = '-c ' + '\"{0:s}\"'.format(cmd)
 
     # Create the device and file mount paths
-    if mount_paths:
-      device_paths, file_paths = self._create_mount_points(mount_paths)
-      args['devices'] = device_paths if device_paths else []
-      args['volumes'] = file_paths if file_paths else []
+    device_paths = []
+    file_paths = {}
+    if rw_paths:
+      dwpath, fwpath = self._create_mount_points(rw_paths)
+      device_paths.extend(dwpath)
+      file_paths.update(fwpath)
+    if ro_paths:
+      drpath, frpath = self._create_mount_points(ro_paths, mode='ro')
+      device_paths.extend(drpath)
+      file_paths.update(frpath)
+
+    args['devices'] = device_paths
+    args['volumes'] = file_paths
 
     # Add any additional arguments
     for key, value in kwargs.items():

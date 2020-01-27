@@ -233,9 +233,6 @@ class JobsManager(object):
     Args:
       job_name(str): name of the job.
       docker_image(str): name of the Docker image to be registered.
-
-    Raises:
-      KeyError: If job class is already set for the corresponding name.
     """
     job_name = job_name.lower()
     cls._job_classes[job_name].docker_image = docker_image
@@ -249,12 +246,9 @@ class JobsManager(object):
 
     Returns:
       docker_image(str): The Docker image if available.
-
-    Raises:
-      KeyError: If job class is already set for the corresponding name.
     """
     docker_image = None
-    job_class = cls._job_classes[job_name.lower()]
-    if hasattr(job_class, 'docker_image'):
+    job_class = cls._job_classes.get(job_name.lower())
+    if hasattr(job_class, 'docker_image') and job_class:
       docker_image = job_class.docker_image
     return docker_image

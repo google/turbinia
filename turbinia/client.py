@@ -124,8 +124,7 @@ def check_docker_dependencies(dependencies):
         cmd = 'type {0:s}'.format(program)
         stdout, stderr, ret = docker_manager.ContainerManager(
             values['docker_image']).execute_container(cmd, shell=True)
-        not_avail = 'type: {0:s}: not found'.format(program)
-        if stdout in not_avail:
+        if ret != 0:
           raise TurbiniaException(
               'Job dependency {0:s} not found for job {1:s}. Please install '
               'the dependency for the container or disable the job.'.format(
@@ -160,11 +159,10 @@ def check_system_dependencies(dependencies):
     elif not values.get('docker_image'):
       for program in values['programs']:
         cmd = 'type {0:s}'.format(program)
-        proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
-        stdout, stderr = proc.communicate()
-        stdout = codecs.decode(stdout, 'utf-8').strip()
-        not_avail = 'type: {0:s}: not found'.format(program)
-        if stdout in not_avail:
+        proc = subprocess.Popen(cmd, shell=True)
+        proc.communicate()
+        ret = proc.returncode
+        if ret != 0:
           raise TurbiniaException(
               'Job dependency {0:s} not found in $PATH for the job {1:s}. '
               'Please install the dependency or disable the job.'.format(
