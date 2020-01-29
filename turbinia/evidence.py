@@ -296,11 +296,6 @@ class EvidenceCollection(Evidence):
     self.collection.append(evidence)
 
 
-class Directory(Evidence):
-  """Filesystem directory evidence."""
-  pass
-
-
 class CompressedDirectory(Evidence):
   """CompressedDirectory based evidence.
 

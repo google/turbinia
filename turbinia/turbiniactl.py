@@ -275,17 +275,6 @@ def main():
       '-m', '--module_list', type=csv_list,
       help='Volatility module(s) to execute', required=True)
 
-  # Parser options for Directory evidence type
-  parser_directory = subparsers.add_parser(
-      'directory', help='Process a directory as Evidence')
-  parser_directory.add_argument(
-      '-l', '--source_path', help='Local path to the evidence', required=True)
-  parser_directory.add_argument(
-      '-s', '--source', help='Description of the source of the evidence',
-      required=False)
-  parser_directory.add_argument(
-      '-n', '--name', help='Descriptive name of the evidence', required=False)
-
   # Parser options for CompressedDirectory evidence type
   parser_directory = subparsers.add_parser(
       'compressedirectory', help='Process a compressed tar file as Evidence')
@@ -521,11 +510,6 @@ def main():
     evidence_ = evidence.BitlockerDisk(
         name=args.name, source_path=source_path, recovery_key=args.recovery_key,
         password=args.password, source=args.source)
-  elif args.command == 'directory':
-    args.name = args.name if args.name else args.source_path
-    source_path = os.path.abspath(args.source_path)
-    evidence_ = evidence.Directory(
-        name=args.name, source_path=source_path, source=args.source)
   elif args.command == 'compressedirectory':
     archive.ValidateTarFile(args.source_path)
     args.name = args.name if args.name else args.source_path

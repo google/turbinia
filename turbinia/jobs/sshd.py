@@ -18,7 +18,6 @@ from __future__ import unicode_literals
 
 from turbinia.workers import artifact
 from turbinia.workers import sshd
-from turbinia.evidence import Directory
 from turbinia.evidence import DockerContainer
 from turbinia.evidence import GoogleCloudDisk
 from turbinia.evidence import GoogleCloudDiskRawEmbedded
@@ -34,8 +33,7 @@ class SSHDExtractionJob(interface.TurbiniaJob):
 
   # The types of evidence that this Job will process
   evidence_input = [
-      Directory, DockerContainer, RawDisk, GoogleCloudDisk,
-      GoogleCloudDiskRawEmbedded
+      DockerContainer, RawDisk, GoogleCloudDisk, GoogleCloudDiskRawEmbedded
   ]
 
   evidence_output = [ExportedFileArtifact]

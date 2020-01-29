@@ -16,7 +16,6 @@
 
 from __future__ import unicode_literals
 
-from turbinia.evidence import Directory
 from turbinia.evidence import GoogleCloudDisk
 from turbinia.evidence import GoogleCloudDiskRawEmbedded
 from turbinia.evidence import RawDisk
@@ -30,9 +29,7 @@ class BinaryExtractorJob(interface.TurbiniaJob):
   """Run image_export.py on evidence to extract binaries."""
 
   # The types of evidence that this Job will process.
-  evidence_input = [
-      Directory, RawDisk, GoogleCloudDisk, GoogleCloudDiskRawEmbedded
-  ]
+  evidence_input = [RawDisk, GoogleCloudDisk, GoogleCloudDiskRawEmbedded]
   evidence_output = [BinaryExtraction]
 
   NAME = 'BinaryExtractorJob'
