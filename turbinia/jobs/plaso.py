@@ -6,7 +6,6 @@
 # You may obtain a copy of the License at
 #
 #      http://www.apache.org/licenses/LICENSE-2.0
-#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -49,7 +48,17 @@ class PlasoJob(interface.TurbiniaJob):
     Returns:
         A list of PlasoTasks.
     """
-    return [PlasoTask() for _ in evidence]
+    task_recipe = self.evidence.config.get('PlasoTask', None)
+    if task_recipe:
+      tasks = []
+      for variant in task_recipe['variant']:
+        for _ in evidence:
+          new_task = PlasoTask(task_variant=variant)
+          if self.validate_task_conf(new_task.task_conf, task_recipe[variant]):
+            tasks.append(new_task)
+    else:
+      tasks = [PlasoTask() for _ in evidence]
+    return tasks
 
 
 manager.JobsManager.RegisterJob(PlasoJob)

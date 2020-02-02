@@ -53,7 +53,7 @@ class TurbiniaJob(object):
     self.evidence.request_id = request_id
     self.evidence.config = evidence_config if evidence_config else {}
 
-  def validate_task_conf(task_defaul_conf, proposed_conf):
+  def validate_task_conf(self, task_defaul_conf, proposed_conf):
     for k in proposed_conf.keys():
       if k not in task_defaul_conf:
         return False

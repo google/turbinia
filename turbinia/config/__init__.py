@@ -196,19 +196,21 @@ def ValidateAndSetConfig(_config):
 class TurbiniaRecipe(object):
   """ Base class for Turbinia recipes
 
-  Attributes:
+  Attributes
       recipe_file (str): name of the recipe file to be loaded.
       jobs_whitelist (list): A whitelist for Jobs that will be allowed to run.
-      jobs_blacklist (list): A blacklist for Jobs that will not be allowed to run.
-      filter_patterns_file (str): Path to a file containing newline separated string patterns with which to filter text
-          based evidence.
-      task_recipes (dict): Object containing a task specific recipe for each of the tasks invoked in the Turbinia 
-          recipe.
+      jobs_blacklist (list): A blacklist for Jobs that will not be
+      allowed to run.
+      filter_patterns_file (str): Path to a file containing newline separated
+      string patterns with which to filter text based evidence.
+      task_recipes (dict): Object containing a task specific recipe for
+      each of the tasks invoked in the Turbinia recipe.
 """
 
-  def __init__(self, recipe_file, filter_patterns_files=[]):
+  def __init__(self, recipe_file, filter_patterns_file=''):
     self.recipe_file = recipe_file
-    self.filter_patterns_files = filter_patterns_files if filter_patterns_files else []
+    self.filter_patterns_file = (
+        filter_patterns_file if filter_patterns_file else [])
 
     self.name = ""
     self.jobs_whitelist = []
@@ -217,6 +219,7 @@ class TurbiniaRecipe(object):
     self.task_recipes = {}
 
   def load(self):
+    """ Load recipe from file. """
     LoadConfig()
     with open(self.recipe_file, 'r') as r_file:
       recipe_contents = r_file.read()
@@ -228,21 +231,26 @@ class TurbiniaRecipe(object):
         line = pattern_file.readline()
         if line not in self.filter_patterns:
           self.filter_patterns.append(line)
-    for task, task_content in recipe_dict['tasks'].items():
-      aux_task_recipe = TurbiniaTaskRecipe(self.name)
-      aux_task_recipe.load(
-          task_content, parent_meta_params=task_content['meta_params'])
-      if task in self.task_recipes:
+    for recipe_item, item_contents in recipe_dict.items():
+      if (recipe_item in
+          ['jobs_blacklist', 'jobs_whitelist', 'filter_patterns_files']):
+        aux_task_recipe = TurbiniaTaskRecipe(recipe_item)
+        aux_task_recipe.load(item_contents)
+      if recipe_item in self.task_recipes:
         raise TurbiniaException(
-            'Two recipes for the same tool {0:s} have been found. If you wish to specify several task runs of the same tools, please add several task instances to the same tool recipe.'
+            'Two recipes for the same tool {0:s} have been found.'
+            'If you wish to specify several task runs of the same tools,'
+            'please add several task variants to the same tool recipe.'
         )
-      self.task_recipes[task] = aux_task_recipe
+      self.task_recipes[recipe_item] = aux_task_recipe
 
   def retrieve_task_recipe(self, task):
+    """ Retrieve recipe by name.  """
     if task in self.task_recipes:
       return self.task_recipes[task]
 
   def serialize(self):
+    """ Obtain serialized task recipe dict. """
     serialized_data = self.__dict__.copy()
     serialized_data['task_recipes'] = {
         k: v.serialize() for k, v in self.task_recipes.items()
@@ -251,56 +259,43 @@ class TurbiniaRecipe(object):
 
 
 class TurbiniaTaskRecipe(object):
-  """ Base class for task recipe container"""
+  """ Base class for task recipe container. """
 
   def __init__(self, name):
     self.name = name
-    self.meta_params = {}
-    self.instances = {}
+    self.variants = {}
 
-  def load(self, data, parent_meta_params=None):
-    if hasattr(data, 'meta_params'):
-      self.meta_params = data['meta_params']
-    else:
-      self.meta_params = parent_meta_params
+  def load(self, data):
+    """ Load task recipe from dict """
 
-    # Providing the flexibility of not specifying an instances tag where one wants to
-    # specify only one task instance.
-    if 'instances' not in data:
-      data["instances"] = {
+    if 'variants' not in data:
+      data['variants'] = {
           self.name: {
               "params": data["params"],
-              "meta_params": data["meta_params"]
           }
       }
-    for instance, instance_config in data['instances'].items():
-      aux_instance = TaskRecipeInstance(name=instance)
-      aux_instance.load(instance_config, parent_meta_params=self.meta_params)
-      self.instances[instance] = aux_instance
+    for variant, variant_config in data['variants'].items():
+      aux_variant = TaskRecipeVariant(name=variant)
+      aux_variant.load(variant_config)
+      self.instances[variant] = aux_variant
 
   def serialize(self):
+    """ Serialize task tecipe into dict. """
     serialized_data = {}
     serialized_data['name'] = self.name
-    serialized_data['meta_params'] = self.meta_params
-    serialized_data['instances'] = {
+    serialized_data['variants'] = {
         k: v.__dict__ for k, v in self.instances.items()
     }
     return serialized_data
 
 
-class TaskRecipeInstance(object):
+class TaskRecipeVariant(object):
   """ Class to house an instance of a task recipe """
 
   def __init__(self, name):
     self.name = name
-    self.meta_params = {}
     self.params = None
 
-  def load(self, data, parent_meta_params=None):
-    if hasattr(data, 'meta_params'):
-      self.meta_params = data['meta_params']
-    elif parent_meta_params:
-      self.meta_params = parent_meta_params
-
-    self.params = data['params'] if 'params' in data else []
-    self.flags = data['flags'] if 'flags' in data else []
+  def load(self, data):
+    """ Load task recipe intance from dict. """
+    self.params = data['params'] if 'params' in data else {}

@@ -28,6 +28,34 @@ from turbinia.workers import TurbiniaTask
 class PlasoTask(TurbiniaTask):
   """Task to run Plaso (log2timeline)."""
 
+  task_conf = {
+      'artifact_filters': [],
+      'no_vss': False,
+      'vss_only': False,
+      'volumes': 'all',
+      'partitions': 'all',
+      'vss_stores': 'all',
+    }
+
+  def build_command(self):
+    """ Tasked with building the command """
+    # Base command could be potentially placed in global configuration
+    cmd = ['log2timeline.py']
+    for k, v in self.task_conf.items():
+      prepend = '-'
+      if len(k) > 1:
+        prepend = '--'
+      if isinstance(v, list):
+        if v:
+          cmd.extend([prepend + k, ','.join(v)])
+      elif isinstance(v, bool):
+        if v:
+          cmd.append(prepend + k)
+      elif isinstance(v, str):
+        if v:
+          cmd.extend([prepend + k, v])
+    return cmd
+
   def run(self, evidence, result):
     """Task that process data with Plaso.
 
@@ -46,10 +74,14 @@ class PlasoTask(TurbiniaTask):
     plaso_evidence = PlasoFile(source_path=plaso_file)
     plaso_log = os.path.join(self.output_dir, '{0:s}.log'.format(self.id))
 
-    # TODO(aarontp): Move these flags into a recipe
-    cmd = (
-        'log2timeline.py --status_view none --hashers all '
-        '--partition all --vss_stores all').split()
+    if self.task_variant:
+      self.task_conf.update(evidence.confg[self.task_variant])
+      cmd = self.build_command()
+    else:
+      # TODO(aarontp): Move these flags into a recipe
+      cmd = (
+          'log2timeline.py --status_view none --hashers all '
+          '--partition all --vss_stores all').split()
     if config.DEBUG_TASKS:
       cmd.append('-d')
 
