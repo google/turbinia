@@ -229,6 +229,8 @@ class TurbiniaRecipe(object):
         message = (
             'Could not load recipe file {0:s}: {1!s}'.format(
                 self.recipe_file, exception))
+        log.error(message)
+        raise TurbiniaException(message)
     recipe_dict = load(recipe_contents, Loader=Loader)
     self.jobs_whitelist = recipe_dict.get('jobs_whitelist', [])
     self.jobs_blacklist = recipe_dict.get('jobs_blacklist', [])
