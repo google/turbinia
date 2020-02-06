@@ -21,6 +21,7 @@ import itertools
 import logging
 import os
 import sys
+import yaml
 from yaml import Loader, load, dump
 
 from turbinia import TurbiniaException
@@ -222,7 +223,12 @@ class TurbiniaRecipe(object):
     """ Load recipe from file. """
     LoadConfig()
     with open(self.recipe_file, 'r') as r_file:
-      recipe_contents = r_file.read()
+      try:
+        recipe_contents = r_file.read()
+      except yaml.parser.ParserError as exception:
+        message = (
+            'Could not load recipe file {0:s}: {1!s}'.format(
+                self.recipe_file, exception))
     recipe_dict = load(recipe_contents, Loader=Loader)
     self.jobs_whitelist = recipe_dict.get('jobs_whitelist', [])
     self.jobs_blacklist = recipe_dict.get('jobs_blacklist', [])

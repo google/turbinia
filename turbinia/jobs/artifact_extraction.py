@@ -34,7 +34,7 @@ class ArtifactExtractionJob(interface.TurbiniaJob):
   ]
 
   evidence_output = [ExportedFileArtifact]
-  NAME = "ArtifactExtractionJob"
+  NAME = 'ArtifactExtractionJob'
 
   def create_tasks(self, evidence):
     """Create task.
