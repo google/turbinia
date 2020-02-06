@@ -34,12 +34,19 @@ class PlasoTask(TurbiniaTask):
       'vss_only': False,
       'volumes': 'all',
       'partitions': 'all',
-      'vss_stores': 'all',
+      'no-vss': True
     }
+
+  def filter_command(self):
+    for k, v in self.task_conf.items():
+      if (k in ['vss-stores', 'vss_stores', 'no-vss', 'no_vss']):
+        self.task_conf.pop('no-vss', None)
+        self.task_conf.pop('no_vss', None)
 
   def build_command(self):
     """ Tasked with building the command """
     # Base command could be potentially placed in global configuration
+    self.filter_command()
     cmd = ['log2timeline.py']
     for k, v in self.task_conf.items():
       prepend = '-'

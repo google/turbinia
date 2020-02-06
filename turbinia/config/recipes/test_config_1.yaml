@@ -1,5 +1,6 @@
 jobs_whitelist: 
   - ArtifactExtractionJob
+  - PlasoJob
 
 PlasoJob:
   artifact_filters: 
