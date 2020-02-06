@@ -207,10 +207,10 @@ class TurbiniaRecipe(object):
       each of the tasks invoked in the Turbinia recipe.
 """
 
-  def __init__(self, recipe_file, filter_patterns_file=''):
+  def __init__(self, recipe_file, filter_patterns_files=[]):
     self.recipe_file = recipe_file
-    self.filter_patterns_file = (
-        filter_patterns_file if filter_patterns_file else [])
+    self.filter_patterns_files = (
+        filter_patterns_files if filter_patterns_files else [])
 
     self.name = ""
     self.jobs_whitelist = []
@@ -232,17 +232,17 @@ class TurbiniaRecipe(object):
         if line not in self.filter_patterns:
           self.filter_patterns.append(line)
     for recipe_item, item_contents in recipe_dict.items():
-      if (recipe_item in
+      if (recipe_item not in
           ['jobs_blacklist', 'jobs_whitelist', 'filter_patterns_files']):
         aux_task_recipe = TurbiniaTaskRecipe(recipe_item)
         aux_task_recipe.load(item_contents)
-      if recipe_item in self.task_recipes:
-        raise TurbiniaException(
-            'Two recipes for the same tool {0:s} have been found.'
-            'If you wish to specify several task runs of the same tools,'
-            'please add several task variants to the same tool recipe.'
-        )
-      self.task_recipes[recipe_item] = aux_task_recipe
+        if recipe_item in self.task_recipes:
+          raise TurbiniaException(
+              'Two recipes for the same tool {0:s} have been found.'
+              'If you wish to specify several task runs of the same tools,'
+              'please add several task variants to the same tool recipe.'
+          )
+        self.task_recipes[recipe_item] = aux_task_recipe
 
   def retrieve_task_recipe(self, task):
     """ Retrieve recipe by name.  """
@@ -269,22 +269,18 @@ class TurbiniaTaskRecipe(object):
     """ Load task recipe from dict """
 
     if 'variants' not in data:
-      data['variants'] = {
-          self.name: {
-              "params": data["params"],
-          }
-      }
+      data['variants'] = {'single_variant': data}
     for variant, variant_config in data['variants'].items():
       aux_variant = TaskRecipeVariant(name=variant)
       aux_variant.load(variant_config)
-      self.instances[variant] = aux_variant
+      self.variants[variant] = aux_variant
 
   def serialize(self):
     """ Serialize task tecipe into dict. """
     serialized_data = {}
     serialized_data['name'] = self.name
     serialized_data['variants'] = {
-        k: v.__dict__ for k, v in self.instances.items()
+        k: v.__dict__ for k, v in self.variants.items()
     }
     return serialized_data
 
