@@ -65,15 +65,14 @@ class PlasoTask(TurbiniaTask):
           for filter_ in file_filters.split(':'):
             file_filter_fh.write(filter_.encode('utf-8') + b'\n')
       except IOError as exception:
-        message = ('Cannot write to filter file {0:s}: {1!s}'.format(
-            file_filter_file, exception))
+        message = 'Cannot write to filter file {0:s}: {1!s}'.format(
+            file_filter_file, exception)
         result.close(self, success=False, status=message)
         return result
 
     else:
       file_filters = None
       file_filter_file = None
-
 
     # Write plaso file into tmp_dir because sqlite has issues with some shared
     # filesystems (e.g NFS).
