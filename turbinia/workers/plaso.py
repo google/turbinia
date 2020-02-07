@@ -19,7 +19,6 @@ from __future__ import unicode_literals
 import os
 
 from turbinia import config
-from turbinia import TurbiniaException
 from turbinia.evidence import APFSEncryptedDisk
 from turbinia.evidence import BitlockerDisk
 from turbinia.evidence import PlasoFile
@@ -46,7 +45,6 @@ class PlasoTask(TurbiniaTask):
     # using the --recipe_config flag, and this can be used with colon separated
     # values like:
     # --recipe_config='artifact_filters=BrowserFoo:BrowserBar,parsers=foo:bar'
-    result.log('DEBUG: Evidence config is:\n{0!s}'.format(evidence.config))
     if evidence.config and evidence.config.get('artifact_filters'):
       artifact_filters = evidence.config.get('artifact_filters')
       artifact_filters = artifact_filters.replace(':', ',')
@@ -67,9 +65,11 @@ class PlasoTask(TurbiniaTask):
           for filter_ in file_filters.split(':'):
             file_filter_fh.write(filter_.encode('utf-8') + b'\n')
       except IOError as exception:
-        TurbiniaException(
-            'Cannot write to filter file {0:s}: {1!s}'.format(
-                file_filter_file, exception))
+        message = ('Cannot write to filter file {0:s}: {1!s}'.format(
+            file_filter_file, exception))
+        result.close(self, success=False, status=message)
+        return result
+
     else:
       file_filters = None
       file_filter_file = None
