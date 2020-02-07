@@ -19,6 +19,7 @@ from __future__ import unicode_literals
 import os
 
 from turbinia import config
+from turbinia import TurbiniaException
 from turbinia.evidence import APFSEncryptedDisk
 from turbinia.evidence import BitlockerDisk
 from turbinia.evidence import PlasoFile
@@ -40,6 +41,40 @@ class PlasoTask(TurbiniaTask):
     """
     config.LoadConfig()
 
+    # TODO: Convert to using real recipes after
+    # https://github.com/google/turbinia/pull/486 is in.  For now we're just
+    # using the --recipe_config flag, and this can be used with colon separated
+    # values like:
+    # --recipe_config='artifact_filters=BrowserFoo:BrowserBar,parsers=foo:bar'
+    self.log('DEBUG: Evidence config is:\n{0!s}'.format(self.evidence.config))
+    if self.evidence.config and self.evidence.config.get('artifact_filters'):
+      artifact_filters = self.evidence.config.get('artifact_filters')
+      artifact_filters = artifact_filters.replace(':', ',')
+    else:
+      artifact_filters = None
+
+    if self.evidence.config and self.evidence.config.get('parsers'):
+      parsers = self.evidence.config.get('parsers')
+      parsers = parsers.replace(':', ',')
+    else:
+      parsers = None
+
+    if self.evidence.config and self.evidence.config.get('file_filters'):
+      file_filters = self.evidence.config.get('file_filters')
+      file_filter_file = os.path.join(self.tmp_dir, 'file_filter.txt')
+      try:
+        with open(file_filter_file, 'w') as file_filter_fh:
+          for filter_ in file_filters.split(':'):
+            file_filter_fh.write(filter_.encode('utf-8'))
+      except IOError as exception:
+        TurbiniaException(
+            'Cannot write to filter file {0:s}: {1!s}'.format(
+                file_filter_file, exception))
+    else:
+      file_filters = None
+      file_filter_file = None
+
+
     # Write plaso file into tmp_dir because sqlite has issues with some shared
     # filesystems (e.g NFS).
     plaso_file = os.path.join(self.tmp_dir, '{0:s}.plaso'.format(self.id))
@@ -52,6 +87,12 @@ class PlasoTask(TurbiniaTask):
         '--partition all --vss_stores all').split()
     if config.DEBUG_TASKS:
       cmd.append('-d')
+    if artifact_filters:
+      cmd.extend(['--artifact_filters', artifact_filters])
+    if parsers:
+      cmd.extend(['--parsers', parsers])
+    if file_filters:
+      cmd.extend(['--file_filters', file_filter_file])
 
     if isinstance(evidence, (APFSEncryptedDisk, BitlockerDisk)):
       if evidence.recovery_key:
