@@ -63,9 +63,9 @@ class PlasoTask(TurbiniaTask):
       file_filters = evidence.config.get('file_filters')
       file_filter_file = os.path.join(self.tmp_dir, 'file_filter.txt')
       try:
-        with open(file_filter_file, 'w') as file_filter_fh:
+        with open(file_filter_file, 'wb') as file_filter_fh:
           for filter_ in file_filters.split(':'):
-            file_filter_fh.write(filter_.encode('utf-8'))
+            file_filter_fh.write(filter_.encode('utf-8') + b'\n')
       except IOError as exception:
         TurbiniaException(
             'Cannot write to filter file {0:s}: {1!s}'.format(
@@ -92,7 +92,7 @@ class PlasoTask(TurbiniaTask):
     if parsers:
       cmd.extend(['--parsers', parsers])
     if file_filters:
-      cmd.extend(['--file_filters', file_filter_file])
+      cmd.extend(['--file_filter', file_filter_file])
 
     if isinstance(evidence, (APFSEncryptedDisk, BitlockerDisk)):
       if evidence.recovery_key:
