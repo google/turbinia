@@ -190,16 +190,17 @@ class TurbiniaTaskResult(object):
       if not evidence.request_id:
         evidence.request_id = self.request_id
 
-    try:
-      self.input_evidence.postprocess()
-    # Adding a broad exception here because we want to try post-processing
-    # to clean things up even after other failures in the task, so this could
-    # also fail.
-    # pylint: disable=broad-except
-    except Exception as exception:
-      message = 'Evidence post-processing for {0!s} failed: {1!s}'.format(
-          self.input_evidence.name, exception)
-      self.log(message, level=logging.ERROR)
+    if self.input_evidence:
+      try:
+        self.input_evidence.postprocess()
+      # Adding a broad exception here because we want to try post-processing
+      # to clean things up even after other failures in the task, so this could
+      # also fail.
+      # pylint: disable=broad-except
+      except Exception as exception:
+        message = 'Evidence post-processing for {0!s} failed: {1!s}'.format(
+            self.input_evidence.name, exception)
+        self.log(message, level=logging.ERROR)
 
     # Write result log info to file
     logfile = os.path.join(self.output_dir, 'worker-log.txt')
@@ -575,7 +576,7 @@ class TurbiniaTask(object):
     else:
       try:
         log.debug('Checking TurbiniaTaskResult for serializability')
-        pickle.dumps(result)
+        pickle.dumps(result.serialize())
       except (TypeError, pickle.PicklingError) as exception:
         bad_message = (
             'Error pickling TurbiniaTaskResult object. Returning a new result '
