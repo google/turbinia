@@ -286,19 +286,23 @@ class TurbiniaTaskResult(object):
     self.error['traceback'] = traceback_
 
   def serialize(self):
-    """Prepares result object for serialization.
+    """Creates serialized result object.
 
     Returns:
       dict: Object dictionary that is JSON serializable.
     """
     self.state_manager = None
-    self.run_time = self.run_time.total_seconds() if self.run_time else None
-    self.start_time = self.start_time.strftime(DATETIME_FORMAT)
+    result_copy = deepcopy(self.__dict__)
+    if self.run_time:
+      result_copy['run_time'] = self.run_time.total_seconds()
+    else:
+      result_copy['run_time'] = None
+    result_copy['start_time'] = self.start_time.strftime(DATETIME_FORMAT)
     if self.input_evidence:
-      self.input_evidence = self.input_evidence.serialize()
-    self.evidence = [x.serialize() for x in self.evidence]
+      result_copy['input_evidence'] = self.input_evidence.serialize()
+    result_copy['evidence'] = [x.serialize() for x in self.evidence]
 
-    return self.__dict__
+    return result_copy
 
   @classmethod
   def deserialize(cls, input_dict):
