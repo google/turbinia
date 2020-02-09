@@ -190,16 +190,23 @@ class TurbiniaTaskResult(object):
       if not evidence.request_id:
         evidence.request_id = self.request_id
 
-    try:
-      self.input_evidence.postprocess()
-    # Adding a broad exception here because we want to try post-processing
-    # to clean things up even after other failures in the task, so this could
-    # also fail.
-    # pylint: disable=broad-except
-    except Exception as exception:
-      message = 'Evidence post-processing for {0!s} failed: {1!s}'.format(
-          self.input_evidence.name, exception)
-      self.log(message, level=logging.ERROR)
+    if self.input_evidence:
+      try:
+        self.input_evidence.postprocess()
+      # Adding a broad exception here because we want to try post-processing
+      # to clean things up even after other failures in the task, so this could
+      # also fail.
+      # pylint: disable=broad-except
+      except Exception as exception:
+        message = 'Evidence post-processing for {0!s} failed: {1!s}'.format(
+            self.input_evidence.name, exception)
+        self.log(message, level=logging.ERROR)
+    else:
+      self.log(
+          'No input evidence attached to the result object so post-processing '
+          'cannot be run. This usually means there were previous failures '
+          'during Task execution and this may result in resources (e.g. '
+          'mounted disks) accumulating on the Worker.', level=logging.WARNING)
 
     # Write result log info to file
     logfile = os.path.join(self.output_dir, 'worker-log.txt')
@@ -285,19 +292,23 @@ class TurbiniaTaskResult(object):
     self.error['traceback'] = traceback_
 
   def serialize(self):
-    """Prepares result object for serialization.
+    """Creates serialized result object.
 
     Returns:
       dict: Object dictionary that is JSON serializable.
     """
     self.state_manager = None
-    self.run_time = self.run_time.total_seconds() if self.run_time else None
-    self.start_time = self.start_time.strftime(DATETIME_FORMAT)
+    result_copy = deepcopy(self.__dict__)
+    if self.run_time:
+      result_copy['run_time'] = self.run_time.total_seconds()
+    else:
+      result_copy['run_time'] = None
+    result_copy['start_time'] = self.start_time.strftime(DATETIME_FORMAT)
     if self.input_evidence:
-      self.input_evidence = self.input_evidence.serialize()
-    self.evidence = [x.serialize() for x in self.evidence]
+      result_copy['input_evidence'] = self.input_evidence.serialize()
+    result_copy['evidence'] = [x.serialize() for x in self.evidence]
 
-    return self.__dict__
+    return result_copy
 
   @classmethod
   def deserialize(cls, input_dict):
@@ -575,7 +586,7 @@ class TurbiniaTask(object):
     else:
       try:
         log.debug('Checking TurbiniaTaskResult for serializability')
-        pickle.dumps(result)
+        pickle.dumps(result.serialize())
       except (TypeError, pickle.PicklingError) as exception:
         bad_message = (
             'Error pickling TurbiniaTaskResult object. Returning a new result '
