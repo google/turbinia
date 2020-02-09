@@ -201,6 +201,12 @@ class TurbiniaTaskResult(object):
         message = 'Evidence post-processing for {0!s} failed: {1!s}'.format(
             self.input_evidence.name, exception)
         self.log(message, level=logging.ERROR)
+    else:
+      self.log(
+          'No input evidence attached to the result object so post-processing '
+          'cannot be run. This usually means there were previous failures '
+          'during Task execution and this may result in resources (e.g. '
+          'mounted disks) accumulating on the Worker.', level=logging.WARNING)
 
     # Write result log info to file
     logfile = os.path.join(self.output_dir, 'worker-log.txt')
