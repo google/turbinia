@@ -143,6 +143,7 @@ class OutputManager(object):
 
     if evidence_.save_metadata:
       metadata = evidence_.config.copy()
+      metadata['evidence_path'] = path
       metadata_path = '{0:s}.metadata.json'.format(local_path)
       try:
         json_str = json.dumps(metadata)
