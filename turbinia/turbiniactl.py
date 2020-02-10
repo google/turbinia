@@ -628,7 +628,7 @@ def main():
         except ValueError as exception:
           log.error(
               'Could not parse key=value pair [{0:s}] from recipe config '
-              '{1:s}: {2!s}'.format(pair, args.recipe_config, exception))
+              '{1!s}: {2!s}'.format(pair, args.recipe_config, exception))
           sys.exit(1)
         request.recipe[key] = value
     if args.dump_json:

@@ -70,10 +70,14 @@ class PlasoTask(TurbiniaTask):
             file_filter_file, exception)
         result.close(self, success=False, status=message)
         return result
-
     else:
       file_filters = None
       file_filter_file = None
+
+    if evidence.config and evidence.config.get('vss'):
+      vss = evidence.config.get('vss')
+    else:
+      vss = None
 
     # Write plaso file into tmp_dir because sqlite has issues with some shared
     # filesystems (e.g NFS).
@@ -84,7 +88,7 @@ class PlasoTask(TurbiniaTask):
     # TODO(aarontp): Move these flags into a recipe
     cmd = (
         'log2timeline.py --status_view none --hashers all '
-        '--partition all --vss_stores all').split()
+        '--partition all').split()
     if config.DEBUG_TASKS:
       cmd.append('-d')
     if artifact_filters:
@@ -93,6 +97,8 @@ class PlasoTask(TurbiniaTask):
       cmd.extend(['--parsers', parsers])
     if file_filters:
       cmd.extend(['--file_filter', file_filter_file])
+    if vss:
+      cmd.extend(['--vss_stores', vss])
 
     if isinstance(evidence, (APFSEncryptedDisk, BitlockerDisk)):
       if evidence.recovery_key:
