@@ -150,20 +150,27 @@ class ContainerManager(DockerManager):
         list: The device blocks that will be mounted.
         dict: The file paths that will be mounted.
     """
+    accepted_vars = ['rw', 'ro']
     device_paths = []
     file_paths = {}
 
-    for mpath in mount_paths:
-      if mpath not in file_paths.keys() and mpath not in device_paths:
-        if IsBlockDevice(mpath):
-          formatted_path = '{0:s}:{0:s}:{1:s}'.format(mpath, 'r')
-          device_paths.append(formatted_path)
-        else:
-          file_paths[mpath] = {'bind': mpath, 'mode': mode}
+    if mode in accepted_vars:
+      for mpath in mount_paths:
+        if mpath not in file_paths.keys() and mpath not in device_paths:
+          if IsBlockDevice(mpath):
+            formatted_path = '{0:s}:{0:s}:{1:s}'.format(mpath, 'r')
+            device_paths.append(formatted_path)
+          else:
+            file_paths[mpath] = {'bind': mpath, 'mode': mode}
+    else:
+      log.warning(
+          'An incorrect mode was passed: {0:s}. The mount point arguments will not be created.'
+          .format(mode))
+
     return device_paths, file_paths
 
   def execute_container(
-      self, cmd, shell, ro_paths=None, rw_paths=None, **kwargs):
+      self, cmd, shell=False, ro_paths=None, rw_paths=None, **kwargs):
     """Executes a Docker container.
 
     A new Docker container will be created from the image id,
@@ -178,7 +185,7 @@ class ContainerManager(DockerManager):
     Returns:
       stdout(str): stdout of the container.
       stderr(str): stderr of the container.
-      ret(int): the return code of process run.
+      ret(int): the return code of the process run.
 
     Raises:
       TurbiniaException: If an error occurred with the Docker container.
@@ -221,7 +228,7 @@ class ContainerManager(DockerManager):
       stdstream = container.logs(stream=True)
       for stdo in stdstream:
         stdo = codecs.decode(stdo, 'utf-8').strip()
-        print(stdo)
+        log.debug(stdo)
         stdout += stdo
       results = container.wait()
     except docker.errors.APIError as exception:
