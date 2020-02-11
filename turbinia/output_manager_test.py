@@ -16,6 +16,7 @@
 
 from __future__ import unicode_literals
 
+import json
 import unittest
 import os
 import shutil
@@ -142,7 +143,8 @@ class TestLocalOutputManager(unittest.TestCase):
     dst_file = os.path.join(local_dir, test_file)
     test_evidence = evidence.Evidence()
     test_evidence.save_metadata = True
-    test_evidence.config = {'foo': 'bar'}
+    config_input = {'foo': 'bar'}
+    test_evidence.config = config_input
 
     with open(src_file, 'w') as fh:
       fh.write(test_contents)
@@ -155,9 +157,10 @@ class TestLocalOutputManager(unittest.TestCase):
     self.assertIsInstance(return_evidence, evidence.Evidence)
     self.assertIn(dst_file, return_evidence.saved_path)
     metadata_file = '{0:s}.metadata.json'.format(dst_file)
-    metadata_contents = b'{"foo": "bar"}'
     self.assertTrue(os.path.exists(metadata_file))
-    self.assertEqual(open(metadata_file, 'rb').read(), metadata_contents)
+    config_input['evidence_path'] = dst_file
+    metadata_contents = json.loads(open(metadata_file, 'rb').read())
+    self.assertDictEqual(config_input, metadata_contents)
 
 
 class TestLocalOutputWriter(unittest.TestCase):

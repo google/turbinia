@@ -97,30 +97,22 @@ log = logging.getLogger('turbinia')
 logger.setup()
 
 
+def get_turbinia_client(run_local=False):
+  """Return Turbinia client based on config.
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+  Returns:
+    Initialized BaseTurbiniaClient or TurbiniaCeleryClient object.
+  """
+  config.LoadConfig()
+  # pylint: disable=no-else-return
+  if config.TASK_MANAGER.lower() == 'psq':
+    return BaseTurbiniaClient(run_local=run_local)
+  elif config.TASK_MANAGER.lower() == 'celery':
+    return TurbiniaCeleryClient(run_local=run_local)
+  else:
+    msg = 'Task Manager type "{0:s}" not implemented'.format(
+        config.TASK_MANAGER)
+    raise TurbiniaException(msg)
 
 
 def check_docker_dependencies(dependencies):
@@ -296,7 +288,7 @@ class TurbiniaStats(object):
         self.description, self.count, self.min, self.mean, self.max)
 
 
-class TurbiniaClient(object):
+class BaseTurbiniaClient(object):
   """Client class for Turbinia.
 
   Attributes:
@@ -811,7 +803,7 @@ class TurbiniaClient(object):
     return 'Closed Task IDs: %s' % response.get('result')
 
 
-class TurbiniaCeleryClient(TurbiniaClient):
+class TurbiniaCeleryClient(BaseTurbiniaClient):
   """Client class for Turbinia (Celery).
 
   Overriding some things specific to Celery operation.
@@ -820,8 +812,8 @@ class TurbiniaCeleryClient(TurbiniaClient):
     redis (RedisStateManager): Redis datastore object
   """
 
-  def __init__(self, *_, **__):
-    super(TurbiniaCeleryClient, self).__init__()
+  def __init__(self, *args, **kwargs):
+    super(TurbiniaCeleryClient, self).__init__(*args, **kwargs)
     self.redis = RedisStateManager()
 
   def send_request(self, request):
@@ -881,7 +873,7 @@ class TurbiniaServer(object):
     self.task_manager.add_evidence(evidence_)
 
 
-class TurbiniaCeleryWorker(TurbiniaClient):
+class TurbiniaCeleryWorker(BaseTurbiniaClient):
   """Turbinia Celery Worker class.
 
   Attributes:
