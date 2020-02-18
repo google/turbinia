@@ -22,6 +22,7 @@ from turbinia.jobs import jenkins
 from turbinia.jobs import hindsight
 from turbinia.jobs import plaso
 from turbinia.jobs import psort
+from turbinia.jobs import redis
 from turbinia.jobs import sshd
 from turbinia.jobs import strings
 from turbinia.jobs import tomcat
