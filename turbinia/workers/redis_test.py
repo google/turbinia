@@ -30,12 +30,10 @@ port 6379
 bind 0.0.0.0 ::1
 """
 
-  REDIS_BIND_EVERYWHERE_REPORT = """#### **Insecure Redis configuration found.**
-* Root login enabled.
-* Password authentication enabled.
-* Empty passwords permitted."""
+  REDIS_BIND_EVERYWHERE_SUMMARY = """Insecure Redis configuration found."""
 
-  REDIS_BIND_EVERYWHERE_SUMMARY = 'Insecure Redis configuration found.'
+  REDIS_BIND_EVERYWHERE_REPORT = """#### **Insecure Redis configuration found.**
+* Redis listening on every IP"""
 
   REDIS_BIND_NOWHERE = """# If port 0 is specified Redis will not listen
 port 6379

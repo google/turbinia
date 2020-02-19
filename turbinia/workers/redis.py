@@ -77,9 +77,9 @@ class RedisAnalysisTask(TurbiniaTask):
     """
     findings = []
     bind_everywhere_re = re.compile(
-        r'^\s*Bind[\s"]*0\.0\.0\.0', re.IGNORECASE | re.MULTILINE)
+        r'^\s*bind[\s"]*0\.0\.0\.0', re.IGNORECASE | re.MULTILINE)
 
-    if not re.search(bind_everywhere_re, config):
+    if re.search(bind_everywhere_re, config):
       findings.append(fmt.bullet('Redis listening on every IP'))
 
     if findings:
