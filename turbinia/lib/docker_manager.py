@@ -156,16 +156,16 @@ class ContainerManager(DockerManager):
 
     if mode in accepted_vars:
       for mpath in mount_paths:
-        if mpath not in file_paths.keys() and mpath not in device_paths:
+        device_mpath = '{0:s}:{0:s}:{1:s}'.format(mpath, 'r')
+        if mpath not in file_paths.keys() and device_mpath not in device_paths:
           if IsBlockDevice(mpath):
-            formatted_path = '{0:s}:{0:s}:{1:s}'.format(mpath, 'r')
-            device_paths.append(formatted_path)
+            device_paths.append(device_mpath)
           else:
             file_paths[mpath] = {'bind': mpath, 'mode': mode}
     else:
-      log.warning(
-          'An incorrect mode was passed: {0:s}. The mount point arguments will not be created.'
-          .format(mode))
+      raise TurbiniaException(
+          'An incorrect mode was passed: {0:s}. Unable to create the correct '
+          'mount points for the Docker container.'.format(mode))
 
     return device_paths, file_paths
 
