@@ -149,6 +149,9 @@ class ContainerManager(DockerManager):
       tuple: containing:
         list: The device blocks that will be mounted.
         dict: The file paths that will be mounted.
+
+    Raises:
+      TurbiniaException: If an incorrect mode was passed.
     """
     accepted_vars = ['rw', 'ro']
     device_paths = []
