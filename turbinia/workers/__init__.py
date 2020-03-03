@@ -557,7 +557,7 @@ class TurbiniaTask(object):
     """Updates the last_update time of the task."""
     self.last_update = datetime.now()
 
-  def create_result(self, status=None, message=None):
+  def create_result(self, status=None, message=None, trace=None):
     """Creates a new TurbiniaTaskResults and instantiates the result.
 
     Args:
@@ -574,7 +574,7 @@ class TurbiniaTask(object):
             message, status)
       else:
         result.status = message
-      result.set_error(message, traceback.format_exc())
+      result.set_error(message, trace)
     return result
 
   def validate_result(self, result):
@@ -617,7 +617,8 @@ class TurbiniaTask(object):
       else:
         status = 'No previous status'
 
-      result = self.create_result(status=status, message=message)
+      result = self.create_result(
+          status=status, message=message, trace=traceback.format_exc())
       result.close(self, success=False, status=message)
       check_status = 'Failed, but replaced with empty result'
 
@@ -662,8 +663,15 @@ class TurbiniaTask(object):
       trace = traceback.format_exc()
       log.error(message)
       log.error(trace)
-
-      self.result = self.create_result(message=message)
+      if self.result:
+        if hasattr(exception, 'message'):
+          self.result.set_error(exception.message, traceback.format_exc())
+        else:
+          self.result.set_error(exception.__class__, traceback.format_exc())
+        self.result.status = message
+      else:
+        self.result = self.create_result(
+            message=message, trace=traceback.format_exc())
       return self.result.serialize()
     with filelock.FileLock(config.LOCK_FILE):
       log.info('Starting Task {0:s} {1:s}'.format(self.name, self.id))
