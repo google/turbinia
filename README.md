@@ -208,6 +208,7 @@ optional arguments:
 *   [Developing new Tasks](docs/developing-new-tasks.md)
 *   [FAQ](docs/faq.md)
 *   [Debugging and Common Errors](docs/debugging.md)
+*   [Using Docker to execute jobs](docs/using-docker.md)
 
 ##### Obligatory Fine Print
 
