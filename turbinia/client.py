@@ -55,6 +55,7 @@ from turbinia.workers.volatility import VolatilityTask
 from turbinia.workers.worker_stat import StatTask
 from turbinia.workers.binary_extractor import BinaryExtractorTask
 from turbinia.workers.bulk_extractor import BulkExtractorTask
+from turbinia.workers.photorec import PhotorecTask
 
 # TODO(aarontp): Remove this map after
 # https://github.com/google/turbinia/issues/278 is fixed.
@@ -76,7 +77,8 @@ TASK_MAP = {
     'stattask': StatTask,
     'binaryextractor': BinaryExtractorTask,
     'bulkextractortask': BulkExtractorTask,
-    'dockertask': DockerContainersEnumerationTask
+    'dockertask': DockerContainersEnumerationTask,
+    'photorectask': PhotorecTask
 }
 
 config.LoadConfig()
