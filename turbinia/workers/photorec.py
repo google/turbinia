@@ -24,10 +24,12 @@ from turbinia.workers import TurbiniaTask
 from turbinia.evidence import BinaryExtraction
 from turbinia.evidence import PhotorecOutput
 
+
 class PhotorecTask(TurbiniaTask):
+
   def __init__(self):
     super(PhotorecTask, self).__init__()
-    
+
   def run(self, evidence, result):
     """Task to execute hindsight.
 
@@ -54,8 +56,9 @@ class PhotorecTask(TurbiniaTask):
       # Add a log line to the result that will be returned.
       result.log('Running photorec as [{0:s}]'.format(cmd))
       # Actually execute the binary
-      self.execute( 
-          cmd, result, log_files=[photorec_log], new_evidence=[output_evidence], close=True, shell=True)
+      self.execute(
+          cmd, result, log_files=[photorec_log], new_evidence=[output_evidence],
+          close=True, shell=True)
     except TurbiniaException as exception:
       result.close(self, success=False, status=str(exception))
 

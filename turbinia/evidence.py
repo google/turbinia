@@ -340,6 +340,7 @@ class PhotorecOutput(Directory):
   """Photorec based evidence."""
   pass
 
+
 class ChromiumProfile(Evidence):
   """Chromium based browser profile evidence.
 
