@@ -563,6 +563,7 @@ class TurbiniaTask(object):
     Args:
       status: A one line descriptive task status.
       message: An error message to show when returning the result.
+      trace: Stack traceback for errors.
     """
     result = TurbiniaTaskResult(
         base_output_dir=self.base_output_dir, request_id=self.request_id,
@@ -714,13 +715,16 @@ class TurbiniaTask(object):
         trace = traceback.format_exc()
         log.error(message)
         log.error(trace)
-        self.result.log(message, level=logging.ERROR)
-        self.result.log(trace)
-        if hasattr(exception, 'message'):
-          self.result.set_error(exception.message, traceback.format_exc())
+        if self.result:
+          self.result.log(message, level=logging.ERROR)
+          self.result.log(trace)
+          if hasattr(exception, 'message'):
+            self.result.set_error(exception.message, traceback.format_exc())
+          else:
+            self.result.set_error(exception.__class__, traceback.format_exc())
+          self.result.status = message
         else:
-          self.result.set_error(exception.__class__, traceback.format_exc())
-        self.result.status = message
+          log.error('No TurbiniaTaskResult object found after task execution.')
 
       self.result = self.validate_result(self.result)
 
