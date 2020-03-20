@@ -93,11 +93,11 @@ VM at this point, and we will later clone this instance to create the workers.
 
 *   Install dependencies
     *   `sudo apt-get install python-dev build-essential python-setuptools
-        python-pip python-virtualenv liblzma-dev git`
+        python-pip python-virtualenv liblzma-dev git john`
 *   Create a turbinia user with password-less sudo access
     *   `sudo adduser --disabled-password turbinia`
     *   `echo "turbinia ALL = (root) NOPASSWD:
-        /bin/mount,/bin/umount,/sbin/losetup" > /etc/sudoers.d/turbinia`
+         /bin/mount,/bin/umount,/sbin/losetup" | sudo tee -a /etc/sudoers.d/turbinia`
 *   Prepare configuration directory:
     *   `sudo mkdir /etc/turbinia`
     *   `sudo chown turbinia /etc/turbinia`
@@ -121,11 +121,24 @@ VM at this point, and we will later clone this instance to create the workers.
         development dependencies.
     *   If you are running a local installation:
         *   `pip3 install turbinia[local]`
-*   Install Plaso on worker machines
+*   Install Worker binary dependencies
     *   You can install Plaso from the
         [GIFT PPA](https://launchpad.net/~gift/+archive/ubuntu/stable), or
         [see here](https://github.com/log2timeline/plaso/blob/master/docs/sources/user/Users-Guide.md)
-        for other packaged installation.
+        for other packaged installations.
+    *   There are a few other binary
+        dependencies that are not packaged with Ubuntu or PyPi, so these
+        will need to be installed manually:
+        [bulk_extractor](https://github.com/simsong/bulk_extractor/wiki/Installing-bulk_extractor),
+        [hindsight](https://github.com/obsidianforensics/hindsight) (this one
+        is technically in PyPi, but since it's not Python3 yet it needs to be
+        installed separately) and
+        [Volatility](https://github.com/volatilityfoundation/volatility/wiki/Installation).
+        Alternately you can disable the Jobs that have those depenencies.
+        You can do this by setting the `DISABLED_JOBS` in the
+        `/etc/turbinia/turbinia.conf` config after it is installed (see below).
+        You can see the list of Jobs with `turbiniactl listjobs` after everything
+        is set up.
 *   Create and configure the Turbinia configuration file.
     *   `cp <git clone path>/turbinia/config/turbinia_config_tmpl.py
         /etc/turbinia/turbinia.conf`
