@@ -336,7 +336,7 @@ class BulkExtractorOutput(CompressedDirectory):
   pass
 
 
-class PhotorecOutput(Directory):
+class PhotorecOutput(CompressedDirectory):
   """Photorec based evidence."""
   pass
 
