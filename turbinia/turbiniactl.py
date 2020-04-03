@@ -28,7 +28,7 @@ import sys
 from turbinia import config
 from turbinia import TurbiniaException
 from turbinia.config import logger
-from turbinia.lib import libcloudforensics
+from libcloudforensics import gcp
 from turbinia import __version__
 from turbinia.processors import archive
 
@@ -487,7 +487,7 @@ def main():
       sys.exit(1)
 
     if args.project and args.project != config.TURBINIA_PROJECT:
-      new_disk = libcloudforensics.create_disk_copy(
+      new_disk = gcp.CreateDiskCopy(
           args.project, config.TURBINIA_PROJECT, None, config.TURBINIA_ZONE,
           args.disk_name)
       args.disk_name = new_disk.name
