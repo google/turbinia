@@ -19,7 +19,6 @@ import logging
 import json
 import os
 
-from turbinia import config
 from turbinia import TurbiniaException
 from turbinia.workers import TurbiniaTask
 from turbinia.evidence import PhotorecOutput
@@ -51,7 +50,7 @@ class PhotorecTask(TurbiniaTask):
       cmd = 'photorec /log /d {0:s} /cmd {1:s}  options,paranoid,keep_corrupted_fille,search'.format(
           output_file_path, evidence.local_path)
       # Add a log line to the result that will be returned.
-      result.log('Running photorec as [{0:s}]'.format(''.cmd))
+      result.log('Running photorec as [{0:s}]'.format(cmd))
       # Actually execute the binary
       self.execute(
           cmd, result, log_files=[photorec_log], new_evidence=[output_evidence],
