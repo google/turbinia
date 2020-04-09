@@ -12,55 +12,40 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Tests for the Docker Containers Enumeration job."""
+"""Tests for the Photorec job."""
 
 from __future__ import unicode_literals
-from io import StringIO
 
+import os
 import unittest
 import textwrap
 import mock
 
-from turbinia.evidence import BulkExtractorOutput
 from turbinia.evidence import PhotorecOutput
-from turbinia.workers import docker
+from turbinia.workers import photorec
 from turbinia.workers.workers_test import TestTurbiniaTaskBase
 from turbinia.workers import TurbiniaTaskResult
 
 
-class DockerTaskTest(TestTurbiniaTaskBase):
-  """Tests for DockerContainersEnumerationTask."""
+class PhotorecTaskTest(TestTurbiniaTaskBase):
+  """Tests for PhotorecTask."""
 
   def setUp(self):
     # pylint: disable=arguments-differ
-    super(DockerTaskTest, self).setUp(
-        task_class=docker.DockerContainersEnumerationTask,
-        evidence_class=docker.DockerContainer)
+    super(PhotorecTaskTest, self).setUp(
+        task_class=photorec.PhotorecTask, evidence_class=PhotorecOutput)
     self.setResults(mock_run=False)
     self.task.output_dir = self.task.base_output_dir
-    self.evidence.mount_path = 'non_existent'
 
-  # pylint: disable=line-too-long
-  @mock.patch(
-      'turbinia.workers.docker.DockerContainersEnumerationTask.GetContainers')
-  def testDockerContainersEnumerationRun(self, get_containers_mock):
-    """Test DockerContainersEnumeration task run."""
-
-    get_containers_mock.return_value = [
-        {
-            'container_id': '12'
-        },
-        {
-            'container_id': '3a'
-        },
-    ]
+  def testPhotorecRun(self):
+    """Test photorec task run."""
+    self.task.execute = mock.MagicMock(return_value=0)
     result = self.task.run(self.evidence, self.result)
 
+    # Ensure execute method is being called.
+    self.task.execute.assert_called_once()
     # Ensure run method returns a TurbiniaTaskResult instance.
     self.assertIsInstance(result, TurbiniaTaskResult)
-    self.assertEqual(result.task_name, 'DockerContainersEnumerationTask')
-    self.assertEqual(len(result.evidence), 2)
-    self.assertEqual(result.report_data, 'Found 2 containers: 12 3a')
 
 
 if __name__ == '__main__':

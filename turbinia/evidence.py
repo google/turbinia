@@ -336,6 +336,11 @@ class BulkExtractorOutput(CompressedDirectory):
   pass
 
 
+class PhotorecOutput(CompressedDirectory):
+  """Photorec based evidence."""
+  pass
+
+
 class ChromiumProfile(Evidence):
   """Chromium based browser profile evidence.
 
