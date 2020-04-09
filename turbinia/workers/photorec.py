@@ -26,9 +26,6 @@ from turbinia.evidence import PhotorecOutput
 
 class PhotorecTask(TurbiniaTask):
 
-  # def __init__(self):
-  #   super(PhotorecTask, self).__init__()
-
   def run(self, evidence, result):
     """Task to execute photorec.
 
@@ -43,7 +40,8 @@ class PhotorecTask(TurbiniaTask):
     output_evidence = PhotorecOutput()
     # Create a path that we can write the new file to.
     base_name = os.path.basename(evidence.local_path)
-    output_file_path = os.path.join(self.output_dir, 'photorec_finding')
+    output_file_path = os.path.join(self.output_dir, 'photorec_output')
+    photorec_log = os.path.join(self.output_dir, 'photorec.log')
     # Add the output path to the evidence so we can automatically save it
     # later.
     output_evidence.local_path = output_file_path
@@ -51,10 +49,14 @@ class PhotorecTask(TurbiniaTask):
       # Generate the command we want to run.
       cmd = 'photorec /d {0:s} /cmd {1:s}  options,paranoid,keep_corrupted_fille,search'.format(
           output_file_path, evidence.local_path)
+      if config.DEBUG_TASKS:
+        cmd.append('/log')
       # Add a log line to the result that will be returned.
       result.log('Running photorec as [{0:s}]'.format(cmd))
       # Actually execute the binary
-      self.execute(cmd, result, new_evidence=[output_evidence], shell=True)
+      self.execute(
+          cmd, result, log_files=[photorec_log], new_evidence=[output_evidence],
+          shell=True)
       output_evidence.compress()
       result.close(
           self, success=True, status='Photorec task completed successfully.')
