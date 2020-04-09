@@ -19,6 +19,7 @@ import logging
 import json
 import os
 
+from turbinia import config
 from turbinia import TurbiniaException
 from turbinia.workers import TurbiniaTask
 from turbinia.evidence import PhotorecOutput

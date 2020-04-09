@@ -26,3 +26,7 @@ terraform/gcp/*.auto.tfvars
 
 # Exclude pycharm files
 .idea/
+
+# Exclude  logs
+*.log
+*.log.gz
