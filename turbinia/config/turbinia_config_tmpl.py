@@ -170,7 +170,6 @@ PUBSUB_TOPIC = INSTANCE_ID
 GCS_OUTPUT_PATH = None
 
 # Set this to True if you would like to enable Google Cloud Stackdriver Logging.
-# Please ensure that the Stackdriver Logging API is already enabled.
 STACKDRIVER_LOGGING = False
 
 ################################################################################
