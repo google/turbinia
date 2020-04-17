@@ -19,6 +19,7 @@ from turbinia.jobs import grep
 from turbinia.jobs import hadoop
 from turbinia.jobs import http_access_logs
 from turbinia.jobs import jenkins
+from turbinia.jobs import jupyter
 from turbinia.jobs import hindsight
 from turbinia.jobs import plaso
 from turbinia.jobs import psort
