@@ -50,7 +50,7 @@ class JupyterAnalysisTask(TurbiniaTask):
     output_evidence = ReportText(source_path=output_file_path)
 
     # Read the config file.
-   # with open(evidence.local_path, 'r') as input_file:
+    # with open(evidence.local_path, 'r') as input_file:
     jupyter_config = open(evidence.local_path, 'r').read()
 
     # Extract the config and return the report
@@ -70,7 +70,6 @@ class JupyterAnalysisTask(TurbiniaTask):
 
     return result
 
-  
   def analyse_config(self, jupyter_config):
     """Extract version from Jupyter configuration files.
 
@@ -83,7 +82,7 @@ class JupyterAnalysisTask(TurbiniaTask):
     import logging
     findings = []
     for line in jupyter_config.split('\n'):
-      
+
       if all(x in line for x in ['disable_check_xsrf', 'True']):
         findings.append(fmt.bullet('XSRF protection is disabled.'))
         continue
@@ -91,18 +90,20 @@ class JupyterAnalysisTask(TurbiniaTask):
         findings.append(fmt.bullet('Jupyter Notebook runs as admin.'))
         continue
       if 'NotebookApp.port' in line:
-        port = line.split('=')[1].replace(' ','')
-        if port == '0': 
+        port = line.split('=')[1].replace(' ', '')
+        if port == '0':
           findings.append(fmt.bullet('Jupyter Notebook listens on all ports.'))
           continue
       if 'password' in line:
         if all(x in line for x in ['required', 'False']):
-          findings.append(fmt.bullet('Jupyter Notebook is not password protected.'))
+          findings.append(
+              fmt.bullet('Jupyter Notebook is not password protected.'))
           continue
         if 'required' not in line:
-          password_hash = line.split('=')[1].replace(' ','')
+          password_hash = line.split('=')[1].replace(' ', '')
           if password_hash == "''":
-            findings.append(fmt.bullet('There is no password for this Jupyter Notebook.'))
+            findings.append(
+                fmt.bullet('There is no password for this Jupyter Notebook.'))
 
     if findings:
       summary = 'Insecure Jupyter Notebook configuration found.'

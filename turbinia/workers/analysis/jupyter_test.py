@@ -44,7 +44,7 @@ c.NotebookApp.allow_root = False
 * Jupyter Notebook is not password protected."""
 
   Good_CONFIG_REPORT = 'No issues found in Jupyter Notebook  configuration.'
-  
+
   def test_analyse_jupyter_config(self):
     """Tests the analyze_redis_config method."""
     config.LoadConfig()
