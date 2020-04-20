@@ -41,6 +41,14 @@ to configure all of your worker nodes to mounting your GCS bucket at a common
 path. Once your GCS bucket is mounted, you can process these images as the
 'rawdisk' Evidence type.
 
+## Stackdriver Logging
+There is an option to enable Stackdriver Logging if you would like to centralize all logging for Turbinia. In order to do this, please set the configuration value `STACKDRIVER_LOGGING` to `True` in the `.turbiniarc` config file as illustrated below. 
+```
+# Set this to True if you would like to enable Google Cloud Stackdriver Logging.
+STACKDRIVER_LOGGING = True
+```
+
+
 ## General Notes
 
 *   Turbinia currently assumes that Evidence is equally available to all worker
