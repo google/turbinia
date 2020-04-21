@@ -22,6 +22,9 @@ import socket
 import ssl
 import time
 
+from google.cloud import logging as cloud_logging
+from google.cloud import exceptions
+
 from apiclient.discovery import build
 from apiclient.http import HttpError
 
@@ -33,6 +36,27 @@ from turbinia import TurbiniaException
 log = logging.getLogger('turbinia')
 
 RETRY_MAX = 10
+
+
+def setup_stackdriver_handler(project_id):
+  """Set up Google Cloud Stackdriver Logging
+
+  The Google Cloud Logging library will attach itself as a
+  handler to the default Python logging module.
+
+  Attributes:
+    project_id: The name of the Google Cloud project.
+  Raises:
+    TurbiniaException: When an error occurs enabling GCP Stackdriver Logging.
+  """
+  try:
+    client = cloud_logging.Client(project=project_id)
+    cloud_handler = cloud_logging.handlers.CloudLoggingHandler(client)
+    logger = logging.getLogger('turbinia')
+    logger.addHandler(cloud_handler)
+  except exceptions.GoogleCloudError as exception:
+    msg = 'Error enabling Stackdriver Logging: {0:s}'.format(str(exception))
+    raise TurbiniaException(msg)
 
 
 class GoogleCloudProject(object):

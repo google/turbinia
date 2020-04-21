@@ -5,6 +5,7 @@ google-api-python-client
 google-cloud-pubsub
 google-cloud-storage
 google-cloud-core
+google-cloud-logging
 oauth2client
 psq
 six
