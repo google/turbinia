@@ -25,8 +25,8 @@ import time
 from google.cloud import logging as cloud_logging
 from google.cloud import exceptions
 
-from apiclient.discovery import build
-from apiclient.http import HttpError
+from googleapiclient.discovery import build
+from googleapiclient.http import HttpError
 
 from oauth2client.client import GoogleCredentials
 from oauth2client.client import ApplicationDefaultCredentialsError
