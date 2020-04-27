@@ -39,6 +39,7 @@ from turbinia.evidence import evidence_decode
 from turbinia import output_manager
 from turbinia import state_manager
 from turbinia import TurbiniaException
+from turbinia import log_and_report
 from turbinia.lib import docker_manager
 
 log = logging.getLogger('turbinia')
@@ -732,8 +733,8 @@ class TurbiniaTask(object):
                 self.name, exception))
         # Logging explicitly here because the result is in an unknown state
         trace = traceback.format_exc()
-        log.error(message)
-        log.error(trace)
+        log_and_report(message, trace)
+
         if self.result:
           self.result.log(message, level=logging.ERROR)
           self.result.log(trace)

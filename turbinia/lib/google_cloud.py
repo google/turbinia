@@ -23,6 +23,7 @@ import ssl
 import time
 
 from google.cloud import logging as cloud_logging
+from google.cloud import error_reporting
 from google.cloud import exceptions
 
 from googleapiclient.discovery import build
@@ -57,6 +58,25 @@ def setup_stackdriver_handler(project_id):
   except exceptions.GoogleCloudError as exception:
     msg = 'Error enabling Stackdriver Logging: {0:s}'.format(str(exception))
     raise TurbiniaException(msg)
+
+
+def setup_stackdriver_traceback(project_id):
+  """Set up Google Cloud Error Reporting
+
+  This method will enable Google Cloud Error Reporting.
+  All exceptions that occur within a Turbinia Task will be logged.
+
+  Attributes:
+    project_id: The name of the Google Cloud project.
+  Raises:
+    TurbiniaException: When an error occurs enabling GCP Error Reporting.
+  """
+  try:
+    client = error_reporting.Client(project=project_id)
+  except exceptions.GoogleCloudError as exception:
+    msg = 'Error enabling GCP Error Reporting: {0:s}'.format(str(exception))
+    raise TurbiniaException(msg)
+  return client
 
 
 class GoogleCloudProject(object):
