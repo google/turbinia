@@ -38,13 +38,12 @@ c.NotebookApp.allow_root = False
   BAD_CONFIG_SUMMARY = """Insecure Jupyter Notebook configuration found."""
 
   BAD_CONFIG_REPORT = """#### **Insecure Jupyter Notebook configuration found.**
-* There is no password for this Jupyter Notebook.
-* Jupyter Notebook listens on all ports.
+* There is no password set for this Jupyter Notebook.
 * XSRF protection is disabled.
-* Jupyter Notebook runs as admin.
-* Jupyter Notebook is not password protected."""
+* Juypter Notebook allowed to run as root.
+* Password is not required to access this Jupyter Notebook."""
 
-  Good_CONFIG_REPORT = 'No issues found in Jupyter Notebook  configuration.'
+  GOOD_CONFIG_REPORT = 'No issues found in Jupyter Notebook  configuration.'
 
   def test_analyse_jupyter_config(self):
     """Tests the analyze_redis_config method."""
@@ -57,7 +56,7 @@ c.NotebookApp.allow_root = False
     self.assertEqual(summary, self.BAD_CONFIG_SUMMARY)
 
     (report, priority, summary) = task.analyse_config(self.GOOD_JUPYTER_CONFIG)
-    self.assertEqual(report, self.Good_CONFIG_REPORT)
+    self.assertEqual(report, self.GOOD_CONFIG_REPORT)
 
 
 if __name__ == '__main__':

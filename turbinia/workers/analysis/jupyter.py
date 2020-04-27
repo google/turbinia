@@ -50,7 +50,7 @@ class JupyterAnalysisTask(TurbiniaTask):
     output_evidence = ReportText(source_path=output_file_path)
 
     # Read the config file.
-    # with open(evidence.local_path, 'r') as input_file:
+  
     jupyter_config = open(evidence.local_path, 'r').read()
 
     # Extract the config and return the report
@@ -71,39 +71,42 @@ class JupyterAnalysisTask(TurbiniaTask):
     return result
 
   def analyse_config(self, jupyter_config):
-    """Extract version from Jupyter configuration files.
+    """Extract security related configs from Jupyter configuration files.
 
     Args:
       config (str): configuration file content.
 
     Returns:
-      str: The version of Jupyter.
+      Tuple(
+        report_text(str): The report data
+        report_priority(int): The priority of the report (0 - 100)
+        summary(str): A summary of the report (used for task status)
+      )
     """
-    import logging
     findings = []
+    num_misconfigs = 0
     for line in jupyter_config.split('\n'):
 
       if all(x in line for x in ['disable_check_xsrf', 'True']):
         findings.append(fmt.bullet('XSRF protection is disabled.'))
+        num_misconfigs += 1
         continue
       if all(x in line for x in ['allow_root', 'True']):
-        findings.append(fmt.bullet('Jupyter Notebook runs as admin.'))
+        findings.append(fmt.bullet('Juypter Notebook allowed to run as root.'))
+        num_misconfigs += 1
         continue
-      if 'NotebookApp.port' in line:
-        port = line.split('=')[1].replace(' ', '')
-        if port == '0':
-          findings.append(fmt.bullet('Jupyter Notebook listens on all ports.'))
-          continue
       if 'password' in line:
         if all(x in line for x in ['required', 'False']):
           findings.append(
-              fmt.bullet('Jupyter Notebook is not password protected.'))
+              fmt.bullet('Password is not required to access this Jupyter Notebook.'))
+          num_misconfigs += 1
           continue
         if 'required' not in line:
           password_hash = line.split('=')[1].replace(' ', '')
           if password_hash == "''":
             findings.append(
-                fmt.bullet('There is no password for this Jupyter Notebook.'))
+                fmt.bullet('There is no password set for this Jupyter Notebook.'))
+            num_misconfigs += 1
 
     if findings:
       summary = 'Insecure Jupyter Notebook configuration found.'
@@ -112,5 +115,4 @@ class JupyterAnalysisTask(TurbiniaTask):
       return (report, Priority.HIGH, summary)
 
     report = 'No issues found in Jupyter Notebook  configuration.'
-    logging.error('its report {}'.format(report))
     return (report, Priority.LOW, report)

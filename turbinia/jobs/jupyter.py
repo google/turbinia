@@ -28,9 +28,8 @@ from turbinia.jobs import interface
 from turbinia.jobs import manager
 from turbinia.workers.analysis.jupyter import JupyterAnalysisTask
 
-
 class JupyterExtractionJob(interface.TurbiniaJob):
-  """Extract Redis configuration files for analysis."""
+  """Extract Jupyter configuration files for analysis."""
 
   # The types of evidence that this Job will process
   evidence_input = [
@@ -50,8 +49,7 @@ class JupyterExtractionJob(interface.TurbiniaJob):
         A list of tasks to schedule.
     """
     tasks = [
-        artifact.FileArtifactExtractionTask('JupyterConfigFile')
-        for _ in evidence
+        artifact.FileArtifactExtractionTask('JupyterConfigFile') for _ in evidence
     ]
     return tasks
 
@@ -60,8 +58,7 @@ class JupyterAnalysisJob(interface.TurbiniaJob):
   """Jupyter analysis job."""
 
   evidence_input = [
-      Directory, DockerContainer, RawDisk, GoogleCloudDisk,
-      GoogleCloudDiskRawEmbedded
+     ExportedFileArtifact
   ]
   evidence_output = [ReportText]
 
@@ -75,12 +72,12 @@ class JupyterAnalysisJob(interface.TurbiniaJob):
 
     Returns:
         A list of tasks to schedule.
-    """
+    """ 
     tasks = []
     for evidence_item in evidence:
-      if evidence_item.artifact_name is 'JupyterConfigFile':
+      if evidence_item.artifact_name == 'JupyterConfigFile':
         tasks.append(jupyter.JupyterAnalysisJob())
     return tasks
 
 
-manager.JobsManager.RegisterJobs([JupyterAnalysisJob, JupyterExtractionJob])
+manager.JobsManager.RegisterJobs([JupyterExtractionJob, JupyterAnalysisJob])
