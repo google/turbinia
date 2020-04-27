@@ -28,6 +28,7 @@ from turbinia.jobs import interface
 from turbinia.jobs import manager
 from turbinia.workers.analysis.jupyter import JupyterAnalysisTask
 
+
 class JupyterExtractionJob(interface.TurbiniaJob):
   """Extract Jupyter configuration files for analysis."""
 
@@ -49,7 +50,8 @@ class JupyterExtractionJob(interface.TurbiniaJob):
         A list of tasks to schedule.
     """
     tasks = [
-        artifact.FileArtifactExtractionTask('JupyterConfigFile') for _ in evidence
+        artifact.FileArtifactExtractionTask('JupyterConfigFile')
+        for _ in evidence
     ]
     return tasks
 
@@ -57,9 +59,7 @@ class JupyterExtractionJob(interface.TurbiniaJob):
 class JupyterAnalysisJob(interface.TurbiniaJob):
   """Jupyter analysis job."""
 
-  evidence_input = [
-     ExportedFileArtifact
-  ]
+  evidence_input = [ExportedFileArtifact]
   evidence_output = [ReportText]
 
   NAME = 'JupyterAnalysisJob'
@@ -72,7 +72,7 @@ class JupyterAnalysisJob(interface.TurbiniaJob):
 
     Returns:
         A list of tasks to schedule.
-    """ 
+    """
     tasks = []
     for evidence_item in evidence:
       if evidence_item.artifact_name == 'JupyterConfigFile':

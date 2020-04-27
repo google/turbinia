@@ -50,7 +50,7 @@ class JupyterAnalysisTask(TurbiniaTask):
     output_evidence = ReportText(source_path=output_file_path)
 
     # Read the config file.
-  
+
     jupyter_config = open(evidence.local_path, 'r').read()
 
     # Extract the config and return the report
@@ -98,14 +98,16 @@ class JupyterAnalysisTask(TurbiniaTask):
       if 'password' in line:
         if all(x in line for x in ['required', 'False']):
           findings.append(
-              fmt.bullet('Password is not required to access this Jupyter Notebook.'))
+              fmt.bullet(
+                  'Password is not required to access this Jupyter Notebook.'))
           num_misconfigs += 1
           continue
         if 'required' not in line:
           password_hash = line.split('=')[1].replace(' ', '')
           if password_hash == "''":
             findings.append(
-                fmt.bullet('There is no password set for this Jupyter Notebook.'))
+                fmt.bullet(
+                    'There is no password set for this Jupyter Notebook.'))
             num_misconfigs += 1
 
     if findings:
