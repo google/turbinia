@@ -19,6 +19,7 @@ __version__ = '20190819'
 import logging
 log = logging.getLogger('turbinia')
 
+
 def log_and_report(message, trace):
   """Log an error and if enabled, send to GCP Error Reporting API.
 
@@ -36,6 +37,7 @@ def log_and_report(message, trace):
   if config.STACKDRIVER_TRACEBACK:
     client = google_cloud.setup_stackdriver_traceback(config.TURBINIA_PROJECT)
     client.report_exception()
+
 
 class TurbiniaException(Exception):
   """Turbinia Exception class."""
