@@ -45,6 +45,8 @@ class PsortTask(TurbiniaTask):
     cmd = ['psort.py', '--status_view', 'none', '--logfile', psort_log]
     if config.DEBUG_TASKS:
       cmd.append('-d')
+
+    cmd.extend(['--additional_fields', 'yara_match'])
     cmd.extend(['-w', psort_file, evidence.source_path])
 
     result.log('Running psort as [{0:s}]'.format(' '.join(cmd)))

@@ -107,6 +107,9 @@ def main():
       'text based evidence files with (in extended grep regex format). '
       'This filtered output will be in addition to the complete output')
   parser.add_argument(
+      '-Y', '--yara_rules_file',
+      help='A file containing Yara rules.')
+  parser.add_argument(
       '-j', '--jobs_whitelist', default=[], type=csv_list,
       help='A whitelist for Jobs that will be allowed to run (in CSV format, '
       'no spaces). This will not force them to run if they are not configured '
@@ -460,6 +463,19 @@ def main():
       log.warning(
           'Cannot open file {0:s} [{1!s}]'.format(args.filter_patterns_file, e))
 
+  # Read yara rules
+  yara_rules = None
+  if (args.yara_rules_file and
+      not os.path.exists(args.yara_rules_file)):
+    log.error('Filter patterns file {0:s} does not exist.')
+    sys.exit(1)
+  elif args.yara_rules_file:
+    try:
+      yara_rules = open(args.yara_rules_file).read()
+    except IOError as e:
+      log.warning(
+          'Cannot open file {0:s} [{1!s}]'.format(args.yara_rules_file, e))
+
   # Create Client object
   client = None
   if args.command not in ('psqworker', 'server'):
@@ -669,6 +685,8 @@ def main():
       request.recipe['jobs_blacklist'] = args.jobs_blacklist
     if args.jobs_whitelist:
       request.recipe['jobs_whitelist'] = args.jobs_whitelist
+    if yara_rules:
+      request.recipe['yara_rules'] = yara_rules
     if args.recipe_config:
       for pair in args.recipe_config:
         try:
