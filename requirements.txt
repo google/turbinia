@@ -11,3 +11,4 @@ psq
 six
 urllib3[secure]
 docker
+libcloudforensics
