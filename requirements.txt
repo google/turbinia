@@ -11,4 +11,3 @@ psq
 six
 urllib3[secure]
 docker
-git+https://github.com/tomchop/cloud-forensics-utils.git@data#egg=libcloudforensics
