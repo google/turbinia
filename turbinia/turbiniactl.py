@@ -107,8 +107,7 @@ def main():
       'text based evidence files with (in extended grep regex format). '
       'This filtered output will be in addition to the complete output')
   parser.add_argument(
-      '-Y', '--yara_rules_file',
-      help='A file containing Yara rules.')
+      '-Y', '--yara_rules_file', help='A file containing Yara rules.')
   parser.add_argument(
       '-j', '--jobs_whitelist', default=[], type=csv_list,
       help='A whitelist for Jobs that will be allowed to run (in CSV format, '
@@ -465,8 +464,7 @@ def main():
 
   # Read yara rules
   yara_rules = None
-  if (args.yara_rules_file and
-      not os.path.exists(args.yara_rules_file)):
+  if (args.yara_rules_file and not os.path.exists(args.yara_rules_file)):
     log.error('Filter patterns file {0:s} does not exist.')
     sys.exit(1)
   elif args.yara_rules_file:
