@@ -6,6 +6,7 @@ google-cloud-pubsub
 google-cloud-storage
 google-cloud-core
 google-cloud-logging
+google-cloud-error-reporting
 oauth2client
 psq
 six
