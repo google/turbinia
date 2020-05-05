@@ -42,7 +42,6 @@ from turbinia.workers import Priority
 from turbinia.workers.artifact import FileArtifactExtractionTask
 from turbinia.workers.analysis.wordpress import WordpressAccessLogAnalysisTask
 from turbinia.workers.analysis.jenkins import JenkinsAnalysisTask
-from turbinia.workers.analysis.jupyter import JupyterAnalysisTask
 from turbinia.workers.finalize_request import FinalizeRequestTask
 from turbinia.workers.docker import DockerContainersEnumerationTask
 from turbinia.workers.grep import GrepTask
@@ -67,7 +66,6 @@ TASK_MAP = {
     'wordpressaccessloganalysistask': WordpressAccessLogAnalysisTask,
     'finalizerequesttask': FinalizeRequestTask,
     'jenkinsanalysistask': JenkinsAnalysisTask,
-    'jupyteranalysistask': JupyterAnalysisTask,
     'greptask': GrepTask,
     'hadoopanalysistask': HadoopAnalysisTask,
     'hindsighttask': HindsightTask,
@@ -868,15 +866,6 @@ class TurbiniaServer(object):
       jobs_blacklist (Optional[list[str]]): Jobs we will exclude from running
       jobs_whitelist (Optional[list[str]]): The only Jobs we will include to run
     """
-    if jobs_whitelist or jobs_blacklist:
-      selected_jobs = jobs_blacklist or jobs_whitelist
-      for job in selected_jobs:
-        if job.lower() not in TASK_MAP:
-          msg = 'Error creating server. Job {} is not supported by Turninia.'.format(
-              job)
-          log.error(msg)
-          raise TurbiniaException(msg)
-
     config.LoadConfig()
     self.task_manager = task_manager.get_task_manager()
     self.task_manager.setup(jobs_blacklist, jobs_whitelist)
@@ -906,16 +895,6 @@ class TurbiniaCeleryWorker(BaseTurbiniaClient):
       jobs_whitelist (Optional[list[str]]): The only Jobs we will include to run
     """
     super(TurbiniaCeleryWorker, self).__init__()
-
-    if jobs_whitelist or jobs_blacklist:
-      selected_jobs = jobs_blacklist or jobs_whitelist
-      for job in selected_jobs:
-        if job.lower() not in TASK_MAP:
-          msg = 'Error creating Celery worker. Job {} is not supported by Turninia.'.format(
-              job)
-          log.error(msg)
-          raise TurbiniaException(msg)
-
     # Deregister jobs from blacklist/whitelist.
     disabled_jobs = list(config.DISABLED_JOBS) if config.DISABLED_JOBS else []
     job_manager.JobsManager.DeregisterJobs(jobs_blacklist, jobs_whitelist)
@@ -978,15 +957,6 @@ class TurbiniaPsqWorker(object):
       msg = 'Error creating PSQ Queue: {0:s}'.format(str(e))
       log.error(msg)
       raise TurbiniaException(msg)
-
-    if jobs_whitelist or jobs_blacklist:
-      selected_jobs = jobs_blacklist or jobs_whitelist
-      for job in selected_jobs:
-        if job.lower() not in TASK_MAP:
-          msg = 'Error creating PSQ Queue. Job {} is not supported by Turninia.'.format(
-              job)
-          log.error(msg)
-          raise TurbiniaException(msg)
 
     # Deregister jobs from blacklist/whitelist.
     disabled_jobs = list(config.DISABLED_JOBS) if config.DISABLED_JOBS else []
