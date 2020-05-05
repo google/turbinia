@@ -3,7 +3,7 @@
 #     yapf -i -r --style .style.yapf ./turbinia/
 #
 [style]
-based_on_style = chromium
+based_on_style = yapf
 COALESCE_BRACKETS = True
 SPLIT_BEFORE_FIRST_ARGUMENT = True
 SPLIT_PENALTY_AFTER_OPENING_BRACKET = 0

@@ -39,6 +39,8 @@ from turbinia.evidence import evidence_decode
 from turbinia import output_manager
 from turbinia import state_manager
 from turbinia import TurbiniaException
+from turbinia import log_and_report
+from turbinia.lib import docker_manager
 
 log = logging.getLogger('turbinia')
 
@@ -454,19 +456,37 @@ class TurbiniaTask(object):
     Returns:
       Tuple of the return code, and the TurbiniaTaskResult object
     """
+    # Avoid circular dependency.
+    from turbinia.jobs import manager as job_manager
+
     save_files = save_files if save_files else []
     log_files = log_files if log_files else []
     new_evidence = new_evidence if new_evidence else []
     success_codes = success_codes if success_codes else [0]
 
-    if shell:
-      proc = subprocess.Popen(cmd, shell=True)
+    # Execute the job via docker.
+    docker_image = job_manager.JobsManager.GetDockerImage(self.job_name)
+    if docker_image:
+      ro_paths = [
+          result.input_evidence.local_path, result.input_evidence.source_path,
+          result.input_evidence.device_path, result.input_evidence.mount_path
+      ]
+      rw_paths = [self.output_dir, self.tmp_dir]
+      container_manager = docker_manager.ContainerManager(docker_image)
+      stdout, stderr, ret = container_manager.execute_container(
+          cmd, shell, ro_paths=ro_paths, rw_paths=rw_paths)
+
+    # Execute the job on the host system.
     else:
-      proc = subprocess.Popen(cmd)
-    stdout, stderr = proc.communicate()
+      if shell:
+        proc = subprocess.Popen(cmd, shell=True)
+      else:
+        proc = subprocess.Popen(cmd)
+      stdout, stderr = proc.communicate()
+      ret = proc.returncode
+
     result.error['stdout'] = stdout
     result.error['stderr'] = stderr
-    ret = proc.returncode
 
     for file_ in log_files:
       if not os.path.exists(file_):
@@ -541,10 +561,7 @@ class TurbiniaTask(object):
     self.output_manager.setup(self)
     self.tmp_dir, self.output_dir = self.output_manager.get_local_output_dirs()
     if not self.result:
-      self.result = TurbiniaTaskResult(
-          input_evidence=evidence, base_output_dir=self.base_output_dir,
-          request_id=self.request_id, job_id=self.job_id)
-      self.result.setup(self)
+      self.result = self.create_result()
 
     if not self.run_local:
       if evidence.copyable and not config.SHARED_FILESYSTEM:
@@ -559,6 +576,27 @@ class TurbiniaTask(object):
   def touch(self):
     """Updates the last_update time of the task."""
     self.last_update = datetime.now()
+
+  def create_result(self, status=None, message=None, trace=None):
+    """Creates a new TurbiniaTaskResults and instantiates the result.
+
+    Args:
+      status: A one line descriptive task status.
+      message: An error message to show when returning the result.
+      trace: Stack traceback for errors.
+    """
+    result = TurbiniaTaskResult(
+        base_output_dir=self.base_output_dir, request_id=self.request_id,
+        job_id=self.job_id)
+    result.setup(self)
+    if message:
+      if status:
+        result.status = '{0:s}. Previous status: [{1:s}]'.format(
+            message, status)
+      else:
+        result.status = message
+      result.set_error(message, trace)
+    return result
 
   def validate_result(self, result):
     """Checks to make sure that the result is valid.
@@ -576,38 +614,33 @@ class TurbiniaTask(object):
       The original result object if it is OK, otherwise an empty result object
       indicating a failure.
     """
-    bad_message = None
+    message = None
     check_status = 'Successful'
 
-    if not isinstance(result, TurbiniaTaskResult):
-      bad_message = (
-          'Task returned type [{0!s}] instead of TurbiniaTaskResult.').format(
-              type(result))
-    else:
+    if isinstance(result, TurbiniaTaskResult):
       try:
         log.debug('Checking TurbiniaTaskResult for serializability')
         pickle.dumps(result.serialize())
       except (TypeError, pickle.PicklingError) as exception:
-        bad_message = (
+        message = (
             'Error pickling TurbiniaTaskResult object. Returning a new result '
             'with the pickling error, and all previous result data will be '
             'lost. Pickle Error: {0!s}'.format(exception))
+    else:
+      message = (
+          'Task returned type [{0!s}] instead of TurbiniaTaskResult.').format(
+              type(result))
 
-    if bad_message:
-      log.error(bad_message)
+    if message:
+      log.error(message)
       if result and hasattr(result, 'status') and result.status:
-        old_status = result.status
+        status = result.status
       else:
-        old_status = 'No previous status'
+        status = 'No previous status'
 
-      result = TurbiniaTaskResult(
-          base_output_dir=self.base_output_dir, request_id=self.request_id,
-          job_id=self.job_id)
-      result.setup(self)
-      result.status = '{0:s}. Previous status: [{1:s}]'.format(
-          bad_message, old_status)
-      result.set_error(bad_message, traceback.format_exc())
-      result.close(self, success=False, status=bad_message)
+      result = self.create_result(
+          status=status, message=message, trace=traceback.format_exc())
+      result.close(self, success=False, status=message)
       check_status = 'Failed, but replaced with empty result'
 
     log.info('Result check: {0:s}'.format(check_status))
@@ -658,12 +691,8 @@ class TurbiniaTask(object):
           self.result.set_error(exception.__class__, traceback.format_exc())
         self.result.status = message
       else:
-        self.result = TurbiniaTaskResult(
-            base_output_dir=self.base_output_dir, request_id=self.request_id,
-            job_id=self.job_id)
-        self.result.setup(self)
-        self.result.status = message
-        self.result.set_error(message, traceback.format_exc())
+        self.result = self.create_result(
+            message=message, trace=traceback.format_exc())
       return self.result.serialize()
     with filelock.FileLock(config.LOCK_FILE):
       log.info('Starting Task {0:s} {1:s}'.format(self.name, self.id))
@@ -704,8 +733,8 @@ class TurbiniaTask(object):
                 self.name, exception))
         # Logging explicitly here because the result is in an unknown state
         trace = traceback.format_exc()
-        log.error(message)
-        log.error(trace)
+        log_and_report(message, trace)
+
         if self.result:
           self.result.log(message, level=logging.ERROR)
           self.result.log(trace)

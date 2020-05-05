@@ -169,6 +169,12 @@ PUBSUB_TOPIC = INSTANCE_ID
 # GCS_OUTPUT_PATH = 'gs://%s/output' % BUCKET_NAME
 GCS_OUTPUT_PATH = None
 
+# Set this to True if you would like to enable Google Cloud Stackdriver Logging.
+STACKDRIVER_LOGGING = False
+
+# Set this to True if you would like to enable Google Cloud Error Reporting.
+STACKDRIVER_TRACEBACK = False
+
 ################################################################################
 #                           Celery / Redis / Kombu
 #
