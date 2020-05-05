@@ -28,7 +28,8 @@ import sys
 from turbinia import config
 from turbinia import TurbiniaException
 from turbinia.config import logger
-from turbinia.lib import libcloudforensics
+from libcloudforensics import gcp
+from turbinia.lib import google_cloud
 from turbinia import __version__
 from turbinia.processors import archive
 
@@ -399,6 +400,10 @@ def main():
   else:
     log.setLevel(logging.INFO)
 
+  # Enable GCP Stackdriver Logging
+  if config.STACKDRIVER_LOGGING and args.command in ('server', 'psqworker'):
+    google_cloud.setup_stackdriver_handler(config.TURBINIA_PROJECT)
+
   log.info('Turbinia version: {0:s}'.format(__version__))
 
   # Do late import of other needed Turbinia modules.  This is needed because the
@@ -487,7 +492,7 @@ def main():
       sys.exit(1)
 
     if args.project and args.project != config.TURBINIA_PROJECT:
-      new_disk = libcloudforensics.create_disk_copy(
+      new_disk = gcp.CreateDiskCopy(
           args.project, config.TURBINIA_PROJECT, None, config.TURBINIA_ZONE,
           args.disk_name)
       args.disk_name = new_disk.name
