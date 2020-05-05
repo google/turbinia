@@ -830,7 +830,8 @@ class TurbiniaServer(object):
       selected_jobs = jobs_blacklist or jobs_whitelist
       for job in selected_jobs:
         if job.lower() not in TASK_MAP:
-          msg = 'Error creating server. Job {} is not supported by Turninia.'.format(job)
+          msg = 'Error creating server. Job {} is not supported by Turninia.'.format(
+              job)
           log.error(msg)
           raise TurbiniaException(msg)
 
@@ -868,7 +869,8 @@ class TurbiniaCeleryWorker(BaseTurbiniaClient):
       selected_jobs = jobs_blacklist or jobs_whitelist
       for job in selected_jobs:
         if job.lower() not in TASK_MAP:
-          msg = 'Error creating Celery worker. Job {} is not supported by Turninia.'.format(job)
+          msg = 'Error creating Celery worker. Job {} is not supported by Turninia.'.format(
+              job)
           log.error(msg)
           raise TurbiniaException(msg)
 
@@ -931,7 +933,8 @@ class TurbiniaPsqWorker(object):
       selected_jobs = jobs_blacklist or jobs_whitelist
       for job in selected_jobs:
         if job.lower() not in TASK_MAP:
-          msg = 'Error creating PSQ Queue. Job {} is not supported by Turninia.'.format(job)
+          msg = 'Error creating PSQ Queue. Job {} is not supported by Turninia.'.format(
+              job)
           log.error(msg)
           raise TurbiniaException(msg)
 
