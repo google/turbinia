@@ -24,8 +24,6 @@ from turbinia.evidence import ReportText
 from turbinia.lib import text_formatter as fmt
 from turbinia.workers import TurbiniaTask
 from turbinia.workers import Priority
-from turbinia.lib.utils import extract_files
-from turbinia.lib.utils import bruteforce_password_hashes
 
 
 class JupyterAnalysisTask(TurbiniaTask):
@@ -95,7 +93,7 @@ class JupyterAnalysisTask(TurbiniaTask):
         findings.append(fmt.bullet('Juypter Notebook allowed to run as root.'))
         num_misconfigs += 1
         continue
-      if 'password' in line:
+      if 'NotebookApp.password' in line:
         if all(x in line for x in ['required', 'False']):
           findings.append(
               fmt.bullet(
@@ -103,7 +101,7 @@ class JupyterAnalysisTask(TurbiniaTask):
           num_misconfigs += 1
           continue
         if 'required' not in line:
-          password_hash = line.split('=')[1].replace(' ', '')
+          password_hash = line.split('=')[1].strip()
           if password_hash == "''":
             findings.append(
                 fmt.bullet(
@@ -111,7 +109,8 @@ class JupyterAnalysisTask(TurbiniaTask):
             num_misconfigs += 1
 
     if findings:
-      summary = 'Insecure Jupyter Notebook configuration found.'
+      summary = 'Insecure Jupyter Notebook configuration found. Total misconfigs: {}'.format(
+          num_misconfigs)
       findings.insert(0, fmt.heading4(fmt.bold(summary)))
       report = '\n'.join(findings)
       return (report, Priority.HIGH, summary)

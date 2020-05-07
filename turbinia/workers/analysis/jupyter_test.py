@@ -15,7 +15,7 @@ c.NotebookApp.password = ''
 c.NotebookApp.open_browser = False
 c.NotebookApp.port = 0
 c.NotebookApp.allow_origin_pat = '(^https://8080-dot-[0-9]+-dot-devshell\.appspot\.com$)z]*.notebooks.googleusercontent.com)'
-c.NotebookApp.allow_remote_a’ccess = True
+c.NotebookApp.allow_remote_access = True
 c.NotebookApp.disable_check_xsrf = True
 c.NotebookApp.notebook_dir = '/home'
 c.NotebookApp.notebook_dir = '/home/jupyter'
@@ -28,16 +28,16 @@ c.NotebookApp.password = 'au6fsdi7acgyac9ivj0asduva'
 c.NotebookApp.open_browser = False
 c.NotebookApp.port = 8080
 c.NotebookApp.allow_origin_pat = '(^https://8080-dot-[0-9]+-dot-devshell\.appspot\.com$)z]*.notebooks.googleusercontent.com)'
-c.NotebookApp.allow_remote_a’ccess = True
+c.NotebookApp.allow_remote_access = True
 c.NotebookApp.disable_check_xsrf = False
 c.NotebookApp.notebook_dir = '/home'
 c.NotebookApp.notebook_dir = '/home/jupyter'
 c.NotebookApp.allow_root = False
 """
 
-  BAD_CONFIG_SUMMARY = """Insecure Jupyter Notebook configuration found."""
+  BAD_CONFIG_SUMMARY = """Insecure Jupyter Notebook configuration found. Total misconfigs: 4"""
 
-  BAD_CONFIG_REPORT = """#### **Insecure Jupyter Notebook configuration found.**
+  BAD_CONFIG_REPORT = """#### **Insecure Jupyter Notebook configuration found. Total misconfigs: 4**
 * There is no password set for this Jupyter Notebook.
 * XSRF protection is disabled.
 * Juypter Notebook allowed to run as root.
