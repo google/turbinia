@@ -1,5 +1,5 @@
 filelock
-google-api-core<=1.14.0
+google-api-core
 google-cloud-datastore
 google-api-python-client
 google-cloud-pubsub
