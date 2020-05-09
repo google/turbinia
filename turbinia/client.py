@@ -904,7 +904,6 @@ class TurbiniaCeleryWorker(BaseTurbiniaClient):
       jobs_whitelist (Optional[list[str]]): The only Jobs we will include to run
     """
     super(TurbiniaCeleryWorker, self).__init__()
-
     # Deregister jobs from blacklist/whitelist.
     disabled_jobs = list(config.DISABLED_JOBS) if config.DISABLED_JOBS else []
     job_manager.JobsManager.DeregisterJobs(jobs_blacklist, jobs_whitelist)
