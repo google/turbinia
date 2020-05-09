@@ -874,7 +874,6 @@ class TurbiniaServer(object):
         if job.lower() not in job_names:
           msg = 'Error creating server. Job {} is not supported by Turninia.'.format(
               job)
-          log.error(job_names)
           log.error(msg)
           raise TurbiniaException(msg)
     self.task_manager = task_manager.get_task_manager()
@@ -905,15 +904,6 @@ class TurbiniaCeleryWorker(BaseTurbiniaClient):
       jobs_whitelist (Optional[list[str]]): The only Jobs we will include to run
     """
     super(TurbiniaCeleryWorker, self).__init__()
-
-    if jobs_whitelist or jobs_blacklist:
-      selected_jobs = jobs_blacklist or jobs_whitelist
-      for job in selected_jobs:
-        if job.lower() not in TASK_MAP:
-          msg = 'Error creating Celery worker. Job {} is not supported by Turninia.'.format(
-              job)
-          log.error(msg)
-          raise TurbiniaException(msg)
 
     # Deregister jobs from blacklist/whitelist.
     disabled_jobs = list(config.DISABLED_JOBS) if config.DISABLED_JOBS else []
@@ -977,15 +967,6 @@ class TurbiniaPsqWorker(object):
       msg = 'Error creating PSQ Queue: {0:s}'.format(str(e))
       log.error(msg)
       raise TurbiniaException(msg)
-
-    if jobs_whitelist or jobs_blacklist:
-      selected_jobs = jobs_blacklist or jobs_whitelist
-      for job in selected_jobs:
-        if job.lower() not in TASK_MAP:
-          msg = 'Error creating PSQ Queue. Job {} is not supported by Turninia.'.format(
-              job)
-          log.error(msg)
-          raise TurbiniaException(msg)
 
     # Deregister jobs from blacklist/whitelist.
     disabled_jobs = list(config.DISABLED_JOBS) if config.DISABLED_JOBS else []
