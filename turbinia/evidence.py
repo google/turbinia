@@ -35,14 +35,11 @@ if config.TASK_MANAGER.lower() == 'psq':
 
 def evidence_decode(evidence_dict):
   """Decode JSON into appropriate Evidence object.
-
   Args:
     evidence_dict: JSON serializable evidence object (i.e. a dict post JSON
                    decoding).
-
   Returns:
     An instantiated Evidence object (or a sub-class of it).
-
   Raises:
     TurbiniaException: If input is not a dict, does not have a type attribute,
                        or does not deserialize to an evidence object.
@@ -76,10 +73,8 @@ def evidence_decode(evidence_dict):
 
 class Evidence(object):
   """Evidence object for processing.
-
   In most cases, these objects will just contain metadata about the actual
   evidence.
-
   Attributes:
     config (dict): Configuration options from the request to be used when
         processing this evidence.
@@ -156,7 +151,6 @@ class Evidence(object):
   @classmethod
   def from_dict(cls, dictionary):
     """Instanciate an Evidence object from a dictionary of attributes.
-
     Args:
       dictionary(dict): the attributes to set for this object.
     Returns:
@@ -183,10 +177,8 @@ class Evidence(object):
 
   def to_json(self):
     """Convert object to JSON.
-
     Returns:
       A JSON serialized string of the current object.
-
     Raises:
       TurbiniaException: If serialization error occurs.
     """
@@ -201,7 +193,6 @@ class Evidence(object):
 
   def _preprocess(self, _):
     """Preprocess this evidence prior to task running.
-
     This gets run in the context of the local task execution on the worker
     nodes prior to the task itself running.  This can be used to prepare the
     evidence to be processed (e.g. attach a cloud disk, mount a local disk etc).
@@ -210,7 +201,6 @@ class Evidence(object):
 
   def _postprocess(self):
     """Postprocess this evidence after the task runs.
-
     This gets run in the context of the local task execution on the worker
     nodes after the task has finished.  This can be used to clean-up after the
     evidence is processed (e.g. detach a cloud disk, etc,).
@@ -219,15 +209,12 @@ class Evidence(object):
 
   def preprocess(self, tmp_dir=None):
     """Runs the possible parent's evidence preprocessing code, then ours.
-
     This is a wrapper function that will call the chain of pre-processors
     starting with the most distant ancestor.  After all of the ancestors have
     been processed, then we run our pre-processor.
-
     Args:
       tmp_dir(str): The path to the temporary directory that the
                        Task will write to.
-
     """
     if self.context_dependent:
       if not self.parent_evidence:
@@ -239,7 +226,6 @@ class Evidence(object):
 
   def postprocess(self):
     """Runs our postprocessing code, then our possible parent's evidence.
-
     This is is a wrapper function that will run our post-processor, and will
     then recurse down the chain of parent Evidence and run those post-processors
     in order.
@@ -250,12 +236,10 @@ class Evidence(object):
 
   def validate(self):
     """Runs validation to verify evidence meets minimum requirements.
-
     This default implementation will just check that the attributes listed in
     REQUIRED_ATTRIBUTES are set, but other evidence types can override this
     method to implement their own more stringent checks as needed.  This is
     called by the worker, prior to the pre/post-processors running.
-
     Raises:
       TurbiniaException: If validation fails
     """
@@ -271,7 +255,6 @@ class Evidence(object):
 
 class EvidenceCollection(Evidence):
   """A Collection of Evidence objects.
-
   Attributes:
     collection(list): The underlying Evidence objects
   """
@@ -289,7 +272,6 @@ class EvidenceCollection(Evidence):
 
   def add_evidence(self, evidence):
     """Adds evidence to the collection.
-
     Args:
       evidence (Evidence): The evidence to add.
     """
@@ -303,7 +285,6 @@ class Directory(Evidence):
 
 class CompressedDirectory(Evidence):
   """CompressedDirectory based evidence.
-
   Attributes:
     compressed_directory: The path to the compressed directory.
     uncompressed_directory: The path to the uncompressed directory.
@@ -336,21 +317,13 @@ class BulkExtractorOutput(CompressedDirectory):
   pass
 
 
-<<<<<<< HEAD
 class PhotorecOutput(CompressedDirectory):
   """Photorec based evidence."""
   pass
 
 
-=======
-class PhotorecOutput(Directory):
-  """Photorec based evidence."""
-  pass
-
->>>>>>> 9ff3622... Added Photorec task to Turbinia.
 class ChromiumProfile(Evidence):
   """Chromium based browser profile evidence.
-
   Attributes:
     browser_type: The type of browser.
       Supported options are Chrome (default) and Brave.
@@ -368,7 +341,6 @@ class ChromiumProfile(Evidence):
 
 class RawDisk(Evidence):
   """Evidence object for Disk based evidence.
-
   Attributes:
     device_path (str): Path to a relevant 'raw' data source (ie: a block
         device or a raw disk image).
@@ -403,7 +375,6 @@ class RawDisk(Evidence):
 
 class EncryptedDisk(RawDisk):
   """Encrypted disk file evidence.
-
   Attributes:
     encryption_type: The type of encryption used, e.g. FileVault or Bitlocker.
     encryption_key: A string of the encryption key used for this disk.
@@ -424,7 +395,6 @@ class EncryptedDisk(RawDisk):
 
 class BitlockerDisk(EncryptedDisk):
   """Bitlocker encrypted disk file evidence.
-
   Attributes:
     recovery_key: A string of the recovery key for this disk
     password: A string of the password used for this disk. If recovery key
@@ -444,7 +414,6 @@ class BitlockerDisk(EncryptedDisk):
 
 class APFSEncryptedDisk(EncryptedDisk):
   """APFS encrypted disk file evidence.
-
   Attributes:
     recovery_key: A string of the recovery key for this disk
     password: A string of the password used for this disk. If recovery key
@@ -464,7 +433,6 @@ class APFSEncryptedDisk(EncryptedDisk):
 
 class GoogleCloudDisk(RawDisk):
   """Evidence object for a Google Cloud Disk.
-
   Attributes:
     project: The cloud project name this disk is associated with.
     zone: The geographic zone.
@@ -496,12 +464,10 @@ class GoogleCloudDisk(RawDisk):
 
 class GoogleCloudDiskRawEmbedded(GoogleCloudDisk):
   """Evidence object for raw disks embedded in Persistent Disks.
-
   This is for a raw image file that is located in the filesystem of a mounted
   GCP Persistent Disk.  This can be useful if you want to process a raw disk
   image originating from outside cloud, and it is much more performant and
   reliable option than reading it directly from GCS FUSE.
-
   Attributes:
     embedded_path: The path of the raw disk image inside the Persistent Disk
   """
@@ -541,7 +507,6 @@ class GoogleCloudDiskRawEmbedded(GoogleCloudDisk):
 
 class PlasoFile(Evidence):
   """Plaso output file evidence.
-
   Attributes:
     plaso_version: The version of plaso that processed this file.
   """
@@ -610,7 +575,6 @@ class VolatilityReport(TextFile):
 
 class RawMemory(Evidence):
   """Evidence object for Memory based evidence.
-
   Attributes:
     profile (string): Volatility profile used for the analysis
     module_list (list): Module used for the analysis
@@ -632,7 +596,6 @@ class BinaryExtraction(CompressedDirectory):
 
 class DockerContainer(Evidence):
   """Evidence object for a DockerContainer filesystem.
-
   Attributes:
     container_id(str): The ID of the container to mount.
     _container_fs_path(str): Full path to where the container filesystem will
