@@ -41,4 +41,3 @@ class PhotorecJob(interface.TurbiniaJob):
 
 
 manager.JobsManager.RegisterJob(PhotorecJob)
-
