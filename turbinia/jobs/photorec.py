@@ -40,4 +40,8 @@ class PhotorecJob(interface.TurbiniaJob):
     return [PhotorecTask() for _ in evidence]
 
 
+<<<<<<< HEAD
 manager.JobsManager.RegisterJob(PhotorecJob)
+=======
+manager.JobsManager.RegisterJob(PhotorecJob)
+>>>>>>> 0d25e02... resolved conflicts
