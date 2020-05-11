@@ -65,6 +65,6 @@ setup(
     extras_require={
         'dev': ['mock', 'nose', 'yapf', 'celery~=4.1', 'coverage'],
         'local': ['celery~=4.1', 'kombu~=4.1', 'redis~=3.0'],
-        'worker': ['plaso>=20171118' 'pyhindsight>=2.2.0']
+        'worker': ['plaso>=20171118', 'pyhindsight>=2.2.0']
     }
 )
