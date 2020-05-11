@@ -449,18 +449,11 @@ class BulkExtractorOutput(CompressedDirectory):
   pass
 
 
-<<<<<<< HEAD
 class PhotorecOutput(CompressedDirectory):
   """Photorec based evidence."""
   pass
 
 
-=======
-class PhotorecOutput(Directory):
-  """Photorec based evidence."""
-  pass
-
->>>>>>> 9ff3622... Added Photorec task to Turbinia.
 class ChromiumProfile(Evidence):
   """Chromium based browser profile evidence.
 

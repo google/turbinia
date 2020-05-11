@@ -22,10 +22,7 @@ from turbinia.jobs import manager
 from turbinia.evidence import PhotorecOutput
 from turbinia.workers.photorec import PhotorecTask
 
-<<<<<<< HEAD
 
-=======
->>>>>>> 9ff3622... Added Photorec task to Turbinia.
 class PhotorecJob(interface.TurbiniaJob):
 
   evidence_input = [RawDisk, GoogleCloudDisk, GoogleCloudDiskRawEmbedded]
@@ -46,7 +43,3 @@ class PhotorecJob(interface.TurbiniaJob):
 
 
 manager.JobsManager.RegisterJob(PhotorecJob)
-<<<<<<< HEAD
-=======
-
->>>>>>> 9ff3622... Added Photorec task to Turbinia.
