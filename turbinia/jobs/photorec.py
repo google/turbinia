@@ -20,7 +20,10 @@ from turbinia.jobs import manager
 from turbinia.evidence import PhotorecOutput
 from turbinia.workers.photorec import PhotorecTask
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> 9ff3622... Added Photorec task to Turbinia.
 class PhotorecJob(interface.TurbiniaJob):
 
   evidence_input = [DiskPartition]
@@ -42,6 +45,13 @@ class PhotorecJob(interface.TurbiniaJob):
 
 <<<<<<< HEAD
 manager.JobsManager.RegisterJob(PhotorecJob)
+<<<<<<< HEAD
 =======
 manager.JobsManager.RegisterJob(PhotorecJob)
 >>>>>>> 0d25e02... resolved conflicts
+=======
+<<<<<<< HEAD
+=======
+
+>>>>>>> 9ff3622... Added Photorec task to Turbinia.
+>>>>>>> 2bfdbeb (change?)

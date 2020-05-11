@@ -197,12 +197,8 @@ class Evidence:
 
   @classmethod
   def from_dict(cls, dictionary):
-<<<<<<< HEAD
     """Instantiate an Evidence object from a dictionary of attributes.
 
-=======
-    """Instanciate an Evidence object from a dictionary of attributes.
->>>>>>> d8fe21d (resolved conflicts)
     Args:
       dictionary(dict): the attributes to set for this object.
     Returns:
@@ -256,7 +252,6 @@ class Evidence:
 
   def _preprocess(self, _, required_states):
     """Preprocess this evidence prior to task running.
-<<<<<<< HEAD
 
     See `preprocess()` docstrings for more info.
 
@@ -265,11 +260,6 @@ class Evidence:
           Task will write to.
       required_states(list[EvidenceState]): The list of evidence state
           requirements from the Task.
-=======
-    This gets run in the context of the local task execution on the worker
-    nodes prior to the task itself running.  This can be used to prepare the
-    evidence to be processed (e.g. attach a cloud disk, mount a local disk etc).
->>>>>>> d8fe21d (resolved conflicts)
     """
     pass
 
@@ -285,7 +275,6 @@ class Evidence:
     """Runs the possible parent's evidence preprocessing code, then ours.
     This is a wrapper function that will call the chain of pre-processors
     starting with the most distant ancestor.  After all of the ancestors have
-<<<<<<< HEAD
     been processed, then we run our pre-processor.  These processors get run in
     the context of the local task execution on the worker nodes prior to the
     task itself running.  This can be used to prepare the evidence to be
@@ -327,12 +316,6 @@ class Evidence:
       TurbiniaException: If the required evidence state cannot be met by the
           possible states of the Evidence or if the parent evidence object does
           not exist when it is required by the Evidence type..
-=======
-    been processed, then we run our pre-processor.
-    Args:
-      tmp_dir(str): The path to the temporary directory that the
-                       Task will write to.
->>>>>>> d8fe21d (resolved conflicts)
     """
     self.local_path = self.source_path
     if not required_states:
@@ -474,7 +457,6 @@ class BulkExtractorOutput(CompressedDirectory):
 class PhotorecOutput(CompressedDirectory):
   """Photorec based evidence."""
   pass
-
 
 class ChromiumProfile(Evidence):
   """Chromium based browser profile evidence.
@@ -901,12 +883,7 @@ class DockerContainer(Evidence):
       self.state[EvidenceState.MOUNTED] = True
 
   def _postprocess(self):
-<<<<<<< HEAD
     if self.state[EvidenceState.MOUNTED]:
       # Unmount the container's filesystem
       mount_local.PostprocessUnmountPath(self._container_fs_path)
       self.state[EvidenceState.MOUNTED] = False
-=======
-    # Unmount the container's filesystem
-    mount_local.PostprocessUnmountPath(self._container_fs_path)
->>>>>>> d8fe21d (resolved conflicts)
