@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
+<<<<<<< HEAD
 # Copyright 2020 Google Inc.
+=======
+# Copyright 2015 Google Inc.
+>>>>>>> 9ff3622... Added Photorec task to Turbinia.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,13 +16,18 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+<<<<<<< HEAD
 """Task to run Photorec on disk images and retrieve deleted files ."""
+=======
+"""Task to extract binary files from an evidence object provided."""
+>>>>>>> 9ff3622... Added Photorec task to Turbinia.
 from __future__ import unicode_literals
 
 import logging
 import json
 import os
 
+<<<<<<< HEAD
 from turbinia import TurbiniaException
 from turbinia.workers import TurbiniaTask
 from turbinia.evidence import PhotorecOutput
@@ -28,6 +37,19 @@ class PhotorecTask(TurbiniaTask):
 
   def run(self, evidence, result):
     """Task to execute photorec.
+=======
+from turbinia import config
+from turbinia.workers import TurbiniaTask
+from turbinia.evidence import BinaryExtraction
+from turbinia.evidence import PhotorecOutput
+
+class PhotorecTask(TurbiniaTask):
+  def __init__(self):
+    super(PhotorecTask, self).__init__()
+    
+  def run(self, evidence, result):
+    """Task to execute hindsight.
+>>>>>>> 9ff3622... Added Photorec task to Turbinia.
 
     Args:
         evidence (Evidence object):  The evidence we will process.
@@ -39,6 +61,7 @@ class PhotorecTask(TurbiniaTask):
     output_evidence = PhotorecOutput()
     # Create a path that we can write the new file to.
     base_name = os.path.basename(evidence.local_path)
+<<<<<<< HEAD
     output_file_path = os.path.join(self.output_dir, 'photorec_output')
     photorec_log = os.path.join(self.output_dir, 'photorec.log')
     # Add the output path to the evidence so we can automatically save it
@@ -47,16 +70,31 @@ class PhotorecTask(TurbiniaTask):
     try:
       # Generate the command we want to run.
       cmd = 'photorec /log /d {0:s} /cmd {1:s}  options,paranoid,keep_corrupted_fille,search'.format(
+=======
+    output_file_path = os.path.join(self.output_dir, base_name)
+    # Add the output path to the evidence so we can automatically save it
+    # later.
+    output_evidence.local_path = output_file_path
+    photorec_log = os.path.join(self.output_dir, 'photorec.log')
+    try:
+      # Generate the command we want to run.
+      cmd = 'photorec /log /d {0:s} /cmd {1:s}  options, paranoid,keep_corrupted_fille,search'.format(
+>>>>>>> 9ff3622... Added Photorec task to Turbinia.
           output_file_path, evidence.local_path)
       # Add a log line to the result that will be returned.
       result.log('Running photorec as [{0:s}]'.format(cmd))
       # Actually execute the binary
+<<<<<<< HEAD
       self.execute(
           cmd, result, log_files=[photorec_log], new_evidence=[output_evidence],
           shell=True)
       output_evidence.compress()
       result.close(
           self, success=True, status='Photorec task completed successfully.')
+=======
+      self.execute( 
+          cmd, result, log_files=[photorec_log], new_evidence=[output_evidence], close=True, shell=True)
+>>>>>>> 9ff3622... Added Photorec task to Turbinia.
     except TurbiniaException as exception:
       result.close(self, success=False, status=str(exception))
 
