@@ -23,6 +23,7 @@ import shutil
 import tempfile
 import unittest
 
+from turbinia import TurbiniaException
 from turbinia import config
 from turbinia import evidence
 from turbinia.evidence import BinaryExtraction
@@ -98,6 +99,10 @@ class BinaryExtractorTaskTest(TestTurbiniaTaskBase):
 
     self.assertEqual(binary_cnt, 5)
     self.assertEqual(hash_cnt, 4)
+
+    # Test if hashes.json file is not generated.
+    self.task.json_path = os.path.join(self.extraction_dir, 'non_exist')
+    self.assertRaises(TurbiniaException, self.task.check_extraction)
 
 
 if __name__ == '__main__':
