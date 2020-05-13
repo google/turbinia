@@ -101,12 +101,18 @@ class JupyterAnalysisTask(TurbiniaTask):
           num_misconfigs += 1
           continue
         if 'required' not in line:
-          password_hash = line.split('=')[1].strip()
-          if password_hash == "''":
-            findings.append(
-                fmt.bullet(
-                    'There is no password set for this Jupyter Notebook.'))
-            num_misconfigs += 1
+          password_hash = line.split('=')
+          if len(password_hash) > 1:
+            if password_hash[1].strip() == "''":
+              findings.append(
+                  fmt.bullet(
+                      'There is no password set for this Jupyter Notebook.'))
+              num_misconfigs += 1
+      if all(x in line for x in ['allow_remote_access', 'True']):
+        findings.append(
+            fmt.bullet('Remote access is enabled on this Jupyter Notebook.'))
+        num_misconfigs += 1
+        continue
 
     if findings:
       summary = 'Insecure Jupyter Notebook configuration found. Total misconfigs: {}'.format(
