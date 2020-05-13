@@ -904,7 +904,6 @@ class TurbiniaCeleryWorker(BaseTurbiniaClient):
       jobs_whitelist (Optional[list[str]]): The only Jobs we will include to run
     """
     super(TurbiniaCeleryWorker, self).__init__()
-
     # Deregister jobs from blacklist/whitelist.
     disabled_jobs = list(config.DISABLED_JOBS) if config.DISABLED_JOBS else []
     job_manager.JobsManager.DeregisterJobs(jobs_blacklist, jobs_whitelist)
@@ -967,7 +966,6 @@ class TurbiniaPsqWorker(object):
       msg = 'Error creating PSQ Queue: {0:s}'.format(str(e))
       log.error(msg)
       raise TurbiniaException(msg)
-
     # Deregister jobs from blacklist/whitelist.
     disabled_jobs = list(config.DISABLED_JOBS) if config.DISABLED_JOBS else []
     job_manager.JobsManager.DeregisterJobs(jobs_blacklist, jobs_whitelist)

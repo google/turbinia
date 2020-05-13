@@ -108,22 +108,18 @@ class JobsManager(object):
     """
     registered_jobs = list(cls.GetJobNames())
     jobs_remove = []
-
     # Create a list of jobs to deregister.
     if jobs_whitelist and jobs_blacklist:
       raise TurbiniaException(
           'jobs_whitelist and jobs_blacklist cannot be specified at the same '
           'time.')
-    if jobs_whitelist or jobs_blacklist:
-      selected_jobs = jobs_blacklist or jobs_whitelist
-      for job in selected_jobs:
-        if job.lower() not in registered_jobs:
-          msg = 'Error creating the worker. Job {} is not supported by Turninia.'.format(
-              job)
-          log.error(msg)
-          raise TurbiniaException(msg)
     elif jobs_whitelist:
       jobs_whitelist = [j.lower() for j in jobs_whitelist]
+      for j in jobs_whitelist:
+        if j not in registered_jobs:
+          msg = 'Error whitelisting the worker. Job {} is not supported by Turninia.'.format(
+              j)
+          raise TurbiniaException(msg)
       jobs_remove = [j for j in registered_jobs if j not in jobs_whitelist]
     elif jobs_blacklist:
       jobs_blacklist = [j.lower() for j in jobs_blacklist]
