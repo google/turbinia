@@ -699,6 +699,8 @@ class BaseTurbiniaClient(object):
     Returns:
       String of task status
     """
+    if user and days == 0:
+      days = 1000
     task_results = self.get_task_data(
         instance, project, region, days, task_id, request_id, user)
     if not task_results:
