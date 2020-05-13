@@ -27,7 +27,8 @@ from operator import attrgetter
 import os
 import stat
 import time
-import shutil
+import subprocess
+import codecs
 
 from turbinia import config
 from turbinia.config import logger
@@ -35,6 +36,7 @@ from turbinia.config import DATETIME_FORMAT
 from turbinia import task_manager
 from turbinia import TurbiniaException
 from turbinia.lib import text_formatter as fmt
+from turbinia.lib import docker_manager
 from turbinia.jobs import manager as job_manager
 from turbinia.workers import Priority
 from turbinia.workers.artifact import FileArtifactExtractionTask
@@ -117,41 +119,81 @@ def get_turbinia_client(run_local=False):
     raise TurbiniaException(msg)
 
 
-def check_dependencies(dependencies):
+def check_docker_dependencies(dependencies):
+  """Checks docker dependencies.
+
+  Args:
+    dependencies(dict): dictionary of dependencies to check for.
+
+  Raises:
+    TurbiniaException: If dependency is not met.
+  """
+  #TODO(wyassine): may run into issues down the line when a docker image
+  # does not have bash or which installed. (no linux fs layer).
+  log.info('Performing docker dependency check.')
+  job_names = list(job_manager.JobsManager.GetJobNames())
+  images = docker_manager.DockerManager().list_images(return_filter='short_id')
+
+  # Iterate through list of jobs
+  for job, values in dependencies.items():
+    if job not in job_names:
+      log.warning(
+          'The job {0:s} was not found or has been disabled. Skipping '
+          'dependency check...'.format(job))
+      continue
+    docker_image = values.get('docker_image')
+    # short id only pulls the first 10 characters of image id.
+    if docker_image and len(docker_image) > 10:
+      docker_image = docker_image[0:10]
+
+    if docker_image in images:
+      for program in values['programs']:
+        cmd = 'type {0:s}'.format(program)
+        stdout, stderr, ret = docker_manager.ContainerManager(
+            values['docker_image']).execute_container(cmd, shell=True)
+        if ret != 0:
+          raise TurbiniaException(
+              'Job dependency {0:s} not found for job {1:s}. Please install '
+              'the dependency for the container or disable the job.'.format(
+                  program, job))
+      job_manager.JobsManager.RegisterDockerImage(job, values['docker_image'])
+    elif docker_image:
+      raise TurbiniaException(
+          'Docker image {0:s} was not found for the job {1:s}. Please '
+          'update the config with the correct image id'.format(
+              values['docker_image'], job))
+
+
+def check_system_dependencies(dependencies):
   """Checks system dependencies.
 
   Args:
     dependencies(dict): dictionary of dependencies to check for.
 
   Raises:
-    TurbiniaException: if dependency is not met or a bad config file.
+    TurbiniaException: If dependency is not met.
   """
-
   log.info('Performing system dependency check.')
   job_names = list(job_manager.JobsManager.GetJobNames())
-  # Iterate through dependency config and perform a system check.
-  try:
-    for dep in dependencies:
-      if dep['job'].lower() in job_names:
-        for p in dep['programs']:
-          # Program can not be found.
-          if shutil.which(p) is None:
-            raise TurbiniaException(
-                'Job dependency {0:s} not found for job: {1:s}. Please install '
-                'the dependency or disable the job.'.format(p, dep['job']))
-      # If job is not found in list of registered jobs.
-      else:
-        log.warning(
-            'The job: {0:s} was not found or has been disabled. Skipping '
-            'dependency check...'.format(dep['job']))
-  except (KeyError, TypeError) as exception:
-    raise TurbiniaException(
-        'An issue has occured while parsing the '
-        'dependency config:{0!s} '.format(exception))
 
-  log.info(
-      'Dependency check complete. The following jobs will be active:'
-      'for this worker: {0:s}'.format(', '.join(job_names)))
+  # Iterate through list of jobs
+  for job, values in dependencies.items():
+    if job not in job_names:
+      log.warning(
+          'The job {0:s} was not found or has been disabled. Skipping '
+          'dependency check...'.format(job))
+      continue
+    elif not values.get('docker_image'):
+      for program in values['programs']:
+        cmd = 'type {0:s}'.format(program)
+        proc = subprocess.Popen(cmd, shell=True)
+        proc.communicate()
+        ret = proc.returncode
+        if ret != 0:
+          raise TurbiniaException(
+              'Job dependency {0:s} not found in $PATH for the job {1:s}. '
+              'Please install the dependency or disable the job.'.format(
+                  program, job))
 
 
 def check_directory(directory):
@@ -865,10 +907,18 @@ class TurbiniaCeleryWorker(BaseTurbiniaClient):
       job_manager.JobsManager.DeregisterJobs(jobs_blacklist=disabled_jobs)
 
     # Check for valid dependencies/directories.
-    check_dependencies(config.DEPENDENCIES)
+    dependencies = config.ParseDependencies()
+    if config.DOCKER_ENABLED:
+      check_docker_dependencies(dependencies)
+    check_system_dependencies(config.DEPENDENCIES)
     check_directory(config.MOUNT_DIR_PREFIX)
     check_directory(config.OUTPUT_DIR)
     check_directory(config.TMP_DIR)
+
+    jobs = job_manager.JobsManager.GetJobNames()
+    log.info(
+        'Dependency check complete. The following jobs will be enabled '
+        'for this worker: {0:s}'.format(','.join(jobs)))
     self.worker = self.task_manager.celery.app
 
   def start(self):
@@ -920,11 +970,18 @@ class TurbiniaPsqWorker(object):
       job_manager.JobsManager.DeregisterJobs(jobs_blacklist=disabled_jobs)
 
     # Check for valid dependencies/directories.
-    check_dependencies(config.DEPENDENCIES)
+    dependencies = config.ParseDependencies()
+    if config.DOCKER_ENABLED:
+      check_docker_dependencies(dependencies)
+    check_system_dependencies(dependencies)
     check_directory(config.MOUNT_DIR_PREFIX)
     check_directory(config.OUTPUT_DIR)
     check_directory(config.TMP_DIR)
 
+    jobs = job_manager.JobsManager.GetJobNames()
+    log.info(
+        'Dependency check complete. The following jobs will be enabled '
+        'for this worker: {0:s}'.format(','.join(jobs)))
     log.info('Starting PSQ listener on queue {0:s}'.format(self.psq.name))
     self.worker = psq.Worker(queue=self.psq)
 

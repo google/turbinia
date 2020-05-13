@@ -78,7 +78,7 @@ def CompressDirectory(uncompressed_directory):
           'The tar file has been created and '
           'can be found at: {0:s}'.format(compressed_directory))
   except IOError as exception:
-    raise TurbiniaException('An error has occured: {0:s}'.format(exception))
+    raise TurbiniaException('An error has occurred: {0:s}'.format(exception))
   except tarfile.TarError as exception:
     raise TurbiniaException(
         'An error has while compressing the directory: {0:s}'.format(exception))
@@ -112,9 +112,9 @@ def UncompressTarFile(compressed_directory, output_tmp):
         'The tar file has been uncompressed to the following directory: {0:s}'
         .format(uncompressed_directory))
   except IOError as exception:
-    raise TurbiniaException('An error has occured: {0:s}'.format(exception))
+    raise TurbiniaException('An error has occurred: {0:s}'.format(exception))
   except tarfile.TarError as exception:
     raise TurbiniaException(
-        'An error has occured while uncompressing the tar '
+        'An error has occurred while uncompressing the tar '
         'file: {0:s}'.format(exception))
   return uncompressed_directory
