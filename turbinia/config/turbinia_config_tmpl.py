@@ -135,6 +135,10 @@ DEPENDENCIES = [{
     'job': 'VolatilityJob',
     'programs': ['vol.py'],
     'docker_image': None
+}, {
+    'job': 'DockerContainersEnumerationJob',
+    'programs': ['de.py'],
+    'docker_image': None
 }]
 
 ################################################################################
