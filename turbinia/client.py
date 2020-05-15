@@ -50,6 +50,7 @@ from turbinia.workers.hadoop import HadoopAnalysisTask
 from turbinia.workers.hindsight import HindsightTask
 from turbinia.workers.plaso import PlasoTask
 from turbinia.workers.psort import PsortTask
+from turbinia.workers.redis import RedisAnalysisTask
 from turbinia.workers.sshd import SSHDAnalysisTask
 from turbinia.workers.strings import StringsAsciiTask
 from turbinia.workers.strings import StringsUnicodeTask
@@ -73,6 +74,7 @@ TASK_MAP = {
     'hindsighttask': HindsightTask,
     'plasotask': PlasoTask,
     'psorttask': PsortTask,
+    'redisanalysistask': RedisAnalysisTask,
     'sshdanalysistask': SSHDAnalysisTask,
     'stringsasciitask': StringsAsciiTask,
     'stringsunicodetask': StringsUnicodeTask,
