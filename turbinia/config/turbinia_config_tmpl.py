@@ -127,7 +127,7 @@ DEPENDENCIES = [{
     'job': 'PhotorecJob',
     'programs': ['photorec'],
     'docker_image': None
-},{
+}, {
     'job': 'PsortJob',
     'programs': ['psort.py'],
     'docker_image': None
