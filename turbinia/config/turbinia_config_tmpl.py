@@ -124,6 +124,10 @@ DEPENDENCIES = [{
     'programs': ['log2timeline.py'],
     'docker_image': None
 }, {
+    'job': 'PhotorecJob',
+    'programs': ['photorec'],
+    'docker_image': None
+}, {
     'job': 'PsortJob',
     'programs': ['psort.py'],
     'docker_image': None
