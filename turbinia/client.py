@@ -867,15 +867,6 @@ class TurbiniaServer(object):
       jobs_whitelist (Optional[list[str]]): The only Jobs we will include to run
     """
     config.LoadConfig()
-    if jobs_whitelist or jobs_blacklist:
-      selected_jobs = jobs_blacklist or jobs_whitelist
-      job_names = list(job_manager.JobsManager.GetJobNames())
-      for job in selected_jobs:
-        if job.lower() not in job_names:
-          msg = 'Error creating server. Job {} is not supported by Turninia.'.format(
-              job)
-          log.error(msg)
-          raise TurbiniaException(msg)
     self.task_manager = task_manager.get_task_manager()
     self.task_manager.setup(jobs_blacklist, jobs_whitelist)
 

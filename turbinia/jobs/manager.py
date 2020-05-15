@@ -117,8 +117,8 @@ class JobsManager(object):
       jobs_whitelist = [j.lower() for j in jobs_whitelist]
       for j in jobs_whitelist:
         if j not in registered_jobs:
-          msg = 'Error whitelisting the worker. Job {} is not supported by Turninia.'.format(
-              j)
+          msg = 'Error whitelisting jobs: Job {0!s} is not found in registered jobs {1!s}.'.format(
+              j, registered_jobs)
           raise TurbiniaException(msg)
       jobs_remove = [j for j in registered_jobs if j not in jobs_whitelist]
     elif jobs_blacklist:
