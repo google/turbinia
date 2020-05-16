@@ -184,3 +184,34 @@ class TestContainerManager(unittest.TestCase):
     self.assertRaises(
         TurbiniaException, self.container_mgr.execute_container, 'cmd',
         shell=True)
+
+
+class TestDockerManagerFunc(unittest.TestCase):
+  """Tests docker_manager's functions"""
+
+  @mock.patch('os.path.exists')
+  def testGetDockerPath(self, mock_exists):
+    """Tests the GetDockerPath() method."""
+    test_path = '/mnt/test'
+    mock_exists.return_value = True
+
+    # Test successful run
+    test_data = '{"data-root": "/path/to/docker"}'
+    with mock.patch('builtins.open', new=mock.mock_open(read_data=test_data)):
+      docker_path1 = docker_manager.GetDockerPath(test_path)
+    return_val1 = '/mnt/test/path/to/docker'
+    self.assertEqual(docker_path1, return_val1)
+
+    # Test config parsing fail
+    test_data = '{"blah": "/path/to/docker"}'
+    with mock.patch('builtins.open', new=mock.mock_open(read_data=test_data)):
+      docker_path2 = docker_manager.GetDockerPath(test_path)
+    return_val2 = '/mnt/test/var/lib/docker'
+    self.assertEqual(docker_path2, return_val2)
+
+    # Test file not found.
+    mock_exists.return_value = False
+    with mock.patch('builtins.open', new=mock.mock_open(read_data=test_data)):
+      docker_path3 = docker_manager.GetDockerPath(test_path)
+    self.assertEqual(docker_path3, return_val2)
+  
