@@ -13,3 +13,4 @@ six
 urllib3[secure]
 docker
 libcloudforensics
+future
