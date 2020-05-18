@@ -54,7 +54,7 @@ def GetDockerPath(mount_path):
   """
   docker_path = None
   etc_path = os.path.join(mount_path, 'etc/docker/daemon.json')
-  if os.path.exists(mount_path):
+  if os.path.exists(etc_path):
     try:
       with open(etc_path) as etc_handle:
         json_obj = json.loads(etc_handle.read())['data-root']
@@ -62,7 +62,7 @@ def GetDockerPath(mount_path):
         if json_obj.startswith('/'):
           json_obj = json_obj[1:]
         docker_path = os.path.join(mount_path, json_obj)
-    except (FileNotFoundError, KeyError) as exception:
+    except KeyError as exception:
       log.error(
           'Error parsing the Docker daemon config file due to: {0:s}. '
           'Using default Docker installation path'.format(str(exception)))
