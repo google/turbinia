@@ -62,7 +62,7 @@ def GetDockerPath(mount_path):
         if json_obj.startswith('/'):
           json_obj = json_obj[1:]
         docker_path = os.path.join(mount_path, json_obj)
-    except Exception as exception:
+    except (FileNotFoundError, KeyError) as exception:
       log.error(
           'Error parsing the Docker daemon config file due to: {0:s}. '
           'Using default Docker installation path'.format(str(exception)))

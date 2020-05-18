@@ -214,4 +214,3 @@ class TestDockerManagerFunc(unittest.TestCase):
     with mock.patch('builtins.open', new=mock.mock_open(read_data=test_data)):
       docker_path3 = docker_manager.GetDockerPath(test_path)
     self.assertEqual(docker_path3, return_val2)
-  
