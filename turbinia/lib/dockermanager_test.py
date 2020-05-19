@@ -20,6 +20,8 @@ import unittest
 import codecs
 import mock
 import docker
+import tempfile
+import os
 
 from turbinia.lib import docker_manager
 from turbinia import TurbiniaException
@@ -187,30 +189,49 @@ class TestContainerManager(unittest.TestCase):
 
 
 class TestDockerManagerFunc(unittest.TestCase):
-  """Tests docker_manager's functions"""
+  """Tests docker_manager's functions
 
-  @mock.patch('os.path.exists')
-  def testGetDockerPath(self, mock_exists):
+  Attributes:
+    base_output(str): The base output directory of the config file
+    output_path1(str): First sample Docker config file
+    output_path2(str): Second sample Docker config file
+    remove_files(list(str)): Files that will be removed after the test run
+  """
+
+  def setUp(self):
+    self.base_output = tempfile.mkdtemp()
+    self.output_path1 = os.path.join(self.base_output, 'daemon1.json')
+    with open(self.output_path1, 'w') as out1:
+      out1.write('{"data-root": "/path/to/docker"}')
+
+    self.output_path2 = os.path.join(self.base_output, 'daemon2.json')
+    with open(self.output_path2, 'w') as out2:
+      out2.write('{"blah2": "/path/to/docker"}')
+
+    self.remove_files = [self.output_path1, self.output_path2]
+
+  def tearDown(self):
+    for remove_file in self.remove_files:
+      if os.path.exists(remove_file):
+        os.remove(remove_file)
+
+    os.rmdir(self.base_output)
+
+  @mock.patch('os.path.join')
+  def testGetDockerPath(self, mock_join):
     """Tests the GetDockerPath() method."""
-    test_path = '/mnt/test'
-    mock_exists.return_value = True
-
     # Test successful run
-    test_data = '{"data-root": "/path/to/docker"}'
-    with mock.patch('builtins.open', new=mock.mock_open(read_data=test_data)):
-      docker_path1 = docker_manager.GetDockerPath(test_path)
-    return_val1 = '/mnt/test/path/to/docker'
+    mock_join.return_value = self.output_path1
+    docker_path1 = docker_manager.GetDockerPath(self.output_path1)
+    return_val1 = os.path.join(self.output_path1, 'path/to/docker')
     self.assertEqual(docker_path1, return_val1)
 
     # Test config parsing fail
-    test_data = '{"blah": "/path/to/docker"}'
-    with mock.patch('builtins.open', new=mock.mock_open(read_data=test_data)):
-      docker_path2 = docker_manager.GetDockerPath(test_path)
-    return_val2 = '/mnt/test/var/lib/docker'
+    mock_join.return_value = self.output_path2
+    docker_path2 = docker_manager.GetDockerPath(self.output_path2)
+    return_val2 = os.path.join(self.output_path2, 'var/lib/docker')
     self.assertEqual(docker_path2, return_val2)
 
     # Test file not found.
-    mock_exists.return_value = False
-    with mock.patch('builtins.open', new=mock.mock_open(read_data=test_data)):
-      docker_path3 = docker_manager.GetDockerPath(test_path)
+    docker_path3 = docker_manager.GetDockerPath('blah')
     self.assertEqual(docker_path3, return_val2)
