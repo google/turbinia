@@ -20,6 +20,7 @@ import logging
 import codecs
 import os
 import stat
+import json
 import docker
 
 from turbinia import TurbiniaException
@@ -40,6 +41,39 @@ def IsBlockDevice(path):
     return False
   mode = os.stat(path).st_mode
   return stat.S_ISBLK(mode)
+
+
+def GetDockerPath(mount_path):
+  """Retrieves the Docker installation path.
+
+  Args:
+    mount_path(str): The mount path of the Evidence object.
+
+  Returns:
+    docker_path(str): The Docker installation path.
+  """
+  docker_path = None
+  etc_path = os.path.join(mount_path, 'etc/docker/daemon.json')
+  if os.path.exists(etc_path):
+    try:
+      with open(etc_path) as etc_handle:
+        json_obj = json.loads(etc_handle.read())['data-root']
+        # Remove starting / so paths can join
+        if json_obj.startswith('/'):
+          json_obj = json_obj[1:]
+        docker_path = os.path.join(mount_path, json_obj)
+    except KeyError as exception:
+      log.error(
+          'Error parsing the Docker daemon config file due to: {0:s}. '
+          'Using default Docker installation path'.format(str(exception)))
+
+  # If file not found or error occured parsing Docker config file.
+  if docker_path is None:
+    log.warning(
+        'Docker daemon confile file not found. '
+        'Using default Docker installation path.')
+    docker_path = os.path.join(mount_path, 'var/lib/docker')
+  return docker_path
 
 
 class DockerManager(object):
