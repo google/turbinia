@@ -7,7 +7,7 @@ google-cloud-storage
 google-cloud-core
 google-cloud-logging
 google-cloud-error-reporting
-oauth2client
+google-auth
 psq
 six
 urllib3[secure]
