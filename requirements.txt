@@ -6,7 +6,7 @@ google-api-python-client
 google-cloud-pubsub
 google-cloud-storage
 google-cloud-core
-oauth2client
 psq
 six
 urllib3[secure]
+google-auth

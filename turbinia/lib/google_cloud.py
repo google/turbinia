@@ -25,8 +25,8 @@ import time
 from apiclient.discovery import build
 from apiclient.http import HttpError
 
-from oauth2client.client import GoogleCredentials
-from oauth2client.client import ApplicationDefaultCredentialsError
+from google.auth import default
+from google.auth.exceptions import DefaultCredentialsError
 
 from turbinia import TurbiniaException
 
@@ -69,8 +69,8 @@ class GoogleCloudProject(object):
       TurbiniaException: If the service cannot be built
     """
     try:
-      credentials = GoogleCredentials.get_application_default()
-    except ApplicationDefaultCredentialsError as error:
+      credentials, _ = default()
+    except DefaultCredentialsError as error:
       raise RuntimeError(
           'Could not get application default credentials: {0!s}\n'
           'Have you run $ gcloud auth application-default login?'.format(error))
