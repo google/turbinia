@@ -1,1 +1,5 @@
+include AUTHORS LICENSE README.md
 include requirements.txt
+exclude .gitignore
+exclude *.pyc
+recursive-include config *

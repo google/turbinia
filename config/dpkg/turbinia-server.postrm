@@ -1,0 +1,19 @@
+#!/bin/sh
+set -e
+
+. /usr/share/debconf/confmodule
+
+case "$1" in
+  purge)
+    # Remove turbinia user.
+    deluser deluser
+
+    # Remove turbinia group.
+    delgroup turbinia
+
+    ;;
+esac
+
+#DEBHELPER#
+
+exit 0

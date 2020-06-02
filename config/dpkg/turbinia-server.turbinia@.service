@@ -1,0 +1,24 @@
+[Unit]
+Description=Turbinia %i
+Documentation=https://github.com/google/turbinia
+Before=multi-user.target
+After=network.target
+After=remote-fs.target
+
+[Service]
+Type=simple
+PIDFile=/var/run/turbinia/%i.pid
+User=turbinia
+Group=turbinia
+Restart=always
+RestartSec=10
+ExecStartPre=+/bin/sh -c '/bin/systemctl set-environment GOOGLE_APPLICATION_CREDENTIALS=$(turbinia_config_parser.py GCE_SERVICE_ACCOUNT_KEYS_FILE)'
+ExecStartPre=+/bin/sh -c '/bin/systemctl set-environment TURBINIA_TMPDIR=$(turbinia_config_parser.py TMP_DIR)'
+ExecStart=/bin/sh -c '/usr/bin/turbiniactl -L /var/log/turbinia/%i.log -S -o $TURBINIA_TMPDIR %i 2>> /var/log/turbinia/%i.error.log'
+ExecStopPost=+/bin/sh -c 'systemctl unset-environment TURBINIA_TMPDIR'
+ExecStopPost=+/bin/sh -c 'systemctl unset-environment GOOGLE_APPLICATION_CREDENTIALS'
+KillMode=control-group
+KillSignal=SIGINT
+
+[Install]
+WantedBy=multi-user.target

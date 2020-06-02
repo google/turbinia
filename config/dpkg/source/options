@@ -1,0 +1,1 @@
+extend-diff-ignore = "(^|/)(\.eggs|config\.h|config\.log|config\.status|.*\.egg-info|.*\.egg-info/.*|Makefile)$"

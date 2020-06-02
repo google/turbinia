@@ -1,0 +1,31 @@
+Source: turbinia
+Section: python
+Priority: extra
+Maintainer: Turbinia development team <turbinia-dev@googlegroups.com>
+Build-Depends: debhelper (>= 9), dh-python, dh-systemd, python3-all (>= 3.6~), python3-setuptools
+Standards-Version: 4.1.4
+X-Python3-Version: >= 3.6
+Homepage: https://github.com/google/turbinia
+
+Package: python3-turbinia
+Architecture: all
+Depends: python3-cachetools, python3-click, python3-colorlog, python3-boto3, python3-botocore, python3-dateutil, python3-docutils, python3-filelock, python3-google-api-core, python3-google-auth, python3-google-auth-httplib2, python3-google-cloud-core, python3-google-cloud-datastore, python3-google-cloud-error-reporting, python3-google-cloud-logging, python3-google-cloud-pubsub, python3-google-cloud-storage, python3-googleapi, python3-googleapis-common-protos, python3-grpc-google-iam-v1, python3-grpcio, python3-httplib2, python3-jmespath, python3-libcloudforensics, python3-protobuf (>= 3.6.1), python3-psq, python3-pyasn1, python3-pyasn1-modules, python3-requests, python3-rsa, python3-s3transfer, python3-six, python3-tz, python3-uritemplate, python3-urllib3, python3-werkzeug, ${python3:Depends}, ${misc:Depends}
+Description: Automation and Scaling of Digital Forensics Tools
+ Turbinia is an open-source framework for deploying, managing,
+ and running forensic workloads on cloud platforms. It is intended to
+ automate running of common forensic processing tools (i.e. Plaso, TSK,
+ strings, etc) to help with processing evidence in the Cloud, scaling the
+ processing of large amounts of evidence, and decreasing response time by
+ parallelizing processing where possible.
+
+Package: turbinia-server
+Architecture: all
+Depends: adduser, python3-celery, python3-docker, python3-kombu, python3-turbinia (>= ${binary:Version}), ${python3:Depends}, ${misc:Depends}
+Recommends: plaso-tools, redis-server
+Description: Turbinia local server and worker
+ Turbinia is an open-source framework for deploying, managing,
+ and running forensic workloads on cloud platforms. It is intended to
+ automate running of common forensic processing tools (i.e. Plaso, TSK,
+ strings, etc) to help with processing evidence in the Cloud, scaling the
+ processing of large amounts of evidence, and decreasing response time by
+ parallelizing processing where possible.

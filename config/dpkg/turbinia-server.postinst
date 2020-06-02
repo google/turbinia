@@ -1,0 +1,78 @@
+#!/bin/sh
+set -e
+
+. /usr/share/debconf/confmodule
+
+case "$1" in
+  configure)
+    # Set up turbinia group.
+    if ! getent group turbinia > /dev/null; then
+        addgroup --quiet --system turbinia
+    fi
+
+    # Set up turbinia user.
+    if ! getent user turbinia > /dev/null; then
+        adduser --quiet --system --no-create-home --gecos "user for turbina server and server" --ingroup turbinia turbinia
+    fi
+
+    logdir="/var/log/turbinia"
+
+    # Allow local admin to override
+    if ! dpkg-statoverride --list "$logdir" >/dev/null; then
+      chown root:adm $logdir
+      chmod 0755 $logdir
+    fi
+
+    # Secure default logfiles on fresh installations
+    if [ -z "$2" ]; then
+      turbinia_log="$logdir/turbinia.log"
+      server_log="$logdir/server.log"
+      server_stderr_log="$logdir/server.error.log"
+      worker_log="$logdir/celeryworker.log"
+      worker_stderr_log="$logdir/celeryworker.error.log"
+
+      if [ ! -e "$turbinia_log" ]; then
+        touch "$turbinia_log"
+        chmod 640 "$turbinia_log"
+        chown turbinia:turbinia "$turbinia_log"
+      fi
+
+      if [ ! -e "$server_log" ]; then
+        touch "$server_log"
+        chmod 640 "$server_log"
+        chown turbinia:turbinia "$server_log"
+      fi
+
+      if [ ! -e "$server_stderr_log" ]; then
+        touch "$server_stderr_log"
+        chmod 640 "$server_stderr_log"
+        chown turbinia:turbinia "$server_stderr_log"
+      fi
+
+      if [ ! -e "$worker_log" ]; then
+        touch "$worker_log"
+        chmod 640 "$worker_log"
+        chown turbinia:turbinia "$worker_log"
+      fi
+
+      if [ ! -e "$worker_stderr_log" ]; then
+        touch "$worker_stderr_log"
+        chmod 640 "$worker_stderr_log"
+        chown turbinia:turbinia "$worker_stderr_log"
+      fi
+    fi
+
+    ;;
+
+  abort-upgrade|abort-remove|abort-deconfigure)
+    ;;
+
+  *)
+    echo "postinst called with unknown argument \`$1'" >&2
+    exit 1
+    ;;
+esac
+
+#DEBHELPER#
+
+exit 0
