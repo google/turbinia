@@ -473,6 +473,7 @@ def main():
     except IOError as e:
       log.warning(
           'Cannot open file {0:s} [{1!s}]'.format(args.yara_rules_file, e))
+      sys.exit(1)
 
   # Create Client object
   client = None

@@ -81,8 +81,7 @@ class PlasoTask(TurbiniaTask):
 
     if evidence.config and evidence.config.get('yara_rules'):
       yara_rules = evidence.config.get('yara_rules')
-      with NamedTemporaryFile(dir=self.output_dir, delete=False,
-                              mode='w') as fh:
+      with NamedTemporaryFile(dir=self.tmp_dir, delete=False, mode='w') as fh:
         yara_file_path = fh.name
         fh.write(yara_rules)
     else:
