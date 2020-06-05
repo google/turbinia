@@ -259,6 +259,35 @@ class Directory(Evidence):
   pass
 
 
+class CompressedDirectory(Evidence):
+  """CompressedDirectory based evidence.
+  Attributes:
+    compressed_directory: The path to the compressed directory.
+    uncompressed_directory: The path to the uncompressed directory.
+  """
+
+  def __init__(
+      self, compressed_directory=None, uncompressed_directory=None, *args,
+      **kwargs):
+    """Initialization for CompressedDirectory evidence object."""
+    super(CompressedDirectory, self).__init__(*args, **kwargs)
+    self.compressed_directory = compressed_directory
+    self.uncompressed_directory = uncompressed_directory
+    self.copyable = True
+
+  def _preprocess(self, tmp_dir):
+    # Uncompress a given tar file and return the uncompressed path.
+    self.uncompressed_directory = archive.UncompressTarFile(
+        self.local_path, tmp_dir)
+    self.local_path = self.uncompressed_directory
+
+  def compress(self):
+    """ Compresses a file or directory."""
+    # Compress a given directory and return the compressed path.
+    self.compressed_directory = archive.CompressDirectory(self.local_path)
+    self.local_path = self.compressed_directory
+
+
 class ChromiumProfile(Evidence):
   """Chromium based browser profile evidence.
 
