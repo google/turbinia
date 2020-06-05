@@ -22,15 +22,16 @@ class TestJob1(interface.TurbiniaJob):
     return None
 
 
-class TestJob2(interface.TurbiniaJob):
+class TestJob2(TestJob1):
   """Test job."""
 
   NAME = 'testjob2'
 
-  # pylint: disable=unused-argument
-  def create_tasks(self, evidence):
-    """Returns None, for testing."""
-    return None
+
+class TestJob3(TestJob1):
+  """Test job."""
+
+  NAME = 'testjob3'
 
 
 class JobsManagerTest(unittest.TestCase):
@@ -74,6 +75,11 @@ class JobsManagerTest(unittest.TestCase):
     manager.JobsManager.DeregisterJob(TestJob2)
 
     self.assertEqual(number_of_jobs, len(manager.JobsManager._job_classes))
+
+  def testJobDeregistrationWithUnknownWhitelist(self):
+    """Test that deregistration throws error when whitelisting unknown Job."""
+    self.assertRaises(
+        TurbiniaException, manager.JobsManager.DeregisterJobs, [], ['NoJob'])
 
   def testGetJobInstance(self):
     """Tests the GetJobInstance function."""

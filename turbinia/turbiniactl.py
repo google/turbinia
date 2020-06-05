@@ -441,6 +441,8 @@ def main():
         'This is a test notification')
     sys.exit(0)
 
+  args.jobs_whitelist = [j.lower() for j in args.jobs_whitelist]
+  args.jobs_blacklist = [j.lower() for j in args.jobs_blacklist]
   if args.jobs_whitelist and args.jobs_blacklist:
     log.error(
         'A Job filter whitelist and blacklist cannot be specified at the same '
