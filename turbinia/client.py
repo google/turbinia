@@ -902,11 +902,15 @@ class TurbiniaCeleryWorker(BaseTurbiniaClient):
     """
     super(TurbiniaCeleryWorker, self).__init__()
     # Deregister jobs from blacklist/whitelist.
-    disabled_jobs = list(config.DISABLED_JOBS) if config.DISABLED_JOBS else []
     job_manager.JobsManager.DeregisterJobs(jobs_blacklist, jobs_whitelist)
+    disabled_jobs = list(config.DISABLED_JOBS) if config.DISABLED_JOBS else []
+    disabled_jobs = [j.lower() for j in disabled_jobs]
+    # Only actually disable jobs that have not been whitelisted.
+    if jobs_whitelist:
+      disabled_jobs = list(set(disabled_jobs) - set(jobs_whitelist))
     if disabled_jobs:
       log.info(
-          'Disabling jobs that were configured to be disabled in the '
+          'Disabling non-whitelisted jobs configured to be disabled in the '
           'config file: {0:s}'.format(', '.join(disabled_jobs)))
       job_manager.JobsManager.DeregisterJobs(jobs_blacklist=disabled_jobs)
 
@@ -963,12 +967,17 @@ class TurbiniaPsqWorker(object):
       msg = 'Error creating PSQ Queue: {0:s}'.format(str(e))
       log.error(msg)
       raise TurbiniaException(msg)
+
     # Deregister jobs from blacklist/whitelist.
-    disabled_jobs = list(config.DISABLED_JOBS) if config.DISABLED_JOBS else []
     job_manager.JobsManager.DeregisterJobs(jobs_blacklist, jobs_whitelist)
+    disabled_jobs = list(config.DISABLED_JOBS) if config.DISABLED_JOBS else []
+    disabled_jobs = [j.lower() for j in disabled_jobs]
+    # Only actually disable jobs that have not been whitelisted.
+    if jobs_whitelist:
+      disabled_jobs = list(set(disabled_jobs) - set(jobs_whitelist))
     if disabled_jobs:
       log.info(
-          'Disabling jobs that were configured to be disabled in the '
+          'Disabling non-whitelisted jobs configured to be disabled in the '
           'config file: {0:s}'.format(', '.join(disabled_jobs)))
       job_manager.JobsManager.DeregisterJobs(jobs_blacklist=disabled_jobs)
 
@@ -983,7 +992,7 @@ class TurbiniaPsqWorker(object):
 
     jobs = job_manager.JobsManager.GetJobNames()
     log.info(
-        'Dependency check complete. The following jobs will be enabled '
+        'Dependency check complete. The following jobs are enabled '
         'for this worker: {0:s}'.format(','.join(jobs)))
     log.info('Starting PSQ listener on queue {0:s}'.format(self.psq.name))
     self.worker = psq.Worker(queue=self.psq)

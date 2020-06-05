@@ -91,8 +91,12 @@ DEBUG_TASKS = False
 # This will enable the usage of docker containers for the worker.
 DOCKER_ENABLED = False
 
-# Any jobs added to this list will disable it from being used.
-DISABLED_JOBS = []
+# Any Jobs added to this list will be disabled by default at start-up.  See the
+# output of `turbiniactl listjobs` for a complete list of Jobs.  Job names
+# entered here are case insensitive.  Disabled Jobs can still be enabled with
+# the --jobs_whitelist flag on the server, but the client will not be able to
+# whitelist jobs that have been disabled or blacklisted on the server.
+DISABLED_JOBS = ['BinaryExtractorJob', 'BulkExtractorJob', 'PhotorecJob']
 
 # Configure additional job dependency checks below.
 DEPENDENCIES = [{

@@ -34,6 +34,8 @@ from turbinia.client import TurbiniaStats
 from turbinia.client import TurbiniaPsqWorker
 from turbinia.client import check_system_dependencies
 from turbinia.client import check_docker_dependencies
+from turbinia.jobs import manager
+from turbinia.jobs import manager_test
 from turbinia import TurbiniaException
 
 SHORT_REPORT = textwrap.dedent(
@@ -443,8 +445,10 @@ class TestTurbiniaPsqWorker(unittest.TestCase):
     config.OUTPUT_DIR = self.tmp_dir
     config.MOUNT_DIR_PREFIX = self.tmp_dir
     config.ParseDependencies = mock.MagicMock(return_value={})
+    self.saved_jobs = manager.JobsManager._job_classes
 
   def tearDown(self):
+    manager.JobsManager._job_classes = self.saved_jobs
     if 'turbinia-test' in self.tmp_dir:
       shutil.rmtree(self.tmp_dir)
 
@@ -476,6 +480,48 @@ class TestTurbiniaPsqWorker(unittest.TestCase):
     config.OUTPUT_DIR = os.path.join(self.tmp_dir, 'empty_file')
     open(config.OUTPUT_DIR, 'a').close()
     self.assertRaises(TurbiniaException, TurbiniaPsqWorker)
+
+  @mock.patch('turbinia.client.config')
+  @mock.patch('turbinia.client.check_directory')
+  @mock.patch('turbinia.client.pubsub')
+  @mock.patch('turbinia.client.datastore.Client')
+  @mock.patch('turbinia.client.psq.Worker')
+  @mock.patch('turbinia.lib.docker_manager.DockerManager')
+  def testTurbiniaClientJobsLists(self, _, __, ___, ____, _____, mock_config):
+    """Test that client job whitelist and blacklists are setup correctly."""
+    mock_config.PSQ_TOPIC = 'foo'
+    manager.JobsManager._job_classes = {}
+    manager.JobsManager.RegisterJob(manager_test.TestJob1)
+    manager.JobsManager.RegisterJob(manager_test.TestJob2)
+    manager.JobsManager.RegisterJob(manager_test.TestJob3)
+
+    # Check blacklist
+    TurbiniaPsqWorker(['testjob1'], [])
+    self.assertListEqual(
+        sorted(list(manager.JobsManager.GetJobNames())),
+        ['testjob2', 'testjob3'])
+    manager.JobsManager.RegisterJob(manager_test.TestJob1)
+
+    # Check blacklist with DISABLED_JOBS config
+    mock_config.DISABLED_JOBS = ['testjob1']
+    TurbiniaPsqWorker(['testjob2'], [])
+    self.assertListEqual(list(manager.JobsManager.GetJobNames()), ['testjob3'])
+    manager.JobsManager.RegisterJob(manager_test.TestJob1)
+    manager.JobsManager.RegisterJob(manager_test.TestJob2)
+    mock_config.DISABLED_JOBS = ['']
+
+    # Check whitelist
+    TurbiniaPsqWorker([], ['testjob1'])
+    self.assertListEqual(list(manager.JobsManager.GetJobNames()), ['testjob1'])
+    manager.JobsManager.RegisterJob(manager_test.TestJob2)
+    manager.JobsManager.RegisterJob(manager_test.TestJob3)
+
+    # Check whitelist of item in DISABLED_JOBS config
+    mock_config.DISABLED_JOBS = ['testjob1', 'testjob2']
+    TurbiniaPsqWorker([], ['testjob1'])
+    self.assertListEqual(list(manager.JobsManager.GetJobNames()), ['testjob1'])
+    manager.JobsManager.RegisterJob(manager_test.TestJob2)
+    manager.JobsManager.RegisterJob(manager_test.TestJob3)
 
   @mock.patch('turbinia.client.subprocess.Popen')
   @mock.patch('logging.Logger.warning')
