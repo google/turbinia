@@ -68,11 +68,11 @@ class TestTaskManager(TestTurbiniaTaskBase):
 
     # Test blacklist along with disabled list in config
     self.manager.setup(jobs_blacklist, [])
-    self.assertListEqual(self.manager.jobs, ['job4', 'job5'])
+    self.assertListEqual(sorted(self.manager.jobs), ['job4', 'job5'])
 
     # Test only disabled list in config
     self.manager.setup([], [])
-    self.assertListEqual(self.manager.jobs, ['job1', 'job4', 'job5'])
+    self.assertListEqual(sorted(self.manager.jobs), ['job1', 'job4', 'job5'])
 
     # Test whitelist of item in disabled list
     self.manager.setup([], ['job2'])

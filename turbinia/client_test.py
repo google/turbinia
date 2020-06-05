@@ -498,7 +498,8 @@ class TestTurbiniaPsqWorker(unittest.TestCase):
     # Check blacklist
     TurbiniaPsqWorker(['testjob1'], [])
     self.assertListEqual(
-        list(manager.JobsManager.GetJobNames()), ['testjob2', 'testjob3'])
+        sorted(list(manager.JobsManager.GetJobNames())),
+        ['testjob2', 'testjob3'])
     manager.JobsManager.RegisterJob(manager_test.TestJob1)
 
     # Check blacklist with DISABLED_JOBS config
