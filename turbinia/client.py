@@ -37,6 +37,7 @@ from turbinia.workers import Priority
 from turbinia.workers.artifact import FileArtifactExtractionTask
 from turbinia.workers.analysis.wordpress import WordpressAccessLogAnalysisTask
 from turbinia.workers.analysis.jenkins import JenkinsAnalysisTask
+from turbinia.workers.binary_extractor import BinaryExtractorTask
 from turbinia.workers.finalize_request import FinalizeRequestTask
 from turbinia.workers.grep import GrepTask
 from turbinia.workers.hadoop import HadoopAnalysisTask

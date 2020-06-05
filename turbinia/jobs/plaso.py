@@ -18,6 +18,7 @@ from __future__ import unicode_literals
 
 from turbinia.evidence import APFSEncryptedDisk
 from turbinia.evidence import BitlockerDisk
+from turbinia.evidence import CompressedDirectory
 from turbinia.evidence import Directory
 from turbinia.evidence import GoogleCloudDisk
 from turbinia.evidence import GoogleCloudDiskRawEmbedded
@@ -33,7 +34,7 @@ class PlasoJob(interface.TurbiniaJob):
   # The types of evidence that this Job will process
   evidence_input = [
       Directory, RawDisk, GoogleCloudDisk, GoogleCloudDiskRawEmbedded,
-      BitlockerDisk, APFSEncryptedDisk
+      BitlockerDisk, APFSEncryptedDisk, CompressedDirectory
   ]
   evidence_output = [PlasoFile]
 
