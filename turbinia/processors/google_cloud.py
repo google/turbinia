@@ -25,9 +25,9 @@ import time
 from six.moves import urllib
 from six.moves import xrange
 
+from libcloudforensics.providers.gcp.internal import project as gcp_project
 from turbinia import config
 from turbinia import TurbiniaException
-from turbinia.lib.google_cloud import GoogleCloudProject
 
 log = logging.getLogger('turbinia')
 
@@ -88,9 +88,10 @@ def PreprocessAttachDisk(disk_name):
 
   config.LoadConfig()
   instance_name = GetLocalInstanceName()
-  project = GoogleCloudProject(
-      project_id=config.TURBINIA_PROJECT, default_zone=config.TURBINIA_ZONE)
-  instance = project.GetInstance(instance_name, zone=config.TURBINIA_ZONE)
+  project = gcp_project.GoogleCloudProject(
+      config.TURBINIA_PROJECT, default_zone=config.TURBINIA_ZONE)
+  instance = project.compute.GetInstance(
+      instance_name, zone=config.TURBINIA_ZONE)
 
   disk = instance.GetDisk(disk_name)
   log.info(
@@ -115,7 +116,7 @@ def PostprocessDetachDisk(disk_name, local_path):
   """Detaches Google Cloud Disk from an instance.
 
   Args:
-    disk_name(str): The name of the Cloud Disk to dettach.
+    disk_name(str): The name of the Cloud Disk to detach.
     local_path(str): The local path to the block device to detach.
   """
   #TODO: can local_path be something diffferent than the /dev/disk/by-id/google*
@@ -130,9 +131,10 @@ def PostprocessDetachDisk(disk_name, local_path):
 
   config.LoadConfig()
   instance_name = GetLocalInstanceName()
-  project = GoogleCloudProject(
-      project_id=config.TURBINIA_PROJECT, default_zone=config.TURBINIA_ZONE)
-  instance = project.GetInstance(instance_name, zone=config.TURBINIA_ZONE)
+  project = gcp_project.GoogleCloudProject(
+      config.TURBINIA_PROJECT, default_zone=config.TURBINIA_ZONE)
+  instance = project.compute.GetInstance(
+      instance_name, zone=config.TURBINIA_ZONE)
   disk = instance.GetDisk(disk_name)
   log.info(
       'Detaching disk {0:s} from instance {1:s}'.format(

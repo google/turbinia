@@ -28,7 +28,7 @@ import sys
 from turbinia import config
 from turbinia import TurbiniaException
 from turbinia.config import logger
-from libcloudforensics import gcp
+from libcloudforensics.providers.gcp import forensics as gcp_forensics
 from turbinia.lib import google_cloud
 from turbinia import __version__
 from turbinia.processors import archive
@@ -494,9 +494,9 @@ def main():
       sys.exit(1)
 
     if args.project and args.project != config.TURBINIA_PROJECT:
-      new_disk = gcp.CreateDiskCopy(
+      new_disk = gcp_forensics.CreateDiskCopy(
           args.project, config.TURBINIA_PROJECT, None, config.TURBINIA_ZONE,
-          args.disk_name)
+          disk_name=args.disk_name)
       args.disk_name = new_disk.name
       if args.copy_only:
         log.info('--copy_only specified, so not processing with Turbinia')
