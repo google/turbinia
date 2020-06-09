@@ -53,11 +53,12 @@ def ValidateTarFile(compressed_directory):
         'acceptable exensions are: .tgz or .tar.gz')
 
 
-def CompressDirectory(uncompressed_directory):
+def CompressDirectory(uncompressed_directory, output_path=None):
   """Compress a given directory into a tar file.
 
   Args:
     uncompressed_directory(str): The path to the uncompressed directory.
+    output_path(str): The path to compress the directory into.
 
   Returns:
     str: The path to the tar file.
@@ -70,6 +71,9 @@ def CompressDirectory(uncompressed_directory):
 
   # Iterate through a given list of files and compress them.
   compressed_directory = uncompressed_directory + '.tar.gz'
+  if output_path:
+    output_file = compressed_directory.split('/')[-1]
+    compressed_directory = os.path.join(output_path, output_file)
   try:
     with tarfile.TarFile.open(compressed_directory, 'w:gz') as tar:
       tar.add(uncompressed_directory, arcname='')
