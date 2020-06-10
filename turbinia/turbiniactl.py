@@ -28,7 +28,8 @@ import sys
 from turbinia import config
 from turbinia import TurbiniaException
 from turbinia.config import logger
-from turbinia.lib import libcloudforensics
+from libcloudforensics import gcp
+from turbinia.lib import google_cloud
 from turbinia import __version__
 from turbinia.processors import archive
 
@@ -202,9 +203,10 @@ def main():
       'googleclouddisk',
       help='Process Google Cloud Persistent Disk as Evidence')
   parser_googleclouddisk.add_argument(
-      '-C', '--copy_only', help='Only copy disk and do not process with '
-      'Turbinia. This only takes effect when a source --project is defined '
-      'and can be run without any Turbinia server or workers configured.')
+      '-C', '--copy_only', action='store_true', help='Only copy disk and do '
+      'not process with Turbinia. This only takes effect when a source '
+      '--project is defined and can be run without any Turbinia server or '
+      'workers configured.')
   parser_googleclouddisk.add_argument(
       '-d', '--disk_name', help='Google Cloud name for disk', required=True)
   parser_googleclouddisk.add_argument(
@@ -230,9 +232,10 @@ def main():
       help='Process Google Cloud Persistent Disk with an embedded raw disk '
       'image as Evidence')
   parser_googleclouddiskembedded.add_argument(
-      '-C', '--copy_only', help='Only copy disk and do not process with '
-      'Turbinia. This only takes effect when a source --project is defined '
-      'and can be run without any Turbinia server or workers configured.')
+      '-C', '--copy_only', action='store_true', help='Only copy disk and do '
+      'not process with Turbinia. This only takes effect when a source '
+      '--project is defined and can be run without any Turbinia server or '
+      'workers configured.')
   parser_googleclouddiskembedded.add_argument(
       '-e', '--embedded_path',
       help='Path within the Persistent Disk that points to the raw image file',
@@ -397,6 +400,10 @@ def main():
   else:
     log.setLevel(logging.INFO)
 
+  # Enable GCP Stackdriver Logging
+  if config.STACKDRIVER_LOGGING and args.command in ('server', 'psqworker'):
+    google_cloud.setup_stackdriver_handler(config.TURBINIA_PROJECT)
+
   log.info('Turbinia version: {0:s}'.format(__version__))
 
   # Do late import of other needed Turbinia modules.  This is needed because the
@@ -404,7 +411,7 @@ def main():
   # the config until after we parse the args so that we can use those arguments
   # to point to config paths.
   from turbinia import notify
-  from turbinia.client import TurbiniaClient
+  from turbinia import client as TurbiniaClientProvider
   from turbinia.client import TurbiniaCeleryClient
   from turbinia.client import TurbiniaServer
   from turbinia.client import TurbiniaCeleryWorker
@@ -434,6 +441,8 @@ def main():
         'This is a test notification')
     sys.exit(0)
 
+  args.jobs_whitelist = [j.lower() for j in args.jobs_whitelist]
+  args.jobs_blacklist = [j.lower() for j in args.jobs_blacklist]
   if args.jobs_whitelist and args.jobs_blacklist:
     log.error(
         'A Job filter whitelist and blacklist cannot be specified at the same '
@@ -454,15 +463,9 @@ def main():
           'Cannot open file {0:s} [{1!s}]'.format(args.filter_patterns_file, e))
 
   # Create Client object
+  client = None
   if args.command not in ('psqworker', 'server'):
-    if config.TASK_MANAGER.lower() == 'celery':
-      client = TurbiniaCeleryClient()
-    elif args.run_local:
-      client = TurbiniaClient(run_local=True)
-    else:
-      client = TurbiniaClient()
-  else:
-    client = None
+    client = TurbiniaClientProvider.get_turbinia_client(args.run_local)
 
   # Make sure run_local flags aren't conflicting with other server/client flags
   server_flags_set = args.server or args.command == 'server'
@@ -491,7 +494,7 @@ def main():
       sys.exit(1)
 
     if args.project and args.project != config.TURBINIA_PROJECT:
-      new_disk = libcloudforensics.create_disk_copy(
+      new_disk = gcp.CreateDiskCopy(
           args.project, config.TURBINIA_PROJECT, None, config.TURBINIA_ZONE,
           args.disk_name)
       args.disk_name = new_disk.name
@@ -675,7 +678,7 @@ def main():
         except ValueError as exception:
           log.error(
               'Could not parse key=value pair [{0:s}] from recipe config '
-              '{1:s}: {2!s}'.format(pair, args.recipe_config, exception))
+              '{1!s}: {2!s}'.format(pair, args.recipe_config, exception))
           sys.exit(1)
         request.recipe[key] = value
     if args.dump_json:

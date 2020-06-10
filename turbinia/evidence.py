@@ -25,6 +25,7 @@ from turbinia import TurbiniaException
 from turbinia.processors import docker
 from turbinia.processors import mount_local
 from turbinia.processors import archive
+from turbinia.lib.docker_manager import GetDockerPath
 
 # pylint: disable=keyword-arg-before-vararg
 
@@ -336,6 +337,11 @@ class BulkExtractorOutput(CompressedDirectory):
   pass
 
 
+class PhotorecOutput(CompressedDirectory):
+  """Photorec based evidence."""
+  pass
+
+
 class ChromiumProfile(Evidence):
   """Chromium based browser profile evidence.
 
@@ -628,9 +634,6 @@ class DockerContainer(Evidence):
     _docker_root_directory(str): Full path to the docker root directory.
   """
 
-  # ABSOLUTELY NO LEADING / HERE
-  DEFAULT_DOCKER_DIRECTORY_PATH = 'var/lib/docker'
-
   def __init__(self, container_id=None, *args, **kwargs):
     """Initialization for Docker Container."""
     super(DockerContainer, self).__init__(*args, **kwargs)
@@ -642,8 +645,7 @@ class DockerContainer(Evidence):
 
   def _preprocess(self, _):
 
-    self._docker_root_directory = os.path.join(
-        self.parent_evidence.mount_path, self.DEFAULT_DOCKER_DIRECTORY_PATH)
+    self._docker_root_directory = GetDockerPath(self.parent_evidence.mount_path)
     # Mounting the container's filesystem
     self._container_fs_path = docker.PreprocessMountDockerFS(
         self._docker_root_directory, self.container_id)

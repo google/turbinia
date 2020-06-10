@@ -108,7 +108,6 @@ class JobsManager(object):
     """
     registered_jobs = list(cls.GetJobNames())
     jobs_remove = []
-
     # Create a list of jobs to deregister.
     if jobs_whitelist and jobs_blacklist:
       raise TurbiniaException(
@@ -116,6 +115,11 @@ class JobsManager(object):
           'time.')
     elif jobs_whitelist:
       jobs_whitelist = [j.lower() for j in jobs_whitelist]
+      for j in jobs_whitelist:
+        if j not in registered_jobs:
+          msg = 'Error whitelisting jobs: Job {0!s} is not found in registered jobs {1!s}.'.format(
+              j, registered_jobs)
+          raise TurbiniaException(msg)
       jobs_remove = [j for j in registered_jobs if j not in jobs_whitelist]
     elif jobs_blacklist:
       jobs_blacklist = [j.lower() for j in jobs_blacklist]
@@ -225,3 +229,30 @@ class JobsManager(object):
     """
     for job_class in job_classes:
       cls.RegisterJob(job_class)
+
+  @classmethod
+  def RegisterDockerImage(cls, job_name, docker_image):
+    """Registers a Docker image for the job.
+
+    Args:
+      job_name(str): name of the job.
+      docker_image(str): name of the Docker image to be registered.
+    """
+    job_name = job_name.lower()
+    cls._job_classes[job_name].docker_image = docker_image
+
+  @classmethod
+  def GetDockerImage(cls, job_name):
+    """Retrieves the Docker image associated with the job.
+
+    Args:
+      job_name(str): name of the job.
+
+    Returns:
+      docker_image(str): The Docker image if available.
+    """
+    docker_image = None
+    job_class = cls._job_classes.get(job_name.lower())
+    if hasattr(job_class, 'docker_image') and job_class:
+      docker_image = job_class.docker_image
+    return docker_image

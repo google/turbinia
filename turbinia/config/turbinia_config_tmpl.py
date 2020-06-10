@@ -91,8 +91,12 @@ DEBUG_TASKS = False
 # This will enable the usage of docker containers for the worker.
 DOCKER_ENABLED = False
 
-# Any jobs added to this list will disable it from being used.
-DISABLED_JOBS = []
+# Any Jobs added to this list will be disabled by default at start-up.  See the
+# output of `turbiniactl listjobs` for a complete list of Jobs.  Job names
+# entered here are case insensitive.  Disabled Jobs can still be enabled with
+# the --jobs_whitelist flag on the server, but the client will not be able to
+# whitelist jobs that have been disabled or blacklisted on the server.
+DISABLED_JOBS = ['BinaryExtractorJob', 'BulkExtractorJob', 'PhotorecJob']
 
 # Configure additional job dependency checks below.
 DEPENDENCIES = [{
@@ -124,6 +128,10 @@ DEPENDENCIES = [{
     'programs': ['log2timeline.py'],
     'docker_image': None
 }, {
+    'job': 'PhotorecJob',
+    'programs': ['photorec'],
+    'docker_image': None
+}, {
     'job': 'PsortJob',
     'programs': ['psort.py'],
     'docker_image': None
@@ -134,6 +142,10 @@ DEPENDENCIES = [{
 }, {
     'job': 'VolatilityJob',
     'programs': ['vol.py'],
+    'docker_image': None
+}, {
+    'job': 'DockerContainersEnumerationJob',
+    'programs': ['de.py'],
     'docker_image': None
 }]
 
@@ -168,6 +180,12 @@ PUBSUB_TOPIC = INSTANCE_ID
 # Otherwise, set this as 'None' if output will be stored in shared storage.
 # GCS_OUTPUT_PATH = 'gs://%s/output' % BUCKET_NAME
 GCS_OUTPUT_PATH = None
+
+# Set this to True if you would like to enable Google Cloud Stackdriver Logging.
+STACKDRIVER_LOGGING = False
+
+# Set this to True if you would like to enable Google Cloud Error Reporting.
+STACKDRIVER_TRACEBACK = False
 
 ################################################################################
 #                           Celery / Redis / Kombu

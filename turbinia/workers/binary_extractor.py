@@ -20,6 +20,7 @@ import logging
 import json
 import os
 
+from turbinia import TurbiniaException
 from turbinia import config
 from turbinia.workers import TurbiniaTask
 from turbinia.evidence import BinaryExtraction
@@ -27,10 +28,10 @@ from turbinia.evidence import BinaryExtraction
 
 class BinaryExtractorTask(TurbiniaTask):
   """Extract binaries out of evidence and provide JSON file with hashes.
-  
+
   Attributes:
     json_path(str): path to output JSON file.
-    binary_extraction_dir(str): path to extraction directory. 
+    binary_extraction_dir(str): path to extraction directory.
   """
 
   def __init__(self, *args, **kwargs):
@@ -48,6 +49,13 @@ class BinaryExtractorTask(TurbiniaTask):
         hash_cnt(int): Number of extracted hashes.
       )
     """
+
+    # Check if hashes.json file was generated.
+    if not os.path.exists(self.json_path):
+      raise TurbiniaException(
+          'The file {0:s} was not found. Please ensure you '
+          'have Plaso version 20191203 or greater deployed'.format(
+              self.json_path))
 
     with open(self.json_path) as json_file:
       hashes = json.load(json_file)

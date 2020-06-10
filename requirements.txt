@@ -2,10 +2,14 @@ filelock
 google-api-core
 google-cloud-datastore
 google-api-python-client
-google-cloud-pubsub
+google-cloud-pubsub==1.4.2
 google-cloud-storage
 google-cloud-core
-oauth2client
+google-cloud-logging
+google-cloud-error-reporting
+google-auth
 psq
 six
 urllib3[secure]
+docker
+libcloudforensics

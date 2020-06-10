@@ -27,6 +27,7 @@ from turbinia import TurbiniaException
 from turbinia.workers import TurbiniaTask
 from turbinia.workers import TurbiniaTaskResult
 from turbinia.workers.plaso import PlasoTask
+from turbinia import state_manager
 
 
 class TestTurbiniaTaskBase(unittest.TestCase):
@@ -63,7 +64,7 @@ class TestTurbiniaTaskBase(unittest.TestCase):
     test_disk_path = tempfile.mkstemp(dir=self.base_output_dir)[1]
     self.remove_files.append(test_disk_path)
     self.evidence = evidence.RawDisk(source_path=test_disk_path)
-
+    self.evidence.preprocess = mock.MagicMock()
     # Set up TurbiniaTaskResult
     self.result = TurbiniaTaskResult(base_output_dir=self.base_output_dir)
     self.result.setup(self.task)
@@ -99,8 +100,11 @@ class TestTurbiniaTaskBase(unittest.TestCase):
       validate_result = self.result
 
     self.result.status = 'TestStatus'
+    self.result.update_task_status = mock.MagicMock()
     self.result.close = mock.MagicMock()
     self.task.setup = mock.MagicMock(return_value=setup)
+    self.result.worker_name = 'worker1'
+    self.result.state_manager = None
     if mock_run:
       self.task.run = mock.MagicMock(return_value=run)
     self.task.validate_result = mock.MagicMock(return_value=validate_result)
@@ -124,6 +128,7 @@ class TestTurbiniaTask(TestTurbiniaTaskBase):
     self.setResults()
     self.result.closed = True
     new_result = self.task.run_wrapper(self.evidence.__dict__)
+
     new_result = TurbiniaTaskResult.deserialize(new_result)
     self.assertEqual(new_result.status, 'TestStatus')
     self.result.close.assert_not_called()
@@ -143,10 +148,8 @@ class TestTurbiniaTask(TestTurbiniaTaskBase):
     checked_result.setup(self.task)
     checked_result.status = 'CheckedResult'
     self.setResults(run=bad_result, validate_result=checked_result)
-
     new_result = self.task.run_wrapper(self.evidence.__dict__)
     new_result = TurbiniaTaskResult.deserialize(new_result)
-
     self.task.validate_result.assert_any_call(bad_result)
     self.assertEqual(type(new_result), TurbiniaTaskResult)
     self.assertIn('CheckedResult', new_result.status)
@@ -175,10 +178,9 @@ class TestTurbiniaTask(TestTurbiniaTaskBase):
   def testTurbiniaTaskRunWrapperSetupFail(self):
     """Test that the run wrapper recovers from setup failing."""
     self.task.result = None
-    canary_status = 'ReturnedFromValidateResult'
-    self.result.status = canary_status
-    self.task.validate_result = mock.MagicMock(return_value=self.result)
-    self.task.setup = mock.MagicMock(side_effect=TurbiniaException)
+    canary_status = 'exception_message'
+    self.task.setup = mock.MagicMock(
+        side_effect=TurbiniaException('exception_message'))
     self.remove_files.append(
         os.path.join(self.task.base_output_dir, 'worker-log.txt'))
 
@@ -190,12 +192,14 @@ class TestTurbiniaTask(TestTurbiniaTaskBase):
   def testTurbiniaTaskValidateResultGoodResult(self):
     """Tests validate_result with good result."""
     self.result.status = 'GoodStatus'
+    self.result.state_manager = None
     new_result = self.task.validate_result(self.result)
     self.assertEqual(new_result.status, 'GoodStatus')
     self.assertDictEqual(new_result.error, {})
 
   @mock.patch('turbinia.workers.TurbiniaTaskResult.close')
-  def testTurbiniaTaskValidateResultBadResult(self, _):
+  @mock.patch('turbinia.state_manager.get_state_manager')
+  def testTurbiniaTaskValidateResultBadResult(self, _, __):
     """Tests validate_result with bad result."""
     # Passing in an unpickleable object (json module) and getting back a
     # TurbiniaTaskResult

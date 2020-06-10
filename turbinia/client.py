@@ -27,7 +27,8 @@ from operator import attrgetter
 import os
 import stat
 import time
-import shutil
+import subprocess
+import codecs
 
 from turbinia import config
 from turbinia.config import logger
@@ -35,11 +36,13 @@ from turbinia.config import DATETIME_FORMAT
 from turbinia import task_manager
 from turbinia import TurbiniaException
 from turbinia.lib import text_formatter as fmt
+from turbinia.lib import docker_manager
 from turbinia.jobs import manager as job_manager
 from turbinia.workers import Priority
 from turbinia.workers.artifact import FileArtifactExtractionTask
 from turbinia.workers.analysis.wordpress import WordpressAccessLogAnalysisTask
 from turbinia.workers.analysis.jenkins import JenkinsAnalysisTask
+from turbinia.workers.analysis.jupyter import JupyterAnalysisTask
 from turbinia.workers.finalize_request import FinalizeRequestTask
 from turbinia.workers.docker import DockerContainersEnumerationTask
 from turbinia.workers.grep import GrepTask
@@ -47,6 +50,7 @@ from turbinia.workers.hadoop import HadoopAnalysisTask
 from turbinia.workers.hindsight import HindsightTask
 from turbinia.workers.plaso import PlasoTask
 from turbinia.workers.psort import PsortTask
+from turbinia.workers.redis import RedisAnalysisTask
 from turbinia.workers.sshd import SSHDAnalysisTask
 from turbinia.workers.strings import StringsAsciiTask
 from turbinia.workers.strings import StringsUnicodeTask
@@ -55,6 +59,7 @@ from turbinia.workers.volatility import VolatilityTask
 from turbinia.workers.worker_stat import StatTask
 from turbinia.workers.binary_extractor import BinaryExtractorTask
 from turbinia.workers.bulk_extractor import BulkExtractorTask
+from turbinia.workers.photorec import PhotorecTask
 
 # TODO(aarontp): Remove this map after
 # https://github.com/google/turbinia/issues/278 is fixed.
@@ -63,11 +68,13 @@ TASK_MAP = {
     'wordpressaccessloganalysistask': WordpressAccessLogAnalysisTask,
     'finalizerequesttask': FinalizeRequestTask,
     'jenkinsanalysistask': JenkinsAnalysisTask,
+    'JupyterAnalysisTask': JupyterAnalysisTask,
     'greptask': GrepTask,
     'hadoopanalysistask': HadoopAnalysisTask,
     'hindsighttask': HindsightTask,
     'plasotask': PlasoTask,
     'psorttask': PsortTask,
+    'redisanalysistask': RedisAnalysisTask,
     'sshdanalysistask': SSHDAnalysisTask,
     'stringsasciitask': StringsAsciiTask,
     'stringsunicodetask': StringsUnicodeTask,
@@ -76,7 +83,8 @@ TASK_MAP = {
     'stattask': StatTask,
     'binaryextractor': BinaryExtractorTask,
     'bulkextractortask': BulkExtractorTask,
-    'dockertask': DockerContainersEnumerationTask
+    'dockertask': DockerContainersEnumerationTask,
+    'photorectask': PhotorecTask
 }
 
 config.LoadConfig()
@@ -95,41 +103,99 @@ log = logging.getLogger('turbinia')
 logger.setup()
 
 
-def check_dependencies(dependencies):
+def get_turbinia_client(run_local=False):
+  """Return Turbinia client based on config.
+
+  Returns:
+    Initialized BaseTurbiniaClient or TurbiniaCeleryClient object.
+  """
+  config.LoadConfig()
+  # pylint: disable=no-else-return
+  if config.TASK_MANAGER.lower() == 'psq':
+    return BaseTurbiniaClient(run_local=run_local)
+  elif config.TASK_MANAGER.lower() == 'celery':
+    return TurbiniaCeleryClient(run_local=run_local)
+  else:
+    msg = 'Task Manager type "{0:s}" not implemented'.format(
+        config.TASK_MANAGER)
+    raise TurbiniaException(msg)
+
+
+def check_docker_dependencies(dependencies):
+  """Checks docker dependencies.
+
+  Args:
+    dependencies(dict): dictionary of dependencies to check for.
+
+  Raises:
+    TurbiniaException: If dependency is not met.
+  """
+  #TODO(wyassine): may run into issues down the line when a docker image
+  # does not have bash or which installed. (no linux fs layer).
+  log.info('Performing docker dependency check.')
+  job_names = list(job_manager.JobsManager.GetJobNames())
+  images = docker_manager.DockerManager().list_images(return_filter='short_id')
+
+  # Iterate through list of jobs
+  for job, values in dependencies.items():
+    if job not in job_names:
+      log.warning(
+          'The job {0:s} was not found or has been disabled. Skipping '
+          'dependency check...'.format(job))
+      continue
+    docker_image = values.get('docker_image')
+    # short id only pulls the first 10 characters of image id.
+    if docker_image and len(docker_image) > 10:
+      docker_image = docker_image[0:10]
+
+    if docker_image in images:
+      for program in values['programs']:
+        cmd = 'type {0:s}'.format(program)
+        stdout, stderr, ret = docker_manager.ContainerManager(
+            values['docker_image']).execute_container(cmd, shell=True)
+        if ret != 0:
+          raise TurbiniaException(
+              'Job dependency {0:s} not found for job {1:s}. Please install '
+              'the dependency for the container or disable the job.'.format(
+                  program, job))
+      job_manager.JobsManager.RegisterDockerImage(job, values['docker_image'])
+    elif docker_image:
+      raise TurbiniaException(
+          'Docker image {0:s} was not found for the job {1:s}. Please '
+          'update the config with the correct image id'.format(
+              values['docker_image'], job))
+
+
+def check_system_dependencies(dependencies):
   """Checks system dependencies.
 
   Args:
     dependencies(dict): dictionary of dependencies to check for.
 
   Raises:
-    TurbiniaException: if dependency is not met or a bad config file.
+    TurbiniaException: If dependency is not met.
   """
-
   log.info('Performing system dependency check.')
   job_names = list(job_manager.JobsManager.GetJobNames())
-  # Iterate through dependency config and perform a system check.
-  try:
-    for dep in dependencies:
-      if dep['job'].lower() in job_names:
-        for p in dep['programs']:
-          # Program can not be found.
-          if shutil.which(p) is None:
-            raise TurbiniaException(
-                'Job dependency {0:s} not found for job: {1:s}. Please install '
-                'the dependency or disable the job.'.format(p, dep['job']))
-      # If job is not found in list of registered jobs.
-      else:
-        log.warning(
-            'The job: {0:s} was not found or has been disabled. Skipping '
-            'dependency check...'.format(dep['job']))
-  except (KeyError, TypeError) as exception:
-    raise TurbiniaException(
-        'An issue has occured while parsing the '
-        'dependency config:{0!s} '.format(exception))
 
-  log.info(
-      'Dependency check complete. The following jobs will be active:'
-      'for this worker: {0:s}'.format(', '.join(job_names)))
+  # Iterate through list of jobs
+  for job, values in dependencies.items():
+    if job not in job_names:
+      log.warning(
+          'The job {0:s} was not found or has been disabled. Skipping '
+          'dependency check...'.format(job))
+      continue
+    elif not values.get('docker_image'):
+      for program in values['programs']:
+        cmd = 'type {0:s}'.format(program)
+        proc = subprocess.Popen(cmd, shell=True)
+        proc.communicate()
+        ret = proc.returncode
+        if ret != 0:
+          raise TurbiniaException(
+              'Job dependency {0:s} not found in $PATH for the job {1:s}. '
+              'Please install the dependency or disable the job.'.format(
+                  program, job))
 
 
 def check_directory(directory):
@@ -233,7 +299,7 @@ class TurbiniaStats(object):
         self.description, self.count, self.min, self.mean, self.max)
 
 
-class TurbiniaClient(object):
+class BaseTurbiniaClient(object):
   """Client class for Turbinia.
 
   Attributes:
@@ -635,6 +701,8 @@ class TurbiniaClient(object):
     Returns:
       String of task status
     """
+    if user and days == 0:
+      days = 1000
     task_results = self.get_task_data(
         instance, project, region, days, task_id, request_id, user)
     if not task_results:
@@ -748,7 +816,7 @@ class TurbiniaClient(object):
     return 'Closed Task IDs: %s' % response.get('result')
 
 
-class TurbiniaCeleryClient(TurbiniaClient):
+class TurbiniaCeleryClient(BaseTurbiniaClient):
   """Client class for Turbinia (Celery).
 
   Overriding some things specific to Celery operation.
@@ -757,8 +825,8 @@ class TurbiniaCeleryClient(TurbiniaClient):
     redis (RedisStateManager): Redis datastore object
   """
 
-  def __init__(self, *_, **__):
-    super(TurbiniaCeleryClient, self).__init__()
+  def __init__(self, *args, **kwargs):
+    super(TurbiniaCeleryClient, self).__init__(*args, **kwargs)
     self.redis = RedisStateManager()
 
   def send_request(self, request):
@@ -818,7 +886,7 @@ class TurbiniaServer(object):
     self.task_manager.add_evidence(evidence_)
 
 
-class TurbiniaCeleryWorker(TurbiniaClient):
+class TurbiniaCeleryWorker(BaseTurbiniaClient):
   """Turbinia Celery Worker class.
 
   Attributes:
@@ -834,19 +902,31 @@ class TurbiniaCeleryWorker(TurbiniaClient):
     """
     super(TurbiniaCeleryWorker, self).__init__()
     # Deregister jobs from blacklist/whitelist.
-    disabled_jobs = list(config.DISABLED_JOBS) if config.DISABLED_JOBS else []
     job_manager.JobsManager.DeregisterJobs(jobs_blacklist, jobs_whitelist)
+    disabled_jobs = list(config.DISABLED_JOBS) if config.DISABLED_JOBS else []
+    disabled_jobs = [j.lower() for j in disabled_jobs]
+    # Only actually disable jobs that have not been whitelisted.
+    if jobs_whitelist:
+      disabled_jobs = list(set(disabled_jobs) - set(jobs_whitelist))
     if disabled_jobs:
       log.info(
-          'Disabling jobs that were configured to be disabled in the '
+          'Disabling non-whitelisted jobs configured to be disabled in the '
           'config file: {0:s}'.format(', '.join(disabled_jobs)))
       job_manager.JobsManager.DeregisterJobs(jobs_blacklist=disabled_jobs)
 
     # Check for valid dependencies/directories.
-    check_dependencies(config.DEPENDENCIES)
+    dependencies = config.ParseDependencies()
+    if config.DOCKER_ENABLED:
+      check_docker_dependencies(dependencies)
+    check_system_dependencies(config.DEPENDENCIES)
     check_directory(config.MOUNT_DIR_PREFIX)
     check_directory(config.OUTPUT_DIR)
     check_directory(config.TMP_DIR)
+
+    jobs = job_manager.JobsManager.GetJobNames()
+    log.info(
+        'Dependency check complete. The following jobs will be enabled '
+        'for this worker: {0:s}'.format(','.join(jobs)))
     self.worker = self.task_manager.celery.app
 
   def start(self):
@@ -889,20 +969,31 @@ class TurbiniaPsqWorker(object):
       raise TurbiniaException(msg)
 
     # Deregister jobs from blacklist/whitelist.
-    disabled_jobs = list(config.DISABLED_JOBS) if config.DISABLED_JOBS else []
     job_manager.JobsManager.DeregisterJobs(jobs_blacklist, jobs_whitelist)
+    disabled_jobs = list(config.DISABLED_JOBS) if config.DISABLED_JOBS else []
+    disabled_jobs = [j.lower() for j in disabled_jobs]
+    # Only actually disable jobs that have not been whitelisted.
+    if jobs_whitelist:
+      disabled_jobs = list(set(disabled_jobs) - set(jobs_whitelist))
     if disabled_jobs:
       log.info(
-          'Disabling jobs that were configured to be disabled in the '
+          'Disabling non-whitelisted jobs configured to be disabled in the '
           'config file: {0:s}'.format(', '.join(disabled_jobs)))
       job_manager.JobsManager.DeregisterJobs(jobs_blacklist=disabled_jobs)
 
     # Check for valid dependencies/directories.
-    check_dependencies(config.DEPENDENCIES)
+    dependencies = config.ParseDependencies()
+    if config.DOCKER_ENABLED:
+      check_docker_dependencies(dependencies)
+    check_system_dependencies(dependencies)
     check_directory(config.MOUNT_DIR_PREFIX)
     check_directory(config.OUTPUT_DIR)
     check_directory(config.TMP_DIR)
 
+    jobs = job_manager.JobsManager.GetJobNames()
+    log.info(
+        'Dependency check complete. The following jobs are enabled '
+        'for this worker: {0:s}'.format(','.join(jobs)))
     log.info('Starting PSQ listener on queue {0:s}'.format(self.psq.name))
     self.worker = psq.Worker(queue=self.psq)
 

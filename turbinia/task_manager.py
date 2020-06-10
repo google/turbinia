@@ -131,11 +131,32 @@ class BaseTaskManager(object):
     self._backend_setup(*args, **kwargs)
     job_names = jobs_manager.JobsManager.GetJobNames()
     if jobs_blacklist or jobs_whitelist:
+      selected_jobs = jobs_blacklist or jobs_whitelist
+      for job in selected_jobs:
+        if job.lower() not in job_names:
+          msg = (
+              'Error creating server. Job {0!s} is not found in registered '
+              'jobs {1!s}.'.format(job, job_names))
+          log.error(msg)
+          raise TurbiniaException(msg)
       log.info(
           'Filtering Jobs with whitelist {0!s} and blacklist {1!s}'.format(
               jobs_whitelist, jobs_blacklist))
       job_names = jobs_manager.JobsManager.FilterJobNames(
           job_names, jobs_blacklist, jobs_whitelist)
+
+    # Disable any jobs from the config that were not previously whitelisted.
+    disabled_jobs = list(config.DISABLED_JOBS) if config.DISABLED_JOBS else []
+    disabled_jobs = [j.lower() for j in disabled_jobs]
+    if jobs_whitelist:
+      disabled_jobs = list(set(disabled_jobs) - set(jobs_whitelist))
+    if disabled_jobs:
+      log.info(
+          'Disabling non-whitelisted jobs configured to be disabled in the '
+          'config file: {0:s}'.format(', '.join(disabled_jobs)))
+      job_names = jobs_manager.JobsManager.FilterJobNames(
+          job_names, disabled_jobs, [])
+
     self.jobs = [job for _, job in jobs_manager.JobsManager.GetJobs(job_names)]
     log.debug('Registered job list: {0:s}'.format(str(job_names)))
 

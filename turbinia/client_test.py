@@ -28,11 +28,14 @@ import textwrap
 import mock
 
 from turbinia import config
-from turbinia.client import TurbiniaClient
+from turbinia import client as TurbiniaClientProvider
 from turbinia.client import TurbiniaServer
 from turbinia.client import TurbiniaStats
 from turbinia.client import TurbiniaPsqWorker
-from turbinia.client import check_dependencies
+from turbinia.client import check_system_dependencies
+from turbinia.client import check_docker_dependencies
+from turbinia.jobs import manager
+from turbinia.jobs import manager_test
 from turbinia import TurbiniaException
 
 SHORT_REPORT = textwrap.dedent(
@@ -205,7 +208,7 @@ class TestTurbiniaClient(unittest.TestCase):
   def testTurbiniaClientInit(self, _, __):
     """Basic test for client."""
     config.LoadConfig()
-    client = TurbiniaClient()
+    client = TurbiniaClientProvider.get_turbinia_client()
     self.assertTrue(hasattr(client, 'task_manager'))
 
   @mock.patch('turbinia.client.GoogleCloudFunction.ExecuteFunction')
@@ -221,7 +224,7 @@ class TestTurbiniaClient(unittest.TestCase):
     gcf_result = json.dumps(gcf_result)
     function_return = {'result': gcf_result}
     mock_cloud_function.return_value = function_return
-    client = TurbiniaClient()
+    client = TurbiniaClientProvider.get_turbinia_client()
     task_data = client.get_task_data('inst', 'proj', 'reg')
     # get_task_data() converts this back into a timedelta(). We returned it
     # seconds from the GCF function call because that is what it is stored in
@@ -235,7 +238,7 @@ class TestTurbiniaClient(unittest.TestCase):
   def testTurbiniaClientGetTaskDataNoResults(self, _, __, mock_cloud_function):
     """Test for exception after empty results from cloud functions."""
     mock_cloud_function.return_value = {}
-    client = TurbiniaClient()
+    client = TurbiniaClientProvider.get_turbinia_client()
     self.assertRaises(
         TurbiniaException, client.get_task_data, "inst", "proj", "reg")
 
@@ -246,7 +249,7 @@ class TestTurbiniaClient(unittest.TestCase):
       self, _, __, mock_cloud_function):
     """Test for exception after bad json results from cloud functions."""
     mock_cloud_function.return_value = {'result': None}
-    client = TurbiniaClient()
+    client = TurbiniaClientProvider.get_turbinia_client()
     self.assertRaises(
         TurbiniaException, client.get_task_data, "inst", "proj", "reg")
 
@@ -255,7 +258,7 @@ class TestTurbiniaClient(unittest.TestCase):
   @mock.patch('turbinia.state_manager.get_state_manager')
   def testClientFormatTaskStatistics(self, _, __, ___):
     """Tests format_task_statistics() report output."""
-    client = TurbiniaClient()
+    client = TurbiniaClientProvider.get_turbinia_client()
     client.get_task_data = mock.MagicMock()
     client.get_task_data.return_value = self.task_data
     stats_report = client.format_task_statistics('inst', 'proj', 'reg')
@@ -267,7 +270,7 @@ class TestTurbiniaClient(unittest.TestCase):
   @mock.patch('turbinia.state_manager.get_state_manager')
   def testClientFormatTaskStatisticsCsv(self, _, __, ___):
     """Tests format_task_statistics() CSV report output."""
-    client = TurbiniaClient()
+    client = TurbiniaClientProvider.get_turbinia_client()
     client.get_task_data = mock.MagicMock()
     client.get_task_data.return_value = self.task_data
     stats_report = client.format_task_statistics(
@@ -280,7 +283,7 @@ class TestTurbiniaClient(unittest.TestCase):
   @mock.patch('turbinia.state_manager.get_state_manager')
   def testClientGetTaskStatistics(self, _, __, ___):
     """Tests get_task_statistics() basic functionality."""
-    client = TurbiniaClient()
+    client = TurbiniaClientProvider.get_turbinia_client()
     client.get_task_data = mock.MagicMock()
     client.get_task_data.return_value = self.task_data
     task_stats = client.get_task_statistics('inst', 'proj', 'reg')
@@ -313,7 +316,7 @@ class TestTurbiniaClient(unittest.TestCase):
   @mock.patch('turbinia.state_manager.get_state_manager')
   def testClientFormatTaskStatus(self, _, __, ___):
     """Tests format_task_status() with empty report_priority."""
-    client = TurbiniaClient()
+    client = TurbiniaClientProvider.get_turbinia_client()
     client.get_task_data = mock.MagicMock()
     self.task_data[0]['report_priority'] = None
     self.task_data[1]['report_priority'] = ''
@@ -327,7 +330,7 @@ class TestTurbiniaClient(unittest.TestCase):
   @mock.patch('turbinia.state_manager.get_state_manager')
   def testClientFormatTaskStatusShortReport(self, _, __, ___):
     """Tests format_task_status() has valid output with short report."""
-    client = TurbiniaClient()
+    client = TurbiniaClientProvider.get_turbinia_client()
     client.get_task_data = mock.MagicMock()
     client.get_task_data.return_value = self.task_data
     result = client.format_task_status('inst', 'proj', 'reg')
@@ -338,7 +341,7 @@ class TestTurbiniaClient(unittest.TestCase):
   @mock.patch('turbinia.state_manager.get_state_manager')
   def testClientFormatTaskStatusFullReport(self, _, __, ___):
     """Tests format_task_status() has valid output with full report."""
-    client = TurbiniaClient()
+    client = TurbiniaClientProvider.get_turbinia_client()
     client.get_task_data = mock.MagicMock()
     client.get_task_data.return_value = self.task_data
     result = client.format_task_status('inst', 'proj', 'reg', full_report=True)
@@ -349,7 +352,7 @@ class TestTurbiniaClient(unittest.TestCase):
   @mock.patch('turbinia.state_manager.get_state_manager')
   def testClientFormatTaskStatusFiles(self, _, __, ___):
     """Tests format_task_status() has valid output with report and files."""
-    client = TurbiniaClient()
+    client = TurbiniaClientProvider.get_turbinia_client()
     client.get_task_data = mock.MagicMock()
     client.get_task_data.return_value = self.task_data
     result = client.format_task_status(
@@ -441,16 +444,19 @@ class TestTurbiniaPsqWorker(unittest.TestCase):
     config.LoadConfig()
     config.OUTPUT_DIR = self.tmp_dir
     config.MOUNT_DIR_PREFIX = self.tmp_dir
-    config.DEPENDENCIES = []
+    config.ParseDependencies = mock.MagicMock(return_value={})
+    self.saved_jobs = manager.JobsManager._job_classes
 
   def tearDown(self):
+    manager.JobsManager._job_classes = self.saved_jobs
     if 'turbinia-test' in self.tmp_dir:
       shutil.rmtree(self.tmp_dir)
 
   @mock.patch('turbinia.client.pubsub')
   @mock.patch('turbinia.client.datastore.Client')
   @mock.patch('turbinia.client.psq.Worker')
-  def testTurbiniaPsqWorkerInit(self, _, __, ___):
+  @mock.patch('turbinia.lib.docker_manager.DockerManager')
+  def testTurbiniaPsqWorkerInit(self, _, __, ___, ____):
     """Basic test for PSQ worker."""
     worker = TurbiniaPsqWorker([], [])
     self.assertTrue(hasattr(worker, 'worker'))
@@ -458,7 +464,8 @@ class TestTurbiniaPsqWorker(unittest.TestCase):
   @mock.patch('turbinia.client.pubsub')
   @mock.patch('turbinia.client.datastore.Client')
   @mock.patch('turbinia.client.psq.Worker')
-  def testTurbiniaClientNoDir(self, _, __, ___):
+  @mock.patch('turbinia.lib.docker_manager.DockerManager')
+  def testTurbiniaClientNoDir(self, _, __, ___, ____):
     """Test that OUTPUT_DIR path is created."""
     config.OUTPUT_DIR = os.path.join(self.tmp_dir, 'no_such_dir')
     TurbiniaPsqWorker([], [])
@@ -467,36 +474,118 @@ class TestTurbiniaPsqWorker(unittest.TestCase):
   @mock.patch('turbinia.client.pubsub')
   @mock.patch('turbinia.client.datastore.Client')
   @mock.patch('turbinia.client.psq.Worker')
-  def testTurbiniaClientIsNonDir(self, _, __, ___):
+  @mock.patch('turbinia.lib.docker_manager.DockerManager')
+  def testTurbiniaClientIsNonDir(self, _, __, ___, ____):
     """Test that OUTPUT_DIR does not point to an existing non-directory."""
     config.OUTPUT_DIR = os.path.join(self.tmp_dir, 'empty_file')
     open(config.OUTPUT_DIR, 'a').close()
     self.assertRaises(TurbiniaException, TurbiniaPsqWorker)
 
-  @mock.patch('turbinia.client.shutil')
-  @mock.patch('logging.Logger.warning')
-  def testDependencyCheck(self, mock_logger, mock_shutil):
-    """Test system dependency check."""
-    dependencies = [{
-        'job': 'PlasoJob',
-        'programs': ['non_exist'],
-        'docker_image': None
-    }]
+  @mock.patch('turbinia.client.config')
+  @mock.patch('turbinia.client.check_directory')
+  @mock.patch('turbinia.client.pubsub')
+  @mock.patch('turbinia.client.datastore.Client')
+  @mock.patch('turbinia.client.psq.Worker')
+  @mock.patch('turbinia.lib.docker_manager.DockerManager')
+  def testTurbiniaClientJobsLists(self, _, __, ___, ____, _____, mock_config):
+    """Test that client job whitelist and blacklists are setup correctly."""
+    mock_config.PSQ_TOPIC = 'foo'
+    manager.JobsManager._job_classes = {}
+    manager.JobsManager.RegisterJob(manager_test.TestJob1)
+    manager.JobsManager.RegisterJob(manager_test.TestJob2)
+    manager.JobsManager.RegisterJob(manager_test.TestJob3)
 
+    # Check blacklist
+    TurbiniaPsqWorker(['testjob1'], [])
+    self.assertListEqual(
+        sorted(list(manager.JobsManager.GetJobNames())),
+        ['testjob2', 'testjob3'])
+    manager.JobsManager.RegisterJob(manager_test.TestJob1)
+
+    # Check blacklist with DISABLED_JOBS config
+    mock_config.DISABLED_JOBS = ['testjob1']
+    TurbiniaPsqWorker(['testjob2'], [])
+    self.assertListEqual(list(manager.JobsManager.GetJobNames()), ['testjob3'])
+    manager.JobsManager.RegisterJob(manager_test.TestJob1)
+    manager.JobsManager.RegisterJob(manager_test.TestJob2)
+    mock_config.DISABLED_JOBS = ['']
+
+    # Check whitelist
+    TurbiniaPsqWorker([], ['testjob1'])
+    self.assertListEqual(list(manager.JobsManager.GetJobNames()), ['testjob1'])
+    manager.JobsManager.RegisterJob(manager_test.TestJob2)
+    manager.JobsManager.RegisterJob(manager_test.TestJob3)
+
+    # Check whitelist of item in DISABLED_JOBS config
+    mock_config.DISABLED_JOBS = ['testjob1', 'testjob2']
+    TurbiniaPsqWorker([], ['testjob1'])
+    self.assertListEqual(list(manager.JobsManager.GetJobNames()), ['testjob1'])
+    manager.JobsManager.RegisterJob(manager_test.TestJob2)
+    manager.JobsManager.RegisterJob(manager_test.TestJob3)
+
+  @mock.patch('turbinia.client.subprocess.Popen')
+  @mock.patch('logging.Logger.warning')
+  def testSystemDependencyCheck(self, mock_logger, peopen_mock):
+    """Test system dependency check."""
+    dependencies = {
+        'plasojob': {
+            'programs': ['non_exist'],
+            'docker_image': None
+        }
+    }
     # Dependency not found.
-    mock_shutil.which.return_value = None
-    self.assertRaises(TurbiniaException, check_dependencies, dependencies)
+    proc_mock = mock.MagicMock()
+    proc_mock.returncode = 1
+    peopen_mock.return_value = proc_mock
+    self.assertRaises(
+        TurbiniaException, check_system_dependencies, dependencies)
 
     # Normal run.
-    mock_shutil.which.return_value = True
-    check_dependencies(dependencies)
+    proc_mock.returncode = 0
+    check_system_dependencies(dependencies)
 
     # Job not found.
-    dependencies[0]['job'] = 'non_exist'
-    check_dependencies(dependencies)
+    dependencies['non_exist'] = dependencies.pop('plasojob')
+    check_system_dependencies(dependencies)
     mock_logger.assert_called_with(
-        'The job: non_exist was not found or has been disabled. '
+        'The job non_exist was not found or has been disabled. '
         'Skipping dependency check...')
 
-    # Bad dependency config.
-    self.assertRaises(TurbiniaException, check_dependencies, [{'test': 'test'}])
+  @mock.patch('turbinia.lib.docker_manager.DockerManager')
+  @mock.patch('turbinia.lib.docker_manager.ContainerManager')
+  @mock.patch('logging.Logger.warning')
+  def testDockerDependencyCheck(
+      self, mock_logger, mock_contmgr, mock_dockermgr):
+    """Test Docker dependency check."""
+    dependencies = {
+        'plasojob': {
+            'programs': ['non_exist'],
+            'docker_image': 'test_img'
+        }
+    }
+
+    # Set up mock objects
+    mock_dm = mock_dockermgr.return_value
+    mock_dm.list_images.return_value = ['test_img']
+    mock_cm = mock_contmgr.return_value
+
+    # Dependency not found.
+    mock_cm.execute_container.return_value = ['non_exist', None, 1]
+    self.assertRaises(
+        TurbiniaException, check_docker_dependencies, dependencies)
+
+    # Normal run
+    mock_cm.execute_container.return_value = ['exists', None, 0]
+    check_docker_dependencies(dependencies)
+
+    # Docker image not found
+    mock_dm.list_images.return_value = ['non_exist']
+    self.assertRaises(
+        TurbiniaException, check_docker_dependencies, dependencies)
+
+    # Job not found.
+    dependencies['non_exist'] = dependencies.pop('plasojob')
+    check_docker_dependencies(dependencies)
+    mock_logger.assert_called_with(
+        'The job non_exist was not found or has been disabled. '
+        'Skipping dependency check...')

@@ -25,13 +25,6 @@ import sys
 from setuptools import find_packages
 from setuptools import setup
 
-try:  # for pip >= 10
-  from pip._internal.download import PipSession
-  from pip._internal.req import parse_requirements
-except ImportError:  # for pip <= 9.0.3
-  from pip.download import PipSession
-  from pip.req import parse_requirements
-
 
 # make sure turbinia is in path
 sys.path.insert(0, '.')
@@ -46,6 +39,9 @@ turbinia_description = (
     'large amounts of evidence, and decreasing response time by parallelizing'
     'processing where possible.')
 
+requirements = []
+with open('requirements.txt','r') as f:
+  requirements = f.read().splitlines()
 setup(
     name='turbinia',
     version=turbinia.__version__,
@@ -65,9 +61,7 @@ setup(
     include_package_data=True,
     zip_safe=False,
     entry_points={'console_scripts': ['turbiniactl=turbinia.turbiniactl:main']},
-    install_requires=[str(req.req) for req in parse_requirements(
-        'requirements.txt', session=PipSession())
-    ],
+    install_requires=requirements,
     extras_require={
         'dev': ['mock', 'nose', 'yapf', 'celery~=4.1', 'coverage'],
         'local': ['celery~=4.1', 'kombu~=4.1', 'redis~=3.0'],

@@ -18,6 +18,8 @@ from __future__ import unicode_literals
 
 import mock
 
+from turbinia import config
+from turbinia import TurbiniaException
 from turbinia import task_manager
 from turbinia.jobs import manager as jobs_manager
 from turbinia.jobs import plaso
@@ -35,6 +37,11 @@ class TestTaskManager(TestTurbiniaTaskBase):
     self.manager = task_manager.BaseTaskManager()
     self.job1 = plaso.PlasoJob()
     self.job2 = strings.StringsJob()
+    self.saved_jobs = jobs_manager.JobsManager._job_classes
+
+  def tearDown(self):
+    """Tears down the test class."""
+    jobs_manager.JobsManager._job_classes = self.saved_jobs
 
   def testTaskManagerTasksProperty(self):
     """Basic test for task_manager Tasks property."""
@@ -43,6 +50,40 @@ class TestTaskManager(TestTurbiniaTaskBase):
     job.tasks.extend([self.task, self.task])
     self.manager.running_jobs.extend([job, job])
     self.assertEqual(len(self.manager.tasks), 4)
+
+  @mock.patch('turbinia.task_manager.config')
+  @mock.patch('turbinia.task_manager.jobs_manager.JobsManager.GetJobs')
+  @mock.patch('turbinia.task_manager.jobs_manager.JobsManager.GetJobNames')
+  @mock.patch('turbinia.task_manager.BaseTaskManager._backend_setup')
+  def testTaskManagerSetupBlacklist(
+      self, _, mock_get_job_names, mock_get_jobs, mock_config):
+    """Test Task manager setup sets up correct set of jobs."""
+
+    all_jobs = ['job1', 'job2', 'job3', 'job4', 'job5']
+    jobs_blacklist = ['job1']
+    disabled_jobs = ['job2', 'job3']
+    mock_config.DISABLED_JOBS = disabled_jobs
+    mock_get_job_names.return_value = all_jobs
+    mock_get_jobs.side_effect = lambda jobs: [(name, name) for name in jobs]
+
+    # Test blacklist along with disabled list in config
+    self.manager.setup(jobs_blacklist, [])
+    self.assertListEqual(sorted(self.manager.jobs), ['job4', 'job5'])
+
+    # Test only disabled list in config
+    self.manager.setup([], [])
+    self.assertListEqual(sorted(self.manager.jobs), ['job1', 'job4', 'job5'])
+
+    # Test whitelist of item in disabled list
+    self.manager.setup([], ['job2'])
+    self.assertListEqual(self.manager.jobs, ['job2'])
+
+    # Test whitelist of item not in disabled list
+    self.manager.setup([], ['job4'])
+    self.assertListEqual(self.manager.jobs, ['job4'])
+
+    # Test whitelist and blacklist both specified
+    self.assertRaises(TurbiniaException, self.manager.setup, ['job1'], ['job2'])
 
   def testAddEvidence(self):
     """Tests add_evidence method."""
@@ -181,7 +222,8 @@ class TestTaskManager(TestTurbiniaTaskBase):
     self.assertIsNone(self.manager.process_result(self.result))
     self.assertIsInstance(self.result.evidence, list)
 
-  def testFinalizeJobGenerateJobFinalizeTasks(self):
+  @mock.patch('turbinia.task_manager.state_manager.get_state_manager')
+  def testFinalizeJobGenerateJobFinalizeTasks(self, _):
     """Tests process_job method generates Job finalize Task."""
     request_id = 'testRequestID'
     self.task.id = 'createdFinalizeTask'
