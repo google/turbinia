@@ -427,7 +427,7 @@ class BaseTurbiniaClient(object):
     if user:
       func_args.update({'user': user})
 
-    response = cloud_function.ExecuteFunction(function_name, func_args)
+    response = cloud_function.ExecuteFunction(function_name, region, func_args)
     if 'result' not in response:
       log.error('No results found')
       if response.get('error', '{}') != '{}':
@@ -812,7 +812,7 @@ class BaseTurbiniaClient(object):
         'user': user,
         'requester': requester
     }
-    response = cloud_function.ExecuteFunction('closetasks', func_args)
+    response = cloud_function.ExecuteFunction('closetasks', region, func_args)
     return 'Closed Task IDs: %s' % response.get('result')
 
 
