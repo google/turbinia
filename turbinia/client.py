@@ -95,7 +95,7 @@ if config.TASK_MANAGER.lower() == 'psq':
   from google.cloud import datastore
   from google.cloud import pubsub
 
-  from turbinia.lib.google_cloud import GoogleCloudFunction
+  from libcloudforensics.providers.gcp.internal import function as gcp_function
 elif config.TASK_MANAGER.lower() == 'celery':
   from turbinia.state_manager import RedisStateManager
 
@@ -410,7 +410,7 @@ class BaseTurbiniaClient(object):
     Returns:
       List of Task dict objects.
     """
-    cloud_function = GoogleCloudFunction(project_id=project, region=region)
+    cloud_function = gcp_function.GoogleCloudFunction(project)
     func_args = {'instance': instance, 'kind': 'TurbiniaTask'}
 
     if days:
@@ -803,7 +803,7 @@ class BaseTurbiniaClient(object):
 
     Returns: String of closed Task IDs.
     """
-    cloud_function = GoogleCloudFunction(project_id=project, region=region)
+    cloud_function = gcp_function.GoogleCloudFunction(project)
     func_args = {
         'instance': instance,
         'kind': 'TurbiniaTask',

@@ -12,4 +12,4 @@ psq
 six
 urllib3[secure]
 docker
-libcloudforensics
+libcloudforensics==20200609
