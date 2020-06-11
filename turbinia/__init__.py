@@ -14,7 +14,7 @@
 # limitations under the License.
 """Main Turbinia application."""
 
-__version__ = '20190819.9'
+__version__ = '20190819.10'
 
 
 class TurbiniaException(Exception):
