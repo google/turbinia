@@ -469,7 +469,8 @@ def main():
       log.error('Turbinia project must be set by --project or in config')
       sys.exit(1)
 
-    if args.project and args.project != config.TURBINIA_PROJECT:
+    if ((args.project and args.project != config.TURBINIA_PROJECT) or
+        (args.zone and args.zone != config.TURBINIA_ZONE)):
       new_disk = libcloudforensics.create_disk_copy(
           args.project, config.TURBINIA_PROJECT, None, config.TURBINIA_ZONE,
           args.disk_name)
