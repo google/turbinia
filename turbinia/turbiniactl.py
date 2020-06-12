@@ -532,8 +532,18 @@ def main():
   elif args.command == 'directory':
     args.name = args.name if args.name else args.source_path
     source_path = os.path.abspath(args.source_path)
-    evidence_ = evidence.Directory(
-        name=args.name, source_path=source_path, source=args.source)
+
+    if not config.SHARED_FILESYSTEM:
+      log.info(
+          'A Cloud Only Architecture has been detected. '
+          'Compressing the directory for GCS upload.')
+      source_path = archive.CompressDirectory(source_path, output_path='/tmp')
+      args.name = args.name if args.name else source_path
+      evidence_ = evidence.CompressedDirectory(
+          name=args.name, source_path=source_path, source=args.source)
+    else:
+      evidence_ = evidence.Directory(
+          name=args.name, source_path=source_path, source=args.source)
   elif args.command == 'compressedirectory':
     archive.ValidateTarFile(args.source_path)
     args.name = args.name if args.name else args.source_path
