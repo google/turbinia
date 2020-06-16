@@ -1,0 +1,1 @@
+docker push gcr.io/ramses-test3/turbinia-server:$1
