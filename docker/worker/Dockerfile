@@ -1,4 +1,3 @@
-# FROM python:3.8-slim-buster
 FROM ubuntu:18.04
 
 RUN apt-get update && apt-get -y install python-pip software-properties-common \
@@ -18,7 +17,6 @@ RUN apt-get -y install python-plaso plaso-tools --option Acquire::ForceIPv4=true
 
 # Install Hindsight
 RUN pip install pyhindsight
-
 
 RUN useradd -r -s /bin/nologin -G disk turbinia
 RUN echo "turbinia ALL = (root) NOPASSWD: /bin/mount,/bin/umount,/sbin/losetup" > /etc/sudoers.d/turbinia

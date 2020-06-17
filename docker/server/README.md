@@ -23,5 +23,3 @@ docker run -ti \
 -e TURBINIA_CONF=`cat turbinia.conf.b64` \
 turbinia-server:dev
 ```
-
-
