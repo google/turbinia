@@ -1,1 +1,1 @@
-docker push gcr.io/ramses-test3/turbinia-server:$1
+docker push gcr.io/oss-forensics-registry/turbinia/turbinia-server:$1
