@@ -1,4 +1,5 @@
 ## Docker configuration file for the Turbinia worker
+This Docker configuration is for building Turbinia worker and server images to be run on GCP (with Terraform) or in a Hybrid local/GCP setup.
 
 ### Build the image
 ```
