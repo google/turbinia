@@ -1,8 +1,11 @@
-FROM python:3.8-slim-buster
+FROM ubuntu:18.04
 
-RUN apt-get update && apt-get -y install python-pip
+RUN apt-get update && apt-get -y install python-pip software-properties-common \
+ca-certificates apt-transport-https apt-utils \
+libterm-readline-gnu-perl software-properties-common \
+wget curl sudo
+
 RUN pip install urllib3 cryptography --upgrade
-
 RUN pip install turbinia
 
 RUN useradd -r -s /bin/nologin -G disk turbinia
