@@ -1,9 +1,13 @@
 FROM ubuntu:18.04
 
-RUN apt-get update && apt-get -y install python-pip software-properties-common \
-ca-certificates apt-transport-https apt-utils \
-libterm-readline-gnu-perl software-properties-common \
-wget curl sudo
+RUN apt-get update && apt-get -y install \
+apt-transport-https \
+apt-utils \
+ca-certificates \
+libterm-readline-gnu-perl \
+python-pip \
+software-properties-common \
+&& rm -rf /var/lib/apt/lists/*
 
 RUN pip install urllib3 cryptography --upgrade
 RUN pip install turbinia
