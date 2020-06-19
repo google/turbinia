@@ -60,8 +60,8 @@ $ turbiniactl --help
 usage: turbiniactl [-h] [-q] [-v] [-d] [-a] [-c CONFIG_FILE]
                    [-C RECIPE_CONFIG] [-f] [-o OUTPUT_DIR] [-L LOG_FILE]
                    [-r REQUEST_ID] [-R] [-S] [-V] [-D]
-                   [-F FILTER_PATTERNS_FILE] [-j JOBS_WHITELIST]
-                   [-J JOBS_BLACKLIST] [-p POLL_INTERVAL] [-t TASK] [-w]
+                   [-F FILTER_PATTERNS_FILE] [-j JOBS_ALLOWLIST]
+                   [-J JOBS_DENYLIST] [-p POLL_INTERVAL] [-t TASK] [-w]
                    <command> ...
 
 optional arguments:
@@ -103,8 +103,8 @@ optional arguments:
                         filter text based evidence files with (in extended
                         grep regex format). This filtered output will be in
                         addition to the complete output
-  -j JOBS_WHITELIST, --jobs_whitelist JOBS_WHITELIST
-                        A whitelist for Jobs that will be allowed to run (in
+  -j JOBS_ALLOWLIST, --jobs_allowlist JOBS_ALLOWLIST
+                        A allowlist for Jobs that will be allowed to run (in
                         CSV format, no spaces). This will not force them to
                         run if they are not configured to. This is applied
                         both at server start time and when the client makes a
@@ -112,9 +112,9 @@ optional arguments:
                         the change is persistent while the server is running.
                         When applied by the client, it will only affect that
                         processing request.
-  -J JOBS_BLACKLIST, --jobs_blacklist JOBS_BLACKLIST
-                        A blacklist for Jobs we will not allow to run. See
-                        --jobs_whitelist help for details on format and when
+  -J JOBS_DENYLIST, --jobs_denylist JOBS_DENYLIST
+                        A denylist for Jobs we will not allow to run. See
+                        --jobs_allowlist help for details on format and when
                         it is applied.
   -p POLL_INTERVAL, --poll_interval POLL_INTERVAL
                         Number of seconds to wait between polling for task

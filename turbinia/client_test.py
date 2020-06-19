@@ -488,21 +488,21 @@ class TestTurbiniaPsqWorker(unittest.TestCase):
   @mock.patch('turbinia.client.psq.Worker')
   @mock.patch('turbinia.lib.docker_manager.DockerManager')
   def testTurbiniaClientJobsLists(self, _, __, ___, ____, _____, mock_config):
-    """Test that client job whitelist and blacklists are setup correctly."""
+    """Test that client job allowlist and denylists are setup correctly."""
     mock_config.PSQ_TOPIC = 'foo'
     manager.JobsManager._job_classes = {}
     manager.JobsManager.RegisterJob(manager_test.TestJob1)
     manager.JobsManager.RegisterJob(manager_test.TestJob2)
     manager.JobsManager.RegisterJob(manager_test.TestJob3)
 
-    # Check blacklist
+    # Check denylist
     TurbiniaPsqWorker(['testjob1'], [])
     self.assertListEqual(
         sorted(list(manager.JobsManager.GetJobNames())),
         ['testjob2', 'testjob3'])
     manager.JobsManager.RegisterJob(manager_test.TestJob1)
 
-    # Check blacklist with DISABLED_JOBS config
+    # Check denylist with DISABLED_JOBS config
     mock_config.DISABLED_JOBS = ['testjob1']
     TurbiniaPsqWorker(['testjob2'], [])
     self.assertListEqual(list(manager.JobsManager.GetJobNames()), ['testjob3'])
@@ -510,13 +510,13 @@ class TestTurbiniaPsqWorker(unittest.TestCase):
     manager.JobsManager.RegisterJob(manager_test.TestJob2)
     mock_config.DISABLED_JOBS = ['']
 
-    # Check whitelist
+    # Check allowlist
     TurbiniaPsqWorker([], ['testjob1'])
     self.assertListEqual(list(manager.JobsManager.GetJobNames()), ['testjob1'])
     manager.JobsManager.RegisterJob(manager_test.TestJob2)
     manager.JobsManager.RegisterJob(manager_test.TestJob3)
 
-    # Check whitelist of item in DISABLED_JOBS config
+    # Check allowlist of item in DISABLED_JOBS config
     mock_config.DISABLED_JOBS = ['testjob1', 'testjob2']
     TurbiniaPsqWorker([], ['testjob1'])
     self.assertListEqual(list(manager.JobsManager.GetJobNames()), ['testjob1'])
