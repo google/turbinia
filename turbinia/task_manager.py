@@ -121,17 +121,17 @@ class BaseTaskManager(object):
     """
     raise NotImplementedError
 
-  def setup(self, jobs_blacklist=None, jobs_whitelist=None, *args, **kwargs):
+  def setup(self, jobs_denylist=None, jobs_allowlist=None, *args, **kwargs):
     """Does setup of Task manager and its dependencies.
 
     Args:
-      jobs_blacklist (list): Jobs that will be excluded from running
-      jobs_whitelist (list): The only Jobs will be included to run
+      jobs_denylist (list): Jobs that will be excluded from running
+      jobs_allowlist (list): The only Jobs will be included to run
     """
     self._backend_setup(*args, **kwargs)
     job_names = jobs_manager.JobsManager.GetJobNames()
-    if jobs_blacklist or jobs_whitelist:
-      selected_jobs = jobs_blacklist or jobs_whitelist
+    if jobs_denylist or jobs_allowlist:
+      selected_jobs = jobs_denylist or jobs_allowlist
       for job in selected_jobs:
         if job.lower() not in job_names:
           msg = (
@@ -140,19 +140,19 @@ class BaseTaskManager(object):
           log.error(msg)
           raise TurbiniaException(msg)
       log.info(
-          'Filtering Jobs with whitelist {0!s} and blacklist {1!s}'.format(
-              jobs_whitelist, jobs_blacklist))
+          'Filtering Jobs with allowlist {0!s} and denylist {1!s}'.format(
+              jobs_allowlist, jobs_denylist))
       job_names = jobs_manager.JobsManager.FilterJobNames(
-          job_names, jobs_blacklist, jobs_whitelist)
+          job_names, jobs_denylist, jobs_allowlist)
 
-    # Disable any jobs from the config that were not previously whitelisted.
+    # Disable any jobs from the config that were not previously allowlisted.
     disabled_jobs = list(config.DISABLED_JOBS) if config.DISABLED_JOBS else []
     disabled_jobs = [j.lower() for j in disabled_jobs]
-    if jobs_whitelist:
-      disabled_jobs = list(set(disabled_jobs) - set(jobs_whitelist))
+    if jobs_allowlist:
+      disabled_jobs = list(set(disabled_jobs) - set(jobs_allowlist))
     if disabled_jobs:
       log.info(
-          'Disabling non-whitelisted jobs configured to be disabled in the '
+          'Disabling non-allowlisted jobs configured to be disabled in the '
           'config file: {0:s}'.format(', '.join(disabled_jobs)))
       job_names = jobs_manager.JobsManager.FilterJobNames(
           job_names, disabled_jobs, [])
@@ -176,14 +176,14 @@ class BaseTaskManager(object):
           'Jobs must be registered before evidence can be added')
     log.info('Adding new evidence: {0:s}'.format(str(evidence_)))
     job_count = 0
-    jobs_whitelist = evidence_.config.get('jobs_whitelist', [])
-    jobs_blacklist = evidence_.config.get('jobs_blacklist', [])
-    if jobs_blacklist or jobs_whitelist:
+    jobs_allowlist = evidence_.config.get('jobs_allowlist', [])
+    jobs_denylist = evidence_.config.get('jobs_denylist', [])
+    if jobs_denylist or jobs_allowlist:
       log.info(
-          'Filtering Jobs with whitelist {0!s} and blacklist {1!s}'.format(
-              jobs_whitelist, jobs_blacklist))
+          'Filtering Jobs with allowlist {0!s} and denylist {1!s}'.format(
+              jobs_allowlist, jobs_denylist))
       jobs_list = jobs_manager.JobsManager.FilterJobObjects(
-          self.jobs, jobs_blacklist, jobs_whitelist)
+          self.jobs, jobs_denylist, jobs_allowlist)
     else:
       jobs_list = self.jobs
 

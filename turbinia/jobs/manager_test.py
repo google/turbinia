@@ -76,8 +76,8 @@ class JobsManagerTest(unittest.TestCase):
 
     self.assertEqual(number_of_jobs, len(manager.JobsManager._job_classes))
 
-  def testJobDeregistrationWithUnknownWhitelist(self):
-    """Test that deregistration throws error when whitelisting unknown Job."""
+  def testJobDeregistrationWithUnknownAllowlist(self):
+    """Test that deregistration throws error when allowlisting unknown Job."""
     self.assertRaises(
         TurbiniaException, manager.JobsManager.DeregisterJobs, [], ['NoJob'])
 
@@ -105,49 +105,49 @@ class JobsManagerTest(unittest.TestCase):
     """Test FilterJobNames() with no filters."""
     job_names = ['testjob1', 'testjob2']
     return_job_names = manager.JobsManager.FilterJobNames(
-        job_names, jobs_blacklist=[], jobs_whitelist=[])
+        job_names, jobs_denylist=[], jobs_allowlist=[])
     self.assertListEqual(job_names, return_job_names)
 
-  def testFilterJobNamesBlackList(self):
-    """Test FilterJobNames() with jobs_blacklist."""
+  def testFilterJobNamesDenyList(self):
+    """Test FilterJobNames() with jobs_denylist."""
     job_names = ['testjob1', 'testjob2']
     return_job_names = manager.JobsManager.FilterJobNames(
-        job_names, jobs_blacklist=[job_names[0]], jobs_whitelist=[])
+        job_names, jobs_denylist=[job_names[0]], jobs_allowlist=[])
     self.assertListEqual(job_names[1:], return_job_names)
 
-  def testFilterJobObjectsBlackList(self):
-    """Test FilterJobObjects() with jobs_blacklist and objects."""
+  def testFilterJobObjectsDenyList(self):
+    """Test FilterJobObjects() with jobs_denylist and objects."""
     jobs = [TestJob1(), TestJob2()]
     return_jobs = manager.JobsManager.FilterJobObjects(
-        jobs, jobs_blacklist=[jobs[0].name], jobs_whitelist=[])
+        jobs, jobs_denylist=[jobs[0].name], jobs_allowlist=[])
     self.assertListEqual(jobs[1:], return_jobs)
 
-  def testFilterJobNamesWhiteList(self):
-    """Test FilterJobNames() with jobs_whitelist."""
+  def testFilterJobNamesAllowList(self):
+    """Test FilterJobNames() with jobs_allowlist."""
     job_names = ['testjob1', 'testjob2']
     return_job_names = manager.JobsManager.FilterJobNames(
-        job_names, jobs_blacklist=[], jobs_whitelist=[job_names[0]])
+        job_names, jobs_denylist=[], jobs_allowlist=[job_names[0]])
     self.assertListEqual(job_names[:1], return_job_names)
 
-  def testFilterJobObjectsWhiteList(self):
-    """Test FilterJobObjects() with jobs_whitelist."""
+  def testFilterJobObjectsAllowList(self):
+    """Test FilterJobObjects() with jobs_allowlist."""
     jobs = [TestJob1(), TestJob2()]
     return_jobs = manager.JobsManager.FilterJobObjects(
-        jobs, jobs_blacklist=[], jobs_whitelist=[jobs[1].name])
+        jobs, jobs_denylist=[], jobs_allowlist=[jobs[1].name])
     self.assertListEqual(jobs[1:], return_jobs)
 
   def testFilterJobNamesException(self):
-    """Test FilterJobNames() with both jobs_blacklist and jobs_whitelist."""
+    """Test FilterJobNames() with both jobs_denylist and jobs_allowlist."""
     job_names = ['testjob1', 'testjob2']
     self.assertRaises(
         TurbiniaException, manager.JobsManager.FilterJobNames, job_names,
-        jobs_blacklist=['a'], jobs_whitelist=['b'])
+        jobs_denylist=['a'], jobs_allowlist=['b'])
 
   def testFilterJobNamesMixedCase(self):
     """Test FilterJobNames() with mixed case inputs."""
     job_names = ['testjob1', 'testjob2']
     return_job_names = manager.JobsManager.FilterJobNames(
-        job_names, jobs_blacklist=[], jobs_whitelist=['TESTJOB1'])
+        job_names, jobs_denylist=[], jobs_allowlist=['TESTJOB1'])
     self.assertListEqual(job_names[:1], return_job_names)
 
 

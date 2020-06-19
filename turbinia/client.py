@@ -865,16 +865,16 @@ class TurbiniaServer(object):
     task_manager (TaskManager): An object to manage turbinia tasks.
   """
 
-  def __init__(self, jobs_blacklist=None, jobs_whitelist=None):
+  def __init__(self, jobs_denylist=None, jobs_allowlist=None):
     """Initializes Turbinia Server.
 
     Args:
-      jobs_blacklist (Optional[list[str]]): Jobs we will exclude from running
-      jobs_whitelist (Optional[list[str]]): The only Jobs we will include to run
+      jobs_denylist (Optional[list[str]]): Jobs we will exclude from running
+      jobs_allowlist (Optional[list[str]]): The only Jobs we will include to run
     """
     config.LoadConfig()
     self.task_manager = task_manager.get_task_manager()
-    self.task_manager.setup(jobs_blacklist, jobs_whitelist)
+    self.task_manager.setup(jobs_denylist, jobs_allowlist)
 
   def start(self):
     """Start Turbinia Server."""
@@ -893,26 +893,26 @@ class TurbiniaCeleryWorker(BaseTurbiniaClient):
     worker (celery.app): Celery worker app
   """
 
-  def __init__(self, jobs_blacklist=None, jobs_whitelist=None):
+  def __init__(self, jobs_denylist=None, jobs_allowlist=None):
     """Initialization for celery worker.
 
     Args:
-      jobs_blacklist (Optional[list[str]]): Jobs we will exclude from running
-      jobs_whitelist (Optional[list[str]]): The only Jobs we will include to run
+      jobs_denylist (Optional[list[str]]): Jobs we will exclude from running
+      jobs_allowlist (Optional[list[str]]): The only Jobs we will include to run
     """
     super(TurbiniaCeleryWorker, self).__init__()
-    # Deregister jobs from blacklist/whitelist.
-    job_manager.JobsManager.DeregisterJobs(jobs_blacklist, jobs_whitelist)
+    # Deregister jobs from denylist/allowlist.
+    job_manager.JobsManager.DeregisterJobs(jobs_denylist, jobs_allowlist)
     disabled_jobs = list(config.DISABLED_JOBS) if config.DISABLED_JOBS else []
     disabled_jobs = [j.lower() for j in disabled_jobs]
-    # Only actually disable jobs that have not been whitelisted.
-    if jobs_whitelist:
-      disabled_jobs = list(set(disabled_jobs) - set(jobs_whitelist))
+    # Only actually disable jobs that have not been allowlisted.
+    if jobs_allowlist:
+      disabled_jobs = list(set(disabled_jobs) - set(jobs_allowlist))
     if disabled_jobs:
       log.info(
-          'Disabling non-whitelisted jobs configured to be disabled in the '
+          'Disabling non-allowlisted jobs configured to be disabled in the '
           'config file: {0:s}'.format(', '.join(disabled_jobs)))
-      job_manager.JobsManager.DeregisterJobs(jobs_blacklist=disabled_jobs)
+      job_manager.JobsManager.DeregisterJobs(jobs_denylist=disabled_jobs)
 
     # Check for valid dependencies/directories.
     dependencies = config.ParseDependencies()
@@ -948,12 +948,12 @@ class TurbiniaPsqWorker(object):
     TurbiniaException: When errors occur
   """
 
-  def __init__(self, jobs_blacklist=None, jobs_whitelist=None):
+  def __init__(self, jobs_denylist=None, jobs_allowlist=None):
     """Initialization for PSQ Worker.
 
     Args:
-      jobs_blacklist (Optional[list[str]]): Jobs we will exclude from running
-      jobs_whitelist (Optional[list[str]]): The only Jobs we will include to run
+      jobs_denylist (Optional[list[str]]): Jobs we will exclude from running
+      jobs_allowlist (Optional[list[str]]): The only Jobs we will include to run
     """
     config.LoadConfig()
     psq_publisher = pubsub.PublisherClient()
@@ -968,18 +968,18 @@ class TurbiniaPsqWorker(object):
       log.error(msg)
       raise TurbiniaException(msg)
 
-    # Deregister jobs from blacklist/whitelist.
-    job_manager.JobsManager.DeregisterJobs(jobs_blacklist, jobs_whitelist)
+    # Deregister jobs from denylist/allowlist.
+    job_manager.JobsManager.DeregisterJobs(jobs_denylist, jobs_allowlist)
     disabled_jobs = list(config.DISABLED_JOBS) if config.DISABLED_JOBS else []
     disabled_jobs = [j.lower() for j in disabled_jobs]
-    # Only actually disable jobs that have not been whitelisted.
-    if jobs_whitelist:
-      disabled_jobs = list(set(disabled_jobs) - set(jobs_whitelist))
+    # Only actually disable jobs that have not been allowlisted.
+    if jobs_allowlist:
+      disabled_jobs = list(set(disabled_jobs) - set(jobs_allowlist))
     if disabled_jobs:
       log.info(
-          'Disabling non-whitelisted jobs configured to be disabled in the '
+          'Disabling non-allowlisted jobs configured to be disabled in the '
           'config file: {0:s}'.format(', '.join(disabled_jobs)))
-      job_manager.JobsManager.DeregisterJobs(jobs_blacklist=disabled_jobs)
+      job_manager.JobsManager.DeregisterJobs(jobs_denylist=disabled_jobs)
 
     # Check for valid dependencies/directories.
     dependencies = config.ParseDependencies()
