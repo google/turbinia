@@ -108,7 +108,7 @@ def main():
       'This filtered output will be in addition to the complete output')
   parser.add_argument(
       '-j', '--jobs_allowlist', default=[], type=csv_list,
-      help='A allowlist for Jobs that will be allowed to run (in CSV format, '
+      help='An allowlist for Jobs that will be allowed to run (in CSV format, '
       'no spaces). This will not force them to run if they are not configured '
       'to. This is applied both at server start time and when the client makes '
       'a processing request. When applied at server start time the change is '

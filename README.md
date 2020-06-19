@@ -104,7 +104,7 @@ optional arguments:
                         grep regex format). This filtered output will be in
                         addition to the complete output
   -j JOBS_ALLOWLIST, --jobs_allowlist JOBS_ALLOWLIST
-                        A allowlist for Jobs that will be allowed to run (in
+                        An allowlist for Jobs that will be allowed to run (in
                         CSV format, no spaces). This will not force them to
                         run if they are not configured to. This is applied
                         both at server start time and when the client makes a
