@@ -432,9 +432,10 @@ class BaseTurbiniaClient(object):
     if user:
       func_args.update({'user': user})
 
+    response = None
     retry_count = 0
     credential_error_count = 0
-    while retry_count < MAX_RETRIES:
+    while not response and retry_count < MAX_RETRIES:
       try:
         response = cloud_function.ExecuteFunction(
             function_name, region, func_args)
