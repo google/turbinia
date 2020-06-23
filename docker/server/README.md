@@ -13,7 +13,7 @@ base64 -w 0 turbinia.conf > turbinia.conf.b64
 -w 0 will output without column wrapping (not needed on OSX).
 
 ### Hybrid GCP - setup credentials
-See https://cloud.google.com/docs/authentication/getting-started and download the credentials to ./gcp/creds.json
+Create a service account with the correct scope by following the instructions [here](https://github.com/google/turbinia/blob/master/docs/install-manual.md#gcp-installation) and download the credentials to ./gcp/creds.json
 
 ### Run the worker
 ```
