@@ -14,7 +14,7 @@ RUN pip install turbinia
 
 RUN useradd -r -s /bin/nologin -G disk turbinia
 
-RUN mkdir /etc/turbinia && mkdir -p /mnt/turbinia/ mkdir -p /var/lib/turbinia/ \
+RUN mkdir /etc/turbinia && mkdir -p /mnt/turbinia/ && mkdir -p /var/lib/turbinia/ \
 && mkdir -p /var/log/turbinia/ && chown -R turbinia:turbinia /mnt/turbinia/ \
 && mkdir -p /etc/turbinia/ \
 && chown -R turbinia:turbinia /var/lib/turbinia/ \
