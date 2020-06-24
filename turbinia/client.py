@@ -328,8 +328,7 @@ class TurbiniaClient(object):
     credential_error_count = 0
     while response is None and retry_count < MAX_RETRIES:
       try:
-        response = cloud_function.ExecuteFunction(
-            function_name, region, func_args)
+        response = cloud_function.ExecuteFunction(function_name, func_args)
       except auth.exceptions.RefreshError as exception:
         if credential_error_count == 0:
           log.info(

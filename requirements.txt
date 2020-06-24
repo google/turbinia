@@ -1,5 +1,6 @@
 filelock
 google-api-core
+google-auth
 google-cloud-datastore
 google-api-python-client
 google-cloud-pubsub
