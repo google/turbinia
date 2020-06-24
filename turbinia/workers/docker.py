@@ -24,6 +24,7 @@ from turbinia import TurbiniaException
 from turbinia.evidence import DockerContainer
 from turbinia.workers import Priority
 from turbinia.workers import TurbiniaTask
+from turbinia.lib.docker_manager import GetDockerPath
 
 log = logging.getLogger('turbinia')
 
@@ -48,23 +49,14 @@ class DockerContainersEnumerationTask(TurbiniaTask):
       TurbiniaException: when the docker-explorer tool failed to run.
     """
 
-    docker_dir = os.path.join(evidence.mount_path, 'var', 'lib', 'docker')
+    docker_dir = GetDockerPath(evidence.mount_path)
 
     containers_info = None
-
-    de_binary = None
-    for path in os.environ['PATH'].split(os.pathsep):
-      tentative_path = os.path.join(path, 'de.py')
-      if os.path.exists(tentative_path):
-        de_binary = tentative_path
-        break
-    if not de_binary:
-      raise TurbiniaException('Could not find docker-explorer script: de.py')
 
     # TODO(rgayon): use docker-explorer exposed constant when
     # https://github.com/google/docker-explorer/issues/80 is in.
     docker_explorer_command = [
-        'sudo', de_binary, '-r', docker_dir, 'list', 'all_containers'
+        'sudo', 'de.py', '-r', docker_dir, 'list', 'all_containers'
     ]
     log.info('Running {0:s}'.format(' '.join(docker_explorer_command)))
     try:

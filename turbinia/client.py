@@ -42,6 +42,7 @@ from turbinia.workers import Priority
 from turbinia.workers.artifact import FileArtifactExtractionTask
 from turbinia.workers.analysis.wordpress import WordpressAccessLogAnalysisTask
 from turbinia.workers.analysis.jenkins import JenkinsAnalysisTask
+from turbinia.workers.analysis.jupyter import JupyterAnalysisTask
 from turbinia.workers.finalize_request import FinalizeRequestTask
 from turbinia.workers.docker import DockerContainersEnumerationTask
 from turbinia.workers.grep import GrepTask
@@ -49,6 +50,7 @@ from turbinia.workers.hadoop import HadoopAnalysisTask
 from turbinia.workers.hindsight import HindsightTask
 from turbinia.workers.plaso import PlasoTask
 from turbinia.workers.psort import PsortTask
+from turbinia.workers.redis import RedisAnalysisTask
 from turbinia.workers.sshd import SSHDAnalysisTask
 from turbinia.workers.strings import StringsAsciiTask
 from turbinia.workers.strings import StringsUnicodeTask
@@ -66,11 +68,13 @@ TASK_MAP = {
     'wordpressaccessloganalysistask': WordpressAccessLogAnalysisTask,
     'finalizerequesttask': FinalizeRequestTask,
     'jenkinsanalysistask': JenkinsAnalysisTask,
+    'JupyterAnalysisTask': JupyterAnalysisTask,
     'greptask': GrepTask,
     'hadoopanalysistask': HadoopAnalysisTask,
     'hindsighttask': HindsightTask,
     'plasotask': PlasoTask,
     'psorttask': PsortTask,
+    'redisanalysistask': RedisAnalysisTask,
     'sshdanalysistask': SSHDAnalysisTask,
     'stringsasciitask': StringsAsciiTask,
     'stringsunicodetask': StringsUnicodeTask,
@@ -91,7 +95,7 @@ if config.TASK_MANAGER.lower() == 'psq':
   from google.cloud import datastore
   from google.cloud import pubsub
 
-  from turbinia.lib.google_cloud import GoogleCloudFunction
+  from libcloudforensics.providers.gcp.internal import function as gcp_function
 elif config.TASK_MANAGER.lower() == 'celery':
   from turbinia.state_manager import RedisStateManager
 
@@ -406,7 +410,7 @@ class BaseTurbiniaClient(object):
     Returns:
       List of Task dict objects.
     """
-    cloud_function = GoogleCloudFunction(project_id=project, region=region)
+    cloud_function = gcp_function.GoogleCloudFunction(project)
     func_args = {'instance': instance, 'kind': 'TurbiniaTask'}
 
     if days:
@@ -423,7 +427,7 @@ class BaseTurbiniaClient(object):
     if user:
       func_args.update({'user': user})
 
-    response = cloud_function.ExecuteFunction(function_name, func_args)
+    response = cloud_function.ExecuteFunction(function_name, region, func_args)
     if 'result' not in response:
       log.error('No results found')
       if response.get('error', '{}') != '{}':
@@ -697,6 +701,8 @@ class BaseTurbiniaClient(object):
     Returns:
       String of task status
     """
+    if user and days == 0:
+      days = 1000
     task_results = self.get_task_data(
         instance, project, region, days, task_id, request_id, user)
     if not task_results:
@@ -797,7 +803,7 @@ class BaseTurbiniaClient(object):
 
     Returns: String of closed Task IDs.
     """
-    cloud_function = GoogleCloudFunction(project_id=project, region=region)
+    cloud_function = gcp_function.GoogleCloudFunction(project)
     func_args = {
         'instance': instance,
         'kind': 'TurbiniaTask',
@@ -806,7 +812,7 @@ class BaseTurbiniaClient(object):
         'user': user,
         'requester': requester
     }
-    response = cloud_function.ExecuteFunction('closetasks', func_args)
+    response = cloud_function.ExecuteFunction('closetasks', region, func_args)
     return 'Closed Task IDs: %s' % response.get('result')
 
 
@@ -859,16 +865,16 @@ class TurbiniaServer(object):
     task_manager (TaskManager): An object to manage turbinia tasks.
   """
 
-  def __init__(self, jobs_blacklist=None, jobs_whitelist=None):
+  def __init__(self, jobs_denylist=None, jobs_allowlist=None):
     """Initializes Turbinia Server.
 
     Args:
-      jobs_blacklist (Optional[list[str]]): Jobs we will exclude from running
-      jobs_whitelist (Optional[list[str]]): The only Jobs we will include to run
+      jobs_denylist (Optional[list[str]]): Jobs we will exclude from running
+      jobs_allowlist (Optional[list[str]]): The only Jobs we will include to run
     """
     config.LoadConfig()
     self.task_manager = task_manager.get_task_manager()
-    self.task_manager.setup(jobs_blacklist, jobs_whitelist)
+    self.task_manager.setup(jobs_denylist, jobs_allowlist)
 
   def start(self):
     """Start Turbinia Server."""
@@ -887,22 +893,26 @@ class TurbiniaCeleryWorker(BaseTurbiniaClient):
     worker (celery.app): Celery worker app
   """
 
-  def __init__(self, jobs_blacklist=None, jobs_whitelist=None):
+  def __init__(self, jobs_denylist=None, jobs_allowlist=None):
     """Initialization for celery worker.
 
     Args:
-      jobs_blacklist (Optional[list[str]]): Jobs we will exclude from running
-      jobs_whitelist (Optional[list[str]]): The only Jobs we will include to run
+      jobs_denylist (Optional[list[str]]): Jobs we will exclude from running
+      jobs_allowlist (Optional[list[str]]): The only Jobs we will include to run
     """
     super(TurbiniaCeleryWorker, self).__init__()
-    # Deregister jobs from blacklist/whitelist.
+    # Deregister jobs from denylist/allowlist.
+    job_manager.JobsManager.DeregisterJobs(jobs_denylist, jobs_allowlist)
     disabled_jobs = list(config.DISABLED_JOBS) if config.DISABLED_JOBS else []
-    job_manager.JobsManager.DeregisterJobs(jobs_blacklist, jobs_whitelist)
+    disabled_jobs = [j.lower() for j in disabled_jobs]
+    # Only actually disable jobs that have not been allowlisted.
+    if jobs_allowlist:
+      disabled_jobs = list(set(disabled_jobs) - set(jobs_allowlist))
     if disabled_jobs:
       log.info(
-          'Disabling jobs that were configured to be disabled in the '
+          'Disabling non-allowlisted jobs configured to be disabled in the '
           'config file: {0:s}'.format(', '.join(disabled_jobs)))
-      job_manager.JobsManager.DeregisterJobs(jobs_blacklist=disabled_jobs)
+      job_manager.JobsManager.DeregisterJobs(jobs_denylist=disabled_jobs)
 
     # Check for valid dependencies/directories.
     dependencies = config.ParseDependencies()
@@ -938,12 +948,12 @@ class TurbiniaPsqWorker(object):
     TurbiniaException: When errors occur
   """
 
-  def __init__(self, jobs_blacklist=None, jobs_whitelist=None):
+  def __init__(self, jobs_denylist=None, jobs_allowlist=None):
     """Initialization for PSQ Worker.
 
     Args:
-      jobs_blacklist (Optional[list[str]]): Jobs we will exclude from running
-      jobs_whitelist (Optional[list[str]]): The only Jobs we will include to run
+      jobs_denylist (Optional[list[str]]): Jobs we will exclude from running
+      jobs_allowlist (Optional[list[str]]): The only Jobs we will include to run
     """
     config.LoadConfig()
     psq_publisher = pubsub.PublisherClient()
@@ -958,14 +968,18 @@ class TurbiniaPsqWorker(object):
       log.error(msg)
       raise TurbiniaException(msg)
 
-    # Deregister jobs from blacklist/whitelist.
+    # Deregister jobs from denylist/allowlist.
+    job_manager.JobsManager.DeregisterJobs(jobs_denylist, jobs_allowlist)
     disabled_jobs = list(config.DISABLED_JOBS) if config.DISABLED_JOBS else []
-    job_manager.JobsManager.DeregisterJobs(jobs_blacklist, jobs_whitelist)
+    disabled_jobs = [j.lower() for j in disabled_jobs]
+    # Only actually disable jobs that have not been allowlisted.
+    if jobs_allowlist:
+      disabled_jobs = list(set(disabled_jobs) - set(jobs_allowlist))
     if disabled_jobs:
       log.info(
-          'Disabling jobs that were configured to be disabled in the '
+          'Disabling non-allowlisted jobs configured to be disabled in the '
           'config file: {0:s}'.format(', '.join(disabled_jobs)))
-      job_manager.JobsManager.DeregisterJobs(jobs_blacklist=disabled_jobs)
+      job_manager.JobsManager.DeregisterJobs(jobs_denylist=disabled_jobs)
 
     # Check for valid dependencies/directories.
     dependencies = config.ParseDependencies()
@@ -978,7 +992,7 @@ class TurbiniaPsqWorker(object):
 
     jobs = job_manager.JobsManager.GetJobNames()
     log.info(
-        'Dependency check complete. The following jobs will be enabled '
+        'Dependency check complete. The following jobs are enabled '
         'for this worker: {0:s}'.format(','.join(jobs)))
     log.info('Starting PSQ listener on queue {0:s}'.format(self.psq.name))
     self.worker = psq.Worker(queue=self.psq)

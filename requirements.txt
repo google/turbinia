@@ -6,9 +6,10 @@ google-cloud-pubsub
 google-cloud-storage
 google-cloud-core
 google-cloud-logging
-oauth2client
+google-cloud-error-reporting
+google-auth
 psq
 six
 urllib3[secure]
 docker
-libcloudforensics
+libcloudforensics==20200609
