@@ -19,6 +19,8 @@ from __future__ import unicode_literals
 from collections import defaultdict
 from datetime import datetime
 from datetime import timedelta
+
+import httplib2
 import json
 import logging
 from operator import itemgetter
@@ -27,6 +29,7 @@ import os
 import stat
 import time
 
+from google import auth
 from turbinia import config
 from turbinia.config import logger
 from turbinia.config import DATETIME_FORMAT
@@ -50,6 +53,9 @@ from turbinia.workers.strings import StringsUnicodeTask
 from turbinia.workers.tomcat import TomcatAnalysisTask
 from turbinia.workers.volatility import VolatilityTask
 from turbinia.workers.worker_stat import StatTask
+
+MAX_RETRIES = 10
+RETRY_SLEEP = 60
 
 # TODO(aarontp): Remove this map after
 # https://github.com/google/turbinia/issues/278 is fixed.
@@ -317,7 +323,36 @@ class TurbiniaClient(object):
     if user:
       func_args.update({'user': user})
 
-    response = cloud_function.ExecuteFunction(function_name, func_args)
+    response = None
+    retry_count = 0
+    credential_error_count = 0
+    while response is None and retry_count < MAX_RETRIES:
+      try:
+        response = cloud_function.ExecuteFunction(
+            function_name, region, func_args)
+      except auth.exceptions.RefreshError as exception:
+        if credential_error_count == 0:
+          log.info(
+              'GCP Credentials need to be refreshed, please refresh in another '
+              'terminal and this process will resume. Error: {0!s}'.format(
+                  exception))
+        else:
+          log.debug(
+              'GCP Credentials need to be refreshed, please refresh in another '
+              'terminal and this process will resume. Attempt {0:d}. Error: '
+              '{1!s}'.format(credential_error_count + 1, exception))
+        # Note, we are intentially not incrementing the retry_count here because
+        # we will retry indefinitely while we wait for the user to reauth.
+        credential_error_count += 1
+      except httplib2.ServerNotFoundError as exception:
+        log.info(
+            'Error connecting to server, will retry [{0:d} of {1:d} retries]: '
+            '{2!s}'.format(retry_count, MAX_RETRIES, exception))
+        retry_count += 1
+
+      if response is None:
+        time.sleep(RETRY_SLEEP)
+
     if 'result' not in response:
       log.error('No results found')
       if response.get('error', '{}') != '{}':
