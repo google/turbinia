@@ -201,7 +201,7 @@ class GoogleCloudFunction(GoogleCloudProject):
     region (str): Region to execute functions in.
   """
 
-  CLOUD_FUNCTIONS_API_VERSION = 'v1beta2'
+  CLOUD_FUNCTIONS_API_VERSION = 'v1'
 
   def __init__(self, project_id, region):
     """Initialize the GoogleCloudFunction object.
