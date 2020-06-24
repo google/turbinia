@@ -435,7 +435,7 @@ class BaseTurbiniaClient(object):
     response = None
     retry_count = 0
     credential_error_count = 0
-    while not response and retry_count < MAX_RETRIES:
+    while response is None and retry_count < MAX_RETRIES:
       try:
         response = cloud_function.ExecuteFunction(
             function_name, region, func_args)
@@ -443,13 +443,13 @@ class BaseTurbiniaClient(object):
         if credential_error_count == 0:
           log.info(
               'GCP Credentials need to be refreshed, please refresh in another '
-              'terminal and this process will resume.  Error: {0!s}'.format(
+              'terminal and this process will resume. Error: {0!s}'.format(
                   exception))
         else:
           log.debug(
               'GCP Credentials need to be refreshed, please refresh in another '
-              'terminal and this process will resume.  Error: {0!s}'.format(
-                  exception))
+              'terminal and this process will resume. Attempt {0:d}. Error: '
+              '{1!s}'.format(credential_error_count + 1, exception))
         # Note, we are intentially not incrementing the retry_count here because
         # we will retry indefinitely while we wait for the user to reauth.
         credential_error_count += 1
