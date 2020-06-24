@@ -371,7 +371,7 @@ class TurbiniaTask(object):
       'id', 'job_id', 'last_update', 'name', 'request_id', 'requester'
   ]
 
-  REQUIRED_STATUS = []
+  REQUIRED_STATE = []
 
   def __init__(
       self, name=None, base_output_dir=None, request_id=None, requester=None):
@@ -446,22 +446,22 @@ class TurbiniaTask(object):
 
     Raises:
       TurbiniaException: If the Evidence can't be validated or the current
-          status does not meet the required status.
+          state does not meet the required state.
     """
     evidence.validate()
-    evidence.preprocess(self.tmp_dir, requirements=self.REQUIRED_STATUS)
+    evidence.preprocess(self.tmp_dir, requirements=self.REQUIRED_STATE)
 
-    # Final check to make sure that the required evidence status has been met
+    # Final check to make sure that the required evidence state has been met
     # for Evidence types that have those capabilities.
-    for status in self.REQUIRED_STATUS:
-      if status in evidence.CAPABILITIES and not evidence.status[status]:
+    for state in self.REQUIRED_STATE:
+      if state in evidence.CAPABILITIES and not evidence.state[state]:
         raise TurbiniaException(
             'Evidence {0!s} being processed by Task {1:s} requires Evidence '
             'to be in state {2:s}, but earlier pre-processors may have '
-            'failed.  Current status is {3:s}. See previous logs for more '
+            'failed.  Current state is {3:s}. See previous logs for more '
             'information.'.format(
-                evidence, self.name, status.name, pprint.pformat(
-                    evidence.status)))
+                evidence, self.name, state.name, pprint.pformat(
+                    evidence.state)))
 
   def execute(
       self, cmd, result, save_files=None, log_files=None, new_evidence=None,

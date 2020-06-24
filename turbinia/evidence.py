@@ -79,11 +79,11 @@ def evidence_decode(evidence_dict):
   return evidence
 
 
-class EvidenceStatus(IntEnum):
-  """Runtime status of Evidence.
+class EvidenceState(IntEnum):
+  """Runtime state of Evidence.
 
   Evidence objects will map each of these to a boolean indicating the current
-  status for the given object.
+  state for the given object.
   """
   MOUNTED = 1
   ATTACHED = 2
@@ -127,8 +127,8 @@ class Evidence(object):
         file alongside the Evidence when saving to external storage.  The
         metadata file will contain all of the key=value pairs sent along with
         the processing request in the recipe.  The output is in JSON format
-    status (dict): A map of each EvidenceStatus type to a boolean to indicate
-        if that status state is true.  This is used by the preprocessors to set
+    state (dict): A map of each EvidenceState type to a boolean to indicate
+        if that state state is true.  This is used by the preprocessors to set
         the current state and Tasks can use this to determine if the Evidence is
         in the correct state for processing.
   """
@@ -136,7 +136,7 @@ class Evidence(object):
   # The list of attributes a given piece of Evidence requires to be set
   REQUIRED_ATTRIBUTES = []
 
-  # The list of EvidenceStatus capabilities that the Evidence supports in its
+  # The list of EvidenceState capabilities that the Evidence supports in its
   # pre/post-processing (e.g. MOUNTED, ATTACHED, etc).  See `preprocessor()`
   # docstrings for more info.
   CAPABILITIES = []
@@ -167,9 +167,9 @@ class Evidence(object):
     self.saved_path = None
     self.saved_path_type = None
 
-    self.status = {}
-    for status in EvidenceStatus:
-      self.status[status] = False
+    self.state = {}
+    for state in EvidenceState:
+      self.state[state] = False
 
     if self.copyable and not self.local_path:
       raise TurbiniaException(
@@ -205,10 +205,10 @@ class Evidence(object):
 
   def serialize(self):
     """Return JSON serializable object."""
-    # Set all statuses to False because if we are serializing the Evidence it is
-    # because this is about to be returned, and the status has no meaning
+    # Set all states to False because if we are serializing the Evidence it is
+    # because this is about to be returned, and the state has no meaning
     # outside of the context on the Worker.
-    self.status = {status: False for status in self.status}
+    self.state = {state: False for state in self.state}
     serialized_evidence = self.__dict__.copy()
     if self.parent_evidence:
       serialized_evidence['parent_evidence'] = self.parent_evidence.serialize()
@@ -240,7 +240,7 @@ class Evidence(object):
     Args:
       tmp_dir(str): The path to the temporary directory that the
                        Task will write to.
-      requirements(list[EvidenceStatus]): The list of evidence status
+      requirements(list[EvidenceState]): The list of evidence state
           requirements from the Task.
     """
     pass
@@ -264,25 +264,25 @@ class Evidence(object):
     task itself running.  This can be used to prepare the evidence to be
     processed (e.g. attach a cloud disk, mount a local disk etc).
 
-    Tasks export a list of the requirements they have for the status of the
-    Evidence it can process in `TurbiniaTask.REQUIRED_STATUS`.  Evidence also
+    Tasks export a list of the requirements they have for the state of the
+    Evidence it can process in `TurbiniaTask.REQUIRED_STATE`.  Evidence also
     exports a list of the pre/post-processing capabilities it has in
     `Evidence.CAPABILITIES`.  The pre-processors should run selectively based on
     the these requirements that come from the Task, and the post-processors
-    should run selectively based on the current status of the Evidence.
+    should run selectively based on the current state of the Evidence.
 
     If a Task requires one of these capabilities supported by the given Evidence
     class, but it is not met after the Evidence is run, then the Task will abort
     early.  Note that for compound evidence types that have parent Evidence
     objects (e.g. where `context_dependent` is True), we only inspect the child
-    Evidence type for its status as it is assumed that it would only be able to
+    Evidence type for its state as it is assumed that it would only be able to
     run the appropriate pre/post-processors when the parent Evidence processors
     have been successful.
 
     Args:
       tmp_dir(str): The path to the temporary directory that the
                        Task will write to.
-      requirements(list[EvidenceStatus]): The list of evidence status
+      requirements(list[EvidenceState]): The list of evidence state
           requirements from the Task.
 
     """
@@ -373,7 +373,7 @@ class CompressedDirectory(Evidence):
     uncompressed_directory: The path to the uncompressed directory.
   """
 
-  CAPABILITIES = [EvidenceStatus.DECOMPRESSED]
+  CAPABILITIES = [EvidenceState.DECOMPRESSED]
 
   def __init__(
       self, compressed_directory=None, uncompressed_directory=None, *args,
@@ -386,18 +386,18 @@ class CompressedDirectory(Evidence):
 
   def _preprocess(self, tmp_dir, requirements):
     # Uncompress a given tar file and return the uncompressed path.
-    if EvidenceStatus.DECOMPRESSED in requirements:
+    if EvidenceState.DECOMPRESSED in requirements:
       self.uncompressed_directory = archive.UncompressTarFile(
           self.local_path, tmp_dir)
       self.local_path = self.uncompressed_directory
-      self.status[EvidenceStatus.DECOMPRESSED] = True
+      self.state[EvidenceState.DECOMPRESSED] = True
 
   def compress(self):
     """ Compresses a file or directory."""
     # Compress a given directory and return the compressed path.
     self.compressed_directory = archive.CompressDirectory(self.local_path)
     self.local_path = self.compressed_directory
-    self.status[EvidenceStatus.DECOMPRESSED] = False
+    self.state[EvidenceState.DECOMPRESSED] = False
 
 
 class BulkExtractorOutput(CompressedDirectory):
@@ -438,7 +438,7 @@ class RawDisk(Evidence):
     size: The size of the disk in bytes.
   """
 
-  CAPABILITIES = [EvidenceStatus.MOUNTED, EvidenceStatus.ATTACHED]
+  CAPABILITIES = [EvidenceState.MOUNTED, EvidenceState.ATTACHED]
 
   def __init__(self, mount_partition=1, size=None, *args, **kwargs):
     """Initialization for raw disk evidence object."""
@@ -454,23 +454,23 @@ class RawDisk(Evidence):
     super(RawDisk, self).__init__(*args, **kwargs)
 
   def _preprocess(self, _, requirements):
-    if EvidenceStatus.ATTACHED in requirements:
+    if EvidenceState.ATTACHED in requirements:
       self.device_path, partition_paths = mount_local.PreprocessLosetup(
           self.source_path)
-      self.status[EvidenceStatus.ATTACHED] = True
-    if EvidenceStatus.MOUNTED in requirements:
+      self.state[EvidenceState.ATTACHED] = True
+    if EvidenceState.MOUNTED in requirements:
       self.mount_path = mount_local.PreprocessMountDisk(
           partition_paths, self.mount_partition)
       self.local_path = self.device_path
-      self.status[EvidenceStatus.MOUNTED] = True
+      self.state[EvidenceState.MOUNTED] = True
 
   def _postprocess(self):
-    if self.status[EvidenceStatus.MOUNTED]:
+    if self.state[EvidenceState.MOUNTED]:
       mount_local.PostprocessUnmountPath(self.mount_path)
-      self.status[EvidenceStatus.MOUNTED] = False
-    if self.status[EvidenceStatus.ATTACHED]:
+      self.state[EvidenceState.MOUNTED] = False
+    if self.state[EvidenceState.ATTACHED]:
       mount_local.PostprocessDeleteLosetup(self.device_path)
-      self.status[EvidenceStatus.ATTACHED] = False
+      self.state[EvidenceState.ATTACHED] = False
 
 
 class EncryptedDisk(RawDisk):
@@ -549,7 +549,7 @@ class GoogleCloudDisk(RawDisk):
   """
 
   REQUIRED_ATTRIBUTES = ['disk_name', 'project', 'zone']
-  CAPABILITIES = [EvidenceStatus.ATTACHED, EvidenceStatus.MOUNTED]
+  CAPABILITIES = [EvidenceState.ATTACHED, EvidenceState.MOUNTED]
 
   def __init__(self, project=None, zone=None, disk_name=None, *args, **kwargs):
     """Initialization for Google Cloud Disk."""
@@ -560,24 +560,24 @@ class GoogleCloudDisk(RawDisk):
     self.cloud_only = True
 
   def _preprocess(self, _, requirements):
-    if EvidenceStatus.ATTACHED in requirements:
+    if EvidenceState.ATTACHED in requirements:
       self.device_path, partition_paths = google_cloud.PreprocessAttachDisk(
           self.disk_name)
-      self.status[EvidenceStatus.ATTACHED] = True
+      self.state[EvidenceState.ATTACHED] = True
 
-    if EvidenceStatus.MOUNTED in requirements:
+    if EvidenceState.MOUNTED in requirements:
       self.mount_path = mount_local.PreprocessMountDisk(
           partition_paths, self.mount_partition)
       self.local_path = self.device_path
-      self.status[EvidenceStatus.MOUNTED] = True
+      self.state[EvidenceState.MOUNTED] = True
 
   def _postprocess(self):
-    if self.status[EvidenceStatus.MOUNTED]:
+    if self.state[EvidenceState.MOUNTED]:
       mount_local.PostprocessUnmountPath(self.mount_path)
-      self.status[EvidenceStatus.MOUNTED] = False
-    if self.status[EvidenceStatus.ATTACHED]:
+      self.state[EvidenceState.MOUNTED] = False
+    if self.state[EvidenceState.ATTACHED]:
       google_cloud.PostprocessDetachDisk(self.disk_name, self.device_path)
-      self.status[EvidenceStatus.ATTACHED] = False
+      self.state[EvidenceState.ATTACHED] = False
 
 
 class GoogleCloudDiskRawEmbedded(GoogleCloudDisk):
@@ -595,7 +595,7 @@ class GoogleCloudDiskRawEmbedded(GoogleCloudDisk):
   REQUIRED_ATTRIBUTES = [
       'disk_name', 'project', 'zone', 'embedded_partition', 'embedded_path'
   ]
-  CAPABILITIES = [EvidenceStatus.ATTACHED, EvidenceStatus.MOUNTED]
+  CAPABILITIES = [EvidenceState.ATTACHED, EvidenceState.MOUNTED]
 
   def __init__(
       self, embedded_path=None, embedded_partition=None, *args, **kwargs):
@@ -608,7 +608,7 @@ class GoogleCloudDiskRawEmbedded(GoogleCloudDisk):
     self.context_dependent = True
 
   def _preprocess(self, _, requirements):
-    if EvidenceStatus.ATTACHED in requirements:
+    if EvidenceState.ATTACHED in requirements:
       rawdisk_path = os.path.join(
           self.parent_evidence.mount_path, self.embedded_path)
       if not os.path.exists(rawdisk_path):
@@ -617,21 +617,21 @@ class GoogleCloudDiskRawEmbedded(GoogleCloudDisk):
                 rawdisk_path))
       self.device_path, partition_paths = mount_local.PreprocessLosetup(
           rawdisk_path)
-      self.status[EvidenceStatus.ATTACHED] = True
+      self.state[EvidenceState.ATTACHED] = True
 
-    if EvidenceStatus.MOUNTED in requirements:
+    if EvidenceState.MOUNTED in requirements:
       self.mount_path = mount_local.PreprocessMountDisk(
           partition_paths, self.mount_partition)
       self.local_path = self.device_path
-      self.status[EvidenceStatus.MOUNTED] = True
+      self.state[EvidenceState.MOUNTED] = True
 
   def _postprocess(self):
-    if self.status[EvidenceStatus.MOUNTED]:
+    if self.state[EvidenceState.MOUNTED]:
       mount_local.PostprocessUnmountPath(self.mount_path)
-      self.status[EvidenceStatus.MOUNTED] = False
-    if self.status[EvidenceStatus.ATTACHED]:
+      self.state[EvidenceState.MOUNTED] = False
+    if self.state[EvidenceState.ATTACHED]:
       mount_local.PostprocessDeleteLosetup(self.device_path)
-      self.status[EvidenceStatus.ATTACHED] = False
+      self.state[EvidenceState.ATTACHED] = False
 
 
 class PlasoFile(Evidence):
