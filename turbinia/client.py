@@ -459,7 +459,8 @@ class BaseTurbiniaClient(object):
             '{2!s}'.format(retry_count, MAX_RETRIES, exception))
         retry_count += 1
 
-      time.sleep(RETRY_SLEEP)
+      if response is None:
+        time.sleep(RETRY_SLEEP)
 
     if 'result' not in response:
       log.error('No results found')
