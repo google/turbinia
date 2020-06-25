@@ -371,7 +371,9 @@ class TurbiniaTask(object):
       'id', 'job_id', 'last_update', 'name', 'request_id', 'requester'
   ]
 
-  REQUIRED_STATE = []
+  # The list of evidence states that are required by a Task in order to run.
+  # See `evidence.Evidence.preprocess()` docstrings for more details.
+  REQUIRED_STATES = []
 
   def __init__(
       self, name=None, base_output_dir=None, request_id=None, requester=None):
@@ -449,12 +451,12 @@ class TurbiniaTask(object):
           state does not meet the required state.
     """
     evidence.validate()
-    evidence.preprocess(self.tmp_dir, requirements=self.REQUIRED_STATE)
+    evidence.preprocess(self.tmp_dir, required_state=self.REQUIRED_STATES)
 
     # Final check to make sure that the required evidence state has been met
     # for Evidence types that have those capabilities.
-    for state in self.REQUIRED_STATE:
-      if state in evidence.CAPABILITIES and not evidence.state[state]:
+    for state in self.REQUIRED_STATES:
+      if state in evidence.POSSIBLE_STATES and not evidence.state[state]:
         raise TurbiniaException(
             'Evidence {0!s} being processed by Task {1:s} requires Evidence '
             'to be in state {2:s}, but earlier pre-processors may have '
@@ -721,17 +723,13 @@ class TurbiniaTask(object):
         self.result = self.create_result(
             message=message, trace=traceback.format_exc())
       return self.result.serialize()
+
     with filelock.FileLock(config.LOCK_FILE):
       log.info('Starting Task {0:s} {1:s}'.format(self.name, self.id))
       original_result_id = None
       try:
         original_result_id = self.result.id
 
-        # Preprocessor must be called after evidence validation.
-        evidence.preprocess(self.tmp_dir)
-        # TODO(wyassine): refactor it so the result task does not
-        # have to go through the preprocess stage. At the moment
-        # self.results.setup is required to be called to set its status.
         # Check if Task's job is available for the worker.
         active_jobs = list(job_manager.JobsManager.GetJobNames())
         if self.job_name.lower() not in active_jobs:
@@ -742,6 +740,8 @@ class TurbiniaTask(object):
           self.result.status = message
           return self.result.serialize()
 
+        self.evidence_setup(evidence)
+
         if self.turbinia_version != turbinia.__version__:
           message = (
               'Worker and Server versions do not match: {0:s} != {1:s}'.format(
@@ -749,9 +749,11 @@ class TurbiniaTask(object):
           self.result.log(message, level=logging.ERROR)
           self.result.status = message
           return self.result.serialize()
+
         self.result.update_task_status(self, 'running')
         self._evidence_config = evidence.config
         self.result = self.run(evidence, self.result)
+
       # pylint: disable=broad-except
       except Exception as exception:
         message = (

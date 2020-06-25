@@ -136,10 +136,10 @@ class Evidence(object):
   # The list of attributes a given piece of Evidence requires to be set
   REQUIRED_ATTRIBUTES = []
 
-  # The list of EvidenceState capabilities that the Evidence supports in its
+  # The list of EvidenceState states that the Evidence supports in its
   # pre/post-processing (e.g. MOUNTED, ATTACHED, etc).  See `preprocessor()`
   # docstrings for more info.
-  CAPABILITIES = []
+  POSSIBLE_STATES = []
 
   def __init__(
       self, name=None, description=None, source=None, source_path=None,
@@ -265,19 +265,30 @@ class Evidence(object):
     processed (e.g. attach a cloud disk, mount a local disk etc).
 
     Tasks export a list of the required_states they have for the state of the
-    Evidence it can process in `TurbiniaTask.REQUIRED_STATE`.  Evidence also
-    exports a list of the pre/post-processing capabilities it has in
-    `Evidence.CAPABILITIES`.  The pre-processors should run selectively based on
-    the these requirements that come from the Task, and the post-processors
-    should run selectively based on the current state of the Evidence.
+    Evidence it can process in `TurbiniaTask.REQUIRED_STATES`[1].  Evidence also
+    exports a list of the possible states it can have after pre/post-processing
+    in `Evidence.POSSIBLE_STATES`.  The pre-processors should run selectively
+    based on the these requirements that come from the Task, and the
+    post-processors should run selectively based on the current state of the
+    Evidence.
 
-    If a Task requires one of these capabilities supported by the given Evidence
-    class, but it is not met after the Evidence is run, then the Task will abort
-    early.  Note that for compound evidence types that have parent Evidence
-    objects (e.g. where `context_dependent` is True), we only inspect the child
-    Evidence type for its state as it is assumed that it would only be able to
-    run the appropriate pre/post-processors when the parent Evidence processors
-    have been successful.
+    If a Task requires a given state supported by the given Evidence class, but
+    it is not met after the preprocessing of the Evidence is run, then the Task
+    will abort early.  Note that for compound evidence types that have parent
+    Evidence objects (e.g. where `context_dependent` is True), we only inspect
+    the child Evidence type for its state as it is assumed that it would only be
+    able to run the appropriate pre/post-processors when the parent Evidence
+    processors have been successful.
+
+    [1] Note that the evidence states required by the Task are only required if
+    the Evidence also supports that state in `POSSSIBLE_STATES`.  This is so
+    that the Tasks are flexible enough to support multiple types of Evidence.
+    For example, `PlasoTask` allows both `CompressedDirectory` and
+    `GoogleCloudDisk` as Evidence input, and has states `ATTACHED` and
+    `DECOMPRESSED` listed in `PlasoTask.REQUIRED_STATES`.  Since `ATTACHED`
+    state is supported by `GoogleCloudDisk`, and `DECOMPRESSED` is supported by
+    `CompressedDirectory`, only those respective pre-processors will be run and
+    the state is confirmed after the preprocessing is complete.
 
     Args:
       tmp_dir(str): The path to the temporary directory that the
@@ -285,9 +296,14 @@ class Evidence(object):
       required_states(list[EvidenceState]): The list of evidence state
           requirements from the Task.
 
+    Raises:
+      TurbiniaException: If the required evidence state cannot be met by the
+          possible states of the Evidence or if the parent evidence object does
+          not exist when it is required by the Evidence type..
     """
     if not required_states:
       required_states = []
+
     if self.context_dependent:
       if not self.parent_evidence:
         raise TurbiniaException(
@@ -373,7 +389,7 @@ class CompressedDirectory(Evidence):
     uncompressed_directory: The path to the uncompressed directory.
   """
 
-  CAPABILITIES = [EvidenceState.DECOMPRESSED]
+  POSSIBLE_STATES = [EvidenceState.DECOMPRESSED]
 
   def __init__(
       self, compressed_directory=None, uncompressed_directory=None, *args,
@@ -438,7 +454,7 @@ class RawDisk(Evidence):
     size: The size of the disk in bytes.
   """
 
-  CAPABILITIES = [EvidenceState.MOUNTED, EvidenceState.ATTACHED]
+  POSSIBLE_STATES = [EvidenceState.MOUNTED, EvidenceState.ATTACHED]
 
   def __init__(self, mount_partition=1, size=None, *args, **kwargs):
     """Initialization for raw disk evidence object."""
@@ -482,10 +498,11 @@ class EncryptedDisk(RawDisk):
     unencrypted_path: A string to the unencrypted local path
   """
 
-  # Setting the capabilities for this Evidence type explicitly to empty for now
-  # because we don't actually mount/attach these kinds of disks yet (they are
-  # currently only used by Plaso which knows how to decrypt them at runtime).
-  CAPABILITIES = []
+  # Setting the possible states for this Evidence type explicitly to empty for
+  # now because we don't actually mount/attach these kinds of disks yet (they
+  # are currently only used by Plaso which knows how to decrypt them at
+  # runtime).
+  POSSIBLE_STATES = []
 
   def __init__(
       self, encryption_type=None, encryption_key=None, unencrypted_path=None,
@@ -549,7 +566,7 @@ class GoogleCloudDisk(RawDisk):
   """
 
   REQUIRED_ATTRIBUTES = ['disk_name', 'project', 'zone']
-  CAPABILITIES = [EvidenceState.ATTACHED, EvidenceState.MOUNTED]
+  POSSIBLE_STATES = [EvidenceState.ATTACHED, EvidenceState.MOUNTED]
 
   def __init__(self, project=None, zone=None, disk_name=None, *args, **kwargs):
     """Initialization for Google Cloud Disk."""
@@ -595,7 +612,7 @@ class GoogleCloudDiskRawEmbedded(GoogleCloudDisk):
   REQUIRED_ATTRIBUTES = [
       'disk_name', 'project', 'zone', 'embedded_partition', 'embedded_path'
   ]
-  CAPABILITIES = [EvidenceState.ATTACHED, EvidenceState.MOUNTED]
+  POSSIBLE_STATES = [EvidenceState.ATTACHED, EvidenceState.MOUNTED]
 
   def __init__(
       self, embedded_path=None, embedded_partition=None, *args, **kwargs):
@@ -735,6 +752,8 @@ class DockerContainer(Evidence):
     _docker_root_directory(str): Full path to the docker root directory.
   """
 
+  POSSIBLE_STATES = [EvidenceState.MOUNTED]
+
   def __init__(self, container_id=None, *args, **kwargs):
     """Initialization for Docker Container."""
     super(DockerContainer, self).__init__(*args, **kwargs)
@@ -744,14 +763,16 @@ class DockerContainer(Evidence):
 
     self.context_dependent = True
 
-  def _preprocess(self, _):
-
-    self._docker_root_directory = GetDockerPath(self.parent_evidence.mount_path)
-    # Mounting the container's filesystem
-    self._container_fs_path = docker.PreprocessMountDockerFS(
-        self._docker_root_directory, self.container_id)
-    self.mount_path = self._container_fs_path
-    self.local_path = self.mount_path
+  def _preprocess(self, _, required_states):
+    if EvidenceState.MOUNTED in required_states:
+      self._docker_root_directory = GetDockerPath(
+          self.parent_evidence.mount_path)
+      # Mounting the container's filesystem
+      self._container_fs_path = docker.PreprocessMountDockerFS(
+          self._docker_root_directory, self.container_id)
+      self.mount_path = self._container_fs_path
+      self.local_path = self.mount_path
+      self.state[EvidenceState.MOUNTED] = True
 
   def _postprocess(self):
     # Unmount the container's filesystem

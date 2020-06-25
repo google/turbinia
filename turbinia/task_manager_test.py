@@ -46,6 +46,7 @@ class TestTaskManager(TestTurbiniaTaskBase):
   def testTaskManagerTasksProperty(self):
     """Basic test for task_manager Tasks property."""
     self.setResults()
+    jobs_manager.JobsManager.RegisterJob(plaso.PlasoJob)
     job = jobs_manager.JobsManager.GetJobInstance('PlasoJob')
     job.tasks.extend([self.task, self.task])
     self.manager.running_jobs.extend([job, job])
