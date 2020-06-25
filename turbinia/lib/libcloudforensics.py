@@ -32,9 +32,9 @@ import time
 
 from apiclient.discovery import build
 from googleapiclient.errors import HttpError
-from oauth2client.client import AccessTokenRefreshError
-from oauth2client.client import GoogleCredentials
-from oauth2client.client import ApplicationDefaultCredentialsError
+from google.auth import default
+from google.auth.exceptions import RefreshError
+from google.auth.exceptions import DefaultCredentialsError
 
 log = logging.getLogger('turbinia')
 
@@ -56,8 +56,8 @@ def create_service(service_name, api_version):
         service build times out.
   """
   try:
-    credentials = GoogleCredentials.get_application_default()
-  except ApplicationDefaultCredentialsError as error:
+    credentials, _ = default()
+  except DefaultCredentialsError as error:
     raise RuntimeError(
         'Could not get application default credentials: {0!s}\n'
         'Have you run $ gcloud auth application-default login?'.format(error))
@@ -967,11 +967,11 @@ def create_disk_copy(src_proj, dst_proj, instance_name, zone, disk_name=None):
         'Disk {0:s} successfully copied to {1:s}'.format(
             disk_to_copy.name, new_disk.name))
 
-  except AccessTokenRefreshError as exception:
+  except RefreshError as exception:
     raise RuntimeError(
         'Something is wrong with your gcloud access token: {0:s}.'.format(
             exception))
-  except ApplicationDefaultCredentialsError as exception:
+  except DefaultCredentialsError as exception:
     raise RuntimeError(
         'Something is wrong with your Application Default Credentials. '
         'Try running:\n  $ gcloud auth application-default login')
