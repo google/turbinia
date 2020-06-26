@@ -24,6 +24,7 @@ import subprocess
 from turbinia import TurbiniaException
 
 from turbinia.lib import text_formatter as fmt
+from turbinia.evidence import EvidenceState as state
 from turbinia.evidence import ReportText
 from turbinia.lib.utils import extract_artifacts
 from turbinia.workers import TurbiniaTask
@@ -34,6 +35,11 @@ log = logging.getLogger('turbinia')
 
 class HadoopAnalysisTask(TurbiniaTask):
   """Task to analyse Hadoop AppRoot files."""
+
+  REQUIRED_STATES = [
+      state.ATTACHED, state.DOCKER_MOUNTED, state.PARENT_ATTACHED,
+      state.PARENT_MOUNTED
+  ]
 
   def _AnalyzeHadoopAppRoot(self, collected_artifacts, output_dir):
     """Runs a naive AppRoot files parsing method.

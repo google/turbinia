@@ -20,6 +20,7 @@ import gzip
 import os
 import re
 
+from turbinia.evidence import EvidenceState as state
 from turbinia.evidence import ReportText
 from turbinia.lib import text_formatter as fmt
 from turbinia.workers import TurbiniaTask

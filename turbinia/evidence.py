@@ -87,7 +87,13 @@ class EvidenceState(IntEnum):
   """
   MOUNTED = 1
   ATTACHED = 2
-  DECOMPRESSED = 3
+  # Using PARENT_* states here for compound evidence types like
+  # GoogleCloudDiskRawEmbedded so that we can control those states
+  # independently.
+  PARENT_MOUNTED = 3
+  PARENT_ATTACHED = 4
+  DECOMPRESSED = 5
+  DOCKER_MOUNTED = 6
 
 
 class Evidence(object):
@@ -612,7 +618,9 @@ class GoogleCloudDiskRawEmbedded(GoogleCloudDisk):
   REQUIRED_ATTRIBUTES = [
       'disk_name', 'project', 'zone', 'embedded_partition', 'embedded_path'
   ]
-  POSSIBLE_STATES = [EvidenceState.ATTACHED, EvidenceState.MOUNTED]
+  POSSIBLE_STATES = [
+      EvidenceState.PARENT_ATTACHED, EvidenceState.PARENT_MOUNTED
+  ]
 
   def __init__(
       self, embedded_path=None, embedded_partition=None, *args, **kwargs):
@@ -625,7 +633,7 @@ class GoogleCloudDiskRawEmbedded(GoogleCloudDisk):
     self.context_dependent = True
 
   def _preprocess(self, _, required_states):
-    if EvidenceState.ATTACHED in required_states:
+    if EvidenceState.PARENT_ATTACHED in required_states:
       rawdisk_path = os.path.join(
           self.parent_evidence.mount_path, self.embedded_path)
       if not os.path.exists(rawdisk_path):
@@ -634,21 +642,21 @@ class GoogleCloudDiskRawEmbedded(GoogleCloudDisk):
                 rawdisk_path))
       self.device_path, partition_paths = mount_local.PreprocessLosetup(
           rawdisk_path)
-      self.state[EvidenceState.ATTACHED] = True
+      self.state[EvidenceState.PARENT_ATTACHED] = True
 
-    if EvidenceState.MOUNTED in required_states:
+    if EvidenceState.PARENT_MOUNTED in required_states:
       self.mount_path = mount_local.PreprocessMountDisk(
           partition_paths, self.mount_partition)
       self.local_path = self.device_path
-      self.state[EvidenceState.MOUNTED] = True
+      self.state[EvidenceState.PARENT_MOUNTED] = True
 
   def _postprocess(self):
-    if self.state[EvidenceState.MOUNTED]:
+    if self.state[EvidenceState.PARENT_MOUNTED]:
       mount_local.PostprocessUnmountPath(self.mount_path)
-      self.state[EvidenceState.MOUNTED] = False
-    if self.state[EvidenceState.ATTACHED]:
+      self.state[EvidenceState.PARENT_MOUNTED] = False
+    if self.state[EvidenceState.PARENT_ATTACHED]:
       mount_local.PostprocessDeleteLosetup(self.device_path)
-      self.state[EvidenceState.ATTACHED] = False
+      self.state[EvidenceState.PARENT_ATTACHED] = False
 
 
 class PlasoFile(Evidence):
@@ -752,7 +760,7 @@ class DockerContainer(Evidence):
     _docker_root_directory(str): Full path to the docker root directory.
   """
 
-  POSSIBLE_STATES = [EvidenceState.MOUNTED]
+  POSSIBLE_STATES = [EvidenceState.DOCKER_MOUNTED]
 
   def __init__(self, container_id=None, *args, **kwargs):
     """Initialization for Docker Container."""
@@ -764,7 +772,7 @@ class DockerContainer(Evidence):
     self.context_dependent = True
 
   def _preprocess(self, _, required_states):
-    if EvidenceState.MOUNTED in required_states:
+    if EvidenceState.DOCKER_MOUNTED in required_states:
       self._docker_root_directory = GetDockerPath(
           self.parent_evidence.mount_path)
       # Mounting the container's filesystem
@@ -772,7 +780,7 @@ class DockerContainer(Evidence):
           self._docker_root_directory, self.container_id)
       self.mount_path = self._container_fs_path
       self.local_path = self.mount_path
-      self.state[EvidenceState.MOUNTED] = True
+      self.state[EvidenceState.DOCKER_MOUNTED] = True
 
   def _postprocess(self):
     # Unmount the container's filesystem
