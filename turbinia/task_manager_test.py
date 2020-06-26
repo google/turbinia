@@ -37,10 +37,13 @@ class TestTaskManager(TestTurbiniaTaskBase):
     self.manager = task_manager.BaseTaskManager()
     self.job1 = plaso.PlasoJob()
     self.job2 = strings.StringsJob()
+    # pylint: disable=protected-access
     self.saved_jobs = jobs_manager.JobsManager._job_classes
+    jobs_manager.JobsManager._job_classes = {}
 
   def tearDown(self):
     """Tears down the test class."""
+    # pylint: disable=protected-access
     jobs_manager.JobsManager._job_classes = self.saved_jobs
 
   def testTaskManagerTasksProperty(self):
