@@ -76,6 +76,13 @@ def evidence_decode(evidence_dict):
     evidence.collection = [
         evidence_decode(e) for e in evidence_dict['collection']
     ]
+
+  # We can just reinitialize insted of deserializing because the state should be
+  # empty when just starting to process on a new machine.
+  evidence.state = {}
+  for state in EvidenceState:
+    evidence.state[state] = False
+
   return evidence
 
 
@@ -320,8 +327,12 @@ class Evidence(object):
       self._preprocess(tmp_dir, required_states)
     except TurbiniaException as exception:
       log.error(
-          'Error running preprocessor for {0:s}: {1:s}'.format(
+          'Error running preprocessor for {0:s}: {1!s}'.format(
               self.name, exception))
+
+    log.debug(
+        'Pre-processing evidence {0:s} is complete, and evidence is in state '
+        '{1:s}'.format(self.name, self.format_state()))
 
   def postprocess(self):
     """Runs our postprocessing code, then our possible parent's evidence.
@@ -333,6 +344,17 @@ class Evidence(object):
     self._postprocess()
     if self.parent_evidence:
       self.parent_evidence.postprocess()
+
+  def format_state(self):
+    """Returns a string representing the current state of evidence.
+
+    Returns:
+      str:  The state as a formated string
+    """
+    output = []
+    for state, value in self.state.items():
+      output.append('{0:s}: {1!s}'.format(state.name, value))
+    return '[{0:s}]'.format(', '.join(output))
 
   def validate(self):
     """Runs validation to verify evidence meets minimum requirements.

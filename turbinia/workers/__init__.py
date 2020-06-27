@@ -451,19 +451,18 @@ class TurbiniaTask(object):
           state does not meet the required state.
     """
     evidence.validate()
-    evidence.preprocess(self.tmp_dir, required_state=self.REQUIRED_STATES)
+    evidence.preprocess(self.tmp_dir, required_states=self.REQUIRED_STATES)
 
     # Final check to make sure that the required evidence state has been met
     # for Evidence types that have those capabilities.
     for state in self.REQUIRED_STATES:
-      if state in evidence.POSSIBLE_STATES and not evidence.state[state]:
+      if state in evidence.POSSIBLE_STATES and not evidence.state.get(state):
         raise TurbiniaException(
             'Evidence {0!s} being processed by Task {1:s} requires Evidence '
             'to be in state {2:s}, but earlier pre-processors may have '
             'failed.  Current state is {3:s}. See previous logs for more '
             'information.'.format(
-                evidence, self.name, state.name, pprint.pformat(
-                    evidence.state)))
+                evidence, self.name, state.name, evidence.format_state()))
 
   def execute(
       self, cmd, result, save_files=None, log_files=None, new_evidence=None,
@@ -590,7 +589,7 @@ class TurbiniaTask(object):
     self.output_manager.setup(self)
     self.tmp_dir, self.output_dir = self.output_manager.get_local_output_dirs()
     if not self.result:
-      self.result = self.create_result()
+      self.result = self.create_result(input_evidence=evidence)
 
     if not self.run_local:
       if evidence.copyable and not config.SHARED_FILESYSTEM:
@@ -606,17 +605,19 @@ class TurbiniaTask(object):
     """Updates the last_update time of the task."""
     self.last_update = datetime.now()
 
-  def create_result(self, status=None, message=None, trace=None):
+  def create_result(
+      self, input_evidence=None, status=None, message=None, trace=None):
     """Creates a new TurbiniaTaskResults and instantiates the result.
 
     Args:
-      status: A one line descriptive task status.
-      message: An error message to show when returning the result.
+      input_evidence(Evidence): The evidence being processed by this Task.
+      status(str): A one line descriptive task status.
+      message(str): An error message to show when returning the result.
       trace: Stack traceback for errors.
     """
     result = TurbiniaTaskResult(
         base_output_dir=self.base_output_dir, request_id=self.request_id,
-        job_id=self.job_id)
+        job_id=self.job_id, input_evidence=input_evidence)
     result.setup(self)
     if message:
       if status:
