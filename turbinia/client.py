@@ -952,7 +952,7 @@ class TurbiniaCeleryWorker(BaseTurbiniaClient):
     dependencies = config.ParseDependencies()
     if config.DOCKER_ENABLED:
       check_docker_dependencies(dependencies)
-    check_system_dependencies(config.DEPENDENCIES)
+    check_system_dependencies(dependencies)
     check_directory(config.MOUNT_DIR_PREFIX)
     check_directory(config.OUTPUT_DIR)
     check_directory(config.TMP_DIR)
