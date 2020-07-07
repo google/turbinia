@@ -261,7 +261,7 @@ class RedisStateManager(BaseStateManager):
         task['last_update'] = datetime.strptime(
             task.get('last_update'), DATETIME_FORMAT)
       if task.get('run_time'):
-        task['run_time'] = datetime.timedelta(seconds=task['run_time'])
+        task['run_time'] = timedelta(seconds=task['run_time'])
 
     # pylint: disable=no-else-return
     if days:
