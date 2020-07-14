@@ -77,8 +77,8 @@ def evidence_decode(evidence_dict):
         evidence_decode(e) for e in evidence_dict['collection']
     ]
 
-  # We can just reinitialize insted of deserializing because the state should be
-  # empty when just starting to process on a new machine.
+  # We can just reinitialize instead of deserializing because the state should
+  # be empty when just starting to process on a new machine.
   evidence.state = {}
   for state in EvidenceState:
     evidence.state[state] = False
@@ -141,9 +141,9 @@ class Evidence(object):
         metadata file will contain all of the key=value pairs sent along with
         the processing request in the recipe.  The output is in JSON format
     state (dict): A map of each EvidenceState type to a boolean to indicate
-        if that state state is true.  This is used by the preprocessors to set
-        the current state and Tasks can use this to determine if the Evidence is
-        in the correct state for processing.
+        if that state is true.  This is used by the preprocessors to set the
+        current state and Tasks can use this to determine if the Evidence is in
+        the correct state for processing.
   """
 
   # The list of attributes a given piece of Evidence requires to be set
