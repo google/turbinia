@@ -21,6 +21,7 @@ import xml.etree.ElementTree as xml_tree
 from turbinia import TurbiniaException
 
 from turbinia.evidence import BulkExtractorOutput
+from turbinia.evidence import EvidenceState as state
 from turbinia.workers import TurbiniaTask
 from turbinia.lib import text_formatter as fmt
 
@@ -29,6 +30,10 @@ log = logging.getLogger('turbinia')
 
 class BulkExtractorTask(TurbiniaTask):
   """Task to generate Bulk Extractor output."""
+
+  REQUIRED_STATES = [
+      state.ATTACHED, state.PARENT_ATTACHED, state.PARENT_MOUNTED
+  ]
 
   def run(self, evidence, result):
     """Run Bulk Extractor binary.

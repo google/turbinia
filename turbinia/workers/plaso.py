@@ -22,12 +22,19 @@ from tempfile import NamedTemporaryFile
 from turbinia import config
 from turbinia.evidence import APFSEncryptedDisk
 from turbinia.evidence import BitlockerDisk
+from turbinia.evidence import EvidenceState as state
 from turbinia.evidence import PlasoFile
 from turbinia.workers import TurbiniaTask
 
 
 class PlasoTask(TurbiniaTask):
   """Task to run Plaso (log2timeline)."""
+
+  # Plaso requires the Disk to be attached, but doesn't require it be mounted.
+  REQUIRED_STATUS = [
+      state.ATTACHED, state.PARENT_ATTACHED, state.PARENT_MOUNTED,
+      state.DECOMPRESSED
+  ]
 
   def run(self, evidence, result):
     """Task that process data with Plaso.

@@ -20,6 +20,7 @@ import os
 import re
 
 from turbinia import TurbiniaException
+from turbinia.evidence import EvidenceState as state
 from turbinia.evidence import ReportText
 from turbinia.lib import text_formatter as fmt
 from turbinia.workers import TurbiniaTask
@@ -28,6 +29,11 @@ from turbinia.workers import Priority
 
 class JupyterAnalysisTask(TurbiniaTask):
   """Task to analyze a Jupyter Notebook config."""
+
+  REQUIRED_STATES = [
+      state.ATTACHED, state.DOCKER_MOUNTED, state.PARENT_ATTACHED,
+      state.PARENT_MOUNTED
+  ]
 
   def run(self, evidence, result):
     """Run the Jupyter worker.

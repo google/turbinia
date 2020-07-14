@@ -20,11 +20,16 @@ import os
 
 from turbinia import config
 from turbinia.evidence import ExportedFileArtifact
+from turbinia.evidence import EvidenceState as state
 from turbinia.workers import TurbiniaTask
 
 
 class FileArtifactExtractionTask(TurbiniaTask):
   """Task to run image_export (log2timeline)."""
+
+  REQUIRED_STATES = [
+      state.ATTACHED, state.PARENT_ATTACHED, state.PARENT_MOUNTED
+  ]
 
   def __init__(self, artifact_name='FileArtifact'):
     super(FileArtifactExtractionTask, self).__init__()
