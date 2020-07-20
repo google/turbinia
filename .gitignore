@@ -9,6 +9,8 @@
 /dependencies/
 /dist/
 /build/
+/_build/
+/_sources/
 
 # And don't care about the 'egg'.
 /turbinia.egg-info
