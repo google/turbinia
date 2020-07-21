@@ -1,0 +1,303 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Operational Details &mdash; Turbinia  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="FAQ" href="faq.html" />
+    <link rel="prev" title="Using Docker for Job execution" href="using-docker.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home" alt="Documentation Home"> Turbinia
+          
+
+          
+            
+            <img src="../_static/turbinia-logo.jpg" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">User documentation</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="install.html"><strong>Turbinia Quick Installation Instructions</strong></a></li>
+<li class="toctree-l2"><a class="reference internal" href="install-manual.html">Turbinia Local and Manual Installation Instructions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="how-it-works.html">How Turbinia Works</a></li>
+<li class="toctree-l2"><a class="reference internal" href="using-docker.html">Using Docker for Job execution</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Operational Details</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#google-cloud-platform-gcp-processing-details">Google Cloud Platform (GCP) Processing Details</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#persistent-disks">Persistent Disks</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#processing-non-cloud-disks-in-gcp">Processing non-cloud disks in GCP</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#stackdriver-logging">Stackdriver Logging</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#stackdriver-error-reporting">Stackdriver Error Reporting</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#general-notes">General Notes</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="faq.html">FAQ</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../developer/index.html">Developer documentation</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Turbinia</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="index.html">User documentation</a> &raquo;</li>
+        
+      <li>Operational Details</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/user/operational-details.md.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="operational-details">
+<h1>Operational Details<a class="headerlink" href="#operational-details" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="google-cloud-platform-gcp-processing-details">
+<h2>Google Cloud Platform (GCP) Processing Details<a class="headerlink" href="#google-cloud-platform-gcp-processing-details" title="Permalink to this headline">¶</a></h2>
+<p>Turbinia can read Evidence from either cloud Persistent Disks, or from other
+Evidence types saved as GCS objects. Turbinia can also write output to GCS. Note
+that you can operate multiple Turbinia instances within the same GCP Project as
+long as you’re careful to make sure your config options (Pub/Sub
+topics/subscriptions, output paths, instance name, etc) don’t overlap.</p>
+<div class="section" id="persistent-disks">
+<h3>Persistent Disks<a class="headerlink" href="#persistent-disks" title="Permalink to this headline">¶</a></h3>
+<p>Persistent disks are the default when processing disks that come from the Cloud.
+The account you run Turbinia as must have access to the persistent disks that
+you want to process, and those disks must also be in the same zone as the
+Turbinia workers. If you process GoogleCloudDisk Evidence with Turbinia, the
+worker node will attach the disk automatically before it runs its tasks. If you
+already have access to a persistent disk in a separate project, Turbinia can
+copy this into the project where Turbinia is being run.</p>
+</div>
+<div class="section" id="processing-non-cloud-disks-in-gcp">
+<h3>Processing non-cloud disks in GCP<a class="headerlink" href="#processing-non-cloud-disks-in-gcp" title="Permalink to this headline">¶</a></h3>
+<p>If you have raw disk images from physical machines or elsewhere that you want to
+process in the cloud, the best option is to create a new Cloud Persistent Disk,
+and then copy the image into the filesystem of the new disk. Then you can use
+the GoogleCloudDiskRawEmbedded Evidence type.</p>
+<p>Another option is to
+<a class="reference external" href="https://cloud.google.com/compute/docs/images/import-existing-image">convert the raw image to a cloud image</a>,
+and then create a Persistent Disk from that and process it as the
+GoogleCloudDisk Evidence type, but this is not generally recommended as it
+requires zero-padding the disk to a GB boundary which can change the hash of the
+disk, and isn’t considered forensically sound.</p>
+<p>One last option is to copy the image into GCS and process them directly from
+there, but the GoogleCloudDiskRawEmbeded option is generally recommended because
+this method requires setting up
+<a class="reference external" href="https://cloud.google.com/storage/docs/gcs-fuse">GCS FUSE</a>, and this is less
+stable than using Persistent Disks. If you do choose this option you will need
+to configure all of your worker nodes to mounting your GCS bucket at a common
+path. Once your GCS bucket is mounted, you can process these images as the
+‘rawdisk’ Evidence type.</p>
+</div>
+<div class="section" id="stackdriver-logging">
+<h3>Stackdriver Logging<a class="headerlink" href="#stackdriver-logging" title="Permalink to this headline">¶</a></h3>
+<p>Stackdriver Logging can be enabled within Turbinia, which would allow for all Turbinia logs to be centralized into the Stackdriver Logging console.</p>
+<p>In order to enable this feature, please set the <code class="docutils literal notranslate"><span class="pre">STACKDRIVER_LOGGING</span></code> config variable to <code class="docutils literal notranslate"><span class="pre">True</span></code> within the <code class="docutils literal notranslate"><span class="pre">.turbiniarc</span></code> configuration file as illustrated below.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Set this to True if you would like to enable Google Cloud Stackdriver Logging.</span>
+<span class="n">STACKDRIVER_LOGGING</span> <span class="o">=</span> <span class="kc">True</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="stackdriver-error-reporting">
+<h3>Stackdriver Error Reporting<a class="headerlink" href="#stackdriver-error-reporting" title="Permalink to this headline">¶</a></h3>
+<p>Stackdriver Error Reporting can be enabled within Turbinia, which would allow for full Traceback logging and alerting within the GCP Error Reporting console. Please note that Error Reporting will only alert on failures of a <code class="docutils literal notranslate"><span class="pre">Task</span></code> running on a <code class="docutils literal notranslate"><span class="pre">Worker</span></code>.</p>
+<p>In order to enable this feature, please set the <code class="docutils literal notranslate"><span class="pre">STACKDRIVER_TRACEBACK</span></code> config variable to <code class="docutils literal notranslate"><span class="pre">True</span></code> within the <code class="docutils literal notranslate"><span class="pre">.turbiniarc</span></code> configuration file as illustrated below.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># Set this to True if you would like to enable Google Cloud Error Reporting.</span>
+<span class="n">STACKDRIVER_TRACEBACK</span> <span class="o">=</span> <span class="kc">True</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="general-notes">
+<h2>General Notes<a class="headerlink" href="#general-notes" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p>Turbinia currently assumes that Evidence is equally available to all worker
+nodes (e.g. through locally mapped storage, or through attachable persistent
+Google Cloud Disks, etc).</p></li>
+</ul>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="faq.html" class="btn btn-neutral float-right" title="FAQ" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="using-docker.html" class="btn btn-neutral float-left" title="Using Docker for Job execution" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, Turbinia contributors
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

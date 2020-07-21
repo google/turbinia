@@ -1,0 +1,374 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Turbinia Quick Installation Instructions &mdash; Turbinia  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Turbinia Local and Manual Installation Instructions" href="install-manual.html" />
+    <link rel="prev" title="User documentation" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home" alt="Documentation Home"> Turbinia
+          
+
+          
+            
+            <img src="../_static/turbinia-logo.jpg" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">User documentation</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#"><strong>Turbinia Quick Installation Instructions</strong></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#overview">Overview</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#installation">Installation</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#gcp-project-setup">GCP Project Setup</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#deploy-turbinia">Deploy Turbinia</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#client-configuration-optional">Client configuration (optional)</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="install-manual.html">Turbinia Local and Manual Installation Instructions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="how-it-works.html">How Turbinia Works</a></li>
+<li class="toctree-l2"><a class="reference internal" href="using-docker.html">Using Docker for Job execution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="operational-details.html">Operational Details</a></li>
+<li class="toctree-l2"><a class="reference internal" href="faq.html">FAQ</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../developer/index.html">Developer documentation</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Turbinia</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="index.html">User documentation</a> &raquo;</li>
+        
+      <li><strong>Turbinia Quick Installation Instructions</strong></li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/user/install.md.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="turbinia-quick-installation-instructions">
+<h1><strong>Turbinia Quick Installation Instructions</strong><a class="headerlink" href="#turbinia-quick-installation-instructions" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<p>Turbinia can be run on the <a class="reference external" href="https://cloud.google.com">Google Cloud Platform</a>, on
+local machines, or in a hybrid mode. See the
+“<a class="reference internal" href="how-it-works.html"><span class="doc">how it works</span></a>”
+documentation for more details on what the architecture looks like for each of
+these installation types. This doc covers the recommended quick installation
+instructions for Cloud installations. This uses
+<a class="reference external" href="https://github.com/forseti-security/forseti-security/tree/master/contrib/incident-response">terraform configs</a>
+that are part of the
+<a class="reference external" href="https://github.com/forseti-security/forseti-security">Forseti Security repository</a>
+to automate deployment of Turbinia into an existing GCP Project. If you want to
+install Turbinia in hybrid or local only mode, or want to install Turbinia
+manually (not recommended), see
+<a class="reference internal" href="install-manual.html"><span class="doc">here</span></a>
+for details.</p>
+</div>
+<div class="section" id="installation">
+<h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
+<p>The following steps can be performed on any Linux machine (Ubuntu 18.0.4
+recommended), and <a class="reference external" href="https://cloud.google.com/shell/">Cloud Shell</a> is one easy way
+to get a shell with access to your GCP resources.</p>
+<div class="section" id="gcp-project-setup">
+<h3>GCP Project Setup<a class="headerlink" href="#gcp-project-setup" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>Create or select a Google Cloud Platform project in the
+<a class="reference external" href="https://console.cloud.google.com">Google Cloud Console</a>.</p></li>
+<li><p>Determine which GCP zone and region that you wish to deploy Turbinia into.
+Note that one of the GCP dependencies is Cloud Functions, and that only
+works in certain regions, so you will need to deploy in one of
+<a class="reference external" href="https://cloud.google.com/functions/docs/locations">the supported regions</a>.</p></li>
+<li><p>Install
+<a class="reference external" href="https://cloud.google.com/sdk/docs/quickstart-linux">google-cloud-sdk</a>.</p>
+<ul>
+<li><p>Note: If you are doing this from cloud shell you shouldn’t need this
+step.</p></li>
+</ul>
+</li>
+<li><p>Run <code class="docutils literal notranslate"><span class="pre">gcloud</span> <span class="pre">auth</span> <span class="pre">login</span></code> to authenticate. This may require you to copy/paste
+url to browser.</p></li>
+<li><p>Run <code class="docutils literal notranslate"><span class="pre">gcloud</span> <span class="pre">auth</span> <span class="pre">application-default</span> <span class="pre">login</span></code></p></li>
+</ul>
+</div>
+<div class="section" id="deploy-turbinia">
+<h3>Deploy Turbinia<a class="headerlink" href="#deploy-turbinia" title="Permalink to this headline">¶</a></h3>
+<ul class="simple">
+<li><p>Download the
+<a class="reference external" href="https://www.terraform.io/downloads.html">Terraform CLI from here</a>.</p></li>
+<li><p>Clone the Forseti Security repository and change to the path containing the
+configs</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">clone</span> <span class="pre">https://github.com/forseti-security/forseti-security/</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">cd</span> <span class="pre">forseti-security/contrib/incident-response/infrastructure</span></code></p></li>
+</ul>
+</li>
+<li><p>Configuration</p>
+<ul>
+<li><p>By default this will create one Turbinia server instance and one worker
+instance. If you want to change the number of workers, edit the
+<code class="docutils literal notranslate"><span class="pre">turbinia/variables.tf</span></code> file and set the <code class="docutils literal notranslate"><span class="pre">turbinia_worker_count</span></code>
+variable to the number of workers you want to deploy.</p></li>
+<li><p>To adjust the GCP zone and region you want to run Turbinia in, edit the
+<code class="docutils literal notranslate"><span class="pre">turbinia/variables.tf</span></code> file and change the <code class="docutils literal notranslate"><span class="pre">gcp_zone</span></code> and <code class="docutils literal notranslate"><span class="pre">gcp_region</span></code>
+variables as appropriate.</p></li>
+<li><p>Running the following commands will leave some state information under
+the current directory, so if you wish to continue to manage the number
+of workers via Terraform you should keep this directory for later use.
+Alternatively, if you wish to store this information in GCS instead, you
+can edit <code class="docutils literal notranslate"><span class="pre">main.tf</span></code> and change the <code class="docutils literal notranslate"><span class="pre">bucket</span></code> parameter to the GCS bucket
+you wish to keep this state information in. See the
+<a class="reference external" href="https://www.terraform.io/docs/commands/index.html">Terraform documentation</a>
+for more information.</p></li>
+</ul>
+</li>
+<li><p>Initialize terraform and apply the configuration</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">terraform</span> <span class="pre">init</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">terraform</span> <span class="pre">apply</span> <span class="pre">--target=module.turbinia</span></code></p>
+<ul>
+<li><p>If the <code class="docutils literal notranslate"><span class="pre">target</span></code> parameter is not supplied, Terraform will also
+create a <a class="reference external" href="http://timesketch.org">Timesketch</a> instance in the same
+project, and this can be configured to ingest Turbinia timeline
+output and report data. See the
+<a class="reference external" href="https://github.com/forseti-security/forseti-security/blob/master/contrib/incident-response/infrastructure/README">Forseti documentation on this</a>
+for more details.</p></li>
+<li><p>When prompted for the project name, enter the project you selected
+during setup.</p></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p>This should result in the appropriate cloud services being enabled and
+configured and GCE instances for the server and the worker(s) being started and
+configured. The Turbinia configuration file will be deployed on these instances
+as <code class="docutils literal notranslate"><span class="pre">etc/turbinia/turbinia.conf</span></code>. If you later want to increase the number of
+workers, you can edit the <code class="docutils literal notranslate"><span class="pre">turbinia/variables.tf</span></code> file mentioned above and
+re-run <code class="docutils literal notranslate"><span class="pre">terraform</span> <span class="pre">apply</span></code></p>
+</div>
+<div class="section" id="client-configuration-optional">
+<h3>Client configuration (optional)<a class="headerlink" href="#client-configuration-optional" title="Permalink to this headline">¶</a></h3>
+<p>If you want to use the command line tool, you can SSH into the server and run
+<code class="docutils literal notranslate"><span class="pre">turbiniactl</span></code> from there. The <code class="docutils literal notranslate"><span class="pre">turbiniactl</span></code> command can be used to submit
+Evidence for processing or see the status of existing and previous processing
+requests. If you’d prefer to use turbiniactl on a different machine, follow the
+following instructions to configure the client. The instructions are based on
+using Ubuntu 18.04, though other versions of Linux should be compatible.</p>
+<ul class="simple">
+<li><p>Follow the steps from GCP Project setup above to install the SDK and
+authenticate with gcloud.</p></li>
+<li><p>Install some python tooling:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">apt-get</span> <span class="pre">install</span> <span class="pre">python3-pip</span> <span class="pre">python3-wheel</span></code></p></li>
+</ul>
+</li>
+<li><p>Install the Turbinia client.</p>
+<ul>
+<li><p>Note: You may want to install this into a virtual-environment with
+<a class="reference external" href="https://docs.python.org/3.7/library/venv.html">venv</a> or
+<a class="reference external" href="https://pipenv.kennethreitz.org/en/latest/">pipenv</a> to reduce potential
+dependency conflicts and isolate these packages into their own
+environment.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">pip3</span> <span class="pre">--user</span> <span class="pre">install</span> <span class="pre">turbinia</span></code></p></li>
+</ul>
+</li>
+<li><p>If running on the same machine you deployed Turbinia from, you can generate
+the config with terraform</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">terraform</span> <span class="pre">output</span> <span class="pre">turbinia-config</span> <span class="pre">&gt;</span> <span class="pre">~/.turbiniarc</span></code></p></li>
+</ul>
+</li>
+<li><p>Otherwise, if you are running from a different machine you’ll need to copy
+the Turbinia config from the original machine, or from the Turbinia server
+from <code class="docutils literal notranslate"><span class="pre">/etc/turbinia/turbinia.conf</span></code>.</p></li>
+</ul>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="install-manual.html" class="btn btn-neutral float-right" title="Turbinia Local and Manual Installation Instructions" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="index.html" class="btn btn-neutral float-left" title="User documentation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, Turbinia contributors
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

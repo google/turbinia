@@ -51,7 +51,7 @@ templates_path = ['_templates']
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
+exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store', 'design/*']
 
 
 # -- Options for HTML output -------------------------------------------------
@@ -83,8 +83,6 @@ html_sidebars = {
 
 html_logo = "images/turbinia-logo.jpg"
 
-anchor_regex = re.compile(
-    r'(?P<uri>[a-zA-Z0-9-./]+?).md#(?P<anchor>[a-zA-Z0-9-]+)')
 
 class ProcessLink(transforms.Transform):
   """Transform definition to parse .md references to internal pages."""
@@ -98,11 +96,8 @@ class ProcessLink(transforms.Transform):
       if r.endswith('.md'):
         r = r[:-3] + '.html'
         node['refuri'] = r
-      else:
-        match = anchor_regex.match(r)
-        if match:
-          node['refuri'] = '{0:s}.html#{1:s}'.format(
-              match.group('uri'), match.group('anchor'))
+
+      
     return node
 
   def traverse(self, node):

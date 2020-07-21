@@ -1,0 +1,392 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Developing new Turbinia Tasks and Evidence types &mdash; Turbinia  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Debugging" href="debugging.html" />
+    <link rel="prev" title="Contributing" href="contributing.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home" alt="Documentation Home"> Turbinia
+          
+
+          
+            
+            <img src="../_static/turbinia-logo.jpg" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../user/index.html">User documentation</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Developer documentation</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="contributing.html">Contributing</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Developing new Turbinia Tasks and Evidence types</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#it-s-easy">It’s easy!</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#before-you-start">Before you start</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#task-code">Task code</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#boilerplate-and-glue">Boilerplate and Glue</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#reporting">Reporting</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#tips">Tips</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#notes">Notes</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="debugging.html">Debugging</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Turbinia</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="index.html">Developer documentation</a> &raquo;</li>
+        
+      <li>Developing new Turbinia Tasks and Evidence types</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/developer/developing-new-tasks.md.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="developing-new-turbinia-tasks-and-evidence-types">
+<h1>Developing new Turbinia Tasks and Evidence types<a class="headerlink" href="#developing-new-turbinia-tasks-and-evidence-types" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="it-s-easy">
+<h2>It’s easy!<a class="headerlink" href="#it-s-easy" title="Permalink to this headline">¶</a></h2>
+<p>Creating new Tasks for Turbinia is fairly easy, and if your Task is simple (like
+just executing an external command) it should only take a few lines of real code
+along with a bit of boiler-plate code, and a few extra lines to connect things
+together.</p>
+</div>
+<div class="section" id="before-you-start">
+<h2>Before you start<a class="headerlink" href="#before-you-start" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p>Check out the <a class="reference internal" href="../user/how-it-works.html"><span class="doc">How it Works</span></a> page to see how the different
+components work within Turbinia.</p></li>
+<li><p>Make sure to follow the Turbinia
+<a class="reference internal" href="contributing.html"><span class="doc">developer contribution guide</span></a>.</p></li>
+</ul>
+</div>
+<div class="section" id="task-code">
+<h2>Task code<a class="headerlink" href="#task-code" title="Permalink to this headline">¶</a></h2>
+<p>The Worker which runs the tasks handles the following things before you even get
+to the <code class="docutils literal notranslate"><span class="pre">run()</span></code> method where most of our code will go:</p>
+<ul class="simple">
+<li><p>Running any pre- or post-processors that need to run to prepare the
+Evidence.</p></li>
+<li><p>If the Evidence is file-based, the pre-processor should make that path
+available as <code class="docutils literal notranslate"><span class="pre">evidence.local_path</span></code>. Similarly, if the Task generates any new
+Evidence objects, you must set the <code class="docutils literal notranslate"><span class="pre">.local_path</span></code> attribute of that before
+you add it to the results.</p></li>
+<li><p>Setting up a temporary directory (available as <code class="docutils literal notranslate"><span class="pre">self.output_dir</span></code>).</p></li>
+<li><p>It prepares a TurbiniaResult object to save results into.</p></li>
+</ul>
+<p>To see a relatively simple example of the code required for a new Task, see this
+<a class="reference external" href="https://github.com/google/turbinia/pull/207">pull request</a>. This simply
+executes the strings binary on Disk-based Evidence types.</p>
+<p>Here is the bulk of the actual Task code for the Ascii Strings Task:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span>    <span class="c1"># Create the new Evidence object that will be generated by this Task.</span>
+    <span class="n">output_evidence</span> <span class="o">=</span> <span class="n">TextFile</span><span class="p">()</span>
+    <span class="c1"># Create a path that we can write the new file to.</span>
+    <span class="n">base_name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">evidence</span><span class="o">.</span><span class="n">local_path</span><span class="p">)</span>
+    <span class="n">output_file_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">output_dir</span><span class="p">,</span> <span class="s1">&#39;</span><span class="si">{0:s}</span><span class="s1">.ascii&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">base_name</span><span class="p">))</span>
+    <span class="c1"># Add the output path to the evidence so we can automatically save it</span>
+    <span class="c1"># later.</span>
+    <span class="n">output_evidence</span><span class="o">.</span><span class="n">local_path</span> <span class="o">=</span> <span class="n">output_file_path</span>
+
+    <span class="c1"># Generate the command we want to run.</span>
+    <span class="n">cmd</span> <span class="o">=</span> <span class="s1">&#39;strings -a -t d </span><span class="si">{0:s}</span><span class="s1"> &gt; </span><span class="si">{1:s}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+        <span class="n">evidence</span><span class="o">.</span><span class="n">local_path</span><span class="p">,</span> <span class="n">output_file_path</span><span class="p">)</span>
+    <span class="c1"># Add a log line to the result that will be returned.</span>
+    <span class="n">result</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="s1">&#39;Running strings as [</span><span class="si">{0:s}</span><span class="s1">]&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">cmd</span><span class="p">))</span>
+    <span class="c1"># Actually execute the binary</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+        <span class="n">cmd</span><span class="p">,</span> <span class="n">result</span><span class="p">,</span> <span class="n">new_evidence</span><span class="o">=</span><span class="p">[</span><span class="n">output_evidence</span><span class="p">],</span> <span class="n">close</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">shell</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This is mostly self explanatory from the comments, but the line that needs a
+little more explaining is this one:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span>    <span class="bp">self</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span>
+        <span class="n">cmd</span><span class="p">,</span> <span class="n">result</span><span class="p">,</span> <span class="n">new_evidence</span><span class="o">=</span><span class="p">[</span><span class="n">output_evidence</span><span class="p">],</span> <span class="n">close</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">shell</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This will:</p>
+<ul class="simple">
+<li><p>Run the command as specified</p></li>
+<li><p>Save the stdout and stderr in the results object specified</p></li>
+</ul>
+<p>Also, because <code class="docutils literal notranslate"><span class="pre">close=True</span></code> is set in this call, it will finalze the results in
+order to prepare them to be returned to to the Task Manager. Closing a result
+does a few things like set task stats, save all of the output files, and run the
+post-processor to free up the Evidence (e.g. unmount disks, etc). If you have
+other external commands that you want to run and save the output from, you
+should not close the results until after these are all complete (i.e. just don’t
+set <code class="docutils literal notranslate"><span class="pre">close=True</span></code>). If you are not calling the <code class="docutils literal notranslate"><span class="pre">execute()</span></code> function and closing
+the results that way, you’ll need to close them similar to this:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">result</span><span class="o">.</span><span class="n">close</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">success</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">status</span><span class="o">=</span><span class="s1">&#39;My message about the Task status&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>One important parameter that was not set in the call for <code class="docutils literal notranslate"><span class="pre">self.close()</span></code> is
+<code class="docutils literal notranslate"><span class="pre">save_files</span></code>. It takes a list of file paths that you want to save (no need to
+add the files you linked to the Evidence earlier, it will save those
+automatically). This is used for non-Evidence files that you want to save (for
+example log files).</p>
+<p>If you want to write temporary files from your task, you should do this relative
+to the self.output_dir. This is a directory that is unique for this Task.</p>
+<p>If you are not using the <code class="docutils literal notranslate"><span class="pre">self.execute()</span></code> method, then you will need to close
+the result object before exiting.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">run()</span></code> function should return the result object and these will also be
+serialized and returned to the server. The new Evidence created and included in
+the results will be checked by the Task Manager to see if there are other Tasks
+that should be scheduled to process it.</p>
+</div>
+<div class="section" id="boilerplate-and-glue">
+<h2>Boilerplate and Glue<a class="headerlink" href="#boilerplate-and-glue" title="Permalink to this headline">¶</a></h2>
+<p>The only two interesting bits for the Job definition in
+<code class="docutils literal notranslate"><span class="pre">turbinia/jobs/strings.py</span></code> are this one that sets the input and output evidence
+types for the Task (so the Task Manager knows what kinds of Tasks to schedule):</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span>  <span class="n">evidence_input</span> <span class="o">=</span> <span class="p">[</span><span class="nb">type</span><span class="p">(</span><span class="n">RawDisk</span><span class="p">()),</span> <span class="nb">type</span><span class="p">(</span><span class="n">GoogleCloudDisk</span><span class="p">()),</span>
+                    <span class="nb">type</span><span class="p">(</span><span class="n">GoogleCloudDiskRawEmbedded</span><span class="p">())]</span>
+  <span class="n">evidence_output</span> <span class="o">=</span> <span class="p">[</span><span class="nb">type</span><span class="p">(</span><span class="n">TextFile</span><span class="p">())]</span>
+</pre></div>
+</div>
+<p>And this one, which just sets up the Tasks for both Task types (Ascii and
+Unicode):</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span>    <span class="n">tasks</span> <span class="o">=</span> <span class="p">[</span><span class="n">StringsAsciiTask</span><span class="p">()</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">evidence</span><span class="p">]</span>
+    <span class="n">tasks</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="n">StringsUniTask</span><span class="p">()</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">evidence</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">tasks</span>
+</pre></div>
+</div>
+<p>In this case we have two separate tasks that we are executing for the Job, but
+it’s possible that there could be more or less depending on how much you want to
+split it up. Then you just need to add a reference to the new job in
+<code class="docutils literal notranslate"><span class="pre">turbinia/jobs/__init__.py</span></code>.</p>
+</div>
+<div class="section" id="reporting">
+<h2>Reporting<a class="headerlink" href="#reporting" title="Permalink to this headline">¶</a></h2>
+<p>Tasks can return report data in Markdown format by adding it as a string to
+<code class="docutils literal notranslate"><span class="pre">result.report_data</span></code>.  If high priority findings are found, you can change
+<code class="docutils literal notranslate"><span class="pre">result.report_priority</span></code>.  Priorites are 0 - 100, and the highest priority is 0.
+This will affect the ordering in the report, and if the priority is a value less
+than what is set with <code class="docutils literal notranslate"><span class="pre">--priority_filter</span></code> (i.e. a higher priority), then the
+full report data will be printed out when <code class="docutils literal notranslate"><span class="pre">--full_report</span></code> is specified.</p>
+<p>Tasks can use the helper methods in turbinia.lib.text_formatter to help format
+the text with formatting like bold and code.  Note that when setting headings in
+a task report, do not use heading1 through heading3 because these are used in
+other sections of the report, but you can use heading4 and above.</p>
+</div>
+<div class="section" id="tips">
+<h2>Tips<a class="headerlink" href="#tips" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p>If possible, set a meaningful <code class="docutils literal notranslate"><span class="pre">status</span></code> message that summarizes the Task
+execution or output.  This can be done by either by setting the <code class="docutils literal notranslate"><span class="pre">status</span></code>
+parameter when calling <code class="docutils literal notranslate"><span class="pre">result.close()</span></code>, or by explicitly setting the
+<code class="docutils literal notranslate"><span class="pre">result.status</span></code> attribute.  This is the line of output that shows up
+for each task when running <code class="docutils literal notranslate"><span class="pre">turbiniactl</span> <span class="pre">status</span></code>.  If a Task has a
+low <code class="docutils literal notranslate"><span class="pre">report_priority</span></code>, then the full report data will not show up in
+the <code class="docutils literal notranslate"><span class="pre">turbiniactl</span> <span class="pre">status</span></code>, and so the status may be the only place that
+Task info will bubble up in the output by default, so setting it to
+something useful can be important.</p></li>
+<li><p>If your Task executes an external command that can generate a log file,
+it’s helpful to specify the appropriate flags to generate this and then
+automatically save it by setting the <code class="docutils literal notranslate"><span class="pre">log_files</span></code> paramter when calling
+<code class="docutils literal notranslate"><span class="pre">self.execute()</span></code>.  Additionally, if there are flags that control the
+verbosity of this log file, it’s helpful to check the <code class="docutils literal notranslate"><span class="pre">config.DEBUG_TASKS</span></code>
+config parameter and log accordingly, and this way all tasks can generate
+debug output when this is configured.</p></li>
+</ul>
+</div>
+<div class="section" id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p>The reason we separate out the strings processing into two separate Tasks is
+so we can do them in parallel and save on wall-time.</p></li>
+<li><p>One caveat about Task development is that it is possible to create a cycle
+in the Task Manager by generating Evidence types that your Task (or any of
+its parent’s tasks) also listens to. Check out the
+<a class="reference external" href="https://github.com/google/turbinia/blob/master/tools/turbinia_job_graph.py">Job and Evidence graph generator</a>
+if you want to verify that there aren’t any cycles in the graph.</p></li>
+</ul>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="debugging.html" class="btn btn-neutral float-right" title="Debugging" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="contributing.html" class="btn btn-neutral float-left" title="Contributing" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, Turbinia contributors
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
