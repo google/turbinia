@@ -17,16 +17,24 @@
 from __future__ import unicode_literals
 
 import os
+from tempfile import NamedTemporaryFile
 
 from turbinia import config
 from turbinia.evidence import APFSEncryptedDisk
 from turbinia.evidence import BitlockerDisk
+from turbinia.evidence import EvidenceState as state
 from turbinia.evidence import PlasoFile
 from turbinia.workers import TurbiniaTask
 
 
 class PlasoTask(TurbiniaTask):
   """Task to run Plaso (log2timeline)."""
+
+  # Plaso requires the Disk to be attached, but doesn't require it be mounted.
+  REQUIRED_STATUS = [
+      state.ATTACHED, state.PARENT_ATTACHED, state.PARENT_MOUNTED,
+      state.DECOMPRESSED
+  ]
 
   def run(self, evidence, result):
     """Task that process data with Plaso.
@@ -78,6 +86,14 @@ class PlasoTask(TurbiniaTask):
     else:
       vss = None
 
+    if evidence.config and evidence.config.get('yara_rules'):
+      yara_rules = evidence.config.get('yara_rules')
+      with NamedTemporaryFile(dir=self.tmp_dir, delete=False, mode='w') as fh:
+        yara_file_path = fh.name
+        fh.write(yara_rules)
+    else:
+      yara_rules = None
+
     # Write plaso file into tmp_dir because sqlite has issues with some shared
     # filesystems (e.g NFS).
     plaso_file = os.path.join(self.tmp_dir, '{0:s}.plaso'.format(self.id))
@@ -98,6 +114,8 @@ class PlasoTask(TurbiniaTask):
       cmd.extend(['--file_filter', file_filter_file])
     if vss:
       cmd.extend(['--vss_stores', vss])
+    if yara_rules:
+      cmd.extend(['--yara_rules', yara_file_path])
 
     if isinstance(evidence, (APFSEncryptedDisk, BitlockerDisk)):
       if evidence.recovery_key:
@@ -114,7 +132,7 @@ class PlasoTask(TurbiniaTask):
         return result
 
     cmd.extend(['--logfile', plaso_log])
-    cmd.extend([plaso_file, evidence.device_path])
+    cmd.extend([plaso_file, evidence.source_path])
 
     result.log('Running plaso as [{0:s}]'.format(' '.join(cmd)))
 

@@ -149,7 +149,7 @@ class OutputManager(object):
         json_str = json.dumps(metadata)
       except TypeError as exception:
         raise TurbiniaException(
-            'Could not serialize Evidence config for {0:s}: {1:s}'.format(
+            'Could not serialize Evidence config for {0:s}: {1!s}'.format(
                 evidence_.name, exception))
 
       try:
@@ -158,7 +158,7 @@ class OutputManager(object):
           file_handle.write(json_str.encode('utf-8'))
       except IOError as exception:
         raise TurbiniaException(
-            'Could not write metadata file {0:s}: {1:s}'.format(
+            'Could not write metadata file {0:s}: {1!s}'.format(
                 metadata_path, exception))
 
       self.save_local_file(metadata_path, result)

@@ -20,6 +20,7 @@ import os
 import re
 
 from turbinia import TurbiniaException
+from turbinia.evidence import EvidenceState as state
 from turbinia.evidence import ReportText
 from turbinia.lib import text_formatter as fmt
 from turbinia.workers import TurbiniaTask
@@ -30,6 +31,11 @@ from turbinia.lib.utils import bruteforce_password_hashes
 
 class JenkinsAnalysisTask(TurbiniaTask):
   """Task to analyze a Jenkins install."""
+
+  REQUIRED_STATES = [
+      state.ATTACHED, state.DOCKER_MOUNTED, state.PARENT_ATTACHED,
+      state.PARENT_MOUNTED
+  ]
 
   def run(self, evidence, result):
     """Run the Jenkins worker.

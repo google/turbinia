@@ -261,7 +261,7 @@ class RedisStateManager(BaseStateManager):
         task['last_update'] = datetime.strptime(
             task.get('last_update'), DATETIME_FORMAT)
       if task.get('run_time'):
-        task['run_time'] = datetime.timedelta(seconds=task['run_time'])
+        task['run_time'] = timedelta(seconds=task['run_time'])
 
     # pylint: disable=no-else-return
     if days:
@@ -284,8 +284,6 @@ class RedisStateManager(BaseStateManager):
     task_data = self.get_task_dict(task)
     task_data['last_update'] = task_data['last_update'].strftime(
         DATETIME_FORMAT)
-    if task_data['run_time']:
-      task_data['run_time'] = task_data['run_time'].total_seconds()
     # Need to use json.dumps, else redis returns single quoted string which
     # is invalid json
     if not self.client.set(key, json.dumps(task_data)):

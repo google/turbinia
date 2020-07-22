@@ -315,3 +315,25 @@ class TestTurbiniaTask(TestTurbiniaTaskBase):
     self.task.execute(
         cmd, self.result, new_evidence=[self.evidence], close=True)
     self.assertNotIn(self.evidence, self.result.evidence)
+
+  def testEvidenceSetup(self):
+    """Tests basic run of evidence_setup."""
+    self.evidence.preprocess = mock.MagicMock()
+    self.task.evidence_setup(self.evidence)
+    self.evidence.preprocess.assert_called_with(
+        self.task.tmp_dir, required_states=self.task.REQUIRED_STATES)
+
+  def testEvidenceSetupStateNotFulfilled(self):
+    """Test that evidence setup throws exception when states don't match."""
+    self.evidence.preprocess = mock.MagicMock()
+    self.evidence.POSSIBLE_STATES = [evidence.EvidenceState.ATTACHED]
+    self.task.REQUIRED_STATES = [evidence.EvidenceState.ATTACHED]
+
+    # The current state of the evience as shown in evidence.state[ATTACHED] is
+    # not True, so this should throw an exception
+    self.assertRaises(
+        TurbiniaException, self.task.evidence_setup, self.evidence)
+
+    # Runs fine after setting the state
+    self.evidence.state[evidence.EvidenceState.ATTACHED] = True
+    self.task.evidence_setup(self.evidence)

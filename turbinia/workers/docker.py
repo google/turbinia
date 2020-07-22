@@ -17,11 +17,11 @@ from __future__ import unicode_literals
 
 import json
 import logging
-import os
 import subprocess
 
 from turbinia import TurbiniaException
 from turbinia.evidence import DockerContainer
+from turbinia.evidence import EvidenceState as state
 from turbinia.workers import Priority
 from turbinia.workers import TurbiniaTask
 from turbinia.lib.docker_manager import GetDockerPath
@@ -31,6 +31,10 @@ log = logging.getLogger('turbinia')
 
 class DockerContainersEnumerationTask(TurbiniaTask):
   """Enumerates Docker containers on Linux"""
+
+  REQUIRED_STATES = [
+      state.ATTACHED, state.MOUNTED, state.PARENT_ATTACHED, state.PARENT_MOUNTED
+  ]
 
   def GetContainers(self, evidence):
     """Lists the containers from an input Evidence.

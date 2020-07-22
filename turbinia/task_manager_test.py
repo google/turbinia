@@ -37,15 +37,19 @@ class TestTaskManager(TestTurbiniaTaskBase):
     self.manager = task_manager.BaseTaskManager()
     self.job1 = plaso.PlasoJob()
     self.job2 = strings.StringsJob()
+    # pylint: disable=protected-access
     self.saved_jobs = jobs_manager.JobsManager._job_classes
+    jobs_manager.JobsManager._job_classes = {}
 
   def tearDown(self):
     """Tears down the test class."""
+    # pylint: disable=protected-access
     jobs_manager.JobsManager._job_classes = self.saved_jobs
 
   def testTaskManagerTasksProperty(self):
     """Basic test for task_manager Tasks property."""
     self.setResults()
+    jobs_manager.JobsManager.RegisterJob(plaso.PlasoJob)
     job = jobs_manager.JobsManager.GetJobInstance('PlasoJob')
     job.tasks.extend([self.task, self.task])
     self.manager.running_jobs.extend([job, job])
@@ -55,34 +59,34 @@ class TestTaskManager(TestTurbiniaTaskBase):
   @mock.patch('turbinia.task_manager.jobs_manager.JobsManager.GetJobs')
   @mock.patch('turbinia.task_manager.jobs_manager.JobsManager.GetJobNames')
   @mock.patch('turbinia.task_manager.BaseTaskManager._backend_setup')
-  def testTaskManagerSetupBlacklist(
+  def testTaskManagerSetupDenylist(
       self, _, mock_get_job_names, mock_get_jobs, mock_config):
     """Test Task manager setup sets up correct set of jobs."""
 
     all_jobs = ['job1', 'job2', 'job3', 'job4', 'job5']
-    jobs_blacklist = ['job1']
+    jobs_denylist = ['job1']
     disabled_jobs = ['job2', 'job3']
     mock_config.DISABLED_JOBS = disabled_jobs
     mock_get_job_names.return_value = all_jobs
     mock_get_jobs.side_effect = lambda jobs: [(name, name) for name in jobs]
 
-    # Test blacklist along with disabled list in config
-    self.manager.setup(jobs_blacklist, [])
+    # Test denylist along with disabled list in config
+    self.manager.setup(jobs_denylist, [])
     self.assertListEqual(sorted(self.manager.jobs), ['job4', 'job5'])
 
     # Test only disabled list in config
     self.manager.setup([], [])
     self.assertListEqual(sorted(self.manager.jobs), ['job1', 'job4', 'job5'])
 
-    # Test whitelist of item in disabled list
+    # Test allowlist of item in disabled list
     self.manager.setup([], ['job2'])
     self.assertListEqual(self.manager.jobs, ['job2'])
 
-    # Test whitelist of item not in disabled list
+    # Test allowlist of item not in disabled list
     self.manager.setup([], ['job4'])
     self.assertListEqual(self.manager.jobs, ['job4'])
 
-    # Test whitelist and blacklist both specified
+    # Test allowlist and denylist both specified
     self.assertRaises(TurbiniaException, self.manager.setup, ['job1'], ['job2'])
 
   def testAddEvidence(self):
@@ -103,7 +107,7 @@ class TestTaskManager(TestTurbiniaTaskBase):
     self.assertEqual(test_job.evidence.request_id, request_id)
     self.assertIn(test_job, self.manager.running_jobs)
 
-  def testAddEvidenceBlackList(self):
+  def testAddEvidenceDenyList(self):
     """Tests add_evidence method."""
     self.setResults()
     self.manager.add_task = mock.MagicMock()
@@ -112,15 +116,15 @@ class TestTaskManager(TestTurbiniaTaskBase):
     self.job1.create_tasks = mock.MagicMock(return_value=[self.task])
     self.job2.create_tasks = mock.MagicMock(return_value=[self.task])
     self.manager.jobs = [self.job1, self.job2]
-    self.evidence.config['jobs_blacklist'] = ['StringsJob']
+    self.evidence.config['jobs_denylist'] = ['StringsJob']
     self.manager.add_evidence(self.evidence)
 
-    # Only one Plaso job is queued after one is blacklisted
+    # Only one Plaso job is queued after one is denylisted
     self.assertEqual(len(self.manager.running_jobs), 1)
     test_job = self.manager.running_jobs[0]
     self.assertEqual(test_job.name, 'PlasoJob')
 
-  def testAddEvidenceWhitelist(self):
+  def testAddEvidenceAllowlist(self):
     """Tests add_evidence method."""
     self.setResults()
     self.manager.add_task = mock.MagicMock()
@@ -129,10 +133,10 @@ class TestTaskManager(TestTurbiniaTaskBase):
     self.job1.create_tasks = mock.MagicMock(return_value=[self.task])
     self.job2.create_tasks = mock.MagicMock(return_value=[self.task])
     self.manager.jobs = [self.job1, self.job2]
-    self.evidence.config['jobs_whitelist'] = ['PlasoJob']
+    self.evidence.config['jobs_allowlist'] = ['PlasoJob']
     self.manager.add_evidence(self.evidence)
 
-    # Only one Plaso job is queued after one is blacklisted
+    # Only one Plaso job is queued after one is denylisted
     self.assertEqual(len(self.manager.running_jobs), 1)
     test_job = self.manager.running_jobs[0]
     self.assertEqual(test_job.name, 'PlasoJob')
