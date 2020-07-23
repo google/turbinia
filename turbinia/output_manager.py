@@ -55,8 +55,8 @@ class OutputManager(object):
     """Get a list of output writers.
 
     Args:
-      name (str): The name of the Request or Job.
-      uid (str): The unique identifier of the Request or Job.
+      name (str): The name of the Request or Task.
+      uid (str): The unique identifier of the Request or Task.
 
     Returns:
       A list of OutputWriter objects.

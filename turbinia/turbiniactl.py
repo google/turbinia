@@ -680,6 +680,11 @@ def main():
         output_manager = OutputManager()
         output_manager.setup(evidence_.type, request_id, remote_only=True)
         output_manager.save_evidence(evidence_)
+      else:
+        log.error(
+            'The evidence local path does not exist: {0:s}. Please submit '
+            'a new Request with a valid path.'.format(evidence_.local_path))
+        sys.exit(1)
     elif not config.SHARED_FILESYSTEM and not evidence_.cloud_only:
       log.error(
           'The evidence type {0:s} cannot run on Cloud instances of '
