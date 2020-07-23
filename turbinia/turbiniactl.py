@@ -24,6 +24,7 @@ import getpass
 import logging
 import os
 import sys
+import uuid
 
 from turbinia import config
 from turbinia import TurbiniaException
@@ -32,6 +33,7 @@ from libcloudforensics.providers.gcp import forensics as gcp_forensics
 from turbinia.lib import google_cloud
 from turbinia import __version__
 from turbinia.processors import archive
+from turbinia.output_manager import OutputManager
 
 log = logging.getLogger('turbinia')
 # We set up the logger first without the file handler, and we will set up the
@@ -518,6 +520,9 @@ def main():
         log.info('--copy_only specified, so not processing with Turbinia')
         sys.exit(0)
 
+  # Set request id
+  request_id = args.request_id if args.request_id else uuid.uuid4().hex
+
   # Start Evidence configuration
   evidence_ = None
   if args.command == 'rawdisk':
@@ -670,6 +675,16 @@ def main():
           'The evidence type {0:s} is Cloud only, and this instance of '
           'Turbinia is not a cloud instance.'.format(evidence_.type))
       sys.exit(1)
+    elif not config.SHARED_FILESYSTEM and evidence_.copyable:
+      if os.path.exists(evidence_.local_path):
+        output_manager = OutputManager()
+        output_manager.setup(evidence_.type, request_id, remote_only=True)
+        output_manager.save_evidence(evidence_)
+      else:
+        log.error(
+            'The evidence local path does not exist: {0:s}. Please submit '
+            'a new Request with a valid path.'.format(evidence_.local_path))
+        sys.exit(1)
     elif not config.SHARED_FILESYSTEM and not evidence_.cloud_only:
       log.error(
           'The evidence type {0:s} cannot run on Cloud instances of '
@@ -689,7 +704,7 @@ def main():
     server.start()
   elif evidence_:
     request = TurbiniaRequest(
-        request_id=args.request_id, requester=getpass.getuser())
+        request_id=request_id, requester=getpass.getuser())
     request.evidence.append(evidence_)
     if filter_patterns:
       request.recipe['filter_patterns'] = filter_patterns
