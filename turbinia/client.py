@@ -710,6 +710,65 @@ class BaseTurbiniaClient(object):
     report.append('')
     return '\n'.join(report)
 
+  def format_request_status(self, instance, project, region, days=0):
+    """Formats the recent history for Turbinia Requests.
+
+    Args:
+      instance (string): The Turbinia instance name (by default the same as the
+          INSTANCE_ID in the config).
+      project (string): The name of the project.
+      region (string): The name of the zone to execute in.
+      days (int): The number of days we want history for.
+    Returns:
+      String of Request status
+    """
+    # Set number of days to retrieve data
+    num_days = 7
+    if days != 0:
+      num_days = days
+    task_results = self.get_task_data(instance, project, region, days=num_days)
+    if not task_results:
+      return ''
+
+    # Create dictionary of request_id: saved_paths
+    request_dict = {}
+    for result in task_results:
+      request_id = result.get('request_id')
+      saved_paths = set(result.get('saved_paths'))
+      if request_id in request_dict and saved_paths:
+        request_dict[request_id].update(saved_paths)
+      elif saved_paths:
+        request_dict[request_id] = saved_paths
+
+    # Generate report header
+    report = []
+    report.append(
+        fmt.heading1(
+            'Turbinia report for Requests made within {0:d} days'.format(
+                num_days)))
+    report.append(
+        fmt.bullet(
+            '{0:d} requests were made within this timeframe.'.format(
+                len(request_dict.keys()))))
+    # Print report data for Requests
+    for request_id, saved_paths in request_dict.items():
+      # Retrieve requester
+      requester = [
+          r.get('requester')
+          for r in task_results
+          if r.get('request_id') == request_id
+      ]
+      report.append('')
+      report.append(
+          fmt.bullet('Request ID: {0:s}, Requester: {1:s}').format(
+              request_id, requester[0]))
+      report.append(fmt.bullet('Associated Evidence:'))
+      # Append all saved paths in request
+      for path in saved_paths:
+        report.append(fmt.bullet(fmt.code(path), level=2))
+      report.append('')
+    return '\n'.join(report)
+
   def format_task_status(
       self, instance, project, region, days=0, task_id=None, request_id=None,
       user=None, all_fields=False, full_report=False,

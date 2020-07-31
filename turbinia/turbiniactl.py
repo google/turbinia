@@ -370,6 +370,10 @@ def main():
       '-t', '--task_id', help='Show task for given Task ID', required=False)
   parser_status.add_argument(
       '-u', '--user', help='Show task for given user', required=False)
+  parser_status.add_argument(
+      '-i', '--requests', required=False, action='store_true',
+      help='Show all requests from a specified timeframe. The default '
+      'timeframe is 7 days. Please use the -d flag to extend this.')
 
   # Server
   subparsers.add_parser('server', help='Run Turbinia Server')
@@ -655,6 +659,13 @@ def main():
       log.info(
           '--wait requires --request_id, which is not specified. '
           'turbiniactl will exit without waiting.')
+
+    if args.requests:
+      print(
+          client.format_request_status(
+              instance=config.INSTANCE_ID, project=config.TURBINIA_PROJECT,
+              region=region, days=args.days_history))
+      sys.exit(0)
 
     print(
         client.format_task_status(

@@ -359,6 +359,39 @@ class TestTurbiniaClient(unittest.TestCase):
         'inst', 'proj', 'reg', all_fields=True, full_report=True)
     self.assertEqual(result.strip(), LONG_REPORT_FILES.strip())
 
+  @mock.patch('libcloudforensics.providers.gcp.internal.function.GoogleCloudFunction.ExecuteFunction')  # yapf: disable
+  @mock.patch('turbinia.client.task_manager.PSQTaskManager._backend_setup')
+  @mock.patch('turbinia.state_manager.get_state_manager')
+  def testClientFormatRequestStatus(self, _, __, ___):
+    """Tests format_request_status() with default days."""
+    client = TurbiniaClientProvider.get_turbinia_client()
+    client.get_task_data = mock.MagicMock()
+    client.get_task_data.return_value = self.task_data
+    result = client.format_request_status('inst', 'proj', 'reg')
+    self.assertIn('Requests made within 7 days', result.strip())
+
+  @mock.patch('libcloudforensics.providers.gcp.internal.function.GoogleCloudFunction.ExecuteFunction')  # yapf: disable
+  @mock.patch('turbinia.client.task_manager.PSQTaskManager._backend_setup')
+  @mock.patch('turbinia.state_manager.get_state_manager')
+  def testClientFormatRequestStatusDays(self, _, __, ___):
+    """Tests format_request_status() with custom days."""
+    client = TurbiniaClientProvider.get_turbinia_client()
+    client.get_task_data = mock.MagicMock()
+    client.get_task_data.return_value = self.task_data
+    result = client.format_request_status('inst', 'proj', 'reg', days=4)
+    self.assertIn('Requests made within 4 days', result.strip())
+
+  @mock.patch('libcloudforensics.providers.gcp.internal.function.GoogleCloudFunction.ExecuteFunction')  # yapf: disable
+  @mock.patch('turbinia.client.task_manager.PSQTaskManager._backend_setup')
+  @mock.patch('turbinia.state_manager.get_state_manager')
+  def testClientFormatRequestStatusNoResults(self, _, __, ___):
+    """Tests format_request_status() with no Task results."""
+    client = TurbiniaClientProvider.get_turbinia_client()
+    client.get_task_data = mock.MagicMock()
+    client.get_task_data.return_value = ''
+    result = client.format_request_status('inst', 'proj', 'reg', days=4)
+    self.assertEqual('', result)
+
 
 class TestTurbiniaStats(unittest.TestCase):
   """Test TurbiniaStats class."""
@@ -589,3 +622,7 @@ class TestTurbiniaPsqWorker(unittest.TestCase):
     mock_logger.assert_called_with(
         'The job non_exist was not found or has been disabled. '
         'Skipping dependency check...')
+
+
+if __name__ == "__main__":
+  unittest.main()
