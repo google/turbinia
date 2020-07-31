@@ -10,4 +10,5 @@ User documentation
    how-it-works
    using-docker
    operational-details
+   debugging
    faq
