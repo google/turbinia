@@ -24,7 +24,7 @@ from docutils import nodes, transforms
 # -- Project information -----------------------------------------------------
 
 project = 'Turbinia'
-copyright = '2020, Turbinia contributors'
+copyright = '2020, Google Inc'
 author = 'Turbinia maintainers'
 
 
