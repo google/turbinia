@@ -18,7 +18,7 @@ New Task development documentation can be [found here](
 ## How can I debug problems with Turbinia?
 
 Information on debugging and other common errors can be [found here](
-../developer/debugging.md)
+debugging.md)
 
 ## Where are the files listed in the turbiniactl status output?
 
