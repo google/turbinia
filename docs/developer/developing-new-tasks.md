@@ -9,7 +9,7 @@ together.
 
 ## Before you start
 
-*   Check out the [How it Works](how-it-works.md) page to see how the different
+*   Check out the [How it Works](../user/how-it-works.md) page to see how the different
     components work within Turbinia.
 *   Make sure to follow the Turbinia
     [developer contribution guide](contributing.md).

@@ -4,7 +4,7 @@
 
 Turbinia can be run on the [Google Cloud Platform](https://cloud.google.com), on
 local machines, or in a hybrid mode. See the
-"[how it works](https://github.com/google/turbinia/blob/master/docs/how-it-works.md)"
+"[how it works](how-it-works.md)"
 documentation for more details on what the architecture looks like for each of
 these installation types. This doc covers the recommended quick installation
 instructions for Cloud installations. This uses
@@ -14,7 +14,7 @@ that are part of the
 to automate deployment of Turbinia into an existing GCP Project. If you want to
 install Turbinia in hybrid or local only mode, or want to install Turbinia
 manually (not recommended), see
-[here](https://github.com/google/turbinia/blob/master/docs/install-manual.md)
+[here](install-manual.md)
 for details.
 
 ## Installation

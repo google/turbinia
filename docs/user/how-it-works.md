@@ -13,15 +13,15 @@ hybrid mode requires shared storage to be accessible by all Workers.
 
 ### Cloud Architecture
 
-<img src="images/turbinia-architecture-cloud.jpg?raw=true" width=400>
+![turbinia-architecture-cloud](../images/turbinia-architecture-cloud.jpg)
 
 ### Local Architecture
 
-<img src="images/turbinia-architecture-local.jpg?raw=true" width=400>
+![turbinia-architecture-local.jpg](../images/turbinia-architecture-local.jpg)
 
 ### Hybrid Architecture
 
-<img src="images/turbinia-architecture-hybrid.jpg?raw=true" width=400>
+![turbinia-architecture-hybrid](../images/turbinia-architecture-hybrid.jpg)
 
 ## Tasks
 
