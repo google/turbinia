@@ -27,32 +27,24 @@ project = 'Turbinia'
 copyright = '2020, Google Inc'
 author = 'Turbinia maintainers'
 
-
 # -- General configuration ---------------------------------------------------
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    'sphinx.ext.autodoc',
-    'sphinx.ext.doctest',
-    'sphinx.ext.coverage',
-    'sphinx.ext.viewcode',
-    'sphinx.ext.napoleon',
-    'sphinx_markdown_tables',
+    'sphinx.ext.autodoc', 'sphinx.ext.doctest', 'sphinx.ext.coverage',
+    'sphinx.ext.viewcode', 'sphinx.ext.napoleon', 'sphinx_markdown_tables',
     'recommonmark'
 ]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
 
-
-
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store', 'design/*']
-
 
 # -- Options for HTML output -------------------------------------------------
 
@@ -73,10 +65,7 @@ html_static_path = ['_static']
 #
 html_sidebars = {
     '**': [
-        'sidebar.html',
-        'localtoc.html',
-        'relations.html',
-        'sourcelink.html',
+        'sidebar.html', 'localtoc.html', 'relations.html', 'sourcelink.html',
         'searchbox.html'
     ]
 }
@@ -97,7 +86,6 @@ class ProcessLink(transforms.Transform):
         r = r[:-3] + '.html'
         node['refuri'] = r
 
-      
     return node
 
   def traverse(self, node):
@@ -119,8 +107,9 @@ class ProcessLink(transforms.Transform):
 
 def setup(app):
   """Add custom parsers to Sphinx generation."""
-  app.add_config_value('recommonmark_config', {
-      'enable_auto_doc_ref': False,
+  app.add_config_value(
+      'recommonmark_config', {
+          'enable_auto_doc_ref': False,
       }, True)
   app.add_transform(AutoStructify)
   app.add_transform(ProcessLink)
