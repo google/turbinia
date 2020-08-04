@@ -749,11 +749,11 @@ class BaseTurbiniaClient(object):
         request_dict[request_id]['saved_paths'] = saved_paths
         request_dict[request_id]['last_update'] = result.get('last_update')
         request_dict[request_id]['requester'] = result.get('requester')
-        request_dict[request_id]['task_id'] = set(result.get('id'))
+        request_dict[request_id]['task_id'] = set([result.get('id')])
       else:
         if saved_paths:
           request_dict[request_id]['saved_paths'].update(saved_paths)
-        request_dict[request_id]['task_id'].update(result.get('id'))
+        request_dict[request_id]['task_id'].update([result.get('id')])
 
     # Generate report header
     report = []
@@ -779,7 +779,7 @@ class BaseTurbiniaClient(object):
       if all_fields:
         report.append(fmt.bullet('Associated Evidence:'))
         # Append all saved paths in request
-        for path in values['saved_paths']:
+        for path in sorted(values['saved_paths']):
           report.append(fmt.bullet(fmt.code(path), level=2))
         report.append('')
     return '\n'.join(report)
