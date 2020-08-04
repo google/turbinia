@@ -1,0 +1,52 @@
+#!/bin/bash
+# This Turbinia e2e test will test the googleclouddisk functionality.
+# It will try to analyse the disk 'test-disk2' in zone 'us-central1-a'.
+
+
+TURBINIA_CLI="turbinia/bin/turbiniactl"
+MAIN_LOG="main.log"
+STATUS_LOG="status.log"
+STATS_LOG="stats.log"
+DETAIL_LOG="jobdetails.log"
+OUT_TGZ="jobresults.tgz"
+
+echo "Executing googlecloudisk e2e test....this takes ~60 minutes!"
+
+$TURBINIA_CLI -a -w googleclouddisk -d test-disk2 -z us-central1-a > $MAIN_LOG 2>&1 &
+
+# Parse turbiniactl output and wait for job ID.
+JOB_ID_LINE=`grep -m 1 "Creating request" <(tail -f $MAIN_LOG)`
+JOB_ID=`echo "$JOB_ID_LINE" | grep -oP "request \K\w+(?= with)"`
+echo "Turbinia job ID found: $JOB_ID"
+
+echo "Sleeping 90 seconds to give the server the time to create the tasks"
+sleep 90
+
+# Get status and loop until no more "# Scheduled or Running Tasks" are left.
+echo "Looping and requesting status every 60 seconds until done..."
+JOB_RUNNING="1"
+while [ $JOB_RUNNING -ne "0" ]
+do
+  date | tee -a $STATUS_LOG
+  JOB_RUNNING=`$TURBINIA_CLI status -r $JOB_ID 2>&1 | tee -a $STATUS_LOG | sed -n '/Scheduled/,/Done/ {//! p}' | wc -l`
+  echo "Jobs scheduled or running: $JOB_RUNNING" | tee -a $STATUS_LOG
+  sleep 60
+done
+
+# When the Turbinia job is finished request the final job statistics.
+$TURBINIA_CLI status -r $JOB_ID -s > $STATS_LOG 2>&1
+
+# Parse out the number of succesfull and failed tasks.
+FAILED=`cat $STATS_LOG | grep Failed stats.log  | cut -d ":" -f 3 | cut -d ',' -f 1 |  tr -d '[:space:]'`
+SUCCESS=`cat $STATS_LOG | grep Success stats.log  | cut -d ":" -f 3 | cut -d ',' -f 1 |  tr -d '[:space:]'`
+
+echo "Results for job ID: $JOB_ID"
+echo "Failed tasks: $FAILED"
+echo "Successful tasks: $SUCCESS"
+
+# Output the details, including GCS worker output for the job.
+$TURBINIA_CLI -a status -r $JOB_ID -R > $DETAIL_LOG 2>&1
+
+# tgz the log files for debugging purposes
+tar -vzcf $OUT_TGZ $MAIN_LOG $STATUS_LOG $STATS_LOG $DETAIL_LOG
+
