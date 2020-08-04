@@ -293,7 +293,7 @@ def main():
 
   # Parser options for CompressedDirectory evidence type
   parser_directory = subparsers.add_parser(
-      'compressedirectory', help='Process a compressed tar file as Evidence')
+      'compresseddirectory', help='Process a compressed tar file as Evidence')
   parser_directory.add_argument(
       '-l', '--local_path', help='Local path to the evidence', required=True)
   parser_directory.add_argument(
@@ -564,12 +564,12 @@ def main():
     else:
       evidence_ = evidence.Directory(
           name=args.name, source_path=source_path, source=args.source)
-  elif args.command == 'compressedirectory':
-    archive.ValidateTarFile(args.source_path)
-    args.name = args.name if args.name else args.source_path
-    source_path = os.path.abspath(args.source_path)
+  elif args.command == 'compresseddirectory':
+    archive.ValidateTarFile(args.local_path)
+    args.name = args.name if args.name else args.local_path
+    local_path = os.path.abspath(args.local_path)
     evidence_ = evidence.CompressedDirectory(
-        name=args.name, source_path=source_path, source=args.source)
+        name=args.name, source_path=local_path, source=args.source)
   elif args.command == 'googleclouddisk':
     args.name = args.name if args.name else args.disk_name
     evidence_ = evidence.GoogleCloudDisk(
