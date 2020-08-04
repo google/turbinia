@@ -622,7 +622,3 @@ class TestTurbiniaPsqWorker(unittest.TestCase):
     mock_logger.assert_called_with(
         'The job non_exist was not found or has been disabled. '
         'Skipping dependency check...')
-
-
-if __name__ == "__main__":
-  unittest.main()

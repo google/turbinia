@@ -664,7 +664,8 @@ def main():
       print(
           client.format_request_status(
               instance=config.INSTANCE_ID, project=config.TURBINIA_PROJECT,
-              region=region, days=args.days_history))
+              region=region, days=args.days_history,
+              all_fields=args.all_fields))
       sys.exit(0)
 
     print(

@@ -710,7 +710,8 @@ class BaseTurbiniaClient(object):
     report.append('')
     return '\n'.join(report)
 
-  def format_request_status(self, instance, project, region, days=0):
+  def format_request_status(
+      self, instance, project, region, days=0, all_fields=False):
     """Formats the recent history for Turbinia Requests.
 
     Args:
@@ -719,6 +720,8 @@ class BaseTurbiniaClient(object):
       project (string): The name of the project.
       region (string): The name of the zone to execute in.
       days (int): The number of days we want history for.
+      all_fields (bool): Include all fields for the Request, which includes,
+          saved file paths.
     Returns:
       String of Request status
     """
@@ -730,15 +733,27 @@ class BaseTurbiniaClient(object):
     if not task_results:
       return ''
 
-    # Create dictionary of request_id: saved_paths
+    # Sort task_results by last updated timestamp.
+    task_results = sorted(
+        task_results, key=itemgetter('last_update'), reverse=True)
+
+    # Create dictionary of request_id: {saved_paths, last_update, requester,
+    # task_id}
     request_dict = {}
     for result in task_results:
       request_id = result.get('request_id')
-      saved_paths = set(result.get('saved_paths'))
-      if request_id in request_dict and saved_paths:
-        request_dict[request_id].update(saved_paths)
-      elif saved_paths:
-        request_dict[request_id] = saved_paths
+      saved_paths = result.get('saved_paths')
+      if request_id not in request_dict:
+        saved_paths = set(saved_paths) if saved_paths else set()
+        request_dict[request_id] = {}
+        request_dict[request_id]['saved_paths'] = saved_paths
+        request_dict[request_id]['last_update'] = result.get('last_update')
+        request_dict[request_id]['requester'] = result.get('requester')
+        request_dict[request_id]['task_id'] = set(result.get('id'))
+      else:
+        if saved_paths:
+          request_dict[request_id]['saved_paths'].update(saved_paths)
+        request_dict[request_id]['task_id'].update(result.get('id'))
 
     # Generate report header
     report = []
@@ -751,22 +766,22 @@ class BaseTurbiniaClient(object):
             '{0:d} requests were made within this timeframe.'.format(
                 len(request_dict.keys()))))
     # Print report data for Requests
-    for request_id, saved_paths in request_dict.items():
-      # Retrieve requester
-      requester = [
-          r.get('requester')
-          for r in task_results
-          if r.get('request_id') == request_id
-      ]
+    for request_id, values in request_dict.items():
       report.append('')
+      report.append(fmt.heading2('Request ID: {0:s}'.format(request_id)))
       report.append(
-          fmt.bullet('Request ID: {0:s}, Requester: {1:s}').format(
-              request_id, requester[0]))
-      report.append(fmt.bullet('Associated Evidence:'))
-      # Append all saved paths in request
-      for path in saved_paths:
-        report.append(fmt.bullet(fmt.code(path), level=2))
-      report.append('')
+          fmt.bullet(
+              'Last Update: {0:s}'.format(
+                  values['last_update'].strftime(DATETIME_FORMAT))))
+      report.append(fmt.bullet('Requester: {0:s}'.format(values['requester'])))
+      report.append(
+          fmt.bullet('Task Count: {0:d}'.format(len(values['task_id']))))
+      if all_fields:
+        report.append(fmt.bullet('Associated Evidence:'))
+        # Append all saved paths in request
+        for path in values['saved_paths']:
+          report.append(fmt.bullet(fmt.code(path), level=2))
+        report.append('')
     return '\n'.join(report)
 
   def format_task_status(
