@@ -430,7 +430,6 @@ class TestTurbiniaClient(unittest.TestCase):
     client.get_task_data.return_value = self.task_data
     result = client.format_request_status(
         'inst', 'proj', 'reg', all_fields=True)
-    self.assertEqual.__self__.maxDiff = None
     self.assertEqual(result.strip(), LONG_REPORT_REQUESTS.strip())
 
 
