@@ -130,6 +130,9 @@ def main():
       help='The name of a single Task to run locally (must be used with '
       '--run_local.')
   parser.add_argument(
+      '-T', '--debug_tasks', action='store_true',
+      help='Show debug output for all supported tasks', default=False)
+  parser.add_argument(
       '-w', '--wait', action='store_true',
       help='Wait to exit until all tasks for the given request have completed')
 
@@ -407,6 +410,10 @@ def main():
     log.setLevel(logging.DEBUG)
   else:
     log.setLevel(logging.INFO)
+
+  # Enable tasks debugging for supported tasks
+  if args.debug_tasks:
+    config.DEBUG_TASKS = True
 
   # Enable GCP Stackdriver Logging
   if config.STACKDRIVER_LOGGING and args.command in ('server', 'psqworker'):
