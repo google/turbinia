@@ -4,7 +4,7 @@
 # access and is project owner for Terraform to function correctly.
 
 apt-get update
-apt-get install python-pip python-virtualenv unzip
+apt-get -y install python-pip python-virtualenv unzip
 
 # Install the Turbinia package so we can use the Turbinia client
 # This can take ~ 5 min due to depedency package grpcio
@@ -25,6 +25,6 @@ gcloud services enable appengine
 sleep 60
 
 export DEVSHELL_PROJECT_ID=`gcloud config list --format 'value(core.project)'`
-./forseti-security/contrib/incident-response/infrastructure/deploy.sh --no-timesketch
+sudo ./forseti-security/contrib/incident-response/infrastructure/deploy.sh --no-timesketch
 
 
