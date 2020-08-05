@@ -54,7 +54,6 @@ REQUIRED_VARS = [
     'MOUNT_DIR_PREFIX',
     'SHARED_FILESYSTEM',
     'DEBUG_TASKS',
-    # TODO(aarontp): Move this to the recipe config when it's available.
     'DEPENDENCIES',
     'DOCKER_ENABLED',
     'DISABLED_JOBS',
