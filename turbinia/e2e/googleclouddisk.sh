@@ -40,13 +40,20 @@ $TURBINIA_CLI status -r $JOB_ID -s > $STATS_LOG 2>&1
 FAILED=`cat $STATS_LOG | grep Failed stats.log  | cut -d ":" -f 3 | cut -d ',' -f 1 |  tr -d '[:space:]'`
 SUCCESS=`cat $STATS_LOG | grep Success stats.log  | cut -d ":" -f 3 | cut -d ',' -f 1 |  tr -d '[:space:]'`
 
-echo "Results for job ID: $JOB_ID"
-echo "Failed tasks: $FAILED"
-echo "Successful tasks: $SUCCESS"
+echo "Results for job ID: $JOB_ID" | tee -a $MAIN_LOG
+echo "Failed tasks: $FAILED" | tee -a $MAIN_LOG
+echo "Successful tasks: $SUCCESS"  | tee -a $MAIN_LOG
 
 # Output the details, including GCS worker output for the job.
 $TURBINIA_CLI -a status -r $JOB_ID -R > $DETAIL_LOG 2>&1
 
 # tgz the log files for debugging purposes
 tar -vzcf $OUT_TGZ $MAIN_LOG $STATUS_LOG $STATS_LOG $DETAIL_LOG
+
+if [ $FAILED -ne "0" ]
+then
+  exit 1
+fi
+
+exit 0
 
