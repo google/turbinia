@@ -3,7 +3,7 @@
 # It will try to analyse the disk 'test-disk2' in zone 'us-central1-a'.
 
 
-TURBINIA_CLI="turbinia/bin/turbiniactl"
+TURBINIA_CLI="turbiniactl"
 MAIN_LOG="main.log"
 STATUS_LOG="status.log"
 STATS_LOG="stats.log"
@@ -12,7 +12,7 @@ OUT_TGZ="jobresults.tgz"
 
 echo "Executing googlecloudisk e2e test....this takes ~60 minutes!"
 
-$TURBINIA_CLI -a -w googleclouddisk -d test-disk2 -z us-central1-a > $MAIN_LOG 2>&1 &
+$TURBINIA_CLI -a -w googleclouddisk -d test-disk2 -z us-central1-a | tee -a $MAIN_LOG 2>&1 &
 
 # Parse turbiniactl output and wait for job ID.
 JOB_ID_LINE=`grep -m 1 "Creating request" <(tail -f $MAIN_LOG)`
@@ -28,7 +28,7 @@ JOB_RUNNING="1"
 while [ $JOB_RUNNING -ne "0" ]
 do
   date | tee -a $STATUS_LOG
-  JOB_RUNNING=`$TURBINIA_CLI status -r $JOB_ID 2>&1 | tee -a $STATUS_LOG | sed -n '/Scheduled/,/Done/ {//! p}' | wc -l`
+  JOB_RUNNING=`$TURBINIA_CLI status -r $JOB_ID 2>&1 | tee -a $STATUS_LOG | sed -n '/Scheduled/,/Done/ {//! p}' | sed '/None/d' | wc -l`
   echo "Jobs scheduled or running: $JOB_RUNNING" | tee -a $STATUS_LOG
   sleep 60
 done

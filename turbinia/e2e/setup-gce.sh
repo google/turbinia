@@ -1,0 +1,31 @@
+#!/bin/bash
+# This script will setup a GCE Ubuntu 18.04 LTS base image for Turbinia e2e testing.
+# Make sure the service account your GCE instance is running under has full API scope
+# access and is project owner for Terraform to function correctly.
+
+apt-get update
+apt-get install python-pip python-virtualenv unzip
+
+# Install the Turbinia package so we can use the Turbinia client
+# This can take ~ 5 min due to depedency package grpcio
+pip install turbinia
+
+# Install Terraform
+wget -O terraform.zip https://releases.hashicorp.com/terraform/0.12.29/terraform_0.12.29_linux_amd64.zip
+unzip terraform.zip && cp terraform /usr/local/bin/
+
+# Git clone Turbinia and Turbinia Terraform scripts
+git clone --single-branch --branch e2e-simple https://github.com/hacktobeer/turbinia.git turbinia-github
+git clone https://github.com/forseti-security/forseti-security.git
+
+# Deploy Turbinia infrastructure with terraform
+# If you see "ERROR: (gcloud.app.create) PERMISSION_DENIED: The caller does not have permission"
+# Only GCP Project Owner can create App Engine project
+# See documentation: https://cloud.google.com/appengine/docs/standard/python/console/#create
+gcloud services enable appengine
+sleep 60
+
+export DEVSHELL_PROJECT_ID=`gcloud config list --format 'value(core.project)'`
+./forseti-security/contrib/incident-response/infrastructure/deploy.sh --no-timesketch
+
+
