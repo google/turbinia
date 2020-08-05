@@ -735,7 +735,7 @@ class BaseTurbiniaClient(object):
 
     # Sort task_results by last updated timestamp.
     task_results = sorted(
-        task_results, key=itemgetter('last_update'), reverse=True)
+        task_results, key=itemgetter('last_update', 'request_id'), reverse=True)
 
     # Create dictionary of request_id: {saved_paths, last_update, requester,
     # task_id}
