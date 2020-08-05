@@ -522,6 +522,27 @@ class BaseTurbiniaClient(object):
       report.append('')
     return report
 
+  def format_worker_task(self, task):
+    """Formats a single task for Worker view.
+
+    Args:
+      task (dict): The task to format data for
+    Returns:
+      list: Formatted task data
+    """
+    report = []
+    report.append('')
+    report.append(
+        fmt.bullet('{0:s} - {1:s}'.format(task['task_id'], task['task_name'])))
+    report.append(
+        fmt.bullet(
+            'Last Update: {0:s}'.format(
+                task['last_update'].strftime(DATETIME_FORMAT)), level=2))
+    report.append(fmt.bullet('Status: {0:s}'.format(task['status']), level=2))
+    report.append(
+        fmt.bullet('Run Time: {0:s}'.format(str(task['run_time'])), level=2))
+    return report
+
   def format_task(self, task, show_files=False):
     """Formats a single task in short form.
 
@@ -708,6 +729,90 @@ class BaseTurbiniaClient(object):
           report.append(stat_obj.format_stats())
 
     report.append('')
+    return '\n'.join(report)
+
+  def format_worker_status(
+      self, instance, project, region, days=0, all_fields=False):
+    """Formats the recent history for Turbinia Workers.
+
+    Args:
+      instance (string): The Turbinia instance name (by default the same as the
+          INSTANCE_ID in the config).
+      project (string): The name of the project.
+      region (string): The name of the zone to execute in.
+      days (int): The number of days we want history for.
+      all_fields (bool): Include historical Task information for the worker.
+    Returns:
+      String of Request status
+    """
+    # Set number of days to retrieve data
+    num_days = 7
+    if days != 0:
+      num_days = days
+    task_results = self.get_task_data(instance, project, region, days=num_days)
+    if not task_results:
+      return ''
+
+    # Sort task_results by last updated timestamp.
+    task_results = sorted(
+        task_results, key=itemgetter('last_update'), reverse=True)
+
+    # Create dictionary of worker_node: {{task_id, task_update,
+    # task_name, task_status}}
+    workers_dict = {}
+    for result in task_results:
+      worker_node = result.get('worker_name')
+      status = result.get('status')
+      status = status if status else 'No task status'
+      if worker_node and worker_node not in workers_dict:
+        workers_dict[worker_node] = []
+      if worker_node:
+        task_dict = {}
+        task_dict['task_id'] = result.get('id')
+        task_dict['last_update'] = result.get('last_update')
+        task_dict['task_name'] = result.get('name')
+        task_dict['status'] = status
+        # Check status for anything that is running.
+        if 'running' in status:
+          run_time = (datetime.now() -
+                      result.get('last_update')).total_seconds()
+          run_time = timedelta(seconds=run_time)
+          task_dict['run_time'] = run_time
+        else:
+          task_dict['run_time'] = result.get('run_time')
+        workers_dict[worker_node].append(task_dict)
+    # Generate report header
+    report = []
+    report.append(
+        fmt.heading1(
+            'Turbinia report for Worker activity within {0:d} days'.format(
+                num_days)))
+    report.append(
+        fmt.bullet('{0:d} Worker(s) found.'.format(len(workers_dict.keys()))))
+    for worker_node, tasks in workers_dict.items():
+      report.append('')
+      report.append(fmt.heading2('Worker Node: {0:s}'.format(worker_node)))
+      # Append the statuses chronologically
+      run_status, queued_status, other_status = [], [], []
+      for vals in tasks:
+        if 'running' in vals['status']:
+          run_status.extend(self.format_worker_task(vals))
+        elif 'queued' in vals['status']:
+          queued_status.extend(self.format_worker_task(vals))
+        else:
+          other_status.extend(self.format_worker_task(vals))
+      # Add each of the status lists back to report list
+      report.append('')
+      report.append(fmt.heading3('Running Tasks'))
+      report.extend(run_status)
+      report.append('')
+      report.append(fmt.heading3('Queued Tasks'))
+      report.extend(queued_status)
+      # Add Historical Tasks
+      if all_fields:
+        report.append('')
+        report.append(fmt.heading3('Finished Tasks'))
+        report.extend(other_status)
     return '\n'.join(report)
 
   def format_request_status(
