@@ -733,6 +733,8 @@ def main():
       request.recipe['jobs_allowlist'] = args.jobs_allowlist
     if yara_rules:
       request.recipe['yara_rules'] = yara_rules
+    if args.debug_tasks:
+      request.recipe['debug_tasks'] = args.debug_tasks
     if args.recipe_config:
       for pair in args.recipe_config:
         try:
