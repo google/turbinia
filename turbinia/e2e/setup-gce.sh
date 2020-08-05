@@ -2,6 +2,7 @@
 # This script will setup a GCE Ubuntu 18.04 LTS base image for Turbinia e2e testing.
 # Make sure the service account your GCE instance is running under has full API scope
 # access and is project owner for Terraform to function correctly.
+gcloud info
 
 apt-get update
 apt-get -y install python-pip python-virtualenv unzip
@@ -25,6 +26,6 @@ gcloud services enable appengine
 sleep 60
 
 export DEVSHELL_PROJECT_ID=`gcloud config list --format 'value(core.project)'`
-sudo ./forseti-security/contrib/incident-response/infrastructure/deploy.sh --no-timesketch
+./forseti-security/contrib/incident-response/infrastructure/deploy.sh --no-timesketch
 
 
