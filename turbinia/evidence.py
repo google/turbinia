@@ -807,4 +807,3 @@ class DockerContainer(Evidence):
   def _postprocess(self):
     # Unmount the container's filesystem
     mount_local.PostprocessUnmountPath(self._container_fs_path)
-    

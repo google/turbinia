@@ -67,4 +67,3 @@ class PhotorecTask(TurbiniaTask):
       result.close(self, success=False, status=str(exception))
 
     return result
-    
