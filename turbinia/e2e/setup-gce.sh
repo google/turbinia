@@ -14,8 +14,7 @@ pip install turbinia
 wget -O terraform.zip https://releases.hashicorp.com/terraform/0.12.29/terraform_0.12.29_linux_amd64.zip
 unzip terraform.zip && cp terraform /usr/local/bin/
 
-# Git clone Turbinia and Turbinia Terraform scripts
-git clone --single-branch --branch e2e-simple https://github.com/hacktobeer/turbinia.git turbinia-github
+# Git clone Turbinia Terraform scripts
 git clone https://github.com/forseti-security/forseti-security.git
 
 # Deploy Turbinia infrastructure with terraform
