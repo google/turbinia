@@ -411,6 +411,10 @@ def main():
   else:
     log.setLevel(logging.INFO)
 
+  # Enable tasks debugging for supported tasks
+  if args.debug_tasks:
+    config.DEBUG_TASKS = True
+
   # Enable GCP Stackdriver Logging
   if config.STACKDRIVER_LOGGING and args.command in ('server', 'psqworker'):
     google_cloud.setup_stackdriver_handler(config.TURBINIA_PROJECT)
