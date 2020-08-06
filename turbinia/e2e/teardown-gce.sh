@@ -6,3 +6,7 @@ echo "Tear down Terraform Turbinia infrastructure."
 export DEVSHELL_PROJECT_ID=`gcloud config list --format 'value(core.project)'`
 cd ./forseti-security/contrib/incident-response/infrastructure/
 terraform destroy --target=module.turbinia -var gcp_project=$DEVSHELL_PROJECT_ID -auto-approve
+
+#TODO(rbdebeer) remove evidence disks (all, except the test-disk2)
+#gcloud compute disks list --format=json
+

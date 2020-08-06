@@ -9,9 +9,14 @@ STATUS_LOG="status.log"
 STATS_LOG="stats.log"
 DETAIL_LOG="jobdetails.log"
 OUT_TGZ="jobresults.tgz"
+DISK="test-disk2"
+ZONE="us-central1-a"
+
+echo "Creating GCE test disk to use in e2e test"
+gcloud compute disks create $DISK --image=$DISK --zone=$ZONE
 
 echo "Executing googlecloudisk e2e test....this takes ~60 minutes!"
-$TURBINIA_CLI -L $MAIN_LOG -a -w googleclouddisk -d test-disk2 -z us-central1-a &
+$TURBINIA_CLI -L $MAIN_LOG -a -w googleclouddisk -d $DISK -z $ZONE &
 
 # Sleep here to make sure Turbinia can get started and we have a main.log file to tail.
 sleep 60
