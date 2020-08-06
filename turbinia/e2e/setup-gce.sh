@@ -7,10 +7,6 @@ gcloud info
 apt-get update
 apt-get -y install python-pip python-virtualenv unzip
 
-# Install the Turbinia package so we can use the Turbinia client
-# This can take ~ 5 min due to depedency package grpcio
-pip install turbinia
-
 # Install Terraform
 wget -O terraform.zip https://releases.hashicorp.com/terraform/0.12.29/terraform_0.12.29_linux_amd64.zip
 unzip terraform.zip && cp terraform /usr/local/bin/
