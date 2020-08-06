@@ -10,7 +10,7 @@ apt-get -y install python-pip python-virtualenv unzip
 
 # Install Terraform
 wget -q -O terraform.zip https://releases.hashicorp.com/terraform/0.12.29/terraform_0.12.29_linux_amd64.zip
-unzip terraform.zip && cp terraform /usr/local/bin/
+unzip terraform.zip && cp terraform /usr/local/bin/ && rm terraform.zip terraform
 
 # Git clone Turbinia Terraform scripts
 git clone https://github.com/forseti-security/forseti-security.git
