@@ -10,8 +10,8 @@ STATS_LOG="stats.log"
 DETAIL_LOG="jobdetails.log"
 OUT_TGZ="jobresults.tgz"
 
-echo "Executing googlecloudisk e2e test....this takes ~60 minutes!"
-$TURBINIA_CLI -a -w googleclouddisk -d test-disk2 -z us-central1-a 2>&1 | tee -a $MAIN_LOG &
+#echo "Executing googlecloudisk e2e test....this takes ~60 minutes!"
+#$TURBINIA_CLI -a -w googleclouddisk -d test-disk2 -z us-central1-a 2>&1 | tee -a $MAIN_LOG &
 
 # Parse turbiniactl output and wait for job ID.
 JOB_ID_LINE=`grep -m 1 "Creating request" <(tail -f $MAIN_LOG)`
