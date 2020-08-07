@@ -63,7 +63,7 @@ class DockerContainersEnumerationTask(TurbiniaTask):
     docker_explorer_command = [
         'sudo', 'de.py', '-r', docker_dir, 'list', 'all_containers'
     ]
-    if config.DEBUG_TASKS or evidence.config['debug_tasks']:
+    if config.DEBUG_TASKS or evidence.config.get('debug_tasks'):
       docker_explorer_command.append('-d')
     log.info('Running {0:s}'.format(' '.join(docker_explorer_command)))
     try:

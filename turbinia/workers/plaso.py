@@ -104,7 +104,7 @@ class PlasoTask(TurbiniaTask):
     cmd = (
         'log2timeline.py --status_view none --hashers all '
         '--partition all').split()
-    if config.DEBUG_TASKS or evidence.config['debug_tasks']:
+    if config.DEBUG_TASKS or evidence.config.get('debug_tasks'):
       cmd.append('-d')
     if artifact_filters:
       cmd.extend(['--artifact_filters', artifact_filters])
