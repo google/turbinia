@@ -779,7 +779,8 @@ class BaseTurbiniaClient(object):
           run_time = timedelta(seconds=run_time)
           task_dict['run_time'] = run_time
         else:
-          task_dict['run_time'] = result.get('run_time')
+          run_time = result.get('run_time')
+          task_dict['run_time'] = run_time if run_time else 'No run time.'
         workers_dict[worker_node].append(task_dict)
     # Generate report header
     report = []
@@ -794,25 +795,26 @@ class BaseTurbiniaClient(object):
       report.append(fmt.heading2('Worker Node: {0:s}'.format(worker_node)))
       # Append the statuses chronologically
       run_status, queued_status, other_status = [], [], []
-      for vals in tasks:
-        if 'running' in vals['status']:
-          run_status.extend(self.format_worker_task(vals))
-        elif 'queued' in vals['status']:
-          queued_status.extend(self.format_worker_task(vals))
+      for task in tasks:
+        if 'running' in task['status']:
+          run_status.extend(self.format_worker_task(task))
+        elif 'queued' in task['status']:
+          queued_status.extend(self.format_worker_task(task))
         else:
-          other_status.extend(self.format_worker_task(vals))
+          other_status.extend(self.format_worker_task(task))
       # Add each of the status lists back to report list
+      not_found = [fmt.bullet('No Tasks found.')]
       report.append('')
       report.append(fmt.heading3('Running Tasks'))
-      report.extend(run_status)
+      report.extend(run_status if run_status else not_found)
       report.append('')
       report.append(fmt.heading3('Queued Tasks'))
-      report.extend(queued_status)
+      report.extend(queued_status if queued_status else not_found)
       # Add Historical Tasks
       if all_fields:
         report.append('')
         report.append(fmt.heading3('Finished Tasks'))
-        report.extend(other_status)
+        report.extend(other_status if other_status else not_found)
     return '\n'.join(report)
 
   def format_request_status(
