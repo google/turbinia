@@ -18,6 +18,7 @@ import uuid
 import logging
 
 from turbinia.evidence import EvidenceCollection
+from turbinia import config
 
 log = logging.getLogger('turbinia')
 
@@ -53,6 +54,12 @@ class TurbiniaJob(object):
     self.evidence = EvidenceCollection()
     self.evidence.request_id = request_id
     self.evidence.config = evidence_config if evidence_config else {}
+
+  def validate_task_conf(self, task_default_conf, proposed_conf):
+    for k in proposed_conf.keys():
+      if k not in task_default_conf:
+        return False
+    return True
 
   def check_done(self):
     """Check to see if all Tasks for this Job have completed.
@@ -115,3 +122,8 @@ class TurbiniaJob(object):
           'Could not find task {0:s} to remove from Job {1:s}'.format(
               task_id, self.name))
     return bool(remove_task)
+
+  def get_task_recipe(self, evidence_config, task_name):
+    if task_name in evidence_config.task_recipes:
+      return evidence_config.task_recipes[task_name]
+    return None

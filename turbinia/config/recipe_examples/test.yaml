@@ -1,0 +1,11 @@
+jobs_allowlist: 
+  - PlasoJob
+
+patterns_file: '/home/jorlamd/.config/turbinia/patterns_files/patterns_test'
+
+plaso_base:
+  task: 'PlasoTask'
+  status_view: 'none'
+  hashers: 'all'
+  partition: 'all'
+  vss_stores: 'all'

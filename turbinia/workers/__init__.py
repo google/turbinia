@@ -400,6 +400,7 @@ class TurbiniaTask(object):
     self.turbinia_version = turbinia.__version__
     self.requester = requester if requester else 'user_unspecified'
     self._evidence_config = {}
+    self.recipe = {}
 
   def serialize(self):
     """Converts the TurbiniaTask object into a serializable dict.
@@ -464,6 +465,23 @@ class TurbiniaTask(object):
             'information.'.format(
                 evidence, self.name, state.name, evidence.format_state()))
 
+  def copy_to_temp_file(source_file):
+    with open(source_file, 'r') as sf_fh:
+      contents = sf_fh.read()
+    with NamedTemporaryFile(dir=self.tmp_dir, delete=False, mode='w') as fh:
+      sf_fh.write(contents)
+    return sf_fh.name
+
+  def draft_list_file(file_name, entries):
+    file_path = os.path.join(self.tmp_dir, file_name)
+    try:
+      with open(file_path, 'wb') as file_fh:
+        for entry_ in entries:
+          file_fh.write(entry_.encode('utf-8') + b'\n')
+    except IOError as exception:
+      message = 'Cannot write to file {0:s}: {1!s}'.format(file_path, exception)
+    return file_path
+
   def execute(
       self, cmd, result, save_files=None, log_files=None, new_evidence=None,
       close=False, shell=False, success_codes=None):
@@ -496,8 +514,11 @@ class TurbiniaTask(object):
     docker_image = job_manager.JobsManager.GetDockerImage(self.job_name)
     if docker_image:
       ro_paths = [
-          result.input_evidence.local_path, result.input_evidence.source_path,
-          result.input_evidence.device_path, result.input_evidence.mount_path
+          el for el in [
+              result.input_evidence.local_path, result.input_evidence
+              .source_path, result.input_evidence.device_path,
+              result.input_evidence.mount_path
+          ] if el
       ]
       rw_paths = [self.output_dir, self.tmp_dir]
       container_manager = docker_manager.ContainerManager(docker_image)
@@ -676,6 +697,14 @@ class TurbiniaTask(object):
     log.info('Result check: {0:s}'.format(check_status))
     return result
 
+  def get_task_recipe(self, task_name, evidence):
+    for _, task_recipe in evidence.config['task_recipes'].items():
+      if isinstance(task_recipe, dict):
+        task = task_recipe.get('task', None)
+        if task and task == task_name:
+          return task_recipe
+    return {}
+
   def run_wrapper(self, evidence):
     """Wrapper to manage TurbiniaTaskResults and exception handling.
 
@@ -752,9 +781,14 @@ class TurbiniaTask(object):
           return self.result.serialize()
 
         self.result.update_task_status(self, 'running')
-        self._evidence_config = evidence.config
+        #commenting out assuming this particular release does not aim to support
+        #passing recipes to newly created evidence
+        #self._evidence_config = evidence.config
+        print('**** LOOKING FOR ' + self.name + ' ********')
+        self.recipe = self.get_task_recipe(self.name, evidence)
+        if self.recipe:
+          self.recipe.pop('task')
         self.result = self.run(evidence, self.result)
-
       # pylint: disable=broad-except
       except Exception as exception:
         message = (

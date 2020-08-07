@@ -34,6 +34,7 @@ from turbinia.lib import google_cloud
 from turbinia import __version__
 from turbinia.processors import archive
 from turbinia.output_manager import OutputManager
+from turbinia.config import TurbiniaRecipe
 
 log = logging.getLogger('turbinia')
 # We set up the logger first without the file handler, and we will set up the
@@ -75,6 +76,9 @@ def main():
       'will ignore config files in other default locations '
       '(/etc/turbinia.conf, ~/.turbiniarc, or in paths referenced in '
       'environment variable TURBINIA_CONFIG_PATH)', required=False)
+  parser.add_argument(
+      '-I', '--recipe', help='Name of Recipe to be employed on evidence',
+      required=False)
   parser.add_argument(
       '-C', '--recipe_config', help='Recipe configuration data passed in as '
       'comma separated key=value pairs (e.g. '
@@ -718,24 +722,27 @@ def main():
     request = TurbiniaRequest(
         request_id=request_id, requester=getpass.getuser())
     request.evidence.append(evidence_)
-    if filter_patterns:
-      request.recipe['filter_patterns'] = filter_patterns
-    if args.jobs_denylist:
-      request.recipe['jobs_denylist'] = args.jobs_denylist
-    if args.jobs_allowlist:
-      request.recipe['jobs_allowlist'] = args.jobs_allowlist
-    if yara_rules:
-      request.recipe['yara_rules'] = yara_rules
-    if args.recipe_config:
-      for pair in args.recipe_config:
-        try:
-          key, value = pair.split('=')
-        except ValueError as exception:
-          log.error(
-              'Could not parse key=value pair [{0:s}] from recipe config '
-              '{1!s}: {2!s}'.format(pair, args.recipe_config, exception))
-          sys.exit(1)
-        request.recipe[key] = value
+
+    if args.recipe:
+      #if hasattr(args, 'jobs_denylist') or hasattr(args, 'jobs_allowlist') or hasattr(args, 'recipe_config'):
+      #  raise TurbiniaException(
+      #      'Specifying a recipe is incompatible with defining'
+      #      ' jobs white/black lists, filter patterns or recipe_config'
+      #      'parameters separately.'
+      #  )
+      recipe_obj = TurbiniaRecipe(
+          os.path.join(config.RECIPE_FILE_DIR, args.recipe))
+      recipe_obj.load()
+      request.recipe = recipe_obj.serialize()
+    else:
+      request.recipe = {}
+      if args.filter_patterns_file:
+        request.recipe['filter_patterns'] = filter_patterns
+      if args.jobs_denylist:
+        request.recipe['jobs_denylist'] = args.jobs_denylist
+      if args.jobs_allowlist:
+        request.recipe['jobs_allowlist'] = args.jobs_allowlist
+
     if args.dump_json:
       print(request.to_json().encode('utf-8'))
       sys.exit(0)
