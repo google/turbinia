@@ -1,4 +1,4 @@
-!/bin/bash
+#/bin/bash
 # This script will cleanup and teardown the Turbinia Terraform setup after
 # the e2e test is finished
 echo "Tear down Terraform Turbinia infrastructure."
@@ -21,5 +21,6 @@ do
   fi
 done
 
-# Remove terraform service account
+# Remove terraform service account and IAMD bindings
+gcloud -q iam service-accounts remove-iam-policy-binding terraform@$DEVSHELL_PROJECT_ID.iam.gserviceaccount.com --all
 gcloud -q iam service-accounts delete terraform@$DEVSHELL_PROJECT_ID.iam.gserviceaccount.com
