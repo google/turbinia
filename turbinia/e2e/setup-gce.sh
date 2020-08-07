@@ -1,13 +1,14 @@
 #!/bin/bash
-# This script will setup a GCE Ubuntu 18.04 LTS base image for Turbinia e2e testing.
+# This script will
+# - setup a GCE Ubuntu 18.04 LTS base image for Turbinia e2e testing.
+# - execute Terraform to setup the Turbinia environment.
 # Make sure the service account your GCE instance is running under has full API scope
 # access and is project owner for Terraform to function correctly.
 echo "Initiate gcloud configuration"
 gcloud info
 
-# Uncomment these if you do not have prepared the GCE image in advance.
-# apt-get update
-# apt-get -y install python-pip python-virtualenv unzip
+apt-get update
+apt-get -y install python-pip python-virtualenv unzip
 
 # Install Terraform
 wget -q -O terraform.zip https://releases.hashicorp.com/terraform/0.12.29/terraform_0.12.29_linux_amd64.zip
