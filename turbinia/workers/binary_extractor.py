@@ -90,7 +90,7 @@ class BinaryExtractorTask(TurbiniaTask):
         'image_export.py', '--partitions', 'all', '--no_vss', '--signatures',
         'elf,exe_mz', '--logfile', image_export_log
     ]
-    if config.DEBUG_TASKS:
+    if config.DEBUG_TASKS or evidence.config['debug_tasks']:
       cmd.append('-d')
     cmd.extend(['-w', self.binary_extraction_dir, evidence.local_path])
 

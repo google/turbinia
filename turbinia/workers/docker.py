@@ -63,8 +63,8 @@ class DockerContainersEnumerationTask(TurbiniaTask):
     docker_explorer_command = [
         'sudo', 'de.py', '-r', docker_dir, 'list', 'all_containers'
     ]
-    if config.DEBUG_TASKS:
-      cmd.append('-d')
+    if config.DEBUG_TASKS or evidence.config['debug_tasks']:
+      docker_explorer_command.append('-d')
     log.info('Running {0:s}'.format(' '.join(docker_explorer_command)))
     try:
       json_string = subprocess.check_output(docker_explorer_command).decode(
