@@ -190,6 +190,71 @@ def ValidateAndSetConfig(_config):
     else:
       setattr(sys.modules[__name__], var, getattr(_config, var))
 
+class TurbiniaRecipe(object):
+  """ Base class for Turbinia recipes
+
+  Attributes
+      recipe_file (str): name of the recipe file to be loaded.
+      jobs_whitelist (list): A whitelist for Jobs that will be allowed to run.
+      jobs_blacklist (list): A blacklist for Jobs that will not be
+      allowed to run.
+      filter_patterns_file (str): Path to a file containing newline separated
+      string patterns with which to filter text based evidence.
+      task_recipes (dict): Object containing a task specific recipe for
+      each of the tasks invoked in the Turbinia recipe.
+"""
+
+  def __init__(self, recipe_file, filter_patterns_files=[]):
+    self.recipe_file = recipe_file
+    self.filter_patterns_files = (
+        filter_patterns_files if filter_patterns_files else [])
+
+    self.name = ""
+    self.jobs_whitelist = []
+    self.jobs_blacklist = []
+    self.filter_patterns = []
+    self.task_recipes = {}
+
+  def load(self):
+    """ Load recipe from file. """
+    LoadConfig()
+    with open(self.recipe_file, 'r') as r_file:
+      try:
+        recipe_file_contents = r_file.read()
+      except yaml.parser.ParserError as exception:
+        message = (
+            'Could not load recipe file {0:s}: {1!s}'.format(
+                self.recipe_file, exception))
+        log.error(message)
+        raise TurbiniaException(message)
+    recipe_dict = load(recipe_file_contents, Loader=Loader)
+    self.jobs_whitelist = recipe_dict.get('jobs_whitelist', [])
+    self.jobs_blacklist = recipe_dict.get('jobs_blacklist', [])
+    for _file in self.filter_patterns_files:
+      with open(_file) as pattern_file:
+        line = pattern_file.readline()
+        if line not in self.filter_patterns:
+          self.filter_patterns.append(line)
+    for recipe_item, recipe_item_contents in recipe_dict.items():
+      if (recipe_item not in
+          ['jobs_blacklist', 'jobs_whitelist', 'filter_patterns_files']):
+        if recipe_item in self.task_recipes:
+          raise TurbiniaException(
+              'Two recipe items with the same name {0:s} have been found.'
+              'If you wish to specify several task runs of the same tools,'
+              'please add several task variants to the same tool recipe.'
+          )
+        self.task_recipes[recipe_item] = recipe_item_contents
+
+  def retrieve_task_recipe(self, task):
+    """ Retrieve recipe by name.  """
+    if task in self.task_recipes:
+      return self.task_recipes[task]
+
+  def serialize(self):
+    """ Obtain serialized task recipe dict. """
+    serialized_data = self.__dict__.copy()
+    return serialized_data
 
 def ParseDependencies():
   """Parses the config file DEPENDENCIES variable.
