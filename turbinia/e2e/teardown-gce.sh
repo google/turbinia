@@ -3,7 +3,9 @@
 # the e2e test is finished
 echo "Tear down Terraform Turbinia infrastructure."
 
-export DEVSHELL_PROJECT_ID=`gcloud config list --format 'value(core.project)'`
+DEVSHELL_PROJECT_ID=`gcloud config list --format 'value(core.project)'`
+SA_MEMBER="terraform"
+
 cd ./forseti-security/contrib/incident-response/infrastructure/
 terraform destroy --target=module.turbinia -var gcp_project=$DEVSHELL_PROJECT_ID -auto-approve
 
@@ -21,6 +23,13 @@ do
   fi
 done
 
-# Remove terraform service account and IAMD bindings
-gcloud -q iam service-accounts remove-iam-policy-binding terraform@$DEVSHELL_PROJECT_ID.iam.gserviceaccount.com --all
+# Remove terraform service account and IAM bindings
+gcloud -q iam service-accounts remove-iam-policy-binding terraform@$DEVSHELL_PROJECT_ID.iam.gserviceaccount.com --member=$SA_MEMBER --role='roles/editor'
+gcloud -q iam service-accounts remove-iam-policy-binding terraform@$DEVSHELL_PROJECT_ID.iam.gserviceaccount.com --member=$SA_MEMBER --role='roles/compute.admin'
+gcloud -q iam service-accounts remove-iam-policy-binding terraform@$DEVSHELL_PROJECT_ID.iam.gserviceaccount.com --member=$SA_MEMBER --role='roles/cloudfunctions.admin'
+gcloud -q iam service-accounts remove-iam-policy-binding terraform@$DEVSHELL_PROJECT_ID.iam.gserviceaccount.com --member=$SA_MEMBER --role='roles/servicemanagement.admin'
+gcloud -q iam service-accounts remove-iam-policy-binding terraform@$DEVSHELL_PROJECT_ID.iam.gserviceaccount.com --member=$SA_MEMBER --role='roles/pubsub.admin'
+gcloud -q iam service-accounts remove-iam-policy-binding terraform@$DEVSHELL_PROJECT_ID.iam.gserviceaccount.com --member=$SA_MEMBER --role='roles/storage.admin'
+gcloud -q iam service-accounts remove-iam-policy-binding terraform@$DEVSHELL_PROJECT_ID.iam.gserviceaccount.com --member=$SA_MEMBER --role='roles/redis.admin'
+gcloud -q iam service-accounts remove-iam-policy-binding terraform@$DEVSHELL_PROJECT_ID.iam.gserviceaccount.com --member=$SA_MEMBER --role='roles/cloudsql.admin'
 gcloud -q iam service-accounts delete terraform@$DEVSHELL_PROJECT_ID.iam.gserviceaccount.com
