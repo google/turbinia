@@ -784,7 +784,6 @@ class TurbiniaTask(object):
         #commenting out assuming this particular release does not aim to support
         #passing recipes to newly created evidence
         #self._evidence_config = evidence.config
-        print('**** LOOKING FOR ' + self.name + ' ********')
         self.recipe = self.get_task_recipe(self.name, evidence)
         if self.recipe:
           self.recipe.pop('task')
