@@ -516,9 +516,9 @@ class TestTurbiniaClient(unittest.TestCase):
     client = TurbiniaClientProvider.get_turbinia_client()
     client.get_task_data = mock.MagicMock()
     client.get_task_data.return_value = self.task_data
-    result = client.format_worker_status(
-        'inst', 'proj', 'reg', all_fields=True)
+    result = client.format_worker_status('inst', 'proj', 'reg', all_fields=True)
     self.assertEqual(result.strip(), LONG_REPORT_WORKERS.strip())
+
 
 class TestTurbiniaStats(unittest.TestCase):
   """Test TurbiniaStats class."""
