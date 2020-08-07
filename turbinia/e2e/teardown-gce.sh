@@ -4,7 +4,7 @@
 echo "Tear down Terraform Turbinia infrastructure."
 
 DEVSHELL_PROJECT_ID=`gcloud config list --format 'value(core.project)'`
-SA_MEMBER="terraform"
+SA_MEMBER="terraform$@DEVSHELL_PROJECT_ID.iam.gserviceaccount.com"
 
 cd ./forseti-security/contrib/incident-response/infrastructure/
 terraform destroy --target=module.turbinia -var gcp_project=$DEVSHELL_PROJECT_ID -auto-approve
@@ -24,12 +24,12 @@ do
 done
 
 # Remove terraform service account and IAM bindings
-gcloud -q iam service-accounts remove-iam-policy-binding terraform@$DEVSHELL_PROJECT_ID.iam.gserviceaccount.com --member=$SA_MEMBER --role='roles/editor' --all
-gcloud -q iam service-accounts remove-iam-policy-binding terraform@$DEVSHELL_PROJECT_ID.iam.gserviceaccount.com --member=$SA_MEMBER --role='roles/compute.admin'  --all
-gcloud -q iam service-accounts remove-iam-policy-binding terraform@$DEVSHELL_PROJECT_ID.iam.gserviceaccount.com --member=$SA_MEMBER --role='roles/cloudfunctions.admin'  --all
-gcloud -q iam service-accounts remove-iam-policy-binding terraform@$DEVSHELL_PROJECT_ID.iam.gserviceaccount.com --member=$SA_MEMBER --role='roles/servicemanagement.admin'  --all
-gcloud -q iam service-accounts remove-iam-policy-binding terraform@$DEVSHELL_PROJECT_ID.iam.gserviceaccount.com --member=$SA_MEMBER --role='roles/pubsub.admin'  --all
-gcloud -q iam service-accounts remove-iam-policy-binding terraform@$DEVSHELL_PROJECT_ID.iam.gserviceaccount.com --member=$SA_MEMBER --role='roles/storage.admin'  --all
-gcloud -q iam service-accounts remove-iam-policy-binding terraform@$DEVSHELL_PROJECT_ID.iam.gserviceaccount.com --member=$SA_MEMBER --role='roles/redis.admin'  --all
-gcloud -q iam service-accounts remove-iam-policy-binding terraform@$DEVSHELL_PROJECT_ID.iam.gserviceaccount.com --member=$SA_MEMBER --role='roles/cloudsql.admin'  --all
+gcloud -q iam service-accounts remove-iam-policy-binding terraform@$DEVSHELL_PROJECT_ID.iam.gserviceaccount.com --member=serviceAccount:$SA_MEMBER --role='roles/editor' --all
+gcloud -q iam service-accounts remove-iam-policy-binding terraform@$DEVSHELL_PROJECT_ID.iam.gserviceaccount.com --member=serviceAccount:$SA_MEMBER --role='roles/compute.admin'  --all
+gcloud -q iam service-accounts remove-iam-policy-binding terraform@$DEVSHELL_PROJECT_ID.iam.gserviceaccount.com --member=serviceAccount:$SA_MEMBER --role='roles/cloudfunctions.admin'  --all
+gcloud -q iam service-accounts remove-iam-policy-binding terraform@$DEVSHELL_PROJECT_ID.iam.gserviceaccount.com --member=serviceAccount:$SA_MEMBER --role='roles/servicemanagement.admin'  --all
+gcloud -q iam service-accounts remove-iam-policy-binding terraform@$DEVSHELL_PROJECT_ID.iam.gserviceaccount.com --member=serviceAccount:$SA_MEMBER --role='roles/pubsub.admin'  --all
+gcloud -q iam service-accounts remove-iam-policy-binding terraform@$DEVSHELL_PROJECT_ID.iam.gserviceaccount.com --member=serviceAccount:$SA_MEMBER --role='roles/storage.admin'  --all
+gcloud -q iam service-accounts remove-iam-policy-binding terraform@$DEVSHELL_PROJECT_ID.iam.gserviceaccount.com --member=serviceAccount:$SA_MEMBER --role='roles/redis.admin'  --all
+gcloud -q iam service-accounts remove-iam-policy-binding terraform@$DEVSHELL_PROJECT_ID.iam.gserviceaccount.com --member=serviceAccount:$SA_MEMBER --role='roles/cloudsql.admin'  --all
 gcloud -q iam service-accounts delete terraform@$DEVSHELL_PROJECT_ID.iam.gserviceaccount.com
