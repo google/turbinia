@@ -724,12 +724,11 @@ def main():
     request.evidence.append(evidence_)
 
     if args.recipe:
-      #if hasattr(args, 'jobs_denylist') or hasattr(args, 'jobs_allowlist') or hasattr(args, 'recipe_config'):
-      #  raise TurbiniaException(
-      #      'Specifying a recipe is incompatible with defining'
-      #      ' jobs white/black lists, filter patterns or recipe_config'
-      #      'parameters separately.'
-      #  )
+      if args.jobs_denylist or args.jobs_allowlist or args.recipe_config or args.filter_patterns_file:
+        raise TurbiniaException(
+            'Specifying a recipe is incompatible with defining'
+            ' jobs allow/deny lists, filter patterns or recipe_config'
+            'parameters separately.')
       recipe_obj = TurbiniaRecipe(
           os.path.join(config.RECIPE_FILE_DIR, args.recipe))
       recipe_obj.load()

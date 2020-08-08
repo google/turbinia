@@ -477,6 +477,8 @@ class TurbiniaTask(object):
       is found.
     """
     for k in proposed_conf.keys():
+      if not proposed_conf:
+        return False
       if k not in self.task_config:
         return False
     return True
@@ -826,9 +828,10 @@ class TurbiniaTask(object):
         self.result.update_task_status(self, 'running')
         self._evidence_config = evidence.config
         potential_recipe = self.get_task_recipe(self.name, evidence)
-        if self.validate_task_conf(potential_recipe):
-          self.recipe = self.get_task_recipe(self.name, evidence)
-          self.recipe.pop('task')
+        if potential_recipe:
+          if self.validate_task_conf(potential_recipe):
+            self.recipe = potential_recipe
+            self.recipe.pop('task')
         self.result = self.run(evidence, self.result)
       # pylint: disable=broad-except
       except Exception as exception:

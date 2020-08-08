@@ -1,5 +1,6 @@
 jobs_allowlist: 
   - PlasoJob
+  - PsortJob
 
 patterns_file: '/home/jorlamd/.config/turbinia/patterns_files/patterns_test'
 
@@ -9,3 +10,12 @@ plaso_base:
   hashers: 'all'
   partition: 'all'
   vss_stores: 'all'
+
+psort_base:
+  task: 'PsortTask'
+  status_view: 'linear'
+  additional_fields: 'yara_match'
+  
+
+
+

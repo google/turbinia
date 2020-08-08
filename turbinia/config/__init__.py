@@ -208,10 +208,8 @@ class TurbiniaRecipe(object):
       each of the tasks invoked in the Turbinia recipe.
 """
 
-  def __init__(self, recipe_file, filter_patterns_files=[]):
+  def __init__(self, recipe_file):
     self.recipe_file = recipe_file
-    self.filter_patterns_files = (
-        filter_patterns_files if filter_patterns_files else [])
     self.name = ""
     self.jobs_allowlist = []
     self.jobs_denylist = []
@@ -230,22 +228,38 @@ class TurbiniaRecipe(object):
                 self.recipe_file, exception))
         log.error(message)
         raise TurbiniaException(message)
+        sys.exit(1)
+
     recipe_dict = load(recipe_file_contents, Loader=Loader)
     self.jobs_allowlist = recipe_dict.get('jobs_allowlist', [])
     self.jobs_denylist = recipe_dict.get('jobs_denylist', [])
-    for _file in self.filter_patterns_files:
-      with open(_file) as pattern_file:
-        line = pattern_file.readline()
-        if line not in self.filter_patterns:
-          self.filter_patterns.append(line)
+    if 'filter_patterns_file' in recipe_dict:
+      patterns_file_path = recipe_dict['filter_patterns_file']
+      try:
+        with open(patterns_file_path, 'r') as _file:
+          self.filter_patterns = _file.read().splitlines()
+      except IOError as exception:
+        log.info(
+            "Failed to read patterns file {0:s}: {1!s}".format(
+                patterns_file_path, exception))
+        sys.exit(1)
+
+    tasks_with_recipe = []
     for recipe_item, recipe_item_contents in recipe_dict.items():
       if (recipe_item not in ['jobs_denylist', 'jobs_allowlist',
-                              'filter_patterns_files']):
+                              'filter_patterns_file']):
         if recipe_item in self.task_recipes:
           raise TurbiniaException(
               'Two recipe items with the same name {0:s} have been found.'
-              'If you wish to specify several task runs of the same tools,'
-              'please add several task variants to the same tool recipe.')
+              'If you wish to specify several task runs of the same tool,'
+              'please include them in separate recipes.')
+
+        if recipe_item_contents['task'] in tasks_with_recipe:
+          raise TurbiniaException(
+              'Two recipe items for the same task {0:s} have been found.'
+              'If you wish to specify several task runs of the same tool,'
+              'please include them in separate recipes.')
+
         self.task_recipes[recipe_item] = recipe_item_contents
 
   def retrieve_task_recipe(self, task):
