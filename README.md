@@ -33,7 +33,7 @@ for task scheduling.
 The main documentation for Turbinia can be
 [found here](https://turbinia.readthedocs.io/). You can also find out more about
 the architecture and
-[how it works here](https://turbinia.readthedocs.io/en/latest/user/how-it-works.html)
+[how it works here](https://turbinia.readthedocs.io/en/latest/user/how-it-works.html).
 
 ## Status
 
