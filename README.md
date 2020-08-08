@@ -225,12 +225,12 @@ optional arguments:
 *   [Main Documentation](https://turbinia.readthedocs.io)
 *   [Installation](https://turbinia.readthedocs.io/en/latest/user/install.html)
 *   [How it works](https://turbinia.readthedocs.io/en/latest/user/how-it-works.html)
-*   [Operational Details](https://turbinia.readthedocs.io/en/latest/docs/user/operational-details.md)
-*   [Contributing to Turbinia](https://turbinia.readthedocs.io/en/latest/dev/contributing.md)
-*   [Developing new Tasks](https://turbinia.readthedocs.io/en/latest/dev/developing-new-tasks.md)
-*   [FAQ](https://turbinia.readthedocs.io/en/latest/user/faq.md)
-*   [Debugging and Common Errors](https://turbinia.readthedocs.io/en/latest/user/debugging.md)
-*   [Using Docker to execute jobs](https://turbinia.readthedocs.io/en/latest/user/using-docker.md)
+*   [Operational Details](https://turbinia.readthedocs.io/en/latest/user/operational-details.html)
+*   [Contributing to Turbinia](https://turbinia.readthedocs.io/en/latest/dev/contributing.html)
+*   [Developing new Tasks](https://turbinia.readthedocs.io/en/latest/dev/developing-new-tasks.html)
+*   [FAQ](https://turbinia.readthedocs.io/en/latest/user/faq.html)
+*   [Debugging and Common Errors](https://turbinia.readthedocs.io/en/latest/user/debugging.html)
+*   [Using Docker to execute jobs](https://turbinia.readthedocs.io/en/latest/user/using-docker.html)
 
 ##### Obligatory Fine Print
 
