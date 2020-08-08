@@ -44,8 +44,15 @@ class PlasoTask(TurbiniaTask):
   }
 
   def build_plaso_command(self, base_command, conf):
-    """ Tasked with building the command """
-    # Base command could be potentially placed in global configuration
+    """Builds a typical plaso command, contains logic specific to log2timeline.
+
+    Args:
+      base_command (str): Command to invoke log2timeline (e.g. log2timeline.py)
+      conf (dict): Dynamic config containing the parameters for the command.
+
+    Returns:
+      String for valid Log2timeline command.
+    """
     cmd = [base_command]
     for k, v in conf.items():
       prepend = '-'

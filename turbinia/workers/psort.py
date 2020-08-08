@@ -24,7 +24,15 @@ from turbinia.evidence import PlasoCsvFile
 
 
 class PsortTask(TurbiniaTask):
-  """Task to run Psort to generate CSV output from plaso storage files."""
+  """Builds a typical plaso command, contains logic specific to psort.
+
+    Args:
+      base_command (str): Command to invoke log2timeline (e.g. log2timeline.py)
+      conf (dict): Dynamic config containing the parameters for the command.
+
+    Returns:
+      String for valid psort command.
+    """
 
   task_config = {
       'status_view': 'none',

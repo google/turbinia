@@ -465,7 +465,32 @@ class TurbiniaTask(object):
             'information.'.format(
                 evidence, self.name, state.name, evidence.format_state()))
 
+  def validate_task_conf(self, proposed_conf):
+    """Checks if the provided recipe contains exclusively fields that are
+    included in the dynamic task recipe
+
+    Args:
+      proposed_conf (dict): Dict to override the default dynamic task conf.
+
+    Returns:
+      bool: False if a field not present in the default dybamic task config
+      is found.
+    """
+    for k in proposed_conf.keys():
+      if k not in self.task_config:
+        return False
+    return True
+
   def copy_to_temp_file(source_file):
+    """Creates a temporary file with the contents of a specified existing one
+
+    Args:
+      source_file (str): Path to the file the contents of which should be put
+      into the temporary file.
+
+    Returns:
+      str: File name for newly created temporary file
+    """
     with open(source_file, 'r') as sf_fh:
       contents = sf_fh.read()
     with NamedTemporaryFile(dir=self.tmp_dir, delete=False, mode='w') as fh:
@@ -473,6 +498,16 @@ class TurbiniaTask(object):
     return sf_fh.name
 
   def draft_list_file(file_name, entries):
+    """ Creates a file containing a line-by-line list of strings off of a 
+    list of entries.
+
+    Args:
+      file_name (str): Name to be given to the file.
+      entries (list): List of entries to be written line by line.
+
+    Returns:
+      str: Path to newly created file.
+    """
     file_path = os.path.join(self.tmp_dir, file_name)
     try:
       with open(file_path, 'wb') as file_fh:
@@ -697,6 +732,15 @@ class TurbiniaTask(object):
     return result
 
   def get_task_recipe(self, task_name, evidence):
+    """Searches and provides a recipe for the task at hand if there is one.
+
+    Args:
+      task_name: string to match the "task" entry for the recipe.
+      evidence: Evidence object.
+
+    Returns:
+      Dict: Recipe dict.
+    """
     for _, task_recipe in evidence.config['task_recipes'].items():
       if isinstance(task_recipe, dict):
         task = task_recipe.get('task', None)
@@ -781,8 +825,9 @@ class TurbiniaTask(object):
 
         self.result.update_task_status(self, 'running')
         self._evidence_config = evidence.config
-        self.recipe = self.get_task_recipe(self.name, evidence)
-        if self.recipe:
+        potential_recipe = self.get_task_recipe(self.name, evidence)
+        if self.validate_task_conf(potential_recipe):
+          self.recipe = self.get_task_recipe(self.name, evidence)
           self.recipe.pop('task')
         self.result = self.run(evidence, self.result)
       # pylint: disable=broad-except
