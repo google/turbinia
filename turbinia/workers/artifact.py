@@ -63,7 +63,7 @@ class FileArtifactExtractionTask(TurbiniaTask):
         '--artifact_filters',
         self.artifact_name,
     ]
-    if config.DEBUG_TASKS:
+    if config.DEBUG_TASKS or evidence.config.get('debug_tasks'):
       cmd.append('-d')
 
     # Path to the source image/directory.
