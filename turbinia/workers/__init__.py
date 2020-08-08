@@ -513,13 +513,12 @@ class TurbiniaTask(object):
     # Execute the job via docker.
     docker_image = job_manager.JobsManager.GetDockerImage(self.job_name)
     if docker_image:
-      ro_paths = [
-          el for el in [
-              result.input_evidence.local_path, result.input_evidence
-              .source_path, result.input_evidence.device_path,
-              result.input_evidence.mount_path
-          ] if el
-      ]
+      ro_paths = []
+      for path in ['local_path', 'source_path', 'device_path', 'mount_path']:
+        if hasattr(result.input_evidence, path):
+          path_string = getattr(result.input_evidence, path)
+          if path_string:
+            ro_paths.append(path_string)
       rw_paths = [self.output_dir, self.tmp_dir]
       container_manager = docker_manager.ContainerManager(docker_image)
       stdout, stderr, ret = container_manager.execute_container(
@@ -781,9 +780,7 @@ class TurbiniaTask(object):
           return self.result.serialize()
 
         self.result.update_task_status(self, 'running')
-        #commenting out assuming this particular release does not aim to support
-        #passing recipes to newly created evidence
-        #self._evidence_config = evidence.config
+        self._evidence_config = evidence.config
         self.recipe = self.get_task_recipe(self.name, evidence)
         if self.recipe:
           self.recipe.pop('task')

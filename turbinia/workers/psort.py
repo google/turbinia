@@ -26,6 +26,32 @@ from turbinia.evidence import PlasoCsvFile
 class PsortTask(TurbiniaTask):
   """Task to run Psort to generate CSV output from plaso storage files."""
 
+  task_config = {
+      'status_view': 'none',
+      'additional_fields': 'yara_match',
+      'output_format': None,
+      'profilers': None,
+  }
+
+  def build_plaso_command(self, base_command, conf):
+    """ Tasked with building the command """
+    # Base command could be potentially placed in global configuration
+    cmd = [base_command]
+    for k, v in conf.items():
+      prepend = '-'
+      if len(k) > 1:
+        prepend = '--'
+      if isinstance(v, list):
+        if v:
+          cmd.extend([prepend + k, ','.join(v)])
+      elif isinstance(v, bool):
+        if v:
+          cmd.append(prepend + k)
+      elif isinstance(v, str):
+        if v:
+          cmd.extend([prepend + k, v])
+    return cmd
+
   def run(self, evidence, result):
     """Task that processes Plaso storage files with Psort.
 
@@ -38,15 +64,20 @@ class PsortTask(TurbiniaTask):
     """
     config.LoadConfig()
 
-    psort_file = os.path.join(self.output_dir, '{0:s}.csv'.format(self.id))
+    psort_file = os.path.join(self.output_dir, '{0:s}'.format(self.id))
     psort_evidence = PlasoCsvFile(source_path=psort_file)
     psort_log = os.path.join(self.output_dir, '{0:s}.log'.format(self.id))
 
-    cmd = ['psort.py', '--status_view', 'none', '--logfile', psort_log]
+    working_recipe = self.task_config
+    if self.recipe:
+      working_recipe = self.recipe
+
+    cmd = self.build_plaso_command('psort.py', working_recipe)
+
+    cmd.extend(['--logfile', psort_log])
     if config.DEBUG_TASKS:
       cmd.append('-d')
 
-    cmd.extend(['--additional_fields', 'yara_match'])
     cmd.extend(['-w', psort_file, evidence.source_path])
 
     result.log('Running psort as [{0:s}]'.format(' '.join(cmd)))
