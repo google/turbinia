@@ -23,13 +23,14 @@ do
   fi
 done
 
+# TODO(rbdebeer) Debug and fix remove-iam-policy-binding calls.
 # Remove IAM bindings and terraform service account
-gcloud -q iam service-accounts remove-iam-policy-binding $SA_MEMBER --member=serviceAccount:$SA_MEMBER --role='roles/editor' --all
-gcloud -q iam service-accounts remove-iam-policy-binding $SA_MEMBER --member=serviceAccount:$SA_MEMBER --role='roles/compute.admin'  --all
-gcloud -q iam service-accounts remove-iam-policy-binding $SA_MEMBER --member=serviceAccount:$SA_MEMBER --role='roles/cloudfunctions.admin'  --all
-gcloud -q iam service-accounts remove-iam-policy-binding $SA_MEMBER --member=serviceAccount:$SA_MEMBER --role='roles/servicemanagement.admin'  --all
-gcloud -q iam service-accounts remove-iam-policy-binding $SA_MEMBER --member=serviceAccount:$SA_MEMBER --role='roles/pubsub.admin'  --all
-gcloud -q iam service-accounts remove-iam-policy-binding $SA_MEMBER --member=serviceAccount:$SA_MEMBER --role='roles/storage.admin'  --all
-gcloud -q iam service-accounts remove-iam-policy-binding $SA_MEMBER --member=serviceAccount:$SA_MEMBER --role='roles/redis.admin'  --all
-gcloud -q iam service-accounts remove-iam-policy-binding $SA_MEMBER --member=serviceAccount:$SA_MEMBER --role='roles/cloudsql.admin'  --all
-gcloud -q iam service-accounts delete $SA_MEMBER
+# gcloud -q iam service-accounts remove-iam-policy-binding $SA_MEMBER --member=serviceAccount:$SA_MEMBER --role='roles/editor' --all
+# gcloud -q iam service-accounts remove-iam-policy-binding $SA_MEMBER --member=serviceAccount:$SA_MEMBER --role='roles/compute.admin'  --all
+# gcloud -q iam service-accounts remove-iam-policy-binding $SA_MEMBER --member=serviceAccount:$SA_MEMBER --role='roles/cloudfunctions.admin'  --all
+# gcloud -q iam service-accounts remove-iam-policy-binding $SA_MEMBER --member=serviceAccount:$SA_MEMBER --role='roles/servicemanagement.admin'  --all
+# gcloud -q iam service-accounts remove-iam-policy-binding $SA_MEMBER --member=serviceAccount:$SA_MEMBER --role='roles/pubsub.admin'  --all
+# gcloud -q iam service-accounts remove-iam-policy-binding $SA_MEMBER --member=serviceAccount:$SA_MEMBER --role='roles/storage.admin'  --all
+# gcloud -q iam service-accounts remove-iam-policy-binding $SA_MEMBER --member=serviceAccount:$SA_MEMBER --role='roles/redis.admin'  --all
+# gcloud -q iam service-accounts remove-iam-policy-binding $SA_MEMBER --member=serviceAccount:$SA_MEMBER --role='roles/cloudsql.admin'  --all
+# gcloud -q iam service-accounts delete $SA_MEMBER
