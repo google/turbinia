@@ -377,6 +377,10 @@ def main():
       '-i', '--requests', required=False, action='store_true',
       help='Show all requests from a specified timeframe. The default '
       'timeframe is 7 days. Please use the -d flag to extend this.')
+  parser_status.add_argument(
+      '-w', '--workers', required=False, action='store_true',
+      help='Show Worker status information from a specified timeframe. The '
+      'default timeframe is 7 days. Please use the -d flag to extend this.')
 
   # Server
   subparsers.add_parser('server', help='Run Turbinia Server')
@@ -670,6 +674,14 @@ def main():
     if args.requests:
       print(
           client.format_request_status(
+              instance=config.INSTANCE_ID, project=config.TURBINIA_PROJECT,
+              region=region, days=args.days_history,
+              all_fields=args.all_fields))
+      sys.exit(0)
+
+    if args.workers:
+      print(
+          client.format_worker_status(
               instance=config.INSTANCE_ID, project=config.TURBINIA_PROJECT,
               region=region, days=args.days_history,
               all_fields=args.all_fields))
