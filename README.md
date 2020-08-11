@@ -65,7 +65,7 @@ usage: turbiniactl [-h] [-q] [-v] [-d] [-a] [-c CONFIG_FILE]
                    [-r REQUEST_ID] [-R] [-S] [-V] [-D]
                    [-F FILTER_PATTERNS_FILE] [-Y YARA_RULES_FILE]
                    [-j JOBS_ALLOWLIST] [-J JOBS_DENYLIST] [-p POLL_INTERVAL]
-                   [-t TASK] [-w]
+                   [-t TASK] [-T] [-w]
                    <command> ...
 
 optional arguments:
@@ -127,6 +127,7 @@ optional arguments:
                         state info
   -t TASK, --task TASK  The name of a single Task to run locally (must be used
                         with --run_local.
+  -T, --debug_tasks     Show debug output for all supported tasks
   -w, --wait            Wait to exit until all tasks for the given request
                         have completed
 
@@ -189,7 +190,7 @@ statistics and reports (in markdown format) with other flags.
 $ turbiniactl status -h
 usage: turbiniactl status [-h] [-c] [-C] [-d DAYS_HISTORY] [-f]
                           [-r REQUEST_ID] [-p PRIORITY_FILTER] [-R] [-s]
-                          [-t TASK_ID] [-u USER] [-i]
+                          [-t TASK_ID] [-u USER] [-i] [-w]
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -218,6 +219,9 @@ optional arguments:
   -i, --requests        Show all requests from a specified timeframe. The
                         default timeframe is 7 days. Please use the -d flag to
                         extend this.
+  -w, --workers         Show Worker status information from a specified
+                        timeframe. The default timeframe is 7 days. Please use
+                        the -d flag to extend this.
 ```
 
 ## Other documentation
