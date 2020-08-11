@@ -531,7 +531,6 @@ class BaseTurbiniaClient(object):
       list: Formatted task data
     """
     report = []
-    report.append('')
     report.append(
         fmt.bullet('{0:s} - {1:s}'.format(task['task_id'], task['task_name'])))
     report.append(
@@ -541,6 +540,7 @@ class BaseTurbiniaClient(object):
     report.append(fmt.bullet('Status: {0:s}'.format(task['status']), level=2))
     report.append(
         fmt.bullet('Run Time: {0:s}'.format(str(task['run_time'])), level=2))
+    report.append('')
     return report
 
   def format_task(self, task, show_files=False):
@@ -804,7 +804,6 @@ class BaseTurbiniaClient(object):
           other_status.extend(self.format_worker_task(task))
       # Add each of the status lists back to report list
       not_found = [fmt.bullet('No Tasks found.')]
-      report.append('')
       report.append(fmt.heading3('Running Tasks'))
       report.extend(run_status if run_status else not_found)
       report.append('')

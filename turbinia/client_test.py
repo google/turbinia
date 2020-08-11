@@ -150,7 +150,6 @@ LONG_REPORT_WORKERS = textwrap.dedent(
     * 2 Worker(s) found.
 
     ## Worker Node: fake_worker2
-
     ### Running Tasks
     * No Tasks found.
 
@@ -158,14 +157,13 @@ LONG_REPORT_WORKERS = textwrap.dedent(
     * No Tasks found.
 
     ### Finished Tasks
-
     * 0xfakeTaskId2 - TaskName2
         * Last Update: 2020-08-04T16:52:38.390390Z
         * Status: This second fake task executed
         * Run Time: 0:05:00
 
-    ## Worker Node: fake_worker
 
+    ## Worker Node: fake_worker
     ### Running Tasks
     * No Tasks found.
 
@@ -173,7 +171,6 @@ LONG_REPORT_WORKERS = textwrap.dedent(
     * No Tasks found.
 
     ### Finished Tasks
-
     * 0xfakeTaskId - TaskName
         * Last Update: 2020-08-04T16:32:38.390390Z
         * Status: This fake task executed
@@ -183,6 +180,7 @@ LONG_REPORT_WORKERS = textwrap.dedent(
         * Last Update: 2020-08-04T16:32:38.390390Z
         * Status: Third Task Failed...
         * Run Time: 0:03:00
+
 """)
 
 STATISTICS_REPORT = textwrap.dedent(
