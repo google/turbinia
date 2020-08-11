@@ -760,6 +760,7 @@ class BaseTurbiniaClient(object):
     # Create dictionary of worker_node: {{task_id, task_update,
     # task_name, task_status}}
     workers_dict = {}
+    scheduled_counter = 0
     for result in task_results:
       worker_node = result.get('worker_name')
       status = result.get('status')
@@ -782,6 +783,10 @@ class BaseTurbiniaClient(object):
           run_time = result.get('run_time')
           task_dict['run_time'] = run_time if run_time else 'No run time.'
         workers_dict[worker_node].append(task_dict)
+      else:
+        # Track scheduled/unassigned Tasks for reporting.
+        scheduled_counter += 1
+
     # Generate report header
     report = []
     report.append(
@@ -790,6 +795,10 @@ class BaseTurbiniaClient(object):
                 num_days)))
     report.append(
         fmt.bullet('{0:d} Worker(s) found.'.format(len(workers_dict.keys()))))
+    report.append(
+        fmt.bullet(
+            '{0:d} Task(s) unassigned or scheduled and pending Worker assignment.'
+            .format(scheduled_counter)))
     for worker_node, tasks in workers_dict.items():
       report.append('')
       report.append(fmt.heading2('Worker Node: {0:s}'.format(worker_node)))

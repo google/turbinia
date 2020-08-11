@@ -148,6 +148,7 @@ LONG_REPORT_WORKERS = textwrap.dedent(
     """\
     # Turbinia report for Worker activity within 7 days
     * 2 Worker(s) found.
+    * 0 Task(s) unassigned or scheduled and pending Worker assignment.
 
     ## Worker Node: fake_worker2
     ### Running Tasks
