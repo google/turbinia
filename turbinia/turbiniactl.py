@@ -698,9 +698,9 @@ def main():
       sys.exit(0)
 
     if args.dump_json:
-      output_json=True
+      output_json = True
     else:
-      output_json=False
+      output_json = False
     print(
         client.format_task_status(
             instance=config.INSTANCE_ID, project=config.TURBINIA_PROJECT,
