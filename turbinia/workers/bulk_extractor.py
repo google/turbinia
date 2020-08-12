@@ -64,6 +64,9 @@ class BulkExtractorTask(TurbiniaTask):
     # https://github.com/google/turbinia/pull/486 is in.
     if evidence.config and evidence.config.get('bulk_extractor_args'):
       bulk_extractor_args = evidence.config.get('bulk_extractor_args')
+      # Some of bulk_extractors arguments use the '=' character
+      # need to substitute with '~' until we have recipes.
+      bulk_extractor_args = bulk_extractor_args.replace('~', '=')
       bulk_extractor_args = bulk_extractor_args.split(':')
     else:
       bulk_extractor_args = None
@@ -80,7 +83,7 @@ class BulkExtractorTask(TurbiniaTask):
       cmd.append(evidence.local_path)
 
       result.log('Running Bulk Extractor as [{0:s}]'.format(' '.join(cmd)))
-      self.execute(cmd, result, new_evidence=[output_evidence], shell=True)
+      self.execute(cmd, result, new_evidence=[output_evidence])
 
       # Generate bulk extractor report
       (report, summary) = self.generate_summary_report(output_file_path)
