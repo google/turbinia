@@ -348,6 +348,10 @@ def main():
       '-d', '--days_history', default=0, type=int,
       help='Number of days of history to show', required=False)
   parser_status.add_argument(
+      '-D', '--dump_json', action='store_true',
+      help='Dump JSON status output instead text. Compatible with -d, -u, '
+      '-r and -t flags, but not others')
+  parser_status.add_argument(
       '-f', '--force', help='Gatekeeper for --close_tasks', action='store_true',
       required=False)
   parser_status.add_argument(
@@ -653,6 +657,12 @@ def main():
         )
         sys.exit(1)
 
+    if args.dump_json and (args.statistics or args.requests or args.workers):
+      log.info(
+          'The --dump_json flag is not compatible with --statistics, '
+          '--reqeusts, or --workers flags')
+      sys.exit(1)
+
     if args.statistics:
       print(
           client.format_task_statistics(
@@ -687,13 +697,19 @@ def main():
               all_fields=args.all_fields))
       sys.exit(0)
 
+    if args.dump_json:
+      output_json = True
+    else:
+      output_json = False
     print(
         client.format_task_status(
             instance=config.INSTANCE_ID, project=config.TURBINIA_PROJECT,
             region=region, days=args.days_history, task_id=args.task_id,
             request_id=args.request_id, user=args.user,
             all_fields=args.all_fields, full_report=args.full_report,
-            priority_filter=args.priority_filter))
+            priority_filter=args.priority_filter, output_json=output_json))
+    sys.exit(0)
+
   elif args.command == 'listjobs':
     log.info('Available Jobs:')
     client.list_jobs()

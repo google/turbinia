@@ -300,6 +300,10 @@ class TestTurbiniaClient(unittest.TestCase):
     test_task_data[0]['run_time'] = run_time
     self.assertEqual(task_data, test_task_data)
 
+    # Also test that JSON output works
+    task_data = client.get_task_data('inst', 'proj', 'reg', output_json=True)
+    self.assertEqual(task_data, '[{"bar": "bar2", "run_time": 3.0}]')
+
   @mock.patch('libcloudforensics.providers.gcp.internal.function.GoogleCloudFunction.ExecuteFunction')  # yapf: disable
   @mock.patch('turbinia.client.task_manager.PSQTaskManager._backend_setup')
   @mock.patch('turbinia.state_manager.get_state_manager')
