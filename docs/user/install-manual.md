@@ -4,13 +4,13 @@
 
 Turbinia can be run on the [Google Cloud Platform](https://cloud.google.com), on
 local machines, or in a hybrid mode. See the
-"[how it works](https://github.com/google/turbinia/blob/master/docs/how-it-works.md)"
+"[how it works](how-it-works.md)"
 documentation for more details on what the architecture looks like for each of
 these installation types. This page covers the local installation as well as the
 manual steps for hybrid and cloud installation. **If you are setting up a GCP
 cloud or hybrid installation, it is highly recommended and much simpler to use
 the
-[terraform installation method](https://github.com/google/turbinia/blob/master/docs/install.md)
+[terraform installation method](install.md)
 to bootstrap those environments.**
 
 Each section of this document indicates which installation types it applies to
@@ -124,7 +124,7 @@ VM at this point, and we will later clone this instance to create the workers.
 *   Install Worker binary dependencies
     *   You can install Plaso from the
         [GIFT PPA](https://launchpad.net/~gift/+archive/ubuntu/stable), or
-        [see here](https://github.com/log2timeline/plaso/blob/master/docs/sources/user/Users-Guide.md)
+        [see here](https://plaso.readthedocs.io/en/latest/sources/user/Users-Guide.html#user-s-guide)
         for other packaged installations.
     *   There are a few other binary
         dependencies that are not packaged with Ubuntu or PyPi, so these
@@ -187,7 +187,7 @@ VM at this point, and we will later clone this instance to create the workers.
         Manager to talk to workers
     *   `Storage Object Admin` and `Storage Legacy Bucket Reader`: Only required
         on the GCS bucket used by Turbinia, if any. See
-        [GCP Turbinia](https://github.com/google/turbinia/blob/master/docs/install.md#gcp-turbinia)
+        [GCP Turbinia](install.md)
         for details
     *   `Compute Instance Admin`: Used to list instances and to attach disks to
         instances

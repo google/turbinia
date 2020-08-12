@@ -18,6 +18,7 @@ import os
 import logging
 import xml.etree.ElementTree as xml_tree
 
+from turbinia import config
 from turbinia import TurbiniaException
 
 from turbinia.evidence import BulkExtractorOutput
@@ -45,6 +46,8 @@ class BulkExtractorTask(TurbiniaTask):
     Returns:
         TurbiniaTaskResult object.
     """
+    config.LoadConfig()
+
     # TODO(wyassine): Research whether bulk extractor has an option to
     # generate a summary report to stdout so that it could be used for
     # a report in this task.
@@ -57,11 +60,26 @@ class BulkExtractorTask(TurbiniaTask):
     # later.
     output_evidence.local_path = output_file_path
 
+    # TODO: Convert to using real recipes after
+    # https://github.com/google/turbinia/pull/486 is in.
+    if evidence.config and evidence.config.get('bulk_extractor_args'):
+      bulk_extractor_args = evidence.config.get('bulk_extractor_args')
+      bulk_extractor_args = bulk_extractor_args.split(':')
+    else:
+      bulk_extractor_args = None
+
     try:
       # Generate the command we want to run then execute.
-      cmd = 'bulk_extractor {0:s} -o {1:s}'.format(
-          evidence.local_path, output_file_path)
-      result.log('Running Bulk Extractor as [{0:s}]'.format(cmd))
+      cmd = ['bulk_extractor']
+
+      cmd.extend(['-o', output_file_path])
+
+      if bulk_extractor_args:
+        cmd.extend(bulk_extractor_args)
+
+      cmd.append(evidence.local_path)
+
+      result.log('Running Bulk Extractor as [{0:s}]'.format(' '.join(cmd)))
       self.execute(cmd, result, new_evidence=[output_evidence], shell=True)
 
       # Generate bulk extractor report

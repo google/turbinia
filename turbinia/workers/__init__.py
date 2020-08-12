@@ -586,7 +586,7 @@ class TurbiniaTask(object):
     Raises:
       TurbiniaException: If the evidence can not be found.
     """
-    self.output_manager.setup(self)
+    self.output_manager.setup(self.name, self.id)
     self.tmp_dir, self.output_dir = self.output_manager.get_local_output_dirs()
     if not self.result:
       self.result = self.create_result(input_evidence=evidence)

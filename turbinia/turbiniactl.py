@@ -24,6 +24,7 @@ import getpass
 import logging
 import os
 import sys
+import uuid
 
 from turbinia import config
 from turbinia import TurbiniaException
@@ -32,6 +33,7 @@ from libcloudforensics.providers.gcp import forensics as gcp_forensics
 from turbinia.lib import google_cloud
 from turbinia import __version__
 from turbinia.processors import archive
+from turbinia.output_manager import OutputManager
 
 log = logging.getLogger('turbinia')
 # We set up the logger first without the file handler, and we will set up the
@@ -127,6 +129,9 @@ def main():
       '-t', '--task',
       help='The name of a single Task to run locally (must be used with '
       '--run_local.')
+  parser.add_argument(
+      '-T', '--debug_tasks', action='store_true',
+      help='Show debug output for all supported tasks', default=False)
   parser.add_argument(
       '-w', '--wait', action='store_true',
       help='Wait to exit until all tasks for the given request have completed')
@@ -291,9 +296,9 @@ def main():
 
   # Parser options for CompressedDirectory evidence type
   parser_directory = subparsers.add_parser(
-      'compressedirectory', help='Process a compressed tar file as Evidence')
+      'compresseddirectory', help='Process a compressed tar file as Evidence')
   parser_directory.add_argument(
-      '-l', '--local_path', help='Local path to the evidence', required=True)
+      '-l', '--source_path', help='Local path to the evidence', required=True)
   parser_directory.add_argument(
       '-s', '--source', help='Description of the source of the evidence',
       required=False)
@@ -368,6 +373,14 @@ def main():
       '-t', '--task_id', help='Show task for given Task ID', required=False)
   parser_status.add_argument(
       '-u', '--user', help='Show task for given user', required=False)
+  parser_status.add_argument(
+      '-i', '--requests', required=False, action='store_true',
+      help='Show all requests from a specified timeframe. The default '
+      'timeframe is 7 days. Please use the -d flag to extend this.')
+  parser_status.add_argument(
+      '-w', '--workers', required=False, action='store_true',
+      help='Show Worker status information from a specified timeframe. The '
+      'default timeframe is 7 days. Please use the -d flag to extend this.')
 
   # Server
   subparsers.add_parser('server', help='Run Turbinia Server')
@@ -401,6 +414,10 @@ def main():
     log.setLevel(logging.DEBUG)
   else:
     log.setLevel(logging.INFO)
+
+  # Enable tasks debugging for supported tasks
+  if args.debug_tasks:
+    config.DEBUG_TASKS = True
 
   # Enable GCP Stackdriver Logging
   if config.STACKDRIVER_LOGGING and args.command in ('server', 'psqworker'):
@@ -518,6 +535,9 @@ def main():
         log.info('--copy_only specified, so not processing with Turbinia')
         sys.exit(0)
 
+  # Set request id
+  request_id = args.request_id if args.request_id else uuid.uuid4().hex
+
   # Start Evidence configuration
   evidence_ = None
   if args.command == 'rawdisk':
@@ -559,7 +579,7 @@ def main():
     else:
       evidence_ = evidence.Directory(
           name=args.name, source_path=source_path, source=args.source)
-  elif args.command == 'compressedirectory':
+  elif args.command == 'compresseddirectory':
     archive.ValidateTarFile(args.source_path)
     args.name = args.name if args.name else args.source_path
     source_path = os.path.abspath(args.source_path)
@@ -651,6 +671,22 @@ def main():
           '--wait requires --request_id, which is not specified. '
           'turbiniactl will exit without waiting.')
 
+    if args.requests:
+      print(
+          client.format_request_status(
+              instance=config.INSTANCE_ID, project=config.TURBINIA_PROJECT,
+              region=region, days=args.days_history,
+              all_fields=args.all_fields))
+      sys.exit(0)
+
+    if args.workers:
+      print(
+          client.format_worker_status(
+              instance=config.INSTANCE_ID, project=config.TURBINIA_PROJECT,
+              region=region, days=args.days_history,
+              all_fields=args.all_fields))
+      sys.exit(0)
+
     print(
         client.format_task_status(
             instance=config.INSTANCE_ID, project=config.TURBINIA_PROJECT,
@@ -670,6 +706,16 @@ def main():
           'The evidence type {0:s} is Cloud only, and this instance of '
           'Turbinia is not a cloud instance.'.format(evidence_.type))
       sys.exit(1)
+    elif not config.SHARED_FILESYSTEM and evidence_.copyable:
+      if os.path.exists(evidence_.local_path):
+        output_manager = OutputManager()
+        output_manager.setup(evidence_.type, request_id, remote_only=True)
+        output_manager.save_evidence(evidence_)
+      else:
+        log.error(
+            'The evidence local path does not exist: {0:s}. Please submit '
+            'a new Request with a valid path.'.format(evidence_.local_path))
+        sys.exit(1)
     elif not config.SHARED_FILESYSTEM and not evidence_.cloud_only:
       log.error(
           'The evidence type {0:s} cannot run on Cloud instances of '
@@ -689,7 +735,7 @@ def main():
     server.start()
   elif evidence_:
     request = TurbiniaRequest(
-        request_id=args.request_id, requester=getpass.getuser())
+        request_id=request_id, requester=getpass.getuser())
     request.evidence.append(evidence_)
     if filter_patterns:
       request.recipe['filter_patterns'] = filter_patterns
@@ -699,6 +745,8 @@ def main():
       request.recipe['jobs_allowlist'] = args.jobs_allowlist
     if yara_rules:
       request.recipe['yara_rules'] = yara_rules
+    if args.debug_tasks:
+      request.recipe['debug_tasks'] = args.debug_tasks
     if args.recipe_config:
       for pair in args.recipe_config:
         try:

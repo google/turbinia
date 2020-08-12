@@ -13,12 +13,12 @@ https://github.com/google/turbinia/blob/master/turbinia/config/turbinia_config_t
 ## How can I write new Tasks?
 
 New Task development documentation can be [found here](
-https://github.com/google/turbinia/blob/master/docs/developing-new-tasks.md)
+../developer/developing-new-tasks.md)
 
 ## How can I debug problems with Turbinia?
 
 Information on debugging and other common errors can be [found here](
-https://github.com/google/turbinia/blob/master/docs/debugging.md)
+debugging.md)
 
 ## Where are the files listed in the turbiniactl status output?
 

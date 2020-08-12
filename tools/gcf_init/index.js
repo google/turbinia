@@ -79,7 +79,7 @@ exports.gettasks = function gettasks(req, res) {
     query = query.filter('last_update', '>=', start_time)
   }
   if (!req.body.task_id && !req.body.request_id && !req.body.user &&
-      !req.start_time) {
+      !req.body.start_time) {
     console.log('Getting open Turbinia Tasks.');
     query = query.filter('successful', '=', null)
   }
