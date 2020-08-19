@@ -9,8 +9,8 @@ python3-pip \
 software-properties-common \
 && rm -rf /var/lib/apt/lists/*
 
-RUN pip install urllib3 cryptography --upgrade
-RUN pip install turbinia
+RUN pip3 install urllib3 cryptography --upgrade
+RUN pip3 install turbinia
 
 RUN useradd -r -s /bin/nologin -G disk turbinia
 
