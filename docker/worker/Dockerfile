@@ -13,7 +13,7 @@ sudo \
 && rm -rf /var/lib/apt/lists/*
 
 RUN pip3 install urllib3 cryptography --upgrade
-RUN pip3 install turbinia
+RUN pip3 install https://github.com/google/turbinia/archive/bump-libcloudforensics.zip
 
 # Install Plaso
 RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 0x5e80511b10c598b8 \
