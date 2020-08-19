@@ -7,7 +7,7 @@ ca-certificates \
 john \
 john-data \
 libterm-readline-gnu-perl \
-python-pip \
+python3-pip \
 software-properties-common \
 sudo \
 && rm -rf /var/lib/apt/lists/*

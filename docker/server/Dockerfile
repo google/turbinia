@@ -5,7 +5,7 @@ apt-transport-https \
 apt-utils \
 ca-certificates \
 libterm-readline-gnu-perl \
-python-pip \
+python3-pip \
 software-properties-common \
 && rm -rf /var/lib/apt/lists/*
 
