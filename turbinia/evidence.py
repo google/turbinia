@@ -517,6 +517,30 @@ class RawDisk(Evidence):
       self.state[EvidenceState.ATTACHED] = False
 
 
+class RawDiskPartition(RawDisk):
+  """Evidence object for a partition within Disk based evidence.
+
+  Attributes:
+    offset: Offset to the start of the volume in bytes.
+    size: The size of the disk in bytes.
+  """
+
+  REQUIRED_ATTRIBUTES = ['local_path']
+  POSSIBLE_STATES = [
+      EvidenceState.PARENT_MOUNTED, EvidenceState.PARENT_ATTACHED
+  ]
+
+  def __init__(self, offset, length, *args, **kwargs):
+    """Initialization for raw volume evidence object."""
+
+    self.offset = offset
+    self.length = length
+    super(RawDiskPartition, self).__init__(*args, **kwargs)
+
+    # This Evidence needs to have a RawDisk as a parent
+    self.context_dependent = True
+
+
 class EncryptedDisk(RawDisk):
   """Encrypted disk file evidence.
 

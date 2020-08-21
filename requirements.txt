@@ -1,3 +1,4 @@
+dfvfs
 filelock
 google-api-core
 google-cloud-datastore
@@ -12,4 +13,4 @@ psq
 six
 urllib3[secure]
 docker
-libcloudforensics==20200609
+libcloudforensics
