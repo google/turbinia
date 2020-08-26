@@ -5,7 +5,17 @@
 # Make sure the service account your GCE instance is running under has full API scope
 # access and is project owner for Terraform to function correctly.
 echo "Initiate gcloud configuration"
-gcloud info
+
+if [ $# -ne  1 ]
+then
+  echo "Not enough arguments supplied, please provide project."
+  echo "$0 [PROJECT]"
+  exit 1
+fi
+
+PROJECT="$1"
+
+gcloud --project=$PROJECT info
 
 apt-get update
 apt-get -y install python-pip python-virtualenv unzip
@@ -22,11 +32,11 @@ git clone https://github.com/forseti-security/forseti-security.git
 # Only GCP Project Owner can create App Engine project
 # See documentation: https://cloud.google.com/appengine/docs/standard/python/console/#create
 echo "Enable AppEngine API and sleep to make sure service is enabled."
-gcloud services enable appengine
+gcloud --project=$PROJECT services enable appengine
 sleep 60
 
 echo "Setup Terraform Turbinia infrastructure."
-export DEVSHELL_PROJECT_ID=`gcloud config list --format 'value(core.project)'`
+export DEVSHELL_PROJECT_ID=$PROJECT
 ./forseti-security/contrib/incident-response/infrastructure/deploy.sh --no-timesketch
 
 
