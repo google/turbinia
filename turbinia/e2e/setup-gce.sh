@@ -29,7 +29,7 @@ max_retry=100
 for try in $(seq 1 ${max_retry}); do
   [[ ${try} -gt 1 ]] && sleep 10
   install_packages && exit_code=0 && break || exit_code=$?
-  err "Failed to apt-get install needed packages, retrying in 10 seconds."
+  echo "Failed to apt-get install needed packages, retrying in 10 seconds."
 done;
 
 # Install Terraform
