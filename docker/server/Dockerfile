@@ -10,7 +10,7 @@ software-properties-common \
 && rm -rf /var/lib/apt/lists/*
 
 RUN pip3 install urllib3 cryptography --upgrade
-RUN pip3 install https://github.com/google/turbinia/archive/bump-libcloudforensics.zip
+RUN pip3 install https://github.com/google/turbinia/archive/lcf-fix.zip
 
 RUN useradd -r -s /bin/nologin -G disk turbinia
 

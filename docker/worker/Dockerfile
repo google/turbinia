@@ -14,7 +14,7 @@ testdisk \
 && rm -rf /var/lib/apt/lists/*
 
 RUN pip3 install urllib3 cryptography --upgrade
-RUN pip3 install https://github.com/google/turbinia/archive/bump-libcloudforensics.zip
+RUN pip3 install https://github.com/google/turbinia/archive/lcf-fix.zip
 
 # Install Plaso
 RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 0x5e80511b10c598b8 \
