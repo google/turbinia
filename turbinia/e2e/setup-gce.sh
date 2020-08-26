@@ -37,7 +37,7 @@ wget -q -O terraform.zip https://releases.hashicorp.com/terraform/0.12.29/terraf
 unzip terraform.zip && cp terraform /usr/local/bin/ && rm terraform.zip terraform
 
 # Git clone Turbinia Terraform scripts
-git clone https://github.com/forseti-security/forseti-security.git
+git clone https://github.com/forseti-security/osdfir-infrastructure.git
 
 # Deploy Turbinia infrastructure with terraform
 # If you see "ERROR: (gcloud.app.create) PERMISSION_DENIED: The caller does not have permission"
@@ -49,6 +49,6 @@ sleep 60
 
 echo "Setup Terraform Turbinia infrastructure."
 export DEVSHELL_PROJECT_ID=$PROJECT
-./forseti-security/contrib/incident-response/infrastructure/deploy.sh --no-timesketch
+./osdfir-infrastructure/deploy.sh --no-timesketch
 
 

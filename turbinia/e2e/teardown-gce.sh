@@ -16,7 +16,7 @@ ZONE="$2"
 
 SA_MEMBER="terraform@$PROJECT.iam.gserviceaccount.com"
 
-cd ./forseti-security/contrib/incident-response/infrastructure/
+cd ./osdfir-infrastructure/
 terraform destroy --target=module.turbinia -var gcp_project=$PROJECT -auto-approve
 
 # Remove test and evidence disks (test-disk2 and evidence* disks)
