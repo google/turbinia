@@ -4,6 +4,12 @@
 # - execute Terraform to setup the Turbinia environment.
 # Make sure the service account your GCE instance is running under has full API scope
 # access and is project owner for Terraform to function correctly.
+
+install_packages() {
+  apt-get -y update
+  apt-get -y install python-pip python-virtualenv unzip
+}
+
 echo "Initiate gcloud configuration"
 
 if [ $# -ne  1 ]
@@ -17,8 +23,14 @@ PROJECT="$1"
 
 gcloud --project=$PROJECT info
 
-apt-get update
-apt-get -y install python-pip python-virtualenv unzip
+# Try to install the packages. GCE instances do their own apt-get updating at
+# first boot so we have to wait on that to install our packages.
+max_retry=100
+for try in $(seq 1 ${max_retry}); do
+  [[ ${try} -gt 1 ]] && sleep 10
+  install_packages && exit_code=0 && break || exit_code=$?
+  err "Failed to apt-get install needed packages, retrying in 10 seconds."
+done;
 
 # Install Terraform
 wget -q -O terraform.zip https://releases.hashicorp.com/terraform/0.12.29/terraform_0.12.29_linux_amd64.zip

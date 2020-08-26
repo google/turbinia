@@ -5,7 +5,6 @@
 
 TURBINIA_CLI="turbiniactl"
 MAIN_LOG="main.log"
-STATUS_LOG="status.log"
 STATS_LOG="stats.log"
 DETAIL_LOG="reqdetails.log"
 OUT_TGZ="reqresults.tgz"
@@ -45,7 +44,7 @@ echo "Successful tasks: $SUCCESS"  | tee -a $MAIN_LOG
 $TURBINIA_CLI -a status -r $REQ_ID -R > $DETAIL_LOG 2>&1
 
 # tgz the log files for debugging purposes
-tar -vzcf $OUT_TGZ $MAIN_LOG $STATUS_LOG $STATS_LOG $DETAIL_LOG
+tar -vzcf $OUT_TGZ $MAIN_LOG $STATS_LOG $DETAIL_LOG
 
 if [ $FAILED -ne "0" ]
 then
