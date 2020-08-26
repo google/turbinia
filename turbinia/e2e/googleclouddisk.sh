@@ -20,6 +20,9 @@ fi
 PROJECT="$1"
 ZONE="$2"
 
+echo -n "Started at "
+date -Iseconds
+
 echo "Creating unique request ID...."
 REQ_ID=`uuidgen -rt`
 
@@ -45,6 +48,9 @@ $TURBINIA_CLI -a status -r $REQ_ID -R > $DETAIL_LOG 2>&1
 
 # tgz the log files for debugging purposes
 tar -vzcf $OUT_TGZ $MAIN_LOG $STATS_LOG $DETAIL_LOG
+
+echo -n "Ended at "
+date -Iseconds
 
 if [ $FAILED -ne "0" ]
 then
