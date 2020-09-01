@@ -26,6 +26,8 @@ from turbinia.workers import TurbiniaTask
 class GrepTask(TurbiniaTask):
   """Filter input based on extended regular expression patterns."""
 
+  task_config = {'filter_patterns_file': None}
+
   def run(self, evidence, result):
     """Run grep binary.
 
@@ -36,11 +38,14 @@ class GrepTask(TurbiniaTask):
     Returns:
         TurbiniaTaskResult object.
     """
-
-    patterns = evidence.config.get('filter_patterns')
-    if not patterns:
+    patterns_file = self.recipe['filter_patterns_file']
+    if patterns_file:
+      log.error('No patterns file specificed for Grep.')
       result.close(self, success=True, status='No patterns supplied, exit task')
       return result
+    else:
+      with open(patterns_file, 'r') as fp_f:
+        filter_patterns = fp_f.read().splitlines()
 
     # Create temporary file to write patterns to.
     # Used as input to grep (-f).

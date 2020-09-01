@@ -476,14 +476,14 @@ class TurbiniaTask(object):
       bool: False if a field not present in the default dybamic task config
       is found.
     """
+    if not proposed_conf:
+      return False
     for k in proposed_conf.keys():
-      if not proposed_conf:
-        return False
       if k not in self.task_config:
         return False
     return True
 
-  def copy_to_temp_file(source_file):
+  def write_to_temp_file(source_file):
     """Creates a temporary file with the contents of a specified existing one
 
     Args:
@@ -496,10 +496,10 @@ class TurbiniaTask(object):
     with open(source_file, 'r') as sf_fh:
       contents = sf_fh.read()
     with NamedTemporaryFile(dir=self.tmp_dir, delete=False, mode='w') as fh:
-      sf_fh.write(contents)
-    return sf_fh.name
+      fh.write(contents)
+    return fh.name
 
-  def draft_list_file(file_name, entries):
+  def write_list_to_file(file_name, entries):
     """ Creates a file containing a line-by-line list of strings off of a 
     list of entries.
 
@@ -517,6 +517,8 @@ class TurbiniaTask(object):
           file_fh.write(entry_.encode('utf-8') + b'\n')
     except IOError as exception:
       message = 'Cannot write to file {0:s}: {1!s}'.format(file_path, exception)
+      log_and_report(message, exception)
+      raise TurbiniaException(message)
     return file_path
 
   def execute(
@@ -733,7 +735,7 @@ class TurbiniaTask(object):
     log.info('Result check: {0:s}'.format(check_status))
     return result
 
-  def get_task_recipe(self, task_name, evidence):
+  def get_task_recipe(self, evidence):
     """Searches and provides a recipe for the task at hand if there is one.
 
     Args:
@@ -746,7 +748,7 @@ class TurbiniaTask(object):
     for _, task_recipe in evidence.config['task_recipes'].items():
       if isinstance(task_recipe, dict):
         task = task_recipe.get('task', None)
-        if task and task == task_name:
+        if task and task == self.name:
           return task_recipe
     return {}
 
@@ -830,8 +832,10 @@ class TurbiniaTask(object):
         potential_recipe = self.get_task_recipe(self.name, evidence)
         if potential_recipe:
           if self.validate_task_conf(potential_recipe):
-            self.recipe = potential_recipe
             self.recipe.pop('task')
+            self.recipe = self.task_config.update(potential_recipe)
+          else:
+            self.recipe = self.task_config
         self.result = self.run(evidence, self.result)
       # pylint: disable=broad-except
       except Exception as exception:

@@ -202,8 +202,6 @@ class TurbiniaRecipe(object):
       jobs_allowlist (list): A whitelist for Jobs that will be allowed to run.
       jobs_denylist (list): A blacklist for Jobs that will not be
       allowed to run.
-      filter_patterns_file (str): Path to a file containing newline separated
-      string patterns with which to filter text based evidence.
       task_recipes (dict): Object containing a task specific recipe for
       each of the tasks invoked in the Turbinia recipe.
 """
@@ -213,59 +211,54 @@ class TurbiniaRecipe(object):
     self.name = ""
     self.jobs_allowlist = []
     self.jobs_denylist = []
-    self.filter_patterns = []
     self.task_recipes = {}
 
   def load(self):
     """ Load recipe from file. """
     LoadConfig()
-    with open(self.recipe_file, 'r') as r_file:
-      try:
-        recipe_file_contents = r_file.read()
-      except yaml.parser.ParserError as exception:
-        message = (
-            'Could not load recipe file {0:s}: {1!s}'.format(
-                self.recipe_file, exception))
-        log.error(message)
-        raise TurbiniaException(message)
-        sys.exit(1)
+    try:
+      with open(self.recipe_file, 'r') as r_file:
+        try:
+          recipe_file_contents = r_file.read()
+          recipe_dict = load(recipe_file_contents, Loader=Loader)
+        except yaml.parser.ParserError as exception:
+          message = (
+              'Could not load recipe file {0:s}: {1!s}'.format(
+                  self.recipe_file, exception))
+          log.error(message)
+          raise TurbiniaException(message)
+          sys.exit(1)
+    except IOError as exception:
+      raise TurbiniaException(
+          'Failed to read recipe file {0:s}: {1!s}'.format(
+              self.recipe_file, exception))
 
-    recipe_dict = load(recipe_file_contents, Loader=Loader)
     self.jobs_allowlist = recipe_dict.get('jobs_allowlist', [])
     self.jobs_denylist = recipe_dict.get('jobs_denylist', [])
-    if 'filter_patterns_file' in recipe_dict:
-      patterns_file_path = recipe_dict['filter_patterns_file']
-      try:
-        with open(patterns_file_path, 'r') as _file:
-          self.filter_patterns = _file.read().splitlines()
-      except IOError as exception:
-        log.info(
-            "Failed to read patterns file {0:s}: {1!s}".format(
-                patterns_file_path, exception))
-        sys.exit(1)
 
     tasks_with_recipe = []
     for recipe_item, recipe_item_contents in recipe_dict.items():
-      if (recipe_item not in ['jobs_denylist', 'jobs_allowlist',
-                              'filter_patterns_file']):
+      if (recipe_item not in ['jobs_denylist', 'jobs_allowlist']):
         if recipe_item in self.task_recipes:
           raise TurbiniaException(
               'Two recipe items with the same name {0:s} have been found.'
               'If you wish to specify several task runs of the same tool,'
-              'please include them in separate recipes.')
+              'please include them in separate recipes.').format(recipe_item)
 
-        if recipe_item_contents['task'] in tasks_with_recipe:
+        try:
+          if recipe_item_contents['task'] in tasks_with_recipe:
+            raise TurbiniaException(
+                'Two recipe items for the same task {0:s} have been found.'
+                'If you wish to specify several task runs of the same tool,'
+                'please include them in separate recipes.').format(recipe_item)
+            sys.exit(1)
+        except KeyError as exception:
           raise TurbiniaException(
-              'Two recipe items for the same task {0:s} have been found.'
-              'If you wish to specify several task runs of the same tool,'
-              'please include them in separate recipes.')
+              'All recipe items must have a "task" key indicating the TurbiniaTask'
+              'to which it relates.').format(recipe_item)
+          sys.exit(1)
 
         self.task_recipes[recipe_item] = recipe_item_contents
-
-  def retrieve_task_recipe(self, task):
-    """ Retrieve recipe by name.  """
-    if task in self.task_recipes:
-      return self.task_recipes[task]
 
   def serialize(self):
     """ Obtain serialized task recipe dict. """

@@ -41,6 +41,9 @@ class PlasoTask(TurbiniaTask):
       'hashers': 'all',
       'partition': 'all',
       'vss_stores': 'all',
+      'artifact_filters': None,
+      'file_filter': None,
+      'yara_rules': None
   }
 
   def build_plaso_command(self, base_command, conf):
@@ -58,11 +61,11 @@ class PlasoTask(TurbiniaTask):
       prepend = '-'
       if len(k) > 1:
         prepend = '--'
-      if k == 'file_filter' or k == 'file-filter' or k == 'filter-file':
-        file_path = self.draft_list_file('filter_file', v)
+      if k == 'file_filter':
+        file_path = self.write_list_to_file('filter_file', v)
         cmd.extend(['-f', file_path])
       elif k == 'yara_rules':
-        file_path = self.copy_to_temp_file(v)
+        file_path = self.write_to_temp_file(v)
         cmd.extend(['--yara_rules', file_path])
       elif isinstance(v, list):
         if v:
@@ -93,10 +96,6 @@ class PlasoTask(TurbiniaTask):
     plaso_file = os.path.join(self.tmp_dir, '{0:s}.plaso'.format(self.id))
     plaso_evidence = PlasoFile(source_path=plaso_file)
     plaso_log = os.path.join(self.output_dir, '{0:s}.log'.format(self.id))
-
-    working_recipe = self.task_config
-    if self.recipe:
-      working_recipe = self.recipe
 
     cmd = self.build_plaso_command('log2timeline.py', working_recipe)
 

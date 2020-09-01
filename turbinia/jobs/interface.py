@@ -116,8 +116,3 @@ class TurbiniaJob(object):
           'Could not find task {0:s} to remove from Job {1:s}'.format(
               task_id, self.name))
     return bool(remove_task)
-
-  def get_task_recipe(self, evidence_config, task_name):
-    if task_name in evidence_config.task_recipes:
-      return evidence_config.task_recipes[task_name]
-    return None

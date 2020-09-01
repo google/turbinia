@@ -80,12 +80,6 @@ def main():
       '-I', '--recipe', help='Name of Recipe to be employed on evidence',
       required=False)
   parser.add_argument(
-      '-C', '--recipe_config', help='Recipe configuration data passed in as '
-      'comma separated key=value pairs (e.g. '
-      '"-C key=value,otherkey=othervalue").  These will get passed to tasks '
-      'as evidence config, and will also be written to the metadata.json file '
-      'for Evidence types that write it', default=[], type=csv_list)
-  parser.add_argument(
       '-f', '--force_evidence', action='store_true',
       help='Force evidence processing request in potentially unsafe conditions',
       required=False)
@@ -107,11 +101,6 @@ def main():
   parser.add_argument(
       '-D', '--dump_json', action='store_true',
       help='Dump JSON output of Turbinia Request instead of sending it')
-  parser.add_argument(
-      '-F', '--filter_patterns_file',
-      help='A file containing newline separated string patterns to filter '
-      'text based evidence files with (in extended grep regex format). '
-      'This filtered output will be in addition to the complete output')
   parser.add_argument(
       '-Y', '--yara_rules_file', help='A file containing Yara rules.')
   parser.add_argument(
@@ -461,23 +450,10 @@ def main():
         'time')
     sys.exit(1)
 
-  # Read set set filter_patterns
-  filter_patterns = None
-  if (args.filter_patterns_file and
-      not os.path.exists(args.filter_patterns_file)):
-    log.error('Filter patterns file {0:s} does not exist.')
-    sys.exit(1)
-  elif args.filter_patterns_file:
-    try:
-      filter_patterns = open(args.filter_patterns_file).read().splitlines()
-    except IOError as e:
-      log.warning(
-          'Cannot open file {0:s} [{1!s}]'.format(args.filter_patterns_file, e))
-
   # Read yara rules
   yara_rules = None
   if (args.yara_rules_file and not os.path.exists(args.yara_rules_file)):
-    log.error('Filter patterns file {0:s} does not exist.')
+    log.error('Yara rules file {0:s} does not exist.')
     sys.exit(1)
   elif args.yara_rules_file:
     try:
@@ -724,23 +700,29 @@ def main():
     request.evidence.append(evidence_)
 
     if args.recipe:
-      if args.jobs_denylist or args.jobs_allowlist or args.recipe_config or args.filter_patterns_file:
+      if args.jobs_denylist or args.jobs_allowlist:
         raise TurbiniaException(
             'Specifying a recipe is incompatible with defining'
-            ' jobs allow/deny lists, filter patterns or recipe_config'
-            'parameters separately.')
-      recipe_obj = TurbiniaRecipe(
-          os.path.join(config.RECIPE_FILE_DIR, args.recipe))
+            ' jobs allow/deny lists parameters separately.')
+
+      if config.RECIPE_FILE_DIR:
+        recipe_obj = TurbiniaRecipe(
+            os.path.join(config.RECIPE_FILE_DIR, args.recipe))
+      else:
+        recipe_obj = TurbiniaRecipe(
+            os.path.join('../data/recipes', args.recipe))
+
       recipe_obj.load()
       request.recipe = recipe_obj.serialize()
     else:
-      request.recipe = {}
-      if args.filter_patterns_file:
-        request.recipe['filter_patterns'] = filter_patterns
       if args.jobs_denylist:
         request.recipe['jobs_denylist'] = args.jobs_denylist
       if args.jobs_allowlist:
         request.recipe['jobs_allowlist'] = args.jobs_allowlist
+      if yara_rules:
+        request.recipe['yara_rules'] = yara_rules
+      if args.debug_tasks:
+        request.recipe['debug_tasks'] = args.debug_tasks
 
     if args.dump_json:
       print(request.to_json().encode('utf-8'))
