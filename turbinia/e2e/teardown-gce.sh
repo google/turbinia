@@ -6,7 +6,7 @@ echo "Tear down Terraform Turbinia infrastructure."
 
 if [ $# -ne  2 ]
 then
-  echo "Not enough arguments supplied, please provide project and zone."
+  echo "Not enough arguments supplied, please provide the project and zone name."
   echo "$0 [PROJECT] [ZONE]"
   exit 1
 fi
@@ -16,10 +16,12 @@ ZONE="$2"
 
 SA_MEMBER="terraform@$PROJECT.iam.gserviceaccount.com"
 
+echo "Destroying Terraform infrastructure..."
 cd ./osdfir-infrastructure/
 terraform destroy --target=module.turbinia -var gcp_project=$PROJECT -auto-approve
 
 # Remove test and evidence disks (test-disk2 and evidence* disks)
+echo "Deleting test and evidence disks..."
 gcloud -q --project=$PROJECT compute disks delete test-disk2 --zone=$ZONE
 for d in `gcloud compute disks list --uri`
 do
@@ -34,6 +36,7 @@ done
 
 # TODO(rbdebeer) Debug and fix remove-iam-policy-binding calls.
 # Remove IAM bindings and terraform service account
+echo "Removing IAM bidings and service account..."
 # gcloud -q --project=$PROJECT iam service-accounts remove-iam-policy-binding $SA_MEMBER --member=serviceAccount:$SA_MEMBER --role='roles/editor' --all
 # gcloud -q --project=$PROJECT iam service-accounts remove-iam-policy-binding $SA_MEMBER --member=serviceAccount:$SA_MEMBER --role='roles/compute.admin'  --all
 # gcloud -q --project=$PROJECT iam service-accounts remove-iam-policy-binding $SA_MEMBER --member=serviceAccount:$SA_MEMBER --role='roles/cloudfunctions.admin'  --all

@@ -1,6 +1,6 @@
 #!/bin/bash
 # This script will
-# - setup a GCE Ubuntu 18.04 LTS base image for Turbinia e2e testing.
+# - configure a GCE Ubuntu 18.04 LTS base image for Turbinia e2e testing.
 # - execute Terraform to setup the Turbinia environment.
 # Make sure the service account your GCE instance is running under has full API scope
 # access and is project owner for Terraform to function correctly.
