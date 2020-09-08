@@ -50,7 +50,7 @@ class PartitionEnumerationTask(TurbiniaTask):
             offset=volume['offset'],
             size=volume['size'])
         result.add_evidence(partition_evidence, evidence.config)
-      status_report = 'Found {0:d} partitions in [{1:s}]'.format(
+      status_report = 'Found {0:d} partition(s) in [{1:s}]'.format(
           len(volumes), evidence.local_path)
       success = True
     except TurbiniaException as e:
