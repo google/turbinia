@@ -15,6 +15,7 @@
 """Job to execute partition enumeration task."""
 
 from turbinia.evidence import RawDisk
+from turbinia.evidence import RawDiskPartition
 from turbinia.jobs import interface
 from turbinia.jobs import manager
 from turbinia.workers.partitions import PartitionEnumerationTask
@@ -28,7 +29,7 @@ class PartitionEnumerationJob(interface.TurbiniaJob):
 
   # The types of evidence that this Job will process
   evidence_input = [RawDisk]
-  evidence_output = []
+  evidence_output = [RawDiskPartition]
 
   NAME = 'PartitionEnumerationJob'
 

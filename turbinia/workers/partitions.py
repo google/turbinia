@@ -14,7 +14,10 @@
 # limitations under the License.
 """Task for enumerating partitions in a disk."""
 
+from turbinia import TurbiniaException
+from turbinia.evidence import RawDiskPartition
 from turbinia.lib.dfvfs import SourceAnalyzer
+from turbinia.workers import Priority
 from turbinia.workers import TurbiniaTask
 
 
@@ -33,9 +36,30 @@ class PartitionEnumerationTask(TurbiniaTask):
     """
     result.log('Scanning [{0:s}]'.format(evidence.local_path))
 
-    source_analyzer = SourceAnalyzer(auto_recurse=True)
-    source_analyzer.Analyze(evidence.local_path, result)
+    success = False
+
+    source_analyzer = SourceAnalyzer()
+    volumes = source_analyzer.Analyze(evidence.local_path)
+
+    try:
+      for identifier, volume in volumes.items():
+        partition_evidence = RawDiskPartition(
+            source_path=evidence.local_path,
+            volume_identifier=identifier,
+            volume_type=volume['description'],
+            offset=volume['offset'],
+            size=volume['size'])
+        result.add_evidence(partition_evidence, evidence.config)
+      status_report = 'Found {0:d} partitions in [{1:s}]'.format(
+          len(volumes), evidence.local_path)
+      success = True
+    except TurbiniaException as e:
+      status_report = 'Error enumerating Docker containers: {0!s}'.format(e)
 
     result.log('Scanning of [{0:s}] is complete'.format(evidence.local_path))
+
+    result.report_priority = Priority.LOW
+    result.report_data = status_report
+    result.close(self, success=success, status=status_report)
 
     return result
