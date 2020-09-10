@@ -16,7 +16,7 @@
 
 from turbinia import TurbiniaException
 from turbinia.evidence import RawDiskPartition
-from turbinia.lib.dfvfs import SourceAnalyzer
+from turbinia.lib.dfvfs_classes import SourceAnalyzer
 from turbinia.workers import Priority
 from turbinia.workers import TurbiniaTask
 
@@ -39,22 +39,49 @@ class PartitionEnumerationTask(TurbiniaTask):
     success = False
 
     source_analyzer = SourceAnalyzer()
-    volumes = source_analyzer.Analyze(evidence.local_path)
+    volumes = source_analyzer.VolumeScan(evidence.local_path)
 
     try:
+      status_report = []
+      status_report.append(
+          'Found {0:d} partition(s) in [{1:s}]:\n'.format(
+              len(volumes), evidence.local_path))
+      status_report.append(
+          '{0:<15}{1:<30}{2:<10}{3:>15}{4:>15}   {5:<30}'.format(
+              'Identifier', 'Description', 'Type', 'Offset (bytes)',
+              'Size (bytes)', 'Name (APFS)'))
+
       for identifier, volume in volumes.items():
+        volume_type = ''
+        description = ''
+        offset = ''
+        size = ''
+        name = ''
+
+        if 'volume_type' in volume:
+          volume_type = volume['volume_type']
+        if 'description' in volume:
+          description = volume['description']
+        if 'offset' in volume:
+          offset = volume['offset']
+        if 'size' in volume:
+          size = volume['size']
+        if 'name' in volume:
+          name = volume['name']
+
+        status_report.append(
+            '{0:<15}{1:<30}{2:<10}{3:>15}{4:>15}   {5:<30}'.format(
+                identifier, description, volume_type, offset, size, name))
+
         partition_evidence = RawDiskPartition(
-            source_path=evidence.local_path,
-            volume_identifier=identifier,
-            volume_type=volume['description'],
-            offset=volume['offset'],
-            size=volume['size'])
+            source_path=evidence.local_path, volume_identifier=identifier,
+            offset=offset, size=size)
         result.add_evidence(partition_evidence, evidence.config)
-      status_report = 'Found {0:d} partition(s) in [{1:s}]'.format(
-          len(volumes), evidence.local_path)
+
+      status_report = '\n'.join(status_report)
       success = True
     except TurbiniaException as e:
-      status_report = 'Error enumerating Docker containers: {0!s}'.format(e)
+      status_report = 'Error enumerating partitions: {0!s}'.format(e)
 
     result.log('Scanning of [{0:s}] is complete'.format(evidence.local_path))
 

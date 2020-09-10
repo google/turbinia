@@ -31,19 +31,21 @@ class PartitionEnumerationTaskTest(TestTurbiniaTaskBase):
         evidence_class=partitions.RawDiskPartition)
     self.setResults(mock_run=False)
 
-  @mock.patch('turbinia.lib.dfvfs.SourceAnalyzer.Analyze')
-  def testPartitionEnumerationRun(self, mock_analyze):
+  @mock.patch('turbinia.lib.dfvfs_classes.SourceAnalyzer.VolumeScan')
+  def testPartitionEnumerationRun(self, mock_volumescan):
     """Test PartitionEnumeration task run."""
-    mock_analyze.return_value = {
+    mock_volumescan.return_value = {
         'p1': {
-            'description': 'NTFS / exFAT (0x07)',
             'offset': 1048576,
-            'size': 9437184
+            'size': 9437184,
+            'description': 'NTFS / exFAT (0x07)',
+            'volume_type': 'NTFS'
         },
         'p2': {
-            'description': 'Linux (0x83)',
             'offset': 11534336,
-            'size': 9437184
+            'size': 9437184,
+            'description': 'Linux (0x83)',
+            'volume_type': 'TSK'
         }
     }
 
@@ -53,9 +55,20 @@ class PartitionEnumerationTaskTest(TestTurbiniaTaskBase):
     self.assertIsInstance(result, TurbiniaTaskResult)
     self.assertEqual(result.task_name, 'PartitionEnumerationTask')
     self.assertEqual(len(result.evidence), 2)
-    self.assertEqual(
-        result.report_data,
-        'Found 2 partition(s) in [{0:s}]'.format(self.evidence.local_path))
+    expected_report = []
+    expected_report.append(
+        'Found 2 partition(s) in [{0:s}]:\n'.format(self.evidence.local_path))
+    expected_report.append(
+        'Identifier     Description                   Type       Offset (bytes)   Size (bytes)   Name (APFS)                   '
+    )
+    expected_report.append(
+        'p1             NTFS / exFAT (0x07)           NTFS              1048576        9437184                                 '
+    )
+    expected_report.append(
+        'p2             Linux (0x83)                  TSK              11534336        9437184                                 '
+    )
+    expected_report = '\n'.join(expected_report)
+    self.assertEqual(result.report_data, expected_report)
 
 
 if __name__ == '__main__':

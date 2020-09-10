@@ -521,8 +521,9 @@ class RawDiskPartition(RawDisk):
   """Evidence object for a partition within Disk based evidence.
 
   Attributes:
-    offset: Offset to the start of the volume in bytes.
-    size: The size of the disk in bytes.
+    volume_identifier (str): Identifier of the partition (e.g. 'p1').
+    offset (int): Offset to the start of the volume in bytes.
+    size (int): The size of the disk in bytes.
   """
 
   REQUIRED_ATTRIBUTES = ['local_path']
@@ -530,12 +531,10 @@ class RawDiskPartition(RawDisk):
       EvidenceState.PARENT_MOUNTED, EvidenceState.PARENT_ATTACHED
   ]
 
-  def __init__(
-      self, volume_identifier, volume_type, offset, size, *args, **kwargs):
+  def __init__(self, volume_identifier, offset, size, *args, **kwargs):
     """Initialization for raw volume evidence object."""
 
     self.volume_identifier = volume_identifier
-    self.volume_type = volume_type
     self.offset = offset
     self.size = size
     super(RawDiskPartition, self).__init__(*args, **kwargs)
