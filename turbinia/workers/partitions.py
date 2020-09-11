@@ -14,6 +14,8 @@
 # limitations under the License.
 """Task for enumerating partitions in a disk."""
 
+from dfvfs.lib import definitions as dfvfs_definitions
+
 from turbinia import TurbiniaException
 from turbinia.evidence import RawDiskPartition
 from turbinia.lib.dfvfs_classes import SourceAnalyzer
@@ -24,58 +26,55 @@ from turbinia.workers import TurbiniaTask
 class PartitionEnumerationTask(TurbiniaTask):
   """Task to enumerate partitions in a disk."""
 
+  def _ProcessPartition(self, path_spec):
+    """Generate RawDiskPartition from a PathSpec.
+
+    Args:
+      path_spec (dfvfs.PathSpec): dfVFS path spec.
+    """
+    status_report = []
+
+    location = getattr(path_spec, 'location', None)
+    if location in ('/', '\\'):
+      path_spec = path_spec.parent
+      location = getattr(path_spec, 'location', None)
+    status_report.append('{0!s}:'.format(location))
+    if getattr(path_spec, 'volume_index', None):
+      status_report.append('\tVolume index: {0!s}'.format(
+          getattr(path_spec, 'volume_index', None)))
+    if not getattr(path_spec, 'part_index', None):
+      path_spec = path_spec.parent
+    status_report.append('\tPartition index: {0!s}'.format(
+        getattr(path_spec, 'part_index', None)))
+    status_report.append('\tPartition offset: {0!s}'.format(
+        getattr(path_spec, 'start_offset', None)))
+    return status_report
+
   def run(self, evidence, result):
     """Scan a raw disk for partitions.
 
     Args:
-        evidence (Evidence object):  The evidence we will process.
-        result (TurbiniaTaskResult): The object to place task results into.
+      evidence (Evidence object):  The evidence we will process.
+      result (TurbiniaTaskResult): The object to place task results into.
 
     Returns:
-        TurbiniaTaskResult object.
+      TurbiniaTaskResult object.
     """
     result.log('Scanning [{0:s}]'.format(evidence.local_path))
 
     success = False
 
     source_analyzer = SourceAnalyzer()
-    volumes = source_analyzer.VolumeScan(evidence.local_path)
+    path_specs = source_analyzer.ScanSource(evidence.local_path)
+
+    status_report = ['Found {0:d} partition(s) in [{1:s}]:'.format(
+        len(path_specs), evidence.local_path)]
 
     try:
-      status_report = []
-      status_report.append(
-          'Found {0:d} partition(s) in [{1:s}]:\n'.format(
-              len(volumes), evidence.local_path))
-      status_report.append(
-          '{0:<15}{1:<30}{2:<10}{3:>15}{4:>15}   {5:<30}'.format(
-              'Identifier', 'Description', 'Type', 'Offset (bytes)',
-              'Size (bytes)', 'Name (APFS)'))
-
-      for identifier, volume in volumes.items():
-        volume_type = ''
-        description = ''
-        offset = ''
-        size = ''
-        name = ''
-
-        if 'volume_type' in volume:
-          volume_type = volume['volume_type']
-        if 'description' in volume:
-          description = volume['description']
-        if 'offset' in volume:
-          offset = volume['offset']
-        if 'size' in volume:
-          size = volume['size']
-        if 'name' in volume:
-          name = volume['name']
-
-        status_report.append(
-            '{0:<15}{1:<30}{2:<10}{3:>15}{4:>15}   {5:<30}'.format(
-                identifier, description, volume_type, offset, size, name))
-
-        partition_evidence = RawDiskPartition(
-            source_path=evidence.local_path, volume_identifier=identifier,
-            offset=offset, size=size)
+      for path_spec in path_specs:
+        status_report.extend(self._ProcessPartition(path_spec))
+        partition_evidence = RawDiskPartition(source_path=evidence.local_path,
+            path_spec=path_spec)
         result.add_evidence(partition_evidence, evidence.config)
 
       status_report = '\n'.join(status_report)
