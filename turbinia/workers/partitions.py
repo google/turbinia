@@ -40,14 +40,17 @@ class PartitionEnumerationTask(TurbiniaTask):
       location = getattr(path_spec, 'location', None)
     status_report.append('{0!s}:'.format(location))
     if getattr(path_spec, 'volume_index', None):
-      status_report.append('\tVolume index: {0!s}'.format(
-          getattr(path_spec, 'volume_index', None)))
+      status_report.append(
+          '\tVolume index: {0!s}'.format(
+              getattr(path_spec, 'volume_index', None)))
     if not getattr(path_spec, 'part_index', None):
       path_spec = path_spec.parent
-    status_report.append('\tPartition index: {0!s}'.format(
-        getattr(path_spec, 'part_index', None)))
-    status_report.append('\tPartition offset: {0!s}'.format(
-        getattr(path_spec, 'start_offset', None)))
+    status_report.append(
+        '\tPartition index: {0!s}'.format(
+            getattr(path_spec, 'part_index', None)))
+    status_report.append(
+        '\tPartition offset: {0!s}'.format(
+            getattr(path_spec, 'start_offset', None)))
     return status_report
 
   def run(self, evidence, result):
@@ -67,14 +70,16 @@ class PartitionEnumerationTask(TurbiniaTask):
     source_analyzer = SourceAnalyzer()
     path_specs = source_analyzer.ScanSource(evidence.local_path)
 
-    status_report = ['Found {0:d} partition(s) in [{1:s}]:'.format(
-        len(path_specs), evidence.local_path)]
+    status_report = [
+        'Found {0:d} partition(s) in [{1:s}]:'.format(
+            len(path_specs), evidence.local_path)
+    ]
 
     try:
       for path_spec in path_specs:
         status_report.extend(self._ProcessPartition(path_spec))
-        partition_evidence = RawDiskPartition(source_path=evidence.local_path,
-            path_spec=path_spec)
+        partition_evidence = RawDiskPartition(
+            source_path=evidence.local_path, path_spec=path_spec)
         result.add_evidence(partition_evidence, evidence.config)
 
       status_report = '\n'.join(status_report)

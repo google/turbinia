@@ -14,6 +14,8 @@
 # limitations under the License.
 """Tests for the Partition Enumeration job."""
 
+from dfvfs.lib import definitions as dfvfs_definitions
+from dfvfs.path import factory as path_spec_factory
 import mock
 import unittest
 
@@ -26,28 +28,33 @@ class PartitionEnumerationTaskTest(TestTurbiniaTaskBase):
   """Tests for PartitionEnumerationTask."""
 
   def setUp(self):
+    # pylint: disable=arguments-differ
     super(PartitionEnumerationTaskTest, self).setUp(
         task_class=partitions.PartitionEnumerationTask,
         evidence_class=partitions.RawDiskPartition)
     self.setResults(mock_run=False)
 
-  @mock.patch('turbinia.lib.dfvfs_classes.SourceAnalyzer.VolumeScan')
-  def testPartitionEnumerationRun(self, mock_volumescan):
+  @mock.patch('turbinia.lib.dfvfs_classes.SourceAnalyzer.ScanSource')
+  def testPartitionEnumerationRun(self, mock_scansource):
     """Test PartitionEnumeration task run."""
-    mock_volumescan.return_value = {
-        'p1': {
-            'offset': 1048576,
-            'size': 9437184,
-            'description': 'NTFS / exFAT (0x07)',
-            'volume_type': 'NTFS'
-        },
-        'p2': {
-            'offset': 11534336,
-            'size': 9437184,
-            'description': 'Linux (0x83)',
-            'volume_type': 'TSK'
-        }
-    }
+    os_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_OS, location='test.dd')
+    raw_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_RAW, parent=os_path_spec)
+    tsk_p1_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION, parent=raw_path_spec,
+        location='/p1', part_index=2, start_offset=1048576)
+    ntfs_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_NTFS, parent=tsk_p1_spec,
+        location='\\')
+
+    tsk_p2_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION, parent=raw_path_spec,
+        location='/p2', part_index=6, start_offset=11534336)
+    tsk_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_NTFS, parent=tsk_p2_spec, location='/')
+
+    mock_scansource.return_value = [ntfs_spec, tsk_spec]
 
     result = self.task.run(self.evidence, self.result)
 
@@ -57,16 +64,13 @@ class PartitionEnumerationTaskTest(TestTurbiniaTaskBase):
     self.assertEqual(len(result.evidence), 2)
     expected_report = []
     expected_report.append(
-        'Found 2 partition(s) in [{0:s}]:\n'.format(self.evidence.local_path))
-    expected_report.append(
-        'Identifier     Description                   Type       Offset (bytes)   Size (bytes)   Name (APFS)                   '
-    )
-    expected_report.append(
-        'p1             NTFS / exFAT (0x07)           NTFS              1048576        9437184                                 '
-    )
-    expected_report.append(
-        'p2             Linux (0x83)                  TSK              11534336        9437184                                 '
-    )
+        'Found 2 partition(s) in [{0:s}]:'.format(self.evidence.local_path))
+    expected_report.append('/p1:')
+    expected_report.append('\tPartition index: 2')
+    expected_report.append('\tPartition offset: 1048576')
+    expected_report.append('/p2:')
+    expected_report.append('\tPartition index: 6')
+    expected_report.append('\tPartition offset: 11534336')
     expected_report = '\n'.join(expected_report)
     self.assertEqual(result.report_data, expected_report)
 
