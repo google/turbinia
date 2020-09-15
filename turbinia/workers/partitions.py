@@ -39,10 +39,9 @@ class PartitionEnumerationTask(TurbiniaTask):
       path_spec = path_spec.parent
       location = getattr(path_spec, 'location', None)
     status_report.append('{0!s}:'.format(location))
-    if getattr(path_spec, 'volume_index', None):
-      status_report.append(
-          '\tVolume index: {0!s}'.format(
-              getattr(path_spec, 'volume_index', None)))
+    volume_index = getattr(path_spec, 'volume_index', None)
+    if volume_index:
+      status_report.append('\tVolume index: {0!s}'.format(volume_index))
     if not getattr(path_spec, 'part_index', None):
       path_spec = path_spec.parent
     status_report.append(

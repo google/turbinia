@@ -14,8 +14,9 @@
 # limitations under the License.
 """Tests for the dfvfs_classes module."""
 
-from dfvfs.helpers import source_scanner
+import os
 import unittest
+from dfvfs.lib import definitions as dfvfs_definitions
 
 from turbinia.lib.dfvfs_classes import SourceAnalyzer
 
@@ -24,13 +25,53 @@ class TestSourceAnalyzer(unittest.TestCase):
   """Test SourceAnalyzer class."""
 
   def setUp(self):
-    self.source_analyzer = SourceAnalyzer()
+    file_path = os.path.dirname(os.path.realpath(__file__))
+    self._apfs_source_path = os.path.join(
+        file_path, '..', '..', 'test_data', 'apfs_volume_system.dmg')
+    self._tsk_source_path = os.path.join(
+        file_path, '..', '..', 'test_data', 'tsk_volume_system.raw')
 
-  def testSourceAnalyzerInit(self):
-    """Tests __init__ method of SourceAnalyzer."""
-    # Test that a SourceScanner is being created
-    self.assertIsInstance(
-        self.source_analyzer._source_scanner, source_scanner.SourceScanner)
+  def testScanSourceAPFSImage(self):
+    """Tests ScanSource method of SourceAnalyzer on an APFS image."""
+    source_analyzer = SourceAnalyzer()
 
-  def testVolumeScan(self):
-    """Tests VolumeScan method of SourceAnalyzer."""
+    path_specs = source_analyzer.ScanSource(self._apfs_source_path)
+    self.assertIsNotNone(path_specs)
+
+    self.assertEqual(len(path_specs), 1)
+
+    path_spec = path_specs[0]
+    self.assertEqual(
+        path_spec.type_indicator, dfvfs_definitions.TYPE_INDICATOR_APFS)
+
+    path_spec = path_spec.parent
+    self.assertEqual(
+        path_spec.type_indicator,
+        dfvfs_definitions.TYPE_INDICATOR_APFS_CONTAINER)
+    self.assertEqual(path_spec.location, '/apfs1')
+
+    path_spec = path_spec.parent
+    self.assertEqual(
+        path_spec.type_indicator,
+        dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION)
+    self.assertEqual(path_spec.start_offset, 20480)
+
+  def testScanSourceTSKImage(self):
+    """Tests ScanSource method of SourceAnalyzer on a partitioned image."""
+    source_analyzer = SourceAnalyzer()
+
+    path_specs = source_analyzer.ScanSource(self._tsk_source_path)
+    self.assertIsNotNone(path_specs)
+
+    self.assertEqual(len(path_specs), 1)
+
+    path_spec = path_specs[0]
+    self.assertEqual(
+        path_spec.type_indicator, dfvfs_definitions.TYPE_INDICATOR_TSK)
+
+    path_spec = path_spec.parent
+    self.assertEqual(
+        path_spec.type_indicator,
+        dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION)
+    self.assertEqual(path_spec.location, '/p2')
+    self.assertEqual(path_spec.start_offset, 180224)
