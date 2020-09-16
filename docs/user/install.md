@@ -8,9 +8,9 @@ local machines, or in a hybrid mode. See the
 documentation for more details on what the architecture looks like for each of
 these installation types. This doc covers the recommended quick installation
 instructions for Cloud installations. This uses
-[terraform configs](https://github.com/forseti-security/forseti-security/tree/master/contrib/incident-response)
+[terraform configs](https://github.com/forseti-security/osdfir-infrastructure)
 that are part of the
-[Forseti Security repository](https://github.com/forseti-security/forseti-security)
+[Forseti Security repository](https://github.com/forseti-security)
 to automate deployment of Turbinia into an existing GCP Project. If you want to
 install Turbinia in hybrid or local only mode, or want to install Turbinia
 manually (not recommended), see
@@ -70,7 +70,7 @@ to get a shell with access to your GCP resources.
             create a [Timesketch](http://timesketch.org) instance in the same
             project, and this can be configured to ingest Turbinia timeline
             output and report data. See the
-            [Forseti documentation on this](https://github.com/forseti-security/forseti-security/blob/master/contrib/incident-response/infrastructure/README.md)
+            [Forseti documentation on this](http://github.com/forseti-security/osdfir-infrastructure)
             for more details.
         *   When prompted for the project name, enter the project you selected
             during setup.
