@@ -10,3 +10,4 @@ psq
 six
 urllib3[secure]
 google-auth
+httplib2==0.17.5
