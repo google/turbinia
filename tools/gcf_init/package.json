@@ -6,5 +6,5 @@
   "author": "Google Inc.",
   "dependencies": {
     "@google-cloud/datastore": "6.1.0"
-  },
+  }
 }
