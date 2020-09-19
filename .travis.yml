@@ -10,5 +10,4 @@ install:
   - pip install .[local]
 
 script:
-  - ./run_tests.py
-  - ./tox --sitepackages ${TOXENV}
+  - tox --sitepackages ${TOXENV}
