@@ -1,0 +1,27 @@
+global:
+  debug_tasks: False
+
+
+jobs_allowlist: 
+  - PlasoJob
+  - GrepJob
+
+grep_task:
+  task: 'GrepTask'
+  patterns_file: '/home/jorlamd/.config/turbinia/patterns_files/patterns_test'
+
+plaso_base:
+  task: 'PlasoTask'
+  status_view: 'none'
+  hashers: 'all'
+  partition: 'all'
+  vss_stores: 'all'
+
+psort_base:
+  task: 'PsortTask'
+  status_view: 'linear'
+  additional_fields: 'yara_match'
+  
+
+
+

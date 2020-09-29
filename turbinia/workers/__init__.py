@@ -739,7 +739,6 @@ class TurbiniaTask(object):
     """Searches and provides a recipe for the task at hand if there is one.
 
     Args:
-      task_name: string to match the "task" entry for the recipe.
       evidence: Evidence object.
 
     Returns:
@@ -752,6 +751,18 @@ class TurbiniaTask(object):
           return task_recipe
     return {}
 
+  def get_named_recipe(self, name):
+    """Searches and provides a recipe for the task at hand if there is one.
+
+    Args:
+      name: Name of the specific recipe key to retrieve.
+
+    Returns:
+      Dict: Recipe dict.
+    """
+    recipe_value = evidence.config['task_recipes'].get(name, {})
+    return recipe_value
+ 
   def run_wrapper(self, evidence):
     """Wrapper to manage TurbiniaTaskResults and exception handling.
 
@@ -831,6 +842,8 @@ class TurbiniaTask(object):
         self._evidence_config = evidence.config
         potential_recipe = self.get_task_recipe(self.name, evidence)
         if potential_recipe:
+          global_recipe = self.get_named_recipe('global')
+          potential_recipe.update(global_recipe)
           if self.validate_task_conf(potential_recipe):
             self.recipe.pop('task')
             self.recipe = self.task_config.update(potential_recipe)

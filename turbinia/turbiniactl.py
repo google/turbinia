@@ -704,13 +704,13 @@ def main():
         raise TurbiniaException(
             'Specifying a recipe is incompatible with defining'
             ' jobs allow/deny lists parameters separately.')
-
-      if config.RECIPE_FILE_DIR:
+      try:
         recipe_obj = TurbiniaRecipe(
             os.path.join(config.RECIPE_FILE_DIR, args.recipe))
-      else:
-        recipe_obj = TurbiniaRecipe(
-            os.path.join('../data/recipes', args.recipe))
+      except IOError as e:
+        log.warning(
+            'Cannot open file {0:s} [{1!s}]'.format(args.yara_rules_file, e))
+        sys.exit(1)
 
       recipe_obj.load()
       request.recipe = recipe_obj.serialize()

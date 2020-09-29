@@ -39,7 +39,7 @@ class PlasoTask(TurbiniaTask):
   task_config = {
       'status_view': 'none',
       'hashers': 'all',
-      'partition': 'all',
+      'partitions': 'all',
       'vss_stores': 'all',
       'artifact_filters': None,
       'file_filter': None,
@@ -58,6 +58,8 @@ class PlasoTask(TurbiniaTask):
     """
     cmd = [base_command]
     for k, v in conf.items():
+      cli_args = ['status_view', 'hashers', 'partitions', 'vss_stores', 'artifact_filters', 'file_filter', 'yara_rules']
+      if k not in cli_args: continue
       prepend = '-'
       if len(k) > 1:
         prepend = '--'
@@ -100,7 +102,7 @@ class PlasoTask(TurbiniaTask):
     cmd = self.build_plaso_command('log2timeline.py', working_recipe)
 
     # TODO(aarontp): Move these flags into a recipe
-    if config.DEBUG_TASKS:
+    if working_recipe['debug_tasks']:
       cmd.append('-d')
 
     if isinstance(evidence, (APFSEncryptedDisk, BitlockerDisk)):
