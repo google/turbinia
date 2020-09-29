@@ -204,6 +204,14 @@ class TurbiniaRecipe(object):
       task_recipes (dict): Object containing a task specific recipe for
       each of the tasks invoked in the Turbinia recipe.
 """
+  DEFAULT_GLOBALS_RECIPE = {
+      'debug_tasks': False,
+      'jobs_allowlist': [],
+      'jobs_denylist': [],
+      'yara_rules': '',
+      'filter_patterns': ''
+  }
+  DEFAULT_RECIPE = {'globals': DEFAULT_GLOBALS_RECIPE}
 
   def __init__(self, recipe_file):
     self.recipe_file = recipe_file
@@ -219,8 +227,8 @@ class TurbiniaRecipe(object):
         recipe_dict = load(recipe_file_contents, Loader=Loader)
     except yaml.parser.ParserError as exception:
       message = (
-        'Syntax error on recipe file {0:s}: {1!s}'.format(
-            self.recipe_file, exception))
+          'Syntax error on recipe file {0:s}: {1!s}'.format(
+              self.recipe_file, exception))
       log.error(message)
       raise TurbiniaException(message)
       sys.exit(1)
@@ -230,45 +238,34 @@ class TurbiniaRecipe(object):
               self.recipe_file, exception))
       sys.exit(1)
 
-    self.jobs_allowlist = recipe_dict.get('jobs_allowlist', [])
-    self.jobs_denylist = recipe_dict.get('jobs_denylist', [])
-
     tasks_with_recipe = []
     for recipe_item, recipe_item_contents in recipe_dict.items():
-      if (recipe_item not in ['jobs_denylist', 'jobs_allowlist']):
-        if recipe_item in self.task_recipes:
+      if recipe_item in self.task_recipes:
+        raise TurbiniaException(
+            'Two recipe items with the same name {0:s} have been found.'
+            'If you wish to specify several task runs of the same tool,'
+            'please include them in separate recipes.').format(recipe_item)
+
+      try:
+        if recipe_item_contents['task'] in tasks_with_recipe:
           raise TurbiniaException(
-              'Two recipe items with the same name {0:s} have been found.'
+              'Two recipe items for the same task {0:s} have been found.'
               'If you wish to specify several task runs of the same tool,'
               'please include them in separate recipes.').format(recipe_item)
-
-        try:
-          if recipe_item_contents['task'] in tasks_with_recipe:
-            raise TurbiniaException(
-                'Two recipe items for the same task {0:s} have been found.'
-                'If you wish to specify several task runs of the same tool,'
-                'please include them in separate recipes.').format(recipe_item)
-            sys.exit(1)
-        except KeyError:
-          raise TurbiniaException(
-              'All recipe items must have a "task" key indicating the TurbiniaTask'
-              'to which it relates.')
           sys.exit(1)
+      except KeyError:
+        raise TurbiniaException(
+            'All recipe items must have a "task" key indicating the TurbiniaTask'
+            'to which it relates.')
+        sys.exit(1)
 
-        self.task_recipes[recipe_item] = recipe_item_contents
+      self.task_recipes[recipe_item] = recipe_item_contents
 
   def _verify_global_recipe(self):
     """ Verify existence and validity of globals recipe item"""
-    default_global_recipe = {
-        'debug_tasks': False,
-        'jobs_allowlist': [],
-        'jobs_denylist': [],
-        'yara_rules': '',
-        'filter_patterns': ''
-    }
     try:
       for k in self.task_recipes['globals']:
-        if k not in default_global_recipe:
+        if k not in self.DEFAULT_GLOBAL_RECIPE:
           raise TurbiniaException(
               'Unknown key {0:s} found on globals recipe item').format(k)
           sys.exit(1)
@@ -282,7 +279,6 @@ class TurbiniaRecipe(object):
       raise TurbiniaException(
           'No jobs can be simultaneously in the allow and deny lists')
       sys.exit(1)
-
 
   def serialize(self):
     """ Obtain serialized task recipe dict. """

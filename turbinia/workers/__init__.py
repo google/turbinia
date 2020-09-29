@@ -762,7 +762,7 @@ class TurbiniaTask(object):
     """
     recipe_value = evidence.config['task_recipes'].get(name, {})
     return recipe_value
- 
+
   def run_wrapper(self, evidence):
     """Wrapper to manage TurbiniaTaskResults and exception handling.
 

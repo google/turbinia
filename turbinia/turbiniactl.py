@@ -54,6 +54,24 @@ def csv_list(string):
   return string.split(',')
 
 
+def file_to_str(file_path):
+  """Read file to variable 
+  Args:
+    file_path(str): Path to file to be read into variable.
+
+  Returns:
+    list[str]: The parsed strings.
+  """
+  if not os.path.exists(file_path):
+    log.error('File {0:s} does not exist.')
+    sys.exit(1)
+  try:
+    file_contents = open(file_path).read()
+  except IOError as e:
+    log.warning('Cannot open file {0:s} [{1!s}]'.format(file_path, e))
+    sys.exit(1)
+
+
 def main():
   """Main function for turbiniactl"""
   # TODO(aarontp): Allow for single run mode when
@@ -101,6 +119,11 @@ def main():
   parser.add_argument(
       '-D', '--dump_json', action='store_true',
       help='Dump JSON output of Turbinia Request instead of sending it')
+  parser.add_argument(
+      '-F', '--filter_patterns_file',
+      help='A file containing newline separated string patterns to filter '
+      'text based evidence files with (in extended grep regex format). '
+      'This filtered output will be in addition to the complete output')
   parser.add_argument(
       '-Y', '--yara_rules_file', help='A file containing Yara rules.')
   parser.add_argument(
@@ -465,18 +488,13 @@ def main():
         'time')
     sys.exit(1)
 
-  # Read yara rules
-  yara_rules = None
-  if (args.yara_rules_file and not os.path.exists(args.yara_rules_file)):
-    log.error('Yara rules file {0:s} does not exist.')
-    sys.exit(1)
-  elif args.yara_rules_file:
-    try:
-      yara_rules = open(args.yara_rules_file).read()
-    except IOError as e:
-      log.warning(
-          'Cannot open file {0:s} [{1!s}]'.format(args.yara_rules_file, e))
-      sys.exit(1)
+  #Read YARA rules
+  if args.yara_rules_file:
+    yara_rules = file_to_str(args.yara_rules_file)
+
+  #Read filter patterns
+  if args.filter_patterns_file:
+    filter_patterns = file_to_str(args.filter_patterns_file)
 
   # Create Client object
   client = None
@@ -735,10 +753,11 @@ def main():
     request.evidence.append(evidence_)
 
     if args.recipe:
-      if args.jobs_denylist or args.jobs_allowlist:
+      if (args.jobs_denylist or args.jobs_allowlist or
+          args.filter_patterns_file or args.yara_rules_file):
         raise TurbiniaException(
             'Specifying a recipe is incompatible with defining'
-            ' jobs allow/deny lists parameters separately.')
+            ' jobs allow/deny lists, yara rules or a patterns file separately.')
       try:
         recipe_obj = TurbiniaRecipe(
             os.path.join(config.RECIPE_FILE_DIR, args.recipe))
@@ -746,13 +765,19 @@ def main():
         log.warning(
             'Cannot open file {0:s} [{1!s}]'.format(args.yara_rules_file, e))
         sys.exit(1)
-
       recipe_obj.load()
-      request.recipe = recipe_obj.serialize()
     else:
+      default_recipe = TurbiniaRecipe.DEFAULT_RECIPE
       if args.jobs_denylist:
-        request.recipe['jobs_denylist'] = args.jobs_denylist
+        default_recipe['globals']['jobs_denylist'] = args.jobs_denylist
       if args.jobs_allowlist:
+        default_recipe['globals']['jobs_allowlist'] = args.jobs_allowlist
+      if yara_rules:
+        default_recipe['globals']['yara_rules'] = yara_rules
+      if filter_patterns:
+        default_recipe['globals']['filter_patterns'] = filter_patterns
+      default_recipe['globals']['debug_tasks'] = args.debug_tasks
+
     if args.dump_json:
       print(request.to_json().encode('utf-8'))
       sys.exit(0)
@@ -767,6 +792,8 @@ def main():
         client.send_request(request)
       else:
         log.debug('--run_local specified so not sending request to server')
+
+    request.recipe = recipe_obj.serialize()
 
     if args.wait:
       log.info(

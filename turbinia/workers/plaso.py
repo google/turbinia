@@ -58,8 +58,12 @@ class PlasoTask(TurbiniaTask):
     """
     cmd = [base_command]
     for k, v in conf.items():
-      cli_args = ['status_view', 'hashers', 'partitions', 'vss_stores', 'artifact_filters', 'file_filter', 'yara_rules']
-      if k not in cli_args: continue
+      cli_args = [
+          'status_view', 'hashers', 'partitions', 'vss_stores',
+          'artifact_filters', 'file_filter', 'yara_rules'
+      ]
+      if k not in cli_args:
+        continue
       prepend = '-'
       if len(k) > 1:
         prepend = '--'
