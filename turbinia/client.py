@@ -398,7 +398,7 @@ class BaseTurbiniaClient(object):
 
   def get_task_data(
       self, instance, project, region, days=0, task_id=None, request_id=None,
-      user=None, function_name='gettasks'):
+      user=None, function_name='gettasks', output_json=False):
     """Gets task data from Google Cloud Functions.
 
     Args:
@@ -410,10 +410,11 @@ class BaseTurbiniaClient(object):
       task_id (string): The Id of the task.
       request_id (string): The Id of the request we want tasks for.
       user (string): The user of the request we want tasks for.
-      function_name (string): The GCF function we want to call
+      function_name (string): The GCF function we want to call.
+      output_json (bool): Whether to return JSON output.
 
     Returns:
-      List of Task dict objects.
+      (List|JSON string) of Task dict objects
     """
     cloud_function = gcp_function.GoogleCloudFunction(project)
     func_args = {'instance': instance, 'kind': 'TurbiniaTask'}
@@ -479,8 +480,17 @@ class BaseTurbiniaClient(object):
           'Could not deserialize result [{0!s}] from GCF: [{1!s}]'.format(
               response.get('result'), e))
 
-    # Convert run_time/last_update back into datetime objects
     task_data = results[0]
+    if output_json:
+      try:
+        json_data = json.dumps(task_data)
+      except (TypeError, ValueError) as e:
+        raise TurbiniaException(
+            'Could not re-serialize result [{0!s}] from GCF: [{1!s}]'.format(
+                str(task_data), e))
+      return json_data
+
+    # Convert run_time/last_update back into datetime objects
     for task in task_data:
       if task.get('run_time'):
         task['run_time'] = timedelta(seconds=task['run_time'])
@@ -520,6 +530,27 @@ class BaseTurbiniaClient(object):
       for path in saved_paths:
         report.append(fmt.bullet(fmt.code(path)))
       report.append('')
+    return report
+
+  def format_worker_task(self, task):
+    """Formats a single task for Worker view.
+
+    Args:
+      task (dict): The task to format data for
+    Returns:
+      list: Formatted task data
+    """
+    report = []
+    report.append(
+        fmt.bullet('{0:s} - {1:s}'.format(task['task_id'], task['task_name'])))
+    report.append(
+        fmt.bullet(
+            'Last Update: {0:s}'.format(
+                task['last_update'].strftime(DATETIME_FORMAT)), level=2))
+    report.append(fmt.bullet('Status: {0:s}'.format(task['status']), level=2))
+    report.append(
+        fmt.bullet('Run Time: {0:s}'.format(str(task['run_time'])), level=2))
+    report.append('')
     return report
 
   def format_task(self, task, show_files=False):
@@ -710,6 +741,100 @@ class BaseTurbiniaClient(object):
     report.append('')
     return '\n'.join(report)
 
+  def format_worker_status(
+      self, instance, project, region, days=0, all_fields=False):
+    """Formats the recent history for Turbinia Workers.
+
+    Args:
+      instance (string): The Turbinia instance name (by default the same as the
+          INSTANCE_ID in the config).
+      project (string): The name of the project.
+      region (string): The name of the zone to execute in.
+      days (int): The number of days we want history for.
+      all_fields (bool): Include historical Task information for the worker.
+    Returns:
+      String of Request status
+    """
+    # Set number of days to retrieve data
+    num_days = 7
+    if days != 0:
+      num_days = days
+    task_results = self.get_task_data(instance, project, region, days=num_days)
+    if not task_results:
+      return ''
+
+    # Sort task_results by last updated timestamp.
+    task_results = sorted(
+        task_results, key=itemgetter('last_update'), reverse=True)
+
+    # Create dictionary of worker_node: {{task_id, task_update,
+    # task_name, task_status}}
+    workers_dict = {}
+    scheduled_counter = 0
+    for result in task_results:
+      worker_node = result.get('worker_name')
+      status = result.get('status')
+      status = status if status else 'No task status'
+      if worker_node and worker_node not in workers_dict:
+        workers_dict[worker_node] = []
+      if worker_node:
+        task_dict = {}
+        task_dict['task_id'] = result.get('id')
+        task_dict['last_update'] = result.get('last_update')
+        task_dict['task_name'] = result.get('name')
+        task_dict['status'] = status
+        # Check status for anything that is running.
+        if 'running' in status:
+          run_time = (datetime.now() -
+                      result.get('last_update')).total_seconds()
+          run_time = timedelta(seconds=run_time)
+          task_dict['run_time'] = run_time
+        else:
+          run_time = result.get('run_time')
+          task_dict['run_time'] = run_time if run_time else 'No run time.'
+        workers_dict[worker_node].append(task_dict)
+      else:
+        # Track scheduled/unassigned Tasks for reporting.
+        scheduled_counter += 1
+
+    # Generate report header
+    report = []
+    report.append(
+        fmt.heading1(
+            'Turbinia report for Worker activity within {0:d} days'.format(
+                num_days)))
+    report.append(
+        fmt.bullet('{0:d} Worker(s) found.'.format(len(workers_dict.keys()))))
+    report.append(
+        fmt.bullet(
+            '{0:d} Task(s) unassigned or scheduled and pending Worker assignment.'
+            .format(scheduled_counter)))
+    for worker_node, tasks in workers_dict.items():
+      report.append('')
+      report.append(fmt.heading2('Worker Node: {0:s}'.format(worker_node)))
+      # Append the statuses chronologically
+      run_status, queued_status, other_status = [], [], []
+      for task in tasks:
+        if 'running' in task['status']:
+          run_status.extend(self.format_worker_task(task))
+        elif 'queued' in task['status']:
+          queued_status.extend(self.format_worker_task(task))
+        else:
+          other_status.extend(self.format_worker_task(task))
+      # Add each of the status lists back to report list
+      not_found = [fmt.bullet('No Tasks found.')]
+      report.append(fmt.heading3('Running Tasks'))
+      report.extend(run_status if run_status else not_found)
+      report.append('')
+      report.append(fmt.heading3('Queued Tasks'))
+      report.extend(queued_status if queued_status else not_found)
+      # Add Historical Tasks
+      if all_fields:
+        report.append('')
+        report.append(fmt.heading3('Finished Tasks'))
+        report.extend(other_status if other_status else not_found)
+    return '\n'.join(report)
+
   def format_request_status(
       self, instance, project, region, days=0, all_fields=False):
     """Formats the recent history for Turbinia Requests.
@@ -787,7 +912,7 @@ class BaseTurbiniaClient(object):
   def format_task_status(
       self, instance, project, region, days=0, task_id=None, request_id=None,
       user=None, all_fields=False, full_report=False,
-      priority_filter=Priority.HIGH):
+      priority_filter=Priority.HIGH, output_json=False):
     """Formats the recent history for Turbinia Tasks.
 
     Args:
@@ -805,16 +930,22 @@ class BaseTurbiniaClient(object):
           summary.
       priority_filter (int): Output only a summary for Tasks with a value
           greater than the priority_filter.
+      output_json (bool): Whether to return JSON output.
 
     Returns:
-      String of task status
+      String of task status in JSON or human readable format.
     """
     if user and days == 0:
       days = 1000
     task_results = self.get_task_data(
-        instance, project, region, days, task_id, request_id, user)
+        instance, project, region, days, task_id, request_id, user,
+        output_json=output_json)
     if not task_results:
       return ''
+
+    if output_json:
+      return task_results
+
     # Sort all tasks by the report_priority so that tasks with a higher
     # priority are listed first in the report.
     for result in task_results:
@@ -948,7 +1079,7 @@ class TurbiniaCeleryClient(BaseTurbiniaClient):
   # pylint: disable=arguments-differ
   def get_task_data(
       self, instance, _, __, days=0, task_id=None, request_id=None,
-      function_name=None):
+      function_name=None, output_json=False):
     """Gets task data from Redis.
 
     We keep the same function signature, but ignore arguments passed for GCP.
