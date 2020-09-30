@@ -18,6 +18,7 @@ from dfvfs.lib import definitions as dfvfs_definitions
 
 from turbinia import TurbiniaException
 from turbinia.evidence import RawDiskPartition
+from turbinia.lib import text_formatter as fmt
 from turbinia.lib.dfvfs_classes import SourceAnalyzer
 from turbinia.workers import Priority
 from turbinia.workers import TurbiniaTask
@@ -31,6 +32,10 @@ class PartitionEnumerationTask(TurbiniaTask):
 
     Args:
       path_spec (dfvfs.PathSpec): dfVFS path spec.
+
+    Returns:
+      A list of strings containing partition information to add to the status
+      report.
     """
     status_report = []
 
@@ -38,18 +43,21 @@ class PartitionEnumerationTask(TurbiniaTask):
     if location in ('/', '\\'):
       path_spec = path_spec.parent
       location = getattr(path_spec, 'location', None)
-    status_report.append('{0!s}:'.format(location))
+    status_report.append(fmt.heading5('{0!s}:'.format(location)))
     volume_index = getattr(path_spec, 'volume_index', None)
     if volume_index:
-      status_report.append('\tVolume index: {0!s}'.format(volume_index))
+      status_report.append(
+          fmt.bullet('Volume index: {0!s}'.format(volume_index)))
     if not getattr(path_spec, 'part_index', None):
       path_spec = path_spec.parent
     status_report.append(
-        '\tPartition index: {0!s}'.format(
-            getattr(path_spec, 'part_index', None)))
+        fmt.bullet(
+            'Partition index: {0!s}'.format(
+                getattr(path_spec, 'part_index', None))))
     status_report.append(
-        '\tPartition offset: {0!s}'.format(
-            getattr(path_spec, 'start_offset', None)))
+        fmt.bullet(
+            'Partition offset: {0!s}'.format(
+                getattr(path_spec, 'start_offset', None))))
     return status_report
 
   def run(self, evidence, result):
@@ -62,17 +70,16 @@ class PartitionEnumerationTask(TurbiniaTask):
     Returns:
       TurbiniaTaskResult object.
     """
-    result.log('Scanning [{0:s}]'.format(evidence.local_path))
+    result.log('Scanning [{0:s}] for partitions'.format(evidence.local_path))
 
     success = False
 
     source_analyzer = SourceAnalyzer()
     path_specs = source_analyzer.ScanSource(evidence.local_path)
 
-    status_report = [
-        'Found {0:d} partition(s) in [{1:s}]:'.format(
-            len(path_specs), evidence.local_path)
-    ]
+    status_summary = 'Found {0:d} partition(s) in [{1:s}]:'.format(
+        len(path_specs), evidence.local_path)
+    status_report = [fmt.heading4(status_summary)]
 
     try:
       for path_spec in path_specs:
@@ -84,12 +91,13 @@ class PartitionEnumerationTask(TurbiniaTask):
       status_report = '\n'.join(status_report)
       success = True
     except TurbiniaException as e:
-      status_report = 'Error enumerating partitions: {0!s}'.format(e)
+      status_summary = 'Error enumerating partitions: {0!s}'.format(e)
+      status_report = status_summary
 
     result.log('Scanning of [{0:s}] is complete'.format(evidence.local_path))
 
     result.report_priority = Priority.LOW
     result.report_data = status_report
-    result.close(self, success=success, status=status_report)
+    result.close(self, success=success, status=status_summary)
 
     return result

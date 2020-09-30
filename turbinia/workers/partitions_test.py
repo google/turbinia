@@ -19,6 +19,7 @@ from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
 import mock
 
+from turbinia.lib import text_formatter as fmt
 from turbinia.workers import partitions
 from turbinia.workers import TurbiniaTaskResult
 from turbinia.workers.workers_test import TestTurbiniaTaskBase
@@ -64,13 +65,15 @@ class PartitionEnumerationTaskTest(TestTurbiniaTaskBase):
     self.assertEqual(len(result.evidence), 2)
     expected_report = []
     expected_report.append(
-        'Found 2 partition(s) in [{0:s}]:'.format(self.evidence.local_path))
-    expected_report.append('/p1:')
-    expected_report.append('\tPartition index: 2')
-    expected_report.append('\tPartition offset: 1048576')
-    expected_report.append('/p2:')
-    expected_report.append('\tPartition index: 6')
-    expected_report.append('\tPartition offset: 11534336')
+        fmt.heading4(
+            'Found 2 partition(s) in [{0:s}]:'.format(
+                self.evidence.local_path)))
+    expected_report.append(fmt.heading5('/p1:'))
+    expected_report.append(fmt.bullet('Partition index: 2'))
+    expected_report.append(fmt.bullet('Partition offset: 1048576'))
+    expected_report.append(fmt.heading5('/p2:'))
+    expected_report.append(fmt.bullet('Partition index: 6'))
+    expected_report.append(fmt.bullet('Partition offset: 11534336'))
     expected_report = '\n'.join(expected_report)
     self.assertEqual(result.report_data, expected_report)
 
