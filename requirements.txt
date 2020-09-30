@@ -10,7 +10,7 @@ google-cloud-error-reporting
 google-cloud-logging
 google-cloud-pubsub
 google-cloud-storage
-libcloudforensics
+libcloudforensics==20200818
 psq
 six
 urllib3[secure]
