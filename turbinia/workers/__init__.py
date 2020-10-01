@@ -402,7 +402,6 @@ class TurbiniaTask(object):
     self.requester = requester if requester else 'user_unspecified'
     self._evidence_config = {}
     self.recipe = {}
-    self.task_config = {}
 
   def serialize(self):
     """Converts the TurbiniaTask object into a serializable dict.
@@ -480,12 +479,30 @@ class TurbiniaTask(object):
     """
     if not proposed_conf:
       return False
+    print('validating task config')
+    print(self.task_config)
     for k in proposed_conf.keys():
+      if k == 'task':
+        continue
       if k not in self.task_config:
+        print('task recipe invalid ' + k + ' key present')
         return False
     return True
 
-  def write_file_to_temp_file(source_file):
+  def write_str_to_temp_file(self, source_str):
+    """Creates a temporary file with the contents of a specified string variable.
+
+    Args:
+      source_str (str): String to be written to file.
+
+    Returns:
+      str: File name for newly created temporary file.
+    """
+    with NamedTemporaryFile(dir=self.tmp_dir, delete=False, mode='w') as fh:
+      fh.write(source_str)
+    return fh.name
+
+  def write_file_to_temp_file(self, source_file):
     """Creates a temporary file with the contents of a specified existing one.
 
     Args:
@@ -501,7 +518,7 @@ class TurbiniaTask(object):
       fh.write(contents)
     return fh.name
 
-  def write_list_to_temp_file(entries, file_name=None, preferred_dir=None):
+  def write_list_to_temp_file(self, entries, file_name=None, preferred_dir=None):
     """ Creates a file containing a line-by-line list of strings off of a 
     list of entries.
 
@@ -841,11 +858,9 @@ class TurbiniaTask(object):
         globals_recipe = evidence.config['task_recipes']['globals']
         if potential_recipe:
           if self.validate_task_conf(potential_recipe):
-            self.recipe.pop('task')
-            self.recipe = self.task_config.update(potential_recipe)
-        else:
-          self.recipe = self.task_config
-        self.recipe.update(globals_recipe)
+            self.task_config.update(potential_recipe)
+            self.task_config.pop('task')
+        self.task_config.update(globals_recipe)
         self.result = self.run(evidence, self.result)
       # pylint: disable=broad-except
       except Exception as exception:

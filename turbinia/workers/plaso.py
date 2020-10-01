@@ -62,26 +62,23 @@ class PlasoTask(TurbiniaTask):
           'status_view', 'hashers', 'partitions', 'vss_stores',
           'artifact_filters', 'file_filter', 'yara_rules'
       ]
-      if k not in cli_args:
+      if (k not in cli_args or not v):
         continue
       prepend = '-'
       if len(k) > 1:
         prepend = '--'
       if k == 'file_filter':
-        file_path = self.write_list_to_file('filter_file', v)
+        file_path = self.write_list_to_temp_file(v)
         cmd.extend(['-f', file_path])
       elif k == 'yara_rules':
-        file_path = self.write_to_temp_file(v)
+        file_path = self.write_str_to_temp_file(v)
         cmd.extend(['--yara_rules', file_path])
       elif isinstance(v, list):
-        if v:
-          cmd.extend([prepend + k, ','.join(v)])
+        cmd.extend([prepend + k, ','.join(v)])
       elif isinstance(v, bool):
-        if v:
-          cmd.append(prepend + k)
+        cmd.append(prepend + k)
       elif isinstance(v, str):
-        if v:
-          cmd.extend([prepend + k, v])
+        cmd.extend([prepend + k, v])
     return cmd
 
   def run(self, evidence, result):
@@ -103,10 +100,9 @@ class PlasoTask(TurbiniaTask):
     plaso_evidence = PlasoFile(source_path=plaso_file)
     plaso_log = os.path.join(self.output_dir, '{0:s}.log'.format(self.id))
 
-    cmd = self.build_plaso_command('log2timeline.py', self.recipe)
+    cmd = self.build_plaso_command('log2timeline.py', self.task_config)
 
-    # TODO(aarontp): Move these flags into a recipe
-    if self.recipe['debug_tasks']:
+    if self.task_config['debug_tasks']:
       cmd.append('-d')
 
     if isinstance(evidence, (APFSEncryptedDisk, BitlockerDisk)):
