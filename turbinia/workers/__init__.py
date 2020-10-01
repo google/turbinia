@@ -837,10 +837,8 @@ class TurbiniaTask(object):
 
         self.result.update_task_status(self, 'running')
         self._evidence_config = evidence.config
-        print(evidence.config)
         potential_recipe = self.get_task_recipe(evidence.config['task_recipes'])
         globals_recipe = evidence.config['task_recipes']['globals']
-        print(globals_recipe)
         if potential_recipe:
           if self.validate_task_conf(potential_recipe):
             self.recipe.pop('task')
