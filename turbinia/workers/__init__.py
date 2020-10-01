@@ -19,6 +19,7 @@ from __future__ import unicode_literals
 from copy import deepcopy
 from datetime import datetime, timedelta
 from enum import IntEnum
+from tempfile import NamedTemporaryFile
 import getpass
 import logging
 import os
@@ -401,6 +402,7 @@ class TurbiniaTask(object):
     self.requester = requester if requester else 'user_unspecified'
     self._evidence_config = {}
     self.recipe = {}
+    self.task_config = {}
 
   def serialize(self):
     """Converts the TurbiniaTask object into a serializable dict.
@@ -483,15 +485,15 @@ class TurbiniaTask(object):
         return False
     return True
 
-  def write_to_temp_file(source_file):
-    """Creates a temporary file with the contents of a specified existing one
+  def write_file_to_temp_file(source_file):
+    """Creates a temporary file with the contents of a specified existing one.
 
     Args:
       source_file (str): Path to the file the contents of which should be put
       into the temporary file.
 
     Returns:
-      str: File name for newly created temporary file
+      str: File name for newly created temporary file.
     """
     with open(source_file, 'r') as sf_fh:
       contents = sf_fh.read()
@@ -499,27 +501,22 @@ class TurbiniaTask(object):
       fh.write(contents)
     return fh.name
 
-  def write_list_to_file(file_name, entries):
+  def write_list_to_temp_file(entries, file_name=None, preferred_dir=None):
     """ Creates a file containing a line-by-line list of strings off of a 
     list of entries.
 
     Args:
-      file_name (str): Name to be given to the file.
       entries (list): List of entries to be written line by line.
+      file_name (str): Name to be given to the file.
+      file_path (str): Preferred path to write the file.
 
     Returns:
       str: Path to newly created file.
     """
-    file_path = os.path.join(self.tmp_dir, file_name)
-    try:
-      with open(file_path, 'wb') as file_fh:
-        for entry_ in entries:
-          file_fh.write(entry_.encode('utf-8') + b'\n')
-    except IOError as exception:
-      message = 'Cannot write to file {0:s}: {1!s}'.format(file_path, exception)
-      log_and_report(message, exception)
-      raise TurbiniaException(message)
-    return file_path
+    with NamedTemporaryFile(dir=self.tmp_dir, delete=False, mode='w') as fh:
+      for entry_ in entries:
+        fh.write(entry_.encode('utf-8') + b'\n')
+    return fh.name
 
   def execute(
       self, cmd, result, save_files=None, log_files=None, new_evidence=None,
@@ -735,7 +732,7 @@ class TurbiniaTask(object):
     log.info('Result check: {0:s}'.format(check_status))
     return result
 
-  def get_task_recipe(self, evidence):
+  def get_task_recipe(self, recipe):
     """Searches and provides a recipe for the task at hand if there is one.
 
     Args:
@@ -744,7 +741,7 @@ class TurbiniaTask(object):
     Returns:
       Dict: Recipe dict.
     """
-    for _, task_recipe in evidence.config['task_recipes'].items():
+    for _, task_recipe in recipe.items():
       if isinstance(task_recipe, dict):
         task = task_recipe.get('task', None)
         if task and task == self.name:
@@ -760,7 +757,7 @@ class TurbiniaTask(object):
     Returns:
       Dict: Recipe dict.
     """
-    recipe_value = evidence.config['task_recipes'].get(name, {})
+    recipe_value = evidence.config.get(name, {})
     return recipe_value
 
   def run_wrapper(self, evidence):
@@ -840,15 +837,17 @@ class TurbiniaTask(object):
 
         self.result.update_task_status(self, 'running')
         self._evidence_config = evidence.config
-        potential_recipe = self.get_task_recipe(self.name, evidence)
+        print(evidence.config)
+        potential_recipe = self.get_task_recipe(evidence.config['task_recipes'])
+        globals_recipe = evidence.config['task_recipes']['globals']
+        print(globals_recipe)
         if potential_recipe:
-          global_recipe = self.get_named_recipe('global')
-          potential_recipe.update(global_recipe)
           if self.validate_task_conf(potential_recipe):
             self.recipe.pop('task')
             self.recipe = self.task_config.update(potential_recipe)
-          else:
-            self.recipe = self.task_config
+        else:
+          self.recipe = self.task_config
+        self.recipe.update(globals_recipe)
         self.result = self.run(evidence, self.result)
       # pylint: disable=broad-except
       except Exception as exception:

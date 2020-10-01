@@ -245,19 +245,19 @@ class TurbiniaRecipe(object):
             'Two recipe items with the same name {0:s} have been found.'
             'If you wish to specify several task runs of the same tool,'
             'please include them in separate recipes.').format(recipe_item)
-
       try:
         if recipe_item_contents['task'] in tasks_with_recipe:
           raise TurbiniaException(
               'Two recipe items for the same task {0:s} have been found.'
               'If you wish to specify several task runs of the same tool,'
-              'please include them in separate recipes.').format(recipe_item)
+              'please include them in separate recipes.'.format(recipe_item))
           sys.exit(1)
       except KeyError:
-        raise TurbiniaException(
-            'All recipe items must have a "task" key indicating the TurbiniaTask'
-            'to which it relates.')
-        sys.exit(1)
+        if recipe_item != 'globals':
+          raise TurbiniaException(
+              'Recipe item {0:s} has not "task" key. All recipe items must have a "task" key indicating the TurbiniaTask'
+              ' to which it relates.'.format(recipe_item))
+          sys.exit(1)
 
       self.task_recipes[recipe_item] = recipe_item_contents
 

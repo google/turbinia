@@ -766,17 +766,19 @@ def main():
             'Cannot open file {0:s} [{1!s}]'.format(args.yara_rules_file, e))
         sys.exit(1)
       recipe_obj.load()
+      request.recipe['task_recipes'] = recipe_obj.task_recipes
     else:
-      default_recipe = TurbiniaRecipe.DEFAULT_RECIPE
+      recipe_obj = TurbiniaRecipe.DEFAULT_RECIPE
       if args.jobs_denylist:
-        default_recipe['globals']['jobs_denylist'] = args.jobs_denylist
+        recipe_obj['globals']['jobs_denylist'] = args.jobs_denylist
       if args.jobs_allowlist:
-        default_recipe['globals']['jobs_allowlist'] = args.jobs_allowlist
+        recipe_obj['globals']['jobs_allowlist'] = args.jobs_allowlist
       if yara_rules:
-        default_recipe['globals']['yara_rules'] = yara_rules
+        recipe_obj['globals']['yara_rules'] = yara_rules
       if filter_patterns:
-        default_recipe['globals']['filter_patterns'] = filter_patterns
-      default_recipe['globals']['debug_tasks'] = args.debug_tasks
+        recipe_obj['globals']['filter_patterns'] = filter_patterns
+      recipe_obj['globals']['debug_tasks'] = args.debug_tasks
+      request.recipe['task_recipes'] = recipe_obj
 
     if args.dump_json:
       print(request.to_json().encode('utf-8'))
@@ -793,7 +795,6 @@ def main():
       else:
         log.debug('--run_local specified so not sending request to server')
 
-    request.recipe = recipe_obj.serialize()
 
     if args.wait:
       log.info(

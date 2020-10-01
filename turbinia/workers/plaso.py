@@ -103,10 +103,10 @@ class PlasoTask(TurbiniaTask):
     plaso_evidence = PlasoFile(source_path=plaso_file)
     plaso_log = os.path.join(self.output_dir, '{0:s}.log'.format(self.id))
 
-    cmd = self.build_plaso_command('log2timeline.py', working_recipe)
+    cmd = self.build_plaso_command('log2timeline.py', self.recipe)
 
     # TODO(aarontp): Move these flags into a recipe
-    if working_recipe['debug_tasks']:
+    if self.recipe['debug_tasks']:
       cmd.append('-d')
 
     if isinstance(evidence, (APFSEncryptedDisk, BitlockerDisk)):
