@@ -14,6 +14,7 @@
 # limitations under the License.
 """Classes for dfVFS"""
 
+import logging
 import os
 
 from dfvfs.helpers import source_scanner
@@ -29,17 +30,19 @@ class SourceAnalyzer(object):
   def __init__(self):
     """Initializes a source analyzer."""
     super(SourceAnalyzer, self).__init__()
+    self._log = logging.getLogger('turbinia')
     self._source_path_specs = []
     self._source_scanner = source_scanner.SourceScanner()
 
-  def _GetAPFSVolumeIdentifiers(self, scan_node):
-    """Determines the APFS volume identifiers.
+  def _GetVolumeIdentifiers(self, scan_node, volume_type):
+    """Determines the volume identifiers.
 
     Args:
       scan_node (dfvfs.SourceScanNode): scan node.
+      volume_type (str): type of volume.
 
     Returns:
-      list[str]: APFS volume identifiers.
+      list[str]: Normalized volume identifiers.
 
     Raises:
       RuntimeError: if the format of or within the source is not supported or
@@ -48,7 +51,15 @@ class SourceAnalyzer(object):
     if not scan_node or not scan_node.path_spec:
       raise RuntimeError('Invalid scan node.')
 
-    volume_system = apfs_volume_system.APFSVolumeSystem()
+    prefix = None
+    if volume_type == dfvfs_definitions.TYPE_INDICATOR_APFS_CONTAINER:
+      volume_system = apfs_volume_system.APFSVolumeSystem()
+      prefix = 'apfs'
+    elif volume_type == dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION:
+      volume_system = tsk_volume_system.TSKVolumeSystem()
+      prefix = 'p'
+    else:
+      raise RuntimeError('Invalid volume type: {0!s}'.format(volume_type))
     volume_system.Open(scan_node.path_spec)
 
     volume_identifiers = self._source_scanner.GetVolumeIdentifiers(
@@ -59,37 +70,7 @@ class SourceAnalyzer(object):
     volumes = range(1, volume_system.number_of_volumes + 1)
 
     return self._NormalizedVolumeIdentifiers(
-        volume_system, volumes, prefix='apfs')
-
-  def _GetTSKPartitionIdentifiers(self, scan_node):
-    """Determines the TSK partition identifiers.
-
-    Args:
-      scan_node (dfvfs.SourceScanNode): scan node.
-
-    Returns:
-      list[str]: TSK partition identifiers.
-
-    Raises:
-      RuntimeError: if the volume for a specific identifier cannot be retrieved,
-          or if the format of or within the source is not supported or the the
-          scan node is invalid.
-    """
-    if not scan_node or not scan_node.path_spec:
-      raise RuntimeError('Invalid scan node.')
-
-    volume_system = tsk_volume_system.TSKVolumeSystem()
-    volume_system.Open(scan_node.path_spec)
-
-    volume_identifiers = self._source_scanner.GetVolumeIdentifiers(
-        volume_system)
-    if not volume_identifiers:
-      return []
-
-    partitions = range(1, volume_system.number_of_volumes + 1)
-
-    return self._NormalizedVolumeIdentifiers(
-        volume_system, partitions, prefix='p')
+        volume_system, volumes, prefix=prefix)
 
   def _NormalizedVolumeIdentifiers(
       self, volume_system, volume_identifiers, prefix='v'):
@@ -151,6 +132,8 @@ class SourceAnalyzer(object):
   def _ScanVolume(self, scan_context, scan_node, base_path_specs):
     """Scans a volume scan node for volume and file systems.
 
+    Scans recursively and adds a base path spec for each volume identified.
+
     Args:
       scan_context (SourceScannerContext): source scanner context.
       scan_node (SourceScanNode): volume scan node.
@@ -165,6 +148,9 @@ class SourceAnalyzer(object):
 
     if scan_context.IsLockedScanNode(scan_node.path_spec):
       # TODO: Add encrypted volume support
+      self._log.info(
+          'Identified a locked volume: {0!s}'.format(
+              scan_node.path_spec.CopyToDict()))
       return
 
     if scan_node.IsVolumeSystemRoot():
@@ -175,6 +161,9 @@ class SourceAnalyzer(object):
 
     elif scan_node.type_indicator == dfvfs_definitions.TYPE_INDICATOR_VSHADOW:
       # TODO: Add volume shadow support
+      self._log.info(
+          'Identified a volume shadow: {0!s}'.format(
+              scan_node.path_spec.CopyToDict()))
       return
 
     else:
@@ -183,6 +172,8 @@ class SourceAnalyzer(object):
 
   def _ScanVolumeSystemRoot(self, scan_context, scan_node, base_path_specs):
     """Scans a volume system root scan node for volume and file systems.
+
+    Adds a base path spec for each volume identified.
 
     Args:
       scan_context (SourceScannerContext): source scanner context.
@@ -198,7 +189,8 @@ class SourceAnalyzer(object):
 
     if scan_node.type_indicator == (
         dfvfs_definitions.TYPE_INDICATOR_APFS_CONTAINER):
-      volume_identifiers = self._GetAPFSVolumeIdentifiers(scan_node)
+      volume_identifiers = self._GetVolumeIdentifiers(
+          scan_node, scan_node.type_indicator)
 
     elif scan_node.type_indicator == dfvfs_definitions.TYPE_INDICATOR_VSHADOW:
       # TODO: Add volume shadow support
@@ -243,14 +235,16 @@ class SourceAnalyzer(object):
       self._source_scanner.Scan(scan_context)
     except (ValueError, dfvfs_errors.BackEndError) as exception:
       raise RuntimeError(
-          'Unable to scan source with error: {0!s}.'.format(exception))
+          'Unable to scan source [{0:s}] with error: {1!s}.'.format(
+              source_path, exception))
 
+    # This method may also be called for files / directories
     if scan_context.source_type not in (
         scan_context.SOURCE_TYPE_STORAGE_MEDIA_DEVICE,
         scan_context.SOURCE_TYPE_STORAGE_MEDIA_IMAGE):
       scan_node = scan_context.GetRootScanNode()
       self._source_path_specs.append(scan_node.path_spec)
-      return scan_context
+      return self._source_path_specs
 
     scan_node = scan_context.GetRootScanNode()
     while len(scan_node.sub_nodes) == 1:
@@ -262,7 +256,8 @@ class SourceAnalyzer(object):
       self._ScanVolume(scan_context, scan_node, base_path_specs)
 
     else:
-      partition_identifiers = self._GetTSKPartitionIdentifiers(scan_node)
+      partition_identifiers = self._GetVolumeIdentifiers(
+          scan_node, scan_node.type_indicator)
       if not partition_identifiers:
         raise RuntimeError('No partitions found.')
 

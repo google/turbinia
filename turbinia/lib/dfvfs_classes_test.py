@@ -48,29 +48,22 @@ class TestSourceAnalyzer(unittest.TestCase):
       scan_node = scan_node.sub_nodes[0]
     return scan_node
 
-  def testGetAPFSVolumeIdentifiers(self):
-    """Tests the _GetAPFSVolumeIdentifiers function."""
+  def testGetVolumeIdentifiers(self):
+    """Tests the _GetVolumeIdentifiers function."""
     source_analyzer = SourceAnalyzer()
 
     # Test error conditions.
     with self.assertRaises(RuntimeError):
-      source_analyzer._GetAPFSVolumeIdentifiers(None)
+      source_analyzer._GetVolumeIdentifiers(
+          None, dfvfs_definitions.TYPE_INDICATOR_APFS_CONTAINER)
 
     scan_node = source_scanner.SourceScanNode(None)
     with self.assertRaises(RuntimeError):
-      source_analyzer._GetAPFSVolumeIdentifiers(scan_node)
+      source_analyzer._GetVolumeIdentifiers(
+          scan_node, dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION)
 
-  def testGetTSKPartitionIdentifiers(self):
-    """Tests the _GetTSKPartitionIdentifiers function."""
-    source_analyzer = SourceAnalyzer()
-
-    # Test error conditions.
     with self.assertRaises(RuntimeError):
-      source_analyzer._GetTSKPartitionIdentifiers(None)
-
-    scan_node = source_scanner.SourceScanNode(None)
-    with self.assertRaises(RuntimeError):
-      source_analyzer._GetTSKPartitionIdentifiers(scan_node)
+      source_analyzer._GetVolumeIdentifiers(scan_node, '')
 
   def testNormalizedVolumeIdentifiers(self):
     """Tests the _NormalizedVolumeIdentifiers function."""

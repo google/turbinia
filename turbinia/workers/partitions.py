@@ -14,8 +14,6 @@
 # limitations under the License.
 """Task for enumerating partitions in a disk."""
 
-from dfvfs.lib import definitions as dfvfs_definitions
-
 from turbinia import TurbiniaException
 from turbinia.evidence import RawDiskPartition
 from turbinia.lib import text_formatter as fmt
@@ -74,11 +72,14 @@ class PartitionEnumerationTask(TurbiniaTask):
 
     success = False
 
-    source_analyzer = SourceAnalyzer()
-    path_specs = source_analyzer.ScanSource(evidence.local_path)
+    try:
+      source_analyzer = SourceAnalyzer()
+      path_specs = source_analyzer.ScanSource(evidence.local_path)
+      status_summary = 'Found {0:d} partition(s) in [{1:s}]:'.format(
+          len(path_specs), evidence.local_path)
+    except RuntimeError as e:
+      status_summary = 'Error scanning for partitions: {0!s}'.format(e)
 
-    status_summary = 'Found {0:d} partition(s) in [{1:s}]:'.format(
-        len(path_specs), evidence.local_path)
     status_report = [fmt.heading4(status_summary)]
 
     try:
