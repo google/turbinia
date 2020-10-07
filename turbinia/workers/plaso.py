@@ -25,6 +25,7 @@ from turbinia.evidence import BitlockerDisk
 from turbinia.evidence import EvidenceState as state
 from turbinia.evidence import PlasoFile
 from turbinia.workers import TurbiniaTask
+from turbinia.lib import file_helpers
 
 
 class PlasoTask(TurbiniaTask):
@@ -68,10 +69,10 @@ class PlasoTask(TurbiniaTask):
       if len(k) > 1:
         prepend = '--'
       if k == 'file_filter':
-        file_path = self.write_list_to_temp_file(v)
+        file_path = file_helpers.write_list_to_temp_file(v)
         cmd.extend(['-f', file_path])
       elif k == 'yara_rules':
-        file_path = self.write_str_to_temp_file(v)
+        file_path = file_helpers.write_str_to_temp_file(v)
         cmd.extend(['--yara_rules', file_path])
       elif isinstance(v, list):
         cmd.extend([prepend + k, ','.join(v)])

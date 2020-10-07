@@ -31,6 +31,7 @@ from turbinia import TurbiniaException
 from turbinia.config import logger
 from libcloudforensics.providers.gcp import forensics as gcp_forensics
 from turbinia.lib import google_cloud
+from turbinia.lib import file_helpers
 from turbinia import __version__
 from turbinia.processors import archive
 from turbinia.output_manager import OutputManager
@@ -52,25 +53,6 @@ def csv_list(string):
     list[str]: The parsed strings.
   """
   return string.split(',')
-
-
-def file_to_str(file_path):
-  """Read file to variable 
-  Args:
-    file_path(str): Path to file to be read into variable.
-
-  Returns:
-    list[str]: The parsed strings.
-  """
-  if not os.path.exists(file_path):
-    log.error('File {0:s} does not exist.')
-    sys.exit(1)
-  try:
-    file_contents = open(file_path).read()
-  except IOError as e:
-    log.warning('Cannot open file {0:s} [{1!s}]'.format(file_path, e))
-    sys.exit(1)
-
 
 def main():
   """Main function for turbiniactl"""
@@ -488,14 +470,6 @@ def main():
         'time')
     sys.exit(1)
 
-  #Read YARA rules
-  if args.yara_rules_file:
-    yara_rules = file_to_str(args.yara_rules_file)
-
-  #Read filter patterns
-  if args.filter_patterns_file:
-    filter_patterns = file_to_str(args.filter_patterns_file)
-
   # Create Client object
   client = None
   if args.command not in ('psqworker', 'server'):
@@ -768,17 +742,16 @@ def main():
       recipe_obj.load()
       request.recipe['task_recipes'] = recipe_obj.task_recipes
     else:
-      recipe_obj = TurbiniaRecipe.DEFAULT_RECIPE
-      if args.jobs_denylist:
-        recipe_obj['globals']['jobs_denylist'] = args.jobs_denylist
-      if args.jobs_allowlist:
-        recipe_obj['globals']['jobs_allowlist'] = args.jobs_allowlist
-      if yara_rules:
-        recipe_obj['globals']['yara_rules'] = yara_rules
-      if filter_patterns:
-        recipe_obj['globals']['filter_patterns'] = filter_patterns
-      recipe_obj['globals']['debug_tasks'] = args.debug_tasks
-      request.recipe['task_recipes'] = recipe_obj
+      recipe_obj = TurbiniaRecipe()
+      default_recipe = {
+          'globals': {
+              'jobs_denylist': args.jobs_denylist,
+              'jobs_allowlist': args.jobs_allowlist,
+              'yara_rules_file': args.yara_rules_file,
+              'filter_patterns_file': args.filter_patterns_file
+          }
+      }
+      request.recipe['task_recipes'] = recipe_obj.load_recipe_from_dict(default_recipe)
 
     if args.dump_json:
       print(request.to_json().encode('utf-8'))

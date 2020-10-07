@@ -19,7 +19,6 @@ from __future__ import unicode_literals
 from copy import deepcopy
 from datetime import datetime, timedelta
 from enum import IntEnum
-from tempfile import NamedTemporaryFile
 import getpass
 import logging
 import os
@@ -479,61 +478,13 @@ class TurbiniaTask(object):
     """
     if not proposed_conf:
       return False
-    print('validating task config')
-    print(self.task_config)
     for k in proposed_conf.keys():
       if k == 'task':
         continue
       if k not in self.task_config:
-        print('task recipe invalid ' + k + ' key present')
         return False
     return True
 
-  def write_str_to_temp_file(self, source_str):
-    """Creates a temporary file with the contents of a specified string variable.
-
-    Args:
-      source_str (str): String to be written to file.
-
-    Returns:
-      str: File name for newly created temporary file.
-    """
-    with NamedTemporaryFile(dir=self.tmp_dir, delete=False, mode='w') as fh:
-      fh.write(source_str)
-    return fh.name
-
-  def write_file_to_temp_file(self, source_file):
-    """Creates a temporary file with the contents of a specified existing one.
-
-    Args:
-      source_file (str): Path to the file the contents of which should be put
-      into the temporary file.
-
-    Returns:
-      str: File name for newly created temporary file.
-    """
-    with open(source_file, 'r') as sf_fh:
-      contents = sf_fh.read()
-    with NamedTemporaryFile(dir=self.tmp_dir, delete=False, mode='w') as fh:
-      fh.write(contents)
-    return fh.name
-
-  def write_list_to_temp_file(self, entries, file_name=None, preferred_dir=None):
-    """ Creates a file containing a line-by-line list of strings off of a 
-    list of entries.
-
-    Args:
-      entries (list): List of entries to be written line by line.
-      file_name (str): Name to be given to the file.
-      file_path (str): Preferred path to write the file.
-
-    Returns:
-      str: Path to newly created file.
-    """
-    with NamedTemporaryFile(dir=self.tmp_dir, delete=False, mode='w') as fh:
-      for entry_ in entries:
-        fh.write(entry_.encode('utf-8') + b'\n')
-    return fh.name
 
   def execute(
       self, cmd, result, save_files=None, log_files=None, new_evidence=None,
@@ -861,6 +812,7 @@ class TurbiniaTask(object):
             self.task_config.update(potential_recipe)
             self.task_config.pop('task')
         self.task_config.update(globals_recipe)
+
         self.result = self.run(evidence, self.result)
       # pylint: disable=broad-except
       except Exception as exception:

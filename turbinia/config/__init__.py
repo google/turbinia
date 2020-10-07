@@ -23,6 +23,7 @@ import os
 import sys
 import yaml
 from yaml import Loader, load, dump
+from turbinia.lib.file_helpers import file_to_str, file_to_list
 
 from turbinia import TurbiniaException
 
@@ -213,38 +214,45 @@ class TurbiniaRecipe(object):
   }
   DEFAULT_RECIPE = {'globals': DEFAULT_GLOBALS_RECIPE}
 
-  def __init__(self, recipe_file):
+  def __init__(self, recipe_file=None):
     self.recipe_file = recipe_file
     self.name = ""
     self.task_recipes = {}
 
   def load(self):
     """ Load recipe from file. """
-    LoadConfig()
-    try:
-      with open(self.recipe_file, 'r') as r_file:
-        recipe_file_contents = r_file.read()
-        recipe_dict = load(recipe_file_contents, Loader=Loader)
-    except yaml.parser.ParserError as exception:
-      message = (
-          'Syntax error on recipe file {0:s}: {1!s}'.format(
-              self.recipe_file, exception))
-      log.error(message)
-      raise TurbiniaException(message)
-      sys.exit(1)
-    except IOError as exception:
-      raise TurbiniaException(
-          'Failed to read recipe file {0:s}: {1!s}'.format(
-              self.recipe_file, exception))
-      sys.exit(1)
+    if not self.recipe_file:
+      self.task_recipe = self.DEFAULT_RECIPE
+    else:
+      LoadConfig()
+      try:
+        with open(self.recipe_file, 'r') as r_file:
+          recipe_file_contents = r_file.read()
+          recipe_dict = load(recipe_file_contents, Loader=Loader)
+      except yaml.parser.ParserError as exception:
+        message = (
+            'Syntax error on recipe file {0:s}: {1!s}'.format(
+                self.recipe_file, exception))
+        log.error(message)
+        raise TurbiniaException(message)
+        sys.exit(1)
+      except IOError as exception:
+        raise TurbiniaException(
+            'Failed to read recipe file {0:s}: {1!s}'.format(
+                self.recipe_file, exception))
+        sys.exit(1)
 
+      self.load_recipe_from_dict(recipe_dict)
+
+  def load_recipe_from_dict(self, recipe_dict):
     tasks_with_recipe = []
     for recipe_item, recipe_item_contents in recipe_dict.items():
       if recipe_item in self.task_recipes:
         raise TurbiniaException(
             'Two recipe items with the same name {0:s} have been found.'
             'If you wish to specify several task runs of the same tool,'
-            'please include them in separate recipes.').format(recipe_item)
+            'please include them in separate recipes.'.format(recipe_item))
+        sys.exit(1)
       try:
         if recipe_item_contents['task'] in tasks_with_recipe:
           raise TurbiniaException(
@@ -258,14 +266,26 @@ class TurbiniaRecipe(object):
               'Recipe item {0:s} has not "task" key. All recipe items must have a "task" key indicating the TurbiniaTask'
               ' to which it relates.'.format(recipe_item))
           sys.exit(1)
+        
+      if recipe_item == 'globals':
+        for item in self.DEFAULT_GLOBALS_RECIPE:
+          if item not in recipe_item_contents:
+            recipe_item_contents[item] = self.DEFAULT_GLOBALS_RECIPE[item]
+        filter_patterns_file = recipe_item_contents.get('filter_patterns_file', None)
+        yara_rules_file = recipe_item_contents.get('yara_rules_file', None)
+        if filter_patterns_file:
+          recipe_item_contents['filter_patterns'] = file_to_list(filter_patterns_file)
+        if yara_rules_file:
+          recipe_item_contents['yara_rules'] = file_to_str(yara_rules_file)
 
       self.task_recipes[recipe_item] = recipe_item_contents
+      tasks_with_recipe.append(recipe_item)
 
   def _verify_global_recipe(self):
     """ Verify existence and validity of globals recipe item"""
     try:
       for k in self.task_recipes['globals']:
-        if k not in self.DEFAULT_GLOBAL_RECIPE:
+        if k not in self.DEFAULT_GLOBALS_RECIPE:
           raise TurbiniaException(
               'Unknown key {0:s} found on globals recipe item').format(k)
           sys.exit(1)
