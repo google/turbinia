@@ -266,15 +266,17 @@ class TurbiniaRecipe(object):
               'Recipe item {0:s} has not "task" key. All recipe items must have a "task" key indicating the TurbiniaTask'
               ' to which it relates.'.format(recipe_item))
           sys.exit(1)
-        
+
       if recipe_item == 'globals':
         for item in self.DEFAULT_GLOBALS_RECIPE:
           if item not in recipe_item_contents:
             recipe_item_contents[item] = self.DEFAULT_GLOBALS_RECIPE[item]
-        filter_patterns_file = recipe_item_contents.get('filter_patterns_file', None)
+        filter_patterns_file = recipe_item_contents.get(
+            'filter_patterns_file', None)
         yara_rules_file = recipe_item_contents.get('yara_rules_file', None)
         if filter_patterns_file:
-          recipe_item_contents['filter_patterns'] = file_to_list(filter_patterns_file)
+          recipe_item_contents['filter_patterns'] = file_to_list(
+              filter_patterns_file)
         if yara_rules_file:
           recipe_item_contents['yara_rules'] = file_to_str(yara_rules_file)
 

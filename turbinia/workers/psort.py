@@ -47,8 +47,7 @@ class PsortTask(TurbiniaTask):
     cmd = [base_command]
     for k, v in conf.items():
       cli_args = [
-          'status_view', 'additional_fields', 
-          'output_format', 'profilers'
+          'status_view', 'additional_fields', 'output_format', 'profilers'
       ]
       if (k not in cli_args or not v):
         continue
@@ -81,7 +80,6 @@ class PsortTask(TurbiniaTask):
     psort_file = os.path.join(self.output_dir, '{0:s}.csv'.format(self.id))
     psort_evidence = PlasoCsvFile(source_path=psort_file)
     psort_log = os.path.join(self.output_dir, '{0:s}.log'.format(self.id))
-
 
     cmd = self.build_plaso_command('psort.py', self.task_config)
 

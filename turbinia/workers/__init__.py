@@ -485,7 +485,6 @@ class TurbiniaTask(object):
         return False
     return True
 
-
   def execute(
       self, cmd, result, save_files=None, log_files=None, new_evidence=None,
       close=False, shell=False, success_codes=None):

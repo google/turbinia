@@ -54,6 +54,7 @@ def csv_list(string):
   """
   return string.split(',')
 
+
 def main():
   """Main function for turbiniactl"""
   # TODO(aarontp): Allow for single run mode when
@@ -751,7 +752,8 @@ def main():
               'filter_patterns_file': args.filter_patterns_file
           }
       }
-      request.recipe['task_recipes'] = recipe_obj.load_recipe_from_dict(default_recipe)
+      request.recipe['task_recipes'] = recipe_obj.load_recipe_from_dict(
+          default_recipe)
 
     if args.dump_json:
       print(request.to_json().encode('utf-8'))
@@ -767,7 +769,6 @@ def main():
         client.send_request(request)
       else:
         log.debug('--run_local specified so not sending request to server')
-
 
     if args.wait:
       log.info(
