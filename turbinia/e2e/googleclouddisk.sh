@@ -33,7 +33,7 @@ echo "Executing googlecloudisk e2e test....this takes ~60 minutes!"
 $TURBINIA_CLI -d -r $REQ_ID -L $MAIN_LOG -a -w googleclouddisk -d $DISK -z $ZONE
 
 # When the Turbinia request is finished request the final request statistics.
-$TURBINIA_CLI -d status -D -r $REQ_ID -s > $STATS_LOG 2>&1
+$TURBINIA_CLI -d status -r $REQ_ID -s > $STATS_LOG 2>&1
 
 # Parse out the number of succesfull and failed tasks.
 FAILED=`cat $STATS_LOG | grep Failed stats.log  | cut -d ":" -f 3 | cut -d ',' -f 1 |  tr -d '[:space:]'`
@@ -44,7 +44,7 @@ echo "Failed tasks: $FAILED" | tee -a $MAIN_LOG
 echo "Successful tasks: $SUCCESS"  | tee -a $MAIN_LOG
 
 # Output the details, including GCS worker output for the request.
-$TURBINIA_CLI -d -a status -D -r $REQ_ID -R > $DETAIL_LOG 2>&1
+$TURBINIA_CLI -d -a status -r $REQ_ID -R > $DETAIL_LOG 2>&1
 
 # tgz the log files for debugging purposes
 tar -vzcf $OUT_TGZ $MAIN_LOG $STATS_LOG $DETAIL_LOG
