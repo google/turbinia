@@ -132,7 +132,8 @@ class SourceAnalyzer(object):
   def _ScanVolume(self, scan_context, scan_node, base_path_specs):
     """Scans a volume scan node for volume and file systems.
 
-    Scans recursively and adds a base path spec for each volume identified.
+    Scans recursively and adds a path spec to base_path_specs for each volume
+    identified.
 
     Args:
       scan_context (SourceScannerContext): source scanner context.
@@ -149,7 +150,7 @@ class SourceAnalyzer(object):
     if scan_context.IsLockedScanNode(scan_node.path_spec):
       # TODO: Add encrypted volume support
       self._log.info(
-          'Identified a locked volume: {0!s}'.format(
+          'Identified an unsupported locked volume: {0!s}'.format(
               scan_node.path_spec.CopyToDict()))
       return
 
@@ -194,6 +195,9 @@ class SourceAnalyzer(object):
 
     elif scan_node.type_indicator == dfvfs_definitions.TYPE_INDICATOR_VSHADOW:
       # TODO: Add volume shadow support
+      self._log.info(
+          'Identified a volume shadow: {0!s}'.format(
+              scan_node.path_spec.CopyToDict()))
       volume_identifiers = []
 
     else:

@@ -42,10 +42,13 @@ class PartitionEnumerationTask(TurbiniaTask):
       path_spec = path_spec.parent
       location = getattr(path_spec, 'location', None)
     status_report.append(fmt.heading5('{0!s}:'.format(location)))
+    # APFS volumes will have a volume_index
     volume_index = getattr(path_spec, 'volume_index', None)
     if volume_index:
       status_report.append(
           fmt.bullet('Volume index: {0!s}'.format(volume_index)))
+    # The part_index and start_offset come from the TSK partition
+    # APFS volumes will have a TSK partition as a parent
     if not getattr(path_spec, 'part_index', None):
       path_spec = path_spec.parent
     status_report.append(
