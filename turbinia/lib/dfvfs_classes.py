@@ -163,7 +163,7 @@ class SourceAnalyzer(object):
     elif scan_node.type_indicator == dfvfs_definitions.TYPE_INDICATOR_VSHADOW:
       # TODO: Add volume shadow support
       self._log.info(
-          'Identified a volume shadow: {0!s}'.format(
+          'Identified an unsupported volume shadow: {0!s}'.format(
               scan_node.path_spec.CopyToDict()))
       return
 
@@ -196,7 +196,7 @@ class SourceAnalyzer(object):
     elif scan_node.type_indicator == dfvfs_definitions.TYPE_INDICATOR_VSHADOW:
       # TODO: Add volume shadow support
       self._log.info(
-          'Identified a volume shadow: {0!s}'.format(
+          'Identified an unsupported volume shadow: {0!s}'.format(
               scan_node.path_spec.CopyToDict()))
       volume_identifiers = []
 
