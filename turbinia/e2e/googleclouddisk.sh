@@ -8,7 +8,7 @@ LOGS="logs"
 MAIN_LOG="$LOGS/main.log"
 STATS_LOG="$LOGS/stats.log"
 DETAIL_LOG="$LOGS/reqdetails.log"
-OUT_TGZ="$LOGS/reqresults.tgz"
+OUT_TGZ="e2e-test-logs.tgz"
 DISK="test-disk2"
 
 if [ $# -ne  2 ]
