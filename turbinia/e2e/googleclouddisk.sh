@@ -4,10 +4,11 @@
 
 
 TURBINIA_CLI="turbiniactl"
-MAIN_LOG="main.log"
-STATS_LOG="stats.log"
-DETAIL_LOG="reqdetails.log"
-OUT_TGZ="reqresults.tgz"
+LOGS="logs"
+MAIN_LOG="$LOGS/main.log"
+STATS_LOG="$LOGS/stats.log"
+DETAIL_LOG="$LOGS/reqdetails.log"
+OUT_TGZ="$LOGS/reqresults.tgz"
 DISK="test-disk2"
 
 if [ $# -ne  2 ]
@@ -22,6 +23,8 @@ ZONE="$2"
 
 echo -n "Started at "
 date -Iseconds
+
+mkdir $LOGS
 
 echo "Creating unique request ID...."
 REQ_ID=`uuidgen -rt`
@@ -46,8 +49,16 @@ echo "Successful tasks: $SUCCESS"  | tee -a $MAIN_LOG
 # Output the details, including GCS worker output for the request.
 $TURBINIA_CLI -d -a status -r $REQ_ID -R > $DETAIL_LOG 2>&1
 
+# Retrieve all test output from GCS and store LOGS folder
+cat $DETAIL_LOG|grep "gs://"|tr -d "*\`"|while read line
+do
+  OUTFILE=`echo "$line"|awk -F/ '{print $(NF-1)"_"$NF}'`
+  echo "Copying $line to $OUTFILE"
+  gsutil cp $line $LOGS/$OUTFILE
+done
+
 # tgz the log files for debugging purposes
-tar -vzcf $OUT_TGZ $MAIN_LOG $STATS_LOG $DETAIL_LOG
+tar -vzcf $OUT_TGZ $LOGS/*
 
 echo -n "Ended at "
 date -Iseconds
