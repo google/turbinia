@@ -6,4 +6,4 @@ then
     echo "${TURBINIA_CONF}" | base64 -d > /etc/turbinia/turbinia.conf
 fi
 
-/usr/local/bin/turbiniactl -L /var/log/turbinia/turbinia.log -S -o /var/lib/turbinia psqworker
+/usr/local/bin/turbiniactl -S psqworker
