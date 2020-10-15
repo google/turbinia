@@ -45,8 +45,8 @@ to get a shell with access to your GCP resources.
     [Terraform CLI from here](https://www.terraform.io/downloads.html).
 *   Clone the Forseti Security repository and change to the path containing the
     configs
-    *   `git clone https://github.com/forseti-security/forseti-security/`
-    *   `cd forseti-security/contrib/incident-response/infrastructure`
+    *   `git clone https://github.com/forseti-security/osdfir-infrastructure/`
+    *   `cd osdfir-infrastructure`
 *   Configuration
     *   By default this will create one Turbinia server instance and one worker
         instance. If you want to change the number of workers, edit the
@@ -64,13 +64,12 @@ to get a shell with access to your GCP resources.
         [Terraform documentation](https://www.terraform.io/docs/commands/index.html)
         for more information.
 *   Initialize terraform and apply the configuration
-    *   `terraform init`
-    *   `terraform apply --target=module.turbinia`
-        *   If the `target` parameter is not supplied, Terraform will also
+    *   `./deploy.sh --no-timesketch`
+        *   If the `--no-timesketch` parameter is not supplied, Terraform will also
             create a [Timesketch](http://timesketch.org) instance in the same
             project, and this can be configured to ingest Turbinia timeline
             output and report data. See the
-            [Forseti documentation on this](http://github.com/forseti-security/osdfir-infrastructure)
+            [Documentation on this](https://github.com/forseti-security/osdfir-infrastructure/blob/master/README.md)
             for more details.
         *   When prompted for the project name, enter the project you selected
             during setup.

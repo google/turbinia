@@ -109,7 +109,7 @@ def LoadConfig(config_file=None):
   # pattern on the config class.
   # pylint: disable=global-statement
   global CONFIG
-  if CONFIG:
+  if CONFIG and not config_file:
     log.debug(
         'Returning cached config from {0:s} instead of reloading config'.format(
             CONFIG.configSource))
