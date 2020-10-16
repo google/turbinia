@@ -6,7 +6,7 @@ cache:
 
 install:
   - pip install mock nose coverage yapf
-  - pip install .
+  - pip install --upgrade .
   - pip install .[local]
 
 script:
