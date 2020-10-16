@@ -51,7 +51,8 @@ $TURBINIA_CLI -d -a status -r $REQ_ID -R > $DETAIL_LOG 2>&1
 
 # Retrieve all test output from GCS and store LOGS folder
 echo "Copy all task result files from GCS"
-cat $DETAIL_LOG|grep "gs://"|tr -d "*\`"|while read line
+echo "Note: excluding result from StringAsciiTask due to large result file"
+cat $DETAIL_LOG|grep "gs://"|tr -d "*\`"|grep -v "\.ascii"|while read line
 do
   OUTFILE=`echo "$line"|awk -F/ '{print $(NF-1)"_"$NF}'`
   echo "Copying $line to $OUTFILE"
