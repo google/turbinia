@@ -39,8 +39,8 @@ $TURBINIA_CLI -d -r $REQ_ID -L $MAIN_LOG -a -w googleclouddisk -d $DISK -z $ZONE
 $TURBINIA_CLI -d status -r $REQ_ID -s > $STATS_LOG 2>&1
 
 # Parse out the number of succesfull and failed tasks.
-FAILED=`cat $STATS_LOG | grep Failed stats.log  | cut -d ":" -f 3 | cut -d ',' -f 1 |  tr -d '[:space:]'`
-SUCCESS=`cat $STATS_LOG | grep Success stats.log  | cut -d ":" -f 3 | cut -d ',' -f 1 |  tr -d '[:space:]'`
+FAILED=`cat $STATS_LOG | grep Failed | cut -d ":" -f 3 | cut -d ',' -f 1 |  tr -d '[:space:]'`
+SUCCESS=`cat $STATS_LOG | grep Success | cut -d ":" -f 3 | cut -d ',' -f 1 |  tr -d '[:space:]'`
 
 echo "Results for request ID: $REQ_ID" | tee -a $MAIN_LOG
 echo "Failed tasks: $FAILED" | tee -a $MAIN_LOG
@@ -50,6 +50,7 @@ echo "Successful tasks: $SUCCESS"  | tee -a $MAIN_LOG
 $TURBINIA_CLI -d -a status -r $REQ_ID -R > $DETAIL_LOG 2>&1
 
 # Retrieve all test output from GCS and store LOGS folder
+echo "Copy all task result files from GCS"
 cat $DETAIL_LOG|grep "gs://"|tr -d "*\`"|while read line
 do
   OUTFILE=`echo "$line"|awk -F/ '{print $(NF-1)"_"$NF}'`
@@ -63,7 +64,7 @@ tar -vzcf $OUT_TGZ $LOGS/*
 echo -n "Ended at "
 date -Iseconds
 
-if [ $FAILED -ne "0" ]
+if [ "$FAILED" != "0" ]
 then
   exit 1
 fi
