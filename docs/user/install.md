@@ -69,7 +69,7 @@ to get a shell with access to your GCP resources.
             create a [Timesketch](http://timesketch.org) instance in the same
             project, and this can be configured to ingest Turbinia timeline
             output and report data. See the
-            [Documentation on this](https://github.com/forseti-security/osdfir-infrastructure/blob/master/README.md)
+            [Documentation on this](https://github.com/forseti-security/osdfir-infrastructure)
             for more details.
         *   When prompted for the project name, enter the project you selected
             during setup.
