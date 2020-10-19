@@ -7,7 +7,7 @@ google-cloud-pubsub
 google-cloud-storage
 google-cloud-core
 psq
-six
+six>=1.15.0
 urllib3[secure]
 google-auth
 httplib2==0.17.4
