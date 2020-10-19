@@ -9,7 +9,7 @@ google-cloud-logging
 google-cloud-error-reporting
 google-auth
 psq
-six
+six>=1.15.0
 urllib3[secure]
 docker
 libcloudforensics==20200818
