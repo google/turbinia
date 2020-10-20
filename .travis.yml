@@ -6,8 +6,10 @@ cache:
 
 install:
   - pip install mock nose coverage yapf
+  - pip install tox
   - pip install .
   - pip install .[local]
 
 script:
   - ./run_tests.py
+  - tox --sitepackages ${TOXENV}

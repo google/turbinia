@@ -37,9 +37,9 @@ To update your local repo from the main:
 
 Please follow the Style Guide when making your changes, and also make sure to
 use the project's
-[pylintrc](https://github.com/google/turbinia/blob/master/turbinia/config/pylintrc)
+[pylintrc](https://github.com/google/turbinia/blob/master/.pylintrc)
 and
-[yapf config file](https://github.com/google/turbinia/blob/master/turbinia/config/style.yapf).
+[yapf config file](https://github.com/google/turbinia/blob/master/.style.yapf).
 Once you're ready for review make sure the tests pass:
 
     $ pip install -e .[dev]
