@@ -50,6 +50,7 @@ from turbinia.workers.docker import DockerContainersEnumerationTask
 from turbinia.workers.grep import GrepTask
 from turbinia.workers.hadoop import HadoopAnalysisTask
 from turbinia.workers.hindsight import HindsightTask
+from turbinia.workers.partitions import PartitionEnumerationTask
 from turbinia.workers.plaso import PlasoTask
 from turbinia.workers.psort import PsortTask
 from turbinia.workers.redis import RedisAnalysisTask
@@ -77,6 +78,7 @@ TASK_MAP = {
     'greptask': GrepTask,
     'hadoopanalysistask': HadoopAnalysisTask,
     'hindsighttask': HindsightTask,
+    'partitionenumerationtask': PartitionEnumerationTask,
     'plasotask': PlasoTask,
     'psorttask': PsortTask,
     'redisanalysistask': RedisAnalysisTask,
