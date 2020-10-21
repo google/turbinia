@@ -553,7 +553,8 @@ class CeleryTaskManager(BaseTaskManager):
         log.debug('Task {0:s} status unknown'.format(celery_task.id))
 
     outstanding_task_count = len(self.tasks) - len(completed_tasks)
-    log.info('{0:d} Tasks still outstanding.'.format(outstanding_task_count))
+    if outstanding_task_count > 0:
+      log.info('{0:d} Tasks still outstanding.'.format(outstanding_task_count))
     return completed_tasks
 
   def get_evidence(self):
@@ -646,7 +647,8 @@ class PSQTaskManager(BaseTaskManager):
         completed_tasks.append(task)
 
     outstanding_task_count = len(self.tasks) - len(completed_tasks)
-    log.info('{0:d} Tasks still outstanding.'.format(outstanding_task_count))
+    if outstanding_task_count > 0:
+      log.info('{0:d} Tasks still outstanding.'.format(outstanding_task_count))
     return completed_tasks
 
   def get_evidence(self):
