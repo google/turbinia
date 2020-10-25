@@ -50,6 +50,7 @@ from turbinia.workers.docker import DockerContainersEnumerationTask
 from turbinia.workers.grep import GrepTask
 from turbinia.workers.hadoop import HadoopAnalysisTask
 from turbinia.workers.hindsight import HindsightTask
+from turbinia.workers.partitions import PartitionEnumerationTask
 from turbinia.workers.plaso import PlasoTask
 from turbinia.workers.psort import PsortTask
 from turbinia.workers.redis import RedisAnalysisTask
@@ -77,6 +78,7 @@ TASK_MAP = {
     'greptask': GrepTask,
     'hadoopanalysistask': HadoopAnalysisTask,
     'hindsighttask': HindsightTask,
+    'partitionenumerationtask': PartitionEnumerationTask,
     'plasotask': PlasoTask,
     'psorttask': PsortTask,
     'redisanalysistask': RedisAnalysisTask,
@@ -398,7 +400,7 @@ class BaseTurbiniaClient(object):
 
   def get_task_data(
       self, instance, project, region, days=0, task_id=None, request_id=None,
-      user=None, function_name='gettasks'):
+      user=None, function_name='gettasks', output_json=False):
     """Gets task data from Google Cloud Functions.
 
     Args:
@@ -410,10 +412,11 @@ class BaseTurbiniaClient(object):
       task_id (string): The Id of the task.
       request_id (string): The Id of the request we want tasks for.
       user (string): The user of the request we want tasks for.
-      function_name (string): The GCF function we want to call
+      function_name (string): The GCF function we want to call.
+      output_json (bool): Whether to return JSON output.
 
     Returns:
-      List of Task dict objects.
+      (List|JSON string) of Task dict objects
     """
     cloud_function = gcp_function.GoogleCloudFunction(project)
     func_args = {'instance': instance, 'kind': 'TurbiniaTask'}
@@ -479,8 +482,17 @@ class BaseTurbiniaClient(object):
           'Could not deserialize result [{0!s}] from GCF: [{1!s}]'.format(
               response.get('result'), e))
 
-    # Convert run_time/last_update back into datetime objects
     task_data = results[0]
+    if output_json:
+      try:
+        json_data = json.dumps(task_data)
+      except (TypeError, ValueError) as e:
+        raise TurbiniaException(
+            'Could not re-serialize result [{0!s}] from GCF: [{1!s}]'.format(
+                str(task_data), e))
+      return json_data
+
+    # Convert run_time/last_update back into datetime objects
     for task in task_data:
       if task.get('run_time'):
         task['run_time'] = timedelta(seconds=task['run_time'])
@@ -902,7 +914,7 @@ class BaseTurbiniaClient(object):
   def format_task_status(
       self, instance, project, region, days=0, task_id=None, request_id=None,
       user=None, all_fields=False, full_report=False,
-      priority_filter=Priority.HIGH):
+      priority_filter=Priority.HIGH, output_json=False):
     """Formats the recent history for Turbinia Tasks.
 
     Args:
@@ -920,16 +932,22 @@ class BaseTurbiniaClient(object):
           summary.
       priority_filter (int): Output only a summary for Tasks with a value
           greater than the priority_filter.
+      output_json (bool): Whether to return JSON output.
 
     Returns:
-      String of task status
+      String of task status in JSON or human readable format.
     """
     if user and days == 0:
       days = 1000
     task_results = self.get_task_data(
-        instance, project, region, days, task_id, request_id, user)
+        instance, project, region, days, task_id, request_id, user,
+        output_json=output_json)
     if not task_results:
       return ''
+
+    if output_json:
+      return task_results
+
     # Sort all tasks by the report_priority so that tasks with a higher
     # priority are listed first in the report.
     for result in task_results:
@@ -1063,7 +1081,7 @@ class TurbiniaCeleryClient(BaseTurbiniaClient):
   # pylint: disable=arguments-differ
   def get_task_data(
       self, instance, _, __, days=0, task_id=None, request_id=None,
-      function_name=None):
+      function_name=None, output_json=False):
     """Gets task data from Redis.
 
     We keep the same function signature, but ignore arguments passed for GCP.

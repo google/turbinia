@@ -517,6 +517,28 @@ class RawDisk(Evidence):
       self.state[EvidenceState.ATTACHED] = False
 
 
+class RawDiskPartition(RawDisk):
+  """Evidence object for a partition within Disk based evidence.
+
+  Attributes:
+    path_spec (dfvfs.PathSpec): Partition path spec.
+  """
+
+  REQUIRED_ATTRIBUTES = ['local_path']
+  POSSIBLE_STATES = [
+      EvidenceState.PARENT_MOUNTED, EvidenceState.PARENT_ATTACHED
+  ]
+
+  def __init__(self, path_spec, *args, **kwargs):
+    """Initialization for raw volume evidence object."""
+
+    self.path_spec = path_spec
+    super(RawDiskPartition, self).__init__(*args, **kwargs)
+
+    # This Evidence needs to have a RawDisk as a parent
+    self.context_dependent = True
+
+
 class EncryptedDisk(RawDisk):
   """Encrypted disk file evidence.
 
