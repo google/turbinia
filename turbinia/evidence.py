@@ -529,7 +529,7 @@ class RawDiskPartition(RawDisk):
       EvidenceState.PARENT_MOUNTED, EvidenceState.PARENT_ATTACHED
   ]
 
-  def __init__(self, path_spec, *args, **kwargs):
+  def __init__(self, path_spec=None, *args, **kwargs):
     """Initialization for raw volume evidence object."""
 
     self.path_spec = path_spec

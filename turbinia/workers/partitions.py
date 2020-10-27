@@ -47,7 +47,7 @@ class PartitionEnumerationTask(TurbiniaTask):
     status_report.append(fmt.heading5('{0!s}:'.format(location)))
     # APFS volumes will have a volume_index
     volume_index = getattr(path_spec, 'volume_index', None)
-    if volume_index:
+    if not volume_index is None:
       status_report.append(
           fmt.bullet('Volume index: {0!s}'.format(volume_index)))
     # The part_index and start_offset come from the TSK partition

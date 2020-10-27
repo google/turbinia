@@ -14,11 +14,18 @@
 # limitations under the License.
 """Classes for dfVFS"""
 
+import logging
+
 from dfvfs.helpers import volume_scanner
 
 
 class UnattendedVolumeScannerMediator(volume_scanner.VolumeScannerMediator):
   """Unattended volume scanner mediator."""
+
+  def __init__(self):
+    """Initializes an unattended volume scanner mediator."""
+    super(UnattendedVolumeScannerMediator, self).__init__()
+    self._log = logging.getLogger('turbinia')
 
   def GetAPFSVolumeIdentifiers(self, volume_system, volume_identifiers):
     """Retrieves APFS volume identifiers.
@@ -68,6 +75,9 @@ class UnattendedVolumeScannerMediator(volume_scanner.VolumeScannerMediator):
     Returns:
       list[str]: None (until VSS support is added).
     """
+    self._log.info(
+        'Volume shadows are currently unsupported: {0!s}'.format(
+            volume_identifiers))
     return []
 
   def UnlockEncryptedVolume(
@@ -85,4 +95,7 @@ class UnattendedVolumeScannerMediator(volume_scanner.VolumeScannerMediator):
     Returns:
       bool: True if the volume was unlocked.
     """
+    self._log.info(
+        'Encrypted volumes are currently unsupported: {0!s}'.format(
+            locked_scan_node.path_spec.CopyToDict()))
     return False

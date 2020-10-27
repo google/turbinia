@@ -16,6 +16,9 @@
 
 import unittest
 
+from dfvfs.helpers import source_scanner
+from dfvfs.lib import definitions as dfvfs_definitions
+from dfvfs.path import factory as path_spec_factory
 from dfvfs.volume import volume_system as dfvfs_volume_system
 import mock
 
@@ -78,7 +81,18 @@ class TestUnattendedVolumeScannerMediator(unittest.TestCase):
     """
     mediator = UnattendedVolumeScannerMediator()
 
+    os_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_OS, location='/path/to/image.dd')
+    raw_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_RAW, parent=os_path_spec)
+    tsk_partition_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION, parent=raw_path_spec)
+    path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_BDE, parent=tsk_partition_path_spec)
+
+    scan_node = source_scanner.SourceScanNode(path_spec)
+
     result = mediator.UnlockEncryptedVolume(
-        source_scanner_object=None, scan_context=None, locked_scan_node=None,
-        credentials=None)
+        source_scanner_object=None, scan_context=None,
+        locked_scan_node=scan_node, credentials=None)
     self.assertFalse(result)
