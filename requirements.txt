@@ -8,7 +8,7 @@ google-cloud-core
 google-cloud-datastore
 google-cloud-error-reporting
 google-cloud-logging
-google-cloud-pubsub
+google-cloud-pubsub==1.7.0
 google-cloud-storage
 libcloudforensics==20200818
 psq
