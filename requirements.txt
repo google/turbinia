@@ -3,7 +3,7 @@ google-api-core
 google-auth
 google-cloud-datastore
 google-api-python-client
-google-cloud-pubsub
+google-cloud-pubsub==1.7.0
 google-cloud-storage
 google-cloud-core
 psq
