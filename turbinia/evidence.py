@@ -525,9 +525,7 @@ class RawDiskPartition(RawDisk):
   """
 
   REQUIRED_ATTRIBUTES = ['local_path']
-  POSSIBLE_STATES = [
-      EvidenceState.PARENT_MOUNTED, EvidenceState.PARENT_ATTACHED
-  ]
+  POSSIBLE_STATES = [EvidenceState.MOUNTED, EvidenceState.ATTACHED]
 
   def __init__(self, path_spec=None, *args, **kwargs):
     """Initialization for raw volume evidence object."""
@@ -537,6 +535,18 @@ class RawDiskPartition(RawDisk):
 
     # This Evidence needs to have a RawDisk as a parent
     self.context_dependent = True
+
+  def _preprocess(self, _, required_states):
+    if EvidenceState.ATTACHED in required_states:
+      self.device_path = mount_local.PreprocessLosetup(
+          self.source_path, path_spec=self.path_spec)
+      if self.device_path:
+        self.state[EvidenceState.ATTACHED] = True
+
+  def _postprocess(self):
+    if self.state[EvidenceState.ATTACHED]:
+      mount_local.PostprocessDeleteLosetup(self.device_path[0])
+      self.state[EvidenceState.ATTACHED] = False
 
 
 class EncryptedDisk(RawDisk):

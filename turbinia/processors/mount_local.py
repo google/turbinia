@@ -23,17 +23,22 @@ import subprocess
 import tempfile
 import time
 
+from dfvfs.lib import definitions as dfvfs_definitions
+from dfvfs.lib import errors as dfvfs_errors
+from dfvfs.volume import tsk_volume_system
+
 from turbinia import config
 from turbinia import TurbiniaException
 
 log = logging.getLogger('turbinia')
 
 
-def PreprocessLosetup(source_path):
+def PreprocessLosetup(source_path, path_spec=None):
   """Runs Losetup on a target block device or image file.
 
   Args:
     source_path(str): the source path to run losetup on.
+    path_spec(dfvfs.PathSpec): path spec if running on RawDiskPartition.
 
   Raises:
     TurbiniaException: if source_path doesn't exist or if the losetup command
@@ -48,17 +53,37 @@ def PreprocessLosetup(source_path):
 
   if not os.path.exists(source_path):
     raise TurbiniaException(
-        'Cannot process non-existing source_path {0!s}'.format(source_path))
+        'Cannot mount non-existing source_path {0!s}'.format(source_path))
 
   # TODO(aarontp): Remove hard-coded sudo in commands:
   # https://github.com/google/turbinia/issues/73
-  if not os.path.exists(source_path):
-    raise TurbiniaException(
-        'Cannot mount non-existing source_path {0!s}'.format(source_path))
+  losetup_command = ['sudo', 'losetup', '--show', '--find', '-r']
+  if path_spec:
+    # Evidence is RawDiskPartition
+    type_indicator = path_spec.type_indicator
+    if type_indicator == dfvfs_definitions.TYPE_INDICATOR_NTFS or type_indicator == dfvfs_definitions.TYPE_INDICATOR_TSK:
+      volume_system = tsk_volume_system.TSKVolumeSystem()
+      volume_path_spec = path_spec.parent
+    else:
+      raise TurbiniaException(
+          'Unsupported path spec type: {0!s}'.format(type_indicator))
 
-  losetup_command = [
-      'sudo', 'losetup', '--show', '--find', '-P', '-r', source_path
-  ]
+    try:
+      volume_system.Open(volume_path_spec)
+      location = getattr(volume_path_spec, 'location', None)
+      volume_identifier = location.replace('/', '')
+      volume = volume_system.GetVolumeByIdentifier(volume_identifier)
+
+      volume_offset = volume.extents[0].offset
+      volume_size = volume.extents[0].size
+    except dfvfs_errors.VolumeSystemError as e:
+      raise TurbiniaException('Could not set losetup devices {0!s}'.format(e))
+
+    losetup_command.extend(['-o', str(volume_offset)])
+    losetup_command.extend(['--sizelimit', str(volume_size)])
+  else:
+    losetup_command.append('-P')
+  losetup_command.append(source_path)
   log.info('Running command {0:s}'.format(' '.join(losetup_command)))
   try:
     losetup_device = subprocess.check_output(
