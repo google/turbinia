@@ -14,10 +14,13 @@
 # limitations under the License.
 """Task for enumerating partitions in a disk."""
 
+from dfvfs.helpers import volume_scanner
+from dfvfs.lib import errors as dfvfs_errors
+
 from turbinia import TurbiniaException
 from turbinia.evidence import RawDiskPartition
+from turbinia.lib import dfvfs_classes
 from turbinia.lib import text_formatter as fmt
-from turbinia.lib.dfvfs_classes import SourceAnalyzer
 from turbinia.workers import Priority
 from turbinia.workers import TurbiniaTask
 
@@ -44,7 +47,7 @@ class PartitionEnumerationTask(TurbiniaTask):
     status_report.append(fmt.heading5('{0!s}:'.format(location)))
     # APFS volumes will have a volume_index
     volume_index = getattr(path_spec, 'volume_index', None)
-    if volume_index:
+    if not volume_index is None:
       status_report.append(
           fmt.bullet('Volume index: {0!s}'.format(volume_index)))
     # The part_index and start_offset come from the TSK partition
@@ -75,12 +78,13 @@ class PartitionEnumerationTask(TurbiniaTask):
 
     success = False
 
+    mediator = dfvfs_classes.UnattendedVolumeScannerMediator()
     try:
-      source_analyzer = SourceAnalyzer()
-      path_specs = source_analyzer.ScanSource(evidence.local_path)
+      scanner = volume_scanner.VolumeScanner(mediator=mediator)
+      path_specs = scanner.GetBasePathSpecs(evidence.local_path)
       status_summary = 'Found {0:d} partition(s) in [{1:s}]:'.format(
           len(path_specs), evidence.local_path)
-    except RuntimeError as e:
+    except dfvfs_errors.ScannerError as e:
       status_summary = 'Error scanning for partitions: {0!s}'.format(e)
 
     status_report = [fmt.heading4(status_summary)]

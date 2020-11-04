@@ -14,229 +14,85 @@
 # limitations under the License.
 """Tests for the dfvfs_classes module."""
 
-import os
 import unittest
+
 from dfvfs.helpers import source_scanner
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
-from dfvfs.volume import tsk_volume_system
+from dfvfs.volume import volume_system as dfvfs_volume_system
+import mock
 
-from turbinia.lib.dfvfs_classes import SourceAnalyzer
+from turbinia.lib.dfvfs_classes import UnattendedVolumeScannerMediator
 
 
-class TestSourceAnalyzer(unittest.TestCase):
-  """Test the SourceAnalyzer class."""
+class TestUnattendedVolumeScannerMediator(unittest.TestCase):
+  """Test the UnattendedVolumeScannerMediator class."""
 
-  def setUp(self):
-    file_path = os.path.dirname(os.path.realpath(__file__))
-    self._apfs_source_path = os.path.join(
-        file_path, '..', '..', 'test_data', 'apfs_volume_system.dmg')
-    self._tsk_source_path = os.path.join(
-        file_path, '..', '..', 'test_data', 'tsk_volume_system.raw')
+  @mock.patch('dfvfs.volume.volume_system.VolumeSystem')
+  def testGetAPFSVolumeIdentifiers(self, mock_volumesystem):
+    """Test the GetAPFSVolumeIdentifiers function."""
+    mediator = UnattendedVolumeScannerMediator()
 
-  def _GetScanNode(self, scan_context):
-    """Retrievs the scan node from the scan context.
+    type(mock_volumesystem.return_value).number_of_volumes = 1
 
-    Args:
-      scan_context (dfvfs.ScanContext): Source scan context.
+    volume_system = dfvfs_volume_system.VolumeSystem()
+    volume_identifiers = ['apfs1']
 
-    Returns:
-      Extracted scan node.
+    result = mediator.GetAPFSVolumeIdentifiers(
+        volume_system, volume_identifiers)
+
+    self.assertEqual(result, volume_identifiers)
+
+  @mock.patch('dfvfs.volume.volume_system.VolumeSystem')
+  def testGetPartitionIdentifiers(self, mock_volumesystem):
+    """Test the GetPartitionIdentifiers function."""
+    mediator = UnattendedVolumeScannerMediator()
+
+    type(mock_volumesystem.return_value).number_of_volumes = 2
+
+    volume_system = dfvfs_volume_system.VolumeSystem()
+    volume_identifiers = ['p1', 'p2']
+
+    result = mediator.GetPartitionIdentifiers(volume_system, volume_identifiers)
+
+    self.assertEqual(result, volume_identifiers)
+
+  @mock.patch('dfvfs.volume.volume_system.VolumeSystem')
+  def testGetVSSStoreIdentifiers(self, mock_volumesystem):
+    """Test the GetVSSStoreIdentifiers function.
+
+    VSS support is not yet implemented.
     """
-    scan_node = scan_context.GetRootScanNode()
-    while len(scan_node.sub_nodes) == 1:
-      scan_node = scan_node.sub_nodes[0]
-    return scan_node
+    mediator = UnattendedVolumeScannerMediator()
 
-  def testGetVolumeIdentifiers(self):
-    """Tests the _GetVolumeIdentifiers function."""
-    source_analyzer = SourceAnalyzer()
+    type(mock_volumesystem.return_value).number_of_volumes = 3
 
-    # Test error conditions.
-    with self.assertRaises(RuntimeError):
-      source_analyzer._GetVolumeIdentifiers(
-          None, dfvfs_definitions.TYPE_INDICATOR_APFS_CONTAINER)
+    volume_system = dfvfs_volume_system.VolumeSystem()
+    volume_identifiers = ['vss1', 'vss2', 'vss3']
 
-    scan_node = source_scanner.SourceScanNode(None)
-    with self.assertRaises(RuntimeError):
-      source_analyzer._GetVolumeIdentifiers(
-          scan_node, dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION)
+    result = mediator.GetVSSStoreIdentifiers(volume_system, volume_identifiers)
 
-    with self.assertRaises(RuntimeError):
-      source_analyzer._GetVolumeIdentifiers(scan_node, '')
+    self.assertEqual(result, [])
 
-  def testNormalizedVolumeIdentifiers(self):
-    """Tests the _NormalizedVolumeIdentifiers function."""
-    source_analyzer = SourceAnalyzer()
+  def testUnlockEncryptedVolume(self):
+    """Test the UnlockEncryptedVolume function.
+
+    Encrypted volume support is not yet implemented.
+    """
+    mediator = UnattendedVolumeScannerMediator()
 
     os_path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_OS, location=self._tsk_source_path)
+        dfvfs_definitions.TYPE_INDICATOR_OS, location='/path/to/image.dd')
     raw_path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_RAW, parent=os_path_spec)
     tsk_partition_path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION, parent=raw_path_spec)
+    path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_BDE, parent=tsk_partition_path_spec)
 
-    volume_system = tsk_volume_system.TSKVolumeSystem()
-    volume_system.Open(tsk_partition_path_spec)
+    scan_node = source_scanner.SourceScanNode(path_spec)
 
-    volume_identifiers = source_analyzer._NormalizedVolumeIdentifiers(
-        volume_system, ['p1', 'p2'], prefix='p')
-    self.assertEqual(volume_identifiers, ['p1', 'p2'])
-
-    volume_identifiers = source_analyzer._NormalizedVolumeIdentifiers(
-        volume_system, [1, 2], prefix='p')
-    self.assertEqual(volume_identifiers, ['p1', 'p2'])
-
-    volume_identifiers = source_analyzer._NormalizedVolumeIdentifiers(
-        volume_system, ['1', '2'], prefix='p')
-    self.assertEqual(volume_identifiers, ['p1', 'p2'])
-
-    # Test error conditions.
-    with self.assertRaises(RuntimeError):
-      source_analyzer._NormalizedVolumeIdentifiers(
-          volume_system, ['p3'], prefix='p')
-
-  def testScanFileSystem(self):
-    """Tests the _ScanFileSystem method of SourceAnalyzer."""
-    source_analyzer = SourceAnalyzer()
-
-    # Test error conditions.
-    with self.assertRaises(RuntimeError):
-      source_analyzer._ScanFileSystem(None, [])
-
-    scan_node = source_scanner.SourceScanNode(None)
-    with self.assertRaises(RuntimeError):
-      source_analyzer._ScanFileSystem(scan_node, [])
-
-  def testScanSourceAPFSImage(self):
-    """Tests ScanSource method of SourceAnalyzer on an APFS image."""
-    source_analyzer = SourceAnalyzer()
-
-    path_specs = source_analyzer.ScanSource(self._apfs_source_path)
-    self.assertIsNotNone(path_specs)
-
-    self.assertEqual(len(path_specs), 1)
-
-    path_spec = path_specs[0]
-    self.assertEqual(
-        path_spec.type_indicator, dfvfs_definitions.TYPE_INDICATOR_APFS)
-
-    path_spec = path_spec.parent
-    self.assertEqual(
-        path_spec.type_indicator,
-        dfvfs_definitions.TYPE_INDICATOR_APFS_CONTAINER)
-    self.assertEqual(path_spec.location, '/apfs1')
-
-    path_spec = path_spec.parent
-    self.assertEqual(
-        path_spec.type_indicator,
-        dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION)
-    self.assertEqual(path_spec.start_offset, 20480)
-
-  def testScanSourceTSKImage(self):
-    """Tests ScanSource method of SourceAnalyzer on a partitioned image."""
-    source_analyzer = SourceAnalyzer()
-
-    path_specs = source_analyzer.ScanSource(self._tsk_source_path)
-    self.assertIsNotNone(path_specs)
-
-    self.assertEqual(len(path_specs), 1)
-
-    path_spec = path_specs[0]
-    self.assertEqual(
-        path_spec.type_indicator, dfvfs_definitions.TYPE_INDICATOR_TSK)
-
-    path_spec = path_spec.parent
-    self.assertEqual(
-        path_spec.type_indicator,
-        dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION)
-    self.assertEqual(path_spec.location, '/p2')
-    self.assertEqual(path_spec.start_offset, 180224)
-
-  def testScanVolume(self):
-    """Tests the _ScanVolume function."""
-    source_analyzer = SourceAnalyzer()
-
-    scan_context = source_scanner.SourceScannerContext()
-
-    # Test error conditions.
-    with self.assertRaises(RuntimeError):
-      source_analyzer._ScanVolume(scan_context, None, [])
-
-    scan_node = source_scanner.SourceScanNode(None)
-    with self.assertRaises(RuntimeError):
-      source_analyzer._ScanVolume(scan_context, scan_node, [])
-
-  def testScanVolumeAPFS(self):
-    """Tests the _ScanVolume function on an APFS image."""
-    source_analyzer = SourceAnalyzer()
-
-    scan_context = source_scanner.SourceScannerContext()
-    scan_context.OpenSourcePath(self._apfs_source_path)
-
-    source_analyzer._source_scanner.Scan(scan_context)
-    scan_node = self._GetScanNode(scan_context)
-
-    apfs_container_scan_node = scan_node.sub_nodes[4].sub_nodes[0]
-
-    # Test on volume system root node.
-    base_path_specs = []
-    source_analyzer._ScanVolume(
-        scan_context, apfs_container_scan_node, base_path_specs)
-    self.assertEqual(len(base_path_specs), 1)
-
-    # Test on volume system sub node.
-    base_path_specs = []
-    source_analyzer._ScanVolume(
-        scan_context, apfs_container_scan_node.sub_nodes[0], base_path_specs)
-    self.assertEqual(len(base_path_specs), 1)
-
-  def testScanVolumeSystemRoot(self):
-    """Tests the _ScanVolumeSystemRoot function."""
-    source_analyzer = SourceAnalyzer()
-
-    scan_context = source_scanner.SourceScannerContext()
-
-    # Test error conditions.
-    with self.assertRaises(RuntimeError):
-      source_analyzer._ScanVolumeSystemRoot(scan_context, None, [])
-
-    scan_node = source_scanner.SourceScanNode(None)
-    with self.assertRaises(RuntimeError):
-      source_analyzer._ScanVolumeSystemRoot(scan_context, scan_node, [])
-
-  def testScanVolumeSystemRootAPFS(self):
-    """Tests the _ScanVolumeSystemRoot function on an APFS image."""
-    source_analyzer = SourceAnalyzer()
-
-    scan_context = source_scanner.SourceScannerContext()
-    scan_context.OpenSourcePath(self._apfs_source_path)
-
-    source_analyzer._source_scanner.Scan(scan_context)
-    scan_node = self._GetScanNode(scan_context)
-
-    apfs_container_scan_node = scan_node.sub_nodes[4].sub_nodes[0]
-
-    base_path_specs = []
-    source_analyzer._ScanVolumeSystemRoot(
-        scan_context, apfs_container_scan_node, base_path_specs)
-    self.assertEqual(len(base_path_specs), 1)
-
-    # Test error conditions.
-    with self.assertRaises(RuntimeError):
-      source_analyzer._ScanVolumeSystemRoot(
-          scan_context, apfs_container_scan_node.sub_nodes[0], base_path_specs)
-
-  def testScanVolumeSystemRootPartitionedImage(self):
-    """Tests the _ScanVolumeSystemRoot function on a partitioned image."""
-    source_analyzer = SourceAnalyzer()
-
-    scan_context = source_scanner.SourceScannerContext()
-    scan_context.OpenSourcePath(self._tsk_source_path)
-
-    source_analyzer._source_scanner.Scan(scan_context)
-    scan_node = self._GetScanNode(scan_context)
-
-    # Test error conditions.
-    with self.assertRaises(RuntimeError):
-      source_analyzer._ScanVolumeSystemRoot(scan_context, scan_node, [])
+    result = mediator.UnlockEncryptedVolume(
+        source_scanner_object=None, scan_context=None,
+        locked_scan_node=scan_node, credentials=None)
+    self.assertFalse(result)
