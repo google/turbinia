@@ -51,6 +51,7 @@ PSQ_QUEUE_WAIT_SECONDS = 2
 # Define metrics
 SERVER_TASKS = Gauge('server_tasks', 'Turbinia Server Total Tasks')
 
+
 def get_task_manager():
   """Return task manager object based on config.
 
