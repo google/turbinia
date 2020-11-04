@@ -10,7 +10,7 @@ python3-pip \
 software-properties-common \
 && rm -rf /var/lib/apt/lists/*
 
-RUN pip3 install --upgrade pip
+RUN pip3 install pip --upgrade
 RUN pip3 install urllib3 cryptography --upgrade
 
 ADD . /tmp/
