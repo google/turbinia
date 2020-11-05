@@ -61,9 +61,16 @@ def PreprocessLosetup(source_path, path_spec=None):
   if path_spec:
     # Evidence is RawDiskPartition
     type_indicator = path_spec.type_indicator
-    if type_indicator == dfvfs_definitions.TYPE_INDICATOR_NTFS or type_indicator == dfvfs_definitions.TYPE_INDICATOR_TSK:
-      volume_system = tsk_volume_system.TSKVolumeSystem()
+    if type_indicator == dfvfs_definitions.TYPE_INDICATOR_NTFS:
       volume_path_spec = path_spec.parent
+    elif type_indicator == dfvfs_definitions.TYPE_INDICATOR_TSK:
+      volume_path_spec = path_spec.parent
+    else:
+      volume_path_spec = path_spec
+
+    type_indicator = volume_path_spec.type_indicator
+    if type_indicator == dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION:
+      volume_system = tsk_volume_system.TSKVolumeSystem()
     else:
       raise TurbiniaException(
           'Unsupported path spec type: {0!s}'.format(type_indicator))
