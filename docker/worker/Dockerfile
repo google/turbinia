@@ -13,6 +13,7 @@ python3 \
 python3-pip \
 software-properties-common \
 sudo \
+testdisk \
 && rm -rf /var/lib/apt/lists/*
 
 RUN pip3 install pip --upgrade
@@ -26,7 +27,7 @@ RUN cd /tmp/ && python3 setup.py install
 RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 0x5e80511b10c598b8 \
 && add-apt-repository -y ppa:gift/stable
 
-RUN apt-get -y install python-plaso plaso-tools --option Acquire::ForceIPv4=true --option Acquire::Retries=100 --option Acquire::http::Timeout=60
+RUN apt-get -y install python-plaso plaso-tools bulk-extractor --option Acquire::ForceIPv4=true --option Acquire::Retries=100 --option Acquire::http::Timeout=60
 
 # Install Hindsight
 RUN pip3 install pyhindsight
