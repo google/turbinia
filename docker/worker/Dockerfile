@@ -6,6 +6,8 @@ apt-utils \
 ca-certificates \
 john \
 john-data \
+libleveldb1v5 \
+libleveldb-dev \
 libterm-readline-gnu-perl \
 python3 \
 python3-pip \
