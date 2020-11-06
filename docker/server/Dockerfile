@@ -1,3 +1,8 @@
+# Can also pass this in as something like
+# https://github.com/google/timesketch/archive/master.zip in order to install
+# from different branches or TAGs.
+ARG turbinia_version=turbinia
+
 FROM ubuntu:18.04
 
 RUN apt-get update && apt-get -y install \
@@ -13,9 +18,7 @@ software-properties-common \
 RUN pip3 install pip --upgrade
 RUN pip3 install urllib3 cryptography --upgrade
 
-ADD . /tmp/
-RUN cd /tmp/ && pip3 install -r requirements.txt
-RUN cd /tmp/ && python3 setup.py install
+RUN pip3 install $turbinia_version
 
 RUN useradd -r -s /bin/nologin -G disk turbinia
 
