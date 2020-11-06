@@ -76,6 +76,8 @@ html_sidebars = {
     ]
 }
 
+# Adding retries to linkchecks before declaring a link broken
+linkcheck_retries = 3
 
 # Output file base name for HTML help builder.
 htmlhelp_basename = 'turbiniadoc'

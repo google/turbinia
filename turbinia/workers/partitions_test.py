@@ -35,8 +35,8 @@ class PartitionEnumerationTaskTest(TestTurbiniaTaskBase):
         evidence_class=partitions.RawDiskPartition)
     self.setResults(mock_run=False)
 
-  @mock.patch('turbinia.lib.dfvfs_classes.SourceAnalyzer.ScanSource')
-  def testPartitionEnumerationRun(self, mock_scansource):
+  @mock.patch('dfvfs.helpers.volume_scanner.VolumeScanner.GetBasePathSpecs')
+  def testPartitionEnumerationRun(self, mock_getbasepathspecs):
     """Test PartitionEnumeration task run."""
     os_path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_OS, location='test.dd')
@@ -55,7 +55,7 @@ class PartitionEnumerationTaskTest(TestTurbiniaTaskBase):
     tsk_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_NTFS, parent=tsk_p2_spec, location='/')
 
-    mock_scansource.return_value = [ntfs_spec, tsk_spec]
+    mock_getbasepathspecs.return_value = [ntfs_spec, tsk_spec]
 
     result = self.task.run(self.evidence, self.result)
 

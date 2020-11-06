@@ -1,3 +1,4 @@
+dfvfs
 pip >= 7.0.0
 PyYAML >= 3.10
 cffi >= 1.9.1
