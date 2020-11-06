@@ -1,5 +1,5 @@
 # Can also pass this in as something like
-# https://github.com/google/timesketch/archive/master.zip in order to install
+# https://github.com/google/turbinia/archive/master.zip in order to install
 # from different branches or TAGs.
 ARG turbinia_version=turbinia
 
