@@ -19,8 +19,7 @@ testdisk \
 RUN pip3 install pip --upgrade
 RUN pip3 install urllib3 cryptography --upgrade
 
-RUN cd ../../
-ADD . /tmp/
+ADD ../../ /tmp/
 RUN cd /tmp/ && pip3 install -r requirements.txt
 RUN cd /tmp/ && python3 setup.py install
 
