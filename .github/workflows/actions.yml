@@ -27,8 +27,3 @@ jobs:
         pip install .
         pip install .[local]
         pip install -r dfvfs_requirements.txt
-    - name: Run Tests
-      run: |
-        ./run_tests.py
-        tox --sitepackages ${TOXENV}
-        
