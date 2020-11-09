@@ -13,7 +13,7 @@ jobs:
       with:
         python-version: 3.6
     - name: Use cached dependencies
-    - uses: actions/cache@v2
+      uses: actions/cache@v2
       with:
         path: ~/.cache/pip
         key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
