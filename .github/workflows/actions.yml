@@ -12,6 +12,7 @@ jobs:
       uses: actions/setup-python@v2
       with:
         python-version: 3.6
+    - name: Use cached dependencies
     - uses: actions/cache@v2
       with:
         path: ~/.cache/pip
@@ -26,4 +27,8 @@ jobs:
         pip install .
         pip install .[local]
         pip install -r dfvfs_requirements.txt
+    - name: Run Tests
+      run: |
+        ./run_tests.py
+        tox --sitepackages ${TOXENV}
         
