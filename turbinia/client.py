@@ -1121,7 +1121,7 @@ class TurbiniaServer(object):
   def start(self):
     """Start Turbinia Server."""
     log.info('Starting Prometheus endpoint.')
-    start_http_server(config.PROMETHEUS_PORT, addr=config.PROMETHEUS_ADDR)
+    start_http_server(port=config.PROMETHEUS_PORT, addr=config.PROMETHEUS_ADDR)
     log.info('Running Turbinia Server.')
     self.task_manager.run()
 
@@ -1244,6 +1244,6 @@ class TurbiniaPsqWorker(object):
   def start(self):
     """Start Turbinia PSQ Worker."""
     log.info('Starting Prometheus endpoint.')
-    start_http_server(config.PROMETHEUS_PORT, addr=config.PROMETHEUS_ADDR)
+    start_http_server(port=config.PROMETHEUS_PORT, addr=config.PROMETHEUS_ADDR)
     log.info('Running Turbinia PSQ Worker.')
     self.worker.listen()
