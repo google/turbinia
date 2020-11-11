@@ -67,7 +67,6 @@ from turbinia.workers.photorec import PhotorecTask
 
 MAX_RETRIES = 10
 RETRY_SLEEP = 60
-PROMETHEUS_PORT = 8000
 
 # TODO(aarontp): Remove this map after
 # https://github.com/google/turbinia/issues/278 is fixed.
@@ -1122,7 +1121,7 @@ class TurbiniaServer(object):
   def start(self):
     """Start Turbinia Server."""
     log.info('Starting Prometheus endpoint.')
-    start_http_server(PROMETHEUS_PORT)
+    start_http_server(config.PROMETHEUS_PORT, addr=config.PROMETHEUS_ADDR)
     log.info('Running Turbinia Server.')
     self.task_manager.run()
 
@@ -1245,6 +1244,6 @@ class TurbiniaPsqWorker(object):
   def start(self):
     """Start Turbinia PSQ Worker."""
     log.info('Starting Prometheus endpoint.')
-    start_http_server(PROMETHEUS_PORT)
+    start_http_server(config.PROMETHEUS_PORT, addr=config.PROMETHEUS_ADDR)
     log.info('Running Turbinia PSQ Worker.')
     self.worker.listen()
