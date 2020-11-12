@@ -33,12 +33,15 @@ from turbinia import TurbiniaException
 log = logging.getLogger('turbinia')
 
 
-def PreprocessLosetup(source_path, path_spec=None):
+def PreprocessLosetup(
+    source_path, path_spec=None, partition_offset=None, partition_size=None):
   """Runs Losetup on a target block device or image file.
 
   Args:
     source_path(str): the source path to run losetup on.
     path_spec(dfvfs.PathSpec): path spec if running on RawDiskPartition.
+    partition_offset(int): offset of volume in bytes.
+    partition_size(int): size of volume in bytes.
 
   Raises:
     TurbiniaException: if source_path doesn't exist or if the losetup command
@@ -58,36 +61,10 @@ def PreprocessLosetup(source_path, path_spec=None):
   # TODO(aarontp): Remove hard-coded sudo in commands:
   # https://github.com/google/turbinia/issues/73
   losetup_command = ['sudo', 'losetup', '--show', '--find', '-r']
-  if path_spec:
+  if path_spec and partition_size:
     # Evidence is RawDiskPartition
-    type_indicator = path_spec.type_indicator
-    if type_indicator == dfvfs_definitions.TYPE_INDICATOR_NTFS:
-      volume_path_spec = path_spec.parent
-    elif type_indicator == dfvfs_definitions.TYPE_INDICATOR_TSK:
-      volume_path_spec = path_spec.parent
-    else:
-      volume_path_spec = path_spec
-
-    type_indicator = volume_path_spec.type_indicator
-    if type_indicator == dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION:
-      volume_system = tsk_volume_system.TSKVolumeSystem()
-    else:
-      raise TurbiniaException(
-          'Unsupported path spec type: {0!s}'.format(type_indicator))
-
-    try:
-      volume_system.Open(volume_path_spec)
-      location = getattr(volume_path_spec, 'location', None)
-      volume_identifier = location.replace('/', '')
-      volume = volume_system.GetVolumeByIdentifier(volume_identifier)
-
-      volume_offset = volume.extents[0].offset
-      volume_size = volume.extents[0].size
-    except dfvfs_errors.VolumeSystemError as e:
-      raise TurbiniaException('Could not set losetup devices {0!s}'.format(e))
-
-    losetup_command.extend(['-o', str(volume_offset)])
-    losetup_command.extend(['--sizelimit', str(volume_size)])
+    losetup_command.extend(['-o', str(partition_offset)])
+    losetup_command.extend(['--sizelimit', str(partition_size)])
   else:
     losetup_command.append('-P')
   losetup_command.append(source_path)

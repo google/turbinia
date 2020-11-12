@@ -522,15 +522,21 @@ class RawDiskPartition(RawDisk):
 
   Attributes:
     path_spec (dfvfs.PathSpec): Partition path spec.
+    partition_offset: Offset of the partition in bytes.
+    partition_size: Size of the partition in bytes.
   """
 
   REQUIRED_ATTRIBUTES = ['local_path']
   POSSIBLE_STATES = [EvidenceState.MOUNTED, EvidenceState.ATTACHED]
 
-  def __init__(self, path_spec=None, *args, **kwargs):
+  def __init__(
+      self, path_spec=None, partition_offset=None, partition_size=None, *args,
+      **kwargs):
     """Initialization for raw volume evidence object."""
 
     self.path_spec = path_spec
+    self.partition_offset = partition_offset
+    self.partition_size = partition_size
     super(RawDiskPartition, self).__init__(*args, **kwargs)
 
     # This Evidence needs to have a RawDisk as a parent
@@ -539,7 +545,9 @@ class RawDiskPartition(RawDisk):
   def _preprocess(self, _, required_states):
     if EvidenceState.ATTACHED in required_states:
       self.device_path = mount_local.PreprocessLosetup(
-          self.source_path, path_spec=self.path_spec)
+          self.source_path, path_spec=self.path_spec,
+          partition_offset=self.partition_offset,
+          partition_size=self.partition_size)
       if self.device_path:
         self.state[EvidenceState.ATTACHED] = True
 
