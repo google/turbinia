@@ -23,10 +23,6 @@ import subprocess
 import tempfile
 import time
 
-from dfvfs.lib import definitions as dfvfs_definitions
-from dfvfs.lib import errors as dfvfs_errors
-from dfvfs.volume import tsk_volume_system
-
 from turbinia import config
 from turbinia import TurbiniaException
 
