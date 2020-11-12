@@ -9,6 +9,7 @@ google-cloud-error-reporting
 google-cloud-logging
 google-cloud-pubsub==1.7.0
 google-cloud-storage
+prometheus_client
 libcloudforensics==20200818
 psq
 six>=1.15.0

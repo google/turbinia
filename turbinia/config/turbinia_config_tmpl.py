@@ -230,3 +230,13 @@ EMAIL_PORT = 587
 # Email address and password
 EMAIL_ADDRESS = 'example@address.com'
 EMAIL_PASSWORD = 'Hunter2'
+
+###############################################################################
+#                           Prometheus Config
+#
+# These options are required for customizing the prometheus configuration
+###############################################################################
+
+# Prometheus listen address and port
+PROMETHEUS_ADDR = '0.0.0.0'
+PROMETHEUS_PORT = 8000
