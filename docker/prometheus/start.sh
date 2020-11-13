@@ -11,7 +11,8 @@ fi
     --config.file=/prometheus/prometheus.yml \
     --storage.tsdb.path=/prometheus \
     --web.console.libraries=/prometheus/console_libraries \
-    --web.console.templates=/prometheus/consoles &
+    --web.console.templates=/prometheus/consoles \
+    --web.listen-address=127.0.0.1:9090 &
 
 /go/bin/stackdriver-prometheus-sidecar \
     --stackdriver.project-id=$GOOGLE_CLOUD_PROJECT \
