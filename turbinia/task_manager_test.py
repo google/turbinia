@@ -203,8 +203,10 @@ class TestTaskManager(TestTurbiniaTaskBase):
     self.assertTrue(self.manager.remove_job(job_id))
     self.assertListEqual(self.manager.running_jobs, [self.job2])
 
-  def testFinalizeResult(self):
+  @mock.patch('turbinia.state_manager.get_state_manager')
+  def testFinalizeResult(self, _):
     """Tests process_result method."""
+    self.result.setup(self.task)
     job_id = 'testJobID'
     self.job1.id = job_id
     self.result.job_id = job_id
@@ -217,8 +219,10 @@ class TestTaskManager(TestTurbiniaTaskBase):
     self.assertEqual(test_job.evidence.collection[0], self.evidence)
     self.manager.add_evidence.assert_called_with(self.evidence)
 
-  def testFinalizeResultBadEvidence(self):
+  @mock.patch('turbinia.state_manager.get_state_manager')
+  def testFinalizeResultBadEvidence(self, _):
     """Tests process_result method with bad input evidence."""
+    self.result.setup(self.task)
     job_id = 'testJobID'
     self.job1.id = job_id
     self.result.job_id = job_id
