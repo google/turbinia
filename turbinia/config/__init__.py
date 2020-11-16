@@ -89,6 +89,9 @@ OPTIONAL_VARS = [
     'EMAIL_PORT',
     'EMAIL_ADDRESS',
     'EMAIL_PASSWORD',
+    # Prometheus config
+    'PROMETHEUS_ADDR',
+    'PROMETHEUS_PORT'
 ]
 
 # Environment variable to look for path data in
