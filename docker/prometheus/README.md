@@ -18,10 +18,15 @@ This is only needed if the prometheus container is run outside of GCP. Inside of
 Create a service account with the correct scope (monitoring) and download the credentials to ./gcp/creds.json
 
 ### Run the worker
+Pass the needed environment variables according to your setup.
+* GOOGLE_CLOUD_PROJECT = the GCP project you want your Google Monitoring metrics to be send to.
+* STACKDRIVER_ZONE = the GCP zone that you want your Google Monitoring metrics to be stored.
 ```
 docker run -ti \
 -v $PWD/gcp:/home/turbinia/gcp \
 -e GOOGLE_APPLICATION_CREDENTIALS=/home/turbinia/gcp/creds.json \
 -e PROMETHEUS_CONF=`cat prometheus.yml.b64` \
+-e GOOGLE_CLOUD_PROJECT=my-test-project \
+-e STACKDRIVER_ZONE=us-central1-f \
 prometheus-server:dev
 ```

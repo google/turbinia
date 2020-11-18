@@ -18,5 +18,5 @@ fi
     --stackdriver.project-id=$GOOGLE_CLOUD_PROJECT \
     --prometheus.wal-directory=/prometheus/wal \
     --prometheus.api-address=http://127.0.0.1:9090/ \
-    --stackdriver.generic.location=us-central1-f \
+    --stackdriver.generic.location=$STACKDRIVER_ZONE \
     --stackdriver.generic.namespace=dummy-namespace
