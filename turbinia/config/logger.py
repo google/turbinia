@@ -38,6 +38,10 @@ def setup(need_file_handler=True, need_stream_handler=True):
   # Eliminate double logging from root logger
   logger.propagate = False
 
+  # Add turbinia logs to syslog
+  syslog_handler = logging.handlers.SysLogHandler(address = '/dev/log')
+  syslog_handler.formatter = logging.Formatter('Turbinia: { "loggerName":"%(name)s", "levelNo":"%(levelno)s", "levelName":"%(levelname)s", "message":"%(message)s"}')
+  logger.addHandler(syslog_handler)   
   # We only need a handler if one of that type doesn't exist already
   if logger.handlers:
     for handler in logger.handlers:
