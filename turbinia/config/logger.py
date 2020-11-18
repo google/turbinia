@@ -16,9 +16,9 @@
 
 from __future__ import unicode_literals
 import logging
-import logging.handlers
-import warnings
 
+import warnings
+import logging.handlers
 from turbinia import config
 from turbinia import TurbiniaException
 
