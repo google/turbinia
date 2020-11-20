@@ -1017,7 +1017,7 @@ class BaseTurbiniaClient(object):
     if not request.evidence:
       raise TurbiniaException('TurbiniaRequest does not contain evidence.')
     log.info('Running Task {0:s} locally'.format(task_name))
-    result = task.run_wrapper(request.evidence[0])
+    result = task.run_wrapper(request.evidence[0].serialize())
     return result
 
   def send_request(self, request):
