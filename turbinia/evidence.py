@@ -103,7 +103,7 @@ class EvidenceState(IntEnum):
   DOCKER_MOUNTED = 6
 
 
-class Evidence(object):
+class Evidence:
   """Evidence object for processing.
 
   In most cases, these objects will just contain metadata about the actual

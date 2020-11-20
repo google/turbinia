@@ -68,7 +68,7 @@ def get_state_manager():
     raise TurbiniaException(msg)
 
 
-class BaseStateManager(object):
+class BaseStateManager:
   """Class to manage Turbinia state persistence."""
 
   def get_task_dict(self, task):
