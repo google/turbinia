@@ -85,7 +85,7 @@ workers, you can edit the `turbinia/variables.tf` file mentioned above and
 re-run `terraform apply`
 To use Turbinia you need to use the virtual environment that was setup by
 terraform `source ~/turbinia/bin/activate` and then use `turbiniactl`. For more
-information on how to use Turbinia please visit [the user manual](https://github.com/google/turbinia/blob/master/README.md#usage). 
+information on how to use Turbinia please visit [the user manual](https://github.com/google/turbinia). 
 
 ### Client configuration (optional)
 
