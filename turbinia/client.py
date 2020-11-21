@@ -1120,8 +1120,10 @@ class TurbiniaServer(object):
 
   def start(self):
     """Start Turbinia Server."""
-    log.info('Starting Prometheus endpoint.')
-    start_http_server(port=config.PROMETHEUS_PORT, addr=config.PROMETHEUS_ADDR)
+    if config.PROMETHEUS_PORT and config.PROMETHEUS_ADDR:
+      log.info('Starting Prometheus endpoint.')
+      start_http_server(
+          port=config.PROMETHEUS_PORT, addr=config.PROMETHEUS_ADDR)
     log.info('Running Turbinia Server.')
     self.task_manager.run()
 
