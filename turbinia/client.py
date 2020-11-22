@@ -196,8 +196,10 @@ def check_system_dependencies(dependencies):
     elif not values.get('docker_image'):
       for program in values['programs']:
         cmd = 'type {0:s}'.format(program)
-        proc = subprocess.Popen(cmd, shell=True)
-        proc.communicate()
+        proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
+        output, _ = proc.communicate()
+        log.debug(
+            'Dependency resolved: {0:s}'.format(output.strip().decode('utf8')))
         ret = proc.returncode
         if ret != 0:
           raise TurbiniaException(
