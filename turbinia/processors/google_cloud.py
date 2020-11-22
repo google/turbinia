@@ -90,8 +90,7 @@ def PreprocessAttachDisk(disk_name):
   instance_name = GetLocalInstanceName()
   project = gcp_project.GoogleCloudProject(
       config.TURBINIA_PROJECT, default_zone=config.TURBINIA_ZONE)
-  instance = project.compute.GetInstance(
-      instance_name, zone=config.TURBINIA_ZONE)
+  instance = project.compute.GetInstance(instance_name)
 
   disk = instance.GetDisk(disk_name)
   log.info(
@@ -133,8 +132,7 @@ def PostprocessDetachDisk(disk_name, local_path):
   instance_name = GetLocalInstanceName()
   project = gcp_project.GoogleCloudProject(
       config.TURBINIA_PROJECT, default_zone=config.TURBINIA_ZONE)
-  instance = project.compute.GetInstance(
-      instance_name, zone=config.TURBINIA_ZONE)
+  instance = project.compute.GetInstance(instance_name)
   disk = instance.GetDisk(disk_name)
   log.info(
       'Detaching disk {0:s} from instance {1:s}'.format(

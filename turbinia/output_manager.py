@@ -28,7 +28,7 @@ from turbinia import config
 from turbinia import TurbiniaException
 
 config.LoadConfig()
-if config.GCS_OUTPUT_PATH and config.GCS_OUTPUT_PATH.lower() is not 'none':
+if config.GCS_OUTPUT_PATH and config.GCS_OUTPUT_PATH.lower() != 'none':
   from google.cloud import storage
   from google.cloud import exceptions
 
