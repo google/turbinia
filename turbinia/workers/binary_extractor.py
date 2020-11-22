@@ -22,6 +22,7 @@ import os
 
 from turbinia import TurbiniaException
 from turbinia import config
+from turbinia.evidence import EvidenceState as state
 from turbinia.workers import TurbiniaTask
 from turbinia.evidence import BinaryExtraction
 
@@ -35,7 +36,8 @@ class BinaryExtractorTask(TurbiniaTask):
   """
 
   REQUIRED_STATUS = [
-      state.ATTACHED, state.PARENT_ATTACHED, state.PARENT_MOUNTED]
+      state.ATTACHED, state.PARENT_ATTACHED, state.PARENT_MOUNTED
+  ]
 
   def __init__(self, *args, **kwargs):
     """Initializes BinaryExtractorTask."""
