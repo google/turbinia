@@ -93,9 +93,10 @@ DOCKER_ENABLED = False
 
 # Any Jobs added to this list will be disabled by default at start-up.  See the
 # output of `turbiniactl listjobs` for a complete list of Jobs.  Job names
-# entered here are case insensitive.  Disabled Jobs can still be enabled with
-# the --jobs_allowlist flag on the server, but the client will not be able to
-# allowlist jobs that have been disabled or denylisted on the server.
+# entered here are case insensitive, but must be quoted.  Disabled Jobs can
+# still be enabled with the --jobs_allowlist flag on the server, but the client
+# will not be able to allowlist jobs that have been disabled or denylisted on
+# the server.
 DISABLED_JOBS = ['BinaryExtractorJob', 'BulkExtractorJob', 'PhotorecJob']
 
 # Configure additional job dependency checks below.
