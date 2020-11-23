@@ -235,7 +235,7 @@ def check_directory(directory):
           'Can not add write permissions to {0:s}'.format(directory))
 
 
-class TurbiniaStats(object):
+class TurbiniaStats:
   """Statistics for Turbinia task execution.
 
   Attributes:
@@ -307,7 +307,7 @@ class TurbiniaStats(object):
         self.description, self.count, self.min, self.mean, self.max)
 
 
-class BaseTurbiniaClient(object):
+class BaseTurbiniaClient:
   """Client class for Turbinia.
 
   Attributes:
@@ -1100,7 +1100,7 @@ class TurbiniaCeleryClient(BaseTurbiniaClient):
     return self.redis.get_task_data(instance, days, task_id, request_id)
 
 
-class TurbiniaServer(object):
+class TurbiniaServer:
   """Turbinia Server class.
 
   Attributes:
@@ -1181,7 +1181,7 @@ class TurbiniaCeleryWorker(BaseTurbiniaClient):
     self.worker.start(argv)
 
 
-class TurbiniaPsqWorker(object):
+class TurbiniaPsqWorker:
   """Turbinia PSQ Worker class.
 
   Attributes:

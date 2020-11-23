@@ -19,7 +19,7 @@ from __future__ import unicode_literals
 from turbinia import TurbiniaException
 
 
-class JobsManager(object):
+class JobsManager:
   """The jobs manager."""
 
   _job_classes = {}

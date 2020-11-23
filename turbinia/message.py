@@ -31,7 +31,7 @@ from turbinia import TurbiniaException
 log = logging.getLogger('turbinia')
 
 
-class TurbiniaRequest(object):
+class TurbiniaRequest:
   """An object to request evidence to be processed.
 
   Attributes:
@@ -99,7 +99,7 @@ class TurbiniaRequest(object):
     self.__dict__ = obj
 
 
-class TurbiniaMessageBase(object):
+class TurbiniaMessageBase:
   """Base class to define common functions and interfaces around client/server
     communication.
   """
