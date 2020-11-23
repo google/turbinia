@@ -115,8 +115,12 @@ def PreprocessAttachDisk(disk_name):
                                                   os.stat(path).st_mode))
     time.sleep(1)
 
-  if not IsBlockDevice(path):
+  message = None
+  if not os.path.exists(path):
+    message = 'Device path {0:s} does not exist'.format(path)
+  elif not IsBlockDevice(path):
     message = 'Device path {0:s} is not a block device'.format(path)
+  if message:
     log.error(message)
     raise TurbiniaException(message)
 
