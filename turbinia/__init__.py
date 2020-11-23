@@ -34,7 +34,7 @@ def log_and_report(message, trace):
   # If GCP Error Reporting is enabled.
   config.LoadConfig()
   if config.STACKDRIVER_TRACEBACK:
-    # Defer loading until needed
+    # Only load google_cloud if needed
     from turbinia.lib import google_cloud
     client = google_cloud.setup_stackdriver_traceback(config.TURBINIA_PROJECT)
     client.report_exception()
