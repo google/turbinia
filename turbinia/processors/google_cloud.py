@@ -54,6 +54,10 @@ def GetLocalInstanceName():
 
   Returns:
     The instance name as a string
+
+  Raises:
+    TurbiniaException: If instance name cannot be determined from metadata
+        server.
   """
   # TODO(aarontp): Use cloud API instead of manual requests to metadata service.
   req = urllib.request.Request(
@@ -80,6 +84,9 @@ def PreprocessAttachDisk(disk_name):
        '/dev/disk/by-id/google-disk0',
        ['/dev/disk/by-id/google-disk0-part1', '/dev/disk/by-id/google-disk0-p2']
       )
+
+  Raises:
+    TurbiniaException: If the device is not a block device.
   """
   path = '/dev/disk/by-id/google-{0:s}'.format(disk_name)
   if IsBlockDevice(path):
@@ -107,6 +114,11 @@ def PreprocessAttachDisk(disk_name):
           'Block device {0:s} mode is {1}'.format(path,
                                                   os.stat(path).st_mode))
     time.sleep(1)
+
+  if not IsBlockDevice(path):
+    message = 'Device path {0:s} is not a block device'.format(path)
+    log.error(message)
+    raise TurbiniaException(message)
 
   return (path, glob.glob('{0:s}-part*'.format(path)))
 
