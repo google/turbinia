@@ -6,11 +6,14 @@ apt-utils \
 ca-certificates \
 john \
 john-data \
+libleveldb1v5 \
+libleveldb-dev \
 libterm-readline-gnu-perl \
 python3 \
 python3-pip \
 software-properties-common \
 sudo \
+testdisk \
 && rm -rf /var/lib/apt/lists/*
 
 RUN pip3 install pip --upgrade
@@ -18,13 +21,14 @@ RUN pip3 install urllib3 cryptography --upgrade
 
 ADD . /tmp/
 RUN cd /tmp/ && pip3 install -r requirements.txt
+RUN cd /tmp/ && pip3 install -r dfvfs_requirements.txt
 RUN cd /tmp/ && python3 setup.py install
 
 # Install Plaso
 RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 0x5e80511b10c598b8 \
 && add-apt-repository -y ppa:gift/stable
 
-RUN apt-get -y install python-plaso plaso-tools --option Acquire::ForceIPv4=true --option Acquire::Retries=100 --option Acquire::http::Timeout=60
+RUN apt-get -y install python-plaso plaso-tools bulk-extractor --option Acquire::ForceIPv4=true --option Acquire::Retries=100 --option Acquire::http::Timeout=60
 
 # Install Hindsight
 RUN pip3 install pyhindsight
@@ -42,3 +46,5 @@ COPY docker/worker/start.sh /home/turbinia/start.sh
 RUN chmod +x /home/turbinia/start.sh
 USER turbinia
 CMD ["/home/turbinia/start.sh"]
+# Expose Prometheus endpoint.
+EXPOSE 8000/tcp

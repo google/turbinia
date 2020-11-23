@@ -32,6 +32,7 @@ import subprocess
 import codecs
 
 from google import auth
+from prometheus_client import start_http_server
 from turbinia import config
 from turbinia.config import logger
 from turbinia.config import DATETIME_FORMAT
@@ -195,8 +196,10 @@ def check_system_dependencies(dependencies):
     elif not values.get('docker_image'):
       for program in values['programs']:
         cmd = 'type {0:s}'.format(program)
-        proc = subprocess.Popen(cmd, shell=True)
-        proc.communicate()
+        proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
+        output, _ = proc.communicate()
+        log.debug(
+            'Dependency resolved: {0:s}'.format(output.strip().decode('utf8')))
         ret = proc.returncode
         if ret != 0:
           raise TurbiniaException(
@@ -234,7 +237,7 @@ def check_directory(directory):
           'Can not add write permissions to {0:s}'.format(directory))
 
 
-class TurbiniaStats(object):
+class TurbiniaStats:
   """Statistics for Turbinia task execution.
 
   Attributes:
@@ -306,7 +309,7 @@ class TurbiniaStats(object):
         self.description, self.count, self.min, self.mean, self.max)
 
 
-class BaseTurbiniaClient(object):
+class BaseTurbiniaClient:
   """Client class for Turbinia.
 
   Attributes:
@@ -1016,7 +1019,7 @@ class BaseTurbiniaClient(object):
     if not request.evidence:
       raise TurbiniaException('TurbiniaRequest does not contain evidence.')
     log.info('Running Task {0:s} locally'.format(task_name))
-    result = task.run_wrapper(request.evidence[0])
+    result = task.run_wrapper(request.evidence[0].serialize())
     return result
 
   def send_request(self, request):
@@ -1099,7 +1102,7 @@ class TurbiniaCeleryClient(BaseTurbiniaClient):
     return self.redis.get_task_data(instance, days, task_id, request_id)
 
 
-class TurbiniaServer(object):
+class TurbiniaServer:
   """Turbinia Server class.
 
   Attributes:
@@ -1119,6 +1122,12 @@ class TurbiniaServer(object):
 
   def start(self):
     """Start Turbinia Server."""
+    if config.PROMETHEUS_PORT and config.PROMETHEUS_ADDR:
+      log.info('Starting Prometheus endpoint.')
+      start_http_server(
+          port=config.PROMETHEUS_PORT, addr=config.PROMETHEUS_ADDR)
+    else:
+      log.debug('Prometheus config not specified, not starting Prometheus.')
     log.info('Running Turbinia Server.')
     self.task_manager.run()
 
@@ -1178,7 +1187,7 @@ class TurbiniaCeleryWorker(BaseTurbiniaClient):
     self.worker.start(argv)
 
 
-class TurbiniaPsqWorker(object):
+class TurbiniaPsqWorker:
   """Turbinia PSQ Worker class.
 
   Attributes:
@@ -1240,5 +1249,11 @@ class TurbiniaPsqWorker(object):
 
   def start(self):
     """Start Turbinia PSQ Worker."""
+    if config.PROMETHEUS_PORT and config.PROMETHEUS_ADDR:
+      log.info('Starting Prometheus endpoint.')
+      start_http_server(
+          port=config.PROMETHEUS_PORT, addr=config.PROMETHEUS_ADDR)
+    else:
+      log.debug('Prometheus config not specified, not starting Prometheus.')
     log.info('Running Turbinia PSQ Worker.')
     self.worker.listen()

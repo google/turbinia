@@ -80,14 +80,14 @@ class SSHDAnalysisTask(TurbiniaTask):
         r'^\s*PermitRootLogin\s*(yes|prohibit-password|without-password)',
         re.IGNORECASE | re.MULTILINE)
     password_authentication_re = re.compile(
-        r'^\s*PasswordAuthentication[\s"]*No', re.IGNORECASE | re.MULTILINE)
+        r'^\s*PasswordAuthentication[\s"]*yes', re.IGNORECASE | re.MULTILINE)
     permit_empty_passwords_re = re.compile(
         r'^\s*PermitEmptyPasswords[\s"]*Yes', re.IGNORECASE | re.MULTILINE)
 
     if re.search(permit_root_login_re, config):
       findings.append(fmt.bullet('Root login enabled.'))
 
-    if not re.search(password_authentication_re, config):
+    if re.search(password_authentication_re, config):
       findings.append(fmt.bullet('Password authentication enabled.'))
 
     if re.search(permit_empty_passwords_re, config):

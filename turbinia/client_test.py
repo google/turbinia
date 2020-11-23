@@ -688,7 +688,7 @@ class TestTurbiniaPsqWorker(unittest.TestCase):
 
   @mock.patch('turbinia.client.subprocess.Popen')
   @mock.patch('logging.Logger.warning')
-  def testSystemDependencyCheck(self, mock_logger, peopen_mock):
+  def testSystemDependencyCheck(self, mock_logger, popen_mock):
     """Test system dependency check."""
     dependencies = {
         'plasojob': {
@@ -698,8 +698,9 @@ class TestTurbiniaPsqWorker(unittest.TestCase):
     }
     # Dependency not found.
     proc_mock = mock.MagicMock()
+    proc_mock.communicate.return_value = (b'no', b'thing')
     proc_mock.returncode = 1
-    peopen_mock.return_value = proc_mock
+    popen_mock.return_value = proc_mock
     self.assertRaises(
         TurbiniaException, check_system_dependencies, dependencies)
 

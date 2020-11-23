@@ -28,14 +28,14 @@ from turbinia import config
 from turbinia import TurbiniaException
 
 config.LoadConfig()
-if config.GCS_OUTPUT_PATH and config.GCS_OUTPUT_PATH.lower() is not 'none':
+if config.GCS_OUTPUT_PATH and config.GCS_OUTPUT_PATH.lower() != 'none':
   from google.cloud import storage
   from google.cloud import exceptions
 
 log = logging.getLogger('turbinia')
 
 
-class OutputManager(object):
+class OutputManager:
   """Manages output data.
 
   Manages the configured output writers.  Also saves and retrieves evidence data
@@ -221,7 +221,7 @@ class OutputManager(object):
     self.is_setup = True
 
 
-class OutputWriter(object):
+class OutputWriter:
   """Base class.
 
   By default this will write the files the Evidence objects point to along with

@@ -15,6 +15,7 @@ RUN pip3 install urllib3 cryptography --upgrade
 
 ADD . /tmp/
 RUN cd /tmp/ && pip3 install -r requirements.txt
+RUN cd /tmp/ && pip3 install -r dfvfs_requirements.txt
 RUN cd /tmp/ && python3 setup.py install
 
 RUN useradd -r -s /bin/nologin -G disk turbinia
@@ -30,3 +31,5 @@ COPY docker/server/start.sh /home/turbinia/start.sh
 RUN chmod +x /home/turbinia/start.sh
 USER turbinia
 CMD ["/home/turbinia/start.sh"]
+# Expose Prometheus endpoint.
+EXPOSE 8000/tcp

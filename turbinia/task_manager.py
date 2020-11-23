@@ -19,6 +19,8 @@ from __future__ import unicode_literals, absolute_import
 import logging
 import time
 
+from prometheus_client import Gauge
+
 import turbinia
 from turbinia import workers
 from turbinia import evidence
@@ -45,6 +47,9 @@ log = logging.getLogger('turbinia')
 
 PSQ_TASK_TIMEOUT_SECONDS = 604800
 PSQ_QUEUE_WAIT_SECONDS = 2
+
+# Define metrics
+SERVER_TASKS = Gauge('server_tasks', 'Turbinia Server Total Tasks')
 
 
 def get_task_manager():
@@ -83,7 +88,7 @@ def task_runner(obj, *args, **kwargs):
   return obj.run_wrapper(*args, **kwargs)
 
 
-class BaseTaskManager(object):
+class BaseTaskManager:
   """Class to manage Turbinia Tasks.
 
   Handles incoming new Evidence messages, adds new Tasks to the queue and
@@ -205,6 +210,7 @@ class BaseTaskManager(object):
         job_count += 1
         for task in job_instance.create_tasks([evidence_]):
           self.add_task(task, job_instance, evidence_)
+          SERVER_TASKS.inc()
 
     if not job_count:
       log.warning(

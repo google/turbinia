@@ -67,7 +67,6 @@ class TestTurbiniaTaskBase(unittest.TestCase):
     self.evidence.preprocess = mock.MagicMock()
     # Set up TurbiniaTaskResult
     self.result = TurbiniaTaskResult(base_output_dir=self.base_output_dir)
-    self.result.setup(self.task)
 
     self.result.output_dir = self.base_output_dir
 
@@ -141,7 +140,8 @@ class TestTurbiniaTask(TestTurbiniaTaskBase):
     self.assertEqual(new_result.status, 'TestStatus')
     self.result.close.assert_called()
 
-  def testTurbiniaTaskRunWrapperBadResult(self):
+  @mock.patch('turbinia.state_manager.get_state_manager')
+  def testTurbiniaTaskRunWrapperBadResult(self, _):
     """Test that the run wrapper recovers from run returning bad result."""
     bad_result = 'Not a TurbiniaTaskResult'
     checked_result = TurbiniaTaskResult(base_output_dir=self.base_output_dir)
@@ -175,7 +175,8 @@ class TestTurbiniaTask(TestTurbiniaTaskBase):
     self.assertEqual(type(new_result), TurbiniaTaskResult)
     self.assertIn('failed', new_result.status)
 
-  def testTurbiniaTaskRunWrapperSetupFail(self):
+  @mock.patch('turbinia.state_manager.get_state_manager')
+  def testTurbiniaTaskRunWrapperSetupFail(self, _):
     """Test that the run wrapper recovers from setup failing."""
     self.task.result = None
     canary_status = 'exception_message'
