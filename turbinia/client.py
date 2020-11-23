@@ -196,8 +196,10 @@ def check_system_dependencies(dependencies):
     elif not values.get('docker_image'):
       for program in values['programs']:
         cmd = 'type {0:s}'.format(program)
-        proc = subprocess.Popen(cmd, shell=True)
-        proc.communicate()
+        proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
+        output, _ = proc.communicate()
+        log.debug(
+            'Dependency resolved: {0:s}'.format(output.strip().decode('utf8')))
         ret = proc.returncode
         if ret != 0:
           raise TurbiniaException(
@@ -1120,8 +1122,12 @@ class TurbiniaServer:
 
   def start(self):
     """Start Turbinia Server."""
-    log.info('Starting Prometheus endpoint.')
-    start_http_server(port=config.PROMETHEUS_PORT, addr=config.PROMETHEUS_ADDR)
+    if config.PROMETHEUS_PORT and config.PROMETHEUS_ADDR:
+      log.info('Starting Prometheus endpoint.')
+      start_http_server(
+          port=config.PROMETHEUS_PORT, addr=config.PROMETHEUS_ADDR)
+    else:
+      log.debug('Prometheus config not specified, not starting Prometheus.')
     log.info('Running Turbinia Server.')
     self.task_manager.run()
 
@@ -1243,7 +1249,11 @@ class TurbiniaPsqWorker:
 
   def start(self):
     """Start Turbinia PSQ Worker."""
-    log.info('Starting Prometheus endpoint.')
-    start_http_server(port=config.PROMETHEUS_PORT, addr=config.PROMETHEUS_ADDR)
+    if config.PROMETHEUS_PORT and config.PROMETHEUS_ADDR:
+      log.info('Starting Prometheus endpoint.')
+      start_http_server(
+          port=config.PROMETHEUS_PORT, addr=config.PROMETHEUS_ADDR)
+    else:
+      log.debug('Prometheus config not specified, not starting Prometheus.')
     log.info('Running Turbinia PSQ Worker.')
     self.worker.listen()
