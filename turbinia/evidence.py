@@ -314,6 +314,7 @@ class Evidence(object):
           possible states of the Evidence or if the parent evidence object does
           not exist when it is required by the Evidence type..
     """
+    self.local_path = self.source_path
     if not required_states:
       required_states = []
 
@@ -324,6 +325,7 @@ class Evidence(object):
                 self.type))
       self.parent_evidence.preprocess(tmp_dir, required_states)
     try:
+      log.debug('Starting pre-processor for evidence {0:s}'.format(self.name))
       self._preprocess(tmp_dir, required_states)
     except TurbiniaException as exception:
       log.error(
@@ -341,6 +343,8 @@ class Evidence(object):
     then recurse down the chain of parent Evidence and run those post-processors
     in order.
     """
+    log.info('Starting post-processor for evidence {0:s}'.format(self.name))
+    log.debug('Evidence state: {0:s}'.format(self.format_state()))
     self._postprocess()
     if self.parent_evidence:
       self.parent_evidence.postprocess()
@@ -502,10 +506,11 @@ class RawDisk(Evidence):
       self.device_path, partition_paths = mount_local.PreprocessLosetup(
           self.source_path)
       self.state[EvidenceState.ATTACHED] = True
+      self.local_path = self.device_path
     if EvidenceState.MOUNTED in required_states:
       self.mount_path = mount_local.PreprocessMountDisk(
           partition_paths, self.mount_partition)
-      self.local_path = self.device_path
+      self.local_path = self.mount_path
       self.state[EvidenceState.MOUNTED] = True
 
   def _postprocess(self):
@@ -630,12 +635,13 @@ class GoogleCloudDisk(RawDisk):
     if EvidenceState.ATTACHED in required_states:
       self.device_path, partition_paths = google_cloud.PreprocessAttachDisk(
           self.disk_name)
+      self.local_path = self.device_path
       self.state[EvidenceState.ATTACHED] = True
 
     if EvidenceState.MOUNTED in required_states:
       self.mount_path = mount_local.PreprocessMountDisk(
           partition_paths, self.mount_partition)
-      self.local_path = self.device_path
+      self.local_path = self.mount_path
       self.state[EvidenceState.MOUNTED] = True
 
   def _postprocess(self):
@@ -687,11 +693,12 @@ class GoogleCloudDiskRawEmbedded(GoogleCloudDisk):
       self.device_path, partition_paths = mount_local.PreprocessLosetup(
           rawdisk_path)
       self.state[EvidenceState.PARENT_ATTACHED] = True
+      self.local_path = self.device_path
 
     if EvidenceState.PARENT_MOUNTED in required_states:
       self.mount_path = mount_local.PreprocessMountDisk(
           partition_paths, self.mount_partition)
-      self.local_path = self.device_path
+      self.local_path = self.mount_path
       self.state[EvidenceState.PARENT_MOUNTED] = True
 
   def _postprocess(self):
