@@ -236,6 +236,8 @@ EMAIL_PASSWORD = 'Hunter2'
 #
 # These options are required for customizing the prometheus configuration
 ###############################################################################
+# This will enable the Prometheus service for the workers and server.
+PROMETHEUS_ENABLED = True
 
 # Prometheus listen address and port
 PROMETHEUS_ADDR = '0.0.0.0'
