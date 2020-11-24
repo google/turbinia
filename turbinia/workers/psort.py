@@ -47,7 +47,7 @@ class PsortTask(TurbiniaTask):
       cmd.append('-d')
 
     cmd.extend(['--additional_fields', 'yara_match'])
-    cmd.extend(['-w', psort_file, evidence.source_path])
+    cmd.extend(['-w', psort_file, evidence.local_path])
 
     result.log('Running psort as [{0:s}]'.format(' '.join(cmd)))
 
