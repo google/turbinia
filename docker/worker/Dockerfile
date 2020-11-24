@@ -35,7 +35,7 @@ RUN apt-get -y install python-plaso plaso-tools bulk-extractor --option Acquire:
 RUN pip3 install pyhindsight
 
 RUN useradd -r -s /bin/nologin -G disk turbinia
-RUN echo "turbinia ALL = (root) NOPASSWD: /bin/mount,/bin/umount,/sbin/losetup" > /etc/sudoers.d/turbinia
+RUN echo "turbinia ALL = (root) NOPASSWD: ALL" > /etc/sudoers.d/turbinia
 
 RUN mkdir /etc/turbinia && mkdir -p /mnt/turbinia/ && mkdir -p /var/lib/turbinia/ \
 && mkdir -p /etc/turbinia/ && chown -R turbinia:turbinia /etc/turbinia/ \
