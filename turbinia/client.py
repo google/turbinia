@@ -775,6 +775,7 @@ class BaseTurbiniaClient:
     # Create dictionary of worker_node: {{task_id, task_update,
     # task_name, task_status}}
     workers_dict = {}
+    unassigned_dict = {}
     scheduled_counter = 0
     for result in task_results:
       worker_node = result.get('worker_name')
@@ -782,6 +783,12 @@ class BaseTurbiniaClient:
       status = status if status else 'No task status'
       if worker_node and worker_node not in workers_dict:
         workers_dict[worker_node] = []
+      elif not worker_node:
+        # Track scheduled/unassigned Tasks for reporting.
+        scheduled_counter += 1
+        worker_node = 'Unassigned'
+        if worker_node not in unassigned_dict:
+          unassigned_dict[worker_node] = []
       if worker_node:
         task_dict = {}
         task_dict['task_id'] = result.get('id')
@@ -797,10 +804,11 @@ class BaseTurbiniaClient:
         else:
           run_time = result.get('run_time')
           task_dict['run_time'] = run_time if run_time else 'No run time.'
-        workers_dict[worker_node].append(task_dict)
-      else:
-        # Track scheduled/unassigned Tasks for reporting.
-        scheduled_counter += 1
+        # Update to correct dictionary
+        if worker_node == 'Unassigned':
+          unassigned_dict[worker_node].append(task_dict)
+        else:
+          workers_dict[worker_node].append(task_dict)
 
     # Generate report header
     report = []
@@ -833,11 +841,23 @@ class BaseTurbiniaClient:
       report.append('')
       report.append(fmt.heading3('Queued Tasks'))
       report.extend(queued_status if queued_status else not_found)
-      # Add Historical Tasks
+      # Add Finished Tasks
       if all_fields:
         report.append('')
         report.append(fmt.heading3('Finished Tasks'))
         report.extend(other_status if other_status else not_found)
+
+    # Add unassigned worker tasks
+    unassigned_status = []
+    for tasks in unassigned_dict.values():
+      for task in tasks:
+        unassigned_status.extend(self.format_worker_task(task))
+    # Now add to main report
+    if all_fields:
+      report.append('')
+      report.append(fmt.heading2('Unassigned Worker Tasks'))
+      report.extend(unassigned_status if unassigned_status else not_found)
+
     return '\n'.join(report)
 
   def format_request_status(
