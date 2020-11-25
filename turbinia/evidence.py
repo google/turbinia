@@ -549,16 +549,16 @@ class RawDiskPartition(RawDisk):
 
   def _preprocess(self, _, required_states):
     if EvidenceState.ATTACHED in required_states:
-      self.device_path = mount_local.PreprocessLosetup(
-          self.source_path, path_spec=self.path_spec,
-          partition_offset=self.partition_offset,
+      self.device_path, _ = mount_local.PreprocessLosetup(
+          self.source_path, partition_offset=self.partition_offset,
           partition_size=self.partition_size)
       if self.device_path:
         self.state[EvidenceState.ATTACHED] = True
+        self.local_path = self.device_path
 
   def _postprocess(self):
     if self.state[EvidenceState.ATTACHED]:
-      mount_local.PostprocessDeleteLosetup(self.device_path[0])
+      mount_local.PostprocessDeleteLosetup(self.device_path)
       self.state[EvidenceState.ATTACHED] = False
 
 

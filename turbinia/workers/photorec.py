@@ -54,7 +54,7 @@ class PhotorecTask(TurbiniaTask):
         sudo = ['sudo']
         sudo.extend(cmd)
         cmd = sudo
-        cmd.append(evidence.device_path[0])
+        cmd.append(evidence.device_path)
       else:
         cmd.append(evidence.local_path)
       cmd.append('options,paranoid,keep_corrupted_file,search')
@@ -65,7 +65,11 @@ class PhotorecTask(TurbiniaTask):
       self.execute(
           cmd, result, log_files=[photorec_log], new_evidence=[output_evidence],
           shell=True)
-      output_evidence.compress()
+      if os.path.exists(output_evidence.local_path):
+        output_evidence.compress()
+        output_evidence.source_path = output_evidence.local_path
+      else:
+        output_evidence.local_path = None
       result.close(
           self, success=True, status='Photorec task completed successfully.')
     except TurbiniaException as exception:

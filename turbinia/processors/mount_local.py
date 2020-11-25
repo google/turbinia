@@ -29,13 +29,11 @@ from turbinia import TurbiniaException
 log = logging.getLogger('turbinia')
 
 
-def PreprocessLosetup(
-    source_path, path_spec=None, partition_offset=None, partition_size=None):
+def PreprocessLosetup(source_path, partition_offset=None, partition_size=None):
   """Runs Losetup on a target block device or image file.
 
   Args:
     source_path(str): the source path to run losetup on.
-    path_spec(dfvfs.PathSpec): path spec if running on RawDiskPartition.
     partition_offset(int): offset of volume in bytes.
     partition_size(int): size of volume in bytes.
 
@@ -57,7 +55,7 @@ def PreprocessLosetup(
   # TODO(aarontp): Remove hard-coded sudo in commands:
   # https://github.com/google/turbinia/issues/73
   losetup_command = ['sudo', 'losetup', '--show', '--find', '-r']
-  if path_spec and partition_size:
+  if partition_size:
     # Evidence is RawDiskPartition
     losetup_command.extend(['-o', str(partition_offset)])
     losetup_command.extend(['--sizelimit', str(partition_size)])
