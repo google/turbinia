@@ -444,7 +444,7 @@ class CompressedDirectory(Evidence):
     """ Compresses a file or directory."""
     # Compress a given directory and return the compressed path.
     self.compressed_directory = archive.CompressDirectory(self.local_path)
-    self.local_path = self.compressed_directory
+    self.source_path = self.compressed_directory
     self.state[EvidenceState.DECOMPRESSED] = False
 
 

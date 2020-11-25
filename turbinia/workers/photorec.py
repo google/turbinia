@@ -47,6 +47,7 @@ class PhotorecTask(TurbiniaTask):
     # Add the output path to the evidence so we can automatically save it
     # later.
     output_evidence.local_path = ''.join((output_file_path, '.1'))
+    output_evidence.uncompressed_directory = output_evidence.local_path
     try:
       # Generate the command we want to run.
       cmd = ['photorec', '/log', '/d', output_file_path, '/cmd']
@@ -67,9 +68,6 @@ class PhotorecTask(TurbiniaTask):
           shell=True)
       if os.path.exists(output_evidence.local_path):
         output_evidence.compress()
-        output_evidence.source_path = output_evidence.local_path
-      else:
-        output_evidence.local_path = None
       result.close(
           self, success=True, status='Photorec task completed successfully.')
     except TurbiniaException as exception:
