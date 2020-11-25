@@ -384,7 +384,9 @@ def main():
   parser_status.add_argument(
       '-w', '--workers', required=False, action='store_true',
       help='Show Worker status information from a specified timeframe. The '
-      'default timeframe is 7 days. Please use the -d flag to extend this.')
+      'default timeframe is 7 days. Please use the -d flag to extend this. '
+      'Additionaly, you can use the -a or --all_fields flag to retrieve the '
+      'full output containing finished and unassigned worker tasks.')
 
   # Server
   subparsers.add_parser('server', help='Run Turbinia Server')

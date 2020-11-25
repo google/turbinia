@@ -182,6 +182,9 @@ LONG_REPORT_WORKERS = textwrap.dedent(
         * Status: Third Task Failed...
         * Run Time: 0:03:00
 
+
+    ## Unassigned Worker Tasks
+    * No Tasks found.
 """)
 
 STATISTICS_REPORT = textwrap.dedent(
