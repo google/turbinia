@@ -441,10 +441,14 @@ class CompressedDirectory(Evidence):
       self.state[EvidenceState.DECOMPRESSED] = True
 
   def compress(self):
-    """ Compresses a file or directory."""
+    """ Compresses a file or directory.
+
+    Creates a tar.gz from the uncompressed_directory attribute.
+    """
     # Compress a given directory and return the compressed path.
-    self.compressed_directory = archive.CompressDirectory(self.local_path)
-    self.local_path = self.compressed_directory
+    self.compressed_directory = archive.CompressDirectory(
+        self.uncompressed_directory)
+    self.source_path = self.compressed_directory
     self.state[EvidenceState.DECOMPRESSED] = False
 
 
@@ -527,21 +531,39 @@ class RawDiskPartition(RawDisk):
 
   Attributes:
     path_spec (dfvfs.PathSpec): Partition path spec.
+    partition_offset: Offset of the partition in bytes.
+    partition_size: Size of the partition in bytes.
   """
 
   REQUIRED_ATTRIBUTES = ['local_path']
-  POSSIBLE_STATES = [
-      EvidenceState.PARENT_MOUNTED, EvidenceState.PARENT_ATTACHED
-  ]
+  POSSIBLE_STATES = [EvidenceState.MOUNTED, EvidenceState.ATTACHED]
 
-  def __init__(self, path_spec=None, *args, **kwargs):
+  def __init__(
+      self, path_spec=None, partition_offset=None, partition_size=None, *args,
+      **kwargs):
     """Initialization for raw volume evidence object."""
 
     self.path_spec = path_spec
+    self.partition_offset = partition_offset
+    self.partition_size = partition_size
     super(RawDiskPartition, self).__init__(*args, **kwargs)
 
     # This Evidence needs to have a RawDisk as a parent
     self.context_dependent = True
+
+  def _preprocess(self, _, required_states):
+    if EvidenceState.ATTACHED in required_states:
+      self.device_path, _ = mount_local.PreprocessLosetup(
+          self.source_path, partition_offset=self.partition_offset,
+          partition_size=self.partition_size)
+      if self.device_path:
+        self.state[EvidenceState.ATTACHED] = True
+        self.local_path = self.device_path
+
+  def _postprocess(self):
+    if self.state[EvidenceState.ATTACHED]:
+      mount_local.PostprocessDeleteLosetup(self.device_path)
+      self.state[EvidenceState.ATTACHED] = False
 
 
 class EncryptedDisk(RawDisk):
