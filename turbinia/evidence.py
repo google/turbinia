@@ -441,9 +441,13 @@ class CompressedDirectory(Evidence):
       self.state[EvidenceState.DECOMPRESSED] = True
 
   def compress(self):
-    """ Compresses a file or directory."""
+    """ Compresses a file or directory.
+
+    Creates a tar.gz from the uncompressed_directory attribute.
+    """
     # Compress a given directory and return the compressed path.
-    self.compressed_directory = archive.CompressDirectory(self.local_path)
+    self.compressed_directory = archive.CompressDirectory(
+        self.uncompressed_directory)
     self.source_path = self.compressed_directory
     self.state[EvidenceState.DECOMPRESSED] = False
 

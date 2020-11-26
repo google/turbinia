@@ -86,6 +86,7 @@ class BinaryExtractorTask(TurbiniaTask):
     binary_extraction_evidence = BinaryExtraction()
 
     binary_extraction_evidence.local_path = self.output_dir
+    binary_extraction_evidence.uncompressed_directory = self.output_dir
     image_export_log = os.path.join(self.output_dir, 'binary_extraction.log')
     self.binary_extraction_dir = os.path.join(
         self.output_dir, 'extracted_binaries')
