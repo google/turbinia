@@ -66,10 +66,13 @@ class PhotorecTask(TurbiniaTask):
       self.execute(
           cmd, result, log_files=[photorec_log], new_evidence=[output_evidence],
           shell=True)
+      status = ''
       if os.path.exists(output_evidence.local_path):
         output_evidence.compress()
-      result.close(
-          self, success=True, status='Photorec task completed successfully.')
+        status = 'Photorec task completed successfully.'
+      else:
+        status = 'Photorec task did not produce any output.'
+      result.close(self, success=True, status=status)
     except TurbiniaException as exception:
       result.close(self, success=False, status=str(exception))
 

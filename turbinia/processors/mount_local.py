@@ -50,7 +50,8 @@ def PreprocessLosetup(source_path, partition_offset=None, partition_size=None):
 
   if not os.path.exists(source_path):
     raise TurbiniaException(
-        'Cannot mount non-existing source_path {0!s}'.format(source_path))
+        ('Cannot create loopback device for non-existing source_path '
+         '{0!s}').format(source_path))
 
   # TODO(aarontp): Remove hard-coded sudo in commands:
   # https://github.com/google/turbinia/issues/73
