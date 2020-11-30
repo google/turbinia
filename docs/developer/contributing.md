@@ -43,7 +43,15 @@ and
 Once you're ready for review make sure the tests pass:
 
     $ pip install -e .[dev]
+    $ pip install -r dfvfs_requirements.txt
     $ python ./run_tests.py
+
+
+----
+>  **_NOTE:_** If you are developing in a hybrid/local setup, you need to 
+set the `PROMETHEUS_PORT` and `PROMETHEUS_ADDR` to `None` in your config file
+in order to run Turbinia. 
+----
 
 Commit your changes to your personal fork and then use the GitHub Web UI to
 create and send the pull request. We'll review and merge the change.
