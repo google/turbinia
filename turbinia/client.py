@@ -196,8 +196,10 @@ def check_system_dependencies(dependencies):
     elif not values.get('docker_image'):
       for program in values['programs']:
         cmd = 'type {0:s}'.format(program)
-        proc = subprocess.Popen(cmd, shell=True)
-        proc.communicate()
+        proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
+        output, _ = proc.communicate()
+        log.debug(
+            'Dependency resolved: {0:s}'.format(output.strip().decode('utf8')))
         ret = proc.returncode
         if ret != 0:
           raise TurbiniaException(
@@ -235,7 +237,7 @@ def check_directory(directory):
           'Can not add write permissions to {0:s}'.format(directory))
 
 
-class TurbiniaStats(object):
+class TurbiniaStats:
   """Statistics for Turbinia task execution.
 
   Attributes:
@@ -307,7 +309,7 @@ class TurbiniaStats(object):
         self.description, self.count, self.min, self.mean, self.max)
 
 
-class BaseTurbiniaClient(object):
+class BaseTurbiniaClient:
   """Client class for Turbinia.
 
   Attributes:
@@ -773,6 +775,7 @@ class BaseTurbiniaClient(object):
     # Create dictionary of worker_node: {{task_id, task_update,
     # task_name, task_status}}
     workers_dict = {}
+    unassigned_dict = {}
     scheduled_counter = 0
     for result in task_results:
       worker_node = result.get('worker_name')
@@ -780,6 +783,12 @@ class BaseTurbiniaClient(object):
       status = status if status else 'No task status'
       if worker_node and worker_node not in workers_dict:
         workers_dict[worker_node] = []
+      elif not worker_node:
+        # Track scheduled/unassigned Tasks for reporting.
+        scheduled_counter += 1
+        worker_node = 'Unassigned'
+        if worker_node not in unassigned_dict:
+          unassigned_dict[worker_node] = []
       if worker_node:
         task_dict = {}
         task_dict['task_id'] = result.get('id')
@@ -795,10 +804,11 @@ class BaseTurbiniaClient(object):
         else:
           run_time = result.get('run_time')
           task_dict['run_time'] = run_time if run_time else 'No run time.'
-        workers_dict[worker_node].append(task_dict)
-      else:
-        # Track scheduled/unassigned Tasks for reporting.
-        scheduled_counter += 1
+        # Update to correct dictionary
+        if worker_node == 'Unassigned':
+          unassigned_dict[worker_node].append(task_dict)
+        else:
+          workers_dict[worker_node].append(task_dict)
 
     # Generate report header
     report = []
@@ -831,11 +841,23 @@ class BaseTurbiniaClient(object):
       report.append('')
       report.append(fmt.heading3('Queued Tasks'))
       report.extend(queued_status if queued_status else not_found)
-      # Add Historical Tasks
+      # Add Finished Tasks
       if all_fields:
         report.append('')
         report.append(fmt.heading3('Finished Tasks'))
         report.extend(other_status if other_status else not_found)
+
+    # Add unassigned worker tasks
+    unassigned_status = []
+    for tasks in unassigned_dict.values():
+      for task in tasks:
+        unassigned_status.extend(self.format_worker_task(task))
+    # Now add to main report
+    if all_fields:
+      report.append('')
+      report.append(fmt.heading2('Unassigned Worker Tasks'))
+      report.extend(unassigned_status if unassigned_status else not_found)
+
     return '\n'.join(report)
 
   def format_request_status(
@@ -1017,7 +1039,7 @@ class BaseTurbiniaClient(object):
     if not request.evidence:
       raise TurbiniaException('TurbiniaRequest does not contain evidence.')
     log.info('Running Task {0:s} locally'.format(task_name))
-    result = task.run_wrapper(request.evidence[0])
+    result = task.run_wrapper(request.evidence[0].serialize())
     return result
 
   def send_request(self, request):
@@ -1100,7 +1122,7 @@ class TurbiniaCeleryClient(BaseTurbiniaClient):
     return self.redis.get_task_data(instance, days, task_id, request_id)
 
 
-class TurbiniaServer(object):
+class TurbiniaServer:
   """Turbinia Server class.
 
   Attributes:
@@ -1120,8 +1142,12 @@ class TurbiniaServer(object):
 
   def start(self):
     """Start Turbinia Server."""
-    log.info('Starting Prometheus endpoint.')
-    start_http_server(port=config.PROMETHEUS_PORT, addr=config.PROMETHEUS_ADDR)
+    if config.PROMETHEUS_PORT and config.PROMETHEUS_ADDR:
+      log.info('Starting Prometheus endpoint.')
+      start_http_server(
+          port=config.PROMETHEUS_PORT, addr=config.PROMETHEUS_ADDR)
+    else:
+      log.debug('Prometheus config not specified, not starting Prometheus.')
     log.info('Running Turbinia Server.')
     self.task_manager.run()
 
@@ -1181,7 +1207,7 @@ class TurbiniaCeleryWorker(BaseTurbiniaClient):
     self.worker.start(argv)
 
 
-class TurbiniaPsqWorker(object):
+class TurbiniaPsqWorker:
   """Turbinia PSQ Worker class.
 
   Attributes:
@@ -1243,7 +1269,11 @@ class TurbiniaPsqWorker(object):
 
   def start(self):
     """Start Turbinia PSQ Worker."""
-    log.info('Starting Prometheus endpoint.')
-    start_http_server(port=config.PROMETHEUS_PORT, addr=config.PROMETHEUS_ADDR)
+    if config.PROMETHEUS_PORT and config.PROMETHEUS_ADDR:
+      log.info('Starting Prometheus endpoint.')
+      start_http_server(
+          port=config.PROMETHEUS_PORT, addr=config.PROMETHEUS_ADDR)
+    else:
+      log.debug('Prometheus config not specified, not starting Prometheus.')
     log.info('Running Turbinia PSQ Worker.')
     self.worker.listen()

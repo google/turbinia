@@ -88,7 +88,7 @@ def task_runner(obj, *args, **kwargs):
   return obj.run_wrapper(*args, **kwargs)
 
 
-class BaseTaskManager(object):
+class BaseTaskManager:
   """Class to manage Turbinia Tasks.
 
   Handles incoming new Evidence messages, adds new Tasks to the queue and

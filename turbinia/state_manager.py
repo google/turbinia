@@ -36,6 +36,7 @@ config.LoadConfig()
 if config.STATE_MANAGER.lower() == 'datastore':
   from google.cloud import datastore
   from google.cloud import exceptions
+  from google.auth import exceptions as auth_exceptions
 elif config.STATE_MANAGER.lower() == 'redis':
   import redis
 else:
@@ -68,7 +69,7 @@ def get_state_manager():
     raise TurbiniaException(msg)
 
 
-class BaseStateManager(object):
+class BaseStateManager:
   """Class to manage Turbinia state persistence."""
 
   def get_task_dict(self, task):
@@ -170,7 +171,7 @@ class DatastoreStateManager(BaseStateManager):
     config.LoadConfig()
     try:
       self.client = datastore.Client(project=config.TURBINIA_PROJECT)
-    except EnvironmentError as e:
+    except (EnvironmentError, auth_exceptions.DefaultCredentialsError) as e:
       message = (
           'Could not create Datastore client: {0!s}\n'
           'Have you run $ gcloud auth application-default login?'.format(e))
