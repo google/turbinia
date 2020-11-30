@@ -181,7 +181,6 @@ optional arguments:
 ```
 
 Sample rawdisk command:
-
 `turbiniactl rawdisk -l {PATH_TO_THE_IMAGE}`
 
 Status information about the requests that are being or have been processed can
