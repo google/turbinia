@@ -43,8 +43,7 @@ def setup(need_file_handler=True, need_stream_handler=True):
   syslog_handler = logging.handlers.SysLogHandler(address='/dev/log')
   syslog_handler.formatter = logging.Formatter(
       'Turbinia: { "loggerName":"%(name)s", "levelNo":"%(levelno)s", '
-      '"levelName":"%(levelname)s", "message":"%(message)s"}'
-  )
+      '"levelName":"%(levelname)s", "message":"%(message)s"}')
   logger.addHandler(syslog_handler)
   # We only need a handler if one of that type doesn't exist already
   if logger.handlers:
