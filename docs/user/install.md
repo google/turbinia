@@ -55,7 +55,7 @@ to get a shell with access to your GCP resources.
     *   To adjust the GCP zone and region you want to run Turbinia in, edit the
         `modules/turbinia/variables.tf` file and change the `gcp_zone` and 
         `gcp_region` variables as appropriate to reflect your GCP project's
-        timezone.
+        zone and region.
     *   If you want to use docker to run Turbinia tasks, please follow the
         instructions [here](using-docker.md) to enable docker.
     *   Running the following commands will leave some state information under
@@ -83,8 +83,9 @@ configured. The Turbinia configuration file will be deployed on these instances
 as `etc/turbinia/turbinia.conf`. If you later want to increase the number of
 workers, you can edit the `turbinia/variables.tf` file mentioned above and
 re-run `terraform apply`
-To use Turbinia you need to use the virtual environment that was setup by
-terraform `source ~/turbinia/bin/activate` and then use `turbiniactl`. For more
+To use Turbinia you can use the virtual environment that was setup by
+the `deploy.sh` script.To activate the virtual environment, run the following
+command  `source ~/turbinia/bin/activate` and then use `turbiniactl`. For more
 information on how to use Turbinia please visit [the user manual](https://github.com/google/turbinia). 
 
 ### Client configuration (optional)

@@ -179,8 +179,11 @@ optional arguments:
                         Description of the source of the evidence
   -n NAME, --name NAME  Descriptive name of the evidence
 ```
+
 Sample rawdisk command:
+
 `turbiniactl rawdisk -l {PATH_TO_THE_IMAGE}`
+
 Status information about the requests that are being or have been processed can
 be viewed with the `turbiniactl status` command. You can specify the request ID
 that was generated, or other filters like the username of the requester, or how
