@@ -59,6 +59,7 @@ class BulkExtractorTask(TurbiniaTask):
     # Add the output path to the evidence so we can automatically save it
     # later.
     output_evidence.local_path = output_file_path
+    output_evidence.uncompressed_directory = output_file_path
 
     # TODO: Convert to using real recipes after
     # https://github.com/google/turbinia/pull/486 is in.

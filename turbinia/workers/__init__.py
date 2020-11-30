@@ -57,7 +57,7 @@ class Priority(IntEnum):
   CRITICAL = 10
 
 
-class TurbiniaTaskResult(object):
+class TurbiniaTaskResult:
   """Object to store task results to be returned by a TurbiniaTask.
 
   Attributes:
@@ -336,7 +336,7 @@ class TurbiniaTaskResult(object):
     return result
 
 
-class TurbiniaTask(object):
+class TurbiniaTask:
   """Base class for Turbinia tasks.
 
   Attributes:

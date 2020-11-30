@@ -22,7 +22,7 @@ from turbinia.evidence import EvidenceCollection
 log = logging.getLogger('turbinia')
 
 
-class TurbiniaJob(object):
+class TurbiniaJob:
   """Base class for Turbinia Jobs.
 
   Attributes:
