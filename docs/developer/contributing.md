@@ -49,8 +49,8 @@ Once you're ready for review make sure the tests pass:
 
 ----
 >  **_NOTE:_** If you are developing in a hybrid/local setup, you need to 
-modify the `PROMETHEUS_PORT` for the server in `turbinia/client.py` in order
-to run Turbinia. 
+set the `PROMETHEUS_PORT` and `PROMETHEUS_ADDR` to `None` in your config file
+in order to run Turbinia. 
 ----
 
 Commit your changes to your personal fork and then use the GitHub Web UI to
