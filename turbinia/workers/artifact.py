@@ -20,11 +20,16 @@ import os
 
 from turbinia import config
 from turbinia.evidence import ExportedFileArtifact
+from turbinia.evidence import EvidenceState as state
 from turbinia.workers import TurbiniaTask
 
 
 class FileArtifactExtractionTask(TurbiniaTask):
   """Task to run image_export (log2timeline)."""
+
+  REQUIRED_STATES = [
+      state.ATTACHED, state.PARENT_ATTACHED, state.PARENT_MOUNTED
+  ]
 
   def __init__(self, artifact_name='FileArtifact'):
     super(FileArtifactExtractionTask, self).__init__()
@@ -58,7 +63,7 @@ class FileArtifactExtractionTask(TurbiniaTask):
         '--artifact_filters',
         self.artifact_name,
     ]
-    if config.DEBUG_TASKS:
+    if config.DEBUG_TASKS or evidence.config.get('debug_tasks'):
       cmd.append('-d')
 
     # Path to the source image/directory.
@@ -75,6 +80,12 @@ class FileArtifactExtractionTask(TurbiniaTask):
 
     for dirpath, _, filenames in os.walk(export_directory):
       for filename in filenames:
+        if filename == 'hashes.json' and dirpath == export_directory:
+          # Ignore the hashes.json file created by image export.
+          # TODO: remove this when
+          # https://github.com/log2timeline/plaso/pull/3320
+          # is pushed.
+          continue
         exported_artifact = ExportedFileArtifact(
             artifact_name=self.artifact_name, source_path=os.path.join(
                 dirpath, filename))

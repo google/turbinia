@@ -28,14 +28,14 @@ from turbinia import config
 from turbinia import TurbiniaException
 
 config.LoadConfig()
-if config.GCS_OUTPUT_PATH and config.GCS_OUTPUT_PATH.lower() is not 'none':
+if config.GCS_OUTPUT_PATH and config.GCS_OUTPUT_PATH.lower() != 'none':
   from google.cloud import storage
   from google.cloud import exceptions
 
 log = logging.getLogger('turbinia')
 
 
-class OutputManager(object):
+class OutputManager:
   """Manages output data.
 
   Manages the configured output writers.  Also saves and retrieves evidence data
@@ -51,24 +51,28 @@ class OutputManager(object):
     self.is_setup = False
 
   @staticmethod
-  def get_output_writers(task):
+  def get_output_writers(name, uid, remote_only):
     """Get a list of output writers.
 
     Args:
-      task: A TurbiniaTask object
+      name (str): The name of the Request or Task.
+      uid (str): The unique identifier of the Request or Task.
 
     Returns:
       A list of OutputWriter objects.
     """
-    epoch = str(int(time.time()))
-    unique_dir = '{0:s}-{1:s}-{2:s}'.format(epoch, str(task.id), task.name)
-
-    writers = [
-        LocalOutputWriter(
-            base_output_dir=task.base_output_dir, unique_dir=unique_dir)
-    ]
-    local_output_dir = writers[0].local_output_dir
     config.LoadConfig()
+    epoch = str(int(time.time()))
+    unique_dir = '{0:s}-{1:s}-{2:s}'.format(epoch, str(uid), name)
+    writers = []
+    local_output_dir = None
+
+    if not remote_only:
+      writer = LocalOutputWriter(
+          base_output_dir=config.OUTPUT_DIR, unique_dir=unique_dir)
+      writers.append(writer)
+      local_output_dir = writers[0].local_output_dir
+
     if config.GCS_OUTPUT_PATH:
       writer = GCSOutputWriter(
           unique_dir=unique_dir, gcs_path=config.GCS_OUTPUT_PATH,
@@ -125,7 +129,7 @@ class OutputManager(object):
         evidence_.local_path = writer.copy_from(evidence_.saved_path)
     return evidence_
 
-  def save_evidence(self, evidence_, result):
+  def save_evidence(self, evidence_, result=None):
     """Saves local evidence data to remote location.
 
     Args:
@@ -149,7 +153,7 @@ class OutputManager(object):
         json_str = json.dumps(metadata)
       except TypeError as exception:
         raise TurbiniaException(
-            'Could not serialize Evidence config for {0:s}: {1:s}'.format(
+            'Could not serialize Evidence config for {0:s}: {1!s}'.format(
                 evidence_.name, exception))
 
       try:
@@ -158,7 +162,7 @@ class OutputManager(object):
           file_handle.write(json_str.encode('utf-8'))
       except IOError as exception:
         raise TurbiniaException(
-            'Could not write metadata file {0:s}: {1:s}'.format(
+            'Could not write metadata file {0:s}: {1!s}'.format(
                 metadata_path, exception))
 
       self.save_local_file(metadata_path, result)
@@ -196,11 +200,12 @@ class OutputManager(object):
     local_path = None
     for writer in self._output_writers:
       new_path = writer.copy_to(file_)
+      if new_path:
+        saved_path = new_path
+        saved_path_type = writer.name
       if result:
         if new_path:
           result.saved_paths.append(new_path)
-          saved_path = new_path
-          saved_path_type = writer.name
         elif os.path.exists(file_) and os.path.getsize(file_) > 0:
           # We want to save the old path if the path is still valid.
           result.saved_paths.append(file_)
@@ -210,13 +215,13 @@ class OutputManager(object):
 
     return saved_path, saved_path_type, local_path
 
-  def setup(self, task):
+  def setup(self, name, uid, remote_only=False):
     """Setup OutputManager object."""
-    self._output_writers = self.get_output_writers(task)
+    self._output_writers = self.get_output_writers(name, uid, remote_only)
     self.is_setup = True
 
 
-class OutputWriter(object):
+class OutputWriter:
   """Base class.
 
   By default this will write the files the Evidence objects point to along with

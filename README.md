@@ -30,8 +30,10 @@ implementation can use either [PSQ](https://github.com/GoogleCloudPlatform/psq)
 (a Google Cloud PubSub Task Queue) or [Celery](http://www.celeryproject.org/)
 for task scheduling.
 
-More information on Turbinia and how it works can be
-[found here](docs/how-it-works.md).
+The main documentation for Turbinia can be
+[found here](https://turbinia.readthedocs.io/). You can also find out more about
+the architecture and
+[how it works here](https://turbinia.readthedocs.io/en/latest/user/how-it-works.html).
 
 ## Status
 
@@ -39,7 +41,8 @@ Turbinia is currently in Alpha release.
 
 ## Installation
 
-There is an [rough installation guide here](docs/install.md).
+There is an
+[installation guide here](https://turbinia.readthedocs.io/en/latest/user/install.html).
 
 ## Usage
 
@@ -56,12 +59,13 @@ turbiniactl can be used to start the different components, and here is the basic
 usage:
 
 ```
-$ turbiniactl --help
+$ turbiniactl -h
 usage: turbiniactl [-h] [-q] [-v] [-d] [-a] [-c CONFIG_FILE]
                    [-C RECIPE_CONFIG] [-f] [-o OUTPUT_DIR] [-L LOG_FILE]
                    [-r REQUEST_ID] [-R] [-S] [-V] [-D]
-                   [-F FILTER_PATTERNS_FILE] [-j JOBS_WHITELIST]
-                   [-J JOBS_BLACKLIST] [-p POLL_INTERVAL] [-t TASK] [-w]
+                   [-F FILTER_PATTERNS_FILE] [-Y YARA_RULES_FILE]
+                   [-j JOBS_ALLOWLIST] [-J JOBS_DENYLIST] [-p POLL_INTERVAL]
+                   [-t TASK] [-T] [-w]
                    <command> ...
 
 optional arguments:
@@ -103,8 +107,10 @@ optional arguments:
                         filter text based evidence files with (in extended
                         grep regex format). This filtered output will be in
                         addition to the complete output
-  -j JOBS_WHITELIST, --jobs_whitelist JOBS_WHITELIST
-                        A whitelist for Jobs that will be allowed to run (in
+  -Y YARA_RULES_FILE, --yara_rules_file YARA_RULES_FILE
+                        A file containing Yara rules.
+  -j JOBS_ALLOWLIST, --jobs_allowlist JOBS_ALLOWLIST
+                        An allowlist for Jobs that will be allowed to run (in
                         CSV format, no spaces). This will not force them to
                         run if they are not configured to. This is applied
                         both at server start time and when the client makes a
@@ -112,33 +118,41 @@ optional arguments:
                         the change is persistent while the server is running.
                         When applied by the client, it will only affect that
                         processing request.
-  -J JOBS_BLACKLIST, --jobs_blacklist JOBS_BLACKLIST
-                        A blacklist for Jobs we will not allow to run. See
-                        --jobs_whitelist help for details on format and when
+  -J JOBS_DENYLIST, --jobs_denylist JOBS_DENYLIST
+                        A denylist for Jobs we will not allow to run. See
+                        --jobs_allowlist help for details on format and when
                         it is applied.
   -p POLL_INTERVAL, --poll_interval POLL_INTERVAL
                         Number of seconds to wait between polling for task
                         state info
   -t TASK, --task TASK  The name of a single Task to run locally (must be used
                         with --run_local.
+  -T, --debug_tasks     Show debug output for all supported tasks
   -w, --wait            Wait to exit until all tasks for the given request
                         have completed
 
 Commands:
   <command>
+    config              Print out config file
+    testnotify          Sends test notification
     rawdisk             Process RawDisk as Evidence
+    apfs                Process APFSEncryptedDisk as Evidence
+    bitlocker           Process Bitlocker Disk as Evidence
     googleclouddisk     Process Google Cloud Persistent Disk as Evidence
     googleclouddiskembedded
                         Process Google Cloud Persistent Disk with an embedded
                         raw disk image as Evidence
+    rawmemory           Process RawMemory as Evidence
     directory           Process a directory as Evidence
-    listjobs            List all available jobs
+    compresseddirectory
+                        Process a compressed tar file as Evidence
+    hindsight           Process ChromiumProfile as Evidence
+    listjobs            List all available Jobs. These Job names can be used
+                        by --jobs_allowlist and --jobs_denylist
     psqworker           Run PSQ worker
     celeryworker        Run Celery worker
     status              Get Turbinia Task status
     server              Run Turbinia Server
-    config              Prints out config file
-    testnotify          Sends test notification
 ```
 
 The commands for processing evidence specify the metadata about that evidence
@@ -149,29 +163,34 @@ server process. Here's the turbiniactl usage for adding a raw disk type of
 evidence to be processed by Turbinia:
 
 ```
-$ ./turbiniactl rawdisk -h
-usage: turbiniactl rawdisk [-h] -l LOCAL_PATH [-s SOURCE] [-n NAME]
+$ turbiniactl rawdisk -h
+usage: turbiniactl rawdisk [-h] -l SOURCE_PATH [-P MOUNT_PARTITION]
+                           [-s SOURCE] [-n NAME]
 
 optional arguments:
   -h, --help            show this help message and exit
-  -l LOCAL_PATH, --local_path LOCAL_PATH
+  -l SOURCE_PATH, --source_path SOURCE_PATH
                         Local path to the evidence
+  -P MOUNT_PARTITION, --mount_partition MOUNT_PARTITION
+                        The partition number to use when mounting this disk.
+                        Defaults to the entire raw disk. Only affects
+                        mounting, and not what gets processed.
   -s SOURCE, --source SOURCE
                         Description of the source of the evidence
   -n NAME, --name NAME  Descriptive name of the evidence
 ```
 
 Status information about the requests that are being or have been processed can
-be viewed with the `turbiniactl status` command.  You can specify the request ID
+be viewed with the `turbiniactl status` command. You can specify the request ID
 that was generated, or other filters like the username of the requester, or how
-many days of processing history you want to view.  You can also generate
+many days of processing history you want to view. You can also generate
 statistics and reports (in markdown format) with other flags.
 
 ```
 $ turbiniactl status -h
 usage: turbiniactl status [-h] [-c] [-C] [-d DAYS_HISTORY] [-f]
                           [-r REQUEST_ID] [-p PRIORITY_FILTER] [-R] [-s]
-                          [-t TASK_ID] [-u USER]
+                          [-t TASK_ID] [-u USER] [-i] [-w]
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -197,18 +216,25 @@ optional arguments:
   -t TASK_ID, --task_id TASK_ID
                         Show task for given Task ID
   -u USER, --user USER  Show task for given user
+  -i, --requests        Show all requests from a specified timeframe. The
+                        default timeframe is 7 days. Please use the -d flag to
+                        extend this.
+  -w, --workers         Show Worker status information from a specified
+                        timeframe. The default timeframe is 7 days. Please use
+                        the -d flag to extend this.
 ```
 
 ## Other documentation
 
-*   [Installation](docs/install.md)
-*   [How it works](docs/how-it-works.md)
-*   [Operational Details](docs/operational-details.md)
-*   [Contributing to Turbinia](docs/contributing.md)
-*   [Developing new Tasks](docs/developing-new-tasks.md)
-*   [FAQ](docs/faq.md)
-*   [Debugging and Common Errors](docs/debugging.md)
-*   [Using Docker to execute jobs](docs/using-docker.md)
+*   [Main Documentation](https://turbinia.readthedocs.io)
+*   [Installation](https://turbinia.readthedocs.io/en/latest/user/install.html)
+*   [How it works](https://turbinia.readthedocs.io/en/latest/user/how-it-works.html)
+*   [Operational Details](https://turbinia.readthedocs.io/en/latest/user/operational-details.html)
+*   [Contributing to Turbinia](https://turbinia.readthedocs.io/en/latest/developer/contributing.html)
+*   [Developing new Tasks](https://turbinia.readthedocs.io/en/latest/developer/developing-new-tasks.html)
+*   [FAQ](https://turbinia.readthedocs.io/en/latest/user/faq.html)
+*   [Debugging and Common Errors](https://turbinia.readthedocs.io/en/latest/user/debugging.html)
+*   [Using Docker to execute jobs](https://turbinia.readthedocs.io/en/latest/user/using-docker.html)
 
 ##### Obligatory Fine Print
 

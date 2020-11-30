@@ -18,12 +18,17 @@ from __future__ import unicode_literals
 
 import os
 
+from turbinia.evidence import EvidenceState as state
 from turbinia.evidence import TextFile
 from turbinia.workers import TurbiniaTask
 
 
 class StringsAsciiTask(TurbiniaTask):
   """Task to generate ascii strings."""
+
+  REQUIRED_STATES = [
+      state.ATTACHED, state.PARENT_ATTACHED, state.PARENT_MOUNTED
+  ]
 
   def run(self, evidence, result):
     """Run strings binary.
@@ -56,6 +61,10 @@ class StringsAsciiTask(TurbiniaTask):
 
 class StringsUnicodeTask(TurbiniaTask):
   """Task to generate Unicode (16 bit little endian) strings."""
+
+  REQUIRED_STATES = [
+      state.ATTACHED, state.PARENT_ATTACHED, state.PARENT_MOUNTED
+  ]
 
   def run(self, evidence, result):
     """Run strings binary.

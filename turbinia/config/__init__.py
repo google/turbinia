@@ -53,7 +53,6 @@ REQUIRED_VARS = [
     'SINGLE_RUN',
     'MOUNT_DIR_PREFIX',
     'SHARED_FILESYSTEM',
-    # TODO(aarontp): Move this to the recipe config when it's available.
     'DEBUG_TASKS',
     'DEPENDENCIES',
     'DOCKER_ENABLED',
@@ -90,6 +89,9 @@ OPTIONAL_VARS = [
     'EMAIL_PORT',
     'EMAIL_ADDRESS',
     'EMAIL_PASSWORD',
+    # Prometheus config
+    'PROMETHEUS_ADDR',
+    'PROMETHEUS_PORT'
 ]
 
 # Environment variable to look for path data in
@@ -110,7 +112,7 @@ def LoadConfig(config_file=None):
   # pattern on the config class.
   # pylint: disable=global-statement
   global CONFIG
-  if CONFIG:
+  if CONFIG and not config_file:
     log.debug(
         'Returning cached config from {0:s} instead of reloading config'.format(
             CONFIG.configSource))

@@ -1,14 +1,16 @@
 language: python
 python:
-  - '2.7'
   - '3.6'
 cache:
   - pip
 
 install:
   - pip install mock nose coverage yapf
+  - pip install tox
   - pip install .
   - pip install .[local]
+  - pip install -r dfvfs_requirements.txt
 
 script:
   - ./run_tests.py
+  - tox --sitepackages ${TOXENV}

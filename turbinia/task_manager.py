@@ -19,6 +19,8 @@ from __future__ import unicode_literals, absolute_import
 import logging
 import time
 
+from prometheus_client import Gauge
+
 import turbinia
 from turbinia import workers
 from turbinia import evidence
@@ -45,6 +47,9 @@ log = logging.getLogger('turbinia')
 
 PSQ_TASK_TIMEOUT_SECONDS = 604800
 PSQ_QUEUE_WAIT_SECONDS = 2
+
+# Define metrics
+SERVER_TASKS = Gauge('server_tasks', 'Turbinia Server Total Tasks')
 
 
 def get_task_manager():
@@ -83,7 +88,7 @@ def task_runner(obj, *args, **kwargs):
   return obj.run_wrapper(*args, **kwargs)
 
 
-class BaseTaskManager(object):
+class BaseTaskManager:
   """Class to manage Turbinia Tasks.
 
   Handles incoming new Evidence messages, adds new Tasks to the queue and
@@ -121,21 +126,42 @@ class BaseTaskManager(object):
     """
     raise NotImplementedError
 
-  def setup(self, jobs_blacklist=None, jobs_whitelist=None, *args, **kwargs):
+  def setup(self, jobs_denylist=None, jobs_allowlist=None, *args, **kwargs):
     """Does setup of Task manager and its dependencies.
 
     Args:
-      jobs_blacklist (list): Jobs that will be excluded from running
-      jobs_whitelist (list): The only Jobs will be included to run
+      jobs_denylist (list): Jobs that will be excluded from running
+      jobs_allowlist (list): The only Jobs will be included to run
     """
     self._backend_setup(*args, **kwargs)
     job_names = jobs_manager.JobsManager.GetJobNames()
-    if jobs_blacklist or jobs_whitelist:
+    if jobs_denylist or jobs_allowlist:
+      selected_jobs = jobs_denylist or jobs_allowlist
+      for job in selected_jobs:
+        if job.lower() not in job_names:
+          msg = (
+              'Error creating server. Job {0!s} is not found in registered '
+              'jobs {1!s}.'.format(job, job_names))
+          log.error(msg)
+          raise TurbiniaException(msg)
       log.info(
-          'Filtering Jobs with whitelist {0!s} and blacklist {1!s}'.format(
-              jobs_whitelist, jobs_blacklist))
+          'Filtering Jobs with allowlist {0!s} and denylist {1!s}'.format(
+              jobs_allowlist, jobs_denylist))
       job_names = jobs_manager.JobsManager.FilterJobNames(
-          job_names, jobs_blacklist, jobs_whitelist)
+          job_names, jobs_denylist, jobs_allowlist)
+
+    # Disable any jobs from the config that were not previously allowlisted.
+    disabled_jobs = list(config.DISABLED_JOBS) if config.DISABLED_JOBS else []
+    disabled_jobs = [j.lower() for j in disabled_jobs]
+    if jobs_allowlist:
+      disabled_jobs = list(set(disabled_jobs) - set(jobs_allowlist))
+    if disabled_jobs:
+      log.info(
+          'Disabling non-allowlisted jobs configured to be disabled in the '
+          'config file: {0:s}'.format(', '.join(disabled_jobs)))
+      job_names = jobs_manager.JobsManager.FilterJobNames(
+          job_names, disabled_jobs, [])
+
     self.jobs = [job for _, job in jobs_manager.JobsManager.GetJobs(job_names)]
     log.debug('Registered job list: {0:s}'.format(str(job_names)))
 
@@ -155,14 +181,14 @@ class BaseTaskManager(object):
           'Jobs must be registered before evidence can be added')
     log.info('Adding new evidence: {0:s}'.format(str(evidence_)))
     job_count = 0
-    jobs_whitelist = evidence_.config.get('jobs_whitelist', [])
-    jobs_blacklist = evidence_.config.get('jobs_blacklist', [])
-    if jobs_blacklist or jobs_whitelist:
+    jobs_allowlist = evidence_.config.get('jobs_allowlist', [])
+    jobs_denylist = evidence_.config.get('jobs_denylist', [])
+    if jobs_denylist or jobs_allowlist:
       log.info(
-          'Filtering Jobs with whitelist {0!s} and blacklist {1!s}'.format(
-              jobs_whitelist, jobs_blacklist))
+          'Filtering Jobs with allowlist {0!s} and denylist {1!s}'.format(
+              jobs_allowlist, jobs_denylist))
       jobs_list = jobs_manager.JobsManager.FilterJobObjects(
-          self.jobs, jobs_blacklist, jobs_whitelist)
+          self.jobs, jobs_denylist, jobs_allowlist)
     else:
       jobs_list = self.jobs
 
@@ -184,6 +210,7 @@ class BaseTaskManager(object):
         job_count += 1
         for task in job_instance.create_tasks([evidence_]):
           self.add_task(task, job_instance, evidence_)
+          SERVER_TASKS.inc()
 
     if not job_count:
       log.warning(
@@ -532,7 +559,8 @@ class CeleryTaskManager(BaseTaskManager):
         log.debug('Task {0:s} status unknown'.format(celery_task.id))
 
     outstanding_task_count = len(self.tasks) - len(completed_tasks)
-    log.info('{0:d} Tasks still outstanding.'.format(outstanding_task_count))
+    if outstanding_task_count > 0:
+      log.info('{0:d} Tasks still outstanding.'.format(outstanding_task_count))
     return completed_tasks
 
   def get_evidence(self):
@@ -625,7 +653,8 @@ class PSQTaskManager(BaseTaskManager):
         completed_tasks.append(task)
 
     outstanding_task_count = len(self.tasks) - len(completed_tasks)
-    log.info('{0:d} Tasks still outstanding.'.format(outstanding_task_count))
+    if outstanding_task_count > 0:
+      log.info('{0:d} Tasks still outstanding.'.format(outstanding_task_count))
     return completed_tasks
 
   def get_evidence(self):

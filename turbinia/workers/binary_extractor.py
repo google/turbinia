@@ -22,6 +22,7 @@ import os
 
 from turbinia import TurbiniaException
 from turbinia import config
+from turbinia.evidence import EvidenceState as state
 from turbinia.workers import TurbiniaTask
 from turbinia.evidence import BinaryExtraction
 
@@ -33,6 +34,10 @@ class BinaryExtractorTask(TurbiniaTask):
     json_path(str): path to output JSON file.
     binary_extraction_dir(str): path to extraction directory.
   """
+
+  REQUIRED_STATES = [
+      state.ATTACHED, state.PARENT_ATTACHED, state.PARENT_MOUNTED
+  ]
 
   def __init__(self, *args, **kwargs):
     """Initializes BinaryExtractorTask."""
@@ -81,6 +86,7 @@ class BinaryExtractorTask(TurbiniaTask):
     binary_extraction_evidence = BinaryExtraction()
 
     binary_extraction_evidence.local_path = self.output_dir
+    binary_extraction_evidence.uncompressed_directory = self.output_dir
     image_export_log = os.path.join(self.output_dir, 'binary_extraction.log')
     self.binary_extraction_dir = os.path.join(
         self.output_dir, 'extracted_binaries')
@@ -90,7 +96,7 @@ class BinaryExtractorTask(TurbiniaTask):
         'image_export.py', '--partitions', 'all', '--no_vss', '--signatures',
         'elf,exe_mz', '--logfile', image_export_log
     ]
-    if config.DEBUG_TASKS:
+    if config.DEBUG_TASKS or evidence.config.get('debug_tasks'):
       cmd.append('-d')
     cmd.extend(['-w', self.binary_extraction_dir, evidence.local_path])
 

@@ -103,7 +103,7 @@ class EvidenceState(IntEnum):
   DOCKER_MOUNTED = 6
 
 
-class Evidence(object):
+class Evidence:
   """Evidence object for processing.
 
   In most cases, these objects will just contain metadata about the actual
@@ -314,6 +314,7 @@ class Evidence(object):
           possible states of the Evidence or if the parent evidence object does
           not exist when it is required by the Evidence type..
     """
+    self.local_path = self.source_path
     if not required_states:
       required_states = []
 
@@ -324,6 +325,7 @@ class Evidence(object):
                 self.type))
       self.parent_evidence.preprocess(tmp_dir, required_states)
     try:
+      log.debug('Starting pre-processor for evidence {0:s}'.format(self.name))
       self._preprocess(tmp_dir, required_states)
     except TurbiniaException as exception:
       log.error(
@@ -341,6 +343,8 @@ class Evidence(object):
     then recurse down the chain of parent Evidence and run those post-processors
     in order.
     """
+    log.info('Starting post-processor for evidence {0:s}'.format(self.name))
+    log.debug('Evidence state: {0:s}'.format(self.format_state()))
     self._postprocess()
     if self.parent_evidence:
       self.parent_evidence.postprocess()
@@ -437,10 +441,14 @@ class CompressedDirectory(Evidence):
       self.state[EvidenceState.DECOMPRESSED] = True
 
   def compress(self):
-    """ Compresses a file or directory."""
+    """ Compresses a file or directory.
+
+    Creates a tar.gz from the uncompressed_directory attribute.
+    """
     # Compress a given directory and return the compressed path.
-    self.compressed_directory = archive.CompressDirectory(self.local_path)
-    self.local_path = self.compressed_directory
+    self.compressed_directory = archive.CompressDirectory(
+        self.uncompressed_directory)
+    self.source_path = self.compressed_directory
     self.state[EvidenceState.DECOMPRESSED] = False
 
 
@@ -502,16 +510,57 @@ class RawDisk(Evidence):
       self.device_path, partition_paths = mount_local.PreprocessLosetup(
           self.source_path)
       self.state[EvidenceState.ATTACHED] = True
+      self.local_path = self.device_path
     if EvidenceState.MOUNTED in required_states:
       self.mount_path = mount_local.PreprocessMountDisk(
           partition_paths, self.mount_partition)
-      self.local_path = self.device_path
+      self.local_path = self.mount_path
       self.state[EvidenceState.MOUNTED] = True
 
   def _postprocess(self):
     if self.state[EvidenceState.MOUNTED]:
       mount_local.PostprocessUnmountPath(self.mount_path)
       self.state[EvidenceState.MOUNTED] = False
+    if self.state[EvidenceState.ATTACHED]:
+      mount_local.PostprocessDeleteLosetup(self.device_path)
+      self.state[EvidenceState.ATTACHED] = False
+
+
+class RawDiskPartition(RawDisk):
+  """Evidence object for a partition within Disk based evidence.
+
+  Attributes:
+    path_spec (dfvfs.PathSpec): Partition path spec.
+    partition_offset: Offset of the partition in bytes.
+    partition_size: Size of the partition in bytes.
+  """
+
+  REQUIRED_ATTRIBUTES = ['local_path']
+  POSSIBLE_STATES = [EvidenceState.MOUNTED, EvidenceState.ATTACHED]
+
+  def __init__(
+      self, path_spec=None, partition_offset=None, partition_size=None, *args,
+      **kwargs):
+    """Initialization for raw volume evidence object."""
+
+    self.path_spec = path_spec
+    self.partition_offset = partition_offset
+    self.partition_size = partition_size
+    super(RawDiskPartition, self).__init__(*args, **kwargs)
+
+    # This Evidence needs to have a RawDisk as a parent
+    self.context_dependent = True
+
+  def _preprocess(self, _, required_states):
+    if EvidenceState.ATTACHED in required_states:
+      self.device_path, _ = mount_local.PreprocessLosetup(
+          self.source_path, partition_offset=self.partition_offset,
+          partition_size=self.partition_size)
+      if self.device_path:
+        self.state[EvidenceState.ATTACHED] = True
+        self.local_path = self.device_path
+
+  def _postprocess(self):
     if self.state[EvidenceState.ATTACHED]:
       mount_local.PostprocessDeleteLosetup(self.device_path)
       self.state[EvidenceState.ATTACHED] = False
@@ -608,12 +657,13 @@ class GoogleCloudDisk(RawDisk):
     if EvidenceState.ATTACHED in required_states:
       self.device_path, partition_paths = google_cloud.PreprocessAttachDisk(
           self.disk_name)
+      self.local_path = self.device_path
       self.state[EvidenceState.ATTACHED] = True
 
     if EvidenceState.MOUNTED in required_states:
       self.mount_path = mount_local.PreprocessMountDisk(
           partition_paths, self.mount_partition)
-      self.local_path = self.device_path
+      self.local_path = self.mount_path
       self.state[EvidenceState.MOUNTED] = True
 
   def _postprocess(self):
@@ -665,11 +715,12 @@ class GoogleCloudDiskRawEmbedded(GoogleCloudDisk):
       self.device_path, partition_paths = mount_local.PreprocessLosetup(
           rawdisk_path)
       self.state[EvidenceState.PARENT_ATTACHED] = True
+      self.local_path = self.device_path
 
     if EvidenceState.PARENT_MOUNTED in required_states:
       self.mount_path = mount_local.PreprocessMountDisk(
           partition_paths, self.mount_partition)
-      self.local_path = self.device_path
+      self.local_path = self.mount_path
       self.state[EvidenceState.PARENT_MOUNTED] = True
 
   def _postprocess(self):

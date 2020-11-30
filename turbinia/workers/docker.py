@@ -17,19 +17,25 @@ from __future__ import unicode_literals
 
 import json
 import logging
-import os
 import subprocess
 
 from turbinia import TurbiniaException
 from turbinia.evidence import DockerContainer
+from turbinia.evidence import EvidenceState as state
 from turbinia.workers import Priority
 from turbinia.workers import TurbiniaTask
+from turbinia.lib.docker_manager import GetDockerPath
+from turbinia import config
 
 log = logging.getLogger('turbinia')
 
 
 class DockerContainersEnumerationTask(TurbiniaTask):
   """Enumerates Docker containers on Linux"""
+
+  REQUIRED_STATES = [
+      state.ATTACHED, state.MOUNTED, state.PARENT_ATTACHED, state.PARENT_MOUNTED
+  ]
 
   def GetContainers(self, evidence):
     """Lists the containers from an input Evidence.
@@ -47,8 +53,8 @@ class DockerContainersEnumerationTask(TurbiniaTask):
     Raises:
       TurbiniaException: when the docker-explorer tool failed to run.
     """
-
-    docker_dir = os.path.join(evidence.mount_path, 'var', 'lib', 'docker')
+    config.LoadConfig()
+    docker_dir = GetDockerPath(evidence.mount_path)
 
     containers_info = None
 
@@ -57,6 +63,8 @@ class DockerContainersEnumerationTask(TurbiniaTask):
     docker_explorer_command = [
         'sudo', 'de.py', '-r', docker_dir, 'list', 'all_containers'
     ]
+    if config.DEBUG_TASKS or evidence.config.get('debug_tasks'):
+      docker_explorer_command.append('-d')
     log.info('Running {0:s}'.format(' '.join(docker_explorer_command)))
     try:
       json_string = subprocess.check_output(docker_explorer_command).decode(

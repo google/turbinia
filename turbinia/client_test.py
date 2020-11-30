@@ -34,7 +34,11 @@ from turbinia.client import TurbiniaStats
 from turbinia.client import TurbiniaPsqWorker
 from turbinia.client import check_system_dependencies
 from turbinia.client import check_docker_dependencies
+from turbinia.jobs import manager
+from turbinia.jobs import manager_test
 from turbinia import TurbiniaException
+
+DATETIME_FORMAT = '%Y-%m-%dT%H:%M:%S.%fZ'
 
 SHORT_REPORT = textwrap.dedent(
     """\
@@ -115,6 +119,74 @@ LONG_REPORT_FILES = textwrap.dedent(
     * None
 """)
 
+LONG_REPORT_REQUESTS = textwrap.dedent(
+    """\
+    # Turbinia report for Requests made within 7 days
+    * 2 requests were made within this timeframe.
+
+    ## Request ID: 0xFakeRequestId
+    * Last Update: 2020-08-04T16:52:38.390390Z
+    * Requester: myuser
+    * Task Count: 2
+    * Associated Evidence:
+        * `/fake/path`
+        * `/fake/path/2`
+        * `/no/path/`
+        * `/no/path/2`
+
+
+    ## Request ID: 0xFakeRequestId2
+    * Last Update: 2020-08-04T16:32:38.390390Z
+    * Requester: myuser2
+    * Task Count: 1
+    * Associated Evidence:
+        * `/fake/path/3`
+        * `/no/path/3`
+""")
+
+LONG_REPORT_WORKERS = textwrap.dedent(
+    """\
+    # Turbinia report for Worker activity within 7 days
+    * 2 Worker(s) found.
+    * 0 Task(s) unassigned or scheduled and pending Worker assignment.
+
+    ## Worker Node: fake_worker2
+    ### Running Tasks
+    * No Tasks found.
+
+    ### Queued Tasks
+    * No Tasks found.
+
+    ### Finished Tasks
+    * 0xfakeTaskId2 - TaskName2
+        * Last Update: 2020-08-04T16:52:38.390390Z
+        * Status: This second fake task executed
+        * Run Time: 0:05:00
+
+
+    ## Worker Node: fake_worker
+    ### Running Tasks
+    * No Tasks found.
+
+    ### Queued Tasks
+    * No Tasks found.
+
+    ### Finished Tasks
+    * 0xfakeTaskId - TaskName
+        * Last Update: 2020-08-04T16:32:38.390390Z
+        * Status: This fake task executed
+        * Run Time: 0:01:00
+
+    * 0xfakeTaskId3 - TaskName3
+        * Last Update: 2020-08-04T16:32:38.390390Z
+        * Status: Third Task Failed...
+        * Run Time: 0:03:00
+
+
+    ## Unassigned Worker Tasks
+    * No Tasks found.
+""")
+
 STATISTICS_REPORT = textwrap.dedent(
     """\
     Execution time statistics for Turbinia:
@@ -153,7 +225,8 @@ class TestTurbiniaClient(unittest.TestCase):
   """Test Turbinia client class."""
 
   def setUp(self):
-    last_update = datetime.now()
+    last_update = datetime.strptime(
+        '2020-08-04T16:32:38.390390Z', DATETIME_FORMAT)
     self.task_data = [
         {
             'id': '0xfakeTaskId',
@@ -209,7 +282,7 @@ class TestTurbiniaClient(unittest.TestCase):
     client = TurbiniaClientProvider.get_turbinia_client()
     self.assertTrue(hasattr(client, 'task_manager'))
 
-  @mock.patch('turbinia.client.GoogleCloudFunction.ExecuteFunction')
+  @mock.patch('libcloudforensics.providers.gcp.internal.function.GoogleCloudFunction.ExecuteFunction')  # yapf: disable
   @mock.patch('turbinia.client.task_manager.PSQTaskManager._backend_setup')
   @mock.patch('turbinia.state_manager.get_state_manager')
   def testTurbiniaClientGetTaskData(self, _, __, mock_cloud_function):
@@ -230,7 +303,11 @@ class TestTurbiniaClient(unittest.TestCase):
     test_task_data[0]['run_time'] = run_time
     self.assertEqual(task_data, test_task_data)
 
-  @mock.patch('turbinia.client.GoogleCloudFunction.ExecuteFunction')
+    # Also test that JSON output works
+    task_data = client.get_task_data('inst', 'proj', 'reg', output_json=True)
+    self.assertEqual(task_data, '[{"bar": "bar2", "run_time": 3.0}]')
+
+  @mock.patch('libcloudforensics.providers.gcp.internal.function.GoogleCloudFunction.ExecuteFunction')  # yapf: disable
   @mock.patch('turbinia.client.task_manager.PSQTaskManager._backend_setup')
   @mock.patch('turbinia.state_manager.get_state_manager')
   def testTurbiniaClientGetTaskDataNoResults(self, _, __, mock_cloud_function):
@@ -240,7 +317,7 @@ class TestTurbiniaClient(unittest.TestCase):
     self.assertRaises(
         TurbiniaException, client.get_task_data, "inst", "proj", "reg")
 
-  @mock.patch('turbinia.client.GoogleCloudFunction.ExecuteFunction')
+  @mock.patch('libcloudforensics.providers.gcp.internal.function.GoogleCloudFunction.ExecuteFunction')  # yapf: disable
   @mock.patch('turbinia.client.task_manager.PSQTaskManager._backend_setup')
   @mock.patch('turbinia.state_manager.get_state_manager')
   def testTurbiniaClientGetTaskDataInvalidJson(
@@ -251,7 +328,7 @@ class TestTurbiniaClient(unittest.TestCase):
     self.assertRaises(
         TurbiniaException, client.get_task_data, "inst", "proj", "reg")
 
-  @mock.patch('turbinia.client.GoogleCloudFunction.ExecuteFunction')
+  @mock.patch('libcloudforensics.providers.gcp.internal.function.GoogleCloudFunction.ExecuteFunction')  # yapf: disable
   @mock.patch('turbinia.client.task_manager.PSQTaskManager._backend_setup')
   @mock.patch('turbinia.state_manager.get_state_manager')
   def testClientFormatTaskStatistics(self, _, __, ___):
@@ -263,7 +340,7 @@ class TestTurbiniaClient(unittest.TestCase):
     self.maxDiff = None
     self.assertEqual(stats_report, STATISTICS_REPORT)
 
-  @mock.patch('turbinia.client.GoogleCloudFunction.ExecuteFunction')
+  @mock.patch('libcloudforensics.providers.gcp.internal.function.GoogleCloudFunction.ExecuteFunction')  # yapf: disable
   @mock.patch('turbinia.client.task_manager.PSQTaskManager._backend_setup')
   @mock.patch('turbinia.state_manager.get_state_manager')
   def testClientFormatTaskStatisticsCsv(self, _, __, ___):
@@ -276,7 +353,7 @@ class TestTurbiniaClient(unittest.TestCase):
     self.maxDiff = None
     self.assertEqual(stats_report, STATISTICS_REPORT_CSV)
 
-  @mock.patch('turbinia.client.GoogleCloudFunction.ExecuteFunction')
+  @mock.patch('libcloudforensics.providers.gcp.internal.function.GoogleCloudFunction.ExecuteFunction')  # yapf: disable
   @mock.patch('turbinia.client.task_manager.PSQTaskManager._backend_setup')
   @mock.patch('turbinia.state_manager.get_state_manager')
   def testClientGetTaskStatistics(self, _, __, ___):
@@ -309,7 +386,7 @@ class TestTurbiniaClient(unittest.TestCase):
     self.assertEqual(
         task_stats['tasks_per_type']['TaskName2'].mean, timedelta(minutes=5))
 
-  @mock.patch('turbinia.client.GoogleCloudFunction.ExecuteFunction')
+  @mock.patch('libcloudforensics.providers.gcp.internal.function.GoogleCloudFunction.ExecuteFunction')  # yapf: disable
   @mock.patch('turbinia.client.task_manager.PSQTaskManager._backend_setup')
   @mock.patch('turbinia.state_manager.get_state_manager')
   def testClientFormatTaskStatus(self, _, __, ___):
@@ -323,7 +400,7 @@ class TestTurbiniaClient(unittest.TestCase):
     result = client.format_task_status('inst', 'proj', 'reg')
     self.assertIn('Processed 3 Tasks', result.strip())
 
-  @mock.patch('turbinia.client.GoogleCloudFunction.ExecuteFunction')
+  @mock.patch('libcloudforensics.providers.gcp.internal.function.GoogleCloudFunction.ExecuteFunction')  # yapf: disable
   @mock.patch('turbinia.client.task_manager.PSQTaskManager._backend_setup')
   @mock.patch('turbinia.state_manager.get_state_manager')
   def testClientFormatTaskStatusShortReport(self, _, __, ___):
@@ -334,7 +411,7 @@ class TestTurbiniaClient(unittest.TestCase):
     result = client.format_task_status('inst', 'proj', 'reg')
     self.assertEqual(result.strip(), SHORT_REPORT.strip())
 
-  @mock.patch('turbinia.client.GoogleCloudFunction.ExecuteFunction')
+  @mock.patch('libcloudforensics.providers.gcp.internal.function.GoogleCloudFunction.ExecuteFunction')  # yapf: disable
   @mock.patch('turbinia.client.task_manager.PSQTaskManager._backend_setup')
   @mock.patch('turbinia.state_manager.get_state_manager')
   def testClientFormatTaskStatusFullReport(self, _, __, ___):
@@ -345,7 +422,7 @@ class TestTurbiniaClient(unittest.TestCase):
     result = client.format_task_status('inst', 'proj', 'reg', full_report=True)
     self.assertEqual(result.strip(), LONG_REPORT.strip())
 
-  @mock.patch('turbinia.client.GoogleCloudFunction.ExecuteFunction')
+  @mock.patch('libcloudforensics.providers.gcp.internal.function.GoogleCloudFunction.ExecuteFunction')  # yapf: disable
   @mock.patch('turbinia.client.task_manager.PSQTaskManager._backend_setup')
   @mock.patch('turbinia.state_manager.get_state_manager')
   def testClientFormatTaskStatusFiles(self, _, __, ___):
@@ -356,6 +433,97 @@ class TestTurbiniaClient(unittest.TestCase):
     result = client.format_task_status(
         'inst', 'proj', 'reg', all_fields=True, full_report=True)
     self.assertEqual(result.strip(), LONG_REPORT_FILES.strip())
+
+  @mock.patch('libcloudforensics.providers.gcp.internal.function.GoogleCloudFunction.ExecuteFunction')  # yapf: disable
+  @mock.patch('turbinia.client.task_manager.PSQTaskManager._backend_setup')
+  @mock.patch('turbinia.state_manager.get_state_manager')
+  def testClientFormatRequestStatus(self, _, __, ___):
+    """Tests format_request_status() with default days."""
+    client = TurbiniaClientProvider.get_turbinia_client()
+    client.get_task_data = mock.MagicMock()
+    client.get_task_data.return_value = self.task_data
+    result = client.format_request_status('inst', 'proj', 'reg')
+    self.assertIn('Requests made within 7 days', result.strip())
+
+  @mock.patch('libcloudforensics.providers.gcp.internal.function.GoogleCloudFunction.ExecuteFunction')  # yapf: disable
+  @mock.patch('turbinia.client.task_manager.PSQTaskManager._backend_setup')
+  @mock.patch('turbinia.state_manager.get_state_manager')
+  def testClientFormatRequestStatusDays(self, _, __, ___):
+    """Tests format_request_status() with custom days."""
+    client = TurbiniaClientProvider.get_turbinia_client()
+    client.get_task_data = mock.MagicMock()
+    client.get_task_data.return_value = self.task_data
+    result = client.format_request_status('inst', 'proj', 'reg', days=4)
+    self.assertIn('Requests made within 4 days', result.strip())
+
+  @mock.patch('libcloudforensics.providers.gcp.internal.function.GoogleCloudFunction.ExecuteFunction')  # yapf: disable
+  @mock.patch('turbinia.client.task_manager.PSQTaskManager._backend_setup')
+  @mock.patch('turbinia.state_manager.get_state_manager')
+  def testClientFormatRequestStatusNoResults(self, _, __, ___):
+    """Tests format_request_status() with no Task results."""
+    client = TurbiniaClientProvider.get_turbinia_client()
+    client.get_task_data = mock.MagicMock()
+    client.get_task_data.return_value = ''
+    result = client.format_request_status('inst', 'proj', 'reg', days=4)
+    self.assertEqual('', result)
+
+  @mock.patch('libcloudforensics.providers.gcp.internal.function.GoogleCloudFunction.ExecuteFunction')  # yapf: disable
+  @mock.patch('turbinia.client.task_manager.PSQTaskManager._backend_setup')
+  @mock.patch('turbinia.state_manager.get_state_manager')
+  def testClientFormatRequestStatusFullReport(self, _, __, ___):
+    """Tests format_request_status() has valid output with full report."""
+    client = TurbiniaClientProvider.get_turbinia_client()
+    client.get_task_data = mock.MagicMock()
+    client.get_task_data.return_value = self.task_data
+    result = client.format_request_status(
+        'inst', 'proj', 'reg', all_fields=True)
+    self.assertEqual(result.strip(), LONG_REPORT_REQUESTS.strip())
+
+  @mock.patch('libcloudforensics.providers.gcp.internal.function.GoogleCloudFunction.ExecuteFunction')  # yapf: disable
+  @mock.patch('turbinia.client.task_manager.PSQTaskManager._backend_setup')
+  @mock.patch('turbinia.state_manager.get_state_manager')
+  def testClientFormatWorkerStatus(self, _, __, ___):
+    """Tests format_worker_status() with default days."""
+    client = TurbiniaClientProvider.get_turbinia_client()
+    client.get_task_data = mock.MagicMock()
+    client.get_task_data.return_value = self.task_data
+    result = client.format_worker_status('inst', 'proj', 'reg')
+    self.assertIn(
+        'Turbinia report for Worker activity within 7 days', result.strip())
+
+  @mock.patch('libcloudforensics.providers.gcp.internal.function.GoogleCloudFunction.ExecuteFunction')  # yapf: disable
+  @mock.patch('turbinia.client.task_manager.PSQTaskManager._backend_setup')
+  @mock.patch('turbinia.state_manager.get_state_manager')
+  def testClientFormatWorkerStatusDays(self, _, __, ___):
+    """Tests format_worker_status() with custom days."""
+    client = TurbiniaClientProvider.get_turbinia_client()
+    client.get_task_data = mock.MagicMock()
+    client.get_task_data.return_value = self.task_data
+    result = client.format_worker_status('inst', 'proj', 'reg', days=4)
+    self.assertIn(
+        'Turbinia report for Worker activity within 4 days', result.strip())
+
+  @mock.patch('libcloudforensics.providers.gcp.internal.function.GoogleCloudFunction.ExecuteFunction')  # yapf: disable
+  @mock.patch('turbinia.client.task_manager.PSQTaskManager._backend_setup')
+  @mock.patch('turbinia.state_manager.get_state_manager')
+  def testClientFormatWorkerStatusNoResults(self, _, __, ___):
+    """Tests format_worker_status() with no Task results."""
+    client = TurbiniaClientProvider.get_turbinia_client()
+    client.get_task_data = mock.MagicMock()
+    client.get_task_data.return_value = ''
+    result = client.format_worker_status('inst', 'proj', 'reg', days=4)
+    self.assertEqual('', result)
+
+  @mock.patch('libcloudforensics.providers.gcp.internal.function.GoogleCloudFunction.ExecuteFunction')  # yapf: disable
+  @mock.patch('turbinia.client.task_manager.PSQTaskManager._backend_setup')
+  @mock.patch('turbinia.state_manager.get_state_manager')
+  def testClientFormatWorkStatusFullReport(self, _, __, ___):
+    """Tests format_worker_status() has valid output with full report."""
+    client = TurbiniaClientProvider.get_turbinia_client()
+    client.get_task_data = mock.MagicMock()
+    client.get_task_data.return_value = self.task_data
+    result = client.format_worker_status('inst', 'proj', 'reg', all_fields=True)
+    self.assertEqual(result.strip(), LONG_REPORT_WORKERS.strip())
 
 
 class TestTurbiniaStats(unittest.TestCase):
@@ -443,8 +611,10 @@ class TestTurbiniaPsqWorker(unittest.TestCase):
     config.OUTPUT_DIR = self.tmp_dir
     config.MOUNT_DIR_PREFIX = self.tmp_dir
     config.ParseDependencies = mock.MagicMock(return_value={})
+    self.saved_jobs = manager.JobsManager._job_classes
 
   def tearDown(self):
+    manager.JobsManager._job_classes = self.saved_jobs
     if 'turbinia-test' in self.tmp_dir:
       shutil.rmtree(self.tmp_dir)
 
@@ -477,9 +647,51 @@ class TestTurbiniaPsqWorker(unittest.TestCase):
     open(config.OUTPUT_DIR, 'a').close()
     self.assertRaises(TurbiniaException, TurbiniaPsqWorker)
 
+  @mock.patch('turbinia.client.config')
+  @mock.patch('turbinia.client.check_directory')
+  @mock.patch('turbinia.client.pubsub')
+  @mock.patch('turbinia.client.datastore.Client')
+  @mock.patch('turbinia.client.psq.Worker')
+  @mock.patch('turbinia.lib.docker_manager.DockerManager')
+  def testTurbiniaClientJobsLists(self, _, __, ___, ____, _____, mock_config):
+    """Test that client job allowlist and denylists are setup correctly."""
+    mock_config.PSQ_TOPIC = 'foo'
+    manager.JobsManager._job_classes = {}
+    manager.JobsManager.RegisterJob(manager_test.TestJob1)
+    manager.JobsManager.RegisterJob(manager_test.TestJob2)
+    manager.JobsManager.RegisterJob(manager_test.TestJob3)
+
+    # Check denylist
+    TurbiniaPsqWorker(['testjob1'], [])
+    self.assertListEqual(
+        sorted(list(manager.JobsManager.GetJobNames())),
+        ['testjob2', 'testjob3'])
+    manager.JobsManager.RegisterJob(manager_test.TestJob1)
+
+    # Check denylist with DISABLED_JOBS config
+    mock_config.DISABLED_JOBS = ['testjob1']
+    TurbiniaPsqWorker(['testjob2'], [])
+    self.assertListEqual(list(manager.JobsManager.GetJobNames()), ['testjob3'])
+    manager.JobsManager.RegisterJob(manager_test.TestJob1)
+    manager.JobsManager.RegisterJob(manager_test.TestJob2)
+    mock_config.DISABLED_JOBS = ['']
+
+    # Check allowlist
+    TurbiniaPsqWorker([], ['testjob1'])
+    self.assertListEqual(list(manager.JobsManager.GetJobNames()), ['testjob1'])
+    manager.JobsManager.RegisterJob(manager_test.TestJob2)
+    manager.JobsManager.RegisterJob(manager_test.TestJob3)
+
+    # Check allowlist of item in DISABLED_JOBS config
+    mock_config.DISABLED_JOBS = ['testjob1', 'testjob2']
+    TurbiniaPsqWorker([], ['testjob1'])
+    self.assertListEqual(list(manager.JobsManager.GetJobNames()), ['testjob1'])
+    manager.JobsManager.RegisterJob(manager_test.TestJob2)
+    manager.JobsManager.RegisterJob(manager_test.TestJob3)
+
   @mock.patch('turbinia.client.subprocess.Popen')
   @mock.patch('logging.Logger.warning')
-  def testSystemDependencyCheck(self, mock_logger, peopen_mock):
+  def testSystemDependencyCheck(self, mock_logger, popen_mock):
     """Test system dependency check."""
     dependencies = {
         'plasojob': {
@@ -489,8 +701,9 @@ class TestTurbiniaPsqWorker(unittest.TestCase):
     }
     # Dependency not found.
     proc_mock = mock.MagicMock()
+    proc_mock.communicate.return_value = (b'no', b'thing')
     proc_mock.returncode = 1
-    peopen_mock.return_value = proc_mock
+    popen_mock.return_value = proc_mock
     self.assertRaises(
         TurbiniaException, check_system_dependencies, dependencies)
 

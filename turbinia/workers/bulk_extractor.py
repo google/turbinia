@@ -18,9 +18,11 @@ import os
 import logging
 import xml.etree.ElementTree as xml_tree
 
+from turbinia import config
 from turbinia import TurbiniaException
 
 from turbinia.evidence import BulkExtractorOutput
+from turbinia.evidence import EvidenceState as state
 from turbinia.workers import TurbiniaTask
 from turbinia.lib import text_formatter as fmt
 
@@ -29,6 +31,10 @@ log = logging.getLogger('turbinia')
 
 class BulkExtractorTask(TurbiniaTask):
   """Task to generate Bulk Extractor output."""
+
+  REQUIRED_STATES = [
+      state.ATTACHED, state.PARENT_ATTACHED, state.PARENT_MOUNTED
+  ]
 
   def run(self, evidence, result):
     """Run Bulk Extractor binary.
@@ -40,6 +46,8 @@ class BulkExtractorTask(TurbiniaTask):
     Returns:
         TurbiniaTaskResult object.
     """
+    config.LoadConfig()
+
     # TODO(wyassine): Research whether bulk extractor has an option to
     # generate a summary report to stdout so that it could be used for
     # a report in this task.
@@ -51,13 +59,32 @@ class BulkExtractorTask(TurbiniaTask):
     # Add the output path to the evidence so we can automatically save it
     # later.
     output_evidence.local_path = output_file_path
+    output_evidence.uncompressed_directory = output_file_path
+
+    # TODO: Convert to using real recipes after
+    # https://github.com/google/turbinia/pull/486 is in.
+    if evidence.config and evidence.config.get('bulk_extractor_args'):
+      bulk_extractor_args = evidence.config.get('bulk_extractor_args')
+      # Some of bulk_extractors arguments use the '=' character
+      # need to substitute with '~' until we have recipes.
+      bulk_extractor_args = bulk_extractor_args.replace('~', '=')
+      bulk_extractor_args = bulk_extractor_args.split(':')
+    else:
+      bulk_extractor_args = None
 
     try:
       # Generate the command we want to run then execute.
-      cmd = 'bulk_extractor {0:s} -o {1:s}'.format(
-          evidence.local_path, output_file_path)
-      result.log('Running Bulk Extractor as [{0:s}]'.format(cmd))
-      self.execute(cmd, result, new_evidence=[output_evidence], shell=True)
+      cmd = ['bulk_extractor']
+
+      cmd.extend(['-o', output_file_path])
+
+      if bulk_extractor_args:
+        cmd.extend(bulk_extractor_args)
+
+      cmd.append(evidence.local_path)
+
+      result.log('Running Bulk Extractor as [{0:s}]'.format(' '.join(cmd)))
+      self.execute(cmd, result, new_evidence=[output_evidence])
 
       # Generate bulk extractor report
       (report, summary) = self.generate_summary_report(output_file_path)

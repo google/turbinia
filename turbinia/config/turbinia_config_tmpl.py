@@ -91,8 +91,13 @@ DEBUG_TASKS = False
 # This will enable the usage of docker containers for the worker.
 DOCKER_ENABLED = False
 
-# Any jobs added to this list will disable it from being used.
-DISABLED_JOBS = []
+# Any Jobs added to this list will be disabled by default at start-up.  See the
+# output of `turbiniactl listjobs` for a complete list of Jobs.  Job names
+# entered here are case insensitive, but must be quoted.  Disabled Jobs can
+# still be enabled with the --jobs_allowlist flag on the server, but the client
+# will not be able to allowlist jobs that have been disabled or denylisted on
+# the server.
+DISABLED_JOBS = ['BinaryExtractorJob', 'BulkExtractorJob', 'PhotorecJob']
 
 # Configure additional job dependency checks below.
 DEPENDENCIES = [{
@@ -122,6 +127,10 @@ DEPENDENCIES = [{
 }, {
     'job': 'PlasoJob',
     'programs': ['log2timeline.py'],
+    'docker_image': None
+}, {
+    'job': 'PhotorecJob',
+    'programs': ['photorec'],
     'docker_image': None
 }, {
     'job': 'PsortJob',
@@ -222,3 +231,13 @@ EMAIL_PORT = 587
 # Email address and password
 EMAIL_ADDRESS = 'example@address.com'
 EMAIL_PASSWORD = 'Hunter2'
+
+###############################################################################
+#                           Prometheus Config
+#
+# These options are required for customizing the prometheus configuration
+###############################################################################
+
+# Prometheus listen address and port
+PROMETHEUS_ADDR = '0.0.0.0'
+PROMETHEUS_PORT = 8000

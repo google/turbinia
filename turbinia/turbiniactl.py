@@ -24,14 +24,16 @@ import getpass
 import logging
 import os
 import sys
+import uuid
 
 from turbinia import config
 from turbinia import TurbiniaException
 from turbinia.config import logger
-from libcloudforensics import gcp
+from libcloudforensics.providers.gcp import forensics as gcp_forensics
 from turbinia.lib import google_cloud
 from turbinia import __version__
 from turbinia.processors import archive
+from turbinia.output_manager import OutputManager
 
 log = logging.getLogger('turbinia')
 # We set up the logger first without the file handler, and we will set up the
@@ -107,17 +109,19 @@ def main():
       'text based evidence files with (in extended grep regex format). '
       'This filtered output will be in addition to the complete output')
   parser.add_argument(
-      '-j', '--jobs_whitelist', default=[], type=csv_list,
-      help='A whitelist for Jobs that will be allowed to run (in CSV format, '
+      '-Y', '--yara_rules_file', help='A file containing Yara rules.')
+  parser.add_argument(
+      '-j', '--jobs_allowlist', default=[], type=csv_list,
+      help='An allowlist for Jobs that will be allowed to run (in CSV format, '
       'no spaces). This will not force them to run if they are not configured '
       'to. This is applied both at server start time and when the client makes '
       'a processing request. When applied at server start time the change is '
       'persistent while the server is running.  When applied by the client, it '
       'will only affect that processing request.')
   parser.add_argument(
-      '-J', '--jobs_blacklist', default=[], type=csv_list,
-      help='A blacklist for Jobs we will not allow to run.  See '
-      '--jobs_whitelist help for details on format and when it is applied.')
+      '-J', '--jobs_denylist', default=[], type=csv_list,
+      help='A denylist for Jobs we will not allow to run.  See '
+      '--jobs_allowlist help for details on format and when it is applied.')
   parser.add_argument(
       '-p', '--poll_interval', default=60, type=int,
       help='Number of seconds to wait between polling for task state info')
@@ -125,6 +129,9 @@ def main():
       '-t', '--task',
       help='The name of a single Task to run locally (must be used with '
       '--run_local.')
+  parser.add_argument(
+      '-T', '--debug_tasks', action='store_true',
+      help='Show debug output for all supported tasks', default=False)
   parser.add_argument(
       '-w', '--wait', action='store_true',
       help='Wait to exit until all tasks for the given request have completed')
@@ -289,9 +296,9 @@ def main():
 
   # Parser options for CompressedDirectory evidence type
   parser_directory = subparsers.add_parser(
-      'compressedirectory', help='Process a compressed tar file as Evidence')
+      'compresseddirectory', help='Process a compressed tar file as Evidence')
   parser_directory.add_argument(
-      '-l', '--local_path', help='Local path to the evidence', required=True)
+      '-l', '--source_path', help='Local path to the evidence', required=True)
   parser_directory.add_argument(
       '-s', '--source', help='Description of the source of the evidence',
       required=False)
@@ -316,7 +323,7 @@ def main():
   subparsers.add_parser(
       'listjobs',
       help='List all available Jobs. These Job names can be used by '
-      '--jobs_whitelist and --jobs_blacklist')
+      '--jobs_allowlist and --jobs_denylist')
 
   # PSQ Worker
   parser_psqworker = subparsers.add_parser('psqworker', help='Run PSQ worker')
@@ -340,6 +347,10 @@ def main():
   parser_status.add_argument(
       '-d', '--days_history', default=0, type=int,
       help='Number of days of history to show', required=False)
+  parser_status.add_argument(
+      '-D', '--dump_json', action='store_true',
+      help='Dump JSON status output instead text. Compatible with -d, -u, '
+      '-r and -t flags, but not others')
   parser_status.add_argument(
       '-f', '--force', help='Gatekeeper for --close_tasks', action='store_true',
       required=False)
@@ -366,6 +377,16 @@ def main():
       '-t', '--task_id', help='Show task for given Task ID', required=False)
   parser_status.add_argument(
       '-u', '--user', help='Show task for given user', required=False)
+  parser_status.add_argument(
+      '-i', '--requests', required=False, action='store_true',
+      help='Show all requests from a specified timeframe. The default '
+      'timeframe is 7 days. Please use the -d flag to extend this.')
+  parser_status.add_argument(
+      '-w', '--workers', required=False, action='store_true',
+      help='Show Worker status information from a specified timeframe. The '
+      'default timeframe is 7 days. Please use the -d flag to extend this. '
+      'Additionaly, you can use the -a or --all_fields flag to retrieve the '
+      'full output containing finished and unassigned worker tasks.')
 
   # Server
   subparsers.add_parser('server', help='Run Turbinia Server')
@@ -399,6 +420,10 @@ def main():
     log.setLevel(logging.DEBUG)
   else:
     log.setLevel(logging.INFO)
+
+  # Enable tasks debugging for supported tasks
+  if args.debug_tasks:
+    config.DEBUG_TASKS = True
 
   # Enable GCP Stackdriver Logging
   if config.STACKDRIVER_LOGGING and args.command in ('server', 'psqworker'):
@@ -441,9 +466,11 @@ def main():
         'This is a test notification')
     sys.exit(0)
 
-  if args.jobs_whitelist and args.jobs_blacklist:
+  args.jobs_allowlist = [j.lower() for j in args.jobs_allowlist]
+  args.jobs_denylist = [j.lower() for j in args.jobs_denylist]
+  if args.jobs_allowlist and args.jobs_denylist:
     log.error(
-        'A Job filter whitelist and blacklist cannot be specified at the same '
+        'A Job filter allowlist and denylist cannot be specified at the same '
         'time')
     sys.exit(1)
 
@@ -459,6 +486,19 @@ def main():
     except IOError as e:
       log.warning(
           'Cannot open file {0:s} [{1!s}]'.format(args.filter_patterns_file, e))
+
+  # Read yara rules
+  yara_rules = None
+  if (args.yara_rules_file and not os.path.exists(args.yara_rules_file)):
+    log.error('Filter patterns file {0:s} does not exist.')
+    sys.exit(1)
+  elif args.yara_rules_file:
+    try:
+      yara_rules = open(args.yara_rules_file).read()
+    except IOError as e:
+      log.warning(
+          'Cannot open file {0:s} [{1!s}]'.format(args.yara_rules_file, e))
+      sys.exit(1)
 
   # Create Client object
   client = None
@@ -491,14 +531,18 @@ def main():
       log.error('Turbinia project must be set by --project or in config')
       sys.exit(1)
 
-    if args.project and args.project != config.TURBINIA_PROJECT:
-      new_disk = gcp.CreateDiskCopy(
+    if ((args.project and args.project != config.TURBINIA_PROJECT) or
+        (args.zone and args.zone != config.TURBINIA_ZONE)):
+      new_disk = gcp_forensics.CreateDiskCopy(
           args.project, config.TURBINIA_PROJECT, None, config.TURBINIA_ZONE,
-          args.disk_name)
+          disk_name=args.disk_name)
       args.disk_name = new_disk.name
       if args.copy_only:
         log.info('--copy_only specified, so not processing with Turbinia')
         sys.exit(0)
+
+  # Set request id
+  request_id = args.request_id if args.request_id else uuid.uuid4().hex
 
   # Start Evidence configuration
   evidence_ = None
@@ -529,9 +573,20 @@ def main():
   elif args.command == 'directory':
     args.name = args.name if args.name else args.source_path
     source_path = os.path.abspath(args.source_path)
-    evidence_ = evidence.Directory(
-        name=args.name, source_path=source_path, source=args.source)
-  elif args.command == 'compressedirectory':
+
+    if not config.SHARED_FILESYSTEM:
+      log.info(
+          'A Cloud Only Architecture has been detected. '
+          'Compressing the directory for GCS upload.')
+      source_path = archive.CompressDirectory(
+          source_path, output_path=config.TMP_DIR)
+      args.name = args.name if args.name else source_path
+      evidence_ = evidence.CompressedDirectory(
+          name=args.name, source_path=source_path, source=args.source)
+    else:
+      evidence_ = evidence.Directory(
+          name=args.name, source_path=source_path, source=args.source)
+  elif args.command == 'compresseddirectory':
     archive.ValidateTarFile(args.source_path)
     args.name = args.name if args.name else args.source_path
     source_path = os.path.abspath(args.source_path)
@@ -578,16 +633,16 @@ def main():
     # which we are bypassing.
     logger.setup()
     worker = TurbiniaPsqWorker(
-        jobs_blacklist=args.jobs_blacklist, jobs_whitelist=args.jobs_whitelist)
+        jobs_denylist=args.jobs_denylist, jobs_allowlist=args.jobs_allowlist)
     worker.start()
   elif args.command == 'celeryworker':
     logger.setup()
     worker = TurbiniaCeleryWorker(
-        jobs_blacklist=args.jobs_blacklist, jobs_whitelist=args.jobs_whitelist)
+        jobs_denylist=args.jobs_denylist, jobs_allowlist=args.jobs_allowlist)
     worker.start()
   elif args.command == 'server':
     server = TurbiniaServer(
-        jobs_blacklist=args.jobs_blacklist, jobs_whitelist=args.jobs_whitelist)
+        jobs_denylist=args.jobs_denylist, jobs_allowlist=args.jobs_allowlist)
     server.start()
   elif args.command == 'status':
     region = config.TURBINIA_REGION
@@ -604,6 +659,12 @@ def main():
             '--close_tasks (-c) requires --user, --request_id, or/and --task_id'
         )
         sys.exit(1)
+
+    if args.dump_json and (args.statistics or args.requests or args.workers):
+      log.info(
+          'The --dump_json flag is not compatible with --statistics, '
+          '--reqeusts, or --workers flags')
+      sys.exit(1)
 
     if args.statistics:
       print(
@@ -623,13 +684,35 @@ def main():
           '--wait requires --request_id, which is not specified. '
           'turbiniactl will exit without waiting.')
 
+    if args.requests:
+      print(
+          client.format_request_status(
+              instance=config.INSTANCE_ID, project=config.TURBINIA_PROJECT,
+              region=region, days=args.days_history,
+              all_fields=args.all_fields))
+      sys.exit(0)
+
+    if args.workers:
+      print(
+          client.format_worker_status(
+              instance=config.INSTANCE_ID, project=config.TURBINIA_PROJECT,
+              region=region, days=args.days_history,
+              all_fields=args.all_fields))
+      sys.exit(0)
+
+    if args.dump_json:
+      output_json = True
+    else:
+      output_json = False
     print(
         client.format_task_status(
             instance=config.INSTANCE_ID, project=config.TURBINIA_PROJECT,
             region=region, days=args.days_history, task_id=args.task_id,
             request_id=args.request_id, user=args.user,
             all_fields=args.all_fields, full_report=args.full_report,
-            priority_filter=args.priority_filter))
+            priority_filter=args.priority_filter, output_json=output_json))
+    sys.exit(0)
+
   elif args.command == 'listjobs':
     log.info('Available Jobs:')
     client.list_jobs()
@@ -642,6 +725,16 @@ def main():
           'The evidence type {0:s} is Cloud only, and this instance of '
           'Turbinia is not a cloud instance.'.format(evidence_.type))
       sys.exit(1)
+    elif not config.SHARED_FILESYSTEM and evidence_.copyable:
+      if os.path.exists(evidence_.local_path):
+        output_manager = OutputManager()
+        output_manager.setup(evidence_.type, request_id, remote_only=True)
+        output_manager.save_evidence(evidence_)
+      else:
+        log.error(
+            'The evidence local path does not exist: {0:s}. Please submit '
+            'a new Request with a valid path.'.format(evidence_.local_path))
+        sys.exit(1)
     elif not config.SHARED_FILESYSTEM and not evidence_.cloud_only:
       log.error(
           'The evidence type {0:s} cannot run on Cloud instances of '
@@ -661,14 +754,18 @@ def main():
     server.start()
   elif evidence_:
     request = TurbiniaRequest(
-        request_id=args.request_id, requester=getpass.getuser())
+        request_id=request_id, requester=getpass.getuser())
     request.evidence.append(evidence_)
     if filter_patterns:
       request.recipe['filter_patterns'] = filter_patterns
-    if args.jobs_blacklist:
-      request.recipe['jobs_blacklist'] = args.jobs_blacklist
-    if args.jobs_whitelist:
-      request.recipe['jobs_whitelist'] = args.jobs_whitelist
+    if args.jobs_denylist:
+      request.recipe['jobs_denylist'] = args.jobs_denylist
+    if args.jobs_allowlist:
+      request.recipe['jobs_allowlist'] = args.jobs_allowlist
+    if yara_rules:
+      request.recipe['yara_rules'] = yara_rules
+    if args.debug_tasks:
+      request.recipe['debug_tasks'] = args.debug_tasks
     if args.recipe_config:
       for pair in args.recipe_config:
         try:
