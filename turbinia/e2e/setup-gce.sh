@@ -21,6 +21,7 @@ then
 fi
 
 PROJECT="$1"
+shift
 EXTRA_ARGS="$@"
 
 gcloud --project=$PROJECT info
