@@ -9,7 +9,7 @@ fi
 # Use log file path from environment variable is it exists, else get the path from the config.
 if [ ! -z ${TURBINIA_LOG_FILE+x} ]
 then
-    /usr/local/bin/turbiniactl -d -L $TURBINIA_LOG_FILE -S server
+    /usr/local/bin/turbiniactl -L $TURBINIA_LOG_FILE -S server
 else
-    /usr/local/bin/turbiniactl -d -S server
+    /usr/local/bin/turbiniactl -S server
 fi
