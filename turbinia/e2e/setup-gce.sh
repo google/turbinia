@@ -15,11 +15,13 @@ echo "Initiate gcloud configuration"
 if [ $# -ne  1 ]
 then
   echo "Not enough arguments supplied, please provide project."
+  echo "Any extra arguments will be passed to deploy.sh"
   echo "$0 [PROJECT]"
   exit 1
 fi
 
 PROJECT="$1"
+EXTRA_ARGS="$@"
 
 gcloud --project=$PROJECT info
 
@@ -49,6 +51,6 @@ sleep 60
 
 echo "Setup Terraform Turbinia infrastructure."
 export DEVSHELL_PROJECT_ID=$PROJECT
-./osdfir-infrastructure/deploy.sh --no-timesketch
+./osdfir-infrastructure/deploy.sh --no-timesketch $EXTRA_ARGS
 
 
