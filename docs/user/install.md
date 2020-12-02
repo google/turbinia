@@ -50,11 +50,14 @@ to get a shell with access to your GCP resources.
 *   Configuration
     *   By default this will create one Turbinia server instance and one worker
         instance. If you want to change the number of workers, edit the
-        `turbinia/variables.tf` file and set the `turbinia_worker_count`
+        `modules/turbinia/variables.tf` file and set the `turbinia_worker_count`
         variable to the number of workers you want to deploy.
     *   To adjust the GCP zone and region you want to run Turbinia in, edit the
-        `turbinia/variables.tf` file and change the `gcp_zone` and `gcp_region`
-        variables as appropriate.
+        `modules/turbinia/variables.tf` file and change the `gcp_zone` and 
+        `gcp_region` variables as appropriate to reflect your GCP project's
+        zone and region.
+    *   If you want to use docker to run Turbinia tasks, please follow the
+        instructions [here](using-docker.md) to enable docker.
     *   Running the following commands will leave some state information under
         the current directory, so if you wish to continue to manage the number
         of workers via Terraform you should keep this directory for later use.
@@ -80,6 +83,10 @@ configured. The Turbinia configuration file will be deployed on these instances
 as `etc/turbinia/turbinia.conf`. If you later want to increase the number of
 workers, you can edit the `turbinia/variables.tf` file mentioned above and
 re-run `terraform apply`
+To use Turbinia you can use the virtual environment that was setup by
+the `deploy.sh` script.To activate the virtual environment, run the following
+command  `source ~/turbinia/bin/activate` and then use `turbiniactl`. For more
+information on how to use Turbinia please visit [the user manual](https://github.com/google/turbinia). 
 
 ### Client configuration (optional)
 
