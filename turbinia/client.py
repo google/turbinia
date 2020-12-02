@@ -1145,8 +1145,8 @@ class TurbiniaServer:
     if config.PROMETHEUS_ENABLED:
       if config.PROMETHEUS_PORT and config.PROMETHEUS_ADDR:
         log.info('Starting Prometheus endpoint.')
-        start_http_server(port=config.PROMETHEUS_PORT,
-                          addr=config.PROMETHEUS_ADDR)
+        start_http_server(
+            port=config.PROMETHEUS_PORT, addr=config.PROMETHEUS_ADDR)
       else:
         log.info('Prometheus enabled but port or address not set!')
     log.info('Running Turbinia Server.')
@@ -1273,8 +1273,8 @@ class TurbiniaPsqWorker:
     if config.PROMETHEUS_ENABLED:
       if config.PROMETHEUS_PORT and config.PROMETHEUS_ADDR:
         log.info('Starting Prometheus endpoint.')
-        start_http_server(port=config.PROMETHEUS_PORT,
-                          addr=config.PROMETHEUS_ADDR)
+        start_http_server(
+            port=config.PROMETHEUS_PORT, addr=config.PROMETHEUS_ADDR)
       else:
         log.info('Prometheus enabled but port or address not set!')
     log.info('Running Turbinia PSQ Worker.')
