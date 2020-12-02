@@ -9,13 +9,13 @@ fi
 if [ ! -z ${TURBINIA_OUTPUT_DIR} ] && [ ! -d ${TURBINIA_OUTPUT_DIR} ]
 then
   sudo mkdir -p ${TURBINIA_OUTPUT_DIR}
-  sudo chown -R turbinia:turbinia ${TURBINIA_OUTPUT_DIR}
+  sudo chown turbinia:turbinia ${TURBINIA_OUTPUT_DIR}
 fi
 
 if [ ! -z ${TURBINIA_TMP_DIR} ] && [ ! -d ${TURBINIA_TMP_DIR} ]
 then
   sudo mkdir -p ${TURBINIA_TMP_DIR}
-  sudo chown -R turbinia:turbinia ${TURBINIA_TMP_DIR}
+  sudo chown turbinia:turbinia ${TURBINIA_TMP_DIR}
 fi
 
 # Use log file path from environment variable is it exists, else get the path from the config.
