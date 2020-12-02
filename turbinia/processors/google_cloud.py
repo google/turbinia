@@ -54,6 +54,10 @@ def GetLocalInstanceName():
 
   Returns:
     The instance name as a string
+
+  Raises:
+    TurbiniaException: If instance name cannot be determined from metadata
+        server.
   """
   # TODO(aarontp): Use cloud API instead of manual requests to metadata service.
   req = urllib.request.Request(
@@ -80,6 +84,9 @@ def PreprocessAttachDisk(disk_name):
        '/dev/disk/by-id/google-disk0',
        ['/dev/disk/by-id/google-disk0-part1', '/dev/disk/by-id/google-disk0-p2']
       )
+
+  Raises:
+    TurbiniaException: If the device is not a block device.
   """
   path = '/dev/disk/by-id/google-{0:s}'.format(disk_name)
   if IsBlockDevice(path):
@@ -90,10 +97,9 @@ def PreprocessAttachDisk(disk_name):
   instance_name = GetLocalInstanceName()
   project = gcp_project.GoogleCloudProject(
       config.TURBINIA_PROJECT, default_zone=config.TURBINIA_ZONE)
-  instance = project.compute.GetInstance(
-      instance_name, zone=config.TURBINIA_ZONE)
+  instance = project.compute.GetInstance(instance_name)
 
-  disk = instance.GetDisk(disk_name)
+  disk = project.compute.GetDisk(disk_name)
   log.info(
       'Attaching disk {0:s} to instance {1:s}'.format(disk_name, instance_name))
   instance.AttachDisk(disk)
@@ -108,6 +114,15 @@ def PreprocessAttachDisk(disk_name):
           'Block device {0:s} mode is {1}'.format(path,
                                                   os.stat(path).st_mode))
     time.sleep(1)
+
+  message = None
+  if not os.path.exists(path):
+    message = 'Device path {0:s} does not exist'.format(path)
+  elif not IsBlockDevice(path):
+    message = 'Device path {0:s} is not a block device'.format(path)
+  if message:
+    log.error(message)
+    raise TurbiniaException(message)
 
   return (path, glob.glob('{0:s}-part*'.format(path)))
 
@@ -133,9 +148,8 @@ def PostprocessDetachDisk(disk_name, local_path):
   instance_name = GetLocalInstanceName()
   project = gcp_project.GoogleCloudProject(
       config.TURBINIA_PROJECT, default_zone=config.TURBINIA_ZONE)
-  instance = project.compute.GetInstance(
-      instance_name, zone=config.TURBINIA_ZONE)
-  disk = instance.GetDisk(disk_name)
+  instance = project.compute.GetInstance(instance_name)
+  disk = project.compute.GetDisk(disk_name)
   log.info(
       'Detaching disk {0:s} from instance {1:s}'.format(
           disk_name, instance_name))
