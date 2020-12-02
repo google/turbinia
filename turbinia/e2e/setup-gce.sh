@@ -12,7 +12,7 @@ install_packages() {
 
 echo "Initiate gcloud configuration"
 
-if [ $# -ne  1 ]
+if [ $# -lt  1 ]
 then
   echo "Not enough arguments supplied, please provide project."
   echo "Any extra arguments will be passed to deploy.sh"
