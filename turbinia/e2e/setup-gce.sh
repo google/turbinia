@@ -32,7 +32,7 @@ git clone https://github.com/forseti-security/osdfir-infrastructure.git
 # If you see "ERROR: (gcloud.app.create) PERMISSION_DENIED: The caller does not have permission"
 # Only GCP Project Owner can create App Engine project
 # See documentation: https://cloud.google.com/appengine/docs/standard/python/console/#create
-if ! gcloud --project=$PROJEC services list | grep appengine; then
+if ! gcloud --project=$PROJECT services list | grep appengine; then
   echo "Enable AppEngine API and sleep to make sure service is enabled."
   gcloud --project=$PROJECT services enable appengine
   sleep 60
