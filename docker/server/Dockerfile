@@ -13,10 +13,13 @@ software-properties-common \
 RUN pip3 install pip --upgrade
 RUN pip3 install urllib3 cryptography --upgrade
 
-ADD . /tmp/
+ADD requirements.txt /tmp/
 RUN cd /tmp/ && pip3 install -r requirements.txt
-RUN cd /tmp/ && python3 setup.py install
+ADD dfvfs_requirements.txt /tmp/
+RUN cd /tmp/ && pip3 install -r dfvfs_requirements.txt
 
+ADD . /tmp/
+RUN cd /tmp/ && python3 setup.py install
 RUN useradd -r -s /bin/nologin -G disk turbinia
 
 RUN mkdir /etc/turbinia && mkdir -p /mnt/turbinia/ && mkdir -p /var/lib/turbinia/ \
