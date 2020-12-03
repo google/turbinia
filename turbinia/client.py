@@ -1142,12 +1142,13 @@ class TurbiniaServer:
 
   def start(self):
     """Start Turbinia Server."""
-    if config.PROMETHEUS_PORT and config.PROMETHEUS_ADDR:
-      log.info('Starting Prometheus endpoint.')
-      start_http_server(
-          port=config.PROMETHEUS_PORT, addr=config.PROMETHEUS_ADDR)
-    else:
-      log.debug('Prometheus config not specified, not starting Prometheus.')
+    if config.PROMETHEUS_ENABLED:
+      if config.PROMETHEUS_PORT and config.PROMETHEUS_ADDR:
+        log.info('Starting Prometheus endpoint.')
+        start_http_server(
+            port=config.PROMETHEUS_PORT, addr=config.PROMETHEUS_ADDR)
+      else:
+        log.info('Prometheus enabled but port or address not set!')
     log.info('Running Turbinia Server.')
     self.task_manager.run()
 
@@ -1269,11 +1270,12 @@ class TurbiniaPsqWorker:
 
   def start(self):
     """Start Turbinia PSQ Worker."""
-    if config.PROMETHEUS_PORT and config.PROMETHEUS_ADDR:
-      log.info('Starting Prometheus endpoint.')
-      start_http_server(
-          port=config.PROMETHEUS_PORT, addr=config.PROMETHEUS_ADDR)
-    else:
-      log.debug('Prometheus config not specified, not starting Prometheus.')
+    if config.PROMETHEUS_ENABLED:
+      if config.PROMETHEUS_PORT and config.PROMETHEUS_ADDR:
+        log.info('Starting Prometheus endpoint.')
+        start_http_server(
+            port=config.PROMETHEUS_PORT, addr=config.PROMETHEUS_ADDR)
+      else:
+        log.info('Prometheus enabled but port or address not set!')
     log.info('Running Turbinia PSQ Worker.')
     self.worker.listen()
