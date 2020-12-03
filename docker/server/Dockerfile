@@ -20,6 +20,7 @@ RUN cd /tmp/ && pip3 install -r dfvfs_requirements.txt
 
 ADD . /tmp/
 RUN cd /tmp/ && python3 setup.py install
+
 RUN useradd -r -s /bin/nologin -G disk turbinia
 
 RUN mkdir /etc/turbinia && mkdir -p /mnt/turbinia/ && mkdir -p /var/lib/turbinia/ \
