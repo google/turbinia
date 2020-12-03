@@ -126,7 +126,7 @@ class OutputManager:
         log.info(
             'Retrieving copyable evidence data from {0:s}'.format(
                 evidence_.saved_path))
-        evidence_.local_path = writer.copy_from(evidence_.saved_path)
+        evidence_.source_path = writer.copy_from(evidence_.saved_path)
     return evidence_
 
   def save_evidence(self, evidence_, result=None):
@@ -143,7 +143,7 @@ class OutputManager:
       TurbiniaException: If serialization or writing of evidence config fails
     """
     path, path_type, local_path = self.save_local_file(
-        evidence_.local_path, result)
+        evidence_.source_path, result)
 
     if evidence_.save_metadata:
       metadata = evidence_.config.copy()
@@ -171,7 +171,7 @@ class OutputManager:
     # where tasks are saving evidence into the temp dir, we'll get the newly
     # copied version from the saved output path.
     if local_path:
-      evidence_.local_path = local_path
+      evidence_.source_path = local_path
     evidence_.saved_path = path
     evidence_.saved_path_type = path_type
     if evidence_.saved_path:
