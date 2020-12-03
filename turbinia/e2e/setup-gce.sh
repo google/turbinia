@@ -26,7 +26,7 @@ wget -q -O terraform.zip https://releases.hashicorp.com/terraform/0.13.5/terrafo
 unzip terraform.zip && cp terraform /usr/local/bin/ && rm terraform.zip terraform
 
 # Git clone Turbinia Terraform scripts
-git clone --single-branch --branch=e2e-fixes https://github.com/hacktobeer/osdfir-infrastructure.git
+git clone https://github.com/forseti-security/osdfir-infrastructure.git
 
 # Deploy Turbinia infrastructure with terraform
 # If you see "ERROR: (gcloud.app.create) PERMISSION_DENIED: The caller does not have permission"
