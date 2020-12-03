@@ -42,7 +42,7 @@ def getTurbiniaRequest():
   return request
 
 
-class MockPubSubMessage(object):
+class MockPubSubMessage:
   """This is a mock of a PubSub message."""
 
   def __init__(self, data='fake data', message_id='12345'):

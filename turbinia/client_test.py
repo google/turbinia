@@ -182,6 +182,9 @@ LONG_REPORT_WORKERS = textwrap.dedent(
         * Status: Third Task Failed...
         * Run Time: 0:03:00
 
+
+    ## Unassigned Worker Tasks
+    * No Tasks found.
 """)
 
 STATISTICS_REPORT = textwrap.dedent(
@@ -688,7 +691,7 @@ class TestTurbiniaPsqWorker(unittest.TestCase):
 
   @mock.patch('turbinia.client.subprocess.Popen')
   @mock.patch('logging.Logger.warning')
-  def testSystemDependencyCheck(self, mock_logger, peopen_mock):
+  def testSystemDependencyCheck(self, mock_logger, popen_mock):
     """Test system dependency check."""
     dependencies = {
         'plasojob': {
@@ -698,8 +701,9 @@ class TestTurbiniaPsqWorker(unittest.TestCase):
     }
     # Dependency not found.
     proc_mock = mock.MagicMock()
+    proc_mock.communicate.return_value = (b'no', b'thing')
     proc_mock.returncode = 1
-    peopen_mock.return_value = proc_mock
+    popen_mock.return_value = proc_mock
     self.assertRaises(
         TurbiniaException, check_system_dependencies, dependencies)
 

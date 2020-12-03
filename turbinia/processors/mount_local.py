@@ -29,11 +29,13 @@ from turbinia import TurbiniaException
 log = logging.getLogger('turbinia')
 
 
-def PreprocessLosetup(source_path):
+def PreprocessLosetup(source_path, partition_offset=None, partition_size=None):
   """Runs Losetup on a target block device or image file.
 
   Args:
     source_path(str): the source path to run losetup on.
+    partition_offset(int): offset of volume in bytes.
+    partition_size(int): size of volume in bytes.
 
   Raises:
     TurbiniaException: if source_path doesn't exist or if the losetup command
@@ -48,17 +50,19 @@ def PreprocessLosetup(source_path):
 
   if not os.path.exists(source_path):
     raise TurbiniaException(
-        'Cannot process non-existing source_path {0!s}'.format(source_path))
+        ('Cannot create loopback device for non-existing source_path '
+         '{0!s}').format(source_path))
 
   # TODO(aarontp): Remove hard-coded sudo in commands:
   # https://github.com/google/turbinia/issues/73
-  if not os.path.exists(source_path):
-    raise TurbiniaException(
-        'Cannot mount non-existing source_path {0!s}'.format(source_path))
-
-  losetup_command = [
-      'sudo', 'losetup', '--show', '--find', '-P', '-r', source_path
-  ]
+  losetup_command = ['sudo', 'losetup', '--show', '--find', '-r']
+  if partition_size:
+    # Evidence is RawDiskPartition
+    losetup_command.extend(['-o', str(partition_offset)])
+    losetup_command.extend(['--sizelimit', str(partition_size)])
+  else:
+    losetup_command.append('-P')
+  losetup_command.append(source_path)
   log.info('Running command {0:s}'.format(' '.join(losetup_command)))
   try:
     losetup_device = subprocess.check_output(

@@ -80,6 +80,12 @@ class FileArtifactExtractionTask(TurbiniaTask):
 
     for dirpath, _, filenames in os.walk(export_directory):
       for filename in filenames:
+        if filename == 'hashes.json' and dirpath == export_directory:
+          # Ignore the hashes.json file created by image export.
+          # TODO: remove this when
+          # https://github.com/log2timeline/plaso/pull/3320
+          # is pushed.
+          continue
         exported_artifact = ExportedFileArtifact(
             artifact_name=self.artifact_name, source_path=os.path.join(
                 dirpath, filename))

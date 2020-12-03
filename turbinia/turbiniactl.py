@@ -384,7 +384,9 @@ def main():
   parser_status.add_argument(
       '-w', '--workers', required=False, action='store_true',
       help='Show Worker status information from a specified timeframe. The '
-      'default timeframe is 7 days. Please use the -d flag to extend this.')
+      'default timeframe is 7 days. Please use the -d flag to extend this. '
+      'Additionaly, you can use the -a or --all_fields flag to retrieve the '
+      'full output containing finished and unassigned worker tasks.')
 
   # Server
   subparsers.add_parser('server', help='Run Turbinia Server')
@@ -576,7 +578,8 @@ def main():
       log.info(
           'A Cloud Only Architecture has been detected. '
           'Compressing the directory for GCS upload.')
-      source_path = archive.CompressDirectory(source_path, output_path='/tmp')
+      source_path = archive.CompressDirectory(
+          source_path, output_path=config.TMP_DIR)
       args.name = args.name if args.name else source_path
       evidence_ = evidence.CompressedDirectory(
           name=args.name, source_path=source_path, source=args.source)

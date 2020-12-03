@@ -34,3 +34,5 @@ COPY docker/server/start.sh /home/turbinia/start.sh
 RUN chmod +x /home/turbinia/start.sh
 USER turbinia
 CMD ["/home/turbinia/start.sh"]
+# Expose Prometheus endpoint.
+EXPOSE 8000/tcp
