@@ -36,7 +36,7 @@ for try in $(seq 1 ${max_retry}); do
 done;
 
 # Install Terraform
-wget -q -O terraform.zip https://releases.hashicorp.com/terraform/0.12.29/terraform_0.12.29_linux_amd64.zip
+wget -q -O terraform.zip https://releases.hashicorp.com/terraform/0.13.5/terraform_0.13.5_linux_amd64.zip
 unzip terraform.zip && cp terraform /usr/local/bin/ && rm terraform.zip terraform
 
 # Git clone Turbinia Terraform scripts
