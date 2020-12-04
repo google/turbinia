@@ -128,8 +128,14 @@ class Evidence:
     source (str): String indicating where evidence came from (including tool
         version that created it, if appropriate).
     local_path (str): Path to the processed data (can be a blockdevice or a
-        directory).
-    source_path (str): Path to the un-processed source data for the Evidence.
+        mounted directory, etc).  This is the path that most Tasks should use to
+        access evidence after it's been processed on the worker (i.e. when the
+        Tasks `run()` method is called).  The last pre-processor to run should
+        set this path.
+    source_path (str): Path to the original un-processed source data for the
+        Evidence.  This is the path that Evidence should be created and set up
+        with initially.  Tasks should generally not use this path, but instead
+        use the `local_path`.
     mount_path (str): Path to a mounted file system (if relevant).
     tags (dict): Extra tags associated with this evidence.
     request_id (str): The id of the request this evidence came from, if any.

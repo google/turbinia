@@ -132,7 +132,7 @@ class PlasoTask(TurbiniaTask):
         return result
 
     cmd.extend(['--logfile', plaso_log])
-    cmd.extend([plaso_file, evidence.source_path])
+    cmd.extend([plaso_file, evidence.local_path])
 
     result.log('Running plaso as [{0:s}]'.format(' '.join(cmd)))
 

@@ -90,6 +90,7 @@ OPTIONAL_VARS = [
     'EMAIL_ADDRESS',
     'EMAIL_PASSWORD',
     # Prometheus config
+    'PROMETHEUS_ENABLED',
     'PROMETHEUS_ADDR',
     'PROMETHEUS_PORT'
 ]
