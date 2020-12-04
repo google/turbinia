@@ -17,6 +17,8 @@
 from __future__ import unicode_literals
 
 import logging
+import os
+import json
 
 from google.cloud import logging as cloud_logging
 from google.cloud import error_reporting
@@ -63,3 +65,30 @@ def setup_stackdriver_traceback(project_id):
     msg = 'Error enabling GCP Error Reporting: {0:s}'.format(str(exception))
     raise TurbiniaException(msg)
   return client
+
+
+def get_logs(project_id, output_dir, query=None):
+  """Copies stackdriver logs to a local directory.
+
+  Attributes:
+    project_id: The name of the Google Cloud project.
+    output_dir: The directory where logs are stored.
+    query: Query to use to pull stackdriver logs. 
+  Raises:
+    TurbiniaException: When an error happens pulling the logs.
+  """
+  if not query:
+    query = 'logName="projects/{}/logs/python"'.format(project_id)
+  output_file = open(os.path.join(output_dir,"turbinia_stackdriver_logs.jsonl"), "w")
+  try:
+    client = cloud_logging.Client(project=project_id)
+    for entry in client.list_entries(
+        order_by=cloud_logging.DESCENDING, filter_=query):
+      output_file.write(json.dumps(entry.to_api_repr()))
+      output_file.write('\n')
+    output_file.close()
+  except exceptions.GoogleCloudError as exception:
+    output_file.close()
+    msg = 'Error enabling Stackdriver Logging: {0:s}'.format(str(exception))
+    raise TurbiniaException(msg)      
+

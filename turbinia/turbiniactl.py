@@ -135,7 +135,6 @@ def main():
   parser.add_argument(
       '-w', '--wait', action='store_true',
       help='Wait to exit until all tasks for the given request have completed')
-
   subparsers = parser.add_subparsers(
       dest='command', title='Commands', metavar='<command>')
 
@@ -387,6 +386,13 @@ def main():
       'default timeframe is 7 days. Please use the -d flag to extend this. '
       'Additionaly, you can use the -a or --all_fields flag to retrieve the '
       'full output containing finished and unassigned worker tasks.')
+  parser_log_collector = subparsers.add_parser(
+      'GCPLogsCollector', help='Collects Turbinia logs from Stack driver.')
+  parser_log_collector.add_argument(
+      '-o', '--output_dir', help='Directory path for output', required=True)
+  parser_log_collector.add_argument(
+      '-q', '--query', help='Filter expression to use to query Stackdriver logs.'
+      )
 
   # Server
   subparsers.add_parser('server', help='Run Turbinia Server')
@@ -716,6 +722,19 @@ def main():
   elif args.command == 'listjobs':
     log.info('Available Jobs:')
     client.list_jobs()
+  elif args.command == 'GCPLogsCollector':
+    if not config.STACKDRIVER_LOGGING:
+      log.error(
+          'Stackdriver logging must be enabled in order to use this.')
+      sys.exit(1) 
+    if not os.path.isdir(args.output_dir):
+      log.error(
+          'Please provide a valid directory path.')
+      sys.exit(1) 
+    query = None
+    if args.query:
+      query = args.query
+    google_cloud.get_logs(config.TURBINIA_PROJECT, args.output_dir, query)
   else:
     log.warning('Command {0!s} not implemented.'.format(args.command))
 
