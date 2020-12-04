@@ -39,6 +39,8 @@ def setup_stackdriver_handler(project_id):
   try:
     client = cloud_logging.Client(project=project_id)
     cloud_handler = cloud_logging.handlers.CloudLoggingHandler(client)
+    formatter = logging.Formatter('[%(levelname)s] Turbinia: %(message)s')
+    cloud_handler.setFormatter(formatter)
     logger = logging.getLogger('turbinia')
     logger.addHandler(cloud_handler)
   except exceptions.GoogleCloudError as exception:
