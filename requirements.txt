@@ -10,7 +10,7 @@ google-cloud-logging==1.15.1
 google-cloud-pubsub==1.7.0
 google-cloud-storage
 prometheus_client
-libcloudforensics==20200818
+libcloudforensics
 psq
 six>=1.15.0
 urllib3[secure]

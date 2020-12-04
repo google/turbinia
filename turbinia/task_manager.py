@@ -210,7 +210,6 @@ class BaseTaskManager:
         job_count += 1
         for task in job_instance.create_tasks([evidence_]):
           self.add_task(task, job_instance, evidence_)
-          SERVER_TASKS.inc()
 
     if not job_count:
       log.warning(
@@ -344,6 +343,7 @@ class BaseTaskManager:
       job.tasks.append(task)
     self.state_manager.write_new_task(task)
     self.enqueue_task(task, evidence_)
+    SERVER_TASKS.inc()
 
   def remove_jobs(self, request_id):
     """Removes the all Jobs for the given request ID.
@@ -501,8 +501,8 @@ class BaseTaskManager:
           job = self.process_result(task.result)
           if job:
             self.process_job(job, task)
+        self.state_manager.update_task(task)
 
-      [self.state_manager.update_task(t) for t in self.tasks]
       if config.SINGLE_RUN and self.check_done():
         log.info('No more tasks to process.  Exiting now.')
         return
