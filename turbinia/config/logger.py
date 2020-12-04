@@ -39,6 +39,7 @@ def setup(need_file_handler=True, need_stream_handler=True):
   # Eliminate double logging from root logger
   logger.propagate = False
 
+  # We only need a handler if one of that type doesn't exist already
   if logger.handlers:
     for handler in logger.handlers:
       # Want to do strict type-checking here because is instance will include
