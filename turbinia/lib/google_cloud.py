@@ -16,6 +16,9 @@
 
 from __future__ import unicode_literals
 
+from datetime import datetime
+from datetime import timedelta
+from turbinia.config import DATETIME_FORMAT
 import logging
 import os
 import json
@@ -26,7 +29,7 @@ from google.cloud import exceptions
 
 from turbinia import TurbiniaException
 
-
+logger = logging.getLogger('turbinia')
 def setup_stackdriver_handler(project_id):
   """Set up Google Cloud Stackdriver Logging
 
@@ -41,7 +44,6 @@ def setup_stackdriver_handler(project_id):
   try:
     client = cloud_logging.Client(project=project_id)
     cloud_handler = cloud_logging.handlers.CloudLoggingHandler(client)
-    logger = logging.getLogger('turbinia')
     logger.addHandler(cloud_handler)
   except exceptions.GoogleCloudError as exception:
     msg = 'Error enabling Stackdriver Logging: {0:s}'.format(str(exception))
@@ -67,23 +69,30 @@ def setup_stackdriver_traceback(project_id):
   return client
 
 
-def get_logs(project_id, output_dir, query=None):
+def get_logs(output_dir, project_id, days, query=None):
   """Copies stackdriver logs to a local directory.
 
   Attributes:
     project_id: The name of the Google Cloud project.
     output_dir: The directory where logs are stored.
     query: Query to use to pull stackdriver logs. 
+    days: number of days we want history for.
   Raises:
     TurbiniaException: When an error happens pulling the logs.
   """
   if not query:
-    query = 'logName="projects/{}/logs/python"'.format(project_id)
+    query = 'jsonPayload.python_logger="turbinia"'
+  start_time = datetime.now() - timedelta(days=days)
+  start_string = start_time.strftime(DATETIME_FORMAT)
+  complete_query = '{0!s} timestamp>="{1!s}"'.format(query, start_string)
   output_file = open(os.path.join(output_dir,"turbinia_stackdriver_logs.jsonl"), "w")
   try:
     client = cloud_logging.Client(project=project_id)
+    logger.info('Collecting the stackdriver logs with the following query: {}'.format(
+        complete_query))
+    logger.info('Writing the logs to {}'.format(output_file))
     for entry in client.list_entries(
-        order_by=cloud_logging.DESCENDING, filter_=query):
+        order_by=cloud_logging.DESCENDING, filter_=complete_query):
       output_file.write(json.dumps(entry.to_api_repr()))
       output_file.write('\n')
     output_file.close()

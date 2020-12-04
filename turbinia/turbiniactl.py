@@ -393,6 +393,9 @@ def main():
   parser_log_collector.add_argument(
       '-q', '--query', help='Filter expression to use to query Stackdriver logs.'
       )
+  parser_log_collector.add_argument(
+      '-d', '--days_history', default=1, type=int,
+      help='Number of days of history to show', required=False)
 
   # Server
   subparsers.add_parser('server', help='Run Turbinia Server')
@@ -734,7 +737,7 @@ def main():
     query = None
     if args.query:
       query = args.query
-    google_cloud.get_logs(config.TURBINIA_PROJECT, args.output_dir, query)
+    google_cloud.get_logs(args.output_dir, config.TURBINIA_PROJECT, args.days_history, query)
   else:
     log.warning('Command {0!s} not implemented.'.format(args.command))
 
