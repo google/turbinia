@@ -1,0 +1,535 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Turbinia Local and Manual Installation Instructions &mdash; Turbinia  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="How Turbinia Works" href="how-it-works.html" />
+    <link rel="prev" title="Turbinia Quick Installation Instructions" href="install.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home" alt="Documentation Home"> Turbinia
+          
+
+          
+            
+            <img src="../_static/turbinia-logo.jpg" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">User documentation</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="install.html"><strong>Turbinia Quick Installation Instructions</strong></a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Turbinia Local and Manual Installation Instructions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#introduction"><strong>Introduction</strong></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#prerequisites"><strong>Prerequisites</strong></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#installation"><strong>Installation</strong></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#gcp-setup"><strong>GCP Setup</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#core-installation"><strong>Core Installation</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#gcp-installation"><strong>GCP Installation</strong></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#local-turbinia"><strong>Local Turbinia</strong></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="how-it-works.html">How Turbinia Works</a></li>
+<li class="toctree-l2"><a class="reference internal" href="using-docker.html">Using Docker for Job execution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="operational-details.html">Operational Details</a></li>
+<li class="toctree-l2"><a class="reference internal" href="debugging.html">Debugging</a></li>
+<li class="toctree-l2"><a class="reference internal" href="faq.html">FAQ</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../developer/index.html">Developer documentation</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">Turbinia</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="index.html">User documentation</a> &raquo;</li>
+        
+      <li>Turbinia Local and Manual Installation Instructions</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/user/install-manual.md.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="turbinia-local-and-manual-installation-instructions">
+<h1>Turbinia Local and Manual Installation Instructions<a class="headerlink" href="#turbinia-local-and-manual-installation-instructions" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="introduction">
+<h2><strong>Introduction</strong><a class="headerlink" href="#introduction" title="Permalink to this headline">¶</a></h2>
+<p>Turbinia can be run on the <a class="reference external" href="https://cloud.google.com">Google Cloud Platform</a>, on
+local machines, or in a hybrid mode. See the
+“<a class="reference internal" href="how-it-works.html"><span class="doc">how it works</span></a>”
+documentation for more details on what the architecture looks like for each of
+these installation types. This page covers the local installation as well as the
+manual steps for hybrid and cloud installation. <strong>If you are setting up a GCP
+cloud or hybrid installation, it is highly recommended and much simpler to use
+the
+<a class="reference internal" href="install.html"><span class="doc">terraform installation method</span></a>
+to bootstrap those environments.</strong></p>
+<p>Each section of this document indicates which installation types it applies to
+(cloud, hybrid or local), so you only need to follow the relevant steps for your
+installation type.</p>
+<div class="section" id="prerequisites">
+<h3><strong>Prerequisites</strong><a class="headerlink" href="#prerequisites" title="Permalink to this headline">¶</a></h3>
+<p>Turbinia requires all worker nodes to have equal access to all Evidence data.
+For Google Cloud this means using Google Cloud Storage (GCS), but for local and
+hybrid configurations the easiest setup is to have NFS or a SAN mounted on a
+common path on each worker. All output should also be written to this common
+directory so that when new Evidence is generated by a Task, that the other
+worker nodes can access it for processing. Turbinia can also write output to GCS
+even when running locally (see the <code class="docutils literal notranslate"><span class="pre">GCS_OUTPUT_PATH</span></code> variable in the config).</p>
+</div>
+</div>
+<div class="section" id="installation">
+<h2><strong>Installation</strong><a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
+<p>To run Turbinia it’s recommended that you have at least two machines or cloud
+instances, one for the server and one or more for workers. In a small or
+development setup, you can also run both the server and worker on a single
+instance.</p>
+<div class="section" id="gcp-setup">
+<h3><strong>GCP Setup</strong><a class="headerlink" href="#gcp-setup" title="Permalink to this headline">¶</a></h3>
+<p><strong>This section is required for cloud and hybrid configurations.</strong></p>
+<ul class="simple">
+<li><p>Create or select a Google Cloud Platform project in the
+<a class="reference external" href="https://console.cloud.google.com">Google Cloud Console</a>.</p></li>
+<li><p>Determine which GCP zone and region that you wish to deploy Turbinia into.
+Note that one of the GCP dependencies is Cloud Functions, and that only
+works in certain regions, so you will need to deploy in one of
+<a class="reference external" href="https://cloud.google.com/functions/docs/locations">the supported regions</a>.</p></li>
+<li><p>Enable
+<a class="reference external" href="https://console.cloud.google.com/apis/library/cloudfunctions.googleapis.com">Cloud Functions</a>.</p></li>
+<li><p>Follow the
+<a class="reference external" href="https://cloud.google.com/pubsub/docs/quickstart-console">instructions</a> to:</p>
+<ul>
+<li><p>Enable
+<a class="reference external" href="https://console.cloud.google.com/apis/library/pubsub.googleapis.com">Cloud Pub/Sub</a></p></li>
+<li><p>Create a new Pub/Sub topic and subscription (pull type with 600s
+timeout). These can use the same base name (the part after <code class="docutils literal notranslate"><span class="pre">topics/</span></code> and
+<code class="docutils literal notranslate"><span class="pre">subscription/</span></code> in the paths).</p></li>
+<li><p>Please take a note of the topic name for the configuration steps, as
+this is what you will set the <code class="docutils literal notranslate"><span class="pre">PUBSUB_TOPIC</span></code> config variable to.</p></li>
+</ul>
+</li>
+<li><p>Enable
+<a class="reference external" href="https://console.cloud.google.com/apis/api/datastore.googleapis.com">Cloud Datastore</a></p>
+<ul>
+<li><p>Go to Datastore in the cloud console</p></li>
+<li><p>Hit the <code class="docutils literal notranslate"><span class="pre">Create</span> <span class="pre">Entity</span></code> button</p></li>
+<li><p>Select the same region that you selected in the previous steps. No need
+to create any Entities after selecting your region</p></li>
+</ul>
+</li>
+</ul>
+<div class="section" id="create-a-gce-instance-for-the-server">
+<h4><strong>Create a GCE Instance for the Server</strong><a class="headerlink" href="#create-a-gce-instance-for-the-server" title="Permalink to this headline">¶</a></h4>
+<p><strong>This section is required for cloud configurations.</strong></p>
+<ul class="simple">
+<li><p>Create a
+<a class="reference external" href="https://console.cloud.google.com/compute/instances">new GCE instance</a> from
+a recent version of Debian or Ubuntu (currently 18.0.4 is recommended). Once
+the host is configured we’ll later clone the disk to use for the workers.</p>
+<ul>
+<li><p>This should work on other Linux flavors, but these are untested, and the
+installation steps would need to be adapted.</p></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="section" id="create-a-google-cloud-storage-gcs-bucket">
+<h4><strong>Create a Google Cloud Storage (GCS) Bucket</strong><a class="headerlink" href="#create-a-google-cloud-storage-gcs-bucket" title="Permalink to this headline">¶</a></h4>
+<p><strong>This section is required for cloud installations.</strong></p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://cloud.google.com/storage/docs/creating-buckets">Create a new GCS bucket</a>
+and take note of the bucket name as this will be referenced later by the
+<code class="docutils literal notranslate"><span class="pre">GCS_OUTPUT_PATH</span></code> variable.</p></li>
+</ul>
+</div>
+</div>
+<div class="section" id="core-installation">
+<h3><strong>Core Installation</strong><a class="headerlink" href="#core-installation" title="Permalink to this headline">¶</a></h3>
+<p><strong>This section is required for cloud, hybrid and local configurations.</strong></p>
+<div class="section" id="preparation">
+<h4><strong>Preparation</strong><a class="headerlink" href="#preparation" title="Permalink to this headline">¶</a></h4>
+<p>All steps listed below must be completed on all servers/workers unless otherwise
+noted. If you are installing in a cloud environment, you will only have a server
+VM at this point, and we will later clone this instance to create the workers.</p>
+<ul class="simple">
+<li><p>Install dependencies</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">sudo</span> <span class="pre">apt-get</span> <span class="pre">install</span> <span class="pre">python-dev</span> <span class="pre">build-essential</span> <span class="pre">python-setuptools</span> <span class="pre">python-pip</span> <span class="pre">python-virtualenv</span> <span class="pre">liblzma-dev</span> <span class="pre">git</span> <span class="pre">john</span></code></p></li>
+</ul>
+</li>
+<li><p>Create a turbinia user with password-less sudo access</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">sudo</span> <span class="pre">adduser</span> <span class="pre">--disabled-password</span> <span class="pre">turbinia</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">echo</span> <span class="pre">&quot;turbinia</span> <span class="pre">ALL</span> <span class="pre">=</span> <span class="pre">(root)</span> <span class="pre">NOPASSWD:</span> <span class="pre">/bin/mount,/bin/umount,/sbin/losetup&quot;</span> <span class="pre">|</span> <span class="pre">sudo</span> <span class="pre">tee</span> <span class="pre">-a</span> <span class="pre">/etc/sudoers.d/turbinia</span></code></p></li>
+</ul>
+</li>
+<li><p>Prepare configuration directory:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">sudo</span> <span class="pre">mkdir</span> <span class="pre">/etc/turbinia</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">sudo</span> <span class="pre">chown</span> <span class="pre">turbinia</span> <span class="pre">/etc/turbinia</span></code></p></li>
+</ul>
+</li>
+<li><p>Checkout git at release branch for config and other setup</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">clone</span> <span class="pre">https://github.com/google/turbinia.git</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">cd</span> <span class="pre">turbinia</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">branch</span> <span class="pre">-l</span> <span class="pre">|</span> <span class="pre">grep</span> <span class="pre">release</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">checkout</span> <span class="pre">&lt;latest</span> <span class="pre">release</span> <span class="pre">branch</span> <span class="pre">from</span> <span class="pre">previous</span> <span class="pre">step&gt;</span></code></p></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="section" id="installation-and-configuration">
+<h4><strong>Installation and Configuration</strong><a class="headerlink" href="#installation-and-configuration" title="Permalink to this headline">¶</a></h4>
+<ul class="simple">
+<li><p>Log in as turbinia</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">sudo</span> <span class="pre">su</span> <span class="pre">-</span> <span class="pre">turbinia</span></code></p></li>
+</ul>
+</li>
+<li><p>Install Turbinia</p>
+<ul>
+<li><p>Note: You may want to install this into a virtual-environment with venv
+or pipenv to reduce potential dependency conflicts and isolate these
+packages into their own environment.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">pip3</span> <span class="pre">install</span> <span class="pre">turbinia</span></code> for the server</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">pip3</span> <span class="pre">install</span> <span class="pre">turbinia[worker]</span></code> for the worker</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">pip3</span> <span class="pre">install</span> <span class="pre">turbinia[dev]</span></code> if you want to run tests or get the
+development dependencies.</p></li>
+<li><p>If you are running a local installation:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">pip3</span> <span class="pre">install</span> <span class="pre">turbinia[local]</span></code></p></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>Install Worker binary dependencies</p>
+<ul>
+<li><p>You can install Plaso from the
+<a class="reference external" href="https://launchpad.net/~gift/+archive/ubuntu/stable">GIFT PPA</a>, or
+<a class="reference external" href="https://plaso.readthedocs.io/en/latest/sources/user/Users-Guide.html#user-s-guide">see here</a>
+for other packaged installations.</p></li>
+<li><p>There are a few other binary
+dependencies that are not packaged with Ubuntu or PyPi, so these
+will need to be installed manually:
+<a class="reference external" href="https://github.com/simsong/bulk_extractor/wiki/Installing-bulk_extractor">bulk_extractor</a>,
+<a class="reference external" href="https://github.com/obsidianforensics/hindsight">hindsight</a> (this one
+is technically in PyPi, but since it’s not Python3 yet it needs to be
+installed separately) and
+<a class="reference external" href="https://github.com/volatilityfoundation/volatility/wiki/Installation">Volatility</a>.
+Alternately you can disable the Jobs that have those depenencies.
+You can do this by setting the <code class="docutils literal notranslate"><span class="pre">DISABLED_JOBS</span></code> in the
+<code class="docutils literal notranslate"><span class="pre">/etc/turbinia/turbinia.conf</span></code> config after it is installed (see below).
+You can see the list of Jobs with <code class="docutils literal notranslate"><span class="pre">turbiniactl</span> <span class="pre">listjobs</span></code> after everything
+is set up.</p></li>
+</ul>
+</li>
+<li><p>Create and configure the Turbinia configuration file.</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">cp</span> <span class="pre">&lt;git</span> <span class="pre">clone</span> <span class="pre">path&gt;/turbinia/config/turbinia_config_tmpl.py</span> <span class="pre">/etc/turbinia/turbinia.conf</span></code></p></li>
+<li><p>Alternately, you can either put the file in <code class="docutils literal notranslate"><span class="pre">/home/$USER/.turbiniarc</span></code> or
+in another directory and then point the <code class="docutils literal notranslate"><span class="pre">TURBINIA_CONFIG_PATH</span></code>
+environment variable to that directory.</p></li>
+<li><p>Edit the config file to match your local installation details.</p>
+<ul>
+<li><p>Match the <code class="docutils literal notranslate"><span class="pre">PUBSUB_TOPIC</span></code> variable in the configuration to the name
+of the topic you created in GCP.</p></li>
+<li><p>If you are running Turbinia locally, make sure to set
+<code class="docutils literal notranslate"><span class="pre">GCS_OUTPUT_PATH</span></code> to <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
+<li><p>For local and hybrid installations:</p>
+<ul>
+<li><p>Set <code class="docutils literal notranslate"><span class="pre">SHARED_FILESYSTEM</span> <span class="pre">=</span> <span class="pre">True</span></code></p></li>
+</ul>
+</li>
+<li><p>For local installations:</p>
+<ul>
+<li><p>Set <code class="docutils literal notranslate"><span class="pre">STATE_MANAGER</span> <span class="pre">=</span> <span class="pre">'Redis'</span></code></p></li>
+<li><p>Set <code class="docutils literal notranslate"><span class="pre">TASK_MANAGER</span> <span class="pre">=</span> <span class="pre">'Celery'</span></code></p></li>
+<li><p>Configure the <code class="docutils literal notranslate"><span class="pre">CELERY*</span></code>, <code class="docutils literal notranslate"><span class="pre">KOMBU*</span></code> and <code class="docutils literal notranslate"><span class="pre">REDIS*</span></code> variables as
+appropriate for your config.</p></li>
+</ul>
+</li>
+<li><p>Set the following</p></li>
+</ul>
+</li>
+<li><p>Configure the <code class="docutils literal notranslate"><span class="pre">OUTPUT_DIR</span></code>, <code class="docutils literal notranslate"><span class="pre">TMP_DIR</span></code>, and <code class="docutils literal notranslate"><span class="pre">MOUNT_DIR_PREFIX</span></code> to match
+your local system. On the worker nodes, create the corresponding
+directories and make sure they are owned by the turbinia user.</p></li>
+</ul>
+</li>
+<li><p>Configure the init scripts to run Turbinia on start</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">cp</span> <span class="pre">&lt;git</span> <span class="pre">clone</span> <span class="pre">path&gt;/turbinia/tools/turbinia&#64;.service</span> <span class="pre">/etc/systemd/system/turbinia&#64;server</span></code> for the server</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">cp</span> <span class="pre">&lt;git</span> <span class="pre">clone</span> <span class="pre">path&gt;/turbinia/tools/turbinia&#64;.service</span> <span class="pre">/etc/systemd/system/turbinia&#64;psqworker</span></code> for a GCP worker</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">cp</span> <span class="pre">&lt;git</span> <span class="pre">clone</span> <span class="pre">path&gt;/turbinia/tools/turbinia&#64;.service</span> <span class="pre">/etc/systemd/system/turbinia&#64;celeryworker</span></code> for a local (non-cloud)
+installation.</p></li>
+<li><p>Follow the instructions at the top of the
+<code class="docutils literal notranslate"><span class="pre">turbinia/tools/turbinia&#64;.service</span></code> file to enable these services.</p></li>
+</ul>
+</li>
+</ul>
+</div>
+</div>
+<div class="section" id="gcp-installation">
+<h3><strong>GCP Installation</strong><a class="headerlink" href="#gcp-installation" title="Permalink to this headline">¶</a></h3>
+<p><strong>This section is required for cloud and hybrid configurations.</strong></p>
+<ul class="simple">
+<li><p>Install
+<a class="reference external" href="https://cloud.google.com/sdk/docs/quickstart-linux">google-cloud-sdk</a></p></li>
+<li><p>Create a
+<a class="reference external" href="https://cloud.google.com/compute/docs/access/service-accounts">scoped service account</a>
+(this is the best option) with the following roles:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">Cloud</span> <span class="pre">Datastore</span> <span class="pre">User</span></code>: Used by PSQ to store result data, and in the
+future by the Task Manager to store queryable task data</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Pub/Sub</span> <span class="pre">Editor</span></code>: Used by clients to talk to Turbinia, and by the Task
+Manager to talk to workers</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Storage</span> <span class="pre">Object</span> <span class="pre">Admin</span></code> and <code class="docutils literal notranslate"><span class="pre">Storage</span> <span class="pre">Legacy</span> <span class="pre">Bucket</span> <span class="pre">Reader</span></code>: Only required
+on the GCS bucket used by Turbinia, if any. See
+<a class="reference internal" href="install.html"><span class="doc">GCP Turbinia</span></a>
+for details</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Compute</span> <span class="pre">Instance</span> <span class="pre">Admin</span></code>: Used to list instances and to attach disks to
+instances</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Service</span> <span class="pre">Account</span> <span class="pre">User</span></code>: Used when attaching disks</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Cloud</span> <span class="pre">Functions</span> <span class="pre">Developer</span></code>: Used by turbiniactl to query task status</p></li>
+</ul>
+</li>
+<li><p>Create a new key for your service account, and save it on server/workers and
+then configure init scripts in <code class="docutils literal notranslate"><span class="pre">/etc/systemd/system/turbinia*</span></code> to point to
+it by setting the <code class="docutils literal notranslate"><span class="pre">GOOGLE_APPLICATION_CREDENTIALS</span></code> var similar to
+<code class="docutils literal notranslate"><span class="pre">ExecStartPre=+/bin/sh</span> <span class="pre">-c</span> <span class="pre">'/bin/systemctl</span> <span class="pre">set-environment</span> <span class="pre">GOOGLE_APPLICATION_CREDENTIALS=&quot;/home/turbinia/turbinia-service-account-creds.json&quot;'</span></code></p></li>
+<li><p>Add the service account to the gcloud auth</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">gcloud</span> <span class="pre">auth</span> <span class="pre">list</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">gcloud</span> <span class="pre">auth</span> <span class="pre">activate-service-account</span> <span class="pre">--key-file=$GOOGLE_APPLICATION_CREDENTIALS</span></code></p></li>
+</ul>
+</li>
+<li><p>Alternately you can run Turbinia under your own credentials (NOT RECOMMENDED
+except for development environments)</p>
+<ul>
+<li><p>Run <code class="docutils literal notranslate"><span class="pre">gcloud</span> <span class="pre">auth</span> <span class="pre">login</span></code> (may require you to copy/paste url to browser)</p></li>
+<li><p>Run <code class="docutils literal notranslate"><span class="pre">gcloud</span> <span class="pre">auth</span> <span class="pre">application-default</span> <span class="pre">login</span></code></p></li>
+</ul>
+</li>
+</ul>
+<div class="section" id="create-gcp-workers">
+<h4><strong>Create GCP workers</strong><a class="headerlink" href="#create-gcp-workers" title="Permalink to this headline">¶</a></h4>
+<p><strong>This section is required for cloud configurations.</strong></p>
+<ul class="simple">
+<li><p>Stop the server instance that has been configured above.</p></li>
+<li><p>Create a new image from the server VM’s disk.</p></li>
+<li><p>Create a new Instance Template using the newly created image.</p></li>
+<li><p>Create a new Managed Instance Group from the newly created Instance
+Template.</p></li>
+</ul>
+</div>
+<div class="section" id="deploy-cloud-functions">
+<h4><strong>Deploy Cloud Functions</strong><a class="headerlink" href="#deploy-cloud-functions" title="Permalink to this headline">¶</a></h4>
+<p><strong>This section is required for cloud and hybrid configurations.</strong></p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">cd</span> <span class="pre">&lt;git</span> <span class="pre">clone</span> <span class="pre">path&gt;/tools/gcf_init</span> <span class="pre">&amp;&amp;</span> <span class="pre">./deploy_gcf.py</span></code></p></li>
+</ul>
+</div>
+</div>
+<div class="section" id="local-turbinia">
+<h3><strong>Local Turbinia</strong><a class="headerlink" href="#local-turbinia" title="Permalink to this headline">¶</a></h3>
+<p><strong>This section is required for local configurations.</strong></p>
+<p>The following is one possible minimal configuration for running Turbinia locally
+using Celery and Redis on Ubuntu 18.04. This setup does not require Google Cloud
+Platform, although a configuration to write output to GCS is possible.</p>
+<ul class="simple">
+<li><p>Start Redis server on the same machine as the server by following the
+instructions <a class="reference external" href="https://redis.io/topics/quickstart">here</a>.</p></li>
+<li><p>Run <code class="docutils literal notranslate"><span class="pre">turbiniactl</span> <span class="pre">-S</span> <span class="pre">server</span></code> to start Turbinia server.</p></li>
+<li><p>Run <code class="docutils literal notranslate"><span class="pre">turbiniactl</span> <span class="pre">celeryworker</span></code> to start Turbinia Celery worker.</p></li>
+</ul>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="how-it-works.html" class="btn btn-neutral float-right" title="How Turbinia Works" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="install.html" class="btn btn-neutral float-left" title="Turbinia Quick Installation Instructions" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020, Google Inc
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
