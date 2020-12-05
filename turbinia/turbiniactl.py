@@ -391,8 +391,8 @@ def main():
   parser_log_collector.add_argument(
       '-o', '--output_dir', help='Directory path for output', required=True)
   parser_log_collector.add_argument(
-      '-q', '--query', help='Filter expression to use to query Stackdriver logs.'
-      )
+      '-q', '--query',
+      help='Filter expression to use to query Stackdriver logs.')
   parser_log_collector.add_argument(
       '-d', '--days_history', default=1, type=int,
       help='Number of days of history to show', required=False)
@@ -727,17 +727,16 @@ def main():
     client.list_jobs()
   elif args.command == 'GCPLogsCollector':
     if not config.STACKDRIVER_LOGGING:
-      log.error(
-          'Stackdriver logging must be enabled in order to use this.')
-      sys.exit(1) 
+      log.error('Stackdriver logging must be enabled in order to use this.')
+      sys.exit(1)
     if not os.path.isdir(args.output_dir):
-      log.error(
-          'Please provide a valid directory path.')
-      sys.exit(1) 
+      log.error('Please provide a valid directory path.')
+      sys.exit(1)
     query = None
     if args.query:
       query = args.query
-    google_cloud.get_logs(args.output_dir, config.TURBINIA_PROJECT, args.days_history, query)
+    google_cloud.get_logs(
+        args.output_dir, config.TURBINIA_PROJECT, args.days_history, query)
   else:
     log.warning('Command {0!s} not implemented.'.format(args.command))
 
