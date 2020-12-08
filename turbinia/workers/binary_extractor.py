@@ -19,6 +19,7 @@ from __future__ import unicode_literals
 import logging
 import json
 import os
+import textwrap
 
 from turbinia import TurbiniaException
 from turbinia import config
@@ -93,9 +94,36 @@ class BinaryExtractorTask(TurbiniaTask):
     self.json_path = os.path.join(self.binary_extraction_dir, 'hashes.json')
 
     cmd = [
-        'image_export.py', '--partitions', 'all', '--no_vss', '--signatures',
-        'elf,exe_mz', '--logfile', image_export_log
+        'image_export.py', '--partitions', 'all', '--no_vss', '--logfile',
+        image_export_log
     ]
+
+    if evidence.config and evidence.config.get('binary_extraction_path'):
+      artifact_dir = os.path.join(self.tmp_dir, 'artifacts')
+      artifact_file = os.path.join(artifact_dir, 'artifacts.yaml')
+      os.mkdir(artifact_dir)
+      binary_extraction_path = evidence.config.get('binary_extraction_path')
+      result.log(
+          'Using custom artifact path {0:s}'.format(binary_extraction_path))
+
+      artifact_text = textwrap.dedent(
+          """
+          name: TurbiniaCustomArtifact
+          doc: Ad hoc artifact created for file extraction.
+          - type: FILE
+            attributes:
+                paths: ['{0:s}']
+          """)
+      artifact_text = artifact_text.format(binary_extraction_path)
+
+      with open(artifact_file) as artifact:
+        artifact.write(artifact_text)
+      cmd.extend(
+          '--custom_artifact_definitions', artifact_dir, '--artifact_filters'
+          'TurbiniaCustomArtifact')
+    else:
+      cmd.extend(['--signatures', 'elf,exe_mz'])
+
     if config.DEBUG_TASKS or evidence.config.get('debug_tasks'):
       cmd.append('-d')
     cmd.extend(['-w', self.binary_extraction_dir, evidence.local_path])
