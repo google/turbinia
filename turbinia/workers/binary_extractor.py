@@ -119,8 +119,8 @@ class BinaryExtractorTask(TurbiniaTask):
       with open(artifact_file, 'wb') as artifact:
         artifact.write(artifact_text.encode('utf-8'))
       cmd.extend(
-          '--custom_artifact_definitions', artifact_dir, '--artifact_filters'
-          'TurbiniaCustomArtifact')
+          ['--custom_artifact_definitions', artifact_dir, '--artifact_filters'
+          'TurbiniaCustomArtifact'])
     else:
       cmd.extend(['--signatures', 'elf,exe_mz'])
 
