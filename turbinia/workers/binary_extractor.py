@@ -116,8 +116,8 @@ class BinaryExtractorTask(TurbiniaTask):
           """)
       artifact_text = artifact_text.format(binary_extraction_path)
 
-      with open(artifact_file) as artifact:
-        artifact.write(artifact_text)
+      with open(artifact_file, 'wb') as artifact:
+        artifact.write(artifact_text.encode('utf-8'))
       cmd.extend(
           '--custom_artifact_definitions', artifact_dir, '--artifact_filters'
           'TurbiniaCustomArtifact')
