@@ -110,6 +110,7 @@ class BinaryExtractorTask(TurbiniaTask):
           """
           name: TurbiniaCustomArtifact
           doc: Ad hoc artifact created for file extraction.
+          sources:
           - type: FILE
             attributes:
                 paths: ['{0:s}']
