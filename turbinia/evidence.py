@@ -517,16 +517,16 @@ class RawDisk(Evidence):
           self.source_path)
       self.state[EvidenceState.ATTACHED] = True
       self.local_path = self.device_path
-    if EvidenceState.MOUNTED in required_states:
-      self.mount_path = mount_local.PreprocessMountDisk(
-          partition_paths, self.mount_partition)
-      self.local_path = self.mount_path
-      self.state[EvidenceState.MOUNTED] = True
+    # if EvidenceState.MOUNTED in required_states:
+    #   self.mount_path = mount_local.PreprocessMountDisk(
+    #       partition_paths, self.mount_partition)
+    #   self.local_path = self.mount_path
+    #   self.state[EvidenceState.MOUNTED] = True
 
   def _postprocess(self):
-    if self.state[EvidenceState.MOUNTED]:
-      mount_local.PostprocessUnmountPath(self.mount_path)
-      self.state[EvidenceState.MOUNTED] = False
+    # if self.state[EvidenceState.MOUNTED]:
+    #   mount_local.PostprocessUnmountPath(self.mount_path)
+    #   self.state[EvidenceState.MOUNTED] = False
     if self.state[EvidenceState.ATTACHED]:
       mount_local.PostprocessDeleteLosetup(self.device_path)
       self.state[EvidenceState.ATTACHED] = False
@@ -565,8 +565,14 @@ class RawDiskPartition(RawDisk):
       if self.device_path:
         self.state[EvidenceState.ATTACHED] = True
         self.local_path = self.device_path
+    if EvidenceState.MOUNTED in required_states:
+      self.mount_path = mount_local.PreprocessMountPartition(self.device_path)
+      self.state[EvidenceState.MOUNTED] = True
 
   def _postprocess(self):
+    if self.state[EvidenceState.MOUNTED]:
+      mount_local.PostprocessUnmountPath(self.mount_path)
+      self.state[EvidenceState.MOUNTED] = False
     if self.state[EvidenceState.ATTACHED]:
       mount_local.PostprocessDeleteLosetup(self.device_path)
       self.state[EvidenceState.ATTACHED] = False
