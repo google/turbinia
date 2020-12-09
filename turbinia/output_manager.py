@@ -28,14 +28,14 @@ from turbinia import config
 from turbinia import TurbiniaException
 
 config.LoadConfig()
-if config.GCS_OUTPUT_PATH and config.GCS_OUTPUT_PATH.lower() is not 'none':
+if config.GCS_OUTPUT_PATH and config.GCS_OUTPUT_PATH.lower() != 'none':
   from google.cloud import storage
   from google.cloud import exceptions
 
 log = logging.getLogger('turbinia')
 
 
-class OutputManager(object):
+class OutputManager:
   """Manages output data.
 
   Manages the configured output writers.  Also saves and retrieves evidence data
@@ -126,7 +126,7 @@ class OutputManager(object):
         log.info(
             'Retrieving copyable evidence data from {0:s}'.format(
                 evidence_.saved_path))
-        evidence_.local_path = writer.copy_from(evidence_.saved_path)
+        evidence_.source_path = writer.copy_from(evidence_.saved_path)
     return evidence_
 
   def save_evidence(self, evidence_, result=None):
@@ -143,7 +143,7 @@ class OutputManager(object):
       TurbiniaException: If serialization or writing of evidence config fails
     """
     path, path_type, local_path = self.save_local_file(
-        evidence_.local_path, result)
+        evidence_.source_path, result)
 
     if evidence_.save_metadata:
       metadata = evidence_.config.copy()
@@ -171,7 +171,7 @@ class OutputManager(object):
     # where tasks are saving evidence into the temp dir, we'll get the newly
     # copied version from the saved output path.
     if local_path:
-      evidence_.local_path = local_path
+      evidence_.source_path = local_path
     evidence_.saved_path = path
     evidence_.saved_path_type = path_type
     if evidence_.saved_path:
@@ -221,7 +221,7 @@ class OutputManager(object):
     self.is_setup = True
 
 
-class OutputWriter(object):
+class OutputWriter:
   """Base class.
 
   By default this will write the files the Evidence objects point to along with

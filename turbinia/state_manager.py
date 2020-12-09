@@ -36,6 +36,7 @@ config.LoadConfig()
 if config.STATE_MANAGER.lower() == 'datastore':
   from google.cloud import datastore
   from google.cloud import exceptions
+  from google.auth import exceptions as auth_exceptions
 elif config.STATE_MANAGER.lower() == 'redis':
   import redis
 else:
@@ -68,7 +69,7 @@ def get_state_manager():
     raise TurbiniaException(msg)
 
 
-class BaseStateManager(object):
+class BaseStateManager:
   """Class to manage Turbinia state persistence."""
 
   def get_task_dict(self, task):
@@ -170,7 +171,7 @@ class DatastoreStateManager(BaseStateManager):
     config.LoadConfig()
     try:
       self.client = datastore.Client(project=config.TURBINIA_PROJECT)
-    except EnvironmentError as e:
+    except (EnvironmentError, auth_exceptions.DefaultCredentialsError) as e:
       message = (
           'Could not create Datastore client: {0!s}\n'
           'Have you run $ gcloud auth application-default login?'.format(e))
@@ -209,7 +210,10 @@ class DatastoreStateManager(BaseStateManager):
     key = self.client.key('TurbiniaTask', task.id)
     try:
       entity = datastore.Entity(key)
-      entity.update(self.get_task_dict(task))
+      task_data = self.get_task_dict(task)
+      task_data['status'] = 'Task scheduled at {0:s}'.format(
+          datetime.now().strftime(DATETIME_FORMAT))
+      entity.update(task_data)
       log.info('Writing new task {0:s} into Datastore'.format(task.name))
       self.client.put(entity)
       task.state_key = key
@@ -296,6 +300,8 @@ class RedisStateManager(BaseStateManager):
     task_data = self.get_task_dict(task)
     task_data['last_update'] = task_data['last_update'].strftime(
         DATETIME_FORMAT)
+    task_data['status'] = 'Task scheduled at {0:s}'.format(
+        datetime.now().strftime(DATETIME_FORMAT))
     if task_data['run_time']:
       task_data['run_time'] = task_data['run_time'].total_seconds()
     # nx=True prevents overwriting (i.e. no unintentional task clobbering)
