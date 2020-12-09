@@ -132,11 +132,16 @@ class BinaryExtractorTask(TurbiniaTask):
     result.log('Running image_export as [{0:s}]'.format(' '.join(cmd)))
     self.execute(
         cmd, result, log_files=[image_export_log, self.json_path],
-        new_evidence=[binary_extraction_evidence], close=True)
+        new_evidence=[binary_extraction_evidence])
 
-    binary_cnt, hash_cnt = self.check_extraction()
+    try:
+      binary_cnt, hash_cnt = self.check_extraction()
+    except TurbiniaException as exception:
+      message = 'File extraction failed: {0!s}'.format(exception)
+      result.close(self, success=False, status=message)
+      return result
 
-    result.status = (
+    status = (
         'Extracted {0:d} hashes and {1:d} binaries from the '
         'evidence.'.format(hash_cnt, binary_cnt))
 
@@ -148,5 +153,6 @@ class BinaryExtractorTask(TurbiniaTask):
           'details.', logging.WARNING)
 
     binary_extraction_evidence.compress()
+    result.close(self, success=True, status=status)
 
     return result
