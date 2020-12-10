@@ -26,15 +26,19 @@ from turbinia import TurbiniaException
 
 import datetime
 
+
 class CustomFormatter(logging.Formatter):
-  def __init__(self, environment,  *args, **kwargs):
+
+  def __init__(self, environment, *args, **kwargs):
     super(CustomFormatter, self).__init__(*args, **kwargs)
     self.environment = environment
+
   def format(self, record):
-    
+
     logmsg = super(CustomFormatter, self).format(record)
 
-    return {'msg':logmsg, 'other':self.environment}
+    return {'msg': logmsg, 'other': self.environment}
+
 
 def setup_stackdriver_handler(project_id, environment):
   """Set up Google Cloud Stackdriver Logging
