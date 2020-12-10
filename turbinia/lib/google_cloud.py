@@ -29,6 +29,7 @@ import datetime
 from google.cloud.logging import _helpers
 from google.cloud.logging.handlers.transports.background_thread import _Worker
 
+
 def setup_stackdriver_handler(project_id, environment):
   """Set up Google Cloud Stackdriver Logging
 
@@ -41,26 +42,28 @@ def setup_stackdriver_handler(project_id, environment):
   Raises:
     TurbiniaException: When an error occurs enabling GCP Stackdriver Logging.
   """
-  
-  # Patching cloud logging to allow 
-  def my_enqueue(self, record, message, resource=None, labels=None, trace=None, span_id=None):
-      queue_entry = {
-          "info": {
-          "message": message, 
-          "python_logger": record.name, 
-          "others":environment},
-          "severity": _helpers._normalize_severity(record.levelno),
-          "resource": resource,
-          "labels": labels,
-          "trace": trace,
-          "span_id": span_id,
-          "timestamp": datetime.datetime.utcfromtimestamp(record.created),
-      }
 
-      self._queue.put_nowait(queue_entry)
+  # Patching cloud logging to allow custom fields
+  def my_enqueue(
+      self, record, message, resource=None, labels=None, trace=None,
+      span_id=None):
+    queue_entry = {
+        "info": {
+            "message": message,
+            "python_logger": record.name,
+            "others": environment
+        },
+        "severity": _helpers._normalize_severity(record.levelno),
+        "resource": resource,
+        "labels": labels,
+        "trace": trace,
+        "span_id": span_id,
+        "timestamp": datetime.datetime.utcfromtimestamp(record.created),
+    }
+
+    self._queue.put_nowait(queue_entry)
 
   _Worker.enqueue = my_enqueue
-
 
   try:
     client = cloud_logging.Client(project=project_id)
