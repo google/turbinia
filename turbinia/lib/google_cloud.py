@@ -26,8 +26,15 @@ from turbinia import TurbiniaException
 
 import datetime
 
-from google.cloud.logging import _helpers
-from google.cloud.logging.handlers.transports.background_thread import _Worker
+class CustomFormatter(logging.Formatter):
+  def __init__(self, environment,  *args, **kwargs):
+    super(CustomFormatter, self).__init__(*args, **kwargs)
+    self.environment = environment
+  def format(self, record):
+    
+    logmsg = super(CustomFormatter, self).format(record)
+
+    return {'msg':logmsg, 'other':self.environment}
 
 def setup_stackdriver_handler(project_id, environment):
   """Set up Google Cloud Stackdriver Logging
@@ -41,30 +48,10 @@ def setup_stackdriver_handler(project_id, environment):
   Raises:
     TurbiniaException: When an error occurs enabling GCP Stackdriver Logging.
   """
-  
-  # Patching cloud logging to allow 
-  def my_enqueue(self, record, message, resource=None, labels=None, trace=None, span_id=None):
-      queue_entry = {
-          "info": {
-          "message": message, 
-          "python_logger": record.name, 
-          "others":environment},
-          "severity": _helpers._normalize_severity(record.levelno),
-          "resource": resource,
-          "labels": labels,
-          "trace": trace,
-          "span_id": span_id,
-          "timestamp": datetime.datetime.utcfromtimestamp(record.created),
-      }
-
-      self._queue.put_nowait(queue_entry)
-
-  _Worker.enqueue = my_enqueue
-
-
   try:
     client = cloud_logging.Client(project=project_id)
     cloud_handler = cloud_logging.handlers.CloudLoggingHandler(client)
+    cloud_handler.setFormatter(CustomFormatter(environment))
     logger = logging.getLogger('turbinia')
     logger.addHandler(cloud_handler)
 
