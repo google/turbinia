@@ -509,8 +509,7 @@ class RawDisk(Evidence):
 
   def _preprocess(self, _, required_states):
     if EvidenceState.ATTACHED in required_states:
-      self.device_path, _ = mount_local.PreprocessLosetup(
-          self.source_path)
+      self.device_path, _ = mount_local.PreprocessLosetup(self.source_path)
       self.state[EvidenceState.ATTACHED] = True
       self.local_path = self.device_path
 
