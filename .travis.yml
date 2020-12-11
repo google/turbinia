@@ -13,5 +13,6 @@ install:
 
 script:
   - cp ./test_data/.turbiniarc ~/
+  - touch turbinia.log
   - ./run_tests.py
   - tox --sitepackages ${TOXENV}
