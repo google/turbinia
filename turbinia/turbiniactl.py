@@ -386,6 +386,18 @@ def main():
       'Additionaly, you can use the -a or --all_fields flag to retrieve the '
       'full output containing finished and unassigned worker tasks.')
 
+  # Add GCS logs collector
+  parser_gcs_logs =subparsers.add_parser(
+      'DumpGCSLogs', help='Get Turbinia results from Google Cloud Storage.')
+  parser_gcs_logs.add_argument(
+      '-t', '--task_id', help='Show task for given Task ID', required=False)
+  parser_gcs_logs.add_argument(
+      '-ts', '--timestamp', help='Show all the results for a given date and time.')
+  parser_gcs_logs.add_argument(
+      '-b', '--bucket', help='GCS bucket to pull logs from.' )
+  parser_gcs_logs.add_argument(
+      '-o', '--output_dir', help='Directory path for output', required=True)
+  
   # Server
   subparsers.add_parser('server', help='Run Turbinia Server')
 
@@ -721,6 +733,14 @@ def main():
   elif args.command == 'listjobs':
     log.info('Available Jobs:')
     client.list_jobs()
+  elif args.command == 'DumpGCSLogs':
+    if not config.GCS_OUTPUT_PATH:
+      log.error('GCS storage must be enabled in order to use this.')
+      sys.exit(1)
+    if not os.path.isdir(args.output_dir):
+      log.error('Please provide a valid directory path.')
+      sys.exit(1)
+    log.info('Preparing to pull files from GCS.')
   else:
     log.warning('Command {0!s} not implemented.'.format(args.command))
 
