@@ -1,0 +1,20 @@
+INSTANCE_ID         = 'turbinia-1'
+STATE_MANAGER       = 'Datastore'
+TASK_MANAGER        = 'PSQ'
+OUTPUT_DIR          = '/var/lib/turbinia'
+TMP_DIR             = '/tmp'
+LOG_FILE            = '/var/log/turbinia/turbinia.log'
+LOCK_FILE           = '/var/lock/turbinia-worker.lock'
+SLEEP_TIME          = 10
+SINGLE_RUN          = False
+MOUNT_DIR_PREFIX    = '/mnt/turbinia'
+SHARED_FILESYSTEM   = True
+DEBUG_TASKS         = False
+
+DOCKER_ENABLED = False
+
+DISABLED_JOBS = []
+
+DEPENDENCIES = []
+
+PSQ_TOPIC           = 'turbinia-1-psq'

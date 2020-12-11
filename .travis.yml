@@ -12,5 +12,6 @@ install:
   - pip install -r dfvfs_requirements.txt
 
 script:
+  - cp ./test_data/.turbiniarc ~/
   - ./run_tests.py
   - tox --sitepackages ${TOXENV}
