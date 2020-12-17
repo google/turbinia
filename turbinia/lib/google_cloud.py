@@ -30,7 +30,7 @@ from google.cloud.logging import _helpers
 from google.cloud.logging.handlers.transports.background_thread import _Worker
 
 
-def setup_stackdriver_handler(project_id, environment):
+def setup_stackdriver_handler(project_id, origin):
   """Set up Google Cloud Stackdriver Logging
 
   The Google Cloud Logging library will attach itself as a
@@ -38,7 +38,7 @@ def setup_stackdriver_handler(project_id, environment):
 
   Attributes:
     project_id: The name of the Google Cloud project.
-    environment: Where the log is running.
+    origin: Where the log is originating from.(i.e. server, worker)
   Raises:
     TurbiniaException: When an error occurs enabling GCP Stackdriver Logging.
   """
@@ -51,7 +51,7 @@ def setup_stackdriver_handler(project_id, environment):
         "info": {
             "message": message,
             "python_logger": record.name,
-            "others": environment
+            "origin": origin
         },
         "severity": _helpers._normalize_severity(record.levelno),
         "resource": resource,
