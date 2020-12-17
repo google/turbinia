@@ -427,7 +427,8 @@ def main():
 
   # Enable GCP Stackdriver Logging
   if config.STACKDRIVER_LOGGING and args.command in ('server', 'psqworker'):
-    google_cloud.setup_stackdriver_handler(config.TURBINIA_PROJECT)
+    google_cloud.setup_stackdriver_handler(
+        config.TURBINIA_PROJECT, args.command)
 
   log.info('Turbinia version: {0:s}'.format(__version__))
 

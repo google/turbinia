@@ -24,8 +24,13 @@ from google.cloud import exceptions
 
 from turbinia import TurbiniaException
 
+import datetime
 
-def setup_stackdriver_handler(project_id):
+from google.cloud.logging import _helpers
+from google.cloud.logging.handlers.transports.background_thread import _Worker
+
+
+def setup_stackdriver_handler(project_id, origin):
   """Set up Google Cloud Stackdriver Logging
 
   The Google Cloud Logging library will attach itself as a
@@ -33,14 +38,39 @@ def setup_stackdriver_handler(project_id):
 
   Attributes:
     project_id: The name of the Google Cloud project.
+    origin: Where the log is originating from.(i.e. server, worker)
   Raises:
     TurbiniaException: When an error occurs enabling GCP Stackdriver Logging.
   """
+
+  # Patching cloud logging to allow custom fields
+  def my_enqueue(
+      self, record, message, resource=None, labels=None, trace=None,
+      span_id=None):
+    queue_entry = {
+        "info": {
+            "message": message,
+            "python_logger": record.name,
+            "origin": origin
+        },
+        "severity": _helpers._normalize_severity(record.levelno),
+        "resource": resource,
+        "labels": labels,
+        "trace": trace,
+        "span_id": span_id,
+        "timestamp": datetime.datetime.utcfromtimestamp(record.created),
+    }
+
+    self._queue.put_nowait(queue_entry)
+
+  _Worker.enqueue = my_enqueue
+
   try:
     client = cloud_logging.Client(project=project_id)
     cloud_handler = cloud_logging.handlers.CloudLoggingHandler(client)
     logger = logging.getLogger('turbinia')
     logger.addHandler(cloud_handler)
+
   except exceptions.GoogleCloudError as exception:
     msg = 'Error enabling Stackdriver Logging: {0:s}'.format(str(exception))
     raise TurbiniaException(msg)
