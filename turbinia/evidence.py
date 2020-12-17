@@ -554,6 +554,7 @@ class RawDiskPartition(RawDisk):
         self.local_path = self.device_path
     if EvidenceState.MOUNTED in required_states:
       self.mount_path = mount_local.PreprocessMountPartition(self.device_path)
+      self.local_path = self.mount_path
       self.state[EvidenceState.MOUNTED] = True
 
   def _postprocess(self):
