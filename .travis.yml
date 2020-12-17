@@ -12,5 +12,7 @@ install:
   - pip install -r dfvfs_requirements.txt
 
 script:
+  - cp ./test_data/.turbiniarc ~/
+  - touch turbinia.log
   - ./run_tests.py
   - tox --sitepackages ${TOXENV}
