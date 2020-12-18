@@ -196,6 +196,13 @@ class MountLocalProcessorTest(unittest.TestCase):
     with self.assertRaises(TurbiniaException):
       mount_local.GetFilesystem('/dev/loop0')
 
+    # Test retry loop
+    mock_subprocess.reset_mock()
+    mock_subprocess.side_effect = [b'', b'ext4']
+    mount_local.GetFilesystem('/dev/loop0')
+    self.assertEqual(fstype, 'ext4')
+    self.assertEqual(mock_subprocess.call_count, 2)
+
   @mock.patch('subprocess.check_call')
   def testPostprocessDeleteLosetup(self, mock_subprocess):
     """Test PostprocessDeleteLosetup method."""
