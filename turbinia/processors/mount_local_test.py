@@ -84,6 +84,7 @@ class MountLocalProcessorTest(unittest.TestCase):
     with self.assertRaises(TurbiniaException):
       mount_local.PreprocessLosetup(source_path)
 
+  @mock.patch('turbinia.processors.mount_local.config')
   @mock.patch('tempfile.mkdtemp')
   @mock.patch('subprocess.check_output')
   @mock.patch('subprocess.check_call')
@@ -92,8 +93,9 @@ class MountLocalProcessorTest(unittest.TestCase):
   @mock.patch('os.makedirs')
   def testPreprocessMountDisk(
       self, _, mock_path_exists, mock_path_isdir, mock_subprocess,
-      mock_filesystem, mock_mkdtemp):
+      mock_filesystem, mock_mkdtemp, mock_config):
     """Test PreprocessMountDisk method."""
+    mock_config.MOUNT_DIR_PREFIX = '/mnt/turbinia'
     mock_path_exists.side_effect = _mock_returns
     mock_filesystem.return_value = b'ext4'
     mock_mkdtemp.return_value = '/mnt/turbinia/turbinia0ckdntz0'
@@ -131,6 +133,7 @@ class MountLocalProcessorTest(unittest.TestCase):
     with self.assertRaises(TurbiniaException):
       mount_local.PreprocessMountDisk(['/dev/loop0p1'], 1)
 
+  @mock.patch('turbinia.processors.mount_local.config')
   @mock.patch('tempfile.mkdtemp')
   @mock.patch('subprocess.check_output')
   @mock.patch('subprocess.check_call')
@@ -139,8 +142,9 @@ class MountLocalProcessorTest(unittest.TestCase):
   @mock.patch('os.makedirs')
   def testPreprocessMountPartition(
       self, _, mock_path_exists, mock_path_isdir, mock_subprocess,
-      mock_filesystem, mock_mkdtemp):
+      mock_filesystem, mock_mkdtemp, mock_config):
     """Test PreprocessMountPartition method."""
+    mock_config.MOUNT_DIR_PREFIX = '/mnt/turbinia'
     mock_path_exists.side_effect = _mock_returns
     mock_filesystem.return_value = b'ext4'
     mock_mkdtemp.return_value = '/mnt/turbinia/turbinia0ckdntz0'
@@ -195,6 +199,13 @@ class MountLocalProcessorTest(unittest.TestCase):
     mock_subprocess.return_value = b'ext4\nxfs'
     with self.assertRaises(TurbiniaException):
       mount_local.GetFilesystem('/dev/loop0')
+
+    # Test retry loop
+    mock_subprocess.reset_mock()
+    mock_subprocess.side_effect = [b'', b'ext4']
+    mount_local.GetFilesystem('/dev/loop0')
+    self.assertEqual(fstype, 'ext4')
+    self.assertEqual(mock_subprocess.call_count, 2)
 
   @mock.patch('subprocess.check_call')
   def testPostprocessDeleteLosetup(self, mock_subprocess):

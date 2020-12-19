@@ -28,6 +28,8 @@ from turbinia import TurbiniaException
 
 log = logging.getLogger('turbinia')
 
+RETRY_MAX = 10
+
 
 def PreprocessLosetup(source_path, partition_offset=None, partition_size=None):
   """Runs Losetup on a target block device or image file.
@@ -70,7 +72,7 @@ def PreprocessLosetup(source_path, partition_offset=None, partition_size=None):
   except subprocess.CalledProcessError as e:
     raise TurbiniaException('Could not set losetup devices {0!s}'.format(e))
 
-  partitions = glob.glob('{0:s}p*'.format(losetup_device))
+  partitions = sorted(glob.glob('{0:s}p*'.format(losetup_device)))
   if not partitions:
     # In this case, the image was of a partition, and not a full disk with a
     # partition table
@@ -208,11 +210,15 @@ def GetFilesystem(path):
   """
   cmd = ['lsblk', path, '-f', '-o', 'FSTYPE', '-n']
   log.info('Running {0!s}'.format(cmd))
-  fstype = subprocess.check_output(cmd).split()
-  if not fstype:
-    # Lets wait a bit for any previous blockdevice operation to settle
-    time.sleep(2)
+  for retry in range(RETRY_MAX):
     fstype = subprocess.check_output(cmd).split()
+    if fstype:
+      break
+    else:
+      log.debug(
+          'Filesystem type for {0:s} not found, retry {1:d} of {2:d}'.format(
+              path, retry, RETRY_MAX))
+      time.sleep(1)
 
   if len(fstype) != 1:
     raise TurbiniaException(
