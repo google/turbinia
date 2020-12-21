@@ -224,10 +224,6 @@ class Evidence:
 
   def serialize(self):
     """Return JSON serializable object."""
-    # Set all states to False because if we are serializing the Evidence it is
-    # because this is about to be returned, and the state has no meaning
-    # outside of the context on the Worker.
-    self.state = {state: False for state in self.state}
     serialized_evidence = self.__dict__.copy()
     if self.parent_evidence:
       serialized_evidence['parent_evidence'] = self.parent_evidence.serialize()
@@ -496,7 +492,7 @@ class RawDisk(Evidence):
     size: The size of the disk in bytes.
   """
 
-  POSSIBLE_STATES = [EvidenceState.MOUNTED, EvidenceState.ATTACHED]
+  POSSIBLE_STATES = [EvidenceState.ATTACHED]
 
   def __init__(self, mount_partition=1, size=None, *args, **kwargs):
     """Initialization for raw disk evidence object."""
@@ -513,20 +509,11 @@ class RawDisk(Evidence):
 
   def _preprocess(self, _, required_states):
     if EvidenceState.ATTACHED in required_states:
-      self.device_path, partition_paths = mount_local.PreprocessLosetup(
-          self.source_path)
+      self.device_path, _ = mount_local.PreprocessLosetup(self.source_path)
       self.state[EvidenceState.ATTACHED] = True
       self.local_path = self.device_path
-    if EvidenceState.MOUNTED in required_states:
-      self.mount_path = mount_local.PreprocessMountDisk(
-          partition_paths, self.mount_partition)
-      self.local_path = self.mount_path
-      self.state[EvidenceState.MOUNTED] = True
 
   def _postprocess(self):
-    if self.state[EvidenceState.MOUNTED]:
-      mount_local.PostprocessUnmountPath(self.mount_path)
-      self.state[EvidenceState.MOUNTED] = False
     if self.state[EvidenceState.ATTACHED]:
       mount_local.PostprocessDeleteLosetup(self.device_path)
       self.state[EvidenceState.ATTACHED] = False
@@ -565,8 +552,15 @@ class RawDiskPartition(RawDisk):
       if self.device_path:
         self.state[EvidenceState.ATTACHED] = True
         self.local_path = self.device_path
+    if EvidenceState.MOUNTED in required_states:
+      self.mount_path = mount_local.PreprocessMountPartition(self.device_path)
+      self.local_path = self.mount_path
+      self.state[EvidenceState.MOUNTED] = True
 
   def _postprocess(self):
+    if self.state[EvidenceState.MOUNTED]:
+      mount_local.PostprocessUnmountPath(self.mount_path)
+      self.state[EvidenceState.MOUNTED] = False
     if self.state[EvidenceState.ATTACHED]:
       mount_local.PostprocessDeleteLosetup(self.device_path)
       self.state[EvidenceState.ATTACHED] = False

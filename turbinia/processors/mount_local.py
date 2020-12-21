@@ -28,6 +28,8 @@ from turbinia import TurbiniaException
 
 log = logging.getLogger('turbinia')
 
+RETRY_MAX = 10
+
 
 def PreprocessLosetup(source_path, partition_offset=None, partition_size=None):
   """Runs Losetup on a target block device or image file.
@@ -70,7 +72,7 @@ def PreprocessLosetup(source_path, partition_offset=None, partition_size=None):
   except subprocess.CalledProcessError as e:
     raise TurbiniaException('Could not set losetup devices {0!s}'.format(e))
 
-  partitions = glob.glob('{0:s}p*'.format(losetup_device))
+  partitions = sorted(glob.glob('{0:s}p*'.format(losetup_device)))
   if not partitions:
     # In this case, the image was of a partition, and not a full disk with a
     # partition table
@@ -145,6 +147,59 @@ def PreprocessMountDisk(partition_paths, partition_number):
   return mount_path
 
 
+def PreprocessMountPartition(partition_path):
+  """Locally mounts disk partition in an instance.
+
+  Args:
+    partition_path(str): A path to a partition block device
+
+  Raises:
+    TurbiniaException: if the mount command failed to run.
+
+  Returns:
+    str: the path to the mounted filesystem.
+  """
+  config.LoadConfig()
+  mount_prefix = config.MOUNT_DIR_PREFIX
+
+  if not os.path.exists(partition_path):
+    raise TurbiniaException(
+        'Could not mount partition {0:s}, the path does not exist'.format(
+            partition_path))
+
+  if os.path.exists(mount_prefix) and not os.path.isdir(mount_prefix):
+    raise TurbiniaException(
+        'Mount dir {0:s} exists, but is not a directory'.format(mount_prefix))
+  if not os.path.exists(mount_prefix):
+    log.info('Creating local mount parent directory {0:s}'.format(mount_prefix))
+    try:
+      os.makedirs(mount_prefix)
+    except OSError as e:
+      raise TurbiniaException(
+          'Could not create mount directory {0:s}: {1!s}'.format(
+              mount_prefix, e))
+
+  mount_path = tempfile.mkdtemp(prefix='turbinia', dir=mount_prefix)
+
+  mount_cmd = ['sudo', 'mount', '-o', 'ro']
+  fstype = GetFilesystem(partition_path)
+  if fstype in ['ext3', 'ext4']:
+    # This is in case the underlying filesystem is dirty, as we want to mount
+    # everything read-only.
+    mount_cmd.extend(['-o', 'noload'])
+  elif fstype == 'xfs':
+    mount_cmd.extend(['-o', 'norecovery'])
+  mount_cmd.extend([partition_path, mount_path])
+
+  log.info('Running: {0:s}'.format(' '.join(mount_cmd)))
+  try:
+    subprocess.check_call(mount_cmd)
+  except subprocess.CalledProcessError as e:
+    raise TurbiniaException('Could not mount directory {0!s}'.format(e))
+
+  return mount_path
+
+
 def GetFilesystem(path):
   """Uses lsblk to detect the filesystem of a partition block device.
 
@@ -155,11 +210,15 @@ def GetFilesystem(path):
   """
   cmd = ['lsblk', path, '-f', '-o', 'FSTYPE', '-n']
   log.info('Running {0!s}'.format(cmd))
-  fstype = subprocess.check_output(cmd).split()
-  if not fstype:
-    # Lets wait a bit for any previous blockdevice operation to settle
-    time.sleep(2)
+  for retry in range(RETRY_MAX):
     fstype = subprocess.check_output(cmd).split()
+    if fstype:
+      break
+    else:
+      log.debug(
+          'Filesystem type for {0:s} not found, retry {1:d} of {2:d}'.format(
+              path, retry, RETRY_MAX))
+      time.sleep(1)
 
   if len(fstype) != 1:
     raise TurbiniaException(

@@ -396,6 +396,12 @@ def main():
   parser_log_collector.add_argument(
       '-d', '--days_history', default=1, type=int,
       help='Number of days of history to show', required=False)
+  parser_log_collector.add_argument(
+      '-s', '--server_logs', action='store_true',
+      help='Collects all server related logs.')
+  parser_log_collector.add_argument(
+      '-w', '--worker_logs', action='store_true',
+      help='Collects all worker related logs.')
 
   # Server
   subparsers.add_parser('server', help='Run Turbinia Server')
@@ -436,7 +442,8 @@ def main():
 
   # Enable GCP Stackdriver Logging
   if config.STACKDRIVER_LOGGING and args.command in ('server', 'psqworker'):
-    google_cloud.setup_stackdriver_handler(config.TURBINIA_PROJECT)
+    google_cloud.setup_stackdriver_handler(
+        config.TURBINIA_PROJECT, args.command)
 
   log.info('Turbinia version: {0:s}'.format(__version__))
 
@@ -735,6 +742,16 @@ def main():
     query = None
     if args.query:
       query = args.query
+    if args.worker_logs:
+      if query:
+        query = 'jsonPayload.origin="psqworker" {}'.format(query)
+      else:
+        query = 'jsonPayload.origin="psqworker"'
+    if args.server_logs:
+      if query:
+        query = 'jsonPayload.origin="server" {}'.format(query)
+      else:
+        query = 'jsonPayload.origin="server"'
     google_cloud.get_logs(
         args.output_dir, config.TURBINIA_PROJECT, args.days_history, query)
   else:

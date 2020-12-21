@@ -23,7 +23,6 @@ import stat
 import time
 
 from six.moves import urllib
-from six.moves import xrange
 
 from libcloudforensics.providers.gcp.internal import project as gcp_project
 from turbinia import config
@@ -91,7 +90,7 @@ def PreprocessAttachDisk(disk_name):
   path = '/dev/disk/by-id/google-{0:s}'.format(disk_name)
   if IsBlockDevice(path):
     log.info('Disk {0:s} already attached!'.format(disk_name))
-    return (path, glob.glob('{0:s}-part*'.format(path)))
+    return (path, sorted(glob.glob('{0:s}-part*'.format(path))))
 
   config.LoadConfig()
   instance_name = GetLocalInstanceName()
@@ -105,7 +104,7 @@ def PreprocessAttachDisk(disk_name):
   instance.AttachDisk(disk)
 
   # Make sure we have a proper block device
-  for _ in xrange(RETRY_MAX):
+  for _ in range(RETRY_MAX):
     if IsBlockDevice(path):
       log.info('Block device {0:s} successfully attached'.format(path))
       break
@@ -124,7 +123,7 @@ def PreprocessAttachDisk(disk_name):
     log.error(message)
     raise TurbiniaException(message)
 
-  return (path, glob.glob('{0:s}-part*'.format(path)))
+  return (path, sorted(glob.glob('{0:s}-part*'.format(path))))
 
 
 def PostprocessDetachDisk(disk_name, local_path):
@@ -156,7 +155,7 @@ def PostprocessDetachDisk(disk_name, local_path):
   instance.DetachDisk(disk)
 
   # Make sure device is Detached
-  for _ in xrange(RETRY_MAX):
+  for _ in range(RETRY_MAX):
     if not os.path.exists(path):
       log.info('Block device {0:s} is no longer attached'.format(path))
       break
