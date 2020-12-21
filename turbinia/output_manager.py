@@ -406,7 +406,7 @@ class GCSOutputWriter(OutputWriter):
     super(GCSOutputWriter, self).__init__(*args, **kwargs)
     config.LoadConfig()
     self.client = storage.Client(project=config.TURBINIA_PROJECT)
-
+    log.error('in  init{}'.format(gcs_path))
     self.bucket, self.base_output_dir = self._parse_gcs_path(gcs_path)
 
   @staticmethod
@@ -419,6 +419,7 @@ class GCSOutputWriter(OutputWriter):
     Returns:
       A tuple of ((string) bucket, (string) path)
     """
+    log.error('HERE {}'.format(file_))
     match = re.search(r'gs://(.*?)/(.*$)', file_)
     if not match:
       raise TurbiniaException(
@@ -469,14 +470,28 @@ class GCSOutputWriter(OutputWriter):
     """
     bucket = self.client.get_bucket(self.bucket)
     gcs_path = self._parse_gcs_path(source_path)[1]
-    destination_path = os.path.join(
-        self.local_output_dir, os.path.basename(source_path))
-    log.info(
-        'Writing GCS file {0:s} to local path {1:s}'.format(
-            source_path, destination_path))
+    log.info('YOOO')
+    log.info(gcs_path)
+    
     try:
-      blob = storage.Blob(gcs_path, bucket, chunk_size=self.CHUNK_SIZE)
-      blob.download_to_filename(destination_path, client=self.client)
+     # blob = storage.Blob(gcs_path, bucket, chunk_size=self.CHUNK_SIZE)
+      blobs = bucket.list_blobs(prefix=gcs_path)
+      if blobs:
+        log.info('YES')
+      else:
+        log.error('NO')
+
+      log.error('RESWAG {}'.format(blobs))
+      for blob in blobs:
+        destination_path = os.path.join(
+        self.local_output_dir, os.path.basename(source_path))
+        log.info(
+            'Writing GCS file {0:s} to local path {1:s}'.format(
+                source_path, destination_path))
+        log.error('SWAG')
+        log.error('Downloading {} to  {}'.format(blob.name, destination_path+blob.name))
+
+        blob.download_to_filename(destination_path, client=self.client)
     except exceptions.RequestRangeNotSatisfiable as exception:
       message = (
           'File retrieval from GCS failed, file may be empty: {0!s}'.format(
