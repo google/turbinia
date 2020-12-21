@@ -25,13 +25,14 @@ import logging
 import os
 import sys
 import uuid
-
+import datetime
 from turbinia import config
 from turbinia import TurbiniaException
 from turbinia.config import logger
 from turbinia import __version__
 from turbinia.processors import archive
 from turbinia.output_manager import OutputManager
+from turbinia.output_manager import GCSOutputWriter
 
 log = logging.getLogger('turbinia')
 # We set up the logger first without the file handler, and we will set up the
@@ -391,13 +392,15 @@ def main():
   parser_gcs_logs =subparsers.add_parser(
       'DumpGCSLogs', help='Get Turbinia results from Google Cloud Storage.')
   parser_gcs_logs.add_argument(
-      '-t', '--task_id', help='Show task for given Task ID', required=False)
+      '-t', '--task_id', help='Download results for given Task ID', required=False)
   parser_gcs_logs.add_argument(
-      '-ts', '--timestamp', help='Show all the results for a given date and time.')
+      '-ts', '--timestamp', help='Download all the results for given epoch timestamp.', required=False)
   parser_gcs_logs.add_argument(
-      '-b', '--bucket', help='GCS bucket to pull logs from.' )
+      '-p', '--gcs_path', help='GCS bucket to pull logs from.', required=False)
   parser_gcs_logs.add_argument(
-      '-o', '--output_dir', help='Directory path for output', required=True)
+      '-o', '--output_dir', help='Directory path for output.', required=True)
+  parser_gcs_logs.add_argument(
+      '-n', '--task_name', help='Download all the results for given task.', required=False)
   
   # Server
   subparsers.add_parser('server', help='Run Turbinia Server')
@@ -759,6 +762,48 @@ def main():
     if not os.path.isdir(args.output_dir):
       log.error('Please provide a valid directory path.')
       sys.exit(1)
+    gcs_file = ''
+    if args.timestamp:
+      gcs_file = args.timestamp
+    if args.task_id:
+      if gcs_file:
+        gcs_file = '{0!s}-{1!s}'.format(gcs_file, args.task_id)
+      else:
+        gcs_file = args.task_id
+    if args.task_name:
+      if gcs_file:
+        gcs_file = '{0!s}-{1!s}'.format(gcs_file, args.task_name)
+      else:
+        gcs_file = args.task_name
+    gcs_bucket = config.GCS_OUTPUT_PATH
+    if args.gcs_path:
+      gcs_bucket = args.gcs_path
+    log.info('Downloading files from {0!s} to {1!s} using the following query "{2!s}".'.format(gcs_bucket, args.output_dir, gcs_file ))
+
+    try:
+      log.error('calling output wtre')
+      file_path = "{0!s}/{1!s}".format(gcs_bucket,gcs_file)
+      output_writer = GCSOutputWriter(
+          file_path , local_output_dir=args.output_dir)
+      log.error('calling output wtre2')
+      local_path = output_writer.copy_from(file_path)
+    except TurbiniaException as exception:
+      log.error('Failed to pull the data {}'.format(exception))
+      # try:
+      #   datetime.datetime.strptime(args.timestamp, '%Y%m%d')
+      #   # or not datetime.datetime.strptime(args.timestamp, '%Y%m%d'):
+      #   #log.error(
+      #   #'YOOThe provided timeformat is not supported. Please use YYYYMMDDTHHMMSS')
+      #   #sys.exit(1)
+      # ## log.info('here')
+      # try: 
+      #   datetime.datetime.strptime(args.timestamp, '%Y%m%d')
+
+      # except:
+      #   log.error(
+      #     'The provided timeformat is not supported. Please use YYYYMMDDTHHMMSS')
+      #   sys.exit(1)
+
     log.info('Preparing to pull files from GCS.')
   else:
     log.warning('Command {0!s} not implemented.'.format(args.command))
