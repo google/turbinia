@@ -23,6 +23,7 @@ import os
 import re
 import shutil
 import time
+from pathlib import Path
 
 from turbinia import config
 from turbinia import TurbiniaException
@@ -483,15 +484,24 @@ class GCSOutputWriter(OutputWriter):
 
       log.error('RESWAG {}'.format(blobs))
       for blob in blobs:
-        destination_path = os.path.join(
-        self.local_output_dir, os.path.basename(source_path))
-        log.info(
-            'Writing GCS file {0:s} to local path {1:s}'.format(
-                source_path, destination_path))
+        
+       # log.info(
+        #    'Writing GCS file {0:s} to local path {1:s}'.format(
+         #       source_path, destination_path))
         log.error('SWAG')
+       # log.error('Downloading {} to  {}'.format(blob.name, destination_path+blob.name))
+        if blob.name.endswith("/"):
+          continue
+        file_split = blob.name.split("/")
+        directory = "/".join(file_split[0:-1])
+        destination_path = os.path.join(
+            self.local_output_dir, directory)
+        Path(destination_path).mkdir(parents=True, exist_ok=True)
+        f_name = os.path.join(self.local_output_dir,blob.name)
         log.error('Downloading {} to  {}'.format(blob.name, destination_path+blob.name))
-
-        blob.download_to_filename(destination_path, client=self.client)
+      
+        blob.download_to_filename(f_name, client=self.client)
+      #  blob.download_to_filename(destination_path, client=self.client)
     except exceptions.RequestRangeNotSatisfiable as exception:
       message = (
           'File retrieval from GCS failed, file may be empty: {0!s}'.format(
