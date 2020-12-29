@@ -388,15 +388,19 @@ def main():
       'full output containing finished and unassigned worker tasks.')
 
   # Add GCS logs collector
-  parser_gcs_logs =subparsers.add_parser(
+  parser_gcs_logs = subparsers.add_parser(
       'DumpGCSLogs', help='Get Turbinia results from Google Cloud Storage.')
   parser_gcs_logs.add_argument(
-      '-p', '--gcs_path', help='GCS bucket to pull logs from. Must be in the following format gs://{BUCKET_NAME}/{OUTPUT_DIR}', required=False)
+      '-p', '--gcs_path',
+      help='GCS bucket to pull logs from. Must be in the following format gs://{BUCKET_NAME}/{OUTPUT_DIR}',
+      required=False)
   parser_gcs_logs.add_argument(
       '-o', '--output_dir', help='Directory path for output.', required=True)
   parser_gcs_logs.add_argument(
-      '-n', '--blob_name', help='Download all the results for given name. You may use timestamp, task_id or task name', required=True)
-  
+      '-n', '--blob_name',
+      help='Download all the results for given name. You may use timestamp, task_id or task name',
+      required=True)
+
   # Server
   subparsers.add_parser('server', help='Run Turbinia Server')
 
@@ -744,12 +748,14 @@ def main():
     gcs_bucket = config.GCS_OUTPUT_PATH
     if args.gcs_path:
       gcs_bucket = args.gcs_path
-    log.info('Downloading files from {0!s} to {1!s} using the following query "{2!s}".'.format(gcs_bucket, args.output_dir, gcs_file ))
+    log.info(
+        'Downloading files from {0!s} to {1!s} using the following query "{2!s}".'
+        .format(gcs_bucket, args.output_dir, gcs_file))
 
     try:
-      file_path = "{0!s}/{1!s}".format(gcs_bucket,gcs_file)
+      file_path = "{0!s}/{1!s}".format(gcs_bucket, gcs_file)
       output_writer = GCSOutputWriter(
-          file_path , local_output_dir=args.output_dir)
+          file_path, local_output_dir=args.output_dir)
       local_path = output_writer.copy_from(file_path)
     except TurbiniaException as exception:
       log.error('Failed to pull the data {}'.format(exception))
