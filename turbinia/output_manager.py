@@ -473,22 +473,21 @@ class GCSOutputWriter(OutputWriter):
         self.local_output_dir, os.path.basename(source_path))
     import fnmatch
     try:
-      # Listing all the bucket objects and filtering the name later. 
+      # Listing all the bucket objects and filtering the name later.
       # Storage API does not support wildcard searching like *filename*.
-      blobs = bucket.list_blobs() #prefix=gcs_path)
+      blobs = bucket.list_blobs()  #prefix=gcs_path)
       for blob in blobs:
-        if fnmatch.fnmatch(blob.name,gcs_path):
+        if fnmatch.fnmatch(blob.name, gcs_path):
           if blob.name.endswith("/"):
             continue
           file_split = blob.name.split("/")
           directory = "/".join(file_split[0:-1])
-          destination_path = os.path.join(
-              self.local_output_dir, directory)
+          destination_path = os.path.join(self.local_output_dir, directory)
           Path(destination_path).mkdir(parents=True, exist_ok=True)
-          file_name = os.path.join(self.local_output_dir,blob.name)
+          file_name = os.path.join(self.local_output_dir, blob.name)
           log.info(
               'Writing GCS file {0:s} to local path {1:s}'.format(
-                   source_path, file_name)) 
+                  source_path, file_name))
           blob.download_to_filename(file_name, client=self.client)
     except exceptions.RequestRangeNotSatisfiable as exception:
       message = (
@@ -508,4 +507,3 @@ class GCSOutputWriter(OutputWriter):
       raise TurbiniaException(message)
 
     return destination_path
-
