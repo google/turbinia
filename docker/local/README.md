@@ -28,7 +28,7 @@ Copy a configuration template for the local stack to the ```./conf`` folder (cre
 $ cp docker/local/turbinia-local-template.conf ./conf/turbinia.conf
 ```
 #### Step 5
-Now build a docker (server) image (this will take some serious time the first build!)
+Now build a docker (server) image (the first build will take some serious time!)
 ```
 $ docker build -t turbinia-server-dev -f docker/server/Dockerfile .
 ```
@@ -37,11 +37,11 @@ Let's bring up the local Turbinia stack
 ```
 $ docker-compose -f ./docker/local/docker-compose.yml up
 ```
-Redis, a Turbinia server and worker should now be running on your local system and a local persistent 'evidence' folder will have been created with the Turbinia log file and processing output.
+Redis, a Turbinia server and worker should now be running on your local system and a local persistent 'evidence' folder will have been created containing the Turbinia log file and processing output.
 #### Step 6
-Let's send process evidence, eg some Chrome Browser history file.
+Let's process evidence, eg a Chrome Browser history file.
 ```
-$ curl https://github.com/obsidianforensics/hindsight/raw/master/tests/fixtures/profiles/60/History > History
+$ curl https://raw.githubusercontent.com/obsidianforensics/hindsight/master/tests/fixtures/profiles/60/History > History
 $ tar -vzcf ./evidence/history.tgz History
 $ docker exec -ti turbinia-server turbiniactl compresseddirectory -l /evidence/history.tgz
 ```
@@ -49,7 +49,7 @@ This will create a task in Turbinia to process the evidence file. A task ID will
 ```
 $ docker exec -ti turbinia-server turbiniactl -a status -r b998efb5dcb64949963d9c72ba143c1a
 ```
-There will be server and worker output displayed both on the docker-compose terminal as well as in the ```./evidence`` folder log files.
+There will be server and worker output displayed both on the docker-compose terminal as well as in the ```./evidence`` folder.
 
 Debug your code and repeat steps 4-6 to make your code perfect :).
 
