@@ -1,4 +1,4 @@
-celery
+celery==4.3.0
 docker
 filelock
 google-api-core
