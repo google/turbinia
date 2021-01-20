@@ -1,6 +1,6 @@
 # Developing on a local Turbinia setup (no cloud required)
 
-We will be using a local setup of the Turbinia stack using Docker. See [here](../../docker/local/README.md) on how to setup the local Turbinia stack.
+See [here](../../docker/local/README.md) on how to setup the local Turbinia stack with Docker.
 
 After you have the local stack up and running a usual development cycle would look like below.
 
@@ -33,7 +33,7 @@ Let's bring up the local Turbinia stack
 $ docker-compose -f ./docker/local/docker-compose.yml up
 ```
 #### Step 6
-Let's process evidence to test your setup, in this case a Chrome Browser history file but you will ikely want to use your specific evidence to test your new functionality.
+Let's process evidence to test your setup, in this case a Chrome Browser history file but you will likely want to use specific evidence to test your new functionality.
 ```
 $ curl https://raw.githubusercontent.com/obsidianforensics/hindsight/master/tests/fixtures/profiles/60/History > History
 $ tar -vzcf ./evidence/history.tgz History
