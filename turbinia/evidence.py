@@ -519,7 +519,7 @@ class RawDisk(Evidence):
       self.state[EvidenceState.ATTACHED] = False
 
 
-class RawDiskPartition(RawDisk):
+class DiskPartition(RawDisk):
   """Evidence object for a partition within Disk based evidence.
 
   Attributes:
@@ -528,7 +528,6 @@ class RawDiskPartition(RawDisk):
     partition_size: Size of the partition in bytes.
   """
 
-  REQUIRED_ATTRIBUTES = ['local_path']
   POSSIBLE_STATES = [EvidenceState.MOUNTED, EvidenceState.ATTACHED]
 
   def __init__(
@@ -539,7 +538,7 @@ class RawDiskPartition(RawDisk):
     self.path_spec = path_spec
     self.partition_offset = partition_offset
     self.partition_size = partition_size
-    super(RawDiskPartition, self).__init__(*args, **kwargs)
+    super(DiskPartition, self).__init__(*args, **kwargs)
 
     # This Evidence needs to have a RawDisk as a parent
     self.context_dependent = True

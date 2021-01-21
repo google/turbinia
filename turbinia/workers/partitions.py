@@ -15,7 +15,9 @@
 """Task for enumerating partitions in a disk."""
 
 from turbinia import TurbiniaException
-from turbinia.evidence import RawDiskPartition
+from turbinia.evidence import DiskPartition
+from turbinia.evidence import EvidenceState
+from turbinia.lib import dfvfs_classes
 from turbinia.lib import text_formatter as fmt
 from turbinia.workers import Priority
 from turbinia.workers import TurbiniaTask
@@ -35,6 +37,8 @@ if TurbiniaTask.check_worker_role():
 
 class PartitionEnumerationTask(TurbiniaTask):
   """Task to enumerate partitions in a disk."""
+
+  REQUIRED_STATES = [EvidenceState.ATTACHED]
 
   def _ProcessPartition(self, evidence_path, path_spec):
     """Generate RawDiskPartition from a PathSpec.
@@ -102,7 +106,7 @@ class PartitionEnumerationTask(TurbiniaTask):
     else:
       status_report.append(fmt.bullet('Source evidence is a volume image'))
 
-    partition_evidence = RawDiskPartition(
+    partition_evidence = DiskPartition(
         source_path=evidence_path, path_spec=fs_path_spec,
         partition_offset=partition_offset, partition_size=partition_size)
 
@@ -125,7 +129,7 @@ class PartitionEnumerationTask(TurbiniaTask):
     mediator = dfvfs_classes.UnattendedVolumeScannerMediator()
     try:
       scanner = volume_scanner.VolumeScanner(mediator=mediator)
-      path_specs = scanner.GetBasePathSpecs(evidence.local_path)
+      path_specs = scanner.GetBasePathSpecs(evidence.device_path)
       status_summary = 'Found {0:d} partition(s) in [{1:s}]:'.format(
           len(path_specs), evidence.local_path)
     except dfvfs_errors.ScannerError as e:
@@ -136,7 +140,7 @@ class PartitionEnumerationTask(TurbiniaTask):
     try:
       for path_spec in path_specs:
         partition_evidence, partition_status = self._ProcessPartition(
-            evidence.local_path, path_spec)
+            evidence.device_path, path_spec)
         status_report.extend(partition_status)
         result.add_evidence(partition_evidence, evidence.config)
 

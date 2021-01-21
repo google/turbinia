@@ -16,10 +16,10 @@
 
 from __future__ import unicode_literals
 
+from turbinia.evidence import DiskPartition
 from turbinia.evidence import DockerContainer
 from turbinia.evidence import GoogleCloudDisk
 from turbinia.evidence import GoogleCloudDiskRawEmbedded
-from turbinia.evidence import RawDiskPartition
 from turbinia.jobs import interface
 from turbinia.jobs import manager
 from turbinia.workers.docker import DockerContainersEnumerationTask
@@ -29,9 +29,7 @@ class DockerContainersEnumerationJob(interface.TurbiniaJob):
   """Use docker-explorer to list all containers in a Linux docker environment"""
 
   # Types of evidence that this Job will process.
-  evidence_input = [
-      GoogleCloudDisk, GoogleCloudDiskRawEmbedded, RawDiskPartition
-  ]
+  evidence_input = [DiskPartition, GoogleCloudDisk, GoogleCloudDiskRawEmbedded]
   evidence_output = [DockerContainer]
 
   NAME = 'DockerContainersEnumerationJob'
