@@ -25,6 +25,7 @@ Let's bring up the local Turbinia stack
 $ docker-compose -f ./docker/local/docker-compose.yml up
 ```
 Redis, a Turbinia server and worker should now be running on your local system and a local persistent 'evidence' folder will have been created containing the Turbinia log file and processing output.
+Note: Redis will store it's data in a volume that is mapped to ```./redis-data/```. You can adjust this in the docker-compose.yml configuration.
 #### Step 4
 Let's process evidence to test your setup, eg a Chrome Browser history file.
 ```
