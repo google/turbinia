@@ -15,8 +15,8 @@ RUN pip3 install urllib3 cryptography --upgrade
 
 ADD requirements.txt /tmp/
 RUN cd /tmp/ && pip3 install -r requirements.txt
-ADD dfvfs_requirements.txt /tmp/
-RUN cd /tmp/ && pip3 install -r dfvfs_requirements.txt
+#ADD dfvfs_requirements.txt /tmp/
+#RUN cd /tmp/ && pip3 install -r dfvfs_requirements.txt
 
 ADD . /tmp/
 RUN cd /tmp/ && python3 setup.py install

@@ -14,14 +14,17 @@
 # limitations under the License.
 """Task for enumerating partitions in a disk."""
 
-from dfvfs.helpers import volume_scanner
-from dfvfs.lib import definitions as dfvfs_definitions
-from dfvfs.lib import errors as dfvfs_errors
-from dfvfs.volume import tsk_volume_system
+import sys
+
+if sys.argv in ('celeryworker', 'psqworker'):
+  from dfvfs.helpers import volume_scanner
+  from dfvfs.lib import definitions as dfvfs_definitions
+  from dfvfs.lib import errors as dfvfs_errors
+  from dfvfs.volume import tsk_volume_system
+  from turbinia.lib import dfvfs_classes
 
 from turbinia import TurbiniaException
 from turbinia.evidence import RawDiskPartition
-from turbinia.lib import dfvfs_classes
 from turbinia.lib import text_formatter as fmt
 from turbinia.workers import Priority
 from turbinia.workers import TurbiniaTask

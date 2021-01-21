@@ -30,7 +30,6 @@ from turbinia import config
 from turbinia import TurbiniaException
 from turbinia.config import logger
 from libcloudforensics.providers.gcp import forensics as gcp_forensics
-from turbinia.lib import google_cloud
 from turbinia import __version__
 from turbinia.processors import archive
 from turbinia.output_manager import OutputManager
@@ -406,6 +405,9 @@ def main():
             exception, config.CONFIG_MSG))
     sys.exit(1)
 
+  if config.TASK_MANAGER == 'PSQ':
+    from turbinia.lib import google_cloud
+    
   if args.log_file:
     config.LOG_FILE = args.log_file
   if args.output_dir:

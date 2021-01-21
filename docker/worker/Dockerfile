@@ -16,16 +16,10 @@ sudo \
 testdisk \
 && rm -rf /var/lib/apt/lists/*
 
+RUN pip3 install --upgrade keyrings.alt 
 RUN pip3 install pip --upgrade
 RUN pip3 install urllib3 cryptography --upgrade
 
-ADD requirements.txt /tmp/
-RUN cd /tmp/ && pip3 install -r requirements.txt
-ADD dfvfs_requirements.txt /tmp/
-RUN cd /tmp/ && pip3 install -r dfvfs_requirements.txt
-
-ADD . /tmp/
-RUN cd /tmp/ && python3 setup.py install
 
 # Install Plaso
 RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 0x5e80511b10c598b8 \
@@ -35,6 +29,14 @@ RUN apt-get -y install python-plaso plaso-tools bulk-extractor --option Acquire:
 
 # Install Hindsight
 RUN pip3 install pyhindsight
+
+ADD requirements.txt /tmp/
+RUN cd /tmp/ && pip3 install --force-reinstall -r requirements.txt
+ADD dfvfs_requirements.txt /tmp/
+RUN cd /tmp/ && pip3 install -r dfvfs_requirements.txt
+
+ADD . /tmp/
+RUN cd /tmp/ && python3 setup.py install
 
 RUN useradd -r -s /bin/nologin -G disk turbinia
 RUN echo "turbinia ALL = (root) NOPASSWD: ALL" > /etc/sudoers.d/turbinia

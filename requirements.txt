@@ -1,15 +1,15 @@
-celery
+celery<5.0
 docker
 filelock
-google-api-core
-google-api-python-client
-google-auth
-google-cloud-core
-google-cloud-datastore<=2.0.0
-google-cloud-error-reporting
-google-cloud-logging==1.15.1
-google-cloud-pubsub==1.7.0
-google-cloud-storage
+# google-api-core
+# google-api-python-client
+# google-auth
+# google-cloud-core
+# google-cloud-datastore<=2.0.0
+# google-cloud-error-reporting
+# google-cloud-logging==1.15.1
+# google-cloud-pubsub==1.7.0
+# google-cloud-storage
 prometheus_client
 libcloudforensics
 psq
