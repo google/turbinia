@@ -97,7 +97,7 @@ def extract_files(file_name, disk_path, output_dir):
     TurbiniaException: If an error occurs when running image_export.
   """
   image_export_cmd = [
-      'image_export.py', '--name', file_name, '--write', output_dir,
+      'sudo', 'image_export.py', '--name', file_name, '--write', output_dir,
       '--partitions', 'all', disk_path
   ]
   return _image_export(image_export_cmd, output_dir)
