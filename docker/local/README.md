@@ -2,7 +2,7 @@
 Turbinia can be run locally without any Cloud components using Docker. It will use Redis, Celery and local disk to store data and perform message broker functionality.
 
 ### Caveats
-rawdisk: As Turbinia uses the loop device to mount different types of evidence (eg raw disks) the host operating system should support the loop device. Linux is currently the only OS that supports the processing of raw disks. It is possible to process different evidence types, eg compresseddirectory, using the local stack on OSX or Windows.
+rawdisk: As Turbinia uses the loop device to mount different types of evidence (eg raw disks) the host operating system should support the loop device. Linux is currently the only OS that supports the processing of raw disks.
 
 googleclouddisk: Turbinia as local stack can currently not process Google Cloud disks.
 
@@ -30,9 +30,12 @@ Let's process evidence to test your setup, eg a Chrome Browser history file.
 ```
 $ curl https://raw.githubusercontent.com/obsidianforensics/hindsight/master/tests/fixtures/profiles/60/History > History
 $ tar -vzcf ./evidence/history.tgz History
+```
+This command runs the turbinia client, turbiniactl, within the turbinia server docker container and generates a processing request.
+```
 $ docker exec -ti turbinia-server turbiniactl compresseddirectory -l /evidence/history.tgz
 ```
-This will create a task in Turbinia to process the evidence file. A task ID will be returned and we can query the status with below command.
+This will create a task in Turbinia to process the evidence file. A request ID will be returned and we can query the status with below command.
 ```
 $ docker exec -ti turbinia-server turbiniactl -a status -r b998efb5dcb64949963d9c72ba143c1a
 ```
