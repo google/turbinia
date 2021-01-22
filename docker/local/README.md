@@ -9,7 +9,7 @@ googleclouddisk: Turbinia as local stack cannot currently process Google Cloud d
 ### Running
 
 #### Step 1
-Checkout the Turbinia source code. If you intend to start developing please fork the repository on github first and check out your own forked instance.
+Checkout the [Turbinia source code](https://github.com/google/turbinia). If you intend to start developing please [fork](https://docs.github.com/en/github/getting-started-with-github/fork-a-repo) the repository on github first and check out your own forked instance.
 ```
 $ git clone https://github.com/google/turbinia.git
 $ cd turbinia
