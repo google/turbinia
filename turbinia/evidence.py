@@ -528,6 +528,7 @@ class DiskPartition(RawDisk):
     partition_size: Size of the partition in bytes.
   """
 
+  REQUIRED_ATTRIBUTES = ['local_path']
   POSSIBLE_STATES = [EvidenceState.MOUNTED, EvidenceState.ATTACHED]
 
   def __init__(
