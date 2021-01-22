@@ -4,7 +4,7 @@ Turbinia can be run locally without any Cloud components using Docker. It will u
 ### Caveats
 rawdisk: As Turbinia uses the loop device to mount different types of evidence (eg raw disks) the host operating system should support the loop device. Linux is currently the only OS that supports the processing of raw disks.
 
-googleclouddisk: Turbinia as local stack can currently not process Google Cloud disks.
+googleclouddisk: Turbinia as local stack cannot currently process Google Cloud disks.
 
 ### Running
 
