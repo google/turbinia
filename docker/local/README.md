@@ -15,9 +15,10 @@ $ git clone https://github.com/google/turbinia.git
 $ cd turbinia
 ```
 #### Step 2
-Copy the configuration template for the local stack to the ```./conf`` folder (create the folder if it does not exist).
+Generate configuration file using sed with default local stack values to the ```./conf``` folder. This folder will be mapped by docker compose into the containers.
 ```
-$ cp docker/local/turbinia-local-template.conf ./conf/turbinia.conf
+$ mkdir ./conf
+$ sed -f docker/local/local-config.sed turbinia/config/turbinia_config_tmpl.py > conf/turbinia.conf
 ```
 #### Step 3
 Let's bring up the local Turbinia stack
