@@ -4,12 +4,12 @@ Turbinia can be run locally without any Cloud components using Docker. It will u
 ### Caveats
 rawdisk: As Turbinia uses the loop device to mount different types of evidence (eg raw disks) the host operating system should support the loop device. Linux is currently the only OS that supports the processing of raw disks.
 
-googleclouddisk: Turbinia as local stack can currently not process Google Cloud disks.
+googleclouddisk: Turbinia as local stack cannot currently process Google Cloud disks.
 
 ### Running
 
 #### Step 1
-Checkout the Turbinia source code. If you intend to start developing please fork the repository on github first and check out your own forked instance.
+Checkout the [Turbinia source code](https://github.com/google/turbinia). If you intend to start developing please [fork](https://docs.github.com/en/github/getting-started-with-github/fork-a-repo) the repository on github first and check out your own forked instance.
 ```
 $ git clone https://github.com/google/turbinia.git
 $ cd turbinia
@@ -38,6 +38,6 @@ $ docker exec -ti turbinia-server turbiniactl compresseddirectory -l /evidence/h
 ```
 This will create a task in Turbinia to process the evidence file. A request ID will be returned and we can query the status with below command.
 ```
-$ docker exec -ti turbinia-server turbiniactl -a status -r b998efb5dcb64949963d9c72ba143c1a
+$ docker exec -ti turbinia-server turbiniactl -a status -r {REQUEST_ID}
 ```
 There will be server and worker output displayed both on the docker-compose terminal as well as in the ```./evidence`` folder.
