@@ -122,16 +122,22 @@ class PartitionEnumerationTask(TurbiniaTask):
     Returns:
       TurbiniaTaskResult object.
     """
-    result.log('Scanning [{0:s}] for partitions'.format(evidence.local_path))
+    evidence_description = None
+    if hasattr(evidence, 'disk_name'):
+      evidence_description = evidence.disk_name
+    else:
+      evidence_description = evidence.source_path
+
+    result.log('Scanning [{0:s}] for partitions'.format(evidence_description))
 
     success = False
 
     mediator = dfvfs_classes.UnattendedVolumeScannerMediator()
     try:
       scanner = volume_scanner.VolumeScanner(mediator=mediator)
-      path_specs = scanner.GetBasePathSpecs(evidence.device_path)
+      path_specs = scanner.GetBasePathSpecs(evidence.local_path)
       status_summary = 'Found {0:d} partition(s) in [{1:s}]:'.format(
-          len(path_specs), evidence.local_path)
+          len(path_specs), evidence_description)
     except dfvfs_errors.ScannerError as e:
       status_summary = 'Error scanning for partitions: {0!s}'.format(e)
 
@@ -140,7 +146,8 @@ class PartitionEnumerationTask(TurbiniaTask):
     try:
       for path_spec in path_specs:
         partition_evidence, partition_status = self._ProcessPartition(
-            evidence.device_path, path_spec)
+            evidence.local_path, path_spec)
+        partition_evidence.parent_evidence = evidence
         status_report.extend(partition_status)
         result.add_evidence(partition_evidence, evidence.config)
 
@@ -150,7 +157,7 @@ class PartitionEnumerationTask(TurbiniaTask):
       status_summary = 'Error enumerating partitions: {0!s}'.format(e)
       status_report = status_summary
 
-    result.log('Scanning of [{0:s}] is complete'.format(evidence.local_path))
+    result.log('Scanning of [{0:s}] is complete'.format(evidence_description))
 
     result.report_priority = Priority.LOW
     result.report_data = status_report
