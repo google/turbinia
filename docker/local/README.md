@@ -38,6 +38,6 @@ $ docker exec -ti turbinia-server turbiniactl compresseddirectory -l /evidence/h
 ```
 This will create a task in Turbinia to process the evidence file. A request ID will be returned and we can query the status with below command.
 ```
-$ docker exec -ti turbinia-server turbiniactl -a status -r b998efb5dcb64949963d9c72ba143c1a
+$ docker exec -ti turbinia-server turbiniactl -a status -r {REQUEST_ID}
 ```
 There will be server and worker output displayed both on the docker-compose terminal as well as in the ```./evidence`` folder.
