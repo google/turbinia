@@ -387,9 +387,9 @@ def main():
       'Additionaly, you can use the -a or --all_fields flag to retrieve the '
       'full output containing finished and unassigned worker tasks.')
   parser_log_collector = subparsers.add_parser(
-      'GCPLogsCollector', help='Collects Turbinia logs from Stack driver.')
+      'gcplogs', help='Collects Turbinia logs from Stack driver.')
   parser_log_collector.add_argument(
-      '-o', '--output_dir', help='Directory path for output', required=True)
+      '-o', '--output_dir', help='Directory path for output', required=False)
   parser_log_collector.add_argument(
       '-q', '--query',
       help='Filter expression to use to query Stackdriver logs.')
@@ -732,11 +732,11 @@ def main():
   elif args.command == 'listjobs':
     log.info('Available Jobs:')
     client.list_jobs()
-  elif args.command == 'GCPLogsCollector':
+  elif args.command == 'gcplogs':
     if not config.STACKDRIVER_LOGGING:
       log.error('Stackdriver logging must be enabled in order to use this.')
       sys.exit(1)
-    if not os.path.isdir(args.output_dir):
+    if args.output_dir and not os.path.isdir(args.output_dir):
       log.error('Please provide a valid directory path.')
       sys.exit(1)
     query = None
@@ -753,7 +753,7 @@ def main():
       else:
         query = 'jsonPayload.origin="server"'
     google_cloud.get_logs(
-        args.output_dir, config.TURBINIA_PROJECT, args.days_history, query)
+        config.TURBINIA_PROJECT, args.output_dir, args.days_history, query)
   else:
     log.warning('Command {0!s} not implemented.'.format(args.command))
 
