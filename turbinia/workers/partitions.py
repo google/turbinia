@@ -14,17 +14,23 @@
 # limitations under the License.
 """Task for enumerating partitions in a disk."""
 
-from dfvfs.helpers import volume_scanner
-from dfvfs.lib import definitions as dfvfs_definitions
-from dfvfs.lib import errors as dfvfs_errors
-from dfvfs.volume import tsk_volume_system
-
 from turbinia import TurbiniaException
 from turbinia.evidence import RawDiskPartition
-from turbinia.lib import dfvfs_classes
 from turbinia.lib import text_formatter as fmt
 from turbinia.workers import Priority
 from turbinia.workers import TurbiniaTask
+
+if TurbiniaTask.check_worker_role():
+  try:
+    from dfvfs.helpers import volume_scanner
+    from dfvfs.lib import definitions as dfvfs_definitions
+    from dfvfs.lib import errors as dfvfs_errors
+    from dfvfs.volume import tsk_volume_system
+
+    from turbinia.lib import dfvfs_classes
+  except ImportError as exception:
+    message = 'Could not import dfVFS libraries: {0!s}'.format(exception)
+    raise TurbiniaException(message)
 
 
 class PartitionEnumerationTask(TurbiniaTask):

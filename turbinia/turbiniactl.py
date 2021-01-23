@@ -29,8 +29,6 @@ import uuid
 from turbinia import config
 from turbinia import TurbiniaException
 from turbinia.config import logger
-from libcloudforensics.providers.gcp import forensics as gcp_forensics
-from turbinia.lib import google_cloud
 from turbinia import __version__
 from turbinia.processors import archive
 from turbinia.output_manager import OutputManager
@@ -430,6 +428,8 @@ def main():
     google_cloud.setup_stackdriver_handler(
         config.TURBINIA_PROJECT, args.command)
 
+  config.TURBINIA_COMMAND = args.command
+
   log.info('Turbinia version: {0:s}'.format(__version__))
 
   # Do late import of other needed Turbinia modules.  This is needed because the
@@ -444,6 +444,10 @@ def main():
   from turbinia.client import TurbiniaPsqWorker
   from turbinia import evidence
   from turbinia.message import TurbiniaRequest
+
+  if config.TASK_MANAGER == 'PSQ':
+    from turbinia.lib import google_cloud
+    from libcloudforensics.providers.gcp import forensics as gcp_forensics
 
   # Print out config if requested
   if args.command == 'config':
