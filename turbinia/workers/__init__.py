@@ -615,7 +615,6 @@ class TurbiniaTask:
       raise TurbiniaException(
           'Evidence source path {0:s} does not exist'.format(
               evidence.source_path))
-    self._load_modules()
     return self.result
 
   def touch(self):
