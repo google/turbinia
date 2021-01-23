@@ -428,6 +428,8 @@ def main():
     google_cloud.setup_stackdriver_handler(
         config.TURBINIA_PROJECT, args.command)
 
+  config.TURBINIA_COMMAND = args.command
+
   log.info('Turbinia version: {0:s}'.format(__version__))
 
   # Do late import of other needed Turbinia modules.  This is needed because the
