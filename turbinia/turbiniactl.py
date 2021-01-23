@@ -29,8 +29,6 @@ import uuid
 from turbinia import config
 from turbinia import TurbiniaException
 from turbinia.config import logger
-from libcloudforensics.providers.gcp import forensics as gcp_forensics
-from turbinia.lib import google_cloud
 from turbinia import __version__
 from turbinia.processors import archive
 from turbinia.output_manager import OutputManager
@@ -444,6 +442,10 @@ def main():
   from turbinia.client import TurbiniaPsqWorker
   from turbinia import evidence
   from turbinia.message import TurbiniaRequest
+
+  if config.TASK_MANAGER == 'PSQ':
+    from turbinia.lib import google_cloud
+    from libcloudforensics.providers.gcp import forensics as gcp_forensics
 
   # Print out config if requested
   if args.command == 'config':

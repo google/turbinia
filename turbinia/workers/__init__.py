@@ -440,6 +440,22 @@ class TurbiniaTask:
         input_dict['last_update'], DATETIME_FORMAT)
     return task
 
+  @classmethod
+  def check_worker_role(cls):
+    """Checks whether the execution context is within a worker or nosetests.
+
+    Returns:
+      bool: If the current execution is in a worker or nosetests.
+    """
+    if config.TURBINIA_COMMAND in ('celeryworker', 'psqworker'):
+      return True
+
+    for arg in sys.argv:
+      if 'nosetests' in arg:
+        return True
+
+    return False
+
   def evidence_setup(self, evidence):
     """Validates and processes the evidence.
 
@@ -599,6 +615,7 @@ class TurbiniaTask:
       raise TurbiniaException(
           'Evidence source path {0:s} does not exist'.format(
               evidence.source_path))
+    self._load_modules()
     return self.result
 
   def touch(self):
