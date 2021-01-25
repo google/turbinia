@@ -228,4 +228,4 @@ VM at this point, and we will later clone this instance to create the workers.
 Running Turbinia locally using Docker. This setup does not require Google 
 Cloud Platform.
 
-See [here](../../docker/local/README.md) for detailed instructions.
+See [here](https://github.com/google/turbinia/tree/master/docker/local/) for detailed instructions.
