@@ -25,14 +25,13 @@ import logging
 import os
 import sys
 import uuid
-import datetime
+
 from turbinia import config
 from turbinia import TurbiniaException
 from turbinia.config import logger
 from turbinia import __version__
 from turbinia.processors import archive
 from turbinia.output_manager import OutputManager
-from turbinia.output_manager import GCSOutputWriter
 
 log = logging.getLogger('turbinia')
 # We set up the logger first without the file handler, and we will set up the
@@ -387,20 +386,6 @@ def main():
       'Additionaly, you can use the -a or --all_fields flag to retrieve the '
       'full output containing finished and unassigned worker tasks.')
 
-  # Add GCS logs collector
-  parser_gcs_logs = subparsers.add_parser(
-      'DumpGCSLogs', help='Get Turbinia results from Google Cloud Storage.')
-  parser_gcs_logs.add_argument(
-      '-p', '--gcs_path',
-      help='GCS bucket to pull logs from. Must be in the following format gs://{BUCKET_NAME}/{OUTPUT_DIR}',
-      required=False)
-  parser_gcs_logs.add_argument(
-      '-o', '--output_dir', help='Directory path for output.', required=True)
-  parser_gcs_logs.add_argument(
-      '-n', '--blob_name',
-      help='Download all the results for given name. You may use timestamp, task_id or task name',
-      required=True)
-
   # Server
   subparsers.add_parser('server', help='Run Turbinia Server')
 
@@ -736,29 +721,6 @@ def main():
   elif args.command == 'listjobs':
     log.info('Available Jobs:')
     client.list_jobs()
-  elif args.command == 'DumpGCSLogs':
-    if not config.GCS_OUTPUT_PATH:
-      log.error('GCS storage must be enabled in order to use this.')
-      sys.exit(1)
-    if not os.path.isdir(args.output_dir):
-      log.error('Please provide a valid directory path.')
-      sys.exit(1)
-    gcs_file = '**{}**'.format(args.blob_name)
-
-    gcs_bucket = config.GCS_OUTPUT_PATH
-    if args.gcs_path:
-      gcs_bucket = args.gcs_path
-    log.info(
-        'Downloading files from {0!s} to {1!s} using the following query "{2!s}".'
-        .format(gcs_bucket, args.output_dir, gcs_file))
-
-    try:
-      file_path = "{0!s}/{1!s}".format(gcs_bucket, gcs_file)
-      output_writer = GCSOutputWriter(
-          file_path, local_output_dir=args.output_dir)
-      local_path = output_writer.copy_from(file_path)
-    except TurbiniaException as exception:
-      log.error('Failed to pull the data {}'.format(exception))
   else:
     log.warning('Command {0!s} not implemented.'.format(args.command))
 
