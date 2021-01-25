@@ -1,0 +1,58 @@
+version: "3.2"
+services:
+ redis:
+    image: "redis:alpine"
+
+    command: redis-server
+    # This will *only* expose it to the docker network, not to the host.
+    # See https://docs.docker.com/compose/compose-file/compose-file-v3/#expose
+    expose:
+     - "6379"
+
+    volumes:
+     - $PWD/redis-data:/var/lib/redis
+
+    environment:
+     - REDIS_REPLICATION_MODE=master
+
+ turbinia-server:
+    #image: "turbinia-server-dev" # Use this for local development and comment out below line
+    image: "us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-server:latest" # Latest stable
+    container_name: turbinia-server
+
+    volumes:
+     - $PWD/evidence:/evidence
+     - $PWD/conf/:/etc/turbinia/
+
+    environment:
+     - LC_ALL=C.UTF-8
+     - LANG=C.UTF-8
+
+ turbinia-worker:
+    #image: "turbinia-worker-dev" # Use this for local development and comment out below line
+    image: "us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-worker:latest" # Latest stable
+    container_name: turbinia-worker
+    privileged: true
+    
+    volumes:
+     - $PWD/evidence:/evidence
+     - $PWD/conf/:/etc/turbinia/
+      
+    environment:
+     - LC_ALL=C.UTF-8
+     - LANG=C.UTF-8
+
+ # Uncomment below in case you want to run a second worker on the same host.
+#  turbinia-worker2:
+#     #image: "turbinia-worker-dev" # Use this for local development and comment out below line
+#     image: "us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-worker:latest" # Latest stable
+#     container_name: turbinia-worker2
+#     privileged: true
+
+#     volumes:
+#      - $PWD/evidence:/evidence
+#      - $PWD/conf/:/etc/turbinia/
+
+#     environment:
+#      - LC_ALL=C.UTF-8
+#      - LANG=C.UTF-8
