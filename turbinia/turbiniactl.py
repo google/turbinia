@@ -423,6 +423,10 @@ def main():
   if args.debug_tasks:
     config.DEBUG_TASKS = True
 
+  if config.TASK_MANAGER == 'PSQ':
+    from turbinia.lib import google_cloud
+    from libcloudforensics.providers.gcp import forensics as gcp_forensics
+
   # Enable GCP Stackdriver Logging
   if config.STACKDRIVER_LOGGING and args.command in ('server', 'psqworker'):
     google_cloud.setup_stackdriver_handler(
@@ -444,10 +448,6 @@ def main():
   from turbinia.client import TurbiniaPsqWorker
   from turbinia import evidence
   from turbinia.message import TurbiniaRequest
-
-  if config.TASK_MANAGER == 'PSQ':
-    from turbinia.lib import google_cloud
-    from libcloudforensics.providers.gcp import forensics as gcp_forensics
 
   # Print out config if requested
   if args.command == 'config':
