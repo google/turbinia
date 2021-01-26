@@ -387,7 +387,7 @@ def main():
       'Additionaly, you can use the -a or --all_fields flag to retrieve the '
       'full output containing finished and unassigned worker tasks.')
   parser_log_collector = subparsers.add_parser(
-      'gcplogs', help='Collects Turbinia logs from Stack driver.')
+      'gcplogs', help='Collects Turbinia logs from Stackdriver.')
   parser_log_collector.add_argument(
       '-o', '--output_dir', help='Directory path for output', required=False)
   parser_log_collector.add_argument(
@@ -744,12 +744,12 @@ def main():
       query = args.query
     if args.worker_logs:
       if query:
-        query = 'jsonPayload.origin="psqworker" {}'.format(query)
+        query = 'jsonPayload.origin="psqworker" {0:s}'.format(query)
       else:
         query = 'jsonPayload.origin="psqworker"'
     if args.server_logs:
       if query:
-        query = 'jsonPayload.origin="server" {}'.format(query)
+        query = 'jsonPayload.origin="server" {0:s}'.format(query)
       else:
         query = 'jsonPayload.origin="server"'
     google_cloud.get_logs(

@@ -118,15 +118,15 @@ def get_logs(project_id, output_dir=None, days=1, query=None):
   complete_query = '{0:s} timestamp>="{1:s}"'.format(query, start_string)
   if output_dir:
     file_path = os.path.join(
-        output_dir, "turbinia_stackdriver_logs_{}.jsonl".format(
-            datetime.datetime.now().strftime('%s')))  #timestamp()))
+        output_dir, 'turbinia_stackdriver_logs_{0:s}.jsonl'.format(
+            datetime.datetime.now().strftime('%s')))
     output_file = open(file_path, "w")
-    logger.info('Writing the logs to {}'.format(file_path))
+    logger.info('Writing the logs to {0:s}'.format(file_path))
   try:
     client = cloud_logging.Client(project=project_id)
     logger.info(
-        'Collecting the stackdriver logs with the following query: {}'.format(
-            complete_query))
+        'Collecting the stackdriver logs with the following query: {0:s}'
+        .format(complete_query))
 
     for entry in client.list_entries(order_by=cloud_logging.DESCENDING,
                                      filter_=complete_query):
