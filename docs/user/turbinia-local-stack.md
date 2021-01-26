@@ -41,4 +41,4 @@ This will create a task in Turbinia to process the evidence file. A request ID w
 ```
 $ docker exec -ti turbinia-server turbiniactl -a status -r {REQUEST_ID}
 ```
-There will be server and worker output displayed both on the docker-compose terminal as well as in the ```./evidence`` folder.
+There will be server and worker output displayed both on the docker-compose terminal as well as in the ```./evidence``` folder.
