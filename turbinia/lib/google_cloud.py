@@ -120,7 +120,7 @@ def get_logs(project_id, output_dir=None, days=1, query=None):
     file_path = os.path.join(
         output_dir, 'turbinia_stackdriver_logs_{0:s}.jsonl'.format(
             datetime.datetime.now().strftime('%s')))
-    output_file = open(file_path, "w")
+    output_file = open(file_path, 'w')
     logger.info('Writing the logs to {0:s}'.format(file_path))
   try:
     client = cloud_logging.Client(project=project_id)
