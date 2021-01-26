@@ -16,18 +16,24 @@
 
 from __future__ import unicode_literals
 
+import datetime
+from datetime import timedelta
+from turbinia.config import DATETIME_FORMAT
 import logging
+import os
+import json
 
 from google.cloud import logging as cloud_logging
 from google.cloud import error_reporting
 from google.cloud import exceptions
+from google.api_core import exceptions as google_api_exceptions
+from googleapiclient.errors import HttpError
 
 from turbinia import TurbiniaException
-
-import datetime
-
 from google.cloud.logging import _helpers
 from google.cloud.logging.handlers.transports.background_thread import _Worker
+
+logger = logging.getLogger('turbinia')
 
 
 def setup_stackdriver_handler(project_id, origin):
@@ -68,7 +74,6 @@ def setup_stackdriver_handler(project_id, origin):
   try:
     client = cloud_logging.Client(project=project_id)
     cloud_handler = cloud_logging.handlers.CloudLoggingHandler(client)
-    logger = logging.getLogger('turbinia')
     logger.addHandler(cloud_handler)
 
   except exceptions.GoogleCloudError as exception:
@@ -93,3 +98,53 @@ def setup_stackdriver_traceback(project_id):
     msg = 'Error enabling GCP Error Reporting: {0:s}'.format(str(exception))
     raise TurbiniaException(msg)
   return client
+
+
+def get_logs(project_id, output_dir=None, days=1, query=None):
+  """Copies stackdriver logs to a local directory.
+
+  Attributes:
+    project_id: The name of the Google Cloud project.
+    output_dir: The directory where logs are stored.
+    query: Query to use to pull stackdriver logs. 
+    days: number of days we want history for.
+  Raises:
+    TurbiniaException: When an error happens pulling the logs.
+  """
+  if not query:
+    query = 'jsonPayload.python_logger="turbinia"'
+  start_time = datetime.datetime.now() - timedelta(days=days)
+  start_string = start_time.strftime(DATETIME_FORMAT)
+  complete_query = '{0:s} timestamp>="{1:s}"'.format(query, start_string)
+  if output_dir:
+    file_path = os.path.join(
+        output_dir, 'turbinia_stackdriver_logs_{0:s}.jsonl'.format(
+            datetime.datetime.now().strftime('%s')))
+    output_file = open(file_path, 'w')
+    logger.info('Writing the logs to {0:s}'.format(file_path))
+  try:
+    client = cloud_logging.Client(project=project_id)
+    logger.info(
+        'Collecting the stackdriver logs with the following query: {0:s}'
+        .format(complete_query))
+
+    for entry in client.list_entries(order_by=cloud_logging.DESCENDING,
+                                     filter_=complete_query):
+      if not output_dir:
+        logger.info(json.dumps(entry.to_api_repr()))
+      else:
+        output_file.write(json.dumps(entry.to_api_repr()))
+        output_file.write('\n')
+    if output_dir:
+      output_file.close()
+  except google_api_exceptions.InvalidArgument as exception:
+    msg = 'Unable to parse query {0!s} with error {1!s}'.format(
+        query, exception)
+    raise TurbiniaException(msg)
+  except HttpError as exception:
+    msg = 'HTTP error querying logs. Make sure you have the right access on the project.{0!s}'.format(
+        exception)
+    raise TurbiniaException(msg)
+  except google_api_exceptions.GoogleAPIError as exception:
+    msg = 'Something went wrong with the API. {0!s}'.format(exception)
+    raise TurbiniaException(msg)
