@@ -1,7 +1,7 @@
 
 name: Turbinia Test Run
 
-on: push
+on: [push, pull_request]
 
 jobs:
   install-n-test:
