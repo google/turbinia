@@ -14,7 +14,6 @@
 # limitations under the License.
 """Main Turbinia application."""
 
-
 import logging
 log = logging.getLogger('turbinia')
 
@@ -23,6 +22,7 @@ try:
   __version__ = get_distribution(__name__).version
 except DistributionNotFound:
   __version__ = "unknown"
+
 
 def log_and_report(message, trace):
   """Log an error and if enabled, send to GCP Error Reporting API.
