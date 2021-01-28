@@ -520,11 +520,11 @@ class BaseTurbiniaClient:
     status = task.get('status') or 'No task status'
 
     report.append(fmt.heading2(task.get('name')))
-    line = '{0:s} {1:s}'.format(fmt.bold('Status:'), status)
+    line = '{0:s} {1!s}'.format(fmt.bold('Status:'), status)
     report.append(fmt.bullet(line))
-    report.append(fmt.bullet('Task Id: {0:s}'.format(task.get('id'))))
+    report.append(fmt.bullet('Task Id: {0!s}'.format(task.get('id'))))
     report.append(
-        fmt.bullet('Executed on worker {0:s}'.format(task.get('worker_name'))))
+        fmt.bullet('Executed on worker {0!s}'.format(task.get('worker_name'))))
     if task.get('report_data'):
       report.append('')
       report.append(fmt.heading3('Task Reported Data'))
