@@ -396,17 +396,23 @@ def main():
   parser_gcs_logs.add_argument(
       '-t', '--task_id', help='Download all the results for given task_id.')
   parser_gcs_logs.add_argument(
-      '-r', '--request_id', 
+      '-r', '--request_id',
       help='Download all the results for given request_id.')
   parser_gcs_logs.add_argument(
-      '-b', '--bucket', 
-      help='GCS bucket to downloawd from. Must be in the following formatgs://{BUCKET_NAME}/. You need to provide a GCS bucket if the task/request was not stored on the same bucket as your config file.')
+      '-b', '--bucket',
+      help='GCS bucket to downloawd from. Must be in the following format '
+      'gs://{BUCKET_NAME}/. You need to provide a GCS bucket if the '
+      'task/request was not stored on the same bucket as your config file.'
+  )
   parser_gcs_logs.add_argument(
       '-d', '--days_history', default=0, type=int,
       help='Number of days of history to show', required=False)
   parser_gcs_logs.add_argument(
-      '-i', '--instance_id', 
-      help='Instance ID used to run tasks/requests. You must provide an instance ID if the task/request was not processed on the same instance as your confing file.')
+      '-i', '--instance_id',
+      help='Instance ID used to run tasks/requests. You must provide an '
+      'instance ID if the task/request was not processed on the same instance '
+      'as your confing file.'
+  )
   # Server
   subparsers.add_parser('server', help='Run Turbinia Server')
 
@@ -770,55 +776,37 @@ def main():
     if not os.path.isdir(args.output_dir):
       log.error('Please provide a valid directory path.')
       sys.exit(1)
-   # gcs_file = '**{}**'.format(args.blob_name)
 
-    if args.bucket:
-      gcs_bucket = args.bucket
-    else:
-      gcs_bucket = config.GCS_OUTPUT_PATH 
-    #if args.gcs_path:
-    #  gcs_bucket = args.gcs_path
-   # log.info(
-       # 'Downloading files from {0!s} to {1!s} using the following query "{2!s}".'
-     #   .format(gcs_bucket, args.output_dir, gcs_file))
-    
+    gcs_bucket = args.bucket if args.bucket else config.GCS_OUTPUT_PATH  
+    instance_id = args.instance_id if args.instance_id else config.INSTANCE_ID
 
     try:
-   #   file_path = "{0!s}/{1!s}".format(gcs_bucket, gcs_file)
-     # output_writer = GCSOutputWriter(
-      #    file_path, local_output_dir=args.output_dir)
-      #local_path = output_writer.query_datastore()#file_path)
       task_data = client.get_task_data(
-          instance='turbinia-shared-dev', days=args.days_history, project=config.TURBINIA_PROJECT,
-          region=config.TURBINIA_REGION, task_id=args.task_id, request_id=args.request_id,
+          instance=instance_id, days=args.days_history,
+          project=config.TURBINIA_PROJECT, region=config.TURBINIA_REGION,
+          task_id=args.task_id, request_id=args.request_id,
           function_name='gettasks')
-      #log.error(task_data)
       output_writer = GCSOutputWriter(
-                  gcs_bucket, local_output_dir=args.output_dir)
+          gcs_bucket, local_output_dir=args.output_dir)
       if not task_data:
-        log.error('Invalid task/request id. Please provide a valid id.')
+        log.error('Invalid task/request id. Please provide a valid ID. You may also be missing instance or bucket name.')
+        sys.exit(1)
       if args.task_id:
+        log.info('Downloading GCS files for task_id {0:s} to {1:s}.'.format(args.task_id, args.output_dir))
         for task in task_data:
           if task['id'] == args.task_id:
-            log.error('GOT HERE')
-            for path in task['saved_paths']:
-              if 'gs://' in path:
-               # output_writer = GCSOutputWriter(
-              #      path, local_output_dir=args.output_dir) 
-                log.error('HERE WITH PATH {}'.format(path))
-                local_path = output_writer.copy_from(path)
-                log.error('LOCAL {}'.format(local_path))
+            if task['saved_paths']:
+              output_writer.copy_from_gcs(task['saved_paths'])
       if args.request_id:
-        log.error(task_data)
+        log.info('Downloading GCS files for request_id {0:s} to {1:s}.'.format(args.request_id, args.output_dir))
         paths = []
         for task in task_data:
           if task['saved_paths']:
             paths.extend(task['saved_paths'])
-        log.error(paths)
-       # output_writer.copy_from_gcs(paths)
-     
+        output_writer.copy_from_gcs(paths)
+
     except TurbiniaException as exception:
-      log.error('Failed to pull the data {}'.format(exception))
+      log.error('Failed to pull the data {0!s}'.format(exception))
   else:
     log.warning('Command {0!s} not implemented.'.format(args.command))
 
