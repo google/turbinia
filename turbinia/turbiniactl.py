@@ -416,8 +416,7 @@ def main():
       '-b', '--bucket',
       help='GCS bucket to downloawd from. Must be in the following format '
       'gs://{BUCKET_NAME}/. You need to provide a GCS bucket if the '
-      'task/request was not stored on the same bucket as your config file.'
-  )
+      'task/request was not stored on the same bucket as your config file.')
   parser_gcs_logs.add_argument(
       '-d', '--days_history', default=0, type=int,
       help='Number of days of history to show', required=False)
@@ -425,8 +424,7 @@ def main():
       '-i', '--instance_id',
       help='Instance ID used to run tasks/requests. You must provide an '
       'instance ID if the task/request was not processed on the same instance '
-      'as your confing file.'
-  )
+      'as your confing file.')
   # Server
   subparsers.add_parser('server', help='Run Turbinia Server')
 
@@ -795,7 +793,7 @@ def main():
       log.error('Please provide a valid directory path.')
       sys.exit(1)
 
-    gcs_bucket = args.bucket if args.bucket else config.GCS_OUTPUT_PATH  
+    gcs_bucket = args.bucket if args.bucket else config.GCS_OUTPUT_PATH
     instance_id = args.instance_id if args.instance_id else config.INSTANCE_ID
 
     try:
@@ -807,16 +805,22 @@ def main():
       output_writer = GCSOutputWriter(
           gcs_bucket, local_output_dir=args.output_dir)
       if not task_data:
-        log.error('Invalid task/request id. Please provide a valid ID. You may also be missing instance or bucket name.')
+        log.error(
+            'Invalid task/request id. Please provide a valid ID. You may also be missing instance or bucket name.'
+        )
         sys.exit(1)
       if args.task_id:
-        log.info('Downloading GCS files for task_id {0:s} to {1:s}.'.format(args.task_id, args.output_dir))
+        log.info(
+            'Downloading GCS files for task_id {0:s} to {1:s}.'.format(
+                args.task_id, args.output_dir))
         for task in task_data:
           if task['id'] == args.task_id:
             if task['saved_paths']:
               output_writer.copy_from_gcs(task['saved_paths'])
       if args.request_id:
-        log.info('Downloading GCS files for request_id {0:s} to {1:s}.'.format(args.request_id, args.output_dir))
+        log.info(
+            'Downloading GCS files for request_id {0:s} to {1:s}.'.format(
+                args.request_id, args.output_dir))
         paths = []
         for task in task_data:
           if task['saved_paths']:
