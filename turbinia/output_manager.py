@@ -388,6 +388,7 @@ class LocalOutputWriter(OutputWriter):
 
 class GCSOutputWriter(OutputWriter):
   """Output writer for Google Cloud Storage.
+
   attributes:
     bucket (string): Storage bucket to put output results into.
     client (google.cloud.storage.Client): GCS Client
@@ -399,6 +400,7 @@ class GCSOutputWriter(OutputWriter):
 
   def __init__(self, gcs_path, *args, **kwargs):
     """Initialization for GCSOutputWriter.
+
     Args:
       gcs_path (string): GCS path to put output results into.
     """
@@ -411,8 +413,10 @@ class GCSOutputWriter(OutputWriter):
   @staticmethod
   def _parse_gcs_path(file_):
     """Get the bucket and path values from a GCS path.
+
     Args:
       file_ (string): GCS file path.
+
     Returns:
       A tuple of ((string) bucket, (string) path)
     """
@@ -451,13 +455,16 @@ class GCSOutputWriter(OutputWriter):
 
   def copy_from(self, source_path):
     """Copies output file from the managed location to the local output dir.
+
     Args:
       source_file (string): A path to a source file in the managed storage
           location.  This path should be in a format matching the storage type
           (e.g. GCS paths are formatted like 'gs://bucketfoo/' and local paths
           are like '/foo/bar'.
+
     Returns:
       The path the file was saved to, or None if file was not written.
+
     Raises:
       TurbiniaException: If file retrieval fails.
     """
