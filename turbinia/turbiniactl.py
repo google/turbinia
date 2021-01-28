@@ -788,7 +788,8 @@ def main():
           gcs_bucket, local_output_dir=args.output_dir)
       if not task_data:
         log.error(
-            'Invalid task/request id. Please provide a valid ID. You may also be missing instance or bucket name.'
+            'Invalid task/request id. Please provide a valid ID. '
+            'You may also be missing instance or bucket name.'
         )
         sys.exit(1)
       if args.task_id:
