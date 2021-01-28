@@ -407,8 +407,7 @@ class GCSOutputWriter(OutputWriter):
     self.client = storage.Client(project=config.TURBINIA_PROJECT)
 
     self.bucket, self.base_output_dir = self._parse_gcs_path(gcs_path)
-    log.error(self.bucket)
-    log.error(self.base_output_dir)
+
   @staticmethod
   def _parse_gcs_path(file_):
     """Get the bucket and path values from a GCS path.
@@ -491,8 +490,6 @@ class GCSOutputWriter(OutputWriter):
       raise TurbiniaException(message)
     return destination_path
 
-  
-
   def copy_from_gcs(self, saved_paths):
     """Copies output file from the managed location to the local output dir.
 
@@ -507,36 +504,35 @@ class GCSOutputWriter(OutputWriter):
 
     for path in saved_paths:
       if 'gs://' in path:
-        gcs_path = self._parse_gcs_path(source_path)[1]
-        destination_path = os.path.join(
-            self.local_output_dir, os.path.basename(source_path))
+        gcs_path = self._parse_gcs_path(path)[1]
 
         try:
+          # Reconstruct the same file structure as GCS on the output dir
+          path_split = gcs_path.split("/")
+          directory = "/".join(path_split[0:-1])
+          destination_path = os.path.join(self.local_output_dir, directory)
+          Path(destination_path).mkdir(parents=True, exist_ok=True)
+          if not os.path.exists(destination_path):
+            message = (
+                'Failed to create the file path {0:s}.'.format(gcs_path))
+            log.error(message)
+            raise TurbiniaException(message)
+
+          file_name = os.path.join(destination_path, path_split[-1])
+
+          # Get the file from GCS
           blob = storage.Blob(gcs_path, bucket, chunk_size=self.CHUNK_SIZE)
-          blob.download_to_filename(destination_path, client=self.client)
+          blob.download_to_filename(file_name, client=self.client)
+          log.info('Downloaded {0:s} to {1:s}.'.format(path, file_name))
+        except exceptions.RequestRangeNotSatisfiable as exception:
+          message = (
+              'File retrieval from GCS failed, file may be empty: {0!s}'.format(
+                  exception))
+          log.error(message)
+          raise TurbiniaException(message)
+        except exceptions.GoogleCloudError as exception:
+          message = 'File retrieval from GCS failed: {0!s}'.format(exception)
+          log.error(message)
+          raise TurbiniaException(message)
 
-
-
-    import fnmatch
-    try:
-      # Listing all the bucket objects and filtering the name later.
-      # Storage API does not support wildcard searching like *filename*.
-      blobs = bucket.list_blobs()  #prefix=gcs_path)
-      for blob in blobs:
-        if fnmatch.fnmatch(blob.name, gcs_path):
-      File retrieval from GCS failed, file may be empty: {0!s}'.format(
-              exception))
-      log.error(message)
-      raise TurbiniaException(message)
-    except exceptions.GoogleCloudError as exception:
-      message = 'File retrieval from GCS failed: {0!s}'.format(exception)
-      log.error(message)
-      raise TurbiniaException(message)
-    if not os.path.exists(destination_path):
-      message = (
-          'File retrieval from GCS failed: GCS file {0:s} does not '
-          'exist.'.format(gcs_path))
-      log.error(message)
-      raise TurbiniaException(message)
-
-    return destination_path
+    return
