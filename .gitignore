@@ -27,8 +27,9 @@ terraform/gcp/terraform.tfstate.backup
 terraform/gcp/terraform.tfvars
 terraform/gcp/*.auto.tfvars
 
-# Exclude pycharm files
+# Exclude IDE files
 .idea/
+.vscode/
 
 # Exclude  logs
 *.log
