@@ -797,7 +797,7 @@ class BaseTurbiniaClient:
         task_dict['status'] = status
         # Check status for anything that is running.
         if 'running' in status:
-          run_time = (datetime.now() -
+          run_time = (datetime.utcnow() -
                       result.get('last_update')).total_seconds()
           run_time = timedelta(seconds=run_time)
           task_dict['run_time'] = run_time
