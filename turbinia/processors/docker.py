@@ -23,6 +23,7 @@ import tempfile
 
 from turbinia import config
 from turbinia import TurbiniaException
+from turbinia import utils
 
 log = logging.getLogger('turbinia')
 
@@ -66,12 +67,7 @@ def PreprocessMountDockerFS(docker_dir, container_id):
   log.info(
       'Using docker_explorer to mount container {0:s} on {1:s}'.format(
           container_id, container_mount_path))
-  de_binary = None
-  for path in os.environ['PATH'].split(os.pathsep):
-    tentative_path = os.path.join(path, 'de.py')
-    if os.path.exists(tentative_path):
-      de_binary = tentative_path
-      break
+  de_binary = utils.get_exe_path('de.py')
 
   if not de_binary:
     raise TurbiniaException('Could not find docker-explorer script: de.py')

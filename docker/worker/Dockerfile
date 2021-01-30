@@ -14,6 +14,7 @@ python3-pip \
 software-properties-common \
 sudo \
 testdisk \
+sleuthkit \
 && rm -rf /var/lib/apt/lists/*
 
 ADD requirements.txt /tmp/
@@ -23,8 +24,9 @@ RUN cd /tmp/ && pip3 install -r dfvfs_requirements.txt
 
 RUN pip3 install pip --upgrade
 
-# Install Hindsight
+# Install third-party worker dependencies
 RUN pip3 install pyhindsight
+RUN pip3 install docker-explorer
 
 # Install Plaso
 RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 0x5e80511b10c598b8 \
