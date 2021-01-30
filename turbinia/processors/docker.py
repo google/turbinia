@@ -23,7 +23,7 @@ import tempfile
 
 from turbinia import config
 from turbinia import TurbiniaException
-from turbinia import utils
+from turbinia.lib import utils
 
 log = logging.getLogger('turbinia')
 

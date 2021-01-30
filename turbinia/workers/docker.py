@@ -22,11 +22,11 @@ import subprocess
 from turbinia import TurbiniaException
 from turbinia.evidence import DockerContainer
 from turbinia.evidence import EvidenceState as state
+from turbinia.lib import utils
 from turbinia.workers import Priority
 from turbinia.workers import TurbiniaTask
 from turbinia.lib.docker_manager import GetDockerPath
 from turbinia import config
-from turbinia import utils
 
 log = logging.getLogger('turbinia')
 
@@ -64,7 +64,7 @@ class DockerContainersEnumerationTask(TurbiniaTask):
     # https://github.com/google/docker-explorer/issues/80 is in.
     de_binary = utils.get_exe_path('de.py')
     if not de_binary:
-       raise TurbiniaException('Cannot find de.py in path')
+      raise TurbiniaException('Cannot find de.py in path')
 
     docker_explorer_command = [
         'sudo', de_binary, '-r', docker_dir, 'list', 'all_containers'
