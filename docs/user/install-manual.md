@@ -223,15 +223,9 @@ VM at this point, and we will later clone this instance to create the workers.
 
 *   `cd <git clone path>/tools/gcf_init && ./deploy_gcf.py`
 
-### **Local Turbinia**
+## **Local Turbinia**
 
-**This section is required for local configurations.**
+Running Turbinia locally using Docker. This setup does not require Google 
+Cloud Platform.
 
-The following is one possible minimal configuration for running Turbinia locally
-using Celery and Redis on Ubuntu 18.04. This setup does not require Google Cloud
-Platform, although a configuration to write output to GCS is possible.
-
-*   Start Redis server on the same machine as the server by following the
-    instructions [here](https://redis.io/topics/quickstart).
-*   Run `turbiniactl -S server` to start Turbinia server.
-*   Run `turbiniactl celeryworker` to start Turbinia Celery worker.
+See [here](https://github.com/google/turbinia/tree/master/docker/local/) for detailed instructions.

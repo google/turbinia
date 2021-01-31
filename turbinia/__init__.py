@@ -14,10 +14,14 @@
 # limitations under the License.
 """Main Turbinia application."""
 
-__version__ = '20190819'
-
 import logging
 log = logging.getLogger('turbinia')
+
+from pkg_resources import get_distribution, DistributionNotFound
+try:
+  __version__ = get_distribution(__name__).version
+except DistributionNotFound:
+  __version__ = "unknown"
 
 
 def log_and_report(message, trace):

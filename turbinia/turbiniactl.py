@@ -29,8 +29,6 @@ import uuid
 from turbinia import config
 from turbinia import TurbiniaException
 from turbinia.config import logger
-from libcloudforensics.providers.gcp import forensics as gcp_forensics
-from turbinia.lib import google_cloud
 from turbinia import __version__
 from turbinia.processors import archive
 from turbinia.output_manager import OutputManager
@@ -135,7 +133,6 @@ def main():
   parser.add_argument(
       '-w', '--wait', action='store_true',
       help='Wait to exit until all tasks for the given request have completed')
-
   subparsers = parser.add_subparsers(
       dest='command', title='Commands', metavar='<command>')
 
@@ -387,6 +384,22 @@ def main():
       'default timeframe is 7 days. Please use the -d flag to extend this. '
       'Additionaly, you can use the -a or --all_fields flag to retrieve the '
       'full output containing finished and unassigned worker tasks.')
+  parser_log_collector = subparsers.add_parser(
+      'gcplogs', help='Collects Turbinia logs from Stackdriver.')
+  parser_log_collector.add_argument(
+      '-o', '--output_dir', help='Directory path for output', required=False)
+  parser_log_collector.add_argument(
+      '-q', '--query',
+      help='Filter expression to use to query Stackdriver logs.')
+  parser_log_collector.add_argument(
+      '-d', '--days_history', default=1, type=int,
+      help='Number of days of history to show', required=False)
+  parser_log_collector.add_argument(
+      '-s', '--server_logs', action='store_true',
+      help='Collects all server related logs.')
+  parser_log_collector.add_argument(
+      '-w', '--worker_logs', action='store_true',
+      help='Collects all worker related logs.')
 
   # Server
   subparsers.add_parser('server', help='Run Turbinia Server')
@@ -425,10 +438,16 @@ def main():
   if args.debug_tasks:
     config.DEBUG_TASKS = True
 
+  if config.TASK_MANAGER == 'PSQ':
+    from turbinia.lib import google_cloud
+    from libcloudforensics.providers.gcp import forensics as gcp_forensics
+
   # Enable GCP Stackdriver Logging
   if config.STACKDRIVER_LOGGING and args.command in ('server', 'psqworker'):
     google_cloud.setup_stackdriver_handler(
         config.TURBINIA_PROJECT, args.command)
+
+  config.TURBINIA_COMMAND = args.command
 
   log.info('Turbinia version: {0:s}'.format(__version__))
 
@@ -717,6 +736,28 @@ def main():
   elif args.command == 'listjobs':
     log.info('Available Jobs:')
     client.list_jobs()
+  elif args.command == 'gcplogs':
+    if not config.STACKDRIVER_LOGGING:
+      log.error('Stackdriver logging must be enabled in order to use this.')
+      sys.exit(1)
+    if args.output_dir and not os.path.isdir(args.output_dir):
+      log.error('Please provide a valid directory path.')
+      sys.exit(1)
+    query = None
+    if args.query:
+      query = args.query
+    if args.worker_logs:
+      if query:
+        query = 'jsonPayload.origin="psqworker" {0:s}'.format(query)
+      else:
+        query = 'jsonPayload.origin="psqworker"'
+    if args.server_logs:
+      if query:
+        query = 'jsonPayload.origin="server" {0:s}'.format(query)
+      else:
+        query = 'jsonPayload.origin="server"'
+    google_cloud.get_logs(
+        config.TURBINIA_PROJECT, args.output_dir, args.days_history, query)
   else:
     log.warning('Command {0!s} not implemented.'.format(args.command))
 
