@@ -190,7 +190,7 @@ class MountLocalProcessorTest(unittest.TestCase):
     """Test GetFilesystem method."""
     mock_subprocess.return_value = b'ext4'
     fstype = mount_local.GetFilesystem('/dev/loop0')
-    expected_args = ['lsblk', '/dev/loop0', '-f', '-o', 'FSTYPE', '-n']
+    expected_args = ['fsstat', '-t', '/dev/loop0']
     mock_subprocess.assert_called_once_with(expected_args)
     self.assertEqual(fstype, 'ext4')
 

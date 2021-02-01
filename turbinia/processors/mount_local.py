@@ -208,7 +208,7 @@ def GetFilesystem(path):
   Returns:
     str: the filesystem detected (for example: 'ext4')
   """
-  cmd = ['lsblk', path, '-f', '-o', 'FSTYPE', '-n']
+  cmd = ['fsstat', '-t', path]
   log.info('Running {0!s}'.format(cmd))
   for retry in range(RETRY_MAX):
     fstype = subprocess.check_output(cmd).split()
