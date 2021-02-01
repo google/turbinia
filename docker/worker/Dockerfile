@@ -4,6 +4,7 @@ RUN apt-get update && apt-get -y install \
 apt-transport-https \
 apt-utils \
 ca-certificates \
+git \
 john \
 john-data \
 libleveldb1v5 \
@@ -11,6 +12,7 @@ libleveldb-dev \
 libterm-readline-gnu-perl \
 python3 \
 python3-pip \
+sleuthkit \
 software-properties-common \
 sudo \
 testdisk \

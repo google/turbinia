@@ -201,14 +201,14 @@ def PreprocessMountPartition(partition_path):
 
 
 def GetFilesystem(path):
-  """Uses lsblk to detect the filesystem of a partition block device.
+  """Uses the sleuthkit to detect the filesystem of a partition block device.
 
   Args:
     path(str): the full path to the block device.
   Returns:
     str: the filesystem detected (for example: 'ext4')
   """
-  cmd = ['lsblk', path, '-f', '-o', 'FSTYPE', '-n']
+  cmd = ['sudo', 'fsstat', '-t', path]
   log.info('Running {0!s}'.format(cmd))
   for retry in range(RETRY_MAX):
     fstype = subprocess.check_output(cmd).split()

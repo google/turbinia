@@ -4,6 +4,7 @@ RUN apt-get update && apt-get -y install \
 apt-transport-https \
 apt-utils \
 ca-certificates \
+git \
 libterm-readline-gnu-perl \
 python3 \
 python3-pip \

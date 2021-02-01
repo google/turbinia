@@ -38,7 +38,7 @@ if TurbiniaTask.check_worker_role():
 class PartitionEnumerationTask(TurbiniaTask):
   """Task to enumerate partitions in a disk."""
 
-  REQUIRED_STATES = [EvidenceState.ATTACHED]
+  REQUIRED_STATES = [EvidenceState.ATTACHED, EvidenceState.PARENT_ATTACHED]
 
   def _ProcessPartition(self, evidence_path, path_spec):
     """Generate RawDiskPartition from a PathSpec.
@@ -123,7 +123,10 @@ class PartitionEnumerationTask(TurbiniaTask):
       TurbiniaTaskResult object.
     """
     evidence_description = None
-    if hasattr(evidence, 'disk_name'):
+    if hasattr(evidence, 'embedded_path'):
+      evidence_description = ':'.join(
+          (evidence.disk_name, evidence.embedded_path))
+    elif hasattr(evidence, 'disk_name'):
       evidence_description = evidence.disk_name
     else:
       evidence_description = evidence.source_path

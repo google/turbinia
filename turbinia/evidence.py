@@ -705,6 +705,12 @@ class GoogleCloudDiskRawEmbedded(GoogleCloudDisk):
     self.context_dependent = True
 
   def _preprocess(self, _, required_states):
+    if EvidenceState.MOUNTED not in required_states:
+      self.parent_evidence.mount_path = mount_local.PreprocessMountPartition(
+          self.parent_evidence.device_path)
+      self.parent_evidence.local_path = self.parent_evidence.mount_path
+      self.parent_evidence.state[EvidenceState.MOUNTED] = True
+
     if EvidenceState.PARENT_ATTACHED in required_states:
       rawdisk_path = os.path.join(
           self.parent_evidence.mount_path, self.embedded_path)
