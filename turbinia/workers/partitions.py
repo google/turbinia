@@ -38,7 +38,7 @@ if TurbiniaTask.check_worker_role():
 class PartitionEnumerationTask(TurbiniaTask):
   """Task to enumerate partitions in a disk."""
 
-  REQUIRED_STATES = [EvidenceState.ATTACHED, EvidenceState.PARENT_ATTACHED]
+  REQUIRED_STATES = [EvidenceState.ATTACHED]
 
   def _ProcessPartition(self, evidence_path, path_spec):
     """Generate RawDiskPartition from a PathSpec.
@@ -150,7 +150,6 @@ class PartitionEnumerationTask(TurbiniaTask):
       for path_spec in path_specs:
         partition_evidence, partition_status = self._ProcessPartition(
             evidence.local_path, path_spec)
-        partition_evidence.parent_evidence = evidence
         status_report.extend(partition_status)
         result.add_evidence(partition_evidence, evidence.config)
 

@@ -629,7 +629,7 @@ def main():
         mount_partition=args.mount_partition, zone=args.zone,
         embedded_path=args.embedded_path,
         embedded_partition=args.embedded_mount_partition)
-    evidence_.parent_evidence = parent_evidence_
+    evidence_.set_parent(parent_evidence_)
   elif args.command == 'hindsight':
     if args.format not in ['xlsx', 'sqlite', 'jsonl']:
       log.error('Invalid output format.')

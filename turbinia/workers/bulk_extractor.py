@@ -32,9 +32,7 @@ log = logging.getLogger('turbinia')
 class BulkExtractorTask(TurbiniaTask):
   """Task to generate Bulk Extractor output."""
 
-  REQUIRED_STATES = [
-      state.ATTACHED, state.PARENT_ATTACHED, state.PARENT_MOUNTED
-  ]
+  REQUIRED_STATES = [state.ATTACHED]
 
   def run(self, evidence, result):
     """Run Bulk Extractor binary.
