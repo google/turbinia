@@ -21,7 +21,7 @@ from pkg_resources import get_distribution, DistributionNotFound
 try:
   __version__ = get_distribution(__name__).version
 except DistributionNotFound:
-  __version__ = "Unknown"
+  __version__ = "unknown"
 
 
 def log_and_report(message, trace):
