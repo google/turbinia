@@ -4,6 +4,7 @@ RUN apt-get update && apt-get -y install \
 apt-transport-https \
 apt-utils \
 ca-certificates \
+git \
 libterm-readline-gnu-perl \
 python3 \
 python3-pip \
@@ -19,6 +20,7 @@ ADD dfvfs_requirements.txt /tmp/
 RUN cd /tmp/ && pip3 install -r dfvfs_requirements.txt
 
 ADD . /tmp/
+RUN pip3 install --upgrade keyrings.alt
 RUN cd /tmp/ && python3 setup.py install
 
 RUN useradd -r -s /bin/nologin -G disk turbinia
