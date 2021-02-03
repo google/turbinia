@@ -190,7 +190,7 @@ class MountLocalProcessorTest(unittest.TestCase):
     """Test GetFilesystem method."""
     mock_subprocess.return_value = b'ext4'
     fstype = mount_local.GetFilesystem('/dev/loop0')
-    expected_args = ['sudo', 'fsstat', '-t', '/dev/loop0']
+    expected_args = ['fsstat', '-t', '/dev/loop0']
     mock_subprocess.assert_called_once_with(expected_args)
     self.assertEqual(fstype, 'ext4')
 
@@ -207,9 +207,11 @@ class MountLocalProcessorTest(unittest.TestCase):
     self.assertEqual(fstype, 'ext4')
     self.assertEqual(mock_subprocess.call_count, 2)
 
+  @mock.patch('subprocess.check_output')
   @mock.patch('subprocess.check_call')
-  def testPostprocessDeleteLosetup(self, mock_subprocess):
+  def testPostprocessDeleteLosetup(self, mock_subprocess, mock_output):
     """Test PostprocessDeleteLosetup method."""
+    mock_output.return_value = b''
     mount_local.PostprocessDeleteLosetup('/dev/loop0')
     mock_subprocess.assert_called_once_with(
         ['sudo', 'losetup', '-d', '/dev/loop0'])

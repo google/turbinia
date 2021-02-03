@@ -208,7 +208,7 @@ def GetFilesystem(path):
   Returns:
     str: the filesystem detected (for example: 'ext4')
   """
-  cmd = ['sudo', 'fsstat', '-t', path]
+  cmd = ['fsstat', '-t', path]
   log.info('Running {0!s}'.format(cmd))
   for retry in range(RETRY_MAX):
     fstype = subprocess.check_output(cmd).split()
@@ -245,6 +245,19 @@ def PostprocessDeleteLosetup(device_path):
     subprocess.check_call(losetup_cmd)
   except subprocess.CalledProcessError as e:
     raise TurbiniaException('Could not delete losetup device {0!s}'.format(e))
+
+  # Check that the device was acutally removed
+  losetup_cmd = ['sudo', 'losetup', '-a']
+  log.info('Running: {0:s}'.format(' '.join(losetup_cmd)))
+  try:
+    output = subprocess.check_output(losetup_cmd)
+  except subprocess.CalledProcessError as e:
+    raise TurbiniaException(
+        'Could not check losetup device status {0!s}'.format(e))
+  if output.find(device_path.encode('utf-8')) != -1:
+    raise TurbiniaException(
+        'Could not delete losetup device {0!s}'.format(device_path))
+  log.info('losetup device [{0!s}] deleted.'.format(device_path))
 
 
 def PostprocessUnmountPath(mount_path):

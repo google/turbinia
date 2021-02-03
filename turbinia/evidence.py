@@ -522,8 +522,11 @@ class RawDisk(Evidence):
       self.state[EvidenceState.ATTACHED] = True
       self.local_path = self.device_path
     if EvidenceState.MOUNTED in required_states or self.has_child_evidence:
-      self.mount_path = mount_local.PreprocessMountDisk(
-          partition_paths, self.mount_partition)
+      if not partition_paths:
+        self.mount_path = mount_local.PreprocessMountPartition(self.device_path)
+      else:
+        self.mount_path = mount_local.PreprocessMountDisk(
+            partition_paths, self.mount_partition)
       self.local_path = self.mount_path
       self.state[EvidenceState.MOUNTED] = True
 
@@ -678,8 +681,11 @@ class GoogleCloudDisk(RawDisk):
       self.state[EvidenceState.ATTACHED] = True
 
     if EvidenceState.MOUNTED in required_states or self.has_child_evidence:
-      self.mount_path = mount_local.PreprocessMountDisk(
-          partition_paths, self.mount_partition)
+      if not partition_paths:
+        self.mount_path = mount_local.PreprocessMountPartition(self.device_path)
+      else:
+        self.mount_path = mount_local.PreprocessMountDisk(
+            partition_paths, self.mount_partition)
       self.local_path = self.mount_path
       self.state[EvidenceState.MOUNTED] = True
 
@@ -733,8 +739,11 @@ class GoogleCloudDiskRawEmbedded(GoogleCloudDisk):
       self.local_path = self.device_path
 
     if EvidenceState.MOUNTED in required_states or self.has_child_evidence:
-      self.mount_path = mount_local.PreprocessMountDisk(
-          partition_paths, self.mount_partition)
+      if not partition_paths:
+        self.mount_path = mount_local.PreprocessMountPartition(self.device_path)
+      else:
+        self.mount_path = mount_local.PreprocessMountDisk(
+            partition_paths, self.mount_partition)
       self.local_path = self.mount_path
       self.state[EvidenceState.MOUNTED] = True
 
