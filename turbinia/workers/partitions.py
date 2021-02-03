@@ -123,6 +123,7 @@ class PartitionEnumerationTask(TurbiniaTask):
     success = False
 
     mediator = dfvfs_classes.UnattendedVolumeScannerMediator()
+    path_specs = []
     try:
       scanner = volume_scanner.VolumeScanner(mediator=mediator)
       path_specs = scanner.GetBasePathSpecs(evidence.local_path)
