@@ -62,8 +62,6 @@ def PreprocessLosetup(source_path, partition_offset=None, partition_size=None):
     # Evidence is RawDiskPartition
     losetup_command.extend(['-o', str(partition_offset)])
     losetup_command.extend(['--sizelimit', str(partition_size)])
-  else:
-    losetup_command.append('-P')
   losetup_command.append(source_path)
   log.info('Running command {0:s}'.format(' '.join(losetup_command)))
   try:
@@ -72,13 +70,7 @@ def PreprocessLosetup(source_path, partition_offset=None, partition_size=None):
   except subprocess.CalledProcessError as e:
     raise TurbiniaException('Could not set losetup devices {0!s}'.format(e))
 
-  partitions = sorted(glob.glob('{0:s}p*'.format(losetup_device)))
-  if not partitions:
-    # In this case, the image was of a partition, and not a full disk with a
-    # partition table
-    return (losetup_device, [losetup_device])
-
-  return (losetup_device, partitions)
+  return losetup_device
 
 
 def PreprocessMountDisk(partition_paths, partition_number):

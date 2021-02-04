@@ -43,28 +43,16 @@ class MountLocalProcessorTest(unittest.TestCase):
     source_path = os.path.join(
         current_path, '..', '..', 'test_data', 'tsk_volume_system.raw')
     mock_subprocess.return_value = '/dev/loop0'
-    device, _ = mount_local.PreprocessLosetup(source_path)
-    expected_args = [
-        'sudo', 'losetup', '--show', '--find', '-r', '-P', source_path
-    ]
+    device = mount_local.PreprocessLosetup(source_path)
+    expected_args = ['sudo', 'losetup', '--show', '--find', '-r', source_path]
     mock_subprocess.assert_called_once_with(
         expected_args, universal_newlines=True)
     self.assertEqual(device, '/dev/loop0')
 
-    # Test multiple partitions
-    mock_subprocess.reset_mock()
-    mock_subprocess.return_value = '/dev/loop0'
-    with mock.patch('glob.glob') as mock_glob:
-      glob_partitions = ['loop0p1', 'loop0p2', 'loop0p3', 'loop0p5', 'loop0p6']
-      mock_glob.return_value = glob_partitions
-      device, partitions = mount_local.PreprocessLosetup(source_path)
-      self.assertEqual(device, '/dev/loop0')
-      self.assertEqual(partitions, glob_partitions)
-
     # Test mount partition
     mock_subprocess.reset_mock()
     mock_subprocess.return_value = '/dev/loop0'
-    device, _ = mount_local.PreprocessLosetup(
+    device = mount_local.PreprocessLosetup(
         source_path, partition_offset=180224, partition_size=1294336)
     expected_args = [
         'sudo', 'losetup', '--show', '--find', '-r', '-o', '180224',
