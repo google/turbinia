@@ -72,7 +72,8 @@ jobs:
         cat ./conf/turbinia.conf
         ls -al ./evidence
     - name: Patch docker-compose config to use locally build images
-      run: sed -i -e 's/#image: "t/image: "t/g' -e 's/image: "u/#image: "u/g' ./docker/local/docker-compose.yml
+      run: |
+        sed -i -e 's/#image: "t/image: "t/g' -e 's/image: "u/#image: "u/g' ./docker/local/docker-compose.yml
     - name: Startup local turbinia docker-compose stack
       run: docker-compose -f ./docker/local/docker-compose.yml up -d
     - name: Sleep for 5s
