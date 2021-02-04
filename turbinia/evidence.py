@@ -658,6 +658,11 @@ class GoogleCloudDisk(RawDisk):
     self.cloud_only = True
 
   def _preprocess(self, _, required_states):
+    # The GoogleCloudDisk should never need to be mounted unless it has child
+    # evidence (GoogleCloudDiskRawEmbedded). In this case we're breaking the
+    # evidence layer isolation and having the child evidence manage the
+    # mounting and unmounting.
+
     if EvidenceState.ATTACHED in required_states:
       self.device_path, _ = google_cloud.PreprocessAttachDisk(self.disk_name)
       self.local_path = self.device_path
