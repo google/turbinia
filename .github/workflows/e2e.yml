@@ -44,7 +44,7 @@ jobs:
     - name: Run E2E test
       run: |
         docker exec -t turbinia-server turbiniactl compresseddirectory -l /evidence/history.tgz > request.txt
-        echo "REQUEST_ID=`cat request.txt | grep -oP \"(?<=b').*?(?=')\" | jq '.request_id' | tr -d \\"`" >> $GITHUB_ENV
+        echo "REQUEST_ID=`cat request.txt |grep Creating | sed -e 's/.*request \(.*\) with.*/\1/'`" >> $GITHUB_ENV
     - name: Sleep for 60s
       uses: juliangruber/sleep-action@v1
       with:
