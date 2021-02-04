@@ -88,7 +88,7 @@ jobs:
         docker logs turbinia-worker
     - name: Run E2E test
       run: |
-        docker exec -t turbinia-server turbiniactl compresseddirectory -r 123456789 -l /evidence/history.tgz 
+        docker exec -t turbinia-server turbiniactl -r 123456789 compresseddirectory -l /evidence/history.tgz 
         echo "REQUEST_ID=123456789" >> $GITHUB_ENV
     - name: Sleep for 60s
       uses: juliangruber/sleep-action@v1
