@@ -969,6 +969,9 @@ class BaseTurbiniaClient:
       return ''
 
     if output_json:
+      for task in task_results:
+        task['last_update'] = task['last_update'].strftime(DATETIME_FORMAT) 
+        task['run_time'] = str(task['run_time'])
       return task_results
 
     # Sort all tasks by the report_priority so that tasks with a higher

@@ -100,7 +100,8 @@ def main():
       help='Show the version')
   parser.add_argument(
       '-D', '--dump_json', action='store_true',
-      help='Dump JSON output of Turbinia Request instead of sending it')
+      help='Dump JSON output of request or status. Compatible with status '
+      '-d, -u, -r and -t flags, but not others')
   parser.add_argument(
       '-F', '--filter_patterns_file',
       help='A file containing newline separated string patterns to filter '
@@ -344,10 +345,6 @@ def main():
   parser_status.add_argument(
       '-d', '--days_history', default=0, type=int,
       help='Number of days of history to show', required=False)
-  parser_status.add_argument(
-      '-D', '--dump_json', action='store_true',
-      help='Dump JSON status output instead text. Compatible with -d, -u, '
-      '-r and -t flags, but not others')
   parser_status.add_argument(
       '-f', '--force', help='Gatekeeper for --close_tasks', action='store_true',
       required=False)
@@ -683,7 +680,7 @@ def main():
     if args.dump_json and (args.statistics or args.requests or args.workers):
       log.info(
           'The --dump_json flag is not compatible with --statistics, '
-          '--reqeusts, or --workers flags')
+          '--requests, or --workers flags')
       sys.exit(1)
 
     if args.statistics:
@@ -818,21 +815,20 @@ def main():
               '{1!s}: {2!s}'.format(pair, args.recipe_config, exception))
           sys.exit(1)
         request.recipe[key] = value
-    if args.dump_json:
-      print(request.to_json().encode('utf-8'))
-      sys.exit(0)
     else:
-      log.info(
-          'Creating request {0:s} with evidence {1:s}'.format(
-              request.request_id, evidence_.name))
-      log.info(
-          'Run command "turbiniactl status -r {0:s}" to see the status of'
-          ' this request and associated tasks'.format(request.request_id))
+      if args.dump_json:
+        print(request.to_json())
+      else:
+        log.info(
+            'Creating request {0:s} with evidence {1:s}'.format(
+                request.request_id, evidence_.name))
+        log.info(
+            'Run command "turbiniactl status -r {0:s}" to see the status of'
+            ' this request and associated tasks'.format(request.request_id))
       if not args.run_local:
         client.send_request(request)
       else:
         log.debug('--run_local specified so not sending request to server')
-
     if args.wait:
       log.info(
           'Waiting for request {0:s} to complete'.format(request.request_id))
