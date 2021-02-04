@@ -970,7 +970,7 @@ class BaseTurbiniaClient:
 
     if output_json:
       for task in task_results:
-        task['last_update'] = task['last_update'].strftime(DATETIME_FORMAT) 
+        task['last_update'] = task['last_update'].strftime(DATETIME_FORMAT)
         task['run_time'] = str(task['run_time'])
       return task_results
 
