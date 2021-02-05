@@ -815,20 +815,19 @@ def main():
               '{1!s}: {2!s}'.format(pair, args.recipe_config, exception))
           sys.exit(1)
         request.recipe[key] = value
+    if args.dump_json:
+      print(request.to_json())
     else:
-      if args.dump_json:
-        print(request.to_json())
-      else:
-        log.info(
-            'Creating request {0:s} with evidence {1:s}'.format(
-                request.request_id, evidence_.name))
-        log.info(
-            'Run command "turbiniactl status -r {0:s}" to see the status of'
-            ' this request and associated tasks'.format(request.request_id))
-      if not args.run_local:
-        client.send_request(request)
-      else:
-        log.debug('--run_local specified so not sending request to server')
+      log.info(
+          'Creating request {0:s} with evidence {1:s}'.format(
+              request.request_id, evidence_.name))
+      log.info(
+          'Run command "turbiniactl status -r {0:s}" to see the status of'
+          ' this request and associated tasks'.format(request.request_id))
+    if not args.run_local:
+      client.send_request(request)
+    else:
+      log.debug('--run_local specified so not sending request to server')
     if args.wait:
       log.info(
           'Waiting for request {0:s} to complete'.format(request.request_id))
