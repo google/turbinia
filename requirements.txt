@@ -1,6 +1,7 @@
 celery<5.0
 docker
 filelock
+jsonpickle
 google-api-core
 google-api-python-client
 google-auth

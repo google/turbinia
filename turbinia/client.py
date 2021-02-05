@@ -22,6 +22,7 @@ from datetime import timedelta
 
 import httplib2
 import json
+import jsonpickle
 import logging
 from operator import itemgetter
 from operator import attrgetter
@@ -248,8 +249,9 @@ class TurbiniaStats:
     tasks(list): A list of tasks to calculate stats for
   """
 
-  def __init__(self, description=None):
+  def __init__(self, description=None, json=False):
     self.description = description
+    self.json = json
     self.min = None
     self.mean = None
     self.max = None
@@ -296,6 +298,10 @@ class TurbiniaStats:
     Returns:
       String of statistics data
     """
+    if self.json:
+      ret = {'description:':self.description, 'count':self.count, 'min':str(self.min), 'mean':str(self.mean), 'max':str(self.max)}
+      return jsonpickle.dumps(ret)
+
     return '{0:s}: Count: {1:d}, Min: {2!s}, Mean: {3!s}, Max: {4!s}'.format(
         self.description, self.count, self.min, self.mean, self.max)
 
@@ -580,7 +586,7 @@ class BaseTurbiniaClient:
 
   def get_task_statistics(
       self, instance, project, region, days=0, task_id=None, request_id=None,
-      user=None):
+      user=None, output_json=False):
     """Gathers statistics for Turbinia execution data.
 
     Args:
@@ -592,6 +598,7 @@ class BaseTurbiniaClient:
       task_id (string): The Id of the task.
       request_id (string): The Id of the request we want tasks for.
       user (string): The user of the request we want tasks for.
+      output_json (bool): Whether to return JSON output.
 
     Returns:
       task_stats(dict): Mapping of statistic names to values
@@ -602,10 +609,10 @@ class BaseTurbiniaClient:
       return {}
 
     task_stats = {
-        'all_tasks': TurbiniaStats('All Tasks'),
-        'successful_tasks': TurbiniaStats('Successful Tasks'),
-        'failed_tasks': TurbiniaStats('Failed Tasks'),
-        'requests': TurbiniaStats('Total Request Time'),
+        'all_tasks': TurbiniaStats('All Tasks', json=output_json),
+        'successful_tasks': TurbiniaStats('Successful Tasks', json=output_json),
+        'failed_tasks': TurbiniaStats('Failed Tasks', json=output_json),
+        'requests': TurbiniaStats('Total Request Time', json=output_json),
         # The following are dicts mapping the user/worker/type names to their
         # respective TurbiniaStats() objects.
         # Total wall-time for all tasks of a given type
@@ -642,7 +649,7 @@ class BaseTurbiniaClient:
       if task_type in task_stats['tasks_per_type']:
         task_type_stats = task_stats['tasks_per_type'].get(task_type)
       else:
-        task_type_stats = TurbiniaStats('Task type {0:s}'.format(task_type))
+        task_type_stats = TurbiniaStats('Task type {0:s}'.format(task_type), json=output_json)
         task_stats['tasks_per_type'][task_type] = task_type_stats
       task_type_stats.add_task(task)
 
@@ -650,7 +657,7 @@ class BaseTurbiniaClient:
       if worker in task_stats['tasks_per_worker']:
         worker_stats = task_stats['tasks_per_worker'].get(worker)
       else:
-        worker_stats = TurbiniaStats('Worker {0:s}'.format(worker))
+        worker_stats = TurbiniaStats('Worker {0:s}'.format(worker), json=output_json)
         task_stats['tasks_per_worker'][worker] = worker_stats
       worker_stats.add_task(task)
 
@@ -658,7 +665,7 @@ class BaseTurbiniaClient:
       if user in task_stats['tasks_per_user']:
         user_stats = task_stats['tasks_per_user'].get(user)
       else:
-        user_stats = TurbiniaStats('User {0:s}'.format(user))
+        user_stats = TurbiniaStats('User {0:s}'.format(user), json=output_json)
         task_stats['tasks_per_user'][user] = user_stats
       user_stats.add_task(task)
 
@@ -695,7 +702,7 @@ class BaseTurbiniaClient:
 
   def format_task_statistics(
       self, instance, project, region, days=0, task_id=None, request_id=None,
-      user=None, csv=False):
+      user=None, csv=False, output_json=False):
     """Formats statistics for Turbinia execution data.
 
     Args:
@@ -708,12 +715,13 @@ class BaseTurbiniaClient:
       request_id (string): The Id of the request we want tasks for.
       user (string): The user of the request we want tasks for.
       csv (bool): Whether we want the output in CSV format.
+      output_json (bool): Whether to return JSON output.
 
     Returns:
       String of task statistics report
     """
     task_stats = self.get_task_statistics(
-        instance, project, region, days, task_id, request_id, user)
+        instance, project, region, days, task_id, request_id, user, output_json)
     if not task_stats:
       return 'No tasks found'
 
@@ -724,6 +732,8 @@ class BaseTurbiniaClient:
 
     if csv:
       report = ['stat_type, count, min, mean, max']
+    elif output_json:
+      report = []
     else:
       report = ['Execution time statistics for Turbinia:', '']
     for stat_name in stats_order:
@@ -744,10 +754,14 @@ class BaseTurbiniaClient:
           report.append(stat_obj.format_stats())
 
     report.append('')
-    return '\n'.join(report)
+
+    if output_json:
+      return '['+','.join(report)+']'
+    else:
+      return '\n'.join(report)
 
   def format_worker_status(
-      self, instance, project, region, days=0, all_fields=False):
+      self, instance, project, region, days=0, all_fields=False, output_json=False):
     """Formats the recent history for Turbinia Workers.
 
     Args:
@@ -810,6 +824,16 @@ class BaseTurbiniaClient:
         else:
           workers_dict[worker_node].append(task_dict)
 
+    if output_json:
+      for worker_node in workers_dict:
+        for task in workers_dict[worker_node]:
+          task['last_update'] = task['last_update'].strftime(DATETIME_FORMAT)
+          task['run_time'] = str(task['run_time'])
+      ret = {}
+      ret['assigned'] = workers_dict
+      ret['unassigned'] = unassigned_dict
+      return json.dumps(ret)
+
     # Generate report header
     report = []
     report.append(
@@ -861,7 +885,7 @@ class BaseTurbiniaClient:
     return '\n'.join(report)
 
   def format_request_status(
-      self, instance, project, region, days=0, all_fields=False):
+      self, instance, project, region, days=0, all_fields=False, output_json=False):
     """Formats the recent history for Turbinia Requests.
 
     Args:
@@ -872,6 +896,7 @@ class BaseTurbiniaClient:
       days (int): The number of days we want history for.
       all_fields (bool): Include all fields for the Request, which includes,
           saved file paths.
+      output_json (bool): Whether to return JSON output.
     Returns:
       String of Request status
     """
@@ -879,7 +904,9 @@ class BaseTurbiniaClient:
     num_days = 7
     if days != 0:
       num_days = days
-    task_results = self.get_task_data(instance, project, region, days=num_days)
+    task_results = self.get_task_data(instance, project, region, days=num_days, output_json=output_json)
+    if output_json:
+      return jsonpickle.dumps(task_results)
     if not task_results:
       return ''
 
@@ -969,10 +996,7 @@ class BaseTurbiniaClient:
       return ''
 
     if output_json:
-      for task in task_results:
-        task['last_update'] = task['last_update'].strftime(DATETIME_FORMAT)
-        task['run_time'] = str(task['run_time'])
-      return task_results
+      return jsonpickle.dumps(task_results)
 
     # Sort all tasks by the report_priority so that tasks with a higher
     # priority are listed first in the report.
@@ -1122,7 +1146,13 @@ class TurbiniaCeleryClient(BaseTurbiniaClient):
     Returns:
       List of Task dict objects.
     """
-    return self.redis.get_task_data(instance, days, task_id, request_id)
+    tasks = self.redis.get_task_data(instance, days, task_id, request_id)
+    if output_json:
+      for task in tasks:
+        task['last_update'] = task['last_update'].strftime(DATETIME_FORMAT)
+        task['run_time'] = str(task['run_time'])
+
+    return tasks
 
 
 class TurbiniaServer:

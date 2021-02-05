@@ -677,18 +677,16 @@ def main():
         )
         sys.exit(1)
 
-    if args.dump_json and (args.statistics or args.requests or args.workers):
-      log.info(
-          'The --dump_json flag is not compatible with --statistics, '
-          '--requests, or --workers flags')
-      sys.exit(1)
-
     if args.statistics:
+      if args.dump_json:
+        output_json = True
+      else:
+        output_json = False
       print(
           client.format_task_statistics(
               instance=config.INSTANCE_ID, project=config.TURBINIA_PROJECT,
               region=region, days=args.days_history, task_id=args.task_id,
-              request_id=args.request_id, user=args.user, csv=args.csv))
+              request_id=args.request_id, user=args.user, csv=args.csv, output_json=output_json))
       sys.exit(0)
 
     if args.wait and args.request_id:
@@ -702,19 +700,26 @@ def main():
           'turbiniactl will exit without waiting.')
 
     if args.requests:
+      if args.dump_json:
+        output_json = True
+      else:
+        output_json = False
       print(
           client.format_request_status(
               instance=config.INSTANCE_ID, project=config.TURBINIA_PROJECT,
               region=region, days=args.days_history,
-              all_fields=args.all_fields))
+              all_fields=args.all_fields, output_json=output_json))
       sys.exit(0)
 
     if args.workers:
-      print(
-          client.format_worker_status(
-              instance=config.INSTANCE_ID, project=config.TURBINIA_PROJECT,
-              region=region, days=args.days_history,
-              all_fields=args.all_fields))
+      if args.dump_json:
+        output_json = True
+      else:
+        output_json = False
+      print(client.format_worker_status(
+            instance=config.INSTANCE_ID, project=config.TURBINIA_PROJECT,
+            region=region, days=args.days_history,
+            all_fields=args.all_fields, output_json=output_json))
       sys.exit(0)
 
     if args.dump_json:
