@@ -299,7 +299,13 @@ class TurbiniaStats:
       String of statistics data
     """
     if self.json:
-      ret = {'description:':self.description, 'count':self.count, 'min':str(self.min), 'mean':str(self.mean), 'max':str(self.max)}
+      ret = {
+          'description:': self.description,
+          'count': self.count,
+          'min': str(self.min),
+          'mean': str(self.mean),
+          'max': str(self.max)
+      }
       return jsonpickle.dumps(ret)
 
     return '{0:s}: Count: {1:d}, Min: {2!s}, Mean: {3!s}, Max: {4!s}'.format(
@@ -649,7 +655,8 @@ class BaseTurbiniaClient:
       if task_type in task_stats['tasks_per_type']:
         task_type_stats = task_stats['tasks_per_type'].get(task_type)
       else:
-        task_type_stats = TurbiniaStats('Task type {0:s}'.format(task_type), json=output_json)
+        task_type_stats = TurbiniaStats(
+            'Task type {0:s}'.format(task_type), json=output_json)
         task_stats['tasks_per_type'][task_type] = task_type_stats
       task_type_stats.add_task(task)
 
@@ -657,7 +664,8 @@ class BaseTurbiniaClient:
       if worker in task_stats['tasks_per_worker']:
         worker_stats = task_stats['tasks_per_worker'].get(worker)
       else:
-        worker_stats = TurbiniaStats('Worker {0:s}'.format(worker), json=output_json)
+        worker_stats = TurbiniaStats(
+            'Worker {0:s}'.format(worker), json=output_json)
         task_stats['tasks_per_worker'][worker] = worker_stats
       worker_stats.add_task(task)
 
@@ -756,12 +764,13 @@ class BaseTurbiniaClient:
     report.append('')
 
     if output_json:
-      return '['+','.join(report)+']'
+      return '[' + ','.join(report) + ']'
     else:
       return '\n'.join(report)
 
   def format_worker_status(
-      self, instance, project, region, days=0, all_fields=False, output_json=False):
+      self, instance, project, region, days=0, all_fields=False,
+      output_json=False):
     """Formats the recent history for Turbinia Workers.
 
     Args:
@@ -885,7 +894,8 @@ class BaseTurbiniaClient:
     return '\n'.join(report)
 
   def format_request_status(
-      self, instance, project, region, days=0, all_fields=False, output_json=False):
+      self, instance, project, region, days=0, all_fields=False,
+      output_json=False):
     """Formats the recent history for Turbinia Requests.
 
     Args:
@@ -904,7 +914,8 @@ class BaseTurbiniaClient:
     num_days = 7
     if days != 0:
       num_days = days
-    task_results = self.get_task_data(instance, project, region, days=num_days, output_json=output_json)
+    task_results = self.get_task_data(
+        instance, project, region, days=num_days, output_json=output_json)
     if output_json:
       return jsonpickle.dumps(task_results)
     if not task_results:
