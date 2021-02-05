@@ -1,5 +1,6 @@
-FROM ubuntu:18.04
+FROM ubuntu:20.04
 
+ENV DEBIAN_FRONTEND=noninteractive 
 RUN apt-get update && apt-get -y install \
 apt-transport-https \
 apt-utils \
@@ -7,16 +8,14 @@ ca-certificates \
 git \
 john \
 john-data \
-libleveldb1v5 \
+libleveldb1d \
 libleveldb-dev \
 libterm-readline-gnu-perl \
-python3 \
 python3-pip \
 software-properties-common \
 sudo \
 testdisk \
-sleuthkit \
-&& rm -rf /var/lib/apt/lists/*
+sleuthkit
 
 ADD requirements.txt /tmp/
 RUN cd /tmp/ && pip3 install -r requirements.txt
@@ -24,18 +23,27 @@ ADD dfvfs_requirements.txt /tmp/
 RUN cd /tmp/ && pip3 install -r dfvfs_requirements.txt
 
 RUN pip3 install pip --upgrade
+RUN pip3 install urllib3 cryptography requests --upgrade
 
 # Install third-party worker dependencies
 RUN pip3 install pyhindsight
-RUN pip3 install --upgrade keyrings.alt
 RUN pip3 install docker-explorer
 
 # Install Plaso
 RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 0x5e80511b10c598b8 \
 && add-apt-repository -y ppa:gift/stable
-RUN apt-get -y install python-plaso plaso-tools bulk-extractor --option Acquire::ForceIPv4=true --option Acquire::Retries=100 --option Acquire::http::Timeout=60
+RUN apt-get update
+RUN apt-get -y install \
+libewf \
+python3-dfvfs \
+libewf-python3 \
+python3-plaso \
+plaso-tools \
+--option Acquire::ForceIPv4=true --option Acquire::Retries=100 --option Acquire::http::Timeout=60 
 
-RUN pip3 install urllib3 cryptography --upgrade
+# Install BulkExtractor
+RUN apt-get -y install bulk-extractor \
+&& rm -rf /var/lib/apt/lists/*
 
 ADD . /tmp/
 RUN cd /tmp/ && python3 setup.py install
