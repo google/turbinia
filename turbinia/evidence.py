@@ -654,6 +654,7 @@ class GoogleCloudDisk(RawDisk):
     self.zone = zone
     self.disk_name = disk_name
     self.mount_partition = mount_partition
+    self.partition_paths = None
     super(GoogleCloudDisk, self).__init__(*args, **kwargs)
     self.cloud_only = True
 
@@ -664,7 +665,9 @@ class GoogleCloudDisk(RawDisk):
     # mounting and unmounting.
 
     if EvidenceState.ATTACHED in required_states:
-      self.device_path, _ = google_cloud.PreprocessAttachDisk(self.disk_name)
+      self.device_path, partition_paths = google_cloud.PreprocessAttachDisk(
+          self.disk_name)
+      self.partition_paths = partition_paths
       self.local_path = self.device_path
       self.state[EvidenceState.ATTACHED] = True
 
@@ -698,18 +701,12 @@ class GoogleCloudDiskRawEmbedded(GoogleCloudDisk):
     self.context_dependent = True
 
   def _preprocess(self, _, required_states):
-    partition_paths = None
-    # Need to attach and mount parent disk
-    if not self.parent_evidence.state[EvidenceState.ATTACHED]:
-      device_path, partition_paths = google_cloud.PreprocessAttachDisk(
-          self.parent_evidence.disk_name)
-      self.parent_evidence.device_path = device_path
-      self.parent_evidence.local_path = self.parent_evidence.device_path
-      self.parent_evidence.state[EvidenceState.ATTACHED] = True
-    if not partition_paths:
+    # Need to mount parent disk
+    if not self.parent_evidence.partition_paths:
       self.parent_evidence.mount_path = mount_local.PreprocessMountPartition(
           self.parent_evidence.device_path)
     else:
+      partition_paths = self.parent_evidence.partition_paths
       self.parent_evidence.mount_path = mount_local.PreprocessMountDisk(
           partition_paths, self.parent_evidence.mount_partition)
     self.parent_evidence.local_path = self.parent_evidence.mount_path
