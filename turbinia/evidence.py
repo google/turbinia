@@ -529,7 +529,6 @@ class DiskPartition(RawDisk):
     partition_size: Size of the partition in bytes.
   """
 
-  REQUIRED_ATTRIBUTES = ['local_path']
   POSSIBLE_STATES = [EvidenceState.ATTACHED, EvidenceState.MOUNTED]
 
   def __init__(
@@ -548,7 +547,8 @@ class DiskPartition(RawDisk):
   def _preprocess(self, _, required_states):
     if EvidenceState.ATTACHED in required_states or self.has_child_evidence:
       self.device_path = mount_local.PreprocessLosetup(
-          self.source_path, partition_offset=self.partition_offset,
+          self.parent_evidence.device_path,
+          partition_offset=self.partition_offset,
           partition_size=self.partition_size)
       if self.device_path:
         self.state[EvidenceState.ATTACHED] = True

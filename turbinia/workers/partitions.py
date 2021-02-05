@@ -40,11 +40,10 @@ class PartitionEnumerationTask(TurbiniaTask):
 
   REQUIRED_STATES = [EvidenceState.ATTACHED]
 
-  def _ProcessPartition(self, evidence_path, path_spec):
+  def _ProcessPartition(self, path_spec):
     """Generate RawDiskPartition from a PathSpec.
 
     Args:
-      evidence_path (str): Local path of the parent evidence
       path_spec (dfvfs.PathSpec): dfVFS path spec.
 
     Returns:
@@ -107,8 +106,8 @@ class PartitionEnumerationTask(TurbiniaTask):
       status_report.append(fmt.bullet('Source evidence is a volume image'))
 
     partition_evidence = DiskPartition(
-        source_path=evidence_path, path_spec=fs_path_spec,
-        partition_offset=partition_offset, partition_size=partition_size)
+        path_spec=fs_path_spec, partition_offset=partition_offset,
+        partition_size=partition_size)
 
     return partition_evidence, status_report
 
@@ -148,8 +147,7 @@ class PartitionEnumerationTask(TurbiniaTask):
 
     try:
       for path_spec in path_specs:
-        partition_evidence, partition_status = self._ProcessPartition(
-            evidence.local_path, path_spec)
+        partition_evidence, partition_status = self._ProcessPartition(path_spec)
         status_report.extend(partition_status)
         result.add_evidence(partition_evidence, evidence.config)
 
