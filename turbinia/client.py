@@ -615,10 +615,14 @@ class BaseTurbiniaClient:
       return {}
 
     task_stats = {
-        'all_tasks': TurbiniaStats('All Tasks', output_json=output_json),
-        'successful_tasks': TurbiniaStats('Successful Tasks', output_json=output_json),
-        'failed_tasks': TurbiniaStats('Failed Tasks', output_json=output_json),
-        'requests': TurbiniaStats('Total Request Time', output_json=output_json),
+        'all_tasks':
+            TurbiniaStats('All Tasks', output_json=output_json),
+        'successful_tasks':
+            TurbiniaStats('Successful Tasks', output_json=output_json),
+        'failed_tasks':
+            TurbiniaStats('Failed Tasks', output_json=output_json),
+        'requests':
+            TurbiniaStats('Total Request Time', output_json=output_json),
         # The following are dicts mapping the user/worker/type names to their
         # respective TurbiniaStats() objects.
         # Total wall-time for all tasks of a given type
@@ -674,7 +678,7 @@ class BaseTurbiniaClient:
         user_stats = task_stats['tasks_per_user'].get(user)
       else:
         user_stats = TurbiniaStats(
-            'User {0:s}'.format(user),output_json=output_json)
+            'User {0:s}'.format(user), output_json=output_json)
         task_stats['tasks_per_user'][user] = user_stats
       user_stats.add_task(task)
 
