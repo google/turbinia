@@ -100,8 +100,7 @@ def main():
       help='Show the version')
   parser.add_argument(
       '-D', '--dump_json', action='store_true',
-      help='Dump JSON output of request or status. Compatible with status '
-      '-d, -u, -r and -t flags, but not others')
+      help='Dump JSON output of request or status.')
   parser.add_argument(
       '-F', '--filter_patterns_file',
       help='A file containing newline separated string patterns to filter '

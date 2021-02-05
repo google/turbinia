@@ -13,6 +13,7 @@ google-cloud-pubsub==1.7.0
 google-cloud-storage
 prometheus_client
 libcloudforensics
+idna<3
 psq
 redis
 six>=1.15.0

@@ -249,9 +249,9 @@ class TurbiniaStats:
     tasks(list): A list of tasks to calculate stats for
   """
 
-  def __init__(self, description=None, json=False):
+  def __init__(self, description=None, output_json=False):
     self.description = description
-    self.json = json
+    self.output_json = output_json
     self.min = None
     self.mean = None
     self.max = None
@@ -298,7 +298,7 @@ class TurbiniaStats:
     Returns:
       String of statistics data
     """
-    if self.json:
+    if self.output_json:
       ret = {
           'description:': self.description,
           'count': self.count,
@@ -615,10 +615,10 @@ class BaseTurbiniaClient:
       return {}
 
     task_stats = {
-        'all_tasks': TurbiniaStats('All Tasks', json=output_json),
-        'successful_tasks': TurbiniaStats('Successful Tasks', json=output_json),
-        'failed_tasks': TurbiniaStats('Failed Tasks', json=output_json),
-        'requests': TurbiniaStats('Total Request Time', json=output_json),
+        'all_tasks': TurbiniaStats('All Tasks', output_json=output_json),
+        'successful_tasks': TurbiniaStats('Successful Tasks', output_json=output_json),
+        'failed_tasks': TurbiniaStats('Failed Tasks', output_json=output_json),
+        'requests': TurbiniaStats('Total Request Time', output_json=output_json),
         # The following are dicts mapping the user/worker/type names to their
         # respective TurbiniaStats() objects.
         # Total wall-time for all tasks of a given type
@@ -656,7 +656,7 @@ class BaseTurbiniaClient:
         task_type_stats = task_stats['tasks_per_type'].get(task_type)
       else:
         task_type_stats = TurbiniaStats(
-            'Task type {0:s}'.format(task_type), json=output_json)
+            'Task type {0:s}'.format(task_type), output_json=output_json)
         task_stats['tasks_per_type'][task_type] = task_type_stats
       task_type_stats.add_task(task)
 
@@ -665,7 +665,7 @@ class BaseTurbiniaClient:
         worker_stats = task_stats['tasks_per_worker'].get(worker)
       else:
         worker_stats = TurbiniaStats(
-            'Worker {0:s}'.format(worker), json=output_json)
+            'Worker {0:s}'.format(worker), output_json=output_json)
         task_stats['tasks_per_worker'][worker] = worker_stats
       worker_stats.add_task(task)
 
@@ -673,7 +673,8 @@ class BaseTurbiniaClient:
       if user in task_stats['tasks_per_user']:
         user_stats = task_stats['tasks_per_user'].get(user)
       else:
-        user_stats = TurbiniaStats('User {0:s}'.format(user), json=output_json)
+        user_stats = TurbiniaStats(
+            'User {0:s}'.format(user),output_json=output_json)
         task_stats['tasks_per_user'][user] = user_stats
       user_stats.add_task(task)
 
