@@ -7,11 +7,11 @@ USER root
 RUN pip uninstall -y turbinia
 RUN rm /usr/local/bin/turbiniactl
 
-# Create /evidence folder (used in local stack configuration)
+# Create /evidence and /tmp/turbinia-mounts folders (used in local stack configuration)
 RUN mkdir /evidence && chmod 777 /evidence
 RUN mkdir -p /tmp/turbinia-mounts && chmod 777 /tmp/turbinia-mounts
 
-# Install pylint and yapf and test tools
+# Install pylint, yapf and test tools
 RUN pip install pylint yapf
 RUN pip install mock nose coverage tox
 
@@ -26,4 +26,5 @@ RUN echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] http://packages.c
 && apt-get update -y \
 && apt-get install google-cloud-sdk -y
       
+# Insert dummy command to override base image CMD
 CMD ["/usr/bin/ps"]
