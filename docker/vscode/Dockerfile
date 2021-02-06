@@ -1,3 +1,4 @@
+# We take the latest Turbinia worker release as a base image to make sure dependencies are already installed
 FROM us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-worker-dev:latest
 
 USER root
