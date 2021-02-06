@@ -1,11 +1,11 @@
-// For format details, see https://aka.ms/devcontainer.json. For config options, see the README at:
-// https://github.com/microsoft/vscode-dev-containers/tree/v0.158.0/containers/python-3
+// For format details, see https://aka.ms/devcontainer.json.
 {
 	"name": "Turbinia Development Container",
 	"build": {
 		"dockerfile": "../docker/vscode/Dockerfile"
 	},
-	"postCreateCommand": "/etc/init.d/redis-server start && mkdir .vscode && cp docker/vscode/vscode-launch.json .vscode/launch.json",
+	// start redis-server and copy launch profiles to .vscode
+	"postCreateCommand": "/etc/init.d/redis-server start && mkdir -p .vscode && cp docker/vscode/vscode-launch.json .vscode/launch.json",
 	// Set *default* container specific settings.json values on container create.
 	"settings": {
 		"terminal.integrated.shell.linux": "/bin/bash",
