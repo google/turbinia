@@ -27,6 +27,7 @@ if TurbiniaTask.check_worker_role():
     from dfvfs.helpers import volume_scanner
     from dfvfs.lib import definitions as dfvfs_definitions
     from dfvfs.lib import errors as dfvfs_errors
+    from dfvfs.volume import gpt_volume_system
     from dfvfs.volume import tsk_volume_system
 
     from turbinia.lib import dfvfs_classes
@@ -68,7 +69,8 @@ class PartitionEnumerationTask(TurbiniaTask):
         # APFS volume index
         volume_index = getattr(path_spec, 'volume_index', None)
 
-      if type_indicator == dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION:
+      if type_indicator in (dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION,
+                            dfvfs_definitions.TYPE_INDICATOR_GPT):
         if fs_location in ('\\', '/'):
           # Partition location / identifier
           fs_location = getattr(path_spec, 'location', None)
@@ -76,7 +78,10 @@ class PartitionEnumerationTask(TurbiniaTask):
         # Partition index
         partition_index = getattr(path_spec, 'part_index', None)
 
-        volume_system = tsk_volume_system.TSKVolumeSystem()
+        if type_indicator == dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION:
+          volume_system = tsk_volume_system.TSKVolumeSystem()
+        else:
+          volume_system = gpt_volume_system.GPTVolumeSystem()
         try:
           volume_system.Open(path_spec)
           volume_identifier = partition_location.replace('/', '')

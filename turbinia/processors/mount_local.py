@@ -44,9 +44,7 @@ def PreprocessLosetup(source_path, partition_offset=None, partition_size=None):
       failed to run in anyway.
 
   Returns:
-    (str, list(str)): a tuple consisting of the path to the 'disk' block device
-      and a list of paths to partition block devices. For example:
-      ('/dev/loop0', ['/dev/loop0p1', '/dev/loop0p2'])
+    str: the path to the 'disk' block device
   """
   losetup_device = None
 
@@ -59,7 +57,7 @@ def PreprocessLosetup(source_path, partition_offset=None, partition_size=None):
   # https://github.com/google/turbinia/issues/73
   losetup_command = ['sudo', 'losetup', '--show', '--find', '-r']
   if partition_size:
-    # Evidence is RawDiskPartition
+    # Evidence is DiskPartition
     losetup_command.extend(['-o', str(partition_offset)])
     losetup_command.extend(['--sizelimit', str(partition_size)])
   losetup_command.append(source_path)
