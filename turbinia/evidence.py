@@ -854,7 +854,10 @@ class DockerContainer(Evidence):
     self.context_dependent = True
 
   def _preprocess(self, _, required_states):
-    if EvidenceState.MOUNTED in required_states:
+    # Checking for either ATTACHED or MOUNTED since artefact extraction only
+    # requires ATTACHED, but a docker container can't be attached.
+    if (EvidenceState.ATTACHED in required_states or
+        EvidenceState.MOUNTED in required_states):
       self._docker_root_directory = GetDockerPath(
           self.parent_evidence.mount_path)
       # Mounting the container's filesystem
