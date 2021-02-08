@@ -126,6 +126,7 @@ class PartitionEnumerationTask(TurbiniaTask):
     Returns:
       TurbiniaTaskResult object.
     """
+    # TODO(dfjxs): Use evidence name instead of evidence_description (#718)
     evidence_description = None
     if hasattr(evidence, 'embedded_path'):
       evidence_description = ':'.join(

@@ -545,6 +545,8 @@ class DiskPartition(RawDisk):
     self.context_dependent = True
 
   def _preprocess(self, _, required_states):
+    # In attaching a partition, we create a new loopback device using the
+    # partition offset and size.
     if EvidenceState.ATTACHED in required_states or self.has_child_evidence:
       self.device_path = mount_local.PreprocessLosetup(
           self.parent_evidence.device_path,
@@ -731,14 +733,10 @@ class GoogleCloudDiskRawEmbedded(GoogleCloudDisk):
       mount_local.PostprocessDeleteLosetup(self.device_path)
       self.state[EvidenceState.ATTACHED] = False
 
-    # Need to unmount and detach parent disk
+    # Need to unmount parent disk
     if self.parent_evidence.state[EvidenceState.MOUNTED]:
       mount_local.PostprocessUnmountPath(self.parent_evidence.mount_path)
       self.parent_evidence.state[EvidenceState.MOUNTED] = False
-    if self.parent_evidence.state[EvidenceState.ATTACHED]:
-      google_cloud.PostprocessDetachDisk(
-          self.parent_evidence.disk_name, self.parent_evidence.device_path)
-      self.parent_evidence.state[EvidenceState.ATTACHED] = False
 
 
 class PlasoFile(Evidence):
