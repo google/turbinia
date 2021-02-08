@@ -529,7 +529,7 @@ class DiskPartition(RawDisk):
     partition_size: Size of the partition in bytes.
   """
 
-  POSSIBLE_STATES = [EvidenceState.ATTACHED]
+  POSSIBLE_STATES = [EvidenceState.ATTACHED, EvidenceState.MOUNTED]
 
   def __init__(
       self, path_spec=None, partition_offset=None, partition_size=None, *args,
@@ -554,7 +554,16 @@ class DiskPartition(RawDisk):
         self.state[EvidenceState.ATTACHED] = True
         self.local_path = self.device_path
 
+    if EvidenceState.MOUNTED in required_states or self.has_child_evidence:
+      self.mount_path = mount_local.PreprocessMountPartition(self.device_path)
+      if self.mount_path:
+        self.local_path = self.mount_path
+        self.state[EvidenceState.MOUNTED] = True
+
   def _postprocess(self):
+    if self.state[EvidenceState.MOUNTED]:
+      mount_local.PostprocessUnmountPath(self.mount_path)
+      self.state[EvidenceState.MOUNTED] = False
     if self.state[EvidenceState.ATTACHED]:
       mount_local.PostprocessDeleteLosetup(self.device_path)
       self.state[EvidenceState.ATTACHED] = False
