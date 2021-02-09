@@ -435,8 +435,8 @@ class GCSOutputWriter(OutputWriter):
       message = (
           'Local source file {0:s} is empty.  Not uploading to GCS'.format(
               source_path))
-      log.error(message)
-      raise TurbiniaException(message)
+      log.warning(message)
+      return None
 
     bucket = self.client.get_bucket(self.bucket)
     destination_path = os.path.join(

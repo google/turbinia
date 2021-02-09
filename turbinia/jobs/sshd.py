@@ -19,11 +19,9 @@ from __future__ import unicode_literals
 from turbinia.workers import artifact
 from turbinia.workers import sshd
 from turbinia.evidence import Directory
+from turbinia.evidence import DiskPartition
 from turbinia.evidence import DockerContainer
-from turbinia.evidence import GoogleCloudDisk
-from turbinia.evidence import GoogleCloudDiskRawEmbedded
 from turbinia.evidence import ExportedFileArtifact
-from turbinia.evidence import RawDisk
 from turbinia.evidence import ReportText
 from turbinia.jobs import interface
 from turbinia.jobs import manager
@@ -33,11 +31,7 @@ class SSHDExtractionJob(interface.TurbiniaJob):
   """Filter input based on regular expression patterns."""
 
   # The types of evidence that this Job will process
-  evidence_input = [
-      Directory, DockerContainer, RawDisk, GoogleCloudDisk,
-      GoogleCloudDiskRawEmbedded
-  ]
-
+  evidence_input = [Directory, DiskPartition, DockerContainer]
   evidence_output = [ExportedFileArtifact]
 
   NAME = 'SSHDExtractionJob'

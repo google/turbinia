@@ -12,6 +12,7 @@ libleveldb-dev \
 libterm-readline-gnu-perl \
 python3 \
 python3-pip \
+sleuthkit \
 software-properties-common \
 sudo \
 testdisk \
@@ -24,6 +25,7 @@ ADD dfvfs_requirements.txt /tmp/
 RUN cd /tmp/ && pip3 install -r dfvfs_requirements.txt
 
 RUN pip3 install pip --upgrade
+RUN pip3 install keyrings.alt --upgrade
 
 # Install third-party worker dependencies
 RUN pip3 install pyhindsight
@@ -33,7 +35,11 @@ RUN pip3 install docker-explorer
 # Install Plaso
 RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 0x5e80511b10c598b8 \
 && add-apt-repository -y ppa:gift/stable
-RUN apt-get -y install python-plaso plaso-tools bulk-extractor --option Acquire::ForceIPv4=true --option Acquire::Retries=100 --option Acquire::http::Timeout=60
+RUN apt-get -y install python-plaso \
+plaso-tools \
+docker-explorer-tools \
+bulk-extractor \
+--option Acquire::ForceIPv4=true --option Acquire::Retries=100 --option Acquire::http::Timeout=60
 
 RUN pip3 install urllib3 cryptography --upgrade
 
