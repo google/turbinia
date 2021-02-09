@@ -69,7 +69,7 @@ def setup(need_file_handler=True, need_stream_handler=True):
     logger.addHandler(file_handler)
 
   console_handler = logging.StreamHandler()
-  formatter = logging.Formatter('[%(levelname)s] %(message)s')
+  formatter = logging.Formatter('%(asctime)s [%(levelname)s] %(message)s')
   console_handler.setFormatter(formatter)
   if need_stream_handler:
     logger.addHandler(console_handler)
