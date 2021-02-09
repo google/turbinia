@@ -1,4 +1,5 @@
-FROM ubuntu:18.04
+#FROM ubuntu:18.04
+FROM us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-server-dev:latest
 
 RUN apt-get update && apt-get -y install \
 apt-transport-https \
@@ -46,6 +47,7 @@ ADD . /tmp/
 # unshallow and fetch all tags so our build systems pickup the correct git tag.
 RUN cd /tmp/ && git fetch --prune --unshallow
 RUN cd /tmp/ && git fetch --depth=1 origin +refs/tags/*:refs/tags/*
+RUN cd /tmp/ && git branch
 RUN cd /tmp/ && python3 setup.py install
 
 RUN useradd -r -s /bin/nologin -G disk,sudo turbinia
