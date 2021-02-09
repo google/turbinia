@@ -21,6 +21,9 @@ RUN cd /tmp/ && pip3 install -r dfvfs_requirements.txt
 
 ADD . /tmp/
 RUN pip3 install --upgrade keyrings.alt
+RUN cd /tmp/ && git tag
+RUN cd /tmp/ && git branch
+RUN cd /tmp/ && git describe
 RUN cd /tmp/ && python3 setup.py install
 
 RUN useradd -r -s /bin/nologin -G disk turbinia
