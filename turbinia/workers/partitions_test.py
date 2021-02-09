@@ -33,7 +33,7 @@ class PartitionEnumerationTaskTest(TestTurbiniaTaskBase):
     # pylint: disable=arguments-differ
     super(PartitionEnumerationTaskTest, self).setUp(
         task_class=partitions.PartitionEnumerationTask,
-        evidence_class=partitions.RawDiskPartition)
+        evidence_class=partitions.DiskPartition)
     self.setResults(mock_run=False)
 
   @mock.patch('turbinia.state_manager.get_state_manager')

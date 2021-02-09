@@ -279,7 +279,7 @@ class TurbiniaTaskResult:
     # See https://github.com/google/turbinia/issues/211 for more details.
     evidence.config = evidence_config
     if evidence.context_dependent:
-      evidence.parent_evidence = self.input_evidence
+      evidence.set_parent(self.input_evidence)
 
     self.evidence.append(evidence)
 
