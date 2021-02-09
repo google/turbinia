@@ -21,12 +21,11 @@ RUN cd /tmp/ && pip3 install -r dfvfs_requirements.txt
 
 ADD . /tmp/
 RUN pip3 install --upgrade keyrings.alt
-RUN cd /tmp/ && git tag
-RUN cd /tmp/ && git branch
+
+# unshallow and fetch all tags so our build systems pickup the correct git tag.
 RUN cd /tmp/ && git fetch --prune --unshallow
 RUN cd /tmp/ && git fetch --depth=1 origin +refs/tags/*:refs/tags/*
-RUN cd /tmp/ && git tag
-RUN cd /tmp/ && git branch
+
 RUN cd /tmp/ && python3 setup.py install
 
 RUN useradd -r -s /bin/nologin -G disk turbinia

@@ -44,6 +44,9 @@ bulk-extractor \
 RUN pip3 install urllib3 cryptography --upgrade
 
 ADD . /tmp/
+# unshallow and fetch all tags so our build systems pickup the correct git tag.
+RUN cd /tmp/ && git fetch --prune --unshallow
+RUN cd /tmp/ && git fetch --depth=1 origin +refs/tags/*:refs/tags/*
 RUN cd /tmp/ && python3 setup.py install
 
 RUN useradd -r -s /bin/nologin -G disk,sudo turbinia
