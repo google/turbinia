@@ -448,13 +448,16 @@ class BaseTurbiniaClient:
       except auth.exceptions.RefreshError as exception:
         if credential_error_count == 0:
           log.info(
-              'GCP Credentials need to be refreshed, please refresh in another '
-              'terminal and this process will resume. Error: {0!s}'.format(
-                  exception))
+              'GCP Credentials need to be refreshed by running gcloud auth '
+              'application-default login, please refresh in another terminal '
+              'and run turbiniactl -w status -r <ID> and this process will '
+              'resume. Error: {0!s}'.format(exception))
         else:
           log.debug(
-              'GCP Credentials need to be refreshed, please refresh in another '
-              'terminal and this process will resume. Attempt {0:d}. Error: '
+              'GCP Credentials need to be refreshed by running gcloud auth '
+              'application-default login, please refresh in another terminal '
+              'and run turbiniactl -w status -r <ID> and this process will '
+              'resume. Error: '
               '{1!s}'.format(credential_error_count + 1, exception))
         # Note, we are intentially not incrementing the retry_count here because
         # we will retry indefinitely while we wait for the user to reauth.
