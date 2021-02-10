@@ -799,7 +799,7 @@ class TurbiniaTask:
 
       self.result = self.validate_result(self.result)
       if self.result:
-        self.result.update_task_status(self, 'completed')
+        self.result.update_task_status(self)
 
       # Trying to close the result if possible so that we clean up what we can.
       # This has a higher likelihood of failing because something must have gone
