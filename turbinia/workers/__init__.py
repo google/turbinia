@@ -251,20 +251,23 @@ class TurbiniaTaskResult:
     if traceback_:
       self.result.set_error(message, traceback_)
 
-  def update_task_status(self, task, status):
-    """Updates the task status and pushes it directly to datastor.
+  def update_task_status(self, task, status=None):
+    """Updates the task status and pushes it directly to datastore.
 
     Args:
-      task: The calling Task object
-      status: One line descriptive task status.
+      task (TurbiniaTask): The calling Task object
+      status (str): Brief word or phrase for Task state. If not supplied, the
+          existing Task status will be used.
     """
-    task.result.status = 'Task {0!s} is {1!s} on {2!s}'.format(
-        self.task_name, status, self.worker_name)
+    if status:
+      task.result.status = 'Task {0!s} is {1!s} on {2!s}'.format(
+          self.task_name, status, self.worker_name)
 
     if self.state_manager:
       self.state_manager.update_task(task)
     else:
-      self.log('No state_manager initialized, not updating Task info', logging.DEBUG)
+      self.log(
+          'No state_manager initialized, not updating Task info', logging.DEBUG)
 
   def add_evidence(self, evidence, evidence_config):
     """Populate the results list.
