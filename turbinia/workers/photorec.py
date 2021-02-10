@@ -25,9 +25,7 @@ from turbinia.evidence import PhotorecOutput
 
 class PhotorecTask(TurbiniaTask):
 
-  REQUIRED_STATES = [
-      state.ATTACHED, state.PARENT_ATTACHED, state.PARENT_MOUNTED
-  ]
+  REQUIRED_STATES = [state.ATTACHED]
 
   def run(self, evidence, result):
     """Task to execute photorec.

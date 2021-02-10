@@ -29,10 +29,7 @@ from turbinia.workers import Priority
 class RedisAnalysisTask(TurbiniaTask):
   """Task to analyze a Redis configuration file."""
 
-  REQUIRED_STATES = [
-      state.ATTACHED, state.DOCKER_MOUNTED, state.PARENT_ATTACHED,
-      state.PARENT_MOUNTED
-  ]
+  REQUIRED_STATES = [state.ATTACHED, state.MOUNTED]
 
   def run(self, evidence, result):
     """Run the Redis configuration analysis worker.
