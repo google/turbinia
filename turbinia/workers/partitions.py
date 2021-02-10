@@ -17,7 +17,6 @@
 from turbinia import TurbiniaException
 from turbinia.evidence import DiskPartition
 from turbinia.evidence import EvidenceState
-from turbinia.lib import dfvfs_classes
 from turbinia.lib import text_formatter as fmt
 from turbinia.workers import Priority
 from turbinia.workers import TurbiniaTask

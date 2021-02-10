@@ -70,7 +70,7 @@ class JupyterAnalysisJob(interface.TurbiniaJob):
     tasks = []
     for evidence_item in evidence:
       if evidence_item.artifact_name == 'JupyterConfigFile':
-        tasks.append(jupyter.JupyterAnalysisJob())
+        tasks.append(JupyterAnalysisTask())
     return tasks
 
 
