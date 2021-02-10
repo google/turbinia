@@ -262,7 +262,7 @@ class Evidence:
 
     Args:
       tmp_dir(str): The path to the temporary directory that the
-                       Task will write to.
+          Task will write to.
       required_states(list[EvidenceState]): The list of evidence state
           requirements from the Task.
     """

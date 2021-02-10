@@ -214,7 +214,9 @@ def GetFilesystem(path):
     raise TurbiniaException(
         '{0:s} should contain exactly one partition, found {1:d}'.format(
             path, len(fstype)))
-  return fstype[0].decode('utf-8').strip()
+  fstype = fstype[0].decode('utf-8').strip()
+  log.info('Found filesystem type {0:s} for path {1:s}'.format(fstype, path))
+  return fstype
 
 
 def PostprocessDeleteLosetup(device_path):
