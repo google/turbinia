@@ -261,7 +261,10 @@ class TurbiniaTaskResult:
     task.result.status = 'Task {0!s} is {1!s} on {2!s}'.format(
         self.task_name, status, self.worker_name)
 
-    self.state_manager.update_task(task)
+    if self.state_manager:
+      self.state_manager.update_task(task)
+    else:
+      self.log('No state_manager initialized, not updating Task info', logging.DEBUG)
 
   def add_evidence(self, evidence, evidence_config):
     """Populate the results list.
@@ -792,6 +795,8 @@ class TurbiniaTask:
           log.error('No TurbiniaTaskResult object found after task execution.')
 
       self.result = self.validate_result(self.result)
+      if self.result:
+        self.result.update_task_status(self, 'completed')
 
       # Trying to close the result if possible so that we clean up what we can.
       # This has a higher likelihood of failing because something must have gone
