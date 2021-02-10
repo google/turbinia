@@ -1,0 +1,18 @@
+# Google Cloud Build configuration for Turbinia worker release
+steps:
+  - name: gcr.io/cloud-builders/docker
+    args:
+      [
+        "build",
+        "-t",
+        "us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-worker:$TAG_NAME",
+        "-t",
+        "us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-worker:latest",
+        "-f",
+        "docker/server/Dockerfile",
+        ".",
+      ]
+    timeout: 4800s
+images:
+  - us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-worker:latest
+  - us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-worker:$TAG_NAME
