@@ -24,9 +24,10 @@ import sys
 
 from turbinia import config
 from turbinia import TurbiniaException
+from turbinia.processors import archive
 from turbinia.processors import docker
 from turbinia.processors import mount_local
-from turbinia.processors import archive
+from turbinia.processors import partitions
 from turbinia.lib.docker_manager import GetDockerPath
 
 # pylint: disable=keyword-arg-before-vararg
@@ -524,27 +525,43 @@ class DiskPartition(RawDisk):
   """Evidence object for a partition within Disk based evidence.
 
   Attributes:
-    path_spec (dfvfs.PathSpec): Partition path spec.
+    partition_location: dfVFS partition location.
+    type_indicator: dfVFS path_spec type indicator.
     partition_offset: Offset of the partition in bytes.
     partition_size: Size of the partition in bytes.
+    path_spec (dfvfs.PathSpec): Partition path spec.
   """
 
   POSSIBLE_STATES = [EvidenceState.ATTACHED, EvidenceState.MOUNTED]
 
   def __init__(
-      self, path_spec=None, partition_offset=None, partition_size=None, *args,
-      **kwargs):
+      self, partition_location=None, type_indicator=None, partition_offset=None,
+      partition_size=None, path_spec=None, *args, **kwargs):
     """Initialization for raw volume evidence object."""
 
-    self.path_spec = path_spec
+    self.partition_location = partition_location
+    self.type_indicator = type_indicator
     self.partition_offset = partition_offset
     self.partition_size = partition_size
+    self.path_spec = path_spec
     super(DiskPartition, self).__init__(*args, **kwargs)
 
     # This Evidence needs to have a parent
     self.context_dependent = True
 
   def _preprocess(self, _, required_states):
+    # We need to enumerate partitions in preprocessing so the path_specs match
+    # the parent evidence location for each task.
+    try:
+      path_specs = partitions.Enumerate(self.parent_evidence)
+    except Error as e:
+      log.error('Error scanning for partitions: {0!s}'.format(e))
+
+    path_spec = partitions.GetPathSpecByLocation(
+        path_specs, self.partition_location)
+    if path_spec:
+      self.path_spec = path_spec
+
     # In attaching a partition, we create a new loopback device using the
     # partition offset and size.
     if EvidenceState.ATTACHED in required_states or self.has_child_evidence:

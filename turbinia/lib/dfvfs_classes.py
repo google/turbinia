@@ -17,6 +17,7 @@
 import logging
 
 from dfvfs.helpers import volume_scanner
+from dfvfs.lib import definitions as dfvfs_definitions
 
 
 class UnattendedVolumeScannerMediator(volume_scanner.VolumeScannerMediator):
@@ -95,7 +96,27 @@ class UnattendedVolumeScannerMediator(volume_scanner.VolumeScannerMediator):
     Returns:
       bool: True if the volume was unlocked.
     """
-    self._log.info(
-        'Encrypted volumes are currently unsupported: {0!s}'.format(
-            locked_scan_node.path_spec.CopyToDict()))
-    return False
+    if locked_scan_node.type_indicator == dfvfs_definitions.TYPE_INDICATOR_BDE:
+      self._log.info('Found a BitLocker encrypted volume.')
+    else:
+      self._log.info(
+          'Encrypted {0!s} volume not currently supported: {1!s}'.format(
+              locked_scan_node.path_spec.type_indicator,
+              locked_scan_node.path_spec.CopyToDict()))
+      return False
+
+    credential_type = 'password'
+    credential_data = ''
+    result = False
+
+    try:
+      result = source_scanner_object.Unlock(
+          scan_context, locked_scan_node.path_spec, credential_type,
+          credential_data)
+    except KeyError as e:
+      self._log.warning('Unable to unlock volume: {0!s}'.format(e))
+      return False
+
+    if not result:
+      self._log.warning('Unable to unlock volume.')
+    return result
