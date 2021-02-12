@@ -532,12 +532,12 @@ class BaseTurbiniaClient:
       report.append('')
       report.append(fmt.heading3('Task Reported Data'))
       report.extend(task.get('report_data').splitlines())
-    if show_files:
+    if show_files and saved_paths:
       report.append('')
       report.append(fmt.heading3('Saved Task Files:'))
       for path in saved_paths:
         report.append(fmt.bullet(fmt.code(path)))
-      report.append('')
+    report.append('')
     return report
 
   def format_worker_task(self, task):
