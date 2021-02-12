@@ -1,4 +1,5 @@
 celery<5.0
+cryptography>=2.0.2,<3.4
 docker
 filelock
 google-api-core
