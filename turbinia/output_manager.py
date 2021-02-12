@@ -515,12 +515,14 @@ class GCSOutputWriter(OutputWriter):
 
         try:
           # Reconstruct the same file structure as GCS on the output dir
-          path_split = gcs_path.split("/")
-          directory = os.path.join(path_split[0:-1])
+          path_split = gcs_path.split('/')
+          directory = os.path.join(''.join(path_split[0:-1]))
           destination_path = os.path.join(self.local_output_dir, directory)
           Path(destination_path).mkdir(parents=True, exist_ok=True)
           if not os.path.exists(destination_path):
-            message = ('Failed to create the file path {0:s}.'.format(destination_path))
+            message = (
+                'Failed to create the file path {0:s}.'.format(
+                    destination_path))
             log.error(message)
             raise TurbiniaException(message)
 

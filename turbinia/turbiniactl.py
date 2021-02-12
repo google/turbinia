@@ -25,7 +25,7 @@ import logging
 import os
 import sys
 import uuid
-import datetime
+
 from turbinia import config
 from turbinia import TurbiniaException
 from turbinia.config import logger
@@ -414,12 +414,12 @@ def main():
       help='Download all the results for given request_id.')
   parser_gcs_logs.add_argument(
       '-b', '--bucket',
-      help='GCS bucket to downloawd from. Must be in the following format '
-      'gs://{BUCKET_NAME}/. You need to provide a GCS bucket if the '
-      'task/request was not stored on the same bucket as your config file.')
+      help='Alternate GCS bucket to download from. Must be in the following '
+      'format gs://{BUCKET_NAME}/. Defaults to the BUCKET_NAME as specified '
+      'in the config')
   parser_gcs_logs.add_argument(
       '-d', '--days_history', default=0, type=int,
-      help='Number of days of history to show', required=False)
+      help='Number of days of history to to query results for', required=False)
   parser_gcs_logs.add_argument(
       '-i', '--instance_id',
       help='Instance ID used to run tasks/requests. You must provide an '
@@ -805,9 +805,7 @@ def main():
       output_writer = GCSOutputWriter(
           gcs_bucket, local_output_dir=args.output_dir)
       if not task_data:
-        log.error(
-            'Invalid task/request id. Please provide a valid ID. '
-            'You may also be missing instance or bucket name.')
+        log.error('No Tasks found for task/request ID')
         sys.exit(1)
       if args.task_id:
         log.info(
