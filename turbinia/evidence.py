@@ -167,6 +167,7 @@ class Evidence:
     self.cloud_only = False
     self.description = description
     self.mount_path = None
+    self.credentials = []
     self.source = source
     self.source_path = source_path
     self.tags = tags if tags else {}

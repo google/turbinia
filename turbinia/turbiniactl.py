@@ -84,6 +84,11 @@ def main():
       '-f', '--force_evidence', action='store_true',
       help='Force evidence processing request in potentially unsafe conditions',
       required=False)
+  parser.add_argument(
+      '-k', '--decryption_keys', help='Decryption keys to be passed in as '
+      ' comma separated list. Each entry should be in the form type=key. (e.g. '
+      '"-k password=123456,recovery_password=XXXXXX-XXXXXX-XXXXXX-XXXXXX-XXXXXX'
+      '-XXXXXX-XXXXXX-XXXXXX")', default=[], type=csv_list)
   parser.add_argument('-o', '--output_dir', help='Directory path for output')
   parser.add_argument('-L', '--log_file', help='Log file')
   parser.add_argument(
@@ -869,6 +874,20 @@ def main():
               '{1!s}: {2!s}'.format(pair, args.recipe_config, exception))
           sys.exit(1)
         request.recipe[key] = value
+    if args.decryption_keys:
+      for credential in args.decryption_keys:
+        try:
+          credential_type, credential_data = credential.split('=')
+        except ValueError as exception:
+          log.error(
+              'Could not parse credential [{0:s}] from decryption keys '
+              '{1!s}: {2!s}'.format(
+                  credential, args.decryption_keys, exception))
+          sys.exit(1)
+        evidence_.credentials.append({
+            'credential_type': credential_type,
+            'credential_data': credential_data
+        })
     if args.dump_json:
       print(request.to_json().encode('utf-8'))
       sys.exit(0)

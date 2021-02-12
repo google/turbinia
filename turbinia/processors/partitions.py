@@ -40,6 +40,7 @@ def Enumerate(evidence):
   dfvfs_definitions.PREFERRED_GPT_BACK_END = (
       dfvfs_definitions.TYPE_INDICATOR_GPT)
   mediator = UnattendedVolumeScannerMediator()
+  mediator.credentials = evidence.credentials
   path_specs = []
   try:
     scanner = volume_scanner.VolumeScanner(mediator=mediator)

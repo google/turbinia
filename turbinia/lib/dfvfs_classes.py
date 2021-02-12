@@ -27,6 +27,7 @@ class UnattendedVolumeScannerMediator(volume_scanner.VolumeScannerMediator):
     """Initializes an unattended volume scanner mediator."""
     super(UnattendedVolumeScannerMediator, self).__init__()
     self._log = logging.getLogger('turbinia')
+    self.credentials = []
 
   def GetAPFSVolumeIdentifiers(self, volume_system, volume_identifiers):
     """Retrieves APFS volume identifiers.
@@ -105,17 +106,20 @@ class UnattendedVolumeScannerMediator(volume_scanner.VolumeScannerMediator):
               locked_scan_node.path_spec.CopyToDict()))
       return False
 
-    credential_type = 'password'
-    credential_data = ''
     result = False
 
-    try:
-      result = source_scanner_object.Unlock(
-          scan_context, locked_scan_node.path_spec, credential_type,
-          credential_data)
-    except KeyError as e:
-      self._log.warning('Unable to unlock volume: {0!s}'.format(e))
-      return False
+    for credential in self.credentials:
+      credential_type = credential['credential_type']
+      credential_data = credential['credential_data']
+      try:
+        result = source_scanner_object.Unlock(
+            scan_context, locked_scan_node.path_spec, credential_type,
+            credential_data)
+        if result:
+          self._log.info('Encrypted volume unlocked.')
+          break
+      except KeyError as e:
+        self._log.warning('Unable to unlock volume: {0!s}'.format(e))
 
     if not result:
       self._log.warning('Unable to unlock volume.')

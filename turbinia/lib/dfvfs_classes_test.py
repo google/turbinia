@@ -78,6 +78,10 @@ class TestUnattendedVolumeScannerMediator(unittest.TestCase):
   def testUnlockEncryptedVolume(self, mock_source_scanner):
     """Test the UnlockEncryptedVolume function."""
     mediator = UnattendedVolumeScannerMediator()
+    mediator.credentials.append({
+        'credential_type': 'password',
+        'credential_data': '123456'
+    })
 
     os_path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_OS, location='/path/to/image.dd')
