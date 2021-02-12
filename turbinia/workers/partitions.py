@@ -110,9 +110,8 @@ class PartitionEnumerationTask(TurbiniaTask):
 
     # Not setting path_spec here as it will need to be generated for each task
     partition_evidence = DiskPartition(
-        partition_location=fs_location,
-        type_indicator=fs_path_spec.type_indicator,
-        partition_offset=partition_offset, partition_size=partition_size)
+        partition_location=fs_location, partition_offset=partition_offset,
+        partition_size=partition_size)
 
     return partition_evidence, status_report
 

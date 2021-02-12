@@ -22,6 +22,8 @@ import logging
 import os
 import sys
 
+from dfvfs.lib import definitions as dfvfs_definitions
+
 from turbinia import config
 from turbinia import TurbiniaException
 from turbinia.processors import archive
@@ -536,12 +538,11 @@ class DiskPartition(RawDisk):
   POSSIBLE_STATES = [EvidenceState.ATTACHED, EvidenceState.MOUNTED]
 
   def __init__(
-      self, partition_location=None, type_indicator=None, partition_offset=None,
-      partition_size=None, path_spec=None, *args, **kwargs):
+      self, partition_location=None, partition_offset=None, partition_size=None,
+      path_spec=None, *args, **kwargs):
     """Initialization for raw volume evidence object."""
 
     self.partition_location = partition_location
-    self.type_indicator = type_indicator
     self.partition_offset = partition_offset
     self.partition_size = partition_size
     self.path_spec = path_spec
@@ -566,10 +567,19 @@ class DiskPartition(RawDisk):
     # In attaching a partition, we create a new loopback device using the
     # partition offset and size.
     if EvidenceState.ATTACHED in required_states or self.has_child_evidence:
-      self.device_path = mount_local.PreprocessLosetup(
-          self.parent_evidence.device_path,
-          partition_offset=self.partition_offset,
-          partition_size=self.partition_size)
+      # Check for encryption
+      if path_spec.parent.type_indicator == dfvfs_definitions.TYPE_INDICATOR_BDE:
+        self.device_path = mount_local.PreprocessBitLocker(
+            self.parent_evidence.device_path,
+            partition_offset=self.partition_offset,
+            credentials=self.parent_evidence.credentials)
+        if not self.device_path:
+          log.error('Could not decrypt partition.')
+      else:
+        self.device_path = mount_local.PreprocessLosetup(
+            self.parent_evidence.device_path,
+            partition_offset=self.partition_offset,
+            partition_size=self.partition_size)
       if self.device_path:
         self.state[EvidenceState.ATTACHED] = True
         self.local_path = self.device_path

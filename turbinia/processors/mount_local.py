@@ -31,6 +31,71 @@ log = logging.getLogger('turbinia')
 RETRY_MAX = 10
 
 
+def PreprocessBitLocker(source_path, partition_offset=None, credentials=None):
+  """Uses libbde on a target block device or image file.
+
+  Args:
+    source_path(str): the source path to run losetup on.
+    partition_offset(int): offset of volume in bytes.
+    credentials(list[{str: str}]): decryption credentials set in evidence setup
+
+  Raises:
+    TurbiniaException: if source_path doesn't exist or if the losetup command
+      failed to run in anyway.
+
+  Returns:
+    str: the path to the decrypted virtual block device
+  """
+  config.LoadConfig()
+  mount_prefix = config.MOUNT_DIR_PREFIX
+  decrypted_device = None
+
+  if not os.path.exists(source_path):
+    raise TurbiniaException(
+        ('Cannot create loopback device for non-existing source_path '
+         '{0!s}').format(source_path))
+
+  if os.path.exists(mount_prefix) and not os.path.isdir(mount_prefix):
+    raise TurbiniaException(
+        'Mount dir {0:s} exists, but is not a directory'.format(mount_prefix))
+  if not os.path.exists(mount_prefix):
+    log.info('Creating local mount parent directory {0:s}'.format(mount_prefix))
+    try:
+      os.makedirs(mount_prefix)
+    except OSError as e:
+      raise TurbiniaException(
+          'Could not create mount directory {0:s}: {1!s}'.format(
+              mount_prefix, e))
+
+  mount_path = tempfile.mkdtemp(prefix='turbinia', dir=mount_prefix)
+
+  for credential in credentials:
+    libbde_command = ['sudo', 'bdemount', '-o', str(partition_offset)]
+    credential_type = credential['credential_type']
+    credential_data = credential['credential_data']
+    if credential_type == 'password':
+      libbde_command.extend(['-p', credential_data])
+    elif credential_type == 'recovery_password':
+      libbde_command.extend(['-r', credential_data])
+    else:
+      # Unsupported credential type, try the next
+      continue
+
+    libbde_command.extend([source_path, mount_path])
+
+    # Not logging command since it will contain credentials
+    try:
+      subprocess.check_call(libbde_command)
+    except subprocess.CalledProcessError as e:
+      # Decryption failed with these credentials, try the next
+      continue
+
+    # Decrypted volume was mounted
+    decrypted_device = os.path.join(mount_path, 'bde1')
+
+    return decrypted_device
+
+
 def PreprocessLosetup(source_path, partition_offset=None, partition_size=None):
   """Runs Losetup on a target block device or image file.
 
