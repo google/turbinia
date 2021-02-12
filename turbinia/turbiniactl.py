@@ -155,11 +155,6 @@ def main():
   parser_rawdisk.add_argument(
       '-l', '--source_path', help='Local path to the evidence', required=True)
   parser_rawdisk.add_argument(
-      '-P', '--mount_partition', default=1, type=int,
-      help='The partition number to use when mounting this disk.  Defaults to '
-      'the entire raw disk.  Only affects mounting, and not what gets '
-      'processed.')
-  parser_rawdisk.add_argument(
       '-s', '--source', help='Description of the source of the evidence',
       required=False)
   parser_rawdisk.add_argument(
@@ -219,11 +214,6 @@ def main():
       'with. If this is different from the project that Turbinia is running '
       'in, it will be copied to the Turbinia project.')
   parser_googleclouddisk.add_argument(
-      '-P', '--mount_partition', default=1, type=int,
-      help='The partition number to use when mounting this disk.  Defaults to '
-      'the entire raw disk.  Only affects mounting, and not what gets '
-      'processed.')
-  parser_googleclouddisk.add_argument(
       '-z', '--zone', help='Geographic zone the disk exists in')
   parser_googleclouddisk.add_argument(
       '-s', '--source', help='Description of the source of the evidence',
@@ -253,13 +243,9 @@ def main():
       'in, it will be copied to the Turbinia project.')
   parser_googleclouddiskembedded.add_argument(
       '-P', '--mount_partition', default=1, type=int,
-      help='The partition number to use when mounting this disk.  Defaults to '
-      'the entire raw disk.  Only affects mounting, and not what gets '
-      'processed.')
-  parser_googleclouddiskembedded.add_argument(
-      '--embedded_mount_partition', default=1, type=int,
-      help='The partition number to use when mounting this embedded disk image.'
-      ' Defaults to the first partition')
+      help='The partition number to use when mounting the parent disk.  '
+      'Defaults to the first partition.  Only affects mounting, and not what '
+      'gets processed.')
   parser_googleclouddiskembedded.add_argument(
       '-z', '--zone', help='Geographic zone the disk exists in')
   parser_googleclouddiskembedded.add_argument(
@@ -594,8 +580,7 @@ def main():
     args.name = args.name if args.name else args.source_path
     source_path = os.path.abspath(args.source_path)
     evidence_ = evidence.RawDisk(
-        name=args.name, source_path=source_path,
-        mount_partition=args.mount_partition, source=args.source)
+        name=args.name, source_path=source_path, source=args.source)
   elif args.command == 'apfs':
     if not args.password and not args.recovery_key:
       log.error('Neither recovery key nor password is specified.')
@@ -640,8 +625,7 @@ def main():
     args.name = args.name if args.name else args.disk_name
     evidence_ = evidence.GoogleCloudDisk(
         name=args.name, disk_name=args.disk_name, project=args.project,
-        mount_partition=args.mount_partition, zone=args.zone,
-        source=args.source)
+        zone=args.zone, source=args.source)
   elif args.command == 'googleclouddiskembedded':
     args.name = args.name if args.name else args.disk_name
     parent_evidence_ = evidence.GoogleCloudDisk(
@@ -650,10 +634,8 @@ def main():
         source=args.source)
     evidence_ = evidence.GoogleCloudDiskRawEmbedded(
         name=args.name, disk_name=args.disk_name, project=args.project,
-        mount_partition=args.mount_partition, zone=args.zone,
-        embedded_path=args.embedded_path,
-        embedded_partition=args.embedded_mount_partition)
-    evidence_.parent_evidence = parent_evidence_
+        zone=args.zone, embedded_path=args.embedded_path)
+    evidence_.set_parent(parent_evidence_)
   elif args.command == 'hindsight':
     if args.format not in ['xlsx', 'sqlite', 'jsonl']:
       log.error('Invalid output format.')

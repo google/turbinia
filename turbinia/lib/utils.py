@@ -103,6 +103,25 @@ def extract_files(file_name, disk_path, output_dir):
   return _image_export(image_export_cmd, output_dir)
 
 
+def get_exe_path(filename):
+  """Gets the full path for a given executable.
+
+  Args:
+    filename (str): Executable name.
+
+  Returns:
+    (str|None): Full file path if it exists, else None
+  """
+  binary = None
+  for path in os.environ['PATH'].split(os.pathsep):
+    tentative_path = os.path.join(path, filename)
+    if os.path.exists(tentative_path):
+      binary = tentative_path
+      break
+
+  return binary
+
+
 def bruteforce_password_hashes(password_hashes, timeout=300):
   """Bruteforce password hashes using John the Ripper.
 

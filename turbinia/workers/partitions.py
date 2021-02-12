@@ -15,7 +15,8 @@
 """Task for enumerating partitions in a disk."""
 
 from turbinia import TurbiniaException
-from turbinia.evidence import RawDiskPartition
+from turbinia.evidence import DiskPartition
+from turbinia.evidence import EvidenceState
 from turbinia.lib import text_formatter as fmt
 from turbinia.workers import Priority
 from turbinia.workers import TurbiniaTask
@@ -25,6 +26,7 @@ if TurbiniaTask.check_worker_role():
     from dfvfs.helpers import volume_scanner
     from dfvfs.lib import definitions as dfvfs_definitions
     from dfvfs.lib import errors as dfvfs_errors
+    from dfvfs.volume import gpt_volume_system
     from dfvfs.volume import tsk_volume_system
 
     from turbinia.lib import dfvfs_classes
@@ -36,11 +38,12 @@ if TurbiniaTask.check_worker_role():
 class PartitionEnumerationTask(TurbiniaTask):
   """Task to enumerate partitions in a disk."""
 
-  def _ProcessPartition(self, evidence_path, path_spec):
+  REQUIRED_STATES = [EvidenceState.ATTACHED]
+
+  def _ProcessPartition(self, path_spec):
     """Generate RawDiskPartition from a PathSpec.
 
     Args:
-      evidence_path (str): Local path of the parent evidence
       path_spec (dfvfs.PathSpec): dfVFS path spec.
 
     Returns:
@@ -65,7 +68,8 @@ class PartitionEnumerationTask(TurbiniaTask):
         # APFS volume index
         volume_index = getattr(path_spec, 'volume_index', None)
 
-      if type_indicator == dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION:
+      if type_indicator in (dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION,
+                            dfvfs_definitions.TYPE_INDICATOR_GPT):
         if fs_location in ('\\', '/'):
           # Partition location / identifier
           fs_location = getattr(path_spec, 'location', None)
@@ -73,7 +77,10 @@ class PartitionEnumerationTask(TurbiniaTask):
         # Partition index
         partition_index = getattr(path_spec, 'part_index', None)
 
-        volume_system = tsk_volume_system.TSKVolumeSystem()
+        if type_indicator == dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION:
+          volume_system = tsk_volume_system.TSKVolumeSystem()
+        else:
+          volume_system = gpt_volume_system.GPTVolumeSystem()
         try:
           volume_system.Open(path_spec)
           volume_identifier = partition_location.replace('/', '')
@@ -102,9 +109,9 @@ class PartitionEnumerationTask(TurbiniaTask):
     else:
       status_report.append(fmt.bullet('Source evidence is a volume image'))
 
-    partition_evidence = RawDiskPartition(
-        source_path=evidence_path, path_spec=fs_path_spec,
-        partition_offset=partition_offset, partition_size=partition_size)
+    partition_evidence = DiskPartition(
+        path_spec=fs_path_spec, partition_offset=partition_offset,
+        partition_size=partition_size)
 
     return partition_evidence, status_report
 
@@ -118,16 +125,29 @@ class PartitionEnumerationTask(TurbiniaTask):
     Returns:
       TurbiniaTaskResult object.
     """
-    result.log('Scanning [{0:s}] for partitions'.format(evidence.local_path))
+    # TODO(dfjxs): Use evidence name instead of evidence_description (#718)
+    evidence_description = None
+    if hasattr(evidence, 'embedded_path'):
+      evidence_description = ':'.join(
+          (evidence.disk_name, evidence.embedded_path))
+    elif hasattr(evidence, 'disk_name'):
+      evidence_description = evidence.disk_name
+    else:
+      evidence_description = evidence.source_path
+
+    result.log('Scanning [{0:s}] for partitions'.format(evidence_description))
 
     success = False
 
+    dfvfs_definitions.PREFERRED_GPT_BACK_END = (
+        dfvfs_definitions.TYPE_INDICATOR_GPT)
     mediator = dfvfs_classes.UnattendedVolumeScannerMediator()
+    path_specs = []
     try:
       scanner = volume_scanner.VolumeScanner(mediator=mediator)
       path_specs = scanner.GetBasePathSpecs(evidence.local_path)
       status_summary = 'Found {0:d} partition(s) in [{1:s}]:'.format(
-          len(path_specs), evidence.local_path)
+          len(path_specs), evidence_description)
     except dfvfs_errors.ScannerError as e:
       status_summary = 'Error scanning for partitions: {0!s}'.format(e)
 
@@ -135,8 +155,7 @@ class PartitionEnumerationTask(TurbiniaTask):
 
     try:
       for path_spec in path_specs:
-        partition_evidence, partition_status = self._ProcessPartition(
-            evidence.local_path, path_spec)
+        partition_evidence, partition_status = self._ProcessPartition(path_spec)
         status_report.extend(partition_status)
         result.add_evidence(partition_evidence, evidence.config)
 
@@ -146,7 +165,7 @@ class PartitionEnumerationTask(TurbiniaTask):
       status_summary = 'Error enumerating partitions: {0!s}'.format(e)
       status_report = status_summary
 
-    result.log('Scanning of [{0:s}] is complete'.format(evidence.local_path))
+    result.log('Scanning of [{0:s}] is complete'.format(evidence_description))
 
     result.report_priority = Priority.LOW
     result.report_data = status_report

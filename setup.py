@@ -44,7 +44,6 @@ with open('requirements.txt','r') as f:
   requirements = f.read().splitlines()
 setup(
     name='turbinia',
-    version=turbinia.__version__,
     description='Automation and Scaling of Digital Forensics Tools',
     long_description=turbinia_description,
     license='Apache License, Version 2.0',
@@ -66,5 +65,7 @@ setup(
         'dev': ['mock', 'nose', 'yapf', 'celery~=4.1', 'coverage'],
         'local': ['celery~=4.1', 'kombu~=4.1', 'redis~=3.0'],
         'worker': ['docker-explorer>=20191104', 'plaso>=20200430', 'pyhindsight>=20200607']
-    }
+    },
+    use_scm_version=True,
+    setup_requires=['setuptools_scm']
 )

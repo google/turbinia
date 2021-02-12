@@ -36,10 +36,7 @@ log = logging.getLogger('turbinia')
 class HadoopAnalysisTask(TurbiniaTask):
   """Task to analyse Hadoop AppRoot files."""
 
-  REQUIRED_STATES = [
-      state.ATTACHED, state.DOCKER_MOUNTED, state.PARENT_ATTACHED,
-      state.PARENT_MOUNTED
-  ]
+  REQUIRED_STATES = [state.ATTACHED, state.MOUNTED]
 
   def _AnalyzeHadoopAppRoot(self, collected_artifacts, output_dir):
     """Runs a naive AppRoot files parsing method.
@@ -124,7 +121,7 @@ class HadoopAnalysisTask(TurbiniaTask):
       # file extracted
       output_dir = os.path.join(self.output_dir, 'artifacts')
       collected_artifacts = extract_artifacts(
-          artifact_names=['HadoopAppRoot'], disk_path=evidence.device_path,
+          artifact_names=['HadoopAppRoot'], disk_path=evidence.local_path,
           output_dir=output_dir)
 
       (report, priority, summary) = self._AnalyzeHadoopAppRoot(

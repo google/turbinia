@@ -448,14 +448,17 @@ class BaseTurbiniaClient:
       except auth.exceptions.RefreshError as exception:
         if credential_error_count == 0:
           log.info(
-              'GCP Credentials need to be refreshed, please refresh in another '
-              'terminal and this process will resume. Error: {0!s}'.format(
-                  exception))
+              'GCP Credentials need to be refreshed by running gcloud auth '
+              'application-default login, please refresh in another terminal '
+              'and run turbiniactl -w status -r {0!s} and this process will '
+              'resume. Error: {1!s}'.format(request_id, exception))
         else:
           log.debug(
-              'GCP Credentials need to be refreshed, please refresh in another '
-              'terminal and this process will resume. Attempt {0:d}. Error: '
-              '{1!s}'.format(credential_error_count + 1, exception))
+              'GCP Credentials need to be refreshed by running gcloud auth '
+              'application-default login, please refresh in another terminal '
+              'and run turbiniactl -w status -r {0!s} and this process will '
+              'resume. Attempt {1:d}. Error: '
+              '{2!s}'.format(request_id, credential_error_count + 1, exception))
         # Note, we are intentially not incrementing the retry_count here because
         # we will retry indefinitely while we wait for the user to reauth.
         credential_error_count += 1
@@ -522,9 +525,9 @@ class BaseTurbiniaClient:
     report.append(fmt.heading2(task.get('name')))
     line = '{0:s} {1:s}'.format(fmt.bold('Status:'), status)
     report.append(fmt.bullet(line))
-    report.append(fmt.bullet('Task Id: {0:s}'.format(task.get('id'))))
+    report.append(fmt.bullet('Task Id: {0!s}'.format(task.get('id'))))
     report.append(
-        fmt.bullet('Executed on worker {0:s}'.format(task.get('worker_name'))))
+        fmt.bullet('Executed on worker {0!s}'.format(task.get('worker_name'))))
     if task.get('report_data'):
       report.append('')
       report.append(fmt.heading3('Task Reported Data'))
@@ -797,7 +800,7 @@ class BaseTurbiniaClient:
         task_dict['status'] = status
         # Check status for anything that is running.
         if 'running' in status:
-          run_time = (datetime.now() -
+          run_time = (datetime.utcnow() -
                       result.get('last_update')).total_seconds()
           run_time = timedelta(seconds=run_time)
           task_dict['run_time'] = run_time

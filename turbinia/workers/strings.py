@@ -26,9 +26,7 @@ from turbinia.workers import TurbiniaTask
 class StringsAsciiTask(TurbiniaTask):
   """Task to generate ascii strings."""
 
-  REQUIRED_STATES = [
-      state.ATTACHED, state.PARENT_ATTACHED, state.PARENT_MOUNTED
-  ]
+  REQUIRED_STATES = [state.ATTACHED]
 
   def run(self, evidence, result):
     """Run strings binary.
@@ -62,9 +60,7 @@ class StringsAsciiTask(TurbiniaTask):
 class StringsUnicodeTask(TurbiniaTask):
   """Task to generate Unicode (16 bit little endian) strings."""
 
-  REQUIRED_STATES = [
-      state.ATTACHED, state.PARENT_ATTACHED, state.PARENT_MOUNTED
-  ]
+  REQUIRED_STATES = [state.ATTACHED]
 
   def run(self, evidence, result):
     """Run strings binary.

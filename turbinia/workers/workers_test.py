@@ -98,6 +98,7 @@ class TestTurbiniaTaskBase(unittest.TestCase):
     if validate_result is None:
       validate_result = self.result
 
+    self.result.input_evidence = evidence.RawDisk()
     self.result.status = 'TestStatus'
     self.result.update_task_status = mock.MagicMock()
     self.result.close = mock.MagicMock()
