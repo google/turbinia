@@ -516,7 +516,7 @@ class GCSOutputWriter(OutputWriter):
         try:
           # Reconstruct the same file structure as GCS on the output dir
           path_split = gcs_path.split("/")
-          directory = "/".join(path_split[0:-1])
+          directory = os.path.join(path_split[0:-1])
           destination_path = os.path.join(self.local_output_dir, directory)
           Path(destination_path).mkdir(parents=True, exist_ok=True)
           if not os.path.exists(destination_path):
