@@ -30,8 +30,8 @@ from google.api_core import exceptions as google_api_exceptions
 from googleapiclient.errors import HttpError
 
 from turbinia import TurbiniaException
-from google.cloud.logging import _helpers
-from google.cloud.logging.handlers.transports.background_thread import _Worker
+from google.cloud.logging_v2 import _helpers
+from google.cloud.logging_v2.handlers.transports.background_thread import _Worker
 
 logger = logging.getLogger('turbinia')
 
