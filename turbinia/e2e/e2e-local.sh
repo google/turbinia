@@ -32,4 +32,4 @@ echo "Sleep for 60 seconds to let Turbinia process evidence"
 sleep 60s
 
 echo "Display Turbinia request status"
-docker exec turbinia-server turbiniactl -a status -r $REQUEST_ID
+docker exec turbinia-server turbiniactl -a status -r 123456789
