@@ -41,7 +41,7 @@ if config.TASK_MANAGER.lower() == 'psq':
 elif config.TASK_MANAGER.lower() == 'celery':
   from celery import states as celery_states
 
-  from turbinia import celery as turbinia_celery
+  from turbinia import tcelery as turbinia_celery
 
 log = logging.getLogger('turbinia')
 

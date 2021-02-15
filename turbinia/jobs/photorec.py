@@ -14,9 +14,7 @@
 # limitations under the License.
 """Job to run photorec Task."""
 from __future__ import unicode_literals
-from turbinia.evidence import RawDiskPartition
-from turbinia.evidence import GoogleCloudDisk
-from turbinia.evidence import GoogleCloudDiskRawEmbedded
+from turbinia.evidence import DiskPartition
 from turbinia.jobs import interface
 from turbinia.jobs import manager
 from turbinia.evidence import PhotorecOutput
@@ -25,9 +23,7 @@ from turbinia.workers.photorec import PhotorecTask
 
 class PhotorecJob(interface.TurbiniaJob):
 
-  evidence_input = [
-      RawDiskPartition, GoogleCloudDisk, GoogleCloudDiskRawEmbedded
-  ]
+  evidence_input = [DiskPartition]
   evidence_output = [PhotorecOutput]
 
   NAME = 'PhotorecJob'

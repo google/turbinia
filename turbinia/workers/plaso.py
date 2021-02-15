@@ -31,10 +31,7 @@ class PlasoTask(TurbiniaTask):
   """Task to run Plaso (log2timeline)."""
 
   # Plaso requires the Disk to be attached, but doesn't require it be mounted.
-  REQUIRED_STATES = [
-      state.ATTACHED, state.PARENT_ATTACHED, state.PARENT_MOUNTED,
-      state.DECOMPRESSED
-  ]
+  REQUIRED_STATES = [state.ATTACHED, state.DECOMPRESSED]
 
   def run(self, evidence, result):
     """Task that process data with Plaso.
@@ -131,6 +128,7 @@ class PlasoTask(TurbiniaTask):
             'for a bitlocker disk.')
         return result
 
+    cmd.extend(['--temporary_directory', self.tmp_dir])
     cmd.extend(['--logfile', plaso_log])
     cmd.extend([plaso_file, evidence.local_path])
 

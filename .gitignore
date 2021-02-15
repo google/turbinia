@@ -15,6 +15,7 @@
 
 # And don't care about the 'egg'.
 /turbinia.egg-info
+.eggs/
 
 # Test files
 .coverage
@@ -27,8 +28,9 @@ terraform/gcp/terraform.tfstate.backup
 terraform/gcp/terraform.tfvars
 terraform/gcp/*.auto.tfvars
 
-# Exclude pycharm files
+# Exclude IDE files
 .idea/
+.vscode/
 
 # Exclude  logs
 *.log

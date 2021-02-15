@@ -251,17 +251,23 @@ class TurbiniaTaskResult:
     if traceback_:
       self.result.set_error(message, traceback_)
 
-  def update_task_status(self, task, status):
-    """Updates the task status and pushes it directly to datastor.
+  def update_task_status(self, task, status=None):
+    """Updates the task status and pushes it directly to datastore.
 
     Args:
-      task: The calling Task object
-      status: One line descriptive task status.
+      task (TurbiniaTask): The calling Task object
+      status (str): Brief word or phrase for Task state. If not supplied, the
+          existing Task status will be used.
     """
-    task.result.status = 'Task {0!s} is {1!s} on {2!s}'.format(
-        self.task_name, status, self.worker_name)
+    if status:
+      task.result.status = 'Task {0!s} is {1!s} on {2!s}'.format(
+          self.task_name, status, self.worker_name)
 
-    self.state_manager.update_task(task)
+    if self.state_manager:
+      self.state_manager.update_task(task)
+    else:
+      self.log(
+          'No state_manager initialized, not updating Task info', logging.DEBUG)
 
   def add_evidence(self, evidence, evidence_config):
     """Populate the results list.
@@ -279,7 +285,7 @@ class TurbiniaTaskResult:
     # See https://github.com/google/turbinia/issues/211 for more details.
     evidence.config = evidence_config
     if evidence.context_dependent:
-      evidence.parent_evidence = self.input_evidence
+      evidence.set_parent(self.input_evidence)
 
     self.evidence.append(evidence)
 
@@ -439,6 +445,22 @@ class TurbiniaTask:
     task.last_update = datetime.strptime(
         input_dict['last_update'], DATETIME_FORMAT)
     return task
+
+  @classmethod
+  def check_worker_role(cls):
+    """Checks whether the execution context is within a worker or nosetests.
+
+    Returns:
+      bool: If the current execution is in a worker or nosetests.
+    """
+    if config.TURBINIA_COMMAND in ('celeryworker', 'psqworker'):
+      return True
+
+    for arg in sys.argv:
+      if 'nosetests' in arg:
+        return True
+
+    return False
 
   def evidence_setup(self, evidence):
     """Validates and processes the evidence.
@@ -776,6 +798,8 @@ class TurbiniaTask:
           log.error('No TurbiniaTaskResult object found after task execution.')
 
       self.result = self.validate_result(self.result)
+      if self.result:
+        self.result.update_task_status(self)
 
       # Trying to close the result if possible so that we clean up what we can.
       # This has a higher likelihood of failing because something must have gone

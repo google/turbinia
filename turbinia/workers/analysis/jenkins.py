@@ -32,10 +32,7 @@ from turbinia.lib.utils import bruteforce_password_hashes
 class JenkinsAnalysisTask(TurbiniaTask):
   """Task to analyze a Jenkins install."""
 
-  REQUIRED_STATES = [
-      state.ATTACHED, state.DOCKER_MOUNTED, state.PARENT_ATTACHED,
-      state.PARENT_MOUNTED
-  ]
+  REQUIRED_STATES = [state.ATTACHED, state.MOUNTED]
 
   def run(self, evidence, result):
     """Run the Jenkins worker.
