@@ -8,6 +8,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      - name: Install git
+        run: apt-get -y install git
+      - name: Un-shallow git repo
+        run: |
+          git fetch --prune --unshallow
+          git fetch --depth=1 origin +refs/tags/*:refs/tags/*
       - name: Pull docker images for cache
         run: |
           docker pull ubuntu:18.04
@@ -15,7 +21,7 @@ jobs:
           docker pull us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-worker-dev:latest
       - name: Build Turbinia server docker image
         run: docker build --cache-from=ubuntu:18.04,us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-server-dev:latest -t turbinia-server-dev -f docker/server/Dockerfile .
-      - name: Build Turbinia server worker image
+      - name: Build Turbinia worker docker image
         run: docker build --cache-from=ubuntu:18.04,us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-worker-dev:latest -t turbinia-worker-dev -f docker/worker/Dockerfile .
       - name: Prepare Turbinia configuration
         run: |
