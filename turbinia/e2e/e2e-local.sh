@@ -19,5 +19,3 @@ sleep 60s
 
 echo "Display Turbinia request status"
 docker exec turbinia-server turbiniactl -a status -r $REQUEST_ID
-
-
