@@ -17,6 +17,35 @@ There are a few different logs that may be useful when debugging:
     executed from a Task. For example, Plaso generates its own log file, and
     that gets saved by the Task. As with the Task logs, these can be stored in
     GCS and retrieved with `gsutil`.
+*   If you have `STACKDRIVER_LOGGING` and/or `STACKDRIVER_TRACEBACK` enabled
+    in the config, the logs and/or traceback exceptions will also be logged into
+    stackdriver in same project that Turbinia is configured to run in.
+
+## Finding previous request data
+By default `turbiniactl` will make a processing request and immediately return.
+It will print out the request ID when it makes the request, and you can use this to
+see the current status of the request with `turbiniactl status -r <request id>`.  If
+you specify the `-w` flag (`turbiniactl -w status -r <request id>`), the client will
+wait for all Tasks to complete and then return.  Killing the client will not affect
+the processing, and you can resume waiting for the task results with the same command.
+
+If you do not have your request ID, you can list all recent requests like this:
+```
+$ turbiniactl status -i
+
+# Turbinia report for Requests made within 7 days
+* 2 requests were made within this timeframe.
+
+## Request ID: 5198949e3fdb8dk569de1268000f97d8
+* Last Update: 2021-02-10T08:39:27.446000Z
+* Requester: turbiniauser
+* Task Count: 441
+
+## Request ID: 69de1268000f97d85198949e3fdb8dk5
+* Last Update: 2021-01-12T07:09:03.123000Z
+* Requester: turbiniauser
+* Task Count: 43
+```
 
 ## Task Debugging
 
@@ -24,7 +53,8 @@ There are a few different logs that may be useful when debugging:
 
 The following is an example of debugging a task failure:
 
-Running turbiniactl, we see a failure of the PsortTask:
+Running turbiniactl, we see a failure of the PsortTask (`-d1` specifies history
+for the last day):
 
 ```
 $ ./turbiniactl status -d1
@@ -61,6 +91,32 @@ $ gsutil cat gs://my-turbinia-bucket/output/1512601742-1f8c4b321f444614bde296b0a
 Running psort as [psort.py --status_view none --logfile /var/tmp/1512601742-1f8c4b321f444614bde296b0a00bb91f-PsortTask/1f8c4b321f444614bde296b0a00bb91f.log -w /var/tmp/1512601742-1f8c4b321f444614bde296b0a00bb91f-PsortTask/1f8c4b321f444614bde296b0a00bb91f.csv /var/tmp/1512601730-b04f479ef9094954968474431aa30e8a-PsortTask/b04f479ef9094954968474431aa30e8a.csv]
 Execution failed with status 1
 ```
+
+### Full Task report data
+To see the report output along with the request status you can specify
+`-R` similar to: `turbiniactl status -R -r <request id>`.  By default
+this output will be filtered to only show high priority Task report
+output (as determined by the Task at runtime) in order to filter out
+uninteresting report info.  You can specify `-p <prio num>` to set
+what priority you want to show in the output report.  To see all report
+output you can specify `-p 100`.  To also show all saved files you can
+specify `-a`.  Putting these together will show all output and can be
+quite a large amount of data: `turbiniactl -a status -r <request id> -R -p 100`.
+
+### Determining Task status
+If you want to get a view of the total running Tasks, you can specify
+`turbiniactl status -w` to see what Tasks are running or queued on
+each of the Workers.  If you want to see all of the completed Tasks,
+you can also specify `-a` to include them: `turbiniactl -a status -w`.
+
+
+### Writing debug logs for binary dependencies
+Some Turbinia tasks execute binaries that can also write their own
+debug logs as part of execution.  This can be expensive so it is
+turned off by default.  You can specify `-T` during the request
+to enable these logs temporarily per-request  (e.g.
+`turbiniactl -T googleclouddisk -d disk-to-process`). Alternately
+you can set `DEBUG_TASKS = True` in the config file for the Worker.
 
 ### Disappearing Tasks
 

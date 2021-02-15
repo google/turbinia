@@ -36,9 +36,7 @@ class BinaryExtractorTask(TurbiniaTask):
     binary_extraction_dir(str): path to extraction directory.
   """
 
-  REQUIRED_STATES = [
-      state.ATTACHED, state.PARENT_ATTACHED, state.PARENT_MOUNTED
-  ]
+  REQUIRED_STATES = [state.ATTACHED]
 
   def __init__(self, *args, **kwargs):
     """Initializes BinaryExtractorTask."""

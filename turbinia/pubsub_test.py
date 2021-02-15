@@ -25,7 +25,7 @@ from six.moves import queue
 from turbinia import evidence
 from turbinia import pubsub
 from turbinia import message
-from turbinia import celery
+from turbinia import tcelery as celery
 from turbinia import TurbiniaException
 
 
