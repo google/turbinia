@@ -33,18 +33,6 @@ jobs:
       - name: Patch docker-compose config to use locally build images
         run: |
           sed -i -e 's/#image: "t/image: "t/g' -e 's/image: "u/#image: "u/g' ./docker/local/docker-compose.yml
-      - name: Startup local turbinia docker-compose stack
-        run: docker-compose -f ./docker/local/docker-compose.yml up -d
-      - name: Sleep for 5s
-        uses: juliangruber/sleep-action@v1
-        with:
-          time: 5s
-      - name: Show running instances
-        run: docker ps -a
-      - name: Show container logs
-        run: |
-          docker logs turbinia-server
-          docker logs turbinia-worker
       - name: Run E2E test
         run: |
           chmod +x ./turbinia/e2e/e2e-local.sh
