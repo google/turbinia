@@ -30,10 +30,7 @@ from turbinia.workers import Priority
 class JupyterAnalysisTask(TurbiniaTask):
   """Task to analyze a Jupyter Notebook config."""
 
-  REQUIRED_STATES = [
-      state.ATTACHED, state.DOCKER_MOUNTED, state.PARENT_ATTACHED,
-      state.PARENT_MOUNTED
-  ]
+  REQUIRED_STATES = [state.ATTACHED, state.MOUNTED]
 
   def run(self, evidence, result):
     """Run the Jupyter worker.

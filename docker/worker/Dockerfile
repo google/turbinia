@@ -12,6 +12,7 @@ libleveldb1d \
 libleveldb-dev \
 libterm-readline-gnu-perl \
 python3-pip \
+sleuthkit \
 software-properties-common \
 sudo \
 testdisk \
@@ -32,6 +33,7 @@ RUN pip3 install docker-explorer
 # Install Plaso
 RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 0x5e80511b10c598b8 \
 && add-apt-repository -y ppa:gift/stable
+
 RUN apt-get update
 RUN apt-get -y install \
 libewf \
@@ -46,6 +48,9 @@ RUN apt-get -y install bulk-extractor \
 && rm -rf /var/lib/apt/lists/*
 
 ADD . /tmp/
+# unshallow and fetch all tags so our build systems pickup the correct git tag.
+RUN cd /tmp/ && git fetch --prune --unshallow
+RUN cd /tmp/ && git fetch --depth=1 origin +refs/tags/*:refs/tags/*
 RUN cd /tmp/ && python3 setup.py install
 
 RUN useradd -r -s /bin/nologin -G disk,sudo turbinia
