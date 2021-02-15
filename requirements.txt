@@ -2,9 +2,9 @@ celery<5.0
 cryptography>=2.0.2,<3.4
 docker
 filelock
-google-api-core
+google-api-core<1.26.0.dev0
 google-api-python-client
-google-auth
+google-auth<2.0.0.dev0
 google-cloud-core
 google-cloud-datastore<=2.0.0
 google-cloud-error-reporting
