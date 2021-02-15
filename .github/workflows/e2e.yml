@@ -8,6 +8,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      - name: Install git
+        run: apt-get -y install git
+      - name: Un-shallow git repo
+        run: |
+          git fetch --prune --unshallow
+          git fetch --depth=1 origin +refs/tags/*:refs/tags/*
       - name: Pull docker images for cache
         run: |
           docker pull ubuntu:18.04
