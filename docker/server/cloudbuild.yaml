@@ -13,6 +13,7 @@ steps:
         ".",
       ]
     timeout: 2400s
+timeout: 2400s
 images:
   - us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-server:latest
   - us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-server:$TAG_NAME
