@@ -49,12 +49,17 @@ PSQ_TASK_TIMEOUT_SECONDS = 604800
 PSQ_QUEUE_WAIT_SECONDS = 2
 
 # Define metrics
-SERVER_TASKS = Gauge('server_tasks', 'Turbinia Server Total Tasks')
-SERVER_TASKS_COMPLETED = Gauge(
-    'server_tasks_completed', 'Total number of completed server tasks')
-JOBS_CREATED = Gauge('jobs_created', 'Total number jobs created')
-JOBS_RESOLVED = Gauge('jobs_resolved', 'Total number jobs resolved')
-TOTAL_REQUESTS = Gauge('total_requests', 'Total number of requests received.')
+turbinia_server_tasks_total = Gauge(
+    'turbinia_server_tasks_total', 'Turbinia Server Total Tasks')
+turbinia_server_tasks_completed_total = Gauge(
+    'turbinia_server_tasks_completed_total',
+    'Total number of completed server tasks')
+turbinia_jobs_created_total = Gauge(
+    'turbinia_jobs_created_total', 'Total number jobs created')
+turbinia_jobs_resolved_total = Gauge(
+    'turbinia_jobs_resolved_total', 'Total number jobs resolved')
+turbinia_server_request_total = Gauge(
+    'turbinia_server_request_total', 'Total number of requests received.')
 
 
 def get_task_manager():
@@ -213,7 +218,7 @@ class BaseTaskManager:
             'Adding {0:s} job to process {1:s}'.format(
                 job_instance.name, evidence_.name))
         job_count += 1
-        JOBS_CREATED.inc()
+        turbinia_jobs_created_total.inc()
         for task in job_instance.create_tasks([evidence_]):
           self.add_task(task, job_instance, evidence_)
 
@@ -349,7 +354,7 @@ class BaseTaskManager:
       job.tasks.append(task)
     self.state_manager.write_new_task(task)
     self.enqueue_task(task, evidence_)
-    SERVER_TASKS.inc()
+    turbinia_server_tasks_total.inc()
 
   def remove_jobs(self, request_id):
     """Removes the all Jobs for the given request ID.
@@ -381,7 +386,7 @@ class BaseTaskManager:
 
     if remove_job:
       self.running_jobs.remove(remove_job)
-      JOBS_RESOLVED.inc()
+      turbinia_jobs_resolved_total.inc()
     return bool(remove_job)
 
   def enqueue_task(self, task, evidence_):
@@ -466,7 +471,7 @@ class BaseTaskManager:
             job.name, task.id))
     self.state_manager.update_task(task)
     job.remove_task(task.id)
-    SERVER_TASKS_COMPLETED.inc()
+    turbinia_server_tasks_completed_total.inc()
     if job.check_done() and not (job.is_finalize_job or task.is_finalize_task):
       log.debug(
           'Job {0:s} completed, creating Job finalize tasks'.format(job.name))
@@ -589,7 +594,7 @@ class CeleryTaskManager(BaseTaskManager):
             'Received evidence [{0:s}] from Kombu message.'.format(
                 str(evidence_)))
         evidence_list.append(evidence_)
-      TOTAL_REQUESTS.inc()
+      turbinia_server_request_total.inc()
     return evidence_list
 
   def enqueue_task(self, task, evidence_):
@@ -679,7 +684,7 @@ class PSQTaskManager(BaseTaskManager):
             'Received evidence [{0:s}] from PubSub message.'.format(
                 str(evidence_)))
         evidence_list.append(evidence_)
-      TOTAL_REQUESTS.inc()
+      turbinia_server_request_total.inc()
     return evidence_list
 
   def enqueue_task(self, task, evidence_):
