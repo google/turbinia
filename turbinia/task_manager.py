@@ -54,10 +54,9 @@ turbinia_server_tasks_total = Gauge(
 turbinia_server_tasks_completed_total = Gauge(
     'turbinia_server_tasks_completed_total',
     'Total number of completed server tasks')
-turbinia_jobs_created_total = Gauge(
-    'turbinia_jobs_created_total', 'Total number jobs created')
-turbinia_jobs_resolved_total = Gauge(
-    'turbinia_jobs_resolved_total', 'Total number jobs resolved')
+turbinia_jobs_total = Gauge('turbinia_jobs_total', 'Total number jobs created')
+turbinia_jobs_completed_total = Gauge(
+    'turbinia_jobs_completed_total', 'Total number jobs resolved')
 turbinia_server_request_total = Gauge(
     'turbinia_server_request_total', 'Total number of requests received.')
 
@@ -218,7 +217,7 @@ class BaseTaskManager:
             'Adding {0:s} job to process {1:s}'.format(
                 job_instance.name, evidence_.name))
         job_count += 1
-        turbinia_jobs_created_total.inc()
+        turbinia_jobs_total.inc()
         for task in job_instance.create_tasks([evidence_]):
           self.add_task(task, job_instance, evidence_)
 
@@ -386,7 +385,7 @@ class BaseTaskManager:
 
     if remove_job:
       self.running_jobs.remove(remove_job)
-      turbinia_jobs_resolved_total.inc()
+      turbinia_jobs_completed_total.inc()
     return bool(remove_job)
 
   def enqueue_task(self, task, evidence_):
