@@ -33,3 +33,9 @@ sleep 60s
 
 echo "Display Turbinia request status"
 docker exec turbinia-server turbiniactl -a status -r 123456789
+
+echo "See if any tasks failed"
+FAILED=`docker exec turbinia-server turbiniactl -a status -r 123456789 | awk '/Failed Tasks/,/\* None/' | wc -l`
+if [ "$FAILED" != "2" ]; then
+    exit 1;
+fi
