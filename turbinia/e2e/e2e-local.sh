@@ -26,7 +26,7 @@ docker logs turbinia-server
 docker logs turbinia-worker
 
 echo "Create  Turbinia request"
-docker exec -t turbinia-server turbiniactl -r 123456789 compresseddirectory -l /evidence/history.tgz 
+docker exec -t turbinia-server turbiniactl -w -r 123456789 compresseddirectory -l /evidence/history.tgz 
 
 echo "Display Turbinia request status"
-docker exec turbinia-server turbiniactl -w -a status -r 123456789
+docker exec turbinia-server turbiniactl -a status -r 123456789
