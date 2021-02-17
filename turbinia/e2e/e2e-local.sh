@@ -37,5 +37,8 @@ docker exec turbinia-server turbiniactl -a status -r 123456789
 echo "See if any tasks failed"
 FAILED=`docker exec turbinia-server turbiniactl -a status -r 123456789 | awk '/Failed Tasks/,/\* None/' | wc -l`
 if [ "$FAILED" != "2" ]; then
+    echo 'Tasks failed!'
     exit 1;
 fi
+
+echo "No tasks failed!"
