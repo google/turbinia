@@ -2,7 +2,8 @@ FROM ubuntu:20.04
 
 ENV DEBIAN_FRONTEND=noninteractive 
 RUN apt-get update && apt-get -y install \
-    apt-transport-https \
+    <<<<<<< HEAD
+apt-transport-https \
     apt-utils \
     ca-certificates \
     git \
@@ -16,6 +17,23 @@ RUN apt-get update && apt-get -y install \
     sudo \
     testdisk \
     sleuthkit
+=======
+apt-transport-https \
+    apt-utils \
+    ca-certificates \
+    git \
+    john \
+    john-data \
+    libleveldb1d \
+    libleveldb-dev \
+    libterm-readline-gnu-perl \
+    python3-pip \
+    sleuthkit \
+    software-properties-common \
+    sudo \
+    testdisk \
+    sleuthkit
+>>>>>>> 12aca438857a3431597a420db25b2ab14f74a2dc
 
 ADD requirements.txt /tmp/
 RUN cd /tmp/ && pip3 install -r requirements.txt
@@ -26,7 +44,7 @@ RUN pip3 install urllib3 cryptography requests --upgrade
 # Install third-party worker dependencies
 RUN pip3 install pyhindsight
 
-# Install Plaso
+# Install Plaso and docker-explorer
 RUN add-apt-repository -y ppa:gift/stable
 RUN apt-key list
 RUN apt-get -y install \
