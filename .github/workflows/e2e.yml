@@ -35,4 +35,3 @@ jobs:
         run: docker logs turbinia-server
       - name: Show Turbinia worker logs
         run: docker logs turbinia-worker
-
