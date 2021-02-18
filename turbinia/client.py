@@ -306,7 +306,7 @@ class TurbiniaStats:
           'mean': str(self.mean),
           'max': str(self.max)
       }
-      return jsonpickle.dumps(ret)
+      return json.dumps(ret)
 
     return '{0:s}: Count: {1:d}, Min: {2!s}, Mean: {3!s}, Max: {4!s}'.format(
         self.description, self.count, self.min, self.mean, self.max)
@@ -925,7 +925,7 @@ class BaseTurbiniaClient:
     task_results = self.get_task_data(
         instance, project, region, days=num_days, output_json=output_json)
     if output_json:
-      return jsonpickle.dumps(task_results)
+      return json.dumps(task_results)
     if not task_results:
       return ''
 
@@ -953,18 +953,24 @@ class BaseTurbiniaClient:
 
     # Generate report header
     report = []
+    json_report = {}
     report.append(
         fmt.heading1(
             'Turbinia report for Requests made within {0:d} days'.format(
                 num_days)))
+    json_report['days'] = num_days
     report.append(
         fmt.bullet(
             '{0:d} requests were made within this timeframe.'.format(
                 len(request_dict.keys()))))
+    json_report['request_made'] = len(request_dict.keys())
     # Print report data for Requests
+    json_report['requests'] = []
     for request_id, values in request_dict.items():
+      request ={}
       report.append('')
       report.append(fmt.heading2('Request ID: {0:s}'.format(request_id)))
+      request['id'] = request_id
       report.append(
           fmt.bullet(
               'Last Update: {0:s}'.format(
@@ -978,6 +984,7 @@ class BaseTurbiniaClient:
         for path in sorted(values['saved_paths']):
           report.append(fmt.bullet(fmt.code(path), level=2))
         report.append('')
+
     return '\n'.join(report)
 
   def format_task_status(
@@ -1010,12 +1017,11 @@ class BaseTurbiniaClient:
       days = 1000
     task_results = self.get_task_data(
         instance, project, region, days, task_id, request_id, user,
-        output_json=output_json)
+        output_json=output_json) 
+    if output_json:
+      return json.dumps(task_results)
     if not task_results:
       return ''
-
-    if output_json:
-      return jsonpickle.dumps(task_results)
 
     # Sort all tasks by the report_priority so that tasks with a higher
     # priority are listed first in the report.
