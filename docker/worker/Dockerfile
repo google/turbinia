@@ -12,19 +12,13 @@ RUN apt-get update && apt-get -y install \
     libleveldb-dev \
     libterm-readline-gnu-perl \
     python3-pip \
-    <<<<<<< HEAD
-=======
-sleuthkit \
-    >>>>>>> 94c4edc (apt-get instead of pip docker-explorer.)
-software-properties-common \
+    software-properties-common \
     sudo \
     testdisk \
     sleuthkit
 
 ADD requirements.txt /tmp/
 RUN cd /tmp/ && pip3 install -r requirements.txt
-ADD dfvfs_requirements.txt /tmp/
-RUN cd /tmp/ && pip3 install -r dfvfs_requirements.txt
 
 RUN pip3 install pip --upgrade
 RUN pip3 install urllib3 cryptography requests --upgrade
@@ -33,15 +27,15 @@ RUN pip3 install urllib3 cryptography requests --upgrade
 RUN pip3 install pyhindsight
 
 # Install Plaso
-RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 0x5e80511b10c598b8 \
-    && add-apt-repository -y ppa:gift/stable
+RUN add-apt-repository -y ppa:gift/stable
+RUN apt-key list
 RUN apt-get -y install \
-    python-plaso \
+    docker-explorer-tools \
     libewf \
-    python3-dfvfs \
     libewf-python3 \
     plaso-tools \
-    docker-explorer-tools \
+    python3-dfvfs \
+    python3-plaso \
     --option Acquire::ForceIPv4=true --option Acquire::Retries=100 --option Acquire::http::Timeout=60
 
 # Install BulkExtractor
