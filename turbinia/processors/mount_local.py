@@ -44,9 +44,7 @@ def PreprocessLosetup(source_path, partition_offset=None, partition_size=None):
       failed to run in anyway.
 
   Returns:
-    (str, list(str)): a tuple consisting of the path to the 'disk' block device
-      and a list of paths to partition block devices. For example:
-      ('/dev/loop0', ['/dev/loop0p1', '/dev/loop0p2'])
+    str: the path to the 'disk' block device
   """
   losetup_device = None
 
@@ -59,11 +57,9 @@ def PreprocessLosetup(source_path, partition_offset=None, partition_size=None):
   # https://github.com/google/turbinia/issues/73
   losetup_command = ['sudo', 'losetup', '--show', '--find', '-r']
   if partition_size:
-    # Evidence is RawDiskPartition
+    # Evidence is DiskPartition
     losetup_command.extend(['-o', str(partition_offset)])
     losetup_command.extend(['--sizelimit', str(partition_size)])
-  else:
-    losetup_command.append('-P')
   losetup_command.append(source_path)
   log.info('Running command {0:s}'.format(' '.join(losetup_command)))
   try:
@@ -72,13 +68,7 @@ def PreprocessLosetup(source_path, partition_offset=None, partition_size=None):
   except subprocess.CalledProcessError as e:
     raise TurbiniaException('Could not set losetup devices {0!s}'.format(e))
 
-  partitions = sorted(glob.glob('{0:s}p*'.format(losetup_device)))
-  if not partitions:
-    # In this case, the image was of a partition, and not a full disk with a
-    # partition table
-    return (losetup_device, [losetup_device])
-
-  return (losetup_device, partitions)
+  return losetup_device
 
 
 def PreprocessMountDisk(partition_paths, partition_number):
@@ -201,7 +191,7 @@ def PreprocessMountPartition(partition_path):
 
 
 def GetFilesystem(path):
-  """Uses lsblk to detect the filesystem of a partition block device.
+  """Uses the sleuthkit to detect the filesystem of a partition block device.
 
   Args:
     path(str): the full path to the block device.
@@ -224,7 +214,9 @@ def GetFilesystem(path):
     raise TurbiniaException(
         '{0:s} should contain exactly one partition, found {1:d}'.format(
             path, len(fstype)))
-  return fstype[0].decode('utf-8').strip()
+  fstype = fstype[0].decode('utf-8').strip()
+  log.info('Found filesystem type {0:s} for path {1:s}'.format(fstype, path))
+  return fstype
 
 
 def PostprocessDeleteLosetup(device_path):
@@ -245,6 +237,19 @@ def PostprocessDeleteLosetup(device_path):
     subprocess.check_call(losetup_cmd)
   except subprocess.CalledProcessError as e:
     raise TurbiniaException('Could not delete losetup device {0!s}'.format(e))
+
+  # Check that the device was acutally removed
+  losetup_cmd = ['sudo', 'losetup', '-a']
+  log.info('Running: {0:s}'.format(' '.join(losetup_cmd)))
+  try:
+    output = subprocess.check_output(losetup_cmd)
+  except subprocess.CalledProcessError as e:
+    raise TurbiniaException(
+        'Could not check losetup device status {0!s}'.format(e))
+  if output.find(device_path.encode('utf-8')) != -1:
+    raise TurbiniaException(
+        'Could not delete losetup device {0!s}'.format(device_path))
+  log.info('losetup device [{0!s}] deleted.'.format(device_path))
 
 
 def PostprocessUnmountPath(mount_path):

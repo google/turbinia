@@ -32,6 +32,7 @@ from turbinia.config import logger
 from turbinia import __version__
 from turbinia.processors import archive
 from turbinia.output_manager import OutputManager
+from turbinia.output_manager import GCSOutputWriter
 
 log = logging.getLogger('turbinia')
 # We set up the logger first without the file handler, and we will set up the
@@ -154,11 +155,6 @@ def main():
   parser_rawdisk.add_argument(
       '-l', '--source_path', help='Local path to the evidence', required=True)
   parser_rawdisk.add_argument(
-      '-P', '--mount_partition', default=1, type=int,
-      help='The partition number to use when mounting this disk.  Defaults to '
-      'the entire raw disk.  Only affects mounting, and not what gets '
-      'processed.')
-  parser_rawdisk.add_argument(
       '-s', '--source', help='Description of the source of the evidence',
       required=False)
   parser_rawdisk.add_argument(
@@ -218,11 +214,6 @@ def main():
       'with. If this is different from the project that Turbinia is running '
       'in, it will be copied to the Turbinia project.')
   parser_googleclouddisk.add_argument(
-      '-P', '--mount_partition', default=1, type=int,
-      help='The partition number to use when mounting this disk.  Defaults to '
-      'the entire raw disk.  Only affects mounting, and not what gets '
-      'processed.')
-  parser_googleclouddisk.add_argument(
       '-z', '--zone', help='Geographic zone the disk exists in')
   parser_googleclouddisk.add_argument(
       '-s', '--source', help='Description of the source of the evidence',
@@ -252,13 +243,9 @@ def main():
       'in, it will be copied to the Turbinia project.')
   parser_googleclouddiskembedded.add_argument(
       '-P', '--mount_partition', default=1, type=int,
-      help='The partition number to use when mounting this disk.  Defaults to '
-      'the entire raw disk.  Only affects mounting, and not what gets '
-      'processed.')
-  parser_googleclouddiskembedded.add_argument(
-      '--embedded_mount_partition', default=1, type=int,
-      help='The partition number to use when mounting this embedded disk image.'
-      ' Defaults to the first partition')
+      help='The partition number to use when mounting the parent disk.  '
+      'Defaults to the first partition.  Only affects mounting, and not what '
+      'gets processed.')
   parser_googleclouddiskembedded.add_argument(
       '-z', '--zone', help='Geographic zone the disk exists in')
   parser_googleclouddiskembedded.add_argument(
@@ -401,6 +388,29 @@ def main():
       '-w', '--worker_logs', action='store_true',
       help='Collects all worker related logs.')
 
+  # Add GCS logs collector
+  parser_gcs_logs = subparsers.add_parser(
+      'dumpgcs', help='Get Turbinia results from Google Cloud Storage.')
+  parser_gcs_logs.add_argument(
+      '-o', '--output_dir', help='Directory path for output.', required=True)
+  parser_gcs_logs.add_argument(
+      '-t', '--task_id', help='Download all the results for given task_id.')
+  parser_gcs_logs.add_argument(
+      '-r', '--request_id',
+      help='Download all the results for given request_id.')
+  parser_gcs_logs.add_argument(
+      '-b', '--bucket',
+      help='Alternate GCS bucket to download from. Must be in the following '
+      'format gs://{BUCKET_NAME}/. Defaults to the BUCKET_NAME as specified '
+      'in the config')
+  parser_gcs_logs.add_argument(
+      '-d', '--days_history', default=0, type=int,
+      help='Number of days of history to to query results for', required=False)
+  parser_gcs_logs.add_argument(
+      '-i', '--instance_id',
+      help='Instance ID used to run tasks/requests. You must provide an '
+      'instance ID if the task/request was not processed on the same instance '
+      'as your confing file.')
   # Server
   subparsers.add_parser('server', help='Run Turbinia Server')
 
@@ -570,8 +580,7 @@ def main():
     args.name = args.name if args.name else args.source_path
     source_path = os.path.abspath(args.source_path)
     evidence_ = evidence.RawDisk(
-        name=args.name, source_path=source_path,
-        mount_partition=args.mount_partition, source=args.source)
+        name=args.name, source_path=source_path, source=args.source)
   elif args.command == 'apfs':
     if not args.password and not args.recovery_key:
       log.error('Neither recovery key nor password is specified.')
@@ -616,8 +625,7 @@ def main():
     args.name = args.name if args.name else args.disk_name
     evidence_ = evidence.GoogleCloudDisk(
         name=args.name, disk_name=args.disk_name, project=args.project,
-        mount_partition=args.mount_partition, zone=args.zone,
-        source=args.source)
+        zone=args.zone, source=args.source)
   elif args.command == 'googleclouddiskembedded':
     args.name = args.name if args.name else args.disk_name
     parent_evidence_ = evidence.GoogleCloudDisk(
@@ -626,10 +634,8 @@ def main():
         source=args.source)
     evidence_ = evidence.GoogleCloudDiskRawEmbedded(
         name=args.name, disk_name=args.disk_name, project=args.project,
-        mount_partition=args.mount_partition, zone=args.zone,
-        embedded_path=args.embedded_path,
-        embedded_partition=args.embedded_mount_partition)
-    evidence_.parent_evidence = parent_evidence_
+        zone=args.zone, embedded_path=args.embedded_path)
+    evidence_.set_parent(parent_evidence_)
   elif args.command == 'hindsight':
     if args.format not in ['xlsx', 'sqlite', 'jsonl']:
       log.error('Invalid output format.')
@@ -758,6 +764,51 @@ def main():
         query = 'jsonPayload.origin="server"'
     google_cloud.get_logs(
         config.TURBINIA_PROJECT, args.output_dir, args.days_history, query)
+  elif args.command == 'dumpgcs':
+    if not config.GCS_OUTPUT_PATH and not args.bucket:
+      log.error('GCS storage must be enabled in order to use this.')
+      sys.exit(1)
+    if not args.task_id and not args.request_id:
+      log.error('You must specify one of task_id or request_id.')
+      sys.exit(1)
+    if not os.path.isdir(args.output_dir):
+      log.error('Please provide a valid directory path.')
+      sys.exit(1)
+
+    gcs_bucket = args.bucket if args.bucket else config.GCS_OUTPUT_PATH
+    instance_id = args.instance_id if args.instance_id else config.INSTANCE_ID
+
+    try:
+      task_data = client.get_task_data(
+          instance=instance_id, days=args.days_history,
+          project=config.TURBINIA_PROJECT, region=config.TURBINIA_REGION,
+          task_id=args.task_id, request_id=args.request_id,
+          function_name='gettasks')
+      output_writer = GCSOutputWriter(
+          gcs_bucket, local_output_dir=args.output_dir)
+      if not task_data:
+        log.error('No Tasks found for task/request ID')
+        sys.exit(1)
+      if args.task_id:
+        log.info(
+            'Downloading GCS files for task_id {0:s} to {1:s}.'.format(
+                args.task_id, args.output_dir))
+        for task in task_data:
+          if task['id'] == args.task_id:
+            if task['saved_paths']:
+              output_writer.copy_from_gcs(task['saved_paths'])
+      if args.request_id:
+        log.info(
+            'Downloading GCS files for request_id {0:s} to {1:s}.'.format(
+                args.request_id, args.output_dir))
+        paths = []
+        for task in task_data:
+          if task['saved_paths']:
+            paths.extend(task['saved_paths'])
+        output_writer.copy_from_gcs(paths)
+
+    except TurbiniaException as exception:
+      log.error('Failed to pull the data {0!s}'.format(exception))
   else:
     log.warning('Command {0!s} not implemented.'.format(args.command))
 

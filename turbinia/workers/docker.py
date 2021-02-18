@@ -34,9 +34,7 @@ log = logging.getLogger('turbinia')
 class DockerContainersEnumerationTask(TurbiniaTask):
   """Enumerates Docker containers on Linux"""
 
-  REQUIRED_STATES = [
-      state.ATTACHED, state.MOUNTED, state.PARENT_ATTACHED, state.PARENT_MOUNTED
-  ]
+  REQUIRED_STATES = [state.ATTACHED, state.MOUNTED]
 
   def GetContainers(self, evidence):
     """Lists the containers from an input Evidence.
