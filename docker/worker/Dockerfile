@@ -2,8 +2,7 @@ FROM ubuntu:20.04
 
 ENV DEBIAN_FRONTEND=noninteractive 
 RUN apt-get update && apt-get -y install \
-    <<<<<<< HEAD
-apt-transport-https \
+    apt-transport-https \
     apt-utils \
     ca-certificates \
     git \
@@ -17,23 +16,6 @@ apt-transport-https \
     sudo \
     testdisk \
     sleuthkit
-=======
-apt-transport-https \
-    apt-utils \
-    ca-certificates \
-    git \
-    john \
-    john-data \
-    libleveldb1d \
-    libleveldb-dev \
-    libterm-readline-gnu-perl \
-    python3-pip \
-    sleuthkit \
-    software-properties-common \
-    sudo \
-    testdisk \
-    sleuthkit
->>>>>>> 12aca438857a3431597a420db25b2ab14f74a2dc
 
 ADD requirements.txt /tmp/
 RUN cd /tmp/ && pip3 install -r requirements.txt
