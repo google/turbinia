@@ -595,8 +595,12 @@ class DiskPartition(RawDisk):
       mount_local.PostprocessUnmountPath(self.mount_path)
       self.state[EvidenceState.MOUNTED] = False
     if self.state[EvidenceState.ATTACHED]:
-      mount_local.PostprocessDeleteLosetup(self.device_path)
-      self.state[EvidenceState.ATTACHED] = False
+      # Check for encryption
+      if self.path_spec.parent.type_indicator == dfvfs_definitions.TYPE_INDICATOR_BDE:
+        mount_local.PostprocessUnmountPath(self.device_path.replace('bde1', ''))
+      else:
+        mount_local.PostprocessDeleteLosetup(self.device_path)
+        self.state[EvidenceState.ATTACHED] = False
 
 
 class EncryptedDisk(RawDisk):

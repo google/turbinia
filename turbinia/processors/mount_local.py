@@ -81,7 +81,7 @@ def PreprocessBitLocker(source_path, partition_offset=None, credentials=None):
       # Unsupported credential type, try the next
       continue
 
-    libbde_command.extend([source_path, mount_path])
+    libbde_command.extend(['-X', 'allow_other', source_path, mount_path])
 
     # Not logging command since it will contain credentials
     try:

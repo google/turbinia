@@ -59,8 +59,8 @@ class MountLocalProcessorTest(unittest.TestCase):
     device = mount_local.PreprocessBitLocker(
         source_path, partition_offset=65536, credentials=credentials)
     expected_args = [
-        'sudo', 'bdemount', '-o', '65536', '-p', '123456', source_path,
-        '/mnt/turbinia/turbinia0ckdntz0'
+        'sudo', 'bdemount', '-o', '65536', '-p', '123456', '-X', 'allow_other',
+        source_path, '/mnt/turbinia/turbinia0ckdntz0'
     ]
     mock_subprocess.assert_called_once_with(expected_args)
     self.assertEqual(device, '/mnt/turbinia/turbinia0ckdntz0/bde1')
@@ -74,8 +74,8 @@ class MountLocalProcessorTest(unittest.TestCase):
     mount_local.PreprocessBitLocker(
         source_path, partition_offset=65536, credentials=credentials)
     expected_args = [
-        'sudo', 'bdemount', '-o', '65536', '-r', '123456', source_path,
-        '/mnt/turbinia/turbinia0ckdntz0'
+        'sudo', 'bdemount', '-o', '65536', '-r', '123456', '-X', 'allow_other',
+        source_path, '/mnt/turbinia/turbinia0ckdntz0'
     ]
     mock_subprocess.assert_called_once_with(expected_args)
 
