@@ -32,7 +32,7 @@ def Enumerate(evidence):
     evidence: Evidence object to be scanned.
 
   Raises:
-    dfVFS.ScannerError if source evidence can't be scanned.
+    TurbiniaException if source evidence can't be scanned.
 
   Returns:
     list[dfVFS.path_spec]: path specs for identified partitions
@@ -46,9 +46,26 @@ def Enumerate(evidence):
     scanner = volume_scanner.VolumeScanner(mediator=mediator)
     path_specs = scanner.GetBasePathSpecs(evidence.local_path)
   except dfvfs_errors.ScannerError as e:
-    raise e
+    raise TurbiniaException(
+        'Could not enumerate partitions [{0!s}]: {1!s}'.format(
+            evidence.local_path, e))
 
   return path_specs
+
+
+def GetPartitionEncryptionType(path_spec):
+  """Checks a partition for encryption.
+
+  Args:
+    path_spec (dfVFS.path_spec): Partition path_spec.
+
+  Returns:
+    String representing the type of encryption, or None.
+  """
+  encryption_type = None
+  if path_spec.parent.type_indicator == dfvfs_definitions.TYPE_INDICATOR_BDE:
+    encryption_type = 'BDE'
+  return encryption_type
 
 
 def GetPathSpecByLocation(path_specs, location):

@@ -94,7 +94,7 @@ class TestUnattendedVolumeScannerMediator(unittest.TestCase):
 
     scan_node = source_scanner.SourceScanNode(path_spec)
 
-    type(mock_source_scanner.return_value).Unlock = True
+    mock_source_scanner.Unlock.return_value = True
     result = mediator.UnlockEncryptedVolume(
         source_scanner_object=mock_source_scanner, scan_context=None,
         locked_scan_node=scan_node, credentials=None)

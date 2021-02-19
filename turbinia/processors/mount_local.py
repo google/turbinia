@@ -34,6 +34,8 @@ RETRY_MAX = 10
 def PreprocessBitLocker(source_path, partition_offset=None, credentials=None):
   """Uses libbde on a target block device or image file.
 
+  Creates a decrypted virtual device of the encrypted volume.
+
   Args:
     source_path(str): the source path to run losetup on.
     partition_offset(int): offset of volume in bytes.
@@ -79,6 +81,7 @@ def PreprocessBitLocker(source_path, partition_offset=None, credentials=None):
       libbde_command.extend(['-r', credential_data])
     else:
       # Unsupported credential type, try the next
+      log.warning('Unsupported credential type: {0!s}'.format(credential_type))
       continue
 
     libbde_command.extend(['-X', 'allow_other', source_path, mount_path])
@@ -92,6 +95,11 @@ def PreprocessBitLocker(source_path, partition_offset=None, credentials=None):
 
     # Decrypted volume was mounted
     decrypted_device = os.path.join(mount_path, 'bde1')
+    if not os.path.exists(decrypted_device):
+      raise TurbiniaException(
+          'Cannot attach decrypted device: {0!s}'.format(decrypted_device))
+    else:
+      log.info('Decrypted device attached: {0!s}'.format(decrypted_device))
 
     return decrypted_device
 

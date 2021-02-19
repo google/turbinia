@@ -22,8 +22,6 @@ import logging
 import os
 import sys
 
-from dfvfs.lib import definitions as dfvfs_definitions
-
 from turbinia import config
 from turbinia import TurbiniaException
 from turbinia.processors import archive
@@ -134,6 +132,7 @@ class Evidence:
         with initially.  Tasks should generally not use this path, but instead
         use the `local_path`.
     mount_path (str): Path to a mounted file system (if relevant).
+    credentials (list): Decryption keys for encrypted evidence.
     tags (dict): Extra tags associated with this evidence.
     request_id (str): The id of the request this evidence came from, if any.
     has_child_evidence (bool): This property indicates the evidence object has
@@ -527,11 +526,14 @@ class RawDisk(Evidence):
 class DiskPartition(RawDisk):
   """Evidence object for a partition within Disk based evidence.
 
+  More information on dfVFS types:
+  https://dfvfs.readthedocs.io/en/latest/sources/Path-specifications.html
+
   Attributes:
-    partition_location: dfVFS partition location.
-    type_indicator: dfVFS path_spec type indicator.
-    partition_offset: Offset of the partition in bytes.
-    partition_size: Size of the partition in bytes.
+    partition_location (str): dfVFS partition location.
+    type_indicator (str): dfVFS path_spec type indicator.
+    partition_offset (int): Offset of the partition in bytes.
+    partition_size (int): Size of the partition in bytes.
     path_spec (dfvfs.PathSpec): Partition path spec.
   """
 
@@ -556,8 +558,8 @@ class DiskPartition(RawDisk):
     # the parent evidence location for each task.
     try:
       path_specs = partitions.Enumerate(self.parent_evidence)
-    except Error as e:
-      log.error('Error scanning for partitions: {0!s}'.format(e))
+    except TurbiniaException as e:
+      log.error(e)
 
     path_spec = partitions.GetPathSpecByLocation(
         path_specs, self.partition_location)
@@ -568,7 +570,8 @@ class DiskPartition(RawDisk):
     # partition offset and size.
     if EvidenceState.ATTACHED in required_states or self.has_child_evidence:
       # Check for encryption
-      if path_spec.parent.type_indicator == dfvfs_definitions.TYPE_INDICATOR_BDE:
+      encryption_type = partitions.GetPartitionEncryptionType(path_spec)
+      if encryption_type == 'BDE':
         self.device_path = mount_local.PreprocessBitLocker(
             self.parent_evidence.device_path,
             partition_offset=self.partition_offset,
@@ -596,8 +599,12 @@ class DiskPartition(RawDisk):
       self.state[EvidenceState.MOUNTED] = False
     if self.state[EvidenceState.ATTACHED]:
       # Check for encryption
-      if self.path_spec.parent.type_indicator == dfvfs_definitions.TYPE_INDICATOR_BDE:
+      encryption_type = partitions.GetPartitionEncryptionType(self.path_spec)
+      if encryption_type == 'BDE':
+        # bdemount creates a virtual device named bde1 in the mount path. This
+        # needs to be unmounted rather than detached.
         mount_local.PostprocessUnmountPath(self.device_path.replace('bde1', ''))
+        self.state[EvidenceState.ATTACHED] = False
       else:
         mount_local.PostprocessDeleteLosetup(self.device_path)
         self.state[EvidenceState.ATTACHED] = False
