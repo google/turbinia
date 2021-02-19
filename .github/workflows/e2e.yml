@@ -1,0 +1,37 @@
+name: Turbinia E2E Test
+
+on: [push, pull_request]
+
+jobs:
+  e2e-test:
+    name: Run local stack e2e test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Pull docker images for cache
+        run: |
+          docker pull ubuntu:18.04
+          docker pull us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-server-dev:latest
+          docker pull us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-worker-dev:latest
+      - name: Build Turbinia server docker image
+        run: docker build --cache-from=ubuntu:18.04,us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-server-dev:latest -t turbinia-server-dev -f docker/server/Dockerfile .
+      - name: Build Turbinia worker docker image
+        run: docker build --cache-from=ubuntu:18.04,us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-worker-dev:latest -t turbinia-worker-dev -f docker/worker/Dockerfile .
+      - name: Prepare Turbinia configuration
+        run: |
+          mkdir ./conf
+          sed -f ./docker/local/local-config.sed ./turbinia/config/turbinia_config_tmpl.py > ./conf/turbinia.conf
+      - name: Display Turbinia configuration
+        run: |
+          cat ./conf/turbinia.conf
+      - name: Patch docker-compose config to use locally build images
+        run: |
+          sed -i -e 's/#image: "t/image: "t/g' -e 's/image: "u/#image: "u/g' ./docker/local/docker-compose.yml
+      - name: Run E2E test
+        run: |
+          chmod +x ./turbinia/e2e/e2e-local.sh
+          ./turbinia/e2e/e2e-local.sh
+      - name: Show Turbinia server logs
+        run: docker logs turbinia-server
+      - name: Show Turbinia worker logs
+        run: docker logs turbinia-worker

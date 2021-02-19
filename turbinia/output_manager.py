@@ -23,6 +23,7 @@ import os
 import re
 import shutil
 import time
+from pathlib import Path
 
 from turbinia import config
 from turbinia import TurbiniaException
@@ -495,3 +496,51 @@ class GCSOutputWriter(OutputWriter):
       log.error(message)
       raise TurbiniaException(message)
     return destination_path
+
+  def copy_from_gcs(self, saved_paths):
+    """Copies output file from the managed location to the local output dir.
+
+    Args:
+      saved_paths (list): A list of saved paths. List includes GCS and local
+      output file paths.
+
+    Raises:
+      TurbiniaException: If file retrieval fails.
+    """
+    bucket = self.client.get_bucket(self.bucket)
+
+    for path in saved_paths:
+      if 'gs://' in path:
+        gcs_path = self._parse_gcs_path(path)[1]
+
+        try:
+          # Reconstruct the same file structure as GCS on the output dir
+          path_split = gcs_path.split('/')
+          directory = os.path.join(*path_split[0:-1])
+          destination_path = os.path.join(self.local_output_dir, directory)
+          Path(destination_path).mkdir(parents=True, exist_ok=True)
+          if not os.path.exists(destination_path):
+            message = (
+                'Failed to create the file path {0:s}.'.format(
+                    destination_path))
+            log.error(message)
+            raise TurbiniaException(message)
+
+          file_name = os.path.join(destination_path, path_split[-1])
+
+          # Get the file from GCS
+          blob = storage.Blob(gcs_path, bucket, chunk_size=self.CHUNK_SIZE)
+          blob.download_to_filename(file_name, client=self.client)
+          log.info('Downloaded {0:s} to {1:s}.'.format(path, file_name))
+        except exceptions.RequestRangeNotSatisfiable as exception:
+          message = (
+              'File retrieval from GCS failed, file may be empty: {0!s}'.format(
+                  exception))
+          log.error(message)
+          raise TurbiniaException(message)
+        except exceptions.GoogleCloudError as exception:
+          message = 'File retrieval from GCS failed: {0!s}'.format(exception)
+          log.error(message)
+          raise TurbiniaException(message)
+
+    return

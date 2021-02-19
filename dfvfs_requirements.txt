@@ -1,8 +1,8 @@
-dfvfs == 20210207
+dfvfs == 20210213
 pip >= 7.0.0
 PyYAML >= 3.10
 cffi >= 1.9.1
-cryptography >= 2.0.2
+cryptography < 3.4
 dfdatetime >= 20200809
 dtfabric >= 20170524
 idna >= 2.5
