@@ -37,13 +37,13 @@ def PreprocessBitLocker(source_path, partition_offset=None, credentials=None):
   Creates a decrypted virtual device of the encrypted volume.
 
   Args:
-    source_path(str): the source path to run losetup on.
+    source_path(str): the source path to run bdemount on.
     partition_offset(int): offset of volume in bytes.
     credentials(list[{str: str}]): decryption credentials set in evidence setup
 
   Raises:
-    TurbiniaException: if source_path doesn't exist or if the losetup command
-      failed to run in anyway.
+    TurbiniaException: if source_path doesn't exist or if the bdemount command
+      failed to create a virtual device.
 
   Returns:
     str: the path to the decrypted virtual block device
@@ -54,7 +54,7 @@ def PreprocessBitLocker(source_path, partition_offset=None, credentials=None):
 
   if not os.path.exists(source_path):
     raise TurbiniaException(
-        ('Cannot create loopback device for non-existing source_path '
+        ('Cannot create virtual device for non-existing source_path '
          '{0!s}').format(source_path))
 
   if os.path.exists(mount_prefix) and not os.path.isdir(mount_prefix):
