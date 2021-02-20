@@ -27,7 +27,6 @@ from turbinia import TurbiniaException
 from turbinia.processors import archive
 from turbinia.processors import docker
 from turbinia.processors import mount_local
-from turbinia.processors import partitions
 from turbinia.lib.docker_manager import GetDockerPath
 
 # pylint: disable=keyword-arg-before-vararg
@@ -530,8 +529,8 @@ class DiskPartition(RawDisk):
   https://dfvfs.readthedocs.io/en/latest/sources/Path-specifications.html
 
   Attributes:
-    partition_location (str): dfVFS partition location.
-    type_indicator (str): dfVFS path_spec type indicator.
+    partition_location (str): dfVFS partition location (The location of the
+        volume within the volume system, similar to a volume identifier).
     partition_offset (int): Offset of the partition in bytes.
     partition_size (int): Size of the partition in bytes.
     path_spec (dfvfs.PathSpec): Partition path spec.
@@ -554,6 +553,9 @@ class DiskPartition(RawDisk):
     self.context_dependent = True
 
   def _preprocess(self, _, required_states):
+    # Late loading the partition processor to avoid loading dfVFS unnecessarily.
+    from turbinia.processors import partitions
+
     # We need to enumerate partitions in preprocessing so the path_specs match
     # the parent evidence location for each task.
     try:
@@ -598,6 +600,9 @@ class DiskPartition(RawDisk):
       mount_local.PostprocessUnmountPath(self.mount_path)
       self.state[EvidenceState.MOUNTED] = False
     if self.state[EvidenceState.ATTACHED]:
+      # Late loading the partition processor to avoid loading dfVFS unnecessarily.
+      from turbinia.processors import partitions
+
       # Check for encryption
       encryption_type = partitions.GetPartitionEncryptionType(self.path_spec)
       if encryption_type == 'BDE':
