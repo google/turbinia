@@ -19,6 +19,8 @@ from __future__ import unicode_literals, absolute_import
 import logging
 import time
 
+from prometheus_client import Gauge
+
 import turbinia
 from turbinia import workers
 from turbinia import evidence
@@ -39,12 +41,24 @@ if config.TASK_MANAGER.lower() == 'psq':
 elif config.TASK_MANAGER.lower() == 'celery':
   from celery import states as celery_states
 
-  from turbinia import celery as turbinia_celery
+  from turbinia import tcelery as turbinia_celery
 
 log = logging.getLogger('turbinia')
 
 PSQ_TASK_TIMEOUT_SECONDS = 604800
 PSQ_QUEUE_WAIT_SECONDS = 2
+
+# Define metrics
+turbinia_server_tasks_total = Gauge(
+    'turbinia_server_tasks_total', 'Turbinia Server Total Tasks')
+turbinia_server_tasks_completed_total = Gauge(
+    'turbinia_server_tasks_completed_total',
+    'Total number of completed server tasks')
+turbinia_jobs_total = Gauge('turbinia_jobs_total', 'Total number jobs created')
+turbinia_jobs_completed_total = Gauge(
+    'turbinia_jobs_completed_total', 'Total number jobs resolved')
+turbinia_server_request_total = Gauge(
+    'turbinia_server_request_total', 'Total number of requests received.')
 
 
 def get_task_manager():
@@ -83,7 +97,7 @@ def task_runner(obj, *args, **kwargs):
   return obj.run_wrapper(*args, **kwargs)
 
 
-class BaseTaskManager(object):
+class BaseTaskManager:
   """Class to manage Turbinia Tasks.
 
   Handles incoming new Evidence messages, adds new Tasks to the queue and
@@ -203,6 +217,7 @@ class BaseTaskManager(object):
             'Adding {0:s} job to process {1:s}'.format(
                 job_instance.name, evidence_.name))
         job_count += 1
+        turbinia_jobs_total.inc()
         for task in job_instance.create_tasks([evidence_]):
           self.add_task(task, job_instance, evidence_)
 
@@ -338,6 +353,7 @@ class BaseTaskManager(object):
       job.tasks.append(task)
     self.state_manager.write_new_task(task)
     self.enqueue_task(task, evidence_)
+    turbinia_server_tasks_total.inc()
 
   def remove_jobs(self, request_id):
     """Removes the all Jobs for the given request ID.
@@ -369,6 +385,7 @@ class BaseTaskManager(object):
 
     if remove_job:
       self.running_jobs.remove(remove_job)
+      turbinia_jobs_completed_total.inc()
     return bool(remove_job)
 
   def enqueue_task(self, task, evidence_):
@@ -453,6 +470,7 @@ class BaseTaskManager(object):
             job.name, task.id))
     self.state_manager.update_task(task)
     job.remove_task(task.id)
+    turbinia_server_tasks_completed_total.inc()
     if job.check_done() and not (job.is_finalize_job or task.is_finalize_task):
       log.debug(
           'Job {0:s} completed, creating Job finalize tasks'.format(job.name))
@@ -495,8 +513,8 @@ class BaseTaskManager(object):
           job = self.process_result(task.result)
           if job:
             self.process_job(job, task)
+        self.state_manager.update_task(task)
 
-      [self.state_manager.update_task(t) for t in self.tasks]
       if config.SINGLE_RUN and self.check_done():
         log.info('No more tasks to process.  Exiting now.')
         return
@@ -553,7 +571,8 @@ class CeleryTaskManager(BaseTaskManager):
         log.debug('Task {0:s} status unknown'.format(celery_task.id))
 
     outstanding_task_count = len(self.tasks) - len(completed_tasks)
-    log.info('{0:d} Tasks still outstanding.'.format(outstanding_task_count))
+    if outstanding_task_count > 0:
+      log.info('{0:d} Tasks still outstanding.'.format(outstanding_task_count))
     return completed_tasks
 
   def get_evidence(self):
@@ -574,6 +593,7 @@ class CeleryTaskManager(BaseTaskManager):
             'Received evidence [{0:s}] from Kombu message.'.format(
                 str(evidence_)))
         evidence_list.append(evidence_)
+      turbinia_server_request_total.inc()
     return evidence_list
 
   def enqueue_task(self, task, evidence_):
@@ -646,7 +666,8 @@ class PSQTaskManager(BaseTaskManager):
         completed_tasks.append(task)
 
     outstanding_task_count = len(self.tasks) - len(completed_tasks)
-    log.info('{0:d} Tasks still outstanding.'.format(outstanding_task_count))
+    if outstanding_task_count > 0:
+      log.info('{0:d} Tasks still outstanding.'.format(outstanding_task_count))
     return completed_tasks
 
   def get_evidence(self):
@@ -662,6 +683,7 @@ class PSQTaskManager(BaseTaskManager):
             'Received evidence [{0:s}] from PubSub message.'.format(
                 str(evidence_)))
         evidence_list.append(evidence_)
+      turbinia_server_request_total.inc()
     return evidence_list
 
   def enqueue_task(self, task, evidence_):

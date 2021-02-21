@@ -93,6 +93,12 @@ OPTIONAL_VARS = [
     'EMAIL_PORT',
     'EMAIL_ADDRESS',
     'EMAIL_PASSWORD',
+    # Prometheus config
+    'PROMETHEUS_ENABLED',
+    'PROMETHEUS_ADDR',
+    'PROMETHEUS_PORT',
+    # General config
+    'TURBINIA_COMMAND'
 ]
 
 # Environment variable to look for path data in

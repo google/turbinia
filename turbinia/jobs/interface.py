@@ -23,7 +23,7 @@ from turbinia import config
 log = logging.getLogger('turbinia')
 
 
-class TurbiniaJob(object):
+class TurbiniaJob:
   """Base class for Turbinia Jobs.
 
   Attributes:

@@ -119,7 +119,7 @@ class TestLocalOutputManager(unittest.TestCase):
 
     with open(src_file, 'w') as fh:
       fh.write(test_contents)
-    test_evidence.local_path = src_file
+    test_evidence.source_path = src_file
 
     self.assertFalse(os.path.exists(dst_file))
     return_evidence = self.task.output_manager.save_evidence(
@@ -150,7 +150,7 @@ class TestLocalOutputManager(unittest.TestCase):
 
     with open(src_file, 'w') as fh:
       fh.write(test_contents)
-    test_evidence.local_path = src_file
+    test_evidence.source_path = src_file
 
     self.assertFalse(os.path.exists(dst_file))
     return_evidence = self.task.output_manager.save_evidence(

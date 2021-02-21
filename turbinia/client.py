@@ -32,6 +32,7 @@ import subprocess
 import codecs
 
 from google import auth
+from prometheus_client import start_http_server
 from turbinia import config
 from turbinia.config import logger
 from turbinia.config import DATETIME_FORMAT
@@ -50,6 +51,7 @@ from turbinia.workers.docker import DockerContainersEnumerationTask
 from turbinia.workers.grep import GrepTask
 from turbinia.workers.hadoop import HadoopAnalysisTask
 from turbinia.workers.hindsight import HindsightTask
+from turbinia.workers.partitions import PartitionEnumerationTask
 from turbinia.workers.plaso import PlasoTask
 from turbinia.workers.psort import PsortTask
 from turbinia.workers.redis import RedisAnalysisTask
@@ -77,6 +79,7 @@ TASK_MAP = {
     'greptask': GrepTask,
     'hadoopanalysistask': HadoopAnalysisTask,
     'hindsighttask': HindsightTask,
+    'partitionenumerationtask': PartitionEnumerationTask,
     'plasotask': PlasoTask,
     'psorttask': PsortTask,
     'redisanalysistask': RedisAnalysisTask,
@@ -193,8 +196,10 @@ def check_system_dependencies(dependencies):
     elif not values.get('docker_image'):
       for program in values['programs']:
         cmd = 'type {0:s}'.format(program)
-        proc = subprocess.Popen(cmd, shell=True)
-        proc.communicate()
+        proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
+        output, _ = proc.communicate()
+        log.debug(
+            'Dependency resolved: {0:s}'.format(output.strip().decode('utf8')))
         ret = proc.returncode
         if ret != 0:
           raise TurbiniaException(
@@ -232,7 +237,7 @@ def check_directory(directory):
           'Can not add write permissions to {0:s}'.format(directory))
 
 
-class TurbiniaStats(object):
+class TurbiniaStats:
   """Statistics for Turbinia task execution.
 
   Attributes:
@@ -304,7 +309,7 @@ class TurbiniaStats(object):
         self.description, self.count, self.min, self.mean, self.max)
 
 
-class BaseTurbiniaClient(object):
+class BaseTurbiniaClient:
   """Client class for Turbinia.
 
   Attributes:
@@ -443,14 +448,17 @@ class BaseTurbiniaClient(object):
       except auth.exceptions.RefreshError as exception:
         if credential_error_count == 0:
           log.info(
-              'GCP Credentials need to be refreshed, please refresh in another '
-              'terminal and this process will resume. Error: {0!s}'.format(
-                  exception))
+              'GCP Credentials need to be refreshed by running gcloud auth '
+              'application-default login, please refresh in another terminal '
+              'and run turbiniactl -w status -r {0!s} and this process will '
+              'resume. Error: {1!s}'.format(request_id, exception))
         else:
           log.debug(
-              'GCP Credentials need to be refreshed, please refresh in another '
-              'terminal and this process will resume. Attempt {0:d}. Error: '
-              '{1!s}'.format(credential_error_count + 1, exception))
+              'GCP Credentials need to be refreshed by running gcloud auth '
+              'application-default login, please refresh in another terminal '
+              'and run turbiniactl -w status -r {0!s} and this process will '
+              'resume. Attempt {1:d}. Error: '
+              '{2!s}'.format(request_id, credential_error_count + 1, exception))
         # Note, we are intentially not incrementing the retry_count here because
         # we will retry indefinitely while we wait for the user to reauth.
         credential_error_count += 1
@@ -517,9 +525,9 @@ class BaseTurbiniaClient(object):
     report.append(fmt.heading2(task.get('name')))
     line = '{0:s} {1:s}'.format(fmt.bold('Status:'), status)
     report.append(fmt.bullet(line))
-    report.append(fmt.bullet('Task Id: {0:s}'.format(task.get('id'))))
+    report.append(fmt.bullet('Task Id: {0!s}'.format(task.get('id'))))
     report.append(
-        fmt.bullet('Executed on worker {0:s}'.format(task.get('worker_name'))))
+        fmt.bullet('Executed on worker {0!s}'.format(task.get('worker_name'))))
     if task.get('report_data'):
       report.append('')
       report.append(fmt.heading3('Task Reported Data'))
@@ -770,6 +778,7 @@ class BaseTurbiniaClient(object):
     # Create dictionary of worker_node: {{task_id, task_update,
     # task_name, task_status}}
     workers_dict = {}
+    unassigned_dict = {}
     scheduled_counter = 0
     for result in task_results:
       worker_node = result.get('worker_name')
@@ -777,6 +786,12 @@ class BaseTurbiniaClient(object):
       status = status if status else 'No task status'
       if worker_node and worker_node not in workers_dict:
         workers_dict[worker_node] = []
+      elif not worker_node:
+        # Track scheduled/unassigned Tasks for reporting.
+        scheduled_counter += 1
+        worker_node = 'Unassigned'
+        if worker_node not in unassigned_dict:
+          unassigned_dict[worker_node] = []
       if worker_node:
         task_dict = {}
         task_dict['task_id'] = result.get('id')
@@ -785,17 +800,18 @@ class BaseTurbiniaClient(object):
         task_dict['status'] = status
         # Check status for anything that is running.
         if 'running' in status:
-          run_time = (datetime.now() -
+          run_time = (datetime.utcnow() -
                       result.get('last_update')).total_seconds()
           run_time = timedelta(seconds=run_time)
           task_dict['run_time'] = run_time
         else:
           run_time = result.get('run_time')
           task_dict['run_time'] = run_time if run_time else 'No run time.'
-        workers_dict[worker_node].append(task_dict)
-      else:
-        # Track scheduled/unassigned Tasks for reporting.
-        scheduled_counter += 1
+        # Update to correct dictionary
+        if worker_node == 'Unassigned':
+          unassigned_dict[worker_node].append(task_dict)
+        else:
+          workers_dict[worker_node].append(task_dict)
 
     # Generate report header
     report = []
@@ -828,11 +844,23 @@ class BaseTurbiniaClient(object):
       report.append('')
       report.append(fmt.heading3('Queued Tasks'))
       report.extend(queued_status if queued_status else not_found)
-      # Add Historical Tasks
+      # Add Finished Tasks
       if all_fields:
         report.append('')
         report.append(fmt.heading3('Finished Tasks'))
         report.extend(other_status if other_status else not_found)
+
+    # Add unassigned worker tasks
+    unassigned_status = []
+    for tasks in unassigned_dict.values():
+      for task in tasks:
+        unassigned_status.extend(self.format_worker_task(task))
+    # Now add to main report
+    if all_fields:
+      report.append('')
+      report.append(fmt.heading2('Unassigned Worker Tasks'))
+      report.extend(unassigned_status if unassigned_status else not_found)
+
     return '\n'.join(report)
 
   def format_request_status(
@@ -1014,7 +1042,7 @@ class BaseTurbiniaClient(object):
     if not request.evidence:
       raise TurbiniaException('TurbiniaRequest does not contain evidence.')
     log.info('Running Task {0:s} locally'.format(task_name))
-    result = task.run_wrapper(request.evidence[0])
+    result = task.run_wrapper(request.evidence[0].serialize())
     return result
 
   def send_request(self, request):
@@ -1097,7 +1125,7 @@ class TurbiniaCeleryClient(BaseTurbiniaClient):
     return self.redis.get_task_data(instance, days, task_id, request_id)
 
 
-class TurbiniaServer(object):
+class TurbiniaServer:
   """Turbinia Server class.
 
   Attributes:
@@ -1117,6 +1145,13 @@ class TurbiniaServer(object):
 
   def start(self):
     """Start Turbinia Server."""
+    if config.PROMETHEUS_ENABLED:
+      if config.PROMETHEUS_PORT and config.PROMETHEUS_ADDR:
+        log.info('Starting Prometheus endpoint.')
+        start_http_server(
+            port=config.PROMETHEUS_PORT, addr=config.PROMETHEUS_ADDR)
+      else:
+        log.info('Prometheus enabled but port or address not set!')
     log.info('Running Turbinia Server.')
     self.task_manager.run()
 
@@ -1176,7 +1211,7 @@ class TurbiniaCeleryWorker(BaseTurbiniaClient):
     self.worker.start(argv)
 
 
-class TurbiniaPsqWorker(object):
+class TurbiniaPsqWorker:
   """Turbinia PSQ Worker class.
 
   Attributes:
@@ -1238,5 +1273,12 @@ class TurbiniaPsqWorker(object):
 
   def start(self):
     """Start Turbinia PSQ Worker."""
+    if config.PROMETHEUS_ENABLED:
+      if config.PROMETHEUS_PORT and config.PROMETHEUS_ADDR:
+        log.info('Starting Prometheus endpoint.')
+        start_http_server(
+            port=config.PROMETHEUS_PORT, addr=config.PROMETHEUS_ADDR)
+      else:
+        log.info('Prometheus enabled but port or address not set!')
     log.info('Running Turbinia PSQ Worker.')
     self.worker.listen()

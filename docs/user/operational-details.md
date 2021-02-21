@@ -58,6 +58,15 @@ In order to enable this feature, please set the `STACKDRIVER_TRACEBACK` config v
 STACKDRIVER_TRACEBACK = True
 ```
 
+### Prometheus instrumentation
+The Turbinia worker and server expose metrics based on [Prometheus](https://prometheus.io/). The implementation exposes a port so monitoring systems can poll the server and worker to fetch running metrics. The configuration (listening port and address) are defined within the `.turbiniarc` configuration file as illustrated below. 
+```
+# Prometheus listen address and port
+PROMETHEUS_ADDR = '0.0.0.0'
+PROMETHEUS_PORT = 8000
+```
+By default it will listen on all interfaces on port 8000.
+
 ## General Notes
 
 *   Turbinia currently assumes that Evidence is equally available to all worker

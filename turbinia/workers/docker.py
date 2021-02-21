@@ -22,6 +22,7 @@ import subprocess
 from turbinia import TurbiniaException
 from turbinia.evidence import DockerContainer
 from turbinia.evidence import EvidenceState as state
+from turbinia.lib import utils
 from turbinia.workers import Priority
 from turbinia.workers import TurbiniaTask
 from turbinia.lib.docker_manager import GetDockerPath
@@ -33,9 +34,7 @@ log = logging.getLogger('turbinia')
 class DockerContainersEnumerationTask(TurbiniaTask):
   """Enumerates Docker containers on Linux"""
 
-  REQUIRED_STATES = [
-      state.ATTACHED, state.MOUNTED, state.PARENT_ATTACHED, state.PARENT_MOUNTED
-  ]
+  REQUIRED_STATES = [state.ATTACHED, state.MOUNTED]
 
   def GetContainers(self, evidence):
     """Lists the containers from an input Evidence.
@@ -51,7 +50,8 @@ class DockerContainersEnumerationTask(TurbiniaTask):
       a list(dict) containing information about the containers found.
 
     Raises:
-      TurbiniaException: when the docker-explorer tool failed to run.
+      TurbiniaException: when the docker-explorer tool cannot be found or failed
+          to run.
     """
     config.LoadConfig()
     docker_dir = GetDockerPath(evidence.mount_path)
@@ -60,8 +60,12 @@ class DockerContainersEnumerationTask(TurbiniaTask):
 
     # TODO(rgayon): use docker-explorer exposed constant when
     # https://github.com/google/docker-explorer/issues/80 is in.
+    de_binary = utils.get_exe_path('de.py')
+    if not de_binary:
+      raise TurbiniaException('Cannot find de.py in path')
+
     docker_explorer_command = [
-        'sudo', 'de.py', '-r', docker_dir, 'list', 'all_containers'
+        'sudo', de_binary, '-r', docker_dir, 'list', 'all_containers'
     ]
     if config.DEBUG_TASKS or evidence.config.get('debug_tasks'):
       docker_explorer_command.append('-d')

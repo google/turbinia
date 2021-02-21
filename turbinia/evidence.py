@@ -24,9 +24,9 @@ import sys
 
 from turbinia import config
 from turbinia import TurbiniaException
+from turbinia.processors import archive
 from turbinia.processors import docker
 from turbinia.processors import mount_local
-from turbinia.processors import archive
 from turbinia.lib.docker_manager import GetDockerPath
 
 # pylint: disable=keyword-arg-before-vararg
@@ -94,16 +94,10 @@ class EvidenceState(IntEnum):
   """
   MOUNTED = 1
   ATTACHED = 2
-  # Using PARENT_* states here for compound evidence types like
-  # GoogleCloudDiskRawEmbedded so that we can control those states
-  # independently.
-  PARENT_MOUNTED = 3
-  PARENT_ATTACHED = 4
-  DECOMPRESSED = 5
-  DOCKER_MOUNTED = 6
+  DECOMPRESSED = 3
 
 
-class Evidence(object):
+class Evidence:
   """Evidence object for processing.
 
   In most cases, these objects will just contain metadata about the actual
@@ -128,11 +122,20 @@ class Evidence(object):
     source (str): String indicating where evidence came from (including tool
         version that created it, if appropriate).
     local_path (str): Path to the processed data (can be a blockdevice or a
-        directory).
-    source_path (str): Path to the un-processed source data for the Evidence.
+        mounted directory, etc).  This is the path that most Tasks should use to
+        access evidence after it's been processed on the worker (i.e. when the
+        Tasks `run()` method is called).  The last pre-processor to run should
+        set this path.
+    source_path (str): Path to the original un-processed source data for the
+        Evidence.  This is the path that Evidence should be created and set up
+        with initially.  Tasks should generally not use this path, but instead
+        use the `local_path`.
     mount_path (str): Path to a mounted file system (if relevant).
+    credentials (list): Decryption keys for encrypted evidence.
     tags (dict): Extra tags associated with this evidence.
     request_id (str): The id of the request this evidence came from, if any.
+    has_child_evidence (bool): This property indicates the evidence object has
+        child evidence.
     parent_evidence (Evidence): The Evidence object that was used to generate
         this one, and which pre/post process methods we need to re-execute to
         access data relevant to us.
@@ -164,10 +167,12 @@ class Evidence(object):
     self.cloud_only = False
     self.description = description
     self.mount_path = None
+    self.credentials = []
     self.source = source
     self.source_path = source_path
     self.tags = tags if tags else {}
     self.request_id = request_id
+    self.has_child_evidence = False
     self.parent_evidence = None
     self.save_metadata = False
 
@@ -218,10 +223,6 @@ class Evidence(object):
 
   def serialize(self):
     """Return JSON serializable object."""
-    # Set all states to False because if we are serializing the Evidence it is
-    # because this is about to be returned, and the state has no meaning
-    # outside of the context on the Worker.
-    self.state = {state: False for state in self.state}
     serialized_evidence = self.__dict__.copy()
     if self.parent_evidence:
       serialized_evidence['parent_evidence'] = self.parent_evidence.serialize()
@@ -245,6 +246,17 @@ class Evidence(object):
 
     return serialized
 
+  def set_parent(self, parent_evidence):
+    """Set the parent evidence of this evidence.
+
+    Also adds this evidence as a child of the parent.
+
+    Args:
+      parent_evidence(Evidence): The parent evidence object.
+    """
+    parent_evidence.has_child_evidence = True
+    self.parent_evidence = parent_evidence
+
   def _preprocess(self, _, required_states):
     """Preprocess this evidence prior to task running.
 
@@ -252,7 +264,7 @@ class Evidence(object):
 
     Args:
       tmp_dir(str): The path to the temporary directory that the
-                       Task will write to.
+          Task will write to.
       required_states(list[EvidenceState]): The list of evidence state
           requirements from the Task.
     """
@@ -314,6 +326,7 @@ class Evidence(object):
           possible states of the Evidence or if the parent evidence object does
           not exist when it is required by the Evidence type..
     """
+    self.local_path = self.source_path
     if not required_states:
       required_states = []
 
@@ -324,6 +337,7 @@ class Evidence(object):
                 self.type))
       self.parent_evidence.preprocess(tmp_dir, required_states)
     try:
+      log.debug('Starting pre-processor for evidence {0:s}'.format(self.name))
       self._preprocess(tmp_dir, required_states)
     except TurbiniaException as exception:
       log.error(
@@ -341,6 +355,8 @@ class Evidence(object):
     then recurse down the chain of parent Evidence and run those post-processors
     in order.
     """
+    log.info('Starting post-processor for evidence {0:s}'.format(self.name))
+    log.debug('Evidence state: {0:s}'.format(self.format_state()))
     self._postprocess()
     if self.parent_evidence:
       self.parent_evidence.postprocess()
@@ -437,10 +453,14 @@ class CompressedDirectory(Evidence):
       self.state[EvidenceState.DECOMPRESSED] = True
 
   def compress(self):
-    """ Compresses a file or directory."""
+    """ Compresses a file or directory.
+
+    Creates a tar.gz from the uncompressed_directory attribute.
+    """
     # Compress a given directory and return the compressed path.
-    self.compressed_directory = archive.CompressDirectory(self.local_path)
-    self.local_path = self.compressed_directory
+    self.compressed_directory = archive.CompressDirectory(
+        self.uncompressed_directory)
+    self.source_path = self.compressed_directory
     self.state[EvidenceState.DECOMPRESSED] = False
 
 
@@ -482,39 +502,117 @@ class RawDisk(Evidence):
     size: The size of the disk in bytes.
   """
 
-  POSSIBLE_STATES = [EvidenceState.MOUNTED, EvidenceState.ATTACHED]
+  POSSIBLE_STATES = [EvidenceState.ATTACHED]
 
-  def __init__(self, mount_partition=1, size=None, *args, **kwargs):
+  def __init__(self, size=None, *args, **kwargs):
     """Initialization for raw disk evidence object."""
-
-    if mount_partition < 1:
-      raise TurbiniaException(
-          'Partition numbers start at 1, but was given {0:d}'.format(
-              mount_partition))
-
     self.device_path = None
-    self.mount_partition = mount_partition
     self.size = size
     super(RawDisk, self).__init__(*args, **kwargs)
 
   def _preprocess(self, _, required_states):
-    if EvidenceState.ATTACHED in required_states:
-      self.device_path, partition_paths = mount_local.PreprocessLosetup(
-          self.source_path)
+    if EvidenceState.ATTACHED in required_states or self.has_child_evidence:
+      self.device_path = mount_local.PreprocessLosetup(self.source_path)
       self.state[EvidenceState.ATTACHED] = True
-    if EvidenceState.MOUNTED in required_states:
-      self.mount_path = mount_local.PreprocessMountDisk(
-          partition_paths, self.mount_partition)
       self.local_path = self.device_path
-      self.state[EvidenceState.MOUNTED] = True
+
+  def _postprocess(self):
+    if self.state[EvidenceState.ATTACHED]:
+      mount_local.PostprocessDeleteLosetup(self.device_path)
+      self.state[EvidenceState.ATTACHED] = False
+
+
+class DiskPartition(RawDisk):
+  """Evidence object for a partition within Disk based evidence.
+
+  More information on dfVFS types:
+  https://dfvfs.readthedocs.io/en/latest/sources/Path-specifications.html
+
+  Attributes:
+    partition_location (str): dfVFS partition location (The location of the
+        volume within the volume system, similar to a volume identifier).
+    partition_offset (int): Offset of the partition in bytes.
+    partition_size (int): Size of the partition in bytes.
+    path_spec (dfvfs.PathSpec): Partition path spec.
+  """
+
+  POSSIBLE_STATES = [EvidenceState.ATTACHED, EvidenceState.MOUNTED]
+
+  def __init__(
+      self, partition_location=None, partition_offset=None, partition_size=None,
+      path_spec=None, *args, **kwargs):
+    """Initialization for raw volume evidence object."""
+
+    self.partition_location = partition_location
+    self.partition_offset = partition_offset
+    self.partition_size = partition_size
+    self.path_spec = path_spec
+    super(DiskPartition, self).__init__(*args, **kwargs)
+
+    # This Evidence needs to have a parent
+    self.context_dependent = True
+
+  def _preprocess(self, _, required_states):
+    # Late loading the partition processor to avoid loading dfVFS unnecessarily.
+    from turbinia.processors import partitions
+
+    # We need to enumerate partitions in preprocessing so the path_specs match
+    # the parent evidence location for each task.
+    try:
+      path_specs = partitions.Enumerate(self.parent_evidence)
+    except TurbiniaException as e:
+      log.error(e)
+
+    path_spec = partitions.GetPathSpecByLocation(
+        path_specs, self.partition_location)
+    if path_spec:
+      self.path_spec = path_spec
+
+    # In attaching a partition, we create a new loopback device using the
+    # partition offset and size.
+    if EvidenceState.ATTACHED in required_states or self.has_child_evidence:
+      # Check for encryption
+      encryption_type = partitions.GetPartitionEncryptionType(path_spec)
+      if encryption_type == 'BDE':
+        self.device_path = mount_local.PreprocessBitLocker(
+            self.parent_evidence.device_path,
+            partition_offset=self.partition_offset,
+            credentials=self.parent_evidence.credentials)
+        if not self.device_path:
+          log.error('Could not decrypt partition.')
+      else:
+        self.device_path = mount_local.PreprocessLosetup(
+            self.parent_evidence.device_path,
+            partition_offset=self.partition_offset,
+            partition_size=self.partition_size)
+      if self.device_path:
+        self.state[EvidenceState.ATTACHED] = True
+        self.local_path = self.device_path
+
+    if EvidenceState.MOUNTED in required_states or self.has_child_evidence:
+      self.mount_path = mount_local.PreprocessMountPartition(self.device_path)
+      if self.mount_path:
+        self.local_path = self.mount_path
+        self.state[EvidenceState.MOUNTED] = True
 
   def _postprocess(self):
     if self.state[EvidenceState.MOUNTED]:
       mount_local.PostprocessUnmountPath(self.mount_path)
       self.state[EvidenceState.MOUNTED] = False
     if self.state[EvidenceState.ATTACHED]:
-      mount_local.PostprocessDeleteLosetup(self.device_path)
-      self.state[EvidenceState.ATTACHED] = False
+      # Late loading the partition processor to avoid loading dfVFS unnecessarily.
+      from turbinia.processors import partitions
+
+      # Check for encryption
+      encryption_type = partitions.GetPartitionEncryptionType(self.path_spec)
+      if encryption_type == 'BDE':
+        # bdemount creates a virtual device named bde1 in the mount path. This
+        # needs to be unmounted rather than detached.
+        mount_local.PostprocessUnmountPath(self.device_path.replace('bde1', ''))
+        self.state[EvidenceState.ATTACHED] = False
+      else:
+        mount_local.PostprocessDeleteLosetup(self.device_path)
+        self.state[EvidenceState.ATTACHED] = False
 
 
 class EncryptedDisk(RawDisk):
@@ -596,30 +694,33 @@ class GoogleCloudDisk(RawDisk):
   REQUIRED_ATTRIBUTES = ['disk_name', 'project', 'zone']
   POSSIBLE_STATES = [EvidenceState.ATTACHED, EvidenceState.MOUNTED]
 
-  def __init__(self, project=None, zone=None, disk_name=None, *args, **kwargs):
+  def __init__(
+      self, project=None, zone=None, disk_name=None, mount_partition=1, *args,
+      **kwargs):
     """Initialization for Google Cloud Disk."""
     self.project = project
     self.zone = zone
     self.disk_name = disk_name
+    self.mount_partition = mount_partition
+    self.partition_paths = None
     super(GoogleCloudDisk, self).__init__(*args, **kwargs)
     self.cloud_only = True
 
   def _preprocess(self, _, required_states):
+    # The GoogleCloudDisk should never need to be mounted unless it has child
+    # evidence (GoogleCloudDiskRawEmbedded). In all other cases, the
+    # DiskPartition evidence will be used. In this case we're breaking the
+    # evidence layer isolation and having the child evidence manage the
+    # mounting and unmounting.
+
     if EvidenceState.ATTACHED in required_states:
       self.device_path, partition_paths = google_cloud.PreprocessAttachDisk(
           self.disk_name)
+      self.partition_paths = partition_paths
+      self.local_path = self.device_path
       self.state[EvidenceState.ATTACHED] = True
 
-    if EvidenceState.MOUNTED in required_states:
-      self.mount_path = mount_local.PreprocessMountDisk(
-          partition_paths, self.mount_partition)
-      self.local_path = self.device_path
-      self.state[EvidenceState.MOUNTED] = True
-
   def _postprocess(self):
-    if self.state[EvidenceState.MOUNTED]:
-      mount_local.PostprocessUnmountPath(self.mount_path)
-      self.state[EvidenceState.MOUNTED] = False
     if self.state[EvidenceState.ATTACHED]:
       google_cloud.PostprocessDetachDisk(self.disk_name, self.device_path)
       self.state[EvidenceState.ATTACHED] = False
@@ -637,48 +738,49 @@ class GoogleCloudDiskRawEmbedded(GoogleCloudDisk):
     embedded_path: The path of the raw disk image inside the Persistent Disk
   """
 
-  REQUIRED_ATTRIBUTES = [
-      'disk_name', 'project', 'zone', 'embedded_partition', 'embedded_path'
-  ]
-  POSSIBLE_STATES = [
-      EvidenceState.PARENT_ATTACHED, EvidenceState.PARENT_MOUNTED
-  ]
+  REQUIRED_ATTRIBUTES = ['disk_name', 'project', 'zone', 'embedded_path']
+  POSSIBLE_STATES = [EvidenceState.ATTACHED]
 
-  def __init__(
-      self, embedded_path=None, embedded_partition=None, *args, **kwargs):
+  def __init__(self, embedded_path=None, *args, **kwargs):
     """Initialization for Google Cloud Disk containing a raw disk image."""
     self.embedded_path = embedded_path
-    self.embedded_partition = embedded_partition
     super(GoogleCloudDiskRawEmbedded, self).__init__(*args, **kwargs)
 
     # This Evidence needs to have a GoogleCloudDisk as a parent
     self.context_dependent = True
 
   def _preprocess(self, _, required_states):
-    if EvidenceState.PARENT_ATTACHED in required_states:
+    # Need to mount parent disk
+    if not self.parent_evidence.partition_paths:
+      self.parent_evidence.mount_path = mount_local.PreprocessMountPartition(
+          self.parent_evidence.device_path)
+    else:
+      partition_paths = self.parent_evidence.partition_paths
+      self.parent_evidence.mount_path = mount_local.PreprocessMountDisk(
+          partition_paths, self.parent_evidence.mount_partition)
+    self.parent_evidence.local_path = self.parent_evidence.mount_path
+    self.parent_evidence.state[EvidenceState.MOUNTED] = True
+
+    if EvidenceState.ATTACHED in required_states or self.has_child_evidence:
       rawdisk_path = os.path.join(
           self.parent_evidence.mount_path, self.embedded_path)
       if not os.path.exists(rawdisk_path):
         raise TurbiniaException(
             'Unable to find raw disk image {0:s} in GoogleCloudDisk'.format(
                 rawdisk_path))
-      self.device_path, partition_paths = mount_local.PreprocessLosetup(
-          rawdisk_path)
-      self.state[EvidenceState.PARENT_ATTACHED] = True
-
-    if EvidenceState.PARENT_MOUNTED in required_states:
-      self.mount_path = mount_local.PreprocessMountDisk(
-          partition_paths, self.mount_partition)
+      self.device_path = mount_local.PreprocessLosetup(rawdisk_path)
+      self.state[EvidenceState.ATTACHED] = True
       self.local_path = self.device_path
-      self.state[EvidenceState.PARENT_MOUNTED] = True
 
   def _postprocess(self):
-    if self.state[EvidenceState.PARENT_MOUNTED]:
-      mount_local.PostprocessUnmountPath(self.mount_path)
-      self.state[EvidenceState.PARENT_MOUNTED] = False
-    if self.state[EvidenceState.PARENT_ATTACHED]:
+    if self.state[EvidenceState.ATTACHED]:
       mount_local.PostprocessDeleteLosetup(self.device_path)
-      self.state[EvidenceState.PARENT_ATTACHED] = False
+      self.state[EvidenceState.ATTACHED] = False
+
+    # Need to unmount parent disk
+    if self.parent_evidence.state[EvidenceState.MOUNTED]:
+      mount_local.PostprocessUnmountPath(self.parent_evidence.mount_path)
+      self.parent_evidence.state[EvidenceState.MOUNTED] = False
 
 
 class PlasoFile(Evidence):
@@ -782,7 +884,7 @@ class DockerContainer(Evidence):
     _docker_root_directory(str): Full path to the docker root directory.
   """
 
-  POSSIBLE_STATES = [EvidenceState.DOCKER_MOUNTED]
+  POSSIBLE_STATES = [EvidenceState.MOUNTED]
 
   def __init__(self, container_id=None, *args, **kwargs):
     """Initialization for Docker Container."""
@@ -794,7 +896,10 @@ class DockerContainer(Evidence):
     self.context_dependent = True
 
   def _preprocess(self, _, required_states):
-    if EvidenceState.DOCKER_MOUNTED in required_states:
+    # Checking for either ATTACHED or MOUNTED since artefact extraction only
+    # requires ATTACHED, but a docker container can't be attached.
+    if (EvidenceState.ATTACHED in required_states or
+        EvidenceState.MOUNTED in required_states):
       self._docker_root_directory = GetDockerPath(
           self.parent_evidence.mount_path)
       # Mounting the container's filesystem
@@ -802,8 +907,10 @@ class DockerContainer(Evidence):
           self._docker_root_directory, self.container_id)
       self.mount_path = self._container_fs_path
       self.local_path = self.mount_path
-      self.state[EvidenceState.DOCKER_MOUNTED] = True
+      self.state[EvidenceState.MOUNTED] = True
 
   def _postprocess(self):
-    # Unmount the container's filesystem
-    mount_local.PostprocessUnmountPath(self._container_fs_path)
+    if self.state[EvidenceState.MOUNTED]:
+      # Unmount the container's filesystem
+      mount_local.PostprocessUnmountPath(self._container_fs_path)
+      self.state[EvidenceState.MOUNTED] = False

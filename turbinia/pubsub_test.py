@@ -25,7 +25,7 @@ from six.moves import queue
 from turbinia import evidence
 from turbinia import pubsub
 from turbinia import message
-from turbinia import celery
+from turbinia import tcelery as celery
 from turbinia import TurbiniaException
 
 
@@ -42,7 +42,7 @@ def getTurbiniaRequest():
   return request
 
 
-class MockPubSubMessage(object):
+class MockPubSubMessage:
   """This is a mock of a PubSub message."""
 
   def __init__(self, data='fake data', message_id='12345'):

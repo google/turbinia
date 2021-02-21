@@ -96,9 +96,10 @@ DOCKER_ENABLED = False
 
 # Any Jobs added to this list will be disabled by default at start-up.  See the
 # output of `turbiniactl listjobs` for a complete list of Jobs.  Job names
-# entered here are case insensitive.  Disabled Jobs can still be enabled with
-# the --jobs_allowlist flag on the server, but the client will not be able to
-# allowlist jobs that have been disabled or denylisted on the server.
+# entered here are case insensitive, but must be quoted.  Disabled Jobs can
+# still be enabled with the --jobs_allowlist flag on the server, but the client
+# will not be able to allowlist jobs that have been disabled or denylisted on
+# the server.
 DISABLED_JOBS = ['BinaryExtractorJob', 'BulkExtractorJob', 'PhotorecJob']
 
 # Configure additional job dependency checks below.
@@ -125,6 +126,10 @@ DEPENDENCIES = [{
 }, {
     'job': 'JenkinsAnalysisJob',
     'programs': ['john'],
+    'docker_image': None
+}, {
+    'job': 'PartitionEnumerationJob',
+    'programs': ['bdemount'],
     'docker_image': None
 }, {
     'job': 'PlasoJob',
@@ -233,3 +238,15 @@ EMAIL_PORT = 587
 # Email address and password
 EMAIL_ADDRESS = 'example@address.com'
 EMAIL_PASSWORD = 'Hunter2'
+
+###############################################################################
+#                           Prometheus Config
+#
+# These options are required for customizing the prometheus configuration
+###############################################################################
+# This will enable the Prometheus service for the workers and server.
+PROMETHEUS_ENABLED = True
+
+# Prometheus listen address and port
+PROMETHEUS_ADDR = '0.0.0.0'
+PROMETHEUS_PORT = 8000

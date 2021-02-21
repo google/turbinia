@@ -1,0 +1,62 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Turbinia Server",
+      "type": "python",
+      "request": "launch",
+      "program": "turbinia/turbiniactl.py",
+      "args": [
+        "-S",
+        "server"
+      ],
+      "console": "integratedTerminal",
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}"
+      }
+    },
+    {
+      "name": "Turbinia Celery Worker",
+      "type": "python",
+      "request": "launch",
+      "program": "turbinia/turbiniactl.py",
+      "args": [
+        "-S",
+        "celeryworker"
+      ],
+      "console": "integratedTerminal",
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}"
+      }
+    },
+    {
+      "name": "Turbinia PSQ Worker",
+      "type": "python",
+      "request": "launch",
+      "program": "turbinia/turbiniactl.py",
+      "args": [
+        "-S",
+        "psqworker"
+      ],
+      "console": "integratedTerminal",
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}"
+      }
+    },
+    {
+      "name": "Turbinia Client [custom]",
+      "type": "python",
+      "request": "launch",
+      "program": "turbinia/turbiniactl.py",
+      // Adjust turbinia client options below to suite your debug run
+      "args": [
+        "status",
+        "-i"
+      ],
+      "console": "integratedTerminal",
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}"
+      }
+    }
+  ]
+}

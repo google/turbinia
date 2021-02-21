@@ -23,19 +23,20 @@ import os
 import re
 import shutil
 import time
+from pathlib import Path
 
 from turbinia import config
 from turbinia import TurbiniaException
 
 config.LoadConfig()
-if config.GCS_OUTPUT_PATH and config.GCS_OUTPUT_PATH.lower() is not 'none':
+if config.GCS_OUTPUT_PATH and config.GCS_OUTPUT_PATH.lower() != 'none':
   from google.cloud import storage
   from google.cloud import exceptions
 
 log = logging.getLogger('turbinia')
 
 
-class OutputManager(object):
+class OutputManager:
   """Manages output data.
 
   Manages the configured output writers.  Also saves and retrieves evidence data
@@ -126,7 +127,7 @@ class OutputManager(object):
         log.info(
             'Retrieving copyable evidence data from {0:s}'.format(
                 evidence_.saved_path))
-        evidence_.local_path = writer.copy_from(evidence_.saved_path)
+        evidence_.source_path = writer.copy_from(evidence_.saved_path)
     return evidence_
 
   def save_evidence(self, evidence_, result=None):
@@ -143,7 +144,7 @@ class OutputManager(object):
       TurbiniaException: If serialization or writing of evidence config fails
     """
     path, path_type, local_path = self.save_local_file(
-        evidence_.local_path, result)
+        evidence_.source_path, result)
 
     if evidence_.save_metadata:
       metadata = evidence_.config.copy()
@@ -171,7 +172,7 @@ class OutputManager(object):
     # where tasks are saving evidence into the temp dir, we'll get the newly
     # copied version from the saved output path.
     if local_path:
-      evidence_.local_path = local_path
+      evidence_.source_path = local_path
     evidence_.saved_path = path
     evidence_.saved_path_type = path_type
     if evidence_.saved_path:
@@ -221,7 +222,7 @@ class OutputManager(object):
     self.is_setup = True
 
 
-class OutputWriter(object):
+class OutputWriter:
   """Base class.
 
   By default this will write the files the Evidence objects point to along with
@@ -435,8 +436,8 @@ class GCSOutputWriter(OutputWriter):
       message = (
           'Local source file {0:s} is empty.  Not uploading to GCS'.format(
               source_path))
-      log.error(message)
-      raise TurbiniaException(message)
+      log.warning(message)
+      return None
 
     bucket = self.client.get_bucket(self.bucket)
     destination_path = os.path.join(
@@ -495,3 +496,51 @@ class GCSOutputWriter(OutputWriter):
       log.error(message)
       raise TurbiniaException(message)
     return destination_path
+
+  def copy_from_gcs(self, saved_paths):
+    """Copies output file from the managed location to the local output dir.
+
+    Args:
+      saved_paths (list): A list of saved paths. List includes GCS and local
+      output file paths.
+
+    Raises:
+      TurbiniaException: If file retrieval fails.
+    """
+    bucket = self.client.get_bucket(self.bucket)
+
+    for path in saved_paths:
+      if 'gs://' in path:
+        gcs_path = self._parse_gcs_path(path)[1]
+
+        try:
+          # Reconstruct the same file structure as GCS on the output dir
+          path_split = gcs_path.split('/')
+          directory = os.path.join(*path_split[0:-1])
+          destination_path = os.path.join(self.local_output_dir, directory)
+          Path(destination_path).mkdir(parents=True, exist_ok=True)
+          if not os.path.exists(destination_path):
+            message = (
+                'Failed to create the file path {0:s}.'.format(
+                    destination_path))
+            log.error(message)
+            raise TurbiniaException(message)
+
+          file_name = os.path.join(destination_path, path_split[-1])
+
+          # Get the file from GCS
+          blob = storage.Blob(gcs_path, bucket, chunk_size=self.CHUNK_SIZE)
+          blob.download_to_filename(file_name, client=self.client)
+          log.info('Downloaded {0:s} to {1:s}.'.format(path, file_name))
+        except exceptions.RequestRangeNotSatisfiable as exception:
+          message = (
+              'File retrieval from GCS failed, file may be empty: {0!s}'.format(
+                  exception))
+          log.error(message)
+          raise TurbiniaException(message)
+        except exceptions.GoogleCloudError as exception:
+          message = 'File retrieval from GCS failed: {0!s}'.format(exception)
+          log.error(message)
+          raise TurbiniaException(message)
+
+    return

@@ -14,10 +14,14 @@
 # limitations under the License.
 """Main Turbinia application."""
 
-__version__ = '20190819'
-
 import logging
 log = logging.getLogger('turbinia')
+
+from pkg_resources import get_distribution, DistributionNotFound
+try:
+  __version__ = get_distribution(__name__).version
+except DistributionNotFound:
+  __version__ = "unknown"
 
 
 def log_and_report(message, trace):
@@ -28,13 +32,14 @@ def log_and_report(message, trace):
     trace(str): The error traceback message to log.
   """
   from turbinia import config
-  from turbinia.lib import google_cloud
 
   log.error(message)
   log.error(trace)
   # If GCP Error Reporting is enabled.
   config.LoadConfig()
   if config.STACKDRIVER_TRACEBACK:
+    # Only load google_cloud if needed
+    from turbinia.lib import google_cloud
     client = google_cloud.setup_stackdriver_traceback(config.TURBINIA_PROJECT)
     client.report_exception()
 

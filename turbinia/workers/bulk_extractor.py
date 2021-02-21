@@ -32,9 +32,7 @@ log = logging.getLogger('turbinia')
 class BulkExtractorTask(TurbiniaTask):
   """Task to generate Bulk Extractor output."""
 
-  REQUIRED_STATES = [
-      state.ATTACHED, state.PARENT_ATTACHED, state.PARENT_MOUNTED
-  ]
+  REQUIRED_STATES = [state.ATTACHED]
 
   def run(self, evidence, result):
     """Run Bulk Extractor binary.
@@ -59,6 +57,7 @@ class BulkExtractorTask(TurbiniaTask):
     # Add the output path to the evidence so we can automatically save it
     # later.
     output_evidence.local_path = output_file_path
+    output_evidence.uncompressed_directory = output_file_path
 
     # TODO: Convert to using real recipes after
     # https://github.com/google/turbinia/pull/486 is in.

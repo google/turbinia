@@ -8,6 +8,7 @@ User documentation
    install
    install-manual
    how-it-works
+   turbinia-local-stack
    using-docker
    operational-details
    debugging

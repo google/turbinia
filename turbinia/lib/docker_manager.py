@@ -76,7 +76,7 @@ def GetDockerPath(mount_path):
   return docker_path
 
 
-class DockerManager(object):
+class DockerManager:
   """Class handling Docker management."""
 
   def __init__(self):

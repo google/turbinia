@@ -8,9 +8,9 @@ local machines, or in a hybrid mode. See the
 documentation for more details on what the architecture looks like for each of
 these installation types. This doc covers the recommended quick installation
 instructions for Cloud installations. This uses
-[terraform configs](https://github.com/forseti-security/forseti-security/tree/master/contrib/incident-response)
+[terraform configs](https://github.com/forseti-security/osdfir-infrastructure)
 that are part of the
-[Forseti Security repository](https://github.com/forseti-security/forseti-security)
+[Forseti Security repository](https://github.com/forseti-security)
 to automate deployment of Turbinia into an existing GCP Project. If you want to
 install Turbinia in hybrid or local only mode, or want to install Turbinia
 manually (not recommended), see
@@ -45,16 +45,19 @@ to get a shell with access to your GCP resources.
     [Terraform CLI from here](https://www.terraform.io/downloads.html).
 *   Clone the Forseti Security repository and change to the path containing the
     configs
-    *   `git clone https://github.com/forseti-security/forseti-security/`
-    *   `cd forseti-security/contrib/incident-response/infrastructure`
+    *   `git clone https://github.com/forseti-security/osdfir-infrastructure/`
+    *   `cd osdfir-infrastructure`
 *   Configuration
     *   By default this will create one Turbinia server instance and one worker
         instance. If you want to change the number of workers, edit the
-        `turbinia/variables.tf` file and set the `turbinia_worker_count`
+        `modules/turbinia/variables.tf` file and set the `turbinia_worker_count`
         variable to the number of workers you want to deploy.
     *   To adjust the GCP zone and region you want to run Turbinia in, edit the
-        `turbinia/variables.tf` file and change the `gcp_zone` and `gcp_region`
-        variables as appropriate.
+        `modules/turbinia/variables.tf` file and change the `gcp_zone` and 
+        `gcp_region` variables as appropriate to reflect your GCP project's
+        zone and region.
+    *   If you want to use docker to run Turbinia tasks, please follow the
+        instructions [here](using-docker.md) to enable docker.
     *   Running the following commands will leave some state information under
         the current directory, so if you wish to continue to manage the number
         of workers via Terraform you should keep this directory for later use.
@@ -64,13 +67,12 @@ to get a shell with access to your GCP resources.
         [Terraform documentation](https://www.terraform.io/docs/commands/index.html)
         for more information.
 *   Initialize terraform and apply the configuration
-    *   `terraform init`
-    *   `terraform apply --target=module.turbinia`
-        *   If the `target` parameter is not supplied, Terraform will also
+    *   `./deploy.sh --no-timesketch`
+        *   If the `--no-timesketch` parameter is not supplied, Terraform will also
             create a [Timesketch](http://timesketch.org) instance in the same
             project, and this can be configured to ingest Turbinia timeline
             output and report data. See the
-            [Forseti documentation on this](https://github.com/forseti-security/forseti-security/blob/master/contrib/incident-response/infrastructure/README.md)
+            [Documentation on this](https://github.com/forseti-security/osdfir-infrastructure)
             for more details.
         *   When prompted for the project name, enter the project you selected
             during setup.
@@ -81,6 +83,10 @@ configured. The Turbinia configuration file will be deployed on these instances
 as `etc/turbinia/turbinia.conf`. If you later want to increase the number of
 workers, you can edit the `turbinia/variables.tf` file mentioned above and
 re-run `terraform apply`
+To use Turbinia you can use the virtual environment that was setup by
+the `deploy.sh` script.To activate the virtual environment, run the following
+command  `source ~/turbinia/bin/activate` and then use `turbiniactl`. For more
+information on how to use Turbinia please visit [the user manual](https://github.com/google/turbinia). 
 
 ### Client configuration (optional)
 

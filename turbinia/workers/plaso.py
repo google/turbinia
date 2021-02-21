@@ -120,6 +120,7 @@ class PlasoTask(TurbiniaTask):
             'for a bitlocker disk.')
         return result
 
+    cmd.extend(['--temporary_directory', self.tmp_dir])
     cmd.extend(['--logfile', plaso_log])
     cmd.extend([plaso_file, evidence.source_path])
     result.log('Running plaso as [{0:s}]'.format(' '.join(cmd)))
