@@ -17,6 +17,7 @@
 import os
 from tempfile import NamedTemporaryFile
 
+
 def file_to_str(file_path):
   """Read file to variable 
   Args:
@@ -34,6 +35,7 @@ def file_to_str(file_path):
     log.warning('Cannot open file {0:s} [{1!s}]'.format(file_path, e))
     sys.exit(1)
   return file_contents
+
 
 def file_to_list(file_path):
   """Read file to list line by line
@@ -65,6 +67,7 @@ def write_str_to_temp_file(source_str, preferred_dir=None):
     fh.write(source_str)
   return fh.name
 
+
 def write_file_to_temp_file(source_file, preferred_dir=None):
   """Creates a temporary file with the contents of a specified existing one.
 
@@ -80,6 +83,7 @@ def write_file_to_temp_file(source_file, preferred_dir=None):
   with NamedTemporaryFile(dir=preferred_dir, delete=False, mode='w') as fh:
     fh.write(contents)
   return fh.name
+
 
 def write_list_to_temp_file(entries, file_name=None, preferred_dir=None):
   """ Creates a file containing a line-by-line list of strings off of a 

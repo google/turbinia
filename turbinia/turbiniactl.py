@@ -29,7 +29,6 @@ import uuid
 from turbinia import config
 from turbinia import TurbiniaException
 from turbinia.config import logger
-<<<<<<< HEAD
 from libcloudforensics.providers.gcp import forensics as gcp_forensics
 from turbinia.lib import google_cloud
 from turbinia.lib import file_helpers
@@ -37,6 +36,7 @@ from turbinia import __version__
 from turbinia.processors import archive
 from turbinia.output_manager import OutputManager
 from turbinia.output_manager import GCSOutputWriter
+from turbinia.config import TurbiniaRecipe
 
 log = logging.getLogger('turbinia')
 # We set up the logger first without the file handler, and we will set up the

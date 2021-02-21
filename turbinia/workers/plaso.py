@@ -32,10 +32,7 @@ class PlasoTask(TurbiniaTask):
   """Task to run Plaso (log2timeline)."""
 
   # Plaso requires the Disk to be attached, but doesn't require it be mounted.
-  REQUIRED_STATUS = [
-      state.ATTACHED, state.PARENT_ATTACHED, state.PARENT_MOUNTED,
-      state.DECOMPRESSED
-  ]
+  REQUIRED_STATUS = [state.ATTACHED, state.DECOMPRESSED]
 
   task_config = {
       'status_view': 'none',
