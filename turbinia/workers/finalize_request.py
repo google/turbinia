@@ -25,7 +25,6 @@ from turbinia.workers import TurbiniaTask
 
 class FinalizeRequestTask(TurbiniaTask):
   """Task to finalize the Turbinia request."""
-  task_config = {}
 
   def run(self, evidence, result):
     """Main entry point for Task.

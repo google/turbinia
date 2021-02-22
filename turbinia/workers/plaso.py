@@ -66,10 +66,10 @@ class PlasoTask(TurbiniaTask):
       if len(k) > 1:
         prepend = '--'
       if k == 'file_filter':
-        file_path = file_helpers.write_list_to_temp_file(v)
+        file_path = file_helpers.write_list_to_temp_file(v, preferred_dir=self.tmp_dir)
         cmd.extend(['-f', file_path])
       elif k == 'yara_rules':
-        file_path = file_helpers.write_str_to_temp_file(v)
+        file_path = file_helpers.write_str_to_temp_file(v, preferred_dir=self.tmp_dir)
         cmd.extend(['--yara_rules', file_path])
       elif isinstance(v, list):
         cmd.extend([prepend + k, ','.join(v)])
@@ -121,7 +121,6 @@ class PlasoTask(TurbiniaTask):
     cmd.extend(['--logfile', plaso_log])
     cmd.extend([plaso_file, evidence.source_path])
     result.log('Running plaso as [{0:s}]'.format(' '.join(cmd)))
-
     self.execute(
         cmd, result, log_files=[plaso_log], new_evidence=[plaso_evidence],
         close=True)

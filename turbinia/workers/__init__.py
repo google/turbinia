@@ -380,7 +380,7 @@ class TurbiniaTask:
   # The list of evidence states that are required by a Task in order to run.
   # See `evidence.Evidence.preprocess()` docstrings for more details.
   REQUIRED_STATES = []
-
+    
   def __init__(
       self, name=None, base_output_dir=None, request_id=None, requester=None):
     """Initialization for TurbiniaTask."""
@@ -407,6 +407,7 @@ class TurbiniaTask:
     self.requester = requester if requester else 'user_unspecified'
     self._evidence_config = {}
     self.recipe = {}
+    self.task_config = {}
 
   def serialize(self):
     """Converts the TurbiniaTask object into a serializable dict.
