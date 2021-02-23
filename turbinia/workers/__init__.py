@@ -41,9 +41,18 @@ from turbinia import state_manager
 from turbinia import TurbiniaException
 from turbinia import log_and_report
 from turbinia.lib import docker_manager
+from prometheus_client import Gauge
 
 log = logging.getLogger('turbinia')
 
+turbinia_worker_tasks_total = Gauge(
+    'turbinia_worker_tasks_total', 'Turbinia Worker Total Tasks')
+turbinia_worker_tasks_completed_total = Gauge(
+    'turbinia_worker_tasks_completed_total',
+    'Total number of completed worker tasks')
+turbinia_worker_tasks_failed_total =  Gauge(
+    'turbinia_worker_tasks_failed_total',
+    'Total number of failed worker tasks')
 
 class Priority(IntEnum):
   """Reporting priority enum to store common values.
@@ -168,9 +177,11 @@ class TurbiniaTaskResult:
     if not status and self.successful:
       status = 'Completed successfully in {0:s} on {1:s}'.format(
           str(self.run_time), self.worker_name)
+      turbinia_worker_tasks_completed_total.inc()
     elif not status and not self.successful:
       status = 'Run failed in {0:s} on {1:s}'.format(
           str(self.run_time), self.worker_name)
+      turbinia_worker_tasks_failed_total.inc()
     self.log(status)
     self.status = status
 
@@ -750,6 +761,7 @@ class TurbiniaTask:
     with filelock.FileLock(config.LOCK_FILE):
       log.info('Starting Task {0:s} {1:s}'.format(self.name, self.id))
       original_result_id = None
+      turbinia_worker_tasks_total.inc()
       try:
         original_result_id = self.result.id
 
