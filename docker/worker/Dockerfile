@@ -38,6 +38,7 @@ RUN apt-get -y install python-plaso \
     plaso-tools \
     docker-explorer-tools \
     bulk-extractor \
+    libbde-tools \
     --option Acquire::ForceIPv4=true --option Acquire::Retries=100 --option Acquire::http::Timeout=60
 
 RUN pip3 install urllib3 cryptography --upgrade
