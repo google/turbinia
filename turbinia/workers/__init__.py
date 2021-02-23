@@ -50,9 +50,9 @@ turbinia_worker_tasks_total = Gauge(
 turbinia_worker_tasks_completed_total = Gauge(
     'turbinia_worker_tasks_completed_total',
     'Total number of completed worker tasks')
-turbinia_worker_tasks_failed_total =  Gauge(
-    'turbinia_worker_tasks_failed_total',
-    'Total number of failed worker tasks')
+turbinia_worker_tasks_failed_total = Gauge(
+    'turbinia_worker_tasks_failed_total', 'Total number of failed worker tasks')
+
 
 class Priority(IntEnum):
   """Reporting priority enum to store common values.
