@@ -7,10 +7,13 @@ echo "Create evidence folder"
 mkdir -p ./evidence
 sudo chmod 777 ./evidence
 
-echo "Download Chrome browser history artifact"
-curl https://raw.githubusercontent.com/obsidianforensics/hindsight/master/tests/fixtures/profiles/60/History > History
-tar -vzcf ./evidence/history.tgz History
-ls -al ./evidence/
+# echo "Download Chrome browser history artifact"
+# curl https://raw.githubusercontent.com/obsidianforensics/hindsight/master/tests/fixtures/profiles/60/History > History
+# tar -vzcf ./evidence/history.tgz History
+# ls -al ./evidence/
+
+echo "Copy test artifacts to /evidence"
+cp ./test_data/compressedfolder.tgz /evidence/
 
 echo "Startup local turbinia docker-compose stack"
 docker-compose -f ./docker/local/docker-compose.yml up -d
@@ -26,7 +29,7 @@ docker logs turbinia-server
 docker logs turbinia-worker
 
 echo "Create  Turbinia request"
-docker exec -t turbinia-server turbiniactl -r 123456789 compresseddirectory -l /evidence/history.tgz 
+docker exec -t turbinia-server turbiniactl -r 123456789 compresseddirectory -l /evidence/compressedfolder.tgz
 
 echo "Sleep for 60 seconds to let Turbinia process evidence"
 sleep 60s
