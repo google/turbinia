@@ -31,8 +31,8 @@ docker logs turbinia-worker
 echo "Create  Turbinia request"
 docker exec -t turbinia-server turbiniactl -r 123456789 rawdisk -l /evidence/artifact_disk.dd
 
-echo "Sleep for 60 seconds to let Turbinia process evidence"
-sleep 60s
+echo "Sleep for 120 seconds to let Turbinia process evidence"
+sleep 120s
 
 echo "Display Turbinia request status"
 docker exec turbinia-server turbiniactl -a status -r 123456789
