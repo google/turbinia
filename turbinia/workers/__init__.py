@@ -224,6 +224,10 @@ class TurbiniaTaskResult:
           'during Task execution and this may result in resources (e.g. '
           'mounted disks) accumulating on the Worker.', level=logging.WARNING)
 
+    # Now that we've post-processed the input_evidence, we can unset it
+    # because we don't need to return it.
+    self.input_evidence = None
+
     # Write result log info to file
     logfile = os.path.join(self.output_dir, 'worker-log.txt')
     # Create default log text just so that the worker log is created to
