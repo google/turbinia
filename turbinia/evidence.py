@@ -97,7 +97,7 @@ class EvidenceState(IntEnum):
   DECOMPRESSED = 3
 
 
-class Evidencexyzzzz:
+class Evidence:
   """Evidence object for processing.
 
   In most cases, these objects will just contain metadata about the actual
