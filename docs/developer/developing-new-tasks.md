@@ -150,7 +150,7 @@ other sections of the report, but you can use heading4 and above.
     something useful can be important.
 *   If your Task executes an external command that can generate a log file,
     it's helpful to specify the appropriate flags to generate this and then
-    automatically save it by setting the `log_files` paramter when calling
+    automatically save it by setting the `log_files` parameter when calling
     `self.execute()`.  Additionally, if there are flags that control the
     verbosity of this log file, it's helpful to check the `config.DEBUG_TASKS`
     config parameter and log accordingly, and this way all tasks can generate

@@ -722,7 +722,7 @@ class TurbiniaTask:
 
     This method should handle (in no particular order):
       - Exceptions thrown from run()
-      - Verifing valid TurbiniaTaskResult object is returned
+      - Verifying valid TurbiniaTaskResult object is returned
           - Check for bad results (non TurbiniaTaskResults) returned from run()
           - Auto-close results that haven't been closed
           - Verifying that the results are serializeable

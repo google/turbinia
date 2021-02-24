@@ -225,7 +225,7 @@ REDIS_DB = '0'
 # These options are required if you wish to use email notifications
 ################################################################################
 
-# Will emails notifcations be enabled
+# Will emails notifications be enabled
 EMAIL_NOTIFICATIONS = False
 
 # Host Address and port number(TLS)

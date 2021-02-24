@@ -459,7 +459,7 @@ class BaseTurbiniaClient:
               'and run turbiniactl -w status -r {0!s} and this process will '
               'resume. Attempt {1:d}. Error: '
               '{2!s}'.format(request_id, credential_error_count + 1, exception))
-        # Note, we are intentially not incrementing the retry_count here because
+        # Note, we are intentionally not incrementing the retry_count here because
         # we will retry indefinitely while we wait for the user to reauth.
         credential_error_count += 1
       except httplib2.ServerNotFoundError as exception:
