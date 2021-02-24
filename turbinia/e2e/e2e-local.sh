@@ -13,7 +13,7 @@ sudo chmod 777 ./evidence
 # ls -al ./evidence/
 
 echo "Copy test artifacts to /evidence"
-cp ./test_data/compressedfolder.tgz ./evidence/
+cp ./test_data/artifact_disk.dd ./evidence/
 
 echo "Startup local turbinia docker-compose stack"
 docker-compose -f ./docker/local/docker-compose.yml up -d
@@ -29,7 +29,7 @@ docker logs turbinia-server
 docker logs turbinia-worker
 
 echo "Create  Turbinia request"
-docker exec -t turbinia-server turbiniactl -r 123456789 compresseddirectory -l /evidence/compressedfolder.tgz
+docker exec -t turbinia-server turbiniactl -r 123456789 rawdisk -l /evidence/artifact_disk.dd
 
 echo "Sleep for 60 seconds to let Turbinia process evidence"
 sleep 60s
