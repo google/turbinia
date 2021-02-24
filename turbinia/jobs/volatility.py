@@ -26,7 +26,7 @@ from turbinia.workers.volatility import VolatilityTask
 class VolatilityJob(interface.TurbiniaJob):
   """Volatility analysis job.
 
-  This will generate a Volatility task for every module per each peice of
+  This will generate a Volatility task for every module per each piece of
   evidence.
   """
 

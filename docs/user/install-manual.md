@@ -134,7 +134,7 @@ VM at this point, and we will later clone this instance to create the workers.
         is technically in PyPi, but since it's not Python3 yet it needs to be
         installed separately) and
         [Volatility](https://github.com/volatilityfoundation/volatility/wiki/Installation).
-        Alternately you can disable the Jobs that have those depenencies.
+        Alternately you can disable the Jobs that have those dependencies.
         You can do this by setting the `DISABLED_JOBS` in the
         `/etc/turbinia/turbinia.conf` config after it is installed (see below).
         You can see the list of Jobs with `turbiniactl listjobs` after everything

@@ -45,14 +45,14 @@ from prometheus_client import Gauge
 
 log = logging.getLogger('turbinia')
 
-turbinia_worker_started_tasks_total = Gauge(
-    'turbinia_worker_started_tasks_total',
+turbinia_worker_tasks_started_total = Gauge(
+    'turbinia_worker_tasks_started_total',
     'Total number of started worker tasks')
 turbinia_worker_tasks_completed_total = Gauge(
     'turbinia_worker_tasks_completed_total',
     'Total number of completed worker tasks')
-turbinia_worker_queued_tasks_total = Gauge(
-    'turbinia_worker_queued_tasks_total', 'Total number of queued worker tasks')
+turbinia_worker_tasks_queued_total = Gauge(
+    'turbinia_worker_tasks_queued_total', 'Total number of queued worker tasks')
 turbinia_worker_tasks_failed_total = Gauge(
     'turbinia_worker_tasks_failed_total', 'Total number of failed worker tasks')
 
@@ -722,7 +722,7 @@ class TurbiniaTask:
 
     This method should handle (in no particular order):
       - Exceptions thrown from run()
-      - Verifing valid TurbiniaTaskResult object is returned
+      - Verifying valid TurbiniaTaskResult object is returned
           - Check for bad results (non TurbiniaTaskResults) returned from run()
           - Auto-close results that haven't been closed
           - Verifying that the results are serializeable
@@ -742,7 +742,7 @@ class TurbiniaTask:
     try:
       self.result = self.setup(evidence)
       self.result.update_task_status(self, 'queued')
-      turbinia_worker_queued_tasks_total.inc()
+      turbinia_worker_tasks_queued_total.inc()
     except TurbiniaException as exception:
       message = (
           '{0:s} Task setup failed with exception: [{1!s}]'.format(
@@ -765,7 +765,7 @@ class TurbiniaTask:
     with filelock.FileLock(config.LOCK_FILE):
       log.info('Starting Task {0:s} {1:s}'.format(self.name, self.id))
       original_result_id = None
-      turbinia_worker_started_tasks_total.inc()
+      turbinia_worker_tasks_started_total.inc()
       try:
         original_result_id = self.result.id
 
