@@ -83,8 +83,8 @@ class VolatilityTask(TurbiniaTask):
             'size ({1:d}). Truncating report to max size'.format(
                 file_size, MAX_REPORT_SIZE))
         summary = (
-            'Volatility module {0:s} successfully ran (report truncated)'.format(
-                self.module))
+            'Volatility module {0:s} successfully ran (report truncated)'
+            .format(self.module))
       else:
         summary = 'Volatility module {0:s} successfully ran'.format(self.module)
 
