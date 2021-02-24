@@ -311,7 +311,7 @@ def PostprocessDeleteLosetup(device_path):
   except subprocess.CalledProcessError as e:
     raise TurbiniaException('Could not delete losetup device {0!s}'.format(e))
 
-  # Check that the device was acutally removed
+  # Check that the device was actually removed
   losetup_cmd = ['sudo', 'losetup', '-a']
   log.info('Running: {0:s}'.format(' '.join(losetup_cmd)))
   try:

@@ -97,7 +97,7 @@ $ PYTHONPATH=. python3 tools/gcf_init/deploy_gcf.py
 
 #### Step 7 - Turbinia installation verification
 
-Let's verify that the GCP hybrid setup is working before we start developing and debugging. We are going to start a server and worker in seperate vscode terminals and create a Turbinia request in a third. Open up 3 vscode terminals and execute below commands.
+Let's verify that the GCP hybrid setup is working before we start developing and debugging. We are going to start a server and worker in separate vscode terminals and create a Turbinia request in a third. Open up 3 vscode terminals and execute below commands.
 
 _Note_: These commands need to be executed in the vscode terminal!
 
