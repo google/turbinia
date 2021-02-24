@@ -13,7 +13,7 @@ sudo chmod 777 ./evidence
 # ls -al ./evidence/
 
 echo "Copy test artifacts to /evidence"
-cp ./test_data/compressedfolder.tgz /evidence/
+cp ./test_data/compressedfolder.tgz ./evidence/
 
 echo "Startup local turbinia docker-compose stack"
 docker-compose -f ./docker/local/docker-compose.yml up -d
