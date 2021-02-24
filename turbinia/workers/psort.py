@@ -24,7 +24,7 @@ from turbinia.evidence import PlasoCsvFile
 
 
 class PsortTask(TurbiniaTask):
-  """Builds a typical plaso command, contains logic specific to psort.
+  """Task to run Psort (Plaso toolset)
 
     Args:
       base_command (str): Command to invoke log2timeline (e.g. log2timeline.py)
@@ -42,7 +42,7 @@ class PsortTask(TurbiniaTask):
   }
 
   def build_plaso_command(self, base_command, conf):
-    """ Tasked with building the command """
+    """ Builds a typical plaso command, contains logic specific to psort. """
     # Base command could be potentially placed in global configuration
     cmd = [base_command]
     for k, v in conf.items():
@@ -84,7 +84,7 @@ class PsortTask(TurbiniaTask):
     cmd = self.build_plaso_command('psort.py', self.task_config)
 
     cmd.extend(['--logfile', psort_log])
-    if config.DEBUG_TASKS:
+    if config.DEBUG_TASKS or self.task_config['debug_tasks']:
       cmd.append('-d')
 
     cmd.extend(['-w', psort_file, evidence.source_path])

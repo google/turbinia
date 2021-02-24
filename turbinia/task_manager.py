@@ -28,6 +28,7 @@ from turbinia import config
 from turbinia import state_manager
 from turbinia import TurbiniaException
 from turbinia.jobs import manager as jobs_manager
+from turbinia.lib import recipe_helpers
 
 config.LoadConfig()
 if config.TASK_MANAGER.lower() == 'psq':
@@ -134,6 +135,16 @@ class BaseTaskManager:
       TurbiniaException: When encountering fatal errors setting up dependencies.
     """
     raise NotImplementedError
+
+  @staticmethod
+  def validate_request_recipe(request_recipe):
+    """Ensure tasks coming from all clients have their recipe checked."""
+    #Load recipe using helper, which will validate.
+    proposed_recipe = request_recipe.get('task_recipes', None)
+    if proposed_recipe:
+      if recipe_helpers.validate_recipe_dict(proposed_recipe):
+        return True
+    return False
 
   def setup(self, jobs_denylist=None, jobs_allowlist=None, *args, **kwargs):
     """Does setup of Task manager and its dependencies.
@@ -587,7 +598,11 @@ class CeleryTaskManager(BaseTaskManager):
       for evidence_ in request.evidence:
         if not evidence_.request_id:
           evidence_.request_id = request.request_id
-        evidence_.config = request.recipe
+
+        if self.validate_request_recipe(request.recipe):
+          evidence_.config = request.recipe
+        #else:
+        #Should the evidence submission be rejected?
         evidence_.config['requester'] = request.requester
         log.info(
             'Received evidence [{0:s}] from Kombu message.'.format(
@@ -677,7 +692,12 @@ class PSQTaskManager(BaseTaskManager):
       for evidence_ in request.evidence:
         if not evidence_.request_id:
           evidence_.request_id = request.request_id
-        evidence_.config = request.recipe
+
+        if self.validate_request_recipe(request.recipe):
+          evidence_.config = request.recipe
+        #else:
+        #Should the evidence submission be rejected?
+
         evidence_.config['requester'] = request.requester
         log.info(
             'Received evidence [{0:s}] from PubSub message.'.format(

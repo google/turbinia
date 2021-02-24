@@ -380,7 +380,7 @@ class TurbiniaTask:
   # The list of evidence states that are required by a Task in order to run.
   # See `evidence.Evidence.preprocess()` docstrings for more details.
   REQUIRED_STATES = []
-    
+
   def __init__(
       self, name=None, base_output_dir=None, request_id=None, requester=None):
     """Initialization for TurbiniaTask."""
@@ -738,18 +738,6 @@ class TurbiniaTask:
           return task_recipe
     return {}
 
-  def get_named_recipe(self, name):
-    """Searches and provides a recipe for the task at hand if there is one.
-
-    Args:
-      name: Name of the specific recipe key to retrieve.
-
-    Returns:
-      Dict: Recipe dict.
-    """
-    recipe_value = evidence.config.get(name, {})
-    return recipe_value
-
   def run_wrapper(self, evidence):
     """Wrapper to manage TurbiniaTaskResults and exception handling.
 
@@ -827,11 +815,14 @@ class TurbiniaTask:
 
         self.result.update_task_status(self, 'running')
         self._evidence_config = evidence.config
-        potential_recipe = self.get_task_recipe(evidence.config['task_recipes'])
+
+        #collect the recipe sent along with the evidence, and validate that
+        #all values are allowed through the default are config.
+        proposed_recipe = self.get_task_recipe(evidence.config['task_recipes'])
         globals_recipe = evidence.config['task_recipes']['globals']
-        if potential_recipe:
-          if self.validate_task_conf(potential_recipe):
-            self.task_config.update(potential_recipe)
+        if proposed_recipe:
+          if self.validate_task_conf(proposed_recipe):
+            self.task_config.update(proposed_recipe)
             self.task_config.pop('task')
         self.task_config.update(globals_recipe)
 

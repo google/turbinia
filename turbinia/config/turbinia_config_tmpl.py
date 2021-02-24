@@ -73,7 +73,7 @@ SHARED_FILESYSTEM = False
 # problems.
 DEBUG_TASKS = False
 
-# Directory keeping all eligible recipes that may be called from any part of turbinia via the TurbiniaRecipe class
+# Directory keeping all eligible recipes
 RECIPE_FILE_DIR = '/tmp'
 
 ################################################################################

@@ -25,6 +25,7 @@ import logging
 import os
 import sys
 import uuid
+import copy
 
 from turbinia import config
 from turbinia import TurbiniaException
@@ -32,11 +33,11 @@ from turbinia.config import logger
 from libcloudforensics.providers.gcp import forensics as gcp_forensics
 from turbinia.lib import google_cloud
 from turbinia.lib import file_helpers
+from turbinia.lib import recipe_helpers
 from turbinia import __version__
 from turbinia.processors import archive
 from turbinia.output_manager import OutputManager
 from turbinia.output_manager import GCSOutputWriter
-from turbinia.config import TurbiniaRecipe
 
 log = logging.getLogger('turbinia')
 # We set up the logger first without the file handler, and we will set up the
@@ -862,27 +863,20 @@ def main():
         raise TurbiniaException(
             'Specifying a recipe is incompatible with defining'
             ' jobs allow/deny lists, yara rules or a patterns file separately.')
-      try:
-        recipe_obj = TurbiniaRecipe(
-            os.path.join(config.RECIPE_FILE_DIR, args.recipe))
-      except IOError as e:
-        log.warning(
-            'Cannot open file {0:s} [{1!s}]'.format(args.yara_rules_file, e))
         sys.exit(1)
-      recipe_obj.load()
-      request.recipe['task_recipes'] = recipe_obj.task_recipes
+      recipe_file = os.path.join(config.RECIPE_FILE_DIR, args.recipe)
+      recipe_dict = recipe_helpers.load_recipe_from_file(recipe_file)
+      if not recipe_dict:
+        sys.exit(1)
     else:
-      recipe_obj = TurbiniaRecipe()
-      default_recipe = {
-          'globals': {
-              'jobs_denylist': args.jobs_denylist,
-              'jobs_allowlist': args.jobs_allowlist,
-              'yara_rules_file': args.yara_rules_file,
-              'filter_patterns_file': args.filter_patterns_file
-          }
-      }
-      request.recipe['task_recipes'] = recipe_obj.load_recipe_from_dict(
-          default_recipe)
+      recipe_dict = copy.deepcopy(recipe_helpers.DEFAULT_RECIPE)
+
+      recipe_dict['globals']['jobs_denylist'] = args.jobs_denylist
+      recipe_dict['globals']['jobs_allowlist'] = args.jobs_denylist
+      recipe_dict['globals']['yara_rules_file'] = args.jobs_denylist
+      recipe_dict['globals']['filter_patterns_file'] = args.jobs_denylist
+
+    request.recipe['task_recipes'] = recipe_dict
 
     if args.dump_json:
       print(request.to_json().encode('utf-8'))

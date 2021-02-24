@@ -66,10 +66,12 @@ class PlasoTask(TurbiniaTask):
       if len(k) > 1:
         prepend = '--'
       if k == 'file_filter':
-        file_path = file_helpers.write_list_to_temp_file(v, preferred_dir=self.tmp_dir)
+        file_path = file_helpers.write_list_to_temp_file(
+            v, preferred_dir=self.tmp_dir)
         cmd.extend(['-f', file_path])
       elif k == 'yara_rules':
-        file_path = file_helpers.write_str_to_temp_file(v, preferred_dir=self.tmp_dir)
+        file_path = file_helpers.write_str_to_temp_file(
+            v, preferred_dir=self.tmp_dir)
         cmd.extend(['--yara_rules', file_path])
       elif isinstance(v, list):
         cmd.extend([prepend + k, ','.join(v)])
@@ -100,7 +102,7 @@ class PlasoTask(TurbiniaTask):
 
     cmd = self.build_plaso_command('log2timeline.py', self.task_config)
 
-    if self.task_config['debug_tasks']:
+    if config.DEBUG_TASKS or self.task_config['debug_tasks']:
       cmd.append('-d')
 
     if isinstance(evidence, (APFSEncryptedDisk, BitlockerDisk)):

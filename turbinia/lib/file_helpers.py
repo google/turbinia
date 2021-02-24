@@ -15,11 +15,11 @@
 """Library containing file helpers."""
 
 import os
-import sys
 import logging
 from tempfile import NamedTemporaryFile
 
 log = logging.getLogger('turbinia')
+
 
 def file_to_str(file_path):
   """Read file to variable 
@@ -30,13 +30,11 @@ def file_to_str(file_path):
     str: contents of the file
   """
   if not os.path.exists(file_path):
-    log.error('File {0:s} does not exist.'.format(file_path))
-    sys.exit(1)
+    log.error('File {0:s} not found.'.format(file_path))
   try:
     file_contents = open(file_path).read()
   except IOError as e:
-    log.warning('Cannot open file {0:s} [{1!s}]'.format(file_path, e))
-    sys.exit(1)
+    log.error('Cannot open file {0:s} [{1!s}]'.format(file_path, e))
   return file_contents
 
 
@@ -52,8 +50,7 @@ def file_to_list(file_path):
     with open(file_path) as fh:
       content = fh.readlines()
   except IOError as e:
-    log.warning('Cannot open file {0:s} [{1!s}]'.format(file_path, e))
-    sys.exit(1)
+    log.error('Cannot open file {0:s} [{1!s}]'.format(file_path, e))
   return [x.rstrip() for x in content]
 
 
