@@ -29,13 +29,13 @@ class PhotorecJob(interface.TurbiniaJob):
   NAME = 'PhotorecJob'
 
   def create_tasks(self, evidence):
-    """Create task for Plaso.
+    """Create task for Photorec.
 
     Args:
       evidence: List of evidence objects to process
 
     Returns:
-        A list of PlasoTasks.
+        A list of PhotorecTasks.
     """
     return [PhotorecTask() for _ in evidence]
 
