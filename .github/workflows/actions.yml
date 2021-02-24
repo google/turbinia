@@ -17,9 +17,12 @@ jobs:
       - name: Run test (turbinia-worker) container
         run: |
           docker run --name turbinia-worker --entrypoint "/bin/bash" -it -d -t turbinia-worker-dev:latest
+      - name: Configure python3
+        run: |
+          docker exec -u root -t turbinia-worker bash -c "update-alternatives --install /usr/bin/python python /usr/bin/python3 1"
+          docker exec -u root -t turbinia-worker bash -c "/usr/bin/python -V"
       - name: Install and configure test dependencies
         run: |
-          docker exec -u root -t turbinia-worker bash -c "/usr/bin/python -V"
           docker exec -u root -t turbinia-worker bash -c "/usr/bin/python -m pip install --quiet --upgrade pip"
           docker exec -u root -t turbinia-worker bash -c "/usr/bin/python -m pip install --quiet mock nose coverage yapf"
           docker exec -u root -t turbinia-worker bash -c "/usr/bin/python -m pip install --quiet tox"
