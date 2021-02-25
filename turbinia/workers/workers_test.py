@@ -28,6 +28,7 @@ from turbinia.workers import TurbiniaTask
 from turbinia.workers import TurbiniaTaskResult
 from turbinia.workers.plaso import PlasoTask
 from turbinia import state_manager
+from prometheus_client import REGISTRY
 
 
 class TestTurbiniaTaskBase(unittest.TestCase):
@@ -109,6 +110,11 @@ class TestTurbiniaTaskBase(unittest.TestCase):
       self.task.run = mock.MagicMock(return_value=run)
     self.task.validate_result = mock.MagicMock(return_value=validate_result)
 
+  def unregisterMetrics(self):
+    """Unset all the metrics to avoid duplicated timeseries error."""
+    for collector, names in tuple(REGISTRY._collector_to_names.items()):
+      REGISTRY.unregister(collector)
+
 
 class TestTurbiniaTask(TestTurbiniaTaskBase):
   """Test TurbiniaTask class."""
@@ -125,6 +131,7 @@ class TestTurbiniaTask(TestTurbiniaTaskBase):
 
   def testTurbiniaTaskRunWrapper(self):
     """Test that the run wrapper executes task run."""
+    self.unregisterMetrics()
     self.setResults()
     self.result.closed = True
     new_result = self.task.run_wrapper(self.evidence.__dict__)
@@ -135,6 +142,7 @@ class TestTurbiniaTask(TestTurbiniaTaskBase):
 
   def testTurbiniaTaskRunWrapperAutoClose(self):
     """Test that the run wrapper closes the task."""
+    self.unregisterMetrics()
     self.setResults()
     new_result = self.task.run_wrapper(self.evidence.__dict__)
     new_result = TurbiniaTaskResult.deserialize(new_result)
@@ -144,6 +152,7 @@ class TestTurbiniaTask(TestTurbiniaTaskBase):
   @mock.patch('turbinia.state_manager.get_state_manager')
   def testTurbiniaTaskRunWrapperBadResult(self, _):
     """Test that the run wrapper recovers from run returning bad result."""
+    self.unregisterMetrics()
     bad_result = 'Not a TurbiniaTaskResult'
     checked_result = TurbiniaTaskResult(base_output_dir=self.base_output_dir)
     checked_result.setup(self.task)
@@ -157,6 +166,7 @@ class TestTurbiniaTask(TestTurbiniaTaskBase):
 
   def testTurbiniaTaskJobUnavailable(self):
     """Test that the run wrapper can fail if the job doesn't exist."""
+    self.unregisterMetrics()
     self.setResults()
     self.task.job_name = 'non_exist'
     canary_status = (
@@ -168,6 +178,7 @@ class TestTurbiniaTask(TestTurbiniaTaskBase):
 
   def testTurbiniaTaskRunWrapperExceptionThrown(self):
     """Test that the run wrapper recovers from run throwing an exception."""
+    self.unregisterMetrics()
     self.setResults()
     self.task.run = mock.MagicMock(side_effect=TurbiniaException)
 
