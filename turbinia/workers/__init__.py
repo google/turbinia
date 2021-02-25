@@ -226,7 +226,7 @@ class TurbiniaTaskResult:
 
     # Now that we've post-processed the input_evidence, we can unset it
     # because we don't need to return it.
-    self.input_evidence = None
+    self.input_evidence = ""
 
     # Write result log info to file
     logfile = os.path.join(self.output_dir, 'worker-log.txt')
