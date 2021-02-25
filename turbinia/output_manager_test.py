@@ -82,7 +82,7 @@ class TestLocalOutputManager(unittest.TestCase):
 
   def testSaveLocalFile(self):
     """Test the save_local_file method."""
-    # Set path to None so we don't try to initialize GCS outout writer.
+    # Set path to None so we don't try to initialize GCS output writer.
     config.GCS_OUTPUT_PATH = None
     self.task.output_manager.setup(self.task.name, self.task.id)
     tmp_dir, local_dir = self.task.output_manager.get_local_output_dirs()
@@ -105,7 +105,7 @@ class TestLocalOutputManager(unittest.TestCase):
 
   def testSaveEvidence(self):
     """Test the save_evidence method."""
-    # Set path to None so we don't try to initialize GCS outout writer.
+    # Set path to None so we don't try to initialize GCS output writer.
     config.GCS_OUTPUT_PATH = None
     self.task.output_manager.setup(self.task.name, self.task.id)
     tmp_dir, local_dir = self.task.output_manager.get_local_output_dirs()
@@ -133,7 +133,7 @@ class TestLocalOutputManager(unittest.TestCase):
 
   def testSaveEvidenceWithMetadata(self):
     """Test the save_evidence method with metadata file."""
-    # Set path to None so we don't try to initialize GCS outout writer.
+    # Set path to None so we don't try to initialize GCS output writer.
     config.GCS_OUTPUT_PATH = None
     self.task.output_manager.setup(self.task.name, self.task.id)
     tmp_dir, local_dir = self.task.output_manager.get_local_output_dirs()

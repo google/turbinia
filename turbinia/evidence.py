@@ -202,7 +202,7 @@ class Evidence:
 
   @classmethod
   def from_dict(cls, dictionary):
-    """Instanciate an Evidence object from a dictionary of attributes.
+    """Instantiate an Evidence object from a dictionary of attributes.
 
     Args:
       dictionary(dict): the attributes to set for this object.
@@ -365,7 +365,7 @@ class Evidence:
     """Returns a string representing the current state of evidence.
 
     Returns:
-      str:  The state as a formated string
+      str:  The state as a formatted string
     """
     output = []
     for state, value in self.state.items():
