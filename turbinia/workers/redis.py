@@ -58,7 +58,7 @@ class RedisAnalysisTask(TurbiniaTask):
 
     # Write the report to the output file.
     with open(output_file_path, 'w') as fh:
-      fh.write(output_evidence.text_data.encode('utf-8'))
+      fh.write(output_evidence.text_data)
 
     # Add the resulting evidence to the result object.
     result.add_evidence(output_evidence, evidence.config)
