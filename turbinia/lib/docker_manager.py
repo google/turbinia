@@ -101,6 +101,10 @@ class DockerManager:
       raise TurbiniaException(
           'An issue has occurred connecting to the Docker daemon: {0!s}'.format(
               exception))
+    except docker.errors.DockerException as exception:
+      raise TurbiniaException(
+          'An issue has occurred connecting to the Docker daemon: {0!s}'.format(
+              exception))
     return docker_client
 
   def get_image(self, image_id):
