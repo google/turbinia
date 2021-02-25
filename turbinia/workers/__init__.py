@@ -768,8 +768,8 @@ class TurbiniaTask:
       original_result_id = None
       turbinia_worker_tasks_started_total.inc()
       task_runtime_metrics = Histogram(
-          '{}_duration_seconds'.format(self.name), 'Seconds to run {}'.format(
-              self.name))
+          '{0:s}_duration_seconds'.format(self.name),
+          'Seconds to run {0:s}'.format(self.name))
       with task_runtime_metrics.time():
         try:
           original_result_id = self.result.id
