@@ -508,7 +508,7 @@ class TurbiniaTask:
 
   def execute(
       self, cmd, result, save_files=None, log_files=None, new_evidence=None,
-      close=False, shell=False, success_codes=None):
+      close=False, shell=False, stdout_file=None, success_codes=None):
     """Executes a given binary and saves output.
 
     Args:
@@ -522,6 +522,7 @@ class TurbiniaTask:
       close (bool): Whether to close out the result.
       shell (bool): Whether the cmd is in the form of a string or a list.
       success_codes (list(int)): Which return codes are considered successful.
+      stdout_file (str): Path to location to save stdout
 
     Returns:
       Tuple of the return code, and the TurbiniaTaskResult object
@@ -557,6 +558,10 @@ class TurbiniaTask:
 
     result.error['stdout'] = stdout
     result.error['stderr'] = stderr
+
+    if stdout_file:
+      with open(stdout_file, 'wb') as fh:
+        fh.write(stdout.encode('utf8'))
 
     for file_ in log_files:
       if not os.path.exists(file_):

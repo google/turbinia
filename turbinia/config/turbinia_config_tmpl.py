@@ -109,6 +109,10 @@ DEPENDENCIES = [{
     'programs': ['bulk_extractor'],
     'docker_image': None
 }, {
+    'job': 'FsstatJob',
+    'programs': ['fsstat'],
+    'docker_image': None
+}, {
     'job': 'GrepJob',
     'programs': ['grep'],
     'docker_image': None
