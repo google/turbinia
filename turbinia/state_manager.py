@@ -239,7 +239,8 @@ class RedisStateManager(BaseStateManager):
   def _validate_data(self, data):
     return data
 
-  def get_task_data(self, instance, days=0, task_id=None, request_id=None):
+  def get_task_data(
+      self, instance, days=0, task_id=None, request_id=None, user=None):
     """Gets task data from Redis.
 
     Args:
@@ -248,6 +249,7 @@ class RedisStateManager(BaseStateManager):
       days (int): The number of days we want history for.
       task_id (string): The Id of the task.
       request_id (string): The Id of the request we want tasks for.
+      user (string): The user of the request we want tasks for.
 
     Returns:
       List of Task dict objects.
@@ -271,11 +273,14 @@ class RedisStateManager(BaseStateManager):
     if days:
       start_time = datetime.now() - timedelta(days=days)
       # Redis only supports strings; we convert to/from datetime here and below
-      return [task for task in tasks if task.get('last_update') > start_time]
-    elif task_id:
-      return [task for task in tasks if task.get('task_id') == task_id]
-    elif request_id:
-      return [task for task in tasks if task.get('request_id') == request_id]
+      tasks = [task for task in tasks if task.get('last_update') > start_time]
+    if task_id:
+      tasks = [task for task in tasks if task.get('task_id') == task_id]
+    if request_id:
+      tasks = [task for task in tasks if task.get('request_id') == request_id]
+    if user:
+      tasks = [task for task in tasks if task.get('requester') == user]
+
     return tasks
 
   def update_task(self, task):
