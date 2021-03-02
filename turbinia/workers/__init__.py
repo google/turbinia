@@ -20,6 +20,7 @@ from copy import deepcopy
 from datetime import datetime, timedelta
 from enum import IntEnum
 import getpass
+import json
 import logging
 import os
 import pickle
@@ -315,8 +316,8 @@ class TurbiniaTaskResult:
         error: Short string describing the error.
         traceback_: Traceback of the error.
     """
-    self.error['error'] = error
-    self.error['traceback'] = traceback_
+    self.error['error'] = str(error)
+    self.error['traceback'] = str(traceback_)
 
   def serialize(self):
     """Creates serialized result object.
@@ -690,13 +691,21 @@ class TurbiniaTask:
 
     if isinstance(result, TurbiniaTaskResult):
       try:
-        log.debug('Checking TurbiniaTaskResult for serializability')
+        log.debug('Checking TurbiniaTaskResult for pickle serializability')
         pickle.dumps(result.serialize())
       except (TypeError, pickle.PicklingError) as exception:
         message = (
             'Error pickling TurbiniaTaskResult object. Returning a new result '
             'with the pickling error, and all previous result data will be '
             'lost. Pickle Error: {0!s}'.format(exception))
+      try:
+        log.debug('Checking TurbiniaTaskResult for JSON serializability')
+        json.dumps(result.serialize())
+      except (TypeError) as exception:
+        message = (
+            'Error JSON serializing TurbiniaTaskResult object. Returning a new '
+            'result with the JSON error, and all previous result data will '
+            'be lost. JSON Error: {0!s}'.format(exception))
     else:
       message = (
           'Task returned type [{0!s}] instead of TurbiniaTaskResult.').format(
