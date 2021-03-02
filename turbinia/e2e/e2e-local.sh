@@ -1,7 +1,7 @@
 #!/bin/bash
 # This scripts executes a Turbinia end-to-end test against a local 
 # docker-compose Turbinia stack
-# The evidence processed is Chrome Browser History.
+# The evidence processed is a prepared raw disk image.
 
 # Set default return value
 RET=0
@@ -9,11 +9,6 @@ RET=0
 echo "Create evidence folder"
 mkdir -p ./evidence
 sudo chmod 777 ./evidence
-
-# echo "Download Chrome browser history artifact"
-# curl https://raw.githubusercontent.com/obsidianforensics/hindsight/master/tests/fixtures/profiles/60/History > History
-# tar -vzcf ./evidence/history.tgz History
-# ls -al ./evidence/
 
 echo "==> Copy test artifacts to /evidence"
 cp ./test_data/artifact_disk.dd ./evidence/
