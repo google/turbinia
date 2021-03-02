@@ -1106,8 +1106,8 @@ class TurbiniaCeleryClient(BaseTurbiniaClient):
 
   # pylint: disable=arguments-differ
   def get_task_data(
-      self, instance, _, __, days=0, task_id=None, request_id=None,
-      user=None, function_name=None, output_json=False):
+      self, instance, _, __, days=0, task_id=None, request_id=None, user=None,
+      function_name=None, output_json=False):
     """Gets task data from Redis.
 
     We keep the same function signature, but ignore arguments passed for GCP.
