@@ -42,6 +42,7 @@ from turbinia import TurbiniaException
 from turbinia import log_and_report
 from turbinia.lib import docker_manager
 from prometheus_client import Gauge
+from prometheus_client import Histogram
 
 log = logging.getLogger('turbinia')
 
@@ -770,52 +771,57 @@ class TurbiniaTask:
       log.info('Starting Task {0:s} {1:s}'.format(self.name, self.id))
       original_result_id = None
       turbinia_worker_tasks_started_total.inc()
-      try:
-        original_result_id = self.result.id
+      task_runtime_metrics = Histogram(
+          '{0:s}_duration_seconds'.format(self.name),
+          'Seconds to run {0:s}'.format(self.name))
+      with task_runtime_metrics.time():
+        try:
+          original_result_id = self.result.id
 
-        # Check if Task's job is available for the worker.
-        active_jobs = list(job_manager.JobsManager.GetJobNames())
-        if self.job_name.lower() not in active_jobs:
+          # Check if Task's job is available for the worker.
+          active_jobs = list(job_manager.JobsManager.GetJobNames())
+          if self.job_name.lower() not in active_jobs:
+            message = (
+                'Task will not run due to the job: {0:s} being disabled '
+                'on the worker.'.format(self.job_name))
+            self.result.log(message, level=logging.ERROR)
+            self.result.status = message
+            return self.result.serialize()
+
+          self.evidence_setup(evidence)
+
+          if self.turbinia_version != turbinia.__version__:
+            message = (
+                'Worker and Server versions do not match: {0:s} != {1:s}'
+                .format(self.turbinia_version, turbinia.__version__))
+            self.result.log(message, level=logging.ERROR)
+            self.result.status = message
+            return self.result.serialize()
+
+          self.result.update_task_status(self, 'running')
+          self._evidence_config = evidence.config
+          self.result = self.run(evidence, self.result)
+
+        # pylint: disable=broad-except
+        except Exception as exception:
           message = (
-              'Task will not run due to the job: {0:s} being disabled '
-              'on the worker.'.format(self.job_name))
-          self.result.log(message, level=logging.ERROR)
-          self.result.status = message
-          return self.result.serialize()
+              '{0:s} Task failed with exception: [{1!s}]'.format(
+                  self.name, exception))
+          # Logging explicitly here because the result is in an unknown state
+          trace = traceback.format_exc()
+          log_and_report(message, trace)
 
-        self.evidence_setup(evidence)
-
-        if self.turbinia_version != turbinia.__version__:
-          message = (
-              'Worker and Server versions do not match: {0:s} != {1:s}'.format(
-                  self.turbinia_version, turbinia.__version__))
-          self.result.log(message, level=logging.ERROR)
-          self.result.status = message
-          return self.result.serialize()
-
-        self.result.update_task_status(self, 'running')
-        self._evidence_config = evidence.config
-        self.result = self.run(evidence, self.result)
-
-      # pylint: disable=broad-except
-      except Exception as exception:
-        message = (
-            '{0:s} Task failed with exception: [{1!s}]'.format(
-                self.name, exception))
-        # Logging explicitly here because the result is in an unknown state
-        trace = traceback.format_exc()
-        log_and_report(message, trace)
-
-        if self.result:
-          self.result.log(message, level=logging.ERROR)
-          self.result.log(trace)
-          if hasattr(exception, 'message'):
-            self.result.set_error(exception.message, traceback.format_exc())
+          if self.result:
+            self.result.log(message, level=logging.ERROR)
+            self.result.log(trace)
+            if hasattr(exception, 'message'):
+              self.result.set_error(exception.message, traceback.format_exc())
+            else:
+              self.result.set_error(exception.__class__, traceback.format_exc())
+            self.result.status = message
           else:
-            self.result.set_error(exception.__class__, traceback.format_exc())
-          self.result.status = message
-        else:
-          log.error('No TurbiniaTaskResult object found after task execution.')
+            log.error(
+                'No TurbiniaTaskResult object found after task execution.')
 
       self.result = self.validate_result(self.result)
       if self.result:
