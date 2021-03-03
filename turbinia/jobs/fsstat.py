@@ -18,6 +18,7 @@ from turbinia.evidence import DiskPartition
 from turbinia.jobs import interface
 from turbinia.jobs import manager
 from turbinia.evidence import ReportText
+from turbinia.workers.fsstat import FsstatTask
 
 
 class FsstatJob(interface.TurbiniaJob):
