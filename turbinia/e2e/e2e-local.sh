@@ -26,6 +26,9 @@ echo "==> Show container logs"
 docker logs turbinia-server
 docker logs turbinia-worker
 
+echo "Show loop device availability in worker"
+docker exec -t turbinia-worker /sbin/losetup -a
+
 echo "==> Create  Turbinia request"
 docker exec -t turbinia-server turbiniactl -r 123456789 rawdisk -l /evidence/artifact_disk.dd
 
