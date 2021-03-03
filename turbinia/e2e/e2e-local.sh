@@ -22,8 +22,11 @@ sleep 5s
 echo "==> Show running instances"
 docker ps -a
 
-echo "Show loop device availability in worker"
+echo "==> Show loop device availability in worker"
 docker exec -t turbinia-worker /sbin/losetup -a
+
+echo "==> Show evidence volume contents in worker"
+docker exec -t turbinia-worker ls -al /evidence/
 
 echo "==> Show container logs"
 docker logs turbinia-server
@@ -50,5 +53,8 @@ docker logs turbinia-server
 
 echo "==> Show Turbinia worker logs"
 docker logs turbinia-worker
+
+echo "==> Show evidence volume contents in worker"
+docker exec -t turbinia-worker ls -al /evidence/
 
 exit $RET
