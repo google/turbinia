@@ -28,6 +28,7 @@ import platform
 import pprint
 import subprocess
 import sys
+import tempfile
 import traceback
 import uuid
 import turbinia
@@ -333,7 +334,7 @@ class TurbiniaTaskResult:
       result_copy['run_time'] = None
     result_copy['start_time'] = self.start_time.strftime(DATETIME_FORMAT)
     if self.input_evidence:
-      result_copy['input_evidence'] = self.input_evidence.serialize()
+      result_copy['input_evidence'] = None
     result_copy['evidence'] = [x.serialize() for x in self.evidence]
 
     return result_copy
@@ -508,7 +509,8 @@ class TurbiniaTask:
 
   def execute(
       self, cmd, result, save_files=None, log_files=None, new_evidence=None,
-      close=False, shell=False, success_codes=None):
+      close=False, shell=False, stderr_file=None, stdout_file=None,
+      success_codes=None):
     """Executes a given binary and saves output.
 
     Args:
@@ -522,6 +524,8 @@ class TurbiniaTask:
       close (bool): Whether to close out the result.
       shell (bool): Whether the cmd is in the form of a string or a list.
       success_codes (list(int)): Which return codes are considered successful.
+      stderr_file (str): Path to location to save stderr.
+      stdout_file (str): Path to location to save stdout.
 
     Returns:
       Tuple of the return code, and the TurbiniaTaskResult object
@@ -533,6 +537,8 @@ class TurbiniaTask:
     log_files = log_files if log_files else []
     new_evidence = new_evidence if new_evidence else []
     success_codes = success_codes if success_codes else [0]
+    stdout = None
+    stderr = None
 
     # Execute the job via docker.
     docker_image = job_manager.JobsManager.GetDockerImage(self.job_name)
@@ -549,15 +555,46 @@ class TurbiniaTask:
     # Execute the job on the host system.
     else:
       if shell:
-        proc = subprocess.Popen(cmd, shell=True)
+        proc = subprocess.Popen(
+            cmd, shell=True, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
       else:
-        proc = subprocess.Popen(cmd)
+        proc = subprocess.Popen(
+            cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
       stdout, stderr = proc.communicate()
       ret = proc.returncode
 
-    result.error['stdout'] = stdout
-    result.error['stderr'] = stderr
+    result.error['stdout'] = str(stdout)
+    result.error['stderr'] = str(stderr)
 
+    if stderr_file and not stderr:
+      result.log(
+          'Attempting to save stderr to {0:s}, but no stderr found during '
+          'execution'.format(stderr_file))
+    elif stderr:
+      if not stderr_file:
+        _, stderr_file = tempfile.mkstemp(
+            suffix='.txt', prefix='stderr-', dir=self.output_dir)
+      result.log(
+          'Writing stderr to {0:s}'.format(stderr_file), level=logging.DEBUG)
+      with open(stderr_file, 'wb') as fh:
+        fh.write(stderr)
+      log_files.append(stderr_file)
+
+    if stdout_file and not stdout:
+      result.log(
+          'Attempting to save stdout to {0:s}, but no stdout found during '
+          'execution'.format(stdout_file))
+    elif stdout:
+      if not stdout_file:
+        _, stdout_file = tempfile.mkstemp(
+            suffix='.txt', prefix='stdout-', dir=self.output_dir)
+      result.log(
+          'Writing stdout to {0:s}'.format(stdout_file), level=logging.DEBUG)
+      with open(stdout_file, 'wb') as fh:
+        fh.write(stdout)
+      log_files.append(stdout_file)
+
+    log_files = list(set(log_files))
     for file_ in log_files:
       if not os.path.exists(file_):
         result.log(
