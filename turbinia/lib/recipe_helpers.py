@@ -20,6 +20,7 @@ from turbinia import config
 from turbinia import TurbiniaException
 from yaml import Loader, load, dump
 from turbinia.lib.file_helpers import file_to_str, file_to_list
+from turbinia.client import TASK_MAP
 
 log = logging.getLogger('turbinia')
 
@@ -51,8 +52,8 @@ def load_recipe_from_file(recipe_file):
       message = (
           'Invalid YAML on recipe file {0:s}: {1!s}.'.format(
               recipe_file, exception))
-      return False
       raise TurbiniaException(message)
+      return False
     except IOError as exception:
       raise TurbiniaException(
           'Failed to read recipe file {0:s}: {1!s}'.format(
@@ -89,11 +90,15 @@ def validate_globals_recipe(proposed_globals_recipe):
     return False
   return True
 
+def validate_task_recipe(proposed_recipe, task_config):
+  """Ensure only allowed parameters are present a given task recipe."""
+  return proposed_recipe.items() <= task_config.items()
 
-def validate_recipe_dict(recipe_dict):
+
+def validate_recipe(recipe_dict):
   """Validate the 'task_recipes' dict supplied by the request recipe."""
   tasks_with_recipe = []
-  valid_config = True
+  valid_recipe = True
   #If not globals task recipe is specified create one.
   if 'globals' not in recipe_dict:
     recipe_dict['globals'] = copy.deepcopy(DEFAULT_RECIPE)
@@ -107,17 +112,22 @@ def validate_recipe_dict(recipe_dict):
           'Two recipe items with the same name {0:s} have been found.'
           'If you wish to specify several task runs of the same tool,'
           'please include them in separate recipes.'.format(recipe_item))
-      valid_config = False
+      valid_recipe = False
     if 'task' not in recipe_item_contents:
       if recipe_item != 'globals':
         raise TurbiniaException(
             'Recipe item {0:s} has no "task" key. All recipe items must have a "task" key indicating the TurbiniaTask'
             ' to which it relates.'.format(recipe_item))
-        valid_config = False
+        valid_recipe = False
       else:
         if not validate_globals_recipe(recipe_item_contents):
           raise TurbiniaException('Invalid globals recipe.')
-          valid_config = False
-
+          valid_recipe = False
+    else:
+      proposed_task = recipe_item_contents['task']
+      if proposed_task not in [v.__name__ for v in TASK_MAP.values()]:
+        raise TurbiniaException(
+                'Task {0:s} defined for task recipe {0:s} does not exist.'.format(proposed_task, recipe_item))
+        valid_recipe = False
     tasks_with_recipe.append(recipe_item)
-  return valid_config
+  return valid_recipe
