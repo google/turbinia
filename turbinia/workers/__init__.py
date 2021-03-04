@@ -391,6 +391,7 @@ class TurbiniaTask:
       requester (str): The user who requested the task.
       _evidence_config (dict): The config that we want to pass to all new
             evidence created from this task.
+      _histograms (dict):  A mapping of task names to registered Histograms.
   """
 
   # The list of attributes that we will persist into storage
@@ -427,6 +428,7 @@ class TurbiniaTask:
     self.turbinia_version = turbinia.__version__
     self.requester = requester if requester else 'user_unspecified'
     self._evidence_config = {}
+    self._histograms = {}
 
   def serialize(self):
     """Converts the TurbiniaTask object into a serializable dict.
@@ -437,6 +439,7 @@ class TurbiniaTask:
     task_copy = deepcopy(self.__dict__)
     task_copy['output_manager'] = self.output_manager.__dict__
     task_copy['last_update'] = self.last_update.strftime(DATETIME_FORMAT)
+    task_copy['_histograms'] = {}
     return task_copy
 
   @classmethod
@@ -506,6 +509,14 @@ class TurbiniaTask:
             'failed.  Current state is {3:s}. See previous logs for more '
             'information.'.format(
                 evidence, self.name, state.name, evidence.format_state()))
+
+  def get_histogram(self):
+    """Gets histogram metric for current Task.
+
+    Returns:
+      prometheus_client.Historgram: For the current task, or None if they are not initialized.
+    """
+    return self._histograms.get(self.name.lower())
 
   def execute(
       self, cmd, result, save_files=None, log_files=None, new_evidence=None,
@@ -665,6 +676,7 @@ class TurbiniaTask:
     Raises:
       TurbiniaException: If the evidence can not be found.
     """
+    self.setup_histograms()
     self.output_manager.setup(self.name, self.id)
     self.tmp_dir, self.output_dir = self.output_manager.get_local_output_dirs()
     if not self.result:
@@ -679,6 +691,39 @@ class TurbiniaTask:
           'Evidence source path {0:s} does not exist'.format(
               evidence.source_path))
     return self.result
+
+  def setup_histograms(self, task_map=None):
+    """Sets up the histogram metrics.
+
+    Returns early with histograms if they are already setup.
+
+    Arguments:
+      task_map(dict): Map of task names to task objects
+
+    Returns:
+      Dict: Mapping of task names to histogram objects.
+    """
+    if self._histograms:
+      return self._histograms
+
+    if not task_map:
+      # Late import to avoid circular dependencies
+      from turbinia.client import TASK_MAP
+      task_map = TASK_MAP
+
+    for task_name in task_map:
+      task_name = task_name.lower()
+      if task_name in self._histograms:
+        continue
+      metric = Histogram(
+          '{0:s}_duration_seconds'.format(task_name),
+          'Seconds to run {0:s}'.format(task_name))
+      self._histograms[task_name] = metric
+
+    log.debug(
+        'Registered {0:d} task histogram metrics'.format(len(self._histograms)))
+
+    return self._histograms
 
   def touch(self):
     """Updates the last_update time of the task."""
@@ -817,9 +862,7 @@ class TurbiniaTask:
       log.info('Starting Task {0:s} {1:s}'.format(self.name, self.id))
       original_result_id = None
       turbinia_worker_tasks_started_total.inc()
-      task_runtime_metrics = Histogram(
-          '{0:s}_duration_seconds'.format(self.name),
-          'Seconds to run {0:s}'.format(self.name))
+      task_runtime_metrics = self.get_histogram()
       with task_runtime_metrics.time():
         try:
           original_result_id = self.result.id

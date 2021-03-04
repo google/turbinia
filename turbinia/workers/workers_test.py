@@ -61,6 +61,7 @@ class TestTurbiniaTaskBase(unittest.TestCase):
     self.task.job_name = 'PlasoJob'
     self.task.output_manager = mock.MagicMock()
     self.task.output_manager.get_local_output_dirs.return_value = (None, None)
+    self.task.get_histogram = mock.MagicMock()
 
     # Set up RawDisk Evidence
     test_disk_path = tempfile.mkstemp(dir=self.base_output_dir)[1]
@@ -336,6 +337,16 @@ class TestTurbiniaTask(TestTurbiniaTaskBase):
     self.task.execute(
         cmd, self.result, new_evidence=[self.evidence], close=True)
     self.assertNotIn(self.evidence, self.result.evidence)
+
+  @mock.patch('turbinia.workers.Histogram')
+  def testTurbiniaSetupHistograms(self, mock_histogram):
+    """Tests that Histograms are set up correctly."""
+    mock_task_map = {'TestTask1': None, 'TestTask2': None}
+    mock_histogram.return_value = "test_histogram"
+    histograms = self.task.setup_histograms(task_map=mock_task_map)
+    self.assertEqual(len(histograms), len(mock_task_map))
+    self.assertEqual(histograms['testtask1'], 'test_histogram')
+    self.assertIn('testtask1', histograms)
 
   def testEvidenceSetup(self):
     """Tests basic run of evidence_setup."""
