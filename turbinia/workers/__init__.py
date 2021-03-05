@@ -46,6 +46,8 @@ from turbinia.lib import docker_manager
 from prometheus_client import Gauge
 from prometheus_client import Histogram
 
+METRICS = {}
+
 log = logging.getLogger('turbinia')
 
 turbinia_worker_tasks_started_total = Gauge(
@@ -507,6 +509,15 @@ class TurbiniaTask:
             'information.'.format(
                 evidence, self.name, state.name, evidence.format_state()))
 
+  def get_metrics(self):
+    """Gets histogram metric for current Task.
+
+    Returns:
+      prometheus_client.Historgram: For the current task, or None if they are not initialized.
+    """
+    global METRICS
+    return METRICS.get(self.name.lower())
+
   def execute(
       self, cmd, result, save_files=None, log_files=None, new_evidence=None,
       close=False, shell=False, stderr_file=None, stdout_file=None,
@@ -665,6 +676,7 @@ class TurbiniaTask:
     Raises:
       TurbiniaException: If the evidence can not be found.
     """
+    self.setup_metrics()
     self.output_manager.setup(self.name, self.id)
     self.tmp_dir, self.output_dir = self.output_manager.get_local_output_dirs()
     if not self.result:
@@ -679,6 +691,40 @@ class TurbiniaTask:
           'Evidence source path {0:s} does not exist'.format(
               evidence.source_path))
     return self.result
+
+  def setup_metrics(self, task_map=None):
+    """Sets up the application metrics.
+
+    Returns early with metrics if they are already setup.
+
+    Arguments:
+      task_map(dict): Map of task names to task objects
+
+    Returns:
+      Dict: Mapping of task names to metrics objects.
+    """
+    global METRICS
+
+    if METRICS:
+      return METRICS
+
+    if not task_map:
+      # Late import to avoid circular dependencies
+      from turbinia.client import TASK_MAP
+      task_map = TASK_MAP
+
+    for task_name in task_map:
+      task_name = task_name.lower()
+      if task_name in METRICS:
+        continue
+      metric = Histogram(
+          '{0:s}_duration_seconds'.format(task_name),
+          'Seconds to run {0:s}'.format(task_name))
+      METRICS[task_name] = metric
+
+    log.debug('Registered {0:d} task metrics'.format(len(METRICS)))
+
+    return METRICS
 
   def touch(self):
     """Updates the last_update time of the task."""
@@ -817,9 +863,7 @@ class TurbiniaTask:
       log.info('Starting Task {0:s} {1:s}'.format(self.name, self.id))
       original_result_id = None
       turbinia_worker_tasks_started_total.inc()
-      task_runtime_metrics = Histogram(
-          '{0:s}_duration_seconds'.format(self.name),
-          'Seconds to run {0:s}'.format(self.name))
+      task_runtime_metrics = self.get_metrics()
       with task_runtime_metrics.time():
         try:
           original_result_id = self.result.id

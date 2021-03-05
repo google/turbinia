@@ -78,6 +78,7 @@ TASK_MAP = {
     'jenkinsanalysistask': JenkinsAnalysisTask,
     'JupyterAnalysisTask': JupyterAnalysisTask,
     'greptask': GrepTask,
+    'fsstattask': FsstatTask,
     'hadoopanalysistask': HadoopAnalysisTask,
     'hindsighttask': HindsightTask,
     'partitionenumerationtask': PartitionEnumerationTask,
@@ -90,7 +91,7 @@ TASK_MAP = {
     'tomcatanalysistask': TomcatAnalysisTask,
     'volatilitytask': VolatilityTask,
     'stattask': StatTask,
-    'binaryextractor': BinaryExtractorTask,
+    'binaryextractortask': BinaryExtractorTask,
     'bulkextractortask': BulkExtractorTask,
     'dockertask': DockerContainersEnumerationTask,
     'photorectask': PhotorecTask
