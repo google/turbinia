@@ -64,11 +64,13 @@ class DockerContainersEnumerationTask(TurbiniaTask):
     if not de_binary:
       raise TurbiniaException('Cannot find de.py in path')
 
-    docker_explorer_command = [
-        'sudo', de_binary, '-r', docker_dir, 'list', 'all_containers'
-    ]
+    docker_explorer_command = ['sudo', de_binary]
+
     if config.DEBUG_TASKS or evidence.config.get('debug_tasks'):
       docker_explorer_command.append('-d')
+
+    docker_explorer_command.extend(['-r', docker_dir, 'list', 'all_containers'])
+
     log.info('Running {0:s}'.format(' '.join(docker_explorer_command)))
     try:
       json_string = subprocess.check_output(docker_explorer_command).decode(

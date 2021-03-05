@@ -20,6 +20,7 @@ from copy import deepcopy
 from datetime import datetime, timedelta
 from enum import IntEnum
 import getpass
+import json
 import logging
 import os
 import pickle
@@ -27,6 +28,7 @@ import platform
 import pprint
 import subprocess
 import sys
+import tempfile
 import traceback
 import uuid
 import turbinia
@@ -43,6 +45,8 @@ from turbinia import log_and_report
 from turbinia.lib import docker_manager
 from prometheus_client import Gauge
 from prometheus_client import Histogram
+
+METRICS = {}
 
 log = logging.getLogger('turbinia')
 
@@ -225,6 +229,10 @@ class TurbiniaTaskResult:
           'during Task execution and this may result in resources (e.g. '
           'mounted disks) accumulating on the Worker.', level=logging.WARNING)
 
+    # Now that we've post-processed the input_evidence, we can unset it
+    # because we don't need to return it.
+    self.input_evidence = None
+
     # Write result log info to file
     logfile = os.path.join(self.output_dir, 'worker-log.txt')
     # Create default log text just so that the worker log is created to
@@ -311,8 +319,8 @@ class TurbiniaTaskResult:
         error: Short string describing the error.
         traceback_: Traceback of the error.
     """
-    self.error['error'] = error
-    self.error['traceback'] = traceback_
+    self.error['error'] = str(error)
+    self.error['traceback'] = str(traceback_)
 
   def serialize(self):
     """Creates serialized result object.
@@ -328,7 +336,7 @@ class TurbiniaTaskResult:
       result_copy['run_time'] = None
     result_copy['start_time'] = self.start_time.strftime(DATETIME_FORMAT)
     if self.input_evidence:
-      result_copy['input_evidence'] = self.input_evidence.serialize()
+      result_copy['input_evidence'] = None
     result_copy['evidence'] = [x.serialize() for x in self.evidence]
 
     return result_copy
@@ -501,9 +509,19 @@ class TurbiniaTask:
             'information.'.format(
                 evidence, self.name, state.name, evidence.format_state()))
 
+  def get_metrics(self):
+    """Gets histogram metric for current Task.
+
+    Returns:
+      prometheus_client.Historgram: For the current task, or None if they are not initialized.
+    """
+    global METRICS
+    return METRICS.get(self.name.lower())
+
   def execute(
       self, cmd, result, save_files=None, log_files=None, new_evidence=None,
-      close=False, shell=False, success_codes=None):
+      close=False, shell=False, stderr_file=None, stdout_file=None,
+      success_codes=None):
     """Executes a given binary and saves output.
 
     Args:
@@ -517,6 +535,8 @@ class TurbiniaTask:
       close (bool): Whether to close out the result.
       shell (bool): Whether the cmd is in the form of a string or a list.
       success_codes (list(int)): Which return codes are considered successful.
+      stderr_file (str): Path to location to save stderr.
+      stdout_file (str): Path to location to save stdout.
 
     Returns:
       Tuple of the return code, and the TurbiniaTaskResult object
@@ -528,6 +548,8 @@ class TurbiniaTask:
     log_files = log_files if log_files else []
     new_evidence = new_evidence if new_evidence else []
     success_codes = success_codes if success_codes else [0]
+    stdout = None
+    stderr = None
 
     # Execute the job via docker.
     docker_image = job_manager.JobsManager.GetDockerImage(self.job_name)
@@ -544,15 +566,46 @@ class TurbiniaTask:
     # Execute the job on the host system.
     else:
       if shell:
-        proc = subprocess.Popen(cmd, shell=True)
+        proc = subprocess.Popen(
+            cmd, shell=True, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
       else:
-        proc = subprocess.Popen(cmd)
+        proc = subprocess.Popen(
+            cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
       stdout, stderr = proc.communicate()
       ret = proc.returncode
 
-    result.error['stdout'] = stdout
-    result.error['stderr'] = stderr
+    result.error['stdout'] = str(stdout)
+    result.error['stderr'] = str(stderr)
 
+    if stderr_file and not stderr:
+      result.log(
+          'Attempting to save stderr to {0:s}, but no stderr found during '
+          'execution'.format(stderr_file))
+    elif stderr:
+      if not stderr_file:
+        _, stderr_file = tempfile.mkstemp(
+            suffix='.txt', prefix='stderr-', dir=self.output_dir)
+      result.log(
+          'Writing stderr to {0:s}'.format(stderr_file), level=logging.DEBUG)
+      with open(stderr_file, 'wb') as fh:
+        fh.write(stderr)
+      log_files.append(stderr_file)
+
+    if stdout_file and not stdout:
+      result.log(
+          'Attempting to save stdout to {0:s}, but no stdout found during '
+          'execution'.format(stdout_file))
+    elif stdout:
+      if not stdout_file:
+        _, stdout_file = tempfile.mkstemp(
+            suffix='.txt', prefix='stdout-', dir=self.output_dir)
+      result.log(
+          'Writing stdout to {0:s}'.format(stdout_file), level=logging.DEBUG)
+      with open(stdout_file, 'wb') as fh:
+        fh.write(stdout)
+      log_files.append(stdout_file)
+
+    log_files = list(set(log_files))
     for file_ in log_files:
       if not os.path.exists(file_):
         result.log(
@@ -623,6 +676,7 @@ class TurbiniaTask:
     Raises:
       TurbiniaException: If the evidence can not be found.
     """
+    self.setup_metrics()
     self.output_manager.setup(self.name, self.id)
     self.tmp_dir, self.output_dir = self.output_manager.get_local_output_dirs()
     if not self.result:
@@ -637,6 +691,40 @@ class TurbiniaTask:
           'Evidence source path {0:s} does not exist'.format(
               evidence.source_path))
     return self.result
+
+  def setup_metrics(self, task_map=None):
+    """Sets up the application metrics.
+
+    Returns early with metrics if they are already setup.
+
+    Arguments:
+      task_map(dict): Map of task names to task objects
+
+    Returns:
+      Dict: Mapping of task names to metrics objects.
+    """
+    global METRICS
+
+    if METRICS:
+      return METRICS
+
+    if not task_map:
+      # Late import to avoid circular dependencies
+      from turbinia.client import TASK_MAP
+      task_map = TASK_MAP
+
+    for task_name in task_map:
+      task_name = task_name.lower()
+      if task_name in METRICS:
+        continue
+      metric = Histogram(
+          '{0:s}_duration_seconds'.format(task_name),
+          'Seconds to run {0:s}'.format(task_name))
+      METRICS[task_name] = metric
+
+    log.debug('Registered {0:d} task metrics'.format(len(METRICS)))
+
+    return METRICS
 
   def touch(self):
     """Updates the last_update time of the task."""
@@ -686,13 +774,21 @@ class TurbiniaTask:
 
     if isinstance(result, TurbiniaTaskResult):
       try:
-        log.debug('Checking TurbiniaTaskResult for serializability')
+        log.debug('Checking TurbiniaTaskResult for pickle serializability')
         pickle.dumps(result.serialize())
       except (TypeError, pickle.PicklingError) as exception:
         message = (
             'Error pickling TurbiniaTaskResult object. Returning a new result '
             'with the pickling error, and all previous result data will be '
             'lost. Pickle Error: {0!s}'.format(exception))
+      try:
+        log.debug('Checking TurbiniaTaskResult for JSON serializability')
+        json.dumps(result.serialize())
+      except (TypeError) as exception:
+        message = (
+            'Error JSON serializing TurbiniaTaskResult object. Returning a new '
+            'result with the JSON error, and all previous result data will '
+            'be lost. JSON Error: {0!s}'.format(exception))
     else:
       message = (
           'Task returned type [{0!s}] instead of TurbiniaTaskResult.').format(
@@ -767,9 +863,7 @@ class TurbiniaTask:
       log.info('Starting Task {0:s} {1:s}'.format(self.name, self.id))
       original_result_id = None
       turbinia_worker_tasks_started_total.inc()
-      task_runtime_metrics = Histogram(
-          '{0:s}_duration_seconds'.format(self.name),
-          'Seconds to run {0:s}'.format(self.name))
+      task_runtime_metrics = self.get_metrics()
       with task_runtime_metrics.time():
         try:
           original_result_id = self.result.id

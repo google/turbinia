@@ -40,6 +40,7 @@ class TestTurbiniaTaskBase(unittest.TestCase):
     remove_dirs(list(str)): Dirs that will be removed after the test run
     base_output_dir(str): The base output directory used by the Task
     task(TurbiniaTask): The instantiated Task under test
+    test_stdout_path(str): A path we can use to send temporary stdout too
     evidence(Evidence): The test evidence object used by the Task
     result(TurbiniaResult): The result object used by the Task
   """
@@ -60,10 +61,13 @@ class TestTurbiniaTaskBase(unittest.TestCase):
     self.task.job_name = 'PlasoJob'
     self.task.output_manager = mock.MagicMock()
     self.task.output_manager.get_local_output_dirs.return_value = (None, None)
+    self.task.get_metrics = mock.MagicMock()
 
     # Set up RawDisk Evidence
     test_disk_path = tempfile.mkstemp(dir=self.base_output_dir)[1]
     self.remove_files.append(test_disk_path)
+    self.test_stdout_path = tempfile.mkstemp(dir=self.base_output_dir)[1]
+    self.remove_files.append(self.test_stdout_path)
     self.evidence = evidence.RawDisk(source_path=test_disk_path)
     self.evidence.preprocess = mock.MagicMock()
     # Set up TurbiniaTaskResult
@@ -236,7 +240,7 @@ class TestTurbiniaTask(TestTurbiniaTaskBase):
   def testTurbiniaTaskExecute(self, popen_mock):
     """Test execution with success case."""
     cmd = 'test cmd'
-    output = ('test stdout', 'test stderr')
+    output = (b'test stdout', b'test stderr')
 
     self.result.close = mock.MagicMock()
     proc_mock = mock.MagicMock()
@@ -244,20 +248,25 @@ class TestTurbiniaTask(TestTurbiniaTaskBase):
     proc_mock.returncode = 0
     popen_mock.return_value = proc_mock
 
-    self.task.execute(cmd, self.result, close=True)
+    self.task.execute(
+        cmd, self.result, stdout_file=self.test_stdout_path, close=True)
+
+    with open(self.test_stdout_path, 'rb') as stdout_path:
+      stdout_data = stdout_path.read()
 
     # Command was executed, has the correct output saved and
     # TurbiniaTaskResult.close() was called with successful status.
-    popen_mock.assert_called_with(cmd)
-    self.assertEqual(self.result.error['stdout'], output[0])
-    self.assertEqual(self.result.error['stderr'], output[1])
+    popen_mock.assert_called_with(cmd, stdout=-1, stderr=-1)
+    self.assertEqual(self.result.error['stdout'], str(output[0]))
+    self.assertEqual(self.result.error['stderr'], str(output[1]))
+    self.assertEqual(stdout_data, output[0])
     self.result.close.assert_called_with(self.task, success=True)
 
   @mock.patch('turbinia.workers.subprocess.Popen')
   def testTurbiniaTaskExecuteFailure(self, popen_mock):
     """Test execution with failure case."""
     cmd = 'test cmd'
-    output = ('test stdout', 'test stderr')
+    output = (b'test stdout', b'test stderr')
 
     self.result.close = mock.MagicMock()
     proc_mock = mock.MagicMock()
@@ -269,7 +278,7 @@ class TestTurbiniaTask(TestTurbiniaTaskBase):
 
     # Command was executed and TurbiniaTaskResult.close() was called with
     # unsuccessful status.
-    popen_mock.assert_called_with(cmd)
+    popen_mock.assert_called_with(cmd, stdout=-1, stderr=-1)
     self.result.close.assert_called_with(
         self.task, success=False, status=mock.ANY)
 
@@ -277,7 +286,7 @@ class TestTurbiniaTask(TestTurbiniaTaskBase):
   def testTurbiniaTaskExecuteEvidenceExists(self, popen_mock):
     """Test execution with new evidence that has valid a source_path."""
     cmd = 'test cmd'
-    output = ('test stdout', 'test stderr')
+    output = (b'test stdout', b'test stderr')
 
     self.result.close = mock.MagicMock()
     proc_mock = mock.MagicMock()
@@ -297,7 +306,7 @@ class TestTurbiniaTask(TestTurbiniaTaskBase):
   def testTurbiniaTaskExecuteEvidenceDoesNotExist(self, popen_mock):
     """Test execution with new evidence that does not have a source_path."""
     cmd = 'test cmd'
-    output = ('test stdout', 'test stderr')
+    output = (b'test stdout', b'test stderr')
 
     self.result.close = mock.MagicMock()
     proc_mock = mock.MagicMock()
@@ -313,7 +322,7 @@ class TestTurbiniaTask(TestTurbiniaTaskBase):
   def testTurbiniaTaskExecuteEvidenceExistsButEmpty(self, popen_mock):
     """Test execution with new evidence source_path that exists but is empty."""
     cmd = 'test cmd'
-    output = ('test stdout', 'test stderr')
+    output = (b'test stdout', b'test stderr')
 
     self.result.close = mock.MagicMock()
     proc_mock = mock.MagicMock()
@@ -328,6 +337,16 @@ class TestTurbiniaTask(TestTurbiniaTaskBase):
     self.task.execute(
         cmd, self.result, new_evidence=[self.evidence], close=True)
     self.assertNotIn(self.evidence, self.result.evidence)
+
+  @mock.patch('turbinia.workers.Histogram')
+  def testTurbiniaSetupMetrics(self, mock_histogram):
+    """Tests that metrics are set up correctly."""
+    mock_task_map = {'TestTask1': None, 'TestTask2': None}
+    mock_histogram.return_value = "test_metrics"
+    metrics = self.task.setup_metrics(task_map=mock_task_map)
+    self.assertEqual(len(metrics), len(mock_task_map))
+    self.assertEqual(metrics['testtask1'], 'test_metrics')
+    self.assertIn('testtask1', metrics)
 
   def testEvidenceSetup(self):
     """Tests basic run of evidence_setup."""
