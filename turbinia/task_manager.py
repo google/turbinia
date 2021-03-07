@@ -216,11 +216,10 @@ class BaseTaskManager:
           'Jobs must be registered before evidence can be added')
     log.info('Adding new evidence: {0:s}'.format(str(evidence_)))
     job_count = 0
+    jobs_list = []
 
     if evidence_.config['abort']:
-      job_list = [AbortJob(
-                  request_id=evidence_.request_id,
-                  evidence_config=evidence_.config)]
+      jobs_list = [AbortJob]
     else:
       jobs_allowlist = evidence_.config.get('jobs_allowlist', [])
       jobs_denylist = evidence_.config.get('jobs_denylist', [])
@@ -242,9 +241,12 @@ class BaseTaskManager:
       # Doing a strict type check here for now until we can get the above
       # comment figured out.
       # pylint: disable=unidiomatic-typecheck
-      if [True for t in job.evidence_input if type(evidence_) == t or evidence_.config['abort']]:
+      jobs_applicable = [True for t in job.evidence_input if type(evidence_) == t]
+
+      if jobs_applicable or evidence_.config['abort']:
         job_instance = job(
             request_id=evidence_.request_id, evidence_config=evidence_.config)
+
         for task in job_instance.create_tasks([evidence_]):
           self.add_task(task, job_instance, evidence_)
 

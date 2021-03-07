@@ -26,6 +26,7 @@ class AbortJob(interface.TurbiniaJob):
 
   NAME = 'AbortJob'
 
+
   def create_tasks(self, evidence=None):
     """Create task for Plaso.
 
@@ -36,7 +37,9 @@ class AbortJob(interface.TurbiniaJob):
         A task to accurately report on the reason for job termination.
     """
     #Returning a single task every time in this case.
-    return AbortTask()
+    abort_task = AbortTask()
+    abort_task.task_config['reason'] = evidence[0].config['abort_message']
+    return [abort_task]
 
 
 manager.JobsManager.RegisterJob(AbortJob)

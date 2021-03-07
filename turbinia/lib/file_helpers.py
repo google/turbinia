@@ -29,6 +29,7 @@ def file_to_str(file_path):
   Returns:
     str: contents of the file
   """
+  file_contents = ''
   if not os.path.exists(file_path):
     log.error('File {0:s} not found.'.format(file_path))
   try:
@@ -98,6 +99,5 @@ def write_list_to_temp_file(entries, file_name=None, preferred_dir=None):
     str: Path to newly created file.
   """
   with NamedTemporaryFile(dir=preferred_dir, delete=False, mode='w') as fh:
-    for entry_ in entries:
-      fh.write(entry_.encode('utf-8') + b'\n')
+    fh.write('\n'.join(entries))
   return fh.name
