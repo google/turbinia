@@ -519,7 +519,7 @@ class TurbiniaTask:
   class StubMetric:
     """Dummy class for when Prometheus is not enabled."""
 
-    class Stub:
+    class StubEnter:
       """Adding the required functions for 'with' statement."""
 
       def __enter__(*args, **kwargs):
