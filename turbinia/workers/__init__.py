@@ -890,7 +890,6 @@ class TurbiniaTask:
 
     with filelock.FileLock(config.LOCK_FILE):
       log.info('Starting Task {0:s} {1:s}'.format(self.name, self.id))
-      log.error('HERE')
       original_result_id = None
       if config.PROMETHEUS_ENABLED:
         turbinia_worker_tasks_started_total.inc()
