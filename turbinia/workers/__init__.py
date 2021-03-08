@@ -46,20 +46,25 @@ from turbinia.lib import docker_manager
 from prometheus_client import Gauge
 from prometheus_client import Histogram
 
+# Only run Prometheus if it's enabled
+if config.PROMETHEUS_ENABLED:
+
+  turbinia_worker_tasks_started_total = Gauge(
+      'turbinia_worker_tasks_started_total',
+      'Total number of started worker tasks')
+  turbinia_worker_tasks_completed_total = Gauge(
+      'turbinia_worker_tasks_completed_total',
+      'Total number of completed worker tasks')
+  turbinia_worker_tasks_queued_total = Gauge(
+      'turbinia_worker_tasks_queued_total',
+      'Total number of queued worker tasks')
+  turbinia_worker_tasks_failed_total = Gauge(
+      'turbinia_worker_tasks_failed_total',
+      'Total number of failed worker tasks')
+
 METRICS = {}
 
 log = logging.getLogger('turbinia')
-
-turbinia_worker_tasks_started_total = Gauge(
-    'turbinia_worker_tasks_started_total',
-    'Total number of started worker tasks')
-turbinia_worker_tasks_completed_total = Gauge(
-    'turbinia_worker_tasks_completed_total',
-    'Total number of completed worker tasks')
-turbinia_worker_tasks_queued_total = Gauge(
-    'turbinia_worker_tasks_queued_total', 'Total number of queued worker tasks')
-turbinia_worker_tasks_failed_total = Gauge(
-    'turbinia_worker_tasks_failed_total', 'Total number of failed worker tasks')
 
 
 class Priority(IntEnum):
@@ -185,11 +190,13 @@ class TurbiniaTaskResult:
     if not status and self.successful:
       status = 'Completed successfully in {0:s} on {1:s}'.format(
           str(self.run_time), self.worker_name)
-      turbinia_worker_tasks_completed_total.inc()
+      if config.PROMETHEUS_ENABLED:
+        turbinia_worker_tasks_completed_total.inc()
     elif not status and not self.successful:
       status = 'Run failed in {0:s} on {1:s}'.format(
           str(self.run_time), self.worker_name)
-      turbinia_worker_tasks_failed_total.inc()
+      if config.PROMETHEUS_ENABLED:
+        turbinia_worker_tasks_failed_total.inc()
     self.log(status)
     self.status = status
 
@@ -509,12 +516,32 @@ class TurbiniaTask:
             'information.'.format(
                 evidence, self.name, state.name, evidence.format_state()))
 
+  class StubMetric:
+    """Dummy class for when Prometheus is not enabled."""
+
+    class Stub:
+      """Adding the required functions for 'with' statement."""
+
+      def __enter__(*args, **kwargs):
+        pass
+
+      def __exit__(*args, **kwargs):
+        pass
+
+    def time(self):
+      """Dummy time function"""
+      return self.StubEnter()
+
   def get_metrics(self):
     """Gets histogram metric for current Task.
 
     Returns:
       prometheus_client.Historgram: For the current task, or None if they are not initialized.
     """
+
+    if not config.PROMETHEUS_ENABLED:
+      return self.StubMetric()
+
     global METRICS
     return METRICS.get(self.name.lower())
 
@@ -676,7 +703,8 @@ class TurbiniaTask:
     Raises:
       TurbiniaException: If the evidence can not be found.
     """
-    self.setup_metrics()
+    if config.PROMETHEUS_ENABLED:
+      self.setup_metrics()
     self.output_manager.setup(self.name, self.id)
     self.tmp_dir, self.output_dir = self.output_manager.get_local_output_dirs()
     if not self.result:
@@ -839,7 +867,8 @@ class TurbiniaTask:
     try:
       self.result = self.setup(evidence)
       self.result.update_task_status(self, 'queued')
-      turbinia_worker_tasks_queued_total.inc()
+      if config.PROMETHEUS_ENABLED:
+        turbinia_worker_tasks_queued_total.inc()
     except TurbiniaException as exception:
       message = (
           '{0:s} Task setup failed with exception: [{1!s}]'.format(
@@ -861,9 +890,12 @@ class TurbiniaTask:
 
     with filelock.FileLock(config.LOCK_FILE):
       log.info('Starting Task {0:s} {1:s}'.format(self.name, self.id))
+      log.error('HERE')
       original_result_id = None
-      turbinia_worker_tasks_started_total.inc()
+      if config.PROMETHEUS_ENABLED:
+        turbinia_worker_tasks_started_total.inc()
       task_runtime_metrics = self.get_metrics()
+      log.error(task_runtime_metrics)
       with task_runtime_metrics.time():
         try:
           original_result_id = self.result.id
