@@ -21,6 +21,7 @@ from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.lib import errors as dfvfs_errors
 
 from turbinia.lib.dfvfs_classes import UnattendedVolumeScannerMediator
+from turbinia import TurbiniaException
 
 log = logging.getLogger('turbinia')
 
