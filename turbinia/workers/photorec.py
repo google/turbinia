@@ -33,7 +33,6 @@ class PhotorecTask(TurbiniaTask):
     Args:
         evidence (Evidence object):  The evidence we will process.
         result (TurbiniaTaskResult): The object to place task results into.
-
     Returns:
         TurbiniaTaskResult object.
     """
