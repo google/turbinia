@@ -17,6 +17,7 @@
 import logging
 
 from dfvfs.helpers import volume_scanner
+from dfvfs.lib import definitions as dfvfs_definitions
 
 
 class UnattendedVolumeScannerMediator(volume_scanner.VolumeScannerMediator):
@@ -26,6 +27,7 @@ class UnattendedVolumeScannerMediator(volume_scanner.VolumeScannerMediator):
     """Initializes an unattended volume scanner mediator."""
     super(UnattendedVolumeScannerMediator, self).__init__()
     self._log = logging.getLogger('turbinia')
+    self.credentials = []
 
   def GetAPFSVolumeIdentifiers(self, volume_system, volume_identifiers):
     """Retrieves APFS volume identifiers.
@@ -95,7 +97,30 @@ class UnattendedVolumeScannerMediator(volume_scanner.VolumeScannerMediator):
     Returns:
       bool: True if the volume was unlocked.
     """
-    self._log.info(
-        'Encrypted volumes are currently unsupported: {0!s}'.format(
-            locked_scan_node.path_spec.CopyToDict()))
-    return False
+    if locked_scan_node.type_indicator == dfvfs_definitions.TYPE_INDICATOR_BDE:
+      self._log.info('Found a BitLocker encrypted volume.')
+    else:
+      self._log.info(
+          'Encrypted {0!s} volume not currently supported: {1!s}'.format(
+              locked_scan_node.path_spec.type_indicator,
+              locked_scan_node.path_spec.CopyToDict()))
+      return False
+
+    result = False
+
+    for credential in self.credentials:
+      credential_type = credential['credential_type']
+      credential_data = credential['credential_data']
+      try:
+        result = source_scanner_object.Unlock(
+            scan_context, locked_scan_node.path_spec, credential_type,
+            credential_data)
+        if result:
+          self._log.info('Encrypted volume unlocked.')
+          break
+      except KeyError as e:
+        self._log.warning('Unable to unlock volume: {0!s}'.format(e))
+
+    if not result:
+      self._log.warning('Unable to unlock volume.')
+    return result

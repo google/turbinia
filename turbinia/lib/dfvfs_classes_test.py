@@ -74,12 +74,14 @@ class TestUnattendedVolumeScannerMediator(unittest.TestCase):
 
     self.assertEqual(result, [])
 
-  def testUnlockEncryptedVolume(self):
-    """Test the UnlockEncryptedVolume function.
-
-    Encrypted volume support is not yet implemented.
-    """
+  @mock.patch('dfvfs.helpers.source_scanner.SourceScanner')
+  def testUnlockEncryptedVolume(self, mock_source_scanner):
+    """Test the UnlockEncryptedVolume function."""
     mediator = UnattendedVolumeScannerMediator()
+    mediator.credentials.append({
+        'credential_type': 'password',
+        'credential_data': '123456'
+    })
 
     os_path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_OS, location='/path/to/image.dd')
@@ -92,7 +94,8 @@ class TestUnattendedVolumeScannerMediator(unittest.TestCase):
 
     scan_node = source_scanner.SourceScanNode(path_spec)
 
+    mock_source_scanner.Unlock.return_value = True
     result = mediator.UnlockEncryptedVolume(
-        source_scanner_object=None, scan_context=None,
+        source_scanner_object=mock_source_scanner, scan_context=None,
         locked_scan_node=scan_node, credentials=None)
-    self.assertFalse(result)
+    self.assertTrue(result)

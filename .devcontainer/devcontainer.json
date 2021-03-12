@@ -1,0 +1,30 @@
+// For format details, see https://aka.ms/devcontainer.json.
+{
+	"name": "Turbinia Development Container",
+	"build": {
+		"dockerfile": "../docker/vscode/Dockerfile"
+	},
+	"runArgs": [ "--privileged" ],
+	// start redis-server and copy launch profiles to .vscode
+	"postCreateCommand": "/etc/init.d/redis-server start && mkdir -p .vscode && cp docker/vscode/vscode-launch.json .vscode/launch.json",
+	// Set *default* container specific settings.json values on container create.
+	"settings": {
+		"terminal.integrated.shell.linux": "/bin/bash",
+		"terminal.integrated.env.linux": {
+			"PYTHONPATH": "${workspaceFolder}",
+		},
+		"python.pythonPath": "/usr/bin/python3",
+		"python.linting.pylintEnabled": true,
+		"python.linting.enabled": true,
+		"editor.formatOnSave": true,
+		"python.formatting.provider": "yapf",
+		"python.formatting.yapfArgs": [
+			"--style",
+			"${workspaceRoot}/.style.yapf"
+		],
+	},
+	// Add the IDs of extensions you want installed when the container is created.
+	"extensions": [
+		"ms-python.python"
+	],
+}

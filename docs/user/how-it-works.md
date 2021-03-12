@@ -97,7 +97,7 @@ ongoing.
 Jobs are configured to process specific Evidence types, and if the Task
 Manager sees a new piece of Evidence (either from a new Turbinia request, or
 because another Task generated a new piece of Evidence), and there is a Job
-that is configured to run for that type of Evidence, then the Task Mananger will
+that is configured to run for that type of Evidence, then the Task Manager will
 create a new Job for it.  The Job then generates one or more Tasks which will
 be immediately scheduled for execution.
 

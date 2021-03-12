@@ -24,9 +24,9 @@ import sys
 
 from turbinia import config
 from turbinia import TurbiniaException
+from turbinia.processors import archive
 from turbinia.processors import docker
 from turbinia.processors import mount_local
-from turbinia.processors import archive
 from turbinia.lib.docker_manager import GetDockerPath
 
 # pylint: disable=keyword-arg-before-vararg
@@ -131,6 +131,7 @@ class Evidence:
         with initially.  Tasks should generally not use this path, but instead
         use the `local_path`.
     mount_path (str): Path to a mounted file system (if relevant).
+    credentials (list): Decryption keys for encrypted evidence.
     tags (dict): Extra tags associated with this evidence.
     request_id (str): The id of the request this evidence came from, if any.
     has_child_evidence (bool): This property indicates the evidence object has
@@ -166,6 +167,7 @@ class Evidence:
     self.cloud_only = False
     self.description = description
     self.mount_path = None
+    self.credentials = []
     self.source = source
     self.source_path = source_path
     self.tags = tags if tags else {}
@@ -200,7 +202,7 @@ class Evidence:
 
   @classmethod
   def from_dict(cls, dictionary):
-    """Instanciate an Evidence object from a dictionary of attributes.
+    """Instantiate an Evidence object from a dictionary of attributes.
 
     Args:
       dictionary(dict): the attributes to set for this object.
@@ -363,7 +365,7 @@ class Evidence:
     """Returns a string representing the current state of evidence.
 
     Returns:
-      str:  The state as a formated string
+      str:  The state as a formatted string
     """
     output = []
     for state, value in self.state.items():
@@ -523,35 +525,66 @@ class RawDisk(Evidence):
 class DiskPartition(RawDisk):
   """Evidence object for a partition within Disk based evidence.
 
+  More information on dfVFS types:
+  https://dfvfs.readthedocs.io/en/latest/sources/Path-specifications.html
+
   Attributes:
+    partition_location (str): dfVFS partition location (The location of the
+        volume within the volume system, similar to a volume identifier).
+    partition_offset (int): Offset of the partition in bytes.
+    partition_size (int): Size of the partition in bytes.
     path_spec (dfvfs.PathSpec): Partition path spec.
-    partition_offset: Offset of the partition in bytes.
-    partition_size: Size of the partition in bytes.
   """
 
   POSSIBLE_STATES = [EvidenceState.ATTACHED, EvidenceState.MOUNTED]
 
   def __init__(
-      self, path_spec=None, partition_offset=None, partition_size=None, *args,
-      **kwargs):
+      self, partition_location=None, partition_offset=None, partition_size=None,
+      path_spec=None, *args, **kwargs):
     """Initialization for raw volume evidence object."""
 
-    self.path_spec = path_spec
+    self.partition_location = partition_location
     self.partition_offset = partition_offset
     self.partition_size = partition_size
+    self.path_spec = path_spec
     super(DiskPartition, self).__init__(*args, **kwargs)
 
     # This Evidence needs to have a parent
     self.context_dependent = True
 
   def _preprocess(self, _, required_states):
+    # Late loading the partition processor to avoid loading dfVFS unnecessarily.
+    from turbinia.processors import partitions
+
+    # We need to enumerate partitions in preprocessing so the path_specs match
+    # the parent evidence location for each task.
+    try:
+      path_specs = partitions.Enumerate(self.parent_evidence)
+    except TurbiniaException as e:
+      log.error(e)
+
+    path_spec = partitions.GetPathSpecByLocation(
+        path_specs, self.partition_location)
+    if path_spec:
+      self.path_spec = path_spec
+
     # In attaching a partition, we create a new loopback device using the
     # partition offset and size.
     if EvidenceState.ATTACHED in required_states or self.has_child_evidence:
-      self.device_path = mount_local.PreprocessLosetup(
-          self.parent_evidence.device_path,
-          partition_offset=self.partition_offset,
-          partition_size=self.partition_size)
+      # Check for encryption
+      encryption_type = partitions.GetPartitionEncryptionType(path_spec)
+      if encryption_type == 'BDE':
+        self.device_path = mount_local.PreprocessBitLocker(
+            self.parent_evidence.device_path,
+            partition_offset=self.partition_offset,
+            credentials=self.parent_evidence.credentials)
+        if not self.device_path:
+          log.error('Could not decrypt partition.')
+      else:
+        self.device_path = mount_local.PreprocessLosetup(
+            self.parent_evidence.device_path,
+            partition_offset=self.partition_offset,
+            partition_size=self.partition_size)
       if self.device_path:
         self.state[EvidenceState.ATTACHED] = True
         self.local_path = self.device_path
@@ -567,8 +600,19 @@ class DiskPartition(RawDisk):
       mount_local.PostprocessUnmountPath(self.mount_path)
       self.state[EvidenceState.MOUNTED] = False
     if self.state[EvidenceState.ATTACHED]:
-      mount_local.PostprocessDeleteLosetup(self.device_path)
-      self.state[EvidenceState.ATTACHED] = False
+      # Late loading the partition processor to avoid loading dfVFS unnecessarily.
+      from turbinia.processors import partitions
+
+      # Check for encryption
+      encryption_type = partitions.GetPartitionEncryptionType(self.path_spec)
+      if encryption_type == 'BDE':
+        # bdemount creates a virtual device named bde1 in the mount path. This
+        # needs to be unmounted rather than detached.
+        mount_local.PostprocessUnmountPath(self.device_path.replace('bde1', ''))
+        self.state[EvidenceState.ATTACHED] = False
+      else:
+        mount_local.PostprocessDeleteLosetup(self.device_path)
+        self.state[EvidenceState.ATTACHED] = False
 
 
 class EncryptedDisk(RawDisk):
