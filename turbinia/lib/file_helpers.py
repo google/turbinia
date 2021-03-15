@@ -27,17 +27,17 @@ def file_to_str(file_path):
     file_path(str): Path to file to be read into variable.
 
   Returns:
-    str: contents of the file
+    str: contents of the file. Empty string if there is an error.
   """
   file_contents = ''
   if not os.path.exists(file_path):
     log.error('File {0:s} not found.'.format(file_path))
-  try:
-    file_contents = open(file_path).read()
-  except IOError as e:
-    log.error('Cannot open file {0:s} [{1!s}]'.format(file_path, e))
+  else:
+    try:
+      file_contents = open(file_path).read()
+    except IOError as e:
+      log.error('Cannot open file {0:s} [{1!s}]'.format(file_path, e))
   return file_contents
-
 
 def file_to_list(file_path):
   """Read file to list line by line
@@ -45,28 +45,15 @@ def file_to_list(file_path):
     file_path(str): Path to file to be read into list
 
   Returns:
-    list[str]: The parsed strings.
+    list[str]: The parsed strings. Empty list if there is an error.
   """
   try:
     with open(file_path) as fh:
       content = fh.readlines()
+      return [x.rstrip() for x in content]
   except IOError as e:
     log.error('Cannot open file {0:s} [{1!s}]'.format(file_path, e))
-  return [x.rstrip() for x in content]
-
-
-def write_str_to_temp_file(source_str, preferred_dir=None):
-  """Creates a temporary file with the contents of a specified string variable.
-
-  Args:
-    source_str (str): String to be written to file.
-
-  Returns:
-    str: File name for newly created temporary file.
-  """
-  with NamedTemporaryFile(dir=preferred_dir, delete=False, mode='w') as fh:
-    fh.write(source_str)
-  return fh.name
+  return []
 
 
 def write_file_to_temp_file(source_file, preferred_dir=None):
@@ -79,12 +66,28 @@ def write_file_to_temp_file(source_file, preferred_dir=None):
   Returns:
     str: File name for newly created temporary file.
   """
-  with open(source_file, 'r') as sf_fh:
-    contents = sf_fh.read()
-  with NamedTemporaryFile(dir=preferred_dir, delete=False, mode='w') as fh:
-    fh.write(contents)
-  return fh.name
+  contents = file_to_str(source_file)
+  fh = write_str_to_temp_file(contents, preferred_dir)
+  return fh
 
+def write_str_to_temp_file(source_str, preferred_dir=None):
+ """Creates a temporary file with the contents of a specified string variable.
+
+ Args:
+   source_str (str): String to be written to file.
+
+ Returns:
+   str: File name for newly created temporary file.
+   None: If there is an error.
+ """
+ try:
+   with NamedTemporaryFile(dir=preferred_dir, delete=False, mode='w') as fh:
+     fh.write(source_str)
+     return fh.name
+ except:
+   log.error('Could not write to temporary file. [{0!s}]'.format(e))
+ return None
+ 
 
 def write_list_to_temp_file(entries, file_name=None, preferred_dir=None):
   """ Creates a file containing a line-by-line list of strings off of a 
@@ -97,7 +100,12 @@ def write_list_to_temp_file(entries, file_name=None, preferred_dir=None):
 
   Returns:
     str: Path to newly created file.
+    None: If there is an error.
   """
-  with NamedTemporaryFile(dir=preferred_dir, delete=False, mode='w') as fh:
-    fh.write('\n'.join(entries))
-  return fh.name
+  try:
+   with NamedTemporaryFile(dir=preferred_dir, delete=False, mode='w') as fh:
+     fh.write('\n'.join(entries))
+     return fh.name
+  except:
+    log.error('Could not write to temporary file. [{0!s}]'.format(e))
+  return None

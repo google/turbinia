@@ -19,8 +19,11 @@ import logging
 import yaml
 from turbinia import config
 from turbinia import TurbiniaException
-from yaml import Loader, load, dump
-from turbinia.lib.file_helpers import file_to_str, file_to_list
+from yaml import Loader
+from yaml import load
+from yaml import dump
+from turbinia.lib.file_helpers import file_to_str
+from turbinia.lib.file_helpers import file_to_list
 from turbinia.client import TASK_MAP
 
 log = logging.getLogger('turbinia')
@@ -30,10 +33,6 @@ DEFAULT_GLOBALS_RECIPE = {
     'debug_tasks': False,
     'jobs_allowlist': [],
     'jobs_denylist': [],
-    'yara_rules': '',
-    'filter_patterns': [],
-    'yara_rules_file': None,
-    'filter_patterns_file': None
 }
 
 #Default 'task_recipes' dict
@@ -41,9 +40,15 @@ DEFAULT_RECIPE = {'globals': DEFAULT_GLOBALS_RECIPE}
 
 
 def load_recipe_from_file(recipe_file):
-  """ Load recipe from file. """
+  """Load recipe from file.
+  Args:
+    recipe_file(str): Name of the recipe file to be read.
+
+  Returns:
+    dict: Validated and corrected recipe dictionary. Empty dict if recipe is invalid.
+  """
   if not recipe_file:
-    task_recipe = DEFAULT_RECIPE
+    return copy.deepcopy(DEFAULT_RECIPE)
   else:
     try:
       with open(recipe_file, 'r') as r_file:
@@ -54,22 +59,26 @@ def load_recipe_from_file(recipe_file):
           'Invalid YAML on recipe file {0:s}: {1!s}.'.format(
               recipe_file, exception))
       log.error(message)
-      return False
     except IOError as exception:
       log.error(
           'Failed to read recipe file {0:s}: {1!s}'.format(
               recipe_file, exception))
-      validate_recipe(recipe_dict)
-      return False
-    return recipe_dict
+    if validate_recipe(recipe_dict):
+      return recipe_dict
+    else:
+      return {}
 
 
 def validate_globals_recipe(proposed_globals_recipe):
-  """Ensures globals recipe is valid for further processing."""
+  """Validate the 'globals' special task recipe.
+  Args:
+    proposed_globals_recipe(dict): globals task recipe in need of validation.
 
-  for item in DEFAULT_GLOBALS_RECIPE:
-    if item not in proposed_globals_recipe:
-      proposed_globals_recipe[item] = DEFAULT_GLOBALS_RECIPE[item]
+  Returns:
+    Bool indicating whether the recipe has a valid format.
+  """
+  reference_globals_recipe = copy.deepcopy(DEFAULT_GLOBALS_RECIPE)
+  reference_globals_recipe.update(proposed_globals_recipe)
 
   filter_patterns_file = proposed_globals_recipe.get(
       'filter_patterns_file', None)
@@ -79,7 +88,7 @@ def validate_globals_recipe(proposed_globals_recipe):
         filter_patterns_file)
   if yara_rules_file:
     proposed_globals_recipe['yara_rules'] = file_to_str(yara_rules_file)
-  diff = set(DEFAULT_GLOBALS_RECIPE) - set(proposed_globals_recipe)
+  diff =  set(proposed_globals_recipe) - set(DEFAULT_GLOBALS_RECIPE)
   if diff:
     log.error('Unknown key {0:s} found on globals recipe item'.format(diff))
     return False
@@ -92,44 +101,58 @@ def validate_globals_recipe(proposed_globals_recipe):
 
 
 def validate_task_recipe(proposed_recipe, task_config):
-  """Ensure only allowed parameters are present a given task recipe."""
-  return proposed_recipe.items() <= task_config.items()
+  """Ensure only allowed parameters are present a given task recipe.
+  Args:
+    proposed_recipe(dict): Task recipe in need of validation.
+    task_config(dict): Default recipe for task, defining the allowed fields. 
+
+  Returns:
+    Bool indicating whether the recipe has a valid format.
+  """
+  allowed_values = task_config.keys()
+  for v in proposed_recipe:
+    if v not in allowed_values:
+      return False 
+  return True
 
 
 def validate_recipe(recipe_dict):
-  """Validate the 'task_recipes' dict supplied by the request recipe."""
+  """Validate the 'task_recipes' dict supplied by the request recipe.
+  Args:
+    recipe_dict(dict): Turbinia recipe in need of validation submitted along with the evidence.
+
+  Returns:
+    Bool indicating whether the recipe has a valid format.
+  """
   tasks_with_recipe = []
-  valid_recipe = True
   #If not globals task recipe is specified create one.
   if 'globals' not in recipe_dict:
     recipe_dict['globals'] = copy.deepcopy(DEFAULT_RECIPE)
     log.warning(
         'No globals recipe specified, all recipes should include a globals entry, the default values will be used'
     )
+  else:
+    if not validate_globals_recipe(recipe_item_contents):
+      log.error('Invalid globals recipe.')
+      return False
 
   for recipe_item, recipe_item_contents in recipe_dict.items():
     if recipe_item in tasks_with_recipe:
       log.error(
-          'Two recipe items with the same name {0:s} have been found.'
-          'If you wish to specify several task runs of the same tool,'
+          'Two recipe items with the same name {0:s} have been found. '
+          'If you wish to specify several task runs of the same tool, '
           'please include them in separate recipes.'.format(recipe_item))
-      valid_recipe = False
-    if 'task' not in recipe_item_contents:
-      if recipe_item != 'globals':
-        log.error(
-            'Recipe item {0:s} has no "task" key. All recipe items must have a "task" key indicating the TurbiniaTask'
-            ' to which it relates.'.format(recipe_item))
-        valid_recipe = False
-      else:
-        if not validate_globals_recipe(recipe_item_contents):
-          log.error('Invalid globals recipe.')
-          valid_recipe = False
-    else:
-      proposed_task = recipe_item_contents['task']
-      if proposed_task not in [v.__name__ for v in TASK_MAP.values()]:
-        log.error(
-            'Task {0:s} defined for task recipe {0:s} does not exist.'.format(
-                proposed_task, recipe_item))
-        valid_recipe = False
+      return False
+    if 'task' not in recipe_item_contents and recipe_item != 'globals':
+      log.error(
+          'Recipe item {0:s} has no "task" key. All recipe items must have a "task" key indicating the TurbiniaTask'
+          ' to which it relates.'.format(recipe_item))
+      return False
+    proposed_task = recipe_item_contents['task']
+    if lower(proposed_task) not in TASK_MAP:
+      log.error(
+          'Task {0:s} defined for task recipe {0:s} does not exist.'.format(
+              proposed_task, recipe_item))
+      return False
     tasks_with_recipe.append(recipe_item)
-  return valid_recipe
+  return True

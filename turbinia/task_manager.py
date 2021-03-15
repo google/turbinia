@@ -139,18 +139,19 @@ class BaseTaskManager:
 
   @staticmethod
   def validate_request_recipe(request_recipe):
-    """Ensure tasks coming from all clients have their recipe checked."""
+    """Ensure tasks coming from all clients have their recipe checked.
+    Args:
+      request_recipe(dict): request recipe in need of validation.
+    Returns:
+      bool: True if the request recipe is valid.
+    """
+
     #Load recipe using helper, which will validate.
     proposed_recipe = request_recipe.get('task_recipes', None)
     if proposed_recipe:
       if recipe_helpers.validate_recipe(proposed_recipe):
         return True
     return False
-
-  @staticmethod
-  def validate_task_recipe(proposed_recipe, task):
-    """Ensure only allowed parameters are present a given task recipe."""
-    return recipe_helpers.validate_task_recipe(proposed_recipe, task.task_config)
 
   @staticmethod
   def get_named_recipe(name, evidence):
