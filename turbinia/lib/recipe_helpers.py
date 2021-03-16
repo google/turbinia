@@ -93,7 +93,7 @@ def validate_globals_recipe(proposed_globals_recipe):
     log.error('Unknown key {0:s} found on globals recipe item'.format(diff))
     return False
 
-  if any(i in proposed_globals_recipe['jobs_denylist']
+  if  proposed_globals_recipe['jobs_allowlist'] and proposed_globals_recipe['jobs_denylist']:
          for i in proposed_globals_recipe['jobs_allowlist']):
     log.error('No jobs can be simultaneously in the allow and deny lists')
     return False
