@@ -58,6 +58,8 @@ def load_recipe_from_file(recipe_file):
       with open(recipe_file, 'r') as r_file:
         recipe_file_contents = r_file.read()
         recipe_dict = load(recipe_file_contents, Loader=Loader)
+        if validate_recipe(recipe_dict):
+          return recipe_dict
     except yaml.parser.ParserError as exception:
       message = (
           'Invalid YAML on recipe file {0:s}: {1!s}.'.format(
@@ -67,10 +69,7 @@ def load_recipe_from_file(recipe_file):
       log.error(
           'Failed to read recipe file {0:s}: {1!s}'.format(
               recipe_file, exception))
-    if validate_recipe(recipe_dict):
-      return recipe_dict
-    else:
-      return {}
+    return {}
 
 
 def validate_globals_recipe(proposed_globals_recipe):
