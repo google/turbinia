@@ -137,31 +137,6 @@ class BaseTaskManager:
     """
     raise NotImplementedError
 
-  @staticmethod
-  def validate_request_recipe(request_recipe):
-    """Ensure tasks coming from all clients have their recipe checked.
-    Args:
-      request_recipe(dict): request recipe in need of validation.
-    Returns:
-      bool: True if the request recipe is valid.
-    """
-
-    #Load recipe using helper, which will validate.
-    proposed_recipe = request_recipe.get('task_recipes', None)
-    if proposed_recipe:
-      if recipe_helpers.validate_recipe(proposed_recipe):
-        return True
-    return False
-
-  @staticmethod
-  def get_named_recipe(name, evidence):
-    """Searches and provides a recipe for the task at hand if there is one."""
-    target_recipe = {}
-    for recipe_name , recipe_contents in evidence.config['task_recipes'].items():
-      if recipe_contents.get('task', '') == name:
-        target_recipe = recipe_contents
-    return target_recipe
-
   def setup(self, jobs_denylist=None, jobs_allowlist=None, *args, **kwargs):
     """Does setup of Task manager and its dependencies.
 
@@ -627,7 +602,7 @@ class CeleryTaskManager(BaseTaskManager):
 
         evidence_.config = request.recipe
         evidence_.config['abort'] = False
-        if not self.validate_request_recipe(evidence_.config):
+        if not recipe_helpers.validate_recipe(evidence_.config):
           evidence_.config['abort'] = True
           evidence_.config['abort_message'] = 'Recipe Invalid'
           
@@ -723,7 +698,7 @@ class PSQTaskManager(BaseTaskManager):
 
         evidence_.config = request.recipe
         evidence_.config['abort'] = False
-        if not self.validate_request_recipe(evidence_.config):
+        if not recipe_helpers.validate_recipe(evidence_.config):
           evidence_.config['abort'] = True
           evidence_.config['abort_message'] = 'Recipe Invalid'
 
