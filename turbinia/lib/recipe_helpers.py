@@ -33,6 +33,10 @@ DEFAULT_GLOBALS_RECIPE = {
     'debug_tasks': False,
     'jobs_allowlist': [],
     'jobs_denylist': [],
+    'yara_rules_file': None,
+    'filter_patterns_file': None,
+    'yara_rules': '',
+    'filter_patterns': ''
 }
 
 #Default 'task_recipes' dict
@@ -90,13 +94,14 @@ def validate_globals_recipe(proposed_globals_recipe):
     proposed_globals_recipe['yara_rules'] = file_to_str(yara_rules_file)
   diff =  set(proposed_globals_recipe) - set(DEFAULT_GLOBALS_RECIPE)
   if diff:
-    log.error('Unknown key {0:s} found on globals recipe item'.format(diff))
+    log.error('Unknown keys [{0:s}] found on globals recipe item'.format(str(diff)))
     return False
 
-  if  proposed_globals_recipe['jobs_allowlist'] and proposed_globals_recipe['jobs_denylist']:
-         for i in proposed_globals_recipe['jobs_allowlist']):
-    log.error('No jobs can be simultaneously in the allow and deny lists')
-    return False
+  if 'jobs_allowlist' in proposed_globals_recipe and 'jobs_denylist' in proposed_globals_recipe:
+    for i in proposed_globals_recipe['jobs_allowlist']:
+      if i in proposed_globals_recipe['jobs_denylist']:
+        log.error('No jobs can be simultaneously in the allow and deny lists')
+        return False
   return True
 
 
@@ -132,27 +137,27 @@ def validate_recipe(recipe_dict):
         'No globals recipe specified, all recipes should include a globals entry, the default values will be used'
     )
   else:
-    if not validate_globals_recipe(recipe_item_contents):
+    if not validate_globals_recipe(recipe_dict['globals']):
       log.error('Invalid globals recipe.')
       return False
 
-  for recipe_item, recipe_item_contents in recipe_dict.items():
-    if recipe_item in tasks_with_recipe:
-      log.error(
-          'Two recipe items with the same name {0:s} have been found. '
-          'If you wish to specify several task runs of the same tool, '
-          'please include them in separate recipes.'.format(recipe_item))
-      return False
-    if 'task' not in recipe_item_contents and recipe_item != 'globals':
-      log.error(
-          'Recipe item {0:s} has no "task" key. All recipe items must have a "task" key indicating the TurbiniaTask'
-          ' to which it relates.'.format(recipe_item))
-      return False
-    proposed_task = recipe_item_contents['task']
-    if lower(proposed_task) not in TASK_MAP:
-      log.error(
-          'Task {0:s} defined for task recipe {0:s} does not exist.'.format(
-              proposed_task, recipe_item))
-      return False
-    tasks_with_recipe.append(recipe_item)
+      for recipe_item, recipe_item_contents in recipe_dict.items():
+        if recipe_item in tasks_with_recipe:
+          log.error(
+              'Two recipe items with the same name {0:s} have been found. '
+              'If you wish to specify several task runs of the same tool, '
+              'please include them in separate recipes.'.format(recipe_item))
+          return False
+        if 'task' not in recipe_item_contents and recipe_item != 'globals':
+          log.error(
+              'Recipe item {0:s} has no "task" key. All recipe items must have a "task" key indicating the TurbiniaTask'
+              ' to which it relates.'.format(recipe_item))
+          return False
+        proposed_task = recipe_item_contents['task']
+        if lower(proposed_task) not in TASK_MAP:
+          log.error(
+              'Task {0:s} defined for task recipe {0:s} does not exist.'.format(
+                  proposed_task, recipe_item))
+          return False
+        tasks_with_recipe.append(recipe_item)
   return True
