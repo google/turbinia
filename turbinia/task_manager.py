@@ -603,6 +603,7 @@ class CeleryTaskManager(BaseTaskManager):
         evidence_.config = request.recipe
         evidence_.config['abort'] = False
         if not recipe_helpers.validate_recipe(evidence_.config):
+          print("RECIPE INVALID")
           evidence_.config['abort'] = True
           evidence_.config['abort_message'] = 'Recipe Invalid'
           
@@ -699,6 +700,7 @@ class PSQTaskManager(BaseTaskManager):
         evidence_.config = request.recipe
         evidence_.config['abort'] = False
         if not recipe_helpers.validate_recipe(evidence_.config):
+          print("RECIPE INVALID")
           evidence_.config['abort'] = True
           evidence_.config['abort_message'] = 'Recipe Invalid'
 

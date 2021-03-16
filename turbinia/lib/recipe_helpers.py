@@ -140,23 +140,24 @@ def validate_recipe(recipe_dict):
       log.error('Invalid globals recipe.')
       return False
 
-      for recipe_item, recipe_item_contents in recipe_dict.items():
-        if recipe_item in tasks_with_recipe:
-          log.error(
-              'Two recipe items with the same name {0:s} have been found. '
-              'If you wish to specify several task runs of the same tool, '
-              'please include them in separate recipes.'.format(recipe_item))
-          return False
-        if 'task' not in recipe_item_contents and recipe_item != 'globals':
-          log.error(
-              'Recipe item {0:s} has no "task" key. All recipe items must have a "task" key indicating the TurbiniaTask'
-              ' to which it relates.'.format(recipe_item))
-          return False
-        proposed_task = recipe_item_contents['task']
-        if lower(proposed_task) not in TASK_MAP:
-          log.error(
-              'Task {0:s} defined for task recipe {0:s} does not exist.'.format(
-                  proposed_task, recipe_item))
-          return False
-        tasks_with_recipe.append(recipe_item)
+  for recipe_item, recipe_item_contents in recipe_dict.items():
+    if recipe_item in tasks_with_recipe:
+      log.error(
+          'Two recipe items with the same name {0:s} have been found. '
+          'If you wish to specify several task runs of the same tool, '
+          'please include them in separate recipes.'.format(recipe_item))
+      return False
+    if recipe_item != 'globals':
+      if 'task' not in recipe_item_contents: 
+        log.error(
+            'Recipe item {0:s} has no "task" key. All recipe items must have a "task" key indicating the TurbiniaTask'
+            ' to which it relates.'.format(recipe_item))
+        return False
+      proposed_task = recipe_item_contents['task']
+      if proposed_task.lower() not in TASK_MAP:
+        log.error(
+            'Task {0:s} defined for task recipe {0:s} does not exist.'.format(
+                proposed_task, recipe_item))
+        return False
+      tasks_with_recipe.append(recipe_item)
   return True
