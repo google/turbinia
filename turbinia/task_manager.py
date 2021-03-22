@@ -212,12 +212,13 @@ class BaseTaskManager:
     # register for Evidence(), or or other evidence types that may be a super
     # class of the output of the job itself.  Short term we could potentially
     # have a run time check for this upon Job instantiation to prevent it.
-          
     for job in jobs_list:
       # Doing a strict type check here for now until we can get the above
       # comment figured out.
       # pylint: disable=unidiomatic-typecheck
-      jobs_applicable = [True for t in job.evidence_input if type(evidence_) == t]
+      jobs_applicable = [
+          True for t in job.evidence_input if type(evidence_) == t
+      ]
 
       if jobs_applicable or evidence_.config['abort']:
         job_instance = job(
@@ -601,12 +602,12 @@ class CeleryTaskManager(BaseTaskManager):
           evidence_.request_id = request.request_id
 
         evidence_.config = request.recipe
-        evidence_.config['abort'] = False
         if not recipe_helpers.validate_recipe(evidence_.config):
-          print("RECIPE INVALID")
           evidence_.config['abort'] = True
           evidence_.config['abort_message'] = 'Recipe Invalid'
-          
+        else:
+          evidence_.config['abort'] = False
+
         evidence_.config['requester'] = request.requester
         log.info(
             'Received evidence [{0:s}] from Kombu message.'.format(
@@ -698,11 +699,11 @@ class PSQTaskManager(BaseTaskManager):
           evidence_.request_id = request.request_id
 
         evidence_.config = request.recipe
-        evidence_.config['abort'] = False
         if not recipe_helpers.validate_recipe(evidence_.config):
-          print("RECIPE INVALID")
           evidence_.config['abort'] = True
           evidence_.config['abort_message'] = 'Recipe Invalid'
+        else:
+          evidence_.config['abort'] = False
 
         evidence_.config['requester'] = request.requester
         log.info(

@@ -34,10 +34,5 @@ class AbortTask(TurbiniaTask):
     Returns:
         TurbiniaTaskResult object.
     """
-    
     result.close(self, False, '{0:s}'.format(self.task_config['reason']))
     return result
-
-
-
-

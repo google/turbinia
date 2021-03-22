@@ -22,7 +22,7 @@ log = logging.getLogger('turbinia')
 
 
 def file_to_str(file_path):
-  """Read file to variable 
+  """Read file to variable
   Args:
     file_path(str): Path to file to be read into variable.
 
@@ -38,6 +38,7 @@ def file_to_str(file_path):
     except IOError as e:
       log.error('Cannot open file {0:s} [{1!s}]'.format(file_path, e))
   return file_contents
+
 
 def file_to_list(file_path):
   """Read file to list line by line
@@ -70,8 +71,9 @@ def write_file_to_temp_file(source_file, preferred_dir=None):
   fh = write_str_to_temp_file(contents, preferred_dir)
   return fh
 
+
 def write_str_to_temp_file(source_str, preferred_dir=None):
- """Creates a temporary file with the contents of a specified string variable.
+  """Creates a temporary file with the contents of a specified string variable.
 
  Args:
    source_str (str): String to be written to file.
@@ -80,17 +82,17 @@ def write_str_to_temp_file(source_str, preferred_dir=None):
    str: File name for newly created temporary file.
    None: If there is an error.
  """
- try:
-   with NamedTemporaryFile(dir=preferred_dir, delete=False, mode='w') as fh:
-     fh.write(source_str)
-     return fh.name
- except:
-   log.error('Could not write to temporary file. [{0!s}]'.format(e))
- return None
- 
+  try:
+    with NamedTemporaryFile(dir=preferred_dir, delete=False, mode='w') as fh:
+      fh.write(source_str)
+      return fh.name
+  except:
+    log.error('Could not write to temporary file. [{0!s}]')
+  return None
 
-def write_list_to_temp_file(entries, file_name=None, preferred_dir=None):
-  """ Creates a file containing a line-by-line list of strings off of a 
+
+def write_list_to_temp_file(entries, preferred_dir=None):
+  """ Creates a file containing a line-by-line list of strings off of a
   list of entries.
 
   Args:
@@ -103,9 +105,9 @@ def write_list_to_temp_file(entries, file_name=None, preferred_dir=None):
     None: If there is an error.
   """
   try:
-   with NamedTemporaryFile(dir=preferred_dir, delete=False, mode='w') as fh:
-     fh.write('\n'.join(entries))
-     return fh.name
+    with NamedTemporaryFile(dir=preferred_dir, delete=False, mode='w') as fh:
+      fh.write('\n'.join(entries))
+      return fh.name
   except:
-    log.error('Could not write to temporary file. [{0!s}]'.format(e))
+    log.error('Could not write to temporary file. [{0!s}]')
   return None

@@ -876,7 +876,7 @@ def main():
       recipe_dict['globals']['yara_rules_file'] = args.jobs_denylist
       recipe_dict['globals']['filter_patterns_file'] = args.jobs_denylist
 
-    request.recipe['task_recipes'] = recipe_dict
+    request.recipe = recipe_dict
 
     if args.dump_json:
       print(request.to_json().encode('utf-8'))

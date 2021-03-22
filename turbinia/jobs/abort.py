@@ -21,11 +21,10 @@ from turbinia.jobs import manager
 
 class AbortJob(interface.TurbiniaJob):
   """Produces abort tasks."""
-  
+
   evidence_input = []
 
   NAME = 'AbortJob'
-
 
   def create_tasks(self, evidence=None):
     """Create task for Plaso.

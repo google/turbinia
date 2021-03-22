@@ -818,8 +818,8 @@ class TurbiniaTask:
 
         #collect the recipe sent along with the evidence, and validate that
         #all values are allowed through the default are config.
-        proposed_recipe = self.get_task_recipe(evidence.config['task_recipes'])
-        globals_recipe = evidence.config['task_recipes']['globals']
+        proposed_recipe = self.get_task_recipe(evidence.config)
+        globals_recipe = evidence.config['globals']
         if proposed_recipe:
           if self.validate_task_conf(proposed_recipe):
             self.task_config.update(proposed_recipe)
