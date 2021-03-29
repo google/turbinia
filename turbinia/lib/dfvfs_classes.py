@@ -47,6 +47,25 @@ class UnattendedVolumeScannerMediator(volume_scanner.VolumeScannerMediator):
         for volume_index in range(1, volume_system.number_of_volumes + 1)
     ]
 
+  def GetLVMVolumeIdentifiers(self, volume_system, volume_identifiers):
+    """Retrieves LVM volume identifiers.
+
+    This method can be used to prompt the user to provide LVM volume
+    identifiers.
+
+    Args:
+      volume_system (LVMVolumeSystem): volume system.
+      volume_identifiers (list[str]): volume identifiers including prefix.
+
+    Returns:
+      list[str]: selected volume identifiers including prefix or None.
+    """
+    prefix = 'lvm'
+    return [
+        '{0:s}{1:d}'.format(prefix, volume_index)
+        for volume_index in range(1, volume_system.number_of_volumes + 1)
+    ]
+
   def GetPartitionIdentifiers(self, volume_system, volume_identifiers):
     """Retrieves partition identifiers.
 
