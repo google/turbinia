@@ -13,3 +13,11 @@ scrape_configs:
           filter: labels.turbinia-prometheus=true
           refresh_interval: 120s
           port: 9100
+  - job_name: 'turbinia-app'
+    gce_sd_configs:
+        # The GCP Project
+        - project: '<project>'
+          zone: '<zone>'
+          filter: labels.turbinia-prometheus=true
+          refresh_interval: 120s
+          port: 9200
