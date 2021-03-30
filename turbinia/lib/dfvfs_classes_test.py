@@ -44,6 +44,20 @@ class TestUnattendedVolumeScannerMediator(unittest.TestCase):
     self.assertEqual(result, volume_identifiers)
 
   @mock.patch('dfvfs.volume.volume_system.VolumeSystem')
+  def testGetLVMVolumeIdentifiers(self, mock_volumesystem):
+    """Test the GetLVMVolumeIdentifiers function."""
+    mediator = UnattendedVolumeScannerMediator()
+
+    type(mock_volumesystem.return_value).number_of_volumes = 1
+
+    volume_system = dfvfs_volume_system.VolumeSystem()
+    volume_identifiers = ['lvm1']
+
+    result = mediator.GetLVMVolumeIdentifiers(volume_system, volume_identifiers)
+
+    self.assertEqual(result, volume_identifiers)
+
+  @mock.patch('dfvfs.volume.volume_system.VolumeSystem')
   def testGetPartitionIdentifiers(self, mock_volumesystem):
     """Test the GetPartitionIdentifiers function."""
     mediator = UnattendedVolumeScannerMediator()
