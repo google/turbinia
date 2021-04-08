@@ -489,8 +489,7 @@ class TurbiniaTask:
                 evidence, self.name, state.name, evidence.format_state()))
 
   def validate_task_conf(self, proposed_conf):
-    """Checks if the provided recipe contains exclusively fields that are
-    included in the dynamic task recipe
+    """Checks if the provided recipe contains exclusively allowed fields.
 
     Args:
       proposed_conf (dict): Dict to override the default dynamic task conf.
@@ -723,10 +722,10 @@ class TurbiniaTask:
     return result
 
   def get_task_recipe(self, recipe):
-    """Searches and provides a recipe for the task at hand if there is one.
+    """Searches and provides a recipe dict for the specified task.
 
     Args:
-      evidence: Evidence object.
+      recipe (str): recipe name.
 
     Returns:
       Dict: Recipe dict.

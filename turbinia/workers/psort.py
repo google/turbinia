@@ -66,15 +66,8 @@ class PsortTask(TurbiniaTask):
     return cmd
 
   def run(self, evidence, result):
-    """Task that processes Plaso storage files with Psort.
+    """Task that processes Plaso storage files with Psort."""
 
-    Args:
-        evidence (Evidence object):  The evidence we will process.
-        result (TurbiniaTaskResult): The object to place task results into.
-
-    Returns:
-        TurbiniaTaskResult object.
-    """
     config.LoadConfig()
 
     psort_file = os.path.join(self.output_dir, '{0:s}.csv'.format(self.id))

@@ -42,6 +42,7 @@ DEFAULT_RECIPE = {'globals': DEFAULT_GLOBALS_RECIPE}
 
 def load_recipe_from_file(recipe_file):
   """Load recipe from file.
+
   Args:
     recipe_file(str): Name of the recipe file to be read.
 
@@ -71,6 +72,7 @@ def load_recipe_from_file(recipe_file):
 
 def validate_globals_recipe(proposed_globals_recipe):
   """Validate the 'globals' special task recipe.
+
   Args:
     proposed_globals_recipe(dict): globals task recipe in need of validation.
 
@@ -94,17 +96,16 @@ def validate_globals_recipe(proposed_globals_recipe):
         'Unknown keys [{0:s}] found on globals recipe item'.format(str(diff)))
     return False
 
-  if 'jobs_allowlist' in proposed_globals_recipe \
-        and 'jobs_denylist' in proposed_globals_recipe:
-    for i in proposed_globals_recipe['jobs_allowlist']:
-      if i in proposed_globals_recipe['jobs_denylist']:
-        log.error('No jobs can be simultaneously in the allow and deny lists')
-        return False
+  if ('jobs_allowlist' in proposed_globals_recipe and
+      'jobs_denylist' in proposed_globals_recipe):
+    log.error('No jobs can be simultaneously in the allow and deny lists')
+    return False
   return True
 
 
 def validate_task_recipe(proposed_recipe, task_config):
   """Ensure only allowed parameters are present a given task recipe.
+
   Args:
     proposed_recipe(dict): Task recipe in need of validation.
     task_config(dict): Default recipe for task, defining the allowed fields.
@@ -121,6 +122,7 @@ def validate_task_recipe(proposed_recipe, task_config):
 
 def validate_recipe(recipe_dict):
   """Validate the 'recipe' dict supplied by the request recipe.
+
   Args:
     recipe_dict(dict): Turbinia recipe in need of validation
     submitted along with the evidence.
@@ -134,8 +136,7 @@ def validate_recipe(recipe_dict):
     recipe_dict['globals'] = copy.deepcopy(DEFAULT_RECIPE)
     log.warning(
         'No globals recipe specified, all recipes should include '
-        'a globals entry, the default values will be used'
-    )
+        'a globals entry, the default values will be used')
   else:
     if not validate_globals_recipe(recipe_dict['globals']):
       log.error('Invalid globals recipe.')
@@ -150,7 +151,6 @@ def validate_recipe(recipe_dict):
       return False
     if recipe_item != 'globals':
       if 'task' not in recipe_item_contents:
-        print("ITEM CAUSING ISSUE: " + recipe_item)
         log.error(
             'Recipe item {0:s} has no "task" key. All recipe items '
             'must have a "task" key indicating the TurbiniaTask '

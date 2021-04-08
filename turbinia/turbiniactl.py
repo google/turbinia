@@ -30,7 +30,6 @@ import copy
 from turbinia import config
 from turbinia import TurbiniaException
 from turbinia.config import logger
-from libcloudforensics.providers.gcp import forensics as gcp_forensics
 from turbinia.lib import google_cloud
 from turbinia.lib import file_helpers
 from turbinia.lib import recipe_helpers
@@ -856,6 +855,30 @@ def main():
     request = TurbiniaRequest(
         request_id=request_id, requester=getpass.getuser())
     request.evidence.append(evidence_)
+    if filter_patterns:
+      request.recipe['filter_patterns'] = filter_patterns
+    if args.jobs_denylist:
+      request.recipe['jobs_denylist'] = args.jobs_denylist
+    if args.jobs_allowlist:
+      request.recipe['jobs_allowlist'] = args.jobs_allowlist
+    if yara_rules:
+      request.recipe['yara_rules'] = yara_rules
+    if args.debug_tasks:
+      request.recipe['debug_tasks'] = args.debug_tasks
+    if args.decryption_keys:
+      for credential in args.decryption_keys:
+        try:
+          credential_type, credential_data = credential.split('=')
+        except ValueError as exception:
+          log.error(
+              'Could not parse credential [{0:s}] from decryption keys '
+              '{1!s}: {2!s}'.format(
+                  credential, args.decryption_keys, exception))
+          sys.exit(1)
+        evidence_.credentials.append({
+            'credential_type': credential_type,
+            'credential_data': credential_data
+        })
 
     if args.recipe:
       if (args.jobs_denylist or args.jobs_allowlist or

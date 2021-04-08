@@ -2,7 +2,7 @@ jobs_allowlist:
   - PlasoJob
   - PsortJob
 
-patterns_file: '/home/jorlamd/.config/turbinia/patterns_files/patterns_test'
+patterns_file: None
 
 plaso_base:
   task: 'PlasoTask'

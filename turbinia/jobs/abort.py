@@ -26,18 +26,18 @@ class AbortJob(interface.TurbiniaJob):
 
   NAME = 'AbortJob'
 
-  def create_tasks(self, evidence=None):
+  def create_tasks(self, evidence):
     """Create task for Plaso.
 
     Args:
-      evidence: None expected for this kind of job.
+      evidence: List of evidence objects to process.
 
     Returns:
         A task to accurately report on the reason for job termination.
     """
     #Returning a single task every time in this case.
     abort_task = AbortTask()
-    abort_task.task_config['reason'] = evidence[0].config['abort_message']
+    abort_task.task_config['reason'] = evidence[0].get('abort_message', '')
     return [abort_task]
 
 
