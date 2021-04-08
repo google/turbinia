@@ -15,7 +15,7 @@
     "editable": true,
     "gnetId": null,
     "graphTooltip": 0,
-    "id": 1,
+    "id": 2,
     "links": [],
     "panels": [
         {
@@ -29,16 +29,17 @@
             },
             "id": 14,
             "panels": [],
-            "title": "Row title",
+            "title": "Summary",
             "type": "row"
         },
         {
             "datasource": "Prometheus",
-            "description": "This shows the total number of Turbinia Jobs.",
+            "description": "Total number of requests received by Turbinia Server",
             "fieldConfig": {
                 "defaults": {
                     "color": {
-                        "mode": "thresholds"
+                        "fixedColor": "rgb(255, 255, 255)",
+                        "mode": "fixed"
                     },
                     "mappings": [],
                     "thresholds": {
@@ -58,131 +59,9 @@
                 "overrides": []
             },
             "gridPos": {
-                "h": 8,
-                "w": 2,
+                "h": 4,
+                "w": 3,
                 "x": 0,
-                "y": 1
-            },
-            "id": 2,
-            "options": {
-                "colorMode": "value",
-                "graphMode": "none",
-                "justifyMode": "auto",
-                "orientation": "auto",
-                "reduceOptions": {
-                    "calcs": [
-                        "lastNotNull"
-                    ],
-                    "fields": "",
-                    "values": false
-                },
-                "text": {},
-                "textMode": "auto"
-            },
-            "pluginVersion": "7.5.2",
-            "targets": [
-                {
-                    "exemplar": true,
-                    "expr": "sum(turbinia_jobs_total)",
-                    "interval": "",
-                    "legendFormat": "",
-                    "queryType": "randomWalk",
-                    "refId": "A"
-                }
-            ],
-            "title": "Total Jobs",
-            "type": "stat"
-        },
-        {
-            "datasource": "Prometheus",
-            "description": "This shows the total number of Turbinia Jobs completed.",
-            "fieldConfig": {
-                "defaults": {
-                    "color": {
-                        "mode": "thresholds"
-                    },
-                    "mappings": [],
-                    "thresholds": {
-                        "mode": "absolute",
-                        "steps": [
-                            {
-                                "color": "green",
-                                "value": null
-                            },
-                            {
-                                "color": "red",
-                                "value": 80
-                            }
-                        ]
-                    }
-                },
-                "overrides": []
-            },
-            "gridPos": {
-                "h": 8,
-                "w": 2,
-                "x": 5,
-                "y": 1
-            },
-            "id": 4,
-            "options": {
-                "colorMode": "value",
-                "graphMode": "none",
-                "justifyMode": "auto",
-                "orientation": "auto",
-                "reduceOptions": {
-                    "calcs": [
-                        "lastNotNull"
-                    ],
-                    "fields": "",
-                    "values": false
-                },
-                "text": {},
-                "textMode": "auto"
-            },
-            "pluginVersion": "7.5.2",
-            "targets": [
-                {
-                    "exemplar": true,
-                    "expr": "sum(turbinia_jobs_completed_total)",
-                    "interval": "",
-                    "legendFormat": "",
-                    "queryType": "randomWalk",
-                    "refId": "A"
-                }
-            ],
-            "title": "Total Jobs Completed",
-            "type": "stat"
-        },
-        {
-            "datasource": "Prometheus",
-            "description": "This indicates the total number of requests sent to the Turbinia Server",
-            "fieldConfig": {
-                "defaults": {
-                    "color": {
-                        "mode": "thresholds"
-                    },
-                    "mappings": [],
-                    "thresholds": {
-                        "mode": "absolute",
-                        "steps": [
-                            {
-                                "color": "green",
-                                "value": null
-                            },
-                            {
-                                "color": "red",
-                                "value": 80
-                            }
-                        ]
-                    }
-                },
-                "overrides": []
-            },
-            "gridPos": {
-                "h": 8,
-                "w": 2,
-                "x": 9,
                 "y": 1
             },
             "id": 6,
@@ -217,11 +96,12 @@
         },
         {
             "datasource": "Prometheus",
-            "description": "This indicates the total number of Tasks the Turbinia Server has received.",
+            "description": "Total number of Turbinia Jobs",
             "fieldConfig": {
                 "defaults": {
                     "color": {
-                        "mode": "thresholds"
+                        "fixedColor": "rgb(255, 255, 255)",
+                        "mode": "fixed"
                     },
                     "mappings": [],
                     "thresholds": {
@@ -241,9 +121,133 @@
                 "overrides": []
             },
             "gridPos": {
-                "h": 8,
-                "w": 2,
-                "x": 12,
+                "h": 4,
+                "w": 3,
+                "x": 3,
+                "y": 1
+            },
+            "id": 2,
+            "options": {
+                "colorMode": "value",
+                "graphMode": "none",
+                "justifyMode": "auto",
+                "orientation": "auto",
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ],
+                    "fields": "",
+                    "values": false
+                },
+                "text": {},
+                "textMode": "auto"
+            },
+            "pluginVersion": "7.5.2",
+            "targets": [
+                {
+                    "exemplar": true,
+                    "expr": "sum(turbinia_jobs_total)",
+                    "interval": "",
+                    "legendFormat": "",
+                    "queryType": "randomWalk",
+                    "refId": "A"
+                }
+            ],
+            "title": "Total Jobs",
+            "type": "stat"
+        },
+        {
+            "datasource": "Prometheus",
+            "description": "Total number of completed Turbinia Jobs",
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "fixedColor": "rgb(255, 255, 255)",
+                        "mode": "fixed"
+                    },
+                    "mappings": [],
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            },
+                            {
+                                "color": "red",
+                                "value": 80
+                            }
+                        ]
+                    }
+                },
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 4,
+                "w": 3,
+                "x": 6,
+                "y": 1
+            },
+            "id": 4,
+            "options": {
+                "colorMode": "value",
+                "graphMode": "none",
+                "justifyMode": "auto",
+                "orientation": "auto",
+                "reduceOptions": {
+                    "calcs": [
+                        "lastNotNull"
+                    ],
+                    "fields": "",
+                    "values": false
+                },
+                "text": {},
+                "textMode": "auto"
+            },
+            "pluginVersion": "7.5.2",
+            "targets": [
+                {
+                    "exemplar": true,
+                    "expr": "sum(turbinia_jobs_completed_total)",
+                    "interval": "",
+                    "legendFormat": "",
+                    "queryType": "randomWalk",
+                    "refId": "A"
+                }
+            ],
+            "title": "Completed Jobs",
+            "type": "stat"
+        },
+        {
+            "datasource": "Prometheus",
+            "description": "Total number of Tasks created by the Turbinia Server",
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "fixedColor": "rgb(255, 255, 255)",
+                        "mode": "fixed"
+                    },
+                    "mappings": [],
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            },
+                            {
+                                "color": "red",
+                                "value": 80
+                            }
+                        ]
+                    }
+                },
+                "overrides": []
+            },
+            "gridPos": {
+                "h": 4,
+                "w": 3,
+                "x": 9,
                 "y": 1
             },
             "id": 8,
@@ -272,16 +276,17 @@
                     "refId": "A"
                 }
             ],
-            "title": "Total Server Tasks ",
+            "title": "Total Tasks ",
             "type": "stat"
         },
         {
             "datasource": "Prometheus",
-            "description": "This displays the total number of Tasks completed as indicated by the Turbinia Server.",
+            "description": "Total number of Tasks completed",
             "fieldConfig": {
                 "defaults": {
                     "color": {
-                        "mode": "thresholds"
+                        "fixedColor": "rgb(255, 255, 255)",
+                        "mode": "fixed"
                     },
                     "mappings": [],
                     "thresholds": {
@@ -301,9 +306,9 @@
                 "overrides": []
             },
             "gridPos": {
-                "h": 8,
-                "w": 2,
-                "x": 16,
+                "h": 4,
+                "w": 3,
+                "x": 12,
                 "y": 1
             },
             "id": 10,
@@ -333,16 +338,17 @@
                     "refId": "A"
                 }
             ],
-            "title": "Total Server Tasks Completed",
+            "title": "Completed Tasks",
             "type": "stat"
         },
         {
             "datasource": "Prometheus",
-            "description": "This displays the total Tasks failed as indicated by the Turbinia Worker.",
+            "description": "Total number of Tasks failed",
             "fieldConfig": {
                 "defaults": {
                     "color": {
-                        "mode": "thresholds"
+                        "fixedColor": "rgb(255, 255, 255)",
+                        "mode": "fixed"
                     },
                     "mappings": [],
                     "thresholds": {
@@ -362,9 +368,9 @@
                 "overrides": []
             },
             "gridPos": {
-                "h": 8,
-                "w": 2,
-                "x": 20,
+                "h": 4,
+                "w": 3,
+                "x": 15,
                 "y": 1
             },
             "id": 12,
@@ -394,8 +400,22 @@
                     "refId": "A"
                 }
             ],
-            "title": "Total Tasks Failed",
+            "title": "Tasks Failed",
             "type": "stat"
+        },
+        {
+            "collapsed": false,
+            "datasource": null,
+            "gridPos": {
+                "h": 1,
+                "w": 24,
+                "x": 0,
+                "y": 5
+            },
+            "id": 16,
+            "panels": [],
+            "title": "Stats",
+            "type": "row"
         },
         {
             "aliasColors": {},
@@ -403,7 +423,7 @@
             "dashLength": 10,
             "dashes": false,
             "datasource": "Prometheus",
-            "description": "Displays various metrics related to Turbinia Server requests and tasks.",
+            "description": "Displays Turbinia Job related information over a period of time",
             "fieldConfig": {
                 "defaults": {},
                 "overrides": []
@@ -411,13 +431,13 @@
             "fill": 1,
             "fillGradient": 0,
             "gridPos": {
-                "h": 15,
-                "w": 10,
+                "h": 8,
+                "w": 9,
                 "x": 0,
-                "y": 9
+                "y": 6
             },
             "hiddenSeries": false,
-            "id": 16,
+            "id": 18,
             "legend": {
                 "avg": false,
                 "current": false,
@@ -438,41 +458,44 @@
             "pointradius": 2,
             "points": false,
             "renderer": "flot",
-            "seriesOverrides": [],
+            "seriesOverrides": [
+                {
+                    "$$hashKey": "object:811",
+                    "alias": "Total Jobs",
+                    "color": "#FFEE52"
+                },
+                {
+                    "$$hashKey": "object:881",
+                    "alias": "Completed Jobs",
+                    "color": "#96D98D"
+                }
+            ],
             "spaceLength": 10,
             "stack": false,
             "steppedLine": false,
             "targets": [
                 {
                     "exemplar": true,
-                    "expr": "turbinia_server_request_total",
+                    "expr": "sum(turbinia_jobs_total)",
                     "interval": "",
-                    "legendFormat": "",
+                    "legendFormat": "Total Jobs",
                     "queryType": "randomWalk",
                     "refId": "A"
                 },
                 {
                     "exemplar": true,
-                    "expr": "turbinia_server_tasks_total",
+                    "expr": "sum(turbinia_jobs_completed_total)",
                     "hide": false,
                     "interval": "",
-                    "legendFormat": "",
+                    "legendFormat": "Completed Jobs",
                     "refId": "B"
-                },
-                {
-                    "exemplar": true,
-                    "expr": "turbinia_server_tasks_completed_total",
-                    "hide": false,
-                    "interval": "",
-                    "legendFormat": "",
-                    "refId": "C"
                 }
             ],
             "thresholds": [],
             "timeFrom": null,
             "timeRegions": [],
             "timeShift": null,
-            "title": "Turbinia Server Stats",
+            "title": "Jobs",
             "tooltip": {
                 "shared": true,
                 "sort": 0,
@@ -515,7 +538,7 @@
             "dashLength": 10,
             "dashes": false,
             "datasource": "Prometheus",
-            "description": "Displays various stats for the Turbinia Worker.",
+            "description": "Displays the number of Requests sent to the Turbinia Server over a period of time",
             "fieldConfig": {
                 "defaults": {},
                 "overrides": []
@@ -523,13 +546,13 @@
             "fill": 1,
             "fillGradient": 0,
             "gridPos": {
-                "h": 15,
-                "w": 12,
-                "x": 10,
-                "y": 9
+                "h": 8,
+                "w": 9,
+                "x": 9,
+                "y": 6
             },
             "hiddenSeries": false,
-            "id": 18,
+            "id": 22,
             "legend": {
                 "avg": false,
                 "current": false,
@@ -550,41 +573,264 @@
             "pointradius": 2,
             "points": false,
             "renderer": "flot",
-            "seriesOverrides": [],
+            "seriesOverrides": [
+                {
+                    "$$hashKey": "object:1027",
+                    "alias": "Requests",
+                    "color": "#8AB8FF"
+                }
+            ],
             "spaceLength": 10,
             "stack": false,
             "steppedLine": false,
             "targets": [
                 {
                     "exemplar": true,
-                    "expr": "turbinia_worker_tasks_completed_total",
+                    "expr": "sum(turbinia_server_request_total)",
                     "interval": "",
-                    "legendFormat": "",
+                    "legendFormat": "Requests",
+                    "queryType": "randomWalk",
+                    "refId": "A"
+                }
+            ],
+            "thresholds": [],
+            "timeFrom": null,
+            "timeRegions": [],
+            "timeShift": null,
+            "title": "Requests",
+            "tooltip": {
+                "shared": true,
+                "sort": 0,
+                "value_type": "individual"
+            },
+            "type": "graph",
+            "xaxis": {
+                "buckets": null,
+                "mode": "time",
+                "name": null,
+                "show": true,
+                "values": []
+            },
+            "yaxes": [
+                {
+                    "format": "short",
+                    "label": null,
+                    "logBase": 1,
+                    "max": null,
+                    "min": null,
+                    "show": true
+                },
+                {
+                    "format": "short",
+                    "label": null,
+                    "logBase": 1,
+                    "max": null,
+                    "min": null,
+                    "show": true
+                }
+            ],
+            "yaxis": {
+                "align": false,
+                "alignLevel": null
+            }
+        },
+        {
+            "aliasColors": {},
+            "bars": false,
+            "dashLength": 10,
+            "dashes": false,
+            "datasource": "Prometheus",
+            "description": "Displays Turbinia Server Task information over a period of time",
+            "fieldConfig": {
+                "defaults": {},
+                "overrides": []
+            },
+            "fill": 1,
+            "fillGradient": 0,
+            "gridPos": {
+                "h": 8,
+                "w": 9,
+                "x": 0,
+                "y": 14
+            },
+            "hiddenSeries": false,
+            "id": 20,
+            "legend": {
+                "avg": false,
+                "current": false,
+                "max": false,
+                "min": false,
+                "show": true,
+                "total": false,
+                "values": false
+            },
+            "lines": true,
+            "linewidth": 1,
+            "nullPointMode": "null",
+            "options": {
+                "alertThreshold": true
+            },
+            "percentage": false,
+            "pluginVersion": "7.5.2",
+            "pointradius": 2,
+            "points": false,
+            "renderer": "flot",
+            "seriesOverrides": [
+                {
+                    "$$hashKey": "object:904",
+                    "alias": "Total Tasks",
+                    "color": "#FFEE52"
+                },
+                {
+                    "$$hashKey": "object:918",
+                    "alias": "Completed Tasks",
+                    "color": "#96D98D"
+                }
+            ],
+            "spaceLength": 10,
+            "stack": false,
+            "steppedLine": false,
+            "targets": [
+                {
+                    "exemplar": true,
+                    "expr": "sum(turbinia_server_tasks_total)",
+                    "interval": "",
+                    "legendFormat": "Total Tasks",
                     "queryType": "randomWalk",
                     "refId": "A"
                 },
                 {
                     "exemplar": true,
-                    "expr": "turbinia_worker_tasks_queued_total",
+                    "expr": "sum(turbinia_server_tasks_completed_total)",
                     "hide": false,
                     "interval": "",
-                    "legendFormat": "",
+                    "legendFormat": "Completed Tasks",
+                    "refId": "B"
+                }
+            ],
+            "thresholds": [],
+            "timeFrom": null,
+            "timeRegions": [],
+            "timeShift": null,
+            "title": "Server Tasks",
+            "tooltip": {
+                "shared": true,
+                "sort": 0,
+                "value_type": "individual"
+            },
+            "type": "graph",
+            "xaxis": {
+                "buckets": null,
+                "mode": "time",
+                "name": null,
+                "show": true,
+                "values": []
+            },
+            "yaxes": [
+                {
+                    "format": "short",
+                    "label": null,
+                    "logBase": 1,
+                    "max": null,
+                    "min": null,
+                    "show": true
+                },
+                {
+                    "format": "short",
+                    "label": null,
+                    "logBase": 1,
+                    "max": null,
+                    "min": null,
+                    "show": true
+                }
+            ],
+            "yaxis": {
+                "align": false,
+                "alignLevel": null
+            }
+        },
+        {
+            "aliasColors": {},
+            "bars": false,
+            "dashLength": 10,
+            "dashes": false,
+            "datasource": "Prometheus",
+            "description": "Displays Turbinia Worker Task statistics over a period of time",
+            "fieldConfig": {
+                "defaults": {},
+                "overrides": []
+            },
+            "fill": 1,
+            "fillGradient": 0,
+            "gridPos": {
+                "h": 8,
+                "w": 9,
+                "x": 9,
+                "y": 14
+            },
+            "hiddenSeries": false,
+            "id": 24,
+            "legend": {
+                "avg": false,
+                "current": false,
+                "max": false,
+                "min": false,
+                "show": true,
+                "total": false,
+                "values": false
+            },
+            "lines": true,
+            "linewidth": 1,
+            "nullPointMode": "null",
+            "options": {
+                "alertThreshold": true
+            },
+            "percentage": false,
+            "pluginVersion": "7.5.2",
+            "pointradius": 2,
+            "points": false,
+            "renderer": "flot",
+            "seriesOverrides": [
+                {
+                    "$$hashKey": "object:1105",
+                    "alias": "Failed Tasks",
+                    "color": "#C4162A"
+                }
+            ],
+            "spaceLength": 10,
+            "stack": false,
+            "steppedLine": false,
+            "targets": [
+                {
+                    "exemplar": true,
+                    "expr": "sum(turbinia_worker_tasks_completed_total)",
+                    "interval": "",
+                    "legendFormat": "Completed Tasks",
+                    "queryType": "randomWalk",
+                    "refId": "A"
+                },
+                {
+                    "exemplar": true,
+                    "expr": "sum(turbinia_worker_tasks_failed_total)",
+                    "hide": false,
+                    "interval": "",
+                    "legendFormat": "Failed Tasks",
                     "refId": "B"
                 },
                 {
                     "exemplar": true,
-                    "expr": "turbinia_worker_tasks_failed_total",
+                    "expr": "sum(turbinia_worker_tasks_queued_total)",
                     "hide": false,
                     "interval": "",
-                    "legendFormat": "",
+                    "legendFormat": "Queued Tasks",
                     "refId": "C"
                 },
                 {
                     "exemplar": true,
-                    "expr": "turbinia_worker_tasks_started_total",
+                    "expr": "sum(turbinia_worker_tasks_started_total)",
                     "hide": false,
                     "interval": "",
-                    "legendFormat": "",
+                    "legendFormat": "Started Tasks",
                     "refId": "D"
                 }
             ],
@@ -592,7 +838,7 @@
             "timeFrom": null,
             "timeRegions": [],
             "timeShift": null,
-            "title": "Turbinia Worker Stats",
+            "title": "Worker Tasks",
             "tooltip": {
                 "shared": true,
                 "sort": 0,
@@ -637,7 +883,7 @@
         "list": []
     },
     "time": {
-        "from": "now-6h",
+        "from": "now-7d",
         "to": "now"
     },
     "timepicker": {},
