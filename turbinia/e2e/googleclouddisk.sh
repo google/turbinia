@@ -38,7 +38,7 @@ $TURBINIA_CLI -d -r $REQ_ID -L $MAIN_LOG -a -w googleclouddisk -d $DISK -z $ZONE
 # When the Turbinia request is finished request the final request statistics.
 $TURBINIA_CLI -d status -r $REQ_ID -s > $STATS_LOG 2>&1
 
-# Parse out the number of succesfull and failed tasks.
+# Parse out the number of successful and failed tasks.
 FAILED=`cat $STATS_LOG | grep Failed | cut -d ":" -f 3 | cut -d ',' -f 1 |  tr -d '[:space:]'`
 SUCCESS=`cat $STATS_LOG | grep Success | cut -d ":" -f 3 | cut -d ',' -f 1 |  tr -d '[:space:]'`
 

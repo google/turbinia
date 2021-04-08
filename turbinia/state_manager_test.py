@@ -77,7 +77,7 @@ class TestPSQStateManager(unittest.TestCase):
 
   @mock.patch('turbinia.state_manager.datastore.Client')
   def testStateManagerGetTaskDict(self, _):
-    """Test State Manger get_task_dict()."""
+    """Test State Manager get_task_dict()."""
     self.state_manager = self._get_state_manager()
 
     task_dict = self.state_manager.get_task_dict(self.task)
@@ -92,7 +92,7 @@ class TestPSQStateManager(unittest.TestCase):
 
   @mock.patch('turbinia.state_manager.datastore.Client')
   def testStateManagerValidateDataValidDict(self, _):
-    """Test State Manger _validate_data() base case."""
+    """Test State Manager _validate_data() base case."""
     self.state_manager = self._get_state_manager()
     # pylint: disable=protected-access
     test_data = self.state_manager._validate_data(self.test_data)
@@ -100,7 +100,7 @@ class TestPSQStateManager(unittest.TestCase):
 
   @mock.patch('turbinia.state_manager.datastore.Client')
   def testStateManagerValidateDataInvalidDict(self, _):
-    """Test State Manger _validate_data() base case."""
+    """Test State Manager _validate_data() base case."""
     self.state_manager = self._get_state_manager()
     invalid_dict = copy.deepcopy(self.test_data)
     invalid_dict['status'] = 'A' * state_manager.MAX_DATASTORE_STRLEN + 'BORKEN'

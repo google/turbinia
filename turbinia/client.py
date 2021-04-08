@@ -49,6 +49,7 @@ from turbinia.workers.analysis.jupyter import JupyterAnalysisTask
 from turbinia.workers.finalize_request import FinalizeRequestTask
 from turbinia.workers.docker import DockerContainersEnumerationTask
 from turbinia.workers.grep import GrepTask
+from turbinia.workers.fsstat import FsstatTask
 from turbinia.workers.hadoop import HadoopAnalysisTask
 from turbinia.workers.hindsight import HindsightTask
 from turbinia.workers.partitions import PartitionEnumerationTask
@@ -78,6 +79,7 @@ TASK_MAP = {
     'jenkinsanalysistask': JenkinsAnalysisTask,
     'JupyterAnalysisTask': JupyterAnalysisTask,
     'greptask': GrepTask,
+    'fsstattask': FsstatTask,
     'hadoopanalysistask': HadoopAnalysisTask,
     'hindsighttask': HindsightTask,
     'partitionenumerationtask': PartitionEnumerationTask,
@@ -90,7 +92,7 @@ TASK_MAP = {
     'tomcatanalysistask': TomcatAnalysisTask,
     'volatilitytask': VolatilityTask,
     'stattask': StatTask,
-    'binaryextractor': BinaryExtractorTask,
+    'binaryextractortask': BinaryExtractorTask,
     'bulkextractortask': BulkExtractorTask,
     'dockertask': DockerContainersEnumerationTask,
     'photorectask': PhotorecTask,
@@ -461,7 +463,7 @@ class BaseTurbiniaClient:
               'and run turbiniactl -w status -r {0!s} and this process will '
               'resume. Attempt {1:d}. Error: '
               '{2!s}'.format(request_id, credential_error_count + 1, exception))
-        # Note, we are intentially not incrementing the retry_count here because
+        # Note, we are intentionally not incrementing the retry_count here because
         # we will retry indefinitely while we wait for the user to reauth.
         credential_error_count += 1
       except httplib2.ServerNotFoundError as exception:
@@ -1108,7 +1110,7 @@ class TurbiniaCeleryClient(BaseTurbiniaClient):
 
   # pylint: disable=arguments-differ
   def get_task_data(
-      self, instance, _, __, days=0, task_id=None, request_id=None,
+      self, instance, _, __, days=0, task_id=None, request_id=None, user=None,
       function_name=None, output_json=False):
     """Gets task data from Redis.
 
@@ -1120,11 +1122,12 @@ class TurbiniaCeleryClient(BaseTurbiniaClient):
       days (int): The number of days we want history for.
       task_id (string): The Id of the task.
       request_id (string): The Id of the request we want tasks for.
+      user (string): The user of the request we want tasks for.
 
     Returns:
       List of Task dict objects.
     """
-    return self.redis.get_task_data(instance, days, task_id, request_id)
+    return self.redis.get_task_data(instance, days, task_id, request_id, user)
 
 
 class TurbiniaServer:

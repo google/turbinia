@@ -17,6 +17,7 @@ from turbinia.jobs import binary_extractor
 from turbinia.jobs import bulk_extractor
 from turbinia.jobs import docker
 from turbinia.jobs import finalize_request
+from turbinia.jobs import fsstat
 from turbinia.jobs import grep
 from turbinia.jobs import hadoop
 from turbinia.jobs import hindsight

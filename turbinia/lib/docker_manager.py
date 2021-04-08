@@ -67,7 +67,7 @@ def GetDockerPath(mount_path):
           'Error parsing the Docker daemon config file due to: {0:s}. '
           'Using default Docker installation path'.format(str(exception)))
 
-  # If file not found or error occured parsing Docker config file.
+  # If file not found or error occurred parsing Docker config file.
   if docker_path is None:
     log.warning(
         'Docker daemon confile file not found. '
@@ -170,7 +170,7 @@ class ContainerManager(DockerManager):
   def _create_mount_points(self, mount_paths, mode='rw'):
     """Creates file and device mounting arguments.
 
-    The arguments will be passed into the container with the appropiate
+    The arguments will be passed into the container with the appropriate
     mounting parameters. All device blocks will be mounted as read only,
     regardless of the specified mode.
 

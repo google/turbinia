@@ -112,6 +112,10 @@ DEPENDENCIES = [{
     'programs': ['bulk_extractor'],
     'docker_image': None
 }, {
+    'job': 'FsstatJob',
+    'programs': ['fsstat'],
+    'docker_image': None
+}, {
     'job': 'GrepJob',
     'programs': ['grep'],
     'docker_image': None
@@ -228,7 +232,7 @@ REDIS_DB = '0'
 # These options are required if you wish to use email notifications
 ################################################################################
 
-# Will emails notifcations be enabled
+# Will emails notifications be enabled
 EMAIL_NOTIFICATIONS = False
 
 # Host Address and port number(TLS)

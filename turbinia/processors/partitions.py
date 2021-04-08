@@ -22,6 +22,7 @@ from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.lib import errors as dfvfs_errors
 
 from turbinia.lib.dfvfs_classes import UnattendedVolumeScannerMediator
+from turbinia import TurbiniaException
 
 log = logging.getLogger('turbinia')
 
@@ -64,6 +65,10 @@ def GetPartitionEncryptionType(path_spec):
     String representing the type of encryption, or None.
   """
   encryption_type = None
+
+  if not path_spec.HasParent():
+    return None
+
   if path_spec.parent.type_indicator == dfvfs_definitions.TYPE_INDICATOR_BDE:
     encryption_type = 'BDE'
   return encryption_type

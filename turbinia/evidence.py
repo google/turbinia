@@ -202,7 +202,7 @@ class Evidence:
 
   @classmethod
   def from_dict(cls, dictionary):
-    """Instanciate an Evidence object from a dictionary of attributes.
+    """Instantiate an Evidence object from a dictionary of attributes.
 
     Args:
       dictionary(dict): the attributes to set for this object.
@@ -365,7 +365,7 @@ class Evidence:
     """Returns a string representing the current state of evidence.
 
     Returns:
-      str:  The state as a formated string
+      str:  The state as a formatted string
     """
     output = []
     for state, value in self.state.items():
@@ -640,26 +640,6 @@ class EncryptedDisk(RawDisk):
     # self.local_path will be the encrypted path
     self.unencrypted_path = unencrypted_path
     super(EncryptedDisk, self).__init__(*args, **kwargs)
-
-
-class BitlockerDisk(EncryptedDisk):
-  """Bitlocker encrypted disk file evidence.
-
-  Attributes:
-    recovery_key: A string of the recovery key for this disk
-    password: A string of the password used for this disk. If recovery key
-        is used, this argument is ignored
-    unencrypted_path: A string to the unencrypted local path
-  """
-
-  REQUIRED_ATTRIBUTES = ['recovery_key', 'password']
-
-  def __init__(self, recovery_key=None, password=None, *args, **kwargs):
-    """Initialization for Bitlocker disk evidence object"""
-    self.recovery_key = recovery_key
-    self.password = password
-    super(BitlockerDisk, self).__init__(*args, **kwargs)
-    self.encryption_type = self.__class__.__name__
 
 
 class APFSEncryptedDisk(EncryptedDisk):
