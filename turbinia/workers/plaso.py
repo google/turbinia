@@ -80,7 +80,7 @@ class PlasoTask(TurbiniaTask):
     if evidence.config and evidence.config.get('vss'):
       vss = evidence.config.get('vss')
     else:
-      vss = None
+      vss = 'none'
 
     if evidence.config and evidence.config.get('yara_rules'):
       yara_rules = evidence.config.get('yara_rules')
@@ -99,7 +99,7 @@ class PlasoTask(TurbiniaTask):
     # TODO(aarontp): Move these flags into a recipe
     cmd = (
         'log2timeline.py --status_view none --hashers all '
-        '--partition all').split()
+        '--partition all -u').split()
     if config.DEBUG_TASKS or evidence.config.get('debug_tasks'):
       cmd.append('-d')
     if artifact_filters:
@@ -108,10 +108,9 @@ class PlasoTask(TurbiniaTask):
       cmd.extend(['--parsers', parsers])
     if file_filters:
       cmd.extend(['--file_filter', file_filter_file])
-    if vss:
-      cmd.extend(['--vss_stores', vss])
     if yara_rules:
       cmd.extend(['--yara_rules', yara_file_path])
+    cmd.extend(['--vss_stores', vss])
 
     # TODO(dfjxs): This can be removed once APFS encryption is implemented
     # natively in Turbinia
