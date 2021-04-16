@@ -21,7 +21,6 @@ from tempfile import NamedTemporaryFile
 
 from turbinia import config
 from turbinia.evidence import APFSEncryptedDisk
-from turbinia.evidence import BitlockerDisk
 from turbinia.evidence import EvidenceState as state
 from turbinia.evidence import PlasoFile
 from turbinia.workers import TurbiniaTask
@@ -81,7 +80,7 @@ class PlasoTask(TurbiniaTask):
     if evidence.config and evidence.config.get('vss'):
       vss = evidence.config.get('vss')
     else:
-      vss = None
+      vss = 'none'
 
     if evidence.config and evidence.config.get('yara_rules'):
       yara_rules = evidence.config.get('yara_rules')
@@ -100,7 +99,7 @@ class PlasoTask(TurbiniaTask):
     # TODO(aarontp): Move these flags into a recipe
     cmd = (
         'log2timeline.py --status_view none --hashers all '
-        '--partition all').split()
+        '--partition all -u').split()
     if config.DEBUG_TASKS or evidence.config.get('debug_tasks'):
       cmd.append('-d')
     if artifact_filters:
@@ -109,12 +108,13 @@ class PlasoTask(TurbiniaTask):
       cmd.extend(['--parsers', parsers])
     if file_filters:
       cmd.extend(['--file_filter', file_filter_file])
-    if vss:
-      cmd.extend(['--vss_stores', vss])
     if yara_rules:
       cmd.extend(['--yara_rules', yara_file_path])
+    cmd.extend(['--vss_stores', vss])
 
-    if isinstance(evidence, (APFSEncryptedDisk, BitlockerDisk)):
+    # TODO(dfjxs): This can be removed once APFS encryption is implemented
+    # natively in Turbinia
+    if isinstance(evidence, APFSEncryptedDisk):
       if evidence.recovery_key:
         cmd.extend([
             '--credential', 'recovery_password:{0:s}'.format(
@@ -127,6 +127,15 @@ class PlasoTask(TurbiniaTask):
             self, False, 'No credentials were provided '
             'for a bitlocker disk.')
         return result
+
+    if evidence.credentials:
+      for credential in evidence.credentials:
+        credential_type = credential['credential_type']
+        credential_data = credential['credential_data']
+        cmd.extend([
+            '--credential', '{0:s}:{1:s}'.format(
+                credential_type, credential_data)
+        ])
 
     cmd.extend(['--temporary_directory', self.tmp_dir])
     cmd.extend(['--logfile', plaso_log])

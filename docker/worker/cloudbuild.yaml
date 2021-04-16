@@ -9,7 +9,7 @@ steps:
         "-t",
         "us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-worker:latest",
         "-f",
-        "docker/server/Dockerfile",
+        "docker/worker/Dockerfile",
         ".",
       ]
     timeout: 4800s
