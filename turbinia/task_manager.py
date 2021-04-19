@@ -478,6 +478,7 @@ class BaseTaskManager:
       if final_task:
         final_task.is_finalize_task = True
         self.add_task(final_task, job, job.evidence)
+        turbinia_server_tasks_total.inc()
     elif job.check_done() and job.is_finalize_job:
       job.is_finalized = True
 
