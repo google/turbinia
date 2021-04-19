@@ -250,4 +250,4 @@ PROMETHEUS_ENABLED = True
 
 # Prometheus listen address and port
 PROMETHEUS_ADDR = '0.0.0.0'
-PROMETHEUS_PORT = 8000
+PROMETHEUS_PORT = 9200
