@@ -182,14 +182,16 @@ class TurbiniaTaskResult:
       return
     self.successful = success
     self.run_time = datetime.now() - self.start_time
+    if success:
+      turbinia_worker_tasks_completed_total.inc()
+    else:
+      turbinia_worker_tasks_failed_total.inc()
     if not status and self.successful:
       status = 'Completed successfully in {0:s} on {1:s}'.format(
           str(self.run_time), self.worker_name)
-      turbinia_worker_tasks_completed_total.inc()
     elif not status and not self.successful:
       status = 'Run failed in {0:s} on {1:s}'.format(
           str(self.run_time), self.worker_name)
-      turbinia_worker_tasks_failed_total.inc()
     self.log(status)
     self.status = status
 
