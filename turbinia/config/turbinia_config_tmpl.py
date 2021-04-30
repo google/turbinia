@@ -103,59 +103,73 @@ DISABLED_JOBS = ['BinaryExtractorJob', 'BulkExtractorJob', 'PhotorecJob']
 DEPENDENCIES = [{
     'job': 'BinaryExtractorJob',
     'programs': ['image_export.py'],
-    'docker_image': None
+    'docker_image': None,
+    'timeout': 300
 }, {
     'job': 'BulkExtractorJob',
     'programs': ['bulk_extractor'],
-    'docker_image': None
+    'docker_image': None,
+    'timeout': 300
 }, {
     'job': 'FsstatJob',
     'programs': ['fsstat'],
-    'docker_image': None
+    'docker_image': None,
+    'timeout': 300
 }, {
     'job': 'GrepJob',
     'programs': ['grep'],
-    'docker_image': None
+    'docker_image': None,
+    'timeout': 300
 }, {
     'job': 'HadoopAnalysisJob',
     'programs': ['strings'],
-    'docker_image': None
+    'docker_image': None,
+    'timeout': 300
 }, {
     'job': 'HindsightJob',
     'programs': ['hindsight.py'],
-    'docker_image': None
+    'docker_image': None,
+    'timeout': 300
 }, {
     'job': 'JenkinsAnalysisJob',
     'programs': ['john'],
-    'docker_image': None
+    'docker_image': None,
+    'timeout': 300
 }, {
     'job': 'PartitionEnumerationJob',
     'programs': ['bdemount'],
-    'docker_image': None
+    'docker_image': None,
+    'timeout': 300
 }, {
     'job': 'PlasoJob',
     'programs': ['log2timeline.py'],
-    'docker_image': None
+    'docker_image': None,
+    'timeout': '3600'
 }, {
     'job': 'PhotorecJob',
     'programs': ['photorec'],
-    'docker_image': None
+    'docker_image': None,
+    'timeout': 300
 }, {
     'job': 'PsortJob',
     'programs': ['psort.py'],
-    'docker_image': None
+    'docker_image': None,
+    'timeout': 300
 }, {
     'job': 'StringsJob',
     'programs': ['strings'],
-    'docker_image': None
+    'docker_image': None,
+    'timeout': 300
 }, {
     'job': 'VolatilityJob',
     'programs': ['vol.py'],
-    'docker_image': None
+    'docker_image': None,
+    'timeout': 300
 }, {
     'job': 'DockerContainersEnumerationJob',
     'programs': ['de.py'],
-    'docker_image': None
+    'docker_image': None,
+    'timeout': 300
 }]
 
 ################################################################################

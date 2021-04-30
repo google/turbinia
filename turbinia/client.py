@@ -131,6 +131,23 @@ def get_turbinia_client(run_local=False):
     raise TurbiniaException(msg)
 
 
+def register_job_timeouts(dependencies):
+  """Registers a timeout for each job.
+
+  Args:
+    dependencies(dict): dependencies to grab timeout value from.
+  """
+  log.info('Registering job timeouts.')
+
+  job_names = list(job_manager.JobsManager.GetJobNames())
+  # Iterate through list of jobs
+  for job, values in dependencies.items():
+    if job not in job_names:
+      continue
+    timeout = values.get('timeout')
+    job_manager.JobsManager.RegisterTimeout(job, values['timeout'])
+
+
 def check_docker_dependencies(dependencies):
   """Checks docker dependencies.
 
@@ -1266,6 +1283,7 @@ class TurbiniaPsqWorker:
     check_directory(config.MOUNT_DIR_PREFIX)
     check_directory(config.OUTPUT_DIR)
     check_directory(config.TMP_DIR)
+    register_job_timeouts(dependencies)
 
     jobs = job_manager.JobsManager.GetJobNames()
     log.info(

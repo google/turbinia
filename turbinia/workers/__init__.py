@@ -553,6 +553,9 @@ class TurbiniaTask:
     stdout = None
     stderr = None
 
+    # Get timeout value.
+    timeout_limit = job_manager.JobsManager.GetTimeoutValue(self.job_name)
+
     # Execute the job via docker.
     docker_image = job_manager.JobsManager.GetDockerImage(self.job_name)
     if docker_image:
@@ -570,9 +573,11 @@ class TurbiniaTask:
       if shell:
         proc = subprocess.Popen(
             cmd, shell=True, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+        proc.wait(timeout_limit)
       else:
         proc = subprocess.Popen(
             cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+        proc.wait(timeout_limit)
       stdout, stderr = proc.communicate()
       ret = proc.returncode
 
