@@ -566,7 +566,8 @@ class TurbiniaTask:
       rw_paths = [self.output_dir, self.tmp_dir]
       container_manager = docker_manager.ContainerManager(docker_image)
       stdout, stderr, ret = container_manager.execute_container(
-          cmd, shell, ro_paths=ro_paths, rw_paths=rw_paths)
+          cmd, shell, ro_paths=ro_paths, rw_paths=rw_paths,
+          timeout_limit=timeout_limit)
 
     # Execute the job on the host system.
     else:

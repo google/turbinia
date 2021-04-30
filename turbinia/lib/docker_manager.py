@@ -207,7 +207,8 @@ class ContainerManager(DockerManager):
     return device_paths, file_paths
 
   def execute_container(
-      self, cmd, shell=False, ro_paths=None, rw_paths=None, **kwargs):
+      self, cmd, shell=False, ro_paths=None, rw_paths=None, timeout_limit=3600,
+      **kwargs):
     """Executes a Docker container.
 
     A new Docker container will be created from the image id,
@@ -217,6 +218,7 @@ class ContainerManager(DockerManager):
       cmd(str|list): command to be executed.
       shell (bool): Whether the cmd is in the form of a string or a list.
       mount_paths(list): A list of paths to mount to the container.
+      timeout_limit(int): The number of seconds before killing a container.
       **kwargs: Any additional keywords to pass to the container.
 
     Returns:
@@ -267,7 +269,7 @@ class ContainerManager(DockerManager):
         stdo = codecs.decode(stdo, 'utf-8').strip()
         log.debug(stdo)
         stdout += stdo
-      results = container.wait()
+      results = container.wait(timeout=timeout_limit)
     except docker.errors.APIError as exception:
       if container:
         container.remove(v=True)
