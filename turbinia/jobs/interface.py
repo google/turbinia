@@ -54,7 +54,7 @@ class TurbiniaJob:
     self.evidence = EvidenceCollection()
     self.evidence.request_id = request_id
     self.evidence.config = evidence_config if evidence_config else {}
-    self.timeout = 300
+    self.timeout = None
 
   def check_done(self):
     """Check to see if all Tasks for this Job have completed.
