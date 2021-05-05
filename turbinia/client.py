@@ -1198,7 +1198,7 @@ class TurbiniaCeleryWorker(BaseTurbiniaClient):
         check_docker_dependencies(dependencies)
       except TurbiniaException as e:
         log.warning(
-            "DOCKER_ENABLED=True but error checking docker daemon: {0:s}"
+            "DOCKER_ENABLED=True is set in the config, but there is an error checking for the docker daemon: {0:s}"
         ).format(str(e))
     check_system_dependencies(dependencies)
     check_directory(config.MOUNT_DIR_PREFIX)
@@ -1270,7 +1270,7 @@ class TurbiniaPsqWorker:
         check_docker_dependencies(dependencies)
       except TurbiniaException as e:
         log.warning(
-            "DOCKER_ENABLED=True but error checking docker daemon: {0:s}"
+            "DOCKER_ENABLED=True is set in the config, but there is an error checking for the docker daemon: {0:s}"
         ).format(str(e))
     check_system_dependencies(dependencies)
     check_directory(config.MOUNT_DIR_PREFIX)
