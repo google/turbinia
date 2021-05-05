@@ -1196,7 +1196,7 @@ class TurbiniaCeleryWorker(BaseTurbiniaClient):
     if config.DOCKER_ENABLED:
       try:
         check_docker_dependencies(dependencies)
-      except Exception as e:
+      except TurbiniaException as e:
         log.warning(
             "DOCKER_ENABLED=True but error checking docker daemon: {0:s}"
         ).format(str(e))
@@ -1268,7 +1268,7 @@ class TurbiniaPsqWorker:
     if config.DOCKER_ENABLED:
       try:
         check_docker_dependencies(dependencies)
-      except Exception as e:
+      except TurbiniaException as e:
         log.warning(
             "DOCKER_ENABLED=True but error checking docker daemon: {0:s}"
         ).format(str(e))
