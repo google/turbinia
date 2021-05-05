@@ -75,13 +75,13 @@ class DockerContainersEnumerationTask(TurbiniaTask):
     try:
       json_string = subprocess.check_output(docker_explorer_command).decode(
           'utf-8')
+      containers_info = json.loads(json_string)
     except json.JSONDecodeError as e:
       raise TurbiniaException(
-          'Error decoding JSON output from de.py: {0!s}'.format(e))
+          'Error decoding JSON output from de.py: {0!s} {1!s}'.format(
+              e, json_string))
     except subprocess.CalledProcessError as e:
       raise TurbiniaException('de.py returned an error: {0!s}'.format(e))
-
-    containers_info = json.loads(json_string)
 
     return containers_info
 

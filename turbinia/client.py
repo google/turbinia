@@ -93,7 +93,7 @@ TASK_MAP = {
     'stattask': StatTask,
     'binaryextractortask': BinaryExtractorTask,
     'bulkextractortask': BulkExtractorTask,
-    'dockertask': DockerContainersEnumerationTask,
+    'dockercontainersenumerationtask': DockerContainersEnumerationTask,
     'photorectask': PhotorecTask
 }
 
