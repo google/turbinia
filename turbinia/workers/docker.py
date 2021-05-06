@@ -111,7 +111,7 @@ class DockerContainersEnumerationTask(TurbiniaTask):
     found_containers = []
     try:
       containers_info = self.GetContainers(evidence)
-      for container_info in containers_info:
+      for container_info in (containers_info or []):
         container_id = container_info.get('container_id')
         found_containers.append(container_id)
         container_evidence = DockerContainer(container_id=container_id)
