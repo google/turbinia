@@ -1194,7 +1194,12 @@ class TurbiniaCeleryWorker(BaseTurbiniaClient):
     # Check for valid dependencies/directories.
     dependencies = config.ParseDependencies()
     if config.DOCKER_ENABLED:
-      check_docker_dependencies(dependencies)
+      try:
+        check_docker_dependencies(dependencies)
+      except TurbiniaException as e:
+        log.warning(
+            "DOCKER_ENABLED=True is set in the config, but there is an error checking for the docker daemon: {0:s}"
+        ).format(str(e))
     check_system_dependencies(dependencies)
     check_directory(config.MOUNT_DIR_PREFIX)
     check_directory(config.OUTPUT_DIR)
@@ -1261,7 +1266,12 @@ class TurbiniaPsqWorker:
     # Check for valid dependencies/directories.
     dependencies = config.ParseDependencies()
     if config.DOCKER_ENABLED:
-      check_docker_dependencies(dependencies)
+      try:
+        check_docker_dependencies(dependencies)
+      except TurbiniaException as e:
+        log.warning(
+            "DOCKER_ENABLED=True is set in the config, but there is an error checking for the docker daemon: {0:s}"
+        ).format(str(e))
     check_system_dependencies(dependencies)
     check_directory(config.MOUNT_DIR_PREFIX)
     check_directory(config.OUTPUT_DIR)
