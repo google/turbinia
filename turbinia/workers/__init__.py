@@ -60,6 +60,9 @@ turbinia_worker_tasks_queued_total = Gauge(
     'turbinia_worker_tasks_queued_total', 'Total number of queued worker tasks')
 turbinia_worker_tasks_failed_total = Gauge(
     'turbinia_worker_tasks_failed_total', 'Total number of failed worker tasks')
+turbinia_worker_tasks_timeout_total = Gauge(
+    'turbinia_worker_tasks_timeout_total',
+    'Total number of worker tasks timed out.')
 
 
 class Priority(IntEnum):
@@ -571,14 +574,26 @@ class TurbiniaTask:
 
     # Execute the job on the host system.
     else:
-      if shell:
-        proc = subprocess.Popen(
-            cmd, shell=True, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
-        proc.wait(timeout_limit)
-      else:
-        proc = subprocess.Popen(
-            cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
-        proc.wait(timeout_limit)
+      try:
+        if shell:
+          proc = subprocess.Popen(
+              cmd, shell=True, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+          proc.wait(timeout_limit)
+        else:
+          proc = subprocess.Popen(
+              cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+          proc.wait(timeout_limit)
+      except subprocess.TimeoutExpired as exception:
+        # Log error and close result.
+        message = 'Execution of [{0!s}] failed due to job timeout of seconds has been reached.'.format(
+            cmd)
+        result.log(message)
+        if close:
+          result.close(self, success=False, status=message)
+        # Increase timeout metric and raise exception
+        turbinia_worker_tasks_timeout_total.inc()
+        raise TurbiniaException(message)
+
       stdout, stderr = proc.communicate()
       ret = proc.returncode
 

@@ -138,6 +138,7 @@ def register_job_timeouts(dependencies):
     dependencies(dict): dependencies to grab timeout value from.
   """
   log.info('Registering job timeouts.')
+  timeout_default = 3600
 
   job_names = list(job_manager.JobsManager.GetJobNames())
   # Iterate through list of jobs
@@ -145,6 +146,10 @@ def register_job_timeouts(dependencies):
     if job not in job_names:
       continue
     timeout = values.get('timeout')
+    if type(timeout) != int:
+      log.warning(
+          'No timeout found for job: {0:s}. Setting default timeout of {1:d} seconds.'
+          .format(job, timeout_default))
     job_manager.JobsManager.RegisterTimeout(job, values['timeout'])
 
 
