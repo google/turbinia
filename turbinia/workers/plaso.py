@@ -17,6 +17,7 @@
 from __future__ import unicode_literals
 
 import os
+import timeout_decorator
 from tempfile import NamedTemporaryFile
 
 from turbinia import config
@@ -25,7 +26,7 @@ from turbinia.evidence import EvidenceState as state
 from turbinia.evidence import PlasoFile
 from turbinia.workers import TurbiniaTask
 
-
+@timeout_decorator.timeout(5)
 class PlasoTask(TurbiniaTask):
   """Task to run Plaso (log2timeline)."""
 

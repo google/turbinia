@@ -150,7 +150,8 @@ def register_job_timeouts(dependencies):
       log.warning(
           'No timeout found for job: {0:s}. Setting default timeout of {1:d} seconds.'
           .format(job, timeout_default))
-    job_manager.JobsManager.RegisterTimeout(job, values['timeout'])
+      timeout = timeout_default
+    job_manager.JobsManager.RegisterTimeout(job, timeout)
 
 
 def check_docker_dependencies(dependencies):
