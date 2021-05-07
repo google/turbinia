@@ -588,8 +588,7 @@ class TurbiniaTask:
         message = 'Execution of [{0!s}] failed due to job timeout of seconds has been reached.'.format(
             cmd)
         result.log(message)
-        if close:
-          result.close(self, success=False, status=message)
+        result.close(self, success=False, status=message)
         # Increase timeout metric and raise exception
         turbinia_worker_tasks_timeout_total.inc()
         raise TurbiniaException(message)
