@@ -585,8 +585,8 @@ class TurbiniaTask:
           proc.wait(timeout_limit)
       except subprocess.TimeoutExpired as exception:
         # Log error and close result.
-        message = 'Execution of [{0!s}] failed due to job timeout of seconds has been reached.'.format(
-            cmd)
+        message = 'Execution of [{0!s}] failed due to job timeout of \
+                  {1:d} seconds has been reached.'.format(cmd, timeout_limit)
         result.log(message)
         result.close(self, success=False, status=message)
         # Increase timeout metric and raise exception

@@ -146,7 +146,7 @@ def register_job_timeouts(dependencies):
     if job not in job_names:
       continue
     timeout = values.get('timeout')
-    if type(timeout) != int:
+    if not isinstance(timeout, int):
       log.warning(
           'No timeout found for job: {0:s}. Setting default timeout of {1:d} seconds.'
           .format(job, timeout_default))
