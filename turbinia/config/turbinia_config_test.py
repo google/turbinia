@@ -157,10 +157,18 @@ class TestTurbiniaConfig(unittest.TestCase):
 
   def testParseDependencies(self):
     """Tests a valid config for the ParseDependencies() method."""
-    smpl_depends = 'DEPENDENCIES = [{"job": "PlasoJob","programs": ["test"], "docker_image": "test"}]'
+    smpl_depends = 'DEPENDENCIES = [{"job": "PlasoJob","programs": ["test"], \
+                   "docker_image": "test", "timeout":30}]'
+
     self.WriteConfig(smpl_depends)
     config.LoadConfig()
-    smpl_out = {'plasojob': {'programs': ['test'], 'docker_image': 'test'}}
+    smpl_out = {
+        'plasojob': {
+            'programs': ['test'],
+            'docker_image': 'test',
+            'timeout': 30
+        }
+    }
     smpl_test = config.ParseDependencies()
     self.assertEqual(smpl_out, smpl_test)
 
