@@ -94,8 +94,8 @@ TASK_MAP = {
     'stattask': StatTask,
     'binaryextractortask': BinaryExtractorTask,
     'bulkextractortask': BulkExtractorTask,
-    'dockertask': DockerContainersEnumerationTask,
-    'photorectask': PhotorecTask,
+    'dockercontainersenumerationtask': DockerContainersEnumerationTask,
+    'photorectask': PhotorecTask
     'aborttask': AbortTask
 }
 
@@ -131,6 +131,29 @@ def get_turbinia_client(run_local=False):
     msg = 'Task Manager type "{0:s}" not implemented'.format(
         config.TASK_MANAGER)
     raise TurbiniaException(msg)
+
+
+def register_job_timeouts(dependencies):
+  """Registers a timeout for each job.
+
+  Args:
+    dependencies(dict): dependencies to grab timeout value from.
+  """
+  log.info('Registering job timeouts.')
+  timeout_default = 3600
+
+  job_names = list(job_manager.JobsManager.GetJobNames())
+  # Iterate through list of jobs
+  for job, values in dependencies.items():
+    if job not in job_names:
+      continue
+    timeout = values.get('timeout')
+    if not isinstance(timeout, int):
+      log.warning(
+          'No timeout found for job: {0:s}. Setting default timeout of {1:d} seconds.'
+          .format(job, timeout_default))
+      timeout = timeout_default
+    job_manager.JobsManager.RegisterTimeout(job, timeout)
 
 
 def check_docker_dependencies(dependencies):
@@ -1196,7 +1219,12 @@ class TurbiniaCeleryWorker(BaseTurbiniaClient):
     # Check for valid dependencies/directories.
     dependencies = config.ParseDependencies()
     if config.DOCKER_ENABLED:
-      check_docker_dependencies(dependencies)
+      try:
+        check_docker_dependencies(dependencies)
+      except TurbiniaException as e:
+        log.warning(
+            "DOCKER_ENABLED=True is set in the config, but there is an error checking for the docker daemon: {0:s}"
+        ).format(str(e))
     check_system_dependencies(dependencies)
     check_directory(config.MOUNT_DIR_PREFIX)
     check_directory(config.OUTPUT_DIR)
@@ -1263,11 +1291,17 @@ class TurbiniaPsqWorker:
     # Check for valid dependencies/directories.
     dependencies = config.ParseDependencies()
     if config.DOCKER_ENABLED:
-      check_docker_dependencies(dependencies)
+      try:
+        check_docker_dependencies(dependencies)
+      except TurbiniaException as e:
+        log.warning(
+            "DOCKER_ENABLED=True is set in the config, but there is an error checking for the docker daemon: {0:s}"
+        ).format(str(e))
     check_system_dependencies(dependencies)
     check_directory(config.MOUNT_DIR_PREFIX)
     check_directory(config.OUTPUT_DIR)
     check_directory(config.TMP_DIR)
+    register_job_timeouts(dependencies)
 
     jobs = job_manager.JobsManager.GetJobNames()
     log.info(

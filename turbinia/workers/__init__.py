@@ -60,6 +60,9 @@ turbinia_worker_tasks_queued_total = Gauge(
     'turbinia_worker_tasks_queued_total', 'Total number of queued worker tasks')
 turbinia_worker_tasks_failed_total = Gauge(
     'turbinia_worker_tasks_failed_total', 'Total number of failed worker tasks')
+turbinia_worker_tasks_timeout_total = Gauge(
+    'turbinia_worker_tasks_timeout_total',
+    'Total number of worker tasks timed out.')
 
 
 class Priority(IntEnum):
@@ -182,14 +185,16 @@ class TurbiniaTaskResult:
       return
     self.successful = success
     self.run_time = datetime.now() - self.start_time
+    if success:
+      turbinia_worker_tasks_completed_total.inc()
+    else:
+      turbinia_worker_tasks_failed_total.inc()
     if not status and self.successful:
       status = 'Completed successfully in {0:s} on {1:s}'.format(
           str(self.run_time), self.worker_name)
-      turbinia_worker_tasks_completed_total.inc()
     elif not status and not self.successful:
       status = 'Run failed in {0:s} on {1:s}'.format(
           str(self.run_time), self.worker_name)
-      turbinia_worker_tasks_failed_total.inc()
     self.log(status)
     self.status = status
 
@@ -570,6 +575,9 @@ class TurbiniaTask:
     stdout = None
     stderr = None
 
+    # Get timeout value.
+    timeout_limit = job_manager.JobsManager.GetTimeoutValue(self.job_name)
+
     # Execute the job via docker.
     docker_image = job_manager.JobsManager.GetDockerImage(self.job_name)
     if docker_image:
@@ -582,16 +590,31 @@ class TurbiniaTask:
       rw_paths = [self.output_dir, self.tmp_dir]
       container_manager = docker_manager.ContainerManager(docker_image)
       stdout, stderr, ret = container_manager.execute_container(
-          cmd, shell, ro_paths=ro_paths, rw_paths=rw_paths)
+          cmd, shell, ro_paths=ro_paths, rw_paths=rw_paths,
+          timeout_limit=timeout_limit)
 
     # Execute the job on the host system.
     else:
-      if shell:
-        proc = subprocess.Popen(
-            cmd, shell=True, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
-      else:
-        proc = subprocess.Popen(
-            cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+      try:
+        if shell:
+          proc = subprocess.Popen(
+              cmd, shell=True, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+          proc.wait(timeout_limit)
+        else:
+          proc = subprocess.Popen(
+              cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+          proc.wait(timeout_limit)
+      except subprocess.TimeoutExpired as exception:
+        # Log error and close result.
+        message = (
+            'Execution of [{0!s}] failed due to job timeout of '
+            '{1:d} seconds has been reached.'.format(cmd, timeout_limit))
+        result.log(message)
+        result.close(self, success=False, status=message)
+        # Increase timeout metric and raise exception
+        turbinia_worker_tasks_timeout_total.inc()
+        raise TurbiniaException(message)
+
       stdout, stderr = proc.communicate()
       ret = proc.returncode
 

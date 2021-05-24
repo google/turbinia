@@ -103,8 +103,6 @@ class PlasoTask(TurbiniaTask):
 
     if config.DEBUG_TASKS or self.task_config['debug_tasks']:
       cmd.append('-d')
-
-    # TODO(dfjxs): This can be removed once APFS encryption is implemented
     # natively in Turbinia
     if isinstance(evidence, APFSEncryptedDisk):
       if evidence.recovery_key:

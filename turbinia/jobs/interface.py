@@ -37,6 +37,7 @@ class TurbiniaJob:
     docker_image (str): Docker image to run for this job or None if unavailable.
     completed_task_count (int): The number of Tasks that have been removed.
     evidence (EvidenceCollection): The Evidence returned by Tasks from this Job.
+    timeout (int): The amount of seconds to wait before timing out.
   """
 
   NAME = 'name'
@@ -54,6 +55,7 @@ class TurbiniaJob:
     self.evidence = EvidenceCollection()
     self.evidence.request_id = request_id
     self.evidence.config = evidence_config if evidence_config else {}
+    self.timeout = None
 
   def check_done(self):
     """Check to see if all Tasks for this Job have completed.
