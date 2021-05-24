@@ -17,8 +17,6 @@
 from __future__ import unicode_literals
 
 import os
-from tempfile import NamedTemporaryFile
-
 from turbinia import config
 from turbinia.evidence import APFSEncryptedDisk
 from turbinia.evidence import EvidenceState as state
