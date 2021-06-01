@@ -129,9 +129,7 @@ class PlasoTask(TurbiniaTask):
         return result
 
     if evidence.credentials:
-      for credential in evidence.credentials:
-        credential_type = credential['credential_type']
-        credential_data = credential['credential_data']
+      for credential_type, credential_data in evidence.credentials:
         cmd.extend([
             '--credential', '{0:s}:{1:s}'.format(
                 credential_type, credential_data)

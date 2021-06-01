@@ -20,7 +20,6 @@ from dfvfs.helpers import volume_scanner
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.lib import errors as dfvfs_errors
 
-from turbinia.lib.dfvfs_classes import UnattendedVolumeScannerMediator
 from turbinia import TurbiniaException
 
 log = logging.getLogger('turbinia')
@@ -38,14 +37,19 @@ def Enumerate(evidence):
   Returns:
     list[dfVFS.path_spec]: path specs for identified partitions
   """
-  dfvfs_definitions.PREFERRED_GPT_BACK_END = (
-      dfvfs_definitions.TYPE_INDICATOR_GPT)
-  mediator = UnattendedVolumeScannerMediator()
-  mediator.credentials = evidence.credentials
+  options = volume_scanner.VolumeScannerOptions()
+  options.partitions = ['all']
+  options.volumes = ['all']
+  # Not processing volume snapshots
+  options.snapshots = ['none']
+  options.credentials = evidence.credentials
+
   path_specs = []
   try:
-    scanner = volume_scanner.VolumeScanner(mediator=mediator)
-    path_specs = scanner.GetBasePathSpecs(evidence.local_path)
+    # Setting the volume scanner mediator to None will cause the volume scanner
+    # to operate in unattended mode
+    scanner = volume_scanner.VolumeScanner(mediator=None)
+    path_specs = scanner.GetBasePathSpecs(evidence.local_path, options=options)
   except dfvfs_errors.ScannerError as e:
     raise TurbiniaException(
         'Could not enumerate partitions [{0!s}]: {1!s}'.format(
