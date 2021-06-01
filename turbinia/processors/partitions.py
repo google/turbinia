@@ -37,8 +37,6 @@ def Enumerate(evidence):
   Returns:
     list[dfVFS.path_spec]: path specs for identified partitions
   """
-  dfvfs_definitions.PREFERRED_GPT_BACK_END = (
-      dfvfs_definitions.TYPE_INDICATOR_GPT)
   options = volume_scanner.VolumeScannerOptions()
   options.partitions = ['all']
   options.volumes = ['all']
@@ -48,6 +46,8 @@ def Enumerate(evidence):
 
   path_specs = []
   try:
+    # Setting the volume scanner mediator to None will cause the volume scanner
+    # to operate in unattended mode
     scanner = volume_scanner.VolumeScanner(mediator=None)
     path_specs = scanner.GetBasePathSpecs(evidence.local_path, options=options)
   except dfvfs_errors.ScannerError as e:
