@@ -3,7 +3,7 @@
 ## Summary
 
 Turbinia is an open-source framework for deploying, managing, and running
-distributed forensic workloads. It is intended to automate the running of common
+distributed forensic workloads. It is intended to automate the common
 forensic processing tools (i.e. Plaso, TSK, strings, etc) to help with
 processing evidence in the Cloud, scaling the processing of large amounts of
 evidence, and decreasing response time by parallelizing processing where
