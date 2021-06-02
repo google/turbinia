@@ -3,7 +3,7 @@
 ## Summary
 
 Turbinia is an open-source framework for deploying, managing, and running
-distributed forensic workloads. It is intended to automate running of common
+distributed forensic workloads. It is intended to automate the running of common
 forensic processing tools (i.e. Plaso, TSK, strings, etc) to help with
 processing evidence in the Cloud, scaling the processing of large amounts of
 evidence, and decreasing response time by parallelizing processing where
@@ -13,13 +13,13 @@ possible.
 
 ## How it works
 
-Turbinia is composed of different components for the client, server and the
-workers. These components can be run in the Cloud, on local machines, or as a
-hybrid of both. The Turbinia client makes requests to process evidence to the
-Turbinia server. The Turbinia server creates logical jobs from these incoming
-user requests, which creates and schedules forensic processing tasks to be run
+Turbinia is composed of different components for the client, server, and workers. 
+These components can be run in the Cloud, on local machines, or as a hybrid of both. 
+The Turbinia client makes requests to process evidence to the Turbinia server.
+The Turbinia server creates logical jobs from these incoming user requests,
+which creates and schedules forensic processing tasks to be run
 by the workers. The evidence to be processed will be split up by the jobs when
-possible, and many tasks can be created in order to process the evidence in
+possible, and many tasks can be created to process the evidence in
 parallel. One or more workers run continuously to process tasks from the server.
 Any new evidence created or discovered by the tasks will be fed back into
 Turbinia for further processing.
