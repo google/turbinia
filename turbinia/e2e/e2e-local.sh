@@ -24,6 +24,7 @@ docker ps -a
 
 echo "==> Show loop device availability in worker"
 docker exec -t turbinia-worker /sbin/losetup -a
+docker exec -t turbinia-worker ls -al /dev/loop*
 
 echo "==> Show evidence volume contents in worker"
 docker exec -t turbinia-worker ls -al /evidence/
