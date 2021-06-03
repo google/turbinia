@@ -184,25 +184,6 @@ def main():
   parser_apfs.add_argument(
       '-n', '--name', help='Descriptive name of the evidence', required=False)
 
-  # Parser options for Bitlocker Disk Evidence type
-  parser_bitlocker = subparsers.add_parser(
-      'bitlocker', help='Process Bitlocker Disk as Evidence')
-  parser_bitlocker.add_argument(
-      '-l', '--source_path',
-      help='Local path to the encrypted Bitlocker evidence', required=True)
-  parser_bitlocker.add_argument(
-      '-r', '--recovery_key', help='Recovery key for the Bitlocker evidence.  '
-      'Either recovery key or password must be specified.', required=False)
-  parser_bitlocker.add_argument(
-      '-p', '--password', help='Password for the Bitlocker evidence.  '
-      'If a recovery key is specified concurrently, password will be ignored.',
-      required=False)
-  parser_bitlocker.add_argument(
-      '-s', '--source', help='Description of the source of the evidence',
-      required=False)
-  parser_bitlocker.add_argument(
-      '-n', '--name', help='Descriptive name of the evidence', required=False)
-
   # Parser options for Google Cloud Disk Evidence type
   parser_googleclouddisk = subparsers.add_parser(
       'googleclouddisk',
@@ -595,15 +576,6 @@ def main():
     evidence_ = evidence.APFSEncryptedDisk(
         name=args.name, source_path=source_path, recovery_key=args.recovery_key,
         password=args.password, source=args.source)
-  elif args.command == 'bitlocker':
-    if not args.password and not args.recovery_key:
-      log.error('Neither recovery key nor password is specified.')
-      sys.exit(1)
-    args.name = args.name if args.name else args.source_path
-    source_path = os.path.abspath(args.source_path)
-    evidence_ = evidence.BitlockerDisk(
-        name=args.name, source_path=source_path, recovery_key=args.recovery_key,
-        password=args.password, source=args.source)
   elif args.command == 'directory':
     args.name = args.name if args.name else args.source_path
     source_path = os.path.abspath(args.source_path)
@@ -884,10 +856,7 @@ def main():
               '{1!s}: {2!s}'.format(
                   credential, args.decryption_keys, exception))
           sys.exit(1)
-        evidence_.credentials.append({
-            'credential_type': credential_type,
-            'credential_data': credential_data
-        })
+        evidence_.credentials.append((credential_type, credential_data))
     if args.dump_json:
       print(request.to_json().encode('utf-8'))
       sys.exit(0)

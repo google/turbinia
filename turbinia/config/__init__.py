@@ -212,6 +212,7 @@ def ParseDependencies():
       dependencies[job] = {}
       dependencies[job]['programs'] = values['programs']
       dependencies[job]['docker_image'] = values.get('docker_image')
+      dependencies[job]['timeout'] = values.get('timeout')
   except (KeyError, TypeError) as exception:
     raise TurbiniaException(
         'An issue has occurred while parsing the '

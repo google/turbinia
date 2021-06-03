@@ -66,7 +66,7 @@ class MockContainer:
     """Mock method of container.logs()"""
     return self.s_logs
 
-  def wait(self):
+  def wait(self, timeout):
     """Mock method of container.wait()"""
     return self.s_wait
 

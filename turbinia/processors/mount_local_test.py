@@ -53,7 +53,7 @@ class MountLocalProcessorTest(unittest.TestCase):
     current_path = os.path.abspath(os.path.dirname(__file__))
     source_path = os.path.join(
         current_path, '..', '..', 'test_data', 'tsk_volume_system.raw')
-    credentials = [{'credential_type': 'password', 'credential_data': '123456'}]
+    credentials = [('password', '123456')]
 
     mock_path_isdir.return_value = True
     device = mount_local.PreprocessBitLocker(
@@ -67,10 +67,7 @@ class MountLocalProcessorTest(unittest.TestCase):
 
     # Test with recovery password
     mock_subprocess.reset_mock()
-    credentials = [{
-        'credential_type': 'recovery_password',
-        'credential_data': '123456'
-    }]
+    credentials = [('recovery_password', '123456')]
     mount_local.PreprocessBitLocker(
         source_path, partition_offset=65536, credentials=credentials)
     expected_args = [
@@ -100,10 +97,7 @@ class MountLocalProcessorTest(unittest.TestCase):
 
     # Test with unsupported credential type
     mock_subprocess.reset_mock()
-    credentials = [{
-        'credential_type': 'startup_key',
-        'credential_data': 'key.BEK'
-    }]
+    credentials = [('startup_key', 'key.BEK')]
     mount_local.PreprocessBitLocker(
         source_path, partition_offset=65536, credentials=credentials)
     mock_subprocess.assert_not_called()

@@ -318,7 +318,7 @@ class BaseTaskManager:
     final_evidence = evidence.EvidenceCollection()
     final_evidence.request_id = request_id
     self.running_jobs.append(final_job)
-
+    turbinia_jobs_total.inc()
     # Gather evidence created by every Job in the request.
     for running_job in self.running_jobs:
       if running_job.request_id == request_id:
@@ -478,6 +478,7 @@ class BaseTaskManager:
       if final_task:
         final_task.is_finalize_task = True
         self.add_task(final_task, job, job.evidence)
+        turbinia_server_tasks_total.inc()
     elif job.check_done() and job.is_finalize_job:
       job.is_finalized = True
 
