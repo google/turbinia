@@ -31,13 +31,7 @@ import time
 import subprocess
 import codecs
 
-import psq
-
-from google.cloud import exceptions
-from google.cloud import datastore
-from google.cloud import pubsub
 from google import auth
-from libcloudforensics.providers.gcp.internal import function as gcp_function
 from prometheus_client import start_http_server
 from turbinia import config
 from turbinia.config import logger
@@ -103,12 +97,23 @@ TASK_MAP = {
     'photorectask': PhotorecTask
 }
 
+config.LoadConfig()
+if config.TASK_MANAGER.lower() == 'psq':
+  import psq
+
+  from google.cloud import exceptions
+  from google.cloud import datastore
+  from google.cloud import pubsub
+
+  from libcloudforensics.providers.gcp.internal import function as gcp_function
+elif config.TASK_MANAGER.lower() == 'celery':
+  from turbinia.state_manager import RedisStateManager
+
 log = logging.getLogger('turbinia')
 
 
 def setup(is_client=False):
   config.LoadConfig()
-
   if is_client:
     logger.setup(need_file_handler=False)
   else:
@@ -344,6 +349,7 @@ class BaseTurbiniaClient:
   """
 
   def __init__(self, run_local=False):
+    config.LoadConfig()
     if run_local:
       self.task_manager = None
     else:
@@ -1120,7 +1126,6 @@ class TurbiniaCeleryClient(BaseTurbiniaClient):
 
   def __init__(self, *args, **kwargs):
     super(TurbiniaCeleryClient, self).__init__(*args, **kwargs)
-    from turbinia.state_manager import RedisStateManager
     self.redis = RedisStateManager()
 
   def send_request(self, request):
@@ -1264,7 +1269,6 @@ class TurbiniaPsqWorker:
       jobs_allowlist (Optional[list[str]]): The only Jobs we will include to run
     """
     setup()
-
     psq_publisher = pubsub.PublisherClient()
     psq_subscriber = pubsub.SubscriberClient()
     datastore_client = datastore.Client(project=config.TURBINIA_PROJECT)
