@@ -97,20 +97,30 @@ TASK_MAP = {
     'photorectask': PhotorecTask
 }
 
-config.LoadConfig()
-if config.TASK_MANAGER.lower() == 'psq':
-  import psq
-
-  from google.cloud import exceptions
-  from google.cloud import datastore
-  from google.cloud import pubsub
-
-  from libcloudforensics.providers.gcp.internal import function as gcp_function
-elif config.TASK_MANAGER.lower() == 'celery':
-  from turbinia.state_manager import RedisStateManager
-
 log = logging.getLogger('turbinia')
-logger.setup()
+
+def setup(is_client=False):
+  config.LoadConfig()
+  print('in setup()')
+  print('TASK_MANAGER='+config.TASK_MANAGER)
+  # if config.TASK_MANAGER.lower() == 'psq':
+  #   import psq
+
+  #   from google.cloud import exceptions
+  #   from google.cloud import datastore
+  #   from google.cloud import pubsub
+
+  #   from libcloudforensics.providers.gcp.internal import function as gcp_function
+  # elif config.TASK_MANAGER.lower() == 'celery':
+  #   print('in load celery')
+  #   from turbinia.state_manager import RedisStateManager
+
+  #log = logging.getLogger('turbinia')
+  if is_client:
+    logger.setup(need_file_handler=False)
+    print('in is_client')
+  else:
+    logger.setup()
 
 
 def get_turbinia_client(run_local=False):
@@ -119,8 +129,8 @@ def get_turbinia_client(run_local=False):
   Returns:
     Initialized BaseTurbiniaClient or TurbiniaCeleryClient object.
   """
-  config.LoadConfig()
   # pylint: disable=no-else-return
+  setup(is_client=True)
   if config.TASK_MANAGER.lower() == 'psq':
     return BaseTurbiniaClient(run_local=run_local)
   elif config.TASK_MANAGER.lower() == 'celery':
@@ -342,7 +352,6 @@ class BaseTurbiniaClient:
   """
 
   def __init__(self, run_local=False):
-    config.LoadConfig()
     if run_local:
       self.task_manager = None
     else:
@@ -1119,6 +1128,7 @@ class TurbiniaCeleryClient(BaseTurbiniaClient):
 
   def __init__(self, *args, **kwargs):
     super(TurbiniaCeleryClient, self).__init__(*args, **kwargs)
+    from turbinia.state_manager import RedisStateManager
     self.redis = RedisStateManager()
 
   def send_request(self, request):
@@ -1165,7 +1175,7 @@ class TurbiniaServer:
       jobs_denylist (Optional[list[str]]): Jobs we will exclude from running
       jobs_allowlist (Optional[list[str]]): The only Jobs we will include to run
     """
-    config.LoadConfig()
+    setup()
     self.task_manager = task_manager.get_task_manager()
     self.task_manager.setup(jobs_denylist, jobs_allowlist)
 
@@ -1201,6 +1211,7 @@ class TurbiniaCeleryWorker(BaseTurbiniaClient):
       jobs_allowlist (Optional[list[str]]): The only Jobs we will include to run
     """
     super(TurbiniaCeleryWorker, self).__init__()
+    setup()
     # Deregister jobs from denylist/allowlist.
     job_manager.JobsManager.DeregisterJobs(jobs_denylist, jobs_allowlist)
     disabled_jobs = list(config.DISABLED_JOBS) if config.DISABLED_JOBS else []
@@ -1260,7 +1271,16 @@ class TurbiniaPsqWorker:
       jobs_denylist (Optional[list[str]]): Jobs we will exclude from running
       jobs_allowlist (Optional[list[str]]): The only Jobs we will include to run
     """
-    config.LoadConfig()
+    setup()
+
+    import psq
+
+    from google.cloud import exceptions
+    from google.cloud import datastore
+    from google.cloud import pubsub
+
+    from libcloudforensics.providers.gcp.internal import function as gcp_function
+
     psq_publisher = pubsub.PublisherClient()
     psq_subscriber = pubsub.SubscriberClient()
     datastore_client = datastore.Client(project=config.TURBINIA_PROJECT)
