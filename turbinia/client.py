@@ -31,6 +31,9 @@ import time
 import subprocess
 import codecs
 
+import psq
+from libcloudforensics.providers.gcp.internal import function as gcp_function
+
 from google import auth
 from prometheus_client import start_http_server
 from turbinia import config
@@ -340,13 +343,9 @@ class BaseTurbiniaClient:
     if run_local:
       self.task_manager = None
     else:
-      import psq
-
       from google.cloud import exceptions
       from google.cloud import pubsub
-
-      from libcloudforensics.providers.gcp.internal import function as gcp_function
-    
+  
       self.task_manager = task_manager.get_task_manager()
       self.task_manager.setup(server=False)
 
@@ -447,7 +446,6 @@ class BaseTurbiniaClient:
     Returns:
       (List|JSON string) of Task dict objects
     """
-    from libcloudforensics.providers.gcp.internal import function as gcp_function
     cloud_function = gcp_function.GoogleCloudFunction(project)
     func_args = {'instance': instance, 'kind': 'TurbiniaTask'}
 
@@ -1097,7 +1095,6 @@ class BaseTurbiniaClient:
 
     Returns: String of closed Task IDs.
     """
-    from libcloudforensics.providers.gcp.internal import function as gcp_function
     cloud_function = gcp_function.GoogleCloudFunction(project)
     func_args = {
         'instance': instance,
@@ -1272,8 +1269,6 @@ class TurbiniaPsqWorker:
     from google.cloud import exceptions
     from google.cloud import datastore
     from google.cloud import pubsub
-
-    from libcloudforensics.providers.gcp.internal import function as gcp_function
 
     psq_publisher = pubsub.PublisherClient()
     psq_subscriber = pubsub.SubscriberClient()
