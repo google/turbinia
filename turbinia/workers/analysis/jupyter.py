@@ -61,9 +61,9 @@ class JupyterAnalysisTask(TurbiniaTask):
     result.report_data = report
 
     # Write the report to the output file.
-    with open(output_file_path, 'w') as fh:
-      fh.write(output_evidence.text_data.encode('utf8'))
-      fh.write('\n'.encode('utf8'))
+    with open(output_file_path, 'w', encoding='utf-8') as fh:
+      fh.write(output_evidence.text_data)
+      fh.write('\n')
 
     # Add the resulting evidence to the result object.
     result.add_evidence(output_evidence, evidence.config)
