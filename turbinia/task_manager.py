@@ -216,14 +216,21 @@ class BaseTaskManager:
       # Doing a strict type check here for now until we can get the above
       # comment figured out.
       # pylint: disable=unidiomatic-typecheck
-      jobs_applicable = [
+      job_applicable = [
           True for t in job.evidence_input if type(evidence_) == t
       ]
-
-      if jobs_applicable or evidence_.config['abort']:
-        job_instance = job(
-            request_id=evidence_.request_id, evidence_config=evidence_.config)
-
+      job_instance = job(
+          request_id=evidence_.request_id, evidence_config=evidence_.config)
+      if evidence_.config['abort']:
+        abort_task = job_instance.create_tasks([evidence_])[0]
+        abort_task.result = abort_task.create_result(input_evidence=None,
+            status="Request aborted", message=evidence_.config['abort_message'])
+        abort_task.result.update_task_status(abort_task)
+        job_instance.tasks.append(task)
+        self.running_jobs.append(job_instance)
+        job_count += 1
+        turbinia_jobs_total.inc()
+      elif job_applicable:
         for task in job_instance.create_tasks([evidence_]):
           self.add_task(task, job_instance, evidence_)
 
