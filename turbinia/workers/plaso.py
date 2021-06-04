@@ -32,6 +32,8 @@ class PlasoTask(TurbiniaTask):
   REQUIRED_STATUS = [state.ATTACHED, state.DECOMPRESSED]
 
   task_config = {
+      # 'none' as indicated in the options for status_view within
+      # the Plaso documentation
       'status_view': 'none',
       'hashers': 'all',
       'partitions': 'all',

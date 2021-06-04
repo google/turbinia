@@ -398,6 +398,9 @@ class TurbiniaTask:
       requester (str): The user who requested the task.
       _evidence_config (dict): The config that we want to pass to all new
             evidence created from this task.
+      recipe (dict): Validated recipe to be used as the task configuration.
+      task_config (dict): Default task configuration, in effect if
+            no recipe is explicitly provided for the task.
   """
 
   # The list of attributes that we will persist into storage
@@ -520,9 +523,10 @@ class TurbiniaTask:
     """Checks if the provided recipe contains exclusively allowed fields.
     Args:
       proposed_conf (dict): Dict to override the default dynamic task conf.
+
     Returns:
-      bool: False if a field not present in the default dybamic task config
-      is found.
+      bool: False if a field not present in the default dynamic task config
+          is found.
     """
     if not proposed_conf:
       return False
@@ -537,7 +541,8 @@ class TurbiniaTask:
     """Gets histogram metric for current Task.
 
     Returns:
-      prometheus_client.Historgram: For the current task, or None if they are not initialized.
+      prometheus_client.Historgram: For the current task,
+          or None if they are not initialized.
     """
     global METRICS
     return METRICS.get(self.name.lower())

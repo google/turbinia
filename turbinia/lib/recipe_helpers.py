@@ -96,27 +96,10 @@ def validate_globals_recipe(proposed_globals_recipe):
         'Unknown keys [{0:s}] found on globals recipe item'.format(str(diff)))
     return False
 
-  if ('jobs_allowlist' in proposed_globals_recipe and
-      'jobs_denylist' in proposed_globals_recipe):
+  if (proposed_globals_recipe.get('jobs_allowlist') and
+      proposed_globals_recipe.get( 'jobs_denylist')):
     log.error('No jobs can be simultaneously in the allow and deny lists')
     return False
-  return True
-
-
-def validate_task_recipe(proposed_recipe, task_config):
-  """Ensure only allowed parameters are present a given task recipe.
-
-  Args:
-    proposed_recipe(dict): Task recipe in need of validation.
-    task_config(dict): Default recipe for task, defining the allowed fields.
-
-  Returns:
-    Bool indicating whether the recipe has a valid format.
-  """
-  allowed_values = task_config.keys()
-  for v in proposed_recipe:
-    if v not in allowed_values:
-      return False
   return True
 
 

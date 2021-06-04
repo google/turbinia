@@ -27,7 +27,7 @@ class PsortTask(TurbiniaTask):
   """Task to run Psort (Plaso toolset)
 
     Args:
-      base_command (str): Command to invoke log2timeline (e.g. log2timeline.py)
+      base_command (str): Command to invoke psort
       conf (dict): Dynamic config containing the parameters for the command.
 
     Returns:
