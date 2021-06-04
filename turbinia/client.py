@@ -32,9 +32,12 @@ import subprocess
 import codecs
 
 import psq
-from libcloudforensics.providers.gcp.internal import function as gcp_function
 
+from google.cloud import exceptions
+from google.cloud import datastore
+from google.cloud import pubsub
 from google import auth
+from libcloudforensics.providers.gcp.internal import function as gcp_function
 from prometheus_client import start_http_server
 from turbinia import config
 from turbinia.config import logger
@@ -1263,12 +1266,6 @@ class TurbiniaPsqWorker:
       jobs_allowlist (Optional[list[str]]): The only Jobs we will include to run
     """
     setup()
-
-    import psq
-
-    from google.cloud import exceptions
-    from google.cloud import datastore
-    from google.cloud import pubsub
 
     psq_publisher = pubsub.PublisherClient()
     psq_subscriber = pubsub.SubscriberClient()
