@@ -105,6 +105,7 @@ TASK_MAP = {
 
 log = logging.getLogger('turbinia')
 
+
 def setup(is_client=False):
   config.LoadConfig()
 
@@ -346,9 +347,6 @@ class BaseTurbiniaClient:
     if run_local:
       self.task_manager = None
     else:
-      from google.cloud import exceptions
-      from google.cloud import pubsub
-  
       self.task_manager = task_manager.get_task_manager()
       self.task_manager.setup(server=False)
 
