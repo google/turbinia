@@ -101,24 +101,9 @@ log = logging.getLogger('turbinia')
 
 def setup(is_client=False):
   config.LoadConfig()
-  print('in setup()')
-  print('TASK_MANAGER='+config.TASK_MANAGER)
-  # if config.TASK_MANAGER.lower() == 'psq':
-  #   import psq
 
-  #   from google.cloud import exceptions
-  #   from google.cloud import datastore
-  #   from google.cloud import pubsub
-
-  #   from libcloudforensics.providers.gcp.internal import function as gcp_function
-  # elif config.TASK_MANAGER.lower() == 'celery':
-  #   print('in load celery')
-  #   from turbinia.state_manager import RedisStateManager
-
-  #log = logging.getLogger('turbinia')
   if is_client:
     logger.setup(need_file_handler=False)
-    print('in is_client')
   else:
     logger.setup()
 
