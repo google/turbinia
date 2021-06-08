@@ -34,6 +34,7 @@ RUN pip3 install docker-explorer
 # Install Plaso
 RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 0x5e80511b10c598b8 \
     && add-apt-repository -y ppa:gift/stable
+RUN apt update
 RUN apt-get -y install python-plaso \
     plaso-tools \
     docker-explorer-tools \
