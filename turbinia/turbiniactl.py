@@ -19,6 +19,7 @@
 from __future__ import print_function
 from __future__ import unicode_literals
 
+import pprint
 import argparse
 import getpass
 import logging
@@ -32,7 +33,6 @@ from turbinia import TurbiniaException
 from turbinia.config import logger
 from turbinia.lib import google_cloud
 from turbinia.lib import file_helpers
-from turbinia.lib import recipe_helpers
 from turbinia import __version__
 from turbinia.processors import archive
 from turbinia.output_manager import OutputManager
@@ -403,6 +403,13 @@ def main():
 
   args = parser.parse_args()
 
+  config.TURBINIA_COMMAND = args.command
+
+  # (jorlamd): Importing recipe_helpers late to avoid a bug where client.TASK_MAP
+  # is imported early rendering the check for worker status not possible.
+  from turbinia.lib import recipe_helpers
+
+
   # Load the config before final logger setup so we can the find the path to the
   # log file.
   try:
@@ -443,8 +450,6 @@ def main():
   if config.STACKDRIVER_LOGGING and args.command in ('server', 'psqworker'):
     google_cloud.setup_stackdriver_handler(
         config.TURBINIA_PROJECT, args.command)
-
-  config.TURBINIA_COMMAND = args.command
 
   log.info('Turbinia version: {0:s}'.format(__version__))
 

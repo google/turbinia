@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+#-*- coding: utf-8 -*-
 # Copyright 2016 Google Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -219,9 +219,8 @@ class BaseTaskManager:
       job_applicable = [
           True for t in job.evidence_input if type(evidence_) == t
       ]
-      job_instance = job(
-          request_id=evidence_.request_id, evidence_config=evidence_.config)
       if evidence_.config['abort']:
+        job_instance = AbortJob(request_id=evidence_.request_id, evidence_config=evidence_.config)
         abort_task = job_instance.create_tasks([evidence_])[0]
         abort_task.result = abort_task.create_result(input_evidence=None,
             status="Request aborted", message=evidence_.config['abort_message'])
@@ -231,6 +230,9 @@ class BaseTaskManager:
         job_count += 1
         turbinia_jobs_total.inc()
       elif job_applicable:
+        job_instance = job(
+          request_id=evidence_.request_id, evidence_config=evidence_.config)
+
         for task in job_instance.create_tasks([evidence_]):
           self.add_task(task, job_instance, evidence_)
 
