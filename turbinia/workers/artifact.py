@@ -52,8 +52,8 @@ class FileArtifactExtractionTask(TurbiniaTask):
     cmd = [
         'sudo',
         'image_export.py',
-        '--logfile',
         '--no-hashes',
+        '--logfile',
         image_export_log,
         '-w',
         export_directory,
