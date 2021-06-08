@@ -39,7 +39,7 @@ def PreprocessBitLocker(source_path, partition_offset=None, credentials=None):
   Args:
     source_path(str): the source path to run bdemount on.
     partition_offset(int): offset of volume in bytes.
-    credentials(list[{str: str}]): decryption credentials set in evidence setup
+    credentials(list[(str, str)]): decryption credentials set in evidence setup
 
   Raises:
     TurbiniaException: if source_path doesn't exist or if the bdemount command
@@ -71,10 +71,8 @@ def PreprocessBitLocker(source_path, partition_offset=None, credentials=None):
 
   mount_path = tempfile.mkdtemp(prefix='turbinia', dir=mount_prefix)
 
-  for credential in credentials:
+  for credential_type, credential_data in credentials:
     libbde_command = ['sudo', 'bdemount', '-o', str(partition_offset)]
-    credential_type = credential['credential_type']
-    credential_data = credential['credential_data']
     if credential_type == 'password':
       libbde_command.extend(['-p', credential_data])
     elif credential_type == 'recovery_password':
