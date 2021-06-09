@@ -15,17 +15,15 @@ RUN apt-get update && apt-get -y install \
     software-properties-common \
     sudo \
     testdisk \
-    sleuthkit
     && rm -rf /var/lib/apt/lists/*
 
 ADD requirements.txt /tmp/
 RUN cd /tmp/ && pip3 install -r requirements.txt
-ADD dfvfs_requirements.txt /tmp/
-RUN cd /tmp/ && pip3 install -r dfvfs_requirements.txt
 
 RUN pip3 install pip --upgrade
 RUN pip3 install keyrings.alt --upgrade
-#RUN pip3 install urllib3 cryptography requests --upgrade
+RUN pip3 install requests --upgrade
+RUN pip3 install urllib3 cryptography --upgrade
 
 # Install third-party worker dependencies
 RUN pip3 install pyhindsight
@@ -34,14 +32,16 @@ RUN pip3 install pyhindsight
 RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 0x5e80511b10c598b8 \
     && add-apt-repository -y ppa:gift/stable
 RUN apt-get -y install \
-    docker-explorer-tools \
-    plaso-tools \
-    python3-plaso \
     bulk-extractor \
+    docker-explorer-tools \
     libbde-tools \
+    libewf \
+    libewf-python3 \
+    plaso-tools \
+    python3-dfvfs \
+    python3-plaso \
+    sleuthkit \
     --option Acquire::ForceIPv4=true --option Acquire::Retries=100 --option Acquire::http::Timeout=60
-
-RUN pip3 install urllib3 cryptography --upgrade
 
 ADD . /tmp/
 # unshallow and fetch all tags so our build systems pickup the correct git tag if it's a shallow clone
