@@ -23,13 +23,12 @@ from turbinia.workers import TurbiniaTask
 
 if TurbiniaTask.check_worker_role():
   try:
-    from dfvfs.helpers import volume_scanner
     from dfvfs.lib import definitions as dfvfs_definitions
     from dfvfs.lib import errors as dfvfs_errors
     from dfvfs.volume import gpt_volume_system
     from dfvfs.volume import tsk_volume_system
 
-    from turbinia.lib import dfvfs_classes
+    from turbinia.processors import partitions
   except ImportError as exception:
     message = 'Could not import dfVFS libraries: {0!s}'.format(exception)
     raise TurbiniaException(message)
@@ -109,8 +108,9 @@ class PartitionEnumerationTask(TurbiniaTask):
     else:
       status_report.append(fmt.bullet('Source evidence is a volume image'))
 
+    # Not setting path_spec here as it will need to be generated for each task
     partition_evidence = DiskPartition(
-        path_spec=fs_path_spec, partition_offset=partition_offset,
+        partition_location=fs_location, partition_offset=partition_offset,
         partition_size=partition_size)
 
     return partition_evidence, status_report
@@ -137,15 +137,11 @@ class PartitionEnumerationTask(TurbiniaTask):
 
     result.log('Scanning [{0:s}] for partitions'.format(evidence_description))
 
+    path_specs = []
     success = False
 
-    dfvfs_definitions.PREFERRED_GPT_BACK_END = (
-        dfvfs_definitions.TYPE_INDICATOR_GPT)
-    mediator = dfvfs_classes.UnattendedVolumeScannerMediator()
-    path_specs = []
     try:
-      scanner = volume_scanner.VolumeScanner(mediator=mediator)
-      path_specs = scanner.GetBasePathSpecs(evidence.local_path)
+      path_specs = partitions.Enumerate(evidence)
       status_summary = 'Found {0:d} partition(s) in [{1:s}]:'.format(
           len(path_specs), evidence_description)
     except dfvfs_errors.ScannerError as e:

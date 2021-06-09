@@ -17,6 +17,7 @@ from __future__ import unicode_literals
 
 import json
 import logging
+from os import path
 import subprocess
 
 from turbinia import TurbiniaException
@@ -64,22 +65,29 @@ class DockerContainersEnumerationTask(TurbiniaTask):
     if not de_binary:
       raise TurbiniaException('Cannot find de.py in path')
 
-    docker_explorer_command = [
-        'sudo', de_binary, '-r', docker_dir, 'list', 'all_containers'
-    ]
+    # Check if docker folder exists
+    if not path.exists(docker_dir):
+      log.info('docker_dir does not exist')
+      return containers_info
+
+    docker_explorer_command = ['sudo', de_binary]
+
     if config.DEBUG_TASKS or evidence.config.get('debug_tasks'):
       docker_explorer_command.append('-d')
+
+    docker_explorer_command.extend(['-r', docker_dir, 'list', 'all_containers'])
+
     log.info('Running {0:s}'.format(' '.join(docker_explorer_command)))
     try:
       json_string = subprocess.check_output(docker_explorer_command).decode(
           'utf-8')
+      containers_info = json.loads(json_string)
     except json.JSONDecodeError as e:
       raise TurbiniaException(
-          'Error decoding JSON output from de.py: {0!s}'.format(e))
+          'Error decoding JSON output from de.py: {0!s} {1!s}'.format(
+              e, json_string))
     except subprocess.CalledProcessError as e:
       raise TurbiniaException('de.py returned an error: {0!s}'.format(e))
-
-    containers_info = json.loads(json_string)
 
     return containers_info
 
@@ -103,7 +111,7 @@ class DockerContainersEnumerationTask(TurbiniaTask):
     found_containers = []
     try:
       containers_info = self.GetContainers(evidence)
-      for container_info in containers_info:
+      for container_info in (containers_info or []):
         container_id = container_info.get('container_id')
         found_containers.append(container_id)
         container_evidence = DockerContainer(container_id=container_id)

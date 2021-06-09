@@ -133,7 +133,7 @@ def PostprocessDetachDisk(disk_name, local_path):
     disk_name(str): The name of the Cloud Disk to detach.
     local_path(str): The local path to the block device to detach.
   """
-  #TODO: can local_path be something diffferent than the /dev/disk/by-id/google*
+  #TODO: can local_path be something different than the /dev/disk/by-id/google*
   if local_path:
     path = local_path
   else:

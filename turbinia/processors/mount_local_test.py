@@ -36,6 +36,72 @@ def _mock_returns(*args, **kwargs):
 class MountLocalProcessorTest(unittest.TestCase):
   """Tests for mount_local processor."""
 
+  @mock.patch('turbinia.processors.mount_local.config')
+  @mock.patch('tempfile.mkdtemp')
+  @mock.patch('subprocess.check_call')
+  @mock.patch('os.path.isdir')
+  @mock.patch('os.path.exists')
+  @mock.patch('os.makedirs')
+  def testPreprocessBitLocker(
+      self, _, mock_path_exists, mock_path_isdir, mock_subprocess, mock_mkdtemp,
+      mock_config):
+    """Test PreprocessBitLocker method."""
+    mock_config.MOUNT_DIR_PREFIX = '/mnt/turbinia'
+    mock_path_exists.side_effect = _mock_returns
+    mock_mkdtemp.return_value = '/mnt/turbinia/turbinia0ckdntz0'
+
+    current_path = os.path.abspath(os.path.dirname(__file__))
+    source_path = os.path.join(
+        current_path, '..', '..', 'test_data', 'tsk_volume_system.raw')
+    credentials = [('password', '123456')]
+
+    mock_path_isdir.return_value = True
+    device = mount_local.PreprocessBitLocker(
+        source_path, partition_offset=65536, credentials=credentials)
+    expected_args = [
+        'sudo', 'bdemount', '-o', '65536', '-p', '123456', '-X', 'allow_other',
+        source_path, '/mnt/turbinia/turbinia0ckdntz0'
+    ]
+    mock_subprocess.assert_called_once_with(expected_args)
+    self.assertEqual(device, '/mnt/turbinia/turbinia0ckdntz0/bde1')
+
+    # Test with recovery password
+    mock_subprocess.reset_mock()
+    credentials = [('recovery_password', '123456')]
+    mount_local.PreprocessBitLocker(
+        source_path, partition_offset=65536, credentials=credentials)
+    expected_args = [
+        'sudo', 'bdemount', '-o', '65536', '-r', '123456', '-X', 'allow_other',
+        source_path, '/mnt/turbinia/turbinia0ckdntz0'
+    ]
+    mock_subprocess.assert_called_once_with(expected_args)
+
+    # Test if source does not exist
+    with self.assertRaises(TurbiniaException):
+      mount_local.PreprocessBitLocker(
+          '/dev/loop0p4', partition_offset=65536, credentials=credentials)
+
+    # Test if mount path not directory
+    mock_path_isdir.return_value = False
+    with self.assertRaises(TurbiniaException):
+      mount_local.PreprocessBitLocker(
+          source_path, partition_offset=65536, credentials=credentials)
+    mock_path_isdir.return_value = True
+
+    # Test decryption failure
+    mock_subprocess.reset_mock()
+    mock_subprocess.side_effect = CalledProcessError(1, 'bdemount')
+    device = mount_local.PreprocessBitLocker(
+        source_path, partition_offset=65536, credentials=credentials)
+    self.assertEqual(device, None)
+
+    # Test with unsupported credential type
+    mock_subprocess.reset_mock()
+    credentials = [('startup_key', 'key.BEK')]
+    mount_local.PreprocessBitLocker(
+        source_path, partition_offset=65536, credentials=credentials)
+    mock_subprocess.assert_not_called()
+
   @mock.patch('subprocess.check_output')
   def testPreprocessLosetup(self, mock_subprocess):
     """Test PreprocessLosetup method."""

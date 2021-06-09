@@ -67,7 +67,7 @@ def GetDockerPath(mount_path):
           'Error parsing the Docker daemon config file due to: {0:s}. '
           'Using default Docker installation path'.format(str(exception)))
 
-  # If file not found or error occured parsing Docker config file.
+  # If file not found or error occurred parsing Docker config file.
   if docker_path is None:
     log.warning(
         'Docker daemon confile file not found. '
@@ -98,6 +98,10 @@ class DockerManager:
     try:
       docker_client = docker.from_env()
     except docker.errors.APIError as exception:
+      raise TurbiniaException(
+          'An issue has occurred connecting to the Docker daemon: {0!s}'.format(
+              exception))
+    except docker.errors.DockerException as exception:
       raise TurbiniaException(
           'An issue has occurred connecting to the Docker daemon: {0!s}'.format(
               exception))
@@ -170,7 +174,7 @@ class ContainerManager(DockerManager):
   def _create_mount_points(self, mount_paths, mode='rw'):
     """Creates file and device mounting arguments.
 
-    The arguments will be passed into the container with the appropiate
+    The arguments will be passed into the container with the appropriate
     mounting parameters. All device blocks will be mounted as read only,
     regardless of the specified mode.
 
@@ -207,7 +211,8 @@ class ContainerManager(DockerManager):
     return device_paths, file_paths
 
   def execute_container(
-      self, cmd, shell=False, ro_paths=None, rw_paths=None, **kwargs):
+      self, cmd, shell=False, ro_paths=None, rw_paths=None, timeout_limit=3600,
+      **kwargs):
     """Executes a Docker container.
 
     A new Docker container will be created from the image id,
@@ -217,6 +222,7 @@ class ContainerManager(DockerManager):
       cmd(str|list): command to be executed.
       shell (bool): Whether the cmd is in the form of a string or a list.
       mount_paths(list): A list of paths to mount to the container.
+      timeout_limit(int): The number of seconds before killing a container.
       **kwargs: Any additional keywords to pass to the container.
 
     Returns:
@@ -267,7 +273,7 @@ class ContainerManager(DockerManager):
         stdo = codecs.decode(stdo, 'utf-8').strip()
         log.debug(stdo)
         stdout += stdo
-      results = container.wait()
+      results = container.wait(timeout=timeout_limit)
     except docker.errors.APIError as exception:
       if container:
         container.remove(v=True)

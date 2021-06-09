@@ -103,51 +103,73 @@ DISABLED_JOBS = ['BinaryExtractorJob', 'BulkExtractorJob', 'PhotorecJob']
 DEPENDENCIES = [{
     'job': 'BinaryExtractorJob',
     'programs': ['image_export.py'],
-    'docker_image': None
+    'docker_image': None,
+    'timeout': 7200
 }, {
     'job': 'BulkExtractorJob',
     'programs': ['bulk_extractor'],
-    'docker_image': None
+    'docker_image': None,
+    'timeout': 14400
+}, {
+    'job': 'FsstatJob',
+    'programs': ['fsstat'],
+    'docker_image': None,
+    'timeout': 1800
 }, {
     'job': 'GrepJob',
     'programs': ['grep'],
-    'docker_image': None
+    'docker_image': None,
+    'timeout': 1800
 }, {
     'job': 'HadoopAnalysisJob',
     'programs': ['strings'],
-    'docker_image': None
+    'docker_image': None,
+    'timeout': 1200
 }, {
     'job': 'HindsightJob',
     'programs': ['hindsight.py'],
-    'docker_image': None
+    'docker_image': None,
+    'timeout': 1200
 }, {
     'job': 'JenkinsAnalysisJob',
     'programs': ['john'],
-    'docker_image': None
+    'docker_image': None,
+    'timeout': 1200
+}, {
+    'job': 'PartitionEnumerationJob',
+    'programs': ['bdemount'],
+    'docker_image': None,
+    'timeout': 1200
 }, {
     'job': 'PlasoJob',
     'programs': ['log2timeline.py'],
-    'docker_image': None
+    'docker_image': None,
+    'timeout': 86400
 }, {
     'job': 'PhotorecJob',
     'programs': ['photorec'],
-    'docker_image': None
+    'docker_image': None,
+    'timeout': 14400
 }, {
     'job': 'PsortJob',
     'programs': ['psort.py'],
-    'docker_image': None
+    'docker_image': None,
+    'timeout': 3600
 }, {
     'job': 'StringsJob',
     'programs': ['strings'],
-    'docker_image': None
+    'docker_image': None,
+    'timeout': 3600
 }, {
     'job': 'VolatilityJob',
     'programs': ['vol.py'],
-    'docker_image': None
+    'docker_image': None,
+    'timeout': 3600
 }, {
     'job': 'DockerContainersEnumerationJob',
     'programs': ['de.py'],
-    'docker_image': None
+    'docker_image': None,
+    'timeout': 1200
 }]
 
 ################################################################################
@@ -221,7 +243,7 @@ REDIS_DB = '0'
 # These options are required if you wish to use email notifications
 ################################################################################
 
-# Will emails notifcations be enabled
+# Will emails notifications be enabled
 EMAIL_NOTIFICATIONS = False
 
 # Host Address and port number(TLS)
@@ -242,4 +264,4 @@ PROMETHEUS_ENABLED = True
 
 # Prometheus listen address and port
 PROMETHEUS_ADDR = '0.0.0.0'
-PROMETHEUS_PORT = 8000
+PROMETHEUS_PORT = 9200

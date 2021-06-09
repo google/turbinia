@@ -43,14 +43,14 @@ def ValidateTarFile(compressed_directory):
         'The File or Directory does not exist: {0:s}'.format(
             compressed_directory))
 
-  # TODO(wyassine): rewrite this check so it is not dependant
+  # TODO(wyassine): rewrite this check so it is not dependent
   # on a list of hard coded extensions and instead have a
   # check to determine whether or not it is a tar file format.
   if not (compressed_directory.endswith('.tgz') or
           compressed_directory.endswith('.tar.gz')):
     raise TurbiniaException(
         'The file is not a supported format. The list of '
-        'acceptable exensions are: .tgz or .tar.gz')
+        'acceptable extensions are: .tgz or .tar.gz')
 
 
 def CompressDirectory(uncompressed_directory, output_path=None):

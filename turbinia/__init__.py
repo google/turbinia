@@ -15,6 +15,7 @@
 """Main Turbinia application."""
 
 import logging
+
 log = logging.getLogger('turbinia')
 
 from pkg_resources import get_distribution, DistributionNotFound

@@ -9,6 +9,7 @@ MAIN_LOG="$LOGS/main.log"
 STATS_LOG="$LOGS/stats.log"
 DETAIL_LOG="$LOGS/reqdetails.log"
 OUT_TGZ="e2e-test-logs.tgz"
+OUT_EXCLUDE="\.ascii|\.tar\.gz|\.plaso|\.csv"
 DISK="test-disk2"
 
 if [ $# -ne  2 ]
@@ -38,7 +39,7 @@ $TURBINIA_CLI -d -r $REQ_ID -L $MAIN_LOG -a -w googleclouddisk -d $DISK -z $ZONE
 # When the Turbinia request is finished request the final request statistics.
 $TURBINIA_CLI -d status -r $REQ_ID -s > $STATS_LOG 2>&1
 
-# Parse out the number of succesfull and failed tasks.
+# Parse out the number of successful and failed tasks.
 FAILED=`cat $STATS_LOG | grep Failed | cut -d ":" -f 3 | cut -d ',' -f 1 |  tr -d '[:space:]'`
 SUCCESS=`cat $STATS_LOG | grep Success | cut -d ":" -f 3 | cut -d ',' -f 1 |  tr -d '[:space:]'`
 
@@ -52,7 +53,7 @@ $TURBINIA_CLI -d -a status -r $REQ_ID -R > $DETAIL_LOG 2>&1
 # Retrieve all test output from GCS and store LOGS folder
 echo "Copy all task result files from GCS"
 echo "Note: excluding result from StringAsciiTask due to large result file"
-cat $DETAIL_LOG|grep "gs://"|tr -d "*\`"|grep -v "\.ascii"|while read line
+cat $DETAIL_LOG|grep "gs://"|tr -d "*\`"|grep -Ev $OUT_EXCLUDE|while read line
 do
   OUTFILE=`echo "$line"|awk -F/ '{print $(NF-1)"_"$NF}'`
   echo "Copying $line to $OUTFILE"
