@@ -21,7 +21,6 @@ ADD requirements.txt /tmp/
 RUN cd /tmp/ && pip3 install -r requirements.txt
 
 RUN pip3 install pip --upgrade
-RUN pip3 install keyrings.alt --upgrade
 RUN pip3 install requests --upgrade
 RUN pip3 install urllib3 cryptography --upgrade
 
