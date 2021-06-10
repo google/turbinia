@@ -40,7 +40,7 @@ DEFAULT_GLOBALS_RECIPE = {
 DEFAULT_RECIPE = {'globals': DEFAULT_GLOBALS_RECIPE}
 
 
-def load_recipe_from_file(recipe_file):
+def load_recipe_from_file(recipe_file, validate=True):
   """Load recipe from file.
 
   Args:
@@ -56,7 +56,10 @@ def load_recipe_from_file(recipe_file):
     with open(recipe_file, 'r') as r_file:
       recipe_file_contents = r_file.read()
       recipe_dict = load(recipe_file_contents, Loader=Loader)
-      if validate_recipe(recipe_dict):
+      if validate:
+        if validate_recipe(recipe_dict):
+          return recipe_dict
+      else:
         return recipe_dict
   except yaml.parser.ParserError as exception:
     message = (

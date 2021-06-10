@@ -115,7 +115,7 @@ class TurbiniaTaskResult:
 
   def __init__(
       self, evidence=None, input_evidence=None, base_output_dir=None,
-      request_id=None, job_id=None):
+      request_id=None, job_id=None, no_output_manager=False):
     """Initialize the TurbiniaTaskResult object."""
 
     self.closed = False
@@ -143,6 +143,7 @@ class TurbiniaTaskResult:
     self.state_manager = None
     # TODO(aarontp): Create mechanism to grab actual python logging data.
     self._log = []
+    self.no_output_manager = no_output_manager
 
   def __str__(self):
     return pprint.pformat(vars(self), depth=3)
@@ -161,10 +162,12 @@ class TurbiniaTaskResult:
     self.task_name = task.name
     self.requester = task.requester
     self.state_manager = state_manager.get_state_manager()
-    if task.output_manager.is_setup:
-      _, self.output_dir = task.output_manager.get_local_output_dirs()
-    else:
-      raise TurbiniaException('Output Manager is not setup yet.')
+    if not self.no_output_manager:
+      if task.output_manager.is_setup:
+        ldirs = task.output_manager.get_local_output_dirs()
+        _, self.output_dir = ldirs
+      else:
+        raise TurbiniaException('Output Manager is not setup yet.')
 
   def close(self, task, success, status=None):
     """Handles closing of this result and writing logs.
@@ -238,18 +241,19 @@ class TurbiniaTaskResult:
     # because we don't need to return it.
     self.input_evidence = None
 
-    # Write result log info to file
-    logfile = os.path.join(self.output_dir, 'worker-log.txt')
-    # Create default log text just so that the worker log is created to
-    # avoid confusion if it doesn't exist.
-    if not self._log:
-      self._log.append('No worker messages were logged.')
-    if self.output_dir and os.path.exists(self.output_dir):
-      with open(logfile, 'w') as f:
-        f.write('\n'.join(self._log))
-        f.write('\n')
-      if not task.run_local:
-        task.output_manager.save_local_file(logfile, self)
+    if not self.no_output_manager:
+      # Write result log info to file
+      logfile = os.path.join(self.output_dir, 'worker-log.txt')
+      # Create default log text just so that the worker log is created to
+      # avoid confusion if it doesn't exist.
+      if not self._log:
+        self._log.append('No worker messages were logged.')
+      if self.output_dir and os.path.exists(self.output_dir):
+        with open(logfile, 'w') as f:
+          f.write('\n'.join(self._log))
+          f.write('\n')
+        if not task.run_local:
+          task.output_manager.save_local_file(logfile, self)
 
     self.closed = True
     log.debug('Result close successful. Status is [{0:s}]'.format(self.status))
@@ -780,7 +784,7 @@ class TurbiniaTask:
     self.last_update = datetime.now()
 
   def create_result(
-      self, input_evidence=None, status=None, message=None, trace=None):
+      self, input_evidence=None, status=None, message=None, trace=None, no_output_manager=False):
     """Creates a new TurbiniaTaskResults and instantiates the result.
 
     Args:
@@ -791,7 +795,8 @@ class TurbiniaTask:
     """
     result = TurbiniaTaskResult(
         base_output_dir=self.base_output_dir, request_id=self.request_id,
-        job_id=self.job_id, input_evidence=input_evidence)
+        job_id=self.job_id, input_evidence=input_evidence,
+        no_output_manager=no_output_manager)
     result.setup(self)
     if message:
       if status:

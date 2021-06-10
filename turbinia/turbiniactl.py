@@ -19,7 +19,6 @@
 from __future__ import print_function
 from __future__ import unicode_literals
 
-import pprint
 import argparse
 import getpass
 import logging
@@ -32,7 +31,6 @@ from turbinia import config
 from turbinia import TurbiniaException
 from turbinia.config import logger
 from turbinia.lib import google_cloud
-from turbinia.lib import file_helpers
 from turbinia import __version__
 from turbinia.processors import archive
 from turbinia.output_manager import OutputManager
@@ -81,6 +79,10 @@ def main():
   parser.add_argument(
       '-I', '--recipe', help='Name of Recipe to be employed on evidence',
       required=False)
+  parser.add_argument(
+      '-X', '--skip_recipe_validation', action='store_true', help='Do not'
+      ' perform recipe validation on the client.', required=False,
+      default=False)
   parser.add_argument(
       '-f', '--force_evidence', action='store_true',
       help='Force evidence processing request in potentially unsafe conditions',
@@ -405,10 +407,10 @@ def main():
 
   config.TURBINIA_COMMAND = args.command
 
-  # (jorlamd): Importing recipe_helpers late to avoid a bug where client.TASK_MAP
-  # is imported early rendering the check for worker status not possible.
+  # (jorlamd): Importing recipe_helpers late to avoid a bug where
+  # client.TASK_MAP is imported early rendering the check for worker
+  # status not possible.
   from turbinia.lib import recipe_helpers
-
 
   # Load the config before final logger setup so we can the find the path to the
   # log file.
@@ -459,7 +461,6 @@ def main():
   # to point to config paths.
   from turbinia import notify
   from turbinia import client as TurbiniaClientProvider
-  from turbinia.client import TurbiniaCeleryClient
   from turbinia.client import TurbiniaServer
   from turbinia.client import TurbiniaCeleryWorker
   from turbinia.client import TurbiniaPsqWorker
@@ -863,9 +864,9 @@ def main():
         raise TurbiniaException(
             'Specifying a recipe is incompatible with defining'
             ' jobs allow/deny lists, yara rules or a patterns file separately.')
-        sys.exit(1)
       recipe_file = os.path.join(config.RECIPE_FILE_DIR, args.recipe)
-      recipe_dict = recipe_helpers.load_recipe_from_file(recipe_file)
+      recipe_dict = recipe_helpers.load_recipe_from_file(recipe_file,
+          not args.skip_recipe_validation)
       if not recipe_dict:
         sys.exit(1)
     else:

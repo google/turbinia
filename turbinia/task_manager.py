@@ -220,13 +220,19 @@ class BaseTaskManager:
           True for t in job.evidence_input if type(evidence_) == t
       ]
       if evidence_.config['abort']:
-        job_instance = AbortJob(request_id=evidence_.request_id, evidence_config=evidence_.config)
+        job_instance = AbortJob(request_id=evidence_.request_id,
+            evidence_config=evidence_.config)
         abort_task = job_instance.create_tasks([evidence_])[0]
-        abort_task.result = abort_task.create_result(input_evidence=None,
-            status="Request aborted", message=evidence_.config['abort_message'])
-        abort_task.result.update_task_status(abort_task)
-        job_instance.tasks.append(task)
+        abort_task.job_id = job_instance.id
+        result = abort_task.create_result(input_evidence=evidence_,
+            status="Request aborted", message=evidence_.config['abort_message'],
+            no_output_manager=True)
+        job_instance.tasks.append(abort_task)
+        abort_task.create_stub()
+        self.state_manager.update_task(abort_task)
         self.running_jobs.append(job_instance)
+        abort_task.result = abort_task.run(evidence_, result)
+        abort_task.stub.result = abort_task.result.serialize()
         job_count += 1
         turbinia_jobs_total.inc()
       elif job_applicable:

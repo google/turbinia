@@ -37,7 +37,8 @@ class AbortJob(interface.TurbiniaJob):
     """
     #Returning a single task every time in this case.
     abort_task = AbortTask()
-    abort_task.task_config['reason'] = evidence[0].get('abort_message', '')
+    message = evidence[0].config.get('abort_message', '')
+    abort_task.task_config['reason'] = message
     return [abort_task]
 
 

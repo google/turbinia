@@ -14,6 +14,9 @@
 # limitations under the License.
 """Task used to abort a job"""
 
+import psq
+from celery import states as celery_states
+from turbinia import config
 from turbinia.workers import TurbiniaTask
 
 class AbortTask(TurbiniaTask):
@@ -24,6 +27,12 @@ class AbortTask(TurbiniaTask):
       'reason': 'Recipe provided is invalid'
   }
 
+  def create_stub(self):
+    """Creates a mock task stub"""
+    if config.TASK_MANAGER.lower() == 'psq':
+      self.stub = MockPSQStub()
+    elif config.TASK_MANAGER.lower() == 'celery':
+      self.stub = MockCeleryStub()
 
   def run(self, evidence, result):
     """Produce a verbose result to halp troubleshoot issues.
@@ -34,5 +43,21 @@ class AbortTask(TurbiniaTask):
     Returns:
         TurbiniaTaskResult object.
     """
-    result.close(self, False, '{0:s}'.format(self.task_config['reason']))
+    result.close(self, True, '{0:s}'.format(self.task_config['reason']))
     return result
+
+class MockPSQStub:
+  """Mock PSQ task stub"""
+
+  def __init__(self):
+    self.status = psq.task.FINISHED
+
+  def get_task(self):
+    """Returns mock task status"""
+    return self.status
+
+class MockCeleryStub:
+  """Mock Celery task stub"""
+
+  def __init__(self):
+    self.status = celery_states.SUCCESS
