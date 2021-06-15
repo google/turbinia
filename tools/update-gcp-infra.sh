@@ -55,7 +55,7 @@ function stop {
     # Stop all workers
     for WORKER in `$GCLOUD compute instances list --filter="zone:$ZONE" --filter="name ~ worker-$INSTANCEID" --format="json(name)" | jq -r '.[] | .name'`
     do
-        $GCLOUD compute instances stop $WORKER --zone $ZONE
+        $GCLOUD compute instances stop $WORKER --zone $ZONE --async
     done
 
     # Show status
@@ -69,7 +69,7 @@ function start {
     # Start all workers
     for WORKER in `$GCLOUD compute instances list --filter="zone:$ZONE" --filter="name ~ worker-$INSTANCEID" --format="json(name)" | jq -r '.[] | .name'`
     do
-        $GCLOUD compute instances start $WORKER --zone $ZONE    
+        $GCLOUD compute instances start $WORKER --zone $ZONE --async
     done
 
     # Start server
