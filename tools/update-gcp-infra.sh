@@ -1,10 +1,5 @@
 #/bin/bash
 
-# Update the configuration or docker image of a running infrastructure in GCP
-# $0 -c stop -i abc123 -z us-central
-# $0 -c start -i abc123 -z us-central
-# $0 -c update_config -f [path-to-new-config]
-# $0 -c upgrade-image -f 20210610
 set -o posix
 
 CMD=$1 
