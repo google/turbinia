@@ -24,6 +24,7 @@ function usage {
   echo "change-image    Change the docker image loaded by a Turbinia deployment with DOCKER_TAG"
   echo "logs            Display logs of a Turbinia server or worker"
   echo "show-config     Write the Turbinia configuration of an instance to CONFIG_FILE.current"
+  echo "status          Show the running status of server and workers"
   echo "start           Start a Turbinia deployment"
   echo "stop            Stop a Turbinia deployment"
   echo "update-config   Update the Turbinia configuration of a Turbinia deployment from CONFIG_FILE"
@@ -126,6 +127,9 @@ echo "Running against GCP project:"
 gcloud config list project
 
 case $CMD in
+    status)
+        show_infra
+        ;;
     logs)
         show_container_logs
         ;;
