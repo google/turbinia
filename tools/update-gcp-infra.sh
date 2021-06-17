@@ -26,7 +26,7 @@ function usage {
   echo "show-config     Write the Turbinia configuration of an instance to CONFIG_FILE.current"
   echo "start           Start a Turbinia deployment"
   echo "stop            Stop a Turbinia deployment"
-  echo "update_config   Update the Turbinia configuration of a Turbinia deployment from CONFIG_FILE"
+  echo "update-config   Update the Turbinia configuration of a Turbinia deployment from CONFIG_FILE"
   echo
 
   exit 1
