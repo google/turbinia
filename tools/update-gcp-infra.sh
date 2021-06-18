@@ -8,7 +8,9 @@ ZONE=$3
 DOCKER_TAG=$4
 CONFIG_FILE=$4
 
-GCLOUD=""
+SERVER_URI="us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-server"
+WORKER_URI="us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-worker"
+GCLOUD=`command -v gcloud`
 
 function usage { 
   echo "Usage: $0 COMMAND INSTANCEID ZONE [DOCKER_TAG or CONFIG_FILE]" 1>&2 
@@ -23,7 +25,7 @@ function usage {
   echo "Commands supported:"
   echo "change-image    Change the docker image loaded by a Turbinia deployment with DOCKER_TAG"
   echo "logs            Display logs of a Turbinia server or worker"
-  echo "show-config     Write the Turbinia configuration of an instance to CONFIG_FILE.current"
+  echo "show-config     Write the Turbinia configuration of an instance to STDOUT"
   echo "status          Show the running status of server and workers"
   echo "start           Start a Turbinia deployment"
   echo "stop            Stop a Turbinia deployment"
@@ -34,12 +36,11 @@ function usage {
 }
 
 function check_gcloud {
-    if ! command -v gcloud
+    if [ -z $GCLOUD ]
     then
         echo "gcloud not found, please install first"
         exit 1
     fi
-    GCLOUD=`command -v gcloud`
 }
 
 function show_infra {
@@ -84,7 +85,7 @@ function show_config {
     # The container environment variables are *not* available in a structured format, only as a big string blob, hence the parsing...
     show_infra
     read -p 'Which instance? ' INSTANCE_NAME
-    $GCLOUD -q compute instances describe $INSTANCE_NAME  --format="json" --zone=$ZONE --flatten="metadata[]" | jq '.[].items[] | select(.value | contains("TURBINIA_CONF")) | .value' | sed -e 's/.*TURBINIA_CONF\\n.*value:\(.*\)\\n.*image.*/\1/' | xargs | base64 -d > $CONFIG_FILE.current
+    $GCLOUD -q compute instances describe $INSTANCE_NAME  --format="json" --zone=$ZONE --flatten="metadata[]" | jq '.[].items[] | select(.value | contains("TURBINIA_CONF")) | .value' | sed -e 's/.*TURBINIA_CONF\\n.*value:\(.*\)\\n.*image.*/\1/' | xargs | base64 -d
 }
 
 function update_config {
@@ -108,23 +109,36 @@ function show_container_logs {
 }
 
 function update_docker_image_tag {
-    SERVER_URI="us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-server"
-    WORKER_URI="us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-worker"
-    for INSTANCE in `$GCLOUD compute instances list --filter="zone:$ZONE" --filter="name ~ worker-$INSTANCEID" --format="json(name)" | jq '.[] | .name'`
+    for INSTANCE in `$GCLOUD compute instances list --filter="zone:$ZONE" --filter="name ~ worker-$INSTANCEID" --format="json(name)" | jq -r '.[] | .name'`
     do
         $GCLOUD beta compute instances update-container $INSTANCE --zone $ZONE --container-image=$SERVER_URI:$DOCKER_TAG
     done
 
-    for INSTANCE in `$GCLOUD compute instances list --filter="zone:$ZONE" --filter="name ~ server-$INSTANCEID" --format="json(name)" | jq '.[] | .name'`
+    for INSTANCE in `$GCLOUD compute instances list --filter="zone:$ZONE" --filter="name ~ server-$INSTANCEID" --format="json(name)" | jq -r '.[] | .name'`
     do
         $GCLOUD beta compute instances update-container $INSTANCE --zone $ZONE --container-image=$WORKER_URI:$DOCKER_TAG
     done
 }
 
+# if less than 3 arguments supplied, display usage
+if [  $# -le 2 ]
+then
+    usage
+    exit 1
+fi
+
+# check whether user had supplied -h or --help . If yes display usage
+if [[ ( $# == "--help") ||  $# == "-h" ]]
+then
+    usage
+    exit 0
+fi
+
+# check if the gcloud binary is present
 check_gcloud
 
 echo "Running against GCP project:"
-gcloud config list project
+$GCLOUD config list project
 
 case $CMD in
     status)
@@ -145,7 +159,7 @@ case $CMD in
     update-config)
         update_config
         ;;
-    change-image))
+    change-image)
         update_docker_image_tag
         ;;        
 esac
