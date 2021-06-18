@@ -1,4 +1,7 @@
-#/bin/bash
+#!/bin/bash
+# Turbinia GCP management script
+# This script can be used to manage a Turbinia stack deployed to GCP. The only requirement is you have 'gcloud' installed.
+# Use --help to show you commands supported.
 
 set -o posix
 
@@ -13,7 +16,7 @@ WORKER_URI="us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-worker"
 GCLOUD=`command -v gcloud`
 
 function usage { 
-  echo "Usage: $0 COMMAND INSTANCEID ZONE [DOCKER_TAG or CONFIG_FILE]" 1>&2 
+  echo "Usage: $0 COMMAND INSTANCEID ZONE [DOCKER_TAG or CONFIG_FILE]" 
   echo "COMMAND         Pick one of the commands below"
   echo "INSTANCEID      The Turbinia deployment instance ID"
   echo "ZONE            The GCP zone the Turbinia deployment is located"
