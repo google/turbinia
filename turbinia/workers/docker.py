@@ -17,6 +17,7 @@ from __future__ import unicode_literals
 
 import json
 import logging
+from os import path
 import subprocess
 
 from turbinia import TurbiniaException
@@ -64,6 +65,11 @@ class DockerContainersEnumerationTask(TurbiniaTask):
     if not de_binary:
       raise TurbiniaException('Cannot find de.py in path')
 
+    # Check if docker folder exists
+    if not path.exists(docker_dir):
+      log.info('docker_dir does not exist')
+      return containers_info
+
     docker_explorer_command = ['sudo', de_binary]
 
     if config.DEBUG_TASKS or evidence.config.get('debug_tasks'):
@@ -105,7 +111,7 @@ class DockerContainersEnumerationTask(TurbiniaTask):
     found_containers = []
     try:
       containers_info = self.GetContainers(evidence)
-      for container_info in containers_info:
+      for container_info in (containers_info or []):
         container_id = container_info.get('container_id')
         found_containers.append(container_id)
         container_evidence = DockerContainer(container_id=container_id)

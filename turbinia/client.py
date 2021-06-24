@@ -110,7 +110,14 @@ elif config.TASK_MANAGER.lower() == 'celery':
   from turbinia.state_manager import RedisStateManager
 
 log = logging.getLogger('turbinia')
-logger.setup()
+
+
+def setup(is_client=False):
+  config.LoadConfig()
+  if is_client:
+    logger.setup(need_file_handler=False)
+  else:
+    logger.setup()
 
 
 def get_turbinia_client(run_local=False):
@@ -119,8 +126,8 @@ def get_turbinia_client(run_local=False):
   Returns:
     Initialized BaseTurbiniaClient or TurbiniaCeleryClient object.
   """
-  config.LoadConfig()
   # pylint: disable=no-else-return
+  setup(is_client=True)
   if config.TASK_MANAGER.lower() == 'psq':
     return BaseTurbiniaClient(run_local=run_local)
   elif config.TASK_MANAGER.lower() == 'celery':
@@ -129,6 +136,29 @@ def get_turbinia_client(run_local=False):
     msg = 'Task Manager type "{0:s}" not implemented'.format(
         config.TASK_MANAGER)
     raise TurbiniaException(msg)
+
+
+def register_job_timeouts(dependencies):
+  """Registers a timeout for each job.
+
+  Args:
+    dependencies(dict): dependencies to grab timeout value from.
+  """
+  log.info('Registering job timeouts.')
+  timeout_default = 3600
+
+  job_names = list(job_manager.JobsManager.GetJobNames())
+  # Iterate through list of jobs
+  for job, values in dependencies.items():
+    if job not in job_names:
+      continue
+    timeout = values.get('timeout')
+    if not isinstance(timeout, int):
+      log.warning(
+          'No timeout found for job: {0:s}. Setting default timeout of {1:d} seconds.'
+          .format(job, timeout_default))
+      timeout = timeout_default
+    job_manager.JobsManager.RegisterTimeout(job, timeout)
 
 
 def check_docker_dependencies(dependencies):
@@ -1142,7 +1172,7 @@ class TurbiniaServer:
       jobs_denylist (Optional[list[str]]): Jobs we will exclude from running
       jobs_allowlist (Optional[list[str]]): The only Jobs we will include to run
     """
-    config.LoadConfig()
+    setup()
     self.task_manager = task_manager.get_task_manager()
     self.task_manager.setup(jobs_denylist, jobs_allowlist)
 
@@ -1178,6 +1208,7 @@ class TurbiniaCeleryWorker(BaseTurbiniaClient):
       jobs_allowlist (Optional[list[str]]): The only Jobs we will include to run
     """
     super(TurbiniaCeleryWorker, self).__init__()
+    setup()
     # Deregister jobs from denylist/allowlist.
     job_manager.JobsManager.DeregisterJobs(jobs_denylist, jobs_allowlist)
     disabled_jobs = list(config.DISABLED_JOBS) if config.DISABLED_JOBS else []
@@ -1194,7 +1225,12 @@ class TurbiniaCeleryWorker(BaseTurbiniaClient):
     # Check for valid dependencies/directories.
     dependencies = config.ParseDependencies()
     if config.DOCKER_ENABLED:
-      check_docker_dependencies(dependencies)
+      try:
+        check_docker_dependencies(dependencies)
+      except TurbiniaException as e:
+        log.warning(
+            "DOCKER_ENABLED=True is set in the config, but there is an error checking for the docker daemon: {0:s}"
+        ).format(str(e))
     check_system_dependencies(dependencies)
     check_directory(config.MOUNT_DIR_PREFIX)
     check_directory(config.OUTPUT_DIR)
@@ -1232,7 +1268,7 @@ class TurbiniaPsqWorker:
       jobs_denylist (Optional[list[str]]): Jobs we will exclude from running
       jobs_allowlist (Optional[list[str]]): The only Jobs we will include to run
     """
-    config.LoadConfig()
+    setup()
     psq_publisher = pubsub.PublisherClient()
     psq_subscriber = pubsub.SubscriberClient()
     datastore_client = datastore.Client(project=config.TURBINIA_PROJECT)
@@ -1261,11 +1297,17 @@ class TurbiniaPsqWorker:
     # Check for valid dependencies/directories.
     dependencies = config.ParseDependencies()
     if config.DOCKER_ENABLED:
-      check_docker_dependencies(dependencies)
+      try:
+        check_docker_dependencies(dependencies)
+      except TurbiniaException as e:
+        log.warning(
+            "DOCKER_ENABLED=True is set in the config, but there is an error checking for the docker daemon: {0:s}"
+        ).format(str(e))
     check_system_dependencies(dependencies)
     check_directory(config.MOUNT_DIR_PREFIX)
     check_directory(config.OUTPUT_DIR)
     check_directory(config.TMP_DIR)
+    register_job_timeouts(dependencies)
 
     jobs = job_manager.JobsManager.GetJobNames()
     log.info(

@@ -256,3 +256,30 @@ class JobsManager:
     if hasattr(job_class, 'docker_image') and job_class:
       docker_image = job_class.docker_image
     return docker_image
+
+  @classmethod
+  def RegisterTimeout(cls, job_name, timeout):
+    """Registers a timeout for the job.
+
+    Args:
+      job_name(str): name of the job.
+      timeout(int): The amount of seconds to wait before timing out.
+    """
+    job_name = job_name.lower()
+    cls._job_classes[job_name].timeout = timeout
+
+  @classmethod
+  def GetTimeoutValue(cls, job_name):
+    """Retrieves the timeout value associated with the job.
+
+    Args:
+      job_name(str): name of the job.
+
+    Returns:
+      timeout(int): The timeout value.
+    """
+    timeout = None
+    job_class = cls._job_classes.get(job_name.lower())
+    if hasattr(job_class, 'timeout') and job_class:
+      timeout = job_class.timeout
+    return timeout
