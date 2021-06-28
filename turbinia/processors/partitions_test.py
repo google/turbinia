@@ -86,3 +86,24 @@ class PartitionsProcessorTest(unittest.TestCase):
     # - OS->RAW->BDE->TSK
     # Determine whether DFVFS should exclude the former on successful deryption
     self.assertEqual(len(path_specs), 2)
+
+  def testEnumerateOnLVM(self):
+    """Test Enumerate on LVM image."""
+    test_path = self._getTestDataPath('lvm.raw')
+    test_evidence = evidence.RawDisk(source_path=test_path)
+    path_specs = partitions.Enumerate(test_evidence)
+    self.assertEqual(len(path_specs), 1)
+
+  def testEnumerateOnPartitionedImage(self):
+    """Test Enumerate on partitioned image."""
+    test_path = self._getTestDataPath('mbr.raw')
+    test_evidence = evidence.RawDisk(source_path=test_path)
+    path_specs = partitions.Enumerate(test_evidence)
+    self.assertEqual(len(path_specs), 2)
+
+  def testEnumerateOnRaw(self):
+    """Test Enumerate on raw image."""
+    test_path = self._getTestDataPath('ext2.raw')
+    test_evidence = evidence.RawDisk(source_path=test_path)
+    path_specs = partitions.Enumerate(test_evidence)
+    self.assertEqual(len(path_specs), 1)

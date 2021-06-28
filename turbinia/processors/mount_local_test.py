@@ -51,8 +51,7 @@ class MountLocalProcessorTest(unittest.TestCase):
     mock_mkdtemp.return_value = '/mnt/turbinia/turbinia0ckdntz0'
 
     current_path = os.path.abspath(os.path.dirname(__file__))
-    source_path = os.path.join(
-        current_path, '..', '..', 'test_data', 'tsk_volume_system.raw')
+    source_path = os.path.join(current_path, '..', '..', 'test_data', 'mbr.raw')
     credentials = [('password', '123456')]
 
     mock_path_isdir.return_value = True
@@ -106,8 +105,7 @@ class MountLocalProcessorTest(unittest.TestCase):
   def testPreprocessLosetup(self, mock_subprocess):
     """Test PreprocessLosetup method."""
     current_path = os.path.abspath(os.path.dirname(__file__))
-    source_path = os.path.join(
-        current_path, '..', '..', 'test_data', 'tsk_volume_system.raw')
+    source_path = os.path.join(current_path, '..', '..', 'test_data', 'mbr.raw')
     mock_subprocess.return_value = '/dev/loop0'
     device = mount_local.PreprocessLosetup(source_path)
     expected_args = ['sudo', 'losetup', '--show', '--find', '-r', source_path]
