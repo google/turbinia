@@ -81,10 +81,6 @@ class PartitionsProcessorTest(unittest.TestCase):
     # Test with good credentials
     test_evidence.credentials = [('password', 'bde-TEST')]
     path_specs = partitions.Enumerate(test_evidence)
-    # TODO(dfjxs): DFVFS currently produces two path_specs.
-    # - OS->RAW->TSK
-    # - OS->RAW->BDE->TSK
-    # Determine whether DFVFS should exclude the former on successful deryption
     self.assertEqual(len(path_specs), 2)
 
   def testEnumerateOnLVM(self):
