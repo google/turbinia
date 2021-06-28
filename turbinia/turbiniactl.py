@@ -856,10 +856,7 @@ def main():
               '{1!s}: {2!s}'.format(
                   credential, args.decryption_keys, exception))
           sys.exit(1)
-        evidence_.credentials.append({
-            'credential_type': credential_type,
-            'credential_data': credential_data
-        })
+        evidence_.credentials.append((credential_type, credential_data))
     if args.dump_json:
       print(request.to_json().encode('utf-8'))
       sys.exit(0)

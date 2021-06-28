@@ -31,7 +31,3 @@ jobs:
         run: |
           chmod +x ./turbinia/e2e/e2e-local.sh
           ./turbinia/e2e/e2e-local.sh
-      - name: Show Turbinia server logs
-        run: docker logs turbinia-server
-      - name: Show Turbinia worker logs
-        run: docker logs turbinia-worker
