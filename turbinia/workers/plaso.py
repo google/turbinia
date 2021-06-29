@@ -20,7 +20,6 @@ import os
 from tempfile import NamedTemporaryFile
 
 from turbinia import config
-from turbinia.evidence import APFSEncryptedDisk
 from turbinia.evidence import EvidenceState as state
 from turbinia.evidence import PlasoFile
 from turbinia.workers import TurbiniaTask
@@ -111,22 +110,6 @@ class PlasoTask(TurbiniaTask):
     if yara_rules:
       cmd.extend(['--yara_rules', yara_file_path])
     cmd.extend(['--vss_stores', vss])
-
-    # TODO(dfjxs): This can be removed once APFS encryption is implemented
-    # natively in Turbinia
-    if isinstance(evidence, APFSEncryptedDisk):
-      if evidence.recovery_key:
-        cmd.extend([
-            '--credential', 'recovery_password:{0:s}'.format(
-                evidence.recovery_key)
-        ])
-      elif evidence.password:
-        cmd.extend(['--credential', 'password:{0:s}'.format(evidence.password)])
-      else:
-        result.close(
-            self, False, 'No credentials were provided '
-            'for a bitlocker disk.')
-        return result
 
     if evidence.credentials:
       for credential_type, credential_data in evidence.credentials:

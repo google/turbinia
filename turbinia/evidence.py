@@ -615,53 +615,6 @@ class DiskPartition(RawDisk):
         self.state[EvidenceState.ATTACHED] = False
 
 
-class EncryptedDisk(RawDisk):
-  """Encrypted disk file evidence.
-
-  Attributes:
-    encryption_type: The type of encryption used, e.g. FileVault or Bitlocker.
-    encryption_key: A string of the encryption key used for this disk.
-    unencrypted_path: A string to the unencrypted local path
-  """
-
-  # Setting the possible states for this Evidence type explicitly to empty for
-  # now because we don't actually mount/attach these kinds of disks yet (they
-  # are currently only used by Plaso which knows how to decrypt them at
-  # runtime).
-  POSSIBLE_STATES = []
-
-  def __init__(
-      self, encryption_type=None, encryption_key=None, unencrypted_path=None,
-      *args, **kwargs):
-    """Initialization for Encrypted disk evidence objects."""
-    # TODO(aarontp): Make this an enum, or limited list
-    self.encryption_type = encryption_type
-    self.encryption_key = encryption_key
-    # self.local_path will be the encrypted path
-    self.unencrypted_path = unencrypted_path
-    super(EncryptedDisk, self).__init__(*args, **kwargs)
-
-
-class APFSEncryptedDisk(EncryptedDisk):
-  """APFS encrypted disk file evidence.
-
-  Attributes:
-    recovery_key: A string of the recovery key for this disk
-    password: A string of the password used for this disk. If recovery key
-        is used, this argument is ignored
-    unencrypted_path: A string to the unencrypted local path
-  """
-
-  REQUIRED_ATTRIBUTES = ['recovery_key', 'password']
-
-  def __init__(self, recovery_key=None, password=None, *args, **kwargs):
-    """Initialization for Bitlocker disk evidence object"""
-    self.recovery_key = recovery_key
-    self.password = password
-    super(APFSEncryptedDisk, self).__init__(*args, **kwargs)
-    self.encryption_type = self.__class__.__name__
-
-
 class GoogleCloudDisk(RawDisk):
   """Evidence object for a Google Cloud Disk.
 
