@@ -147,7 +147,7 @@ If you want to receive alert notifications from Grafan, you'll need to setup a S
 ---
 > **NOTE**
 
-> By default Gmail does not allow [less secure apps](https://support.google.com/accounts/answer/6010255#zippy=%2Cif-less-secure-app-access-is-on-for-your-account%2Cif-less-secure-app-access-is-off-for-your-account) to authenticate and send emails. For that reason, you'll need to allow less secure apps to access the provided Gmail account.
+> By default Gmail does not allow [less secure apps](https://support.google.com/accounts/answer/6010255) to authenticate and send emails. For that reason, you'll need to allow less secure apps to access the provided Gmail account.
 
 ---
 
