@@ -46,7 +46,7 @@ class GrepTask(TurbiniaTask):
     # Used as input to grep (-f).
     with NamedTemporaryFile(dir=self.output_dir, delete=False) as fh:
       patterns_file_path = fh.name
-      fh.write('\n'.join(patterns.encode('utf-8')))
+      fh.write('\n'.join(patterns).encode('utf-8'))
 
     # Create a path that we can write the new file to.
     base_name = os.path.basename(evidence.local_path)

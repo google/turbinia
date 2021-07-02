@@ -110,7 +110,14 @@ elif config.TASK_MANAGER.lower() == 'celery':
   from turbinia.state_manager import RedisStateManager
 
 log = logging.getLogger('turbinia')
-logger.setup()
+
+
+def setup(is_client=False):
+  config.LoadConfig()
+  if is_client:
+    logger.setup(need_file_handler=False)
+  else:
+    logger.setup()
 
 
 def get_turbinia_client(run_local=False):
@@ -119,8 +126,8 @@ def get_turbinia_client(run_local=False):
   Returns:
     Initialized BaseTurbiniaClient or TurbiniaCeleryClient object.
   """
-  config.LoadConfig()
   # pylint: disable=no-else-return
+  setup(is_client=True)
   if config.TASK_MANAGER.lower() == 'psq':
     return BaseTurbiniaClient(run_local=run_local)
   elif config.TASK_MANAGER.lower() == 'celery':
@@ -1165,7 +1172,7 @@ class TurbiniaServer:
       jobs_denylist (Optional[list[str]]): Jobs we will exclude from running
       jobs_allowlist (Optional[list[str]]): The only Jobs we will include to run
     """
-    config.LoadConfig()
+    setup()
     self.task_manager = task_manager.get_task_manager()
     self.task_manager.setup(jobs_denylist, jobs_allowlist)
 
@@ -1201,6 +1208,7 @@ class TurbiniaCeleryWorker(BaseTurbiniaClient):
       jobs_allowlist (Optional[list[str]]): The only Jobs we will include to run
     """
     super(TurbiniaCeleryWorker, self).__init__()
+    setup()
     # Deregister jobs from denylist/allowlist.
     job_manager.JobsManager.DeregisterJobs(jobs_denylist, jobs_allowlist)
     disabled_jobs = list(config.DISABLED_JOBS) if config.DISABLED_JOBS else []
@@ -1260,7 +1268,7 @@ class TurbiniaPsqWorker:
       jobs_denylist (Optional[list[str]]): Jobs we will exclude from running
       jobs_allowlist (Optional[list[str]]): The only Jobs we will include to run
     """
-    config.LoadConfig()
+    setup()
     psq_publisher = pubsub.PublisherClient()
     psq_subscriber = pubsub.SubscriberClient()
     datastore_client = datastore.Client(project=config.TURBINIA_PROJECT)
