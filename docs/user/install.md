@@ -119,7 +119,7 @@ using Ubuntu 18.04, though other versions of Linux should be compatible.
 
 ### Grafana SMTP Setup 
 
-If you want to receive alert notifications from Grafan, you'll need to setup a SMTP server for Grafana. To configure a SMTP server, you need to add the following environment variables to `Grafana` `env` section in `osdfir-infrastructure/modules/monitoring/main.tf`
+If you want to receive alert notifications from Grafana, you'll need to setup a SMTP server for Grafana. To configure a SMTP server, you need to add the following environment variables to `Grafana` `env` section in `osdfir-infrastructure/modules/monitoring/main.tf`
 
 ```
       {
