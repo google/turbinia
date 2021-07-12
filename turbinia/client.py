@@ -412,10 +412,26 @@ class BaseTurbiniaClient:
       if completed_tasks and len(completed_tasks) == len(task_results):
         break
 
-      completed_names = [t.get('name') for t in completed_tasks]
-      completed_names = ', '.join(sorted(completed_names))
-      uncompleted_names = [t.get('name') for t in uncompleted_tasks]
-      uncompleted_names = ', '.join(sorted(uncompleted_names))
+      tasks = {}
+      completed_names = ''
+      completed_names_list = []
+      for task in completed_tasks:
+        task_name = task.get('name')
+        tasks[task_name] = tasks.get(task_name, 0) + 1
+      for task, count in sorted(tasks.items()):
+        completed_names_list.append('{0:s}:{1:d}'.format(task, count))
+      completed_names = ', '.join(completed_names_list)
+
+      tasks = {}
+      uncompleted_names = ''
+      uncompleted_names_list = []
+      for task in uncompleted_tasks:
+        task_name = task.get('name')
+        tasks[task_name] = tasks.get(task_name, 0) + 1
+      for task, count in sorted(tasks.items()):
+        uncompleted_names_list.append('{0:s}:{1:d}'.format(task, count))
+      uncompleted_names = ', '.join(uncompleted_names_list)
+
       total_count = len(completed_tasks) + len(uncompleted_tasks)
       msg = (
           'Tasks completed ({0:d}/{1:d}): [{2:s}], waiting for [{3:s}].'.format(
