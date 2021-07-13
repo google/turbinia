@@ -9,11 +9,11 @@ RUN apt-get update && apt-get -y install \
     libterm-readline-gnu-perl \
     python3-pip \
     software-properties-common \
+    sudo \
     && rm -rf /var/lib/apt/lists/*
 
 RUN pip3 install pip --upgrade
 RUN pip3 install urllib3 cryptography requests --upgrade
-RUN pip3 install requests --upgrade
 
 ADD requirements.txt /tmp/
 RUN cd /tmp/ && pip3 install -r requirements.txt
