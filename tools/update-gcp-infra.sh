@@ -15,8 +15,6 @@ SERVER_URI="us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-server"
 WORKER_URI="us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-worker"
 GCLOUD=`command -v gcloud`
 
-LIST_WORKERS="$GCLOUD compute instances list --filter=\"zone:$ZONE\" --filter=\"name ~ worker-$INSTANCEID\" --format=\"json(name)\" | jq -r '.[] | .name'"
-
 
 function usage { 
   echo "Usage: $0" 
@@ -28,15 +26,18 @@ function usage {
   echo "-t              Docker image tag, eg latest or 20210606"
   echo "-f              Path to Turbinia configuration file"
   echo "-s              Use plain ssh instead of gcloud compute ssh"
+  echo "-k              Environment variable name"
+  echo "-v              Environment variable value"
   echo 
   echo "Commands supported:"
-  echo "change-image    Change the docker image loaded by a Turbinia deployment with DOCKER_TAG"
+  echo "change-image    Change the docker image loaded by a Turbinia deployment with DOCKER_TAG, use -t"
   echo "logs            Display logs of a Turbinia server or worker"
   echo "show-config     Write the Turbinia configuration of an instance to STDOUT"
   echo "status          Show the running status of server and workers"
   echo "start           Start a Turbinia deployment"
   echo "stop            Stop a Turbinia deployment"
-  echo "update-config   Update the Turbinia configuration of a Turbinia deployment from CONFIG_FILE"
+  echo "update-config   Update the Turbinia configuration of a Turbinia deployment from CONFIG_FILE, use -f"
+  echo "update-env      Update an environment variable on a container, use -k and -v"
   echo
 }
 
@@ -49,7 +50,11 @@ function check_gcloud {
 }
 
 function show_infra {
-    $GCLOUD compute instances list --filter="zone:$ZONE" --filter="name ~ $INSTANCEID"
+    $GCLOUD -q compute instances list --filter="zone:$ZONE" --filter="name~$INSTANCEID"
+}
+
+function get_workers {
+        WORKERS=`$GCLOUD compute instances list --filter="zone:$ZONE" --filter="name~worker-$INSTANCEID" --format="json(name)" | jq -r '.[] | .name'`
 }
 
 function stop {
@@ -59,8 +64,10 @@ function stop {
     # Stop server
     $GCLOUD compute instances stop turbinia-server-$INSTANCEID --zone $ZONE
 
+    get_workers
+
     # Stop all workers
-    for WORKER in `$LIST_WORKERS`
+    for WORKER in $WORKERS
     do
         $GCLOUD compute instances stop $WORKER --zone $ZONE --async
     done
@@ -74,7 +81,8 @@ function start {
     show_infra
 
     # Start all workers
-    for WORKER in `$LIST_WORKERS`
+    get_workers
+    for WORKER in $WORKERS
     do
         $GCLOUD compute instances start $WORKER --zone $ZONE --async
     done
@@ -92,6 +100,15 @@ function show_config {
     $GCLOUD -q compute instances describe turbinia-server-$INSTANCEID  --format="json" --zone=$ZONE --flatten="metadata[]" | jq '.[].items[] | select(.value | contains("TURBINIA_CONF")) | .value' | sed -e 's/.*value\\": \\"\(.*\)\\"\\n.*image.*/\1/' | xargs | base64 -d
 }
 
+function update_env {
+    show_infra
+
+    echo "Going to set environment variable $ENVKEY to $ENVVALUE"
+    read -p 'Which instance? ' INSTANCE
+
+    $GCLOUD compute instances update-container $INSTANCE --zone=$ZONE --container-env $ENVKEY=$ENVVALUE
+}
+
 function update_config {
     show_infra
 
@@ -103,28 +120,28 @@ function update_config {
     done
 }
 
+function ssh_wrapper {
+    COMMAND=$1
+    if [ -z $PLAIN_SSH ] 
+    then
+        $GCLOUD compute ssh $INSTANCE_NAME --zone $ZONE --command="$COMMAND"
+    else
+        ssh -i ~/.ssh/google_compute_engine $INSTANCE_NAME "$COMMAND"
+    fi
+}
+
 function show_container_logs {
     # TODO(rbdebeer) update this to use container names instead of IDs when the terraform scripts have been updated to non-random names.
     show_infra
-    read -p 'Which instance? ' INSTANCE_NAME
-    if [ -z $PLAIN_SSH ] 
-    then
-        $GCLOUD compute ssh -i ~/.ssh/google_compute_engine $INSTANCE_NAME --zone $ZONE --command="docker ps"
-    else
-        ssh $INSTANCE_NAME "docker ps"
-    fi
+    read -p 'Which instance (only RUNNING containers supported)? ' INSTANCE_NAME
+    ssh_wrapper "docker ps"
     read -p 'Which container ID? ' CONTAINER_ID
-    if [ -z $PLAIN_SSH ] 
-    then
-        $GCLOUD compute ssh $INSTANCE_NAME --zone $ZONE --command="docker logs $CONTAINER_ID"
-    else
-        ssh $INSTANCE_NAME "docker logs $CONTAINER_ID"
-    fi
-    
+    ssh_wrapper "docker logs $CONTAINER_ID"
 }
 
 function update_docker_image_tag {
-    for INSTANCE in `$LIST_WORKERS`
+    get_workers
+    for INSTANCE in $WORKERS
     do
         $GCLOUD beta compute instances update-container $INSTANCE --zone $ZONE --container-image=$SERVER_URI:$DOCKER_TAG
     done
@@ -132,7 +149,7 @@ function update_docker_image_tag {
     $GCLOUD beta compute instances update-container turbinia-server-$INSTANCEID --zone $ZONE --container-image=$WORKER_URI:$DOCKER_TAG
 }
 
-while getopts ":c:i:z:t:f:s" option; do
+while getopts ":c:i:z:t:f:v:k:s" option; do
    case ${option} in
       c ) 
          CMD=$OPTARG;;
@@ -146,6 +163,10 @@ while getopts ":c:i:z:t:f:s" option; do
          CONFIG_FILE=$OPTARG;;
       s )
          PLAIN_SSH=1;;
+      k )
+         ENVKEY=$OPTARG;;
+      v )
+         ENVVALUE=$OPTARG;;
      \? ) 
          echo "Error: Invalid usage"
          usage
@@ -205,5 +226,13 @@ case $CMD in
             exit 1
         fi
         update_docker_image_tag
-        ;;        
+        ;;   
+    update-env)
+        if [ -z ${ENVKEY} ] || [ -z ${ENVVALUE} ] ; then 
+            echo "Error: No key or value set to update enviroment variable (use -k and -v)"
+            usage
+            exit 1
+        fi
+        update_env
+        ;;
 esac
