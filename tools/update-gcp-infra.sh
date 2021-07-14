@@ -183,8 +183,8 @@ then
     exit 0
 fi
 
-if [ -z ${CMD} ]; then 
-    echo "Error: No command provided"
+if [ -z ${CMD} ] || [ -z ${INSTANCEID} ] || [ -z ${ZONE} ] ; then 
+    echo "Error: Please provide at least an instance ID (-i), a zone (-z) and a command (-c)"
     usage
     exit 1
 fi
