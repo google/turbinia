@@ -1,0 +1,414 @@
+groups:  
+- name: plasotask.rules
+  rules:
+  # Calculate the rate of plasotask requests and it's total sum for the 3 days
+  - record: job:plasotask_duration:rate3d
+    expr: sum without(instance)(rate(plasotask_duration_seconds_sum[3d]))
+
+  # Calculate the average runtime over the past 30 days
+  - record: job:plasotask_duration:rate3d:avg_over_time_30d
+    expr: avg_over_time(job:plasotask_duration:rate3d[30d])
+
+  # Long-term standard deviation for the series
+  - record: job:plasotask_duration:rate3d:stddev_over_time_30d
+    expr: stddev_over_time(job:plasotask_duration:rate3d[30d])
+
+  # Z-Score for aggregation
+  - record: job:plasotask_duration:rate3d:z_score
+    expr: (job:plasotask_duration:rate3d - job:plasotask_duration:rate3d:avg_over_time_30d) / job:plasotask_duration:rate3d:stddev_over_time_30d
+
+- name: partitionenumerationtask.rules
+  rules:
+  # Calculate the rate of requests and it's total sum for the 3 days
+  - record: job:partitionenumerationtask_duration:rate3d
+    expr: sum without(instance)(rate(partitionenumerationtask_duration_seconds_sum[3d]))
+
+  # Calculate the average runtime over the past 30 days
+  - record: job:partitionenumerationtask_duration:rate3d:avg_over_time_30d
+    expr: avg_over_time(job:partitionenumerationtask_duration:rate3d[30d])
+
+  # Long-term standard deviation for the series
+  - record: job:partitionenumerationtask_duration:rate3d:stddev_over_time_30d
+    expr: stddev_over_time(job:partitionenumerationtask_duration:rate3d[30d])
+
+  # Z-Score for aggregation
+  - record: job:partitionenumerationtask_duration:rate3d:z_score
+    expr: (job:partitionenumerationtask_duration:rate3d - job:partitionenumerationtask_duration:rate3d:avg_over_time_30d) /  job:partitionenumerationtask_duration:rate3d:stddev_over_time_30d
+
+- name: psorttask.rules
+  rules:
+  # Calculate the rate of psorttask requests and it's total sum for the 3 days
+  - record: job:psorttask_duration:rate3d
+    expr: sum without(instance)(rate(psorttask_duration_seconds_sum[3d]))
+
+  # Calculate the average runtime over the past 30 days
+  - record: job:psorttask_duration:rate3d:avg_over_time_30d
+    expr: avg_over_time(job:psorttask_duration:rate3d[30d])
+
+  # Long-term standard deviation for the series
+  - record: job:psorttask_duration:rate3d:stddev_over_time_30d
+    expr: stddev_over_time(job:psorttask_duration:rate3d[30d])
+
+  # Z-Score for aggregation
+  - record: job:psorttask_duration:rate3d:z_score
+    expr: (job:psorttask_duration:rate3d - job:psorttask_duration:rate3d:avg_over_time_30d) / job:psorttask_duration:rate3d:stddev_over_time_30d
+
+- name: finalizerequesttask.rules
+  rules:
+  # Calculate the rate of requests and it's total sum for the 3 days
+  - record: job:finalizerequesttask_duration:rate3d
+    expr: sum without(instance)(rate(finalizerequesttask_duration_seconds_sum[3d]))
+
+  # Calculate the average runtime over the past 30 days
+  - record: job:finalizerequesttask_duration:rate3d:avg_over_time_30d
+    expr: avg_over_time(job:finalizerequesttask_duration:rate3d[30d])
+
+  # Long-term standard deviation for the series
+  - record: job:finalizerequesttask_duration:rate3d:stddev_over_time_30d
+    expr: stddev_over_time(job:finalizerequesttask_duration:rate3d[30d])
+
+  # Z-Score for aggregation
+  - record: job:finalizerequesttask_duration:rate3d:z_score
+    expr: (job:finalizerequesttask_duration:rate3d - job:finalizerequesttask_duration:rate3d:avg_over_time_30d) / job:finalizerequesttask_duration:rate3d:stddev_over_time_30d
+
+- name: bulkextractortask.rules
+  rules:
+  # Calculate the rate of requests and it's total sum for the 3 days
+  - record: job:bulkextractortask_duration:rate3d
+    expr: sum without(instance)(rate(bulkextractortask_duration_seconds_sum[3d]))
+
+  # Calculate the average runtime over the past 30 days
+  - record: job:bulkextractortask_duration:rate3d:avg_over_time_30d
+    expr: avg_over_time(job:bulkextractortask_duration:rate3d[30d])
+
+  # Long-term standard deviation for the series
+  - record: job:bulkextractortask_duration:rate3d:stddev_over_time_30d
+    expr: stddev_over_time(job:bulkextractortask_duration:rate3d[30d])
+
+  # Z-Score for aggregation
+  - record: job:bulkextractortask_duration:rate3d:z_score
+    expr: (job:bulkextractortask_duration:rate3d - job:bulkextractortask_duration:rate3d:avg_over_time_30d) / job:bulkextractortask_duration:rate3d:stddev_over_time_30d
+
+- name: greptask.rules
+  rules:
+  # Calculate the rate of requests and it's total sum for the 3 days
+  - record: job:greptask_duration:rate3d
+    expr: sum without(instance)(rate(greptask_duration_seconds_sum[3d]))
+
+  # Calculate the average runtime over the past 30 days
+  - record: job:greptask_duration:rate3d:avg_over_time_30d
+    expr: avg_over_time(job:greptask_duration:rate3d[30d])
+
+  # Long-term standard deviation for the series
+  - record: job:greptask_duration:rate3d:stddev_over_time_30d
+    expr: stddev_over_time(job:greptask_duration:rate3d[30d])
+
+  # Z-Score for aggregation
+  - record: job:greptask_duration:rate3d:z_score
+    expr: (job:greptask_duration:rate3d - job:greptask_duration:rate3d:avg_over_time_30d) / job:greptask_duration:rate3d:stddev_over_time_30d
+
+- name: redisanalysistask.rules
+  rules:
+  # Calculate the rate of requests and it's total sum for the 3 days
+  - record: job:redisanalysistask_duration:rate3d
+    expr: sum without(instance)(rate(redisanalysistask_duration_seconds_sum[3d]))
+
+  # Calculate the average runtime over the past 30 days
+  - record: job:redisanalysistask_duration:rate3d:avg_over_time_30d
+    expr: avg_over_time(job:redisanalysistask_duration:rate3d[30d])
+
+  # Long-term standard deviation for the series
+  - record: job:redisanalysistask_duration:rate3d:stddev_over_time_30d
+    expr: stddev_over_time(job:redisanalysistask_duration:rate3d[30d])
+
+  # Z-Score for aggregation
+  - record: job:redisanalysistask_duration:rate3d:z_score
+    expr: (job:redisanalysistask_duration:rate3d - job:redisanalysistask_duration:rate3d:avg_over_time_30d) / job:redisanalysistask_duration:rate3d:stddev_over_time_30d
+
+- name: tomcatanalysistask.rules
+  rules:
+  # Calculate the rate of requests and it's total sum for the 3 days
+  - record: job:tomcatanalysistask_duration:rate3d
+    expr: sum without(instance)(rate(tomcatanalysistask_duration_seconds_sum[3d]))
+
+  # Calculate the average runtime over the past 30 days
+  - record: job:tomcatanalysistask_duration:rate3d:avg_over_time_30d
+    expr: avg_over_time(job:tomcatanalysistask_duration:rate3d[30d])
+
+  # Long-term standard deviation for the series
+  - record: job:tomcatanalysistask_duration:rate3d:stddev_over_time_30d
+    expr: stddev_over_time(job:tomcatanalysistask_duration:rate3d[30d])
+
+  # Z-Score for aggregation
+  - record: job:tomcatanalysistask_duration:rate3d:z_score
+    expr: (job:tomcatanalysistask_duration:rate3d - job:tomcatanalysistask_duration:rate3d:avg_over_time_30d) / job:tomcatanalysistask_duration:rate3d:stddev_over_time_30d
+
+- name: stringsasciitask.rules
+  rules:
+  # Calculate the rate of requests and it's total sum for the 3 days
+  - record: job:stringsasciitask_duration:rate3d
+    expr: sum without(instance)(rate(stringsasciitask_duration_seconds_sum[3d]))
+
+  # Calculate the average runtime over the past 30 days
+  - record: job:stringsasciitask_duration:rate3d:avg_over_time_30d
+    expr: avg_over_time(job:stringsasciitask_duration:rate3d[30d])
+
+  # Long-term standard deviation for the series
+  - record: job:stringsasciitask_duration:rate3d:stddev_over_time_30d
+    expr: stddev_over_time(job:stringsasciitask_duration:rate3d[30d])
+
+  # Z-Score for aggregation
+  - record: job:stringsasciitask_duration:rate3d:z_score
+    expr: (job:stringsasciitask_duration:rate3d - job:stringsasciitask_duration:rate3d:avg_over_time_30d) / job:stringsasciitask_duration:rate3d:stddev_over_time_30d
+
+- name: jupyteranalysistask.rules
+  rules:
+  # Calculate the rate of requests and it's total sum for the 3 days
+  - record: job:jupyteranalysistask_duration:rate3d
+    expr: sum without(instance)(rate(jupyteranalysistask_duration_seconds_sum[3d]))
+
+  # Calculate the average runtime over the past 30 days
+  - record: job:jupyteranalysistask_duration:rate3d:avg_over_time_30d
+    expr: avg_over_time(job:jupyteranalysistask_duration:rate3d[30d])
+
+  # Long-term standard deviation for the series
+  - record: job:jupyteranalysistask_duration:rate3d:stddev_over_time_30d
+    expr: stddev_over_time(job:jupyteranalysistask_duration:rate3d[30d])
+
+  # Z-Score for aggregation
+  - record: job:jupyteranalysistask_duration:rate3d:z_score
+    expr: (job:jupyteranalysistask_duration:rate3d - job:jupyteranalysistask_duration:rate3d:avg_over_time_30d) / job:jupyteranalysistask_duration:rate3d:stddev_over_time_30d
+
+- name: volatilitytask.rules
+  rules:
+  # Calculate the rate of requests and it's total sum for the 3 days
+  - record: job:volatilitytask_duration:rate3d
+    expr: sum without(instance)(rate(volatilitytask_duration_seconds_sum[3d]))
+
+  # Calculate the average runtime over the past 30 days
+  - record: job:volatilitytask_duration:rate3d:avg_over_time_30d
+    expr: avg_over_time(job:volatilitytask_duration:rate3d[30d])
+
+  # Long-term standard deviation for the series
+  - record: job:volatilitytask_duration:rate3d:stddev_over_time_30d
+    expr: stddev_over_time(job:volatilitytask_duration:rate3d[30d])
+
+  # Z-Score for aggregation
+  - record: job:volatilitytask_duration:rate3d:z_score
+    expr: (job:volatilitytask_duration:rate3d - job:volatilitytask_duration:rate3d:avg_over_time_30d) / job:volatilitytask_duration:rate3d:stddev_over_time_30d
+
+- name: stattask.rules
+  rules:
+  # Calculate the rate of requests and it's total sum for the 3 days
+  - record: job:stattask_duration:rate3d
+    expr: sum without(instance)(rate(stattask_duration_seconds_sum[3d]))
+
+  # Calculate the average runtime over the past 30 days
+  - record: job:stattask_duration:rate3d:avg_over_time_30d
+    expr: avg_over_time(job:stattask_duration:rate3d[30d])
+
+  # Long-term standard deviation for the series
+  - record: job:stattask_duration:rate3d:stddev_over_time_30d
+    expr: stddev_over_time(job:stattask_duration:rate3d[30d])
+
+  # Z-Score for aggregation
+  - record: job:stattask_duration:rate3d:z_score
+    expr: (job:stattask_duration:rate3d - job:stattask_duration:rate3d:avg_over_time_30d) / job:stattask_duration:rate3d:stddev_over_time_30d
+
+- name: hindsighttask.rules
+  rules:
+  # Calculate the rate of requests and it's total sum for the 3 days
+  - record: job:hindsighttask_duration:rate3d
+    expr: sum without(instance)(rate(hindsighttask_duration_seconds_sum[3d]))
+
+  # Calculate the average runtime over the past 30 days
+  - record: job:hindsighttask_duration:rate3d:avg_over_time_30d
+    expr: avg_over_time(job:hindsighttask_duration:rate3d[30d])
+
+  # Long-term standard deviation for the series
+  - record: job:hindsighttask_duration:rate3d:stddev_over_time_30d
+    expr: stddev_over_time(job:hindsighttask_duration:rate3d[30d])
+
+  # Z-Score for aggregation
+  - record: job:hindsighttask_duration:rate3d:z_score
+    expr: (job:hindsighttask_duration:rate3d - job:hindsighttask_duration:rate3d:avg_over_time_30d) / job:hindsighttask_duration:rate3d:stddev_over_time_30d
+
+- name: stringsunicodetask.rules
+  rules:
+  # Calculate the rate of requests and it's total sum for the 3 days
+  - record: job:stringsunicodetask_duration:rate3d
+    expr: sum without(instance)(rate(stringsunicodetask_duration_seconds_sum[3d]))
+
+  # Calculate the average runtime over the past 30 days
+  - record: job:stringsunicodetask_duration:rate3d:avg_over_time_30d
+    expr: avg_over_time(job:stringsunicodetask_duration:rate3d[30d])
+
+  # Long-term standard deviation for the series
+  - record: job:stringsunicodetask_duration:rate3d:stddev_over_time_30d
+    expr: stddev_over_time(job:stringsunicodetask_duration:rate3d[30d])
+
+  # Z-Score for aggregation
+  - record: job:stringsunicodetask_duration:rate3d:z_score
+    expr: (job:stringsunicodetask_duration:rate3d - job:stringsunicodetask_duration:rate3d:avg_over_time_30d) / job:stringsunicodetask_duration:rate3d:stddev_over_time_30d
+
+- name: sshdanalysistask.rules
+  rules:
+  # Calculate the rate of requests and it's total sum for the 3 days
+  - record: job:sshdanalysistask_duration:rate3d
+    expr: sum without(instance)(rate(sshdanalysistask_duration_seconds_sum[3d]))
+
+  # Calculate the average runtime over the past 30 days
+  - record: job:sshdanalysistask_duration:rate3d:avg_over_time_30d
+    expr: avg_over_time(job:sshdanalysistask_duration:rate3d[30d])
+
+  # Long-term standard deviation for the series
+  - record: job:sshdanalysistask_duration:rate3d:stddev_over_time_30d
+    expr: stddev_over_time(job:sshdanalysistask_duration:rate3d[30d])
+
+  # Z-Score for aggregation
+  - record: job:sshdanalysistask_duration:rate3d:z_score
+    expr: (job:sshdanalysistask_duration:rate3d - job:sshdanalysistask_duration:rate3d:avg_over_time_30d) / job:sshdanalysistask_duration:rate3d:stddev_over_time_30d
+
+- name: jenkinsanalysistask.rules
+  rules:
+  # Calculate the rate of requests and it's total sum for the 3 days
+  - record: job:jenkinsanalysistask_duration:rate3d
+    expr: sum without(instance)(rate(jenkinsanalysistask_duration_seconds_sum[3d]))
+
+  # Calculate the average runtime over the past 30 days
+  - record: job:jenkinsanalysistask_duration:rate3d:avg_over_time_30d
+    expr: avg_over_time(job:jenkinsanalysistask_duration:rate3d[30d])
+
+  # Long-term standard deviation for the series
+  - record: job:jenkinsanalysistask_duration:rate3d:stddev_over_time_30d
+    expr: stddev_over_time(job:jenkinsanalysistask_duration:rate3d[30d])
+
+  # Z-Score for aggregation
+  - record: job:jenkinsanalysistask_duration:rate3d:z_score
+    expr: (job:jenkinsanalysistask_duration:rate3d - job:jenkinsanalysistask_duration:rate3d:avg_over_time_30d) / job:jenkinsanalysistask_duration:rate3d:stddev_over_time_30d
+
+- name: fileartifactextractiontask.rules
+  rules:
+  # Calculate the rate of requests and it's total sum for the 3 days
+  - record: job:fileartifactextractiontask_duration:rate3d
+    expr: sum without(instance)(rate(fileartifactextractiontask_duration_seconds_sum[3d]))
+
+  # Calculate the average runtime over the past 30 days
+  - record: job:fileartifactextractiontask_duration:rate3d:avg_over_time_30d
+    expr: avg_over_time(job:fileartifactextractiontask_duration:rate3d[30d])
+
+  # Long-term standard deviation for the series
+  - record: job:fileartifactextractiontask_duration:rate3d:stddev_over_time_30d
+    expr: stddev_over_time(job:fileartifactextractiontask_duration:rate3d[30d])
+
+  # Z-Score for aggregation
+  - record: job:fileartifactextractiontask_duration:rate3d:z_score
+    expr: (job:fileartifactextractiontask_duration:rate3d - job:fileartifactextractiontask_duration:rate3d:avg_over_time_30d) / job:fileartifactextractiontask_duration:rate3d:stddev_over_time_30d
+
+- name: photorectask.rules
+  rules:
+  # Calculate the rate of requests and it's total sum for the 3 days
+  - record: job:photorectask_duration:rate3d
+    expr: sum without(instance)(rate(photorectask_duration_seconds_sum[3d]))
+
+  # Calculate the average runtime over the past 30 days
+  - record: job:photorectask_duration:rate3d:avg_over_time_30d
+    expr: avg_over_time(job:photorectask_duration:rate3d[30d])
+
+  # Long-term standard deviation for the series
+  - record: job:photorectask_duration:rate3d:stddev_over_time_30d
+    expr: stddev_over_time(job:photorectask_duration:rate3d[30d])
+
+  # Z-Score for aggregation
+  - record: job:photorectask_duration:rate3d:z_score
+    expr: (job:photorectask_duration:rate3d - job:photorectask_duration:rate3d:avg_over_time_30d) / job:photorectask_duration:rate3d:stddev_over_time_30d
+
+- name: wordpressaccessloganalysistask.rules
+  rules:
+  # Calculate the rate of requests and it's total sum for the 3 days
+  - record: job:wordpressaccessloganalysistask_duration:rate3d
+    expr: sum without(instance)(rate(wordpressaccessloganalysistask_duration_seconds_sum[3d]))
+
+  # Calculate the average runtime over the past 30 days
+  - record: job:wordpressaccessloganalysistask_duration:rate3d:avg_over_time_30d
+    expr: avg_over_time(job:wordpressaccessloganalysistask_duration:rate3d[30d])
+
+  # Long-term standard deviation for the series
+  - record: job:wordpressaccessloganalysistask_duration:rate3d:stddev_over_time_30d
+    expr: stddev_over_time(job:wordpressaccessloganalysistask_duration:rate3d[30d])
+
+  # Z-Score for aggregation
+  - record: job:wordpressaccessloganalysistask_duration:rate3d:z_score
+    expr: (job:wordpressaccessloganalysistask_duration:rate3d - job:wordpressaccessloganalysistask_duration:rate3d:avg_over_time_30d) / job:wordpressaccessloganalysistask_duration:rate3d:stddev_over_time_30d
+
+- name: binaryextractortask.rules
+  rules:
+  # Calculate the rate of requests and it's total sum for the 3 days
+  - record: job:binaryextractortask_duration:rate3d
+    expr: sum without(instance)(rate(binaryextractortask_duration_seconds_sum[3d]))
+
+  # Calculate the average runtime over the past 30 days
+  - record: job:binaryextractortask_duration:rate3d:avg_over_time_30d
+    expr: avg_over_time(job:binaryextractortask_duration:rate3d[30d])
+
+  # Long-term standard deviation for the series
+  - record: job:binaryextractortask_duration:rate3d:stddev_over_time_30d
+    expr: stddev_over_time(job:binaryextractortask_duration:rate3d[30d])
+
+  # Z-Score for aggregation
+  - record: job:binaryextractortask_duration:rate3d:z_score
+    expr: (job:binaryextractortask_duration:rate3d - job:binaryextractortask_duration:rate3d:avg_over_time_30d) / job:binaryextractortask_duration:rate3d:stddev_over_time_30d
+
+- name: hadoopanalysistask.rules
+  rules:
+  # Calculate the rate of requests and it's total sum for the 3 days
+  - record: job:hadoopanalysistask_duration:rate3d
+    expr: sum without(instance)(rate(hadoopanalysistask_duration_seconds_sum[3d]))
+
+  # Calculate the average runtime over the past 30 days
+  - record: job:hadoopanalysistask_duration:rate3d:avg_over_time_30d
+    expr: avg_over_time(job:hadoopanalysistask_duration:rate3d[30d])
+
+  # Long-term standard deviation for the series
+  - record: job:hadoopanalysistask_duration:rate3d:stddev_over_time_30d
+    expr: stddev_over_time(job:hadoopanalysistask_duration:rate3d[30d])
+
+  # Z-Score for aggregation
+  - record: job:hadoopanalysistask_duration:rate3d:z_score
+    expr: (job:hadoopanalysistask_duration:rate3d - job:hadoopanalysistask_duration:rate3d:avg_over_time_30d) / job:hadoopanalysistask_duration:rate3d:stddev_over_time_30d
+
+- name: dockercontainersenumerationtask.rules
+  rules:
+  # Calculate the rate of requests and it's total sum for the 3 days
+  - record: job:dockercontainersenumerationtask_duration:rate3d
+    expr: sum without(instance)(rate(dockercontainersenumerationtask_duration_seconds_sum[3d]))
+
+  # Calculate the average runtime over the past 30 days
+  - record: job:dockercontainersenumerationtask_duration:rate3d:avg_over_time_30d
+    expr: avg_over_time(job:dockercontainersenumerationtask_duration:rate3d[30d])
+
+  # Long-term standard deviation for the series
+  - record: job:dockercontainersenumerationtask_duration:rate3d:stddev_over_time_30d
+    expr: stddev_over_time(job:dockercontainersenumerationtask_duration:rate3d[30d])
+
+  # Z-Score for aggregation
+  - record: job:dockercontainersenumerationtask_duration:rate3d:z_score
+    expr: (job:dockercontainersenumerationtask_duration:rate3d - job:dockercontainersenumerationtask_duration:rate3d:avg_over_time_30d) / job:dockercontainersenumerationtask_duration:rate3d:stddev_over_time_30d
+
+- name: fsstattask.rules
+  rules:
+  # Calculate the rate of requests and it's total sum for the 3 days
+  - record: job:fsstattask_duration:rate3d
+    expr: sum without(instance)(rate(fsstattask_duration_seconds_sum[3d]))
+
+  # Calculate the average runtime over the past 30 days
+  - record: job:fsstattask_duration:rate3d:avg_over_time_30d
+    expr: avg_over_time(job:fsstattask_duration:rate3d[30d])
+
+  # Long-term standard deviation for the series
+  - record: job:fsstattask_duration:rate3d:stddev_over_time_30d
+    expr: stddev_over_time(job:fsstattask_duration:rate3d[30d])
+
+  # Z-Score for aggregation
+  - record: job:fsstattask_duration:rate3d:z_score
+    expr: (job:fsstattask_duration:rate3d - job:fsstattask_duration:rate3d:avg_over_time_30d) / job:fsstattask_duration:rate3d:stddev_over_time_30d
