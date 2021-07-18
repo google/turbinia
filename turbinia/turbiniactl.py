@@ -454,9 +454,9 @@ def main():
   from turbinia import notify
   from turbinia import client as TurbiniaClientProvider
   from turbinia.client import TurbiniaCeleryClient
-  from turbinia.client import TurbiniaServer
-  from turbinia.client import TurbiniaCeleryWorker
-  from turbinia.client import TurbiniaPsqWorker
+  from turbinia.worker import TurbiniaCeleryWorker
+  from turbinia.worker import TurbiniaPsqWorker
+  from turbinia.server import TurbiniaServer
   from turbinia import evidence
   from turbinia.message import TurbiniaRequest
 
