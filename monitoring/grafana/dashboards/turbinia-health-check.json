@@ -170,29 +170,6 @@
               "type": "max"
             },
             "type": "query"
-          },
-          {
-            "evaluator": {
-              "params": [
-                -3
-              ],
-              "type": "lt"
-            },
-            "operator": {
-              "type": "or"
-            },
-            "query": {
-              "params": [
-                "C",
-                "12h",
-                "now"
-              ]
-            },
-            "reducer": {
-              "params": [],
-              "type": "min"
-            },
-            "type": "query"
           }
         ],
         "executionErrorState": "alerting",
@@ -343,29 +320,6 @@
             "reducer": {
               "params": [],
               "type": "max"
-            },
-            "type": "query"
-          },
-          {
-            "evaluator": {
-              "params": [
-                -3
-              ],
-              "type": "lt"
-            },
-            "operator": {
-              "type": "or"
-            },
-            "query": {
-              "params": [
-                "C",
-                "12h",
-                "now"
-              ]
-            },
-            "reducer": {
-              "params": [],
-              "type": "min"
             },
             "type": "query"
           }
@@ -520,29 +474,6 @@
               "type": "max"
             },
             "type": "query"
-          },
-          {
-            "evaluator": {
-              "params": [
-                -3
-              ],
-              "type": "lt"
-            },
-            "operator": {
-              "type": "or"
-            },
-            "query": {
-              "params": [
-                "C",
-                "12h",
-                "now"
-              ]
-            },
-            "reducer": {
-              "params": [],
-              "type": "min"
-            },
-            "type": "query"
           }
         ],
         "executionErrorState": "alerting",
@@ -693,29 +624,6 @@
             "reducer": {
               "params": [],
               "type": "max"
-            },
-            "type": "query"
-          },
-          {
-            "evaluator": {
-              "params": [
-                -3
-              ],
-              "type": "lt"
-            },
-            "operator": {
-              "type": "or"
-            },
-            "query": {
-              "params": [
-                "C",
-                "12h",
-                "now"
-              ]
-            },
-            "reducer": {
-              "params": [],
-              "type": "min"
             },
             "type": "query"
           }
@@ -870,29 +778,6 @@
               "type": "max"
             },
             "type": "query"
-          },
-          {
-            "evaluator": {
-              "params": [
-                -3
-              ],
-              "type": "lt"
-            },
-            "operator": {
-              "type": "or"
-            },
-            "query": {
-              "params": [
-                "C",
-                "12h",
-                "now"
-              ]
-            },
-            "reducer": {
-              "params": [],
-              "type": "min"
-            },
-            "type": "query"
           }
         ],
         "executionErrorState": "alerting",
@@ -1043,29 +928,6 @@
             "reducer": {
               "params": [],
               "type": "max"
-            },
-            "type": "query"
-          },
-          {
-            "evaluator": {
-              "params": [
-                -3
-              ],
-              "type": "gt"
-            },
-            "operator": {
-              "type": "or"
-            },
-            "query": {
-              "params": [
-                "C",
-                "12h",
-                "now"
-              ]
-            },
-            "reducer": {
-              "params": [],
-              "type": "min"
             },
             "type": "query"
           }
@@ -1220,29 +1082,6 @@
               "type": "max"
             },
             "type": "query"
-          },
-          {
-            "evaluator": {
-              "params": [
-                -3
-              ],
-              "type": "lt"
-            },
-            "operator": {
-              "type": "and"
-            },
-            "query": {
-              "params": [
-                "C",
-                "12h",
-                "now"
-              ]
-            },
-            "reducer": {
-              "params": [],
-              "type": "min"
-            },
-            "type": "query"
           }
         ],
         "executionErrorState": "alerting",
@@ -1393,29 +1232,6 @@
             "reducer": {
               "params": [],
               "type": "max"
-            },
-            "type": "query"
-          },
-          {
-            "evaluator": {
-              "params": [
-                -3
-              ],
-              "type": "gt"
-            },
-            "operator": {
-              "type": "or"
-            },
-            "query": {
-              "params": [
-                "C",
-                "12h",
-                "now"
-              ]
-            },
-            "reducer": {
-              "params": [],
-              "type": "min"
             },
             "type": "query"
           }
@@ -1570,29 +1386,6 @@
               "type": "max"
             },
             "type": "query"
-          },
-          {
-            "evaluator": {
-              "params": [
-                -3
-              ],
-              "type": "lt"
-            },
-            "operator": {
-              "type": "and"
-            },
-            "query": {
-              "params": [
-                "C",
-                "12h",
-                "now"
-              ]
-            },
-            "reducer": {
-              "params": [],
-              "type": "min"
-            },
-            "type": "query"
           }
         ],
         "executionErrorState": "alerting",
@@ -1743,29 +1536,6 @@
             "reducer": {
               "params": [],
               "type": "max"
-            },
-            "type": "query"
-          },
-          {
-            "evaluator": {
-              "params": [
-                -3
-              ],
-              "type": "lt"
-            },
-            "operator": {
-              "type": "or"
-            },
-            "query": {
-              "params": [
-                "C",
-                "12h",
-                "now"
-              ]
-            },
-            "reducer": {
-              "params": [],
-              "type": "min"
             },
             "type": "query"
           }
@@ -1920,29 +1690,6 @@
               "type": "max"
             },
             "type": "query"
-          },
-          {
-            "evaluator": {
-              "params": [
-                3
-              ],
-              "type": "lt"
-            },
-            "operator": {
-              "type": "or"
-            },
-            "query": {
-              "params": [
-                "C",
-                "12h",
-                "now"
-              ]
-            },
-            "reducer": {
-              "params": [],
-              "type": "min"
-            },
-            "type": "query"
           }
         ],
         "executionErrorState": "alerting",
@@ -2093,29 +1840,6 @@
             "reducer": {
               "params": [],
               "type": "max"
-            },
-            "type": "query"
-          },
-          {
-            "evaluator": {
-              "params": [
-                -3
-              ],
-              "type": "lt"
-            },
-            "operator": {
-              "type": "or"
-            },
-            "query": {
-              "params": [
-                "C",
-                "12h",
-                "now"
-              ]
-            },
-            "reducer": {
-              "params": [],
-              "type": "min"
             },
             "type": "query"
           }
@@ -2270,29 +1994,6 @@
               "type": "max"
             },
             "type": "query"
-          },
-          {
-            "evaluator": {
-              "params": [
-                -3
-              ],
-              "type": "lt"
-            },
-            "operator": {
-              "type": "and"
-            },
-            "query": {
-              "params": [
-                "C",
-                "12h",
-                "now"
-              ]
-            },
-            "reducer": {
-              "params": [],
-              "type": "min"
-            },
-            "type": "query"
           }
         ],
         "executionErrorState": "alerting",
@@ -2445,29 +2146,6 @@
               "type": "max"
             },
             "type": "query"
-          },
-          {
-            "evaluator": {
-              "params": [
-                -3
-              ],
-              "type": "lt"
-            },
-            "operator": {
-              "type": "or"
-            },
-            "query": {
-              "params": [
-                "C",
-                "12h",
-                "now"
-              ]
-            },
-            "reducer": {
-              "params": [],
-              "type": "min"
-            },
-            "type": "query"
           }
         ],
         "executionErrorState": "alerting",
@@ -2538,7 +2216,7 @@
         {
           "exemplar": true,
           "expr": "job:stringsunicodetask_duration:rate3d:z_score",
-          "hide": false,
+          "hide": true,
           "interval": "",
           "legendFormat": "z_score",
           "refId": "C"
@@ -2618,29 +2296,6 @@
             "reducer": {
               "params": [],
               "type": "max"
-            },
-            "type": "query"
-          },
-          {
-            "evaluator": {
-              "params": [
-                -3
-              ],
-              "type": "lt"
-            },
-            "operator": {
-              "type": "or"
-            },
-            "query": {
-              "params": [
-                "C",
-                "12h",
-                "now"
-              ]
-            },
-            "reducer": {
-              "params": [],
-              "type": "min"
             },
             "type": "query"
           }
@@ -2795,29 +2450,6 @@
               "type": "max"
             },
             "type": "query"
-          },
-          {
-            "evaluator": {
-              "params": [
-                -3
-              ],
-              "type": "lt"
-            },
-            "operator": {
-              "type": "or"
-            },
-            "query": {
-              "params": [
-                "C",
-                "12h",
-                "now"
-              ]
-            },
-            "reducer": {
-              "params": [],
-              "type": "min"
-            },
-            "type": "query"
           }
         ],
         "executionErrorState": "alerting",
@@ -2968,29 +2600,6 @@
             "reducer": {
               "params": [],
               "type": "max"
-            },
-            "type": "query"
-          },
-          {
-            "evaluator": {
-              "params": [
-                -3
-              ],
-              "type": "lt"
-            },
-            "operator": {
-              "type": "or"
-            },
-            "query": {
-              "params": [
-                "A",
-                "5m",
-                "now"
-              ]
-            },
-            "reducer": {
-              "params": [],
-              "type": "min"
             },
             "type": "query"
           }
@@ -3145,29 +2754,6 @@
               "type": "max"
             },
             "type": "query"
-          },
-          {
-            "evaluator": {
-              "params": [
-                -3
-              ],
-              "type": "lt"
-            },
-            "operator": {
-              "type": "or"
-            },
-            "query": {
-              "params": [
-                "C",
-                "12h",
-                "now"
-              ]
-            },
-            "reducer": {
-              "params": [],
-              "type": "min"
-            },
-            "type": "query"
           }
         ],
         "executionErrorState": "alerting",
@@ -3318,29 +2904,6 @@
             "reducer": {
               "params": [],
               "type": "max"
-            },
-            "type": "query"
-          },
-          {
-            "evaluator": {
-              "params": [
-                -3
-              ],
-              "type": "lt"
-            },
-            "operator": {
-              "type": "or"
-            },
-            "query": {
-              "params": [
-                "C",
-                "12h",
-                "now"
-              ]
-            },
-            "reducer": {
-              "params": [],
-              "type": "min"
             },
             "type": "query"
           }
@@ -3495,29 +3058,6 @@
               "type": "max"
             },
             "type": "query"
-          },
-          {
-            "evaluator": {
-              "params": [
-                -3
-              ],
-              "type": "lt"
-            },
-            "operator": {
-              "type": "or"
-            },
-            "query": {
-              "params": [
-                "C",
-                "12h",
-                "now"
-              ]
-            },
-            "reducer": {
-              "params": [],
-              "type": "min"
-            },
-            "type": "query"
           }
         ],
         "executionErrorState": "alerting",
@@ -3668,29 +3208,6 @@
             "reducer": {
               "params": [],
               "type": "max"
-            },
-            "type": "query"
-          },
-          {
-            "evaluator": {
-              "params": [
-                -3
-              ],
-              "type": "lt"
-            },
-            "operator": {
-              "type": "or"
-            },
-            "query": {
-              "params": [
-                "C",
-                "12h",
-                "now"
-              ]
-            },
-            "reducer": {
-              "params": [],
-              "type": "min"
             },
             "type": "query"
           }
@@ -3845,29 +3362,6 @@
               "type": "max"
             },
             "type": "query"
-          },
-          {
-            "evaluator": {
-              "params": [
-                -3
-              ],
-              "type": "gt"
-            },
-            "operator": {
-              "type": "or"
-            },
-            "query": {
-              "params": [
-                "C",
-                "12h",
-                "now"
-              ]
-            },
-            "reducer": {
-              "params": [],
-              "type": "min"
-            },
-            "type": "query"
           }
         ],
         "executionErrorState": "alerting",
@@ -4020,29 +3514,6 @@
               "type": "max"
             },
             "type": "query"
-          },
-          {
-            "evaluator": {
-              "params": [
-                -3
-              ],
-              "type": "lt"
-            },
-            "operator": {
-              "type": "or"
-            },
-            "query": {
-              "params": [
-                "C",
-                "12h",
-                "now"
-              ]
-            },
-            "reducer": {
-              "params": [],
-              "type": "min"
-            },
-            "type": "query"
           }
         ],
         "executionErrorState": "alerting",
@@ -4170,7 +3641,7 @@
       }
     }
   ],
-  "refresh": false,
+  "refresh": "",
   "schemaVersion": 30,
   "style": "dark",
   "tags": [],
@@ -4185,5 +3656,5 @@
   "timezone": "",
   "title": "Turbinia Health Check",
   "uid": "ZRyA5Uinz",
-  "version": 5
+  "version": 7
 }
