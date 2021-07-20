@@ -461,9 +461,10 @@ def main():
   # to point to config paths.
   from turbinia import notify
   from turbinia import client as TurbiniaClientProvider
-  from turbinia.client import TurbiniaServer
-  from turbinia.client import TurbiniaCeleryWorker
-  from turbinia.client import TurbiniaPsqWorker
+  from turbinia.client import TurbiniaCeleryClient
+  from turbinia.worker import TurbiniaCeleryWorker
+  from turbinia.worker import TurbiniaPsqWorker
+  from turbinia.server import TurbiniaServer
   from turbinia import evidence
   from turbinia.message import TurbiniaRequest
 
@@ -853,10 +854,7 @@ def main():
               '{1!s}: {2!s}'.format(
                   credential, args.decryption_keys, exception))
           sys.exit(1)
-        evidence_.credentials.append({
-            'credential_type': credential_type,
-            'credential_data': credential_data
-        })
+        evidence_.credentials.append((credential_type, credential_data))
 
     if args.recipe:
       if (args.jobs_denylist or args.jobs_allowlist or
