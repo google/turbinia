@@ -420,9 +420,13 @@ def main():
   if args.output_dir:
     config.OUTPUT_DIR = args.output_dir
 
-  # Run logger setup again to get file-handler now that we have the logfile path
-  # from the config.
-  logger.setup()
+  server_flags_set = args.server or args.command == 'server'
+  worker_flags_set = args.command in ('psqworker', 'celeryworker')
+  # Run logger setup again if we're running as a server or worker (or have a log
+  # file explicitly set on the command line) to set a file-handler now that we
+  # have the logfile path from the config.
+  if server_flags_set or worker_flags_set or args.log_file:
+    logger.setup()
   if args.quiet:
     log.setLevel(logging.ERROR)
   elif args.debug:
@@ -522,8 +526,6 @@ def main():
     client = TurbiniaClientProvider.get_turbinia_client(args.run_local)
 
   # Make sure run_local flags aren't conflicting with other server/client flags
-  server_flags_set = args.server or args.command == 'server'
-  worker_flags_set = args.command in ('psqworker', 'celeryworker')
   if args.run_local and (server_flags_set or worker_flags_set):
     log.error('--run_local flag is not compatible with server/worker flags')
     sys.exit(1)
