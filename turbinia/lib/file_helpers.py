@@ -75,8 +75,7 @@ def write_str_to_temp_file(source, preferred_dir=None):
       fh.write(source)
       return fh.name
   except IOError as e:
-    log.error(
-        'Could not write to temporary file. [{1!s}]'.format(e))
+    log.error('Could not write to temporary file. [{1!s}]'.format(e))
   return None
 
 

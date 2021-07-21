@@ -865,8 +865,8 @@ def main():
             'Specifying a recipe is incompatible with defining'
             ' jobs allow/deny lists, yara rules or a patterns file separately.')
       recipe_file = os.path.join(config.RECIPE_FILE_DIR, args.recipe)
-      recipe_dict = recipe_helpers.load_recipe_from_file(recipe_file,
-          not args.skip_recipe_validation)
+      recipe_dict = recipe_helpers.load_recipe_from_file(
+          recipe_file, not args.skip_recipe_validation)
       if not recipe_dict:
         sys.exit(1)
     else:

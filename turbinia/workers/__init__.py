@@ -784,7 +784,8 @@ class TurbiniaTask:
     self.last_update = datetime.now()
 
   def create_result(
-      self, input_evidence=None, status=None, message=None, trace=None, no_output_manager=False):
+      self, input_evidence=None, status=None, message=None, trace=None,
+      no_output_manager=False):
     """Creates a new TurbiniaTaskResults and instantiates the result.
 
     Args:

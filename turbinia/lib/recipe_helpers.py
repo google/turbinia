@@ -99,7 +99,7 @@ def validate_globals_recipe(proposed_globals_recipe):
     return False
 
   if (proposed_globals_recipe.get('jobs_allowlist') and
-      proposed_globals_recipe.get( 'jobs_denylist')):
+      proposed_globals_recipe.get('jobs_denylist')):
     log.error('No jobs can be simultaneously in the allow and deny lists')
     return False
   return True

@@ -19,13 +19,11 @@ from celery import states as celery_states
 from turbinia import config
 from turbinia.workers import TurbiniaTask
 
+
 class AbortTask(TurbiniaTask):
   """Task producing a graceful job termination result."""
 
-
-  task_config = {
-      'reason': 'Recipe provided is invalid'
-  }
+  task_config = {'reason': 'Recipe provided is invalid'}
 
   def create_stub(self):
     """Creates a mock task stub"""
@@ -46,6 +44,7 @@ class AbortTask(TurbiniaTask):
     result.close(self, True, '{0:s}'.format(self.task_config['reason']))
     return result
 
+
 class MockPSQStub:
   """Mock PSQ task stub"""
 
@@ -55,6 +54,7 @@ class MockPSQStub:
   def get_task(self):
     """Returns mock task status"""
     return self.status
+
 
 class MockCeleryStub:
   """Mock Celery task stub"""
