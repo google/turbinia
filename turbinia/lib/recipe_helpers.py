@@ -21,7 +21,6 @@ from yaml import Loader
 from yaml import load
 from turbinia.lib.file_helpers import file_to_str
 from turbinia.lib.file_helpers import file_to_list
-from turbinia.client import TASK_MAP
 
 log = logging.getLogger('turbinia')
 
@@ -143,6 +142,9 @@ def validate_recipe(recipe_dict):
             'to which it relates.'.format(recipe_item))
         return False
       proposed_task = recipe_item_contents['task']
+
+      # Doing a delayed import to avoid circular dependencies.
+      from turbinia.client import TASK_MAP
       if proposed_task.lower() not in TASK_MAP:
         log.error(
             'Task {0:s} defined for task recipe {1:s} does not exist.'.format(
