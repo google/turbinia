@@ -24,15 +24,7 @@ from turbinia.evidence import PlasoCsvFile
 
 
 class PsortTask(TurbiniaTask):
-  """Task to run Psort (Plaso toolset)
-
-    Args:
-      base_command (str): Command to invoke psort
-      conf (dict): Dynamic config containing the parameters for the command.
-
-    Returns:
-      String for valid psort command.
-    """
+  """Task to run Psort (Plaso toolset)."""
 
   task_config = {
       'status_view': 'none',
@@ -42,7 +34,16 @@ class PsortTask(TurbiniaTask):
   }
 
   def build_plaso_command(self, base_command, conf):
-    """ Builds a typical plaso command, contains logic specific to psort. """
+    """ Builds a typical plaso command, contains logic specific to psort.
+
+    Args:
+      base_command (str): Command to invoke psort
+      conf (dict): Dynamic config containing the parameters for the command.
+
+    Returns:
+      list: Plaso command and arguments
+    """
+
     # Base command could be potentially placed in global configuration
     cmd = [base_command]
     for k, v in conf.items():
@@ -77,10 +78,10 @@ class PsortTask(TurbiniaTask):
     cmd = self.build_plaso_command('psort.py', self.task_config)
 
     cmd.extend(['--logfile', psort_log])
-    if config.DEBUG_TASKS or self.task_config['debug_tasks']:
+    if config.DEBUG_TASKS or self.task_config.get('debug_tasks'):
       cmd.append('-d')
 
-    cmd.extend(['-w', psort_file, evidence.source_path])
+    cmd.extend(['-w', psort_file, evidence.local_path])
 
     result.log('Running psort as [{0:s}]'.format(' '.join(cmd)))
 

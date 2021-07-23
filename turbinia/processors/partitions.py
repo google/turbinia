@@ -16,7 +16,6 @@
 
 import logging
 
-from turbinia import TurbiniaException
 from dfvfs.helpers import volume_scanner
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.lib import errors as dfvfs_errors
