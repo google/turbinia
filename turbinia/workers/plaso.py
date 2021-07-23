@@ -101,7 +101,7 @@ class PlasoTask(TurbiniaTask):
 
     cmd = self.build_plaso_command('log2timeline.py', self.task_config)
 
-    if config.DEBUG_TASKS or self.task_config['debug_tasks']:
+    if config.DEBUG_TASKS or self.task_config.get('debug_tasks'):
       cmd.append('-d')
     # natively in Turbinia
     if isinstance(evidence, APFSEncryptedDisk):
@@ -127,7 +127,7 @@ class PlasoTask(TurbiniaTask):
 
     cmd.extend(['--temporary_directory', self.tmp_dir])
     cmd.extend(['--logfile', plaso_log])
-    cmd.extend([plaso_file, evidence.source_path])
+    cmd.extend([plaso_file, evidence.local_path])
     result.log('Running plaso as [{0:s}]'.format(' '.join(cmd)))
     self.execute(
         cmd, result, log_files=[plaso_log], new_evidence=[plaso_evidence],

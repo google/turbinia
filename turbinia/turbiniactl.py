@@ -30,7 +30,6 @@ import copy
 from turbinia import config
 from turbinia import TurbiniaException
 from turbinia.config import logger
-from turbinia.lib import google_cloud
 from turbinia import __version__
 from turbinia.processors import archive
 from turbinia.output_manager import OutputManager
@@ -80,16 +79,15 @@ def main():
       '-I', '--recipe', help='Name of Recipe to be employed on evidence',
       required=False)
   parser.add_argument(
-      '-X', '--skip_recipe_validation', action='store_true', help='Do not'
-      ' perform recipe validation on the client.', required=False,
-      default=False)
+      '-X', '--skip_recipe_validation', action='store_true', help='Do not '
+      'perform recipe validation on the client.', required=False, default=False)
   parser.add_argument(
       '-f', '--force_evidence', action='store_true',
       help='Force evidence processing request in potentially unsafe conditions',
       required=False)
   parser.add_argument(
       '-k', '--decryption_keys', help='Decryption keys to be passed in as '
-      ' comma separated list. Each entry should be in the form type=key. (e.g. '
+      'comma separated list. Each entry should be in the form type=key. (e.g. '
       '"-k password=123456,recovery_password=XXXXXX-XXXXXX-XXXXXX-XXXXXX-XXXXXX'
       '-XXXXXX-XXXXXX-XXXXXX")', default=[], type=csv_list)
   parser.add_argument('-o', '--output_dir', help='Directory path for output')

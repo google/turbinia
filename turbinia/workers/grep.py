@@ -39,7 +39,7 @@ class GrepTask(TurbiniaTask):
         TurbiniaTaskResult object.
     """
 
-    patterns = self.task_config['filter_patterns']
+    patterns = self.task_config.get('filter_patterns')
     if not patterns:
       result.close(self, success=True, status='No patterns supplied, exit task')
       return result
