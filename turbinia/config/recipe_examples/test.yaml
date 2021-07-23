@@ -1,0 +1,21 @@
+jobs_allowlist: 
+  - PlasoJob
+  - PsortJob
+
+patterns_file: None
+
+plaso_base:
+  task: 'PlasoTask'
+  status_view: 'none'
+  hashers: 'all'
+  partition: 'all'
+  vss_stores: 'all'
+
+psort_base:
+  task: 'PsortTask'
+  status_view: 'linear'
+  additional_fields: 'yara_match'
+  
+
+
+

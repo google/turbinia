@@ -194,10 +194,10 @@ class DatastoreStateManager(BaseStateManager):
     task.touch()
     try:
       with self.client.transaction():
-        entity = self.client.get(task.state_key)
-        if not entity:
+        if not task.state_key:
           self.write_new_task(task)
           return
+        entity = self.client.get(task.state_key)
         entity.update(self.get_task_dict(task))
         log.debug('Updating Task {0:s} in Datastore'.format(task.name))
         self.client.put(entity)
@@ -286,7 +286,7 @@ class RedisStateManager(BaseStateManager):
   def update_task(self, task):
     task.touch()
     key = task.state_key
-    if not self.client.get(key):
+    if not key:
       self.write_new_task(task)
       return
     log.info('Updating task {0:s} in Redis'.format(task.name))

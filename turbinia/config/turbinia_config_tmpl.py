@@ -73,6 +73,9 @@ SHARED_FILESYSTEM = False
 # problems.
 DEBUG_TASKS = False
 
+# Directory keeping all eligible recipes
+RECIPE_FILE_DIR = None
+
 ################################################################################
 #                         External Dependency Configurations
 #

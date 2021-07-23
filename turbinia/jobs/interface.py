@@ -18,6 +18,7 @@ import uuid
 import logging
 
 from turbinia.evidence import EvidenceCollection
+from turbinia import config
 
 log = logging.getLogger('turbinia')
 
