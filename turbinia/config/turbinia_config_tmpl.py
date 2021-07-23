@@ -74,7 +74,7 @@ SHARED_FILESYSTEM = False
 DEBUG_TASKS = False
 
 # Directory keeping all eligible recipes
-RECIPE_FILE_DIR = None
+RECIPE_FILE_DIR = '/etc/turbinia/recipes'
 
 ################################################################################
 #                         External Dependency Configurations

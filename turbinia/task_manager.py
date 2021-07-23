@@ -219,6 +219,10 @@ class BaseTaskManager:
       job_applicable = [
           True for t in job.evidence_input if type(evidence_) == t
       ]
+
+      # When there is a fatal error processing the request we create an AbortJob
+      # with the error and write it directly to the state manager.  This way the
+      # client will get a reasonable error in response to the failure.
       if evidence_.config['abort']:
         job_instance = AbortJob(
             request_id=evidence_.request_id, evidence_config=evidence_.config)
