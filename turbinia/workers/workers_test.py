@@ -69,6 +69,8 @@ class TestTurbiniaTaskBase(unittest.TestCase):
     self.test_stdout_path = tempfile.mkstemp(dir=self.base_output_dir)[1]
     self.remove_files.append(self.test_stdout_path)
     self.evidence = evidence.RawDisk(source_path=test_disk_path)
+    self.evidence.config['abort'] = False
+    self.evidence.config['globals'] = {}
     self.evidence.preprocess = mock.MagicMock()
     # Set up TurbiniaTaskResult
     self.result = TurbiniaTaskResult(base_output_dir=self.base_output_dir)

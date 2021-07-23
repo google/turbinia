@@ -115,7 +115,7 @@ class TurbiniaTaskResult:
 
   def __init__(
       self, evidence=None, input_evidence=None, base_output_dir=None,
-      request_id=None, job_id=None):
+      request_id=None, job_id=None, no_output_manager=False):
     """Initialize the TurbiniaTaskResult object."""
 
     self.closed = False
@@ -143,6 +143,7 @@ class TurbiniaTaskResult:
     self.state_manager = None
     # TODO(aarontp): Create mechanism to grab actual python logging data.
     self._log = []
+    self.no_output_manager = no_output_manager
 
   def __str__(self):
     return pprint.pformat(vars(self), depth=3)
@@ -161,10 +162,12 @@ class TurbiniaTaskResult:
     self.task_name = task.name
     self.requester = task.requester
     self.state_manager = state_manager.get_state_manager()
-    if task.output_manager.is_setup:
-      _, self.output_dir = task.output_manager.get_local_output_dirs()
-    else:
-      raise TurbiniaException('Output Manager is not setup yet.')
+    if not self.no_output_manager:
+      if task.output_manager.is_setup:
+        ldirs = task.output_manager.get_local_output_dirs()
+        _, self.output_dir = ldirs
+      else:
+        raise TurbiniaException('Output Manager is not setup yet.')
 
   def close(self, task, success, status=None):
     """Handles closing of this result and writing logs.
@@ -238,18 +241,19 @@ class TurbiniaTaskResult:
     # because we don't need to return it.
     self.input_evidence = None
 
-    # Write result log info to file
-    logfile = os.path.join(self.output_dir, 'worker-log.txt')
-    # Create default log text just so that the worker log is created to
-    # avoid confusion if it doesn't exist.
-    if not self._log:
-      self._log.append('No worker messages were logged.')
-    if self.output_dir and os.path.exists(self.output_dir):
-      with open(logfile, 'w') as f:
-        f.write('\n'.join(self._log))
-        f.write('\n')
-      if not task.run_local:
-        task.output_manager.save_local_file(logfile, self)
+    if not self.no_output_manager:
+      # Write result log info to file
+      logfile = os.path.join(self.output_dir, 'worker-log.txt')
+      # Create default log text just so that the worker log is created to
+      # avoid confusion if it doesn't exist.
+      if not self._log:
+        self._log.append('No worker messages were logged.')
+      if self.output_dir and os.path.exists(self.output_dir):
+        with open(logfile, 'w') as f:
+          f.write('\n'.join(self._log))
+          f.write('\n')
+        if not task.run_local:
+          task.output_manager.save_local_file(logfile, self)
 
     self.closed = True
     log.debug('Result close successful. Status is [{0:s}]'.format(self.status))
@@ -398,6 +402,9 @@ class TurbiniaTask:
       requester (str): The user who requested the task.
       _evidence_config (dict): The config that we want to pass to all new
             evidence created from this task.
+      recipe (dict): Validated recipe to be used as the task configuration.
+      task_config (dict): Default task configuration, in effect if
+            no recipe is explicitly provided for the task.
   """
 
   # The list of attributes that we will persist into storage
@@ -434,6 +441,8 @@ class TurbiniaTask:
     self.turbinia_version = turbinia.__version__
     self.requester = requester if requester else 'user_unspecified'
     self._evidence_config = {}
+    self.recipe = {}
+    self.task_config = {}
 
   def serialize(self):
     """Converts the TurbiniaTask object into a serializable dict.
@@ -514,11 +523,30 @@ class TurbiniaTask:
             'information.'.format(
                 evidence, self.name, state.name, evidence.format_state()))
 
+  def validate_task_conf(self, proposed_conf):
+    """Checks if the provided recipe contains exclusively allowed fields.
+    Args:
+      proposed_conf (dict): Dict to override the default dynamic task conf.
+
+    Returns:
+      bool: False if a field not present in the default dynamic task config
+          is found.
+    """
+    if not proposed_conf:
+      return False
+    for k in proposed_conf.keys():
+      if k == 'task':
+        continue
+      if k not in self.task_config:
+        return False
+    return True
+
   def get_metrics(self):
     """Gets histogram metric for current Task.
 
     Returns:
-      prometheus_client.Historgram: For the current task, or None if they are not initialized.
+      prometheus_client.Historgram: For the current task,
+          or None if they are not initialized.
     """
     global METRICS
     return METRICS.get(self.name.lower())
@@ -562,10 +590,12 @@ class TurbiniaTask:
     # Execute the job via docker.
     docker_image = job_manager.JobsManager.GetDockerImage(self.job_name)
     if docker_image:
-      ro_paths = [
-          result.input_evidence.local_path, result.input_evidence.source_path,
-          result.input_evidence.device_path, result.input_evidence.mount_path
-      ]
+      ro_paths = []
+      for path in ['local_path', 'source_path', 'device_path', 'mount_path']:
+        if hasattr(result.input_evidence, path):
+          path_string = getattr(result.input_evidence, path)
+          if path_string:
+            ro_paths.append(path_string)
       rw_paths = [self.output_dir, self.tmp_dir]
       container_manager = docker_manager.ContainerManager(docker_image)
       stdout, stderr, ret = container_manager.execute_container(
@@ -754,7 +784,8 @@ class TurbiniaTask:
     self.last_update = datetime.now()
 
   def create_result(
-      self, input_evidence=None, status=None, message=None, trace=None):
+      self, input_evidence=None, status=None, message=None, trace=None,
+      no_output_manager=False):
     """Creates a new TurbiniaTaskResults and instantiates the result.
 
     Args:
@@ -765,7 +796,8 @@ class TurbiniaTask:
     """
     result = TurbiniaTaskResult(
         base_output_dir=self.base_output_dir, request_id=self.request_id,
-        job_id=self.job_id, input_evidence=input_evidence)
+        job_id=self.job_id, input_evidence=input_evidence,
+        no_output_manager=no_output_manager)
     result.setup(self)
     if message:
       if status:
@@ -831,6 +863,22 @@ class TurbiniaTask:
 
     log.info('Result check: {0:s}'.format(check_status))
     return result
+
+  def get_task_recipe(self, recipe):
+    """Searches and provides a recipe dict for the specified task.
+
+    Args:
+      recipe (str): recipe name.
+
+    Returns:
+      Dict: Recipe dict.
+    """
+    for _, task_recipe in recipe.items():
+      if isinstance(task_recipe, dict):
+        task = task_recipe.get('task', None)
+        if task and task == self.name:
+          return task_recipe
+    return {}
 
   def run_wrapper(self, evidence):
     """Wrapper to manage TurbiniaTaskResults and exception handling.
@@ -913,6 +961,15 @@ class TurbiniaTask:
 
           self.result.update_task_status(self, 'running')
           self._evidence_config = evidence.config
+          #collect the recipe sent along with the evidence, and validate that
+          #all values are allowed through the default are config.
+          proposed_recipe = self.get_task_recipe(evidence.config)
+          globals_recipe = evidence.config['globals']
+          if proposed_recipe:
+            if self.validate_task_conf(proposed_recipe):
+              self.task_config.update(proposed_recipe)
+              self.task_config.pop('task')
+          self.task_config.update(globals_recipe)
           self.result = self.run(evidence, self.result)
 
         # pylint: disable=broad-except

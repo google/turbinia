@@ -65,6 +65,7 @@ from turbinia.workers.worker_stat import StatTask
 from turbinia.workers.binary_extractor import BinaryExtractorTask
 from turbinia.workers.bulk_extractor import BulkExtractorTask
 from turbinia.workers.photorec import PhotorecTask
+from turbinia.workers.abort import AbortTask
 
 MAX_RETRIES = 10
 RETRY_SLEEP = 60
@@ -94,7 +95,8 @@ TASK_MAP = {
     'binaryextractortask': BinaryExtractorTask,
     'bulkextractortask': BulkExtractorTask,
     'dockercontainersenumerationtask': DockerContainersEnumerationTask,
-    'photorectask': PhotorecTask
+    'photorectask': PhotorecTask,
+    'aborttask': AbortTask
 }
 
 config.LoadConfig()
