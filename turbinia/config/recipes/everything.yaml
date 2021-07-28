@@ -1,0 +1,30 @@
+globals:
+  jobs_allowlist: 
+    - BinaryExtractorJob
+    - BulkExtractorJob
+    - FsstatJob
+    - GrepJob
+    - HadoopAnalysisJob
+    - HindsightJob
+    - HTTPAccessLogExtractionJob
+    - HTTPAccessLogAnalysisJob
+    - JenkinsAnalysisJob
+    - JupyterExtractionJob
+    - JupyterAnalysisJob
+    - PartitionEnumerationJob
+    - PlasoJob
+    - PsortJob
+    - RedisAnalysisJob
+    - RedisExtractionJob
+    - SSHDAnalysisJob
+    - SSHDExtractionJob
+    - StringsJob
+    - TomcatExtractionJob
+    - TomcatAnalysisJob
+
+plaso_base:
+  task: 'PlasoTask'
+  status_view: 'none'
+  hashers: 'all'
+  partition: 'all'
+  vss_stores: 'all'

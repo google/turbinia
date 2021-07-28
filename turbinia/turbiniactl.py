@@ -79,6 +79,9 @@ def main():
       '-I', '--recipe', help='Name of Recipe to be employed on evidence',
       required=False)
   parser.add_argument(
+      '-P', '--recipe_path', help='Recipe file path to load and use.',
+      required=False)
+  parser.add_argument(
       '-X', '--skip_recipe_validation', action='store_true', help='Do not '
       'perform recipe validation on the client.', required=False, default=False)
   parser.add_argument(
@@ -501,7 +504,7 @@ def main():
     sys.exit(1)
 
   # Read set set filter_patterns
-  filter_patterns = None
+  filter_patterns = []
   if (args.filter_patterns_file and
       not os.path.exists(args.filter_patterns_file)):
     log.error('Filter patterns file {0:s} does not exist.')
@@ -514,7 +517,7 @@ def main():
           'Cannot open file {0:s} [{1!s}]'.format(args.filter_patterns_file, e))
 
   # Read yara rules
-  yara_rules = None
+  yara_rules = ''
   if (args.yara_rules_file and not os.path.exists(args.yara_rules_file)):
     log.error('Filter patterns file {0:s} does not exist.')
     sys.exit(1)
@@ -834,16 +837,7 @@ def main():
     request = TurbiniaRequest(
         request_id=request_id, requester=getpass.getuser())
     request.evidence.append(evidence_)
-    if filter_patterns:
-      request.recipe['filter_patterns'] = filter_patterns
-    if args.jobs_denylist:
-      request.recipe['jobs_denylist'] = args.jobs_denylist
-    if args.jobs_allowlist:
-      request.recipe['jobs_allowlist'] = args.jobs_allowlist
-    if yara_rules:
-      request.recipe['yara_rules'] = yara_rules
-    if args.debug_tasks:
-      request.recipe['debug_tasks'] = args.debug_tasks
+
     if args.decryption_keys:
       for credential in args.decryption_keys:
         try:
@@ -856,24 +850,37 @@ def main():
           sys.exit(1)
         evidence_.credentials.append((credential_type, credential_data))
 
-    if args.recipe:
+    if args.recipe or args.recipe_path:
       if (args.jobs_denylist or args.jobs_allowlist or
           args.filter_patterns_file or args.yara_rules_file):
         raise TurbiniaException(
-            'Specifying a recipe is incompatible with defining'
-            ' jobs allow/deny lists, yara rules or a patterns file separately.')
-      recipe_file = os.path.join(config.RECIPE_FILE_DIR, args.recipe)
+            'Specifying a recipe is incompatible with defining '
+            'jobs allow/deny lists, yara rules or a patterns file separately.')
+
+      if args.recipe_path:
+        recipe_file = args.recipe_path
+      else:
+        recipe_file = os.path.join(config.RECIPE_FILE_DIR, args.recipe)
+      if not os.path.exists(recipe_file) and not recipe_file.endswith('.yaml'):
+        log.warning(
+            'Could not find recipe file at {0:s}, checking for file '
+            'with .yaml extension'.format(recipe_file))
+        recipe_file = recipe_file + '.yaml'
+      if not os.path.exists(recipe_file):
+        log.error('Recipe file {0:s} could not be found. Exiting.')
+        sys.exit(1)
+
       recipe_dict = recipe_helpers.load_recipe_from_file(
           recipe_file, not args.skip_recipe_validation)
       if not recipe_dict:
         sys.exit(1)
     else:
       recipe_dict = copy.deepcopy(recipe_helpers.DEFAULT_RECIPE)
-
+      recipe_dict['globals']['debug_tasks'] = args.debug_tasks
+      recipe_dict['globals']['filter_patterns'] = filter_patterns
       recipe_dict['globals']['jobs_denylist'] = args.jobs_denylist
-      recipe_dict['globals']['jobs_allowlist'] = args.jobs_denylist
-      recipe_dict['globals']['yara_rules_file'] = args.jobs_denylist
-      recipe_dict['globals']['filter_patterns_file'] = args.jobs_denylist
+      recipe_dict['globals']['jobs_allowlist'] = args.jobs_allowlist
+      recipe_dict['globals']['yara_rules'] = yara_rules
 
     request.recipe = recipe_dict
 

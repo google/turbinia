@@ -29,10 +29,8 @@ DEFAULT_GLOBALS_RECIPE = {
     'debug_tasks': False,
     'jobs_allowlist': [],
     'jobs_denylist': [],
-    'yara_rules_file': None,
-    'filter_patterns_file': None,
     'yara_rules': '',
-    'filter_patterns': ''
+    'filter_patterns': []
 }
 
 #Default recipes dict
@@ -52,6 +50,7 @@ def load_recipe_from_file(recipe_file, validate=True):
   if not recipe_file:
     return copy.deepcopy(DEFAULT_RECIPE)
   try:
+    log.info('Loading recipe file from {0:s}'.format(recipe_file))
     with open(recipe_file, 'r') as r_file:
       recipe_file_contents = r_file.read()
       recipe_dict = load(recipe_file_contents, Loader=Loader)
@@ -124,7 +123,7 @@ def validate_recipe(recipe_dict):
         'a globals entry, the default values will be used')
   else:
     if not validate_globals_recipe(recipe_dict['globals']):
-      log.error('Invalid globals recipe.')
+      log.error('Invalid globals section for loaded recipe.')
       return False
 
   for recipe_item, recipe_item_contents in recipe_dict.items():

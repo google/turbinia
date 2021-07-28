@@ -48,7 +48,7 @@ class TurbiniaRequest:
     """Initialization for TurbiniaRequest."""
     self.request_id = request_id if request_id else uuid.uuid4().hex
     self.requester = requester if requester else 'user_unspecified'
-    self.recipe = recipe if recipe else {}
+    self.recipe = recipe if recipe else {'globals': {}}
     self.context = context if context else {}
     self.evidence = evidence_ if evidence_ else []
     self.type = self.__class__.__name__
