@@ -26,7 +26,7 @@ from turbinia.lib.file_helpers import write_list_to_temp_file
 class GrepTask(TurbiniaTask):
   """Filter input based on extended regular expression patterns."""
 
-  task_config = {'filter_patterns': []}
+  TASK_CONFIG = {'filter_patterns': []}
 
   def run(self, evidence, result):
     """Run grep binary.

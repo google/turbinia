@@ -194,11 +194,11 @@ class BaseTaskManager:
     job_count = 0
     jobs_list = []
 
-    if evidence_.config['abort']:
+    if evidence_.config.get('abort'):
       jobs_list = [AbortJob]
     else:
-      jobs_allowlist = evidence_.config.get('jobs_allowlist', [])
-      jobs_denylist = evidence_.config.get('jobs_denylist', [])
+      jobs_allowlist = evidence_.config['globals'].get('jobs_allowlist', [])
+      jobs_denylist = evidence_.config['globals'].get('jobs_denylist', [])
       if jobs_denylist or jobs_allowlist:
         log.info(
             'Filtering Jobs with allowlist {0!s} and denylist {1!s}'.format(
@@ -223,7 +223,7 @@ class BaseTaskManager:
       # When there is a fatal error processing the request we create an AbortJob
       # with the error and write it directly to the state manager.  This way the
       # client will get a reasonable error in response to the failure.
-      if evidence_.config['abort']:
+      if evidence_.config.get('abort'):
         job_instance = AbortJob(
             request_id=evidence_.request_id, evidence_config=evidence_.config)
         abort_task = job_instance.create_tasks([evidence_])[0]
