@@ -25,6 +25,7 @@ import logging
 import os
 import sys
 import uuid
+import copy
 
 from turbinia import config
 from turbinia import TurbiniaException
@@ -75,18 +76,18 @@ def main():
       '(/etc/turbinia.conf, ~/.turbiniarc, or in paths referenced in '
       'environment variable TURBINIA_CONFIG_PATH)', required=False)
   parser.add_argument(
-      '-C', '--recipe_config', help='Recipe configuration data passed in as '
-      'comma separated key=value pairs (e.g. '
-      '"-C key=value,otherkey=othervalue").  These will get passed to tasks '
-      'as evidence config, and will also be written to the metadata.json file '
-      'for Evidence types that write it', default=[], type=csv_list)
+      '-I', '--recipe', help='Name of Recipe to be employed on evidence',
+      required=False)
+  parser.add_argument(
+      '-X', '--skip_recipe_validation', action='store_true', help='Do not '
+      'perform recipe validation on the client.', required=False, default=False)
   parser.add_argument(
       '-f', '--force_evidence', action='store_true',
       help='Force evidence processing request in potentially unsafe conditions',
       required=False)
   parser.add_argument(
       '-k', '--decryption_keys', help='Decryption keys to be passed in as '
-      ' comma separated list. Each entry should be in the form type=key. (e.g. '
+      'comma separated list. Each entry should be in the form type=key. (e.g. '
       '"-k password=123456,recovery_password=XXXXXX-XXXXXX-XXXXXX-XXXXXX-XXXXXX'
       '-XXXXXX-XXXXXX-XXXXXX")', default=[], type=csv_list)
   parser.add_argument('-o', '--output_dir', help='Directory path for output')
@@ -402,6 +403,13 @@ def main():
 
   args = parser.parse_args()
 
+  config.TURBINIA_COMMAND = args.command
+
+  # (jorlamd): Importing recipe_helpers late to avoid a bug where
+  # client.TASK_MAP is imported early rendering the check for worker
+  # status not possible.
+  from turbinia.lib import recipe_helpers
+
   # Load the config before final logger setup so we can the find the path to the
   # log file.
   try:
@@ -420,9 +428,13 @@ def main():
   if args.output_dir:
     config.OUTPUT_DIR = args.output_dir
 
-  # Run logger setup again to get file-handler now that we have the logfile path
-  # from the config.
-  logger.setup()
+  server_flags_set = args.server or args.command == 'server'
+  worker_flags_set = args.command in ('psqworker', 'celeryworker')
+  # Run logger setup again if we're running as a server or worker (or have a log
+  # file explicitly set on the command line) to set a file-handler now that we
+  # have the logfile path from the config.
+  if server_flags_set or worker_flags_set or args.log_file:
+    logger.setup()
   if args.quiet:
     log.setLevel(logging.ERROR)
   elif args.debug:
@@ -443,8 +455,6 @@ def main():
     google_cloud.setup_stackdriver_handler(
         config.TURBINIA_PROJECT, args.command)
 
-  config.TURBINIA_COMMAND = args.command
-
   log.info('Turbinia version: {0:s}'.format(__version__))
 
   # Do late import of other needed Turbinia modules.  This is needed because the
@@ -454,9 +464,9 @@ def main():
   from turbinia import notify
   from turbinia import client as TurbiniaClientProvider
   from turbinia.client import TurbiniaCeleryClient
-  from turbinia.client import TurbiniaServer
-  from turbinia.client import TurbiniaCeleryWorker
-  from turbinia.client import TurbiniaPsqWorker
+  from turbinia.worker import TurbiniaCeleryWorker
+  from turbinia.worker import TurbiniaPsqWorker
+  from turbinia.server import TurbiniaServer
   from turbinia import evidence
   from turbinia.message import TurbiniaRequest
 
@@ -522,8 +532,6 @@ def main():
     client = TurbiniaClientProvider.get_turbinia_client(args.run_local)
 
   # Make sure run_local flags aren't conflicting with other server/client flags
-  server_flags_set = args.server or args.command == 'server'
-  worker_flags_set = args.command in ('psqworker', 'celeryworker')
   if args.run_local and (server_flags_set or worker_flags_set):
     log.error('--run_local flag is not compatible with server/worker flags')
     sys.exit(1)
@@ -836,16 +844,6 @@ def main():
       request.recipe['yara_rules'] = yara_rules
     if args.debug_tasks:
       request.recipe['debug_tasks'] = args.debug_tasks
-    if args.recipe_config:
-      for pair in args.recipe_config:
-        try:
-          key, value = pair.split('=')
-        except ValueError as exception:
-          log.error(
-              'Could not parse key=value pair [{0:s}] from recipe config '
-              '{1!s}: {2!s}'.format(pair, args.recipe_config, exception))
-          sys.exit(1)
-        request.recipe[key] = value
     if args.decryption_keys:
       for credential in args.decryption_keys:
         try:
@@ -857,6 +855,28 @@ def main():
                   credential, args.decryption_keys, exception))
           sys.exit(1)
         evidence_.credentials.append((credential_type, credential_data))
+
+    if args.recipe:
+      if (args.jobs_denylist or args.jobs_allowlist or
+          args.filter_patterns_file or args.yara_rules_file):
+        raise TurbiniaException(
+            'Specifying a recipe is incompatible with defining'
+            ' jobs allow/deny lists, yara rules or a patterns file separately.')
+      recipe_file = os.path.join(config.RECIPE_FILE_DIR, args.recipe)
+      recipe_dict = recipe_helpers.load_recipe_from_file(
+          recipe_file, not args.skip_recipe_validation)
+      if not recipe_dict:
+        sys.exit(1)
+    else:
+      recipe_dict = copy.deepcopy(recipe_helpers.DEFAULT_RECIPE)
+
+      recipe_dict['globals']['jobs_denylist'] = args.jobs_denylist
+      recipe_dict['globals']['jobs_allowlist'] = args.jobs_denylist
+      recipe_dict['globals']['yara_rules_file'] = args.jobs_denylist
+      recipe_dict['globals']['filter_patterns_file'] = args.jobs_denylist
+
+    request.recipe = recipe_dict
+
     if args.dump_json:
       print(request.to_json().encode('utf-8'))
       sys.exit(0)
