@@ -52,8 +52,12 @@ class MockPSQStub:
     self.status = psq.task.FINISHED
 
   def get_task(self):
-    """Returns mock task status"""
-    return self.status
+    """Returns this mock task stub (self).
+    
+    Returns:
+        MockPSQStub: The current instantiated object
+    """
+    return self
 
 
 class MockCeleryStub:
