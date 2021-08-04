@@ -143,10 +143,10 @@ function update_docker_image_tag {
     get_workers
     for INSTANCE in $WORKERS
     do
-        $GCLOUD beta compute instances update-container $INSTANCE --zone $ZONE --container-image=$SERVER_URI:$DOCKER_TAG
+        $GCLOUD beta compute instances update-container $INSTANCE --zone $ZONE --container-image=$WORKER_URI:$DOCKER_TAG
     done
 
-    $GCLOUD beta compute instances update-container turbinia-server-$INSTANCEID --zone $ZONE --container-image=$WORKER_URI:$DOCKER_TAG
+    $GCLOUD beta compute instances update-container turbinia-server-$INSTANCEID --zone $ZONE --container-image=$SERVER_URI:$DOCKER_TAG
 }
 
 while getopts ":c:i:z:t:f:v:k:s" option; do
