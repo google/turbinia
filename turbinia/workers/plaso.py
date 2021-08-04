@@ -136,7 +136,7 @@ class PlasoTask(TurbiniaTask):
     cmd.extend([plaso_file, evidence.local_path])
 
     self.result.log('DEBUUUUUG: command is {0!s}'.format(cmd))
-    self.result.log('DEBUUUUUG: evidence is {0!s}'.format(evidence))
+    self.result.log('DEBUUUUUG: evidence is {0!s}'.format(evidence.__dict__))
 
     result.log('Running plaso as [{0:s}]'.format(' '.join(cmd)))
     self.execute(
