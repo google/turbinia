@@ -416,6 +416,10 @@ class TurbiniaTask:
   # See `evidence.Evidence.preprocess()` docstrings for more details.
   REQUIRED_STATES = []
 
+  # The default configuration variables used by Tasks.  Recipe data will
+  # override these parameters at run time.
+  TASK_CONFIG = {}
+
   def __init__(
       self, name=None, base_output_dir=None, request_id=None, requester=None):
     """Initialization for TurbiniaTask."""
@@ -537,7 +541,10 @@ class TurbiniaTask:
     for k in proposed_conf.keys():
       if k == 'task':
         continue
-      if k not in self.task_config:
+      if k not in self.TASK_CONFIG:
+        self.result.log(
+            'Recipe key "{0:s}" is not found in task {1:s} default config: {2!s}'
+            .format(k, self.name, self.TASK_CONFIG))
         return False
     return True
 
@@ -865,20 +872,29 @@ class TurbiniaTask:
     return result
 
   def get_task_recipe(self, recipe):
-    """Searches and provides a recipe dict for the specified task.
+    """Creates and validates a recipe for the specified task.
 
     Args:
-      recipe (str): recipe name.
+      recipe (dict): The full request recipe data.
 
     Returns:
-      Dict: Recipe dict.
+      Dict: Recipe data specific to the current Task
     """
+    recipe_data = deepcopy(self.TASK_CONFIG)
     for _, task_recipe in recipe.items():
       if isinstance(task_recipe, dict):
         task = task_recipe.get('task', None)
-        if task and task == self.name:
-          return task_recipe
-    return {}
+        if task and task == self.name and self.validate_task_conf(task_recipe):
+          log.debug(
+              'Setting recipe data for task {0:s}: {1!s}'.format(
+                  task, task_recipe))
+          recipe_data.update(task_recipe)
+          recipe_data.pop('task')
+          break
+
+    recipe_data.update(recipe['globals'])
+
+    return recipe_data
 
   def run_wrapper(self, evidence):
     """Wrapper to manage TurbiniaTaskResults and exception handling.
@@ -961,15 +977,8 @@ class TurbiniaTask:
 
           self.result.update_task_status(self, 'running')
           self._evidence_config = evidence.config
-          #collect the recipe sent along with the evidence, and validate that
-          #all values are allowed through the default are config.
-          proposed_recipe = self.get_task_recipe(evidence.config)
-          globals_recipe = evidence.config['globals']
-          if proposed_recipe:
-            if self.validate_task_conf(proposed_recipe):
-              self.task_config.update(proposed_recipe)
-              self.task_config.pop('task')
-          self.task_config.update(globals_recipe)
+          self.task_config = self.get_task_recipe(evidence.config)
+
           self.result = self.run(evidence, self.result)
 
         # pylint: disable=broad-except

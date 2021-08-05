@@ -31,13 +31,13 @@ class PlasoTask(TurbiniaTask):
   # Plaso requires the Disk to be attached, but doesn't require it be mounted.
   REQUIRED_STATUS = [state.ATTACHED, state.DECOMPRESSED]
 
-  task_config = {
+  TASK_CONFIG = {
       # 'none' as indicated in the options for status_view within
       # the Plaso documentation
       'status_view': 'none',
       'hashers': 'all',
       'partitions': 'all',
-      'vss_stores': 'all',
+      'vss_stores': 'none',
       'artifact_filters': None,
       'file_filter': None,
       'yara_rules': None

@@ -22,7 +22,8 @@ for cloud_function in function_names:
   print('Deploying function {0:s}'.format(cloud_function))
   cmd = (
       'gcloud --project {0:s} functions deploy {1:s} --stage-bucket {2:s} '
-      '--region {3:s} --runtime nodejs10 --trigger-http'.format(
+      '--region {3:s} --runtime nodejs14 --trigger-http --memory 256MB '
+      '--timeout 60s'.format(
           config.TURBINIA_PROJECT, cloud_function, config.BUCKET_NAME,
           config.TURBINIA_REGION))
   print(subprocess.check_call(cmd, shell=True))

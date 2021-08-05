@@ -26,7 +26,7 @@ from turbinia.evidence import PlasoCsvFile
 class PsortTask(TurbiniaTask):
   """Task to run Psort (Plaso toolset)."""
 
-  task_config = {
+  TASK_CONFIG = {
       'status_view': 'none',
       'additional_fields': 'yara_match',
       'output_format': None,
