@@ -3,7 +3,7 @@
 # partitions).  This may take a long time to complete.
 
 globals:
-  jobs_allowlist: 
+  jobs_allowlist:
     - BinaryExtractorJob
     - BulkExtractorJob
     - FsstatJob
@@ -15,6 +15,7 @@ globals:
     - JenkinsAnalysisJob
     - JupyterExtractionJob
     - JupyterAnalysisJob
+    - LinuxAccountAnalysisJob
     - PartitionEnumerationJob
     - PlasoJob
     - PsortJob

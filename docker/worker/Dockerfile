@@ -1,6 +1,6 @@
 FROM ubuntu:20.04
 
-ENV DEBIAN_FRONTEND=noninteractive 
+ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get -y install \
     apt-transport-https \
     apt-utils \
@@ -54,7 +54,8 @@ RUN mkdir /etc/turbinia && mkdir -p /mnt/turbinia/ && mkdir -p /var/lib/turbinia
     && mkdir -p /etc/turbinia/ && chown -R turbinia:turbinia /etc/turbinia/ \
     && mkdir -p /var/log/turbinia/ && chown -R turbinia:turbinia /mnt/turbinia/ \
     && chown -R turbinia:turbinia /var/lib/turbinia/ \
-    && chown -R turbinia:turbinia /var/log/turbinia/
+    && chown -R turbinia:turbinia /var/log/turbinia/ \
+    && mkdir -p /home/turbinia/.john && chown -R turbinia:turbinia /home/turbinia/
 
 COPY docker/worker/start.sh /home/turbinia/start.sh
 RUN chmod +x /home/turbinia/start.sh
