@@ -79,7 +79,7 @@ class LinuxAccountAnalysisTask(TurbiniaTask):
       result.add_evidence(output_evidence, evidence.config)
       result.close(self, success=True, status=summary)
       return result
-    result.close(self, success=False, status='No shadow files found')
+    result.close(self, success=True, status='No shadow files found')
     return result
 
   @staticmethod
