@@ -120,11 +120,6 @@ def PreprocessLosetup(
   """
   losetup_device = None
 
-  if not os.path.exists(source_path):
-    raise TurbiniaException(
-        ('Cannot create loopback device for non-existing source_path '
-         '{0!s}').format(source_path))
-
   if lv_uuid:
     # LVM
     lvdisplay_command = [
@@ -141,6 +136,11 @@ def PreprocessLosetup(
     lvdetails = lvdetails.split(':')
     losetup_device = lvdetails[0]
   else:
+    if not os.path.exists(source_path):
+      raise TurbiniaException((
+          'Cannot create loopback device for non-existing source_path '
+          '{0!s}').format(source_path))
+
     # TODO(aarontp): Remove hard-coded sudo in commands:
     # https://github.com/google/turbinia/issues/73
     losetup_command = ['sudo', 'losetup', '--show', '--find', '-r']
