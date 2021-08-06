@@ -177,31 +177,27 @@ class BaseTaskManager:
     log.debug('Registered job list: {0:s}'.format(str(job_names)))
 
   def abort_request(self, request_id, requester, evidence_name, message):
-    # When there is a fatal error processing the request we create an AbortJob
-    # with the error and write it directly to the state manager.  This way the
-    # client will get a reasonable error in response to the failure.
+    """Abort the request by creating an AbortTask.
 
-    #job_instance = AbortJob(
-    #    request_id=evidence_.request_id, evidence_config=evidence_.config)
-    #abort_task = job_instance.create_tasks([evidence_])[0]
+    When there is a fatal error processing the request such that we can't
+    continue, an AbortTask will be created with the error message and is written
+    directly to the state database. This way the client will get a reasonable
+    error in response to the failure.
+    
+    Args:
+      request_id(str): The request ID.
+      requester(str): The username of the requester.
+      evidence_name(str): Name of the Evidence requested to be processed.
+      message(str): The error message to abort the request with.
+    """
     abort_task = AbortTask(request_id=request_id, requester=requester)
-    #abort_task.job_id = job_instance.id
-    #result = abort_task.create_result(no_output_manager=True)
     result = workers.TurbiniaTaskResult(
         request_id=request_id, no_output_manager=True)
     result.status = 'Processing request for {0:s} aborted: {1:s}'.format(
         evidence_name, message)
     result.successful = False
-    #job_instance.tasks.append(abort_task)
-    #self.running_jobs.append(job_instance)
-    #abort_task.result = abort_task.run(evidence_, result)
     abort_task.result = result
-    #self.state_manager.update_task(abort_task)
     self.state_manager.update_task(abort_task)
-    #abort_task.create_stub(abort_task.result.serialize())
-    #abort_task.stub.result = abort_task.result.serialize()
-    #job_count += 1
-    #turbinia_jobs_total.inc()
 
   def add_evidence(self, evidence_):
     """Adds new evidence and creates tasks to process it.
