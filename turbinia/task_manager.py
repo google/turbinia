@@ -638,8 +638,8 @@ class CeleryTaskManager(BaseTaskManager):
           self.abort_request(evidence_.request_id, evidence_.name, message)
         else:
           evidence_list.append(evidence_)
-
       turbinia_server_request_total.inc()
+
     return evidence_list
 
   def enqueue_task(self, task, evidence_):
@@ -724,17 +724,19 @@ class PSQTaskManager(BaseTaskManager):
         if not evidence_.request_id:
           evidence_.request_id = request.request_id
 
-        evidence_.config = request.recipe
-        success, message = recipe_helpers.validate_recipe(evidence_.config)
-        if not success:
-          self.abort_request(evidence_.request_id, evidence_.name, message)
-
         evidence_.config['requester'] = request.requester
         log.info(
             'Received evidence [{0:s}] from PubSub message.'.format(
                 str(evidence_)))
-        evidence_list.append(evidence_)
+
+        evidence_.config = request.recipe
+        success, message = recipe_helpers.validate_recipe(evidence_.config)
+        if not success:
+          self.abort_request(evidence_.request_id, evidence_.name, message)
+        else:
+          evidence_list.append(evidence_)
       turbinia_server_request_total.inc()
+
     return evidence_list
 
   def enqueue_task(self, task, evidence_):
