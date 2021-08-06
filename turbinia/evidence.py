@@ -540,12 +540,13 @@ class DiskPartition(RawDisk):
 
   def __init__(
       self, partition_location=None, partition_offset=None, partition_size=None,
-      path_spec=None, *args, **kwargs):
+      lv_uuid=None, path_spec=None, *args, **kwargs):
     """Initialization for raw volume evidence object."""
 
     self.partition_location = partition_location
     self.partition_offset = partition_offset
     self.partition_size = partition_size
+    self.lv_uuid = lv_uuid
     self.path_spec = path_spec
     super(DiskPartition, self).__init__(*args, **kwargs)
 
@@ -584,7 +585,7 @@ class DiskPartition(RawDisk):
         self.device_path = mount_local.PreprocessLosetup(
             self.parent_evidence.device_path,
             partition_offset=self.partition_offset,
-            partition_size=self.partition_size)
+            partition_size=self.partition_size, lv_uuid=self.lv_uuid)
       if self.device_path:
         self.state[EvidenceState.ATTACHED] = True
         self.local_path = self.device_path
@@ -611,7 +612,7 @@ class DiskPartition(RawDisk):
         mount_local.PostprocessUnmountPath(self.device_path.replace('bde1', ''))
         self.state[EvidenceState.ATTACHED] = False
       else:
-        mount_local.PostprocessDeleteLosetup(self.device_path)
+        mount_local.PostprocessDeleteLosetup(self.device_path, self.lv_uuid)
         self.state[EvidenceState.ATTACHED] = False
 
 

@@ -26,8 +26,10 @@ if TurbiniaTask.check_worker_role():
     from dfvfs.lib import definitions as dfvfs_definitions
     from dfvfs.lib import errors as dfvfs_errors
     from dfvfs.volume import gpt_volume_system
+    from dfvfs.volume import lvm_volume_system
     from dfvfs.volume import tsk_volume_system
 
+    from turbinia.processors import mount_local
     from turbinia.processors import partitions
   except ImportError as exception:
     message = 'Could not import dfVFS libraries: {0!s}'.format(exception)
@@ -58,8 +60,10 @@ class PartitionEnumerationTask(TurbiniaTask):
     partition_index = None
     partition_offset = None
     partition_size = None
+    lv_uuid = None
 
     # File system location / identifier
+    is_lvm = False
     fs_location = getattr(path_spec, 'location', None)
     while path_spec.HasParent():
       type_indicator = path_spec.type_indicator
@@ -67,8 +71,9 @@ class PartitionEnumerationTask(TurbiniaTask):
         # APFS volume index
         volume_index = getattr(path_spec, 'volume_index', None)
 
-      if type_indicator in (dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION,
-                            dfvfs_definitions.TYPE_INDICATOR_GPT):
+      if type_indicator in (dfvfs_definitions.TYPE_INDICATOR_GPT,
+                            dfvfs_definitions.TYPE_INDICATOR_LVM,
+                            dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION):
         if fs_location in ('\\', '/'):
           # Partition location / identifier
           fs_location = getattr(path_spec, 'location', None)
@@ -78,12 +83,21 @@ class PartitionEnumerationTask(TurbiniaTask):
 
         if type_indicator == dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION:
           volume_system = tsk_volume_system.TSKVolumeSystem()
+        elif type_indicator == dfvfs_definitions.TYPE_INDICATOR_LVM:
+          is_lvm = True
+          volume_system = lvm_volume_system.LVMVolumeSystem()
         else:
           volume_system = gpt_volume_system.GPTVolumeSystem()
         try:
           volume_system.Open(path_spec)
           volume_identifier = partition_location.replace('/', '')
           volume = volume_system.GetVolumeByIdentifier(volume_identifier)
+
+          if is_lvm:
+            # LVM Logical Volume UUID
+            lv_uuid = volume.GetAttribute('identifier')
+            if lv_uuid:
+              lv_uuid = lv_uuid.value
 
           partition_offset = volume.extents[0].offset
           partition_size = volume.extents[0].size
@@ -95,23 +109,23 @@ class PartitionEnumerationTask(TurbiniaTask):
       path_spec = path_spec.parent
 
     status_report.append(fmt.heading5('{0!s}:'.format(fs_location)))
+    if volume_index:
+      status_report.append(
+          fmt.bullet('Volume index: {0!s}'.format(volume_index)))
     if partition_index:
-      if not volume_index is None:
-        status_report.append(
-            fmt.bullet('Volume index: {0!s}'.format(volume_index)))
       status_report.append(
           fmt.bullet('Partition index: {0!s}'.format(partition_index)))
       status_report.append(
           fmt.bullet('Partition offset: {0!s}'.format(partition_offset)))
       status_report.append(
           fmt.bullet('Partition size: {0!s}'.format(partition_size)))
-    else:
+    if not volume_index and not partition_index:
       status_report.append(fmt.bullet('Source evidence is a volume image'))
 
     # Not setting path_spec here as it will need to be generated for each task
     partition_evidence = DiskPartition(
         partition_location=fs_location, partition_offset=partition_offset,
-        partition_size=partition_size)
+        partition_size=partition_size, lv_uuid=lv_uuid)
 
     return partition_evidence, status_report
 
@@ -149,9 +163,11 @@ class PartitionEnumerationTask(TurbiniaTask):
 
     status_report = [fmt.heading4(status_summary)]
 
+    lvm = None
     try:
       for path_spec in path_specs:
         partition_evidence, partition_status = self._ProcessPartition(path_spec)
+        lvm = partition_evidence.lv_uuid
         status_report.extend(partition_status)
         result.add_evidence(partition_evidence, evidence.config)
 
@@ -162,6 +178,11 @@ class PartitionEnumerationTask(TurbiniaTask):
       status_report = status_summary
 
     result.log('Scanning of [{0:s}] is complete'.format(evidence_description))
+
+    # If we processed an LVM volume, we need to deactivate it so postprocessing
+    # can detach the loopback device
+    if lvm:
+      mount_local.PostprocessDeleteLosetup(None, lv_uuid=lvm)
 
     result.report_priority = Priority.LOW
     result.report_data = status_report
