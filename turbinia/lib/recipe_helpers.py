@@ -153,7 +153,6 @@ def validate_recipe(recipe_dict):
             'to which it relates.'.format(recipe_item))
         log.error(message)
         return (False, message)
-    if recipe_item != 'globals':
       proposed_task = recipe_item_contents['task']
 
       # Doing a delayed import to avoid circular dependencies.

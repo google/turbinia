@@ -18,7 +18,6 @@ from __future__ import unicode_literals, absolute_import
 
 import logging
 import time
-from turbinia.workers.abort import AbortTask
 
 from prometheus_client import Gauge
 
@@ -30,6 +29,7 @@ from turbinia import state_manager
 from turbinia import TurbiniaException
 from turbinia.jobs import manager as jobs_manager
 from turbinia.lib import recipe_helpers
+from turbinia.workers.abort import AbortTask
 
 config.LoadConfig()
 if config.TASK_MANAGER.lower() == 'psq':
