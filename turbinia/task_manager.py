@@ -384,7 +384,7 @@ class BaseTaskManager:
 
     evidence_.config = job.evidence.config
     task.base_output_dir = config.OUTPUT_DIR
-    task.requester = evidence_.config.get('requester')
+    task.requester = evidence_.config['globals'].get('requester')
     if job:
       task.job_id = job.id
       task.job_name = job.name
@@ -631,13 +631,13 @@ class CeleryTaskManager(BaseTaskManager):
             'Received evidence [{0:s}] from Kombu message.'.format(
                 str(evidence_)))
 
-        evidence_.config = request.recipe
-        evidence_.config['requester'] = request.requester
-        success, message = recipe_helpers.validate_recipe(evidence_.config)
+        success, message = recipe_helpers.validate_recipe(request.recipe)
         if not success:
           self.abort_request(
               evidence_.request_id, request.requester, evidence_.name, message)
         else:
+          evidence_.config = request.recipe
+          evidence_.config['globals']['requester'] = request.requester
           evidence_list.append(evidence_)
       turbinia_server_request_total.inc()
 
@@ -729,13 +729,13 @@ class PSQTaskManager(BaseTaskManager):
             'Received evidence [{0:s}] from PubSub message.'.format(
                 str(evidence_)))
 
-        evidence_.config = request.recipe
-        evidence_.config['requester'] = request.requester
-        success, message = recipe_helpers.validate_recipe(evidence_.config)
+        success, message = recipe_helpers.validate_recipe(request.recipe)
         if not success:
           self.abort_request(
               evidence_.request_id, request.requester, evidence_.name, message)
         else:
+          evidence_.config = request.recipe
+          evidence_.config['requester'] = request.requester
           evidence_list.append(evidence_)
       turbinia_server_request_total.inc()
 
