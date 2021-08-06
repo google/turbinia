@@ -48,8 +48,9 @@ class AbortTask(TurbiniaTask):
 class MockPSQStub:
   """Mock PSQ task stub"""
 
-  def __init__(self):
+  def __init__(self, result):
     self.status = psq.task.FINISHED
+    self._result = result
 
   def get_task(self):
     """Returns this mock task stub (self).
@@ -59,9 +60,17 @@ class MockPSQStub:
     """
     return self
 
+  def result(self):
+    """Returns the task result data.
+    
+    Returns: results object.
+    """
+    return self._result
+
 
 class MockCeleryStub:
   """Mock Celery task stub"""
 
-  def __init__(self):
+  def __init__(self, result):
     self.status = celery_states.SUCCESS
+    self.result = result
