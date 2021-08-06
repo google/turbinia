@@ -114,7 +114,8 @@ class LinuxAccountAnalysisTask(TurbiniaTask):
     weak_passwords = bruteforce_password_hashes(shadow)
     if weak_passwords:
       priority = Priority.CRITICAL
-      summary = 'Shadow file analysis found potential issues'
+      summary = 'Shadow file analysis found {0:n} weak password(s)'.format(
+          len(weak_passwords))
       report.insert(0, fmt.heading4(fmt.bold(summary)))
       line = '{0:n} weak password(s) found:'.format(len(weak_passwords))
       report.append(fmt.bullet(fmt.bold(line)))
