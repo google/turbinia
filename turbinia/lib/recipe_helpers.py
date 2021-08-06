@@ -98,8 +98,8 @@ def validate_globals_recipe(proposed_globals_recipe):
   diff = set(proposed_globals_recipe) - set(DEFAULT_GLOBALS_RECIPE)
   if diff:
     message = (
-        'Invalid recipe: Unknown keys [{0:s}] found on globals recipe item'
-        .format(str(diff)))
+        'Invalid recipe: Unknown keys [{0:s}] found in globals recipe'.format(
+            str(diff)))
     log.error(message)
     return (False, message)
 
