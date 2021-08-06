@@ -882,8 +882,6 @@ def main():
       recipe_dict['globals']['jobs_allowlist'] = args.jobs_allowlist
       recipe_dict['globals']['yara_rules'] = yara_rules
 
-    # Hack to break things:
-    recipe_dict['nothing'] = 'something'
     request.recipe = recipe_dict
 
     if args.dump_json:

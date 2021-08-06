@@ -14,6 +14,8 @@
 # limitations under the License.
 """Task used to abort a job"""
 
+from turbinia.workers import TurbiniaTask
+
 
 class AbortTask(TurbiniaTask):
   """Task producing a graceful job termination result."""
