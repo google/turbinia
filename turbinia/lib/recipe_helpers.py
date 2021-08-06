@@ -55,7 +55,8 @@ def load_recipe_from_file(recipe_file, validate=True):
       recipe_file_contents = r_file.read()
       recipe_dict = load(recipe_file_contents, Loader=Loader)
       if validate:
-        if validate_recipe(recipe_dict):
+        success, _ = validate_recipe(recipe_dict)
+        if success:
           return recipe_dict
       else:
         return recipe_dict
@@ -78,7 +79,10 @@ def validate_globals_recipe(proposed_globals_recipe):
     proposed_globals_recipe(dict): globals task recipe in need of validation.
 
   Returns:
-    Bool indicating whether the recipe has a valid format.
+    Tuple(
+      bool: Whether the recipe has a valid format.
+      str: Error message if validation failed.
+    )
   """
   reference_globals_recipe = copy.deepcopy(DEFAULT_GLOBALS_RECIPE)
   reference_globals_recipe.update(proposed_globals_recipe)
@@ -93,15 +97,18 @@ def validate_globals_recipe(proposed_globals_recipe):
     proposed_globals_recipe['yara_rules'] = file_to_str(yara_rules_file)
   diff = set(proposed_globals_recipe) - set(DEFAULT_GLOBALS_RECIPE)
   if diff:
-    log.error(
-        'Unknown keys [{0:s}] found on globals recipe item'.format(str(diff)))
-    return False
+    message = (
+        'Invalid recipe: Unknown keys [{0:s}] found in globals recipe'.format(
+            str(diff)))
+    log.error(message)
+    return (False, message)
 
   if (proposed_globals_recipe.get('jobs_allowlist') and
       proposed_globals_recipe.get('jobs_denylist')):
-    log.error('No jobs can be simultaneously in the allow and deny lists')
-    return False
-  return True
+    message = 'Invalid recipe: Jobs cannnot be in both the allow and deny lists'
+    log.error(message)
+    return (False, message)
+  return (True, '')
 
 
 def validate_recipe(recipe_dict):
@@ -112,7 +119,10 @@ def validate_recipe(recipe_dict):
     submitted along with the evidence.
 
   Returns:
-    Bool indicating whether the recipe has a valid format.
+    Tuple(
+      bool: Whether the recipe has a valid format.
+      str: Error message if validation failed.
+    )
   """
   tasks_with_recipe = []
   #If not globals task recipe is specified create one.
@@ -122,24 +132,27 @@ def validate_recipe(recipe_dict):
         'No globals recipe specified, all recipes should include '
         'a globals entry, the default values will be used')
   else:
-    if not validate_globals_recipe(recipe_dict['globals']):
-      log.error('Invalid globals section for loaded recipe.')
-      return False
+    success, message = validate_globals_recipe(recipe_dict['globals'])
+    if not success:
+      log.error(message)
+      return (False, message)
 
   for recipe_item, recipe_item_contents in recipe_dict.items():
     if recipe_item in tasks_with_recipe:
-      log.error(
-          'Two recipe items with the same name {0:s} have been found. '
+      message = (
+          'Two recipe items with the same name \"{0:s}\" have been found. '
           'If you wish to specify several task runs of the same tool, '
           'please include them in separate recipes.'.format(recipe_item))
-      return False
+      log.error(message)
+      return (False, message)
     if recipe_item != 'globals':
       if 'task' not in recipe_item_contents:
-        log.error(
-            'Recipe item {0:s} has no "task" key. All recipe items '
+        message = (
+            'Recipe item \"{0:s}\" has no "task" key. All recipe items '
             'must have a "task" key indicating the TurbiniaTask '
             'to which it relates.'.format(recipe_item))
-        return False
+        log.error(message)
+        return (False, message)
       proposed_task = recipe_item_contents['task']
 
       # Doing a delayed import to avoid circular dependencies.
@@ -148,6 +161,7 @@ def validate_recipe(recipe_dict):
         log.error(
             'Task {0:s} defined for task recipe {1:s} does not exist.'.format(
                 proposed_task, recipe_item))
-        return False
+        return (False, message)
       tasks_with_recipe.append(recipe_item)
-  return True
+
+  return (True, '')
