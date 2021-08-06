@@ -973,6 +973,7 @@ class TurbiniaTask:
                 .format(self.turbinia_version, turbinia.__version__))
             self.result.log(message, level=logging.ERROR)
             self.result.status = message
+            self.result.successful = False
             return self.result.serialize()
 
           self.result.update_task_status(self, 'running')
