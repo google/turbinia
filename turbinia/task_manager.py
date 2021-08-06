@@ -384,7 +384,7 @@ class BaseTaskManager:
 
     evidence_.config = job.evidence.config
     task.base_output_dir = config.OUTPUT_DIR
-    task.requester = evidence_.config['globals'].get('requester')
+    task.requester = evidence_.config.get('globals', {}).get('requester')
     if job:
       task.job_id = job.id
       task.job_name = job.name
@@ -735,7 +735,7 @@ class PSQTaskManager(BaseTaskManager):
               evidence_.request_id, request.requester, evidence_.name, message)
         else:
           evidence_.config = request.recipe
-          evidence_.config['requester'] = request.requester
+          evidence_.config['globals']['requester'] = request.requester
           evidence_list.append(evidence_)
       turbinia_server_request_total.inc()
 
