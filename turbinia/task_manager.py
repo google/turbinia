@@ -176,7 +176,7 @@ class BaseTaskManager:
     self.jobs = [job for _, job in jobs_manager.JobsManager.GetJobs(job_names)]
     log.debug('Registered job list: {0:s}'.format(str(job_names)))
 
-  def abort_request(self, request_id, evidence_name, message):
+  def abort_request(self, request_id, requester, evidence_name, message):
     # When there is a fatal error processing the request we create an AbortJob
     # with the error and write it directly to the state manager.  This way the
     # client will get a reasonable error in response to the failure.
@@ -184,7 +184,7 @@ class BaseTaskManager:
     #job_instance = AbortJob(
     #    request_id=evidence_.request_id, evidence_config=evidence_.config)
     #abort_task = job_instance.create_tasks([evidence_])[0]
-    abort_task = AbortTask(request_id=request_id)
+    abort_task = AbortTask(request_id=request_id, requester=requester)
     #abort_task.job_id = job_instance.id
     #result = abort_task.create_result(no_output_manager=True)
     result = workers.TurbiniaTaskResult(
@@ -627,15 +627,16 @@ class CeleryTaskManager(BaseTaskManager):
         if not evidence_.request_id:
           evidence_.request_id = request.request_id
 
-        evidence_.config['requester'] = request.requester
         log.info(
             'Received evidence [{0:s}] from Kombu message.'.format(
                 str(evidence_)))
 
         evidence_.config = request.recipe
+        evidence_.config['requester'] = request.requester
         success, message = recipe_helpers.validate_recipe(evidence_.config)
         if not success:
-          self.abort_request(evidence_.request_id, evidence_.name, message)
+          self.abort_request(
+              evidence_.request_id, request.requester, evidence_.name, message)
         else:
           evidence_list.append(evidence_)
       turbinia_server_request_total.inc()
@@ -724,15 +725,16 @@ class PSQTaskManager(BaseTaskManager):
         if not evidence_.request_id:
           evidence_.request_id = request.request_id
 
-        evidence_.config['requester'] = request.requester
         log.info(
             'Received evidence [{0:s}] from PubSub message.'.format(
                 str(evidence_)))
 
         evidence_.config = request.recipe
+        evidence_.config['requester'] = request.requester
         success, message = recipe_helpers.validate_recipe(evidence_.config)
         if not success:
-          self.abort_request(evidence_.request_id, evidence_.name, message)
+          self.abort_request(
+              evidence_.request_id, request.requester, evidence_.name, message)
         else:
           evidence_list.append(evidence_)
       turbinia_server_request_total.inc()
