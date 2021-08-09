@@ -29,7 +29,6 @@ if TurbiniaTask.check_worker_role():
     from dfvfs.volume import lvm_volume_system
     from dfvfs.volume import tsk_volume_system
 
-    from turbinia.processors import mount_local
     from turbinia.processors import partitions
   except ImportError as exception:
     message = 'Could not import dfVFS libraries: {0!s}'.format(exception)
@@ -163,11 +162,9 @@ class PartitionEnumerationTask(TurbiniaTask):
 
     status_report = [fmt.heading4(status_summary)]
 
-    lvm = None
     try:
       for path_spec in path_specs:
         partition_evidence, partition_status = self._ProcessPartition(path_spec)
-        lvm = partition_evidence.lv_uuid
         status_report.extend(partition_status)
         result.add_evidence(partition_evidence, evidence.config)
 
@@ -178,11 +175,6 @@ class PartitionEnumerationTask(TurbiniaTask):
       status_report = status_summary
 
     result.log('Scanning of [{0:s}] is complete'.format(evidence_description))
-
-    # If we processed an LVM volume, we need to deactivate it so postprocessing
-    # can detach the loopback device
-    if lvm:
-      mount_local.PostprocessDeleteLosetup(None, lv_uuid=lvm)
 
     result.report_priority = Priority.LOW
     result.report_data = status_report

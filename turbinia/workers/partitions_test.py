@@ -139,11 +139,9 @@ class PartitionEnumerationTaskTest(TestTurbiniaTaskBase):
     expected_report = '\n'.join(expected_report)
     self.assertEqual(result.report_data, expected_report)
 
-  @mock.patch('turbinia.processors.mount_local.PostprocessDeleteLosetup')
   @mock.patch('turbinia.state_manager.get_state_manager')
   @mock.patch('dfvfs.helpers.volume_scanner.VolumeScanner.GetBasePathSpecs')
-  def testPartitionEnumerationRunLVM(
-      self, mock_getbasepathspecs, mock_state_manager, mock_mount_local):
+  def testPartitionEnumerationRunLVM(self, mock_getbasepathspecs, _):
     """Test PartitionEnumeration task run on LVM."""
     self.result.setup(self.task)
     filedir = os.path.dirname(os.path.realpath(__file__))
