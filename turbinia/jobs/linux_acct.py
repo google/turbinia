@@ -14,13 +14,11 @@
 # limitations under the License.
 """Job to execute linux_acct analysis task."""
 
+from turbinia.evidence import CompressedDirectory
 from turbinia.evidence import Directory
+from turbinia.evidence import DiskPartition
 from turbinia.evidence import DockerContainer
 from turbinia.evidence import ReportText
-from turbinia.evidence import CompressedDirectory
-from turbinia.evidence import GoogleCloudDisk
-from turbinia.evidence import GoogleCloudDiskRawEmbedded
-from turbinia.evidence import RawDisk
 from turbinia.jobs import interface
 from turbinia.jobs import manager
 from turbinia.workers.analysis import linux_acct
@@ -30,8 +28,7 @@ class LinuxAccountAnalysisJob(interface.TurbiniaJob):
   """Linux Account analysis job."""
 
   evidence_input = [
-      Directory, RawDisk, GoogleCloudDisk, GoogleCloudDiskRawEmbedded,
-      CompressedDirectory, DockerContainer
+      CompressedDirectory, Directory, DiskPartition, DockerContainer
   ]
   evidence_output = [ReportText]
 
