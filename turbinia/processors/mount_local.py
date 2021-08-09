@@ -129,11 +129,18 @@ def PreprocessLosetup(
     log.info('Running: {0:s}'.format(' '.join(lvdisplay_command)))
     try:
       lvdetails = subprocess.check_output(
-          lvdisplay_command, universal_newlines=True).split('\n')[-1].strip()
+          lvdisplay_command, universal_newlines=True).split('\n')[-2].strip()
     except subprocess.CalledProcessError as e:
       raise TurbiniaException(
           'Could not determine logical volume device {0!s}'.format(e))
     lvdetails = lvdetails.split(':')
+    volume_group = lvdetails[1]
+    vgchange_command = ['sudo', 'vgchange', '-a', 'y', volume_group]
+    log.info('Running: {0:s}'.format(' '.join(vgchange_command)))
+    try:
+      subprocess.check_call(vgchange_command)
+    except subprocess.CalledProcessError as e:
+      raise TurbiniaException('Could not activate volume group {0!s}'.format(e))
     losetup_device = lvdetails[0]
   else:
     if not os.path.exists(source_path):
@@ -329,7 +336,7 @@ def PostprocessDeleteLosetup(device_path, lv_uuid=None):
     log.info('Running: {0:s}'.format(' '.join(lvdisplay_command)))
     try:
       lvdetails = subprocess.check_output(
-          lvdisplay_command, universal_newlines=True).split('\n')[-1].strip()
+          lvdisplay_command, universal_newlines=True).split('\n')[-2].strip()
     except subprocess.CalledProcessError as e:
       raise TurbiniaException(
           'Could not determine volume group {0!s}'.format(e))

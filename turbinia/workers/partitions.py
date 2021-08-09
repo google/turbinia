@@ -109,17 +109,17 @@ class PartitionEnumerationTask(TurbiniaTask):
       path_spec = path_spec.parent
 
     status_report.append(fmt.heading5('{0!s}:'.format(fs_location)))
-    if volume_index:
+    if volume_index is not None:
       status_report.append(
           fmt.bullet('Volume index: {0!s}'.format(volume_index)))
-    if partition_index:
+    if partition_index is not None:
       status_report.append(
           fmt.bullet('Partition index: {0!s}'.format(partition_index)))
       status_report.append(
           fmt.bullet('Partition offset: {0!s}'.format(partition_offset)))
       status_report.append(
           fmt.bullet('Partition size: {0!s}'.format(partition_size)))
-    if not volume_index and not partition_index:
+    if volume_index is None and partition_index is None:
       status_report.append(fmt.bullet('Source evidence is a volume image'))
 
     # Not setting path_spec here as it will need to be generated for each task

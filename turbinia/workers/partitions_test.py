@@ -101,7 +101,7 @@ class PartitionEnumerationTaskTest(TestTurbiniaTaskBase):
             'Found 1 partition(s) in [{0:s}]:'.format(
                 self.evidence.local_path)))
     expected_report.append(fmt.heading5('/apfs1:'))
-    expected_report.append(fmt.bullet('Source evidence is a volume image'))
+    expected_report.append(fmt.bullet('Volume index: 0'))
     expected_report = '\n'.join(expected_report)
     self.assertEqual(result.report_data, expected_report)
 

@@ -137,22 +137,32 @@ class MountLocalProcessorTest(unittest.TestCase):
       mount_local.PreprocessLosetup(source_path)
 
   @mock.patch('subprocess.check_output')
-  def testPreprocessLVM(self, mock_subprocess):
+  @mock.patch('subprocess.check_call')
+  def testPreprocessLVM(self, mock_subprocess, mock_output):
     """Test PreprocessLosetup method on LVM."""
     source_path = os.path.join('/dev/loop0')
     lv_uuid = 'RI0pgm-rdy4-XxcL-5eoK-Easc-fgPq-CWaEJb'
-    mock_subprocess.return_value = '  /dev/test_volume_group/test_logical_volume1:test_volume_group:3:0:-1:0:8192:1:-1:0:-1:-1:-1'
+    mock_output.return_value = (
+        '  /dev/test_volume_group/test_logical_volume1:test_volume_group:3:0:-1:'
+        '0:8192:1:-1:0:-1:-1:-1\n')
     device = mount_local.PreprocessLosetup(source_path, lv_uuid=lv_uuid)
     expected_args = [
         'sudo', 'lvdisplay', '--colon', '--select',
         'lv_uuid={0:s}'.format(lv_uuid)
     ]
+    mock_output.assert_called_once_with(expected_args, universal_newlines=True)
     mock_subprocess.assert_called_once_with(
-        expected_args, universal_newlines=True)
+        ['sudo', 'vgchange', '-a', 'y', 'test_volume_group'])
     self.assertEqual(device, '/dev/test_volume_group/test_logical_volume1')
 
+    # Test vgchange error
+    mock_subprocess.reset_mock()
+    mock_subprocess.side_effect = CalledProcessError(1, 'vgchange')
+    with self.assertRaises(TurbiniaException):
+      mount_local.PreprocessLosetup(source_path, lv_uuid=lv_uuid)
+
     # Test lvdisplay failure
-    mock_subprocess.side_effect = CalledProcessError(1, 'lvdisplay')
+    mock_output.side_effect = CalledProcessError(1, 'lvdisplay')
     with self.assertRaises(TurbiniaException):
       mount_local.PreprocessLosetup(source_path, lv_uuid=lv_uuid)
 
@@ -299,7 +309,9 @@ class MountLocalProcessorTest(unittest.TestCase):
   def testPostprocessDeleteLVM(self, mock_subprocess, mock_output):
     """Test PostprocessDeleteLosetup method on LVM."""
     lv_uuid = 'RI0pgm-rdy4-XxcL-5eoK-Easc-fgPq-CWaEJb'
-    mock_output.return_value = '  /dev/test_volume_group/test_logical_volume1:test_volume_group:3:0:-1:0:8192:1:-1:0:-1:-1:-1'
+    mock_output.return_value = (
+        '  /dev/test_volume_group/test_logical_volume1:test_volume_group:3:0:-1:'
+        '0:8192:1:-1:0:-1:-1:-1\n')
     mount_local.PostprocessDeleteLosetup(None, lv_uuid=lv_uuid)
     expected_args = [
         'sudo', 'lvdisplay', '--colon', '--select',
