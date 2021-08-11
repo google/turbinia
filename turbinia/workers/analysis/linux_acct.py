@@ -30,11 +30,10 @@ from turbinia.workers import TurbiniaTask
 class LinuxAccountAnalysisTask(TurbiniaTask):
   """Task to analyze a Linux password file."""
 
-  REQUIRED_STATES = [state.ATTACHED, state.MOUNTED]
+  REQUIRED_STATES = [state.ATTACHED, state.DECOMPRESSED]
 
   def run(self, evidence, result):
     """Run the Linux Account worker.
-
     Args:
         evidence (Evidence object):  The evidence to process
         result (TurbiniaTaskResult): The object to place task results into.
@@ -117,7 +116,8 @@ class LinuxAccountAnalysisTask(TurbiniaTask):
     weak_passwords = bruteforce_password_hashes(shadow)
     if weak_passwords:
       priority = Priority.CRITICAL
-      summary = 'Shadow file analysis found potential issues'
+      summary = 'Shadow file analysis found {0:n} weak password(s)'.format(
+          len(weak_passwords))
       report.insert(0, fmt.heading4(fmt.bold(summary)))
       line = '{0:n} weak password(s) found:'.format(len(weak_passwords))
       report.append(fmt.bullet(fmt.bold(line)))

@@ -853,9 +853,10 @@ def main():
     if args.recipe or args.recipe_path:
       if (args.jobs_denylist or args.jobs_allowlist or
           args.filter_patterns_file or args.yara_rules_file):
-        raise TurbiniaException(
+        log.error(
             'Specifying a recipe is incompatible with defining '
             'jobs allow/deny lists, yara rules or a patterns file separately.')
+        sys.exit(1)
 
       if args.recipe_path:
         recipe_file = args.recipe_path

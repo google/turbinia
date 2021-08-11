@@ -17,6 +17,8 @@
 from __future__ import unicode_literals
 
 import os
+import logging
+
 from turbinia import config
 from turbinia.evidence import APFSEncryptedDisk
 from turbinia.evidence import EvidenceState as state
@@ -29,7 +31,7 @@ class PlasoTask(TurbiniaTask):
   """Task to run Plaso (log2timeline)."""
 
   # Plaso requires the Disk to be attached, but doesn't require it be mounted.
-  REQUIRED_STATUS = [state.ATTACHED, state.DECOMPRESSED]
+  REQUIRED_STATES = [state.ATTACHED, state.DECOMPRESSED]
 
   TASK_CONFIG = {
       # 'none' as indicated in the options for status_view within
@@ -53,6 +55,9 @@ class PlasoTask(TurbiniaTask):
     Returns:
       String for valid Log2timeline command.
     """
+    self.result.log(
+        'Generating Plaso command line from arguments: {0!s}'.format(conf),
+        level=logging.DEBUG)
     cmd = [base_command]
     for k, v in conf.items():
       cli_args = [
@@ -127,7 +132,9 @@ class PlasoTask(TurbiniaTask):
 
     cmd.extend(['--temporary_directory', self.tmp_dir])
     cmd.extend(['--logfile', plaso_log])
+    cmd.extend(['--unattended'])
     cmd.extend([plaso_file, evidence.local_path])
+
     result.log('Running plaso as [{0:s}]'.format(' '.join(cmd)))
     self.execute(
         cmd, result, log_files=[plaso_log], new_evidence=[plaso_evidence],

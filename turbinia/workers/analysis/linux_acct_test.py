@@ -31,7 +31,7 @@ class LinuxAccountAnalysisTaskTest(unittest.TestCase):
       '$6$NS6w5Q6yjrlZiw7s$5jeyNS.bsw2p4nlbbMRI5H8oZnSbbwKs0Lsw94xCouqn/y/yQpKNA4vdPSr/wdA0isyUmq3BD..ZcirwOVNPF/':
           'testuser'
   }
-  SHADOW_REPORT = """#### **Shadow file analysis found potential issues**
+  SHADOW_REPORT = """#### **Shadow file analysis found 1 weak password(s)**
 * **1 weak password(s) found:**
     * User 'testuser' with password 'test'"""
 
@@ -60,7 +60,7 @@ class LinuxAccountAnalysisTaskTest(unittest.TestCase):
         self.SHADOW_FILE, self.EXPECTED_CREDENTIALS)
     self.assertEqual(report, self.SHADOW_REPORT)
     self.assertEqual(priority, 10)
-    self.assertEqual(summary, 'Shadow file analysis found potential issues')
+    self.assertEqual(summary, 'Shadow file analysis found 1 weak password(s)')
 
 
 if __name__ == '__main__':
