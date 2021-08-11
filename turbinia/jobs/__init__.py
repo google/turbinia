@@ -13,7 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Turbinia jobs."""
-from turbinia.jobs import abort
 from turbinia.jobs import binary_extractor
 from turbinia.jobs import bulk_extractor
 from turbinia.jobs import docker
