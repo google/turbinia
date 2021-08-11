@@ -1,9 +1,10 @@
 # Triage recipe for quick initial response (specific to Windows).
 
 globals:
-  jobs_allowlist: 
+  jobs_allowlist:
     - PlasoJob
     - PsortJob
+    - WindowsAccountAnalysisJob
 
 plaso_base:
   task: 'PlasoTask'

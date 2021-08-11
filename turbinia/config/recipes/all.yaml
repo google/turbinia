@@ -26,6 +26,7 @@ globals:
     - StringsJob
     - TomcatExtractionJob
     - TomcatAnalysisJob
+    - WindowsAccountAnalysisJob
 
 plaso_base:
   task: 'PlasoTask'

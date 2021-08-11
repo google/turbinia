@@ -6,16 +6,21 @@ RUN apt-get update && apt-get -y install \
     apt-utils \
     ca-certificates \
     git \
-    john \
-    john-data \
     libleveldb1d \
     libleveldb-dev \
     libterm-readline-gnu-perl \
     python3-pip \
+    python3.8-venv \
     software-properties-common \
     sudo \
-    testdisk \
-    && rm -rf /var/lib/apt/lists/*
+    testdisk
+
+RUN apt-get -y install build-essential git \
+    libssl-dev zlib1g-dev yasm libgmp-dev libpcap-dev \
+    pkg-config libbz2-dev ocl-icd-opencl-dev \
+    opencl-headers pocl-opencl-icd
+
+RUN rm -rf /var/lib/apt/lists/*
 
 ADD requirements.txt /tmp/
 RUN cd /tmp/ && pip3 install -r requirements.txt
@@ -50,12 +55,25 @@ RUN cd /tmp/ && python3 setup.py install
 RUN useradd -r -s /bin/nologin -G disk,sudo turbinia
 RUN echo "turbinia ALL = (root) NOPASSWD: ALL" > /etc/sudoers.d/turbinia
 
+# Get new version of John from Git
+RUN cd /opt/ && git clone https://github.com/openwall/john
+RUN chown -R turbinia:turbinia /opt/john/
+RUN cd /opt/john/src && ./configure && make -s clean && make -sj4
+
+# Get install Impacket from Git in a venv
+RUN python3 -m venv /opt/impacket-env
+RUN chown -R turbinia:turbinia /opt/impacket-env
+RUN chmod +x /opt/impacket-env/bin/activate
+RUN mkdir -p /home/turbinia/impacket && chown turbinia:turbinia /home/turbinia/impacket
+RUN cd /home/turbinia/impacket && git clone https://github.com/SecureAuthCorp/impacket.git
+RUN . /opt/impacket-env/bin/activate && pip install wheel && cd /home/turbinia/impacket/impacket && python3 -m pip install .
+RUN cp /home/turbinia/impacket/impacket/examples/secretsdump.py /usr/bin/
+
 RUN mkdir /etc/turbinia && mkdir -p /mnt/turbinia/ && mkdir -p /var/lib/turbinia/ \
     && mkdir -p /etc/turbinia/ && chown -R turbinia:turbinia /etc/turbinia/ \
     && mkdir -p /var/log/turbinia/ && chown -R turbinia:turbinia /mnt/turbinia/ \
     && chown -R turbinia:turbinia /var/lib/turbinia/ \
-    && chown -R turbinia:turbinia /var/log/turbinia/ \
-    && mkdir -p /home/turbinia/.john && chown -R turbinia:turbinia /home/turbinia/
+    && chown -R turbinia:turbinia /var/log/turbinia/
 
 COPY docker/worker/start.sh /home/turbinia/start.sh
 RUN chmod +x /home/turbinia/start.sh

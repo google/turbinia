@@ -122,12 +122,13 @@ def get_exe_path(filename):
   return binary
 
 
-def bruteforce_password_hashes(password_hashes, timeout=300):
+def bruteforce_password_hashes(password_hashes, timeout=300, extra_args=''):
   """Bruteforce password hashes using John the Ripper.
 
   Args:
     password_hashes (list): Password hashes as strings.
     timeout (int): Number of seconds to run for before terminating the process.
+    extra_args (str): Any extra arguments to be passed to JtR.
 
   Returns:
     list: of tuples with hashes and plain text passwords.
@@ -140,7 +141,10 @@ def bruteforce_password_hashes(password_hashes, timeout=300):
     password_hashes_file_path = fh.name
     fh.write('\n'.join(password_hashes))
 
-  cmd = ['john', password_hashes_file_path]
+  cmd = ['/opt/john/run/john']
+  if extra_args:
+    cmd = cmd + extra_args.split(' ')
+  cmd = cmd + [password_hashes_file_path]
 
   with open(os.devnull, 'w') as devnull:
     try:
@@ -151,18 +155,19 @@ def bruteforce_password_hashes(password_hashes, timeout=300):
       # Cancel the timer if the process is done before the timer.
       if timer.is_alive():
         timer.cancel()
-    except OSError:
-      raise TurbiniaException('john the ripper failed.')
+    except OSError as e:
+      raise TurbiniaException('john the ripper failed: {0}'.format(str(e)))
 
   result = []
-  # Default location of the result file, no way to change it.
-  pot_file = os.path.expanduser('~/.john/john.pot')
+  pot_file = '/opt/john/run/john.pot'
 
   if os.path.isfile(pot_file):
     with open(pot_file, 'r') as fh:
-      for line in fh.readlines():
+      for line in fh:
         password_hash, plaintext = line.rsplit(':', 1)
-        result.append((password_hash, plaintext.rstrip()))
+        plaintext = plaintext.rstrip()
+        if plaintext:
+          result.append((password_hash, plaintext))
     os.remove(pot_file)
 
   return result
