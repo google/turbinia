@@ -278,7 +278,7 @@ class JobsManager:
     Returns:
       timeout(int): The timeout value.
     """
-    timeout = None
+    timeout = 7200
     job_class = cls._job_classes.get(job_name.lower())
     if hasattr(job_class, 'timeout') and job_class:
       timeout = job_class.timeout
