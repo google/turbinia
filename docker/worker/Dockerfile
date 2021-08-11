@@ -60,6 +60,8 @@ RUN cd /opt/ && git clone https://github.com/openwall/john
 RUN chown -R turbinia:turbinia /opt/john/
 RUN cd /opt/john/src && ./configure && make -s clean && make -sj4
 
+ENV PATH="/opt/john/run:$PATH"
+
 # Get install Impacket from Git in a venv
 RUN python3 -m venv /opt/impacket-env
 RUN chown -R turbinia:turbinia /opt/impacket-env
