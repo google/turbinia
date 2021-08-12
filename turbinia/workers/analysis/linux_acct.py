@@ -34,6 +34,7 @@ class LinuxAccountAnalysisTask(TurbiniaTask):
 
   def run(self, evidence, result):
     """Run the Linux Account worker.
+
     Args:
         evidence (Evidence object):  The evidence to process
         result (TurbiniaTaskResult): The object to place task results into.
@@ -113,7 +114,8 @@ class LinuxAccountAnalysisTask(TurbiniaTask):
     report = []
     summary = 'No weak passwords found'
     priority = Priority.LOW
-    weak_passwords = bruteforce_password_hashes(shadow)
+    weak_passwords = bruteforce_password_hashes(
+        shadow, tmp_dir=self.tmp_dir, extra_args='-m 1800 -a 0')
     if weak_passwords:
       priority = Priority.CRITICAL
       summary = 'Shadow file analysis found {0:n} weak password(s)'.format(

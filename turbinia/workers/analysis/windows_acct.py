@@ -113,7 +113,7 @@ class WindowsAccountAnalysisTask(TurbiniaTask):
           if passwdhash in IGNORE_CREDS:
             continue
           creds.append(line.strip())
-          hashnames['$NT$' + passwdhash] = username
+          hashnames[passwdhash] = username
       os.remove(hash_file)
     return (creds, hashnames)
 
@@ -122,7 +122,7 @@ class WindowsAccountAnalysisTask(TurbiniaTask):
     summary = 'No weak passwords found'
     priority = Priority.LOW
     weak_passwords = bruteforce_password_hashes(
-        creds, timeout=timeout, extra_args='--format=NT')
+        creds, tmp_dir=self.tmp_dir, timeout=timeout, extra_args='-m 1000')
     if weak_passwords:
       priority = Priority.CRITICAL
       summary = 'Registry analysis found {0:d} weak password(s)'.format(

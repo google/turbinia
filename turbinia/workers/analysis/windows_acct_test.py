@@ -31,9 +31,9 @@ class WindowsAccountAnalysisTaskTest(unittest.TestCase):
       'badpassword:1005:aad3b435b51404eeaad3b435b51404ee:7a21990fcd3d759941e45c490f143d5f:::'
   ]
   EXPECTED_CREDENTIALS = {
-      '$NT$29f98734e7aa3df2454621ff3928d121': 'testlocaluser',
-      '$NT$7a21990fcd3d759941e45c490f143d5f': 'badpassword',
-      '$NT$9c7ae0f76b24aad74254914c2b191633': 'testuser'
+      '29f98734e7aa3df2454621ff3928d121': 'testlocaluser',
+      '7a21990fcd3d759941e45c490f143d5f': 'badpassword',
+      '9c7ae0f76b24aad74254914c2b191633': 'testuser'
   }
   REGISTRY_REPORT = """#### **Registry analysis found 2 weak password(s)**
 * **2 weak password(s) found:**

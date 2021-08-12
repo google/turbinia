@@ -4,7 +4,6 @@ globals:
   jobs_allowlist:
     - PlasoJob
     - PsortJob
-    - WindowsAccountAnalysisJob
 
 plaso_base:
   task: 'PlasoTask'

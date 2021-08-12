@@ -122,11 +122,13 @@ def get_exe_path(filename):
   return binary
 
 
-def bruteforce_password_hashes(password_hashes, timeout=300, extra_args=''):
-  """Bruteforce password hashes using John the Ripper.
+def bruteforce_password_hashes(
+    password_hashes, tmp_dir, timeout=300, extra_args=''):
+  """Bruteforce password hashes using Hashcat.
 
   Args:
     password_hashes (list): Password hashes as strings.
+    tmp_dir (str): Path to use as a temporary directory
     timeout (int): Number of seconds to run for before terminating the process.
     extra_args (str): Any extra arguments to be passed to JtR.
 
@@ -141,10 +143,14 @@ def bruteforce_password_hashes(password_hashes, timeout=300, extra_args=''):
     password_hashes_file_path = fh.name
     fh.write('\n'.join(password_hashes))
 
-  cmd = ['/opt/john/run/john']
+  pot_file = os.path.join((tmp_dir or tempfile.gettempdir()), 'hashcat.pot')
+  password_list_file_path = os.path.expanduser('~/password.lst')
+
+  cmd = ['hashcat', '-a', '0']
   if extra_args:
     cmd = cmd + extra_args.split(' ')
-  cmd = cmd + [password_hashes_file_path]
+  cmd = cmd + ['--potfile-path={}'.format(pot_file)]
+  cmd = cmd + [password_hashes_file_path, password_list_file_path]
 
   with open(os.devnull, 'w') as devnull:
     try:
@@ -156,10 +162,9 @@ def bruteforce_password_hashes(password_hashes, timeout=300, extra_args=''):
       if timer.is_alive():
         timer.cancel()
     except OSError as e:
-      raise TurbiniaException('john the ripper failed: {0}'.format(str(e)))
+      raise TurbiniaException('hashcat failed: {0}'.format(str(e)))
 
   result = []
-  pot_file = '/opt/john/run/john.pot'
 
   if os.path.isfile(pot_file):
     with open(pot_file, 'r') as fh:
