@@ -105,7 +105,7 @@ def validate_globals_recipe(proposed_globals_recipe):
 
   if (proposed_globals_recipe.get('jobs_allowlist') and
       proposed_globals_recipe.get('jobs_denylist')):
-    message = 'Invalid recipe: Jobs cannnot be in both the allow and deny lists'
+    message = 'Invalid recipe: Jobs cannot be in both the allow and deny lists'
     log.error(message)
     return (False, message)
   return (True, '')
