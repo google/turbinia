@@ -8,13 +8,10 @@ RUN apt-get update && apt-get -y install \
     git \
     hashcat \
     hashcat-data \
-    john \
-    john-data \
     libleveldb1d \
     libleveldb-dev \
     libterm-readline-gnu-perl \
     python3-pip \
-    python3-impacket \
     software-properties-common \
     sudo \
     testdisk \
