@@ -28,7 +28,7 @@ from turbinia.workers import TurbiniaTask
 
 
 class WindowsAccountAnalysisTask(TurbiniaTask):
-  """Task to analyze a Linux password file."""
+  """Task to analyze Windows accounts."""
 
   REQUIRED_STATES = [state.ATTACHED, state.DECOMPRESSED]
 
@@ -56,7 +56,7 @@ class WindowsAccountAnalysisTask(TurbiniaTask):
           status='No Windows account files found: {0:s}'.format(str(e)))
       return result
     (creds, hashnames) = self._extract_windows_hashes(
-        os.path.join(location, 'Windows', 'System32', 'config'))
+        result, os.path.join(location, 'Windows', 'System32', 'config'))
     (report, priority, summary) = self._analyse_windows_creds(creds, hashnames)
     output_evidence.text_data = report
     result.report_priority = priority
@@ -84,7 +84,7 @@ class WindowsAccountAnalysisTask(TurbiniaTask):
 
     return location
 
-  def _extract_windows_hashes(self, location):
+  def _extract_windows_hashes(self, result, location):
     # Dump the secrets into a file
 
     # Default (empty) hash
@@ -97,12 +97,8 @@ class WindowsAccountAnalysisTask(TurbiniaTask):
         hash_file
     ]
 
-    with open(os.devnull, 'w') as devnull:
-      try:
-        child = subprocess.Popen(cmd, stdout=devnull, stderr=devnull)
-        child.communicate()
-      except OSError as e:
-        raise TurbiniaException('impacket failed: {0:s}'.format(str(e)))
+    impacket_log = os.path.join(self.output_dir, 'impacket.log')
+    self.execute(cmd, result, stdout_file=impacket_log)
 
     creds = []
     hashnames = {}
@@ -116,6 +112,9 @@ class WindowsAccountAnalysisTask(TurbiniaTask):
           creds.append(line.strip())
           hashnames[passwdhash] = username
       os.remove(hash_file)
+    else:
+      result.close(self, success=False, status='Extracted hash file not found.')
+
     return (creds, hashnames)
 
   def _analyse_windows_creds(self, creds, hashnames, timeout=300):

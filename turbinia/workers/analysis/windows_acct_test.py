@@ -20,9 +20,10 @@ import unittest
 
 from turbinia import config
 from turbinia.workers.analysis import windows_acct
+from turbinia.workers.workers_test import TestTurbiniaTaskBase
 
 
-class WindowsAccountAnalysisTaskTest(unittest.TestCase):
+class WindowsAccountAnalysisTaskTest(TestTurbiniaTaskBase):
   """Tests for WindowsAccountAnalysisTask Task."""
 
   TEST_DIR = None
@@ -42,28 +43,29 @@ class WindowsAccountAnalysisTaskTest(unittest.TestCase):
     * User 'testlocaluser' with password 'google'"""
 
   def setUp(self):
-    super(WindowsAccountAnalysisTaskTest, self).setUp()
+    super(WindowsAccountAnalysisTaskTest,
+          self).setUp(task_class=windows_acct.WindowsAccountAnalysisTask)
+    self.setResults(mock_run=False)
+    self.task.tmp_dir = tempfile.gettempdir()
+    self.task.output_dir = self.task.base_output_dir
+    self.remove_files.append(os.path.join(self.task.output_dir, 'impacket.log'))
     filedir = os.path.dirname(os.path.realpath(__file__))
     self.TEST_DIR = os.path.join(filedir, '..', '..', '..', 'test_data')
 
   def test_extract_windows_hashes(self):
     """Tests the extract_windows_hashes method."""
     config.LoadConfig()
-    task = windows_acct.WindowsAccountAnalysisTask()
-    task.tmp_dir = tempfile.gettempdir()
-
     # pylint: disable=protected-access
-    creds, credentials = task._extract_windows_hashes(self.TEST_DIR)
+    creds, credentials = self.task._extract_windows_hashes(
+        self.result, self.TEST_DIR)
     self.assertDictEqual(credentials, self.EXPECTED_CREDENTIALS)
     self.assertCountEqual(creds, self.RAW_CREDS)
 
   def test_analyse_windows_creds(self):
     """Tests the analyse_windows_creds method."""
     config.LoadConfig()
-    task = windows_acct.WindowsAccountAnalysisTask()
-    task.tmp_dir = tempfile.gettempdir()
 
-    (report, priority, summary) = task._analyse_windows_creds(
+    (report, priority, summary) = self.task._analyse_windows_creds(
         self.RAW_CREDS, self.EXPECTED_CREDENTIALS, timeout=10)
     self.assertEqual(report, self.REGISTRY_REPORT)
     self.assertEqual(priority, 10)
