@@ -164,7 +164,7 @@ class JenkinsAnalysisTask(TurbiniaTask):
     # TODO: Add timeout parameter when dynamic configuration is ready.
     # Ref: https://github.com/google/turbinia/issues/244
     weak_passwords = bruteforce_password_hashes(
-        credentials_registry.keys(), extra_args='-m 3200')
+        credentials_registry.keys(), tmp_dir=None, extra_args='-m 3200')
 
     if not version:
       version = 'Unknown'

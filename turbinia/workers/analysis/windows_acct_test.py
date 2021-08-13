@@ -15,6 +15,7 @@
 """Tests for the Windows account analysis task."""
 
 import os
+import tempfile
 import unittest
 
 from turbinia import config
@@ -49,6 +50,7 @@ class WindowsAccountAnalysisTaskTest(unittest.TestCase):
     """Tests the extract_windows_hashes method."""
     config.LoadConfig()
     task = windows_acct.WindowsAccountAnalysisTask()
+    task.tmp_dir = tempfile.gettempdir()
 
     # pylint: disable=protected-access
     creds, credentials = task._extract_windows_hashes(self.TEST_DIR)
