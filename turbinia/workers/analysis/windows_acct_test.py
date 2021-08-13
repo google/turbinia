@@ -61,6 +61,7 @@ class WindowsAccountAnalysisTaskTest(unittest.TestCase):
     """Tests the analyse_windows_creds method."""
     config.LoadConfig()
     task = windows_acct.WindowsAccountAnalysisTask()
+    task.tmp_dir = tempfile.gettempdir()
 
     (report, priority, summary) = task._analyse_windows_creds(
         self.RAW_CREDS, self.EXPECTED_CREDENTIALS, timeout=10)
