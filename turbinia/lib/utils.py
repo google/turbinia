@@ -146,7 +146,7 @@ def bruteforce_password_hashes(
   pot_file = os.path.join((tmp_dir or tempfile.gettempdir()), 'hashcat.pot')
   password_list_file_path = os.path.expanduser('~/password.lst')
 
-  cmd = ['hashcat', '-a', '0']
+  cmd = ['hashcat', '--force', '-a', '0']
   if extra_args:
     cmd = cmd + extra_args.split(' ')
   cmd = cmd + ['--potfile-path={}'.format(pot_file)]
