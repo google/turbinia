@@ -87,14 +87,14 @@ class WindowsAccountAnalysisTask(TurbiniaTask):
   def _extract_windows_hashes(self, location):
     # Dump the secrets into a file
 
-    # Password not set
+    # Default (empty) hash
     IGNORE_CREDS = ['31d6cfe0d16ae931b73c59d7e0c089c0']
 
     hash_file = os.path.join(self.tmp_dir, 'windows_hashes')
     cmd = [
-        '/opt/impacket-env/bin/python', '/usr/bin/secretsdump.py', '-system',
-        location + '/SYSTEM', '-sam', location + '/SAM', '-hashes',
-        'lmhash:nthash', 'LOCAL', '-outputfile', hash_file
+        'secretsdump.py', '-system', location + '/SYSTEM', '-sam',
+        location + '/SAM', '-hashes', 'lmhash:nthash', 'LOCAL', '-outputfile',
+        hash_file
     ]
 
     with open(os.devnull, 'w') as devnull:

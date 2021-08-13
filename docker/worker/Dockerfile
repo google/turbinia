@@ -15,6 +15,7 @@ RUN apt-get update && apt-get -y install \
     software-properties-common \
     sudo \
     testdisk \
+    wget \
     && rm -rf /var/lib/apt/lists/*
 
 ADD requirements.txt /tmp/
@@ -50,15 +51,17 @@ RUN cd /tmp/ && python3 setup.py install
 RUN useradd -r -s /bin/nologin -G disk,sudo turbinia
 RUN echo "turbinia ALL = (root) NOPASSWD: ALL" > /etc/sudoers.d/turbinia
 
-# Get a decent password list
-RUN cd /home/turbinia && wget https://raw.githubusercontent.com/danielmiessler/SecLists/master/Passwords/Common-Credentials/10-million-password-list-top-10000.txt -O password.lst
-
 RUN mkdir /etc/turbinia && mkdir -p /mnt/turbinia/ && mkdir -p /var/lib/turbinia/ \
     && mkdir -p /etc/turbinia/ && chown -R turbinia:turbinia /etc/turbinia/ \
     && mkdir -p /var/log/turbinia/ && chown -R turbinia:turbinia /mnt/turbinia/ \
     && chown -R turbinia:turbinia /var/lib/turbinia/ \
     && chown -R turbinia:turbinia /var/log/turbinia/ \
-    && chown -R turbinia:turbinia /home/turbinia
+    && mkdir -p /home/turbinia && chown -R turbinia:turbinia /home/turbinia
+
+# Get a decent password list
+RUN cd /home/turbinia && wget https://raw.githubusercontent.com/danielmiessler/SecLists/master/Passwords/Common-Credentials/10-million-password-list-top-10000.txt -O password.lst
+
+RUN pip3 install impacket --no-deps
 
 COPY docker/worker/start.sh /home/turbinia/start.sh
 RUN chmod +x /home/turbinia/start.sh
