@@ -536,8 +536,6 @@ class RawDisk(Evidence):
     self.device_path = None
     self.size = size
     super(RawDisk, self).__init__(*args, **kwargs)
-    self.resource_tracked = True
-    self.resource_id = self.local_path
 
   def _preprocess(self, _, required_states):
     if EvidenceState.ATTACHED in required_states or self.has_child_evidence:
