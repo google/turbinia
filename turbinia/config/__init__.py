@@ -47,6 +47,8 @@ REQUIRED_VARS = [
     'TASK_MANAGER',
     'LOG_FILE',
     'LOCK_FILE',
+    'RESOURCE_FILE',
+    'RESOURCE_FILE_LOCK',
     'OUTPUT_DIR',
     'TMP_DIR',
     'SLEEP_TIME',

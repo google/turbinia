@@ -51,6 +51,13 @@ LOG_FILE = '%s/turbinia.log' % OUTPUT_DIR
 # Path to a lock file used for the worker tasks.
 LOCK_FILE = '%s/turbinia-worker.lock' % OUTPUT_DIR
 
+# Path to a resource state file used for tracking shared Evidence types.
+RESOURCE_FILE = '%s/turbinia-state.json' % OUTPUT_DIR
+
+# Path to a resource state lock file used for locking changes to shared
+# Evidence types.
+RESOURCE_FILE_LOCK = '%s.lock' % RESOURCE_FILE
+
 # Time in seconds to sleep in task management loops
 SLEEP_TIME = 10
 
