@@ -83,6 +83,17 @@ class PartitionsProcessorTest(unittest.TestCase):
     path_specs = partitions.Enumerate(test_evidence)
     self.assertEqual(len(path_specs), 2)
 
+    # Test GetPartitionEncryptionType
+    encryption_type = partitions.GetPartitionEncryptionType(path_specs[0])
+    self.assertEqual(encryption_type, 'BDE')
+
+  def testEnumerateOnGPTImage(self):
+    """Test Enumerate on GPT image."""
+    test_path = self._getTestDataPath('gpt.raw')
+    test_evidence = evidence.RawDisk(source_path=test_path)
+    path_specs = partitions.Enumerate(test_evidence)
+    self.assertEqual(len(path_specs), 2)
+
   def testEnumerateOnLVM(self):
     """Test Enumerate on LVM image."""
     test_path = self._getTestDataPath('lvm.raw')
@@ -96,6 +107,10 @@ class PartitionsProcessorTest(unittest.TestCase):
     test_evidence = evidence.RawDisk(source_path=test_path)
     path_specs = partitions.Enumerate(test_evidence)
     self.assertEqual(len(path_specs), 2)
+
+    # Test GetPathSpecByLocation
+    path_spec = partitions.GetPathSpecByLocation(path_specs, '/p1')
+    self.assertIsNotNone(path_spec)
 
   def testEnumerateOnRaw(self):
     """Test Enumerate on raw image."""
