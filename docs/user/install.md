@@ -66,6 +66,8 @@ to get a shell with access to your GCP resources.
         you wish to keep this state information in. See the
         [Terraform documentation](https://www.terraform.io/docs/commands/index.html)
         for more information.
+    *   The current configuration does not enable alert notifications by default.
+        Please see [here](#grafana-smtp-setup) for the instructions
 *   Initialize terraform and apply the configuration
     *   `./deploy.sh --no-timesketch`
         *   If the `--no-timesketch` parameter is not supplied, Terraform will also
@@ -114,3 +116,44 @@ using Ubuntu 18.04, though other versions of Linux should be compatible.
 *   Otherwise, if you are running from a different machine you'll need to copy
     the Turbinia config from the original machine, or from the Turbinia server
     from `/etc/turbinia/turbinia.conf`.
+
+### Grafana SMTP Setup 
+
+If you want to receive alert notifications from Grafana, you'll need to setup a SMTP server for Grafana. To configure a SMTP server, you need to add the following environment variables to `Grafana` `env` section in `osdfir-infrastructure/modules/monitoring/main.tf`
+
+```
+      {
+        name = "GF_SMTP_ENABLED" 
+        value = "true"
+      }, {
+        name = "GF_SMTP_HOST"
+        value = "smtp.gmail.com:465" # Replace this if you're not using gmail
+      }, {
+        name = "GF_SMTP_USER"
+        value = "<EMAIL ADDRESS HERE>"
+      }, {
+        name = "GF_SMTP_PASSWORD"
+        value = "<PASSWORD>"
+      }, {
+        name = "GF_SMTP_SKIP_VERIFY"
+        value = "true"
+      }, {
+        name = "GF_SMTP_FROM_ADDRESS"
+        value = "<EMAIL ADDRESS THAT SHOWS AS THE SENDER>"
+      }
+
+```
+
+---
+> **NOTE**
+
+> By default Gmail does not allow [less secure apps](https://support.google.com/accounts/answer/6010255) to authenticate and send emails. For that reason, you'll need to allow less secure apps to access the provided Gmail account.
+
+---
+
+Once completed:
+ - login to the Grafana Dashboard.
+ - Select Alerting and choose "Notification channels".
+ - Fill the required fields and add the email addresses that will receive notification.
+ - Click "Test" to test your SMTP setup.
+ - Once everything is working, click "Save" to save the notification channel.

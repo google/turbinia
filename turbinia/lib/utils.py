@@ -76,7 +76,8 @@ def extract_artifacts(artifact_names, disk_path, output_dir):
   artifacts = ','.join(artifact_names)
   image_export_cmd = [
       'sudo', 'image_export.py', '--artifact_filters', artifacts, '--write',
-      output_dir, '--partitions', 'all', disk_path
+      output_dir, '--partitions', 'all', '--volumes', 'all', '--unattended',
+      disk_path
   ]
 
   return _image_export(image_export_cmd, output_dir)

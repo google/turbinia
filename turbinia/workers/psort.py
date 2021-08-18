@@ -24,31 +24,64 @@ from turbinia.evidence import PlasoCsvFile
 
 
 class PsortTask(TurbiniaTask):
-  """Task to run Psort to generate CSV output from plaso storage files."""
+  """Task to run Psort (Plaso toolset)."""
 
-  def run(self, evidence, result):
-    """Task that processes Plaso storage files with Psort.
+  TASK_CONFIG = {
+      'status_view': 'none',
+      'additional_fields': 'yara_match',
+      'output_format': None,
+      'profilers': None,
+  }
+
+  def build_plaso_command(self, base_command, conf):
+    """ Builds a typical plaso command, contains logic specific to psort.
 
     Args:
-        evidence (Evidence object):  The evidence we will process.
-        result (TurbiniaTaskResult): The object to place task results into.
+      base_command (str): Command to invoke psort
+      conf (dict): Dynamic config containing the parameters for the command.
 
     Returns:
-        TurbiniaTaskResult object.
+      list: Plaso command and arguments
     """
+
+    # Base command could be potentially placed in global configuration
+    cmd = [base_command]
+    for k, v in conf.items():
+      cli_args = [
+          'status_view', 'additional_fields', 'output_format', 'profilers'
+      ]
+      if (k not in cli_args or not v):
+        continue
+      prepend = '-'
+      if len(k) > 1:
+        prepend = '--'
+      if isinstance(v, list):
+        if v:
+          cmd.extend([prepend + k, ','.join(v)])
+      elif isinstance(v, bool):
+        if v:
+          cmd.append(prepend + k)
+      elif isinstance(v, str):
+        if v:
+          cmd.extend([prepend + k, v])
+    return cmd
+
+  def run(self, evidence, result):
+    """Task that processes Plaso storage files with Psort."""
+
     config.LoadConfig()
 
     psort_file = os.path.join(self.output_dir, '{0:s}.csv'.format(self.id))
     psort_evidence = PlasoCsvFile(source_path=psort_file)
     psort_log = os.path.join(self.output_dir, '{0:s}.log'.format(self.id))
 
-    cmd = ['psort.py', '--status_view', 'none', '--logfile', psort_log]
-    if config.DEBUG_TASKS or evidence.config.get('debug_tasks'):
+    cmd = self.build_plaso_command('psort.py', self.task_config)
+
+    cmd.extend(['--logfile', psort_log])
+    if config.DEBUG_TASKS or self.task_config.get('debug_tasks'):
       cmd.append('-d')
 
-    cmd.extend(['--additional_fields', 'yara_match'])
     cmd.extend(['-w', psort_file, evidence.local_path])
-    cmd.extend(['--temporary_directory', self.tmp_dir])
 
     result.log('Running psort as [{0:s}]'.format(' '.join(cmd)))
 

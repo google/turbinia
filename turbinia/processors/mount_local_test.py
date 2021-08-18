@@ -51,8 +51,7 @@ class MountLocalProcessorTest(unittest.TestCase):
     mock_mkdtemp.return_value = '/mnt/turbinia/turbinia0ckdntz0'
 
     current_path = os.path.abspath(os.path.dirname(__file__))
-    source_path = os.path.join(
-        current_path, '..', '..', 'test_data', 'tsk_volume_system.raw')
+    source_path = os.path.join(current_path, '..', '..', 'test_data', 'mbr.raw')
     credentials = [('password', '123456')]
 
     mock_path_isdir.return_value = True
@@ -106,8 +105,7 @@ class MountLocalProcessorTest(unittest.TestCase):
   def testPreprocessLosetup(self, mock_subprocess):
     """Test PreprocessLosetup method."""
     current_path = os.path.abspath(os.path.dirname(__file__))
-    source_path = os.path.join(
-        current_path, '..', '..', 'test_data', 'tsk_volume_system.raw')
+    source_path = os.path.join(current_path, '..', '..', 'test_data', 'mbr.raw')
     mock_subprocess.return_value = '/dev/loop0'
     device = mount_local.PreprocessLosetup(source_path)
     expected_args = ['sudo', 'losetup', '--show', '--find', '-r', source_path]
@@ -137,6 +135,36 @@ class MountLocalProcessorTest(unittest.TestCase):
     source_path = 'test.dd'
     with self.assertRaises(TurbiniaException):
       mount_local.PreprocessLosetup(source_path)
+
+  @mock.patch('subprocess.check_output')
+  @mock.patch('subprocess.check_call')
+  def testPreprocessLVM(self, mock_subprocess, mock_output):
+    """Test PreprocessLosetup method on LVM."""
+    source_path = os.path.join('/dev/loop0')
+    lv_uuid = 'RI0pgm-rdy4-XxcL-5eoK-Easc-fgPq-CWaEJb'
+    mock_output.return_value = (
+        '  /dev/test_volume_group/test_logical_volume1:test_volume_group:3:0:-1:'
+        '0:8192:1:-1:0:-1:-1:-1\n')
+    device = mount_local.PreprocessLosetup(source_path, lv_uuid=lv_uuid)
+    expected_args = [
+        'sudo', 'lvdisplay', '--colon', '--select',
+        'lv_uuid={0:s}'.format(lv_uuid)
+    ]
+    mock_output.assert_called_once_with(expected_args, universal_newlines=True)
+    mock_subprocess.assert_called_once_with(
+        ['sudo', 'vgchange', '-a', 'y', 'test_volume_group'])
+    self.assertEqual(device, '/dev/test_volume_group/test_logical_volume1')
+
+    # Test vgchange error
+    mock_subprocess.reset_mock()
+    mock_subprocess.side_effect = CalledProcessError(1, 'vgchange')
+    with self.assertRaises(TurbiniaException):
+      mount_local.PreprocessLosetup(source_path, lv_uuid=lv_uuid)
+
+    # Test lvdisplay failure
+    mock_output.side_effect = CalledProcessError(1, 'lvdisplay')
+    with self.assertRaises(TurbiniaException):
+      mount_local.PreprocessLosetup(source_path, lv_uuid=lv_uuid)
 
   @mock.patch('turbinia.processors.mount_local.config')
   @mock.patch('tempfile.mkdtemp')
@@ -275,6 +303,35 @@ class MountLocalProcessorTest(unittest.TestCase):
     mock_subprocess.side_effect = CalledProcessError(1, 'losetup')
     with self.assertRaises(TurbiniaException):
       mount_local.PostprocessDeleteLosetup('/dev/loop0')
+
+  @mock.patch('subprocess.check_output')
+  @mock.patch('subprocess.check_call')
+  def testPostprocessDeleteLVM(self, mock_subprocess, mock_output):
+    """Test PostprocessDeleteLosetup method on LVM."""
+    lv_uuid = 'RI0pgm-rdy4-XxcL-5eoK-Easc-fgPq-CWaEJb'
+    mock_output.return_value = (
+        '  /dev/test_volume_group/test_logical_volume1:test_volume_group:3:0:-1:'
+        '0:8192:1:-1:0:-1:-1:-1\n')
+    mount_local.PostprocessDeleteLosetup(None, lv_uuid=lv_uuid)
+    expected_args = [
+        'sudo', 'lvdisplay', '--colon', '--select',
+        'lv_uuid={0:s}'.format(lv_uuid)
+    ]
+    mock_output.assert_called_once_with(expected_args, universal_newlines=True)
+    mock_subprocess.assert_called_once_with(
+        ['sudo', 'vgchange', '-a', 'n', 'test_volume_group'])
+
+    # Test vgchange error
+    mock_subprocess.reset_mock()
+    mock_subprocess.side_effect = CalledProcessError(1, 'vgchange')
+    with self.assertRaises(TurbiniaException):
+      mount_local.PostprocessDeleteLosetup(None, lv_uuid=lv_uuid)
+
+    # Test lvdisplay error
+    mock_output.reset_mock()
+    mock_output.side_effect = CalledProcessError(1, 'lvdisplay')
+    with self.assertRaises(TurbiniaException):
+      mount_local.PostprocessDeleteLosetup(None, lv_uuid=lv_uuid)
 
   @mock.patch('subprocess.check_call')
   @mock.patch('os.rmdir')

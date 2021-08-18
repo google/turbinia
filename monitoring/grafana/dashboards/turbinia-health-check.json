@@ -19,118 +19,173 @@
   "links": [],
   "panels": [
     {
-      "aliasColors": {},
-      "bars": false,
-      "dashLength": 10,
-      "dashes": false,
+      "alert": {
+        "alertRuleTags": {},
+        "conditions": [
+          {
+            "evaluator": {
+              "params": [
+                0
+              ],
+              "type": "gt"
+            },
+            "operator": {
+              "type": "and"
+            },
+            "query": {
+              "params": [
+                "A",
+                "12h",
+                "now"
+              ]
+            },
+            "reducer": {
+              "params": [],
+              "type": "diff"
+            },
+            "type": "query"
+          }
+        ],
+        "executionErrorState": "alerting",
+        "for": "1m",
+        "frequency": "12h",
+        "handler": 1,
+        "message": "One or more Turbinia task was timed out.",
+        "name": "Turbinia Task Timeout alert",
+        "noDataState": "no_data",
+        "notifications": []
+      },
       "datasource": "Prometheus",
       "fieldConfig": {
-        "defaults": {},
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
         "overrides": []
       },
-      "fill": 1,
-      "fillGradient": 0,
       "gridPos": {
         "h": 7,
         "w": 7,
         "x": 0,
         "y": 0
       },
-      "hiddenSeries": false,
-      "id": 2,
-      "legend": {
-        "avg": false,
-        "current": false,
-        "max": false,
-        "min": false,
-        "show": true,
-        "total": false,
-        "values": false
-      },
-      "lines": true,
-      "linewidth": 1,
-      "nullPointMode": "null",
+      "id": 48,
       "options": {
-        "alertThreshold": true
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltip": {
+          "mode": "single"
+        }
       },
-      "percentage": false,
-      "pluginVersion": "7.5.5",
-      "pointradius": 2,
-      "points": false,
-      "renderer": "flot",
-      "seriesOverrides": [],
-      "spaceLength": 10,
-      "stack": false,
-      "steppedLine": false,
       "targets": [
         {
           "exemplar": true,
-          "expr": "avg(rate(plasotask_duration_seconds_sum[30d])/rate(plasotask_duration_seconds_count[30d]))",
+          "expr": "sum(turbinia_worker_tasks_timeout_total)",
           "interval": "",
-          "legendFormat": "Plaso last 30 days average runtime",
+          "legendFormat": "Total timed out tasks",
           "queryType": "randomWalk",
           "refId": "A"
-        },
-        {
-          "exemplar": true,
-          "expr": "avg(rate(plasotask_duration_seconds_sum[3d])/rate(plasotask_duration_seconds_count[3d]))",
-          "hide": false,
-          "interval": "",
-          "legendFormat": "Plaso last 3 days average runtime",
-          "refId": "B"
         }
       ],
-      "thresholds": [],
-      "timeFrom": null,
-      "timeRegions": [],
-      "timeShift": null,
-      "title": "Plaso Average Runtime",
-      "tooltip": {
-        "shared": true,
-        "sort": 0,
-        "value_type": "individual"
-      },
-      "type": "graph",
-      "xaxis": {
-        "buckets": null,
-        "mode": "time",
-        "name": null,
-        "show": true,
-        "values": []
-      },
-      "yaxes": [
+      "thresholds": [
         {
-          "format": "short",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": true
-        },
-        {
-          "format": "short",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": true
+          "colorMode": "critical",
+          "op": "gt",
+          "value": 0,
+          "visible": true
         }
       ],
-      "yaxis": {
-        "align": false,
-        "alignLevel": null
-      }
+      "title": "Turbinia Task Timeout",
+      "type": "timeseries"
     },
     {
+      "alert": {
+        "alertRuleTags": {},
+        "conditions": [
+          {
+            "evaluator": {
+              "params": [
+                2
+              ],
+              "type": "gt"
+            },
+            "operator": {
+              "type": "and"
+            },
+            "query": {
+              "params": [
+                "C",
+                "12h",
+                "now"
+              ]
+            },
+            "reducer": {
+              "params": [],
+              "type": "max"
+            },
+            "type": "query"
+          }
+        ],
+        "executionErrorState": "alerting",
+        "for": "10s",
+        "frequency": "12h",
+        "handler": 1,
+        "message": "Partition Enumeration task took longer than usual to run. Please check if it's intended.",
+        "name": "Partition Enumeration Average Runtime alert",
+        "noDataState": "no_data",
+        "notifications": []
+      },
       "aliasColors": {},
       "bars": false,
       "dashLength": 10,
       "dashes": false,
       "datasource": "Prometheus",
-      "fieldConfig": {
-        "defaults": {},
-        "overrides": []
-      },
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
@@ -154,10 +209,10 @@
       "linewidth": 1,
       "nullPointMode": "null",
       "options": {
-        "alertThreshold": true
+        "alertThreshold": false
       },
       "percentage": false,
-      "pluginVersion": "7.5.5",
+      "pluginVersion": "8.0.6",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
@@ -181,9 +236,26 @@
           "interval": "",
           "legendFormat": "Partition Enumeration last 3 days average runtime",
           "refId": "B"
+        },
+        {
+          "exemplar": true,
+          "expr": "job:partitionenumerationtask_duration:rate3d:z_score",
+          "hide": true,
+          "interval": "",
+          "legendFormat": "z_score",
+          "refId": "C"
         }
       ],
-      "thresholds": [],
+      "thresholds": [
+        {
+          "colorMode": "critical",
+          "fill": false,
+          "line": false,
+          "op": "gt",
+          "value": 2,
+          "visible": true
+        }
+      ],
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
@@ -225,15 +297,47 @@
       }
     },
     {
+      "alert": {
+        "alertRuleTags": {},
+        "conditions": [
+          {
+            "evaluator": {
+              "params": [
+                2
+              ],
+              "type": "gt"
+            },
+            "operator": {
+              "type": "and"
+            },
+            "query": {
+              "params": [
+                "C",
+                "12h",
+                "now"
+              ]
+            },
+            "reducer": {
+              "params": [],
+              "type": "max"
+            },
+            "type": "query"
+          }
+        ],
+        "executionErrorState": "alerting",
+        "for": "10s",
+        "frequency": "12h",
+        "handler": 1,
+        "message": "Psort task took longer than usual to run. Please check if it's intended.",
+        "name": "Psort Average Runtime alert",
+        "noDataState": "no_data",
+        "notifications": []
+      },
       "aliasColors": {},
       "bars": false,
       "dashLength": 10,
       "dashes": false,
       "datasource": "Prometheus",
-      "fieldConfig": {
-        "defaults": {},
-        "overrides": []
-      },
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
@@ -257,10 +361,10 @@
       "linewidth": 1,
       "nullPointMode": "null",
       "options": {
-        "alertThreshold": true
+        "alertThreshold": false
       },
       "percentage": false,
-      "pluginVersion": "7.5.5",
+      "pluginVersion": "8.0.6",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
@@ -284,9 +388,26 @@
           "interval": "",
           "legendFormat": "Psort last 3 days average runtime",
           "refId": "B"
+        },
+        {
+          "exemplar": true,
+          "expr": "job:psorttask_duration:rate3d:z_score",
+          "hide": true,
+          "interval": "",
+          "legendFormat": "z_score",
+          "refId": "C"
         }
       ],
-      "thresholds": [],
+      "thresholds": [
+        {
+          "colorMode": "critical",
+          "fill": false,
+          "line": false,
+          "op": "gt",
+          "value": 2,
+          "visible": true
+        }
+      ],
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
@@ -328,15 +449,47 @@
       }
     },
     {
+      "alert": {
+        "alertRuleTags": {},
+        "conditions": [
+          {
+            "evaluator": {
+              "params": [
+                2
+              ],
+              "type": "gt"
+            },
+            "operator": {
+              "type": "and"
+            },
+            "query": {
+              "params": [
+                "C",
+                "12h",
+                "now"
+              ]
+            },
+            "reducer": {
+              "params": [],
+              "type": "max"
+            },
+            "type": "query"
+          }
+        ],
+        "executionErrorState": "alerting",
+        "for": "10s",
+        "frequency": "12h",
+        "handler": 1,
+        "message": "Plaso task took longer than usual to run. Please check if it's intended.",
+        "name": "Plaso Average Runtime alert",
+        "noDataState": "no_data",
+        "notifications": []
+      },
       "aliasColors": {},
       "bars": false,
       "dashLength": 10,
       "dashes": false,
       "datasource": "Prometheus",
-      "fieldConfig": {
-        "defaults": {},
-        "overrides": []
-      },
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
@@ -346,7 +499,7 @@
         "y": 7
       },
       "hiddenSeries": false,
-      "id": 18,
+      "id": 2,
       "legend": {
         "avg": false,
         "current": false,
@@ -360,10 +513,10 @@
       "linewidth": 1,
       "nullPointMode": "null",
       "options": {
-        "alertThreshold": true
+        "alertThreshold": false
       },
       "percentage": false,
-      "pluginVersion": "7.5.5",
+      "pluginVersion": "8.0.6",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
@@ -374,26 +527,43 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "\navg(rate(greptask_duration_seconds_sum[30d])/rate(greptask_duration_seconds_count[30d]))",
+          "expr": "avg(rate(plasotask_duration_seconds_sum[30d])/rate(plasotask_duration_seconds_count[30d]))",
           "interval": "",
-          "legendFormat": "Grep last 30 days average runtime",
+          "legendFormat": "Plaso last 30 days average runtime",
           "queryType": "randomWalk",
           "refId": "A"
         },
         {
           "exemplar": true,
-          "expr": "\navg(rate(greptask_duration_seconds_sum[3d])/rate(greptask_duration_seconds_count[3d]))",
+          "expr": "avg(rate(plasotask_duration_seconds_sum[3d])/rate(plasotask_duration_seconds_count[3d]))",
           "hide": false,
           "interval": "",
-          "legendFormat": "Grep last 3 days average runtime",
+          "legendFormat": "Plaso last 3 days average runtime",
           "refId": "B"
+        },
+        {
+          "exemplar": true,
+          "expr": "job:plasotask_duration:rate3d:z_score",
+          "hide": true,
+          "interval": "",
+          "legendFormat": "z_score",
+          "refId": "C"
         }
       ],
-      "thresholds": [],
+      "thresholds": [
+        {
+          "colorMode": "critical",
+          "fill": false,
+          "line": false,
+          "op": "gt",
+          "value": 2,
+          "visible": true
+        }
+      ],
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "Grep Task Average Runtime",
+      "title": "Plaso Average Runtime",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -431,15 +601,47 @@
       }
     },
     {
+      "alert": {
+        "alertRuleTags": {},
+        "conditions": [
+          {
+            "evaluator": {
+              "params": [
+                2
+              ],
+              "type": "gt"
+            },
+            "operator": {
+              "type": "and"
+            },
+            "query": {
+              "params": [
+                "C",
+                "12h",
+                "now"
+              ]
+            },
+            "reducer": {
+              "params": [],
+              "type": "max"
+            },
+            "type": "query"
+          }
+        ],
+        "executionErrorState": "alerting",
+        "for": "10s",
+        "frequency": "12h",
+        "handler": 1,
+        "message": "Finalize task took longer than usual to run. Please check if it's intended",
+        "name": "Finalize Task Average Runtime alert",
+        "noDataState": "no_data",
+        "notifications": []
+      },
       "aliasColors": {},
       "bars": false,
       "dashLength": 10,
       "dashes": false,
       "datasource": "Prometheus",
-      "fieldConfig": {
-        "defaults": {},
-        "overrides": []
-      },
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
@@ -463,10 +665,10 @@
       "linewidth": 1,
       "nullPointMode": "null",
       "options": {
-        "alertThreshold": true
+        "alertThreshold": false
       },
       "percentage": false,
-      "pluginVersion": "7.5.5",
+      "pluginVersion": "8.0.6",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
@@ -490,9 +692,26 @@
           "interval": "",
           "legendFormat": "Finalize request last 3 days average runtime",
           "refId": "B"
+        },
+        {
+          "exemplar": true,
+          "expr": "job:finalizerequesttask_duration:rate3d:z_score",
+          "hide": true,
+          "interval": "",
+          "legendFormat": "z_score",
+          "refId": "C"
         }
       ],
-      "thresholds": [],
+      "thresholds": [
+        {
+          "colorMode": "critical",
+          "fill": false,
+          "line": false,
+          "op": "gt",
+          "value": 2,
+          "visible": true
+        }
+      ],
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
@@ -534,15 +753,47 @@
       }
     },
     {
+      "alert": {
+        "alertRuleTags": {},
+        "conditions": [
+          {
+            "evaluator": {
+              "params": [
+                2
+              ],
+              "type": "gt"
+            },
+            "operator": {
+              "type": "and"
+            },
+            "query": {
+              "params": [
+                "C",
+                "12h",
+                "now"
+              ]
+            },
+            "reducer": {
+              "params": [],
+              "type": "max"
+            },
+            "type": "query"
+          }
+        ],
+        "executionErrorState": "alerting",
+        "for": "10s",
+        "frequency": "12h",
+        "handler": 1,
+        "message": "Bulk Extractor task took longer than usual to run. Please check if it's intended.",
+        "name": "Bulk Extractor Average Runtime alert",
+        "noDataState": "no_data",
+        "notifications": []
+      },
       "aliasColors": {},
       "bars": false,
       "dashLength": 10,
       "dashes": false,
       "datasource": "Prometheus",
-      "fieldConfig": {
-        "defaults": {},
-        "overrides": []
-      },
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
@@ -566,10 +817,10 @@
       "linewidth": 1,
       "nullPointMode": "null",
       "options": {
-        "alertThreshold": true
+        "alertThreshold": false
       },
       "percentage": false,
-      "pluginVersion": "7.5.5",
+      "pluginVersion": "8.0.6",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
@@ -593,9 +844,26 @@
           "interval": "",
           "legendFormat": "Bulk extractor last 3 days average runtime",
           "refId": "B"
+        },
+        {
+          "exemplar": true,
+          "expr": "job:bulkextractortask_duration:rate3d:z_score",
+          "hide": false,
+          "interval": "",
+          "legendFormat": "z_score",
+          "refId": "C"
         }
       ],
-      "thresholds": [],
+      "thresholds": [
+        {
+          "colorMode": "critical",
+          "fill": false,
+          "line": false,
+          "op": "gt",
+          "value": 2,
+          "visible": true
+        }
+      ],
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
@@ -637,15 +905,47 @@
       }
     },
     {
+      "alert": {
+        "alertRuleTags": {},
+        "conditions": [
+          {
+            "evaluator": {
+              "params": [
+                2
+              ],
+              "type": "gt"
+            },
+            "operator": {
+              "type": "and"
+            },
+            "query": {
+              "params": [
+                "C",
+                "12h",
+                "now"
+              ]
+            },
+            "reducer": {
+              "params": [],
+              "type": "max"
+            },
+            "type": "query"
+          }
+        ],
+        "executionErrorState": "alerting",
+        "for": "10s",
+        "frequency": "12h",
+        "handler": 1,
+        "message": "Grep task took longer than usual to run. Please check if it's intended.",
+        "name": "Grep Task Average Runtime alert",
+        "noDataState": "no_data",
+        "notifications": []
+      },
       "aliasColors": {},
       "bars": false,
       "dashLength": 10,
       "dashes": false,
       "datasource": "Prometheus",
-      "fieldConfig": {
-        "defaults": {},
-        "overrides": []
-      },
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
@@ -655,7 +955,7 @@
         "y": 14
       },
       "hiddenSeries": false,
-      "id": 40,
+      "id": 18,
       "legend": {
         "avg": false,
         "current": false,
@@ -672,7 +972,7 @@
         "alertThreshold": true
       },
       "percentage": false,
-      "pluginVersion": "7.5.5",
+      "pluginVersion": "8.0.6",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
@@ -683,26 +983,43 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "\navg(rate(stringsasciitask_duration_seconds_sum[30d])/rate(stringsasciitask_duration_seconds_count[30d]))",
+          "expr": "\navg(rate(greptask_duration_seconds_sum[30d])/rate(greptask_duration_seconds_count[30d]))",
           "interval": "",
-          "legendFormat": "String last 30 days average runtime",
+          "legendFormat": "Grep last 30 days average runtime",
           "queryType": "randomWalk",
           "refId": "A"
         },
         {
           "exemplar": true,
-          "expr": "\navg(rate(stringsasciitask_duration_seconds_sum[3d])/rate(stringsasciitask_duration_seconds_count[3d]))",
+          "expr": "\navg(rate(greptask_duration_seconds_sum[3d])/rate(greptask_duration_seconds_count[3d]))",
           "hide": false,
           "interval": "",
-          "legendFormat": "String last 3 days average runtime",
+          "legendFormat": "Grep last 3 days average runtime",
           "refId": "B"
+        },
+        {
+          "exemplar": true,
+          "expr": "job:greptask_duration:rate3d:z_score",
+          "hide": true,
+          "interval": "",
+          "legendFormat": "z_score",
+          "refId": "C"
         }
       ],
-      "thresholds": [],
+      "thresholds": [
+        {
+          "colorMode": "critical",
+          "fill": true,
+          "line": true,
+          "op": "gt",
+          "value": 2,
+          "visible": true
+        }
+      ],
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "String ASCII Average Runtime",
+      "title": "Grep Task Average Runtime",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -740,15 +1057,47 @@
       }
     },
     {
+      "alert": {
+        "alertRuleTags": {},
+        "conditions": [
+          {
+            "evaluator": {
+              "params": [
+                2
+              ],
+              "type": "gt"
+            },
+            "operator": {
+              "type": "and"
+            },
+            "query": {
+              "params": [
+                "C",
+                "12h",
+                "now"
+              ]
+            },
+            "reducer": {
+              "params": [],
+              "type": "max"
+            },
+            "type": "query"
+          }
+        ],
+        "executionErrorState": "alerting",
+        "for": "10s",
+        "frequency": "12h",
+        "handler": 1,
+        "message": "Redis task took longer than usual to run. Please check if it's intended.",
+        "name": "Redis Average Runtime alert",
+        "noDataState": "no_data",
+        "notifications": []
+      },
       "aliasColors": {},
       "bars": false,
       "dashLength": 10,
       "dashes": false,
       "datasource": "Prometheus",
-      "fieldConfig": {
-        "defaults": {},
-        "overrides": []
-      },
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
@@ -772,10 +1121,10 @@
       "linewidth": 1,
       "nullPointMode": "null",
       "options": {
-        "alertThreshold": true
+        "alertThreshold": false
       },
       "percentage": false,
-      "pluginVersion": "7.5.5",
+      "pluginVersion": "8.0.6",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
@@ -799,9 +1148,26 @@
           "interval": "",
           "legendFormat": "Redis last 3 days average runtime",
           "refId": "B"
+        },
+        {
+          "exemplar": true,
+          "expr": "job:redisanalysistask_duration:rate3d:z_score",
+          "hide": true,
+          "interval": "",
+          "legendFormat": "z_score",
+          "refId": "C"
         }
       ],
-      "thresholds": [],
+      "thresholds": [
+        {
+          "colorMode": "critical",
+          "fill": false,
+          "line": false,
+          "op": "gt",
+          "value": 2,
+          "visible": true
+        }
+      ],
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
@@ -843,15 +1209,47 @@
       }
     },
     {
+      "alert": {
+        "alertRuleTags": {},
+        "conditions": [
+          {
+            "evaluator": {
+              "params": [
+                2
+              ],
+              "type": "gt"
+            },
+            "operator": {
+              "type": "and"
+            },
+            "query": {
+              "params": [
+                "C",
+                "12h",
+                "now"
+              ]
+            },
+            "reducer": {
+              "params": [],
+              "type": "max"
+            },
+            "type": "query"
+          }
+        ],
+        "executionErrorState": "alerting",
+        "for": "10s",
+        "frequency": "12h",
+        "handler": 1,
+        "message": "Tomcat task took longer than usual to run. Please check if it's intended.",
+        "name": "Tomcat Average Runtime alert",
+        "noDataState": "no_data",
+        "notifications": []
+      },
       "aliasColors": {},
       "bars": false,
       "dashLength": 10,
       "dashes": false,
       "datasource": "Prometheus",
-      "fieldConfig": {
-        "defaults": {},
-        "overrides": []
-      },
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
@@ -878,7 +1276,7 @@
         "alertThreshold": true
       },
       "percentage": false,
-      "pluginVersion": "7.5.5",
+      "pluginVersion": "8.0.6",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
@@ -902,9 +1300,26 @@
           "interval": "",
           "legendFormat": "Tomcat last 3 days average runtime",
           "refId": "B"
+        },
+        {
+          "exemplar": true,
+          "expr": "job:tomcatanalysistask_duration:rate3d:z_score",
+          "hide": true,
+          "interval": "",
+          "legendFormat": "z_score",
+          "refId": "C"
         }
       ],
-      "thresholds": [],
+      "thresholds": [
+        {
+          "colorMode": "critical",
+          "fill": true,
+          "line": true,
+          "op": "gt",
+          "value": 2,
+          "visible": true
+        }
+      ],
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
@@ -946,15 +1361,47 @@
       }
     },
     {
+      "alert": {
+        "alertRuleTags": {},
+        "conditions": [
+          {
+            "evaluator": {
+              "params": [
+                2
+              ],
+              "type": "gt"
+            },
+            "operator": {
+              "type": "and"
+            },
+            "query": {
+              "params": [
+                "C",
+                "12h",
+                "now"
+              ]
+            },
+            "reducer": {
+              "params": [],
+              "type": "max"
+            },
+            "type": "query"
+          }
+        ],
+        "executionErrorState": "alerting",
+        "for": "10s",
+        "frequency": "12h",
+        "handler": 1,
+        "message": "String ASCII task took longer than usual to run. Please check if it's intended.",
+        "name": "String ASCII Average Runtime alert",
+        "noDataState": "no_data",
+        "notifications": []
+      },
       "aliasColors": {},
       "bars": false,
       "dashLength": 10,
       "dashes": false,
       "datasource": "Prometheus",
-      "fieldConfig": {
-        "defaults": {},
-        "overrides": []
-      },
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
@@ -964,7 +1411,7 @@
         "y": 21
       },
       "hiddenSeries": false,
-      "id": 38,
+      "id": 40,
       "legend": {
         "avg": false,
         "current": false,
@@ -978,10 +1425,10 @@
       "linewidth": 1,
       "nullPointMode": "null",
       "options": {
-        "alertThreshold": true
+        "alertThreshold": false
       },
       "percentage": false,
-      "pluginVersion": "7.5.5",
+      "pluginVersion": "8.0.6",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
@@ -992,26 +1439,43 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "\navg(rate(stattask_duration_seconds_sum[30d])/rate(stattask_duration_seconds_count[30d]))",
+          "expr": "\navg(rate(stringsasciitask_duration_seconds_sum[30d])/rate(stringsasciitask_duration_seconds_count[30d]))",
           "interval": "",
-          "legendFormat": "Stat task last 30 days average runtime",
+          "legendFormat": "String last 30 days average runtime",
           "queryType": "randomWalk",
           "refId": "A"
         },
         {
           "exemplar": true,
-          "expr": "\navg(rate(stattask_duration_seconds_sum[3d])/rate(stattask_duration_seconds_count[3d]))",
+          "expr": "\navg(rate(stringsasciitask_duration_seconds_sum[3d])/rate(stringsasciitask_duration_seconds_count[3d]))",
           "hide": false,
           "interval": "",
-          "legendFormat": "Stat task last 3 days average runtime",
+          "legendFormat": "String last 3 days average runtime",
           "refId": "B"
+        },
+        {
+          "exemplar": true,
+          "expr": "job:stringsasciitask_duration:rate3d:z_score",
+          "hide": true,
+          "interval": "",
+          "legendFormat": "z_score",
+          "refId": "C"
         }
       ],
-      "thresholds": [],
+      "thresholds": [
+        {
+          "colorMode": "critical",
+          "fill": false,
+          "line": false,
+          "op": "gt",
+          "value": 2,
+          "visible": true
+        }
+      ],
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "Stattask Average Runtime",
+      "title": "String ASCII Average Runtime",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -1049,15 +1513,47 @@
       }
     },
     {
+      "alert": {
+        "alertRuleTags": {},
+        "conditions": [
+          {
+            "evaluator": {
+              "params": [
+                2
+              ],
+              "type": "gt"
+            },
+            "operator": {
+              "type": "and"
+            },
+            "query": {
+              "params": [
+                "C",
+                "12h",
+                "now"
+              ]
+            },
+            "reducer": {
+              "params": [],
+              "type": "max"
+            },
+            "type": "query"
+          }
+        ],
+        "executionErrorState": "alerting",
+        "for": "10s",
+        "frequency": "12h",
+        "handler": 1,
+        "message": "Jupyter analysis task took longer than usual to run. Please check if it's intended.",
+        "name": "Jupyter  Average Runtime alert",
+        "noDataState": "no_data",
+        "notifications": []
+      },
       "aliasColors": {},
       "bars": false,
       "dashLength": 10,
       "dashes": false,
       "datasource": "Prometheus",
-      "fieldConfig": {
-        "defaults": {},
-        "overrides": []
-      },
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
@@ -1084,7 +1580,7 @@
         "alertThreshold": true
       },
       "percentage": false,
-      "pluginVersion": "7.5.5",
+      "pluginVersion": "8.0.6",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
@@ -1108,9 +1604,26 @@
           "interval": "",
           "legendFormat": "Jupyter last 3 days average runtime",
           "refId": "B"
+        },
+        {
+          "exemplar": true,
+          "expr": "job:jupyteranalysistask_duration:rate3d:z_score",
+          "hide": true,
+          "interval": "",
+          "legendFormat": "z_score",
+          "refId": "C"
         }
       ],
-      "thresholds": [],
+      "thresholds": [
+        {
+          "colorMode": "critical",
+          "fill": true,
+          "line": true,
+          "op": "gt",
+          "value": 2,
+          "visible": true
+        }
+      ],
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
@@ -1152,15 +1665,47 @@
       }
     },
     {
+      "alert": {
+        "alertRuleTags": {},
+        "conditions": [
+          {
+            "evaluator": {
+              "params": [
+                2
+              ],
+              "type": "gt"
+            },
+            "operator": {
+              "type": "and"
+            },
+            "query": {
+              "params": [
+                "C",
+                "12h",
+                "now"
+              ]
+            },
+            "reducer": {
+              "params": [],
+              "type": "max"
+            },
+            "type": "query"
+          }
+        ],
+        "executionErrorState": "alerting",
+        "for": "10s",
+        "frequency": "12h",
+        "handler": 1,
+        "message": "Volattility task took longer than usual to run. Please check if it's intended.",
+        "name": "Volatility Average Runtime alert",
+        "noDataState": "no_data",
+        "notifications": []
+      },
       "aliasColors": {},
       "bars": false,
       "dashLength": 10,
       "dashes": false,
       "datasource": "Prometheus",
-      "fieldConfig": {
-        "defaults": {},
-        "overrides": []
-      },
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
@@ -1184,10 +1729,10 @@
       "linewidth": 1,
       "nullPointMode": "null",
       "options": {
-        "alertThreshold": true
+        "alertThreshold": false
       },
       "percentage": false,
-      "pluginVersion": "7.5.5",
+      "pluginVersion": "8.0.6",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
@@ -1211,9 +1756,26 @@
           "interval": "",
           "legendFormat": "Volatility last 3 days average runtime",
           "refId": "B"
+        },
+        {
+          "exemplar": true,
+          "expr": "job:volatilitytask_duration:rate3d:z_score",
+          "hide": true,
+          "interval": "",
+          "legendFormat": "z_score",
+          "refId": "C"
         }
       ],
-      "thresholds": [],
+      "thresholds": [
+        {
+          "colorMode": "critical",
+          "fill": false,
+          "line": false,
+          "op": "gt",
+          "value": 2,
+          "visible": true
+        }
+      ],
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
@@ -1255,15 +1817,47 @@
       }
     },
     {
+      "alert": {
+        "alertRuleTags": {},
+        "conditions": [
+          {
+            "evaluator": {
+              "params": [
+                2
+              ],
+              "type": "gt"
+            },
+            "operator": {
+              "type": "and"
+            },
+            "query": {
+              "params": [
+                "C",
+                "12h",
+                "now"
+              ]
+            },
+            "reducer": {
+              "params": [],
+              "type": "max"
+            },
+            "type": "query"
+          }
+        ],
+        "executionErrorState": "alerting",
+        "for": "10s",
+        "frequency": "12h",
+        "handler": 1,
+        "message": "Stat task took longer than usual to run. Please check if its intended.",
+        "name": "Stattask Average Runtime alert",
+        "noDataState": "no_data",
+        "notifications": []
+      },
       "aliasColors": {},
       "bars": false,
       "dashLength": 10,
       "dashes": false,
       "datasource": "Prometheus",
-      "fieldConfig": {
-        "defaults": {},
-        "overrides": []
-      },
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
@@ -1273,7 +1867,7 @@
         "y": 28
       },
       "hiddenSeries": false,
-      "id": 36,
+      "id": 38,
       "legend": {
         "avg": false,
         "current": false,
@@ -1287,10 +1881,10 @@
       "linewidth": 1,
       "nullPointMode": "null",
       "options": {
-        "alertThreshold": true
+        "alertThreshold": false
       },
       "percentage": false,
-      "pluginVersion": "7.5.5",
+      "pluginVersion": "8.0.6",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
@@ -1301,26 +1895,43 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "\n\navg(rate(sshdanalysistask_duration_seconds_sum[30d])/rate(sshdanalysistask_duration_seconds_count[30d]))",
+          "expr": "\navg(rate(stattask_duration_seconds_sum[30d])/rate(stattask_duration_seconds_count[30d]))",
           "interval": "",
-          "legendFormat": "SSHD last 30 days average runtime",
+          "legendFormat": "Stat task last 30 days average runtime",
           "queryType": "randomWalk",
           "refId": "A"
         },
         {
           "exemplar": true,
-          "expr": "\navg(rate(sshdanalysistask_duration_seconds_sum[3d])/rate(sshdanalysistask_duration_seconds_count[3d]))",
+          "expr": "\navg(rate(stattask_duration_seconds_sum[3d])/rate(stattask_duration_seconds_count[3d]))",
           "hide": false,
           "interval": "",
-          "legendFormat": "SSHD last 3 days average runtime",
+          "legendFormat": "Stat task last 3 days average runtime",
           "refId": "B"
+        },
+        {
+          "exemplar": true,
+          "expr": "job:stattask_duration:rate3d:z_score",
+          "hide": true,
+          "interval": "",
+          "legendFormat": "z_score",
+          "refId": "C"
         }
       ],
-      "thresholds": [],
+      "thresholds": [
+        {
+          "colorMode": "critical",
+          "fill": false,
+          "line": false,
+          "op": "gt",
+          "value": 2,
+          "visible": true
+        }
+      ],
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "SSHD Average Runtime",
+      "title": "Stattask Average Runtime",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -1358,15 +1969,47 @@
       }
     },
     {
+      "alert": {
+        "alertRuleTags": {},
+        "conditions": [
+          {
+            "evaluator": {
+              "params": [
+                2
+              ],
+              "type": "gt"
+            },
+            "operator": {
+              "type": "and"
+            },
+            "query": {
+              "params": [
+                "C",
+                "12h",
+                "now"
+              ]
+            },
+            "reducer": {
+              "params": [],
+              "type": "max"
+            },
+            "type": "query"
+          }
+        ],
+        "executionErrorState": "alerting",
+        "for": "10s",
+        "frequency": "12h",
+        "handler": 1,
+        "message": "Hindsight task took longer than usual to run. Please check if its intended.",
+        "name": "Hindsight Average Runtime alert",
+        "noDataState": "no_data",
+        "notifications": []
+      },
       "aliasColors": {},
       "bars": false,
       "dashLength": 10,
       "dashes": false,
       "datasource": "Prometheus",
-      "fieldConfig": {
-        "defaults": {},
-        "overrides": []
-      },
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
@@ -1390,10 +2033,10 @@
       "linewidth": 1,
       "nullPointMode": "null",
       "options": {
-        "alertThreshold": true
+        "alertThreshold": false
       },
       "percentage": false,
-      "pluginVersion": "7.5.5",
+      "pluginVersion": "8.0.6",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
@@ -1417,9 +2060,26 @@
           "interval": "",
           "legendFormat": "Hindsight last 3 days average runtime",
           "refId": "B"
+        },
+        {
+          "exemplar": true,
+          "expr": "job:hindsighttask_duration:rate3d:z_score",
+          "hide": true,
+          "interval": "",
+          "legendFormat": "z_score",
+          "refId": "C"
         }
       ],
-      "thresholds": [],
+      "thresholds": [
+        {
+          "colorMode": "critical",
+          "fill": false,
+          "line": false,
+          "op": "gt",
+          "value": 2,
+          "visible": true
+        }
+      ],
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
@@ -1461,15 +2121,47 @@
       }
     },
     {
+      "alert": {
+        "alertRuleTags": {},
+        "conditions": [
+          {
+            "evaluator": {
+              "params": [
+                2
+              ],
+              "type": "gt"
+            },
+            "operator": {
+              "type": "and"
+            },
+            "query": {
+              "params": [
+                "C",
+                "12h",
+                "now"
+              ]
+            },
+            "reducer": {
+              "params": [],
+              "type": "max"
+            },
+            "type": "query"
+          }
+        ],
+        "executionErrorState": "alerting",
+        "for": "10s",
+        "frequency": "12h",
+        "handler": 1,
+        "message": "String unicode task took longer than usual to run. Please check if its intended.",
+        "name": "String Unicode Average Runtime alert",
+        "noDataState": "no_data",
+        "notifications": []
+      },
       "aliasColors": {},
       "bars": false,
       "dashLength": 10,
       "dashes": false,
       "datasource": "Prometheus",
-      "fieldConfig": {
-        "defaults": {},
-        "overrides": []
-      },
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
@@ -1493,10 +2185,10 @@
       "linewidth": 1,
       "nullPointMode": "null",
       "options": {
-        "alertThreshold": true
+        "alertThreshold": false
       },
       "percentage": false,
-      "pluginVersion": "7.5.5",
+      "pluginVersion": "8.0.6",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
@@ -1520,9 +2212,26 @@
           "interval": "",
           "legendFormat": "String last 3 days average runtime",
           "refId": "B"
+        },
+        {
+          "exemplar": true,
+          "expr": "job:stringsunicodetask_duration:rate3d:z_score",
+          "hide": true,
+          "interval": "",
+          "legendFormat": "z_score",
+          "refId": "C"
         }
       ],
-      "thresholds": [],
+      "thresholds": [
+        {
+          "colorMode": "critical",
+          "fill": false,
+          "line": false,
+          "op": "gt",
+          "value": 2,
+          "visible": true
+        }
+      ],
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
@@ -1564,15 +2273,47 @@
       }
     },
     {
+      "alert": {
+        "alertRuleTags": {},
+        "conditions": [
+          {
+            "evaluator": {
+              "params": [
+                2
+              ],
+              "type": "gt"
+            },
+            "operator": {
+              "type": "and"
+            },
+            "query": {
+              "params": [
+                "C",
+                "12h",
+                "now"
+              ]
+            },
+            "reducer": {
+              "params": [],
+              "type": "max"
+            },
+            "type": "query"
+          }
+        ],
+        "executionErrorState": "alerting",
+        "for": "10s",
+        "frequency": "12h",
+        "handler": 1,
+        "message": "SSHD task took longer than usual to run. Please check if it's intended.",
+        "name": "SSHD Average Runtime alert",
+        "noDataState": "no_data",
+        "notifications": []
+      },
       "aliasColors": {},
       "bars": false,
       "dashLength": 10,
       "dashes": false,
       "datasource": "Prometheus",
-      "fieldConfig": {
-        "defaults": {},
-        "overrides": []
-      },
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
@@ -1582,7 +2323,7 @@
         "y": 35
       },
       "hiddenSeries": false,
-      "id": 30,
+      "id": 36,
       "legend": {
         "avg": false,
         "current": false,
@@ -1596,10 +2337,10 @@
       "linewidth": 1,
       "nullPointMode": "null",
       "options": {
-        "alertThreshold": true
+        "alertThreshold": false
       },
       "percentage": false,
-      "pluginVersion": "7.5.5",
+      "pluginVersion": "8.0.6",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
@@ -1610,26 +2351,43 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "\n\navg(rate(photorectask_duration_seconds_sum[30d])/rate(photorectask_duration_seconds_count[30d]))",
+          "expr": "\n\navg(rate(sshdanalysistask_duration_seconds_sum[30d])/rate(sshdanalysistask_duration_seconds_count[30d]))",
           "interval": "",
-          "legendFormat": "Photorec last 30 days average runtime",
+          "legendFormat": "SSHD last 30 days average runtime",
           "queryType": "randomWalk",
           "refId": "A"
         },
         {
           "exemplar": true,
-          "expr": "\n\navg(rate(photorectask_duration_seconds_sum[3d])/rate(photorectask_duration_seconds_count[3d]))",
+          "expr": "\navg(rate(sshdanalysistask_duration_seconds_sum[3d])/rate(sshdanalysistask_duration_seconds_count[3d]))",
           "hide": false,
           "interval": "",
-          "legendFormat": "Photorec last 3 days average runtime",
+          "legendFormat": "SSHD last 3 days average runtime",
           "refId": "B"
+        },
+        {
+          "exemplar": true,
+          "expr": "job:sshdanalysistask_duration:rate3d:z_score",
+          "hide": true,
+          "interval": "",
+          "legendFormat": "z_score",
+          "refId": "C"
         }
       ],
-      "thresholds": [],
+      "thresholds": [
+        {
+          "colorMode": "critical",
+          "fill": false,
+          "line": false,
+          "op": "gt",
+          "value": 2,
+          "visible": true
+        }
+      ],
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "Photorec Average Runtime",
+      "title": "SSHD Average Runtime",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -1667,15 +2425,47 @@
       }
     },
     {
+      "alert": {
+        "alertRuleTags": {},
+        "conditions": [
+          {
+            "evaluator": {
+              "params": [
+                2
+              ],
+              "type": "gt"
+            },
+            "operator": {
+              "type": "and"
+            },
+            "query": {
+              "params": [
+                "C",
+                "12h",
+                "now"
+              ]
+            },
+            "reducer": {
+              "params": [],
+              "type": "max"
+            },
+            "type": "query"
+          }
+        ],
+        "executionErrorState": "alerting",
+        "for": "10s",
+        "frequency": "12h",
+        "handler": 1,
+        "message": "Jenkins task took longer than usual to run. Please check if it's intended.",
+        "name": "Jenkins Average Runtime alert",
+        "noDataState": "no_data",
+        "notifications": []
+      },
       "aliasColors": {},
       "bars": false,
       "dashLength": 10,
       "dashes": false,
       "datasource": "Prometheus",
-      "fieldConfig": {
-        "defaults": {},
-        "overrides": []
-      },
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
@@ -1699,10 +2489,10 @@
       "linewidth": 1,
       "nullPointMode": "null",
       "options": {
-        "alertThreshold": true
+        "alertThreshold": false
       },
       "percentage": false,
-      "pluginVersion": "7.5.5",
+      "pluginVersion": "8.0.6",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
@@ -1726,9 +2516,26 @@
           "interval": "",
           "legendFormat": "Jenkins last 3 days average runtime",
           "refId": "B"
+        },
+        {
+          "exemplar": true,
+          "expr": "job:jenkinsanalysistask_duration:rate3d:z_score",
+          "hide": true,
+          "interval": "",
+          "legendFormat": "z_score",
+          "refId": "C"
         }
       ],
-      "thresholds": [],
+      "thresholds": [
+        {
+          "colorMode": "critical",
+          "fill": false,
+          "line": false,
+          "op": "gt",
+          "value": 2,
+          "visible": true
+        }
+      ],
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
@@ -1770,15 +2577,47 @@
       }
     },
     {
+      "alert": {
+        "alertRuleTags": {},
+        "conditions": [
+          {
+            "evaluator": {
+              "params": [
+                2
+              ],
+              "type": "gt"
+            },
+            "operator": {
+              "type": "and"
+            },
+            "query": {
+              "params": [
+                "C",
+                "12h",
+                "now"
+              ]
+            },
+            "reducer": {
+              "params": [],
+              "type": "max"
+            },
+            "type": "query"
+          }
+        ],
+        "executionErrorState": "alerting",
+        "for": "10s",
+        "frequency": "12h",
+        "handler": 1,
+        "message": "File  artifact extraction task took longer than usual to run. Please check if it's intended.",
+        "name": "File Artifact Extraction Average Runtime alert",
+        "noDataState": "no_data",
+        "notifications": []
+      },
       "aliasColors": {},
       "bars": false,
       "dashLength": 10,
       "dashes": false,
       "datasource": "Prometheus",
-      "fieldConfig": {
-        "defaults": {},
-        "overrides": []
-      },
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
@@ -1802,10 +2641,10 @@
       "linewidth": 1,
       "nullPointMode": "null",
       "options": {
-        "alertThreshold": true
+        "alertThreshold": false
       },
       "percentage": false,
-      "pluginVersion": "7.5.5",
+      "pluginVersion": "8.0.6",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
@@ -1829,9 +2668,26 @@
           "interval": "",
           "legendFormat": "File artifact last 3 days average runtime",
           "refId": "B"
+        },
+        {
+          "exemplar": true,
+          "expr": "job:fileartifactextractiontask_duration:rate3d:z_score",
+          "hide": true,
+          "interval": "",
+          "legendFormat": "z_score",
+          "refId": "C"
         }
       ],
-      "thresholds": [],
+      "thresholds": [
+        {
+          "colorMode": "critical",
+          "fill": false,
+          "line": false,
+          "op": "gt",
+          "value": 2,
+          "visible": true
+        }
+      ],
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
@@ -1873,15 +2729,47 @@
       }
     },
     {
+      "alert": {
+        "alertRuleTags": {},
+        "conditions": [
+          {
+            "evaluator": {
+              "params": [
+                2
+              ],
+              "type": "gt"
+            },
+            "operator": {
+              "type": "and"
+            },
+            "query": {
+              "params": [
+                "C",
+                "12h",
+                "now"
+              ]
+            },
+            "reducer": {
+              "params": [],
+              "type": "max"
+            },
+            "type": "query"
+          }
+        ],
+        "executionErrorState": "alerting",
+        "for": "10s",
+        "frequency": "12h",
+        "handler": 1,
+        "message": "Photorec task took longer than usual to run. Please check if it's intended.",
+        "name": "Photorec Average Runtime alert",
+        "noDataState": "no_data",
+        "notifications": []
+      },
       "aliasColors": {},
       "bars": false,
       "dashLength": 10,
       "dashes": false,
       "datasource": "Prometheus",
-      "fieldConfig": {
-        "defaults": {},
-        "overrides": []
-      },
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
@@ -1891,7 +2779,7 @@
         "y": 42
       },
       "hiddenSeries": false,
-      "id": 20,
+      "id": 30,
       "legend": {
         "avg": false,
         "current": false,
@@ -1908,7 +2796,7 @@
         "alertThreshold": true
       },
       "percentage": false,
-      "pluginVersion": "7.5.5",
+      "pluginVersion": "8.0.6",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
@@ -1919,26 +2807,43 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "\n\navg(rate(hadoopanalysistask_duration_seconds_sum[30d])/rate(hadoopanalysistask_duration_seconds_count[30d]))",
+          "expr": "\n\navg(rate(photorectask_duration_seconds_sum[30d])/rate(photorectask_duration_seconds_count[30d]))",
           "interval": "",
-          "legendFormat": "Hadoop last 30 days average runtime",
+          "legendFormat": "Photorec last 30 days average runtime",
           "queryType": "randomWalk",
           "refId": "A"
         },
         {
           "exemplar": true,
-          "expr": "\navg(rate(hadoopanalysistask_duration_seconds_sum[3d])/rate(hadoopanalysistask_duration_seconds_count[3d]))",
+          "expr": "\n\navg(rate(photorectask_duration_seconds_sum[3d])/rate(photorectask_duration_seconds_count[3d]))",
           "hide": false,
           "interval": "",
-          "legendFormat": "Hadoop last 3 days average runtime",
+          "legendFormat": "Photorec last 3 days average runtime",
           "refId": "B"
+        },
+        {
+          "exemplar": true,
+          "expr": "job:photorectask_duration:rate3d:z_score",
+          "hide": false,
+          "interval": "",
+          "legendFormat": "z_score",
+          "refId": "C"
         }
       ],
-      "thresholds": [],
+      "thresholds": [
+        {
+          "colorMode": "critical",
+          "fill": true,
+          "line": true,
+          "op": "gt",
+          "value": 2,
+          "visible": true
+        }
+      ],
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "Hadoop Task Average Runtime",
+      "title": "Photorec Average Runtime",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -1976,15 +2881,47 @@
       }
     },
     {
+      "alert": {
+        "alertRuleTags": {},
+        "conditions": [
+          {
+            "evaluator": {
+              "params": [
+                2
+              ],
+              "type": "gt"
+            },
+            "operator": {
+              "type": "and"
+            },
+            "query": {
+              "params": [
+                "C",
+                "12h",
+                "now"
+              ]
+            },
+            "reducer": {
+              "params": [],
+              "type": "max"
+            },
+            "type": "query"
+          }
+        ],
+        "executionErrorState": "alerting",
+        "for": "10s",
+        "frequency": "12h",
+        "handler": 1,
+        "message": "Wordpress task took longer than usual to run. Please check if it's intended.",
+        "name": "Wordpress Task Average Runtime alert",
+        "noDataState": "no_data",
+        "notifications": []
+      },
       "aliasColors": {},
       "bars": false,
       "dashLength": 10,
       "dashes": false,
       "datasource": "Prometheus",
-      "fieldConfig": {
-        "defaults": {},
-        "overrides": []
-      },
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
@@ -2008,10 +2945,10 @@
       "linewidth": 1,
       "nullPointMode": "null",
       "options": {
-        "alertThreshold": true
+        "alertThreshold": false
       },
       "percentage": false,
-      "pluginVersion": "7.5.5",
+      "pluginVersion": "8.0.6",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
@@ -2035,9 +2972,26 @@
           "interval": "",
           "legendFormat": "Wordpress last 3 days average runtime",
           "refId": "B"
+        },
+        {
+          "exemplar": true,
+          "expr": "job:wordpressaccessloganalysistask_duration:rate3d:z_score",
+          "hide": true,
+          "interval": "",
+          "legendFormat": "z_score",
+          "refId": "C"
         }
       ],
-      "thresholds": [],
+      "thresholds": [
+        {
+          "colorMode": "critical",
+          "fill": false,
+          "line": false,
+          "op": "gt",
+          "value": 2,
+          "visible": true
+        }
+      ],
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
@@ -2079,15 +3033,47 @@
       }
     },
     {
+      "alert": {
+        "alertRuleTags": {},
+        "conditions": [
+          {
+            "evaluator": {
+              "params": [
+                2
+              ],
+              "type": "gt"
+            },
+            "operator": {
+              "type": "and"
+            },
+            "query": {
+              "params": [
+                "C",
+                "12h",
+                "now"
+              ]
+            },
+            "reducer": {
+              "params": [],
+              "type": "max"
+            },
+            "type": "query"
+          }
+        ],
+        "executionErrorState": "alerting",
+        "for": "10s",
+        "frequency": "12h",
+        "handler": 1,
+        "message": "Binary Extraction task took longer than usual to run. Please check if it's intended.",
+        "name": "Binary Extraction Average Runtime alert",
+        "noDataState": "no_data",
+        "notifications": []
+      },
       "aliasColors": {},
       "bars": false,
       "dashLength": 10,
       "dashes": false,
       "datasource": "Prometheus",
-      "fieldConfig": {
-        "defaults": {},
-        "overrides": []
-      },
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
@@ -2111,10 +3097,10 @@
       "linewidth": 1,
       "nullPointMode": "null",
       "options": {
-        "alertThreshold": true
+        "alertThreshold": false
       },
       "percentage": false,
-      "pluginVersion": "7.5.5",
+      "pluginVersion": "8.0.6",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
@@ -2138,9 +3124,26 @@
           "interval": "",
           "legendFormat": "Binary extraction last 3 days average runtime",
           "refId": "B"
+        },
+        {
+          "exemplar": true,
+          "expr": "job:binaryextractortask_duration:rate3d:z_score",
+          "hide": true,
+          "interval": "",
+          "legendFormat": "z_score",
+          "refId": "C"
         }
       ],
-      "thresholds": [],
+      "thresholds": [
+        {
+          "colorMode": "critical",
+          "fill": false,
+          "line": false,
+          "op": "gt",
+          "value": 2,
+          "visible": true
+        }
+      ],
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
@@ -2182,15 +3185,47 @@
       }
     },
     {
+      "alert": {
+        "alertRuleTags": {},
+        "conditions": [
+          {
+            "evaluator": {
+              "params": [
+                2
+              ],
+              "type": "gt"
+            },
+            "operator": {
+              "type": "and"
+            },
+            "query": {
+              "params": [
+                "C",
+                "12h",
+                "now"
+              ]
+            },
+            "reducer": {
+              "params": [],
+              "type": "max"
+            },
+            "type": "query"
+          }
+        ],
+        "executionErrorState": "alerting",
+        "for": "10s",
+        "frequency": "12h",
+        "handler": 1,
+        "message": "Hadoop task took longer than usual to run. Please check if it's intended.",
+        "name": "Hadoop Task Average Runtime alert",
+        "noDataState": "no_data",
+        "notifications": []
+      },
       "aliasColors": {},
       "bars": false,
       "dashLength": 10,
       "dashes": false,
       "datasource": "Prometheus",
-      "fieldConfig": {
-        "defaults": {},
-        "overrides": []
-      },
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
@@ -2200,7 +3235,7 @@
         "y": 49
       },
       "hiddenSeries": false,
-      "id": 16,
+      "id": 20,
       "legend": {
         "avg": false,
         "current": false,
@@ -2214,10 +3249,10 @@
       "linewidth": 1,
       "nullPointMode": "null",
       "options": {
-        "alertThreshold": true
+        "alertThreshold": false
       },
       "percentage": false,
-      "pluginVersion": "7.5.5",
+      "pluginVersion": "8.0.6",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
@@ -2228,26 +3263,43 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "\navg(rate(fsstattask_duration_seconds_sum[30d])/rate(fsstattask_duration_seconds_count[30d]))",
+          "expr": "\n\navg(rate(hadoopanalysistask_duration_seconds_sum[30d])/rate(hadoopanalysistask_duration_seconds_count[30d]))",
           "interval": "",
-          "legendFormat": "Fstat last 30 days average runtime",
+          "legendFormat": "Hadoop last 30 days average runtime",
           "queryType": "randomWalk",
           "refId": "A"
         },
         {
           "exemplar": true,
-          "expr": "avg(rate(fsstattask_duration_seconds_sum[3d])/rate(fsstattask_duration_seconds_count[3d]))",
+          "expr": "\navg(rate(hadoopanalysistask_duration_seconds_sum[3d])/rate(hadoopanalysistask_duration_seconds_count[3d]))",
           "hide": false,
           "interval": "",
-          "legendFormat": "Fstat last 3 days average runtime",
+          "legendFormat": "Hadoop last 3 days average runtime",
           "refId": "B"
+        },
+        {
+          "exemplar": true,
+          "expr": "job:hadoopanalysistask_duration:rate3d:z_score",
+          "hide": true,
+          "interval": "",
+          "legendFormat": "z_score",
+          "refId": "C"
         }
       ],
-      "thresholds": [],
+      "thresholds": [
+        {
+          "colorMode": "critical",
+          "fill": false,
+          "line": false,
+          "op": "gt",
+          "value": 2,
+          "visible": true
+        }
+      ],
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "Fs Stat Average Riuntime",
+      "title": "Hadoop Task Average Runtime",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -2285,15 +3337,47 @@
       }
     },
     {
+      "alert": {
+        "alertRuleTags": {},
+        "conditions": [
+          {
+            "evaluator": {
+              "params": [
+                2
+              ],
+              "type": "gt"
+            },
+            "operator": {
+              "type": "and"
+            },
+            "query": {
+              "params": [
+                "C",
+                "12h",
+                "now"
+              ]
+            },
+            "reducer": {
+              "params": [],
+              "type": "max"
+            },
+            "type": "query"
+          }
+        ],
+        "executionErrorState": "alerting",
+        "for": "10s",
+        "frequency": "12h",
+        "handler": 1,
+        "message": "Docker enumeration task took longer than usual to run. Please check if it's intended.",
+        "name": "Docker Enumeration Average Runtime alert",
+        "noDataState": "no_data",
+        "notifications": []
+      },
       "aliasColors": {},
       "bars": false,
       "dashLength": 10,
       "dashes": false,
       "datasource": "Prometheus",
-      "fieldConfig": {
-        "defaults": {},
-        "overrides": []
-      },
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
@@ -2317,10 +3401,10 @@
       "linewidth": 1,
       "nullPointMode": "null",
       "options": {
-        "alertThreshold": true
+        "alertThreshold": false
       },
       "percentage": false,
-      "pluginVersion": "7.5.5",
+      "pluginVersion": "8.0.6",
       "pointradius": 2,
       "points": false,
       "renderer": "flot",
@@ -2344,9 +3428,26 @@
           "interval": "",
           "legendFormat": "Docker enumeration last 3 days average runtime",
           "refId": "B"
+        },
+        {
+          "exemplar": true,
+          "expr": "job:dockercontainersenumerationtask_duration:rate3d:z_score",
+          "hide": true,
+          "interval": "",
+          "legendFormat": "z_score",
+          "refId": "C"
         }
       ],
-      "thresholds": [],
+      "thresholds": [
+        {
+          "colorMode": "critical",
+          "fill": false,
+          "line": false,
+          "op": "gt",
+          "value": 2,
+          "visible": true
+        }
+      ],
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
@@ -2386,9 +3487,162 @@
         "align": false,
         "alignLevel": null
       }
+    },
+    {
+      "alert": {
+        "alertRuleTags": {},
+        "conditions": [
+          {
+            "evaluator": {
+              "params": [
+                2
+              ],
+              "type": "gt"
+            },
+            "operator": {
+              "type": "and"
+            },
+            "query": {
+              "params": [
+                "C",
+                "12h",
+                "now"
+              ]
+            },
+            "reducer": {
+              "params": [],
+              "type": "max"
+            },
+            "type": "query"
+          }
+        ],
+        "executionErrorState": "alerting",
+        "for": "10s",
+        "frequency": "12h",
+        "handler": 1,
+        "message": "FS Stat task took longer than usual to run. Please check if it's intended.",
+        "name": "Fs Stat Average Riuntime alert",
+        "noDataState": "no_data",
+        "notifications": []
+      },
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "Prometheus",
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 7,
+        "w": 7,
+        "x": 14,
+        "y": 49
+      },
+      "hiddenSeries": false,
+      "id": 16,
+      "legend": {
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "show": true,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "nullPointMode": "null",
+      "options": {
+        "alertThreshold": false
+      },
+      "percentage": false,
+      "pluginVersion": "8.0.6",
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "exemplar": true,
+          "expr": "\navg(rate(fsstattask_duration_seconds_sum[30d])/rate(fsstattask_duration_seconds_count[30d]))",
+          "interval": "",
+          "legendFormat": "Fstat last 30 days average runtime",
+          "queryType": "randomWalk",
+          "refId": "A"
+        },
+        {
+          "exemplar": true,
+          "expr": "avg(rate(fsstattask_duration_seconds_sum[3d])/rate(fsstattask_duration_seconds_count[3d]))",
+          "hide": false,
+          "interval": "",
+          "legendFormat": "Fstat last 3 days average runtime",
+          "refId": "B"
+        },
+        {
+          "exemplar": true,
+          "expr": "job:fsstattask_duration:rate3d:z_score",
+          "hide": true,
+          "interval": "",
+          "legendFormat": "z_score",
+          "refId": "C"
+        }
+      ],
+      "thresholds": [
+        {
+          "colorMode": "critical",
+          "fill": false,
+          "line": false,
+          "op": "gt",
+          "value": 2,
+          "visible": true
+        }
+      ],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "Fs Stat Average Riuntime",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
     }
   ],
-  "schemaVersion": 27,
+  "refresh": "",
+  "schemaVersion": 30,
   "style": "dark",
   "tags": [],
   "templating": {
@@ -2401,6 +3655,6 @@
   "timepicker": {},
   "timezone": "",
   "title": "Turbinia Health Check",
-  "uid": "jgK1UUCGk",
-  "version": 5
+  "uid": "ZRyA5Uinz",
+  "version": 7
 }

@@ -5,8 +5,10 @@
 		"dockerfile": "../docker/vscode/Dockerfile"
 	},
 	"runArgs": [ "--privileged" ],
-	// start redis-server and copy launch profiles to .vscode
-	"postCreateCommand": "/etc/init.d/redis-server start && mkdir -p .vscode && cp docker/vscode/vscode-launch.json .vscode/launch.json",
+	// copy launch profiles to .vscode
+	"postCreateCommand": "mkdir -p .vscode && cp docker/vscode/vscode-launch.json .vscode/launch.json",
+	// start redis-server after subsequent start of the devcontainer
+	"postStartCommand": "/etc/init.d/redis-server start",
 	// Set *default* container specific settings.json values on container create.
 	"settings": {
 		"terminal.integrated.shell.linux": "/bin/bash",
