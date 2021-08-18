@@ -229,7 +229,7 @@ case $CMD in
         ;;   
     update-env)
         if [ -z ${ENVKEY} ] || [ -z ${ENVVALUE} ] ; then 
-            echo "Error: No key or value set to update enviroment variable (use -k and -v)"
+            echo "Error: No key or value set to update environment variable (use -k and -v)"
             usage
             exit 1
         fi
