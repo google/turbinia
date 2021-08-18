@@ -66,7 +66,7 @@ to get a shell with access to your GCP resources.
         you wish to keep this state information in. See the
         [Terraform documentation](https://www.terraform.io/docs/commands/index.html)
         for more information.
-    *   The current configuration does not enable alert notifcations by default.
+    *   The current configuration does not enable alert notifications by default.
         Please see [here](#grafana-smtp-setup) for the instructions
 *   Initialize terraform and apply the configuration
     *   `./deploy.sh --no-timesketch`
