@@ -92,8 +92,8 @@ class BinaryExtractorTask(TurbiniaTask):
     self.json_path = os.path.join(self.binary_extraction_dir, 'hashes.json')
 
     cmd = [
-        'image_export.py', '--partitions', 'all', '--no_vss', '--logfile',
-        image_export_log
+        'image_export.py', '--partitions', 'all', '--volumes', 'all',
+        '--no_vss', '--unattended', '--logfile', image_export_log
     ]
 
     if evidence.config and evidence.config.get('binary_extraction_path'):

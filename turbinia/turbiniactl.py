@@ -406,8 +406,6 @@ def main():
 
   args = parser.parse_args()
 
-  config.TURBINIA_COMMAND = args.command
-
   # (jorlamd): Importing recipe_helpers late to avoid a bug where
   # client.TASK_MAP is imported early rendering the check for worker
   # status not possible.
@@ -431,6 +429,7 @@ def main():
   if args.output_dir:
     config.OUTPUT_DIR = args.output_dir
 
+  config.TURBINIA_COMMAND = args.command
   server_flags_set = args.server or args.command == 'server'
   worker_flags_set = args.command in ('psqworker', 'celeryworker')
   # Run logger setup again if we're running as a server or worker (or have a log
