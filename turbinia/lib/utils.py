@@ -35,7 +35,7 @@ def _image_export(command, output_dir):
     output_dir: Path to directory to store the the extracted files.
 
   Returns:
-    dict: file names and paths to extracted files.
+    list: paths to extracted files.
 
   Raises:
     TurbiniaException: If an error occurs when running image_export.
@@ -67,7 +67,7 @@ def extract_artifacts(artifact_names, disk_path, output_dir):
     output_dir: Path to directory to store the the extracted files.
 
   Returns:
-    dict: file names and paths to extracted files.
+    list: paths to extracted files.
 
   Raises:
     TurbiniaException: If an error occurs when running image_export.
@@ -92,7 +92,7 @@ def extract_files(file_name, disk_path, output_dir):
     output_dir: Path to directory to store the the extracted files.
 
   Returns:
-    dict: file names and paths to extracted files.
+    list: paths to extracted files.
 
   Raises:
     TurbiniaException: If an error occurs when running image_export.

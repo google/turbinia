@@ -49,11 +49,14 @@ class WindowsAccountAnalysisTask(TurbiniaTask):
     output_evidence = ReportText(source_path=output_file_path)
 
     try:
-      location = self._collect_windows_files(evidence)
+      (location, num_files) = self._collect_windows_files(evidence)
     except TurbiniaException as e:
       result.close(
           self, success=True,
           status='No Windows account files found: {0:s}'.format(str(e)))
+      return result
+    if num_files < 2:
+      result.close(self, success=True, status='No Windows account files found')
       return result
     (creds, hashnames) = self._extract_windows_hashes(
         result, os.path.join(location, 'Windows', 'System32', 'config'))
@@ -82,7 +85,7 @@ class WindowsAccountAnalysisTask(TurbiniaTask):
     # Extract base dir from our list of collected artifacts
     location = os.path.dirname(collected_artifacts[0])
 
-    return location
+    return (location, len(collected_artifacts))
 
   def _extract_windows_hashes(self, result, location):
     # Dump the secrets into a file
