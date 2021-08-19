@@ -20,7 +20,6 @@ import os
 import logging
 
 from turbinia import config
-from turbinia.evidence import APFSEncryptedDisk
 from turbinia.evidence import EvidenceState as state
 from turbinia.evidence import PlasoFile
 from turbinia.workers import TurbiniaTask
@@ -108,20 +107,6 @@ class PlasoTask(TurbiniaTask):
 
     if config.DEBUG_TASKS or self.task_config.get('debug_tasks'):
       cmd.append('-d')
-    # natively in Turbinia
-    if isinstance(evidence, APFSEncryptedDisk):
-      if evidence.recovery_key:
-        cmd.extend([
-            '--credential', 'recovery_password:{0:s}'.format(
-                evidence.recovery_key)
-        ])
-      elif evidence.password:
-        cmd.extend(['--credential', 'password:{0:s}'.format(evidence.password)])
-      else:
-        result.close(
-            self, False, 'No credentials were provided '
-            'for a bitlocker disk.')
-        return result
 
     if evidence.credentials:
       for credential_type, credential_data in evidence.credentials:

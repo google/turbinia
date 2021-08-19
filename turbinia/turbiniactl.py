@@ -90,9 +90,9 @@ def main():
       required=False)
   parser.add_argument(
       '-k', '--decryption_keys', help='Decryption keys to be passed in as '
-      'comma separated list. Each entry should be in the form type=key. (e.g. '
-      '"-k password=123456,recovery_password=XXXXXX-XXXXXX-XXXXXX-XXXXXX-XXXXXX'
-      '-XXXXXX-XXXXXX-XXXXXX")', default=[], type=csv_list)
+      ' comma separated list. Each entry should be in the form type=key. (e.g. '
+      '"-k password=123456,recovery_password=XXXX-XXXX-XXXX-XXXX-XXXX-XXXX")',
+      default=[], type=csv_list)
   parser.add_argument('-o', '--output_dir', help='Directory path for output')
   parser.add_argument('-L', '--log_file', help='Log file')
   parser.add_argument(
@@ -167,25 +167,6 @@ def main():
       '-s', '--source', help='Description of the source of the evidence',
       required=False)
   parser_rawdisk.add_argument(
-      '-n', '--name', help='Descriptive name of the evidence', required=False)
-
-  # Parser options for APFS Disk Evidence type
-  parser_apfs = subparsers.add_parser(
-      'apfs', help='Process APFSEncryptedDisk as Evidence')
-  parser_apfs.add_argument(
-      '-l', '--source_path', help='Local path to the encrypted APFS evidence',
-      required=True)
-  parser_apfs.add_argument(
-      '-r', '--recovery_key', help='Recovery key for the APFS evidence.  '
-      'Either recovery key or password must be specified.', required=False)
-  parser_apfs.add_argument(
-      '-p', '--password', help='Password for the APFS evidence.  '
-      'If a recovery key is specified concurrently, password will be ignored.',
-      required=False)
-  parser_apfs.add_argument(
-      '-s', '--source', help='Description of the source of the evidence',
-      required=False)
-  parser_apfs.add_argument(
       '-n', '--name', help='Descriptive name of the evidence', required=False)
 
   # Parser options for Google Cloud Disk Evidence type
@@ -577,15 +558,6 @@ def main():
     source_path = os.path.abspath(args.source_path)
     evidence_ = evidence.RawDisk(
         name=args.name, source_path=source_path, source=args.source)
-  elif args.command == 'apfs':
-    if not args.password and not args.recovery_key:
-      log.error('Neither recovery key nor password is specified.')
-      sys.exit(1)
-    args.name = args.name if args.name else args.source_path
-    source_path = os.path.abspath(args.source_path)
-    evidence_ = evidence.APFSEncryptedDisk(
-        name=args.name, source_path=source_path, recovery_key=args.recovery_key,
-        password=args.password, source=args.source)
   elif args.command == 'directory':
     args.name = args.name if args.name else args.source_path
     source_path = os.path.abspath(args.source_path)
