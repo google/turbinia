@@ -62,7 +62,7 @@ RUN mkdir /etc/turbinia && mkdir -p /mnt/turbinia/ && mkdir -p /var/lib/turbinia
     && mkdir -p /home/turbinia/.john && chown -R turbinia:turbinia /home/turbinia/
 
 COPY docker/worker/start.sh /home/turbinia/start.sh
-RUN chmod +x /home/turbinia/start.sh
+RUN chmod +rwx /home/turbinia/start.sh
 USER turbinia
 CMD ["/home/turbinia/start.sh"]
 # Expose Prometheus endpoint.
