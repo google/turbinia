@@ -6,6 +6,7 @@ RUN apt-get update && apt-get -y install \
     apt-utils \
     ca-certificates \
     git \
+    john-data \
     hashcat \
     hashcat-data \
     libleveldb1d \

@@ -163,6 +163,8 @@ class JenkinsAnalysisTask(TurbiniaTask):
     credentials_registry = {hash: username for username, hash in credentials}
     # TODO: Add timeout parameter when dynamic configuration is ready.
     # Ref: https://github.com/google/turbinia/issues/244
+
+    # '3200' is "bcrypt $2*$, Blowfish (Unix)"
     weak_passwords = bruteforce_password_hashes(
         credentials_registry.keys(), tmp_dir=None, extra_args='-m 3200')
 

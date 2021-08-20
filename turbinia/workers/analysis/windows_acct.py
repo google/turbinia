@@ -58,8 +58,14 @@ class WindowsAccountAnalysisTask(TurbiniaTask):
     if num_files < 2:
       result.close(self, success=True, status='No Windows account files found')
       return result
-    (creds, hashnames) = self._extract_windows_hashes(
-        result, os.path.join(location, 'Windows', 'System32', 'config'))
+    try:
+      (creds, hashnames) = self._extract_windows_hashes(
+          result, os.path.join(location, 'Windows', 'System32', 'config'))
+    except TurbiniaException as e:
+      result.close(
+          self, success=False,
+          status='Unable to extract hashes from registry files: {0:s}'.format(
+              str(e)))
     (report, priority, summary) = self._analyse_windows_creds(creds, hashnames)
     output_evidence.text_data = report
     result.report_priority = priority
@@ -75,6 +81,14 @@ class WindowsAccountAnalysisTask(TurbiniaTask):
     return result
 
   def _collect_windows_files(self, evidence):
+    """Extract artifacts using image_export.
+
+    Args:
+        evidence (Evidence object):  The evidence to process
+    Returns:
+        location (str): The file path to the extracted evidence.
+        number of artifacts (int): The number of files extracted.
+    """
     try:
       collected_artifacts = extract_artifacts(
           artifact_names=['WindowsSystemRegistryFiles'],
@@ -88,7 +102,16 @@ class WindowsAccountAnalysisTask(TurbiniaTask):
     return (location, len(collected_artifacts))
 
   def _extract_windows_hashes(self, result, location):
-    # Dump the secrets into a file
+    """Dump the secrets from the Windows registry files.
+
+    Args:
+        result (TurbiniaTaskResult): The object to place task results into.
+        location (str): File path to the extracted registry files.
+
+    Returns:
+        creds (list): List of strings containing raw extracted credentials
+        hashnames (dict): Dict mapping hash back to username for convenience.
+    """
 
     # Default (empty) hash
     IGNORE_CREDS = ['31d6cfe0d16ae931b73c59d7e0c089c0']
@@ -116,16 +139,33 @@ class WindowsAccountAnalysisTask(TurbiniaTask):
           hashnames[passwdhash] = username
       os.remove(hash_file)
     else:
-      result.close(self, success=False, status='Extracted hash file not found.')
+      raise TurbiniaException('Extracted hash file not found.')
 
     return (creds, hashnames)
 
   def _analyse_windows_creds(self, creds, hashnames, timeout=300):
+    """Attempt to brute force extracted Windows credentials.
+
+    Args:
+        creds (list): List of strings containing raw extracted credentials
+        hashnames (dict): Dict mapping hash back to username for convenience.
+        timeout (int): How long to spend cracking.
+
+    Returns:
+      Tuple(
+        report_text(str): The report data
+        report_priority(int): The priority of the report (0 - 100)
+        summary(str): A summary of the report (used for task status)
+      )
+    """
     report = []
     summary = 'No weak passwords found'
     priority = Priority.LOW
+
+    # 1000 is "NTLM"
     weak_passwords = bruteforce_password_hashes(
         creds, tmp_dir=self.tmp_dir, timeout=timeout, extra_args='-m 1000')
+
     if weak_passwords:
       priority = Priority.CRITICAL
       summary = 'Registry analysis found {0:d} weak password(s)'.format(
