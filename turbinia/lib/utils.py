@@ -26,8 +26,10 @@ from turbinia import TurbiniaException
 
 log = logging.getLogger('turbinia')
 
+DEFAULT_TIMEOUT = 7200
 
-def _image_export(command, output_dir):
+
+def _image_export(command, output_dir, timeout=DEFAULT_TIMEOUT):
   """Runs image_export command.
 
   Args:
@@ -43,9 +45,12 @@ def _image_export(command, output_dir):
   # TODO: Consider using the exec helper to gather stdin/err.
   log.debug('Running image_export as [{0:s}]'.format(' '.join(command)))
   try:
-    subprocess.check_call(command)
-  except subprocess.CalledProcessError:
-    raise TurbiniaException('image_export.py failed.')
+    subprocess.check_call(command, timeout=timeout)
+  except subprocess.CalledProcessError as e:
+    raise TurbiniaException('image_export.py failed: {0!s}'.format(e))
+  except subprocess.TimeoutExpired as e:
+    raise TurbiniaException(
+        'image_export.py timed out after {0:d}s: {1!s}'.format(timeout, e))
 
   collected_file_paths = []
   file_count = 0
