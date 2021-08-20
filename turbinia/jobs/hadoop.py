@@ -16,8 +16,10 @@
 
 from __future__ import unicode_literals
 
-from turbinia.evidence import DiskPartition
 from turbinia.evidence import DockerContainer
+from turbinia.evidence import GoogleCloudDisk
+from turbinia.evidence import GoogleCloudDiskRawEmbedded
+from turbinia.evidence import RawDisk
 from turbinia.evidence import ReportText
 from turbinia.jobs import interface
 from turbinia.jobs import manager
@@ -27,7 +29,9 @@ from turbinia.workers.hadoop import HadoopAnalysisTask
 class HadoopAnalysisJob(interface.TurbiniaJob):
   """Analyzes Hadoop AppRoot files."""
 
-  evidence_input = [DiskPartition, DockerContainer]
+  evidence_input = [
+      DockerContainer, GoogleCloudDisk, GoogleCloudDiskRawEmbedded, RawDisk
+  ]
   evidence_output = [ReportText]
 
   NAME = 'HadoopAnalysisJob'
