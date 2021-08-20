@@ -64,7 +64,7 @@ RUN mkdir /etc/turbinia && mkdir -p /mnt/turbinia/ && mkdir -p /var/lib/turbinia
     && mkdir -p /home/turbinia && chown -R turbinia:turbinia /home/turbinia
 
 # Get a decent password list
-RUN cd /home/turbinia && wget https://raw.githubusercontent.com/danielmiessler/SecLists/master/Passwords/Common-Credentials/10-million-password-list-top-10000.txt -O password.lst
+RUN cd /home/turbinia && wget https://raw.githubusercontent.com/danielmiessler/SecLists/master/Passwords/Common-Credentials/10-million-password-list-top-1000000.txt -O password.lst
 RUN cp /home/turbinia/password.lst /root/
 
 RUN pip3 install impacket --no-deps
