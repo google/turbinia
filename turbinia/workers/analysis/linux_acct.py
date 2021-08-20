@@ -117,7 +117,7 @@ class LinuxAccountAnalysisTask(TurbiniaTask):
 
     # 1800 is "sha512crypt $6$, SHA512 (Unix)"
     weak_passwords = bruteforce_password_hashes(
-        shadow, tmp_dir=self.tmp_dir, extra_args='-m 1800 -a 0')
+        shadow, tmp_dir=self.tmp_dir, extra_args='-m 1800')
 
     if weak_passwords:
       priority = Priority.CRITICAL
