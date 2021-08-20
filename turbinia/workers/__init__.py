@@ -228,12 +228,12 @@ class TurbiniaTaskResult:
       # also fail.
       # pylint: disable=broad-except
       except Exception as exception:
-        with filelock.FileLock(config.RESOURCE_FILE_LOCK):
-          resource_manager.PostProcessResourceState(
-              self.input_evidence.resource_id, self.task_id)
         message = 'Evidence post-processing for {0!s} failed: {1!s}'.format(
             self.input_evidence.name, exception)
         self.log(message, level=logging.ERROR)
+        with filelock.FileLock(config.RESOURCE_FILE_LOCK):
+          resource_manager.PostProcessResourceState(
+              self.input_evidence.resource_id, self.task_id)
     else:
       self.log(
           'No input evidence attached to the result object so post-processing '

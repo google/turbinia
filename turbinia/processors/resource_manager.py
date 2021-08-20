@@ -44,7 +44,7 @@ def ValidateStateFile():
       json_load = json.load(fh)
     fh.close()
   except ValueError as e:
-    message = "Can not load json from resource state file."
+    message = 'Can not load json from resource state file.'
     log.error(message)
     raise TurbiniaException(message)
 
@@ -64,18 +64,19 @@ def PreprocessResourceState(resource_id, task_id):
   if resource_id in json_load.keys():
     if task_id not in json_load[resource_id]:
       log.debug(
-          "Adding task {0:s} into resource {1:s}.".format(task_id, resource_id))
+          'Adding task {0:s} into the resource state file for resource {1:s}.'
+          .format(task_id, resource_id))
       json_load[resource_id].append(task_id)
   else:
     log.debug(
-        "Adding new resource {0:s} and task {1:s}.".format(
-            resource_id, task_id))
+        'Adding new resource {0:s} and associated task {1:s} to the resource state file.'
+        .format(resource_id, task_id))
     json_load[resource_id] = [task_id]
 
   # Write back to state file.
   with open(config.RESOURCE_FILE, 'w') as fh:
     json.dump(json_load, fh)
-    log.debug("The resource state file has been successfully updated.")
+    log.debug('The resource state file has been successfully updated.')
   fh.close()
 
 
@@ -99,20 +100,20 @@ def PostProcessResourceState(resource_id, task_id):
     tasks = json_load[resource_id]
     if task_id in tasks and len(tasks) == 1:
       log.debug(
-          "Last task {0:s} remaining. Removing resource {1:s}.".format(
-              task_id, resource_id))
+          'Last task {0:s} remaining. Removing resource {1:s} from the resource state file.'
+          .format(task_id, resource_id))
       json_load.pop(resource_id)
       is_detachable = True
     elif task_id in tasks:
       json_load[resource_id].remove(task_id)
       log.debug(
-          "Removing task {0:s} from resource {1:s}.".format(
-              task_id, resource_id))
+          'Removing task {0:s} with associated resource {1:s} from the resource state file.'
+          .format(task_id, resource_id))
 
   # Write back to state file.
   with open(config.RESOURCE_FILE, 'w') as fh:
     json.dump(json_load, fh)
-    log.debug("The resource state file has been successfully updated.")
+    log.debug('The resource state file has been successfully updated.')
   fh.close()
 
   return is_detachable
