@@ -18,6 +18,8 @@ from __future__ import unicode_literals
 
 from turbinia import TurbiniaException
 
+DEFAULT_TIMEOUT = 7200
+
 
 class JobsManager:
   """The jobs manager."""
@@ -278,7 +280,7 @@ class JobsManager:
     Returns:
       timeout(int): The timeout value.
     """
-    timeout = None
+    timeout = DEFAULT_TIMEOUT
     job_class = cls._job_classes.get(job_name.lower())
     if hasattr(job_class, 'timeout') and job_class:
       timeout = job_class.timeout
