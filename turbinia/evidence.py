@@ -21,12 +21,14 @@ import json
 import logging
 import os
 import sys
+import filelock
 
 from turbinia import config
 from turbinia import TurbiniaException
 from turbinia.processors import archive
 from turbinia.processors import docker
 from turbinia.processors import mount_local
+from turbinia.processors import resource_manager
 from turbinia.lib.docker_manager import GetDockerPath
 
 # pylint: disable=keyword-arg-before-vararg
@@ -147,6 +149,10 @@ class Evidence:
         if that state is true.  This is used by the preprocessors to set the
         current state and Tasks can use this to determine if the Evidence is in
         the correct state for processing.
+    resource_tracked (bool): Evidence with this property set requires tracking 
+        in a state file to allow for access amongst multiple workers.
+    resource_id (str): The unique id used to track the state of a given Evidence
+        type for stateful tracking.
   """
 
   # The list of attributes a given piece of Evidence requires to be set
@@ -175,6 +181,8 @@ class Evidence:
     self.has_child_evidence = False
     self.parent_evidence = None
     self.save_metadata = False
+    self.resource_tracked = False
+    self.resource_id = None
 
     self.local_path = source_path
 
@@ -279,7 +287,7 @@ class Evidence:
     """
     pass
 
-  def preprocess(self, tmp_dir=None, required_states=None):
+  def preprocess(self, tmp_dir=None, required_states=None, task_id=None):
     """Runs the possible parent's evidence preprocessing code, then ours.
 
     This is a wrapper function that will call the chain of pre-processors
@@ -320,6 +328,7 @@ class Evidence:
                        Task will write to.
       required_states(list[EvidenceState]): The list of evidence state
           requirements from the Task.
+      task_id(str): The id of a given Task.
 
     Raises:
       TurbiniaException: If the required evidence state cannot be met by the
@@ -338,6 +347,10 @@ class Evidence:
       self.parent_evidence.preprocess(tmp_dir, required_states)
     try:
       log.debug('Starting pre-processor for evidence {0:s}'.format(self.name))
+      if self.resource_tracked:
+        # Track resource and task id in state file
+        with filelock.FileLock(config.RESOURCE_FILE_LOCK):
+          resource_manager.PreprocessResourceState(self.resource_id, task_id)
       self._preprocess(tmp_dir, required_states)
     except TurbiniaException as exception:
       log.error(
@@ -348,15 +361,29 @@ class Evidence:
         'Pre-processing evidence {0:s} is complete, and evidence is in state '
         '{1:s}'.format(self.name, self.format_state()))
 
-  def postprocess(self):
+  def postprocess(self, task_id=None):
     """Runs our postprocessing code, then our possible parent's evidence.
 
     This is is a wrapper function that will run our post-processor, and will
     then recurse down the chain of parent Evidence and run those post-processors
     in order.
+
+    Args:
+      task_id(str): The id of a given Task.
     """
     log.info('Starting post-processor for evidence {0:s}'.format(self.name))
     log.debug('Evidence state: {0:s}'.format(self.format_state()))
+    if self.resource_tracked:
+      with filelock.FileLock(config.RESOURCE_FILE_LOCK):
+        # Run postprocess to either remove task_id or resource_id.
+        detachable = resource_manager.PostProcessResourceState(
+            self.resource_id, task_id)
+        if not detachable:
+          # Prevent from running post process code if there are other tasks running.
+          log.info(
+              'Resource ID {0:s} still in use. Skipping detaching Evidence...'
+              .format(self.resource_id))
+          return
     self._postprocess()
     if self.parent_evidence:
       self.parent_evidence.postprocess()
@@ -639,6 +666,8 @@ class GoogleCloudDisk(RawDisk):
     self.partition_paths = None
     super(GoogleCloudDisk, self).__init__(*args, **kwargs)
     self.cloud_only = True
+    self.resource_tracked = True
+    self.resource_id = self.disk_name
 
   def _preprocess(self, _, required_states):
     # The GoogleCloudDisk should never need to be mounted unless it has child
@@ -647,12 +676,15 @@ class GoogleCloudDisk(RawDisk):
     # evidence layer isolation and having the child evidence manage the
     # mounting and unmounting.
 
-    if EvidenceState.ATTACHED in required_states:
-      self.device_path, partition_paths = google_cloud.PreprocessAttachDisk(
-          self.disk_name)
-      self.partition_paths = partition_paths
-      self.local_path = self.device_path
-      self.state[EvidenceState.ATTACHED] = True
+    # Explicitly lock this method to prevent race condition with two workers
+    # attempting to attach disk at same time, given delay with attaching in GCP.
+    with filelock.FileLock(config.RESOURCE_FILE_LOCK):
+      if EvidenceState.ATTACHED in required_states:
+        self.device_path, partition_paths = google_cloud.PreprocessAttachDisk(
+            self.disk_name)
+        self.partition_paths = partition_paths
+        self.local_path = self.device_path
+        self.state[EvidenceState.ATTACHED] = True
 
   def _postprocess(self):
     if self.state[EvidenceState.ATTACHED]:

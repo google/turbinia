@@ -38,6 +38,7 @@ import filelock
 from turbinia import config
 from turbinia.config import DATETIME_FORMAT
 from turbinia.evidence import evidence_decode
+from turbinia.processors import resource_manager
 from turbinia import output_manager
 from turbinia import state_manager
 from turbinia import TurbiniaException
@@ -221,7 +222,7 @@ class TurbiniaTaskResult:
 
     if self.input_evidence:
       try:
-        self.input_evidence.postprocess()
+        self.input_evidence.postprocess(task_id=self.task_id)
       # Adding a broad exception here because we want to try post-processing
       # to clean things up even after other failures in the task, so this could
       # also fail.
@@ -230,6 +231,9 @@ class TurbiniaTaskResult:
         message = 'Evidence post-processing for {0!s} failed: {1!s}'.format(
             self.input_evidence.name, exception)
         self.log(message, level=logging.ERROR)
+        with filelock.FileLock(config.RESOURCE_FILE_LOCK):
+          resource_manager.PostProcessResourceState(
+              self.input_evidence.resource_id, self.task_id)
     else:
       self.log(
           'No input evidence attached to the result object so post-processing '
@@ -514,7 +518,8 @@ class TurbiniaTask:
           state does not meet the required state.
     """
     evidence.validate()
-    evidence.preprocess(self.tmp_dir, required_states=self.REQUIRED_STATES)
+    evidence.preprocess(
+        self.tmp_dir, required_states=self.REQUIRED_STATES, task_id=self.id)
 
     # Final check to make sure that the required evidence state has been met
     # for Evidence types that have those capabilities.
