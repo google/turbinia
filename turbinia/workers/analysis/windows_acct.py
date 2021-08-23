@@ -66,6 +66,7 @@ class WindowsAccountAnalysisTask(TurbiniaTask):
           self, success=False,
           status='Unable to extract hashes from registry files: {0:s}'.format(
               str(e)))
+      return result
     (report, priority, summary) = self._analyse_windows_creds(creds, hashnames)
     output_evidence.text_data = report
     result.report_priority = priority
