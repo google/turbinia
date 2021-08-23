@@ -50,9 +50,7 @@ def setup_stackdriver_handler(project_id, origin):
   """
 
   # Patching cloud logging to allow custom fields
-  def my_enqueue(
-      self, record, message, resource=None, labels=None, trace=None,
-      span_id=None):
+  def my_enqueue(self, record, message, **kwargs):
     queue_entry = {
         "info": {
             "message": message,
@@ -60,13 +58,10 @@ def setup_stackdriver_handler(project_id, origin):
             "origin": origin
         },
         "severity": _helpers._normalize_severity(record.levelno),
-        "resource": resource,
-        "labels": labels,
-        "trace": trace,
-        "span_id": span_id,
         "timestamp": datetime.datetime.utcfromtimestamp(record.created),
     }
 
+    queue_entry.update(kwargs)
     self._queue.put_nowait(queue_entry)
 
   _Worker.enqueue = my_enqueue
