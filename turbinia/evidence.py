@@ -344,9 +344,12 @@ class Evidence:
         raise TurbiniaException(
             'Evidence of type {0:s} needs parent_evidence to be set'.format(
                 self.type))
-      self.parent_evidence.preprocess(tmp_dir, required_states)
+      self.parent_evidence.preprocess(tmp_dir, required_states, task_id)
     try:
       log.debug('Starting pre-processor for evidence {0:s}'.format(self.name))
+      log.info(
+          'DEBUUUUUUUG: resource_id: {0!s} task_id: {1!s}'.format(
+              self.resource_id, task_id))
       if self.resource_tracked:
         # Track resource and task id in state file
         with filelock.FileLock(config.RESOURCE_FILE_LOCK):
