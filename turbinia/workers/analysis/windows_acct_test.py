@@ -66,7 +66,7 @@ class WindowsAccountAnalysisTaskTest(TestTurbiniaTaskBase):
     config.LoadConfig()
 
     (report, priority, summary) = self.task._analyse_windows_creds(
-        self.RAW_CREDS, self.EXPECTED_CREDENTIALS, timeout=10)
+        self.RAW_CREDS, self.EXPECTED_CREDENTIALS, timeout=30)
     self.assertEqual(report, self.REGISTRY_REPORT)
     self.assertEqual(priority, 10)
     self.assertEqual(summary, 'Registry analysis found 2 weak password(s)')
