@@ -667,10 +667,19 @@ class GoogleCloudDisk(RawDisk):
     self.disk_name = disk_name
     self.mount_partition = mount_partition
     self.partition_paths = None
+    log.info(
+        'DEBUUUUUG: resource_id: {0!s} before super() call'.format(
+            self.resource_id))
+    log.info(
+        'DEBUUUUUG: disk_name: {0!s} before super() call'.format(
+            self.disk_name))
     super(GoogleCloudDisk, self).__init__(*args, **kwargs)
     self.cloud_only = True
     self.resource_tracked = True
     self.resource_id = self.disk_name
+    log.info(
+        'DEBUUUUUG: resource_id: {0!s} after super() call'.format(
+            self.resource_id))
 
   def _preprocess(self, _, required_states):
     # The GoogleCloudDisk should never need to be mounted unless it has child
