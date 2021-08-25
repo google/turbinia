@@ -42,8 +42,8 @@ class LinuxAccountAnalysisTaskTest(unittest.TestCase):
     with open(test_data, 'r') as data:
       self.SHADOW_FILE = data.readlines()
 
-  def test_extract_jenkins_credentials(self):
-    """Tests the extract_jenkins_credentials method."""
+  def test_extract_linux_credentials(self):
+    """Tests the extract_linux_credentials method."""
     config.LoadConfig()
     task = linux_acct.LinuxAccountAnalysisTask()
 

@@ -6,8 +6,9 @@ RUN apt-get update && apt-get -y install \
     apt-utils \
     ca-certificates \
     git \
-    john \
     john-data \
+    hashcat \
+    hashcat-data \
     libleveldb1d \
     libleveldb-dev \
     libterm-readline-gnu-perl \
@@ -16,6 +17,7 @@ RUN apt-get update && apt-get -y install \
     software-properties-common \
     sudo \
     testdisk \
+    wget \
     && rm -rf /var/lib/apt/lists/*
 
 ADD requirements.txt /tmp/
@@ -56,7 +58,13 @@ RUN mkdir /etc/turbinia && mkdir -p /mnt/turbinia/ && mkdir -p /var/lib/turbinia
     && mkdir -p /var/log/turbinia/ && chown -R turbinia:turbinia /mnt/turbinia/ \
     && chown -R turbinia:turbinia /var/lib/turbinia/ \
     && chown -R turbinia:turbinia /var/log/turbinia/ \
-    && mkdir -p /home/turbinia/.john && chown -R turbinia:turbinia /home/turbinia/
+    && mkdir -p /home/turbinia && chown -R turbinia:turbinia /home/turbinia
+
+# Get a decent password list
+RUN cd /home/turbinia && wget https://raw.githubusercontent.com/danielmiessler/SecLists/master/Passwords/Common-Credentials/10-million-password-list-top-1000000.txt -O password.lst
+RUN cp /home/turbinia/password.lst /root/
+
+RUN pip3 install impacket --no-deps
 
 COPY docker/worker/start.sh /home/turbinia/start.sh
 RUN chmod +rwx /home/turbinia/start.sh

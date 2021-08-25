@@ -147,7 +147,12 @@ DEPENDENCIES = [{
     'timeout': 1200
 }, {
     'job': 'JenkinsAnalysisJob',
-    'programs': ['john'],
+    'programs': ['hashcat'],
+    'docker_image': None,
+    'timeout': 1200
+}, {
+    'job': 'LinuxAccountAnalysisJob',
+    'programs': ['hashcat'],
     'docker_image': None,
     'timeout': 1200
 }, {
@@ -178,6 +183,11 @@ DEPENDENCIES = [{
 }, {
     'job': 'VolatilityJob',
     'programs': ['vol.py'],
+    'docker_image': None,
+    'timeout': 3600
+}, {
+    'job': 'WindowsAccountAnalysisJob',
+    'programs': ['hashcat', 'secretsdump.py'],
     'docker_image': None,
     'timeout': 3600
 }, {

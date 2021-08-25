@@ -136,7 +136,7 @@ def main():
   parser.add_argument(
       '-t', '--task',
       help='The name of a single Task to run locally (must be used with '
-      '--run_local.')
+      '--run_local).')
   parser.add_argument(
       '-T', '--debug_tasks', action='store_true',
       help='Show debug output for all supported tasks', default=False)

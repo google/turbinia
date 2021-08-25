@@ -34,6 +34,7 @@ class LinuxAccountAnalysisTask(TurbiniaTask):
 
   def run(self, evidence, result):
     """Run the Linux Account worker.
+
     Args:
         evidence (Evidence object):  The evidence to process
         result (TurbiniaTaskResult): The object to place task results into.
@@ -85,6 +86,7 @@ class LinuxAccountAnalysisTask(TurbiniaTask):
   @staticmethod
   def _extract_linux_credentials(shadow):
     """Extract credentials from a Linux shadow files.
+
     Args:
       shadow (list): shadow file contents (list of str).
     Returns:
@@ -98,6 +100,7 @@ class LinuxAccountAnalysisTask(TurbiniaTask):
 
   def analyse_shadow_file(self, shadow, hashes):
     """Analyses a Linux shadow file.
+
     Args:
       shadow (list): shadow file content (list of str).
       hashes (dict): dict of hashes to usernames
@@ -111,7 +114,11 @@ class LinuxAccountAnalysisTask(TurbiniaTask):
     report = []
     summary = 'No weak passwords found'
     priority = Priority.LOW
-    weak_passwords = bruteforce_password_hashes(shadow)
+
+    # 1800 is "sha512crypt $6$, SHA512 (Unix)"
+    weak_passwords = bruteforce_password_hashes(
+        shadow, tmp_dir=self.tmp_dir, extra_args='-m 1800')
+
     if weak_passwords:
       priority = Priority.CRITICAL
       summary = 'Shadow file analysis found {0:n} weak password(s)'.format(
