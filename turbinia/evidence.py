@@ -347,9 +347,6 @@ class Evidence:
       self.parent_evidence.preprocess(tmp_dir, required_states, task_id)
     try:
       log.debug('Starting pre-processor for evidence {0:s}'.format(self.name))
-      log.info(
-          'DEBUUUUUUUG: resource_id: {0!s} task_id: {1!s}'.format(
-              self.resource_id, task_id))
       if self.resource_tracked:
         # Track resource and task id in state file
         with filelock.FileLock(config.RESOURCE_FILE_LOCK):
@@ -655,7 +652,7 @@ class GoogleCloudDisk(RawDisk):
     disk_name: The cloud disk name.
   """
 
-  REQUIRED_ATTRIBUTES = ['disk_name', 'project', 'zone']
+  REQUIRED_ATTRIBUTES = ['disk_name', 'project', 'resource_id', 'zone']
   POSSIBLE_STATES = [EvidenceState.ATTACHED, EvidenceState.MOUNTED]
 
   def __init__(
@@ -667,19 +664,10 @@ class GoogleCloudDisk(RawDisk):
     self.disk_name = disk_name
     self.mount_partition = mount_partition
     self.partition_paths = None
-    log.info(
-        'DEBUUUUUG: resource_id: {0!s} before super() call'.format(
-            self.resource_id))
-    log.info(
-        'DEBUUUUUG: disk_name: {0!s} before super() call'.format(
-            self.disk_name))
     super(GoogleCloudDisk, self).__init__(*args, **kwargs)
     self.cloud_only = True
     self.resource_tracked = True
     self.resource_id = self.disk_name
-    log.info(
-        'DEBUUUUUG: resource_id: {0!s} after super() call'.format(
-            self.resource_id))
 
   def _preprocess(self, _, required_states):
     # The GoogleCloudDisk should never need to be mounted unless it has child
