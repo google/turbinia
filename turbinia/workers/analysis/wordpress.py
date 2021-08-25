@@ -30,6 +30,8 @@ from turbinia.workers import Priority
 class WordpressAccessLogAnalysisTask(TurbiniaTask):
   """Task to analyze Wordpress access logs."""
 
+  REQUIRED_STATES = [state.ATTACHED, state.CONTAINER_MOUNTED]
+
   timestamp_regex = re.compile(r'\[(?P<timestamp>.+)\]')
 
   install_step_regex = re.compile(

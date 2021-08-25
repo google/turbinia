@@ -97,6 +97,7 @@ class EvidenceState(IntEnum):
   MOUNTED = 1
   ATTACHED = 2
   DECOMPRESSED = 3
+  CONTAINER_MOUNTED = 4
 
 
 class Evidence:
@@ -850,7 +851,7 @@ class DockerContainer(Evidence):
     _docker_root_directory(str): Full path to the docker root directory.
   """
 
-  POSSIBLE_STATES = [EvidenceState.MOUNTED]
+  POSSIBLE_STATES = [EvidenceState.CONTAINER_MOUNTED]
 
   def __init__(self, container_id=None, *args, **kwargs):
     """Initialization for Docker Container."""
@@ -864,8 +865,7 @@ class DockerContainer(Evidence):
   def _preprocess(self, _, required_states):
     # Checking for either ATTACHED or MOUNTED since artefact extraction only
     # requires ATTACHED, but a docker container can't be attached.
-    if (EvidenceState.ATTACHED in required_states or
-        EvidenceState.MOUNTED in required_states):
+    if EvidenceState.CONTAINER_MOUNTED in required_states:
       self._docker_root_directory = GetDockerPath(
           self.parent_evidence.mount_path)
       # Mounting the container's filesystem
@@ -873,10 +873,10 @@ class DockerContainer(Evidence):
           self._docker_root_directory, self.container_id)
       self.mount_path = self._container_fs_path
       self.local_path = self.mount_path
-      self.state[EvidenceState.MOUNTED] = True
+      self.state[EvidenceState.CONTAINER_MOUNTED] = True
 
   def _postprocess(self):
-    if self.state[EvidenceState.MOUNTED]:
+    if self.state[EvidenceState.CONTAINER_MOUNTED]:
       # Unmount the container's filesystem
       mount_local.PostprocessUnmountPath(self._container_fs_path)
-      self.state[EvidenceState.MOUNTED] = False
+      self.state[EvidenceState.CONTAINER_MOUNTED] = False

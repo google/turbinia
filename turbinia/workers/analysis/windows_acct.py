@@ -30,7 +30,9 @@ from turbinia.workers import TurbiniaTask
 class WindowsAccountAnalysisTask(TurbiniaTask):
   """Task to analyze Windows accounts."""
 
-  REQUIRED_STATES = [state.ATTACHED, state.DECOMPRESSED]
+  REQUIRED_STATES = [
+      state.ATTACHED, state.CONTAINER_MOUNTED, state.DECOMPRESSED
+  ]
 
   def run(self, evidence, result):
     """Run the Windows Account worker.

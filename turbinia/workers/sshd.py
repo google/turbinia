@@ -28,6 +28,8 @@ from turbinia.workers import Priority
 class SSHDAnalysisTask(TurbiniaTask):
   """Task to analyze a sshd_config file."""
 
+  REQUIRED_STATES = [state.ATTACHED, state.CONTAINER_MOUNTED]
+
   def run(self, evidence, result):
     """Run the sshd_config analysis worker.
 

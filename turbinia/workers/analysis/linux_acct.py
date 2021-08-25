@@ -30,7 +30,9 @@ from turbinia.workers import TurbiniaTask
 class LinuxAccountAnalysisTask(TurbiniaTask):
   """Task to analyze a Linux password file."""
 
-  REQUIRED_STATES = [state.ATTACHED, state.DECOMPRESSED]
+  REQUIRED_STATES = [
+      state.ATTACHED, state.CONTAINER_MOUNTED, state.DECOMPRESSED
+  ]
 
   def run(self, evidence, result):
     """Run the Linux Account worker.

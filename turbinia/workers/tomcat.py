@@ -28,6 +28,8 @@ from turbinia.workers import Priority
 class TomcatAnalysisTask(TurbiniaTask):
   """Task to analyze a Tomcat file."""
 
+  REQUIRED_STATES = [state.ATTACHED, state.CONTAINER_MOUNTED]
+
   def run(self, evidence, result):
     """Run the Tomcat analysis worker.
 
