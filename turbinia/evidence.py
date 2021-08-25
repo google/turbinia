@@ -344,7 +344,7 @@ class Evidence:
         raise TurbiniaException(
             'Evidence of type {0:s} needs parent_evidence to be set'.format(
                 self.type))
-      self.parent_evidence.preprocess(tmp_dir, required_states)
+      self.parent_evidence.preprocess(tmp_dir, required_states, task_id)
     try:
       log.debug('Starting pre-processor for evidence {0:s}'.format(self.name))
       if self.resource_tracked:
@@ -652,7 +652,7 @@ class GoogleCloudDisk(RawDisk):
     disk_name: The cloud disk name.
   """
 
-  REQUIRED_ATTRIBUTES = ['disk_name', 'project', 'zone']
+  REQUIRED_ATTRIBUTES = ['disk_name', 'project', 'resource_id', 'zone']
   POSSIBLE_STATES = [EvidenceState.ATTACHED, EvidenceState.MOUNTED]
 
   def __init__(
