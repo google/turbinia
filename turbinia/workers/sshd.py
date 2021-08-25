@@ -20,6 +20,7 @@ import os
 import re
 
 from turbinia.evidence import ReportText
+from turbinia.evidence import EvidenceState as state
 from turbinia.lib import text_formatter as fmt
 from turbinia.workers import TurbiniaTask
 from turbinia.workers import Priority
