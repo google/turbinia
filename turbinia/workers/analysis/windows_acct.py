@@ -15,7 +15,6 @@
 """Task for analysing Windows account passwords."""
 
 import os
-import subprocess
 
 from turbinia import TurbiniaException
 from turbinia.evidence import EvidenceState as state
