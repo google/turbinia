@@ -68,6 +68,7 @@ class PartitionEnumerationTaskTest(TestTurbiniaTaskBase):
             'Found 1 partition(s) in [{0:s}]:'.format(
                 self.evidence.local_path)))
     expected_report.append(fmt.heading5('/p1:'))
+    expected_report.append(fmt.bullet('Filesystem: NTFS'))
     expected_report.append(fmt.bullet('Partition index: 2'))
     expected_report.append(fmt.bullet('Partition offset: 512'))
     expected_report.append(fmt.bullet('Partition size: 66048'))
@@ -101,6 +102,7 @@ class PartitionEnumerationTaskTest(TestTurbiniaTaskBase):
             'Found 1 partition(s) in [{0:s}]:'.format(
                 self.evidence.local_path)))
     expected_report.append(fmt.heading5('/apfs1:'))
+    expected_report.append(fmt.bullet('Filesystem: APFS_CONTAINER'))
     expected_report.append(fmt.bullet('Volume index: 0'))
     expected_report = '\n'.join(expected_report)
     self.assertEqual(result.report_data, expected_report)
@@ -124,7 +126,7 @@ class PartitionEnumerationTaskTest(TestTurbiniaTaskBase):
         dfvfs_definitions.TYPE_INDICATOR_EXT, location='/',
         parent=test_gpt_path_spec)
 
-    mock_getbasepathspecs.return_value = [test_gpt_path_spec]
+    mock_getbasepathspecs.return_value = [test_ext_path_spec]
 
     result = self.task.run(self.evidence, self.result)
 
@@ -135,6 +137,7 @@ class PartitionEnumerationTaskTest(TestTurbiniaTaskBase):
             'Found 1 partition(s) in [{0:s}]:'.format(
                 self.evidence.local_path)))
     expected_report.append(fmt.heading5('/p1:'))
+    expected_report.append(fmt.bullet('Filesystem: EXT'))
     expected_report.append(fmt.bullet('Source evidence is a volume image'))
     expected_report = '\n'.join(expected_report)
     self.assertEqual(result.report_data, expected_report)
@@ -169,6 +172,7 @@ class PartitionEnumerationTaskTest(TestTurbiniaTaskBase):
             'Found 1 partition(s) in [{0:s}]:'.format(
                 self.evidence.local_path)))
     expected_report.append(fmt.heading5('/lvm1:'))
+    expected_report.append(fmt.bullet('Filesystem: XFS'))
     expected_report.append(fmt.bullet('Source evidence is a volume image'))
     expected_report = '\n'.join(expected_report)
     self.assertEqual(result.report_data, expected_report)
