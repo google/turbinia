@@ -217,32 +217,30 @@ class MountLocalProcessorTest(unittest.TestCase):
 
   @mock.patch('turbinia.processors.mount_local.config')
   @mock.patch('tempfile.mkdtemp')
-  @mock.patch('subprocess.check_output')
   @mock.patch('subprocess.check_call')
   @mock.patch('os.path.isdir')
   @mock.patch('os.path.exists')
   @mock.patch('os.makedirs')
   def testPreprocessMountPartition(
-      self, _, mock_path_exists, mock_path_isdir, mock_subprocess,
-      mock_filesystem, mock_mkdtemp, mock_config):
+      self, _, mock_path_exists, mock_path_isdir, mock_subprocess, mock_mkdtemp,
+      mock_config):
     """Test PreprocessMountPartition method."""
     mock_config.MOUNT_DIR_PREFIX = '/mnt/turbinia'
     mock_path_exists.side_effect = _mock_returns
-    mock_filesystem.return_value = b'ext4'
     mock_mkdtemp.return_value = '/mnt/turbinia/turbinia0ckdntz0'
 
     # Test partition path doesn't exist
     with self.assertRaises(TurbiniaException):
-      mount_local.PreprocessMountPartition('/dev/loop0p4')
+      mount_local.PreprocessMountPartition('/dev/loop0p4', 'EXT')
 
     # Test mount prefix is not directory
     mock_path_isdir.return_value = False
     with self.assertRaises(TurbiniaException):
-      mount_local.PreprocessMountPartition('/dev/loop0')
+      mount_local.PreprocessMountPartition('/dev/loop0', 'EXT')
     mock_path_isdir.return_value = True
 
     # Test ext4
-    mount_path = mount_local.PreprocessMountPartition('/dev/loop0')
+    mount_path = mount_local.PreprocessMountPartition('/dev/loop0', 'EXT')
     expected_args = [
         'sudo', 'mount', '-o', 'ro', '-o', 'noload', '/dev/loop0',
         '/mnt/turbinia/turbinia0ckdntz0'
@@ -252,8 +250,7 @@ class MountLocalProcessorTest(unittest.TestCase):
 
     # Test xfs
     mock_subprocess.reset_mock()
-    mock_filesystem.return_value = b'xfs'
-    mount_path = mount_local.PreprocessMountPartition('/dev/loop0')
+    mount_path = mount_local.PreprocessMountPartition('/dev/loop0', 'XFS')
     expected_args = [
         'sudo', 'mount', '-o', 'ro', '-o', 'norecovery', '/dev/loop0',
         '/mnt/turbinia/turbinia0ckdntz0'
@@ -265,7 +262,7 @@ class MountLocalProcessorTest(unittest.TestCase):
     mock_subprocess.reset_mock()
     mock_subprocess.side_effect = CalledProcessError(1, 'mount')
     with self.assertRaises(TurbiniaException):
-      mount_local.PreprocessMountPartition('/dev/loop0')
+      mount_local.PreprocessMountPartition('/dev/loop0', 'EXT')
 
   @mock.patch('subprocess.check_output')
   def testGetFilesystem(self, mock_subprocess):
