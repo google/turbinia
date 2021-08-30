@@ -20,7 +20,7 @@ import os
 import unittest
 
 from turbinia import config
-from turbinia.workers.analysis import wordpress
+from turbinia.workers.analysis import wordpress_access
 
 
 class WordpressAccessLogAnalysisTaskTest(unittest.TestCase):
@@ -42,7 +42,7 @@ class WordpressAccessLogAnalysisTaskTest(unittest.TestCase):
   def test_analyze_wp_access_logs(self):
     """Tests the analyze_wp_access_logs method."""
     config.LoadConfig()
-    task = wordpress.WordpressAccessLogAnalysisTask()
+    task = wordpress_access.WordpressAccessLogAnalysisTask()
 
     (report, priority, summary) = task.analyze_wp_access_logs(
         self.WORDPRESS_ACCESS_LOGS)
