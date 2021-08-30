@@ -69,14 +69,12 @@ class WordpressCredsAnalysisTask(TurbiniaTask):
 
     try:
       (creds, hashnames) = self._extract_wordpress_hashes(location)
-      result.log('C: {} // R: {}'.format(creds, hashnames))
     except TurbiniaException as e:
       result.close(self, success=True, status=str(e))
       return result
 
     (report, priority, summary) = self._analyse_wordpress_creds(
         creds, hashnames)
-    result.log('R: {} // P: {} // S: {}'.format(report, priority, summary))
     output_evidence.text_data = report
     result.report_data = report
     result.report_priority = priority
