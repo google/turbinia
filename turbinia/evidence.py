@@ -386,7 +386,7 @@ class Evidence:
           log.info(
               'Resource ID {0:s} still in use. Skipping detaching Evidence...'
               .format(self.resource_id))
-          return
+              
     if is_detachable:
       self._postprocess()
     if self.parent_evidence:
