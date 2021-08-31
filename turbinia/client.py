@@ -47,6 +47,7 @@ from turbinia.workers.analysis.wordpress import WordpressAccessLogAnalysisTask
 from turbinia.workers.analysis.jenkins import JenkinsAnalysisTask
 from turbinia.workers.analysis.jupyter import JupyterAnalysisTask
 from turbinia.workers.analysis.linux_acct import LinuxAccountAnalysisTask
+from turbinia.workers.analysis.loki import LokiAnalysisTask
 from turbinia.workers.analysis.windows_acct import WindowsAccountAnalysisTask
 from turbinia.workers.finalize_request import FinalizeRequestTask
 from turbinia.workers.docker import DockerContainersEnumerationTask
@@ -86,6 +87,7 @@ TASK_MAP = {
     'hindsighttask': HindsightTask,
     'LinuxAccountAnalysisTask': LinuxAccountAnalysisTask,
     'WindowsAccountAnalysisTask': WindowsAccountAnalysisTask,
+    'LokiAnalysisTask': LokiAnalysisTask,
     'partitionenumerationtask': PartitionEnumerationTask,
     'plasotask': PlasoTask,
     'psorttask': PsortTask,

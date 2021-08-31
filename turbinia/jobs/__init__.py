@@ -25,6 +25,7 @@ from turbinia.jobs import http_access_logs
 from turbinia.jobs import jenkins
 from turbinia.jobs import jupyter
 from turbinia.jobs import linux_acct
+from turbinia.jobs import loki
 from turbinia.jobs import partitions
 from turbinia.jobs import photorec
 from turbinia.jobs import plaso

@@ -17,6 +17,7 @@ RUN apt-get update && apt-get -y install \
     software-properties-common \
     sudo \
     testdisk \
+    unzip \
     wget \
     && rm -rf /var/lib/apt/lists/*
 
@@ -65,6 +66,11 @@ RUN cd /home/turbinia && wget https://raw.githubusercontent.com/danielmiessler/S
 RUN cp /home/turbinia/password.lst /root/
 
 RUN pip3 install impacket --no-deps
+
+RUN cd /home/turbinia && wget https://github.com/Neo23x0/Loki/archive/refs/tags/0.44.0.zip \
+    && unzip 0.44.0.zip && cd Loki-0.44.0 && pip3 install -r requirements.txt \
+    && sudo update-alternatives --install /usr/bin/python python /usr/bin/python3 1 \
+    && sudo chown -R turbinia:turbinia /home/turbinia/Loki-0.44.0
 
 COPY docker/worker/start.sh /home/turbinia/start.sh
 RUN chmod +rwx /home/turbinia/start.sh
