@@ -288,7 +288,7 @@ class Evidence:
     """
     pass
 
-  def preprocess(self, tmp_dir=None, required_states=None, task_id=None):
+  def preprocess(self, task_id, tmp_dir=None, required_states=None):
     """Runs the possible parent's evidence preprocessing code, then ours.
 
     This is a wrapper function that will call the chain of pre-processors
@@ -325,11 +325,11 @@ class Evidence:
     the state is confirmed after the preprocessing is complete.
 
     Args:
+      task_id(str): The id of a given Task.
       tmp_dir(str): The path to the temporary directory that the
                        Task will write to.
       required_states(list[EvidenceState]): The list of evidence state
           requirements from the Task.
-      task_id(str): The id of a given Task.
 
     Raises:
       TurbiniaException: If the required evidence state cannot be met by the
@@ -345,7 +345,7 @@ class Evidence:
         raise TurbiniaException(
             'Evidence of type {0:s} needs parent_evidence to be set'.format(
                 self.type))
-      self.parent_evidence.preprocess(tmp_dir, required_states, task_id)
+      self.parent_evidence.preprocess(task_id, tmp_dir, required_states)
     try:
       log.debug('Starting pre-processor for evidence {0:s}'.format(self.name))
       if self.resource_tracked:
@@ -362,7 +362,7 @@ class Evidence:
         'Pre-processing evidence {0:s} is complete, and evidence is in state '
         '{1:s}'.format(self.name, self.format_state()))
 
-  def postprocess(self, task_id=None):
+  def postprocess(self, task_id):
     """Runs our postprocessing code, then our possible parent's evidence.
 
     This is is a wrapper function that will run our post-processor, and will
@@ -374,20 +374,23 @@ class Evidence:
     """
     log.info('Starting post-processor for evidence {0:s}'.format(self.name))
     log.debug('Evidence state: {0:s}'.format(self.format_state()))
+
+    is_detachable = True
     if self.resource_tracked:
       with filelock.FileLock(config.RESOURCE_FILE_LOCK):
         # Run postprocess to either remove task_id or resource_id.
-        detachable = resource_manager.PostProcessResourceState(
+        is_detachable = resource_manager.PostProcessResourceState(
             self.resource_id, task_id)
-        if not detachable:
+        if not is_detachable:
           # Prevent from running post process code if there are other tasks running.
           log.info(
               'Resource ID {0:s} still in use. Skipping detaching Evidence...'
               .format(self.resource_id))
           return
-    self._postprocess()
+    if not is_detachable:
+      self._postprocess()
     if self.parent_evidence:
-      self.parent_evidence.postprocess()
+      self.parent_evidence.postprocess(task_id)
 
   def format_state(self):
     """Returns a string representing the current state of evidence.
