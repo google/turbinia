@@ -63,7 +63,7 @@ class WordpressCredsAnalysisTask(TurbiniaTask):
         return result
     except TurbiniaException as e:
       result.close(
-          self, success=True,
+          self, success=False,
           status='Error retrieving Wordpress database: {0:s}'.format(str(e)))
       return result
 
