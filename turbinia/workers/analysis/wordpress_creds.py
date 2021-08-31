@@ -70,7 +70,7 @@ class WordpressCredsAnalysisTask(TurbiniaTask):
     try:
       (creds, hashnames) = self._extract_wordpress_hashes(location)
     except TurbiniaException as e:
-      result.close(self, success=True, status=str(e))
+      result.close(self, success=False, status=str(e))
       return result
 
     (report, priority, summary) = self._analyse_wordpress_creds(
@@ -104,7 +104,8 @@ class WordpressCredsAnalysisTask(TurbiniaTask):
           file_name=_WP_DB_NAME, disk_path=evidence.local_path,
           output_dir=os.path.join(self.output_dir, 'artifacts'))
     except TurbiniaException as e:
-      raise TurbiniaException('artifact extraction failed: {}'.format(str(e)))
+      raise TurbiniaException(
+          'artifact extraction failed: {0:s}'.format(str(e)))
 
     # Extract base dir from our list of collected artifacts
     location = os.path.dirname(collected_artifacts[0])
@@ -138,10 +139,10 @@ class WordpressCredsAnalysisTask(TurbiniaTask):
             raise TurbiniaException('No Wordpress credentials found')
           if grep.returncode == 2:
             raise TurbiniaException(
-                'Error grepping file: {}'.format(grep.stdout))
+                'Error grepping file: {0:s}'.format(grep.stdout))
         except subprocess.CalledProcessError as e:
           raise TurbiniaException(
-              'Unable to strings/grep file: {}'.format(str(e)))
+              'Unable to strings/grep file: {0:s}'.format(str(e)))
 
         for cred in grep.stdout.strip().split('\n'):
           m = re.match(_CREDS_REGEXP, cred)

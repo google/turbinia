@@ -192,7 +192,7 @@ DEPENDENCIES = [{
     'timeout': 3600
 }, {
     'job': 'WordpressCredsAnalysisJob',
-    'programs': ['hashcat'],
+    'programs': ['hashcat', 'grep', 'strings'],
     'docker_image': None,
     'timeout': 3600
 }, {
