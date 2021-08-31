@@ -387,7 +387,7 @@ class Evidence:
               'Resource ID {0:s} still in use. Skipping detaching Evidence...'
               .format(self.resource_id))
           return
-    if not is_detachable:
+    if is_detachable:
       self._postprocess()
     if self.parent_evidence:
       self.parent_evidence.postprocess(task_id)
