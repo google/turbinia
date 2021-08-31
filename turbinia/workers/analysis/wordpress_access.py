@@ -23,8 +23,8 @@ import re
 from turbinia.evidence import EvidenceState as state
 from turbinia.evidence import ReportText
 from turbinia.lib import text_formatter as fmt
-from turbinia.workers import TurbiniaTask
 from turbinia.workers import Priority
+from turbinia.workers import TurbiniaTask
 
 
 class WordpressAccessLogAnalysisTask(TurbiniaTask):
@@ -51,7 +51,7 @@ class WordpressAccessLogAnalysisTask(TurbiniaTask):
       TurbiniaTaskResult object.
     """
     # Where to store the resulting output file.
-    output_file_name = 'wp_acces_log_analysis.txt'
+    output_file_name = 'wp_access_log_analysis.txt'
     output_file_path = os.path.join(self.output_dir, output_file_name)
     # Set the output file as the data source for the output evidence.
     output_evidence = ReportText(source_path=output_file_path)

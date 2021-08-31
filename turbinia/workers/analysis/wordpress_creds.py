@@ -12,77 +12,85 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Task for analysing Windows account passwords."""
+"""Task for analysing Wordpress credentials."""
 
 import os
-
+import re
+import subprocess
 from turbinia import TurbiniaException
+
 from turbinia.evidence import EvidenceState as state
 from turbinia.evidence import ReportText
 from turbinia.lib import text_formatter as fmt
 from turbinia.lib.utils import bruteforce_password_hashes
-from turbinia.lib.utils import extract_artifacts
+from turbinia.lib.utils import extract_files
 from turbinia.workers import Priority
 from turbinia.workers import TurbiniaTask
 
+_CREDS_REGEXP = r'(?P<username>.*)(?P<password>\$P\$.*)(?:\1)'
+_WP_DB_NAME = 'wp_users.ibd'
 
-class WindowsAccountAnalysisTask(TurbiniaTask):
-  """Task to analyze Windows accounts."""
+
+class WordpressCredsAnalysisTask(TurbiniaTask):
+  """Task to analyze the credentials of a Wordpress instance."""
 
   REQUIRED_STATES = [
       state.ATTACHED, state.CONTAINER_MOUNTED, state.DECOMPRESSED
   ]
 
   def run(self, evidence, result):
-    """Run the Windows Account worker.
+    """Run the Wordpress Creds worker.
 
     Args:
         evidence (Evidence object):  The evidence to process
         result (TurbiniaTaskResult): The object to place task results into.
+
     Returns:
         TurbiniaTaskResult object.
     """
+
     # Where to store the resulting output file.
-    output_file_name = 'windows_account_analysis.txt'
+    output_file_name = 'wordpress_creds_analysis.txt'
     output_file_path = os.path.join(self.output_dir, output_file_name)
 
     # What type of evidence we should output.
     output_evidence = ReportText(source_path=output_file_path)
 
     try:
-      (location, num_files) = self._collect_windows_files(evidence)
-    except TurbiniaException as e:
-      result.close(
-          self, success=True,
-          status='No Windows account files found: {0:s}'.format(str(e)))
-      return result
-    if num_files < 2:
-      result.close(self, success=True, status='No Windows account files found')
-      return result
-    try:
-      (creds, hashnames) = self._extract_windows_hashes(
-          result, os.path.join(location, 'Windows', 'System32', 'config'))
+      location, num_files = self._collect_wordpress_file(evidence)
+      if num_files == 0:
+        result.close(self, success=True, status='No Wordpress database found')
+        return result
     except TurbiniaException as e:
       result.close(
           self, success=False,
-          status='Unable to extract hashes from registry files: {0:s}'.format(
-              str(e)))
+          status='Error retrieving Wordpress database: {0:s}'.format(str(e)))
       return result
-    (report, priority, summary) = self._analyse_windows_creds(creds, hashnames)
+
+    try:
+      (creds, hashnames) = self._extract_wordpress_hashes(location)
+    except TurbiniaException as e:
+      result.close(self, success=False, status=str(e))
+      return result
+
+    (report, priority, summary) = self._analyse_wordpress_creds(
+        creds, hashnames)
     output_evidence.text_data = report
-    result.report_priority = priority
     result.report_data = report
+    result.report_priority = priority
 
     # Write the report to the output file.
     with open(output_file_path, 'wb') as fh:
-      fh.write(output_evidence.text_data.encode('utf-8'))
+      fh.write(output_evidence.text_data.encode('utf8'))
+      fh.write('\n'.encode('utf8'))
 
     # Add the resulting evidence to the result object.
     result.add_evidence(output_evidence, evidence.config)
     result.close(self, success=True, status=summary)
+
     return result
 
-  def _collect_windows_files(self, evidence):
+  def _collect_wordpress_file(self, evidence):
     """Extract artifacts using image_export.
 
     Args:
@@ -92,61 +100,61 @@ class WindowsAccountAnalysisTask(TurbiniaTask):
         number of artifacts (int): The number of files extracted.
     """
     try:
-      collected_artifacts = extract_artifacts(
-          artifact_names=['WindowsSystemRegistryFiles'],
-          disk_path=evidence.local_path, output_dir=self.output_dir)
+      collected_artifacts = extract_files(
+          file_name=_WP_DB_NAME, disk_path=evidence.local_path,
+          output_dir=os.path.join(self.output_dir, 'artifacts'))
     except TurbiniaException as e:
-      raise TurbiniaException('artifact extraction failed: {}'.format(str(e)))
+      raise TurbiniaException(
+          'artifact extraction failed: {0:s}'.format(str(e)))
 
     # Extract base dir from our list of collected artifacts
     location = os.path.dirname(collected_artifacts[0])
 
     return (location, len(collected_artifacts))
 
-  def _extract_windows_hashes(self, result, location):
-    """Dump the secrets from the Windows registry files.
+  def _extract_wordpress_hashes(self, location):
+    """Dump the Wordpress credentials from a raw database file.
 
     Args:
-        result (TurbiniaTaskResult): The object to place task results into.
-        location (str): File path to the extracted registry files.
+        location (list): Directory of files extracted from the disk.
 
     Returns:
         creds (list): List of strings containing raw extracted credentials
         hashnames (dict): Dict mapping hash back to username for convenience.
+
+    Raises:
+      TurbiniaException: when the process fails.
     """
-
-    # Default (empty) hash
-    IGNORE_CREDS = ['31d6cfe0d16ae931b73c59d7e0c089c0']
-
-    hash_file = os.path.join(self.tmp_dir, 'windows_hashes')
-    cmd = [
-        'secretsdump.py', '-system', location + '/SYSTEM', '-sam',
-        location + '/SAM', '-hashes', 'lmhash:nthash', 'LOCAL', '-outputfile',
-        hash_file
-    ]
-
-    impacket_log = os.path.join(self.output_dir, 'impacket.log')
-    self.execute(cmd, result, stdout_file=impacket_log)
-
     creds = []
     hashnames = {}
-    hash_file = hash_file + '.sam'
-    if os.path.isfile(hash_file):
-      with open(hash_file, 'r') as fh:
-        for line in fh:
-          (username, _, _, passwdhash, _, _, _) = line.split(':')
-          if passwdhash in IGNORE_CREDS:
-            continue
-          creds.append(line.strip())
-          hashnames[passwdhash] = username
-      os.remove(hash_file)
-    else:
-      raise TurbiniaException('Extracted hash file not found.')
+    for dirs, _, files in os.walk(location):
+      if _WP_DB_NAME in files:
+        try:
+          strings = subprocess.Popen(
+              ['strings', os.path.join(dirs, _WP_DB_NAME)],
+              stdout=subprocess.PIPE, text=True)
+          grep = subprocess.run(['grep', r'\$P\$'], stdin=strings.stdout,
+                                check=False, text=True, capture_output=True)
+          if grep.returncode == 1:
+            raise TurbiniaException('No Wordpress credentials found')
+          if grep.returncode == 2:
+            raise TurbiniaException(
+                'Error grepping file: {0:s}'.format(grep.stdout))
+        except subprocess.CalledProcessError as e:
+          raise TurbiniaException(
+              'Unable to strings/grep file: {0:s}'.format(str(e)))
 
+        for cred in grep.stdout.strip().split('\n'):
+          m = re.match(_CREDS_REGEXP, cred)
+          if not m:
+            continue
+          (username, passwdhash) = (m.group('username'), m.group('password'))
+          creds.append('{0:s}:{1:s}'.format(username, passwdhash))
+          hashnames[passwdhash] = username
     return (creds, hashnames)
 
-  def _analyse_windows_creds(self, creds, hashnames, timeout=300):
-    """Attempt to brute force extracted Windows credentials.
+  def _analyse_wordpress_creds(self, creds, hashnames, timeout=300):
+    """Attempt to brute force extracted Wordpress credentials.
 
     Args:
         creds (list): List of strings containing raw extracted credentials
@@ -164,13 +172,14 @@ class WindowsAccountAnalysisTask(TurbiniaTask):
     summary = 'No weak passwords found'
     priority = Priority.LOW
 
-    # 1000 is "NTLM"
+    # 1000 is "phpass"
     weak_passwords = bruteforce_password_hashes(
-        creds, tmp_dir=self.tmp_dir, timeout=timeout, extra_args='-m 1000')
+        creds, tmp_dir=self.tmp_dir, timeout=timeout,
+        extra_args='--username -m 400')
 
     if weak_passwords:
       priority = Priority.CRITICAL
-      summary = 'Registry analysis found {0:d} weak password(s)'.format(
+      summary = 'Wordpress analysis found {0:d} weak password(s)'.format(
           len(weak_passwords))
       report.insert(0, fmt.heading4(fmt.bold(summary)))
       line = '{0:n} weak password(s) found:'.format(len(weak_passwords))
