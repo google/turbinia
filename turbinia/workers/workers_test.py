@@ -355,8 +355,8 @@ class TestTurbiniaTask(TestTurbiniaTaskBase):
     self.evidence.preprocess = mock.MagicMock()
     self.task.evidence_setup(self.evidence)
     self.evidence.preprocess.assert_called_with(
-        self.task.tmp_dir, required_states=self.task.REQUIRED_STATES,
-        task_id=self.task.id)
+        self.task.id, tmp_dir=self.task.tmp_dir,
+        required_states=self.task.REQUIRED_STATES)
 
   def testEvidenceSetupStateNotFulfilled(self):
     """Test that evidence setup throws exception when states don't match."""
