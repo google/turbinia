@@ -14,6 +14,7 @@ echo "==> Copy test artifacts to /evidence"
 cp ./test_data/artifact_disk.dd ./evidence/
 
 echo "==> Startup local turbinia docker-compose stack"
+export TURBINIA_EXTRA_ARGS="-d"
 docker-compose -f ./docker/local/docker-compose.yml up -d
 
 echo "==> Sleep for 5s"
