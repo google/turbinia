@@ -519,7 +519,7 @@ class TurbiniaTask:
     """
     evidence.validate()
     evidence.preprocess(
-        self.tmp_dir, required_states=self.REQUIRED_STATES, task_id=self.id)
+        self.id, tmp_dir=self.tmp_dir, required_states=self.REQUIRED_STATES)
 
     # Final check to make sure that the required evidence state has been met
     # for Evidence types that have those capabilities.

@@ -15,18 +15,17 @@
 """Job to execute HTTP Access logs analysis task."""
 from __future__ import unicode_literals
 
-from turbinia.workers import artifact
-
 from turbinia.evidence import Directory
 from turbinia.evidence import DockerContainer
+from turbinia.evidence import ExportedFileArtifact
 from turbinia.evidence import GoogleCloudDisk
 from turbinia.evidence import GoogleCloudDiskRawEmbedded
 from turbinia.evidence import RawDisk
-from turbinia.evidence import ExportedFileArtifact
 from turbinia.evidence import ReportText
 from turbinia.jobs import interface
 from turbinia.jobs import manager
-from turbinia.workers.analysis import wordpress
+from turbinia.workers import artifact
+from turbinia.workers.analysis import wordpress_access
 
 ACCESS_LOG_ARTIFACTS = [
     'GKEDockerContainerLogs', 'NginxAccessLogs', 'ApacheAccessLogs'
@@ -71,13 +70,14 @@ class HTTPAccessLogAnalysisJob(interface.TurbiniaJob):
 
   def create_tasks(self, evidence):
     """Create task.
+
     Args:
       evidence: List of evidence objects to process
     Returns:
         A list of tasks to schedule.
     """
     evidence = [e for e in evidence if e.artifact_name in ACCESS_LOG_ARTIFACTS]
-    return [wordpress.WordpressAccessLogAnalysisTask() for _ in evidence]
+    return [wordpress_access.WordpressAccessLogAnalysisTask() for _ in evidence]
 
 
 manager.JobsManager.RegisterJobs(
