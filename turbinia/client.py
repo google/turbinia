@@ -43,7 +43,8 @@ from turbinia.lib import docker_manager
 from turbinia.jobs import manager as job_manager
 from turbinia.workers import Priority
 from turbinia.workers.artifact import FileArtifactExtractionTask
-from turbinia.workers.analysis.wordpress import WordpressAccessLogAnalysisTask
+from turbinia.workers.analysis.wordpress_access import WordpressAccessLogAnalysisTask
+from turbinia.workers.analysis.wordpress_creds import WordpressCredsAnalysisTask
 from turbinia.workers.analysis.jenkins import JenkinsAnalysisTask
 from turbinia.workers.analysis.jupyter import JupyterAnalysisTask
 from turbinia.workers.analysis.linux_acct import LinuxAccountAnalysisTask
@@ -78,6 +79,7 @@ RETRY_SLEEP = 60
 TASK_MAP = {
     'fileartifactextractiontask': FileArtifactExtractionTask,
     'wordpressaccessloganalysistask': WordpressAccessLogAnalysisTask,
+    'WordpressCredsAnalysisTask': WordpressCredsAnalysisTask,
     'finalizerequesttask': FinalizeRequestTask,
     'jenkinsanalysistask': JenkinsAnalysisTask,
     'JupyterAnalysisTask': JupyterAnalysisTask,

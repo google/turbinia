@@ -36,4 +36,5 @@ from turbinia.jobs import strings
 from turbinia.jobs import tomcat
 from turbinia.jobs import volatility
 from turbinia.jobs import windows_acct
+from turbinia.jobs import wordpress_creds
 from turbinia.jobs import worker_stat
