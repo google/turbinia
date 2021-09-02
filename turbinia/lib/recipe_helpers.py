@@ -30,7 +30,8 @@ DEFAULT_GLOBALS_RECIPE = {
     'jobs_allowlist': [],
     'jobs_denylist': [],
     'yara_rules': '',
-    'filter_patterns': []
+    'filter_patterns': [],
+    'sketch_id': None
 }
 
 #Default recipes dict
