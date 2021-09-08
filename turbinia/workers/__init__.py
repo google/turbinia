@@ -973,8 +973,8 @@ class TurbiniaTask:
 
         if self.turbinia_version != turbinia.__version__:
           message = (
-              'Worker and Server versions do not match: {0:s} != {1:s}'
-              .format(self.turbinia_version, turbinia.__version__))
+              'Worker and Server versions do not match: {0:s} != {1:s}'.format(
+                  self.turbinia_version, turbinia.__version__))
           self.result.log(message, level=logging.ERROR)
           self.result.status = message
           self.result.successful = False
@@ -1004,8 +1004,7 @@ class TurbiniaTask:
             self.result.set_error(exception.__class__, traceback.format_exc())
           self.result.status = message
         else:
-          log.error(
-              'No TurbiniaTaskResult object found after task execution.')
+          log.error('No TurbiniaTaskResult object found after task execution.')
 
     self.result = self.validate_result(self.result)
     if self.result:

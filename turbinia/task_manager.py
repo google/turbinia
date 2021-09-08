@@ -105,7 +105,7 @@ def task_runner(obj, *args, **kwargs):
       run = obj.run_wrapper(*args, **kwargs)
     if os.path.exists(config.LOCK_FILE):
       os.remove(config.LOCK_FILE)
-    return run 
+    return run
 
 
 class BaseTaskManager:
