@@ -18,6 +18,8 @@ from __future__ import unicode_literals, absolute_import
 
 import logging
 import time
+import os
+import filelock
 
 from prometheus_client import Gauge
 
@@ -95,8 +97,15 @@ def task_runner(obj, *args, **kwargs):
   Returns:
     Output from TurbiniaTask (should be TurbiniaTaskResult).
   """
-  obj = workers.TurbiniaTask.deserialize(obj)
-  return obj.run_wrapper(*args, **kwargs)
+  if os.path.exists(config.LOCK_FILE):
+    raise psq.Retry()
+  else:
+    with filelock.FileLock(config.LOCK_FILE):
+      obj = workers.TurbiniaTask.deserialize(obj)
+      run = obj.run_wrapper(*args, **kwargs)
+    if os.path.exists(config.LOCK_FILE):
+      os.remove(config.LOCK_FILE)
+    return run 
 
 
 class BaseTaskManager:
