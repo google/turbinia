@@ -97,7 +97,7 @@ def task_runner(obj, *args, **kwargs):
   Returns:
     Output from TurbiniaTask (should be TurbiniaTaskResult).
   """
-  if os.path.exists(config.LOCK_FILE):
+  if os.path.exists(config.LOCK_FILE) or os.path.exists(config.TO_BE_DELETED):
     raise psq.Retry()
   else:
     with filelock.FileLock(config.LOCK_FILE):

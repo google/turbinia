@@ -49,6 +49,7 @@ REQUIRED_VARS = [
     'LOCK_FILE',
     'RESOURCE_FILE',
     'RESOURCE_FILE_LOCK',
+    'TO_BE_DELETED',
     'OUTPUT_DIR',
     'TMP_DIR',
     'SLEEP_TIME',
