@@ -64,7 +64,7 @@ RESOURCE_FILE = '%s/turbinia-state.json' % OUTPUT_DIR
 RESOURCE_FILE_LOCK = '%s.lock' % RESOURCE_FILE
 
 # For Kubernetes infrastructure. Indicates whether a given pod is set to be deleted.
-TO_BE_DELETED = '%s/turbinia-to-delete.lock' % TMP_DIR
+SCALEDOWN_WORKER_FILE = '%s/turbinia-to-scaledown.lock' % TMP_DIR
 
 # Time in seconds to sleep in task management loops
 SLEEP_TIME = 10
