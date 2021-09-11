@@ -97,15 +97,21 @@ def task_runner(obj, *args, **kwargs):
   Returns:
     Output from TurbiniaTask (should be TurbiniaTaskResult).
   """
-  if os.path.exists(config.LOCK_FILE) or os.path.exists(config.TO_BE_DELETED):
+
+  # GKE Specific - do not queue more work if pod places this file
+  if os.path.exists(config.SCALEDOWN_WORKER_FILE):
     raise psq.Retry()
-  else:
-    with filelock.FileLock(config.LOCK_FILE):
+
+  # try to acquire lock and timeout and requeue task if it's in use
+  try:
+    lock = filelock.FileLock(config.LOCK_FILE)
+    with lock.acquire(timeout=0.001):
       obj = workers.TurbiniaTask.deserialize(obj)
       run = obj.run_wrapper(*args, **kwargs)
-    if os.path.exists(config.LOCK_FILE):
-      os.remove(config.LOCK_FILE)
-    return run
+  except filelock.Timeout:
+    raise psq.Retry()
+
+  return run
 
 
 class BaseTaskManager:
