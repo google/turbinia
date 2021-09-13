@@ -49,7 +49,7 @@ TMP_DIR = '/tmp'
 LOG_FILE = '%s/turbinia.log' % OUTPUT_DIR
 
 # Path to a lock file used for the worker tasks.
-LOCK_FILE = '%s/turbinia-worker.lock' % OUTPUT_DIR
+LOCK_FILE = '%s/turbinia-worker.lock' % TMP_DIR
 
 # Path to a resource state file used for tracking shared Evidence types. This should
 # be a shared path amongst all workers on a given host to properly update the state.
@@ -62,6 +62,9 @@ RESOURCE_FILE = '%s/turbinia-state.json' % OUTPUT_DIR
 # Similar to RESOURCE_FILE, this should be a shared path amongst all workers on a given
 # host to properly lock the resource state file.
 RESOURCE_FILE_LOCK = '%s.lock' % RESOURCE_FILE
+
+# For Kubernetes infrastructure. Indicates whether a given pod is set to be deleted.
+SCALEDOWN_WORKER_FILE = '%s/turbinia-to-scaledown.lock' % TMP_DIR
 
 # Time in seconds to sleep in task management loops
 SLEEP_TIME = 10

@@ -951,95 +951,93 @@ class TurbiniaTask:
             message=message, trace=traceback.format_exc())
       return self.result.serialize()
 
-    with filelock.FileLock(config.LOCK_FILE):
-      log.info('Starting Task {0:s} {1:s}'.format(self.name, self.id))
-      original_result_id = None
-      turbinia_worker_tasks_started_total.inc()
-      task_runtime_metrics = self.get_metrics()
-      with task_runtime_metrics.time():
-        try:
-          original_result_id = self.result.id
+    log.info('Starting Task {0:s} {1:s}'.format(self.name, self.id))
+    original_result_id = None
+    turbinia_worker_tasks_started_total.inc()
+    task_runtime_metrics = self.get_metrics()
+    with task_runtime_metrics.time():
+      try:
+        original_result_id = self.result.id
 
-          # Check if Task's job is available for the worker.
-          active_jobs = list(job_manager.JobsManager.GetJobNames())
-          if self.job_name.lower() not in active_jobs:
-            message = (
-                'Task will not run due to the job: {0:s} being disabled '
-                'on the worker.'.format(self.job_name))
-            self.result.log(message, level=logging.ERROR)
-            self.result.status = message
-            return self.result.serialize()
-
-          self.evidence_setup(evidence)
-
-          if self.turbinia_version != turbinia.__version__:
-            message = (
-                'Worker and Server versions do not match: {0:s} != {1:s}'
-                .format(self.turbinia_version, turbinia.__version__))
-            self.result.log(message, level=logging.ERROR)
-            self.result.status = message
-            self.result.successful = False
-            return self.result.serialize()
-
-          self.result.update_task_status(self, 'running')
-          self._evidence_config = evidence.config
-          self.task_config = self.get_task_recipe(evidence.config)
-
-          self.result = self.run(evidence, self.result)
-
-        # pylint: disable=broad-except
-        except Exception as exception:
+        # Check if Task's job is available for the worker.
+        active_jobs = list(job_manager.JobsManager.GetJobNames())
+        if self.job_name.lower() not in active_jobs:
           message = (
-              '{0:s} Task failed with exception: [{1!s}]'.format(
-                  self.name, exception))
-          # Logging explicitly here because the result is in an unknown state
-          trace = traceback.format_exc()
-          log_and_report(message, trace)
+              'Task will not run due to the job: {0:s} being disabled '
+              'on the worker.'.format(self.job_name))
+          self.result.log(message, level=logging.ERROR)
+          self.result.status = message
+          return self.result.serialize()
 
-          if self.result:
-            self.result.log(message, level=logging.ERROR)
-            self.result.log(trace)
-            if hasattr(exception, 'message'):
-              self.result.set_error(exception.message, traceback.format_exc())
-            else:
-              self.result.set_error(exception.__class__, traceback.format_exc())
-            self.result.status = message
-          else:
-            log.error(
-                'No TurbiniaTaskResult object found after task execution.')
+        self.evidence_setup(evidence)
 
-      self.result = self.validate_result(self.result)
-      if self.result:
-        self.result.update_task_status(self)
+        if self.turbinia_version != turbinia.__version__:
+          message = (
+              'Worker and Server versions do not match: {0:s} != {1:s}'.format(
+                  self.turbinia_version, turbinia.__version__))
+          self.result.log(message, level=logging.ERROR)
+          self.result.status = message
+          self.result.successful = False
+          return self.result.serialize()
 
-      # Trying to close the result if possible so that we clean up what we can.
-      # This has a higher likelihood of failing because something must have gone
-      # wrong as the Task should have already closed this.
-      if self.result and not self.result.closed:
-        message = 'Trying last ditch attempt to close result'
-        log.warning(message)
-        self.result.log(message)
+        self.result.update_task_status(self, 'running')
+        self._evidence_config = evidence.config
+        self.task_config = self.get_task_recipe(evidence.config)
 
-        if self.result.status:
-          status = self.result.status
-        else:
-          status = 'No previous status'
+        self.result = self.run(evidence, self.result)
+
+      # pylint: disable=broad-except
+      except Exception as exception:
         message = (
-            'Task Result was auto-closed from task executor on {0:s} likely '
-            'due to previous failures.  Previous status: [{1:s}]'.format(
-                self.result.worker_name, status))
-        self.result.log(message)
-        try:
-          self.result.close(self, False, message)
-        # Using broad except here because lots can go wrong due to the reasons
-        # listed above.
-        # pylint: disable=broad-except
-        except Exception as exception:
-          log.error('TurbiniaTaskResult close failed: {0!s}'.format(exception))
-          if not self.result.status:
-            self.result.status = message
-        # Check the result again after closing to make sure it's still good.
-        self.result = self.validate_result(self.result)
+            '{0:s} Task failed with exception: [{1!s}]'.format(
+                self.name, exception))
+        # Logging explicitly here because the result is in an unknown state
+        trace = traceback.format_exc()
+        log_and_report(message, trace)
+
+        if self.result:
+          self.result.log(message, level=logging.ERROR)
+          self.result.log(trace)
+          if hasattr(exception, 'message'):
+            self.result.set_error(exception.message, traceback.format_exc())
+          else:
+            self.result.set_error(exception.__class__, traceback.format_exc())
+          self.result.status = message
+        else:
+          log.error('No TurbiniaTaskResult object found after task execution.')
+
+    self.result = self.validate_result(self.result)
+    if self.result:
+      self.result.update_task_status(self)
+
+    # Trying to close the result if possible so that we clean up what we can.
+    # This has a higher likelihood of failing because something must have gone
+    # wrong as the Task should have already closed this.
+    if self.result and not self.result.closed:
+      message = 'Trying last ditch attempt to close result'
+      log.warning(message)
+      self.result.log(message)
+
+      if self.result.status:
+        status = self.result.status
+      else:
+        status = 'No previous status'
+      message = (
+          'Task Result was auto-closed from task executor on {0:s} likely '
+          'due to previous failures.  Previous status: [{1:s}]'.format(
+              self.result.worker_name, status))
+      self.result.log(message)
+      try:
+        self.result.close(self, False, message)
+      # Using broad except here because lots can go wrong due to the reasons
+      # listed above.
+      # pylint: disable=broad-except
+      except Exception as exception:
+        log.error('TurbiniaTaskResult close failed: {0!s}'.format(exception))
+        if not self.result.status:
+          self.result.status = message
+      # Check the result again after closing to make sure it's still good.
+      self.result = self.validate_result(self.result)
 
     if original_result_id != self.result.id:
       log.debug(

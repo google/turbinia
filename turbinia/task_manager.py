@@ -18,6 +18,8 @@ from __future__ import unicode_literals, absolute_import
 
 import logging
 import time
+import os
+import filelock
 
 from prometheus_client import Gauge
 
@@ -95,8 +97,21 @@ def task_runner(obj, *args, **kwargs):
   Returns:
     Output from TurbiniaTask (should be TurbiniaTaskResult).
   """
-  obj = workers.TurbiniaTask.deserialize(obj)
-  return obj.run_wrapper(*args, **kwargs)
+
+  # GKE Specific - do not queue more work if pod places this file
+  if os.path.exists(config.SCALEDOWN_WORKER_FILE):
+    raise psq.Retry()
+
+  # try to acquire lock and timeout and requeue task if it's in use
+  try:
+    lock = filelock.FileLock(config.LOCK_FILE)
+    with lock.acquire(timeout=0.001):
+      obj = workers.TurbiniaTask.deserialize(obj)
+      run = obj.run_wrapper(*args, **kwargs)
+  except filelock.Timeout:
+    raise psq.Retry()
+
+  return run
 
 
 class BaseTaskManager:
