@@ -397,6 +397,7 @@ class BaseTurbiniaClient:
               'Retriable error response from cloud functions: [{0!s}]'.format(
                   response_error))
           retry_count += 1
+          response = None
           continue
         elif response_error != '{}':
           msg = 'Error executing Cloud Function: [{0!s}].'.format(
