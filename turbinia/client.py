@@ -389,16 +389,22 @@ class BaseTurbiniaClient:
 
       if response is None:
         time.sleep(RETRY_SLEEP)
-
-    if 'result' not in response:
-      log.error('No results found')
-      if response.get('error', '{}') != '{}':
-        msg = 'Error executing Cloud Function: [{0!s}].'.format(
-            response.get('error'))
-        log.error(msg)
-      log.debug('GCF response: {0!s}'.format(response))
-      raise TurbiniaException(
-          'Cloud Function {0:s} returned no results.'.format(function_name))
+      elif 'result' not in response:
+        log.error('No results found')
+        response_error = response.get('error', '{}')
+        if response_error != '{}' and response_error.get('code') == 503:
+          log.warning(
+              'Retriable error response from cloud functions: [{0!s}]'.format(
+                  response_error))
+          retry_count += 1
+          continue
+        elif response_error != '{}':
+          msg = 'Error executing Cloud Function: [{0!s}].'.format(
+              response.get('error'))
+          log.error(msg)
+        log.debug('GCF response has no result: {0!s}'.format(response))
+        raise TurbiniaException(
+            'Cloud Function {0:s} returned no results.'.format(function_name))
 
     try:
       results = json.loads(response['result'])
