@@ -357,10 +357,10 @@ class BaseTurbiniaClient:
     if user:
       func_args.update({'user': user})
 
-    response = None
+    response = {}
     retry_count = 0
     credential_error_count = 0
-    while response is None and retry_count < MAX_RETRIES:
+    while not response and retry_count < MAX_RETRIES:
       try:
         response = cloud_function.ExecuteFunction(
             function_name, region, func_args)
@@ -387,21 +387,29 @@ class BaseTurbiniaClient:
             '{2!s}'.format(retry_count, MAX_RETRIES, exception))
         retry_count += 1
 
-      if response is None:
+      if not response:
+        retry_count += 1
+        time.sleep(RETRY_SLEEP)
+      elif response.get('error', {}).get('code') == 503:
+        log.warning(
+            'Retriable error response from cloud functions: [{0!s}]'.format(
+                response.get('error')))
+        retry_count += 1
+        response = {}
         time.sleep(RETRY_SLEEP)
 
-    if 'result' not in response:
+    if not response or 'result' not in response:
       log.error('No results found')
-      if response.get('error', '{}') != '{}':
+      if response.get('error'):
         msg = 'Error executing Cloud Function: [{0!s}].'.format(
             response.get('error'))
         log.error(msg)
-      log.debug('GCF response: {0!s}'.format(response))
+      log.debug('Invalid or empty GCF response: {0!s}'.format(response))
       raise TurbiniaException(
           'Cloud Function {0:s} returned no results.'.format(function_name))
 
     try:
-      results = json.loads(response['result'])
+      results = json.loads(response.get('result'))
     except (TypeError, ValueError) as e:
       raise TurbiniaException(
           'Could not deserialize result [{0!s}] from GCF: [{1!s}]'.format(
