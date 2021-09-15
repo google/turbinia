@@ -390,7 +390,7 @@ class BaseTurbiniaClient:
       if not response:
         retry_count += 1
         time.sleep(RETRY_SLEEP)
-      elif response.get('error') and response.get('error').get('code') == 503:
+      elif response.get('error', {}).get('code') == 503:
         log.warning(
             'Retriable error response from cloud functions: [{0!s}]'.format(
                 response.get('error')))
