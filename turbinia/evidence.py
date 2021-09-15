@@ -622,7 +622,8 @@ class DiskPartition(RawDisk):
         self.local_path = self.device_path
 
     if EvidenceState.MOUNTED in required_states or self.has_child_evidence:
-      self.mount_path = mount_local.PreprocessMountPartition(self.device_path)
+      self.mount_path = mount_local.PreprocessMountPartition(
+          self.device_path, self.path_spec.type_indicator)
       if self.mount_path:
         self.local_path = self.mount_path
         self.state[EvidenceState.MOUNTED] = True

@@ -38,11 +38,16 @@ class FsstatTask(TurbiniaTask):
         TurbiniaTaskResult object.
     """
     fsstat_output = os.path.join(self.output_dir, 'fsstat.txt')
-    output_evidence = ReportText(source_path=fsstat_output)
-    cmd = ['sudo', 'fsstat', evidence.device_path]
-    result.log('Running fsstat as [{0!s}]'.format(cmd))
-    self.execute(
-        cmd, result, stdout_file=fsstat_output, new_evidence=[output_evidence],
-        close=True)
+    # Since fsstat does not support XFS, we won't run it when we know the
+    # partition is XFS.
+    if evidence.path_spec.type_indicator == 'XFS':
+      result.log('Not running fsstat since partition is XFS')
+    else:
+      output_evidence = ReportText(source_path=fsstat_output)
+      cmd = ['sudo', 'fsstat', evidence.device_path]
+      result.log('Running fsstat as [{0!s}]'.format(cmd))
+      self.execute(
+          cmd, result, stdout_file=fsstat_output,
+          new_evidence=[output_evidence], close=True)
 
     return result
