@@ -216,6 +216,7 @@ class TestTurbiniaClient(unittest.TestCase):
   """Test Turbinia client class."""
 
   def setUp(self):
+    TurbiniaClientProvider.RETRY_SLEEP = 0.001
     last_update = datetime.strptime(
         '2020-08-04T16:32:38.390390Z', DATETIME_FORMAT)
     self.task_data = [
@@ -307,6 +308,19 @@ class TestTurbiniaClient(unittest.TestCase):
     client = TurbiniaClientProvider.get_turbinia_client()
     self.assertRaises(
         TurbiniaException, client.get_task_data, "inst", "proj", "reg")
+
+  @mock.patch('libcloudforensics.providers.gcp.internal.function.GoogleCloudFunction.ExecuteFunction')  # yapf: disable
+  @mock.patch('turbinia.client.task_manager.PSQTaskManager._backend_setup')
+  @mock.patch('turbinia.state_manager.get_state_manager')
+  def testTurbiniaClientGetTaskDataRetriableErrors(
+      self, _, __, mock_cloud_function):
+    """Test for retries after retriable errors returned from cloud functions."""
+    mock_cloud_function.return_value = {'error': {'code': 503}}
+    client = TurbiniaClientProvider.get_turbinia_client()
+    self.assertRaises(
+        TurbiniaException, client.get_task_data, "inst", "proj", "reg")
+    self.assertEqual(
+        mock_cloud_function.call_count, TurbiniaClientProvider.MAX_RETRIES)
 
   @mock.patch('libcloudforensics.providers.gcp.internal.function.GoogleCloudFunction.ExecuteFunction')  # yapf: disable
   @mock.patch('turbinia.client.task_manager.PSQTaskManager._backend_setup')
