@@ -108,6 +108,8 @@ class PartitionEnumerationTask(TurbiniaTask):
       path_spec = path_spec.parent
 
     status_report.append(fmt.heading5('{0!s}:'.format(fs_location)))
+    status_report.append(
+        fmt.bullet('Filesystem: {0!s}'.format(fs_path_spec.type_indicator)))
     if volume_index is not None:
       status_report.append(
           fmt.bullet('Volume index: {0!s}'.format(volume_index)))

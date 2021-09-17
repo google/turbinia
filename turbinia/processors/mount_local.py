@@ -232,11 +232,12 @@ def PreprocessMountDisk(partition_paths, partition_number):
   return mount_path
 
 
-def PreprocessMountPartition(partition_path):
+def PreprocessMountPartition(partition_path, filesystem_type):
   """Locally mounts disk partition in an instance.
 
   Args:
     partition_path(str): A path to a partition block device
+    filesystem_type(str): Filesystem of the partition to be mounted
 
   Raises:
     TurbiniaException: if the mount command failed to run.
@@ -267,12 +268,11 @@ def PreprocessMountPartition(partition_path):
   mount_path = tempfile.mkdtemp(prefix='turbinia', dir=mount_prefix)
 
   mount_cmd = ['sudo', 'mount', '-o', 'ro']
-  fstype = GetFilesystem(partition_path)
-  if fstype in ['ext3', 'ext4']:
+  if filesystem_type == 'EXT':
     # This is in case the underlying filesystem is dirty, as we want to mount
     # everything read-only.
     mount_cmd.extend(['-o', 'noload'])
-  elif fstype == 'xfs':
+  elif filesystem_type == 'XFS':
     mount_cmd.extend(['-o', 'norecovery'])
   mount_cmd.extend([partition_path, mount_path])
 
