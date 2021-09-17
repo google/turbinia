@@ -16,6 +16,7 @@
 
 import csv
 import os
+from turbinia import TurbiniaException
 
 from turbinia.evidence import EvidenceState as state
 from turbinia.evidence import ReportText
@@ -46,24 +47,52 @@ class LokiAnalysisTask(TurbiniaTask):
 
     # What type of evidence we should output.
     output_evidence = ReportText(source_path=output_file_path)
+
+    self.updateLoki(result)
+
+    try:
+      (report, priority, summary) = self.runLoki(result, evidence)
+    except TurbiniaException as e:
+      result.close(
+          self, success=False, status='Unable to run Loki: {0:s}'.format(
+              str(e)))
+      return result
+
+    output_evidence.text_data = report
+    result.report_priority = priority
+    result.report_data = report
+
+    # Write the report to the output file.
+    with open(output_file_path, 'wb') as fh:
+      fh.write(output_evidence.text_data.encode('utf-8'))
+
+    # Add the resulting evidence to the result object.
+    result.add_evidence(output_evidence, evidence.config)
+    result.close(self, success=True, status=summary)
+    return result
+
+  def updateLoki(self, result):
+    cmd = ['python', os.path.expanduser('~/Loki/loki-upgrader.py')]
+    self.execute(cmd, result, cwd=os.path.expanduser('~/Loki/'))
+
+  def runLoki(self, result, evidence):
     log_file = os.path.join(self.output_dir, 'loki.log')
     stdout_file = os.path.join(self.output_dir, 'loki_stdout.log')
+    stderr_file = os.path.join(self.output_dir, 'loki_stderr.log')
 
     cmd = [
         'python',
-        os.path.expanduser('~/Loki-0.44.0/loki.py'), '--update', '-w', '0',
-        '--csv', '--intense', '--noprocscan', '--dontwait', '--noindicator',
+        os.path.expanduser('~/Loki/loki.py'), '-w', '0', '--csv',
+        '--intense', '--noprocscan', '--dontwait', '--noindicator',
         '-l', log_file, '-p', (evidence.mount_path or evidence.local_path)
     ]
-    result.log('Running %s', cmd)
 
     (ret, result) = self.execute(
         cmd, result, log_files=[log_file], stdout_file=stdout_file,
-        cwd=os.path.expanduser('~/Loki-0.44.0/'))
+        stderr_file=stderr_file, cwd=os.path.expanduser('~/Loki/'))
 
     if ret != 0:
-      result.close(self, success=False, status='Unable to run Loki')
-      return result
+      raise TurbiniaException('Return code: {0:d}'.format(ret))
 
     report = []
     summary = 'No Loki threats found'
@@ -79,22 +108,12 @@ class LokiAnalysisTask(TurbiniaTask):
 
     if report_lines:
       priority = Priority.HIGH
-      summary = 'Loki analysis found {0:d} alerts'.format(len(report_lines))
+      summary = 'Loki analysis found {0:d} alert(s)'.format(len(report_lines))
       report.insert(0, fmt.heading4(fmt.bold(summary)))
       line = '{0:n} alerts(s) found:'.format(len(report_lines))
       report.append(fmt.bullet(fmt.bold(line)))
       for line in report_lines:
         report.append(fmt.bullet(line, level=2))
 
-    output_evidence.text_data = '\n'.join(report)
-    result.report_priority = priority
-    result.report_data = report
-
-    # Write the report to the output file.
-    with open(output_file_path, 'wb') as fh:
-      fh.write(output_evidence.text_data.encode('utf-8'))
-
-    # Add the resulting evidence to the result object.
-    result.add_evidence(output_evidence, evidence.config)
-    result.close(self, success=True, status=summary)
-    return result
+    report = '\n'.join(report)
+    return (report, priority, summary)
