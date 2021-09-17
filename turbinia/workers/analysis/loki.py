@@ -82,9 +82,9 @@ class LokiAnalysisTask(TurbiniaTask):
 
     cmd = [
         'python',
-        os.path.expanduser('~/Loki/loki.py'), '-w', '0', '--csv',
-        '--intense', '--noprocscan', '--dontwait', '--noindicator',
-        '-l', log_file, '-p', (evidence.mount_path or evidence.local_path)
+        os.path.expanduser('~/Loki/loki.py'), '-w', '0', '--csv', '--intense',
+        '--noprocscan', '--dontwait', '--noindicator', '-l', log_file, '-p',
+        (evidence.mount_path or evidence.local_path)
     ]
 
     (ret, result) = self.execute(
