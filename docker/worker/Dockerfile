@@ -5,6 +5,7 @@ RUN apt-get update && apt-get -y install \
     apt-transport-https \
     apt-utils \
     ca-certificates \
+    curl \
     git \
     john-data \
     hashcat \
@@ -67,10 +68,11 @@ RUN cp /home/turbinia/password.lst /root/
 
 RUN pip3 install impacket --no-deps
 
-RUN cd /home/turbinia && wget https://github.com/Neo23x0/Loki/archive/refs/tags/0.44.0.zip \
-    && unzip 0.44.0.zip && cd Loki-0.44.0 && pip3 install -r requirements.txt \
+RUN cd /home/turbinia && mkdir Loki && cd Loki \
+    && curl -s https://api.github.com/repos/Neo23x0/Loki/releases/latest | sed -n 's/.*"tarball_url": "\(.*\)",.*/\1/p' | xargs -n1 wget -O - -q | tar -xz --strip-components=1 \
+    && pip3 install -r requirements.txt \
     && sudo update-alternatives --install /usr/bin/python python /usr/bin/python3 1 \
-    && sudo chown -R turbinia:turbinia /home/turbinia/Loki-0.44.0
+    && sudo chown -R turbinia:turbinia /home/turbinia/Loki
 
 COPY docker/worker/start.sh /home/turbinia/start.sh
 RUN chmod +rwx /home/turbinia/start.sh
