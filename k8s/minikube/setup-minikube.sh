@@ -16,8 +16,4 @@ kubectl create -f ../celery/turbinia-server.yaml
 kubectl create -f ../celery/turbinia-worker.yaml 
 kubectl create -f ../celery/turbinia-autoscale-cpu.yaml 
 
-# Setup some usefull things
-alias k=kubectl
-ke() { kubectl exec --stdin --tty $1 -- /bin/bash; }
-export -f ke
 

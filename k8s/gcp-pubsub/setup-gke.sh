@@ -10,8 +10,4 @@ kubectl create -f turbinia-server.yaml
 kubectl create -f turbinia-worker.yaml 
 kubectl create -f turbinia-autoscale-cpu.yaml 
 
-# Setup some usefull things
-alias k=kubectl
-ke() { kubectl exec --stdin --tty $1 -- /bin/bash; }
-export -f ke
 
