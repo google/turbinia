@@ -105,7 +105,9 @@ def task_runner(obj, *args, **kwargs):
     if config.TASK_MANAGER.lower() == 'psq':
       raise psq.Retry()
     elif config.TASK_MANAGER.lower() == 'celery':
-      raise obj.stub.retry('Turbinia worker busy!')
+      pass
+      #TODO(rbdebeer) - figure out how to fail only one task
+      #raise obj.stub.retry('Turbinia worker busy!')
 
   # try to acquire lock and timeout and requeue task if it's in use
   try:
@@ -116,7 +118,9 @@ def task_runner(obj, *args, **kwargs):
     if config.TASK_MANAGER.lower() == 'psq':
       raise psq.Retry()
     elif config.TASK_MANAGER.lower() == 'celery':
-      raise obj.stub.retry('Turbinia worker busy!')
+      pass
+      #TODO(rbdebeer) - figure out how to fail only one task
+      #raise obj.stub.retry('Turbinia worker busy!')
 
   return run
 
