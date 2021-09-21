@@ -19,56 +19,56 @@ spec:
     spec:
       terminationGracePeriodSeconds: 50000
       initContainers:
-      - name: init-filestore
-        image: busybox:1.28
-        command: ['sh', '-c', 'chmod go+w /mnt/criticalvolume']
-        volumeMounts:
-        - mountPath: "/mnt/criticalvolume"
-          name: criticalvolume
+        - name: init-filestore
+          image: busybox:1.28
+          command: ["sh", "-c", "chmod go+w /mnt/criticalvolume"]
+          volumeMounts:
+            - mountPath: "/mnt/criticalvolume"
+              name: criticalvolume
       containers:
-      - name: worker
-        #image: us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-worker-dev:latest
-        image: rbdebeer/turbinia-worker-dev 
-        lifecycle:
-          preStop:
-            exec:
-              command: ["touch", "/tmp/turbinia-to-delete.lock"]
-        securityContext:
-          privileged: true
-        env:
-        - name: TURBINIA_CONF
-          valueFrom:
-            configMapKeyRef:
-              name: turbinia-config
-              key: TURBINIA_CONF
-        - name: TURBINIA_EXTRA_ARGS
-          value: "-d"
-        volumeMounts:
-        - mountPath: /mnt/criticalvolume
-          name: criticalvolume
-        - mountPath: "/dev"
-          name: dev
-          readOnly: true 
-        - mountPath: "/tmp/resources"
-          name: resources
-          readOnly: false
-        ports:
-          - containerPort: 9200
-        resources: #TODO adjust for GKE
-          requests:
-           memory: "256Mi"
-           cpu: "500m"
-          limits:
-           memory: "8192Mi"
-           cpu: "32000m"
+        - name: worker
+          #image: us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-worker-dev:latest
+          image: rbdebeer/turbinia-worker-dev
+          lifecycle:
+            preStop:
+              exec:
+                command: ["touch", "/tmp/turbinia-to-delete.lock"]
+          securityContext:
+            privileged: true
+          env:
+            - name: TURBINIA_CONF
+              valueFrom:
+                configMapKeyRef:
+                  name: turbinia-config
+                  key: TURBINIA_CONF
+            - name: TURBINIA_EXTRA_ARGS
+              value: "-d"
+          volumeMounts:
+            - mountPath: /mnt/criticalvolume
+              name: criticalvolume
+            - mountPath: "/dev"
+              name: dev
+              readOnly: true
+            - mountPath: "/var/run/lock"
+              name: lockfolder
+              readOnly: false
+          ports:
+            - containerPort: 9200
+          resources: #TODO adjust for GKE
+            requests:
+              memory: "256Mi"
+              cpu: "500m"
+            limits:
+              memory: "8192Mi"
+              cpu: "32000m"
       volumes:
-      - name: criticalvolume
-        persistentVolumeClaim:
-          claimName: criticalvolume-claim
-          readOnly: false
-      - name: dev
-        hostPath:
-          path: /dev
-      - name: resources
-        hostPath:
-          path: /tmp/resources
+        - name: criticalvolume
+          persistentVolumeClaim:
+            claimName: criticalvolume-claim
+            readOnly: false
+        - name: dev
+          hostPath:
+            path: /dev
+        - name: lockfolder
+          hostPath:
+            path: /var/run/lock
