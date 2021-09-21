@@ -65,7 +65,7 @@ class OutputManager:
     """
     config.LoadConfig()
     epoch = str(int(time.time()))
-    unique_dir = os.path.join(str(reqid), '{1:s}-{2:s}--{3:s}'.format(epoch, str(uid), name))
+    unique_dir = os.path.join(str(reqid), '{0:s}-{1:s}-{2:s}'.format(epoch, str(uid), name))
     writers = []
     local_output_dir = None
 
