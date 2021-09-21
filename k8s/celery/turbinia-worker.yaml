@@ -27,7 +27,7 @@ spec:
               name: criticalvolume
       containers:
         - name: worker
-          #image: us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-worker-dev:latest
+          #image: us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-ng-worker-dev:latest
           image: rbdebeer/turbinia-worker-dev
           lifecycle:
             preStop:
