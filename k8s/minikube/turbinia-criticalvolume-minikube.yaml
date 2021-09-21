@@ -1,0 +1,14 @@
+# Use minikube mount $PWD/criticalvolume:/criticalvolume --uid=999 --gid=999
+# 999 == turbinia user in container.....
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: criticalvolume
+spec:
+  capacity:
+    storage: 10G
+  accessModes:
+  - ReadWriteMany
+  hostPath:
+    path: /criticalvolume
+    

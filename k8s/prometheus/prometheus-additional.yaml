@@ -1,0 +1,12 @@
+- job_name: "turbinia-auto-discover"
+  scrape_interval: 15s
+  kubernetes_sd_configs:
+  - role: pod
+    namespaces:
+      names:
+        - default
+  relabel_configs: 
+  - source_labels : [__meta_kubernetes_pod_container_port_number]
+    action: keep
+    regex: 9200
+

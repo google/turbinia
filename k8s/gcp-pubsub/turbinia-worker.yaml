@@ -1,0 +1,71 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: turbinia-worker
+  labels:
+    app: turbinia-worker
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: turbinia-worker
+  template:
+    metadata:
+      labels:
+        app: turbinia-worker
+    spec:
+      terminationGracePeriodSeconds: 50000
+      containers:
+      - name: worker
+        image: us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-worker-dev:latest
+        #image: wyassine/turbinia-worker-dev:latest
+        lifecycle:
+          preStop:
+            exec:
+              command: ["touch", "/tmp/turbinia-out/turbinia-to-delete.lock"]
+        securityContext:
+          privileged: true
+        env:
+        - name: TURBINIA_CONF
+          valueFrom:
+            configMapKeyRef:
+              name: turbinia-config
+              key: TURBINIA_CONF
+        - name: TURBINIA_EXTRA_ARGS
+          value: "-d"
+        volumeMounts:
+        - mountPath: "/dev"
+          name: dev
+          readOnly: true
+        - mountPath: /tmp/turbinia-out
+          name: output
+          readOnly: false
+        ports:
+          - containerPort: 9200
+        resources: #TODO adjust for GKE
+          requests:
+           memory: "256Mi"
+           cpu: "500m"
+          limits:
+           memory: "8192Mi"
+           cpu: "32000m"
+      initContainers:
+      - name: change-dir
+        image: alpine
+        securityContext:
+          privileged: true
+        command:
+        - chown
+        - -R
+        - 999:999
+        - /tmp/turbinia-out
+        volumeMounts:
+          - mountPath: /tmp/turbinia-out
+            name: output
+      volumes:
+      - name: dev
+        hostPath:
+          path: /dev
+      - name: output
+        hostPath:
+          path: /tmp/turbinia-out

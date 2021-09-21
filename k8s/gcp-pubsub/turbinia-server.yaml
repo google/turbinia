@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: turbinia-server
+  labels:
+    app: turbinia-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: turbinia-server
+  template:
+    metadata:
+      labels:
+        app: turbinia-server
+    spec:
+      containers:
+      - name: server
+        image: us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-server-dev:latest
+        #image: wyassine/turbinia-server-dev:latest
+        env:
+        - name: TURBINIA_CONF
+          valueFrom:
+            configMapKeyRef:
+              name: turbinia-config
+              key: TURBINIA_CONF
+        ports:
+          - containerPort: 9200

@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis-server
+  labels:
+    app: redis-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis-server
+  template:
+    metadata:
+      labels:
+        app: redis-server
+    spec:
+      # initContainers:
+      # - name: init-filestore
+      #   image: busybox:1.28
+      #   command: ['sh', '-c', 'chmod og+w /mnt/criticalvolume']
+      #   volumeMounts:
+      #   - mountPath: /mnt/criticalvolume
+      #     name: criticalvolume
+      containers:
+      - name: redis
+        image: "docker.io/redis:6.0.5"
+        resources:
+          requests:
+            cpu: 100m
+            memory: 100Mi
+        ports:
+        - containerPort: 6379
+      #   volumeMounts:
+      #   - mountPath: /mnt/criticalvolume
+      #     name: criticalvolume
+      # volumes:
+      # - name: criticalvolume
+      #   persistentVolumeClaim:
+      #     claimName: criticalvolume-claim
+      #     readOnly: false
+ 
