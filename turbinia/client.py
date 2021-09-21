@@ -32,6 +32,7 @@ import subprocess
 import codecs
 
 from google import auth
+from libcloudforensics.providers.gcp.internal import function as gcp_function
 from prometheus_client import start_http_server
 from turbinia import config
 from turbinia.config import logger
@@ -106,9 +107,7 @@ TASK_MAP = {
 }
 
 config.LoadConfig()
-if config.TASK_MANAGER.lower() == 'psq':
-  from libcloudforensics.providers.gcp.internal import function as gcp_function
-elif config.TASK_MANAGER.lower() == 'celery':
+if config.TASK_MANAGER.lower() == 'celery':
   from turbinia.state_manager import RedisStateManager
 
 log = logging.getLogger('turbinia')

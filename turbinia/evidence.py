@@ -27,6 +27,7 @@ from turbinia import config
 from turbinia import TurbiniaException
 from turbinia.processors import archive
 from turbinia.processors import docker
+from turbinia.processors import google_cloud
 from turbinia.processors import mount_local
 from turbinia.processors import resource_manager
 from turbinia.lib.docker_manager import GetDockerPath
@@ -34,8 +35,6 @@ from turbinia.lib.docker_manager import GetDockerPath
 # pylint: disable=keyword-arg-before-vararg
 
 config.LoadConfig()
-if config.TASK_MANAGER.lower() == 'psq':
-  from turbinia.processors import google_cloud
 
 log = logging.getLogger('turbinia')
 
