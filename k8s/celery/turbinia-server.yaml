@@ -18,31 +18,31 @@ spec:
         app: turbinia-server
     spec:
       initContainers:
-      - name: init-filestore
-        image: busybox:1.28
-        command: ['sh', '-c', 'chmod go+w /mnt/criticalvolume']
-        volumeMounts:
-        - mountPath: "/mnt/criticalvolume"
-          name: criticalvolume
+        - name: init-filestore
+          image: busybox:1.28
+          command: ["sh", "-c", "chmod go+w /mnt/criticalvolume"]
+          volumeMounts:
+            - mountPath: "/mnt/criticalvolume"
+              name: criticalvolume
       containers:
-      - name: server
-        #image: us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-server-dev:latest
-        image: rbdebeer/turbinia-server-dev 
-        env:
-        - name: TURBINIA_CONF
-          valueFrom:
-            configMapKeyRef:
-              name: turbinia-config
-              key: TURBINIA_CONF
-        - name: TURBINIA_EXTRA_ARGS
-          value: "-d"
-        volumeMounts:
-        - mountPath: /mnt/criticalvolume
-          name: criticalvolume
-        ports:
-          - containerPort: 9200
+        - name: server
+          #image: us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-server-dev:latest
+          image: rbdebeer/turbinia-server-dev
+          env:
+            - name: TURBINIA_CONF
+              valueFrom:
+                configMapKeyRef:
+                  name: turbinia-config
+                  key: TURBINIA_CONF
+            - name: TURBINIA_EXTRA_ARGS
+              value: "-d"
+          volumeMounts:
+            - mountPath: /mnt/criticalvolume
+              name: criticalvolume
+          ports:
+            - containerPort: 9200
       volumes:
-      - name: criticalvolume
-        persistentVolumeClaim:
-          claimName: criticalvolume-claim
-          readOnly: false
+        - name: criticalvolume
+          persistentVolumeClaim:
+            claimName: criticalvolume-claim
+            readOnly: false

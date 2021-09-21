@@ -5,7 +5,7 @@ metadata:
   labels:
     app: turbinia-worker
 spec:
-  replicas: 1
+  replicas: 3
   selector:
     matchLabels:
       app: turbinia-worker
@@ -32,7 +32,7 @@ spec:
           lifecycle:
             preStop:
               exec:
-                command: ["touch", "/tmp/turbinia-to-delete.lock"]
+                command: ["touch", "/tmp/turbinia-to-scaledown.lock"]
           securityContext:
             privileged: true
           env:
