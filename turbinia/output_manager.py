@@ -65,7 +65,8 @@ class OutputManager:
     """
     config.LoadConfig()
     epoch = str(int(time.time()))
-    unique_dir = os.path.join(str(reqid), '{0:s}-{1:s}-{2:s}'.format(epoch, str(uid), name))
+    unique_dir = os.path.join(
+        str(reqid), '{0:s}-{1:s}-{2:s}'.format(epoch, str(uid), name))
     writers = []
     local_output_dir = None
 
@@ -219,7 +220,8 @@ class OutputManager:
 
   def setup(self, name, uid, reqid, remote_only=False):
     """Setup OutputManager object."""
-    self._output_writers = self.get_output_writers(name, uid, reqid, remote_only)
+    self._output_writers = self.get_output_writers(
+        name, uid, reqid, remote_only)
     self.is_setup = True
 
 
