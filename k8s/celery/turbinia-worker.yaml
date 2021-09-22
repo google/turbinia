@@ -17,7 +17,7 @@ spec:
       labels:
         app: turbinia-worker
     spec:
-      terminationGracePeriodSeconds: 120
+      terminationGracePeriodSeconds: 300
       initContainers:
         - name: init-filestore
           image: busybox:1.28
@@ -32,7 +32,10 @@ spec:
           lifecycle:
             preStop:
               exec:
-                command: ["touch", "/tmp/turbinia-to-scaledown.lock"]
+                command:
+                  - "/bin/sh"
+                  - "-c"
+                  - "touch /tmp/turbinia-to-scaledown.lock && /bin/sh -c 'while [ -e /tmp/`uname -n`.lock ]; do sleep 2; done'"
           securityContext:
             privileged: true
           env:
