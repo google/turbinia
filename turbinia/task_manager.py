@@ -107,9 +107,7 @@ def task_runner(obj, *args, **kwargs):
     if config.TASK_MANAGER.lower() == 'psq':
       raise psq.Retry()
     elif config.TASK_MANAGER.lower() == 'celery':
-      pass
-      #TODO(rbdebeer) - figure out how to fail only one task
-      #raise obj.stub.retry('Turbinia worker busy!')
+      raise obj.stub.retry('Turbinia worker busy!')
 
   # try to acquire lock, timeout and requeue task if the worker
   # is already processing a task. Keep a lock count and remove
@@ -124,9 +122,7 @@ def task_runner(obj, *args, **kwargs):
     if config.TASK_MANAGER.lower() == 'psq':
       raise psq.Retry()
     elif config.TASK_MANAGER.lower() == 'celery':
-      pass
-      #TODO(rbdebeer) - figure out how to fail only one task
-      #raise obj.stub.retry('Turbinia worker busy!')
+      raise obj.stub.retry('Turbinia worker busy!')
   finally:
     # *always* make sure we release the lock and decrease the lock_counter
     lock.release()
