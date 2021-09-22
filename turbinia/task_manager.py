@@ -100,7 +100,9 @@ def task_runner(obj, *args, **kwargs):
 
   obj = workers.TurbiniaTask.deserialize(obj)
 
-  # GKE Specific - do not queue more work if pod places this file
+  # GKE Specific - do not queue more work if Pod is scheduled
+  # for scaledown. The auto-scaler will write a file to this
+  # location if the Pod will scaledown.
   if os.path.exists(config.SCALEDOWN_WORKER_FILE):
     if config.TASK_MANAGER.lower() == 'psq':
       raise psq.Retry()
@@ -109,10 +111,14 @@ def task_runner(obj, *args, **kwargs):
       #TODO(rbdebeer) - figure out how to fail only one task
       #raise obj.stub.retry('Turbinia worker busy!')
 
-  # try to acquire lock and timeout and requeue task if it's in use
+  # try to acquire lock, timeout and requeue task if the worker
+  # is already processing a task. Keep a lock count and remove
+  # the lock file from disk when done.
+  lock_count = 0
   try:
     lock = filelock.FileLock(config.LOCK_FILE)
     with lock.acquire(timeout=0.001):
+      lock_count += 1
       run = obj.run_wrapper(*args, **kwargs)
   except filelock.Timeout:
     if config.TASK_MANAGER.lower() == 'psq':
@@ -121,6 +127,16 @@ def task_runner(obj, *args, **kwargs):
       pass
       #TODO(rbdebeer) - figure out how to fail only one task
       #raise obj.stub.retry('Turbinia worker busy!')
+  finally:
+    # *always* make sure we release the lock and decrease the lock_counter
+    lock.release()
+    lock_count -= 1
+    if lock_count == 0:
+      try:
+        os.remove(config.LOCK_FILE)
+      except FileNotFoundError:
+        log.warning(
+            'Remove filelock: File not found {0:s}'.format(config.LOCK_FILE))
 
   return run
 

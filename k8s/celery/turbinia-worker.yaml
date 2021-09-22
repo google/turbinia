@@ -17,7 +17,7 @@ spec:
       labels:
         app: turbinia-worker
     spec:
-      terminationGracePeriodSeconds: 50000
+      terminationGracePeriodSeconds: 120
       initContainers:
         - name: init-filestore
           image: busybox:1.28
