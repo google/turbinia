@@ -50,10 +50,10 @@ TMP_DIR = '/tmp'
 LOG_FILE = '%s/turbinia-%s.log' % (OUTPUT_DIR, uname().nodename)
 
 # Path to a lock file used for the worker tasks.
-LOCK_FILE = '%s/worker-%s.lock' % (OUTPUT_DIR, uname().nodename)
+LOCK_FILE = '%s/%s.lock' % (TMP_DIR, uname().nodename)
 
-# Folder that must be shared from the machine the container is running on to all containers
-# running on that machine.
+# IMPORTANT: This folder needs to be shared among all workers running on the same host to
+# prevent resource locking issues!
 TMP_RESOURCE_DIR = '/var/run/lock'
 
 # Path to a resource state file used for tracking shared Evidence types. This should
@@ -120,7 +120,10 @@ DOCKER_ENABLED = False
 # still be enabled with the --jobs_allowlist flag on the server, but the client
 # will not be able to allowlist jobs that have been disabled or denylisted on
 # the server.
-DISABLED_JOBS = ['BulkExtractorJob','BinaryExtractorJob','VolatilityJob', 'DockerContainersEnumerationJob', 'PhotorecJob']
+DISABLED_JOBS = [
+    'BulkExtractorJob', 'BinaryExtractorJob', 'VolatilityJob',
+    'DockerContainersEnumerationJob', 'PhotorecJob'
+]
 
 # Configure additional job dependency checks below.
 # Configure additional job dependency checks below.
