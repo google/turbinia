@@ -37,7 +37,7 @@ spec:
                 command:
                   - "/bin/sh"
                   - "-c"
-                  - "touch /tmp/turbinia-to-scaledown.lock && /bin/sh -c 'while [ -e /tmp/`uname -n`.lock ]; do sleep 2; done'"
+                  - "touch /tmp/turbinia-to-scaledown.lock && sleep 5 && /usr/bin/python3 /tmp/k8s/tools/check-lockfile.py"
           securityContext:
             privileged: true
           env:
