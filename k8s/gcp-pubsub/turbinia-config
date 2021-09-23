@@ -1,0 +1,155 @@
+# General
+INSTANCE_ID = 'turbinia-74f96fd0b12c2708'
+STATE_MANAGER = 'Datastore'
+TASK_MANAGER = 'PSQ'
+OUTPUT_DIR = '/var/lib/turbinia/output'
+TMP_DIR = '/var/lib/turbinia/tmp'
+LOG_FILE = '/tmp/turbinia.log'
+LOCK_FILE = '/var/lock/turbinia-worker.lock'
+SLEEP_TIME = 10
+SINGLE_RUN = False
+MOUNT_DIR_PREFIX = '/mnt/turbinia'
+SHARED_FILESYSTEM = False
+DEBUG_TASKS = False
+
+# IMPORTANT: This folder needs to be shared among all workers running on the same host to
+# prevent resource locking issues!
+TMP_RESOURCE_DIR = '/tmp/turbinia-out'
+
+# Path to a resource state file used for tracking shared Evidence types. This should
+# be a shared path amongst all workers on a given host to properly update the state.
+# If for example, you are running the workers within containers, be sure to map the
+# OUTPUT_DIR from the container to the host so that the workers are updating a single
+# resource file rather than individual state files within the containers.
+RESOURCE_FILE = '%s/turbinia-state.json' % TMP_RESOURCE_DIR
+
+# Path to a resource state lock file used for locking changes to shared Evidence types.
+# Similar to RESOURCE_FILE, this should be a shared path amongst all workers on a given
+# host to properly lock the resource state file.
+RESOURCE_FILE_LOCK = '%s.lock' % RESOURCE_FILE
+
+# For Kubernetes infrastructure. Indicates whether a given pod is set to be deleted.
+SCALEDOWN_WORKER_FILE = '%s/turbinia-to-scaledown.lock' % TMP_DIR
+
+# This will enable the usage of docker containers for the worker.
+DOCKER_ENABLED = False
+
+# Any jobs added to this list will disable it from being used.
+DISABLED_JOBS = [
+    'BulkExtractorJob', 'BinaryExtractorJob', 'VolatilityJob',
+    'DockerContainersEnumerationJob', 'PhotorecJob'
+]
+
+# Configure additional job dependency checks below.
+DEPENDENCIES = [{
+    'job': 'BinaryExtractorJob',
+    'programs': ['image_export.py'],
+    'docker_image': None,
+    'timeout': 7200
+}, {
+    'job': 'BulkExtractorJob',
+    'programs': ['bulk_extractor'],
+    'docker_image': None,
+    'timeout': 14400
+}, {
+    'job': 'FsstatJob',
+    'programs': ['fsstat'],
+    'docker_image': None,
+    'timeout': 1800
+}, {
+    'job': 'GrepJob',
+    'programs': ['grep'],
+    'docker_image': None,
+    'timeout': 1800
+}, {
+    'job': 'HadoopAnalysisJob',
+    'programs': ['strings'],
+    'docker_image': None,
+    'timeout': 1200
+}, {
+    'job': 'HindsightJob',
+    'programs': ['hindsight.py'],
+    'docker_image': None,
+    'timeout': 1200
+}, {
+    'job': 'JenkinsAnalysisJob',
+    'programs': ['hashcat'],
+    'docker_image': None,
+    'timeout': 1200
+}, {
+    'job': 'LinuxAccountAnalysisJob',
+    'programs': ['hashcat'],
+    'docker_image': None,
+    'timeout': 1200
+}, {
+    'job': 'PartitionEnumerationJob',
+    'programs': ['bdemount'],
+    'docker_image': None,
+    'timeout': 1200
+}, {
+    'job': 'PlasoJob',
+    'programs': ['log2timeline.py'],
+    'docker_image': None,
+    'timeout': 86400
+}, {
+    'job': 'PhotorecJob',
+    'programs': ['photorec'],
+    'docker_image': None,
+    'timeout': 14400
+}, {
+    'job': 'PsortJob',
+    'programs': ['psort.py'],
+    'docker_image': None,
+    'timeout': 3600
+}, {
+    'job': 'StringsJob',
+    'programs': ['strings'],
+    'docker_image': None,
+    'timeout': 3600
+}, {
+    'job': 'VolatilityJob',
+    'programs': ['vol.py'],
+    'docker_image': None,
+    'timeout': 3600
+}, {
+    'job': 'WindowsAccountAnalysisJob',
+    'programs': ['hashcat', 'secretsdump.py'],
+    'docker_image': None,
+    'timeout': 3600
+}, {
+    'job': 'WordpressCredsAnalysisJob',
+    'programs': ['hashcat', 'grep', 'strings'],
+    'docker_image': None,
+    'timeout': 3600
+}, {
+    'job': 'DockerContainersEnumerationJob',
+    'programs': ['de.py'],
+    'docker_image': None,
+    'timeout': 1200
+}]
+
+# Prometheus monitoring config
+PROMETHEUS_ENABLED = False
+PROMETHEUS_ADDR = '0.0.0.0'
+PROMETHEUS_PORT = 8000
+
+# GCP
+TURBINIA_PROJECT = 'turbiniang-k8s'
+TURBINIA_REGION = 'us-central1'
+TURBINIA_ZONE = 'us-central1-c'
+BUCKET_NAME = 'turbinia-74f96fd0b12c2708'
+PSQ_TOPIC = 'turbinia-74f96fd0b12c2708-psq'
+PUBSUB_TOPIC = 'turbinia-74f96fd0b12c2708'
+GCS_OUTPUT_PATH = 'gs://turbinia-74f96fd0b12c2708/output'
+STACKDRIVER_LOGGING = True
+STACKDRIVER_TRACEBACK = True
+
+# Celery
+CELERY_BROKER = None
+CELERY_BACKEND = None
+KOMBU_BROKER = None
+KOMBU_CHANNEL = None
+KOMBU_DURABLE = True
+REDIS_HOST = None
+REDIS_PORT = None
+REDIS_DB = None
