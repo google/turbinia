@@ -110,13 +110,10 @@ def task_runner(obj, *args, **kwargs):
       raise obj.stub.retry('Turbinia worker busy!')
 
   # try to acquire lock, timeout and requeue task if the worker
-  # is already processing a task. Keep a lock count and remove
-  # the lock file from disk when done.
-  lock_count = 0
+  # is already processing a task.
   try:
     lock = filelock.FileLock(config.LOCK_FILE)
     with lock.acquire(timeout=0.001):
-      lock_count += 1
       run = obj.run_wrapper(*args, **kwargs)
   except filelock.Timeout:
     if config.TASK_MANAGER.lower() == 'psq':
@@ -124,15 +121,8 @@ def task_runner(obj, *args, **kwargs):
     elif config.TASK_MANAGER.lower() == 'celery':
       raise obj.stub.retry('Turbinia worker busy!')
   finally:
-    # *always* make sure we release the lock and decrease the lock_counter
+    # *always* make sure we release the lock
     lock.release()
-    lock_count -= 1
-    if lock_count == 0:
-      try:
-        os.remove(config.LOCK_FILE)
-      except FileNotFoundError:
-        log.warning(
-            'Remove filelock: File not found {0:s}'.format(config.LOCK_FILE))
 
   return run
 
