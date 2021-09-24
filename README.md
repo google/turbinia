@@ -60,12 +60,11 @@ usage:
 
 ```
 $ turbiniactl -h
-usage: turbiniactl [-h] [-q] [-v] [-d] [-a] [-c CONFIG_FILE]
-                   [-C RECIPE_CONFIG] [-f] [-o OUTPUT_DIR] [-L LOG_FILE]
-                   [-r REQUEST_ID] [-R] [-S] [-V] [-D]
-                   [-F FILTER_PATTERNS_FILE] [-Y YARA_RULES_FILE]
-                   [-j JOBS_ALLOWLIST] [-J JOBS_DENYLIST] [-p POLL_INTERVAL]
-                   [-t TASK] [-T] [-w]
+usage: turbiniactl [-h] [-q] [-v] [-d] [-a] [-c CONFIG_FILE] [-C RECIPE_CONFIG]
+                   [-f] [-k DECRYPTION_KEYS] [-o OUTPUT_DIR] [-L LOG_FILE]
+                   [-r REQUEST_ID] [-R] [-S] [-V] [-D] [-F FILTER_PATTERNS_FILE]
+                   [-Y YARA_RULES_FILE] [-j JOBS_ALLOWLIST] [-J JOBS_DENYLIST]
+                   [-p POLL_INTERVAL] [-t TASK] [-T] [-w]
                    <command> ...
 
 optional arguments:
@@ -78,17 +77,19 @@ optional arguments:
                         Load explicit config file. If specified it will ignore
                         config files in other default locations
                         (/etc/turbinia.conf, ~/.turbiniarc, or in paths
-                        referenced in environment variable
-                        TURBINIA_CONFIG_PATH)
+                        referenced in environment variable TURBINIA_CONFIG_PATH)
   -C RECIPE_CONFIG, --recipe_config RECIPE_CONFIG
                         Recipe configuration data passed in as comma separated
                         key=value pairs (e.g. "-C
                         key=value,otherkey=othervalue"). These will get passed
-                        to tasks as evidence config, and will also be written
-                        to the metadata.json file for Evidence types that
-                        write it
-  -f, --force_evidence  Force evidence processing request in potentially
-                        unsafe conditions
+                        to tasks as evidence config, and will also be written to
+                        the metadata.json file for Evidence types that write it
+  -f, --force_evidence  Force evidence processing request in potentially unsafe
+                        conditions
+  -k DECRYPTION_KEYS, --decryption_keys DECRYPTION_KEYS
+                        Decryption keys to be passed in as comma separated list.
+                        Each entry should be in the form type=key. (e.g. "-k
+                        password=123456,recovery_password=XXXX-XXXX-XXXX-XXXX")
   -o OUTPUT_DIR, --output_dir OUTPUT_DIR
                         Directory path for output
   -L LOG_FILE, --log_file LOG_FILE
@@ -96,48 +97,45 @@ optional arguments:
   -r REQUEST_ID, --request_id REQUEST_ID
                         Create new requests with this Request ID
   -R, --run_local       Run completely locally without any server or other
-                        infrastructure. This can be used to run one-off Tasks
-                        to process data locally.
+                        infrastructure. This can be used to run one-off Tasks to
+                        process data locally.
   -S, --server          Run Turbinia Server indefinitely
   -V, --version         Show the version
-  -D, --dump_json       Dump JSON output of Turbinia Request instead of
-                        sending it
+  -D, --dump_json       Dump JSON output of Turbinia Request instead of sending
+                        it
   -F FILTER_PATTERNS_FILE, --filter_patterns_file FILTER_PATTERNS_FILE
                         A file containing newline separated string patterns to
-                        filter text based evidence files with (in extended
-                        grep regex format). This filtered output will be in
-                        addition to the complete output
+                        filter text based evidence files with (in extended grep
+                        regex format). This filtered output will be in addition
+                        to the complete output
   -Y YARA_RULES_FILE, --yara_rules_file YARA_RULES_FILE
                         A file containing Yara rules.
   -j JOBS_ALLOWLIST, --jobs_allowlist JOBS_ALLOWLIST
                         An allowlist for Jobs that will be allowed to run (in
-                        CSV format, no spaces). This will not force them to
-                        run if they are not configured to. This is applied
-                        both at server start time and when the client makes a
-                        processing request. When applied at server start time
-                        the change is persistent while the server is running.
-                        When applied by the client, it will only affect that
-                        processing request.
+                        CSV format, no spaces). This will not force them to run
+                        if they are not configured to. This is applied both at
+                        server start time and when the client makes a processing
+                        request. When applied at server start time the change is
+                        persistent while the server is running. When applied by
+                        the client, it will only affect that processing request.
   -J JOBS_DENYLIST, --jobs_denylist JOBS_DENYLIST
                         A denylist for Jobs we will not allow to run. See
-                        --jobs_allowlist help for details on format and when
-                        it is applied.
+                        --jobs_allowlist help for details on format and when it
+                        is applied.
   -p POLL_INTERVAL, --poll_interval POLL_INTERVAL
-                        Number of seconds to wait between polling for task
-                        state info
+                        Number of seconds to wait between polling for task state
+                        info
   -t TASK, --task TASK  The name of a single Task to run locally (must be used
                         with --run_local.
   -T, --debug_tasks     Show debug output for all supported tasks
-  -w, --wait            Wait to exit until all tasks for the given request
-                        have completed
+  -w, --wait            Wait to exit until all tasks for the given request have
+                        completed
 
 Commands:
   <command>
     config              Print out config file
     testnotify          Sends test notification
     rawdisk             Process RawDisk as Evidence
-    apfs                Process APFSEncryptedDisk as Evidence
-    bitlocker           Process Bitlocker Disk as Evidence
     googleclouddisk     Process Google Cloud Persistent Disk as Evidence
     googleclouddiskembedded
                         Process Google Cloud Persistent Disk with an embedded
@@ -147,11 +145,13 @@ Commands:
     compresseddirectory
                         Process a compressed tar file as Evidence
     hindsight           Process ChromiumProfile as Evidence
-    listjobs            List all available Jobs. These Job names can be used
-                        by --jobs_allowlist and --jobs_denylist
+    listjobs            List all available Jobs. These Job names can be used by
+                        --jobs_allowlist and --jobs_denylist
     psqworker           Run PSQ worker
     celeryworker        Run Celery worker
     status              Get Turbinia Task status
+    gcplogs             Collects Turbinia logs from Stackdriver.
+    dumpgcs             Get Turbinia results from Google Cloud Storage.
     server              Run Turbinia Server
 ```
 

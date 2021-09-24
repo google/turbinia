@@ -26,8 +26,10 @@ from turbinia import TurbiniaException
 
 log = logging.getLogger('turbinia')
 
+DEFAULT_TIMEOUT = 7200
 
-def _image_export(command, output_dir):
+
+def _image_export(command, output_dir, timeout=DEFAULT_TIMEOUT):
   """Runs image_export command.
 
   Args:
@@ -35,7 +37,7 @@ def _image_export(command, output_dir):
     output_dir: Path to directory to store the the extracted files.
 
   Returns:
-    dict: file names and paths to extracted files.
+    list: paths to extracted files.
 
   Raises:
     TurbiniaException: If an error occurs when running image_export.
@@ -43,9 +45,12 @@ def _image_export(command, output_dir):
   # TODO: Consider using the exec helper to gather stdin/err.
   log.debug('Running image_export as [{0:s}]'.format(' '.join(command)))
   try:
-    subprocess.check_call(command)
-  except subprocess.CalledProcessError:
-    raise TurbiniaException('image_export.py failed.')
+    subprocess.check_call(command, timeout=timeout)
+  except subprocess.CalledProcessError as e:
+    raise TurbiniaException('image_export.py failed: {0!s}'.format(e))
+  except subprocess.TimeoutExpired as e:
+    raise TurbiniaException(
+        'image_export.py timed out after {0:d}s: {1!s}'.format(timeout, e))
 
   collected_file_paths = []
   file_count = 0
@@ -67,7 +72,7 @@ def extract_artifacts(artifact_names, disk_path, output_dir):
     output_dir: Path to directory to store the the extracted files.
 
   Returns:
-    dict: file names and paths to extracted files.
+    list: paths to extracted files.
 
   Raises:
     TurbiniaException: If an error occurs when running image_export.
@@ -76,7 +81,8 @@ def extract_artifacts(artifact_names, disk_path, output_dir):
   artifacts = ','.join(artifact_names)
   image_export_cmd = [
       'sudo', 'image_export.py', '--artifact_filters', artifacts, '--write',
-      output_dir, '--partitions', 'all', disk_path
+      output_dir, '--partitions', 'all', '--volumes', 'all', '--unattended',
+      disk_path
   ]
 
   return _image_export(image_export_cmd, output_dir)
@@ -91,7 +97,7 @@ def extract_files(file_name, disk_path, output_dir):
     output_dir: Path to directory to store the the extracted files.
 
   Returns:
-    dict: file names and paths to extracted files.
+    list: paths to extracted files.
 
   Raises:
     TurbiniaException: If an error occurs when running image_export.
@@ -122,12 +128,15 @@ def get_exe_path(filename):
   return binary
 
 
-def bruteforce_password_hashes(password_hashes, timeout=300):
-  """Bruteforce password hashes using John the Ripper.
+def bruteforce_password_hashes(
+    password_hashes, tmp_dir, timeout=300, extra_args=''):
+  """Bruteforce password hashes using Hashcat.
 
   Args:
     password_hashes (list): Password hashes as strings.
+    tmp_dir (str): Path to use as a temporary directory
     timeout (int): Number of seconds to run for before terminating the process.
+    extra_args (str): Any extra arguments to be passed to Hashcat.
 
   Returns:
     list: of tuples with hashes and plain text passwords.
@@ -140,7 +149,22 @@ def bruteforce_password_hashes(password_hashes, timeout=300):
     password_hashes_file_path = fh.name
     fh.write('\n'.join(password_hashes))
 
-  cmd = ['john', password_hashes_file_path]
+  pot_file = os.path.join((tmp_dir or tempfile.gettempdir()), 'hashcat.pot')
+  password_list_file_path = os.path.expanduser('~/password.lst')
+
+  # Fallback
+  if not os.path.isfile(password_list_file_path):
+    password_list_file_path = '/usr/share/john/password.lst'
+
+  # Bail
+  if not os.path.isfile(password_list_file_path):
+    raise TurbiniaException('No password list available')
+
+  cmd = ['hashcat', '--force', '-a', '0']
+  if extra_args:
+    cmd = cmd + extra_args.split(' ')
+  cmd = cmd + ['--potfile-path={}'.format(pot_file)]
+  cmd = cmd + [password_hashes_file_path, password_list_file_path]
 
   with open(os.devnull, 'w') as devnull:
     try:
@@ -151,18 +175,18 @@ def bruteforce_password_hashes(password_hashes, timeout=300):
       # Cancel the timer if the process is done before the timer.
       if timer.is_alive():
         timer.cancel()
-    except OSError:
-      raise TurbiniaException('john the ripper failed.')
+    except OSError as e:
+      raise TurbiniaException('hashcat failed: {0}'.format(str(e)))
 
   result = []
-  # Default location of the result file, no way to change it.
-  pot_file = os.path.expanduser('~/.john/john.pot')
 
   if os.path.isfile(pot_file):
     with open(pot_file, 'r') as fh:
-      for line in fh.readlines():
+      for line in fh:
         password_hash, plaintext = line.rsplit(':', 1)
-        result.append((password_hash, plaintext.rstrip()))
+        plaintext = plaintext.rstrip()
+        if plaintext:
+          result.append((password_hash, plaintext))
     os.remove(pot_file)
 
   return result

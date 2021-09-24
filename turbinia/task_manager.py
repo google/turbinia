@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+#-*- coding: utf-8 -*-
 # Copyright 2016 Google Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,6 +18,8 @@ from __future__ import unicode_literals, absolute_import
 
 import logging
 import time
+import os
+import filelock
 
 from prometheus_client import Gauge
 
@@ -28,6 +30,8 @@ from turbinia import config
 from turbinia import state_manager
 from turbinia import TurbiniaException
 from turbinia.jobs import manager as jobs_manager
+from turbinia.lib import recipe_helpers
+from turbinia.workers.abort import AbortTask
 
 config.LoadConfig()
 if config.TASK_MANAGER.lower() == 'psq':
@@ -93,8 +97,21 @@ def task_runner(obj, *args, **kwargs):
   Returns:
     Output from TurbiniaTask (should be TurbiniaTaskResult).
   """
-  obj = workers.TurbiniaTask.deserialize(obj)
-  return obj.run_wrapper(*args, **kwargs)
+
+  # GKE Specific - do not queue more work if pod places this file
+  if os.path.exists(config.SCALEDOWN_WORKER_FILE):
+    raise psq.Retry()
+
+  # try to acquire lock and timeout and requeue task if it's in use
+  try:
+    lock = filelock.FileLock(config.LOCK_FILE)
+    with lock.acquire(timeout=0.001):
+      obj = workers.TurbiniaTask.deserialize(obj)
+      run = obj.run_wrapper(*args, **kwargs)
+  except filelock.Timeout:
+    raise psq.Retry()
+
+  return run
 
 
 class BaseTaskManager:
@@ -174,6 +191,29 @@ class BaseTaskManager:
     self.jobs = [job for _, job in jobs_manager.JobsManager.GetJobs(job_names)]
     log.debug('Registered job list: {0:s}'.format(str(job_names)))
 
+  def abort_request(self, request_id, requester, evidence_name, message):
+    """Abort the request by creating an AbortTask.
+
+    When there is a fatal error processing the request such that we can't
+    continue, an AbortTask will be created with the error message and is written
+    directly to the state database. This way the client will get a reasonable
+    error in response to the failure.
+    
+    Args:
+      request_id(str): The request ID.
+      requester(str): The username of the requester.
+      evidence_name(str): Name of the Evidence requested to be processed.
+      message(str): The error message to abort the request with.
+    """
+    abort_task = AbortTask(request_id=request_id, requester=requester)
+    result = workers.TurbiniaTaskResult(
+        request_id=request_id, no_output_manager=True)
+    result.status = 'Processing request for {0:s} aborted: {1:s}'.format(
+        evidence_name, message)
+    result.successful = False
+    abort_task.result = result
+    self.state_manager.update_task(abort_task)
+
   def add_evidence(self, evidence_):
     """Adds new evidence and creates tasks to process it.
 
@@ -190,8 +230,10 @@ class BaseTaskManager:
           'Jobs must be registered before evidence can be added')
     log.info('Adding new evidence: {0:s}'.format(str(evidence_)))
     job_count = 0
-    jobs_allowlist = evidence_.config.get('jobs_allowlist', [])
-    jobs_denylist = evidence_.config.get('jobs_denylist', [])
+    jobs_list = []
+
+    jobs_allowlist = evidence_.config['globals'].get('jobs_allowlist', [])
+    jobs_denylist = evidence_.config['globals'].get('jobs_denylist', [])
     if jobs_denylist or jobs_allowlist:
       log.info(
           'Filtering Jobs with allowlist {0!s} and denylist {1!s}'.format(
@@ -209,23 +251,30 @@ class BaseTaskManager:
       # Doing a strict type check here for now until we can get the above
       # comment figured out.
       # pylint: disable=unidiomatic-typecheck
-      if [True for t in job.evidence_input if type(evidence_) == t]:
+      job_applicable = [
+          True for t in job.evidence_input if type(evidence_) == t
+      ]
+
+      if job_applicable:
         job_instance = job(
             request_id=evidence_.request_id, evidence_config=evidence_.config)
+
+        for task in job_instance.create_tasks([evidence_]):
+          self.add_task(task, job_instance, evidence_)
+
         self.running_jobs.append(job_instance)
         log.info(
             'Adding {0:s} job to process {1:s}'.format(
                 job_instance.name, evidence_.name))
         job_count += 1
         turbinia_jobs_total.inc()
-        for task in job_instance.create_tasks([evidence_]):
-          self.add_task(task, job_instance, evidence_)
 
     if not job_count:
       log.warning(
           'No Jobs/Tasks were created for Evidence [{0:s}]. '
-          'Jobs may need to be configured to allow this type of '
-          'Evidence as input'.format(str(evidence_)))
+          'Request or recipe parsing may have failed, or Jobs may need to be '
+          'configured to allow this type of Evidence as input'.format(
+              str(evidence_)))
 
   def check_done(self):
     """Checks if we have any outstanding tasks.
@@ -346,7 +395,7 @@ class BaseTaskManager:
 
     evidence_.config = job.evidence.config
     task.base_output_dir = config.OUTPUT_DIR
-    task.requester = evidence_.config.get('requester')
+    task.requester = evidence_.config.get('globals', {}).get('requester')
     if job:
       task.job_id = job.id
       task.job_name = job.name
@@ -588,13 +637,21 @@ class CeleryTaskManager(BaseTaskManager):
       for evidence_ in request.evidence:
         if not evidence_.request_id:
           evidence_.request_id = request.request_id
-        evidence_.config = request.recipe
-        evidence_.config['requester'] = request.requester
+
         log.info(
             'Received evidence [{0:s}] from Kombu message.'.format(
                 str(evidence_)))
-        evidence_list.append(evidence_)
+
+        success, message = recipe_helpers.validate_recipe(request.recipe)
+        if not success:
+          self.abort_request(
+              evidence_.request_id, request.requester, evidence_.name, message)
+        else:
+          evidence_.config = request.recipe
+          evidence_.config['globals']['requester'] = request.requester
+          evidence_list.append(evidence_)
       turbinia_server_request_total.inc()
+
     return evidence_list
 
   def enqueue_task(self, task, evidence_):
@@ -678,13 +735,21 @@ class PSQTaskManager(BaseTaskManager):
       for evidence_ in request.evidence:
         if not evidence_.request_id:
           evidence_.request_id = request.request_id
-        evidence_.config = request.recipe
-        evidence_.config['requester'] = request.requester
+
         log.info(
             'Received evidence [{0:s}] from PubSub message.'.format(
                 str(evidence_)))
-        evidence_list.append(evidence_)
+
+        success, message = recipe_helpers.validate_recipe(request.recipe)
+        if not success:
+          self.abort_request(
+              evidence_.request_id, request.requester, evidence_.name, message)
+        else:
+          evidence_.config = request.recipe
+          evidence_.config['globals']['requester'] = request.requester
+          evidence_list.append(evidence_)
       turbinia_server_request_total.inc()
+
     return evidence_list
 
   def enqueue_task(self, task, evidence_):

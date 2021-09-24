@@ -43,9 +43,12 @@ from turbinia.lib import docker_manager
 from turbinia.jobs import manager as job_manager
 from turbinia.workers import Priority
 from turbinia.workers.artifact import FileArtifactExtractionTask
-from turbinia.workers.analysis.wordpress import WordpressAccessLogAnalysisTask
+from turbinia.workers.analysis.wordpress_access import WordpressAccessLogAnalysisTask
+from turbinia.workers.analysis.wordpress_creds import WordpressCredsAnalysisTask
 from turbinia.workers.analysis.jenkins import JenkinsAnalysisTask
 from turbinia.workers.analysis.jupyter import JupyterAnalysisTask
+from turbinia.workers.analysis.linux_acct import LinuxAccountAnalysisTask
+from turbinia.workers.analysis.windows_acct import WindowsAccountAnalysisTask
 from turbinia.workers.finalize_request import FinalizeRequestTask
 from turbinia.workers.docker import DockerContainersEnumerationTask
 from turbinia.workers.grep import GrepTask
@@ -65,6 +68,7 @@ from turbinia.workers.worker_stat import StatTask
 from turbinia.workers.binary_extractor import BinaryExtractorTask
 from turbinia.workers.bulk_extractor import BulkExtractorTask
 from turbinia.workers.photorec import PhotorecTask
+from turbinia.workers.abort import AbortTask
 
 MAX_RETRIES = 10
 RETRY_SLEEP = 60
@@ -74,6 +78,7 @@ RETRY_SLEEP = 60
 TASK_MAP = {
     'fileartifactextractiontask': FileArtifactExtractionTask,
     'wordpressaccessloganalysistask': WordpressAccessLogAnalysisTask,
+    'WordpressCredsAnalysisTask': WordpressCredsAnalysisTask,
     'finalizerequesttask': FinalizeRequestTask,
     'jenkinsanalysistask': JenkinsAnalysisTask,
     'JupyterAnalysisTask': JupyterAnalysisTask,
@@ -81,6 +86,8 @@ TASK_MAP = {
     'fsstattask': FsstatTask,
     'hadoopanalysistask': HadoopAnalysisTask,
     'hindsighttask': HindsightTask,
+    'LinuxAccountAnalysisTask': LinuxAccountAnalysisTask,
+    'WindowsAccountAnalysisTask': WindowsAccountAnalysisTask,
     'partitionenumerationtask': PartitionEnumerationTask,
     'plasotask': PlasoTask,
     'psorttask': PsortTask,
@@ -94,7 +101,8 @@ TASK_MAP = {
     'binaryextractortask': BinaryExtractorTask,
     'bulkextractortask': BulkExtractorTask,
     'dockercontainersenumerationtask': DockerContainersEnumerationTask,
-    'photorectask': PhotorecTask
+    'photorectask': PhotorecTask,
+    'aborttask': AbortTask
 }
 
 config.LoadConfig()
@@ -349,10 +357,10 @@ class BaseTurbiniaClient:
     if user:
       func_args.update({'user': user})
 
-    response = None
+    response = {}
     retry_count = 0
     credential_error_count = 0
-    while response is None and retry_count < MAX_RETRIES:
+    while not response and retry_count < MAX_RETRIES:
       try:
         response = cloud_function.ExecuteFunction(
             function_name, region, func_args)
@@ -379,21 +387,29 @@ class BaseTurbiniaClient:
             '{2!s}'.format(retry_count, MAX_RETRIES, exception))
         retry_count += 1
 
-      if response is None:
+      if not response:
+        retry_count += 1
+        time.sleep(RETRY_SLEEP)
+      elif response.get('error', {}).get('code') == 503:
+        log.warning(
+            'Retriable error response from cloud functions: [{0!s}]'.format(
+                response.get('error')))
+        retry_count += 1
+        response = {}
         time.sleep(RETRY_SLEEP)
 
-    if 'result' not in response:
+    if not response or 'result' not in response:
       log.error('No results found')
-      if response.get('error', '{}') != '{}':
+      if response.get('error'):
         msg = 'Error executing Cloud Function: [{0!s}].'.format(
             response.get('error'))
         log.error(msg)
-      log.debug('GCF response: {0!s}'.format(response))
+      log.debug('Invalid or empty GCF response: {0!s}'.format(response))
       raise TurbiniaException(
           'Cloud Function {0:s} returned no results.'.format(function_name))
 
     try:
-      results = json.loads(response['result'])
+      results = json.loads(response.get('result'))
     except (TypeError, ValueError) as e:
       raise TurbiniaException(
           'Could not deserialize result [{0!s}] from GCF: [{1!s}]'.format(

@@ -102,5 +102,6 @@ class TestTurbiniaEvidence(unittest.TestCase):
   def testEvidencePreprocess(self, mock_preprocess):
     """Basic test for Evidence.preprocess()."""
     test_evidence = TestEvidence()
-    test_evidence.preprocess(required_states=[evidence.EvidenceState.ATTACHED])
+    test_evidence.preprocess(
+        'task123', required_states=[evidence.EvidenceState.ATTACHED])
     mock_preprocess.assert_called_with(None, [evidence.EvidenceState.ATTACHED])

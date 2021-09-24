@@ -1,0 +1,36 @@
+# This recipe will run all Jobs with all configuration options turned on for in
+# depth "kitchen-sink" processing of everything (e.g. all VSS stores and all
+# partitions).  This may take a long time to complete.
+
+globals:
+  jobs_allowlist:
+    - BinaryExtractorJob
+    - BulkExtractorJob
+    - FsstatJob
+    - GrepJob
+    - HadoopAnalysisJob
+    - HindsightJob
+    - HTTPAccessLogExtractionJob
+    - HTTPAccessLogAnalysisJob
+    - JenkinsAnalysisJob
+    - JupyterExtractionJob
+    - JupyterAnalysisJob
+    - LinuxAccountAnalysisJob
+    - PartitionEnumerationJob
+    - PlasoJob
+    - PsortJob
+    - RedisAnalysisJob
+    - RedisExtractionJob
+    - SSHDAnalysisJob
+    - SSHDExtractionJob
+    - StringsJob
+    - TomcatExtractionJob
+    - TomcatAnalysisJob
+    - WindowsAccountAnalysisJob
+
+plaso_base:
+  task: 'PlasoTask'
+  status_view: 'none'
+  hashers: 'all'
+  partition: 'all'
+  vss_stores: 'all'

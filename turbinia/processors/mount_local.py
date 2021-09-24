@@ -16,7 +16,6 @@
 
 from __future__ import unicode_literals
 
-import glob
 import logging
 import os
 import subprocess
@@ -102,13 +101,15 @@ def PreprocessBitLocker(source_path, partition_offset=None, credentials=None):
     return decrypted_device
 
 
-def PreprocessLosetup(source_path, partition_offset=None, partition_size=None):
+def PreprocessLosetup(
+    source_path, partition_offset=None, partition_size=None, lv_uuid=None):
   """Runs Losetup on a target block device or image file.
 
   Args:
     source_path(str): the source path to run losetup on.
     partition_offset(int): offset of volume in bytes.
     partition_size(int): size of volume in bytes.
+    lv_uuid(str): LVM Logical Volume UUID.
 
   Raises:
     TurbiniaException: if source_path doesn't exist or if the losetup command
@@ -119,25 +120,48 @@ def PreprocessLosetup(source_path, partition_offset=None, partition_size=None):
   """
   losetup_device = None
 
-  if not os.path.exists(source_path):
-    raise TurbiniaException(
-        ('Cannot create loopback device for non-existing source_path '
-         '{0!s}').format(source_path))
+  if lv_uuid:
+    # LVM
+    lvdisplay_command = [
+        'sudo', 'lvdisplay', '--colon', '--select',
+        'lv_uuid={0:s}'.format(lv_uuid)
+    ]
+    log.info('Running: {0:s}'.format(' '.join(lvdisplay_command)))
+    try:
+      lvdetails = subprocess.check_output(
+          lvdisplay_command, universal_newlines=True).split('\n')[-2].strip()
+    except subprocess.CalledProcessError as e:
+      raise TurbiniaException(
+          'Could not determine logical volume device {0!s}'.format(e))
+    lvdetails = lvdetails.split(':')
+    volume_group = lvdetails[1]
+    vgchange_command = ['sudo', 'vgchange', '-a', 'y', volume_group]
+    log.info('Running: {0:s}'.format(' '.join(vgchange_command)))
+    try:
+      subprocess.check_call(vgchange_command)
+    except subprocess.CalledProcessError as e:
+      raise TurbiniaException('Could not activate volume group {0!s}'.format(e))
+    losetup_device = lvdetails[0]
+  else:
+    if not os.path.exists(source_path):
+      raise TurbiniaException((
+          'Cannot create loopback device for non-existing source_path '
+          '{0!s}').format(source_path))
 
-  # TODO(aarontp): Remove hard-coded sudo in commands:
-  # https://github.com/google/turbinia/issues/73
-  losetup_command = ['sudo', 'losetup', '--show', '--find', '-r']
-  if partition_size:
-    # Evidence is DiskPartition
-    losetup_command.extend(['-o', str(partition_offset)])
-    losetup_command.extend(['--sizelimit', str(partition_size)])
-  losetup_command.append(source_path)
-  log.info('Running command {0:s}'.format(' '.join(losetup_command)))
-  try:
-    losetup_device = subprocess.check_output(
-        losetup_command, universal_newlines=True).strip()
-  except subprocess.CalledProcessError as e:
-    raise TurbiniaException('Could not set losetup devices {0!s}'.format(e))
+    # TODO(aarontp): Remove hard-coded sudo in commands:
+    # https://github.com/google/turbinia/issues/73
+    losetup_command = ['sudo', 'losetup', '--show', '--find', '-r']
+    if partition_size:
+      # Evidence is DiskPartition
+      losetup_command.extend(['-o', str(partition_offset)])
+      losetup_command.extend(['--sizelimit', str(partition_size)])
+    losetup_command.append(source_path)
+    log.info('Running command {0:s}'.format(' '.join(losetup_command)))
+    try:
+      losetup_device = subprocess.check_output(
+          losetup_command, universal_newlines=True).strip()
+    except subprocess.CalledProcessError as e:
+      raise TurbiniaException('Could not set losetup devices {0!s}'.format(e))
 
   return losetup_device
 
@@ -208,11 +232,12 @@ def PreprocessMountDisk(partition_paths, partition_number):
   return mount_path
 
 
-def PreprocessMountPartition(partition_path):
+def PreprocessMountPartition(partition_path, filesystem_type):
   """Locally mounts disk partition in an instance.
 
   Args:
     partition_path(str): A path to a partition block device
+    filesystem_type(str): Filesystem of the partition to be mounted
 
   Raises:
     TurbiniaException: if the mount command failed to run.
@@ -243,12 +268,11 @@ def PreprocessMountPartition(partition_path):
   mount_path = tempfile.mkdtemp(prefix='turbinia', dir=mount_prefix)
 
   mount_cmd = ['sudo', 'mount', '-o', 'ro']
-  fstype = GetFilesystem(partition_path)
-  if fstype in ['ext3', 'ext4']:
+  if filesystem_type == 'EXT':
     # This is in case the underlying filesystem is dirty, as we want to mount
     # everything read-only.
     mount_cmd.extend(['-o', 'noload'])
-  elif fstype == 'xfs':
+  elif filesystem_type == 'XFS':
     mount_cmd.extend(['-o', 'norecovery'])
   mount_cmd.extend([partition_path, mount_path])
 
@@ -290,37 +314,64 @@ def GetFilesystem(path):
   return fstype
 
 
-def PostprocessDeleteLosetup(device_path):
+def PostprocessDeleteLosetup(device_path, lv_uuid=None):
   """Removes a loop device.
 
   Args:
     device_path(str): the path to the block device to remove
       (ie: /dev/loopX).
+    lv_uuid(str): LVM Logical Volume UUID.
 
   Raises:
     TurbiniaException: if the losetup command failed to run.
   """
-  # TODO(aarontp): Remove hard-coded sudo in commands:
-  # https://github.com/google/turbinia/issues/73
-  losetup_cmd = ['sudo', 'losetup', '-d', device_path]
-  log.info('Running: {0:s}'.format(' '.join(losetup_cmd)))
-  try:
-    subprocess.check_call(losetup_cmd)
-  except subprocess.CalledProcessError as e:
-    raise TurbiniaException('Could not delete losetup device {0!s}'.format(e))
+  if lv_uuid:
+    # LVM
+    # Rather than detaching a loopback device, we need to deactivate the volume
+    # group.
+    lvdisplay_command = [
+        'sudo', 'lvdisplay', '--colon', '--select',
+        'lv_uuid={0:s}'.format(lv_uuid)
+    ]
+    log.info('Running: {0:s}'.format(' '.join(lvdisplay_command)))
+    try:
+      lvdetails = subprocess.check_output(
+          lvdisplay_command, universal_newlines=True).split('\n')[-2].strip()
+    except subprocess.CalledProcessError as e:
+      raise TurbiniaException(
+          'Could not determine volume group {0!s}'.format(e))
+    lvdetails = lvdetails.split(':')
+    volume_group = lvdetails[1]
 
-  # Check that the device was actually removed
-  losetup_cmd = ['sudo', 'losetup', '-a']
-  log.info('Running: {0:s}'.format(' '.join(losetup_cmd)))
-  try:
-    output = subprocess.check_output(losetup_cmd)
-  except subprocess.CalledProcessError as e:
-    raise TurbiniaException(
-        'Could not check losetup device status {0!s}'.format(e))
-  if output.find(device_path.encode('utf-8')) != -1:
-    raise TurbiniaException(
-        'Could not delete losetup device {0!s}'.format(device_path))
-  log.info('losetup device [{0!s}] deleted.'.format(device_path))
+    vgchange_command = ['sudo', 'vgchange', '-a', 'n', volume_group]
+    log.info('Running: {0:s}'.format(' '.join(vgchange_command)))
+    try:
+      subprocess.check_call(vgchange_command)
+    except subprocess.CalledProcessError as e:
+      raise TurbiniaException(
+          'Could not deactivate volume group {0!s}'.format(e))
+  else:
+    # TODO(aarontp): Remove hard-coded sudo in commands:
+    # https://github.com/google/turbinia/issues/73
+    losetup_cmd = ['sudo', 'losetup', '-d', device_path]
+    log.info('Running: {0:s}'.format(' '.join(losetup_cmd)))
+    try:
+      subprocess.check_call(losetup_cmd)
+    except subprocess.CalledProcessError as e:
+      raise TurbiniaException('Could not delete losetup device {0!s}'.format(e))
+
+    # Check that the device was actually removed
+    losetup_cmd = ['sudo', 'losetup', '-a']
+    log.info('Running: {0:s}'.format(' '.join(losetup_cmd)))
+    try:
+      output = subprocess.check_output(losetup_cmd)
+    except subprocess.CalledProcessError as e:
+      raise TurbiniaException(
+          'Could not check losetup device status {0!s}'.format(e))
+    if output.find(device_path.encode('utf-8')) != -1:
+      raise TurbiniaException(
+          'Could not delete losetup device {0!s}'.format(device_path))
+    log.info('losetup device [{0!s}] deleted.'.format(device_path))
 
 
 def PostprocessUnmountPath(mount_path):

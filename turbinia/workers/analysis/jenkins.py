@@ -32,7 +32,7 @@ from turbinia.lib.utils import bruteforce_password_hashes
 class JenkinsAnalysisTask(TurbiniaTask):
   """Task to analyze a Jenkins install."""
 
-  REQUIRED_STATES = [state.ATTACHED, state.MOUNTED]
+  REQUIRED_STATES = [state.ATTACHED, state.CONTAINER_MOUNTED]
 
   def run(self, evidence, result):
     """Run the Jenkins worker.
@@ -163,7 +163,10 @@ class JenkinsAnalysisTask(TurbiniaTask):
     credentials_registry = {hash: username for username, hash in credentials}
     # TODO: Add timeout parameter when dynamic configuration is ready.
     # Ref: https://github.com/google/turbinia/issues/244
-    weak_passwords = bruteforce_password_hashes(credentials_registry.keys())
+
+    # '3200' is "bcrypt $2*$, Blowfish (Unix)"
+    weak_passwords = bruteforce_password_hashes(
+        credentials_registry.keys(), tmp_dir=None, extra_args='-m 3200')
 
     if not version:
       version = 'Unknown'

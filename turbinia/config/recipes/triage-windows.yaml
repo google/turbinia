@@ -1,0 +1,65 @@
+# Triage recipe for quick initial response (specific to Windows).
+
+globals:
+  jobs_allowlist:
+    - PlasoJob
+    - PsortJob
+
+plaso_base:
+  task: 'PlasoTask'
+  # Filter list taken from Plaso example windows triage file:
+  # https://github.com/log2timeline/plaso/blob/main/data/filter_windows.txt
+  file_filter: [
+      '/[$]MFT',
+      '/[$]LogFile',
+      '/[$]Extend/[$]UsnJrnl',
+      '/[$]Recycle.Bin',
+      '/[$]Recycle.Bin/.+',
+      '/[$]Recycle.Bin/.+/.+',
+      '/RECYCLER',
+      '/RECYCLER/.+',
+      '/RECYCLER/.+/.+',
+      '/(Users|Documents And Settings)/.+/NTUSER[.]DAT',
+      '/Users/.+/AppData/Local/Microsoft/Windows/Usrclass[.]dat',
+      '/Documents And Settings/.+/Local Settings/Application Data/Microsoft/Windows/Usrclass[.]dat',
+      '{systemroot}/System32/config/(SAM|SOFTWARE|SECURITY|SYSTEM)',
+      '/Users/.+/AppData/Roaming/Microsoft/Windows/Recent/.+[.]lnk',
+      '/Users/.+/AppData/Roaming/Microsoft/Office/Recent/.+[.]lnk',
+      '/Documents And Settings/.+/Recent/.+[.]lnk',
+      '/Users/.+/AppData/Roaming/Microsoft/Windows/Recent/Automaticdestinations/.+[.]automaticDestinations-ms',
+      '/Users/.+/AppData/Roaming/Microsoft/Windows/Recent/Customdestinations/.+[.].customDestinations-ms',
+      '{systemroot}/System32/winevt/Logs/.+[.]evtx',
+      '{systemroot}/System32/config/.+[.]evt',
+      '{systemroot}/inf/setupapi[.].+[.]log',
+      '{systemroot}/setupapi.log',
+      '{systemroot}/System32/LogFiles/.+/.+[.]txt',
+      '{systemroot}/Tasks/.+[.]job',
+      '{systemroot}/Appcompat/Programs/Recentfilecache[.]bcf',
+      '{systemroot}/Appcompat/Programs/AMcache[.]hve',
+      '{systemroot}/Prefetch/.+[.]pf',
+      '/Users/.+/AppData/Local/Microsoft/Windows/History/History.IE5/index[.]dat',
+      '/Users/.+/AppData/Local/Microsoft/Windows/History/History.IE5/MSHist.+/index[.]dat',
+      '/Users/.+/AppData/Local/Microsoft/Windows/History/Low/History.IE5/index[.]dat',
+      '/Users/.+/AppData/Local/Microsoft/Windows/History/Low/History.IE5/MSHist.+/index[.]dat',
+      '/Users/.+/AppData/Local/Microsoft/Windows/Temporary Internet Files/Content.IE5/index[.]dat',
+      '/Users/.+/AppData/Local/Microsoft/Windows/Temporary Internet Files/Low/Content.IE5/index[.]dat',
+      '/Users/.+/AppData/Roaming/Microsoft/Windows/Cookies/index[.]dat',
+      '/Users/.+/AppData/Roaming/Microsoft/Windows/Cookies/Low/index[.]dat',
+      '/Users/.+/AppData/Local/Microsoft/Internet Explorer/Recovery/.+/.+[.]dat',
+      '/Users/.+/AppData/Local/Microsoft/Internet Explorer/Recovery/Immersive/.+/.+[.]dat',
+      '/Users/.+/AppData/Roaming/Mozilla/Firefox/Profiles/.+/.+[.]sqlite',
+      '/Users/.+/AppData/Local/Microsoft/Windows/WebCache/.+[.]dat',
+      '/Users/.+/AppData/Local/Google/Chrome/User Data/.+/History',
+      '/Users/.+/AppData/Local/Google/Chrome/User Data/.+/Current Session',
+      '/Users/.+/AppData/Local/Google/Chrome/User Data/.+/Last Session',
+      '/Users/.+/AppData/Local/Google/Chrome/User Data/.+/Current Tabs',
+      '/Users/.+/AppData/Local/Google/Chrome/User Data/.+/Last Tabs',
+      '/Users/.+/AppData/Roaming/Macromedia/FlashPlayer/#SharedObjects/.+/.+/.+[.]sol',
+      '/Documents And Settings/.+/Local Settings/History/History.IE5/index[.]dat',
+      '/Documents And Settings/.+/Local Settings/History/History.IE5/MSHist.+/index[.]dat',
+      '/Documents And Settings/.+/Local Settings/Temporary Internet Files/Content.IE5/index[.]dat',
+      '/Documents And Settings/.+/Cookies/index[.]dat',
+      '/Documents And Settings/.+/Application Data/Mozilla/Firefox/Profiles/.+/.+[.]sqlite',
+      '/Documents And Settings/.+/Local Settings/Application Data/Google/Chrome/User Data/.+/History',
+      '/Documents And Settings/.+/Local Settings/Application Data/Google/Chrome/.+',
+  ]

@@ -2,13 +2,13 @@ celery<5.0
 cryptography>=2.0.2,<3.4
 docker
 filelock
-google-api-core<=1.26.0
+google-api-core<2.0.0dev
 google-api-python-client
 google-auth<2.0.0.dev0
-google-cloud-core
+google-cloud-core<2.0dev
 google-cloud-datastore<=2.0.0
 google-cloud-error-reporting
-google-cloud-logging<2.1,>=2.0.0
+google-cloud-logging>=2.0.0
 google-cloud-pubsub==1.7.0
 google-cloud-storage
 prometheus_client

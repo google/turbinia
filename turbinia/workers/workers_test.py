@@ -69,6 +69,8 @@ class TestTurbiniaTaskBase(unittest.TestCase):
     self.test_stdout_path = tempfile.mkstemp(dir=self.base_output_dir)[1]
     self.remove_files.append(self.test_stdout_path)
     self.evidence = evidence.RawDisk(source_path=test_disk_path)
+    self.evidence.config['abort'] = False
+    self.evidence.config['globals'] = {}
     self.evidence.preprocess = mock.MagicMock()
     # Set up TurbiniaTaskResult
     self.result = TurbiniaTaskResult(base_output_dir=self.base_output_dir)
@@ -353,7 +355,8 @@ class TestTurbiniaTask(TestTurbiniaTaskBase):
     self.evidence.preprocess = mock.MagicMock()
     self.task.evidence_setup(self.evidence)
     self.evidence.preprocess.assert_called_with(
-        self.task.tmp_dir, required_states=self.task.REQUIRED_STATES)
+        self.task.id, tmp_dir=self.task.tmp_dir,
+        required_states=self.task.REQUIRED_STATES)
 
   def testEvidenceSetupStateNotFulfilled(self):
     """Test that evidence setup throws exception when states don't match."""

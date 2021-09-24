@@ -21,12 +21,14 @@ import json
 import logging
 import os
 import sys
+import filelock
 
 from turbinia import config
 from turbinia import TurbiniaException
 from turbinia.processors import archive
 from turbinia.processors import docker
 from turbinia.processors import mount_local
+from turbinia.processors import resource_manager
 from turbinia.lib.docker_manager import GetDockerPath
 
 # pylint: disable=keyword-arg-before-vararg
@@ -95,6 +97,7 @@ class EvidenceState(IntEnum):
   MOUNTED = 1
   ATTACHED = 2
   DECOMPRESSED = 3
+  CONTAINER_MOUNTED = 4
 
 
 class Evidence:
@@ -147,6 +150,10 @@ class Evidence:
         if that state is true.  This is used by the preprocessors to set the
         current state and Tasks can use this to determine if the Evidence is in
         the correct state for processing.
+    resource_tracked (bool): Evidence with this property set requires tracking 
+        in a state file to allow for access amongst multiple workers.
+    resource_id (str): The unique id used to track the state of a given Evidence
+        type for stateful tracking.
   """
 
   # The list of attributes a given piece of Evidence requires to be set
@@ -175,6 +182,8 @@ class Evidence:
     self.has_child_evidence = False
     self.parent_evidence = None
     self.save_metadata = False
+    self.resource_tracked = False
+    self.resource_id = None
 
     self.local_path = source_path
 
@@ -279,7 +288,7 @@ class Evidence:
     """
     pass
 
-  def preprocess(self, tmp_dir=None, required_states=None):
+  def preprocess(self, task_id, tmp_dir=None, required_states=None):
     """Runs the possible parent's evidence preprocessing code, then ours.
 
     This is a wrapper function that will call the chain of pre-processors
@@ -316,6 +325,7 @@ class Evidence:
     the state is confirmed after the preprocessing is complete.
 
     Args:
+      task_id(str): The id of a given Task.
       tmp_dir(str): The path to the temporary directory that the
                        Task will write to.
       required_states(list[EvidenceState]): The list of evidence state
@@ -335,9 +345,13 @@ class Evidence:
         raise TurbiniaException(
             'Evidence of type {0:s} needs parent_evidence to be set'.format(
                 self.type))
-      self.parent_evidence.preprocess(tmp_dir, required_states)
+      self.parent_evidence.preprocess(task_id, tmp_dir, required_states)
     try:
       log.debug('Starting pre-processor for evidence {0:s}'.format(self.name))
+      if self.resource_tracked:
+        # Track resource and task id in state file
+        with filelock.FileLock(config.RESOURCE_FILE_LOCK):
+          resource_manager.PreprocessResourceState(self.resource_id, task_id)
       self._preprocess(tmp_dir, required_states)
     except TurbiniaException as exception:
       log.error(
@@ -348,18 +362,35 @@ class Evidence:
         'Pre-processing evidence {0:s} is complete, and evidence is in state '
         '{1:s}'.format(self.name, self.format_state()))
 
-  def postprocess(self):
+  def postprocess(self, task_id):
     """Runs our postprocessing code, then our possible parent's evidence.
 
     This is is a wrapper function that will run our post-processor, and will
     then recurse down the chain of parent Evidence and run those post-processors
     in order.
+
+    Args:
+      task_id(str): The id of a given Task.
     """
     log.info('Starting post-processor for evidence {0:s}'.format(self.name))
     log.debug('Evidence state: {0:s}'.format(self.format_state()))
-    self._postprocess()
+
+    is_detachable = True
+    if self.resource_tracked:
+      with filelock.FileLock(config.RESOURCE_FILE_LOCK):
+        # Run postprocess to either remove task_id or resource_id.
+        is_detachable = resource_manager.PostProcessResourceState(
+            self.resource_id, task_id)
+        if not is_detachable:
+          # Prevent from running post process code if there are other tasks running.
+          log.info(
+              'Resource ID {0:s} still in use. Skipping detaching Evidence...'
+              .format(self.resource_id))
+
+    if is_detachable:
+      self._postprocess()
     if self.parent_evidence:
-      self.parent_evidence.postprocess()
+      self.parent_evidence.postprocess(task_id)
 
   def format_state(self):
     """Returns a string representing the current state of evidence.
@@ -540,12 +571,13 @@ class DiskPartition(RawDisk):
 
   def __init__(
       self, partition_location=None, partition_offset=None, partition_size=None,
-      path_spec=None, *args, **kwargs):
+      lv_uuid=None, path_spec=None, *args, **kwargs):
     """Initialization for raw volume evidence object."""
 
     self.partition_location = partition_location
     self.partition_offset = partition_offset
     self.partition_size = partition_size
+    self.lv_uuid = lv_uuid
     self.path_spec = path_spec
     super(DiskPartition, self).__init__(*args, **kwargs)
 
@@ -584,13 +616,14 @@ class DiskPartition(RawDisk):
         self.device_path = mount_local.PreprocessLosetup(
             self.parent_evidence.device_path,
             partition_offset=self.partition_offset,
-            partition_size=self.partition_size)
+            partition_size=self.partition_size, lv_uuid=self.lv_uuid)
       if self.device_path:
         self.state[EvidenceState.ATTACHED] = True
         self.local_path = self.device_path
 
     if EvidenceState.MOUNTED in required_states or self.has_child_evidence:
-      self.mount_path = mount_local.PreprocessMountPartition(self.device_path)
+      self.mount_path = mount_local.PreprocessMountPartition(
+          self.device_path, self.path_spec.type_indicator)
       if self.mount_path:
         self.local_path = self.mount_path
         self.state[EvidenceState.MOUNTED] = True
@@ -611,55 +644,8 @@ class DiskPartition(RawDisk):
         mount_local.PostprocessUnmountPath(self.device_path.replace('bde1', ''))
         self.state[EvidenceState.ATTACHED] = False
       else:
-        mount_local.PostprocessDeleteLosetup(self.device_path)
+        mount_local.PostprocessDeleteLosetup(self.device_path, self.lv_uuid)
         self.state[EvidenceState.ATTACHED] = False
-
-
-class EncryptedDisk(RawDisk):
-  """Encrypted disk file evidence.
-
-  Attributes:
-    encryption_type: The type of encryption used, e.g. FileVault or Bitlocker.
-    encryption_key: A string of the encryption key used for this disk.
-    unencrypted_path: A string to the unencrypted local path
-  """
-
-  # Setting the possible states for this Evidence type explicitly to empty for
-  # now because we don't actually mount/attach these kinds of disks yet (they
-  # are currently only used by Plaso which knows how to decrypt them at
-  # runtime).
-  POSSIBLE_STATES = []
-
-  def __init__(
-      self, encryption_type=None, encryption_key=None, unencrypted_path=None,
-      *args, **kwargs):
-    """Initialization for Encrypted disk evidence objects."""
-    # TODO(aarontp): Make this an enum, or limited list
-    self.encryption_type = encryption_type
-    self.encryption_key = encryption_key
-    # self.local_path will be the encrypted path
-    self.unencrypted_path = unencrypted_path
-    super(EncryptedDisk, self).__init__(*args, **kwargs)
-
-
-class APFSEncryptedDisk(EncryptedDisk):
-  """APFS encrypted disk file evidence.
-
-  Attributes:
-    recovery_key: A string of the recovery key for this disk
-    password: A string of the password used for this disk. If recovery key
-        is used, this argument is ignored
-    unencrypted_path: A string to the unencrypted local path
-  """
-
-  REQUIRED_ATTRIBUTES = ['recovery_key', 'password']
-
-  def __init__(self, recovery_key=None, password=None, *args, **kwargs):
-    """Initialization for Bitlocker disk evidence object"""
-    self.recovery_key = recovery_key
-    self.password = password
-    super(APFSEncryptedDisk, self).__init__(*args, **kwargs)
-    self.encryption_type = self.__class__.__name__
 
 
 class GoogleCloudDisk(RawDisk):
@@ -671,7 +657,7 @@ class GoogleCloudDisk(RawDisk):
     disk_name: The cloud disk name.
   """
 
-  REQUIRED_ATTRIBUTES = ['disk_name', 'project', 'zone']
+  REQUIRED_ATTRIBUTES = ['disk_name', 'project', 'resource_id', 'zone']
   POSSIBLE_STATES = [EvidenceState.ATTACHED, EvidenceState.MOUNTED]
 
   def __init__(
@@ -685,6 +671,8 @@ class GoogleCloudDisk(RawDisk):
     self.partition_paths = None
     super(GoogleCloudDisk, self).__init__(*args, **kwargs)
     self.cloud_only = True
+    self.resource_tracked = True
+    self.resource_id = self.disk_name
 
   def _preprocess(self, _, required_states):
     # The GoogleCloudDisk should never need to be mounted unless it has child
@@ -693,12 +681,15 @@ class GoogleCloudDisk(RawDisk):
     # evidence layer isolation and having the child evidence manage the
     # mounting and unmounting.
 
-    if EvidenceState.ATTACHED in required_states:
-      self.device_path, partition_paths = google_cloud.PreprocessAttachDisk(
-          self.disk_name)
-      self.partition_paths = partition_paths
-      self.local_path = self.device_path
-      self.state[EvidenceState.ATTACHED] = True
+    # Explicitly lock this method to prevent race condition with two workers
+    # attempting to attach disk at same time, given delay with attaching in GCP.
+    with filelock.FileLock(config.RESOURCE_FILE_LOCK):
+      if EvidenceState.ATTACHED in required_states:
+        self.device_path, partition_paths = google_cloud.PreprocessAttachDisk(
+            self.disk_name)
+        self.partition_paths = partition_paths
+        self.local_path = self.device_path
+        self.state[EvidenceState.ATTACHED] = True
 
   def _postprocess(self):
     if self.state[EvidenceState.ATTACHED]:
@@ -864,7 +855,7 @@ class DockerContainer(Evidence):
     _docker_root_directory(str): Full path to the docker root directory.
   """
 
-  POSSIBLE_STATES = [EvidenceState.MOUNTED]
+  POSSIBLE_STATES = [EvidenceState.CONTAINER_MOUNTED]
 
   def __init__(self, container_id=None, *args, **kwargs):
     """Initialization for Docker Container."""
@@ -876,10 +867,7 @@ class DockerContainer(Evidence):
     self.context_dependent = True
 
   def _preprocess(self, _, required_states):
-    # Checking for either ATTACHED or MOUNTED since artefact extraction only
-    # requires ATTACHED, but a docker container can't be attached.
-    if (EvidenceState.ATTACHED in required_states or
-        EvidenceState.MOUNTED in required_states):
+    if EvidenceState.CONTAINER_MOUNTED in required_states:
       self._docker_root_directory = GetDockerPath(
           self.parent_evidence.mount_path)
       # Mounting the container's filesystem
@@ -887,10 +875,10 @@ class DockerContainer(Evidence):
           self._docker_root_directory, self.container_id)
       self.mount_path = self._container_fs_path
       self.local_path = self.mount_path
-      self.state[EvidenceState.MOUNTED] = True
+      self.state[EvidenceState.CONTAINER_MOUNTED] = True
 
   def _postprocess(self):
-    if self.state[EvidenceState.MOUNTED]:
+    if self.state[EvidenceState.CONTAINER_MOUNTED]:
       # Unmount the container's filesystem
       mount_local.PostprocessUnmountPath(self._container_fs_path)
-      self.state[EvidenceState.MOUNTED] = False
+      self.state[EvidenceState.CONTAINER_MOUNTED] = False

@@ -37,13 +37,25 @@ class FsstatTaskTest(TestTurbiniaTaskBase):
     self.setResults(mock_run=False)
     self.task.output_dir = self.task.base_output_dir
 
-  def testFsstatRun(self):
+  @mock.patch('turbinia.evidence.DiskPartition')
+  def testFsstatRun(self, mock_evidence):
     """Test fsstat task run."""
     self.task.execute = mock.MagicMock(return_value=0)
-    result = self.task.run(self.evidence, self.result)
+    mock_evidence.path_spec.type_indicator = 'EXT'
+    result = self.task.run(mock_evidence, self.result)
 
     # Ensure execute method is being called.
     self.task.execute.assert_called_once()
+    # Ensure run method returns a TurbiniaTaskResult instance.
+    self.assertIsInstance(result, TurbiniaTaskResult)
+
+    # Test for XFS
+    self.task.execute.reset_mock()
+    mock_evidence.path_spec.type_indicator = 'XFS'
+    result = self.task.run(mock_evidence, self.result)
+
+    # Ensure execute method is not being called.
+    self.task.execute.assert_not_called()
     # Ensure run method returns a TurbiniaTaskResult instance.
     self.assertIsInstance(result, TurbiniaTaskResult)
 

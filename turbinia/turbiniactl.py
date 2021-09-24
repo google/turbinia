@@ -25,6 +25,7 @@ import logging
 import os
 import sys
 import uuid
+import copy
 
 from turbinia import config
 from turbinia import TurbiniaException
@@ -75,11 +76,14 @@ def main():
       '(/etc/turbinia.conf, ~/.turbiniarc, or in paths referenced in '
       'environment variable TURBINIA_CONFIG_PATH)', required=False)
   parser.add_argument(
-      '-C', '--recipe_config', help='Recipe configuration data passed in as '
-      'comma separated key=value pairs (e.g. '
-      '"-C key=value,otherkey=othervalue").  These will get passed to tasks '
-      'as evidence config, and will also be written to the metadata.json file '
-      'for Evidence types that write it', default=[], type=csv_list)
+      '-I', '--recipe', help='Name of Recipe to be employed on evidence',
+      required=False)
+  parser.add_argument(
+      '-P', '--recipe_path', help='Recipe file path to load and use.',
+      required=False)
+  parser.add_argument(
+      '-X', '--skip_recipe_validation', action='store_true', help='Do not '
+      'perform recipe validation on the client.', required=False, default=False)
   parser.add_argument(
       '-f', '--force_evidence', action='store_true',
       help='Force evidence processing request in potentially unsafe conditions',
@@ -87,8 +91,8 @@ def main():
   parser.add_argument(
       '-k', '--decryption_keys', help='Decryption keys to be passed in as '
       ' comma separated list. Each entry should be in the form type=key. (e.g. '
-      '"-k password=123456,recovery_password=XXXXXX-XXXXXX-XXXXXX-XXXXXX-XXXXXX'
-      '-XXXXXX-XXXXXX-XXXXXX")', default=[], type=csv_list)
+      '"-k password=123456,recovery_password=XXXX-XXXX-XXXX-XXXX-XXXX-XXXX")',
+      default=[], type=csv_list)
   parser.add_argument('-o', '--output_dir', help='Directory path for output')
   parser.add_argument('-L', '--log_file', help='Log file')
   parser.add_argument(
@@ -132,7 +136,7 @@ def main():
   parser.add_argument(
       '-t', '--task',
       help='The name of a single Task to run locally (must be used with '
-      '--run_local.')
+      '--run_local).')
   parser.add_argument(
       '-T', '--debug_tasks', action='store_true',
       help='Show debug output for all supported tasks', default=False)
@@ -163,25 +167,6 @@ def main():
       '-s', '--source', help='Description of the source of the evidence',
       required=False)
   parser_rawdisk.add_argument(
-      '-n', '--name', help='Descriptive name of the evidence', required=False)
-
-  # Parser options for APFS Disk Evidence type
-  parser_apfs = subparsers.add_parser(
-      'apfs', help='Process APFSEncryptedDisk as Evidence')
-  parser_apfs.add_argument(
-      '-l', '--source_path', help='Local path to the encrypted APFS evidence',
-      required=True)
-  parser_apfs.add_argument(
-      '-r', '--recovery_key', help='Recovery key for the APFS evidence.  '
-      'Either recovery key or password must be specified.', required=False)
-  parser_apfs.add_argument(
-      '-p', '--password', help='Password for the APFS evidence.  '
-      'If a recovery key is specified concurrently, password will be ignored.',
-      required=False)
-  parser_apfs.add_argument(
-      '-s', '--source', help='Description of the source of the evidence',
-      required=False)
-  parser_apfs.add_argument(
       '-n', '--name', help='Descriptive name of the evidence', required=False)
 
   # Parser options for Google Cloud Disk Evidence type
@@ -402,6 +387,11 @@ def main():
 
   args = parser.parse_args()
 
+  # (jorlamd): Importing recipe_helpers late to avoid a bug where
+  # client.TASK_MAP is imported early rendering the check for worker
+  # status not possible.
+  from turbinia.lib import recipe_helpers
+
   # Load the config before final logger setup so we can the find the path to the
   # log file.
   try:
@@ -420,6 +410,7 @@ def main():
   if args.output_dir:
     config.OUTPUT_DIR = args.output_dir
 
+  config.TURBINIA_COMMAND = args.command
   server_flags_set = args.server or args.command == 'server'
   worker_flags_set = args.command in ('psqworker', 'celeryworker')
   # Run logger setup again if we're running as a server or worker (or have a log
@@ -446,8 +437,6 @@ def main():
   if config.STACKDRIVER_LOGGING and args.command in ('server', 'psqworker'):
     google_cloud.setup_stackdriver_handler(
         config.TURBINIA_PROJECT, args.command)
-
-  config.TURBINIA_COMMAND = args.command
 
   log.info('Turbinia version: {0:s}'.format(__version__))
 
@@ -495,7 +484,7 @@ def main():
     sys.exit(1)
 
   # Read set set filter_patterns
-  filter_patterns = None
+  filter_patterns = []
   if (args.filter_patterns_file and
       not os.path.exists(args.filter_patterns_file)):
     log.error('Filter patterns file {0:s} does not exist.')
@@ -508,7 +497,7 @@ def main():
           'Cannot open file {0:s} [{1!s}]'.format(args.filter_patterns_file, e))
 
   # Read yara rules
-  yara_rules = None
+  yara_rules = ''
   if (args.yara_rules_file and not os.path.exists(args.yara_rules_file)):
     log.error('Filter patterns file {0:s} does not exist.')
     sys.exit(1)
@@ -569,15 +558,6 @@ def main():
     source_path = os.path.abspath(args.source_path)
     evidence_ = evidence.RawDisk(
         name=args.name, source_path=source_path, source=args.source)
-  elif args.command == 'apfs':
-    if not args.password and not args.recovery_key:
-      log.error('Neither recovery key nor password is specified.')
-      sys.exit(1)
-    args.name = args.name if args.name else args.source_path
-    source_path = os.path.abspath(args.source_path)
-    evidence_ = evidence.APFSEncryptedDisk(
-        name=args.name, source_path=source_path, recovery_key=args.recovery_key,
-        password=args.password, source=args.source)
   elif args.command == 'directory':
     args.name = args.name if args.name else args.source_path
     source_path = os.path.abspath(args.source_path)
@@ -828,26 +808,7 @@ def main():
     request = TurbiniaRequest(
         request_id=request_id, requester=getpass.getuser())
     request.evidence.append(evidence_)
-    if filter_patterns:
-      request.recipe['filter_patterns'] = filter_patterns
-    if args.jobs_denylist:
-      request.recipe['jobs_denylist'] = args.jobs_denylist
-    if args.jobs_allowlist:
-      request.recipe['jobs_allowlist'] = args.jobs_allowlist
-    if yara_rules:
-      request.recipe['yara_rules'] = yara_rules
-    if args.debug_tasks:
-      request.recipe['debug_tasks'] = args.debug_tasks
-    if args.recipe_config:
-      for pair in args.recipe_config:
-        try:
-          key, value = pair.split('=')
-        except ValueError as exception:
-          log.error(
-              'Could not parse key=value pair [{0:s}] from recipe config '
-              '{1!s}: {2!s}'.format(pair, args.recipe_config, exception))
-          sys.exit(1)
-        request.recipe[key] = value
+
     if args.decryption_keys:
       for credential in args.decryption_keys:
         try:
@@ -859,6 +820,42 @@ def main():
                   credential, args.decryption_keys, exception))
           sys.exit(1)
         evidence_.credentials.append((credential_type, credential_data))
+
+    if args.recipe or args.recipe_path:
+      if (args.jobs_denylist or args.jobs_allowlist or
+          args.filter_patterns_file or args.yara_rules_file):
+        log.error(
+            'Specifying a recipe is incompatible with defining '
+            'jobs allow/deny lists, yara rules or a patterns file separately.')
+        sys.exit(1)
+
+      if args.recipe_path:
+        recipe_file = args.recipe_path
+      else:
+        recipe_file = os.path.join(config.RECIPE_FILE_DIR, args.recipe)
+      if not os.path.exists(recipe_file) and not recipe_file.endswith('.yaml'):
+        log.warning(
+            'Could not find recipe file at {0:s}, checking for file '
+            'with .yaml extension'.format(recipe_file))
+        recipe_file = recipe_file + '.yaml'
+      if not os.path.exists(recipe_file):
+        log.error('Recipe file {0:s} could not be found. Exiting.')
+        sys.exit(1)
+
+      recipe_dict = recipe_helpers.load_recipe_from_file(
+          recipe_file, not args.skip_recipe_validation)
+      if not recipe_dict:
+        sys.exit(1)
+    else:
+      recipe_dict = copy.deepcopy(recipe_helpers.DEFAULT_RECIPE)
+      recipe_dict['globals']['debug_tasks'] = args.debug_tasks
+      recipe_dict['globals']['filter_patterns'] = filter_patterns
+      recipe_dict['globals']['jobs_denylist'] = args.jobs_denylist
+      recipe_dict['globals']['jobs_allowlist'] = args.jobs_allowlist
+      recipe_dict['globals']['yara_rules'] = yara_rules
+
+    request.recipe = recipe_dict
+
     if args.dump_json:
       print(request.to_json().encode('utf-8'))
       sys.exit(0)

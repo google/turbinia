@@ -62,9 +62,14 @@ setup(
     entry_points={'console_scripts': ['turbiniactl=turbinia.turbiniactl:main']},
     install_requires=requirements,
     extras_require={
-        'dev': ['mock', 'nose', 'yapf', 'celery~=4.1', 'coverage'],
+        'dev': ['mock', 'nose', 'yapf', 'celery>=4.1,<=4.4.7', 'coverage'],
         'local': ['celery~=4.1', 'kombu~=4.1', 'redis~=3.0'],
-        'worker': ['docker-explorer>=20191104', 'plaso>=20200430', 'pyhindsight>=20200607']
+        'worker': [
+            'docker-explorer>=20191104',
+            'impacket',
+            'plaso>=20200430',
+            'pyhindsight>=20200607'
+        ]
     },
     use_scm_version=True,
     setup_requires=['setuptools_scm']

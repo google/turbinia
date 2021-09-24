@@ -194,10 +194,10 @@ class DatastoreStateManager(BaseStateManager):
     task.touch()
     try:
       with self.client.transaction():
-        entity = self.client.get(task.state_key)
-        if not entity:
+        if not task.state_key:
           self.write_new_task(task)
           return
+        entity = self.client.get(task.state_key)
         entity.update(self.get_task_dict(task))
         log.debug('Updating Task {0:s} in Datastore'.format(task.name))
         self.client.put(entity)
@@ -211,8 +211,9 @@ class DatastoreStateManager(BaseStateManager):
     try:
       entity = datastore.Entity(key)
       task_data = self.get_task_dict(task)
-      task_data['status'] = 'Task scheduled at {0:s}'.format(
-          datetime.now().strftime(DATETIME_FORMAT))
+      if not task_data.get('status'):
+        task_data['status'] = 'Task scheduled at {0:s}'.format(
+            datetime.now().strftime(DATETIME_FORMAT))
       entity.update(task_data)
       log.info('Writing new task {0:s} into Datastore'.format(task.name))
       self.client.put(entity)
@@ -286,7 +287,7 @@ class RedisStateManager(BaseStateManager):
   def update_task(self, task):
     task.touch()
     key = task.state_key
-    if not self.client.get(key):
+    if not key:
       self.write_new_task(task)
       return
     log.info('Updating task {0:s} in Redis'.format(task.name))
@@ -305,8 +306,9 @@ class RedisStateManager(BaseStateManager):
     task_data = self.get_task_dict(task)
     task_data['last_update'] = task_data['last_update'].strftime(
         DATETIME_FORMAT)
-    task_data['status'] = 'Task scheduled at {0:s}'.format(
-        datetime.now().strftime(DATETIME_FORMAT))
+    if not task_data.get('status'):
+      task_data['status'] = 'Task scheduled at {0:s}'.format(
+          datetime.now().strftime(DATETIME_FORMAT))
     if task_data['run_time']:
       task_data['run_time'] = task_data['run_time'].total_seconds()
     # nx=True prevents overwriting (i.e. no unintentional task clobbering)

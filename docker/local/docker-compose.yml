@@ -27,6 +27,7 @@ services:
     environment:
      - LC_ALL=C.UTF-8
      - LANG=C.UTF-8
+     - TURBINIA_EXTRA_ARGS=${TURBINIA_EXTRA_ARGS}
 
  turbinia-worker:
     #image: "turbinia-worker-dev" # Use this for local development and comment out below line
@@ -41,6 +42,7 @@ services:
     environment:
      - LC_ALL=C.UTF-8
      - LANG=C.UTF-8
+     - TURBINIA_EXTRA_ARGS=${TURBINIA_EXTRA_ARGS}
 
  # Uncomment below in case you want to run a second worker on the same host.
 #  turbinia-worker2:

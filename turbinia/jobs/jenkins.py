@@ -17,8 +17,10 @@
 from __future__ import unicode_literals
 
 from turbinia.evidence import Directory
-from turbinia.evidence import DiskPartition
 from turbinia.evidence import DockerContainer
+from turbinia.evidence import GoogleCloudDisk
+from turbinia.evidence import GoogleCloudDiskRawEmbedded
+from turbinia.evidence import RawDisk
 from turbinia.evidence import ReportText
 from turbinia.jobs import interface
 from turbinia.jobs import manager
@@ -28,7 +30,10 @@ from turbinia.workers.analysis.jenkins import JenkinsAnalysisTask
 class JenkinsAnalysisJob(interface.TurbiniaJob):
   """Jenkins analysis job."""
 
-  evidence_input = [Directory, DiskPartition, DockerContainer]
+  evidence_input = [
+      Directory, DockerContainer, GoogleCloudDisk, GoogleCloudDiskRawEmbedded,
+      RawDisk
+  ]
   evidence_output = [ReportText]
 
   NAME = 'JenkinsAnalysisJob'

@@ -136,6 +136,36 @@ class MountLocalProcessorTest(unittest.TestCase):
     with self.assertRaises(TurbiniaException):
       mount_local.PreprocessLosetup(source_path)
 
+  @mock.patch('subprocess.check_output')
+  @mock.patch('subprocess.check_call')
+  def testPreprocessLVM(self, mock_subprocess, mock_output):
+    """Test PreprocessLosetup method on LVM."""
+    source_path = os.path.join('/dev/loop0')
+    lv_uuid = 'RI0pgm-rdy4-XxcL-5eoK-Easc-fgPq-CWaEJb'
+    mock_output.return_value = (
+        '  /dev/test_volume_group/test_logical_volume1:test_volume_group:3:0:-1:'
+        '0:8192:1:-1:0:-1:-1:-1\n')
+    device = mount_local.PreprocessLosetup(source_path, lv_uuid=lv_uuid)
+    expected_args = [
+        'sudo', 'lvdisplay', '--colon', '--select',
+        'lv_uuid={0:s}'.format(lv_uuid)
+    ]
+    mock_output.assert_called_once_with(expected_args, universal_newlines=True)
+    mock_subprocess.assert_called_once_with(
+        ['sudo', 'vgchange', '-a', 'y', 'test_volume_group'])
+    self.assertEqual(device, '/dev/test_volume_group/test_logical_volume1')
+
+    # Test vgchange error
+    mock_subprocess.reset_mock()
+    mock_subprocess.side_effect = CalledProcessError(1, 'vgchange')
+    with self.assertRaises(TurbiniaException):
+      mount_local.PreprocessLosetup(source_path, lv_uuid=lv_uuid)
+
+    # Test lvdisplay failure
+    mock_output.side_effect = CalledProcessError(1, 'lvdisplay')
+    with self.assertRaises(TurbiniaException):
+      mount_local.PreprocessLosetup(source_path, lv_uuid=lv_uuid)
+
   @mock.patch('turbinia.processors.mount_local.config')
   @mock.patch('tempfile.mkdtemp')
   @mock.patch('subprocess.check_output')
@@ -187,32 +217,30 @@ class MountLocalProcessorTest(unittest.TestCase):
 
   @mock.patch('turbinia.processors.mount_local.config')
   @mock.patch('tempfile.mkdtemp')
-  @mock.patch('subprocess.check_output')
   @mock.patch('subprocess.check_call')
   @mock.patch('os.path.isdir')
   @mock.patch('os.path.exists')
   @mock.patch('os.makedirs')
   def testPreprocessMountPartition(
-      self, _, mock_path_exists, mock_path_isdir, mock_subprocess,
-      mock_filesystem, mock_mkdtemp, mock_config):
+      self, _, mock_path_exists, mock_path_isdir, mock_subprocess, mock_mkdtemp,
+      mock_config):
     """Test PreprocessMountPartition method."""
     mock_config.MOUNT_DIR_PREFIX = '/mnt/turbinia'
     mock_path_exists.side_effect = _mock_returns
-    mock_filesystem.return_value = b'ext4'
     mock_mkdtemp.return_value = '/mnt/turbinia/turbinia0ckdntz0'
 
     # Test partition path doesn't exist
     with self.assertRaises(TurbiniaException):
-      mount_local.PreprocessMountPartition('/dev/loop0p4')
+      mount_local.PreprocessMountPartition('/dev/loop0p4', 'EXT')
 
     # Test mount prefix is not directory
     mock_path_isdir.return_value = False
     with self.assertRaises(TurbiniaException):
-      mount_local.PreprocessMountPartition('/dev/loop0')
+      mount_local.PreprocessMountPartition('/dev/loop0', 'EXT')
     mock_path_isdir.return_value = True
 
     # Test ext4
-    mount_path = mount_local.PreprocessMountPartition('/dev/loop0')
+    mount_path = mount_local.PreprocessMountPartition('/dev/loop0', 'EXT')
     expected_args = [
         'sudo', 'mount', '-o', 'ro', '-o', 'noload', '/dev/loop0',
         '/mnt/turbinia/turbinia0ckdntz0'
@@ -222,8 +250,7 @@ class MountLocalProcessorTest(unittest.TestCase):
 
     # Test xfs
     mock_subprocess.reset_mock()
-    mock_filesystem.return_value = b'xfs'
-    mount_path = mount_local.PreprocessMountPartition('/dev/loop0')
+    mount_path = mount_local.PreprocessMountPartition('/dev/loop0', 'XFS')
     expected_args = [
         'sudo', 'mount', '-o', 'ro', '-o', 'norecovery', '/dev/loop0',
         '/mnt/turbinia/turbinia0ckdntz0'
@@ -235,7 +262,7 @@ class MountLocalProcessorTest(unittest.TestCase):
     mock_subprocess.reset_mock()
     mock_subprocess.side_effect = CalledProcessError(1, 'mount')
     with self.assertRaises(TurbiniaException):
-      mount_local.PreprocessMountPartition('/dev/loop0')
+      mount_local.PreprocessMountPartition('/dev/loop0', 'EXT')
 
   @mock.patch('subprocess.check_output')
   def testGetFilesystem(self, mock_subprocess):
@@ -273,6 +300,35 @@ class MountLocalProcessorTest(unittest.TestCase):
     mock_subprocess.side_effect = CalledProcessError(1, 'losetup')
     with self.assertRaises(TurbiniaException):
       mount_local.PostprocessDeleteLosetup('/dev/loop0')
+
+  @mock.patch('subprocess.check_output')
+  @mock.patch('subprocess.check_call')
+  def testPostprocessDeleteLVM(self, mock_subprocess, mock_output):
+    """Test PostprocessDeleteLosetup method on LVM."""
+    lv_uuid = 'RI0pgm-rdy4-XxcL-5eoK-Easc-fgPq-CWaEJb'
+    mock_output.return_value = (
+        '  /dev/test_volume_group/test_logical_volume1:test_volume_group:3:0:-1:'
+        '0:8192:1:-1:0:-1:-1:-1\n')
+    mount_local.PostprocessDeleteLosetup(None, lv_uuid=lv_uuid)
+    expected_args = [
+        'sudo', 'lvdisplay', '--colon', '--select',
+        'lv_uuid={0:s}'.format(lv_uuid)
+    ]
+    mock_output.assert_called_once_with(expected_args, universal_newlines=True)
+    mock_subprocess.assert_called_once_with(
+        ['sudo', 'vgchange', '-a', 'n', 'test_volume_group'])
+
+    # Test vgchange error
+    mock_subprocess.reset_mock()
+    mock_subprocess.side_effect = CalledProcessError(1, 'vgchange')
+    with self.assertRaises(TurbiniaException):
+      mount_local.PostprocessDeleteLosetup(None, lv_uuid=lv_uuid)
+
+    # Test lvdisplay error
+    mock_output.reset_mock()
+    mock_output.side_effect = CalledProcessError(1, 'lvdisplay')
+    with self.assertRaises(TurbiniaException):
+      mount_local.PostprocessDeleteLosetup(None, lv_uuid=lv_uuid)
 
   @mock.patch('subprocess.check_call')
   @mock.patch('os.rmdir')

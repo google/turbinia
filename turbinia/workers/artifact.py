@@ -59,6 +59,9 @@ class FileArtifactExtractionTask(TurbiniaTask):
         export_directory,
         '--partitions',
         'all',
+        '--volumes',
+        'all',
+        '--unattended',
         '--artifact_filters',
         self.artifact_name,
     ]

@@ -17,14 +17,16 @@
 from __future__ import unicode_literals
 
 import os
-from tempfile import NamedTemporaryFile
 
 from turbinia.evidence import FilteredTextFile
 from turbinia.workers import TurbiniaTask
+from turbinia.lib.file_helpers import write_list_to_temp_file
 
 
 class GrepTask(TurbiniaTask):
   """Filter input based on extended regular expression patterns."""
+
+  TASK_CONFIG = {'filter_patterns': []}
 
   def run(self, evidence, result):
     """Run grep binary.
@@ -37,16 +39,12 @@ class GrepTask(TurbiniaTask):
         TurbiniaTaskResult object.
     """
 
-    patterns = evidence.config.get('filter_patterns')
+    patterns = self.task_config.get('filter_patterns')
     if not patterns:
       result.close(self, success=True, status='No patterns supplied, exit task')
       return result
 
-    # Create temporary file to write patterns to.
-    # Used as input to grep (-f).
-    with NamedTemporaryFile(dir=self.output_dir, delete=False) as fh:
-      patterns_file_path = fh.name
-      fh.write('\n'.join(patterns).encode('utf-8'))
+    patterns_file_path = write_list_to_temp_file(patterns)
 
     # Create a path that we can write the new file to.
     base_name = os.path.basename(evidence.local_path)

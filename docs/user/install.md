@@ -66,8 +66,12 @@ to get a shell with access to your GCP resources.
         you wish to keep this state information in. See the
         [Terraform documentation](https://www.terraform.io/docs/commands/index.html)
         for more information.
-    *   The current configuration does not enable alert notifcations by default.
+    *   The current configuration does not enable alert notifications by default.
         Please see [here](#grafana-smtp-setup) for the instructions
+    *   If you are running multiple workers on a given host and within containers, ensure
+        that you are mapping the host `OUTPUT_DIR` path specified in the configuration file 
+        `.turbiniarc` to the containers so that they can properly update the `RESOURCE_STATE_FILE`.
+
 *   Initialize terraform and apply the configuration
     *   `./deploy.sh --no-timesketch`
         *   If the `--no-timesketch` parameter is not supplied, Terraform will also

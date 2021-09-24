@@ -197,7 +197,7 @@ class ContainerManager(DockerManager):
 
     if mode in accepted_vars:
       for mpath in mount_paths:
-        device_mpath = '{0:s}:{0:s}:{1:s}'.format(mpath, 'r')
+        device_mpath = '{0:s}:{0:s}:{1:s}'.format(str(mpath), 'r')
         if mpath not in file_paths.keys() and device_mpath not in device_paths:
           if IsBlockDevice(mpath):
             device_paths.append(device_mpath)
