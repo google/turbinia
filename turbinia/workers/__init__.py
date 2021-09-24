@@ -975,10 +975,12 @@ class TurbiniaTask:
           message = (
               'Worker and Server versions do not match: {0:s} != {1:s}'.format(
                   self.turbinia_version, turbinia.__version__))
-          self.result.log(message, level=logging.ERROR)
-          self.result.status = message
-          self.result.successful = False
-          return self.result.serialize()
+          log.warning(message)
+          # Make the version mismatch informational, but do not error task
+          # self.result.log(message, level=logging.ERROR)
+          # self.result.status = message
+          # self.result.successful = False
+          # return self.result.serialize()
 
         self.result.update_task_status(self, 'running')
         self._evidence_config = evidence.config
