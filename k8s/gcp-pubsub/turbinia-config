@@ -3,7 +3,7 @@ INSTANCE_ID = 'turbinia-74f96fd0b12c2708'
 STATE_MANAGER = 'Datastore'
 TASK_MANAGER = 'PSQ'
 OUTPUT_DIR = '/var/lib/turbinia/output'
-TMP_DIR = '/var/lib/turbinia/tmp'
+TMP_DIR = '/tmp'
 LOG_FILE = '/tmp/turbinia.log'
 LOCK_FILE = '/var/lock/turbinia-worker.lock'
 SLEEP_TIME = 10
@@ -29,6 +29,7 @@ RESOURCE_FILE = '%s/turbinia-state.json' % TMP_RESOURCE_DIR
 RESOURCE_FILE_LOCK = '%s.lock' % RESOURCE_FILE
 
 # For Kubernetes infrastructure. Indicates whether a given pod is set to be deleted.
+# Note: Please make sure this matches up with the path of the K8S preStop hook.
 SCALEDOWN_WORKER_FILE = '%s/turbinia-to-scaledown.lock' % TMP_DIR
 
 # This will enable the usage of docker containers for the worker.
