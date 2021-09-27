@@ -3,8 +3,8 @@
 
 ## Introduction
 
-Turbinia SRE guide will cover topics to manage Turbinia infrastructure in both
-lab and cloud and includes Prometheus/Grafana monitoring stack how tos.
+This document will cover topics to manage Turbinia infrastructure in cloud
+and includes Prometheus/Grafana monitoring stack how tos.
 
 
 ## GCP
@@ -25,29 +25,29 @@ management script. This script can be run from any workstation or cloud shell.
     [gcloud](https://cloud.google.com/sdk/docs/install) cli tool
 *   workstation only : Authenticate to your GCP project:
     *   `$ gcloud auth application-default login`
-*   workstation only : set the correct GCP project
+*   workstation only : set the correct GCP project:
     *   `$ gcloud config set project {PROJECT_NAME}`
 
 ### Stop and start the Turbinia stack
 
-Turbinia uses pubsub mechanism to distribute jobs and tasks to server and
+Turbinia uses [Pub/Sub](https://cloud.google.com/pubsub/docs/overview) to distribute jobs and tasks to server and
 workers. We must first stop the server before stopping the workers. Before
 stopping the server we need to make sure the server is not handling any open
 tasks/requests anymore.
 
 #### Stop infrastructure
 
-*   Check the server logs to see if it's waiting for any tasks to complete
+*   Check the server logs to see if it's waiting for any tasks to complete:
 
     *   <code>$ ./update-gcp-infra.sh -i
         {INSTANCEID}
-        -z us-central1-f -c logs -s</code>
+        -z {ZONE} -c logs -s</code>
 
     ---
 
     **NOTE** 
 
-    If you are not running from your workstation you can remove the -s
+    If you are not running from your workstation you can remove the `-s`.
 
     ---
 
@@ -56,30 +56,30 @@ tasks/requests anymore.
 
     *   <code>$ ./update-gcp-infra.sh -i
         {INSTANCEID}
-        -z us-central1-f -c stop</code>
+        -z {ZONE} -c stop</code>
 
     ---
     **NOTE**
 
     Workers are shut down asynchronously so it will take a while to show
-    them as "RUNNING"
+    them as "STOPPED".
 
     ---
 
 #### Start infrastructure
 
-*   The management script will make sure startup is done in the correct order
+*   The management script will make sure startup is done in the correct order:
 
     *   <code>$ ./update-gcp-infra.sh -i
        {INSTANCEID}
-        -z us-central1-f -c start</code>
+        -z {ZONE} -c start</code>
 
     ---
 
     **NOTE**
 
     workers are started up asynchronously so it will take a while to show
-    them as "RUNNING"
+    them as "RUNNING".
 
     ---
 
@@ -87,12 +87,12 @@ tasks/requests anymore.
 
     *   <code>$ ./update-gcp-infra.sh -i
         {INSTANCEID}
-        -z us-central1-f -c logs -s</code>
+        -z {ZONE} -c logs -s</code>
 
     ---
     **NOTE** 
 
-    if you are not running from your workstation you can remove the -s
+    If you are not running from your workstation you can remove the `-s`.
 
     ---
 
@@ -104,33 +104,33 @@ disk at boot time and used by the server and worker docker containers.
 
 Load the new configuration into the Turbinia stack with the following commands:
 
-*   Stop the stack (see [here](#stop-infrastructure))
+*   Stop the stack (see [here](#stop-infrastructure)).
 *   <code>$ ./update-gcp-infra.sh -i
     {INSTANCEID}
-    -z us-central1-f -f [path-to-new-config-file] -c update-config</code>
-*   Start the stack (see [here](#start-infrastructure))
+    -z {ZONE} -f [path-to-new-config-file] -c update-config</code>
+*   Start the stack (see [here](#start-infrastructure)).
 
 ### Environment variable update
 
 The Turbinia stack (including monitoring components) sets some configuration
 parameters through containerOS environment variables.
 
-*   Stop the stack (see [here](#stop-infrastructure))
+*   Stop the stack (see [here](#stop-infrastructure)).
 *   <code>$ ./update-gcp-infra.sh -i
     {INSTANCEID}
-    -z us-central1-f -k [env-variable-name] -v [env-variable-value] -c
+    -z {ZONE} -k [env-variable-name] -v [env-variable-value] -c
     update-config</code>
-*   Start the stack (see [here](#start-infrastructure))
+*   Start the stack (see [here](#start-infrastructure)).
 
 ### Docker image update
 
-Turbinia runs as a docker image (separate images for server and worker) that are
+Turbinia runs as a docker image (separate image for server and worker) that are
 built and stored in the
 [osdfir-registry](https://github.com/forseti-security/osdfir-infrastructure/blob/2c14857a07f35e1e9f59c5a60c8ef237af93f921/modules/turbinia/variables.tf#L52)
-project. When we are ready to release a new version we need to reload the
+project. When you are ready to release a new version you need to reload the
 Turbinia stack with that new docker image. Please make sure you also
 [update the configuration](#configuration-update) if needed (depending on code
-changes...).
+changes).
 
 
 #### Update to `latest`
@@ -139,8 +139,8 @@ This is the most common scenario. When releasing a new version of Turbinia in
 github, a production docker image will be built for both server and worker and
 tagged with the `latest` tag.
 
-*   Stop the stack (see [here](#stop-infrastructure))
-*   Start the stack (see [here](#start-infrastructure))
+*   Stop the stack (see [here](#stop-infrastructure)).
+*   Start the stack (see [here](#start-infrastructure)).
     *   When starting the stack again ContainerOS will poll the
         `osdfir-registry` and pull the `latest` image of worker and server.
     *   Verify the running version by viewing the server and workers logs.
@@ -151,15 +151,15 @@ Some scenarios require deploying a specific version of Turbinia. Each docker
 image is tagged with the actual release tag from github (eg 20210606) and can be
 loaded.
 
-*   Stop the stack (see [here](#stop-infrastructure))
+*   Stop the stack (see [here](#stop-infrastructure)).
 *   Configure a custom tag (instead of `latest`) for server and worker runners
     *   Verify the required tag is actually successfully built and available in
         [the registry](https://github.com/forseti-security/osdfir-infrastructure/blob/2c14857a07f35e1e9f59c5a60c8ef237af93f921/modules/turbinia/variables.tf#L52)
         for both server and worker.
     *   <code>$ ./update-gcp-infra.sh -i
         {INSTANCEID}
-        -z us-central1-f -t [tag] -c change-image</code>
-*   Start the stack (see [here](#start-infrastructure))
+        -z {ZONE} -t [tag] -c change-image</code>
+*   Start the stack (see [here](#start-infrastructure)).
     *   When starting the stack again ContainerOS will poll the
         <code>osdfir-registry</code> and pull the <code>latest</code> image of
         worker and server.
@@ -170,9 +170,9 @@ loaded.
 Sometimes we need more capacity to process tasks and we want to spin-up new
 workers.
 
-*   Go to the instances page in your cloud project.
+*   Go to "VM instances" page under the Compute Engine tab in your cloud project.
 *   Filter instances on the current Turbinia instance ID.
-    *   only use the numbers, leave out the 'turbinia-' part
+    *   Only use the numbers, leave out the 'turbinia-' part.
 *   Find the worker with the highest number at the end of the name (eg
     turbinia-worker-1aa1aaaa1a1a1111 **-4**)
 *   Open the detail page of that worker.
@@ -182,12 +182,12 @@ workers.
 *   Verify the logs of the new worker for correct instantiation.
     *   <code>$ ./update-gcp-infra.sh -i
         {INSTANCEID}
-        -z us-central1-f -c logs -s</code>
+        -z {ZONE} -c logs -s</code>
 
     ---
     **NOTE**
 
-    if you are not running from your workstation you can remove the -s
+    If you are not running from your workstation you can remove the `-s`.
 
     ---
 
@@ -211,8 +211,8 @@ metrics, you can include the following in Turbinia configuration file:
 The following is the same for both prod and dev cloud projects.
 
 
-![gcp_graph](../images/gcp-monitoring-graph.png) Google
-Monitoring metrics are enabled on all container machines and provide the OS
+![gcp_graph](../images/gcp-monitoring-graph.png) 
+Google Monitoring metrics are enabled on all container machines and provide the OS
 metrics.
 
 *   `google-monitoring-enabled` set to `true` in GCE configuration of container
@@ -221,7 +221,7 @@ metrics.
     auto-discovery by prometheus.
 
 Turbinia server and workers are instrumented with prometheus code and expose
-    application metrics.
+application metrics.
 
 *   each server and worker listens on port 9100 on the private IP only for
     system metrics and port 9200 for application metrics.
@@ -229,7 +229,7 @@ Turbinia server and workers are instrumented with prometheus code and expose
 #### Prometheus
 
 
-*   Prometheus will scrape the OS metrics and application metrics from each lab
+*   Prometheus will scrape the OS metrics and application metrics from each
     host and expose them on port 9090 for grafana
 *   Listens on port 9090
 *   Configuration: `/etc/prometheus/prometheus.yml`and
@@ -255,7 +255,7 @@ scrape_configs:
     gce_sd_configs:
         # The GCP Project
         - project: {PROJECT_NAME}
-          zone: us-central1-f
+          zone: {ZONE}
           filter: labels.turbinia-prometheus=true
           refresh_interval: 120s
           port: 8000
@@ -267,14 +267,16 @@ set by the Terraform scripts and are auto discovered by Prometheus.
 #### Grafana
 
 *   Grafana pulls metrics from Google monitoring (OS metrics) and application
-    metrics from the server/workers.
-*   Grafana displays dashboard for both the os and turbinia application metrics.
+    metrics from Prometheus.
+*   Grafana displays dashboard for both the OS and Turbinia application metrics.
 *   Datasource 1: Google Monitoring of gcp project
 *   Datasource 2: `http://prometheus-server-1aa1aaaa1a1a1111:9090/`
 *   Listens on port 3000
-*   Current username is **"admin"** and password is generated when you terraform deploys Grafana.
+*   Current the username is **"admin"** and password is generated by terraform when it 
+deploys Grafana.
 
-WARNING: You need to save and securely store your Grafana admin password after terraform deployment is complete.
+**WARNING**: You are responsible for securly storing the Grafan admin password after terraform
+deployment is complete.
 
 *   SSH access
     *   `ssh -i ~/.ssh/google_compute_engine -L 11111:localhost:3000
@@ -303,7 +305,7 @@ WARNING: You need to save and securely store your Grafana admin password after t
 
 To update the prometheus config file or add new rules to prometheus:
 
-*   SSH to the host VM as mentioned here .
+*   SSH to the host VM as mentioned [here](#prometheus) .
 *   To change the config:
     *   Change and save the contents of `/etc/prometheus/prometheus.yml`
     *   Restart the prometheus container by running `docker restart
@@ -318,8 +320,8 @@ To update the prometheus config file or add new rules to prometheus:
     *   Copy the rule file to the prometheus container by running `docker cp
         prometheus.rules.yml container_id:/etc/prometheus/prometheus.rules.yml`
     *   SSH to the prometheus container `docker exec -ti container_id sh`and
-        check if the rule file is correct by running
+        check if the rule file is correct by running:
         *    `promtool check rules rule_file_path`
     *   Finally to apply the rules, you need to send a`SIGHUP`signal to
-        prometheus process by running
+        prometheus process by running:
         *   `killall -HUP prometheus`
