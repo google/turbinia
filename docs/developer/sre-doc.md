@@ -15,7 +15,7 @@ GCP management script:
 ### Preparation
 
 The GCP stack is managed with the
-[update-gcp-infra.sh](https://github.com/google/turbinira/blob/master/tools/update-gcp-infra.sh)
+[update-gcp-infra.sh](https://github.com/google/turbinia/blob/master/tools/update-gcp-infra.sh)
 management script. This script can be run from any workstation or cloud shell.
 
 *   Clone the Turbinia repo or
