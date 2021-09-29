@@ -141,7 +141,7 @@ created Evidence.
 
 ### Recipe configuration
 Tasks can also specify a set of variables that can be configured and set
-through [recipes](./recipes.md) recipes.  This allows users to pre-define set
+through [recipes](../user/recipes.md) recipes.  This allows users to pre-define set
 configurations for the runtime behavior of Tasks along with which Jobs/Tasks
 should be run.  Each task has a `TASK_CONFIG` dictionary set at the object
 level that defines each of the variables that can be used along with the
