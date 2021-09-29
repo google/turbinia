@@ -24,8 +24,9 @@ to the `run()` method where most of our code will go:
     Evidence.
 *   If the Evidence is file-based, the pre-processor will add the path to the
     processed evidence in `evidence.local_path`.
-*   Setting up a temporary directory (available as `self.output_dir`).
-*   It prepares a TurbiniaResult object to save results into.
+*   Setting up temporary directories (available as `self.output_dir` and
+    `self.tmp_dir`).
+*   Preparing a TurbiniaResult object to save results into.
 
 
 ### Task execution
@@ -73,7 +74,7 @@ This will:
 *   Close the Result in preparation for Task completion
 
 
-### Finalization of the Task and Saving Results
+### Task Finalization and Saving Results
 
 Before a Task completes and returns, the Result object must be "closed" which
 finalizes the results in preparation for them to be returned to the server.
@@ -120,7 +121,7 @@ These states are set up by the pre-processors and then after the Task is
 completed, the post-processor will tear down this state (e.g. unmount or
 detach, etc).  For more details on the different states and how the
 pre/post-processors will set these up at runtime, see the
-[Evidence.preprocess()
+[`Evidence.preprocess()`
 docstrings](https://github.com/google/turbinia/blob/cc79288ae36cfec749381b80694b4c1290d76583/turbinia/evidence.py#L291).
 
 ### Evidence Paths
@@ -128,15 +129,27 @@ docstrings](https://github.com/google/turbinia/blob/cc79288ae36cfec749381b80694b
 As mentioned above, the pre-processor that runs before the Task is executed
 will set the path `evidence.local_path` to point to the local evidence. If the
 Task generates any new Evidence objects, you must set the `.source_path`
-attribute of that before you add it to the results.  The `.source_path` is the
-original path the Evidence is created with and the `.local_path` is the path
-to access the Evidence after any pre-processors are run (e.g. the path it was
-mounted on if it was mounted, etc).  See the [docstrings for these attributes
-in the Evidence
+attribute for that object before you add it to the results.  The `.source_path`
+is the original path the Evidence is created with and the `.local_path` is the
+path to access the Evidence after any pre-processors are run (e.g. the path it
+was mounted on if it was mounted, etc).  See the [docstrings for these
+attributes in the Evidence
 object](https://github.com/google/turbinia/blob/cc79288ae36cfec749381b80694b4c1290d76583/turbinia/evidence.py#L127)
 for more details on the differences, but in summary, Tasks should use
 `.local_path` to process the incomming Evidence and `.source_path` for newly
 created Evidence.
+
+### Recipe configuration
+Tasks can also specify a set of variables that can be configured and set
+through [recipes](./recipes.md) recipes.  This allows users to pre-define set
+configurations for the runtime behavior of Tasks along with which Jobs/Tasks
+should be run.  Each task has a `TASK_CONFIG` dictionary set at the object
+level that defines each of the variables that can be used along with the
+default values that the Task will use when the recipe does not specify that
+variable, or there is no recipe used.  See the [Plaso
+Task](https://github.com/google/turbinia/blob/8aafea5d4ba165aa72748ed7f1f196c8b9d7175c/turbinia/workers/plaso.py#L35)
+`TASK_CONFIG` as an example. Tasks can access these variables by referencing
+the dictionary at `self.task_config`.
 
 ## Boilerplate and Glue
 
@@ -163,18 +176,6 @@ In this case we have two separate Tasks that we are executing for the Job, but
 it's possible that there could be more or less depending on how much you want to
 split it up. Then you just need to add a reference to the new job in
 `turbinia/jobs/__init__.py`.
-
-## Recipe configuration
-Tasks can also specify a set of variables that can be configured and set
-through [recipes](./recipes.md) recipes.  This allows users to pre-define set
-configurations for the runtime behavior of Tasks along with which Jobs/Tasks
-should be run.  Each task has a `TASK_CONFIG` dictionary set at the object
-level that defines each of the variables that can be used along with the
-default values that the Task will use when the recipe does not specify that
-variable, or there is no recipe used.  See the [Plaso
-Task](https://github.com/google/turbinia/blob/8aafea5d4ba165aa72748ed7f1f196c8b9d7175c/turbinia/workers/plaso.py#L35)
-`TASK_CONFIG` as an example. Tasks can access these variables by referencing
-the dictionary at `self.task_config`.
 
 ## Reporting
 

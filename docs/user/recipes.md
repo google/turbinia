@@ -2,10 +2,10 @@
 
 #### Introduction
 Recipes are a way to create pre-defined configurations for what Jobs/Tasks to
-run along with various parameters that Tasks can use to change their runtime
-behavior for a given processing request.  They can contain a number of "global"
-variables that affect the overall processing and also have per-Task variables
-that are specific to each Task.
+run and how to run them along with various parameters that Tasks can use to
+change their runtime behavior for a given processing request.  They can contain
+a number of "global" variables that affect the overall processing and also have
+per-Task variables that are specific to each Task.
 
 #### Using Recipes
 Recipes can be specified by name when sending a processing request to Turbinia.
@@ -17,7 +17,7 @@ turbiniactl --recipe triage googleclouddisk -d diskname-to-process
 
 Note: This currently requires that the `RECIPE_FILE_DIR` configuration variable
 is set in the config file that you are using and is pointing to a valid
-directory with the [recipe
+directory containing the [recipe
 files](https://github.com/google/turbinia/tree/master/turbinia/config/recipes).
 Alternately you can also specify a recipe file directly by referencing the file
 path:
