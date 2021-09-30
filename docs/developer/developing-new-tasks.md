@@ -78,7 +78,7 @@ This will:
 
 Before a Task completes and returns, the Result object must be "closed" which
 finalizes the results in preparation for them to be returned to the server.
-Closing a result does a few things like set Task stats, save all of the output
+Closing a Result does a few things like set Task stats, save all of the output
 files, and run the post-processor to free up the Evidence (e.g. unmount disks,
 etc).  In the above example of `self.execute()`, `close=True` is set, which
 will tells the method to handle closing the results. If you have other external
@@ -127,7 +127,7 @@ docstrings](https://github.com/google/turbinia/blob/cc79288ae36cfec749381b80694b
 ### Evidence Paths
 
 As mentioned above, the pre-processor that runs before the Task is executed
-will set the path `evidence.local_path` to point to the local evidence. If the
+will set the path `evidence.local_path` to point to the local Evidence. If the
 Task generates any new Evidence objects, you must set the `.source_path`
 attribute for that object before you add it to the results.  The `.source_path`
 is the original path the Evidence is created with and the `.local_path` is the
@@ -141,9 +141,9 @@ created Evidence.
 
 ### Recipe configuration
 Tasks can also specify a set of variables that can be configured and set
-through [recipes](../user/recipes.md) recipes.  This allows users to pre-define set
+through [recipes](../user/recipes.md).  This allows users to pre-define set
 configurations for the runtime behavior of Tasks along with which Jobs/Tasks
-should be run.  Each task has a `TASK_CONFIG` dictionary set at the object
+should be run.  Each Task has a `TASK_CONFIG` dictionary set at the object
 level that defines each of the variables that can be used along with the
 default values that the Task will use when the recipe does not specify that
 variable, or there is no recipe used.  See the [Plaso
@@ -155,7 +155,7 @@ the dictionary at `self.task_config`.
 
 The only two interesting bits for the Job definition in
 `turbinia/jobs/strings.py` are this one that sets the allowable input and
-output evidence types for the Task (so the Task Manager knows what kinds of
+output Evidence types for the Task (so the Task Manager knows what kinds of
 Tasks to schedule):
 
 ```python

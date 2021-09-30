@@ -31,7 +31,7 @@ to the server along with the processing request data.  There are no required
 sections and they can contain a `globals` section and zero or more Task
 sections.  Each Task section must contain a `task:` key that references the
 relevant Task that the section applies to.  Other keys in either the `globals`
-or task sections must match the pre-defined keys for those sections.  Here is a
+or Task sections must match the pre-defined keys for those sections.  Here is a
 snapshot of the pre-defined variables allowed in the `globals` section along
 with the defaults:
 ```
@@ -93,6 +93,5 @@ plaso_base:
 ```
 
 For adding additional configuration options to a given Task, please see the
-[recipes configuration
-section](../developer/developing-new-tasks.md#recipe-configuration) in the
+[recipes configuration section](../developer/developing-new-tasks.md) in the
 developing new Tasks documentation.
