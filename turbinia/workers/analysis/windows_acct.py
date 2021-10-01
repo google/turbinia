@@ -74,7 +74,9 @@ class WindowsAccountAnalysisTask(TurbiniaTask):
           status='Unable to extract hashes from registry files: {0:s}'.format(
               str(e)))
       return result
-    (report, priority, summary) = self._analyse_windows_creds(creds, hashnames)
+    timeout = self.task_config.get('bruteforce_timeout')
+    (report, priority, summary) = self._analyse_windows_creds(
+        creds, hashnames, timeout=timeout)
     output_evidence.text_data = report
     result.report_priority = priority
     result.report_data = report
@@ -170,11 +172,9 @@ class WindowsAccountAnalysisTask(TurbiniaTask):
     summary = 'No weak passwords found'
     priority = Priority.LOW
 
-    timeout = self.task_config.get('bruteforce_timeout')
     # 1000 is "NTLM"
     weak_passwords = bruteforce_password_hashes(
-        creds, tmp_dir=self.tmp_dir, timeout=timeout, timeout=timeout,
-        extra_args='-m 1000')
+        creds, tmp_dir=self.tmp_dir, timeout=timeout, extra_args='-m 1000')
 
     if weak_passwords:
       priority = Priority.CRITICAL

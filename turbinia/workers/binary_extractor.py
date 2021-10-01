@@ -104,11 +104,11 @@ class BinaryExtractorTask(TurbiniaTask):
         '--no_vss', '--unattended', '--logfile', image_export_log
     ]
 
-    if evidence.task_config.get('binary_extraction_path'):
+    if self.task_config.get('binary_extraction_path'):
       artifact_dir = os.path.join(self.tmp_dir, 'artifacts')
       artifact_file = os.path.join(artifact_dir, 'artifacts.yaml')
       os.mkdir(artifact_dir)
-      binary_extraction_path = evidence.task_config.get(
+      binary_extraction_path = self.task_config.get(
           'binary_extraction_path')
       result.log(
           'Using custom artifact path {0:s}'.format(binary_extraction_path))
