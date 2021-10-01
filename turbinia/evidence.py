@@ -388,6 +388,10 @@ class Evidence:
           log.info(
               'Resource ID {0:s} still in use. Skipping detaching Evidence...'
               .format(self.resource_id))
+        else:
+          self._postprocess()
+          # Set to False to prevent postprocess from running twice.
+          is_detachable = False
 
     if is_detachable:
       self._postprocess()
