@@ -73,7 +73,8 @@ class LinuxAccountAnalysisTask(TurbiniaTask):
       with open(filepath, 'r') as input_file:
         shadow_file = input_file.readlines()
 
-      hashnames = self._extract_linux_credentials(shadow_file)
+      timeout = self.task_config.get('bruteforce_timeout')
+      hashnames = self._extract_linux_credentials(shadow_file, timeout=timeout)
       (report, priority, summary) = self.analyse_shadow_file(
           shadow_file, hashnames)
       output_evidence.text_data = report
@@ -92,11 +93,12 @@ class LinuxAccountAnalysisTask(TurbiniaTask):
     return result
 
   @staticmethod
-  def _extract_linux_credentials(shadow):
+  def _extract_linux_credentials(shadow, timeout=300):
     """Extract credentials from a Linux shadow files.
 
     Args:
       shadow (list): shadow file contents (list of str).
+      timeout (int): Time in seconds to run password bruteforcing.
     Returns:
       dict: of hash against username.
     """
@@ -123,7 +125,6 @@ class LinuxAccountAnalysisTask(TurbiniaTask):
     summary = 'No weak passwords found'
     priority = Priority.LOW
 
-    timeout = self.task_config.get('bruteforce_timeout')
     # 1800 is "sha512crypt $6$, SHA512 (Unix)"
     weak_passwords = bruteforce_password_hashes(
         shadow, tmp_dir=self.tmp_dir, timeout=timeout, extra_args='-m 1800')
