@@ -39,11 +39,11 @@ class BinaryExtractorTask(TurbiniaTask):
   REQUIRED_STATES = [state.ATTACHED]
 
   TASK_CONFIG = {
-    # This is can be an arbitrary path that will be put into a custom artifact
-    # definition so that the files at this path are extracted.  See the path
-    # specification format in the ForensicArtifacts documentation:
-    # https://artifacts.readthedocs.io/en/latest/sources/Format-specification.html
-    'binary_extraction_path': None
+      # This is can be an arbitrary path that will be put into a custom artifact
+      # definition so that the files at this path are extracted.  See the path
+      # specification format in the ForensicArtifacts documentation:
+      # https://artifacts.readthedocs.io/en/latest/sources/Format-specification.html
+      'binary_extraction_path': None
   }
 
   def __init__(self, *args, **kwargs):
@@ -108,8 +108,7 @@ class BinaryExtractorTask(TurbiniaTask):
       artifact_dir = os.path.join(self.tmp_dir, 'artifacts')
       artifact_file = os.path.join(artifact_dir, 'artifacts.yaml')
       os.mkdir(artifact_dir)
-      binary_extraction_path = self.task_config.get(
-          'binary_extraction_path')
+      binary_extraction_path = self.task_config.get('binary_extraction_path')
       result.log(
           'Using custom artifact path {0:s}'.format(binary_extraction_path))
 

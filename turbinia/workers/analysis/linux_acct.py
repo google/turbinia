@@ -73,10 +73,10 @@ class LinuxAccountAnalysisTask(TurbiniaTask):
       with open(filepath, 'r') as input_file:
         shadow_file = input_file.readlines()
 
+      hashnames = self._extract_linux_credentials(shadow_file)
       timeout = self.task_config.get('bruteforce_timeout')
-      hashnames = self._extract_linux_credentials(shadow_file, timeout=timeout)
       (report, priority, summary) = self.analyse_shadow_file(
-          shadow_file, hashnames)
+          shadow_file, hashnames, timeout=timeout)
       output_evidence.text_data = report
       result.report_priority = priority
       result.report_data = report
@@ -93,12 +93,12 @@ class LinuxAccountAnalysisTask(TurbiniaTask):
     return result
 
   @staticmethod
-  def _extract_linux_credentials(shadow, timeout=300):
+  def _extract_linux_credentials(shadow):
     """Extract credentials from a Linux shadow files.
 
     Args:
       shadow (list): shadow file contents (list of str).
-      timeout (int): Time in seconds to run password bruteforcing.
+
     Returns:
       dict: of hash against username.
     """
@@ -108,12 +108,14 @@ class LinuxAccountAnalysisTask(TurbiniaTask):
       hashnames[passwdhash] = username
     return hashnames
 
-  def analyse_shadow_file(self, shadow, hashes):
+  def analyse_shadow_file(self, shadow, hashes, timeout=300):
     """Analyses a Linux shadow file.
 
     Args:
       shadow (list): shadow file content (list of str).
       hashes (dict): dict of hashes to usernames
+      timeout (int): Time in seconds to run password bruteforcing.
+
     Returns:
       Tuple(
         report_text(str): The report data

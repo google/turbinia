@@ -35,8 +35,8 @@ class BulkExtractorTask(TurbiniaTask):
   REQUIRED_STATES = [state.ATTACHED]
 
   TASK_CONFIG = {
-    # These are extra arguments passed when running bulk_extractor
-    'bulk_extractor_args': None
+      # These are extra arguments passed when running bulk_extractor
+      'bulk_extractor_args': None
   }
 
   def run(self, evidence, result):
