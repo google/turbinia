@@ -33,6 +33,12 @@ class WindowsAccountAnalysisTask(TurbiniaTask):
       state.ATTACHED, state.CONTAINER_MOUNTED, state.DECOMPRESSED
   ]
 
+  TASK_CONFIG = {
+      # This is the length of time in seconds that the collected passwords will
+      # be bruteforced.
+      'bruteforce_timeout': 300
+  }
+
   def run(self, evidence, result):
     """Run the Windows Account worker.
 
@@ -164,9 +170,11 @@ class WindowsAccountAnalysisTask(TurbiniaTask):
     summary = 'No weak passwords found'
     priority = Priority.LOW
 
+    timeout = self.task_config.get('bruteforce_timeout')
     # 1000 is "NTLM"
     weak_passwords = bruteforce_password_hashes(
-        creds, tmp_dir=self.tmp_dir, timeout=timeout, extra_args='-m 1000')
+        creds, tmp_dir=self.tmp_dir, timeout=timeout, timeout=timeout,
+        extra_args='-m 1000')
 
     if weak_passwords:
       priority = Priority.CRITICAL

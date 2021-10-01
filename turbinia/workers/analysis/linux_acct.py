@@ -34,6 +34,12 @@ class LinuxAccountAnalysisTask(TurbiniaTask):
       state.ATTACHED, state.CONTAINER_MOUNTED, state.DECOMPRESSED
   ]
 
+  TASK_CONFIG = {
+      # This is the length of time in seconds that the collected passwords will
+      # be bruteforced.
+      'bruteforce_timeout': 300
+  }
+
   def run(self, evidence, result):
     """Run the Linux Account worker.
 
@@ -117,9 +123,10 @@ class LinuxAccountAnalysisTask(TurbiniaTask):
     summary = 'No weak passwords found'
     priority = Priority.LOW
 
+    timeout = self.task_config.get('bruteforce_timeout')
     # 1800 is "sha512crypt $6$, SHA512 (Unix)"
     weak_passwords = bruteforce_password_hashes(
-        shadow, tmp_dir=self.tmp_dir, extra_args='-m 1800')
+        shadow, tmp_dir=self.tmp_dir, timeout=timeout, extra_args='-m 1800')
 
     if weak_passwords:
       priority = Priority.CRITICAL
