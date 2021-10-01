@@ -48,8 +48,6 @@ class LokiAnalysisTask(TurbiniaTask):
     # What type of evidence we should output.
     output_evidence = ReportText(source_path=output_file_path)
 
-    self.updateLoki(result)
-
     try:
       (report, priority, summary) = self.runLoki(result, evidence)
     except TurbiniaException as e:
@@ -71,25 +69,20 @@ class LokiAnalysisTask(TurbiniaTask):
     result.close(self, success=True, status=summary)
     return result
 
-  def updateLoki(self, result):
-    cmd = ['python', os.path.expanduser('~/Loki/loki-upgrader.py')]
-    self.execute(cmd, result, cwd=os.path.expanduser('~/Loki/'))
-
   def runLoki(self, result, evidence):
     log_file = os.path.join(self.output_dir, 'loki.log')
     stdout_file = os.path.join(self.output_dir, 'loki_stdout.log')
     stderr_file = os.path.join(self.output_dir, 'loki_stderr.log')
 
     cmd = [
-        'python',
-        os.path.expanduser('~/Loki/loki.py'), '-w', '0', '--csv', '--intense',
+        'python', '/opt/loki/loki.py', '-w', '0', '--csv', '--intense',
         '--noprocscan', '--dontwait', '--noindicator', '-l', log_file, '-p',
-        (evidence.mount_path or evidence.local_path)
+        evidence.local_path
     ]
 
     (ret, result) = self.execute(
         cmd, result, log_files=[log_file], stdout_file=stdout_file,
-        stderr_file=stderr_file, cwd=os.path.expanduser('~/Loki/'))
+        stderr_file=stderr_file, cwd='/opt/loki/')
 
     if ret != 0:
       raise TurbiniaException('Return code: {0:d}'.format(ret))

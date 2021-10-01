@@ -18,7 +18,6 @@ RUN apt-get update && apt-get -y install \
     software-properties-common \
     sudo \
     testdisk \
-    unzip \
     wget \
     && rm -rf /var/lib/apt/lists/*
 
@@ -47,13 +46,23 @@ RUN apt-get -y install \
     sleuthkit \
     --option Acquire::ForceIPv4=true --option Acquire::Retries=100 --option Acquire::http::Timeout=60
 
+RUN useradd -r -s /bin/nologin -G disk,sudo turbinia
+RUN echo "turbinia ALL = (root) NOPASSWD: ALL" > /etc/sudoers.d/turbinia
+
+RUN pip3 install impacket --no-deps
+
+RUN mkdir -p /opt/loki && chown -R turbinia:turbinia /opt/loki \
+    && cd /opt/loki \
+    && curl -s https://api.github.com/repos/Neo23x0/Loki/releases/latest | sed -n 's/.*"tarball_url": "\(.*\)",.*/\1/p' | xargs -n1 wget -O - -q | tar -xz --strip-components=1 \
+    && pip3 install -r requirements.txt \
+    && sudo update-alternatives --install /usr/bin/python python /usr/bin/python3 1 \
+    && sudo chown -R turbinia:turbinia /opt/loki \
+    && git clone https://github.com/Neo23x0/signature-base.git
+
 ADD . /tmp/
 # unshallow and fetch all tags so our build systems pickup the correct git tag if it's a shallow clone
 RUN if $(cd /tmp/ && git rev-parse --is-shallow-repository); then cd /tmp/ && git fetch --prune --unshallow && git fetch --depth=1 origin +refs/tags/*:refs/tags/*; fi
 RUN cd /tmp/ && python3 setup.py install
-
-RUN useradd -r -s /bin/nologin -G disk,sudo turbinia
-RUN echo "turbinia ALL = (root) NOPASSWD: ALL" > /etc/sudoers.d/turbinia
 
 RUN mkdir /etc/turbinia && mkdir -p /mnt/turbinia/ && mkdir -p /var/lib/turbinia/ \
     && mkdir -p /etc/turbinia/ && chown -R turbinia:turbinia /etc/turbinia/ \
@@ -65,14 +74,6 @@ RUN mkdir /etc/turbinia && mkdir -p /mnt/turbinia/ && mkdir -p /var/lib/turbinia
 # Get a decent password list
 RUN cd /home/turbinia && wget https://raw.githubusercontent.com/danielmiessler/SecLists/master/Passwords/Common-Credentials/10-million-password-list-top-1000000.txt -O password.lst
 RUN cp /home/turbinia/password.lst /root/
-
-RUN pip3 install impacket --no-deps
-
-RUN cd /home/turbinia && mkdir Loki && cd Loki \
-    && curl -s https://api.github.com/repos/Neo23x0/Loki/releases/latest | sed -n 's/.*"tarball_url": "\(.*\)",.*/\1/p' | xargs -n1 wget -O - -q | tar -xz --strip-components=1 \
-    && pip3 install -r requirements.txt \
-    && sudo update-alternatives --install /usr/bin/python python /usr/bin/python3 1 \
-    && sudo chown -R turbinia:turbinia /home/turbinia/Loki
 
 COPY docker/worker/start.sh /home/turbinia/start.sh
 RUN chmod +rwx /home/turbinia/start.sh

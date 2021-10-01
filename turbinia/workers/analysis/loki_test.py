@@ -49,7 +49,7 @@ class LokiAnalysisTaskTest(TestTurbiniaTaskBase):
   def test_loki(self):
     """Tests the runLoki method."""
     # Check if installed
-    if not os.path.isfile(os.path.expanduser('~/Loki/loki.py')):
+    if not os.path.isfile(os.path.expanduser('/opt/loki/loki.py')):
       logging.getLogger('turbinia').error('Loki not installed')
       return
 
