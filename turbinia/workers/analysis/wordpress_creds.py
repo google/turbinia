@@ -81,7 +81,7 @@ class WordpressCredsAnalysisTask(TurbiniaTask):
 
     timeout = self.task_config.get('bruteforce_timeout')
     (report, priority, summary) = self._analyse_wordpress_creds(
-        creds, hashnames, timetout=timeout)
+        creds, hashnames, timeout=timeout)
     output_evidence.text_data = report
     result.report_data = report
     result.report_priority = priority
