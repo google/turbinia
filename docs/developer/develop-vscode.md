@@ -39,7 +39,7 @@ _Note_: If vscode does not ask you to reopen in a container you need to verify y
 
 _Note_: The instructions contain shell commands to execute, please execute those commands in the vscode terminal (which runs in the development container) and not in a terminal on your host!
 
-Continue with Step 4 for a local Turbinia setup or Step 6 for a GCP hybrid setup.
+Continue with Step 4 for a local Turbinia setup or Step 5 for a GCP hybrid setup.
 
 #### Step 4 - Local Turbinia setup
 
@@ -51,9 +51,9 @@ _Note_: This command needs to be executed in the vscode terminal!
 $ sed -f ./docker/vscode/redis-config.sed ./turbinia/config/turbinia_config_tmpl.py > ~/.turbiniarc
 ```
 
-Let's verify the installation in Step 7.
+Let's verify the installation in Step 6.
 
-#### Step 6 - GCP hybrid Turbinia setup
+#### Step 5 - GCP hybrid Turbinia setup
 
 Follow the ‘GCP Setup’ section [here](https://turbinia.readthedocs.io/en/latest/user/install-manual.html) and setup Cloud Functions, a GCE bucket, Datastore and PubSub.
 
@@ -95,7 +95,7 @@ _Note_: This command needs to be executed in the vscode terminal!
 $ PYTHONPATH=. python3 tools/gcf_init/deploy_gcf.py
 ```
 
-#### Step 7 - Turbinia installation verification
+#### Step 6 - Turbinia installation verification
 
 Let's verify that the GCP hybrid setup is working before we start developing and debugging. We are going to start a server and worker in separate vscode terminals and create a Turbinia request in a third. Open up 3 vscode terminals and execute below commands.
 

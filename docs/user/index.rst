@@ -11,5 +11,6 @@ User documentation
    turbinia-local-stack
    using-docker
    operational-details
+   recipes
    debugging
    faq

@@ -51,6 +51,7 @@ from turbinia.workers.analysis.linux_acct import LinuxAccountAnalysisTask
 from turbinia.workers.analysis.loki import LokiAnalysisTask
 from turbinia.workers.analysis.windows_acct import WindowsAccountAnalysisTask
 from turbinia.workers.finalize_request import FinalizeRequestTask
+from turbinia.workers.cron import CronAnalysisTask
 from turbinia.workers.docker import DockerContainersEnumerationTask
 from turbinia.workers.grep import GrepTask
 from turbinia.workers.fsstat import FsstatTask
@@ -104,7 +105,8 @@ TASK_MAP = {
     'bulkextractortask': BulkExtractorTask,
     'dockercontainersenumerationtask': DockerContainersEnumerationTask,
     'photorectask': PhotorecTask,
-    'aborttask': AbortTask
+    'aborttask': AbortTask,
+    'crontask': CronAnalysisTask
 }
 
 config.LoadConfig()
