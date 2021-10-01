@@ -56,7 +56,7 @@ class LokiAnalysisTaskTest(TestTurbiniaTaskBase):
     (report, priority, summary) = self.task.runLoki(self.result, self.evidence)
     self.assertEqual(priority, 20)
     self.assertEqual(summary, self.LOKI_SUMMARY)
-    self.assertIn('Mimikatz', report)
+    self.assertIn('mimikatz', report)
 
 
 if __name__ == '__main__':
