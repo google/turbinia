@@ -81,6 +81,7 @@ OPTIONAL_VARS = [
     'REDIS_HOST',
     'REDIS_PORT',
     'REDIS_DB',
+    'NODE_NAME',
     'REDLOCK',
     'REDLOCK_TTL',
     'REDLOCK_RETRIES',

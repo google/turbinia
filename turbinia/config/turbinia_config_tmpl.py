@@ -15,6 +15,8 @@
 """Turbinia Config Template"""
 
 from __future__ import unicode_literals
+from os import getenv
+from platform import node
 
 ################################################################################
 #                          Base Turbinia configuration
@@ -56,6 +58,8 @@ LOCK_FILE = '%s/turbinia-worker.lock' % TMP_DIR
 # If for example, you are running the workers within containers, be sure to map the
 # OUTPUT_DIR from the container to the host so that the workers are updating a single
 # resource file rather than individual state files within the containers.
+NODE_NAME = getenv('NODE_NAME', node())
+RESOURCE_FILE = '%s/turbinia-state-%s.json' % (OUTPUT_DIR, NODE_NAME)
 RESOURCE_FILE = '%s/turbinia-state.json' % OUTPUT_DIR
 
 # For Kubernetes infrastructure. Indicates whether a given pod is set to be deleted.
