@@ -59,6 +59,8 @@ config.REDLOCK = RedLockFactory(
         },
     ])
 
+log.info('Starting worker on node {0:s}'.format(config.NODE_NAME))
+
 turbinia_worker_tasks_started_total = Gauge(
     'turbinia_worker_tasks_started_total',
     'Total number of started worker tasks')
