@@ -30,7 +30,7 @@ from turbinia import TurbiniaException
 
 log = logging.getLogger('turbinia')
 
-RETRY_MAX = 10
+RETRY_MAX = 20
 
 
 def IsBlockDevice(path):
@@ -104,15 +104,19 @@ def PreprocessAttachDisk(disk_name):
   instance.AttachDisk(disk)
 
   # Make sure we have a proper block device
-  for _ in range(RETRY_MAX):
+  for retry in range(RETRY_MAX):
+    log.info(
+        'Checking if Google Cloud disk ({0:s}) was attached #{1:d}....'.format(
+            path, retry))
     if IsBlockDevice(path):
       log.info('Block device {0:s} successfully attached'.format(path))
       break
     if os.path.exists(path):
       log.info(
-          'Block device {0:s} mode is {1}'.format(path,
-                                                  os.stat(path).st_mode))
-    time.sleep(1)
+          'Block device {0:s} mode is {1:d}'.format(
+              path,
+              os.stat(path).st_mode))
+    time.sleep(2)
 
   message = None
   if not os.path.exists(path):
@@ -155,8 +159,11 @@ def PostprocessDetachDisk(disk_name, local_path):
   instance.DetachDisk(disk)
 
   # Make sure device is Detached
-  for _ in range(RETRY_MAX):
+  for retry in range(RETRY_MAX):
+    log.info(
+        'Checking if Google Cloud disk ({0:s}) was detached #{1:d}....'.format(
+            path, retry))
     if not os.path.exists(path):
       log.info('Block device {0:s} is no longer attached'.format(path))
       break
-    time.sleep(5)
+    time.sleep(2)
