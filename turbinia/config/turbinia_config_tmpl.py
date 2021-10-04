@@ -60,7 +60,6 @@ LOCK_FILE = '%s/turbinia-worker.lock' % TMP_DIR
 # resource file rather than individual state files within the containers.
 NODE_NAME = getenv('NODE_NAME', node())
 RESOURCE_FILE = '%s/turbinia-state-%s.json' % (OUTPUT_DIR, NODE_NAME)
-RESOURCE_FILE = '%s/turbinia-state.json' % OUTPUT_DIR
 
 # For Kubernetes infrastructure. Indicates whether a given pod is set to be deleted.
 SCALEDOWN_WORKER_FILE = '%s/turbinia-to-scaledown.lock' % TMP_DIR
