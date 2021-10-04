@@ -10,7 +10,7 @@ jobs:
       - uses: actions/checkout@v2
       - name: Pull docker images for cache
         run: |
-          docker pull ubuntu:18.04
+          docker pull ubuntu:20.04
           docker pull us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-server-dev:latest
           docker pull us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-worker-dev:latest
       - name: Build Turbinia server docker image
