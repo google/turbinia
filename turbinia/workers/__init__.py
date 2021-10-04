@@ -33,8 +33,7 @@ import traceback
 import uuid
 import turbinia
 
-import filelock
-
+from redlock import RedLockFactory
 from turbinia import config
 from turbinia.config import DATETIME_FORMAT
 from turbinia.evidence import evidence_decode
@@ -50,6 +49,15 @@ from prometheus_client import Histogram
 METRICS = {}
 
 log = logging.getLogger('turbinia')
+
+config.REDLOCK = RedLockFactory(
+    connection_details=[
+        {
+            'host': config.REDIS_HOST,
+            'port': config.REDIS_PORT,
+            'db': config.REDIS_DB
+        },
+    ])
 
 turbinia_worker_tasks_started_total = Gauge(
     'turbinia_worker_tasks_started_total',
@@ -231,7 +239,11 @@ class TurbiniaTaskResult:
         message = 'Evidence post-processing for {0!s} failed: {1!s}'.format(
             self.input_evidence.name, exception)
         self.log(message, level=logging.ERROR)
-        with filelock.FileLock(config.RESOURCE_FILE_LOCK):
+        log.info('worker.__init__: getting RedLock')
+        with config.REDLOCK.create_lock(config.NODE_NAME,
+                                        ttl=config.REDLOCK_TTL,
+                                        retry_times=config.REDLOCK_RETRIES,
+                                        retry_delay=config.REDLOCK_DELAY):
           resource_manager.PostProcessResourceState(
               self.input_evidence.resource_id, self.task_id)
     else:

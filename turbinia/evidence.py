@@ -21,7 +21,6 @@ import json
 import logging
 import os
 import sys
-import filelock
 
 from turbinia import config
 from turbinia import TurbiniaException
@@ -349,7 +348,11 @@ class Evidence:
       log.debug('Starting pre-processor for evidence {0:s}'.format(self.name))
       if self.resource_tracked:
         # Track resource and task id in state file
-        with filelock.FileLock(config.RESOURCE_FILE_LOCK):
+        log.info('preprocess: getting RedLock')
+        with config.REDLOCK.create_lock(config.NODE_NAME,
+                                        ttl=config.REDLOCK_TTL,
+                                        retry_times=config.REDLOCK_RETRIES,
+                                        retry_delay=config.REDLOCK_DELAY):
           resource_manager.PreprocessResourceState(self.resource_id, task_id)
       self._preprocess(tmp_dir, required_states)
     except TurbiniaException as exception:
@@ -376,7 +379,10 @@ class Evidence:
 
     is_detachable = True
     if self.resource_tracked:
-      with filelock.FileLock(config.RESOURCE_FILE_LOCK):
+      log.info('postprocess: getting RedLock')
+      with config.REDLOCK.create_lock(config.NODE_NAME, ttl=config.REDLOCK_TTL,
+                                      retry_times=config.REDLOCK_RETRIES,
+                                      retry_delay=config.REDLOCK_DELAY):
         # Run postprocess to either remove task_id or resource_id.
         is_detachable = resource_manager.PostProcessResourceState(
             self.resource_id, task_id)
@@ -385,7 +391,6 @@ class Evidence:
           log.info(
               'Resource ID {0:s} still in use. Skipping detaching Evidence...'
               .format(self.resource_id))
-
     if is_detachable:
       self._postprocess()
     if self.parent_evidence:
@@ -682,7 +687,10 @@ class GoogleCloudDisk(RawDisk):
 
     # Explicitly lock this method to prevent race condition with two workers
     # attempting to attach disk at same time, given delay with attaching in GCP.
-    with filelock.FileLock(config.RESOURCE_FILE_LOCK):
+    log.info('_preprocess: getting RedLock')
+    with config.REDLOCK.create_lock(config.NODE_NAME, ttl=config.REDLOCK_TTL,
+                                    retry_times=config.REDLOCK_RETRIES,
+                                    retry_delay=config.REDLOCK_DELAY):
       if EvidenceState.ATTACHED in required_states:
         self.device_path, partition_paths = google_cloud.PreprocessAttachDisk(
             self.disk_name)
@@ -692,8 +700,12 @@ class GoogleCloudDisk(RawDisk):
 
   def _postprocess(self):
     if self.state[EvidenceState.ATTACHED]:
-      google_cloud.PostprocessDetachDisk(self.disk_name, self.device_path)
-      self.state[EvidenceState.ATTACHED] = False
+      log.info('_postprocess: getting RedLock')
+      with config.REDLOCK.create_lock(config.NODE_NAME, ttl=config.REDLOCK_TTL,
+                                      retry_times=config.REDLOCK_RETRIES,
+                                      retry_delay=config.REDLOCK_DELAY):
+        google_cloud.PostprocessDetachDisk(self.disk_name, self.device_path)
+        self.state[EvidenceState.ATTACHED] = False
 
 
 class GoogleCloudDiskRawEmbedded(GoogleCloudDisk):

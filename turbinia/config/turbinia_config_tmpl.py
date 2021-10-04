@@ -58,11 +58,6 @@ LOCK_FILE = '%s/turbinia-worker.lock' % TMP_DIR
 # resource file rather than individual state files within the containers.
 RESOURCE_FILE = '%s/turbinia-state.json' % OUTPUT_DIR
 
-# Path to a resource state lock file used for locking changes to shared Evidence types.
-# Similar to RESOURCE_FILE, this should be a shared path amongst all workers on a given
-# host to properly lock the resource state file.
-RESOURCE_FILE_LOCK = '%s.lock' % RESOURCE_FILE
-
 # For Kubernetes infrastructure. Indicates whether a given pod is set to be deleted.
 SCALEDOWN_WORKER_FILE = '%s/turbinia-to-scaledown.lock' % TMP_DIR
 
@@ -269,6 +264,12 @@ KOMBU_DURABLE = True
 REDIS_HOST = 'localhost'
 REDIS_PORT = '6379'
 REDIS_DB = '0'
+
+# Use Redis lock management
+REDLOCK_TTL = 240000
+REDLOCK_RETRIES = 30
+REDLOCK_DELAY = 5000
+REDLOCK = None
 
 ################################################################################
 #                           Email Config

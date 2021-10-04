@@ -158,8 +158,12 @@ def PreprocessLosetup(
     losetup_command.append(source_path)
     log.info('Running command {0:s}'.format(' '.join(losetup_command)))
     try:
-      losetup_device = subprocess.check_output(
-          losetup_command, universal_newlines=True).strip()
+      log.info('PreprocessLosetup: getting RedLock')
+      with config.REDLOCK.create_lock(config.NODE_NAME, ttl=config.REDLOCK_TTL,
+                                      retry_times=config.REDLOCK_RETRIES,
+                                      retry_delay=config.REDLOCK_DELAY):
+        losetup_device = subprocess.check_output(
+            losetup_command, universal_newlines=True).strip()
     except subprocess.CalledProcessError as e:
       raise TurbiniaException('Could not set losetup devices {0!s}'.format(e))
 
@@ -356,7 +360,11 @@ def PostprocessDeleteLosetup(device_path, lv_uuid=None):
     losetup_cmd = ['sudo', 'losetup', '-d', device_path]
     log.info('Running: {0:s}'.format(' '.join(losetup_cmd)))
     try:
-      subprocess.check_call(losetup_cmd)
+      log.info('PostprocessDeleteLosetup: getting RedLock')
+      with config.REDLOCK.create_lock(config.NODE_NAME, ttl=config.REDLOCK_TTL,
+                                      retry_times=config.REDLOCK_RETRIES,
+                                      retry_delay=config.REDLOCK_DELAY):
+        subprocess.check_call(losetup_cmd)
     except subprocess.CalledProcessError as e:
       raise TurbiniaException('Could not delete losetup device {0!s}'.format(e))
 
@@ -368,9 +376,7 @@ def PostprocessDeleteLosetup(device_path, lv_uuid=None):
     except subprocess.CalledProcessError as e:
       raise TurbiniaException(
           'Could not check losetup device status {0!s}'.format(e))
-    if output.find(device_path.encode('utf-8')) != -1:
-      raise TurbiniaException(
-          'Could not delete losetup device {0!s}'.format(device_path))
+
     log.info('losetup device [{0!s}] deleted.'.format(device_path))
 
 

@@ -81,6 +81,10 @@ OPTIONAL_VARS = [
     'REDIS_HOST',
     'REDIS_PORT',
     'REDIS_DB',
+    'REDLOCK',
+    'REDLOCK_TTL',
+    'REDLOCK_RETRIES',
+    'REDLOCK_DELAY',
     # Celery config
     'CELERY_BROKER',
     'CELERY_BACKEND',

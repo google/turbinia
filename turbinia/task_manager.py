@@ -19,9 +19,10 @@ from __future__ import unicode_literals, absolute_import
 import logging
 import time
 import os
-import filelock
+import platform
 
 from prometheus_client import Gauge
+from redlock.lock import RedLockError
 
 import turbinia
 from turbinia import workers
@@ -107,22 +108,23 @@ def task_runner(obj, *args, **kwargs):
     if config.TASK_MANAGER.lower() == 'psq':
       raise psq.Retry()
     elif config.TASK_MANAGER.lower() == 'celery':
+      log.info('Worker set to scaledown, retrying task')
       raise obj.stub.retry('Turbinia worker busy!')
 
   # try to acquire lock, timeout and requeue task if the worker
   # is already processing a task.
   try:
-    lock = filelock.FileLock(config.LOCK_FILE)
-    with lock.acquire(timeout=0.001):
+    node = platform.node()
+    with config.REDLOCK.create_lock(node, ttl=config.REDLOCK_TTL,
+                                    retry_times=config.REDLOCK_RETRIES,
+                                    retry_delay=config.REDLOCK_DELAY):
       run = obj.run_wrapper(*args, **kwargs)
-  except filelock.Timeout:
+  except RedLockError:
     if config.TASK_MANAGER.lower() == 'psq':
       raise psq.Retry()
     elif config.TASK_MANAGER.lower() == 'celery':
+      log.info('Worker busy, retrying task')
       raise obj.stub.retry('Turbinia worker busy!')
-  finally:
-    # *always* make sure we release the lock
-    lock.release()
 
   return run
 
