@@ -159,6 +159,11 @@ DEPENDENCIES = [{
     'docker_image': None,
     'timeout': 1200
 }, {
+    'job': 'LokiAnalysisJob',
+    'programs': ['/opt/loki/loki.py'],
+    'docker_image': None,
+    'timeout': 1200
+}, {
     'job': 'PartitionEnumerationJob',
     'programs': ['bdemount'],
     'docker_image': None,
