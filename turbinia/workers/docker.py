@@ -72,7 +72,7 @@ class DockerContainersEnumerationTask(TurbiniaTask):
 
     docker_explorer_command = ['sudo', de_binary]
 
-    if config.DEBUG_TASKS or evidence.config.get('debug_tasks'):
+    if config.DEBUG_TASKS or self.task_config.get('debug_tasks'):
       docker_explorer_command.append('-d')
 
     docker_explorer_command.extend(['-r', docker_dir, 'list', 'all_containers'])

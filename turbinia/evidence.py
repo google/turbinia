@@ -108,7 +108,9 @@ class Evidence:
 
   Attributes:
     config (dict): Configuration options from the request to be used when
-        processing this evidence.
+        processing this evidence.  Tasks should not read from this property
+        directly, but should use `Task.task_config` to access any recipe or
+        configuration variables.
     cloud_only (bool): Set to True for evidence types that can only be processed
         in a cloud environment, e.g. GoogleCloudDisk.
     context_dependent (bool): Whether this evidence is required to be built upon
