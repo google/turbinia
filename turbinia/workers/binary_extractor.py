@@ -39,7 +39,7 @@ class BinaryExtractorTask(TurbiniaTask):
   REQUIRED_STATES = [state.ATTACHED]
 
   TASK_CONFIG = {
-      # This is can be an arbitrary path that will be put into a custom artifact
+      # This is an arbitrary path that will be put into a custom artifact
       # definition so that the files at this path are extracted.  See the path
       # specification format in the ForensicArtifacts documentation:
       # https://artifacts.readthedocs.io/en/latest/sources/Format-specification.html
