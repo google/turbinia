@@ -41,6 +41,7 @@ from turbinia.evidence import evidence_decode
 from turbinia.processors import resource_manager
 from turbinia import output_manager
 from turbinia import state_manager
+from turbinia import task_utils
 from turbinia import TurbiniaException
 from turbinia import log_and_report
 from turbinia.lib import docker_manager
@@ -473,23 +474,7 @@ class TurbiniaTask:
     Returns:
       TurbiniaTask: Deserialized object.
     """
-    from turbinia import client  # Avoid circular imports
-
-    type_ = input_dict['name']
-    try:
-      task = getattr(sys.modules['turbinia.client'], type_)()
-    except AttributeError:
-      message = (
-          "Could not import {0:s} object! Make sure it is imported where "
-          "this method is defined.".format(type_))
-      log.error(message)
-      raise TurbiniaException(message)
-    task.__dict__.update(input_dict)
-    task.output_manager = output_manager.OutputManager()
-    task.output_manager.__dict__.update(input_dict['output_manager'])
-    task.last_update = datetime.strptime(
-        input_dict['last_update'], DATETIME_FORMAT)
-    return task
+    return task_utils.deserialize(input_dict)
 
   @classmethod
   def check_worker_role(cls):

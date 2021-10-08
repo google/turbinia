@@ -30,10 +30,11 @@ import copy
 from turbinia import config
 from turbinia import TurbiniaException
 from turbinia.config import logger
+from turbinia.lib import recipe_helpers
 from turbinia import __version__
-from turbinia.processors import archive
 from turbinia.output_manager import OutputManager
 from turbinia.output_manager import GCSOutputWriter
+from turbinia.processors import archive
 
 log = logging.getLogger('turbinia')
 # We set up the logger first without the file handler, and we will set up the
@@ -386,11 +387,6 @@ def main():
   subparsers.add_parser('server', help='Run Turbinia Server')
 
   args = parser.parse_args()
-
-  # (jorlamd): Importing recipe_helpers late to avoid a bug where
-  # client.TASK_MAP is imported early rendering the check for worker
-  # status not possible.
-  from turbinia.lib import recipe_helpers
 
   # Load the config before final logger setup so we can the find the path to the
   # log file.

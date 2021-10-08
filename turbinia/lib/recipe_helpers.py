@@ -157,7 +157,7 @@ def validate_recipe(recipe_dict):
       proposed_task = recipe_item_contents['task']
 
       # Doing a delayed import to avoid circular dependencies.
-      from turbinia.client import TASK_MAP
+      from turbinia.task_utils import TASK_MAP
       if proposed_task.lower() not in TASK_MAP:
         log.error(
             'Task {0:s} defined for task recipe {1:s} does not exist.'.format(

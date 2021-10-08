@@ -24,7 +24,7 @@ import subprocess
 from prometheus_client import start_http_server
 from turbinia import config
 from turbinia.config import logger
-from turbinia.client import BaseTurbiniaClient
+from turbinia import task_utils
 from turbinia import TurbiniaException
 from turbinia.lib import docker_manager
 from turbinia.jobs import manager as job_manager
@@ -253,8 +253,7 @@ class TurbiniaWorkerBase:
     raise NotImplementedError
 
 
-# TODOTODO: fix base class
-class TurbiniaCeleryWorker(BaseTurbiniaClient):
+class TurbiniaCeleryWorker(TurbiniaWorkerBase):
   """Turbinia Celery Worker class.
 
   Attributes:
@@ -271,7 +270,7 @@ class TurbiniaCeleryWorker(BaseTurbiniaClient):
     """Start Turbinia Celery Worker."""
     log.info('Running Turbinia Celery Worker.')
     # TODOTODO: fix task_manager reference
-    self.worker.task(task_manager.task_runner, name='task_runner')
+    self.worker.task(task_utils.task_runner, name='task_runner')
     argv = ['celery', 'worker', '--loglevel=info', '--pool=solo']
     self.worker.start(argv)
 

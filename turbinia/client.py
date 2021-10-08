@@ -37,6 +37,7 @@ from turbinia import config
 from turbinia.config import logger
 from turbinia.config import DATETIME_FORMAT
 from turbinia import task_manager
+from turbinia import task_utils
 from turbinia import TurbiniaException
 from turbinia.lib import text_formatter as fmt
 from turbinia.lib import docker_manager
@@ -75,6 +76,7 @@ from turbinia.workers.abort import AbortTask
 MAX_RETRIES = 10
 RETRY_SLEEP = 60
 
+<<<<<<< HEAD
 # TODO(aarontp): Remove this map after
 # https://github.com/google/turbinia/issues/278 is fixed.
 TASK_MAP = {
@@ -109,6 +111,8 @@ TASK_MAP = {
     'cronanalysistask': CronAnalysisTask
 }
 
+=======
+>>>>>>> c65e24a (Add task_utils)
 config.LoadConfig()
 if config.TASK_MANAGER.lower() == 'psq':
   from libcloudforensics.providers.gcp.internal import function as gcp_function
@@ -243,7 +247,7 @@ class BaseTurbiniaClient:
     Raises:
       TurbiniaException: When no Task object matching task_name is found.
     """
-    task_obj = TASK_MAP.get(task_name.lower())
+    task_obj = task_utils.TASK_MAP.get(task_name.lower())
     log.debug('Looking up Task {0:s} by name'.format(task_name))
     if not task_obj:
       raise TurbiniaException('No Task named {0:s} found'.format(task_name))
