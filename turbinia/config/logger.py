@@ -84,6 +84,6 @@ def setup(need_file_handler=True, need_stream_handler=True):
   root_log.addHandler(console_handler)
   if need_file_handler:
     root_log.addHandler(file_handler)
-  
+
   # Set filelock logging to ERROR due to log spam
   logging.getLogger("filelock").setLevel(logging.ERROR)
