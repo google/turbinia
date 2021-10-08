@@ -33,6 +33,12 @@ class WindowsAccountAnalysisTask(TurbiniaTask):
       state.ATTACHED, state.CONTAINER_MOUNTED, state.DECOMPRESSED
   ]
 
+  TASK_CONFIG = {
+      # This is the length of time in seconds that the collected passwords will
+      # be bruteforced.
+      'bruteforce_timeout': 300
+  }
+
   def run(self, evidence, result):
     """Run the Windows Account worker.
 
@@ -68,7 +74,9 @@ class WindowsAccountAnalysisTask(TurbiniaTask):
           status='Unable to extract hashes from registry files: {0:s}'.format(
               str(e)))
       return result
-    (report, priority, summary) = self._analyse_windows_creds(creds, hashnames)
+    timeout = self.task_config.get('bruteforce_timeout')
+    (report, priority, summary) = self._analyse_windows_creds(
+        creds, hashnames, timeout=timeout)
     output_evidence.text_data = report
     result.report_priority = priority
     result.report_data = report
