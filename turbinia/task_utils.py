@@ -88,35 +88,7 @@ TASK_MAP = {
 }
 
 
-def task_runner(obj, *args, **kwargs):
-  """Wrapper function to run specified TurbiniaTask object.
-
-  Args:
-    obj: An instantiated TurbiniaTask object.
-    *args: Any Args to pass to obj.
-    **kwargs: Any keyword args to pass to obj.
-
-  Returns:
-    Output from TurbiniaTask (should be TurbiniaTaskResult).
-  """
-
-  # GKE Specific - do not queue more work if pod places this file
-  if os.path.exists(config.SCALEDOWN_WORKER_FILE):
-    raise psq.Retry()
-
-  # try to acquire lock and timeout and requeue task if it's in use
-  try:
-    lock = filelock.FileLock(config.LOCK_FILE)
-    with lock.acquire(timeout=0.001):
-      obj = workers.TurbiniaTask.deserialize(obj)
-      run = obj.run_wrapper(*args, **kwargs)
-  except filelock.Timeout:
-    raise psq.Retry()
-
-  return run
-
-
-def deserialize(input_dict):
+def task_deserialize(input_dict):
   """Converts an input dictionary back into a TurbiniaTask object.
 
   Args:
@@ -142,3 +114,31 @@ def deserialize(input_dict):
   task.last_update = datetime.strptime(
       input_dict['last_update'], DATETIME_FORMAT)
   return task
+
+
+def task_runner(obj, *args, **kwargs):
+  """Wrapper function to run specified TurbiniaTask object.
+
+  Args:
+    obj: An instantiated TurbiniaTask object.
+    *args: Any Args to pass to obj.
+    **kwargs: Any keyword args to pass to obj.
+
+  Returns:
+    Output from TurbiniaTask (should be TurbiniaTaskResult).
+  """
+
+  # GKE Specific - do not queue more work if pod places this file
+  if os.path.exists(config.SCALEDOWN_WORKER_FILE):
+    raise psq.Retry()
+
+  # try to acquire lock and timeout and requeue task if it's in use
+  try:
+    lock = filelock.FileLock(config.LOCK_FILE)
+    with lock.acquire(timeout=0.001):
+      obj = task_deserialize(obj)
+      run = obj.run_wrapper(*args, **kwargs)
+  except filelock.Timeout:
+    raise psq.Retry()
+
+  return run

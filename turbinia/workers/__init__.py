@@ -474,7 +474,7 @@ class TurbiniaTask:
     Returns:
       TurbiniaTask: Deserialized object.
     """
-    return task_utils.deserialize(input_dict)
+    return task_utils.task_deserialize(input_dict)
 
   @classmethod
   def check_worker_role(cls):
