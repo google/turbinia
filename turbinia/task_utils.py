@@ -129,8 +129,11 @@ def task_runner(obj, *args, **kwargs):
   """
 
   # GKE Specific - do not queue more work if pod places this file
-  if os.path.exists(config.SCALEDOWN_WORKER_FILE):
-    raise psq.Retry()
+  if config.TASK_MANAGER.lower() == 'psq':
+    if os.path.exists(config.SCALEDOWN_WORKER_FILE):
+      # Late import because this is only needed for PSQ
+      import psq
+      raise psq.Retry()
 
   # try to acquire lock and timeout and requeue task if it's in use
   try:
