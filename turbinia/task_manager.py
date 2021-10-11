@@ -102,14 +102,20 @@ def task_runner(obj, *args, **kwargs):
   if os.path.exists(config.SCALEDOWN_WORKER_FILE):
     raise psq.Retry()
 
-  # try to acquire lock and timeout and requeue task if it's in use
+  # try to acquire lock, timeout and requeue task if the worker
+  # is already processing a task.
   try:
     lock = filelock.FileLock(config.LOCK_FILE)
     with lock.acquire(timeout=0.001):
-      obj = workers.TurbiniaTask.deserialize(obj)
       run = obj.run_wrapper(*args, **kwargs)
   except filelock.Timeout:
-    raise psq.Retry()
+    if config.TASK_MANAGER.lower() == 'psq':
+      raise psq.Retry()
+    elif config.TASK_MANAGER.lower() == 'celery':
+      raise obj.stub.retry('Turbinia worker busy!')
+  finally:
+    # *always* make sure we release the lock
+    lock.release()
 
   return run
 
