@@ -28,10 +28,7 @@ class DfdeweyTask(TurbiniaTask):
   """Task to run dfDewey."""
 
   REQUIRED_STATES = [state.ATTACHED]
-  TASK_CONFIG = {
-      'case': None,
-      'search': None
-  }
+  TASK_CONFIG = {'case': None, 'search': None}
 
   def run(self, evidence, result):
     """Task to index a disk with dfDewey.
