@@ -28,7 +28,10 @@ class DfdeweyTask(TurbiniaTask):
   """Task to run dfDewey."""
 
   REQUIRED_STATES = [state.ATTACHED]
-  TASK_CONFIG = {'case': None}
+  TASK_CONFIG = {
+      'case': None,
+      'search': None
+  }
 
   def run(self, evidence, result):
     """Task to index a disk with dfDewey.
@@ -50,7 +53,13 @@ class DfdeweyTask(TurbiniaTask):
     if self.task_config.get('case'):
       cmd = ['dfdewey']
       cmd.append(self.task_config.get('case'))
-      cmd.append(evidence.local_path)
+      if self.task_config.get('search'):
+        cmd.extend(['-s', self.task_config.get('search')])
+      else:
+        # Since the local path is always going to be a loopback device, only
+        # include it when indexing.
+        # TODO(dfjxs): change the way images are identified
+        cmd.append(evidence.local_path)
       output_evidence = ReportText(source_path=dfdewey_output)
 
       result.log('Running dfDewey as [{0:s}]'.format(' '.join(cmd)))

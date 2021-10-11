@@ -54,6 +54,13 @@ class DfdeweyTaskTest(TestTurbiniaTaskBase):
     # Ensure run method returns a TurbiniaTaskResult instance.
     self.assertIsInstance(result, TurbiniaTaskResult)
 
+    # Test search
+    self.task.execute.reset_mock()
+    self.task.task_config['search'] = 'password'
+    result = self.task.run(mock_evidence, self.result)
+    # Ensure execute method is being called.
+    self.task.execute.assert_called_once()
+
     # Test failed execution
     self.task.execute = mock.MagicMock(return_value=(1, None))
     result = self.task.run(mock_evidence, self.result)
