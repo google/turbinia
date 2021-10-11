@@ -84,7 +84,7 @@ TASK_MAP = {
     'wordpresscredsanalysistask': WordpressCredsAnalysisTask,
     'finalizerequesttask': FinalizeRequestTask,
     'jenkinsanalysistask': JenkinsAnalysisTask,
-    'aupyteranalysistask': JupyterAnalysisTask,
+    'jupyteranalysistask': JupyterAnalysisTask,
     'greptask': GrepTask,
     'fsstattask': FsstatTask,
     'hadoopanalysistask': HadoopAnalysisTask,
