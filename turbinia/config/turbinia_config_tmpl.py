@@ -115,7 +115,9 @@ DOCKER_ENABLED = False
 # still be enabled with the --jobs_allowlist flag on the server, but the client
 # will not be able to allowlist jobs that have been disabled or denylisted on
 # the server.
-DISABLED_JOBS = ['BinaryExtractorJob', 'BulkExtractorJob', 'PhotorecJob']
+DISABLED_JOBS = [
+    'BinaryExtractorJob', 'BulkExtractorJob', 'DfdeweyJob', 'PhotorecJob'
+]
 
 # Configure additional job dependency checks below.
 DEPENDENCIES = [{
@@ -128,6 +130,16 @@ DEPENDENCIES = [{
     'programs': ['bulk_extractor'],
     'docker_image': None,
     'timeout': 14400
+}, {
+    'job': 'DfdeweyJob',
+    'programs': ['dfdewey'],
+    'docker_image': None,
+    'timeout': 86400
+}, {
+    'job': 'DockerContainersEnumerationJob',
+    'programs': ['de.py'],
+    'docker_image': None,
+    'timeout': 1200
 }, {
     'job': 'FsstatJob',
     'programs': ['fsstat'],
@@ -203,11 +215,6 @@ DEPENDENCIES = [{
     'programs': ['hashcat', 'grep', 'strings'],
     'docker_image': None,
     'timeout': 3600
-}, {
-    'job': 'DockerContainersEnumerationJob',
-    'programs': ['de.py'],
-    'docker_image': None,
-    'timeout': 1200
 }]
 
 ################################################################################

@@ -52,6 +52,7 @@ from turbinia.workers.analysis.loki import LokiAnalysisTask
 from turbinia.workers.analysis.windows_acct import WindowsAccountAnalysisTask
 from turbinia.workers.finalize_request import FinalizeRequestTask
 from turbinia.workers.cron import CronAnalysisTask
+from turbinia.workers.dfdewey import DfdeweyTask
 from turbinia.workers.docker import DockerContainersEnumerationTask
 from turbinia.workers.grep import GrepTask
 from turbinia.workers.fsstat import FsstatTask
@@ -80,17 +81,17 @@ RETRY_SLEEP = 60
 TASK_MAP = {
     'fileartifactextractiontask': FileArtifactExtractionTask,
     'wordpressaccessloganalysistask': WordpressAccessLogAnalysisTask,
-    'WordpressCredsAnalysisTask': WordpressCredsAnalysisTask,
+    'wordpresscredsanalysistask': WordpressCredsAnalysisTask,
     'finalizerequesttask': FinalizeRequestTask,
     'jenkinsanalysistask': JenkinsAnalysisTask,
-    'JupyterAnalysisTask': JupyterAnalysisTask,
+    'aupyteranalysistask': JupyterAnalysisTask,
     'greptask': GrepTask,
     'fsstattask': FsstatTask,
     'hadoopanalysistask': HadoopAnalysisTask,
     'hindsighttask': HindsightTask,
-    'LinuxAccountAnalysisTask': LinuxAccountAnalysisTask,
-    'WindowsAccountAnalysisTask': WindowsAccountAnalysisTask,
-    'LokiAnalysisTask': LokiAnalysisTask,
+    'linuxaccountanalysistask': LinuxAccountAnalysisTask,
+    'windowsaccountanalysistask': WindowsAccountAnalysisTask,
+    'lokianalysistask': LokiAnalysisTask,
     'partitionenumerationtask': PartitionEnumerationTask,
     'plasotask': PlasoTask,
     'psorttask': PsortTask,
@@ -106,7 +107,8 @@ TASK_MAP = {
     'dockercontainersenumerationtask': DockerContainersEnumerationTask,
     'photorectask': PhotorecTask,
     'aborttask': AbortTask,
-    'crontask': CronAnalysisTask
+    'crontask': CronAnalysisTask,
+    'dfdeweytask': DfdeweyTask
 }
 
 config.LoadConfig()
