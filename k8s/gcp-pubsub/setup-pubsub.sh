@@ -1,10 +1,13 @@
 #!/bin/sh
-echo "Please specify a Turbinia config file."
-echo
+# Turbinia GKE deployment script
+# This script can be used to deploy Turbinia to GKE.
+# Requirements:
+# - have 'gcloud' installed.
+# - autheticate against your GKE cluster with "gcloud container clusters get-credentials"
 
 TURBINIA_CONF=$1
 if [ -z $1 ]; then
-    echo "No Turbinia config found as parameter."
+    echo "No config found as parameter, please specify a Turbinia config file."
     exit 0
 fi
 
