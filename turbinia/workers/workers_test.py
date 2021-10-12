@@ -343,10 +343,10 @@ class TestTurbiniaTask(TestTurbiniaTaskBase):
   @mock.patch('turbinia.workers.Histogram')
   def testTurbiniaSetupMetrics(self, mock_histogram):
     """Tests that metrics are set up correctly."""
-    mock_task_map = {'TestTask1': None, 'TestTask2': None}
+    mock_task_list = {'TestTask1', 'TestTask2'}
     mock_histogram.return_value = "test_metrics"
-    metrics = self.task.setup_metrics(task_map=mock_task_map)
-    self.assertEqual(len(metrics), len(mock_task_map))
+    metrics = self.task.setup_metrics(task_list=mock_task_list)
+    self.assertEqual(len(metrics), len(mock_task_list))
     self.assertEqual(metrics['testtask1'], 'test_metrics')
     self.assertIn('testtask1', metrics)
 

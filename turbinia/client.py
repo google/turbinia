@@ -101,7 +101,7 @@ def setup(is_client=False):
     logger.setup()
 
 
-def get_turbinia_client(run_local=False):
+def get_turbinia_client():
   """Return Turbinia client based on config.
 
   Returns:
@@ -110,9 +110,9 @@ def get_turbinia_client(run_local=False):
   # pylint: disable=no-else-return
   setup(is_client=True)
   if config.TASK_MANAGER.lower() == 'psq':
-    return BaseTurbiniaClient(run_local=run_local)
+    return BaseTurbiniaClient()
   elif config.TASK_MANAGER.lower() == 'celery':
-    return TurbiniaCeleryClient(run_local=run_local)
+    return TurbiniaCeleryClient()
   else:
     msg = 'Task Manager type "{0:s}" not implemented'.format(
         config.TASK_MANAGER)
@@ -198,13 +198,10 @@ class BaseTurbiniaClient:
     task_manager (TaskManager): Turbinia task manager
   """
 
-  def __init__(self, run_local=False):
+  def __init__(self):
     config.LoadConfig()
-    if run_local:
-      self.task_manager = None
-    else:
-      self.task_manager = task_manager.get_task_manager()
-      self.task_manager.setup(server=False)
+    self.task_manager = task_manager.get_task_manager()
+    self.task_manager.setup(server=False)
 
   def create_task(self, task_name):
     """Creates a Turbinia Task by name.
@@ -218,7 +215,8 @@ class BaseTurbiniaClient:
     Raises:
       TurbiniaException: When no Task object matching task_name is found.
     """
-    task_obj = task_utils.TASK_MAP.get(task_name.lower())
+    task_loader = task_utils.TaskLoader()
+    task_obj = task_loader.get_task(task_name)
     log.debug('Looking up Task {0:s} by name'.format(task_name))
     if not task_obj:
       raise TurbiniaException('No Task named {0:s} found'.format(task_name))
@@ -930,26 +928,6 @@ class BaseTurbiniaClient:
           report.extend(self.format_task(task, show_files=all_fields))
 
     return '\n'.join(report)
-
-  def run_local_task(self, task_name, request):
-    """Runs a Turbinia Task locally.
-
-    Args:
-      task_name(string): Name of the Task we are going to run.
-      request (TurbiniaRequest): Object containing request and evidence info.
-
-    Returns:
-      TurbiniaTaskResult: The result returned by the Task Execution.
-    """
-    task = self.create_task(task_name)
-    task.request_id = request.request_id
-    task.base_output_dir = config.OUTPUT_DIR
-    task.run_local = True
-    if not request.evidence:
-      raise TurbiniaException('TurbiniaRequest does not contain evidence.')
-    log.info('Running Task {0:s} locally'.format(task_name))
-    result = task.run_wrapper(request.evidence[0].serialize())
-    return result
 
   def send_request(self, request):
     """Sends a TurbiniaRequest message.

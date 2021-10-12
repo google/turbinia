@@ -14,78 +14,130 @@
 # limitations under the License.
 """Task runner for Turbinia."""
 
-import datetime
+from datetime import datetime
+import logging
 import os
+import sys
+
 import filelock
 
 import turbinia
 from turbinia import config
+from turbinia.config import DATETIME_FORMAT
 from turbinia import TurbiniaException
-from turbinia.workers.artifact import FileArtifactExtractionTask
-from turbinia.workers.analysis.wordpress_access import WordpressAccessLogAnalysisTask
-from turbinia.workers.analysis.wordpress_creds import WordpressCredsAnalysisTask
-from turbinia.workers.analysis.jenkins import JenkinsAnalysisTask
-from turbinia.workers.analysis.jupyter import JupyterAnalysisTask
-from turbinia.workers.analysis.linux_acct import LinuxAccountAnalysisTask
-from turbinia.workers.analysis.loki import LokiAnalysisTask
-from turbinia.workers.analysis.windows_acct import WindowsAccountAnalysisTask
-from turbinia.workers.finalize_request import FinalizeRequestTask
-from turbinia.workers.cron import CronAnalysisTask
-from turbinia.workers.docker import DockerContainersEnumerationTask
-from turbinia.workers.grep import GrepTask
-from turbinia.workers.fsstat import FsstatTask
-from turbinia.workers.hadoop import HadoopAnalysisTask
-from turbinia.workers.hindsight import HindsightTask
-from turbinia.workers.partitions import PartitionEnumerationTask
-from turbinia.workers.plaso import PlasoTask
-from turbinia.workers.psort import PsortTask
-from turbinia.workers.redis import RedisAnalysisTask
-from turbinia.workers.sshd import SSHDAnalysisTask
-from turbinia.workers.strings import StringsAsciiTask
-from turbinia.workers.strings import StringsUnicodeTask
-from turbinia.workers.tomcat import TomcatAnalysisTask
-from turbinia.workers.volatility import VolatilityTask
-from turbinia.workers.worker_stat import StatTask
-from turbinia.workers.binary_extractor import BinaryExtractorTask
-from turbinia.workers.bulk_extractor import BulkExtractorTask
-from turbinia.workers.photorec import PhotorecTask
-from turbinia.workers.abort import AbortTask
+
+log = logging.getLogger('turbinia')
 
 config.LoadConfig()
 
-# TODO(aarontp): Remove this map after
-# https://github.com/google/turbinia/issues/278 is fixed.
-TASK_MAP = {
-    'fileartifactextractiontask': FileArtifactExtractionTask,
-    'wordpressaccessloganalysistask': WordpressAccessLogAnalysisTask,
-    'WordpressCredsAnalysisTask': WordpressCredsAnalysisTask,
-    'finalizerequesttask': FinalizeRequestTask,
-    'jenkinsanalysistask': JenkinsAnalysisTask,
-    'JupyterAnalysisTask': JupyterAnalysisTask,
-    'greptask': GrepTask,
-    'fsstattask': FsstatTask,
-    'hadoopanalysistask': HadoopAnalysisTask,
-    'hindsighttask': HindsightTask,
-    'LinuxAccountAnalysisTask': LinuxAccountAnalysisTask,
-    'WindowsAccountAnalysisTask': WindowsAccountAnalysisTask,
-    'LokiAnalysisTask': LokiAnalysisTask,
-    'partitionenumerationtask': PartitionEnumerationTask,
-    'plasotask': PlasoTask,
-    'psorttask': PsortTask,
-    'redisanalysistask': RedisAnalysisTask,
-    'sshdanalysistask': SSHDAnalysisTask,
-    'stringsasciitask': StringsAsciiTask,
-    'stringsunicodetask': StringsUnicodeTask,
-    'tomcatanalysistask': TomcatAnalysisTask,
-    'volatilitytask': VolatilityTask,
-    'stattask': StatTask,
-    'binaryextractortask': BinaryExtractorTask,
-    'bulkextractortask': BulkExtractorTask,
-    'dockercontainersenumerationtask': DockerContainersEnumerationTask,
-    'photorectask': PhotorecTask,
-    'aborttask': AbortTask,
-    'crontask': CronAnalysisTask
-}
+
+class TaskLoader():
+
+  TASK_LIST = [
+      'FileArtifactExtractionTask',
+      'WordpressAccessLogAnalysisTask',
+      'WordpressCredsAnalysisTask',
+      'FinalizeRequestTask',
+      'JenkinsAnalysisTask',
+      'JupyterAnalysisTask',
+      'GrepTask',
+      'FsstatTask',
+      'HadoopAnalysisTask',
+      'HindsightTask',
+      'LinuxAccountAnalysisTask',
+      'WindowsAccountAnalysisTask',
+      'LokiAnalysisTask',
+      'PartitionEnumerationTask',
+      'PlasoTask',
+      'PsortTask',
+      'RedisAnalysisTask',
+      'SSHDAnalysisTask',
+      'StringsAsciiTask',
+      'StringsUnicodeTask',
+      'TomcatAnalysisTask',
+      'VolatilityTask',
+      'StatTask',
+      'BinaryExtractorTask',
+      'BulkExtractorTask',
+      'DockerContainersEnumerationTask',
+      'PhotorecTask',
+      'AbortTask',
+      'CronAnalysisTask',
+  ]
+
+  def check_task_name(self, task_name):
+    """Checks whether a given task name is a valid task
+    
+    Args:
+      task_name(str): Name of the Task to check.
+      
+    Returns:
+      bool: True if task with the given name exists, else False
+    """
+    for task in TASK_LIST:
+      if task.lower() == task_name.lower():
+        return True
+    return False
+
+  def get_task(self, task_name):
+    """Get's an instantiated Task object for the given name.
+    
+    Args:
+      task_name(str): Name of the Task to return.
+      
+    Returns:
+      TurbiniaTask: An instantiated Task object.
+    """
+    # TODO(aarontp): Remove this list after
+    # https://github.com/google/turbinia/issues/278 is fixed.
+    #
+    # Late imports to minimize what needs to load all Tasks
+    from turbinia.workers.artifact import FileArtifactExtractionTask
+    from turbinia.workers.analysis.wordpress_access import WordpressAccessLogAnalysisTask
+    from turbinia.workers.analysis.wordpress_creds import WordpressCredsAnalysisTask
+    from turbinia.workers.analysis.jenkins import JenkinsAnalysisTask
+    from turbinia.workers.analysis.jupyter import JupyterAnalysisTask
+    from turbinia.workers.analysis.linux_acct import LinuxAccountAnalysisTask
+    from turbinia.workers.analysis.loki import LokiAnalysisTask
+    from turbinia.workers.analysis.windows_acct import WindowsAccountAnalysisTask
+    from turbinia.workers.finalize_request import FinalizeRequestTask
+    from turbinia.workers.cron import CronAnalysisTask
+    from turbinia.workers.docker import DockerContainersEnumerationTask
+    from turbinia.workers.grep import GrepTask
+    from turbinia.workers.fsstat import FsstatTask
+    from turbinia.workers.hadoop import HadoopAnalysisTask
+    from turbinia.workers.hindsight import HindsightTask
+    from turbinia.workers.partitions import PartitionEnumerationTask
+    from turbinia.workers.plaso import PlasoTask
+    from turbinia.workers.psort import PsortTask
+    from turbinia.workers.redis import RedisAnalysisTask
+    from turbinia.workers.sshd import SSHDAnalysisTask
+    from turbinia.workers.strings import StringsAsciiTask
+    from turbinia.workers.strings import StringsUnicodeTask
+    from turbinia.workers.tomcat import TomcatAnalysisTask
+    from turbinia.workers.volatility import VolatilityTask
+    from turbinia.workers.worker_stat import StatTask
+    from turbinia.workers.binary_extractor import BinaryExtractorTask
+    from turbinia.workers.bulk_extractor import BulkExtractorTask
+    from turbinia.workers.photorec import PhotorecTask
+    from turbinia.workers.abort import AbortTask
+
+    for task in self.TASK_LIST:
+      if task.lower() == task_name.lower():
+        try:
+          task_obj = locals()[task]
+          return task_obj()
+        except (AttributeError, KeyError):
+          message = (
+              "Could not import {0:s} object! Make sure it is imported where "
+              "this method is defined.".format(task_name))
+          log.error(message)
+          raise TurbiniaException(message)
+
+    return None
+
+  def get_task_names(self):
+    return self.TASK_LIST
 
 
 def task_deserialize(input_dict):
@@ -99,18 +151,11 @@ def task_deserialize(input_dict):
   """
 
   type_ = input_dict['name']
-  try:
-    task = getattr(sys.modules['turbinia.task_utils'], type_)()
-  except AttributeError:
-    message = (
-        "Could not import {0:s} object! Make sure it is imported where "
-        "this method is defined.".format(type_))
-    log.error(message)
-    raise TurbiniaException(message)
+  task_loader = TaskLoader()
+  task = task_loader.get_task(type_)
+  if not task:
+    raise TurbiniaException('Could not load Task module {0:s}'.format(type_))
   task.__dict__.update(input_dict)
-  # Pretty sure this is not needed? Testing DONOTSUBMIT
-  # task.output_manager = output_manager.OutputManager()
-  task.output_manager.__dict__.update(input_dict['output_manager'])
   task.last_update = datetime.strptime(
       input_dict['last_update'], DATETIME_FORMAT)
   return task

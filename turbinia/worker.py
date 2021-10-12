@@ -188,10 +188,7 @@ def register_job_timeouts(dependencies):
 
 
 class TurbiniaWorkerBase:
-  """Base class for Turibinia Workers
-  
-  
-  """
+  """Base class for Turibinia Workers."""
 
   def __init__(self, jobs_denylist=None, jobs_allowlist=None):
     """Initialization for Turbinia Worker.
@@ -269,7 +266,6 @@ class TurbiniaCeleryWorker(TurbiniaWorkerBase):
   def start(self):
     """Start Turbinia Celery Worker."""
     log.info('Running Turbinia Celery Worker.')
-    # TODOTODO: fix task_manager reference
     self.worker.task(task_utils.task_runner, name='task_runner')
     argv = ['celery', 'worker', '--loglevel=info', '--pool=solo']
     self.worker.start(argv)
@@ -287,8 +283,6 @@ class TurbiniaPsqWorker(TurbiniaWorkerBase):
   """
 
   def _backend_setup(self):
-    log.info('Starting PSQ listener on queue {0:s}'.format(self.psq.name))
-    self.worker = psq.Worker(queue=self.psq)
     psq_publisher = pubsub.PublisherClient()
     psq_subscriber = pubsub.SubscriberClient()
     datastore_client = datastore.Client(project=config.TURBINIA_PROJECT)
@@ -300,6 +294,8 @@ class TurbiniaPsqWorker(TurbiniaWorkerBase):
       msg = 'Error creating PSQ Queue: {0:s}'.format(str(e))
       log.error(msg)
       raise TurbiniaException(msg)
+    log.info('Starting PSQ listener on queue {0:s}'.format(self.psq.name))
+    self.worker = psq.Worker(queue=self.psq)
 
   def start(self):
     """Start Turbinia PSQ Worker."""

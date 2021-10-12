@@ -207,7 +207,7 @@ class TurbiniaTaskResult:
       if evidence.source_path:
         if os.path.exists(evidence.source_path):
           self.saved_paths.append(evidence.source_path)
-          if not task.run_local and evidence.copyable:
+          if evidence.copyable:
             task.output_manager.save_evidence(evidence, self)
         else:
           self.log(
@@ -257,8 +257,7 @@ class TurbiniaTaskResult:
         with open(logfile, 'w') as f:
           f.write('\n'.join(self._log))
           f.write('\n')
-        if not task.run_local:
-          task.output_manager.save_local_file(logfile, self)
+        task.output_manager.save_local_file(logfile, self)
 
     self.closed = True
     log.debug('Result close successful. Status is [{0:s}]'.format(self.status))
@@ -397,7 +396,6 @@ class TurbiniaTask:
       output_manager (OutputManager): The object that manages saving output.
       result (TurbiniaTaskResult): A TurbiniaTaskResult object.
       request_id (str): The id of the initial request to process this evidence.
-      run_local (bool): Whether we are running locally without a Worker or not.
       state_key (str): A key used to manage task state
       stub (psq.task.TaskResult|celery.app.Task): The task manager
           implementation specific task stub that exists server side to keep a
@@ -443,7 +441,6 @@ class TurbiniaTask:
     self.output_manager = output_manager.OutputManager()
     self.result = None
     self.request_id = request_id
-    self.run_local = False
     self.state_key = None
     self.stub = None
     self.tmp_dir = None
@@ -679,8 +676,7 @@ class TurbiniaTask:
             level=logging.DEBUG)
         continue
       result.log('Output log file found at {0:s}'.format(file_))
-      if not self.run_local:
-        self.output_manager.save_local_file(file_, result)
+      self.output_manager.save_local_file(file_, result)
 
     if ret not in success_codes:
       message = 'Execution of [{0!s}] failed with status {1:d}'.format(cmd, ret)
@@ -696,8 +692,7 @@ class TurbiniaTask:
               level=logging.DEBUG)
           continue
         result.log('Output save file at {0:s}'.format(file_))
-        if not self.run_local:
-          self.output_manager.save_local_file(file_, result)
+        self.output_manager.save_local_file(file_, result)
 
       for evidence in new_evidence:
         # If the local path is set in the Evidence, we check to make sure that
@@ -743,9 +738,8 @@ class TurbiniaTask:
     if not self.result:
       self.result = self.create_result(input_evidence=evidence)
 
-    if not self.run_local:
-      if evidence.copyable and not config.SHARED_FILESYSTEM:
-        self.output_manager.retrieve_evidence(evidence)
+    if evidence.copyable and not config.SHARED_FILESYSTEM:
+      self.output_manager.retrieve_evidence(evidence)
 
     if evidence.source_path and not os.path.exists(evidence.source_path):
       raise TurbiniaException(
@@ -753,13 +747,13 @@ class TurbiniaTask:
               evidence.source_path))
     return self.result
 
-  def setup_metrics(self, task_map=None):
+  def setup_metrics(self, task_list=None):
     """Sets up the application metrics.
 
     Returns early with metrics if they are already setup.
 
     Arguments:
-      task_map(dict): Map of task names to task objects
+      task_list(list): List of Task names
 
     Returns:
       Dict: Mapping of task names to metrics objects.
@@ -769,12 +763,11 @@ class TurbiniaTask:
     if METRICS:
       return METRICS
 
-    if not task_map:
-      # Late import to avoid circular dependencies
-      from turbinia.client import TASK_MAP
-      task_map = TASK_MAP
+    if not task_list:
+      task_loader = task_utils.TaskLoader()
+      task_list = task_loader.get_task_names()
 
-    for task_name in task_map:
+    for task_name in task_list:
       task_name = task_name.lower()
       if task_name in METRICS:
         continue

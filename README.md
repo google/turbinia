@@ -96,9 +96,6 @@ optional arguments:
                         Log file
   -r REQUEST_ID, --request_id REQUEST_ID
                         Create new requests with this Request ID
-  -R, --run_local       Run completely locally without any server or other
-                        infrastructure. This can be used to run one-off Tasks to
-                        process data locally.
   -S, --server          Run Turbinia Server indefinitely
   -V, --version         Show the version
   -D, --dump_json       Dump JSON output of Turbinia Request instead of sending
@@ -125,8 +122,6 @@ optional arguments:
   -p POLL_INTERVAL, --poll_interval POLL_INTERVAL
                         Number of seconds to wait between polling for task state
                         info
-  -t TASK, --task TASK  The name of a single Task to run locally (must be used
-                        with --run_local.
   -T, --debug_tasks     Show debug output for all supported tasks
   -w, --wait            Wait to exit until all tasks for the given request have
                         completed
