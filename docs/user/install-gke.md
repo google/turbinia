@@ -2,7 +2,7 @@
 
 ## **Introduction**
 
-Turbinia can be run within Google Kubernetes Engine (https://cloud.google.com/kubernetes-engine). This allows Turbinia Workers to scale based on processing demand. Currently, Turbinia can scale based on CPU Utilization and works by increasing the number of Worker pods when a CPU threshold has been met on the currently available pods through processing Tasks. The GKE architecture closely resembles the [cloud architecture](how-it-works.md#cloud-architecture) with GKE being used to scale Turbinia Woker pods.
+Turbinia can be run within Google Kubernetes Engine (https://cloud.google.com/kubernetes-engine). This allows Turbinia Workers to scale based on processing demand. Currently, Turbinia can scale based on CPU Utilization and works by increasing the number of Worker pods when a CPU threshold has been met on the currently available pods through processing Tasks. The GKE architecture closely resembles the [cloud architecture](how-it-works.md) with GKE being used to scale Turbinia Woker pods.
 
 All steps in this document are required for getting Turbinia running on. Please ensure you have followed the GCP setup prior to configuring the GKE cluster as it is required for the Turbinia components to properly function together.
 
