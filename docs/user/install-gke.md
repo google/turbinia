@@ -2,13 +2,13 @@
 
 ## **Introduction**
 
-Turbinia can be run within Google Kubernetes Engine (https://cloud.google.com/kubernetes-engine). This allows Turbinia Workers to scale based on processing demand. Currently, Turbinia can scale based on CPU Utilization and works by increasing the number of Worker pods when a CPU threshold has been met on the currently available pods through processing Tasks. The GKE architecture closely resembles the [cloud architecture](how-it-works.md) with GKE being used to scale Turbinia Woker pods.
+Turbinia can be run within Google Kubernetes Engine (https://cloud.google.com/kubernetes-engine). This allows Turbinia Workers to scale based on processing demand. Currently, this is done through scaling on CPU utilization, which is determined when available Turbinia Workers process Tasks and reach a pre-defined CPU threshold. The GKE architecture closely resembles the [cloud architecture](how-it-works.md) with GKE being used to scale Turbinia Woker pods.
 
-All steps in this document are required for getting Turbinia running on. Please ensure you have followed the GCP setup prior to configuring the GKE cluster as it is required for the Turbinia components to properly function together.
+All steps in this document are required for getting Turbinia running on GKE. Please ensure you have followed the GCP setup prior to configuring the GKE cluster as it's required for Turbinia components to properly function together.
 
 ### **Prerequisites**
 
-GKE is only supported for Google Cloud so a Google Cloud Project is required to work from. Additionally, all GCP components specified below must be enabled for Turbinia to properly function. Please follow the GCP steps outlined prior to setting up GKE.
+GKE is only supported for Google Cloud so a Google Cloud Project is required to work from. Additionally, all GCP components specified below must be enabled so please follow the GCP steps outlined prior to setting up GKE.
 
 ## **Installation**
 
@@ -70,13 +70,13 @@ gcloud container clusters create CLUSTER_NAME \
 * Connect to cluser through `gcloud container clusters get-credentials <CLUSTER_NAME> --zone <ZONE> --project <PROJECT_NAME>`.
 * Clone the latest Turbinia branch and `cd <git clone path>/k8s/gcp-pubsub`.
 * Ensure that the zone and region in the Turbinia config file are equal to the zone and region you created your k8s cluster in.
-* In the `turbinia-worker.yaml` and `turbinia-server.yaml` files, the `image` variable can be set to corresponding docker images or left to default registry.
-* In `turbinia-worker.yaml`, ensure that the path in the volume labeled `lockfolder` matches the Turbinia config variable `TMP_RESOURCE_DIR`.
-* Ensure that the `.turbiniarc` config file has been properly configured.
-* Deploy the Turbinia infrastructure via `./setup-pubsub.sh <PATH TO CONFIG>`. 
-* The Turbinia infrastructure can be destroyed via `./destroy-pubsub.sh`.
+* The `image` variable can be optionally changed in the `turbinia-worker.yaml` and `turbinia-server.yaml` files to chose the docker images used during deployment.
+* In the `turbinia-worker.yaml` file, ensure that the path in the volume labeled `lockfolder` matches the Turbinia config variable `TMP_RESOURCE_DIR`.
+* Ensure that the `.turbiniarc` config file has been properly configured with required GCP variables.
+* Deploy the Turbinia infrastructure by executing `./setup-pubsub.sh <PATH TO CONFIG>`. 
+* The Turbinia infrastructure can be destroyed by executing `./destroy-pubsub.sh`.
 
-### **Executing Jobs in GKE**
+### **Making processing requests in GKE**
 * Connect to cluser through `gcloud container clusters get-credentials <CLUSTER_NAME> --zone <ZONE> --project <PROJECT_NAME>`.
 * Use `kubectl get pods` to get a list of running pods.
 * Identify the pod named `turbinia-server-*` and exec into it via `kubectl exec --stdin --tty [CONTAINER-NAME] -- bash`
