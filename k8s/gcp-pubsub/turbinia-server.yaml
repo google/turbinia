@@ -19,8 +19,7 @@ spec:
     spec:
       containers:
         - name: server
-          #image: us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-ng-server-dev:latest
-          image: wyassine/turbinia-server-dev
+          image: us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-server:latest
           env:
             - name: TURBINIA_CONF
               valueFrom:

@@ -22,8 +22,7 @@ spec:
       terminationGracePeriodSeconds: 86400
       containers:
         - name: worker
-          #image: us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-ng-worker-dev:latest
-          image: wyassine/turbinia-worker-dev
+          image: us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-worker:latest
           lifecycle:
             preStop:
               exec:
