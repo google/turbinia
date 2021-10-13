@@ -559,9 +559,18 @@ class TurbiniaTask:
     Returns:
       prometheus_client.Historgram: For the current task,
           or None if they are not initialized.
+
+    Raises:
+      TurbiniaException: If no metric is found for the given Task.
     """
     global METRICS
-    return METRICS.get(self.name.lower())
+    metric = METRICS.get(self.name.lower())
+    if not metric:
+      message = (
+          'No metric found for Task {0:s}. client.TASK_MAP may be out of '
+          'date.'.format(self.name.lower))
+      raise TurbiniaException(message)
+    return metric
 
   def execute(
       self, cmd, result, save_files=None, log_files=None, new_evidence=None,
@@ -934,6 +943,7 @@ class TurbiniaTask:
       self.result = self.setup(evidence)
       self.result.update_task_status(self, 'queued')
       turbinia_worker_tasks_queued_total.inc()
+      task_runtime_metrics = self.get_metrics()
     except TurbiniaException as exception:
       message = (
           '{0:s} Task setup failed with exception: [{1!s}]'.format(
@@ -956,7 +966,6 @@ class TurbiniaTask:
     log.info('Starting Task {0:s} {1:s}'.format(self.name, self.id))
     original_result_id = None
     turbinia_worker_tasks_started_total.inc()
-    task_runtime_metrics = self.get_metrics()
     with task_runtime_metrics.time():
       try:
         original_result_id = self.result.id

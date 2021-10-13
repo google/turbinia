@@ -106,7 +106,7 @@ TASK_MAP = {
     'dockercontainersenumerationtask': DockerContainersEnumerationTask,
     'photorectask': PhotorecTask,
     'aborttask': AbortTask,
-    'crontask': CronAnalysisTask
+    'cronanalysistask': CronAnalysisTask
 }
 
 config.LoadConfig()
