@@ -47,43 +47,6 @@ from turbinia.workers import Priority
 MAX_RETRIES = 10
 RETRY_SLEEP = 60
 
-<<<<<<< HEAD
-# TODO(aarontp): Remove this map after
-# https://github.com/google/turbinia/issues/278 is fixed.
-TASK_MAP = {
-    'fileartifactextractiontask': FileArtifactExtractionTask,
-    'wordpressaccessloganalysistask': WordpressAccessLogAnalysisTask,
-    'WordpressCredsAnalysisTask': WordpressCredsAnalysisTask,
-    'finalizerequesttask': FinalizeRequestTask,
-    'jenkinsanalysistask': JenkinsAnalysisTask,
-    'JupyterAnalysisTask': JupyterAnalysisTask,
-    'greptask': GrepTask,
-    'fsstattask': FsstatTask,
-    'hadoopanalysistask': HadoopAnalysisTask,
-    'hindsighttask': HindsightTask,
-    'LinuxAccountAnalysisTask': LinuxAccountAnalysisTask,
-    'WindowsAccountAnalysisTask': WindowsAccountAnalysisTask,
-    'LokiAnalysisTask': LokiAnalysisTask,
-    'partitionenumerationtask': PartitionEnumerationTask,
-    'plasotask': PlasoTask,
-    'psorttask': PsortTask,
-    'redisanalysistask': RedisAnalysisTask,
-    'sshdanalysistask': SSHDAnalysisTask,
-    'stringsasciitask': StringsAsciiTask,
-    'stringsunicodetask': StringsUnicodeTask,
-    'tomcatanalysistask': TomcatAnalysisTask,
-    'volatilitytask': VolatilityTask,
-    'stattask': StatTask,
-    'binaryextractortask': BinaryExtractorTask,
-    'bulkextractortask': BulkExtractorTask,
-    'dockercontainersenumerationtask': DockerContainersEnumerationTask,
-    'photorectask': PhotorecTask,
-    'aborttask': AbortTask,
-    'cronanalysistask': CronAnalysisTask
-}
-
-=======
->>>>>>> c65e24a (Add task_utils)
 config.LoadConfig()
 if config.TASK_MANAGER.lower() == 'psq':
   from libcloudforensics.providers.gcp.internal import function as gcp_function
