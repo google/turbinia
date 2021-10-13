@@ -80,7 +80,7 @@ class TaskLoader():
     return False
 
   def get_task(self, task_name):
-    """Get's an instantiated Task object for the given name.
+    """Gets an instantiated Task object for the given name.
     
     Args:
       task_name(str): Name of the Task to return.
@@ -91,7 +91,7 @@ class TaskLoader():
     # TODO(aarontp): Remove this list after
     # https://github.com/google/turbinia/issues/278 is fixed.
     #
-    # Late imports to minimize what needs to load all Tasks
+    # Late imports to minimize what loads all Tasks
     from turbinia.workers.artifact import FileArtifactExtractionTask
     from turbinia.workers.analysis.wordpress_access import WordpressAccessLogAnalysisTask
     from turbinia.workers.analysis.wordpress_creds import WordpressCredsAnalysisTask
@@ -137,6 +137,11 @@ class TaskLoader():
     return None
 
   def get_task_names(self):
+    """Returns a list of Task names.
+    
+    Returns:
+      (list) All Task names.
+    """
     return self.TASK_LIST
 
 
@@ -190,6 +195,8 @@ def task_runner(obj, *args, **kwargs):
       obj = task_deserialize(obj)
       run = obj.run_wrapper(*args, **kwargs)
   except filelock.Timeout:
+    # Late import because this is only needed for PSQ
+    import psq
     raise psq.Retry()
 
   return run
