@@ -25,10 +25,25 @@ from turbinia.workers import TurbiniaTask
 
 
 class DfdeweyTask(TurbiniaTask):
-  """Task to run dfDewey."""
+  """Task to run dfDewey.
+
+  This task requires dfDewey to be installed on the worker.
+  https://github.com/google/dfdewey
+
+  Additionally, dfDewey requires Elasticsearch and PostgreSQL datastores.
+  For more information on datastore setup, see:
+  https://github.com/google/dfdewey/blob/master/README.md#datastores
+  """
 
   REQUIRED_STATES = [state.ATTACHED]
-  TASK_CONFIG = {'case': None, 'search': None}
+
+  # Task configuration variables from recipe
+  TASK_CONFIG = {
+      # Case ID for the disk being processed / searched
+      'case': None,
+      # Search term
+      'search': None
+  }
 
   def run(self, evidence, result):
     """Task to index a disk with dfDewey.
@@ -55,7 +70,9 @@ class DfdeweyTask(TurbiniaTask):
       else:
         # Since the local path is always going to be a loopback device, only
         # include it when indexing.
-        # TODO(dfjxs): change the way images are identified
+        # https://github.com/google/turbinia/issues/468
+        # TODO(dfjxs): change the way images are identified in dfDewey
+        # https://github.com/google/dfdewey/issues/19
         cmd.append(evidence.local_path)
       output_evidence = ReportText(source_path=dfdewey_output)
 
@@ -70,9 +87,8 @@ class DfdeweyTask(TurbiniaTask):
             ret)
         result.log(status_summary)
     else:
-      success = False
       status_summary = (
-          'Error running dfDewey. Case was not provided in task config.')
+          'Not running dfDewey. Case was not provided in task config.')
       result.log(status_summary)
 
     result.close(self, success=success, status=status_summary)
