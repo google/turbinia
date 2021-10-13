@@ -1,6 +1,6 @@
 # This script tries to acquire a lock on the worker using
-# a timeout equal to the maximum job timeout. It will will return
-# if a lock can be acuired or the lock process times out.
+# a timeout equal to the maximum job timeout. It will return
+# if a lock can be acquired or the lock process times out.
 # It can be used in container orchestration setups (eg k8s)
 # to make sure workers terminate gracefully.
 

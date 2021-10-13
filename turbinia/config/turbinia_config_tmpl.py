@@ -51,8 +51,9 @@ LOG_FILE = '%s/turbinia.log' % TMP_DIR
 # Path to a lock file used for the worker tasks.
 LOCK_FILE = '%s/turbinia-worker.lock' % TMP_DIR
 
-# IMPORTANT: This folder needs to be shared among all workers running on the same host to
-# prevent resource locking issues!
+# This folder is used to maintain the RESOURCE_FILE needed for resource tracking across
+# multiple workers on a given host. It is important that this folder is shared amongst
+# all workers running ont he same host to prevent resource locking issues!
 TMP_RESOURCE_DIR = '/var/run/lock'
 
 # Path to a resource state file used for tracking shared Evidence types. This should

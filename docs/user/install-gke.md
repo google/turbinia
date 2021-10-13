@@ -67,7 +67,7 @@ gcloud container clusters create CLUSTER_NAME \
     --scopes "https://www.googleapis.com/auth/cloud-platform" 
 ```
 ### **Turbinia GKE Deployment**
-* Connect to cluser through `gcloud container clusters get-credentials <CLUSTER_NAME> --zone <ZONE> --project <PROJECT_NAME>`.
+* Connect to cluster through `gcloud container clusters get-credentials <CLUSTER_NAME> --zone <ZONE> --project <PROJECT_NAME>`.
 * Clone the latest Turbinia branch and `cd <git clone path>/k8s/gcp-pubsub`.
 * Ensure that the zone and region in the Turbinia config file are equal to the zone and region you created your k8s cluster in.
 * The `image` variable can be optionally changed in the `turbinia-worker.yaml` and `turbinia-server.yaml` files to chose the docker images used during deployment.
@@ -77,7 +77,8 @@ gcloud container clusters create CLUSTER_NAME \
 * The Turbinia infrastructure can be destroyed by executing `./destroy-pubsub.sh`.
 
 ### **Making processing requests in GKE**
-* Connect to cluser through `gcloud container clusters get-credentials <CLUSTER_NAME> --zone <ZONE> --project <PROJECT_NAME>`.
+* You can either make requests via setting up a local `turbiniactl` client or through connecting to the server through the following steps.
+* Connect to cluster through `gcloud container clusters get-credentials <CLUSTER_NAME> --zone <ZONE> --project <PROJECT_NAME>`.
 * Use `kubectl get pods` to get a list of running pods.
 * Identify the pod named `turbinia-server-*` and exec into it via `kubectl exec --stdin --tty [CONTAINER-NAME] -- bash`
 * Use `turbiniactl` to kick off a request to process evidence.
