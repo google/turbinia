@@ -203,25 +203,6 @@ class BaseTurbiniaClient:
     self.task_manager = task_manager.get_task_manager()
     self.task_manager.setup(server=False)
 
-  def create_task(self, task_name):
-    """Creates a Turbinia Task by name.
-
-    Args:
-      task_name(string): Name of the Task we are going to run.
-
-    Returns:
-      TurbiniaTask: An instantiated Task object.
-
-    Raises:
-      TurbiniaException: When no Task object matching task_name is found.
-    """
-    task_loader = task_utils.TaskLoader()
-    task_obj = task_loader.get_task(task_name)
-    log.debug('Looking up Task {0:s} by name'.format(task_name))
-    if not task_obj:
-      raise TurbiniaException('No Task named {0:s} found'.format(task_name))
-    return task_obj()
-
   def list_jobs(self):
     """List the available jobs."""
     # TODO(aarontp): Refactor this out so that we don't need to depend on

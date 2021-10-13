@@ -28,6 +28,7 @@ from turbinia import task_utils
 from turbinia import TurbiniaException
 from turbinia.lib import docker_manager
 from turbinia.jobs import manager as job_manager
+from turbinia.tcelery import TurbiniaCelery
 
 config.LoadConfig()
 task_manager_type = config.TASK_MANAGER.lower()
@@ -231,6 +232,8 @@ class TurbiniaWorkerBase:
         'Dependency check complete. The following jobs are enabled '
         'for this worker: {0:s}'.format(','.join(jobs)))
 
+  def _monitoring_setup(self):
+    """Sets up monitoring server."""
     if config.PROMETHEUS_ENABLED:
       if config.PROMETHEUS_PORT and config.PROMETHEUS_ADDR:
         log.info('Starting Prometheus endpoint.')
@@ -238,8 +241,6 @@ class TurbiniaWorkerBase:
             port=config.PROMETHEUS_PORT, addr=config.PROMETHEUS_ADDR)
       else:
         log.info('Prometheus enabled but port or address not set!')
-
-    self._backend_setup()
 
   def _backend_setup(self):
     """Sets up the required backend dependencies for the worker"""
@@ -258,6 +259,11 @@ class TurbiniaCeleryWorker(TurbiniaWorkerBase):
     celery (TurbiniaCelery): Turbinia Celery object
   """
 
+  def __init__(self, *args, **kwargs):
+    super(TurbiniaCeleryWorker, self).__init__(*args, **kwargs)
+    self.worker = None
+    self.celery = None
+
   def _backend_setup(self):
     self.celery = turbinia_celery.TurbiniaCelery()
     self.celery.setup()
@@ -266,6 +272,8 @@ class TurbiniaCeleryWorker(TurbiniaWorkerBase):
   def start(self):
     """Start Turbinia Celery Worker."""
     log.info('Running Turbinia Celery Worker.')
+    self._monitoring_setup()
+    self._backend_setup()
     self.worker.task(task_utils.task_runner, name='task_runner')
     argv = ['celery', 'worker', '--loglevel=info', '--pool=solo']
     self.worker.start(argv)
@@ -281,6 +289,11 @@ class TurbiniaPsqWorker(TurbiniaWorkerBase):
   Raises:
     TurbiniaException: When errors occur
   """
+
+  def __init__(self, *args, **kwargs):
+    super(TurbiniaPsqWorker, self).__init__(*args, **kwargs)
+    self.worker = None
+    self.psq = None
 
   def _backend_setup(self):
     psq_publisher = pubsub.PublisherClient()
@@ -300,4 +313,6 @@ class TurbiniaPsqWorker(TurbiniaWorkerBase):
   def start(self):
     """Start Turbinia PSQ Worker."""
     log.info('Running Turbinia PSQ Worker.')
+    self._monitoring_setup()
+    self._backend_setup()
     self.worker.listen()
