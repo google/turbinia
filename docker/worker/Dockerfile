@@ -75,6 +75,10 @@ RUN mkdir /etc/turbinia && mkdir -p /mnt/turbinia/ && mkdir -p /var/lib/turbinia
 RUN cd /home/turbinia && wget https://raw.githubusercontent.com/danielmiessler/SecLists/master/Passwords/Common-Credentials/10-million-password-list-top-1000000.txt -O password.lst
 RUN cp /home/turbinia/password.lst /root/
 
+# Copy Kubernetes support tool to home folder
+COPY k8s/tools/check-lockfile.py /home/turbinia/check-lockfile.py
+RUN chown turbinia:turbinia /home/turbinia/check-lockfile.py
+
 COPY docker/worker/start.sh /home/turbinia/start.sh
 RUN chmod +rwx /home/turbinia/start.sh
 USER turbinia

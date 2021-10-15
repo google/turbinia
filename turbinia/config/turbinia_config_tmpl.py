@@ -46,17 +46,22 @@ OUTPUT_DIR = '/var/tmp'
 TMP_DIR = '/tmp'
 
 # File to log debugging output to.
-LOG_FILE = '%s/turbinia.log' % OUTPUT_DIR
+LOG_FILE = '%s/turbinia.log' % TMP_DIR
 
 # Path to a lock file used for the worker tasks.
 LOCK_FILE = '%s/turbinia-worker.lock' % TMP_DIR
+
+# This folder is used to maintain the RESOURCE_FILE needed for resource tracking across
+# multiple workers on a given host. It is important that this folder is shared amongst
+# all workers running ont he same host to prevent resource locking issues!
+TMP_RESOURCE_DIR = '/var/run/lock'
 
 # Path to a resource state file used for tracking shared Evidence types. This should
 # be a shared path amongst all workers on a given host to properly update the state.
 # If for example, you are running the workers within containers, be sure to map the
 # OUTPUT_DIR from the container to the host so that the workers are updating a single
 # resource file rather than individual state files within the containers.
-RESOURCE_FILE = '%s/turbinia-state.json' % OUTPUT_DIR
+RESOURCE_FILE = '%s/turbinia-state.json' % TMP_RESOURCE_DIR
 
 # Path to a resource state lock file used for locking changes to shared Evidence types.
 # Similar to RESOURCE_FILE, this should be a shared path amongst all workers on a given
