@@ -68,6 +68,11 @@ function stop {
 
     get_nodes
 
+    for NODE in $NODES
+    do
+        echo $NODE
+    done
+
     # Stop all workers
 
     # Show status
@@ -98,7 +103,7 @@ function show_infra {
 }
 
 function get_nodes {
-    NODES=kubectl get nodes --output=jsonpath={.items..metadata.name}
+    NODES=$($KUBECTL get nodes --output=jsonpath={.items..metadata.name})
 }
 
 function show_container_logs {
