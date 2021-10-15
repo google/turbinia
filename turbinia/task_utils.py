@@ -32,6 +32,11 @@ config.LoadConfig()
 
 
 class TaskLoader():
+  """Utility class for handling Task loading/checking/deserialization.
+
+  Attributes:
+    TASK_LIST(list): A list of all valid Tasks.
+  """
 
   TASK_LIST = [
       'FileArtifactExtractionTask',
@@ -134,7 +139,7 @@ class TaskLoader():
           log.error(message)
           raise TurbiniaException(message)
 
-    return None
+    return
 
   def get_task_names(self):
     """Returns a list of Task names.
@@ -188,7 +193,8 @@ def task_runner(obj, *args, **kwargs):
       import psq
       raise psq.Retry()
 
-  # try to acquire lock and timeout and requeue task if it's in use
+  # Try to acquire lock, timeout and requeue task if the worker
+  # is already processing a task.
   try:
     lock = filelock.FileLock(config.LOCK_FILE)
     with lock.acquire(timeout=0.001):
@@ -198,5 +204,8 @@ def task_runner(obj, *args, **kwargs):
     # Late import because this is only needed for PSQ
     import psq
     raise psq.Retry()
+  # *Always* make sure we release the lock
+  finally:
+    lock.release()
 
   return run
