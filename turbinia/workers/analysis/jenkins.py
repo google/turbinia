@@ -63,8 +63,9 @@ class JenkinsAnalysisTask(TurbiniaTask):
     # than we need.  Tracked in https://github.com/google/turbinia/issues/402
     try:
       collected_artifacts = extract_files(
-          file_name='config.xml', disk_path=evidence.local_path,
-          output_dir=os.path.join(self.output_dir, 'artifacts'))
+          file_name='config.xml',
+          disk_path=evidence.local_path, output_dir=os.path.join(
+              self.output_dir, 'artifacts'), credentials=evidence.credentials)
     except TurbiniaException as e:
       result.close(self, success=False, status=str(e))
       return result
