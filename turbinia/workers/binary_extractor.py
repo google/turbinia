@@ -132,6 +132,13 @@ class BinaryExtractorTask(TurbiniaTask):
     else:
       cmd.extend(['--signatures', 'elf,exe_mz'])
 
+    if evidence.credentials:
+      for credential_type, credential_data in evidence.credentials:
+        cmd.extend([
+            '--credential', '{0:s}:{1:s}'.format(
+                credential_type, credential_data)
+        ])
+
     if config.DEBUG_TASKS or self.task_config.get('debug_tasks'):
       cmd.append('-d')
     cmd.extend(['-w', self.binary_extraction_dir, evidence.local_path])

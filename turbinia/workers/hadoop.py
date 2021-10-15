@@ -122,7 +122,7 @@ class HadoopAnalysisTask(TurbiniaTask):
       output_dir = os.path.join(self.output_dir, 'artifacts')
       collected_artifacts = extract_artifacts(
           artifact_names=['HadoopAppRoot'], disk_path=evidence.local_path,
-          output_dir=output_dir)
+          output_dir=output_dir, credentials=evidence.credentials)
 
       (report, priority, summary) = self._AnalyzeHadoopAppRoot(
           collected_artifacts, output_dir)
