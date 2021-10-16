@@ -59,7 +59,8 @@ class LinuxAccountAnalysisTask(TurbiniaTask):
     try:
       collected_artifacts = extract_artifacts(
           artifact_names=['LoginPolicyConfiguration'],
-          disk_path=evidence.local_path, output_dir=self.output_dir)
+          disk_path=evidence.local_path, output_dir=self.output_dir,
+          credentials=evidence.credentials)
     except TurbiniaException as e:
       result.close(self, success=False, status=str(e))
       return result

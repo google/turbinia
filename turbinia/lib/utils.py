@@ -63,13 +63,14 @@ def _image_export(command, output_dir, timeout=DEFAULT_TIMEOUT):
   return collected_file_paths
 
 
-def extract_artifacts(artifact_names, disk_path, output_dir):
+def extract_artifacts(artifact_names, disk_path, output_dir, credentials=[]):
   """Extract artifacts using image_export from Plaso.
 
   Args:
     artifact_names: List of artifact definition names.
     disk_path: Path to either a raw disk image or a block device.
     output_dir: Path to directory to store the the extracted files.
+    credentials: List of credentials to use for decryption.
 
   Returns:
     list: paths to extracted files.
@@ -81,20 +82,29 @@ def extract_artifacts(artifact_names, disk_path, output_dir):
   artifacts = ','.join(artifact_names)
   image_export_cmd = [
       'sudo', 'image_export.py', '--artifact_filters', artifacts, '--write',
-      output_dir, '--partitions', 'all', '--volumes', 'all', '--unattended',
-      disk_path
+      output_dir, '--partitions', 'all', '--volumes', 'all', '--unattended'
   ]
+
+  if credentials:
+    for credential_type, credential_data in credentials:
+      image_export_cmd.extend([
+          '--credential', '{0:s}:{1:s}'.format(
+              credential_type, credential_data)
+      ])
+
+  image_export_cmd.append(disk_path)
 
   return _image_export(image_export_cmd, output_dir)
 
 
-def extract_files(file_name, disk_path, output_dir):
+def extract_files(file_name, disk_path, output_dir, credentials=[]):
   """Extract files using image_export from Plaso.
 
   Args:
     file_name: Name of file (without path) to be extracted.
     disk_path: Path to either a raw disk image or a block device.
     output_dir: Path to directory to store the the extracted files.
+    credentials: List of credentials to use for decryption.
 
   Returns:
     list: paths to extracted files.
@@ -104,8 +114,18 @@ def extract_files(file_name, disk_path, output_dir):
   """
   image_export_cmd = [
       'sudo', 'image_export.py', '--name', file_name, '--write', output_dir,
-      '--partitions', 'all', disk_path
+      '--partitions', 'all'
   ]
+
+  if credentials:
+    for credential_type, credential_data in credentials:
+      image_export_cmd.extend([
+          '--credential', '{0:s}:{1:s}'.format(
+              credential_type, credential_data)
+      ])
+
+  image_export_cmd.append(disk_path)
+
   return _image_export(image_export_cmd, output_dir)
 
 

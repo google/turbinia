@@ -108,8 +108,9 @@ class WordpressCredsAnalysisTask(TurbiniaTask):
     """
     try:
       collected_artifacts = extract_files(
-          file_name=_WP_DB_NAME, disk_path=evidence.local_path,
-          output_dir=os.path.join(self.output_dir, 'artifacts'))
+          file_name=_WP_DB_NAME,
+          disk_path=evidence.local_path, output_dir=os.path.join(
+              self.output_dir, 'artifacts'), credentials=evidence.credentials)
     except TurbiniaException as e:
       raise TurbiniaException(
           'artifact extraction failed: {0:s}'.format(str(e)))
