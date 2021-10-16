@@ -30,10 +30,11 @@ import copy
 from turbinia import config
 from turbinia import TurbiniaException
 from turbinia.config import logger
+from turbinia.lib import recipe_helpers
 from turbinia import __version__
-from turbinia.processors import archive
 from turbinia.output_manager import OutputManager
 from turbinia.output_manager import GCSOutputWriter
+from turbinia.processors import archive
 
 log = logging.getLogger('turbinia')
 # We set up the logger first without the file handler, and we will set up the
@@ -99,10 +100,6 @@ def main():
       '-r', '--request_id', help='Create new requests with this Request ID',
       required=False)
   parser.add_argument(
-      '-R', '--run_local', action='store_true',
-      help='Run completely locally without any server or other infrastructure. '
-      'This can be used to run one-off Tasks to process data locally.')
-  parser.add_argument(
       '-S', '--server', action='store_true',
       help='Run Turbinia Server indefinitely')
   parser.add_argument(
@@ -133,10 +130,6 @@ def main():
   parser.add_argument(
       '-p', '--poll_interval', default=60, type=int,
       help='Number of seconds to wait between polling for task state info')
-  parser.add_argument(
-      '-t', '--task',
-      help='The name of a single Task to run locally (must be used with '
-      '--run_local).')
   parser.add_argument(
       '-T', '--debug_tasks', action='store_true',
       help='Show debug output for all supported tasks', default=False)
@@ -387,11 +380,6 @@ def main():
 
   args = parser.parse_args()
 
-  # (jorlamd): Importing recipe_helpers late to avoid a bug where
-  # client.TASK_MAP is imported early rendering the check for worker
-  # status not possible.
-  from turbinia.lib import recipe_helpers
-
   # Load the config before final logger setup so we can the find the path to the
   # log file.
   try:
@@ -512,16 +500,7 @@ def main():
   # Create Client object
   client = None
   if args.command not in ('psqworker', 'server'):
-    client = TurbiniaClientProvider.get_turbinia_client(args.run_local)
-
-  # Make sure run_local flags aren't conflicting with other server/client flags
-  if args.run_local and (server_flags_set or worker_flags_set):
-    log.error('--run_local flag is not compatible with server/worker flags')
-    sys.exit(1)
-
-  if args.run_local and not args.task:
-    log.error('--run_local flag requires --task flag')
-    sys.exit(1)
+    client = TurbiniaClientProvider.get_turbinia_client()
 
   # Set zone/project to defaults if flags are not set, and also copy remote
   # disk if needed.
@@ -866,10 +845,7 @@ def main():
       log.info(
           'Run command "turbiniactl status -r {0:s}" to see the status of'
           ' this request and associated tasks'.format(request.request_id))
-      if not args.run_local:
-        client.send_request(request)
-      else:
-        log.debug('--run_local specified so not sending request to server')
+      client.send_request(request)
 
     if args.wait:
       log.info(
@@ -884,16 +860,6 @@ def main():
               instance=config.INSTANCE_ID, project=config.TURBINIA_PROJECT,
               region=region, request_id=request.request_id,
               all_fields=args.all_fields))
-
-  if args.run_local and not evidence_:
-    log.error('Evidence must be specified if using --run_local')
-    sys.exit(1)
-  if args.run_local and evidence_.cloud_only:
-    log.error('--run_local cannot be used with Cloud only Evidence types')
-    sys.exit(1)
-  if args.run_local and evidence_:
-    result = client.run_local_task(args.task, request)
-    log.info('Task execution result: {0:s}'.format(result))
 
   log.info('Done.')
   sys.exit(0)
