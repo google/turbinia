@@ -98,7 +98,7 @@ Please ensure `PROMETHEUS_ENABLED` is set to `True` and that the `PROMETHEUS_POR
 ### Deploying Prometheus
 In this deployment method, we are using [kube-prometheus](https://github.com/prometheus-operator/kube-prometheus) to deploy the Prometheus stack to the cluster. This simplifies the setup required and automatically deploys Prometheus, Grafana, and Alert Manager to the cluster through manifest files. Before proceeding with the setup, please ensure you are connected to the cluster with Turbinia deployed and can run commands via `kubectl`, then proceed to the following steps to configure Prometheus with Turbinia.
 
-* Clone the github repo [kube-prometheus](https://github.com/prometheus-operator/kube-prometheus) locally. Please ensure that the branch  cloned is compatible with your Kubernetes cluster version else you may run into issues. Please see the [Compatibility Matrix](https://github.com/prometheus-operator/kube-prometheus#compatibility) for more details.
+* Clone the github repo [kube-prometheus](https://github.com/prometheus-operator/kube-prometheus) locally. Please ensure that the branch  cloned is compatible with your Kubernetes cluster version else you may run into issues. Please see the [Compatibility Matrix](https://github.com/prometheus-operator/kube-prometheus) section of the repo for more details.
 * Once cloned, run the following commands to deploy the stack
     * `kubectl create -f manifests/setup`
     * `kubectl create -f manifests/`
