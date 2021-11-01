@@ -76,7 +76,7 @@ function cordon {
     # Show status
     show_nodes
 
-    # Stop all nodes
+    # Cordon all nodes
     get_nodes
 
     for NODE in $NODES
@@ -92,7 +92,7 @@ function uncordon {
     # Show status
     show_nodes
 
-    # Stop all nodes
+    # Uncordon all nodes
     get_nodes
 
     for NODE in $NODES
@@ -111,7 +111,6 @@ function show_container_logs {
 }
 
 function show_config {
-    # The container environment variables are *not* available in a structured format, only as a big string blob, hence the parsing...
     echo "Pulling Turbinia configuration from ConfigMap: turbinia-config"
     $KUBECTL get configmap turbinia-config -o json | jq '.data.TURBINIA_CONF' | xargs | base64 -d
 }
