@@ -20,14 +20,11 @@ KUBECTL=`command -v kubectl`
 
 function usage { 
   echo "Usage: $0" 
-  echo "-i              The Turbinia deployment instance ID"
-  echo "-z              The GCP zone the Turbinia deployment is located"
   echo "-c              Choose one of the commands below"
   echo
   echo "Optional arguments:"
   echo "-t              Docker image tag, eg latest or 20210606"
   echo "-f              Path to Turbinia configuration file"
-  echo "-s              Use plain ssh instead of gcloud compute ssh"
   echo "-k              Environment variable name"
   echo "-v              Environment variable value"
   echo 
@@ -36,8 +33,8 @@ function usage {
   echo "logs            Display logs of a Turbinia server or worker"
   echo "show-config     Write the Turbinia configuration of an instance to STDOUT"
   echo "status          Show the running status of server and workers"
-  echo "start           Start a Turbinia deployment"
-  echo "stop            Stop a Turbinia deployment"
+  echo "cordon          Cordon a cluster (Cordoning nodes is a Kubernetes mechanism to mark a node as “unschedulable”.)"
+  echo "uncordon        Uncordon a cluser (Cordoning nodes is a Kubernetes mechanism to mark a node as “unschedulable”.)"
   echo "update-config   Update the Turbinia configuration of a Turbinia deployment from CONFIG_FILE, use -f"
   echo "update-env      Update an environment variable on a container, use -k and -v"
   echo
@@ -59,68 +56,99 @@ function check_kubectl {
     fi
 }
 
-
-function stop {
-    # Show status
-    # show_infra
-
-    # Stop server
-
-    get_nodes
-
-    for NODE in $NODES
-    do
-        echo $NODE
-    done
-
-    # Stop all workers
-
-    # Show status
-    # show_infra
-
-}
-
-function start {
-    # Show status
-    show_infra
-
-    # Start all workers
-    get_workers
-    for WORKER in $WORKERS
-    do
-        $GCLOUD compute instances start $WORKER --zone $ZONE --async
-    done
-
-    # Start server
-    $GCLOUD compute instances start turbinia-server-$INSTANCEID --zone $ZONE
-
-    # Show status
-    show_infra
-}
-
 function show_infra {
     $KUBECTL get pod -o=custom-columns=NAME:.metadata.name,STATUS:.status.phase,NODE:.spec.nodeName
+}
+
+function show_nodes {
+    $KUBECTL get nodes
 }
 
 function get_nodes {
     NODES=$($KUBECTL get nodes --output=jsonpath={.items..metadata.name})
 }
 
+function cordon {
+    echo "Note this does not stop a cluster. Please resize the cluster to zero to prevent being billed."
+    # Show status
+    show_nodes
+
+    # Stop all nodes
+    get_nodes
+
+    for NODE in $NODES
+    do
+        $KUBECTL cordon $NODE
+    done
+
+    # Show status
+    show_nodes
+}
+
+function uncordon {
+    # Show status
+    show_nodes
+
+    # Stop all nodes
+    get_nodes
+
+    for NODE in $NODES
+    do
+        $KUBECTL uncordon $NODE
+    done
+
+    # Show status
+    show_nodes
+}
+
 function show_container_logs {
-    # TODO(rbdebeer) update this to use container names instead of IDs when the terraform scripts have been updated to non-random names.
     show_infra
     read -p 'Which container name? ' CONTAINER_NAME
     $KUBECTL logs $CONTAINER_NAME
+}
+
+function show_config {
+    # The container environment variables are *not* available in a structured format, only as a big string blob, hence the parsing...
+    echo "Pulling Turbinia configuration from ConfigMap: turbinia-config"
+    $KUBECTL get configmap turbinia-config -o json | jq '.data.TURBINIA_CONF' | xargs | base64 -d
+}
+
+function update_config {
+    CONFIG_BASE64=`cat $CONFIG_FILE | base64 -w 0`
+    # Update ConfigMap with new Turbinia config
+    $KUBECTL create configmap turbinia-config --from-literal=TURBINIA_CONF=$CONFIG_BASE64 -o yaml --dry-run=client | $KUBECTL replace -f -
+}
+
+function show_deployment {
+    $KUBECTL get deployments
+}
+
+function update_env {
+    show_deployment
+
+    echo "Going to set environment variable $ENVKEY to $ENVVALUE"
+    read -p 'Which deployment? ' DEPLOYMENT
+
+    # Update the deployment
+    $KUBECTL set env deployment/$DEPLOYMENT $ENVKEY=$ENVVALUE
+
+}
+
+function update_docker_image_tag {
+    echo "Updating the following deployments with docker tag $DOCKER_TAG"
+    show_deployment
+
+    # Update the turbinia-server deployment
+    $KUBECTL set image deployment/turbinia-server server=$SERVER_URI:$DOCKER_TAG
+
+    # Update the turbinia-worker deployment
+    $KUBECTL set image deployment/turbinia-worker worker=$WORKER_URI:$DOCKER_TAG
 }
 
 while getopts ":c:i:z:t:f:v:k:s" option; do
    case ${option} in
       c ) 
          CMD=$OPTARG;;
-      i ) 
-         INSTANCEID=$OPTARG;;
-      z ) 
-         ZONE=$OPTARG;;
       t ) 
          DOCKER_TAG=$OPTARG;;
       f ) 
@@ -147,8 +175,8 @@ then
     exit 0
 fi
 
-if [ -z ${CMD} ] || [ -z ${INSTANCEID} ] || [ -z ${ZONE} ] ; then 
-    echo "Error: Please provide at least an instance ID (-i), a zone (-z) and a command (-c)"
+if [ -z ${CMD} ]; then 
+    echo "Error: Please provide a command (-c)"
     usage
     exit 1
 fi
@@ -168,7 +196,37 @@ case $CMD in
     logs)
         show_container_logs
         ;;
-    stop)
-        stop
+    cordon)
+        cordon
+        ;;
+    uncordon)
+        uncordon
+        ;;
+    show-config)
+        show_config
+        ;;
+    update-config)
+        if [ -z ${CONFIG_FILE} ]; then 
+            echo "Error: No configuration file provided"
+            usage
+            exit 1
+        fi
+        update_config
+        ;;
+    update-env)
+        if [ -z ${ENVKEY} ] || [ -z ${ENVVALUE} ] ; then 
+            echo "Error: No key or value set to update environment variable (use -k and -v)"
+            usage
+            exit 1
+        fi
+        update_env
+        ;;
+    change-image)
+        if [ -z ${DOCKER_TAG} ]; then 
+            echo "Error: No Docker image tag provided"
+            usage
+            exit 1
+        fi
+        update_docker_image_tag
         ;;
 esac
