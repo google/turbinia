@@ -23,6 +23,8 @@ function usage {
   echo "-c              Choose one of the commands below"
   echo
   echo "Optional arguments:"
+  echo "-n              The cluster name"
+  echo "-s              The desired number of nodes in the cluster"
   echo "-t              Docker image tag, eg latest or 20210606"
   echo "-f              Path to Turbinia configuration file"
   echo "-k              Environment variable name"
@@ -37,6 +39,7 @@ function usage {
   echo "uncordon        Uncordon a cluser (Cordoning nodes is a Kubernetes mechanism to mark a node as “unschedulable”.)"
   echo "update-config   Update the Turbinia configuration of a Turbinia deployment from CONFIG_FILE, use -f"
   echo "update-env      Update an environment variable on a container, use -k and -v"
+  echo "resize-cluster  Resize the number of nodes in the cluster."
   echo
 }
 
@@ -134,6 +137,11 @@ function update_env {
 
 }
 
+function resize_cluster {
+    echo "Resizing cluster $CLUSTER_NAME to $CLUSTER_SIZE nodes."
+    $GCLOUD container clusters resize $CLUSTER_NAME --num-nodes $CLUSTER_SIZE
+}
+
 function update_docker_image_tag {
     echo "Updating the following deployments with docker tag $DOCKER_TAG"
     show_deployment
@@ -145,10 +153,14 @@ function update_docker_image_tag {
     $KUBECTL set image deployment/turbinia-worker worker=$WORKER_URI:$DOCKER_TAG
 }
 
-while getopts ":c:i:z:t:f:v:k:s" option; do
+while getopts ":c:n:s:t:f:v:k:" option; do
    case ${option} in
       c ) 
          CMD=$OPTARG;;
+      n )
+         CLUSTER_NAME=$OPTARG;;
+      s )
+         CLUSTER_SIZE=$OPTARG;;
       t ) 
          DOCKER_TAG=$OPTARG;;
       f ) 
@@ -226,5 +238,13 @@ case $CMD in
             exit 1
         fi
         update_docker_image_tag
+        ;;
+    resize-cluster)
+        if [ -z ${CLUSTER_NAME} ] || [ -z ${CLUSTER_SIZE} ] ; then 
+            echo "Error: No cluster name or cluster size provided"
+            usage
+            exit 1
+        fi
+        resize_cluster
         ;;
 esac
