@@ -153,8 +153,6 @@ while getopts ":c:i:z:t:f:v:k:s" option; do
          DOCKER_TAG=$OPTARG;;
       f ) 
          CONFIG_FILE=$OPTARG;;
-      s )
-         PLAIN_SSH=1;;
       k )
          ENVKEY=$OPTARG;;
       v )
