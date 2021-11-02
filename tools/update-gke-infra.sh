@@ -52,7 +52,7 @@ function check_gcloud {
 }
 
 function check_kubectl {
-    if [ -z $GCLOUD ]
+    if [ -z $KUBECTL ]
     then
         echo "kubectl not found, please install first"
         exit 1
