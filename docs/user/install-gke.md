@@ -115,11 +115,13 @@ In this deployment method, we are using [kube-prometheus](https://github.com/pro
     * `kubectl -n monitoring apply -f manifests/prometheus-prometheus.yaml`
 * To get Turbinia custom rules imported, apply the `turbinia-custom-rules.yaml` file located in the Turbinia directory
     * `kubectl -n monitoring apply -f monitoring/k8s/prometheus/turbinia-custom-rules.yaml`
-* You can test that the changes were properly made by connecting to the Prometheus console and searching for `turbinia`. If related metrics pop up in the search bar, then Turbinia metrics are properly being ingested by Prometheus. You can also check to see if the Turbinia custom rules have been applied by navigating to Status -> Rules then searching for one of the custom rule names. To connect to the Prometheus console, run the following command
+
+### Testing Prometheus Deployment
+* Test that the changes were properly made by connecting to the Prometheus console and searching for `turbinia`. If related metrics pop up in the search bar, then Turbinia metrics are properly being ingested by Prometheus. You can also check to see if the Turbinia custom rules have been applied by navigating to Status -> Rules then searching for one of the custom rule names. To connect to the Prometheus console, run the following command
     * `kubectl -n monitoring port-forward svc/prometheus-k8s 9090`
 
 ### Deploying Grafana
-Before proceeding to the Grafana setup, please ensure that you have followed all the steps outlined in the **Deploying Prometheus** section.
+Before proceeding to the Grafana setup, please ensure that you have followed all the steps outlined in the **Testing Prometheus Deployment** section.
 * Clone the github repo [kube-prometheus](https://github.com/prometheus-operator/kube-prometheus) locally. 
 * You will then need to update `manifests/grafana-deployment.yaml` file, first by updating the `volumeMounts` section with the following `mountPaths`
     ```
