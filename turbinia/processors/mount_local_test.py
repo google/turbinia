@@ -32,6 +32,7 @@ def _mock_bitlocker_returns(*args, **kwargs):
     return False
   return True
 
+
 def _mock_disk_size_returns(*args, **kwargs):
   """Mock return values."""
   if args[0][0] == 'blockdev' and args[0][2] == '/dev/loop0':
@@ -43,6 +44,7 @@ def _mock_disk_size_returns(*args, **kwargs):
   if args[0][0] == 'ls' and args[0][2] == 'test2.dd':
     raise CalledProcessError(1, 'ls')
   return ''
+
 
 class MountLocalProcessorTest(unittest.TestCase):
   """Tests for mount_local processor."""
