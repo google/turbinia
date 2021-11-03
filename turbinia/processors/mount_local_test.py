@@ -26,15 +26,56 @@ from turbinia import TurbiniaException
 from turbinia.processors import mount_local
 
 
-def _mock_returns(*args, **kwargs):
+def _mock_bitlocker_returns(*args, **kwargs):
   """Mock return values."""
   if args[0] == '/dev/loop0p4':
     return False
   return True
 
+def _mock_disk_size_returns(*args, **kwargs):
+  """Mock return values."""
+  if args[0][0] == 'blockdev' and args[0][2] == '/dev/loop0':
+    return b'100\n'
+  if args[0][0] == 'blockdev' and args[0][2] in ['test.dd', 'test2.dd']:
+    raise CalledProcessError(1, 'blockdev')
+  if args[0][0] == 'ls' and args[0][2] == 'test.dd':
+    return b'100 test.dd\n'
+  if args[0][0] == 'ls' and args[0][2] == 'test2.dd':
+    raise CalledProcessError(1, 'ls')
+  return ''
 
 class MountLocalProcessorTest(unittest.TestCase):
   """Tests for mount_local processor."""
+
+  @mock.patch('subprocess.check_output')
+  @mock.patch('os.path.exists')
+  def testGetDiskSize(self, mock_path_exists, mock_subprocess):
+    """Test GetDiskSize method."""
+    mock_path_exists.return_value = True
+    source_path = '/dev/loop0'
+    # Test for block device
+    mock_subprocess.side_effect = _mock_disk_size_returns
+    size = mount_local.GetDiskSize(source_path)
+    expected_args = ['blockdev', '--getsize64', source_path]
+    mock_subprocess.assert_called_once_with(expected_args)
+    self.assertEqual(size, 100)
+
+    # Test for image file
+    source_path = 'test.dd'
+    size = mount_local.GetDiskSize(source_path)
+    expected_args = ['ls', '-s', source_path]
+    mock_subprocess.assert_called_with(expected_args)
+    self.assertEqual(size, 100)
+
+    # Test ls failure
+    source_path = 'test2.dd'
+    size = mount_local.GetDiskSize(source_path)
+    self.assertIsNone(size)
+
+    # Test path doesn't exist
+    mock_path_exists.return_value = False
+    with self.assertRaises(TurbiniaException):
+      mount_local.GetDiskSize(source_path)
 
   @mock.patch('turbinia.processors.mount_local.config')
   @mock.patch('tempfile.mkdtemp')
@@ -47,7 +88,7 @@ class MountLocalProcessorTest(unittest.TestCase):
       mock_config):
     """Test PreprocessBitLocker method."""
     mock_config.MOUNT_DIR_PREFIX = '/mnt/turbinia'
-    mock_path_exists.side_effect = _mock_returns
+    mock_path_exists.side_effect = _mock_bitlocker_returns
     mock_mkdtemp.return_value = '/mnt/turbinia/turbinia0ckdntz0'
 
     current_path = os.path.abspath(os.path.dirname(__file__))
@@ -178,7 +219,7 @@ class MountLocalProcessorTest(unittest.TestCase):
       mock_filesystem, mock_mkdtemp, mock_config):
     """Test PreprocessMountDisk method."""
     mock_config.MOUNT_DIR_PREFIX = '/mnt/turbinia'
-    mock_path_exists.side_effect = _mock_returns
+    mock_path_exists.side_effect = _mock_bitlocker_returns
     mock_filesystem.return_value = b'ext4'
     mock_mkdtemp.return_value = '/mnt/turbinia/turbinia0ckdntz0'
 
@@ -226,7 +267,7 @@ class MountLocalProcessorTest(unittest.TestCase):
       mock_config):
     """Test PreprocessMountPartition method."""
     mock_config.MOUNT_DIR_PREFIX = '/mnt/turbinia'
-    mock_path_exists.side_effect = _mock_returns
+    mock_path_exists.side_effect = _mock_bitlocker_returns
     mock_mkdtemp.return_value = '/mnt/turbinia/turbinia0ckdntz0'
 
     # Test partition path doesn't exist
