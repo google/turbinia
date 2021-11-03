@@ -25,11 +25,11 @@ import filelock
 
 from turbinia import config
 from turbinia import TurbiniaException
+from turbinia.lib.docker_manager import GetDockerPath
 from turbinia.processors import archive
 from turbinia.processors import docker
 from turbinia.processors import mount_local
 from turbinia.processors import resource_manager
-from turbinia.lib.docker_manager import GetDockerPath
 
 # pylint: disable=keyword-arg-before-vararg
 
@@ -120,6 +120,8 @@ class Evidence:
         PlasoFile, but not RawDisk).
     name (str): Name of evidence.
     description (str): Description of evidence.
+    size (int): The evidence size in bytes where available (Used for metric
+        tracking).
     saved_path (str): Path to secondary location evidence is saved for later
         retrieval (e.g. GCS).
     saved_path_type (str): The name of the output writer that saved evidence
@@ -167,14 +169,15 @@ class Evidence:
   POSSIBLE_STATES = []
 
   def __init__(
-      self, name=None, description=None, source=None, source_path=None,
-      tags=None, request_id=None, copyable=False):
+      self, name=None, description=None, size=None, source=None,
+      source_path=None, tags=None, request_id=None, copyable=False):
     """Initialization for Evidence."""
     self.copyable = copyable
     self.config = {}
     self.context_dependent = False
     self.cloud_only = False
     self.description = description
+    self.size = size
     self.mount_path = None
     self.credentials = []
     self.source = source
@@ -222,12 +225,13 @@ class Evidence:
     """
     name = dictionary.pop('name', None)
     description = dictionary.pop('description', None)
+    size = dictionary.pop('size', None)
     source = dictionary.pop('source', None)
     source_path = dictionary.pop('source_path', None)
     tags = dictionary.pop('tags', None)
     request_id = dictionary.pop('request_id', None)
     new_object = cls(
-        name=name, description=description, source=source,
+        name=name, description=description, size=size, source=source,
         source_path=source_path, tags=tags, request_id=request_id)
     new_object.__dict__.update(dictionary)
     return new_object
@@ -536,16 +540,18 @@ class RawDisk(Evidence):
     device_path (str): Path to a relevant 'raw' data source (ie: a block
         device or a raw disk image).
     mount_partition: The mount partition for this disk (if any).
-    size: The size of the disk in bytes.
   """
 
   POSSIBLE_STATES = [EvidenceState.ATTACHED]
 
-  def __init__(self, size=None, *args, **kwargs):
+  def __init__(self, *args, **kwargs):
     """Initialization for raw disk evidence object."""
     self.device_path = None
-    self.size = size
     super(RawDisk, self).__init__(*args, **kwargs)
+    if hasattr(config, 'TURBINIA_COMMAND') and config.TURBINIA_COMMAND:
+      if 'worker' in config.TURBINIA_COMMAND:
+        if self.source_path and self.size is None:
+          self.size = mount_local.GetDiskSize(self.source_path)
 
   def _preprocess(self, _, required_states):
     if EvidenceState.ATTACHED in required_states or self.has_child_evidence:
@@ -585,7 +591,10 @@ class DiskPartition(RawDisk):
     self.partition_size = partition_size
     self.lv_uuid = lv_uuid
     self.path_spec = path_spec
-    super(DiskPartition, self).__init__(*args, **kwargs)
+    if 'size' not in kwargs:
+      super(DiskPartition, self).__init__(size=partition_size, *args, **kwargs)
+    else:
+      super(DiskPartition, self).__init__(*args, **kwargs)
 
     # This Evidence needs to have a parent
     self.context_dependent = True
