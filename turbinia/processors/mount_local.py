@@ -45,16 +45,17 @@ def GetDiskSize(source_path):
   size = None
 
   if not os.path.exists(source_path):
-    raise TurbiniaException(
-        ('Cannot check disk size for non-existing source_path '
-         '{0!s}').format(source_path))
+    log.error(
+        'Cannot check disk size for non-existing source_path {0!s}'.format(
+            source_path))
+    return None
 
   cmd = ['blockdev', '--getsize64', source_path]
   log.info('Running {0!s}'.format(cmd))
 
   # Run blockdev first, this will fail if evidence is not a block device
   try:
-    cmd_output = subprocess.check_output(cmd).split()
+    cmd_output = subprocess.check_output(cmd, stderr=subprocess.STDOUT).split()
     size = int(cmd_output[0].decode('utf-8'))
   except subprocess.CalledProcessError:
     log.debug('blockdev failed, attempting to get file size')

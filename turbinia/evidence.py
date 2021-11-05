@@ -548,12 +548,10 @@ class RawDisk(Evidence):
     """Initialization for raw disk evidence object."""
     self.device_path = None
     super(RawDisk, self).__init__(*args, **kwargs)
-    if hasattr(config, 'TURBINIA_COMMAND') and config.TURBINIA_COMMAND:
-      if 'worker' in config.TURBINIA_COMMAND:
-        if self.source_path and self.size is None:
-          self.size = mount_local.GetDiskSize(self.source_path)
 
   def _preprocess(self, _, required_states):
+    if self.size is None:
+      self.size = mount_local.GetDiskSize(self.source_path)
     if EvidenceState.ATTACHED in required_states or self.has_child_evidence:
       self.device_path = mount_local.PreprocessLosetup(self.source_path)
       self.state[EvidenceState.ATTACHED] = True
@@ -591,10 +589,7 @@ class DiskPartition(RawDisk):
     self.partition_size = partition_size
     self.lv_uuid = lv_uuid
     self.path_spec = path_spec
-    if 'size' not in kwargs:
-      super(DiskPartition, self).__init__(size=partition_size, *args, **kwargs)
-    else:
-      super(DiskPartition, self).__init__(*args, **kwargs)
+    super(DiskPartition, self).__init__(*args, **kwargs)
 
     # This Evidence needs to have a parent
     self.context_dependent = True

@@ -18,6 +18,7 @@ from __future__ import unicode_literals
 
 import os
 from subprocess import CalledProcessError
+from subprocess import STDOUT
 import unittest
 
 import mock
@@ -59,7 +60,7 @@ class MountLocalProcessorTest(unittest.TestCase):
     mock_subprocess.side_effect = _mock_disk_size_returns
     size = mount_local.GetDiskSize(source_path)
     expected_args = ['blockdev', '--getsize64', source_path]
-    mock_subprocess.assert_called_once_with(expected_args)
+    mock_subprocess.assert_called_once_with(expected_args, stderr=STDOUT)
     self.assertEqual(size, 100)
 
     # Test for image file
@@ -76,8 +77,8 @@ class MountLocalProcessorTest(unittest.TestCase):
 
     # Test path doesn't exist
     mock_path_exists.return_value = False
-    with self.assertRaises(TurbiniaException):
-      mount_local.GetDiskSize(source_path)
+    size = mount_local.GetDiskSize(source_path)
+    self.assertIsNone(size)
 
   @mock.patch('turbinia.processors.mount_local.config')
   @mock.patch('tempfile.mkdtemp')
