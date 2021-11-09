@@ -131,6 +131,7 @@ class TurbiniaTaskResult:
     self.task_name = None
     self.requester = None
     self.output_dir = None
+    # self.group_id = None
 
     self.report_data = None
     self.report_priority = Priority.MEDIUM
@@ -413,7 +414,8 @@ class TurbiniaTask:
 
   # The list of attributes that we will persist into storage
   STORED_ATTRIBUTES = [
-      'id', 'job_id', 'last_update', 'name', 'request_id', 'requester'
+      'id', 'job_id', 'last_update', 'name', 'request_id', 'requester',
+      'group_id'
   ]
 
   # The list of evidence states that are required by a Task in order to run.

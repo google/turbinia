@@ -53,6 +53,224 @@ def csv_list(string):
   return string.split(',')
 
 
+def process_evidence(**kwargs):
+
+  from turbinia import client as TurbiniaClientProvider
+  from turbinia.client import TurbiniaCeleryClient
+  from turbinia.worker import TurbiniaCeleryWorker
+  from turbinia.worker import TurbiniaPsqWorker
+  from turbinia.server import TurbiniaServer
+  from turbinia import evidence
+  from turbinia.message import TurbiniaRequest
+
+  args = kwargs.get('args')
+  group_id = kwargs.get('group_id')
+  # Set request id
+  request_id = uuid.uuid4().hex
+  # Start Evidence configuration
+  evidence_ = None
+  # command = kwargs["command"]
+  if args.command == 'rawdisk':
+    name = kwargs.get('name')
+    source_path = os.path.abspath(kwargs.get('source_path'))
+    evidence_ = evidence.RawDisk(
+        name=name, source_path=source_path, source=kwargs.get('source'))
+  elif args.command == 'directory':
+    name = kwargs.get('name')
+    source_path = os.path.abspath(kwargs.get('source_path'))
+
+    if not config.SHARED_FILESYSTEM:
+      log.info(
+          'A Cloud Only Architecture has been detected. '
+          'Compressing the directory for GCS upload.')
+      source_path = archive.CompressDirectory(
+          source_path, output_path=config.TMP_DIR)
+      evidence_ = evidence.CompressedDirectory(
+          name=name, source_path=source_path, source=kwargs.get('source'))
+    else:
+      evidence_ = evidence.Directory(
+          name=name, source_path=source_path, source=kwargs.get('source'))
+  elif args.command == 'compresseddirectory':
+    archive.ValidateTarFile(kwargs.get('source_path'))
+    name = kwargs.get('name')
+    source_path = os.path.abspath(kwargs.get('source_path'))
+    evidence_ = evidence.CompressedDirectory(
+        name=name, source_path=source_path, source=kwargs.get('source'))
+  elif args.command == 'googleclouddisk':
+    args.name = args.name if args.name else args.disk_name
+    evidence_ = evidence.GoogleCloudDisk(
+        name=args.name, disk_name=args.disk_name, project=args.project,
+        zone=args.zone, source=args.source)
+  elif args.command == 'googleclouddiskembedded':
+    args.name = args.name if args.name else args.disk_name
+    parent_evidence_ = evidence.GoogleCloudDisk(
+        name=args.name, disk_name=args.disk_name, project=args.project,
+        mount_partition=args.mount_partition, zone=args.zone,
+        source=args.source)
+    evidence_ = evidence.GoogleCloudDiskRawEmbedded(
+        name=args.name, disk_name=args.disk_name, project=args.project,
+        zone=args.zone, embedded_path=args.embedded_path)
+    evidence_.set_parent(parent_evidence_)
+  elif args.command == 'hindsight':
+    if args.format not in ['xlsx', 'sqlite', 'jsonl']:
+      log.error('Invalid output format.')
+      sys.exit(1)
+    if args.browser_type not in ['Chrome', 'Brave']:
+      log.error('Browser type not supported.')
+      sys.exit(1)
+    args.name = args.name if args.name else args.source_path
+    source_path = os.path.abspath(args.source_path)
+    evidence_ = evidence.ChromiumProfile(
+        name=args.name, source_path=source_path, output_format=args.format,
+        browser_type=args.browser_type)
+  elif args.command == 'rawmemory':
+    args.name = args.name if args.name else args.source_path
+    source_path = os.path.abspath(args.source_path)
+    evidence_ = evidence.RawMemory(
+        name=args.name, source_path=source_path, profile=args.profile,
+        module_list=args.module_list)
+
+  if evidence_ and not args.force_evidence:
+    if config.SHARED_FILESYSTEM and evidence_.cloud_only:
+      log.error(
+          'The evidence type {0:s} is Cloud only, and this instance of '
+          'Turbinia is not a cloud instance.'.format(evidence_.type))
+      sys.exit(1)
+    elif not config.SHARED_FILESYSTEM and evidence_.copyable:
+      if os.path.exists(evidence_.local_path):
+        output_manager = OutputManager()
+        output_manager.setup(evidence_.type, request_id, remote_only=True)
+        output_manager.save_evidence(evidence_)
+      else:
+        log.error(
+            'The evidence local path does not exist: {0:s}. Please submit '
+            'a new Request with a valid path.'.format(evidence_.local_path))
+        sys.exit(1)
+    elif not config.SHARED_FILESYSTEM and not evidence_.cloud_only:
+      log.error(
+          'The evidence type {0:s} cannot run on Cloud instances of '
+          'Turbinia. Consider wrapping it in a '
+          'GoogleCloudDiskRawEmbedded or other Cloud compatible '
+          'object'.format(evidence_.type))
+      sys.exit(1)
+
+  # (jorlamd): Importing recipe_helpers late to avoid a bug where
+  # client.TASK_MAP is imported early rendering the check for worker
+  # status not possible.
+  from turbinia.lib import recipe_helpers
+
+  # If we have evidence to process and we also want to run as a server, then
+  # we'll just process the evidence directly rather than send it through the
+  # PubSub frontend interface.  If we're not running as a server then we will
+  # create a new TurbiniaRequest and send it over PubSub.
+  request = None
+  client = kwargs.get('client')
+  if evidence_ and args.server:
+    server = TurbiniaServer()
+    server.add_evidence(evidence_)
+    server.start()
+  # TODO UPDATE TurbiniaRequest
+  elif evidence_:
+    request = TurbiniaRequest(
+        request_id=request_id, requester=getpass.getuser())
+    #  request_id=request_id, group_id=group_id, requester=getpass.getuser())
+    request.evidence.append(evidence_)
+
+    if args.decryption_keys:
+      for credential in args.decryption_keys:
+        try:
+          credential_type, credential_data = credential.split('=')
+        except ValueError as exception:
+          log.error(
+              'Could not parse credential [{0:s}] from decryption keys '
+              '{1!s}: {2!s}'.format(
+                  credential, args.decryption_keys, exception))
+          sys.exit(1)
+        evidence_.credentials.append((credential_type, credential_data))
+
+    if args.recipe or args.recipe_path:
+      if (args.jobs_denylist or args.jobs_allowlist or
+          args.filter_patterns_file or args.yara_rules_file):
+        log.error(
+            'Specifying a recipe is incompatible with defining '
+            'jobs allow/deny lists, yara rules or a patterns file separately.')
+        sys.exit(1)
+
+      if args.recipe_path:
+        recipe_file = args.recipe_path
+      else:
+        recipe_file = os.path.join(config.RECIPE_FILE_DIR, args.recipe)
+      if not os.path.exists(recipe_file) and not recipe_file.endswith('.yaml'):
+        log.warning(
+            'Could not find recipe file at {0:s}, checking for file '
+            'with .yaml extension'.format(recipe_file))
+        recipe_file = recipe_file + '.yaml'
+      if not os.path.exists(recipe_file):
+        log.error('Recipe file {0:s} could not be found. Exiting.')
+        sys.exit(1)
+
+      recipe_dict = recipe_helpers.load_recipe_from_file(
+          recipe_file, not args.skip_recipe_validation)
+      if recipe_dict['globals']:
+        recipe_dict['globals']['group_id'] = group_id
+      else:
+        recipe_dict['globals'] = dict()
+        recipe_dict['globals']['group_id'] = group_id
+      if not recipe_dict:
+        sys.exit(1)
+    else:
+      recipe_dict = copy.deepcopy(recipe_helpers.DEFAULT_RECIPE)
+      recipe_dict['globals']['debug_tasks'] = args.debug_tasks
+      recipe_dict['globals']['filter_patterns'] = kwargs.get('filter_patterns')
+      recipe_dict['globals']['jobs_denylist'] = args.jobs_denylist
+      recipe_dict['globals']['jobs_allowlist'] = args.jobs_allowlist
+      recipe_dict['globals']['yara_rules'] = kwargs.get('yara_rules')
+      recipe_dict['globals']['group_id'] = group_id
+      log.error('HERE IN CTL 2')
+      log.error(group_id)
+    request.recipe = recipe_dict
+
+    if args.dump_json:
+      print(request.to_json().encode('utf-8'))
+      sys.exit(0)
+    else:
+      log.info(
+          'Creating request {0:s} with group id {1:s} and evidence '
+          '{2:s}'.format(request.request_id, request.group_id, evidence_.name))
+      # TODO add a new log line when group status is implemented
+      log.info(
+          'Run command "turbiniactl status -r {0:s}" to see the status of'
+          ' this request and associated tasks'.format(request.request_id))
+      if not args.run_local:
+        client.send_request(request)
+      else:
+        log.debug('--run_local specified so not sending request to server')
+    # TODO check if group id affects this part
+    if args.wait:
+      log.info(
+          'Waiting for request {0:s} to complete'.format(request.request_id))
+      region = config.TURBINIA_REGION
+      client.wait_for_request(
+          instance=config.INSTANCE_ID, project=config.TURBINIA_PROJECT,
+          region=region, request_id=request.request_id,
+          poll_interval=args.poll_interval)
+      print(
+          client.format_task_status(
+              instance=config.INSTANCE_ID, project=config.TURBINIA_PROJECT,
+              region=region, request_id=request.request_id,
+              all_fields=args.all_fields))
+
+  if args.run_local and not evidence_:
+    log.error('Evidence must be specified if using --run_local')
+    sys.exit(1)
+  if args.run_local and evidence_.cloud_only:
+    log.error('--run_local cannot be used with Cloud only Evidence types')
+    sys.exit(1)
+  if args.run_local and evidence_:
+    result = client.run_local_task(args.task, request)
+    log.info('Task execution result: {0:s}'.format(result))
+
+
 def main():
   """Main function for turbiniactl"""
   # TODO(aarontp): Allow for single run mode when
@@ -162,12 +380,14 @@ def main():
   parser_rawdisk = subparsers.add_parser(
       'rawdisk', help='Process RawDisk as Evidence')
   parser_rawdisk.add_argument(
-      '-l', '--source_path', help='Local path to the evidence', required=True)
+      '-l', '--source_path', help='Local path to the evidence', required=True,
+      type=csv_list)
   parser_rawdisk.add_argument(
       '-s', '--source', help='Description of the source of the evidence',
-      required=False)
+      required=False, type=csv_list)
   parser_rawdisk.add_argument(
-      '-n', '--name', help='Descriptive name of the evidence', required=False)
+      '-n', '--name', help='Descriptive name of the evidence', required=False,
+      type=csv_list)
 
   # Parser options for Google Cloud Disk Evidence type
   parser_googleclouddisk = subparsers.add_parser(
@@ -179,16 +399,17 @@ def main():
       '--project is defined and can be run without any Turbinia server or '
       'workers configured.')
   parser_googleclouddisk.add_argument(
-      '-d', '--disk_name', help='Google Cloud name for disk', required=True)
+      '-d', '--disk_name', help='Google Cloud name for disk', required=True,
+      type=csv_list)
   parser_googleclouddisk.add_argument(
       '-p', '--project', help='Project that the disk to process is associated '
       'with. If this is different from the project that Turbinia is running '
-      'in, it will be copied to the Turbinia project.')
+      'in, it will be copied to the Turbinia project.', type=csv_list)
   parser_googleclouddisk.add_argument(
-      '-z', '--zone', help='Geographic zone the disk exists in')
+      '-z', '--zone', help='Geographic zone the disk exists in', type=csv_list)
   parser_googleclouddisk.add_argument(
       '-s', '--source', help='Description of the source of the evidence',
-      required=False)
+      required=False, type=csv_list)
   parser_googleclouddisk.add_argument(
       '-n', '--name', help='Descriptive name of the evidence', required=False)
 
@@ -207,33 +428,39 @@ def main():
       help='Path within the Persistent Disk that points to the raw image file',
       required=True)
   parser_googleclouddiskembedded.add_argument(
-      '-d', '--disk_name', help='Google Cloud name for disk', required=True)
+      '-d', '--disk_name', help='Google Cloud name for disk', required=True,
+      type=csv_list)
   parser_googleclouddiskembedded.add_argument(
       '-p', '--project', help='Project that the disk to process is associated '
       'with. If this is different from the project that Turbinia is running '
-      'in, it will be copied to the Turbinia project.')
+      'in, it will be copied to the Turbinia project.', type=csv_list)
+  #TODO: The csv list must take all
   parser_googleclouddiskembedded.add_argument(
       '-P', '--mount_partition', default=1, type=int,
       help='The partition number to use when mounting the parent disk.  '
       'Defaults to the first partition.  Only affects mounting, and not what '
       'gets processed.')
   parser_googleclouddiskembedded.add_argument(
-      '-z', '--zone', help='Geographic zone the disk exists in')
+      '-z', '--zone', help='Geographic zone the disk exists in', type=csv_list)
   parser_googleclouddiskembedded.add_argument(
       '-s', '--source', help='Description of the source of the evidence',
-      required=False)
+      required=False, type=csv_list)
   parser_googleclouddiskembedded.add_argument(
-      '-n', '--name', help='Descriptive name of the evidence', required=False)
+      '-n', '--name', help='Descriptive name of the evidence', required=False,
+      type=csv_list)
 
   # RawMemory
   parser_rawmemory = subparsers.add_parser(
       'rawmemory', help='Process RawMemory as Evidence')
   parser_rawmemory.add_argument(
-      '-l', '--source_path', help='Local path to the evidence', required=True)
+      '-l', '--source_path', help='Local path to the evidence', required=True,
+      type=csv_list)
   parser_rawmemory.add_argument(
-      '-P', '--profile', help='Profile to use with Volatility', required=True)
+      '-P', '--profile', help='Profile to use with Volatility', required=True,
+      type=csv_list)
   parser_rawmemory.add_argument(
-      '-n', '--name', help='Descriptive name of the evidence', required=False)
+      '-n', '--name', help='Descriptive name of the evidence', required=False,
+      type=csv_list)
   parser_rawmemory.add_argument(
       '-m', '--module_list', type=csv_list,
       help='Volatility module(s) to execute', required=True)
@@ -242,7 +469,8 @@ def main():
   parser_directory = subparsers.add_parser(
       'directory', help='Process a directory as Evidence')
   parser_directory.add_argument(
-      '-l', '--source_path', help='Local path to the evidence', required=True)
+      '-l', '--source_path', help='Local path to the evidence', required=True,
+      type=csv_list)
   parser_directory.add_argument(
       '-s', '--source', help='Description of the source of the evidence',
       required=False)
@@ -253,24 +481,27 @@ def main():
   parser_directory = subparsers.add_parser(
       'compresseddirectory', help='Process a compressed tar file as Evidence')
   parser_directory.add_argument(
-      '-l', '--source_path', help='Local path to the evidence', required=True)
+      '-l', '--source_path', help='Local path to the evidence', required=True,
+      type=csv_list)
   parser_directory.add_argument(
       '-s', '--source', help='Description of the source of the evidence',
-      required=False)
+      required=False, type=csv_list)
   parser_directory.add_argument(
-      '-n', '--name', help='Descriptive name of the evidence', required=False)
+      '-n', '--name', help='Descriptive name of the evidence', required=False,
+      type=csv_list)
 
   # Parser options for ChromiumProfile evidence type
   parser_hindsight = subparsers.add_parser(
       'hindsight', help='Process ChromiumProfile as Evidence')
   parser_hindsight.add_argument(
-      '-l', '--source_path', help='Local path to the evidence', required=True)
+      '-l', '--source_path', help='Local path to the evidence', required=True,
+      type=csv_list)
   parser_hindsight.add_argument(
       '-f', '--format', help='Output format (supported types are '
-      'xlsx, sqlite, jsonl)', default='sqlite')
+      'xlsx, sqlite, jsonl)', default='sqlite', type=csv_list)
   parser_hindsight.add_argument(
       '-b', '--browser_type', help='The type of browser the input files belong'
-      'to (supported types are Chrome, Brave)', default='Chrome')
+      'to (supported types are Chrome, Brave)', default='Chrome', type=csv_list)
   parser_hindsight.add_argument(
       '-n', '--name', help='Descriptive name of the evidence', required=False)
 
@@ -386,11 +617,6 @@ def main():
   subparsers.add_parser('server', help='Run Turbinia Server')
 
   args = parser.parse_args()
-
-  # (jorlamd): Importing recipe_helpers late to avoid a bug where
-  # client.TASK_MAP is imported early rendering the check for worker
-  # status not possible.
-  from turbinia.lib import recipe_helpers
 
   # Load the config before final logger setup so we can the find the path to the
   # log file.
@@ -548,71 +774,36 @@ def main():
         log.info('--copy_only specified, so not processing with Turbinia')
         sys.exit(0)
 
-  # Set request id
-  request_id = args.request_id if args.request_id else uuid.uuid4().hex
-
-  # Start Evidence configuration
-  evidence_ = None
-  if args.command == 'rawdisk':
-    args.name = args.name if args.name else args.source_path
-    source_path = os.path.abspath(args.source_path)
-    evidence_ = evidence.RawDisk(
-        name=args.name, source_path=source_path, source=args.source)
-  elif args.command == 'directory':
-    args.name = args.name if args.name else args.source_path
-    source_path = os.path.abspath(args.source_path)
-
-    if not config.SHARED_FILESYSTEM:
-      log.info(
-          'A Cloud Only Architecture has been detected. '
-          'Compressing the directory for GCS upload.')
-      source_path = archive.CompressDirectory(
-          source_path, output_path=config.TMP_DIR)
-      args.name = args.name if args.name else source_path
-      evidence_ = evidence.CompressedDirectory(
-          name=args.name, source_path=source_path, source=args.source)
-    else:
-      evidence_ = evidence.Directory(
-          name=args.name, source_path=source_path, source=args.source)
-  elif args.command == 'compresseddirectory':
-    archive.ValidateTarFile(args.source_path)
-    args.name = args.name if args.name else args.source_path
-    source_path = os.path.abspath(args.source_path)
-    evidence_ = evidence.CompressedDirectory(
-        name=args.name, source_path=source_path, source=args.source)
-  elif args.command == 'googleclouddisk':
-    args.name = args.name if args.name else args.disk_name
-    evidence_ = evidence.GoogleCloudDisk(
-        name=args.name, disk_name=args.disk_name, project=args.project,
-        zone=args.zone, source=args.source)
-  elif args.command == 'googleclouddiskembedded':
-    args.name = args.name if args.name else args.disk_name
-    parent_evidence_ = evidence.GoogleCloudDisk(
-        name=args.name, disk_name=args.disk_name, project=args.project,
-        mount_partition=args.mount_partition, zone=args.zone,
-        source=args.source)
-    evidence_ = evidence.GoogleCloudDiskRawEmbedded(
-        name=args.name, disk_name=args.disk_name, project=args.project,
-        zone=args.zone, embedded_path=args.embedded_path)
-    evidence_.set_parent(parent_evidence_)
-  elif args.command == 'hindsight':
-    if args.format not in ['xlsx', 'sqlite', 'jsonl']:
-      log.error('Invalid output format.')
+  # Set group id
+  group_id = uuid.uuid4().hex
+  log.error('HERE IN CTL')
+  log.error(group_id)
+  if (args.command == 'rawdisk' or args.command == 'directory' or
+      args.command == 'compresseddirectory'):
+    if (args.source and len(args.source) > 1 and len(args.source) != len(
+        args.source_path)) or (args.name and len(args.name) > 1 and
+                               len(args.name) != len(args.source_path)):
+      log.error('Number of name/source args equal to one or source_path')
       sys.exit(1)
-    if args.browser_type not in ['Chrome', 'Brave']:
-      log.error('Browser type not supported.')
+    # If there are more than one evidence we can't run all of them on a server
+    if len(args.source_path) > 1 and args.server:
+      log.error('Number of name/source args equal to one or source_path')
       sys.exit(1)
-    args.name = args.name if args.name else args.source_path
-    source_path = os.path.abspath(args.source_path)
-    evidence_ = evidence.ChromiumProfile(
-        name=args.name, source_path=source_path, output_format=args.format,
-        browser_type=args.browser_type)
-  elif args.command == 'rawmemory':
-    args.name = args.name if args.name else args.source_path
-    source_path = os.path.abspath(args.source_path)
-    evidence_ = evidence.RawMemory(
-        name=args.name, source_path=source_path, profile=args.profile,
-        module_list=args.module_list)
+    for i in range(len(args.source_path)):
+      source_path = args.source_path[i]
+      if args.name:
+        name = args.name[i] if args.name[i] else args.name[0]
+      else:
+        name = source_path
+      if args.source:
+        source = args.source[i] if args.source[i] else args.source[0]
+      else:
+        source = None
+      process_evidence(
+          args=args, source_path=source_path, name=name, source=source,
+          group_id=group_id, filter_patterns=filter_patterns, client=client,
+          yara_rules=yara_rules)
+
   elif args.command == 'psqworker':
     # Set up root logger level which is normally set by the psqworker command
     # which we are bypassing.
@@ -697,7 +888,6 @@ def main():
             all_fields=args.all_fields, full_report=args.full_report,
             priority_filter=args.priority_filter, output_json=output_json))
     sys.exit(0)
-
   elif args.command == 'listjobs':
     log.info('Available Jobs:')
     client.list_jobs()
@@ -770,131 +960,6 @@ def main():
       log.error('Failed to pull the data {0!s}'.format(exception))
   else:
     log.warning('Command {0!s} not implemented.'.format(args.command))
-
-  if evidence_ and not args.force_evidence:
-    if config.SHARED_FILESYSTEM and evidence_.cloud_only:
-      log.error(
-          'The evidence type {0:s} is Cloud only, and this instance of '
-          'Turbinia is not a cloud instance.'.format(evidence_.type))
-      sys.exit(1)
-    elif not config.SHARED_FILESYSTEM and evidence_.copyable:
-      if os.path.exists(evidence_.local_path):
-        output_manager = OutputManager()
-        output_manager.setup(evidence_.type, request_id, remote_only=True)
-        output_manager.save_evidence(evidence_)
-      else:
-        log.error(
-            'The evidence local path does not exist: {0:s}. Please submit '
-            'a new Request with a valid path.'.format(evidence_.local_path))
-        sys.exit(1)
-    elif not config.SHARED_FILESYSTEM and not evidence_.cloud_only:
-      log.error(
-          'The evidence type {0:s} cannot run on Cloud instances of '
-          'Turbinia. Consider wrapping it in a '
-          'GoogleCloudDiskRawEmbedded or other Cloud compatible '
-          'object'.format(evidence_.type))
-      sys.exit(1)
-
-  # If we have evidence to process and we also want to run as a server, then
-  # we'll just process the evidence directly rather than send it through the
-  # PubSub frontend interface.  If we're not running as a server then we will
-  # create a new TurbiniaRequest and send it over PubSub.
-  request = None
-  if evidence_ and args.server:
-    server = TurbiniaServer()
-    server.add_evidence(evidence_)
-    server.start()
-  elif evidence_:
-    request = TurbiniaRequest(
-        request_id=request_id, requester=getpass.getuser())
-    request.evidence.append(evidence_)
-
-    if args.decryption_keys:
-      for credential in args.decryption_keys:
-        try:
-          credential_type, credential_data = credential.split('=')
-        except ValueError as exception:
-          log.error(
-              'Could not parse credential [{0:s}] from decryption keys '
-              '{1!s}: {2!s}'.format(
-                  credential, args.decryption_keys, exception))
-          sys.exit(1)
-        evidence_.credentials.append((credential_type, credential_data))
-
-    if args.recipe or args.recipe_path:
-      if (args.jobs_denylist or args.jobs_allowlist or
-          args.filter_patterns_file or args.yara_rules_file):
-        log.error(
-            'Specifying a recipe is incompatible with defining '
-            'jobs allow/deny lists, yara rules or a patterns file separately.')
-        sys.exit(1)
-
-      if args.recipe_path:
-        recipe_file = args.recipe_path
-      else:
-        recipe_file = os.path.join(config.RECIPE_FILE_DIR, args.recipe)
-      if not os.path.exists(recipe_file) and not recipe_file.endswith('.yaml'):
-        log.warning(
-            'Could not find recipe file at {0:s}, checking for file '
-            'with .yaml extension'.format(recipe_file))
-        recipe_file = recipe_file + '.yaml'
-      if not os.path.exists(recipe_file):
-        log.error('Recipe file {0:s} could not be found. Exiting.')
-        sys.exit(1)
-
-      recipe_dict = recipe_helpers.load_recipe_from_file(
-          recipe_file, not args.skip_recipe_validation)
-      if not recipe_dict:
-        sys.exit(1)
-    else:
-      recipe_dict = copy.deepcopy(recipe_helpers.DEFAULT_RECIPE)
-      recipe_dict['globals']['debug_tasks'] = args.debug_tasks
-      recipe_dict['globals']['filter_patterns'] = filter_patterns
-      recipe_dict['globals']['jobs_denylist'] = args.jobs_denylist
-      recipe_dict['globals']['jobs_allowlist'] = args.jobs_allowlist
-      recipe_dict['globals']['yara_rules'] = yara_rules
-
-    request.recipe = recipe_dict
-
-    if args.dump_json:
-      print(request.to_json().encode('utf-8'))
-      sys.exit(0)
-    else:
-      log.info(
-          'Creating request {0:s} with evidence {1:s}'.format(
-              request.request_id, evidence_.name))
-      log.info(
-          'Run command "turbiniactl status -r {0:s}" to see the status of'
-          ' this request and associated tasks'.format(request.request_id))
-      if not args.run_local:
-        client.send_request(request)
-      else:
-        log.debug('--run_local specified so not sending request to server')
-
-    if args.wait:
-      log.info(
-          'Waiting for request {0:s} to complete'.format(request.request_id))
-      region = config.TURBINIA_REGION
-      client.wait_for_request(
-          instance=config.INSTANCE_ID, project=config.TURBINIA_PROJECT,
-          region=region, request_id=request.request_id,
-          poll_interval=args.poll_interval)
-      print(
-          client.format_task_status(
-              instance=config.INSTANCE_ID, project=config.TURBINIA_PROJECT,
-              region=region, request_id=request.request_id,
-              all_fields=args.all_fields))
-
-  if args.run_local and not evidence_:
-    log.error('Evidence must be specified if using --run_local')
-    sys.exit(1)
-  if args.run_local and evidence_.cloud_only:
-    log.error('--run_local cannot be used with Cloud only Evidence types')
-    sys.exit(1)
-  if args.run_local and evidence_:
-    result = client.run_local_task(args.task, request)
-    log.info('Task execution result: {0:s}'.format(result))
-
   log.info('Done.')
   sys.exit(0)
 
