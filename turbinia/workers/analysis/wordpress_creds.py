@@ -38,6 +38,12 @@ class WordpressCredsAnalysisTask(TurbiniaTask):
       state.ATTACHED, state.CONTAINER_MOUNTED, state.DECOMPRESSED
   ]
 
+  TASK_CONFIG = {
+      # This is the length of time in seconds that the collected passwords will
+      # be bruteforced.
+      'bruteforce_timeout': 300
+  }
+
   def run(self, evidence, result):
     """Run the Wordpress Creds worker.
 
@@ -73,8 +79,9 @@ class WordpressCredsAnalysisTask(TurbiniaTask):
       result.close(self, success=False, status=str(e))
       return result
 
+    timeout = self.task_config.get('bruteforce_timeout')
     (report, priority, summary) = self._analyse_wordpress_creds(
-        creds, hashnames)
+        creds, hashnames, timeout=timeout)
     output_evidence.text_data = report
     result.report_data = report
     result.report_priority = priority
@@ -101,8 +108,9 @@ class WordpressCredsAnalysisTask(TurbiniaTask):
     """
     try:
       collected_artifacts = extract_files(
-          file_name=_WP_DB_NAME, disk_path=evidence.local_path,
-          output_dir=os.path.join(self.output_dir, 'artifacts'))
+          file_name=_WP_DB_NAME,
+          disk_path=evidence.local_path, output_dir=os.path.join(
+              self.output_dir, 'artifacts'), credentials=evidence.credentials)
     except TurbiniaException as e:
       raise TurbiniaException(
           'artifact extraction failed: {0:s}'.format(str(e)))

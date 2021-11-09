@@ -30,10 +30,11 @@ import copy
 from turbinia import config
 from turbinia import TurbiniaException
 from turbinia.config import logger
+from turbinia.lib import recipe_helpers
 from turbinia import __version__
-from turbinia.processors import archive
 from turbinia.output_manager import OutputManager
 from turbinia.output_manager import GCSOutputWriter
+from turbinia.processors import archive
 
 log = logging.getLogger('turbinia')
 # We set up the logger first without the file handler, and we will set up the
@@ -317,10 +318,6 @@ def main():
       '-r', '--request_id', help='Create new requests with this Request ID',
       required=False)
   parser.add_argument(
-      '-R', '--run_local', action='store_true',
-      help='Run completely locally without any server or other infrastructure. '
-      'This can be used to run one-off Tasks to process data locally.')
-  parser.add_argument(
       '-S', '--server', action='store_true',
       help='Run Turbinia Server indefinitely')
   parser.add_argument(
@@ -351,10 +348,6 @@ def main():
   parser.add_argument(
       '-p', '--poll_interval', default=60, type=int,
       help='Number of seconds to wait between polling for task state info')
-  parser.add_argument(
-      '-t', '--task',
-      help='The name of a single Task to run locally (must be used with '
-      '--run_local).')
   parser.add_argument(
       '-T', '--debug_tasks', action='store_true',
       help='Show debug output for all supported tasks', default=False)
@@ -738,16 +731,7 @@ def main():
   # Create Client object
   client = None
   if args.command not in ('psqworker', 'server'):
-    client = TurbiniaClientProvider.get_turbinia_client(args.run_local)
-
-  # Make sure run_local flags aren't conflicting with other server/client flags
-  if args.run_local and (server_flags_set or worker_flags_set):
-    log.error('--run_local flag is not compatible with server/worker flags')
-    sys.exit(1)
-
-  if args.run_local and not args.task:
-    log.error('--run_local flag requires --task flag')
-    sys.exit(1)
+    client = TurbiniaClientProvider.get_turbinia_client()
 
   # Set zone/project to defaults if flags are not set, and also copy remote
   # disk if needed.
@@ -960,6 +944,7 @@ def main():
       log.error('Failed to pull the data {0!s}'.format(exception))
   else:
     log.warning('Command {0!s} not implemented.'.format(args.command))
+
   log.info('Done.')
   sys.exit(0)
 

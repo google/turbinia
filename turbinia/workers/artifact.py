@@ -65,8 +65,15 @@ class FileArtifactExtractionTask(TurbiniaTask):
         '--artifact_filters',
         self.artifact_name,
     ]
-    if config.DEBUG_TASKS or evidence.config.get('debug_tasks'):
+    if config.DEBUG_TASKS or self.task_config.get('debug_tasks'):
       cmd.append('-d')
+
+    if evidence.credentials:
+      for credential_type, credential_data in evidence.credentials:
+        cmd.extend([
+            '--credential', '{0:s}:{1:s}'.format(
+                credential_type, credential_data)
+        ])
 
     # Path to the source image/directory.
     cmd.append(evidence.local_path)

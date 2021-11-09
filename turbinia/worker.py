@@ -24,19 +24,27 @@ import subprocess
 from prometheus_client import start_http_server
 from turbinia import config
 from turbinia.config import logger
-from turbinia.client import BaseTurbiniaClient
-from turbinia import task_manager
+from turbinia import task_utils
 from turbinia import TurbiniaException
 from turbinia.lib import docker_manager
 from turbinia.jobs import manager as job_manager
+from turbinia.tcelery import TurbiniaCelery
 
 config.LoadConfig()
-if config.TASK_MANAGER.lower() == 'psq':
+task_manager_type = config.TASK_MANAGER.lower()
+if task_manager_type == 'psq':
   import psq
 
   from google.cloud import exceptions
   from google.cloud import datastore
   from google.cloud import pubsub
+elif task_manager_type == 'celery':
+  from celery import states as celery_states
+  from turbinia import tcelery as turbinia_celery
+else:
+  raise TurbiniaException(
+      'Unknown task manager {0:s} found, please update config to use "psq" or '
+      '"celery"'.format(task_manager_type))
 
 log = logging.getLogger('turbinia')
 
@@ -180,101 +188,17 @@ def register_job_timeouts(dependencies):
     job_manager.JobsManager.RegisterTimeout(job, timeout)
 
 
-class TurbiniaCeleryWorker(BaseTurbiniaClient):
-  """Turbinia Celery Worker class.
-
-  Attributes:
-    worker (celery.app): Celery worker app
-  """
+class TurbiniaWorkerBase:
+  """Base class for Turibinia Workers."""
 
   def __init__(self, jobs_denylist=None, jobs_allowlist=None):
-    """Initialization for celery worker.
-
-    Args:
-      jobs_denylist (Optional[list[str]]): Jobs we will exclude from running
-      jobs_allowlist (Optional[list[str]]): The only Jobs we will include to run
-    """
-    super(TurbiniaCeleryWorker, self).__init__()
-    setup()
-    # Deregister jobs from denylist/allowlist.
-    job_manager.JobsManager.DeregisterJobs(jobs_denylist, jobs_allowlist)
-    disabled_jobs = list(config.DISABLED_JOBS) if config.DISABLED_JOBS else []
-    disabled_jobs = [j.lower() for j in disabled_jobs]
-    # Only actually disable jobs that have not been allowlisted.
-    if jobs_allowlist:
-      disabled_jobs = list(set(disabled_jobs) - set(jobs_allowlist))
-    if disabled_jobs:
-      log.info(
-          'Disabling non-allowlisted jobs configured to be disabled in the '
-          'config file: {0:s}'.format(', '.join(disabled_jobs)))
-      job_manager.JobsManager.DeregisterJobs(jobs_denylist=disabled_jobs)
-
-    # Check for valid dependencies/directories.
-    dependencies = config.ParseDependencies()
-    if config.DOCKER_ENABLED:
-      try:
-        check_docker_dependencies(dependencies)
-      except TurbiniaException as e:
-        log.warning(
-            "DOCKER_ENABLED=True is set in the config, but there is an error checking for the docker daemon: {0:s}"
-        ).format(str(e))
-    check_system_dependencies(dependencies)
-    check_directory(config.MOUNT_DIR_PREFIX)
-    check_directory(config.OUTPUT_DIR)
-    check_directory(config.TMP_DIR)
-
-    jobs = job_manager.JobsManager.GetJobNames()
-    log.info(
-        'Dependency check complete. The following jobs will be enabled '
-        'for this worker: {0:s}'.format(','.join(jobs)))
-    self.worker = self.task_manager.celery.app
-
-  def start(self):
-    """Start Turbinia Celery Worker."""
-    if config.PROMETHEUS_ENABLED:
-      if config.PROMETHEUS_PORT and config.PROMETHEUS_ADDR:
-        log.info('Starting Prometheus endpoint.')
-        start_http_server(
-            port=config.PROMETHEUS_PORT, addr=config.PROMETHEUS_ADDR)
-      else:
-        log.info('Prometheus enabled but port or address not set!')
-    log.info('Running Turbinia Celery Worker.')
-    self.worker.task(task_manager.task_runner, name='task_runner')
-    argv = ['celery', 'worker', '--loglevel=info', '--pool=solo']
-    self.worker.start(argv)
-
-
-class TurbiniaPsqWorker:
-  """Turbinia PSQ Worker class.
-
-  Attributes:
-    worker (psq.Worker): PSQ Worker object
-    psq (psq.Queue): A Task queue object
-
-  Raises:
-    TurbiniaException: When errors occur
-  """
-
-  def __init__(self, jobs_denylist=None, jobs_allowlist=None):
-    """Initialization for PSQ Worker.
+    """Initialization for Turbinia Worker.
 
     Args:
       jobs_denylist (Optional[list[str]]): Jobs we will exclude from running
       jobs_allowlist (Optional[list[str]]): The only Jobs we will include to run
     """
     setup()
-    psq_publisher = pubsub.PublisherClient()
-    psq_subscriber = pubsub.SubscriberClient()
-    datastore_client = datastore.Client(project=config.TURBINIA_PROJECT)
-    try:
-      self.psq = psq.Queue(
-          psq_publisher, psq_subscriber, config.TURBINIA_PROJECT,
-          name=config.PSQ_TOPIC, storage=psq.DatastoreStorage(datastore_client))
-    except exceptions.GoogleCloudError as e:
-      msg = 'Error creating PSQ Queue: {0:s}'.format(str(e))
-      log.error(msg)
-      raise TurbiniaException(msg)
-
     # Deregister jobs from denylist/allowlist.
     job_manager.JobsManager.DeregisterJobs(jobs_denylist, jobs_allowlist)
     disabled_jobs = list(config.DISABLED_JOBS) if config.DISABLED_JOBS else []
@@ -307,11 +231,9 @@ class TurbiniaPsqWorker:
     log.info(
         'Dependency check complete. The following jobs are enabled '
         'for this worker: {0:s}'.format(','.join(jobs)))
-    log.info('Starting PSQ listener on queue {0:s}'.format(self.psq.name))
-    self.worker = psq.Worker(queue=self.psq)
 
-  def start(self):
-    """Start Turbinia PSQ Worker."""
+  def _monitoring_setup(self):
+    """Sets up monitoring server."""
     if config.PROMETHEUS_ENABLED:
       if config.PROMETHEUS_PORT and config.PROMETHEUS_ADDR:
         log.info('Starting Prometheus endpoint.')
@@ -319,5 +241,78 @@ class TurbiniaPsqWorker:
             port=config.PROMETHEUS_PORT, addr=config.PROMETHEUS_ADDR)
       else:
         log.info('Prometheus enabled but port or address not set!')
+
+  def _backend_setup(self):
+    """Sets up the required backend dependencies for the worker"""
+    raise NotImplementedError
+
+  def start(self):
+    """Start Turbinia Worker."""
+    raise NotImplementedError
+
+
+class TurbiniaCeleryWorker(TurbiniaWorkerBase):
+  """Turbinia Celery Worker class.
+
+  Attributes:
+    worker (celery.app): Celery worker app
+    celery (TurbiniaCelery): Turbinia Celery object
+  """
+
+  def __init__(self, *args, **kwargs):
+    super(TurbiniaCeleryWorker, self).__init__(*args, **kwargs)
+    self.worker = None
+    self.celery = None
+
+  def _backend_setup(self):
+    self.celery = turbinia_celery.TurbiniaCelery()
+    self.celery.setup()
+    self.worker = self.celery.app
+
+  def start(self):
+    """Start Turbinia Celery Worker."""
+    log.info('Running Turbinia Celery Worker.')
+    self._monitoring_setup()
+    self._backend_setup()
+    self.worker.task(task_utils.task_runner, name='task_runner')
+    argv = ['celery', 'worker', '--loglevel=info', '--pool=solo']
+    self.worker.start(argv)
+
+
+class TurbiniaPsqWorker(TurbiniaWorkerBase):
+  """Turbinia PSQ Worker class.
+
+  Attributes:
+    worker (psq.Worker): PSQ Worker object
+    psq (psq.Queue): A Task queue object
+
+  Raises:
+    TurbiniaException: When errors occur
+  """
+
+  def __init__(self, *args, **kwargs):
+    super(TurbiniaPsqWorker, self).__init__(*args, **kwargs)
+    self.worker = None
+    self.psq = None
+
+  def _backend_setup(self):
+    psq_publisher = pubsub.PublisherClient()
+    psq_subscriber = pubsub.SubscriberClient()
+    datastore_client = datastore.Client(project=config.TURBINIA_PROJECT)
+    try:
+      self.psq = psq.Queue(
+          psq_publisher, psq_subscriber, config.TURBINIA_PROJECT,
+          name=config.PSQ_TOPIC, storage=psq.DatastoreStorage(datastore_client))
+    except exceptions.GoogleCloudError as e:
+      msg = 'Error creating PSQ Queue: {0:s}'.format(str(e))
+      log.error(msg)
+      raise TurbiniaException(msg)
+    log.info('Starting PSQ listener on queue {0:s}'.format(self.psq.name))
+    self.worker = psq.Worker(queue=self.psq)
+
+  def start(self):
+    """Start Turbinia PSQ Worker."""
     log.info('Running Turbinia PSQ Worker.')
+    self._monitoring_setup()
+    self._backend_setup()
     self.worker.listen()

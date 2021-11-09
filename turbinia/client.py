@@ -37,73 +37,15 @@ from turbinia import config
 from turbinia.config import logger
 from turbinia.config import DATETIME_FORMAT
 from turbinia import task_manager
+from turbinia import task_utils
 from turbinia import TurbiniaException
 from turbinia.lib import text_formatter as fmt
 from turbinia.lib import docker_manager
 from turbinia.jobs import manager as job_manager
 from turbinia.workers import Priority
-from turbinia.workers.artifact import FileArtifactExtractionTask
-from turbinia.workers.analysis.wordpress_access import WordpressAccessLogAnalysisTask
-from turbinia.workers.analysis.wordpress_creds import WordpressCredsAnalysisTask
-from turbinia.workers.analysis.jenkins import JenkinsAnalysisTask
-from turbinia.workers.analysis.jupyter import JupyterAnalysisTask
-from turbinia.workers.analysis.linux_acct import LinuxAccountAnalysisTask
-from turbinia.workers.analysis.windows_acct import WindowsAccountAnalysisTask
-from turbinia.workers.finalize_request import FinalizeRequestTask
-from turbinia.workers.docker import DockerContainersEnumerationTask
-from turbinia.workers.grep import GrepTask
-from turbinia.workers.fsstat import FsstatTask
-from turbinia.workers.hadoop import HadoopAnalysisTask
-from turbinia.workers.hindsight import HindsightTask
-from turbinia.workers.partitions import PartitionEnumerationTask
-from turbinia.workers.plaso import PlasoTask
-from turbinia.workers.psort import PsortTask
-from turbinia.workers.redis import RedisAnalysisTask
-from turbinia.workers.sshd import SSHDAnalysisTask
-from turbinia.workers.strings import StringsAsciiTask
-from turbinia.workers.strings import StringsUnicodeTask
-from turbinia.workers.tomcat import TomcatAnalysisTask
-from turbinia.workers.volatility import VolatilityTask
-from turbinia.workers.worker_stat import StatTask
-from turbinia.workers.binary_extractor import BinaryExtractorTask
-from turbinia.workers.bulk_extractor import BulkExtractorTask
-from turbinia.workers.photorec import PhotorecTask
-from turbinia.workers.abort import AbortTask
 
 MAX_RETRIES = 10
 RETRY_SLEEP = 60
-
-# TODO(aarontp): Remove this map after
-# https://github.com/google/turbinia/issues/278 is fixed.
-TASK_MAP = {
-    'fileartifactextractiontask': FileArtifactExtractionTask,
-    'wordpressaccessloganalysistask': WordpressAccessLogAnalysisTask,
-    'WordpressCredsAnalysisTask': WordpressCredsAnalysisTask,
-    'finalizerequesttask': FinalizeRequestTask,
-    'jenkinsanalysistask': JenkinsAnalysisTask,
-    'JupyterAnalysisTask': JupyterAnalysisTask,
-    'greptask': GrepTask,
-    'fsstattask': FsstatTask,
-    'hadoopanalysistask': HadoopAnalysisTask,
-    'hindsighttask': HindsightTask,
-    'LinuxAccountAnalysisTask': LinuxAccountAnalysisTask,
-    'WindowsAccountAnalysisTask': WindowsAccountAnalysisTask,
-    'partitionenumerationtask': PartitionEnumerationTask,
-    'plasotask': PlasoTask,
-    'psorttask': PsortTask,
-    'redisanalysistask': RedisAnalysisTask,
-    'sshdanalysistask': SSHDAnalysisTask,
-    'stringsasciitask': StringsAsciiTask,
-    'stringsunicodetask': StringsUnicodeTask,
-    'tomcatanalysistask': TomcatAnalysisTask,
-    'volatilitytask': VolatilityTask,
-    'stattask': StatTask,
-    'binaryextractortask': BinaryExtractorTask,
-    'bulkextractortask': BulkExtractorTask,
-    'dockercontainersenumerationtask': DockerContainersEnumerationTask,
-    'photorectask': PhotorecTask,
-    'aborttask': AbortTask
-}
 
 config.LoadConfig()
 if config.TASK_MANAGER.lower() == 'psq':
@@ -122,7 +64,7 @@ def setup(is_client=False):
     logger.setup()
 
 
-def get_turbinia_client(run_local=False):
+def get_turbinia_client():
   """Return Turbinia client based on config.
 
   Returns:
@@ -131,9 +73,9 @@ def get_turbinia_client(run_local=False):
   # pylint: disable=no-else-return
   setup(is_client=True)
   if config.TASK_MANAGER.lower() == 'psq':
-    return BaseTurbiniaClient(run_local=run_local)
+    return BaseTurbiniaClient()
   elif config.TASK_MANAGER.lower() == 'celery':
-    return TurbiniaCeleryClient(run_local=run_local)
+    return TurbiniaCeleryClient()
   else:
     msg = 'Task Manager type "{0:s}" not implemented'.format(
         config.TASK_MANAGER)
@@ -219,31 +161,10 @@ class BaseTurbiniaClient:
     task_manager (TaskManager): Turbinia task manager
   """
 
-  def __init__(self, run_local=False):
+  def __init__(self):
     config.LoadConfig()
-    if run_local:
-      self.task_manager = None
-    else:
-      self.task_manager = task_manager.get_task_manager()
-      self.task_manager.setup(server=False)
-
-  def create_task(self, task_name):
-    """Creates a Turbinia Task by name.
-
-    Args:
-      task_name(string): Name of the Task we are going to run.
-
-    Returns:
-      TurbiniaTask: An instantiated Task object.
-
-    Raises:
-      TurbiniaException: When no Task object matching task_name is found.
-    """
-    task_obj = TASK_MAP.get(task_name.lower())
-    log.debug('Looking up Task {0:s} by name'.format(task_name))
-    if not task_obj:
-      raise TurbiniaException('No Task named {0:s} found'.format(task_name))
-    return task_obj()
+    self.task_manager = task_manager.get_task_manager()
+    self.task_manager.setup(server=False)
 
   def list_jobs(self):
     """List the available jobs."""
@@ -951,26 +872,6 @@ class BaseTurbiniaClient:
           report.extend(self.format_task(task, show_files=all_fields))
 
     return '\n'.join(report)
-
-  def run_local_task(self, task_name, request):
-    """Runs a Turbinia Task locally.
-
-    Args:
-      task_name(string): Name of the Task we are going to run.
-      request (TurbiniaRequest): Object containing request and evidence info.
-
-    Returns:
-      TurbiniaTaskResult: The result returned by the Task Execution.
-    """
-    task = self.create_task(task_name)
-    task.request_id = request.request_id
-    task.base_output_dir = config.OUTPUT_DIR
-    task.run_local = True
-    if not request.evidence:
-      raise TurbiniaException('TurbiniaRequest does not contain evidence.')
-    log.info('Running Task {0:s} locally'.format(task_name))
-    result = task.run_wrapper(request.evidence[0].serialize())
-    return result
 
   def send_request(self, request):
     """Sends a TurbiniaRequest message.

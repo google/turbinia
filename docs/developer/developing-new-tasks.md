@@ -9,24 +9,27 @@ together.
 
 ## Before you start
 
-*   Check out the [How it Works](../user/how-it-works.md) page to see how the different
-    components work within Turbinia.
+*   Check out the [How it Works](../user/how-it-works.md) page to see how the
+    different components work within Turbinia.
 *   Make sure to follow the Turbinia
     [developer contribution guide](contributing.md).
 
 ## Task code
+### Task Setup
 
 The Worker which runs the tasks handles the following things before you even get
 to the `run()` method where most of our code will go:
 
 *   Running any pre- or post-processors that need to run to prepare the
     Evidence.
-*   If the Evidence is file-based, the pre-processor should make that path
-    available as `evidence.local_path`. Similarly, if the Task generates any new
-    Evidence objects, you must set the `.local_path` attribute of that before
-    you add it to the results.
-*   Setting up a temporary directory (available as `self.output_dir`).
-*   It prepares a TurbiniaResult object to save results into.
+*   If the Evidence is file-based, the pre-processor will add the path to the
+    processed evidence in `evidence.local_path`.
+*   Setting up temporary directories (available as `self.output_dir` and
+    `self.tmp_dir`).
+*   Preparing a TurbiniaResult object to save results into.
+
+
+### Task execution
 
 To see a relatively simple example of the code required for a new Task, see this
 [pull request](https://github.com/google/turbinia/pull/207). This simply
@@ -43,7 +46,7 @@ Here is the bulk of the actual Task code for the Ascii Strings Task:
         self.output_dir, '{0:s}.ascii'.format(base_name))
     # Add the output path to the evidence so we can automatically save it
     # later.
-    output_evidence.local_path = output_file_path
+    output_evidence.source_path = output_file_path
 
     # Generate the command we want to run.
     cmd = 'strings -a -t d {0:s} > {1:s}'.format(
@@ -66,48 +69,98 @@ little more explaining is this one:
 This will:
 
 *   Run the command as specified
+*   Set the output evidence to be saved
 *   Save the stdout and stderr in the results object specified
+*   Close the Result in preparation for Task completion
 
-Also, because `close=True` is set in this call, it will finalze the results in
-order to prepare them to be returned to to the Task Manager. Closing a result
-does a few things like set task stats, save all of the output files, and run the
-post-processor to free up the Evidence (e.g. unmount disks, etc). If you have
-other external commands that you want to run and save the output from, you
-should not close the results until after these are all complete (i.e. just don't
-set `close=True`). If you are not calling the `execute()` function and closing
-the results that way, you'll need to close them similar to this:
+
+### Task Finalization and Saving Results
+
+Before a Task completes and returns, the Result object must be "closed" which
+finalizes the results in preparation for them to be returned to the server.
+Closing a Result does a few things like set Task stats, save all of the output
+files, and run the post-processor to free up the Evidence (e.g. unmount disks,
+etc).  In the above example of `self.execute()`, `close=True` is set, which
+will tells the method to handle closing the results. If you have other external
+commands that you want to run and save the output from, you should not close
+the results until after these are all complete (i.e. don't set `close=True` in
+`self.execute()` in this case).  If you are not calling the `execute()` method
+and implicitly closing the results that way, you'll need to close them similar
+to this:
 
 ```python
 result.close(self, success=True, status='My message about the Task status')
 ```
 
-One important parameter that was not set in the call for `self.close()` is
-`save_files`. It takes a list of file paths that you want to save (no need to
-add the files you linked to the Evidence earlier, it will save those
+One important parameter that was not set in this example call of `self.close()`
+is `save_files`. It takes a list of file paths that you want to save (no need
+to add the files you linked to the Evidence earlier, it will save those
 automatically). This is used for non-Evidence files that you want to save (for
 example log files).
 
-If you want to write temporary files from your task, you should do this relative
-to the self.output_dir. This is a directory that is unique for this Task.
+If you want to write files from your Task, you should do this relative to the
+`self.output_dir`. If you have temporary files you want to write, you can write
+these to `self.tmp_dir`. These directories are unique for the given Task
+execution.
 
-If you are not using the `self.execute()` method, then you will need to close
-the result object before exiting.
+The `run()` method should return the `result` object which will be serialized
+and returned to the server along with the associated Evidence that may have
+been created. The new Evidence created and included in the results will be
+checked by the Task Manager to see if there are other Jobs/Tasks that should be
+scheduled to process it.
 
-The `run()` function should return the result object and these will also be
-serialized and returned to the server. The new Evidence created and included in
-the results will be checked by the Task Manager to see if there are other Tasks
-that should be scheduled to process it.
+### Pre/Post-Processing
+
+Each Task can set the Evidence state that is required (e.g. mounted, attached,
+etc) prior to execution by setting the state in `Task.REQUIRED_STATES`.  Each
+Evidence object can specify which states it supports in the
+`Evidence.POSSIBLE_STATES` list attribute for that Task (e.g. see the
+[`GoogleCloudDisk` possible states
+here](https://github.com/google/turbinia/blob/cc79288ae36cfec749381b80694b4c1290d76583/turbinia/evidence.py#L661)).
+These states are set up by the pre-processors and then after the Task is
+completed, the post-processor will tear down this state (e.g. unmount or
+detach, etc).  For more details on the different states and how the
+pre/post-processors will set these up at runtime, see the
+[`Evidence.preprocess()`
+docstrings](https://github.com/google/turbinia/blob/cc79288ae36cfec749381b80694b4c1290d76583/turbinia/evidence.py#L291).
+
+### Evidence Paths
+
+As mentioned above, the pre-processor that runs before the Task is executed
+will set the path `evidence.local_path` to point to the local Evidence. If the
+Task generates any new Evidence objects, you must set the `.source_path`
+attribute for that object before you add it to the results.  The `.source_path`
+is the original path the Evidence is created with and the `.local_path` is the
+path to access the Evidence after any pre-processors are run (e.g. the path it
+was mounted on if it was mounted, etc).  See the [docstrings for these
+attributes in the Evidence
+object](https://github.com/google/turbinia/blob/cc79288ae36cfec749381b80694b4c1290d76583/turbinia/evidence.py#L127)
+for more details on the differences, but in summary, Tasks should use
+`.local_path` to process the incomming Evidence and `.source_path` for newly
+created Evidence.
+
+### Recipe configuration
+Tasks can also specify a set of variables that can be configured and set
+through [recipes](../user/recipes.md).  This allows users to pre-define set
+configurations for the runtime behavior of Tasks along with which Jobs/Tasks
+should be run.  Each Task has a `TASK_CONFIG` dictionary set at the object
+level that defines each of the variables that can be used along with the
+default values that the Task will use when the recipe does not specify that
+variable, or there is no recipe used.  See the [Plaso
+Task](https://github.com/google/turbinia/blob/8aafea5d4ba165aa72748ed7f1f196c8b9d7175c/turbinia/workers/plaso.py#L35)
+`TASK_CONFIG` as an example. Tasks can access these variables by referencing
+the dictionary at `self.task_config`.
 
 ## Boilerplate and Glue
 
 The only two interesting bits for the Job definition in
-`turbinia/jobs/strings.py` are this one that sets the input and output evidence
-types for the Task (so the Task Manager knows what kinds of Tasks to schedule):
+`turbinia/jobs/strings.py` are this one that sets the allowable input and
+output Evidence types for the Task (so the Task Manager knows what kinds of
+Tasks to schedule):
 
 ```python
-  evidence_input = [type(RawDisk()), type(GoogleCloudDisk()),
-                    type(GoogleCloudDiskRawEmbedded())]
-  evidence_output = [type(TextFile())]
+  evidence_input = [RawDisk, GoogleCloudDisk, GoogleCloudDiskRawEmbedded]
+  evidence_output = [TextFile]
 ```
 
 And this one, which just sets up the Tasks for both Task types (Ascii and
@@ -119,7 +172,7 @@ Unicode):
     return tasks
 ```
 
-In this case we have two separate tasks that we are executing for the Job, but
+In this case we have two separate Tasks that we are executing for the Job, but
 it's possible that there could be more or less depending on how much you want to
 split it up. Then you just need to add a reference to the new job in
 `turbinia/jobs/__init__.py`.
@@ -155,6 +208,13 @@ other sections of the report, but you can use heading4 and above.
     verbosity of this log file, it's helpful to check the `config.DEBUG_TASKS`
     config parameter and log accordingly, and this way all tasks can generate
     debug output when this is configured.
+
+## Testing
+There is a `TestTurbiniaTaskBase` object that task tests can sub-class for
+relatively easy testing of the basic run method.  See the [photorec
+test](https://github.com/google/turbinia/blob/master/turbinia/workers/photorec_test.py)
+for a simple example. For a task test with reporting output see the [sshd
+test](https://github.com/google/turbinia/blob/master/turbinia/workers/sshd_test.py) as an example.
 
 ## Notes
 

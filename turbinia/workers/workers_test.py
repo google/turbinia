@@ -258,7 +258,7 @@ class TestTurbiniaTask(TestTurbiniaTaskBase):
 
     # Command was executed, has the correct output saved and
     # TurbiniaTaskResult.close() was called with successful status.
-    popen_mock.assert_called_with(cmd, stdout=-1, stderr=-1)
+    popen_mock.assert_called_with(cmd, stdout=-1, stderr=-1, cwd=None)
     self.assertEqual(self.result.error['stdout'], str(output[0]))
     self.assertEqual(self.result.error['stderr'], str(output[1]))
     self.assertEqual(stdout_data, output[0])
@@ -280,7 +280,7 @@ class TestTurbiniaTask(TestTurbiniaTaskBase):
 
     # Command was executed and TurbiniaTaskResult.close() was called with
     # unsuccessful status.
-    popen_mock.assert_called_with(cmd, stdout=-1, stderr=-1)
+    popen_mock.assert_called_with(cmd, stdout=-1, stderr=-1, cwd=None)
     self.result.close.assert_called_with(
         self.task, success=False, status=mock.ANY)
 
@@ -343,10 +343,10 @@ class TestTurbiniaTask(TestTurbiniaTaskBase):
   @mock.patch('turbinia.workers.Histogram')
   def testTurbiniaSetupMetrics(self, mock_histogram):
     """Tests that metrics are set up correctly."""
-    mock_task_map = {'TestTask1': None, 'TestTask2': None}
+    mock_task_list = {'TestTask1', 'TestTask2'}
     mock_histogram.return_value = "test_metrics"
-    metrics = self.task.setup_metrics(task_map=mock_task_map)
-    self.assertEqual(len(metrics), len(mock_task_map))
+    metrics = self.task.setup_metrics(task_list=mock_task_list)
+    self.assertEqual(len(metrics), len(mock_task_list))
     self.assertEqual(metrics['testtask1'], 'test_metrics')
     self.assertIn('testtask1', metrics)
 

@@ -28,6 +28,7 @@ from turbinia import workers
 from turbinia import evidence
 from turbinia import config
 from turbinia import state_manager
+from turbinia import task_utils
 from turbinia import TurbiniaException
 from turbinia.jobs import manager as jobs_manager
 from turbinia.lib import recipe_helpers
@@ -84,34 +85,6 @@ def get_task_manager():
     msg = 'Task Manager type "{0:s}" not implemented'.format(
         config.TASK_MANAGER)
     raise turbinia.TurbiniaException(msg)
-
-
-def task_runner(obj, *args, **kwargs):
-  """Wrapper function to run specified TurbiniaTask object.
-
-  Args:
-    obj: An instantiated TurbiniaTask object.
-    *args: Any Args to pass to obj.
-    **kwargs: Any keyword args to pass to obj.
-
-  Returns:
-    Output from TurbiniaTask (should be TurbiniaTaskResult).
-  """
-
-  # GKE Specific - do not queue more work if pod places this file
-  if os.path.exists(config.SCALEDOWN_WORKER_FILE):
-    raise psq.Retry()
-
-  # try to acquire lock and timeout and requeue task if it's in use
-  try:
-    lock = filelock.FileLock(config.LOCK_FILE)
-    with lock.acquire(timeout=0.001):
-      obj = workers.TurbiniaTask.deserialize(obj)
-      run = obj.run_wrapper(*args, **kwargs)
-  except filelock.Timeout:
-    raise psq.Retry()
-
-  return run
 
 
 class BaseTaskManager:
@@ -597,7 +570,8 @@ class CeleryTaskManager(BaseTaskManager):
     self.celery.setup()
     self.kombu = turbinia_celery.TurbiniaKombu(config.KOMBU_CHANNEL)
     self.kombu.setup()
-    self.celery_runner = self.celery.app.task(task_runner, name="task_runner")
+    self.celery_runner = self.celery.app.task(
+        task_utils.task_runner, name="task_runner")
 
   def process_tasks(self):
     """Determine the current state of our tasks.
@@ -760,5 +734,5 @@ class PSQTaskManager(BaseTaskManager):
         'Adding PSQ task {0:s} with evidence {1:s} to queue'.format(
             task.name, evidence_.name))
     task.stub = self.psq.enqueue(
-        task_runner, task.serialize(), evidence_.serialize())
+        task_utils.task_runner, task.serialize(), evidence_.serialize())
     time.sleep(PSQ_QUEUE_WAIT_SECONDS)

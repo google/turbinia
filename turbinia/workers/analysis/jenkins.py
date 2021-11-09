@@ -34,6 +34,12 @@ class JenkinsAnalysisTask(TurbiniaTask):
 
   REQUIRED_STATES = [state.ATTACHED, state.CONTAINER_MOUNTED]
 
+  TASK_CONFIG = {
+      # This is the length of time in seconds that the collected passwords will
+      # be bruteforced.
+      'bruteforce_timeout': 300
+  }
+
   def run(self, evidence, result):
     """Run the Jenkins worker.
 
@@ -57,8 +63,9 @@ class JenkinsAnalysisTask(TurbiniaTask):
     # than we need.  Tracked in https://github.com/google/turbinia/issues/402
     try:
       collected_artifacts = extract_files(
-          file_name='config.xml', disk_path=evidence.local_path,
-          output_dir=os.path.join(self.output_dir, 'artifacts'))
+          file_name='config.xml',
+          disk_path=evidence.local_path, output_dir=os.path.join(
+              self.output_dir, 'artifacts'), credentials=evidence.credentials)
     except TurbiniaException as e:
       result.close(self, success=False, status=str(e))
       return result
@@ -83,7 +90,9 @@ class JenkinsAnalysisTask(TurbiniaTask):
 
       credentials.extend(extracted_credentials)
 
-    (report, priority, summary) = self.analyze_jenkins(version, credentials)
+    timeout = self.task_config.get('bruteforce_timeout')
+    (report, priority, summary) = self.analyze_jenkins(
+        version, credentials, timeout=timeout)
     output_evidence.text_data = report
     result.report_data = report
     result.report_priority = priority
@@ -143,12 +152,13 @@ class JenkinsAnalysisTask(TurbiniaTask):
     return credentials
 
   @staticmethod
-  def analyze_jenkins(version, credentials):
+  def analyze_jenkins(version, credentials, timeout=300):
     """Analyses a Jenkins configuration.
 
     Args:
       version (str): Version of Jenkins.
       credentials (list): of tuples with username and password hash.
+      timeout (int): Time in seconds to run password bruteforcing.
 
     Returns:
       Tuple(
@@ -161,12 +171,11 @@ class JenkinsAnalysisTask(TurbiniaTask):
     summary = ''
     priority = Priority.LOW
     credentials_registry = {hash: username for username, hash in credentials}
-    # TODO: Add timeout parameter when dynamic configuration is ready.
-    # Ref: https://github.com/google/turbinia/issues/244
 
     # '3200' is "bcrypt $2*$, Blowfish (Unix)"
     weak_passwords = bruteforce_password_hashes(
-        credentials_registry.keys(), tmp_dir=None, extra_args='-m 3200')
+        credentials_registry.keys(), tmp_dir=None, timeout=timeout,
+        extra_args='-m 3200')
 
     if not version:
       version = 'Unknown'

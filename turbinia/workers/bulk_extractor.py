@@ -34,6 +34,11 @@ class BulkExtractorTask(TurbiniaTask):
 
   REQUIRED_STATES = [state.ATTACHED]
 
+  TASK_CONFIG = {
+      # These are extra arguments passed when running bulk_extractor
+      'bulk_extractor_args': None
+  }
+
   def run(self, evidence, result):
     """Run Bulk Extractor binary.
 
@@ -59,10 +64,8 @@ class BulkExtractorTask(TurbiniaTask):
     output_evidence.local_path = output_file_path
     output_evidence.uncompressed_directory = output_file_path
 
-    # TODO: Convert to using real recipes after
-    # https://github.com/google/turbinia/pull/486 is in.
-    if evidence.config and evidence.config.get('bulk_extractor_args'):
-      bulk_extractor_args = evidence.config.get('bulk_extractor_args')
+    if self.task_config.get('bulk_extractor_args'):
+      bulk_extractor_args = self.task_config.get('bulk_extractor_args')
       # Some of bulk_extractors arguments use the '=' character
       # need to substitute with '~' until we have recipes.
       bulk_extractor_args = bulk_extractor_args.replace('~', '=')
