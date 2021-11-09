@@ -29,7 +29,8 @@ RUN pip3 install requests --upgrade
 RUN pip3 install urllib3 cryptography --upgrade
 
 # Install third-party worker dependencies
-RUN pip3 install pyhindsight
+# TODO(hacktobeer) uncomment when protobuf lib dependency if fixed upstream
+# RUN pip3 install pyhindsight
 
 # Install Plaso, bulkextractor and docker-explorer
 RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 0x5e80511b10c598b8 \
