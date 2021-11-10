@@ -40,6 +40,7 @@ function usage {
   echo "update-config   Update the Turbinia configuration of a Turbinia deployment from CONFIG_FILE, use -f"
   echo "update-env      Update an environment variable on a container, use -k and -v"
   echo "resize-cluster  Resize the number of nodes in the cluster."
+  echo "update-latest   Update the Turbinia worker and server deployments to latest docker image."
   echo
 }
 
@@ -136,9 +137,32 @@ function update_env {
 
 }
 
+function update_to_latest {
+    DEPLOYMENTS=$(kubectl get deployments --output=jsonpath={.items..metadata.name})
+
+    # rollout each deployment
+    for DEPLOYMENT in $DEPLOYMENTS
+    do 
+        $KUBECTL rollout restart deployment/$DEPLOYMENT
+    done
+
+    # Show status
+    for DEPLOYMENT in $DEPLOYMENTS
+    do
+        $KUBECTL rollout status deployment/$DEPLOYMENT
+    done
+}
+
 function resize_cluster {
     echo "Resizing cluster $CLUSTER_NAME to $CLUSTER_SIZE nodes."
-    $GCLOUD container clusters resize $CLUSTER_NAME --num-nodes $CLUSTER_SIZE
+    read -p 'WARNING: This will delete nodes as well as any associated data on the node. Do you wish to continue? (yes/no) ' ANS
+
+    if [ "$ANS" == "yes" ] ; then
+        $GCLOUD container clusters resize $CLUSTER_NAME --num-nodes $CLUSTER_SIZE
+    else
+        echo "Please enter yes if you'd like to resize the cluster. Exiting..."
+        exit 0
+    fi
 }
 
 function update_docker_image_tag {
@@ -245,5 +269,8 @@ case $CMD in
             exit 1
         fi
         resize_cluster
+        ;;
+    update-latest)
+        update_to_latest
         ;;
 esac
