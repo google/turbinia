@@ -20,6 +20,13 @@ spec:
       # The grace period needs to be set to the largest task timeout as
       # set in the turbinia configuration file.
       terminationGracePeriodSeconds: 86400
+      initContainers:
+        - name: init-filestore
+          image: busybox:1.28
+          command: ['sh', '-c', 'chmod go+w /mnt/output']
+          volumeMounts:
+            - mountPath: "/mnt/output"
+              name: output
       containers:
         - name: worker
           image: us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-worker:latest
@@ -47,6 +54,8 @@ spec:
             - mountPath: "/var/run/lock"
               name: lockfolder
               readOnly: false
+            - mountPath: /mnt/output
+              name: output
           ports:
             - containerPort: 9200
           resources: 
@@ -63,3 +72,7 @@ spec:
         - name: lockfolder
           hostPath:
             path: /var/run/lock
+        - name: output
+          persistentVolumeClaim:
+            claimName: output-claim
+            readOnly: false
