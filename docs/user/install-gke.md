@@ -45,6 +45,13 @@ Please follow these steps for configuring Turbinia for GCP use and then running 
     and take note of the bucket name as this will be referenced later by the
     `GCS_OUTPUT_PATH` variable.
 *   Deploy Cloud Functions `cd <git clone path>/tools/gcf_init && ./deploy_gcf.py`
+* Enable [Cloud Filestore](https://console.cloud.google.com/filestore)
+    * Go to Filestore in the cloud console
+    * Hit the `Create Instance` button
+    * Set the `Instance ID` and `File Share Name` to the default name `output`.
+        * Note: The name can be changed however you must update the appropiate sections in the k8s Deployment files with the newly chosen name. Please see the `GKE Setup` section for more details.
+    * Select the same region and zone selected in the previous steps.
+    * After the Filestore instance has been created, keep a note of the IP address for later use.
 
 ### **GKE Setup**
 * Enable the [Kubernetes Engine API](https://console.cloud.google.com/apis/api/container.googleapis.com/overview).
@@ -72,6 +79,9 @@ gcloud container clusters create CLUSTER_NAME \
 * Ensure that the zone and region in the Turbinia config file are equal to the zone and region you created your k8s cluster in.
 * The `image` variable can be optionally changed in the `turbinia-worker.yaml` and `turbinia-server.yaml` files to chose the docker images used during deployment.
 * In the `turbinia-worker.yaml` file, ensure that the path in the volume labeled `lockfolder` matches the Turbinia config variable `TMP_RESOURCE_DIR`.
+* If the Filestore `Instance ID` and `File share name` have a different name then the default name `output`, update `turbinia-worker.yaml`, `turbinia-server.yaml`, `turbinia-output-claim-filestore.yaml`, and `turbinia-output-filestore.yaml` by searching for the string `output` and replacing it with the custom name. Skip this step if the default name was used.
+* To have all logs go to the central Filestore location, update the `LOG_DIR` variable in the `.turbiniarc` config file to the default Filestore path `/mnt/output` or if configured differently, to the custom Filestore path.
+* In `turbinia-output-filestore.yaml`, update `<IP_ADDRESS>` to the Filestore IP address.  
 * Ensure that the `.turbiniarc` config file has been properly configured with required GCP variables.
 * Deploy the Turbinia infrastructure by executing `./setup-pubsub.sh <PATH TO CONFIG>`. 
 * The Turbinia infrastructure can be destroyed by executing `./destroy-pubsub.sh`.
