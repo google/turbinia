@@ -118,7 +118,8 @@ class PlasoTask(TurbiniaTask):
     cmd.extend(['--temporary_directory', self.tmp_dir])
     cmd.extend(['--logfile', plaso_log])
     cmd.extend(['--unattended'])
-    cmd.extend([plaso_file, evidence.local_path])
+    cmd.extend(['--storage_file', plaso_file])
+    cmd.extend([evidence.local_path])
 
     result.log('Running plaso as [{0:s}]'.format(' '.join(cmd)))
     self.execute(
