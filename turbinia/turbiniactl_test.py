@@ -37,7 +37,8 @@ class TestTurbiniactl(unittest.TestCase):
   def setUp(self):
     config.TASK_MANAGER = 'CELERY'
 
-  def testUnequalDirectoryArgs(self):
+  @mock.patch('turbinia.client.get_turbinia_client')
+  def testUnequalDirectoryArgs(self, _):
     """Test unequal number of args for directory evidence type."""
     self.assertRaises(
         TurbiniaException, turbiniactl.process_args, [
@@ -56,7 +57,8 @@ class TestTurbiniactl(unittest.TestCase):
     ])
     self.assertTrue(turbiniactl.process_evidence.called)
 
-  def testUnequalRawdiskArgs(self):
+  @mock.patch('turbinia.client.get_turbinia_client')
+  def testUnequalRawdiskArgs(self, _):
     """Test unequal number of args for rawdisk evidence type."""
     self.assertRaises(
         TurbiniaException, turbiniactl.process_args, [
@@ -73,7 +75,8 @@ class TestTurbiniactl(unittest.TestCase):
         ['rawdisk', '--source_path', 'img1,img2', '--name', 'name1,name2'])
     self.assertTrue(turbiniactl.process_evidence.called)
 
-  def testUnequalCompresseddirectoryArgs(self):
+  @mock.patch('turbinia.client.get_turbinia_client')
+  def testUnequalCompresseddirectoryArgs(self, _):
     """Test unequal number of args for compresseddirectory evidence type."""
     self.assertRaises(
         TurbiniaException, turbiniactl.process_args, [
@@ -191,7 +194,8 @@ class TestTurbiniactl(unittest.TestCase):
     ])
     self.assertTrue(turbiniactl.process_evidence.called)
 
-  def testUnequalRawMemoryArgs(self):
+  @mock.patch('turbinia.client.get_turbinia_client')
+  def testUnequalRawMemoryArgs(self, _):
     """Test unequal number of args for rawmemory evidence type."""
     self.assertRaises(
         TurbiniaException, turbiniactl.process_args, [
@@ -212,7 +216,8 @@ class TestTurbiniactl(unittest.TestCase):
     ])
     self.assertTrue(turbiniactl.process_evidence.called)
 
-  def testUnequalHindsightArgs(self):
+  @mock.patch('turbinia.client.get_turbinia_client')
+  def testUnequalHindsightArgs(self, _):
     """Test unequal number of args for hindsight evidence type."""
     self.assertRaises(
         TurbiniaException, turbiniactl.process_args, [
