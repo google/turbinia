@@ -299,7 +299,6 @@ class TurbiniaTaskResult:
     if status:
       task.result.status = 'Task {0!s} is {1!s} on {2!s}'.format(
           self.task_name, status, self.worker_name)
-
     if self.state_manager:
       self.state_manager.update_task(task)
     else:
@@ -451,6 +450,7 @@ class TurbiniaTask:
     self._evidence_config = {}
     self.recipe = {}
     self.task_config = {}
+    self.group_id = None
 
   def serialize(self):
     """Converts the TurbiniaTask object into a serializable dict.
@@ -887,7 +887,6 @@ class TurbiniaTask:
           recipe_data.update(task_recipe)
           recipe_data.pop('task')
           break
-
     recipe_data.update(recipe['globals'])
 
     return recipe_data
