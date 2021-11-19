@@ -52,19 +52,21 @@ class OutputManager:
     self.is_setup = False
 
   @staticmethod
-  def get_output_writers(name, uid, remote_only):
+  def get_output_writers(name, uid, reqid, remote_only):
     """Get a list of output writers.
 
     Args:
       name (str): The name of the Request or Task.
       uid (str): The unique identifier of the Request or Task.
+      reqid(str): The ID of the Request.
 
     Returns:
       A list of OutputWriter objects.
     """
     config.LoadConfig()
     epoch = str(int(time.time()))
-    unique_dir = '{0:s}-{1:s}-{2:s}'.format(epoch, str(uid), name)
+    unique_dir = os.path.join(
+        str(reqid), '{0:s}-{1:s}-{2:s}'.format(epoch, str(uid), name))
     writers = []
     local_output_dir = None
 
@@ -216,9 +218,10 @@ class OutputManager:
 
     return saved_path, saved_path_type, local_path
 
-  def setup(self, name, uid, remote_only=False):
+  def setup(self, name, uid, reqid, remote_only=False):
     """Setup OutputManager object."""
-    self._output_writers = self.get_output_writers(name, uid, remote_only)
+    self._output_writers = self.get_output_writers(
+        name, uid, reqid, remote_only)
     self.is_setup = True
 
 
