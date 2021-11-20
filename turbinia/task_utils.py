@@ -79,7 +79,7 @@ class TaskLoader():
     Returns:
       bool: True if task with the given name exists, else False
     """
-    for task in TASK_LIST:
+    for task in self.TASK_LIST:
       if task.lower() == task_name.lower():
         return True
     return False
