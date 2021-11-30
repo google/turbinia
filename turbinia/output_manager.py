@@ -52,21 +52,19 @@ class OutputManager:
     self.is_setup = False
 
   @staticmethod
-  def get_output_writers(name, request_id, remote_only):
+  def get_output_writers(name, uid, remote_only):
     """Get a list of output writers.
 
     Args:
       name (str): The name of the Request or Task.
-      request_id (str): The unique identifier of the Request or Task.
+      uid (str): The unique identifier of the Request or Task.
 
     Returns:
       A list of OutputWriter objects.
     """
     config.LoadConfig()
     epoch = str(int(time.time()))
-    unique_dir = unique_dir = '{0:s}-{1:s}-{2:s}'.format(
-        epoch, str(request_id), name)  #'{0:s}-{1:s}-{2:s}-{3:s}'.format(
-    # epoch, str(group_id), str(request_id), name)
+    unique_dir = '{0:s}-{1:s}-{2:s}'.format(epoch, str(uid), name)
     writers = []
     local_output_dir = None
 
@@ -217,22 +215,6 @@ class OutputManager:
         local_path = new_path
 
     return saved_path, saved_path_type, local_path
-
-    #def setup(self, name, request_id, group_id, remote_only=False):
-    """Setup OutputManager object.
-    
-    Args:
-      name(string): The evidence type.
-      request_id(string): Request ID associated with the request.
-      group_id(string): Group ID associated with the request.
-      remote_only: Flag for whether output should be written remotely. 
-  #  """
-
-  #  self._output_writers = self.get_output_writers(
-
-
-#       name, request_id, group_id, remote_only)
-#   self.is_setup = True
 
   def setup(self, name, uid, remote_only=False):
     """Setup OutputManager object."""

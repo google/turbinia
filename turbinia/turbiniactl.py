@@ -773,10 +773,9 @@ def process_args(args):
           args=args, source_path=source_path, name=name, source=source,
           group_id=group_id, filter_patterns=filter_patterns, client=client,
           yara_rules=yara_rules)
-
   # Set zone/project to defaults if flags are not set, and also copy remote
   # disk if needed.
-  if args.command in ('googleclouddisk', 'googleclouddiskembedded'):
+  elif args.command in ('googleclouddisk', 'googleclouddiskembedded'):
 
     if not args.zone and config.TURBINIA_ZONE:
       args.zone = [config.TURBINIA_ZONE]
@@ -847,7 +846,7 @@ def process_args(args):
           project=project, zone=zone, embedded_path=embedded_path,
           mount_partition=mount_partition, group_id=group_id,
           filter_patterns=filter_patterns, client=client, yara_rules=yara_rules)
-  if args.command == 'rawmemory':
+  elif args.command == 'rawmemory':
 
     if len(args.profile) > 1 and (len(args.profile) != len(args.source_path)):
       msg = 'Number of profiles must equal to source_path.'
@@ -866,7 +865,7 @@ def process_args(args):
           args=args, source_path=source_path, name=name, profile=profile,
           group_id=group_id, filter_patterns=filter_patterns, client=client,
           yara_rules=yara_rules)
-  if args.command == 'hindsight':
+  elif args.command == 'hindsight':
     if args.name and len(args.name) > 1 and len(args.name) != len(
         args.source_path):
       msg = 'Number of names must equal to one or source_path.'
@@ -897,7 +896,7 @@ def process_args(args):
           output_format=output_format, group_id=group_id, client=client,
           filter_patterns=filter_patterns, yara_rules=yara_rules,
           browser_type=browser_type)
-  if args.command == 'psqworker':
+  elif args.command == 'psqworker':
     # Set up root logger level which is normally set by the psqworker command
     # which we are bypassing.
     logger.setup()

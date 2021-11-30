@@ -425,7 +425,8 @@ class TurbiniaTask:
   TASK_CONFIG = {}
 
   def __init__(
-      self, name=None, base_output_dir=None, request_id=None, requester=None):
+      self, name=None, base_output_dir=None, request_id=None, requester=None,
+      group_id=None):
     """Initialization for TurbiniaTask."""
     if base_output_dir:
       self.base_output_dir = base_output_dir
@@ -450,7 +451,7 @@ class TurbiniaTask:
     self._evidence_config = {}
     self.recipe = {}
     self.task_config = {}
-    self.group_id = None
+    self.group_id = group_id
 
   def serialize(self):
     """Converts the TurbiniaTask object into a serializable dict.

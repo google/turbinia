@@ -20,7 +20,7 @@ import copy
 import os
 import tempfile
 import unittest
-import mock
+from unittest import mock
 
 from turbinia import config
 from turbinia.workers import TurbiniaTask
@@ -49,6 +49,7 @@ class TestPSQStateManager(unittest.TestCase):
     self.test_data = {
         'name': 'TestTask',
         'request_id': 'TestRequestId',
+        'group_id': 'TestGroupID',
         'status': 'TestStatus',
         'saved_paths': ['testpath1', 'testpath2']
     }
@@ -57,7 +58,8 @@ class TestPSQStateManager(unittest.TestCase):
     self.base_output_dir = tempfile.mkdtemp()
     self.task = TurbiniaTask(
         base_output_dir=self.base_output_dir, name=self.test_data['name'],
-        request_id=self.test_data['request_id'])
+        request_id=self.test_data['request_id'],
+        group_id=self.test_data['group_id'])
     self.task.output_manager = mock.MagicMock()
     self.task.output_manager.get_local_output_dirs.return_value = (
         '/fake/tmp/dir', self.base_output_dir)
@@ -86,6 +88,7 @@ class TestPSQStateManager(unittest.TestCase):
     self.assertEqual(task_dict['name'], self.test_data['name'])
     self.assertEqual(task_dict['request_id'], self.test_data['request_id'])
     self.assertEqual(task_dict['status'], self.test_data['status'])
+    self.assertEqual(task_dict['group_id'], 'FAIL')
     self.assertEqual(len(task_dict['saved_paths']), 2)
     self.assertTrue('instance' in task_dict)
     self.assertIn(self.test_data['saved_paths'][0], task_dict['saved_paths'])
