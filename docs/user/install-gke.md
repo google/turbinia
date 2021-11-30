@@ -124,14 +124,17 @@ In this deployment method, we are using [kube-prometheus](https://github.com/pro
 * Once complete apply the changes made through the following commands
     * `kubectl -n monitoring apply -f additional-scrape-configs.yaml`
     * `kubectl -n monitoring apply -f manifests/prometheus-prometheus.yaml`
-* To get Turbinia custom rules imported, first run the `gen-yaml.sh` script from the directory its located
+* To import Turbinia custom rules, run the `gen-yaml.sh` script from the same directory its located
     * `cd monitoring/k8s && ./gen-yaml.sh`
-* Then apply the `turbinia-custom-rules.yaml` file located in the Turbinia directory
+* Then apply the `turbinia-custom-rules.yaml` file 
     * `kubectl -n monitoring apply -f monitoring/k8s/prometheus/turbinia-custom-rules.yaml`
 
 ### Testing Prometheus Deployment
 * Test that the changes were properly made by connecting to the Prometheus console and searching for `turbinia`. If related metrics pop up in the search bar, then Turbinia metrics are properly being ingested by Prometheus. You can also check to see if the Turbinia custom rules have been applied by navigating to Status -> Rules then searching for one of the custom rule names. To connect to the Prometheus console, run the following command
     * `kubectl -n monitoring port-forward svc/prometheus-k8s 9090`
+
+* To delete the monitoring stack, cd into the `kube-prometheus` directory and run the following command.
+    * `kubectl delete --ignore-not-found=true -f manifests/ -f manifests/setup`
 
 ### Deploying Grafana
 Before proceeding to the Grafana setup, please ensure that you have followed all the steps outlined in the **Testing Prometheus Deployment** section.
@@ -159,7 +162,7 @@ Before proceeding to the Grafana setup, please ensure that you have followed all
 * To get the Turbinia Application & Healthcheck dashboard to show, first run the `gen.yaml.sh` if haven't done so already in the setting up Prometheus section.
     * `cd monitoring/k8s && ./gen-yaml.sh`
 * Then apply the dashboards to the monitoring namespace.
-    * `kubectl -n monitoring apply -f monitoring/k8s/grafana/*`
+    * `kubectl -n monitoring apply -f monitoring/k8s/grafana`
 * To connect to the Grafana dashboard, run the following command
     * ```kubectl -n monitoring port-forward svc/grafana 11111:3000```
 ### Email Notifications
