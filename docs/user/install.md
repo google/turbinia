@@ -110,7 +110,7 @@ using Ubuntu 18.04, though other versions of Linux should be compatible.
 *   Install the Turbinia client.
     *   Note: You may want to install this into a virtual-environment with
         [venv](https://docs.python.org/3.7/library/venv.html) or
-        [pipenv](https://pipenv.kennethreitz.org/en/latest/) to reduce potential
+        [pipenv](https://pipenv.pypa.io/en/latest/)) to reduce potential
         dependency conflicts and isolate these packages into their own
         environment.
     *   `pip3 --user install turbinia`

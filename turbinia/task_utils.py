@@ -79,7 +79,7 @@ class TaskLoader():
     Returns:
       bool: True if task with the given name exists, else False
     """
-    for task in TASK_LIST:
+    for task in self.TASK_LIST:
       if task.lower() == task_name.lower():
         return True
     return False
@@ -201,9 +201,10 @@ def task_runner(obj, *args, **kwargs):
       obj = task_deserialize(obj)
       run = obj.run_wrapper(*args, **kwargs)
   except filelock.Timeout:
-    # Late import because this is only needed for PSQ
-    import psq
-    raise psq.Retry()
+    if config.TASK_MANAGER.lower() == 'psq':
+      # Late import because this is only needed for PSQ
+      import psq
+      raise psq.Retry()
   # *Always* make sure we release the lock
   finally:
     lock.release()

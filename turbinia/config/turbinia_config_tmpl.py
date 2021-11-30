@@ -15,6 +15,7 @@
 """Turbinia Config Template"""
 
 from __future__ import unicode_literals
+from os import uname
 
 ################################################################################
 #                          Base Turbinia configuration
@@ -45,8 +46,13 @@ OUTPUT_DIR = '/var/tmp'
 # different from the OUTPUT_DIR.
 TMP_DIR = '/tmp'
 
+# Default directory to where logs will be stored. Note for a Kubernetes
+# environment, set this path to the shared path configured for Filestore
+# so that logs are can be easily retrieved from one central location.
+LOG_DIR = '/var/tmp'
+
 # File to log debugging output to.
-LOG_FILE = '%s/turbinia.log' % TMP_DIR
+LOG_FILE = '%s/%s.log' % (LOG_DIR, uname().nodename)
 
 # Path to a lock file used for the worker tasks.
 LOCK_FILE = '%s/turbinia-worker.lock' % TMP_DIR
@@ -120,7 +126,7 @@ DOCKER_ENABLED = False
 # still be enabled with the --jobs_allowlist flag on the server, but the client
 # will not be able to allowlist jobs that have been disabled or denylisted on
 # the server.
-DISABLED_JOBS = ['BinaryExtractorJob', 'BulkExtractorJob', 'DfdeweyJob', 'PhotorecJob']  # yapf: disable
+DISABLED_JOBS = ['BinaryExtractorJob', 'BulkExtractorJob', 'DfdeweyJob', 'HindsightJob', 'PhotorecJob']  # yapf: disable
 
 # Configure additional job dependency checks below.
 DEPENDENCIES = [{

@@ -11,9 +11,14 @@ google-cloud-error-reporting
 google-cloud-logging>=2.0.0
 google-cloud-pubsub==1.7.0
 google-cloud-storage
+pycryptodomex
 prometheus_client
 libcloudforensics
+protobuf<3.18.0
+proto-plus<1.19.7
 psq
+pyparsing<3
+pyyaml>=5.4.1
 redis
 six>=1.15.0
 urllib3[secure]

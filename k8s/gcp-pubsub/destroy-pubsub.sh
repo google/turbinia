@@ -10,4 +10,6 @@ kubectl delete -f turbinia-autoscale-cpu.yaml
 kubectl delete -f turbinia-server-metrics-service.yaml 
 kubectl delete -f turbinia-worker-metrics-service.yaml 
 kubectl delete -f turbinia-worker.yaml 
-kubectl delete -f turbinia-server.yaml 
+kubectl delete -f turbinia-server.yaml
+kubectl delete -f turbinia-output-claim-filestore.yaml 
+kubectl delete -f turbinia-output-filestore.yaml 
