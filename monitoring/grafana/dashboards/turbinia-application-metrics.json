@@ -33,7 +33,7 @@
       "type": "row"
     },
     {
-      "datasource": "Prometheus",
+      "datasource": "prometheus",
       "description": "Total number of requests received by Turbinia Server",
       "fieldConfig": {
         "defaults": {
@@ -95,7 +95,7 @@
       "type": "stat"
     },
     {
-      "datasource": "Prometheus",
+      "datasource": "prometheus",
       "description": "Total number of Turbinia Jobs",
       "fieldConfig": {
         "defaults": {
@@ -157,7 +157,7 @@
       "type": "stat"
     },
     {
-      "datasource": "Prometheus",
+      "datasource": "prometheus",
       "description": "Total number of completed Turbinia Jobs",
       "fieldConfig": {
         "defaults": {
@@ -219,7 +219,7 @@
       "type": "stat"
     },
     {
-      "datasource": "Prometheus",
+      "datasource": "prometheus",
       "description": "Total number of Tasks created by the Turbinia Server",
       "fieldConfig": {
         "defaults": {
@@ -280,7 +280,7 @@
       "type": "stat"
     },
     {
-      "datasource": "Prometheus",
+      "datasource": "prometheus",
       "description": "Total number of Tasks completed",
       "fieldConfig": {
         "defaults": {
@@ -342,7 +342,7 @@
       "type": "stat"
     },
     {
-      "datasource": "Prometheus",
+      "datasource": "prometheus",
       "description": "Total number of Tasks failed",
       "fieldConfig": {
         "defaults": {
@@ -422,7 +422,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "Prometheus",
+      "datasource": "prometheus",
       "description": "Displays Turbinia Job related information over a period of time",
       "fill": 1,
       "fillGradient": 0,
@@ -569,7 +569,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "Prometheus",
+      "datasource": "prometheus",
       "description": "Displays the number of Requests sent to the Turbinia Server over a period of time",
       "fill": 1,
       "fillGradient": 0,
@@ -676,7 +676,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "Prometheus",
+      "datasource": "prometheus",
       "description": "Displays Turbinia Server Task information over a period of time",
       "fill": 1,
       "fillGradient": 0,
@@ -823,7 +823,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "Prometheus",
+      "datasource": "prometheus",
       "description": "Displays Turbinia Worker Task statistics over a period of time",
       "fill": 1,
       "fillGradient": 0,
@@ -986,7 +986,7 @@
         "noDataState": "no_data",
         "notifications": []
       },
-      "datasource": "Prometheus",
+      "datasource": "prometheus",
       "fieldConfig": {
         "defaults": {
           "color": {
