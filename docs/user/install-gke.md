@@ -12,7 +12,7 @@ GKE is only supported for Google Cloud so a Google Cloud Project is required to 
 
 ## **Installation**
 
-Please follow these steps for configuring Turbinia for GCP use and than running it within GKE. Ensure that the `.turbiniarc` config file has been updated appropriately. 
+Please follow these steps for configuring Turbinia for GCP use and then running it within GKE. Ensure that the `.turbiniarc` config file has been updated appropriately. 
 
 ### **GCP Setup**
 
