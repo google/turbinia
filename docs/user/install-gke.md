@@ -124,7 +124,9 @@ In this deployment method, we are using [kube-prometheus](https://github.com/pro
 * Once complete apply the changes made through the following commands
     * `kubectl -n monitoring apply -f additional-scrape-configs.yaml`
     * `kubectl -n monitoring apply -f manifests/prometheus-prometheus.yaml`
-* To get Turbinia custom rules imported, apply the `turbinia-custom-rules.yaml` file located in the Turbinia directory
+* To get Turbinia custom rules imported, first run the `gen-yaml.sh` script from the directory its located
+    * `cd monitoring/k8s && ./gen-yaml.sh`
+* Then apply the `turbinia-custom-rules.yaml` file located in the Turbinia directory
     * `kubectl -n monitoring apply -f monitoring/k8s/prometheus/turbinia-custom-rules.yaml`
 
 ### Testing Prometheus Deployment
@@ -154,6 +156,10 @@ Before proceeding to the Grafana setup, please ensure that you have followed all
     ```
 * Once complete, apply the changes through
   * `kubectl -n monitoring apply -f manifests/grafana-deployment.yaml`
+* To get the Turbinia Application & Healthcheck dashboard to show, first run the `gen.yaml.sh` if haven't done so already in the setting up Prometheus section.
+    * `cd monitoring/k8s && ./gen-yaml.sh`
+* Then apply the dashboards to the monitoring namespace.
+    * `kubectl -n monitoring apply -f monitoring/k8s/grafana/*`
 * To connect to the Grafana dashboard, run the following command
     * ```kubectl -n monitoring port-forward svc/grafana 11111:3000```
 ### Email Notifications
