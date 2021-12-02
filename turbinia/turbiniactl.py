@@ -27,6 +27,7 @@ import sys
 import uuid
 import copy
 
+from os import uname
 from turbinia import config
 from turbinia import TurbiniaException
 from turbinia.config import logger
@@ -395,6 +396,10 @@ def main():
 
   if args.log_file:
     config.LOG_FILE = args.log_file
+  else:
+    config.LOG_FILE = '{0:s}/{1:s}.log'.format(
+        config.LOG_FILE,
+        uname().nodename)
   if args.output_dir:
     config.OUTPUT_DIR = args.output_dir
 
