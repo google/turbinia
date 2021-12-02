@@ -49,7 +49,7 @@ TMP_DIR = '/tmp'
 # Default path to where logs will be stored. Note for a Kubernetes
 # environment, change the path to the shared path configured for Filestore
 # so that logs are can be easily retrieved from one central location.
-LOG_FILE = '/var/tmp/%s.log' % (uname().nodename)
+LOG_FILE = '/var/tmp/%s.log' % uname().nodename
 
 # Path to a lock file used for the worker tasks.
 LOCK_FILE = '%s/turbinia-worker.lock' % TMP_DIR
