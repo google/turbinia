@@ -397,7 +397,12 @@ def main():
   if args.log_file:
     config.LOG_DIR = args.log_file
   else:
-    config.LOG_DIR = '{0:s}/{1:s}.log'.format(config.LOG_DIR, uname().nodename)
+    log_name = uname().nodename
+    if log_name:
+      config.LOG_DIR = '{0:s}/{1:s}.log'.format(config.LOG_DIR, log_name)
+    else:
+      config.LOG_DIR = '{0:s}/{1:s}.log'.format(config.LOG_DIR, 'turbinia.log')
+      
   if args.output_dir:
     config.OUTPUT_DIR = args.output_dir
 
