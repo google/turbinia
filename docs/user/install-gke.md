@@ -80,7 +80,7 @@ gcloud container clusters create CLUSTER_NAME \
 * The `image` variable can be optionally changed in the `turbinia-worker.yaml` and `turbinia-server.yaml` files to chose the docker images used during deployment.
 * In the `turbinia-worker.yaml` file, ensure that the path in the volume labeled `lockfolder` matches the Turbinia config variable `TMP_RESOURCE_DIR`.
 * If the Filestore `Instance ID` and `File share name` have a different name than the default name `output`, update `turbinia-worker.yaml`, `turbinia-server.yaml`, `turbinia-output-claim-filestore.yaml`, and `turbinia-output-filestore.yaml` by searching for the string `output` and replacing it with the custom name. Skip this step if the default name was used.
-* To have all logs go to the central location, update the `LOG_DIR` variable in the `.turbiniarc` config file to the default Filestore path `/mnt/output` or if configured differently, to the custom path.
+* To have all logs go to the central location, update the `LOG_FILE` variable in the `.turbiniarc` config file to the default Filestore path `/mnt/output` or if configured differently, to the custom path.
 * In `turbinia-output-filestore.yaml`, update `<IP_ADDRESS>` to the Filestore IP address.
 * If the Filestore instance size is greater than 1 TB, update the `storage` sections in `turbinia-output-claim-filestore.yaml` and `turbinia-output-filestore.yaml` with the appropriate size.
 * Ensure that the `.turbiniarc` config file has been properly configured with required GCP variables.
