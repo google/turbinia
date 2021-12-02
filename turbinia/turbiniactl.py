@@ -397,9 +397,7 @@ def main():
   if args.log_file:
     config.LOG_DIR = args.log_file
   else:
-    config.LOG_DIR = '{0:s}/{1:s}.log'.format(
-        config.LOG_DIR,
-        uname().nodename)
+    config.LOG_DIR = '{0:s}/{1:s}.log'.format(config.LOG_DIR, uname().nodename)
   if args.output_dir:
     config.OUTPUT_DIR = args.output_dir
 
