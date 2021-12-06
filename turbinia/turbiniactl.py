@@ -834,7 +834,7 @@ def process_evidence(**kwargs):
   group_id = kwargs.get('group_id')
 
   # Set request id
-  request_id = uuid.uuid4().hex
+  request_id = args.request_id if args.request_id else uuid.uuid4().hex
 
   # Start Evidence configuration
   evidence_ = None
