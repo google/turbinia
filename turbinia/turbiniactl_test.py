@@ -44,34 +44,26 @@ class FakeEvidence():
     self.type = type
     self.project = project
     self.disk_name = disk_name
+    self.zone = zone
 
-  def set_parent(self, evidence):
+  def set_parent(self, _):
     return
 
 
 class TestTurbiniactl(unittest.TestCase):
   """ Test Turbiniactl."""
 
-  #@mock.patch('turbinia.output_manager.OutputManager')
-  # @mock.patch('turbinia.evidence.Evidence')
-
   @mock.patch('turbinia.output_manager.OutputManager.setup')
   @mock.patch('turbinia.output_manager.OutputManager.save_evidence')
   @mock.patch('turbinia.message.TurbiniaRequest')
-  def setUp(self, mockRequest, _, __):  # mockEvidence
+  def setUp(self, mockRequest, _, __):
     super(TestTurbiniactl, self).setUp()
     config.TASK_MANAGER = 'CELERY'
     self.output_manager = mock.MagicMock()
     self.base_dir = tempfile.mkdtemp()
     self.source_path = tempfile.mkstemp(dir=self.base_dir)[1]
-    #mockEvidence.return_value = evidence.Evidence
-    #  self.evidence = mock.MagicMock()
-    #  self.evidence.RawDisk = mock.create_autospec(self.evidence, autospec=True)
     self.client = mock.MagicMock()
     self.client.send_request = mock.MagicMock()
-    # self.TurbiniaRequest = mock.MagicMock(
-    #     return_value=TurbiniaRequest(
-    #         request_id='fakeID', group_id='FakeGroupID'))
     mockRequest.request_id = 'fakeID'
     mockRequest.group_id = 'FakeGroupID'
 
@@ -160,11 +152,6 @@ class TestTurbiniactl(unittest.TestCase):
         type='googleclouddisk', project='testProject', disk_name='testDisk',
         cloud_only=True)
     mockClient.send_request = mock.MagicMock()
-    #process_evidence(
-    #args=args, disk_name=disk_name, name=name, source=source,
-    #project=project, zone=zone, embedded_path=embedded_path,
-    #mount_partition=mount_partition, group_id=group_id,
-    #filter_patterns=filter_patterns, client=client, yara_rules=yara_rules)
     turbiniactl.process_evidence(
         name='My Evidence', disk_name='testDisk', zone='testZone',
         project='testProject', args=args, source='case', client=mockClient,
@@ -274,187 +261,196 @@ class TestTurbiniactl(unittest.TestCase):
     ])
     self.assertTrue(turbiniactl.process_evidence.called)
 
+  @mock.patch('turbinia.client.get_turbinia_client')
+  def testUnequalRawdiskArgs(self, _):
+    """Test unequal number of args for rawdisk evidence type."""
+    self.assertRaises(
+        TurbiniaException, turbiniactl.process_args, [
+            'rawdisk', '--source_path', 'img1,img2', '--source',
+            'source,source2,source3'
+        ])
+    self.assertRaises(
+        TurbiniaException, turbiniactl.process_args, [
+            'rawdisk', '--source_path', 'img1,img2', '--name',
+            'name1,name2,name3'
+        ])
+    turbiniactl.process_evidence = mock.MagicMock(return_value=None)
+    turbiniactl.process_args(
+        ['rawdisk', '--source_path', 'img1,img2', '--name', 'name1,name2'])
+    self.assertTrue(turbiniactl.process_evidence.called)
 
-#   @mock.patch('turbinia.client.get_turbinia_client')
-#   def testUnequalRawdiskArgs(self, _):
-#     """Test unequal number of args for rawdisk evidence type."""
-#     self.assertRaises(
-#         TurbiniaException, turbiniactl.process_args, [
-#             'rawdisk', '--source_path', 'img1,img2', '--source',
-#             'source,source2,source3'
-#         ])
-#     self.assertRaises(
-#         TurbiniaException, turbiniactl.process_args, [
-#             'rawdisk', '--source_path', 'img1,img2', '--name',
-#             'name1,name2,name3'
-#         ])
-#     turbiniactl.process_evidence = mock.MagicMock(return_value=None)
-#     turbiniactl.process_args(
-#         ['rawdisk', '--source_path', 'img1,img2', '--name', 'name1,name2'])
-#     self.assertTrue(turbiniactl.process_evidence.called)
+  @mock.patch('turbinia.client.get_turbinia_client')
+  def testUnequalCompresseddirectoryArgs(self, _):
+    """Test unequal number of args for compresseddirectory evidence type."""
+    self.assertRaises(
+        TurbiniaException, turbiniactl.process_args, [
+            'compresseddirectory', '--source_path', 'img1,img2,img3',
+            '--source', 'source1,source2'
+        ])
 
-#   @mock.patch('turbinia.client.get_turbinia_client')
-#   def testUnequalCompresseddirectoryArgs(self, _):
-#     """Test unequal number of args for compresseddirectory evidence type."""
-#     self.assertRaises(
-#         TurbiniaException, turbiniactl.process_args, [
-#             'compresseddirectory', '--source_path', 'img1,img2,img3',
-#             '--source', 'source1,source2'
-#         ])
+    self.assertRaises(
+        TurbiniaException, turbiniactl.process_args, [
+            'compresseddirectory', '--source_path', 'img1,img2', '--name',
+            'name1,name2,name3'
+        ])
 
-#     self.assertRaises(
-#         TurbiniaException, turbiniactl.process_args, [
-#             'compresseddirectory', '--source_path', 'img1,img2', '--name',
-#             'name1,name2,name3'
-#         ])
+    turbiniactl.process_evidence = mock.MagicMock(return_value=None)
+    turbiniactl.process_args([
+        'compresseddirectory', '--source_path', 'img1,img2', '--name',
+        'name1,name2'
+    ])
+    self.assertTrue(turbiniactl.process_evidence.called)
 
-#     turbiniactl.process_evidence = mock.MagicMock(return_value=None)
-#     turbiniactl.process_args([
-#         'compresseddirectory', '--source_path', 'img1,img2', '--name',
-#         'name1,name2'
-#     ])
-#     self.assertTrue(turbiniactl.process_evidence.called)
+  @mock.patch('turbinia.client.get_turbinia_client')
+  @mock.patch('libcloudforensics.providers.gcp.forensics.CreateDiskCopy')
+  def testUnequalCloudDiskArgs(self, mock_copyDisk, _):
+    """Test unequal number of args for cloud disk evidence type."""
+    config.SHARED_FILESYSTEM = False
+    self.assertRaises(
+        TurbiniaException, turbiniactl.process_args, [
+            'googleclouddisk', '--disk_name', 'disk1,disk2,disk3', '--zone',
+            'zone1,zone2', '--project', 'proj1,proj2,proj3'
+        ])
 
-#   @mock.patch('turbinia.client.get_turbinia_client')
-#   @mock.patch('libcloudforensics.providers.gcp.forensics.CreateDiskCopy')
-#   def testUnequalCloudDiskArgs(self, mock_copyDisk, _):
-#     """Test unequal number of args for cloud disk evidence type."""
-#     self.assertRaises(
-#         TurbiniaException, turbiniactl.process_args, [
-#             'googleclouddisk', '--disk_name', 'disk1,disk2,disk3', '--zone',
-#             'zone1,zone2', '--project', 'proj1,proj2,proj3'
-#         ])
+    self.assertRaises(
+        TurbiniaException, turbiniactl.process_args, [
+            'googleclouddisk', '--disk_name', 'disk1,disk2,disk3', '--zone',
+            'zone1,zone2,zone3', '--project', 'proj1,proj2'
+        ])
 
-#     self.assertRaises(
-#         TurbiniaException, turbiniactl.process_args, [
-#             'googleclouddisk', '--disk_name', 'disk1,disk2,disk3', '--zone',
-#             'zone1,zone2,zone3', '--project', 'proj1,proj2'
-#         ])
+    self.assertRaises(
+        TurbiniaException, turbiniactl.process_args, [
+            'googleclouddisk', '--disk_name', 'disk1,disk2,disk3', '--zone',
+            'zone1,zone2,zone3', '--project', 'proj1,proj2,proj3', '--name',
+            'name1,name2'
+        ])
 
-#     self.assertRaises(
-#         TurbiniaException, turbiniactl.process_args, [
-#             'googleclouddisk', '--disk_name', 'disk1,disk2,disk3', '--zone',
-#             'zone1,zone2,zone3', '--project', 'proj1,proj2,proj3', '--name',
-#             'name1,name2'
-#         ])
+    self.assertRaises(
+        TurbiniaException, turbiniactl.process_args, [
+            'googleclouddisk', '--disk_name', 'disk1,disk2,disk3', '--zone',
+            'zone1,zone2,zone3', '--project', 'proj1,proj2,proj3', '--source',
+            'source1,source2'
+        ])
 
-#     self.assertRaises(
-#         TurbiniaException, turbiniactl.process_args, [
-#             'googleclouddisk', '--disk_name', 'disk1,disk2,disk3', '--zone',
-#             'zone1,zone2,zone3', '--project', 'proj1,proj2,proj3', '--source',
-#             'source1,source2'
-#         ])
+    config.TASK_MANAGER = 'PSQ'
+    turbiniactl.process_evidence = mock.MagicMock(return_value=None)
+    mock_copyDisk.return_value = compute.GoogleComputeDisk(
+        'fake-proj', 'fake-zone', 'fake-disk-copy')
+    turbiniactl.process_args([
+        'googleclouddisk', '--disk_name', 'disk1,disk2,disk3', '--zone',
+        'zone1,zone2,zone3', '--project', 'proj1,proj2,proj3'
+    ])
+    self.assertTrue(turbiniactl.process_evidence.called)
 
-#     config.TASK_MANAGER = 'PSQ'
-#     turbiniactl.process_evidence = mock.MagicMock(return_value=None)
-#     mock_copyDisk.return_value = compute.GoogleComputeDisk(
-#         'fake-proj', 'fake-zone', 'fake-disk-copy')
-#     turbiniactl.process_args([
-#         'googleclouddisk', '--disk_name', 'disk1,disk2,disk3', '--zone',
-#         'zone1,zone2,zone3', '--project', 'proj1,proj2,proj3'
-#     ])
-#     self.assertTrue(turbiniactl.process_evidence.called)
+  @mock.patch('turbinia.client.get_turbinia_client')
+  @mock.patch('libcloudforensics.providers.gcp.forensics.CreateDiskCopy')
+  def testUnequalCloudDiskEmbeddedArgs(self, mock_copyDisk, _):
+    """Test unequal number of args for cloud embedded disk evidence type."""
+    # Fail when zones don't match
+    config.SHARED_FILESYSTEM = False
+    self.assertRaises(
+        TurbiniaException, turbiniactl.process_args, [
+            'googleclouddiskembedded', '--disk_name', 'disk1,disk2,disk3',
+            '--zone', 'zone1,zone2', '--project', 'proj1,proj2,proj3',
+            '--embedded_path', 'path1,path2,path3'
+        ])
 
-#   @mock.patch('turbinia.client.get_turbinia_client')
-#   @mock.patch('libcloudforensics.providers.gcp.forensics.CreateDiskCopy')
-#   def testUnequalCloudDiskEmbeddedArgs(self, mock_copyDisk, _):
-#     """Test unequal number of args for cloud embedded disk evidence type."""
-#     # Fail when zones don't match
-#     self.assertRaises(
-#         TurbiniaException, turbiniactl.process_args, [
-#             'googleclouddiskembedded', '--disk_name', 'disk1,disk2,disk3',
-#             '--zone', 'zone1,zone2', '--project', 'proj1,proj2,proj3',
-#             '--embedded_path', 'path1,path2,path3'
-#         ])
+    # Fail when embedded path don't match
+    self.assertRaises(
+        TurbiniaException, turbiniactl.process_args, [
+            'googleclouddiskembedded', '--disk_name', 'disk1,disk2,disk3',
+            '--zone', 'zone1,zone2,zone3', '--project', 'proj1,proj2,proj3',
+            '--embedded_path', 'path1,path2'
+        ])
 
-#     # Fail when embedded path don't match
-#     self.assertRaises(
-#         TurbiniaException, turbiniactl.process_args, [
-#             'googleclouddiskembedded', '--disk_name', 'disk1,disk2,disk3',
-#             '--zone', 'zone1,zone2,zone3', '--project', 'proj1,proj2,proj3',
-#             '--embedded_path', 'path1,path2'
-#         ])
+    # Fail when name don't match
+    self.assertRaises(
+        TurbiniaException, turbiniactl.process_args, [
+            'googleclouddiskembedded', '--disk_name', 'disk1,disk2', '--zone',
+            'zone1,zone2,zone3', '--project', 'proj1,proj2,proj3', '--name',
+            'name1,name2', '--embedded_path', 'path1,path2,path3'
+        ])
+    # Fail when mount source don't match
+    self.assertRaises(
+        TurbiniaException, turbiniactl.process_args, [
+            'googleclouddiskembedded', '--disk_name', 'disk1,disk2,disk3',
+            '--zone', 'zone1,zone2,zone3', '--project', 'proj1,proj2,proj3',
+            '--source', 'source1,source2', '--embedded_path',
+            'path1,path2,path3'
+        ])
 
-#     # Fail when name don't match
-#     self.assertRaises(
-#         TurbiniaException, turbiniactl.process_args, [
-#             'googleclouddiskembedded', '--disk_name', 'disk1,disk2', '--zone',
-#             'zone1,zone2,zone3', '--project', 'proj1,proj2,proj3', '--name',
-#             'name1,name2', '--embedded_path', 'path1,path2,path3'
-#         ])
-#     # Fail when mount source don't match
-#     self.assertRaises(
-#         TurbiniaException, turbiniactl.process_args, [
-#             'googleclouddiskembedded', '--disk_name', 'disk1,disk2,disk3',
-#             '--zone', 'zone1,zone2,zone3', '--project', 'proj1,proj2,proj3',
-#             '--source', 'source1,source2', '--embedded_path',
-#             'path1,path2,path3'
-#         ])
+    # Fail when project don't match
+    self.assertRaises(
+        TurbiniaException, turbiniactl.process_args, [
+            'googleclouddiskembedded', '--disk_name', 'disk1,disk2,disk3',
+            '--zone', 'zone1,zone2,zone3', '--project', 'proj1,proj2',
+            '--source', 'source1,source2', '--embedded_path',
+            'path1,path2,path3'
+        ])
 
-#     # Fail when project don't match
-#     self.assertRaises(
-#         TurbiniaException, turbiniactl.process_args, [
-#             'googleclouddiskembedded', '--disk_name', 'disk1,disk2,disk3',
-#             '--zone', 'zone1,zone2,zone3', '--project', 'proj1,proj2',
-#             '--source', 'source1,source2', '--embedded_path',
-#             'path1,path2,path3'
-#         ])
+    # Pass when all the args match
+    config.TASK_MANAGER = 'PSQ'
+    turbiniactl.process_evidence = mock.MagicMock(return_value=None)
+    mock_copyDisk.return_value = compute.GoogleComputeDisk(
+        'fake-proj', 'fake-zone', 'fake-disk-copy')
+    turbiniactl.process_args([
+        'googleclouddiskembedded', '--disk_name', 'disk1,disk2,disk3', '--zone',
+        'zone1,zone2,zone3', '--project', 'proj1,proj2,proj3',
+        '--embedded_path', 'path1,path2,path3'
+    ])
+    self.assertTrue(turbiniactl.process_evidence.called)
 
-#     # Pass when all the args match
-#     config.TASK_MANAGER = 'PSQ'
-#     turbiniactl.process_evidence = mock.MagicMock(return_value=None)
-#     mock_copyDisk.return_value = compute.GoogleComputeDisk(
-#         'fake-proj', 'fake-zone', 'fake-disk-copy')
-#     turbiniactl.process_args([
-#         'googleclouddiskembedded', '--disk_name', 'disk1,disk2,disk3', '--zone',
-#         'zone1,zone2,zone3', '--project', 'proj1,proj2,proj3',
-#         '--embedded_path', 'path1,path2,path3'
-#     ])
-#     self.assertTrue(turbiniactl.process_evidence.called)
+    # Raise error when running locally
+    config.SHARED_FILESYSTEM = True
+    with self.assertRaisesRegex(TurbiniaException, 'Cloud only'):
+      turbiniactl.process_args([
+          'googleclouddiskembedded', '--disk_name', 'disk1,disk2,disk3',
+          '--zone', 'zone1,zone2,zone3', '--project', 'proj1,proj2,proj3',
+          '--embedded_path', 'path1,path2,path3'
+      ])
 
-#   @mock.patch('turbinia.client.get_turbinia_client')
-#   def testUnequalRawMemoryArgs(self, _):
-#     """Test unequal number of args for rawmemory evidence type."""
-#     self.assertRaises(
-#         TurbiniaException, turbiniactl.process_args, [
-#             'rawmemory', '--source_path', 'disk1,disk2,disk3', '--profile',
-#             'prof1,prof2,prof3,prof4', '--module_list', 'mock'
-#         ])
-#     self.assertRaises(
-#         TurbiniaException, turbiniactl.process_args, [
-#             'rawmemory', '--source_path', 'disk1,disk2,disk3', '--profile',
-#             'prof1,prof2,prof3', '--module_list', 'mock', '--name',
-#             'name1,name2'
-#         ])
+  @mock.patch('turbinia.client.get_turbinia_client')
+  def testUnequalRawMemoryArgs(self, _):
+    """Test unequal number of args for rawmemory evidence type."""
+    self.assertRaises(
+        TurbiniaException, turbiniactl.process_args, [
+            'rawmemory', '--source_path', 'disk1,disk2,disk3', '--profile',
+            'prof1,prof2,prof3,prof4', '--module_list', 'mock'
+        ])
+    self.assertRaises(
+        TurbiniaException, turbiniactl.process_args, [
+            'rawmemory', '--source_path', 'disk1,disk2,disk3', '--profile',
+            'prof1,prof2,prof3', '--module_list', 'mock', '--name',
+            'name1,name2'
+        ])
 
-#     turbiniactl.process_evidence = mock.MagicMock(return_value=None)
-#     turbiniactl.process_args([
-#         'rawmemory', '--source_path', 'disk1,disk2,disk3', '--profile',
-#         'prof1,prof2,prof3', '--module_list', 'mock'
-#     ])
-#     self.assertTrue(turbiniactl.process_evidence.called)
+    turbiniactl.process_evidence = mock.MagicMock(return_value=None)
+    turbiniactl.process_args([
+        'rawmemory', '--source_path', 'disk1,disk2,disk3', '--profile',
+        'prof1,prof2,prof3', '--module_list', 'mock'
+    ])
+    self.assertTrue(turbiniactl.process_evidence.called)
 
-#   @mock.patch('turbinia.client.get_turbinia_client')
-#   def testUnequalHindsightArgs(self, _):
-#     """Test unequal number of args for hindsight evidence type."""
-#     self.assertRaises(
-#         TurbiniaException, turbiniactl.process_args, [
-#             'hindsight', '--source_path', 'disk1,disk2,disk3', '--format',
-#             'prof1,prof2,prof3', '--name', 'name1,name2'
-#         ])
-#     self.assertRaises(
-#         TurbiniaException, turbiniactl.process_args, [
-#             'hindsight', '--source_path', 'disk1,disk2,disk3', '--format',
-#             'sqlite,sqlite,sqlite,sqlite'
-#         ])
-#     self.assertRaises(
-#         TurbiniaException, turbiniactl.process_args, [
-#             'hindsight', '--source_path', 'disk1,disk2,disk3', '--format',
-#             'sqlite,sqlite,sqlite', '--browser_type', 'type1,type2'
-#         ])
+  @mock.patch('turbinia.client.get_turbinia_client')
+  def testUnequalHindsightArgs(self, _):
+    """Test unequal number of args for hindsight evidence type."""
+    self.assertRaises(
+        TurbiniaException, turbiniactl.process_args, [
+            'hindsight', '--source_path', 'disk1,disk2,disk3', '--format',
+            'prof1,prof2,prof3', '--name', 'name1,name2'
+        ])
+    self.assertRaises(
+        TurbiniaException, turbiniactl.process_args, [
+            'hindsight', '--source_path', 'disk1,disk2,disk3', '--format',
+            'sqlite,sqlite,sqlite,sqlite'
+        ])
+    self.assertRaises(
+        TurbiniaException, turbiniactl.process_args, [
+            'hindsight', '--source_path', 'disk1,disk2,disk3', '--format',
+            'sqlite,sqlite,sqlite', '--browser_type', 'type1,type2'
+        ])
 
-#     turbiniactl.process_evidence = mock.MagicMock(return_value=None)
-#     turbiniactl.process_args(
-#         ['hindsight', '--source_path', 'disk1,disk2,disk3'])
-#     self.assertTrue(turbiniactl.process_evidence.called)
-#@mock.patch('turbinia.message.TurbiniaRequest')
+    turbiniactl.process_evidence = mock.MagicMock(return_value=None)
+    turbiniactl.process_args(
+        ['hindsight', '--source_path', 'disk1,disk2,disk3'])
+    self.assertTrue(turbiniactl.process_evidence.called)

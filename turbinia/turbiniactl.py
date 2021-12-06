@@ -29,6 +29,7 @@ import copy
 
 from turbinia import config
 from turbinia import TurbiniaException
+from turbinia.lib import recipe_helpers
 from turbinia.config import logger
 from turbinia import __version__
 from turbinia.processors import archive
@@ -96,10 +97,6 @@ def process_args(args):
       '-r', '--request_id', help='Create new requests with this Request ID',
       required=False)
   parser.add_argument(
-      '-R', '--run_local', action='store_true',
-      help='Run completely locally without any server or other infrastructure. '
-      'This can be used to run one-off Tasks to process data locally.')
-  parser.add_argument(
       '-S', '--server', action='store_true',
       help='Run Turbinia Server indefinitely')
   parser.add_argument(
@@ -130,10 +127,7 @@ def process_args(args):
   parser.add_argument(
       '-p', '--poll_interval', default=60, type=int,
       help='Number of seconds to wait between polling for task state info')
-  parser.add_argument(
-      '-t', '--task',
-      help='The name of a single Task to run locally (must be used with '
-      '--run_local).')
+
   parser.add_argument(
       '-T', '--debug_tasks', action='store_true',
       help='Show debug output for all supported tasks', default=False)
@@ -458,8 +452,6 @@ def process_args(args):
   from turbinia.worker import TurbiniaCeleryWorker
   from turbinia.worker import TurbiniaPsqWorker
   from turbinia.server import TurbiniaServer
-  from turbinia import evidence
-  from turbinia.message import TurbiniaRequest
 
   # Print out config if requested
   if args.command == 'config':
@@ -522,18 +514,10 @@ def process_args(args):
   if args.command not in ('psqworker', 'server'):
     client = TurbiniaClientProvider.get_turbinia_client()
 
-  # Make sure run_local flags aren't conflicting with other server/client flags
-  if args.run_local and (server_flags_set or worker_flags_set):
-    log.error('--run_local flag is not compatible with server/worker flags')
-    sys.exit(1)
-
-  if args.run_local and not args.task:
-    log.error('--run_local flag requires --task flag')
-    sys.exit(1)
-
   # Set group id
   group_id = uuid.uuid4().hex
 
+  # Checks for bulk processing
   if args.command in ('rawdisk', 'directory', 'compresseddirectory'):
     if ((args.source and len(args.source) > 1 and
          len(args.source) != len(args.source_path)) or
@@ -541,10 +525,7 @@ def process_args(args):
          len(args.name) != len(args.source_path))):
       msg = 'Number of name/source args must equal to one or source_path.'
       raise TurbiniaException(msg)
-      sys.exit(1)
-
-    # If there are more than one evidence we can't run all of them on a server
-
+    # Iterate through evidence and call process_evidence
     for i, source_path in enumerate(args.source_path):
       if args.name:
         name = args.name[i] if i < len(args.name) else args.name[0]
@@ -558,11 +539,8 @@ def process_args(args):
           args=args, source_path=source_path, name=name, source=source,
           group_id=group_id, filter_patterns=filter_patterns, client=client,
           yara_rules=yara_rules)
-  # Set zone/project to defaults if flags are not set, and also copy remote
-  # disk if needed.
-
   elif args.command in ('googleclouddisk', 'googleclouddiskembedded'):
-
+    # Check cloud zones
     if not args.zone and config.TURBINIA_ZONE:
       args.zone = [config.TURBINIA_ZONE]
     elif not args.zone and not config.TURBINIA_ZONE:
@@ -572,7 +550,7 @@ def process_args(args):
         args.disk_name):
       msg = 'Number of zones must equal to number of supplied disks.'
       raise TurbiniaException(msg)
-
+    # Check sources and names to see if the match
     if ((args.source and len(args.source) > 1 and
          len(args.source) != len(args.disk_name)) or
         (args.name and len(args.name) > 1 and
@@ -591,7 +569,7 @@ def process_args(args):
       if len(args.embedded_path) != len(args.disk_name):
         msg = 'Number of embedded paths must equal to disk names.'
         raise TurbiniaException(msg)
-
+    # Checks for cloud project
     if not args.project and config.TURBINIA_PROJECT:
       args.project = [config.TURBINIA_PROJECT]
     elif not args.project and not config.TURBINIA_PROJECT:
@@ -627,13 +605,19 @@ def process_args(args):
         source = args.source[i] if i < len(args.source) else args.source[0]
       else:
         source = None
+      # Fail if this is a local instance
+      if config.SHARED_FILESYSTEM and not args.force_evidence:
+        msg = (
+            'The evidence type {0:s} is Cloud only, and this instance of '
+            'Turbinia is not a cloud instance.'.format(args.command))
+        raise TurbiniaException(msg)
       process_evidence(
           args=args, disk_name=disk_name, name=name, source=source,
           project=project, zone=zone, embedded_path=embedded_path,
           mount_partition=mount_partition, group_id=group_id,
           filter_patterns=filter_patterns, client=client, yara_rules=yara_rules)
   elif args.command == 'rawmemory':
-
+    # Checks if length of args match
     if len(args.profile) > 1 and (len(args.profile) != len(args.source_path)):
       msg = 'Number of profiles must equal to source_path.'
       raise TurbiniaException(msg)
@@ -652,18 +636,19 @@ def process_args(args):
           group_id=group_id, filter_patterns=filter_patterns, client=client,
           yara_rules=yara_rules)
   elif args.command == 'hindsight':
+    # Checks if length of args match
     if args.name and len(args.name) > 1 and len(args.name) != len(
         args.source_path):
       msg = 'Number of names must equal to one or source_path.'
       raise TurbiniaException(msg)
     if not args.browser_type:
-      args.browser_type = ['sqlite']
+      args.browser_type = ['Chrome']
     if args.browser_type and len(args.browser_type) > 1 and len(
         args.browser_type) != len(args.source_path):
       msg = 'Number of browser types must equal to one or source_path.'
       raise TurbiniaException(msg)
     if not args.format:
-      args.format = ['Chrome']
+      args.format = ['sqlite']
     if args.format and len(args.format) > 1 and len(args.format) != len(
         args.source_path):
       msg = 'Number of formats must equal to one or source_path.'
@@ -913,12 +898,7 @@ def process_evidence(**kwargs):
         profile=kwargs.get('profile'), module_list=args.module_list)
 
   if evidence_ and not args.force_evidence:
-    if config.SHARED_FILESYSTEM and evidence_.cloud_only:
-      log.error(
-          'The evidence type {0:s} is Cloud only, and this instance of '
-          'Turbinia is not a cloud instance.'.format(evidence_.type))
-      sys.exit(1)
-    elif not config.SHARED_FILESYSTEM and evidence_.copyable:
+    if not config.SHARED_FILESYSTEM and evidence_.copyable:
       if os.path.exists(evidence_.local_path):
         output_manager = OutputManager()
         output_manager.setup(evidence_.type, request_id, remote_only=True)
@@ -935,11 +915,6 @@ def process_evidence(**kwargs):
           'GoogleCloudDiskRawEmbedded or other Cloud compatible '
           'object'.format(evidence_.type))
       sys.exit(1)
-
-  # (jorlamd): Importing recipe_helpers late to avoid a bug where
-  # client.TASK_MAP is imported early rendering the check for worker
-  # status not possible.
-  from turbinia.lib import recipe_helpers
 
   # If we have evidence to process and we also want to run as a server, then
   # we'll just process the evidence directly rather than send it through the
@@ -1010,17 +985,13 @@ def process_evidence(**kwargs):
     else:
       log.info(
           'Creating request {0:s} with group id {1:s} and evidence '
-          '{2:s}'.format(request.request_id, request.group_id,
-                         'sd'))  #evidence_.name))
+          '{2:s}'.format(request.request_id, request.group_id, evidence_.name))
       # TODO add a new log line when group status is implemented
       log.info(
           'Run command "turbiniactl status -r {0:s}" to see the status of'
           ' this request and associated tasks'.format(request.request_id))
-      if not args.run_local:
-        client.send_request(request)
-      else:
-        log.debug('--run_local specified so not sending request to server')
-    # TODO check if group id affects this part
+      client.send_request(request)
+
     if args.wait:
       log.info(
           'Waiting for request {0:s} to complete'.format(request.request_id))
@@ -1034,16 +1005,6 @@ def process_evidence(**kwargs):
               instance=config.INSTANCE_ID, project=config.TURBINIA_PROJECT,
               region=region, request_id=request.request_id,
               all_fields=args.all_fields))
-
-  if args.run_local and not evidence_:
-    log.error('Evidence must be specified if using --run_local')
-    sys.exit(1)
-  if args.run_local and evidence_.cloud_only:
-    log.error('--run_local cannot be used with Cloud only Evidence types')
-    sys.exit(1)
-  if args.run_local and evidence_:
-    result = client.run_local_task(args.task, request)
-    log.info('Task execution result: {0:s}'.format(result))
 
 
 def main():

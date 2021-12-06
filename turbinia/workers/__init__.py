@@ -132,7 +132,6 @@ class TurbiniaTaskResult:
     self.task_name = None
     self.requester = None
     self.output_dir = None
-    # self.group_id = None
 
     self.report_data = None
     self.report_priority = Priority.MEDIUM
