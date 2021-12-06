@@ -53,221 +53,6 @@ def csv_list(string):
   return string.split(',')
 
 
-def process_evidence(**kwargs):
-
-  from turbinia import client as TurbiniaClientProvider
-  from turbinia.client import TurbiniaCeleryClient
-  from turbinia.worker import TurbiniaCeleryWorker
-  from turbinia.worker import TurbiniaPsqWorker
-  from turbinia.server import TurbiniaServer
-  from turbinia import evidence
-  from turbinia.message import TurbiniaRequest
-
-  args = kwargs.get('args')
-  group_id = kwargs.get('group_id')
-  # Set request id
-  request_id = uuid.uuid4().hex
-  # Start Evidence configuration
-  evidence_ = None
-  # command = kwargs["command"]
-  if args.command == 'rawdisk':
-    name = kwargs.get('name')
-    source_path = os.path.abspath(kwargs.get('source_path'))
-    evidence_ = evidence.RawDisk(
-        name=name, source_path=source_path, source=kwargs.get('source'))
-  elif args.command == 'directory':
-    name = kwargs.get('name')
-    source_path = os.path.abspath(kwargs.get('source_path'))
-
-    if not config.SHARED_FILESYSTEM:
-      log.info(
-          'A Cloud Only Architecture has been detected. '
-          'Compressing the directory for GCS upload.')
-      source_path = archive.CompressDirectory(
-          source_path, output_path=config.TMP_DIR)
-      evidence_ = evidence.CompressedDirectory(
-          name=name, source_path=source_path, source=kwargs.get('source'))
-    else:
-      evidence_ = evidence.Directory(
-          name=name, source_path=source_path, source=kwargs.get('source'))
-  elif args.command == 'compresseddirectory':
-    archive.ValidateTarFile(kwargs.get('source_path'))
-    name = kwargs.get('name')
-    source_path = os.path.abspath(kwargs.get('source_path'))
-    evidence_ = evidence.CompressedDirectory(
-        name=name, source_path=source_path, source=kwargs.get('source'))
-  elif args.command == 'googleclouddisk':
-    evidence_ = evidence.GoogleCloudDisk(
-        name=kwargs.get('name'), disk_name=kwargs.get('disk_name'),
-        project=kwargs.get('project'), zone=kwargs.get('zone'),
-        source=kwargs.get('source'))
-  elif args.command == 'googleclouddiskembedded':
-    parent_evidence_ = evidence.GoogleCloudDisk(
-        name=kwargs.get('name'), disk_name=kwargs.get('disk_name'),
-        project=kwargs.get('project'), source=kwargs.get('source'),
-        mount_partition=kwargs.get('mount_partition'), zone=kwargs.get('zone'))
-    evidence_ = evidence.GoogleCloudDiskRawEmbedded(
-        name=kwargs.get('name'), disk_name=kwargs.get('disk_name'),
-        project=kwargs.get('project'), zone=kwargs.get('zone'),
-        embedded_path=kwargs.get('embedded_path'))
-    evidence_.set_parent(parent_evidence_)
-  elif args.command == 'hindsight':
-    if args.format not in ['xlsx', 'sqlite', 'jsonl']:
-      log.error('Invalid output format.')
-      sys.exit(1)
-    if args.browser_type not in ['Chrome', 'Brave']:
-      log.error('Browser type not supported.')
-      sys.exit(1)
-    source_path = os.path.abspath(kwargs.get('source_path'))
-    evidence_ = evidence.ChromiumProfile(
-        name=kwargs.get('name'), source_path=source_path,
-        output_format=kwargs.get('output_format'),
-        browser_type=kwargs.get('browser_type'))
-  elif args.command == 'rawmemory':
-    source_path = os.path.abspath(kwargs.get('source_path'))
-    evidence_ = evidence.RawMemory(
-        name=kwargs.get('name'), source_path=source_path,
-        profile=kwargs.get('profile'), module_list=args.module_list)
-
-  if evidence_ and not args.force_evidence:
-    if config.SHARED_FILESYSTEM and evidence_.cloud_only:
-      log.error(
-          'The evidence type {0:s} is Cloud only, and this instance of '
-          'Turbinia is not a cloud instance.'.format(evidence_.type))
-      sys.exit(1)
-    elif not config.SHARED_FILESYSTEM and evidence_.copyable:
-      if os.path.exists(evidence_.local_path):
-        output_manager = OutputManager()
-        output_manager.setup(evidence_.type, request_id, remote_only=True)
-        output_manager.save_evidence(evidence_)
-      else:
-        log.error(
-            'The evidence local path does not exist: {0:s}. Please submit '
-            'a new Request with a valid path.'.format(evidence_.local_path))
-        sys.exit(1)
-    elif not config.SHARED_FILESYSTEM and not evidence_.cloud_only:
-      log.error(
-          'The evidence type {0:s} cannot run on Cloud instances of '
-          'Turbinia. Consider wrapping it in a '
-          'GoogleCloudDiskRawEmbedded or other Cloud compatible '
-          'object'.format(evidence_.type))
-      sys.exit(1)
-
-  # (jorlamd): Importing recipe_helpers late to avoid a bug where
-  # client.TASK_MAP is imported early rendering the check for worker
-  # status not possible.
-  from turbinia.lib import recipe_helpers
-
-  # If we have evidence to process and we also want to run as a server, then
-  # we'll just process the evidence directly rather than send it through the
-  # PubSub frontend interface.  If we're not running as a server then we will
-  # create a new TurbiniaRequest and send it over PubSub.
-  request = None
-  client = kwargs.get('client')
-  if evidence_ and args.server:
-    server = TurbiniaServer()
-    server.add_evidence(evidence_)
-    server.start()
-  # TODO UPDATE TurbiniaRequest
-  elif evidence_:
-    request = TurbiniaRequest(
-        request_id=request_id, group_id=group_id, requester=getpass.getuser())
-    request.evidence.append(evidence_)
-
-    if args.decryption_keys:
-      for credential in args.decryption_keys:
-        try:
-          credential_type, credential_data = credential.split('=')
-        except ValueError as exception:
-          log.error(
-              'Could not parse credential [{0:s}] from decryption keys '
-              '{1!s}: {2!s}'.format(
-                  credential, args.decryption_keys, exception))
-          sys.exit(1)
-        evidence_.credentials.append((credential_type, credential_data))
-
-    if args.recipe or args.recipe_path:
-      if (args.jobs_denylist or args.jobs_allowlist or
-          args.filter_patterns_file or args.yara_rules_file):
-        log.error(
-            'Specifying a recipe is incompatible with defining '
-            'jobs allow/deny lists, yara rules or a patterns file separately.')
-        sys.exit(1)
-
-      if args.recipe_path:
-        recipe_file = args.recipe_path
-      else:
-        recipe_file = os.path.join(config.RECIPE_FILE_DIR, args.recipe)
-      if not os.path.exists(recipe_file) and not recipe_file.endswith('.yaml'):
-        log.warning(
-            'Could not find recipe file at {0:s}, checking for file '
-            'with .yaml extension'.format(recipe_file))
-        recipe_file = recipe_file + '.yaml'
-      if not os.path.exists(recipe_file):
-        log.error('Recipe file {0:s} could not be found. Exiting.')
-        sys.exit(1)
-
-      recipe_dict = recipe_helpers.load_recipe_from_file(
-          recipe_file, not args.skip_recipe_validation)
-      if recipe_dict['globals']:
-        recipe_dict['globals']['group_id'] = group_id
-      else:
-        recipe_dict['globals'] = dict()
-        recipe_dict['globals']['group_id'] = group_id
-      if not recipe_dict:
-        sys.exit(1)
-    else:
-      recipe_dict = copy.deepcopy(recipe_helpers.DEFAULT_RECIPE)
-      recipe_dict['globals']['debug_tasks'] = args.debug_tasks
-      recipe_dict['globals']['filter_patterns'] = kwargs.get('filter_patterns')
-      recipe_dict['globals']['jobs_denylist'] = args.jobs_denylist
-      recipe_dict['globals']['jobs_allowlist'] = args.jobs_allowlist
-      recipe_dict['globals']['yara_rules'] = kwargs.get('yara_rules')
-      recipe_dict['globals']['group_id'] = group_id
-
-    request.recipe = recipe_dict
-
-    if args.dump_json:
-      print(request.to_json().encode('utf-8'))
-      sys.exit(0)
-    else:
-      log.info(
-          'Creating request {0:s} with group id {1:s} and evidence '
-          '{2:s}'.format(request.request_id, request.group_id, evidence_.name))
-      # TODO add a new log line when group status is implemented
-      log.info(
-          'Run command "turbiniactl status -r {0:s}" to see the status of'
-          ' this request and associated tasks'.format(request.request_id))
-      if not args.run_local:
-        client.send_request(request)
-      else:
-        log.debug('--run_local specified so not sending request to server')
-    # TODO check if group id affects this part
-    if args.wait:
-      log.info(
-          'Waiting for request {0:s} to complete'.format(request.request_id))
-      region = config.TURBINIA_REGION
-      client.wait_for_request(
-          instance=config.INSTANCE_ID, project=config.TURBINIA_PROJECT,
-          region=region, request_id=request.request_id,
-          poll_interval=args.poll_interval)
-      print(
-          client.format_task_status(
-              instance=config.INSTANCE_ID, project=config.TURBINIA_PROJECT,
-              region=region, request_id=request.request_id,
-              all_fields=args.all_fields))
-
-  if args.run_local and not evidence_:
-    log.error('Evidence must be specified if using --run_local')
-    sys.exit(1)
-  if args.run_local and evidence_.cloud_only:
-    log.error('--run_local cannot be used with Cloud only Evidence types')
-    sys.exit(1)
-  if args.run_local and evidence_:
-    result = client.run_local_task(args.task, request)
-    log.info('Task execution result: {0:s}'.format(result))
-
-
 def process_args(args):
   """Parses and processes args."""
   parser = argparse.ArgumentParser()
@@ -775,6 +560,7 @@ def process_args(args):
           yara_rules=yara_rules)
   # Set zone/project to defaults if flags are not set, and also copy remote
   # disk if needed.
+
   elif args.command in ('googleclouddisk', 'googleclouddiskembedded'):
 
     if not args.zone and config.TURBINIA_ZONE:
@@ -890,12 +676,11 @@ def process_args(args):
       browser_type = (
           args.browser_type[i]
           if len(args.browser_type) > i else args.browser_type[0])
-      output_format = args.format[i] if len(args.format) > i else args.format[0]
+      format = args.format[i] if len(args.format) > i else args.format[0]
       process_evidence(
-          args=args, source_path=source_path, name=name,
-          output_format=output_format, group_id=group_id, client=client,
-          filter_patterns=filter_patterns, yara_rules=yara_rules,
-          browser_type=browser_type)
+          args=args, source_path=source_path, name=name, format=format,
+          group_id=group_id, client=client, filter_patterns=filter_patterns,
+          yara_rules=yara_rules, browser_type=browser_type)
   elif args.command == 'psqworker':
     # Set up root logger level which is normally set by the psqworker command
     # which we are bypassing.
@@ -1052,6 +837,213 @@ def process_args(args):
       log.error('Failed to pull the data {0!s}'.format(exception))
   else:
     log.warning('Command {0!s} not implemented.'.format(args.command))
+
+
+def process_evidence(**kwargs):
+  """Used for processing evidence and creating Turbinia request."""
+  from turbinia import evidence
+  from turbinia.message import TurbiniaRequest
+
+  args = kwargs.get('args')
+
+  group_id = kwargs.get('group_id')
+
+  # Set request id
+  request_id = uuid.uuid4().hex
+
+  # Start Evidence configuration
+  evidence_ = None
+
+  if args.command == 'rawdisk':
+    name = kwargs.get('name')
+    source_path = os.path.abspath(kwargs.get('source_path'))
+    evidence_ = evidence.RawDisk(
+        name=name, source_path=source_path, source=kwargs.get('source'))
+  elif args.command == 'directory':
+    name = kwargs.get('name')
+    source_path = os.path.abspath(kwargs.get('source_path'))
+    if not config.SHARED_FILESYSTEM:
+      log.info(
+          'A Cloud Only Architecture has been detected. '
+          'Compressing the directory for GCS upload.')
+      source_path = archive.CompressDirectory(
+          source_path, output_path=config.TMP_DIR)
+      evidence_ = evidence.CompressedDirectory(
+          name=name, source_path=source_path, source=kwargs.get('source'))
+    else:
+      evidence_ = evidence.Directory(
+          name=name, source_path=source_path, source=kwargs.get('source'))
+  elif args.command == 'compresseddirectory':
+    archive.ValidateTarFile(kwargs.get('source_path'))
+    name = kwargs.get('name')
+    source_path = os.path.abspath(kwargs.get('source_path'))
+    evidence_ = evidence.CompressedDirectory(
+        name=name, source_path=source_path, source=kwargs.get('source'))
+  elif args.command == 'googleclouddisk':
+    evidence_ = evidence.GoogleCloudDisk(
+        name=kwargs.get('name'), disk_name=kwargs.get('disk_name'),
+        project=kwargs.get('project'), zone=kwargs.get('zone'),
+        source=kwargs.get('source'))
+  elif args.command == 'googleclouddiskembedded':
+    parent_evidence_ = evidence.GoogleCloudDisk(
+        name=kwargs.get('name'), disk_name=kwargs.get('disk_name'),
+        project=kwargs.get('project'), source=kwargs.get('source'),
+        mount_partition=kwargs.get('mount_partition'), zone=kwargs.get('zone'))
+    evidence_ = evidence.GoogleCloudDiskRawEmbedded(
+        name=kwargs.get('name'), disk_name=kwargs.get('disk_name'),
+        project=kwargs.get('project'), zone=kwargs.get('zone'),
+        embedded_path=kwargs.get('embedded_path'))
+    evidence_.set_parent(parent_evidence_)
+  elif args.command == 'hindsight':
+    if kwargs.get('format') not in ['xlsx', 'sqlite', 'jsonl']:
+      msg = 'Invalid output format.'
+      raise TurbiniaException(msg)
+    if kwargs.get('browser_type') not in ['Chrome', 'Brave']:
+      msg = 'Browser type not supported.'
+      raise TurbiniaException(msg)
+    source_path = os.path.abspath(kwargs.get('source_path'))
+    evidence_ = evidence.ChromiumProfile(
+        name=kwargs.get('name'), source_path=source_path,
+        output_format=kwargs.get('format'),
+        browser_type=kwargs.get('browser_type'))
+  elif args.command == 'rawmemory':
+    source_path = os.path.abspath(kwargs.get('source_path'))
+    evidence_ = evidence.RawMemory(
+        name=kwargs.get('name'), source_path=source_path,
+        profile=kwargs.get('profile'), module_list=args.module_list)
+
+  if evidence_ and not args.force_evidence:
+    if config.SHARED_FILESYSTEM and evidence_.cloud_only:
+      log.error(
+          'The evidence type {0:s} is Cloud only, and this instance of '
+          'Turbinia is not a cloud instance.'.format(evidence_.type))
+      sys.exit(1)
+    elif not config.SHARED_FILESYSTEM and evidence_.copyable:
+      if os.path.exists(evidence_.local_path):
+        output_manager = OutputManager()
+        output_manager.setup(evidence_.type, request_id, remote_only=True)
+        output_manager.save_evidence(evidence_)
+      else:
+        log.error(
+            'The evidence local path does not exist: {0:s}. Please submit '
+            'a new Request with a valid path.'.format(evidence_.local_path))
+        sys.exit(1)
+    elif not config.SHARED_FILESYSTEM and not evidence_.cloud_only:
+      log.error(
+          'The evidence type {0:s} cannot run on Cloud instances of '
+          'Turbinia. Consider wrapping it in a '
+          'GoogleCloudDiskRawEmbedded or other Cloud compatible '
+          'object'.format(evidence_.type))
+      sys.exit(1)
+
+  # (jorlamd): Importing recipe_helpers late to avoid a bug where
+  # client.TASK_MAP is imported early rendering the check for worker
+  # status not possible.
+  from turbinia.lib import recipe_helpers
+
+  # If we have evidence to process and we also want to run as a server, then
+  # we'll just process the evidence directly rather than send it through the
+  # PubSub frontend interface.  If we're not running as a server then we will
+  # create a new TurbiniaRequest and send it over PubSub.
+  request = None
+  client = kwargs.get('client')
+  if evidence_:
+    request = TurbiniaRequest(
+        request_id=request_id, group_id=group_id, requester=getpass.getuser())
+    request.evidence.append(evidence_)
+
+    if args.decryption_keys:
+      for credential in args.decryption_keys:
+        try:
+          credential_type, credential_data = credential.split('=')
+        except ValueError as exception:
+          log.error(
+              'Could not parse credential [{0:s}] from decryption keys '
+              '{1!s}: {2!s}'.format(
+                  credential, args.decryption_keys, exception))
+          sys.exit(1)
+        evidence_.credentials.append((credential_type, credential_data))
+    if args.recipe or args.recipe_path:
+      if (args.jobs_denylist or args.jobs_allowlist or
+          args.filter_patterns_file or args.yara_rules_file):
+        log.error(
+            'Specifying a recipe is incompatible with defining '
+            'jobs allow/deny lists, yara rules or a patterns file separately.')
+        sys.exit(1)
+
+      if args.recipe_path:
+        recipe_file = args.recipe_path
+      else:
+        recipe_file = os.path.join(config.RECIPE_FILE_DIR, args.recipe)
+      if not os.path.exists(recipe_file) and not recipe_file.endswith('.yaml'):
+        log.warning(
+            'Could not find recipe file at {0:s}, checking for file '
+            'with .yaml extension'.format(recipe_file))
+        recipe_file = recipe_file + '.yaml'
+      if not os.path.exists(recipe_file):
+        log.error('Recipe file {0:s} could not be found. Exiting.')
+        sys.exit(1)
+
+      recipe_dict = recipe_helpers.load_recipe_from_file(
+          recipe_file, not args.skip_recipe_validation)
+      if recipe_dict['globals']:
+        recipe_dict['globals']['group_id'] = group_id
+      else:
+        recipe_dict['globals'] = dict()
+        recipe_dict['globals']['group_id'] = group_id
+      if not recipe_dict:
+        sys.exit(1)
+    else:
+      recipe_dict = copy.deepcopy(recipe_helpers.DEFAULT_RECIPE)
+      recipe_dict['globals']['debug_tasks'] = args.debug_tasks
+      recipe_dict['globals']['filter_patterns'] = kwargs.get('filter_patterns')
+      recipe_dict['globals']['jobs_denylist'] = args.jobs_denylist
+      recipe_dict['globals']['jobs_allowlist'] = args.jobs_allowlist
+      recipe_dict['globals']['yara_rules'] = kwargs.get('yara_rules')
+      recipe_dict['globals']['group_id'] = group_id
+
+    request.recipe = recipe_dict
+
+    if args.dump_json:
+      print(request.to_json().encode('utf-8'))
+      sys.exit(0)
+    else:
+      log.info(
+          'Creating request {0:s} with group id {1:s} and evidence '
+          '{2:s}'.format(request.request_id, request.group_id,
+                         'sd'))  #evidence_.name))
+      # TODO add a new log line when group status is implemented
+      log.info(
+          'Run command "turbiniactl status -r {0:s}" to see the status of'
+          ' this request and associated tasks'.format(request.request_id))
+      if not args.run_local:
+        client.send_request(request)
+      else:
+        log.debug('--run_local specified so not sending request to server')
+    # TODO check if group id affects this part
+    if args.wait:
+      log.info(
+          'Waiting for request {0:s} to complete'.format(request.request_id))
+      region = config.TURBINIA_REGION
+      client.wait_for_request(
+          instance=config.INSTANCE_ID, project=config.TURBINIA_PROJECT,
+          region=region, request_id=request.request_id,
+          poll_interval=args.poll_interval)
+      print(
+          client.format_task_status(
+              instance=config.INSTANCE_ID, project=config.TURBINIA_PROJECT,
+              region=region, request_id=request.request_id,
+              all_fields=args.all_fields))
+
+  if args.run_local and not evidence_:
+    log.error('Evidence must be specified if using --run_local')
+    sys.exit(1)
+  if args.run_local and evidence_.cloud_only:
+    log.error('--run_local cannot be used with Cloud only Evidence types')
+    sys.exit(1)
+  if args.run_local and evidence_:
+    result = client.run_local_task(args.task, request)
+    log.info('Task execution result: {0:s}'.format(result))
 
 
 def main():

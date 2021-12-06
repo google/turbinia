@@ -49,7 +49,7 @@ class TestPSQStateManager(unittest.TestCase):
     self.test_data = {
         'name': 'TestTask',
         'request_id': 'TestRequestId',
-        'group_id': 'TestGroupID',
+        'group_id': 'TestGroupId',
         'status': 'TestStatus',
         'saved_paths': ['testpath1', 'testpath2']
     }
@@ -88,8 +88,8 @@ class TestPSQStateManager(unittest.TestCase):
     self.assertEqual(task_dict['name'], self.test_data['name'])
     self.assertEqual(task_dict['request_id'], self.test_data['request_id'])
     self.assertEqual(task_dict['status'], self.test_data['status'])
-    self.assertEqual(task_dict['group_id'], 'FAIL')
     self.assertEqual(len(task_dict['saved_paths']), 2)
+    self.assertEqual(task_dict['group_id'], self.test_data['group_id'])
     self.assertTrue('instance' in task_dict)
     self.assertIn(self.test_data['saved_paths'][0], task_dict['saved_paths'])
 
