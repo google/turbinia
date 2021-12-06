@@ -72,9 +72,10 @@ class TestTurbiniactl(unittest.TestCase):
   def testRawDiskEvidence(self, mockEvidence, mockClient):
     """Test RawDisk evidence."""
     args = argparse.Namespace(
-        command='rawdisk', force_evidence=False, decryption_keys=None,
-        recipe=None, recipe_path=None, dump_json=None, debug_tasks=None,
-        jobs_denylist=None, jobs_allowlist=None, run_local=False, wait=False)
+        request_id=None, command='rawdisk', force_evidence=False,
+        decryption_keys=None, recipe=None, recipe_path=None, dump_json=None,
+        debug_tasks=None, jobs_denylist=None, jobs_allowlist=None,
+        run_local=False, wait=False)
     mockEvidence.return_value = FakeEvidence(
         type='rawdisk', source_path=self.source_path)
     config.SHARED_FILESYSTEM = True
@@ -92,9 +93,10 @@ class TestTurbiniactl(unittest.TestCase):
       self, mockDirectory, mockCompressedEvidence, mockClient):
     """Test directory evidence."""
     args = argparse.Namespace(
-        command='directory', force_evidence=False, decryption_keys=None,
-        recipe=None, recipe_path=None, dump_json=None, debug_tasks=None,
-        jobs_denylist=None, jobs_allowlist=None, run_local=False, wait=False)
+        request_id=None, command='directory', force_evidence=False,
+        decryption_keys=None, recipe=None, recipe_path=None, dump_json=None,
+        debug_tasks=None, jobs_denylist=None, jobs_allowlist=None,
+        run_local=False, wait=False)
     # Test not shared filesystem
     archive.CompressDirectory = mock.MagicMock()
     config.SHARED_FILESYSTEM = False
@@ -124,7 +126,7 @@ class TestTurbiniactl(unittest.TestCase):
   def testCompressedDirectory(self, mockEvidence, mockClient):
     """Test compressed directory evidence"""
     args = argparse.Namespace(
-        command='compresseddirectory', force_evidence=False,
+        request_id=None, command='compresseddirectory', force_evidence=False,
         decryption_keys=None, recipe=None, recipe_path=None, dump_json=None,
         debug_tasks=None, jobs_denylist=None, jobs_allowlist=None,
         run_local=False, wait=False)
@@ -145,9 +147,10 @@ class TestTurbiniactl(unittest.TestCase):
   def testCloudDisk(self, mockEvidence, mockClient):
     """Test Google Cloud Disk evidence."""
     args = argparse.Namespace(
-        command='googleclouddisk', force_evidence=False, decryption_keys=None,
-        recipe=None, recipe_path=None, dump_json=None, debug_tasks=None,
-        jobs_denylist=None, jobs_allowlist=None, run_local=False, wait=False)
+        request_id=None, command='googleclouddisk', force_evidence=False,
+        decryption_keys=None, recipe=None, recipe_path=None, dump_json=None,
+        debug_tasks=None, jobs_denylist=None, jobs_allowlist=None,
+        run_local=False, wait=False)
     mockEvidence.return_value = FakeEvidence(
         type='googleclouddisk', project='testProject', disk_name='testDisk',
         cloud_only=True)
@@ -169,10 +172,10 @@ class TestTurbiniactl(unittest.TestCase):
       self, mockCloudEvidence, mockEmbeddedEvidence, mockClient, _, __):
     """Test Google Cloud Disk Embedded evidence."""
     args = argparse.Namespace(
-        command='googleclouddiskembedded', force_evidence=False,
-        decryption_keys=None, recipe=None, recipe_path=None, dump_json=None,
-        debug_tasks=None, jobs_denylist=None, jobs_allowlist=None,
-        run_local=False, wait=False)
+        request_id=None, command='googleclouddiskembedded',
+        force_evidence=False, decryption_keys=None, recipe=None,
+        recipe_path=None, dump_json=None, debug_tasks=None, jobs_denylist=None,
+        jobs_allowlist=None, run_local=False, wait=False)
     mockCloudEvidence.return_value = FakeEvidence(
         type='googleclouddisk', project='testProject', disk_name='testDisk',
         cloud_only=True)
@@ -198,9 +201,10 @@ class TestTurbiniactl(unittest.TestCase):
   def testHindsight(self, mockEvidence, mockClient):
     """Test hindsight evidence"""
     args = argparse.Namespace(
-        command='hindsight', force_evidence=False, decryption_keys=None,
-        recipe=None, recipe_path=None, dump_json=None, debug_tasks=None,
-        jobs_denylist=None, jobs_allowlist=None, run_local=False, wait=False)
+        request_id=None, command='hindsight', force_evidence=False,
+        decryption_keys=None, recipe=None, recipe_path=None, dump_json=None,
+        debug_tasks=None, jobs_denylist=None, jobs_allowlist=None,
+        run_local=False, wait=False)
     with self.assertRaisesRegex(TurbiniaException, 'Invalid output format.'):
       turbiniactl.process_evidence(
           name='My Evidence', source_path=self.source_path, args=args,
@@ -227,10 +231,10 @@ class TestTurbiniactl(unittest.TestCase):
   def testRawMemory(self, mockEvidence, mockClient):
     """Test raw memory evidence"""
     args = argparse.Namespace(
-        command='rawmemory', force_evidence=False, decryption_keys=None,
-        recipe=None, recipe_path=None, dump_json=None, debug_tasks=None,
-        jobs_denylist=None, jobs_allowlist=None, run_local=False, wait=False,
-        module_list=['mod1', 'mod2'])
+        request_id=None, command='rawmemory', force_evidence=False,
+        decryption_keys=None, recipe=None, recipe_path=None, dump_json=None,
+        debug_tasks=None, jobs_denylist=None, jobs_allowlist=None,
+        run_local=False, wait=False, module_list=['mod1', 'mod2'])
     mockEvidence.return_value = FakeEvidence(
         type='rawmemory', source_path=self.source_path)
     turbiniactl.process_evidence(
