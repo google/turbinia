@@ -315,7 +315,7 @@ class TurbiniaTaskResult:
             was supplied to the task, so likely the caller will always want to
             use evidence_.config for this parameter.
     """
-    if (os.path.exists(evidence.source_path) and
+    if (evidence.source_path and os.path.exists(evidence.source_path) and
         os.path.getsize(evidence.source_path) == 0):
       self.log(
           'Evidence source path [{0:s}] for [{1:s}] exists but is empty. Not '
