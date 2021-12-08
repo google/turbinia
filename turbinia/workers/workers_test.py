@@ -388,6 +388,7 @@ class TestTurbiniaTask(TestTurbiniaTaskBase):
 
     # Test that evidence is *not* added when source_path points to file with no
     # contents.
+    self.result.evidence = []
     empty_file = tempfile.mkstemp(dir=self.base_output_dir)[1]
     self.remove_files.append(empty_file)
     self.evidence.source_path = empty_file
@@ -396,6 +397,7 @@ class TestTurbiniaTask(TestTurbiniaTaskBase):
     self.assertEqual(len(self.result.evidence), 0)
 
     # Test that evidence with source_path=None gets added
+    self.result.evidence = []
     self.evidence.source_path = None
     self.result.add_evidence(self.evidence, 'EmptyConfig')
     self.assertEqual(self.result.evidence[0].name, 'AddEvidenceTest')
