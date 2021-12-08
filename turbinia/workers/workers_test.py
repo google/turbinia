@@ -372,3 +372,32 @@ class TestTurbiniaTask(TestTurbiniaTaskBase):
     # Runs fine after setting the state
     self.evidence.state[evidence.EvidenceState.ATTACHED] = True
     self.task.evidence_setup(self.evidence)
+
+  def testAddEvidence(self):
+    """Test that add_evidence adds evidence when appropriate."""
+
+    # Test that evidence gets added in the base case (source_path points to file
+    # with contents)
+    self.evidence.name = 'AddEvidenceTest'
+    with open(self.evidence.source_path, 'w') as source_path:
+      source_path.write('test')
+    self.result.add_evidence(self.evidence, 'EmptyConfig')
+    self.assertEqual(len(self.result.evidence), 1)
+    self.assertEqual(self.result.evidence[0].name, 'AddEvidenceTest')
+    self.assertEqual(self.result.evidence[0].config, 'EmptyConfig')
+
+    # Test that evidence is *not* added when source_path points to file with no
+    # contents.
+    self.result.evidence = []
+    empty_file = tempfile.mkstemp(dir=self.base_output_dir)[1]
+    self.remove_files.append(empty_file)
+    self.evidence.source_path = empty_file
+    self.result.add_evidence(self.evidence, 'EmptyConfig')
+    # Evidence with empty path was not in evidence list
+    self.assertEqual(len(self.result.evidence), 0)
+
+    # Test that evidence with source_path=None gets added
+    self.result.evidence = []
+    self.evidence.source_path = None
+    self.result.add_evidence(self.evidence, 'EmptyConfig')
+    self.assertEqual(self.result.evidence[0].name, 'AddEvidenceTest')
