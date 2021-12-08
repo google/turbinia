@@ -54,6 +54,22 @@ def csv_list(string):
   return string.split(',')
 
 
+def check_args(source_path, arg):
+  """Checks lengths of supplied args match or raise an error.
+  
+  Args:
+    source_path(list(str)): List of source_paths supplied to turbiniactl.
+    arg(list(str)): List of args (i.e. name, source, partitions, etc) and their values supplied to turbiniactl.
+    
+  Raises:
+    TurbiniaException: If length of args don't match."""
+
+  if len(arg) > 1 and len(arg) != len(source_path):
+    raise TurbiniaException(
+        'Number of passed in args must equal to one or '
+        'number of source_paths/disks.')
+
+
 def process_args(args):
   """Parses and processes args."""
   parser = argparse.ArgumentParser()
@@ -478,17 +494,17 @@ def process_args(args):
   args.jobs_allowlist = [j.lower() for j in args.jobs_allowlist]
   args.jobs_denylist = [j.lower() for j in args.jobs_denylist]
   if args.jobs_allowlist and args.jobs_denylist:
-    log.error(
+    log.msg = (
         'A Job filter allowlist and denylist cannot be specified at the same '
         'time')
-    sys.exit(1)
+    raise TurbiniaException(msg)
 
   # Read set set filter_patterns
   filter_patterns = []
   if (args.filter_patterns_file and
       not os.path.exists(args.filter_patterns_file)):
-    log.error('Filter patterns file {0:s} does not exist.')
-    sys.exit(1)
+    msg = 'Filter patterns file {0:s} does not exist.'
+    raise TurbiniaException(msg)
   elif args.filter_patterns_file:
     try:
       filter_patterns = open(args.filter_patterns_file).read().splitlines()
@@ -499,8 +515,8 @@ def process_args(args):
   # Read yara rules
   yara_rules = ''
   if (args.yara_rules_file and not os.path.exists(args.yara_rules_file)):
-    log.error('Filter patterns file {0:s} does not exist.')
-    sys.exit(1)
+    msg = 'Filter patterns file {0:s} does not exist.'
+    raise TurbiniaException(msg)
   elif args.yara_rules_file:
     try:
       yara_rules = open(args.yara_rules_file).read()
@@ -519,12 +535,10 @@ def process_args(args):
 
   # Checks for bulk processing
   if args.command in ('rawdisk', 'directory', 'compresseddirectory'):
-    if ((args.source and len(args.source) > 1 and
-         len(args.source) != len(args.source_path)) or
-        (args.name and len(args.name) > 1 and
-         len(args.name) != len(args.source_path))):
-      msg = 'Number of name/source args must equal to one or source_path.'
-      raise TurbiniaException(msg)
+    if args.source:
+      check_args(args.source_path, args.source)
+    if args.name:
+      check_args(args.source_path, args.name)
     # Iterate through evidence and call process_evidence
     for i, source_path in enumerate(args.source_path):
       if args.name:
@@ -544,26 +558,18 @@ def process_args(args):
     if not args.zone and config.TURBINIA_ZONE:
       args.zone = [config.TURBINIA_ZONE]
     elif not args.zone and not config.TURBINIA_ZONE:
-      msg = 'Turbinia zone must be set by --zone or in config'
+      msg = 'Turbinia zone must be set by --zone or in config.'
       raise TurbiniaException(msg)
-    elif args.zone and len(args.zone) > 1 and len(args.zone) != len(
-        args.disk_name):
-      msg = 'Number of zones must equal to number of supplied disks.'
-      raise TurbiniaException(msg)
-    # Check sources and names to see if the match
-    if ((args.source and len(args.source) > 1 and
-         len(args.source) != len(args.disk_name)) or
-        (args.name and len(args.name) > 1 and
-         len(args.name) != len(args.disk_name))):
-      msg = 'Number of name/source args must equal to one or disk_names.'
-      raise TurbiniaException(msg)
+    check_args(args.disk_name, args.zone)
+    if args.source:
+      check_args(args.disk_name, args.source)
+    if args.name:
+      check_args(args.disk_name, args.name)
     mount_partition = None
     embedded_path = None
     if args.command == 'googleclouddiskembedded':
-      if args.mount_partition and len(args.mount_partition) > 1 and len(
-          args.mount_partition) != len(args.disk_name):
-        msg = 'Number of partitions args must equal to one or disk_names'
-        raise TurbiniaException(msg)
+      if args.mount_partition:
+        check_args(args.disk_name, args.mount_partition)
       else:
         args.mount_partition = [1]
       if len(args.embedded_path) != len(args.disk_name):
@@ -575,10 +581,7 @@ def process_args(args):
     elif not args.project and not config.TURBINIA_PROJECT:
       msg = 'Turbinia project must be set by --project or in config'
       raise TurbiniaException(msg)
-    elif args.project and len(args.project) > 1 and len(args.project) != len(
-        args.disk_name):
-      msg = 'Number of projects must equal to number of supplied disks.'
-      raise TurbiniaException(msg)
+    check_args(args.disk_name, args.project)
     for i, disk_name in enumerate(args.disk_name):
       project = args.project[i] if len(args.project) > i else args.project[0]
       zone = args.zone[i] if len(args.zone) > i else args.zone[0]
@@ -618,13 +621,9 @@ def process_args(args):
           filter_patterns=filter_patterns, client=client, yara_rules=yara_rules)
   elif args.command == 'rawmemory':
     # Checks if length of args match
-    if len(args.profile) > 1 and (len(args.profile) != len(args.source_path)):
-      msg = 'Number of profiles must equal to source_path.'
-      raise TurbiniaException(msg)
-    if args.name and len(args.name) > 1 and len(args.name) != len(
-        args.source_path):
-      msg = 'Number of names must equal to one or source_path.'
-      raise TurbiniaException(msg)
+    check_args(args.source_path, args.profile)
+    if args.name:
+      check_args(args.source_path, args.name)
     for i, source_path in enumerate(args.source_path):
       profile = args.profile[i] if len(args.profile) > i else args.profile[0]
       if args.name:
@@ -637,22 +636,16 @@ def process_args(args):
           yara_rules=yara_rules)
   elif args.command == 'hindsight':
     # Checks if length of args match
-    if args.name and len(args.name) > 1 and len(args.name) != len(
-        args.source_path):
-      msg = 'Number of names must equal to one or source_path.'
-      raise TurbiniaException(msg)
-    if not args.browser_type:
+    if args.name:
+      check_args(args.source_path, args.name)
+    if args.browser_type:
+      check_args(args.source_path, args.browser_type)
+    else:
       args.browser_type = ['Chrome']
-    if args.browser_type and len(args.browser_type) > 1 and len(
-        args.browser_type) != len(args.source_path):
-      msg = 'Number of browser types must equal to one or source_path.'
-      raise TurbiniaException(msg)
-    if not args.format:
+    if args.format:
+      check_args(args.source_path, args.format)
+    else:
       args.format = ['sqlite']
-    if args.format and len(args.format) > 1 and len(args.format) != len(
-        args.source_path):
-      msg = 'Number of formats must equal to one or source_path.'
-      raise TurbiniaException(msg)
     for i, source_path in enumerate(args.source_path):
       if args.name:
         name = args.name[i] if len(args.name) > i else args.name[0]
@@ -755,11 +748,11 @@ def process_args(args):
     client.list_jobs()
   elif args.command == 'gcplogs':
     if not config.STACKDRIVER_LOGGING:
-      log.error('Stackdriver logging must be enabled in order to use this.')
-      sys.exit(1)
+      msg = 'Stackdriver logging must be enabled in order to use this.'
+      raise TurbiniaException(msg)
     if args.output_dir and not os.path.isdir(args.output_dir):
-      log.error('Please provide a valid directory path.')
-      sys.exit(1)
+      msg = 'Please provide a valid directory path.'
+      raise TurbiniaException(msg)
     query = None
     if args.query:
       query = args.query
@@ -777,14 +770,14 @@ def process_args(args):
         config.TURBINIA_PROJECT, args.output_dir, args.days_history, query)
   elif args.command == 'dumpgcs':
     if not config.GCS_OUTPUT_PATH and not args.bucket:
-      log.error('GCS storage must be enabled in order to use this.')
-      sys.exit(1)
+      msg = 'GCS storage must be enabled in order to use this.'
+      raise TurbiniaException(msg)
     if not args.task_id and not args.request_id:
-      log.error('You must specify one of task_id or request_id.')
-      sys.exit(1)
+      msg = 'You must specify one of task_id or request_id.'
+      raise TurbiniaException(msg)
     if not os.path.isdir(args.output_dir):
-      log.error('Please provide a valid directory path.')
-      sys.exit(1)
+      msg = 'Please provide a valid directory path.'
+      raise TurbiniaException(msg)
 
     gcs_bucket = args.bucket if args.bucket else config.GCS_OUTPUT_PATH
     instance_id = args.instance_id if args.instance_id else config.INSTANCE_ID
@@ -798,8 +791,8 @@ def process_args(args):
       output_writer = GCSOutputWriter(
           gcs_bucket, local_output_dir=args.output_dir)
       if not task_data:
-        log.error('No Tasks found for task/request ID')
-        sys.exit(1)
+        msg = 'No Tasks found for task/request ID'
+        raise TurbiniaException(msg)
       if args.task_id:
         log.info(
             'Downloading GCS files for task_id {0:s} to {1:s}.'.format(
@@ -904,22 +897,18 @@ def process_evidence(**kwargs):
         output_manager.setup(evidence_.type, request_id, remote_only=True)
         output_manager.save_evidence(evidence_)
       else:
-        log.error(
+        msg = (
             'The evidence local path does not exist: {0:s}. Please submit '
             'a new Request with a valid path.'.format(evidence_.local_path))
-        sys.exit(1)
+        raise TurbiniaException(msg)
     elif not config.SHARED_FILESYSTEM and not evidence_.cloud_only:
-      log.error(
+      msg = (
           'The evidence type {0:s} cannot run on Cloud instances of '
           'Turbinia. Consider wrapping it in a '
           'GoogleCloudDiskRawEmbedded or other Cloud compatible '
           'object'.format(evidence_.type))
-      sys.exit(1)
+      raise TurbiniaException(msg)
 
-  # If we have evidence to process and we also want to run as a server, then
-  # we'll just process the evidence directly rather than send it through the
-  # PubSub frontend interface.  If we're not running as a server then we will
-  # create a new TurbiniaRequest and send it over PubSub.
   request = None
   client = kwargs.get('client')
   if evidence_:
@@ -932,19 +921,19 @@ def process_evidence(**kwargs):
         try:
           credential_type, credential_data = credential.split('=')
         except ValueError as exception:
-          log.error(
+          msg = (
               'Could not parse credential [{0:s}] from decryption keys '
               '{1!s}: {2!s}'.format(
                   credential, args.decryption_keys, exception))
-          sys.exit(1)
+          raise TurbiniaException(msg)
         evidence_.credentials.append((credential_type, credential_data))
     if args.recipe or args.recipe_path:
       if (args.jobs_denylist or args.jobs_allowlist or
           args.filter_patterns_file or args.yara_rules_file):
-        log.error(
+        msg = (
             'Specifying a recipe is incompatible with defining '
             'jobs allow/deny lists, yara rules or a patterns file separately.')
-        sys.exit(1)
+        raise TurbiniaException(msg)
 
       if args.recipe_path:
         recipe_file = args.recipe_path
@@ -956,16 +945,11 @@ def process_evidence(**kwargs):
             'with .yaml extension'.format(recipe_file))
         recipe_file = recipe_file + '.yaml'
       if not os.path.exists(recipe_file):
-        log.error('Recipe file {0:s} could not be found. Exiting.')
-        sys.exit(1)
+        msg = 'Recipe file {0:s} could not be found. Exiting.'
+        raise TurbiniaException(msg)
 
       recipe_dict = recipe_helpers.load_recipe_from_file(
           recipe_file, not args.skip_recipe_validation)
-      if recipe_dict['globals']:
-        recipe_dict['globals']['group_id'] = group_id
-      else:
-        recipe_dict['globals'] = dict()
-        recipe_dict['globals']['group_id'] = group_id
       if not recipe_dict:
         sys.exit(1)
     else:
@@ -975,8 +959,8 @@ def process_evidence(**kwargs):
       recipe_dict['globals']['jobs_denylist'] = args.jobs_denylist
       recipe_dict['globals']['jobs_allowlist'] = args.jobs_allowlist
       recipe_dict['globals']['yara_rules'] = kwargs.get('yara_rules')
-      recipe_dict['globals']['group_id'] = group_id
-
+    # There will always be globals variable one way or another
+    recipe_dict['globals']['group_id'] = group_id
     request.recipe = recipe_dict
 
     if args.dump_json:
@@ -1012,9 +996,11 @@ def main():
   # TODO(aarontp): Allow for single run mode when
   # by specifying evidence which will also terminate the task manager after
   # evidence has been processed.
-
-  process_args(sys.argv[1:])
-
+  try:
+    process_args(sys.argv[1:])
+  except TurbiniaException as e:
+    log.error('There was a problem processing arguments: {:s}'.format(str(e)))
+    sys.exit(1)
   log.info('Done.')
   sys.exit(0)
 
