@@ -56,18 +56,24 @@ def csv_list(string):
 
 def check_args(source_path, arg):
   """Checks lengths of supplied args match or raise an error.
-  
+
   Args:
     source_path(list(str)): List of source_paths supplied to turbiniactl.
     arg(list(str)): List of args (i.e. name, source, partitions, etc) and their values supplied to turbiniactl.
-    
+
   Raises:
-    TurbiniaException: If length of args don't match."""
+    TurbiniaException: If length of args don't match.
+
+  Returns:
+    list(str): List of arg """
 
   if len(arg) > 1 and len(arg) != len(source_path):
     raise TurbiniaException(
         'Number of passed in args must equal to one or '
         'number of source_paths/disks.')
+  if len(arg) == 1:
+    arg = [arg[0] for _ in source_path]
+  return arg
 
 
 def process_args(args):
@@ -536,19 +542,15 @@ def process_args(args):
   # Checks for bulk processing
   if args.command in ('rawdisk', 'directory', 'compresseddirectory'):
     if args.source:
-      check_args(args.source_path, args.source)
+      args.source = check_args(args.source_path, args.source)
     if args.name:
-      check_args(args.source_path, args.name)
+      args.name = check_args(args.source_path, args.name)
+    else:
+      args.name = args.source_path
     # Iterate through evidence and call process_evidence
     for i, source_path in enumerate(args.source_path):
-      if args.name:
-        name = args.name[i] if i < len(args.name) else args.name[0]
-      else:
-        name = source_path
-      if args.source:
-        source = args.source[i] if i < len(args.source) else args.source[0]
-      else:
-        source = None
+      name = args.name[i]
+      source = args.source[i] if args.source else None
       process_evidence(
           args=args, source_path=source_path, name=name, source=source,
           group_id=group_id, filter_patterns=filter_patterns, client=client,
@@ -560,18 +562,19 @@ def process_args(args):
     elif not args.zone and not config.TURBINIA_ZONE:
       msg = 'Turbinia zone must be set by --zone or in config.'
       raise TurbiniaException(msg)
-    check_args(args.disk_name, args.zone)
+    args.zone = check_args(args.disk_name, args.zone)
     if args.source:
-      check_args(args.disk_name, args.source)
+      args.source = check_args(args.disk_name, args.source)
     if args.name:
-      check_args(args.disk_name, args.name)
+      args.name = check_args(args.disk_name, args.name)
+    else:
+      args.name = args.disk_name
     mount_partition = None
     embedded_path = None
     if args.command == 'googleclouddiskembedded':
-      if args.mount_partition:
-        check_args(args.disk_name, args.mount_partition)
-      else:
+      if not args.mount_partition:
         args.mount_partition = [1]
+      args.mount_partition = check_args(args.disk_name, args.mount_partition)
       if len(args.embedded_path) != len(args.disk_name):
         msg = 'Number of embedded paths must equal to disk names.'
         raise TurbiniaException(msg)
@@ -581,14 +584,15 @@ def process_args(args):
     elif not args.project and not config.TURBINIA_PROJECT:
       msg = 'Turbinia project must be set by --project or in config'
       raise TurbiniaException(msg)
-    check_args(args.disk_name, args.project)
+    args.project = check_args(args.disk_name, args.project)
     for i, disk_name in enumerate(args.disk_name):
-      project = args.project[i] if len(args.project) > i else args.project[0]
-      zone = args.zone[i] if len(args.zone) > i else args.zone[0]
+      project = args.project[i]
+      zone = args.zone[i]
+      name = args.name[i]
+      source = args.source[i] if args.source else None
       if args.command == 'googleclouddiskembedded':
-        embedded_path = args.embedded_path[i] if args.embedded_path else None
-        mount_partition = (
-            args.mount_partition[i] if len(args.mount_partition) > i else 1)
+        embedded_path = args.embedded_path[i]
+        mount_partition = args.mount_partition[i]
       if ((project and project != config.TURBINIA_PROJECT) or
           (zone and zone != config.TURBINIA_ZONE)):
         new_disk = gcp_forensics.CreateDiskCopy(
@@ -600,14 +604,6 @@ def process_args(args):
               '--copy_only specified, so not processing {0:s} with '
               'Turbinia'.format(disk_name))
           continue
-      if args.name:
-        name = args.name[i] if i < len(args.name) else args.name[0]
-      else:
-        name = disk_name
-      if args.source:
-        source = args.source[i] if i < len(args.source) else args.source[0]
-      else:
-        source = None
       # Fail if this is a local instance
       if config.SHARED_FILESYSTEM and not args.force_evidence:
         msg = (
@@ -623,13 +619,13 @@ def process_args(args):
     # Checks if length of args match
     check_args(args.source_path, args.profile)
     if args.name:
-      check_args(args.source_path, args.name)
+      args.name = check_args(args.source_path, args.name)
+    else:
+      args.name = args.source_path
+    args.profile = check_args(args.source_path, args.profile)
     for i, source_path in enumerate(args.source_path):
-      profile = args.profile[i] if len(args.profile) > i else args.profile[0]
-      if args.name:
-        name = args.name[i] if len(args.name) > i else args.name[0]
-      else:
-        name = source_path
+      profile = args.profile[i]
+      name = args.name[i]
       process_evidence(
           args=args, source_path=source_path, name=name, profile=profile,
           group_id=group_id, filter_patterns=filter_patterns, client=client,
@@ -637,24 +633,19 @@ def process_args(args):
   elif args.command == 'hindsight':
     # Checks if length of args match
     if args.name:
-      check_args(args.source_path, args.name)
-    if args.browser_type:
-      check_args(args.source_path, args.browser_type)
+      args.name = check_args(args.source_path, args.name)
     else:
+      args.name = args.source_path
+    if not args.browser_type:
       args.browser_type = ['Chrome']
-    if args.format:
-      check_args(args.source_path, args.format)
-    else:
+    args.browser_type = check_args(args.source_path, args.browser_type)
+    if not args.format:
       args.format = ['sqlite']
+    args.format = check_args(args.source_path, args.format)
     for i, source_path in enumerate(args.source_path):
-      if args.name:
-        name = args.name[i] if len(args.name) > i else args.name[0]
-      else:
-        name = source_path
-      browser_type = (
-          args.browser_type[i]
-          if len(args.browser_type) > i else args.browser_type[0])
-      format = args.format[i] if len(args.format) > i else args.format[0]
+      name = args.name[i]
+      browser_type = args.browser_type[i]
+      format = args.format[i]
       process_evidence(
           args=args, source_path=source_path, name=name, format=format,
           group_id=group_id, client=client, filter_patterns=filter_patterns,
