@@ -54,26 +54,33 @@ def csv_list(string):
   return string.split(',')
 
 
-def check_args(source_path, arg):
+def check_args(source_path, args):
   """Checks lengths of supplied args match or raise an error.
 
   Args:
     source_path(list(str)): List of source_paths supplied to turbiniactl.
-    arg(list(str)): List of args (i.e. name, source, partitions, etc) and their values supplied to turbiniactl.
+    args(list(list)): List of args (i.e. name, source, partitions, etc) and their values supplied to turbiniactl.
 
   Raises:
     TurbiniaException: If length of args don't match.
 
   Returns:
     list(str): List of arg """
-
-  if len(arg) > 1 and len(arg) != len(source_path):
-    raise TurbiniaException(
-        'Number of passed in args must equal to one or '
-        'number of source_paths/disks.')
-  if len(arg) == 1:
-    arg = [arg[0] for _ in source_path]
-  return arg
+  ret = list()
+  if not args[0]:
+    args[0] = source_path
+  for arg in args:
+    if not arg:
+      ret.append(None)
+      continue
+    if len(arg) > 1 and len(arg) != len(source_path):
+      raise TurbiniaException(
+          'Number of passed in args must equal to one or '
+          'number of source_paths/disks.')
+    if len(arg) == 1:
+      arg = [arg[0] for _ in source_path]
+    ret.append(arg)
+  return ret
 
 
 def process_args(args):
@@ -179,7 +186,7 @@ def process_args(args):
       type=csv_list)
   parser_rawdisk.add_argument(
       '-s', '--source', help='Description of the source of the evidence',
-      required=False, type=csv_list)
+      required=False, type=csv_list, default=[None])
   parser_rawdisk.add_argument(
       '-n', '--name', help='Descriptive name of the evidence', required=False,
       type=csv_list)
@@ -204,7 +211,7 @@ def process_args(args):
       '-z', '--zone', help='Geographic zone the disk exists in', type=csv_list)
   parser_googleclouddisk.add_argument(
       '-s', '--source', help='Description of the source of the evidence',
-      required=False, type=csv_list)
+      required=False, type=csv_list, default=[None])
   parser_googleclouddisk.add_argument(
       '-n', '--name', help='Descriptive name of the evidence', required=False,
       type=csv_list)
@@ -232,7 +239,7 @@ def process_args(args):
       'in, it will be copied to the Turbinia project.', type=csv_list)
 
   parser_googleclouddiskembedded.add_argument(
-      '-P', '--mount_partition', type=csv_list,
+      '-P', '--mount_partition', type=csv_list, default=[1],
       help='The partition number to use when mounting the parent disk.  '
       'Defaults to the first partition.  Only affects mounting, and not what '
       'gets processed.')
@@ -240,7 +247,7 @@ def process_args(args):
       '-z', '--zone', help='Geographic zone the disk exists in', type=csv_list)
   parser_googleclouddiskembedded.add_argument(
       '-s', '--source', help='Description of the source of the evidence',
-      required=False, type=csv_list)
+      required=False, type=csv_list, default=[None])
   parser_googleclouddiskembedded.add_argument(
       '-n', '--name', help='Descriptive name of the evidence', required=False,
       type=csv_list)
@@ -269,7 +276,7 @@ def process_args(args):
       type=csv_list)
   parser_directory.add_argument(
       '-s', '--source', help='Description of the source of the evidence',
-      required=False, type=csv_list)
+      required=False, type=csv_list, default=[None])
   parser_directory.add_argument(
       '-n', '--name', help='Descriptive name of the evidence', required=False,
       type=csv_list)
@@ -282,7 +289,7 @@ def process_args(args):
       type=csv_list)
   parser_directory.add_argument(
       '-s', '--source', help='Description of the source of the evidence',
-      required=False, type=csv_list)
+      required=False, type=csv_list, default=[None])
   parser_directory.add_argument(
       '-n', '--name', help='Descriptive name of the evidence', required=False,
       type=csv_list)
@@ -295,10 +302,11 @@ def process_args(args):
       type=csv_list)
   parser_hindsight.add_argument(
       '-f', '--format', help='Output format (supported types are '
-      'xlsx, sqlite, jsonl)', type=csv_list)
+      'xlsx, sqlite, jsonl)', type=csv_list, default=['sqlite'])
   parser_hindsight.add_argument(
       '-b', '--browser_type', help='The type of browser the input files belong'
-      'to (supported types are Chrome, Brave)', type=csv_list)
+      'to (supported types are Chrome, Brave)', type=csv_list,
+      default=['Chrome'])
   parser_hindsight.add_argument(
       '-n', '--name', help='Descriptive name of the evidence', required=False,
       type=csv_list)
@@ -500,7 +508,7 @@ def process_args(args):
   args.jobs_allowlist = [j.lower() for j in args.jobs_allowlist]
   args.jobs_denylist = [j.lower() for j in args.jobs_denylist]
   if args.jobs_allowlist and args.jobs_denylist:
-    log.msg = (
+    msg = (
         'A Job filter allowlist and denylist cannot be specified at the same '
         'time')
     raise TurbiniaException(msg)
@@ -527,9 +535,8 @@ def process_args(args):
     try:
       yara_rules = open(args.yara_rules_file).read()
     except IOError as e:
-      log.warning(
-          'Cannot open file {0:s} [{1!s}]'.format(args.yara_rules_file, e))
-      sys.exit(1)
+      msg = ('Cannot open file {0:s} [{1!s}]'.format(args.yara_rules_file, e))
+      raise TurbiniaException(msg)
 
   # Create Client object
   client = None
@@ -541,12 +548,8 @@ def process_args(args):
 
   # Checks for bulk processing
   if args.command in ('rawdisk', 'directory', 'compresseddirectory'):
-    if args.source:
-      args.source = check_args(args.source_path, args.source)
-    if args.name:
-      args.name = check_args(args.source_path, args.name)
-    else:
-      args.name = args.source_path
+    args.name, args.source = check_args(
+        args.source_path, [args.name, args.source])
     # Iterate through evidence and call process_evidence
     for i, source_path in enumerate(args.source_path):
       name = args.name[i]
@@ -562,29 +565,24 @@ def process_args(args):
     elif not args.zone and not config.TURBINIA_ZONE:
       msg = 'Turbinia zone must be set by --zone or in config.'
       raise TurbiniaException(msg)
-    args.zone = check_args(args.disk_name, args.zone)
-    if args.source:
-      args.source = check_args(args.disk_name, args.source)
-    if args.name:
-      args.name = check_args(args.disk_name, args.name)
-    else:
-      args.name = args.disk_name
-    mount_partition = None
-    embedded_path = None
-    if args.command == 'googleclouddiskembedded':
-      if not args.mount_partition:
-        args.mount_partition = [1]
-      args.mount_partition = check_args(args.disk_name, args.mount_partition)
-      if len(args.embedded_path) != len(args.disk_name):
-        msg = 'Number of embedded paths must equal to disk names.'
-        raise TurbiniaException(msg)
     # Checks for cloud project
     if not args.project and config.TURBINIA_PROJECT:
       args.project = [config.TURBINIA_PROJECT]
     elif not args.project and not config.TURBINIA_PROJECT:
       msg = 'Turbinia project must be set by --project or in config'
       raise TurbiniaException(msg)
-    args.project = check_args(args.disk_name, args.project)
+    (args.name, args.source, args.project, args.zone,
+     args.mount_partition) = check_args(
+         args.disk_name, [
+             args.name, args.source, args.project, args.zone,
+             args.mount_partition
+         ])
+    mount_partition = None
+    embedded_path = None
+    if args.command == 'googleclouddiskembedded':
+      if len(args.embedded_path) != len(args.disk_name):
+        msg = 'Number of embedded paths must equal to disk names.'
+        raise TurbiniaException(msg)
     for i, disk_name in enumerate(args.disk_name):
       project = args.project[i]
       zone = args.zone[i]
@@ -617,12 +615,8 @@ def process_args(args):
           filter_patterns=filter_patterns, client=client, yara_rules=yara_rules)
   elif args.command == 'rawmemory':
     # Checks if length of args match
-    check_args(args.source_path, args.profile)
-    if args.name:
-      args.name = check_args(args.source_path, args.name)
-    else:
-      args.name = args.source_path
-    args.profile = check_args(args.source_path, args.profile)
+    args.name, args.profile = check_args(
+        args.source_path, [args.name, args.profile])
     for i, source_path in enumerate(args.source_path):
       profile = args.profile[i]
       name = args.name[i]
@@ -631,17 +625,8 @@ def process_args(args):
           group_id=group_id, filter_patterns=filter_patterns, client=client,
           yara_rules=yara_rules)
   elif args.command == 'hindsight':
-    # Checks if length of args match
-    if args.name:
-      args.name = check_args(args.source_path, args.name)
-    else:
-      args.name = args.source_path
-    if not args.browser_type:
-      args.browser_type = ['Chrome']
-    args.browser_type = check_args(args.source_path, args.browser_type)
-    if not args.format:
-      args.format = ['sqlite']
-    args.format = check_args(args.source_path, args.format)
+    args.name, args.browser_type, args.format = check_args(
+        args.source_path, [args.name, args.browser_type, args.format])
     for i, source_path in enumerate(args.source_path):
       name = args.name[i]
       browser_type = args.browser_type[i]

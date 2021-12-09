@@ -307,28 +307,54 @@ class TestTurbiniactl(unittest.TestCase):
 
   @mock.patch('turbinia.client.get_turbinia_client')
   @mock.patch('libcloudforensics.providers.gcp.forensics.CreateDiskCopy')
-  def testUnequalCloudDiskArgs(self, mock_copyDisk, _):
+  @mock.patch('argparse.ArgumentParser.parse_args')
+  def testUnequalCloudDiskArgs(self, mockParser, mock_copyDisk, _):
     """Test unequal number of args for cloud disk evidence type."""
     config.SHARED_FILESYSTEM = False
+
+    mockArgs = argparse.Namespace(
+        all_fields=False, command='googleclouddisk', config_file=None,
+        copy_only=False, debug=False, debug_tasks=False, decryption_keys=[],
+        disk_name=['disk1', 'disk2', 'disk3'], dump_json=False, embedded_path=[
+            'path1', 'path2', 'path3'
+        ], filter_patterns_file=None, force_evidence=False, jobs_allowlist=[],
+        jobs_denylist=[], log_file=None, mount_partition=None,
+        name=None, output_dir=None, poll_interval=60, project=[
+            'proj1', 'proj2', 'proj3'
+        ], quiet=False, recipe=None, recipe_path=None, request_id=None,
+        server=False, skip_recipe_validation=False, source=[None], verbose=True,
+        wait=False, yara_rules_file=None, zone=['zone1', 'zone2'])
+    mockParser.return_value = mockArgs
+
+    # Fail when zones dont match
     self.assertRaises(
         TurbiniaException, turbiniactl.process_args, [
             'googleclouddisk', '--disk_name', 'disk1,disk2,disk3', '--zone',
             'zone1,zone2', '--project', 'proj1,proj2,proj3'
         ])
 
+    # Fail when projects don't match
+    mockArgs.zone = ['zone1', 'zone2', 'zone3']
+    mockArgs.project = ['proj1', 'proj2']
+    mockParser.return_value = mockArgs
     self.assertRaises(
         TurbiniaException, turbiniactl.process_args, [
             'googleclouddisk', '--disk_name', 'disk1,disk2,disk3', '--zone',
             'zone1,zone2,zone3', '--project', 'proj1,proj2'
         ])
 
+    #Fail when names dont match
+    mockArgs.project = ['proj1', 'proj2', 'proj3']
+    mockArgs.name = ['name1', 'name2']
+    mockParser.return_value = mockArgs
     self.assertRaises(
         TurbiniaException, turbiniactl.process_args, [
             'googleclouddisk', '--disk_name', 'disk1,disk2,disk3', '--zone',
             'zone1,zone2,zone3', '--project', 'proj1,proj2,proj3', '--name',
             'name1,name2'
         ])
-
+    mockArgs.name = ['name1', 'name2', 'name3']
+    mockArgs.source = ['source1', 'source2']
     self.assertRaises(
         TurbiniaException, turbiniactl.process_args, [
             'googleclouddisk', '--disk_name', 'disk1,disk2,disk3', '--zone',
@@ -336,6 +362,7 @@ class TestTurbiniactl(unittest.TestCase):
             'source1,source2'
         ])
 
+    mockArgs.source = ['source1', 'source2', 'source3']
     config.TASK_MANAGER = 'PSQ'
     turbiniactl.process_evidence = mock.MagicMock(return_value=None)
     mock_copyDisk.return_value = compute.GoogleComputeDisk(
