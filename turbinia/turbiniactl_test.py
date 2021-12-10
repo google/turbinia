@@ -62,8 +62,6 @@ class TestTurbiniactl(unittest.TestCase):
     self.output_manager = mock.MagicMock()
     self.base_dir = tempfile.mkdtemp()
     self.source_path = tempfile.mkstemp(dir=self.base_dir)[1]
-    self.client = mock.MagicMock()
-    self.client.send_request = mock.MagicMock()
     mockRequest.request_id = 'fakeID'
     mockRequest.group_id = 'FakeGroupID'
 
@@ -79,7 +77,6 @@ class TestTurbiniactl(unittest.TestCase):
     mockEvidence.return_value = FakeEvidence(
         type='rawdisk', source_path=self.source_path)
     config.SHARED_FILESYSTEM = True
-    mockClient.send_request = mock.MagicMock()
     turbiniactl.process_evidence(
         name='My Evidence', source_path='/tmp/foo.img', args=args,
         source='case', client=mockClient, group_id='FakeGroupID')
@@ -154,7 +151,6 @@ class TestTurbiniactl(unittest.TestCase):
     mockEvidence.return_value = FakeEvidence(
         type='googleclouddisk', project='testProject', disk_name='testDisk',
         cloud_only=True)
-    mockClient.send_request = mock.MagicMock()
     turbiniactl.process_evidence(
         name='My Evidence', disk_name='testDisk', zone='testZone',
         project='testProject', args=args, source='case', client=mockClient,

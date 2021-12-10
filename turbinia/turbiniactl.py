@@ -793,14 +793,34 @@ def process_args(args):
     log.warning('Command {0!s} not implemented.'.format(args.command))
 
 
-def process_evidence(**kwargs):
-  """Used for processing evidence and creating Turbinia request."""
+# TODO: shard this function and move some of its functionalitie to other files (move some  of this to evidence.py to run the checks etc)
+def process_evidence(
+    client, group_id, args=None, browser_type=None, disk_name=None,
+    embedded_path=None, filter_patterns=None, format=None, mount_partition=None,
+    name=None, profile=None, project=None, source=None, source_path=None,
+    yara_rules=None, zone=None):
+  """Creates evidence and turbinia request.
+  
+  Args:
+    client(TurbiniaClient): TurbiniaClient used for creating requests.
+    group_id(str): Group ID used for bulk processing.
+    args(Namespace): commandline args.
+    browser_type(list(str)): List of browser types used for hindsight.
+    disk_name(list(str)): List of disk names used for processing cloud evidence.
+    embedded_path(list(str)): List of embedded paths for clouddiskembedded.
+    filter_pattern(str): Filter patterns used for processing evidence.
+    format(list(str)): List of output formats for hindsight.
+    mount_partition(list(int)): List of mount partitions for clouddiskembedded.
+    name(list(str)): List of evidence names.
+    profile(list(str)): List of volatility profiles used for rawmemory.
+    project(list(str)): List of projects for cloud related evidence.
+    source(list(str)): List of sources for evidence.
+    source_path(list(str)): List of source paths used for host evidence.
+    yara_rules(str): Yara rules for processing evidence.
+    zone(list(str)): List of could zones used for cloud evidence. 
+    """
   from turbinia import evidence
   from turbinia.message import TurbiniaRequest
-
-  args = kwargs.get('args')
-
-  group_id = kwargs.get('group_id')
 
   # Set request id
   request_id = args.request_id if args.request_id else uuid.uuid4().hex
@@ -809,13 +829,13 @@ def process_evidence(**kwargs):
   evidence_ = None
 
   if args.command == 'rawdisk':
-    name = kwargs.get('name')
-    source_path = os.path.abspath(kwargs.get('source_path'))
+    name = name
+    source_path = os.path.abspath(source_path)
     evidence_ = evidence.RawDisk(
-        name=name, source_path=source_path, source=kwargs.get('source'))
+        name=name, source_path=source_path, source=source)
   elif args.command == 'directory':
-    name = kwargs.get('name')
-    source_path = os.path.abspath(kwargs.get('source_path'))
+    name = name
+    source_path = os.path.abspath(source_path)
     if not config.SHARED_FILESYSTEM:
       log.info(
           'A Cloud Only Architecture has been detected. '
@@ -823,48 +843,44 @@ def process_evidence(**kwargs):
       source_path = archive.CompressDirectory(
           source_path, output_path=config.TMP_DIR)
       evidence_ = evidence.CompressedDirectory(
-          name=name, source_path=source_path, source=kwargs.get('source'))
+          name=name, source_path=source_path, source=source)
     else:
       evidence_ = evidence.Directory(
-          name=name, source_path=source_path, source=kwargs.get('source'))
+          name=name, source_path=source_path, source=source)
   elif args.command == 'compresseddirectory':
-    archive.ValidateTarFile(kwargs.get('source_path'))
-    name = kwargs.get('name')
-    source_path = os.path.abspath(kwargs.get('source_path'))
+    archive.ValidateTarFile(source_path)
+    name = name
+    source_path = os.path.abspath(source_path)
     evidence_ = evidence.CompressedDirectory(
-        name=name, source_path=source_path, source=kwargs.get('source'))
+        name=name, source_path=source_path, source=source)
   elif args.command == 'googleclouddisk':
     evidence_ = evidence.GoogleCloudDisk(
-        name=kwargs.get('name'), disk_name=kwargs.get('disk_name'),
-        project=kwargs.get('project'), zone=kwargs.get('zone'),
-        source=kwargs.get('source'))
+        name=name, disk_name=disk_name, project=project, zone=zone,
+        source=source)
   elif args.command == 'googleclouddiskembedded':
     parent_evidence_ = evidence.GoogleCloudDisk(
-        name=kwargs.get('name'), disk_name=kwargs.get('disk_name'),
-        project=kwargs.get('project'), source=kwargs.get('source'),
-        mount_partition=kwargs.get('mount_partition'), zone=kwargs.get('zone'))
+        name=name, disk_name=disk_name, project=project, source=source,
+        mount_partition=mount_partition, zone=zone)
     evidence_ = evidence.GoogleCloudDiskRawEmbedded(
-        name=kwargs.get('name'), disk_name=kwargs.get('disk_name'),
-        project=kwargs.get('project'), zone=kwargs.get('zone'),
-        embedded_path=kwargs.get('embedded_path'))
+        name=name, disk_name=disk_name, project=project, zone=zone,
+        embedded_path=embedded_path)
     evidence_.set_parent(parent_evidence_)
   elif args.command == 'hindsight':
-    if kwargs.get('format') not in ['xlsx', 'sqlite', 'jsonl']:
+    if format not in ['xlsx', 'sqlite', 'jsonl']:
       msg = 'Invalid output format.'
       raise TurbiniaException(msg)
-    if kwargs.get('browser_type') not in ['Chrome', 'Brave']:
+    if browser_type not in ['Chrome', 'Brave']:
       msg = 'Browser type not supported.'
       raise TurbiniaException(msg)
-    source_path = os.path.abspath(kwargs.get('source_path'))
+    source_path = os.path.abspath(source_path)
     evidence_ = evidence.ChromiumProfile(
-        name=kwargs.get('name'), source_path=source_path,
-        output_format=kwargs.get('format'),
-        browser_type=kwargs.get('browser_type'))
+        name=name, source_path=source_path, output_format=format,
+        browser_type=browser_type)
   elif args.command == 'rawmemory':
-    source_path = os.path.abspath(kwargs.get('source_path'))
+    source_path = os.path.abspath(source_path)
     evidence_ = evidence.RawMemory(
-        name=kwargs.get('name'), source_path=source_path,
-        profile=kwargs.get('profile'), module_list=args.module_list)
+        name=name, source_path=source_path, profile=profile,
+        module_list=args.module_list)
 
   if evidence_ and not args.force_evidence:
     if not config.SHARED_FILESYSTEM and evidence_.copyable:
@@ -886,7 +902,7 @@ def process_evidence(**kwargs):
       raise TurbiniaException(msg)
 
   request = None
-  client = kwargs.get('client')
+  client = client
   if evidence_:
     request = TurbiniaRequest(
         request_id=request_id, group_id=group_id, requester=getpass.getuser())
@@ -931,10 +947,10 @@ def process_evidence(**kwargs):
     else:
       recipe_dict = copy.deepcopy(recipe_helpers.DEFAULT_RECIPE)
       recipe_dict['globals']['debug_tasks'] = args.debug_tasks
-      recipe_dict['globals']['filter_patterns'] = kwargs.get('filter_patterns')
+      recipe_dict['globals']['filter_patterns'] = filter_patterns
       recipe_dict['globals']['jobs_denylist'] = args.jobs_denylist
       recipe_dict['globals']['jobs_allowlist'] = args.jobs_allowlist
-      recipe_dict['globals']['yara_rules'] = kwargs.get('yara_rules')
+      recipe_dict['globals']['yara_rules'] = yara_rules
     # There will always be globals variable one way or another
     recipe_dict['globals']['group_id'] = group_id
     request.recipe = recipe_dict
