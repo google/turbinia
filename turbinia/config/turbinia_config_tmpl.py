@@ -316,3 +316,21 @@ PROMETHEUS_ENABLED = True
 # Prometheus listen address and port
 PROMETHEUS_ADDR = '0.0.0.0'
 PROMETHEUS_PORT = 9200
+
+###############################################################################
+#                           dfDewey Config
+#
+# These options are required for the dfDewey task
+###############################################################################
+
+# Postgres Config
+DFDEWEY_PG_HOST = '127.0.0.1'
+DFDEWEY_PG_PORT = 5432
+DFDEWEY_PG_DB_NAME = 'dfdewey'
+
+# OpenSearch Config
+DFDEWEY_OS_HOST = '127.0.0.1'
+DFDEWEY_OS_PORT = 9200
+# OS_URL can be used to specify a RFC-1738 formatted URL
+# Example: OS_URL = 'https://user:secret@127.0.0.1:9200/'
+DFDEWEY_OS_URL = None

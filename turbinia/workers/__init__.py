@@ -565,7 +565,7 @@ class TurbiniaTask:
   def execute(
       self, cmd, result, save_files=None, log_files=None, new_evidence=None,
       close=False, shell=False, stderr_file=None, stdout_file=None,
-      success_codes=None, cwd=None):
+      success_codes=None, cwd=None, env=None):
     """Executes a given binary and saves output.
 
     Args:
@@ -582,6 +582,7 @@ class TurbiniaTask:
       stderr_file (str): Path to location to save stderr.
       stdout_file (str): Path to location to save stdout.
       cwd (str): Sets the current directory before the process is executed.
+      env (list(str)): Process environment.
 
     Returns:
       Tuple of the return code, and the TurbiniaTaskResult object
@@ -620,11 +621,12 @@ class TurbiniaTask:
         if shell:
           proc = subprocess.Popen(
               cmd, shell=True, stderr=subprocess.PIPE, stdout=subprocess.PIPE,
-              cwd=cwd)
+              cwd=cwd, env=env)
           proc.wait(timeout_limit)
         else:
           proc = subprocess.Popen(
-              cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE, cwd=cwd)
+              cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE, cwd=cwd,
+              env=env)
           proc.wait(timeout_limit)
       except subprocess.TimeoutExpired as exception:
         # Log error and close result.

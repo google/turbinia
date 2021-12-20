@@ -63,23 +63,29 @@ class DfdeweyTask(TurbiniaTask):
     status_summary = ''
 
     if self.task_config.get('case'):
-      cmd = ['dfdewey']
+      cmd = []
+      # Datastore config
+      config_vars = [
+          configvar for configvar in dir(config)
+          if configvar.startswith('DFDEWEY_')
+      ]
+      env = os.environ.copy()
+      for configvar in config_vars:
+        configval = getattr(config, configvar)
+        if configvar != 'DFDEWEY_OS_URL' or configval:
+          env[configvar] = '{0!s}'.format(getattr(config, configvar))
+
+      cmd.append('dfdewey')
       cmd.append(self.task_config.get('case'))
+      cmd.append(evidence.local_path)
       if self.task_config.get('search'):
         cmd.extend(['-s', self.task_config.get('search')])
-      else:
-        # Since the local path is always going to be a loopback device, only
-        # include it when indexing.
-        # https://github.com/google/turbinia/issues/468
-        # TODO(dfjxs): change the way images are identified in dfDewey
-        # https://github.com/google/dfdewey/issues/19
-        cmd.append(evidence.local_path)
       output_evidence = ReportText(source_path=dfdewey_output)
 
       result.log('Running dfDewey as [{0:s}]'.format(' '.join(cmd)))
       ret, _ = self.execute(
           cmd, result, stdout_file=dfdewey_output,
-          new_evidence=[output_evidence], close=True)
+          new_evidence=[output_evidence], close=True, env=env)
       status_summary = 'dfDewey executed with [{0:s}]'.format(' '.join(cmd))
       if ret != 0:
         success = False
