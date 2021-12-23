@@ -258,7 +258,7 @@ class TestTurbiniaTask(TestTurbiniaTaskBase):
 
     # Command was executed, has the correct output saved and
     # TurbiniaTaskResult.close() was called with successful status.
-    popen_mock.assert_called_with(cmd, stdout=-1, stderr=-1, cwd=None)
+    popen_mock.assert_called_with(cmd, stdout=-1, stderr=-1, cwd=None, env=None)
     self.assertEqual(self.result.error['stdout'], str(output[0]))
     self.assertEqual(self.result.error['stderr'], str(output[1]))
     self.assertEqual(stdout_data, output[0])
@@ -280,7 +280,7 @@ class TestTurbiniaTask(TestTurbiniaTaskBase):
 
     # Command was executed and TurbiniaTaskResult.close() was called with
     # unsuccessful status.
-    popen_mock.assert_called_with(cmd, stdout=-1, stderr=-1, cwd=None)
+    popen_mock.assert_called_with(cmd, stdout=-1, stderr=-1, cwd=None, env=None)
     self.result.close.assert_called_with(
         self.task, success=False, status=mock.ANY)
 
