@@ -55,28 +55,30 @@ def csv_list(string):
 
 
 def check_args(source_path, args):
-  """Checks lengths of supplied args match or raise an error.
+  """Checks lengths of supplied args match or raise an error. 
+     Lists can have only one element where they are automatically extended.
 
   Args:
     source_path(list(str)): List of source_paths supplied to turbiniactl.
-    args(list(list)): List of args (i.e. name, source, partitions, etc) and their values supplied to turbiniactl.
+    args(list(list)): List of args (i.e. name, source, partitions, etc) and 
+    their values supplied to turbiniactl.
 
   Raises:
     TurbiniaException: If length of args don't match.
 
   Returns:
-    list(str): List of arg """
+    list(str): List of arg or None """
   ret = list()
   if not args[0]:
     args[0] = source_path
   for arg in args:
     if not arg:
-      ret.append(None)
-      continue
+      arg = [None]
     if len(arg) > 1 and len(arg) != len(source_path):
       raise TurbiniaException(
-          'Number of passed in args must equal to one or '
-          'number of source_paths/disks.')
+          'Number of passed in args ({0:d}) must equal to one or '
+          'number of source_paths/disks ({1:d}).'.format(
+              len(arg), len(source_path)))
     if len(arg) == 1:
       arg = [arg[0] for _ in source_path]
     ret.append(arg)
@@ -84,7 +86,14 @@ def check_args(source_path, args):
 
 
 def process_args(args):
-  """Parses and processes args."""
+  """Parses and processes args.
+  
+  Args:
+    args(namespace): turbiniactl args.
+  
+  Raises:
+    TurbiniaException: If theres an error processing args.
+  """
   parser = argparse.ArgumentParser()
   parser.add_argument(
       '-q', '--quiet', action='store_true', help='Show minimal output')
@@ -494,10 +503,10 @@ def process_args(args):
         print(f.read())
         sys.exit(0)
     except IOError as exception:
-      log.info(
-          "Failed to read config file {0:s}: {1!s}".format(
+      msg = (
+          'Failed to read config file {0:s}: {1!s}'.format(
               config.configSource, exception))
-      sys.exit(1)
+      raise TurbiniaException(msg)
   #sends test notification
   if args.command == 'testnotify':
     notify.sendmail(
@@ -517,7 +526,8 @@ def process_args(args):
   filter_patterns = []
   if (args.filter_patterns_file and
       not os.path.exists(args.filter_patterns_file)):
-    msg = 'Filter patterns file {0:s} does not exist.'
+    msg = 'Filter patterns file {0:s} does not exist.'.format(
+        args.filter_patterns_file)
     raise TurbiniaException(msg)
   elif args.filter_patterns_file:
     try:
@@ -529,7 +539,8 @@ def process_args(args):
   # Read yara rules
   yara_rules = ''
   if (args.yara_rules_file and not os.path.exists(args.yara_rules_file)):
-    msg = 'Filter patterns file {0:s} does not exist.'
+    msg = 'Filter patterns file {0:s} does not exist.'.format(
+        args.yara_rules_file)
     raise TurbiniaException(msg)
   elif args.yara_rules_file:
     try:
@@ -553,12 +564,18 @@ def process_args(args):
     # Iterate through evidence and call process_evidence
     for i, source_path in enumerate(args.source_path):
       name = args.name[i]
-      source = args.source[i] if args.source else None
+      source = args.source[i]
       process_evidence(
           args=args, source_path=source_path, name=name, source=source,
           group_id=group_id, filter_patterns=filter_patterns, client=client,
           yara_rules=yara_rules)
   elif args.command in ('googleclouddisk', 'googleclouddiskembedded'):
+    # Fail if this is a local instance
+    if config.SHARED_FILESYSTEM and not args.force_evidence:
+      msg = (
+          'The evidence type {0:s} is Cloud only, and this instance of '
+          'Turbinia is not a cloud instance.'.format(args.command))
+      raise TurbiniaException(msg)
     # Check cloud zones
     if not args.zone and config.TURBINIA_ZONE:
       args.zone = [config.TURBINIA_ZONE]
@@ -571,23 +588,20 @@ def process_args(args):
     elif not args.project and not config.TURBINIA_PROJECT:
       msg = 'Turbinia project must be set by --project or in config'
       raise TurbiniaException(msg)
-    (args.name, args.source, args.project, args.zone,
-     args.mount_partition) = check_args(
-         args.disk_name, [
-             args.name, args.source, args.project, args.zone,
-             args.mount_partition
-         ])
+    (
+        args.name, args.source, args.project, args.zone, args.mount_partition,
+        args.embedded_path) = check_args(
+            args.disk_name, [
+                args.name, args.source, args.project, args.zone,
+                args.mount_partition, args.embedded_path
+            ])
     mount_partition = None
     embedded_path = None
-    if args.command == 'googleclouddiskembedded':
-      if len(args.embedded_path) != len(args.disk_name):
-        msg = 'Number of embedded paths must equal to disk names.'
-        raise TurbiniaException(msg)
     for i, disk_name in enumerate(args.disk_name):
       project = args.project[i]
       zone = args.zone[i]
       name = args.name[i]
-      source = args.source[i] if args.source else None
+      source = args.source[i]
       if args.command == 'googleclouddiskembedded':
         embedded_path = args.embedded_path[i]
         mount_partition = args.mount_partition[i]
@@ -602,12 +616,7 @@ def process_args(args):
               '--copy_only specified, so not processing {0:s} with '
               'Turbinia'.format(disk_name))
           continue
-      # Fail if this is a local instance
-      if config.SHARED_FILESYSTEM and not args.force_evidence:
-        msg = (
-            'The evidence type {0:s} is Cloud only, and this instance of '
-            'Turbinia is not a cloud instance.'.format(args.command))
-        raise TurbiniaException(msg)
+
       process_evidence(
           args=args, disk_name=disk_name, name=name, source=source,
           project=project, zone=zone, embedded_path=embedded_path,
@@ -793,7 +802,8 @@ def process_args(args):
     log.warning('Command {0!s} not implemented.'.format(args.command))
 
 
-# TODO: shard this function and move some of its functionalitie to other files (move some  of this to evidence.py to run the checks etc)
+# TODO: shard this function and move some of its functionalities to other files
+# (move some  of this to evidence.py to run the checks etc)
 def process_evidence(
     client, group_id, args=None, browser_type=None, disk_name=None,
     embedded_path=None, filter_patterns=None, format=None, mount_partition=None,
@@ -805,19 +815,19 @@ def process_evidence(
     client(TurbiniaClient): TurbiniaClient used for creating requests.
     group_id(str): Group ID used for bulk processing.
     args(Namespace): commandline args.
-    browser_type(list(str)): List of browser types used for hindsight.
-    disk_name(list(str)): List of disk names used for processing cloud evidence.
-    embedded_path(list(str)): List of embedded paths for clouddiskembedded.
+    browser_type(str): List of browser types used for hindsight.
+    disk_name(str): List of disk names used for processing cloud evidence.
+    embedded_path(str): List of embedded paths for clouddiskembedded.
     filter_pattern(str): Filter patterns used for processing evidence.
-    format(list(str)): List of output formats for hindsight.
-    mount_partition(list(int)): List of mount partitions for clouddiskembedded.
-    name(list(str)): List of evidence names.
+    format(str): List of output formats for hindsight.
+    mount_partition(int): List of mount partitions for clouddiskembedded.
+    name(str): List of evidence names.
     profile(list(str)): List of volatility profiles used for rawmemory.
-    project(list(str)): List of projects for cloud related evidence.
-    source(list(str)): List of sources for evidence.
-    source_path(list(str)): List of source paths used for host evidence.
+    project(str): List of projects for cloud related evidence.
+    source(str): List of sources for evidence.
+    source_path(str): List of source paths used for host evidence.
     yara_rules(str): Yara rules for processing evidence.
-    zone(list(str)): List of could zones used for cloud evidence. 
+    zone(str): List of could zones used for cloud evidence. 
     """
   from turbinia import evidence
   from turbinia.message import TurbiniaRequest
@@ -829,12 +839,9 @@ def process_evidence(
   evidence_ = None
 
   if args.command == 'rawdisk':
-    name = name
-    source_path = os.path.abspath(source_path)
     evidence_ = evidence.RawDisk(
-        name=name, source_path=source_path, source=source)
+        name=name, source_path=os.path.abspath(source_path), source=source)
   elif args.command == 'directory':
-    name = name
     source_path = os.path.abspath(source_path)
     if not config.SHARED_FILESYSTEM:
       log.info(
@@ -849,10 +856,8 @@ def process_evidence(
           name=name, source_path=source_path, source=source)
   elif args.command == 'compresseddirectory':
     archive.ValidateTarFile(source_path)
-    name = name
-    source_path = os.path.abspath(source_path)
     evidence_ = evidence.CompressedDirectory(
-        name=name, source_path=source_path, source=source)
+        name=name, source_path=os.path.abspath(source_path), source=source)
   elif args.command == 'googleclouddisk':
     evidence_ = evidence.GoogleCloudDisk(
         name=name, disk_name=disk_name, project=project, zone=zone,
@@ -902,7 +907,6 @@ def process_evidence(
       raise TurbiniaException(msg)
 
   request = None
-  client = client
   if evidence_:
     request = TurbiniaRequest(
         request_id=request_id, group_id=group_id, requester=getpass.getuser())
@@ -943,7 +947,8 @@ def process_evidence(
       recipe_dict = recipe_helpers.load_recipe_from_file(
           recipe_file, not args.skip_recipe_validation)
       if not recipe_dict:
-        sys.exit(1)
+        msg = 'Could not initiate a recipe_dict.'
+        raise TurbiniaException(msg)
     else:
       recipe_dict = copy.deepcopy(recipe_helpers.DEFAULT_RECIPE)
       recipe_dict['globals']['debug_tasks'] = args.debug_tasks
@@ -951,7 +956,6 @@ def process_evidence(
       recipe_dict['globals']['jobs_denylist'] = args.jobs_denylist
       recipe_dict['globals']['jobs_allowlist'] = args.jobs_allowlist
       recipe_dict['globals']['yara_rules'] = yara_rules
-    # There will always be globals variable one way or another
     recipe_dict['globals']['group_id'] = group_id
     request.recipe = recipe_dict
 
@@ -985,9 +989,6 @@ def process_evidence(
 
 def main():
   """Main function for turbiniactl"""
-  # TODO(aarontp): Allow for single run mode when
-  # by specifying evidence which will also terminate the task manager after
-  # evidence has been processed.
   try:
     process_args(sys.argv[1:])
   except TurbiniaException as e:

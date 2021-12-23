@@ -426,7 +426,14 @@ class TurbiniaTask:
   def __init__(
       self, name=None, base_output_dir=None, request_id=None, requester=None,
       group_id=None):
-    """Initialization for TurbiniaTask."""
+    """Initialization for TurbiniaTask.
+    
+    Args:
+      base_output_dir(str): Output dir to store Turbinia results.
+      request_id(str): The request id
+      requester(str): Name of the requester
+      group_id(str): The group id
+    """
     if base_output_dir:
       self.base_output_dir = base_output_dir
     else:
