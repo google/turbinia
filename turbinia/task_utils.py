@@ -39,35 +39,36 @@ class TaskLoader():
   """
 
   TASK_LIST = [
+      'AbortTask',
+      'BinaryExtractorTask',
+      'BulkExtractorTask',
+      'CronAnalysisTask',
+      'DfdeweyTask',
+      'DockerContainersEnumerationTask',
       'FileArtifactExtractionTask',
-      'WordpressAccessLogAnalysisTask',
-      'WordpressCredsAnalysisTask',
       'FinalizeRequestTask',
-      'JenkinsAnalysisTask',
-      'JupyterAnalysisTask',
-      'GrepTask',
       'FsstatTask',
+      'GrepTask',
       'HadoopAnalysisTask',
       'HindsightTask',
+      'JenkinsAnalysisTask',
+      'JupyterAnalysisTask',
       'LinuxAccountAnalysisTask',
-      'WindowsAccountAnalysisTask',
       'LokiAnalysisTask',
       'PartitionEnumerationTask',
+      'PhotorecTask',
       'PlasoTask',
       'PsortTask',
       'RedisAnalysisTask',
       'SSHDAnalysisTask',
+      'StatTask',
       'StringsAsciiTask',
       'StringsUnicodeTask',
       'TomcatAnalysisTask',
       'VolatilityTask',
-      'StatTask',
-      'BinaryExtractorTask',
-      'BulkExtractorTask',
-      'DockerContainersEnumerationTask',
-      'PhotorecTask',
-      'AbortTask',
-      'CronAnalysisTask',
+      'WindowsAccountAnalysisTask',
+      'WordpressAccessLogAnalysisTask',
+      'WordpressCredsAnalysisTask',
   ]
 
   def check_task_name(self, task_name):
@@ -79,7 +80,7 @@ class TaskLoader():
     Returns:
       bool: True if task with the given name exists, else False
     """
-    for task in TASK_LIST:
+    for task in self.TASK_LIST:
       if task.lower() == task_name.lower():
         return True
     return False
@@ -97,22 +98,27 @@ class TaskLoader():
     # https://github.com/google/turbinia/issues/278 is fixed.
     #
     # Late imports to minimize what loads all Tasks
-    from turbinia.workers.artifact import FileArtifactExtractionTask
-    from turbinia.workers.analysis.wordpress_access import WordpressAccessLogAnalysisTask
-    from turbinia.workers.analysis.wordpress_creds import WordpressCredsAnalysisTask
+    from turbinia.workers.abort import AbortTask
     from turbinia.workers.analysis.jenkins import JenkinsAnalysisTask
     from turbinia.workers.analysis.jupyter import JupyterAnalysisTask
     from turbinia.workers.analysis.linux_acct import LinuxAccountAnalysisTask
     from turbinia.workers.analysis.loki import LokiAnalysisTask
     from turbinia.workers.analysis.windows_acct import WindowsAccountAnalysisTask
-    from turbinia.workers.finalize_request import FinalizeRequestTask
+    from turbinia.workers.analysis.wordpress_access import WordpressAccessLogAnalysisTask
+    from turbinia.workers.analysis.wordpress_creds import WordpressCredsAnalysisTask
+    from turbinia.workers.artifact import FileArtifactExtractionTask
+    from turbinia.workers.binary_extractor import BinaryExtractorTask
+    from turbinia.workers.bulk_extractor import BulkExtractorTask
     from turbinia.workers.cron import CronAnalysisTask
+    from turbinia.workers.dfdewey import DfdeweyTask
     from turbinia.workers.docker import DockerContainersEnumerationTask
-    from turbinia.workers.grep import GrepTask
+    from turbinia.workers.finalize_request import FinalizeRequestTask
     from turbinia.workers.fsstat import FsstatTask
+    from turbinia.workers.grep import GrepTask
     from turbinia.workers.hadoop import HadoopAnalysisTask
     from turbinia.workers.hindsight import HindsightTask
     from turbinia.workers.partitions import PartitionEnumerationTask
+    from turbinia.workers.photorec import PhotorecTask
     from turbinia.workers.plaso import PlasoTask
     from turbinia.workers.psort import PsortTask
     from turbinia.workers.redis import RedisAnalysisTask
@@ -122,10 +128,6 @@ class TaskLoader():
     from turbinia.workers.tomcat import TomcatAnalysisTask
     from turbinia.workers.volatility import VolatilityTask
     from turbinia.workers.worker_stat import StatTask
-    from turbinia.workers.binary_extractor import BinaryExtractorTask
-    from turbinia.workers.bulk_extractor import BulkExtractorTask
-    from turbinia.workers.photorec import PhotorecTask
-    from turbinia.workers.abort import AbortTask
 
     for task in self.TASK_LIST:
       if task.lower() == task_name.lower():

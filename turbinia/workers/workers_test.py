@@ -258,7 +258,7 @@ class TestTurbiniaTask(TestTurbiniaTaskBase):
 
     # Command was executed, has the correct output saved and
     # TurbiniaTaskResult.close() was called with successful status.
-    popen_mock.assert_called_with(cmd, stdout=-1, stderr=-1, cwd=None)
+    popen_mock.assert_called_with(cmd, stdout=-1, stderr=-1, cwd=None, env=None)
     self.assertEqual(self.result.error['stdout'], str(output[0]))
     self.assertEqual(self.result.error['stderr'], str(output[1]))
     self.assertEqual(stdout_data, output[0])
@@ -280,7 +280,7 @@ class TestTurbiniaTask(TestTurbiniaTaskBase):
 
     # Command was executed and TurbiniaTaskResult.close() was called with
     # unsuccessful status.
-    popen_mock.assert_called_with(cmd, stdout=-1, stderr=-1, cwd=None)
+    popen_mock.assert_called_with(cmd, stdout=-1, stderr=-1, cwd=None, env=None)
     self.result.close.assert_called_with(
         self.task, success=False, status=mock.ANY)
 
@@ -372,3 +372,32 @@ class TestTurbiniaTask(TestTurbiniaTaskBase):
     # Runs fine after setting the state
     self.evidence.state[evidence.EvidenceState.ATTACHED] = True
     self.task.evidence_setup(self.evidence)
+
+  def testAddEvidence(self):
+    """Test that add_evidence adds evidence when appropriate."""
+
+    # Test that evidence gets added in the base case (source_path points to file
+    # with contents)
+    self.evidence.name = 'AddEvidenceTest'
+    with open(self.evidence.source_path, 'w') as source_path:
+      source_path.write('test')
+    self.result.add_evidence(self.evidence, 'EmptyConfig')
+    self.assertEqual(len(self.result.evidence), 1)
+    self.assertEqual(self.result.evidence[0].name, 'AddEvidenceTest')
+    self.assertEqual(self.result.evidence[0].config, 'EmptyConfig')
+
+    # Test that evidence is *not* added when source_path points to file with no
+    # contents.
+    self.result.evidence = []
+    empty_file = tempfile.mkstemp(dir=self.base_output_dir)[1]
+    self.remove_files.append(empty_file)
+    self.evidence.source_path = empty_file
+    self.result.add_evidence(self.evidence, 'EmptyConfig')
+    # Evidence with empty path was not in evidence list
+    self.assertEqual(len(self.result.evidence), 0)
+
+    # Test that evidence with source_path=None gets added
+    self.result.evidence = []
+    self.evidence.source_path = None
+    self.result.add_evidence(self.evidence, 'EmptyConfig')
+    self.assertEqual(self.result.evidence[0].name, 'AddEvidenceTest')

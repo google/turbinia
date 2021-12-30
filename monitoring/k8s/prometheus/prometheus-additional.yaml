@@ -1,0 +1,7 @@
+- job_name: "turbinia-auto-discover"
+  scrape_interval: 15s
+  kubernetes_sd_configs:
+  - role: pod
+    namespaces:
+      names:
+        - default

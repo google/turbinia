@@ -15,6 +15,7 @@
 """Turbinia Config Template"""
 
 from __future__ import unicode_literals
+from os import uname
 
 ################################################################################
 #                          Base Turbinia configuration
@@ -45,8 +46,10 @@ OUTPUT_DIR = '/var/tmp'
 # different from the OUTPUT_DIR.
 TMP_DIR = '/tmp'
 
-# File to log debugging output to.
-LOG_FILE = '%s/turbinia.log' % TMP_DIR
+# Default path to where logs will be stored. Note for a Kubernetes
+# environment, change the path to the shared path configured for Filestore
+# so that logs are can be easily retrieved from one central location.
+LOG_FILE = '/var/tmp/%s.log' % uname().nodename
 
 # Path to a lock file used for the worker tasks.
 LOCK_FILE = '%s/turbinia-worker.lock' % TMP_DIR
@@ -313,3 +316,21 @@ PROMETHEUS_ENABLED = True
 # Prometheus listen address and port
 PROMETHEUS_ADDR = '0.0.0.0'
 PROMETHEUS_PORT = 9200
+
+###############################################################################
+#                           dfDewey Config
+#
+# These options are required for the dfDewey task
+###############################################################################
+
+# Postgres Config
+DFDEWEY_PG_HOST = '127.0.0.1'
+DFDEWEY_PG_PORT = 5432
+DFDEWEY_PG_DB_NAME = 'dfdewey'
+
+# OpenSearch Config
+DFDEWEY_OS_HOST = '127.0.0.1'
+DFDEWEY_OS_PORT = 9200
+# OS_URL can be used to specify a RFC-1738 formatted URL
+# Example: OS_URL = 'https://user:secret@127.0.0.1:9200/'
+DFDEWEY_OS_URL = None

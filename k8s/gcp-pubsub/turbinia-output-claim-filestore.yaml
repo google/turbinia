@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: output-claim
+spec:
+  accessModes:
+  - ReadWriteMany
+  storageClassName: ""
+  volumeName: output
+  resources:
+    requests:
+      storage: 1T

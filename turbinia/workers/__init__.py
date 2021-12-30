@@ -315,6 +315,14 @@ class TurbiniaTaskResult:
             was supplied to the task, so likely the caller will always want to
             use evidence_.config for this parameter.
     """
+    if (evidence.source_path and os.path.exists(evidence.source_path) and
+        os.path.getsize(evidence.source_path) == 0):
+      self.log(
+          'Evidence source path [{0:s}] for [{1:s}] exists but is empty. Not '
+          'adding empty Evidence.'.format(evidence.source_path, evidence.name),
+          logging.WARNING)
+      return
+
     # We want to enforce this here to make sure that any new Evidence objects
     # created also contain the config.  We could create a closure to do this
     # automatically, but the real fix is to attach this to a separate object.
@@ -557,7 +565,7 @@ class TurbiniaTask:
   def execute(
       self, cmd, result, save_files=None, log_files=None, new_evidence=None,
       close=False, shell=False, stderr_file=None, stdout_file=None,
-      success_codes=None, cwd=None):
+      success_codes=None, cwd=None, env=None):
     """Executes a given binary and saves output.
 
     Args:
@@ -574,6 +582,7 @@ class TurbiniaTask:
       stderr_file (str): Path to location to save stderr.
       stdout_file (str): Path to location to save stdout.
       cwd (str): Sets the current directory before the process is executed.
+      env (list(str)): Process environment.
 
     Returns:
       Tuple of the return code, and the TurbiniaTaskResult object
@@ -612,11 +621,12 @@ class TurbiniaTask:
         if shell:
           proc = subprocess.Popen(
               cmd, shell=True, stderr=subprocess.PIPE, stdout=subprocess.PIPE,
-              cwd=cwd)
+              cwd=cwd, env=env)
           proc.wait(timeout_limit)
         else:
           proc = subprocess.Popen(
-              cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE, cwd=cwd)
+              cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE, cwd=cwd,
+              env=env)
           proc.wait(timeout_limit)
       except subprocess.TimeoutExpired as exception:
         # Log error and close result.
@@ -733,7 +743,7 @@ class TurbiniaTask:
       TurbiniaException: If the evidence can not be found.
     """
     self.setup_metrics()
-    self.output_manager.setup(self.name, self.id)
+    self.output_manager.setup(self.name, self.id, self.request_id)
     self.tmp_dir, self.output_dir = self.output_manager.get_local_output_dirs()
     if not self.result:
       self.result = self.create_result(input_evidence=evidence)
