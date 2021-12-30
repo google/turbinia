@@ -62,7 +62,7 @@ usage:
 $ turbiniactl -h
 usage: turbiniactl [-h] [-q] [-v] [-d] [-a] [-c CONFIG_FILE] [-C RECIPE_CONFIG]
                    [-f] [-k DECRYPTION_KEYS] [-o OUTPUT_DIR] [-L LOG_FILE]
-                   [-r REQUEST_ID] [-R] [-S] [-V] [-D] [-F FILTER_PATTERNS_FILE]
+                   [-r REQUEST_ID] [-R] [-V] [-D] [-F FILTER_PATTERNS_FILE]
                    [-Y YARA_RULES_FILE] [-j JOBS_ALLOWLIST] [-J JOBS_DENYLIST]
                    [-p POLL_INTERVAL] [-t TASK] [-T] [-w]
                    <command> ...
@@ -96,7 +96,6 @@ optional arguments:
                         Log file
   -r REQUEST_ID, --request_id REQUEST_ID
                         Create new requests with this Request ID
-  -S, --server          Run Turbinia Server indefinitely
   -V, --version         Show the version
   -D, --dump_json       Dump JSON output of Turbinia Request instead of sending
                         it
