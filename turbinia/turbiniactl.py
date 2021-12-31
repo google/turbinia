@@ -94,7 +94,12 @@ def process_args(args):
   Raises:
     TurbiniaException: If theres an error processing args.
   """
-  parser = argparse.ArgumentParser()
+  parser = argparse.ArgumentParser(
+      description='Turbinia can bulk process multiple evidence of same type '
+      '(i.e. rawdisk, google cloud disk). For bulk processing, pass in csv '
+      'list of args to be processed. If all pieces of evidence share the same '
+      'property, such as project or source, there is no need for repeating '
+      'those values in the command.')
   parser.add_argument(
       '-q', '--quiet', action='store_true', help='Show minimal output')
   parser.add_argument(
@@ -134,9 +139,6 @@ def process_args(args):
   parser.add_argument(
       '-r', '--request_id', help='Create new requests with this Request ID',
       required=False)
-  parser.add_argument(
-      '-S', '--server', action='store_true',
-      help='Run Turbinia Server indefinitely')
   parser.add_argument(
       '-V', '--version', action='version', version=__version__,
       help='Show the version')
@@ -189,7 +191,7 @@ def process_args(args):
   # commands based on introspection of evidence objects?
   # RawDisk
   parser_rawdisk = subparsers.add_parser(
-      'rawdisk', help='Process RawDisk as Evidence')
+      'rawdisk', help='Process RawDisk as Evidence (bulk processable)')
   parser_rawdisk.add_argument(
       '-l', '--source_path', help='Local path to the evidence', required=True,
       type=csv_list)
@@ -203,7 +205,8 @@ def process_args(args):
   # Parser options for Google Cloud Disk Evidence type
   parser_googleclouddisk = subparsers.add_parser(
       'googleclouddisk',
-      help='Process Google Cloud Persistent Disk as Evidence')
+      help='Process Google Cloud Persistent Disk as Evidence '
+      '(bulk processable)')
   parser_googleclouddisk.add_argument(
       '-C', '--copy_only', action='store_true', help='Only copy disk and do '
       'not process with Turbinia. This only takes effect when a source '
@@ -229,7 +232,7 @@ def process_args(args):
   parser_googleclouddiskembedded = subparsers.add_parser(
       'googleclouddiskembedded',
       help='Process Google Cloud Persistent Disk with an embedded raw disk '
-      'image as Evidence')
+      'image as Evidence (bulk processable)')
   parser_googleclouddiskembedded.add_argument(
       '-C', '--copy_only', action='store_true', help='Only copy disk and do '
       'not process with Turbinia. This only takes effect when a source '
@@ -263,7 +266,7 @@ def process_args(args):
 
   # RawMemory
   parser_rawmemory = subparsers.add_parser(
-      'rawmemory', help='Process RawMemory as Evidence')
+      'rawmemory', help='Process RawMemory as Evidence (bulk processable)')
   parser_rawmemory.add_argument(
       '-l', '--source_path', help='Local path to the evidence', required=True,
       type=csv_list)
@@ -279,7 +282,7 @@ def process_args(args):
 
   # Parser options for Directory evidence type
   parser_directory = subparsers.add_parser(
-      'directory', help='Process a directory as Evidence')
+      'directory', help='Process a directory as Evidence (bulk processable)')
   parser_directory.add_argument(
       '-l', '--source_path', help='Local path to the evidence', required=True,
       type=csv_list)
@@ -292,7 +295,8 @@ def process_args(args):
 
   # Parser options for CompressedDirectory evidence type
   parser_directory = subparsers.add_parser(
-      'compresseddirectory', help='Process a compressed tar file as Evidence')
+      'compresseddirectory', help='Process a compressed tar file as Evidence '
+      '(bulk processable)')
   parser_directory.add_argument(
       '-l', '--source_path', help='Local path to the evidence', required=True,
       type=csv_list)
@@ -305,7 +309,8 @@ def process_args(args):
 
   # Parser options for ChromiumProfile evidence type
   parser_hindsight = subparsers.add_parser(
-      'hindsight', help='Process ChromiumProfile as Evidence')
+      'hindsight', help='Process ChromiumProfile as Evidence '
+      '(bulk processable)')
   parser_hindsight.add_argument(
       '-l', '--source_path', help='Local path to the evidence', required=True,
       type=csv_list)
@@ -452,7 +457,7 @@ def process_args(args):
     config.OUTPUT_DIR = args.output_dir
 
   config.TURBINIA_COMMAND = args.command
-  server_flags_set = args.server or args.command == 'server'
+  server_flags_set = args.command == 'server'
   worker_flags_set = args.command in ('psqworker', 'celeryworker')
   # Run logger setup again if we're running as a server or worker (or have a log
   # file explicitly set on the command line) to set a file-handler now that we
@@ -815,19 +820,19 @@ def process_evidence(
     client(TurbiniaClient): TurbiniaClient used for creating requests.
     group_id(str): Group ID used for bulk processing.
     args(Namespace): commandline args.
-    browser_type(str): List of browser types used for hindsight.
-    disk_name(str): List of disk names used for processing cloud evidence.
-    embedded_path(str): List of embedded paths for clouddiskembedded.
+    browser_type(str): Browser type used for hindsight.
+    disk_name(str): Disk name used for processing cloud evidence.
+    embedded_path(str): Embedded path for clouddiskembedded.
     filter_pattern(str): Filter patterns used for processing evidence.
-    format(str): List of output formats for hindsight.
-    mount_partition(int): List of mount partitions for clouddiskembedded.
-    name(str): List of evidence names.
+    format(str): Output format for hindsight.
+    mount_partition(int): Mount partition for clouddiskembedded.
+    name(str): Evidence name.
     profile(list(str)): List of volatility profiles used for rawmemory.
-    project(str): List of projects for cloud related evidence.
-    source(str): List of sources for evidence.
-    source_path(str): List of source paths used for host evidence.
-    yara_rules(str): Yara rules for processing evidence.
-    zone(str): List of could zones used for cloud evidence. 
+    project(str): Project for cloud related evidence.
+    source(str): Source for evidence.
+    source_path(str): Source path used for host evidence.
+    yara_rules(str): Yara rule for processing evidence.
+    zone(str): Could zone used for cloud evidence. 
     """
   from turbinia import evidence
   from turbinia.message import TurbiniaRequest
@@ -992,7 +997,7 @@ def main():
   try:
     process_args(sys.argv[1:])
   except TurbiniaException as e:
-    log.error('There was a problem processing arguments: {:s}'.format(str(e)))
+    log.error('There was a problem processing arguments: {0:s}'.format(str(e)))
     sys.exit(1)
   log.info('Done.')
   sys.exit(0)
