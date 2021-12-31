@@ -7,7 +7,6 @@
       "request": "launch",
       "program": "turbinia/turbiniactl.py",
       "args": [
-        "-S",
         "server"
       ],
       "console": "integratedTerminal",
@@ -21,7 +20,6 @@
       "request": "launch",
       "program": "turbinia/turbiniactl.py",
       "args": [
-        "-S",
         "celeryworker"
       ],
       "console": "integratedTerminal",
@@ -35,7 +33,6 @@
       "request": "launch",
       "program": "turbinia/turbiniactl.py",
       "args": [
-        "-S",
         "psqworker"
       ],
       "console": "integratedTerminal",
