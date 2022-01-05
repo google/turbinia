@@ -574,7 +574,7 @@ class TurbiniaTask:
   def execute(
       self, cmd, result, save_files=None, log_files=None, new_evidence=None,
       close=False, shell=False, stderr_file=None, stdout_file=None,
-      success_codes=None, cwd=None, env=None):
+      success_codes=None, cwd=None, env=None, timeout=0):
     """Executes a given binary and saves output.
 
     Args:
@@ -592,6 +592,7 @@ class TurbiniaTask:
       stdout_file (str): Path to location to save stdout.
       cwd (str): Sets the current directory before the process is executed.
       env (list(str)): Process environment.
+      timeout (int): Override job timeout value.
 
     Returns:
       Tuple of the return code, and the TurbiniaTaskResult object
@@ -608,7 +609,10 @@ class TurbiniaTask:
     fail_message = None
 
     # Get timeout value.
-    timeout_limit = job_manager.JobsManager.GetTimeoutValue(self.job_name)
+    if timeout:
+      timeout_limit = timeout
+    else:
+      timeout_limit = job_manager.JobsManager.GetTimeoutValue(self.job_name)
 
     # Execute the job via docker.
     docker_image = job_manager.JobsManager.GetDockerImage(self.job_name)
