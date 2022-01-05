@@ -62,6 +62,7 @@ globals:
   jobs_allowlist:
     - BinaryExtractorJob
     - BulkExtractorJob
+    - FileSystemTimelineJob
     - FsstatJob
     - GrepJob
     - HadoopAnalysisJob

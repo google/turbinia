@@ -1,0 +1,24 @@
+# Triage recipe for quick initial response (specific to Linux).
+
+globals:
+  jobs_allowlist:
+    - FileSystemTimelineJob
+    - PlasoJob
+    - PsortJob
+
+plaso_base:
+  task: 'PlasoTask'
+
+  file_filter: [
+      '/[.]fseventsd/.+',
+      '/Library/Preferences/SystemConfiguration/com[.]apple[.]airport[.]preferences[.]plist',
+      '/Users/.+/Library/Preferences/.+LSSharedFileList[.]plist',
+      '/private/var/log/asl/.+',
+      '/var/log/asl/.+',
+      '/Users/.+/.bash_history',
+      '/root/.bash_history',
+      '/Users/.+/[.]local/share/fish/fish_history',
+      '/root/[.]local/share/fish/fish_history',
+      '/Users/.+/Library/Application Support/Firefox/.+',
+      '/Users/.+/Library/Application Support/Google/Chrome/.+',
+  ]

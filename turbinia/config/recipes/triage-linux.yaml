@@ -1,0 +1,23 @@
+# Triage recipe for quick initial response (specific to Linux).
+
+globals:
+  jobs_allowlist:
+    - CronExtractionJob
+    - CronAnalysisJob
+    - PlasoJob
+    - PsortJob
+    - FileSystemTimelineJob
+
+plaso_base:
+  task: 'PlasoTask'
+
+  file_filter: [
+      '/var/log/\w+[.]log([.]\d.gz|[.]\d|$)',
+      '/var/log/audit/audit[.]log([.]\d[.]gz|[.]\d|$)',
+      '/home/.+/[.]bash_history',
+      '/root/[.]bash_history',
+      '/home/.+/[.]local/share/fish/fish_history',
+      '/root/[.]local/share/fish/fish_history',
+      '/home/.+/[.]config/google-chrome',
+      '/home/.+/[.]config/chromium',
+  ]

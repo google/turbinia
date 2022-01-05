@@ -46,6 +46,7 @@ class TaskLoader():
       'DfdeweyTask',
       'DockerContainersEnumerationTask',
       'FileArtifactExtractionTask',
+      'FileSystemTimelineTask',
       'FinalizeRequestTask',
       'FsstatTask',
       'GrepTask',
@@ -112,6 +113,7 @@ class TaskLoader():
     from turbinia.workers.cron import CronAnalysisTask
     from turbinia.workers.dfdewey import DfdeweyTask
     from turbinia.workers.docker import DockerContainersEnumerationTask
+    from turbinia.workers.file_system_timeline import FileSystemTimelineTask
     from turbinia.workers.finalize_request import FinalizeRequestTask
     from turbinia.workers.fsstat import FsstatTask
     from turbinia.workers.grep import GrepTask
