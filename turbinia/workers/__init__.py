@@ -605,6 +605,7 @@ class TurbiniaTask:
     success_codes = success_codes if success_codes else [0]
     stdout = None
     stderr = None
+    fail_message = None
 
     # Get timeout value.
     timeout_limit = job_manager.JobsManager.GetTimeoutValue(self.job_name)
@@ -631,24 +632,24 @@ class TurbiniaTask:
           proc = subprocess.Popen(
               cmd, shell=True, stderr=subprocess.PIPE, stdout=subprocess.PIPE,
               cwd=cwd, env=env)
-          proc.wait(timeout_limit)
+          stdout, stderr = proc.communicate(timeout=timeout_limit)
         else:
           proc = subprocess.Popen(
               cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE, cwd=cwd,
               env=env)
-          proc.wait(timeout_limit)
+          stdout, stderr = proc.communicate(timeout=timeout_limit)
       except subprocess.TimeoutExpired as exception:
-        # Log error and close result.
-        message = (
+        proc.kill()
+        # Get any potential partial output so we can save it later.
+        stdout, stderr = proc.communicate()
+        fail_message = (
             'Execution of [{0!s}] failed due to job timeout of '
             '{1:d} seconds has been reached.'.format(cmd, timeout_limit))
-        result.log(message)
-        result.close(self, success=False, status=message)
-        # Increase timeout metric and raise exception
+        result.log(fail_message)
+        # Increase timeout metric. Not re-raising an exception so we can save
+        # any potential output.
         turbinia_worker_tasks_timeout_total.inc()
-        raise TurbiniaException(message)
 
-      stdout, stderr = proc.communicate()
       ret = proc.returncode
 
     result.error['stdout'] = str(stdout)
@@ -697,7 +698,9 @@ class TurbiniaTask:
       result.log('Output log file found at {0:s}'.format(file_))
       self.output_manager.save_local_file(file_, result)
 
-    if ret not in success_codes:
+    if fail_message:
+      result.close(self, success=False, status=fail_message)
+    elif ret not in success_codes:
       message = 'Execution of [{0!s}] failed with status {1:d}'.format(cmd, ret)
       result.log(message)
       if close:
