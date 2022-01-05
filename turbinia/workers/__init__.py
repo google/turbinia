@@ -298,7 +298,6 @@ class TurbiniaTaskResult:
     if status:
       task.result.status = 'Task {0!s} is {1!s} on {2!s}'.format(
           self.task_name, status, self.worker_name)
-
     if self.state_manager:
       self.state_manager.update_task(task)
     else:
@@ -420,7 +419,8 @@ class TurbiniaTask:
 
   # The list of attributes that we will persist into storage
   STORED_ATTRIBUTES = [
-      'id', 'job_id', 'last_update', 'name', 'request_id', 'requester'
+      'id', 'job_id', 'last_update', 'name', 'request_id', 'requester',
+      'group_id'
   ]
 
   # The list of evidence states that are required by a Task in order to run.
@@ -432,8 +432,16 @@ class TurbiniaTask:
   TASK_CONFIG = {}
 
   def __init__(
-      self, name=None, base_output_dir=None, request_id=None, requester=None):
-    """Initialization for TurbiniaTask."""
+      self, name=None, base_output_dir=None, request_id=None, requester=None,
+      group_id=None):
+    """Initialization for TurbiniaTask.
+    
+    Args:
+      base_output_dir(str): Output dir to store Turbinia results.
+      request_id(str): The request id
+      requester(str): Name of the requester
+      group_id(str): The group id
+    """
     if base_output_dir:
       self.base_output_dir = base_output_dir
     else:
@@ -457,6 +465,7 @@ class TurbiniaTask:
     self._evidence_config = {}
     self.recipe = {}
     self.task_config = {}
+    self.group_id = group_id
 
   def serialize(self):
     """Converts the TurbiniaTask object into a serializable dict.
@@ -895,7 +904,6 @@ class TurbiniaTask:
           recipe_data.update(task_recipe)
           recipe_data.pop('task')
           break
-
     recipe_data.update(recipe['globals'])
 
     return recipe_data
