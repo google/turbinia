@@ -54,7 +54,7 @@ class FileSystemTimelineTest(TestTurbiniaTaskBase):
   @mock.patch('turbinia.state_manager.get_state_manager')
   @mock.patch('dfvfs.helpers.volume_scanner.VolumeScanner.GetBasePathSpecs')
   def testRun(self, mock_getbasepathspecs, _):
-    """Test PartitionEnumeration task run."""
+    """Test FileSystemTimelineJob task run."""
     self.result.setup(self.task)
     filedir = os.path.dirname(os.path.realpath(__file__))
     test_data = os.path.join(filedir, '..', '..', 'test_data', 'gpt.raw')
