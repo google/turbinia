@@ -29,7 +29,7 @@ class FileSystemTimelineJob(interface.TurbiniaJob):
   """File System Timeline Job.
 
   This will generate a directory containing the resulting
-  dfimagetools list_file_entries output.
+  dfimagetools FileEntryLister output.
   """
 
   # The types of evidence that this Job will process
@@ -39,7 +39,7 @@ class FileSystemTimelineJob(interface.TurbiniaJob):
   NAME = 'FileSystemTimelineJob'
 
   def create_tasks(self, evidence):
-    """Create task for list_file_entries tool.
+    """Create tasks for this job.
 
     Args:
       evidence: List of evidence objects to process

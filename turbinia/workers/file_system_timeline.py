@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright 2021 Google Inc.
+# Copyright 2022 Google Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,7 +12,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Task to run dfimagetools on disk partitions."""
+"""Task to run dfimagetools FileEntryLister on disk partitions."""
 from __future__ import unicode_literals
 
 import os
@@ -30,7 +30,7 @@ class FileSystemTimelineTask(TurbiniaTask):
   REQUIRED_STATES = [state.ATTACHED]
 
   def run(self, evidence, result):
-    """Task to execute (dfimagetools) list_file_entries.
+    """Task to execute (dfimagetools) FileEntryLister.
 
     Args:
         evidence (Evidence object):  The evidence we will process.
@@ -53,8 +53,9 @@ class FileSystemTimelineTask(TurbiniaTask):
       with open(bodyfile_output, 'w') as file_object:
         for file_entry, path_segments in entry_lister.ListFileEntries(
             base_path_specs):
-          for bodyfile_entry in entry_lister.GetBodyfileEntries(file_entry,
-                                                                path_segments):
+          bodyfile_entries = entry_lister.GetBodyfileEntries(
+              file_entry, path_segments)
+          for bodyfile_entry in bodyfile_entries:
             file_object.write(bodyfile_entry)
             file_object.write('\n')
             number_of_entries += 1

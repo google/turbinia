@@ -1,4 +1,4 @@
-# Triage recipe for quick initial response (specific to Linux).
+# Triage recipe for quick initial response (specific to macOS).
 
 globals:
   jobs_allowlist:
