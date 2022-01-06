@@ -16,10 +16,10 @@
 
 from __future__ import unicode_literals
 
-import unittest
-import mock
-import os
 import glob
+import unittest
+import os
+import mock
 
 from turbinia.evidence import BodyFile
 from turbinia.workers import file_system_timeline
@@ -28,8 +28,6 @@ from turbinia.workers.workers_test import TestTurbiniaTaskBase
 
 from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
-
-from dfimagetools import file_entry_lister
 
 
 class FileSystemTimelineTest(TestTurbiniaTaskBase):
