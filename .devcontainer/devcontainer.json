@@ -4,9 +4,7 @@
 	"build": {
 		"dockerfile": "../docker/vscode/Dockerfile"
 	},
-	"runArgs": [
-		"--privileged"
-	],
+	"runArgs": [ "--privileged" ],
 	// copy launch profiles to .vscode
 	"postCreateCommand": "mkdir -p .vscode && cp docker/vscode/vscode-launch.json .vscode/launch.json",
 	// start redis-server after subsequent start of the devcontainer
@@ -29,6 +27,6 @@
 	},
 	// Add the IDs of extensions you want installed when the container is created.
 	"extensions": [
-		"ms-python.python",
+		"ms-python.python"
 	],
 }
