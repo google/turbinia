@@ -284,6 +284,22 @@ class TestTurbiniaTask(TestTurbiniaTaskBase):
     self.result.close.assert_called_with(
         self.task, success=False, status=mock.ANY)
 
+  def testTurbiniaTaskExecuteTimeout(self):
+    """Test execution with subprocess timeout case."""
+    cmd = 'sleep 10'
+    self.result.close = mock.MagicMock()
+    ret, result = self.task.execute(cmd, self.result, shell=True, timeout=1)
+
+    # Command was executed and TurbiniaTaskResult.close() was called with
+    # unsuccessful status.
+    self.result.close.assert_called_with(
+        self.task, success=False, status=mock.ANY)
+    result_call_args = self.result.close.call_args.kwargs
+    # 'timeout' string shows up in status message
+    self.assertIn('timeout', result_call_args['status'])
+    # Return value shows job was killed
+    self.assertEqual(ret, -9)
+
   @mock.patch('turbinia.workers.subprocess.Popen')
   def testTurbiniaTaskExecuteEvidenceExists(self, popen_mock):
     """Test execution with new evidence that has valid a source_path."""
