@@ -22,6 +22,9 @@ from turbinia.workers import TurbiniaTask
 from turbinia.evidence import EvidenceState as state
 from turbinia.evidence import BodyFile
 
+from dfvfs.helpers import volume_scanner
+from dfimagetools import file_entry_lister
+
 if TurbiniaTask.check_worker_role():
   try:
     from dfvfs.helpers import volume_scanner
@@ -47,14 +50,21 @@ class FileSystemTimelineTask(TurbiniaTask):
     """
     bodyfile_output = os.path.join(self.output_dir, 'file_system.bodyfile')
     output_evidence = BodyFile(source_path=bodyfile_output)
-    output_evidence.parent_evidence = evidence
-    volume_scanner_options = volume_scanner.VolumeScannerOptions()
-    entry_lister = file_entry_lister.FileEntryLister()
-    volume_scanner_options.partitions = ['all']
     number_of_entries = 0
+
+    # Set things up for the FileEntryLister client. We will scan all
+    # partitions in the volume.
+    volume_scanner_options = volume_scanner.VolumeScannerOptions()
+    volume_scanner_options.partitions = ['all']
+
+    # Create the FileEntryLister client and generate the path specs
+    # for all available partitions.
+    entry_lister = file_entry_lister.FileEntryLister()
     base_path_specs = entry_lister.GetBasePathSpecs(
         evidence.device_path, options=volume_scanner_options)
 
+    # Iterate over all file entries and generate the output in bodyfile
+    # format.
     try:
       with open(bodyfile_output, 'w') as file_object:
         for file_entry, path_segments in entry_lister.ListFileEntries(
