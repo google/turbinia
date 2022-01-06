@@ -28,7 +28,7 @@ from turbinia.workers.file_system_timeline import FileSystemTimelineTask
 class FileSystemTimelineJob(interface.TurbiniaJob):
   """File System Timeline Job.
 
-  This will generate a directory containing the resulting
+  This will generate a BodyFile containing the resulting
   dfimagetools FileEntryLister output.
   """
 

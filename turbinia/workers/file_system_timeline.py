@@ -21,8 +21,14 @@ from turbinia import TurbiniaException
 from turbinia.workers import TurbiniaTask
 from turbinia.evidence import EvidenceState as state
 from turbinia.evidence import BodyFile
-from dfvfs.helpers import volume_scanner
-from dfimagetools import file_entry_lister
+
+if TurbiniaTask.check_worker_role():
+  try:
+    from dfvfs.helpers import volume_scanner
+    from dfimagetools import file_entry_lister
+  except ImportError as exception:
+    message = 'Could not import libraries: {0!s}'.format(exception)
+    raise TurbiniaException(message)
 
 
 class FileSystemTimelineTask(TurbiniaTask):
