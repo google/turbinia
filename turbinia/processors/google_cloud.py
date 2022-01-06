@@ -121,7 +121,7 @@ def PreprocessAttachDisk(disk_name):
 
   message = None
   if not os.path.exists(path):
-    turbinia_nonexisting_path.inc()
+    turbinia_nonexisting_disk_path.inc()
     message = 'Device path {0:s} does not exist'.format(path)
   elif not IsBlockDevice(path):
     message = 'Device path {0:s} is not a block device'.format(path)
