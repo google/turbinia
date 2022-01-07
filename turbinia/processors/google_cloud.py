@@ -34,7 +34,8 @@ log = logging.getLogger('turbinia')
 RETRY_MAX = 10
 
 turbinia_nonexisting_disk_path = Gauge(
-    'turbinia_nonexisting_disk_path', 'Total number of non existing disk paths')
+    'turbinia_nonexisting_disk_path',
+    'Total number of non existing disk paths after attempts to attach')
 
 
 def IsBlockDevice(path):

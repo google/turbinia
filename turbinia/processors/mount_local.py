@@ -31,7 +31,7 @@ RETRY_MAX = 10
 
 turbinia_failed_loop_device_detach = Gauge(
     'turbinia_failed_loop_device_detach',
-    'Total number of disks failed to detach')
+    'Total number of loop devices failed to detach')
 
 
 def PreprocessBitLocker(source_path, partition_offset=None, credentials=None):
