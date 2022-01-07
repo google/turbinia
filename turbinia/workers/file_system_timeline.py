@@ -25,8 +25,8 @@ from turbinia.evidence import BodyFile
 
 if TurbiniaTask.check_worker_role():
   try:
-    from dfvfs.lib import errors as dfvfs_errors
     from dfvfs.helpers import volume_scanner
+    from dfvfs.lib import errors as dfvfs_errors
     from dfimagetools import file_entry_lister
   except ImportError as exception:
     message = 'Could not import libraries: {0!s}'.format(exception)
