@@ -440,8 +440,8 @@ class BaseTaskManager:
       log.error(
           'Task {0:s} from {1:s} returned invalid success status "None". '
           'Setting this to False so the client knows the Task is complete. '
-          'Usually this means that the close() method was not called on the '
-          'TurbiniaTaskResult prior to returning it'.format(
+          'Usually this means that the Task returning the TurbiniaTaskResult '
+          'did not call the close() method on it.'.format(
               task_result.task_name, task_result.worker_name))
       task_result.successful = False
       if task_result.status:
