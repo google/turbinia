@@ -30,6 +30,52 @@ log = logging.getLogger('turbinia')
 RETRY_MAX = 10
 
 
+def GetDiskSize(source_path):
+  """Gets the size of disk evidence in bytes.
+
+  Tries using blockdev to query the size of block devices, and falls back on
+  filesize for image files.
+
+  Args:
+    source_path(str): the source path of the disk.
+
+  Returns:
+    int: the size of the disk in bytes.
+  """
+  size = None
+
+  if not os.path.exists(source_path):
+    log.error(
+        'Cannot check disk size for non-existing source_path {0!s}'.format(
+            source_path))
+    return None
+
+  cmd = ['blockdev', '--getsize64', source_path]
+  log.info('Running {0!s}'.format(cmd))
+
+  # Run blockdev first, this will fail if evidence is not a block device
+  try:
+    cmd_output = subprocess.check_output(cmd, stderr=subprocess.STDOUT).split()
+    size = int(cmd_output[0].decode('utf-8'))
+  except subprocess.CalledProcessError:
+    log.debug('blockdev failed, attempting to get file size')
+  except ValueError:
+    log.debug(
+        'Unexpected output from blockdev: {0:s}'.format(
+            cmd_output[0].decode('utf-8')))
+
+  if size is None:
+    # evidence is not a block device, check image file size
+    cmd = ['ls', '-s', source_path]
+    try:
+      cmd_output = subprocess.check_output(cmd).split()
+      size = int(cmd_output[0].decode('utf-8'))
+    except subprocess.CalledProcessError as e:
+      log.warning('Checking disk size failed: {0!s}'.format(e))
+
+  return size
+
+
 def PreprocessBitLocker(source_path, partition_offset=None, credentials=None):
   """Uses libbde on a target block device or image file.
 
