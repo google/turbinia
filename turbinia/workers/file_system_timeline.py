@@ -81,10 +81,11 @@ class FileSystemTimelineTask(TurbiniaTask):
       status = 'Generated file system timeline containing [{0:d}] entries'.format(
           number_of_entries)
       result.close(self, success=True, status=status)
-    except dfvfs_errors.ScannerError as e:
+    except dfvfs_errors.ScannerError as exception:
       result.log('Error generating bodyfile {0!s}'.format(exception))
       status = 'Unable to generate bodyfile using provided evidence data.'
       result.close(self, success=False, status=status)
-      raise TurbiniaException('Could not process partition: {0!s}'.format(e))
+      raise TurbiniaException(
+          'Could not process volume: {0!s}'.format(exception))
 
     return result
