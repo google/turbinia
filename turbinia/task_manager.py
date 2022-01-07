@@ -436,6 +436,17 @@ class BaseTaskManager:
     Returns:
       TurbiniaJob|None: The Job for the processed task, else None
     """
+    if task_result.successful is None:
+      log.error(
+          'Task {0:s} from {1:s} returned invalid success status "None". '
+          'Setting this to False so the client knows the Task is complete. '
+          'Usually this means that the close() method was not called on the '
+          'TurbiniaTaskResult prior to returning it'.format(
+              task_result.task_name, task_result.worker_name))
+      task_result.successful = False
+      task_result.status = (
+          task_result.status + ' (Sucess status forcefully set to False)')
+
     if not task_result.successful:
       log.error(
           'Task {0:s} from {1:s} was not successful'.format(

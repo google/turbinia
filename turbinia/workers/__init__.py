@@ -964,7 +964,7 @@ class TurbiniaTask:
       else:
         self.result = self.create_result(
             message=message, trace=traceback.format_exc())
-      # self.result.close(self, success=False)
+      self.result.close(self, success=False)
       return self.result.serialize()
 
     log.info('Starting Task {0:s} {1:s}'.format(self.name, self.id))
