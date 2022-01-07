@@ -213,7 +213,7 @@ class TestTurbiniaTask(TestTurbiniaTaskBase):
     # Checking specifically for `False` value and not whether this evaluates to
     # `False` because we don't want the `None` case to pass.
     self.assertEqual(new_result.successful, False)
-    create_results_args = mock_create_results.call_args.kwargs
+    create_results_args = mock_create_result.call_args.kwargs
     self.assertIn(canary_status, create_results_args['message'])
 
   def testTurbiniaTaskValidateResultGoodResult(self):
