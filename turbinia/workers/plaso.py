@@ -39,8 +39,12 @@ class PlasoTask(TurbiniaTask):
       'hashers': 'all',
       'partitions': 'all',
       'vss_stores': 'none',
+      # artifact_filters and file_filter are mutually exclusive
+      # parameters and Plaso will error out if both parameters are used.
       'artifact_filters': None,
       'file_filter': None,
+      'custom_artifact_definitions': None,
+      'parsers': None,
       'yara_rules': None
   }
 
@@ -61,7 +65,8 @@ class PlasoTask(TurbiniaTask):
     for k, v in conf.items():
       cli_args = [
           'status_view', 'hashers', 'partitions', 'vss_stores',
-          'artifact_filters', 'file_filter', 'yara_rules'
+          'custom_artifact_definitions', 'parsers', 'artifact_filters',
+          'file_filter', 'yara_rules'
       ]
       if (k not in cli_args or not v):
         continue

@@ -817,6 +817,14 @@ class FilteredTextFile(TextFile):
   pass
 
 
+class BodyFile(Evidence):
+  """Bodyfile data."""
+
+  def __init__(self, *args, **kwargs):
+    self.number_of_entries = None
+    super(BodyFile, self).__init__(copyable=True, *args, **kwargs)
+
+
 class ExportedFileArtifact(Evidence):
   """Exported file artifact."""
 
