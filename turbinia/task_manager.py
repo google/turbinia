@@ -445,7 +445,7 @@ class BaseTaskManager:
               task_result.task_name, task_result.worker_name))
       task_result.successful = False
       task_result.status = (
-          task_result.status + ' (Sucess status forcefully set to False)')
+          task_result.status + ' (Success status forcefully set to False)')
 
     if not task_result.successful:
       log.error(
