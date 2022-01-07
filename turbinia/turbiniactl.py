@@ -161,6 +161,11 @@ def main():
       required=False)
   parser_rawdisk.add_argument(
       '-n', '--name', help='Descriptive name of the evidence', required=False)
+  parser_rawdisk.add_argument(
+      '-g', '--group_name', help='Name of grouping evidence', required=False)
+  parser_rawdisk.add_argument(
+      '-R', '--reason', help='Related ticket/incident ID for the evidence',
+      required=False)
 
   # Parser options for Google Cloud Disk Evidence type
   parser_googleclouddisk = subparsers.add_parser(
@@ -184,6 +189,11 @@ def main():
       required=False)
   parser_googleclouddisk.add_argument(
       '-n', '--name', help='Descriptive name of the evidence', required=False)
+  parser_googleclouddisk.add_argument(
+      '-g', '--group_name', help='Name of grouping evidence', required=False)
+  parser_googleclouddisk.add_argument(
+      '-R', '--reason', help='Related ticket/incident ID for the evidence',
+      required=False)
 
   # Parser options for Google Cloud Persistent Disk Embedded Raw Image
   parser_googleclouddiskembedded = subparsers.add_parser(
@@ -217,6 +227,11 @@ def main():
       required=False)
   parser_googleclouddiskembedded.add_argument(
       '-n', '--name', help='Descriptive name of the evidence', required=False)
+  parser_googleclouddiskembedded.add_argument(
+      '-g', '--group_name', help='Name of grouping evidence', required=False)
+  parser_googleclouddiskembedded.add_argument(
+      '-R', '--reason', help='Related ticket/incident ID for the evidence',
+      required=False)
 
   # RawMemory
   parser_rawmemory = subparsers.add_parser(
@@ -230,6 +245,11 @@ def main():
   parser_rawmemory.add_argument(
       '-m', '--module_list', type=csv_list,
       help='Volatility module(s) to execute', required=True)
+  parser_rawmemory.add_argument(
+      '-g', '--group_name', help='Name of grouping evidence', required=False)
+  parser_rawmemory.add_argument(
+      '-R', '--reason', help='Related ticket/incident ID for the evidence',
+      required=False)
 
   # Parser options for Directory evidence type
   parser_directory = subparsers.add_parser(
@@ -241,6 +261,11 @@ def main():
       required=False)
   parser_directory.add_argument(
       '-n', '--name', help='Descriptive name of the evidence', required=False)
+  parser_directory.add_argument(
+      '-g', '--group_name', help='Name of grouping evidence', required=False)
+  parser_directory.add_argument(
+      '-R', '--reason', help='Related ticket/incident ID for the evidence',
+      required=False)
 
   # Parser options for CompressedDirectory evidence type
   parser_directory = subparsers.add_parser(
@@ -252,6 +277,11 @@ def main():
       required=False)
   parser_directory.add_argument(
       '-n', '--name', help='Descriptive name of the evidence', required=False)
+  parser_directory.add_argument(
+      '-g', '--group_name', help='Name of grouping evidence', required=False)
+  parser_directory.add_argument(
+      '-R', '--reason', help='Related ticket/incident ID for the evidence',
+      required=False)
 
   # Parser options for ChromiumProfile evidence type
   parser_hindsight = subparsers.add_parser(
@@ -266,6 +296,11 @@ def main():
       'to (supported types are Chrome, Brave)', default='Chrome')
   parser_hindsight.add_argument(
       '-n', '--name', help='Descriptive name of the evidence', required=False)
+  parser_hindsight.add_argument(
+      '-g', '--group_name', help='Name of grouping evidence', required=False)
+  parser_hindsight.add_argument(
+      '-R', '--reason', help='Related ticket/incident ID for the evidence',
+      required=False)
 
   # List Jobs
   subparsers.add_parser(
@@ -784,8 +819,10 @@ def main():
     server.add_evidence(evidence_)
     server.start()
   elif evidence_:
+    print(sys.argv)
     request = TurbiniaRequest(
-        request_id=request_id, requester=getpass.getuser())
+        request_id=request_id, requester=getpass.getuser(),
+        group_name=args.group_name, reason=args.reason, all_args=sys.argv)
     request.evidence.append(evidence_)
 
     if args.decryption_keys:
@@ -832,6 +869,9 @@ def main():
       recipe_dict['globals']['jobs_denylist'] = args.jobs_denylist
       recipe_dict['globals']['jobs_allowlist'] = args.jobs_allowlist
       recipe_dict['globals']['yara_rules'] = yara_rules
+      recipe_dict['globals']['group_name'] = args.group_name
+      recipe_dict['globals']['reason'] = args.reason
+      recipe_dict['globals']['all_args'] = sys.argv
 
     request.recipe = recipe_dict
 

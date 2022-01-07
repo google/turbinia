@@ -369,6 +369,9 @@ class BaseTaskManager:
     evidence_.config = job.evidence.config
     task.base_output_dir = config.OUTPUT_DIR
     task.requester = evidence_.config.get('globals', {}).get('requester')
+    task.group_name = evidence_.config.get('globals', {}).get('group_name')
+    task.reason = evidence_.config.get('globals', {}).get('reason')
+    task.all_args = evidence_.config.get('globals', {}).get('all_args')
     if job:
       task.job_id = job.id
       task.job_name = job.name
@@ -623,6 +626,9 @@ class CeleryTaskManager(BaseTaskManager):
         else:
           evidence_.config = request.recipe
           evidence_.config['globals']['requester'] = request.requester
+          evidence_.config['globals']['group_name'] = request.group_name
+          evidence_.config['globals']['reason'] = request.reason
+          evidence_.config['globals']['all_args'] = request.all_args
           evidence_list.append(evidence_)
       turbinia_server_request_total.inc()
 

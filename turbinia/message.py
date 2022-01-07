@@ -40,17 +40,23 @@ class TurbiniaRequest:
     recipe(dict): Recipe to use when processing this request.
     context(dict): A Dict of context data to be passed around with this request.
     evidence(list): A list of Evidence objects.
+    group_name (str): 
+    reason (str): 
+    all_args (list): A list of terminal arguments for evidence
   """
 
   def __init__(
       self, request_id=None, requester=None, recipe=None, context=None,
-      evidence_=None):
+      evidence_=None, group_name=None, reason=None, all_args=None):
     """Initialization for TurbiniaRequest."""
     self.request_id = request_id if request_id else uuid.uuid4().hex
     self.requester = requester if requester else 'user_unspecified'
     self.recipe = recipe if recipe else {'globals': {}}
     self.context = context if context else {}
     self.evidence = evidence_ if evidence_ else []
+    self.group_name = group_name if group_name else ''
+    self.reason = reason if reason else ''
+    self.all_args = all_args if all_args else []
     self.type = self.__class__.__name__
 
   def to_json(self):
