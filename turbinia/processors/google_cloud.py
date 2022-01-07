@@ -25,12 +25,17 @@ import time
 from six.moves import urllib
 
 from libcloudforensics.providers.gcp.internal import project as gcp_project
+from prometheus_client import Gauge
 from turbinia import config
 from turbinia import TurbiniaException
 
 log = logging.getLogger('turbinia')
 
 RETRY_MAX = 10
+
+turbinia_nonexisting_disk_path = Gauge(
+    'turbinia_nonexisting_disk_path',
+    'Total number of non existing disk paths after attempts to attach')
 
 
 def IsBlockDevice(path):
@@ -116,6 +121,7 @@ def PreprocessAttachDisk(disk_name):
 
   message = None
   if not os.path.exists(path):
+    turbinia_nonexisting_disk_path.inc()
     message = 'Device path {0:s} does not exist'.format(path)
   elif not IsBlockDevice(path):
     message = 'Device path {0:s} is not a block device'.format(path)
