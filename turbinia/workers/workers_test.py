@@ -206,6 +206,7 @@ class TestTurbiniaTask(TestTurbiniaTaskBase):
     new_result = self.task.run_wrapper(self.evidence.__dict__)
     new_result = TurbiniaTaskResult.deserialize(new_result)
     self.assertEqual(type(new_result), TurbiniaTaskResult)
+    self.assertFalse(new_result.successful)
     self.assertIn(canary_status, new_result.status)
 
   def testTurbiniaTaskValidateResultGoodResult(self):
