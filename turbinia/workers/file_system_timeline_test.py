@@ -40,17 +40,6 @@ class FileSystemTimelineTest(TestTurbiniaTaskBase):
     self.setResults(mock_run=False)
     self.task.output_dir = self.task.base_output_dir
 
-  def tearDown(self):
-    """Override tearDown method to deal with empty bodyfile."""
-    entries = glob.glob(self.task.output_dir + '/**', recursive=True)
-    for entry in entries:
-      if os.path.isfile(entry):
-        os.remove(entry)
-
-    for entry in entries:
-      if os.path.isdir(entry):
-        os.rmdir(entry)
-
   @mock.patch('turbinia.state_manager.get_state_manager')
   @mock.patch('dfvfs.helpers.volume_scanner.VolumeScanner.GetBasePathSpecs')
   def testRun(self, mock_getbasepathspecs, _):
@@ -71,6 +60,10 @@ class FileSystemTimelineTest(TestTurbiniaTaskBase):
         parent=test_gpt_path_spec)
 
     mock_getbasepathspecs.return_value = [test_ext_path_spec]
+    self.task = file_system_timeline.FileSystemTimelineTask(
+        base_output_dir='/tmp/bodyfile')
+    self.task.output_dir = self.base_output_dir
+    self.remove_files.append(self.task.output_dir + '/file_system.bodyfile')
     result = self.task.run(self.evidence, self.result)
 
     # Check the task name.

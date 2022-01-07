@@ -25,6 +25,7 @@ from turbinia.evidence import BodyFile
 
 if TurbiniaTask.check_worker_role():
   try:
+    from dfvfs.lib import errors as dfvfs_errors
     from dfvfs.helpers import volume_scanner
     from dfimagetools import file_entry_lister
   except ImportError as exception:
@@ -35,6 +36,8 @@ if TurbiniaTask.check_worker_role():
 class FileSystemTimelineTask(TurbiniaTask):
 
   REQUIRED_STATES = [state.ATTACHED]
+
+  TASK_CONFIG = {'partitions': ['all']}
 
   def run(self, evidence, result):
     """Task to execute (dfimagetools) FileEntryLister.
@@ -53,7 +56,7 @@ class FileSystemTimelineTask(TurbiniaTask):
     # Set things up for the FileEntryLister client. We will scan all
     # partitions in the volume.
     volume_scanner_options = volume_scanner.VolumeScannerOptions()
-    volume_scanner_options.partitions = ['all']
+    volume_scanner_options.partitions = self.task_config.get('partitions')
 
     # Create the FileEntryLister client and generate the path specs
     # for all available partitions.
@@ -75,12 +78,13 @@ class FileSystemTimelineTask(TurbiniaTask):
             number_of_entries += 1
       output_evidence.number_of_entries = number_of_entries
       result.add_evidence(output_evidence, evidence.config)
-      status = 'Successfully generated file system timeline at [{0:s}]'.format(
-          bodyfile_output)
+      status = 'Generated file system timeline containing [{0:d}] entries'.format(
+          number_of_entries)
       result.close(self, success=True, status=status)
-    except TurbiniaException as exception:
-      result.log(exception)
-      status = 'Error generating bodyfile {0!s}'.format(exception)
+    except dfvfs_errors.ScannerError as e:
+      result.log('Error generating bodyfile {0!s}'.format(exception))
+      status = 'Unable to generate bodyfile using provided evidence data.'
       result.close(self, success=False, status=status)
+      raise TurbiniaException('Could not process partition: {0!s}'.format(e))
 
     return result
