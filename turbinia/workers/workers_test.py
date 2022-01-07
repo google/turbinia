@@ -193,7 +193,7 @@ class TestTurbiniaTask(TestTurbiniaTaskBase):
     self.assertEqual(type(new_result), TurbiniaTaskResult)
     self.assertIn('failed', new_result.status)
 
-  @mock.patch('turbinia.workers.TurbiniaTaskResult.create_result')
+  @mock.patch('turbinia.workers.TurbiniaTask.create_result')
   @mock.patch('turbinia.state_manager.get_state_manager')
   def testTurbiniaTaskRunWrapperSetupFail(self, _, mock_create_result):
     """Test that the run wrapper recovers from setup failing."""
