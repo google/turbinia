@@ -193,13 +193,17 @@ class TestTurbiniaTask(TestTurbiniaTaskBase):
     self.assertEqual(type(new_result), TurbiniaTaskResult)
     self.assertIn('failed', new_result.status)
 
+  @mock.patch('turbinia.workers.TurbiniaTaskResult.create_result')
   @mock.patch('turbinia.state_manager.get_state_manager')
-  def testTurbiniaTaskRunWrapperSetupFail(self, _):
+  def testTurbiniaTaskRunWrapperSetupFail(self, _, mock_create_result):
     """Test that the run wrapper recovers from setup failing."""
     self.task.result = None
     canary_status = 'exception_message'
     self.task.setup = mock.MagicMock(
         side_effect=TurbiniaException('exception_message'))
+
+    self.result.no_output_manager = True
+    mock_create_result.return_value = self.result
     self.remove_files.append(
         os.path.join(self.task.base_output_dir, 'worker-log.txt'))
 
