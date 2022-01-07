@@ -64,6 +64,9 @@ turbinia_jobs_completed_total = Gauge(
     'turbinia_jobs_completed_total', 'Total number jobs resolved')
 turbinia_server_request_total = Gauge(
     'turbinia_server_request_total', 'Total number of requests received.')
+turbinia_result_success_invalid = Gauge(
+    'turbinia_result_success_invalid',
+    'The result returned from the Task had an invalid success status of None')
 
 
 def get_task_manager():
@@ -443,6 +446,7 @@ class BaseTaskManager:
           'Usually this means that the Task returning the TurbiniaTaskResult '
           'did not call the close() method on it.'.format(
               task_result.task_name, task_result.worker_name))
+      turbinia_result_success_invalid.inc()
       task_result.successful = False
       if task_result.status:
         task_result.status = (
