@@ -298,7 +298,6 @@ class TurbiniaTaskResult:
     if status:
       task.result.status = 'Task {0!s} is {1!s} on {2!s}'.format(
           self.task_name, status, self.worker_name)
-
     if self.state_manager:
       self.state_manager.update_task(task)
     else:
@@ -420,7 +419,8 @@ class TurbiniaTask:
 
   # The list of attributes that we will persist into storage
   STORED_ATTRIBUTES = [
-      'id', 'job_id', 'last_update', 'name', 'request_id', 'requester'
+      'id', 'job_id', 'last_update', 'name', 'request_id', 'requester',
+      'group_id'
   ]
 
   # The list of evidence states that are required by a Task in order to run.
@@ -432,8 +432,16 @@ class TurbiniaTask:
   TASK_CONFIG = {}
 
   def __init__(
-      self, name=None, base_output_dir=None, request_id=None, requester=None):
-    """Initialization for TurbiniaTask."""
+      self, name=None, base_output_dir=None, request_id=None, requester=None,
+      group_id=None):
+    """Initialization for TurbiniaTask.
+    
+    Args:
+      base_output_dir(str): Output dir to store Turbinia results.
+      request_id(str): The request id
+      requester(str): Name of the requester
+      group_id(str): The group id
+    """
     if base_output_dir:
       self.base_output_dir = base_output_dir
     else:
@@ -457,6 +465,7 @@ class TurbiniaTask:
     self._evidence_config = {}
     self.recipe = {}
     self.task_config = {}
+    self.group_id = group_id
 
   def serialize(self):
     """Converts the TurbiniaTask object into a serializable dict.
@@ -565,7 +574,7 @@ class TurbiniaTask:
   def execute(
       self, cmd, result, save_files=None, log_files=None, new_evidence=None,
       close=False, shell=False, stderr_file=None, stdout_file=None,
-      success_codes=None, cwd=None, env=None):
+      success_codes=None, cwd=None, env=None, timeout=0):
     """Executes a given binary and saves output.
 
     Args:
@@ -583,6 +592,7 @@ class TurbiniaTask:
       stdout_file (str): Path to location to save stdout.
       cwd (str): Sets the current directory before the process is executed.
       env (list(str)): Process environment.
+      timeout (int): Override job timeout value.
 
     Returns:
       Tuple of the return code, and the TurbiniaTaskResult object
@@ -596,9 +606,13 @@ class TurbiniaTask:
     success_codes = success_codes if success_codes else [0]
     stdout = None
     stderr = None
+    fail_message = None
 
     # Get timeout value.
-    timeout_limit = job_manager.JobsManager.GetTimeoutValue(self.job_name)
+    if timeout:
+      timeout_limit = timeout
+    else:
+      timeout_limit = job_manager.JobsManager.GetTimeoutValue(self.job_name)
 
     # Execute the job via docker.
     docker_image = job_manager.JobsManager.GetDockerImage(self.job_name)
@@ -622,24 +636,24 @@ class TurbiniaTask:
           proc = subprocess.Popen(
               cmd, shell=True, stderr=subprocess.PIPE, stdout=subprocess.PIPE,
               cwd=cwd, env=env)
-          proc.wait(timeout_limit)
+          stdout, stderr = proc.communicate(timeout=timeout_limit)
         else:
           proc = subprocess.Popen(
               cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE, cwd=cwd,
               env=env)
-          proc.wait(timeout_limit)
+          stdout, stderr = proc.communicate(timeout=timeout_limit)
       except subprocess.TimeoutExpired as exception:
-        # Log error and close result.
-        message = (
+        proc.kill()
+        # Get any potential partial output so we can save it later.
+        stdout, stderr = proc.communicate()
+        fail_message = (
             'Execution of [{0!s}] failed due to job timeout of '
             '{1:d} seconds has been reached.'.format(cmd, timeout_limit))
-        result.log(message)
-        result.close(self, success=False, status=message)
-        # Increase timeout metric and raise exception
+        result.log(fail_message)
+        # Increase timeout metric. Not re-raising an exception so we can save
+        # any potential output.
         turbinia_worker_tasks_timeout_total.inc()
-        raise TurbiniaException(message)
 
-      stdout, stderr = proc.communicate()
       ret = proc.returncode
 
     result.error['stdout'] = str(stdout)
@@ -688,7 +702,9 @@ class TurbiniaTask:
       result.log('Output log file found at {0:s}'.format(file_))
       self.output_manager.save_local_file(file_, result)
 
-    if ret not in success_codes:
+    if fail_message:
+      result.close(self, success=False, status=fail_message)
+    elif ret not in success_codes:
       message = 'Execution of [{0!s}] failed with status {1:d}'.format(cmd, ret)
       result.log(message)
       if close:
@@ -895,7 +911,6 @@ class TurbiniaTask:
           recipe_data.update(task_recipe)
           recipe_data.pop('task')
           break
-
     recipe_data.update(recipe['globals'])
 
     return recipe_data

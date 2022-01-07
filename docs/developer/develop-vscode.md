@@ -104,20 +104,20 @@ _Note_: These commands need to be executed in the vscode terminal!
 Terminal 1 - Start server
 
 ```
-$ python3 turbinia/turbiniactl.py -S server
+$ python3 turbinia/turbiniactl.py server
 ```
 
 Terminal 2 - Start worker
 For a local setup
 
 ```
-$ python3 turbinia/turbiniactl.py -S celeryworker
+$ python3 turbinia/turbiniactl.py celeryworker
 ```
 
 For a GCP hybrid setup
 
 ```
-$ python3 turbinia/turbiniactl.py -S psqworker
+$ python3 turbinia/turbiniactl.py psqworker
 ```
 
 Terminal 3 - Fetch and process some evidence

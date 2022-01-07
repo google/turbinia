@@ -36,6 +36,7 @@ class TurbiniaRequest:
 
   Attributes:
     request_id(str): A client specified ID for this request.
+    group_id(str): A client specified group id for this request.
     requestor(str): The username of who made the request.
     recipe(dict): Recipe to use when processing this request.
     context(dict): A Dict of context data to be passed around with this request.
@@ -43,10 +44,11 @@ class TurbiniaRequest:
   """
 
   def __init__(
-      self, request_id=None, requester=None, recipe=None, context=None,
-      evidence_=None):
+      self, request_id=None, group_id=None, requester=None, recipe=None,
+      context=None, evidence_=None):
     """Initialization for TurbiniaRequest."""
     self.request_id = request_id if request_id else uuid.uuid4().hex
+    self.group_id = group_id if group_id else uuid.uuid4().hex
     self.requester = requester if requester else 'user_unspecified'
     self.recipe = recipe if recipe else {'globals': {}}
     self.context = context if context else {}
