@@ -1,4 +1,4 @@
-celery<5.0
+celery>=5.2.2
 cryptography>=2.0.2,<3.4
 docker
 filelock
@@ -22,6 +22,6 @@ pyyaml>=5.4.1
 redis
 six>=1.15.0
 urllib3[secure]
-vine==1.3.0
+vine>=5.0.0
 PyJWT[crypto]<2
 idna==2.10
