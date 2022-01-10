@@ -593,6 +593,11 @@ def process_args(args):
     elif not args.project and not config.TURBINIA_PROJECT:
       msg = 'Turbinia project must be set by --project or in config'
       raise TurbiniaException(msg)
+    # Since mount_partition and embedded_path are not in cloud disk namespace,
+    # Setting them to None here
+    if args.command == 'googleclouddisk':
+      args.mount_partition = None
+      args.embedded_path = None
     (
         args.name, args.source, args.project, args.zone, args.mount_partition,
         args.embedded_path) = check_args(
