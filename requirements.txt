@@ -1,6 +1,7 @@
 celery>=5.2.2
 cryptography>=2.0.2,<3.4
 docker
+dfimagetools
 filelock
 google-api-core<2.0.0dev
 google-api-python-client
