@@ -452,7 +452,7 @@ def process_args(args):
     sys.exit(1)
 
   if args.log_file:
-    config.LOG_FILE = args.log_file
+    config.LOG_DIR = args.log_file
   if args.output_dir:
     config.OUTPUT_DIR = args.output_dir
 
