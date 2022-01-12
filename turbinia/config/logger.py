@@ -19,6 +19,7 @@ import logging
 
 import warnings
 import logging.handlers
+from os import uname
 from turbinia import config
 from turbinia import TurbiniaException
 
@@ -61,8 +62,11 @@ def setup(need_file_handler=True, need_stream_handler=True):
           'Could not load config file ({0!s}).\n{1:s}'.format(
               exception, config.CONFIG_MSG))
       sys.exit(1)
+    
+    log_name = uname().nodename
+    config.LOG_DIR = '{0:s}/{1:s}.log'.format(config.LOG_DIR, log_name)
 
-    file_handler = logging.FileHandler(config.LOG_FILE)
+    file_handler = logging.FileHandler(config.LOG_DIR)
     formatter = logging.Formatter('%(asctime)s:%(levelname)s:%(message)s')
     file_handler.setFormatter(formatter)
     file_handler.setLevel(logging.DEBUG)

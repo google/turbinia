@@ -45,7 +45,7 @@ REQUIRED_VARS = [
     'INSTANCE_ID',
     'STATE_MANAGER',
     'TASK_MANAGER',
-    'LOG_FILE',
+    'LOG_DIR',
     'LOCK_FILE',
     'TMP_RESOURCE_DIR',
     'RESOURCE_FILE',
