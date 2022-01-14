@@ -451,10 +451,8 @@ def process_args(args):
             exception, config.CONFIG_MSG))
     sys.exit(1)
 
-  user_specified_log = False
   if args.log_file:
     config.LOG_DIR = args.log_file
-    user_specified_log = True
   if args.output_dir:
     config.OUTPUT_DIR = args.output_dir
 
@@ -464,8 +462,11 @@ def process_args(args):
   # Run logger setup again if we're running as a server or worker (or have a log
   # file explicitly set on the command line) to set a file-handler now that we
   # have the logfile path from the config.
-  if server_flags_set or worker_flags_set or args.log_file:
-    logger.setup(user_specified_log)
+  if server_flags_set or worker_flags_set:
+    if args.log_file:
+      logger.setup(user_specified_log=True)
+    else:
+      logger.setup()
   if args.quiet:
     log.setLevel(logging.ERROR)
   elif args.debug:
@@ -659,12 +660,12 @@ def process_args(args):
   elif args.command == 'psqworker':
     # Set up root logger level which is normally set by the psqworker command
     # which we are bypassing.
-    logger.setup(user_specified_log)
+    logger.setup()
     worker = TurbiniaPsqWorker(
         jobs_denylist=args.jobs_denylist, jobs_allowlist=args.jobs_allowlist)
     worker.start()
   elif args.command == 'celeryworker':
-    logger.setup(user_specified_log)
+    logger.setup()
     worker = TurbiniaCeleryWorker(
         jobs_denylist=args.jobs_denylist, jobs_allowlist=args.jobs_allowlist)
     worker.start()
