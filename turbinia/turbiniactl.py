@@ -462,7 +462,7 @@ def process_args(args):
   # Run logger setup again if we're running as a server or worker (or have a log
   # file explicitly set on the command line) to set a file-handler now that we
   # have the logfile path from the config.
-  if server_flags_set or worker_flags_set:
+  if server_flags_set or worker_flags_set or args.log_file:
     if args.log_file:
       logger.setup(user_specified_log=True)
     else:
