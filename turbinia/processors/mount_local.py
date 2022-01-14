@@ -21,13 +21,17 @@ import os
 import subprocess
 import tempfile
 import time
-
+from prometheus_client import Gauge
 from turbinia import config
 from turbinia import TurbiniaException
 
 log = logging.getLogger('turbinia')
 
 RETRY_MAX = 10
+
+turbinia_failed_loop_device_detach = Gauge(
+    'turbinia_failed_loop_device_detach',
+    'Total number of loop devices failed to detach')
 
 
 def GetDiskSize(source_path):
@@ -404,6 +408,7 @@ def PostprocessDeleteLosetup(device_path, lv_uuid=None):
     try:
       subprocess.check_call(losetup_cmd)
     except subprocess.CalledProcessError as e:
+      turbinia_failed_loop_device_detach.inc()
       raise TurbiniaException('Could not delete losetup device {0!s}'.format(e))
 
     # Check that the device was actually removed
@@ -415,6 +420,7 @@ def PostprocessDeleteLosetup(device_path, lv_uuid=None):
       raise TurbiniaException(
           'Could not check losetup device status {0!s}'.format(e))
     if output.find(device_path.encode('utf-8')) != -1:
+      turbinia_failed_loop_device_detach.inc()
       raise TurbiniaException(
           'Could not delete losetup device {0!s}'.format(device_path))
     log.info('losetup device [{0!s}] deleted.'.format(device_path))

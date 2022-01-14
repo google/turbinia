@@ -147,6 +147,11 @@ DEPENDENCIES = [{
     'docker_image': None,
     'timeout': 1200
 }, {
+    'job': 'FileSystemTimelineJob',
+    'programs': ['list_file_entries.py'],
+    'docker_image': None,
+    'timeout': 1800
+}, {
     'job': 'FsstatJob',
     'programs': ['fsstat'],
     'docker_image': None,

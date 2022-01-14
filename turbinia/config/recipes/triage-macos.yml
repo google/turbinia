@@ -1,0 +1,51 @@
+# Triage recipe for quick initial response (specific to macOS).
+
+globals:
+  jobs_allowlist:
+    - FileSystemTimelineJob
+    - PlasoJob
+    - PsortJob
+
+plaso_base:
+  task: 'PlasoTask'
+
+  artifact_filters: [
+      'AllUsersShellHistory',
+      'ApacheAccessLogs',
+      'BrowserCache',
+      'BrowserHistory',
+      'ChromeStorage',
+      'MacOSAppleSystemLogFiles',
+      'MacOSAtJobs',
+      'MacOSAuditLogFiles',
+      'MacOSBashHistory',
+      'MacOSBluetoothPlistFile',
+      'MacOSCronTabs',
+      'MacOSFSEvents',
+      'MacOSGlobalPreferencesPlistFile',
+      'MacOSiOSBackupInfo',
+      'MacOSiOSBackupManifest',
+      'MacOSiOSBackupStatus',
+      'MacOSLastlogFile',
+      'MacOSLaunchAgentsPlistFiles',
+      'MacOSLaunchDaemonsPlistFiles',
+      'MacOSLoginWindowPlistFile',
+      'MacOSMailAccounts',
+      'MacOSMailOpenedAttachments',
+      'MacOSMailPreferences',
+      'MacOSRecentItems',
+      'MacOSRemoteDesktopAdministratorSystem',
+      'MacOSRemoteDesktopClientSystem',
+      'MacOSSidebarLists',
+      'MacOSStartupItemsPlistFiles',
+      'MacOSSystemConfigurationPreferencesPlistFile',
+      'MacOSSystemLogFiles',
+      'MacOSSystemPreferencesPlistFiles',
+      'MacOSSystemVersionPlistFile',
+      'MacOSTimeMachinePlistFile',
+      'MacOSUserLoginItems',
+      'MacOSUserPasswordHashesPlistFiles',
+      'MacOSUserSocialAccounts',
+      'MacOSUtmpFile',
+      'MacOSUtmpxFile',
+  ]

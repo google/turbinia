@@ -275,7 +275,7 @@ class TurbiniaCeleryWorker(TurbiniaWorkerBase):
     self._monitoring_setup()
     self._backend_setup()
     self.worker.task(task_utils.task_runner, name='task_runner')
-    argv = ['celery', 'worker', '--loglevel=info', '--pool=solo']
+    argv = ['worker', '--loglevel=info', '--pool=solo']
     self.worker.start(argv)
 
 

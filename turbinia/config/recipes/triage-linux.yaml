@@ -1,0 +1,30 @@
+# Triage recipe for quick initial response (specific to Linux).
+
+globals:
+  jobs_allowlist:
+    - CronExtractionJob
+    - CronAnalysisJob
+    - PlasoJob
+    - PsortJob
+    - FileSystemTimelineJob
+
+plaso_base:
+  task: 'PlasoTask'
+
+  artifact_filters: [
+      'AllUsersShellHistory',
+      'ApacheAccessLogs',
+      'BrowserCache',
+      'BrowserHistory',
+      'ChromeStorage',
+      'LinuxAuditLogs',
+      'LinuxAuthLogs',
+      'LinuxCronLogs',
+      'LinuxKernelLogFiles',
+      'LinuxLastlogFile',
+      'LinuxMessagesLogFiles',
+      'LinuxScheduleFiles',
+      'LinuxSysLogFiles',
+      'LinuxUtmpFiles',
+      'LinuxWtmp',
+  ]

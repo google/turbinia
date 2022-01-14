@@ -37,6 +37,8 @@ RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 0x5e80511b
     && add-apt-repository -y ppa:gift/stable
 RUN apt-get -y install \
     bulk-extractor \
+    python3-dfimagetools \
+    dfimagetools-tools \
     docker-explorer-tools \
     libbde-tools \
     libewf \

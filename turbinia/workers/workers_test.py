@@ -193,20 +193,28 @@ class TestTurbiniaTask(TestTurbiniaTaskBase):
     self.assertEqual(type(new_result), TurbiniaTaskResult)
     self.assertIn('failed', new_result.status)
 
+  @mock.patch('turbinia.workers.TurbiniaTask.create_result')
   @mock.patch('turbinia.state_manager.get_state_manager')
-  def testTurbiniaTaskRunWrapperSetupFail(self, _):
+  def testTurbiniaTaskRunWrapperSetupFail(self, _, mock_create_result):
     """Test that the run wrapper recovers from setup failing."""
     self.task.result = None
     canary_status = 'exception_message'
     self.task.setup = mock.MagicMock(
         side_effect=TurbiniaException('exception_message'))
+
+    self.result.no_output_manager = True
+    mock_create_result.return_value = self.result
     self.remove_files.append(
         os.path.join(self.task.base_output_dir, 'worker-log.txt'))
 
     new_result = self.task.run_wrapper(self.evidence.__dict__)
     new_result = TurbiniaTaskResult.deserialize(new_result)
     self.assertEqual(type(new_result), TurbiniaTaskResult)
-    self.assertIn(canary_status, new_result.status)
+    # Checking specifically for `False` value and not whether this evaluates to
+    # `False` because we don't want the `None` case to pass.
+    self.assertEqual(new_result.successful, False)
+    create_results_args = mock_create_result.call_args.kwargs
+    self.assertIn(canary_status, create_results_args['message'])
 
   def testTurbiniaTaskValidateResultGoodResult(self):
     """Tests validate_result with good result."""
