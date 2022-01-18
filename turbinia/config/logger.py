@@ -19,9 +19,12 @@ import logging
 
 import warnings
 import logging.handlers
-from os import uname
+from os import uname, environ
 from turbinia import config
 from turbinia import TurbiniaException
+
+# Environment variable to look for node name in
+ENVNODENAME = 'NODE_NAME'
 
 
 def setup(
@@ -66,9 +69,11 @@ def setup(
 
     # Check if user specified log name and update to default if not
     if not user_specified_log:
-      config.LOG_DIR = '{0:s}/{1:s}.log'.format(
-          config.LOG_DIR,
-          uname().nodename)
+      log_name = uname().nodename
+      # Check if NODE_NAME available for GKE setups
+      if ENVNODENAME in environ:
+        log_name = log_name + '.{0!s}'.format(environ[ENVNODENAME])
+      config.LOG_DIR = '{0:s}/{1:s}.log'.format(config.LOG_DIR, log_name)
 
     file_handler = logging.FileHandler(config.LOG_DIR)
     formatter = logging.Formatter('%(asctime)s:%(levelname)s:%(message)s')
