@@ -19,11 +19,16 @@ import logging
 
 import warnings
 import logging.handlers
+import os
+
 from turbinia import config
 from turbinia import TurbiniaException
 
+# Environment variable to look for node name in
+ENVNODENAME = 'NODE_NAME'
 
-def setup(need_file_handler=True, need_stream_handler=True):
+
+def setup(need_file_handler=True, need_stream_handler=True, log_file_path=None):
   """Set up logging parameters.
 
   This will also set the root logger, which is the default logger when a named
@@ -62,7 +67,15 @@ def setup(need_file_handler=True, need_stream_handler=True):
               exception, config.CONFIG_MSG))
       sys.exit(1)
 
-    file_handler = logging.FileHandler(config.LOG_FILE)
+    # Check if a user specified log path was provided else create default path
+    if not log_file_path:
+      log_name = os.uname().nodename
+      # Check if NODE_NAME available for GKE setups
+      if ENVNODENAME in os.environ:
+        log_name = log_name + '.{0!s}'.format(os.environ[ENVNODENAME])
+      log_file_path = os.path.join(config.LOG_DIR, log_name) + '.log'
+
+    file_handler = logging.FileHandler(log_file_path)
     formatter = logging.Formatter('%(asctime)s:%(levelname)s:%(message)s')
     file_handler.setFormatter(formatter)
     file_handler.setLevel(logging.DEBUG)

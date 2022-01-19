@@ -452,7 +452,7 @@ def process_args(args):
     sys.exit(1)
 
   if args.log_file:
-    config.LOG_FILE = args.log_file
+    user_specified_log = args.log_file
   if args.output_dir:
     config.OUTPUT_DIR = args.output_dir
 
@@ -463,7 +463,10 @@ def process_args(args):
   # file explicitly set on the command line) to set a file-handler now that we
   # have the logfile path from the config.
   if server_flags_set or worker_flags_set or args.log_file:
-    logger.setup()
+    if args.log_file:
+      logger.setup(log_file_path=user_specified_log)
+    else:
+      logger.setup()
   if args.quiet:
     log.setLevel(logging.ERROR)
   elif args.debug:
