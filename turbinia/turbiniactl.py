@@ -452,7 +452,7 @@ def process_args(args):
     sys.exit(1)
 
   if args.log_file:
-    config.LOG_DIR = args.log_file
+    user_specified_log = args.log_file
   if args.output_dir:
     config.OUTPUT_DIR = args.output_dir
 
@@ -464,7 +464,7 @@ def process_args(args):
   # have the logfile path from the config.
   if server_flags_set or worker_flags_set or args.log_file:
     if args.log_file:
-      logger.setup(user_specified_log=True)
+      logger.setup(log_file_path=user_specified_log)
     else:
       logger.setup()
   if args.quiet:
