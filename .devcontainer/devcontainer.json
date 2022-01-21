@@ -10,6 +10,7 @@
 	// start redis-server after subsequent start of the devcontainer
 	"postStartCommand": "/etc/init.d/redis-server start",
 	// Set *default* container specific settings.json values on container create.
+	"mounts": ["source=/dev,target=/dev,type=bind"],
 	"settings": {
 		"terminal.integrated.shell.linux": "/bin/bash",
 		"terminal.integrated.env.linux": {

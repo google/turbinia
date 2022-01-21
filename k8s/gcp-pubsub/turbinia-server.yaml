@@ -35,6 +35,10 @@ spec:
                   key: TURBINIA_CONF
             - name: TURBINIA_EXTRA_ARGS
               value: "-d"
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
           volumeMounts:
             - mountPath: /mnt/output
               name: output

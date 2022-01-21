@@ -60,6 +60,10 @@ do
   gsutil cp $line $LOGS/$OUTFILE
 done
 
+# Retrieve all worker and server logs from Stackdriver and store in LOGS folder
+$TURBINIA_CLI gcplogs -w -o $LOGS
+$TURBINIA_CLI gcplogs -s -o $LOGS
+
 # tgz the log files for debugging purposes
 tar -vzcf $OUT_TGZ $LOGS/*
 
