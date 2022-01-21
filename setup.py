@@ -20,6 +20,8 @@
 
 from __future__ import unicode_literals
 
+import glob
+import os
 import sys
 
 from setuptools import find_packages
@@ -72,5 +74,9 @@ setup(
         ]
     },
     use_scm_version=True,
-    setup_requires=['setuptools_scm']
+    setup_requires=['setuptools_scm'],
+    data_files=[
+        ('share/turbinia', glob.glob(
+            os.path.join('turbinia', 'recipes', '*.yaml'))),
+    ],
 )
