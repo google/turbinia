@@ -1,0 +1,34 @@
+# Turbinia parameters for Google Cloud Kubernetes deployment. Please review
+# the default configuration and update where necessary based on requirements.
+
+# A unique ID per Turbinia instance. Used for keeping multiple Turbinia instances
+# seperate and to name newly created GCP resources such as the cluster name.
+INSTANCE_ID='turbinia-main3'
+
+# The Turbinia config name
+TURBINIA_CONFIG=".turbiniarc"
+
+# The region and zone where Turbinia will run.  Note that Turbinia does
+# not currently support multi-zone operation.
+ZONE="us-central1-f"
+REGION="us-central1"
+
+# VPC network to configure the cluster in.
+VPC_NETWORK="default"
+
+# Control plane IP range for the control pane VPC. Due to the Turbinia
+# cluster being private, this is required for the control pane and cluster
+# to communicate privately.
+VPC_CONTROL_PANE="172.15.0.0/28" # Set to default
+
+# The cluster name, number of nodes, machine type and disk size of the
+# deployed cluster and nodes within it.
+CLUSTER_NAME=$INSTANCE_ID
+CLUSTER_NODE_SIZE='1'
+CLUSTER_MACHINE_TYPE='e2-standard-32'
+CLUSTER_MACHINE_SIZE='1000'
+
+# The Filestore share name, and size. Filestore will be used to retain shared output
+# from Turbinia, such as logs. Please specify size in terabytes.
+FILESTORE_NAME='output'
+FILESTORE_CAPACITY='1T'
