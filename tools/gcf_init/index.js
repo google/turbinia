@@ -16,7 +16,7 @@
 'use strict';
 
 // Global
-const { Datastore } = require('@google-cloud/datastore');
+const {Datastore} = require('@google-cloud/datastore');
 // Instantiates a client
 const datastore = new Datastore();
 const turbiniaKind = 'TurbiniaTask';
@@ -37,8 +37,8 @@ const turbiniaKind = 'TurbiniaTask';
  * @param {string} req.body.start_time A date string in ISO 8601 format of the
  *    beginning of the time window to query for
  * @param {string} req.body.task_id Id of task to retrieve
- * @param {string} req.body.group_id of tasks to retrieve
  * @param {string} req.body.request_id of tasks to retrieve
+ * @param {string} req.body.group_id of tasks to retrieve
  * @param {string} req.body.user of tasks to retrieve
  * @param {object} res Cloud Function response context.
  */
@@ -51,8 +51,8 @@ exports.gettasks = function gettasks(req, res) {
   }
 
   var query = datastore.createQuery(req.body.kind)
-    .filter('instance', '=', req.body.instance)
-    .order('last_update', { descending: true });
+                  .filter('instance', '=', req.body.instance)
+                  .order('last_update', {descending: true});
   var start_time;
 
   // Note: If you change any of these filter properties, you must also
@@ -62,13 +62,13 @@ exports.gettasks = function gettasks(req, res) {
     console.log('Getting Turbinia Tasks by Task Id: ' + req.body.task_id);
     query = query.filter('id', '=', req.body.task_id)
   }
-  if (req.body.group_id) {
-    console.log('Getting Turbinia Tasks by Group ID: ' + req.body.group_id);
-    query = query.filter('group_id', '=', req.body.group_id);
-  }
   if (req.body.request_id) {
     console.log('Getting Turbinia Tasks by Request Id: ' + req.body.request_id);
     query = query.filter('request_id', '=', req.body.request_id)
+  }
+  if (req.body.group_id) {
+    console.log('Getting Turbinia Tasks by Group ID: ' + req.body.group_id);
+    query = query.filter('group_id', '=', req.body.group_id);
   }
   if (req.body.user) {
     console.log('Getting Turbinia Tasks by user: ' + req.body.user);
@@ -84,7 +84,7 @@ exports.gettasks = function gettasks(req, res) {
     query = query.filter('last_update', '>=', start_time)
   }
   if (!req.body.task_id && !req.body.request_id && !req.body.user &&
-    !req.body.start_time) {
+      !req.body.start_time && !req.body.group_id) {
     console.log('Getting open Turbinia Tasks.');
     query = query.filter('successful', '=', null)
   }
@@ -92,19 +92,19 @@ exports.gettasks = function gettasks(req, res) {
   console.log(query);
 
   return datastore.runQuery(query)
-    .then((results) => {
-      // Task entities found.
-      const tasks = results[0];
+      .then((results) => {
+        // Task entities found.
+        const tasks = results[0];
 
-      console.log('Turbinia Tasks:');
-      tasks.forEach((task) => console.log(task));
-      res.status(200).send(results);
-    })
-    .catch((err) => {
-      console.error('Error in runQuery' + err);
-      res.status(500).send(err);
-      return Promise.reject(err);
-    });
+        console.log('Turbinia Tasks:');
+        tasks.forEach((task) => console.log(task));
+        res.status(200).send(results);
+      })
+      .catch((err) => {
+        console.error('Error in runQuery' + err);
+        res.status(500).send(err);
+        return Promise.reject(err);
+      });
 };
 
 /**
@@ -138,13 +138,13 @@ exports.closetasks = function closetasks(req, res) {
   }
   if (!req.body.request_id && !req.body.task_id && !req.body.user) {
     throw new Error(
-      'None of Request ID, Task ID, or user provided in request.');
+        'None of Request ID, Task ID, or user provided in request.');
   }
 
   var query = datastore.createQuery(req.body.kind)
-    .filter('instance', '=', req.body.instance)
-    .filter('successful', '=', null)
-    .order('last_update', { descending: true });
+                  .filter('instance', '=', req.body.instance)
+                  .filter('successful', '=', null)
+                  .order('last_update', {descending: true});
   if (req.body.request_id) {
     console.log('Adding filter - Request Id: ' + req.body.request_id);
     query = query.filter('request_id', '=', req.body.request_id)
@@ -152,7 +152,7 @@ exports.closetasks = function closetasks(req, res) {
   if (req.body.task_id) {
     console.log('Adding filter - Task Id: ' + req.body.task_id);
     query = query.filter(
-      '__key__', '=', datastore.key([turbiniaKind, req.body.task_id]))
+        '__key__', '=', datastore.key([turbiniaKind, req.body.task_id]))
   }
   if (req.body.user) {
     console.log('Adding filter - requester: ' + req.body.user);
@@ -162,29 +162,29 @@ exports.closetasks = function closetasks(req, res) {
   console.log(query);
 
   return datastore.runQuery(query)
-    .then((results) => {
-      // Task entities found.
-      const tasks = results[0];
-      var uncompleted_tasks = [];
-      tasks.forEach((task) => {
-        console.log(task);
-        uncompleted_tasks.push(
-          { 'request_id': task.request_id, 'id': task.id });
+      .then((results) => {
+        // Task entities found.
+        const tasks = results[0];
+        var uncompleted_tasks = [];
+        tasks.forEach((task) => {
+          console.log(task);
+          uncompleted_tasks.push(
+              {'request_id': task.request_id, 'id': task.id});
+        });
+        return uncompleted_tasks;
+      })
+      .then((uncompleted_tasks) => {
+        uncompleted_tasks.forEach((task) => {
+          module.exports.closetask(task.id, req.body.requester);
+        });
+        return uncompleted_tasks;
+      })
+      .then((uncompleted_tasks) => { res.status(200).send(uncompleted_tasks); })
+      .catch((err) => {
+        console.error('Error in runQuery' + err);
+        res.status(500).send(err);
+        return Promise.reject(err);
       });
-      return uncompleted_tasks;
-    })
-    .then((uncompleted_tasks) => {
-      uncompleted_tasks.forEach((task) => {
-        module.exports.closetask(task.id, req.body.requester);
-      });
-      return uncompleted_tasks;
-    })
-    .then((uncompleted_tasks) => { res.status(200).send(uncompleted_tasks); })
-    .catch((err) => {
-      console.error('Error in runQuery' + err);
-      res.status(500).send(err);
-      return Promise.reject(err);
-    });
 };
 
 exports.closetask = function closetask(id, requester) {
@@ -198,32 +198,32 @@ exports.closetask = function closetask(id, requester) {
   const taskKey = datastore.key([turbiniaKind, id]);
   console.log('Preparing transaction.');
   transaction.run()
-    .then(() => transaction.get(taskKey))
-    .then(results => {
-      const taskEntity = results[0];
-      taskEntity.successful = false;
-      taskEntity.status = 'Task forcefully closed by ' + requester + '.';
-      var updatedEntity = {
-        key: taskKey,
-        data: taskEntity,
-      };
-      transaction.save(updatedEntity);
+      .then(() => transaction.get(taskKey))
+      .then(results => {
+        const taskEntity = results[0];
+        taskEntity.successful = false;
+        taskEntity.status = 'Task forcefully closed by ' + requester + '.';
+        var updatedEntity = {
+          key: taskKey,
+          data: taskEntity,
+        };
+        transaction.save(updatedEntity);
 
-      console.log('Committing transaction: %o', updatedEntity);
-      transaction.commit()
-        .then(() => {
-          console.log('Entity successfully saved.');
-          return updatedEntity;
-        })
-        .catch(err => {
-          console.error('Rolling back - Error in transaction (Failure)');
-          console.error(err);
-          transaction.rollback();
-        });
-    })
-    .catch((err) => {
-      console.error('Rolling back - Error in transaction (Other Reasons)');
-      console.error(err);
-      transaction.rollback();
-    });
+        console.log('Committing transaction: %o', updatedEntity);
+        transaction.commit()
+            .then(() => {
+              console.log('Entity successfully saved.');
+              return updatedEntity;
+            })
+            .catch(err => {
+              console.error('Rolling back - Error in transaction (Failure)');
+              console.error(err);
+              transaction.rollback();
+            });
+      })
+      .catch((err) => {
+        console.error('Rolling back - Error in transaction (Other Reasons)');
+        console.error(err);
+        transaction.rollback();
+      });
 };

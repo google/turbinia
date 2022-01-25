@@ -382,14 +382,16 @@ def process_args(args):
   parser_status.add_argument(
       '-t', '--task_id', help='Show task for given Task ID', required=False)
   parser_status.add_argument(
-      '-g', '--group_id', help='Show Requests for given group ID',
-      required=False)
-  parser_status.add_argument(
       '-u', '--user', help='Show task for given user', required=False)
   parser_status.add_argument(
       '-i', '--requests', required=False, action='store_true',
       help='Show all requests from a specified timeframe. The default '
       'timeframe is 7 days. Please use the -d flag to extend this.')
+  parser_status.add_argument(
+      '-g', '--group_id', help='Show Requests for given group ID. This command'
+      ' only shows the related requests and overview of their task status. Run '
+      '--full_report for the full list of requests and their tasks.',
+      required=False)
   parser_status.add_argument(
       '-w', '--workers', required=False, action='store_true',
       help='Show Worker status information from a specified timeframe. The '
@@ -455,7 +457,7 @@ def process_args(args):
     sys.exit(1)
 
   if args.log_file:
-    config.LOG_FILE = args.log_file
+    user_specified_log = args.log_file
   if args.output_dir:
     config.OUTPUT_DIR = args.output_dir
 
@@ -466,7 +468,10 @@ def process_args(args):
   # file explicitly set on the command line) to set a file-handler now that we
   # have the logfile path from the config.
   if server_flags_set or worker_flags_set or args.log_file:
-    logger.setup()
+    if args.log_file:
+      logger.setup(log_file_path=user_specified_log)
+    else:
+      logger.setup()
   if args.quiet:
     log.setLevel(logging.ERROR)
   elif args.debug:
@@ -615,8 +620,9 @@ def process_args(args):
       zone = args.zone[i]
       name = args.name[i]
       source = args.source[i]
-      embedded_path = args.embedded_path[i]
-      mount_partition = args.mount_partition[i]
+      if args.command == 'googleclouddiskembedded':
+        embedded_path = args.embedded_path[i]
+        mount_partition = args.mount_partition[i]
       if ((project and project != config.TURBINIA_PROJECT) or
           (zone and zone != config.TURBINIA_ZONE)):
         new_disk = gcp_forensics.CreateDiskCopy(
@@ -961,7 +967,8 @@ def process_evidence(
             'with .yaml extension'.format(recipe_file))
         recipe_file = recipe_file + '.yaml'
       if not os.path.exists(recipe_file):
-        msg = 'Recipe file {0:s} could not be found. Exiting.'
+        msg = 'Recipe file {0:s} could not be found. Exiting.'.format(
+            recipe_file)
         raise TurbiniaException(msg)
 
       recipe_dict = recipe_helpers.load_recipe_from_file(
