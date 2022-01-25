@@ -382,6 +382,9 @@ def process_args(args):
   parser_status.add_argument(
       '-t', '--task_id', help='Show task for given Task ID', required=False)
   parser_status.add_argument(
+      '-g', '--group_id', help='Show Requests for given group ID',
+      required=False)
+  parser_status.add_argument(
       '-u', '--user', help='Show task for given user', required=False)
   parser_status.add_argument(
       '-i', '--requests', required=False, action='store_true',
@@ -452,7 +455,7 @@ def process_args(args):
     sys.exit(1)
 
   if args.log_file:
-    user_specified_log = args.log_file
+    config.LOG_FILE = args.log_file
   if args.output_dir:
     config.OUTPUT_DIR = args.output_dir
 
@@ -463,10 +466,7 @@ def process_args(args):
   # file explicitly set on the command line) to set a file-handler now that we
   # have the logfile path from the config.
   if server_flags_set or worker_flags_set or args.log_file:
-    if args.log_file:
-      logger.setup(log_file_path=user_specified_log)
-    else:
-      logger.setup()
+    logger.setup()
   if args.quiet:
     log.setLevel(logging.ERROR)
   elif args.debug:
@@ -615,9 +615,8 @@ def process_args(args):
       zone = args.zone[i]
       name = args.name[i]
       source = args.source[i]
-      if args.command == 'googleclouddiskembedded':
-        embedded_path = args.embedded_path[i]
-        mount_partition = args.mount_partition[i]
+      embedded_path = args.embedded_path[i]
+      mount_partition = args.mount_partition[i]
       if ((project and project != config.TURBINIA_PROJECT) or
           (zone and zone != config.TURBINIA_ZONE)):
         new_disk = gcp_forensics.CreateDiskCopy(
@@ -675,7 +674,15 @@ def process_args(args):
     server.start()
   elif args.command == 'status':
     region = config.TURBINIA_REGION
+    if args.request_id and args.group_id:
+      msg = (
+          'Cannot run status command with request ID and group ID. Please '
+          'only specify one.')
+      raise TurbiniaException(msg)
     if args.close_tasks:
+      if args.group_id:
+        msg = 'The --close_task flag is not compatible with --group_id.'
+        raise TurbiniaException(msg)
       if args.user or args.request_id or args.task_id:
         print(
             client.close_tasks(
@@ -737,7 +744,7 @@ def process_args(args):
         client.format_task_status(
             instance=config.INSTANCE_ID, project=config.TURBINIA_PROJECT,
             region=region, days=args.days_history, task_id=args.task_id,
-            request_id=args.request_id, user=args.user,
+            request_id=args.request_id, group_id=args.group_id, user=args.user,
             all_fields=args.all_fields, full_report=args.full_report,
             priority_filter=args.priority_filter, output_json=output_json))
     sys.exit(0)

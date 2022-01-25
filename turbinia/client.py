@@ -243,7 +243,7 @@ class BaseTurbiniaClient:
 
   def get_task_data(
       self, instance, project, region, days=0, task_id=None, request_id=None,
-      user=None, function_name='gettasks', output_json=False):
+      group_id=None, user=None, function_name='gettasks', output_json=False):
     """Gets task data from Google Cloud Functions.
 
     Args:
@@ -253,6 +253,7 @@ class BaseTurbiniaClient:
       region (string): The name of the region to execute in.
       days (int): The number of days we want history for.
       task_id (string): The Id of the task.
+      group_id (string): The group Id of the requests.
       request_id (string): The Id of the request we want tasks for.
       user (string): The user of the request we want tasks for.
       function_name (string): The GCF function we want to call.
@@ -272,6 +273,8 @@ class BaseTurbiniaClient:
       func_args.update({'start_time': start_string})
     elif task_id:
       func_args.update({'task_id': task_id})
+    elif group_id:
+      func_args.update({'group_id': group_id})
     elif request_id:
       func_args.update({'request_id': request_id})
 
@@ -787,8 +790,8 @@ class BaseTurbiniaClient:
 
   def format_task_status(
       self, instance, project, region, days=0, task_id=None, request_id=None,
-      user=None, all_fields=False, full_report=False,
-      priority_filter=Priority.HIGH, output_json=False):
+      group_id=None, user=None, all_fields=False, full_report=False,
+      priority_filter=Priority.HIGH, output_json=False, report=[]):
     """Formats the recent history for Turbinia Tasks.
 
     Args:
@@ -799,6 +802,7 @@ class BaseTurbiniaClient:
       days (int): The number of days we want history for.
       task_id (string): The Id of the task.
       request_id (string): The Id of the request we want tasks for.
+      group_id (string): Group Id of the requests.
       user (string): The user of the request we want tasks for.
       all_fields (bool): Include all fields for the task, including task,
           request ids and saved file paths.
@@ -807,6 +811,7 @@ class BaseTurbiniaClient:
       priority_filter (int): Output only a summary for Tasks with a value
           greater than the priority_filter.
       output_json (bool): Whether to return JSON output.
+      report (string): Status report that will be returned.
 
     Returns:
       String of task status in JSON or human readable format.
@@ -814,7 +819,7 @@ class BaseTurbiniaClient:
     if user and days == 0:
       days = 1000
     task_results = self.get_task_data(
-        instance, project, region, days, task_id, request_id, user,
+        instance, project, region, days, task_id, request_id, group_id, user,
         output_json=output_json)
     if not task_results:
       return ''
@@ -836,20 +841,49 @@ class BaseTurbiniaClient:
       return '\n{0:s}'.format(msg)
 
     # Build up data
-    report = []
-    requester = task_results[0].get('requester')
-    request_id = task_results[0].get('request_id')
     success_types = ['Successful', 'Failed', 'Scheduled or Running']
     success_values = [True, False, None]
     # Reverse mapping values to types
     success_map = dict(zip(success_values, success_types))
+    # This is used for group ID status
+    requests = defaultdict(dict)
+
+    requester = task_results[0].get('requester')
+    request_id = task_results[0].get('request_id')
     task_map = defaultdict(list)
     success_types.insert(0, 'High Priority')
     for task in task_results:
+      if task.get('request_id') not in requests:
+        requests[task.get('request_id')] = {
+            'Successful': 0,
+            'Failed': 0,
+            'Scheduled or Running': 0
+        }
+      requests[task.get('request_id')][success_map[task.get('successful')]] += 1
       if task.get('report_priority') <= priority_filter:
         task_map['High Priority'].append(task)
       else:
         task_map[success_map[task.get('successful')]].append(task)
+
+    if group_id:
+      report.append('\n')
+      report.append(
+          fmt.heading1('Turbinia report for group ID {0:s}'.format(group_id)))
+      for request_id, success_counts in requests.items():
+        report.append(
+            'Request Id {0:s} with {1:d} successful, {2:d} failed, and {3:d} running tasks.'
+            .format(
+                request_id, success_counts['Successful'],
+                success_counts['Failed'],
+                success_counts['Scheduled or Running']))
+        if full_report:
+          self.format_task_status(
+              instance, project, region, days=0, task_id=None,
+              request_id=request_id, user=user, all_fields=all_fields,
+              full_report=full_report, priority_filter=priority_filter,
+              output_json=output_json, report=report)
+
+      return '\n'.join(report)
 
     # Generate report header
     report.append('\n')
@@ -934,8 +968,8 @@ class TurbiniaCeleryClient(BaseTurbiniaClient):
 
   # pylint: disable=arguments-differ
   def get_task_data(
-      self, instance, _, __, days=0, task_id=None, request_id=None, user=None,
-      function_name=None, output_json=False):
+      self, instance, _, __, days=0, task_id=None, request_id=None,
+      group_id=None, user=None, function_name=None, output_json=False):
     """Gets task data from Redis.
 
     We keep the same function signature, but ignore arguments passed for GCP.
@@ -946,9 +980,11 @@ class TurbiniaCeleryClient(BaseTurbiniaClient):
       days (int): The number of days we want history for.
       task_id (string): The Id of the task.
       request_id (string): The Id of the request we want tasks for.
+      group_id (string): Group Id of the requests.
       user (string): The user of the request we want tasks for.
 
     Returns:
       List of Task dict objects.
     """
-    return self.redis.get_task_data(instance, days, task_id, request_id, user)
+    return self.redis.get_task_data(
+        instance, days, task_id, request_id, group_id, user)
