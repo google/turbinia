@@ -3,10 +3,14 @@
 
 # A unique ID per Turbinia instance. Used for keeping multiple Turbinia instances
 # seperate and to name newly created GCP resources such as the cluster name.
-INSTANCE_ID='turbinia-main3'
+INSTANCE_ID='turbinia-main'
 
 # The Turbinia config name
 TURBINIA_CONFIG=".turbiniarc"
+
+# Folder to save configured Deployment files to. Please use an absolute path else
+# the directory will default to within the root of the Turbinia k8s folder.
+DEPLOYMENT_FOLDER="deployment/"
 
 # The region and zone where Turbinia will run.  Note that Turbinia does
 # not currently support multi-zone operation.

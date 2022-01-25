@@ -13,9 +13,9 @@ set -e
 
 # Source cluster config to pull specs to create cluster from. Please review
 # the config file and make any necessary changes prior to executing this script
-DIR="$( cd $( dirname "$( dirname "${BASH_SOURCE[0]}" )") >/dev/null 2>&1 && pwd )"
-cd $DIR
-source tools/.clusterconfig
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+source $DIR/.clusterconfig
+cd $DIR/..
 
 if [[ "$*" == *--help ]] ; then
   echo "Turbinia deployment script for Kubernetes environment"
@@ -124,10 +124,10 @@ fi
 echo "Deploying cluster to project $DEVSHELL_PROJECT_ID"
 
 # Setup appropriate directories and copy of deployment templates and Turbinia config
-echo "Copying over template deployment files to deployment/$CLUSTER_NAME"
-mkdir -p deployment/$CLUSTER_NAME/
-cp gcp-pubsub/* deployment/$CLUSTER_NAME/
-cp ../turbinia/config/turbinia_config_tmpl.py deployment/$CLUSTER_NAME/.turbiniarc
+echo "Copying over template deployment files to $DEPLOYMENT_FOLDER/$CLUSTER_NAME"
+mkdir -p $DEPLOYMENT_FOLDER/$CLUSTER_NAME/
+cp gcp-pubsub/* $DEPLOYMENT_FOLDER/$CLUSTER_NAME/
+cp ../turbinia/config/turbinia_config_tmpl.py $DEPLOYMENT_FOLDER/$CLUSTER_NAME/$TURBINIA_CONFIG
 
 # Deploy cloud functions
 if [[ "$*" != *--no-cloudfunctions* ]] ; then
