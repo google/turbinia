@@ -847,7 +847,6 @@ class BaseTurbiniaClient:
     success_map = dict(zip(success_values, success_types))
     # This is used for group ID status
     requests = defaultdict(dict)
-
     requester = task_results[0].get('requester')
     request_id = task_results[0].get('request_id')
     task_map = defaultdict(list)
@@ -877,15 +876,17 @@ class BaseTurbiniaClient:
                 success_counts['Failed'],
                 success_counts['Scheduled or Running']))
         if full_report:
-          self.format_task_status(
-              instance, project, region, days=0, task_id=None,
-              request_id=request_id, user=user, all_fields=all_fields,
-              full_report=full_report, priority_filter=priority_filter,
-              output_json=output_json, report=report)
+          report.append(
+              self.format_task_status(
+                  instance, project, region, days=0, task_id=None,
+                  request_id=request_id, user=user, all_fields=all_fields,
+                  full_report=full_report, priority_filter=priority_filter,
+                  output_json=output_json, report=report))
 
       return '\n'.join(report)
 
     # Generate report header
+    report = []
     report.append('\n')
     report.append(fmt.heading1('Turbinia report {0:s}'.format(request_id)))
     report.append(
