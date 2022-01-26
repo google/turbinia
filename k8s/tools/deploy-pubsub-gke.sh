@@ -124,10 +124,10 @@ fi
 echo "Deploying cluster to project $DEVSHELL_PROJECT_ID"
 
 # Setup appropriate directories and copy of deployment templates and Turbinia config
-echo "Copying over template deployment files to $DEPLOYMENT_FOLDER/$CLUSTER_NAME"
-mkdir -p $DEPLOYMENT_FOLDER/$CLUSTER_NAME/
-cp gcp-pubsub/* $DEPLOYMENT_FOLDER/$CLUSTER_NAME/
-cp ../turbinia/config/turbinia_config_tmpl.py $DEPLOYMENT_FOLDER/$CLUSTER_NAME/$TURBINIA_CONFIG
+echo "Copying over template deployment files to $DEPLOYMENT_FOLDER/$INSTANCE_ID"
+mkdir -p $DEPLOYMENT_FOLDER/$INSTANCE_ID/
+cp gcp-pubsub/* $DEPLOYMENT_FOLDER/$INSTANCE_ID/
+cp ../turbinia/config/turbinia_config_tmpl.py $DEPLOYMENT_FOLDER/$INSTANCE_ID/$TURBINIA_CONFIG
 
 # Deploy cloud functions
 if [[ "$*" != *--no-cloudfunctions* ]] ; then
@@ -169,7 +169,7 @@ cd $DEPLOYMENT_FOLDER
 
 # Update Turbinia config with project info
 echo "Updating $TURBINIA_CONFIG config with project info"
-sed -i -e "s/INSTANCE_ID = .*/INSTANCE_ID = '$CLUSTER_NAME'/g" $TURBINIA_CONFIG
+sed -i -e "s/INSTANCE_ID = .*/INSTANCE_ID = '$INSTANCE_ID'/g" $TURBINIA_CONFIG
 sed -i -e "s/TURBINIA_PROJECT = .*/TURBINIA_PROJECT = '$DEVSHELL_PROJECT_ID'/g" $TURBINIA_CONFIG
 sed -i -e "s/TURBINIA_ZONE = .*/TURBINIA_ZONE = '$ZONE'/g" $TURBINIA_CONFIG
 sed -i -e "s/TURBINIA_REGION = .*/TURBINIA_REGION = '$REGION'/g" $TURBINIA_CONFIG
@@ -197,31 +197,31 @@ sed -i -e "s/MOUNT_DIR_PREFIX = .*/MOUNT_DIR_PREFIX = '\/mnt\/turbinia'/g" $TURB
 #Create Google Cloud Storage Bucket
 echo "Enabling GCS cloud storage"
 gcloud -q services --project $DEVSHELL_PROJECT_ID enable storage-component.googleapis.com
-echo "Creating GCS bucket gs://$CLUSTER_NAME"
-gsutil mb -l $REGION gs://$CLUSTER_NAME
+echo "Creating GCS bucket gs://$INSTANCE_ID"
+gsutil mb -l $REGION gs://$INSTANCE_ID
 echo "Updating $TURBINIA_CONFIG config with GCS bucket configuration"
-sed -i -e "s/GCS_OUTPUT_PATH = .*/GCS_OUTPUT_PATH = 'gs:\/\/$CLUSTER_NAME\/output'/g" $TURBINIA_CONFIG
-sed -i -e "s/BUCKET_NAME = .*/BUCKET_NAME = '$CLUSTER_NAME'/g" $TURBINIA_CONFIG
+sed -i -e "s/GCS_OUTPUT_PATH = .*/GCS_OUTPUT_PATH = 'gs:\/\/$INSTANCE_ID\/output'/g" $TURBINIA_CONFIG
+sed -i -e "s/BUCKET_NAME = .*/BUCKET_NAME = '$INSTANCE_ID'/g" $TURBINIA_CONFIG
 
 # Create main PubSub Topic/Subscription
 echo "Enabling the GCP PubSub  API"
 gcloud -q services --project $DEVSHELL_PROJECT_ID enable pubsub.googleapis.com
-echo "Creating PubSub topic $CLUSTER_NAME"
-gcloud pubsub topics create $CLUSTER_NAME
-echo "Creating PubSub subscription $CLUSTER_NAME"
-gcloud pubsub subscriptions create $CLUSTER_NAME --topic=$CLUSTER_NAME --ack-deadline=600 
+echo "Creating PubSub topic $INSTANCE_ID"
+gcloud pubsub topics create $INSTANCE_ID
+echo "Creating PubSub subscription $INSTANCE_ID"
+gcloud pubsub subscriptions create $INSTANCE_ID --topic=$INSTANCE_ID --ack-deadline=600 
 
 # Create internal PubSub PSQ Topic/Subscription
-echo "Creating PubSub PSQ Topic $CLUSTER_NAME-psq"
-gcloud pubsub topics create "$CLUSTER_NAME-psq"
-echo "Creating PubSub PSQ subscription $CLUSTER_NAME-psq"
-gcloud pubsub subscriptions create "$CLUSTER_NAME-psq" --topic="$CLUSTER_NAME-psq" --ack-deadline=600
+echo "Creating PubSub PSQ Topic $INSTANCE_ID-psq"
+gcloud pubsub topics create "$INSTANCE_ID-psq"
+echo "Creating PubSub PSQ subscription $INSTANCE_ID-psq"
+gcloud pubsub subscriptions create "$INSTANCE_ID-psq" --topic="$INSTANCE_ID-psq" --ack-deadline=600
 
 # Update Turbinia config with PubSub parameters
 echo "Updating $TURBINIA_CONFIG with PubSub config"
 sed -i -e "s/TASK_MANAGER = .*/TASK_MANAGER = 'PSQ'/g" $TURBINIA_CONFIG
-sed -i -e "s/PUBSUB_TOPIC = .*/PUBSUB_TOPIC = '$CLUSTER_NAME'/g" $TURBINIA_CONFIG
-sed -i -e "s/PSQ_TOPIC = .*/PSQ_TOPIC = '$CLUSTER_NAME-psq'/g" $TURBINIA_CONFIG
+sed -i -e "s/PUBSUB_TOPIC = .*/PUBSUB_TOPIC = '$INSTANCE_ID'/g" $TURBINIA_CONFIG
+sed -i -e "s/PSQ_TOPIC = .*/PSQ_TOPIC = '$INSTANCE_ID-psq'/g" $TURBINIA_CONFIG
 
 # Enable Stackdriver Logging and Stackdriver Traceback
 echo "Enabling Cloud Error Reporting and Logging APIs"

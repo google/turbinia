@@ -55,17 +55,17 @@ echo "Deleting cluster $CLUSTER_NAME"
 gcloud -q --project $DEVSHELL_PROJECT_ID container clusters delete $CLUSTER_NAME --zone $ZONE
 
 # Delete the GCS storage bucket
-echo "Deleting GCS storage bucket gs://$CLUSTER_NAME"
-gsutil -q rm -r gs://$CLUSTER_NAME
+echo "Deleting GCS storage bucket gs://$INSTANCE_ID"
+gsutil -q rm -r gs://$INSTANCE_ID
 
 # Delete PubSub topics
-echo "Deleting PubSub topic $CLUSTER_NAME"
-gcloud -q --project $DEVSHELL_PROJECT_ID pubsub topics delete $CLUSTER_NAME
-gcloud -q --project $DEVSHELL_PROJECT_ID pubsub topics delete "$CLUSTER_NAME-psq"
+echo "Deleting PubSub topic $INSTANCE_ID"
+gcloud -q --project $DEVSHELL_PROJECT_ID pubsub topics delete $INSTANCE_ID
+gcloud -q --project $DEVSHELL_PROJECT_ID pubsub topics delete "$INSTANCE_ID-psq"
 
 # Delete PubSub subscriptions
-gcloud -q --project $DEVSHELL_PROJECT_ID pubsub subscriptions delete $CLUSTER_NAME
-gcloud -q --project $DEVSHELL_PROJECT_ID pubsub subscriptions delete "$CLUSTER_NAME-psq"
+gcloud -q --project $DEVSHELL_PROJECT_ID pubsub subscriptions delete $INSTANCE_ID
+gcloud -q --project $DEVSHELL_PROJECT_ID pubsub subscriptions delete "$INSTANCE_ID-psq"
 
 # Delete the Filestore instance
 if [[ "$*" != *--no-filestore* ]] ; then

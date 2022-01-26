@@ -7,6 +7,7 @@ User documentation
 
    install
    install-manual
+   install-gke-manual
    install-gke
    how-it-works
    turbinia-local-stack
