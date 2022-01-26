@@ -1,5 +1,6 @@
 # Turbinia parameters for Google Cloud Kubernetes deployment. Please review
-# the default configuration and update where necessary based on requirements.
+# the default configuration and update if necessary based on billing restrictions
+# or quota requirements.
 
 # A unique ID per Turbinia instance. Used for keeping multiple Turbinia instances
 # seperate and to name newly created GCP resources such as the cluster name.
@@ -10,7 +11,7 @@ TURBINIA_CONFIG=".turbiniarc"
 
 # Folder to save configured Deployment files to. Please use an absolute path else
 # the directory will default to within the root of the Turbinia k8s folder.
-DEPLOYMENT_FOLDER="deployment/"
+DEPLOYMENT_FOLDER="deployment/$INSTANCE_ID"
 
 # The region and zone where Turbinia will run.  Note that Turbinia does
 # not currently support multi-zone operation.

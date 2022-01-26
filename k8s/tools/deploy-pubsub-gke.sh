@@ -23,9 +23,9 @@ if [[ "$*" == *--help ]] ; then
   echo "--build-release-test           Deploy Turbinia release test docker image"
   echo "--build-dev                    Deploy Turbinia development docker image"
   echo "--no-gcloud-auth               Create service key instead of using gcloud authentication"
-  echo "--no-cloudnat                  Do not deploy a Cloud NAT router"
   echo "--no-cloudfunctions            Do not deploy Turbinia Cloud Functions"
   echo "--no-datastore                 Do not configure Turbinia Datastore"
+  echo "--no-filestore                 Do not deploy Turbinia Filestore"
   exit 1
 fi
 
@@ -165,7 +165,6 @@ gcloud container clusters get-credentials $CLUSTER_NAME --zone $ZONE
 
 
 # Go to deployment folder to make changes files
-DEPLOYMENT_FOLDER=deployment/$CLUSTER_NAME
 cd $DEPLOYMENT_FOLDER
 
 # Update Turbinia config with project info
@@ -176,10 +175,16 @@ sed -i -e "s/TURBINIA_ZONE = .*/TURBINIA_ZONE = '$ZONE'/g" $TURBINIA_CONFIG
 sed -i -e "s/TURBINIA_REGION = .*/TURBINIA_REGION = '$REGION'/g" $TURBINIA_CONFIG
 
 # Create File Store instance and update deployment files with created instance
-echo "Enabling GCP Filestore API"
-gcloud -q services --project $DEVSHELL_PROJECT_ID enable file.googleapis.com
-echo "Creating Filestore instance $FILESTORE_NAME with capacity $FILESTORE_CAPACITY"
-gcloud filestore instances create $FILESTORE_NAME --zone=$ZONE --network=name=$VPC_NETWORK --file-share=name=$FILESTORE_NAME,capacity=$FILESTORE_CAPACITY
+if [[ "$*" != *--no-filestore* ]] ; then  
+  echo "Enabling GCP Filestore API"
+  gcloud -q services --project $DEVSHELL_PROJECT_ID enable file.googleapis.com
+  echo "Creating Filestore instance $FILESTORE_NAME with capacity $FILESTORE_CAPACITY"
+  gcloud filestore instances create $FILESTORE_NAME --zone=$ZONE --network=name=$VPC_NETWORK --file-share=name=$FILESTORE_NAME,capacity=$FILESTORE_CAPACITY
+else
+  echo "Using pre existing Filestore instance $FILESTORE_NAME with capacity $FILESTORE_CAPACITY"
+fi
+
+echo "Updating $TURBINIA_CONFIG config with Filestore configuration"
 FILESTORE_IP=$(gcloud filestore instances describe $FILESTORE_NAME --zone=$ZONE --format='value(networks.ipAddresses)' --flatten="networks[].ipAddresses[]")
 FILESTORE_MOUNT="'\/mnt\/$FILESTORE_NAME'"
 echo "Updating $TURBINIA_CONFIG config with Filestore configuration"
@@ -193,7 +198,7 @@ sed -i -e "s/MOUNT_DIR_PREFIX = .*/MOUNT_DIR_PREFIX = '\/mnt\/turbinia'/g" $TURB
 echo "Enabling GCS cloud storage"
 gcloud -q services --project $DEVSHELL_PROJECT_ID enable storage-component.googleapis.com
 echo "Creating GCS bucket gs://$CLUSTER_NAME"
-gsutil mb -l us-central1 gs://$CLUSTER_NAME
+gsutil mb -l $REGION gs://$CLUSTER_NAME
 echo "Updating $TURBINIA_CONFIG config with GCS bucket configuration"
 sed -i -e "s/GCS_OUTPUT_PATH = .*/GCS_OUTPUT_PATH = 'gs:\/\/$CLUSTER_NAME\/output'/g" $TURBINIA_CONFIG
 sed -i -e "s/BUCKET_NAME = .*/BUCKET_NAME = '$CLUSTER_NAME'/g" $TURBINIA_CONFIG
