@@ -159,7 +159,7 @@ fi
 echo "Enabling GCP Compute and Container APIs"
 gcloud -q services --project $DEVSHELL_PROJECT_ID enable compute.googleapis.com
 gcloud -q services --project $DEVSHELL_PROJECT_ID enable container.googleapis.com
-echo "Creating cluser $CLUSTER_NAME with $CLUSTER_NODE_SIZE node(s) configured with  machine type $CLUSTER_MACHINE_TYPE and disk size $CLUSTER_MACHINE_SIZE"
+echo "Creating cluser $CLUSTER_NAME with $CLUSTER_NODE_SIZE node(s) configured with machine type $CLUSTER_MACHINE_TYPE and disk size $CLUSTER_MACHINE_SIZE"
 gcloud beta container clusters create $CLUSTER_NAME --machine-type $CLUSTER_MACHINE_TYPE --disk-size $CLUSTER_MACHINE_SIZE --num-nodes $CLUSTER_NODE_SIZE --master-ipv4-cidr $VPC_CONTROL_PANE --network $VPC_NETWORK --zone $ZONE --shielded-secure-boot --no-enable-master-authorized-networks  --enable-private-nodes --enable-ip-alias  --scopes "https://www.googleapis.com/auth/cloud-platform"
 gcloud container clusters get-credentials $CLUSTER_NAME --zone $ZONE
 
@@ -253,4 +253,5 @@ echo "Deploying Turbinia to $CLUSTER_NAME cluster"
 echo "Creating a copy of Turbinia config in $HOME/.turbiniarc"
 cp $TURBINIA_CONFIG $HOME/.turbiniarc
 
-echo "Deployed successful."
+echo "Turbinia GKE was succesfully deployed!"
+echo "Authenticate via: gcloud container clusters get-credentials $CLUSTER_NAME --zone $ZONE" 

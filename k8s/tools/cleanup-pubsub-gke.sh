@@ -125,4 +125,4 @@ elif [[ $( gcloud auth list --filter="status:ACTIVE" --format="value(account)" |
   exit 1
 fi
 
-echo "Cleaning up Turbinia deployment complete"
+echo "The Turbinia deployment $INSTANCE_ID was succesfully removed from $DEVSHELL_PROJECT_ID"
