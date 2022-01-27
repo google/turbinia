@@ -791,7 +791,7 @@ class BaseTurbiniaClient:
   def format_task_status(
       self, instance, project, region, days=0, task_id=None, request_id=None,
       group_id=None, user=None, all_fields=False, full_report=False,
-      priority_filter=Priority.HIGH, output_json=False, report=[]):
+      priority_filter=Priority.HIGH, output_json=False, report=None):
     """Formats the recent history for Turbinia Tasks.
 
     Args:
@@ -841,6 +841,8 @@ class BaseTurbiniaClient:
       return '\n{0:s}'.format(msg)
 
     # Build up data
+    if report is None:
+      report = []
     success_types = ['Successful', 'Failed', 'Scheduled or Running']
     success_values = [True, False, None]
     # Reverse mapping values to types
@@ -870,23 +872,22 @@ class BaseTurbiniaClient:
           fmt.heading1('Turbinia report for group ID {0:s}'.format(group_id)))
       for request_id, success_counts in requests.items():
         report.append(
-            'Request Id {0:s} with {1:d} successful, {2:d} failed, and {3:d} running tasks.'
-            .format(
-                request_id, success_counts['Successful'],
-                success_counts['Failed'],
-                success_counts['Scheduled or Running']))
+            fmt.bullet(
+                'Request Id {0:s} with {1:d} successful, {2:d} failed, and {3:d} running tasks.'
+                .format(
+                    request_id, success_counts['Successful'],
+                    success_counts['Failed'],
+                    success_counts['Scheduled or Running'])))
         if full_report:
-          report.append(
-              self.format_task_status(
-                  instance, project, region, days=0, task_id=None,
-                  request_id=request_id, user=user, all_fields=all_fields,
-                  full_report=full_report, priority_filter=priority_filter,
-                  output_json=output_json, report=report))
+          self.format_task_status(
+              instance, project, region, days=0, task_id=None,
+              request_id=request_id, user=user, all_fields=all_fields,
+              full_report=full_report, priority_filter=priority_filter,
+              output_json=output_json, report=report)
 
       return '\n'.join(report)
 
     # Generate report header
-    report = []
     report.append('\n')
     report.append(fmt.heading1('Turbinia report {0:s}'.format(request_id)))
     report.append(
