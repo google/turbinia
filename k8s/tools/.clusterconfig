@@ -1,3 +1,4 @@
+#!/bin/bash
 # Turbinia parameters for Google Cloud Kubernetes deployment. Please review
 # the default configuration and update if necessary based on billing restrictions
 # or quota requirements.
