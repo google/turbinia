@@ -124,3 +124,5 @@ elif [[ $( gcloud auth list --filter="status:ACTIVE" --format="value(account)" |
   echo "No gcloud credentials found.  Use 'gcloud auth login' and 'gcloud auth application-default' to log in"
   exit 1
 fi
+
+echo "Cleaning up Turbinia deployment complete"

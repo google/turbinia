@@ -124,10 +124,10 @@ fi
 echo "Deploying cluster to project $DEVSHELL_PROJECT_ID"
 
 # Setup appropriate directories and copy of deployment templates and Turbinia config
-echo "Copying over template deployment files to $DEPLOYMENT_FOLDER/$INSTANCE_ID"
-mkdir -p $DEPLOYMENT_FOLDER/$INSTANCE_ID/
-cp gcp-pubsub/* $DEPLOYMENT_FOLDER/$INSTANCE_ID/
-cp ../turbinia/config/turbinia_config_tmpl.py $DEPLOYMENT_FOLDER/$INSTANCE_ID/$TURBINIA_CONFIG
+echo "Copying over template deployment files to $DEPLOYMENT_FOLDER"
+mkdir -p $DEPLOYMENT_FOLDER
+cp gcp-pubsub/* $DEPLOYMENT_FOLDER
+cp ../turbinia/config/turbinia_config_tmpl.py $DEPLOYMENT_FOLDER/$TURBINIA_CONFIG
 
 # Deploy cloud functions
 if [[ "$*" != *--no-cloudfunctions* ]] ; then
@@ -163,7 +163,6 @@ echo "Creating cluser $CLUSTER_NAME with $CLUSTER_NODE_SIZE node(s) configured w
 gcloud beta container clusters create $CLUSTER_NAME --machine-type $CLUSTER_MACHINE_TYPE --disk-size $CLUSTER_MACHINE_SIZE --num-nodes $CLUSTER_NODE_SIZE --master-ipv4-cidr $VPC_CONTROL_PANE --network $VPC_NETWORK --zone $ZONE --shielded-secure-boot --no-enable-master-authorized-networks  --enable-private-nodes --enable-ip-alias  --scopes "https://www.googleapis.com/auth/cloud-platform"
 gcloud container clusters get-credentials $CLUSTER_NAME --zone $ZONE
 
-
 # Go to deployment folder to make changes files
 cd $DEPLOYMENT_FOLDER
 
@@ -179,7 +178,7 @@ if [[ "$*" != *--no-filestore* ]] ; then
   echo "Enabling GCP Filestore API"
   gcloud -q services --project $DEVSHELL_PROJECT_ID enable file.googleapis.com
   echo "Creating Filestore instance $FILESTORE_NAME with capacity $FILESTORE_CAPACITY"
-  gcloud filestore instances create $FILESTORE_NAME --zone=$ZONE --network=name=$VPC_NETWORK --file-share=name=$FILESTORE_NAME,capacity=$FILESTORE_CAPACITY
+  gcloud -q filestore --project $DEVSHELL_PROJECT_ID instances create $FILESTORE_NAME --file-share=name=$FILESTORE_NAME,capacity=$FILESTORE_CAPACITY --zone=$ZONE --network=name=$VPC_NETWORK
 else
   echo "Using pre existing Filestore instance $FILESTORE_NAME with capacity $FILESTORE_CAPACITY"
 fi
@@ -253,3 +252,5 @@ echo "Deploying Turbinia to $CLUSTER_NAME cluster"
 # Make a copy of Turbinia config in user home directory
 echo "Creating a copy of Turbinia config in $HOME/.turbiniarc"
 cp $TURBINIA_CONFIG $HOME/.turbiniarc
+
+echo "Deployed successful."
