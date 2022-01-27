@@ -388,6 +388,11 @@ def process_args(args):
       help='Show all requests from a specified timeframe. The default '
       'timeframe is 7 days. Please use the -d flag to extend this.')
   parser_status.add_argument(
+      '-g', '--group_id', help='Show Requests for given group ID. This command'
+      ' only shows the related requests and overview of their task status. Run '
+      '--full_report for the full list of requests and their tasks.',
+      required=False)
+  parser_status.add_argument(
       '-w', '--workers', required=False, action='store_true',
       help='Show Worker status information from a specified timeframe. The '
       'default timeframe is 7 days. Please use the -d flag to extend this. '
@@ -675,7 +680,15 @@ def process_args(args):
     server.start()
   elif args.command == 'status':
     region = config.TURBINIA_REGION
+    if args.request_id and args.group_id:
+      msg = (
+          'Cannot run status command with request ID and group ID. Please '
+          'only specify one.')
+      raise TurbiniaException(msg)
     if args.close_tasks:
+      if args.group_id:
+        msg = 'The --close_task flag is not compatible with --group_id.'
+        raise TurbiniaException(msg)
       if args.user or args.request_id or args.task_id:
         print(
             client.close_tasks(
@@ -737,7 +750,7 @@ def process_args(args):
         client.format_task_status(
             instance=config.INSTANCE_ID, project=config.TURBINIA_PROJECT,
             region=region, days=args.days_history, task_id=args.task_id,
-            request_id=args.request_id, user=args.user,
+            request_id=args.request_id, group_id=args.group_id, user=args.user,
             all_fields=args.all_fields, full_report=args.full_report,
             priority_filter=args.priority_filter, output_json=output_json))
     sys.exit(0)
