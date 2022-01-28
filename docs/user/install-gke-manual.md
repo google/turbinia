@@ -60,8 +60,8 @@ Please follow these steps for configuring Turbinia for GCP use and then running 
   * Choose the GKE Standard type.
   * Choose any name for the cluster.
   * The Zone should match the GCP Zone configuration (e.g. wherever Zone cloud functions & Datastore was deployed to).
-  * Choose number of nodes based on processing & cost requirements.
-  * Change machine type based on processing & cost requirments.
+  * Choose the number of nodes. The minimum requirement being 3 nodes and recommended being 5 nodes.
+  * Change the machine type. The minimum recommendation would be to use a machine type of e2-standard-32.
   * In the Node Pools -> Security tab, change access scopes to "Allow full access to all cloud APIs"
 * Alternatively, a GKE cluster can be created via [gcloud](https://cloud.google.com/kubernetes-engine/docs/how-to/creating-a-zonal-cluster#gcloud).
 ```
@@ -77,7 +77,7 @@ gcloud container clusters create CLUSTER_NAME \
 * Connect to cluster through `gcloud container clusters get-credentials <CLUSTER_NAME> --zone <ZONE> --project <PROJECT_NAME>`.
 * Clone the latest Turbinia branch and `cd <git clone path>/k8s/gcp-pubsub`.
 * Ensure that the zone and region in the Turbinia config file are equal to the zone and region you created your k8s cluster in.
-* The `image` variable can be optionally changed in the `turbinia-worker.yaml` and `turbinia-server.yaml` files to chose the docker images used during deployment.
+* The `image` variable can be optionally changed in the `turbinia-worker.yaml` and `turbinia-server.yaml` files e.g expiremental/dev to chose the docker images used during deployment.
 * In the `turbinia-worker.yaml` file, ensure that the path in the volume labeled `lockfolder` matches the Turbinia config variable `TMP_RESOURCE_DIR`.
 * If the Filestore `Instance ID` and `File share name` have a different name than the default name `output`, update `turbinia-worker.yaml`, `turbinia-server.yaml`, `turbinia-output-claim-filestore.yaml`, and `turbinia-output-filestore.yaml` by searching for the string `output` and replacing it with the custom name. Skip this step if the default name was used.
 * To have all logs go to the central location, update the `LOG_DIR` variable in the `.turbiniarc` config file to the default Filestore path `/mnt/output` or if configured differently, to the custom path.
@@ -88,7 +88,7 @@ gcloud container clusters create CLUSTER_NAME \
 * The Turbinia infrastructure can be destroyed by executing `./destroy-pubsub.sh`.
 
 ### **Making processing requests in GKE**
-* You can either make requests via setting up a local `turbiniactl` client or through connecting to the server through the following steps.
+* You can either make requests via setting up a local `turbiniactl` client using pip install turbinia in eg. a virtualenv or through connecting to the server through the following steps.
 * Connect to cluster through `gcloud container clusters get-credentials <CLUSTER_NAME> --zone <ZONE> --project <PROJECT_NAME>`.
 * Use `kubectl get pods` to get a list of running pods.
 * Identify the pod named `turbinia-server-*` and exec into it via `kubectl exec --stdin --tty [CONTAINER-NAME] -- bash`

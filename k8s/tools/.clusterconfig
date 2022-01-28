@@ -38,3 +38,7 @@ CLUSTER_MACHINE_SIZE='1000'
 # from Turbinia, such as logs. Please specify size in terabytes(TB).
 FILESTORE_NAME='output'
 FILESTORE_CAPACITY='1T'
+
+# Any Jobs added to this list will be disabled by default at start-up. Job names
+# entered here are case insensitive, but must be quoted. 
+DISABLED_JOBS="['BinaryExtractorJob', 'BulkExtractorJob', 'DfdeweyJob', 'HindsightJob', 'PhotorecJob', 'VolatilityJob']"
