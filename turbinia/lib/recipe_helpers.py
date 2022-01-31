@@ -17,8 +17,12 @@
 import copy
 import logging
 import yaml
+import os
+
 from yaml import Loader
 from yaml import load
+from turbinia import config
+from turbinia import TurbiniaException
 from turbinia.lib.file_helpers import file_to_str
 from turbinia.lib.file_helpers import file_to_list
 from turbinia.task_utils import TaskLoader
@@ -167,3 +171,43 @@ def validate_recipe(recipe_dict):
       tasks_with_recipe.append(recipe_item)
 
   return (True, '')
+
+
+def validate_recipe_conditions(args):
+  """Validates necessary pre-conditions to use a recipe.
+
+  Args:
+    args(namespace): turbiniactl args.
+  
+  Raises:
+    TurbiniaException: if the conditions are not met.
+  """
+  if args.recipe and args.recipe_path:
+    msg = ('Expected a recipe name (-I) or path (-P) but found both.')
+    raise TurbiniaException(msg)
+
+  if args.recipe or args.recipe_path:
+    if (args.jobs_denylist or args.jobs_allowlist or
+        args.filter_patterns_file or args.yara_rules_file):
+      msg = (
+          'Specifying a recipe is incompatible with defining '
+          'jobs allow/deny lists, yara rules or a patterns file separately.')
+      raise TurbiniaException(msg)
+
+
+def get_recipe_path_from_name(recipe_name):
+  """Returns a recipe's path from a recipe name.
+
+  Args:
+    recipe_name (str): A recipe name.
+
+  Returns:
+    str: a recipe's file system path.
+  """
+  recipe_path = ''
+  if not recipe_name.endswith('.yaml'):
+    recipe_path = recipe_name + '.yaml'
+
+  recipe_path = os.path.join(config.RECIPE_FILE_DIR, recipe_path)
+
+  return recipe_path
