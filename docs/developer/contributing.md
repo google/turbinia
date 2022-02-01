@@ -19,10 +19,10 @@ possibly guide you. Coordinating up front makes it much easier to avoid
 frustration later on.
 
 We use the github
-[fork and pull review process](https://help.github.com/articles/using-pull-requests)
+[fork and pull review process](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/about-pull-requests)
 to review all contributions. First, fork the Turbinia repository by following
-the [github instructions](https://help.github.com/articles/fork-a-repo). Then
-check out your personal fork:
+the [github instructions](https://docs.github.com/en/get-started/quickstart/fork-a-repo).
+Then check out your personal fork:
 
     $ git clone https://github.com/<username>/turbinia.git
 
