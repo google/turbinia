@@ -957,10 +957,22 @@ def process_evidence(
             'jobs allow/deny lists, yara rules or a patterns file separately.')
         raise TurbiniaException(msg)
 
+      # Find the recipe file with the following precedence:
+      #   1. An absolute path to a recipe file provided with --recipe_path.
+      #   2. A combination of the RECIPE_FILE_DIR config option and the
+      #     --recipe flag.
+      #   3. A combination of the packaged recipe dir (turbinia/config/recipes)
+      #     and the --recipe flag.
       if args.recipe_path:
         recipe_file = args.recipe_path
-      else:
+      elif hasattr(config, 'RECIPE_FILE_DIR') and config.RECIPE_FILE_DIR:
         recipe_file = os.path.join(config.RECIPE_FILE_DIR, args.recipe)
+      else:
+        recipe_dir = os.path.realpath(__file__)
+        recipe_dir = os.path.dirname(recipe_dir)
+        recipe_dir = os.path.join(recipe_dir, 'config', 'recipes')
+        recipe_file = os.path.join(recipe_dir, args.recipe)
+
       if not os.path.exists(recipe_file) and not recipe_file.endswith('.yaml'):
         log.warning(
             'Could not find recipe file at {0:s}, checking for file '
