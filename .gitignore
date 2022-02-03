@@ -35,3 +35,7 @@ terraform/gcp/*.auto.tfvars
 # Exclude  logs
 *.log
 *.log.gz
+
+# Exclude Python virtualenvs
+venv/
+.venv/

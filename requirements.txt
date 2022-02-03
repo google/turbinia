@@ -1,7 +1,6 @@
 celery>=5.2.2
 cryptography>=2.0.2,<3.4
 docker
-dfimagetools
 filelock
 google-api-core<2.0.0dev
 google-api-python-client
@@ -20,6 +19,7 @@ proto-plus<1.19.7
 psq
 pyparsing<3
 pyyaml>=5.4.1
+pyOpenSSL<=21.0.0
 redis
 six>=1.15.0
 urllib3[secure]

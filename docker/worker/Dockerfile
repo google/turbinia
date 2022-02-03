@@ -45,6 +45,7 @@ RUN apt-get -y install \
     libewf-python3 \
     plaso-tools \
     python3-dfvfs \
+    python3-dfimagetools \
     python3-plaso \
     sleuthkit \
     --option Acquire::ForceIPv4=true --option Acquire::Retries=100 --option Acquire::http::Timeout=60

@@ -241,7 +241,8 @@ class RedisStateManager(BaseStateManager):
     return data
 
   def get_task_data(
-      self, instance, days=0, task_id=None, request_id=None, user=None):
+      self, instance, days=0, task_id=None, request_id=None, group_id=None,
+      user=None):
     """Gets task data from Redis.
 
     Args:
@@ -250,6 +251,7 @@ class RedisStateManager(BaseStateManager):
       days (int): The number of days we want history for.
       task_id (string): The Id of the task.
       request_id (string): The Id of the request we want tasks for.
+      group_id (string): Group Id of the requests.
       user (string): The user of the request we want tasks for.
 
     Returns:
@@ -279,6 +281,8 @@ class RedisStateManager(BaseStateManager):
       tasks = [task for task in tasks if task.get('task_id') == task_id]
     if request_id:
       tasks = [task for task in tasks if task.get('request_id') == request_id]
+    if group_id:
+      tasks = [task for task in tasks if task.get('group_id') == group_id]
     if user:
       tasks = [task for task in tasks if task.get('requester') == user]
 
