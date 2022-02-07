@@ -364,8 +364,7 @@ def process_args(args):
       '-r', '--request_id',
       help='Show all tasks for this Request ID. A request to process Evidence will '
       'generate a unique request ID and this option will show all Tasks associated '
-      'with this request.',
-      required=False)
+      'with this request.', required=False)
   # 20 == Priority.High. We are setting this manually here because we don't want
   # to load the worker module yet in order to access this Enum.
   parser_status.add_argument(
