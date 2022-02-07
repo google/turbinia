@@ -14,6 +14,7 @@
 # limitations under the License.
 """Library to contain recipe validation logic."""
 
+import argparse
 import copy
 import logging
 import yaml
@@ -182,17 +183,24 @@ def validate_recipe_conditions(args):
   Raises:
     TurbiniaException: if the conditions are not met.
   """
-  if args.recipe and args.recipe_path:
-    msg = ('Expected a recipe name (-I) or path (-P) but found both.')
-    raise TurbiniaException(msg)
+  if not isinstance(args, argparse.Namespace):
+    raise TurbiniaException(
+        "Invalid object, was expecting an argparse.Namespace type")
 
-  if args.recipe or args.recipe_path:
-    if (args.jobs_denylist or args.jobs_allowlist or
-        args.filter_patterns_file or args.yara_rules_file):
-      msg = (
-          'Specifying a recipe is incompatible with defining '
-          'jobs allow/deny lists, yara rules or a patterns file separately.')
+  try:
+    if args.recipe and args.recipe_path:
+      msg = ('Expected a recipe name (-I) or path (-P) but found both.')
       raise TurbiniaException(msg)
+
+    if args.recipe or args.recipe_path:
+      if (args.jobs_denylist or args.jobs_allowlist or
+          args.filter_patterns_file or args.yara_rules_file):
+        msg = (
+            'Specifying a recipe is incompatible with defining '
+            'jobs allow/deny lists, yara rules or a patterns file separately.')
+        raise TurbiniaException(msg)
+  except AttributeError:
+    raise TurbiniaException("Unable to parse command line parameters.")
 
 
 def get_recipe_path_from_name(recipe_name):

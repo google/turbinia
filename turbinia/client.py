@@ -216,7 +216,7 @@ class BaseTurbiniaClient:
         recipe['globals']['yara_rules'] = yara_rules
     else:
       # Load custom recipe from given path or name.
-      if '/' in recipe_name and recipe_name.endswith('.yaml'):
+      if os.path.exists(recipe_name):
         recipe_path = recipe_name
       else:
         recipe_path = recipe_helpers.get_recipe_path_from_name(recipe_name)
@@ -246,9 +246,10 @@ class BaseTurbiniaClient:
       self, request_id=None, group_id=None, requester=None, recipe=None,
       context=None, evidence_=None):
     """Wrapper method to create a Turbinia request."""
+    default_recipe = self.create_recipe()
     request = TurbiniaRequest(
         request_id=request_id, group_id=group_id, requester=requester,
-        recipe=recipe, context=context, evidence_=evidence_)
+        recipe=default_recipe, context=context, evidence_=evidence_)
     return request
 
   def list_jobs(self):
