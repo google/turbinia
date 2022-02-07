@@ -27,6 +27,7 @@ if [[ "$*" == *--help ]] ; then
   echo "--no-cloudfunctions            Do not cleanup Turbinia Cloud Functions"
   echo "--no-datastore                 Do not cleanup Turbinia Datastore"
   echo "--no-filestore                 Do not cleanup Turbinia Filestore share"
+  echo "--no-gcs                       Do not delete the GCS bucket"
   exit 1
 fi
 
@@ -55,8 +56,10 @@ echo "Deleting cluster $CLUSTER_NAME"
 gcloud -q --project $DEVSHELL_PROJECT_ID container clusters delete $CLUSTER_NAME --zone $ZONE
 
 # Delete the GCS storage bucket
-echo "Deleting GCS storage bucket gs://$INSTANCE_ID"
-gsutil -q rm -r gs://$INSTANCE_ID
+if [[ "$*" != *--no-filestore* ]] ; then
+  echo "Deleting GCS storage bucket gs://$INSTANCE_ID"
+  gsutil -q rm -r gs://$INSTANCE_ID
+fi
 
 # Delete PubSub topics
 echo "Deleting PubSub topic $INSTANCE_ID"

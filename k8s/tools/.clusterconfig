@@ -36,7 +36,7 @@ CLUSTER_MACHINE_SIZE='1000'
 
 # The Filestore share name, and size. Filestore will be used to retain shared output
 # from Turbinia, such as logs. Please specify size in terabytes(TB).
-FILESTORE_NAME='output'
+FILESTORE_NAME='turbiniavolume'
 FILESTORE_CAPACITY='1T'
 
 # Any Jobs added to this list will be disabled by default at start-up. Job names

@@ -1,12 +1,12 @@
 apiVersion: v1
 kind: PersistentVolume
 metadata:
-  name: output
+  name: turbiniavolume
 spec:
   capacity:
     storage: 1T
   accessModes:
   - ReadWriteMany
   nfs:
-    path: /output
+    path: /turbiniavolume
     server: <IP_ADDRESS>

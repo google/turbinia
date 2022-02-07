@@ -26,6 +26,7 @@ if [[ "$*" == *--help ]] ; then
   echo "--no-cloudfunctions            Do not deploy Turbinia Cloud Functions"
   echo "--no-datastore                 Do not configure Turbinia Datastore"
   echo "--no-filestore                 Do not deploy Turbinia Filestore"
+  echo "--no-gcs                       Do not create a GCS bucket"
   exit 1
 fi
 
@@ -106,18 +107,18 @@ if [[ "$*" == *--no-gcloud-auth* ]] ; then
 
 # TODO: Do real check to make sure credentials have adequate roles
 elif [[ $( gcloud auth list --filter="status:ACTIVE" --format="value(account)" | wc -l ) -eq 0 ]] ; then
-  echo "No gcloud credentials found.  Use 'gcloud auth login' and 'gcloud auth application-default' to log in"
+  echo "No gcloud credentials found.  Use 'gcloud auth login <EMAIl>' or 'gcloud auth application-default' to log in"
   exit 1
 fi
 
 # Update Docker image if flag was provided else use default
 if [[ "$*" == *--build-dev* ]] ; then
-  TURBINIA_SERVER_IMAGE="turbinia-server-dev"
-  TURBINIA_WORKER_IMAGE="turbinia-worker-dev"
+  TURBINIA_SERVER_IMAGE="us-docker.pkg.dev\/osdfir-registry\/turbinia\/release\/turbinia-server-dev:latest"
+  TURBINIA_WORKER_IMAGE="us-docker.pkg.dev\/osdfir-registry\/turbinia\/release\/turbinia-worker-dev:latest"
   echo "Setting docker image to $TURBINIA_SERVER_IMAGE and $TURBINIA_WORKER_IMAGE"
 elif [[ "$*" == *--build-experimental* ]] ; then
-  TURBINIA_SERVER_IMAGE="turbinia-server-experimental"
-  TURBINIA_WORKER_IMAGE="turbinia-worker-experimental"
+  TURBINIA_SERVER_IMAGE="us-docker.pkg.dev\/osdfir-registry\/turbinia\/release\/turbinia-server-experimental:latest"
+  TURBINIA_WORKER_IMAGE="us-docker.pkg.dev\/osdfir-registry\/turbinia\/release\/turbinia-worker-experimental:latest"
   echo "Setting docker image to $TURBINIA_SERVER_IMAGE and $TURBINIA_WORKER_IMAGE"
 fi
 
@@ -166,17 +167,16 @@ gcloud container clusters get-credentials $CLUSTER_NAME --zone $ZONE
 # Go to deployment folder to make changes files
 cd $DEPLOYMENT_FOLDER
 
-
 # Disable some jobs
 echo "Updating $TURBINIA_CONFIG with disabled jobs"
-sed -i -e "s/DISABLED_JOBS = .*/DISABLED_JOBS = $DISABLED_JOBS/g" $TURBINIA_CONFIG
+sed -i -e "s/^DISABLED_JOBS = .*$/DISABLED_JOBS = $DISABLED_JOBS/g" $TURBINIA_CONFIG
 
 # Update Turbinia config with project info
 echo "Updating $TURBINIA_CONFIG config with project info"
-sed -i -e "s/INSTANCE_ID = .*/INSTANCE_ID = '$INSTANCE_ID'/g" $TURBINIA_CONFIG
-sed -i -e "s/TURBINIA_PROJECT = .*/TURBINIA_PROJECT = '$DEVSHELL_PROJECT_ID'/g" $TURBINIA_CONFIG
-sed -i -e "s/TURBINIA_ZONE = .*/TURBINIA_ZONE = '$ZONE'/g" $TURBINIA_CONFIG
-sed -i -e "s/TURBINIA_REGION = .*/TURBINIA_REGION = '$REGION'/g" $TURBINIA_CONFIG
+sed -i -e "s/^INSTANCE_ID = .*$/INSTANCE_ID = '$INSTANCE_ID'/g" $TURBINIA_CONFIG
+sed -i -e "s/^TURBINIA_PROJECT = .*$/TURBINIA_PROJECT = '$DEVSHELL_PROJECT_ID'/g" $TURBINIA_CONFIG
+sed -i -e "s/^TURBINIA_ZONE = .*$/TURBINIA_ZONE = '$ZONE'/g" $TURBINIA_CONFIG
+sed -i -e "s/^TURBINIA_REGION = .*$/TURBINIA_REGION = '$REGION'/g" $TURBINIA_CONFIG
 
 # Create File Store instance and update deployment files with created instance
 if [[ "$*" != *--no-filestore* ]] ; then  
@@ -192,20 +192,24 @@ echo "Updating $TURBINIA_CONFIG config with Filestore configuration"
 FILESTORE_IP=$(gcloud filestore instances describe $FILESTORE_NAME --zone=$ZONE --format='value(networks.ipAddresses)' --flatten="networks[].ipAddresses[]")
 FILESTORE_MOUNT="'\/mnt\/$FILESTORE_NAME'"
 echo "Updating $TURBINIA_CONFIG config with Filestore configuration"
-sed -i -e "s/<IP_ADDRESS>/$FILESTORE_IP/g" turbinia-output-filestore.yaml
-sed -i -e "s/output/$FILESTORE_NAME/g" *.yaml
-sed -i -e "s/storage: .*/storage: $FILESTORE_CAPACITY/g" turbinia-output-filestore.yaml turbinia-output-claim-filestore.yaml
-sed -i -e "s/LOG_DIR = .*/LOG_DIR = $FILESTORE_MOUNT/g" $TURBINIA_CONFIG
-sed -i -e "s/MOUNT_DIR_PREFIX = .*/MOUNT_DIR_PREFIX = '\/mnt\/turbinia'/g" $TURBINIA_CONFIG
+sed -i -e "s/<IP_ADDRESS>/$FILESTORE_IP/g" turbinia-volume-filestore.yaml
+sed -i -e "s/turbiniavolume/$FILESTORE_NAME/g" *.yaml
+sed -i -e "s/storage: .*/storage: $FILESTORE_CAPACITY/g" turbinia-volume-filestore.yaml turbinia-volume-claim-filestore.yaml
+sed -i -e "s/^LOG_DIR = .*$/LOG_DIR = $FILESTORE_MOUNT/g" $TURBINIA_CONFIG
+sed -i -e "s/^MOUNT_DIR_PREFIX = .*$/MOUNT_DIR_PREFIX = '\/mnt\/turbinia'/g" $TURBINIA_CONFIG
 
 #Create Google Cloud Storage Bucket
-echo "Enabling GCS cloud storage"
-gcloud -q services --project $DEVSHELL_PROJECT_ID enable storage-component.googleapis.com
-echo "Creating GCS bucket gs://$INSTANCE_ID"
-gsutil mb -l $REGION gs://$INSTANCE_ID
+if [[ "$*" != *--no-gcs* ]] ; then  
+  echo "Enabling GCS cloud storage"
+  gcloud -q services --project $DEVSHELL_PROJECT_ID enable storage-component.googleapis.com
+  echo "Creating GCS bucket gs://$INSTANCE_ID"
+  gsutil mb -l $REGION gs://$INSTANCE_ID
+else
+  echo "--no-gcs specified. Using pre-existing GCS bucket $INSTANCE_ID"
+
 echo "Updating $TURBINIA_CONFIG config with GCS bucket configuration"
-sed -i -e "s/GCS_OUTPUT_PATH = .*/GCS_OUTPUT_PATH = 'gs:\/\/$INSTANCE_ID\/output'/g" $TURBINIA_CONFIG
-sed -i -e "s/BUCKET_NAME = .*/BUCKET_NAME = '$INSTANCE_ID'/g" $TURBINIA_CONFIG
+sed -i -e "s/^GCS_OUTPUT_PATH = .*$/GCS_OUTPUT_PATH = 'gs:\/\/$INSTANCE_ID\/output'/g" $TURBINIA_CONFIG
+sed -i -e "s/^BUCKET_NAME = .*$/BUCKET_NAME = '$INSTANCE_ID'/g" $TURBINIA_CONFIG
 
 # Create main PubSub Topic/Subscription
 echo "Enabling the GCP PubSub  API"
@@ -223,31 +227,31 @@ gcloud pubsub subscriptions create "$INSTANCE_ID-psq" --topic="$INSTANCE_ID-psq"
 
 # Update Turbinia config with PubSub parameters
 echo "Updating $TURBINIA_CONFIG with PubSub config"
-sed -i -e "s/TASK_MANAGER = .*/TASK_MANAGER = 'PSQ'/g" $TURBINIA_CONFIG
-sed -i -e "s/PUBSUB_TOPIC = .*/PUBSUB_TOPIC = '$INSTANCE_ID'/g" $TURBINIA_CONFIG
-sed -i -e "s/PSQ_TOPIC = .*/PSQ_TOPIC = '$INSTANCE_ID-psq'/g" $TURBINIA_CONFIG
+sed -i -e "s/^TASK_MANAGER = .*$/TASK_MANAGER = 'PSQ'/g" $TURBINIA_CONFIG
+sed -i -e "s/^PUBSUB_TOPIC = .*$/PUBSUB_TOPIC = '$INSTANCE_ID'/g" $TURBINIA_CONFIG
+sed -i -e "s/^PSQ_TOPIC = .*$/PSQ_TOPIC = '$INSTANCE_ID-psq'/g" $TURBINIA_CONFIG
 
 # Enable Stackdriver Logging and Stackdriver Traceback
 echo "Enabling Cloud Error Reporting and Logging APIs"
 gcloud -q services --project $DEVSHELL_PROJECT_ID enable clouderrorreporting.googleapis.com
 gcloud -q services --project $DEVSHELL_PROJECT_ID enable logging.googleapis.com
 echo "Updating $TURBINIA_CONFIG to enable Stackdriver Traceback and Logging"
-sed -i -e "s/STACKDRIVER_LOGGING = .*/STACKDRIVER_LOGGING = True/g" $TURBINIA_CONFIG
-sed -i -e "s/STACKDRIVER_TRACEBACK = .*/STACKDRIVER_TRACEBACK = True/g" $TURBINIA_CONFIG
+sed -i -e "s/^STACKDRIVER_LOGGING = .*$/STACKDRIVER_LOGGING = True/g" $TURBINIA_CONFIG
+sed -i -e "s/^STACKDRIVER_TRACEBACK = .*$/STACKDRIVER_TRACEBACK = True/g" $TURBINIA_CONFIG
 
 # Enable Prometheus
 echo "Updating $TURBINIA_CONFIG to enable Prometheus application metrics"
-sed -i -e "s/PROMETHEUS_ENABLED = .*/PROMETHEUS_ENABLED = True/g" $TURBINIA_CONFIG
+sed -i -e "s/^PROMETHEUS_ENABLED = .*$/PROMETHEUS_ENABLED = True/g" $TURBINIA_CONFIG
 
 # Disable some jobs
 echo "Updating $TURBINIA_CONFIG with disabled jobs"
-sed -i -e "s/DISABLED_JOBS = .*/DISABLED_JOBS = $DISABLED_JOBS/g" $TURBINIA_CONFIG
+sed -i -e "s/^DISABLED_JOBS = .*$/DISABLED_JOBS = $DISABLED_JOBS/g" $TURBINIA_CONFIG
 
 # Set appropriate docker image in deployment file if user specified
-if [[ ! -z "$TURBINIA_SERVER_IMAGE" || ! -z "$TURBINIA_WORKER_IMAGE" ]] ; then
+if [[ ! -z "$TURBINIA_SERVER_IMAGE" && ! -z "$TURBINIA_WORKER_IMAGE" ]] ; then
   echo "Updating deployment files with docker image $TURBINIA_SERVER_IMAGE and $TURBINIA_WORKER_IMAGE"
-  sed -i -e "s/turbinia-server/$TURBINIA_SERVER_IMAGE/g" turbinia-server.yaml
-  sed -i -e "s/turbinia-worker/$TURBINIA_WORKER_IMAGE/g" turbinia-worker.yaml
+  sed -i -e "s/us-docker.pkg.dev\/osdfir-registry\/turbinia\/release\/turbinia-server:latest$/$TURBINIA_SERVER_IMAGE/g" turbinia-server.yaml
+  sed -i -e "s/us-docker.pkg.dev\/osdfir-registry\/turbinia\/release\/turbinia-worker:latest$/$TURBINIA_WORKER_IMAGE/g" turbinia-worker.yaml
 fi
 
 # Deploy to cluster
