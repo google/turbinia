@@ -199,8 +199,9 @@ def validate_recipe_conditions(args):
             'Specifying a recipe is incompatible with defining '
             'jobs allow/deny lists, yara rules or a patterns file separately.')
         raise TurbiniaException(msg)
-  except AttributeError:
-    raise TurbiniaException("Unable to parse command line parameters.")
+  except AttributeError as exception:
+    raise TurbiniaException(
+        "Unable to parse command line parameters.") from exception
 
 
 def get_recipe_path_from_name(recipe_name):

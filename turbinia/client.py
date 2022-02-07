@@ -26,22 +26,15 @@ import logging
 from operator import itemgetter
 from operator import attrgetter
 import os
-import stat
 import time
-import subprocess
-import codecs
 
 from google import auth
-from prometheus_client import start_http_server
 from turbinia import config
 from turbinia.config import logger
 from turbinia.config import DATETIME_FORMAT
 from turbinia import task_manager
-from turbinia import task_utils
 from turbinia import TurbiniaException
 from turbinia.lib import recipe_helpers, text_formatter as fmt
-from turbinia.lib import docker_manager
-from turbinia.jobs import manager as job_manager
 from turbinia.message import TurbiniaRequest
 from turbinia.workers import Priority
 

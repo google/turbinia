@@ -25,7 +25,6 @@ import logging
 import os
 import sys
 import uuid
-import copy
 
 from turbinia import config
 from turbinia import TurbiniaException
@@ -500,7 +499,6 @@ def process_args(args):
   # to point to config paths.
   from turbinia import notify
   from turbinia import client as TurbiniaClientProvider
-  from turbinia.client import TurbiniaCeleryClient
   from turbinia.worker import TurbiniaCeleryWorker
   from turbinia.worker import TurbiniaPsqWorker
   from turbinia.server import TurbiniaServer
@@ -851,7 +849,6 @@ def process_evidence(
     zone(str): Could zone used for cloud evidence. 
     """
   from turbinia import evidence
-  from turbinia.message import TurbiniaRequest
 
   # Set request id
   request_id = args.request_id if args.request_id else uuid.uuid4().hex
@@ -962,14 +959,6 @@ def process_evidence(
           sketch_id=None, skip_recipe_validation=skip_recipe_validation,
           yara_rules=yara_rules)
       request.recipe = recipe_dict
-    #else:
-    # Create a 'default' recipe.
-    #recipe_dict = client.create_recipe(
-    #    debug_tasks=args.debug_tasks, filter_patterns=filter_patterns,
-    #    group_id=group_id, jobs_allowlist=args.jobs_allowlist,
-    #    jobs_denylist=args.jobs_denylist, recipe_name=None, sketch_id=None,
-    #    skip_recipe_validation=skip_recipe_validation, yara_rules=yara_rules)
-    #request.recipe = recipe_dict
 
     if args.dump_json:
       print(request.to_json().encode('utf-8'))
@@ -980,13 +969,13 @@ def process_evidence(
           '{2:s}'.format(request.request_id, request.group_id, evidence_.name))
       # TODO add a new log line when group status is implemented
       log.info(
-          'Run command "turbiniactl status -r {0:s}" to see the status of'
+          'Run command "turbiniactl status -r {0!s}" to see the status of'
           ' this request and associated tasks'.format(request.request_id))
       client.send_request(request)
 
     if args.wait:
       log.info(
-          'Waiting for request {0:s} to complete'.format(request.request_id))
+          'Waiting for request {0!s} to complete'.format(request.request_id))
       region = config.TURBINIA_REGION
       client.wait_for_request(
           instance=config.INSTANCE_ID, project=config.TURBINIA_PROJECT,
