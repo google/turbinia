@@ -1,7 +1,6 @@
 celery>=5.2.2
 cryptography>=2.0.2,<3.4
 docker
-dfimagetools
 filelock
 google-api-core<2.0.0dev
 google-api-python-client
@@ -9,7 +8,7 @@ google-auth<2.0.0.dev0
 google-cloud-core<2.0dev
 google-cloud-datastore<=2.0.0
 google-cloud-error-reporting
-google-cloud-logging>=2.0.0
+google-cloud-logging>=2.0.0,<3.0.0dev
 google-cloud-pubsub==1.7.0
 google-cloud-storage
 pycryptodomex
@@ -20,6 +19,7 @@ proto-plus<1.19.7
 psq
 pyparsing<3
 pyyaml>=5.4.1
+pyOpenSSL<=21.0.0
 redis
 six>=1.15.0
 urllib3[secure]
