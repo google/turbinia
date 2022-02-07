@@ -3,7 +3,7 @@
 # This script can be used to manage a Turbinia stack deployed to GKE. 
 # Requirements:
 # - have 'gcloud' and 'kubectl' installed.
-# - autheticate against your GCP project with "gcloud auth login"
+# - authenticate against your GCP project with "gcloud auth login"
 # - authenticate against your GKE cluster with "gcloud container clusters get-credentials [cluster-name]> --zone [zone] --project [project-name]"
 # - optionally have the GCP project set with "gcloud config set project [you-project-name]"
 #
@@ -36,7 +36,7 @@ function usage {
   echo "show-config     Write the Turbinia configuration of an instance to STDOUT"
   echo "status          Show the running status of server and workers"
   echo "cordon          Cordon a cluster (Cordoning nodes is a Kubernetes mechanism to mark a node as “unschedulable”.)"
-  echo "uncordon        Uncordon a cluser (Cordoning nodes is a Kubernetes mechanism to mark a node as “unschedulable”.)"
+  echo "uncordon        Uncordon a cluster (Cordoning nodes is a Kubernetes mechanism to mark a node as “unschedulable”.)"
   echo "update-config   Update the Turbinia configuration of a Turbinia deployment from CONFIG_FILE, use -f"
   echo "update-env      Update an environment variable on a container, use -k and -v"
   echo "resize-cluster  Resize the number of nodes in the cluster."
@@ -155,9 +155,9 @@ function update_to_latest {
 
 function resize_cluster {
     echo "Resizing cluster $CLUSTER_NAME to $CLUSTER_SIZE nodes."
-    read -p 'WARNING: This will delete nodes as well as any associated data on the node. Do you wish to continue? (yes/no) ' ANS
+    read -p 'WARNING: This will delete nodes as well as any associated data on the node. Do you wish to continue? (yes/no) ' AND
 
-    if [ "$ANS" == "yes" ] ; then
+    if [ "$AND" == "yes" ] ; then
         $GCLOUD container clusters resize $CLUSTER_NAME --num-nodes $CLUSTER_SIZE
     else
         echo "Please enter yes if you'd like to resize the cluster. Exiting..."
