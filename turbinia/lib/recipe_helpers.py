@@ -215,8 +215,14 @@ def get_recipe_path_from_name(recipe_name):
   """
   recipe_path = ''
   if not recipe_name.endswith('.yaml'):
-    recipe_path = recipe_name + '.yaml'
+    recipe_name = recipe_name + '.yaml'
 
-  recipe_path = os.path.join(config.RECIPE_FILE_DIR, recipe_path)
+  if hasattr(config, 'RECIPE_FILE_DIR') and config.RECIPE_FILE_DIR:
+    recipe_path = os.path.join(config.RECIPE_FILE_DIR, recipe_name)
+  else:
+    recipe_path = os.path.realpath(__file__)
+    recipe_path = os.path.dirname(recipe_path)
+    recipe_path = os.path.join(recipe_path, 'config', 'recipes')
+    recipe_path = os.path.join(recipe_path, recipe_name)
 
   return recipe_path
