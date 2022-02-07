@@ -43,7 +43,7 @@ class FsstatTask(TurbiniaTask):
     if evidence.path_spec.type_indicator == 'XFS':
       message = 'Not running fsstat since partition is XFS'
       result.log(message)
-      result.close(self, successful=True, status=message)
+      result.close(self, success=True, status=message)
     else:
       output_evidence = ReportText(source_path=fsstat_output)
       cmd = ['sudo', 'fsstat', evidence.device_path]
