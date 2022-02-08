@@ -65,7 +65,7 @@ class TestTurbiniactl(unittest.TestCase):
     self.base_dir = tempfile.mkdtemp()
     self.source_path = tempfile.mkstemp(dir=self.base_dir)[1]
 
-  @mock.patch('turbinia.client.TurbiniaCeleryClient')
+  @mock.patch('turbinia.client.get_turbinia_client')
   @mock.patch('turbinia.evidence.RawDisk')
   def testRawDiskEvidence(self, mockEvidence, mockClient):
     """Test RawDisk evidence."""
@@ -84,7 +84,7 @@ class TestTurbiniactl(unittest.TestCase):
     mockEvidence.assert_called_with(
         name='My Evidence', source_path='/tmp/foo.img', source='case')
 
-  @mock.patch('turbinia.client.TurbiniaCeleryClient')
+  @mock.patch('turbinia.client.get_turbinia_client')
   @mock.patch('turbinia.evidence.CompressedDirectory')
   @mock.patch('turbinia.evidence.Directory')
   def testDirectoryDiskEvidence(
@@ -120,7 +120,7 @@ class TestTurbiniactl(unittest.TestCase):
     mockDirectory.assert_called_with(
         name='My Evidence', source_path=mock.ANY, source='case')
 
-  @mock.patch('turbinia.client.TurbiniaCeleryClient')
+  @mock.patch('turbinia.client.get_turbinia_client')
   @mock.patch('turbinia.evidence.CompressedDirectory')
   def testCompressedDirectory(self, mockEvidence, mockClient):
     """Test compressed directory evidence"""
@@ -142,7 +142,7 @@ class TestTurbiniactl(unittest.TestCase):
     mockEvidence.assert_called_with(
         name='My Evidence', source_path=mock.ANY, source='case')
 
-  @mock.patch('turbinia.client.TurbiniaCeleryClient')
+  @mock.patch('turbinia.client.get_turbinia_client')
   @mock.patch('turbinia.evidence.GoogleCloudDisk')
   def testCloudDisk(self, mockEvidence, mockClient):
     """Test Google Cloud Disk evidence."""
@@ -165,7 +165,7 @@ class TestTurbiniactl(unittest.TestCase):
 
   @mock.patch('turbinia.output_manager.OutputManager.setup')
   @mock.patch('turbinia.output_manager.OutputManager.save_evidence')
-  @mock.patch('turbinia.client.TurbiniaCeleryClient')
+  @mock.patch('turbinia.client.get_turbinia_client')
   @mock.patch('turbinia.evidence.GoogleCloudDiskRawEmbedded')
   @mock.patch('turbinia.evidence.GoogleCloudDisk')
   def testCloudEmbedded(
@@ -197,7 +197,7 @@ class TestTurbiniactl(unittest.TestCase):
         zone='testZone', embedded_path=mock.ANY)
     self.assertTrue(mockEmbeddedEvidence.called)
 
-  @mock.patch('turbinia.client.TurbiniaCeleryClient')
+  @mock.patch('turbinia.client.get_turbinia_client')
   @mock.patch('turbinia.evidence.ChromiumProfile')
   def testHindsight(self, mockEvidence, mockClient):
     """Test hindsight evidence"""
@@ -228,7 +228,7 @@ class TestTurbiniactl(unittest.TestCase):
         name='My Evidence', output_format='sqlite', browser_type='Chrome',
         source_path=mock.ANY)
 
-  @mock.patch('turbinia.client.TurbiniaCeleryClient')
+  @mock.patch('turbinia.client.get_turbinia_client')
   @mock.patch('turbinia.evidence.RawMemory')
   def testRawMemory(self, mockEvidence, mockClient):
     """Test raw memory evidence"""
@@ -248,7 +248,7 @@ class TestTurbiniactl(unittest.TestCase):
         name='My Evidence', source_path=mock.ANY, profile='testProfile',
         module_list=['mod1', 'mod2'])
 
-  @mock.patch('turbinia.client.TurbiniaCeleryClient')
+  @mock.patch('turbinia.client.get_turbinia_client')
   def testUnequalDirectoryArgs(self, _):
     """Test unequal number of args for directory evidence type."""
     self.assertRaises(
@@ -268,7 +268,7 @@ class TestTurbiniactl(unittest.TestCase):
     ])
     self.assertTrue(turbiniactl.process_evidence.called)
 
-  @mock.patch('turbinia.client.TurbiniaCeleryClient')
+  @mock.patch('turbinia.client.get_turbinia_client')
   def testUnequalRawdiskArgs(self, mockClient):
     """Test unequal number of args for rawdisk evidence type."""
     self.assertRaises(
@@ -286,7 +286,7 @@ class TestTurbiniactl(unittest.TestCase):
         ['rawdisk', '--source_path', 'img1,img2', '--name', 'name1,name2'])
     self.assertTrue(turbiniactl.process_evidence.called)
 
-  @mock.patch('turbinia.client.TurbiniaCeleryClient')
+  @mock.patch('turbinia.client.get_turbinia_client')
   def testUnequalCompresseddirectoryArgs(self, _):
     """Test unequal number of args for compresseddirectory evidence type."""
     self.assertRaises(
@@ -308,7 +308,7 @@ class TestTurbiniactl(unittest.TestCase):
     ])
     self.assertTrue(turbiniactl.process_evidence.called)
 
-  @mock.patch('turbinia.client.BaseTurbiniaClient')
+  @mock.patch('turbinia.client.get_turbinia_client')
   @mock.patch('libcloudforensics.providers.gcp.forensics.CreateDiskCopy')
   @mock.patch('argparse.ArgumentParser.parse_args')
   def testUnequalCloudDiskArgs(self, mockParser, mock_copyDisk, _):
@@ -375,7 +375,7 @@ class TestTurbiniactl(unittest.TestCase):
     ])
     self.assertTrue(turbiniactl.process_evidence.called)
 
-  @mock.patch('turbinia.client.BaseTurbiniaClient')
+  @mock.patch('turbinia.client.get_turbinia_client')
   @mock.patch('libcloudforensics.providers.gcp.forensics.CreateDiskCopy')
   def testUnequalCloudDiskEmbeddedArgs(self, mock_copyDisk, _):
     """Test unequal number of args for cloud embedded disk evidence type."""
@@ -442,7 +442,7 @@ class TestTurbiniactl(unittest.TestCase):
           '--embedded_path', 'path1,path2,path3'
       ])
 
-  @mock.patch('turbinia.client.TurbiniaCeleryClient')
+  @mock.patch('turbinia.client.get_turbinia_client')
   def testUnequalRawMemoryArgs(self, _):
     """Test unequal number of args for rawmemory evidence type."""
     self.assertRaises(
@@ -464,7 +464,7 @@ class TestTurbiniactl(unittest.TestCase):
     ])
     self.assertTrue(turbiniactl.process_evidence.called)
 
-  @mock.patch('turbinia.client.TurbiniaCeleryClient')
+  @mock.patch('turbinia.client.get_turbinia_client')
   def testUnequalHindsightArgs(self, _):
     """Test unequal number of args for hindsight evidence type."""
     self.assertRaises(
@@ -488,7 +488,7 @@ class TestTurbiniactl(unittest.TestCase):
         ['hindsight', '--source_path', 'disk1,disk2,disk3'])
     self.assertTrue(turbiniactl.process_evidence.called)
 
-  @mock.patch('turbinia.client.TurbiniaCeleryClient')
+  @mock.patch('turbinia.client.get_turbinia_client')
   def testTurbiniaClientRequest(self, mockClient):
     """Test Turbinia client request creation."""
     config.TASK_MANAGER = 'celery'
