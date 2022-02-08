@@ -27,7 +27,7 @@ if [[ "$*" == *--help ]] ; then
   echo "--no-datastore                 Do not configure Turbinia Datastore"
   echo "--no-filestore                 Do not deploy Turbinia Filestore"
   echo "--no-gcs                       Do not create a GCS bucket"
-  echo "--no pubsub                    Do not create the PubSub and PSQ topic/subscription"
+  echo "--no-pubsub                    Do not create the PubSub and PSQ topic/subscription"
   echo "--no-cluster                   Do not create the cluster"
   exit 1
 fi
@@ -68,15 +68,8 @@ if [[ -z "$DEVSHELL_PROJECT_ID" ]] ; then
   fi
 fi
 
-# Check if the configured VPC network exists.
-networks=$(gcloud -q compute networks list --filter="name=$VPC_NETWORK" |wc -l)
-if [[ "${networks}" -lt "2" ]]; then
-        echo "ERROR: VPC network $VPC_NETWORK not found, please create this first."
-        exit 1
-fi
-
 # Enable IAM services
-gcloud -q services --project $DEVSHELL_PROJECT_ID enable iam.googleapis.com
+gcloud -q --project $DEVSHELL_PROJECT_ID services enable iam.googleapis.com
 
 # Use local `gcloud auth` credentials rather than creating new Service Account.
 if [[ "$*" == *--no-gcloud-auth* ]] ; then
@@ -104,13 +97,20 @@ if [[ "$*" == *--no-gcloud-auth* ]] ; then
 
   # Create and fetch the service account key
   echo "Fetch and store service account key"
-  gcloud --project $DEVSHELL_PROJECT_ID iam service-accounts keys create ~/key.json --iam-account "$SA_NAME@$DEVSHELL_PROJECT_ID.iam.gserviceaccount.com"
-  export GOOGLE_APPLICATION_CREDENTIALS=~/key.json
+  gcloud --project $DEVSHELL_PROJECT_ID iam service-accounts keys create ~/$INSTANCE_ID.json --iam-account "$SA_NAME@$DEVSHELL_PROJECT_ID.iam.gserviceaccount.com"
+  export GOOGLE_APPLICATION_CREDENTIALS=~/$INSTANCE_ID.json
 
 # TODO: Do real check to make sure credentials have adequate roles
-elif [[ $( gcloud auth list --filter="status:ACTIVE" --format="value(account)" | wc -l ) -eq 0 ]] ; then
+elif [[ $( gcloud -q --project $DEVSHELL_PROJECT_ID auth list --filter="status:ACTIVE" --format="value(account)" | wc -l ) -eq 0 ]] ; then
   echo "No gcloud credentials found.  Use 'gcloud auth login' and 'gcloud auth application-default login' to log in"
   exit 1
+fi
+
+# Check if the configured VPC network exists.
+networks=$(gcloud -q --project $DEVSHELL_PROJECT_ID compute networks list --filter="name=$VPC_NETWORK" |wc -l)
+if [[ "${networks}" -lt "2" ]]; then
+        echo "ERROR: VPC network $VPC_NETWORK not found, please create this first."
+        exit 1
 fi
 
 # Update Docker image if flag was provided else use default
@@ -135,42 +135,42 @@ cp ../turbinia/config/turbinia_config_tmpl.py $DEPLOYMENT_FOLDER/$TURBINIA_CONFI
 # Deploy cloud functions
 if [[ "$*" != *--no-cloudfunctions* ]] ; then
   echo "Deploying cloud functions"
-  gcloud -q services --project $DEVSHELL_PROJECT_ID enable cloudfunctions.googleapis.com
-  gcloud -q services --project $DEVSHELL_PROJECT_ID enable cloudbuild.googleapis.com
+  gcloud -q --project $DEVSHELL_PROJECT_ID services enable cloudfunctions.googleapis.com
+  gcloud -q --project $DEVSHELL_PROJECT_ID services enable cloudbuild.googleapis.com
 
   # Deploying cloud functions is flaky. Retry until success.
   while true; do
-    num_functions="$(gcloud functions --project $DEVSHELL_PROJECT_ID list | grep task | grep $REGION | wc -l)"
+    num_functions="$(gcloud -q --project $DEVSHELL_PROJECT_ID functions list | grep task | grep $REGION | wc -l)"
     if [[ "${num_functions}" -eq "3" ]]; then
       echo "All Cloud Functions deployed"
       break
     fi
-    gcloud --project $DEVSHELL_PROJECT_ID -q functions deploy gettasks --region $REGION --source ../tools/gcf_init/ --runtime nodejs14 --trigger-http --memory 256MB --timeout 60s
-    gcloud --project $DEVSHELL_PROJECT_ID -q functions deploy closetask --region $REGION --source ../tools/gcf_init/ --runtime nodejs14 --trigger-http --memory 256MB --timeout 60s
-    gcloud --project $DEVSHELL_PROJECT_ID -q functions deploy closetasks  --region $REGION --source ../tools/gcf_init/ --runtime nodejs14 --trigger-http --memory 256MB --timeout 60s
+    gcloud -q --project $DEVSHELL_PROJECT_ID functions deploy gettasks --region $REGION --source ../tools/gcf_init/ --runtime nodejs14 --trigger-http --memory 256MB --timeout 60s
+    gcloud -q --project $DEVSHELL_PROJECT_ID functions deploy closetask --region $REGION --source ../tools/gcf_init/ --runtime nodejs14 --trigger-http --memory 256MB --timeout 60s
+    gcloud -q --project $DEVSHELL_PROJECT_ID functions deploy closetasks  --region $REGION --source ../tools/gcf_init/ --runtime nodejs14 --trigger-http --memory 256MB --timeout 60s
   done
 fi
 
 # Deploy Datastore indexes
 if [[ "$*" != *--no-datastore* ]] ; then
   echo "Enabling Datastore API and deploying datastore index"
-  gcloud --project $DEVSHELL_PROJECT_ID -q services enable datastore.googleapis.com
-  gcloud --project $DEVSHELL_PROJECT_ID -q datastore indexes create ../tools/gcf_init/index.yaml
+  gcloud -q --project $DEVSHELL_PROJECT_ID services enable datastore.googleapis.com
+  gcloud -q --project $DEVSHELL_PROJECT_ID datastore indexes create ../tools/gcf_init/index.yaml
 fi
 
 # Create GKE cluster and authenticate to it
 if [[ "$*" != *--no-cluster* ]] ; then
   echo "Enabling GCP Compute and Container APIs"
-  gcloud -q services --project $DEVSHELL_PROJECT_ID enable compute.googleapis.com
-  gcloud -q services --project $DEVSHELL_PROJECT_ID enable container.googleapis.com
+  gcloud -q --project $DEVSHELL_PROJECT_ID services enable compute.googleapis.com
+  gcloud -q --project $DEVSHELL_PROJECT_ID services enable container.googleapis.com
   echo "Creating cluser $CLUSTER_NAME with $CLUSTER_NODE_SIZE node(s) configured with machine type $CLUSTER_MACHINE_TYPE and disk size $CLUSTER_MACHINE_SIZE"
-  gcloud beta container clusters create $CLUSTER_NAME --machine-type $CLUSTER_MACHINE_TYPE --disk-size $CLUSTER_MACHINE_SIZE --num-nodes $CLUSTER_NODE_SIZE --master-ipv4-cidr $VPC_CONTROL_PANE --network $VPC_NETWORK --zone $ZONE --shielded-secure-boot --no-enable-master-authorized-networks  --enable-private-nodes --enable-ip-alias  --scopes "https://www.googleapis.com/auth/cloud-platform" --labels "turbinia-infra=true"
+  gcloud -q --project $DEVSHELL_PROJECT_ID container clusters create $CLUSTER_NAME --machine-type $CLUSTER_MACHINE_TYPE --disk-size $CLUSTER_MACHINE_SIZE --num-nodes $CLUSTER_NODE_SIZE --master-ipv4-cidr $VPC_CONTROL_PANE --network $VPC_NETWORK --zone $ZONE --shielded-secure-boot --no-enable-master-authorized-networks  --enable-private-nodes --enable-ip-alias  --scopes "https://www.googleapis.com/auth/cloud-platform" --labels "turbinia-infra=true"
 else
   echo "--no-cluster specified. Authenticating to pre-existing cluster $CLUSTER_NAME"
 fi
 
 # Authenticate to cluster
-gcloud container clusters get-credentials $CLUSTER_NAME --zone $ZONE
+gcloud -q --project $DEVSHELL_PROJECT_ID container clusters get-credentials $CLUSTER_NAME --zone $ZONE
 
 # Go to deployment folder to make changes files
 cd $DEPLOYMENT_FOLDER
@@ -189,15 +189,15 @@ sed -i -e "s/^TURBINIA_REGION = .*$/TURBINIA_REGION = '$REGION'/g" $TURBINIA_CON
 # Create File Store instance and update deployment files with created instance
 if [[ "$*" != *--no-filestore* ]] ; then  
   echo "Enabling GCP Filestore API"
-  gcloud -q services --project $DEVSHELL_PROJECT_ID enable file.googleapis.com
+  gcloud -q --project $DEVSHELL_PROJECT_ID services enable file.googleapis.com
   echo "Creating Filestore instance $FILESTORE_NAME with capacity $FILESTORE_CAPACITY"
-  gcloud -q filestore --project $DEVSHELL_PROJECT_ID instances create $FILESTORE_NAME --file-share=name=$FILESTORE_NAME,capacity=$FILESTORE_CAPACITY --zone=$ZONE --network=name=$VPC_NETWORK
+  gcloud -q --project $DEVSHELL_PROJECT_ID filestore instances create $FILESTORE_NAME --file-share=name=$FILESTORE_NAME,capacity=$FILESTORE_CAPACITY --zone=$ZONE --network=name=$VPC_NETWORK
 else
   echo "Using pre existing Filestore instance $FILESTORE_NAME with capacity $FILESTORE_CAPACITY"
 fi
 
 echo "Updating $TURBINIA_CONFIG config with Filestore configuration"
-FILESTORE_IP=$(gcloud filestore instances describe $FILESTORE_NAME --zone=$ZONE --format='value(networks.ipAddresses)' --flatten="networks[].ipAddresses[]")
+FILESTORE_IP=$(gcloud -q --project $DEVSHELL_PROJECT_ID filestore instances describe $FILESTORE_NAME --zone=$ZONE --format='value(networks.ipAddresses)' --flatten="networks[].ipAddresses[]")
 FILESTORE_MOUNT="'\/mnt\/$FILESTORE_NAME'"
 sed -i -e "s/<IP_ADDRESS>/$FILESTORE_IP/g" turbinia-volume-filestore.yaml
 sed -i -e "s/turbiniavolume/$FILESTORE_NAME/g" *.yaml
@@ -208,7 +208,7 @@ sed -i -e "s/^MOUNT_DIR_PREFIX = .*$/MOUNT_DIR_PREFIX = '\/mnt\/turbinia'/g" $TU
 #Create Google Cloud Storage Bucket
 if [[ "$*" != *--no-gcs* ]] ; then  
   echo "Enabling GCS cloud storage"
-  gcloud -q services --project $DEVSHELL_PROJECT_ID enable storage-component.googleapis.com
+  gcloud -q --project $DEVSHELL_PROJECT_ID services enable storage-component.googleapis.com
   echo "Creating GCS bucket gs://$INSTANCE_ID"
   gsutil mb -l $REGION gs://$INSTANCE_ID
 else
@@ -222,17 +222,17 @@ sed -i -e "s/^BUCKET_NAME = .*$/BUCKET_NAME = '$INSTANCE_ID'/g" $TURBINIA_CONFIG
 # Create main PubSub Topic/Subscription
 if [[ "$*" != *--no-pubsub* ]] ; then  
   echo "Enabling the GCP PubSub  API"
-  gcloud -q services --project $DEVSHELL_PROJECT_ID enable pubsub.googleapis.com
+  gcloud -q --project $DEVSHELL_PROJECT_ID services enable pubsub.googleapis.com
   echo "Creating PubSub topic $INSTANCE_ID"
-  gcloud pubsub topics create $INSTANCE_ID
+  gcloud -q --project $DEVSHELL_PROJECT_ID pubsub topics create $INSTANCE_ID
   echo "Creating PubSub subscription $INSTANCE_ID"
-  gcloud pubsub subscriptions create $INSTANCE_ID --topic=$INSTANCE_ID --ack-deadline=600 
+  gcloud -q --project $DEVSHELL_PROJECT_ID pubsub subscriptions create $INSTANCE_ID --topic=$INSTANCE_ID --ack-deadline=600 
 
   # Create internal PubSub PSQ Topic/Subscription
   echo "Creating PubSub PSQ Topic $INSTANCE_ID-psq"
-  gcloud pubsub topics create "$INSTANCE_ID-psq"
+  gcloud -q --project $DEVSHELL_PROJECT_ID pubsub topics create "$INSTANCE_ID-psq"
   echo "Creating PubSub PSQ subscription $INSTANCE_ID-psq"
-  gcloud pubsub subscriptions create "$INSTANCE_ID-psq" --topic="$INSTANCE_ID-psq" --ack-deadline=600
+  gcloud -q --project $DEVSHELL_PROJECT_ID pubsub subscriptions create "$INSTANCE_ID-psq" --topic="$INSTANCE_ID-psq" --ack-deadline=600
 else
   echo "--no-pubsub specified. Using pre-existing PubSub topic/subscription $INSTANCE_ID and PSQ topic/subscription $INSTANCE_ID-psq"
 fi
@@ -245,8 +245,8 @@ sed -i -e "s/^PSQ_TOPIC = .*$/PSQ_TOPIC = '$INSTANCE_ID-psq'/g" $TURBINIA_CONFIG
 
 # Enable Stackdriver Logging and Stackdriver Traceback
 echo "Enabling Cloud Error Reporting and Logging APIs"
-gcloud -q services --project $DEVSHELL_PROJECT_ID enable clouderrorreporting.googleapis.com
-gcloud -q services --project $DEVSHELL_PROJECT_ID enable logging.googleapis.com
+gcloud -q --project $DEVSHELL_PROJECT_ID services enable clouderrorreporting.googleapis.com
+gcloud -q --project $DEVSHELL_PROJECT_ID services enable logging.googleapis.com
 echo "Updating $TURBINIA_CONFIG to enable Stackdriver Traceback and Logging"
 sed -i -e "s/^STACKDRIVER_LOGGING = .*$/STACKDRIVER_LOGGING = True/g" $TURBINIA_CONFIG
 sed -i -e "s/^STACKDRIVER_TRACEBACK = .*$/STACKDRIVER_TRACEBACK = True/g" $TURBINIA_CONFIG
@@ -270,9 +270,17 @@ fi
 echo "Deploying Turbinia to $CLUSTER_NAME cluster"
 ./setup-pubsub.sh $TURBINIA_CONFIG
 
+# Create backup of turbinia config file if it exists
+TURBINIA_OUT="$HOME/.turbiniarc"
+if [[ -a $TURBINIA_OUT ]] ; then
+  backup_file="${TURBINIA_OUT}.$( date +%s )"
+  mv $TURBINIA_OUT $backup_file
+  echo "Backing up old Turbinia config $TURBINIA_CONFIG to $backup_file"
+fi
+
 # Make a copy of Turbinia config in user home directory
-echo "Creating a copy of Turbinia config in $HOME/.turbiniarc"
-cp $TURBINIA_CONFIG $HOME/.turbiniarc
+echo "Creating a copy of Turbinia config in $TURBINIA_OUT"
+cp $TURBINIA_CONFIG $TURBINIA_OUT
 
 echo "Turbinia GKE was succesfully deployed!"
 echo "Authenticate via: gcloud container clusters get-credentials $CLUSTER_NAME --zone $ZONE" 
