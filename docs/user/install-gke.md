@@ -28,7 +28,7 @@ Please follow these steps for deploying Turbinia to GKE. Ensure that the `.clust
 * The deployment script will automatically enable GCP APIs, create the cluster and GCP resources then deploy Turbinia to the cluster. At the end of the run, you should have a fully functioning Turbinia environment within GKE to use. 
 * Run the following command if you'd like to cleanup the newly created Turbinia environment
     * `./k8s/tools/cleanup-pubsub-gke.sh`
-    * **Note this will delete the Turbinia cluster and associated GCP resources** 
+    * **Note this will delete the Turbinia cluster including all processed output and log files as well as associated GCP resources** 
 
 ### **Making processing requests in GKE**
 * You can either make requests via setting up a local `turbiniactl` client or through connecting to the server through the following steps.

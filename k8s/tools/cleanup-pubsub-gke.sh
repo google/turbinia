@@ -33,6 +33,15 @@ if [[ "$*" == *--help ]] ; then
   exit 1
 fi
 
+# Before proceeding, prompt user to confirm deletion
+echo "This script is going to do a lot of destructive/irrecoverable actions such as deleting all output, logs, and GCP resources. "
+echo -n "Please enter in 'delete all' if you'd like to proceed: "
+read response
+if [[ $response == "delete all" ]] ; then
+  echo "'delete all' specified. Exiting."
+  exit 1
+fi
+
 # Check configured gcloud project
 if [[ -z "$DEVSHELL_PROJECT_ID" ]] ; then
   DEVSHELL_PROJECT_ID=$(gcloud config get-value project)
