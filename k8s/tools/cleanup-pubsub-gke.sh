@@ -28,6 +28,8 @@ if [[ "$*" == *--help ]] ; then
   echo "--no-datastore                 Do not cleanup Turbinia Datastore"
   echo "--no-filestore                 Do not cleanup Turbinia Filestore share"
   echo "--no-gcs                       Do not delete the GCS bucket"
+  echo "--no-pubsub                    Do not delete the PubSub and PSQ topic/subscription"
+  echo "--no-cluster                   Do not delete the cluster"
   exit 1
 fi
 
@@ -52,23 +54,27 @@ if [[ -z "$DEVSHELL_PROJECT_ID" ]] ; then
 fi
 
 # Delete the cluster
-echo "Deleting cluster $CLUSTER_NAME"
-gcloud -q --project $DEVSHELL_PROJECT_ID container clusters delete $CLUSTER_NAME --zone $ZONE
+if [[ "$*" != *--no-cluster* ]] ; then
+  echo "Deleting cluster $CLUSTER_NAME"
+  gcloud -q --project $DEVSHELL_PROJECT_ID container clusters delete $CLUSTER_NAME --zone $ZONE
+fi
 
 # Delete the GCS storage bucket
-if [[ "$*" != *--no-filestore* ]] ; then
+if [[ "$*" != *--no-gcs* ]] ; then
   echo "Deleting GCS storage bucket gs://$INSTANCE_ID"
   gsutil -q rm -r gs://$INSTANCE_ID
 fi
 
 # Delete PubSub topics
-echo "Deleting PubSub topic $INSTANCE_ID"
-gcloud -q --project $DEVSHELL_PROJECT_ID pubsub topics delete $INSTANCE_ID
-gcloud -q --project $DEVSHELL_PROJECT_ID pubsub topics delete "$INSTANCE_ID-psq"
+if [[ "$*" != *--no-pubsub* ]] ; then
+  echo "Deleting PubSub topic $INSTANCE_ID"
+  gcloud -q --project $DEVSHELL_PROJECT_ID pubsub topics delete $INSTANCE_ID
+  gcloud -q --project $DEVSHELL_PROJECT_ID pubsub topics delete "$INSTANCE_ID-psq"
 
-# Delete PubSub subscriptions
-gcloud -q --project $DEVSHELL_PROJECT_ID pubsub subscriptions delete $INSTANCE_ID
-gcloud -q --project $DEVSHELL_PROJECT_ID pubsub subscriptions delete "$INSTANCE_ID-psq"
+  # Delete PubSub subscriptions
+  gcloud -q --project $DEVSHELL_PROJECT_ID pubsub subscriptions delete $INSTANCE_ID
+  gcloud -q --project $DEVSHELL_PROJECT_ID pubsub subscriptions delete "$INSTANCE_ID-psq"
+fi
 
 # Delete the Filestore instance
 if [[ "$*" != *--no-filestore* ]] ; then
