@@ -34,7 +34,8 @@ from turbinia.config import logger
 from turbinia.config import DATETIME_FORMAT
 from turbinia import task_manager
 from turbinia import TurbiniaException
-from turbinia.lib import recipe_helpers, text_formatter as fmt
+from turbinia.lib import recipe_helpers
+from turbinia.lib import text_formatter as fmt
 from turbinia.message import TurbiniaRequest
 from turbinia.workers import Priority
 
@@ -169,12 +170,13 @@ class BaseTurbiniaClient:
       self, debug_tasks=False, filter_patterns=None, group_id='',
       jobs_allowlist=None, jobs_denylist=None, recipe_name=None, sketch_id=None,
       skip_recipe_validation=False, yara_rules=None):
-    """Creates a Turbinia recipe. If no recipe_name is not specified, this
-        method returns a default recipe. If a recipe_name is specified
-        then this method will build the recipe dictionary by reading the
-        contents of a recipe file. The path to the recipe file is inferred
-        from the recipe_name and the RECIPE_FILE_DIR configuration
-        parameter.
+    """Creates a Turbinia recipe.
+    
+    If no recipe_name is specified, this  method returns a default recipe.
+    If a recipe_name is specified then this method will build the recipe 
+    dictionary by reading the  contents of a recipe file. The path to
+    the recipe file is inferre from the recipe_name and the RECIPE_FILE_DIR
+    configuration parameter.
 
     Args:
       debug_tasks (bool): flag to turn debug output on for supported tasks.
