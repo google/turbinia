@@ -16,12 +16,12 @@
 
 from __future__ import unicode_literals
 
+import argparse
 import unittest
 import tempfile
+
 from unittest import mock
-import argparse
 from libcloudforensics.providers.gcp.internal import compute
-from turbinia import client
 from turbinia import config
 from turbinia import TurbiniaException
 from turbinia import turbiniactl
@@ -495,7 +495,7 @@ class TestTurbiniactl(unittest.TestCase):
     mockClient.create_request = mock.MagicMock()
     mockClient.create_request.return_value = TurbiniaRequest(
         recipe=recipe_helpers.DEFAULT_RECIPE)
-    test_request = mockClient.create_request(request_id='1234')
+    test_request = mockClient.create_request()
     self.assertIsNotNone(test_request)
     test_default_recipe = recipe_helpers.DEFAULT_RECIPE
     self.assertEqual(test_request.recipe, test_default_recipe)
