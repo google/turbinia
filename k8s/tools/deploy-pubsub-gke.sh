@@ -109,7 +109,7 @@ if [[ "$*" == *--no-gcloud-auth* ]] ; then
 
 # TODO: Do real check to make sure credentials have adequate roles
 elif [[ $( gcloud auth list --filter="status:ACTIVE" --format="value(account)" | wc -l ) -eq 0 ]] ; then
-  echo "No gcloud credentials found.  Use 'gcloud auth login <EMAIl>' or 'gcloud auth application-default' to log in"
+  echo "No gcloud credentials found.  Use 'gcloud auth login' and 'gcloud auth application-default login' to log in"
   exit 1
 fi
 
