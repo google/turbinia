@@ -969,13 +969,13 @@ def process_evidence(
           '{2:s}'.format(request.request_id, request.group_id, evidence_.name))
       # TODO add a new log line when group status is implemented
       log.info(
-          'Run command "turbiniactl status -r {0!s}" to see the status of'
+          'Run command "turbiniactl status -r {0:s}" to see the status of'
           ' this request and associated tasks'.format(request.request_id))
       client.send_request(request)
 
     if args.wait:
       log.info(
-          'Waiting for request {0!s} to complete'.format(request.request_id))
+          'Waiting for request {0:s} to complete'.format(request.request_id))
       region = config.TURBINIA_REGION
       client.wait_for_request(
           instance=config.INSTANCE_ID, project=config.TURBINIA_PROJECT,

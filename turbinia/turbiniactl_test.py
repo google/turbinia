@@ -21,9 +21,11 @@ import tempfile
 from unittest import mock
 import argparse
 from libcloudforensics.providers.gcp.internal import compute
+from turbinia import client
 from turbinia import config
 from turbinia import TurbiniaException
 from turbinia import turbiniactl
+from turbinia.lib import recipe_helpers
 from turbinia.message import TurbiniaRequest
 from turbinia.processors import archive
 
@@ -485,3 +487,15 @@ class TestTurbiniactl(unittest.TestCase):
     turbiniactl.process_args(
         ['hindsight', '--source_path', 'disk1,disk2,disk3'])
     self.assertTrue(turbiniactl.process_evidence.called)
+
+  @mock.patch('turbinia.client.TurbiniaCeleryClient')
+  def testTurbiniaClientRequest(self, mockClient):
+    """Test Turbinia client request creation."""
+    config.TASK_MANAGER = 'celery'
+    mockClient.create_request = mock.MagicMock()
+    mockClient.create_request.return_value = TurbiniaRequest(
+        recipe=recipe_helpers.DEFAULT_RECIPE)
+    test_request = mockClient.create_request(request_id='1234')
+    self.assertIsNotNone(test_request)
+    test_default_recipe = recipe_helpers.DEFAULT_RECIPE
+    self.assertEqual(test_request.recipe, test_default_recipe)
