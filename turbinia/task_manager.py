@@ -17,6 +17,7 @@
 from __future__ import unicode_literals, absolute_import
 
 import logging
+import datetime
 import time
 import os
 import filelock
@@ -52,6 +53,12 @@ log = logging.getLogger('turbinia')
 
 PSQ_TASK_TIMEOUT_SECONDS = 604800
 PSQ_QUEUE_WAIT_SECONDS = 2
+# The amount of time in seconds that the server will wait in addition to the
+# Job/Task timeout value before it times out a given Task.  This is to make sure
+# that the server doesn't time out the Task before the Worker has a chance to
+# and should account for the Task scheduling and setup time that happens before
+# the task starts.
+SERVER_TASK_TIMEOUT_BUFFER = 300
 
 # Define metrics
 turbinia_server_tasks_total = Gauge(
@@ -64,6 +71,9 @@ turbinia_jobs_completed_total = Gauge(
     'turbinia_jobs_completed_total', 'Total number jobs resolved')
 turbinia_server_request_total = Gauge(
     'turbinia_server_request_total', 'Total number of requests received.')
+turbinia_server_task_timeout_total = Gauge(
+    'turbinia_server_task_timeout_total',
+    'Total number of Tasks that have timed out on the Server.')
 turbinia_result_success_invalid = Gauge(
     'turbinia_result_success_invalid',
     'The result returned from the Task had an invalid success status of None')
@@ -298,6 +308,32 @@ class BaseTaskManager:
         break
 
     return request_finalized and self.check_request_done(request_id)
+
+  def check_task_timeout(self, task):
+    """Checks whether a Task has timed out.
+
+    The Tasks should normally be timed out by the Worker, but if there was some
+    kind of fatal error on the Worker or other problem in the Task that
+    prevented the results from returning then we will time out on the server
+    side as well and abandon the Task.
+
+    Args:
+      task(TurbiniaTask): The Task to check for the timeout.
+
+    Returns:
+      int: If the Task has timed out, this is the time in seconds, otherwise if
+          the Task hasn't timed out it will return 0.
+    """
+    job = self.get_job(task.job_id)
+    timeout_target = jobs_manager.JobsManager.GetTimeoutValue(job.name)
+    task_runtime = datetime.now() - task.start_time
+    task_runtime = task_runtime.total_seconds()
+    if task_runtime > timeout_target + SERVER_TASK_TIMEOUT_BUFFER:
+      timeout = task_runtime
+    else:
+      timeout = 0
+
+    return timeout
 
   def get_evidence(self):
     """Checks for new evidence to process.
@@ -564,6 +600,27 @@ class BaseTaskManager:
 
       time.sleep(config.SLEEP_TIME)
 
+  def timeout_task(self, task, timeout):
+    """Sets status and result data for timed out Task.
+
+    Args:
+      task(TurbiniaTask): The task that will be timed out.
+      timeout(int): The timeout value that has been reached.
+
+    Returns:
+      TurbiniaTask: The updated task.
+    """
+    result = workers.TurbiniaTaskResult(
+        request_id=task.request_id, no_output_manager=True)
+    result.status = (
+        'Task {0:s} timed out on the server and was auto-closed after '
+        '{0:d} seconds'.format(task.name, timeout))
+    result.successful = False
+    task.result = workers.TurbiniaTaskResult.deserialize(result)
+    turbinia_server_task_timeout_total.inc()
+
+    return task
+
 
 class CeleryTaskManager(BaseTaskManager):
   """Celery implementation of BaseTaskManager.
@@ -609,7 +666,15 @@ class CeleryTaskManager(BaseTaskManager):
         task.result = workers.TurbiniaTaskResult.deserialize(celery_task.result)
         completed_tasks.append(task)
       else:
-        log.debug('Task {0:s} status unknown'.format(celery_task.id))
+        timeout = self.check_task_timeout(task)
+        if timeout:
+          log.warning(
+              'Task {0:s} timed on server out after {0:d} seconds. Auto-closing Task.'
+              .format(celery_task.id, timeout))
+          task = self.timeout_task(task, timeout)
+          completed_tasks.append(task)
+        else:
+          log.debug('Task {0:s} status unknown'.format(celery_task.id))
 
     outstanding_task_count = len(self.tasks) - len(completed_tasks)
     if outstanding_task_count > 0:
@@ -708,6 +773,13 @@ class PSQTaskManager(BaseTaskManager):
         log.debug('Task {0:s} not yet created'.format(task.stub.task_id))
       elif psq_task.status not in (psq.task.FINISHED, psq.task.FAILED):
         log.debug('Task {0:s} not finished'.format(psq_task.id))
+        timeout = self.check_task_timeout(task)
+        if timeout:
+          log.warning(
+              'Task {0:s} timed on server out after {0:d} seconds. Auto-closing Task.'
+              .format(celery_task.id, timeout))
+          task = self.timeout_task(task, timeout)
+          completed_tasks.append(task)
       elif psq_task.status == psq.task.FAILED:
         log.warning('Task {0:s} failed.'.format(psq_task.id))
         completed_tasks.append(task)

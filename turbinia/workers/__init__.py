@@ -97,8 +97,8 @@ class TurbiniaTaskResult:
       request_id: The id of the initial request to process this evidence.
       run_time: Length of time the task ran for.
       saved_paths: Paths where output has been saved.
-      start_time: Datetime object of when the task was started
       status: A one line descriptive task status.
+      start_time: Datetime object of when the task was started
       successful: Bool indicating success status.
       task_id: Task ID of the parent task.
       task_name: Name of parent task.
@@ -135,10 +135,10 @@ class TurbiniaTaskResult:
 
     self.report_data = None
     self.report_priority = Priority.MEDIUM
-    self.start_time = datetime.now()
     self.run_time = None
     self.saved_paths = []
     self.successful = None
+    self.start_time = datetime.now()
     self.status = None
     self.error = {}
     self.worker_name = platform.node()
@@ -189,7 +189,7 @@ class TurbiniaTaskResult:
       # Don't try to close twice.
       return
     self.successful = success
-    self.run_time = datetime.now() - self.start_time
+    self.run_time = datetime.now() - task.start_time
     if success:
       turbinia_worker_tasks_completed_total.inc()
     else:
@@ -354,7 +354,6 @@ class TurbiniaTaskResult:
       result_copy['run_time'] = self.run_time.total_seconds()
     else:
       result_copy['run_time'] = None
-    result_copy['start_time'] = self.start_time.strftime(DATETIME_FORMAT)
     if self.input_evidence:
       result_copy['input_evidence'] = None
     result_copy['evidence'] = [x.serialize() for x in self.evidence]
@@ -377,7 +376,6 @@ class TurbiniaTaskResult:
       result.state_manager = None
     if result.run_time:
       result.run_time = timedelta(seconds=result.run_time)
-    result.start_time = datetime.strptime(result.start_time, DATETIME_FORMAT)
     if result.input_evidence:
       result.input_evidence = evidence_decode(result.input_evidence)
     result.evidence = [evidence_decode(x) for x in result.evidence]
@@ -476,6 +474,7 @@ class TurbiniaTask:
     task_copy = deepcopy(self.__dict__)
     task_copy['output_manager'] = self.output_manager.__dict__
     task_copy['last_update'] = self.last_update.strftime(DATETIME_FORMAT)
+    task_copy['start_time'] = self.start_time.strftime(DATETIME_FORMAT)
     return task_copy
 
   @classmethod
