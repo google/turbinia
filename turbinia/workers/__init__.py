@@ -83,30 +83,29 @@ class TurbiniaTaskResult:
   """Object to store task results to be returned by a TurbiniaTask.
 
   Attributes:
-      base_output_dir: Base path for local output
-      closed: Boolean indicating whether this result is closed
-      output_dir: Full path for local output
-      error: Dict of error data ('error' and 'traceback' are some valid keys)
-      evidence: List of newly created Evidence objects.
-      id: Unique Id of result (string of hex)
-      input_evidence: The evidence this task processed.
+      base_output_dir (str): Base path for local output
+      closed (bool): Indicates whether this result is closed
+      output_dir (str): Full path for local output
+      error (dict): Error data ('error' and 'traceback' are some valid keys)
+      evidence (list[Evidence]): Newly created Evidence objects.
+      id (str): Unique Id of result (string of hex)
+      input_evidence (Evidence): The evidence this task processed.
       job_id (str): The ID of the Job that generated this Task/TaskResult
       report_data (string): Markdown data that can be used in a Turbinia report.
       report_priority (int): Value between 0-100 (0 is the highest priority) to
           be used to order report sections.
-      request_id: The id of the initial request to process this evidence.
-      run_time: Length of time the task ran for.
-      saved_paths: Paths where output has been saved.
-      status: A one line descriptive task status.
-      start_time: Datetime object of when the task was started
-      successful: Bool indicating success status.
-      task_id: Task ID of the parent task.
-      task_name: Name of parent task.
-      requester: The user who requested the task.
-      state_manager: (DatastoreStateManager|RedisStateManager): State manager
-        object to handle syncing with storage.
-      worker_name: Name of worker task executed on.
-      _log: A list of log messages
+      request_id (str): The id of the initial request to process this evidence.
+      run_time (datetime): Length of time the task ran for.
+      saved_paths (list(str)): Paths where output has been saved.
+      status (str): A one line descriptive task status.
+      successful (bool): Indicates success status.
+      task_id (str): Task ID of the parent task.
+      task_name (str): Name of parent task.
+      requester (str): The user who requested the task.
+      state_manager (DatastoreStateManager|RedisStateManager): State manager
+          object to handle syncing with storage.
+      worker_name (str): Name of worker task executed on.
+      _log (list[str]): A list of log messages
   """
 
   # The list of attributes that we will persist into storage
@@ -138,7 +137,6 @@ class TurbiniaTaskResult:
     self.run_time = None
     self.saved_paths = []
     self.successful = None
-    self.start_time = datetime.now()
     self.status = None
     self.error = {}
     self.worker_name = platform.node()
@@ -401,6 +399,7 @@ class TurbiniaTask:
       output_manager (OutputManager): The object that manages saving output.
       result (TurbiniaTaskResult): A TurbiniaTaskResult object.
       request_id (str): The id of the initial request to process this evidence.
+      start_time (datetime): When the task was started
       state_key (str): A key used to manage task state
       stub (psq.task.TaskResult|celery.app.Task): The task manager
           implementation specific task stub that exists server side to keep a
@@ -456,6 +455,7 @@ class TurbiniaTask:
     self.result = None
     self.request_id = request_id
     self.state_key = None
+    self.start_time = datetime.now()
     self.stub = None
     self.tmp_dir = None
     self.turbinia_version = turbinia.__version__
