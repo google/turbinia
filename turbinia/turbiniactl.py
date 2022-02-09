@@ -944,10 +944,6 @@ def process_evidence(
 
     # Recipe pre-condition checks.
     recipe_helpers.validate_recipe_conditions(args)
-    if not hasattr(args, 'skip_recipe_validation'):
-      skip_recipe_validation = False
-    else:
-      skip_recipe_validation = args.skip_recipe_validation
 
     if args.recipe or args.recipe_path:
       # Load the specified recipe.
@@ -956,7 +952,7 @@ def process_evidence(
           group_id=group_id, jobs_allowlist=args.jobs_allowlist,
           jobs_denylist=args.jobs_denylist,
           recipe_name=args.recipe if args.recipe else args.recipe_path,
-          sketch_id=None, skip_recipe_validation=skip_recipe_validation,
+          sketch_id=None, skip_recipe_validation=args.skip_recipe_validation,
           yara_rules=yara_rules)
       request.recipe = recipe_dict
 
