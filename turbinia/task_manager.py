@@ -17,7 +17,7 @@
 from __future__ import unicode_literals, absolute_import
 
 import logging
-import datetime
+from datetime import datetime
 import time
 import os
 import filelock
