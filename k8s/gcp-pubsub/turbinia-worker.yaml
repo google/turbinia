@@ -23,10 +23,10 @@ spec:
       initContainers:
         - name: init-filestore
           image: busybox:1.28
-          command: ['sh', '-c', 'chmod go+w /mnt/output']
+          command: ['sh', '-c', 'chmod go+w /mnt/turbiniavolume']
           volumeMounts:
-            - mountPath: "/mnt/output"
-              name: output
+            - mountPath: "/mnt/turbiniavolume"
+              name: turbiniavolume
       containers:
         - name: worker
           image: us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-worker:latest
@@ -58,8 +58,8 @@ spec:
             - mountPath: "/var/run/lock"
               name: lockfolder
               readOnly: false
-            - mountPath: /mnt/output
-              name: output
+            - mountPath: /mnt/turbiniavolume
+              name: turbiniavolume
           ports:
             - containerPort: 9200
           resources: 
@@ -76,7 +76,7 @@ spec:
         - name: lockfolder
           hostPath:
             path: /var/run/lock
-        - name: output
+        - name: turbiniavolume
           persistentVolumeClaim:
-            claimName: output-claim
+            claimName: turbiniavolume-claim
             readOnly: false
