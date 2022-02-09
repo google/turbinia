@@ -17,7 +17,8 @@
 from __future__ import unicode_literals
 
 from copy import deepcopy
-from datetime import datetime, timedelta
+from datetime import datetime
+from datetime import timedelta
 from enum import IntEnum
 import getpass
 import json
