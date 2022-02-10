@@ -969,7 +969,7 @@ class TurbiniaCeleryClient(BaseTurbiniaClient):
     https://github.com/google/turbinia/issues/999
     """
     raise TurbiniaException(
-        '--close_tasks is not yet implemented for Celery: '
+        '--close_tasks is not yet implemented for Redis: '
         'https://github.com/google/turbinia/issues/999')
     
   def send_request(self, request):
