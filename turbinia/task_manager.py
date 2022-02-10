@@ -28,6 +28,7 @@ import turbinia
 from turbinia import workers
 from turbinia import evidence
 from turbinia import config
+from turbinia import job_utils
 from turbinia import state_manager
 from turbinia import task_utils
 from turbinia import TurbiniaException
@@ -175,6 +176,8 @@ class BaseTaskManager:
           job_names, disabled_jobs, [])
 
     self.jobs = [job for _, job in jobs_manager.JobsManager.GetJobs(job_names)]
+    dependencies = config.ParseDependencies()
+    job_utils.register_job_timeouts(dependencies)
     log.debug('Registered job list: {0:s}'.format(str(job_names)))
 
   def abort_request(self, request_id, requester, evidence_name, message):
@@ -332,8 +335,6 @@ class BaseTaskManager:
       timeout = task_runtime
     else:
       timeout = 0
-    log.debug('DEBUUUUUUUUUUUG: Checking Task timeout for {0:s} runtime '
-                  '{1!s} target timeout {2!s})'.format(task.name, task_runtime, timeout_target))
 
     return timeout
 
