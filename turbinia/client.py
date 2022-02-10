@@ -1047,6 +1047,18 @@ class TurbiniaCeleryClient(BaseTurbiniaClient):
     super(TurbiniaCeleryClient, self).__init__(*args, **kwargs)
     self.redis = RedisStateManager()
 
+  def close_tasks(
+      self, instance, project, region, request_id=None, task_id=None, user=None,
+      requester=None):
+    """Close Turbinia Tasks based on Request ID.
+
+    Currently needs to be implemented for Redis/Celery:
+    https://github.com/google/turbinia/issues/999
+    """
+    raise TurbiniaException(
+        '--close_tasks is not yet implemented for Redis: '
+        'https://github.com/google/turbinia/issues/999')
+
   def send_request(self, request):
     """Sends a TurbiniaRequest message.
 

@@ -251,9 +251,9 @@ def process_args(args):
 
   parser_googleclouddiskembedded.add_argument(
       '-P', '--mount_partition', type=csv_list, default=[1],
-      help='The partition number to use when mounting the parent disk.  '
-      'Defaults to the first partition.  Only affects mounting, and not what '
-      'gets processed.')
+      help='The partition number as an integer to use when mounting the '
+      'parent disk. Defaults to the first partition. Only affects mounting, and '
+      'not what gets processed.')
   parser_googleclouddiskembedded.add_argument(
       '-z', '--zone', help='Geographic zone the disk exists in', type=csv_list)
   parser_googleclouddiskembedded.add_argument(
@@ -360,8 +360,10 @@ def process_args(args):
       '-f', '--force', help='Gatekeeper for --close_tasks', action='store_true',
       required=False)
   parser_status.add_argument(
-      '-r', '--request_id', help='Show tasks with this Request ID',
-      required=False)
+      '-r', '--request_id',
+      help='Show all tasks for this Request ID. A request to process Evidence will '
+      'generate a unique request ID and this option will show all Tasks associated '
+      'with this request.', required=False)
   # 20 == Priority.High. We are setting this manually here because we don't want
   # to load the worker module yet in order to access this Enum.
   parser_status.add_argument(
@@ -379,7 +381,9 @@ def process_args(args):
       '-s', '--statistics', help='Generate statistics only',
       action='store_true', required=False)
   parser_status.add_argument(
-      '-t', '--task_id', help='Show task for given Task ID', required=False)
+      '-t', '--task_id', help='Show task data for the given Task ID. A '
+      'processing request can generate multiple Tasks as part of the request '
+      'and this will filter to only the specified Task.', required=False)
   parser_status.add_argument(
       '-u', '--user', help='Show task for given user', required=False)
   parser_status.add_argument(
@@ -423,7 +427,7 @@ def process_args(args):
       '-t', '--task_id', help='Download all the results for given task_id.')
   parser_gcs_logs.add_argument(
       '-r', '--request_id',
-      help='Download all the results for given request_id.')
+      help='Download the results for all Tasks for the given request_id.')
   parser_gcs_logs.add_argument(
       '-b', '--bucket',
       help='Alternate GCS bucket to download from. Must be in the following '
