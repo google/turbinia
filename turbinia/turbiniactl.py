@@ -25,7 +25,6 @@ import logging
 import os
 import sys
 import uuid
-import copy
 
 from turbinia import config
 from turbinia import TurbiniaException
@@ -504,7 +503,6 @@ def process_args(args):
   # to point to config paths.
   from turbinia import notify
   from turbinia import client as TurbiniaClientProvider
-  from turbinia.client import TurbiniaCeleryClient
   from turbinia.worker import TurbiniaCeleryWorker
   from turbinia.worker import TurbiniaPsqWorker
   from turbinia.server import TurbiniaServer
@@ -533,11 +531,6 @@ def process_args(args):
 
   args.jobs_allowlist = [j.lower() for j in args.jobs_allowlist]
   args.jobs_denylist = [j.lower() for j in args.jobs_denylist]
-  if args.jobs_allowlist and args.jobs_denylist:
-    msg = (
-        'A Job filter allowlist and denylist cannot be specified at the same '
-        'time')
-    raise TurbiniaException(msg)
 
   # Read set set filter_patterns
   filter_patterns = []
@@ -860,7 +853,6 @@ def process_evidence(
     zone(str): Could zone used for cloud evidence. 
     """
   from turbinia import evidence
-  from turbinia.message import TurbiniaRequest
 
   # Set request id
   request_id = args.request_id if args.request_id else uuid.uuid4().hex
@@ -938,7 +930,7 @@ def process_evidence(
 
   request = None
   if evidence_:
-    request = TurbiniaRequest(
+    request = client.create_request(
         request_id=request_id, group_id=group_id, requester=getpass.getuser())
     request.evidence.append(evidence_)
 
@@ -953,54 +945,22 @@ def process_evidence(
                   credential, args.decryption_keys, exception))
           raise TurbiniaException(msg)
         evidence_.credentials.append((credential_type, credential_data))
+
+    # Recipe pre-condition checks.
+    if args.recipe and args.recipe_path:
+      msg = ('Expected a recipe name (-I) or path (-P) but found both.')
+      raise TurbiniaException(msg)
+
     if args.recipe or args.recipe_path:
-      if (args.jobs_denylist or args.jobs_allowlist or
-          args.filter_patterns_file or args.yara_rules_file):
-        msg = (
-            'Specifying a recipe is incompatible with defining '
-            'jobs allow/deny lists, yara rules or a patterns file separately.')
-        raise TurbiniaException(msg)
-
-      # Find the recipe file with the following precedence:
-      #   1. An absolute path to a recipe file provided with --recipe_path.
-      #   2. A combination of the RECIPE_FILE_DIR config option and the
-      #     --recipe flag.
-      #   3. A combination of the packaged recipe dir (turbinia/config/recipes)
-      #     and the --recipe flag.
-      if args.recipe_path:
-        recipe_file = args.recipe_path
-      elif hasattr(config, 'RECIPE_FILE_DIR') and config.RECIPE_FILE_DIR:
-        recipe_file = os.path.join(config.RECIPE_FILE_DIR, args.recipe)
-      else:
-        recipe_dir = os.path.realpath(__file__)
-        recipe_dir = os.path.dirname(recipe_dir)
-        recipe_dir = os.path.join(recipe_dir, 'config', 'recipes')
-        recipe_file = os.path.join(recipe_dir, args.recipe)
-
-      if not os.path.exists(recipe_file) and not recipe_file.endswith('.yaml'):
-        log.warning(
-            'Could not find recipe file at {0:s}, checking for file '
-            'with .yaml extension'.format(recipe_file))
-        recipe_file = recipe_file + '.yaml'
-      if not os.path.exists(recipe_file):
-        msg = 'Recipe file {0:s} could not be found. Exiting.'.format(
-            recipe_file)
-        raise TurbiniaException(msg)
-
-      recipe_dict = recipe_helpers.load_recipe_from_file(
-          recipe_file, not args.skip_recipe_validation)
-      if not recipe_dict:
-        msg = 'Could not initiate a recipe_dict.'
-        raise TurbiniaException(msg)
-    else:
-      recipe_dict = copy.deepcopy(recipe_helpers.DEFAULT_RECIPE)
-      recipe_dict['globals']['debug_tasks'] = args.debug_tasks
-      recipe_dict['globals']['filter_patterns'] = filter_patterns
-      recipe_dict['globals']['jobs_denylist'] = args.jobs_denylist
-      recipe_dict['globals']['jobs_allowlist'] = args.jobs_allowlist
-      recipe_dict['globals']['yara_rules'] = yara_rules
-    recipe_dict['globals']['group_id'] = group_id
-    request.recipe = recipe_dict
+      # Load the specified recipe.
+      recipe_dict = client.create_recipe(
+          debug_tasks=args.debug_tasks, filter_patterns=filter_patterns,
+          group_id=group_id, jobs_allowlist=args.jobs_allowlist,
+          jobs_denylist=args.jobs_denylist,
+          recipe_name=args.recipe if args.recipe else args.recipe_path,
+          sketch_id=None, skip_recipe_validation=args.skip_recipe_validation,
+          yara_rules=yara_rules)
+      request.recipe = recipe_dict
 
     if args.dump_json:
       print(request.to_json().encode('utf-8'))
