@@ -330,7 +330,7 @@ class BaseTaskManager:
     job = self.get_job(task.job_id)
     timeout_target = jobs_manager.JobsManager.GetTimeoutValue(job.name)
     task_runtime = datetime.now() - task.start_time
-    task_runtime = task_runtime.total_seconds()
+    task_runtime = int(task_runtime.total_seconds())
     if task_runtime > timeout_target + SERVER_TASK_TIMEOUT_BUFFER:
       timeout = task_runtime
     else:
@@ -681,7 +681,7 @@ class CeleryTaskManager(BaseTaskManager):
         timeout = self.check_task_timeout(task)
         if timeout:
           log.warning(
-              'Task {0:s} timed on server out after {0:d} seconds. Auto-closing Task.'
+              'Task {0:s} timed on server out after {1:d} seconds. Auto-closing Task.'
               .format(celery_task.id, timeout))
           task = self.timeout_task(task, timeout)
           completed_tasks.append(task)
