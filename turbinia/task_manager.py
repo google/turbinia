@@ -619,7 +619,7 @@ class BaseTaskManager:
         'Task {0:s} timed out on the server and was auto-closed after '
         '{1:d} seconds'.format(task.name, timeout))
     result.successful = False
-    task.result = workers.TurbiniaTaskResult.deserialize(result)
+    task.result = workers.TurbiniaTaskResult.serialize(result)
     turbinia_server_task_timeout_total.inc()
 
     return task
