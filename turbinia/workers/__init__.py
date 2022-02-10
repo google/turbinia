@@ -117,7 +117,8 @@ class TurbiniaTaskResult:
 
   def __init__(
       self, evidence=None, input_evidence=None, base_output_dir=None,
-      request_id=None, job_id=None, no_output_manager=False):
+      request_id=None, job_id=None, no_output_manager=False,
+      no_state_manager=False):
     """Initialize the TurbiniaTaskResult object."""
 
     self.closed = False
@@ -145,6 +146,7 @@ class TurbiniaTaskResult:
     # TODO(aarontp): Create mechanism to grab actual python logging data.
     self._log = []
     self.no_output_manager = no_output_manager
+    self.no_state_manager = no_state_manager
 
   def __str__(self):
     return pprint.pformat(vars(self), depth=3)
@@ -162,7 +164,8 @@ class TurbiniaTaskResult:
     self.task_id = task.id
     self.task_name = task.name
     self.requester = task.requester
-    self.state_manager = state_manager.get_state_manager()
+    if not self.no_state_manager:
+      self.state_manager = state_manager.get_state_manager()
     if not self.no_output_manager:
       if task.output_manager.is_setup:
         ldirs = task.output_manager.get_local_output_dirs()

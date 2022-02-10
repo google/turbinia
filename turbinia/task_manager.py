@@ -614,11 +614,15 @@ class BaseTaskManager:
       TurbiniaTask: The updated task.
     """
     result = workers.TurbiniaTaskResult(
-        request_id=task.request_id, no_output_manager=True)
+        request_id=task.request_id, no_output_manager=True,
+        no_state_manager=True)
+    result.setup(task)
     result.status = (
         'Task {0:s} timed out on the server and was auto-closed after '
         '{1:d} seconds'.format(task.name, timeout))
     result.successful = False
+    result.closed = True
+    task.result = result
     turbinia_server_task_timeout_total.inc()
 
     return task
