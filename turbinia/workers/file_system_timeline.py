@@ -34,6 +34,7 @@ if TurbiniaTask.check_worker_role():
 
 
 class FileSystemTimelineTask(TurbiniaTask):
+  """Task to generate file system timelines. """
 
   REQUIRED_STATES = [state.ATTACHED]
 
@@ -81,9 +82,9 @@ class FileSystemTimelineTask(TurbiniaTask):
       status = 'Generated file system timeline containing [{0:d}] entries'.format(
           number_of_entries)
       result.close(self, success=True, status=status)
-    except dfvfs_errors.ScannerError as exception:
-      result.log('Error generating bodyfile {0!s}'.format(exception))
+    except (dfvfs_errors.ScannerError, dfvfs_errors.BackEndError) as exception:
       status = 'Unable to generate bodyfile using provided evidence data.'
+      result.log('{0:s} {1!s}'.format(status, exception))
       result.close(self, success=False, status=status)
       raise TurbiniaException(
           'Could not process volume: {0!s}'.format(exception))
