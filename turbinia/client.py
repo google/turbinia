@@ -198,8 +198,8 @@ class BaseTurbiniaClient:
       raise TurbiniaException(
           'jobs_allowlist and jobs_denylist are mutually exclusive.')
 
-    # if no recipe_name is given, create a default recipe.
     if not recipe_name:
+      # if no recipe_name is given, create a default recipe.
       recipe = self._create_default_recipe()
       if filter_patterns:
         recipe['globals']['filter_patterns'] = filter_patterns
@@ -211,6 +211,12 @@ class BaseTurbiniaClient:
         recipe['globals']['yara_rules'] = yara_rules
     else:
       # Load custom recipe from given path or name.
+      if (jobs_denylist or jobs_allowlist or filter_patterns or yara_rules):
+        msg = (
+            'Specifying a recipe name is incompatible with defining '
+            'jobs allow/deny lists, yara rules or a patterns file separately.')
+        raise TurbiniaException(msg)
+
       if os.path.exists(recipe_name):
         recipe_path = recipe_name
       else:

@@ -943,7 +943,9 @@ def process_evidence(
         evidence_.credentials.append((credential_type, credential_data))
 
     # Recipe pre-condition checks.
-    recipe_helpers.validate_recipe_conditions(args)
+    if args.recipe and args.recipe_path:
+      msg = ('Expected a recipe name (-I) or path (-P) but found both.')
+      raise TurbiniaException(msg)
 
     if args.recipe or args.recipe_path:
       # Load the specified recipe.
