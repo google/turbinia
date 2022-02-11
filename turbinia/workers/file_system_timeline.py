@@ -99,7 +99,6 @@ class FileSystemTimelineTask(TurbiniaTask):
       else:
         status = 'Unable to process any file entries: {0!s}'.format(exception)
         result.close(self, success=False, status=status)
-        raise TurbiniaException(status)
 
     except IOError as exception:
       status = 'Unable to create bodyfile local output file: {0!s}'.format(
