@@ -54,11 +54,11 @@ log = logging.getLogger('turbinia')
 
 PSQ_TASK_TIMEOUT_SECONDS = 604800
 PSQ_QUEUE_WAIT_SECONDS = 2
-# The amount of time in seconds that the server will wait in addition to the
-# Job/Task timeout value before it times out a given Task.  This is to make sure
-# that the server doesn't time out the Task before the Worker has a chance to
+# The amount of time in seconds that the Server will wait in addition to the
+# Job/Task timeout value before it times out a given Task. This is to make sure
+# that the Server doesn't time out the Task before the Worker has a chance to
 # and should account for the Task scheduling and setup time that happens before
-# the task starts.
+# the Task starts.
 SERVER_TASK_TIMEOUT_BUFFER = 300
 
 # Define metrics
@@ -315,9 +315,9 @@ class BaseTaskManager:
   def check_task_timeout(self, task):
     """Checks whether a Task has timed out.
 
-    The Tasks should normally be timed out by the Worker, but if there was some
+    Tasks should normally be timed out by the Worker, but if there was some
     kind of fatal error on the Worker or other problem in the Task that
-    prevented the results from returning then we will time out on the server
+    prevented the results from returning then we will time out on the Server
     side as well and abandon the Task.
 
     Args:
@@ -607,18 +607,18 @@ class BaseTaskManager:
     """Sets status and result data for timed out Task.
 
     Args:
-      task(TurbiniaTask): The task that will be timed out.
+      task(TurbiniaTask): The Task that will be timed out.
       timeout(int): The timeout value that has been reached.
 
     Returns:
-      TurbiniaTask: The updated task.
+      TurbiniaTask: The updated Task.
     """
     result = workers.TurbiniaTaskResult(
         request_id=task.request_id, no_output_manager=True,
         no_state_manager=True)
     result.setup(task)
     result.status = (
-        'Task {0:s} timed out on the server and was auto-closed after '
+        'Task {0:s} timed out on the Server and was auto-closed after '
         '{1:d} seconds'.format(task.name, timeout))
     result.successful = False
     result.closed = True
