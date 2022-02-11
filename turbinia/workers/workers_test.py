@@ -193,20 +193,28 @@ class TestTurbiniaTask(TestTurbiniaTaskBase):
     self.assertEqual(type(new_result), TurbiniaTaskResult)
     self.assertIn('failed', new_result.status)
 
+  @mock.patch('turbinia.workers.TurbiniaTask.create_result')
   @mock.patch('turbinia.state_manager.get_state_manager')
-  def testTurbiniaTaskRunWrapperSetupFail(self, _):
+  def testTurbiniaTaskRunWrapperSetupFail(self, _, mock_create_result):
     """Test that the run wrapper recovers from setup failing."""
     self.task.result = None
     canary_status = 'exception_message'
     self.task.setup = mock.MagicMock(
         side_effect=TurbiniaException('exception_message'))
+
+    self.result.no_output_manager = True
+    mock_create_result.return_value = self.result
     self.remove_files.append(
         os.path.join(self.task.base_output_dir, 'worker-log.txt'))
 
     new_result = self.task.run_wrapper(self.evidence.__dict__)
     new_result = TurbiniaTaskResult.deserialize(new_result)
     self.assertEqual(type(new_result), TurbiniaTaskResult)
-    self.assertIn(canary_status, new_result.status)
+    # Checking specifically for `False` value and not whether this evaluates to
+    # `False` because we don't want the `None` case to pass.
+    self.assertEqual(new_result.successful, False)
+    create_results_args = mock_create_result.call_args.kwargs
+    self.assertIn(canary_status, create_results_args['message'])
 
   def testTurbiniaTaskValidateResultGoodResult(self):
     """Tests validate_result with good result."""
@@ -258,7 +266,7 @@ class TestTurbiniaTask(TestTurbiniaTaskBase):
 
     # Command was executed, has the correct output saved and
     # TurbiniaTaskResult.close() was called with successful status.
-    popen_mock.assert_called_with(cmd, stdout=-1, stderr=-1, cwd=None)
+    popen_mock.assert_called_with(cmd, stdout=-1, stderr=-1, cwd=None, env=None)
     self.assertEqual(self.result.error['stdout'], str(output[0]))
     self.assertEqual(self.result.error['stderr'], str(output[1]))
     self.assertEqual(stdout_data, output[0])
@@ -280,9 +288,25 @@ class TestTurbiniaTask(TestTurbiniaTaskBase):
 
     # Command was executed and TurbiniaTaskResult.close() was called with
     # unsuccessful status.
-    popen_mock.assert_called_with(cmd, stdout=-1, stderr=-1, cwd=None)
+    popen_mock.assert_called_with(cmd, stdout=-1, stderr=-1, cwd=None, env=None)
     self.result.close.assert_called_with(
         self.task, success=False, status=mock.ANY)
+
+  def testTurbiniaTaskExecuteTimeout(self):
+    """Test execution with subprocess timeout case."""
+    cmd = 'sleep 10'
+    self.result.close = mock.MagicMock()
+    ret, result = self.task.execute(cmd, self.result, shell=True, timeout=1)
+
+    # Command was executed and TurbiniaTaskResult.close() was called with
+    # unsuccessful status.
+    self.result.close.assert_called_with(
+        self.task, success=False, status=mock.ANY)
+    result_call_args = self.result.close.call_args.kwargs
+    # 'timeout' string shows up in status message
+    self.assertIn('timeout', result_call_args['status'])
+    # Return value shows job was killed
+    self.assertEqual(ret, -9)
 
   @mock.patch('turbinia.workers.subprocess.Popen')
   def testTurbiniaTaskExecuteEvidenceExists(self, popen_mock):
@@ -372,3 +396,32 @@ class TestTurbiniaTask(TestTurbiniaTaskBase):
     # Runs fine after setting the state
     self.evidence.state[evidence.EvidenceState.ATTACHED] = True
     self.task.evidence_setup(self.evidence)
+
+  def testAddEvidence(self):
+    """Test that add_evidence adds evidence when appropriate."""
+
+    # Test that evidence gets added in the base case (source_path points to file
+    # with contents)
+    self.evidence.name = 'AddEvidenceTest'
+    with open(self.evidence.source_path, 'w') as source_path:
+      source_path.write('test')
+    self.result.add_evidence(self.evidence, 'EmptyConfig')
+    self.assertEqual(len(self.result.evidence), 1)
+    self.assertEqual(self.result.evidence[0].name, 'AddEvidenceTest')
+    self.assertEqual(self.result.evidence[0].config, 'EmptyConfig')
+
+    # Test that evidence is *not* added when source_path points to file with no
+    # contents.
+    self.result.evidence = []
+    empty_file = tempfile.mkstemp(dir=self.base_output_dir)[1]
+    self.remove_files.append(empty_file)
+    self.evidence.source_path = empty_file
+    self.result.add_evidence(self.evidence, 'EmptyConfig')
+    # Evidence with empty path was not in evidence list
+    self.assertEqual(len(self.result.evidence), 0)
+
+    # Test that evidence with source_path=None gets added
+    self.result.evidence = []
+    self.evidence.source_path = None
+    self.result.add_evidence(self.evidence, 'EmptyConfig')
+    self.assertEqual(self.result.evidence[0].name, 'AddEvidenceTest')

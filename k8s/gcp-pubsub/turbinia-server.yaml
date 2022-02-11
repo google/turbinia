@@ -17,6 +17,13 @@ spec:
       labels:
         app: turbinia-server
     spec:
+      initContainers:
+        - name: init-filestore
+          image: busybox:1.28
+          command: ['sh', '-c', 'chmod go+w /mnt/turbiniavolume']
+          volumeMounts:
+            - mountPath: "/mnt/turbiniavolume"
+              name: turbiniavolume
       containers:
         - name: server
           image: us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-server:latest
@@ -28,5 +35,17 @@ spec:
                   key: TURBINIA_CONF
             - name: TURBINIA_EXTRA_ARGS
               value: "-d"
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+          volumeMounts:
+            - mountPath: /mnt/turbiniavolume
+              name: turbiniavolume
           ports:
             - containerPort: 9200
+      volumes:
+        - name: turbiniavolume
+          persistentVolumeClaim:
+            claimName: turbiniavolume-claim
+            readOnly: false

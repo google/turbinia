@@ -38,6 +38,7 @@ const turbiniaKind = 'TurbiniaTask';
  *    beginning of the time window to query for
  * @param {string} req.body.task_id Id of task to retrieve
  * @param {string} req.body.request_id of tasks to retrieve
+ * @param {string} req.body.group_id of tasks to retrieve
  * @param {string} req.body.user of tasks to retrieve
  * @param {object} res Cloud Function response context.
  */
@@ -65,6 +66,10 @@ exports.gettasks = function gettasks(req, res) {
     console.log('Getting Turbinia Tasks by Request Id: ' + req.body.request_id);
     query = query.filter('request_id', '=', req.body.request_id)
   }
+  if (req.body.group_id) {
+    console.log('Getting Turbinia Tasks by Group ID: ' + req.body.group_id);
+    query = query.filter('group_id', '=', req.body.group_id);
+  }
   if (req.body.user) {
     console.log('Getting Turbinia Tasks by user: ' + req.body.user);
     query = query.filter('requester', '=', req.body.user);
@@ -79,7 +84,7 @@ exports.gettasks = function gettasks(req, res) {
     query = query.filter('last_update', '>=', start_time)
   }
   if (!req.body.task_id && !req.body.request_id && !req.body.user &&
-      !req.body.start_time) {
+      !req.body.start_time && !req.body.group_id) {
     console.log('Getting open Turbinia Tasks.');
     query = query.filter('successful', '=', null)
   }

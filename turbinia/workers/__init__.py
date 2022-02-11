@@ -304,7 +304,6 @@ class TurbiniaTaskResult:
     if status:
       task.result.status = 'Task {0!s} is {1!s} on {2!s}'.format(
           self.task_name, status, self.worker_name)
-
     if self.state_manager:
       self.state_manager.update_task(task)
     else:
@@ -321,6 +320,14 @@ class TurbiniaTaskResult:
             was supplied to the task, so likely the caller will always want to
             use evidence_.config for this parameter.
     """
+    if (evidence.source_path and os.path.exists(evidence.source_path) and
+        os.path.getsize(evidence.source_path) == 0):
+      self.log(
+          'Evidence source path [{0:s}] for [{1:s}] exists but is empty. Not '
+          'adding empty Evidence.'.format(evidence.source_path, evidence.name),
+          logging.WARNING)
+      return
+
     # We want to enforce this here to make sure that any new Evidence objects
     # created also contain the config.  We could create a closure to do this
     # automatically, but the real fix is to attach this to a separate object.
@@ -422,7 +429,7 @@ class TurbiniaTask:
   # The list of attributes that we will persist into storage
   STORED_ATTRIBUTES = [
       'id', 'job_id', 'last_update', 'name', 'request_id', 'requester',
-      'group_name', 'reason', 'all_args'
+      'group_name', 'reason', 'all_args', 'group_id'
   ]
 
   # The list of evidence states that are required by a Task in order to run.
@@ -435,8 +442,15 @@ class TurbiniaTask:
 
   def __init__(
       self, name=None, base_output_dir=None, request_id=None, requester=None,
-      group_name=None, reason=None, all_args=None):
-    """Initialization for TurbiniaTask."""
+      group_name=None, reason=None, all_args=None, group_id=None):
+    """Initialization for TurbiniaTask.
+    
+    Args:
+      base_output_dir(str): Output dir to store Turbinia results.
+      request_id(str): The request id
+      requester(str): Name of the requester
+      group_id(str): The group id
+    """
     if base_output_dir:
       self.base_output_dir = base_output_dir
     else:
@@ -463,6 +477,7 @@ class TurbiniaTask:
     self.group_name = group_name
     self.reason = reason
     self.all_args = all_args
+    self.group_id = group_id
 
   def serialize(self):
     """Converts the TurbiniaTask object into a serializable dict.
@@ -571,7 +586,7 @@ class TurbiniaTask:
   def execute(
       self, cmd, result, save_files=None, log_files=None, new_evidence=None,
       close=False, shell=False, stderr_file=None, stdout_file=None,
-      success_codes=None, cwd=None):
+      success_codes=None, cwd=None, env=None, timeout=0):
     """Executes a given binary and saves output.
 
     Args:
@@ -588,6 +603,8 @@ class TurbiniaTask:
       stderr_file (str): Path to location to save stderr.
       stdout_file (str): Path to location to save stdout.
       cwd (str): Sets the current directory before the process is executed.
+      env (list(str)): Process environment.
+      timeout (int): Override job timeout value.
 
     Returns:
       Tuple of the return code, and the TurbiniaTaskResult object
@@ -601,9 +618,13 @@ class TurbiniaTask:
     success_codes = success_codes if success_codes else [0]
     stdout = None
     stderr = None
+    fail_message = None
 
     # Get timeout value.
-    timeout_limit = job_manager.JobsManager.GetTimeoutValue(self.job_name)
+    if timeout:
+      timeout_limit = timeout
+    else:
+      timeout_limit = job_manager.JobsManager.GetTimeoutValue(self.job_name)
 
     # Execute the job via docker.
     docker_image = job_manager.JobsManager.GetDockerImage(self.job_name)
@@ -626,24 +647,25 @@ class TurbiniaTask:
         if shell:
           proc = subprocess.Popen(
               cmd, shell=True, stderr=subprocess.PIPE, stdout=subprocess.PIPE,
-              cwd=cwd)
-          proc.wait(timeout_limit)
+              cwd=cwd, env=env)
+          stdout, stderr = proc.communicate(timeout=timeout_limit)
         else:
           proc = subprocess.Popen(
-              cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE, cwd=cwd)
-          proc.wait(timeout_limit)
+              cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE, cwd=cwd,
+              env=env)
+          stdout, stderr = proc.communicate(timeout=timeout_limit)
       except subprocess.TimeoutExpired as exception:
-        # Log error and close result.
-        message = (
+        proc.kill()
+        # Get any potential partial output so we can save it later.
+        stdout, stderr = proc.communicate()
+        fail_message = (
             'Execution of [{0!s}] failed due to job timeout of '
             '{1:d} seconds has been reached.'.format(cmd, timeout_limit))
-        result.log(message)
-        result.close(self, success=False, status=message)
-        # Increase timeout metric and raise exception
+        result.log(fail_message)
+        # Increase timeout metric. Not re-raising an exception so we can save
+        # any potential output.
         turbinia_worker_tasks_timeout_total.inc()
-        raise TurbiniaException(message)
 
-      stdout, stderr = proc.communicate()
       ret = proc.returncode
 
     result.error['stdout'] = str(stdout)
@@ -692,7 +714,9 @@ class TurbiniaTask:
       result.log('Output log file found at {0:s}'.format(file_))
       self.output_manager.save_local_file(file_, result)
 
-    if ret not in success_codes:
+    if fail_message:
+      result.close(self, success=False, status=fail_message)
+    elif ret not in success_codes:
       message = 'Execution of [{0!s}] failed with status {1:d}'.format(cmd, ret)
       result.log(message)
       if close:
@@ -747,7 +771,7 @@ class TurbiniaTask:
       TurbiniaException: If the evidence can not be found.
     """
     self.setup_metrics()
-    self.output_manager.setup(self.name, self.id)
+    self.output_manager.setup(self.name, self.id, self.request_id)
     self.tmp_dir, self.output_dir = self.output_manager.get_local_output_dirs()
     if not self.result:
       self.result = self.create_result(input_evidence=evidence)
@@ -899,7 +923,6 @@ class TurbiniaTask:
           recipe_data.update(task_recipe)
           recipe_data.pop('task')
           break
-
     recipe_data.update(recipe['globals'])
 
     return recipe_data
@@ -953,6 +976,7 @@ class TurbiniaTask:
       else:
         self.result = self.create_result(
             message=message, trace=traceback.format_exc())
+      self.result.close(self, success=False)
       return self.result.serialize()
 
     log.info('Starting Task {0:s} {1:s}'.format(self.name, self.id))

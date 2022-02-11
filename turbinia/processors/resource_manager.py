@@ -27,8 +27,12 @@ config.LoadConfig()
 log = logging.getLogger('turbinia')
 
 
-def ValidateStateFile():
-  """Checks if resource file exists and the json object can be properly loaded."""
+def RetrieveResourceState():
+  """Creates a resource file if it doesn't exist and load resource state into a json object.
+  
+    Returns:
+      json_load(dict): The resource state json object.
+  """
   # Check if file exists and if not create it
   if not os.path.exists(config.RESOURCE_FILE):
     log.info(
@@ -38,15 +42,18 @@ def ValidateStateFile():
       fh.write("{}")
     fh.close()
 
-  # Ensure file can be loaded as json object
+  # Load file as json object
   try:
     with open(config.RESOURCE_FILE) as fh:
       json_load = json.load(fh)
-    fh.close()
   except ValueError as e:
     message = 'Can not load json from resource state file.'
     log.error(message)
     raise TurbiniaException(message)
+  finally:
+    fh.close()
+
+  return json_load
 
 
 def PreprocessResourceState(resource_id, task_id):
@@ -56,9 +63,9 @@ def PreprocessResourceState(resource_id, task_id):
     Args:
       resource_id (str): The unique id representing the resource being tracked.
       task_id (str): The id of a given Task.
-    """
-  ValidateStateFile()
-  json_load = json.load(open(config.RESOURCE_FILE))
+  """
+  # Retrieve the resource state
+  json_load = RetrieveResourceState()
 
   # Append task_id to existing resource else add new resource id.
   if resource_id in json_load.keys():
@@ -90,9 +97,9 @@ def PostProcessResourceState(resource_id, task_id):
     
     Returns:
       is_detachable (bool): Whether the given resource can be postprocessed.
-    """
-  ValidateStateFile()
-  json_load = json.load(open(config.RESOURCE_FILE))
+  """
+  # Retrieve the resource state
+  json_load = RetrieveResourceState()
   is_detachable = False
 
   # Either remove task id or remove resource id if it is last Task remaining.

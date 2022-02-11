@@ -26,22 +26,17 @@ import logging
 from operator import itemgetter
 from operator import attrgetter
 import os
-import stat
 import time
-import subprocess
-import codecs
 
 from google import auth
-from prometheus_client import start_http_server
 from turbinia import config
 from turbinia.config import logger
 from turbinia.config import DATETIME_FORMAT
 from turbinia import task_manager
-from turbinia import task_utils
 from turbinia import TurbiniaException
+from turbinia.lib import recipe_helpers
 from turbinia.lib import text_formatter as fmt
-from turbinia.lib import docker_manager
-from turbinia.jobs import manager as job_manager
+from turbinia.message import TurbiniaRequest
 from turbinia.workers import Priority
 
 MAX_RETRIES = 10
@@ -166,6 +161,107 @@ class BaseTurbiniaClient:
     self.task_manager = task_manager.get_task_manager()
     self.task_manager.setup(server=False)
 
+  def _create_default_recipe(self):
+    """Creates a default Turbinia recipe."""
+    default_recipe = recipe_helpers.DEFAULT_RECIPE
+    return default_recipe
+
+  def create_recipe(
+      self, debug_tasks=False, filter_patterns=None, group_id='',
+      jobs_allowlist=None, jobs_denylist=None, recipe_name=None, sketch_id=None,
+      skip_recipe_validation=False, yara_rules=None, group_name=None, reason=None, all_args=None):
+    """Creates a Turbinia recipe.
+    
+    If no recipe_name is specified, this  method returns a default recipe.
+    If a recipe_name is specified then this method will build the recipe 
+    dictionary by reading the  contents of a recipe file. The path to
+    the recipe file is inferre from the recipe_name and the RECIPE_FILE_DIR
+    configuration parameter.
+
+    Args:
+      debug_tasks (bool): flag to turn debug output on for supported tasks.
+      filter_patterns (list): a list of filter pattern strings.
+      group_id (str): a group identifier.
+      jobs_allowlist (list): a list of jobs allowed for execution.
+      jobs_denylist (list): a list of jobs that will not be executed.
+      recipe_name (str): Turbinia recipe name (e.g. triage-linux).
+      sketch_id (str): a Timesketch sketch identifier.
+      skip_recipe_validation (bool): flag indicates if the recipe will be
+          validated.
+      yara_rules (str): a string containing yara rules.
+      group_name (str): Name for grouping evidence.
+      reason (str): Reason or justification to Turbinia requests.
+      all_args (list(str)): a list of commandline arguments provided to run client.
+
+    Returns:
+      dict: a Turbinia recipe dictionary.
+    """
+    recipe = None
+    if jobs_allowlist and jobs_denylist:
+      raise TurbiniaException(
+          'jobs_allowlist and jobs_denylist are mutually exclusive.')
+
+    if not recipe_name:
+      # if no recipe_name is given, create a default recipe.
+      recipe = self._create_default_recipe()
+      if filter_patterns:
+        recipe['globals']['filter_patterns'] = filter_patterns
+      if jobs_denylist:
+        recipe['globals']['jobs_denylist'] = jobs_denylist
+      if jobs_allowlist:
+        recipe['globals']['jobs_allowlist'] = jobs_allowlist
+      if yara_rules:
+        recipe['globals']['yara_rules'] = yara_rules
+    else:
+      # Load custom recipe from given path or name.
+      if (jobs_denylist or jobs_allowlist or filter_patterns or yara_rules):
+        msg = (
+            'Specifying a recipe name is incompatible with defining '
+            'jobs allow/deny lists, yara rules or a patterns file separately.')
+        raise TurbiniaException(msg)
+
+      if os.path.exists(recipe_name):
+        recipe_path = recipe_name
+      else:
+        recipe_path = recipe_helpers.get_recipe_path_from_name(recipe_name)
+
+      if not os.path.exists(recipe_path):
+        msg = 'Could not find recipe file at {0:s}'.format(recipe_path)
+        log.error(msg)
+        raise TurbiniaException(msg)
+
+      recipe = recipe_helpers.load_recipe_from_file(
+          recipe_path, skip_recipe_validation)
+      if not recipe:
+        msg = 'Could not load recipe from file at {0:s}.'.format(recipe_path)
+        raise TurbiniaException(msg)
+
+    # Set any additional recipe parameters, if specified.
+    if sketch_id:
+      recipe['globals']['sketch_id'] = sketch_id
+    if debug_tasks:
+      recipe['globals']['debug_tasks'] = debug_tasks
+    if group_id:
+      recipe['globals']['group_id'] = group_id
+    if group_name:
+      recipe['globals']['group_name'] = group_name
+    if reason:
+      recipe['globals']['reason'] = reason
+    if all_args:
+      recipe['globals']['all_args'] = all_args
+
+    return recipe
+
+  def create_request(
+      self, request_id=None, group_id=None, requester=None, recipe=None,
+      context=None, evidence_=None, group_name=None, reason=None, all_args=None):
+    """Wrapper method to create a Turbinia request."""
+    default_recipe = self.create_recipe()
+    request = TurbiniaRequest(
+        request_id=request_id, group_id=group_id, requester=requester,
+        recipe=default_recipe, context=context, evidence_=evidence_, group_name=group_name, reason=reason, all_args=all_args)
+    return request
+
   def list_jobs(self):
     """List the available jobs."""
     # TODO(aarontp): Refactor this out so that we don't need to depend on
@@ -243,7 +339,7 @@ class BaseTurbiniaClient:
 
   def get_task_data(
       self, instance, project, region, days=0, task_id=None, request_id=None,
-      user=None, function_name='gettasks', output_json=False):
+      group_id=None, user=None, function_name='gettasks', output_json=False):
     """Gets task data from Google Cloud Functions.
 
     Args:
@@ -253,6 +349,7 @@ class BaseTurbiniaClient:
       region (string): The name of the region to execute in.
       days (int): The number of days we want history for.
       task_id (string): The Id of the task.
+      group_id (string): The group Id of the requests.
       request_id (string): The Id of the request we want tasks for.
       user (string): The user of the request we want tasks for.
       function_name (string): The GCF function we want to call.
@@ -272,6 +369,8 @@ class BaseTurbiniaClient:
       func_args.update({'start_time': start_string})
     elif task_id:
       func_args.update({'task_id': task_id})
+    elif group_id:
+      func_args.update({'group_id': group_id})
     elif request_id:
       func_args.update({'request_id': request_id})
 
@@ -787,8 +886,8 @@ class BaseTurbiniaClient:
 
   def format_task_status(
       self, instance, project, region, days=0, task_id=None, request_id=None,
-      user=None, all_fields=False, full_report=False,
-      priority_filter=Priority.HIGH, output_json=False):
+      group_id=None, user=None, all_fields=False, full_report=False,
+      priority_filter=Priority.HIGH, output_json=False, report=None):
     """Formats the recent history for Turbinia Tasks.
 
     Args:
@@ -799,6 +898,7 @@ class BaseTurbiniaClient:
       days (int): The number of days we want history for.
       task_id (string): The Id of the task.
       request_id (string): The Id of the request we want tasks for.
+      group_id (string): Group Id of the requests.
       user (string): The user of the request we want tasks for.
       all_fields (bool): Include all fields for the task, including task,
           request ids and saved file paths.
@@ -807,6 +907,7 @@ class BaseTurbiniaClient:
       priority_filter (int): Output only a summary for Tasks with a value
           greater than the priority_filter.
       output_json (bool): Whether to return JSON output.
+      report (string): Status report that will be returned.
 
     Returns:
       String of task status in JSON or human readable format.
@@ -814,7 +915,7 @@ class BaseTurbiniaClient:
     if user and days == 0:
       days = 1000
     task_results = self.get_task_data(
-        instance, project, region, days, task_id, request_id, user,
+        instance, project, region, days, task_id, request_id, group_id, user,
         output_json=output_json)
     if not task_results:
       return ''
@@ -836,20 +937,51 @@ class BaseTurbiniaClient:
       return '\n{0:s}'.format(msg)
 
     # Build up data
-    report = []
-    requester = task_results[0].get('requester')
-    request_id = task_results[0].get('request_id')
+    if report is None:
+      report = []
     success_types = ['Successful', 'Failed', 'Scheduled or Running']
     success_values = [True, False, None]
     # Reverse mapping values to types
     success_map = dict(zip(success_values, success_types))
+    # This is used for group ID status
+    requests = defaultdict(dict)
+    requester = task_results[0].get('requester')
+    request_id = task_results[0].get('request_id')
     task_map = defaultdict(list)
     success_types.insert(0, 'High Priority')
     for task in task_results:
+      if task.get('request_id') not in requests:
+        requests[task.get('request_id')] = {
+            'Successful': 0,
+            'Failed': 0,
+            'Scheduled or Running': 0
+        }
+      requests[task.get('request_id')][success_map[task.get('successful')]] += 1
       if task.get('report_priority') <= priority_filter:
         task_map['High Priority'].append(task)
       else:
         task_map[success_map[task.get('successful')]].append(task)
+
+    if group_id:
+      report.append('\n')
+      report.append(
+          fmt.heading1('Turbinia report for group ID {0:s}'.format(group_id)))
+      for request_id, success_counts in requests.items():
+        report.append(
+            fmt.bullet(
+                'Request Id {0:s} with {1:d} successful, {2:d} failed, and {3:d} running tasks.'
+                .format(
+                    request_id, success_counts['Successful'],
+                    success_counts['Failed'],
+                    success_counts['Scheduled or Running'])))
+        if full_report:
+          self.format_task_status(
+              instance, project, region, days=0, task_id=None,
+              request_id=request_id, user=user, all_fields=all_fields,
+              full_report=full_report, priority_filter=priority_filter,
+              output_json=output_json, report=report)
+
+      return '\n'.join(report)
 
     # Generate report header
     report.append('\n')
@@ -924,6 +1056,18 @@ class TurbiniaCeleryClient(BaseTurbiniaClient):
     super(TurbiniaCeleryClient, self).__init__(*args, **kwargs)
     self.redis = RedisStateManager()
 
+  def close_tasks(
+      self, instance, project, region, request_id=None, task_id=None, user=None,
+      requester=None):
+    """Close Turbinia Tasks based on Request ID.
+
+    Currently needs to be implemented for Redis/Celery:
+    https://github.com/google/turbinia/issues/999
+    """
+    raise TurbiniaException(
+        '--close_tasks is not yet implemented for Redis: '
+        'https://github.com/google/turbinia/issues/999')
+
   def send_request(self, request):
     """Sends a TurbiniaRequest message.
 
@@ -934,8 +1078,8 @@ class TurbiniaCeleryClient(BaseTurbiniaClient):
 
   # pylint: disable=arguments-differ
   def get_task_data(
-      self, instance, _, __, days=0, task_id=None, request_id=None, user=None,
-      function_name=None, output_json=False):
+      self, instance, _, __, days=0, task_id=None, request_id=None,
+      group_id=None, user=None, function_name=None, output_json=False):
     """Gets task data from Redis.
 
     We keep the same function signature, but ignore arguments passed for GCP.
@@ -946,9 +1090,11 @@ class TurbiniaCeleryClient(BaseTurbiniaClient):
       days (int): The number of days we want history for.
       task_id (string): The Id of the task.
       request_id (string): The Id of the request we want tasks for.
+      group_id (string): Group Id of the requests.
       user (string): The user of the request we want tasks for.
 
     Returns:
       List of Task dict objects.
     """
-    return self.redis.get_task_data(instance, days, task_id, request_id, user)
+    return self.redis.get_task_data(
+        instance, days, task_id, request_id, group_id, user)

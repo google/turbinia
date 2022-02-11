@@ -45,7 +45,7 @@ REQUIRED_VARS = [
     'INSTANCE_ID',
     'STATE_MANAGER',
     'TASK_MANAGER',
-    'LOG_FILE',
+    'LOG_DIR',
     'LOCK_FILE',
     'TMP_RESOURCE_DIR',
     'RESOURCE_FILE',
@@ -98,6 +98,13 @@ OPTIONAL_VARS = [
     'PROMETHEUS_ENABLED',
     'PROMETHEUS_ADDR',
     'PROMETHEUS_PORT',
+    # dfDewey config
+    'DFDEWEY_PG_HOST',
+    'DFDEWEY_PG_PORT',
+    'DFDEWEY_PG_DB_NAME',
+    'DFDEWEY_OS_HOST',
+    'DFDEWEY_OS_PORT',
+    'DFDEWEY_OS_URL',
     # General config
     'TURBINIA_COMMAND'
 ]

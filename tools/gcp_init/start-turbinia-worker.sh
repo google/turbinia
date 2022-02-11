@@ -9,6 +9,6 @@ git pull
 cd -
 
 while [ 1 ] ; do
-	$turbiniactl -L $output_dir/logs/${HOSTNAME}.log.txt -o $tmp_dir psqworker -S >> $output_dir/logs/${HOSTNAME}.stdout.log.txt 2>&1
+	$turbiniactl -L $output_dir/logs/${HOSTNAME}.log.txt -o $tmp_dir psqworker >> $output_dir/logs/${HOSTNAME}.stdout.log.txt 2>&1
         sleep 2
 done

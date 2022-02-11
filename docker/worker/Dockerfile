@@ -29,19 +29,23 @@ RUN pip3 install requests --upgrade
 RUN pip3 install urllib3 cryptography --upgrade
 
 # Install third-party worker dependencies
-RUN pip3 install pyhindsight
+# TODO(hacktobeer) uncomment when protobuf lib dependency if fixed upstream
+# RUN pip3 install pyhindsight
 
 # Install Plaso, bulkextractor and docker-explorer
 RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 0x5e80511b10c598b8 \
     && add-apt-repository -y ppa:gift/stable
 RUN apt-get -y install \
     bulk-extractor \
+    python3-dfimagetools \
+    dfimagetools-tools \
     docker-explorer-tools \
     libbde-tools \
     libewf \
     libewf-python3 \
     plaso-tools \
     python3-dfvfs \
+    python3-dfimagetools \
     python3-plaso \
     sleuthkit \
     --option Acquire::ForceIPv4=true --option Acquire::Retries=100 --option Acquire::http::Timeout=60

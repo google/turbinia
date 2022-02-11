@@ -64,6 +64,9 @@ turbinia_jobs_completed_total = Gauge(
     'turbinia_jobs_completed_total', 'Total number jobs resolved')
 turbinia_server_request_total = Gauge(
     'turbinia_server_request_total', 'Total number of requests received.')
+turbinia_result_success_invalid = Gauge(
+    'turbinia_result_success_invalid',
+    'The result returned from the Task had an invalid success status of None')
 
 
 def get_task_manager():
@@ -372,6 +375,7 @@ class BaseTaskManager:
     task.group_name = evidence_.config.get('globals', {}).get('group_name')
     task.reason = evidence_.config.get('globals', {}).get('reason')
     task.all_args = evidence_.config.get('globals', {}).get('all_args')
+    task.group_id = evidence_.config.get('globals', {}).get('group_id')
     if job:
       task.job_id = job.id
       task.job_name = job.name
@@ -438,6 +442,19 @@ class BaseTaskManager:
     Returns:
       TurbiniaJob|None: The Job for the processed task, else None
     """
+    if task_result.successful is None:
+      log.error(
+          'Task {0:s} from {1:s} returned invalid success status "None". '
+          'Setting this to False so the client knows the Task is complete. '
+          'Usually this means that the Task returning the TurbiniaTaskResult '
+          'did not call the close() method on it.'.format(
+              task_result.task_name, task_result.worker_name))
+      turbinia_result_success_invalid.inc()
+      task_result.successful = False
+      if task_result.status:
+        task_result.status = (
+            task_result.status + ' (Success status forcefully set to False)')
+
     if not task_result.successful:
       log.error(
           'Task {0:s} from {1:s} was not successful'.format(
@@ -629,6 +646,8 @@ class CeleryTaskManager(BaseTaskManager):
           evidence_.config['globals']['group_name'] = request.group_name
           evidence_.config['globals']['reason'] = request.reason
           evidence_.config['globals']['all_args'] = request.all_args
+          evidence_.config['globals']['group_id'] = request.recipe['globals'][
+              'group_id']
           evidence_list.append(evidence_)
       turbinia_server_request_total.inc()
 

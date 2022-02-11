@@ -1,0 +1,44 @@
+#!/bin/bash
+# Turbinia parameters for Google Cloud Kubernetes deployment. Please review
+# the default configuration and update if necessary based on billing restrictions
+# or quota requirements.
+
+# A unique ID per Turbinia instance. Used for keeping multiple Turbinia instances
+# seperate and to name newly created GCP resources such as the cluster name.
+INSTANCE_ID='turbinia-main'
+
+# The Turbinia config name
+TURBINIA_CONFIG='.turbiniarc'
+
+# Folder to save configured Deployment files to. Please use an absolute path else
+# the directory will default to within the root of the Turbinia k8s folder.
+DEPLOYMENT_FOLDER="deployment/$INSTANCE_ID"
+
+# The region and zone where Turbinia will run.  Note that Turbinia does
+# not currently support multi-zone operation.
+ZONE='us-central1-f'
+REGION='us-central1'
+
+# VPC network to configure the cluster in.
+VPC_NETWORK='default'
+
+# Control plane IP range for the control pane VPC. Due to the Turbinia
+# cluster being private, this is required for the control pane and cluster
+# to communicate privately.
+VPC_CONTROL_PANE='172.16.0.0/28' # Set to default
+
+# The cluster name, number of nodes, machine type and disk size of the
+# deployed cluster and nodes within it.
+CLUSTER_NAME=$INSTANCE_ID
+CLUSTER_NODE_SIZE='1'
+CLUSTER_MACHINE_TYPE='e2-standard-32'
+CLUSTER_MACHINE_SIZE='1000'
+
+# The Filestore share name, and size. Filestore will be used to retain shared output
+# from Turbinia, such as logs. Please specify size in terabytes(TB).
+FILESTORE_NAME='turbiniavolume'
+FILESTORE_CAPACITY='1T'
+
+# Any Jobs added to this list will be disabled by default at start-up. Job names
+# entered here are case insensitive, but must be quoted. 
+DISABLED_JOBS="['BinaryExtractorJob', 'BulkExtractorJob', 'DfdeweyJob', 'HindsightJob', 'PhotorecJob', 'VolatilityJob']"
