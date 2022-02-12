@@ -12,7 +12,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Task runner for Turbinia."""
+"""Task utilities for Turbinia."""
 
 from datetime import datetime
 import logging
@@ -173,6 +173,7 @@ def task_deserialize(input_dict):
   # empty Task is instantiated and we don't want to overwrite it.
   input_dict.pop('output_manager')
   task.__dict__.update(input_dict)
+  task.start_time = datetime.strptime(input_dict['start_time'], DATETIME_FORMAT)
   task.last_update = datetime.strptime(
       input_dict['last_update'], DATETIME_FORMAT)
   return task
