@@ -95,15 +95,16 @@ class FileSystemTimelineTask(TurbiniaTask):
         result.add_evidence(output_evidence, evidence.config)
         status = 'Generated file system timeline containing [{0:d}] entries'.format(
             number_of_entries)
+        result.log(status)
         result.close(self, success=True, status=status)
       else:
-        status = 'Unable to process any file entries: {0!s}'.format(exception)
+        status = 'Unable to process any file entries.'
         result.close(self, success=False, status=status)
 
     except IOError as exception:
       status = 'Unable to create bodyfile local output file: {0!s}'.format(
           exception)
+      result.log(status)
       result.close(self, success=False, status=status)
-      raise TurbiniaException(status) from exception
 
     return result
