@@ -62,40 +62,41 @@ class FileSystemTimelineTask(TurbiniaTask):
     # Create the FileEntryLister client and generate the path specs
     # for all available partitions.
     entry_lister = file_entry_lister.FileEntryLister()
-    base_path_specs = entry_lister.GetBasePathSpecs(
-        evidence.device_path, options=volume_scanner_options)
+    try:
+      base_path_specs = entry_lister.GetBasePathSpecs(
+          evidence.device_path, options=volume_scanner_options)
+    except dfvfs_errors.ScannerError as exception:
+      status = 'Unable to open evidence: {0!s}'.format(exception)
+      result.close(self, success=False, status=status)
 
     # Iterate over all file entries and generate the output in bodyfile
     # format.
     try:
       file_entries = None
       with open(bodyfile_output, 'w', encoding='utf-8') as file_object:
-        try:
-          file_entries = enumerate(
-              entry_lister.ListFileEntries(base_path_specs))
-          while file_entries:
-            try:
-              _, (file_entry, path_segments) = next(file_entries)
-              bodyfile_entries = entry_lister.GetBodyfileEntries(
-                  file_entry, path_segments)
-              for bodyfile_entry in bodyfile_entries:
-                file_object.write(bodyfile_entry)
-                file_object.write('\n')
-                number_of_entries += 1
-            except StopIteration:
-              break
-        except (dfvfs_errors.AccessError, dfvfs_errors.BackEndError,
-                dfvfs_errors.MountPointError,
-                dfvfs_errors.PathSpecError) as exception:
-          status = 'Unable to process file entry: {0!s}'.format(exception)
-          result.log(status)
+        file_entries = enumerate(entry_lister.ListFileEntries(base_path_specs))
+        while file_entries:
+          try:
+            _, (file_entry, path_segments) = next(file_entries)
+            bodyfile_entries = entry_lister.GetBodyfileEntries(
+                file_entry, path_segments)
+            for bodyfile_entry in bodyfile_entries:
+              file_object.write(bodyfile_entry)
+              file_object.write('\n')
+              number_of_entries += 1
+          except StopIteration:
+            break
+          except (dfvfs_errors.AccessError, dfvfs_errors.BackEndError,
+                  dfvfs_errors.MountPointError,
+                  dfvfs_errors.PathSpecError) as exception:
+            status = 'Unable to process file entry: {0!s}'.format(exception)
+            result.log(status)
 
       if number_of_entries > 0:
         output_evidence.number_of_entries = number_of_entries
         result.add_evidence(output_evidence, evidence.config)
         status = 'Generated file system timeline containing [{0:d}] entries'.format(
             number_of_entries)
-        result.log(status)
         result.close(self, success=True, status=status)
       else:
         status = 'Unable to process any file entries.'
@@ -104,7 +105,6 @@ class FileSystemTimelineTask(TurbiniaTask):
     except IOError as exception:
       status = 'Unable to create bodyfile local output file: {0!s}'.format(
           exception)
-      result.log(status)
       result.close(self, success=False, status=status)
 
     return result
