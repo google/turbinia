@@ -107,9 +107,6 @@ class TurbiniaTaskResult:
           object to handle syncing with storage.
       worker_name (str): Name of worker task executed on.
       _log (list[str]): A list of log messages
-      group_name: name for grouping across multiple requests
-      reason: Associated Vimes ID for grouping an jutification validation.
-      all_args: All terminal arugments provided with evidence. 
   """
 
   # The list of attributes that we will persist into storage
@@ -136,9 +133,6 @@ class TurbiniaTaskResult:
     self.task_name = None
     self.requester = None
     self.output_dir = None
-    self.group_name = None
-    self.reason = None
-    self.all_args = None
 
     self.report_data = None
     self.report_priority = Priority.MEDIUM

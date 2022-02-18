@@ -38,7 +38,7 @@ DEFAULT_GLOBALS_RECIPE = {
     'sketch_id': None,
     'group_name': '',
     'reason': '',
-    'all_args': [],
+    'all_args': '',
     'group_id': ''
 }
 

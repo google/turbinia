@@ -174,9 +174,9 @@ def process_args(args):
       '-w', '--wait', action='store_true',
       help='Wait to exit until all tasks for the given request have completed')
   parser.add_argument(
-      '-g', '--group_name', help='Grouping name for evidences', required=False)
+      '-g', '--group_name', help='Grouping name for evidence', required=False)
   parser.add_argument(
-      '-R', '--reason', help='Related ticket/incident ID for the evidences',
+      '-R', '--reason', help='Related ticket/incident ID for the evidence',
       required=False)
 
   subparsers = parser.add_subparsers(
@@ -573,6 +573,9 @@ def process_args(args):
   # Set group id
   group_id = uuid.uuid4().hex
 
+  # Set all_args
+  all_args = ' '.join(sys.argv)
+
   # Checks for bulk processing
   if args.command in ('rawdisk', 'directory', 'compresseddirectory'):
     args.name, args.source = check_args(
@@ -584,7 +587,8 @@ def process_args(args):
       process_evidence(
           args=args, source_path=source_path, name=name, source=source,
           group_id=group_id, filter_patterns=filter_patterns, client=client,
-          yara_rules=yara_rules, group_name=args.group_name, reason=args.reason, all_args=sys.argv)
+          yara_rules=yara_rules, group_name=args.group_name, reason=args.reason,
+          all_args=all_args)
   elif args.command in ('googleclouddisk', 'googleclouddiskembedded'):
     # Fail if this is a local instance
     if config.SHARED_FILESYSTEM and not args.force_evidence:
@@ -642,7 +646,8 @@ def process_args(args):
           args=args, disk_name=disk_name, name=name, source=source,
           project=project, zone=zone, embedded_path=embedded_path,
           mount_partition=mount_partition, group_id=group_id,
-          filter_patterns=filter_patterns, client=client, yara_rules=yara_rules, group_name=args.group_name, reason=args.reason, all_args=sys.argv)
+          filter_patterns=filter_patterns, client=client, yara_rules=yara_rules,
+          group_name=args.group_name, reason=args.reason, all_args=all_args)
   elif args.command == 'rawmemory':
     # Checks if length of args match
     args.name, args.profile = check_args(
@@ -653,7 +658,8 @@ def process_args(args):
       process_evidence(
           args=args, source_path=source_path, name=name, profile=profile,
           group_id=group_id, filter_patterns=filter_patterns, client=client,
-          yara_rules=yara_rules, group_name=args.group_name, reason=args.reason, all_args=sys.argv)
+          yara_rules=yara_rules, group_name=args.group_name, reason=args.reason,
+          all_args=all_args)
   elif args.command == 'hindsight':
     args.name, args.browser_type, args.format = check_args(
         args.source_path, [args.name, args.browser_type, args.format])
@@ -664,7 +670,8 @@ def process_args(args):
       process_evidence(
           args=args, source_path=source_path, name=name, format=format,
           group_id=group_id, client=client, filter_patterns=filter_patterns,
-          yara_rules=yara_rules, browser_type=browser_type, group_name=args.group_name, reason=args.reason, all_args=sys.argv)
+          yara_rules=yara_rules, browser_type=browser_type,
+          group_name=args.group_name, reason=args.reason, all_args=all_args)
   elif args.command == 'psqworker':
     # Set up root logger level which is normally set by the psqworker command
     # which we are bypassing.
@@ -940,7 +947,8 @@ def process_evidence(
   request = None
   if evidence_:
     request = client.create_request(
-        request_id=request_id, group_id=group_id, requester=getpass.getuser(), group_name=args.group_name, reason=args.reason, all_args=sys.argv)
+        request_id=request_id, group_id=group_id, requester=getpass.getuser(),
+        group_name=group_name, reason=reason, all_args=all_args)
     request.evidence.append(evidence_)
 
     if args.decryption_keys:
@@ -968,10 +976,8 @@ def process_evidence(
           jobs_denylist=args.jobs_denylist,
           recipe_name=args.recipe if args.recipe else args.recipe_path,
           sketch_id=None, skip_recipe_validation=args.skip_recipe_validation,
-          yara_rules=yara_rules,
-          group_name=args.group_name,
-          reason=args.reason,
-          all_args=sys.argv)
+          yara_rules=yara_rules, group_name=group_name, reason=reason,
+          all_args=all_args)
       request.recipe = recipe_dict
 
     if args.dump_json:
