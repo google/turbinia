@@ -163,7 +163,8 @@ def validate_recipe(recipe_dict):
 
       task_loader = TaskLoader()
       if not task_loader.check_task_name(proposed_task):
-        message = ('Task {0:s} defined for task recipe {1:s} does not '
+        message = (
+            'Task {0:s} defined for task recipe {1:s} does not '
             'exist.'.format(proposed_task, recipe_item))
         log.error(message)
         return (False, message)
