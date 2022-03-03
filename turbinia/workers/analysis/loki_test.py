@@ -25,7 +25,7 @@ from turbinia.workers.workers_test import TestTurbiniaTaskBase
 
 
 class LokiAnalysisTaskTest(TestTurbiniaTaskBase):
-  """Tests for LokisAnalysisTask Task."""
+  """Tests for LokiAnalysisTask Task."""
 
   LOKI_SUMMARY = 'Loki analysis found 1 alert(s)'
 
