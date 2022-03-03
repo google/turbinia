@@ -55,7 +55,7 @@ class RecipeHelpersTest(unittest.TestCase):
   @mock.patch('builtins.open', side_effect=IOError)
   @mock.patch('turbinia.lib.recipe_helpers.log.error')
   def testLoadRecipeFromFileIOError(self, mock_log, _):
-    """Tests that an IOError generates logs."""
+    """Tests that an IOError is handled correctly."""
     result = recipe_helpers.load_recipe_from_file('test.yaml')
 
     mock_log.assert_called_with('Failed to read recipe file test.yaml: ')
@@ -64,7 +64,7 @@ class RecipeHelpersTest(unittest.TestCase):
   @mock.patch('builtins.open', return_value=io.StringIO('{'))
   @mock.patch('turbinia.lib.recipe_helpers.log.error')
   def testLoadRecipeFromFileInvalidYAML(self, mock_log, _):
-    """Tests that a YAML parser error is logged."""
+    """Tests that a YAML parser error is handled correctly."""
     result = recipe_helpers.load_recipe_from_file('test.yaml', validate=False)
 
     mock_log.assert_called_with(
@@ -77,7 +77,7 @@ class RecipeHelpersTest(unittest.TestCase):
       'builtins.open',
       return_value=io.StringIO('globals:\n  invalid_key:\n    - invalid_value'))
   def testLoadRecipeFromFileInvalidRecipe(self, _):
-    """Tests that a recipe is loaded correctly."""
+    """Tests that an invalid recipe is handled correctly."""
     result = recipe_helpers.load_recipe_from_file('test.yaml')
     self.assertEqual(result, {})
 
@@ -88,7 +88,7 @@ class RecipeHelpersTest(unittest.TestCase):
 
   @mock.patch('turbinia.lib.recipe_helpers.log.error')
   def testValidateGlobalsRecipeInvalidKey(self, mock_log):
-    """Tests that an invalid recipe key name is handled."""
+    """Tests that an invalid recipe key name is handled correctly."""
     self.test_globals_recipe['invalid_key'] = 'invalid_value'
     expected_error_message = (
         'Invalid recipe: Unknown keys [{\'invalid_key\'}] found in globals '
@@ -100,7 +100,7 @@ class RecipeHelpersTest(unittest.TestCase):
 
   @mock.patch('turbinia.lib.recipe_helpers.log.error')
   def testValidateGlobalsRecipeAllowDenyListDuplicate(self, mock_log):
-    """Tests that the same entry in allowlist and denylist is handled."""
+    """Tests that an entry in both allow and deny lists is handled correctly."""
     self.test_globals_recipe['jobs_allowlist'].append('job_name')
     self.test_globals_recipe['jobs_denylist'].append('job_name')
     expected_error_message = (
@@ -111,13 +111,13 @@ class RecipeHelpersTest(unittest.TestCase):
     self.assertEqual(result, (False, expected_error_message))
 
   def testValidateRecipe(self):
-    """Tests a valid recipe passes validation."""
+    """Tests that a valid recipe passes validation."""
     result = recipe_helpers.validate_recipe(self.test_recipe_dict)
     self.assertEqual(result, (True, ''))
 
   @mock.patch('turbinia.lib.recipe_helpers.log.error')
   def testValidateRecipeInvalidGlobals(self, mock_log):
-    """Tests a recipe with invalid globals is handled."""
+    """Tests that a recipe with invalid globals is handled correctly."""
     recipe_dict = {
         'globals': {
             'invalid_key': 'invalid_value'
@@ -136,7 +136,7 @@ class RecipeHelpersTest(unittest.TestCase):
 
   @mock.patch('turbinia.lib.recipe_helpers.log.error')
   def testValidateRecipeNoTask(self, mock_log):
-    """Tests a recipe with no task key is handled."""
+    """Tests that a recipe with no task key is handled correctly."""
     self.test_recipe_dict['plaso_base'] = {'notask': 'PlasoTask'}
     expected_error_message = (
         'Recipe item "plaso_base" has no "task" key. All recipe items must '
@@ -148,7 +148,7 @@ class RecipeHelpersTest(unittest.TestCase):
 
   @mock.patch('turbinia.lib.recipe_helpers.log.error')
   def testValidateRecipeInvalidTaskName(self, mock_log):
-    """Tests a recipe with an invalid task name is handled."""
+    """Tests that a recipe with an invalid task name is handled correctly."""
     self.test_recipe_dict['plaso_base'] = {'task': 'NoTask'}
     expected_error_message = (
         'Task NoTask defined for task recipe plaso_base does not exist.')
@@ -159,13 +159,13 @@ class RecipeHelpersTest(unittest.TestCase):
 
   @mock.patch('turbinia.config.RECIPE_FILE_DIR', '/etc/turbinia/', create=True)
   def testGetRecipeFromPathConfigSet(self):
-    """Test recipe path when RECIPE_FILE_PATH is set in config."""
+    """Check recipe path is correct when RECIPE_FILE_DIR set."""
     file_path_with_config = recipe_helpers.get_recipe_path_from_name('name')
     self.assertEqual(file_path_with_config, '/etc/turbinia/name.yaml')
 
   @mock.patch('turbinia.config.RECIPE_FILE_DIR', None, create=True)
   def testGetRecipeFromPathDefault(self):
-    """Test recipe path when RECIPE_FILE_PATH is not set in config."""
+    """Check recipe path is correct when RECIPE_FILE_DIR is not set."""
     file_path_default = recipe_helpers.get_recipe_path_from_name('name')
     file_name = os.path.basename(file_path_default)
     first_parent_dir = os.path.basename(os.path.dirname(file_path_default))
