@@ -238,6 +238,9 @@ class Evidence:
 
   def serialize(self):
     """Return JSON serializable object."""
+    # Clear any partition path_specs before serializing
+    if hasattr(self, 'path_spec'):
+      self.path_spec = None
     serialized_evidence = self.__dict__.copy()
     if self.parent_evidence:
       serialized_evidence['parent_evidence'] = self.parent_evidence.serialize()
