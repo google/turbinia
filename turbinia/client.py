@@ -1004,7 +1004,7 @@ class BaseTurbiniaClient:
           if v == 1:
             report.append(k)
           else:
-            report.append('{} x {}'.format(k, v))
+            report.append('{0:s} x {1:d}'.format(k, v))
 
     return '\n'.join(report)
 
