@@ -997,7 +997,7 @@ class BaseTurbiniaClient:
           report.extend(self.format_task(task, show_files=all_fields))
         else:
           task_counter['\n'.join(self.format_task(task,
-                                                show_files=all_fields))] += 1
+                                                  show_files=all_fields))] += 1
 
       if len(task_counter):
         for k, v in task_counter.items():
