@@ -993,7 +993,7 @@ class BaseTurbiniaClient:
       for task in task_map[success_type]:
         if full_report and success_type == success_types[0]:
           report.extend(self.format_task_detail(task, show_files=all_fields))
-        elif success_type == success_type[2]:
+        elif success_type == success_types[2]:
           report.extend(self.format_task(task, show_files=all_fields))
         else:
           task_counter[''.join(self.format_task(task,
