@@ -155,7 +155,7 @@ function update_to_latest {
 
 function resize_cluster {
     echo "Resizing cluster $CLUSTER_NAME to $CLUSTER_SIZE nodes."
-    read -p 'WARNING: This will delete nodes as well as any associated data on the node. Do you wish to continue? (yes/no) ' AND
+    read -p 'WARNING: This will delete nodes as well as any associated data on the node. Do you wish to continue? (yes/no) ' ANS
 
     if [ "$AND" == "yes" ] ; then
         $GCLOUD container clusters resize $CLUSTER_NAME --num-nodes $CLUSTER_SIZE
