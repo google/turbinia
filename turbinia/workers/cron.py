@@ -51,7 +51,14 @@ class CronAnalysisTask(TurbiniaTask):
 
     # Read the input file
     with open(evidence.local_path, 'r') as input_file:
-      crontab = input_file.read()
+      try:
+        crontab = input_file.read()
+      except UnicodeDecodeError as exception:
+        message = 'Error parsing cron file {0:s}: {1!s}'.format(
+            evidence.local_path, exception)
+        result.log(message)
+        result.close(self, success=False, status=message)
+        return result
 
     (report, priority, summary) = self.analyse_crontab(crontab)
     output_evidence.text_data = report
