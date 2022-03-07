@@ -80,8 +80,9 @@ class FileArtifactExtractionTask(TurbiniaTask):
     if not evidence.local_path:
       result.log('Tried to run image_export without local_path')
       result.close(
-          self, False, 'image_export.py failed for artifact {0:s} - local_path not provided.'.format(
-              self.artifact_name))
+          self, False,
+          'image_export.py failed for artifact {0:s} - local_path not provided.'
+          .format(self.artifact_name))
       return result
 
     result.log('Running image_export as [{0:s}]'.format(' '.join(cmd)))

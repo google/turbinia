@@ -34,8 +34,7 @@ class GitlabTaskTest(TestTurbiniaTaskBase):
     super(GitlabTaskTest, self).setUp(task_class=gitlab.GitlabTask)
     self.setResults(mock_run=False)
     filedir = os.path.dirname(os.path.realpath(__file__))
-    self.evidence.local_path = os.path.join(
-        filedir, '..', '..', 'test_data')
+    self.evidence.local_path = os.path.join(filedir, '..', '..', 'test_data')
     self.task.output_dir = self.task.base_output_dir
 
   def testGitlabRun(self):
@@ -48,10 +47,10 @@ class GitlabTaskTest(TestTurbiniaTaskBase):
     self.assertEqual(result.report_priority, 20)
     self.assertEqual(result.report_data, self.SUMMARY)
 
-
   def tearDown(self):
     if os.path.exists(self.base_output_dir):
       shutil.rmtree(self.base_output_dir)
+
 
 if __name__ == '__main__':
   unittest.main()
