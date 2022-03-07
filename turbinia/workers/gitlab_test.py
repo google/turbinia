@@ -15,33 +15,43 @@
 """Tests for the Gitlab task."""
 
 import os
+import shutil
 import unittest
 
 from turbinia import config
 from turbinia.workers import gitlab
+from turbinia.workers import TurbiniaTaskResult
 from turbinia.workers.workers_test import TestTurbiniaTaskBase
 
 
 class GitlabTaskTest(TestTurbiniaTaskBase):
   """Tests for the Gitlab Task."""
 
-  SUMMARY = 'exif exploit detected in workhorse.log'
+  SUMMARY = '#### **exif exploit detected in var/log/gitlab/workhorse.log**'
   TEST_DATA = None
 
   def setUp(self):
     super(GitlabTaskTest, self).setUp(task_class=gitlab.GitlabTask)
-    self.setResults(mock_run=True)
+    self.setResults(mock_run=False)
     filedir = os.path.dirname(os.path.realpath(__file__))
-    self.TEST_DATA = os.path.join(filedir, '..', '..', 'test_data')
+    self.evidence.local_path = os.path.join(
+        filedir, '..', '..', 'test_data')
+    self.task.output_dir = self.task.base_output_dir
 
-  def testGitlab(self):
-    """Tests the extract_linux_credentials method."""
+  def testGitlabRun(self):
+    """Test Gitlab task run."""
     config.LoadConfig()
-    (report, priority, summary) = self.task._is_exif_in_logs(
-        self.result, self.TEST_DATA, 'workhorse.log')
-    self.assertEqual(priority, 20)
-    self.assertEqual(summary, self.SUMMARY)
+    result = self.task.run(self.evidence, self.result)
 
+    self.assertIsInstance(result, TurbiniaTaskResult)
+
+    self.assertEqual(result.report_priority, 20)
+    self.assertEqual(result.report_data, self.SUMMARY)
+
+
+  def tearDown(self):
+    if os.path.exists(self.base_output_dir):
+      shutil.rmtree(self.base_output_dir)
 
 if __name__ == '__main__':
   unittest.main()

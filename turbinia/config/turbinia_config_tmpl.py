@@ -154,6 +154,11 @@ DEPENDENCIES = [{
     'docker_image': None,
     'timeout': 1800
 }, {
+    'job': 'GitlabJob',
+    'programs': ['zgrep'],
+    'docker_image': None,
+    'timeout': 1800
+}, {
     'job': 'GrepJob',
     'programs': ['grep'],
     'docker_image': None,

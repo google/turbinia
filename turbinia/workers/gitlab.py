@@ -88,8 +88,8 @@ class GitlabTask(TurbiniaTask):
       result.close(self, success=True, status='No Gitlab exploitation found')
       return result
 
-    report = "\n".join(reports)
-    summary = "\n".join(summaries)
+    report = " ".join(reports)
+    summary = " ".join(summaries)
 
     output_evidence.text_data = report
     result.report_priority = priority
@@ -110,7 +110,7 @@ class GitlabTask(TurbiniaTask):
     Args:
       result (TurbiniaTaskResult): The object to place task results into.
       basedir (str): the root of the evidence.
-      logdir (str): The file(s) to check
+      logfiles (str): The file(s) to check
 
     Returns:
       Tuple(
@@ -127,7 +127,7 @@ class GitlabTask(TurbiniaTask):
     cmd = ['zgrep', '"exiftool command failed"', check]
     ret, result = self.execute(cmd, result, success_codes=[0, 1])
     if ret == 0:
-      summary = 'exif exploit detected in {}'.format(logfiles)
+      summary = 'exif exploit detected in {0:s}'.format(logfiles)
       report = fmt.heading4(fmt.bold(summary))
       return (report, Priority.HIGH, summary)
 
@@ -139,7 +139,7 @@ class GitlabTask(TurbiniaTask):
     Args:
       result (TurbiniaTaskResult): The object to place task results into.
       basedir (str): the root of the evidence.
-      logdir (str): The file(s) to check
+      logfiles (str): The file(s) to check
 
     Returns:
       Tuple(
