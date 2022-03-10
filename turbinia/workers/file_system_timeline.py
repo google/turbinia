@@ -75,31 +75,29 @@ class FileSystemTimelineTask(TurbiniaTask):
     try:
       bodyfile_fileobj = open(bodyfile_output, 'w', encoding='utf-8')
     except IOError as exception:
-      status = 'Unable to create bodyfile local output file: {0!s}'.format(
-          exception)
+      status = 'Failed to open local output file: {0!s}'.format(exception)
       result.close(self, success=False, status=status)
       return result
 
-    if bodyfile_fileobj:
-      file_entries = enumerate(entry_lister.ListFileEntries(base_path_specs))
-      while file_entries:
-        try:
-          _, (file_entry, path_segments) = next(file_entries)
-          bodyfile_entries = entry_lister.GetBodyfileEntries(
-              file_entry, path_segments)
-          for bodyfile_entry in bodyfile_entries:
-            bodyfile_fileobj.write(bodyfile_entry)
-            bodyfile_fileobj.write('\n')
-            number_of_entries += 1
-        except StopIteration:
-          break
-        except (dfvfs_errors.AccessError, dfvfs_errors.BackEndError,
-                dfvfs_errors.MountPointError, dfvfs_errors.PathSpecError,
-                IOError) as exception:
-          status = 'Unable to process file entry: {0!s}'.format(exception)
-          result.log(status)
+    file_entries = enumerate(entry_lister.ListFileEntries(base_path_specs))
+    while file_entries:
+      try:
+        _, (file_entry, path_segments) = next(file_entries)
+        bodyfile_entries = entry_lister.GetBodyfileEntries(
+            file_entry, path_segments)
+        for bodyfile_entry in bodyfile_entries:
+          bodyfile_fileobj.write(bodyfile_entry)
+          bodyfile_fileobj.write('\n')
+          number_of_entries += 1
+      except StopIteration:
+        break
+      except (dfvfs_errors.AccessError, dfvfs_errors.BackEndError,
+              dfvfs_errors.MountPointError, dfvfs_errors.PathSpecError,
+              IOError) as exception:
+        status = 'Unable to process file entry: {0!s}'.format(exception)
+        result.log(status)
 
-      bodyfile_fileobj.close()
+    bodyfile_fileobj.close()
 
     if number_of_entries > 0:
       output_evidence.number_of_entries = number_of_entries
