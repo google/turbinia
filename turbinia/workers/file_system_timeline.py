@@ -68,6 +68,7 @@ class FileSystemTimelineTask(TurbiniaTask):
     except dfvfs_errors.ScannerError as exception:
       status = 'Unable to open evidence: {0!s}'.format(exception)
       result.close(self, success=False, status=status)
+      return result
 
     # Iterate over all file entries and generate the output in bodyfile
     # format.
@@ -77,6 +78,7 @@ class FileSystemTimelineTask(TurbiniaTask):
       status = 'Unable to create bodyfile local output file: {0!s}'.format(
           exception)
       result.close(self, success=False, status=status)
+      return result
 
     if bodyfile_fileobj:
       file_entries = enumerate(entry_lister.ListFileEntries(base_path_specs))
