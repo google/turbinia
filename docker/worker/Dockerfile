@@ -71,10 +71,6 @@ RUN mkdir -p /opt/loki && chown -R turbinia:turbinia /opt/loki \
     && sudo chown -R turbinia:turbinia /opt/loki \
     && git clone https://github.com/Neo23x0/signature-base.git
 
-ADD . /tmp/
-# unshallow and fetch all tags so our build systems pickup the correct git tag if it's a shallow clone
-RUN if $(cd /tmp/ && git rev-parse --is-shallow-repository); then cd /tmp/ && git fetch --prune --unshallow && git fetch --depth=1 origin +refs/tags/*:refs/tags/*; fi
-RUN cd /tmp/ && python3 setup.py install
 
 RUN mkdir /etc/turbinia && mkdir -p /mnt/turbinia/ && mkdir -p /var/lib/turbinia/ \
     && mkdir -p /etc/turbinia/ && chown -R turbinia:turbinia /etc/turbinia/ \
@@ -90,6 +86,11 @@ RUN cp /home/turbinia/password.lst /root/
 # Copy Kubernetes support tool to home folder
 COPY k8s/tools/check-lockfile.py /home/turbinia/check-lockfile.py
 RUN chown turbinia:turbinia /home/turbinia/check-lockfile.py
+
+ADD . /tmp/
+# unshallow and fetch all tags so our build systems pickup the correct git tag if it's a shallow clone
+RUN if $(cd /tmp/ && git rev-parse --is-shallow-repository); then cd /tmp/ && git fetch --prune --unshallow && git fetch --depth=1 origin +refs/tags/*:refs/tags/*; fi
+RUN cd /tmp/ && python3 setup.py install
 
 COPY docker/worker/start.sh /home/turbinia/start.sh
 RUN chmod +rwx /home/turbinia/start.sh

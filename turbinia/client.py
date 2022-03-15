@@ -171,9 +171,9 @@ class BaseTurbiniaClient:
       jobs_allowlist=None, jobs_denylist=None, recipe_name=None, sketch_id=None,
       skip_recipe_validation=False, yara_rules=None):
     """Creates a Turbinia recipe.
-    
+
     If no recipe_name is specified, this  method returns a default recipe.
-    If a recipe_name is specified then this method will build the recipe 
+    If a recipe_name is specified then this method will build the recipe
     dictionary by reading the  contents of a recipe file. The path to
     the recipe file is inferre from the recipe_name and the RECIPE_FILE_DIR
     configuration parameter.
@@ -989,11 +989,22 @@ class BaseTurbiniaClient:
       report.append(fmt.heading1('{0:s} Tasks'.format(success_type)))
       if not task_map[success_type]:
         report.append(fmt.bullet('None'))
+      task_counter = defaultdict(int)
       for task in task_map[success_type]:
         if full_report and success_type == success_types[0]:
           report.extend(self.format_task_detail(task, show_files=all_fields))
-        else:
+        elif success_type == success_types[2]:
           report.extend(self.format_task(task, show_files=all_fields))
+        else:
+          task_counter['\n'.join(self.format_task(task,
+                                                  show_files=all_fields))] += 1
+
+      if len(task_counter):
+        for k, v in task_counter.items():
+          if v == 1:
+            report.append(k)
+          else:
+            report.append('{0:s} x {1:d}'.format(k, v))
 
     return '\n'.join(report)
 

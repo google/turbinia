@@ -112,6 +112,10 @@ def extract_files(file_name, disk_path, output_dir, credentials=[]):
   Raises:
     TurbiniaException: If an error occurs when running image_export.
   """
+  if not disk_path:
+    raise TurbiniaException(
+        'image_export.py failed: Attempted to run with no local_path')
+
   image_export_cmd = [
       'sudo', 'image_export.py', '--name', file_name, '--write', output_dir,
       '--partitions', 'all'
