@@ -24,6 +24,7 @@ from turbinia.evidence import ReportText
 
 
 class FsstatTask(TurbiniaTask):
+  """Task to run fsstat on an evidence object."""
 
   REQUIRED_STATES = [state.ATTACHED]
 
@@ -38,18 +39,24 @@ class FsstatTask(TurbiniaTask):
         TurbiniaTaskResult object.
     """
     fsstat_output = os.path.join(self.output_dir, 'fsstat.txt')
+
     # Since fsstat does not support XFS, we won't run it when we know the
     # partition is XFS.
-    if evidence.path_spec.type_indicator == 'XFS':
-      message = 'Not running fsstat since partition is XFS'
-      result.log(message)
-      result.close(self, success=True, status=message)
-    else:
-      output_evidence = ReportText(source_path=fsstat_output)
-      cmd = ['sudo', 'fsstat', evidence.device_path]
-      result.log('Running fsstat as [{0!s}]'.format(cmd))
-      self.execute(
-          cmd, result, stdout_file=fsstat_output,
-          new_evidence=[output_evidence], close=True)
+
+    # Note: an evidence object that was serialized will not have a path_spec
+    # because it is removed prior to JSON serialization in evidence.py:243
+    if hasattr(evidence, "path_spec"):
+      if evidence.path_spec.type_indicator == "XFS":
+        message = 'Not running fsstat since partition is XFS'
+        result.log(message)
+        result.close(self, success=True, status=message)
+        return result
+
+    output_evidence = ReportText(source_path=fsstat_output)
+    cmd = ['sudo', 'fsstat', evidence.device_path]
+    result.log('Running fsstat as [{0!s}]'.format(cmd))
+    self.execute(
+        cmd, result, stdout_file=fsstat_output, new_evidence=[output_evidence],
+        close=True)
 
     return result
