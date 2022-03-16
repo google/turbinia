@@ -16,9 +16,7 @@
 
 from __future__ import unicode_literals
 
-import os
 import unittest
-import textwrap
 import mock
 
 from turbinia.evidence import ReportText

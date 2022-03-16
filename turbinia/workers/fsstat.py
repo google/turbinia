@@ -17,7 +17,6 @@ from __future__ import unicode_literals
 
 import os
 
-from turbinia import TurbiniaException
 from turbinia.workers import TurbiniaTask
 from turbinia.evidence import EvidenceState as state
 from turbinia.evidence import ReportText
