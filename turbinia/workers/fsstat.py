@@ -45,7 +45,7 @@ class FsstatTask(TurbiniaTask):
 
     # Note: an evidence object that was serialized will not have a path_spec
     # because it is removed prior to JSON serialization in evidence.py:243
-    if hasattr(evidence, "path_spec"):
+    if hasattr(evidence.path_spec, "type_indicator"):
       if evidence.path_spec.type_indicator == "XFS":
         message = 'Not running fsstat since partition is XFS'
         result.log(message)

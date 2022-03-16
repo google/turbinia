@@ -59,6 +59,18 @@ class FsstatTaskTest(TestTurbiniaTaskBase):
     # Ensure run method returns a TurbiniaTaskResult instance.
     self.assertIsInstance(result, TurbiniaTaskResult)
 
+  @mock.patch('turbinia.evidence.DiskPartition')
+  def testFsstatRunNoPathSpec(self, mock_evidence):
+    """Test fssstat task on an evidence object with no path_spec."""
+    self.task.execute = mock.MagicMock(return_value=0)
+    mock_evidence.path_spec = None
+    result = self.task.run(mock_evidence, self.result)
+
+    # Ensure execute method is not being called.
+    self.task.execute.assert_called_once()
+    # Ensure run method returns a TurbiniaTaskResult instance.
+    self.assertIsInstance(result, TurbiniaTaskResult)
+
 
 if __name__ == '__main__':
   unittest.main()
