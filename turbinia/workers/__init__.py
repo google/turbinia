@@ -50,6 +50,12 @@ from prometheus_client import Gauge
 from prometheus_client import Histogram
 
 METRICS = {}
+# Set the maximum size that the report can be before truncating it.  This is a
+# best effort estimate and not a guarantee and comes from the limit for
+# datastore entities[1] less some overhead for the rest of the attributes that
+# will be saved in the response.
+# [1]https://cloud.google.com/datastore/docs/concepts/limits
+REPORT_MAXSIZE = 1048572 * 0.75
 
 log = logging.getLogger('turbinia')
 
@@ -219,6 +225,18 @@ class TurbiniaTaskResult:
         self.log(
             'Evidence {0:s} has empty source_path so '
             'not saving.'.format(evidence.name))
+
+      # Truncate report text data if it is approaching the size of the max
+      # datastore entity size (See REPORT_MAXSIZE definition for details).
+      if (hasattr(evidence, 'text_data') and
+          len(evidence.text_data) > REPORT_MAXSIZE):
+        message = (
+            'The text_data attribute has a size {0:d} larger than the max '
+            'size {1:d} so truncating the response.'.format(
+                len(evidence.text_data), REPORT_MAXSIZE))
+        self.log(message, logging.WARN)
+        evidence.text_data = evidence.text_data[0:REPORT_MAXSIZE] + '\n'
+        evidence.text_data += message
 
       if not evidence.request_id:
         evidence.request_id = self.request_id
@@ -659,7 +677,6 @@ class TurbiniaTask:
 
       ret = proc.returncode
 
-    result.error['stdout'] = str(stdout)
     result.error['stderr'] = str(stderr)
 
     if stderr_file and not stderr:

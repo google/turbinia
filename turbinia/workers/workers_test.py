@@ -125,6 +125,16 @@ class TestTurbiniaTaskBase(unittest.TestCase):
 class TestTurbiniaTask(TestTurbiniaTaskBase):
   """Test TurbiniaTask class."""
 
+  def testTurbiniaTaskCloseTruncate(self):
+    """Tests that the close method will truncate large report output."""
+    evidence_ = evidence.ReportText()
+    max_size = 10 ** 20
+    evidence_.text_data = 'A' * max_size
+    self.result.add_evidence(evidence_)
+    self.result.close(self.task, success=True)
+    self.assertIn(evidence_, 'truncating')
+    self.assert(len(evidence_.text_data) <= (max_size * 0.8))
+
   def testTurbiniaTaskSerialize(self):
     """Test that we can properly serialize/deserialize tasks."""
     out_dict = self.plaso_task.serialize()
