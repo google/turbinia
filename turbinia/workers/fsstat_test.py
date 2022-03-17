@@ -39,7 +39,7 @@ class FsstatTaskTest(TestTurbiniaTaskBase):
   def testFsstatRun(self, mock_evidence):
     """Test fsstat task run."""
     self.task.execute = mock.MagicMock(return_value=0)
-    mock_evidence.path_spec.type_indicator = 'EXT'
+    mock_evidence.type_indicator = 'EXT'
     result = self.task.run(mock_evidence, self.result)
 
     # Ensure execute method is being called.
@@ -49,7 +49,7 @@ class FsstatTaskTest(TestTurbiniaTaskBase):
 
     # Test for XFS
     self.task.execute.reset_mock()
-    mock_evidence.path_spec.type_indicator = 'XFS'
+    mock_evidence.type_indicator = 'XFS'
     result = self.task.run(mock_evidence, self.result)
 
     # Ensure execute method is not being called.
