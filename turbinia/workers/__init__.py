@@ -228,7 +228,7 @@ class TurbiniaTaskResult:
 
       # Truncate report text data if it is approaching the size of the max
       # datastore entity size (See REPORT_MAXSIZE definition for details).
-      if (hasattr(evidence, 'text_data') and
+      if (hasattr(evidence, 'text_data') and evidence.text_data and
           len(evidence.text_data) > REPORT_MAXSIZE):
         message = (
             'The text_data attribute has a size {0:d} larger than the max '
