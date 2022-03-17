@@ -578,13 +578,14 @@ class DiskPartition(RawDisk):
     partition_offset (int): Offset of the partition in bytes.
     partition_size (int): Size of the partition in bytes.
     path_spec (dfvfs.PathSpec): Partition path spec.
+    type_indicator (str): Partition type indicator from dfVFS.
   """
 
   POSSIBLE_STATES = [EvidenceState.ATTACHED, EvidenceState.MOUNTED]
 
   def __init__(
       self, partition_location=None, partition_offset=None, partition_size=None,
-      lv_uuid=None, path_spec=None, *args, **kwargs):
+      lv_uuid=None, path_spec=None, type_indicator=None, *args, **kwargs):
     """Initialization for raw volume evidence object."""
 
     self.partition_location = partition_location
@@ -592,6 +593,7 @@ class DiskPartition(RawDisk):
     self.partition_size = partition_size
     self.lv_uuid = lv_uuid
     self.path_spec = path_spec
+    self.type_indicator = type_indicator
     super(DiskPartition, self).__init__(*args, **kwargs)
 
     # This Evidence needs to have a parent
@@ -612,6 +614,7 @@ class DiskPartition(RawDisk):
         path_specs, self.partition_location)
     if path_spec:
       self.path_spec = path_spec
+      self.type_indicator = path_spec.type_indicator
 
     # In attaching a partition, we create a new loopback device using the
     # partition offset and size.

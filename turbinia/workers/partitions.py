@@ -60,6 +60,7 @@ class PartitionEnumerationTask(TurbiniaTask):
     partition_offset = None
     partition_size = None
     lv_uuid = None
+    type_indicator = None
 
     # File system location / identifier
     is_lvm = False
@@ -126,7 +127,8 @@ class PartitionEnumerationTask(TurbiniaTask):
     # Not setting path_spec here as it will need to be generated for each task
     partition_evidence = DiskPartition(
         partition_location=fs_location, partition_offset=partition_offset,
-        partition_size=partition_size, lv_uuid=lv_uuid)
+        partition_size=partition_size, lv_uuid=lv_uuid,
+        type_indicator=type_indicator)
 
     return partition_evidence, status_report
 

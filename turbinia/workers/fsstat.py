@@ -17,13 +17,13 @@ from __future__ import unicode_literals
 
 import os
 
-from turbinia import TurbiniaException
 from turbinia.workers import TurbiniaTask
 from turbinia.evidence import EvidenceState as state
 from turbinia.evidence import ReportText
 
 
 class FsstatTask(TurbiniaTask):
+  """Task to run fsstat on an evidence object."""
 
   REQUIRED_STATES = [state.ATTACHED]
 
@@ -38,9 +38,13 @@ class FsstatTask(TurbiniaTask):
         TurbiniaTaskResult object.
     """
     fsstat_output = os.path.join(self.output_dir, 'fsstat.txt')
+
     # Since fsstat does not support XFS, we won't run it when we know the
     # partition is XFS.
-    if evidence.path_spec.type_indicator == 'XFS':
+
+    # Note: an evidence object that was serialized will not have a path_spec
+    # because it is removed prior to JSON serialization in evidence.py:243
+    if evidence.type_indicator == "XFS":
       message = 'Not running fsstat since partition is XFS'
       result.log(message)
       result.close(self, success=True, status=message)
