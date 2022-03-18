@@ -127,8 +127,8 @@ class TestTurbiniaTask(TestTurbiniaTaskBase):
 
   def testTurbiniaTaskCloseTruncate(self):
     """Tests that the close method will truncate large report output."""
-    evidence_ = evidence.ReportText()
-    max_size = 10 ** 20
+    evidence_ = evidence.ReportText(source_path='/no/path')
+    max_size = 10**20
     evidence_.text_data = 'A' * max_size
     self.result.add_evidence(evidence_)
     self.result.close(self.task, success=True)
@@ -277,7 +277,6 @@ class TestTurbiniaTask(TestTurbiniaTaskBase):
     # Command was executed, has the correct output saved and
     # TurbiniaTaskResult.close() was called with successful status.
     popen_mock.assert_called_with(cmd, stdout=-1, stderr=-1, cwd=None, env=None)
-    self.assertEqual(self.result.error['stdout'], str(output[0]))
     self.assertEqual(self.result.error['stderr'], str(output[1]))
     self.assertEqual(stdout_data, output[0])
     self.result.close.assert_called_with(self.task, success=True)
