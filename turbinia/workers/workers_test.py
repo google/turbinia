@@ -130,7 +130,8 @@ class TestTurbiniaTask(TestTurbiniaTaskBase):
     evidence_ = evidence.ReportText(source_path='/no/path')
     max_size = 2**20
     evidence_.text_data = 'A' * max_size
-    self.result.close(self.task, success=True, new_evidence=[evidence_])
+    self.result.add_evidence(evidence_, self.task._evidence_config)
+    self.result.close(self.task, success=True)
     self.assertIn(evidence_, 'truncating')
     self.assertTrue(len(evidence_.text_data) <= (max_size * 0.8))
 
