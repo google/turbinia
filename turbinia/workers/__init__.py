@@ -55,7 +55,7 @@ METRICS = {}
 # datastore entities[1] less some overhead for the rest of the attributes that
 # will be saved in the response.
 # [1]https://cloud.google.com/datastore/docs/concepts/limits
-REPORT_MAXSIZE = 1048572 * 0.75
+REPORT_MAXSIZE = int(1048572 * 0.75)
 
 log = logging.getLogger('turbinia')
 
@@ -235,7 +235,7 @@ class TurbiniaTaskResult:
             'size {1:d} so truncating the response.'.format(
                 len(evidence.text_data), REPORT_MAXSIZE))
         self.log(message, logging.WARN)
-        evidence.text_data = evidence.text_data[0:REPORT_MAXSIZE] + '\n'
+        evidence.text_data = evidence.text_data[:REPORT_MAXSIZE] + '\n'
         evidence.text_data += message
 
       if not evidence.request_id:
