@@ -128,7 +128,7 @@ class TestTurbiniaTask(TestTurbiniaTaskBase):
   def testTurbiniaTaskCloseTruncate(self):
     """Tests that the close method will truncate large report output."""
     evidence_ = evidence.ReportText(source_path='/no/path')
-    max_size = 10**20
+    max_size = 2**20
     evidence_.text_data = 'A' * max_size
     self.result.add_evidence(evidence_)
     self.result.close(self.task, success=True)
