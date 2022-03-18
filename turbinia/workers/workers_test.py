@@ -134,7 +134,7 @@ class TestTurbiniaTask(TestTurbiniaTaskBase):
     self.result.close(self.task, success=True)
     self.remove_files.append(
         os.path.join(self.task.base_output_dir, 'worker-log.txt'))
-    self.assertIn('truncating', evidence_.text_data)
+    self.assertIn('truncating', evidence_.text_data[-100:])
     self.assertTrue(len(evidence_.text_data) <= (max_size * 0.8))
 
   def testTurbiniaTaskSerialize(self):
