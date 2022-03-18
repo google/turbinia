@@ -685,8 +685,7 @@ class CeleryTaskManager(BaseTaskManager):
         if timeout:
           log.warning(
               'Task {0:s} timed out on server after {1:d} seconds. '
-              'Auto-closing Task.'
-              .format(celery_task.id, timeout))
+              'Auto-closing Task.'.format(celery_task.id, timeout))
           task = self.timeout_task(task, timeout)
           completed_tasks.append(task)
 

@@ -133,7 +133,7 @@ class TestTurbiniaTask(TestTurbiniaTaskBase):
     self.result.add_evidence(evidence_)
     self.result.close(self.task, success=True)
     self.assertIn(evidence_, 'truncating')
-    self.assert(len(evidence_.text_data) <= (max_size * 0.8))
+    self.assertTrue(len(evidence_.text_data) <= (max_size * 0.8))
 
   def testTurbiniaTaskSerialize(self):
     """Test that we can properly serialize/deserialize tasks."""
