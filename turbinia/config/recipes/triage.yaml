@@ -4,4 +4,3 @@ globals:
   jobs_allowlist: 
     - FileSystemTimelineJob
     - PlasoJob
-    - PsortJob

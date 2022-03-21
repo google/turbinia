@@ -4,7 +4,6 @@ globals:
   jobs_allowlist:
     - FileSystemTimelineJob
     - PlasoJob
-    - PsortJob
 
 plaso_base:
   task: 'PlasoTask'
