@@ -207,8 +207,6 @@ class BaseTurbiniaClient:
         recipe['globals']['jobs_denylist'] = jobs_denylist
       if jobs_allowlist:
         recipe['globals']['jobs_allowlist'] = jobs_allowlist
-      if yara_rules:
-        recipe['globals']['yara_rules'] = yara_rules
     else:
       # Load custom recipe from given path or name.
       if (jobs_denylist or jobs_allowlist or filter_patterns or yara_rules):
@@ -240,6 +238,8 @@ class BaseTurbiniaClient:
       recipe['globals']['debug_tasks'] = debug_tasks
     if group_id:
       recipe['globals']['group_id'] = group_id
+    if yara_rules:
+      recipe['globals']['yara_rules'] = yara_rules
 
     return recipe
 
