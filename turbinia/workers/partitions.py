@@ -40,6 +40,27 @@ class PartitionEnumerationTask(TurbiniaTask):
 
   REQUIRED_STATES = [EvidenceState.ATTACHED]
 
+  def _GetLocation(self, path_spec):
+    """Retrieve the best location for a partition.
+
+    Args:
+      path_spec (dfvfs.PathSpec): dfVFS path spec.
+
+    Returns:
+      The location attribute for the partition.
+    """
+    location = getattr(path_spec, 'location', None)
+    if location and location not in ('\\', '/'):
+      return location
+    while path_spec.HasParent():
+      path_spec = path_spec.parent
+      new_location = getattr(path_spec, 'location', None)
+      if new_location and new_location not in ('\\', '/'):
+        type_indicator = path_spec.type_indicator
+        if type_indicator in dfvfs_definitions.VOLUME_SYSTEM_TYPE_INDICATORS:
+          return new_location
+    return location
+
   def _ProcessPartition(self, path_spec):
     """Generate RawDiskPartition from a PathSpec.
 
@@ -53,18 +74,16 @@ class PartitionEnumerationTask(TurbiniaTask):
     status_report = []
 
     fs_path_spec = path_spec
-    fs_location = None
-    partition_location = None
+    location = None
     volume_index = None
     partition_index = None
     partition_offset = None
     partition_size = None
     lv_uuid = None
-    type_indicator = None
 
     # File system location / identifier
     is_lvm = False
-    fs_location = getattr(path_spec, 'location', None)
+    location = self._GetLocation(path_spec)
     while path_spec.HasParent():
       type_indicator = path_spec.type_indicator
       if type_indicator == dfvfs_definitions.TYPE_INDICATOR_APFS_CONTAINER:
@@ -74,10 +93,6 @@ class PartitionEnumerationTask(TurbiniaTask):
       if type_indicator in (dfvfs_definitions.TYPE_INDICATOR_GPT,
                             dfvfs_definitions.TYPE_INDICATOR_LVM,
                             dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION):
-        if fs_location in ('\\', '/'):
-          # Partition location / identifier
-          fs_location = getattr(path_spec, 'location', None)
-        partition_location = getattr(path_spec, 'location', None)
         # Partition index
         partition_index = getattr(path_spec, 'part_index', None)
 
@@ -90,7 +105,7 @@ class PartitionEnumerationTask(TurbiniaTask):
           volume_system = gpt_volume_system.GPTVolumeSystem()
         try:
           volume_system.Open(path_spec)
-          volume_identifier = partition_location.replace('/', '')
+          volume_identifier = location.replace('/', '')
           volume = volume_system.GetVolumeByIdentifier(volume_identifier)
 
           if is_lvm:
@@ -108,7 +123,7 @@ class PartitionEnumerationTask(TurbiniaTask):
 
       path_spec = path_spec.parent
 
-    status_report.append(fmt.heading5('{0!s}:'.format(fs_location)))
+    status_report.append(fmt.heading5('{0!s}:'.format(location)))
     status_report.append(
         fmt.bullet('Filesystem: {0!s}'.format(fs_path_spec.type_indicator)))
     if volume_index is not None:
@@ -126,9 +141,8 @@ class PartitionEnumerationTask(TurbiniaTask):
 
     # Not setting path_spec here as it will need to be generated for each task
     partition_evidence = DiskPartition(
-        partition_location=fs_location, partition_offset=partition_offset,
-        partition_size=partition_size, lv_uuid=lv_uuid,
-        type_indicator=type_indicator)
+        partition_location=location, partition_offset=partition_offset,
+        partition_size=partition_size, lv_uuid=lv_uuid)
 
     return partition_evidence, status_report
 

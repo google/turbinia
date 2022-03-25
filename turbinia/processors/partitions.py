@@ -90,14 +90,14 @@ def GetPathSpecByLocation(path_specs, location):
   for path_spec in path_specs:
     child_path_spec = path_spec
     fs_location = getattr(path_spec, 'location', None)
+    if fs_location and fs_location == location:
+      return child_path_spec
     while path_spec.HasParent():
       type_indicator = path_spec.type_indicator
       if type_indicator in dfvfs_definitions.VOLUME_SYSTEM_TYPE_INDICATORS:
-        if fs_location in ('\\', '/'):
-          fs_location = getattr(path_spec, 'location', None)
+        fs_location = getattr(path_spec, 'location', None)
         break
       path_spec = path_spec.parent
     if fs_location == location:
       return child_path_spec
-  log.warn('Could not find path_spec for location {0:s}'.format(location))
   return None

@@ -39,13 +39,14 @@ class FsstatTask(TurbiniaTask):
     """
     fsstat_output = os.path.join(self.output_dir, 'fsstat.txt')
 
-    # Since fsstat does not support XFS, we won't run it when we know the
-    # partition is XFS.
-
-    # Note: an evidence object that was serialized will not have a path_spec
-    # because it is removed prior to JSON serialization in evidence.py:243
-    if evidence.type_indicator == "XFS":
-      message = 'Not running fsstat since partition is XFS'
+    if not evidence.path_spec:
+      message = 'Could not run fsstat since partition does not have a path_spec'
+      result.log(message)
+      result.close(self, success=False, status=message)
+    # Since fsstat does not support some filesystems, we won't run it when we
+    # know the partition is not supported.
+    elif evidence.path_spec.type_indicator in ("APFS", "XFS"):
+      message = 'Not running fsstat since partition is not supported'
       result.log(message)
       result.close(self, success=True, status=message)
     else:
