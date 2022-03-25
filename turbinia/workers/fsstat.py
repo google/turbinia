@@ -39,7 +39,7 @@ class FsstatTask(TurbiniaTask):
     """
     fsstat_output = os.path.join(self.output_dir, 'fsstat.txt')
 
-    if not evidence.path_spec:
+    if evidence.path_spec is None:
       message = 'Could not run fsstat since partition does not have a path_spec'
       result.log(message)
       result.close(self, success=False, status=message)

@@ -100,4 +100,5 @@ def GetPathSpecByLocation(path_specs, location):
       path_spec = path_spec.parent
     if fs_location == location:
       return child_path_spec
+  log.error('Could not find path_spec for location {0:s}'.format(location))
   return None

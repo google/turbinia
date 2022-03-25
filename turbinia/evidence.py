@@ -613,7 +613,7 @@ class DiskPartition(RawDisk):
     if path_spec:
       self.path_spec = path_spec
     else:
-      log.error(
+      raise TurbiniaException(
           'Could not find path_spec for location {0:s}'.format(
               self.partition_location))
 
