@@ -26,22 +26,17 @@ import logging
 from operator import itemgetter
 from operator import attrgetter
 import os
-import stat
 import time
-import subprocess
-import codecs
 
 from google import auth
-from prometheus_client import start_http_server
 from turbinia import config
 from turbinia.config import logger
 from turbinia.config import DATETIME_FORMAT
 from turbinia import task_manager
-from turbinia import task_utils
 from turbinia import TurbiniaException
+from turbinia.lib import recipe_helpers
 from turbinia.lib import text_formatter as fmt
-from turbinia.lib import docker_manager
-from turbinia.jobs import manager as job_manager
+from turbinia.message import TurbiniaRequest
 from turbinia.workers import Priority
 
 MAX_RETRIES = 10
@@ -165,6 +160,99 @@ class BaseTurbiniaClient:
     config.LoadConfig()
     self.task_manager = task_manager.get_task_manager()
     self.task_manager.setup(server=False)
+
+  def _create_default_recipe(self):
+    """Creates a default Turbinia recipe."""
+    default_recipe = recipe_helpers.DEFAULT_RECIPE
+    return default_recipe
+
+  def create_recipe(
+      self, debug_tasks=False, filter_patterns=None, group_id='',
+      jobs_allowlist=None, jobs_denylist=None, recipe_name=None, sketch_id=None,
+      skip_recipe_validation=False, yara_rules=None):
+    """Creates a Turbinia recipe.
+
+    If no recipe_name is specified, this  method returns a default recipe.
+    If a recipe_name is specified then this method will build the recipe
+    dictionary by reading the  contents of a recipe file. The path to
+    the recipe file is inferre from the recipe_name and the RECIPE_FILE_DIR
+    configuration parameter.
+
+    Args:
+      debug_tasks (bool): flag to turn debug output on for supported tasks.
+      filter_patterns (list): a list of filter pattern strings.
+      group_id (str): a group identifier.
+      jobs_allowlist (list): a list of jobs allowed for execution.
+      jobs_denylist (list): a list of jobs that will not be executed.
+      recipe_name (str): Turbinia recipe name (e.g. triage-linux).
+      sketch_id (str): a Timesketch sketch identifier.
+      skip_recipe_validation (bool): flag indicates if the recipe will be
+          validated.
+      yara_rules (str): a string containing yara rules.
+
+    Returns:
+      dict: a Turbinia recipe dictionary.
+    """
+    recipe = None
+    if jobs_allowlist and jobs_denylist:
+      raise TurbiniaException(
+          'jobs_allowlist and jobs_denylist are mutually exclusive.')
+
+    if not recipe_name:
+      # if no recipe_name is given, create a default recipe.
+      recipe = self._create_default_recipe()
+      if filter_patterns:
+        recipe['globals']['filter_patterns'] = filter_patterns
+      if jobs_denylist:
+        recipe['globals']['jobs_denylist'] = jobs_denylist
+      if jobs_allowlist:
+        recipe['globals']['jobs_allowlist'] = jobs_allowlist
+    else:
+      # Load custom recipe from given path or name.
+      if (jobs_denylist or jobs_allowlist or filter_patterns or yara_rules):
+        msg = (
+            'Specifying a recipe name is incompatible with defining '
+            'jobs allow/deny lists, yara rules or a patterns file separately.')
+        raise TurbiniaException(msg)
+
+      if os.path.exists(recipe_name):
+        recipe_path = recipe_name
+      else:
+        recipe_path = recipe_helpers.get_recipe_path_from_name(recipe_name)
+
+      if not os.path.exists(recipe_path):
+        msg = 'Could not find recipe file at {0:s}'.format(recipe_path)
+        log.error(msg)
+        raise TurbiniaException(msg)
+
+      recipe = recipe_helpers.load_recipe_from_file(
+          recipe_path, skip_recipe_validation)
+      if not recipe:
+        msg = 'Could not load recipe from file at {0:s}.'.format(recipe_path)
+        raise TurbiniaException(msg)
+
+    # Set any additional recipe parameters, if specified.
+    if sketch_id:
+      recipe['globals']['sketch_id'] = sketch_id
+    if debug_tasks:
+      recipe['globals']['debug_tasks'] = debug_tasks
+    if group_id:
+      recipe['globals']['group_id'] = group_id
+    if yara_rules:
+      recipe['globals']['yara_rules'] = yara_rules
+
+    return recipe
+
+  def create_request(
+      self, request_id=None, group_id=None, requester=None, recipe=None,
+      context=None, evidence_=None):
+    """Wrapper method to create a Turbinia request."""
+    default_recipe = self.create_recipe()
+    request = TurbiniaRequest(
+        request_id=request_id, group_id=group_id, requester=requester,
+        recipe=recipe if recipe else default_recipe, context=context,
+        evidence_=evidence_)
+    return request
 
   def list_jobs(self):
     """List the available jobs."""
@@ -901,11 +989,22 @@ class BaseTurbiniaClient:
       report.append(fmt.heading1('{0:s} Tasks'.format(success_type)))
       if not task_map[success_type]:
         report.append(fmt.bullet('None'))
+      task_counter = defaultdict(int)
       for task in task_map[success_type]:
         if full_report and success_type == success_types[0]:
           report.extend(self.format_task_detail(task, show_files=all_fields))
-        else:
+        elif success_type == success_types[2]:
           report.extend(self.format_task(task, show_files=all_fields))
+        else:
+          task_counter['\n'.join(self.format_task(task,
+                                                  show_files=all_fields))] += 1
+
+      if len(task_counter):
+        for k, v in task_counter.items():
+          if v == 1:
+            report.append(k)
+          else:
+            report.append('{0:s} x {1:d}'.format(k, v))
 
     return '\n'.join(report)
 
@@ -959,6 +1058,18 @@ class TurbiniaCeleryClient(BaseTurbiniaClient):
   def __init__(self, *args, **kwargs):
     super(TurbiniaCeleryClient, self).__init__(*args, **kwargs)
     self.redis = RedisStateManager()
+
+  def close_tasks(
+      self, instance, project, region, request_id=None, task_id=None, user=None,
+      requester=None):
+    """Close Turbinia Tasks based on Request ID.
+
+    Currently needs to be implemented for Redis/Celery:
+    https://github.com/google/turbinia/issues/999
+    """
+    raise TurbiniaException(
+        '--close_tasks is not yet implemented for Redis: '
+        'https://github.com/google/turbinia/issues/999')
 
   def send_request(self, request):
     """Sends a TurbiniaRequest message.

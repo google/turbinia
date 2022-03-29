@@ -16,21 +16,22 @@
 
 from __future__ import unicode_literals
 
+import argparse
 import unittest
 import tempfile
+
 from unittest import mock
-import argparse
 from libcloudforensics.providers.gcp.internal import compute
 from turbinia import config
 from turbinia import TurbiniaException
 from turbinia import turbiniactl
-from turbinia.output_manager import OutputManager
+from turbinia.lib import recipe_helpers
 from turbinia.message import TurbiniaRequest
-from turbinia import evidence
 from turbinia.processors import archive
 
 
 class FakeEvidence():
+  """Class to represent a fake Evidence object. """
 
   def __init__(
       self, name='My Evidence', type=None, source_path=None, cloud_only=False,
@@ -47,6 +48,7 @@ class FakeEvidence():
     self.zone = zone
 
   def set_parent(self, _):
+    """Set evidence parent."""
     return
 
 
@@ -55,20 +57,19 @@ class TestTurbiniactl(unittest.TestCase):
 
   @mock.patch('turbinia.output_manager.OutputManager.setup')
   @mock.patch('turbinia.output_manager.OutputManager.save_evidence')
-  @mock.patch('turbinia.message.TurbiniaRequest')
-  def setUp(self, mockRequest, _, __):
+  # pylint: disable=arguments-differ
+  def setUp(self, _, __):
     super(TestTurbiniactl, self).setUp()
-    config.TASK_MANAGER = 'CELERY'
+    config.TASK_MANAGER = 'celery'
     self.output_manager = mock.MagicMock()
     self.base_dir = tempfile.mkdtemp()
     self.source_path = tempfile.mkstemp(dir=self.base_dir)[1]
-    mockRequest.request_id = 'fakeID'
-    mockRequest.group_id = 'FakeGroupID'
 
   @mock.patch('turbinia.client.get_turbinia_client')
   @mock.patch('turbinia.evidence.RawDisk')
   def testRawDiskEvidence(self, mockEvidence, mockClient):
     """Test RawDisk evidence."""
+    mockClient.create_request.return_value = TurbiniaRequest()
     args = argparse.Namespace(
         request_id=None, command='rawdisk', force_evidence=False,
         decryption_keys=None, recipe=None, recipe_path=None, dump_json=None,
@@ -89,6 +90,7 @@ class TestTurbiniactl(unittest.TestCase):
   def testDirectoryDiskEvidence(
       self, mockDirectory, mockCompressedEvidence, mockClient):
     """Test directory evidence."""
+    mockClient.create_request.return_value = TurbiniaRequest()
     args = argparse.Namespace(
         request_id=None, command='directory', force_evidence=False,
         decryption_keys=None, recipe=None, recipe_path=None, dump_json=None,
@@ -122,6 +124,7 @@ class TestTurbiniactl(unittest.TestCase):
   @mock.patch('turbinia.evidence.CompressedDirectory')
   def testCompressedDirectory(self, mockEvidence, mockClient):
     """Test compressed directory evidence"""
+    mockClient.create_request.return_value = TurbiniaRequest()
     args = argparse.Namespace(
         request_id=None, command='compresseddirectory', force_evidence=False,
         decryption_keys=None, recipe=None, recipe_path=None, dump_json=None,
@@ -143,6 +146,7 @@ class TestTurbiniactl(unittest.TestCase):
   @mock.patch('turbinia.evidence.GoogleCloudDisk')
   def testCloudDisk(self, mockEvidence, mockClient):
     """Test Google Cloud Disk evidence."""
+    mockClient.create_request.return_value = TurbiniaRequest()
     args = argparse.Namespace(
         request_id=None, command='googleclouddisk', force_evidence=False,
         decryption_keys=None, recipe=None, recipe_path=None, dump_json=None,
@@ -167,6 +171,7 @@ class TestTurbiniactl(unittest.TestCase):
   def testCloudEmbedded(
       self, mockCloudEvidence, mockEmbeddedEvidence, mockClient, _, __):
     """Test Google Cloud Disk Embedded evidence."""
+    mockClient.create_request.return_value = TurbiniaRequest()
     args = argparse.Namespace(
         request_id=None, command='googleclouddiskembedded',
         force_evidence=False, decryption_keys=None, recipe=None,
@@ -196,6 +201,7 @@ class TestTurbiniactl(unittest.TestCase):
   @mock.patch('turbinia.evidence.ChromiumProfile')
   def testHindsight(self, mockEvidence, mockClient):
     """Test hindsight evidence"""
+    mockClient.create_request.return_value = TurbiniaRequest()
     args = argparse.Namespace(
         request_id=None, command='hindsight', force_evidence=False,
         decryption_keys=None, recipe=None, recipe_path=None, dump_json=None,
@@ -226,6 +232,7 @@ class TestTurbiniactl(unittest.TestCase):
   @mock.patch('turbinia.evidence.RawMemory')
   def testRawMemory(self, mockEvidence, mockClient):
     """Test raw memory evidence"""
+    mockClient.create_request.return_value = TurbiniaRequest()
     args = argparse.Namespace(
         request_id=None, command='rawmemory', force_evidence=False,
         decryption_keys=None, recipe=None, recipe_path=None, dump_json=None,
@@ -262,7 +269,7 @@ class TestTurbiniactl(unittest.TestCase):
     self.assertTrue(turbiniactl.process_evidence.called)
 
   @mock.patch('turbinia.client.get_turbinia_client')
-  def testUnequalRawdiskArgs(self, _):
+  def testUnequalRawdiskArgs(self, mockClient):
     """Test unequal number of args for rawdisk evidence type."""
     self.assertRaises(
         TurbiniaException, turbiniactl.process_args, [
@@ -307,7 +314,7 @@ class TestTurbiniactl(unittest.TestCase):
   def testUnequalCloudDiskArgs(self, mockParser, mock_copyDisk, _):
     """Test unequal number of args for cloud disk evidence type."""
     config.SHARED_FILESYSTEM = False
-
+    config.TASK_MANAGER = 'PSQ'
     mockArgs = argparse.Namespace(
         all_fields=False, command='googleclouddisk', config_file=None,
         copy_only=False, debug=False, debug_tasks=False, decryption_keys=[],
@@ -359,7 +366,6 @@ class TestTurbiniactl(unittest.TestCase):
         ])
 
     mockArgs.source = ['source1', 'source2', 'source3']
-    config.TASK_MANAGER = 'PSQ'
     turbiniactl.process_evidence = mock.MagicMock(return_value=None)
     mock_copyDisk.return_value = compute.GoogleComputeDisk(
         'fake-proj', 'fake-zone', 'fake-disk-copy')
@@ -375,6 +381,7 @@ class TestTurbiniactl(unittest.TestCase):
     """Test unequal number of args for cloud embedded disk evidence type."""
     # Fail when zones don't match
     config.SHARED_FILESYSTEM = False
+    config.TASK_MANAGER = 'PSQ'
     self.assertRaises(
         TurbiniaException, turbiniactl.process_args, [
             'googleclouddiskembedded', '--disk_name', 'disk1,disk2,disk3',
@@ -416,7 +423,6 @@ class TestTurbiniactl(unittest.TestCase):
         ])
 
     # Pass when all the args match
-    config.TASK_MANAGER = 'PSQ'
     turbiniactl.process_evidence = mock.MagicMock(return_value=None)
     mock_copyDisk.return_value = compute.GoogleComputeDisk(
         'fake-proj', 'fake-zone', 'fake-disk-copy')
@@ -481,3 +487,15 @@ class TestTurbiniactl(unittest.TestCase):
     turbiniactl.process_args(
         ['hindsight', '--source_path', 'disk1,disk2,disk3'])
     self.assertTrue(turbiniactl.process_evidence.called)
+
+  @mock.patch('turbinia.client.get_turbinia_client')
+  def testTurbiniaClientRequest(self, mockClient):
+    """Test Turbinia client request creation."""
+    config.TASK_MANAGER = 'celery'
+    mockClient.create_request = mock.MagicMock()
+    mockClient.create_request.return_value = TurbiniaRequest(
+        recipe=recipe_helpers.DEFAULT_RECIPE)
+    test_request = mockClient.create_request()
+    self.assertIsNotNone(test_request)
+    test_default_recipe = recipe_helpers.DEFAULT_RECIPE
+    self.assertEqual(test_request.recipe, test_default_recipe)

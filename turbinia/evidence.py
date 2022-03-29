@@ -154,7 +154,7 @@ class Evidence:
         if that state is true.  This is used by the preprocessors to set the
         current state and Tasks can use this to determine if the Evidence is in
         the correct state for processing.
-    resource_tracked (bool): Evidence with this property set requires tracking 
+    resource_tracked (bool): Evidence with this property set requires tracking
         in a state file to allow for access amongst multiple workers.
     resource_id (str): The unique id used to track the state of a given Evidence
         type for stateful tracking.
@@ -238,6 +238,9 @@ class Evidence:
 
   def serialize(self):
     """Return JSON serializable object."""
+    # Clear any partition path_specs before serializing
+    if hasattr(self, 'path_spec'):
+      self.path_spec = None
     serialized_evidence = self.__dict__.copy()
     if self.parent_evidence:
       serialized_evidence['parent_evidence'] = self.parent_evidence.serialize()
@@ -609,6 +612,10 @@ class DiskPartition(RawDisk):
         path_specs, self.partition_location)
     if path_spec:
       self.path_spec = path_spec
+    else:
+      raise TurbiniaException(
+          'Could not find path_spec for location {0:s}'.format(
+              self.partition_location))
 
     # In attaching a partition, we create a new loopback device using the
     # partition offset and size.

@@ -16,9 +16,7 @@
 
 from __future__ import unicode_literals
 
-import os
 import unittest
-import textwrap
 import mock
 
 from turbinia.evidence import ReportText
@@ -52,6 +50,18 @@ class FsstatTaskTest(TestTurbiniaTaskBase):
     # Test for XFS
     self.task.execute.reset_mock()
     mock_evidence.path_spec.type_indicator = 'XFS'
+    result = self.task.run(mock_evidence, self.result)
+
+    # Ensure execute method is not being called.
+    self.task.execute.assert_not_called()
+    # Ensure run method returns a TurbiniaTaskResult instance.
+    self.assertIsInstance(result, TurbiniaTaskResult)
+
+  @mock.patch('turbinia.evidence.DiskPartition')
+  def testFsstatRunNoPathSpec(self, mock_evidence):
+    """Test fssstat task on an evidence object with no path_spec."""
+    self.task.execute = mock.MagicMock(return_value=0)
+    mock_evidence.path_spec = None
     result = self.task.run(mock_evidence, self.result)
 
     # Ensure execute method is not being called.

@@ -17,13 +17,13 @@ from __future__ import unicode_literals
 
 import os
 
-from turbinia import TurbiniaException
 from turbinia.workers import TurbiniaTask
 from turbinia.evidence import EvidenceState as state
 from turbinia.evidence import ReportText
 
 
 class FsstatTask(TurbiniaTask):
+  """Task to run fsstat on an evidence object."""
 
   REQUIRED_STATES = [state.ATTACHED]
 
@@ -38,12 +38,17 @@ class FsstatTask(TurbiniaTask):
         TurbiniaTaskResult object.
     """
     fsstat_output = os.path.join(self.output_dir, 'fsstat.txt')
-    # Since fsstat does not support XFS, we won't run it when we know the
-    # partition is XFS.
-    if evidence.path_spec.type_indicator == 'XFS':
-      message = 'Not running fsstat since partition is XFS'
+
+    if evidence.path_spec is None:
+      message = 'Could not run fsstat since partition does not have a path_spec'
       result.log(message)
-      result.close(self, successful=True, status=message)
+      result.close(self, success=False, status=message)
+    # Since fsstat does not support some filesystems, we won't run it when we
+    # know the partition is not supported.
+    elif evidence.path_spec.type_indicator in ("APFS", "XFS"):
+      message = 'Not running fsstat since partition is not supported'
+      result.log(message)
+      result.close(self, success=True, status=message)
     else:
       output_evidence = ReportText(source_path=fsstat_output)
       cmd = ['sudo', 'fsstat', evidence.device_path]

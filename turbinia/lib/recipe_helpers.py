@@ -17,8 +17,11 @@
 import copy
 import logging
 import yaml
+import os
+
 from yaml import Loader
 from yaml import load
+from turbinia import config
 from turbinia.lib.file_helpers import file_to_str
 from turbinia.lib.file_helpers import file_to_list
 from turbinia.task_utils import TaskLoader
@@ -160,10 +163,35 @@ def validate_recipe(recipe_dict):
 
       task_loader = TaskLoader()
       if not task_loader.check_task_name(proposed_task):
-        log.error(
-            'Task {0:s} defined for task recipe {1:s} does not exist.'.format(
-                proposed_task, recipe_item))
+        message = (
+            'Task {0:s} defined for task recipe {1:s} does not '
+            'exist.'.format(proposed_task, recipe_item))
+        log.error(message)
         return (False, message)
       tasks_with_recipe.append(recipe_item)
 
   return (True, '')
+
+
+def get_recipe_path_from_name(recipe_name):
+  """Returns a recipe's path from a recipe name.
+
+  Args:
+    recipe_name (str): A recipe name.
+
+  Returns:
+    str: a recipe's file system path.
+  """
+  recipe_path = ''
+  if not recipe_name.endswith('.yaml'):
+    recipe_name = recipe_name + '.yaml'
+
+  if hasattr(config, 'RECIPE_FILE_DIR') and config.RECIPE_FILE_DIR:
+    recipe_path = os.path.join(config.RECIPE_FILE_DIR, recipe_name)
+  else:
+    recipe_path = os.path.realpath(__file__)
+    recipe_path = os.path.dirname(recipe_path)
+    recipe_path = os.path.join(recipe_path, 'config', 'recipes')
+    recipe_path = os.path.join(recipe_path, recipe_name)
+
+  return recipe_path

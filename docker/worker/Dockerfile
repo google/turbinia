@@ -1,5 +1,8 @@
 FROM ubuntu:20.04
 
+# Use: docker build --no-cache --build-arg PPA_TRACK="[staging|stable]"
+ARG PPA_TRACK=stable
+
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get -y install \
     apt-transport-https \
@@ -32,20 +35,25 @@ RUN pip3 install urllib3 cryptography --upgrade
 # TODO(hacktobeer) uncomment when protobuf lib dependency if fixed upstream
 # RUN pip3 install pyhindsight
 
-# Install Plaso, bulkextractor and docker-explorer
+# Install various packages from the GIFT PPA
+#   bulkextractor
+#   dfImageTools
+#   docker-explorer
+#   libbde-tools
+#   Plaso
+#   Sleuthkit
 RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 0x5e80511b10c598b8 \
-    && add-apt-repository -y ppa:gift/stable
+    && add-apt-repository -y ppa:gift/$PPA_TRACK
 RUN apt-get -y install \
     bulk-extractor \
-    python3-dfimagetools \
     dfimagetools-tools \
     docker-explorer-tools \
     libbde-tools \
     libewf \
     libewf-python3 \
     plaso-tools \
-    python3-dfvfs \
     python3-dfimagetools \
+    python3-dfvfs \
     python3-plaso \
     sleuthkit \
     --option Acquire::ForceIPv4=true --option Acquire::Retries=100 --option Acquire::http::Timeout=60
@@ -63,10 +71,6 @@ RUN mkdir -p /opt/loki && chown -R turbinia:turbinia /opt/loki \
     && sudo chown -R turbinia:turbinia /opt/loki \
     && git clone https://github.com/Neo23x0/signature-base.git
 
-ADD . /tmp/
-# unshallow and fetch all tags so our build systems pickup the correct git tag if it's a shallow clone
-RUN if $(cd /tmp/ && git rev-parse --is-shallow-repository); then cd /tmp/ && git fetch --prune --unshallow && git fetch --depth=1 origin +refs/tags/*:refs/tags/*; fi
-RUN cd /tmp/ && python3 setup.py install
 
 RUN mkdir /etc/turbinia && mkdir -p /mnt/turbinia/ && mkdir -p /var/lib/turbinia/ \
     && mkdir -p /etc/turbinia/ && chown -R turbinia:turbinia /etc/turbinia/ \
@@ -82,6 +86,11 @@ RUN cp /home/turbinia/password.lst /root/
 # Copy Kubernetes support tool to home folder
 COPY k8s/tools/check-lockfile.py /home/turbinia/check-lockfile.py
 RUN chown turbinia:turbinia /home/turbinia/check-lockfile.py
+
+ADD . /tmp/
+# unshallow and fetch all tags so our build systems pickup the correct git tag if it's a shallow clone
+RUN if $(cd /tmp/ && git rev-parse --is-shallow-repository); then cd /tmp/ && git fetch --prune --unshallow && git fetch --depth=1 origin +refs/tags/*:refs/tags/*; fi
+RUN cd /tmp/ && python3 setup.py install
 
 COPY docker/worker/start.sh /home/turbinia/start.sh
 RUN chmod +rwx /home/turbinia/start.sh
