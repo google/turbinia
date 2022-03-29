@@ -61,7 +61,7 @@ Please follow these steps for configuring Turbinia for GCP use and then running 
   * Choose any name for the cluster.
   * The Zone should match the GCP Zone configuration (e.g. wherever Zone cloud functions & Datastore was deployed to).
   * Choose number of nodes based on processing & cost requirements.
-  * Change machine type based on processing & cost requirements.
+  * Change machine type based on processing & cost requirments.
   * In the Node Pools -> Security tab, change access scopes to "Allow full access to all cloud APIs"
 * Alternatively, a GKE cluster can be created via [gcloud](https://cloud.google.com/kubernetes-engine/docs/how-to/creating-a-zonal-cluster#gcloud).
 ```
