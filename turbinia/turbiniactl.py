@@ -91,7 +91,7 @@ def process_args(args):
     args(namespace): turbiniactl args.
   
   Raises:
-    TurbiniaException: If theres an error processing args.
+    TurbiniaException: If there's an error processing args.
   """
   parser = argparse.ArgumentParser(
       description='Turbinia can bulk process multiple evidence of same type '
