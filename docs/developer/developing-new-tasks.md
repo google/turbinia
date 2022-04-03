@@ -181,7 +181,7 @@ split it up. Then you just need to add a reference to the new job in
 
 Tasks can return report data in Markdown format by adding it as a string to
 `result.report_data`.  If high priority findings are found, you can change
-`result.report_priority`.  Priorites are 0 - 100, and the highest priority is 0.
+`result.report_priority`.  Priorities are 0 - 100, and the highest priority is 0.
 This will affect the ordering in the report, and if the priority is a value less
 than what is set with `--priority_filter` (i.e. a higher priority), then the
 full report data will be printed out when `--full_report` is specified.
