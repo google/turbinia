@@ -209,10 +209,10 @@ class BaseTurbiniaClient:
         recipe['globals']['jobs_allowlist'] = jobs_allowlist
     else:
       # Load custom recipe from given path or name.
-      if (jobs_denylist or jobs_allowlist or filter_patterns or yara_rules):
+      if (jobs_denylist or jobs_allowlist or filter_patterns):
         msg = (
             'Specifying a recipe name is incompatible with defining '
-            'jobs allow/deny lists, yara rules or a patterns file separately.')
+            'jobs allow/deny lists, or a patterns file separately.')
         raise TurbiniaException(msg)
 
       if os.path.exists(recipe_name):
