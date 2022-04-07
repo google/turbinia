@@ -175,7 +175,7 @@ class BaseTurbiniaClient:
     If no recipe_name is specified, this  method returns a default recipe.
     If a recipe_name is specified then this method will build the recipe
     dictionary by reading the  contents of a recipe file. The path to
-    the recipe file is inferre from the recipe_name and the RECIPE_FILE_DIR
+    the recipe file is inferred from the recipe_name and the RECIPE_FILE_DIR
     configuration parameter.
 
     Args:
