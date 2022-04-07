@@ -803,7 +803,7 @@ class PSQTaskManager(BaseTaskManager):
         timeout = self.check_task_timeout(task)
         if timeout:
           log.warning(
-              'Task {0:s} timed on server out after {0:d} seconds. Auto-closing Task.'
+              'Task {0:s} timed on server out after {1:d} seconds. Auto-closing Task.'
               .format(task.id, timeout))
           task = self.timeout_task(task, timeout)
           completed_tasks.append(task)
