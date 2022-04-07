@@ -23,7 +23,7 @@ from six.moves import queue
 from six.moves import xrange
 
 from google.cloud import exceptions
-from google.cloud import pubsub
+import libcloudforensics.providers.gcp.internal.common as gcp_common
 
 from turbinia import config
 from turbinia.message import TurbiniaMessageBase
@@ -60,12 +60,14 @@ class TurbiniaPubSub(TurbiniaMessageBase):
   def setup_publisher(self):
     """Set up the pubsub publisher."""
     config.LoadConfig()
-    self.publisher = pubsub.PublisherClient()
+    self.publisher = gcp_common.CreateService('pubsub', 'v1')
     self.topic_path = self.publisher.topic_path(
         config.TURBINIA_PROJECT, self.topic_name)
     try:
       log.debug('Trying to create pubsub topic {0:s}'.format(self.topic_path))
-      self.publisher.create_topic(self.topic_path)
+      topics_client = self.publisher.topics()
+      gcp_common.ExecuteRequest(
+          topics_client, 'create', {'name': self.topic_path})
     except exceptions.Conflict:
       log.debug('PubSub topic {0:s} already exists.'.format(self.topic_path))
     log.debug('Setup PubSub publisher at {0:s}'.format(self.topic_path))
@@ -73,7 +75,7 @@ class TurbiniaPubSub(TurbiniaMessageBase):
   def setup_subscriber(self):
     """Set up the pubsub subscriber."""
     config.LoadConfig()
-    self.subscriber = pubsub.SubscriberClient()
+    #self.subscriber = gcp_common.CreateService('pubsub', 'v1')
     subscription_path = self.subscriber.subscription_path(
         config.TURBINIA_PROJECT, self.topic_name)
     if not self.topic_path:
@@ -83,7 +85,13 @@ class TurbiniaPubSub(TurbiniaMessageBase):
       log.debug(
           'Trying to create subscription {0:s} on topic {1:s}'.format(
               subscription_path, self.topic_path))
-      self.subscriber.create_subscription(subscription_path, self.topic_path)
+      subscriptions_client = self.publisher.subscriptions()
+      request_body = {'topic': self.topic_path}
+      gcp_common.ExecuteRequest(
+          subscriptions_client, 'create', {
+              'name': subscription_path,
+              'body': request_body
+          })
     except exceptions.Conflict:
       log.debug('Subscription {0:s} already exists.'.format(subscription_path))
 
