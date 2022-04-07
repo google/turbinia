@@ -1,12 +1,6 @@
 <template>
   <v-app id="turb">
-    <v-navigation-drawer
-      v-model="drawer"
-      app
-      class="pt-4"
-      color="grey lighten-3"
-      mini-variant
-    >
+    <v-navigation-drawer v-model="drawer" app class="pt-4" color="grey lighten-3" mini-variant>
       <v-avatar
         v-for="n in 6"
         :key="n"
@@ -27,5 +21,5 @@ export default {
   data: () => ({
     //
   }),
-};
+}
 </script>
