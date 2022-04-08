@@ -11,15 +11,27 @@
     </v-navigation-drawer>
 
     <v-main>
-      <!--  -->
+      <v-data-table :headers="headers"></v-data-table>
     </v-main>
   </v-app>
 </template>
 
 <script>
 export default {
-  data: () => ({
-    //
-  }),
+  data() {
+    return {
+      headers: [
+        {
+          text: 'Request ID',
+          align: 'start',
+          value: 'name',
+        },
+        { text: 'Requester', value: 'requester' },
+        { text: 'Created', value: 'created' },
+        { text: 'Last Update Time', value: 'last_update_time' },
+        { text: 'Status', value: 'status' },
+      ],
+    }
+  },
 }
 </script>
