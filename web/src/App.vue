@@ -9,7 +9,6 @@
         class="d-block text-center mx-auto mb-9"
       ></v-avatar>
     </v-navigation-drawer>
-
     <v-main>
       <request-list></request-list>
     </v-main>
