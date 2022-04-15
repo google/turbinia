@@ -961,6 +961,16 @@ def process_evidence(
           sketch_id=None, skip_recipe_validation=args.skip_recipe_validation,
           yara_rules=yara_rules)
       request.recipe = recipe_dict
+    else:
+      # Create default recipe with additional parameters
+      # from the command line arguments.
+      recipe_dict = client.create_recipe(
+          debug_tasks=args.debug_tasks, filter_patterns=filter_patterns,
+          group_id=group_id, jobs_allowlist=args.jobs_allowlist,
+          jobs_denylist=args.jobs_denylist,
+          sketch_id=None, skip_recipe_validation=args.skip_recipe_validation,
+          yara_rules=yara_rules)
+      request.recipe = recipe_dict
 
     if args.dump_json:
       print(request.to_json().encode('utf-8'))
