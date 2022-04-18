@@ -951,6 +951,11 @@ def process_evidence(
       msg = ('Expected a recipe name (-I) or path (-P) but found both.')
       raise TurbiniaException(msg)
 
+    if args.skip_recipe_validation:
+      skip_recipe_validation = args.skip_recipe_validation
+    else:
+      skip_recipe_validation = False
+
     # Set the recipe name/path or None if not set.
     # If no recipe name or path is given, the create_recipe method will
     # generate a default recipe but still honor any of other parameters
@@ -960,9 +965,8 @@ def process_evidence(
     recipe_dict = client.create_recipe(
         debug_tasks=args.debug_tasks, filter_patterns=filter_patterns,
         group_id=group_id, jobs_allowlist=args.jobs_allowlist,
-        jobs_denylist=args.jobs_denylist, recipe_name=recipe,
-        sketch_id=None, skip_recipe_validation=args.skip_recipe_validation,
-        yara_rules=yara_rules)
+        jobs_denylist=args.jobs_denylist, recipe_name=recipe, sketch_id=None,
+        skip_recipe_validation=skip_recipe_validation, yara_rules=yara_rules)
     request.recipe = recipe_dict
 
     if args.dump_json:
