@@ -26,11 +26,8 @@ import os
 import sys
 import uuid
 
-from attr import Attribute
-
 from turbinia import config
 from turbinia import TurbiniaException
-from turbinia.lib import recipe_helpers
 from turbinia.config import logger
 from turbinia import __version__
 from turbinia.processors import archive
