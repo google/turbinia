@@ -291,7 +291,7 @@ class TestTurbiniaClient(unittest.TestCase):
     task_data = client.get_task_data('inst', 'proj', 'reg')
     # get_task_data() converts this back into a timedelta(). We returned it
     # seconds from the GCF function call because that is what it is stored in
-    # Datastore as.ggg
+    # Datastore as.
     test_task_data[0]['run_time'] = run_time
     self.assertEqual(task_data, test_task_data)
 
