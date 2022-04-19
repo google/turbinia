@@ -10,7 +10,12 @@
       ></v-avatar>
     </v-navigation-drawer>
     <v-main>
-      <request-list></request-list>
+      <v-container fluid>
+        <v-btn>Test</v-btn>
+      </v-container>
+      <v-container fluid>
+        <request-list></request-list>
+      </v-container>
     </v-main>
   </v-app>
 </template>
@@ -18,7 +23,9 @@
 <script>
 export default {
   data() {
-    return {}
+    return {
+      drawer: 'woah',
+    }
   },
 }
 </script>

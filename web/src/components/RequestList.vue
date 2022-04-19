@@ -1,5 +1,8 @@
 <template>
-  <v-data-table :headers="headers" :items="requestSummary"></v-data-table>
+  <v-app id="turb2">
+    <v-btn @click="count++">Refresh</v-btn>
+    <v-data-table :headers="headers" :items="requestSummary"></v-data-table>
+  </v-app>
 </template>
 
 <script>
@@ -13,8 +16,15 @@ export default {
         { text: 'Last Update Time', value: 'last_update_time' },
         { text: 'Status', value: 'status' },
       ],
-      requestSummary: [{ request_id: 'test1', last_update_time: '2' }, { request_id: 'test2' }],
+      requestSummary: [],
+      count: 0,
     }
+  },
+  computed: {
+    getRequestStatus() {
+      console.log('test')
+      return ''
+    },
   },
 }
 </script>
