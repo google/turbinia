@@ -278,7 +278,7 @@ class RedisStateManager(BaseStateManager):
       # Redis only supports strings; we convert to/from datetime here and below
       tasks = [task for task in tasks if task.get('last_update') > start_time]
     if task_id:
-      tasks = [task for task in tasks if task.get('task_id') == task_id]
+      tasks = [task for task in tasks if task.get('id') == task_id]
     if request_id:
       tasks = [task for task in tasks if task.get('request_id') == request_id]
     if group_id:
