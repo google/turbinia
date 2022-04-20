@@ -27,7 +27,7 @@ import mock
 from turbinia import config
 from turbinia import client as TurbiniaClientProvider
 from turbinia import TurbiniaException
-from turbinia.client import TurbiniaStats
+from turbinia.client import TurbiniaCeleryClient, TurbiniaStats
 
 DATETIME_FORMAT = '%Y-%m-%dT%H:%M:%S.%fZ'
 
@@ -284,35 +284,37 @@ class TestTurbiniaClient(unittest.TestCase):
   @mock.patch('turbinia.state_manager.get_state_manager')
   def testTurbiniaClientGetTaskData(self, _, __, mock_cloud_function):
     """Basic test for client.get_task_data"""
-    # ExecuteFunction returns a dict with a 'result' key that has a json-encoded
-    # list.  This contains our task data, which is a list of dicts.
-    run_time = timedelta(seconds=3)
-    test_task_data = [{'bar': 'bar2', 'run_time': run_time.total_seconds()}]
-    gcf_result = [test_task_data, 'Unused GCF data']
-    gcf_result = json.dumps(gcf_result)
-    function_return = {'result': gcf_result}
-    mock_cloud_function.return_value = function_return
-    client = TurbiniaClientProvider.get_turbinia_client()
-    task_data = client.get_task_data('inst', 'proj', 'reg')
-    # get_task_data() converts this back into a timedelta(). We returned it
-    # seconds from the GCF function call because that is what it is stored in
-    # Datastore as.
-    test_task_data[0]['run_time'] = run_time
-    self.assertEqual(task_data, test_task_data)
+    if config.STATE_MANAGER.lower() == 'datastore':
+      # ExecuteFunction returns a dict with a 'result' key that has a json-encoded
+      # list.  This contains our task data, which is a list of dicts.
+      run_time = timedelta(seconds=3)
+      test_task_data = [{'bar': 'bar2', 'run_time': run_time.total_seconds()}]
+      gcf_result = [test_task_data, 'Unused GCF data']
+      gcf_result = json.dumps(gcf_result)
+      function_return = {'result': gcf_result}
+      mock_cloud_function.return_value = function_return
+      client = TurbiniaClientProvider.get_turbinia_client()
+      task_data = client.get_task_data('inst', 'proj', 'reg')
+      # get_task_data() converts this back into a timedelta(). We returned it
+      # seconds from the GCF function call because that is what it is stored in
+      # Datastore as.
+      test_task_data[0]['run_time'] = run_time
+      self.assertEqual(task_data, test_task_data)
 
-    # Also test that JSON output works
-    task_data = client.get_task_data('inst', 'proj', 'reg', output_json=True)
-    self.assertEqual(task_data, '[{"bar": "bar2", "run_time": 3.0}]')
+      # Also test that JSON output works
+      task_data = client.get_task_data('inst', 'proj', 'reg', output_json=True)
+      self.assertEqual(task_data, '[{"bar": "bar2", "run_time": 3.0}]')
 
   @mock.patch('libcloudforensics.providers.gcp.internal.function.GoogleCloudFunction.ExecuteFunction')  # yapf: disable
   @mock.patch('turbinia.client.task_manager.PSQTaskManager._backend_setup')
   @mock.patch('turbinia.state_manager.get_state_manager')
   def testTurbiniaClientGetTaskDataNoResults(self, _, __, mock_cloud_function):
     """Test for exception after empty results from cloud functions."""
-    mock_cloud_function.return_value = {}
-    client = TurbiniaClientProvider.get_turbinia_client()
-    self.assertRaises(
-        TurbiniaException, client.get_task_data, "inst", "proj", "reg")
+    if config.STATE_MANAGER.lower() == 'datastore':
+      mock_cloud_function.return_value = {}
+      client = TurbiniaClientProvider.get_turbinia_client()
+      self.assertRaises(
+          TurbiniaException, client.get_task_data, "inst", "proj", "reg")
 
   @mock.patch('libcloudforensics.providers.gcp.internal.function.GoogleCloudFunction.ExecuteFunction')  # yapf: disable
   @mock.patch('turbinia.client.task_manager.PSQTaskManager._backend_setup')
@@ -320,12 +322,13 @@ class TestTurbiniaClient(unittest.TestCase):
   def testTurbiniaClientGetTaskDataRetriableErrors(
       self, _, __, mock_cloud_function):
     """Test for retries after retriable errors returned from cloud functions."""
-    mock_cloud_function.return_value = {'error': {'code': 503}}
-    client = TurbiniaClientProvider.get_turbinia_client()
-    self.assertRaises(
-        TurbiniaException, client.get_task_data, "inst", "proj", "reg")
-    self.assertEqual(
-        mock_cloud_function.call_count, TurbiniaClientProvider.MAX_RETRIES)
+    if config.STATE_MANAGER.lower() == 'datastore':
+      mock_cloud_function.return_value = {'error': {'code': 503}}
+      client = TurbiniaClientProvider.get_turbinia_client()
+      self.assertRaises(
+          TurbiniaException, client.get_task_data, "inst", "proj", "reg")
+      self.assertEqual(
+          mock_cloud_function.call_count, TurbiniaClientProvider.MAX_RETRIES)
 
   @mock.patch('libcloudforensics.providers.gcp.internal.function.GoogleCloudFunction.ExecuteFunction')  # yapf: disable
   @mock.patch('turbinia.client.task_manager.PSQTaskManager._backend_setup')
@@ -333,10 +336,11 @@ class TestTurbiniaClient(unittest.TestCase):
   def testTurbiniaClientGetTaskDataInvalidJson(
       self, _, __, mock_cloud_function):
     """Test for exception after bad json results from cloud functions."""
-    mock_cloud_function.return_value = {'result': None}
-    client = TurbiniaClientProvider.get_turbinia_client()
-    self.assertRaises(
-        TurbiniaException, client.get_task_data, "inst", "proj", "reg")
+    if config.STATE_MANAGER.lower() == 'datastore':
+      mock_cloud_function.return_value = {'result': None}
+      client = TurbiniaClientProvider.get_turbinia_client()
+      self.assertRaises(
+          TurbiniaException, client.get_task_data, "inst", "proj", "reg")
 
   @mock.patch('libcloudforensics.providers.gcp.internal.function.GoogleCloudFunction.ExecuteFunction')  # yapf: disable
   @mock.patch('turbinia.client.task_manager.PSQTaskManager._backend_setup')
