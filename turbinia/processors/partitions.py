@@ -87,10 +87,15 @@ def GetPathSpecByLocation(path_specs, location):
   Returns:
     dfVFS.path_spec for the given location or None if not found.
   """
+  path_spec_chain = []
   for path_spec in path_specs:
     child_path_spec = path_spec
+    path_spec_chain.insert(0, child_path_spec)
     fs_location = getattr(path_spec, 'location', None)
     if fs_location and fs_location == location:
+      log.debug(
+          'Found path_spec {0!s} for location {1!s} in list {2!s}'.format(
+              child_path_spec, fs_location, path_spec_chain))
       return child_path_spec
     while path_spec.HasParent():
       type_indicator = path_spec.type_indicator
@@ -98,7 +103,13 @@ def GetPathSpecByLocation(path_specs, location):
         fs_location = getattr(path_spec, 'location', None)
         break
       path_spec = path_spec.parent
+      path_spec_chain.insert(0, path_spec)
     if fs_location == location:
+      log.debug(
+          'Found path_spec {0!s} for location {1!s} in list {2!s}'.format(
+              child_path_spec, fs_location, path_spec_chain))
       return child_path_spec
-  log.error('Could not find path_spec for location {0:s}'.format(location))
+  log.error(
+      'Could not find path_spec for location {0:s} in list {1!s}'.format(
+          location, path_spec_chain))
   return None

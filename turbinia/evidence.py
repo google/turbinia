@@ -605,6 +605,9 @@ class DiskPartition(RawDisk):
     # the parent evidence location for each task.
     try:
       path_specs = partitions.Enumerate(self.parent_evidence)
+      log.debug(
+          'Enumerated path_specs {0!s} for parent Evidence {1:s}'.format(
+              path_specs, self.parent_evidence.name))
     except TurbiniaException as e:
       log.error(e)
 
