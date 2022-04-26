@@ -128,7 +128,7 @@ class PartitionEnumerationTask(TurbiniaTask):
         break
 
       path_spec = path_spec.parent
-_
+
     log.debug(
         'Partition processing found path_specs {0!s} for partition '
         'location {1!s} index {2!s}'.format(
