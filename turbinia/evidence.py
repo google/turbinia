@@ -605,9 +605,10 @@ class DiskPartition(RawDisk):
     # the parent evidence location for each task.
     try:
       path_specs = partitions.Enumerate(self.parent_evidence)
+      path_specs_dicts = [path_spec.CopyToDict() for path_spec in path_specs]
       log.debug(
           'Enumerated path_specs {0!s} for parent Evidence {1:s}'.format(
-              path_specs, self.parent_evidence.name))
+              path_specs_dicts, self.parent_evidence.name))
     except TurbiniaException as e:
       log.error(e)
 

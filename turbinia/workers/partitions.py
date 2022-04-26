@@ -14,6 +14,8 @@
 # limitations under the License.
 """Task for enumerating partitions in a disk."""
 
+import logging
+
 from turbinia import TurbiniaException
 from turbinia.evidence import DiskPartition
 from turbinia.evidence import EvidenceState
@@ -33,6 +35,8 @@ if TurbiniaTask.check_worker_role():
   except ImportError as exception:
     message = 'Could not import dfVFS libraries: {0!s}'.format(exception)
     raise TurbiniaException(message)
+
+log = logging.getLogger('turbinia')
 
 
 class PartitionEnumerationTask(TurbiniaTask):
@@ -84,7 +88,9 @@ class PartitionEnumerationTask(TurbiniaTask):
     # File system location / identifier
     is_lvm = False
     location = self._GetLocation(path_spec)
+    path_spec_chain = []
     while path_spec.HasParent():
+      path_spec_chain.insert(0, path_spec.CopyToDict())
       type_indicator = path_spec.type_indicator
       if type_indicator == dfvfs_definitions.TYPE_INDICATOR_APFS_CONTAINER:
         # APFS volume index
@@ -122,7 +128,11 @@ class PartitionEnumerationTask(TurbiniaTask):
         break
 
       path_spec = path_spec.parent
-
+_
+    log.debug(
+        'Partition processing found path_specs {0!s} for partition '
+        'location {1!s} index {2!s}'.format(
+            path_spec_chain, location, partition_index))
     status_report.append(fmt.heading5('{0!s}:'.format(location)))
     status_report.append(
         fmt.bullet('Filesystem: {0!s}'.format(fs_path_spec.type_indicator)))

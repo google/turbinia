@@ -90,7 +90,7 @@ def GetPathSpecByLocation(path_specs, location):
   path_spec_chain = []
   for path_spec in path_specs:
     child_path_spec = path_spec
-    path_spec_chain.insert(0, child_path_spec)
+    path_spec_chain.insert(0, child_path_spec.CopyToDict())
     fs_location = getattr(path_spec, 'location', None)
     if fs_location and fs_location == location:
       log.debug(
@@ -103,7 +103,7 @@ def GetPathSpecByLocation(path_specs, location):
         fs_location = getattr(path_spec, 'location', None)
         break
       path_spec = path_spec.parent
-      path_spec_chain.insert(0, path_spec)
+      path_spec_chain.insert(0, path_spec.CopyToDict())
     if fs_location == location:
       log.debug(
           'Found path_spec {0!s} for location {1!s} in list {2!s}'.format(
