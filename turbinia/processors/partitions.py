@@ -95,7 +95,7 @@ def GetPathSpecByLocation(path_specs, location):
     if fs_location and fs_location == location:
       log.debug(
           'Found path_spec {0!s} for location {1!s} in list {2!s}'.format(
-              child_path_spec, fs_location, path_spec_chain))
+              child_path_spec.CopyToDict(), fs_location, path_spec_chain))
       return child_path_spec
     while path_spec.HasParent():
       type_indicator = path_spec.type_indicator
@@ -107,7 +107,7 @@ def GetPathSpecByLocation(path_specs, location):
     if fs_location == location:
       log.debug(
           'Found path_spec {0!s} for location {1!s} in list {2!s}'.format(
-              child_path_spec, fs_location, path_spec_chain))
+              child_path_spec.CopyToDict(), fs_location, path_spec_chain))
       return child_path_spec
   log.error(
       'Could not find path_spec for location {0:s} in list {1!s}'.format(
