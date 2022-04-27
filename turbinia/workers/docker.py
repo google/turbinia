@@ -67,7 +67,7 @@ class DockerContainersEnumerationTask(TurbiniaTask):
 
     # Check if docker folder exists
     if not path.exists(docker_dir):
-      log.info('docker_dir does not exist')
+      log.info('docker_dir {0:s} does not exist'.format(docker_dir))
       return containers_info
 
     docker_explorer_command = ['sudo', de_binary]
