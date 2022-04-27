@@ -88,9 +88,8 @@ class PartitionEnumerationTask(TurbiniaTask):
     # File system location / identifier
     is_lvm = False
     location = self._GetLocation(path_spec)
-    path_spec_chain = []
+    path_spec_chain = [path_spec.CopyToDict()]
     while path_spec.HasParent():
-      path_spec_chain.insert(0, path_spec.CopyToDict())
       type_indicator = path_spec.type_indicator
       if type_indicator == dfvfs_definitions.TYPE_INDICATOR_APFS_CONTAINER:
         # APFS volume index
@@ -128,6 +127,7 @@ class PartitionEnumerationTask(TurbiniaTask):
         break
 
       path_spec = path_spec.parent
+      path_spec_chain.insert(0, path_spec.CopyToDict())
 
     log.debug(
         'Partition processing found path_specs {0!s} for partition '
