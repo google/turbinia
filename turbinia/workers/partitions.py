@@ -88,7 +88,9 @@ class PartitionEnumerationTask(TurbiniaTask):
     # File system location / identifier
     is_lvm = False
     location = self._GetLocation(path_spec)
-    log.debug('Got location {0:s} for path_spec {1!s} with type {2:s}'.format(location, path_spec.CopyToDict(), path_spec.type_indicator))
+    log.debug(
+        'Got location {0:s} for path_spec {1!s} with type {2:s}'.format(
+            location, path_spec.CopyToDict(), path_spec.type_indicator))
     while path_spec.HasParent():
       type_indicator = path_spec.type_indicator
       if type_indicator == dfvfs_definitions.TYPE_INDICATOR_APFS_CONTAINER:
@@ -149,7 +151,9 @@ class PartitionEnumerationTask(TurbiniaTask):
         partition_location=location, partition_offset=partition_offset,
         partition_size=partition_size, lv_uuid=lv_uuid)
 
-    log.debug('Created DiskPartition evidence with location {0:s}, offset {1!s}, and size {2!s}'.format(location, partition_offset, partition_size))
+    log.debug(
+        'Created DiskPartition evidence with location {0:s}, offset {1!s}, and size {2!s}'
+        .format(location, partition_offset, partition_size))
 
     return partition_evidence, status_report
 
@@ -191,7 +195,10 @@ class PartitionEnumerationTask(TurbiniaTask):
         while child_path_spec.HasParent():
           path_spec_types.insert(0, child_path_spec.parent.type_indicator)
           child_path_spec = child_path_spec.parent
-        path_spec_debug.append(' | '.join(('{0!s}'.format(path_spec.CopyToDict()), ' -> '.join(path_spec_types))))
+        path_spec_debug.append(
+            ' | '.join((
+                '{0!s}'.format(
+                    path_spec.CopyToDict()), ' -> '.join(path_spec_types))))
       log.debug('\n'.join(path_spec_debug))
     except dfvfs_errors.ScannerError as e:
       status_summary = 'Error scanning for partitions: {0!s}'.format(e)
