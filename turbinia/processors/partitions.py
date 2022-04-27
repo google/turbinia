@@ -87,15 +87,19 @@ def GetPathSpecByLocation(path_specs, location):
   Returns:
     dfVFS.path_spec for the given location or None if not found.
   """
-  path_spec_chain = []
+  log.debug(
+      'Searching {0:d} path_specs for location {1:s}'.format(
+          len(path_specs), location))
+  searched_path_specs = []
   for path_spec in path_specs:
+    searched_path_specs.append(path_spec.CopyToDict())
+    log.debug('Checking path_spec {0!s}'.format(path_spec.CopyToDict()))
     child_path_spec = path_spec
-    path_spec_chain.insert(0, child_path_spec.CopyToDict())
     fs_location = getattr(path_spec, 'location', None)
     if fs_location and fs_location == location:
       log.debug(
-          'Found path_spec {0!s} for location {1!s} in list {2!s}'.format(
-              child_path_spec.CopyToDict(), fs_location, path_spec_chain))
+          'Found path_spec {0!s} for location {1:s}'.format(
+              child_path_spec.CopyToDict(), fs_location))
       return child_path_spec
     while path_spec.HasParent():
       type_indicator = path_spec.type_indicator
@@ -103,13 +107,12 @@ def GetPathSpecByLocation(path_specs, location):
         fs_location = getattr(path_spec, 'location', None)
         break
       path_spec = path_spec.parent
-      path_spec_chain.insert(0, path_spec.CopyToDict())
     if fs_location == location:
       log.debug(
-          'Found path_spec {0!s} for location {1!s} in list {2!s}'.format(
-              child_path_spec.CopyToDict(), fs_location, path_spec_chain))
+          'Found path_spec {0!s} for location {1:s}'.format(
+              child_path_spec.CopyToDict(), fs_location))
       return child_path_spec
   log.error(
       'Could not find path_spec for location {0:s} in list {1!s}'.format(
-          location, path_spec_chain))
+          location, searched_path_specs))
   return None
