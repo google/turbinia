@@ -23,6 +23,7 @@ from six.moves import queue
 from six.moves import xrange
 
 from google.cloud import exceptions
+from google.cloud import pubsub
 import libcloudforensics.providers.gcp.internal.common as gcp_common
 
 from turbinia import config
@@ -36,7 +37,7 @@ class TurbiniaPubSub(TurbiniaMessageBase):
 
   Attributes:
     _queue: A Queue object for storing pubsub messages
-    publisher: The pubsub publisher client object
+    pubsub_client: The pubsub publisher client object
     subscriber: The pubsub subscriber client object
     subscription: The pubsub subscription object
     topic_name (str): The pubsub topic name
@@ -46,7 +47,7 @@ class TurbiniaPubSub(TurbiniaMessageBase):
   def __init__(self, topic_name):
     """Initialization for PubSubClient."""
     self._queue = queue.Queue()
-    self.publisher = None
+    self.pubsub_client = None
     self.subscriber = None
     self.subscription = None
     self.topic_name = topic_name
@@ -60,12 +61,12 @@ class TurbiniaPubSub(TurbiniaMessageBase):
   def setup_publisher(self):
     """Set up the pubsub publisher."""
     config.LoadConfig()
-    self.publisher = gcp_common.CreateService('pubsub', 'v1')
-    self.topic_path = self.publisher.topic_path(
+    self.pubsub_client = gcp_common.CreateService('pubsub', 'v1')
+    self.topic_path = self.pubsub_client.topic_path(
         config.TURBINIA_PROJECT, self.topic_name)
     try:
       log.debug('Trying to create pubsub topic {0:s}'.format(self.topic_path))
-      topics_client = self.publisher.topics()
+      topics_client = self.pubsub_client.topics()
       gcp_common.ExecuteRequest(
           topics_client, 'create', {'name': self.topic_path})
     except exceptions.Conflict:
@@ -75,7 +76,7 @@ class TurbiniaPubSub(TurbiniaMessageBase):
   def setup_subscriber(self):
     """Set up the pubsub subscriber."""
     config.LoadConfig()
-    #self.subscriber = gcp_common.CreateService('pubsub', 'v1')
+    self.subscriber = pubsub.SubscriberClient()
     subscription_path = self.subscriber.subscription_path(
         config.TURBINIA_PROJECT, self.topic_name)
     if not self.topic_path:
@@ -85,7 +86,7 @@ class TurbiniaPubSub(TurbiniaMessageBase):
       log.debug(
           'Trying to create subscription {0:s} on topic {1:s}'.format(
               subscription_path, self.topic_path))
-      subscriptions_client = self.publisher.subscriptions()
+      subscriptions_client = self.pubsub_client.subscriptions()
       request_body = {'topic': self.topic_path}
       gcp_common.ExecuteRequest(
           subscriptions_client, 'create', {
