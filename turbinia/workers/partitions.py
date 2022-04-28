@@ -15,6 +15,7 @@
 """Task for enumerating partitions in a disk."""
 
 import logging
+import os
 
 from turbinia import TurbiniaException
 from turbinia.evidence import DiskPartition
@@ -89,8 +90,10 @@ class PartitionEnumerationTask(TurbiniaTask):
     is_lvm = False
     location = self._GetLocation(path_spec)
     log.debug(
-        'Got location {0:s} for path_spec {1!s} with type {2:s}'.format(
-            location, path_spec.CopyToDict(), path_spec.type_indicator))
+        'Got location {0:s} for path_spec {1!s} with type {2:s} on {3:s}'
+        .format(
+            location, path_spec.CopyToDict(), path_spec.type_indicator,
+            os.uname().nodename))
     while path_spec.HasParent():
       type_indicator = path_spec.type_indicator
       if type_indicator == dfvfs_definitions.TYPE_INDICATOR_APFS_CONTAINER:
@@ -152,8 +155,10 @@ class PartitionEnumerationTask(TurbiniaTask):
         partition_size=partition_size, lv_uuid=lv_uuid)
 
     log.debug(
-        'Created DiskPartition evidence with location {0:s}, offset {1!s}, and size {2!s}'
-        .format(location, partition_offset, partition_size))
+        'Created DiskPartition evidence with location {0:s}, offset {1!s}, and size {2!s} '
+        'on {3:s}'.format(
+            location, partition_offset, partition_size,
+            os.uname().nodename))
 
     return partition_evidence, status_report
 
@@ -188,7 +193,7 @@ class PartitionEnumerationTask(TurbiniaTask):
           len(path_specs), evidence_description)
 
       # Debug output
-      path_spec_debug = ['Base path specs:']
+      path_spec_debug = ['{0:s}: Base path specs:'.format(os.uname().nodename)]
       for path_spec in path_specs:
         path_spec_types = [path_spec.type_indicator]
         child_path_spec = path_spec
@@ -199,7 +204,8 @@ class PartitionEnumerationTask(TurbiniaTask):
             ' | '.join((
                 '{0!s}'.format(
                     path_spec.CopyToDict()), ' -> '.join(path_spec_types))))
-      log.debug('\n'.join(path_spec_debug))
+      message = '\n'.join(path_spec_debug)
+      log.debug('{0:s} {1:s}'.format(os.uname().nodename, message)
     except dfvfs_errors.ScannerError as e:
       status_summary = 'Error scanning for partitions: {0!s}'.format(e)
 

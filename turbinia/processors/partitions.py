@@ -15,6 +15,7 @@
 """Evidence processor to enumerate partitions."""
 
 import logging
+import os
 
 from dfvfs.helpers import volume_scanner
 from dfvfs.lib import definitions as dfvfs_definitions
@@ -93,13 +94,17 @@ def GetPathSpecByLocation(path_specs, location):
   searched_path_specs = []
   for path_spec in path_specs:
     searched_path_specs.append(path_spec.CopyToDict())
-    log.debug('Checking path_spec {0!s}'.format(path_spec.CopyToDict()))
+    log.debug(
+        'Checking path_spec {0!s} on {1:s}'.format(
+            path_spec.CopyToDict(),
+            os.uname().nodename))
     child_path_spec = path_spec
     fs_location = getattr(path_spec, 'location', None)
     if fs_location and fs_location == location:
       log.debug(
-          'Found path_spec {0!s} for location {1:s}'.format(
-              child_path_spec.CopyToDict(), fs_location))
+          'Found path_spec {0!s} for location {1:s} on {2:s}'.format(
+              child_path_spec.CopyToDict(), fs_location,
+              os.uname().nodename))
       return child_path_spec
     while path_spec.HasParent():
       type_indicator = path_spec.type_indicator
@@ -109,10 +114,12 @@ def GetPathSpecByLocation(path_specs, location):
       path_spec = path_spec.parent
     if fs_location == location:
       log.debug(
-          'Found path_spec {0!s} for location {1:s}'.format(
-              child_path_spec.CopyToDict(), fs_location))
+          'Found path_spec {0!s} for location {1:s} on {2:s}'.format(
+              child_path_spec.CopyToDict(), fs_location,
+              os.uname().nodename))
       return child_path_spec
   log.error(
-      'Could not find path_spec for location {0:s} in list {1!s}'.format(
-          location, searched_path_specs))
+      'Could not find path_spec for location {0:s} in list {1!s} on {2:s}'
+      .format(location, searched_path_specs,
+              os.uname().nodename))
   return None
