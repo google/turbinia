@@ -205,7 +205,7 @@ class PartitionEnumerationTask(TurbiniaTask):
                 '{0!s}'.format(
                     path_spec.CopyToDict()), ' -> '.join(path_spec_types))))
       message = '\n'.join(path_spec_debug)
-      log.debug('{0:s} {1:s}'.format(os.uname().nodename, message)
+      log.debug('{0:s} {1:s}'.format(os.uname().nodename, message))
     except dfvfs_errors.ScannerError as e:
       status_summary = 'Error scanning for partitions: {0!s}'.format(e)
 
