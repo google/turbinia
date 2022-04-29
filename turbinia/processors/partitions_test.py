@@ -108,10 +108,6 @@ class PartitionsProcessorTest(unittest.TestCase):
     path_specs = partitions.Enumerate(test_evidence)
     self.assertEqual(len(path_specs), 2)
 
-    # Test GetPathSpecByLocation
-    path_spec = partitions.GetPathSpecByLocation(path_specs, '/p1')
-    self.assertIsNotNone(path_spec)
-
   def testEnumerateOnRaw(self):
     """Test Enumerate on raw image."""
     test_path = self._getTestDataPath('ext2.raw')
