@@ -34,7 +34,7 @@ echo "Creating GCE test disk to use in e2e test"
 gcloud --project=$PROJECT compute disks create $DISK --image=$DISK --zone=$ZONE
 
 echo "Executing googlecloudisk e2e test....this takes ~60 minutes!"
-$TURBINIA_CLI -d -r $REQ_ID -L $MAIN_LOG -a -J PlasoJob -w googleclouddisk -d $DISK -z $ZONE
+$TURBINIA_CLI -d -r $REQ_ID -L $MAIN_LOG -a -w googleclouddisk -d $DISK -z $ZONE
 
 # When the Turbinia request is finished request the final request statistics.
 $TURBINIA_CLI -d status -r $REQ_ID -s > $STATS_LOG 2>&1
