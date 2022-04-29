@@ -77,7 +77,6 @@ class PartitionEnumerationTask(TurbiniaTask):
     """
     status_report = []
 
-    fs_path_spec = path_spec
     location = None
     volume_index = None
     partition_index = None
@@ -85,23 +84,24 @@ class PartitionEnumerationTask(TurbiniaTask):
     partition_size = None
     lv_uuid = None
 
-    # File system location / identifier
+    child_path_spec = path_spec
     is_lvm = False
+    # File system location / identifier
     location = self._GetLocation(path_spec)
     log.debug(
         'Got location {0:s} for path_spec {1!s} with type {2:s}'.format(
             location, path_spec.CopyToDict(), path_spec.type_indicator))
-    while path_spec.HasParent():
-      type_indicator = path_spec.type_indicator
+    while child_path_spec.HasParent():
+      type_indicator = child_path_spec.type_indicator
       if type_indicator == dfvfs_definitions.TYPE_INDICATOR_APFS_CONTAINER:
         # APFS volume index
-        volume_index = getattr(path_spec, 'volume_index', None)
+        volume_index = getattr(child_path_spec, 'volume_index', None)
 
       if type_indicator in (dfvfs_definitions.TYPE_INDICATOR_GPT,
                             dfvfs_definitions.TYPE_INDICATOR_LVM,
                             dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION):
         # Partition index
-        partition_index = getattr(path_spec, 'part_index', None)
+        partition_index = getattr(child_path_spec, 'part_index', None)
 
         if type_indicator == dfvfs_definitions.TYPE_INDICATOR_TSK_PARTITION:
           volume_system = tsk_volume_system.TSKVolumeSystem()
@@ -111,7 +111,7 @@ class PartitionEnumerationTask(TurbiniaTask):
         else:
           volume_system = gpt_volume_system.GPTVolumeSystem()
         try:
-          volume_system.Open(path_spec)
+          volume_system.Open(child_path_spec)
           volume_identifier = location.replace('/', '')
           volume = volume_system.GetVolumeByIdentifier(volume_identifier)
 
@@ -128,11 +128,11 @@ class PartitionEnumerationTask(TurbiniaTask):
               'Could not process partition: {0!s}'.format(e))
         break
 
-      path_spec = path_spec.parent
+      child_path_spec = child_path_spec.parent
 
     status_report.append(fmt.heading5('{0!s}:'.format(location)))
     status_report.append(
-        fmt.bullet('Filesystem: {0!s}'.format(fs_path_spec.type_indicator)))
+        fmt.bullet('Filesystem: {0!s}'.format(path_spec.type_indicator)))
     if volume_index is not None:
       status_report.append(
           fmt.bullet('Volume index: {0!s}'.format(volume_index)))

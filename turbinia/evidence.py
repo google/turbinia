@@ -612,9 +612,10 @@ class DiskPartition(RawDisk):
 
     if len(path_specs) > 1:
       path_specs_dicts = [path_spec.CopyToDict() for path_spec in path_specs]
-      log.warning(
-          'Found more than one path_spec for {0:s}: {1!s}'.format(
-              self.parent_evidence.name, path_specs_dicts))
+      raise TurbiniaException(
+          'Found more than one path_spec for {0:s} {1:s}: {2!s}'.format(
+              self.parent_evidence.name, self.partition_location,
+              path_specs_dicts))
     elif len(path_specs) == 1:
       self.path_spec = path_specs[0]
       log.debug(

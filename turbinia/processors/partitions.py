@@ -42,9 +42,14 @@ def Enumerate(evidence, location=None):
   options.partitions = ['all']
   options.volumes = ['all']
   if location:
-    log.debug('Parsing for partition at location {0!s}'.format(location))
+    log.debug(
+        'Scanning {0:s} for partition at location {1!s}'.format(
+            evidence.name, location))
+    # APFS and LVM are volumes rather than partitions.
     if location.find('apfs') != -1 or location.find('lvm') != -1:
       options.volumes = [location.replace('/', '')]
+    elif location in ('/', '\\'):
+      options.partitions = [location]
     else:
       options.partitions = [location.replace('/', '')]
   # Not processing volume snapshots
