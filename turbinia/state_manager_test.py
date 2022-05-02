@@ -103,7 +103,7 @@ class TestPSQStateManager(unittest.TestCase):
 
   @mock.patch('turbinia.state_manager.datastore.Client')
   def testStateManagerValidateDataInvalidDict(self, _):
-    """Test State Manager _validate_data() base case."""
+    """Test State Manager _validate_data() with invalid large input."""
     self.state_manager = self._get_state_manager()
     invalid_dict = copy.deepcopy(self.test_data)
     invalid_dict['status'] = 'A' * state_manager.MAX_DATASTORE_STRLEN + 'BORKEN'
