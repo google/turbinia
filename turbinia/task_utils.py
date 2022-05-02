@@ -49,6 +49,7 @@ class TaskLoader():
       'FileSystemTimelineTask',
       'FinalizeRequestTask',
       'FsstatTask',
+      'GitlabTask',
       'GrepTask',
       'HadoopAnalysisTask',
       'HindsightTask',
@@ -74,10 +75,10 @@ class TaskLoader():
 
   def check_task_name(self, task_name):
     """Checks whether a given task name is a valid task
-    
+
     Args:
       task_name(str): Name of the Task to check.
-      
+
     Returns:
       bool: True if task with the given name exists, else False
     """
@@ -88,10 +89,10 @@ class TaskLoader():
 
   def get_task(self, task_name):
     """Gets an instantiated Task object for the given name.
-    
+
     Args:
       task_name(str): Name of the Task to return.
-      
+
     Returns:
       TurbiniaTask: An instantiated Task object.
     """
@@ -116,6 +117,7 @@ class TaskLoader():
     from turbinia.workers.file_system_timeline import FileSystemTimelineTask
     from turbinia.workers.finalize_request import FinalizeRequestTask
     from turbinia.workers.fsstat import FsstatTask
+    from turbinia.workers.gitlab import GitlabTask
     from turbinia.workers.grep import GrepTask
     from turbinia.workers.hadoop import HadoopAnalysisTask
     from turbinia.workers.hindsight import HindsightTask
@@ -147,7 +149,7 @@ class TaskLoader():
 
   def get_task_names(self):
     """Returns a list of Task names.
-    
+
     Returns:
       (list) All Task names.
     """

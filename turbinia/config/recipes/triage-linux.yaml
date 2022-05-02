@@ -5,7 +5,6 @@ globals:
     - CronExtractionJob
     - CronAnalysisJob
     - PlasoJob
-    - PsortJob
     - FileSystemTimelineJob
 
 plaso_base:

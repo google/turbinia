@@ -236,7 +236,7 @@ class OutputWriter:
         to the output writer object type.
     local_output_dir: The full path for the local output dir.
     name (string): Name of this output writer
-    unique_dir (string): A psuedo-unique string to be used in paths.
+    unique_dir (string): A pseudo-unique string to be used in paths.
   """
 
   NAME = 'base_output_writer'
@@ -250,7 +250,7 @@ class OutputWriter:
           OUTPUT_DIR by default.
       local_output_dir: The full path for the local output dir.  This will be
           generated automatically if not set.
-      unique_dir (string):  A psuedo-unique string to be used in paths. This
+      unique_dir (string):  A pseudo-unique string to be used in paths. This
           will be generated automatically if not set.
     """
     self.unique_dir = unique_dir

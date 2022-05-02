@@ -125,6 +125,18 @@ class TestTurbiniaTaskBase(unittest.TestCase):
 class TestTurbiniaTask(TestTurbiniaTaskBase):
   """Test TurbiniaTask class."""
 
+  def testTurbiniaTaskCloseTruncate(self):
+    """Tests that the close method will truncate large report output."""
+    evidence_ = evidence.ReportText(source_path='/no/path')
+    max_size = 2**20
+    evidence_.text_data = 'A' * max_size
+    self.result.add_evidence(evidence_, self.task._evidence_config)
+    self.result.close(self.task, success=True)
+    self.remove_files.append(
+        os.path.join(self.task.base_output_dir, 'worker-log.txt'))
+    self.assertIn('truncating', evidence_.text_data[-100:])
+    self.assertTrue(len(evidence_.text_data) <= (max_size * 0.8))
+
   def testTurbiniaTaskSerialize(self):
     """Test that we can properly serialize/deserialize tasks."""
     out_dict = self.plaso_task.serialize()
@@ -267,7 +279,6 @@ class TestTurbiniaTask(TestTurbiniaTaskBase):
     # Command was executed, has the correct output saved and
     # TurbiniaTaskResult.close() was called with successful status.
     popen_mock.assert_called_with(cmd, stdout=-1, stderr=-1, cwd=None, env=None)
-    self.assertEqual(self.result.error['stdout'], str(output[0]))
     self.assertEqual(self.result.error['stderr'], str(output[1]))
     self.assertEqual(stdout_data, output[0])
     self.result.close.assert_called_with(self.task, success=True)

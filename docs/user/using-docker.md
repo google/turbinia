@@ -25,7 +25,7 @@ The following section provides an example of the steps mentioned above for the P
     log2timeline/plaso                              latest              9c22665bff50        4 days ago          314MB
     ```
 3. Open up the `.turbiniarc` configuration file then set the attribute `DOCKER_ENABLED` to `True`. 
-4. Identify the `DEPENDENICES` attribute and look for the Job `PlasoJob`, then replace the `docker_image` value with the identified `IMAGE ID`. 
+4. Identify the `DEPENDENCIES` attribute and look for the Job `PlasoJob`, then replace the `docker_image` value with the identified `IMAGE ID`. 
     ```python
     {
         'job': 'PlasoJob'

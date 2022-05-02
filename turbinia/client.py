@@ -172,11 +172,11 @@ class BaseTurbiniaClient:
       skip_recipe_validation=False, yara_rules=None, group_name=None,
       reason=None, all_args=None):
     """Creates a Turbinia recipe.
-    
+
     If no recipe_name is specified, this  method returns a default recipe.
-    If a recipe_name is specified then this method will build the recipe 
+    If a recipe_name is specified then this method will build the recipe
     dictionary by reading the  contents of a recipe file. The path to
-    the recipe file is inferre from the recipe_name and the RECIPE_FILE_DIR
+    the recipe file is inferred from the recipe_name and the RECIPE_FILE_DIR
     configuration parameter.
 
     Args:
@@ -211,14 +211,12 @@ class BaseTurbiniaClient:
         recipe['globals']['jobs_denylist'] = jobs_denylist
       if jobs_allowlist:
         recipe['globals']['jobs_allowlist'] = jobs_allowlist
-      if yara_rules:
-        recipe['globals']['yara_rules'] = yara_rules
     else:
       # Load custom recipe from given path or name.
-      if (jobs_denylist or jobs_allowlist or filter_patterns or yara_rules):
+      if (jobs_denylist or jobs_allowlist or filter_patterns):
         msg = (
             'Specifying a recipe name is incompatible with defining '
-            'jobs allow/deny lists, yara rules or a patterns file separately.')
+            'jobs allow/deny lists, or a patterns file separately.')
         raise TurbiniaException(msg)
 
       if os.path.exists(recipe_name):
@@ -250,6 +248,8 @@ class BaseTurbiniaClient:
       recipe['globals']['reason'] = reason
     if all_args:
       recipe['globals']['all_args'] = all_args
+    if yara_rules:
+      recipe['globals']['yara_rules'] = yara_rules
 
     return recipe
 
@@ -1000,11 +1000,22 @@ class BaseTurbiniaClient:
       report.append(fmt.heading1('{0:s} Tasks'.format(success_type)))
       if not task_map[success_type]:
         report.append(fmt.bullet('None'))
+      task_counter = defaultdict(int)
       for task in task_map[success_type]:
         if full_report and success_type == success_types[0]:
           report.extend(self.format_task_detail(task, show_files=all_fields))
-        else:
+        elif success_type == success_types[2]:
           report.extend(self.format_task(task, show_files=all_fields))
+        else:
+          task_counter['\n'.join(self.format_task(task,
+                                                  show_files=all_fields))] += 1
+
+      if len(task_counter):
+        for k, v in task_counter.items():
+          if v == 1:
+            report.append(k)
+          else:
+            report.append('{0:s} x {1:d}'.format(k, v))
 
     return '\n'.join(report)
 

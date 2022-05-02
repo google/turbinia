@@ -154,7 +154,7 @@ class Evidence:
         if that state is true.  This is used by the preprocessors to set the
         current state and Tasks can use this to determine if the Evidence is in
         the correct state for processing.
-    resource_tracked (bool): Evidence with this property set requires tracking 
+    resource_tracked (bool): Evidence with this property set requires tracking
         in a state file to allow for access amongst multiple workers.
     resource_id (str): The unique id used to track the state of a given Evidence
         type for stateful tracking.
@@ -604,20 +604,33 @@ class DiskPartition(RawDisk):
     # We need to enumerate partitions in preprocessing so the path_specs match
     # the parent evidence location for each task.
     try:
-      path_specs = partitions.Enumerate(self.parent_evidence)
+      # We should only get one path_spec here since we're specifying the location.
+      path_specs = partitions.Enumerate(
+          self.parent_evidence, self.partition_location)
     except TurbiniaException as e:
       log.error(e)
 
-    path_spec = partitions.GetPathSpecByLocation(
-        path_specs, self.partition_location)
-    if path_spec:
-      self.path_spec = path_spec
+    if len(path_specs) > 1:
+      path_specs_dicts = [path_spec.CopyToDict() for path_spec in path_specs]
+      raise TurbiniaException(
+          'Found more than one path_spec for {0:s} {1:s}: {2!s}'.format(
+              self.parent_evidence.name, self.partition_location,
+              path_specs_dicts))
+    elif len(path_specs) == 1:
+      self.path_spec = path_specs[0]
+      log.debug(
+          'Found path_spec {0!s} for parent evidence {1:s}'.format(
+              self.path_spec.CopyToDict(), self.parent_evidence.name))
+    else:
+      raise TurbiniaException(
+          'Could not find path_spec for location {0:s}'.format(
+              self.partition_location))
 
     # In attaching a partition, we create a new loopback device using the
     # partition offset and size.
     if EvidenceState.ATTACHED in required_states or self.has_child_evidence:
       # Check for encryption
-      encryption_type = partitions.GetPartitionEncryptionType(path_spec)
+      encryption_type = partitions.GetPartitionEncryptionType(self.path_spec)
       if encryption_type == 'BDE':
         self.device_path = mount_local.PreprocessBitLocker(
             self.parent_evidence.device_path,

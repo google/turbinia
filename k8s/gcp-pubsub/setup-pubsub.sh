@@ -3,7 +3,7 @@
 # This script can be used to deploy Turbinia to GKE.
 # Requirements:
 # - have 'gcloud' installed.
-# - autheticate against your GKE cluster with "gcloud container clusters get-credentials"
+# - authenticate against your GKE cluster with "gcloud container clusters get-credentials"
 
 TURBINIA_CONF=$1
 if [ -z $1 ]; then

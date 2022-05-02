@@ -28,7 +28,6 @@ import uuid
 
 from turbinia import config
 from turbinia import TurbiniaException
-from turbinia.lib import recipe_helpers
 from turbinia.config import logger
 from turbinia import __version__
 from turbinia.processors import archive
@@ -91,7 +90,7 @@ def process_args(args):
     args(namespace): turbiniactl args.
   
   Raises:
-    TurbiniaException: If theres an error processing args.
+    TurbiniaException: If there's an error processing args.
   """
   parser = argparse.ArgumentParser(
       description='Turbinia can bulk process multiple evidence of same type '
@@ -968,17 +967,20 @@ def process_evidence(
       msg = ('Expected a recipe name (-I) or path (-P) but found both.')
       raise TurbiniaException(msg)
 
-    if args.recipe or args.recipe_path:
-      # Load the specified recipe.
-      recipe_dict = client.create_recipe(
-          debug_tasks=args.debug_tasks, filter_patterns=filter_patterns,
-          group_id=group_id, jobs_allowlist=args.jobs_allowlist,
-          jobs_denylist=args.jobs_denylist,
-          recipe_name=args.recipe if args.recipe else args.recipe_path,
-          sketch_id=None, skip_recipe_validation=args.skip_recipe_validation,
-          yara_rules=yara_rules, group_name=group_name, reason=reason,
+    # Set the recipe name/path or None if not set.
+    # If no recipe name or path is given, the create_recipe method will
+    # generate a default recipe but still honor any of other parameters
+    # such as jobs_allowlist/jobs_denylist.
+    recipe = args.recipe if args.recipe else args.recipe_path
+
+    recipe_dict = client.create_recipe(
+        debug_tasks=args.debug_tasks, filter_patterns=filter_patterns,
+        group_id=group_id, jobs_allowlist=args.jobs_allowlist,
+        jobs_denylist=args.jobs_denylist, recipe_name=recipe, sketch_id=None,
+        skip_recipe_validation=args.skip_recipe_validation,
+        yara_rules=yara_rules, group_name=group_name, reason=reason,
           all_args=all_args)
-      request.recipe = recipe_dict
+    request.recipe = recipe_dict
 
     if args.dump_json:
       print(request.to_json().encode('utf-8'))
