@@ -572,8 +572,11 @@ def process_args(args):
   # Set group id
   group_id = uuid.uuid4().hex
 
-  # Set all_args
+  # Set all_args from command line
   all_args = ' '.join(sys.argv)
+
+  group_name = args.group_name
+  reason = args.reason
 
   # Checks for bulk processing
   if args.command in ('rawdisk', 'directory', 'compresseddirectory'):
@@ -586,7 +589,7 @@ def process_args(args):
       process_evidence(
           args=args, source_path=source_path, name=name, source=source,
           group_id=group_id, filter_patterns=filter_patterns, client=client,
-          yara_rules=yara_rules, group_name=args.group_name, reason=args.reason,
+          yara_rules=yara_rules, group_name=group_name, reason=reason,
           all_args=all_args)
   elif args.command in ('googleclouddisk', 'googleclouddiskembedded'):
     # Fail if this is a local instance
@@ -646,7 +649,7 @@ def process_args(args):
           project=project, zone=zone, embedded_path=embedded_path,
           mount_partition=mount_partition, group_id=group_id,
           filter_patterns=filter_patterns, client=client, yara_rules=yara_rules,
-          group_name=args.group_name, reason=args.reason, all_args=all_args)
+          group_name=group_name, reason=reason, all_args=all_args)
   elif args.command == 'rawmemory':
     # Checks if length of args match
     args.name, args.profile = check_args(
@@ -657,7 +660,7 @@ def process_args(args):
       process_evidence(
           args=args, source_path=source_path, name=name, profile=profile,
           group_id=group_id, filter_patterns=filter_patterns, client=client,
-          yara_rules=yara_rules, group_name=args.group_name, reason=args.reason,
+          yara_rules=yara_rules, group_name=group_name, reason=reason,
           all_args=all_args)
   elif args.command == 'hindsight':
     args.name, args.browser_type, args.format = check_args(
@@ -670,7 +673,7 @@ def process_args(args):
           args=args, source_path=source_path, name=name, format=format,
           group_id=group_id, client=client, filter_patterns=filter_patterns,
           yara_rules=yara_rules, browser_type=browser_type,
-          group_name=args.group_name, reason=args.reason, all_args=all_args)
+          group_name=group_name, reason=reason, all_args=all_args)
   elif args.command == 'psqworker':
     # Set up root logger level which is normally set by the psqworker command
     # which we are bypassing.
@@ -979,7 +982,7 @@ def process_evidence(
         jobs_denylist=args.jobs_denylist, recipe_name=recipe, sketch_id=None,
         skip_recipe_validation=args.skip_recipe_validation,
         yara_rules=yara_rules, group_name=group_name, reason=reason,
-          all_args=all_args)
+        all_args=all_args)
     request.recipe = recipe_dict
 
     if args.dump_json:

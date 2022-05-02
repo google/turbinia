@@ -48,8 +48,7 @@ class TurbiniaRequest:
 
   def __init__(
       self, request_id=None, group_id=None, requester=None, recipe=None,
-      context=None, evidence=None, group_name=None, reason=None,
-      all_args=None):
+      context=None, evidence=None, group_name=None, reason=None, all_args=None):
     """Initialization for TurbiniaRequest."""
     self.request_id = request_id if request_id else uuid.uuid4().hex
     self.group_id = group_id if group_id else uuid.uuid4().hex
