@@ -16,7 +16,7 @@
 
 from __future__ import unicode_literals
 
-from turbinia.evidence import BodyFile
+from turbinia.evidence import BodyFile, DockerContainer
 from turbinia.evidence import CompressedDirectory
 from turbinia.evidence import Directory
 from turbinia.evidence import GoogleCloudDisk
@@ -33,7 +33,7 @@ class PlasoJob(interface.TurbiniaJob):
   # The types of evidence that this Job will process
   evidence_input = [
       BodyFile, Directory, RawDisk, GoogleCloudDisk, GoogleCloudDiskRawEmbedded,
-      CompressedDirectory
+      CompressedDirectory, DockerContainer
   ]
   evidence_output = [PlasoFile]
 
