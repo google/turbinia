@@ -44,7 +44,7 @@ RUN pip3 install urllib3 cryptography --upgrade
 #   Sleuthkit
 RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 0x5e80511b10c598b8 \
     && add-apt-repository -y ppa:gift/$PPA_TRACK
-RUN apt-get -y install \
+RUN apt-get update && apt-get -y install \
     bulk-extractor \
     dfimagetools-tools \
     docker-explorer-tools \
