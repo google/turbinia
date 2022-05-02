@@ -1,31 +1,69 @@
 <template>
-  <v-app id="turb">
-    <v-navigation-drawer v-model="drawer" app class="pt-4" color="grey lighten-3" mini-variant>
-      <v-avatar
-        v-for="n in 6"
-        :key="n"
-        :color="`blue ${n === 1 ? 'darken' : 'lighten'}-1`"
-        :size="n === 1 ? 36 : 20"
-        class="d-block text-center mx-auto mb-9"
-      ></v-avatar>
-    </v-navigation-drawer>
+  <v-app id="app">
     <v-main>
-      <v-container fluid>
-        <v-btn>Test</v-btn>
-      </v-container>
-      <v-container fluid>
-        <request-list></request-list>
-      </v-container>
+      <v-btn @click="getRequest">Refresh</v-btn>
+      <v-data-table :headers="headers" :items="requestSummary"></v-data-table>
     </v-main>
   </v-app>
 </template>
 
 <script>
+import axios from 'axios'
 export default {
+  name: 'app',
   data() {
     return {
-      drawer: 'woah',
+      headers: [
+        { text: 'Last Task Update Time', value: 'last_task_update_time' },
+        { text: 'Request ID', value: 'request_id' },
+        { text: 'Requester', value: 'requester' },
+        { text: 'Total Tasks', value: 'total_tasks' },
+        { text: 'Running Tasks', value: 'running_tasks' },
+        { text: 'Successful Tasks', value: 'successful_tasks' },
+        { text: 'Failed Tasks', value: 'failed_tasks' },
+        { text: 'Status', value: 'status' },
+      ],
+      requestSummary: [],
+      message: 'Hello',
     }
+  },
+  methods: {
+    getRequest() {
+      axios
+        .get('http://localhost:8000/request/summary')
+        .then((response) => {
+          if (response.status === 200) {
+            return response.data['requests_status']
+          }
+        })
+        .then((data) => {
+          var requestSummary = []
+          for (const req in data) {
+            requestSummary.push({
+              last_task_update_time: data[req].last_task_update_time,
+              request_id: data[req].request_id,
+              requester: data[req].requester,
+              total_tasks: data[req].task_count,
+              running_tasks: data[req].running_tasks,
+              successful_tasks: data[req].successful_tasks,
+              failed_tasks: data[req].failed_tasks,
+              status: data[req].status,
+            })
+          }
+          this.requestSummary = requestSummary
+        })
+        .catch(function (error) {
+          console.log(error)
+        })
+    },
+  },
+  computed: {
+    reverseMsg() {
+      return ''
+    },
+  },
+  mounted() {
+    this.getRequest()
   },
 }
 </script>
