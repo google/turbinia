@@ -6,14 +6,21 @@ jobs:
   install-n-test:
     name: Install Turbinia dependencies and run tests.
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+        - docker_base_image: 'ubuntu:20.04'
+          gift_ppa_track: 'staging'
+        - docker_base_image: 'ubuntu:20.04'
+          gift_ppa_track: 'stable'
     steps:
       - uses: actions/checkout@v2
       - name: Pull latest docker image for cache
         run: |
-          docker pull ubuntu:18.04
+          docker pull ${{ matrix.docker_base_image }}
           docker pull us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-worker-dev:latest
       - name: Build Turbinia worker docker image
-        run: docker build --cache-from=ubuntu:18.04,us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-worker-dev:latest -t turbinia-worker-dev -f docker/worker/Dockerfile .
+        run: docker build --build-arg PPA_TRACK=${{ matrix.gift_ppa_track }} --cache-from=${{ matrix.docker_base_image }},us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-worker-dev:latest -t turbinia-worker-dev -f docker/worker/Dockerfile .
       - name: Run test (turbinia-worker) container
         run: |
           docker run --name turbinia-worker --entrypoint "/bin/bash" -it -d -t turbinia-worker-dev:latest
