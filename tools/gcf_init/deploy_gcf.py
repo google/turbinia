@@ -32,5 +32,5 @@ for cloud_function in function_names:
 
 print('/nCreating Datastore index from {0:s}'.format(index_file))
 cmd = 'gcloud --quiet --project {0:s} datastore indexes create {1:s}'.format(
-    config.TURBINIA_PROJECT, f'{current_dir}/{index_file}')
+    config.TURBINIA_PROJECT, '{0:s}/{1:s}'.format(current_dir, index_file))
 subprocess.check_call(cmd, shell=True)

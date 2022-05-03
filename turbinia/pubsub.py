@@ -68,9 +68,8 @@ class TurbiniaPubSub(TurbiniaMessageBase):
     # for more information on using the APIs, see
     # https://cloud.google.com/pubsub/docs/reference/rest
     self.pubsub_api_client = gcp_common.CreateService('pubsub', 'v1')
-    self.topic_path = (
-        f'projects/{config.TURBINIA_PROJECT}'
-        f'/topics/{self.topic_name}')
+    self.topic_path = 'projects/{0:s}/topics/{1:s}'.format(
+        config.TURBINIA_PROJECT, self.topic_name)
     try:
       log.debug('Trying to create pubsub topic {0:s}'.format(self.topic_path))
       topics_client = self.pubsub_api_client.projects().topics()
@@ -160,7 +159,8 @@ class TurbiniaPubSub(TurbiniaMessageBase):
     # Safe to unpack since response is unpaged.
     if not response[0]['messageIds']:
       raise TurbiniaException(
-          f'Message {message} was not published to topic {self.topic_path}')
+          'Message {0:s} was not published to topic {1:s}'.format(
+              message, self.topic_path))
     msg_id = response[0]['messageIds'][0]
     log.info(
         'Published message {0!s} to topic {1!s}'.format(
