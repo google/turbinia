@@ -16,7 +16,8 @@
 
 from __future__ import unicode_literals
 
-from turbinia.evidence import BodyFile, DockerContainer
+from turbinia.evidence import BodyFile
+from turbinia.evidence import DockerContainer
 from turbinia.evidence import CompressedDirectory
 from turbinia.evidence import Directory
 from turbinia.evidence import GoogleCloudDisk
