@@ -326,9 +326,12 @@ class TestTurbiniactl(unittest.TestCase):
         jobs_denylist=[], log_file=None, mount_partition=None,
         name=None, output_dir=None, poll_interval=60, project=[
             'proj1', 'proj2', 'proj3'
-        ], quiet=False, recipe=None, recipe_path=None, request_id=None,
-        server=False, skip_recipe_validation=False, source=[None], verbose=True,
-        wait=False, yara_rules_file=None, zone=['zone1', 'zone2'])
+        ], quiet=False, recipe=None, recipe_path=None,
+        request_id=None, server=False, skip_recipe_validation=False, source=[
+            None
+        ], verbose=True, wait=False, yara_rules_file=None, zone=[
+            'zone1', 'zone2'
+        ], group_name=None, reason=None, all_args=None)
     mockParser.return_value = mockArgs
 
     # Fail when zones dont match

@@ -172,6 +172,12 @@ def process_args(args):
   parser.add_argument(
       '-w', '--wait', action='store_true',
       help='Wait to exit until all tasks for the given request have completed')
+  parser.add_argument(
+      '-g', '--group_name', help='Grouping name for evidence', required=False)
+  parser.add_argument(
+      '-R', '--reason', help='Related ticket/incident ID for the evidence',
+      required=False)
+
   subparsers = parser.add_subparsers(
       dest='command', title='Commands', metavar='<command>')
 
@@ -566,6 +572,12 @@ def process_args(args):
   # Set group id
   group_id = uuid.uuid4().hex
 
+  # Set all_args from list of commandline arguments to string
+  all_args = ' '.join(sys.argv)
+
+  group_name = args.group_name
+  reason = args.reason
+
   # Checks for bulk processing
   if args.command in ('rawdisk', 'directory', 'compresseddirectory'):
     args.name, args.source = check_args(
@@ -577,7 +589,8 @@ def process_args(args):
       process_evidence(
           args=args, source_path=source_path, name=name, source=source,
           group_id=group_id, filter_patterns=filter_patterns, client=client,
-          yara_rules=yara_rules)
+          yara_rules=yara_rules, group_name=group_name, reason=reason,
+          all_args=all_args)
   elif args.command in ('googleclouddisk', 'googleclouddiskembedded'):
     # Fail if this is a local instance
     if config.SHARED_FILESYSTEM and not args.force_evidence:
@@ -635,7 +648,8 @@ def process_args(args):
           args=args, disk_name=disk_name, name=name, source=source,
           project=project, zone=zone, embedded_path=embedded_path,
           mount_partition=mount_partition, group_id=group_id,
-          filter_patterns=filter_patterns, client=client, yara_rules=yara_rules)
+          filter_patterns=filter_patterns, client=client, yara_rules=yara_rules,
+          group_name=group_name, reason=reason, all_args=all_args)
   elif args.command == 'rawmemory':
     # Checks if length of args match
     args.name, args.profile = check_args(
@@ -646,7 +660,8 @@ def process_args(args):
       process_evidence(
           args=args, source_path=source_path, name=name, profile=profile,
           group_id=group_id, filter_patterns=filter_patterns, client=client,
-          yara_rules=yara_rules)
+          yara_rules=yara_rules, group_name=group_name, reason=reason,
+          all_args=all_args)
   elif args.command == 'hindsight':
     args.name, args.browser_type, args.format = check_args(
         args.source_path, [args.name, args.browser_type, args.format])
@@ -657,7 +672,8 @@ def process_args(args):
       process_evidence(
           args=args, source_path=source_path, name=name, format=format,
           group_id=group_id, client=client, filter_patterns=filter_patterns,
-          yara_rules=yara_rules, browser_type=browser_type)
+          yara_rules=yara_rules, browser_type=browser_type,
+          group_name=group_name, reason=reason, all_args=all_args)
   elif args.command == 'psqworker':
     # Set up root logger level which is normally set by the psqworker command
     # which we are bypassing.
@@ -830,7 +846,7 @@ def process_evidence(
     client, group_id, args=None, browser_type=None, disk_name=None,
     embedded_path=None, filter_patterns=None, format=None, mount_partition=None,
     name=None, profile=None, project=None, source=None, source_path=None,
-    yara_rules=None, zone=None):
+    yara_rules=None, zone=None, group_name=None, reason=None, all_args=None):
   """Creates evidence and turbinia request.
   
   Args:
@@ -849,7 +865,10 @@ def process_evidence(
     source(str): Source for evidence.
     source_path(str): Source path used for host evidence.
     yara_rules(str): Yara rule for processing evidence.
-    zone(str): Could zone used for cloud evidence. 
+    zone(str): Could zone used for cloud evidence.
+    group_name (str): Name for grouping evidence.
+    reason (str): Reason or justification to Turbinia requests.
+    all_args (str): a string of commandline arguments provided to run client.
     """
   from turbinia import evidence
 
@@ -930,7 +949,8 @@ def process_evidence(
   request = None
   if evidence_:
     request = client.create_request(
-        request_id=request_id, group_id=group_id, requester=getpass.getuser())
+        request_id=request_id, group_id=group_id, requester=getpass.getuser(),
+        group_name=group_name, reason=reason, all_args=all_args)
     request.evidence.append(evidence_)
 
     if args.decryption_keys:
@@ -961,7 +981,8 @@ def process_evidence(
         group_id=group_id, jobs_allowlist=args.jobs_allowlist,
         jobs_denylist=args.jobs_denylist, recipe_name=recipe, sketch_id=None,
         skip_recipe_validation=args.skip_recipe_validation,
-        yara_rules=yara_rules)
+        yara_rules=yara_rules, group_name=group_name, reason=reason,
+        all_args=all_args)
     request.recipe = recipe_dict
 
     if args.dump_json:
