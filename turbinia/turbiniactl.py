@@ -572,7 +572,7 @@ def process_args(args):
   # Set group id
   group_id = uuid.uuid4().hex
 
-  # Set all_args from command line
+  # Set all_args from list of commandline arguments to string
   all_args = ' '.join(sys.argv)
 
   group_name = args.group_name
@@ -868,7 +868,7 @@ def process_evidence(
     zone(str): Could zone used for cloud evidence.
     group_name (str): Name for grouping evidence.
     reason (str): Reason or justification to Turbinia requests.
-    all_args (list(str)): a list of commandline arguments provided to run client.
+    all_args (str): a string of commandline arguments provided to run client.
     """
   from turbinia import evidence
 

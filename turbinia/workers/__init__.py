@@ -436,7 +436,7 @@ class TurbiniaTask:
             no recipe is explicitly provided for the task.
       group_name (str): group name for the evidence
       reason (str): reason of the evidence
-      all_args (list): Terminal arguments input by user for evidence
+      all_args (str): Terminal arguments input by user for evidence
   """
 
   # The list of attributes that we will persist into storage

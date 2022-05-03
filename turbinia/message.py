@@ -58,7 +58,7 @@ class TurbiniaRequest:
     self.evidence = evidence if evidence else []
     self.group_name = group_name if group_name else ''
     self.reason = reason if reason else ''
-    self.all_args = all_args if all_args else []
+    self.all_args = all_args if all_args else ''
     self.type = self.__class__.__name__
 
   def to_json(self):
