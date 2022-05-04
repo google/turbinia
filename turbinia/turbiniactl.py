@@ -932,7 +932,7 @@ def process_evidence(
       # This is created so we can auto-upload files when they are copyable.
       if os.path.exists(evidence_.local_path):
         output_manager = OutputManager()
-        # Passing in request_id as the uid in this case because we don't have an
+        # Passing in request_id as the uid because we don't have an
         # associated Task ID in this case.
         output_manager.setup(
             evidence_.type, request_id, request_id, remote_only=True)
