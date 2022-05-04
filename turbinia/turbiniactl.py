@@ -929,9 +929,12 @@ def process_evidence(
 
   if evidence_ and not args.force_evidence:
     if not config.SHARED_FILESYSTEM and evidence_.copyable:
+      # This is created so we can auto-upload files when they are copyable.
       if os.path.exists(evidence_.local_path):
         output_manager = OutputManager()
-        output_manager.setup(evidence_.type, request_id, remote_only=True)
+        # Passing in request_id as the uid in this case because we don't have an
+        # associated Task ID in this case.
+        output_manager.setup(evidence_.type, request_id, request_id, remote_only=True)
         output_manager.save_evidence(evidence_)
       else:
         msg = (
