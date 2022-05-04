@@ -934,7 +934,8 @@ def process_evidence(
         output_manager = OutputManager()
         # Passing in request_id as the uid in this case because we don't have an
         # associated Task ID in this case.
-        output_manager.setup(evidence_.type, request_id, request_id, remote_only=True)
+        output_manager.setup(
+            evidence_.type, request_id, request_id, remote_only=True)
         output_manager.save_evidence(evidence_)
       else:
         msg = (
