@@ -64,8 +64,8 @@ class TurbiniaPubSub(TurbiniaMessageBase):
   def setup_publisher(self):
     """Set up the pubsub publisher."""
     config.LoadConfig()
-    # the publisher we will use the pubsub client in googleapiclient.discovery
-    # for more information on using the APIs, see
+    # Configure the pubsub client in googleapiclient.discovery
+    # for more information on using the API, see
     # https://cloud.google.com/pubsub/docs/reference/rest
     self.pubsub_api_client = gcp_common.CreateService('pubsub', 'v1')
     self.topic_path = 'projects/{0:s}/topics/{1:s}'.format(
