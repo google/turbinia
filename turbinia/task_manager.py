@@ -769,19 +769,20 @@ class PSQTaskManager(BaseTaskManager):
     self.server_pubsub = turbinia_pubsub.TurbiniaPubSub(config.PUBSUB_TOPIC)
     if server:
       self.server_pubsub.setup_subscriber()
+      psq_publisher = pubsub.PublisherClient()
+      psq_subscriber = pubsub.SubscriberClient()
+      datastore_client = datastore.Client(project=config.TURBINIA_PROJECT)
+      try:
+        self.psq = psq.Queue(
+            psq_publisher, psq_subscriber, config.TURBINIA_PROJECT,
+            name=config.PSQ_TOPIC,
+            storage=psq.DatastoreStorage(datastore_client))
+      except exceptions.GoogleCloudError as e:
+        msg = 'Error creating PSQ Queue: {0:s}'.format(str(e))
+        log.error(msg)
+        raise turbinia.TurbiniaException(msg)
     else:
       self.server_pubsub.setup_publisher()
-    psq_publisher = pubsub.PublisherClient()
-    psq_subscriber = pubsub.SubscriberClient()
-    datastore_client = datastore.Client(project=config.TURBINIA_PROJECT)
-    try:
-      self.psq = psq.Queue(
-          psq_publisher, psq_subscriber, config.TURBINIA_PROJECT,
-          name=config.PSQ_TOPIC, storage=psq.DatastoreStorage(datastore_client))
-    except exceptions.GoogleCloudError as e:
-      msg = 'Error creating PSQ Queue: {0:s}'.format(str(e))
-      log.error(msg)
-      raise turbinia.TurbiniaException(msg)
 
   def process_tasks(self):
     completed_tasks = []
