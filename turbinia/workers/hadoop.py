@@ -121,8 +121,7 @@ class HadoopAnalysisTask(TurbiniaTask):
       # file extracted
       output_dir = os.path.join(self.output_dir, 'artifacts')
       collected_artifacts = extract_artifacts(
-          artifact_names=['HadoopAppRoot',
-                          'HadoopYarnLogs',
+          artifact_names=['HadoopAppRoot', 'HadoopYarnLogs',
                           'HadoopAppLogs'], disk_path=evidence.local_path,
           output_dir=output_dir, credentials=evidence.credentials)
 
