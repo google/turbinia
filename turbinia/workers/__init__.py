@@ -50,6 +50,12 @@ from prometheus_client import Gauge
 from prometheus_client import Histogram
 
 METRICS = {}
+# Set the maximum size that the report can be before truncating it.  This is a
+# best effort estimate and not a guarantee and comes from the limit for
+# datastore entities[1] less some overhead for the rest of the attributes that
+# will be saved in the response.
+# [1]https://cloud.google.com/datastore/docs/concepts/limits
+REPORT_MAXSIZE = int(1048572 * 0.75)
 
 log = logging.getLogger('turbinia')
 
@@ -219,6 +225,18 @@ class TurbiniaTaskResult:
         self.log(
             'Evidence {0:s} has empty source_path so '
             'not saving.'.format(evidence.name))
+
+      # Truncate report text data if it is approaching the size of the max
+      # datastore entity size (See REPORT_MAXSIZE definition for details).
+      if (hasattr(evidence, 'text_data') and evidence.text_data and
+          len(evidence.text_data) > REPORT_MAXSIZE):
+        message = (
+            'The text_data attribute has a size {0:d} larger than the max '
+            'size {1:d} so truncating the response.'.format(
+                len(evidence.text_data), REPORT_MAXSIZE))
+        self.log(message, logging.WARN)
+        evidence.text_data = evidence.text_data[:REPORT_MAXSIZE] + '\n'
+        evidence.text_data += message
 
       if not evidence.request_id:
         evidence.request_id = self.request_id
@@ -416,12 +434,15 @@ class TurbiniaTask:
       recipe (dict): Validated recipe to be used as the task configuration.
       task_config (dict): Default task configuration, in effect if
             no recipe is explicitly provided for the task.
+      group_name (str): group name for the evidence
+      reason (str): reason of the evidence
+      all_args (str): Terminal arguments input by user for evidence
   """
 
   # The list of attributes that we will persist into storage
   STORED_ATTRIBUTES = [
       'id', 'job_id', 'last_update', 'name', 'request_id', 'requester',
-      'group_id'
+      'group_name', 'reason', 'all_args', 'group_id'
   ]
 
   # The list of evidence states that are required by a Task in order to run.
@@ -434,7 +455,7 @@ class TurbiniaTask:
 
   def __init__(
       self, name=None, base_output_dir=None, request_id=None, requester=None,
-      group_id=None):
+      group_name=None, reason=None, all_args=None, group_id=None):
     """Initialization for TurbiniaTask.
     
     Args:
@@ -467,6 +488,9 @@ class TurbiniaTask:
     self._evidence_config = {}
     self.recipe = {}
     self.task_config = {}
+    self.group_name = group_name
+    self.reason = reason
+    self.all_args = all_args
     self.group_id = group_id
 
   def serialize(self):
@@ -659,7 +683,6 @@ class TurbiniaTask:
 
       ret = proc.returncode
 
-    result.error['stdout'] = str(stdout)
     result.error['stderr'] = str(stderr)
 
     if stderr_file and not stderr:

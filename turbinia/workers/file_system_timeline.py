@@ -25,9 +25,10 @@ from turbinia.evidence import BodyFile
 
 if TurbiniaTask.check_worker_role():
   try:
+    from dfimagetools import bodyfile
+    from dfimagetools import file_entry_lister
     from dfvfs.helpers import volume_scanner
     from dfvfs.lib import errors as dfvfs_errors
-    from dfimagetools import file_entry_lister
   except ImportError as exception:
     message = 'Could not import libraries: {0!s}'.format(exception)
     raise TurbiniaException(message)
@@ -57,7 +58,21 @@ class FileSystemTimelineTask(TurbiniaTask):
     # Set things up for the FileEntryLister client. We will scan all
     # partitions in the volume.
     volume_scanner_options = volume_scanner.VolumeScannerOptions()
-    volume_scanner_options.partitions = self.task_config.get('partitions')
+    config_partitions = self.task_config.get('partitions')
+    if config_partitions is None or (len(config_partitions) == 1 and
+                                     config_partitions[0] == 'all'):
+      volume_scanner_options.partitions = ['all']
+      volume_scanner_options.volumes = ['all']
+    else:
+      volume_scanner_options.partitions = []
+      volume_scanner_options.volumes = []
+      for partition in config_partitions:
+        if partition.find('apfs') != -1 or partition.find('lvm') != -1:
+          volume_scanner_options.volumes.append(partition)
+        else:
+          volume_scanner_options.partitions.append(partition)
+    volume_scanner_options.snapshots = ['none']
+    volume_scanner_options.credentials = evidence.credentials
 
     # Create the FileEntryLister client and generate the path specs
     # for all available partitions.
@@ -68,43 +83,43 @@ class FileSystemTimelineTask(TurbiniaTask):
     except dfvfs_errors.ScannerError as exception:
       status = 'Unable to open evidence: {0!s}'.format(exception)
       result.close(self, success=False, status=status)
+      return result
 
     # Iterate over all file entries and generate the output in bodyfile
     # format.
     try:
-      file_entries = None
-      with open(bodyfile_output, 'w', encoding='utf-8') as file_object:
-        file_entries = enumerate(entry_lister.ListFileEntries(base_path_specs))
-        while file_entries:
-          try:
-            _, (file_entry, path_segments) = next(file_entries)
-            bodyfile_entries = entry_lister.GetBodyfileEntries(
-                file_entry, path_segments)
-            for bodyfile_entry in bodyfile_entries:
-              file_object.write(bodyfile_entry)
-              file_object.write('\n')
-              number_of_entries += 1
-          except StopIteration:
-            break
-          except (dfvfs_errors.AccessError, dfvfs_errors.BackEndError,
-                  dfvfs_errors.MountPointError,
-                  dfvfs_errors.PathSpecError) as exception:
-            status = 'Unable to process file entry: {0!s}'.format(exception)
-            result.log(status)
-
-      if number_of_entries > 0:
-        output_evidence.number_of_entries = number_of_entries
-        result.add_evidence(output_evidence, evidence.config)
-        status = 'Generated file system timeline containing [{0:d}] entries'.format(
-            number_of_entries)
-        result.close(self, success=True, status=status)
-      else:
-        status = 'Unable to process any file entries.'
-        result.close(self, success=False, status=status)
-
+      bodyfile_fileobj = open(bodyfile_output, 'w', encoding='utf-8')
     except IOError as exception:
-      status = 'Unable to create bodyfile local output file: {0!s}'.format(
-          exception)
+      status = 'Failed to open local output file: {0!s}'.format(exception)
+      result.close(self, success=False, status=status)
+      return result
+
+    for base_path_spec in base_path_specs:
+      file_entries_generator = entry_lister.ListFileEntries([base_path_spec])
+      bodyfile_generator = bodyfile.BodyfileGenerator()
+      try:
+        for file_entry, path_segments in file_entries_generator:
+          for bodyfile_entry in bodyfile_generator.GetEntries(file_entry,
+                                                              path_segments):
+            bodyfile_fileobj.write(bodyfile_entry)
+            bodyfile_fileobj.write('\n')
+            number_of_entries += 1
+      except (dfvfs_errors.AccessError, dfvfs_errors.BackEndError,
+              dfvfs_errors.MountPointError, dfvfs_errors.PathSpecError,
+              IOError) as exception:
+        status = 'Unable to process file entry: {0!s}'.format(exception)
+        result.log(status)
+
+    bodyfile_fileobj.close()
+
+    if number_of_entries > 0:
+      output_evidence.number_of_entries = number_of_entries
+      result.add_evidence(output_evidence, evidence.config)
+      status = 'Generated file system timeline containing [{0:d}] entries'.format(
+          number_of_entries)
+      result.close(self, success=True, status=status)
+    else:
+      status = 'Unable to process any file entries.'
       result.close(self, success=False, status=status)
 
     return result

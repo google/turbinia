@@ -411,6 +411,9 @@ class BaseTaskManager:
     evidence_.config = job.evidence.config
     task.base_output_dir = config.OUTPUT_DIR
     task.requester = evidence_.config.get('globals', {}).get('requester')
+    task.group_name = evidence_.config.get('globals', {}).get('group_name')
+    task.reason = evidence_.config.get('globals', {}).get('reason')
+    task.all_args = evidence_.config.get('globals', {}).get('all_args')
     task.group_id = evidence_.config.get('globals', {}).get('group_id')
     if job:
       task.job_id = job.id
@@ -684,8 +687,8 @@ class CeleryTaskManager(BaseTaskManager):
         timeout = self.check_task_timeout(task)
         if timeout:
           log.warning(
-              'Task {0:s} timed on server out after {1:d} seconds. Auto-closing Task.'
-              .format(celery_task.id, timeout))
+              'Task {0:s} timed out on server after {1:d} seconds. '
+              'Auto-closing Task.'.format(celery_task.id, timeout))
           task = self.timeout_task(task, timeout)
           completed_tasks.append(task)
 
@@ -718,6 +721,9 @@ class CeleryTaskManager(BaseTaskManager):
         else:
           evidence_.config = request.recipe
           evidence_.config['globals']['requester'] = request.requester
+          evidence_.config['globals']['group_name'] = request.group_name
+          evidence_.config['globals']['reason'] = request.reason
+          evidence_.config['globals']['all_args'] = request.all_args
           evidence_.config['globals']['group_id'] = request.recipe['globals'][
               'group_id']
           evidence_list.append(evidence_)
@@ -763,19 +769,20 @@ class PSQTaskManager(BaseTaskManager):
     self.server_pubsub = turbinia_pubsub.TurbiniaPubSub(config.PUBSUB_TOPIC)
     if server:
       self.server_pubsub.setup_subscriber()
+      psq_publisher = pubsub.PublisherClient()
+      psq_subscriber = pubsub.SubscriberClient()
+      datastore_client = datastore.Client(project=config.TURBINIA_PROJECT)
+      try:
+        self.psq = psq.Queue(
+            psq_publisher, psq_subscriber, config.TURBINIA_PROJECT,
+            name=config.PSQ_TOPIC,
+            storage=psq.DatastoreStorage(datastore_client))
+      except exceptions.GoogleCloudError as e:
+        msg = 'Error creating PSQ Queue: {0:s}'.format(str(e))
+        log.error(msg)
+        raise turbinia.TurbiniaException(msg)
     else:
       self.server_pubsub.setup_publisher()
-    psq_publisher = pubsub.PublisherClient()
-    psq_subscriber = pubsub.SubscriberClient()
-    datastore_client = datastore.Client(project=config.TURBINIA_PROJECT)
-    try:
-      self.psq = psq.Queue(
-          psq_publisher, psq_subscriber, config.TURBINIA_PROJECT,
-          name=config.PSQ_TOPIC, storage=psq.DatastoreStorage(datastore_client))
-    except exceptions.GoogleCloudError as e:
-      msg = 'Error creating PSQ Queue: {0:s}'.format(str(e))
-      log.error(msg)
-      raise turbinia.TurbiniaException(msg)
 
   def process_tasks(self):
     completed_tasks = []
@@ -803,8 +810,8 @@ class PSQTaskManager(BaseTaskManager):
         timeout = self.check_task_timeout(task)
         if timeout:
           log.warning(
-              'Task {0:s} timed on server out after {0:d} seconds. Auto-closing Task.'
-              .format(celery_task.id, timeout))
+              'Task {0:s} timed on server out after {1:d} seconds. Auto-closing Task.'
+              .format(task.id, timeout))
           task = self.timeout_task(task, timeout)
           completed_tasks.append(task)
 

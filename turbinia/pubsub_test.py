@@ -18,6 +18,7 @@ from __future__ import unicode_literals
 
 import unittest
 
+import base64
 import mock
 
 from six.moves import queue
@@ -48,6 +49,22 @@ class MockPubSubMessage:
   def __init__(self, data='fake data', message_id='12345'):
     self.data = data if data else ''
     self.message_id = message_id
+
+
+class MockPubSubProject:
+  """This is a mock of a PubSub project API object."""
+
+  def topics(cls):
+    "Mock class method topics."
+    return 'fake-topic-api-object'
+
+
+class MockPubSubClient:
+  """This is a mock of PubSub API client."""
+
+  def projects(cls):
+    "Mock class method projects."
+    return MockPubSubProject()
 
 
 class TestTurbiniaRequest(unittest.TestCase):
@@ -120,12 +137,23 @@ class TestTurbiniaPubSub(unittest.TestCase):
 
     self.assertListEqual(self.pubsub.check_messages(), [])
 
-  def testSendMessage(self):
+  @mock.patch('libcloudforensics.providers.gcp.internal.common.ExecuteRequest')
+  def testSendMessage(self, gcp_execute):
     """Test sending a message."""
-    self.pubsub.publisher = mock.MagicMock()
+    gcp_execute.return_value = [{'messageIds': ['fake-id']}]
+    gcp_execute.side_effect = None
+    self.pubsub.pubsub_api_client = MockPubSubClient()
     self.pubsub.send_message('test message text')
-    self.pubsub.publisher.publish.assert_called_with(
-        'faketopicpath', b'test message text')
+    base64_data = base64.b64encode('test message text'.encode('utf-8'))
+    gcp_execute.assert_called_with(
+        'fake-topic-api-object', 'publish', {
+            'topic': 'faketopicpath',
+            'body': {
+                'messages': [{
+                    'data': base64_data.decode('utf-8')
+                }]
+            }
+        })
 
 
 class TestTurbiniaKombu(unittest.TestCase):

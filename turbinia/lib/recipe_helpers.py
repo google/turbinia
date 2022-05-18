@@ -36,6 +36,9 @@ DEFAULT_GLOBALS_RECIPE = {
     'yara_rules': '',
     'filter_patterns': [],
     'sketch_id': None,
+    'group_name': '',
+    'reason': '',
+    'all_args': '',
     'group_id': ''
 }
 
@@ -163,9 +166,10 @@ def validate_recipe(recipe_dict):
 
       task_loader = TaskLoader()
       if not task_loader.check_task_name(proposed_task):
-        log.error(
-            'Task {0:s} defined for task recipe {1:s} does not exist.'.format(
-                proposed_task, recipe_item))
+        message = (
+            'Task {0:s} defined for task recipe {1:s} does not '
+            'exist.'.format(proposed_task, recipe_item))
+        log.error(message)
         return (False, message)
       tasks_with_recipe.append(recipe_item)
 
