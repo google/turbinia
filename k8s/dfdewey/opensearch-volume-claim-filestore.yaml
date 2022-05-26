@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: dfdeweyosvolume-claim
+  annotations:
+    pv.beta.kubernetes.io/gid: "1000"
+spec:
+  accessModes:
+  - ReadWriteMany
+  storageClassName: ""
+  volumeName: dfdeweyosvolume
+  resources:
+    requests:
+      storage: <CAPACITY>

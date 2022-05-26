@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dfdewey-postgres
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dfdewey-postgres
+  template:
+    metadata:
+      labels:
+        app: dfdewey-postgres
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:latest
+          imagePullPolicy: "IfNotPresent"
+          ports:
+            - containerPort: 5432
+          envFrom:
+            - configMapRef:
+                name: postgres-config
+          volumeMounts:
+            - mountPath: /var/lib/postgresql/data
+              name: dfdeweypgvolume
+      volumes:
+        - name: dfdeweypgvolume
+          persistentVolumeClaim:
+            claimName: dfdeweypgvolume-claim
+            readOnly: false
+      nodeSelector:
+        cloud.google.com/gke-nodepool: default-pool

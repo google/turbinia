@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: dfdeweypgvolume-claim
+spec:
+  accessModes:
+  - ReadWriteMany
+  storageClassName: ""
+  volumeName: dfdeweypgvolume
+  resources:
+    requests:
+      storage: <CAPACITY>
