@@ -14,7 +14,7 @@ limitations under the License.
 <template>
   <v-app id="app">
     <v-app-bar app clipped-right flat>
-      <v-img src="/turbinia-logo.png" max-height="80" max-width="80" contain></v-img>
+      <v-toolbar-title>Turbinia</v-toolbar-title>
       <v-tooltip right>
         <template v-slot:activator="{ on, attrs }">
           <v-btn icon v-on:click="toggleTheme" v-bind="attrs" v-on="on">
@@ -25,7 +25,9 @@ limitations under the License.
     </v-app-bar>
     <v-main>
       <v-col class="text-right">
-        <v-btn @click="getRequest()">Refresh</v-btn>
+        <v-btn @click="getRequest()">
+          <v-icon>mdi-refresh</v-icon>
+        </v-btn>
       </v-col>
       <v-data-table :headers="headers" :items="outputRequest"></v-data-table>
     </v-main>
@@ -85,11 +87,6 @@ export default {
       console.log('Switching theme')
       this.$vuetify.theme.dark = !this.$vuetify.theme.dark
       localStorage.setItem('isDarkTheme', this.$vuetify.theme.dark.toString())
-    },
-  },
-  computed: {
-    outputRequest() {
-      return this.requestSummary
     },
   },
   mounted() {
