@@ -12,17 +12,16 @@ if [ -z $1 ]; then
     exit 0
 fi
 
+kubectl create -f dfdewey-volume-filestore.yaml
+kubectl create -f dfdewey-volume-claim-filestore.yaml
+
 # PostgreSQL
 kubectl create -f postgres-configmap.yaml
-kubectl create -f postgres-volume-filestore.yaml
-kubectl create -f postgres-volume-claim-filestore.yaml
 kubectl create -f postgres-server.yaml
 kubectl create -f postgres-service.yaml
 
 # Opensearch
 kubectl create -f opensearch-configmap.yaml
-kubectl create -f opensearch-volume-filestore.yaml
-kubectl create -f opensearch-volume-claim-filestore.yaml
 kubectl create -f opensearch-server.yaml
 kubectl create -f opensearch-service.yaml
 
@@ -34,10 +33,8 @@ sed -i -e "s/^DFDEWEY_OS_HOST = .*$/DFDEWEY_OS_HOST = \'$DFDEWEY_OS_IP\'/g" $TUR
 base64 -w0 $TURBINIA_CONF > turbinia-config.b64
 kubectl create configmap turbinia-config --from-file=TURBINIA_CONF=turbinia-config.b64 --dry-run=client -o yaml | kubectl apply -f -
 
-# Redeploy server and worker
-kubectl delete -f turbinia-server.yaml
-kubectl delete -f turbinia-worker.yaml
-kubectl create -f turbinia-server.yaml
-kubectl create -f turbinia-worker.yaml
+# Restart server and worker
+kubectl rollout restart -f turbinia-server.yaml
+kubectl rollout restart -f turbinia-worker.yaml
 
 echo "dfDewey datastore deployment complete"

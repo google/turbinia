@@ -15,7 +15,6 @@ spec:
       containers:
         - name: postgres
           image: postgres:latest
-          imagePullPolicy: "IfNotPresent"
           ports:
             - containerPort: 5432
           envFrom:
@@ -23,11 +22,12 @@ spec:
                 name: postgres-config
           volumeMounts:
             - mountPath: /var/lib/postgresql/data
-              name: dfdeweypgvolume
+              name: dfdeweyvolume
+              subPath: <PATH>
       volumes:
-        - name: dfdeweypgvolume
+        - name: dfdeweyvolume
           persistentVolumeClaim:
-            claimName: dfdeweypgvolume-claim
+            claimName: dfdeweyvolume-claim
             readOnly: false
       nodeSelector:
         cloud.google.com/gke-nodepool: default-pool

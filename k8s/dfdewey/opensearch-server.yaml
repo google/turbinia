@@ -17,7 +17,6 @@ spec:
       containers:
         - name: opensearch
           image: opensearchproject/opensearch:latest
-          imagePullPolicy: "IfNotPresent"
           resources:
             requests:
               memory: "32Gi"
@@ -28,7 +27,8 @@ spec:
                 name: opensearch-config
           volumeMounts:
             - mountPath: /usr/share/opensearch/data
-              name: dfdeweyosvolume
+              name: dfdeweyvolume
+              subPath: <PATH>
       initContainers:
       - name: opensearch-init
         image: busybox:latest
@@ -36,9 +36,9 @@ spec:
           privileged: true
         command: ['sh', '-c', "sysctl -w vm.max_map_count=262144; sysctl -p"]
       volumes:
-        - name: dfdeweyosvolume
+        - name: dfdeweyvolume
           persistentVolumeClaim:
-            claimName: dfdeweyosvolume-claim
+            claimName: dfdeweyvolume-claim
             readOnly: false
       nodeSelector:
         cloud.google.com/gke-nodepool: default-pool

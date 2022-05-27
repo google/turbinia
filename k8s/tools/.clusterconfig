@@ -40,10 +40,10 @@ FILESTORE_NAME='turbiniavolume'
 FILESTORE_CAPACITY='1T'
 
 # Filestore share names, and sizes for dfDewey datastores (if deployed).
-FILESTORE_PG_NAME='dfdeweypgvolume'
-FILESTORE_PG_CAPACITY='1T'
-FILESTORE_OS_NAME='dfdeweyosvolume'
-FILESTORE_OS_CAPACITY='5T'
+FILESTORE_DFDEWEY_NAME='dfdeweyvolume'
+FILESTORE_DFDEWEY_CAPACITY='6T'
+FILESTORE_PG_PATH='postgres'
+FILESTORE_OS_PATH='opensearch'
 
 # Any Jobs added to this list will be disabled by default at start-up. Job names
 # entered here are case insensitive, but must be quoted. 

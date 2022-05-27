@@ -277,29 +277,18 @@ echo "Deploying Turbinia to $CLUSTER_NAME cluster"
 # Deploy dfDewey
 if [[ "$*" == *--deploy-dfdewey* ]] ; then
   echo "Deploying dfDewey datastores to $CLUSTER_NAME cluster"
-  # PostgreSQL
-  if [[ -z "$(gcloud -q --project $DEVSHELL_PROJECT_ID filestore instances list --format='value(name)' --filter=name:$FILESTORE_PG_NAME)" ]] ; then
-    echo "Creating Filestore instance $FILESTORE_PG_NAME with capacity $FILESTORE_PG_CAPACITY"
-    gcloud -q --project $DEVSHELL_PROJECT_ID filestore instances create $FILESTORE_PG_NAME --file-share=name=$FILESTORE_PG_NAME,capacity=$FILESTORE_PG_CAPACITY --zone=$ZONE --network=name=$VPC_NETWORK
+  if [[ -z "$(gcloud -q --project $DEVSHELL_PROJECT_ID filestore instances list --format='value(name)' --filter=name:$FILESTORE_DFDEWEY_NAME)" ]] ; then
+    echo "Creating Filestore instance $FILESTORE_DFDEWEY_NAME with capacity $FILESTORE_DFDEWEY_CAPACITY"
+    gcloud -q --project $DEVSHELL_PROJECT_ID filestore instances create $FILESTORE_DFDEWEY_NAME --file-share=name=$FILESTORE_DFDEWEY_NAME,capacity=$FILESTORE_DFDEWEY_CAPACITY --zone=$ZONE --network=name=$VPC_NETWORK
   else
-    echo "Using pre existing Filestore instance $FILESTORE_PG_NAME with capacity $FILESTORE_PG_CAPACITY"
+    echo "Using pre existing Filestore instance $FILESTORE_DFDEWEY_NAME with capacity $FILESTORE_DFDEWEY_CAPACITY"
   fi
-  FILESTORE_PG_IP=$(gcloud -q --project $DEVSHELL_PROJECT_ID filestore instances describe $FILESTORE_PG_NAME --zone=$ZONE --format='value(networks.ipAddresses)' --flatten="networks[].ipAddresses[]")
-  sed -i -e "s/<PATH>/$FILESTORE_PG_NAME/g" postgres-volume-filestore.yaml
-  sed -i -e "s/<IP_ADDRESS>/$FILESTORE_PG_IP/g" postgres-volume-filestore.yaml
-  sed -i -e "s/<CAPACITY>/$FILESTORE_PG_CAPACITY/g" postgres-volume-filestore.yaml postgres-volume-claim-filestore.yaml
-
-  # Opensearch
-  if [[ -z "$(gcloud -q --project $DEVSHELL_PROJECT_ID filestore instances list --format='value(name)' --filter=name:$FILESTORE_OS_NAME)" ]] ; then
-    echo "Creating Filestore instance $FILESTORE_OS_NAME with capacity $FILESTORE_OS_CAPACITY"
-    gcloud -q --project $DEVSHELL_PROJECT_ID filestore instances create $FILESTORE_OS_NAME --file-share=name=$FILESTORE_OS_NAME,capacity=$FILESTORE_OS_CAPACITY --zone=$ZONE --network=name=$VPC_NETWORK
-  else
-    echo "Using pre existing Filestore instance $FILESTORE_OS_NAME with capacity $FILESTORE_OS_CAPACITY"
-  fi
-  FILESTORE_OS_IP=$(gcloud -q --project $DEVSHELL_PROJECT_ID filestore instances describe $FILESTORE_OS_NAME --zone=$ZONE --format='value(networks.ipAddresses)' --flatten="networks[].ipAddresses[]")
-  sed -i -e "s/<PATH>/$FILESTORE_OS_NAME/g" opensearch-volume-filestore.yaml
-  sed -i -e "s/<IP_ADDRESS>/$FILESTORE_OS_IP/g" opensearch-volume-filestore.yaml
-  sed -i -e "s/<CAPACITY>/$FILESTORE_OS_CAPACITY/g" opensearch-volume-filestore.yaml opensearch-volume-claim-filestore.yaml
+  FILESTORE_DFDEWEY_IP=$(gcloud -q --project $DEVSHELL_PROJECT_ID filestore instances describe $FILESTORE_DFDEWEY_NAME --zone=$ZONE --format='value(networks.ipAddresses)' --flatten="networks[].ipAddresses[]")
+  sed -i -e "s/<PATH>/$FILESTORE_DFDEWEY_NAME/g" dfdewey-volume-filestore.yaml
+  sed -i -e "s/<IP_ADDRESS>/$FILESTORE_DFDEWEY_IP/g" dfdewey-volume-filestore.yaml
+  sed -i -e "s/<CAPACITY>/$FILESTORE_DFDEWEY_CAPACITY/g" dfdewey-volume-filestore.yaml dfdewey-volume-claim-filestore.yaml
+  sed -i -e "s/<PATH>/$FILESTORE_PG_PATH/g" postgres-server.yaml
+  sed -i -e "s/<PATH>/$FILESTORE_OS_PATH/g" opensearch-server.yaml
 
   ./setup-dfdewey.sh $TURBINIA_CONFIG
 fi
