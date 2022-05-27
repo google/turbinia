@@ -13,23 +13,41 @@ limitations under the License.
 
 <template>
   <v-app id="app">
-    <v-app-bar app clipped-right flat>
-      <v-toolbar-title>Turbinia</v-toolbar-title>
-      <v-tooltip right>
-        <template v-slot:activator="{ on, attrs }">
-          <v-btn icon v-on:click="toggleTheme" v-bind="attrs" v-on="on">
-            <v-icon>mdi-brightness-6</v-icon>
-          </v-btn>
-        </template>
-      </v-tooltip>
-    </v-app-bar>
+    <nav class="navbar">
+      <v-app-bar app flat>
+        <div class="turbinia-logo">
+          <v-img src="./assets/turbinia-logo-mark.png" max-height="50" max-width="70" contain />
+        </div>
+        <div class="turbinia-title">
+          <v-toolbar-title>Turbinia</v-toolbar-title>
+        </div>
+        <v-spacer></v-spacer>
+        <div class="dark-theme-btn">
+          <v-tooltip left>
+            <template v-slot:activator="{ on, attrs }">
+              <v-btn icon v-on:click="toggleTheme" v-bind="attrs" v-on="on">
+                <v-icon>mdi-brightness-6</v-icon>
+              </v-btn>
+            </template>
+            Switch to dark mode
+          </v-tooltip>
+        </div>
+      </v-app-bar>
+    </nav>
     <v-main>
-      <v-col class="text-right">
-        <v-btn @click="getRequest()">
-          <v-icon>mdi-refresh</v-icon>
-        </v-btn>
-      </v-col>
-      <v-data-table :headers="headers" :items="outputRequest"></v-data-table>
+      <div class="d-flex justify-end mt-2 mx-4">
+        <v-tooltip left>
+          <template v-slot:activator="{ on, attrs }">
+            <v-btn fab color="blue lighten-2" @click="getRequest()" v-bind="attrs" v-on="on">
+              <v-icon>mdi-refresh</v-icon>
+            </v-btn>
+          </template>
+          Refresh Request List
+        </v-tooltip>
+      </div>
+      <div>
+        <v-data-table :headers="headers" :items="this.requestSummary"></v-data-table>
+      </div>
     </v-main>
   </v-app>
 </template>
