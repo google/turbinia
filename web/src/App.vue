@@ -35,18 +35,30 @@ limitations under the License.
       </v-app-bar>
     </nav>
     <v-main>
-      <div class="d-flex justify-end mt-2 mx-4">
-        <v-tooltip left>
-          <template v-slot:activator="{ on, attrs }">
-            <v-btn fab color="blue lighten-2" @click="getRequest()" v-bind="attrs" v-on="on">
-              <v-icon>mdi-refresh</v-icon>
-            </v-btn>
-          </template>
-          Refresh Request List
-        </v-tooltip>
-      </div>
       <div>
-        <v-data-table :headers="headers" :items="this.requestSummary"></v-data-table>
+        <v-card>
+          <v-card-title>
+            Request List
+            <v-spacer></v-spacer>
+            <v-text-field
+              v-model="search"
+              append-icon="mdi-magnify"
+              label="Search"
+              single-line
+              hide-details
+            ></v-text-field>
+            <v-spacer></v-spacer>
+            <v-tooltip left>
+              <template v-slot:activator="{ on, attrs }">
+                <v-btn fab color="blue lighten-2" @click="getRequest()" v-bind="attrs" v-on="on">
+                  <v-icon>mdi-refresh</v-icon>
+                </v-btn>
+              </template>
+              Refresh Request List
+            </v-tooltip>
+          </v-card-title>
+          <v-data-table :headers="headers" :items="this.requestSummary" :search="search"></v-data-table>
+        </v-card>
       </div>
     </v-main>
   </v-app>
