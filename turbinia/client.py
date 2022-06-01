@@ -169,13 +169,14 @@ class BaseTurbiniaClient:
   def create_recipe(
       self, debug_tasks=False, filter_patterns=None, group_id='',
       jobs_allowlist=None, jobs_denylist=None, recipe_name=None, sketch_id=None,
-      skip_recipe_validation=False, yara_rules=None):
+      skip_recipe_validation=False, yara_rules=None, group_name=None,
+      reason=None, all_args=None):
     """Creates a Turbinia recipe.
 
     If no recipe_name is specified, this  method returns a default recipe.
     If a recipe_name is specified then this method will build the recipe
     dictionary by reading the  contents of a recipe file. The path to
-    the recipe file is inferre from the recipe_name and the RECIPE_FILE_DIR
+    the recipe file is inferred from the recipe_name and the RECIPE_FILE_DIR
     configuration parameter.
 
     Args:
@@ -189,6 +190,9 @@ class BaseTurbiniaClient:
       skip_recipe_validation (bool): flag indicates if the recipe will be
           validated.
       yara_rules (str): a string containing yara rules.
+      group_name (str): Name for grouping evidence.
+      reason (str): Reason or justification for Turbinia requests.
+      all_args (str): a string of commandline arguments provided to run client.
 
     Returns:
       dict: a Turbinia recipe dictionary.
@@ -209,10 +213,10 @@ class BaseTurbiniaClient:
         recipe['globals']['jobs_allowlist'] = jobs_allowlist
     else:
       # Load custom recipe from given path or name.
-      if (jobs_denylist or jobs_allowlist or filter_patterns or yara_rules):
+      if (jobs_denylist or jobs_allowlist or filter_patterns):
         msg = (
             'Specifying a recipe name is incompatible with defining '
-            'jobs allow/deny lists, yara rules or a patterns file separately.')
+            'jobs allow/deny lists, or a patterns file separately.')
         raise TurbiniaException(msg)
 
       if os.path.exists(recipe_name):
@@ -238,6 +242,12 @@ class BaseTurbiniaClient:
       recipe['globals']['debug_tasks'] = debug_tasks
     if group_id:
       recipe['globals']['group_id'] = group_id
+    if group_name:
+      recipe['globals']['group_name'] = group_name
+    if reason:
+      recipe['globals']['reason'] = reason
+    if all_args:
+      recipe['globals']['all_args'] = all_args
     if yara_rules:
       recipe['globals']['yara_rules'] = yara_rules
 
@@ -245,13 +255,15 @@ class BaseTurbiniaClient:
 
   def create_request(
       self, request_id=None, group_id=None, requester=None, recipe=None,
-      context=None, evidence_=None):
+      context=None, evidence_=None, group_name=None, reason=None,
+      all_args=None):
     """Wrapper method to create a Turbinia request."""
     default_recipe = self.create_recipe()
     request = TurbiniaRequest(
         request_id=request_id, group_id=group_id, requester=requester,
         recipe=recipe if recipe else default_recipe, context=context,
-        evidence_=evidence_)
+        evidence=evidence_, group_name=group_name, reason=reason,
+        all_args=all_args)
     return request
 
   def list_jobs(self):

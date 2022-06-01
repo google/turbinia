@@ -27,7 +27,7 @@ from turbinia.workers import TurbiniaTask
 class FileArtifactExtractionTask(TurbiniaTask):
   """Task to run image_export (log2timeline)."""
 
-  REQUIRED_STATES = [state.ATTACHED]
+  REQUIRED_STATES = [state.ATTACHED, state.CONTAINER_MOUNTED]
 
   def __init__(self, artifact_name='FileArtifact'):
     super(FileArtifactExtractionTask, self).__init__()

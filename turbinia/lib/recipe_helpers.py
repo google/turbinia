@@ -36,6 +36,9 @@ DEFAULT_GLOBALS_RECIPE = {
     'yara_rules': '',
     'filter_patterns': [],
     'sketch_id': None,
+    'group_name': '',
+    'reason': '',
+    'all_args': '',
     'group_id': ''
 }
 

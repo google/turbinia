@@ -25,11 +25,12 @@ from turbinia import TurbiniaException
 log = logging.getLogger('turbinia')
 
 
-def Enumerate(evidence):
+def Enumerate(evidence, location=None):
   """Uses dfVFS to enumerate partitions in a disk / image.
 
   Args:
     evidence: Evidence object to be scanned.
+    location: dfVFS partition location to be scanned
 
   Raises:
     TurbiniaException if source evidence can't be scanned.
@@ -40,6 +41,17 @@ def Enumerate(evidence):
   options = volume_scanner.VolumeScannerOptions()
   options.partitions = ['all']
   options.volumes = ['all']
+  if location:
+    log.debug(
+        'Scanning {0:s} for partition at location {1!s}'.format(
+            evidence.name, location))
+    # APFS and LVM are volumes rather than partitions.
+    if location.find('apfs') != -1 or location.find('lvm') != -1:
+      options.volumes = [location.replace('/', '')]
+    elif location in ('/', '\\'):
+      options.partitions = [location]
+    else:
+      options.partitions = [location.replace('/', '')]
   # Not processing volume snapshots
   options.snapshots = ['none']
   options.credentials = evidence.credentials
@@ -75,30 +87,3 @@ def GetPartitionEncryptionType(path_spec):
   if path_spec.parent.type_indicator == dfvfs_definitions.TYPE_INDICATOR_BDE:
     encryption_type = 'BDE'
   return encryption_type
-
-
-def GetPathSpecByLocation(path_specs, location):
-  """Finds a path_spec from a list of path_specs for a given location.
-
-  Args:
-    path_specs (list[dfVFS.path_spec]): List of path_specs from volume scanner.
-    location (str): dfVFS location to search for.
-
-  Returns:
-    dfVFS.path_spec for the given location or None if not found.
-  """
-  for path_spec in path_specs:
-    child_path_spec = path_spec
-    fs_location = getattr(path_spec, 'location', None)
-    if fs_location and fs_location == location:
-      return child_path_spec
-    while path_spec.HasParent():
-      type_indicator = path_spec.type_indicator
-      if type_indicator in dfvfs_definitions.VOLUME_SYSTEM_TYPE_INDICATORS:
-        fs_location = getattr(path_spec, 'location', None)
-        break
-      path_spec = path_spec.parent
-    if fs_location == location:
-      return child_path_spec
-  log.error('Could not find path_spec for location {0:s}'.format(location))
-  return None

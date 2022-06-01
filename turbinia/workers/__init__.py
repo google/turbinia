@@ -434,12 +434,15 @@ class TurbiniaTask:
       recipe (dict): Validated recipe to be used as the task configuration.
       task_config (dict): Default task configuration, in effect if
             no recipe is explicitly provided for the task.
+      group_name (str): group name for the evidence
+      reason (str): reason of the evidence
+      all_args (str): Terminal arguments input by user for evidence
   """
 
   # The list of attributes that we will persist into storage
   STORED_ATTRIBUTES = [
       'id', 'job_id', 'last_update', 'name', 'request_id', 'requester',
-      'group_id'
+      'group_name', 'reason', 'all_args', 'group_id'
   ]
 
   # The list of evidence states that are required by a Task in order to run.
@@ -452,7 +455,7 @@ class TurbiniaTask:
 
   def __init__(
       self, name=None, base_output_dir=None, request_id=None, requester=None,
-      group_id=None):
+      group_name=None, reason=None, all_args=None, group_id=None):
     """Initialization for TurbiniaTask.
     
     Args:
@@ -485,6 +488,9 @@ class TurbiniaTask:
     self._evidence_config = {}
     self.recipe = {}
     self.task_config = {}
+    self.group_name = group_name
+    self.reason = reason
+    self.all_args = all_args
     self.group_id = group_id
 
   def serialize(self):

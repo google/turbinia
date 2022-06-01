@@ -25,9 +25,10 @@ from turbinia.evidence import BodyFile
 
 if TurbiniaTask.check_worker_role():
   try:
+    from dfimagetools import bodyfile
+    from dfimagetools import file_entry_lister
     from dfvfs.helpers import volume_scanner
     from dfvfs.lib import errors as dfvfs_errors
-    from dfimagetools import file_entry_lister
   except ImportError as exception:
     message = 'Could not import libraries: {0!s}'.format(exception)
     raise TurbiniaException(message)
@@ -57,7 +58,21 @@ class FileSystemTimelineTask(TurbiniaTask):
     # Set things up for the FileEntryLister client. We will scan all
     # partitions in the volume.
     volume_scanner_options = volume_scanner.VolumeScannerOptions()
-    volume_scanner_options.partitions = self.task_config.get('partitions')
+    config_partitions = self.task_config.get('partitions')
+    if config_partitions is None or (len(config_partitions) == 1 and
+                                     config_partitions[0] == 'all'):
+      volume_scanner_options.partitions = ['all']
+      volume_scanner_options.volumes = ['all']
+    else:
+      volume_scanner_options.partitions = []
+      volume_scanner_options.volumes = []
+      for partition in config_partitions:
+        if partition.find('apfs') != -1 or partition.find('lvm') != -1:
+          volume_scanner_options.volumes.append(partition)
+        else:
+          volume_scanner_options.partitions.append(partition)
+    volume_scanner_options.snapshots = ['none']
+    volume_scanner_options.credentials = evidence.credentials
 
     # Create the FileEntryLister client and generate the path specs
     # for all available partitions.
@@ -79,18 +94,16 @@ class FileSystemTimelineTask(TurbiniaTask):
       result.close(self, success=False, status=status)
       return result
 
-    file_entries = enumerate(entry_lister.ListFileEntries(base_path_specs))
-    while file_entries:
+    for base_path_spec in base_path_specs:
+      file_entries_generator = entry_lister.ListFileEntries([base_path_spec])
+      bodyfile_generator = bodyfile.BodyfileGenerator()
       try:
-        _, (file_entry, path_segments) = next(file_entries)
-        bodyfile_entries = entry_lister.GetBodyfileEntries(
-            file_entry, path_segments)
-        for bodyfile_entry in bodyfile_entries:
-          bodyfile_fileobj.write(bodyfile_entry)
-          bodyfile_fileobj.write('\n')
-          number_of_entries += 1
-      except StopIteration:
-        break
+        for file_entry, path_segments in file_entries_generator:
+          for bodyfile_entry in bodyfile_generator.GetEntries(file_entry,
+                                                              path_segments):
+            bodyfile_fileobj.write(bodyfile_entry)
+            bodyfile_fileobj.write('\n')
+            number_of_entries += 1
       except (dfvfs_errors.AccessError, dfvfs_errors.BackEndError,
               dfvfs_errors.MountPointError, dfvfs_errors.PathSpecError,
               IOError) as exception:

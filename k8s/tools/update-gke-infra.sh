@@ -137,7 +137,7 @@ function update_env {
 
 }
 
-function update_to_latest {
+function rollout_restart {
     DEPLOYMENTS=$(kubectl get deployments --output=jsonpath={.items..metadata.name})
 
     # rollout each deployment
@@ -174,6 +174,9 @@ function update_docker_image_tag {
 
     # Update the turbinia-worker deployment
     $KUBECTL set image deployment/turbinia-worker worker=$WORKER_URI:$DOCKER_TAG
+
+    # Restart Turbinia Server/Worker Deployments so changes can apply
+    rollout_restart
 }
 
 while getopts ":c:n:s:t:f:v:k:" option; do
@@ -269,8 +272,5 @@ case $CMD in
             exit 1
         fi
         resize_cluster
-        ;;
-    update-latest)
-        update_to_latest
         ;;
 esac
