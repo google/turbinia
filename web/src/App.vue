@@ -57,7 +57,13 @@ limitations under the License.
               Refresh Request List
             </v-tooltip>
           </v-card-title>
-          <v-data-table :headers="headers" :items="this.requestSummary" :search="search"></v-data-table>
+          <v-data-table
+            :headers="headers"
+            :items="this.requestSummary"
+            :search="search"
+            :footer-props="{ itemsPerPageOptions: [10, 20, 40, -1] }"
+          >
+          </v-data-table>
         </v-card>
       </div>
     </v-main>
