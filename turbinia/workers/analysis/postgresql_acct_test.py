@@ -27,9 +27,7 @@ class PostgresAcctAnalysisTaskTest(TestTurbiniaTaskBase):
 
   TEST_DATA_DIR = None
 
-  EXPECTED_CREDENTIALS = {
-    '5f4dcc3b5aa765d61d8327deb882cf99': 'postgres'
-  }
+  EXPECTED_CREDENTIALS = {'5f4dcc3b5aa765d61d8327deb882cf99': 'postgres'}
 
   POSTGRES_REPORT = """#### **PostgreSQL analysis found 1 weak password(s)**
 * **1 weak password(s) found:**

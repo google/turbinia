@@ -175,10 +175,9 @@ class PostgresAccountAnalysisTask(TurbiniaTask):
     for location in locations:
       dir = os.path.normpath(evidence.local_path + location)
       try:
-        grep = subprocess.run([
-            'sudo', 'egrep', '-hari', r'md5[a-zA-Z0-9]{32}',
-            dir
-        ], check=False, text=False, capture_output=True)
+        grep = subprocess.run(
+            ['sudo', 'egrep', '-hari', r'md5[a-zA-Z0-9]{32}', dir], check=False,
+            text=False, capture_output=True)
         if grep.returncode != 0:
           continue
       except subprocess.CalledProcessError as e:
