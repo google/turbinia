@@ -1,0 +1,11 @@
+#
+# To run yapf for this project, invoke as such from the base directory:
+#     yapf -i -r --style .style.yapf ./turbinia/
+#
+[style]
+based_on_style = yapf
+COALESCE_BRACKETS = True
+SPLIT_BEFORE_FIRST_ARGUMENT = True
+SPLIT_PENALTY_AFTER_OPENING_BRACKET = 0
+SPLIT_PENALTY_FOR_ADDED_LINE_SPLIT = 30
+SPLIT_BEFORE_NAMED_ASSIGNS = False
