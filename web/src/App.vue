@@ -59,7 +59,7 @@ limitations under the License.
           </v-card-title>
           <v-data-table
             :headers="headers"
-            :items="this.requestSummary"
+            :items="requestSummary"
             :search="search"
             :footer-props="{ itemsPerPageOptions: [10, 20, 40, -1] }"
           >
