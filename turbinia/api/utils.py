@@ -38,8 +38,7 @@ def create_zip(request_id: str, task_id: str):
     HTTPException if the request/task output paths could not be found
         on the file system.
   """
-  log_path = turbinia_config.SerializeConfig(
-      turbinia_config.LoadConfig()).get('OUTPUT_DIR')
+  log_path = turbinia_config.toJSON().get('OUTPUT_DIR')
 
   request_output_path = '{}/{}'.format(log_path, request_id)
   if task_id:

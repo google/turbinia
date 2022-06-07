@@ -31,6 +31,7 @@ class RequestStatus(BaseModel):
   """Represents a Turbinia request status object."""
   request_id: str = None
   tasks: List[Dict] = []
+  reason: str = None
   requester: str = None
   last_task_update_time: str = None
   status: str = None
@@ -70,6 +71,7 @@ class RequestStatus(BaseModel):
       self.requester = task.get('requester')
       self.task_count = len(tasks)
       task_last_update = datetime.datetime.timestamp(task.get('last_update'))
+
       if not self.last_task_update_time:
         self.last_task_update_time = task_last_update
       else:
@@ -83,6 +85,8 @@ class RequestStatus(BaseModel):
             self.running_tasks += 1
         else:
           self.failed_tasks += 1
+      task['last_update'] = task['last_update'].strftime(
+          turbinia_config.DATETIME_FORMAT)
 
     if self.running_tasks > 0:
       self.status = 'running'
@@ -94,7 +98,7 @@ class RequestStatus(BaseModel):
       self.status = 'completed_with_errors'
 
     self.last_task_update_time = datetime.datetime.fromtimestamp(
-        self.last_task_update_time).isoformat()
+        self.last_task_update_time).strftime(turbinia_config.DATETIME_FORMAT)
 
     return bool(self.tasks)
 

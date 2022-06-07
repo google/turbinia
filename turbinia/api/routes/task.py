@@ -16,33 +16,30 @@
 
 import logging
 
-from typing import Dict
-
 from fastapi import HTTPException, APIRouter
 from pydantic import ValidationError
 
 from turbinia import state_manager
 from turbinia import config as turbinia_config
 
-from fastapi import HTTPException, APIRouter
-from pydantic import ValidationError
-
-
 log = logging.getLogger('turbinia:api_server:task')
 
 router = APIRouter(prefix='/task', tags=['Turbinia Tasks'])
 
 
-@router.get("/{task_id}", response_model=Dict)
+@router.get("/{task_id}")
 async def get_task_status(task_id: str):
   """Retrieve task information."""
   try:
     _state_manager = state_manager.get_state_manager()
     tasks = _state_manager.get_task_data(
         instance=turbinia_config.INSTANCE_ID, task_id=task_id)
-    task = tasks[0]
-    if task:
-      return task
+    if tasks:
+      task = tasks[0]
+      if task:
+        task['last_update'] = task['last_update'].strftime(
+            turbinia_config.DATETIME_FORMAT)
+        return task
     return HTTPException(status_code=404, detail='Task ID not found')
   except ValidationError as exception:
     log.error('Error retrieving task information: {}'.format(exception))

@@ -99,8 +99,11 @@ async def create_request(input_request: request.Request):
   """
   client = turbinia_client.get_turbinia_client()
   evidence_list = []
-  request_id = request.request_id
-  group_id = request.group_id
+  request_id = input_request.request_id
+  group_id = input_request.group_id
+  print(group_id)
+  requester = input_request.requester
+  reason = input_request.reason
   recipe = None
 
   try:
@@ -160,14 +163,15 @@ async def create_request(input_request: request.Request):
         group_id=group_id, recipe_name=recipe_name,
         filter_patterns=input_request.evidence_options.filter_patterns,
         yara_rules=input_request.evidence_options.filter_patterns,
-        sketch_id=request.sketch_id)
-    if request.job_options.turbinia_recipe:
-      recipe = client.create_recipe(
-          recipe_name=request.job_options.turbinia_recipe)
+        sketch_id=input_request.sketch_id)
+
+    #if input_request.evidence_options.turbinia_recipe:
+    #  recipe = client.create_recipe(
+    #      recipe_name=input_request.evidence_options.turbinia_recipe)
 
     request_out = client.create_request(
-        evidence_=evidence_list, request_id=request_id, recipe=recipe,
-        group_id=group_id, requester='test')
+        evidence_=evidence_list, request_id=request_id, reason=reason,
+        recipe=recipe, group_id=group_id, requester=requester)
 
     client.send_request(request_out)
 
