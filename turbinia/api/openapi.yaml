@@ -21,7 +21,7 @@ components:
         name:
           title: Name
           type: string
-        sketcH_id:
+        sketch_id:
           title: Sketch Id
           type: integer
         source_path:
@@ -38,18 +38,18 @@ components:
     EvidenceTypesEnum:
       description: Enum of Turbinia Evidence types.
       enum:
-        - compresseddirectory
-        - directory
-        - googleclouddiskembedded
-        - googleclouddisk
-        - rawdisk
+      - compresseddirectory
+      - directory
+      - googleclouddiskembedded
+      - googleclouddisk
+      - rawdisk
       title: EvidenceTypesEnum
       type: string
     HTTPValidationError:
       properties:
         detail:
           items:
-            $ref: "#/components/schemas/ValidationError"
+            $ref: '#/components/schemas/ValidationError'
           title: Detail
           type: array
       title: HTTPValidationError
@@ -62,20 +62,29 @@ components:
           title: Description
           type: string
         evidence_options:
-          $ref: "#/components/schemas/BaseEvidenceOptions"
+          $ref: '#/components/schemas/BaseEvidenceOptions'
         evidence_type:
-          $ref: "#/components/schemas/EvidenceTypesEnum"
+          $ref: '#/components/schemas/EvidenceTypesEnum'
         group_id:
           description: Turbinia group identifier
           title: Group Id
+          type: string
+        reason:
+          title: Reason
           type: string
         request_id:
           description: Turbinia request identifier
           title: Request Id
           type: string
+        requester:
+          title: Requester
+          type: string
+        sketch_id:
+          title: Sketch Id
+          type: string
       required:
-        - evidence_type
-        - evidence_options
+      - evidence_type
+      - evidence_options
       title: Request
       type: object
     RequestStatus:
@@ -87,6 +96,9 @@ components:
           type: integer
         last_task_update_time:
           title: Last Task Update Time
+          type: string
+        reason:
+          title: Reason
           type: string
         request_id:
           title: Request Id
@@ -123,7 +135,7 @@ components:
         requests_status:
           default: []
           items:
-            $ref: "#/components/schemas/RequestStatus"
+            $ref: '#/components/schemas/RequestStatus'
           title: Requests Status
           type: array
       title: RequestsSummary
@@ -133,8 +145,8 @@ components:
         loc:
           items:
             anyOf:
-              - type: string
-              - type: integer
+            - type: string
+            - type: integer
           title: Location
           type: array
         msg:
@@ -144,9 +156,9 @@ components:
           title: Error Type
           type: string
       required:
-        - loc
-        - msg
-        - type
+      - loc
+      - msg
+      - type
       title: ValidationError
       type: object
 info:
@@ -163,57 +175,56 @@ paths:
       description: Retrieve turbinia config.
       operationId: read_config
       responses:
-        "200":
+        '200':
           content:
             application/json:
               schema: {}
           description: Successful Response
       summary: Read Config
       tags:
-        - Turbinia Configuration
+      - Turbinia Configuration
   /jobs/:
     get:
       description: Return all available jobs.
       operationId: read_jobs
       responses:
-        "200":
+        '200':
           content:
             application/json:
               schema: {}
           description: Successful Response
       summary: Read Jobs
       tags:
-        - Turbinia Jobs
+      - Turbinia Jobs
   /logs/{query}:
     get:
       description: Retrieve log data.
       operationId: get_logs
       parameters:
-        - in: path
-          name: query
-          required: true
-          schema:
-            title: Query
-            type: string
+      - in: path
+        name: query
+        required: true
+        schema:
+          title: Query
+          type: string
       responses:
-        "200":
+        '200':
           content:
             application/json:
               schema: {}
           description: Successful Response
-        "422":
+        '422':
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/HTTPValidationError"
+                $ref: '#/components/schemas/HTTPValidationError'
           description: Validation Error
       summary: Get Logs
       tags:
-        - Logs
+      - Logs
   /request/:
     post:
-      description:
-        "Create a new Turbinia request.\n\nArgs:\n  request (turbinia.api.schema.request):\
+      description: "Create a new Turbinia request.\n\nArgs:\n  request (turbinia.api.schema.request):\
         \ JSON object from the HTTP POST data\n      matching the schema defined for\
         \ a Turbinia Request. The schema is used\n      by pydantic for field validation.\n\
         \nRaises:\n  ValidationError: if the Request object contains invalid data."
@@ -222,147 +233,143 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/Request"
+              $ref: '#/components/schemas/Request'
         required: true
       responses:
-        "200":
+        '200':
           content:
             application/json:
               schema: {}
           description: Successful Response
-        "422":
+        '422':
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/HTTPValidationError"
+                $ref: '#/components/schemas/HTTPValidationError'
           description: Validation Error
       summary: Create Request
       tags:
-        - Turbinia Requests
+      - Turbinia Requests
   /request/summary:
     get:
-      description:
-        "Retrieves a summary of all Turbinia requests.\n\nThe response\
+      description: "Retrieves a summary of all Turbinia requests.\n\nThe response\
         \ is validated against the RequestSummary model.\n\nRaises:\n  HTTPException:\
         \ if another exception is caught."
       operationId: get_requests_summary
       responses:
-        "200":
+        '200':
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/RequestsSummary"
+                $ref: '#/components/schemas/RequestsSummary'
           description: Successful Response
       summary: Get Requests Summary
       tags:
-        - Turbinia Requests
+      - Turbinia Requests
   /request/{request_id}:
     get:
-      description:
-        "Retrieves status for a Turbinia Request.\n\nArgs:\n  request_id\
+      description: "Retrieves status for a Turbinia Request.\n\nArgs:\n  request_id\
         \ (str): A Turbinia request identifier.\n\nRaises:\n  HTTPException: if another\
         \ exception is caught."
       operationId: get_request_status
       parameters:
-        - in: path
-          name: request_id
-          required: true
-          schema:
-            title: Request Id
-            type: string
+      - in: path
+        name: request_id
+        required: true
+        schema:
+          title: Request Id
+          type: string
       responses:
-        "200":
+        '200':
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/RequestStatus"
+                $ref: '#/components/schemas/RequestStatus'
           description: Successful Response
-        "422":
+        '422':
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/HTTPValidationError"
+                $ref: '#/components/schemas/HTTPValidationError'
           description: Validation Error
       summary: Get Request Status
       tags:
-        - Turbinia Requests
+      - Turbinia Requests
   /result/request/{request_id}:
     get:
       description: Retrieve request status output.
       operationId: get_request_output
       parameters:
-        - in: path
-          name: request_id
-          required: true
-          schema:
-            title: Request Id
-            type: string
+      - in: path
+        name: request_id
+        required: true
+        schema:
+          title: Request Id
+          type: string
       responses:
-        "200":
+        '200':
           content:
             application/json:
               schema: {}
           description: Successful Response
-        "422":
+        '422':
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/HTTPValidationError"
+                $ref: '#/components/schemas/HTTPValidationError'
           description: Validation Error
       summary: Get Request Output
       tags:
-        - Turbinia Request Results
+      - Turbinia Request Results
   /result/task/{task_id}:
     get:
       description: Retrieves a task's output files.
       operationId: get_task_output
       parameters:
-        - in: path
-          name: task_id
-          required: true
-          schema:
-            title: Task Id
-            type: string
+      - in: path
+        name: task_id
+        required: true
+        schema:
+          title: Task Id
+          type: string
       responses:
-        "200":
+        '200':
           content:
             application/json:
               schema: {}
           description: Successful Response
-        "422":
+        '422':
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/HTTPValidationError"
+                $ref: '#/components/schemas/HTTPValidationError'
           description: Validation Error
       summary: Get Task Output
       tags:
-        - Turbinia Request Results
+      - Turbinia Request Results
   /task/{task_id}:
     get:
       description: Retrieve task information.
       operationId: get_task_status
       parameters:
-        - in: path
-          name: task_id
-          required: true
-          schema:
-            title: Task Id
-            type: string
+      - in: path
+        name: task_id
+        required: true
+        schema:
+          title: Task Id
+          type: string
       responses:
-        "200":
+        '200':
           content:
             application/json:
-              schema:
-                title: Response Get Task Status Task  Task Id  Get
-                type: object
+              schema: {}
           description: Successful Response
-        "422":
+        '422':
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/HTTPValidationError"
+                $ref: '#/components/schemas/HTTPValidationError'
           description: Validation Error
       summary: Get Task Status
       tags:
-        - Turbinia Tasks
+      - Turbinia Tasks
