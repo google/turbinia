@@ -88,6 +88,9 @@ class RequestStatus(BaseModel):
       task['last_update'] = task['last_update'].strftime(
           turbinia_config.DATETIME_FORMAT)
 
+    self.last_task_update_time = datetime.datetime.fromtimestamp(
+        self.last_task_update_time).strftime(turbinia_config.DATETIME_FORMAT)
+
     if self.running_tasks > 0:
       self.status = 'running'
     elif self.failed_tasks == self.task_count:
@@ -96,9 +99,6 @@ class RequestStatus(BaseModel):
       self.status = 'successful'
     else:
       self.status = 'completed_with_errors'
-
-    self.last_task_update_time = datetime.datetime.fromtimestamp(
-        self.last_task_update_time).strftime(turbinia_config.DATETIME_FORMAT)
 
     return bool(self.tasks)
 

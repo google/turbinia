@@ -14,6 +14,7 @@
 # limitations under the License.
 """Turbinia API Server helper methods."""
 
+import logging
 import mmap
 import shutil
 import tempfile
@@ -21,6 +22,8 @@ import os
 
 from fastapi import HTTPException
 from turbinia import config as turbinia_config
+
+log = logging.getLogger('turbinia:api_server:utils')
 
 
 def create_zip(request_id: str, task_id: str):
@@ -42,14 +45,20 @@ def create_zip(request_id: str, task_id: str):
 
   request_output_path = '{}/{}'.format(log_path, request_id)
   if task_id:
-    request_dirs = os.listdir(request_output_path)
+    try:
+      request_dirs = os.listdir(request_output_path)
+    except FileNotFoundError as exception:
+      log.error('Output path could not be found: {}'.format(exception))
+      raise HTTPException(
+          status_code=404, detail='Output path could not be found.')
+
     for request_dir in request_dirs:
       if task_id in request_dir:
         request_output_path = '{}/{}'.format(request_output_path, request_dir)
 
   if not os.path.exists(request_output_path):
     raise HTTPException(
-        status_code=404, detail='Request output path could not be found.')
+        status_code=404, detail='Output path could not be found.')
 
   # Create a temporary directory to store the zip file
   # containing the request result files.
