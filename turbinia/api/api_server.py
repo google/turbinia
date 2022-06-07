@@ -23,6 +23,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.routing import APIRoute
 from fastapi.responses import Response
+from fastapi.staticfiles import StaticFiles
 
 from turbinia import config
 from turbinia.api.routes.router import router
@@ -63,6 +64,9 @@ app.add_middleware(
 )
 set_operation_ids(app)
 
+
+# app.mount("/js", StaticFiles(directory="../../web/dist/js"), name="/js")
+# app.mount("/css", StaticFiles(directory="../../web/dist/css"), name="/css")
 
 class TurbiniaAPIServer:
   """Turbinia API server."""

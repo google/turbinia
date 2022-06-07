@@ -26,6 +26,7 @@ log = logging.getLogger('turbinia:api_server:result')
 
 router = APIRouter(prefix='/result', tags=['Turbinia Request Results'])
 
+
 @router.get("/task/{task_id}")
 async def get_task_output(task_id: str):
   """Retrieves a task's output files."""
@@ -43,6 +44,7 @@ async def get_task_output(task_id: str):
       data, media_type='application/x-zip-compressed', headers={
           "Content-Disposition": 'attachment;filename={}.zip'.format(task_id)
       })
+
 
 @router.get("/request/{request_id}")
 async def get_request_output(request_id: str):

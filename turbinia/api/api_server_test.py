@@ -97,3 +97,19 @@ class testTurbiniaAPIServer(unittest.TestCase):
     config_dict = config.toJSON()
     response = self.client.get('/config')
     self.assertEqual(response.json(), config_dict)
+
+  def testRequestResults(self):
+    """Test getting request result files."""
+    response = self.client.get(
+        '/result/request/{}'.format(self._REQUEST_TEST_DATA.get('request_id')))
+    self.assertEqual(response.status_code, 404)
+    self.assertEqual(
+        response.json(), {'detail': 'Output path could not be found.'})
+
+  def testTaskResults(self):
+    """Test getting task result files."""
+    response = self.client.get(
+        '/result/task/{}'.format(self._TASK_TEST_DATA.get('id')))
+    self.assertEqual(response.status_code, 404)
+    self.assertEqual(
+        response.json(), {'detail': 'Output path could not be found.'})

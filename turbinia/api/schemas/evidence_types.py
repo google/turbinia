@@ -15,6 +15,8 @@
 """Turbinia evidence types enum."""
 
 from enum import Enum
+
+
 class EvidenceTypesEnum(str, Enum):
   """Enum of Turbinia Evidence types."""
   compresseddirectory = 'compresseddirectory'

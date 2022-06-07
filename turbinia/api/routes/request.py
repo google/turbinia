@@ -46,18 +46,14 @@ async def get_requests_summary():
   requests_summary = request_status.RequestsSummary()
   try:
     if not requests_summary.get_requests_summmary():
-      raise HTTPException(
-          status_code=500, detail='Unable to generate requests status summary.')
+      return JSONResponse(
+          content={'detail': 'Request summary is empty'}, status_code=200)
     return requests_summary
   except (ValidationError, ValueError, TypeError) as exception:
     log.error('Error retrieving requests summary: {}'.format(exception))
     raise HTTPException(
         status_code=500,
         detail='Error retrieving requests summary') from exception
-  except Exception as exception:
-    log.error('An unexpected error occurred: {}'.format(exception))
-    raise HTTPException(
-        status_code=500, detail='An unknown error occurred.') from exception
 
 
 @router.get("/{request_id}", response_model=request_status.RequestStatus)
