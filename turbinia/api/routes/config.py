@@ -31,8 +31,7 @@ router = APIRouter(prefix='/config', tags=['Turbinia Configuration'])
 async def read_config():
   """Retrieve turbinia config."""
   try:
-    current_config = turbinia_config.SerializeConfig(
-        turbinia_config.LoadConfig())
+    current_config = turbinia_config.toJSON()
     if current_config:
       return JSONResponse(content=current_config, status_code=200)
   except (json.JSONDecodeError, TypeError) as exception:

@@ -23,7 +23,10 @@ from typing import Optional
 class Request(BaseModel):
   """Base request object."""
   description: Optional[str] = 'Turbinia request object'
+  reason: Optional[str] = None
   request_id: Optional[str] = Field(description='Turbinia request identifier')
+  requester: Optional[str] = None
   group_id: Optional[str] = Field(description='Turbinia group identifier')
   evidence_type: evidence_types.EvidenceTypesEnum
   evidence_options: evidence_options.BaseEvidenceOptions
+  sketch_id: Optional[str] = None

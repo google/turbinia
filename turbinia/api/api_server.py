@@ -20,6 +20,7 @@ import uvicorn
 import yaml
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.routing import APIRoute
 from fastapi.responses import Response
 
@@ -38,7 +39,6 @@ def get_application():
           'name': 'Apache License 2.0',
           'url': 'https://www.apache.org/licenses/LICENSE-2.0.html'
       }, routes=router.routes)
-  #})
   return _app
 
 
@@ -53,6 +53,14 @@ def set_operation_ids(app: FastAPI):
 
 
 app = get_application()
+origins = ["http://localhost:8080", "http://localhost"]
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 set_operation_ids(app)
 
 
@@ -60,7 +68,7 @@ class TurbiniaAPIServer:
   """Turbinia API server."""
 
   def __init__(self, app=None, router=None):
-    self.app = app if app else self.get_application()
+    self.app = app if app else get_application()
     self.router = router
     self.openapi_spec = self.app.openapi()
     #self.set_operation_ids()
