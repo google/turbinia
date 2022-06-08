@@ -84,7 +84,7 @@ async def get_request_status(request_id: str):
 @router.post("/")
 async def create_request(input_request: request.Request):
   """Create a new Turbinia request.
-  
+
   Args:
     request (turbinia.api.schema.request): JSON object from the HTTP POST data
         matching the schema defined for a Turbinia Request. The schema is used

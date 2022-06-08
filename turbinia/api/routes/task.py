@@ -40,13 +40,9 @@ async def get_task_status(task_id: str):
         task['last_update'] = task['last_update'].strftime(
             turbinia_config.DATETIME_FORMAT)
         return task
-    return HTTPException(status_code=404, detail='Task ID not found')
+    raise HTTPException(status_code=404, detail='Task ID not found')
   except ValidationError as exception:
     log.error('Error retrieving task information: {}'.format(exception))
     raise HTTPException(
         status_code=500,
         detail='Error retrieving task information') from exception
-  except Exception as exception:
-    log.error('An unexpected error occurred: {}'.format(exception))
-    raise HTTPException(
-        status_code=500, detail='An unknown error occurred.') from exception
