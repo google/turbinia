@@ -30,7 +30,7 @@ router = APIRouter(prefix='/jobs', tags=['Turbinia Jobs'])
 
 @router.get("/")
 async def read_jobs():
-  """Return all available jobs."""
+  """Return all enabled jobs."""
   try:
 
     jobs = jobs_enum.JobsEnum.get_values()
