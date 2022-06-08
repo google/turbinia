@@ -17,6 +17,7 @@
 import logging
 
 from fastapi import APIRouter
+from fastapi.responses import JSONResponse
 
 log = logging.getLogger('turbinia:api_server:logs')
 
@@ -26,4 +27,5 @@ router = APIRouter(prefix='/logs', tags=['Logs'])
 @router.get("/{query}")
 async def get_logs(query: str):
   """Retrieve log data."""
-  return {}
+  return JSONResponse(
+      content={'detail': 'Not implemented yet.'}, status_code=200)
