@@ -18,6 +18,7 @@ import io
 import logging
 import uvicorn
 import yaml
+import os
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -43,7 +44,7 @@ def get_application():
   return _app
 
 
-def set_operation_ids(app: FastAPI):
+def set_operation_ids(app):
   """Simplify operation IDs so that generated API clients have
     simpler function names.
     Should be called only after all routes have been added.
@@ -53,20 +54,32 @@ def set_operation_ids(app: FastAPI):
       route.operation_id = route.name
 
 
+def serve_static_content(ap):
+  """Configure the application to serve static content.
+    
+  This method must be called after all routes have been initialized.
+  """
+  root_content_path = os.path.realpath('../../web')
+  css_content_path = os.path.join(root_content_path, 'css')
+  js_content_path = os.path.join(root_content_path, 'js')
+
+  app.mount("/", StaticFiles(directory=root_content_path), name="/")
+  app.mount("/css", StaticFiles(directory=css_content_path), name="/css")
+  app.mount("/js", StaticFiles(directory=js_content_path), name="/js")
+
+
 app = get_application()
-origins = ["http://localhost:8080", "http://localhost"]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=config.API_ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 set_operation_ids(app)
+#serve_static_content(app)
 
-
-# app.mount("/js", StaticFiles(directory="../../web/dist/js"), name="/js")
-# app.mount("/css", StaticFiles(directory="../../web/dist/css"), name="/css")
 
 class TurbiniaAPIServer:
   """Turbinia API server."""
@@ -92,7 +105,7 @@ class TurbiniaAPIServer:
 
 @app.get('/docs/openapi.yaml', include_in_schema=False)
 def read_openapi_yaml():
-  """Serve the OpenAPI spec in YAML format."""
+  """Serve the OpenAPI specification in YAML format."""
   openapi_json = app.openapi()
   yaml_s = io.StringIO()
   yaml.dump(openapi_json, yaml_s)

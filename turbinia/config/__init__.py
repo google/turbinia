@@ -62,6 +62,10 @@ REQUIRED_VARS = [
     'DEPENDENCIES',
     'DOCKER_ENABLED',
     'DISABLED_JOBS',
+    # API SERVER CONFIG
+    'API_SERVER_ADDRESS',
+    'API_SERVER_PORT',
+    'API_ALLOWED_ORIGINS'
 ]
 
 # Optional config vars.  Some may be mandatory depending on the configuration

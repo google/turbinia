@@ -17,11 +17,9 @@
 import datetime
 import logging
 
-from typing import Optional, List, Dict
 from pydantic import BaseModel
+from typing import Optional, List, Dict
 from turbinia import state_manager
-
-from turbinia.api.models import task_status
 from turbinia import config as turbinia_config
 
 log = logging.getLogger('turbinia:api_server:routes:request')
@@ -62,8 +60,6 @@ class RequestStatus(BaseModel):
       for task in tasks:
         current_request_id = task.get('request_id')
         if current_request_id == request_id:
-          _task_status = task_status.TaskStatus()
-          _task_status.get_task_data_json(task)
           self.tasks.append(task)
 
     for task in tasks:

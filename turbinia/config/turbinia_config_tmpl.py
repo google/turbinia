@@ -97,6 +97,21 @@ DEBUG_TASKS = False
 RECIPE_FILE_DIR = None
 
 ################################################################################
+#                         Turbinia API Server configuration
+#
+# Options in this section are used to configure the API serrver.
+################################################################################
+
+# API server hostname or IP address to listen on
+API_SERVER_ADDRESS = '0.0.0.0'
+
+# API server port
+API_SERVER_PORT = 8000
+
+# Allowed CORS origins
+API_ALLOWED_ORIGINS = ['http;//localhost:8000', 'http://localhost']
+
+################################################################################
 #                         External Dependency Configurations
 #
 # Options in this section are used to configure system and docker dependencies.
