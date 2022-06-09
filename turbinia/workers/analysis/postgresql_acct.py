@@ -85,7 +85,7 @@ class PostgresAccountAnalysisTask(TurbiniaTask):
       result.close(self, success=False, status=str(e))
       return result
 
-  # 5) Bruteforce
+    # 5) Bruteforce
     timeout = self.task_config.get('bruteforce_timeout')
     (report, priority, summary) = self._analyse_postgres_creds(
         hashnames, timeout=timeout)
@@ -158,7 +158,6 @@ class PostgresAccountAnalysisTask(TurbiniaTask):
         raise TurbiniaException(
             'Unable to grep Postgres config file: {0:s}'.format(str(e)))
 
-    result.log('Returning {}'.format(data_dirs))
     return data_dirs
 
   def _extract_creds(self, locations, evidence):
