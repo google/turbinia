@@ -78,7 +78,7 @@ export default {
     return {
       search: '',
       headers: [
-        { text: 'Request ID', value: 'request_id' },
+        { text: 'Request', value: 'request_id' },
         { text: 'Last Task Update Time', value: 'last_task_update_time' },
         { text: 'Requester', value: 'requester' },
         { text: 'Total Tasks', value: 'total_tasks' },
@@ -103,7 +103,7 @@ export default {
           var requestSummary = []
           for (const req in data) {
             requestSummary.push({
-              request_id: data[req].request_id,
+              request_id: data[req].request_id + ' - ' + data[req].reason,
               last_task_update_time: data[req].last_task_update_time,
               requester: data[req].requester,
               total_tasks: data[req].task_count,
