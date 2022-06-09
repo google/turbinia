@@ -85,7 +85,7 @@ class PostgresAccountAnalysisTask(TurbiniaTask):
       result.close(self, success=False, status=str(e))
       return result
 
-    # 5) Bruteforce
+    # 4) Bruteforce
     timeout = self.task_config.get('bruteforce_timeout')
     (report, priority, summary) = self._analyse_postgres_creds(
         hashnames, timeout=timeout)
