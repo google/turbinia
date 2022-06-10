@@ -71,6 +71,7 @@ RUN mkdir -p /opt/loki && chown -R turbinia:turbinia /opt/loki \
     && sudo chown -R turbinia:turbinia /opt/loki \
     && git clone https://github.com/Neo23x0/signature-base.git
 
+COPY turbinia/config/rules/*.yar /opt/loki/signature-base/yara/
 
 RUN mkdir /etc/turbinia && mkdir -p /mnt/turbinia/ && mkdir -p /var/lib/turbinia/ \
     && mkdir -p /etc/turbinia/ && chown -R turbinia:turbinia /etc/turbinia/ \
