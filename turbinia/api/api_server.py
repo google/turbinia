@@ -100,6 +100,7 @@ def configure_authentication_providers(app):
   """
   raise NotImplementedError
 
+
 app = get_application()
 
 app.add_middleware(
