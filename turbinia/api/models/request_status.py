@@ -65,6 +65,7 @@ class RequestStatus(BaseModel):
     for task in tasks:
       self.request_id = task.get('request_id')
       self.requester = task.get('requester')
+      self.reason = task.get('reason')
       self.task_count = len(tasks)
       task_last_update = datetime.datetime.timestamp(task.get('last_update'))
 
@@ -75,12 +76,10 @@ class RequestStatus(BaseModel):
             self.last_task_update_time, task_last_update)
       if task.get('successful'):
         self.successful_tasks += 1
+      elif 'running' in task.get('status'):
+        self.running_tasks += 1
       else:
-        if task.get('status'):
-          if 'running' in task.get('status') or task.get('successful') is None:
-            self.running_tasks += 1
-        else:
-          self.failed_tasks += 1
+        self.failed_tasks += 1
       task['last_update'] = task['last_update'].strftime(
           turbinia_config.DATETIME_FORMAT)
 

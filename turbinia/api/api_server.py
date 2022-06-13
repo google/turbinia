@@ -16,15 +16,17 @@
 
 import io
 import logging
+import os
 import uvicorn
 import yaml
-import os
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.routing import APIRoute
 from fastapi.responses import Response
 from fastapi.staticfiles import StaticFiles
+
+from starlette_oauth2_api import AuthenticateMiddleware
 
 from turbinia import config
 from turbinia.api.routes.router import router
@@ -56,7 +58,7 @@ def set_operation_ids(app):
 
 def serve_static_content(ap):
   """Configure the application to serve static content.
-    
+
   This method must be called after all routes have been initialized.
   """
   root_content_path = os.path.realpath('../../web')
@@ -68,6 +70,36 @@ def serve_static_content(ap):
   app.mount("/js", StaticFiles(directory=js_content_path), name="/js")
 
 
+def configure_authentication_providers(app):
+  """Configure the application's authentication providers.
+
+  Example provider configuration using starlette-oauth2-pai:
+
+  app.add_middleware(
+      AuthenticateMiddleware,
+      providers={
+          'google-ui': {
+              'keys':
+                  'https://www.googleapis.com/oauth2/v3/certs',
+              'issuer':
+                  'https://accounts.google.com',
+              'audience':
+                  'GOOGLE_WEB_CLIENT_ID',
+          },
+          'cli-client': {
+              'keys':
+                  'https://www.googleapis.com/oauth2/v3/certs',
+              'issuer':
+                  'https://accounts.google.com',
+              'audience':
+                  'GOOGLE_NATIVE_CLIENT_ID',
+          }
+      },
+      public_paths={'/'},
+  )
+  """
+  raise NotImplementedError
+
 app = get_application()
 
 app.add_middleware(
@@ -77,6 +109,10 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+if config.API_AUTHENTICATION_ENABLED:
+  configure_authentication_providers(app)
+
 set_operation_ids(app)
 #serve_static_content(app)
 
@@ -88,7 +124,6 @@ class TurbiniaAPIServer:
     self.app = app if app else get_application()
     self.router = router
     self.openapi_spec = self.app.openapi()
-    #self.set_operation_ids()
 
   def start(self, app_name: str):
     """Runs the Turbinia API server
