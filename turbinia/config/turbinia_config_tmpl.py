@@ -111,6 +111,10 @@ API_SERVER_PORT = 8000
 # Allowed CORS origins
 API_ALLOWED_ORIGINS = ['http;//localhost:8000', 'http://localhost']
 
+# Enable/Disable API authentication. This will determine whether the API server will
+# check for OAuth 2.0 bearer tokens in the 'Authorization' header.
+API_AUTHENTICATION_ENABLED = False
+
 ################################################################################
 #                         External Dependency Configurations
 #

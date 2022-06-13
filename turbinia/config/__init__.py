@@ -65,7 +65,8 @@ REQUIRED_VARS = [
     # API SERVER CONFIG
     'API_SERVER_ADDRESS',
     'API_SERVER_PORT',
-    'API_ALLOWED_ORIGINS'
+    'API_ALLOWED_ORIGINS',
+    'API_AUTHENTICATION_ENABLED'
 ]
 
 # Optional config vars.  Some may be mandatory depending on the configuration
