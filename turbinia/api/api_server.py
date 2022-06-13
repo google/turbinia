@@ -56,7 +56,7 @@ def set_operation_ids(app):
       route.operation_id = route.name
 
 
-def serve_static_content(ap):
+def serve_static_content(app):
   """Configure the application to serve static content.
 
   This method must be called after all routes have been initialized.
