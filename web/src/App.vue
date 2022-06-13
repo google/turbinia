@@ -92,10 +92,12 @@ export default {
   },
   methods: {
     getRequest() {
+      console.log('Retrieving Request List Summary...')
       axios
-        .get('http://localhost:8000/request/summary')
+        .get('/request/summary')
         .then((response) => {
           if (response.status === 200) {
+            console.log('Successfully retrieved Request List.')
             return response.data['requests_status']
           }
         })
