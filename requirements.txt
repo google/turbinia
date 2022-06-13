@@ -14,7 +14,7 @@ google-cloud-storage<=2.2.1
 pycryptodomex
 prometheus_client
 libcloudforensics
-protobuf<3.18.0
+protobuf>=3.19.0,<4.0.0dev
 proto-plus<1.19.7
 psq
 pyparsing<3
