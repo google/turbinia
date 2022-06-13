@@ -184,11 +184,14 @@ def bruteforce_password_hashes(
   if not os.path.isfile(password_list_file_path):
     raise TurbiniaException('No password list available')
 
-  cmd = ['hashcat', '--force', '-a', '0']
+  cmd = ['hashcat', '--force', '-a', '1']
   if extra_args:
     cmd = cmd + extra_args.split(' ')
   cmd = cmd + ['--potfile-path={}'.format(pot_file)]
-  cmd = cmd + [password_hashes_file_path, password_list_file_path]
+  cmd = cmd + [
+      password_hashes_file_path, password_list_file_path,
+      password_list_file_path
+  ]
 
   with open(os.devnull, 'w') as devnull:
     try:
