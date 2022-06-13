@@ -65,7 +65,7 @@ def serve_static_content(app):
   css_content_path = os.path.join(root_content_path, 'css')
   js_content_path = os.path.join(root_content_path, 'js')
 
-  app.mount("/", StaticFiles(directory=root_content_path), name="/")
+  app.mount("/", StaticFiles(directory=root_content_path, html=True), name="/")
   app.mount("/css", StaticFiles(directory=css_content_path), name="/css")
   app.mount("/js", StaticFiles(directory=js_content_path), name="/js")
 
