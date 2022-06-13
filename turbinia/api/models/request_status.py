@@ -17,8 +17,8 @@
 import datetime
 import logging
 
-from pydantic import BaseModel
 from typing import Optional, List, Dict
+from pydantic import BaseModel
 from turbinia import state_manager
 from turbinia import config as turbinia_config
 

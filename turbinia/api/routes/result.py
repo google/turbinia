@@ -19,8 +19,8 @@ import logging
 from fastapi import HTTPException, APIRouter
 from fastapi.responses import Response
 from turbinia import config as turbinia_config
-from turbinia.api import utils as api_utils
 from turbinia import state_manager
+from turbinia.api import utils as api_utils
 
 log = logging.getLogger('turbinia:api_server:result')
 

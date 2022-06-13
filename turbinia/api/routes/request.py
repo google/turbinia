@@ -26,9 +26,7 @@ from turbinia import evidence
 from turbinia.api.schemas import evidence_types
 from turbinia.api.schemas import request
 from turbinia.api.models import request_status
-from pydantic import ValidationError
-from turbinia import TurbiniaException, client as turbinia_client
-from turbinia import evidence
+
 
 log = logging.getLogger('turbinia:api_server:models:request')
 router = APIRouter(prefix="/request", tags=["Turbinia Requests"])
