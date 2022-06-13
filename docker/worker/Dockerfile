@@ -32,6 +32,7 @@ RUN pip3 install requests --upgrade
 RUN pip3 install urllib3 cryptography --upgrade
 
 # Install third-party worker dependencies
+RUN pip3 install dfDewey
 # TODO(hacktobeer) uncomment when protobuf lib dependency if fixed upstream
 # RUN pip3 install pyhindsight
 

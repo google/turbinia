@@ -39,6 +39,12 @@ CLUSTER_MACHINE_SIZE='1000'
 FILESTORE_NAME='turbiniavolume'
 FILESTORE_CAPACITY='1T'
 
+# Filestore share names, and sizes for dfDewey datastores (if deployed).
+FILESTORE_DFDEWEY_NAME='dfdeweyvolume'
+FILESTORE_DFDEWEY_CAPACITY='6T'
+FILESTORE_PG_PATH='postgres'
+FILESTORE_OS_PATH='opensearch'
+
 # Any Jobs added to this list will be disabled by default at start-up. Job names
 # entered here are case insensitive, but must be quoted. 
-DISABLED_JOBS="['BinaryExtractorJob', 'BulkExtractorJob', 'DfdeweyJob', 'HindsightJob', 'PhotorecJob', 'VolatilityJob']"
+DISABLED_JOBS="['BinaryExtractorJob', 'BulkExtractorJob', 'HindsightJob', 'PhotorecJob', 'VolatilityJob']"
