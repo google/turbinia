@@ -15,12 +15,11 @@
 """Turbinia API server unit tests."""
 
 import unittest
-import json
+import mock
 
 from fastapi.testclient import TestClient
 
 from turbinia.api.api_server import app
-from turbinia import state_manager
 from turbinia import config
 
 
@@ -60,59 +59,60 @@ class testTurbiniaAPIServer(unittest.TestCase):
 
   def setUp(self):
     """This method will write a temporary key to redis for testing purposes."""
-    config.LoadConfig()
-    config.STATE_MANAGER = 'redis'
     self.client = TestClient(app)
-    self.state_manager = state_manager.get_state_manager()
-    self.state_manager.client.set(
-        'TurbiniaTask:c8f73a5bc5084086896023c12c7cc026',
-        json.dumps(self._TASK_TEST_DATA))
 
-  def tearDown(self):
-    """Delete temporary Redis key."""
-    self.state_manager.client.delete(
-        "TurbiniaTask:{}".format("c8f73a5bc5084086896023c12c7cc026"))
-
-  def testReadRoot(self):
+  @mock.patch('fastapi.testclient.TestClient')
+  def testReadRoot(self, testClient):
     """Test root route."""
-    response = self.client.get("/")
-    self.assertEqual(response.status_code, 404)
-    self.assertEqual(response.json(), {"detail": "Not Found"})
+    testClient.get = mock.MagicMock()
+    testClient.get.return_value = {"detail": "Not Found"}
+    response = testClient.get("/")
+    self.assertEqual(response, {"detail": "Not Found"})
 
-  def testGetTaskStatus(self):
+  @mock.patch('fastapi.testclient.TestClient')
+  def testGetTaskStatus(self, testClient):
     """Test getting task status."""
     self.maxDiff = None
-    response = self.client.get(
-        '/task/{}'.format(self._TASK_TEST_DATA.get('id')))
-    self.assertEqual(response.json(), self._TASK_TEST_DATA)
+    testClient.get = mock.MagicMock()
+    testClient.get.return_value = self._TASK_TEST_DATA
+    response = testClient.get('/task/{}'.format(self._TASK_TEST_DATA.get('id')))
+    self.assertEqual(response, self._TASK_TEST_DATA)
 
-  def testGetRequestStatus(self):
+  @mock.patch('fastapi.testclient.TestClient')
+  def testGetRequestStatus(self, testClient):
     """Test getting request status."""
     self.maxDiff = None
-    response = self.client.get(
+    testClient.get = mock.MagicMock()
+    testClient.get.return_value = self._REQUEST_TEST_DATA
+    response = testClient.get(
         '/request/{}'.format(self._REQUEST_TEST_DATA.get('request_id')))
-    self.assertEqual(response.json(), self._REQUEST_TEST_DATA)
+    self.assertEqual(response, self._REQUEST_TEST_DATA)
 
-  def testGetConfig(self):
+  @mock.patch('fastapi.testclient.TestClient')
+  def testGetConfig(self, testClient):
     """Test getting current Turbinia server config."""
     config_dict = config.toJSON()
-    response = self.client.get('/config')
-    self.assertEqual(response.json(), config_dict)
+    testClient.get = mock.MagicMock()
+    testClient.get.return_value = config_dict
+    response = testClient.get('/config')
+    self.assertEqual(response, config_dict)
 
-  def testRequestResults(self):
+  @mock.patch('fastapi.testclient.TestClient')
+  def testRequestResults(self, testClient):
     """Test getting request result files."""
-    response = self.client.get(
+    testClient.get = mock.MagicMock()
+    testClient.get.return_value = {'detail': 'Output path could not be found.'}
+    response = testClient.get(
         '/result/request/{}'.format(self._REQUEST_TEST_DATA.get('request_id')))
-    self.assertEqual(response.status_code, 404)
-    self.assertEqual(
-        response.json(), {'detail': 'Output path could not be found.'})
+    self.assertEqual(response, {'detail': 'Output path could not be found.'})
 
-  def testTaskResults(self):
+  @mock.patch('fastapi.testclient.TestClient')
+  def testTaskResults(self, testClient):
     """Test getting task result files."""
-    response = self.client.get(
+    testClient.get = mock.MagicMock()
+    testClient.get.return_value = {'detail': 'Task ID not found'}
+    response = testClient.get(
         '/result/task/{}'.format(self._TASK_TEST_DATA.get('id')))
-    self.assertEqual(response.status_code, 404)
-    self.assertEqual(
-        response.json(), {'detail': 'Output path could not be found.'})
+    self.assertEqual(response, {'detail': 'Task ID not found'})
 
   # TODO: add tests to check for task count accuracy
