@@ -61,13 +61,12 @@ class testTurbiniaAPIServer(unittest.TestCase):
     """This method will write a temporary key to redis for testing purposes."""
     self.client = TestClient(app)
 
-  @mock.patch('fastapi.testclient.TestClient')
-  def testReadRoot(self, testClient):
+  #@mock.patch('fastapi.testclient.TestClient')
+  def testReadRoot(self):
     """Test root route."""
-    testClient.get = mock.MagicMock()
-    testClient.get.return_value = {"detail": "Not Found"}
-    response = testClient.get("/")
-    self.assertEqual(response, {"detail": "Not Found"})
+    response = self.client.get("/")
+    self.assertEqual(response.status_code, 404)
+    self.assertEqual(response.json(), {"detail": "Not Found"})
 
   @mock.patch('fastapi.testclient.TestClient')
   def testGetTaskStatus(self, testClient):
@@ -88,14 +87,11 @@ class testTurbiniaAPIServer(unittest.TestCase):
         '/request/{}'.format(self._REQUEST_TEST_DATA.get('request_id')))
     self.assertEqual(response, self._REQUEST_TEST_DATA)
 
-  @mock.patch('fastapi.testclient.TestClient')
-  def testGetConfig(self, testClient):
+  def testGetConfig(self):
     """Test getting current Turbinia server config."""
     config_dict = config.toJSON()
-    testClient.get = mock.MagicMock()
-    testClient.get.return_value = config_dict
-    response = testClient.get('/config')
-    self.assertEqual(response, config_dict)
+    response = self.client.get('/config')
+    self.assertEqual(response.json(), config_dict)
 
   @mock.patch('fastapi.testclient.TestClient')
   def testRequestResults(self, testClient):
