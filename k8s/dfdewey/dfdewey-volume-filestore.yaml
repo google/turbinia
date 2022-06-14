@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: dfdeweyvolume
+spec:
+  capacity:
+    storage: <CAPACITY>
+  accessModes:
+  - ReadWriteMany
+  nfs:
+    path: /<PATH>
+    server: <IP_ADDRESS>

@@ -29,6 +29,7 @@ if [[ "$*" == *--help ]] ; then
   echo "--no-gcs                       Do not create a GCS bucket"
   echo "--no-pubsub                    Do not create the PubSub and PSQ topic/subscription"
   echo "--no-cluster                   Do not create the cluster"
+  echo "--deploy-dfdewey               Deploy dfDewey datastores"
   exit 1
 fi
 
@@ -130,6 +131,9 @@ echo "Deploying cluster to project $DEVSHELL_PROJECT_ID"
 echo "Copying over template deployment files to $DEPLOYMENT_FOLDER"
 mkdir -p $DEPLOYMENT_FOLDER
 cp gcp-pubsub/* $DEPLOYMENT_FOLDER
+if [[ "$*" == *--deploy-dfdewey* ]] ; then
+  cp dfdewey/* $DEPLOYMENT_FOLDER
+fi
 cp ../turbinia/config/turbinia_config_tmpl.py $DEPLOYMENT_FOLDER/$TURBINIA_CONFIG
 
 # Deploy cloud functions
@@ -164,7 +168,7 @@ if [[ "$*" != *--no-cluster* ]] ; then
   gcloud -q --project $DEVSHELL_PROJECT_ID services enable compute.googleapis.com
   gcloud -q --project $DEVSHELL_PROJECT_ID services enable container.googleapis.com
   echo "Creating cluser $CLUSTER_NAME with $CLUSTER_NODE_SIZE node(s) configured with machine type $CLUSTER_MACHINE_TYPE and disk size $CLUSTER_MACHINE_SIZE"
-  gcloud -q --project $DEVSHELL_PROJECT_ID container clusters create $CLUSTER_NAME --machine-type $CLUSTER_MACHINE_TYPE --disk-size $CLUSTER_MACHINE_SIZE --num-nodes $CLUSTER_NODE_SIZE --master-ipv4-cidr $VPC_CONTROL_PANE --network $VPC_NETWORK --zone $ZONE --shielded-secure-boot --no-enable-master-authorized-networks  --enable-private-nodes --enable-ip-alias  --scopes "https://www.googleapis.com/auth/cloud-platform" --labels "turbinia-infra=true"
+  gcloud -q --project $DEVSHELL_PROJECT_ID container clusters create $CLUSTER_NAME --machine-type $CLUSTER_MACHINE_TYPE --disk-size $CLUSTER_MACHINE_SIZE --num-nodes $CLUSTER_NODE_SIZE --master-ipv4-cidr $VPC_CONTROL_PANE --network $VPC_NETWORK --zone $ZONE --shielded-secure-boot --shielded-integrity-monitoring --no-enable-master-authorized-networks --enable-private-nodes --enable-ip-alias --scopes "https://www.googleapis.com/auth/cloud-platform" --labels "turbinia-infra=true"
 else
   echo "--no-cluster specified. Authenticating to pre-existing cluster $CLUSTER_NAME"
 fi
@@ -269,6 +273,25 @@ fi
 # Deploy to cluster
 echo "Deploying Turbinia to $CLUSTER_NAME cluster"
 ./setup-pubsub.sh $TURBINIA_CONFIG
+
+# Deploy dfDewey
+if [[ "$*" == *--deploy-dfdewey* ]] ; then
+  echo "Deploying dfDewey datastores to $CLUSTER_NAME cluster"
+  if [[ -z "$(gcloud -q --project $DEVSHELL_PROJECT_ID filestore instances list --format='value(name)' --filter=name:$FILESTORE_DFDEWEY_NAME)" ]] ; then
+    echo "Creating Filestore instance $FILESTORE_DFDEWEY_NAME with capacity $FILESTORE_DFDEWEY_CAPACITY"
+    gcloud -q --project $DEVSHELL_PROJECT_ID filestore instances create $FILESTORE_DFDEWEY_NAME --file-share=name=$FILESTORE_DFDEWEY_NAME,capacity=$FILESTORE_DFDEWEY_CAPACITY --zone=$ZONE --network=name=$VPC_NETWORK
+  else
+    echo "Using pre existing Filestore instance $FILESTORE_DFDEWEY_NAME with capacity $FILESTORE_DFDEWEY_CAPACITY"
+  fi
+  FILESTORE_DFDEWEY_IP=$(gcloud -q --project $DEVSHELL_PROJECT_ID filestore instances describe $FILESTORE_DFDEWEY_NAME --zone=$ZONE --format='value(networks.ipAddresses)' --flatten="networks[].ipAddresses[]")
+  sed -i -e "s/<PATH>/$FILESTORE_DFDEWEY_NAME/g" dfdewey-volume-filestore.yaml
+  sed -i -e "s/<IP_ADDRESS>/$FILESTORE_DFDEWEY_IP/g" dfdewey-volume-filestore.yaml
+  sed -i -e "s/<CAPACITY>/$FILESTORE_DFDEWEY_CAPACITY/g" dfdewey-volume-filestore.yaml dfdewey-volume-claim-filestore.yaml
+  sed -i -e "s/<PATH>/$FILESTORE_PG_PATH/g" postgres-server.yaml
+  sed -i -e "s/<PATH>/$FILESTORE_OS_PATH/g" opensearch-server.yaml
+
+  ./setup-dfdewey.sh $TURBINIA_CONFIG
+fi
 
 # Create backup of turbinia config file if it exists
 TURBINIA_OUT="$HOME/.turbiniarc"

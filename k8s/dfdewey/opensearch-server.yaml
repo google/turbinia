@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dfdewey-opensearch
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dfdewey-opensearch
+  template:
+    metadata:
+      labels:
+        app: dfdewey-opensearch
+    spec:
+      securityContext:
+        fsGroup: 1000
+      containers:
+        - name: opensearch
+          image: opensearchproject/opensearch:latest
+          resources:
+            requests:
+              memory: "32Gi"
+          ports:
+            - containerPort: 9200
+          envFrom:
+            - configMapRef:
+                name: opensearch-config
+          volumeMounts:
+            - mountPath: /usr/share/opensearch/data
+              name: dfdeweyvolume
+              subPath: <PATH>
+      initContainers:
+      - name: opensearch-init
+        image: busybox:latest
+        volumeMounts:
+          - mountPath: /usr/share/opensearch/data
+            name: dfdeweyvolume
+            subPath: <PATH>
+        securityContext:
+          privileged: true
+        command: ['sh', '-c', "chown -R 1000:1000 /usr/share/opensearch/data; sysctl -w vm.max_map_count=262144; sysctl -p"]
+      volumes:
+        - name: dfdeweyvolume
+          persistentVolumeClaim:
+            claimName: dfdeweyvolume-claim
+            readOnly: false
+      nodeSelector:
+        cloud.google.com/gke-nodepool: default-pool

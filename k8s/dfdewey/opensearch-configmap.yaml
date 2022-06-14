@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: opensearch-config
+  labels:
+    app: opensearch
+data:
+  discovery.type: single-node
+  plugins.security.disabled: "true"
+  OPENSEARCH_JAVA_OPTS: -Xms32g -Xmx32g
+  network.host: 0.0.0.0
