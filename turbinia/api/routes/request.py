@@ -27,7 +27,6 @@ from turbinia.api.schemas import evidence_types
 from turbinia.api.schemas import request
 from turbinia.api.models import request_status
 
-
 log = logging.getLogger('turbinia:api_server:models:request')
 router = APIRouter(prefix="/request", tags=["Turbinia Requests"])
 
@@ -158,10 +157,6 @@ async def create_request(input_request: request.Request):
         filter_patterns=input_request.evidence_options.filter_patterns,
         yara_rules=input_request.evidence_options.filter_patterns,
         sketch_id=input_request.sketch_id)
-
-    #if input_request.evidence_options.turbinia_recipe:
-    #  recipe = client.create_recipe(
-    #      recipe_name=input_request.evidence_options.turbinia_recipe)
 
     request_out = client.create_request(
         evidence_=evidence_list, request_id=request_id, reason=reason,
