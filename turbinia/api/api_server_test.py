@@ -61,6 +61,7 @@ class testTurbiniaAPIServer(unittest.TestCase):
   def setUp(self):
     """This method will write a temporary key to redis for testing purposes."""
     config.LoadConfig()
+    config.STATE_MANAGER = 'redis'
     self.client = TestClient(app)
     self.state_manager = state_manager.get_state_manager()
     self.state_manager.client.set(
