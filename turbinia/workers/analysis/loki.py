@@ -75,9 +75,9 @@ class LokiAnalysisTask(TurbiniaTask):
     stderr_file = os.path.join(self.output_dir, 'loki_stderr.log')
 
     cmd = [
-        'python', '/opt/loki/loki.py', '-w', '0', '--csv', '--intense',
-        '--noprocscan', '--dontwait', '--noindicator', '-l', log_file, '-p',
-        evidence.local_path
+        'sudo', 'python', '/opt/loki/loki.py', '-w', '0', '--csv', '--intense',
+        '--noprocscan', '--dontwait', '--noindicator', '--nolevcheck',
+        '--nolisten', '-l', log_file, '-p', evidence.local_path
     ]
 
     (ret, result) = self.execute(
