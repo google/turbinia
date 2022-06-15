@@ -601,6 +601,9 @@ class DiskPartition(RawDisk):
     # Late loading the partition processor to avoid loading dfVFS unnecessarily.
     from turbinia.processors import partitions
 
+    # Set evidence name
+    self.name = ':'.join((self.parent_evidence.name, self.partition_location))
+
     # We need to enumerate partitions in preprocessing so the path_specs match
     # the parent evidence location for each task.
     try:
@@ -901,6 +904,9 @@ class DockerContainer(Evidence):
     self.context_dependent = True
 
   def _preprocess(self, _, required_states):
+    # Set evidence name
+    self.name = ':'.join((self.parent_evidence.name, self.container_id))
+
     if EvidenceState.CONTAINER_MOUNTED in required_states:
       self._docker_root_directory = GetDockerPath(
           self.parent_evidence.mount_path)
