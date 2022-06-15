@@ -16,9 +16,9 @@
 
 from datetime import datetime
 
-import filelock
 import logging
 import os
+import filelock
 
 from turbinia import config
 from turbinia.config import DATETIME_FORMAT
