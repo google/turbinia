@@ -15,13 +15,11 @@
 """Task utilities for Turbinia."""
 
 from datetime import datetime
-import logging
-import os
-import sys
 
 import filelock
+import logging
+import os
 
-import turbinia
 from turbinia import config
 from turbinia.config import DATETIME_FORMAT
 from turbinia import TurbiniaException

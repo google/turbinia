@@ -20,10 +20,8 @@ import codecs
 import copy
 import json
 import uuid
-
-import six
-
 import logging
+import six
 
 from turbinia import evidence
 from turbinia import TurbiniaException
