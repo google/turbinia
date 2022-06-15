@@ -20,6 +20,7 @@ import logging
 import warnings
 import logging.handlers
 import os
+import sys
 
 from turbinia import config
 from turbinia import TurbiniaException
