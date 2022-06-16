@@ -16,8 +16,8 @@
 
 import copy
 import logging
-import yaml
 import os
+import yaml
 
 from yaml import Loader
 from yaml import load
