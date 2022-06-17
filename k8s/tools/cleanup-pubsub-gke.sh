@@ -27,6 +27,7 @@ if [[ "$*" == *--help ]] ; then
   echo "--no-cloudfunctions            Do not cleanup Turbinia Cloud Functions"
   echo "--no-datastore                 Do not cleanup Turbinia Datastore"
   echo "--no-filestore                 Do not cleanup Turbinia Filestore share"
+  echo "--no-dfdewey                   Do not cleanup dfDewey Filestore share"
   echo "--no-gcs                       Do not delete the GCS bucket"
   echo "--no-pubsub                    Do not delete the PubSub and PSQ topic/subscription"
   echo "--no-cluster                   Do not delete the cluster"
@@ -98,6 +99,10 @@ fi
 if [[ "$*" != *--no-filestore* ]] ; then
   echo "Deleting Filestore instance $FILESTORE_NAME"
   gcloud -q --project $DEVSHELL_PROJECT_ID filestore instances delete $FILESTORE_NAME --zone $ZONE
+fi
+if [[ "$*" != *--no-dfdewey* ]] ; then
+  echo "Deleting Filestore instance $FILESTORE_DFDEWEY_NAME"
+  gcloud -q --project $DEVSHELL_PROJECT_ID filestore instances delete $FILESTORE_DFDEWEY_NAME --zone $ZONE
 fi
 
 # Remove cloud functions

@@ -21,6 +21,8 @@ persistent=yes
 # usually to register additional checkers.
 load-plugins=
 
+# Fixes linter errors for Pydantic
+extension-pkg-allow-list=pydantic
 
 [MESSAGES CONTROL]
 

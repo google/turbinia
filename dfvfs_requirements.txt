@@ -4,6 +4,7 @@ PyYAML >= 3.10
 cffi >= 1.9.1
 cryptography >= 2.0.2
 dfdatetime >= 20210509
+dfimagetools >= 20220312
 dtfabric >= 20170524
 idna >= 2.5
 libbde-python >= 20140531

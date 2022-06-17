@@ -60,6 +60,7 @@ class TaskLoader():
       'PartitionEnumerationTask',
       'PhotorecTask',
       'PlasoTask',
+      'PostgresAccountAnalysisTask',
       'PsortTask',
       'RedisAnalysisTask',
       'SSHDAnalysisTask',
@@ -105,6 +106,7 @@ class TaskLoader():
     from turbinia.workers.analysis.jupyter import JupyterAnalysisTask
     from turbinia.workers.analysis.linux_acct import LinuxAccountAnalysisTask
     from turbinia.workers.analysis.loki import LokiAnalysisTask
+    from turbinia.workers.analysis.postgresql_acct import PostgresAccountAnalysisTask
     from turbinia.workers.analysis.windows_acct import WindowsAccountAnalysisTask
     from turbinia.workers.analysis.wordpress_access import WordpressAccessLogAnalysisTask
     from turbinia.workers.analysis.wordpress_creds import WordpressCredsAnalysisTask

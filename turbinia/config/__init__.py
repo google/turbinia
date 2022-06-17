@@ -18,6 +18,7 @@ from __future__ import unicode_literals
 
 import imp
 import itertools
+import json
 import logging
 import os
 import sys
@@ -61,6 +62,11 @@ REQUIRED_VARS = [
     'DEPENDENCIES',
     'DOCKER_ENABLED',
     'DISABLED_JOBS',
+    # API SERVER CONFIG
+    'API_SERVER_ADDRESS',
+    'API_SERVER_PORT',
+    'API_ALLOWED_ORIGINS',
+    'API_AUTHENTICATION_ENABLED'
 ]
 
 # Optional config vars.  Some may be mandatory depending on the configuration
@@ -230,3 +236,16 @@ def ParseDependencies():
         'An issue has occurred while parsing the '
         'dependency config: {0!s}'.format(exception))
   return dependencies
+
+
+def toJSON():
+  """Returns a JSON serialized config."""
+  _config = dict()
+  config_vars = REQUIRED_VARS + OPTIONAL_VARS
+  config_dict = LoadConfig().__dict__
+
+  for attribute_key in config_dict.keys():
+    if attribute_key in config_vars:
+      _config[attribute_key] = config_dict[attribute_key]
+
+  return _config
