@@ -19,8 +19,6 @@ from __future__ import unicode_literals, absolute_import
 import logging
 from datetime import datetime
 import time
-import os
-import filelock
 
 from prometheus_client import Gauge
 

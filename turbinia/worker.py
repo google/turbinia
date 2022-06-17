@@ -40,7 +40,6 @@ if task_manager_type == 'psq':
   from google.cloud import datastore
   from google.cloud import pubsub
 elif task_manager_type == 'celery':
-  from celery import states as celery_states
   from turbinia import tcelery as turbinia_celery
 else:
   raise TurbiniaException(
