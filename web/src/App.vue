@@ -35,100 +35,25 @@ limitations under the License.
       </v-app-bar>
     </nav>
     <v-main>
-      <div>
-        <v-card>
-          <v-card-title>
-            Request List
-            <v-spacer></v-spacer>
-            <v-text-field
-              v-model="search"
-              append-icon="mdi-magnify"
-              label="Search"
-              single-line
-              hide-details
-            ></v-text-field>
-            <v-spacer></v-spacer>
-            <v-tooltip left>
-              <template v-slot:activator="{ on, attrs }">
-                <v-btn fab color="blue lighten-2" @click="getRequest()" v-bind="attrs" v-on="on">
-                  <v-icon>mdi-refresh</v-icon>
-                </v-btn>
-              </template>
-              Refresh Request List
-            </v-tooltip>
-          </v-card-title>
-          <v-data-table
-            :headers="headers"
-            :items="requestSummary"
-            :search="search"
-            :footer-props="{ itemsPerPageOptions: [10, 20, 40, -1] }"
-          >
-          </v-data-table>
-        </v-card>
-      </div>
+      <request-list></request-list>
     </v-main>
   </v-app>
 </template>
 
 <script>
-import axios from 'axios'
+import RequestList from './components/RequestList'
+
 export default {
   name: 'app',
+  components: { RequestList },
   data() {
-    return {
-      search: '',
-      headers: [
-        { text: 'Request', value: 'request_id' },
-        { text: 'Last Task Update Time', value: 'last_task_update_time' },
-        { text: 'Requester', value: 'requester' },
-        { text: 'Total Tasks', value: 'total_tasks' },
-        { text: 'Running Tasks', value: 'running_tasks' },
-        { text: 'Successful Tasks', value: 'successful_tasks' },
-        { text: 'Failed Tasks', value: 'failed_tasks' },
-        { text: 'Status', value: 'status' },
-      ],
-      requestSummary: [],
-    }
+    return {}
   },
   methods: {
-    getRequest() {
-      console.log('Retrieving Request List Summary...')
-      axios
-        .get('/request/summary')
-        .then((response) => {
-          if (response.status === 200) {
-            console.log('Successfully retrieved Request List.')
-            return response.data['requests_status']
-          }
-        })
-        .then((data) => {
-          var requestSummary = []
-          for (const req in data) {
-            requestSummary.push({
-              request_id: data[req].request_id + ' - ' + data[req].reason,
-              last_task_update_time: data[req].last_task_update_time,
-              requester: data[req].requester,
-              total_tasks: data[req].task_count,
-              running_tasks: data[req].running_tasks,
-              successful_tasks: data[req].successful_tasks,
-              failed_tasks: data[req].failed_tasks,
-              status: data[req].status,
-            })
-          }
-          this.requestSummary = requestSummary
-        })
-        .catch(function (error) {
-          console.log(error)
-        })
-    },
     toggleTheme: function () {
-      console.log('Switching theme')
       this.$vuetify.theme.dark = !this.$vuetify.theme.dark
       localStorage.setItem('isDarkTheme', this.$vuetify.theme.dark.toString())
     },
-  },
-  mounted() {
-    this.getRequest()
   },
 }
 </script>
