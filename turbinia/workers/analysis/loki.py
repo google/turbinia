@@ -96,7 +96,7 @@ class LokiAnalysisTask(TurbiniaTask):
       lokireader = csv.DictReader(
           loki_report_csv, fieldnames=['Time', 'Hostname', 'Level', 'Log'])
       for row in lokireader:
-        if row['Level'] == 'ALERT':
+        if row['Level'] == 'ALERT' or row['Level'] == 'WARNING':
           report_lines.append(row['Log'])
 
     if report_lines:
