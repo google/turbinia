@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright 2021 Google Inc.
+# Copyright 2022 Google Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,7 +12,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Task for running Loki on drives & directories."""
+"""Task for running Yara on drives & directories."""
 
 import csv
 import os
@@ -25,15 +25,15 @@ from turbinia.workers import Priority
 from turbinia.workers import TurbiniaTask
 
 
-class LokiAnalysisTask(TurbiniaTask):
-  """Task to use Loki to analyse files."""
+class YaraAnalysisTask(TurbiniaTask):
+  """Task to use Yara to analyse files."""
 
   REQUIRED_STATES = [
       state.ATTACHED, state.MOUNTED, state.CONTAINER_MOUNTED, state.DECOMPRESSED
   ]
 
   def run(self, evidence, result):
-    """Run the Loki worker.
+    """Run the Yara worker.
 
     Args:
         evidence (Evidence object):  The evidence to process
@@ -42,17 +42,17 @@ class LokiAnalysisTask(TurbiniaTask):
         TurbiniaTaskResult object.
     """
     # Where to store the resulting output file.
-    output_file_name = 'loki_analysis.txt'
+    output_file_name = 'yara_analysis.txt'
     output_file_path = os.path.join(self.output_dir, output_file_name)
 
     # What type of evidence we should output.
     output_evidence = ReportText(source_path=output_file_path)
 
     try:
-      (report, priority, summary) = self.runLoki(result, evidence)
+      (report, priority, summary) = self.runFraken(result, evidence)
     except TurbiniaException as e:
       result.close(
-          self, success=False, status='Unable to run Loki: {0:s}'.format(
+          self, success=False, status='Unable to run Fraken: {0:s}'.format(
               str(e)))
       return result
 
@@ -69,39 +69,36 @@ class LokiAnalysisTask(TurbiniaTask):
     result.close(self, success=True, status=summary)
     return result
 
-  def runLoki(self, result, evidence):
-    log_file = os.path.join(self.output_dir, 'loki.log')
-    stdout_file = os.path.join(self.output_dir, 'loki_stdout.log')
-    stderr_file = os.path.join(self.output_dir, 'loki_stderr.log')
+  def runFraken(self, result, evidence):
+    stdout_file = os.path.join(self.output_dir, 'fraken_stdout.log')
 
     cmd = [
-        'sudo', 'python', '/opt/loki/loki.py', '-s', '10000', '--csv',
-        '--intense', '--noprocscan', '--dontwait', '--noindicator',
-        '--nolevcheck', '--nolisten', '-l', log_file, '-p', evidence.local_path
+        # 'sudo', 
+        '/opt/fraken/fraken', '-rules', '/opt/signature-base/',
+        '-folder', evidence.local_path
     ]
 
     (ret, result) = self.execute(
-        cmd, result, log_files=[log_file], stdout_file=stdout_file,
-        stderr_file=stderr_file, cwd='/opt/loki/')
+        cmd, result, stdout_file=stdout_file)
 
     if ret != 0:
       raise TurbiniaException('Return code: {0:d}'.format(ret))
 
     report = []
-    summary = 'No Loki threats found'
+    summary = 'No Yara rules matched'
     priority = Priority.LOW
 
     report_lines = []
-    with open(stdout_file, 'r') as loki_report_csv:
-      lokireader = csv.DictReader(
-          loki_report_csv, fieldnames=['Time', 'Hostname', 'Level', 'Log'])
-      for row in lokireader:
-        if row['Level'] == 'ALERT' or row['Level'] == 'WARNING':
-          report_lines.append(row['Log'])
+    with open(stdout_file, 'r') as fraken_report_csv:
+      frakenreader = csv.DictReader(
+          fraken_report_csv, fieldnames=['Path', 'Hash', 'Signature', 'Description', 'Reference', 'Score'])
+      for row in frakenreader:
+        if row['Score'] == "" or int(row['Score']) > 40:
+          report_lines.append(' - '.join([row['Path'], row['Hash'], row['Signature'], row['Description'], row.get('Reference', ""), row.get('Score', 0)]))
 
     if report_lines:
       priority = Priority.HIGH
-      summary = 'Loki analysis found {0:d} alert(s)'.format(len(report_lines))
+      summary = 'Yara analysis found {0:d} alert(s)'.format(len(report_lines))
       report.insert(0, fmt.heading4(fmt.bold(summary)))
       line = '{0:n} alerts(s) found:'.format(len(report_lines))
       report.append(fmt.bullet(fmt.bold(line)))

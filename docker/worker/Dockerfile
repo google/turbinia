@@ -7,16 +7,26 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get -y install \
     apt-transport-https \
     apt-utils \
+    automake \
     ca-certificates \
     curl \
+    dh-autoreconf \
+    gcc \
     git \
+    golang-1.16 \
+    go-bindata \
     john-data \
     hashcat \
     hashcat-data \
     libleveldb1d \
     libleveldb-dev \
+    libprotobuf-c-dev \
+    libssl-dev \
     libterm-readline-gnu-perl \
+    libtool \
     lvm2 \
+    make \
+    pkg-config \
     python3-pip \
     software-properties-common \
     sudo \
@@ -64,15 +74,20 @@ RUN echo "turbinia ALL = (root) NOPASSWD: ALL" > /etc/sudoers.d/turbinia
 
 RUN pip3 install impacket --no-deps
 
-RUN mkdir -p /opt/loki && chown -R turbinia:turbinia /opt/loki \
-    && cd /opt/loki \
-    && curl -s https://api.github.com/repos/Neo23x0/Loki/releases/latest | sed -n 's/.*"tarball_url": "\(.*\)",.*/\1/p' | xargs -n1 wget -O - -q | tar -xz --strip-components=1 \
-    && pip3 install -r requirements.txt \
-    && sudo update-alternatives --install /usr/bin/python python /usr/bin/python3 1 \
-    && sudo chown -R turbinia:turbinia /opt/loki \
-    && git clone https://github.com/Neo23x0/signature-base.git
+RUN cd /opt \
+    && git clone https://github.com/Neo23x0/signature-base.git \
+    && sudo chown -R turbinia:turbinia /opt/signature-base
 
-COPY turbinia/config/rules/*.yar /opt/loki/signature-base/yara/
+COPY turbinia/config/rules/*.yar /opt/signature-base/yara/
+
+RUN mkdir -p /opt/fraken/yara && chown -R turbinia:turbinia /opt/fraken
+COPY --chown=turbinia:turbinia tools/fraken/* /opt/fraken/
+RUN cd /opt/fraken/yara && curl -s https://api.github.com/repos/VirusTotal/Yara/releases/latest | sed -n 's/.*"tarball_url": "\(.*\)",.*/\1/p' | xargs -n1 wget -O - -q | tar -xz --strip-components=1 \
+    && ./bootstrap.sh \
+    && ./configure \
+    && make && sudo make install && sudo ldconfig \
+    && sudo update-alternatives --install /usr/bin/go go /usr/lib/go-1.16/bin/go 10
+RUN cd /opt/fraken && go build -o fraken
 
 RUN mkdir /etc/turbinia && mkdir -p /mnt/turbinia/ && mkdir -p /var/lib/turbinia/ \
     && mkdir -p /etc/turbinia/ && chown -R turbinia:turbinia /etc/turbinia/ \
