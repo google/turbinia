@@ -20,10 +20,11 @@ cd $DIR/..
 if [[ "$*" == *--help ]] ; then
   echo "Turbinia deployment script for Kubernetes environment"
   echo "Options:"
-  echo "--build-release-test           Deploy Turbinia release test docker image"
   echo "--build-dev                    Deploy Turbinia development docker image"
+  echo "--build-experimental           Deploy Turbinia experimental docker image"
   echo "--no-gcloud-auth               Create service key instead of using gcloud authentication"
   echo "--no-cloudfunctions            Do not deploy Turbinia Cloud Functions"
+  echo "--no-appengine                 Do not enable App Engine"
   echo "--no-datastore                 Do not configure Turbinia Datastore"
   echo "--no-filestore                 Do not deploy Turbinia Filestore"
   echo "--no-gcs                       Do not create a GCS bucket"
@@ -113,8 +114,8 @@ gcloud -q --project $DEVSHELL_PROJECT_ID services enable compute.googleapis.com
 # Check if the configured VPC network exists.
 networks=$(gcloud -q --project $DEVSHELL_PROJECT_ID compute networks list --filter="name=$VPC_NETWORK" |wc -l)
 if [[ "${networks}" -lt "2" ]]; then
-        echo "ERROR: VPC network $VPC_NETWORK not found, please create this first."
-        exit 1
+  echo "ERROR: VPC network $VPC_NETWORK not found, please create this first."
+  exit 1
 fi
 
 # Update Docker image if flag was provided else use default
@@ -158,11 +159,16 @@ if [[ "$*" != *--no-cloudfunctions* ]] ; then
   done
 fi
 
+# Enable App Engine
+if [[ "$*" != *--no-appengine* ]] ; then
+  echo "Enabling App Engine"
+  gcloud -q --project $DEVSHELL_PROJECT_ID app create --region=$DATASTORE_REGION
+fi
+
 # Deploy Datastore indexes
 if [[ "$*" != *--no-datastore* ]] ; then
   echo "Enabling Datastore API and deploying datastore index"
   gcloud -q --project $DEVSHELL_PROJECT_ID services enable datastore.googleapis.com
-  gcloud -q --project $DEVSHELL_PROJECT_ID app create --region=$DATASTORE_REGION
   gcloud -q --project $DEVSHELL_PROJECT_ID datastore databases create --region=$DATASTORE_REGION
   gcloud -q --project $DEVSHELL_PROJECT_ID datastore indexes create ../tools/gcf_init/index.yaml
 fi
