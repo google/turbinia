@@ -107,6 +107,9 @@ elif [[ $( gcloud -q --project $DEVSHELL_PROJECT_ID auth list --filter="status:A
   exit 1
 fi
 
+echo "Enabling Compute API"
+gcloud -q --project $DEVSHELL_PROJECT_ID services enable compute.googleapis.com
+
 # Check if the configured VPC network exists.
 networks=$(gcloud -q --project $DEVSHELL_PROJECT_ID compute networks list --filter="name=$VPC_NETWORK" |wc -l)
 if [[ "${networks}" -lt "2" ]]; then
@@ -159,13 +162,14 @@ fi
 if [[ "$*" != *--no-datastore* ]] ; then
   echo "Enabling Datastore API and deploying datastore index"
   gcloud -q --project $DEVSHELL_PROJECT_ID services enable datastore.googleapis.com
+  gcloud -q --project $DEVSHELL_PROJECT_ID app create --region=$DATASTORE_REGION
+  gcloud -q --project $DEVSHELL_PROJECT_ID datastore databases create --region=$DATASTORE_REGION
   gcloud -q --project $DEVSHELL_PROJECT_ID datastore indexes create ../tools/gcf_init/index.yaml
 fi
 
 # Create GKE cluster and authenticate to it
 if [[ "$*" != *--no-cluster* ]] ; then
-  echo "Enabling GCP Compute and Container APIs"
-  gcloud -q --project $DEVSHELL_PROJECT_ID services enable compute.googleapis.com
+  echo "Enabling Container API"
   gcloud -q --project $DEVSHELL_PROJECT_ID services enable container.googleapis.com
   echo "Creating cluser $CLUSTER_NAME with $CLUSTER_NODE_SIZE node(s) configured with machine type $CLUSTER_MACHINE_TYPE and disk size $CLUSTER_MACHINE_SIZE"
   gcloud -q --project $DEVSHELL_PROJECT_ID container clusters create $CLUSTER_NAME --machine-type $CLUSTER_MACHINE_TYPE --disk-size $CLUSTER_MACHINE_SIZE --num-nodes $CLUSTER_NODE_SIZE --master-ipv4-cidr $VPC_CONTROL_PANE --network $VPC_NETWORK --zone $ZONE --shielded-secure-boot --shielded-integrity-monitoring --no-enable-master-authorized-networks --enable-private-nodes --enable-ip-alias --scopes "https://www.googleapis.com/auth/cloud-platform" --labels "turbinia-infra=true"

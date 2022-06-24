@@ -18,6 +18,7 @@ DEPLOYMENT_FOLDER="deployment/$INSTANCE_ID"
 # not currently support multi-zone operation.
 ZONE='us-central1-f'
 REGION='us-central1'
+DATASTORE_REGION='us-central'
 
 # VPC network to configure the cluster in.
 VPC_NETWORK='default'
