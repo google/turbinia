@@ -100,6 +100,7 @@ if [[ "$*" != *--no-filestore* ]] ; then
   echo "Deleting Filestore instance $FILESTORE_NAME"
   gcloud -q --project $DEVSHELL_PROJECT_ID filestore instances delete $FILESTORE_NAME --zone $ZONE
 fi
+# Delete the dfDewey Filestore instance
 if [[ "$*" != *--no-dfdewey* ]] ; then
   if [[ -z "$(gcloud -q --project $DEVSHELL_PROJECT_ID filestore instances list --format='value(name)' --filter=name:$FILESTORE_DFDEWEY_NAME)" ]] ; then
     echo "Filestore instance $FILESTORE_DFDEWEY_NAME does not exist"
