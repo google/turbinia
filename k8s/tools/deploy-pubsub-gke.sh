@@ -159,16 +159,15 @@ if [[ "$*" != *--no-cloudfunctions* ]] ; then
   done
 fi
 
-# Enable App Engine
-if [[ "$*" != *--no-appengine* ]] ; then
-  echo "Enabling App Engine"
-  gcloud -q --project $DEVSHELL_PROJECT_ID app create --region=$DATASTORE_REGION
-fi
-
 # Deploy Datastore indexes
 if [[ "$*" != *--no-datastore* ]] ; then
   echo "Enabling Datastore API and deploying datastore index"
   gcloud -q --project $DEVSHELL_PROJECT_ID services enable datastore.googleapis.com
+  # Enable App Engine
+  if [[ "$*" != *--no-appengine* ]] ; then
+    echo "Enabling App Engine"
+    gcloud -q --project $DEVSHELL_PROJECT_ID app create --region=$DATASTORE_REGION
+  fi
   gcloud -q --project $DEVSHELL_PROJECT_ID datastore databases create --region=$DATASTORE_REGION
   gcloud -q --project $DEVSHELL_PROJECT_ID datastore indexes create ../tools/gcf_init/index.yaml
 fi
