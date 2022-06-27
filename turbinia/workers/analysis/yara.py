@@ -16,6 +16,7 @@
 
 import csv
 import os
+
 from turbinia import TurbiniaException
 
 from turbinia.evidence import EvidenceState as state
@@ -73,10 +74,13 @@ class YaraAnalysisTask(TurbiniaTask):
     stdout_file = os.path.join(self.output_dir, 'fraken_stdout.log')
 
     cmd = [
-        # 'sudo', 
-        '/opt/fraken/fraken', '-rules', '/opt/signature-base/',
+        'sudo', '/opt/fraken/fraken', '-rules', '/opt/signature-base/',
         '-folder', evidence.local_path
     ]
+
+    yr = self.task_config.get('yara_rules', '') 
+    if yr != '':
+      cmd.extend(['-yara', yr])
 
     (ret, result) = self.execute(
         cmd, result, stdout_file=stdout_file)
@@ -89,12 +93,15 @@ class YaraAnalysisTask(TurbiniaTask):
     priority = Priority.LOW
 
     report_lines = []
-    with open(stdout_file, 'r') as fraken_report_csv:
-      frakenreader = csv.DictReader(
-          fraken_report_csv, fieldnames=['Path', 'Hash', 'Signature', 'Description', 'Reference', 'Score'])
-      for row in frakenreader:
-        if row['Score'] == "" or int(row['Score']) > 40:
-          report_lines.append(' - '.join([row['Path'], row['Hash'], row['Signature'], row['Description'], row.get('Reference', ""), row.get('Score', 0)]))
+    try:
+      with open(stdout_file, 'r') as fraken_report_csv:
+        frakenreader = csv.DictReader(
+            fraken_report_csv, fieldnames=['Path', 'Hash', 'Signature', 'Description', 'Reference', 'Score'])
+        for row in frakenreader:
+          if row['Score'] == "" or int(row['Score']) > 40:
+            report_lines.append(' - '.join([row['Path'], row['Hash'], row['Signature'], row['Description'], row.get('Reference', ""), row.get('Score', 0)]))
+    except FileNotFoundError:
+      pass # No Yara rules matched
 
     if report_lines:
       priority = Priority.HIGH
