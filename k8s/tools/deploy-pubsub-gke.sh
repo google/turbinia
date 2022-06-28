@@ -73,30 +73,31 @@ fi
 # Enable IAM services
 gcloud -q --project $DEVSHELL_PROJECT_ID services enable iam.googleapis.com
 
-# Use local `gcloud auth` credentials rather than creating new Service Account.
+# Create Turbinia service account.
+SA_NAME="turbinia"
+SA_MEMBER="serviceAccount:$SA_NAME@$DEVSHELL_PROJECT_ID.iam.gserviceaccount.com"
+
+if ! gcloud --project $DEVSHELL_PROJECT_ID iam service-accounts list |grep $SA_NAME; then
+  # Create service account
+  gcloud --project $DEVSHELL_PROJECT_ID iam service-accounts create "${SA_NAME}" --display-name "${SA_NAME}"
+fi
+
+# Grant IAM roles to the service account
+echo "Grant permissions on service account"
+gcloud projects add-iam-policy-binding $DEVSHELL_PROJECT_ID --member=$SA_MEMBER --role='roles/cloudfunctions.admin'
+gcloud projects add-iam-policy-binding $DEVSHELL_PROJECT_ID --member=$SA_MEMBER --role='roles/cloudsql.admin'
+gcloud projects add-iam-policy-binding $DEVSHELL_PROJECT_ID --member=$SA_MEMBER --role='roles/compute.admin'
+gcloud projects add-iam-policy-binding $DEVSHELL_PROJECT_ID --member=$SA_MEMBER --role='roles/container.admin'
+gcloud projects add-iam-policy-binding $DEVSHELL_PROJECT_ID --member=$SA_MEMBER --role='roles/datastore.indexAdmin'
+gcloud projects add-iam-policy-binding $DEVSHELL_PROJECT_ID --member=$SA_MEMBER --role='roles/editor'
+gcloud projects add-iam-policy-binding $DEVSHELL_PROJECT_ID --member=$SA_MEMBER --role='roles/logging.logWriter'
+gcloud projects add-iam-policy-binding $DEVSHELL_PROJECT_ID --member=$SA_MEMBER --role='roles/pubsub.admin'
+gcloud projects add-iam-policy-binding $DEVSHELL_PROJECT_ID --member=$SA_MEMBER --role='roles/redis.admin'
+gcloud projects add-iam-policy-binding $DEVSHELL_PROJECT_ID --member=$SA_MEMBER --role='roles/servicemanagement.admin'
+gcloud projects add-iam-policy-binding $DEVSHELL_PROJECT_ID --member=$SA_MEMBER --role='roles/storage.admin'
+
+# Use local `gcloud auth` credentials.
 if [[ "$*" == *--no-gcloud-auth* ]] ; then
-  SA_NAME="turbinia"
-  SA_MEMBER="serviceAccount:$SA_NAME@$DEVSHELL_PROJECT_ID.iam.gserviceaccount.com"
-
-  if ! gcloud --project $DEVSHELL_PROJECT_ID iam service-accounts list |grep $SA_NAME; then
-    # Create service account
-    gcloud --project $DEVSHELL_PROJECT_ID iam service-accounts create "${SA_NAME}" --display-name "${SA_NAME}"
-  fi
-
-  # Grant IAM roles to the service account
-  echo "Grant permissions on service account"
-  gcloud projects add-iam-policy-binding $DEVSHELL_PROJECT_ID --member=$SA_MEMBER --role='roles/cloudfunctions.admin'
-  gcloud projects add-iam-policy-binding $DEVSHELL_PROJECT_ID --member=$SA_MEMBER --role='roles/cloudsql.admin'
-  gcloud projects add-iam-policy-binding $DEVSHELL_PROJECT_ID --member=$SA_MEMBER --role='roles/compute.admin'
-  gcloud projects add-iam-policy-binding $DEVSHELL_PROJECT_ID --member=$SA_MEMBER --role='roles/container.admin'
-  gcloud projects add-iam-policy-binding $DEVSHELL_PROJECT_ID --member=$SA_MEMBER --role='roles/datastore.indexAdmin'
-  gcloud projects add-iam-policy-binding $DEVSHELL_PROJECT_ID --member=$SA_MEMBER --role='roles/editor'
-  gcloud projects add-iam-policy-binding $DEVSHELL_PROJECT_ID --member=$SA_MEMBER --role='roles/logging.logWriter'
-  gcloud projects add-iam-policy-binding $DEVSHELL_PROJECT_ID --member=$SA_MEMBER --role='roles/pubsub.admin'
-  gcloud projects add-iam-policy-binding $DEVSHELL_PROJECT_ID --member=$SA_MEMBER --role='roles/redis.admin'
-  gcloud projects add-iam-policy-binding $DEVSHELL_PROJECT_ID --member=$SA_MEMBER --role='roles/servicemanagement.admin'
-  gcloud projects add-iam-policy-binding $DEVSHELL_PROJECT_ID --member=$SA_MEMBER --role='roles/storage.admin'
-
   # Create and fetch the service account key
   echo "Fetch and store service account key"
   gcloud --project $DEVSHELL_PROJECT_ID iam service-accounts keys create ~/$INSTANCE_ID.json --iam-account "$SA_NAME@$DEVSHELL_PROJECT_ID.iam.gserviceaccount.com"
@@ -177,16 +178,23 @@ if [[ "$*" != *--no-cluster* ]] ; then
   echo "Enabling Container API"
   gcloud -q --project $DEVSHELL_PROJECT_ID services enable container.googleapis.com
   echo "Creating cluser $CLUSTER_NAME with $CLUSTER_NODE_SIZE node(s) configured with machine type $CLUSTER_MACHINE_TYPE and disk size $CLUSTER_MACHINE_SIZE"
-  gcloud -q --project $DEVSHELL_PROJECT_ID container clusters create $CLUSTER_NAME --machine-type $CLUSTER_MACHINE_TYPE --disk-size $CLUSTER_MACHINE_SIZE --num-nodes $CLUSTER_NODE_SIZE --master-ipv4-cidr $VPC_CONTROL_PANE --network $VPC_NETWORK --zone $ZONE --shielded-secure-boot --shielded-integrity-monitoring --no-enable-master-authorized-networks --enable-private-nodes --enable-ip-alias --scopes "https://www.googleapis.com/auth/cloud-platform" --labels "turbinia-infra=true"
+  gcloud -q --project $DEVSHELL_PROJECT_ID container clusters create $CLUSTER_NAME --machine-type $CLUSTER_MACHINE_TYPE --disk-size $CLUSTER_MACHINE_SIZE --num-nodes $CLUSTER_NODE_SIZE --master-ipv4-cidr $VPC_CONTROL_PANE --network $VPC_NETWORK --zone $ZONE --shielded-secure-boot --shielded-integrity-monitoring --no-enable-master-authorized-networks --enable-private-nodes --enable-ip-alias --scopes "https://www.googleapis.com/auth/cloud-platform" --labels "turbinia-infra=true" --workload-pool=$DEVSHELL_PROJECT_ID.svc.id.goog
 else
   echo "--no-cluster specified. Authenticating to pre-existing cluster $CLUSTER_NAME"
 fi
 
 # Authenticate to cluster
 gcloud -q --project $DEVSHELL_PROJECT_ID container clusters get-credentials $CLUSTER_NAME --zone $ZONE
+# Create Kubernetes service account
+kubectl get serviceaccounts $SA_NAME || kubectl create serviceaccount $SA_NAME --namespace default
+gcloud iam service-accounts add-iam-policy-binding $SA_NAME@$DEVSHELL_PROJECT_ID.iam.gserviceaccount.com --role roles/iam.workloadIdentityUser --member "serviceAccount:$DEVSHELL_PROJECT_ID.svc.id.goog[default/$SA_NAME]"
+kubectl annotate serviceaccount $SA_NAME --overwrite --namespace default iam.gke.io/gcp-service-account=$SA_NAME@$DEVSHELL_PROJECT_ID.iam.gserviceaccount.com
 
 # Go to deployment folder to make changes files
 cd $DEPLOYMENT_FOLDER
+
+# Add service account to deployments
+sed -i -e "s/<SA_NAME>/$SA_NAME/g" turbinia-server.yaml turbinia-worker.yaml
 
 # Disable some jobs
 echo "Updating $TURBINIA_CONFIG with disabled jobs"
