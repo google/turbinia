@@ -22,7 +22,7 @@ if [[ "$*" == *--help ]] ; then
   echo "Options:"
   echo "--build-dev                    Deploy Turbinia development docker image"
   echo "--build-experimental           Deploy Turbinia experimental docker image"
-  echo "--no-gcloud-auth               Create service key instead of using gcloud authentication"
+  echo "--no-gcloud-auth               Use Turbinia service account instead of gcloud authentication"
   echo "--no-cloudfunctions            Do not deploy Turbinia Cloud Functions"
   echo "--no-appengine                 Do not enable App Engine"
   echo "--no-datastore                 Do not configure Turbinia Datastore"
