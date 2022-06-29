@@ -363,10 +363,10 @@ func filesystemScan(wait chan struct{}, c chan *Detection) {
 					if m.Identifier == "score" {
 						score = strconv.Itoa(m.Value.(int))
 					}
-					if m.Identifier == "description" {
+					if strings.HasPrefix(m.Identifier, "desc") {
 						description = m.Value.(string)
 					}
-					if m.Identifier == "reference" {
+					if m.Identifier == "reference" || strings.HasPrefix(m.Identifier, "report") {
 						reference = m.Value.(string)
 					}
 				}
