@@ -21,6 +21,7 @@ import (
 	"bytes"
 	"crypto/sha256"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"flag"
 	"fmt"
@@ -439,6 +440,11 @@ func main() {
 	resultsChan := make(chan *Detection)
 	go filesystemScan(waitChan, resultsChan)
 	for r := range resultsChan {
-		fmt.Printf("%v,%v,%v,%v,%v,%v\n", r.ImagePath, r.SHA256, r.Signature, r.Description, r.Reference, r.Score)
+		j, err := json.Marshal(r)
+		if err != nil {
+			log.Printf("error marshalling JSON: %v", err)
+			continue
+		}
+		fmt.Println(string(j))
 	}
 }
