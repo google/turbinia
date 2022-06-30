@@ -69,7 +69,7 @@ var (
 
 func initMagics() {
 	// Try magic:
-	file, err := os.Open("file.go") // For read access.
+	file, err := os.Open(*magicPathFlag) // For read access.
 	if err != nil {
 		// Try rule + magic
 		file, err = os.Open(path.Join(*rulePathFlag, *magicPathFlag))
