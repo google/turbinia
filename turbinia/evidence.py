@@ -771,6 +771,13 @@ class GoogleCloudDiskRawEmbedded(GoogleCloudDisk):
     # This Evidence needs to have a GoogleCloudDisk as a parent
     self.context_dependent = True
 
+  @property
+  def name(self):
+    if self._name:
+      return self._name
+    else:
+      return ':'.join((self.disk_name, self.embedded_path))
+
   def _preprocess(self, _, required_states):
     # Need to mount parent disk
     if not self.parent_evidence.partition_paths:

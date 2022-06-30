@@ -632,7 +632,7 @@ def process_args(args):
       if args.command == 'googleclouddiskembedded':
         embedded_path = args.embedded_path[i]
         if not name:
-          name = embedded_path
+          name = ':'.join((disk_name, embedded_path))
         mount_partition = args.mount_partition[i]
       if ((project and project != config.TURBINIA_PROJECT) or
           (zone and zone != config.TURBINIA_ZONE)):
