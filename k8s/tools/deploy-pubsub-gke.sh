@@ -77,7 +77,7 @@ gcloud -q --project $DEVSHELL_PROJECT_ID services enable iam.googleapis.com
 SA_NAME="turbinia"
 SA_MEMBER="serviceAccount:$SA_NAME@$DEVSHELL_PROJECT_ID.iam.gserviceaccount.com"
 
-if ! gcloud --project $DEVSHELL_PROJECT_ID iam service-accounts list |grep $SA_NAME; then
+if [[ -z "$(gcloud -q --project $DEVSHELL_PROJECT_ID iam service-accounts list --format='value(name)' --filter=name:/$SA_NAME@)" ]] ; then
   # Create service account
   gcloud --project $DEVSHELL_PROJECT_ID iam service-accounts create "${SA_NAME}" --display-name "${SA_NAME}"
 fi
