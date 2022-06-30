@@ -26,7 +26,6 @@ import (
 	"flag"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"os"
 	"os/user"
@@ -305,17 +304,7 @@ func (s *Scanner) compile() error {
 	}
 
 	if *yaraRulesFlag != "" {
-		tmpRulesFile, err := ioutil.TempFile("", "turbinia_yara")
-		if err != nil {
-			log.Fatalf("Unable to create temporary file: %v", err)
-		}
-		defer os.Remove(tmpRulesFile.Name())
-		_, err = tmpRulesFile.WriteString(*yaraRulesFlag)
-		if err != nil {
-			log.Fatalf("Unable to write Yara rules into tmp file: %v", err)
-		}
-		tmpRulesFile.Sync()
-		err = compiler.AddString(fungeRules(tmpRulesFile.Name()), "")
+		err = compiler.AddString(fungeRules(*yaraRulesFlag), "")
 		if err != nil {
 			log.Fatalf("Error adding Rule from Variable: %v", err)
 		}
@@ -421,13 +410,13 @@ func init() {
 	scanPathFlag = flag.String("folder", "", "Specify a particular folder to be scanned")
 	rulePathFlag = flag.String("rules", "", "Specify a particular path to a file or folder containing the Yara rules to use")
 	magicPathFlag = flag.String("magic", "misc/file-type-signatures.txt", "A path under the rules path that contains File Magics")
-	yaraRulesFlag = flag.String("yara", "", "Any additional Yara rules to be used, passed in as a string")
+	yaraRulesFlag = flag.String("extrayara", "", "Any additional Yara rules to be used")
 	flag.Parse()
 }
 
 func main() {
 	if *scanPathFlag == "" || *rulePathFlag == "" {
-		log.Println("Usage: fraken -folder <path to scan> -rules <path to rules> [-magic <path to magics>]")
+		log.Println("Usage: fraken -folder <path to scan> -rules <path to rules> [-magic <path to magics>] [-extrayara <path to file>]")
 		os.Exit(1)
 	}
 	err := scanner.init()

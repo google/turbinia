@@ -14,13 +14,16 @@
 # limitations under the License.
 """Task for running Yara on drives & directories."""
 
-import csv
+import json
 import os
+import re
 
+from turbinia import config
 from turbinia import TurbiniaException
 
 from turbinia.evidence import EvidenceState as state
 from turbinia.evidence import ReportText
+from turbinia.lib import file_helpers
 from turbinia.lib import text_formatter as fmt
 from turbinia.workers import Priority
 from turbinia.workers import TurbiniaTask
@@ -78,9 +81,11 @@ class YaraAnalysisTask(TurbiniaTask):
         '-folder', evidence.local_path
     ]
 
-    yr = self.task_config.get('yara_rules', '') 
+    yr = self.task_config.get('yara_rules', '')
     if yr != '':
-      cmd.extend(['-yara', yr])
+      file_path = file_helpers.write_str_to_temp_file(
+          yr, preferred_dir=self.tmp_dir)
+      cmd.extend(['-extrayara', file_path])
 
     (ret, result) = self.execute(
         cmd, result, stdout_file=stdout_file)
@@ -92,16 +97,28 @@ class YaraAnalysisTask(TurbiniaTask):
     summary = 'No Yara rules matched'
     priority = Priority.LOW
 
+    config.LoadConfig()
+    dirRE = re.compile(r"{0!s}/.*?/".format(config.MOUNT_DIR_PREFIX))
+
     report_lines = []
     try:
-      with open(stdout_file, 'r') as fraken_report_csv:
-        frakenreader = csv.DictReader(
-            fraken_report_csv, fieldnames=['Path', 'Hash', 'Signature', 'Description', 'Reference', 'Score'])
-        for row in frakenreader:
-          if row['Score'] == "" or int(row['Score']) > 40:
-            report_lines.append(' - '.join([row['Path'], row['Hash'], row['Signature'], row['Description'], row.get('Reference', ""), row.get('Score', 0)]))
+      with open(stdout_file, 'r') as fraken_report:
+        try:
+          fraken_output = json.load(fraken_report)
+        except (TypeError, ValueError, json.JSONDecodeError) as e:
+          raise TurbiniaException(
+              'Error decoding JSON output from fraken: {0!s}'.format(e))
+        for row in fraken_output:
+          if row['Score'] == "" or int(row.get('Score', 0)) > 40:
+            report_lines.append(
+                ' - '.join([
+                    dirRE.sub("/", row['ImagePath']), row['SHA256'],
+                    row['Signature'], row['Description'],
+                    row.get('Reference', ""),
+                    row.get('Score', 0)
+                ]))
     except FileNotFoundError:
-      pass # No Yara rules matched
+      pass  # No Yara rules matched
 
     if report_lines:
       priority = Priority.HIGH
