@@ -439,12 +439,18 @@ func main() {
 	waitChan := make(chan struct{}, MAX_GOROUTINES)
 	resultsChan := make(chan *Detection)
 	go filesystemScan(waitChan, resultsChan)
+	var results []*Detection
 	for r := range resultsChan {
-		j, err := json.Marshal(r)
-		if err != nil {
-			log.Printf("error marshalling JSON: %v", err)
-			continue
-		}
+		results = append(results, r)
+	}
+	if len(results) == 0 {
+		log.Println("No hits")
+		os.Exit(0)
+	}
+	j, err := json.Marshal(results)
+	if err != nil {
+		log.Printf("error marshalling JSON: %v", err)
+	} else {
 		fmt.Println(string(j))
 	}
 }
