@@ -51,7 +51,8 @@ class YaraAnalysisTaskTest(TestTurbiniaTaskBase):
       logging.getLogger('turbinia').error('Fraken not installed')
       return
 
-    (report, priority, summary) = self.task.runFraken(self.result, self.evidence)
+    (report, priority, summary) = self.task.runFraken(
+        self.result, self.evidence)
     self.assertEqual(priority, 20)
     self.assertEqual(summary, self.YARA_SUMMARY)
     self.assertIn('Mimikatz', report)
