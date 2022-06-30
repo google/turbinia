@@ -75,7 +75,7 @@ func initMagics() {
 		// Try rule + magic
 		file, err = os.Open(path.Join(*rulePathFlag, *magicPathFlag))
 		if err != nil {
-			fmt.Printf("unable to open Magics file: %v\n", err)
+			log.Printf("unable to open Magics file: %v\n", err)
 			return
 		}
 	}
@@ -102,7 +102,7 @@ func initMagics() {
 func getFileTypes(filePath string) string {
 	f, err := os.Open(filePath)
 	if err != nil {
-		fmt.Printf("Error opening file: %v\n", err)
+		log.Printf("Error opening file: %v\n", err)
 		return ""
 	}
 	defer f.Close()
@@ -111,7 +111,7 @@ func getFileTypes(filePath string) string {
 	for k, v := range magics {
 		sig, err := hex.DecodeString(k)
 		if err != nil {
-			fmt.Printf("Unable to parse signature %v: %v\n", k, err)
+			log.Printf("Unable to parse signature %v: %v\n", k, err)
 			continue
 		}
 		if bytes.Equal(fData[:len(sig)], sig) {
@@ -291,7 +291,7 @@ func (s *Scanner) compile() error {
 			return nil
 		})
 		if err != nil {
-			fmt.Printf("error walking the path %v\n", err)
+			log.Printf("error walking the path %v\n", err)
 			return err
 		}
 	case mode.IsRegular():
@@ -427,12 +427,12 @@ func init() {
 
 func main() {
 	if *scanPathFlag == "" || *rulePathFlag == "" {
-		fmt.Println("Usage: fraken -folder <path to scan> -rules <path to rules> [-magic <path to magics>]")
+		log.Println("Usage: fraken -folder <path to scan> -rules <path to rules> [-magic <path to magics>]")
 		os.Exit(1)
 	}
 	err := scanner.init()
 	if err != nil {
-		fmt.Printf("Error initialising Yara engine: %v\n", err)
+		log.Printf("Error initialising Yara engine: %v\n", err)
 		os.Exit(1)
 	}
 	initMagics()
