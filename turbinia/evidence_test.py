@@ -69,7 +69,7 @@ class TestTurbiniaEvidence(unittest.TestCase):
     collection_evidence = serialized_evidence['collection'][0]
 
     self.assertIsInstance(serialized_evidence, dict)
-    self.assertEqual(collection_evidence['name'], 'My Evidence')
+    self.assertEqual(collection_evidence['_name'], 'My Evidence')
 
   def testEvidenceSerializationBadType(self):
     """Test that evidence_decode throws error on non-dict type."""
