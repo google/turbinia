@@ -52,7 +52,7 @@ type Detection struct {
 	Signature   string
 	Description string
 	Reference   string
-	Score       string
+	Score       int
 }
 
 var (
@@ -135,7 +135,7 @@ func hashFile(filePath string) (string, error) {
 	return hex.EncodeToString(h.Sum(nil)), nil
 }
 
-func newDetection(imagePath, signature, description, reference, score string) *Detection {
+func newDetection(imagePath, signature, description, reference string, score int) *Detection {
 	sha256, _ := hashFile(imagePath)
 
 	return &Detection{
@@ -348,16 +348,23 @@ func filesystemScan(wait chan struct{}, c chan *Detection) {
 		go func() {
 			matches, _ := scanFile(scanner, filePath, fileInfo)
 			for _, match := range matches {
-				var score, description, reference string
+				var description, reference string
+				score := 50
 				for _, m := range match.Metas {
 					if m.Identifier == "score" {
-						score = strconv.Itoa(m.Value.(int))
+						score = m.Value.(int)
 					}
 					if strings.HasPrefix(m.Identifier, "desc") {
 						description = m.Value.(string)
 					}
 					if m.Identifier == "reference" || strings.HasPrefix(m.Identifier, "report") {
 						reference = m.Value.(string)
+					}
+					if m.Identifier == "context" {
+						v := strings.ToLower(m.Value.(string))
+						if v == "yes" || v == "true" || v == "1" {
+							score = 0
+						}
 					}
 				}
 				c <- newDetection(filePath, match.Rule, description, reference, score)
