@@ -2,10 +2,9 @@
 
 globals:
   jobs_allowlist:
-    - CronExtractionJob
-    - CronAnalysisJob
     - PlasoJob
     - FileSystemTimelineJob
+    - YaraAnalysisJob
 
 plaso_base:
   task: 'PlasoTask'
