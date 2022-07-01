@@ -112,9 +112,10 @@ class YaraAnalysisTask(TurbiniaTask):
             report_lines.append(
                 ' - '.join([
                     dirRE.sub("/", row['ImagePath']), row['SHA256'],
-                    row['Signature'], row.get('Description', ''),
+                    row['Signature'],
+                    row.get('Description', ''),
                     row.get('Reference', ''),
-                    row.get('Score', 0)
+                    str(row.get('Score', 0))
                 ]))
     except FileNotFoundError:
       pass  # No Yara rules matched
