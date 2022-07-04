@@ -82,7 +82,7 @@ class YaraAnalysisTask(TurbiniaTask):
     ]
 
     yr = self.task_config.get('yara_rules')
-    if not yr:
+    if yr:
       file_path = file_helpers.write_str_to_temp_file(
           yr, preferred_dir=self.tmp_dir)
       cmd.extend(['-extrayara', file_path])
