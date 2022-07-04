@@ -87,7 +87,7 @@ func initMagics() {
 		}
 		tokens := strings.Split(t, ";")
 		if len(tokens) != 2 {
-			log.Printf("Unable to parse: %v", t)
+			log.Printf("unable to parse: %v", t)
 			continue
 		}
 		sig := strings.Replace(tokens[0], " ", "", -1)
@@ -101,7 +101,7 @@ func initMagics() {
 func getFileTypes(filePath string) string {
 	f, err := os.Open(filePath)
 	if err != nil {
-		log.Printf("Error opening file: %v\n", err)
+		log.Printf("error opening file: %v\n", err)
 		return ""
 	}
 	defer f.Close()
@@ -110,7 +110,7 @@ func getFileTypes(filePath string) string {
 	for k, v := range magics {
 		sig, err := hex.DecodeString(k)
 		if err != nil {
-			log.Printf("Unable to parse signature %v: %v\n", k, err)
+			log.Printf("unable to parse signature %v: %v\n", k, err)
 			continue
 		}
 		if bytes.Equal(fData[:len(sig)], sig) {
@@ -192,7 +192,7 @@ func fungeRules(filePath string) string {
 		}
 		if trimmedT == "meta:" {
 			if meta {
-				log.Fatal("Was in meta and met meta")
+				log.Fatal("error funging Yara rule: was in meta section and met meta section header")
 			}
 			meta = true
 		}
@@ -249,7 +249,7 @@ func fungeRules(filePath string) string {
 		}
 		if trimmedT == "condition:" {
 			if condition {
-				log.Fatal("Was in condition and met condition")
+				log.Fatal("error funging Yara rule: was in condition section and met condition header")
 			}
 			condition = true
 		}
@@ -284,7 +284,7 @@ func (s *Scanner) compile() error {
 				// Open the rule file and add it to the Yara compiler.
 				err = compiler.AddString(fungeRules(filePath), "")
 				if err != nil {
-					log.Fatalf("Unable to parse rule: %v", err)
+					log.Fatalf("unable to parse rule %v: %v", filePath, err)
 				}
 			}
 			return nil
@@ -294,7 +294,6 @@ func (s *Scanner) compile() error {
 			return err
 		}
 	case mode.IsRegular():
-		log.Println("Compiling Yara rule ", s.rulesPath)
 		rulesFile, _ := os.Open(s.rulesPath)
 		defer rulesFile.Close()
 		err = compiler.AddString(fungeRules(s.rulesPath), "")
@@ -306,7 +305,7 @@ func (s *Scanner) compile() error {
 	if *yaraRulesFlag != "" {
 		err = compiler.AddString(fungeRules(*yaraRulesFlag), "")
 		if err != nil {
-			log.Fatalf("Error adding Rule from Variable: %v", err)
+			log.Fatalf("error adding rule from parameter: %v", err)
 		}
 	}
 
@@ -333,7 +332,7 @@ func (s *Scanner) init() error {
 
 func filesystemScan(wait chan struct{}, c chan *Detection) {
 	if _, err := os.Stat(*scanPathFlag); err != nil {
-		log.Printf("Cannot scan: %v\n", err)
+		log.Printf("cannot scan %v: %v\n", *scanPathFlag, err)
 		close(c)
 		return
 	}
@@ -428,7 +427,7 @@ func main() {
 	}
 	err := scanner.init()
 	if err != nil {
-		log.Printf("Error initialising Yara engine: %v\n", err)
+		log.Printf("error initialising Yara engine: %v\n", err)
 		os.Exit(1)
 	}
 	initMagics()
