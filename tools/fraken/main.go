@@ -167,7 +167,7 @@ func fungeRules(filePath string) (string, error) {
 		if trimmedT == "" {
 			continue
 		}
-		if meta && strings.HasSuffix(trimmedT, ":") {
+		if meta && trimmedT != "meta:" && strings.HasSuffix(trimmedT, ":") {
 			meta = false
 		}
 		if meta {
@@ -191,11 +191,14 @@ func fungeRules(filePath string) (string, error) {
 		}
 		if trimmedT == "meta:" {
 			if meta {
-				log.Fatal("Error funging Yara rule: was in meta section and met meta section header")
+				return "", fmt.Errorf("error funging Yara rule: was in meta section and met meta section header")
 			}
 			meta = true
 		}
-		if condition {
+		if condition && trimmedT != "condition:" && strings.HasSuffix(trimmedT, ":") {
+			condition = false
+		}
+		if condition && !strings.HasSuffix(trimmedT, ":") {
 			if filepath != "" {
 				if filepath[0] == '!' {
 					not = "not "
@@ -244,11 +247,10 @@ func fungeRules(filePath string) (string, error) {
 				owner = ""
 				not = ""
 			}
-			condition = false
 		}
 		if trimmedT == "condition:" {
 			if condition {
-				log.Fatal("Error funging Yara rule: was in condition section and met condition header")
+				return "", fmt.Errorf("error funging Yara rule: was in condition section and met condition header")
 			}
 			condition = true
 		}
