@@ -18,6 +18,7 @@ RUN apt-get update && apt-get -y install \
     john-data \
     hashcat \
     hashcat-data \
+    libjemalloc-dev \
     libleveldb1d \
     libleveldb-dev \
     libprotobuf-c-dev \
@@ -87,7 +88,7 @@ RUN cd /opt/fraken/yara && curl -s https://api.github.com/repos/VirusTotal/Yara/
     && ./configure \
     && make && sudo make install && sudo ldconfig \
     && sudo update-alternatives --install /usr/bin/go go /usr/lib/go-1.16/bin/go 10
-RUN cd /opt/fraken && go build -o fraken
+RUN cd /opt/fraken && go build -ldflags="-linkmode=external -extldflags=-ljemalloc" -o fraken
 
 RUN mkdir /etc/turbinia && mkdir -p /mnt/turbinia/ && mkdir -p /var/lib/turbinia/ \
     && mkdir -p /etc/turbinia/ && chown -R turbinia:turbinia /etc/turbinia/ \

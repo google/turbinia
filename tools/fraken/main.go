@@ -57,25 +57,24 @@ type Detection struct {
 
 var (
 	scanner           Scanner
-	scanPathFlag      *string
-	rulePathFlag      *string
-	magicPathFlag     *string
-	yaraRulesFlag     *string
-	magics            = make(map[string]string)
 	maxMagics         int
+	scanPathFlag      = flag.String("folder", "", "Specify a particular folder to be scanned")
+	rulePathFlag      = flag.String("rules", "", "Specify a particular path to a file or folder containing the Yara rules to use")
+	magicPathFlag     = flag.String("magic", "misc/file-type-signatures.txt", "A path under the rules path that contains File Magics")
+	yaraRulesFlag     = flag.String("extrayara", "", "Any additional Yara rules to be used")
+	magics            = make(map[string]string)
 	externalVariables = []string{"filepath", "filename", "filetype", "extension", "owner"}
-	MAX_GOROUTINES    = 10
+	maxGoroutines     = 10
 )
 
-func initMagics() {
+func initMagics() error {
 	// Try magic:
 	file, err := os.Open(*magicPathFlag) // For read access.
 	if err != nil {
 		// Try rule + magic
 		file, err = os.Open(path.Join(*rulePathFlag, *magicPathFlag))
 		if err != nil {
-			log.Printf("unable to open Magics file: %v\n", err)
-			return
+			return fmt.Errorf("unable to open Magics file: %v", err)
 		}
 	}
 	defer file.Close()
@@ -87,7 +86,7 @@ func initMagics() {
 		}
 		tokens := strings.Split(t, ";")
 		if len(tokens) != 2 {
-			log.Printf("unable to parse: %v", t)
+			log.Printf("Unable to parse: %v", t)
 			continue
 		}
 		sig := strings.Replace(tokens[0], " ", "", -1)
@@ -96,13 +95,13 @@ func initMagics() {
 		}
 		magics[sig] = tokens[1]
 	}
+	return nil
 }
 
-func getFileTypes(filePath string) string {
+func getFileTypes(filePath string) (string, error) {
 	f, err := os.Open(filePath)
 	if err != nil {
-		log.Printf("error opening file: %v\n", err)
-		return ""
+		return "", fmt.Errorf("error opening file: %v", err)
 	}
 	defer f.Close()
 	fData := make([]byte, maxMagics)
@@ -110,17 +109,17 @@ func getFileTypes(filePath string) string {
 	for k, v := range magics {
 		sig, err := hex.DecodeString(k)
 		if err != nil {
-			log.Printf("unable to parse signature %v: %v\n", k, err)
+			log.Printf("Unable to parse signature %v: %v\n", k, err)
 			continue
 		}
 		if bytes.Equal(fData[:len(sig)], sig) {
-			return v
+			return v, nil
 		}
 	}
-	return "UNKNOWN"
+	return "UNKNOWN", nil
 }
 
-func hashFile(filePath string) (string, error) {
+func sha256sum(filePath string) (string, error) {
 	h := sha256.New()
 	file, err := os.Open(filePath)
 	if err != nil {
@@ -136,7 +135,10 @@ func hashFile(filePath string) (string, error) {
 }
 
 func newDetection(imagePath, signature, description, reference string, score int) *Detection {
-	sha256, _ := hashFile(imagePath)
+	sha256, err := sha256sum(imagePath)
+	if err != nil {
+		log.Printf("Unable to hash file %v: %v\n", imagePath, err)
+	}
 
 	return &Detection{
 		ImagePath:   imagePath,
@@ -148,18 +150,15 @@ func newDetection(imagePath, signature, description, reference string, score int
 	}
 }
 
-func fungeRules(filePath string) string {
+func fungeRules(filePath string) (string, error) {
 	var ret []string
-	var meta bool
-	var condition bool
-	var filepath string
-	var filename string
-	var filetype string
-	var not string
-	var extension string
-	var owner string
+	var meta, condition bool
+	var filepath, filename, filetype, not, extension, owner string
 
-	rulesFile, _ := os.Open(filePath)
+	rulesFile, err := os.Open(filePath)
+	if err != nil {
+		return "", err
+	}
 	defer rulesFile.Close()
 	scanner := bufio.NewScanner(rulesFile)
 	for scanner.Scan() {
@@ -192,7 +191,7 @@ func fungeRules(filePath string) string {
 		}
 		if trimmedT == "meta:" {
 			if meta {
-				log.Fatal("error funging Yara rule: was in meta section and met meta section header")
+				log.Fatal("Error funging Yara rule: was in meta section and met meta section header")
 			}
 			meta = true
 		}
@@ -249,16 +248,16 @@ func fungeRules(filePath string) string {
 		}
 		if trimmedT == "condition:" {
 			if condition {
-				log.Fatal("error funging Yara rule: was in condition section and met condition header")
+				log.Fatal("Error funging Yara rule: was in condition section and met condition header")
 			}
 			condition = true
 		}
 		ret = append(ret, t)
 	}
-	return strings.Join(ret, "\n")
+	return strings.Join(ret, "\n"), nil
 }
 
-// Compile will compile the provided Yara rules in a Rules object.
+// Compile will compile the provided Yara rules in a Rules struct.
 func (s *Scanner) compile() error {
 	compiler, err := yara.NewCompiler()
 	if err != nil {
@@ -268,7 +267,10 @@ func (s *Scanner) compile() error {
 		compiler.DefineVariable(v, "")
 	}
 
-	rulesStat, _ := os.Stat(s.rulesPath)
+	rulesStat, err := os.Stat(s.rulesPath)
+	if err != nil {
+		return err
+	}
 	switch mode := rulesStat.Mode(); {
 	case mode.IsDir():
 		err = filepath.Walk(s.rulesPath, func(filePath string, fileInfo os.FileInfo, err error) error {
@@ -279,33 +281,40 @@ func (s *Scanner) compile() error {
 
 			// Check if the file has extension .yar or .yara.
 			if (path.Ext(fileName) == ".yar") || (path.Ext(fileName) == ".yara") {
-				// log.Println("Adding rule ", filePath)
-
 				// Open the rule file and add it to the Yara compiler.
-				err = compiler.AddString(fungeRules(filePath), "")
+				r, err := fungeRules(filePath)
 				if err != nil {
-					log.Fatalf("unable to parse rule %v: %v", filePath, err)
+					return fmt.Errorf("unable to funge rules %v: %v", filePath, err)
+				}
+				err = compiler.AddString(r, "")
+				if err != nil {
+					return fmt.Errorf("unable to parse rule %v: %v", filePath, err)
 				}
 			}
 			return nil
 		})
 		if err != nil {
-			log.Printf("error walking the path %v\n", err)
-			return err
+			return fmt.Errorf("error walking the path %v", err)
 		}
 	case mode.IsRegular():
-		rulesFile, _ := os.Open(s.rulesPath)
-		defer rulesFile.Close()
-		err = compiler.AddString(fungeRules(s.rulesPath), "")
+		r, err := fungeRules(s.rulesPath)
 		if err != nil {
-			log.Fatal(err)
+			return fmt.Errorf("unable to funge rules %v: %v", s.rulesPath, err)
+		}
+		err = compiler.AddString(r, "")
+		if err != nil {
+			return fmt.Errorf("unable to compile rules: %v", err)
 		}
 	}
 
 	if *yaraRulesFlag != "" {
-		err = compiler.AddString(fungeRules(*yaraRulesFlag), "")
+		r, err := fungeRules(*yaraRulesFlag)
 		if err != nil {
-			log.Fatalf("error adding rule from parameter: %v", err)
+			return fmt.Errorf("unable to funge parameterised rules: %v", err)
+		}
+		err = compiler.AddString(r, "")
+		if err != nil {
+			return fmt.Errorf("error adding rule from parameter: %v", err)
 		}
 	}
 
@@ -332,7 +341,7 @@ func (s *Scanner) init() error {
 
 func filesystemScan(wait chan struct{}, c chan *Detection) {
 	if _, err := os.Stat(*scanPathFlag); err != nil {
-		log.Printf("cannot scan %v: %v\n", *scanPathFlag, err)
+		log.Printf("Cannot scan %v: %v\n", *scanPathFlag, err)
 		close(c)
 		return
 	}
@@ -350,8 +359,17 @@ func filesystemScan(wait chan struct{}, c chan *Detection) {
 				var description, reference string
 				score := 50
 				for _, m := range match.Metas {
+					var parsedScore int
 					if m.Identifier == "score" {
-						score = m.Value.(int)
+						switch g := m.Value.(type) {
+						case int:
+							parsedScore = m.Value.(int)
+						case string:
+							parsedScore, err = strconv.Atoi(strings.TrimSpace(m.Value.(string)))
+						default:
+							log.Printf("Unable to parse score for rule %v (type %v)): %v\n", match.Rule, g, m)
+						}
+						score = parsedScore
 					}
 					if strings.HasPrefix(m.Identifier, "desc") {
 						description = m.Value.(string)
@@ -374,7 +392,7 @@ func filesystemScan(wait chan struct{}, c chan *Detection) {
 		return nil
 	})
 	if err != nil {
-		log.Printf("error walking dir: %v\n", err)
+		log.Printf("Error walking dir: %v\n", err)
 	}
 	wg.Wait()
 	close(c)
@@ -394,12 +412,17 @@ func scanFile(s Scanner, filePath string, fileInfo os.FileInfo) (yara.MatchRules
 	ys.DefineVariable("extension", filepath.Ext(filePath))
 
 	stat := fileInfo.Sys().(*syscall.Stat_t)
+	// TODO: Read this in from mounted /etc/passwd if we have it.
 	owner, err := user.LookupId(strconv.FormatUint(uint64(stat.Uid), 10))
 	if err == nil {
 		ys.DefineVariable("owner", owner.Username)
 	}
 
-	ys.DefineVariable("filetype", getFileTypes(filePath))
+	ft, err := getFileTypes(filePath)
+	if err != nil {
+		log.Printf("Unable to determine file type of file %v: %v\n", filePath, err)
+	}
+	ys.DefineVariable("filetype", ft)
 
 	// Scan the file.
 	err = ys.SetCallback(&matches).ScanFile(filePath)
@@ -412,26 +435,20 @@ func scanFile(s Scanner, filePath string, fileInfo os.FileInfo) (yara.MatchRules
 	return matches, nil
 }
 
-func init() {
-	scanPathFlag = flag.String("folder", "", "Specify a particular folder to be scanned")
-	rulePathFlag = flag.String("rules", "", "Specify a particular path to a file or folder containing the Yara rules to use")
-	magicPathFlag = flag.String("magic", "misc/file-type-signatures.txt", "A path under the rules path that contains File Magics")
-	yaraRulesFlag = flag.String("extrayara", "", "Any additional Yara rules to be used")
-	flag.Parse()
-}
-
 func main() {
+	flag.Parse()
+
 	if *scanPathFlag == "" || *rulePathFlag == "" {
 		log.Println("Usage: fraken -folder <path to scan> -rules <path to rules> [-magic <path to magics>] [-extrayara <path to file>]")
 		os.Exit(1)
 	}
-	err := scanner.init()
-	if err != nil {
-		log.Printf("error initialising Yara engine: %v\n", err)
-		os.Exit(1)
+	if err := scanner.init(); err != nil {
+		log.Fatalf("Error initialising Yara engine: %v\n", err)
 	}
-	initMagics()
-	waitChan := make(chan struct{}, MAX_GOROUTINES)
+	if err := initMagics(); err != nil {
+		log.Println("Error initialising Magic file (continuing without it): ", err)
+	}
+	waitChan := make(chan struct{}, maxGoroutines)
 	resultsChan := make(chan *Detection)
 	go filesystemScan(waitChan, resultsChan)
 	var results []*Detection
@@ -444,7 +461,7 @@ func main() {
 	}
 	j, err := json.Marshal(results)
 	if err != nil {
-		log.Printf("error marshalling JSON: %v", err)
+		log.Printf("Error marshalling JSON: %v", err)
 	} else {
 		fmt.Println(string(j))
 	}

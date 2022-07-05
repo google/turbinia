@@ -1,3 +1,10 @@
+This is a multithreaded Yara scanner.  It supports rules that make use of the external variables defined in [signature-base](https://github.com/Neo23x0/signature-base), as well as having those variables defined in the metadata fields of the rules.
+
+Its main use is as part of Turbinia but it can be compiled and used standalone.
+
+Usage:
+`./<binary> -folder <path to scan> -rules <path to rules>`
+
 Thanks to [Loki](https://github.com/Neo23x0/Loki), [Kraken](https://github.com/botherder/kraken) and [go-yara](https://github.com/hillu/go-yara)
 
 Needs Yara first, i.e:
