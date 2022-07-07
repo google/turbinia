@@ -441,8 +441,8 @@ class TurbiniaTask:
 
   # The list of attributes that we will persist into storage
   STORED_ATTRIBUTES = [
-      'id', 'job_id', 'last_update', 'name', 'request_id', 'requester',
-      'group_name', 'reason', 'all_args', 'group_id'
+      'id', 'job_id', 'last_update', 'name', 'evidence_name', 'request_id',
+      'requester', 'group_name', 'reason', 'all_args', 'group_id'
   ]
 
   # The list of evidence states that are required by a Task in order to run.
@@ -475,6 +475,7 @@ class TurbiniaTask:
     self.job_name = None
     self.last_update = datetime.now()
     self.name = name if name else self.__class__.__name__
+    self.evidence_name = None
     self.output_dir = None
     self.output_manager = output_manager.OutputManager()
     self.result = None
