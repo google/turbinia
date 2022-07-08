@@ -10,8 +10,8 @@ components:
           tokenUrl: https://oauth2.googleapis.com/token
           scopes: {}
   schemas:
-    BaseEvidenceOptions:
-      description: Base Evidence Options class to be extended by other evidence types.
+    BaseRequestOptions:
+      description: "Base Request Options class to be extended by other option types. "
       properties:
         filter_patterns:
           items:
@@ -31,19 +31,19 @@ components:
         name:
           title: Name
           type: string
+        recipe_name:
+          title: Recipe Name
+          type: string
         sketch_id:
           title: Sketch Id
           type: integer
         source_path:
           title: Source Path
           type: string
-        turbinia_recipe:
-          title: Turbinia Recipe
-          type: string
         yara_rules:
           title: Yara Rules
           type: string
-      title: BaseEvidenceOptions
+      title: BaseRequestOptions
       type: object
     EvidenceTypesEnum:
       description: Enum of Turbinia Evidence types.
@@ -65,27 +65,25 @@ components:
       title: HTTPValidationError
       type: object
     Request:
-      description: Base request object.
+      description: "Base request object. "
       properties:
         description:
           default: Turbinia request object
           title: Description
           type: string
-        evidence_options:
-          $ref: "#/components/schemas/BaseEvidenceOptions"
         evidence_type:
           $ref: "#/components/schemas/EvidenceTypesEnum"
         group_id:
-          description: Turbinia group identifier
           title: Group Id
           type: string
         reason:
           title: Reason
           type: string
         request_id:
-          description: Turbinia request identifier
           title: Request Id
           type: string
+        request_options:
+          $ref: "#/components/schemas/BaseRequestOptions"
         requester:
           title: Requester
           type: string
@@ -94,7 +92,7 @@ components:
           type: string
       required:
         - evidence_type
-        - evidence_options
+        - request_options
       title: Request
       type: object
     RequestStatus:
@@ -172,15 +170,15 @@ components:
       title: ValidationError
       type: object
 info:
-  description: This is Turbinia's API server description.
+  description: Turbinia API server
   license:
     name: Apache License 2.0
-    url: https://www.apache.org/licenses/LICENSE-2.0.html
+    url: "https://www.apache.org/licenses/LICENSE-2.0.html"
   title: Turbinia API Server
   version: 1.0.0
 openapi: 3.0.2
 paths:
-  /config/:
+  /api/config/:
     get:
       description: Retrieve turbinia config.
       operationId: read_config
@@ -193,9 +191,9 @@ paths:
       summary: Read Config
       tags:
         - Turbinia Configuration
-  /jobs/:
+  /api/jobs/:
     get:
-      description: Return all enabled jobs.
+      description: Return enabled jobs from the current Turbinia config.
       operationId: read_jobs
       responses:
         "200":
@@ -206,7 +204,7 @@ paths:
       summary: Read Jobs
       tags:
         - Turbinia Jobs
-  /logs/{query}:
+  /api/logs/{query}:
     get:
       description: Retrieve log data.
       operationId: get_logs
@@ -232,7 +230,7 @@ paths:
       summary: Get Logs
       tags:
         - Logs
-  /request/:
+  /api/request/:
     post:
       description:
         "Create a new Turbinia request.\n\nArgs:\n  request (turbinia.api.schema.request):\
@@ -261,7 +259,7 @@ paths:
       summary: Create Request
       tags:
         - Turbinia Requests
-  /request/summary:
+  /api/request/summary:
     get:
       description:
         "Retrieves a summary of all Turbinia requests.\n\nThe response\
@@ -278,7 +276,7 @@ paths:
       summary: Get Requests Summary
       tags:
         - Turbinia Requests
-  /request/{request_id}:
+  /api/request/{request_id}:
     get:
       description:
         "Retrieves status for a Turbinia Request.\n\nArgs:\n  request_id\
@@ -308,7 +306,7 @@ paths:
       summary: Get Request Status
       tags:
         - Turbinia Requests
-  /result/request/{request_id}:
+  /api/result/request/{request_id}:
     get:
       description: Retrieve request status output.
       operationId: get_request_output
@@ -334,7 +332,7 @@ paths:
       summary: Get Request Output
       tags:
         - Turbinia Request Results
-  /result/task/{task_id}:
+  /api/result/task/{task_id}:
     get:
       description: Retrieves a task's output files.
       operationId: get_task_output
@@ -360,7 +358,7 @@ paths:
       summary: Get Task Output
       tags:
         - Turbinia Request Results
-  /task/{task_id}:
+  /api/task/{task_id}:
     get:
       description: Retrieve task information.
       operationId: get_task_status

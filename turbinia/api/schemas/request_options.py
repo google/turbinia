@@ -12,18 +12,17 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Turbinia API server Job Options model and methods."""
+"""Turbinia API server request options model and methods."""
 
-from pydantic import BaseModel, Field
 from typing import Optional, List
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
-class BaseEvidenceOptions(BaseModel):
-  """Base Evidence Options class to be extended by other evidence types."""
+class BaseRequestOptions(BaseModel):
+  """Base Request Options class to be extended by other option types. """
   name: str = None
   source_path: str = None
-  turbinia_recipe: Optional[str] = None
+  recipe_name: Optional[str] = None
   jobs_allowlist: Optional[List[str]] = None
   jobs_denylist: Optional[List[str]] = None
   filter_patterns: Optional[List[str]] = None
@@ -31,20 +30,16 @@ class BaseEvidenceOptions(BaseModel):
   sketch_id: Optional[int] = None
 
 
-class GoogleCloudOptions(BaseEvidenceOptions):
+class GoogleCloudOptions(BaseRequestOptions):
   """Google Cloud disk evidence options."""
   description: Optional[str] = 'GoogleCloudJob Evidence Options'
   project: str = None
   zone: str = None
   disk_name: str = None
-  mount_partition: Optional[str] = None
-  turbinia_recipe: str = None
-  jobs_allowlist: List[str] = None
-  jobs_denylist: List[str] = None
+  mount_partition: Optional[int] = Field(ge=0)
 
 
 class GoogleCloudDiskEmbeddedOptions(GoogleCloudOptions):
   """Google CLoud jobs that work with disk images."""
-  description: Optional[str] = 'GoogleCloudDiskEmbeddedJob Job Options'
+  description: Optional[str] = 'GoogleCloudDiskEmbeddedJob Evidence Options'
   embedded_path: str = None
-  mount_partition: Optional[int] = Field(ge=0)

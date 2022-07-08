@@ -15,18 +15,19 @@
 """Turbinia Request schema class."""
 
 from pydantic import BaseModel, Field
-from turbinia.api.schemas import evidence_options
+from turbinia.api.schemas import request_options
 from turbinia.api.schemas import evidence_types
 from typing import Optional
 
 
 class Request(BaseModel):
-  """Base request object."""
+  """Base request object. """
+
   description: Optional[str] = 'Turbinia request object'
-  reason: Optional[str] = None
-  request_id: Optional[str] = Field(description='Turbinia request identifier')
-  requester: Optional[str] = None
-  group_id: Optional[str] = Field(description='Turbinia group identifier')
   evidence_type: evidence_types.EvidenceTypesEnum
-  evidence_options: evidence_options.BaseEvidenceOptions
+  request_options: request_options.BaseRequestOptions
+  group_id: Optional[str] = None
+  reason: Optional[str] = None
+  request_id: Optional[str] = None
+  requester: Optional[str] = None
   sketch_id: Optional[str] = None

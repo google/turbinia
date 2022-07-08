@@ -36,7 +36,7 @@ log = logging.getLogger('turbinia:api_server')
 
 def get_application():
   """Returns a FastAPI application object."""
-  description = '''This is Turbinia's API server description.'''
+  description = '''Turbinia API server'''
   _app = FastAPI(
       title='Turbinia API Server', description=description, version='1.0.0',
       license_info={
@@ -47,10 +47,10 @@ def get_application():
 
 
 def set_operation_ids(app):
-  """Simplify operation IDs so that generated API clients have
-    simpler function names.
-    Should be called only after all routes have been added.
-    """
+  """Simplify operation ID names to be used by client generator.
+
+ This method must only be called after all routes have been added.
+  """
   for route in app.routes:
     if isinstance(route, APIRoute):
       route.operation_id = route.name
@@ -74,31 +74,23 @@ def configure_authentication_providers(app):
   """Configure the application's authentication providers.
 
   Example provider configuration using starlette-oauth2-pai:
-
+  """
   app.add_middleware(
       AuthenticateMiddleware,
       providers={
-          'google-ui': {
-              'keys':
-                  'https://www.googleapis.com/oauth2/v3/certs',
-              'issuer':
-                  'https://accounts.google.com',
-              'audience':
-                  'GOOGLE_WEB_CLIENT_ID',
+          'web-ui': {
+              'keys': 'https://www.googleapis.com/oauth2/v3/certs',
+              'issuer': 'https://accounts.google.com',
+              'audience': 'GOOGLE_WEB_CLIENT_ID',
           },
           'cli-client': {
-              'keys':
-                  'https://www.googleapis.com/oauth2/v3/certs',
-              'issuer':
-                  'https://accounts.google.com',
-              'audience':
-                  'GOOGLE_NATIVE_CLIENT_ID',
+              'keys': 'https://www.googleapis.com/oauth2/v3/certs',
+              'issuer': 'https://accounts.google.com',
+              'audience': 'GOOGLE_NATIVE_CLIENT_ID',
           }
       },
       public_paths={'/'},
   )
-  """
-  raise NotImplementedError
 
 
 app = get_application()
@@ -106,7 +98,7 @@ app = get_application()
 app.add_middleware(
     CORSMiddleware,
     allow_origins=config.API_ALLOWED_ORIGINS,
-    allow_credentials=True,
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )

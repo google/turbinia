@@ -27,8 +27,7 @@ log = logging.getLogger('turbinia:api_server:utils')
 
 
 def create_zip(request_id: str, task_id: str):
-  """Compress a Turbinia request or task's output directories
-  into a zip file.
+  """Compress a Turbinia request or task's output directories into a zip file.
 
   Args:
     request_id (str): Turbinia request identifier.
@@ -43,7 +42,8 @@ def create_zip(request_id: str, task_id: str):
   """
   log_path = turbinia_config.toJSON().get('OUTPUT_DIR')
 
-  request_output_path = '{}/{}'.format(log_path, request_id)
+  request_output_path = os.path.join(log_path, request_id)
+
   if task_id:
     try:
       request_dirs = os.listdir(request_output_path)
@@ -54,7 +54,7 @@ def create_zip(request_id: str, task_id: str):
 
     for request_dir in request_dirs:
       if task_id in request_dir:
-        request_output_path = '{}/{}'.format(request_output_path, request_dir)
+        request_output_path = os.path.join(request_output_path, request_dir)
 
   if not os.path.exists(request_output_path):
     raise HTTPException(
@@ -65,9 +65,9 @@ def create_zip(request_id: str, task_id: str):
   temp_directory = tempfile.TemporaryDirectory()
   with temp_directory as directory_name:
     if task_id:
-      zip_path = '{}/{}'.format(directory_name, task_id)
+      zip_path = os.path.join(directory_name, task_id)
     else:
-      zip_path = '{}/{}'.format(directory_name, request_id)
+      zip_path = os.path.join(directory_name, request_id)
 
     # Create the zip file
     zip_filename = shutil.make_archive(zip_path, 'zip', request_output_path)

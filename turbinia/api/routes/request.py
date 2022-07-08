@@ -94,10 +94,10 @@ async def create_request(input_request: request.Request):
   evidence_list = []
   request_id = input_request.request_id
   group_id = input_request.group_id
-  print(group_id)
   requester = input_request.requester
   reason = input_request.reason
   recipe = None
+  recipe_name = None
 
   try:
     if input_request.evidence_type == evidence_types.EvidenceTypesEnum.rawdisk:
@@ -149,8 +149,8 @@ async def create_request(input_request: request.Request):
     if not group_id:
       group_id = uuid.uuid4().hex
 
-    if input_request.evidence_options.turbinia_recipe:
-      recipe_name = input_request.evidence_options.turbinia_recipe
+    if input_request.evidence_options.recipe_name:
+      recipe_name = input_request.evidence_options.recipe_name
 
     recipe = client.create_recipe(
         group_id=group_id, recipe_name=recipe_name,
