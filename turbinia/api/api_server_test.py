@@ -65,7 +65,7 @@ class testTurbiniaAPIServer(unittest.TestCase):
   }
 
   def _get_state_manager(self):
-    """Gets a Datastore State Manager object for test."""
+    """Gets a Redis State Manager object for test."""
     turbinia_config.STATE_MANAGER = 'Redis'
     # force state_manager module to reload using Redis state manager.
     importlib.reload(state_manager)
