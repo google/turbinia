@@ -18,11 +18,13 @@ import unittest
 import json
 import fakeredis
 import mock
+import importlib
 
 from fastapi.testclient import TestClient
 
 from turbinia.api.api_server import app
 from turbinia import config as turbinia_config
+from turbinia import state_manager
 from turbinia.jobs import manager as jobs_manager
 from turbinia.workers import TurbiniaTask
 
@@ -62,9 +64,17 @@ class testTurbiniaAPIServer(unittest.TestCase):
       'failed_tasks': 0,
   }
 
+  def _get_state_manager(self):
+    """Gets a Datastore State Manager object for test."""
+    turbinia_config.STATE_MANAGER = 'Redis'
+    # force state_manager module to reload using Redis state manager.
+    importlib.reload(state_manager)
+    return state_manager.get_state_manager()
+
   def setUp(self):
     """This method will write a temporary key to redis for testing purposes."""
     self.client = TestClient(app)
+    self.state_manager = self._get_state_manager()
 
   #@mock.patch('fastapi.testclient.TestClient')
   def testReadRoot(self):
@@ -144,7 +154,6 @@ class testTurbiniaAPIServer(unittest.TestCase):
   @mock.patch('turbinia.state_manager.RedisStateManager.get_task_data')
   def testRequestSummary(self, testTaskData):
     """Test getting Turbinia Request status summary."""
-    self.maxDiff = None
     redis_client = fakeredis.FakeStrictRedis()
     input_task = TurbiniaTask().deserialize(self._TASK_TEST_DATA)
     input_task_serialized = input_task.serialize()
