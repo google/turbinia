@@ -2,7 +2,7 @@
 
 ## **Introduction**
 
-These instructions cover how to manually install Turbinia using [Google Kubernetes Engine (GKE)](https://cloud.google.com/kubernetes-engine).  It is recommended to use the [Turbinia GKE Quick Installation Instructions](install-gke.html) for an easier and more automated deployment.
+These instructions cover how to manually install Turbinia using [Google Kubernetes Engine (GKE)](https://cloud.google.com/kubernetes-engine).  It is recommended to use the [Turbinia GKE Quick Installation Instructions](install-gke.md) for an easier and more automated deployment.
 
 Installing Turbinia in GKE allows Turbinia Workers to scale based on processing demand. Currently, this is done through scaling on CPU utilization, which is determined when available Turbinia Workers process Tasks and reach a pre-defined CPU threshold. The GKE architecture closely resembles the [cloud architecture](how-it-works.md) with GKE being used to scale Turbinia Woker pods.
 
