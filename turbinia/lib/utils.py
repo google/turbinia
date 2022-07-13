@@ -97,6 +97,43 @@ def extract_artifacts(artifact_names, disk_path, output_dir, credentials=[]):
   return _image_export(image_export_cmd, output_dir)
 
 
+def extract_custom_artifacts(artifact_names, artifact_definition_file,
+                             disk_path, output_dir, credentials=[]):
+  """Extract custome artifacts using image_export from Plaso.
+
+  Args:
+    artifact_names: List of artifact definition names.
+    artifact_definition_file: File containing custom artifact definition.
+    disk_path: Path to either a raw disk image or a block device.
+    output_dir: Path to directory to store the the extracted files.
+    credentials: List of credentials to use for decryption.
+
+  Returns:
+    list: paths to extracted files.
+
+  Raises:
+    TurbiniaException: If an error occurs when running image_export.
+  """
+  # Plaso image_export expects artifact names as a comma separated string.
+  artifacts = ','.join(artifact_names)
+  image_export_cmd = [
+      'sudo', 'image_export.py', '--custom_artifact_definitions',
+      artifact_definition_file, '--artifact_filters', artifacts, '--write',
+      output_dir, '--partitions', 'all', '--volumes', 'all', '--unattended'
+  ]
+
+  if credentials:
+    for credential_type, credential_data in credentials:
+      image_export_cmd.extend([
+          '--credential', '{0:s}:{1:s}'.format(
+              credential_type, credential_data)
+      ])
+
+  image_export_cmd.append(disk_path)
+
+  return _image_export(image_export_cmd, output_dir)
+
+
 def extract_files(file_name, disk_path, output_dir, credentials=[]):
   """Extract files using image_export from Plaso.
 
