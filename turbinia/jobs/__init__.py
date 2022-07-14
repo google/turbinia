@@ -33,6 +33,7 @@ from turbinia.jobs import loki
 from turbinia.jobs import partitions
 from turbinia.jobs import photorec
 from turbinia.jobs import plaso
+from turbinia.jobs import postgres
 from turbinia.jobs import postgres_acct
 from turbinia.jobs import psort
 from turbinia.jobs import redis
