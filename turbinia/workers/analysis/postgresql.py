@@ -179,20 +179,15 @@ class PostgreSQLAnalysisTask(TurbiniaTask):
     for artifact_location in artifact_locations:
       result.log(f'Processing postgresql.conf: {artifact_location}')
       config_data = read_file(artifact_location)
-      try:
-        pg_config = self._read_postgresql_config(config_data)
-        if not pg_config:
-          result.log(f'Error reading {artifact_location}')
-          continue
-      except TurbiniaException as e:
-        result.close(self, success=False,
-            status='Error parsing postgresql.conf: {0:s}'.format(str(e)))
-        return result
 
       # artifact_path holds the path on the evidece disk
       artifact_disk_path = self._get_artifact_disk_path(artifact_location)
 
-      (report, priority, summary) = self._analyze_postgresql_config(pg_config)
+      (report, priority, summary), err = self._analyze_postgresql_config(
+          config_data)
+      if err:
+        result.log(err)
+
       reports.append(ModuleReport(name='Server Configuration: postgresql.conf',
           artifact_path=artifact_disk_path, priority=priority,
           summary=summary, report=report))
@@ -378,16 +373,30 @@ class PostgreSQLAnalysisTask(TurbiniaTask):
     artifacts_path = os.path.join(self.output_dir, 'artifacts')
     return collected_artifact_path[len(artifacts_path):]
 
-  def _read_postgresql_config(self, config_data):
-    """Read and parse postgres.conf value
+  def _analyze_postgresql_config(self, data):
+    """Analyze extracted postgresql.conf key-value.
 
     Args:
-      location (dict): Dictionary of files extracted from the disk
-      result (TurbiniaTaskResult): Used to log messages
+      data (str): Content of postgresql.conf
 
     Returns:
-      dict: PostgresQL configuration key-value
+      Tuple(
+        module_report (str): Module report
+        module_priority (int): The priority of module summary
+        module_summary (str): A summary of the report (used for task status)
+      )
     """
+    if not data:
+      return ('', Priority.LOW, 'Empty configuration file')
+
+    module_summary = 'No suspicious findings'
+    module_priority = Priority.LOW
+    module_report = ''
+
+    report = []
+    err = ''
+
+    commented_line_re = re.compile(r'^\s*#.*')
 
     ConfigPattern = namedtuple('ConfigPattern', ['name', 'priority', 'pattern'])
     config_pattern = [
@@ -411,76 +420,48 @@ class PostgreSQLAnalysisTask(TurbiniaTask):
           pattern=re.compile(r'cluster_name\s*=\s*\'([^\']+)\'')),
     ]
 
-    # store extracted configuration values
-    pg_config = {}
+    for name, priority, pattern in config_pattern:
+      name_re = re.compile(r'.*{0:s}\s+=.*'.format(name))
+      for config_line in re.findall(name_re, data):
+        if re.match(commented_line_re, config_line):
+          err += f'Commented entry found {config_line}\n'
+          continue
 
-    for name, _, pattern in config_pattern:
-      for config_entry in re.findall(pattern, config_data):
-        pg_config[name] = config_entry
+        try:
+          config_value = re.match(pattern, config_line).group(1)
 
-    return pg_config
+          # Access listening IP address
+          # IP address can be comma separated list
+          if name == 'listen_addresses':
+            listen_addresses = []
 
-  def _analyze_postgresql_config(self, pg_config):
-    """Analyze extracted postgresql.conf key-value.
+            if ',' in config_value:
+              listen_addresses = config_value.split(',')
+            else:
+              listen_addresses.append(config_value)
 
-    Args:
-      pg_config (dict): Dictionary containing selected postgresql.conf key-value
-
-    Returns:
-      Tuple(
-        module_report (str): Module report
-        module_priority (int): The priority of module summary
-        module_summary (str): A summary of the report (used for task status)
-      )
-    """
-    module_summary = 'Listening on localhost'
-    module_priority = Priority.LOW
-    module_report = ''
-
-    report = []
-
-    # Listening address
-    listen_addresses = pg_config.get('listen_addresses', None)
-    if not listen_addresses:
-      report.append(fmt.bullet('listen_addresses not parsed'))
-    elif '*' in listen_addresses or '0.0.0.0' in listen_addresses:
-      module_priority = Priority.HIGH
-      module_summary = 'Listening on all interfaces'
-      report_line = 'PostgreSQL listening on all interfaces'
-      report.append(fmt.bullet(report_line))
-    elif listen_addresses == 'localhost':
-      module_priority = Priority.LOW
-      report_line = 'Listening on localhost'
-      report.append(fmt.bullet(report_line))
-    else:
-      module_summary = 'Listening on a routable interface'
-      report_line = f'PostgreSQL listening on {listen_addresses}'
-      report.append(fmt.bullet(report_line))
-
-    # Posgresql Port
-    port = pg_config.get('port', None)
-    if not port:
-      report.append(fmt.bullet('port not parsed'))
-    else:
-      report.append(fmt.bullet(f'Listening on port {port}'))
-
-    # password encryption
-    password_encryption = pg_config.get('password_encryption', None)
-    if not password_encryption:
-      report.append(fmt.bullet('password_encryption not parsed'))
-    else:
-      report.append(fmt.bullet(
-          f'Password is encrypted with {password_encryption}'))
-
-    # timezone
-    log_timezone = pg_config.get('log_timezone', None)
-    if not log_timezone:
-      report.append(fmt.bullet('log_timezone not parsed'))
-    else:
-      report.append(fmt.bullet(f'Log timezone is {log_timezone}'))
+            if '*' in listen_addresses or '0.0.0.0' in listen_addresses:
+              if module_priority > priority:
+                module_summary = 'Listening on all interface IP addresses'
+                module_priority = priority
+              report.append(fmt.bullet(
+                  'Listening on all interface IP addresses'))
+            else:
+              report.append(fmt.bullet(
+                  'Listening on {0:s}'.format(', '.join(listen_addresses))))
+          elif name == 'port':
+            report.append(fmt.bullet(f'Listening on tcp port {config_value}'))
+          elif name == 'password_encryption':
+            report.append(fmt.bullet(
+                f'Passwords encrypted with {config_value}'))
+          elif name == 'log_timezone':
+            report.append(fmt.bullet(f'Log time zone is {config_value}'))
+        except AttributeError:
+          err += f'Failed extracting value for {name}\n'
+          continue
 
     module_report = '\n'.join(report)
-    return (module_report, module_priority, module_summary)
+    return (module_report, module_priority, module_summary), err
 
   def _analyze_pg_hba_config(self, config_data, result):
     """Analyze PostgreSQL client authentication config.
@@ -798,9 +779,9 @@ class PostgreSQLAnalysisTask(TurbiniaTask):
       summary.append((module_priority, fmt.bullet(module_summary)))
 
       report.append('{0:s}\n'.format(fmt.heading3(module_name)))
-      report.append('{0:s}: {1:s}\n'.format(fmt.bold('Summary:'),
+      report.append('{0:s}: {1:s}\n'.format(fmt.bold('Summary'),
                                             module_summary))
-      report.append('{0:s}:'.format(fmt.bold('Details:')))
+      report.append('{0:s}:'.format(fmt.bold('Details')))
       report.append(fmt.bullet(f'artifact path {artifact_path}'))
       report.append(module_report + '\n')
 
