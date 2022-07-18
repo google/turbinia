@@ -54,7 +54,7 @@ class TaskLoader():
       'JenkinsAnalysisTask',
       'JupyterAnalysisTask',
       'LinuxAccountAnalysisTask',
-      'LokiAnalysisTask',
+      'YaraAnalysisTask',
       'PartitionEnumerationTask',
       'PhotorecTask',
       'PlasoTask',
@@ -103,7 +103,7 @@ class TaskLoader():
     from turbinia.workers.analysis.jenkins import JenkinsAnalysisTask
     from turbinia.workers.analysis.jupyter import JupyterAnalysisTask
     from turbinia.workers.analysis.linux_acct import LinuxAccountAnalysisTask
-    from turbinia.workers.analysis.loki import LokiAnalysisTask
+    from turbinia.workers.analysis.yara import YaraAnalysisTask
     from turbinia.workers.analysis.postgresql_acct import PostgresAccountAnalysisTask
     from turbinia.workers.analysis.windows_acct import WindowsAccountAnalysisTask
     from turbinia.workers.analysis.wordpress_access import WordpressAccessLogAnalysisTask
