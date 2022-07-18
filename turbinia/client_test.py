@@ -37,13 +37,13 @@ SHORT_REPORT = textwrap.dedent(
     * Processed 3 Tasks for user myuser
 
     # High Priority Tasks
-    * TaskName2: This second fake task executed
+    * TaskName2 (EvidenceName2): This second fake task executed
 
     # Successful Tasks
-    * TaskName: This fake task executed
+    * TaskName (EvidenceName): This fake task executed
 
     # Failed Tasks
-    * TaskName3: Third Task Failed...
+    * TaskName3 (EvidenceName3): Third Task Failed...
 
     # Scheduled or Running Tasks
     * None
@@ -56,6 +56,7 @@ LONG_REPORT = textwrap.dedent(
 
     # High Priority Tasks
     ## TaskName2
+    * **Evidence:** EvidenceName2
     * **Status:** This second fake task executed
     * Task Id: 0xfakeTaskId2
     * Executed on worker fake_worker2
@@ -65,10 +66,10 @@ LONG_REPORT = textwrap.dedent(
     * Fake Bullet
 
     # Successful Tasks
-    * TaskName: This fake task executed
+    * TaskName (EvidenceName): This fake task executed
 
     # Failed Tasks
-    * TaskName3: Third Task Failed...
+    * TaskName3 (EvidenceName3): Third Task Failed...
 
     # Scheduled or Running Tasks
     * None
@@ -81,6 +82,7 @@ LONG_REPORT_FILES = textwrap.dedent(
 
     # High Priority Tasks
     ## TaskName2
+    * **Evidence:** EvidenceName2
     * **Status:** This second fake task executed
     * Task Id: 0xfakeTaskId2
     * Executed on worker fake_worker2
@@ -95,13 +97,13 @@ LONG_REPORT_FILES = textwrap.dedent(
 
 
     # Successful Tasks
-    * TaskName: This fake task executed
+    * TaskName (EvidenceName): This fake task executed
         * `/no/path/`
         * `/fake/path`
 
 
     # Failed Tasks
-    * TaskName3: Third Task Failed...
+    * TaskName3 (EvidenceName3): Third Task Failed...
         * `/no/path/3`
         * `/fake/path/3`
 
@@ -225,6 +227,7 @@ class TestTurbiniaClient(unittest.TestCase):
             'instance': 'MyTurbiniaInstance',
             'last_update': last_update,
             'name': 'TaskName',
+            'evidence_name': 'EvidenceName',
             'report_data': '#### Fake Low priority Report\n* Fake Bullet',
             'report_priority': 80,
             'request_id': '0xFakeRequestId',
@@ -239,6 +242,7 @@ class TestTurbiniaClient(unittest.TestCase):
             'instance': 'MyTurbiniaInstance',
             'last_update': last_update + timedelta(minutes=20),
             'name': 'TaskName2',
+            'evidence_name': 'EvidenceName2',
             'report_data': '#### Fake High priority Report\n* Fake Bullet',
             'report_priority': 10,
             'request_id': '0xFakeRequestId',
@@ -253,6 +257,7 @@ class TestTurbiniaClient(unittest.TestCase):
             'instance': 'MyTurbiniaInstance',
             'last_update': last_update,
             'name': 'TaskName3',
+            'evidence_name': 'EvidenceName3',
             'report_data': '',
             'report_priority': 80,
             'request_id': '0xFakeRequestId2',
