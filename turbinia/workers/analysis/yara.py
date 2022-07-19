@@ -95,7 +95,8 @@ class YaraAnalysisTask(TurbiniaTask):
       error = "Unknown"
       with open(stderr_file, 'r') as f:
         error = f.readlines()
-      raise TurbiniaException('Return code: {0:d}. Error: {1!s}'.format(ret, error))
+      raise TurbiniaException(
+          'Return code: {0:d}. Error: {1!s}'.format(ret, error))
 
     report = []
     summary = 'No Yara rules matched'
