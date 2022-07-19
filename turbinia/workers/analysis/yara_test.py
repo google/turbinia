@@ -42,6 +42,7 @@ class YaraAnalysisTaskTest(TestTurbiniaTaskBase):
     self.task.output_dir = self.task.base_output_dir
     self.remove_files.extend([
         os.path.join(self.task.output_dir, 'fraken_stdout.log'),
+        os.path.join(self.task.output_dir, 'fraken_stderr.log'),
     ])
 
   def test_yara(self):

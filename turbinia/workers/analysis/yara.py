@@ -75,6 +75,7 @@ class YaraAnalysisTask(TurbiniaTask):
 
   def runFraken(self, result, evidence):
     stdout_file = os.path.join(self.output_dir, 'fraken_stdout.log')
+    stderr_file = os.path.join(self.output_dir, 'fraken_stderr.log')
 
     cmd = [
         'sudo', '/opt/fraken/fraken', '-rules', '/opt/signature-base/',
@@ -87,7 +88,8 @@ class YaraAnalysisTask(TurbiniaTask):
           yr, preferred_dir=self.tmp_dir)
       cmd.extend(['-extrayara', file_path])
 
-    (ret, result) = self.execute(cmd, result, stdout_file=stdout_file)
+    (ret, result) = self.execute(
+        cmd, result, stderr_file=stderr_file, stdout_file=stdout_file)
 
     if ret != 0:
       raise TurbiniaException('Return code: {0:d}'.format(ret))

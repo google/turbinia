@@ -159,11 +159,6 @@ DEPENDENCIES = [{
     'docker_image': None,
     'timeout': 1800
 }, {
-    'job': 'HadoopAnalysisJob',
-    'programs': ['strings'],
-    'docker_image': None,
-    'timeout': 1200
-}, {
     'job': 'HindsightJob',
     'programs': ['hindsight.py'],
     'docker_image': None,
