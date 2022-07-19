@@ -474,6 +474,9 @@ class BaseTurbiniaClient:
     status = task.get('status') or 'No task status'
 
     report.append(fmt.heading2(task.get('name')))
+    line = '{0:s} {1!s}'.format(
+        fmt.bold('Evidence:'), task.get('evidence_name'))
+    report.append(fmt.bullet(line))
     line = '{0:s} {1:s}'.format(fmt.bold('Status:'), status)
     report.append(fmt.bullet(line))
     report.append(fmt.bullet('Task Id: {0!s}'.format(task.get('id'))))
@@ -525,7 +528,10 @@ class BaseTurbiniaClient:
     report = []
     saved_paths = task.get('saved_paths') or []
     status = task.get('status') or 'No task status'
-    report.append(fmt.bullet('{0:s}: {1:s}'.format(task.get('name'), status)))
+    report.append(
+        fmt.bullet(
+            '{0:s} ({1!s}): {2:s}'.format(
+                task.get('name'), task.get('evidence_name'), status)))
     if show_files:
       for path in saved_paths:
         report.append(fmt.bullet(fmt.code(path), level=2))

@@ -12,7 +12,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Job to execute Loki analysis tasks."""
+"""Job to execute Yara analysis tasks."""
 
 from turbinia.evidence import CompressedDirectory
 from turbinia.evidence import Directory
@@ -21,18 +21,18 @@ from turbinia.evidence import DockerContainer
 from turbinia.evidence import ReportText
 from turbinia.jobs import interface
 from turbinia.jobs import manager
-from turbinia.workers.analysis import loki
+from turbinia.workers.analysis import yara
 
 
-class LokiAnalysisJob(interface.TurbiniaJob):
-  """Loki analysis job."""
+class YaraAnalysisJob(interface.TurbiniaJob):
+  """Yara analysis job."""
 
   evidence_input = [
       Directory, DiskPartition, CompressedDirectory, DockerContainer
   ]
   evidence_output = [ReportText]
 
-  NAME = 'LokiAnalysisJob'
+  NAME = 'YaraAnalysisJob'
 
   def create_tasks(self, evidence):
     """Create task.
@@ -42,8 +42,8 @@ class LokiAnalysisJob(interface.TurbiniaJob):
     Returns:
         A list of tasks to schedule.
     """
-    tasks = [loki.LokiAnalysisTask() for _ in evidence]
+    tasks = [yara.YaraAnalysisTask() for _ in evidence]
     return tasks
 
 
-manager.JobsManager.RegisterJob(LokiAnalysisJob)
+manager.JobsManager.RegisterJob(YaraAnalysisJob)
