@@ -61,6 +61,5 @@ class YaraAnalysisTaskTest(TestTurbiniaTaskBase):
     self.assertIn('Gitlab', report)
 
 
-
 if __name__ == '__main__':
   unittest.main()
