@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright 2021 Google Inc.
+# Copyright 2022 Google Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,28 +12,32 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Task for running Loki on drives & directories."""
+"""Task for running Yara on drives & directories."""
 
-import csv
+import json
 import os
+import re
+
+from turbinia import config
 from turbinia import TurbiniaException
 
 from turbinia.evidence import EvidenceState as state
 from turbinia.evidence import ReportText
+from turbinia.lib import file_helpers
 from turbinia.lib import text_formatter as fmt
 from turbinia.workers import Priority
 from turbinia.workers import TurbiniaTask
 
 
-class LokiAnalysisTask(TurbiniaTask):
-  """Task to use Loki to analyse files."""
+class YaraAnalysisTask(TurbiniaTask):
+  """Task to use Yara to analyse files."""
 
   REQUIRED_STATES = [
       state.ATTACHED, state.MOUNTED, state.CONTAINER_MOUNTED, state.DECOMPRESSED
   ]
 
   def run(self, evidence, result):
-    """Run the Loki worker.
+    """Run the Yara worker.
 
     Args:
         evidence (Evidence object):  The evidence to process
@@ -42,17 +46,17 @@ class LokiAnalysisTask(TurbiniaTask):
         TurbiniaTaskResult object.
     """
     # Where to store the resulting output file.
-    output_file_name = 'loki_analysis.txt'
+    output_file_name = 'yara_analysis.txt'
     output_file_path = os.path.join(self.output_dir, output_file_name)
 
     # What type of evidence we should output.
     output_evidence = ReportText(source_path=output_file_path)
 
     try:
-      (report, priority, summary) = self.runLoki(result, evidence)
+      (report, priority, summary) = self.runFraken(result, evidence)
     except TurbiniaException as e:
       result.close(
-          self, success=False, status='Unable to run Loki: {0:s}'.format(
+          self, success=False, status='Unable to run Fraken: {0:s}'.format(
               str(e)))
       return result
 
@@ -69,39 +73,56 @@ class LokiAnalysisTask(TurbiniaTask):
     result.close(self, success=True, status=summary)
     return result
 
-  def runLoki(self, result, evidence):
-    log_file = os.path.join(self.output_dir, 'loki.log')
-    stdout_file = os.path.join(self.output_dir, 'loki_stdout.log')
-    stderr_file = os.path.join(self.output_dir, 'loki_stderr.log')
+  def runFraken(self, result, evidence):
+    stdout_file = os.path.join(self.output_dir, 'fraken_stdout.log')
 
     cmd = [
-        'sudo', 'python', '/opt/loki/loki.py', '-s', '10000', '--csv',
-        '--intense', '--noprocscan', '--dontwait', '--noindicator',
-        '--nolevcheck', '--nolisten', '-l', log_file, '-p', evidence.local_path
+        'sudo', '/opt/fraken/fraken', '-rules', '/opt/signature-base/',
+        '-folder', evidence.local_path
     ]
 
-    (ret, result) = self.execute(
-        cmd, result, log_files=[log_file], stdout_file=stdout_file,
-        stderr_file=stderr_file, cwd='/opt/loki/')
+    yr = self.task_config.get('yara_rules')
+    if yr:
+      file_path = file_helpers.write_str_to_temp_file(
+          yr, preferred_dir=self.tmp_dir)
+      cmd.extend(['-extrayara', file_path])
+
+    (ret, result) = self.execute(cmd, result, stdout_file=stdout_file)
 
     if ret != 0:
       raise TurbiniaException('Return code: {0:d}'.format(ret))
 
     report = []
-    summary = 'No Loki threats found'
+    summary = 'No Yara rules matched'
     priority = Priority.LOW
 
+    config.LoadConfig()
+    dirRE = re.compile(r"{0!s}/.*?/".format(config.MOUNT_DIR_PREFIX))
+
     report_lines = []
-    with open(stdout_file, 'r') as loki_report_csv:
-      lokireader = csv.DictReader(
-          loki_report_csv, fieldnames=['Time', 'Hostname', 'Level', 'Log'])
-      for row in lokireader:
-        if row['Level'] == 'ALERT' or row['Level'] == 'WARNING':
-          report_lines.append(row['Log'])
+    try:
+      with open(stdout_file, 'r') as fraken_report:
+        try:
+          fraken_output = json.load(fraken_report)
+        except (TypeError, ValueError, json.JSONDecodeError) as e:
+          raise TurbiniaException(
+              'Error decoding JSON output from fraken: {0!s}'.format(e))
+        for row in fraken_output:
+          if row.get('Score', 0) > 40:
+            report_lines.append(
+                ' - '.join([
+                    dirRE.sub("/", row['ImagePath']), row['SHA256'],
+                    row['Signature'],
+                    row.get('Description', ''),
+                    row.get('Reference', ''),
+                    str(row.get('Score', 0))
+                ]))
+    except FileNotFoundError:
+      pass  # No Yara rules matched
 
     if report_lines:
       priority = Priority.HIGH
-      summary = 'Loki analysis found {0:d} alert(s)'.format(len(report_lines))
+      summary = 'Yara analysis found {0:d} alert(s)'.format(len(report_lines))
       report.insert(0, fmt.heading4(fmt.bold(summary)))
       line = '{0:n} alerts(s) found:'.format(len(report_lines))
       report.append(fmt.bullet(fmt.bold(line)))

@@ -60,7 +60,7 @@ class PostgresAcctAnalysisTaskTest(TestTurbiniaTaskBase):
     self.assertDictEqual(hashes, self.EXPECTED_CREDENTIALS)
 
   def test_analyse_postgres_creds(self):
-    """Tests the _analyse_postegres_creds method."""
+    """Tests the _analyse_postgres_creds method."""
     config.LoadConfig()
     task = postgresql_acct.PostgresAccountAnalysisTask()
 

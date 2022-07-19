@@ -184,8 +184,8 @@ DEPENDENCIES = [{
     'docker_image': None,
     'timeout': 1200
 }, {
-    'job': 'LokiAnalysisJob',
-    'programs': ['/opt/loki/loki.py'],
+    'job': 'YaraAnalysisJob',
+    'programs': ['/opt/fraken/fraken'],
     'docker_image': None,
     'timeout': 1200
 }, {

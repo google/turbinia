@@ -407,6 +407,7 @@ class BaseTaskManager:
       return
 
     evidence_.config = job.evidence.config
+    task.evidence_name = evidence_.name
     task.base_output_dir = config.OUTPUT_DIR
     task.requester = evidence_.config.get('globals', {}).get('requester')
     task.group_name = evidence_.config.get('globals', {}).get('group_name')
