@@ -17,15 +17,15 @@ spec:
       initContainers:
         - name: init-filestore
           image: busybox:1.28
-          command: ["sh", "-c", "chmod og+w /mnt/criticalvolume/redis"]
+          command: ["sh", "-c", "chmod og+w /mnt/turbiniavolume/redis"]
           volumeMounts:
-            - mountPath: /mnt/criticalvolume
-              name: criticalvolume
+            - mountPath: /mnt/turbiniavolume
+              name: turbiniavolume
       containers:
         - name: redis
           image: "docker.io/redis:6.0.5"
           args: ["--appendonly", "yes", "--save", "30", "1"]
-          workingDir: /mnt/criticalvolume/redis
+          workingDir: /mnt/turbiniavolume/redis
           resources:
             requests:
               cpu: 2000m
@@ -33,10 +33,10 @@ spec:
           ports:
             - containerPort: 6379
           volumeMounts:
-            - mountPath: /mnt/criticalvolume
-              name: criticalvolume
+            - mountPath: /mnt/turbiniavolume
+              name: turbiniavolume
       volumes:
-        - name: criticalvolume
+        - name: turbiniavolume
           persistentVolumeClaim:
-            claimName: criticalvolume-claim
+            claimName: turbiniavolume-claim
             readOnly: false

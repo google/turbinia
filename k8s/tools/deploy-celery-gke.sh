@@ -81,7 +81,7 @@ fi
 # Grant IAM roles to the service account
 echo "Grant permissions on service account"
 gcloud projects add-iam-policy-binding $DEVSHELL_PROJECT_ID --member=$SA_MEMBER --role='roles/compute.admin'
-gcloud projects remove-iam-policy-binding $DEVSHELL_PROJECT_ID --member=$SA_MEMBER --role='roles/cloudsql.admin'
+gcloud projects add-iam-policy-binding $DEVSHELL_PROJECT_ID --member=$SA_MEMBER --role='roles/cloudsql.admin'
 gcloud projects add-iam-policy-binding $DEVSHELL_PROJECT_ID --member=$SA_MEMBER --role='roles/container.admin'
 gcloud projects add-iam-policy-binding $DEVSHELL_PROJECT_ID --member=$SA_MEMBER --role='roles/editor'
 gcloud projects add-iam-policy-binding $DEVSHELL_PROJECT_ID --member=$SA_MEMBER --role='roles/logging.logWriter'
@@ -127,7 +127,7 @@ echo "Deploying cluster to project $DEVSHELL_PROJECT_ID"
 # Setup appropriate directories and copy of deployment templates and Turbinia config
 echo "Copying over template deployment files to $DEPLOYMENT_FOLDER"
 mkdir -p $DEPLOYMENT_FOLDER
-cp gcp-pubsub/* $DEPLOYMENT_FOLDER
+cp celery/* $DEPLOYMENT_FOLDER
 if [[ "$*" == *--deploy-dfdewey* ]] ; then
   cp dfdewey/* $DEPLOYMENT_FOLDER
 fi
@@ -200,11 +200,9 @@ echo "Updating $TURBINIA_CONFIG config with GCS bucket configuration"
 sed -i -e "s/^GCS_OUTPUT_PATH = .*$/GCS_OUTPUT_PATH = 'gs:\/\/$INSTANCE_ID\/output'/g" $TURBINIA_CONFIG
 sed -i -e "s/^BUCKET_NAME = .*$/BUCKET_NAME = '$INSTANCE_ID'/g" $TURBINIA_CONFIG
 
-# Update Turbinia config with PubSub parameters
-echo "Updating $TURBINIA_CONFIG with PubSub config"
-sed -i -e "s/^TASK_MANAGER = .*$/TASK_MANAGER = 'PSQ'/g" $TURBINIA_CONFIG
-sed -i -e "s/^PUBSUB_TOPIC = .*$/PUBSUB_TOPIC = '$INSTANCE_ID'/g" $TURBINIA_CONFIG
-sed -i -e "s/^PSQ_TOPIC = .*$/PSQ_TOPIC = '$INSTANCE_ID-psq'/g" $TURBINIA_CONFIG
+# Update Turbinia config with Redis parameters
+echo "Updating $TURBINIA_CONFIG with Redis config"
+sed -i -e "s/^TASK_MANAGER = .*$/TASK_MANAGER = 'Redis'/g" $TURBINIA_CONFIG
 
 # Enable Stackdriver Logging and Stackdriver Traceback
 echo "Enabling Cloud Error Reporting and Logging APIs"
@@ -231,7 +229,7 @@ fi
 
 # Deploy to cluster
 echo "Deploying Turbinia to $CLUSTER_NAME cluster"
-./setup-pubsub.sh $TURBINIA_CONFIG
+./setup-celery.sh $TURBINIA_CONFIG
 
 # Deploy dfDewey
 if [[ "$*" == *--deploy-dfdewey* ]] ; then
