@@ -192,7 +192,7 @@ def task_runner(obj, *args, **kwargs):
   Returns:
     Output from TurbiniaTask (should be TurbiniaTaskResult).
   """
-  obj = task_deserialize(obj) 
+  obj = task_deserialize(obj)
   # GKE Specific - do not queue more work if pod places this file
   if os.path.exists(config.SCALEDOWN_WORKER_FILE):
     if config.TASK_MANAGER.lower() == 'psq':
