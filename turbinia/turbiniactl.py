@@ -26,10 +26,12 @@ import os
 import sys
 import uuid
 
+from libcloudforensics.providers.gcp import forensics as gcp_forensics
 from turbinia import config
 from turbinia import TurbiniaException
 from turbinia.config import logger
 from turbinia import __version__
+from turbinia.lib import google_cloud
 from turbinia.processors import archive
 from turbinia.output_manager import OutputManager
 from turbinia.output_manager import GCSOutputWriter
@@ -490,10 +492,6 @@ def process_args(args):
   # Enable tasks debugging for supported tasks
   if args.debug_tasks:
     config.DEBUG_TASKS = True
-
-  if config.TASK_MANAGER == 'PSQ':
-    from turbinia.lib import google_cloud
-    from libcloudforensics.providers.gcp import forensics as gcp_forensics
 
   # Enable GCP Stackdriver Logging
   if config.STACKDRIVER_LOGGING and args.command in ('server', 'psqworker'):
