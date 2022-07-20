@@ -192,26 +192,29 @@ def task_runner(obj, *args, **kwargs):
   Returns:
     Output from TurbiniaTask (should be TurbiniaTaskResult).
   """
-
+  obj = task_deserialize(obj) 
   # GKE Specific - do not queue more work if pod places this file
-  if config.TASK_MANAGER.lower() == 'psq':
-    if os.path.exists(config.SCALEDOWN_WORKER_FILE):
+  if os.path.exists(config.SCALEDOWN_WORKER_FILE):
+    if config.TASK_MANAGER.lower() == 'psq':
       # Late import because this is only needed for PSQ
       import psq
       raise psq.Retry()
+    elif config.TASK_MANAGER.lower() == 'celery':
+      raise obj.stub.retry('Turbinia worker busy!')
 
   # Try to acquire lock, timeout and requeue task if the worker
   # is already processing a task.
   try:
     lock = filelock.FileLock(config.LOCK_FILE)
     with lock.acquire(timeout=0.001):
-      obj = task_deserialize(obj)
       run = obj.run_wrapper(*args, **kwargs)
   except filelock.Timeout:
     if config.TASK_MANAGER.lower() == 'psq':
       # Late import because this is only needed for PSQ
       import psq
       raise psq.Retry()
+    elif config.TASK_MANAGER.lower() == 'celery':
+      raise obj.stub.retry('Turbinia worker busy!')
   # *Always* make sure we release the lock
   finally:
     lock.release()
