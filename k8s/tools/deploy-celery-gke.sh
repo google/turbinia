@@ -86,6 +86,7 @@ gcloud projects add-iam-policy-binding $DEVSHELL_PROJECT_ID --member=$SA_MEMBER 
 gcloud projects add-iam-policy-binding $DEVSHELL_PROJECT_ID --member=$SA_MEMBER --role='roles/editor'
 gcloud projects add-iam-policy-binding $DEVSHELL_PROJECT_ID --member=$SA_MEMBER --role='roles/logging.logWriter'
 gcloud projects add-iam-policy-binding $DEVSHELL_PROJECT_ID --member=$SA_MEMBER --role='roles/servicemanagement.admin'
+gcloud projects add-iam-policy-binding $DEVSHELL_PROJECT_ID --member=$SA_MEMBER --role='roles/redis.admin'
 gcloud projects add-iam-policy-binding $DEVSHELL_PROJECT_ID --member=$SA_MEMBER --role='roles/storage.admin'
 
 # Use local `gcloud auth` credentials.
@@ -166,6 +167,7 @@ sed -i -e "s/^INSTANCE_ID = .*$/INSTANCE_ID = '$INSTANCE_ID'/g" $TURBINIA_CONFIG
 sed -i -e "s/^TURBINIA_PROJECT = .*$/TURBINIA_PROJECT = '$DEVSHELL_PROJECT_ID'/g" $TURBINIA_CONFIG
 sed -i -e "s/^TURBINIA_ZONE = .*$/TURBINIA_ZONE = '$ZONE'/g" $TURBINIA_CONFIG
 sed -i -e "s/^TURBINIA_REGION = .*$/TURBINIA_REGION = '$REGION'/g" $TURBINIA_CONFIG
+sed -i -e "s/^CLOUD_PROVIDER = .*$/CLOUD_PROVIDER = 'GCP'/g" $TURBINIA_CONFIG
 
 # Create File Store instance and update deployment files with created instance
 if [[ "$*" != *--no-filestore* ]] ; then  
