@@ -1,6 +1,6 @@
-s/CELERY_BROKER = .*/CELERY_BROKER = 'redis:\/\/redis'/g
-s/CELERY_BACKEND = .*/CELERY_BACKEND = 'redis:\/\/redis'/g
-s/REDIS_HOST = .*/REDIS_HOST = 'redis'/g
+s/CELERY_BROKER = .*/CELERY_BROKER = 'redis:\/\/redis-server'/g
+s/CELERY_BACKEND = .*/CELERY_BACKEND = 'redis:\/\/redis-server'/g
+s/REDIS_HOST = .*/REDIS_HOST = 'redis-server'/g
 s/PROMETHEUS_ENABLED = .*/PROMETHEUS_ENABLED = False/g
 s/STATE_MANAGER = .*/STATE_MANAGER = 'Redis'/g
 s/TASK_MANAGER = .*/TASK_MANAGER = 'Celery'/g
