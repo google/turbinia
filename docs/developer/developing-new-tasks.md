@@ -177,6 +177,15 @@ it's possible that there could be more or less depending on how much you want to
 split it up. Then you just need to add a reference to the new job in
 `turbinia/jobs/__init__.py`.
 
+## Logging
+
+Using `result.log()` is recommended for logging within a Task instead of the
+normal python logger. `result.log()` will log to the standard logger and
+will also log the data in the Task result and creates a Task specific log
+file with the name of `worker.txt` in the Task output directory. This makes it
+easier to debug and find Task specific logs. `result.log()` also has a `level`
+parameter that takes a log level (e.g. `logging.INFO`) for control.
+
 ## Reporting
 
 Tasks can return report data in Markdown format by adding it as a string to
@@ -195,9 +204,9 @@ other sections of the report, but you can use heading4 and above.
 *   If possible, set a meaningful `status` message that summarizes the Task
     execution or output.  This can be done by either by setting the `status`
     parameter when calling `result.close()`, or by explicitly setting the
-    `result.status` attribute.  This is the line of output that shows up
-    for each task when running `turbiniactl status`.  If a Task has a
-    low `report_priority`, then the full report data will not show up in
+    `result.status` attribute.  This should be a single line and is the output
+    that shows up for each task when running `turbiniactl status`.  If a Task
+    has a low `report_priority`, then the full report data will not show up in
     the `turbiniactl status`, and so the status may be the only place that
     Task info will bubble up in the output by default, so setting it to
     something useful can be important.
