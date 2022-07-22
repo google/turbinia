@@ -193,11 +193,11 @@ def task_runner(obj, *args, **kwargs):
     Output from TurbiniaTask (should be TurbiniaTaskResult).
   """
   obj = task_deserialize(obj)
-  # PSQ Specific - do not queue more work if pod places this file
   if config.TASK_MANAGER.lower() == 'psq':
+    # Late import because this is only needed for PSQ
+    import psq
+    # GKE PSQ Specific - do not queue more work if pod places this file
     if os.path.exists(config.SCALEDOWN_WORKER_FILE):
-      # Late import because this is only needed for PSQ
-      import psq
       raise psq.Retry()
     # Try to acquire lock, timeout and requeue task if the worker
     # is already processing a task.
@@ -206,10 +206,7 @@ def task_runner(obj, *args, **kwargs):
       with lock.acquire(timeout=0.001):
         run = obj.run_wrapper(*args, **kwargs)
     except filelock.Timeout:
-      if config.TASK_MANAGER.lower() == 'psq':
-        # Late import because this is only needed for PSQ
-        import psq
-        raise psq.Retry()
+      raise psq.Retry()
     # *Always* make sure we release the lock
     finally:
       lock.release()
