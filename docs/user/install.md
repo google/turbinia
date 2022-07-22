@@ -1,3 +1,7 @@
+**Note**: ***This installation method will be deprecated by the end of 2022. 
+The current recommended method for installing Turbinia is
+[here](https://turbinia.readthedocs.io/en/latest/user/install-gke.html).***
+
 # **Turbinia Quick Installation Instructions**
 
 ## Overview
