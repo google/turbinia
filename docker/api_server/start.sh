@@ -6,10 +6,16 @@ then
     echo "${TURBINIA_CONF}" | base64 -d > /etc/turbinia/turbinia.conf
 fi
 
-# Use log file path from environment variable is it exists, else get the path from the config.
-if [ ! -z ${TURBINIA_LOG_FILE+x} ]
-then
-    /usr/local/bin/turbiniactl $TURBINIA_EXTRA_ARGS -L $TURBINIA_LOG_FILE api_server
-else
-    /usr/local/bin/turbiniactl $TURBINIA_EXTRA_ARGS api_server
+# Start supervisord
+service supervisor start
+
+# Start Turbinia API server
+supervisorctl start turbinia-api-server
+
+# Start Oauth2 proxy if authentication is enabled
+if [ `cat /etc/turbinia/turbinia.conf | grep API_AUTHENTICATION_ENABLED | cut -d'=' -f2` == 'True' ]
+then 
+    supervisorctl start oauth2-proxy
 fi
+
+while sleep 1000; do :; done

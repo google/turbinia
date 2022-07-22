@@ -1,6 +1,6 @@
 version: "3.2"
 services:
- redis:
+ redis-server:
     image: "redis:alpine"
 
     command: redis-server
@@ -19,6 +19,20 @@ services:
     #image: "turbinia-server-dev" # Use this for local development and comment out below line
     image: "us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-server:latest" # Latest stable
     container_name: turbinia-server
+
+    volumes:
+     - $PWD/evidence:/evidence
+     - $PWD/conf/:/etc/turbinia/
+
+    environment:
+     - LC_ALL=C.UTF-8
+     - LANG=C.UTF-8
+     - TURBINIA_EXTRA_ARGS=${TURBINIA_EXTRA_ARGS}
+
+ turbinia-api-server:
+    #image: "turbinia-api-server:dev" # Use this for local development and comment out below line
+    image: "us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-api-server:latest" # Latest stable
+    container_name: turbinia-api-server
 
     volumes:
      - $PWD/evidence:/evidence
