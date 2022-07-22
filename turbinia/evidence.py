@@ -28,13 +28,14 @@ from turbinia import TurbiniaException
 from turbinia.lib.docker_manager import GetDockerPath
 from turbinia.processors import archive
 from turbinia.processors import docker
-from turbinia.processors import google_cloud
 from turbinia.processors import mount_local
 from turbinia.processors import resource_manager
 
 # pylint: disable=keyword-arg-before-vararg
 
 config.LoadConfig()
+if config.CLOUD_PROVIDER.lower() == 'gcp':
+  from turbinia.processors import google_cloud
 
 log = logging.getLogger('turbinia')
 

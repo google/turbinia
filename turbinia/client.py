@@ -29,7 +29,6 @@ import os
 import time
 
 from google import auth
-from libcloudforensics.providers.gcp.internal import function as gcp_function
 from turbinia import config
 from turbinia.config import logger
 from turbinia.config import DATETIME_FORMAT
@@ -44,6 +43,8 @@ MAX_RETRIES = 10
 RETRY_SLEEP = 60
 
 config.LoadConfig()
+if config.CLOUD_PROVIDER.lower() == 'gcp':
+  from libcloudforensics.providers.gcp.internal import function as gcp_function
 if config.TASK_MANAGER.lower() == 'celery':
   from turbinia.state_manager import RedisStateManager
 
