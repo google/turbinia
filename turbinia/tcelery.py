@@ -55,10 +55,6 @@ class TurbiniaCelery:
     self.app.conf.update(
         task_default_queue=config.INSTANCE_ID,
         accept_content=['json'],
-        # TODO(ericzinnikas): Without task_acks_late Celery workers will start
-        # on one task and prefetch another (i.e. can result in 1 worker getting
-        # 2 plaso jobs while another worker is free). But enabling this causes
-        # problems with certain Celery brokers (duplicated work).
         task_acks_late=False,
         task_track_started=True,
         worker_concurrency=1,
