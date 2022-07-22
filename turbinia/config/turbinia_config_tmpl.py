@@ -284,10 +284,10 @@ STACKDRIVER_TRACEBACK = False
 ################################################################################
 
 # Method for communication between nodes
-CELERY_BROKER = 'redis://localhost'
+CELERY_BROKER = 'redis://redis'
 
 # Storage for task results/status
-CELERY_BACKEND = 'redis://localhost'
+CELERY_BACKEND = 'redis://redis'
 
 # Can be the same as CELERY_BROKER
 KOMBU_BROKER = CELERY_BROKER
@@ -300,7 +300,7 @@ KOMBU_CHANNEL = '%s-kombu' % INSTANCE_ID
 KOMBU_DURABLE = True
 
 # Use Redis for state management
-REDIS_HOST = 'localhost'
+REDIS_HOST = 'redis'
 REDIS_PORT = '6379'
 REDIS_DB = '0'
 
