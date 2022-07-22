@@ -300,7 +300,7 @@ KOMBU_CHANNEL = '%s-kombu' % INSTANCE_ID
 KOMBU_DURABLE = True
 
 # Use Redis for state management
-REDIS_HOST = 'redis://localhost'
+REDIS_HOST = 'localhost'
 REDIS_PORT = '6379'
 REDIS_DB = '0'
 

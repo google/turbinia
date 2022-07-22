@@ -30,8 +30,8 @@ services:
      - TURBINIA_EXTRA_ARGS=${TURBINIA_EXTRA_ARGS}
 
  turbinia-api-server:
-    #image: "turbinia-api-server:dev" # Use this for local development and comment out below line
-    image: "us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-api-server:latest" # Latest stable
+    image: "turbinia-api-server:dev" # Use this for local development and comment out below line
+    #image: "us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-api-server:latest" # Latest stable
     container_name: turbinia-api-server
 
     volumes:

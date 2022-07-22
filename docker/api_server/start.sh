@@ -18,4 +18,5 @@ then
     supervisorctl start oauth2-proxy
 fi
 
+# Don't exit
 while sleep 1000; do :; done
