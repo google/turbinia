@@ -14,5 +14,5 @@ rule suspicious_cron {
         $pipechar = "|"
         $shell = "sh"
    condition:
-      (filepath matches /cron/ or filepath matches /spool\/at/) and ($wget or any of ($options*) or any of ($curl*) or $shm or ($pipechar and $shell))
+      (filepath matches /cron/ or filepath matches /spool\/at/) and (($wget and any of ($options*)) or any of ($curl*) or $shm or (for all i in (1..#shell) : (@shell[i] > @pipechar[i])))
 }
