@@ -3216,8 +3216,8 @@
         "for": "10s",
         "frequency": "12h",
         "handler": 1,
-        "message": "Hadoop task took longer than usual to run. Please check if it's intended.",
-        "name": "Hadoop Task Average Runtime alert",
+        "message": "Yara task took longer than usual to run. Please check if it's intended.",
+        "name": "Yara Task Average Runtime alert",
         "noDataState": "no_data",
         "notifications": []
       },
@@ -3263,23 +3263,23 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "\n\navg(rate(hadoopanalysistask_duration_seconds_sum[30d])/rate(hadoopanalysistask_duration_seconds_count[30d]))",
+          "expr": "\n\navg(rate(yaraanalysistask_duration_seconds_sum[30d])/rate(yaraanalysistask_duration_seconds_count[30d]))",
           "interval": "",
-          "legendFormat": "Hadoop last 30 days average runtime",
+          "legendFormat": "Yara last 30 days average runtime",
           "queryType": "randomWalk",
           "refId": "A"
         },
         {
           "exemplar": true,
-          "expr": "\navg(rate(hadoopanalysistask_duration_seconds_sum[3d])/rate(hadoopanalysistask_duration_seconds_count[3d]))",
+          "expr": "\navg(rate(yaraanalysistask_duration_seconds_sum[3d])/rate(yaraanalysistask_duration_seconds_count[3d]))",
           "hide": false,
           "interval": "",
-          "legendFormat": "Hadoop last 3 days average runtime",
+          "legendFormat": "Yara last 3 days average runtime",
           "refId": "B"
         },
         {
           "exemplar": true,
-          "expr": "job:hadoopanalysistask_duration:rate3d:z_score",
+          "expr": "job:yaraanalysistask_duration:rate3d:z_score",
           "hide": true,
           "interval": "",
           "legendFormat": "z_score",
@@ -3299,7 +3299,7 @@
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "Hadoop Task Average Runtime",
+      "title": "Yara Task Average Runtime",
       "tooltip": {
         "shared": true,
         "sort": 0,

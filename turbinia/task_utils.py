@@ -40,16 +40,13 @@ class TaskLoader():
       'AbortTask',
       'BinaryExtractorTask',
       'BulkExtractorTask',
-      'CronAnalysisTask',
       'DfdeweyTask',
       'DockerContainersEnumerationTask',
       'FileArtifactExtractionTask',
       'FileSystemTimelineTask',
       'FinalizeRequestTask',
       'FsstatTask',
-      'GitlabTask',
       'GrepTask',
-      'HadoopAnalysisTask',
       'HindsightTask',
       'JenkinsAnalysisTask',
       'JupyterAnalysisTask',
@@ -111,15 +108,12 @@ class TaskLoader():
     from turbinia.workers.artifact import FileArtifactExtractionTask
     from turbinia.workers.binary_extractor import BinaryExtractorTask
     from turbinia.workers.bulk_extractor import BulkExtractorTask
-    from turbinia.workers.cron import CronAnalysisTask
     from turbinia.workers.dfdewey import DfdeweyTask
     from turbinia.workers.docker import DockerContainersEnumerationTask
     from turbinia.workers.file_system_timeline import FileSystemTimelineTask
     from turbinia.workers.finalize_request import FinalizeRequestTask
     from turbinia.workers.fsstat import FsstatTask
-    from turbinia.workers.gitlab import GitlabTask
     from turbinia.workers.grep import GrepTask
-    from turbinia.workers.hadoop import HadoopAnalysisTask
     from turbinia.workers.hindsight import HindsightTask
     from turbinia.workers.partitions import PartitionEnumerationTask
     from turbinia.workers.photorec import PhotorecTask
