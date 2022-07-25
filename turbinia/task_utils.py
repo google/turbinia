@@ -213,6 +213,8 @@ def task_runner(obj, *args, **kwargs):
   # Celery is configured to receive only one Task per worker
   # so no need to create a FileLock.
   elif config.TASK_MANAGER.lower() == 'celery':
+    if os.path.exists(config.SCALEDOWN_WORKER_FILE):
+      log.warn('Scaledown file detected!')
     run = obj.run_wrapper(*args, **kwargs)
 
   return run
