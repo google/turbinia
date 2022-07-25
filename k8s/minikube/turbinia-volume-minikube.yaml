@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: turbiniavolume
+spec:
+  capacity:
+    storage: 100G
+  accessModes:
+  - ReadWriteMany
+  nfs:
+    path: /turbiniavolume
