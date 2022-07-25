@@ -48,6 +48,7 @@ class testTurbiniaAPIServer(unittest.TestCase):
       'status': 'No issues found in crontabs',
       'saved_paths': '/tmp/worker-log.txt',
       'successful': True,
+      'output_manager': '',
       'instance': 'turbinia-jleaniz-test'
   }
 
