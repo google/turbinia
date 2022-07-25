@@ -4,8 +4,8 @@ metadata:
   name: turbiniavolume
 spec:
   capacity:
-    storage: 100G
+    storage: 10G
   accessModes:
   - ReadWriteMany
-  nfs:
+  hostPath:
     path: /turbiniavolume

@@ -65,13 +65,13 @@ sed -i -e "s/^INSTANCE_ID = .*$/INSTANCE_ID = '$INSTANCE_ID'/g" $TURBINIA_CONFIG
 echo "Updating $TURBINIA_CONFIG config with mount configuration"
 FILESTORE_MOUNT="'\/mnt\/$FILESTORE_NAME'"
 sed -i -e "s/turbiniavolume/$FILESTORE_NAME/g" *.yaml
-sed -i -e "s/storage: .*/storage: $FILESTORE_CAPACITY/g" turbinia-volume-filestore.yaml turbinia-volume-claim-filestore.yaml
+sed -i -e "s/storage: .*/storage: $FILESTORE_CAPACITY/g" turbinia-volume-minikube.yaml turbinia-volume-claim-minikube.yaml
 sed -i -e "s/^LOG_DIR = .*$/LOG_DIR = $FILESTORE_MOUNT/g" $TURBINIA_CONFIG
 sed -i -e "s/^MOUNT_DIR_PREFIX = .*$/MOUNT_DIR_PREFIX = '\/mnt\/turbinia'/g" $TURBINIA_CONFIG
 
-# Update Turbinia config with Redis parameters
-echo "Updating $TURBINIA_CONFIG with Redis config"
-sed -i -e "s/^TASK_MANAGER = .*$/TASK_MANAGER = 'Redis'/g" $TURBINIA_CONFIG
+# Update Turbinia config with Celery parameters
+echo "Updating $TURBINIA_CONFIG with Celery config"
+sed -i -e "s/^TASK_MANAGER = .*$/TASK_MANAGER = 'Celery'/g" $TURBINIA_CONFIG
 
 # Enable Prometheus
 echo "Updating $TURBINIA_CONFIG to enable Prometheus application metrics"

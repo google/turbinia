@@ -9,4 +9,4 @@ spec:
   volumeName: turbiniavolume
   resources:
     requests:
-      storage: 100G
+      storage: 10G
