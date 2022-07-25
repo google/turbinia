@@ -21,7 +21,7 @@ jobs:
           docker pull us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-api-server-dev:latest
           docker pull us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-server-dev:latest
           docker pull us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-worker-dev:latest
-      - name: Build Turbinia server Docker image
+      - name: Build Turbinia API server Docker image
         run: docker build --cache-from=${{ matrix.docker_base_image }},us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-api-server-dev:latest -t turbinia-api-server-dev -f docker/api_server/Dockerfile .
       - name: Build Turbinia server Docker image
         run: docker build --cache-from=${{ matrix.docker_base_image }},us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-server-dev:latest -t turbinia-server-dev -f docker/server/Dockerfile .
