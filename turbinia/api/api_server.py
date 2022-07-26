@@ -92,7 +92,6 @@ def configure_authentication_providers(app):
       public_paths={'/'},
   )
 
-
 app = get_application()
 
 app.add_middleware(

@@ -39,6 +39,8 @@ class PlasoTask(TurbiniaTask):
       # the Plaso documentation
       'status_view': 'none',
       'hashers': 'all',
+      # Do not hash files larger than 1 GB.
+      'hasher_file_size_limit': '1073741824',
       'partitions': 'all',
       'vss_stores': 'none',
       # artifact_filters and file_filter are mutually exclusive
@@ -66,9 +68,9 @@ class PlasoTask(TurbiniaTask):
     cmd = [base_command]
     for k, v in conf.items():
       cli_args = [
-          'status_view', 'hashers', 'partitions', 'vss_stores',
-          'custom_artifact_definitions', 'parsers', 'artifact_filters',
-          'file_filter', 'yara_rules'
+          'status_view', 'hashers', 'hasher_file_size_limit', 'partitions',
+          'vss_stores', 'custom_artifact_definitions', 'parsers',
+          'artifact_filters', 'file_filter', 'yara_rules'
       ]
       if (k not in cli_args or not v):
         continue
