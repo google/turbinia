@@ -37,7 +37,7 @@ class testTurbiniaAPIServer(unittest.TestCase):
       'job_id': '1db0dc47d8f244f5b4fa7e15b8a87861',
       'start_time': '2022-04-01T19:15:14.791074Z',
       'last_update': '2022-04-01T19:17:14.791074Z',
-      'name': 'CronAnalysisTask',
+      'name': 'YaraAnalysisTask',
       'request_id': '41483253079448e59685d88f37ab91f7',
       'requester': 'root',
       'group_id': '1234',
