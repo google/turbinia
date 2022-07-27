@@ -105,7 +105,8 @@ class WindowsAccountAnalysisTask(TurbiniaTask):
           disk_path=evidence.local_path, output_dir=self.output_dir,
           credentials=evidence.credentials)
     except TurbiniaException as e:
-      raise TurbiniaException('artifact extraction failed: {0:s}'.format(str(e)))
+      raise TurbiniaException(
+          'artifact extraction failed: {0:s}'.format(str(e)))
 
     # Extract base dir from our list of collected artifacts
     location = os.path.dirname(collected_artifacts[0])
