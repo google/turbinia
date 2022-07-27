@@ -39,7 +39,7 @@ async def get_task_status(task_id: str):
       return task
     raise HTTPException(status_code=404, detail='Task ID not found.')
   except ValidationError as exception:
-    log.error('Error retrieving task information: {}'.format(exception))
+    log.error('Error retrieving task information: {0!s}'.format(exception))
     raise HTTPException(
         status_code=500,
         detail='Error retrieving task information') from exception

@@ -37,9 +37,10 @@ async def read_jobs():
     disabled_jobs = set(turbinia_config.CONFIG.DISABLED_JOBS)
     enabled_jobs = registered_jobs.difference(disabled_jobs)
 
-    if registered_jobs:
-      return JSONResponse(content=list(enabled_jobs), status_code=200)
+    if not registered_jobs:
+      raise HTTPException(status_code=404, detail='No registered jobs found.')
+    return JSONResponse(content=list(enabled_jobs), status_code=200)
   except (json.JSONDecodeError, TypeError) as exception:
-    log.error('Error listing jobs: {}'.format(exception))
+    log.error('Error listing jobs: {0!s}'.format(exception))
     raise HTTPException(
         status_code=500, detail='error listing jobs') from exception

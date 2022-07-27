@@ -48,13 +48,14 @@ def create_zip(request_id: str, task_id: str):
     try:
       request_dirs = os.listdir(request_output_path)
     except FileNotFoundError as exception:
-      log.error('Output path could not be found: {}'.format(exception))
+      log.error('Output path could not be found: {0!s}'.format(exception))
       raise HTTPException(
           status_code=404, detail='Output path could not be found.')
 
     for request_dir in request_dirs:
       if task_id in request_dir:
         request_output_path = os.path.join(request_output_path, request_dir)
+        break
 
   if not os.path.exists(request_output_path):
     raise HTTPException(
@@ -71,8 +72,16 @@ def create_zip(request_id: str, task_id: str):
 
     # Create the zip file
     zip_filename = shutil.make_archive(zip_path, 'zip', request_output_path)
+    data = None
     # Read the zip using a memory-mapped file and return it
     with open(zip_filename, 'rb') as zip_obj:
       mm = mmap.mmap(zip_obj.fileno(), 0, access=mmap.ACCESS_READ)
       data = mm.read()
-      return data
+
+    try:
+      os.remove(zip_filename)
+    except OSError as exception:
+      log.error(
+          'Failed to delete zip file: {0:s} due to error: {1!s}'.format(
+              zip_filename, exception))
+    return data

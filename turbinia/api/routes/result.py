@@ -31,11 +31,13 @@ router = APIRouter(prefix='/result', tags=['Turbinia Request Results'])
 async def get_task_output(task_id: str):
   """Retrieves a task's output files."""
   # Get the request_id for the task. This is needed to find the right path.
+  data = None
   _state_manager = state_manager.get_state_manager()
   task = _state_manager.get_task_data(
       instance=turbinia_config.INSTANCE_ID, task_id=task_id)
-  request_id = task[0].get('request_id')
-  data = api_utils.create_zip(request_id, task_id)
+  if task:
+    request_id = task[0].get('request_id')
+    data = api_utils.create_zip(request_id, task_id)
 
   if not data:
     raise HTTPException(

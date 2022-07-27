@@ -47,7 +47,7 @@ async def get_requests_summary():
           content={'detail': 'Request summary is empty'}, status_code=200)
     return requests_summary
   except (ValidationError, ValueError, TypeError) as exception:
-    log.error('Error retrieving requests summary: {}'.format(exception))
+    log.error('Error retrieving requests summary: {0!s}'.format(exception))
     raise HTTPException(
         status_code=500,
         detail='Error retrieving requests summary') from exception
@@ -72,7 +72,7 @@ async def get_request_status(request_id: str):
           detail='Request ID not found or the request had no associated tasks.')
     return request_out
   except (ValidationError, ValueError, TypeError) as exception:
-    log.error('Error retrieving request information: {}'.format(exception))
+    log.error('Error retrieving request information: {0!s}'.format(exception))
     raise HTTPException(
         status_code=500,
         detail='Error retrieving request information') from exception
@@ -165,10 +165,10 @@ async def create_request(input_request: request.Request):
     client.send_request(request_out)
 
   except TurbiniaException as exception:
-    log.error('Error creating new Turbinia request: {}'.format(exception))
+    log.error('Error creating new Turbinia request: {0!s}'.format(exception))
     raise HTTPException(
         status_code=400,
-        detail='Error creating new Turbinia request: {}'.format(
+        detail='Error creating new Turbinia request: {0!s}'.format(
             exception)) from exception
 
   response = {'request_id': request_out.request_id}
