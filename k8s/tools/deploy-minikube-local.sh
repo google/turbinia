@@ -74,6 +74,7 @@ echo "Updating $TURBINIA_CONFIG with Redis/Celery config"
 sed -i -e "s/^TASK_MANAGER = .*$/TASK_MANAGER = 'Celery'/g" $TURBINIA_CONFIG
 sed -i -e "s/^STATE_MANAGER = .*$/STATE_MANAGER = 'Redis'/g" $TURBINIA_CONFIG
 sed -i -e "s/^REDIS_HOST = .*$/REDIS_HOST = 'redis.default.svc.cluster.local'/g" $TURBINIA_CONFIG
+
 # Enable Prometheus
 echo "Updating $TURBINIA_CONFIG to enable Prometheus application metrics"
 sed -i -e "s/^PROMETHEUS_ENABLED = .*$/PROMETHEUS_ENABLED = True/g" $TURBINIA_CONFIG

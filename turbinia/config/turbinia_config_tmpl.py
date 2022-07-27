@@ -278,6 +278,11 @@ STACKDRIVER_TRACEBACK = False
 # Options in this section are required if TASK_MANAGER is set to 'Celery'
 ################################################################################
 
+# Use Redis for state management
+REDIS_HOST = 'localhost'
+REDIS_PORT = '6379'
+REDIS_DB = '0'
+
 # Method for communication between nodes
 CELERY_BROKER = 'redis://%s' % REDIS_HOST
 
@@ -293,11 +298,6 @@ KOMBU_CHANNEL = '%s-kombu' % INSTANCE_ID
 # Will messages be persistent and require acknowledgment?
 # http://docs.celeryproject.org/projects/kombu/en/4.0/reference/kombu.html#kombu.Connection.SimpleBuffer
 KOMBU_DURABLE = True
-
-# Use Redis for state management
-REDIS_HOST = 'localhost'
-REDIS_PORT = '6379'
-REDIS_DB = '0'
 
 ################################################################################
 #                           Email Config

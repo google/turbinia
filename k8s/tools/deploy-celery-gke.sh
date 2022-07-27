@@ -203,7 +203,7 @@ sed -i -e "s/^GCS_OUTPUT_PATH = .*$/GCS_OUTPUT_PATH = 'gs:\/\/$INSTANCE_ID\/outp
 sed -i -e "s/^BUCKET_NAME = .*$/BUCKET_NAME = '$INSTANCE_ID'/g" $TURBINIA_CONFIG
 
 # Update Turbinia config with Redis/Celery parameters
-echo "Updating $TURBINIA_CONFIG with Redis config"
+echo "Updating $TURBINIA_CONFIG with Redis/Celery config"
 sed -i -e "s/^TASK_MANAGER = .*$/TASK_MANAGER = 'Celery'/g" $TURBINIA_CONFIG
 sed -i -e "s/^STATE_MANAGER = .*$/STATE_MANAGER = 'Redis'/g" $TURBINIA_CONFIG
 sed -i -e "s/^REDIS_HOST = .*$/REDIS_HOST = 'redis.default.svc.cluster.local'/g" $TURBINIA_CONFIG
