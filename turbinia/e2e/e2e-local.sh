@@ -58,7 +58,7 @@ docker logs turbinia-worker
 
 echo "==> Show evidence volume contents in worker"
 docker exec -t turbinia-worker ls -al /evidence/
-
-cat /evidence/*/*PlasoTask*/*.txt
+docker exec -t turbinia-worker find /evidence -ls
+docker exec -t turbinia-worker cat /evidence/*/*PlasoTask/*.txt
 
 exit $RET
