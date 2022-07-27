@@ -17,7 +17,7 @@ spec:
       initContainers:
         - name: init-filestore
           image: busybox:1.28
-          command: ["sh", "-c", "chmod og+w /mnt/turbiniavolume/redis"]
+          command: ["sh", "-c", "chmod og+w /mnt/turbiniavolume"]
           volumeMounts:
             - mountPath: /mnt/turbiniavolume
               name: turbiniavolume

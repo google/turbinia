@@ -279,10 +279,10 @@ STACKDRIVER_TRACEBACK = False
 ################################################################################
 
 # Method for communication between nodes
-CELERY_BROKER = 'redis://localhost'
+CELERY_BROKER = 'redis://%s' % REDIS_HOST
 
 # Storage for task results/status
-CELERY_BACKEND = 'redis://localhost'
+CELERY_BACKEND = 'redis://%s' % REDIS_HOST
 
 # Can be the same as CELERY_BROKER
 KOMBU_BROKER = CELERY_BROKER

@@ -202,9 +202,11 @@ echo "Updating $TURBINIA_CONFIG config with GCS bucket configuration"
 sed -i -e "s/^GCS_OUTPUT_PATH = .*$/GCS_OUTPUT_PATH = 'gs:\/\/$INSTANCE_ID\/output'/g" $TURBINIA_CONFIG
 sed -i -e "s/^BUCKET_NAME = .*$/BUCKET_NAME = '$INSTANCE_ID'/g" $TURBINIA_CONFIG
 
-# Update Turbinia config with Redis parameters
+# Update Turbinia config with Redis/Celery parameters
 echo "Updating $TURBINIA_CONFIG with Redis config"
-sed -i -e "s/^TASK_MANAGER = .*$/TASK_MANAGER = 'Redis'/g" $TURBINIA_CONFIG
+sed -i -e "s/^TASK_MANAGER = .*$/TASK_MANAGER = 'Celery'/g" $TURBINIA_CONFIG
+sed -i -e "s/^STATE_MANAGER = .*$/STATE_MANAGER = 'Redis'/g" $TURBINIA_CONFIG
+sed -i -e "s/^REDIS_HOST = .*$/REDIS_HOST = 'redis.default.svc.cluster.local'/g" $TURBINIA_CONFIG
 
 # Enable Stackdriver Logging and Stackdriver Traceback
 echo "Enabling Cloud Error Reporting and Logging APIs"

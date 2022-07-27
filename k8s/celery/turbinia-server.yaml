@@ -27,7 +27,7 @@ spec:
               name: turbiniavolume
       containers:
         - name: server
-          image: us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-server:latest
+          image: us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-tscelery:latest
           env:
             - name: TURBINIA_CONF
               valueFrom:

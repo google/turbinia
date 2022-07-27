@@ -69,10 +69,11 @@ sed -i -e "s/storage: .*/storage: $FILESTORE_CAPACITY/g" turbinia-volume-minikub
 sed -i -e "s/^LOG_DIR = .*$/LOG_DIR = $FILESTORE_MOUNT/g" $TURBINIA_CONFIG
 sed -i -e "s/^MOUNT_DIR_PREFIX = .*$/MOUNT_DIR_PREFIX = '\/mnt\/turbinia'/g" $TURBINIA_CONFIG
 
-# Update Turbinia config with Celery parameters
-echo "Updating $TURBINIA_CONFIG with Celery config"
+# Update Turbinia config with Redis/Celery parameters
+echo "Updating $TURBINIA_CONFIG with Redis/Celery config"
 sed -i -e "s/^TASK_MANAGER = .*$/TASK_MANAGER = 'Celery'/g" $TURBINIA_CONFIG
-
+sed -i -e "s/^STATE_MANAGER = .*$/STATE_MANAGER = 'Redis'/g" $TURBINIA_CONFIG
+sed -i -e "s/^REDIS_HOST = .*$/REDIS_HOST = 'redis.default.svc.cluster.local'/g" $TURBINIA_CONFIG
 # Enable Prometheus
 echo "Updating $TURBINIA_CONFIG to enable Prometheus application metrics"
 sed -i -e "s/^PROMETHEUS_ENABLED = .*$/PROMETHEUS_ENABLED = True/g" $TURBINIA_CONFIG

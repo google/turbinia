@@ -214,7 +214,10 @@ def task_runner(obj, *args, **kwargs):
   # so no need to create a FileLock.
   elif config.TASK_MANAGER.lower() == 'celery':
     if os.path.exists(config.SCALEDOWN_WORKER_FILE):
-      log.warn('Scaledown file detected!')
+      log.warn('Scaledown file detected!')  
+      # Check if NODE_NAME available for GKE setups
+      scale_down = 'scaledown' + '.{0!s}'.format(os.environ[ENVNODENAME])
+      os.write(os.path.join(config.LOG_DIR, scale_down))
     run = obj.run_wrapper(*args, **kwargs)
 
   return run
