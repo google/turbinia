@@ -62,6 +62,7 @@ class TaskLoader():
       'StatTask',
       'StringsAsciiTask',
       'StringsUnicodeTask',
+      'SystemdAnalysisTask',
       'TomcatAnalysisTask',
       'VolatilityTask',
       'WindowsAccountAnalysisTask',
@@ -123,6 +124,7 @@ class TaskLoader():
     from turbinia.workers.sshd import SSHDAnalysisTask
     from turbinia.workers.strings import StringsAsciiTask
     from turbinia.workers.strings import StringsUnicodeTask
+    from turbinia.workers.systemd_services import SystemdAnalysisTask
     from turbinia.workers.tomcat import TomcatAnalysisTask
     from turbinia.workers.volatility import VolatilityTask
     from turbinia.workers.worker_stat import StatTask
