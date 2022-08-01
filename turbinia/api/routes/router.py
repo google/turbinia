@@ -23,7 +23,7 @@ from turbinia.api.routes import request
 from turbinia.api.routes import result
 from turbinia.api.routes import task
 
-router = APIRouter()
+router = APIRouter(prefix='/api')
 router.include_router(config.router)
 router.include_router(jobs.router)
 router.include_router(logs.router)

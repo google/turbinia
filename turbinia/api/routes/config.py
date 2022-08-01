@@ -35,6 +35,6 @@ async def read_config():
     if current_config:
       return JSONResponse(content=current_config, status_code=200)
   except (json.JSONDecodeError, TypeError) as exception:
-    log.error('Error reading configuration: {}'.format(exception))
+    log.error('Error reading configuration: {0!s}'.format(exception))
     raise HTTPException(
         status_code=500, detail='error reading configuration') from exception

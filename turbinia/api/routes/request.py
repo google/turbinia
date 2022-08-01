@@ -47,7 +47,7 @@ async def get_requests_summary():
           content={'detail': 'Request summary is empty'}, status_code=200)
     return requests_summary
   except (ValidationError, ValueError, TypeError) as exception:
-    log.error('Error retrieving requests summary: {}'.format(exception))
+    log.error('Error retrieving requests summary: {0!s}'.format(exception))
     raise HTTPException(
         status_code=500,
         detail='Error retrieving requests summary') from exception
@@ -72,7 +72,7 @@ async def get_request_status(request_id: str):
           detail='Request ID not found or the request had no associated tasks.')
     return request_out
   except (ValidationError, ValueError, TypeError) as exception:
-    log.error('Error retrieving request information: {}'.format(exception))
+    log.error('Error retrieving request information: {0!s}'.format(exception))
     raise HTTPException(
         status_code=500,
         detail='Error retrieving request information') from exception
@@ -94,10 +94,10 @@ async def create_request(input_request: request.Request):
   evidence_list = []
   request_id = input_request.request_id
   group_id = input_request.group_id
-  print(group_id)
   requester = input_request.requester
   reason = input_request.reason
   recipe = None
+  recipe_name = None
 
   try:
     if input_request.evidence_type == evidence_types.EvidenceTypesEnum.rawdisk:
@@ -149,8 +149,8 @@ async def create_request(input_request: request.Request):
     if not group_id:
       group_id = uuid.uuid4().hex
 
-    if input_request.evidence_options.turbinia_recipe:
-      recipe_name = input_request.evidence_options.turbinia_recipe
+    if input_request.evidence_options.recipe_name:
+      recipe_name = input_request.evidence_options.recipe_name
 
     recipe = client.create_recipe(
         group_id=group_id, recipe_name=recipe_name,
@@ -165,10 +165,10 @@ async def create_request(input_request: request.Request):
     client.send_request(request_out)
 
   except TurbiniaException as exception:
-    log.error('Error creating new Turbinia request: {}'.format(exception))
+    log.error('Error creating new Turbinia request: {0!s}'.format(exception))
     raise HTTPException(
         status_code=400,
-        detail='Error creating new Turbinia request: {}'.format(
+        detail='Error creating new Turbinia request: {0!s}'.format(
             exception)) from exception
 
   response = {'request_id': request_out.request_id}

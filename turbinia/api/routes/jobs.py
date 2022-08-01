@@ -21,7 +21,7 @@ from fastapi import HTTPException, APIRouter
 from fastapi.responses import JSONResponse
 
 from turbinia import config as turbinia_config
-from turbinia.api.schemas import jobs_enum
+from turbinia.jobs import manager as jobs_manager
 
 log = logging.getLogger('turbinia:api_server:jobs')
 
@@ -30,16 +30,17 @@ router = APIRouter(prefix='/jobs', tags=['Turbinia Jobs'])
 
 @router.get("/")
 async def read_jobs():
-  """Return all enabled jobs."""
+  """Return enabled jobs from the current Turbinia config."""
   try:
-
-    jobs = jobs_enum.JobsEnum.get_values()
+    _jobs_manager = jobs_manager.JobsManager()
+    registered_jobs = set(_jobs_manager.GetJobNames())
     disabled_jobs = set(turbinia_config.CONFIG.DISABLED_JOBS)
-    enabled_jobs = set(jobs['enabled_jobs']).difference(disabled_jobs)
+    enabled_jobs = registered_jobs.difference(disabled_jobs)
 
-    if jobs:
-      return JSONResponse(content=list(enabled_jobs), status_code=200)
+    if not registered_jobs:
+      raise HTTPException(status_code=404, detail='No registered jobs found.')
+    return JSONResponse(content=list(enabled_jobs), status_code=200)
   except (json.JSONDecodeError, TypeError) as exception:
-    log.error('Error listing jobs: {}'.format(exception))
+    log.error('Error listing jobs: {0!s}'.format(exception))
     raise HTTPException(
         status_code=500, detail='error listing jobs') from exception

@@ -62,33 +62,39 @@ class RequestStatus(BaseModel):
         if current_request_id == request_id:
           self.tasks.append(task)
 
-    if tasks:
-      for task in tasks:
-        print(task.get('id'))
-        self.request_id = task.get('request_id')
-        self.requester = task.get('requester')
-        self.reason = task.get('reason')
-        self.task_count = len(tasks)
+    for task in tasks:
+      self.request_id = task.get('request_id')
+      self.requester = task.get('requester')
+      self.reason = task.get('reason')
+      self.task_count = len(tasks)
+      task_status = task.get('status')
+      if isinstance(task.get('last_update'), datetime.datetime):
         task_last_update = datetime.datetime.timestamp(task.get('last_update'))
-        task_status = task.get('status')
+      else:
+        task_last_update = task.get('last_update')
 
-        if not self.last_task_update_time:
-          self.last_task_update_time = task_last_update
-        else:
-          self.last_task_update_time = max(
-              self.last_task_update_time, task_last_update)
-        if task.get('successful'):
-          self.successful_tasks += 1
-        elif task_status:
-          if 'running' in task_status:
-            self.running_tasks += 1
-        else:
-          self.failed_tasks += 1
+      if not self.last_task_update_time:
+        self.last_task_update_time = task_last_update
+      else:
+        self.last_task_update_time = max(
+            self.last_task_update_time, task_last_update)
+      if task.get('successful'):
+        self.successful_tasks += 1
+      elif task_status:
+        if 'running' in task_status:
+          self.running_tasks += 1
+      else:
+        self.failed_tasks += 1
+
+      if isinstance(task['last_update'], datetime.datetime):
         task['last_update'] = task['last_update'].strftime(
             turbinia_config.DATETIME_FORMAT)
 
-      self.last_task_update_time = datetime.datetime.fromtimestamp(
-          self.last_task_update_time).strftime(turbinia_config.DATETIME_FORMAT)
+    if self.last_task_update_time:
+      if isinstance(self.last_task_update_time, datetime.datetime):
+        self.last_task_update_time = datetime.datetime.fromtimestamp(
+            self.last_task_update_time).strftime(
+                turbinia_config.DATETIME_FORMAT)
 
     if self.running_tasks > 0:
       self.status = 'running'

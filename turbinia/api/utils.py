@@ -63,7 +63,7 @@ def create_zip(request_id: str, task_id: str):
 
   # Create a temporary directory to store the zip file
   # containing the request result files.
-  # Directory and contents are removed upon content exit.
+  # Directory and its contents deleted upon context exit.
   temp_directory = tempfile.TemporaryDirectory()
   with temp_directory as directory_name:
     if task_id:
