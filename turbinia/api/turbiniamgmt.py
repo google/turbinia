@@ -135,9 +135,14 @@ def get_request_result(ctx, request_id):
       api_client)
   try:
     api_response = api_instance.get_request_output(request_id)
-    click.echo(api_response)
+    filename = api_response.name.split('/')[-1]
+    click.echo("Saving zip file: {}".format(filename))
+    with open(filename, 'wb') as f:
+      f.write(api_response.read())
   except turbinia_api_client.ApiException as e:
     click.echo("Exception when calling read_config: %s\n" % e)
+  except OSError as exception:
+    click.echo("Unable to save file: {}".format(exception))
 
 
 @result_group.command("get_task_result")
@@ -152,9 +157,14 @@ def get_task_result(ctx, task_id):
   try:
     api_response = api_instance.get_task_output(
         task_id, _check_return_type=False)
-    click.echo(api_response)
+    filename = api_response.name.split('/')[-1]
+    click.echo("Saving zip file: {}".format(filename))
+    with open(filename, 'wb') as f:
+      f.write(api_response.read())
   except turbinia_api_client.ApiException as e:
     click.echo("Exception when calling read_config: %s\n" % e)
+  except OSError as exception:
+    click.echo("Unable to save file: {}".format(exception))
 
 
 @jobs_group.command("get_jobs")
