@@ -1,17 +1,7 @@
 components:
-  securitySchemes:
-    oAuth2: # <---- arbitrary name
-      type: oauth2
-      description: This API uses OAuth 2 with the authorizationCode flow.
-      flows:
-        authorizationCode: # <---- OAuth flow(authorizationCode, implicit, password or clientCredentials)
-          # Google OpenID Connect config https://accounts.google.com/.well-known/openid-configuration
-          authorizationUrl: https://accounts.google.com/o/oauth2/v2/auth
-          tokenUrl: https://oauth2.googleapis.com/token
-          scopes: {}
   schemas:
-    BaseRequestOptions:
-      description: "Base Request Options class to be extended by other option types. "
+    BaseEvidenceOptions:
+      description: Base Evidence Options class to be extended by other evidence types.
       properties:
         filter_patterns:
           items:
@@ -31,19 +21,19 @@ components:
         name:
           title: Name
           type: string
-        recipe_name:
-          title: Recipe Name
-          type: string
         sketch_id:
           title: Sketch Id
           type: integer
         source_path:
           title: Source Path
           type: string
+        turbinia_recipe:
+          title: Turbinia Recipe
+          type: string
         yara_rules:
           title: Yara Rules
           type: string
-      title: BaseRequestOptions
+      title: BaseEvidenceOptions
       type: object
     EvidenceTypesEnum:
       description: Enum of Turbinia Evidence types.
@@ -65,25 +55,27 @@ components:
       title: HTTPValidationError
       type: object
     Request:
-      description: "Base request object. "
+      description: Base request object.
       properties:
         description:
           default: Turbinia request object
           title: Description
           type: string
+        evidence_options:
+          $ref: "#/components/schemas/BaseEvidenceOptions"
         evidence_type:
           $ref: "#/components/schemas/EvidenceTypesEnum"
         group_id:
+          description: Turbinia group identifier
           title: Group Id
           type: string
         reason:
           title: Reason
           type: string
         request_id:
+          description: Turbinia request identifier
           title: Request Id
           type: string
-        request_options:
-          $ref: "#/components/schemas/BaseRequestOptions"
         requester:
           title: Requester
           type: string
@@ -92,7 +84,7 @@ components:
           type: string
       required:
         - evidence_type
-        - request_options
+        - evidence_options
       title: Request
       type: object
     RequestStatus:
@@ -173,12 +165,12 @@ info:
   description: Turbinia API server
   license:
     name: Apache License 2.0
-    url: "https://www.apache.org/licenses/LICENSE-2.0.html"
+    url: https://www.apache.org/licenses/LICENSE-2.0.html
   title: Turbinia API Server
   version: 1.0.0
 openapi: 3.0.2
 paths:
-  /api/config/:
+  /config/:
     get:
       description: Retrieve turbinia config.
       operationId: read_config
@@ -191,9 +183,9 @@ paths:
       summary: Read Config
       tags:
         - Turbinia Configuration
-  /api/jobs/:
+  /jobs/:
     get:
-      description: Return enabled jobs from the current Turbinia config.
+      description: Return all enabled jobs.
       operationId: read_jobs
       responses:
         "200":
@@ -204,7 +196,7 @@ paths:
       summary: Read Jobs
       tags:
         - Turbinia Jobs
-  /api/logs/{query}:
+  /logs/{query}:
     get:
       description: Retrieve log data.
       operationId: get_logs
@@ -230,7 +222,7 @@ paths:
       summary: Get Logs
       tags:
         - Logs
-  /api/request/:
+  /request/:
     post:
       description:
         "Create a new Turbinia request.\n\nArgs:\n  request (turbinia.api.schema.request):\
@@ -259,7 +251,7 @@ paths:
       summary: Create Request
       tags:
         - Turbinia Requests
-  /api/request/summary:
+  /request/summary:
     get:
       description:
         "Retrieves a summary of all Turbinia requests.\n\nThe response\
@@ -276,7 +268,7 @@ paths:
       summary: Get Requests Summary
       tags:
         - Turbinia Requests
-  /api/request/{request_id}:
+  /request/{request_id}:
     get:
       description:
         "Retrieves status for a Turbinia Request.\n\nArgs:\n  request_id\
@@ -306,7 +298,7 @@ paths:
       summary: Get Request Status
       tags:
         - Turbinia Requests
-  /api/result/request/{request_id}:
+  /result/request/{request_id}:
     get:
       description: Retrieve request status output.
       operationId: get_request_output
@@ -320,8 +312,10 @@ paths:
       responses:
         "200":
           content:
-            application/json:
-              schema: {}
+            application/x-zip-compressed:
+              schema:
+                type: string
+                format: binary
           description: Successful Response
         "422":
           content:
@@ -332,7 +326,7 @@ paths:
       summary: Get Request Output
       tags:
         - Turbinia Request Results
-  /api/result/task/{task_id}:
+  /result/task/{task_id}:
     get:
       description: Retrieves a task's output files.
       operationId: get_task_output
@@ -346,8 +340,10 @@ paths:
       responses:
         "200":
           content:
-            application/json:
-              schema: {}
+            application/x-zip-compressed:
+              schema:
+                type: string
+                format: binary
           description: Successful Response
         "422":
           content:
@@ -358,7 +354,7 @@ paths:
       summary: Get Task Output
       tags:
         - Turbinia Request Results
-  /api/task/{task_id}:
+  /task/{task_id}:
     get:
       description: Retrieve task information.
       operationId: get_task_status
@@ -384,5 +380,3 @@ paths:
       summary: Get Task Status
       tags:
         - Turbinia Tasks
-security:
-  - oAuth2: []
