@@ -22,7 +22,6 @@ setup.cfg
 setup.py
 test-requirements.txt
 test/__init__.py
-test/test_base_request_options.py
 tox.ini
 turbinia_api_client/__init__.py
 turbinia_api_client/api/__init__.py
