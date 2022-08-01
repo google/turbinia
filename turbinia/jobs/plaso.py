@@ -24,6 +24,7 @@ from turbinia.evidence import GoogleCloudDisk
 from turbinia.evidence import GoogleCloudDiskRawEmbedded
 from turbinia.evidence import PlasoFile
 from turbinia.evidence import RawDisk
+from turbinia.evidence import ExpertWitnessFormat
 from turbinia.jobs import interface
 from turbinia.jobs import manager
 from turbinia.workers.plaso import PlasoTask
@@ -34,7 +35,7 @@ class PlasoJob(interface.TurbiniaJob):
   # The types of evidence that this Job will process
   evidence_input = [
       BodyFile, Directory, RawDisk, GoogleCloudDisk, GoogleCloudDiskRawEmbedded,
-      CompressedDirectory, DockerContainer
+      CompressedDirectory, DockerContainer, ExpertWitnessFormat
   ]
   evidence_output = [PlasoFile]
 

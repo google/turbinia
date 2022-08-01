@@ -20,6 +20,7 @@ from turbinia.evidence import DockerContainer
 from turbinia.evidence import GoogleCloudDisk
 from turbinia.evidence import GoogleCloudDiskRawEmbedded
 from turbinia.evidence import RawDisk
+from turbinia.evidence import ExpertWitnessFormat
 from turbinia.evidence import ReportText
 from turbinia.jobs import interface
 from turbinia.jobs import manager
@@ -31,7 +32,7 @@ class WindowsAccountAnalysisJob(interface.TurbiniaJob):
 
   evidence_input = [
       Directory, RawDisk, GoogleCloudDisk, GoogleCloudDiskRawEmbedded,
-      CompressedDirectory, DockerContainer
+      CompressedDirectory, DockerContainer, ExpertWitnessFormat
   ]
   evidence_output = [ReportText]
 

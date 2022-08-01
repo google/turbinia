@@ -21,6 +21,7 @@ from turbinia.evidence import ExportedFileArtifact
 from turbinia.evidence import GoogleCloudDisk
 from turbinia.evidence import GoogleCloudDiskRawEmbedded
 from turbinia.evidence import RawDisk
+from turbinia.evidence import ExpertWitnessFormat
 from turbinia.evidence import ReportText
 from turbinia.jobs import interface
 from turbinia.jobs import manager
@@ -37,7 +38,7 @@ class HTTPAccessLogExtractionJob(interface.TurbiniaJob):
 
   evidence_input = [
       Directory, DockerContainer, GoogleCloudDisk, GoogleCloudDiskRawEmbedded,
-      RawDisk
+      RawDisk, ExpertWitnessFormat
   ]
   evidence_output = [ExportedFileArtifact]
 
