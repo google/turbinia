@@ -958,3 +958,33 @@ class DockerContainer(Evidence):
       # Unmount the container's filesystem
       mount_local.PostprocessUnmountPath(self._container_fs_path)
       self.state[EvidenceState.CONTAINER_MOUNTED] = False
+
+
+class ExpertWitnessFormat(RawDisk):
+  """Evidence object for a EWF based evidence.
+
+  Attributes:
+    device_path (str): Path to the EWF image.
+  """
+  POSSIBLE_STATES = [EvidenceState.ATTACHED] 
+
+  def __init__(self, *args, **kwargs):
+    """Initialization for EWF evidence object."""
+    self.device_path = None
+    self.ewf_path = None
+    self.mount_path = None
+    super(ExpertWitnessFormat, self).__init__(*args, **kwargs)
+
+  def _preprocess(self, _, required_states):
+      if EvidenceState.ATTACHED in required_states:
+          self.mount_path = mount_local.PreprocessMountEwfDisk(self.source_path)
+          self.ewf_path = self.mount_path + "/ewf1"
+          self.device_path = mount_local.PreprocessLosetup(self.ewf_path)
+          self.local_path = self.device_path
+          self.state[EvidenceState.ATTACHED] = True
+
+  def _postprocess(self):
+    if self.state[EvidenceState.ATTACHED]:
+      mount_local.PostprocessDeleteLosetup(self.device_path)
+      self.state[EvidenceState.ATTACHED] = False
+      mount_local.PostprocessUnmountPath(self.mount_path)
