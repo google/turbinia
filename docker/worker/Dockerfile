@@ -70,6 +70,8 @@ RUN apt-get update && apt-get -y install \
     sleuthkit \
     --option Acquire::ForceIPv4=true --option Acquire::Retries=100 --option Acquire::http::Timeout=60
 
+RUN apt-get update && apt-get download ewf-tools && dpkg --force-depends -i ewf-tools_*
+
 RUN useradd -r -s /bin/nologin -G disk,sudo turbinia
 RUN echo "turbinia ALL = (root) NOPASSWD: ALL" > /etc/sudoers.d/turbinia
 
