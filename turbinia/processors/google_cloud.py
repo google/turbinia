@@ -65,8 +65,8 @@ def GetLocalInstanceName():
   """
   # TODO(aarontp): Use cloud API instead of manual requests to metadata service.
   req = urllib.request.Request(
-      'http://metadata.google.internal/computeMetadata/v1/instance/hostname', None,
-      {'Metadata-Flavor': 'Google'})
+      'http://metadata.google.internal/computeMetadata/v1/instance/hostname',
+      None, {'Metadata-Flavor': 'Google'})
   try:
     instance = urllib.request.urlopen(req).read().decode('utf-8')
     #Grab everything excluding the domain part of the hostname
