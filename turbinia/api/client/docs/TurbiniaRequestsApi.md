@@ -18,7 +18,6 @@ Create a new Turbinia request.  Args:   request (turbinia.api.schema.request): J
 
 ### Example
 
-* OAuth Authentication (oAuth2):
 
 ```python
 import time
@@ -33,19 +32,9 @@ configuration = turbinia_api_client.Configuration(
     host = "http://localhost"
 )
 
-# The client must configure the authentication and authorization parameters
-# in accordance with the API server security policy.
-# Examples for each auth method are provided below, use the example that
-# satisfies your auth use case.
-
-# Configure OAuth2 access token for authorization: oAuth2
-configuration = turbinia_api_client.Configuration(
-    host = "http://localhost"
-)
-configuration.access_token = 'YOUR_ACCESS_TOKEN'
 
 # Enter a context with an instance of the API client
-with turbinia_api_client.ApiClient(configuration) as api_client:
+with turbinia_api_client.ApiClient() as api_client:
     # Create an instance of the API class
     api_instance = turbinia_requests_api.TurbiniaRequestsApi(api_client)
     request = Request(
@@ -96,7 +85,7 @@ Name | Type | Description  | Notes
 
 ### Authorization
 
-[oAuth2](../README.md#oAuth2)
+No authorization required
 
 ### HTTP request headers
 
@@ -122,7 +111,6 @@ Retrieves status for a Turbinia Request.  Args:   request_id (str): A Turbinia r
 
 ### Example
 
-* OAuth Authentication (oAuth2):
 
 ```python
 import time
@@ -137,19 +125,9 @@ configuration = turbinia_api_client.Configuration(
     host = "http://localhost"
 )
 
-# The client must configure the authentication and authorization parameters
-# in accordance with the API server security policy.
-# Examples for each auth method are provided below, use the example that
-# satisfies your auth use case.
-
-# Configure OAuth2 access token for authorization: oAuth2
-configuration = turbinia_api_client.Configuration(
-    host = "http://localhost"
-)
-configuration.access_token = 'YOUR_ACCESS_TOKEN'
 
 # Enter a context with an instance of the API client
-with turbinia_api_client.ApiClient(configuration) as api_client:
+with turbinia_api_client.ApiClient() as api_client:
     # Create an instance of the API class
     api_instance = turbinia_requests_api.TurbiniaRequestsApi(api_client)
     request_id = "request_id_example" # str | 
@@ -176,7 +154,7 @@ Name | Type | Description  | Notes
 
 ### Authorization
 
-[oAuth2](../README.md#oAuth2)
+No authorization required
 
 ### HTTP request headers
 
@@ -202,7 +180,6 @@ Retrieves a summary of all Turbinia requests.  The response is validated against
 
 ### Example
 
-* OAuth Authentication (oAuth2):
 
 ```python
 import time
@@ -216,19 +193,9 @@ configuration = turbinia_api_client.Configuration(
     host = "http://localhost"
 )
 
-# The client must configure the authentication and authorization parameters
-# in accordance with the API server security policy.
-# Examples for each auth method are provided below, use the example that
-# satisfies your auth use case.
-
-# Configure OAuth2 access token for authorization: oAuth2
-configuration = turbinia_api_client.Configuration(
-    host = "http://localhost"
-)
-configuration.access_token = 'YOUR_ACCESS_TOKEN'
 
 # Enter a context with an instance of the API client
-with turbinia_api_client.ApiClient(configuration) as api_client:
+with turbinia_api_client.ApiClient() as api_client:
     # Create an instance of the API class
     api_instance = turbinia_requests_api.TurbiniaRequestsApi(api_client)
 
@@ -251,7 +218,7 @@ This endpoint does not need any parameter.
 
 ### Authorization
 
-[oAuth2](../README.md#oAuth2)
+No authorization required
 
 ### HTTP request headers
 

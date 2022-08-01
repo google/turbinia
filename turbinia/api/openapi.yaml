@@ -1,14 +1,4 @@
 components:
-  securitySchemes:
-    oAuth2: # <---- arbitrary name
-      type: oauth2
-      description: This API uses OAuth 2 with the authorizationCode flow.
-      flows:
-        authorizationCode: # <---- OAuth flow(authorizationCode, implicit, password or clientCredentials)
-          # Google OpenID Connect config https://accounts.google.com/.well-known/openid-configuration
-          authorizationUrl: https://accounts.google.com/o/oauth2/v2/auth
-          tokenUrl: https://oauth2.googleapis.com/token
-          scopes: {}
   schemas:
     BaseEvidenceOptions:
       description: Base Evidence Options class to be extended by other evidence types.
@@ -172,7 +162,7 @@ components:
       title: ValidationError
       type: object
 info:
-  description: This is Turbinia's API server description.
+  description: Turbinia API server
   license:
     name: Apache License 2.0
     url: https://www.apache.org/licenses/LICENSE-2.0.html
@@ -322,8 +312,10 @@ paths:
       responses:
         "200":
           content:
-            application/json:
-              schema: {}
+            application/x-zip-compressed:
+              schema:
+                type: string
+                format: binary
           description: Successful Response
         "422":
           content:
@@ -348,8 +340,10 @@ paths:
       responses:
         "200":
           content:
-            application/json:
-              schema: {}
+            application/x-zip-compressed:
+              schema:
+                type: string
+                format: binary
           description: Successful Response
         "422":
           content:
@@ -386,5 +380,3 @@ paths:
       summary: Get Task Status
       tags:
         - Turbinia Tasks
-security:
-  - oAuth2: []

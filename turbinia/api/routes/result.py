@@ -17,7 +17,7 @@
 import logging
 
 from fastapi import HTTPException, APIRouter
-from fastapi.responses import Response
+from fastapi.responses import Response, StreamingResponse, FileResponse
 from turbinia import config as turbinia_config
 from turbinia import state_manager
 from turbinia.api import utils as api_utils
@@ -27,7 +27,11 @@ log = logging.getLogger('turbinia:api_server:result')
 router = APIRouter(prefix='/result', tags=['Turbinia Request Results'])
 
 
-@router.get("/task/{task_id}")
+@router.get(
+    "/task/{task_id}", response_class=StreamingResponse,
+    responses={'200': {
+        'content': {'application/x-zip-compressed'}
+    }})
 async def get_task_output(task_id: str):
   """Retrieves a task's output files."""
   # Get the request_id for the task. This is needed to find the right path.
@@ -40,13 +44,17 @@ async def get_task_output(task_id: str):
   if not data:
     raise HTTPException(
         status_code=500, detail='Unable to retrieve task output files.')
-  return Response(
+  return StreamingResponse(
       data, media_type='application/x-zip-compressed', headers={
           "Content-Disposition": 'attachment;filename={}.zip'.format(task_id)
       })
 
 
-@router.get("/request/{request_id}")
+@router.get(
+    "/request/{request_id}", response_class=StreamingResponse,
+    responses={'200': {
+        'content': {'application/x-zip-compressed'}
+    }})
 async def get_request_output(request_id: str):
   """Retrieve request status output."""
   data = api_utils.create_zip(request_id, None)
@@ -54,7 +62,7 @@ async def get_request_output(request_id: str):
   if not data:
     raise HTTPException(
         status_code=500, detail='Unable to retrieve task output files.')
-  return Response(
+  return StreamingResponse(
       data, media_type='application/x-zip-compressed', headers={
           "Content-Disposition":
               'attachment;filename={}.zip'.format(request_id)

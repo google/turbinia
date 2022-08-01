@@ -1,6 +1,5 @@
 .gitignore
 .gitlab-ci.yml
-.openapi-generator-ignore
 .travis.yml
 README.md
 docs/BaseEvidenceOptions.md
@@ -23,20 +22,6 @@ setup.cfg
 setup.py
 test-requirements.txt
 test/__init__.py
-test/test_base_evidence_options.py
-test/test_evidence_types_enum.py
-test/test_http_validation_error.py
-test/test_logs_api.py
-test/test_request.py
-test/test_request_status.py
-test/test_requests_summary.py
-test/test_turbinia_configuration_api.py
-test/test_turbinia_jobs_api.py
-test/test_turbinia_request_results_api.py
-test/test_turbinia_requests_api.py
-test/test_turbinia_tasks_api.py
-test/test_validation_error.py
-test/test_validation_error_loc_inner.py
 tox.ini
 turbinia_api_client/__init__.py
 turbinia_api_client/api/__init__.py

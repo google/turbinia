@@ -74,7 +74,7 @@ def configure_authentication_providers(app):
   """Configure the application's authentication providers.
 
   Example provider configuration using starlette-oauth2-pai:
-
+  """
   app.add_middleware(
       AuthenticateMiddleware,
       providers={
@@ -91,8 +91,6 @@ def configure_authentication_providers(app):
       },
       public_paths={'/'},
   )
-  """
-  raise NotImplementedError
 
 
 app = get_application()
