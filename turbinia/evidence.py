@@ -964,7 +964,9 @@ class ExpertWitnessFormat(RawDisk):
   """Evidence object for a EWF based evidence.
 
   Attributes:
-    device_path (str): Path to the EWF image.
+    device_path (str): Path to the mounted loop device.
+	ewf_path (str): Path to mounted EWF image.
+	mount_path (str): Path to EWF mount directory.
   """
   POSSIBLE_STATES = [EvidenceState.ATTACHED] 
 
