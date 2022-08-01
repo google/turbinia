@@ -17,7 +17,7 @@
 import logging
 
 from fastapi import HTTPException, APIRouter
-from fastapi.responses import Response, StreamingResponse, FileResponse
+from fastapi.responses import Response, StreamingResponse
 from turbinia import config as turbinia_config
 from turbinia import state_manager
 from turbinia.api import utils as api_utils
@@ -28,7 +28,7 @@ router = APIRouter(prefix='/result', tags=['Turbinia Request Results'])
 
 
 @router.get(
-    "/task/{task_id}", response_class=StreamingResponse,
+    "/task/{task_id}", response_class=Response,
     responses={'200': {
         'content': {'application/x-zip-compressed'}
     }})
@@ -44,14 +44,14 @@ async def get_task_output(task_id: str):
   if not data:
     raise HTTPException(
         status_code=500, detail='Unable to retrieve task output files.')
-  return StreamingResponse(
+  return Response(
       data, media_type='application/x-zip-compressed', headers={
           "Content-Disposition": 'attachment;filename={}.zip'.format(task_id)
       })
 
 
 @router.get(
-    "/request/{request_id}", response_class=StreamingResponse,
+    "/request/{request_id}", response_class=Response,
     responses={'200': {
         'content': {'application/x-zip-compressed'}
     }})
@@ -62,7 +62,7 @@ async def get_request_output(request_id: str):
   if not data:
     raise HTTPException(
         status_code=500, detail='Unable to retrieve task output files.')
-  return StreamingResponse(
+  return Response(
       data, media_type='application/x-zip-compressed', headers={
           "Content-Disposition":
               'attachment;filename={}.zip'.format(request_id)

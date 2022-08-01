@@ -73,10 +73,10 @@ def create_zip(request_id: str, task_id: str):
 
     # Create the zip file
     zip_filename = shutil.make_archive(zip_path, 'zip', request_output_path)
-    #data = None
+    data = None
     # Read the zip using a memory-mapped file and return it
     with open(zip_filename, 'rb') as zip_obj:
       mm = mmap.mmap(zip_obj.fileno(), 0, access=mmap.ACCESS_READ)
-      #data = mm.read()
-      yield mm.read()
-    #return data
+      data = mm.read()
+
+    return data
