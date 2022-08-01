@@ -101,7 +101,7 @@ class BinaryExtractorTask(TurbiniaTask):
 
     cmd = [
         'image_export.py', '--partitions', 'all', '--volumes', 'all',
-        '--vss_stores=none', '--unattended', '--logfile', image_export_log
+        '--vss_stores', 'none', '--unattended', '--logfile', image_export_log
     ]
 
     if self.task_config.get('binary_extraction_path'):
