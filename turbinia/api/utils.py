@@ -63,6 +63,7 @@ def create_zip(request_id: str, task_id: str):
 
   # Create a temporary directory to store the zip file
   # containing the request result files.
+  # Directory and its contents deleted upon context exit.
   temp_directory = tempfile.TemporaryDirectory()
   with temp_directory as directory_name:
     if task_id:
@@ -78,10 +79,4 @@ def create_zip(request_id: str, task_id: str):
       mm = mmap.mmap(zip_obj.fileno(), 0, access=mmap.ACCESS_READ)
       data = mm.read()
 
-    try:
-      os.remove(zip_filename)
-    except OSError as exception:
-      log.error(
-          'Failed to delete zip file: {0:s} due to error: {1!s}'.format(
-              zip_filename, exception))
     return data
