@@ -216,6 +216,55 @@ def PreprocessLosetup(
   return losetup_device
 
 
+def PreprocessMountEwfDisk(ewf_path):
+  """ Locally mounts a EWF disk image.
+
+  Args:
+    ewf_path (str): The path to the EWF image to mount.
+
+  Raises:
+    TurbiniaException: If the mount command failed to run.
+
+  Returns:
+    str: The path to the mounted filesystem.
+  """
+
+  config.LoadConfig()
+  mount_prefix = config.MOUNT_DIR_PREFIX
+
+  if not os.path.exists(ewf_path):
+    raise TurbiniaException(
+      'Could not mount partition {0:s}, the path does not exist'.format(
+            ewf_path))
+
+  # Checks if the mount path is a directory
+  if os.path.exists(mount_prefix) and not os.path.isdir(mount_prefix):
+    raise TurbiniaException(
+      'Mount dir {0:s} exists, but is not a directory'.format(mount_prefix))
+
+  # Checks if the mount path does not exist; if not, create the directory
+  if not os.path.exists(mount_prefix):
+    log.info('Creating local mount parent directory {0:s}'.format(mount_prefix))
+    try:
+      os.makedirs(mount_prefix)
+    except OSError as e:
+      raise TurbiniaException(
+          'Could not create mount directory {0:s}: {1!s}'.format(
+              mount_prefix, e))
+
+  # Creates a temporary directory for the mount path
+  mount_path = tempfile.mkdtemp(prefix='turbinia', dir=mount_prefix)
+  mount_cmd = ['sudo', 'ewfmount', '-X', 'allow_other', ewf_path, mount_path]
+
+  log.info('Running: {0:s}'.format(' '.join(mount_cmd)))
+  try:
+    subprocess.check_call(mount_cmd)
+  except subprocess.CalledProcessError as e:
+    raise TurbiniaException('Could not mount directory {0!s}'.format(e))
+
+  return mount_path
+
+
 def PreprocessMountDisk(partition_paths, partition_number):
   """Locally mounts disk in an instance.
 
