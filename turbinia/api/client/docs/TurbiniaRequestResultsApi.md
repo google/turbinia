@@ -4,8 +4,8 @@ All URIs are relative to *http://localhost*
 
 Method | HTTP request | Description
 ------------- | ------------- | -------------
-[**get_request_output**](TurbiniaRequestResultsApi.md#get_request_output) | **GET** /result/request/{request_id} | Get Request Output
-[**get_task_output**](TurbiniaRequestResultsApi.md#get_task_output) | **GET** /result/task/{task_id} | Get Task Output
+[**get_request_output**](TurbiniaRequestResultsApi.md#get_request_output) | **GET** /api/result/request/{request_id} | Get Request Output
+[**get_task_output**](TurbiniaRequestResultsApi.md#get_task_output) | **GET** /api/result/task/{task_id} | Get Task Output
 
 
 # **get_request_output**
@@ -17,6 +17,7 @@ Retrieve request status output.
 
 ### Example
 
+* OAuth Authentication (oAuth2):
 
 ```python
 import time
@@ -30,9 +31,19 @@ configuration = turbinia_api_client.Configuration(
     host = "http://localhost"
 )
 
+# The client must configure the authentication and authorization parameters
+# in accordance with the API server security policy.
+# Examples for each auth method are provided below, use the example that
+# satisfies your auth use case.
+
+# Configure OAuth2 access token for authorization: oAuth2
+configuration = turbinia_api_client.Configuration(
+    host = "http://localhost"
+)
+configuration.access_token = 'YOUR_ACCESS_TOKEN'
 
 # Enter a context with an instance of the API client
-with turbinia_api_client.ApiClient() as api_client:
+with turbinia_api_client.ApiClient(configuration) as api_client:
     # Create an instance of the API class
     api_instance = turbinia_request_results_api.TurbiniaRequestResultsApi(api_client)
     request_id = "request_id_example" # str | 
@@ -59,7 +70,7 @@ Name | Type | Description  | Notes
 
 ### Authorization
 
-No authorization required
+[oAuth2](../README.md#oAuth2)
 
 ### HTTP request headers
 
@@ -85,6 +96,7 @@ Retrieves a task's output files.
 
 ### Example
 
+* OAuth Authentication (oAuth2):
 
 ```python
 import time
@@ -98,9 +110,19 @@ configuration = turbinia_api_client.Configuration(
     host = "http://localhost"
 )
 
+# The client must configure the authentication and authorization parameters
+# in accordance with the API server security policy.
+# Examples for each auth method are provided below, use the example that
+# satisfies your auth use case.
+
+# Configure OAuth2 access token for authorization: oAuth2
+configuration = turbinia_api_client.Configuration(
+    host = "http://localhost"
+)
+configuration.access_token = 'YOUR_ACCESS_TOKEN'
 
 # Enter a context with an instance of the API client
-with turbinia_api_client.ApiClient() as api_client:
+with turbinia_api_client.ApiClient(configuration) as api_client:
     # Create an instance of the API class
     api_instance = turbinia_request_results_api.TurbiniaRequestResultsApi(api_client)
     task_id = "task_id_example" # str | 
@@ -127,7 +149,7 @@ Name | Type | Description  | Notes
 
 ### Authorization
 
-No authorization required
+[oAuth2](../README.md#oAuth2)
 
 ### HTTP request headers
 

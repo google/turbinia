@@ -37,8 +37,10 @@ class TurbiniaConfigurationApi(object):
         self.read_config_endpoint = _Endpoint(
             settings={
                 'response_type': (bool, date, datetime, dict, float, int, list, str, none_type,),
-                'auth': [],
-                'endpoint_path': '/config/',
+                'auth': [
+                    'oAuth2'
+                ],
+                'endpoint_path': '/api/config/',
                 'operation_id': 'read_config',
                 'http_method': 'GET',
                 'servers': None,

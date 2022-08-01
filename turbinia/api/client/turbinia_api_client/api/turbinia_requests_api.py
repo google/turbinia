@@ -41,8 +41,10 @@ class TurbiniaRequestsApi(object):
         self.create_request_endpoint = _Endpoint(
             settings={
                 'response_type': (bool, date, datetime, dict, float, int, list, str, none_type,),
-                'auth': [],
-                'endpoint_path': '/request/',
+                'auth': [
+                    'oAuth2'
+                ],
+                'endpoint_path': '/api/request/',
                 'operation_id': 'create_request',
                 'http_method': 'POST',
                 'servers': None,
@@ -91,8 +93,10 @@ class TurbiniaRequestsApi(object):
         self.get_request_status_endpoint = _Endpoint(
             settings={
                 'response_type': (RequestStatus,),
-                'auth': [],
-                'endpoint_path': '/request/{request_id}',
+                'auth': [
+                    'oAuth2'
+                ],
+                'endpoint_path': '/api/request/{request_id}',
                 'operation_id': 'get_request_status',
                 'http_method': 'GET',
                 'servers': None,
@@ -140,8 +144,10 @@ class TurbiniaRequestsApi(object):
         self.get_requests_summary_endpoint = _Endpoint(
             settings={
                 'response_type': (RequestsSummary,),
-                'auth': [],
-                'endpoint_path': '/request/summary',
+                'auth': [
+                    'oAuth2'
+                ],
+                'endpoint_path': '/api/request/summary',
                 'operation_id': 'get_requests_summary',
                 'http_method': 'GET',
                 'servers': None,

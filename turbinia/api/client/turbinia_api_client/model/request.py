@@ -30,9 +30,9 @@ from turbinia_api_client.exceptions import ApiAttributeError
 
 
 def lazy_import():
-    from turbinia_api_client.model.base_evidence_options import BaseEvidenceOptions
+    from turbinia_api_client.model.base_request_options import BaseRequestOptions
     from turbinia_api_client.model.evidence_types_enum import EvidenceTypesEnum
-    globals()['BaseEvidenceOptions'] = BaseEvidenceOptions
+    globals()['BaseRequestOptions'] = BaseRequestOptions
     globals()['EvidenceTypesEnum'] = EvidenceTypesEnum
 
 
@@ -89,8 +89,8 @@ class Request(ModelNormal):
         """
         lazy_import()
         return {
-            'evidence_options': (BaseEvidenceOptions,),  # noqa: E501
             'evidence_type': (EvidenceTypesEnum,),  # noqa: E501
+            'request_options': (BaseRequestOptions,),  # noqa: E501
             'description': (str,),  # noqa: E501
             'group_id': (str,),  # noqa: E501
             'reason': (str,),  # noqa: E501
@@ -105,8 +105,8 @@ class Request(ModelNormal):
 
 
     attribute_map = {
-        'evidence_options': 'evidence_options',  # noqa: E501
         'evidence_type': 'evidence_type',  # noqa: E501
+        'request_options': 'request_options',  # noqa: E501
         'description': 'description',  # noqa: E501
         'group_id': 'group_id',  # noqa: E501
         'reason': 'reason',  # noqa: E501
@@ -122,12 +122,12 @@ class Request(ModelNormal):
 
     @classmethod
     @convert_js_args_to_python_args
-    def _from_openapi_data(cls, evidence_options, evidence_type, *args, **kwargs):  # noqa: E501
+    def _from_openapi_data(cls, evidence_type, request_options, *args, **kwargs):  # noqa: E501
         """Request - a model defined in OpenAPI
 
         Args:
-            evidence_options (BaseEvidenceOptions):
             evidence_type (EvidenceTypesEnum):
+            request_options (BaseRequestOptions):
 
         Keyword Args:
             _check_type (bool): if True, values for parameters in openapi_types
@@ -161,9 +161,9 @@ class Request(ModelNormal):
                                 through its discriminator because we passed in
                                 _visited_composed_classes = (Animal,)
             description (str): [optional] if omitted the server will use the default value of "Turbinia request object"  # noqa: E501
-            group_id (str): Turbinia group identifier. [optional]  # noqa: E501
+            group_id (str): [optional]  # noqa: E501
             reason (str): [optional]  # noqa: E501
-            request_id (str): Turbinia request identifier. [optional]  # noqa: E501
+            request_id (str): [optional]  # noqa: E501
             requester (str): [optional]  # noqa: E501
             sketch_id (str): [optional]  # noqa: E501
         """
@@ -197,8 +197,8 @@ class Request(ModelNormal):
         self._configuration = _configuration
         self._visited_composed_classes = _visited_composed_classes + (self.__class__,)
 
-        self.evidence_options = evidence_options
         self.evidence_type = evidence_type
+        self.request_options = request_options
         for var_name, var_value in kwargs.items():
             if var_name not in self.attribute_map and \
                         self._configuration is not None and \
@@ -219,12 +219,12 @@ class Request(ModelNormal):
     ])
 
     @convert_js_args_to_python_args
-    def __init__(self, evidence_options, evidence_type, *args, **kwargs):  # noqa: E501
+    def __init__(self, evidence_type, request_options, *args, **kwargs):  # noqa: E501
         """Request - a model defined in OpenAPI
 
         Args:
-            evidence_options (BaseEvidenceOptions):
             evidence_type (EvidenceTypesEnum):
+            request_options (BaseRequestOptions):
 
         Keyword Args:
             _check_type (bool): if True, values for parameters in openapi_types
@@ -258,9 +258,9 @@ class Request(ModelNormal):
                                 through its discriminator because we passed in
                                 _visited_composed_classes = (Animal,)
             description (str): [optional] if omitted the server will use the default value of "Turbinia request object"  # noqa: E501
-            group_id (str): Turbinia group identifier. [optional]  # noqa: E501
+            group_id (str): [optional]  # noqa: E501
             reason (str): [optional]  # noqa: E501
-            request_id (str): Turbinia request identifier. [optional]  # noqa: E501
+            request_id (str): [optional]  # noqa: E501
             requester (str): [optional]  # noqa: E501
             sketch_id (str): [optional]  # noqa: E501
         """
@@ -292,8 +292,8 @@ class Request(ModelNormal):
         self._configuration = _configuration
         self._visited_composed_classes = _visited_composed_classes + (self.__class__,)
 
-        self.evidence_options = evidence_options
         self.evidence_type = evidence_type
+        self.request_options = request_options
         for var_name, var_value in kwargs.items():
             if var_name not in self.attribute_map and \
                         self._configuration is not None and \

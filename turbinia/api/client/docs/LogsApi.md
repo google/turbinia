@@ -4,7 +4,7 @@ All URIs are relative to *http://localhost*
 
 Method | HTTP request | Description
 ------------- | ------------- | -------------
-[**get_logs**](LogsApi.md#get_logs) | **GET** /logs/{query} | Get Logs
+[**get_logs**](LogsApi.md#get_logs) | **GET** /api/logs/{query} | Get Logs
 
 
 # **get_logs**
@@ -16,6 +16,7 @@ Retrieve log data.
 
 ### Example
 
+* OAuth Authentication (oAuth2):
 
 ```python
 import time
@@ -29,9 +30,19 @@ configuration = turbinia_api_client.Configuration(
     host = "http://localhost"
 )
 
+# The client must configure the authentication and authorization parameters
+# in accordance with the API server security policy.
+# Examples for each auth method are provided below, use the example that
+# satisfies your auth use case.
+
+# Configure OAuth2 access token for authorization: oAuth2
+configuration = turbinia_api_client.Configuration(
+    host = "http://localhost"
+)
+configuration.access_token = 'YOUR_ACCESS_TOKEN'
 
 # Enter a context with an instance of the API client
-with turbinia_api_client.ApiClient() as api_client:
+with turbinia_api_client.ApiClient(configuration) as api_client:
     # Create an instance of the API class
     api_instance = logs_api.LogsApi(api_client)
     query = "query_example" # str | 
@@ -58,7 +69,7 @@ Name | Type | Description  | Notes
 
 ### Authorization
 
-No authorization required
+[oAuth2](../README.md#oAuth2)
 
 ### HTTP request headers
 

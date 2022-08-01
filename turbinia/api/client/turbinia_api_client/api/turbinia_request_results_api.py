@@ -38,8 +38,10 @@ class TurbiniaRequestResultsApi(object):
         self.get_request_output_endpoint = _Endpoint(
             settings={
                 'response_type': (file_type,),
-                'auth': [],
-                'endpoint_path': '/result/request/{request_id}',
+                'auth': [
+                    'oAuth2'
+                ],
+                'endpoint_path': '/api/result/request/{request_id}',
                 'operation_id': 'get_request_output',
                 'http_method': 'GET',
                 'servers': None,
@@ -88,8 +90,10 @@ class TurbiniaRequestResultsApi(object):
         self.get_task_output_endpoint = _Endpoint(
             settings={
                 'response_type': (file_type,),
-                'auth': [],
-                'endpoint_path': '/result/task/{task_id}',
+                'auth': [
+                    'oAuth2'
+                ],
+                'endpoint_path': '/api/result/task/{task_id}',
                 'operation_id': 'get_task_output',
                 'http_method': 'GET',
                 'servers': None,

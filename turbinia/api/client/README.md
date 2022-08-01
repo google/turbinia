@@ -57,6 +57,16 @@ configuration = turbinia_api_client.Configuration(
     host = "http://localhost"
 )
 
+# The client must configure the authentication and authorization parameters
+# in accordance with the API server security policy.
+# Examples for each auth method are provided below, use the example that
+# satisfies your auth use case.
+
+# Configure OAuth2 access token for authorization: oAuth2
+configuration = turbinia_api_client.Configuration(
+    host = "http://localhost"
+)
+configuration.access_token = 'YOUR_ACCESS_TOKEN'
 
 
 # Enter a context with an instance of the API client
@@ -79,20 +89,20 @@ All URIs are relative to *http://localhost*
 
 Class | Method | HTTP request | Description
 ------------ | ------------- | ------------- | -------------
-*LogsApi* | [**get_logs**](docs/LogsApi.md#get_logs) | **GET** /logs/{query} | Get Logs
-*TurbiniaConfigurationApi* | [**read_config**](docs/TurbiniaConfigurationApi.md#read_config) | **GET** /config/ | Read Config
-*TurbiniaJobsApi* | [**read_jobs**](docs/TurbiniaJobsApi.md#read_jobs) | **GET** /jobs/ | Read Jobs
-*TurbiniaRequestResultsApi* | [**get_request_output**](docs/TurbiniaRequestResultsApi.md#get_request_output) | **GET** /result/request/{request_id} | Get Request Output
-*TurbiniaRequestResultsApi* | [**get_task_output**](docs/TurbiniaRequestResultsApi.md#get_task_output) | **GET** /result/task/{task_id} | Get Task Output
-*TurbiniaRequestsApi* | [**create_request**](docs/TurbiniaRequestsApi.md#create_request) | **POST** /request/ | Create Request
-*TurbiniaRequestsApi* | [**get_request_status**](docs/TurbiniaRequestsApi.md#get_request_status) | **GET** /request/{request_id} | Get Request Status
-*TurbiniaRequestsApi* | [**get_requests_summary**](docs/TurbiniaRequestsApi.md#get_requests_summary) | **GET** /request/summary | Get Requests Summary
-*TurbiniaTasksApi* | [**get_task_status**](docs/TurbiniaTasksApi.md#get_task_status) | **GET** /task/{task_id} | Get Task Status
+*LogsApi* | [**get_logs**](docs/LogsApi.md#get_logs) | **GET** /api/logs/{query} | Get Logs
+*TurbiniaConfigurationApi* | [**read_config**](docs/TurbiniaConfigurationApi.md#read_config) | **GET** /api/config/ | Read Config
+*TurbiniaJobsApi* | [**read_jobs**](docs/TurbiniaJobsApi.md#read_jobs) | **GET** /api/jobs/ | Read Jobs
+*TurbiniaRequestResultsApi* | [**get_request_output**](docs/TurbiniaRequestResultsApi.md#get_request_output) | **GET** /api/result/request/{request_id} | Get Request Output
+*TurbiniaRequestResultsApi* | [**get_task_output**](docs/TurbiniaRequestResultsApi.md#get_task_output) | **GET** /api/result/task/{task_id} | Get Task Output
+*TurbiniaRequestsApi* | [**create_request**](docs/TurbiniaRequestsApi.md#create_request) | **POST** /api/request/ | Create Request
+*TurbiniaRequestsApi* | [**get_request_status**](docs/TurbiniaRequestsApi.md#get_request_status) | **GET** /api/request/{request_id} | Get Request Status
+*TurbiniaRequestsApi* | [**get_requests_summary**](docs/TurbiniaRequestsApi.md#get_requests_summary) | **GET** /api/request/summary | Get Requests Summary
+*TurbiniaTasksApi* | [**get_task_status**](docs/TurbiniaTasksApi.md#get_task_status) | **GET** /api/task/{task_id} | Get Task Status
 
 
 ## Documentation For Models
 
- - [BaseEvidenceOptions](docs/BaseEvidenceOptions.md)
+ - [BaseRequestOptions](docs/BaseRequestOptions.md)
  - [EvidenceTypesEnum](docs/EvidenceTypesEnum.md)
  - [HTTPValidationError](docs/HTTPValidationError.md)
  - [Request](docs/Request.md)
@@ -104,7 +114,14 @@ Class | Method | HTTP request | Description
 
 ## Documentation For Authorization
 
- All endpoints do not require authorization.
+
+## oAuth2
+
+- **Type**: OAuth
+- **Flow**: accessCode
+- **Authorization URL**: https://accounts.google.com/o/oauth2/v2/auth
+- **Scopes**: N/A
+
 
 ## Author
 

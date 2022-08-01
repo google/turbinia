@@ -76,6 +76,7 @@ class Configuration(object):
     :param ssl_ca_cert: str - the path to a file of concatenated CA certificates
       in PEM format
 
+    :Example:
     """
 
     _default = None
@@ -369,6 +370,13 @@ class Configuration(object):
         :return: The Auth Settings information dict.
         """
         auth = {}
+        if self.access_token is not None:
+            auth['oAuth2'] = {
+                'type': 'oauth2',
+                'in': 'header',
+                'key': 'Authorization',
+                'value': 'Bearer ' + self.access_token
+            }
         return auth
 
     def to_debug_report(self):

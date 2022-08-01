@@ -2,7 +2,7 @@
 .gitlab-ci.yml
 .travis.yml
 README.md
-docs/BaseEvidenceOptions.md
+docs/BaseRequestOptions.md
 docs/EvidenceTypesEnum.md
 docs/HTTPValidationError.md
 docs/LogsApi.md
@@ -22,6 +22,7 @@ setup.cfg
 setup.py
 test-requirements.txt
 test/__init__.py
+test/test_base_request_options.py
 tox.ini
 turbinia_api_client/__init__.py
 turbinia_api_client/api/__init__.py
@@ -36,7 +37,7 @@ turbinia_api_client/apis/__init__.py
 turbinia_api_client/configuration.py
 turbinia_api_client/exceptions.py
 turbinia_api_client/model/__init__.py
-turbinia_api_client/model/base_evidence_options.py
+turbinia_api_client/model/base_request_options.py
 turbinia_api_client/model/evidence_types_enum.py
 turbinia_api_client/model/http_validation_error.py
 turbinia_api_client/model/request.py

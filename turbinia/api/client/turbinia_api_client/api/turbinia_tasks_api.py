@@ -38,8 +38,10 @@ class TurbiniaTasksApi(object):
         self.get_task_status_endpoint = _Endpoint(
             settings={
                 'response_type': (bool, date, datetime, dict, float, int, list, str, none_type,),
-                'auth': [],
-                'endpoint_path': '/task/{task_id}',
+                'auth': [
+                    'oAuth2'
+                ],
+                'endpoint_path': '/api/task/{task_id}',
                 'operation_id': 'get_task_status',
                 'http_method': 'GET',
                 'servers': None,

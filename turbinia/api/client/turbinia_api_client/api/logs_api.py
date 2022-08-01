@@ -38,8 +38,10 @@ class LogsApi(object):
         self.get_logs_endpoint = _Endpoint(
             settings={
                 'response_type': (bool, date, datetime, dict, float, int, list, str, none_type,),
-                'auth': [],
-                'endpoint_path': '/logs/{query}',
+                'auth': [
+                    'oAuth2'
+                ],
+                'endpoint_path': '/api/logs/{query}',
                 'operation_id': 'get_logs',
                 'http_method': 'GET',
                 'servers': None,

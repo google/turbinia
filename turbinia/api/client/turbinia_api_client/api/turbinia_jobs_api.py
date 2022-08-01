@@ -37,8 +37,10 @@ class TurbiniaJobsApi(object):
         self.read_jobs_endpoint = _Endpoint(
             settings={
                 'response_type': (bool, date, datetime, dict, float, int, list, str, none_type,),
-                'auth': [],
-                'endpoint_path': '/jobs/',
+                'auth': [
+                    'oAuth2'
+                ],
+                'endpoint_path': '/api/jobs/',
                 'operation_id': 'read_jobs',
                 'http_method': 'GET',
                 'servers': None,
@@ -83,7 +85,7 @@ class TurbiniaJobsApi(object):
     ):
         """Read Jobs  # noqa: E501
 
-        Return all enabled jobs.  # noqa: E501
+        Return enabled jobs from the current Turbinia config.  # noqa: E501
         This method makes a synchronous HTTP request by default. To make an
         asynchronous HTTP request, please pass async_req=True
 
