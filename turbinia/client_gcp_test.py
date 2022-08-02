@@ -224,14 +224,18 @@ class TestTurbiniaClient(unittest.TestCase):
     config.TURBINIA_PROJECT = 'test'
     config.TURBINIA_ZONE = 'test'
     config.TURBINIA_REGION = 'test'
+    return state_manager.get_state_manager()
+
+  @mock.patch('turbinia.client.task_manager.PSQTaskManager._backend_setup')
+  @mock.patch('turbinia.state_manager.datastore.Client')
+  def setUp(self, _, __):  #pylint: disable=arguments-differ
+    """Initialize test."""
+    self.state_manager = self._get_state_manager()
     # Reload module using the config settings above.
     # This is needed due to the conditional imports in client.py
     importlib.reload(TurbiniaClientProvider)
+    self.client = TurbiniaClientProvider.get_turbinia_client()
     TurbiniaClientProvider.RETRY_SLEEP = 0.001
-    return state_manager.get_state_manager()
-
-  def setUp(self):
-    self.state_manager = self._get_state_manager()
 
     last_update = datetime.strptime(
         '2020-08-04T16:32:38.390390Z', DATETIME_FORMAT)
@@ -290,9 +294,8 @@ class TestTurbiniaClient(unittest.TestCase):
   def testTurbiniaClientInit(self, _, __):
     """Basic test for client."""
     config.LoadConfig()
-    client = TurbiniaClientProvider.get_turbinia_client()
+    client = self.client
     client.task_amanger = self.state_manager
-    #client.task_manager = self._get_state_manager()
     self.assertTrue(hasattr(client, 'task_manager'))
 
   @mock.patch('turbinia.client.task_manager.PSQTaskManager._backend_setup')
@@ -310,9 +313,8 @@ class TestTurbiniaClient(unittest.TestCase):
     gcf_result = json.dumps(gcf_result)
     function_return = {'result': gcf_result}
     mock_cloud_function.return_value = function_return
-    client = TurbiniaClientProvider.get_turbinia_client()
+    client = self.client
     client.task_amanger = self.state_manager
-    #client.task_manager = self._get_state_manager()
     task_data = client.get_task_data('inst', 'proj', 'reg')
     # get_task_data() converts this back into a timedelta(). We returned it
     # seconds from the GCF function call because that is what it is stored in
@@ -333,9 +335,8 @@ class TestTurbiniaClient(unittest.TestCase):
       self, _, __, ___, mock_cloud_function):
     """Test for exception after empty results from cloud functions."""
     mock_cloud_function.return_value = {}
-    client = TurbiniaClientProvider.get_turbinia_client()
+    client = self.client
     client.task_amanger = self.state_manager
-    #client.task_manager = self._get_state_manager()
     self.assertRaises(
         TurbiniaException, client.get_task_data, "inst", "proj", "reg")
 
@@ -346,9 +347,8 @@ class TestTurbiniaClient(unittest.TestCase):
       self, _, __, mock_cloud_function):
     """Test for retries after retriable errors returned from cloud functions."""
     mock_cloud_function.return_value = {'error': {'code': 503}}
-    client = TurbiniaClientProvider.get_turbinia_client()
+    client = self.client
     client.task_amanger = self.state_manager
-    #client.task_manager = self._get_state_manager()
     self.assertRaises(
         TurbiniaException, client.get_task_data, "inst", "proj", "reg")
     self.assertEqual(
@@ -362,9 +362,8 @@ class TestTurbiniaClient(unittest.TestCase):
       self, _, __, ___, mock_cloud_function):
     """Test for exception after bad json results from cloud functions."""
     mock_cloud_function.return_value = {'result': None}
-    client = TurbiniaClientProvider.get_turbinia_client()
+    client = self.client
     client.task_amanger = self.state_manager
-    #client.task_manager = self._get_state_manager()
     self.assertRaises(
         TurbiniaException, client.get_task_data, "inst", "proj", "reg")
 
@@ -373,9 +372,8 @@ class TestTurbiniaClient(unittest.TestCase):
   @mock.patch('turbinia.state_manager.datastore.Client')
   def testClientFormatTaskStatistics(self, _, __, ___):
     """Tests format_task_statistics() report output."""
-    client = TurbiniaClientProvider.get_turbinia_client()
+    client = self.client
     client.task_amanger = self.state_manager
-    #client.task_manager = self._get_state_manager()
     client.get_task_data = mock.MagicMock()
     client.get_task_data.return_value = self.task_data
     stats_report = client.format_task_statistics('inst', 'proj', 'reg')
@@ -389,7 +387,6 @@ class TestTurbiniaClient(unittest.TestCase):
     """Tests format_task_statistics() CSV report output."""
     client = TurbiniaClientProvider.get_turbinia_client()
     client.task_amanger = self.state_manager
-    #client.task_manager = self._get_state_manager()
     client.get_task_data = mock.MagicMock()
     client.get_task_data.return_value = self.task_data
     stats_report = client.format_task_statistics(
@@ -402,9 +399,8 @@ class TestTurbiniaClient(unittest.TestCase):
   @mock.patch('turbinia.state_manager.datastore.Client')
   def testClientGetTaskStatistics(self, _, __, ___):
     """Tests get_task_statistics() basic functionality."""
-    client = TurbiniaClientProvider.get_turbinia_client()
+    client = self.client
     client.task_amanger = self.state_manager
-    #client.task_manager = self._get_state_manager()
     client.get_task_data = mock.MagicMock()
     client.get_task_data.return_value = self.task_data
     task_stats = client.get_task_statistics('inst', 'proj', 'reg')
@@ -437,9 +433,8 @@ class TestTurbiniaClient(unittest.TestCase):
   @mock.patch('turbinia.state_manager.datastore.Client')
   def testClientFormatTaskStatus(self, _, __, ____):
     """Tests format_task_status() with empty report_priority."""
-    client = TurbiniaClientProvider.get_turbinia_client()
+    client = self.client
     client.task_amanger = self.state_manager
-    #client.task_manager = self._get_state_manager()
     client.get_task_data = mock.MagicMock()
     self.task_data[0]['report_priority'] = None
     self.task_data[1]['report_priority'] = ''
@@ -453,9 +448,8 @@ class TestTurbiniaClient(unittest.TestCase):
   @mock.patch('turbinia.state_manager.datastore.Client')
   def testClientFormatTaskStatusShortReport(self, _, __, ___):
     """Tests format_task_status() has valid output with short report."""
-    client = TurbiniaClientProvider.get_turbinia_client()
+    client = self.client
     client.task_amanger = self.state_manager
-    #client.task_manager = self._get_state_manager()
     client.get_task_data = mock.MagicMock()
     client.get_task_data.return_value = self.task_data
     result = client.format_task_status('inst', 'proj', 'reg')
@@ -466,9 +460,8 @@ class TestTurbiniaClient(unittest.TestCase):
   @mock.patch('turbinia.state_manager.datastore.Client')
   def testClientFormatTaskStatusFullReport(self, _, __, mock_cloud_function):
     """Tests format_task_status() has valid output with full report."""
-    client = TurbiniaClientProvider.get_turbinia_client()
+    client = self.client
     client.task_amanger = self.state_manager
-    #client.task_manager = self._get_state_manager()
     client.get_task_data = mock.MagicMock()
     client.get_task_data.return_value = self.task_data
     result = client.format_task_status('inst', 'proj', 'reg', full_report=True)
@@ -479,9 +472,8 @@ class TestTurbiniaClient(unittest.TestCase):
   @mock.patch('turbinia.state_manager.datastore.Client')
   def testClientFormatTaskStatusFiles(self, _, __, mock_cloud_function):
     """Tests format_task_status() has valid output with report and files."""
-    client = TurbiniaClientProvider.get_turbinia_client()
+    client = self.client
     client.task_amanger = self.state_manager
-    #client.task_manager = self._get_state_manager()
     client.get_task_data = mock.MagicMock()
     client.get_task_data.return_value = self.task_data
     result = client.format_task_status(
@@ -493,9 +485,8 @@ class TestTurbiniaClient(unittest.TestCase):
   @mock.patch('turbinia.state_manager.datastore.Client')
   def testClientFormatRequestStatus(self, _, __, ___):
     """Tests format_request_status() with default days."""
-    client = TurbiniaClientProvider.get_turbinia_client()
+    client = self.client
     client.task_amanger = self.state_manager
-    #client.task_manager = self._get_state_manager()
     client.get_task_data = mock.MagicMock()
     client.get_task_data.return_value = self.task_data
     result = client.format_request_status('inst', 'proj', 'reg')
@@ -506,9 +497,8 @@ class TestTurbiniaClient(unittest.TestCase):
   @mock.patch('turbinia.state_manager.datastore.Client')
   def testClientFormatRequestStatusDays(self, _, __, ___):
     """Tests format_request_status() with custom days."""
-    client = TurbiniaClientProvider.get_turbinia_client()
+    client = self.client
     client.task_amanger = self.state_manager
-    #client.task_manager = self._get_state_manager()
     client.get_task_data = mock.MagicMock()
     client.get_task_data.return_value = self.task_data
     result = client.format_request_status('inst', 'proj', 'reg', days=4)
@@ -519,9 +509,8 @@ class TestTurbiniaClient(unittest.TestCase):
   @mock.patch('turbinia.state_manager.datastore.Client')
   def testClientFormatRequestStatusNoResults(self, _, __, ___):
     """Tests format_request_status() with no Task results."""
-    client = TurbiniaClientProvider.get_turbinia_client()
+    client = self.client
     client.task_amanger = self.state_manager
-    #client.task_manager = self._get_state_manager()
     client.get_task_data = mock.MagicMock()
     client.get_task_data.return_value = ''
     result = client.format_request_status('inst', 'proj', 'reg', days=4)
@@ -532,9 +521,8 @@ class TestTurbiniaClient(unittest.TestCase):
   @mock.patch('turbinia.state_manager.datastore.Client')
   def testClientFormatRequestStatusFullReport(self, _, __, ___):
     """Tests format_request_status() has valid output with full report."""
-    client = TurbiniaClientProvider.get_turbinia_client()
+    client = self.client
     client.task_amanger = self.state_manager
-    #client.task_manager = self._get_state_manager()
     client.get_task_data = mock.MagicMock()
     client.get_task_data.return_value = self.task_data
     result = client.format_request_status(
@@ -546,9 +534,8 @@ class TestTurbiniaClient(unittest.TestCase):
   @mock.patch('turbinia.state_manager.datastore.Client')
   def testClientFormatWorkerStatus(self, _, __, ___):
     """Tests format_worker_status() with default days."""
-    client = TurbiniaClientProvider.get_turbinia_client()
+    client = self.client
     client.task_amanger = self.state_manager
-    #client.task_manager = self._get_state_manager()
     client.get_task_data = mock.MagicMock()
     client.get_task_data.return_value = self.task_data
     result = client.format_worker_status('inst', 'proj', 'reg')
@@ -560,9 +547,8 @@ class TestTurbiniaClient(unittest.TestCase):
   @mock.patch('turbinia.state_manager.datastore.Client')
   def testClientFormatWorkerStatusDays(self, _, __, ___):
     """Tests format_worker_status() with custom days."""
-    client = TurbiniaClientProvider.get_turbinia_client()
+    client = self.client
     client.task_amanger = self.state_manager
-    #client.task_manager = self._get_state_manager()
     client.get_task_data = mock.MagicMock()
     client.get_task_data.return_value = self.task_data
     result = client.format_worker_status('inst', 'proj', 'reg', days=4)
@@ -574,9 +560,8 @@ class TestTurbiniaClient(unittest.TestCase):
   @mock.patch('turbinia.state_manager.datastore.Client')
   def testClientFormatWorkerStatusNoResults(self, _, __, ___):
     """Tests format_worker_status() with no Task results."""
-    client = TurbiniaClientProvider.get_turbinia_client()
+    client = self.client
     client.task_amanger = self.state_manager
-    #client.task_manager = self._get_state_manager()
     client.get_task_data = mock.MagicMock()
     client.get_task_data.return_value = ''
     result = client.format_worker_status('inst', 'proj', 'reg', days=4)
@@ -587,9 +572,8 @@ class TestTurbiniaClient(unittest.TestCase):
   @mock.patch('turbinia.state_manager.datastore.Client')
   def testClientFormatWorkStatusFullReport(self, _, __, ___):
     """Tests format_worker_status() has valid output with full report."""
-    client = TurbiniaClientProvider.get_turbinia_client()
+    client = self.client
     client.task_amanger = self.state_manager
-    #client.task_manager = self._get_state_manager()
     client.get_task_data = mock.MagicMock()
     client.get_task_data.return_value = self.task_data
     result = client.format_worker_status('inst', 'proj', 'reg', all_fields=True)
