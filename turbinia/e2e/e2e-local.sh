@@ -58,5 +58,10 @@ docker logs turbinia-worker
 
 echo "==> Show evidence volume contents in worker"
 docker exec -t turbinia-worker ls -al /evidence/
+docker exec -t turbinia-worker find /evidence -ls
+
+echo "==> Show PlasoTask logs"
+for i in cat `docker exec turbinia-server turbiniactl -a status -r 123456789|grep -Eo '*/evidence/123456789/.*PlasoTask.*txt'`; do docker exec turbinia-worker cat $i; done
+
 
 exit $RET
