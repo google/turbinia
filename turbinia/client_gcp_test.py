@@ -230,12 +230,11 @@ class TestTurbiniaClient(unittest.TestCase):
   @mock.patch('turbinia.state_manager.datastore.Client')
   def setUp(self, _, __):  #pylint: disable=arguments-differ
     """Initialize test."""
-    _state_manager = self._get_state_manager()
+    self.state_manager = self._get_state_manager()
     # Reload module using the config settings above.
     # This is needed due to the conditional imports in client.py
     importlib.reload(TurbiniaClientProvider)
     self.client = TurbiniaClientProvider.get_turbinia_client()
-    self.client.state_manager = _state_manager
     TurbiniaClientProvider.RETRY_SLEEP = 0.001
 
     last_update = datetime.strptime(
