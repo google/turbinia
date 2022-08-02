@@ -16,11 +16,12 @@
 
 from __future__ import unicode_literals
 
-import imp
+import importlib
 import itertools
 import logging
 import os
 import sys
+import types
 
 from turbinia import TurbiniaException
 
@@ -156,7 +157,9 @@ def LoadConfig(config_file=None):
   if 'turbinia_config_tmpl' in config_file:
     log.warning('Using fallback source config. {0:s}'.format(CONFIG_MSG))
   try:
-    _config = imp.load_source('config', config_file)
+    config_loader = importlib.machinery.SourceFileLoader('config', config_file)
+    _config = types.ModuleType(config_loader.name)
+    config_loader.exec_module(_config)
   except IOError as exception:
     message = (
         'Could not load config file {0:s}: {1!s}'.format(
