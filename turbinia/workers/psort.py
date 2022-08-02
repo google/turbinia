@@ -20,7 +20,7 @@ import os
 
 from turbinia import config
 from turbinia.workers import TurbiniaTask
-from turbinia.evidence import PlasoFile
+from turbinia.evidence import PlasoCsvFile
 
 
 class PsortTask(TurbiniaTask):
@@ -76,7 +76,7 @@ class PsortTask(TurbiniaTask):
     else:
       output_suffix = 'csv'
     psort_file = os.path.join(self.output_dir, '{0:s}.{1:s}'.format(self.id, output_suffix))
-    psort_evidence = PlasoFile(source_path=psort_file)
+    psort_evidence = PlasoCsvFile(source_path=psort_file)
     psort_log = os.path.join(self.output_dir, '{0:s}.log'.format(self.id))
 
     cmd = self.build_plaso_command('psort.py', self.task_config)

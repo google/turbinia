@@ -826,13 +826,13 @@ class PlasoFile(Evidence):
     self.save_metadata = True
 
 
-class PlasoFile(Evidence):
+class PlasoCsvFile(Evidence):
   """Psort output file evidence.  """
 
   def __init__(self, plaso_version=None, *args, **kwargs):
     """Initialization for Plaso File evidence."""
     self.plaso_version = plaso_version
-    super(PlasoFile, self).__init__(copyable=True, *args, **kwargs)
+    super(PlasoCsvFile, self).__init__(copyable=True, *args, **kwargs)
     self.save_metadata = False
 
 
