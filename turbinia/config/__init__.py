@@ -16,13 +16,12 @@
 
 from __future__ import unicode_literals
 
-import importlib
+import importlib.util
+import importlib.machinery
 import itertools
 import logging
 import os
 import sys
-import types
-
 from turbinia import TurbiniaException
 
 DATETIME_FORMAT = '%Y-%m-%dT%H:%M:%S.%fZ'
@@ -158,7 +157,9 @@ def LoadConfig(config_file=None):
     log.warning('Using fallback source config. {0:s}'.format(CONFIG_MSG))
   try:
     config_loader = importlib.machinery.SourceFileLoader('config', config_file)
-    _config = types.ModuleType(config_loader.name)
+    config_spec = importlib.util.spec_from_loader(
+        config_loader.name, config_loader)
+    _config = importlib.util.module_from_spec(config_spec)
     config_loader.exec_module(_config)
   except IOError as exception:
     message = (
