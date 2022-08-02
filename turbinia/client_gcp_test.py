@@ -230,11 +230,12 @@ class TestTurbiniaClient(unittest.TestCase):
   @mock.patch('turbinia.state_manager.datastore.Client')
   def setUp(self, _, __):  #pylint: disable=arguments-differ
     """Initialize test."""
-    self.state_manager = self._get_state_manager()
+    _state_manager = self._get_state_manager()
     # Reload module using the config settings above.
     # This is needed due to the conditional imports in client.py
     importlib.reload(TurbiniaClientProvider)
     self.client = TurbiniaClientProvider.get_turbinia_client()
+    self.client.state_manager = _state_manager
     TurbiniaClientProvider.RETRY_SLEEP = 0.001
 
     last_update = datetime.strptime(
@@ -289,21 +290,16 @@ class TestTurbiniaClient(unittest.TestCase):
     ] # yapf: disable
 
 
-  @mock.patch('turbinia.client.task_manager.PSQTaskManager._backend_setup')
-  @mock.patch('turbinia.state_manager.datastore.Client')
-  def testTurbiniaClientInit(self, _, __):
+  def testTurbiniaClientInit(self):
     """Basic test for client."""
     config.LoadConfig()
     client = self.client
-    client.task_amanger = self.state_manager
     self.assertTrue(hasattr(client, 'task_manager'))
 
-  @mock.patch('turbinia.client.task_manager.PSQTaskManager._backend_setup')
-  @mock.patch('turbinia.state_manager.datastore.Client')
   @mock.patch(
       'libcloudforensics.providers.gcp.internal.function.GoogleCloudFunction.ExecuteFunction'
   )
-  def testTurbiniaClientGetTaskData(self, mock_cloud_function, _, __):
+  def testTurbiniaClientGetTaskData(self, mock_cloud_function):
     """Basic test for client.get_task_data"""
     # ExecuteFunction returns a dict with a 'result' key that has a json-encoded
     # list.  This contains our task data, which is a list of dicts.
@@ -314,7 +310,6 @@ class TestTurbiniaClient(unittest.TestCase):
     function_return = {'result': gcf_result}
     mock_cloud_function.return_value = function_return
     client = self.client
-    client.task_amanger = self.state_manager
     task_data = client.get_task_data('inst', 'proj', 'reg')
     # get_task_data() converts this back into a timedelta(). We returned it
     # seconds from the GCF function call because that is what it is stored in
@@ -329,26 +324,18 @@ class TestTurbiniaClient(unittest.TestCase):
   @mock.patch('libcloudforensics.providers.gcp.internal.function.GoogleCloudFunction.ExecuteFunction')  # yapf: disable
   @mock.patch(
       'libcloudforensics.providers.gcp.internal.function.GoogleCloudFunction')
-  @mock.patch('turbinia.client.task_manager.PSQTaskManager._backend_setup')
-  @mock.patch('turbinia.state_manager.datastore.Client')
-  def testTurbiniaClientGetTaskDataNoResults(
-      self, _, __, ___, mock_cloud_function):
+  def testTurbiniaClientGetTaskDataNoResults(self, _, mock_cloud_function):
     """Test for exception after empty results from cloud functions."""
     mock_cloud_function.return_value = {}
     client = self.client
-    client.task_amanger = self.state_manager
     self.assertRaises(
         TurbiniaException, client.get_task_data, "inst", "proj", "reg")
 
   @mock.patch('libcloudforensics.providers.gcp.internal.function.GoogleCloudFunction.ExecuteFunction')  # yapf: disable
-  @mock.patch('turbinia.client.task_manager.PSQTaskManager._backend_setup')
-  @mock.patch('turbinia.state_manager.datastore.Client')
-  def testTurbiniaClientGetTaskDataRetriableErrors(
-      self, _, __, mock_cloud_function):
+  def testTurbiniaClientGetTaskDataRetriableErrors(self, mock_cloud_function):
     """Test for retries after retriable errors returned from cloud functions."""
     mock_cloud_function.return_value = {'error': {'code': 503}}
     client = self.client
-    client.task_amanger = self.state_manager
     self.assertRaises(
         TurbiniaException, client.get_task_data, "inst", "proj", "reg")
     self.assertEqual(
@@ -356,37 +343,25 @@ class TestTurbiniaClient(unittest.TestCase):
 
   @mock.patch('libcloudforensics.providers.gcp.internal.function.GoogleCloudFunction.ExecuteFunction')  # yapf: disable
   @mock.patch('libcloudforensics.providers.gcp.internal.function.GoogleCloudFunction')  # yapf: disable
-  @mock.patch('turbinia.client.task_manager.PSQTaskManager._backend_setup')
-  @mock.patch('turbinia.state_manager.datastore.Client')
-  def testTurbiniaClientGetTaskDataInvalidJson(
-      self, _, __, ___, mock_cloud_function):
+  def testTurbiniaClientGetTaskDataInvalidJson(self, _, mock_cloud_function):
     """Test for exception after bad json results from cloud functions."""
     mock_cloud_function.return_value = {'result': None}
     client = self.client
-    client.task_amanger = self.state_manager
     self.assertRaises(
         TurbiniaException, client.get_task_data, "inst", "proj", "reg")
 
-  @mock.patch('libcloudforensics.providers.gcp.internal.function.GoogleCloudFunction.ExecuteFunction')  # yapf: disable
-  @mock.patch('turbinia.client.task_manager.PSQTaskManager._backend_setup')
-  @mock.patch('turbinia.state_manager.datastore.Client')
-  def testClientFormatTaskStatistics(self, _, __, ___):
+  def testClientFormatTaskStatistics(self):
     """Tests format_task_statistics() report output."""
     client = self.client
-    client.task_amanger = self.state_manager
     client.get_task_data = mock.MagicMock()
     client.get_task_data.return_value = self.task_data
     stats_report = client.format_task_statistics('inst', 'proj', 'reg')
     self.maxDiff = None
     self.assertEqual(stats_report, STATISTICS_REPORT)
 
-  @mock.patch('libcloudforensics.providers.gcp.internal.function.GoogleCloudFunction.ExecuteFunction')  # yapf: disable
-  @mock.patch('turbinia.client.task_manager.PSQTaskManager._backend_setup')
-  @mock.patch('turbinia.state_manager.datastore.Client')
-  def testClientFormatTaskStatisticsCsv(self, _, __, ___):
+  def testClientFormatTaskStatisticsCsv(self):
     """Tests format_task_statistics() CSV report output."""
-    client = TurbiniaClientProvider.get_turbinia_client()
-    client.task_amanger = self.state_manager
+    client = self.client
     client.get_task_data = mock.MagicMock()
     client.get_task_data.return_value = self.task_data
     stats_report = client.format_task_statistics(
@@ -394,13 +369,9 @@ class TestTurbiniaClient(unittest.TestCase):
     self.maxDiff = None
     self.assertEqual(stats_report, STATISTICS_REPORT_CSV)
 
-  @mock.patch('libcloudforensics.providers.gcp.internal.function.GoogleCloudFunction.ExecuteFunction')  # yapf: disable
-  @mock.patch('turbinia.client.task_manager.PSQTaskManager._backend_setup')
-  @mock.patch('turbinia.state_manager.datastore.Client')
-  def testClientGetTaskStatistics(self, _, __, ___):
+  def testClientGetTaskStatistics(self):
     """Tests get_task_statistics() basic functionality."""
     client = self.client
-    client.task_amanger = self.state_manager
     client.get_task_data = mock.MagicMock()
     client.get_task_data.return_value = self.task_data
     task_stats = client.get_task_statistics('inst', 'proj', 'reg')
@@ -428,13 +399,9 @@ class TestTurbiniaClient(unittest.TestCase):
     self.assertEqual(
         task_stats['tasks_per_type']['TaskName2'].mean, timedelta(minutes=5))
 
-  @mock.patch('libcloudforensics.providers.gcp.internal.function.GoogleCloudFunction.ExecuteFunction')  # yapf: disable
-  @mock.patch('turbinia.client.task_manager.PSQTaskManager._backend_setup')
-  @mock.patch('turbinia.state_manager.datastore.Client')
-  def testClientFormatTaskStatus(self, _, __, ____):
+  def testClientFormatTaskStatus(self):
     """Tests format_task_status() with empty report_priority."""
     client = self.client
-    client.task_amanger = self.state_manager
     client.get_task_data = mock.MagicMock()
     self.task_data[0]['report_priority'] = None
     self.task_data[1]['report_priority'] = ''
@@ -443,137 +410,93 @@ class TestTurbiniaClient(unittest.TestCase):
     result = client.format_task_status('inst', 'proj', 'reg')
     self.assertIn('Processed 3 Tasks', result.strip())
 
-  @mock.patch('libcloudforensics.providers.gcp.internal.function.GoogleCloudFunction.ExecuteFunction')  # yapf: disable
-  @mock.patch('turbinia.client.task_manager.PSQTaskManager._backend_setup')
-  @mock.patch('turbinia.state_manager.datastore.Client')
-  def testClientFormatTaskStatusShortReport(self, _, __, ___):
+  def testClientFormatTaskStatusShortReport(self):
     """Tests format_task_status() has valid output with short report."""
     client = self.client
-    client.task_amanger = self.state_manager
     client.get_task_data = mock.MagicMock()
     client.get_task_data.return_value = self.task_data
     result = client.format_task_status('inst', 'proj', 'reg')
     self.assertEqual(result.strip(), SHORT_REPORT.strip())
 
-  @mock.patch('libcloudforensics.providers.gcp.internal.function.GoogleCloudFunction.ExecuteFunction')  # yapf: disable
-  @mock.patch('turbinia.client.task_manager.PSQTaskManager._backend_setup')
-  @mock.patch('turbinia.state_manager.datastore.Client')
-  def testClientFormatTaskStatusFullReport(self, _, __, mock_cloud_function):
+  def testClientFormatTaskStatusFullReport(self):
     """Tests format_task_status() has valid output with full report."""
     client = self.client
-    client.task_amanger = self.state_manager
     client.get_task_data = mock.MagicMock()
     client.get_task_data.return_value = self.task_data
     result = client.format_task_status('inst', 'proj', 'reg', full_report=True)
     self.assertEqual(result.strip(), LONG_REPORT.strip())
 
-  @mock.patch('libcloudforensics.providers.gcp.internal.function.GoogleCloudFunction.ExecuteFunction')  # yapf: disable
-  @mock.patch('turbinia.client.task_manager.PSQTaskManager._backend_setup')
-  @mock.patch('turbinia.state_manager.datastore.Client')
-  def testClientFormatTaskStatusFiles(self, _, __, mock_cloud_function):
+  def testClientFormatTaskStatusFiles(self):
     """Tests format_task_status() has valid output with report and files."""
     client = self.client
-    client.task_amanger = self.state_manager
     client.get_task_data = mock.MagicMock()
     client.get_task_data.return_value = self.task_data
     result = client.format_task_status(
         'inst', 'proj', 'reg', all_fields=True, full_report=True)
     self.assertEqual(result.strip(), LONG_REPORT_FILES.strip())
 
-  @mock.patch('libcloudforensics.providers.gcp.internal.function.GoogleCloudFunction.ExecuteFunction')  # yapf: disable
-  @mock.patch('turbinia.client.task_manager.PSQTaskManager._backend_setup')
-  @mock.patch('turbinia.state_manager.datastore.Client')
-  def testClientFormatRequestStatus(self, _, __, ___):
+  def testClientFormatRequestStatus(self):
     """Tests format_request_status() with default days."""
     client = self.client
-    client.task_amanger = self.state_manager
     client.get_task_data = mock.MagicMock()
     client.get_task_data.return_value = self.task_data
     result = client.format_request_status('inst', 'proj', 'reg')
     self.assertIn('Requests made within 7 days', result.strip())
 
-  @mock.patch('libcloudforensics.providers.gcp.internal.function.GoogleCloudFunction.ExecuteFunction')  # yapf: disable
-  @mock.patch('turbinia.client.task_manager.PSQTaskManager._backend_setup')
-  @mock.patch('turbinia.state_manager.datastore.Client')
-  def testClientFormatRequestStatusDays(self, _, __, ___):
+  def testClientFormatRequestStatusDays(self):
     """Tests format_request_status() with custom days."""
     client = self.client
-    client.task_amanger = self.state_manager
     client.get_task_data = mock.MagicMock()
     client.get_task_data.return_value = self.task_data
     result = client.format_request_status('inst', 'proj', 'reg', days=4)
     self.assertIn('Requests made within 4 days', result.strip())
 
-  @mock.patch('libcloudforensics.providers.gcp.internal.function.GoogleCloudFunction.ExecuteFunction')  # yapf: disable
-  @mock.patch('turbinia.client.task_manager.PSQTaskManager._backend_setup')
-  @mock.patch('turbinia.state_manager.datastore.Client')
-  def testClientFormatRequestStatusNoResults(self, _, __, ___):
+  def testClientFormatRequestStatusNoResults(self):
     """Tests format_request_status() with no Task results."""
     client = self.client
-    client.task_amanger = self.state_manager
     client.get_task_data = mock.MagicMock()
     client.get_task_data.return_value = ''
     result = client.format_request_status('inst', 'proj', 'reg', days=4)
     self.assertEqual('', result)
 
-  @mock.patch('libcloudforensics.providers.gcp.internal.function.GoogleCloudFunction.ExecuteFunction')  # yapf: disable
-  @mock.patch('turbinia.client.task_manager.PSQTaskManager._backend_setup')
-  @mock.patch('turbinia.state_manager.datastore.Client')
-  def testClientFormatRequestStatusFullReport(self, _, __, ___):
+  def testClientFormatRequestStatusFullReport(self):
     """Tests format_request_status() has valid output with full report."""
     client = self.client
-    client.task_amanger = self.state_manager
     client.get_task_data = mock.MagicMock()
     client.get_task_data.return_value = self.task_data
     result = client.format_request_status(
         'inst', 'proj', 'reg', all_fields=True)
     self.assertEqual(result.strip(), LONG_REPORT_REQUESTS.strip())
 
-  @mock.patch('libcloudforensics.providers.gcp.internal.function.GoogleCloudFunction.ExecuteFunction')  # yapf: disable
-  @mock.patch('turbinia.client.task_manager.PSQTaskManager._backend_setup')
-  @mock.patch('turbinia.state_manager.datastore.Client')
-  def testClientFormatWorkerStatus(self, _, __, ___):
+  def testClientFormatWorkerStatus(self):
     """Tests format_worker_status() with default days."""
     client = self.client
-    client.task_amanger = self.state_manager
     client.get_task_data = mock.MagicMock()
     client.get_task_data.return_value = self.task_data
     result = client.format_worker_status('inst', 'proj', 'reg')
     self.assertIn(
         'Turbinia report for Worker activity within 7 days', result.strip())
 
-  @mock.patch('libcloudforensics.providers.gcp.internal.function.GoogleCloudFunction.ExecuteFunction')  # yapf: disable
-  @mock.patch('turbinia.client.task_manager.PSQTaskManager._backend_setup')
-  @mock.patch('turbinia.state_manager.datastore.Client')
-  def testClientFormatWorkerStatusDays(self, _, __, ___):
+  def testClientFormatWorkerStatusDays(self):
     """Tests format_worker_status() with custom days."""
     client = self.client
-    client.task_amanger = self.state_manager
     client.get_task_data = mock.MagicMock()
     client.get_task_data.return_value = self.task_data
     result = client.format_worker_status('inst', 'proj', 'reg', days=4)
     self.assertIn(
         'Turbinia report for Worker activity within 4 days', result.strip())
 
-  @mock.patch('libcloudforensics.providers.gcp.internal.function.GoogleCloudFunction.ExecuteFunction')  # yapf: disable
-  @mock.patch('turbinia.client.task_manager.PSQTaskManager._backend_setup')
-  @mock.patch('turbinia.state_manager.datastore.Client')
-  def testClientFormatWorkerStatusNoResults(self, _, __, ___):
+  def testClientFormatWorkerStatusNoResults(self):
     """Tests format_worker_status() with no Task results."""
     client = self.client
-    client.task_amanger = self.state_manager
     client.get_task_data = mock.MagicMock()
     client.get_task_data.return_value = ''
     result = client.format_worker_status('inst', 'proj', 'reg', days=4)
     self.assertEqual('', result)
 
-  @mock.patch('libcloudforensics.providers.gcp.internal.function.GoogleCloudFunction.ExecuteFunction')  # yapf: disable
-  @mock.patch('turbinia.client.task_manager.PSQTaskManager._backend_setup')
-  @mock.patch('turbinia.state_manager.datastore.Client')
-  def testClientFormatWorkStatusFullReport(self, _, __, ___):
+  def testClientFormatWorkStatusFullReport(self):
     """Tests format_worker_status() has valid output with full report."""
     client = self.client
-    client.task_amanger = self.state_manager
     client.get_task_data = mock.MagicMock()
     client.get_task_data.return_value = self.task_data
     result = client.format_worker_status('inst', 'proj', 'reg', all_fields=True)
