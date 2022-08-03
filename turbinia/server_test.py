@@ -27,7 +27,7 @@ class TestTurbiniaServerPSQ(unittest.TestCase):
   """Test Turbinia Server class."""
 
   def setUp(self):  #pylint: disable=arguments-differ
-    """Initialize tests for Turbinia client."""
+    """Initialize tests for Turbinia Server."""
     config.LoadConfig()
     config.STATE_MANAGER = 'Datastore'
     config.TASK_MANAGER = 'PSQ'
@@ -44,7 +44,7 @@ class TestTurbiniaServerCelery(unittest.TestCase):
   """Test Turbinia Server class."""
 
   def setUp(self):  #pylint: disable=arguments-differ
-    """Initialize tests for Turbinia client."""
+    """Initialize tests for Turbinia Server."""
     config.LoadConfig()
     config.STATE_MANAGER = 'Redis'
     config.TASK_MANAGER = 'Celery'
