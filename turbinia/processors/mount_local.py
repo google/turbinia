@@ -230,7 +230,7 @@ def PreprocessMountEwfDisk(ewf_path):
   """
 
   config.LoadConfig()
-  mount_prefix = config.MOUNT_DIR_PREFIX
+  block_prefix = config.MOUNT_DIR_PREFIX
 
   if not os.path.exists(ewf_path):
     raise TurbiniaException(
@@ -238,23 +238,23 @@ def PreprocessMountEwfDisk(ewf_path):
             ewf_path))
 
   # Checks if the mount path is a directory
-  if os.path.exists(mount_prefix) and not os.path.isdir(mount_prefix):
+  if os.path.exists(block_prefix) and not os.path.isdir(block_prefix):
     raise TurbiniaException(
-        'Mount dir {0:s} exists, but is not a directory'.format(mount_prefix))
+        'Mount dir {0:s} exists, but is not a directory'.format(block_prefix))
 
   # Checks if the mount path does not exist; if not, create the directory
-  if not os.path.exists(mount_prefix):
-    log.info('Creating local mount parent directory {0:s}'.format(mount_prefix))
+  if not os.path.exists(block_prefix):
+    log.info('Creating local mount parent directory {0:s}'.format(block_prefix))
     try:
-      os.makedirs(mount_prefix)
+      os.makedirs(block_prefix)
     except OSError as e:
       raise TurbiniaException(
           'Could not create mount directory {0:s}: {1!s}'.format(
-              mount_prefix, e))
+              block_prefix, e))
 
   # Creates a temporary directory for the mount path
-  mount_path = tempfile.mkdtemp(prefix='turbinia', dir=mount_prefix)
-  mount_cmd = ['sudo', 'ewfmount', '-X', 'allow_other', ewf_path, mount_path]
+  block_path = tempfile.mkdtemp(prefix='turbinia', dir=block_prefix)
+  mount_cmd = ['sudo', 'ewfmount', '-X', 'allow_other', ewf_path, block_path]
 
   log.info('Running: {0:s}'.format(' '.join(mount_cmd)))
   try:
@@ -262,8 +262,12 @@ def PreprocessMountEwfDisk(ewf_path):
   except subprocess.CalledProcessError as e:
     raise TurbiniaException('Could not mount directory {0!s}'.format(e))
 
-  return mount_path
+  return block_path
 
+def GetEwfPath(block_path):
+  ewf_devices = os.listdir(block_path)
+  ewf_path = '{0:s}/{1:s}'.format(block_path, ewf_devices[0])
+  return ewf_path
 
 def PreprocessMountDisk(partition_paths, partition_number):
   """Locally mounts disk in an instance.
