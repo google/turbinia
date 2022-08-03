@@ -234,13 +234,13 @@ def PreprocessMountEwfDisk(ewf_path):
 
   if not os.path.exists(ewf_path):
     raise TurbiniaException(
-      'Could not mount partition {0:s}, the path does not exist'.format(
+        'Could not mount partition {0:s}, the path does not exist'.format(
             ewf_path))
 
   # Checks if the mount path is a directory
   if os.path.exists(mount_prefix) and not os.path.isdir(mount_prefix):
     raise TurbiniaException(
-      'Mount dir {0:s} exists, but is not a directory'.format(mount_prefix))
+        'Mount dir {0:s} exists, but is not a directory'.format(mount_prefix))
 
   # Checks if the mount path does not exist; if not, create the directory
   if not os.path.exists(mount_prefix):

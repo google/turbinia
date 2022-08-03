@@ -20,7 +20,7 @@ from turbinia.evidence import Directory
 from turbinia.evidence import GoogleCloudDisk
 from turbinia.evidence import GoogleCloudDiskRawEmbedded
 from turbinia.evidence import RawDisk
-from turbinia.evidence import ExpertWitnessFormat
+from turbinia.evidence import EwfDisk
 from turbinia.evidence import BinaryExtraction
 from turbinia.jobs import interface
 from turbinia.jobs import manager
@@ -32,7 +32,8 @@ class BinaryExtractorJob(interface.TurbiniaJob):
 
   # The types of evidence that this Job will process.
   evidence_input = [
-      Directory, GoogleCloudDisk, GoogleCloudDiskRawEmbedded, RawDisk, ExpertWitnessFormat
+      Directory, GoogleCloudDisk, GoogleCloudDiskRawEmbedded, RawDisk,
+      EwfDisk
   ]
   evidence_output = [BinaryExtraction]
 

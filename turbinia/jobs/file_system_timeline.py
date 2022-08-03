@@ -19,7 +19,7 @@ from __future__ import unicode_literals
 from turbinia.evidence import GoogleCloudDisk
 from turbinia.evidence import GoogleCloudDiskRawEmbedded
 from turbinia.evidence import RawDisk
-from turbinia.evidence import ExpertWitnessFormat
+from turbinia.evidence import EwfDisk
 from turbinia.evidence import BodyFile
 from turbinia.jobs import interface
 from turbinia.jobs import manager
@@ -34,7 +34,9 @@ class FileSystemTimelineJob(interface.TurbiniaJob):
   """
 
   # The types of evidence that this Job will process
-  evidence_input = [RawDisk, GoogleCloudDisk, GoogleCloudDiskRawEmbedded, ExpertWitnessFormat]
+  evidence_input = [
+      RawDisk, GoogleCloudDisk, GoogleCloudDiskRawEmbedded, EwfDisk
+  ]
   evidence_output = [BodyFile]
 
   NAME = 'FileSystemTimelineJob'

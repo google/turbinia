@@ -16,6 +16,7 @@
 
 from __future__ import unicode_literals
 
+from turbinia.evidence import EwfDisk
 from turbinia.evidence import BodyFile
 from turbinia.evidence import DockerContainer
 from turbinia.evidence import CompressedDirectory
@@ -24,7 +25,6 @@ from turbinia.evidence import GoogleCloudDisk
 from turbinia.evidence import GoogleCloudDiskRawEmbedded
 from turbinia.evidence import PlasoFile
 from turbinia.evidence import RawDisk
-from turbinia.evidence import ExpertWitnessFormat
 from turbinia.jobs import interface
 from turbinia.jobs import manager
 from turbinia.workers.plaso import PlasoTask
@@ -34,8 +34,8 @@ class PlasoJob(interface.TurbiniaJob):
   """Runs Plaso on some evidence to generate a Plaso file."""
   # The types of evidence that this Job will process
   evidence_input = [
-      BodyFile, Directory, RawDisk, GoogleCloudDisk, GoogleCloudDiskRawEmbedded,
-      CompressedDirectory, DockerContainer, ExpertWitnessFormat
+      BodyFile, Directory, EwfDisk, RawDisk, GoogleCloudDisk, GoogleCloudDiskRawEmbedded,
+      CompressedDirectory, DockerContainer
   ]
   evidence_output = [PlasoFile]
 
