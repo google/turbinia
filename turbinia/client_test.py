@@ -341,8 +341,6 @@ class TestBaseTurbiniaClient(unittest.TestCase):
   def testClientFormatTaskStatusShortReport(self):
     """Tests format_task_status() has valid output with short report."""
     client = self.client
-    self.maxDiff = None
-
     client.get_task_data = mock.MagicMock()
     client.get_task_data.return_value = self.task_data
     result = client.format_task_status('inst', 'proj', 'reg')
@@ -351,8 +349,6 @@ class TestBaseTurbiniaClient(unittest.TestCase):
   def testClientFormatTaskStatusFullReport(self):
     """Tests format_task_status() has valid output with full report."""
     client = self.client
-    self.maxDiff = None
-
     client.get_task_data = mock.MagicMock()
     client.get_task_data.return_value = self.task_data
     result = client.format_task_status('inst', 'proj', 'reg', full_report=True)
@@ -361,7 +357,6 @@ class TestBaseTurbiniaClient(unittest.TestCase):
   def testClientFormatTaskStatusFiles(self):
     """Tests format_task_status() has valid output with report and files."""
     client = self.client
-    self.maxDiff = None
     client.get_task_data = mock.MagicMock()
     client.get_task_data.return_value = self.task_data
     result = client.format_task_status(
@@ -439,7 +434,8 @@ class TestBaseTurbiniaClient(unittest.TestCase):
 class TestTurbiniaClientRedis(TestBaseTurbiniaClient):
   """Run tests using a Redis client."""
 
-  def setUp(self):  #pylint: disable=arguments-differ
+  @mock.patch('turbinia.client.task_manager.CeleryTaskManager._backend_setup')
+  def setUp(self, _):  #pylint: disable=arguments-differ
     """Initialize tests for Turbinia client."""
     config.LoadConfig()
     config.STATE_MANAGER = 'Redis'
