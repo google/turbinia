@@ -26,8 +26,7 @@ from turbinia import config
 class TestTurbiniaServerPSQ(unittest.TestCase):
   """Test Turbinia Server class."""
 
-  @mock.patch('turbinia.client.task_manager.CeleryTaskManager._backend_setup')
-  def setUp(self, _):  #pylint: disable=arguments-differ
+  def setUp(self):  #pylint: disable=arguments-differ
     """Initialize tests for Turbinia client."""
     config.LoadConfig()
     config.STATE_MANAGER = 'Datastore'
@@ -44,8 +43,7 @@ class TestTurbiniaServerPSQ(unittest.TestCase):
 class TestTurbiniaServerCelery(unittest.TestCase):
   """Test Turbinia Server class."""
 
-  @mock.patch('turbinia.client.task_manager.CeleryTaskManager._backend_setup')
-  def setUp(self, _):  #pylint: disable=arguments-differ
+  def setUp(self):  #pylint: disable=arguments-differ
     """Initialize tests for Turbinia client."""
     config.LoadConfig()
     config.STATE_MANAGER = 'Redis'
