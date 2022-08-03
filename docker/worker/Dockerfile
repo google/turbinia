@@ -63,6 +63,7 @@ RUN apt-get update && apt-get -y install \
     libbde-tools \
     libewf \
     libewf-python3 \
+    libewf-tools \
     plaso-tools \
     python3-dfimagetools \
     python3-dfvfs \
@@ -70,12 +71,12 @@ RUN apt-get update && apt-get -y install \
     sleuthkit \
     --option Acquire::ForceIPv4=true --option Acquire::Retries=100 --option Acquire::http::Timeout=60
 
-RUN apt-get update && apt-get download ewf-tools && dpkg --force-depends -i ewf-tools_*
-
 RUN useradd -r -s /bin/nologin -G disk,sudo turbinia
 RUN echo "turbinia ALL = (root) NOPASSWD: ALL" > /etc/sudoers.d/turbinia
 
 RUN pip3 install impacket --no-deps
+
+RUN git clone https://github.com/volatilityfoundation/volatility.git
 
 RUN cd /opt \
     && git clone https://github.com/Neo23x0/signature-base.git \
