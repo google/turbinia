@@ -235,7 +235,8 @@ class RedisStateManager(BaseStateManager):
   def __init__(self):
     config.LoadConfig()
     self.client = redis.StrictRedis(
-        host=config.REDIS_HOST, port=config.REDIS_PORT, db=config.REDIS_DB)
+        host=config.REDIS_HOST, port=config.REDIS_PORT, db=config.REDIS_DB,
+        socket_timeout=10, socket_keepalive=True, socket_connect_timeout=10)
 
   def _validate_data(self, data):
     return data

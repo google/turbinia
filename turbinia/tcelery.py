@@ -78,7 +78,11 @@ class TurbiniaKombu(TurbiniaMessageBase):
   def setup(self):
     """Set up Kombu SimpleBuffer"""
     config.LoadConfig()
-    conn = kombu.Connection(config.KOMBU_BROKER)
+    conn = kombu.Connection(
+        config.KOMBU_BROKER, transport_options={
+            'socket_timeout': 10,
+            'socket_keepalive': True
+        })
     if config.KOMBU_DURABLE:
       self.queue = conn.SimpleQueue(name=self.routing_key)
     else:
