@@ -592,8 +592,7 @@ def process_args(args):
   reason = args.reason
 
   # Checks for bulk processing
-  if args.command in ('ewfdisk', 'rawdisk', 'directory',
-                      'compresseddirectory'):
+  if args.command in ('ewfdisk', 'rawdisk', 'directory', 'compresseddirectory'):
     args.name, args.source = check_args(
         args.source_path, [args.name, args.source])
     # Iterate through evidence and call process_evidence
