@@ -212,7 +212,7 @@ STATISTICS_REPORT_CSV = textwrap.dedent(
 """)
 
 
-class TestBaseTurbiniaClientFormat(unittest.TestCase):
+class TestBaseTurbiniaClient(unittest.TestCase):
   """Test Turbinia client class."""
 
   def load_test_data(self):
@@ -436,7 +436,7 @@ class TestBaseTurbiniaClientFormat(unittest.TestCase):
     self.assertEqual(result.strip(), LONG_REPORT_WORKERS.strip())
 
 
-class TestTurbiniaClientFormatRedis(TestBaseTurbiniaClientFormat):
+class TestTurbiniaClientRedis(TestBaseTurbiniaClient):
   """Run tests using a Redis client."""
 
   def setUp(self):  #pylint: disable=arguments-differ
