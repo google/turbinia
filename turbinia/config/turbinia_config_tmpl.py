@@ -27,12 +27,12 @@ INSTANCE_ID = 'turbinia-instance1'
 # Which state manager to use. Valid options are 'Datastore' or 'Redis'.  Use
 # 'Datastore' for Cloud (GCP) or hybrid installations, and 'Redis' for local
 # installations.
-STATE_MANAGER = 'Datastore'
+STATE_MANAGER = 'Redis'
 
 # Which Task manager to use. Valid options are 'PSQ' and 'Celery'.  Use 'PSQ'
 # for Cloud (GCP) or hybrid installations, and 'Celery' for local
 # installations.
-TASK_MANAGER = 'PSQ'
+TASK_MANAGER = 'Celery'
 
 # Default base output directory for worker results and evidence.
 OUTPUT_DIR = '/var/tmp'
