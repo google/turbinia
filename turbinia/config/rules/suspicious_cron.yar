@@ -13,6 +13,7 @@ rule suspicious_cron {
         $shm = "/dev/shm"
         $pipechar = "|"
         $shell = "sh"
+        $pgmem = "pg_mem"
    condition:
-      (filepath matches /cron/ or filepath matches /spool\/at/) and (($wget or all of ($options*)) or any of ($curl*) or $shm or (for all i in (1..#shell) : (@shell[i] > @pipechar[i])))
+      (filepath matches /cron/ or filepath matches /spool\/at/) and (($wget or all of ($options*)) or any of ($curl*) or $shm or $pgmem or (for all i in (1..#shell) : (@shell[i] > @pipechar[i])))
 }
