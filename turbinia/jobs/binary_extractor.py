@@ -32,8 +32,7 @@ class BinaryExtractorJob(interface.TurbiniaJob):
 
   # The types of evidence that this Job will process.
   evidence_input = [
-      Directory, GoogleCloudDisk, GoogleCloudDiskRawEmbedded, RawDisk,
-      EwfDisk
+      Directory, GoogleCloudDisk, GoogleCloudDiskRawEmbedded, RawDisk, EwfDisk
   ]
   evidence_output = [BinaryExtraction]
 

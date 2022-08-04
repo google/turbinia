@@ -960,6 +960,7 @@ class DockerContainer(Evidence):
       mount_local.PostprocessUnmountPath(self._container_fs_path)
       self.state[EvidenceState.CONTAINER_MOUNTED] = False
 
+
 #TODO implement support for several ewf devices if there are more than one
 #inside the block path
 class EwfDisk(RawDisk):
@@ -983,7 +984,7 @@ class EwfDisk(RawDisk):
     if EvidenceState.ATTACHED in required_states:
       self.block_path = mount_local.PreprocessMountEwfDisk(self.source_path)
       self.state[EvidenceState.MOUNTED] = True
-      self.ewf_path = mount_local.GetEwfPath(self.block_path)
+      self.ewf_path = mount_local.GetEwfDiskPath(self.block_path)
       self.device_path = mount_local.PreprocessLosetup(self.ewf_path)
       self.local_path = self.device_path
       self.state[EvidenceState.ATTACHED] = True

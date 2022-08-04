@@ -31,7 +31,9 @@ class PartitionEnumerationJob(interface.TurbiniaJob):
   """
 
   # The types of evidence that this Job will process
-  evidence_input = [EwfDisk, GoogleCloudDisk, GoogleCloudDiskRawEmbedded, RawDisk]
+  evidence_input = [
+      EwfDisk, GoogleCloudDisk, GoogleCloudDiskRawEmbedded, RawDisk
+  ]
   evidence_output = [DiskPartition]
 
   NAME = 'PartitionEnumerationJob'

@@ -264,10 +264,20 @@ def PreprocessMountEwfDisk(ewf_path):
 
   return block_path
 
-def GetEwfPath(block_path):
+
+def GetEwfDiskPath(block_path):
+  """Returns the path to the device in the EWF disk block. Only supports 1 block device.
+
+  Args:
+      block_path (str): The path to the EWF disk block device.
+
+  Returns:
+      str: The path to the block device found in a EWF disk
+  """
   ewf_devices = os.listdir(block_path)
   ewf_path = '{0:s}/{1:s}'.format(block_path, ewf_devices[0])
   return ewf_path
+
 
 def PreprocessMountDisk(partition_paths, partition_number):
   """Locally mounts disk in an instance.

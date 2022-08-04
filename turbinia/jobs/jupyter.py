@@ -35,8 +35,8 @@ class JupyterExtractionJob(interface.TurbiniaJob):
 
   # The types of evidence that this Job will process
   evidence_input = [
-      EwfDisk, Directory, DockerContainer, GoogleCloudDisk, GoogleCloudDiskRawEmbedded,
-      RawDisk
+      EwfDisk, Directory, DockerContainer, GoogleCloudDisk,
+      GoogleCloudDiskRawEmbedded, RawDisk
   ]
   evidence_output = [ExportedFileArtifact]
 
