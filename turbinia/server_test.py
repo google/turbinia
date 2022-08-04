@@ -20,12 +20,36 @@ import unittest
 import mock
 
 from turbinia.server import TurbiniaServer
+from turbinia import config
 
 
-class TestTurbiniaServer(unittest.TestCase):
+class TestTurbiniaServerPSQ(unittest.TestCase):
   """Test Turbinia Server class."""
 
+  def setUp(self):  #pylint: disable=arguments-differ
+    """Initialize tests for Turbinia Server."""
+    config.LoadConfig()
+    config.STATE_MANAGER = 'Datastore'
+    config.TASK_MANAGER = 'PSQ'
+
   @mock.patch('turbinia.client.task_manager.PSQTaskManager._backend_setup')
+  @mock.patch('turbinia.state_manager.get_state_manager')
+  def testTurbiniaServerInit(self, _, __):
+    """Basic test for Turbinia Server init."""
+    server = TurbiniaServer()
+    self.assertTrue(hasattr(server, 'task_manager'))
+
+
+class TestTurbiniaServerCelery(unittest.TestCase):
+  """Test Turbinia Server class."""
+
+  def setUp(self):  #pylint: disable=arguments-differ
+    """Initialize tests for Turbinia Server."""
+    config.LoadConfig()
+    config.STATE_MANAGER = 'Redis'
+    config.TASK_MANAGER = 'Celery'
+
+  @mock.patch('turbinia.client.task_manager.CeleryTaskManager._backend_setup')
   @mock.patch('turbinia.state_manager.get_state_manager')
   def testTurbiniaServerInit(self, _, __):
     """Basic test for Turbinia Server init."""
