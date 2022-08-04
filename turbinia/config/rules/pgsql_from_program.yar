@@ -8,5 +8,5 @@ rule pgsql_from_program {
    strings:
       $fp1 = "FROM PROGRAM" ascii
    condition:
-      $fp1 and filename matches /postgresql-([0-9])+-.*.log(.[0-9]+)?/
+      $fp1 and (filename matches /postgresql-([0-9])+-.*.log(.[0-9]+)?/ or filepath matches /babelfish\/log/)
 }

@@ -16,13 +16,13 @@
 
 from __future__ import unicode_literals
 
-import imp
+import importlib.util
+import importlib.machinery
 import itertools
 import json
 import logging
 import os
 import sys
-
 from turbinia import TurbiniaException
 
 DATETIME_FORMAT = '%Y-%m-%dT%H:%M:%S.%fZ'
@@ -162,7 +162,11 @@ def LoadConfig(config_file=None):
   if 'turbinia_config_tmpl' in config_file:
     log.warning('Using fallback source config. {0:s}'.format(CONFIG_MSG))
   try:
-    _config = imp.load_source('config', config_file)
+    config_loader = importlib.machinery.SourceFileLoader('config', config_file)
+    config_spec = importlib.util.spec_from_loader(
+        config_loader.name, config_loader)
+    _config = importlib.util.module_from_spec(config_spec)
+    config_loader.exec_module(_config)
   except IOError as exception:
     message = (
         'Could not load config file {0:s}: {1!s}'.format(
