@@ -24,7 +24,7 @@ from docutils import nodes, transforms
 # -- Project information -----------------------------------------------------
 
 project = 'Turbinia'
-copyright = '2020, Google Inc'
+copyright = '2022, Google Inc'
 author = 'Turbinia maintainers'
 
 # -- General configuration ---------------------------------------------------
@@ -34,8 +34,7 @@ author = 'Turbinia maintainers'
 # ones.
 extensions = [
     'sphinx.ext.autodoc', 'sphinx.ext.doctest', 'sphinx.ext.coverage',
-    'sphinx.ext.viewcode', 'sphinx.ext.napoleon', 'sphinx_markdown_tables',
-    'recommonmark'
+    'sphinx.ext.viewcode', 'sphinx.ext.napoleon', 'recommonmark'
 ]
 
 # Add any paths that contain templates here, relative to this directory.

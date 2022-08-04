@@ -20,6 +20,7 @@ import logging
 import warnings
 import logging.handlers
 import os
+import sys
 
 from turbinia import config
 from turbinia import TurbiniaException
@@ -81,7 +82,7 @@ def setup(need_file_handler=True, need_stream_handler=True, log_file_path=None):
     file_handler.setLevel(logging.DEBUG)
     logger.addHandler(file_handler)
 
-  console_handler = logging.StreamHandler()
+  console_handler = logging.StreamHandler(sys.stdout)
   formatter = logging.Formatter(
       '%(asctime)s [%(levelname)s] %(message)s', "%Y-%m-%d %H:%M:%S")
   console_handler.setFormatter(formatter)

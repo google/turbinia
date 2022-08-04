@@ -65,7 +65,6 @@ globals:
     - FileSystemTimelineJob
     - FsstatJob
     - GrepJob
-    - HadoopAnalysisJob
     - HindsightJob
     - HTTPAccessLogExtractionJob
     - HTTPAccessLogAnalysisJob

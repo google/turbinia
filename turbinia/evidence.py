@@ -195,7 +195,7 @@ class Evidence:
     # List of jobs that have processed this evidence
     self.processed_by = []
     self.type = self.__class__.__name__
-    self.name = name if name else self.type
+    self._name = name
     self.saved_path = None
     self.saved_path_type = None
 
@@ -213,6 +213,21 @@ class Evidence:
 
   def __repr__(self):
     return self.__str__()
+
+  @property
+  def name(self):
+    if self._name:
+      return self._name
+    else:
+      return self.source_path if self.source_path else self.type
+
+  @name.setter
+  def name(self, value):
+    self._name = value
+
+  @name.deleter
+  def name(self):
+    del self._name
 
   @classmethod
   def from_dict(cls, dictionary):
@@ -597,6 +612,16 @@ class DiskPartition(RawDisk):
     # This Evidence needs to have a parent
     self.context_dependent = True
 
+  @property
+  def name(self):
+    if self._name:
+      return self._name
+    else:
+      if self.parent_evidence:
+        return ':'.join((self.parent_evidence.name, self.partition_location))
+      else:
+        return ':'.join((self.type, self.partition_location))
+
   def _preprocess(self, _, required_states):
     # Late loading the partition processor to avoid loading dfVFS unnecessarily.
     from turbinia.processors import partitions
@@ -745,6 +770,13 @@ class GoogleCloudDiskRawEmbedded(GoogleCloudDisk):
 
     # This Evidence needs to have a GoogleCloudDisk as a parent
     self.context_dependent = True
+
+  @property
+  def name(self):
+    if self._name:
+      return self._name
+    else:
+      return ':'.join((self.disk_name, self.embedded_path))
 
   def _preprocess(self, _, required_states):
     # Need to mount parent disk
@@ -899,6 +931,16 @@ class DockerContainer(Evidence):
     self._docker_root_directory = None
 
     self.context_dependent = True
+
+  @property
+  def name(self):
+    if self._name:
+      return self._name
+    else:
+      if self.parent_evidence:
+        return ':'.join((self.parent_evidence.name, self.container_id))
+      else:
+        return ':'.join((self.type, self.container_id))
 
   def _preprocess(self, _, required_states):
     if EvidenceState.CONTAINER_MOUNTED in required_states:
