@@ -14,16 +14,20 @@
 # limitations under the License.
 """Library to contain recipe validation logic."""
 
+import base64
 import copy
 import logging
 import os
+import tempfile
 import yaml
 
+from binascii import Error as binascii_error
 from yaml import Loader
 from yaml import load
-from turbinia import config
+from turbinia import TurbiniaException, config
 from turbinia.lib.file_helpers import file_to_str
 from turbinia.lib.file_helpers import file_to_list
+from turbinia.pubsub import TurbiniaPubSub
 from turbinia.task_utils import TaskLoader
 
 log = logging.getLogger('turbinia')
@@ -46,6 +50,30 @@ DEFAULT_GLOBALS_RECIPE = {
 DEFAULT_RECIPE = {'globals': DEFAULT_GLOBALS_RECIPE}
 
 
+def load_recipe_from_data(recipe_data):
+  """Load recipe from client-provided data.
+
+  Args:
+    recipe_data(str): Client-provided Base64 encoded recipe data
+
+  Returns
+    dict: Validated and corrected recipe dictionary.
+        Empty dict if recipe is invalid.
+  """
+  with tempfile.NamedTemporaryFile(mode='w', encoding='utf-8') as temp_file:
+    try:
+      decoded_recipe = base64.b64decode(recipe_data)
+      temp_file.write(decoded_recipe.decode('utf-8'))
+      temp_file.flush()
+      print(decoded_recipe.decode('utf-8'))
+      return load_recipe_from_file(temp_file.name)
+    except binascii_error as exception:
+      log.error('Unable to decode recipe_data: {0!s}'.format(exception))
+      raise TurbiniaException(
+          'Unable to decode recipe_data: {0!s}'.format(
+              exception)) from exception
+
+
 def load_recipe_from_file(recipe_file, validate=True):
   """Load recipe from file.
 
@@ -60,8 +88,10 @@ def load_recipe_from_file(recipe_file, validate=True):
     return copy.deepcopy(DEFAULT_RECIPE)
   try:
     log.info('Loading recipe file from {0:s}'.format(recipe_file))
-    with open(recipe_file, 'r') as r_file:
+    print(os.path.isfile(recipe_file))
+    with open(recipe_file, 'r', encoding='utf-8') as r_file:
       recipe_file_contents = r_file.read()
+      print('reading ... ', recipe_file_contents)
       recipe_dict = load(recipe_file_contents, Loader=Loader)
       if validate:
         success, _ = validate_recipe(recipe_dict)

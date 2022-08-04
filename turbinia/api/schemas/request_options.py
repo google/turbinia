@@ -15,31 +15,13 @@
 """Turbinia API server request options model and methods."""
 
 from typing import Optional, List
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
 
 class BaseRequestOptions(BaseModel):
   """Base Request Options class to be extended by other option types. """
-  name: str = None
-  source_path: str = None
   recipe_name: Optional[str] = None
-  jobs_allowlist: Optional[List[str]] = None
-  jobs_denylist: Optional[List[str]] = None
+  recipe_data: Optional[str] = None
   filter_patterns: Optional[List[str]] = None
   yara_rules: Optional[str] = None
   sketch_id: Optional[int] = None
-
-
-class GoogleCloudOptions(BaseRequestOptions):
-  """Google Cloud disk evidence options."""
-  description: Optional[str] = 'GoogleCloudJob Evidence Options'
-  project: str = None
-  zone: str = None
-  disk_name: str = None
-  mount_partition: Optional[int] = Field(ge=0)
-
-
-class GoogleCloudDiskEmbeddedOptions(GoogleCloudOptions):
-  """Google CLoud jobs that work with disk images."""
-  description: Optional[str] = 'GoogleCloudDiskEmbeddedJob Evidence Options'
-  embedded_path: str = None
