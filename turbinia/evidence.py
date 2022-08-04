@@ -21,7 +21,6 @@ import json
 import logging
 import os
 import sys
-from unittest import result
 import filelock
 
 from turbinia import config
