@@ -76,8 +76,6 @@ RUN echo "turbinia ALL = (root) NOPASSWD: ALL" > /etc/sudoers.d/turbinia
 
 RUN pip3 install impacket --no-deps
 
-RUN git clone https://github.com/volatilityfoundation/volatility.git
-
 RUN cd /opt \
     && git clone https://github.com/Neo23x0/signature-base.git \
     && sudo chown -R turbinia:turbinia /opt/signature-base
