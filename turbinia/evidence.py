@@ -993,4 +993,4 @@ class EwfDisk(RawDisk):
     if self.state[EvidenceState.ATTACHED]:
       mount_local.PostprocessDeleteLosetup(self.device_path)
       self.state[EvidenceState.ATTACHED] = False
-      mount_local.PostprocessUnmountPath(self.block_path) 
+      mount_local.PostprocessUnmountPath(self.block_path)
