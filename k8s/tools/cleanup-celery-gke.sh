@@ -23,7 +23,7 @@ cd $DIR/..
 if [[ "$*" == *--help ]] ; then
   echo "Turbinia cleanup script for Turbinia within Kubernetes"
   echo "Options:"
-  echo "--no-gcloud-auth               Do not use gcloud authentication and service key instead"
+  echo "--no-service-account           Do not delete the Turbinia service account"
   echo "--no-filestore                 Do not cleanup Turbinia Filestore share"
   echo "--no-dfdewey                   Do not cleanup dfDewey Filestore share"
   echo "--no-cluster                   Do not delete the cluster"
@@ -90,24 +90,20 @@ if [[ "$*" != *--no-dfdewey* ]] ; then
 fi
 
 # Remove the service account if it was being used.
-if [[ "$*" == *--no-gcloud-auth* ]] ; then
+if [[ "$*" != *--no-service-account* ]] ; then
   SA_NAME="turbinia"
   SA_MEMBER="serviceAccount:$SA_NAME@$DEVSHELL_PROJECT_ID.iam.gserviceaccount.com"
 
   # Delete IAM roles from the service account
   echo "Delete permissions on service account"
-  gcloud projects remove-iam-policy-binding $DEVSHELL_PROJECT_ID --member=$SA_MEMBER --role='roles/compute.admin'
-  gcloud projects remove-iam-policy-binding $DEVSHELL_PROJECT_ID --member=$SA_MEMBER --role='roles/logging.logWriter'
-  gcloud projects remove-iam-policy-binding $DEVSHELL_PROJECT_ID --member=$SA_MEMBER --role='roles/iam.serviceAccountUser'
+  gcloud projects add-iam-policy-binding $DEVSHELL_PROJECT_ID --member=$SA_MEMBER --role='roles/compute.instanceAdmin'
+  gcloud projects add-iam-policy-binding $DEVSHELL_PROJECT_ID --member=$SA_MEMBER --role='roles/logging.logWriter'
+  gcloud projects add-iam-policy-binding $DEVSHELL_PROJECT_ID --member=$SA_MEMBER --role='roles/errorreporting.writer'
+  gcloud projects add-iam-policy-binding $DEVSHELL_PROJECT_ID --member=$SA_MEMBER --role='roles/iam.serviceAccountUser'
 
   # Delete service account
   echo "Delete service account"
-  gcloud -q --project $DEVSHELL_PROJECT_ID iam service-accounts delete "${SA_NAME}@$DEVSHELL_PROJECT_ID.iam.gserviceaccount.com" 
-
-  # Remove the service account key
-  echo "Remove service account key"
-  rm ~/$INSTANCE_ID.json
-
+  gcloud -q --project $DEVSHELL_PROJECT_ID iam service-accounts delete "${SA_NAME}@$DEVSHELL_PROJECT_ID.iam.gserviceaccount.com"
 fi
 
 echo "The Turbinia deployment $INSTANCE_ID was succesfully removed from $DEVSHELL_PROJECT_ID"

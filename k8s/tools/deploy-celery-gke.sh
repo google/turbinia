@@ -22,9 +22,8 @@ if [[ "$*" == *--help ]] ; then
   echo "Options:"
   echo "--build-dev                    Deploy Turbinia development docker image"
   echo "--build-experimental           Deploy Turbinia experimental docker image"
-  echo "--no-gcloud-auth               Use Turbinia service account instead of gcloud authentication"
-  echo "--no-filestore                 Do not deploy Turbinia Filestore"
   echo "--no-cluster                   Do not create the cluster"
+  echo "--no-filestore                 Do not deploy Turbinia Filestore"
   echo "--deploy-dfdewey               Deploy dfDewey datastores"
   exit 1
 fi
@@ -65,35 +64,26 @@ if [[ -z "$DEVSHELL_PROJECT_ID" ]] ; then
   fi
 fi
 
+# TODO: Do real check to make sure credentials have adequate roles
+if [[ $( gcloud -q --project $DEVSHELL_PROJECT_ID auth list --filter="status:ACTIVE" --format="value(account)" | wc -l ) -eq 0 ]] ; then
+  echo "No gcloud credentials found.  Use 'gcloud auth login' and 'gcloud auth application-default login' to log in"
+  exit 1
+fi
+
 # Enable IAM services
 gcloud -q --project $DEVSHELL_PROJECT_ID services enable iam.googleapis.com
 
 # Create Turbinia service account.
 SA_NAME="turbinia"
 SA_MEMBER="serviceAccount:$SA_NAME@$DEVSHELL_PROJECT_ID.iam.gserviceaccount.com"
-
 if [[ -z "$(gcloud -q --project $DEVSHELL_PROJECT_ID iam service-accounts list --format='value(name)' --filter=name:/$SA_NAME@)" ]] ; then
-  # Create service account
   gcloud --project $DEVSHELL_PROJECT_ID iam service-accounts create "${SA_NAME}" --display-name "${SA_NAME}"
-fi
-
-# Grant IAM roles to the service account
-echo "Grant permissions on service account"
-gcloud projects add-iam-policy-binding $DEVSHELL_PROJECT_ID --member=$SA_MEMBER --role='roles/compute.admin'
-gcloud projects add-iam-policy-binding $DEVSHELL_PROJECT_ID --member=$SA_MEMBER --role='roles/logging.logWriter'
-gcloud projects add-iam-policy-binding $DEVSHELL_PROJECT_ID --member=$SA_MEMBER --role='roles/iam.serviceAccountUser'
-
-# Use local `gcloud auth` credentials.
-if [[ "$*" == *--no-gcloud-auth* ]] ; then
-  # Create and fetch the service account key
-  echo "Fetch and store service account key"
-  gcloud --project $DEVSHELL_PROJECT_ID iam service-accounts keys create ~/$INSTANCE_ID.json --iam-account "$SA_NAME@$DEVSHELL_PROJECT_ID.iam.gserviceaccount.com"
-  export GOOGLE_APPLICATION_CREDENTIALS=~/$INSTANCE_ID.json
-
-# TODO: Do real check to make sure credentials have adequate roles
-elif [[ $( gcloud -q --project $DEVSHELL_PROJECT_ID auth list --filter="status:ACTIVE" --format="value(account)" | wc -l ) -eq 0 ]] ; then
-  echo "No gcloud credentials found.  Use 'gcloud auth login' and 'gcloud auth application-default login' to log in"
-  exit 1
+  # Grant IAM roles to the service account
+  echo "Grant permissions on service account"
+  gcloud projects add-iam-policy-binding $DEVSHELL_PROJECT_ID --member=$SA_MEMBER --role='roles/compute.instanceAdmin'
+  gcloud projects add-iam-policy-binding $DEVSHELL_PROJECT_ID --member=$SA_MEMBER --role='roles/logging.logWriter'
+  gcloud projects add-iam-policy-binding $DEVSHELL_PROJECT_ID --member=$SA_MEMBER --role='roles/errorreporting.writer'
+  gcloud projects add-iam-policy-binding $DEVSHELL_PROJECT_ID --member=$SA_MEMBER --role='roles/iam.serviceAccountUser'
 fi
 
 echo "Enabling Compute API"
@@ -149,7 +139,7 @@ kubectl annotate serviceaccount $SA_NAME --overwrite --namespace default iam.gke
 cd $DEPLOYMENT_FOLDER
 
 # Add service account to deployments
-sed -i -e "s/<SA_NAME>/$SA_NAME/g" turbinia-server.yaml turbinia-worker.yaml redis-server.yaml
+sed -i -e "s/serviceAccountName: .*/serviceAccountName: $SA_NAME/g" turbinia-server.yaml turbinia-worker.yaml redis-server.yaml
 
 # Disable some jobs
 echo "Updating $TURBINIA_CONFIG with disabled jobs"
@@ -173,20 +163,24 @@ else
   echo "Using pre existing Filestore instance $FILESTORE_NAME with capacity $FILESTORE_CAPACITY"
 fi
 
-echo "Updating $TURBINIA_CONFIG config with Filestore configuration"
+echo "Updating $TURBINIA_CONFIG config with Filestore configuration and setting output directories"
 FILESTORE_IP=$(gcloud -q --project $DEVSHELL_PROJECT_ID filestore instances describe $FILESTORE_NAME --zone=$ZONE --format='value(networks.ipAddresses)' --flatten="networks[].ipAddresses[]")
-FILESTORE_MOUNT="'\/mnt\/$FILESTORE_NAME'"
+FILESTORE_LOGS="'\/mnt\/$FILESTORE_NAME\/logs'"
+FILESTORE_OUTPUT="'\/mnt\/$FILESTORE_NAME\/output'"
 sed -i -e "s/<IP_ADDRESS>/$FILESTORE_IP/g" turbinia-volume-filestore.yaml
 sed -i -e "s/turbiniavolume/$FILESTORE_NAME/g" *.yaml
 sed -i -e "s/storage: .*/storage: $FILESTORE_CAPACITY/g" turbinia-volume-filestore.yaml turbinia-volume-claim-filestore.yaml
-sed -i -e "s/^LOG_DIR = .*$/LOG_DIR = $FILESTORE_MOUNT/g" $TURBINIA_CONFIG
+sed -i -e "s/^LOG_DIR = .*$/LOG_DIR = $FILESTORE_LOGS/g" $TURBINIA_CONFIG
 sed -i -e "s/^MOUNT_DIR_PREFIX = .*$/MOUNT_DIR_PREFIX = '\/mnt\/turbinia'/g" $TURBINIA_CONFIG
+sed -i -e "s/^SHARED_FILESYSTEM = .*$/SHARED_FILESYSTEM = True/g" $TURBINIA_CONFIG
+sed -i -e "s/^OUTPUT_DIR = .*$/OUTPUT_DIR = $FILESTORE_OUTPUT/g" $TURBINIA_CONFIG
 
 # Update Turbinia config with Redis/Celery parameters
 echo "Updating $TURBINIA_CONFIG with Redis/Celery config"
 sed -i -e "s/^TASK_MANAGER = .*$/TASK_MANAGER = 'Celery'/g" $TURBINIA_CONFIG
 sed -i -e "s/^STATE_MANAGER = .*$/STATE_MANAGER = 'Redis'/g" $TURBINIA_CONFIG
 sed -i -e "s/^REDIS_HOST = .*$/REDIS_HOST = 'redis.default.svc.cluster.local'/g" $TURBINIA_CONFIG
+sed -i -e "s/^DEBUG_TASKS = .*$/DEBUG_TASKS = True/g" $TURBINIA_CONFIG
 
 # Enable Stackdriver Logging and Stackdriver Traceback
 echo "Enabling Cloud Error Reporting and Logging APIs"
