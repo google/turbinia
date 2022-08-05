@@ -24,7 +24,6 @@ if [[ "$*" == *--help ]] ; then
   echo "--build-experimental           Deploy Turbinia experimental docker image"
   echo "--no-gcloud-auth               Use Turbinia service account instead of gcloud authentication"
   echo "--no-filestore                 Do not deploy Turbinia Filestore"
-  echo "--no-gcs                       Do not create a GCS bucket"
   echo "--no-cluster                   Do not create the cluster"
   echo "--deploy-dfdewey               Deploy dfDewey datastores"
   exit 1
@@ -81,13 +80,8 @@ fi
 # Grant IAM roles to the service account
 echo "Grant permissions on service account"
 gcloud projects add-iam-policy-binding $DEVSHELL_PROJECT_ID --member=$SA_MEMBER --role='roles/compute.admin'
-gcloud projects add-iam-policy-binding $DEVSHELL_PROJECT_ID --member=$SA_MEMBER --role='roles/cloudsql.admin'
-gcloud projects add-iam-policy-binding $DEVSHELL_PROJECT_ID --member=$SA_MEMBER --role='roles/container.admin'
-gcloud projects add-iam-policy-binding $DEVSHELL_PROJECT_ID --member=$SA_MEMBER --role='roles/editor'
 gcloud projects add-iam-policy-binding $DEVSHELL_PROJECT_ID --member=$SA_MEMBER --role='roles/logging.logWriter'
-gcloud projects add-iam-policy-binding $DEVSHELL_PROJECT_ID --member=$SA_MEMBER --role='roles/servicemanagement.admin'
-gcloud projects add-iam-policy-binding $DEVSHELL_PROJECT_ID --member=$SA_MEMBER --role='roles/redis.admin'
-gcloud projects add-iam-policy-binding $DEVSHELL_PROJECT_ID --member=$SA_MEMBER --role='roles/storage.admin'
+gcloud projects add-iam-policy-binding $DEVSHELL_PROJECT_ID --member=$SA_MEMBER --role='roles/iam.serviceAccountUser'
 
 # Use local `gcloud auth` credentials.
 if [[ "$*" == *--no-gcloud-auth* ]] ; then
@@ -155,7 +149,7 @@ kubectl annotate serviceaccount $SA_NAME --overwrite --namespace default iam.gke
 cd $DEPLOYMENT_FOLDER
 
 # Add service account to deployments
-sed -i -e "s/<SA_NAME>/$SA_NAME/g" turbinia-server.yaml turbinia-worker.yaml
+sed -i -e "s/<SA_NAME>/$SA_NAME/g" turbinia-server.yaml turbinia-worker.yaml redis-server.yaml
 
 # Disable some jobs
 echo "Updating $TURBINIA_CONFIG with disabled jobs"
@@ -187,20 +181,6 @@ sed -i -e "s/turbiniavolume/$FILESTORE_NAME/g" *.yaml
 sed -i -e "s/storage: .*/storage: $FILESTORE_CAPACITY/g" turbinia-volume-filestore.yaml turbinia-volume-claim-filestore.yaml
 sed -i -e "s/^LOG_DIR = .*$/LOG_DIR = $FILESTORE_MOUNT/g" $TURBINIA_CONFIG
 sed -i -e "s/^MOUNT_DIR_PREFIX = .*$/MOUNT_DIR_PREFIX = '\/mnt\/turbinia'/g" $TURBINIA_CONFIG
-
-#Create Google Cloud Storage Bucket
-if [[ "$*" != *--no-gcs* ]] ; then  
-  echo "Enabling GCS cloud storage"
-  gcloud -q --project $DEVSHELL_PROJECT_ID services enable storage-component.googleapis.com
-  echo "Creating GCS bucket gs://$INSTANCE_ID"
-  gsutil mb -l $REGION gs://$INSTANCE_ID
-else
-  echo "--no-gcs specified. Using pre-existing GCS bucket $INSTANCE_ID"
-fi
-
-echo "Updating $TURBINIA_CONFIG config with GCS bucket configuration"
-sed -i -e "s/^GCS_OUTPUT_PATH = .*$/GCS_OUTPUT_PATH = 'gs:\/\/$INSTANCE_ID\/output'/g" $TURBINIA_CONFIG
-sed -i -e "s/^BUCKET_NAME = .*$/BUCKET_NAME = '$INSTANCE_ID'/g" $TURBINIA_CONFIG
 
 # Update Turbinia config with Redis/Celery parameters
 echo "Updating $TURBINIA_CONFIG with Redis/Celery config"

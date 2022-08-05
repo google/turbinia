@@ -26,7 +26,6 @@ if [[ "$*" == *--help ]] ; then
   echo "--no-gcloud-auth               Do not use gcloud authentication and service key instead"
   echo "--no-filestore                 Do not cleanup Turbinia Filestore share"
   echo "--no-dfdewey                   Do not cleanup dfDewey Filestore share"
-  echo "--no-gcs                       Do not delete the GCS bucket"
   echo "--no-cluster                   Do not delete the cluster"
   exit 1
 fi
@@ -75,12 +74,6 @@ if [[ "$*" != *--no-cluster* ]] ; then
   gcloud -q --project $DEVSHELL_PROJECT_ID container clusters delete $CLUSTER_NAME --zone $ZONE
 fi
 
-# Delete the GCS storage bucket
-if [[ "$*" != *--no-gcs* ]] ; then
-  echo "Deleting GCS storage bucket gs://$INSTANCE_ID"
-  gsutil -q rm -r gs://$INSTANCE_ID
-fi
-
 # Delete the Filestore instance
 if [[ "$*" != *--no-filestore* ]] ; then
   echo "Deleting Filestore instance $FILESTORE_NAME"
@@ -103,14 +96,9 @@ if [[ "$*" == *--no-gcloud-auth* ]] ; then
 
   # Delete IAM roles from the service account
   echo "Delete permissions on service account"
-  gcloud projects remove-iam-policy-binding $DEVSHELL_PROJECT_ID --member=$SA_MEMBER --role='roles/cloudsql.admin'
   gcloud projects remove-iam-policy-binding $DEVSHELL_PROJECT_ID --member=$SA_MEMBER --role='roles/compute.admin'
-  gcloud projects remove-iam-policy-binding $DEVSHELL_PROJECT_ID --member=$SA_MEMBER --role='roles/container.admin'
-  gcloud projects remove-iam-policy-binding $DEVSHELL_PROJECT_ID --member=$SA_MEMBER --role='roles/editor'
   gcloud projects remove-iam-policy-binding $DEVSHELL_PROJECT_ID --member=$SA_MEMBER --role='roles/logging.logWriter'
-  gcloud projects remove-iam-policy-binding $DEVSHELL_PROJECT_ID --member=$SA_MEMBER --role='roles/servicemanagement.admin'
-  gcloud projects add-iam-policy-binding $DEVSHELL_PROJECT_ID --member=$SA_MEMBER --role='roles/redis.admin'
-  gcloud projects remove-iam-policy-binding $DEVSHELL_PROJECT_ID --member=$SA_MEMBER --role='roles/storage.admin'
+  gcloud projects remove-iam-policy-binding $DEVSHELL_PROJECT_ID --member=$SA_MEMBER --role='roles/iam.serviceAccountUser'
 
   # Delete service account
   echo "Delete service account"
@@ -118,7 +106,7 @@ if [[ "$*" == *--no-gcloud-auth* ]] ; then
 
   # Remove the service account key
   echo "Remove service account key"
-  rm ~/$TURBINIA_INSTANCE.json
+  rm ~/$INSTANCE_ID.json
 
 fi
 
