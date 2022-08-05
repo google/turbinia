@@ -254,7 +254,9 @@ def PreprocessMountEwfDisk(ewf_path):
 
   # Creates a temporary directory for the mount path
   ewf_mount_path = tempfile.mkdtemp(prefix='turbinia', dir=block_prefix)
-  mount_cmd = ['sudo', 'ewfmount', '-X', 'allow_other', ewf_path, ewf_mount_path]
+  mount_cmd = [
+      'sudo', 'ewfmount', '-X', 'allow_other', ewf_path, ewf_mount_path
+  ]
 
   log.info('Running: {0:s}'.format(' '.join(mount_cmd)))
   try:
@@ -278,7 +280,8 @@ def GetEwfDiskPath(ewf_mount_path):
   if ewf_devices:
     ewf_path = '{0:s}/{1:s}'.format(ewf_mount_path, ewf_devices[0])
   else:
-    raise TurbiniaException('No EWF block device found after ewfmount {0:s}'.format(ewf_mount_path))
+    raise TurbiniaException(
+        'No EWF block device found after ewfmount {0:s}'.format(ewf_mount_path))
   return ewf_path
 
 
