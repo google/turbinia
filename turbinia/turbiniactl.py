@@ -593,7 +593,7 @@ def process_args(args):
           all_args=all_args)
   elif args.command in ('googleclouddisk', 'googleclouddiskembedded'):
     # Fail if this is a local instance
-    if config.SHARED_FILESYSTEM and not args.force_evidence:
+    if not config.CLOUD_PROVIDER and not args.force_evidence:
       msg = (
           'The evidence type {0:s} is Cloud only, and this instance of '
           'Turbinia is not a cloud instance.'.format(args.command))
@@ -885,7 +885,7 @@ def process_evidence(
         name=name, source_path=os.path.abspath(source_path), source=source)
   elif args.command == 'directory':
     source_path = os.path.abspath(source_path)
-    if not config.SHARED_FILESYSTEM:
+    if config.CLOUD_PROVIDER.lower() == 'gcp':
       log.info(
           'A Cloud Only Architecture has been detected. '
           'Compressing the directory for GCS upload.')
