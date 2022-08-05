@@ -234,7 +234,7 @@ def PreprocessMountEwfDisk(ewf_path):
 
   if not os.path.exists(ewf_path):
     raise TurbiniaException(
-        'Could not mount partition {0:s}, the path does not exist'.format(
+        'Could not mount EWF disk image {0:s}, the path does not exist'.format(
             ewf_path))
 
   # Checks if the mount path is a directory
@@ -253,8 +253,8 @@ def PreprocessMountEwfDisk(ewf_path):
               block_prefix, e))
 
   # Creates a temporary directory for the mount path
-  block_path = tempfile.mkdtemp(prefix='turbinia', dir=block_prefix)
-  mount_cmd = ['sudo', 'ewfmount', '-X', 'allow_other', ewf_path, block_path]
+  ewf_mount_path = tempfile.mkdtemp(prefix='turbinia', dir=block_prefix)
+  mount_cmd = ['sudo', 'ewfmount', '-X', 'allow_other', ewf_path, ewf_mount_path]
 
   log.info('Running: {0:s}'.format(' '.join(mount_cmd)))
   try:
@@ -262,20 +262,23 @@ def PreprocessMountEwfDisk(ewf_path):
   except subprocess.CalledProcessError as e:
     raise TurbiniaException('Could not mount directory {0!s}'.format(e))
 
-  return block_path
+  return ewf_mount_path
 
 
-def GetEwfDiskPath(block_path):
+def GetEwfDiskPath(ewf_mount_path):
   """Returns the path to the device in the EWF disk block. Only supports 1 block device.
 
   Args:
-      block_path (str): The path to the EWF disk block device.
+      ewf_mount_path (str): The path to the EWF disk block device.
 
   Returns:
       str: The path to the block device found in a EWF disk
   """
-  ewf_devices = os.listdir(block_path)
-  ewf_path = '{0:s}/{1:s}'.format(block_path, ewf_devices[0])
+  ewf_devices = os.listdir(ewf_mount_path)
+  if ewf_devices:
+    ewf_path = '{0:s}/{1:s}'.format(ewf_mount_path, ewf_devices[0])
+  else:
+    raise TurbiniaException('No EWF block device found after ewfmount {0:s}'.format(ewf_mount_path))
   return ewf_path
 
 

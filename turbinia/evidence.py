@@ -21,7 +21,6 @@ import json
 import logging
 import os
 import sys
-from unittest import result
 import filelock
 
 from turbinia import config
@@ -969,7 +968,7 @@ class EwfDisk(RawDisk):
   Attributes:
     device_path (str): Path to the mounted loop device.
     ewf_path (str): Path to mounted EWF image.
-    block_path (str): Path to EWF mount directory.
+    ewf_mount_path (str): Path to EWF mount directory.
   """
   POSSIBLE_STATES = [EvidenceState.ATTACHED, EvidenceState.MOUNTED]
 
@@ -977,14 +976,14 @@ class EwfDisk(RawDisk):
     """Initialization for EWF evidence object."""
     self.device_path = None
     self.ewf_path = None
-    self.block_path = None
+    self.ewf_mount_path = None
     super(EwfDisk, self).__init__(*args, **kwargs)
 
   def _preprocess(self, _, required_states):
     if EvidenceState.ATTACHED in required_states:
-      self.block_path = mount_local.PreprocessMountEwfDisk(self.source_path)
+      self.ewf_mount_path = mount_local.PreprocessMountEwfDisk(self.source_path)
       self.state[EvidenceState.MOUNTED] = True
-      self.ewf_path = mount_local.GetEwfDiskPath(self.block_path)
+      self.ewf_path = mount_local.GetEwfDiskPath(self.ewf_mount_path)
       self.device_path = mount_local.PreprocessLosetup(self.ewf_path)
       self.local_path = self.device_path
       self.state[EvidenceState.ATTACHED] = True
@@ -993,4 +992,4 @@ class EwfDisk(RawDisk):
     if self.state[EvidenceState.ATTACHED]:
       mount_local.PostprocessDeleteLosetup(self.device_path)
       self.state[EvidenceState.ATTACHED] = False
-      mount_local.PostprocessUnmountPath(self.block_path)
+      mount_local.PostprocessUnmountPath(self.ewf_mount_path)
