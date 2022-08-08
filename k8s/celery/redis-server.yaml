@@ -26,7 +26,7 @@ spec:
               name: host-sys
       containers:
         - name: redis
-          image: "docker.io/redis:6.0.5"
+          image: "docker.io/redis:latest"
           args: ["--appendonly", "yes", "--save", "30", "1", "--client-output-buffer-limit", "pubsub", "268435456", "67108864", "0"]
           workingDir: /mnt/turbiniavolume/redis
           resources:
