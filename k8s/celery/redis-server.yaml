@@ -18,14 +18,16 @@ spec:
       initContainers:
         - name: init-filestore
           image: busybox:1.28
-          command: ["sh", "-c", "chmod og+w /mnt/turbiniavolume"]
+          command: ["sh", "-c", "chmod og+w /mnt/turbiniavolume && echo never > /host-sys/kernel/mm/transparent_hugepage/enabled"]
           volumeMounts:
             - mountPath: /mnt/turbiniavolume
               name: turbiniavolume
+            - mountPath: /host-sys
+              name: host-sys
       containers:
         - name: redis
           image: "docker.io/redis:6.0.5"
-          args: ["--appendonly", "yes", "--save", "30", "1"]
+          args: ["--appendonly", "yes", "--save", "30", "1", "--client-output-buffer-limit", "pubsub", "268435456", "67108864", "0"]
           workingDir: /mnt/turbiniavolume/redis
           resources:
             requests:
@@ -41,3 +43,6 @@ spec:
           persistentVolumeClaim:
             claimName: turbiniavolume-claim
             readOnly: false
+        - name: host-sys
+          hostPath:
+            path: /sys
