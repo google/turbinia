@@ -7,9 +7,7 @@ User documentation
 
    install
    install-manual
-   install-gke-celery-manual
    install-gke-celery
-   install-gke-pubsub-manual
    install-gke-pubsub
    install-gke-monitoring-manual
    how-it-works
