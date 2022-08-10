@@ -491,7 +491,7 @@ def process_args(args):
   if args.debug_tasks:
     config.DEBUG_TASKS = True
 
-  if config.CLOUD_PROVIDER.lower() == 'gcp':
+  if config.CLOUD_PROVIDER:
     from turbinia.lib import google_cloud
     from libcloudforensics.providers.gcp import forensics as gcp_forensics
 
@@ -885,7 +885,7 @@ def process_evidence(
         name=name, source_path=os.path.abspath(source_path), source=source)
   elif args.command == 'directory':
     source_path = os.path.abspath(source_path)
-    if config.CLOUD_PROVIDER.lower() == 'gcp':
+    if not config.SHARED_FILESYSTEM:
       log.info(
           'A Cloud Only Architecture has been detected. '
           'Compressing the directory for GCS upload.')
