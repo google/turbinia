@@ -254,10 +254,11 @@ class TurbiniaCeleryWorker(TurbiniaWorkerBase):
     # Disable heartbeat and worker ping checks per amount of signals these generate,
     # causing connection timeouts to the Redis client.
     self.worker.task(task_utils.task_runner, name='task_runner')
-    argv = [
-        'worker', '--loglevel=info', '--pool=solo', '--without-gossip',
-        '--without-heartbeat', '--without-mingle'
-    ]
+    #argv = [
+    #    'worker', '--loglevel=info', '--pool=solo', '--without-gossip',
+    #    '--without-heartbeat', '--without-mingle'
+    #]
+    argv = ['worker', '--loglevel=info', '--pool=solo']
     self.worker.start(argv)
 
 
