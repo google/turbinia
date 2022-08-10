@@ -34,7 +34,7 @@ from turbinia.processors import resource_manager
 # pylint: disable=keyword-arg-before-vararg
 
 config.LoadConfig()
-if config.CLOUD_PROVIDER.lower() == 'gcp':
+if config.CLOUD_PROVIDER:
   from turbinia.processors import google_cloud
 
 log = logging.getLogger('turbinia')
