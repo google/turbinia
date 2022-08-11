@@ -961,8 +961,8 @@ class DockerContainer(Evidence):
 
 
 #TODO implement support for several ewf devices if there are more than one
-#inside the block path
-class EwfDisk(RawDisk):
+#inside the ewf_mount_path
+class EwfDisk(Evidence):
   """Evidence object for a EWF based evidence.
 
   Attributes:
@@ -970,7 +970,7 @@ class EwfDisk(RawDisk):
     ewf_path (str): Path to mounted EWF image.
     ewf_mount_path (str): Path to EWF mount directory.
   """
-  POSSIBLE_STATES = [EvidenceState.ATTACHED, EvidenceState.MOUNTED]
+  POSSIBLE_STATES = [EvidenceState.ATTACHED]
 
   def __init__(self, *args, **kwargs):
     """Initialization for EWF evidence object."""
@@ -980,16 +980,14 @@ class EwfDisk(RawDisk):
     super(EwfDisk, self).__init__(*args, **kwargs)
 
   def _preprocess(self, _, required_states):
-    if EvidenceState.ATTACHED in required_states:
+    if EvidenceState.ATTACHED in required_states or self.has_child_evidence:
       self.ewf_mount_path = mount_local.PreprocessMountEwfDisk(self.source_path)
-      self.state[EvidenceState.MOUNTED] = True
       self.ewf_path = mount_local.GetEwfDiskPath(self.ewf_mount_path)
-      self.device_path = mount_local.PreprocessLosetup(self.ewf_path)
-      self.local_path = self.device_path
+      self.device_path = self.ewf_path
+      self.local_path = self.ewf_path
       self.state[EvidenceState.ATTACHED] = True
 
   def _postprocess(self):
     if self.state[EvidenceState.ATTACHED]:
-      mount_local.PostprocessDeleteLosetup(self.device_path)
       self.state[EvidenceState.ATTACHED] = False
       mount_local.PostprocessUnmountPath(self.ewf_mount_path)
