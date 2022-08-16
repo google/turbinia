@@ -4,12 +4,11 @@ User documentation
 
 .. toctree::
    :maxdepth: 3
-
    install
-   install-manual
    install-gke-celery
    install-gke-pubsub
-   install-gke-monitoring-manual
+   install-gke-monitoring
+   install-gcp-pubsub
    how-it-works
    turbinia-local-stack
    using-docker
