@@ -16,6 +16,7 @@
 
 from __future__ import unicode_literals
 
+from turbinia.evidence import EwfDisk
 from turbinia.workers import artifact
 from turbinia.evidence import Directory
 from turbinia.evidence import DockerContainer
@@ -34,8 +35,8 @@ class JupyterExtractionJob(interface.TurbiniaJob):
 
   # The types of evidence that this Job will process
   evidence_input = [
-      Directory, DockerContainer, GoogleCloudDisk, GoogleCloudDiskRawEmbedded,
-      RawDisk
+      EwfDisk, Directory, DockerContainer, GoogleCloudDisk,
+      GoogleCloudDiskRawEmbedded, RawDisk
   ]
   evidence_output = [ExportedFileArtifact]
 
