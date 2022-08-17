@@ -15,7 +15,7 @@ pycryptodomex
 prometheus_client
 libcloudforensics
 protobuf
-proto-plus<1.19.7
+proto-plus
 psq
 pyparsing<3
 pyyaml>=5.4.1
