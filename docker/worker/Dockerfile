@@ -63,6 +63,7 @@ RUN apt-get update && apt-get -y install \
     libbde-tools \
     libewf \
     libewf-python3 \
+    libewf-tools \
     plaso-tools \
     python3-dfimagetools \
     python3-dfvfs \

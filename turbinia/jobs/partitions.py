@@ -14,6 +14,7 @@
 # limitations under the License.
 """Job to execute partition enumeration task."""
 
+from turbinia.evidence import EwfDisk
 from turbinia.evidence import DiskPartition
 from turbinia.evidence import GoogleCloudDisk
 from turbinia.evidence import GoogleCloudDiskRawEmbedded
@@ -30,7 +31,9 @@ class PartitionEnumerationJob(interface.TurbiniaJob):
   """
 
   # The types of evidence that this Job will process
-  evidence_input = [GoogleCloudDisk, GoogleCloudDiskRawEmbedded, RawDisk]
+  evidence_input = [
+      EwfDisk, GoogleCloudDisk, GoogleCloudDiskRawEmbedded, RawDisk
+  ]
   evidence_output = [DiskPartition]
 
   NAME = 'PartitionEnumerationJob'
