@@ -599,7 +599,7 @@ class DiskPartition(RawDisk):
 
   def __init__(
       self, partition_location=None, partition_offset=None, partition_size=None,
-      lv_uuid=None, path_spec=None, *args, **kwargs):
+      lv_uuid=None, path_spec=None, important=True, *args, **kwargs):
     """Initialization for raw volume evidence object."""
 
     self.partition_location = partition_location
@@ -607,6 +607,7 @@ class DiskPartition(RawDisk):
     self.partition_size = partition_size
     self.lv_uuid = lv_uuid
     self.path_spec = path_spec
+    self.important = important
     super(DiskPartition, self).__init__(*args, **kwargs)
 
     # This Evidence needs to have a parent

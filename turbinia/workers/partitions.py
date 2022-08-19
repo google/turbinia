@@ -16,6 +16,7 @@
 
 import logging
 
+from turbinia import config
 from turbinia import TurbiniaException
 from turbinia.evidence import DiskPartition
 from turbinia.evidence import EvidenceState
@@ -31,6 +32,7 @@ if TurbiniaTask.check_worker_role():
     from dfvfs.volume import lvm_volume_system
     from dfvfs.volume import tsk_volume_system
 
+    from turbinia.processors import mount_local
     from turbinia.processors import partitions
   except ImportError as exception:
     message = 'Could not import dfVFS libraries: {0!s}'.format(exception)
@@ -43,6 +45,14 @@ class PartitionEnumerationTask(TurbiniaTask):
   """Task to enumerate partitions in a disk."""
 
   REQUIRED_STATES = [EvidenceState.ATTACHED]
+
+  # Task configuration variables from recipe
+  TASK_CONFIG = {
+      # Process important partitions
+      'process_important': True,
+      # Process unimportant partitions
+      'process_unimportant': False
+  }
 
   def _GetLocation(self, path_spec):
     """Retrieve the best location for a partition.
@@ -83,6 +93,7 @@ class PartitionEnumerationTask(TurbiniaTask):
     partition_offset = None
     partition_size = None
     lv_uuid = None
+    important = True
 
     child_path_spec = path_spec
     is_lvm = False
@@ -130,7 +141,27 @@ class PartitionEnumerationTask(TurbiniaTask):
 
       child_path_spec = child_path_spec.parent
 
+    # Is partition important based on filesystem?
+    if path_spec.type_indicator not in ('APFS', 'EXT', 'HFS', 'NTFS', 'TSK',
+                                        'XFS'):
+      important = False
+      log.info(
+          'Marking partition {0:s} unimportant (filesystem {1:s})'.format(
+              location, path_spec.type_indicator))
+
+    # Is partition important based on size? (100M or larger)
+    if partition_size and partition_size < 104857600:
+      important = False
+      log.info(
+          'Marking partition {0:s} unimportant (size {1!s} bytes)'.format(
+              location, partition_size))
+
+    # If LVM, we need to deactivate the Volume Group
+    if lv_uuid:
+      mount_local.PostprocessDeleteLosetup(None, lv_uuid=lv_uuid)
+
     status_report.append(fmt.heading5('{0!s}:'.format(location)))
+    status_report.append(fmt.bullet('Important: {0!s}'.format(important)))
     status_report.append(
         fmt.bullet('Filesystem: {0!s}'.format(path_spec.type_indicator)))
     if volume_index is not None:
@@ -149,7 +180,7 @@ class PartitionEnumerationTask(TurbiniaTask):
     # Not setting path_spec here as it will need to be generated for each task
     partition_evidence = DiskPartition(
         partition_location=location, partition_offset=partition_offset,
-        partition_size=partition_size, lv_uuid=lv_uuid)
+        partition_size=partition_size, lv_uuid=lv_uuid, important=important)
 
     log.debug(
         'Created DiskPartition evidence with location {0:s}, offset {1!s}, and size {2!s}'
@@ -167,25 +198,20 @@ class PartitionEnumerationTask(TurbiniaTask):
     Returns:
       TurbiniaTaskResult object.
     """
-    # TODO(dfjxs): Use evidence name instead of evidence_description (#718)
-    evidence_description = None
-    if hasattr(evidence, 'embedded_path'):
-      evidence_description = ':'.join(
-          (evidence.disk_name, evidence.embedded_path))
-    elif hasattr(evidence, 'disk_name'):
-      evidence_description = evidence.disk_name
-    else:
-      evidence_description = evidence.source_path
+    config.LoadConfig()
+    process_important = self.task_config.get('process_important')
+    process_unimportant = self.task_config.get('process_unimportant')
 
-    result.log('Scanning [{0:s}] for partitions'.format(evidence_description))
+    result.log('Scanning [{0:s}] for partitions'.format(evidence.name))
 
     path_specs = []
     success = False
+    processing = 0
 
     try:
       path_specs = partitions.Enumerate(evidence)
-      status_summary = 'Found {0:d} partition(s) in [{1:s}]:'.format(
-          len(path_specs), evidence_description)
+      status_summary = 'Found {0:d} partition(s) in [{1:s}]'.format(
+          len(path_specs), evidence.name)
 
       # Debug output
       path_spec_debug = ['Base path specs:']
@@ -209,7 +235,15 @@ class PartitionEnumerationTask(TurbiniaTask):
       for path_spec in path_specs:
         partition_evidence, partition_status = self._ProcessPartition(path_spec)
         status_report.extend(partition_status)
-        result.add_evidence(partition_evidence, evidence.config)
+        if ((process_important and partition_evidence.important) or
+            (process_unimportant and not partition_evidence.important)):
+          result.add_evidence(partition_evidence, evidence.config)
+          processing += 1
+        else:
+          log.info(
+              'Not processing {0:s} partition {1!s} due to task config'.format(
+                  'important' if partition_evidence.important else
+                  'unimportant', partition_evidence.name))
 
       status_report = '\n'.join(status_report)
       success = True
@@ -217,7 +251,10 @@ class PartitionEnumerationTask(TurbiniaTask):
       status_summary = 'Error enumerating partitions: {0!s}'.format(e)
       status_report = status_summary
 
-    result.log('Scanning of [{0:s}] is complete'.format(evidence_description))
+    result.log('Scanning of [{0:s}] is complete'.format(evidence.name))
+    status_summary = ' '.join((
+        status_summary, 'Processing {0!s} partition{1:s}:'.format(
+            processing, '' if processing == 1 else 's')))
 
     result.report_priority = Priority.LOW
     result.report_data = status_report

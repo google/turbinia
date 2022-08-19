@@ -56,6 +56,7 @@ class PartitionEnumerationTaskTest(TestTurbiniaTaskBase):
 
     mock_getbasepathspecs.return_value = [tsk_spec]
 
+    self.task.task_config['process_unimportant'] = True
     result = self.task.run(self.evidence, self.result)
 
     # Ensure run method returns a TurbiniaTaskResult instance.
@@ -65,9 +66,9 @@ class PartitionEnumerationTaskTest(TestTurbiniaTaskBase):
     expected_report = []
     expected_report.append(
         fmt.heading4(
-            'Found 1 partition(s) in [{0:s}]:'.format(
-                self.evidence.local_path)))
+            'Found 1 partition(s) in [{0:s}]'.format(self.evidence.local_path)))
     expected_report.append(fmt.heading5('/p1:'))
+    expected_report.append(fmt.bullet('Important: False'))
     expected_report.append(fmt.bullet('Filesystem: NTFS'))
     expected_report.append(fmt.bullet('Partition index: 2'))
     expected_report.append(fmt.bullet('Partition offset: 512'))
@@ -88,10 +89,13 @@ class PartitionEnumerationTaskTest(TestTurbiniaTaskBase):
     test_raw_path_spec = path_spec_factory.Factory.NewPathSpec(
         dfvfs_definitions.TYPE_INDICATOR_RAW, parent=test_os_path_spec)
     test_apfs_container_path_spec = path_spec_factory.Factory.NewPathSpec(
-        dfvfs_definitions.TYPE_INDICATOR_APFS_CONTAINER, location='/apfs1',
-        volume_index=0, parent=test_raw_path_spec)
+        dfvfs_definitions.TYPE_INDICATOR_APFS_CONTAINER, volume_index=0,
+        parent=test_raw_path_spec)
+    test_apfs_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_APFS, location='/apfs1',
+        parent=test_apfs_container_path_spec)
 
-    mock_getbasepathspecs.return_value = [test_apfs_container_path_spec]
+    mock_getbasepathspecs.return_value = [test_apfs_path_spec]
 
     result = self.task.run(self.evidence, self.result)
 
@@ -99,10 +103,10 @@ class PartitionEnumerationTaskTest(TestTurbiniaTaskBase):
     expected_report = []
     expected_report.append(
         fmt.heading4(
-            'Found 1 partition(s) in [{0:s}]:'.format(
-                self.evidence.local_path)))
+            'Found 1 partition(s) in [{0:s}]'.format(self.evidence.local_path)))
     expected_report.append(fmt.heading5('/apfs1:'))
-    expected_report.append(fmt.bullet('Filesystem: APFS_CONTAINER'))
+    expected_report.append(fmt.bullet('Important: True'))
+    expected_report.append(fmt.bullet('Filesystem: APFS'))
     expected_report.append(fmt.bullet('Volume index: 0'))
     expected_report = '\n'.join(expected_report)
     self.assertEqual(result.report_data, expected_report)
@@ -134,9 +138,9 @@ class PartitionEnumerationTaskTest(TestTurbiniaTaskBase):
     expected_report = []
     expected_report.append(
         fmt.heading4(
-            'Found 1 partition(s) in [{0:s}]:'.format(
-                self.evidence.local_path)))
+            'Found 1 partition(s) in [{0:s}]'.format(self.evidence.local_path)))
     expected_report.append(fmt.heading5('/p1:'))
+    expected_report.append(fmt.bullet('Important: False'))
     expected_report.append(fmt.bullet('Filesystem: EXT'))
     expected_report.append(fmt.bullet('Source evidence is a volume image'))
     expected_report = '\n'.join(expected_report)
@@ -163,15 +167,16 @@ class PartitionEnumerationTaskTest(TestTurbiniaTaskBase):
 
     mock_getbasepathspecs.return_value = [test_xfs_path_spec]
 
-    result = self.task.run(self.evidence, self.result)
+    with mock.patch('turbinia.processors.mount_local.PostprocessDeleteLosetup'):
+      result = self.task.run(self.evidence, self.result)
 
     # Ensure run method returns a TurbiniaTaskResult instance.
     expected_report = []
     expected_report.append(
         fmt.heading4(
-            'Found 1 partition(s) in [{0:s}]:'.format(
-                self.evidence.local_path)))
+            'Found 1 partition(s) in [{0:s}]'.format(self.evidence.local_path)))
     expected_report.append(fmt.heading5('/lvm1:'))
+    expected_report.append(fmt.bullet('Important: False'))
     expected_report.append(fmt.bullet('Filesystem: XFS'))
     expected_report.append(fmt.bullet('Source evidence is a volume image'))
     expected_report = '\n'.join(expected_report)
