@@ -182,6 +182,42 @@ class PartitionEnumerationTaskTest(TestTurbiniaTaskBase):
     expected_report = '\n'.join(expected_report)
     self.assertEqual(result.report_data, expected_report)
 
+  @mock.patch('turbinia.state_manager.get_state_manager')
+  @mock.patch('dfvfs.helpers.volume_scanner.VolumeScanner.GetBasePathSpecs')
+  def testPartitionEnumerationRunOther(self, mock_getbasepathspecs, _):
+    """Test PartitionEnumeration task run on unsupported FS."""
+    self.result.setup(self.task)
+    filedir = os.path.dirname(os.path.realpath(__file__))
+    test_data = os.path.join(filedir, '..', '..', 'test_data', 'gpt.raw')
+
+    test_os_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_OS, location=test_data)
+    test_raw_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_RAW, parent=test_os_path_spec)
+    test_gpt_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_GPT, location='/p1',
+        parent=test_raw_path_spec)
+    test_tar_path_spec = path_spec_factory.Factory.NewPathSpec(
+        dfvfs_definitions.TYPE_INDICATOR_TAR, location='/',
+        parent=test_gpt_path_spec)
+
+    mock_getbasepathspecs.return_value = [test_tar_path_spec]
+
+    result = self.task.run(self.evidence, self.result)
+
+    # Ensure run method returns a TurbiniaTaskResult instance.
+    expected_report = []
+    expected_report.append(
+        fmt.heading4(
+            'Found 1 partition(s) in [{0:s}]'.format(self.evidence.local_path)))
+    expected_report.append(fmt.heading5('/p1:'))
+    expected_report.append(fmt.bullet('Important: False'))
+    expected_report.append(fmt.bullet('Filesystem: TAR'))
+    expected_report.append(fmt.bullet('Source evidence is a volume image'))
+    expected_report = '\n'.join(expected_report)
+    self.assertEqual(result.report_data, expected_report)
+    self.assertEqual(len(result.evidence), 0)
+
 
 if __name__ == '__main__':
   unittest.main()
