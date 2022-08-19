@@ -16,6 +16,8 @@ SERVER_URI="us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-server"
 WORKER_URI="us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-worker"
 GCLOUD=`command -v gcloud`
 KUBECTL=`command -v kubectl`
+LOG_MODE=all
+LOG_LINES=10
 
 
 function usage { 
@@ -26,13 +28,15 @@ function usage {
   echo "-n              The cluster name"
   echo "-s              The desired number of nodes in the cluster"
   echo "-t              Docker image tag, eg latest or 20210606"
+  echo "-T <lines>      When executing logs command, show last N log lines (tail) for each node"
+  echo "-H <lines>      When executing logs command, show first N log lines (head) for each node"
   echo "-f              Path to Turbinia configuration file"
   echo "-k              Environment variable name"
   echo "-v              Environment variable value"
   echo 
   echo "Commands supported:"
   echo "change-image    Change the docker image loaded by a Turbinia deployment with DOCKER_TAG, use -t"
-  echo "logs            Display logs of a Turbinia server or worker"
+  echo "logs            Display logs of a Turbinia server or worker.  Use -T or -H to show tail/head of logs for all pods"
   echo "show-config     Write the Turbinia configuration of an instance to STDOUT"
   echo "status          Show the running status of server and workers"
   echo "cordon          Cordon a cluster (Cordoning nodes is a Kubernetes mechanism to mark a node as “unschedulable”.)"
@@ -72,6 +76,10 @@ function get_nodes {
     NODES=$($KUBECTL get nodes --output=jsonpath={.items..metadata.name})
 }
 
+function get_pods {
+    PODS=$($KUBECTL get pod --output=jsonpath={.items..metadata.name})
+}
+
 function cordon {
     echo "Note this does not stop a cluster. Please resize the cluster to zero to prevent being billed."
     # Show status
@@ -109,6 +117,16 @@ function show_container_logs {
     show_infra
     read -p 'Which container name? ' CONTAINER_NAME
     $KUBECTL logs $CONTAINER_NAME
+}
+
+function show_container_logs_all {
+    get_pods
+    for POD in $PODS
+    do
+      echo "Logs for pod $POD:"
+      echo "------------------"
+      $KUBECTL logs $POD | $LOG_MODE -n $LOG_LINES
+    done
 }
 
 function show_config {
@@ -179,16 +197,22 @@ function update_docker_image_tag {
     rollout_restart
 }
 
-while getopts ":c:n:s:t:f:v:k:" option; do
+while getopts ":c:H:n:s:t:T:f:v:k:" option; do
    case ${option} in
       c ) 
          CMD=$OPTARG;;
+      H )
+         LOG_MODE="head"
+         LOG_LINES=$OPTARG;;
       n )
          CLUSTER_NAME=$OPTARG;;
       s )
          CLUSTER_SIZE=$OPTARG;;
       t ) 
          DOCKER_TAG=$OPTARG;;
+      T )
+         LOG_MODE="tail"
+         LOG_LINES=$OPTARG;;
       f ) 
          CONFIG_FILE=$OPTARG;;
       k )
@@ -230,7 +254,11 @@ case $CMD in
         show_infra
         ;;
     logs)
-        show_container_logs
+        if [ $LOG_MODE == "tail" ] || [ $LOG_MODE == "head" ] ; then
+          show_container_logs_all
+        else
+          show_container_logs
+        fi
         ;;
     cordon)
         cordon
