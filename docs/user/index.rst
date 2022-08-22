@@ -9,6 +9,7 @@ User documentation
    install-gke-pubsub
    install-gke-monitoring
    install-gcp-pubsub
+   gke-sre
    how-it-works
    turbinia-local-stack
    using-docker
