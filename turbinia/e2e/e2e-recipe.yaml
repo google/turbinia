@@ -1,3 +1,5 @@
+globals:
+
 partitionenumeration_base:
   task: 'PartitionEnumerationTask'
   process_unimportant: True
