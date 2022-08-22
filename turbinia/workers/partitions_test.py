@@ -35,6 +35,7 @@ class PartitionEnumerationTaskTest(TestTurbiniaTaskBase):
         task_class=partitions.PartitionEnumerationTask,
         evidence_class=partitions.DiskPartition)
     self.setResults(mock_run=False)
+    self.task.task_config['minimum_size'] = 104857600
 
   @mock.patch('turbinia.state_manager.get_state_manager')
   @mock.patch('dfvfs.helpers.volume_scanner.VolumeScanner.GetBasePathSpecs')

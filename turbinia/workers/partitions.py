@@ -51,7 +51,9 @@ class PartitionEnumerationTask(TurbiniaTask):
       # Process important partitions
       'process_important': True,
       # Process unimportant partitions
-      'process_unimportant': False
+      'process_unimportant': False,
+      # Minimum important partition size (default 100M)
+      'minimum_size': 104857600
   }
 
   def _GetLocation(self, path_spec):
@@ -150,11 +152,12 @@ class PartitionEnumerationTask(TurbiniaTask):
               location, path_spec.type_indicator))
 
     # Is partition important based on size? (100M or larger)
-    if partition_size and partition_size < 104857600:
+    minimum_size = self.task_config.get('minimum_size')
+    if partition_size and partition_size < minimum_size:
       important = False
       log.info(
-          'Marking partition {0:s} unimportant (size {1!s} bytes)'.format(
-              location, partition_size))
+          'Marking partition {0:s} unimportant (size {1!s} < {2!s})'.format(
+              location, partition_size, minimum_size))
 
     # If LVM, we need to deactivate the Volume Group
     if lv_uuid:
