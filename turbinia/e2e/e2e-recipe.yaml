@@ -1,4 +1,5 @@
 globals:
+  'debug_tasks': True
 
 partitionenumeration_base:
   task: 'PartitionEnumerationTask'
