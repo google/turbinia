@@ -86,3 +86,82 @@ to get a shell with access to your GCP resources.
             for more details.
         *   When prompted for the project name, enter the project you selected
             during setup.
+
+This should result in the appropriate cloud services being enabled and
+configured and GCE instances for the server and the worker(s) being started and
+configured. The Turbinia configuration file will be deployed on these instances
+as `etc/turbinia/turbinia.conf`. If you later want to increase the number of
+workers, you can edit the `turbinia/variables.tf` file mentioned above and
+re-run `terraform apply`
+To use Turbinia you can use the virtual environment that was setup by
+the `deploy.sh` script.To activate the virtual environment, run the following
+command  `source ~/turbinia/bin/activate` and then use `turbiniactl`. For more
+information on how to use Turbinia please visit [the user manual](https://github.com/google/turbinia). 
+
+### Client configuration (optional)
+
+If you want to use the command line tool, you can SSH into the server and run
+`turbiniactl` from there. The `turbiniactl` command can be used to submit
+Evidence for processing or see the status of existing and previous processing
+requests. If you'd prefer to use turbiniactl on a different machine, follow the
+following instructions to configure the client. The instructions are based on
+using Ubuntu 18.04, though other versions of Linux should be compatible.
+
+*   Follow the steps from GCP Project setup above to install the SDK and
+    authenticate with gcloud.
+*   Install some python tooling:
+    *   `apt-get install python3-pip python3-wheel`
+*   Install the Turbinia client.
+    *   Note: You may want to install this into a virtual-environment with
+        [venv](https://docs.python.org/3.7/library/venv.html) or
+        [pipenv](https://pipenv.pypa.io/en/latest/)) to reduce potential
+        dependency conflicts and isolate these packages into their own
+        environment.
+    *   `pip3 --user install turbinia`
+*   If running on the same machine you deployed Turbinia from, you can generate
+    the config with terraform
+    *   `terraform output turbinia-config > ~/.turbiniarc`
+*   Otherwise, if you are running from a different machine you'll need to copy
+    the Turbinia config from the original machine, or from the Turbinia server
+    from `/etc/turbinia/turbinia.conf`.
+
+### Grafana SMTP Setup 
+
+If you want to receive alert notifications from Grafana, you'll need to setup a SMTP server for Grafana. To configure a SMTP server, you need to add the following environment variables to `Grafana` `env` section in `osdfir-infrastructure/modules/monitoring/main.tf`
+
+```
+      {
+        name = "GF_SMTP_ENABLED" 
+        value = "true"
+      }, {
+        name = "GF_SMTP_HOST"
+        value = "smtp.gmail.com:465" # Replace this if you're not using gmail
+      }, {
+        name = "GF_SMTP_USER"
+        value = "<EMAIL ADDRESS HERE>"
+      }, {
+        name = "GF_SMTP_PASSWORD"
+        value = "<PASSWORD>"
+      }, {
+        name = "GF_SMTP_SKIP_VERIFY"
+        value = "true"
+      }, {
+        name = "GF_SMTP_FROM_ADDRESS"
+        value = "<EMAIL ADDRESS THAT SHOWS AS THE SENDER>"
+      }
+
+```
+
+---
+> **NOTE**
+
+> By default Gmail does not allow [less secure apps](https://support.google.com/accounts/answer/6010255) to authenticate and send emails. For that reason, you'll need to allow less secure apps to access the provided Gmail account.
+
+---
+
+Once completed:
+ - login to the Grafana Dashboard.
+ - Select Alerting and choose "Notification channels".
+ - Fill the required fields and add the email addresses that will receive notification.
+ - Click "Test" to test your SMTP setup.
+ - Once everything is working, click "Save" to save the notification channel.
