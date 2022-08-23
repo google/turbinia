@@ -15,10 +15,7 @@ instructions for Cloud installations. This uses
 [terraform configs](https://github.com/forseti-security/osdfir-infrastructure)
 that are part of the
 [Forseti Security repository](https://github.com/forseti-security)
-to automate deployment of Turbinia into an existing GCP Project. If you want to
-install Turbinia in hybrid or local only mode, or want to install Turbinia
-manually (not recommended), see
-[here](install-manual.md)
+to automate deployment of Turbinia into an existing GCP Project. 
 for details.
 
 ## Installation
