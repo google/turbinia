@@ -23,7 +23,7 @@ for details.
 
 ## Installation
 
-The following steps can be performed on any Linux machine (Ubuntu 20.04
+The following steps can be performed on any Linux machine (Ubuntu 18.0.4
 recommended), and [Cloud Shell](https://cloud.google.com/shell/) is one easy way
 to get a shell with access to your GCP resources.
 
@@ -106,7 +106,7 @@ If you want to use the command line tool, you can SSH into the server and run
 Evidence for processing or see the status of existing and previous processing
 requests. If you'd prefer to use turbiniactl on a different machine, follow the
 following instructions to configure the client. The instructions are based on
-using Ubuntu 20.04, though other versions of Linux should be compatible.
+using Ubuntu 18.04, though other versions of Linux should be compatible.
 
 - Follow the steps from GCP Project setup above to install the SDK and
   authenticate with gcloud.
