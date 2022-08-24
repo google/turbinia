@@ -43,7 +43,7 @@ def IsLosetup(path):
   except subprocess.CalledProcessError as e:
     raise TurbiniaException(
         'Could not check losetup device status {0!s}'.format(e))
-  if output.find(path.encode('utf-8')) != -1:
+  if output.find(path.encode('utf-8')) == -1:
     return False
   return True
 
