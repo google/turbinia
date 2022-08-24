@@ -68,7 +68,7 @@ def evidence_decode(evidence_dict, strict=False):
   try:
     evidence_class = getattr(sys.modules[__name__], type_)
     log.info('Evidence type: {0!s}'.format(evidence_class))
-    evidence_object = evidence_class()
+    #evidence_object = evidence_class()
     if strict:
       for attribute_key in evidence_dict.keys():
         if not attribute_key in evidence_object.__dict__:
