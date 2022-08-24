@@ -146,6 +146,10 @@ A verbose cheatsheet can also be found [here](https://kubernetes.io/docs/referen
 
   - `$ gcloud container clusters get-credentials [cluster-name] --zone [zone] --project [project-name]`
 
+- Get cluster events
+
+  - `$ kubectl get events`
+
 - Get Turbinia pods
 
   - `$ kubectl get pods`
@@ -157,6 +161,10 @@ A verbose cheatsheet can also be found [here](https://kubernetes.io/docs/referen
 - Get all pods and associated nodes
 
   - `$ kubectl get pods -A -o wide`
+
+- Get verbose related pod deployment status
+
+  - `$ kubectl describe pod [pod-name]`
 
 - Get all nodes
 
@@ -203,6 +211,7 @@ A verbose cheatsheet can also be found [here](https://kubernetes.io/docs/referen
   - `$ kubectl top pods`
 
 - See how busy (cpu/mem) nodes are
+
   - `$ kubectl top nodes`
 
 ## GKE Metrics and Monitoring

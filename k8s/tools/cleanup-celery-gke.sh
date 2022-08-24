@@ -1,11 +1,12 @@
 #!/bin/bash
-# Turbinia GKE cleanup script for celery configuration.
+# Turbinia GKE cleanup script for Celery configuration.
 # This script can be used to cleanup the Turbinia Celery stack within GKE. Note that
 # this script will not disable any APIs to avoid outage with any other applications 
 # deployed within the project. 
 # Requirements:
 # - have 'gcloud'installed.
 # - autheticate against your GCP project with "gcloud auth login"
+# - account being used to run script should have an IAM policy of instance.admin and container.admin used to delete resources.
 # - optionally have the GCP project set with "gcloud config set project [you-project-name]"
 #
 # Use --help to show you commands supported.

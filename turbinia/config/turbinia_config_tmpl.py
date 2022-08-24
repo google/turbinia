@@ -24,8 +24,8 @@
 # separate when running with the same Cloud projects or backend servers.
 INSTANCE_ID = 'turbinia-instance1'
 
-# Which Cloud provider to use. Valid options are 'None' and 'GCP'. Use 'GCP'
-# for GCP or hybrid installations, and 'None' for local installations.
+# Which Cloud provider to use. Valid options are None and 'GCP'. Use 'GCP'
+# for GCP or hybrid installations, and None for local installations.
 CLOUD_PROVIDER = 'GCP'
 
 # Which state manager to use. Valid options are 'Datastore' or 'Redis'.  Use

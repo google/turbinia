@@ -1,5 +1,5 @@
 #!/bin/sh
-# Turbinia Kubernetes deployment script for celery/redis config.
+# Turbinia Kubernetes deployment script for Celery/Redis config.
 # This script can be used to deploy Turbinia to a Kubernetes environment.
 
 TURBINIA_CONF=$1

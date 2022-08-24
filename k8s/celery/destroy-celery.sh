@@ -1,5 +1,5 @@
 #!/bin/sh
-# Turbinia Kubernetes destroy script for celery/redis config.
+# Turbinia Kubernetes destroy script for Celery/Redis config.
 # This script can be used to destroy the Turbinia infrastructure in Kubernetes.
 
 kubectl delete configmap turbinia-config
