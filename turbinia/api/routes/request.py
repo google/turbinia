@@ -24,7 +24,7 @@ from pydantic import ValidationError
 from turbinia import TurbiniaException, client as turbinia_client
 from turbinia import evidence
 from turbinia.lib import recipe_helpers
-from turbinia.api.schemas import request  # pylint: disable=unused-import
+from turbinia.api.schemas import request, request_options  # pylint: disable=unused-import
 from turbinia.api.models import request_status
 
 log = logging.getLogger('turbinia:api_server:models:request')
@@ -47,7 +47,9 @@ async def get_requests_summary():
           content={'detail': 'Request summary is empty'}, status_code=200)
     return requests_summary
   except (ValidationError, ValueError, TypeError) as exception:
-    log.error('Error retrieving requests summary: {0!s}'.format(exception))
+    log.error(
+        'Error retrieving requests summary: {0!s}'.format(exception),
+        exc_info=True)
     raise HTTPException(
         status_code=500,
         detail='Error retrieving requests summary') from exception
@@ -100,6 +102,7 @@ async def create_request(req: request.Request):
   recipe = None
   recipe_name = req.request_options.recipe_name
   recipe_data = req.request_options.recipe_data
+  options = req.request_options
 
   if not request_id:
     request_id = uuid.uuid4().hex
@@ -114,27 +117,31 @@ async def create_request(req: request.Request):
           detail='You can only provide one of recipe_data or recipe_name.')
 
     if recipe_data:
-      # Use a client-provided recipe. recipe_data should be a Base64 encoded
+      # Use a client-provided recipe. recipe_data MUST be a Base64 encoded
       # YAML representaiton of a Turbinia recipe. The recipe will be validated.
       # We assume that if the client provided a custom recipe it will include
       # its own jobs_allowlist, filter_patterns and other settings.
       recipe = recipe_helpers.load_recipe_from_data(recipe_data)
     elif recipe_name:
       # Use a client-provided recipe name or path for an existing recipe.
-      # In this case, we can customize the recipe with additional parameters.
       recipe = client.create_recipe(
           group_id=group_id, recipe_name=recipe_name,
-          yara_rules=req.request_options.filter_patterns,
           sketch_id=req.request_options.sketch_id)
-
+    elif (options.jobs_allowlist or options.jobs_denylist or
+          options.filter_patterns or options.yara_rules):
+      recipe = client.create_recipe(
+          group_id=group_id, jobs_allowlist=options.jobs_allowlist,
+          jobs_denylist=options.jobs_denylist,
+          filter_patterns=options.filter_patterns,
+          yara_rules=options.yara_rules, sketch_id=options.sketch_id)
     # Create an appropriate evidence.Evidence object based on the
-    # "type" attribute from the evidence_json object.
+    # "type" attribute from the evidence object.
     # The following is an example of what a POST request might look like:
     # pylint: disable=pointless-string-statement
     """
     {
       "description": "Turbinia request object",
-      "evidence_json": { 
+      "evidence": { 
         "_name": "Rawdisk evidence", 
         "source_path": "/root/evidence.dd", 
         "type": "RawDisk"
@@ -149,7 +156,7 @@ async def create_request(req: request.Request):
     ----
     {
       "description": "Turbinia request object",
-      "evidence_json": { 
+      "evidence": { 
       "_name": "Rawdisk evidence", 
       "source_path": "/root/evidence.dd", 
       "type": "RawDisk"
@@ -162,18 +169,15 @@ async def create_request(req: request.Request):
       "requester": "tester"
     }
     """
-    evidence_object = evidence.evidence_decode(req.evidence_json)
+    evidence_object = evidence.evidence_decode(req.evidence, strict=True)
     evidence_list.append(evidence_object)
-
-    # If at this point recipe is None, the Turbinia Client will create
+    # If at this point the recipe is None, the TurbiniaClient will create
     # a generic recipe based on recipe_helpers.DEFAULT_RECIPE.
     request_out = client.create_request(
         evidence_=evidence_list, request_id=request_id, reason=reason,
         recipe=recipe, group_id=group_id, requester=requester)
-
     # Send the Turbinia request to the appropriate queue.
     client.send_request(request_out)
-
   except TurbiniaException as exception:
     log.error('Error creating new Turbinia request: {0!s}'.format(exception))
     raise HTTPException(

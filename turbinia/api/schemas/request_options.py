@@ -22,6 +22,8 @@ class BaseRequestOptions(BaseModel):
   """Base Request Options class to be extended by other option types. """
   recipe_name: Optional[str] = None
   recipe_data: Optional[str] = None
+  jobs_allowlist: Optional[List[str]] = None
+  jobs_denylist: Optional[List[str]] = None
   filter_patterns: Optional[List[str]] = None
   yara_rules: Optional[str] = None
   sketch_id: Optional[int] = None

@@ -31,8 +31,6 @@ from turbinia.processors import docker
 from turbinia.processors import mount_local
 from turbinia.processors import resource_manager
 
-# pylint: disable=keyword-arg-before-vararg
-
 config.LoadConfig()
 if config.TASK_MANAGER.lower() == 'psq':
   from turbinia.processors import google_cloud
@@ -40,12 +38,14 @@ if config.TASK_MANAGER.lower() == 'psq':
 log = logging.getLogger('turbinia')
 
 
-def evidence_decode(evidence_dict):
+def evidence_decode(evidence_dict, strict=False):
   """Decode JSON into appropriate Evidence object.
 
   Args:
     evidence_dict: JSON serializable evidence object (i.e. a dict post JSON
                    decoding).
+    strict: Flag to indicate whether strict attribute validation will occur.
+        Defaults to False.
 
   Returns:
     An instantiated Evidence object (or a sub-class of it).
@@ -68,14 +68,13 @@ def evidence_decode(evidence_dict):
   try:
     evidence_class = getattr(sys.modules[__name__], type_)
     evidence_object = evidence_class()
-    print(evidence_class, evidence_object)
     for attribute_key in evidence_dict.keys():
-      if not attribute_key in evidence_object.__dict__:
-        raise TurbiniaException(
-            'Invalid attribute ({0:s}) in evidence object of type {1:s}'.format(
-                attribute_key, type_))
+      if strict:
+        if not attribute_key in evidence_object.__dict__:
+          raise TurbiniaException(
+              'Invalid attribute ({0:s}) in evidence object of type {1:s}'
+              .format(attribute_key, type_))
     evidence = evidence_class.from_dict(evidence_dict)
-    print(evidence)
   except AttributeError:
     raise TurbiniaException(
         'No Evidence object of type {0:s} in evidence module'.format(type_))

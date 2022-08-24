@@ -65,7 +65,6 @@ def load_recipe_from_data(recipe_data):
       decoded_recipe = base64.b64decode(recipe_data)
       temp_file.write(decoded_recipe.decode('utf-8'))
       temp_file.flush()
-      print(decoded_recipe.decode('utf-8'))
       return load_recipe_from_file(temp_file.name)
     except binascii_error as exception:
       log.error('Unable to decode recipe_data: {0!s}'.format(exception))

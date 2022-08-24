@@ -16,7 +16,7 @@
 
 import io
 import logging
-import os
+import pathlib
 import uvicorn
 import yaml
 
@@ -46,31 +46,33 @@ def get_application():
   return _app
 
 
-def set_operation_ids(app):
+def set_operation_ids(app: FastAPI):
   """Simplify operation ID names to be used by client generator.
 
- This method must only be called after all routes have been added.
+ This method must only be called after all routes have been initialized.
   """
   for route in app.routes:
     if isinstance(route, APIRoute):
       route.operation_id = route.name
 
 
-def serve_static_content(app):
+def serve_static_content(app: FastAPI):
   """Configure the application to serve static content.
 
   This method must be called after all routes have been initialized.
   """
-  root_content_path = os.path.realpath('../../web')
-  css_content_path = os.path.join(root_content_path, 'css')
-  js_content_path = os.path.join(root_content_path, 'js')
+  this_path = pathlib.Path(__file__).parent.resolve()
+  web_content_path = this_path.parent.parent.joinpath('web/dist')
+  css_content_path = web_content_path.joinpath('css')
+  js_content_path = web_content_path.joinpath('js')
 
-  app.mount("/", StaticFiles(directory=root_content_path, html=True), name="/")
+  app.mount(
+      "/web", StaticFiles(directory=web_content_path, html=True), name="/")
   app.mount("/css", StaticFiles(directory=css_content_path), name="/css")
   app.mount("/js", StaticFiles(directory=js_content_path), name="/js")
 
 
-def configure_authentication_providers(app):
+def configure_authentication_providers(app: FastAPI):
   """Configure the application's authentication providers.
 
   Example provider configuration using starlette-oauth2-pai:
@@ -107,7 +109,7 @@ if config.API_AUTHENTICATION_ENABLED:
   configure_authentication_providers(app)
 
 set_operation_ids(app)
-#serve_static_content(app)
+serve_static_content(app)
 
 
 class TurbiniaAPIServer:
@@ -131,7 +133,7 @@ class TurbiniaAPIServer:
         log_level="info", reload=True)
 
 
-@app.get('/docs/openapi.yaml', include_in_schema=False)
+@app.get('/docs/openapi.yaml', tags=['OpenAPI Specification'])
 def read_openapi_yaml():
   """Serve the OpenAPI specification in YAML format."""
   openapi_json = app.openapi()

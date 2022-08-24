@@ -63,6 +63,7 @@ class testTurbiniaAPIServer(unittest.TestCase):
       'successful_tasks': 1,
       'running_tasks': 0,
       'failed_tasks': 0,
+      'queued_tasks': 0
   }
 
   def _get_state_manager(self):

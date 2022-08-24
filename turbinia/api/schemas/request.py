@@ -22,7 +22,7 @@ from turbinia.api.schemas import request_options
 class Request(BaseModel):
   """Base request object. """
   description: Optional[str] = 'Turbinia request object'
-  evidence_json: Dict[Any, Any]
+  evidence: Dict[Any, Any]
   request_options: request_options.BaseRequestOptions
   group_id: Optional[str] = None
   reason: Optional[str] = None

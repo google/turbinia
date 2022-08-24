@@ -170,7 +170,7 @@ def task_deserialize(input_dict):
   try:
     input_dict.pop('output_manager')
   except KeyError:
-    log.error(
+    log.info(
         'output_manager key not found in serialized TurbiniaTask {}'.format(
             input_dict['id']))
   task.__dict__.update(input_dict)
