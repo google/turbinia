@@ -34,6 +34,21 @@ turbinia_failed_loop_device_detach = Gauge(
     'Total number of loop devices failed to detach')
 
 
+def IsLosetup(path):
+  # Check that the device was attached
+  losetup_cmd = ['sudo', 'losetup', '-a']
+  log.info('Running: {0:s}'.format(' '.join(losetup_cmd)))
+  try:
+    output = subprocess.check_output(losetup_cmd)
+  except subprocess.CalledProcessError as e:
+    raise TurbiniaException(
+        'Could not check losetup device status {0!s}'.format(e))
+  if output.find(path.encode('utf-8')) != -1:
+    return False
+  log.info('losetup device [{0!s}] deleted.'.format(path))
+  return True
+
+
 def GetDiskSize(source_path):
   """Gets the size of disk evidence in bytes.
 
@@ -212,7 +227,26 @@ def PreprocessLosetup(
           losetup_command, universal_newlines=True).strip()
     except subprocess.CalledProcessError as e:
       raise TurbiniaException('Could not set losetup devices {0!s}'.format(e))
-
+    # Make sure we have a proper loop device.
+    for _ in range(RETRY_MAX):
+      if IsLosetup(losetup_device):
+        log.info(
+            'Loop device {0:s} successfully attached'.format(losetup_device))
+        break
+      if os.path.exists(losetup_device):
+        log.info(
+            'Loop device {0:s} mode is {1}'.format(
+                losetup_device,
+                os.stat(losetup_device).st_mode))
+      time.sleep(1)
+    message = None
+    if not os.path.exists(losetup_device):
+      message = 'Loop device path {0:s} does not exist'.format(losetup_device)
+    elif not IsLosetup(losetup_device):
+      message = 'Device path {0:s} is not a block device'.format(losetup_device)
+    if message:
+      log.error(message)
+      raise TurbiniaException(message)
   return losetup_device
 
 
@@ -482,12 +516,21 @@ def PostprocessDeleteLosetup(device_path, lv_uuid=None):
 
     # Check that the device was actually removed
     losetup_cmd = ['sudo', 'losetup', '-a']
-    log.info('Running: {0:s}'.format(' '.join(losetup_cmd)))
-    try:
-      output = subprocess.check_output(losetup_cmd)
-    except subprocess.CalledProcessError as e:
-      raise TurbiniaException(
-          'Could not check losetup device status {0!s}'.format(e))
+    for _ in range(RETRY_MAX):
+      log.info('Running: {0:s}'.format(' '.join(losetup_cmd)))
+      try:
+        output = subprocess.check_output(losetup_cmd)
+      except subprocess.CalledProcessError as e:
+        raise TurbiniaException(
+            'Could not check losetup device status {0!s}'.format(e))
+      if output.find(device_path.encode('utf-8')) != -1:
+        log.info(
+            'Loop device {0:s} mode is {1}'.format(
+                device_path,
+                os.stat(device_path).st_mode))
+      else:
+        break
+    # Fail if loop device was not removed.
     if output.find(device_path.encode('utf-8')) != -1:
       turbinia_failed_loop_device_detach.inc()
       raise TurbiniaException(
