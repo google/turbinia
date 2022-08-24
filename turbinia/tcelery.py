@@ -57,7 +57,6 @@ class TurbiniaCelery:
         accept_content=['json'],
         task_acks_late=True,
         worker_cancel_long_running_tasks_on_connection_loss=True,
-        task_track_started=False,
         worker_concurrency=1,
         worker_prefetch_multiplier=1,
     )
