@@ -170,6 +170,11 @@ async def create_request(req: request.Request):
     }
     """
     evidence_object = evidence.evidence_decode(req.evidence, strict=True)
+    if not evidence_object:
+      raise HTTPException(
+          status_code=400,
+          detail='Error creating evidence object from {0!s}'.format(
+              req.evidence))
     evidence_list.append(evidence_object)
     # If at this point the recipe is None, the TurbiniaClient will create
     # a generic recipe based on recipe_helpers.DEFAULT_RECIPE.
