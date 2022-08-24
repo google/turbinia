@@ -27,6 +27,7 @@ from turbinia import config
 from turbinia import TurbiniaException
 from turbinia.lib.docker_manager import GetDockerPath
 from turbinia.processors import archive
+from turbinia.processors import containerd
 from turbinia.processors import docker
 from turbinia.processors import mount_local
 from turbinia.processors import resource_manager
@@ -992,3 +993,43 @@ class EwfDisk(Evidence):
     if self.state[EvidenceState.ATTACHED]:
       self.state[EvidenceState.ATTACHED] = False
       mount_local.PostprocessUnmountPath(self.ewf_mount_path)
+
+
+class ContainerdContainer(Evidence):
+  """Evidence object for a containerd evidence.
+
+  Attributes:
+    image_path (str): Path where rawdisk is mounted.
+    namespace (str): Namespace of the container to be mounted.
+    container_id (str): ID of the container to be mounted.
+    _container_fs_path (str): Path where containerd filesystem is mounted.
+  """
+
+  POSSIBLE_STATES = [EvidenceState.CONTAINER_MOUNTED]
+
+  def __init__(
+      self, image_path=None, namespace=None, container_id=None, *args,
+      **kwargs):
+    """Initialization of containerd container."""
+    super(ContainerdContainer, self).__init__(*args, **kwargs)
+    self.image_path = image_path
+    self.namespace = namespace
+    self.container_id = container_id
+    self._container_fs_path = None
+
+    self.context_dependent = True
+
+  def _preprocess(self, _, required_states):
+    if EvidenceState.CONTAINER_MOUNTED in required_states:
+      # Mount containerd container
+      self._container_fs_path = containerd.PreprocessMountContainerdFS(
+          self.image_path, self.namespace, self.container_id)
+      self.mount_path = self._container_fs_path
+      self.local_path = self.mount_path
+      self.state[EvidenceState.CONTAINER_MOUNTED] = True
+
+  def _postprocess(self):
+    if self.state[EvidenceState.CONTAINER_MOUNTED]:
+      # Unmount the container
+      mount_local.PostprocessUnmountPath(self._container_fs_path)
+      self.state[EvidenceState.CONTAINER_MOUNTED] = False
