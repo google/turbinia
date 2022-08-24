@@ -12,6 +12,7 @@ sudo chmod 777 ./evidence
 
 echo "==> Copy test artifacts to /evidence"
 cp ./test_data/artifact_disk.dd ./evidence/
+cp ./turbinia/e2e/e2e-recipe.yaml ./evidence/
 
 echo "==> Startup local turbinia docker-compose stack"
 export TURBINIA_EXTRA_ARGS="-d"
@@ -34,8 +35,8 @@ echo "==> Show container logs"
 docker logs turbinia-server
 docker logs turbinia-worker
 
-echo "==> Create  Turbinia request"
-docker exec -t turbinia-server turbiniactl -r 123456789 rawdisk -l /evidence/artifact_disk.dd
+echo "==> Create Turbinia request"
+docker exec -t turbinia-server turbiniactl -r 123456789 -P /evidence/e2e-recipe.yaml rawdisk -l /evidence/artifact_disk.dd
 
 echo "==> Sleep for 150 seconds to let Turbinia process evidence"
 sleep 150s
