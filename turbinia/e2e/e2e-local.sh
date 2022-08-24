@@ -16,7 +16,7 @@ cp ./turbinia/e2e/e2e-recipe.yaml ./evidence/
 
 echo "==> Startup local turbinia docker-compose stack"
 export TURBINIA_EXTRA_ARGS="-d"
-docker-compose -f ./docker/local/docker-compose.yml up -d
+#docker-compose -f ./docker/local/docker-compose.yml up -d
 
 echo "==> Sleep for 10s"
 sleep 10s
