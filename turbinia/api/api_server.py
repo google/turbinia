@@ -75,9 +75,9 @@ def serve_static_content(app: FastAPI):
       log.error(
           'Unable to serve Web UI static content: {0!s}'.format(exception))
   else:
-    log.error(
-        'Web UI path {0:s} could not be found. Will not serve Web UI.'.format(
-            web_content_path.name))
+    log.info(
+        'Web UI path {0!s} could not be found. Will not serve Web UI.'.format(
+            web_content_path))
 
 
 def configure_authentication_providers(app: FastAPI):
