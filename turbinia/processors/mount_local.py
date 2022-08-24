@@ -45,7 +45,6 @@ def IsLosetup(path):
         'Could not check losetup device status {0!s}'.format(e))
   if output.find(path.encode('utf-8')) != -1:
     return False
-  log.info('losetup device [{0!s}] deleted.'.format(path))
   return True
 
 
@@ -243,7 +242,7 @@ def PreprocessLosetup(
     if not os.path.exists(losetup_device):
       message = 'Loop device path {0:s} does not exist'.format(losetup_device)
     elif not IsLosetup(losetup_device):
-      message = 'Device path {0:s} is not a block device'.format(losetup_device)
+      message = 'Device {0:s} is not a loop device'.format(losetup_device)
     if message:
       log.error(message)
       raise TurbiniaException(message)
