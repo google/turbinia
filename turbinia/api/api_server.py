@@ -65,11 +65,19 @@ def serve_static_content(app: FastAPI):
   web_content_path = this_path.parent.parent.joinpath('web/dist')
   css_content_path = web_content_path.joinpath('css')
   js_content_path = web_content_path.joinpath('js')
-
-  app.mount(
-      "/web", StaticFiles(directory=web_content_path, html=True), name="/")
-  app.mount("/css", StaticFiles(directory=css_content_path), name="/css")
-  app.mount("/js", StaticFiles(directory=js_content_path), name="/js")
+  if web_content_path.exists():
+    try:
+      app.mount(
+          "/web", StaticFiles(directory=web_content_path, html=True), name="/")
+      app.mount("/css", StaticFiles(directory=css_content_path), name="/css")
+      app.mount("/js", StaticFiles(directory=js_content_path), name="/js")
+    except RuntimeError as exception:
+      log.error(
+          'Unable to serve Web UI static content: {0!s}'.format(exception))
+  else:
+    log.error(
+        'Web UI path {0:s} could not be found. Will not serve Web UI.'.format(
+            web_content_path.name))
 
 
 def configure_authentication_providers(app: FastAPI):

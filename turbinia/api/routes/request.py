@@ -24,7 +24,7 @@ from pydantic import ValidationError
 from turbinia import TurbiniaException, client as turbinia_client
 from turbinia import evidence
 from turbinia.lib import recipe_helpers
-from turbinia.api.schemas import request, request_options  # pylint: disable=unused-import
+from turbinia.api.schemas import request
 from turbinia.api.models import request_status
 
 log = logging.getLogger('turbinia:api_server:models:request')
