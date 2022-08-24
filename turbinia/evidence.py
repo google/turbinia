@@ -67,19 +67,20 @@ def evidence_decode(evidence_dict, strict=False):
 
   try:
     evidence_class = getattr(sys.modules[__name__], type_)
-    """
-    evidence_object = evidence_class()
-    if strict:
+    if strict and evidence_class:
+      evidence_object = evidence_class()
       for attribute_key in evidence_dict.keys():
         if not attribute_key in evidence_object.__dict__:
-          raise TurbiniaException(
-              'Invalid attribute ({0:s}) in evidence object of type {1:s}'
-              .format(attribute_key, type_))
-    """
+          message = 'Invalid attribute ({0:s}) in evidence object of type {1:s}'.format(
+              attribute_key, type_)
+          log.error(message)
+          raise TurbiniaException(message)
     evidence = evidence_class.from_dict(evidence_dict)
   except AttributeError:
-    raise TurbiniaException(
-        'No Evidence object of type {0:s} in evidence module'.format(type_))
+    message = 'No Evidence object of type {0:s} in evidence module'.format(
+        type_)
+    log.error(message)
+    raise TurbiniaException(message)
 
   if evidence_dict.get('parent_evidence'):
     evidence.parent_evidence = evidence_decode(evidence_dict['parent_evidence'])
