@@ -68,8 +68,8 @@ def evidence_decode(evidence_dict, strict=False):
   try:
     evidence_class = getattr(sys.modules[__name__], type_)
     evidence_object = evidence_class()
-    for attribute_key in evidence_dict.keys():
-      if strict:
+    if strict:
+      for attribute_key in evidence_dict.keys():
         if not attribute_key in evidence_object.__dict__:
           raise TurbiniaException(
               'Invalid attribute ({0:s}) in evidence object of type {1:s}'
