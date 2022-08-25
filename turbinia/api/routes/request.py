@@ -23,7 +23,7 @@ from fastapi.responses import JSONResponse
 from pydantic import ValidationError
 from turbinia import TurbiniaException, client as turbinia_client
 from turbinia import evidence
-from turbinia.api.schemas import evidence_types
+from turbinia.lib import recipe_helpers
 from turbinia.api.schemas import request
 from turbinia.api.models import request_status
 
@@ -47,7 +47,9 @@ async def get_requests_summary():
           content={'detail': 'Request summary is empty'}, status_code=200)
     return requests_summary
   except (ValidationError, ValueError, TypeError) as exception:
-    log.error('Error retrieving requests summary: {0!s}'.format(exception))
+    log.error(
+        'Error retrieving requests summary: {0!s}'.format(exception),
+        exc_info=True)
     raise HTTPException(
         status_code=500,
         detail='Error retrieving requests summary') from exception
@@ -79,7 +81,7 @@ async def get_request_status(request_id: str):
 
 
 @router.post("/")
-async def create_request(input_request: request.Request):
+async def create_request(req: request.Request):
   """Create a new Turbinia request.
 
   Args:
@@ -89,81 +91,98 @@ async def create_request(input_request: request.Request):
 
   Raises:
     ValidationError: if the Request object contains invalid data.
+    HTTPException: If pre-conditions are not met.
   """
   client = turbinia_client.get_turbinia_client()
   evidence_list = []
-  request_id = input_request.request_id
-  group_id = input_request.group_id
-  requester = input_request.requester
-  reason = input_request.reason
+  request_id = req.request_id
+  group_id = req.group_id
+  requester = req.requester
+  reason = req.reason
   recipe = None
-  recipe_name = None
+  recipe_name = req.request_options.recipe_name
+  recipe_data = req.request_options.recipe_data
+  options = req.request_options
+
+  if not request_id:
+    request_id = uuid.uuid4().hex
+
+  if not group_id:
+    group_id = uuid.uuid4().hex
 
   try:
-    if input_request.evidence_type == evidence_types.EvidenceTypesEnum.rawdisk:
-      rawdisk = evidence.RawDisk(
-          source_path=input_request.evidence_options.source_path)
-      rawdisk.validate()
-      evidence_list.append(rawdisk)
-    elif input_request.evidence_type == (
-        evidence_types.EvidenceTypesEnum.compresseddirectory):
-      directory = evidence.CompressedDirectory(
-          source_path=input_request.evidence_options.source_path)
-      directory.validate()
-      evidence_list.append(directory)
-    elif input_request.evidence_type == (
-        evidence_types.EvidenceTypesEnum.directory):
-      directory = evidence.Directory(
-          name='directory',
-          source_path=input_request.evidence_options.source_path)
-      evidence_list.append(directory)
-    elif input_request.evidence_type == (
-        evidence_types.EvidenceTypesEnum.googleclouddisk):
-      gcp_disk = input_request.GoogleCloudDisk(
-          name='gcp_disk', disk_name=input_request.evidence_options.disk_name,
-          project=input_request.evidence_options.project,
-          zone=input_request.evidence_options.zone)
-      evidence_list.append(gcp_disk)
-    elif input_request.evidence_type == (
-        evidence_types.EvidenceTypesEnum.googleclouddiskembedded):
-      parent_disk = input_request.GoogleCloudDisk(
-          name='parent gcp disk',
-          disk_name=input_request.evidence_options.disk_name,
-          project=input_request.evidence_options.project,
-          mount_partition=input_request.evidence_options.mount_partition,
-          zone=input_request.evidence_options.zone)
-      gcp_disk = evidence.GoogleCloudDiskRawEmbedded(
-          name='gcp disk', disk_name=input_request.evidence_options.disk_name,
-          project=input_request.evidence_options.project,
-          zone=input_request.evidence_options.zone,
-          embedded_path=input_request.evidence_options.embedded_path)
-      gcp_disk.set_parent(parent_disk)
-      evidence_list.append(gcp_disk)
-    else:
+    if recipe_data and recipe_name:
       raise HTTPException(
-          status_code=400, detail='An unsupported evidence type was provided.')
+          status_code=400,
+          detail='You can only provide one of recipe_data or recipe_name.')
 
-    if not request_id:
-      request_id = uuid.uuid4().hex
-
-    if not group_id:
-      group_id = uuid.uuid4().hex
-
-    if input_request.evidence_options.recipe_name:
-      recipe_name = input_request.evidence_options.recipe_name
-
-    recipe = client.create_recipe(
-        group_id=group_id, recipe_name=recipe_name,
-        filter_patterns=input_request.evidence_options.filter_patterns,
-        yara_rules=input_request.evidence_options.filter_patterns,
-        sketch_id=input_request.sketch_id)
-
+    if recipe_data:
+      # Use a client-provided recipe. recipe_data MUST be a Base64 encoded
+      # YAML representaiton of a Turbinia recipe. The recipe will be validated.
+      # We assume that if the client provided a custom recipe it will include
+      # its own jobs_allowlist, filter_patterns and other settings.
+      recipe = recipe_helpers.load_recipe_from_data(recipe_data)
+    elif recipe_name:
+      # Use a client-provided recipe name or path for an existing recipe.
+      recipe = client.create_recipe(
+          group_id=group_id, recipe_name=recipe_name,
+          sketch_id=req.request_options.sketch_id)
+    elif (options.jobs_allowlist or options.jobs_denylist or
+          options.filter_patterns or options.yara_rules):
+      recipe = client.create_recipe(
+          group_id=group_id, jobs_allowlist=options.jobs_allowlist,
+          jobs_denylist=options.jobs_denylist,
+          filter_patterns=options.filter_patterns,
+          yara_rules=options.yara_rules, sketch_id=options.sketch_id)
+    # Create an appropriate evidence.Evidence object based on the
+    # "type" attribute from the evidence object.
+    # The following is an example of what a POST request might look like:
+    # pylint: disable=pointless-string-statement
+    """
+    {
+      "description": "Turbinia request object",
+      "evidence": { 
+        "_name": "Rawdisk evidence", 
+        "source_path": "/root/evidence.dd", 
+        "type": "RawDisk"
+        },
+      "request_options": {
+        "sketch_id": 1234,
+        "recipe_name": "triage-linux"
+      },
+      "reason": "test",
+      "requester": "tester"
+    }
+    ----
+    {
+      "description": "Turbinia request object",
+      "evidence": { 
+      "_name": "Rawdisk evidence", 
+      "source_path": "/root/evidence.dd", 
+      "type": "RawDisk"
+      },
+      "request_options": {
+      "sketch_id": 1234,
+      "recipe_data": "Z2xvYmFsczoKICBqb2JzX2FsbG93bGlzdDoKICAgIC0gQ3JvbkV4dHJhY3Rpb25Kb2IKICAgIC0gQ3JvbkFuYWx5c2lzSm9iCiAgICAtIFBsYXNvSm9iCiAgICAtIFBzb3J0Sm9iCiAgICAtIEZpbGVTeXN0ZW1UaW1lbGluZUpvYgoKcGxhc29fYmFzZToKICB0YXNrOiAnUGxhc29UYXNrJwoKICBhcnRpZmFjdF9maWx0ZXJzOiBbCiAgICAnQWxsVXNlcnNTaGVsbEhpc3RvcnknLAogICAgJ0FwYWNoZUFjY2Vzc0xvZ3MnLAogICAgJ0Jyb3dzZXJDYWNoZScsCiAgICAnQnJvd3Nlckhpc3RvcnknLAogICAgJ0Nocm9tZVN0b3JhZ2UnLAogICAgJ0xpbnV4QXVkaXRMb2dzJywKICAgICdMaW51eEF1dGhMb2dzJywKICAgICdMaW51eENyb25Mb2dzJywKICAgICdMaW51eEtlcm5lbExvZ0ZpbGVzJywKICAgICdMaW51eExhc3Rsb2dGaWxlJywKICAgICdMaW51eE1lc3NhZ2VzTG9nRmlsZXMnLAogICAgJ0xpbnV4U2NoZWR1bGVGaWxlcycsCiAgICAnTGludXhTeXNMb2dGaWxlcycsCiAgICAnTGludXhVdG1wRmlsZXMnLAogICAgJ0xpbnV4V3RtcCcsCiAgXQ=="
+      },
+      "reason": "test",
+      "requester": "tester"
+    }
+    """
+    evidence_object = evidence.evidence_decode(req.evidence, strict=True)
+    if not evidence_object:
+      raise HTTPException(
+          status_code=400,
+          detail='Error creating evidence object from {0!s}'.format(
+              req.evidence))
+    evidence_list.append(evidence_object)
+    # If at this point the recipe is None, the TurbiniaClient will create
+    # a generic recipe based on recipe_helpers.DEFAULT_RECIPE.
     request_out = client.create_request(
         evidence_=evidence_list, request_id=request_id, reason=reason,
         recipe=recipe, group_id=group_id, requester=requester)
-
+    # Send the Turbinia request to the appropriate queue.
     client.send_request(request_out)
-
   except TurbiniaException as exception:
     log.error('Error creating new Turbinia request: {0!s}'.format(exception))
     raise HTTPException(

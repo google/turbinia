@@ -28,8 +28,8 @@ components:
             type: string
           title: Jobs Denylist
           type: array
-        name:
-          title: Name
+        recipe_data:
+          title: Recipe Data
           type: string
         recipe_name:
           title: Recipe Name
@@ -37,24 +37,11 @@ components:
         sketch_id:
           title: Sketch Id
           type: integer
-        source_path:
-          title: Source Path
-          type: string
         yara_rules:
           title: Yara Rules
           type: string
       title: BaseRequestOptions
       type: object
-    EvidenceTypesEnum:
-      description: Enum of Turbinia Evidence types.
-      enum:
-        - compresseddirectory
-        - directory
-        - googleclouddiskembedded
-        - googleclouddisk
-        - rawdisk
-      title: EvidenceTypesEnum
-      type: string
     HTTPValidationError:
       properties:
         detail:
@@ -71,8 +58,9 @@ components:
           default: Turbinia request object
           title: Description
           type: string
-        evidence_type:
-          $ref: "#/components/schemas/EvidenceTypesEnum"
+        evidence:
+          title: Evidence
+          type: object
         group_id:
           title: Group Id
           type: string
@@ -87,11 +75,8 @@ components:
         requester:
           title: Requester
           type: string
-        sketch_id:
-          title: Sketch Id
-          type: string
       required:
-        - evidence_type
+        - evidence
         - request_options
       title: Request
       type: object
@@ -105,6 +90,10 @@ components:
         last_task_update_time:
           title: Last Task Update Time
           type: string
+        queued_tasks:
+          default: 0
+          title: Queued Tasks
+          type: integer
         reason:
           title: Reason
           type: string
@@ -236,7 +225,8 @@ paths:
         "Create a new Turbinia request.\n\nArgs:\n  request (turbinia.api.schema.request):\
         \ JSON object from the HTTP POST data\n      matching the schema defined for\
         \ a Turbinia Request. The schema is used\n      by pydantic for field validation.\n\
-        \nRaises:\n  ValidationError: if the Request object contains invalid data."
+        \nRaises:\n  ValidationError: if the Request object contains invalid data.\n\
+        \  HTTPException: If pre-conditions are not met."
       operationId: create_request
       requestBody:
         content:
@@ -388,5 +378,18 @@ paths:
       summary: Get Task Status
       tags:
         - Turbinia Tasks
+  /docs/openapi.yaml:
+    get:
+      description: Serve the OpenAPI specification in YAML format.
+      operationId: read_openapi_yaml
+      responses:
+        "200":
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+      summary: Read Openapi Yaml
+      tags:
+        - OpenAPI Specification
 security:
   - oAuth2: []

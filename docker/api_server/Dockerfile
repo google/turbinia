@@ -1,7 +1,7 @@
 FROM ubuntu:20.04
 
 ENV DEBIAN_FRONTEND=noninteractive 
-RUN apt-get update && apt-get -y install python3-pip git
+RUN apt-get update && apt-get -y install python3-pip git wget supervisor curl
 
 RUN pip3 install pip --upgrade
 RUN pip3 install requests --upgrade
@@ -28,8 +28,22 @@ RUN mkdir /etc/turbinia && mkdir -p /mnt/turbinia/ && mkdir -p /var/lib/turbinia
 
 COPY docker/api_server/start.sh /home/turbinia/start.sh
 RUN chmod +rwx /home/turbinia/start.sh
-USER turbinia
+
+# Setup OAuth2-proxy
+COPY docker/api_server/oauth2_web.cfg /etc/turbinia/oauth2_web.cfg
+RUN chown turbinia:turbinia /etc/turbinia/oauth2_web.cfg
+
+RUN mkdir /oauth2-proxy
+
+RUN cd /oauth2-proxy && curl https://api.github.com/repos/oauth2-proxy/oauth2-proxy/releases/latest | grep -E 'browser_download_url.*linux-amd64.tar.gz' | cut -d'"' -f4 | xargs -n1 wget -q -O proxy.tar.gz && tar xzf proxy.tar.gz
+
+RUN cp /oauth2-proxy/oauth2-proxy*.linux-amd64/oauth2-proxy /usr/local/bin/oauth2-proxy
+RUN chmod +x /usr/local/bin/oauth2-proxy
+
+COPY docker/api_server/turbinia_services.conf /etc/supervisor/conf.d/turbinia_services.conf
+
 CMD ["/home/turbinia/start.sh"]
 
-# Expose Uvicorn port.
+# Expose tcp ports
 EXPOSE 8000/tcp
+EXPOSE 8080/tcp

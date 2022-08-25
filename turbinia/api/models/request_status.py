@@ -37,6 +37,7 @@ class RequestStatus(BaseModel):
   successful_tasks: int = 0
   running_tasks: int = 0
   failed_tasks: int = 0
+  queued_tasks: int = 0
 
   def get_request_data(
       self, request_id: str, tasks: Optional[List[Dict]] = None,
@@ -80,12 +81,17 @@ class RequestStatus(BaseModel):
             self.last_task_update_time, task_last_update)
       if task.get('successful'):
         self.successful_tasks += 1
-      elif task_status:
-        if 'running' in task_status:
-          self.running_tasks += 1
-      else:
+      # 'successful' could be None or False, which means different things.
+      # If False, the task has failed, If None, could be queued or running.
+      elif task.get('successful') is False:
         self.failed_tasks += 1
-
+      elif task.get('successful') is None:
+        if task_status:
+          if 'running' in task_status:
+            self.running_tasks += 1
+        else:
+          # 'successful' is None and 'status' is None
+          self.queued_tasks += 1
       if isinstance(task['last_update'], datetime.datetime):
         task['last_update'] = task['last_update'].strftime(
             turbinia_config.DATETIME_FORMAT)
@@ -113,7 +119,7 @@ class RequestsSummary(BaseModel):
   requests_status: List[RequestStatus] = []
 
   def get_requests_summmary(self):
-    """Generate a status summary for each Turbinia request."""
+    """Generates a status summary for each Turbinia request."""
     _state_manager = state_manager.get_state_manager()
     instance_id = turbinia_config.INSTANCE_ID
     tasks = _state_manager.get_task_data(instance=instance_id)

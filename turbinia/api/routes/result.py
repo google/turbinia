@@ -26,20 +26,22 @@ log = logging.getLogger('turbinia:api_server:result')
 
 router = APIRouter(prefix='/result', tags=['Turbinia Request Results'])
 
+_ATTACHMENT_RESPONSE = {'200': {'content': {'application/x-zip-compressed'}}}
+
 
 @router.get(
-    "/task/{task_id}", response_class=Response,
-    responses={'200': {
-        'content': {'application/x-zip-compressed'}
-    }})
+    "/task/{task_id}", response_class=Response, responses=_ATTACHMENT_RESPONSE)
 async def get_task_output(task_id: str):
   """Retrieves a task's output files."""
   # Get the request_id for the task. This is needed to find the right path.
+  data = None
   _state_manager = state_manager.get_state_manager()
-  task = _state_manager.get_task_data(
+  tasks = _state_manager.get_task_data(
       instance=turbinia_config.INSTANCE_ID, task_id=task_id)
-  request_id = task[0].get('request_id')
-  data = api_utils.create_zip(request_id, task_id)
+  if tasks:
+    request_id = tasks[0].get('request_id')
+  if request_id:
+    data = api_utils.create_zip(request_id, task_id)
 
   if not data:
     raise HTTPException(
@@ -52,12 +54,10 @@ async def get_task_output(task_id: str):
 
 @router.get(
     "/request/{request_id}", response_class=Response,
-    responses={'200': {
-        'content': {'application/x-zip-compressed'}
-    }})
+    responses=_ATTACHMENT_RESPONSE)
 async def get_request_output(request_id: str):
   """Retrieve request status output."""
-  data = api_utils.create_zip(request_id, None)
+  data = api_utils.create_zip(request_id, task_id=None)
 
   if not data:
     raise HTTPException(

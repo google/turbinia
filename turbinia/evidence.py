@@ -31,8 +31,6 @@ from turbinia.processors import docker
 from turbinia.processors import mount_local
 from turbinia.processors import resource_manager
 
-# pylint: disable=keyword-arg-before-vararg
-
 config.LoadConfig()
 if config.TASK_MANAGER.lower() == 'psq':
   from turbinia.processors import google_cloud
@@ -40,15 +38,17 @@ if config.TASK_MANAGER.lower() == 'psq':
 log = logging.getLogger('turbinia')
 
 
-def evidence_decode(evidence_dict):
+def evidence_decode(evidence_dict, strict=False):
   """Decode JSON into appropriate Evidence object.
 
   Args:
     evidence_dict: JSON serializable evidence object (i.e. a dict post JSON
                    decoding).
+    strict: Flag to indicate whether strict attribute validation will occur.
+        Defaults to False.
 
   Returns:
-    An instantiated Evidence object (or a sub-class of it).
+    An instantiated Evidence object (or a sub-class of it) or None.
 
   Raises:
     TurbiniaException: If input is not a dict, does not have a type attribute,
@@ -64,26 +64,36 @@ def evidence_decode(evidence_dict):
     raise TurbiniaException(
         'No Type attribute for evidence object [{0:s}]'.format(
             str(evidence_dict)))
-
+  evidence = None
   try:
     evidence_class = getattr(sys.modules[__name__], type_)
     evidence = evidence_class.from_dict(evidence_dict)
+    evidence_object = evidence_class(source_path='dummy_object')
+    if strict and evidence_object:
+      for attribute_key in evidence_dict.keys():
+        if not attribute_key in evidence_object.__dict__:
+          message = 'Invalid attribute {0!s} for evidence type {1:s}'.format(
+              attribute_key, type_)
+          log.error(message)
+          raise TurbiniaException(message)
+    if evidence:
+      if evidence_dict.get('parent_evidence'):
+        evidence.parent_evidence = evidence_decode(
+            evidence_dict['parent_evidence'])
+      if evidence_dict.get('collection'):
+        evidence.collection = [
+            evidence_decode(e) for e in evidence_dict['collection']
+        ]
+      # We can just reinitialize instead of deserializing because the
+      # state should be empty when just starting to process on a new machine.
+      evidence.state = {}
+      for state in EvidenceState:
+        evidence.state[state] = False
   except AttributeError:
-    raise TurbiniaException(
-        'No Evidence object of type {0:s} in evidence module'.format(type_))
-
-  if evidence_dict.get('parent_evidence'):
-    evidence.parent_evidence = evidence_decode(evidence_dict['parent_evidence'])
-  if evidence_dict.get('collection'):
-    evidence.collection = [
-        evidence_decode(e) for e in evidence_dict['collection']
-    ]
-
-  # We can just reinitialize instead of deserializing because the state should
-  # be empty when just starting to process on a new machine.
-  evidence.state = {}
-  for state in EvidenceState:
-    evidence.state[state] = False
+    message = 'No Evidence object of type {0!s} in evidence module'.format(
+        type_)
+    log.error(message)
+    raise TurbiniaException(message) from AttributeError
 
   return evidence
 
@@ -205,8 +215,8 @@ class Evidence:
 
     if self.copyable and not self.local_path:
       raise TurbiniaException(
-          '{0:s} is a copyable evidence and needs a source_path'.format(
-              self.type))
+          'Unable to initialize object, {0:s} is a copyable '
+          'evidence and needs a source_path'.format(self.type))
 
   def __str__(self):
     return '{0:s}:{1:s}:{2!s}'.format(self.type, self.name, self.source_path)
@@ -216,6 +226,7 @@ class Evidence:
 
   @property
   def name(self):
+    """Returns evidence object name."""
     if self._name:
       return self._name
     else:
@@ -272,10 +283,10 @@ class Evidence:
     """
     try:
       serialized = json.dumps(self.serialize())
-    except TypeError as e:
+    except TypeError as exception:
       msg = 'JSON serialization of evidence object {0:s} failed: {1:s}'.format(
-          self.type, str(e))
-      raise TurbiniaException(msg)
+          self.type, str(exception))
+      raise TurbiniaException(msg) from exception
 
     return serialized
 
@@ -633,8 +644,8 @@ class DiskPartition(RawDisk):
       # We should only get one path_spec here since we're specifying the location.
       path_specs = partitions.Enumerate(
           self.parent_evidence, self.partition_location)
-    except TurbiniaException as e:
-      log.error(e)
+    except TurbiniaException as exception:
+      log.error(exception)
 
     if len(path_specs) > 1:
       path_specs_dicts = [path_spec.CopyToDict() for path_spec in path_specs]
@@ -783,7 +794,7 @@ class GoogleCloudDiskRawEmbedded(GoogleCloudDisk):
     # Need to mount parent disk
     if not self.parent_evidence.partition_paths:
       self.parent_evidence.mount_path = mount_local.PreprocessMountPartition(
-          self.parent_evidence.device_path)
+          self.parent_evidence.device_path, self.path_spec.type_indicator)
     else:
       partition_paths = self.parent_evidence.partition_paths
       self.parent_evidence.mount_path = mount_local.PreprocessMountDisk(
