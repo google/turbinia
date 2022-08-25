@@ -206,6 +206,19 @@ def process_args(args):
       '-n', '--name', help='Descriptive name of the evidence', required=False,
       type=csv_list)
 
+  # Parser options for Ewf Disk Evidence type
+  parser_ewfdisk = subparsers.add_parser(
+      'ewfdisk', help='Process EwfDisk as Evidence')
+  parser_ewfdisk.add_argument(
+      '-l', '--source_path', help='Local path to the evidence', required=True,
+      type=csv_list)
+  parser_ewfdisk.add_argument(
+      '-s', '--source', help='Description of the source of the evidence',
+      required=False, type=csv_list, default=[None])
+  parser_ewfdisk.add_argument(
+      '-n', '--name', help='Descriptive name of the evidence', required=False,
+      type=csv_list)
+
   # Parser options for Google Cloud Disk Evidence type
   parser_googleclouddisk = subparsers.add_parser(
       'googleclouddisk',
@@ -582,7 +595,7 @@ def process_args(args):
   reason = args.reason
 
   # Checks for bulk processing
-  if args.command in ('rawdisk', 'directory', 'compresseddirectory'):
+  if args.command in ('ewfdisk', 'rawdisk', 'directory', 'compresseddirectory'):
     args.name, args.source = check_args(
         args.source_path, [args.name, args.source])
     # Iterate through evidence and call process_evidence
@@ -888,6 +901,9 @@ def process_evidence(
 
   if args.command == 'rawdisk':
     evidence_ = evidence.RawDisk(
+        name=name, source_path=os.path.abspath(source_path), source=source)
+  elif args.command == 'ewfdisk':
+    evidence_ = evidence.EwfDisk(
         name=name, source_path=os.path.abspath(source_path), source=source)
   elif args.command == 'directory':
     source_path = os.path.abspath(source_path)

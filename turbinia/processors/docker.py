@@ -50,6 +50,10 @@ def PreprocessMountDockerFS(docker_dir, container_id):
   config.LoadConfig()
   mount_prefix = config.MOUNT_DIR_PREFIX
 
+  if not os.path.isdir(docker_dir):
+    raise TurbiniaException(
+        'Docker path {0:s} is not a valid directory'.format(docker_dir))
+
   if os.path.exists(mount_prefix) and not os.path.isdir(mount_prefix):
     raise TurbiniaException(
         'Mount dir {0:s} exists, but is not a directory'.format(mount_prefix))

@@ -599,7 +599,7 @@ class DiskPartition(RawDisk):
 
   def __init__(
       self, partition_location=None, partition_offset=None, partition_size=None,
-      lv_uuid=None, path_spec=None, *args, **kwargs):
+      lv_uuid=None, path_spec=None, important=True, *args, **kwargs):
     """Initialization for raw volume evidence object."""
 
     self.partition_location = partition_location
@@ -607,6 +607,7 @@ class DiskPartition(RawDisk):
     self.partition_size = partition_size
     self.lv_uuid = lv_uuid
     self.path_spec = path_spec
+    self.important = important
     super(DiskPartition, self).__init__(*args, **kwargs)
 
     # This Evidence needs to have a parent
@@ -958,3 +959,36 @@ class DockerContainer(Evidence):
       # Unmount the container's filesystem
       mount_local.PostprocessUnmountPath(self._container_fs_path)
       self.state[EvidenceState.CONTAINER_MOUNTED] = False
+
+
+#TODO implement support for several ewf devices if there are more than one
+#inside the ewf_mount_path
+class EwfDisk(Evidence):
+  """Evidence object for a EWF based evidence.
+
+  Attributes:
+    device_path (str): Path to the mounted loop device.
+    ewf_path (str): Path to mounted EWF image.
+    ewf_mount_path (str): Path to EWF mount directory.
+  """
+  POSSIBLE_STATES = [EvidenceState.ATTACHED]
+
+  def __init__(self, *args, **kwargs):
+    """Initialization for EWF evidence object."""
+    self.device_path = None
+    self.ewf_path = None
+    self.ewf_mount_path = None
+    super(EwfDisk, self).__init__(*args, **kwargs)
+
+  def _preprocess(self, _, required_states):
+    if EvidenceState.ATTACHED in required_states or self.has_child_evidence:
+      self.ewf_mount_path = mount_local.PreprocessMountEwfDisk(self.source_path)
+      self.ewf_path = mount_local.GetEwfDiskPath(self.ewf_mount_path)
+      self.device_path = self.ewf_path
+      self.local_path = self.ewf_path
+      self.state[EvidenceState.ATTACHED] = True
+
+  def _postprocess(self):
+    if self.state[EvidenceState.ATTACHED]:
+      self.state[EvidenceState.ATTACHED] = False
+      mount_local.PostprocessUnmountPath(self.ewf_mount_path)
