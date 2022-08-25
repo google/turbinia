@@ -15,6 +15,7 @@
 
 # Import APIs into API package:
 from turbinia_api_client.api.logs_api import LogsApi
+from turbinia_api_client.api.open_api_specification_api import OpenAPISpecificationApi
 from turbinia_api_client.api.turbinia_configuration_api import TurbiniaConfigurationApi
 from turbinia_api_client.api.turbinia_jobs_api import TurbiniaJobsApi
 from turbinia_api_client.api.turbinia_request_results_api import TurbiniaRequestResultsApi

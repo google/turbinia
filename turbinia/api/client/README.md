@@ -90,6 +90,7 @@ All URIs are relative to *http://localhost*
 Class | Method | HTTP request | Description
 ------------ | ------------- | ------------- | -------------
 *LogsApi* | [**get_logs**](docs/LogsApi.md#get_logs) | **GET** /api/logs/{query} | Get Logs
+*OpenAPISpecificationApi* | [**read_openapi_yaml**](docs/OpenAPISpecificationApi.md#read_openapi_yaml) | **GET** /docs/openapi.yaml | Read Openapi Yaml
 *TurbiniaConfigurationApi* | [**read_config**](docs/TurbiniaConfigurationApi.md#read_config) | **GET** /api/config/ | Read Config
 *TurbiniaJobsApi* | [**read_jobs**](docs/TurbiniaJobsApi.md#read_jobs) | **GET** /api/jobs/ | Read Jobs
 *TurbiniaRequestResultsApi* | [**get_request_output**](docs/TurbiniaRequestResultsApi.md#get_request_output) | **GET** /api/result/request/{request_id} | Get Request Output
@@ -103,7 +104,6 @@ Class | Method | HTTP request | Description
 ## Documentation For Models
 
  - [BaseRequestOptions](docs/BaseRequestOptions.md)
- - [EvidenceTypesEnum](docs/EvidenceTypesEnum.md)
  - [HTTPValidationError](docs/HTTPValidationError.md)
  - [Request](docs/Request.md)
  - [RequestStatus](docs/RequestStatus.md)

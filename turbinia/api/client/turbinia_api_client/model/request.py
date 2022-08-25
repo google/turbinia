@@ -31,9 +31,7 @@ from turbinia_api_client.exceptions import ApiAttributeError
 
 def lazy_import():
     from turbinia_api_client.model.base_request_options import BaseRequestOptions
-    from turbinia_api_client.model.evidence_types_enum import EvidenceTypesEnum
     globals()['BaseRequestOptions'] = BaseRequestOptions
-    globals()['EvidenceTypesEnum'] = EvidenceTypesEnum
 
 
 class Request(ModelNormal):
@@ -89,14 +87,13 @@ class Request(ModelNormal):
         """
         lazy_import()
         return {
-            'evidence_type': (EvidenceTypesEnum,),  # noqa: E501
+            'evidence': ({str: (bool, date, datetime, dict, float, int, list, str, none_type)},),  # noqa: E501
             'request_options': (BaseRequestOptions,),  # noqa: E501
             'description': (str,),  # noqa: E501
             'group_id': (str,),  # noqa: E501
             'reason': (str,),  # noqa: E501
             'request_id': (str,),  # noqa: E501
             'requester': (str,),  # noqa: E501
-            'sketch_id': (str,),  # noqa: E501
         }
 
     @cached_property
@@ -105,14 +102,13 @@ class Request(ModelNormal):
 
 
     attribute_map = {
-        'evidence_type': 'evidence_type',  # noqa: E501
+        'evidence': 'evidence',  # noqa: E501
         'request_options': 'request_options',  # noqa: E501
         'description': 'description',  # noqa: E501
         'group_id': 'group_id',  # noqa: E501
         'reason': 'reason',  # noqa: E501
         'request_id': 'request_id',  # noqa: E501
         'requester': 'requester',  # noqa: E501
-        'sketch_id': 'sketch_id',  # noqa: E501
     }
 
     read_only_vars = {
@@ -122,11 +118,11 @@ class Request(ModelNormal):
 
     @classmethod
     @convert_js_args_to_python_args
-    def _from_openapi_data(cls, evidence_type, request_options, *args, **kwargs):  # noqa: E501
+    def _from_openapi_data(cls, evidence, request_options, *args, **kwargs):  # noqa: E501
         """Request - a model defined in OpenAPI
 
         Args:
-            evidence_type (EvidenceTypesEnum):
+            evidence ({str: (bool, date, datetime, dict, float, int, list, str, none_type)}):
             request_options (BaseRequestOptions):
 
         Keyword Args:
@@ -165,7 +161,6 @@ class Request(ModelNormal):
             reason (str): [optional]  # noqa: E501
             request_id (str): [optional]  # noqa: E501
             requester (str): [optional]  # noqa: E501
-            sketch_id (str): [optional]  # noqa: E501
         """
 
         _check_type = kwargs.pop('_check_type', True)
@@ -197,7 +192,7 @@ class Request(ModelNormal):
         self._configuration = _configuration
         self._visited_composed_classes = _visited_composed_classes + (self.__class__,)
 
-        self.evidence_type = evidence_type
+        self.evidence = evidence
         self.request_options = request_options
         for var_name, var_value in kwargs.items():
             if var_name not in self.attribute_map and \
@@ -219,11 +214,11 @@ class Request(ModelNormal):
     ])
 
     @convert_js_args_to_python_args
-    def __init__(self, evidence_type, request_options, *args, **kwargs):  # noqa: E501
+    def __init__(self, evidence, request_options, *args, **kwargs):  # noqa: E501
         """Request - a model defined in OpenAPI
 
         Args:
-            evidence_type (EvidenceTypesEnum):
+            evidence ({str: (bool, date, datetime, dict, float, int, list, str, none_type)}):
             request_options (BaseRequestOptions):
 
         Keyword Args:
@@ -262,7 +257,6 @@ class Request(ModelNormal):
             reason (str): [optional]  # noqa: E501
             request_id (str): [optional]  # noqa: E501
             requester (str): [optional]  # noqa: E501
-            sketch_id (str): [optional]  # noqa: E501
         """
 
         _check_type = kwargs.pop('_check_type', True)
@@ -292,7 +286,7 @@ class Request(ModelNormal):
         self._configuration = _configuration
         self._visited_composed_classes = _visited_composed_classes + (self.__class__,)
 
-        self.evidence_type = evidence_type
+        self.evidence = evidence
         self.request_options = request_options
         for var_name, var_value in kwargs.items():
             if var_name not in self.attribute_map and \

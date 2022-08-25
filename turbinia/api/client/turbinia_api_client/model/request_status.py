@@ -83,6 +83,7 @@ class RequestStatus(ModelNormal):
         return {
             'failed_tasks': (int,),  # noqa: E501
             'last_task_update_time': (str,),  # noqa: E501
+            'queued_tasks': (int,),  # noqa: E501
             'reason': (str,),  # noqa: E501
             'request_id': (str,),  # noqa: E501
             'requester': (str,),  # noqa: E501
@@ -101,6 +102,7 @@ class RequestStatus(ModelNormal):
     attribute_map = {
         'failed_tasks': 'failed_tasks',  # noqa: E501
         'last_task_update_time': 'last_task_update_time',  # noqa: E501
+        'queued_tasks': 'queued_tasks',  # noqa: E501
         'reason': 'reason',  # noqa: E501
         'request_id': 'request_id',  # noqa: E501
         'requester': 'requester',  # noqa: E501
@@ -154,6 +156,7 @@ class RequestStatus(ModelNormal):
                                 _visited_composed_classes = (Animal,)
             failed_tasks (int): [optional] if omitted the server will use the default value of 0  # noqa: E501
             last_task_update_time (str): [optional]  # noqa: E501
+            queued_tasks (int): [optional] if omitted the server will use the default value of 0  # noqa: E501
             reason (str): [optional]  # noqa: E501
             request_id (str): [optional]  # noqa: E501
             requester (str): [optional]  # noqa: E501
@@ -249,6 +252,7 @@ class RequestStatus(ModelNormal):
                                 _visited_composed_classes = (Animal,)
             failed_tasks (int): [optional] if omitted the server will use the default value of 0  # noqa: E501
             last_task_update_time (str): [optional]  # noqa: E501
+            queued_tasks (int): [optional] if omitted the server will use the default value of 0  # noqa: E501
             reason (str): [optional]  # noqa: E501
             request_id (str): [optional]  # noqa: E501
             requester (str): [optional]  # noqa: E501

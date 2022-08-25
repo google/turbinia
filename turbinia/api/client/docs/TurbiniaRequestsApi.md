@@ -14,7 +14,7 @@ Method | HTTP request | Description
 
 Create Request
 
-Create a new Turbinia request.  Args:   request (turbinia.api.schema.request): JSON object from the HTTP POST data       matching the schema defined for a Turbinia Request. The schema is used       by pydantic for field validation.  Raises:   ValidationError: if the Request object contains invalid data.
+Create a new Turbinia request.  Args:   request (turbinia.api.schema.request): JSON object from the HTTP POST data       matching the schema defined for a Turbinia Request. The schema is used       by pydantic for field validation.  Raises:   ValidationError: if the Request object contains invalid data.   HTTPException: If pre-conditions are not met.
 
 ### Example
 
@@ -50,7 +50,7 @@ with turbinia_api_client.ApiClient(configuration) as api_client:
     api_instance = turbinia_requests_api.TurbiniaRequestsApi(api_client)
     request = Request(
         description="Turbinia request object",
-        evidence_type=EvidenceTypesEnum("compresseddirectory"),
+        evidence={},
         group_id="group_id_example",
         reason="reason_example",
         request_id="request_id_example",
@@ -64,14 +64,12 @@ with turbinia_api_client.ApiClient(configuration) as api_client:
             jobs_denylist=[
                 "jobs_denylist_example",
             ],
-            name="name_example",
+            recipe_data="recipe_data_example",
             recipe_name="recipe_name_example",
             sketch_id=1,
-            source_path="source_path_example",
             yara_rules="yara_rules_example",
         ),
         requester="requester_example",
-        sketch_id="sketch_id_example",
     ) # Request | 
 
     # example passing only required values which don't have defaults set

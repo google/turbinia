@@ -10,7 +10,6 @@
 # sys.setrecursionlimit(n)
 
 from turbinia_api_client.model.base_request_options import BaseRequestOptions
-from turbinia_api_client.model.evidence_types_enum import EvidenceTypesEnum
 from turbinia_api_client.model.http_validation_error import HTTPValidationError
 from turbinia_api_client.model.request import Request
 from turbinia_api_client.model.request_status import RequestStatus

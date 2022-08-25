@@ -7,6 +7,7 @@ Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **failed_tasks** | **int** |  | [optional]  if omitted the server will use the default value of 0
 **last_task_update_time** | **str** |  | [optional] 
+**queued_tasks** | **int** |  | [optional]  if omitted the server will use the default value of 0
 **reason** | **str** |  | [optional] 
 **request_id** | **str** |  | [optional] 
 **requester** | **str** |  | [optional] 
