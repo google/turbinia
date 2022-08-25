@@ -16,6 +16,7 @@
 from turbinia.jobs import binary_extractor
 from turbinia.jobs import bulk_extractor
 from turbinia.jobs import dfdewey
+from turbinia.jobs import containerd
 from turbinia.jobs import docker
 from turbinia.jobs import file_system_timeline
 from turbinia.jobs import finalize_request
