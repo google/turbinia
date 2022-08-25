@@ -135,9 +135,8 @@ class ContainerdEnumerationTask(TurbiniaTask):
             image_path=image_path, namespace=namespace,
             container_id=container_id)
         report_data.append(
-            f'Created containerd evidence for {namespace}:{container_id} '
-            'mounted at {container_evidence.mount_path}'
-        )
+            'Created evidence for {0:s}:{1:s} mounted at {2!s}'.format(
+                namespace, container_id, container_evidence.mount_path))
 
         result.add_evidence(container_evidence, evidence.config)
       success = True
@@ -147,5 +146,5 @@ class ContainerdEnumerationTask(TurbiniaTask):
     # 3. Prepare result
     result.report_priority = Priority.LOW
     result.report_data = ', '.join(report_data)
-    result.close(self, success=success, status=report_status)
+    result.close(self, success=success, status=summary)
     return result

@@ -21,6 +21,7 @@ import unittest
 
 from turbinia.evidence import ContainerdContainer
 from turbinia.evidence import EvidenceState as state
+from turbinia.evidence import RawDisk
 from turbinia.workers.analysis.containerd import ContainerdEnumerationTask
 from turbinia.workers.workers_test import TestTurbiniaTaskBase
 from turbinia.workers import TurbiniaTaskResult
@@ -34,8 +35,11 @@ class ContainerdEnumerationTaskTest(TestTurbiniaTaskBase):
         task_class=ContainerdEnumerationTask,
         evidence_class=ContainerdContainer)
     self.task.output_dir = self.task.base_output_dir
+    self.evidence = RawDisk(source_path='/rmk/data/containerd-evidence.dd')
     self.evidence.mount_path = '/mnt/mock'
+    self.evidence.local_path = '/mnt/mock'
     self.evidence.state[state.MOUNTED] = True
+    self.setResults(mock_run=False)
 
   def test_list_containers(self):
     """Tests method list_containers."""
@@ -48,9 +52,11 @@ class ContainerdEnumerationTaskTest(TestTurbiniaTaskBase):
 
   def test_run(self):
     """Tests run method."""
+    """
     if not os.path.exists(self.evidence.mount_path):
       print(f'Mount path{self.evidence.mount_path} does not exists')
       return
+    """
     self.result = self.task.run(self.evidence, self.result)
     print('rest_run: ', self.result)
 
