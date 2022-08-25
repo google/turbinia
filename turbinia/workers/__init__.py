@@ -455,7 +455,7 @@ class TurbiniaTask:
       self, name=None, base_output_dir=None, request_id=None, requester=None,
       group_name=None, reason=None, all_args=None, group_id=None):
     """Initialization for TurbiniaTask.
-    
+
     Args:
       base_output_dir(str): Output dir to store Turbinia results.
       request_id(str): The request id

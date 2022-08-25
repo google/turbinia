@@ -84,8 +84,8 @@ def evidence_decode(evidence_dict, strict=False):
         evidence.collection = [
             evidence_decode(e) for e in evidence_dict['collection']
         ]
-      # We can just reinitialize instead of deserializing because the state should
-      # be empty when just starting to process on a new machine.
+      # We can just reinitialize instead of deserializing because the
+      # state should be empty when just starting to process on a new machine.
       evidence.state = {}
       for state in EvidenceState:
         evidence.state[state] = False
@@ -226,6 +226,7 @@ class Evidence:
 
   @property
   def name(self):
+    """Returns evidence object name."""
     if self._name:
       return self._name
     else:
@@ -282,10 +283,10 @@ class Evidence:
     """
     try:
       serialized = json.dumps(self.serialize())
-    except TypeError as e:
+    except TypeError as exception:
       msg = 'JSON serialization of evidence object {0:s} failed: {1:s}'.format(
-          self.type, str(e))
-      raise TurbiniaException(msg)
+          self.type, str(exception))
+      raise TurbiniaException(msg) from exception
 
     return serialized
 
@@ -643,8 +644,8 @@ class DiskPartition(RawDisk):
       # We should only get one path_spec here since we're specifying the location.
       path_specs = partitions.Enumerate(
           self.parent_evidence, self.partition_location)
-    except TurbiniaException as e:
-      log.error(e)
+    except TurbiniaException as exception:
+      log.error(exception)
 
     if len(path_specs) > 1:
       path_specs_dicts = [path_spec.CopyToDict() for path_spec in path_specs]
@@ -793,7 +794,7 @@ class GoogleCloudDiskRawEmbedded(GoogleCloudDisk):
     # Need to mount parent disk
     if not self.parent_evidence.partition_paths:
       self.parent_evidence.mount_path = mount_local.PreprocessMountPartition(
-          self.parent_evidence.device_path)
+          self.parent_evidence.device_path, self.path_spec.type_indicator)
     else:
       partition_paths = self.parent_evidence.partition_paths
       self.parent_evidence.mount_path = mount_local.PreprocessMountDisk(

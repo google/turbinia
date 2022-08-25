@@ -14,20 +14,20 @@
 # limitations under the License.
 """Library to contain recipe validation logic."""
 
+from binascii import Error as binascii_error
+
 import base64
 import copy
 import logging
 import os
 import tempfile
-import yaml
 
-from binascii import Error as binascii_error
+from yaml.parser import ParserError as yaml_error
 from yaml import Loader
 from yaml import load
 from turbinia import TurbiniaException, config
 from turbinia.lib.file_helpers import file_to_str
 from turbinia.lib.file_helpers import file_to_list
-from turbinia.pubsub import TurbiniaPubSub
 from turbinia.task_utils import TaskLoader
 
 log = logging.getLogger('turbinia')
@@ -67,7 +67,9 @@ def load_recipe_from_data(recipe_data):
       temp_file.flush()
       return load_recipe_from_file(temp_file.name)
     except binascii_error as exception:
-      log.error('Unable to decode recipe_data: {0!s}'.format(exception))
+      log.error(
+          'Unable to decode recipe_data: {0!s} with error: {1!s}'.format(
+              recipe_data, exception))
       raise TurbiniaException(
           'Unable to decode recipe_data: {0!s}'.format(
               exception)) from exception
@@ -87,10 +89,8 @@ def load_recipe_from_file(recipe_file, validate=True):
     return copy.deepcopy(DEFAULT_RECIPE)
   try:
     log.info('Loading recipe file from {0:s}'.format(recipe_file))
-    print(os.path.isfile(recipe_file))
     with open(recipe_file, 'r', encoding='utf-8') as r_file:
       recipe_file_contents = r_file.read()
-      print('reading ... ', recipe_file_contents)
       recipe_dict = load(recipe_file_contents, Loader=Loader)
       if validate:
         success, _ = validate_recipe(recipe_dict)
@@ -98,7 +98,7 @@ def load_recipe_from_file(recipe_file, validate=True):
           return recipe_dict
       else:
         return recipe_dict
-  except yaml.parser.ParserError as exception:
+  except yaml_error as exception:
     message = (
         'Invalid YAML on recipe file {0:s}: {1!s}.'.format(
             recipe_file, exception))
