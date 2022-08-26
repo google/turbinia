@@ -999,34 +999,36 @@ class ContainerdContainer(Evidence):
   """Evidence object for a containerd evidence.
 
   Attributes:
-    image_path (str): Path where rawdisk is mounted.
     namespace (str): Namespace of the container to be mounted.
     container_id (str): ID of the container to be mounted.
+    _image_path (str): Path where disk image is mounted.
     _container_fs_path (str): Path where containerd filesystem is mounted.
   """
 
   POSSIBLE_STATES = [EvidenceState.CONTAINER_MOUNTED]
 
-  def __init__(
-      self, image_path=None, namespace=None, container_id=None, *args,
-      **kwargs):
+  def __init__(self, namespace=None, container_id=None, *args, **kwargs):
     """Initialization of containerd container."""
     super(ContainerdContainer, self).__init__(*args, **kwargs)
-    self.image_path = image_path
     self.namespace = namespace
     self.container_id = container_id
+    self._image_path = None
     self._container_fs_path = None
 
     self.context_dependent = True
 
   def _preprocess(self, _, required_states):
-    if EvidenceState.CONTAINER_MOUNTED in required_states:
-      # Mount containerd container
-      self._container_fs_path = containerd.PreprocessMountContainerdFS(
-          self.image_path, self.namespace, self.container_id)
-      self.mount_path = self._container_fs_path
-      self.local_path = self.mount_path
-      self.state[EvidenceState.CONTAINER_MOUNTED] = True
+    if EvidenceState.CONTAINER_MOUNTED not in required_states:
+      return
+
+    self._image_path = self.parent_evidence.mount_path
+
+    # Mount containerd container
+    self._container_fs_path = containerd.PreprocessMountContainerdFS(
+        self._image_path, self.namespace, self.container_id)
+    self.mount_path = self._container_fs_path
+    self.local_path = self.mount_path
+    self.state[EvidenceState.CONTAINER_MOUNTED] = True
 
   def _postprocess(self):
     if self.state[EvidenceState.CONTAINER_MOUNTED]:
