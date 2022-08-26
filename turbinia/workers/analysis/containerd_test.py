@@ -16,7 +16,7 @@
 
 from __future__ import unicode_literals
 
-import os
+import mock
 import unittest
 
 from turbinia.evidence import ContainerdContainer
@@ -34,31 +34,36 @@ class ContainerdEnumerationTaskTest(TestTurbiniaTaskBase):
     super(ContainerdEnumerationTaskTest, self).setUp(
         task_class=ContainerdEnumerationTask,
         evidence_class=ContainerdContainer)
-    self.task.output_dir = self.task.base_output_dir
-    self.evidence = RawDisk(source_path='/rmk/data/containerd-evidence.dd')
-    self.evidence.mount_path = '/mnt/mock'
-    self.evidence.local_path = '/mnt/mock'
-    self.evidence.state[state.MOUNTED] = True
     self.setResults(mock_run=False)
+    self.task.output_dir = self.task.base_output_dir
+    self.evidence.mount_path = 'non_existent'
 
-  def test_list_containers(self):
-    """Tests method list_containers."""
-    if not os.path.exists(self.evidence.mount_path):
-      print(f'Mount path {self.evidence.mount_path} does not exist')
-      return
+  @mock.patch('turbinia.state_manager.get_state_manager')
+  @mock.patch(
+      'turbinia.workers.analysis.containerd.ContainerdEnumerationTask.list_containers'
+  )
+  def testContainerdEnumerationTaskRun(self, list_containers_mock, _):
+    """Test ContainerdEnumerationTask run."""
+    self.result.setup(self.task)
 
-    containers = self.task.list_containers(self.evidence, self.result)
-    print(containers)
+    list_containers_mock.return_value = [
+        {
+            'Namespace': 'default',
+            'ID': 'nginx01',
+        },
+        {
+            'Namespace': 'default',
+            'ID': 'apache01',
+        },
+    ]
+    result = self.task.run(self.evidence, self.result)
 
-  def test_run(self):
-    """Tests run method."""
-    """
-    if not os.path.exists(self.evidence.mount_path):
-      print(f'Mount path{self.evidence.mount_path} does not exists')
-      return
-    """
-    self.result = self.task.run(self.evidence, self.result)
-    print('rest_run: ', self.result)
+    # Ensure run method returns a TurbiniaTaskResult instance.
+    self.assertIsInstance(result, TurbiniaTaskResult)
+    self.assertEqual(result.task_name, 'ContainerdEnumerationTask')
+    self.assertEqual(len(result.evidence), 2)
+    self.assertEqual(
+        result.report_data, 'Found 2 containers: nginx01, apache01')
 
 
 if __name__ == '__main__':

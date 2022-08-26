@@ -111,7 +111,6 @@ class ContainerdEnumerationTask(TurbiniaTask):
       TurbiniaTaskResult object
     """
     summary = ''
-    report_data = []
     success = False
 
     image_path = evidence.mount_path
@@ -126,9 +125,6 @@ class ContainerdEnumerationTask(TurbiniaTask):
         return result
 
       container_ids = [x.get('ID') for x in containers]
-      summary = (
-          f'Found {len(containers)} containers: {", ".join(container_ids)}')
-      log.info(summary)
 
       # 2. Add containers as evidences
       for container in containers:
@@ -136,21 +132,17 @@ class ContainerdEnumerationTask(TurbiniaTask):
         container_id = container.get('ID')
 
         container_evidence = ContainerdContainer(
-            image_path=image_path, namespace=namespace,
-            container_id=container_id)
-
-        log.info(f'Adding container evidence {container_evidence}')
-        report_data.append(
-            'Created evidence for {0:s}:{1:s} mounted at {2!s}'.format(
-                namespace, container_id, container_evidence.mount_path))
+            namespace=namespace, container_id=container_id)
 
         result.add_evidence(container_evidence, evidence.config)
+      summary = (
+          f'Found {len(container_ids)} containers: {", ".join(container_ids)}')
       success = True
     except TurbiniaException as e:
       summary = f'Error enumerating containerd containers: {e}'
 
     # 3. Prepare result
     result.report_priority = Priority.LOW
-    result.report_data = ', '.join(report_data)
+    result.report_data = summary
     result.close(self, success=success, status=summary)
     return result
