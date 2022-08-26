@@ -14,6 +14,7 @@
 # limitations under the License.
 """Job to execute windows_acct analysis task."""
 
+from turbinia.evidence import ContainerdContainer
 from turbinia.evidence import CompressedDirectory
 from turbinia.evidence import Directory
 from turbinia.evidence import DockerContainer
@@ -31,8 +32,8 @@ class WindowsAccountAnalysisJob(interface.TurbiniaJob):
   """Windows Account analysis job."""
 
   evidence_input = [
-      Directory, RawDisk, GoogleCloudDisk, GoogleCloudDiskRawEmbedded,
-      CompressedDirectory, DockerContainer, EwfDisk
+      ContainerdContainer, Directory, RawDisk, GoogleCloudDisk,
+      GoogleCloudDiskRawEmbedded, CompressedDirectory, DockerContainer, EwfDisk
   ]
   evidence_output = [ReportText]
 

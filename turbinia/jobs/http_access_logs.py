@@ -16,6 +16,7 @@
 from __future__ import unicode_literals
 
 from turbinia.evidence import Directory
+from turbinia.evidence import ContainerdContainer
 from turbinia.evidence import DockerContainer
 from turbinia.evidence import ExportedFileArtifact
 from turbinia.evidence import GoogleCloudDisk
@@ -37,8 +38,8 @@ class HTTPAccessLogExtractionJob(interface.TurbiniaJob):
   """HTTP Access log extraction job."""
 
   evidence_input = [
-      Directory, DockerContainer, GoogleCloudDisk, GoogleCloudDiskRawEmbedded,
-      RawDisk, EwfDisk
+      ContainerdContainer, Directory, DockerContainer, EwfDisk, GoogleCloudDisk,
+      GoogleCloudDiskRawEmbedded, RawDisk
   ]
   evidence_output = [ExportedFileArtifact]
 
