@@ -38,7 +38,7 @@ CE_SUPPORT_FILE = '/opt/container-explorer/supportcontainer.yaml'
 class ContainerdEnumerationTask(TurbiniaTask):
   """Enumerate containerd containers on Linux."""
 
-  REQUIRED_STATE = [state.MOUNTED]
+  REQUIRED_STATES = [state.ATTACHED, state.MOUNTED]
 
   def list_containers(self, evidence, result, detailed_output=False):
     """List containerd containers in the evidence.
@@ -58,6 +58,7 @@ class ContainerdEnumerationTask(TurbiniaTask):
         'sudo', CE_BINARY, '--support-container-data', CE_SUPPORT_FILE,
         '--image-root', image_path, '--output', 'json', 'list', 'containers'
     ]
+    log.info(f'Running {list_cmd}')
 
     try:
       json_data = subprocess.check_output(list_cmd).decode('utf-8')
@@ -114,6 +115,8 @@ class ContainerdEnumerationTask(TurbiniaTask):
     success = False
 
     image_path = evidence.mount_path
+    if not image_path:
+      raise TurbiniaException('Evidence is not mounted')
 
     try:
       # 1. List containers
@@ -125,6 +128,7 @@ class ContainerdEnumerationTask(TurbiniaTask):
       container_ids = [x.get('ID') for x in containers]
       summary = (
           f'Found {len(containers)} containers: {", ".join(container_ids)}')
+      log.info(summary)
 
       # 2. Add containers as evidences
       for container in containers:
@@ -134,6 +138,8 @@ class ContainerdEnumerationTask(TurbiniaTask):
         container_evidence = ContainerdContainer(
             image_path=image_path, namespace=namespace,
             container_id=container_id)
+
+        log.info(f'Adding container evidence {container_evidence}')
         report_data.append(
             'Created evidence for {0:s}:{1:s} mounted at {2!s}'.format(
                 namespace, container_id, container_evidence.mount_path))
