@@ -14,10 +14,14 @@ Turbinia can not anticipate all failures that may occur, especially with a third
 party tool. Here are some debugging steps you can take to further investigate
 these failures.
 
-- Refer to the debugging documentation for steps on grabbing the status of a
-  Request or Task that has failed.
+- Refer to the [debugging documentation](https://github.com/google/turbinia/blob/master/docs/user/debugging.md)
+  for steps on grabbing the status of a Request or Task that has failed.
 - If the debugging documentation doesn’t provide enough information to the Task
   failure, you may also grab and review stderr logs for the Task that has failed.
+  - stderr logs can be found in the path specified in the Turbinia `OUTPUT_DIR`.
+    The directory containing all Task output can be identified in the directory format
+    `<REQUEST_ID>-<TASK_ID>-<TASK_NAME>`.
+  - Turbinia logs can be found in the path specified at `LOG_DIR`.
 - Determine whether the failure has occurred before by checking the Error
   Reporting console, if `STACKDRIVER_TRACEBACK` was enabled in the Turbinia config.
   All Turbinia exceptions will be logged to the console and can be helpful to
@@ -43,8 +47,6 @@ the script.
   installs the gcloud and kubectl cli tool.
 - Authenticate with the Turbinia cloud project:
   - `gcloud auth application-default login`
-- Set the correct GCP project
-  - `gcloud config set project [project]`
 - Connect to the cluster
   - `gcloud container clusters get-credentials [cluster] --zone [zone] --project [project]`
 
@@ -59,7 +61,8 @@ image.
 The Turbinia configuration is base64 encoded as a ConfigMap value named
 `TURBINIA_CONF`. This is then read by the Turbinia Server and Workers as an
 environment variable. Any changes made to the configuration do NOT require a
-Server/Worker restart.
+Server/Worker restart if using the `update-gke-infra.sh` as the script will
+automatically restart the pods through a `kubectl rollout`
 
 Please ensure you have the latest version of the configuration file before
 making any changes. The new configuration can be loaded into the Turbinia stack
@@ -86,8 +89,8 @@ environment.
 When a new version of Turbinia is released, a production Docker image will be
 built for both the Server and Worker and tagged with the `latest` tag or a tag
 specifying the [release date](https://github.com/google/turbinia/releases).
-It is recommended to specify the `latest` release date instead of the latest tag
-to prevent Worker pods from picking up a newer version than the rest of the
+It is recommended to specify the latest release date tag (e.g. `20220701`) instead
+of the `latest` tag to prevent Worker pods from picking up a newer version than the rest of the
 environment as they get removed and re-created through auto scaling.
 These updates can be done through the commands below.
 

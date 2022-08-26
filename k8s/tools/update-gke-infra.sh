@@ -120,6 +120,7 @@ function update_config {
     CONFIG_BASE64=`cat $CONFIG_FILE | base64 -w 0`
     # Update ConfigMap with new Turbinia config
     $KUBECTL create configmap turbinia-config --from-literal=TURBINIA_CONF=$CONFIG_BASE64 -o yaml --dry-run=client | $KUBECTL replace -f -
+    rollout_restart
 }
 
 function show_deployment {

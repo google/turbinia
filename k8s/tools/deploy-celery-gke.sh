@@ -18,7 +18,7 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 source $DIR/.clusterconfig
 cd $DIR/..
 
-if [[ "$*" == *--help ]] ; then
+if [[ "$*" == *--help ||  "$*" == *-h ]] ; then
   echo "Turbinia deployment script for Kubernetes environment"
   echo "Options:"
   echo "--build-dev                    Deploy Turbinia development docker image"
@@ -101,13 +101,12 @@ fi
 if [[ "$*" == *--build-dev* ]] ; then
   TURBINIA_SERVER_IMAGE="us-docker.pkg.dev\/osdfir-registry\/turbinia\/release\/turbinia-server-dev:latest"
   TURBINIA_WORKER_IMAGE="us-docker.pkg.dev\/osdfir-registry\/turbinia\/release\/turbinia-worker-dev:latest"
-  echo "Setting docker image to $TURBINIA_SERVER_IMAGE and $TURBINIA_WORKER_IMAGE"
 elif [[ "$*" == *--build-experimental* ]] ; then
   TURBINIA_SERVER_IMAGE="us-docker.pkg.dev\/osdfir-registry\/turbinia\/release\/turbinia-server-experimental:latest"
   TURBINIA_WORKER_IMAGE="us-docker.pkg.dev\/osdfir-registry\/turbinia\/release\/turbinia-worker-experimental:latest"
-  echo "Setting docker image to $TURBINIA_SERVER_IMAGE and $TURBINIA_WORKER_IMAGE"
 fi
 
+echo "Setting docker image to $TURBINIA_SERVER_IMAGE and $TURBINIA_WORKER_IMAGE"
 echo "Deploying cluster to project $DEVSHELL_PROJECT_ID"
 
 # Setup appropriate directories and copy of deployment templates and Turbinia config
@@ -142,10 +141,6 @@ cd $DEPLOYMENT_FOLDER
 # Add service account to deployments
 sed -i -e "s/serviceAccountName: .*/serviceAccountName: $SA_NAME/g" turbinia-server.yaml turbinia-worker.yaml redis-server.yaml
 
-# Disable some jobs
-echo "Updating $TURBINIA_CONFIG with disabled jobs"
-sed -i -e "s/^DISABLED_JOBS = .*$/DISABLED_JOBS = $DISABLED_JOBS/g" $TURBINIA_CONFIG
-
 # Update Turbinia config with project info
 echo "Updating $TURBINIA_CONFIG config with project info"
 sed -i -e "s/^INSTANCE_ID = .*$/INSTANCE_ID = '$INSTANCE_ID'/g" $TURBINIA_CONFIG
@@ -169,7 +164,7 @@ FILESTORE_IP=$(gcloud -q --project $DEVSHELL_PROJECT_ID filestore instances desc
 FILESTORE_LOGS="'\/mnt\/$FILESTORE_NAME\/logs'"
 FILESTORE_OUTPUT="'\/mnt\/$FILESTORE_NAME\/output'"
 sed -i -e "s/<IP_ADDRESS>/$FILESTORE_IP/g" turbinia-volume-filestore.yaml
-sed -i -e "s/turbiniavolume/$FILESTORE_NAME/g" *.yaml
+sed -i -e "s/turbiniavolume/$FILESTORE_NAME/g" turbinia-volume-filestore.yaml turbinia-volume-claim-filestore.yaml turbinia-server.yaml turbinia-worker.yaml redis-server.yaml
 sed -i -e "s/storage: .*/storage: $FILESTORE_CAPACITY/g" turbinia-volume-filestore.yaml turbinia-volume-claim-filestore.yaml
 sed -i -e "s/^LOG_DIR = .*$/LOG_DIR = $FILESTORE_LOGS/g" $TURBINIA_CONFIG
 sed -i -e "s/^MOUNT_DIR_PREFIX = .*$/MOUNT_DIR_PREFIX = '\/mnt\/turbinia'/g" $TURBINIA_CONFIG

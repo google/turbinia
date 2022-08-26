@@ -21,7 +21,7 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 source $DIR/.clusterconfig
 cd $DIR/..
 
-if [[ "$*" == *--help ]] ; then
+if [[ "$*" == *--help ||  "$*" == *-h ]] ; then
   echo "Turbinia cleanup script for Turbinia within Kubernetes"
   echo "Options:"
   echo "--no-service-account           Do not delete the Turbinia service account"
