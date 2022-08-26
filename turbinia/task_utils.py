@@ -40,6 +40,7 @@ class TaskLoader():
       'AbortTask',
       'BinaryExtractorTask',
       'BulkExtractorTask',
+      'ContainerdEnumerationTask',
       'DfdeweyTask',
       'DockerContainersEnumerationTask',
       'FileArtifactExtractionTask',
