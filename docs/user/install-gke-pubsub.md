@@ -44,4 +44,4 @@ Please follow these steps for deploying Turbinia to GKE. Ensure that the `.clust
 
 ## **Monitoring Installation**
 
-Turbinia GKE has the capability to be monitored through Prometheus and Grafana. Please follow the steps outlined under the Monitoring Installation section [here](install-gke-monitoring-manual.md).
+Turbinia GKE has the capability to be monitored through Prometheus and Grafana. Please follow the steps outlined under the Monitoring Installation section [here](install-gke-monitoring.md).
