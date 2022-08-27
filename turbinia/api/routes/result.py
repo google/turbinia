@@ -39,7 +39,8 @@ async def get_task_output(task_id: str):
   tasks = _state_manager.get_task_data(
       instance=turbinia_config.INSTANCE_ID, task_id=task_id)
   if not tasks:
-    raise HTTPException(status_code=404, detail='Task not found.')
+    raise HTTPException(
+        status_code=404, detail='Task {0:s} not found.'.format(task_id))
   request_id = tasks[0].get('request_id')
   if request_id:
     data = api_utils.create_zip(request_id, task_id)

@@ -105,12 +105,15 @@ class testTurbiniaAPIServer(unittest.TestCase):
                 .format(output_path, request_id)
         })
 
-  def testTaskResultsNotFound(self):
+  @mock.patch('turbinia.state_manager.RedisStateManager.get_task_data')
+  def testTaskResultsNotFound(self, testTaskData):
     """Test getting empty task result files."""
-    response = self.client.get(
-        '/api/result/task/{}'.format(self._TASK_TEST_DATA.get('id')))
+    testTaskData.return_value = []
+    task_id = self._TASK_TEST_DATA.get('id')
+    response = self.client.get('/api/result/task/{}'.format(task_id))
     self.assertEqual(response.status_code, 404)
-    self.assertEqual(response.json(), {'detail': 'Task not found.'})
+    self.assertEqual(
+        response.json(), {'detail': 'Task {0:s} not found.'.format(task_id)})
 
   @mock.patch('turbinia.state_manager.RedisStateManager.get_task_data')
   def testGetTaskStatus(self, testTaskData):
