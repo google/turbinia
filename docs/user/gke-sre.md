@@ -14,7 +14,7 @@ Turbinia can not anticipate all failures that may occur, especially with a third
 party tool. Here are some debugging steps you can take to further investigate
 these failures.
 
-- Refer to the [debugging documentation](https://github.com/google/turbinia/blob/master/docs/user/debugging.md)
+- Refer to the [debugging documentation](debugging.md)
   for steps on grabbing the status of a Request or Task that has failed.
 - If the debugging documentation doesn’t provide enough information to the Task
   failure, you may also grab and review stderr logs for the Task that has failed.
