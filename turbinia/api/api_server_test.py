@@ -17,6 +17,7 @@
 import unittest
 import json
 import fakeredis
+import os
 import mock
 import importlib
 
@@ -78,7 +79,6 @@ class testTurbiniaAPIServer(unittest.TestCase):
     self.client = TestClient(app)
     self.state_manager = self._get_state_manager()
 
-  #@mock.patch('fastapi.testclient.TestClient')
   def testReadRoot(self):
     """Test root route."""
     response = self.client.get("/")
@@ -87,28 +87,30 @@ class testTurbiniaAPIServer(unittest.TestCase):
 
   def testGetConfig(self):
     """Test getting current Turbinia server config."""
-    config_dict = turbinia_config.toJSON()
+    config_dict = turbinia_config.toDict()
     response = self.client.get('/api/config')
     self.assertEqual(response.json(), config_dict)
 
-  @mock.patch('fastapi.testclient.TestClient')
-  def testRequestResults(self, testClient):
+  def testRequestResultsNotFound(self):
     """Test getting empty request result files."""
-    testClient.get = mock.MagicMock()
-    testClient.get.return_value = {'detail': 'Output path could not be found.'}
-    response = testClient.get(
-        '/api/result/request/{}'.format(
-            self._REQUEST_TEST_DATA.get('request_id')))
-    self.assertEqual(response, {'detail': 'Output path could not be found.'})
+    request_id = self._REQUEST_TEST_DATA.get('request_id')
+    response = self.client.get('/api/result/request/{}'.format(request_id))
+    log_path = turbinia_config.toDict().get('OUTPUT_DIR')
+    output_path = os.path.join(log_path, request_id)
+    self.assertEqual(response.status_code, 404)
+    self.assertEqual(
+        response.json(), {
+            'detail':
+                'Output path {0:s} for request {1:s} could not be found.'
+                .format(output_path, request_id)
+        })
 
-  @mock.patch('fastapi.testclient.TestClient')
-  def testTaskResults(self, testClient):
+  def testTaskResultsNotFound(self):
     """Test getting empty task result files."""
-    testClient.get = mock.MagicMock()
-    testClient.get.return_value = {'detail': 'Task ID not found'}
-    response = testClient.get(
+    response = self.client.get(
         '/api/result/task/{}'.format(self._TASK_TEST_DATA.get('id')))
-    self.assertEqual(response, {'detail': 'Task ID not found'})
+    self.assertEqual(response.status_code, 404)
+    self.assertEqual(response.json(), {'detail': 'Task not found.'})
 
   @mock.patch('turbinia.state_manager.RedisStateManager.get_task_data')
   def testGetTaskStatus(self, testTaskData):

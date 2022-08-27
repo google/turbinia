@@ -298,7 +298,7 @@ paths:
         - Turbinia Requests
   /api/result/request/{request_id}:
     get:
-      description: Retrieve request status output.
+      description: Retrieve request output.
       operationId: get_request_output
       parameters:
         - in: path

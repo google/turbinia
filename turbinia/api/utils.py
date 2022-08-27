@@ -40,7 +40,7 @@ def create_zip(request_id: str, task_id: str):
     HTTPException if the request/task output paths could not be found
         on the file system.
   """
-  log_path = turbinia_config.toJSON().get('OUTPUT_DIR')
+  log_path = turbinia_config.toDict().get('OUTPUT_DIR')
 
   request_output_path = os.path.join(log_path, request_id)
 
@@ -48,9 +48,10 @@ def create_zip(request_id: str, task_id: str):
     try:
       request_dirs = os.listdir(request_output_path)
     except FileNotFoundError as exception:
-      log.error('Output path could not be found: {0!s}'.format(exception))
-      raise HTTPException(
-          status_code=404, detail='Output path could not be found.')
+      message = 'Output path {0:s} for task {1:s} could not be found.'.format(
+          request_output_path, task_id)
+      log.error(message)
+      raise HTTPException(status_code=404, detail=message) from exception
 
     for request_dir in request_dirs:
       if task_id in request_dir:
@@ -58,8 +59,10 @@ def create_zip(request_id: str, task_id: str):
         break
 
   if not os.path.exists(request_output_path):
-    raise HTTPException(
-        status_code=404, detail='Output path could not be found.')
+    message = 'Output path {0:s} for request {1:s} could not be found.'.format(
+        request_output_path, request_id)
+    log.error(message)
+    raise HTTPException(status_code=404, detail=message)
 
   # Create a temporary directory to store the zip file
   # containing the request result files.

@@ -242,8 +242,8 @@ def ParseDependencies():
   return dependencies
 
 
-def toJSON():
-  """Returns a JSON serialized config."""
+def toDict():
+  """Returns a dictionary representing the current config."""
   _config = dict()
   config_vars = REQUIRED_VARS + OPTIONAL_VARS
   config_dict = LoadConfig().__dict__

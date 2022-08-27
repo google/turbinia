@@ -38,8 +38,9 @@ async def get_task_output(task_id: str):
   _state_manager = state_manager.get_state_manager()
   tasks = _state_manager.get_task_data(
       instance=turbinia_config.INSTANCE_ID, task_id=task_id)
-  if tasks:
-    request_id = tasks[0].get('request_id')
+  if not tasks:
+    raise HTTPException(status_code=404, detail='Task not found.')
+  request_id = tasks[0].get('request_id')
   if request_id:
     data = api_utils.create_zip(request_id, task_id)
 
@@ -56,7 +57,7 @@ async def get_task_output(task_id: str):
     "/request/{request_id}", response_class=Response,
     responses=_ATTACHMENT_RESPONSE)
 async def get_request_output(request_id: str):
-  """Retrieve request status output."""
+  """Retrieve request output."""
   data = api_utils.create_zip(request_id, task_id=None)
 
   if not data:
