@@ -53,12 +53,12 @@ def csv_list(string):
 
 
 def check_args(source_path, args):
-  """Checks lengths of supplied args match or raise an error. 
+  """Checks lengths of supplied args match or raise an error.
      Lists can have only one element where they are automatically extended.
 
   Args:
     source_path(list(str)): List of source_paths supplied to turbiniactl.
-    args(list(list)): List of args (i.e. name, source, partitions, etc) and 
+    args(list(list)): List of args (i.e. name, source, partitions, etc) and
     their values supplied to turbiniactl.
 
   Raises:
@@ -85,10 +85,10 @@ def check_args(source_path, args):
 
 def process_args(args):
   """Parses and processes args.
-  
+
   Args:
     args(namespace): turbiniactl args.
-  
+
   Raises:
     TurbiniaException: If there's an error processing args.
   """
@@ -532,7 +532,7 @@ def process_args(args):
       sys.exit(0)
 
     try:
-      with open(config.configSource, "r") as f:
+      with open(config.configSource, "r", encoding='utf-8') as f:
         print(f.read())
         sys.exit(0)
     except IOError as exception:
@@ -559,10 +559,12 @@ def process_args(args):
     raise TurbiniaException(msg)
   elif args.filter_patterns_file:
     try:
-      filter_patterns = open(args.filter_patterns_file).read().splitlines()
-    except IOError as e:
+      filter_patterns = open(args.filter_patterns_file,
+                             encoding='utf-8').read().splitlines()
+    except IOError as exception:
       log.warning(
-          'Cannot open file {0:s} [{1!s}]'.format(args.filter_patterns_file, e))
+          'Cannot open file {0:s} [{1!s}]'.format(
+              args.filter_patterns_file, exception))
 
   # Read yara rules
   yara_rules = ''
@@ -572,9 +574,11 @@ def process_args(args):
     raise TurbiniaException(msg)
   elif args.yara_rules_file:
     try:
-      yara_rules = open(args.yara_rules_file).read()
-    except IOError as e:
-      msg = ('Cannot open file {0:s} [{1!s}]'.format(args.yara_rules_file, e))
+      yara_rules = open(args.yara_rules_file, encoding='utf-8').read()
+    except IOError as exception:
+      msg = (
+          'Cannot open file {0:s} [{1!s}]'.format(
+              args.yara_rules_file, exception))
       raise TurbiniaException(msg)
 
   # Create Client object
@@ -863,7 +867,7 @@ def process_evidence(
     name=None, profile=None, project=None, source=None, source_path=None,
     yara_rules=None, zone=None, group_name=None, reason=None, all_args=None):
   """Creates evidence and turbinia request.
-  
+
   Args:
     client(TurbiniaClient): TurbiniaClient used for creating requests.
     group_id(str): Group ID used for bulk processing.
@@ -1039,8 +1043,10 @@ def main():
   """Main function for turbiniactl"""
   try:
     process_args(sys.argv[1:])
-  except TurbiniaException as e:
-    log.error('There was a problem processing arguments: {0:s}'.format(str(e)))
+  except TurbiniaException as exception:
+    log.error(
+        'There was a problem processing arguments: {0:s}'.format(
+            str(exception)))
     sys.exit(1)
   log.info('Done.')
   sys.exit(0)

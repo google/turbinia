@@ -272,9 +272,9 @@ class Evidence:
     """
     try:
       serialized = json.dumps(self.serialize())
-    except TypeError as e:
+    except TypeError as exception:
       msg = 'JSON serialization of evidence object {0:s} failed: {1:s}'.format(
-          self.type, str(e))
+          self.type, str(exception))
       raise TurbiniaException(msg)
 
     return serialized
@@ -633,8 +633,8 @@ class DiskPartition(RawDisk):
       # We should only get one path_spec here since we're specifying the location.
       path_specs = partitions.Enumerate(
           self.parent_evidence, self.partition_location)
-    except TurbiniaException as e:
-      log.error(e)
+    except TurbiniaException as exception:
+      log.error(exception)
 
     if len(path_specs) > 1:
       path_specs_dicts = [path_spec.CopyToDict() for path_spec in path_specs]

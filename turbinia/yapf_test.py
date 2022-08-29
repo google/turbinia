@@ -15,13 +15,13 @@ class StyleTest(unittest.TestCase):
     try:
       subprocess.check_output(
           ['yapf', '--style', config_path, '--diff', '-r', turbinia_path])
-    except subprocess.CalledProcessError as e:
-      if hasattr(e, 'output'):
+    except subprocess.CalledProcessError as exception:
+      if hasattr(exception, 'output'):
         raise Exception(
             'From the root directory of the repository, run '
             '"yapf --style {0:s} -i -r {1:s}" to correct '
             'these problems: {2:s}'.format(
-                config_path, turbinia_path, e.output.decode('utf-8')))
+                config_path, turbinia_path, exception.output.decode('utf-8')))
       raise
 
 

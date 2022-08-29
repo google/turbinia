@@ -434,19 +434,19 @@ class BaseTurbiniaClient:
 
     try:
       results = json.loads(response.get('result'))
-    except (TypeError, ValueError) as e:
+    except (TypeError, ValueError) as exception:
       raise TurbiniaException(
           'Could not deserialize result [{0!s}] from GCF: [{1!s}]'.format(
-              response.get('result'), e))
+              response.get('result'), exception))
 
     task_data = results[0]
     if output_json:
       try:
         json_data = json.dumps(task_data)
-      except (TypeError, ValueError) as e:
+      except (TypeError, ValueError) as exception:
         raise TurbiniaException(
             'Could not re-serialize result [{0!s}] from GCF: [{1!s}]'.format(
-                str(task_data), e))
+                str(task_data), exception))
       return json_data
 
     # Convert run_time/last_update back into datetime objects

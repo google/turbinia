@@ -67,8 +67,8 @@ def sendmail(address, subject, message):
     else:
       log.info('Email notifications are disabled')
 
-  except smtplib.SMTPException as e:
-    log.error(e)
+  except smtplib.SMTPException as exception:
+    log.error(exception)
     log.error(
         'Email failed to send, SMTP has raised an error,'
         ' this likely means that there is a problem with the config')

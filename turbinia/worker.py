@@ -194,10 +194,10 @@ class TurbiniaWorkerBase:
     if config.DOCKER_ENABLED:
       try:
         check_docker_dependencies(dependencies)
-      except TurbiniaException as e:
+      except TurbiniaException as exception:
         log.warning(
             "DOCKER_ENABLED=True is set in the config, but there is an error checking for the docker daemon: {0:s}"
-        ).format(str(e))
+        ).format(str(exception))
     check_system_dependencies(dependencies)
     check_directory(config.MOUNT_DIR_PREFIX)
     check_directory(config.OUTPUT_DIR)
@@ -280,8 +280,8 @@ class TurbiniaPsqWorker(TurbiniaWorkerBase):
       self.psq = psq.Queue(
           psq_publisher, psq_subscriber, config.TURBINIA_PROJECT,
           name=config.PSQ_TOPIC, storage=psq.DatastoreStorage(datastore_client))
-    except exceptions.GoogleCloudError as e:
-      msg = 'Error creating PSQ Queue: {0:s}'.format(str(e))
+    except exceptions.GoogleCloudError as exception:
+      msg = 'Error creating PSQ Queue: {0:s}'.format(str(exception))
       log.error(msg)
       raise TurbiniaException(msg)
     log.info('Starting PSQ listener on queue {0:s}'.format(self.psq.name))

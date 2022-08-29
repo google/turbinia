@@ -67,22 +67,23 @@ class PostgresAccountAnalysisTask(TurbiniaTask):
       if num_files == 0:
         result.close(self, success=True, status='No PostgreSQL config found')
         return result
-    except TurbiniaException as e:
+    except TurbiniaException as exception:
       result.close(
           self, success=False,
-          status='Error retrieving PostgreSQL config: {0:s}'.format(str(e)))
+          status='Error retrieving PostgreSQL config: {0:s}'.format(
+              str(exception)))
       return result
     # 2) Grep for data dirs
     try:
       data_dirs = self._extract_data_dir(location, result)
-    except TurbiniaException as e:
-      result.close(self, success=False, status=str(e))
+    except TurbiniaException as exception:
+      result.close(self, success=False, status=str(exception))
       return result
     # 3) Extract creds
     try:
       hashnames = self._extract_creds(data_dirs, evidence)
-    except TurbiniaException as e:
-      result.close(self, success=False, status=str(e))
+    except TurbiniaException as exception:
+      result.close(self, success=False, status=str(exception))
       return result
 
     # 4) Bruteforce
@@ -118,9 +119,9 @@ class PostgresAccountAnalysisTask(TurbiniaTask):
           file_name=_PG_CONF_NAME,
           disk_path=evidence.local_path, output_dir=os.path.join(
               self.output_dir, 'artifacts'), credentials=evidence.credentials)
-    except TurbiniaException as e:
+    except TurbiniaException as exception:
       raise TurbiniaException(
-          'artifact extraction failed: {0:s}'.format(str(e)))
+          'artifact extraction failed: {0:s}'.format(str(exception)))
 
     # Extract base dir from our list of collected artifacts
     location = os.path.dirname(collected_artifacts[0])
@@ -154,9 +155,9 @@ class PostgresAccountAnalysisTask(TurbiniaTask):
           else:
             result.log(
                 'Unable to parse data_dir directive: {0:s}'.format(directive))
-      except subprocess.CalledProcessError as e:
+      except subprocess.CalledProcessError as exception:
         raise TurbiniaException(
-            'Unable to grep Postgres config file: {0:s}'.format(str(e)))
+            'Unable to grep Postgres config file: {0:s}'.format(str(exception)))
 
     return data_dirs
 
@@ -179,9 +180,9 @@ class PostgresAccountAnalysisTask(TurbiniaTask):
             text=False, capture_output=True)
         if grep.returncode != 0:
           continue
-      except subprocess.CalledProcessError as e:
+      except subprocess.CalledProcessError as exception:
         raise TurbiniaException(
-            'Unable to grep raw database file: {0:s}'.format(str(e)))
+            'Unable to grep raw database file: {0:s}'.format(str(exception)))
 
       # Process the raw binary data
       raw_lines = str(grep.stdout).split('\\n')
