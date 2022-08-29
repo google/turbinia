@@ -2,7 +2,8 @@
 
 ## **Introduction**
 
-These instructions cover the recommended Redis installation of Turbinia using [Google Kubernetes Engine (GKE)](https://cloud.google.com/kubernetes-engine).
+These instructions cover the Redis installation of Turbinia using [Google Kubernetes Engine (GKE)](https://cloud.google.com/kubernetes-engine). However, development is still in progress and we
+recommend you use the [GKE PubSub Installation](install-gke-pubsub.md) for cloud installations.
 
 Installing into GKE allows Turbinia Workers to scale based on processing demand. Currently, this is done through scaling on CPU utilization, which is determined when available Turbinia Workers process Tasks and reach a pre-defined CPU threshold. The GKE architecture closely resembles the [cloud architecture](how-it-works.md) with GKE being used to scale Turbinia Woker pods.
 
@@ -27,8 +28,11 @@ Please follow these steps for deploying Turbinia to GKE. Ensure that the `.clust
 - Deploy Turbinia through the following command
   - `./k8s/tools/deploy-celery-gke.sh`
 - The deployment script will automatically enable GCP APIs, create the cluster and GCP resources then deploy Turbinia to the cluster. At the end of the run, you should have a fully functioning Turbinia environment within GKE to use.
-- Run the following command if you'd like to cleanup the newly created Turbinia environment
-  - `./k8s/tools/cleanup-celery-gke.sh`
+
+**Follow these steps to destroy the Turbinia GKE environment.**
+
+- Run the following command if you'd like to destroy the Turbinia GKE environment.
+  - `./k8s/tools/destroy-celery-gke.sh`
   - **Note this will delete the Turbinia cluster including all processed output and log files as well as associated GCP resources**
 
 ### **Making processing requests in GKE**

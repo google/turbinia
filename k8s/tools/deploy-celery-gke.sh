@@ -74,7 +74,9 @@ fi
 # Enable IAM services
 gcloud -q --project $DEVSHELL_PROJECT_ID services enable iam.googleapis.com
 
-# Create Turbinia service account.
+# Create Turbinia service account with necessary IAM roles. The service account will be used at
+# container runtime in order to have the necessary permissions to attach and detach GCP disks as
+# well as write to stackdriver logging and error reporting.
 SA_NAME="turbinia"
 SA_MEMBER="serviceAccount:$SA_NAME@$DEVSHELL_PROJECT_ID.iam.gserviceaccount.com"
 if [[ -z "$(gcloud -q --project $DEVSHELL_PROJECT_ID iam service-accounts list --format='value(name)' --filter=name:/$SA_NAME@)" ]] ; then

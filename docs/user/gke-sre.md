@@ -91,20 +91,9 @@ built for both the Server and Worker and tagged with the `latest` tag or a tag
 specifying the [release date](https://github.com/google/turbinia/releases).
 It is recommended to specify the latest release date tag (e.g. `20220701`) instead
 of the `latest` tag to prevent Worker pods from picking up a newer version than the rest of the
-environment as they get removed and re-created through auto scaling.
-These updates can be done through the commands below.
-
-- `$ ./update-gke-infra.sh -c change-image -t latest`
-
-OR
-
-- `$ ./update-gke-infra.sh -c change-image -t [tag]`
-
-#### Updating to custom tag (or rollback)
-
-Some scenarios (including rollback) require deploying a specific version of
-Turbinia. Each Docker image is tagged with the actual [release tag](https://github.com/google/turbinia/releases) from Github (eg 20210606) and can be loaded. Run the following command
-to change the image to a different release date.
+environment as they get removed and re-created through auto scaling. Additionaly,
+an older release date can be specified if you'd like to rollback to a different
+version of Turbinia. These updates can be done through the commands below.
 
 - `$ ./update-gke-infra.sh -c change-image -t [tag]`
 

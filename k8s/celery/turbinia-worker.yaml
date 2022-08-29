@@ -30,7 +30,7 @@ spec:
               name: turbiniavolume
       containers:
         - name: worker
-          image: us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-twcelery:latest
+          image: us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-worker:latest
           lifecycle:
             preStop:
               exec:

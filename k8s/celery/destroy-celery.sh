@@ -1,6 +1,8 @@
 #!/bin/sh
 # Turbinia Kubernetes destroy script for Celery/Redis config.
-# This script can be used to destroy the Turbinia infrastructure in Kubernetes.
+# This script can be used to destroy the Turbinia deployment in Kubernetes.
+# Please use the destroy-celery-gke.sh script if you'd like to also delete
+# the cluster and other GCP resources created as part of the deployment.
 
 kubectl delete configmap turbinia-config
 kubectl delete -f redis-server.yaml

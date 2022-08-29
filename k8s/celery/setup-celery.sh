@@ -1,6 +1,8 @@
 #!/bin/sh
 # Turbinia Kubernetes deployment script for Celery/Redis config.
 # This script can be used to deploy Turbinia to a Kubernetes environment.
+# Please use the deploy-celery-gke.sh script if you'd also like to create
+# the GKE cluster and associated GCP resources required by Turbinia.
 
 TURBINIA_CONF=$1
 if [ -z $1 ]; then
