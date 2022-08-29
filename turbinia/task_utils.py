@@ -167,7 +167,12 @@ def task_deserialize(input_dict):
     raise TurbiniaException('Could not load Task module {0:s}'.format(type_))
   # Remove serialized output manager because this gets reinstantiated when the
   # empty Task is instantiated and we don't want to overwrite it.
-  input_dict.pop('output_manager')
+  try:
+    input_dict.pop('output_manager')
+  except KeyError:
+    log.info(
+        'output_manager key not found in serialized TurbiniaTask {}'.format(
+            input_dict['id']))
   task.__dict__.update(input_dict)
   task.start_time = datetime.strptime(input_dict['start_time'], DATETIME_FORMAT)
   task.last_update = datetime.strptime(

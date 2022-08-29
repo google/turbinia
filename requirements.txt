@@ -1,6 +1,8 @@
 celery>=5.2.2
 cryptography>=2.0.2,<3.4
 docker
+fakeredis>=1.8.1
+fastapi>=0.75.0
 filelock
 google-api-core<2.0.0dev
 google-api-python-client
@@ -22,7 +24,9 @@ pyyaml>=5.4.1
 pyOpenSSL<=21.0.0
 redis<4.2
 six>=1.15.0
+starlette-oauth2-api
 urllib3[secure]
+uvicorn>=0.17.6
 vine>=5.0.0
 PyJWT[crypto]<2
 idna==2.10

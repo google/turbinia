@@ -270,7 +270,8 @@ def PreprocessMountEwfDisk(ewf_path):
 
 
 def GetEwfDiskPath(ewf_mount_path):
-  """Returns the path to the device in the EWF disk block. Only supports 1 block device.
+  """Returns the path to the device in the EWF disk block. 
+      Only supports 1 block device.
 
   Args:
       ewf_mount_path (str): The path to the EWF disk block device.
