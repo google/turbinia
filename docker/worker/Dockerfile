@@ -1,4 +1,4 @@
-FROM ubuntu:20.04
+FROM ubuntu:22.04
 
 # Use: docker build --no-cache --build-arg PPA_TRACK="[staging|stable]"
 ARG PPA_TRACK=stable

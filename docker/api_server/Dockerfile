@@ -1,4 +1,4 @@
-FROM ubuntu:20.04
+FROM ubuntu:22.04
 
 ENV DEBIAN_FRONTEND=noninteractive 
 RUN apt-get update && apt-get -y install python3-pip git wget supervisor curl
