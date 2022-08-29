@@ -16,6 +16,8 @@
 
 from __future__ import unicode_literals
 
+import logging
+
 from turbinia.evidence import EwfDisk
 from turbinia.evidence import BodyFile
 from turbinia.evidence import DockerContainer
@@ -27,7 +29,10 @@ from turbinia.evidence import PlasoFile
 from turbinia.evidence import RawDisk
 from turbinia.jobs import interface
 from turbinia.jobs import manager
-from turbinia.workers.plaso import PlasoTask
+from turbinia.workers.plaso import PlasoParserTask
+from turbinia.workers.plaso import PlasoHasherTask
+
+log = logging.getLogger('turbinia')
 
 
 class PlasoJob(interface.TurbiniaJob):
@@ -50,7 +55,11 @@ class PlasoJob(interface.TurbiniaJob):
     Returns:
         A list of PlasoTasks.
     """
-    return [PlasoTask() for _ in evidence]
+    tasks = []
+    for _ in evidence:
+      tasks.append(PlasoHasherTask())
+      tasks.append(PlasoParserTask())
+    return tasks
 
 
 manager.JobsManager.RegisterJob(PlasoJob)

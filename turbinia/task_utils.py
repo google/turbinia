@@ -54,7 +54,8 @@ class TaskLoader():
       'YaraAnalysisTask',
       'PartitionEnumerationTask',
       'PhotorecTask',
-      'PlasoTask',
+      'PlasoParserTask',
+      'PlasoHasherTask',
       'PostgresAccountAnalysisTask',
       'PsortTask',
       'RedisAnalysisTask',
@@ -117,7 +118,8 @@ class TaskLoader():
     from turbinia.workers.hindsight import HindsightTask
     from turbinia.workers.partitions import PartitionEnumerationTask
     from turbinia.workers.photorec import PhotorecTask
-    from turbinia.workers.plaso import PlasoTask
+    from turbinia.workers.plaso import PlasoParserTask
+    from turbinia.workers.plaso import PlasoHasherTask
     from turbinia.workers.psort import PsortTask
     from turbinia.workers.redis import RedisAnalysisTask
     from turbinia.workers.sshd import SSHDAnalysisTask
