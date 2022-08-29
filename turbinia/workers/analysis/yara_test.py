@@ -27,7 +27,7 @@ from turbinia.workers.workers_test import TestTurbiniaTaskBase
 class YaraAnalysisTaskTest(TestTurbiniaTaskBase):
   """Tests for YaraAnalysisTask Task."""
 
-  YARA_SUMMARY = 'Yara analysis found 1 alert(s)'
+  YARA_SUMMARY = 'Yara analysis found 3 alert(s)'
 
   TEST_DATA_DIR = None
 
@@ -41,7 +41,12 @@ class YaraAnalysisTaskTest(TestTurbiniaTaskBase):
     self.task.tmp_dir = tempfile.gettempdir()
     self.task.output_dir = self.task.base_output_dir
     self.remove_files.extend([
-        os.path.join(self.task.output_dir, 'fraken_stdout.log'),
+        os.path.join(
+            self.task.output_dir, '{0:s}_fraken_stdout.log'.format(
+                self.task.id)),
+        os.path.join(
+            self.task.output_dir, '{0:s}_fraken_stderr.log'.format(
+                self.task.id)),
     ])
 
   def test_yara(self):
@@ -56,6 +61,8 @@ class YaraAnalysisTaskTest(TestTurbiniaTaskBase):
     self.assertEqual(priority, 20)
     self.assertEqual(summary, self.YARA_SUMMARY)
     self.assertIn('Mimikatz', report)
+    self.assertIn('Hadoop', report)
+    self.assertIn('Gitlab', report)
 
 
 if __name__ == '__main__':

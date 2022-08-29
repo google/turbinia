@@ -206,6 +206,19 @@ def process_args(args):
       '-n', '--name', help='Descriptive name of the evidence', required=False,
       type=csv_list)
 
+  # Parser options for Ewf Disk Evidence type
+  parser_ewfdisk = subparsers.add_parser(
+      'ewfdisk', help='Process EwfDisk as Evidence')
+  parser_ewfdisk.add_argument(
+      '-l', '--source_path', help='Local path to the evidence', required=True,
+      type=csv_list)
+  parser_ewfdisk.add_argument(
+      '-s', '--source', help='Description of the source of the evidence',
+      required=False, type=csv_list, default=[None])
+  parser_ewfdisk.add_argument(
+      '-n', '--name', help='Descriptive name of the evidence', required=False,
+      type=csv_list)
+
   # Parser options for Google Cloud Disk Evidence type
   parser_googleclouddisk = subparsers.add_parser(
       'googleclouddisk',
@@ -448,6 +461,8 @@ def process_args(args):
       'as your confing file.')
   # Server
   subparsers.add_parser('server', help='Run Turbinia Server')
+  # API server
+  subparsers.add_parser('api_server', help='Run Turbinia API server')
 
   args = parser.parse_args(args)
 
@@ -511,6 +526,7 @@ def process_args(args):
   from turbinia.worker import TurbiniaCeleryWorker
   from turbinia.worker import TurbiniaPsqWorker
   from turbinia.server import TurbiniaServer
+  from turbinia.api.api_server import TurbiniaAPIServer
 
   # Print out config if requested
   if args.command == 'config':
@@ -579,7 +595,7 @@ def process_args(args):
   reason = args.reason
 
   # Checks for bulk processing
-  if args.command in ('rawdisk', 'directory', 'compresseddirectory'):
+  if args.command in ('ewfdisk', 'rawdisk', 'directory', 'compresseddirectory'):
     args.name, args.source = check_args(
         args.source_path, [args.name, args.source])
     # Iterate through evidence and call process_evidence
@@ -692,6 +708,9 @@ def process_args(args):
     server = TurbiniaServer(
         jobs_denylist=args.jobs_denylist, jobs_allowlist=args.jobs_allowlist)
     server.start()
+  elif args.command == 'api_server':
+    api_server = TurbiniaAPIServer()
+    api_server.start('turbinia.api.api_server:app')
   elif args.command == 'status':
     region = config.TURBINIA_REGION
     if args.request_id and args.group_id:
@@ -882,6 +901,9 @@ def process_evidence(
 
   if args.command == 'rawdisk':
     evidence_ = evidence.RawDisk(
+        name=name, source_path=os.path.abspath(source_path), source=source)
+  elif args.command == 'ewfdisk':
+    evidence_ = evidence.EwfDisk(
         name=name, source_path=os.path.abspath(source_path), source=source)
   elif args.command == 'directory':
     source_path = os.path.abspath(source_path)

@@ -101,6 +101,25 @@ DEBUG_TASKS = False
 RECIPE_FILE_DIR = None
 
 ################################################################################
+#                         Turbinia API Server configuration
+#
+# Options in this section are used to configure the API serrver.
+################################################################################
+
+# API server hostname or IP address to listen on
+API_SERVER_ADDRESS = '0.0.0.0'
+
+# API server port
+API_SERVER_PORT = 8000
+
+# Allowed CORS origins
+API_ALLOWED_ORIGINS = ['http;//localhost:8000', 'http://localhost']
+
+# Enable/Disable API authentication. This will determine whether the API server will
+# check for OAuth 2.0 bearer tokens in the 'Authorization' header.
+API_AUTHENTICATION_ENABLED = False
+
+################################################################################
 #                         External Dependency Configurations
 #
 # Options in this section are used to configure system and docker dependencies.
@@ -158,20 +177,10 @@ DEPENDENCIES = [{
     'docker_image': None,
     'timeout': 1800
 }, {
-    'job': 'GitlabJob',
-    'programs': ['zgrep'],
-    'docker_image': None,
-    'timeout': 1800
-}, {
     'job': 'GrepJob',
     'programs': ['grep'],
     'docker_image': None,
     'timeout': 1800
-}, {
-    'job': 'HadoopAnalysisJob',
-    'programs': ['strings'],
-    'docker_image': None,
-    'timeout': 1200
 }, {
     'job': 'HindsightJob',
     'programs': ['hindsight.py'],
@@ -278,11 +287,6 @@ STACKDRIVER_TRACEBACK = False
 # Options in this section are required if TASK_MANAGER is set to 'Celery'
 ################################################################################
 
-# Use Redis for state management
-REDIS_HOST = 'localhost'
-REDIS_PORT = '6379'
-REDIS_DB = '0'
-
 # Method for communication between nodes
 CELERY_BROKER = 'redis://%s' % REDIS_HOST
 
@@ -298,6 +302,11 @@ KOMBU_CHANNEL = '%s-kombu' % INSTANCE_ID
 # Will messages be persistent and require acknowledgment?
 # http://docs.celeryproject.org/projects/kombu/en/4.0/reference/kombu.html#kombu.Connection.SimpleBuffer
 KOMBU_DURABLE = True
+
+# Use Redis for state management
+REDIS_HOST = 'redis'
+REDIS_PORT = '6379'
+REDIS_DB = '0'
 
 ################################################################################
 #                           Email Config

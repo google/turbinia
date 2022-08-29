@@ -17,3 +17,4 @@ User documentation
    recipes
    debugging
    faq
+   turbinia-web-ui

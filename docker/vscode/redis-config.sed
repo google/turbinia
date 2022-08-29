@@ -5,4 +5,4 @@ s/OUTPUT_DIR = .*/OUTPUT_DIR = '\/evidence'/g
 s/MOUNT_DIR_PREFIX = .*/MOUNT_DIR_PREFIX = '\/tmp\/turbinia-mounts'/g
 s/SHARED_FILESYSTEM = .*/SHARED_FILESYSTEM = True/g
 s/DEBUG_TASKS = .*/DEBUG_TASKS = True/g
-s/DISABLED_JOBS = .*/DISABLED_JOBS = ['VolatilityJob', 'DockerContainersEnumerationJob', 'PhotorecJob']/g
+s/DISABLED_JOBS = .*/DISABLED_JOBS = ['VolatilityJob', 'DockerContainersEnumerationJob', 'PhotorecJob', 'HindsightJob', 'YaraAnalysisJob']/g

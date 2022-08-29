@@ -1,6 +1,8 @@
 celery>=5.2.2
 cryptography>=2.0.2,<3.4
 docker
+fakeredis>=1.8.1
+fastapi>=0.75.0
 filelock
 google-api-core<2.0.0dev
 google-api-python-client
@@ -15,14 +17,16 @@ pycryptodomex
 prometheus_client
 libcloudforensics
 protobuf>=3.19.0,<4.0.0dev
-proto-plus<1.19.7
+proto-plus<2.0.0dev,>=1.22.0
 psq
 pyparsing<3
 pyyaml>=5.4.1
 pyOpenSSL<=21.0.0
-redis
+redis<4.2
 six>=1.15.0
+starlette-oauth2-api
 urllib3[secure]
+uvicorn>=0.17.6
 vine>=5.0.0
 PyJWT[crypto]<2
 idna==2.10

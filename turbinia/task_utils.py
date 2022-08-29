@@ -40,16 +40,13 @@ class TaskLoader():
       'AbortTask',
       'BinaryExtractorTask',
       'BulkExtractorTask',
-      'CronAnalysisTask',
       'DfdeweyTask',
       'DockerContainersEnumerationTask',
       'FileArtifactExtractionTask',
       'FileSystemTimelineTask',
       'FinalizeRequestTask',
       'FsstatTask',
-      'GitlabTask',
       'GrepTask',
-      'HadoopAnalysisTask',
       'HindsightTask',
       'JenkinsAnalysisTask',
       'JupyterAnalysisTask',
@@ -111,15 +108,12 @@ class TaskLoader():
     from turbinia.workers.artifact import FileArtifactExtractionTask
     from turbinia.workers.binary_extractor import BinaryExtractorTask
     from turbinia.workers.bulk_extractor import BulkExtractorTask
-    from turbinia.workers.cron import CronAnalysisTask
     from turbinia.workers.dfdewey import DfdeweyTask
     from turbinia.workers.docker import DockerContainersEnumerationTask
     from turbinia.workers.file_system_timeline import FileSystemTimelineTask
     from turbinia.workers.finalize_request import FinalizeRequestTask
     from turbinia.workers.fsstat import FsstatTask
-    from turbinia.workers.gitlab import GitlabTask
     from turbinia.workers.grep import GrepTask
-    from turbinia.workers.hadoop import HadoopAnalysisTask
     from turbinia.workers.hindsight import HindsightTask
     from turbinia.workers.partitions import PartitionEnumerationTask
     from turbinia.workers.photorec import PhotorecTask
@@ -173,7 +167,12 @@ def task_deserialize(input_dict):
     raise TurbiniaException('Could not load Task module {0:s}'.format(type_))
   # Remove serialized output manager because this gets reinstantiated when the
   # empty Task is instantiated and we don't want to overwrite it.
-  input_dict.pop('output_manager')
+  try:
+    input_dict.pop('output_manager')
+  except KeyError:
+    log.info(
+        'output_manager key not found in serialized TurbiniaTask {}'.format(
+            input_dict['id']))
   task.__dict__.update(input_dict)
   task.start_time = datetime.strptime(input_dict['start_time'], DATETIME_FORMAT)
   task.last_update = datetime.strptime(

@@ -31,8 +31,6 @@ from turbinia.processors import docker
 from turbinia.processors import mount_local
 from turbinia.processors import resource_manager
 
-# pylint: disable=keyword-arg-before-vararg
-
 config.LoadConfig()
 if config.CLOUD_PROVIDER:
   from turbinia.processors import google_cloud
@@ -40,15 +38,17 @@ if config.CLOUD_PROVIDER:
 log = logging.getLogger('turbinia')
 
 
-def evidence_decode(evidence_dict):
+def evidence_decode(evidence_dict, strict=False):
   """Decode JSON into appropriate Evidence object.
 
   Args:
     evidence_dict: JSON serializable evidence object (i.e. a dict post JSON
                    decoding).
+    strict: Flag to indicate whether strict attribute validation will occur.
+        Defaults to False.
 
   Returns:
-    An instantiated Evidence object (or a sub-class of it).
+    An instantiated Evidence object (or a sub-class of it) or None.
 
   Raises:
     TurbiniaException: If input is not a dict, does not have a type attribute,
@@ -64,26 +64,36 @@ def evidence_decode(evidence_dict):
     raise TurbiniaException(
         'No Type attribute for evidence object [{0:s}]'.format(
             str(evidence_dict)))
-
+  evidence = None
   try:
     evidence_class = getattr(sys.modules[__name__], type_)
     evidence = evidence_class.from_dict(evidence_dict)
+    evidence_object = evidence_class(source_path='dummy_object')
+    if strict and evidence_object:
+      for attribute_key in evidence_dict.keys():
+        if not attribute_key in evidence_object.__dict__:
+          message = 'Invalid attribute {0!s} for evidence type {1:s}'.format(
+              attribute_key, type_)
+          log.error(message)
+          raise TurbiniaException(message)
+    if evidence:
+      if evidence_dict.get('parent_evidence'):
+        evidence.parent_evidence = evidence_decode(
+            evidence_dict['parent_evidence'])
+      if evidence_dict.get('collection'):
+        evidence.collection = [
+            evidence_decode(e) for e in evidence_dict['collection']
+        ]
+      # We can just reinitialize instead of deserializing because the
+      # state should be empty when just starting to process on a new machine.
+      evidence.state = {}
+      for state in EvidenceState:
+        evidence.state[state] = False
   except AttributeError:
-    raise TurbiniaException(
-        'No Evidence object of type {0:s} in evidence module'.format(type_))
-
-  if evidence_dict.get('parent_evidence'):
-    evidence.parent_evidence = evidence_decode(evidence_dict['parent_evidence'])
-  if evidence_dict.get('collection'):
-    evidence.collection = [
-        evidence_decode(e) for e in evidence_dict['collection']
-    ]
-
-  # We can just reinitialize instead of deserializing because the state should
-  # be empty when just starting to process on a new machine.
-  evidence.state = {}
-  for state in EvidenceState:
-    evidence.state[state] = False
+    message = 'No Evidence object of type {0!s} in evidence module'.format(
+        type_)
+    log.error(message)
+    raise TurbiniaException(message) from AttributeError
 
   return evidence
 
@@ -205,8 +215,8 @@ class Evidence:
 
     if self.copyable and not self.local_path:
       raise TurbiniaException(
-          '{0:s} is a copyable evidence and needs a source_path'.format(
-              self.type))
+          'Unable to initialize object, {0:s} is a copyable '
+          'evidence and needs a source_path'.format(self.type))
 
   def __str__(self):
     return '{0:s}:{1:s}:{2!s}'.format(self.type, self.name, self.source_path)
@@ -216,6 +226,7 @@ class Evidence:
 
   @property
   def name(self):
+    """Returns evidence object name."""
     if self._name:
       return self._name
     else:
@@ -272,10 +283,10 @@ class Evidence:
     """
     try:
       serialized = json.dumps(self.serialize())
-    except TypeError as e:
+    except TypeError as exception:
       msg = 'JSON serialization of evidence object {0:s} failed: {1:s}'.format(
-          self.type, str(e))
-      raise TurbiniaException(msg)
+          self.type, str(exception))
+      raise TurbiniaException(msg) from exception
 
     return serialized
 
@@ -599,7 +610,7 @@ class DiskPartition(RawDisk):
 
   def __init__(
       self, partition_location=None, partition_offset=None, partition_size=None,
-      lv_uuid=None, path_spec=None, *args, **kwargs):
+      lv_uuid=None, path_spec=None, important=True, *args, **kwargs):
     """Initialization for raw volume evidence object."""
 
     self.partition_location = partition_location
@@ -607,6 +618,7 @@ class DiskPartition(RawDisk):
     self.partition_size = partition_size
     self.lv_uuid = lv_uuid
     self.path_spec = path_spec
+    self.important = important
     super(DiskPartition, self).__init__(*args, **kwargs)
 
     # This Evidence needs to have a parent
@@ -632,8 +644,8 @@ class DiskPartition(RawDisk):
       # We should only get one path_spec here since we're specifying the location.
       path_specs = partitions.Enumerate(
           self.parent_evidence, self.partition_location)
-    except TurbiniaException as e:
-      log.error(e)
+    except TurbiniaException as exception:
+      log.error(exception)
 
     if len(path_specs) > 1:
       path_specs_dicts = [path_spec.CopyToDict() for path_spec in path_specs]
@@ -782,7 +794,7 @@ class GoogleCloudDiskRawEmbedded(GoogleCloudDisk):
     # Need to mount parent disk
     if not self.parent_evidence.partition_paths:
       self.parent_evidence.mount_path = mount_local.PreprocessMountPartition(
-          self.parent_evidence.device_path)
+          self.parent_evidence.device_path, self.path_spec.type_indicator)
     else:
       partition_paths = self.parent_evidence.partition_paths
       self.parent_evidence.mount_path = mount_local.PreprocessMountDisk(
@@ -958,3 +970,36 @@ class DockerContainer(Evidence):
       # Unmount the container's filesystem
       mount_local.PostprocessUnmountPath(self._container_fs_path)
       self.state[EvidenceState.CONTAINER_MOUNTED] = False
+
+
+#TODO implement support for several ewf devices if there are more than one
+#inside the ewf_mount_path
+class EwfDisk(Evidence):
+  """Evidence object for a EWF based evidence.
+
+  Attributes:
+    device_path (str): Path to the mounted loop device.
+    ewf_path (str): Path to mounted EWF image.
+    ewf_mount_path (str): Path to EWF mount directory.
+  """
+  POSSIBLE_STATES = [EvidenceState.ATTACHED]
+
+  def __init__(self, *args, **kwargs):
+    """Initialization for EWF evidence object."""
+    self.device_path = None
+    self.ewf_path = None
+    self.ewf_mount_path = None
+    super(EwfDisk, self).__init__(*args, **kwargs)
+
+  def _preprocess(self, _, required_states):
+    if EvidenceState.ATTACHED in required_states or self.has_child_evidence:
+      self.ewf_mount_path = mount_local.PreprocessMountEwfDisk(self.source_path)
+      self.ewf_path = mount_local.GetEwfDiskPath(self.ewf_mount_path)
+      self.device_path = self.ewf_path
+      self.local_path = self.ewf_path
+      self.state[EvidenceState.ATTACHED] = True
+
+  def _postprocess(self):
+    if self.state[EvidenceState.ATTACHED]:
+      self.state[EvidenceState.ATTACHED] = False
+      mount_local.PostprocessUnmountPath(self.ewf_mount_path)

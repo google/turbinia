@@ -359,23 +359,23 @@ groups:
   - record: job:binaryextractortask_duration:rate3d:z_score
     expr: (job:binaryextractortask_duration:rate3d - job:binaryextractortask_duration:rate3d:avg_over_time_30d) / job:binaryextractortask_duration:rate3d:stddev_over_time_30d
 
-- name: hadoopanalysistask.rules
+- name: yaraanalysistask.rules
   rules:
   # Calculate the rate of requests and it's total sum for the 3 days
-  - record: job:hadoopanalysistask_duration:rate3d
-    expr: sum without(instance)(rate(hadoopanalysistask_duration_seconds_sum[3d]))
+  - record: job:yaraanalysistask_duration:rate3d
+    expr: sum without(instance)(rate(yaraanalysistask_duration_seconds_sum[3d]))
 
   # Calculate the average runtime over the past 30 days
-  - record: job:hadoopanalysistask_duration:rate3d:avg_over_time_30d
-    expr: avg_over_time(job:hadoopanalysistask_duration:rate3d[30d])
+  - record: job:yaraanalysistask_duration:rate3d:avg_over_time_30d
+    expr: avg_over_time(job:yaraanalysistask_duration:rate3d[30d])
 
   # Long-term standard deviation for the series
-  - record: job:hadoopanalysistask_duration:rate3d:stddev_over_time_30d
-    expr: stddev_over_time(job:hadoopanalysistask_duration:rate3d[30d])
+  - record: job:yaraanalysistask_duration:rate3d:stddev_over_time_30d
+    expr: stddev_over_time(job:yaraanalysistask_duration:rate3d[30d])
 
   # Z-Score for aggregation
-  - record: job:hadoopanalysistask_duration:rate3d:z_score
-    expr: (job:hadoopanalysistask_duration:rate3d - job:hadoopanalysistask_duration:rate3d:avg_over_time_30d) / job:hadoopanalysistask_duration:rate3d:stddev_over_time_30d
+  - record: job:yaraanalysistask_duration:rate3d:z_score
+    expr: (job:yaraanalysistask_duration:rate3d - job:yaraanalysistask_duration:rate3d:avg_over_time_30d) / job:yaraanalysistask_duration:rate3d:stddev_over_time_30d
 
 - name: dockercontainersenumerationtask.rules
   rules:

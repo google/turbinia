@@ -23,6 +23,7 @@ from turbinia.evidence import DockerContainer
 from turbinia.evidence import GoogleCloudDisk
 from turbinia.evidence import GoogleCloudDiskRawEmbedded
 from turbinia.evidence import RawDisk
+from turbinia.evidence import EwfDisk
 from turbinia.evidence import ExportedFileArtifact
 from turbinia.evidence import ReportText
 from turbinia.jobs import interface
@@ -35,7 +36,7 @@ class RedisExtractionJob(interface.TurbiniaJob):
   # The types of evidence that this Job will process
   evidence_input = [
       Directory, DockerContainer, GoogleCloudDisk, GoogleCloudDiskRawEmbedded,
-      RawDisk
+      RawDisk, EwfDisk
   ]
   evidence_output = [ExportedFileArtifact]
 

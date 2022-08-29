@@ -15,15 +15,12 @@
 """Turbinia jobs."""
 from turbinia.jobs import binary_extractor
 from turbinia.jobs import bulk_extractor
-from turbinia.jobs import cron
 from turbinia.jobs import dfdewey
 from turbinia.jobs import docker
 from turbinia.jobs import file_system_timeline
 from turbinia.jobs import finalize_request
 from turbinia.jobs import fsstat
-from turbinia.jobs import gitlab
 from turbinia.jobs import grep
-from turbinia.jobs import hadoop
 from turbinia.jobs import hindsight
 from turbinia.jobs import http_access_logs
 from turbinia.jobs import jenkins

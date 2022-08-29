@@ -12,13 +12,14 @@ sudo chmod 777 ./evidence
 
 echo "==> Copy test artifacts to /evidence"
 cp ./test_data/artifact_disk.dd ./evidence/
+cp ./turbinia/e2e/e2e-recipe.yaml ./evidence/
 
 echo "==> Startup local turbinia docker-compose stack"
 export TURBINIA_EXTRA_ARGS="-d"
 docker-compose -f ./docker/local/docker-compose.yml up -d
 
-echo "==> Sleep for 5s"
-sleep 5s
+echo "==> Sleep for 10s"
+sleep 10s
 
 echo "==> Show running instances"
 docker ps -a
@@ -34,8 +35,8 @@ echo "==> Show container logs"
 docker logs turbinia-server
 docker logs turbinia-worker
 
-echo "==> Create  Turbinia request"
-docker exec -t turbinia-server turbiniactl -r 123456789 rawdisk -l /evidence/artifact_disk.dd
+echo "==> Create Turbinia request"
+docker exec -t turbinia-server turbiniactl -r 123456789 -P /evidence/e2e-recipe.yaml rawdisk -l /evidence/artifact_disk.dd
 
 echo "==> Sleep for 150 seconds to let Turbinia process evidence"
 sleep 150s
@@ -58,5 +59,10 @@ docker logs turbinia-worker
 
 echo "==> Show evidence volume contents in worker"
 docker exec -t turbinia-worker ls -al /evidence/
+docker exec -t turbinia-worker find /evidence -ls
+
+echo "==> Show PlasoTask logs"
+for i in cat `docker exec turbinia-server turbiniactl -a status -r 123456789|grep -Eo '*/evidence/123456789/.*PlasoTask.*txt'`; do docker exec turbinia-worker cat $i; done
+
 
 exit $RET

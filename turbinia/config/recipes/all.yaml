@@ -9,7 +9,6 @@ globals:
     - FileSystemTimelineJob
     - FsstatJob
     - GrepJob
-    - HadoopAnalysisJob
     - HindsightJob
     - HTTPAccessLogExtractionJob
     - HTTPAccessLogAnalysisJob
@@ -28,6 +27,7 @@ globals:
     - TomcatExtractionJob
     - TomcatAnalysisJob
     - WindowsAccountAnalysisJob
+    - YaraAnalysisJob
 
 plaso_base:
   task: 'PlasoTask'
