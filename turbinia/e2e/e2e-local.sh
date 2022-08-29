@@ -18,8 +18,8 @@ echo "==> Startup local turbinia docker-compose stack"
 export TURBINIA_EXTRA_ARGS="-d"
 docker-compose -f ./docker/local/docker-compose.yml up -d
 
-echo "==> Sleep for 5s"
-sleep 5s
+echo "==> Sleep for 10s"
+sleep 10s
 
 echo "==> Show running instances"
 docker ps -a

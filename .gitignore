@@ -39,3 +39,6 @@ terraform/gcp/*.auto.tfvars
 # Exclude Python virtualenvs
 venv/
 .venv/
+
+# Ignore OpenAPI code generator temporary files
+.openapi-generator/
