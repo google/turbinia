@@ -461,6 +461,8 @@ def process_args(args):
       'as your confing file.')
   # Server
   subparsers.add_parser('server', help='Run Turbinia Server')
+  # API server
+  subparsers.add_parser('api_server', help='Run Turbinia API server')
 
   args = parser.parse_args(args)
 
@@ -524,6 +526,7 @@ def process_args(args):
   from turbinia.worker import TurbiniaCeleryWorker
   from turbinia.worker import TurbiniaPsqWorker
   from turbinia.server import TurbiniaServer
+  from turbinia.api.api_server import TurbiniaAPIServer
 
   # Print out config if requested
   if args.command == 'config':
@@ -705,6 +708,9 @@ def process_args(args):
     server = TurbiniaServer(
         jobs_denylist=args.jobs_denylist, jobs_allowlist=args.jobs_allowlist)
     server.start()
+  elif args.command == 'api_server':
+    api_server = TurbiniaAPIServer()
+    api_server.start('turbinia.api.api_server:app')
   elif args.command == 'status':
     region = config.TURBINIA_REGION
     if args.request_id and args.group_id:
