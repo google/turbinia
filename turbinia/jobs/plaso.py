@@ -53,7 +53,7 @@ class PlasoJob(interface.TurbiniaJob):
       evidence: List of evidence objects to process
 
     Returns:
-        A list of PlasoTasks.
+        A list of PlasoParserTask and PlasoHasherTask objects.
     """
     tasks = []
     for _ in evidence:

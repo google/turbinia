@@ -7,7 +7,7 @@ globals:
     - YaraAnalysisJob
 
 plaso_base:
-  task: "PlasoTask"
+  task: "PlasoParserTask"
 
   artifact_filters:
     [
