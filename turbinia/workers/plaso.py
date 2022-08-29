@@ -27,7 +27,7 @@ from turbinia.lib import file_helpers
 
 
 class PlasoTask(TurbiniaTask):
-  """Task to run Plaso parsers (log2timeline)."""
+  """Parent task for PlasoJob sub-tasks."""
 
   # Plaso requires the Disk to be attached, but doesn't require it be mounted.
   REQUIRED_STATES = [
