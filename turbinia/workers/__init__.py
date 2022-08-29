@@ -663,12 +663,12 @@ class TurbiniaTask:
         if shell:
           proc = subprocess.Popen(
               cmd, shell=True, stderr=subprocess.PIPE, stdout=subprocess.PIPE,
-              cwd=cwd, env=env)
+              cwd=cwd, env=env, text=True, encoding="utf-8")
           stdout, stderr = proc.communicate(timeout=timeout_limit)
         else:
           proc = subprocess.Popen(
               cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE, cwd=cwd,
-              env=env)
+              env=env, text=True, encoding="utf-8")
           stdout, stderr = proc.communicate(timeout=timeout_limit)
       except subprocess.TimeoutExpired as exception:
         proc.kill()
@@ -696,7 +696,7 @@ class TurbiniaTask:
             suffix='.txt', prefix='stderr-', dir=self.output_dir)
       result.log(
           'Writing stderr to {0:s}'.format(stderr_file), level=logging.DEBUG)
-      with open(stderr_file, 'wb') as fh:
+      with open(stderr_file, 'w+') as fh:
         fh.write(stderr)
       log_files.append(stderr_file)
 
@@ -710,7 +710,7 @@ class TurbiniaTask:
             suffix='.txt', prefix='stdout-', dir=self.output_dir)
       result.log(
           'Writing stdout to {0:s}'.format(stdout_file), level=logging.DEBUG)
-      with open(stdout_file, 'wb') as fh:
+      with open(stdout_file, 'w+') as fh:
         fh.write(stdout)
       log_files.append(stdout_file)
 
