@@ -32,8 +32,6 @@ from turbinia.jobs import manager
 from turbinia.workers.plaso import PlasoParserTask
 from turbinia.workers.plaso import PlasoHasherTask
 
-log = logging.getLogger('turbinia')
-
 
 class PlasoJob(interface.TurbiniaJob):
   """Runs Plaso on some evidence to generate a Plaso file."""
