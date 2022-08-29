@@ -13,7 +13,7 @@ RUN apt-get update && apt-get -y install \
     dh-autoreconf \
     gcc \
     git \
-    golang-1.16 \
+    golang-1.18 \
     go-bindata \
     john-data \
     hashcat \
