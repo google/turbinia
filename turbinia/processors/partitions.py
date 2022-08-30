@@ -62,10 +62,10 @@ def Enumerate(evidence, location=None):
     # to operate in unattended mode
     scanner = volume_scanner.VolumeScanner(mediator=None)
     path_specs = scanner.GetBasePathSpecs(evidence.local_path, options=options)
-  except dfvfs_errors.ScannerError as e:
+  except dfvfs_errors.ScannerError as exception:
     raise TurbiniaException(
         'Could not enumerate partitions [{0!s}]: {1!s}'.format(
-            evidence.local_path, e))
+            evidence.local_path, exception))
 
   return path_specs
 

@@ -92,9 +92,10 @@ class VolatilityTask(TurbiniaTask):
         report_data = fh.read(MAX_REPORT_SIZE)
         try:
           output_evidence.text_data = report_data.decode('utf-8')
-        except UnicodeDecodeError as e:
+        except UnicodeDecodeError as exception:
           success = False
-          summary = 'Volatility report could not be read: {0!s}'.format(e)
+          summary = 'Volatility report could not be read: {0!s}'.format(
+              exception)
 
       result.report_data = output_evidence.text_data
       result.close(self, success=success, status=summary)

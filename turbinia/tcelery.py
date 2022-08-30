@@ -106,10 +106,10 @@ class TurbiniaKombu(TurbiniaMessageBase):
         break
       except ChannelError:
         break
-      except OperationalError as e:
+      except OperationalError as exception:
         log.warning(
             'Caught recoverable message transport connection error when ' +
-            'fetching from queue: {0!s}'.format(e))
+            'fetching from queue: {0!s}'.format(exception))
         break
 
     log.debug('Received {0:d} messages'.format(len(requests)))
