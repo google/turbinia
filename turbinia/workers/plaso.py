@@ -27,29 +27,12 @@ from turbinia.lib import file_helpers
 
 
 class PlasoTask(TurbiniaTask):
-  """Task to run Plaso (log2timeline)."""
+  """Parent task for PlasoJob sub-tasks."""
 
   # Plaso requires the Disk to be attached, but doesn't require it be mounted.
   REQUIRED_STATES = [
       state.ATTACHED, state.DECOMPRESSED, state.CONTAINER_MOUNTED
   ]
-
-  TASK_CONFIG = {
-      # 'none' as indicated in the options for status_view within
-      # the Plaso documentation
-      'status_view': 'none',
-      'hashers': 'all',
-      'hasher_file_size_limit': '1073741824',
-      'partitions': 'all',
-      'vss_stores': 'none',
-      # artifact_filters and file_filter are mutually exclusive
-      # parameters and Plaso will error out if both parameters are used.
-      'artifact_filters': None,
-      'file_filter': None,
-      'custom_artifact_definitions': None,
-      'parsers': None,
-      'yara_rules': None
-  }
 
   def build_plaso_command(self, base_command, conf):
     """Builds a typical plaso command, contains logic specific to log2timeline.
@@ -129,9 +112,52 @@ class PlasoTask(TurbiniaTask):
     cmd.extend(['--storage_file', plaso_file])
     cmd.extend([evidence.local_path])
 
-    result.log('Running plaso as [{0:s}]'.format(' '.join(cmd)))
+    result.log('Running {0:s} as [{1:s}]'.format(self.name, ' '.join(cmd)))
     self.execute(
         cmd, result, log_files=[plaso_log], new_evidence=[plaso_evidence],
         close=True)
 
     return result
+
+
+class PlasoParserTask(PlasoTask):
+  """Task to run Plaso parsers (log2timeline)."""
+
+  TASK_CONFIG = {
+      # 'none' as indicated in the options for status_view within
+      # the Plaso documentation
+      'status_view': 'none',
+      'hashers': 'none',
+      'hasher_file_size_limit': None,
+      'partitions': 'all',
+      'vss_stores': 'none',
+      # artifact_filters and file_filter are mutually exclusive
+      # parameters and Plaso will error out if both parameters are used.
+      'artifact_filters': None,
+      'file_filter': None,
+      'custom_artifact_definitions': None,
+      # Disable filestat parser. PlasoHasherTask will run it separately.
+      'parsers': '!filestat',
+      'yara_rules': None
+  }
+
+
+class PlasoHasherTask(PlasoTask):
+  """Task to run Plaso hashers. This task only runs the filestat parser."""
+
+  TASK_CONFIG = {
+      # 'none' as indicated in the options for status_view within
+      # the Plaso documentation
+      'status_view': 'none',
+      'hashers': 'all',
+      'hasher_file_size_limit': '1073741824',
+      'partitions': 'all',
+      'vss_stores': 'none',
+      # artifact_filters and file_filter are mutually exclusive
+      # parameters and Plaso will error out if both parameters are used.
+      'artifact_filters': None,
+      'file_filter': None,
+      'custom_artifact_definitions': None,
+      'parsers': 'filestat',
+      'yara_rules': None
+  }

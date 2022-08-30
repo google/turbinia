@@ -352,9 +352,9 @@ class Evidence:
     [1] Note that the evidence states required by the Task are only required if
     the Evidence also supports that state in `POSSSIBLE_STATES`.  This is so
     that the Tasks are flexible enough to support multiple types of Evidence.
-    For example, `PlasoTask` allows both `CompressedDirectory` and
+    For example, `PlasoParserTask` allows both `CompressedDirectory` and
     `GoogleCloudDisk` as Evidence input, and has states `ATTACHED` and
-    `DECOMPRESSED` listed in `PlasoTask.REQUIRED_STATES`.  Since `ATTACHED`
+    `DECOMPRESSED` listed in `PlasoParserTask.REQUIRED_STATES`.  Since `ATTACHED`
     state is supported by `GoogleCloudDisk`, and `DECOMPRESSED` is supported by
     `CompressedDirectory`, only those respective pre-processors will be run and
     the state is confirmed after the preprocessing is complete.

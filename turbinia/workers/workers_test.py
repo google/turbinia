@@ -26,8 +26,7 @@ from turbinia import evidence
 from turbinia import TurbiniaException
 from turbinia.workers import TurbiniaTask
 from turbinia.workers import TurbiniaTaskResult
-from turbinia.workers.plaso import PlasoTask
-from turbinia import state_manager
+from turbinia.workers.plaso import PlasoParserTask
 from prometheus_client import REGISTRY
 
 
@@ -53,7 +52,7 @@ class TestTurbiniaTaskBase(unittest.TestCase):
 
     # Set up Tasks under test
     self.base_output_dir = tempfile.mkdtemp()
-    self.plaso_task = PlasoTask(base_output_dir=self.base_output_dir)
+    self.plaso_task = PlasoParserTask(base_output_dir=self.base_output_dir)
     self.plaso_task.output_manager = mock.MagicMock()
     self.plaso_task.output_manager.get_local_output_dirs.return_value = (
         None, None)
@@ -141,7 +140,7 @@ class TestTurbiniaTask(TestTurbiniaTaskBase):
     """Test that we can properly serialize/deserialize tasks."""
     out_dict = self.plaso_task.serialize()
     out_obj = TurbiniaTask.deserialize(out_dict)
-    self.assertIsInstance(out_obj, PlasoTask)
+    self.assertIsInstance(out_obj, PlasoParserTask)
     # Nuke output_manager so we don't deal with class equality
     self.plaso_task.output_manager = None
     out_obj.output_manager = None
