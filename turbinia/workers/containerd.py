@@ -18,14 +18,12 @@ from __future__ import unicode_literals
 
 import json
 import logging
-import os
 import subprocess
 
 from turbinia import config
 from turbinia import TurbiniaException
 from turbinia.evidence import ContainerdContainer
 from turbinia.evidence import EvidenceState as state
-from turbinia.evidence import ReportText
 from turbinia.workers import Priority
 from turbinia.workers import TurbiniaTask
 
@@ -40,7 +38,7 @@ class ContainerdEnumerationTask(TurbiniaTask):
 
   REQUIRED_STATES = [state.ATTACHED, state.MOUNTED]
 
-  def list_containers(self, evidence, result, detailed_output=False):
+  def list_containers(self, evidence, _, detailed_output=False):
     """List containerd containers in the evidence.
 
     Args:

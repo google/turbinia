@@ -98,7 +98,6 @@ class TaskLoader():
     #
     # Late imports to minimize what loads all Tasks
     from turbinia.workers.abort import AbortTask
-    from turbinia.workers.analysis.containerd import ContainerdEnumerationTask
     from turbinia.workers.analysis.jenkins import JenkinsAnalysisTask
     from turbinia.workers.analysis.jupyter import JupyterAnalysisTask
     from turbinia.workers.analysis.linux_acct import LinuxAccountAnalysisTask
@@ -110,6 +109,7 @@ class TaskLoader():
     from turbinia.workers.artifact import FileArtifactExtractionTask
     from turbinia.workers.binary_extractor import BinaryExtractorTask
     from turbinia.workers.bulk_extractor import BulkExtractorTask
+    from turbinia.workers.containerd import ContainerdEnumerationTask
     from turbinia.workers.dfdewey import DfdeweyTask
     from turbinia.workers.docker import DockerContainersEnumerationTask
     from turbinia.workers.file_system_timeline import FileSystemTimelineTask

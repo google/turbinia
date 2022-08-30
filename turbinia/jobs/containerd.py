@@ -20,7 +20,7 @@ from turbinia.evidence import DiskPartition
 from turbinia.evidence import ContainerdContainer
 from turbinia.jobs import interface
 from turbinia.jobs import manager
-from turbinia.workers.analysis.containerd import ContainerdEnumerationTask
+from turbinia.workers.containerd import ContainerdEnumerationTask
 
 
 class ContainerdEnumerationJob(interface.TurbiniaJob):

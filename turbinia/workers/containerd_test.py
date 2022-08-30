@@ -16,13 +16,11 @@
 
 from __future__ import unicode_literals
 
-import mock
 import unittest
+import mock
 
 from turbinia.evidence import ContainerdContainer
-from turbinia.evidence import EvidenceState as state
-from turbinia.evidence import RawDisk
-from turbinia.workers.analysis.containerd import ContainerdEnumerationTask
+from turbinia.workers.containerd import ContainerdEnumerationTask
 from turbinia.workers.workers_test import TestTurbiniaTaskBase
 from turbinia.workers import TurbiniaTaskResult
 
@@ -40,8 +38,7 @@ class ContainerdEnumerationTaskTest(TestTurbiniaTaskBase):
 
   @mock.patch('turbinia.state_manager.get_state_manager')
   @mock.patch(
-      'turbinia.workers.analysis.containerd.ContainerdEnumerationTask.list_containers'
-  )
+      'turbinia.workers.containerd.ContainerdEnumerationTask.list_containers')
   def testContainerdEnumerationTaskRun(self, list_containers_mock, _):
     """Test ContainerdEnumerationTask run."""
     self.result.setup(self.task)
