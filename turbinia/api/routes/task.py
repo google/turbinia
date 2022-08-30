@@ -39,7 +39,7 @@ async def get_task_status(task_id: str):
         instance=turbinia_config.INSTANCE_ID, task_id=task_id)
     if tasks:
       task = tasks[0]
-      task_json = json.dumps(jsonable_encoder(task))
+      task_json = json.dumps(jsonable_encoder(task), sort_keys=True)
       return JSONResponse(
           status_code=200, content=task_json, media_type='application/json')
     raise HTTPException(status_code=404, detail='Task ID not found.')

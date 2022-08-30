@@ -14,14 +14,15 @@
 # limitations under the License.
 """Turbinia API server unit tests."""
 
+import importlib
 import unittest
 import json
-import fakeredis
 import os
+import fakeredis
 import mock
-import importlib
 
 from fastapi.testclient import TestClient
+from fastapi.encoders import jsonable_encoder
 
 from turbinia.api.api_server import app
 from turbinia import config as turbinia_config
@@ -34,37 +35,37 @@ class testTurbiniaAPIServer(unittest.TestCase):
   """ Test Turbinia API server."""
 
   _TASK_TEST_DATA = {
-      "id": "c8f73a5bc5084086896023c12c7cc026",
-      "job_id": "1db0dc47d8f244f5b4fa7e15b8a87861",
-      "start_time": "2022-04-01T19:15:14.791074Z",
-      "last_update": "2022-04-01T19:17:14.791074Z",
-      "name": "YaraAnalysisTask",
-      "request_id": "41483253079448e59685d88f37ab91f7",
-      "requester": "root",
-      "group_id": "1234",
-      "worker_name": "95153920ab11",
-      "report_data": "No issues found in crontabs",
-      "report_priority": 80,
-      "run_time": 46.003234,
-      "status": "No issues found in crontabs",
-      "saved_paths": "/tmp/worker-log.txt",
-      "successful": True,
-      "output_manager": "",
-      "instance": "turbinia-jleaniz-test"
+      'id': 'c8f73a5bc5084086896023c12c7cc026',
+      'job_id': '1db0dc47d8f244f5b4fa7e15b8a87861',
+      'start_time': '2022-04-01T19:15:14.791074Z',
+      'last_update': '2022-04-01T19:17:14.791074Z',
+      'name': 'YaraAnalysisTask',
+      'request_id': '41483253079448e59685d88f37ab91f7',
+      'requester': 'root',
+      'group_id': '1234',
+      'worker_name': '95153920ab11',
+      'report_data': 'No issues found in crontabs',
+      'report_priority': 80,
+      'run_time': 46.003234,
+      'status': 'No issues found in crontabs',
+      'saved_paths': '/tmp/worker-log.txt',
+      'successful': True,
+      'output_manager': '',
+      'instance': 'turbinia-jleaniz-test'
   }
 
   _REQUEST_TEST_DATA = {
-      "request_id": "41483253079448e59685d88f37ab91f7",
-      "reason": None,
-      "tasks": [],
-      "requester": "root",
-      "last_task_update_time": "2022-04-01T19:17:14.791074Z",
-      "status": "successful",
-      "task_count": 1,
-      "successful_tasks": 1,
-      "running_tasks": 0,
-      "failed_tasks": 0,
-      "queued_tasks": 0
+      'failed_tasks': 0,
+      'last_task_update_time': '2022-04-01T19:17:14.791074Z',
+      'queued_tasks': 0,
+      'reason': None,
+      'request_id': '41483253079448e59685d88f37ab91f7',
+      'requester': 'root',
+      'running_tasks': 0,
+      'status': 'successful',
+      'successful_tasks': 1,
+      'task_count': 1,
+      'tasks': []
   }
 
   def _get_state_manager(self):
@@ -118,13 +119,13 @@ class testTurbiniaAPIServer(unittest.TestCase):
   @mock.patch('turbinia.state_manager.RedisStateManager.get_task_data')
   def testGetTaskStatus(self, testTaskData):
     """Test getting task status."""
+    self.maxDiff = None
     redis_client = fakeredis.FakeStrictRedis()
     input_task = TurbiniaTask().deserialize(self._TASK_TEST_DATA)
-    expected_result = input_task.serialize()
+    expected_result = json.dumps(input_task.serialize(), sort_keys=True)
 
     redis_client.set(
-        'TurbiniaTask:41483253079448e59685d88f37ab91f7',
-        json.dumps(expected_result))
+        'TurbiniaTask:41483253079448e59685d88f37ab91f7', expected_result)
 
     testTaskData.return_value = [
         json.loads(
@@ -133,17 +134,20 @@ class testTurbiniaAPIServer(unittest.TestCase):
 
     result = self.client.get(
         '/api/task/{}'.format(self._TASK_TEST_DATA.get('id')))
-    result = json.loads(result.content)
+    result = jsonable_encoder(json.loads(result.content))
     self.assertEqual(expected_result, result)
 
   @mock.patch('turbinia.state_manager.RedisStateManager.get_task_data')
   def testRequestStatus(self, testTaskData):
     """Test getting Turbinia Request status."""
+    self.maxDiff = None
     redis_client = fakeredis.FakeStrictRedis()
     input_task = TurbiniaTask().deserialize(self._TASK_TEST_DATA)
     input_task_serialized = input_task.serialize()
     expected_result = self._REQUEST_TEST_DATA.copy()
     expected_result['tasks'] = [input_task_serialized]
+    expected_result = jsonable_encoder(
+        json.dumps(expected_result, sort_keys=True))
 
     redis_client.set(
         'TurbiniaTask:41483253079448e59685d88f37ab91f7',
@@ -155,7 +159,7 @@ class testTurbiniaAPIServer(unittest.TestCase):
 
     result = self.client.get(
         '/api/request/{}'.format(self._REQUEST_TEST_DATA.get('request_id')))
-    result = json.loads(result.content)
+    result = jsonable_encoder(json.loads(result.content))
     self.assertEqual(expected_result, result)
 
   @mock.patch('turbinia.state_manager.RedisStateManager.get_task_data')
@@ -164,7 +168,7 @@ class testTurbiniaAPIServer(unittest.TestCase):
     redis_client = fakeredis.FakeStrictRedis()
     input_task = TurbiniaTask().deserialize(self._TASK_TEST_DATA)
     input_task_serialized = input_task.serialize()
-    expected_result = {'requests_status': [self._REQUEST_TEST_DATA]}
+    expected_result = json.dumps({'requests_status': [self._REQUEST_TEST_DATA]})
 
     redis_client.set(
         'TurbiniaTask:41483253079448e59685d88f37ab91f7',
@@ -176,7 +180,7 @@ class testTurbiniaAPIServer(unittest.TestCase):
     ]
 
     result = self.client.get('/api/request/summary')
-    result = json.loads(result.content)
+    result = jsonable_encoder(json.loads(result.content))
     self.assertEqual(expected_result, result)
 
   @mock.patch('turbinia.state_manager.RedisStateManager.get_task_data')

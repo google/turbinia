@@ -46,7 +46,7 @@ async def get_requests_summary():
       return JSONResponse(
           content={'detail': 'Request summary is empty'}, status_code=200)
     return JSONResponse(
-        status_code=200, content=requests_summary.json(),
+        status_code=200, content=requests_summary.json(sort_keys=True),
         media_type='application/json')
   except (ValidationError, ValueError, TypeError) as exception:
     log.error(
@@ -76,7 +76,7 @@ async def get_request_status(request_id: str):
           status_code=404,
           detail='Request ID not found or the request had no associated tasks.')
     return JSONResponse(
-        status_code=200, content=request_out.json(),
+        status_code=200, content=request_out.json(sort_keys=True),
         media_type='application/json')
   except (ValidationError, ValueError, TypeError) as exception:
     log.error('Error retrieving request information: {0!s}'.format(exception))
