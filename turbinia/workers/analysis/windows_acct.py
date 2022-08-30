@@ -57,10 +57,10 @@ class WindowsAccountAnalysisTask(TurbiniaTask):
 
     try:
       (location, num_files) = self._collect_windows_files(evidence)
-    except TurbiniaException as e:
+    except TurbiniaException as exception:
       result.close(
           self, success=True,
-          status='No Windows account files found: {0:s}'.format(str(e)))
+          status='No Windows account files found: {0:s}'.format(str(exception)))
       return result
     if num_files < 2:
       result.close(self, success=True, status='No Windows account files found')
@@ -68,11 +68,11 @@ class WindowsAccountAnalysisTask(TurbiniaTask):
     try:
       (creds, hashnames) = self._extract_windows_hashes(
           result, os.path.join(location, 'Windows', 'System32', 'config'))
-    except TurbiniaException as e:
+    except TurbiniaException as exception:
       result.close(
           self, success=False,
           status='Unable to extract hashes from registry files: {0:s}'.format(
-              str(e)))
+              str(exception)))
       return result
     timeout = self.task_config.get('bruteforce_timeout')
     (report, priority, summary) = self._analyse_windows_creds(
@@ -104,9 +104,9 @@ class WindowsAccountAnalysisTask(TurbiniaTask):
           artifact_names=['WindowsSystemRegistryFiles'],
           disk_path=evidence.local_path, output_dir=self.output_dir,
           credentials=evidence.credentials)
-    except TurbiniaException as e:
+    except TurbiniaException as exception:
       raise TurbiniaException(
-          'artifact extraction failed: {0:s}'.format(str(e)))
+          'artifact extraction failed: {}'.format(str(exception)))
 
     # Extract base dir from our list of collected artifacts
     location = os.path.dirname(collected_artifacts[0])

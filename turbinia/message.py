@@ -70,10 +70,10 @@ class TurbiniaRequest:
 
     try:
       serialized = json.dumps(serializable)
-    except TypeError as e:
+    except TypeError as exception:
       msg = (
           'JSON serialization of TurbiniaRequest object {0:s} failed: '
-          '{1:s}'.format(self.type, str(e)))
+          '{1:s}'.format(self.type, str(exception)))
       raise TurbiniaException(msg)
 
     return serialized
@@ -92,9 +92,9 @@ class TurbiniaRequest:
       if isinstance(json_str, six.binary_type):
         json_str = codecs.decode(json_str, 'utf-8')
       obj = json.loads(json_str)
-    except ValueError as e:
+    except ValueError as exception:
       raise TurbiniaException(
-          'Can not load json from string {0:s}'.format(str(e)))
+          'Can not load json from string {0:s}'.format(str(exception)))
 
     if obj.get('type', None) != self.type:
       raise TurbiniaException(
@@ -135,8 +135,8 @@ class TurbiniaMessageBase:
     request = TurbiniaRequest()
     try:
       request.from_json(message)
-    except TurbiniaException as e:
-      log.error('Error decoding message: {0:s}'.format(str(e)))
+    except TurbiniaException as exception:
+      log.error('Error decoding message: {0:s}'.format(str(exception)))
       return None
 
     return request

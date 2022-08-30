@@ -69,8 +69,9 @@ def GetLocalInstanceName():
       {'Metadata-Flavor': 'Google'})
   try:
     instance = urllib.request.urlopen(req).read().decode('utf-8')
-  except urllib.error.HTTPError as e:
-    raise TurbiniaException('Could not get instance name: {0!s}'.format(e))
+  except urllib.error.HTTPError as exception:
+    raise TurbiniaException(
+        'Could not get instance name: {0!s}'.format(exception))
 
   return instance
 

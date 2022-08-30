@@ -54,10 +54,10 @@ class YaraAnalysisTask(TurbiniaTask):
 
     try:
       (report, priority, summary) = self.runFraken(result, evidence)
-    except TurbiniaException as e:
+    except TurbiniaException as exception:
       result.close(
           self, success=False, status='Unable to run Fraken: {0:s}'.format(
-              str(e)))
+              str(exception)))
       return result
 
     output_evidence.text_data = report
@@ -74,6 +74,16 @@ class YaraAnalysisTask(TurbiniaTask):
     return result
 
   def runFraken(self, result, evidence):
+    """Runs Fraken.
+
+      Args:
+        evidence (Evidence object):  The evidence to process
+        result (TurbiniaTaskResult): The object to place task results into.
+      Raises:
+        TurbiniaException
+      Returns:
+        report (tuple): A 3-tuple containing a report, priority and summary.
+    """
     stdout_file = os.path.join(
         self.output_dir, '{0:s}_fraken_stdout.log'.format(self.id))
     stderr_file = os.path.join(
@@ -112,9 +122,9 @@ class YaraAnalysisTask(TurbiniaTask):
       with open(stdout_file, 'r') as fraken_report:
         try:
           fraken_output = json.load(fraken_report)
-        except (TypeError, ValueError, json.JSONDecodeError) as e:
+        except (TypeError, ValueError, json.JSONDecodeError) as exception:
           raise TurbiniaException(
-              'Error decoding JSON output from fraken: {0!s}'.format(e))
+              'Error decoding JSON output from fraken: {0!s}'.format(exception))
         for row in fraken_output:
           if row.get('Score', 0) > 40:
             report_lines.append(
