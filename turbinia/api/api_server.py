@@ -39,10 +39,7 @@ def get_application():
   description = '''Turbinia API server'''
   _app = FastAPI(
       title='Turbinia API Server', description=description, version='1.0.0',
-      license_info={
-          'name': 'Apache License 2.0',
-          'url': 'https://www.apache.org/licenses/LICENSE-2.0.html'
-      }, routes=router.routes)
+      routes=router.routes)
   return _app
 
 
@@ -141,7 +138,9 @@ class TurbiniaAPIServer:
         log_level="info", reload=True)
 
 
-@app.get('/docs/openapi.yaml', tags=['OpenAPI Specification'])
+@app.get(
+    '/docs/openapi.yaml', tags=['OpenAPI Specification'],
+    include_in_schema=False)
 def read_openapi_yaml():
   """Serve the OpenAPI specification in YAML format."""
   openapi_json = app.openapi()

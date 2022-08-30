@@ -112,7 +112,7 @@ Name | Type | Description  | Notes
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **get_request_status**
-> RequestStatus get_request_status(request_id)
+> bool, date, datetime, dict, float, int, list, str, none_type get_request_status(request_id)
 
 Get Request Status
 
@@ -126,7 +126,6 @@ Retrieves status for a Turbinia Request.  Args:   request_id (str): A Turbinia r
 import time
 import turbinia_api_client
 from turbinia_api_client.api import turbinia_requests_api
-from turbinia_api_client.model.request_status import RequestStatus
 from turbinia_api_client.model.http_validation_error import HTTPValidationError
 from pprint import pprint
 # Defining the host is optional and defaults to http://localhost
@@ -170,7 +169,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**RequestStatus**](RequestStatus.md)
+**bool, date, datetime, dict, float, int, list, str, none_type**
 
 ### Authorization
 
@@ -192,7 +191,7 @@ Name | Type | Description  | Notes
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **get_requests_summary**
-> RequestsSummary get_requests_summary()
+> bool, date, datetime, dict, float, int, list, str, none_type get_requests_summary()
 
 Get Requests Summary
 
@@ -206,7 +205,6 @@ Retrieves a summary of all Turbinia requests.  The response is validated against
 import time
 import turbinia_api_client
 from turbinia_api_client.api import turbinia_requests_api
-from turbinia_api_client.model.requests_summary import RequestsSummary
 from pprint import pprint
 # Defining the host is optional and defaults to http://localhost
 # See configuration.py for a list of all supported configuration parameters.
@@ -245,7 +243,7 @@ This endpoint does not need any parameter.
 
 ### Return type
 
-[**RequestsSummary**](RequestsSummary.md)
+**bool, date, datetime, dict, float, int, list, str, none_type**
 
 ### Authorization
 

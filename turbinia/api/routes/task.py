@@ -15,8 +15,11 @@
 """Turbinia API - Task router"""
 
 import logging
+import json
 
 from fastapi import HTTPException, APIRouter
+from fastapi.responses import JSONResponse
+from fastapi.encoders import jsonable_encoder
 from pydantic import ValidationError
 
 from turbinia import state_manager
@@ -36,9 +39,11 @@ async def get_task_status(task_id: str):
         instance=turbinia_config.INSTANCE_ID, task_id=task_id)
     if tasks:
       task = tasks[0]
-      return task
+      task_json = json.dumps(jsonable_encoder(task))
+      return JSONResponse(
+          status_code=200, content=task_json, media_type='application/json')
     raise HTTPException(status_code=404, detail='Task ID not found.')
-  except ValidationError as exception:
+  except (ValidationError, json.JSONDecodeError) as exception:
     log.error('Error retrieving task information: {0!s}'.format(exception))
     raise HTTPException(
         status_code=500,

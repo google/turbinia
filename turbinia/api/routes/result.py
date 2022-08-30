@@ -26,7 +26,18 @@ log = logging.getLogger('turbinia:api_server:result')
 
 router = APIRouter(prefix='/result', tags=['Turbinia Request Results'])
 
-_ATTACHMENT_RESPONSE = {'200': {'content': {'application/x-zip-compressed'}}}
+_ATTACHMENT_RESPONSE = {
+    '200': {
+        'content': {
+            'application/x-zip-compressed': {
+                'schema': {
+                    'type': 'string',
+                    'format': 'binary'
+                }
+            }
+        }
+    }
+}
 
 
 @router.get(
@@ -49,7 +60,7 @@ async def get_task_output(task_id: str):
     raise HTTPException(
         status_code=500, detail='Unable to retrieve task output files.')
   return Response(
-      data, media_type='application/x-zip-compressed', headers={
+      status_code=200, content=data, headers={
           "Content-Disposition": 'attachment;filename={}.zip'.format(task_id)
       })
 
@@ -65,7 +76,7 @@ async def get_request_output(request_id: str):
     raise HTTPException(
         status_code=500, detail='Unable to retrieve task output files.')
   return Response(
-      data, media_type='application/x-zip-compressed', headers={
+      status_code=200, content=data, headers={
           "Content-Disposition":
               'attachment;filename={}.zip'.format(request_id)
       })

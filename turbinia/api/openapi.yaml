@@ -80,63 +80,6 @@ components:
         - request_options
       title: Request
       type: object
-    RequestStatus:
-      description: Represents a Turbinia request status object.
-      properties:
-        failed_tasks:
-          default: 0
-          title: Failed Tasks
-          type: integer
-        last_task_update_time:
-          title: Last Task Update Time
-          type: string
-        queued_tasks:
-          default: 0
-          title: Queued Tasks
-          type: integer
-        reason:
-          title: Reason
-          type: string
-        request_id:
-          title: Request Id
-          type: string
-        requester:
-          title: Requester
-          type: string
-        running_tasks:
-          default: 0
-          title: Running Tasks
-          type: integer
-        status:
-          title: Status
-          type: string
-        successful_tasks:
-          default: 0
-          title: Successful Tasks
-          type: integer
-        task_count:
-          default: 0
-          title: Task Count
-          type: integer
-        tasks:
-          default: []
-          items:
-            type: object
-          title: Tasks
-          type: array
-      title: RequestStatus
-      type: object
-    RequestsSummary:
-      description: Represents a summary view of multiple Turbinia requests.
-      properties:
-        requests_status:
-          default: []
-          items:
-            $ref: "#/components/schemas/RequestStatus"
-          title: Requests Status
-          type: array
-      title: RequestsSummary
-      type: object
     ValidationError:
       properties:
         loc:
@@ -160,9 +103,6 @@ components:
       type: object
 info:
   description: Turbinia API server
-  license:
-    name: Apache License 2.0
-    url: https://www.apache.org/licenses/LICENSE-2.0.html
   title: Turbinia API Server
   version: 1.0.0
 openapi: 3.0.2
@@ -260,8 +200,7 @@ paths:
         "200":
           content:
             application/json:
-              schema:
-                $ref: "#/components/schemas/RequestsSummary"
+              schema: {}
           description: Successful Response
       summary: Get Requests Summary
       tags:
@@ -284,8 +223,7 @@ paths:
         "200":
           content:
             application/json:
-              schema:
-                $ref: "#/components/schemas/RequestStatus"
+              schema: {}
           description: Successful Response
         "422":
           content:
@@ -312,8 +250,8 @@ paths:
           content:
             application/x-zip-compressed:
               schema:
-                type: string
                 format: binary
+                type: string
           description: Successful Response
         "422":
           content:
@@ -340,8 +278,8 @@ paths:
           content:
             application/x-zip-compressed:
               schema:
-                type: string
                 format: binary
+                type: string
           description: Successful Response
         "422":
           content:
@@ -378,18 +316,5 @@ paths:
       summary: Get Task Status
       tags:
         - Turbinia Tasks
-  /docs/openapi.yaml:
-    get:
-      description: Serve the OpenAPI specification in YAML format.
-      operationId: read_openapi_yaml
-      responses:
-        "200":
-          content:
-            application/json:
-              schema: {}
-          description: Successful Response
-      summary: Read Openapi Yaml
-      tags:
-        - OpenAPI Specification
 security:
   - oAuth2: []

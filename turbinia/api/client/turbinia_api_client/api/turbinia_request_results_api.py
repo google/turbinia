@@ -147,7 +147,7 @@ class TurbiniaRequestResultsApi(object):
     ):
         """Get Request Output  # noqa: E501
 
-        Retrieve request status output.  # noqa: E501
+        Retrieve request output.  # noqa: E501
         This method makes a synchronous HTTP request by default. To make an
         asynchronous HTTP request, please pass async_req=True
 

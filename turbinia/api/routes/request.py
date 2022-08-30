@@ -31,7 +31,7 @@ log = logging.getLogger('turbinia:api_server:models:request')
 router = APIRouter(prefix="/request", tags=["Turbinia Requests"])
 
 
-@router.get("/summary", response_model=request_status.RequestsSummary)
+@router.get("/summary")
 async def get_requests_summary():
   """Retrieves a summary of all Turbinia requests.
 
@@ -45,7 +45,9 @@ async def get_requests_summary():
     if not requests_summary.get_requests_summmary():
       return JSONResponse(
           content={'detail': 'Request summary is empty'}, status_code=200)
-    return requests_summary
+    return JSONResponse(
+        status_code=200, content=requests_summary.json(),
+        media_type='application/json')
   except (ValidationError, ValueError, TypeError) as exception:
     log.error(
         'Error retrieving requests summary: {0!s}'.format(exception),
@@ -55,7 +57,7 @@ async def get_requests_summary():
         detail='Error retrieving requests summary') from exception
 
 
-@router.get("/{request_id}", response_model=request_status.RequestStatus)
+@router.get("/{request_id}")
 async def get_request_status(request_id: str):
   """Retrieves status for a Turbinia Request.
 
@@ -67,12 +69,15 @@ async def get_request_status(request_id: str):
   """
   request_out = request_status.RequestStatus(request_id=request_id)
   response_ok = request_out.get_request_data(request_id)
+
   try:
     if not response_ok:
       raise HTTPException(
           status_code=404,
           detail='Request ID not found or the request had no associated tasks.')
-    return request_out
+    return JSONResponse(
+        status_code=200, content=request_out.json(),
+        media_type='application/json')
   except (ValidationError, ValueError, TypeError) as exception:
     log.error('Error retrieving request information: {0!s}'.format(exception))
     raise HTTPException(

@@ -34,14 +34,14 @@ class OpenAPISpecificationApi(object):
         if api_client is None:
             api_client = ApiClient()
         self.api_client = api_client
-        self.read_openapi_yaml_endpoint = _Endpoint(
+        self.read_openapi_yaml_docs_openapi_yaml_get_endpoint = _Endpoint(
             settings={
                 'response_type': (bool, date, datetime, dict, float, int, list, str, none_type,),
                 'auth': [
                     'oAuth2'
                 ],
                 'endpoint_path': '/docs/openapi.yaml',
-                'operation_id': 'read_openapi_yaml',
+                'operation_id': 'read_openapi_yaml_docs_openapi_yaml_get',
                 'http_method': 'GET',
                 'servers': None,
             },
@@ -79,7 +79,7 @@ class OpenAPISpecificationApi(object):
             api_client=api_client
         )
 
-    def read_openapi_yaml(
+    def read_openapi_yaml_docs_openapi_yaml_get(
         self,
         **kwargs
     ):
@@ -89,7 +89,7 @@ class OpenAPISpecificationApi(object):
         This method makes a synchronous HTTP request by default. To make an
         asynchronous HTTP request, please pass async_req=True
 
-        >>> thread = api.read_openapi_yaml(async_req=True)
+        >>> thread = api.read_openapi_yaml_docs_openapi_yaml_get(async_req=True)
         >>> result = thread.get()
 
 
@@ -155,5 +155,5 @@ class OpenAPISpecificationApi(object):
             '_content_type')
         kwargs['_host_index'] = kwargs.get('_host_index')
         kwargs['_request_auths'] = kwargs.get('_request_auths', None)
-        return self.read_openapi_yaml_endpoint.call_with_http_info(**kwargs)
+        return self.read_openapi_yaml_docs_openapi_yaml_get_endpoint.call_with_http_info(**kwargs)
 

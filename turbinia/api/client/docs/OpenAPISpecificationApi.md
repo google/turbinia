@@ -4,11 +4,11 @@ All URIs are relative to *http://localhost*
 
 Method | HTTP request | Description
 ------------- | ------------- | -------------
-[**read_openapi_yaml**](OpenAPISpecificationApi.md#read_openapi_yaml) | **GET** /docs/openapi.yaml | Read Openapi Yaml
+[**read_openapi_yaml_docs_openapi_yaml_get**](OpenAPISpecificationApi.md#read_openapi_yaml_docs_openapi_yaml_get) | **GET** /docs/openapi.yaml | Read Openapi Yaml
 
 
-# **read_openapi_yaml**
-> bool, date, datetime, dict, float, int, list, str, none_type read_openapi_yaml()
+# **read_openapi_yaml_docs_openapi_yaml_get**
+> bool, date, datetime, dict, float, int, list, str, none_type read_openapi_yaml_docs_openapi_yaml_get()
 
 Read Openapi Yaml
 
@@ -48,10 +48,10 @@ with turbinia_api_client.ApiClient(configuration) as api_client:
     # example, this endpoint has no required or optional parameters
     try:
         # Read Openapi Yaml
-        api_response = api_instance.read_openapi_yaml()
+        api_response = api_instance.read_openapi_yaml_docs_openapi_yaml_get()
         pprint(api_response)
     except turbinia_api_client.ApiException as e:
-        print("Exception when calling OpenAPISpecificationApi->read_openapi_yaml: %s\n" % e)
+        print("Exception when calling OpenAPISpecificationApi->read_openapi_yaml_docs_openapi_yaml_get: %s\n" % e)
 ```
 
 

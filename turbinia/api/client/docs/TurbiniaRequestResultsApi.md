@@ -13,7 +13,7 @@ Method | HTTP request | Description
 
 Get Request Output
 
-Retrieve request status output.
+Retrieve request output.
 
 ### Example
 

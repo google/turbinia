@@ -23,8 +23,8 @@ class TestOpenAPISpecificationApi(unittest.TestCase):
     def tearDown(self):
         pass
 
-    def test_read_openapi_yaml(self):
-        """Test case for read_openapi_yaml
+    def test_read_openapi_yaml_docs_openapi_yaml_get(self):
+        """Test case for read_openapi_yaml_docs_openapi_yaml_get
 
         Read Openapi Yaml  # noqa: E501
         """

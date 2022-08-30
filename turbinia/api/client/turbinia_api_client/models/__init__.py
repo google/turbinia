@@ -12,7 +12,5 @@
 from turbinia_api_client.model.base_request_options import BaseRequestOptions
 from turbinia_api_client.model.http_validation_error import HTTPValidationError
 from turbinia_api_client.model.request import Request
-from turbinia_api_client.model.request_status import RequestStatus
-from turbinia_api_client.model.requests_summary import RequestsSummary
 from turbinia_api_client.model.validation_error import ValidationError
 from turbinia_api_client.model.validation_error_loc_inner import ValidationErrorLocInner

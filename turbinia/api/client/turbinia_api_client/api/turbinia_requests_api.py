@@ -23,8 +23,6 @@ from turbinia_api_client.model_utils import (  # noqa: F401
 )
 from turbinia_api_client.model.http_validation_error import HTTPValidationError
 from turbinia_api_client.model.request import Request
-from turbinia_api_client.model.request_status import RequestStatus
-from turbinia_api_client.model.requests_summary import RequestsSummary
 
 
 class TurbiniaRequestsApi(object):
@@ -92,7 +90,7 @@ class TurbiniaRequestsApi(object):
         )
         self.get_request_status_endpoint = _Endpoint(
             settings={
-                'response_type': (RequestStatus,),
+                'response_type': (bool, date, datetime, dict, float, int, list, str, none_type,),
                 'auth': [
                     'oAuth2'
                 ],
@@ -143,7 +141,7 @@ class TurbiniaRequestsApi(object):
         )
         self.get_requests_summary_endpoint = _Endpoint(
             settings={
-                'response_type': (RequestsSummary,),
+                'response_type': (bool, date, datetime, dict, float, int, list, str, none_type,),
                 'auth': [
                     'oAuth2'
                 ],
@@ -319,7 +317,7 @@ class TurbiniaRequestsApi(object):
             async_req (bool): execute request asynchronously
 
         Returns:
-            RequestStatus
+            bool, date, datetime, dict, float, int, list, str, none_type
                 If the method is called asynchronously, returns the request
                 thread.
         """
@@ -399,7 +397,7 @@ class TurbiniaRequestsApi(object):
             async_req (bool): execute request asynchronously
 
         Returns:
-            RequestsSummary
+            bool, date, datetime, dict, float, int, list, str, none_type
                 If the method is called asynchronously, returns the request
                 thread.
         """
