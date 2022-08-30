@@ -1,0 +1,6 @@
+{
+	"API_SERVER_ADDRESS": "localhost",
+	"API_SERVER_PORT": 8000,
+	"API_AUTHENTICATION_ENABLED": false
+}
+

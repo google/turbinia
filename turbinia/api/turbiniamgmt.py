@@ -17,6 +17,7 @@
 import os
 import sys
 import logging
+import json
 import click
 import turbinia_api_client
 
@@ -28,7 +29,6 @@ from turbinia_api_client.api import turbinia_tasks_api
 from turbinia_api_client.api import turbinia_configuration_api
 from turbinia_api_client.api import turbinia_jobs_api
 from turbinia_api_client.api import turbinia_request_results_api
-from turbinia import config as turbinia_config
 
 log = logging.getLogger('turbinia:turbiniamgmt')
 stdout_handler = logging.StreamHandler(stream=sys.stdout)
@@ -36,17 +36,8 @@ stdout_handler.setLevel(logging.DEBUG)
 log.addHandler(stdout_handler)
 
 
-def load_config():
-  """Load the API client configuration."""
-  turbinia_config.LoadConfig()
-  config = turbinia_api_client.Configuration(
-      host='{}:{}'.format(
-          turbinia_config.API_SERVER_ADDRESS, turbinia_config.API_SERVER_PORT))
-  return config
-
-
 def get_oauth2_credentials():
-  """Authenticate the user using Google OAuth services."""
+  """Authenticates the user using Google OAuth services."""
   scopes = [
       'openid', 'https://www.googleapis.com/auth/userinfo.email',
       'https://www.googleapis.com/auth/userinfo.profile'
@@ -120,8 +111,8 @@ def get_config(ctx):
   try:
     api_response = api_instance.read_config()
     click.echo(api_response)
-  except turbinia_api_client.ApiException as e:
-    click.echo("Exception when calling read_config: %s\n" % e)
+  except turbinia_api_client.ApiException as exception:
+    click.echo("Exception when calling read_config: {0!s}".format(exception))
 
 
 @result_group.command("get_request_result")
@@ -137,12 +128,13 @@ def get_request_result(ctx, request_id):
     api_response = api_instance.get_request_output(request_id)
     filename = api_response.name.split('/')[-1]
     click.echo("Saving zip file: {}".format(filename))
-    with open(filename, 'wb') as f:
-      f.write(api_response.read())
-  except turbinia_api_client.ApiException as e:
-    click.echo("Exception when calling read_config: %s\n" % e)
+    with open(filename, 'wb') as file:
+      file.write(api_response.read())
+  except turbinia_api_client.ApiException as exception:
+    click.echo(
+        "Exception when calling get_request_result: {0!s}".format(exception))
   except OSError as exception:
-    click.echo("Unable to save file: {}".format(exception))
+    click.echo("Unable to save file: {0!s}".format(exception))
 
 
 @result_group.command("get_task_result")
@@ -159,12 +151,13 @@ def get_task_result(ctx, task_id):
         task_id, _check_return_type=False)
     filename = api_response.name.split('/')[-1]
     click.echo("Saving zip file: {}".format(filename))
-    with open(filename, 'wb') as f:
-      f.write(api_response.read())
-  except turbinia_api_client.ApiException as e:
-    click.echo("Exception when calling read_config: %s\n" % e)
+    with open(filename, 'wb') as file:
+      file.write(api_response.read())
+  except turbinia_api_client.ApiException as exception:
+    click.echo(
+        "Exception when calling get_task_result: {0!s}".format(exception))
   except OSError as exception:
-    click.echo("Unable to save file: {}".format(exception))
+    click.echo("Unable to save file: {0!s}".format(exception))
 
 
 @jobs_group.command("get_jobs")
@@ -176,8 +169,8 @@ def get_jobs(ctx):
   try:
     api_response = api_instance.read_jobs()
     click.echo(api_response)
-  except turbinia_api_client.ApiException as e:
-    click.echo("Exception when calling read_jobs: %s\n" % e)
+  except turbinia_api_client.ApiException as exception:
+    click.echo("Exception when calling get_jobs: %s\n" % exception)
 
 
 @request_group.command("get_status")
@@ -192,8 +185,8 @@ def get_request(ctx, request_id):
     api_response = api_instance.get_request_status(
         request_id, _check_return_type=False)
     click.echo(api_response)
-  except turbinia_api_client.ApiException as e:
-    click.echo("Exception when calling get_request_status: %s\n" % e)
+  except turbinia_api_client.ApiException as exception:
+    click.echo("Exception when calling get_status: {0!s}".format(exception))
 
 
 @request_group.command("get_summary")
@@ -205,8 +198,8 @@ def get_requests_summary(ctx):
   try:
     api_response = api_instance.get_requests_summary(_check_return_type=False)
     click.echo(api_response)
-  except turbinia_api_client.ApiException as e:
-    click.echo("Exception when calling get_requests_summary: %s\n" % e)
+  except turbinia_api_client.ApiException as exception:
+    click.echo("Exception when calling get_summary: {0!s}".format(exception))
 
 
 @task_group.command("get_status")
@@ -221,33 +214,51 @@ def get_task(ctx, task_id):
     api_response = api_instance.get_task_status(
         task_id, _check_return_type=False)
     click.echo(api_response)
-  except turbinia_api_client.ApiException as e:
-    click.echo("Exception when calling get_task_status: %s\n" % e)
+  except turbinia_api_client.ApiException as exception:
+    click.echo("Exception when calling get_status: {0!s}".format(exception))
 
 
 class TurbiniaMgmtCli():
   """Turbinia API client tool."""
 
   def __init__(self, api_client=None, config=None):
+    self.API_SERVER_ADDRESS = None
+    self.API_SERVER_PORT = None
+    self.API_AUTHENTICATION_ENABLED = None
+    self.get_api_uri()
     self.api_client = api_client
     self.config = config
 
     if not self.config:
-      self.config = turbinia_api_client.Configuration(
-          host="http://localhost:8000")
+      host = 'http://{0:s}:{1:d}'.format(
+          self.API_SERVER_ADDRESS, self.API_SERVER_PORT)
+      self.config = turbinia_api_client.Configuration(host=host)
     if not self.api_client:
-      self.api_client = turbinia_api_client.ApiClient(configuration=config)
+      self.api_client = turbinia_api_client.ApiClient(configuration=self.config)
 
-    if turbinia_config.API_AUTHENTICATION_ENABLED:
+    if self.API_AUTHENTICATION_ENABLED:
       config.access_token = get_oauth2_credentials()
+
+  def get_api_uri(self):
+    """Reads the configuration file to obtain the API server URI."""
+    with open(".turbinia_api_config.json", encoding='utf-8') as config:
+      try:
+        config_dict = json.loads(config.read())
+        self.API_SERVER_ADDRESS = config_dict.get('API_SERVER_ADDRESS')
+        self.API_SERVER_PORT = config_dict.get('API_SERVER_PORT')
+        self.API_AUTHENTICATION_ENABLED = config_dict.get(
+            'API_AUTHENTICATION_ENABLED')
+      except json.JSONDecodeError as exception:
+        log.error(exception)
+        click.echo(
+            "Error reading .turbinia_api_config.json: {0!s}".format(exception))
 
 
 @click.group(context_settings={"help_option_names": ["-h", "--help"]})
 @click.pass_context
 def cli(ctx):
   """Turbinia API client tool."""
-  config = load_config()
-  ctx.obj = TurbiniaMgmtCli(config=config)
+  ctx.obj = TurbiniaMgmtCli()
 
 
 cli.add_command(config_group)
