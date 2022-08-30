@@ -191,28 +191,27 @@ def task_runner(obj, *args, **kwargs):
   Returns:
     Output from TurbiniaTask (should be TurbiniaTaskResult).
   """
-
-  # GKE Specific - do not queue more work if pod places this file
+  obj = task_deserialize(obj)
   if config.TASK_MANAGER.lower() == 'psq':
+    # Late import because this is only needed for PSQ
+    import psq
+    # GKE PSQ Specific - do not queue more work if pod places this file
     if os.path.exists(config.SCALEDOWN_WORKER_FILE):
-      # Late import because this is only needed for PSQ
-      import psq
       raise psq.Retry()
-
-  # Try to acquire lock, timeout and requeue task if the worker
-  # is already processing a task.
-  try:
-    lock = filelock.FileLock(config.LOCK_FILE)
-    with lock.acquire(timeout=0.001):
-      obj = task_deserialize(obj)
-      run = obj.run_wrapper(*args, **kwargs)
-  except filelock.Timeout:
-    if config.TASK_MANAGER.lower() == 'psq':
-      # Late import because this is only needed for PSQ
-      import psq
+    # Try to acquire lock, timeout and requeue task if the worker
+    # is already processing a task.
+    try:
+      lock = filelock.FileLock(config.LOCK_FILE)
+      with lock.acquire(timeout=0.001):
+        run = obj.run_wrapper(*args, **kwargs)
+    except filelock.Timeout:
       raise psq.Retry()
-  # *Always* make sure we release the lock
-  finally:
-    lock.release()
+    # *Always* make sure we release the lock
+    finally:
+      lock.release()
+  # Celery is configured to receive only one Task per worker
+  # so no need to create a FileLock.
+  elif config.TASK_MANAGER.lower() == 'celery':
+    run = obj.run_wrapper(*args, **kwargs)
 
   return run

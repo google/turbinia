@@ -506,14 +506,14 @@ def process_args(args):
   if args.debug_tasks:
     config.DEBUG_TASKS = True
 
-  if config.TASK_MANAGER == 'PSQ':
+  if config.CLOUD_PROVIDER:
     from turbinia.lib import google_cloud
     from libcloudforensics.providers.gcp import forensics as gcp_forensics
 
-  # Enable GCP Stackdriver Logging
-  if config.STACKDRIVER_LOGGING and args.command in ('server', 'psqworker'):
-    google_cloud.setup_stackdriver_handler(
-        config.TURBINIA_PROJECT, args.command)
+    # Enable GCP Stackdriver Logging
+    if config.STACKDRIVER_LOGGING:
+      google_cloud.setup_stackdriver_handler(
+          config.TURBINIA_PROJECT, args.command)
 
   log.info('Turbinia version: {0:s}'.format(__version__))
 
@@ -613,7 +613,7 @@ def process_args(args):
           all_args=all_args)
   elif args.command in ('googleclouddisk', 'googleclouddiskembedded'):
     # Fail if this is a local instance
-    if config.SHARED_FILESYSTEM and not args.force_evidence:
+    if not config.CLOUD_PROVIDER and not args.force_evidence:
       msg = (
           'The evidence type {0:s} is Cloud only, and this instance of '
           'Turbinia is not a cloud instance.'.format(args.command))

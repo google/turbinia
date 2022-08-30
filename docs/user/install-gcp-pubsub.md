@@ -1,26 +1,16 @@
-**Note**: **_This installation method will be deprecated by the end of 2022.
-The current recommended method for installing Turbinia is
-[here](install-gke-pubsub.md)._**
-
-# **Turbinia Quick Installation Instructions**
+# **Turbinia GCP Installation Instructions**
 
 ## Overview
 
-Turbinia can be run on the [Google Cloud Platform](https://cloud.google.com), on
-local machines, or in a hybrid mode. See the
-"[how it works](how-it-works.md)"
-documentation for more details on what the architecture looks like for each of
-these installation types. This doc covers the recommended quick installation
-instructions for Cloud installations. This uses
+These instructions cover the PubSub installation of Turbinia using
+[Google Cloud Platform](https://cloud.google.com). This uses
 [terraform configs](https://github.com/forseti-security/osdfir-infrastructure)
-that are part of the
-[Forseti Security repository](https://github.com/forseti-security)
+that are part of the [Forseti Security repository](https://github.com/forseti-security)
 to automate deployment of Turbinia into an existing GCP Project.
-for details.
 
 ## Installation
 
-The following steps can be performed on any Linux machine (Ubuntu 18.0.4
+The following steps can be performed on any Linux machine (Ubuntu 20.04
 recommended), and [Cloud Shell](https://cloud.google.com/shell/) is one easy way
 to get a shell with access to your GCP resources.
 
@@ -58,8 +48,8 @@ to get a shell with access to your GCP resources.
     `modules/turbinia/variables.tf` file and change the `gcp_zone` and
     `gcp_region` variables as appropriate to reflect your GCP project's
     zone and region.
-  - If you want to use docker to run Turbinia tasks, please follow the
-    instructions [here](using-docker.md) to enable docker.
+  - If you want to use Docker to run Turbinia tasks, please follow the
+    instructions [here](using-docker.md) to enable Docker.
   - Running the following commands will leave some state information under
     the current directory, so if you wish to continue to manage the number
     of workers via Terraform you should keep this directory for later use.
@@ -69,7 +59,7 @@ to get a shell with access to your GCP resources.
     [Terraform documentation](https://www.terraform.io/docs/commands/index.html)
     for more information.
   - The current configuration does not enable alert notifications by default.
-    Please see [here](#grafana-smtp-setup) for the instructions
+    Please see [here](#grafana-smtp-setup) for instructions.
   - If you are running multiple workers on a given host and within containers, ensure
     that you are mapping the host `OUTPUT_DIR` path specified in the configuration file
     `.turbiniarc` to the containers so that they can properly update the `RESOURCE_STATE_FILE`.
@@ -103,7 +93,7 @@ If you want to use the command line tool, you can SSH into the server and run
 Evidence for processing or see the status of existing and previous processing
 requests. If you'd prefer to use turbiniactl on a different machine, follow the
 following instructions to configure the client. The instructions are based on
-using Ubuntu 18.04, though other versions of Linux should be compatible.
+using Ubuntu 20.04, though other versions of Linux should be compatible.
 
 - Follow the steps from GCP Project setup above to install the SDK and
   authenticate with gcloud.

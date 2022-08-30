@@ -24,6 +24,10 @@
 # separate when running with the same Cloud projects or backend servers.
 INSTANCE_ID = 'turbinia-instance1'
 
+# Which Cloud provider to use. Valid options are None and 'GCP'. Use 'GCP'
+# for GCP or hybrid installations, and None for local installations.
+CLOUD_PROVIDER = 'GCP'
+
 # Which state manager to use. Valid options are 'Datastore' or 'Redis'.  Use
 # 'Datastore' for Cloud (GCP) or hybrid installations, and 'Redis' for local
 # installations.
@@ -283,11 +287,16 @@ STACKDRIVER_TRACEBACK = False
 # Options in this section are required if TASK_MANAGER is set to 'Celery'
 ################################################################################
 
+# Use Redis for state management
+REDIS_HOST = 'redis'
+REDIS_PORT = '6379'
+REDIS_DB = '0'
+
 # Method for communication between nodes
-CELERY_BROKER = 'redis://redis'
+CELERY_BROKER = 'redis://%s' % REDIS_HOST
 
 # Storage for task results/status
-CELERY_BACKEND = 'redis://redis'
+CELERY_BACKEND = 'redis://%s' % REDIS_HOST
 
 # Can be the same as CELERY_BROKER
 KOMBU_BROKER = CELERY_BROKER
@@ -298,11 +307,6 @@ KOMBU_CHANNEL = '%s-kombu' % INSTANCE_ID
 # Will messages be persistent and require acknowledgment?
 # http://docs.celeryproject.org/projects/kombu/en/4.0/reference/kombu.html#kombu.Connection.SimpleBuffer
 KOMBU_DURABLE = True
-
-# Use Redis for state management
-REDIS_HOST = 'redis'
-REDIS_PORT = '6379'
-REDIS_DB = '0'
 
 ################################################################################
 #                           Email Config

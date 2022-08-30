@@ -44,6 +44,7 @@ CONFIG_MSG = (
 REQUIRED_VARS = [
     # Turbinia Config
     'INSTANCE_ID',
+    'CLOUD_PROVIDER',
     'STATE_MANAGER',
     'TASK_MANAGER',
     'LOG_DIR',

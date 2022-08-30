@@ -65,10 +65,12 @@ def GetLocalInstanceName():
   """
   # TODO(aarontp): Use cloud API instead of manual requests to metadata service.
   req = urllib.request.Request(
-      'http://metadata.google.internal/computeMetadata/v1/instance/name', None,
-      {'Metadata-Flavor': 'Google'})
+      'http://metadata.google.internal/computeMetadata/v1/instance/hostname',
+      None, {'Metadata-Flavor': 'Google'})
   try:
     instance = urllib.request.urlopen(req).read().decode('utf-8')
+    #Grab everything excluding the domain part of the hostname
+    instance = instance.split('.')[0]
   except urllib.error.HTTPError as exception:
     raise TurbiniaException(
         'Could not get instance name: {0!s}'.format(exception))

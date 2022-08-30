@@ -32,7 +32,7 @@ from turbinia.processors import mount_local
 from turbinia.processors import resource_manager
 
 config.LoadConfig()
-if config.TASK_MANAGER.lower() == 'psq':
+if config.CLOUD_PROVIDER:
   from turbinia.processors import google_cloud
 
 log = logging.getLogger('turbinia')

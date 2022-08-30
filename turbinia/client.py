@@ -43,9 +43,9 @@ MAX_RETRIES = 10
 RETRY_SLEEP = 60
 
 config.LoadConfig()
-if config.TASK_MANAGER.lower() == 'psq':
+if config.CLOUD_PROVIDER:
   from libcloudforensics.providers.gcp.internal import function as gcp_function
-elif config.TASK_MANAGER.lower() == 'celery':
+if config.TASK_MANAGER.lower() == 'celery':
   from turbinia.state_manager import RedisStateManager
 
 log = logging.getLogger('turbinia')
