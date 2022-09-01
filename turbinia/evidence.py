@@ -17,11 +17,14 @@
 from __future__ import unicode_literals
 
 from enum import IntEnum
+from collections import defaultdict
+
 import json
 import logging
 import os
 import sys
 import filelock
+import inspect
 
 from turbinia import config
 from turbinia import TurbiniaException
@@ -36,6 +39,49 @@ if config.CLOUD_PROVIDER:
   from turbinia.processors import google_cloud
 
 log = logging.getLogger('turbinia')
+
+
+def evidence_class_names(all_classes=False):
+  """Returns a list of class names for the evidence module."""
+  predicate = lambda member: inspect.isclass(member) and not inspect.isbuiltin(
+      member)
+  class_names = inspect.getmembers(sys.modules['turbinia.evidence'], predicate)
+  if not all_classes:
+    # Ignore classes that are not real Evidence types and the base class.
+    # TODO: Non-evidence types should be moved out of the evidence module,
+    # so that we no longer have to ignore certain classes here. Especially
+    # 'output' and 'report' types.
+    ignored_classes = (
+        'BodyFile', 'BulkExtractorOutput', 'Evidence', 'EvidenceState',
+        'EvidenceCollection', 'ExportedFileArtifact', 'FilteredTextFile',
+        'FinalReport', 'IntEnum', 'PlasoCsvFile', 'PlasoFile', 'PhotorecOutput',
+        'ReportText', 'TextFile', 'VolatilityReport', 'TurbiniaException')
+    class_names = filter(
+        lambda class_tuple: class_tuple[0] not in ignored_classes, class_names)
+  return list(class_names)
+
+
+def map_evidence_attributes():
+  """Creates a dictionary that maps evidence types to their
+       constructor attributes.
+
+  Returns:
+    object_attribute_mapping (defaultdict): A mapping of evidence types
+        and their constructor attributes.
+  """
+  object_attribute_mapping = defaultdict(list)
+  for class_name, class_type in evidence_class_names():
+    try:
+      attributes = inspect.signature(class_type).parameters.keys()
+      for attribute in attributes:
+        if not object_attribute_mapping[class_name]:
+          object_attribute_mapping[class_name] = []
+        # Ignore 'args' and 'kwargs' attributes.
+        if attribute not in ('args', 'kwargs'):
+          object_attribute_mapping[class_name].append(attribute)
+    except ValueError as exception:
+      log.info(exception)
+  return object_attribute_mapping
 
 
 def evidence_decode(evidence_dict, strict=False):
@@ -570,12 +616,12 @@ class RawDisk(Evidence):
         device or a raw disk image).
     mount_partition: The mount partition for this disk (if any).
   """
-
+  REQUIRED_ATTRIBUTES = ['device_path']
   POSSIBLE_STATES = [EvidenceState.ATTACHED]
 
-  def __init__(self, *args, **kwargs):
+  def __init__(self, device_path=None, *args, **kwargs):
     """Initialization for raw disk evidence object."""
-    self.device_path = None
+    self.device_path = device_path
     super(RawDisk, self).__init__(*args, **kwargs)
 
   def _preprocess(self, _, required_states):
@@ -984,11 +1030,13 @@ class EwfDisk(Evidence):
   """
   POSSIBLE_STATES = [EvidenceState.ATTACHED]
 
-  def __init__(self, *args, **kwargs):
+  def __init__(
+      self, device_path=None, ewf_path=None, ewf_mount_path=None, *args,
+      **kwargs):
     """Initialization for EWF evidence object."""
-    self.device_path = None
-    self.ewf_path = None
-    self.ewf_mount_path = None
+    self.device_path = device_path
+    self.ewf_path = ewf_path
+    self.ewf_mount_path = ewf_mount_path
     super(EwfDisk, self).__init__(*args, **kwargs)
 
   def _preprocess(self, _, required_states):

@@ -21,6 +21,7 @@ from fastapi import HTTPException, APIRouter
 from fastapi.responses import JSONResponse
 
 from turbinia import config as turbinia_config
+from turbinia import evidence
 
 log = logging.getLogger('turbinia:api_server:config')
 
@@ -38,3 +39,10 @@ async def read_config():
     log.error('Error reading configuration: {0!s}'.format(exception))
     raise HTTPException(
         status_code=500, detail='error reading configuration') from exception
+
+
+@router.get("/evidence")
+async def get_evidence_types():
+  """Returns supported Evidence object types and required parameters."""
+  attribute_mapping = evidence.map_evidence_attributes()
+  return JSONResponse(content=attribute_mapping, status_code=200)

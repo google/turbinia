@@ -77,32 +77,32 @@ def get_oauth2_credentials():
   return credentials.id_token
 
 
-@click.group("request")
-def request_group():
-  """Manage Turbinia requests."""
-
-
-@click.group("task")
-def task_group():
-  """Get Turbinia task information."""
-
-
-@click.group("config")
+@click.group('config')
 def config_group():
   """Get turbinia configuration."""
 
 
-@click.group("result")
+@click.group('status')
+def status_group():
+  """Get turbinia request/task status."""
+
+
+@click.group('result')
 def result_group():
   """Get turbinia task or request results."""
 
 
-@click.group("jobs")
+@click.group('jobs')
 def jobs_group():
   """Get a list of enabled Turbinia jobs."""
 
 
-@config_group.command("get_config")
+@click.group('submit')
+def submit_group():
+  """Submit new requests to the Turbinia API server."""
+
+
+@config_group.command('list')
 @click.pass_context
 def get_config(ctx):
   """Get Turbinia server configuration."""
@@ -112,12 +112,11 @@ def get_config(ctx):
     api_response = api_instance.read_config()
     click.echo(api_response)
   except turbinia_api_client.ApiException as exception:
-    click.echo("Exception when calling read_config: {0!s}".format(exception))
+    click.echo('Exception when calling read_config: {0!s}'.format(exception))
 
 
-@result_group.command("get_request_result")
-@click.option(
-    "--request_id", '-r', type=str, required=True, help="Request identifier.")
+@result_group.command('request')
+@click.argument('request_id')
 @click.pass_context
 def get_request_result(ctx, request_id):
   """Get Turbinia server configuration."""
@@ -132,14 +131,13 @@ def get_request_result(ctx, request_id):
       file.write(api_response.read())
   except turbinia_api_client.ApiException as exception:
     click.echo(
-        "Exception when calling get_request_result: {0!s}".format(exception))
+        'Exception when calling get_request_result: {0!s}'.format(exception))
   except OSError as exception:
-    click.echo("Unable to save file: {0!s}".format(exception))
+    click.echo('Unable to save file: {0!s}'.format(exception))
 
 
-@result_group.command("get_task_result")
-@click.option(
-    "--task_id", '-t', type=str, required=True, help="Task identifier.")
+@result_group.command('task')
+@click.argument('task_id')
 @click.pass_context
 def get_task_result(ctx, task_id):
   """Get Turbinia server configuration."""
@@ -150,17 +148,16 @@ def get_task_result(ctx, task_id):
     api_response = api_instance.get_task_output(
         task_id, _check_return_type=False)
     filename = api_response.name.split('/')[-1]
-    click.echo("Saving zip file: {}".format(filename))
+    click.echo('Saving zip file: {}'.format(filename))
     with open(filename, 'wb') as file:
       file.write(api_response.read())
   except turbinia_api_client.ApiException as exception:
-    click.echo(
-        "Exception when calling get_task_result: {0!s}".format(exception))
+    click.echo('Error when calling get_task_result: {0!s}'.format(exception))
   except OSError as exception:
-    click.echo("Unable to save file: {0!s}".format(exception))
+    click.echo('Unable to save file: {0!s}'.format(exception))
 
 
-@jobs_group.command("get_jobs")
+@jobs_group.command('list')
 @click.pass_context
 def get_jobs(ctx):
   """Get Turbinia jobs list."""
@@ -170,12 +167,11 @@ def get_jobs(ctx):
     api_response = api_instance.read_jobs()
     click.echo(api_response)
   except turbinia_api_client.ApiException as exception:
-    click.echo("Exception when calling get_jobs: %s\n" % exception)
+    click.echo('Error when calling get_jobs: {0!s}'.format(exception))
 
 
-@request_group.command("get_status")
-@click.option(
-    "--request_id", '-r', type=str, required=True, help="Request identifier.")
+@status_group.command('request')
+@click.argument('request_id')
 @click.pass_context
 def get_request(ctx, request_id):
   """Get Turbinia request status."""
@@ -186,10 +182,10 @@ def get_request(ctx, request_id):
         request_id, _check_return_type=False)
     click.echo(api_response)
   except turbinia_api_client.ApiException as exception:
-    click.echo("Exception when calling get_status: {0!s}".format(exception))
+    click.echo('Error when calling get_status: {0!s}'.format(exception))
 
 
-@request_group.command("get_summary")
+@status_group.command('summary')
 @click.pass_context
 def get_requests_summary(ctx):
   """Get a summary of all Trubinia requests."""
@@ -199,12 +195,11 @@ def get_requests_summary(ctx):
     api_response = api_instance.get_requests_summary(_check_return_type=False)
     click.echo(api_response)
   except turbinia_api_client.ApiException as exception:
-    click.echo("Exception when calling get_summary: {0!s}".format(exception))
+    click.echo('Error when calling get_summary: {0!s}'.format(exception))
 
 
-@task_group.command("get_status")
-@click.option(
-    "--task_id", '-t', type=str, required=True, help="Task identifier.")
+@status_group.command('task')
+@click.argument('task_id')
 @click.pass_context
 def get_task(ctx, task_id):
   """Get Turbinia task status."""
@@ -215,7 +210,50 @@ def get_task(ctx, task_id):
         task_id, _check_return_type=False)
     click.echo(api_response)
   except turbinia_api_client.ApiException as exception:
-    click.echo("Exception when calling get_status: {0!s}".format(exception))
+    click.echo('Error when calling get_status: {0!s}'.format(exception))
+
+
+def build_evidence_arguments(evidence):
+  pass
+
+
+def build_recipe_data(recipe_dict):
+  pass
+
+
+@submit_group.command('request')
+#@click.argument('evidence', nargs=-1)
+@click.pass_context
+#@click.option(
+#    "--task_id", '-t', type=str, required=True, help="Task identifier.")
+def create_request(ctx):
+  """Create and submit a new Turbinia request."""
+  api_client = ctx.obj.api_client
+  api_instance = turbinia_requests_api.TurbiniaRequestsApi(api_client)
+  #request = {'evidence': {}, 'request_options': {}}
+  request = {
+      "description": "Turbinia request object",
+      "evidence": {
+          "_name": "Rawdisk evidence",
+          "source_path": "/workspaces/turbinia/test_data/artifact_disk.dd",
+          "type": "RawDisk"
+      },
+      "request_options": {
+          "sketch_id":
+              1234,
+          "recipe_name":
+              "/workspaces/turbinia/turbinia/config/recipes/triage-linux.yaml"
+      },
+      "reason": "test",
+      "requester": "tester"
+  }
+  try:
+    api_response = api_instance.create_request(request)
+    click.echo(api_response)
+  except turbinia_api_client.ApiException as exception:
+    click.echo('Error when calling create_request: {0!s}'.format(exception))
+  except TypeError as exception:
+    click.echo('The request object is invalid. {0!s}'.format(exception))
 
 
 class TurbiniaMgmtCli():
@@ -251,10 +289,10 @@ class TurbiniaMgmtCli():
       except json.JSONDecodeError as exception:
         log.error(exception)
         click.echo(
-            "Error reading .turbinia_api_config.json: {0!s}".format(exception))
+            'Error reading .turbinia_api_config.json: {0!s}'.format(exception))
 
 
-@click.group(context_settings={"help_option_names": ["-h", "--help"]})
+@click.group(context_settings={'help_option_names': ['-h', '--help']})
 @click.pass_context
 def cli(ctx):
   """Turbinia API client tool."""
@@ -263,9 +301,9 @@ def cli(ctx):
 
 cli.add_command(config_group)
 cli.add_command(jobs_group)
-cli.add_command(request_group)
 cli.add_command(result_group)
-cli.add_command(task_group)
+cli.add_command(status_group)
+cli.add_command(submit_group)
 
 if __name__ == "__main__":
   cli()

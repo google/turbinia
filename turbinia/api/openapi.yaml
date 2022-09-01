@@ -120,6 +120,19 @@ paths:
       summary: Read Config
       tags:
         - Turbinia Configuration
+  /api/config/evidence:
+    get:
+      description: Returns supported Evidence object types and required parameters.
+      operationId: get_evidence_types
+      responses:
+        "200":
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+      summary: Get Evidence Types
+      tags:
+        - Turbinia Configuration
   /api/jobs/:
     get:
       description: Return enabled jobs from the current Turbinia config.
