@@ -29,8 +29,8 @@ from turbinia.workers import TurbiniaTask
 
 log = logging.getLogger('turbinia')
 
-CE_BINARY = '/opt/container-explorer/container-explorer'
-CE_SUPPORT_FILE = '/opt/container-explorer/supportcontainer.yaml'
+CE_BINARY = '/opt/container-explorer/bin/ce'
+CE_SUPPORT_FILE = '/opt/container-explorer/etc/supportcontainer.yaml'
 
 
 class ContainerdEnumerationTask(TurbiniaTask):

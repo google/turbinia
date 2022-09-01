@@ -61,8 +61,8 @@ def PreprocessMountContainerdFS(image_path, namespace, container_id):
   containerd_mount_path = tempfile.mkdtemp(
       prefix=f'{namespace}_{container_id}_', dir=mount_prefix)
 
-  ce_binary = '/opt/container-explorer/container-explorer'
-  ce_support = '/opt/container-explorer/supportcontainer.yaml'
+  ce_binary = '/opt/container-explorer/bin/ce'
+  ce_support = '/opt/container-explorer/etc/supportcontainer.yaml'
   mount_cmd = [
       'sudo', ce_binary, '--support-container-data', ce_support, '-i',
       image_path, '-n', namespace, 'mount', container_id, containerd_mount_path
