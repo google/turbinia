@@ -45,12 +45,12 @@ def evidence_class_names(all_classes=False):
   """Returns a list of class names for the evidence module."""
   predicate = lambda member: inspect.isclass(member) and not inspect.isbuiltin(
       member)
-  class_names = inspect.getmembers(sys.modules['turbinia.evidence'], predicate)
+  class_names = inspect.getmembers(sys.modules[__name__], predicate)
   if not all_classes:
-    # Ignore classes that are not real Evidence types and the base class.
     # TODO: Non-evidence types should be moved out of the evidence module,
     # so that we no longer have to ignore certain classes here. Especially
     # 'output' and 'report' types.
+    # Ignore classes that are not real Evidence types and the base class.
     ignored_classes = (
         'BodyFile', 'BulkExtractorOutput', 'Evidence', 'EvidenceState',
         'EvidenceCollection', 'ExportedFileArtifact', 'FilteredTextFile',
@@ -72,7 +72,8 @@ def map_evidence_attributes():
   object_attribute_mapping = defaultdict(list)
   for class_name, class_type in evidence_class_names():
     try:
-      attributes = inspect.signature(class_type).parameters.keys()
+      attributes_signature = inspect.signature(class_type)
+      attributes = attributes_signature.parameters.keys()
       for attribute in attributes:
         if not object_attribute_mapping[class_name]:
           object_attribute_mapping[class_name] = []
@@ -548,7 +549,7 @@ class CompressedDirectory(Evidence):
     compressed_directory: The path to the compressed directory.
     uncompressed_directory: The path to the uncompressed directory.
   """
-
+  REQUIRED_ATTRIBUTES = ['compressed_directory', 'uncompressed_directory']
   POSSIBLE_STATES = [EvidenceState.DECOMPRESSED]
 
   def __init__(
@@ -612,7 +613,7 @@ class RawDisk(Evidence):
   """Evidence object for Disk based evidence.
 
   Attributes:
-    device_path (str): Path to a relevant 'raw' data source (ie: a block
+    source_path (str): Path to a relevant 'raw' data source (ie: a block
         device or a raw disk image).
     mount_partition: The mount partition for this disk (if any).
   """
@@ -621,8 +622,7 @@ class RawDisk(Evidence):
 
   def __init__(self, source_path=None, *args, **kwargs):
     """Initialization for raw disk evidence object."""
-    super(RawDisk, self).__init__(*args, **kwargs)
-    self.source_path = source_path
+    super(RawDisk, self).__init__(source_path=source_path, *args, **kwargs)
     self.device_path = None
 
   def _preprocess(self, _, required_states):
@@ -652,21 +652,23 @@ class DiskPartition(RawDisk):
     partition_size (int): Size of the partition in bytes.
     path_spec (dfvfs.PathSpec): Partition path spec.
   """
-
+  REQUIRED_ATTRIBUTES = [
+      'partition_location', 'partition_offset', 'partition_size', 'lv_uuid',
+      'path_spec', 'important'
+  ]
   POSSIBLE_STATES = [EvidenceState.ATTACHED, EvidenceState.MOUNTED]
 
   def __init__(
       self, partition_location=None, partition_offset=None, partition_size=None,
       lv_uuid=None, path_spec=None, important=True, *args, **kwargs):
     """Initialization for raw volume evidence object."""
-
+    super(DiskPartition, self).__init__(*args, **kwargs)
     self.partition_location = partition_location
     self.partition_offset = partition_offset
     self.partition_size = partition_size
     self.lv_uuid = lv_uuid
     self.path_spec = path_spec
     self.important = important
-    super(DiskPartition, self).__init__(*args, **kwargs)
 
     # This Evidence needs to have a parent
     self.context_dependent = True
@@ -774,12 +776,12 @@ class GoogleCloudDisk(RawDisk):
       self, project=None, zone=None, disk_name=None, mount_partition=1, *args,
       **kwargs):
     """Initialization for Google Cloud Disk."""
+    super(GoogleCloudDisk, self).__init__(*args, **kwargs)
     self.project = project
     self.zone = zone
     self.disk_name = disk_name
     self.mount_partition = mount_partition
     self.partition_paths = None
-    super(GoogleCloudDisk, self).__init__(*args, **kwargs)
     self.cloud_only = True
     self.resource_tracked = True
     self.resource_id = self.disk_name
@@ -824,8 +826,8 @@ class GoogleCloudDiskRawEmbedded(GoogleCloudDisk):
 
   def __init__(self, embedded_path=None, *args, **kwargs):
     """Initialization for Google Cloud Disk containing a raw disk image."""
-    self.embedded_path = embedded_path
     super(GoogleCloudDiskRawEmbedded, self).__init__(*args, **kwargs)
+    self.embedded_path = embedded_path
 
     # This Evidence needs to have a GoogleCloudDisk as a parent
     self.context_dependent = True
@@ -880,8 +882,8 @@ class PlasoFile(Evidence):
 
   def __init__(self, plaso_version=None, *args, **kwargs):
     """Initialization for Plaso File evidence."""
-    self.plaso_version = plaso_version
     super(PlasoFile, self).__init__(copyable=True, *args, **kwargs)
+    self.plaso_version = plaso_version
     self.save_metadata = True
 
 
@@ -890,8 +892,8 @@ class PlasoCsvFile(Evidence):
 
   def __init__(self, plaso_version=None, *args, **kwargs):
     """Initialization for Plaso File evidence."""
-    self.plaso_version = plaso_version
     super(PlasoCsvFile, self).__init__(copyable=True, *args, **kwargs)
+    self.plaso_version = plaso_version
     self.save_metadata = False
 
 
@@ -900,8 +902,8 @@ class ReportText(Evidence):
   """Text data for general reporting."""
 
   def __init__(self, text_data=None, *args, **kwargs):
-    self.text_data = text_data
     super(ReportText, self).__init__(copyable=True, *args, **kwargs)
+    self.text_data = text_data
 
 
 class FinalReport(ReportText):
@@ -979,7 +981,7 @@ class DockerContainer(Evidence):
       be mounted.
     _docker_root_directory(str): Full path to the docker root directory.
   """
-
+  REQUIRED_ATTRIBUTES = ['container_id']
   POSSIBLE_STATES = [EvidenceState.CONTAINER_MOUNTED]
 
   def __init__(self, container_id=None, *args, **kwargs):
@@ -988,7 +990,6 @@ class DockerContainer(Evidence):
     self.container_id = container_id
     self._container_fs_path = None
     self._docker_root_directory = None
-
     self.context_dependent = True
 
   @property
@@ -1025,20 +1026,21 @@ class EwfDisk(Evidence):
   """Evidence object for a EWF based evidence.
 
   Attributes:
-    device_path (str): Path to the mounted loop device.
+    source_path (str): Path to the mounted loop device.
     ewf_path (str): Path to mounted EWF image.
     ewf_mount_path (str): Path to EWF mount directory.
   """
+  REQUIRED_ATTRIBUTES = ['source_path', 'ewf_path', 'ewf_mount_path']
   POSSIBLE_STATES = [EvidenceState.ATTACHED]
 
   def __init__(
-      self, device_path=None, ewf_path=None, ewf_mount_path=None, *args,
+      self, source_path=None, ewf_path=None, ewf_mount_path=None, *args,
       **kwargs):
     """Initialization for EWF evidence object."""
-    self.device_path = device_path
+    super(EwfDisk, self).__init__(source_path=source_path, *args, **kwargs)
+    self.device_path = None
     self.ewf_path = ewf_path
     self.ewf_mount_path = ewf_mount_path
-    super(EwfDisk, self).__init__(*args, **kwargs)
 
   def _preprocess(self, _, required_states):
     if EvidenceState.ATTACHED in required_states or self.has_child_evidence:
