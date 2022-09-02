@@ -265,6 +265,10 @@ class Evidence:
           'Unable to initialize object, {0:s} is a copyable '
           'evidence and needs a source_path'.format(self.type))
 
+    # TODO: Validating for required attributes breaks some units tests.
+    # Github issue: https://github.com/google/turbinia/issues/1136
+    # self.validate()
+
   def __str__(self):
     return '{0:s}:{1:s}:{2!s}'.format(self.type, self.name, self.source_path)
 
@@ -506,7 +510,7 @@ class Evidence:
         message = (
             'Evidence validation failed: Required attribute {0:s} for class '
             '{1:s} is not set. Please check original request.'.format(
-                attribute, self.type))
+                attribute, self.name))
         raise TurbiniaException(message)
 
 
@@ -613,7 +617,7 @@ class RawDisk(Evidence):
   """Evidence object for Disk based evidence.
 
   Attributes:
-    source_path (str): Path to a relevant 'raw' data source (ie: a block
+    device_path (str): Path to a relevant 'raw' data source (ie: a block
         device or a raw disk image).
     mount_partition: The mount partition for this disk (if any).
   """
@@ -652,23 +656,20 @@ class DiskPartition(RawDisk):
     partition_size (int): Size of the partition in bytes.
     path_spec (dfvfs.PathSpec): Partition path spec.
   """
-  REQUIRED_ATTRIBUTES = [
-      'partition_location', 'partition_offset', 'partition_size', 'lv_uuid',
-      'path_spec', 'important'
-  ]
   POSSIBLE_STATES = [EvidenceState.ATTACHED, EvidenceState.MOUNTED]
 
   def __init__(
       self, partition_location=None, partition_offset=None, partition_size=None,
       lv_uuid=None, path_spec=None, important=True, *args, **kwargs):
     """Initialization for raw volume evidence object."""
-    super(DiskPartition, self).__init__(*args, **kwargs)
+
     self.partition_location = partition_location
     self.partition_offset = partition_offset
     self.partition_size = partition_size
     self.lv_uuid = lv_uuid
     self.path_spec = path_spec
     self.important = important
+    super(DiskPartition, self).__init__(*args, **kwargs)
 
     # This Evidence needs to have a parent
     self.context_dependent = True
@@ -882,8 +883,9 @@ class PlasoFile(Evidence):
 
   def __init__(self, plaso_version=None, *args, **kwargs):
     """Initialization for Plaso File evidence."""
-    super(PlasoFile, self).__init__(copyable=True, *args, **kwargs)
+
     self.plaso_version = plaso_version
+    super(PlasoFile, self).__init__(copyable=True, *args, **kwargs)
     self.save_metadata = True
 
 
@@ -892,8 +894,9 @@ class PlasoCsvFile(Evidence):
 
   def __init__(self, plaso_version=None, *args, **kwargs):
     """Initialization for Plaso File evidence."""
-    super(PlasoCsvFile, self).__init__(copyable=True, *args, **kwargs)
+
     self.plaso_version = plaso_version
+    super(PlasoCsvFile, self).__init__(copyable=True, *args, **kwargs)
     self.save_metadata = False
 
 
@@ -981,6 +984,7 @@ class DockerContainer(Evidence):
       be mounted.
     _docker_root_directory(str): Full path to the docker root directory.
   """
+
   REQUIRED_ATTRIBUTES = ['container_id']
   POSSIBLE_STATES = [EvidenceState.CONTAINER_MOUNTED]
 
@@ -1037,10 +1041,11 @@ class EwfDisk(Evidence):
       self, source_path=None, ewf_path=None, ewf_mount_path=None, *args,
       **kwargs):
     """Initialization for EWF evidence object."""
-    super(EwfDisk, self).__init__(source_path=source_path, *args, **kwargs)
-    self.device_path = None
+    super(EwfDisk, self).__init__(*args, **kwargs)
+    self.source_path = source_path
     self.ewf_path = ewf_path
     self.ewf_mount_path = ewf_mount_path
+    self.device_path = None
 
   def _preprocess(self, _, required_states):
     if EvidenceState.ATTACHED in required_states or self.has_child_evidence:
