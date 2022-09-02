@@ -242,7 +242,8 @@ def PreprocessLosetup(
     if not os.path.exists(losetup_device):
       message = 'Loop device path {0:s} does not exist'.format(losetup_device)
     elif not IsLosetup(losetup_device):
-      message = 'Device {0:s} is not a loop device'.format(losetup_device)
+      message = 'Device {0:s} is not attached according to losetup'.format(
+          losetup_device)
     if message:
       log.error(message)
       raise TurbiniaException(message)
@@ -529,6 +530,7 @@ def PostprocessDeleteLosetup(device_path, lv_uuid=None):
                 os.stat(device_path).st_mode))
       else:
         break
+      time.sleep(1)
     # Fail if loop device was not removed.
     if output.find(device_path.encode('utf-8')) != -1:
       turbinia_failed_loop_device_detach.inc()
