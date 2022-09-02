@@ -55,7 +55,7 @@ Let's verify the installation in Step 6.
 
 #### Step 5 - GCP hybrid Turbinia setup
 
-Follow the ‘GCP Setup’ section [here](https://turbinia.readthedocs.io/en/latest/user/install-manual.html) and setup Cloud Functions, a GCE bucket, Datastore and PubSub.
+Follow the ‘GCP Setup’ section [here](../user/install-gcp-pubsub.md) and setup Cloud Functions, a GCE bucket, Datastore and PubSub.
 
 - Create a pubsub topic, eg ‘turbinia-dev’
 - Create a GCE storage bucket with a unique name

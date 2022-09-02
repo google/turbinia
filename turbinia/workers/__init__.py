@@ -20,7 +20,6 @@ from copy import deepcopy
 from datetime import datetime
 from datetime import timedelta
 from enum import IntEnum
-import getpass
 import json
 import logging
 import os
@@ -32,9 +31,8 @@ import sys
 import tempfile
 import traceback
 import uuid
-import turbinia
-
 import filelock
+import turbinia
 
 from turbinia import config
 from turbinia.config import DATETIME_FORMAT
@@ -457,7 +455,7 @@ class TurbiniaTask:
       self, name=None, base_output_dir=None, request_id=None, requester=None,
       group_name=None, reason=None, all_args=None, group_id=None):
     """Initialization for TurbiniaTask.
-    
+
     Args:
       base_output_dir(str): Output dir to store Turbinia results.
       request_id(str): The request id
@@ -663,12 +661,12 @@ class TurbiniaTask:
         if shell:
           proc = subprocess.Popen(
               cmd, shell=True, stderr=subprocess.PIPE, stdout=subprocess.PIPE,
-              cwd=cwd, env=env)
+              cwd=cwd, env=env, text=True, encoding="utf-8")
           stdout, stderr = proc.communicate(timeout=timeout_limit)
         else:
           proc = subprocess.Popen(
               cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE, cwd=cwd,
-              env=env)
+              env=env, text=True, encoding="utf-8")
           stdout, stderr = proc.communicate(timeout=timeout_limit)
       except subprocess.TimeoutExpired as exception:
         proc.kill()
@@ -696,7 +694,7 @@ class TurbiniaTask:
             suffix='.txt', prefix='stderr-', dir=self.output_dir)
       result.log(
           'Writing stderr to {0:s}'.format(stderr_file), level=logging.DEBUG)
-      with open(stderr_file, 'wb') as fh:
+      with open(stderr_file, 'w+') as fh:
         fh.write(stderr)
       log_files.append(stderr_file)
 
@@ -710,7 +708,7 @@ class TurbiniaTask:
             suffix='.txt', prefix='stdout-', dir=self.output_dir)
       result.log(
           'Writing stdout to {0:s}'.format(stdout_file), level=logging.DEBUG)
-      with open(stdout_file, 'wb') as fh:
+      with open(stdout_file, 'w+') as fh:
         fh.write(stdout)
       log_files.append(stdout_file)
 
@@ -968,8 +966,8 @@ class TurbiniaTask:
     from turbinia.jobs import manager as job_manager
 
     log.debug('Task {0:s} {1:s} awaiting execution'.format(self.name, self.id))
-    evidence = evidence_decode(evidence)
     try:
+      evidence = evidence_decode(evidence)
       self.result = self.setup(evidence)
       self.result.update_task_status(self, 'queued')
       turbinia_worker_tasks_queued_total.inc()

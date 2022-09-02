@@ -136,9 +136,9 @@ class PartitionEnumerationTask(TurbiniaTask):
 
           partition_offset = volume.extents[0].offset
           partition_size = volume.extents[0].size
-        except dfvfs_errors.VolumeSystemError as e:
+        except dfvfs_errors.VolumeSystemError as exception:
           raise TurbiniaException(
-              'Could not process partition: {0!s}'.format(e))
+              'Could not process partition: {0!s}'.format(exception))
         break
 
       child_path_spec = child_path_spec.parent
@@ -229,8 +229,8 @@ class PartitionEnumerationTask(TurbiniaTask):
                 '{0!s}'.format(
                     path_spec.CopyToDict()), ' -> '.join(path_spec_types))))
       log.debug('\n'.join(path_spec_debug))
-    except dfvfs_errors.ScannerError as e:
-      status_summary = 'Error scanning for partitions: {0!s}'.format(e)
+    except dfvfs_errors.ScannerError as exception:
+      status_summary = 'Error scanning for partitions: {0!s}'.format(exception)
 
     status_report = [fmt.heading4(status_summary)]
 
@@ -250,8 +250,8 @@ class PartitionEnumerationTask(TurbiniaTask):
 
       status_report = '\n'.join(status_report)
       success = True
-    except TurbiniaException as e:
-      status_summary = 'Error enumerating partitions: {0!s}'.format(e)
+    except TurbiniaException as exception:
+      status_summary = 'Error enumerating partitions: {0!s}'.format(exception)
       status_report = status_summary
 
     result.log('Scanning of [{0:s}] is complete'.format(evidence.name))

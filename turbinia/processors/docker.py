@@ -61,10 +61,10 @@ def PreprocessMountDockerFS(docker_dir, container_id):
     log.info('Creating local mount parent directory {0:s}'.format(mount_prefix))
     try:
       os.makedirs(mount_prefix)
-    except OSError as e:
+    except OSError as exception:
       raise TurbiniaException(
           'Could not create mount directory {0:s}: {1!s}'.format(
-              mount_prefix, e))
+              mount_prefix, exception))
 
   container_mount_path = tempfile.mkdtemp(prefix='turbinia', dir=mount_prefix)
 
@@ -86,8 +86,9 @@ def PreprocessMountDockerFS(docker_dir, container_id):
 
   try:
     subprocess.check_call(mount_cmd)
-  except subprocess.CalledProcessError as e:
+  except subprocess.CalledProcessError as exception:
     raise TurbiniaException(
-        'Could not mount container {0:s}: {1!s}'.format(container_id, e))
+        'Could not mount container {0:s}: {1!s}'.format(
+            container_id, exception))
 
   return container_mount_path

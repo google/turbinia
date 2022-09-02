@@ -16,6 +16,8 @@
 
 from __future__ import unicode_literals
 
+import logging
+
 from turbinia.evidence import EwfDisk
 from turbinia.evidence import BodyFile
 from turbinia.evidence import DockerContainer
@@ -27,7 +29,8 @@ from turbinia.evidence import PlasoFile
 from turbinia.evidence import RawDisk
 from turbinia.jobs import interface
 from turbinia.jobs import manager
-from turbinia.workers.plaso import PlasoTask
+from turbinia.workers.plaso import PlasoParserTask
+from turbinia.workers.plaso import PlasoHasherTask
 
 
 class PlasoJob(interface.TurbiniaJob):
@@ -48,9 +51,15 @@ class PlasoJob(interface.TurbiniaJob):
       evidence: List of evidence objects to process
 
     Returns:
-        A list of PlasoTasks.
+        A list of PlasoParserTask and PlasoHasherTask objects.
     """
-    return [PlasoTask() for _ in evidence]
+    tasks = []
+    for evidence_object in evidence:
+      # No need to run the hasher task for BodyFile type.
+      if evidence_object.type is not 'BodyFile':
+        tasks.append(PlasoHasherTask())
+      tasks.append(PlasoParserTask())
+    return tasks
 
 
 manager.JobsManager.RegisterJob(PlasoJob)

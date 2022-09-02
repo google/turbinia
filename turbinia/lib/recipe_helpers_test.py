@@ -38,7 +38,7 @@ class RecipeHelpersTest(unittest.TestCase):
     self.test_recipe_dict = {
         'globals': self.test_globals_recipe,
         'plaso_base': {
-            'task': 'PlasoTask'
+            'task': 'PlasoParserTask'
         }
     }
 
@@ -123,7 +123,7 @@ class RecipeHelpersTest(unittest.TestCase):
             'invalid_key': 'invalid_value'
         },
         'plaso_base': {
-            'task': 'PlasoTask'
+            'task': 'PlasoParserTask'
         }
     }
     expected_error_message = (
@@ -137,7 +137,7 @@ class RecipeHelpersTest(unittest.TestCase):
   @mock.patch('turbinia.lib.recipe_helpers.log.error')
   def testValidateRecipeNoTask(self, mock_log):
     """Tests that a recipe with no task key is handled correctly."""
-    self.test_recipe_dict['plaso_base'] = {'notask': 'PlasoTask'}
+    self.test_recipe_dict['plaso_base'] = {'notask': 'PlasoParserTask'}
     expected_error_message = (
         'Recipe item "plaso_base" has no "task" key. All recipe items must '
         'have a "task" key indicating the TurbiniaTask to which it relates.')
