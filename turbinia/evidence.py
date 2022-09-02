@@ -23,8 +23,8 @@ import json
 import logging
 import os
 import sys
-import filelock
 import inspect
+import filelock
 
 from turbinia import config
 from turbinia import TurbiniaException
@@ -505,7 +505,7 @@ class Evidence:
         message = (
             'Evidence validation failed: Required attribute {0:s} for class '
             '{1:s} is not set. Please check original request.'.format(
-                attribute, self.name))
+                attribute, self.type))
         raise TurbiniaException(message)
 
 
@@ -616,13 +616,14 @@ class RawDisk(Evidence):
         device or a raw disk image).
     mount_partition: The mount partition for this disk (if any).
   """
-  REQUIRED_ATTRIBUTES = ['device_path']
+  REQUIRED_ATTRIBUTES = ['source_path']
   POSSIBLE_STATES = [EvidenceState.ATTACHED]
 
-  def __init__(self, device_path=None, *args, **kwargs):
+  def __init__(self, source_path=None, *args, **kwargs):
     """Initialization for raw disk evidence object."""
-    self.device_path = device_path
     super(RawDisk, self).__init__(*args, **kwargs)
+    self.source_path = source_path
+    self.device_path = None
 
   def _preprocess(self, _, required_states):
     if self.size is None:
