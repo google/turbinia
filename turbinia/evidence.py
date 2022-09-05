@@ -1017,18 +1017,26 @@ class ContainerdContainer(Evidence):
 
     self.context_dependent = True
 
+  @property
+  def name(self):
+    if self._name:
+      return self._name
+
+    if self.parent_evidence:
+      return ':'.join((self.parent_evidence.name, self.container_id))
+    else:
+      return ':'.join((self.type, self.container_id))
+
   def _preprocess(self, _, required_states):
-    if EvidenceState.CONTAINER_MOUNTED not in required_states:
-      return
+    if EvidenceState.CONTAINER_MOUNTED in required_states:
+      self._image_path = self.parent_evidence.mount_path
 
-    self._image_path = self.parent_evidence.mount_path
-
-    # Mount containerd container
-    self._container_fs_path = containerd.PreprocessMountContainerdFS(
-        self._image_path, self.namespace, self.container_id)
-    self.mount_path = self._container_fs_path
-    self.local_path = self.mount_path
-    self.state[EvidenceState.CONTAINER_MOUNTED] = True
+      # Mount containerd container
+      self._container_fs_path = containerd.PreprocessMountContainerdFS(
+          self._image_path, self.namespace, self.container_id)
+      self.mount_path = self._container_fs_path
+      self.local_path = self.mount_path
+      self.state[EvidenceState.CONTAINER_MOUNTED] = True
 
   def _postprocess(self):
     if self.state[EvidenceState.CONTAINER_MOUNTED]:
