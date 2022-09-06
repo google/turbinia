@@ -17,10 +17,13 @@
 from __future__ import unicode_literals
 
 from enum import IntEnum
+from collections import defaultdict
+
 import json
 import logging
 import os
 import sys
+import inspect
 import filelock
 
 from turbinia import config
@@ -36,6 +39,55 @@ if config.CLOUD_PROVIDER:
   from turbinia.processors import google_cloud
 
 log = logging.getLogger('turbinia')
+
+
+def evidence_class_names(all_classes=False):
+  """Returns a list of class names for the evidence module.
+  
+  Args:
+    all_classes (bool): Flag to determine whether to include all classes
+        in the module.
+  """
+  predicate = lambda member: inspect.isclass(member) and not inspect.isbuiltin(
+      member)
+  class_names = inspect.getmembers(sys.modules[__name__], predicate)
+  if not all_classes:
+    # TODO: Non-evidence types should be moved out of the evidence module,
+    # so that we no longer have to ignore certain classes here. Especially
+    # 'output' and 'report' types.
+    # Ignore classes that are not real Evidence types and the base class.
+    ignored_classes = (
+        'BodyFile', 'BulkExtractorOutput', 'Evidence', 'EvidenceState',
+        'EvidenceCollection', 'ExportedFileArtifact', 'FilteredTextFile',
+        'FinalReport', 'IntEnum', 'PlasoCsvFile', 'PlasoFile', 'PhotorecOutput',
+        'ReportText', 'TextFile', 'VolatilityReport', 'TurbiniaException')
+    class_names = filter(
+        lambda class_tuple: class_tuple[0] not in ignored_classes, class_names)
+  return list(class_names)
+
+
+def map_evidence_attributes():
+  """Creates a dictionary that maps evidence types to their
+       constructor attributes.
+
+  Returns:
+    object_attribute_mapping (defaultdict): A mapping of evidence types
+        and their constructor attributes.
+  """
+  object_attribute_mapping = defaultdict(list)
+  for class_name, class_type in evidence_class_names():
+    try:
+      attributes_signature = inspect.signature(class_type)
+      attributes = attributes_signature.parameters.keys()
+      for attribute in attributes:
+        if not object_attribute_mapping[class_name]:
+          object_attribute_mapping[class_name] = []
+        # Ignore 'args' and 'kwargs' attributes.
+        if attribute not in ('args', 'kwargs'):
+          object_attribute_mapping[class_name].append(attribute)
+    except ValueError as exception:
+      log.info(exception)
+  return object_attribute_mapping
 
 
 def evidence_decode(evidence_dict, strict=False):
@@ -217,6 +269,10 @@ class Evidence:
       raise TurbiniaException(
           'Unable to initialize object, {0:s} is a copyable '
           'evidence and needs a source_path'.format(self.type))
+
+    # TODO: Validating for required attributes breaks some units tests.
+    # Github issue: https://github.com/google/turbinia/issues/1136
+    # self.validate()
 
   def __str__(self):
     return '{0:s}:{1:s}:{2!s}'.format(self.type, self.name, self.source_path)
@@ -502,7 +558,7 @@ class CompressedDirectory(Evidence):
     compressed_directory: The path to the compressed directory.
     uncompressed_directory: The path to the uncompressed directory.
   """
-
+  REQUIRED_ATTRIBUTES = ['compressed_directory', 'uncompressed_directory']
   POSSIBLE_STATES = [EvidenceState.DECOMPRESSED]
 
   def __init__(
@@ -570,13 +626,13 @@ class RawDisk(Evidence):
         device or a raw disk image).
     mount_partition: The mount partition for this disk (if any).
   """
-
+  REQUIRED_ATTRIBUTES = ['source_path']
   POSSIBLE_STATES = [EvidenceState.ATTACHED]
 
-  def __init__(self, *args, **kwargs):
+  def __init__(self, source_path=None, *args, **kwargs):
     """Initialization for raw disk evidence object."""
+    super(RawDisk, self).__init__(source_path=source_path, *args, **kwargs)
     self.device_path = None
-    super(RawDisk, self).__init__(*args, **kwargs)
 
   def _preprocess(self, _, required_states):
     if self.size is None:
@@ -605,7 +661,6 @@ class DiskPartition(RawDisk):
     partition_size (int): Size of the partition in bytes.
     path_spec (dfvfs.PathSpec): Partition path spec.
   """
-
   POSSIBLE_STATES = [EvidenceState.ATTACHED, EvidenceState.MOUNTED]
 
   def __init__(
@@ -727,12 +782,12 @@ class GoogleCloudDisk(RawDisk):
       self, project=None, zone=None, disk_name=None, mount_partition=1, *args,
       **kwargs):
     """Initialization for Google Cloud Disk."""
+    super(GoogleCloudDisk, self).__init__(*args, **kwargs)
     self.project = project
     self.zone = zone
     self.disk_name = disk_name
     self.mount_partition = mount_partition
     self.partition_paths = None
-    super(GoogleCloudDisk, self).__init__(*args, **kwargs)
     self.cloud_only = True
     self.resource_tracked = True
     self.resource_id = self.disk_name
@@ -777,8 +832,8 @@ class GoogleCloudDiskRawEmbedded(GoogleCloudDisk):
 
   def __init__(self, embedded_path=None, *args, **kwargs):
     """Initialization for Google Cloud Disk containing a raw disk image."""
-    self.embedded_path = embedded_path
     super(GoogleCloudDiskRawEmbedded, self).__init__(*args, **kwargs)
+    self.embedded_path = embedded_path
 
     # This Evidence needs to have a GoogleCloudDisk as a parent
     self.context_dependent = True
@@ -833,6 +888,7 @@ class PlasoFile(Evidence):
 
   def __init__(self, plaso_version=None, *args, **kwargs):
     """Initialization for Plaso File evidence."""
+
     self.plaso_version = plaso_version
     super(PlasoFile, self).__init__(copyable=True, *args, **kwargs)
     self.save_metadata = True
@@ -843,6 +899,7 @@ class PlasoCsvFile(Evidence):
 
   def __init__(self, plaso_version=None, *args, **kwargs):
     """Initialization for Plaso File evidence."""
+
     self.plaso_version = plaso_version
     super(PlasoCsvFile, self).__init__(copyable=True, *args, **kwargs)
     self.save_metadata = False
@@ -853,8 +910,8 @@ class ReportText(Evidence):
   """Text data for general reporting."""
 
   def __init__(self, text_data=None, *args, **kwargs):
-    self.text_data = text_data
     super(ReportText, self).__init__(copyable=True, *args, **kwargs)
+    self.text_data = text_data
 
 
 class FinalReport(ReportText):
@@ -933,6 +990,7 @@ class DockerContainer(Evidence):
     _docker_root_directory(str): Full path to the docker root directory.
   """
 
+  REQUIRED_ATTRIBUTES = ['container_id']
   POSSIBLE_STATES = [EvidenceState.CONTAINER_MOUNTED]
 
   def __init__(self, container_id=None, *args, **kwargs):
@@ -941,7 +999,6 @@ class DockerContainer(Evidence):
     self.container_id = container_id
     self._container_fs_path = None
     self._docker_root_directory = None
-
     self.context_dependent = True
 
   @property
@@ -978,18 +1035,22 @@ class EwfDisk(Evidence):
   """Evidence object for a EWF based evidence.
 
   Attributes:
-    device_path (str): Path to the mounted loop device.
+    source_path (str): Path to the mounted loop device.
     ewf_path (str): Path to mounted EWF image.
     ewf_mount_path (str): Path to EWF mount directory.
   """
+  REQUIRED_ATTRIBUTES = ['source_path', 'ewf_path', 'ewf_mount_path']
   POSSIBLE_STATES = [EvidenceState.ATTACHED]
 
-  def __init__(self, *args, **kwargs):
+  def __init__(
+      self, source_path=None, ewf_path=None, ewf_mount_path=None, *args,
+      **kwargs):
     """Initialization for EWF evidence object."""
-    self.device_path = None
-    self.ewf_path = None
-    self.ewf_mount_path = None
     super(EwfDisk, self).__init__(*args, **kwargs)
+    self.source_path = source_path
+    self.ewf_path = ewf_path
+    self.ewf_mount_path = ewf_mount_path
+    self.device_path = None
 
   def _preprocess(self, _, required_states):
     if EvidenceState.ATTACHED in required_states or self.has_child_evidence:
