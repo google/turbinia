@@ -57,10 +57,11 @@ def evidence_class_names(all_classes=False):
     # 'output' and 'report' types.
     # Ignore classes that are not real Evidence types and the base class.
     ignored_classes = (
-        'BodyFile', 'BulkExtractorOutput', 'Evidence', 'EvidenceState',
-        'EvidenceCollection', 'ExportedFileArtifact', 'FilteredTextFile',
-        'FinalReport', 'IntEnum', 'PlasoCsvFile', 'PlasoFile', 'PhotorecOutput',
-        'ReportText', 'TextFile', 'VolatilityReport', 'TurbiniaException')
+        'BinaryExtraction', 'BodyFile', 'BulkExtractorOutput', 'Directory',
+        'Evidence', 'EvidenceState', 'EvidenceCollection',
+        'ExportedFileArtifact', 'FilteredTextFile', 'FinalReport', 'IntEnum',
+        'PlasoCsvFile', 'PlasoFile', 'PhotorecOutput', 'ReportText', 'TextFile',
+        'VolatilityReport', 'TurbiniaException')
     class_names = filter(
         lambda class_tuple: class_tuple[0] not in ignored_classes, class_names)
   return list(class_names)
