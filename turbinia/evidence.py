@@ -43,14 +43,14 @@ log = logging.getLogger('turbinia')
 
 def evidence_class_names(all_classes=False):
   """Returns a list of class names for the evidence module.
-  
+
   Args:
     all_classes (bool): Flag to determine whether to include all classes
         in the module.
   """
   predicate = lambda member: inspect.isclass(member) and not inspect.isbuiltin(
       member)
-  class_names = inspect.getmembers(sys.modules[__name__], predicate)
+  class_names = inspect.getmembers(sys.modules['turbinia.evidence'], predicate)
   if not all_classes:
     # TODO: Non-evidence types should be moved out of the evidence module,
     # so that we no longer have to ignore certain classes here. Especially
@@ -84,7 +84,13 @@ def map_evidence_attributes():
           object_attribute_mapping[class_name] = []
         # Ignore 'args' and 'kwargs' attributes.
         if attribute not in ('args', 'kwargs'):
-          object_attribute_mapping[class_name].append(attribute)
+          attribute_dict = {
+              attribute: {
+                  'required': bool(attribute in class_type.REQUIRED_ATTRIBUTES),
+                  'type': 'str'
+              }
+          }
+          object_attribute_mapping[class_name].append(attribute_dict)
     except ValueError as exception:
       log.info(exception)
   return object_attribute_mapping
@@ -626,6 +632,7 @@ class RawDisk(Evidence):
         device or a raw disk image).
     mount_partition: The mount partition for this disk (if any).
   """
+  REQUIRED_ATTRIBUTES = ['source_path']
   POSSIBLE_STATES = [EvidenceState.ATTACHED]
 
   def __init__(self, source_path=None, *args, **kwargs):
