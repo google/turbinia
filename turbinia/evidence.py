@@ -647,7 +647,7 @@ class RawDisk(Evidence):
       self.state[EvidenceState.ATTACHED] = False
 
 
-class DiskPartition(RawDisk):
+class DiskPartition(Evidence):
   """Evidence object for a partition within Disk based evidence.
 
   More information on dfVFS types:
@@ -765,7 +765,7 @@ class DiskPartition(RawDisk):
         self.state[EvidenceState.ATTACHED] = False
 
 
-class GoogleCloudDisk(RawDisk):
+class GoogleCloudDisk(Evidence):
   """Evidence object for a Google Cloud Disk.
 
   Attributes:
