@@ -515,7 +515,7 @@ class Evidence:
         message = (
             'Evidence validation failed: Required attribute {0:s} for class '
             '{1:s} is not set. Please check original request.'.format(
-                attribute, self.name))
+                attribute, self.type))
         raise TurbiniaException(message)
 
 
@@ -622,11 +622,10 @@ class RawDisk(Evidence):
   """Evidence object for Disk based evidence.
 
   Attributes:
-    device_path (str): Path to a relevant 'raw' data source (ie: a block
+    source_path (str): Path to a relevant 'raw' data source (ie: a block
         device or a raw disk image).
     mount_partition: The mount partition for this disk (if any).
   """
-  REQUIRED_ATTRIBUTES = ['source_path']
   POSSIBLE_STATES = [EvidenceState.ATTACHED]
 
   def __init__(self, source_path=None, *args, **kwargs):
