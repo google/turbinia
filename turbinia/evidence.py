@@ -57,10 +57,10 @@ def evidence_class_names(all_classes=False):
     # 'output' and 'report' types.
     # Ignore classes that are not real Evidence types and the base class.
     ignored_classes = (
-        'BinaryExtraction', 'BodyFile', 'BulkExtractorOutput', 'Directory',
-        'Evidence', 'EvidenceState', 'EvidenceCollection',
-        'ExportedFileArtifact', 'FilteredTextFile', 'FinalReport', 'IntEnum',
-        'PlasoCsvFile', 'PlasoFile', 'PhotorecOutput', 'ReportText', 'TextFile',
+        'BinaryExtraction', 'BodyFile', 'BulkExtractorOutput', 'Evidence',
+        'EvidenceState', 'EvidenceCollection', 'ExportedFileArtifact',
+        'FilteredTextFile', 'FinalReport', 'IntEnum', 'PlasoCsvFile',
+        'PlasoFile', 'PhotorecOutput', 'ReportText', 'TextFile',
         'VolatilityReport', 'TurbiniaException')
     class_names = filter(
         lambda class_tuple: class_tuple[0] not in ignored_classes, class_names)
@@ -554,8 +554,16 @@ class EvidenceCollection(Evidence):
 
 
 class Directory(Evidence):
-  """Filesystem directory evidence."""
-  pass
+  """Filesystem directory evidence.
+
+  Attributes:
+    source_path: The path to the source directory used as evidence.
+  """
+  REQUIRED_ATTRIBUTES = ['source_path']
+
+  def __init__(self, source_path=None, *args, **kwargs):
+    super(Directory, self).__init__(source_path=source_path, *args, **kwargs)
+    self.source_path = source_path
 
 
 class CompressedDirectory(Evidence):
