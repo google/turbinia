@@ -134,6 +134,11 @@ DEPENDENCIES = [{
     'docker_image': None,
     'timeout': 14400
 }, {
+    'job': 'ContainerdEnumerationJob',
+    'programs'; ['/opt/container-explorer/bin/ce'],
+    'docker_image': None,
+    'timeout': 1200
+}, {
     'job': 'DfdeweyJob',
     'programs': ['dfdewey'],
     'docker_image': None,
