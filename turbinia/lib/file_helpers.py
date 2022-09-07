@@ -36,8 +36,8 @@ def file_to_str(file_path):
   else:
     try:
       file_contents = open(file_path).read()
-    except IOError as e:
-      log.error('Cannot open file {0:s} [{1!s}]'.format(file_path, e))
+    except IOError as exception:
+      log.error('Cannot open file {0:s} [{1!s}]'.format(file_path, exception))
   return file_contents
 
 
@@ -54,8 +54,8 @@ def file_to_list(file_path):
     with open(file_path) as fh:
       content = fh.readlines()
       return [x.rstrip() for x in content]
-  except IOError as e:
-    log.error('Cannot open file {0:s} [{1!s}]'.format(file_path, e))
+  except IOError as exception:
+    log.error('Cannot open file {0:s} [{1!s}]'.format(file_path, exception))
   return []
 
 
@@ -74,8 +74,8 @@ def write_str_to_temp_file(source, preferred_dir=None):
     with NamedTemporaryFile(dir=preferred_dir, delete=False, mode='w') as fh:
       fh.write(source)
       return fh.name
-  except IOError as e:
-    log.error('Could not write to temporary file. [{1!s}]'.format(e))
+  except IOError as exception:
+    log.error('Could not write to temporary file. [{1!s}]'.format(exception))
   return None
 
 

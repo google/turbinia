@@ -55,7 +55,8 @@ class TaskLoader():
       'YaraAnalysisTask',
       'PartitionEnumerationTask',
       'PhotorecTask',
-      'PlasoTask',
+      'PlasoParserTask',
+      'PlasoHasherTask',
       'PostgresAccountAnalysisTask',
       'PsortTask',
       'RedisAnalysisTask',
@@ -119,7 +120,8 @@ class TaskLoader():
     from turbinia.workers.hindsight import HindsightTask
     from turbinia.workers.partitions import PartitionEnumerationTask
     from turbinia.workers.photorec import PhotorecTask
-    from turbinia.workers.plaso import PlasoTask
+    from turbinia.workers.plaso import PlasoParserTask
+    from turbinia.workers.plaso import PlasoHasherTask
     from turbinia.workers.psort import PsortTask
     from turbinia.workers.redis import RedisAnalysisTask
     from turbinia.workers.sshd import SSHDAnalysisTask
@@ -169,7 +171,12 @@ def task_deserialize(input_dict):
     raise TurbiniaException('Could not load Task module {0:s}'.format(type_))
   # Remove serialized output manager because this gets reinstantiated when the
   # empty Task is instantiated and we don't want to overwrite it.
-  input_dict.pop('output_manager')
+  try:
+    input_dict.pop('output_manager')
+  except KeyError:
+    log.info(
+        'output_manager key not found in serialized TurbiniaTask {}'.format(
+            input_dict['id']))
   task.__dict__.update(input_dict)
   task.start_time = datetime.strptime(input_dict['start_time'], DATETIME_FORMAT)
   task.last_update = datetime.strptime(
@@ -188,28 +195,27 @@ def task_runner(obj, *args, **kwargs):
   Returns:
     Output from TurbiniaTask (should be TurbiniaTaskResult).
   """
-
-  # GKE Specific - do not queue more work if pod places this file
+  obj = task_deserialize(obj)
   if config.TASK_MANAGER.lower() == 'psq':
+    # Late import because this is only needed for PSQ
+    import psq
+    # GKE PSQ Specific - do not queue more work if pod places this file
     if os.path.exists(config.SCALEDOWN_WORKER_FILE):
-      # Late import because this is only needed for PSQ
-      import psq
       raise psq.Retry()
-
-  # Try to acquire lock, timeout and requeue task if the worker
-  # is already processing a task.
-  try:
-    lock = filelock.FileLock(config.LOCK_FILE)
-    with lock.acquire(timeout=0.001):
-      obj = task_deserialize(obj)
-      run = obj.run_wrapper(*args, **kwargs)
-  except filelock.Timeout:
-    if config.TASK_MANAGER.lower() == 'psq':
-      # Late import because this is only needed for PSQ
-      import psq
+    # Try to acquire lock, timeout and requeue task if the worker
+    # is already processing a task.
+    try:
+      lock = filelock.FileLock(config.LOCK_FILE)
+      with lock.acquire(timeout=0.001):
+        run = obj.run_wrapper(*args, **kwargs)
+    except filelock.Timeout:
       raise psq.Retry()
-  # *Always* make sure we release the lock
-  finally:
-    lock.release()
+    # *Always* make sure we release the lock
+    finally:
+      lock.release()
+  # Celery is configured to receive only one Task per worker
+  # so no need to create a FileLock.
+  elif config.TASK_MANAGER.lower() == 'celery':
+    run = obj.run_wrapper(*args, **kwargs)
 
   return run

@@ -38,16 +38,17 @@ def RetrieveResourceState():
     log.info(
         'Resource state file does not exist. '
         'Writing new one to {0:s}'.format(config.RESOURCE_FILE))
-    with open(config.RESOURCE_FILE, 'w') as fh:
+    with open(config.RESOURCE_FILE, 'w', encoding='utf-8') as fh:
       fh.write("{}")
     fh.close()
 
   # Load file as json object
   try:
-    with open(config.RESOURCE_FILE) as fh:
+    with open(config.RESOURCE_FILE, encoding='utf-8') as fh:
       json_load = json.load(fh)
-  except ValueError as e:
-    message = 'Can not load json from resource state file.'
+  except ValueError as exception:
+    message = 'Can not load json from resource state file: {0!s}'.format(
+        exception)
     log.error(message)
     raise TurbiniaException(message)
   finally:
@@ -81,7 +82,7 @@ def PreprocessResourceState(resource_id, task_id):
     json_load[resource_id] = [task_id]
 
   # Write back to state file.
-  with open(config.RESOURCE_FILE, 'w') as fh:
+  with open(config.RESOURCE_FILE, 'w', encoding='utf-8') as fh:
     json.dump(json_load, fh)
     log.debug('The resource state file has been successfully updated.')
   fh.close()
@@ -118,7 +119,7 @@ def PostProcessResourceState(resource_id, task_id):
           .format(task_id, resource_id))
 
   # Write back to state file.
-  with open(config.RESOURCE_FILE, 'w') as fh:
+  with open(config.RESOURCE_FILE, 'w', encoding='utf-8') as fh:
     json.dump(json_load, fh)
     log.debug('The resource state file has been successfully updated.')
   fh.close()

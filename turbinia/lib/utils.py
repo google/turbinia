@@ -46,11 +46,12 @@ def _image_export(command, output_dir, timeout=DEFAULT_TIMEOUT):
   log.debug('Running image_export as [{0:s}]'.format(' '.join(command)))
   try:
     subprocess.check_call(command, timeout=timeout)
-  except subprocess.CalledProcessError as e:
-    raise TurbiniaException('image_export.py failed: {0!s}'.format(e))
-  except subprocess.TimeoutExpired as e:
+  except subprocess.CalledProcessError as exception:
+    raise TurbiniaException('image_export.py failed: {0!s}'.format(exception))
+  except subprocess.TimeoutExpired as exception:
     raise TurbiniaException(
-        'image_export.py timed out after {0:d}s: {1!s}'.format(timeout, e))
+        'image_export.py timed out after {0:d}s: {1!s}'.format(
+            timeout, exception))
 
   collected_file_paths = []
   file_count = 0
@@ -202,8 +203,8 @@ def bruteforce_password_hashes(
       # Cancel the timer if the process is done before the timer.
       if timer.is_alive():
         timer.cancel()
-    except OSError as e:
-      raise TurbiniaException('hashcat failed: {0}'.format(str(e)))
+    except OSError as exception:
+      raise TurbiniaException('hashcat failed: {0}'.format(str(exception)))
 
   result = []
 

@@ -1,0 +1,57 @@
+# Extended triage recipe for Linux.
+
+globals:
+  jobs_allowlist:
+    - DockerContainersEnumerationJob
+    - FileSystemTimelineJob
+    - HTTPAccessLogExtractionJob
+    - HTTPAccessLogAnalysisJob
+    - JenkinsAnalysisJob
+    - JupyterExtractionJob
+    - JupyterAnalysisJob
+    - LinuxAccountAnalysisJob
+    - PartitionEnumerationJob
+    - PlasoJob
+    - RedisAnalysisJob
+    - RedisExtractionJob
+    - SSHDAnalysisJob
+    - SSHDExtractionJob
+    - TomcatExtractionJob
+    - TomcatAnalysisJob
+    - YaraAnalysisJob
+
+plaso_parsers:
+  task: "PlasoParserTask"
+
+  artifact_filters:
+    [
+      "AllUsersShellHistory",
+      "ApacheAccessLogs",
+      "BrowserCache",
+      "BrowserHistory",
+      "ChromeStorage",
+      "GKEDockerContainerLogs",
+      "JupyterConfigFile",
+      "LinuxAuditLogs",
+      "LinuxAuthLogs",
+      "LinuxCronLogs",
+      "LinuxKernelLogFiles",
+      "LinuxLastlogFile",
+      "LinuxMessagesLogFiles",
+      "LinuxScheduleFiles",
+      "LinuxSysLogFiles",
+      "LinuxUtmpFiles",
+      "LinuxWtmp",
+      "LoginPolicyConfiguration",
+      "NginxAccessLogs",
+      "RedisLogFiles",
+      "SshdConfigFile",
+      "TomcatFiles",
+    ]
+
+plaso_hashers:
+  task: "PlasoHasherTask"
+  # Only run SHA256 hasher.
+  hashers: "sha256"
+  # 1GB file size limit for hashers.
+  hasher_file_size_limit: "1073741824"

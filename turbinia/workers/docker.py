@@ -82,12 +82,13 @@ class DockerContainersEnumerationTask(TurbiniaTask):
       json_string = subprocess.check_output(docker_explorer_command).decode(
           'utf-8')
       containers_info = json.loads(json_string)
-    except json.JSONDecodeError as e:
+    except json.JSONDecodeError as exception:
       raise TurbiniaException(
           'Error decoding JSON output from de.py: {0!s} {1!s}'.format(
-              e, json_string))
-    except subprocess.CalledProcessError as e:
-      raise TurbiniaException('de.py returned an error: {0!s}'.format(e))
+              exception, json_string))
+    except subprocess.CalledProcessError as exception:
+      raise TurbiniaException(
+          'de.py returned an error: {0!s}'.format(exception))
 
     return containers_info
 
@@ -119,8 +120,9 @@ class DockerContainersEnumerationTask(TurbiniaTask):
       success = True
       status_report = 'Found {0!s} containers: {1:s}'.format(
           len(found_containers), ' '.join(found_containers))
-    except TurbiniaException as e:
-      status_report = 'Error enumerating Docker containers: {0!s}'.format(e)
+    except TurbiniaException as exception:
+      status_report = 'Error enumerating Docker containers: {0!s}'.format(
+          exception)
 
     result.report_priority = Priority.LOW
     result.report_data = status_report

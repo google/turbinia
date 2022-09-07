@@ -70,6 +70,9 @@ def setup(need_file_handler=True, need_stream_handler=True, log_file_path=None):
 
     # Check if a user specified log path was provided else create default path
     if not log_file_path:
+      # Create LOG directory if it doesn't exist
+      if not os.path.exists(config.LOG_DIR):
+        os.mkdir(config.LOG_DIR)
       log_name = os.uname().nodename
       # Check if NODE_NAME available for GKE setups
       if ENVNODENAME in os.environ:

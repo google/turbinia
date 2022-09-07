@@ -42,7 +42,7 @@ just a flat dict of options set in the Task object code. Only the options found
 there can be configured dynamically by users. The values set in config will be
 the defaults that are used by the Task when no overriding config is specified.
 
-Here is an example of what PlasoTask.config could look like:
+Here is an example of what PlasoParserTask.config could look like:
 
 ```
 {
