@@ -582,14 +582,16 @@ class RawDisk(Evidence):
     if self.size is None:
       self.size = mount_local.GetDiskSize(self.source_path)
     if EvidenceState.ATTACHED in required_states or self.has_child_evidence:
-      self.device_path = mount_local.PreprocessLosetup(self.source_path)
-      self.state[EvidenceState.ATTACHED] = True
-      self.local_path = self.device_path
+      with filelock.FileLock(config.RESOURCE_FILE_LOCK):
+        self.device_path = mount_local.PreprocessLosetup(self.source_path)
+        self.state[EvidenceState.ATTACHED] = True
+        self.local_path = self.device_path
 
   def _postprocess(self):
     if self.state[EvidenceState.ATTACHED]:
-      mount_local.PostprocessDeleteLosetup(self.device_path)
-      self.state[EvidenceState.ATTACHED] = False
+      with filelock.FileLock(config.RESOURCE_FILE_LOCK):
+        mount_local.PostprocessDeleteLosetup(self.device_path)
+        self.state[EvidenceState.ATTACHED] = False
 
 
 class DiskPartition(RawDisk):
@@ -676,10 +678,11 @@ class DiskPartition(RawDisk):
         if not self.device_path:
           log.error('Could not decrypt partition.')
       else:
-        self.device_path = mount_local.PreprocessLosetup(
-            self.parent_evidence.device_path,
-            partition_offset=self.partition_offset,
-            partition_size=self.partition_size, lv_uuid=self.lv_uuid)
+        with filelock.FileLock(config.RESOURCE_FILE_LOCK):
+          self.device_path = mount_local.PreprocessLosetup(
+              self.parent_evidence.device_path,
+              partition_offset=self.partition_offset,
+              partition_size=self.partition_size, lv_uuid=self.lv_uuid)
       if self.device_path:
         self.state[EvidenceState.ATTACHED] = True
         self.local_path = self.device_path
@@ -707,8 +710,9 @@ class DiskPartition(RawDisk):
         mount_local.PostprocessUnmountPath(self.device_path.replace('bde1', ''))
         self.state[EvidenceState.ATTACHED] = False
       else:
-        mount_local.PostprocessDeleteLosetup(self.device_path, self.lv_uuid)
-        self.state[EvidenceState.ATTACHED] = False
+        with filelock.FileLock(config.RESOURCE_FILE_LOCK):
+          mount_local.PostprocessDeleteLosetup(self.device_path, self.lv_uuid)
+          self.state[EvidenceState.ATTACHED] = False
 
 
 class GoogleCloudDisk(RawDisk):
@@ -809,13 +813,15 @@ class GoogleCloudDiskRawEmbedded(GoogleCloudDisk):
         raise TurbiniaException(
             'Unable to find raw disk image {0:s} in GoogleCloudDisk'.format(
                 rawdisk_path))
-      self.device_path = mount_local.PreprocessLosetup(rawdisk_path)
-      self.state[EvidenceState.ATTACHED] = True
-      self.local_path = self.device_path
+      with filelock.FileLock(config.RESOURCE_FILE_LOCK):
+        self.device_path = mount_local.PreprocessLosetup(rawdisk_path)
+        self.state[EvidenceState.ATTACHED] = True
+        self.local_path = self.device_path
 
   def _postprocess(self):
     if self.state[EvidenceState.ATTACHED]:
-      mount_local.PostprocessDeleteLosetup(self.device_path)
+      with filelock.FileLock(config.RESOURCE_FILE_LOCK):
+        mount_local.PostprocessDeleteLosetup(self.device_path)
       self.state[EvidenceState.ATTACHED] = False
 
     # Need to unmount parent disk
