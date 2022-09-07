@@ -158,7 +158,7 @@ DEPENDENCIES = [{
     'timeout': 14400
 }, {
     'job': 'ContainerdEnumerationJob',
-    'programs'; ['/opt/container-explorer/bin/ce'],
+    'programs': ['/opt/container-explorer/bin/ce'],
     'docker_image': None,
     'timeout': 1200
 }, {
