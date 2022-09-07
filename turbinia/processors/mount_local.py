@@ -21,6 +21,8 @@ import os
 import subprocess
 import tempfile
 import time
+import filelock
+
 from prometheus_client import Gauge
 from turbinia import config
 from turbinia import TurbiniaException
@@ -214,6 +216,9 @@ def PreprocessLosetup(
     except subprocess.CalledProcessError as exception:
       raise TurbiniaException(
           'Could not set losetup devices {0!s}'.format(exception))
+    log.info(
+        'Loop device {0:s} created for evidence {1:s}'.format(
+            losetup_device, source_path))
 
   return losetup_device
 
@@ -485,7 +490,7 @@ def PostprocessDeleteLosetup(device_path, lv_uuid=None):
           'Could not delete losetup device {0!s}'.format(exception))
 
     # Check that the device was actually removed
-    losetup_cmd = ['sudo', 'losetup', '-a']
+    losetup_cmd = ['sudo', 'losetup', '--list']
     log.info('Running: {0:s}'.format(' '.join(losetup_cmd)))
     try:
       output = subprocess.check_output(losetup_cmd)
@@ -495,7 +500,8 @@ def PostprocessDeleteLosetup(device_path, lv_uuid=None):
     if output.find(device_path.encode('utf-8')) != -1:
       turbinia_failed_loop_device_detach.inc()
       raise TurbiniaException(
-          'Could not delete losetup device {0!s}'.format(device_path))
+          'Losetup device still present, could not delete device {0!s}'.format(
+              device_path))
     log.info('losetup device [{0!s}] deleted.'.format(device_path))
 
 
