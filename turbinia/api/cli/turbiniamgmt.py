@@ -35,21 +35,21 @@ class TurbiniaMgmtCli:
   """Turbinia API client tool."""
 
   def __init__(self, api_client=None, config=None):
-    self.API_SERVER_ADDRESS = None
-    self.API_SERVER_PORT = None
-    self.API_AUTHENTICATION_ENABLED = None
+    self.api_server_address: str = None
+    self.api_server_port: str = None
+    self.api_authentication_enabled: str = None
     self.read_api_configuration()
-    self._api_client = api_client
-    self._config = config
+    self._api_client: turbinia_api_client.ApiClient = api_client
+    self._config: turbinia_api_client.Configuration = config
 
     if not self.config:
       host = 'http://{0:s}:{1:d}'.format(
-          self.API_SERVER_ADDRESS, self.API_SERVER_PORT)
+          self.api_server_address, self.api_server_port)
       self.config = self.default_config(host)
     if not self.api_client:
       self.api_client = self.default_api_client(self.config)
 
-    if self.API_AUTHENTICATION_ENABLED:
+    if self.api_authentication_enabled:
       config.access_token = auth_helpers.get_oauth2_credentials()
 
     self.evidence_mapping = self.get_evidence_arguments()
@@ -73,11 +73,13 @@ class TurbiniaMgmtCli:
   def config(self, config):
     self._config = config
 
-  def default_api_client(self, config):
+  def default_api_client(
+      self, config: turbinia_api_client.Configuration
+  ) -> turbinia_api_client.ApiClient:
     """Default value for API client instance."""
     return turbinia_api_client.ApiClient(configuration=config)
 
-  def default_config(self, host):
+  def default_config(self, host: str) -> turbinia_api_client.Configuration:
     """Default value for API client configuration."""
     return turbinia_api_client.Configuration(host=host)
 
@@ -91,7 +93,7 @@ class TurbiniaMgmtCli:
             evidence_name)
       else:
         api_response = api_instance.get_evidence_types()
-      self.evidence_mapping = api_response
+      self.evidence_mapping: dict = api_response
     except turbinia_api_client.ApiException as exception:
       log.exception(
           'Exception when calling read_config: {0!s}'.format(exception))
@@ -117,9 +119,9 @@ class TurbiniaMgmtCli:
     with open(client_config_path, encoding='utf-8') as config:
       try:
         config_dict = json.loads(config.read())
-        self.API_SERVER_ADDRESS = config_dict.get('API_SERVER_ADDRESS')
-        self.API_SERVER_PORT = config_dict.get('API_SERVER_PORT')
-        self.API_AUTHENTICATION_ENABLED = config_dict.get(
+        self.api_server_address = config_dict.get('API_SERVER_ADDRESS')
+        self.api_server_port = config_dict.get('API_SERVER_PORT')
+        self.api_authentication_enabled = config_dict.get(
             'API_AUTHENTICATION_ENABLED')
       except json.JSONDecodeError as exception:
         log.error(exception)

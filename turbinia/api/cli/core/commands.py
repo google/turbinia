@@ -14,12 +14,10 @@
 # limitations under the License.
 """Turbinia API client / management tool."""
 
-from collections import defaultdict
-
 import logging
 import click
-import turbinia_api_client
-
+from turbinia_api_client import exceptions
+from turbinia_api_client import api_client
 from turbinia_api_client.api import turbinia_requests_api
 from turbinia_api_client.api import turbinia_tasks_api
 from turbinia_api_client.api import turbinia_configuration_api
@@ -35,14 +33,14 @@ log.setLevel(logging.DEBUG)
 
 @groups.config_group.command('list')
 @click.pass_context
-def get_config(ctx):
+def get_config(ctx: click.Context) -> None:
   """Get Turbinia server configuration."""
-  api_client = ctx.obj.api_client
-  api_instance = turbinia_configuration_api.TurbiniaConfigurationApi(api_client)
+  client: api_client.ApiClient = ctx.obj.api_client
+  api_instance = turbinia_configuration_api.TurbiniaConfigurationApi(client)
   try:
     api_response = api_instance.read_config()
     click.echo(api_response)
-  except turbinia_api_client.ApiException as exception:
+  except exceptions.ApiException as exception:
     log.exception(
         'Received status code {0!s} when calling create_request: {1!s}'.format(
             exception.status, exception.body))
@@ -51,18 +49,17 @@ def get_config(ctx):
 @groups.result_group.command('request')
 @click.pass_context
 @click.argument('request_id')
-def get_request_result(ctx, request_id):
+def get_request_result(ctx: click.Context, request_id: str) -> None:
   """Get Turbinia server configuration."""
-  api_client = ctx.obj.api_client
-  api_instance = turbinia_request_results_api.TurbiniaRequestResultsApi(
-      api_client)
+  client: api_client.ApiClient = ctx.obj.api_client
+  api_instance = turbinia_request_results_api.TurbiniaRequestResultsApi(client)
   try:
     api_response = api_instance.get_request_output(request_id)
     filename = api_response.name.split('/')[-1]
     click.echo("Saving zip file: {}".format(filename))
     with open(filename, 'wb') as file:
       file.write(api_response.read())
-  except turbinia_api_client.ApiException as exception:
+  except exceptions.ApiException as exception:
     log.exception(
         'Received status code {0!s} when calling create_request: {1!s}'.format(
             exception.status, exception.body))
@@ -73,11 +70,10 @@ def get_request_result(ctx, request_id):
 @groups.result_group.command('task')
 @click.pass_context
 @click.argument('task_id')
-def get_task_result(ctx, task_id):
+def get_task_result(ctx: click.Context, task_id: str) -> None:
   """Get Turbinia server configuration."""
-  api_client = ctx.obj.api_client
-  api_instance = turbinia_request_results_api.TurbiniaRequestResultsApi(
-      api_client)
+  client: api_client.ApiClient = ctx.obj.api_client
+  api_instance = turbinia_request_results_api.TurbiniaRequestResultsApi(client)
   try:
     api_response = api_instance.get_task_output(
         task_id, _check_return_type=False)
@@ -85,7 +81,7 @@ def get_task_result(ctx, task_id):
     click.echo('Saving zip file: {}'.format(filename))
     with open(filename, 'wb') as file:
       file.write(api_response.read())
-  except turbinia_api_client.ApiException as exception:
+  except exceptions.ApiException as exception:
     log.exception(
         'Received status code {0!s} when calling create_request: {1!s}'.format(
             exception.status, exception.body))
@@ -95,14 +91,14 @@ def get_task_result(ctx, task_id):
 
 @groups.jobs_group.command('list')
 @click.pass_context
-def get_jobs(ctx):
+def get_jobs(ctx: click.Context) -> None:
   """Get Turbinia jobs list."""
-  api_client = ctx.obj.api_client
-  api_instance = turbinia_jobs_api.TurbiniaJobsApi(api_client)
+  client: api_client.ApiClient = ctx.obj.api_client
+  api_instance = turbinia_jobs_api.TurbiniaJobsApi(client)
   try:
     api_response = api_instance.read_jobs()
     click.echo(api_response)
-  except turbinia_api_client.ApiException as exception:
+  except exceptions.ApiException as exception:
     log.exception(
         'Received status code {0!s} when calling create_request: {1!s}'.format(
             exception.status, exception.body))
@@ -111,15 +107,15 @@ def get_jobs(ctx):
 @groups.status_group.command('request')
 @click.pass_context
 @click.argument('request_id')
-def get_request(ctx, request_id):
+def get_request(ctx: click.Context, request_id: str) -> None:
   """Get Turbinia request status."""
-  api_client = ctx.obj.api_client
-  api_instance = turbinia_requests_api.TurbiniaRequestsApi(api_client)
+  client: api_client.ApiClient = ctx.obj.api_client
+  api_instance = turbinia_requests_api.TurbiniaRequestsApi(client)
   try:
     api_response = api_instance.get_request_status(
         request_id, _check_return_type=False)
     click.echo(api_response)
-  except turbinia_api_client.ApiException as exception:
+  except exceptions.ApiException as exception:
     log.exception(
         'Received status code {0!s} when calling create_request: {1!s}'.format(
             exception.status, exception.body))
@@ -127,14 +123,14 @@ def get_request(ctx, request_id):
 
 @groups.status_group.command('summary')
 @click.pass_context
-def get_requests_summary(ctx):
+def get_requests_summary(ctx: click.Context) -> None:
   """Get a summary of all Trubinia requests."""
-  api_client = ctx.obj.api_client
-  api_instance = turbinia_requests_api.TurbiniaRequestsApi(api_client)
+  client: api_client.ApiClient = ctx.obj.api_client
+  api_instance = turbinia_requests_api.TurbiniaRequestsApi(client)
   try:
     api_response = api_instance.get_requests_summary(_check_return_type=False)
     click.echo(api_response)
-  except turbinia_api_client.ApiException as exception:
+  except exceptions.ApiException as exception:
     log.exception(
         'Received status code {0!s} when calling create_request: {1!s}'.format(
             exception.status, exception.body))
@@ -143,28 +139,29 @@ def get_requests_summary(ctx):
 @groups.status_group.command('task')
 @click.pass_context
 @click.argument('task_id')
-def get_task(ctx, task_id):
+def get_task(ctx: click.Context, task_id: str) -> None:
   """Get Turbinia task status."""
-  api_client = ctx.obj.api_client
-  api_instance = turbinia_tasks_api.TurbiniaTasksApi(api_client)
+  client: api_client.ApiClient = ctx.obj.api_client
+  api_instance = turbinia_tasks_api.TurbiniaTasksApi(client)
   try:
     api_response = api_instance.get_task_status(
         task_id, _check_return_type=False)
     click.echo(api_response)
-  except turbinia_api_client.ApiException as exception:
+  except exceptions.ApiException as exception:
     log.exception(
         'Received status code {0!s} when calling create_request: {1!s}'.format(
             exception.status, exception.body))
 
 
 @click.pass_context
-def create_request(ctx, *args, **kwargs):
+def create_request(ctx: click.Context, *args: int, **kwargs: int) -> None:
   """Create and submit a new Turbinia request."""
-  api_client = ctx.obj.api_client
-  api_instance = turbinia_requests_api.TurbiniaRequestsApi(api_client)
+  client: api_client.ApiClient = ctx.obj.api_client
+  api_instance = turbinia_requests_api.TurbiniaRequestsApi(client)
   evidence_name = ctx.command.name
   request_options = list(ctx.obj.request_options.keys())
   request = {'evidence': {'type': evidence_name}, 'request_options': {}}
+
   for key, value in kwargs.items():
     # If the value is not empty, add it to the request.
     if kwargs.get(key):
@@ -174,11 +171,12 @@ def create_request(ctx, *args, **kwargs):
       else:
         request['request_options'][key] = value
   log.debug('Sending request: {0!s}'.format(request))
+
   # Send the request to the API server.
   try:
     api_response = api_instance.create_request(request)
     log.debug('Received response: {0!s}'.format(api_response))
-  except turbinia_api_client.ApiException as exception:
+  except exceptions.ApiException as exception:
     log.exception(
         'Received status code {0!s} when calling create_request: {1!s}'.format(
             exception.status, exception.body))

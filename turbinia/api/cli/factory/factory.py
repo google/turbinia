@@ -15,12 +15,15 @@
 """Turbinia API client / management tool."""
 
 from abc import ABC, abstractmethod
+from typing import TypeVar, Type, Tuple, Any, List
 
 import logging
 import click
 
 from turbinia.api.cli.helpers import click_helpers
 from turbinia.api.cli.core.commands import create_request
+
+T = TypeVar('T', bound='FactoryInterface')
 
 _LOGGER_FORMAT = '%(asctime)s %(levelname)s %(name)s - %(message)s'
 logging.basicConfig(format=_LOGGER_FORMAT)
@@ -32,7 +35,7 @@ class FactoryInterface(ABC):
   """Factory Interface."""
 
   @classmethod
-  def get_evidence_names(cls, evidence_mapping):
+  def get_evidence_names(cls: Type[T], evidence_mapping: dict) -> List[str]:
     """Retrieves a list of evidence type names.
     
     Args:
@@ -45,7 +48,7 @@ class FactoryInterface(ABC):
     return [evidence_name for evidence_name in evidence_mapping.keys()]
 
   @classmethod
-  def get_request_options(cls, request_options):
+  def get_request_options(cls: Type[T], request_options: dict) -> List[str]:
     """Retrieves a list of request options.
     
     Args:
@@ -55,7 +58,8 @@ class FactoryInterface(ABC):
     return [request_option for request_option in request_options.keys()]
 
   @classmethod
-  def get_evidence_attributes(cls, evidence_mapping):
+  def get_evidence_attributes(
+      cls: Type[T], evidence_mapping: dict) -> List[Tuple[str, Any, dict]]:
     """Retrieves a list of evidence attribute metadata.
     
     Args:
@@ -80,7 +84,9 @@ class FactoryInterface(ABC):
 
   @classmethod
   @abstractmethod
-  def create_dynamic_objects(cls, name, evidence_mapping, request_options):
+  def create_dynamic_objects(
+      cls: Type[T], name: str, evidence_mapping: dict,
+      request_options: dict) -> None:
     """Creates multiple objects.
     
     Args:
@@ -93,7 +99,7 @@ class FactoryInterface(ABC):
 
   @classmethod
   @abstractmethod
-  def create_object(cls, name, params):
+  def create_object(cls: Type[T], name: str, params: Tuple[Any, dict]):
     """Creates an object of a specific type.
     
     Args:
@@ -108,17 +114,19 @@ class OptionFactory(FactoryInterface):
   """Command line options factory class."""
 
   @classmethod
-  def append_request_option_objects(cls, params, request_options_data):
+  def append_request_option_objects(
+      cls: Type[T], params: List[click.Option],
+      request_options: dict = None) -> None:
     """Appends request options to a list of parameters for a click.Command object."""
-    for request_option in OptionFactory.get_request_options(
-        request_options_data):
+    for request_option in OptionFactory.get_request_options(request_options):
       request_parameters = click_helpers.generate_option_parameters(
           request_option)
       params.append(OptionFactory.create_object(params=request_parameters))
 
   @classmethod
   def create_dynamic_objects(
-      cls, name=None, evidence_mapping=None, request_options=None):
+      cls, name: str = None, evidence_mapping: dict = None,
+      request_options: dict = None) -> List[click.Option]:
     """Implements create_dynamic_objects to create a list of click.Option objects."""
     option_objects = []
     if not name:
@@ -134,7 +142,9 @@ class OptionFactory(FactoryInterface):
     return option_objects
 
   @classmethod
-  def create_object(cls, name=None, params=None):
+  def create_object(
+      cls: Type[T], name: str = None,
+      params: Tuple[Any, dict] = None) -> click.Option:
     """Creates a click.Option object with specified parameters."""
     option = None
     if params:
@@ -148,7 +158,8 @@ class CommandFactory(FactoryInterface):
 
   @classmethod
   def create_dynamic_objects(
-      cls, name=None, evidence_mapping=None, request_options=None):
+      cls, name: str = None, evidence_mapping: dict = None,
+      request_options: dict = None) -> List[click.Command]:
     """Implements create_dynamic_objects to create a list of click.Command objects."""
 
     command_objects = []
@@ -164,6 +175,8 @@ class CommandFactory(FactoryInterface):
     return command_objects
 
   @classmethod
-  def create_object(cls, name=None, params=None):
+  def create_object(
+      cls: Type[T], name: str = None,
+      params: Tuple[Any, dict] = None) -> click.Command:
     """Creates a click.Command object with specified parameters."""
     return click.Command(name=name, params=params)

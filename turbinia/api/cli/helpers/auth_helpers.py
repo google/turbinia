@@ -21,9 +21,10 @@ from google_auth_oauthlib import flow
 from google.oauth2.credentials import Credentials
 from google.auth.transport.requests import Request
 
-_LOGGER_FORMAT = '%(asctime)s %(levelname)s %(name)s %(message)s'
+_LOGGER_FORMAT = '%(asctime)s %(levelname)s %(name)s - %(message)s'
 logging.basicConfig(format=_LOGGER_FORMAT)
-log = logging.getLogger()
+log = logging.getLogger('turbiniamgmt:helpers:auth')
+log.setLevel(logging.DEBUG)
 
 
 def get_oauth2_credentials():
