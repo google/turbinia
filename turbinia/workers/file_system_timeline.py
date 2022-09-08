@@ -79,7 +79,7 @@ class FileSystemTimelineTask(TurbiniaTask):
     entry_lister = file_entry_lister.FileEntryLister()
     try:
       base_path_specs = entry_lister.GetBasePathSpecs(
-          evidence.device_path, options=volume_scanner_options)
+          evidence.local_path, options=volume_scanner_options)
     except dfvfs_errors.ScannerError as exception:
       status = 'Unable to open evidence: {0!s}'.format(exception)
       result.close(self, success=False, status=status)
@@ -104,6 +104,10 @@ class FileSystemTimelineTask(TurbiniaTask):
             bodyfile_fileobj.write(bodyfile_entry)
             bodyfile_fileobj.write('\n')
             number_of_entries += 1
+          # TODO(dfjxs): Currently need to delete the file_entries so dfVFS will
+          # release the loopback device. Will investigate whether we can fix
+          # this in dfVFS.
+          del file_entry
       except (dfvfs_errors.AccessError, dfvfs_errors.BackEndError,
               dfvfs_errors.MountPointError, dfvfs_errors.PathSpecError,
               IOError) as exception:
