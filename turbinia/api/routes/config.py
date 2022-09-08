@@ -22,6 +22,7 @@ from fastapi.responses import JSONResponse
 
 from turbinia import config as turbinia_config
 from turbinia import evidence
+from turbinia.api.schemas import request_options
 
 log = logging.getLogger('turbinia:api_server:config')
 
@@ -46,3 +47,25 @@ async def get_evidence_types():
   """Returns supported Evidence object types and required parameters."""
   attribute_mapping = evidence.map_evidence_attributes()
   return JSONResponse(content=attribute_mapping, status_code=200)
+
+
+@router.get("/evidence/{evidence_name}")
+async def get_evidence_attributes_by_name(evidence_name):
+  """Returns supported Evidence object types and required parameters."""
+  attribute_mapping = evidence.map_evidence_attributes()
+  attribute_mapping = {evidence_name: attribute_mapping.get(evidence_name)}
+  if not attribute_mapping:
+    raise HTTPException(
+        status_code=404,
+        detail='Evidence type ({0:s}) not found.'.format(evidence_name))
+  return JSONResponse(content=attribute_mapping, status_code=200)
+
+
+@router.get("/request_options")
+async def get_request_options():
+  """Returns a list BaseRequestOptions attributes."""
+  attributes = request_options.BaseRequestOptions.__annotations__
+  attributes_dict = {}
+  for attribute_name, attribute_type in attributes.items():
+    attributes_dict[attribute_name] = {'type': str(attribute_type)}
+  return JSONResponse(content=attributes_dict, status_code=200)

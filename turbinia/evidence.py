@@ -42,7 +42,12 @@ log = logging.getLogger('turbinia')
 
 
 def evidence_class_names(all_classes=False):
-  """Returns a list of class names for the evidence module."""
+  """Returns a list of class names for the evidence module.
+
+  Args:
+    all_classes (bool): Flag to determine whether to include all classes
+        in the module.
+  """
   predicate = lambda member: inspect.isclass(member) and not inspect.isbuiltin(
       member)
   class_names = inspect.getmembers(sys.modules[__name__], predicate)
@@ -52,10 +57,11 @@ def evidence_class_names(all_classes=False):
     # 'output' and 'report' types.
     # Ignore classes that are not real Evidence types and the base class.
     ignored_classes = (
-        'BodyFile', 'BulkExtractorOutput', 'Evidence', 'EvidenceState',
-        'EvidenceCollection', 'ExportedFileArtifact', 'FilteredTextFile',
-        'FinalReport', 'IntEnum', 'PlasoCsvFile', 'PlasoFile', 'PhotorecOutput',
-        'ReportText', 'TextFile', 'VolatilityReport', 'TurbiniaException')
+        'BinaryExtraction', 'BodyFile', 'BulkExtractorOutput', 'Evidence',
+        'EvidenceState', 'EvidenceCollection', 'ExportedFileArtifact',
+        'FilteredTextFile', 'FinalReport', 'IntEnum', 'PlasoCsvFile',
+        'PlasoFile', 'PhotorecOutput', 'ReportText', 'TextFile',
+        'VolatilityReport', 'TurbiniaException')
     class_names = filter(
         lambda class_tuple: class_tuple[0] not in ignored_classes, class_names)
   return list(class_names)
@@ -76,10 +82,19 @@ def map_evidence_attributes():
       attributes = attributes_signature.parameters.keys()
       for attribute in attributes:
         if not object_attribute_mapping[class_name]:
-          object_attribute_mapping[class_name] = []
+          object_attribute_mapping[class_name] = defaultdict(dict)
         # Ignore 'args' and 'kwargs' attributes.
         if attribute not in ('args', 'kwargs'):
-          object_attribute_mapping[class_name].append(attribute)
+          object_attribute_mapping[class_name][attribute] = {
+              'required': bool(attribute in class_type.REQUIRED_ATTRIBUTES),
+              'type': 'str'
+          }
+      # Add optional attributes.
+      for optional_attribute in Evidence.OPTIONAL_ATTRIBUTES:
+        object_attribute_mapping[class_name][optional_attribute] = {
+            'required': False,
+            'type': 'str'
+        }
     except ValueError as exception:
       log.info(exception)
   return object_attribute_mapping
@@ -219,6 +234,10 @@ class Evidence:
 
   # The list of attributes a given piece of Evidence requires to be set
   REQUIRED_ATTRIBUTES = []
+
+  # An optional list of attributes that are generally used to describe
+  # a given piece of Evidence.
+  OPTIONAL_ATTRIBUTES = ['name', 'source', 'description', 'tags']
 
   # The list of EvidenceState states that the Evidence supports in its
   # pre/post-processing (e.g. MOUNTED, ATTACHED, etc).  See `preprocessor()`
@@ -510,7 +529,7 @@ class Evidence:
         message = (
             'Evidence validation failed: Required attribute {0:s} for class '
             '{1:s} is not set. Please check original request.'.format(
-                attribute, self.name))
+                attribute, self.type))
         raise TurbiniaException(message)
 
 
@@ -542,8 +561,16 @@ class EvidenceCollection(Evidence):
 
 
 class Directory(Evidence):
-  """Filesystem directory evidence."""
-  pass
+  """Filesystem directory evidence.
+
+  Attributes:
+    source_path: The path to the source directory used as evidence.
+  """
+  REQUIRED_ATTRIBUTES = ['source_path']
+
+  def __init__(self, source_path=None, *args, **kwargs):
+    super(Directory, self).__init__(source_path=source_path, *args, **kwargs)
+    self.source_path = source_path
 
 
 class CompressedDirectory(Evidence):
@@ -553,16 +580,15 @@ class CompressedDirectory(Evidence):
     compressed_directory: The path to the compressed directory.
     uncompressed_directory: The path to the uncompressed directory.
   """
-  REQUIRED_ATTRIBUTES = ['compressed_directory', 'uncompressed_directory']
+  REQUIRED_ATTRIBUTES = ['source_path']
   POSSIBLE_STATES = [EvidenceState.DECOMPRESSED]
 
-  def __init__(
-      self, compressed_directory=None, uncompressed_directory=None, *args,
-      **kwargs):
+  def __init__(self, source_path=None, *args, **kwargs):
     """Initialization for CompressedDirectory evidence object."""
-    super(CompressedDirectory, self).__init__(*args, **kwargs)
-    self.compressed_directory = compressed_directory
-    self.uncompressed_directory = uncompressed_directory
+    super(CompressedDirectory, self).__init__(
+        source_path=source_path, *args, **kwargs)
+    self.compressed_directory = None
+    self.uncompressed_directory = None
     self.copyable = True
 
   def _preprocess(self, tmp_dir, required_states):
@@ -617,7 +643,7 @@ class RawDisk(Evidence):
   """Evidence object for Disk based evidence.
 
   Attributes:
-    device_path (str): Path to a relevant 'raw' data source (ie: a block
+    source_path (str): Path to a relevant 'raw' data source (ie: a block
         device or a raw disk image).
     mount_partition: The mount partition for this disk (if any).
   """
@@ -643,7 +669,7 @@ class RawDisk(Evidence):
       self.state[EvidenceState.ATTACHED] = False
 
 
-class DiskPartition(RawDisk):
+class DiskPartition(Evidence):
   """Evidence object for a partition within Disk based evidence.
 
   More information on dfVFS types:
@@ -662,7 +688,6 @@ class DiskPartition(RawDisk):
       self, partition_location=None, partition_offset=None, partition_size=None,
       lv_uuid=None, path_spec=None, important=True, *args, **kwargs):
     """Initialization for raw volume evidence object."""
-
     self.partition_location = partition_location
     self.partition_offset = partition_offset
     self.partition_size = partition_size
@@ -761,7 +786,7 @@ class DiskPartition(RawDisk):
         self.state[EvidenceState.ATTACHED] = False
 
 
-class GoogleCloudDisk(RawDisk):
+class GoogleCloudDisk(Evidence):
   """Evidence object for a Google Cloud Disk.
 
   Attributes:
@@ -770,7 +795,7 @@ class GoogleCloudDisk(RawDisk):
     disk_name: The cloud disk name.
   """
 
-  REQUIRED_ATTRIBUTES = ['disk_name', 'project', 'resource_id', 'zone']
+  REQUIRED_ATTRIBUTES = ['disk_name', 'project', 'zone']
   POSSIBLE_STATES = [EvidenceState.ATTACHED, EvidenceState.MOUNTED]
 
   def __init__(
@@ -825,11 +850,18 @@ class GoogleCloudDiskRawEmbedded(GoogleCloudDisk):
   REQUIRED_ATTRIBUTES = ['disk_name', 'project', 'zone', 'embedded_path']
   POSSIBLE_STATES = [EvidenceState.ATTACHED]
 
-  def __init__(self, embedded_path=None, *args, **kwargs):
+  def __init__(
+      self, embedded_path=None, project=None, zone=None, disk_name=None,
+      mount_partition=1, *args, **kwargs):
     """Initialization for Google Cloud Disk containing a raw disk image."""
-    super(GoogleCloudDiskRawEmbedded, self).__init__(*args, **kwargs)
+    super(GoogleCloudDiskRawEmbedded, self).__init__(
+        project=project, zone=zone, disk_name=disk_name, mount_partition=1,
+        *args, **kwargs)
     self.embedded_path = embedded_path
-
+    self.project = project
+    self.zone = zone
+    self.disk_name = disk_name
+    self.mount_partition = mount_partition
     # This Evidence needs to have a GoogleCloudDisk as a parent
     self.context_dependent = True
 
@@ -883,7 +915,6 @@ class PlasoFile(Evidence):
 
   def __init__(self, plaso_version=None, *args, **kwargs):
     """Initialization for Plaso File evidence."""
-
     self.plaso_version = plaso_version
     super(PlasoFile, self).__init__(copyable=True, *args, **kwargs)
     self.save_metadata = True
@@ -894,7 +925,6 @@ class PlasoCsvFile(Evidence):
 
   def __init__(self, plaso_version=None, *args, **kwargs):
     """Initialization for Plaso File evidence."""
-
     self.plaso_version = plaso_version
     super(PlasoCsvFile, self).__init__(copyable=True, *args, **kwargs)
     self.save_metadata = False
@@ -961,11 +991,12 @@ class RawMemory(Evidence):
     module_list (list): Module used for the analysis
     """
 
-  REQUIRED_ATTRIBUTES = ['module_list', 'profile']
+  REQUIRED_ATTRIBUTES = ['source_path', 'module_list', 'profile']
 
-  def __init__(self, module_list=None, profile=None, *args, **kwargs):
+  def __init__(
+      self, source_path=None, module_list=None, profile=None, *args, **kwargs):
     """Initialization for raw memory evidence object."""
-    super(RawMemory, self).__init__(*args, **kwargs)
+    super(RawMemory, self).__init__(source_path=source_path, *args, **kwargs)
     self.profile = profile
     self.module_list = module_list
 

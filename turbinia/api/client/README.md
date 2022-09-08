@@ -90,6 +90,9 @@ All URIs are relative to *http://localhost*
 Class | Method | HTTP request | Description
 ------------ | ------------- | ------------- | -------------
 *LogsApi* | [**get_logs**](docs/LogsApi.md#get_logs) | **GET** /api/logs/{query} | Get Logs
+*TurbiniaConfigurationApi* | [**get_evidence_attributes_by_name**](docs/TurbiniaConfigurationApi.md#get_evidence_attributes_by_name) | **GET** /api/config/evidence/{evidence_name} | Get Evidence Attributes By Name
+*TurbiniaConfigurationApi* | [**get_evidence_types**](docs/TurbiniaConfigurationApi.md#get_evidence_types) | **GET** /api/config/evidence | Get Evidence Types
+*TurbiniaConfigurationApi* | [**get_request_options**](docs/TurbiniaConfigurationApi.md#get_request_options) | **GET** /api/config/request_options | Get Request Options
 *TurbiniaConfigurationApi* | [**read_config**](docs/TurbiniaConfigurationApi.md#read_config) | **GET** /api/config/ | Read Config
 *TurbiniaJobsApi* | [**read_jobs**](docs/TurbiniaJobsApi.md#read_jobs) | **GET** /api/jobs/ | Read Jobs
 *TurbiniaRequestResultsApi* | [**get_request_output**](docs/TurbiniaRequestResultsApi.md#get_request_output) | **GET** /api/result/request/{request_id} | Get Request Output

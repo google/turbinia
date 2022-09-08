@@ -133,6 +133,44 @@ paths:
       summary: Get Evidence Types
       tags:
         - Turbinia Configuration
+  /api/config/evidence/{evidence_name}:
+    get:
+      description: Returns supported Evidence object types and required parameters.
+      operationId: get_evidence_attributes_by_name
+      parameters:
+        - in: path
+          name: evidence_name
+          required: true
+          schema:
+            title: Evidence Name
+      responses:
+        "200":
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+          description: Validation Error
+      summary: Get Evidence Attributes By Name
+      tags:
+        - Turbinia Configuration
+  /api/config/request_options:
+    get:
+      description: Returns a list BaseRequestOptions attributes.
+      operationId: get_request_options
+      responses:
+        "200":
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+      summary: Get Request Options
+      tags:
+        - Turbinia Configuration
   /api/jobs/:
     get:
       description: Return enabled jobs from the current Turbinia config.
