@@ -50,7 +50,7 @@ def evidence_class_names(all_classes=False):
   """
   predicate = lambda member: inspect.isclass(member) and not inspect.isbuiltin(
       member)
-  class_names = inspect.getmembers(sys.modules['turbinia.evidence'], predicate)
+  class_names = inspect.getmembers(sys.modules[__name__], predicate)
   if not all_classes:
     # TODO: Non-evidence types should be moved out of the evidence module,
     # so that we no longer have to ignore certain classes here. Especially
