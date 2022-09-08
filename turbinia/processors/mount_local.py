@@ -492,11 +492,17 @@ def PostprocessDeleteLosetup(device_path, lv_uuid=None):
     # Check that the device was actually removed
     losetup_cmd = ['sudo', 'losetup', '--list']
     log.info('Running: {0:s}'.format(' '.join(losetup_cmd)))
-    try:
-      output = subprocess.check_output(losetup_cmd)
-    except subprocess.CalledProcessError as exception:
-      raise TurbiniaException(
-          'Could not check losetup device status {0!s}'.format(exception))
+    for _ in range(RETRY_MAX):
+      try:
+        output = subprocess.check_output(losetup_cmd)
+      except subprocess.CalledProcessError as exception:
+        raise TurbiniaException(
+            'Could not check losetup device status {0!s}'.format(exception))
+      if output.find(device_path.encode('utf-8')) != -1:
+        time.sleep(1)
+      else:
+        break
+    # Final check if Losetup device still exists
     if output.find(device_path.encode('utf-8')) != -1:
       turbinia_failed_loop_device_detach.inc()
       raise TurbiniaException(
