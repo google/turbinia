@@ -211,8 +211,9 @@ def PreprocessLosetup(
     losetup_command.append(source_path)
     log.info('Running command {0:s}'.format(' '.join(losetup_command)))
     try:
-      losetup_device = subprocess.check_output(
-          losetup_command, universal_newlines=True).strip()
+      with filelock.FileLock(config.RESOURCE_FILE_LOCK):
+        losetup_device = subprocess.check_output(
+            losetup_command, universal_newlines=True).strip()
     except subprocess.CalledProcessError as exception:
       raise TurbiniaException(
           'Could not set losetup devices {0!s}'.format(exception))
@@ -482,26 +483,23 @@ def PostprocessDeleteLosetup(device_path, lv_uuid=None):
     # https://github.com/google/turbinia/issues/73
     losetup_cmd = ['sudo', 'losetup', '-d', device_path]
     log.info('Running: {0:s}'.format(' '.join(losetup_cmd)))
-    try:
-      subprocess.check_call(losetup_cmd)
-    except subprocess.CalledProcessError as exception:
-      turbinia_failed_loop_device_detach.inc()
-      raise TurbiniaException(
-          'Could not delete losetup device {0!s}'.format(exception))
-
-    # Check that the device was actually removed
-    losetup_cmd = ['sudo', 'losetup', '--list']
-    log.info('Running: {0:s}'.format(' '.join(losetup_cmd)))
-    for _ in range(RETRY_MAX):
+    with filelock.FileLock(config.RESOURCE_FILE_LOCK):
       try:
-        output = subprocess.check_output(losetup_cmd)
+        subprocess.check_call(losetup_cmd)
       except subprocess.CalledProcessError as exception:
+        turbinia_failed_loop_device_detach.inc()
         raise TurbiniaException(
-            'Could not check losetup device status {0!s}'.format(exception))
-      if output.find(device_path.encode('utf-8')) != -1:
-        time.sleep(1)
-      else:
-        break
+            'Could not delete losetup device {0!s}'.format(exception))
+      for _ in range(RETRY_MAX):
+        try:
+          output = subprocess.check_output(losetup_cmd)
+        except subprocess.CalledProcessError as exception:
+          raise TurbiniaException(
+              'Could not check losetup device status {0!s}'.format(exception))
+        if output.find(device_path.encode('utf-8')) != -1:
+          time.sleep(1)
+        else:
+          break
     # Final check if Losetup device still exists
     if output.find(device_path.encode('utf-8')) != -1:
       turbinia_failed_loop_device_detach.inc()
