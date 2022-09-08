@@ -14,6 +14,9 @@
 # limitations under the License.
 """Turbinia API client / management tool."""
 
+from collections import defaultdict
+
+import logging
 import click
 import turbinia_api_client
 
@@ -22,8 +25,12 @@ from turbinia_api_client.api import turbinia_tasks_api
 from turbinia_api_client.api import turbinia_configuration_api
 from turbinia_api_client.api import turbinia_jobs_api
 from turbinia_api_client.api import turbinia_request_results_api
-
 from turbinia.api.cli.core import groups
+
+_LOGGER_FORMAT = '%(asctime)s %(levelname)s %(name)s - %(message)s'
+logging.basicConfig(format=_LOGGER_FORMAT)
+log = logging.getLogger('turbiniamgmt:core:commands')
+log.setLevel(logging.DEBUG)
 
 
 @groups.config_group.command('list')
@@ -36,7 +43,9 @@ def get_config(ctx):
     api_response = api_instance.read_config()
     click.echo(api_response)
   except turbinia_api_client.ApiException as exception:
-    click.echo('Exception when calling read_config: {0!s}'.format(exception))
+    log.exception(
+        'Received status code {0!s} when calling create_request: {1!s}'.format(
+            exception.status, exception.body))
 
 
 @groups.result_group.command('request')
@@ -54,10 +63,11 @@ def get_request_result(ctx, request_id):
     with open(filename, 'wb') as file:
       file.write(api_response.read())
   except turbinia_api_client.ApiException as exception:
-    click.echo(
-        'Exception when calling get_request_result: {0!s}'.format(exception))
+    log.exception(
+        'Received status code {0!s} when calling create_request: {1!s}'.format(
+            exception.status, exception.body))
   except OSError as exception:
-    click.echo('Unable to save file: {0!s}'.format(exception))
+    log.exception('Unable to save file: {0!s}'.format(exception))
 
 
 @groups.result_group.command('task')
@@ -76,9 +86,11 @@ def get_task_result(ctx, task_id):
     with open(filename, 'wb') as file:
       file.write(api_response.read())
   except turbinia_api_client.ApiException as exception:
-    click.echo('Error when calling get_task_result: {0!s}'.format(exception))
+    log.exception(
+        'Received status code {0!s} when calling create_request: {1!s}'.format(
+            exception.status, exception.body))
   except OSError as exception:
-    click.echo('Unable to save file: {0!s}'.format(exception))
+    log.exception('Unable to save file: {0!s}'.format(exception))
 
 
 @groups.jobs_group.command('list')
@@ -91,7 +103,9 @@ def get_jobs(ctx):
     api_response = api_instance.read_jobs()
     click.echo(api_response)
   except turbinia_api_client.ApiException as exception:
-    click.echo('Error when calling get_jobs: {0!s}'.format(exception))
+    log.exception(
+        'Received status code {0!s} when calling create_request: {1!s}'.format(
+            exception.status, exception.body))
 
 
 @groups.status_group.command('request')
@@ -106,7 +120,9 @@ def get_request(ctx, request_id):
         request_id, _check_return_type=False)
     click.echo(api_response)
   except turbinia_api_client.ApiException as exception:
-    click.echo('Error when calling get_status: {0!s}'.format(exception))
+    log.exception(
+        'Received status code {0!s} when calling create_request: {1!s}'.format(
+            exception.status, exception.body))
 
 
 @groups.status_group.command('summary')
@@ -119,7 +135,9 @@ def get_requests_summary(ctx):
     api_response = api_instance.get_requests_summary(_check_return_type=False)
     click.echo(api_response)
   except turbinia_api_client.ApiException as exception:
-    click.echo('Error when calling get_summary: {0!s}'.format(exception))
+    log.exception(
+        'Received status code {0!s} when calling create_request: {1!s}'.format(
+            exception.status, exception.body))
 
 
 @groups.status_group.command('task')
@@ -134,7 +152,9 @@ def get_task(ctx, task_id):
         task_id, _check_return_type=False)
     click.echo(api_response)
   except turbinia_api_client.ApiException as exception:
-    click.echo('Error when calling get_status: {0!s}'.format(exception))
+    log.exception(
+        'Received status code {0!s} when calling create_request: {1!s}'.format(
+            exception.status, exception.body))
 
 
 @click.pass_context
@@ -143,28 +163,24 @@ def create_request(ctx, *args, **kwargs):
   api_client = ctx.obj.api_client
   api_instance = turbinia_requests_api.TurbiniaRequestsApi(api_client)
   evidence_name = ctx.command.name
-  print(args, kwargs)
-  #request = {'evidence': {}, 'request_options': {}}
-  request = {
-      "description": "Turbinia request object",
-      "evidence": {
-          "_name": "Rawdisk evidence",
-          "source_path": "/workspaces/turbinia/test_data/artifact_disk.dd",
-          "type": "RawDisk"
-      },
-      "request_options": {
-          "sketch_id":
-              1234,
-          "recipe_name":
-              "/workspaces/turbinia/turbinia/config/recipes/triage-linux.yaml"
-      },
-      "reason": "test",
-      "requester": "tester"
-  }
+  request_options = list(ctx.obj.request_options.keys())
+  request = {'evidence': {'type': evidence_name}, 'request_options': {}}
+  for key, value in kwargs.items():
+    # If the value is not empty, add it to the request.
+    if kwargs.get(key):
+      # Check if the key is for evidence or request_options
+      if not key in request_options:
+        request['evidence'][key] = value
+      else:
+        request['request_options'][key] = value
+  log.debug('Sending request: {0!s}'.format(request))
+  # Send the request to the API server.
   try:
     api_response = api_instance.create_request(request)
-    click.echo(api_response)
+    log.debug('Received response: {0!s}'.format(api_response))
   except turbinia_api_client.ApiException as exception:
-    click.echo('Error when calling create_request: {0!s}'.format(exception))
+    log.exception(
+        'Received status code {0!s} when calling create_request: {1!s}'.format(
+            exception.status, exception.body))
   except TypeError as exception:
-    click.echo('The request object is invalid. {0!s}'.format(exception))
+    log.exception('The request object is invalid: {0!s}'.format(exception))

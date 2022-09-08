@@ -16,6 +16,9 @@
 
 
 def generate_option_parameters(option_name):
+  """Builds click.Option or click.Command arguments based on a given parameter 
+      name.
+  """
   return (((['--' + option_name], option_name), {
       'required': False,
       'type': str

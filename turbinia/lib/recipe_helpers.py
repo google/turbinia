@@ -222,7 +222,7 @@ def get_recipe_path_from_name(recipe_name):
     recipe_path = os.path.join(config.RECIPE_FILE_DIR, recipe_name)
   else:
     recipe_path = os.path.realpath(__file__)
-    recipe_path = os.path.dirname(recipe_path)
+    recipe_path = os.path.dirname(os.path.dirname(recipe_path))
     recipe_path = os.path.join(recipe_path, 'config', 'recipes')
     recipe_path = os.path.join(recipe_path, recipe_name)
 

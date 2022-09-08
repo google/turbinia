@@ -15,23 +15,20 @@
 """Turbinia API client / management tool."""
 
 import os
-import sys
 import logging
 import json
 import click
 import turbinia_api_client
 
-from turbinia.api.cli.helpers import auth_helpers
-from turbinia.api.cli.factory import factory
-from turbinia.api.cli.core import groups
 from turbinia_api_client.api import turbinia_configuration_api
+from turbinia.api.cli.core import groups
+from turbinia.api.cli.factory import factory
+from turbinia.api.cli.helpers import auth_helpers
 
-_LOGGER_FORMAT = '%(asctime)s %(levelname)s %(name)s %(message)s'
+_LOGGER_FORMAT = '%(asctime)s %(levelname)s %(name)s - %(message)s'
 logging.basicConfig(format=_LOGGER_FORMAT)
-log = logging.getLogger()
-stdout_handler = logging.StreamHandler(stream=sys.stdout)
-stdout_handler.setLevel(logging.DEBUG)
-log.addHandler(stdout_handler)
+log = logging.getLogger('turbiniamgmt')
+log.setLevel(logging.DEBUG)
 
 
 class TurbiniaMgmtCli:
@@ -96,7 +93,8 @@ class TurbiniaMgmtCli:
         api_response = api_instance.get_evidence_types()
       self.evidence_mapping = api_response
     except turbinia_api_client.ApiException as exception:
-      click.echo('Exception when calling read_config: {0!s}'.format(exception))
+      log.exception(
+          'Exception when calling read_config: {0!s}'.format(exception))
     return api_response
 
   def get_request_options(self):
@@ -106,7 +104,8 @@ class TurbiniaMgmtCli:
     try:
       api_response = api_instance.get_request_options()
     except turbinia_api_client.ApiException as exception:
-      click.echo('Exception when calling read_config: {0!s}'.format(exception))
+      log.exception(
+          'Exception when calling read_config: {0!s}'.format(exception))
     return api_response
 
   def read_api_configuration(self):
@@ -124,24 +123,21 @@ class TurbiniaMgmtCli:
             'API_AUTHENTICATION_ENABLED')
       except json.JSONDecodeError as exception:
         log.error(exception)
-        click.echo(
-            'Error reading .turbinia_api_config.json: {0!s}'.format(exception))
 
 
 @click.group(context_settings={'help_option_names': ['-h', '--help']})
 @click.pass_context
 def cli(ctx):
+  """Main context for the Click command-line application."""
   ctx.obj = TurbiniaMgmtCli()
+  request_commands = factory.CommandFactory.create_dynamic_objects(
+      evidence_mapping=ctx.obj.evidence_mapping,
+      request_options=ctx.obj.request_options)
+  for command in request_commands:
+    groups.submit_group.add_command(command)
 
 
-turbiniacli = TurbiniaMgmtCli()
-
-request_commands = factory.CommandFactory.create_dynamic_objects(
-    evidence_params=turbiniacli.evidence_mapping,
-    request_params=turbiniacli.request_options)
-for command in request_commands:
-  groups.submit_group.add_command(command)
-
+# Register all command groups.
 cli.add_command(groups.submit_group)
 cli.add_command(groups.config_group)
 cli.add_command(groups.jobs_group)
