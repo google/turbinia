@@ -82,7 +82,6 @@ def map_evidence_attributes():
       attributes = attributes_signature.parameters.keys()
       for attribute in attributes:
         if not object_attribute_mapping[class_name]:
-          #object_attribute_mapping[class_name] = []
           object_attribute_mapping[class_name] = defaultdict(dict)
         # Ignore 'args' and 'kwargs' attributes.
         if attribute not in ('args', 'kwargs'):
@@ -92,7 +91,6 @@ def map_evidence_attributes():
           }
       # Add optional attributes.
       for optional_attribute in Evidence.OPTIONAL_ATTRIBUTES:
-
         object_attribute_mapping[class_name][optional_attribute] = {
             'required': False,
             'type': 'str'
@@ -917,7 +915,6 @@ class PlasoFile(Evidence):
 
   def __init__(self, plaso_version=None, *args, **kwargs):
     """Initialization for Plaso File evidence."""
-
     self.plaso_version = plaso_version
     super(PlasoFile, self).__init__(copyable=True, *args, **kwargs)
     self.save_metadata = True
@@ -928,7 +925,6 @@ class PlasoCsvFile(Evidence):
 
   def __init__(self, plaso_version=None, *args, **kwargs):
     """Initialization for Plaso File evidence."""
-
     self.plaso_version = plaso_version
     super(PlasoCsvFile, self).__init__(copyable=True, *args, **kwargs)
     self.save_metadata = False
