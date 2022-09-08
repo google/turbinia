@@ -579,20 +579,17 @@ class RawDisk(Evidence):
     super(RawDisk, self).__init__(*args, **kwargs)
 
   def _preprocess(self, _, required_states):
-    with filelock.FileLock(config.RESOURCE_FILE_LOCK):
-      if self.size is None:
-        self.size = mount_local.GetDiskSize(self.source_path)
-      if EvidenceState.ATTACHED in required_states or self.has_child_evidence:
-        self.device_path = mount_local.PreprocessLosetup(self.source_path)
-        self.state[EvidenceState.ATTACHED] = True
-        self.local_path = self.device_path
+    if self.size is None:
+      self.size = mount_local.GetDiskSize(self.source_path)
+    if EvidenceState.ATTACHED in required_states or self.has_child_evidence:
+      self.device_path = mount_local.PreprocessLosetup(self.source_path)
+      self.state[EvidenceState.ATTACHED] = True
+      self.local_path = self.device_path
 
   def _postprocess(self):
-    with filelock.FileLock(config.RESOURCE_FILE_LOCK):
-      if self.state[EvidenceState.ATTACHED]:
-        with filelock.FileLock(config.RESOURCE_FILE_LOCK):
-          mount_local.PostprocessDeleteLosetup(self.device_path)
-          self.state[EvidenceState.ATTACHED] = False
+    if self.state[EvidenceState.ATTACHED]:
+      mount_local.PostprocessDeleteLosetup(self.device_path)
+      self.state[EvidenceState.ATTACHED] = False
 
 
 class DiskPartition(RawDisk):
@@ -643,77 +640,75 @@ class DiskPartition(RawDisk):
 
     # We need to enumerate partitions in preprocessing so the path_specs match
     # the parent evidence location for each task.
-    with filelock.FileLock(config.RESOURCE_FILE_LOCK):
-      try:
-        # We should only get one path_spec here since we're specifying the location.
-        path_specs = partitions.Enumerate(
-            self.parent_evidence, self.partition_location)
-      except TurbiniaException as exception:
-        log.error(exception)
+    try:
+      # We should only get one path_spec here since we're specifying the location.
+      path_specs = partitions.Enumerate(
+          self.parent_evidence, self.partition_location)
+    except TurbiniaException as exception:
+      log.error(exception)
 
-      if len(path_specs) > 1:
-        path_specs_dicts = [path_spec.CopyToDict() for path_spec in path_specs]
-        raise TurbiniaException(
-            'Found more than one path_spec for {0:s} {1:s}: {2!s}'.format(
-                self.parent_evidence.name, self.partition_location,
-                path_specs_dicts))
-      elif len(path_specs) == 1:
-        self.path_spec = path_specs[0]
-        log.debug(
-            'Found path_spec {0!s} for parent evidence {1:s}'.format(
-                self.path_spec.CopyToDict(), self.parent_evidence.name))
+    if len(path_specs) > 1:
+      path_specs_dicts = [path_spec.CopyToDict() for path_spec in path_specs]
+      raise TurbiniaException(
+          'Found more than one path_spec for {0:s} {1:s}: {2!s}'.format(
+              self.parent_evidence.name, self.partition_location,
+              path_specs_dicts))
+    elif len(path_specs) == 1:
+      self.path_spec = path_specs[0]
+      log.debug(
+          'Found path_spec {0!s} for parent evidence {1:s}'.format(
+              self.path_spec.CopyToDict(), self.parent_evidence.name))
+    else:
+      raise TurbiniaException(
+          'Could not find path_spec for location {0:s}'.format(
+              self.partition_location))
+
+    # In attaching a partition, we create a new loopback device using the
+    # partition offset and size.
+    if EvidenceState.ATTACHED in required_states or self.has_child_evidence:
+      # Check for encryption
+      encryption_type = partitions.GetPartitionEncryptionType(self.path_spec)
+      if encryption_type == 'BDE':
+        self.device_path = mount_local.PreprocessBitLocker(
+            self.parent_evidence.device_path,
+            partition_offset=self.partition_offset,
+            credentials=self.parent_evidence.credentials)
+        if not self.device_path:
+          log.error('Could not decrypt partition.')
       else:
-        raise TurbiniaException(
-            'Could not find path_spec for location {0:s}'.format(
-                self.partition_location))
+        self.device_path = mount_local.PreprocessLosetup(
+            self.parent_evidence.device_path,
+            partition_offset=self.partition_offset,
+            partition_size=self.partition_size, lv_uuid=self.lv_uuid)
+      if self.device_path:
+        self.state[EvidenceState.ATTACHED] = True
+        self.local_path = self.device_path
 
-      # In attaching a partition, we create a new loopback device using the
-      # partition offset and size.
-      if EvidenceState.ATTACHED in required_states or self.has_child_evidence:
-        # Check for encryption
-        encryption_type = partitions.GetPartitionEncryptionType(self.path_spec)
-        if encryption_type == 'BDE':
-          self.device_path = mount_local.PreprocessBitLocker(
-              self.parent_evidence.device_path,
-              partition_offset=self.partition_offset,
-              credentials=self.parent_evidence.credentials)
-          if not self.device_path:
-            log.error('Could not decrypt partition.')
-        else:
-          self.device_path = mount_local.PreprocessLosetup(
-              self.parent_evidence.device_path,
-              partition_offset=self.partition_offset,
-              partition_size=self.partition_size, lv_uuid=self.lv_uuid)
-        if self.device_path:
-          self.state[EvidenceState.ATTACHED] = True
-          self.local_path = self.device_path
-
-      if EvidenceState.MOUNTED in required_states or self.has_child_evidence:
-        self.mount_path = mount_local.PreprocessMountPartition(
-            self.device_path, self.path_spec.type_indicator)
-        if self.mount_path:
-          self.local_path = self.mount_path
-          self.state[EvidenceState.MOUNTED] = True
+    if EvidenceState.MOUNTED in required_states or self.has_child_evidence:
+      self.mount_path = mount_local.PreprocessMountPartition(
+          self.device_path, self.path_spec.type_indicator)
+      if self.mount_path:
+        self.local_path = self.mount_path
+        self.state[EvidenceState.MOUNTED] = True
 
   def _postprocess(self):
-    with filelock.FileLock(config.RESOURCE_FILE_LOCK):
-      if self.state[EvidenceState.MOUNTED]:
-        mount_local.PostprocessUnmountPath(self.mount_path)
-        self.state[EvidenceState.MOUNTED] = False
-      if self.state[EvidenceState.ATTACHED]:
-        # Late loading the partition processor to avoid loading dfVFS unnecessarily.
-        from turbinia.processors import partitions
+    if self.state[EvidenceState.MOUNTED]:
+      mount_local.PostprocessUnmountPath(self.mount_path)
+      self.state[EvidenceState.MOUNTED] = False
+    if self.state[EvidenceState.ATTACHED]:
+      # Late loading the partition processor to avoid loading dfVFS unnecessarily.
+      from turbinia.processors import partitions
 
-        # Check for encryption
-        encryption_type = partitions.GetPartitionEncryptionType(self.path_spec)
-        if encryption_type == 'BDE':
-          # bdemount creates a virtual device named bde1 in the mount path. This
-          # needs to be unmounted rather than detached.
-          mount_local.PostprocessUnmountPath(self.device_path.replace('bde1', ''))
-          self.state[EvidenceState.ATTACHED] = False
-        else:
-            mount_local.PostprocessDeleteLosetup(self.device_path, self.lv_uuid)
-            self.state[EvidenceState.ATTACHED] = False
+      # Check for encryption
+      encryption_type = partitions.GetPartitionEncryptionType(self.path_spec)
+      if encryption_type == 'BDE':
+        # bdemount creates a virtual device named bde1 in the mount path. This
+        # needs to be unmounted rather than detached.
+        mount_local.PostprocessUnmountPath(self.device_path.replace('bde1', ''))
+        self.state[EvidenceState.ATTACHED] = False
+      else:
+        mount_local.PostprocessDeleteLosetup(self.device_path, self.lv_uuid)
+        self.state[EvidenceState.ATTACHED] = False
 
 
 class GoogleCloudDisk(RawDisk):
@@ -760,10 +755,9 @@ class GoogleCloudDisk(RawDisk):
         self.state[EvidenceState.ATTACHED] = True
 
   def _postprocess(self):
-    with filelock.FileLock(config.RESOURCE_FILE_LOCK):
-      if self.state[EvidenceState.ATTACHED]:
-        google_cloud.PostprocessDetachDisk(self.disk_name, self.device_path)
-        self.state[EvidenceState.ATTACHED] = False
+    if self.state[EvidenceState.ATTACHED]:
+      google_cloud.PostprocessDetachDisk(self.disk_name, self.device_path)
+      self.state[EvidenceState.ATTACHED] = False
 
 
 class GoogleCloudDiskRawEmbedded(GoogleCloudDisk):
@@ -797,17 +791,16 @@ class GoogleCloudDiskRawEmbedded(GoogleCloudDisk):
       return ':'.join((self.disk_name, self.embedded_path))
 
   def _preprocess(self, _, required_states):
-    with filelock.FileLock(config.RESOURCE_FILE_LOCK):
-      # Need to mount parent disk
-      if not self.parent_evidence.partition_paths:
-        self.parent_evidence.mount_path = mount_local.PreprocessMountPartition(
-            self.parent_evidence.device_path, self.path_spec.type_indicator)
-      else:
-        partition_paths = self.parent_evidence.partition_paths
-        self.parent_evidence.mount_path = mount_local.PreprocessMountDisk(
-            partition_paths, self.parent_evidence.mount_partition)
-      self.parent_evidence.local_path = self.parent_evidence.mount_path
-      self.parent_evidence.state[EvidenceState.MOUNTED] = True
+    # Need to mount parent disk
+    if not self.parent_evidence.partition_paths:
+      self.parent_evidence.mount_path = mount_local.PreprocessMountPartition(
+          self.parent_evidence.device_path, self.path_spec.type_indicator)
+    else:
+      partition_paths = self.parent_evidence.partition_paths
+      self.parent_evidence.mount_path = mount_local.PreprocessMountDisk(
+          partition_paths, self.parent_evidence.mount_partition)
+    self.parent_evidence.local_path = self.parent_evidence.mount_path
+    self.parent_evidence.state[EvidenceState.MOUNTED] = True
 
     if EvidenceState.ATTACHED in required_states or self.has_child_evidence:
       rawdisk_path = os.path.join(
@@ -821,15 +814,14 @@ class GoogleCloudDiskRawEmbedded(GoogleCloudDisk):
       self.local_path = self.device_path
 
   def _postprocess(self):
-    with filelock.FileLock(config.RESOURCE_FILE_LOCK):
-      if self.state[EvidenceState.ATTACHED]:
-        mount_local.PostprocessDeleteLosetup(self.device_path)
-        self.state[EvidenceState.ATTACHED] = False
+    if self.state[EvidenceState.ATTACHED]:
+      mount_local.PostprocessDeleteLosetup(self.device_path)
+      self.state[EvidenceState.ATTACHED] = False
 
-      # Need to unmount parent disk
-      if self.parent_evidence.state[EvidenceState.MOUNTED]:
-        mount_local.PostprocessUnmountPath(self.parent_evidence.mount_path)
-        self.parent_evidence.state[EvidenceState.MOUNTED] = False
+    # Need to unmount parent disk
+    if self.parent_evidence.state[EvidenceState.MOUNTED]:
+      mount_local.PostprocessUnmountPath(self.parent_evidence.mount_path)
+      self.parent_evidence.state[EvidenceState.MOUNTED] = False
 
 
 class PlasoFile(Evidence):
