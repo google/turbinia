@@ -24,6 +24,10 @@
 # separate when running with the same Cloud projects or backend servers.
 INSTANCE_ID = 'turbinia-instance1'
 
+# Which Cloud provider to use. Valid options are None and 'GCP'. Use 'GCP'
+# for GCP or hybrid installations, and None for local installations.
+CLOUD_PROVIDER = 'GCP'
+
 # Which state manager to use. Valid options are 'Datastore' or 'Redis'.  Use
 # 'Datastore' for Cloud (GCP) or hybrid installations, and 'Redis' for local
 # installations.
@@ -95,6 +99,25 @@ DEBUG_TASKS = False
 
 # Directory keeping all eligible recipes
 RECIPE_FILE_DIR = None
+
+################################################################################
+#                         Turbinia API Server configuration
+#
+# Options in this section are used to configure the API serrver.
+################################################################################
+
+# API server hostname or IP address to listen on
+API_SERVER_ADDRESS = '0.0.0.0'
+
+# API server port
+API_SERVER_PORT = 8000
+
+# Allowed CORS origins
+API_ALLOWED_ORIGINS = ['http;//localhost:8000', 'http://localhost']
+
+# Enable/Disable API authentication. This will determine whether the API server will
+# check for OAuth 2.0 bearer tokens in the 'Authorization' header.
+API_AUTHENTICATION_ENABLED = False
 
 ################################################################################
 #                         External Dependency Configurations
@@ -309,11 +332,16 @@ STACKDRIVER_TRACEBACK = False
 # Options in this section are required if TASK_MANAGER is set to 'Celery'
 ################################################################################
 
+# Use Redis for state management
+REDIS_HOST = 'localhost'
+REDIS_PORT = '6379'
+REDIS_DB = '0'
+
 # Method for communication between nodes
-CELERY_BROKER = 'redis://localhost'
+CELERY_BROKER = 'redis://%s' % REDIS_HOST
 
 # Storage for task results/status
-CELERY_BACKEND = 'redis://localhost'
+CELERY_BACKEND = 'redis://%s' % REDIS_HOST
 
 # Can be the same as CELERY_BROKER
 KOMBU_BROKER = CELERY_BROKER
@@ -324,11 +352,6 @@ KOMBU_CHANNEL = '%s-kombu' % INSTANCE_ID
 # Will messages be persistent and require acknowledgment?
 # http://docs.celeryproject.org/projects/kombu/en/4.0/reference/kombu.html#kombu.Connection.SimpleBuffer
 KOMBU_DURABLE = True
-
-# Use Redis for state management
-REDIS_HOST = 'localhost'
-REDIS_PORT = '6379'
-REDIS_DB = '0'
 
 ################################################################################
 #                           Email Config

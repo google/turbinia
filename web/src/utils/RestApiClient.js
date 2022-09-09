@@ -29,6 +29,6 @@ RestApiClient.interceptors.response.use(
 export default {
   // Request List
   getRequestList() {
-    return RestApiClient.get('/request/summary')
+    return RestApiClient.get('/api/request/summary')
   },
 }

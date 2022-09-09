@@ -171,10 +171,12 @@ class DatastoreStateManager(BaseStateManager):
     config.LoadConfig()
     try:
       self.client = datastore.Client(project=config.TURBINIA_PROJECT)
-    except (EnvironmentError, auth_exceptions.DefaultCredentialsError) as e:
+    except (EnvironmentError,
+            auth_exceptions.DefaultCredentialsError) as exception:
       message = (
           'Could not create Datastore client: {0!s}\n'
-          'Have you run $ gcloud auth application-default login?'.format(e))
+          'Have you run $ gcloud auth application-default login?'.format(
+              exception))
       raise TurbiniaException(message)
 
   def _validate_data(self, data):
@@ -201,10 +203,10 @@ class DatastoreStateManager(BaseStateManager):
         entity.update(self.get_task_dict(task))
         log.debug('Updating Task {0:s} in Datastore'.format(task.name))
         self.client.put(entity)
-    except exceptions.GoogleCloudError as e:
+    except exceptions.GoogleCloudError as exception:
       log.error(
           'Failed to update task {0:s} in datastore: {1!s}'.format(
-              task.name, e))
+              task.name, exception))
 
   def write_new_task(self, task):
     key = self.client.key('TurbiniaTask', task.id)
@@ -218,10 +220,10 @@ class DatastoreStateManager(BaseStateManager):
       log.info('Writing new task {0:s} into Datastore'.format(task.name))
       self.client.put(entity)
       task.state_key = key
-    except exceptions.GoogleCloudError as e:
+    except exceptions.GoogleCloudError as exception:
       log.error(
           'Failed to update task {0:s} in datastore: {1!s}'.format(
-              task.name, e))
+              task.name, exception))
     return key
 
 
@@ -235,7 +237,8 @@ class RedisStateManager(BaseStateManager):
   def __init__(self):
     config.LoadConfig()
     self.client = redis.StrictRedis(
-        host=config.REDIS_HOST, port=config.REDIS_PORT, db=config.REDIS_DB)
+        host=config.REDIS_HOST, port=config.REDIS_PORT, db=config.REDIS_DB,
+        socket_timeout=10, socket_keepalive=True, socket_connect_timeout=10)
 
   def _validate_data(self, data):
     return data
