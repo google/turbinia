@@ -288,7 +288,7 @@ STACKDRIVER_TRACEBACK = False
 ################################################################################
 
 # Use Redis for state management
-REDIS_HOST = 'redis'
+REDIS_HOST = 'localhost'
 REDIS_PORT = '6379'
 REDIS_DB = '0'
 
