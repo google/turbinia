@@ -25,11 +25,16 @@ class LinuxAccountAnalysisTaskTest(unittest.TestCase):
   """Tests for LinuxAccountAnalysisTask Task."""
 
   SHADOW_FILE = None
+  YESCRYPT_SHADOW_FILE = None
   EXPECTED_CREDENTIALS = {
       '*':
           'root',
       '$6$NS6w5Q6yjrlZiw7s$5jeyNS.bsw2p4nlbbMRI5H8oZnSbbwKs0Lsw94xCouqn/y/yQpKNA4vdPSr/wdA0isyUmq3BD..ZcirwOVNPF/':
           'testuser'
+  }
+  YESCRYPT_EXPECTED_CREDENTIALS = {
+      '$y$j9T$Ju9QNI0mUsapuQPOXH4Ie0$o7RT.ZY25GXZkBd2EguKLGXNeSVmIN6KWrZkWl5PoL9':
+          'root'
   }
   SHADOW_REPORT = """#### **Shadow file analysis found 1 weak password(s)**
 * **1 weak password(s) found:**
@@ -41,6 +46,9 @@ class LinuxAccountAnalysisTaskTest(unittest.TestCase):
     test_data = os.path.join(filedir, '..', '..', '..', 'test_data', 'shadow')
     with open(test_data, 'r') as data:
       self.SHADOW_FILE = data.readlines()
+    test_data = os.path.join(filedir, '..', '..', '..', 'test_data', 'deb11_shadow')
+    with open(test_data, 'r') as data:
+      self.YESCRYPT_SHADOW_FILE = data.readlines()
 
   def test_extract_linux_credentials(self):
     """Tests the extract_linux_credentials method."""
@@ -59,6 +67,17 @@ class LinuxAccountAnalysisTaskTest(unittest.TestCase):
     (report, priority, summary) = task.analyse_shadow_file(
         self.SHADOW_FILE, self.EXPECTED_CREDENTIALS)
     self.assertEqual(report, self.SHADOW_REPORT)
+    self.assertEqual(priority, 10)
+    self.assertEqual(summary, 'Shadow file analysis found 1 weak password(s)')
+
+  def test_analyse_yescrypt_shadow(self):
+    """Tests the analyse_shadow_file method with a yescrypt credential."""
+    config.LoadConfig()
+    task = linux_acct.LinuxAccountAnalysisTask()
+
+    (report, priority, summary) = task.analyse_shadow_file(
+        self.YESCRYPT_SHADOW_FILE, self.YESCRYPT_EXPECTED_CREDENTIALS)
+    self.assertRegexpMatches(report, "User 'root' with password 'password'")
     self.assertEqual(priority, 10)
     self.assertEqual(summary, 'Shadow file analysis found 1 weak password(s)')
 
