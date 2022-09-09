@@ -212,6 +212,7 @@ def PreprocessLosetup(
     losetup_command.append(source_path)
     log.info('Running command {0:s}'.format(' '.join(losetup_command)))
     try:
+      # File lock to prevent race condition with PostProcessLosetup.
       with filelock.FileLock(config.RESOURCE_FILE_LOCK):
         losetup_device = subprocess.check_output(
             losetup_command, universal_newlines=True).strip()
@@ -484,6 +485,7 @@ def PostprocessDeleteLosetup(device_path, lv_uuid=None):
     # https://github.com/google/turbinia/issues/73
     losetup_cmd = ['sudo', 'losetup', '-d', device_path]
     log.info('Running: {0:s}'.format(' '.join(losetup_cmd)))
+    # File lock to prevent race condition with PreProcessLosetup
     with filelock.FileLock(config.RESOURCE_FILE_LOCK):
       try:
         subprocess.check_call(losetup_cmd)
@@ -502,6 +504,7 @@ def PostprocessDeleteLosetup(device_path, lv_uuid=None):
               'Could not check losetup device status {0!s}'.format(exception))
         reg_search = re.search(device_path + ':.*', output)
         if reg_search:
+          # TODO(wyassine): Add lsof check for file handles on device path
           log.debug('losetup retry check {0!s}/{1!s} for device {2!s}').format(
               _, RETRY_MAX, device_path)
           time.sleep(1)
