@@ -218,6 +218,51 @@ DEPENDENCIES = [{
     'programs': ['hashcat', 'grep', 'strings'],
     'docker_image': None,
     'timeout': 3600
+}, {
+    'job': 'WebShellAnalyzerJob',
+    'programs': ['linux_wsa'],
+    'docker_image': None,
+    'timeout': 3600
+}]
+
+################################################################################
+#                        Google Cloud Platform (GCP)
+#
+# Options in this section are required if the TASK_MANAGER is set to 'PSQ'.
+################################################################################
+
+# GCP project, region and zone where Turbinia will run.  Note that Turbinia does
+# not currently support multi-zone operation.  Even if you are running Turbinia
+# in Hybrid mode (with the Server and Workers running on local machines), you
+# will still need to provide these three parameters.
+TURBINIA_PROJECT = None
+TURBINIA_ZONE = None
+TURBINIA_REGION = None
+
+# GCS bucket that has Turbinia specific scripts and can be used to store logs.
+# This must be globally unique within GCP.
+BUCKET_NAME = None
+
+# This is the internal PubSub topic that PSQ will use.  This should be different
+# than the PUBSUB_TOPIC variable.  The actual PubSub topic created will be this
+# variable prefixed with 'psq-'.
+PSQ_TOPIC = 'turbinia-psq'
+
+# The PubSub topic Turbinia will listen on for new requests.  This should be
+# different than the PSQ_TOPIC variable.
+PUBSUB_TOPIC = INSTANCE_ID
+
+# GCS Path to copy worker results and Evidence output to.
+# Otherwise, set this as 'None' if output will be stored in shared storage.
+# GCS_OUTPUT_PATH = 'gs://%s/output' % BUCKET_NAME
+GCS_OUTPUT_PATH = None
+
+# Set this to True if you would like to enable Google Cloud Stackdriver Logging.
+STACKDRIVER_LOGGING = False
+
+# Set this to True if you would like to enable Google Cloud Error Reporting.
+STACKDRIVER_TRACEBACK = False
+
 }]
 
 ################################################################################

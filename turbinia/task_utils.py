@@ -64,6 +64,7 @@ class TaskLoader():
       'StringsUnicodeTask',
       'TomcatAnalysisTask',
       'VolatilityTask',
+      'WebshellAnalyzerTask',
       'WindowsAccountAnalysisTask',
       'WordpressAccessLogAnalysisTask',
       'WordpressCredsAnalysisTask',
@@ -126,6 +127,7 @@ class TaskLoader():
     from turbinia.workers.tomcat import TomcatAnalysisTask
     from turbinia.workers.volatility import VolatilityTask
     from turbinia.workers.worker_stat import StatTask
+    from turbinia.workers.webshell_analyzer import WebshellAnalyzerTask
 
     for task in self.TASK_LIST:
       if task.lower() == task_name.lower():
