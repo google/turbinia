@@ -46,7 +46,8 @@ class LinuxAccountAnalysisTaskTest(unittest.TestCase):
     test_data = os.path.join(filedir, '..', '..', '..', 'test_data', 'shadow')
     with open(test_data, 'r') as data:
       self.SHADOW_FILE = data.readlines()
-    test_data = os.path.join(filedir, '..', '..', '..', 'test_data', 'deb11_shadow')
+    test_data = os.path.join(
+      filedir, '..', '..', '..', 'test_data', 'deb11_shadow')
     with open(test_data, 'r') as data:
       self.YESCRYPT_SHADOW_FILE = data.readlines()
 
