@@ -21,12 +21,12 @@ spec:
       initContainers:
         - name: init-filestore
           image: busybox:1.28
-          command: ['sh', '-c', 'chmod go+w /mnt/turbiniavolume2']
+          command: ['sh', '-c', 'chmod go+w /mnt/turbiniavolume']
           volumeMounts:
-            - mountPath: "/mnt/turbiniavolume2"
-              name: turbiniavolume2
+            - mountPath: "/mnt/turbiniavolume"
+              name: turbiniavolume
       containers:
-        - name: server
+        - name: api
           image: us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-api-server:latest
           env:
             - name: TURBINIA_CONF
@@ -39,8 +39,8 @@ spec:
                 fieldRef:
                   fieldPath: spec.nodeName
           volumeMounts:
-            - mountPath: /mnt/turbiniavolume2
-              name: turbiniavolume2
+            - mountPath: /mnt/turbiniavolume
+              name: turbiniavolume
           ports:
             - containerPort: 9200
             - containerPort: 8000
@@ -53,7 +53,7 @@ spec:
               memory: "4096Mi"
               cpu: "2000m"
       volumes:
-        - name: turbiniavolume2
+        - name: turbiniavolume
           persistentVolumeClaim:
-            claimName: turbiniavolume2-claim
+            claimName: turbiniavolume-claim
             readOnly: false
