@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: turbinia-api-service
+  labels:
+    app: turbinia-api-service
+spec:
+  ports:
+  - port: 8000
+    targetPort: 8000
+  selector:
+    app: turbinia-api-server
