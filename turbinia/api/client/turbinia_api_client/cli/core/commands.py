@@ -15,7 +15,9 @@
 """Turbinia API client / management tool."""
 
 import logging
+import json
 import click
+
 from turbinia_api_client import exceptions
 from turbinia_api_client import api_client
 from turbinia_api_client.api import turbinia_requests_api
@@ -23,7 +25,9 @@ from turbinia_api_client.api import turbinia_tasks_api
 from turbinia_api_client.api import turbinia_configuration_api
 from turbinia_api_client.api import turbinia_jobs_api
 from turbinia_api_client.api import turbinia_request_results_api
-from turbinia.api.cli.core import groups
+
+from turbinia_api_client.cli.core import groups
+from turbinia_api_client.cli.helpers import formatter
 
 _LOGGER_FORMAT = '%(asctime)s %(levelname)s %(name)s - %(message)s'
 logging.basicConfig(format=_LOGGER_FORMAT)
@@ -107,14 +111,20 @@ def get_jobs(ctx: click.Context) -> None:
 @groups.status_group.command('request')
 @click.pass_context
 @click.argument('request_id')
-def get_request(ctx: click.Context, request_id: str) -> None:
+@click.option(
+    '--report', '-R', help="Generate a markdown report.", is_flag=True,
+    required=False)
+def get_request(ctx: click.Context, request_id: str, report: bool) -> None:
   """Get Turbinia request status."""
   client: api_client.ApiClient = ctx.obj.api_client
   api_instance = turbinia_requests_api.TurbiniaRequestsApi(client)
   try:
-    api_response = api_instance.get_request_status(
-        request_id, _check_return_type=False)
-    click.echo(api_response)
+    api_response = api_instance.get_request_status(request_id)
+    if report:
+      report = formatter.RequestMarkdownReport(api_response).generate_markdown()
+      click.echo(report)
+    else:
+      click.echo(json.dumps(api_response))
   except exceptions.ApiException as exception:
     log.exception(
         'Received status code {0!s} when calling create_request: {1!s}'.format(
@@ -123,13 +133,20 @@ def get_request(ctx: click.Context, request_id: str) -> None:
 
 @groups.status_group.command('summary')
 @click.pass_context
-def get_requests_summary(ctx: click.Context) -> None:
+@click.option(
+    '--report', '-R', help="Generate a markdown report.", is_flag=True,
+    required=False)
+def get_requests_summary(ctx: click.Context, report: bool) -> None:
   """Get a summary of all Trubinia requests."""
   client: api_client.ApiClient = ctx.obj.api_client
   api_instance = turbinia_requests_api.TurbiniaRequestsApi(client)
   try:
-    api_response = api_instance.get_requests_summary(_check_return_type=False)
-    click.echo(api_response)
+    api_response = api_instance.get_requests_summary()
+    if report:
+      report = formatter.SummaryMarkdownReport(api_response).generate_markdown()
+      click.echo(report)
+    else:
+      click.echo(api_response)
   except exceptions.ApiException as exception:
     log.exception(
         'Received status code {0!s} when calling create_request: {1!s}'.format(
@@ -139,14 +156,20 @@ def get_requests_summary(ctx: click.Context) -> None:
 @groups.status_group.command('task')
 @click.pass_context
 @click.argument('task_id')
-def get_task(ctx: click.Context, task_id: str) -> None:
+@click.option(
+    '--report', '-R', help="Generate a markdown report.", is_flag=True,
+    required=False)
+def get_task(ctx: click.Context, task_id: str, report: bool) -> None:
   """Get Turbinia task status."""
   client: api_client.ApiClient = ctx.obj.api_client
   api_instance = turbinia_tasks_api.TurbiniaTasksApi(client)
   try:
-    api_response = api_instance.get_task_status(
-        task_id, _check_return_type=False)
-    click.echo(api_response)
+    api_response = api_instance.get_task_status(task_id)
+    if report:
+      report = formatter.TaskMarkdownReport(api_response).generate_markdown()
+      click.echo(report)
+    else:
+      click.echo(api_response)
   except exceptions.ApiException as exception:
     log.exception(
         'Received status code {0!s} when calling create_request: {1!s}'.format(

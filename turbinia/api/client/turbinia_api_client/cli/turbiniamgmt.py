@@ -21,9 +21,9 @@ import click
 import turbinia_api_client
 
 from turbinia_api_client.api import turbinia_configuration_api
-from turbinia.api.cli.core import groups
-from turbinia.api.cli.factory import factory
-from turbinia.api.cli.helpers import auth_helpers
+from turbinia_api_client.cli.core import groups
+from turbinia_api_client.cli.factory import factory
+from turbinia_api_client.cli.helpers import auth_helper
 
 _LOGGER_FORMAT = '%(asctime)s %(levelname)s %(name)s - %(message)s'
 logging.basicConfig(format=_LOGGER_FORMAT)
@@ -50,7 +50,7 @@ class TurbiniaMgmtCli:
       self.api_client = self.default_api_client(self.config)
 
     if self.api_authentication_enabled:
-      config.access_token = auth_helpers.get_oauth2_credentials()
+      config.access_token = auth_helper.get_oauth2_credentials()
 
     self.evidence_mapping = self.get_evidence_arguments()
     self.request_options = self.get_request_options()
@@ -127,7 +127,9 @@ class TurbiniaMgmtCli:
         log.error(exception)
 
 
-@click.group(context_settings={'help_option_names': ['-h', '--help']})
+@click.group(context_settings={
+    'help_option_names': ['-h', '--help'],
+})
 @click.pass_context
 def cli(ctx):
   """Main context for the Click command-line application."""
@@ -146,5 +148,11 @@ cli.add_command(groups.jobs_group)
 cli.add_command(groups.result_group)
 cli.add_command(groups.status_group)
 
-if __name__ == '__main__':
+
+def main():
+  """Initialize the cli application."""
+  # pylint: disable=no-value-for-parameter
   cli()
+
+
+main()

@@ -20,8 +20,8 @@ from typing import TypeVar, Type, Tuple, Any, List
 import logging
 import click
 
-from turbinia.api.cli.helpers import click_helpers
-from turbinia.api.cli.core.commands import create_request
+from turbinia_api_client.cli.helpers import click_helper
+from turbinia_api_client.cli.core.commands import create_request
 
 T = TypeVar('T', bound='FactoryInterface')
 
@@ -37,7 +37,7 @@ class FactoryInterface(ABC):
   @classmethod
   def get_evidence_names(cls: Type[T], evidence_mapping: dict) -> List[str]:
     """Retrieves a list of evidence type names.
-    
+
     Args:
       evidence_mapping (dict): A dictionary of Evidence types
           and attributes retrieved from the Turbinia API server.
@@ -50,7 +50,7 @@ class FactoryInterface(ABC):
   @classmethod
   def get_request_options(cls: Type[T], request_options: dict) -> List[str]:
     """Retrieves a list of request options.
-    
+
     Args:
       request_options (dict): A dictionary of BaseRequestOptions
           attributes and types retrieved from the Turbinia APi server.
@@ -61,7 +61,7 @@ class FactoryInterface(ABC):
   def get_evidence_attributes(
       cls: Type[T], evidence_mapping: dict) -> List[Tuple[str, Any, dict]]:
     """Retrieves a list of evidence attribute metadata.
-    
+
     Args:
       evidence_mapping (dict): A dictionary of Evidence types
           and attributes retrieved from the Turbinia API server.
@@ -88,7 +88,7 @@ class FactoryInterface(ABC):
       cls: Type[T], name: str, evidence_mapping: dict,
       request_options: dict) -> None:
     """Creates multiple objects.
-    
+
     Args:
       evidence_mapping (dict): A dictionary of Evidence types
           and attributes retrieved from the Turbinia API server.
@@ -99,13 +99,15 @@ class FactoryInterface(ABC):
 
   @classmethod
   @abstractmethod
-  def create_object(cls: Type[T], name: str, params: Tuple[Any, dict]):
+  def create_object(
+      cls: Type[T], name: str, params: Tuple[Any, dict], callback: Any):
     """Creates an object of a specific type.
-    
+
     Args:
       name (str): Object name.
       params (tuple): A tuple comprised of arguments needed to create
           click.Option or click.Command objects.
+      callback: A callback function.
     """
     raise NotImplementedError
 
@@ -117,9 +119,11 @@ class OptionFactory(FactoryInterface):
   def append_request_option_objects(
       cls: Type[T], params: List[click.Option],
       request_options: dict = None) -> None:
-    """Appends request options to a list of parameters for a click.Command object."""
+    """Appends request options to a list of parameters for a 
+        click.Command object.
+    """
     for request_option in OptionFactory.get_request_options(request_options):
-      request_parameters = click_helpers.generate_option_parameters(
+      request_parameters = click_helper.generate_option_parameters(
           request_option)
       params.append(OptionFactory.create_object(params=request_parameters))
 
@@ -127,7 +131,9 @@ class OptionFactory(FactoryInterface):
   def create_dynamic_objects(
       cls, name: str = None, evidence_mapping: dict = None,
       request_options: dict = None) -> List[click.Option]:
-    """Implements create_dynamic_objects to create a list of click.Option objects."""
+    """Implements create_dynamic_objects to create a list of 
+        click.Option objects.
+    """
     option_objects = []
     if not name:
       log.info('An evidence type was not provided.')
@@ -143,8 +149,8 @@ class OptionFactory(FactoryInterface):
 
   @classmethod
   def create_object(
-      cls: Type[T], name: str = None,
-      params: Tuple[Any, dict] = None) -> click.Option:
+      cls: Type[T], name: str = None, params: Tuple[Any, dict] = None,
+      callback=None) -> click.Option:
     """Creates a click.Option object with specified parameters."""
     option = None
     if params:
@@ -160,7 +166,9 @@ class CommandFactory(FactoryInterface):
   def create_dynamic_objects(
       cls, name: str = None, evidence_mapping: dict = None,
       request_options: dict = None) -> List[click.Command]:
-    """Implements create_dynamic_objects to create a list of click.Command objects."""
+    """Implements create_dynamic_objects to create a list of 
+        click.Command objects.
+    """
 
     command_objects = []
     for evidence_name in CommandFactory.get_evidence_names(evidence_mapping):
@@ -169,14 +177,14 @@ class CommandFactory(FactoryInterface):
           name=evidence_name, evidence_mapping=evidence_mapping,
           request_options=request_options)
       OptionFactory.append_request_option_objects(params, request_options)
-      cmd = click.Command(
+      cmd = CommandFactory.create_object(
           name=evidence_name, params=params, callback=create_request)
       command_objects.append(cmd)
     return command_objects
 
   @classmethod
   def create_object(
-      cls: Type[T], name: str = None,
-      params: Tuple[Any, dict] = None) -> click.Command:
+      cls: Type[T], name: str = None, params: Tuple[Any, dict] = None,
+      callback=None) -> click.Command:
     """Creates a click.Command object with specified parameters."""
-    return click.Command(name=name, params=params)
+    return click.Command(name=name, params=params, callback=callback)

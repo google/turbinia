@@ -15,6 +15,9 @@
 """Turbinia API server unit tests."""
 
 import importlib
+
+from collections import OrderedDict
+
 import unittest
 import json
 import os
@@ -22,7 +25,6 @@ import fakeredis
 import mock
 
 from fastapi.testclient import TestClient
-from fastapi.encoders import jsonable_encoder
 
 from turbinia.api.api_server import app
 from turbinia import config as turbinia_config
@@ -119,13 +121,13 @@ class testTurbiniaAPIServer(unittest.TestCase):
   @mock.patch('turbinia.state_manager.RedisStateManager.get_task_data')
   def testGetTaskStatus(self, testTaskData):
     """Test getting task status."""
-    self.maxDiff = None
     redis_client = fakeredis.FakeStrictRedis()
     input_task = TurbiniaTask().deserialize(self._TASK_TEST_DATA)
-    expected_result = json.dumps(input_task.serialize(), sort_keys=True)
+    expected_result_dict = OrderedDict(sorted(input_task.serialize().items()))
+    expected_result_str = json.dumps(expected_result_dict)
 
     redis_client.set(
-        'TurbiniaTask:41483253079448e59685d88f37ab91f7', expected_result)
+        'TurbiniaTask:41483253079448e59685d88f37ab91f7', expected_result_str)
 
     testTaskData.return_value = [
         json.loads(
@@ -134,20 +136,18 @@ class testTurbiniaAPIServer(unittest.TestCase):
 
     result = self.client.get(
         '/api/task/{}'.format(self._TASK_TEST_DATA.get('id')))
-    result = jsonable_encoder(json.loads(result.content))
-    self.assertEqual(expected_result, result)
+    result = json.loads(result.content)
+    self.assertEqual(expected_result_dict, result)
 
   @mock.patch('turbinia.state_manager.RedisStateManager.get_task_data')
   def testRequestStatus(self, testTaskData):
     """Test getting Turbinia Request status."""
-    self.maxDiff = None
     redis_client = fakeredis.FakeStrictRedis()
     input_task = TurbiniaTask().deserialize(self._TASK_TEST_DATA)
     input_task_serialized = input_task.serialize()
     expected_result = self._REQUEST_TEST_DATA.copy()
     expected_result['tasks'] = [input_task_serialized]
-    expected_result = jsonable_encoder(
-        json.dumps(expected_result, sort_keys=True))
+    expected_result_dict = OrderedDict(sorted(expected_result.items()))
 
     redis_client.set(
         'TurbiniaTask:41483253079448e59685d88f37ab91f7',
@@ -159,8 +159,8 @@ class testTurbiniaAPIServer(unittest.TestCase):
 
     result = self.client.get(
         '/api/request/{}'.format(self._REQUEST_TEST_DATA.get('request_id')))
-    result = jsonable_encoder(json.loads(result.content))
-    self.assertEqual(expected_result, result)
+    result = json.loads(result.content)
+    self.assertEqual(expected_result_dict, result)
 
   @mock.patch('turbinia.state_manager.RedisStateManager.get_task_data')
   def testRequestSummary(self, testTaskData):
@@ -168,7 +168,7 @@ class testTurbiniaAPIServer(unittest.TestCase):
     redis_client = fakeredis.FakeStrictRedis()
     input_task = TurbiniaTask().deserialize(self._TASK_TEST_DATA)
     input_task_serialized = input_task.serialize()
-    expected_result = json.dumps({'requests_status': [self._REQUEST_TEST_DATA]})
+    expected_result = {'requests_status': [self._REQUEST_TEST_DATA]}
 
     redis_client.set(
         'TurbiniaTask:41483253079448e59685d88f37ab91f7',
@@ -180,7 +180,7 @@ class testTurbiniaAPIServer(unittest.TestCase):
     ]
 
     result = self.client.get('/api/request/summary')
-    result = jsonable_encoder(json.loads(result.content))
+    result = json.loads(result.content)
     self.assertEqual(expected_result, result)
 
   @mock.patch('turbinia.state_manager.RedisStateManager.get_task_data')

@@ -97,7 +97,7 @@ class RequestStatus(BaseModel):
             turbinia_config.DATETIME_FORMAT)
 
     if self.last_task_update_time:
-      if isinstance(self.last_task_update_time, datetime.datetime):
+      if isinstance(self.last_task_update_time, float):
         self.last_task_update_time = datetime.datetime.fromtimestamp(
             self.last_task_update_time).strftime(
                 turbinia_config.DATETIME_FORMAT)

@@ -17,6 +17,8 @@
 import logging
 import json
 
+from collections import OrderedDict
+
 from fastapi import HTTPException, APIRouter
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
@@ -39,11 +41,14 @@ async def get_task_status(task_id: str):
         instance=turbinia_config.INSTANCE_ID, task_id=task_id)
     if tasks:
       task = tasks[0]
-      task_json = json.dumps(jsonable_encoder(task), sort_keys=True)
+      task_json = jsonable_encoder(task)
+      task_json_sorted = OrderedDict(sorted(task_json.items()))
       return JSONResponse(
-          status_code=200, content=task_json, media_type='application/json')
+          status_code=200, content=task_json_sorted,
+          media_type='application/json')
     raise HTTPException(status_code=404, detail='Task ID not found.')
-  except (ValidationError, json.JSONDecodeError) as exception:
+  except (json.JSONDecodeError, TypeError, ValueError,
+          ValidationError) as exception:
     log.error('Error retrieving task information: {0!s}'.format(exception))
     raise HTTPException(
         status_code=500,

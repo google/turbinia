@@ -16,6 +16,7 @@
 
 import logging
 import uuid
+import json
 
 from fastapi import HTTPException, APIRouter
 from fastapi.responses import JSONResponse
@@ -45,10 +46,12 @@ async def get_requests_summary():
     if not requests_summary.get_requests_summmary():
       return JSONResponse(
           content={'detail': 'Request summary is empty'}, status_code=200)
+    response_json = requests_summary.json(sort_keys=True)
     return JSONResponse(
-        status_code=200, content=requests_summary.json(sort_keys=True),
+        status_code=200, content=json.loads(response_json),
         media_type='application/json')
-  except (ValidationError, ValueError, TypeError) as exception:
+  except (json.JSONDecodeError, TypeError, ValueError,
+          ValidationError) as exception:
     log.error(
         'Error retrieving requests summary: {0!s}'.format(exception),
         exc_info=True)
@@ -68,17 +71,17 @@ async def get_request_status(request_id: str):
     HTTPException: if another exception is caught.
   """
   request_out = request_status.RequestStatus(request_id=request_id)
-  response_ok = request_out.get_request_data(request_id)
-
   try:
-    if not response_ok:
+    if not request_out.get_request_data(request_id):
       raise HTTPException(
           status_code=404,
           detail='Request ID not found or the request had no associated tasks.')
+    response_json = request_out.json(sort_keys=True)
     return JSONResponse(
-        status_code=200, content=request_out.json(sort_keys=True),
+        status_code=200, content=json.loads(response_json),
         media_type='application/json')
-  except (ValidationError, ValueError, TypeError) as exception:
+  except (json.JSONDecodeError, TypeError, ValueError,
+          ValidationError) as exception:
     log.error('Error retrieving request information: {0!s}'.format(exception))
     raise HTTPException(
         status_code=500,
@@ -195,5 +198,5 @@ async def create_request(req: request.Request):
         detail='Error creating new Turbinia request: {0!s}'.format(
             exception)) from exception
 
-  response = {'request_id': request_out.request_id}
+  response = {"request_id": request_out.request_id}
   return JSONResponse(content=response, status_code=200)
