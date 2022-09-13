@@ -45,7 +45,10 @@ class FactoryInterface(ABC):
     Returns:
       list: A list of Evidence class names.
     """
-    return [evidence_name for evidence_name in evidence_mapping.keys()]
+    if evidence_mapping:
+      return [evidence_name for evidence_name in evidence_mapping.keys()]
+
+    return []
 
   @classmethod
   def get_request_options(cls: Type[T], request_options: dict) -> List[str]:
@@ -55,7 +58,9 @@ class FactoryInterface(ABC):
       request_options (dict): A dictionary of BaseRequestOptions
           attributes and types retrieved from the Turbinia APi server.
     """
-    return [request_option for request_option in request_options.keys()]
+    if request_options:
+      return [request_option for request_option in request_options.keys()]
+    return []
 
   @classmethod
   def get_evidence_attributes(

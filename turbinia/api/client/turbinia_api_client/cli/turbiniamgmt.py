@@ -20,6 +20,8 @@ import json
 import click
 import turbinia_api_client
 
+from urllib3 import exceptions as urllib3_exceptions
+
 from turbinia_api_client.api import turbinia_configuration_api
 from turbinia_api_client.cli.core import groups
 from turbinia_api_client.cli.factory import factory
@@ -87,6 +89,7 @@ class TurbiniaMgmtCli:
     """Gets arguments for Evidence types."""
     api_instance = turbinia_configuration_api.TurbiniaConfigurationApi(
         self.api_client)
+    api_response = None
     try:
       if evidence_name:
         api_response = api_instance.get_evidence_attributes_by_name(
@@ -94,20 +97,25 @@ class TurbiniaMgmtCli:
       else:
         api_response = api_instance.get_evidence_types()
       self.evidence_mapping: dict = api_response
-    except turbinia_api_client.ApiException as exception:
-      log.exception(
-          'Exception when calling read_config: {0!s}'.format(exception))
+    except (ConnectionRefusedError, turbinia_api_client.ApiException,
+            urllib3_exceptions.MaxRetryError,
+            urllib3_exceptions.NewConnectionError) as exception:
+      log.error(
+          'Exception when calling get_evidence_types: {0!s}'.format(exception))
     return api_response
 
   def get_request_options(self):
     """Gets BaseRequestOptions attributes."""
+    api_response = None
     api_instance = turbinia_configuration_api.TurbiniaConfigurationApi(
         self.api_client)
     try:
       api_response = api_instance.get_request_options()
-    except turbinia_api_client.ApiException as exception:
-      log.exception(
-          'Exception when calling read_config: {0!s}'.format(exception))
+    except (ConnectionRefusedError, turbinia_api_client.ApiException,
+            urllib3_exceptions.MaxRetryError,
+            urllib3_exceptions.NewConnectionError) as exception:
+      log.error(
+          'Exception when calling get_request_options: {0!s}'.format(exception))
     return api_response
 
   def read_api_configuration(self):
@@ -131,8 +139,37 @@ class TurbiniaMgmtCli:
     'help_option_names': ['-h', '--help'],
 })
 @click.pass_context
-def cli(ctx):
-  """Main context for the Click command-line application."""
+def cli(ctx: click.Context) -> None:
+  """Turbinia API command-line tool (turbiniamgmt).
+
+  \b                         ***    ***                                       
+  \b                          *          *                                      
+  \b                     ***             ******                                 
+  \b                    *                      *                                
+  \b                    **      *   *  **     ,*                                
+  \b                      *******  * ********                                  
+  \b                             *  * *                                         
+  \b                             *  * *                                         
+  \b                             %%%%%%                                         
+  \b                             %%%%%%                                         
+  \b                    %%%%%%%%%%%%%%%       %%%%%%                            
+  \b              %%%%%%%%%%%%%%%%%%%%%      %%%%%%%                            
+  \b %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  ** *******       
+  \b %%                                                   %%  ***************   
+  \b %%                                (%%%%%%%%%%%%%%%%%%%  *****  **          
+  \b   %%%%%        %%%%%%%%%%%%%%%                                             
+                                                                             
+  \b   %%%%%%%%%%                     %%          **             ***              
+  \b      %%%                         %%  %%             %%%            %%%,      
+  \b      %%%      %%%   %%%   %%%%%  %%%   %%%   %%  %%%   %%%  %%%  %%   (%%    
+  \b      %%%      %%%   %%%  %%%     %%     %%/  %%  %%%   %%%  %%%  %%%%%%%%    
+  \b      %%%      %%%   %%%  %%%     %%%   %%%   %%  %%%   %%%  %%% %%%   %%%    
+  \b      %%%        %%%%%    %%%       %%%%%     %%  %%%    %%  %%%   %%%%%      
+
+  This command-line tool interacts with Turbinia's API server.
+
+  You can specify the API server location in .turbinia_api_config.json
+  """
   ctx.obj = TurbiniaMgmtCli()
   request_commands = factory.CommandFactory.create_dynamic_objects(
       evidence_mapping=ctx.obj.evidence_mapping,
@@ -141,18 +178,21 @@ def cli(ctx):
     groups.submit_group.add_command(command)
 
 
-# Register all command groups.
-cli.add_command(groups.submit_group)
-cli.add_command(groups.config_group)
-cli.add_command(groups.jobs_group)
-cli.add_command(groups.result_group)
-cli.add_command(groups.status_group)
-
-
 def main():
   """Initialize the cli application."""
-  # pylint: disable=no-value-for-parameter
-  cli()
+
+  # Register all command groups.
+  cli.add_command(groups.submit_group)
+  cli.add_command(groups.config_group)
+  cli.add_command(groups.jobs_group)
+  cli.add_command(groups.result_group)
+  cli.add_command(groups.status_group)
+
+  try:
+    cli.main()
+  except (ConnectionRefusedError, urllib3_exceptions.MaxRetryError,
+          urllib3_exceptions.NewConnectionError) as exception:
+    log.error(exception)
 
 
 main()
