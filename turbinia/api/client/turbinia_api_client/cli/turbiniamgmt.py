@@ -18,6 +18,7 @@ import os
 import logging
 import json
 import click
+import sys
 import turbinia_api_client
 
 from urllib3 import exceptions as urllib3_exceptions
@@ -97,9 +98,7 @@ class TurbiniaMgmtCli:
       else:
         api_response = api_instance.get_evidence_types()
       self.evidence_mapping: dict = api_response
-    except (ConnectionRefusedError, turbinia_api_client.ApiException,
-            urllib3_exceptions.MaxRetryError,
-            urllib3_exceptions.NewConnectionError) as exception:
+    except turbinia_api_client.ApiException as exception:
       log.error(
           'Exception when calling get_evidence_types: {0!s}'.format(exception))
     return api_response
@@ -111,9 +110,7 @@ class TurbiniaMgmtCli:
         self.api_client)
     try:
       api_response = api_instance.get_request_options()
-    except (ConnectionRefusedError, turbinia_api_client.ApiException,
-            urllib3_exceptions.MaxRetryError,
-            urllib3_exceptions.NewConnectionError) as exception:
+    except turbinia_api_client.ApiException as exception:
       log.error(
           'Exception when calling get_request_options: {0!s}'.format(exception))
     return api_response
@@ -192,7 +189,10 @@ def main():
     cli.main()
   except (ConnectionRefusedError, urllib3_exceptions.MaxRetryError,
           urllib3_exceptions.NewConnectionError) as exception:
-    log.error(exception)
+    log.error(
+        'Error connecting to the Turbinia API server: {0!s}'.format(exception))
+    log.error('Exiting.')
+    sys.exit(-1)
 
 
 main()
