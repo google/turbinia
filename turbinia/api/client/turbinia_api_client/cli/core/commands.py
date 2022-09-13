@@ -191,6 +191,9 @@ def create_request(ctx: click.Context, *args: int, **kwargs: int) -> None:
       # Check if the key is for evidence or request_options
       if not key in request_options:
         request['evidence'][key] = value
+      elif key == 'jobs_allowlist' or key == 'jobs_denylist':
+        jobs_list = value.split(',')
+        request['request_options'][key] = jobs_list
       else:
         request['request_options'][key] = value
   log.debug('Sending request: {0!s}'.format(request))
@@ -201,7 +204,7 @@ def create_request(ctx: click.Context, *args: int, **kwargs: int) -> None:
     log.debug('Received response: {0!s}'.format(api_response))
   except exceptions.ApiException as exception:
     log.error(
-        'Received status code {0!s} when calling create_request: {1!s}'.format(
+        'Received status code {0!s} when calling create_request. {1!s}'.format(
             exception.status, exception.body))
-  except TypeError as exception:
-    log.error('The request object is invalid: {0!s}'.format(exception))
+  except (TypeError, exceptions.ApiTypeError) as exception:
+    log.error('The request object is invalid. {0!s}'.format(exception))

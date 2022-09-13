@@ -15,10 +15,10 @@
 """Turbinia API client / management tool."""
 
 import os
+import sys
 import logging
 import json
 import click
-import sys
 import turbinia_api_client
 
 from urllib3 import exceptions as urllib3_exceptions
