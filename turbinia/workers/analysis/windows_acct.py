@@ -180,8 +180,8 @@ class WindowsAccountAnalysisTask(TurbiniaTask):
         'secretsdump.py', '-system',
         os.path.join(location, 'Windows', 'System32', 'config',
                      '/SYSTEM'), '-ntds',
-        os.path.join(location, 'Windows', 'NTDS', 'ntds.dit'), '-hashes', 'lmhash:nthash',
-        'LOCAL', '-outputfile', hash_file
+        os.path.join(location, 'Windows', 'NTDS', 'ntds.dit'), '-hashes',
+        'lmhash:nthash', 'LOCAL', '-outputfile', hash_file
     ]
 
     impacket_log = os.path.join(self.output_dir, 'impacket.log')
