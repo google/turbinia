@@ -10,13 +10,13 @@ google-auth<2.0.0.dev0
 google-cloud-core<2.0dev
 google-cloud-datastore<=2.0.0
 google-cloud-error-reporting
-google-cloud-logging
+google-cloud-logging>=2.0.0,<3.0.0dev
 google-cloud-pubsub==1.7.0
 google-cloud-storage<=2.2.1
 pycryptodomex
 prometheus_client
 libcloudforensics
-protobuf>=4.21.3
+protobuf>=3.19.0,<4.0.0dev
 proto-plus<2.0.0dev,>=1.22.0
 psq
 pyparsing<3
@@ -30,4 +30,4 @@ uvicorn>=0.17.6
 vine>=5.0.0
 PyJWT[crypto]<2
 idna==2.10
-grpcio-status<2.0dev,>=1.33.2
+grpcio-status<1.49.0,>=1.33.2
