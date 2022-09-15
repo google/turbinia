@@ -154,7 +154,10 @@ class WindowsAccountAnalysisTask(TurbiniaTask):
           if passwdhash in IGNORE_CREDS:
             continue
           creds.append(line.strip())
-          hashnames[passwdhash] = username
+          if passwdhash in hashnames:
+            hashnames[passwdhash] = hashnames[passwdhash] + ", " + username
+          else:
+            hashnames[passwdhash] = username
       os.remove(hash_file)
     else:
       raise TurbiniaException('Extracted hash file not found.')
@@ -198,7 +201,10 @@ class WindowsAccountAnalysisTask(TurbiniaTask):
           if passwdhash in IGNORE_CREDS:
             continue
           creds.append(line.strip())
-          hashnames[passwdhash] = username
+          if passwdhash in hashnames:
+            hashnames[passwdhash] = hashnames[passwdhash] + ", " + username
+          else:
+            hashnames[passwdhash] = username
       os.remove(hash_file)
     else:
       raise TurbiniaException('Extracted hash file not found.')
