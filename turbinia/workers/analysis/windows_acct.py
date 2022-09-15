@@ -77,7 +77,8 @@ class WindowsAccountAnalysisTask(TurbiniaTask):
     if os.path.isfile(os.path.join(location, 'Windows', 'NTDS', 'ntds.dit')):
       (adcreds, adhashnames) = self._extract_ad_hashes(result, location)
       creds.extend(adcreds)
-      hashnames |= adhashnames
+      # Merge dictionaries (Python version too low for | operator)
+      hashnames = {**hashnames, **adhashnames}
     timeout = self.task_config.get('bruteforce_timeout')
     (report, priority, summary) = self._analyse_windows_creds(
         creds, hashnames, timeout=timeout)
@@ -179,7 +180,7 @@ class WindowsAccountAnalysisTask(TurbiniaTask):
     cmd = [
         'secretsdump.py', '-system',
         os.path.join(location, 'Windows', 'System32', 'config',
-                     '/SYSTEM'), '-ntds',
+                     'SYSTEM'), '-ntds',
         os.path.join(location, 'Windows', 'NTDS', 'ntds.dit'), '-hashes',
         'lmhash:nthash', 'LOCAL', '-outputfile', hash_file
     ]
