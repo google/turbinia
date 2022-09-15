@@ -74,7 +74,7 @@ class WindowsAccountAnalysisTask(TurbiniaTask):
           status='Unable to extract hashes from registry files: {0:s}'.format(
               str(exception)))
       return result
-    if os.path.isfile(os.path.join(location, 'NTDS', 'ntds.dit')):
+    if os.path.isfile(os.path.join(location, 'Windows', 'NTDS', 'ntds.dit')):
       (adcreds, adhashnames) = self._extract_ad_hashes(result, location)
       creds.extend(adcreds)
       hashnames |= adhashnames
