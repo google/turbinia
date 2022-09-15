@@ -180,7 +180,7 @@ class WindowsAccountAnalysisTask(TurbiniaTask):
         'secretsdump.py', '-system',
         os.path.join(location, 'Windows', 'System32', 'config',
                      '/SYSTEM'), '-ntds',
-        os.path.join(location, 'NTDS', 'ntds.dit'), '-hashes', 'lmhash:nthash',
+        os.path.join(location, 'Windows', 'NTDS', 'ntds.dit'), '-hashes', 'lmhash:nthash',
         'LOCAL', '-outputfile', hash_file
     ]
 
