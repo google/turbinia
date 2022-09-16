@@ -74,14 +74,19 @@ class WindowsAccountAnalysisTask(TurbiniaTask):
           status='Unable to extract hashes from registry files: {0:s}'.format(
               str(exception)))
       return result
+    extra_summary = ""
     if os.path.isfile(os.path.join(location, 'Windows', 'NTDS', 'ntds.dit')):
-      (adcreds, adhashnames) = self._extract_ad_hashes(result, location)
-      creds.extend(adcreds)
-      # Merge dictionaries (Python version too low for | operator)
-      hashnames = {**hashnames, **adhashnames}
+      try:
+        (adcreds, adhashnames) = self._extract_ad_hashes(result, location)
+        creds.extend(adcreds)
+        # Merge dictionaries (Python version too low for | operator)
+        hashnames = {**hashnames, **adhashnames}
+      except TurbiniaException as exception:
+        extra_summary = " Unable to extract AD credentials (not a DC?)."
     timeout = self.task_config.get('bruteforce_timeout')
     (report, priority, summary) = self._analyse_windows_creds(
         creds, hashnames, timeout=timeout)
+    summary += extra_summary
     output_evidence.text_data = report
     result.report_priority = priority
     result.report_data = report
@@ -125,6 +130,9 @@ class WindowsAccountAnalysisTask(TurbiniaTask):
     Args:
         result (TurbiniaTaskResult): The object to place task results into.
         location (str): File path to the extracted registry files.
+
+    Raises:
+        TurbiniaException
 
     Returns:
         creds (list): List of strings containing raw extracted credentials
@@ -170,6 +178,9 @@ class WindowsAccountAnalysisTask(TurbiniaTask):
     Args:
         result (TurbiniaTaskResult): The object to place task results into.
         location (str): File path to the extracted registry files.
+
+    Raises:
+        TurbiniaException
 
     Returns:
         creds (list): List of strings containing raw extracted credentials
@@ -227,7 +238,7 @@ class WindowsAccountAnalysisTask(TurbiniaTask):
       )
     """
     report = []
-    summary = 'No weak passwords found'
+    summary = 'No weak passwords found.'
     priority = Priority.LOW
 
     # 1000 is "NTLM"
