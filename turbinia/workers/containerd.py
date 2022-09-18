@@ -19,6 +19,7 @@ from __future__ import unicode_literals
 import json
 import logging
 import subprocess
+import tempfile
 
 from turbinia import config
 from turbinia import TurbiniaException
@@ -52,15 +53,20 @@ class ContainerdEnumerationTask(TurbiniaTask):
     containers = None
     image_path = evidence.mount_path
 
+    outputfile = tempfile.mkstemp()[1]
     list_cmd = [
         'sudo', CE_BINARY, '--support-container-data', CE_SUPPORT_FILE,
-        '--image-root', image_path, '--output', 'json', 'list', 'containers'
+        '--output', 'json', '--output-file', outputfile, '--image-root',
+        image_path, 'list', 'containers'
     ]
     log.info(f'Running {list_cmd}')
 
     try:
-      json_data = subprocess.check_output(list_cmd).decode('utf-8')
-      containers = json.loads(json_data)
+      #json_data = subprocess.check_output(list_cmd).decode('utf-8')
+      subprocess.check_call(list_cmd)
+      with open(outputfile, 'r') as fh:
+        json_data = fh.read()
+        containers = json.loads(json_data)
     except json.JSONDecodeError as e:
       raise TurbiniaException(
           f'Error decoding container-explorer output: {e}') from e
@@ -79,6 +85,9 @@ class ContainerdEnumerationTask(TurbiniaTask):
     Returns:
       list(dict): List containers basic or complete output.
     """
+    if not containers:
+      return containers
+
     if detailed_output:
       return containers
 
@@ -119,7 +128,7 @@ class ContainerdEnumerationTask(TurbiniaTask):
       # 1. List containers
       containers = self.list_containers(evidence, result)
       if not containers:
-        result.close(self, success=False, status='Failed listing container')
+        result.close(self, success=True, status='Found 0 containers')
         return result
 
       container_ids = [x.get('ID') for x in containers]
