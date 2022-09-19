@@ -21,7 +21,9 @@ There are a few different logs that may be useful when debugging:
     in the config, the logs and/or traceback exceptions will also be logged into
     stackdriver in same project that Turbinia is configured to run in.
 
-## Finding previous request data
+## Request Debugging
+
+### Finding previous request data
 By default `turbiniactl` will make a processing request and immediately return.
 It will print out the request ID when it makes the request, and you can use this to
 see the current status of the request with `turbiniactl status -r <request id>`.  If
@@ -46,6 +48,19 @@ $ turbiniactl status -i
 * Requester: turbiniauser
 * Task Count: 43
 ```
+
+### No Jobs being created
+
+If you create a processing request with `turbiniactl` and the client just
+hangs at the message `Tasks completed (0/0): [], waiting for [].`, it's
+possible that there was either a problem with the request getting to the
+server, or the server may have crashed. In this case take a look at the
+server logs to see if the server accepted the request (you can grep for
+the request ID which should be in the client output) and note any log
+messages around this point.  If there was a crash of the server, there may
+be relevant log messages prior to the crash that are useful in determining
+the cause.  If there are server crashes or other problems processing or
+validating a request, please file a Github Issue with the relevant details.
 
 ## Task Debugging
 
