@@ -47,6 +47,10 @@ def evidence_class_names(all_classes=False):
   Args:
     all_classes (bool): Flag to determine whether to include all classes
         in the module.
+  
+  Returns:
+    class_names (list[str]): A list of class names within the Evidence module,
+        minus the ignored class names.
   """
   predicate = lambda member: inspect.isclass(member) and not inspect.isbuiltin(
       member)
@@ -811,6 +815,7 @@ class GoogleCloudDisk(Evidence):
     self.cloud_only = True
     self.resource_tracked = True
     self.resource_id = self.disk_name
+    self.device_path + None
 
   def _preprocess(self, _, required_states):
     # The GoogleCloudDisk should never need to be mounted unless it has child
@@ -858,10 +863,6 @@ class GoogleCloudDiskRawEmbedded(GoogleCloudDisk):
         project=project, zone=zone, disk_name=disk_name, mount_partition=1,
         *args, **kwargs)
     self.embedded_path = embedded_path
-    self.project = project
-    self.zone = zone
-    self.disk_name = disk_name
-    self.mount_partition = mount_partition
     # This Evidence needs to have a GoogleCloudDisk as a parent
     self.context_dependent = True
 
