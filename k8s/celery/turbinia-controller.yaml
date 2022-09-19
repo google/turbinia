@@ -20,7 +20,6 @@ spec:
       serviceAccountName: turbinia
       # The grace period needs to be set to the largest task timeout as
       # set in the turbinia configuration file.
-      terminationGracePeriodSeconds: 86400
       initContainers:
         - name: init-filestore
           image: busybox:1.28
