@@ -22,7 +22,6 @@ if [[ "$*" == *--help ]] ; then
   echo "Options:"
   echo "--build-dev                    Deploy Turbinia development docker image"
   echo "--build-experimental           Deploy Turbinia experimental docker image"
-  echo "--no-gcloud-auth               Use Turbinia service account instead of gcloud authentication"
   echo "--no-cloudfunctions            Do not deploy Turbinia Cloud Functions"
   echo "--no-appengine                 Do not enable App Engine"
   echo "--no-datastore                 Do not configure Turbinia Datastore"
@@ -70,43 +69,36 @@ if [[ -z "$DEVSHELL_PROJECT_ID" ]] ; then
   fi
 fi
 
+# TODO: Do real check to make sure credentials have adequate roles
+if [[ $( gcloud -q --project $DEVSHELL_PROJECT_ID auth list --filter="status:ACTIVE" --format="value(account)" | wc -l ) -eq 0 ]] ; then
+  echo "No gcloud credentials found.  Use 'gcloud auth login' and 'gcloud auth application-default login' to log in"
+  exit 1
+fi
+
 # Enable IAM services
 gcloud -q --project $DEVSHELL_PROJECT_ID services enable iam.googleapis.com
 
-# Create Turbinia service account.
+
+# Create Turbinia service account with necessary IAM roles. The service account will be used at
+# container runtime in order to have the necessary permissions to attach and detach GCP disks, to
+# access GCP Pubsub, Datastore, Cloud Functions, GCS, and to write logs to stackdriver logging and 
+# error reporting.
 SA_NAME="turbinia"
 SA_MEMBER="serviceAccount:$SA_NAME@$DEVSHELL_PROJECT_ID.iam.gserviceaccount.com"
-
 if [[ -z "$(gcloud -q --project $DEVSHELL_PROJECT_ID iam service-accounts list --format='value(name)' --filter=name:/$SA_NAME@)" ]] ; then
-  # Create service account
   gcloud --project $DEVSHELL_PROJECT_ID iam service-accounts create "${SA_NAME}" --display-name "${SA_NAME}"
-fi
-
-# Grant IAM roles to the service account
-echo "Grant permissions on service account"
-gcloud projects add-iam-policy-binding $DEVSHELL_PROJECT_ID --member=$SA_MEMBER --role='roles/cloudfunctions.admin'
-gcloud projects add-iam-policy-binding $DEVSHELL_PROJECT_ID --member=$SA_MEMBER --role='roles/cloudsql.admin'
-gcloud projects add-iam-policy-binding $DEVSHELL_PROJECT_ID --member=$SA_MEMBER --role='roles/compute.admin'
-gcloud projects add-iam-policy-binding $DEVSHELL_PROJECT_ID --member=$SA_MEMBER --role='roles/container.admin'
-gcloud projects add-iam-policy-binding $DEVSHELL_PROJECT_ID --member=$SA_MEMBER --role='roles/datastore.indexAdmin'
-gcloud projects add-iam-policy-binding $DEVSHELL_PROJECT_ID --member=$SA_MEMBER --role='roles/editor'
-gcloud projects add-iam-policy-binding $DEVSHELL_PROJECT_ID --member=$SA_MEMBER --role='roles/logging.logWriter'
-gcloud projects add-iam-policy-binding $DEVSHELL_PROJECT_ID --member=$SA_MEMBER --role='roles/pubsub.admin'
-gcloud projects add-iam-policy-binding $DEVSHELL_PROJECT_ID --member=$SA_MEMBER --role='roles/redis.admin'
-gcloud projects add-iam-policy-binding $DEVSHELL_PROJECT_ID --member=$SA_MEMBER --role='roles/servicemanagement.admin'
-gcloud projects add-iam-policy-binding $DEVSHELL_PROJECT_ID --member=$SA_MEMBER --role='roles/storage.admin'
-
-# Use local `gcloud auth` credentials.
-if [[ "$*" == *--no-gcloud-auth* ]] ; then
-  # Create and fetch the service account key
-  echo "Fetch and store service account key"
-  gcloud --project $DEVSHELL_PROJECT_ID iam service-accounts keys create ~/$INSTANCE_ID.json --iam-account "$SA_NAME@$DEVSHELL_PROJECT_ID.iam.gserviceaccount.com"
-  export GOOGLE_APPLICATION_CREDENTIALS=~/$INSTANCE_ID.json
-
-# TODO: Do real check to make sure credentials have adequate roles
-elif [[ $( gcloud -q --project $DEVSHELL_PROJECT_ID auth list --filter="status:ACTIVE" --format="value(account)" | wc -l ) -eq 0 ]] ; then
-  echo "No gcloud credentials found.  Use 'gcloud auth login' and 'gcloud auth application-default login' to log in"
-  exit 1
+  # Grant IAM roles to the service account
+  echo "Grant permissions on service account"
+  gcloud projects add-iam-policy-binding $DEVSHELL_PROJECT_ID --member=$SA_MEMBER --role='roles/cloudfunctions.admin'
+  gcloud projects add-iam-policy-binding $DEVSHELL_PROJECT_ID --member=$SA_MEMBER --role='roles/editor'
+  gcloud projects add-iam-policy-binding $DEVSHELL_PROJECT_ID --member=$SA_MEMBER --role='roles/cloudsql.admin'
+  gcloud projects add-iam-policy-binding $DEVSHELL_PROJECT_ID --member=$SA_MEMBER --role='roles/datastore.indexAdmin'
+  gcloud projects add-iam-policy-binding $DEVSHELL_PROJECT_ID --member=$SA_MEMBER --role='roles/logging.logWriter'
+  gcloud projects add-iam-policy-binding $DEVSHELL_PROJECT_ID --member=$SA_MEMBER --role='roles/errorreporting.writer'
+  gcloud projects add-iam-policy-binding $DEVSHELL_PROJECT_ID --member=$SA_MEMBER --role='roles/pubsub.admin'
+  gcloud projects add-iam-policy-binding $DEVSHELL_PROJECT_ID --member=$SA_MEMBER --role='roles/servicemanagement.admin'
+  gcloud projects add-iam-policy-binding $DEVSHELL_PROJECT_ID --member=$SA_MEMBER --role='roles/storage.admin'
+  gcloud projects add-iam-policy-binding $DEVSHELL_PROJECT_ID --member=$SA_MEMBER --role='roles/compute.admin'
 fi
 
 echo "Enabling Compute API"
@@ -123,13 +115,12 @@ fi
 if [[ "$*" == *--build-dev* ]] ; then
   TURBINIA_SERVER_IMAGE="us-docker.pkg.dev\/osdfir-registry\/turbinia\/release\/turbinia-server-dev:latest"
   TURBINIA_WORKER_IMAGE="us-docker.pkg.dev\/osdfir-registry\/turbinia\/release\/turbinia-worker-dev:latest"
-  echo "Setting docker image to $TURBINIA_SERVER_IMAGE and $TURBINIA_WORKER_IMAGE"
 elif [[ "$*" == *--build-experimental* ]] ; then
   TURBINIA_SERVER_IMAGE="us-docker.pkg.dev\/osdfir-registry\/turbinia\/release\/turbinia-server-experimental:latest"
   TURBINIA_WORKER_IMAGE="us-docker.pkg.dev\/osdfir-registry\/turbinia\/release\/turbinia-worker-experimental:latest"
-  echo "Setting docker image to $TURBINIA_SERVER_IMAGE and $TURBINIA_WORKER_IMAGE"
 fi
 
+echo "Setting docker image to $TURBINIA_SERVER_IMAGE and $TURBINIA_WORKER_IMAGE"
 echo "Deploying cluster to project $DEVSHELL_PROJECT_ID"
 
 # Setup appropriate directories and copy of deployment templates and Turbinia config
@@ -206,6 +197,7 @@ sed -i -e "s/^INSTANCE_ID = .*$/INSTANCE_ID = '$INSTANCE_ID'/g" $TURBINIA_CONFIG
 sed -i -e "s/^TURBINIA_PROJECT = .*$/TURBINIA_PROJECT = '$DEVSHELL_PROJECT_ID'/g" $TURBINIA_CONFIG
 sed -i -e "s/^TURBINIA_ZONE = .*$/TURBINIA_ZONE = '$ZONE'/g" $TURBINIA_CONFIG
 sed -i -e "s/^TURBINIA_REGION = .*$/TURBINIA_REGION = '$REGION'/g" $TURBINIA_CONFIG
+sed -i -e "s/^CLOUD_PROVIDER = .*$/CLOUD_PROVIDER = 'GCP'/g" $TURBINIA_CONFIG
 
 # Create File Store instance and update deployment files with created instance
 if [[ "$*" != *--no-filestore* ]] ; then  
@@ -219,12 +211,15 @@ fi
 
 echo "Updating $TURBINIA_CONFIG config with Filestore configuration"
 FILESTORE_IP=$(gcloud -q --project $DEVSHELL_PROJECT_ID filestore instances describe $FILESTORE_NAME --zone=$ZONE --format='value(networks.ipAddresses)' --flatten="networks[].ipAddresses[]")
-FILESTORE_MOUNT="'\/mnt\/$FILESTORE_NAME'"
+FILESTORE_LOGS="'\/mnt\/$FILESTORE_NAME\/logs'"
+FILESTORE_OUTPUT="'\/mnt\/$FILESTORE_NAME\/output'"
 sed -i -e "s/<IP_ADDRESS>/$FILESTORE_IP/g" turbinia-volume-filestore.yaml
-sed -i -e "s/turbiniavolume/$FILESTORE_NAME/g" *.yaml
+sed -i -e "s/turbiniavolume/$FILESTORE_NAME/g" turbinia-volume-filestore.yaml turbinia-volume-claim-filestore.yaml turbinia-server.yaml turbinia-worker.yaml 
 sed -i -e "s/storage: .*/storage: $FILESTORE_CAPACITY/g" turbinia-volume-filestore.yaml turbinia-volume-claim-filestore.yaml
-sed -i -e "s/^LOG_DIR = .*$/LOG_DIR = $FILESTORE_MOUNT/g" $TURBINIA_CONFIG
+sed -i -e "s/^LOG_DIR = .*$/LOG_DIR = $FILESTORE_LOGS/g" $TURBINIA_CONFIG
 sed -i -e "s/^MOUNT_DIR_PREFIX = .*$/MOUNT_DIR_PREFIX = '\/mnt\/turbinia'/g" $TURBINIA_CONFIG
+sed -i -e "s/^SHARED_FILESYSTEM = .*$/SHARED_FILESYSTEM = True/g" $TURBINIA_CONFIG
+sed -i -e "s/^OUTPUT_DIR = .*$/OUTPUT_DIR = $FILESTORE_OUTPUT/g" $TURBINIA_CONFIG
 
 #Create Google Cloud Storage Bucket
 if [[ "$*" != *--no-gcs* ]] ; then  
@@ -323,4 +318,4 @@ echo "Creating a copy of Turbinia config in $TURBINIA_OUT"
 cp $TURBINIA_CONFIG $TURBINIA_OUT
 
 echo "Turbinia GKE was succesfully deployed!"
-echo "Authenticate via: gcloud container clusters get-credentials $CLUSTER_NAME --zone $ZONE" 
+echo "Authenticate via: gcloud container clusters get-credentials $CLUSTER_NAME --zone $ZONE"
