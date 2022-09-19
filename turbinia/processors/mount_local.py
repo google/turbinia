@@ -21,6 +21,9 @@ import os
 import subprocess
 import tempfile
 import time
+import filelock
+import re
+
 from prometheus_client import Gauge
 from turbinia import config
 from turbinia import TurbiniaException
@@ -209,11 +212,16 @@ def PreprocessLosetup(
     losetup_command.append(source_path)
     log.info('Running command {0:s}'.format(' '.join(losetup_command)))
     try:
-      losetup_device = subprocess.check_output(
-          losetup_command, universal_newlines=True).strip()
+      # File lock to prevent race condition with PostProcessLosetup.
+      with filelock.FileLock(config.RESOURCE_FILE_LOCK):
+        losetup_device = subprocess.check_output(
+            losetup_command, universal_newlines=True).strip()
     except subprocess.CalledProcessError as exception:
       raise TurbiniaException(
           'Could not set losetup devices {0!s}'.format(exception))
+    log.info(
+        'Loop device {0:s} created for evidence {1:s}'.format(
+            losetup_device, source_path))
 
   return losetup_device
 
@@ -477,25 +485,39 @@ def PostprocessDeleteLosetup(device_path, lv_uuid=None):
     # https://github.com/google/turbinia/issues/73
     losetup_cmd = ['sudo', 'losetup', '-d', device_path]
     log.info('Running: {0:s}'.format(' '.join(losetup_cmd)))
-    try:
-      subprocess.check_call(losetup_cmd)
-    except subprocess.CalledProcessError as exception:
-      turbinia_failed_loop_device_detach.inc()
-      raise TurbiniaException(
-          'Could not delete losetup device {0!s}'.format(exception))
+    # File lock to prevent race condition with PreProcessLosetup
+    with filelock.FileLock(config.RESOURCE_FILE_LOCK):
+      try:
+        subprocess.check_call(losetup_cmd)
+      except subprocess.CalledProcessError as exception:
+        turbinia_failed_loop_device_detach.inc()
+        raise TurbiniaException(
+            'Could not delete losetup device {0!s}'.format(exception))
 
-    # Check that the device was actually removed
-    losetup_cmd = ['sudo', 'losetup', '-a']
-    log.info('Running: {0:s}'.format(' '.join(losetup_cmd)))
-    try:
-      output = subprocess.check_output(losetup_cmd)
-    except subprocess.CalledProcessError as exception:
-      raise TurbiniaException(
-          'Could not check losetup device status {0!s}'.format(exception))
-    if output.find(device_path.encode('utf-8')) != -1:
+      # Check that the device was actually removed
+      losetup_cmd = ['sudo', 'losetup', '-a']
+      for _ in range(RETRY_MAX):
+        try:
+          output = subprocess.check_output(losetup_cmd, text=True)
+        except subprocess.CalledProcessError as exception:
+          raise TurbiniaException(
+              'Could not check losetup device status {0!s}'.format(exception))
+        reg_search = re.search(device_path + ':.*', output)
+        if reg_search:
+          # TODO(wyassine): Add lsof check for file handles on device path
+          # https://github.com/google/turbinia/issues/1148
+          log.debug('losetup retry check {0!s}/{1!s} for device {2!s}').format(
+              _, RETRY_MAX, device_path)
+          time.sleep(1)
+        else:
+          break
+    # Raise if losetup device still exists
+    if reg_search:
       turbinia_failed_loop_device_detach.inc()
       raise TurbiniaException(
-          'Could not delete losetup device {0!s}'.format(device_path))
+          'losetup device still present, unable to delete the device {0!s}'
+          .format(device_path))
+
     log.info('losetup device [{0!s}] deleted.'.format(device_path))
 
 

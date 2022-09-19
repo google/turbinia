@@ -145,11 +145,13 @@ class MountLocalProcessorTest(unittest.TestCase):
         source_path, partition_offset=65536, credentials=credentials)
     mock_subprocess.assert_not_called()
 
+  @mock.patch('turbinia.processors.mount_local.config')
   @mock.patch('subprocess.check_output')
-  def testPreprocessLosetup(self, mock_subprocess):
+  def testPreprocessLosetup(self, mock_subprocess, mock_config):
     """Test PreprocessLosetup method."""
     current_path = os.path.abspath(os.path.dirname(__file__))
     source_path = os.path.join(current_path, '..', '..', 'test_data', 'mbr.raw')
+    mock_config.RESOURCE_FILE_LOCK = '/tmp/turbinia_resource.lock'
     mock_subprocess.return_value = '/dev/loop0'
     device = mount_local.PreprocessLosetup(source_path)
     expected_args = ['sudo', 'losetup', '--show', '--find', '-r', source_path]
@@ -330,11 +332,14 @@ class MountLocalProcessorTest(unittest.TestCase):
     self.assertEqual(fstype, 'ext4')
     self.assertEqual(mock_subprocess.call_count, 2)
 
+  @mock.patch('turbinia.processors.mount_local.config')
   @mock.patch('subprocess.check_output')
   @mock.patch('subprocess.check_call')
-  def testPostprocessDeleteLosetup(self, mock_subprocess, mock_output):
+  def testPostprocessDeleteLosetup(
+      self, mock_subprocess, mock_output, mock_config):
     """Test PostprocessDeleteLosetup method."""
-    mock_output.return_value = b''
+    mock_config.RESOURCE_FILE_LOCK = '/tmp/turbinia_resource.lock'
+    mock_output.return_value = ''
     mount_local.PostprocessDeleteLosetup('/dev/loop0')
     mock_subprocess.assert_called_once_with(
         ['sudo', 'losetup', '-d', '/dev/loop0'])
