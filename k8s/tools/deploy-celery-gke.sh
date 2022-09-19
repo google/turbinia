@@ -114,6 +114,7 @@ echo "Deploying cluster to project $DEVSHELL_PROJECT_ID"
 # Setup appropriate directories and copy of deployment templates and Turbinia config
 echo "Copying over template deployment files to $DEPLOYMENT_FOLDER"
 mkdir -p $DEPLOYMENT_FOLDER
+cp common/* $DEPLOYMENT_FOLDER
 cp celery/* $DEPLOYMENT_FOLDER
 if [[ "$*" == *--deploy-dfdewey* ]] ; then
   cp dfdewey/* $DEPLOYMENT_FOLDER
