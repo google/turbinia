@@ -66,29 +66,26 @@ class WebshellAnalyzerTask(TurbiniaTask):
 
   def find_webshells(self, result, evidence):
 
-    scan_directory = '/var/'
-    out_file = os.path.join(self.output_dir, 'webshells')
+    stdout_file = os.path.join(
+        self.output_dir, '{0:s}_webshells_stdout.log'.format(self.id))
 
+    scan_directory = '/var/'
     cmd = [
         '/opt/webshell-analyzer/bins/linux_wsa', '-dir',
-        evidence.mount_path + scan_directory
+        evidence.local_path + scan_directory
     ]
 
-    (ret, result) = self.execute(cmd, result, stdout_file=out_file)
+    (ret, result) = self.execute(cmd, result, stdout_file=stdout_file)
 
     if ret != 0:
       print('error')
 
     findings = []
     priority = Priority.LOW
-
-    #f = open(out_file, 'r')
-    #x = f.readline()
-    #if 'filePath' in x:
-    #  findings.append(x)
+    summary = 'No webshells were found'
 
     try:
-      with open(out_file, 'r') as shells:
+      with open(stdout_file, 'r') as shells:
         for line in shells:
           try:
             json_data = json.loads(line)
@@ -107,5 +104,4 @@ class WebshellAnalyzerTask(TurbiniaTask):
       report = '\n'.join(findings)
       return (report, priority, summary)
 
-    summary = 'No webshells were found'
     return (summary, priority, summary)
