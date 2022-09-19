@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: turbinia-controller
   labels:
-    app: turbinia-worker-loadtest
+    app: turbinia-controller
 spec:
   replicas: 1
   selector:
@@ -29,9 +29,8 @@ spec:
             - mountPath: "/mnt/turbiniavolume"
               name: turbiniavolume
       containers:
-        - name: worker
-          image: us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-twcelery:latest
-          command: ["sh", "-c", "tail -f /dev/null"]
+        - name: controller
+          image: us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-controller:latest
           securityContext:
             privileged: true
           env:
