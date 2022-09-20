@@ -16,15 +16,14 @@ fi
 # Please ensure the disks you are testing have been created prior to running
 # this script as it does not handle test disk creation. Once that is done, update
 # the values below with the correct test disks.
-MIN_NUM=1
-MAX_NUM=15
+MAX_DISKS=5
 DISK_NAME='test-disk-25gb'
 DISK_ZONE='us-central1-f'
 
-for i in {$MIN_NUM..MAX_NUM}
+for i in $(seq 1 $MAX_DISKS};
 do
-    echo -n "Start" > $OUTPUT_LOG-$i.log
-    date >> $OUTPUT_LOG-$i.log
-    { time turbiniactl -w googleclouddisk -d $DISK_NAME-$i -z $DISK_ZONE ; } >> $OUTPUT_LOG-$i.log 2>&1 & 
+    echo -n "Start" > $OUTPUT_LOG/$DISK_NAME-$i.log
+    date >> $OUTPUT_LOG/$DISK_NAME-$i.log
+    { time turbiniactl -w googleclouddisk -d $DISK_NAME-$i -z $DISK_ZONE ; } >> $OUTPUT_LOG/$DISK_NAME-$i.log 2>&1 & 
     sleep 2
 done
