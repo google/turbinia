@@ -138,15 +138,24 @@ class Evidence:
         to the saved_path location.
     source (str): String indicating where evidence came from (including tool
         version that created it, if appropriate).
-    local_path (str): Path to the processed data (can be a blockdevice or a
-        mounted directory, etc).  This is the path that most Tasks should use to
-        access evidence after it's been processed on the worker (i.e. when the
-        Tasks `run()` method is called).  The last pre-processor to run should
-        set this path.
+    local_path (str): Generic path to the evidence data after pre-processing
+        has been run.  This is the path that most Tasks and any code that runs
+        after the pre-processors should use to access evidence. Depending on
+        the pre-processors and `REQUIRED_STATE` for the Task being run, this
+        could point to a blockdevice or a mounted directory. The last
+        pre-processor to run should always set this path. For example if the
+        Evidence is a `RawDisk`, the `source_path` will be a path to the image
+        file, then the pre-processors will (optionally, depending on the Task
+        requirements) create a loop device and mount it which will set the
+        `device_path` and `mount_path` respectively. After that, the
+        `local_path` should point to whatever path the last pre-processor has
+        created, in this case the mount_path.
     source_path (str): Path to the original un-processed source data for the
         Evidence.  This is the path that Evidence should be created and set up
-        with initially.  Tasks should generally not use this path, but instead
-        use the `local_path`.
+        with initially and used any time prior to when the pre-processors run.
+        Tasks should generally not use `source_path`, but instead use the
+        `local_path` (or other more specific paths like `device_path` or
+        `mount_path` depending on the Task requirements).
     mount_path (str): Path to a mounted file system (if relevant).
     credentials (list): Decryption keys for encrypted evidence.
     tags (dict): Extra tags associated with this evidence.
