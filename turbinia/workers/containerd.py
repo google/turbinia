@@ -66,7 +66,8 @@ class ContainerdEnumerationTask(TurbiniaTask):
       subprocess.check_call(list_cmd)
       with open(outputfile, 'r') as fh:
         json_data = fh.read()
-        containers = json.loads(json_data)
+        if json_data:
+          containers = json.loads(json_data)
     except json.JSONDecodeError as e:
       raise TurbiniaException(
           f'Error decoding container-explorer output: {e}') from e
