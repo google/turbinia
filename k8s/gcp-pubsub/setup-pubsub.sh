@@ -1,8 +1,10 @@
 #!/bin/sh
-# Turbinia GKE deployment script
-# This script can be used to deploy Turbinia to GKE.
+# Turbinia GKE Pubsub deployment script.
+# This script can be used to deploy Turbinia configured with Pubsub to GKE.
+# Please use the deploy-celery-gke.sh script if you'd also like to create
+# the GKE cluster and associated GCP resources required by Turbinia.
 # Requirements:
-# - have 'gcloud' installed.
+# - have 'gcloud' and 'kubectl' installed.
 # - authenticate against your GKE cluster with "gcloud container clusters get-credentials"
 
 TURBINIA_CONF=$1
