@@ -29,6 +29,7 @@ if [[ "$*" == *--help ]] ; then
   echo "--no-gcs                       Do not create a GCS bucket"
   echo "--no-pubsub                    Do not create the PubSub and PSQ topic/subscription"
   echo "--no-cluster                   Do not create the cluster"
+  echo "--deploy-controller            Deploy Turbinia controller for load testing and troubleshooting" 
   echo "--deploy-dfdewey               Deploy dfDewey datastores"
   exit 1
 fi
@@ -286,6 +287,12 @@ fi
 # Deploy to cluster
 echo "Deploying Turbinia to $CLUSTER_NAME cluster"
 ./setup-pubsub.sh $TURBINIA_CONFIG
+
+# Deploy Turbinia Controller
+if [[ "$*" == *--deploy-controller* ]] ; then
+  echo "--deploy-controller specified. Deploying Turbinia controller."
+  kubectl create -f turbinia-controller.yaml
+fi
 
 # Deploy dfDewey
 if [[ "$*" == *--deploy-dfdewey* ]] ; then
