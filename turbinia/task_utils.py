@@ -172,9 +172,8 @@ def task_deserialize(input_dict):
   try:
     input_dict.pop('output_manager')
   except KeyError:
-    log.info(
-        'output_manager key not found in serialized TurbiniaTask {}'.format(
-            input_dict['id']))
+    pass
+
   task.__dict__.update(input_dict)
   task.start_time = datetime.strptime(input_dict['start_time'], DATETIME_FORMAT)
   task.last_update = datetime.strptime(
