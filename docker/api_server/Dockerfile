@@ -1,6 +1,15 @@
-FROM ubuntu:20.04
+# Build stage for the web ui
+FROM node:lts-alpine as build-stage
+WORKDIR /tmp/web
+COPY web/package*.json ./
+RUN npm install
+COPY web/. .
+RUN npm run build
 
+# Build Turbinia API Server, copy from build, and setup rest of requirements
+FROM ubuntu:20.04
 ENV DEBIAN_FRONTEND=noninteractive 
+COPY --from=build-stage /tmp/web/dist /web/dist
 RUN apt-get update && apt-get -y install python3-pip git wget supervisor curl
 
 RUN pip3 install pip --upgrade
