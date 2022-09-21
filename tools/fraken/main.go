@@ -62,6 +62,7 @@ var (
 	rulePathFlag      = flag.String("rules", "", "Specify a particular path to a file or folder containing the Yara rules to use")
 	magicPathFlag     = flag.String("magic", "misc/file-type-signatures.txt", "A path under the rules path that contains File Magics")
 	yaraRulesFlag     = flag.String("extrayara", "", "Any additional Yara rules to be used")
+	testRulesFlag     = flag.Bool("testrules", false, "Test the given rules for syntax validity and then exit")
 	magics            = make(map[string]string)
 	externalVariables = []string{"filepath", "filename", "filetype", "extension", "owner"}
 	maxGoroutines     = 10
@@ -440,12 +441,16 @@ func scanFile(s Scanner, filePath string, fileInfo os.FileInfo) (yara.MatchRules
 func main() {
 	flag.Parse()
 
-	if *scanPathFlag == "" || *rulePathFlag == "" {
-		log.Println("Usage: fraken -folder <path to scan> -rules <path to rules> [-magic <path to magics>] [-extrayara <path to file>]")
+	if (!*testRulesFlag && *scanPathFlag == "") || *rulePathFlag == "" {
+		log.Println("Usage: fraken -folder <path to scan> -rules <path to rules> [-magic <path to magics>] [-extrayara <path to file>] [-testrules]")
 		os.Exit(1)
 	}
 	if err := scanner.init(); err != nil {
 		log.Fatalf("Error initialising Yara engine: %v\n", err)
+	}
+	if *testRulesFlag {
+		log.Println("Rules test OK")
+		os.Exit(0)
 	}
 	if err := initMagics(); err != nil {
 		log.Println("Error initialising Magic file (continuing without it): ", err)
