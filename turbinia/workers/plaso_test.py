@@ -21,6 +21,7 @@ import sys
 from turbinia.workers import plaso
 from turbinia.workers.workers_test import TestTurbiniaTaskBase
 
+
 class PlasoTaskTest(TestTurbiniaTaskBase):
   """Tests for PlasoTask."""
 
@@ -47,11 +48,13 @@ rule rulename {
     self.assertEqual(command, [self._BASE_COMMAND])
 
   def test_build_command_bad_cli_arg(self):
-    command = self.plaso_task.build_plaso_command(self._BASE_COMMAND, {'badArg': 'test'})
+    command = self.plaso_task.build_plaso_command(
+        self._BASE_COMMAND, {'badArg': 'test'})
     self.assertEqual(command, [self._BASE_COMMAND])
 
   def test_build_command_good_cli_arg(self):
-    command = self.plaso_task.build_plaso_command(self._BASE_COMMAND, {'status_view': 'none'})
+    command = self.plaso_task.build_plaso_command(
+        self._BASE_COMMAND, {'status_view': 'none'})
     self.assertEqual(command, [self._BASE_COMMAND, "--status_view", "none"])
     return
 
@@ -59,12 +62,14 @@ rule rulename {
     if not os.path.isfile(os.path.expanduser('/opt/fraken/fraken')):
       logging.getLogger('turbinia').error('Fraken not installed')
       return
-    command = self.plaso_task.build_plaso_command(self._BASE_COMMAND, {'yara_rules': self._YARA_RULE})
+    command = self.plaso_task.build_plaso_command(
+        self._BASE_COMMAND, {'yara_rules': self._YARA_RULE})
     self.assertIn("--yara_rules", command)
 
   def test_build_command_bad_yara(self):
     if not os.path.isfile(os.path.expanduser('/opt/fraken/fraken')):
       logging.getLogger('turbinia').error('Fraken not installed')
       return
-    command = self.plaso_task.build_plaso_command(self._BASE_COMMAND, {'yara_rules': self._YARA_RULE + self._YARA_RULE})
+    command = self.plaso_task.build_plaso_command(
+        self._BASE_COMMAND, {'yara_rules': self._YARA_RULE + self._YARA_RULE})
     self.assertNotIn("--yara_rules", command)
