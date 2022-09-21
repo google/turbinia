@@ -18,5 +18,5 @@ then
   sudo chown turbinia:turbinia ${TURBINIA_TMP_DIR}
 fi
 
-# Allows pod to run without being terminated in a Kubernetes cluster
+# Allows pod to run without being terminated in a GKE cluster
 tail -f /dev/null

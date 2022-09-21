@@ -237,9 +237,11 @@ or would like to test out a new features capability within GKE, a load test scri
 available for use within `k8s/tools/load-test.sh`. Prior to running, please ensure you
 review the script and update any variables for your test. Most importantly, the load test
 script does not currently support the creation of test GCP disks and would need to be created
-prior to running the script. Once test data has been created, you can run the script on
-any machine or pod that has the Turbinia client installed and configured to the correct
-Turbinia GKE instance. Please run the following command to execute the load test.
+prior to running the script. By default, the script will look for GCP disks with the naming
+convention of `<DISK_NAME-i>`, `i` being a range of `1` and `MAX_DISKS`. Once test data has
+been created, you can run the script on any machine or pod that has the Turbinia client
+installed and configured to the correct Turbinia GKE instance. Please run the following
+command to execute the load test.
 
 ```
 ./k8s/tools/load-test.sh /PATH/TO/LOADTESTS
