@@ -15,6 +15,7 @@ RUN apt-get update && apt-get -y install \
     git \
     golang-1.16 \
     go-bindata \
+    john \
     john-data \
     hashcat \
     hashcat-data \
