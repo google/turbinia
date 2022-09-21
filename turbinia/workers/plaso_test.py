@@ -35,7 +35,6 @@ rule rulename {
 }
   """
 
-
   def setUp(self):
     super(PlasoTaskTest, self).setUp()
     logging.basicConfig(stream=sys.stderr)
