@@ -61,11 +61,10 @@ def evidence_class_names(all_classes=False):
     # 'output' and 'report' types.
     # Ignore classes that are not real Evidence types and the base class.
     ignored_classes = (
-        'BinaryExtraction', 'BodyFile', 'BulkExtractorOutput', 'Evidence',
-        'EvidenceState', 'EvidenceCollection', 'ExportedFileArtifact',
-        'FilteredTextFile', 'FinalReport', 'IntEnum', 'PlasoCsvFile',
-        'PlasoFile', 'PhotorecOutput', 'ReportText', 'TextFile',
-        'VolatilityReport', 'TurbiniaException')
+        'BinaryExtraction', 'BulkExtractorOutput', 'Evidence', 'EvidenceState',
+        'EvidenceCollection', 'ExportedFileArtifact', 'FilteredTextFile',
+        'FinalReport', 'IntEnum', 'PlasoCsvFile', 'PlasoFile', 'PhotorecOutput',
+        'ReportText', 'TextFile', 'VolatilityReport', 'TurbiniaException')
     class_names = filter(
         lambda class_tuple: class_tuple[0] not in ignored_classes, class_names)
   return list(class_names)
@@ -239,9 +238,9 @@ class Evidence:
   # The list of attributes a given piece of Evidence requires to be set
   REQUIRED_ATTRIBUTES = []
 
-  # An optional list of attributes that are generally used to describe
+  # An optional set of attributes that are generally used to describe
   # a given piece of Evidence.
-  OPTIONAL_ATTRIBUTES = ['name', 'source', 'description', 'tags']
+  OPTIONAL_ATTRIBUTES = {'name', 'source', 'description', 'tags'}
 
   # The list of EvidenceState states that the Evidence supports in its
   # pre/post-processing (e.g. MOUNTED, ATTACHED, etc).  See `preprocessor()`
@@ -693,8 +692,13 @@ class DiskPartition(Evidence):
       lv_uuid=None, path_spec=None, important=True, *args, **kwargs):
     """Initialization for raw volume evidence object."""
     self.partition_location = partition_location
-    self.partition_offset = partition_offset
-    self.partition_size = partition_size
+    try:
+      self.partition_offset = int(partition_offset)
+      self.partition_size = int(partition_size)
+    except ValueError as exception:
+      log.error(
+          'Unable to cast partition attributes to integers. {0!s}'.format(
+              exception))
     self.lv_uuid = lv_uuid
     self.path_spec = path_spec
     self.important = important
@@ -1062,7 +1066,7 @@ class EwfDisk(Evidence):
   """Evidence object for a EWF based evidence.
 
   Attributes:
-    source_path (str): Path to the mounted loop device.
+    device_path (str): Path to a relevant 'raw' data source (ie: a block.
     ewf_path (str): Path to mounted EWF image.
     ewf_mount_path (str): Path to EWF mount directory.
   """
