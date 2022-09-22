@@ -692,13 +692,20 @@ class DiskPartition(Evidence):
       lv_uuid=None, path_spec=None, important=True, *args, **kwargs):
     """Initialization for raw volume evidence object."""
     self.partition_location = partition_location
-    try:
-      self.partition_offset = int(partition_offset)
-      self.partition_size = int(partition_size)
-    except ValueError as exception:
-      log.error(
-          'Unable to cast partition attributes to integers. {0!s}'.format(
-              exception))
+    if partition_offset:
+      try:
+        self.partition_offset = int(partition_offset)
+      except ValueError as exception:
+        log.error(
+            'Unable to cast partition_offset attribute to integer. {0!s}'
+            .format(exception))
+    if partition_size:
+      try:
+        self.partition_size = int(partition_size)
+      except ValueError as exception:
+        log.error(
+            'Unable to cast partition_size attribute to integer. {0!s}'.format(
+                exception))
     self.lv_uuid = lv_uuid
     self.path_spec = path_spec
     self.important = important
