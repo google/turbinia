@@ -26,5 +26,12 @@ RUN echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] http://packages.c
 && apt-get update -y \
 && apt-get install google-cloud-sdk -y
 
+# Install NodeJS for frontend development
+RUN curl -sL https://deb.nodesource.com/setup_18.x -o nodesource_setup.sh
+RUN bash nodesource_setup.sh
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    nodejs \
+  && rm -rf /var/lib/apt/lists/*
+
 # Insert dummy command to override base image CMD
 CMD ["/usr/bin/ps"]
