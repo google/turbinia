@@ -835,7 +835,7 @@ class GoogleCloudDisk(Evidence):
     self.cloud_only = True
     self.resource_tracked = True
     self.resource_id = self.disk_name
-    self.device_path + None
+    self.device_path = None
 
   def _preprocess(self, _, required_states):
     # The GoogleCloudDisk should never need to be mounted unless it has child
