@@ -34,6 +34,22 @@ class PlasoTask(TurbiniaTask):
       state.ATTACHED, state.DECOMPRESSED, state.CONTAINER_MOUNTED
   ]
 
+  def test_yara_rules(self, file_path, result):
+    """Test the given Yara rules for syntactical validity before processing.
+
+    Args:
+      file_path (str): Location on disk of the Yara rules to be tested.
+      result (TurbiniaTaskResult): The object to place task results into.
+    
+    Returns:
+      True if rules are good, else False
+    """
+    cmd = ['/opt/fraken/fraken', '-rules', file_path, '-testrules']
+    (ret, _) = self.execute(cmd, result)
+    if ret == 0:
+      return True
+    return False
+
   def build_plaso_command(self, base_command, conf):
     """Builds a typical plaso command, contains logic specific to log2timeline.
 
@@ -66,7 +82,9 @@ class PlasoTask(TurbiniaTask):
       elif k == 'yara_rules':
         file_path = file_helpers.write_str_to_temp_file(
             v, preferred_dir=self.tmp_dir)
-        cmd.extend(['--yara_rules', file_path])
+        rules_check = self.test_yara_rules(file_path, self.result)
+        if rules_check:
+          cmd.extend(['--yara_rules', file_path])
       elif isinstance(v, list):
         cmd.extend([prepend + k, ','.join(v)])
       elif isinstance(v, bool):
