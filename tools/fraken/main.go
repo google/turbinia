@@ -62,9 +62,11 @@ var (
 	rulePathFlag      = flag.String("rules", "", "Specify a particular path to a file or folder containing the Yara rules to use")
 	magicPathFlag     = flag.String("magic", "misc/file-type-signatures.txt", "A path under the rules path that contains File Magics")
 	yaraRulesFlag     = flag.String("extrayara", "", "Any additional Yara rules to be used")
+	testRulesFlag     = flag.Bool("testrules", false, "Test the given rules for syntax validity and then exit")
 	magics            = make(map[string]string)
 	externalVariables = []string{"filepath", "filename", "filetype", "extension", "owner"}
 	maxGoroutines     = 10
+	maxScanFilesize   = 1073741824 /* 1 Gb */
 )
 
 func initMagics() error {
@@ -356,37 +358,39 @@ func filesystemScan(wait chan struct{}, c chan *Detection) {
 		wg.Add(1)
 		wait <- struct{}{}
 		go func() {
-			matches, _ := scanFile(scanner, filePath, fileInfo)
-			for _, match := range matches {
-				var description, reference string
-				score := 50
-				for _, m := range match.Metas {
-					var parsedScore int
-					if m.Identifier == "score" {
-						switch g := m.Value.(type) {
-						case int:
-							parsedScore = m.Value.(int)
-						case string:
-							parsedScore, err = strconv.Atoi(strings.TrimSpace(m.Value.(string)))
-						default:
-							log.Printf("Unable to parse score for rule %v (type %v)): %v\n", match.Rule, g, m)
+			if fileInfo.Size() <= int64(maxScanFilesize) {
+				matches, _ := scanFile(scanner, filePath, fileInfo)
+				for _, match := range matches {
+					var description, reference string
+					score := 50
+					for _, m := range match.Metas {
+						var parsedScore int
+						if m.Identifier == "score" {
+							switch g := m.Value.(type) {
+							case int:
+								parsedScore = m.Value.(int)
+							case string:
+								parsedScore, err = strconv.Atoi(strings.TrimSpace(m.Value.(string)))
+							default:
+								log.Printf("Unable to parse score for rule %v (type %v)): %v\n", match.Rule, g, m)
+							}
+							score = parsedScore
 						}
-						score = parsedScore
-					}
-					if strings.HasPrefix(m.Identifier, "desc") {
-						description = m.Value.(string)
-					}
-					if m.Identifier == "reference" || strings.HasPrefix(m.Identifier, "report") {
-						reference = m.Value.(string)
-					}
-					if m.Identifier == "context" {
-						v := strings.ToLower(m.Value.(string))
-						if v == "yes" || v == "true" || v == "1" {
-							score = 0
+						if strings.HasPrefix(m.Identifier, "desc") {
+							description = m.Value.(string)
+						}
+						if m.Identifier == "reference" || strings.HasPrefix(m.Identifier, "report") {
+							reference = m.Value.(string)
+						}
+						if m.Identifier == "context" {
+							v := strings.ToLower(m.Value.(string))
+							if v == "yes" || v == "true" || v == "1" {
+								score = 0
+							}
 						}
 					}
+					c <- newDetection(filePath, match.Rule, description, reference, score)
 				}
-				c <- newDetection(filePath, match.Rule, description, reference, score)
 			}
 			<-wait
 			wg.Done()
@@ -440,12 +444,16 @@ func scanFile(s Scanner, filePath string, fileInfo os.FileInfo) (yara.MatchRules
 func main() {
 	flag.Parse()
 
-	if *scanPathFlag == "" || *rulePathFlag == "" {
-		log.Println("Usage: fraken -folder <path to scan> -rules <path to rules> [-magic <path to magics>] [-extrayara <path to file>]")
+	if (!*testRulesFlag && *scanPathFlag == "") || *rulePathFlag == "" {
+		log.Println("Usage: fraken -folder <path to scan> -rules <path to rules> [-magic <path to magics>] [-extrayara <path to file>] [-testrules]")
 		os.Exit(1)
 	}
 	if err := scanner.init(); err != nil {
 		log.Fatalf("Error initialising Yara engine: %v\n", err)
+	}
+	if *testRulesFlag {
+		log.Println("Rules test OK")
+		os.Exit(0)
 	}
 	if err := initMagics(); err != nil {
 		log.Println("Error initialising Magic file (continuing without it): ", err)
