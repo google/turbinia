@@ -66,6 +66,7 @@ var (
 	magics            = make(map[string]string)
 	externalVariables = []string{"filepath", "filename", "filetype", "extension", "owner"}
 	maxGoroutines     = 10
+	maxScanFilesize   = 1073741824 /* 1 Gb */
 )
 
 func initMagics() error {
@@ -357,37 +358,39 @@ func filesystemScan(wait chan struct{}, c chan *Detection) {
 		wg.Add(1)
 		wait <- struct{}{}
 		go func() {
-			matches, _ := scanFile(scanner, filePath, fileInfo)
-			for _, match := range matches {
-				var description, reference string
-				score := 50
-				for _, m := range match.Metas {
-					var parsedScore int
-					if m.Identifier == "score" {
-						switch g := m.Value.(type) {
-						case int:
-							parsedScore = m.Value.(int)
-						case string:
-							parsedScore, err = strconv.Atoi(strings.TrimSpace(m.Value.(string)))
-						default:
-							log.Printf("Unable to parse score for rule %v (type %v)): %v\n", match.Rule, g, m)
+			if fileInfo.Size() <= int64(maxScanFilesize) {
+				matches, _ := scanFile(scanner, filePath, fileInfo)
+				for _, match := range matches {
+					var description, reference string
+					score := 50
+					for _, m := range match.Metas {
+						var parsedScore int
+						if m.Identifier == "score" {
+							switch g := m.Value.(type) {
+							case int:
+								parsedScore = m.Value.(int)
+							case string:
+								parsedScore, err = strconv.Atoi(strings.TrimSpace(m.Value.(string)))
+							default:
+								log.Printf("Unable to parse score for rule %v (type %v)): %v\n", match.Rule, g, m)
+							}
+							score = parsedScore
 						}
-						score = parsedScore
-					}
-					if strings.HasPrefix(m.Identifier, "desc") {
-						description = m.Value.(string)
-					}
-					if m.Identifier == "reference" || strings.HasPrefix(m.Identifier, "report") {
-						reference = m.Value.(string)
-					}
-					if m.Identifier == "context" {
-						v := strings.ToLower(m.Value.(string))
-						if v == "yes" || v == "true" || v == "1" {
-							score = 0
+						if strings.HasPrefix(m.Identifier, "desc") {
+							description = m.Value.(string)
+						}
+						if m.Identifier == "reference" || strings.HasPrefix(m.Identifier, "report") {
+							reference = m.Value.(string)
+						}
+						if m.Identifier == "context" {
+							v := strings.ToLower(m.Value.(string))
+							if v == "yes" || v == "true" || v == "1" {
+								score = 0
+							}
 						}
 					}
+					c <- newDetection(filePath, match.Rule, description, reference, score)
 				}
-				c <- newDetection(filePath, match.Rule, description, reference, score)
 			}
 			<-wait
 			wg.Done()
