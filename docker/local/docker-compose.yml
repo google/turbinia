@@ -22,7 +22,7 @@ services:
 
         volumes:
             - $PWD/evidence:/evidence
-            - $PWD/conf/:/etc/turbinia/
+            - $PWD/conf/turbinia.conf:/etc/turbinia/turbinia.conf
 
         environment:
             - LC_ALL=C.UTF-8
@@ -36,7 +36,7 @@ services:
 
         volumes:
             - $PWD/evidence:/evidence
-            - $PWD/conf/:/etc/turbinia/
+            - $PWD/conf/turbinia.conf:/etc/turbinia/turbinia.conf
 
         environment:
             - LC_ALL=C.UTF-8
@@ -51,7 +51,7 @@ services:
 
         volumes:
             - $PWD/evidence:/evidence
-            - $PWD/conf/:/etc/turbinia/
+            - $PWD/conf/turbinia.conf:/etc/turbinia/turbinia.conf
 
         environment:
             - LC_ALL=C.UTF-8
