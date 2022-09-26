@@ -45,6 +45,13 @@ spec:
               name: turbiniavolume
           ports:
             - containerPort: 9200
+          resources: 
+            requests:
+              memory: "256Mi"
+              cpu: "500m"
+            limits:
+              memory: "8192Mi"
+              cpu: "4000m"
       volumes:
         - name: turbiniavolume
           persistentVolumeClaim:

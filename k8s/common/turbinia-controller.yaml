@@ -1,26 +1,25 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: turbinia-worker
+  name: turbinia-controller
   labels:
-    app: turbinia-worker
+    app: turbinia-controller
 spec:
-  replicas: 3
+  replicas: 1
   selector:
     matchLabels:
-      app: turbinia-worker
+      app: turbinia-controller
   template:
     metadata:
       annotations:
         prometheus.io/port: "9200"
         prometheus.io/scrape: "true"
       labels:
-        app: turbinia-worker
+        app: turbinia-controller
     spec:
-      serviceAccountName: <SA_NAME>
+      serviceAccountName: turbinia
       # The grace period needs to be set to the largest task timeout as
       # set in the turbinia configuration file.
-      terminationGracePeriodSeconds: 86400
       initContainers:
         - name: init-filestore
           image: busybox:1.28
@@ -29,15 +28,8 @@ spec:
             - mountPath: "/mnt/turbiniavolume"
               name: turbiniavolume
       containers:
-        - name: worker
-          image: us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-worker:latest
-          lifecycle:
-            preStop:
-              exec:
-                command:
-                  - "/bin/sh"
-                  - "-c"
-                  - "touch /tmp/turbinia-to-scaledown.lock && sleep 5 && /usr/bin/python3 /home/turbinia/check-lockfile.py"
+        - name: controller
+          image: us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-controller:latest
           securityContext:
             privileged: true
           env:
@@ -53,9 +45,6 @@ spec:
                 fieldRef:
                   fieldPath: spec.nodeName
           volumeMounts:
-            - mountPath: "/dev"
-              name: dev
-              readOnly: true
             - mountPath: "/var/run/lock"
               name: lockfolder
               readOnly: false
@@ -71,9 +60,6 @@ spec:
               memory: "8192Mi"
               cpu: "32000m"
       volumes:
-        - name: dev
-          hostPath:
-            path: /dev
         - name: lockfolder
           hostPath:
             path: /var/run/lock
