@@ -67,7 +67,7 @@ REQUIRED_VARS = [
     'API_SERVER_ADDRESS',
     'API_SERVER_PORT',
     'API_ALLOWED_ORIGINS',
-    'API_AUTHENTICATION_ENABLED'
+    'API_AUTHENTICATION_ENABLED',
 ]
 
 # Optional config vars.  Some may be mandatory depending on the configuration
@@ -113,7 +113,14 @@ OPTIONAL_VARS = [
     'DFDEWEY_OS_PORT',
     'DFDEWEY_OS_URL',
     # General config
-    'TURBINIA_COMMAND'
+    'TURBINIA_COMMAND',
+    # API config
+    'OIDC_SCOPE',
+    'OIDC_KEYS',
+    'OIDC_ISSUER',
+    'OIDC_VALID_CLIENT_IDS',
+    'AUTHORIZED_EMAILS',
+    'WEBUI_CLIENT_SECRETS_FILE'
 ]
 
 # Environment variable to look for path data in

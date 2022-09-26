@@ -17,12 +17,14 @@
 import json
 import logging
 
-from fastapi import HTTPException, APIRouter
+from fastapi import HTTPException, APIRouter, Depends
 from fastapi.responses import JSONResponse
+from fastapi.requests import Request
 
 from turbinia import config as turbinia_config
 from turbinia import evidence
 from turbinia.api.schemas import request_options
+from turbinia.api.routes.auth import auth_required
 
 log = logging.getLogger('turbinia:api_server:config')
 
@@ -30,8 +32,10 @@ router = APIRouter(prefix='/config', tags=['Turbinia Configuration'])
 
 
 @router.get("/")
-async def read_config():
+@auth_required
+async def read_config(request: Request):
   """Retrieve turbinia config."""
+  print(request.headers)
   try:
     current_config = turbinia_config.toDict()
     if current_config:

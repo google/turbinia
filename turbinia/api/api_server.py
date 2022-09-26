@@ -17,21 +17,31 @@
 import io
 import logging
 import pathlib
+import secrets
 import uvicorn
 import yaml
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.routing import APIRoute
-from fastapi.responses import Response
+from fastapi.responses import Response, RedirectResponse
 from fastapi.staticfiles import StaticFiles
-
+from fastapi.security import OAuth2AuthorizationCodeBearer
 from starlette_oauth2_api import AuthenticateMiddleware
-
+from starlette.middleware.sessions import SessionMiddleware
 from turbinia import config
 from turbinia.api.routes.router import router
+from turbinia.api.routes.auth import auth_router
+from turbinia.api.routes.auth import validate_auth
 
+_LOGGER_FORMAT = '%(asctime)s %(levelname)s %(name)s - %(message)s'
+logging.basicConfig(format=_LOGGER_FORMAT)
 log = logging.getLogger('turbinia:api_server')
+log.setLevel(logging.DEBUG)
+
+oauth2_scheme = OAuth2AuthorizationCodeBearer(
+    authorizationUrl='https://accounts.google.com/o/oauth2/auth',
+    tokenUrl='https://oauth2.googleapis.com/token')
 
 
 def get_application():
@@ -39,7 +49,7 @@ def get_application():
   description = '''Turbinia API server'''
   _app = FastAPI(
       title='Turbinia API Server', description=description, version='1.0.0',
-      routes=router.routes)
+      routes=router.routes + auth_router.routes)
   return _app
 
 
@@ -65,9 +75,10 @@ def serve_static_content(app: FastAPI):
   if web_content_path.exists():
     try:
       app.mount(
-          "/web", StaticFiles(directory=web_content_path, html=True), name="/")
-      app.mount("/css", StaticFiles(directory=css_content_path), name="/css")
-      app.mount("/js", StaticFiles(directory=js_content_path), name="/js")
+          "/web", StaticFiles(directory=web_content_path, html=True),
+          name="web")
+      app.mount("/css", StaticFiles(directory=css_content_path), name="css")
+      app.mount("/js", StaticFiles(directory=js_content_path), name="js")
     except RuntimeError as exception:
       log.error(
           'Unable to serve Web UI static content: {0!s}'.format(exception))
@@ -88,30 +99,30 @@ def configure_authentication_providers(app: FastAPI):
           'web-ui': {
               'keys': 'https://www.googleapis.com/oauth2/v3/certs',
               'issuer': 'https://accounts.google.com',
-              'audience': 'GOOGLE_WEB_CLIENT_ID',
+              'audience': '<client_Id>',
           },
           'cli-client': {
               'keys': 'https://www.googleapis.com/oauth2/v3/certs',
               'issuer': 'https://accounts.google.com',
-              'audience': 'GOOGLE_NATIVE_CLIENT_ID',
+              'audience': '<client_Id>',
           }
       },
-      public_paths={'/'},
+      public_paths={'/login', '/oauth2/callback'},
   )
 
 
 app = get_application()
 
 app.add_middleware(
-    CORSMiddleware,
-    allow_origins=config.API_ALLOWED_ORIGINS,
-    allow_credentials=False,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+    CORSMiddleware, allow_origins=config.API_ALLOWED_ORIGINS,
+    allow_credentials=False, allow_methods=["GET"], allow_headers=["*"],
+    expose_headers=['authorization'])
 
-if config.API_AUTHENTICATION_ENABLED:
-  configure_authentication_providers(app)
+app.add_middleware(
+    SessionMiddleware, secret_key=secrets.token_urlsafe(32), max_age=3600)
+
+#if config.API_AUTHENTICATION_ENABLED:
+#  configure_authentication_providers(app)
 
 set_operation_ids(app)
 serve_static_content(app)
@@ -135,7 +146,15 @@ class TurbiniaAPIServer:
     _config = config.LoadConfig()
     uvicorn.run(
         app_name, host=_config.API_SERVER_ADDRESS, port=_config.API_SERVER_PORT,
-        log_level="info", reload=True)
+        log_level="debug", reload=True)
+
+
+@app.get('/')
+async def root(is_authenticated: bool = Depends(validate_auth)):
+  """Default route."""
+  if is_authenticated:
+    return RedirectResponse('/web')
+  return RedirectResponse('/login')
 
 
 @app.get(

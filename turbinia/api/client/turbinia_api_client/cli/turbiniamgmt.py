@@ -53,7 +53,7 @@ class TurbiniaMgmtCli:
       self.api_client = self.default_api_client(self.config)
 
     if self.api_authentication_enabled:
-      config.access_token = auth_helper.get_oauth2_credentials()
+      self.config.access_token = auth_helper.get_oauth2_credentials()
 
     self.evidence_mapping = self.get_evidence_arguments()
     self.request_options = self.get_request_options()

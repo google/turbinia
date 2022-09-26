@@ -119,6 +119,21 @@ API_ALLOWED_ORIGINS = ['http;//localhost:8000', 'http://localhost']
 # check for OAuth 2.0 bearer tokens in the 'Authorization' header.
 API_AUTHENTICATION_ENABLED = False
 
+OIDC_SCOPE = [
+    'openid',
+    'https://www.googleapis.com/auth/userinfo.profile',
+    'https://www.googleapis.com/auth/userinfo.email',
+]
+
+OIDC_KEYS = 'https://www.googleapis.com/oauth2/v3/certs'
+
+OIDC_ISSUER = 'https://accounts.google.com'
+
+OIDC_VALID_CLIENT_IDS = ['']
+AUTHORIZED_EMAILS = ['']
+
+WEBUI_CLIENT_SECRETS_FILE = '/tmp/test.json'
+
 ################################################################################
 #                         External Dependency Configurations
 #
