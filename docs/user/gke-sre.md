@@ -55,8 +55,10 @@ If using Turbinia Celery/Redis
 ./k8s/tools/deploy-celery-gke.sh --deploy-controller
 ```
 
-You can also deploy the pod directly via `kubectl create -f k8s/common/turbinia-controller.yaml`.
-Please ensure that you have the correct `turbiniavolume` filestore path prior to deploying.
+Please note that the commands above will also deploy the rest of the infrastructure so
+if you'd like to deploy the pod to an existing infrastructure, you can run
+`kubectl create -f k8s/common/turbinia-controller.yaml`. Please ensure that you
+have the correct `turbiniavolume` filestore path prior to deploying.
 
 ## GKE Infrastructure
 
@@ -241,10 +243,10 @@ prior to running the script. By default, the script will look for GCP disks with
 convention of `<DISK_NAME-i>`, `i` being a range of `1` and `MAX_DISKS`. Once test data has
 been created, you can run the script on any machine or pod that has the Turbinia client
 installed and configured to the correct Turbinia GKE instance. Please run the following
-command to execute the load test.
+command to execute the load test, passing in a path to store the load test results.
 
 ```
-./k8s/tools/load-test.sh /PATH/TO/LOADTESTS
+./k8s/tools/load-test.sh /OUTPUT/LOADTEST/RESULTS
 ```
 
 To check for any failed Tasks once the load test is complete.
