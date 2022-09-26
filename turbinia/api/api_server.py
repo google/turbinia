@@ -26,7 +26,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.routing import APIRoute
 from fastapi.responses import Response, RedirectResponse
 from fastapi.staticfiles import StaticFiles
-from fastapi.security import OAuth2AuthorizationCodeBearer
 from starlette_oauth2_api import AuthenticateMiddleware
 from starlette.middleware.sessions import SessionMiddleware
 from turbinia import config
@@ -38,10 +37,6 @@ _LOGGER_FORMAT = '%(asctime)s %(levelname)s %(name)s - %(message)s'
 logging.basicConfig(format=_LOGGER_FORMAT)
 log = logging.getLogger('turbinia:api_server')
 log.setLevel(logging.DEBUG)
-
-oauth2_scheme = OAuth2AuthorizationCodeBearer(
-    authorizationUrl='https://accounts.google.com/o/oauth2/auth',
-    tokenUrl='https://oauth2.googleapis.com/token')
 
 
 def get_application():
