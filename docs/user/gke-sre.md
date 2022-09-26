@@ -132,7 +132,7 @@ demand determined by the CPU utilization average across all pods. As demand
 increases, the number of pods scale up until the CPU utilization is below a
 determined threshold. Once processing is complete, the number of Worker pods
 will scale down. The current autoscaling policy is configured in the
-[turbinia-autoscale-cpu.yaml](https://github.com/google/turbinia/blob/master/k8s/gcp-pubsub/turbinia-autoscale-cpu.yaml)
+[turbinia-autoscale-cpu.yaml](https://github.com/google/turbinia/blob/master/k8s/common/turbinia-autoscale-cpu.yaml)
 file.
 
 There is a default setting of 3 Worker pods to run at any given time with the
@@ -140,7 +140,7 @@ ability to scale up to 50 Worker pods across all nodes in the GKE cluster.
 In order to update the minimum number of Worker pods running at a given time,
 update the `minReplicas` value with the desired number of pods. In order to update
 the max number of pods to scale, update the `maxReplicas` value with the desired
-number. These changes should be updated in the [turbinia-autoscale-cpu.yaml](https://github.com/google/turbinia/blob/master/k8s/gcp-pubsub/turbinia-autoscale-cpu.yaml)
+number. These changes should be updated in the [turbinia-autoscale-cpu.yaml](https://github.com/google/turbinia/blob/master/k8s/common/turbinia-autoscale-cpu.yaml)
 file then applied through the following command.
 
 - `$ kubectl replace -f turbinia-autoscale-cpu.yaml`
@@ -290,7 +290,7 @@ through manifest files.
 The Turbinia Server and Workers are instrumented with Prometheus code and expose
 application metrics.
 
-- Service manifest files were created for both the Turbinia [Server](https://github.com/google/turbinia/blob/master/k8s/gcp-pubsub/turbinia-server-metrics-service.yaml) and [Worker](https://github.com/google/turbinia/blob/master/k8s/gcp-pubsub/turbinia-worker-metrics-service.yaml).
+- Service manifest files were created for both the Turbinia [Server](https://github.com/google/turbinia/blob/master/k8s/common/turbinia-server-metrics-service.yaml) and [Worker](https://github.com/google/turbinia/blob/master/k8s/common/turbinia-worker-metrics-service.yaml).
 - The files create two services named `turbinia-server-metrics` and `turbinia-worker-metrics` which expose port 9200 to
   poll application metrics.
 - The Prometheus service, which is listening on port 9090 scrapes these services
