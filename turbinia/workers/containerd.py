@@ -73,6 +73,8 @@ class ContainerdEnumerationTask(TurbiniaTask):
           f'Error decoding container-explorer output: {e}') from e
     except subprocess.CalledProcessError as e:
       raise TurbiniaException(f'container-explorer return error: {e}') from e
+    except FileNotFoundError as e:
+      raise TurbiniaException(f'output file {outputfile} does not exist') from e
 
     return self._list_containers_result(containers, detailed_output)
 
@@ -123,7 +125,9 @@ class ContainerdEnumerationTask(TurbiniaTask):
 
     image_path = evidence.mount_path
     if not image_path:
-      raise TurbiniaException('Evidence is not mounted')
+      summary = f'Evidence {evidence.name}:{evidence.source_path} is not mounted'
+      result.close(self, success=False, status=summary)
+      return result
 
     try:
       # 1. List containers
@@ -138,6 +142,12 @@ class ContainerdEnumerationTask(TurbiniaTask):
       for container in containers:
         namespace = container.get('Namespace')
         container_id = container.get('ID')
+
+        if not namespace or not container_id:
+          result.log(
+              f'Value is empty. namespace={namespace}, container_id={container_id}'
+          )
+          continue
 
         container_evidence = ContainerdContainer(
             namespace=namespace, container_id=container_id)
