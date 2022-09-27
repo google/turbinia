@@ -123,6 +123,14 @@ set_operation_ids(app)
 serve_static_content(app)
 
 
+@app.get('/')
+async def root(is_authenticated: bool = Depends(validate_auth)):
+  """Default route."""
+  if is_authenticated:
+    return RedirectResponse('/web')
+  return RedirectResponse('/login')
+
+
 class TurbiniaAPIServer:
   """Turbinia API server."""
 
@@ -142,14 +150,6 @@ class TurbiniaAPIServer:
     uvicorn.run(
         app_name, host=_config.API_SERVER_ADDRESS, port=_config.API_SERVER_PORT,
         log_level="debug", reload=True)
-
-
-@app.get('/')
-async def root(is_authenticated: bool = Depends(validate_auth)):
-  """Default route."""
-  if is_authenticated:
-    return RedirectResponse('/web')
-  return RedirectResponse('/login')
 
 
 @app.get(
