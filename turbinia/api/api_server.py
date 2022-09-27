@@ -20,11 +20,14 @@ import pathlib
 import secrets
 import uvicorn
 import yaml
+import os
+import pkg_resources
 
 from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.routing import APIRoute
-from fastapi.responses import Response, RedirectResponse
+from fastapi.requests import Request
+from fastapi.responses import Response, RedirectResponse, HTMLResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 from starlette_oauth2_api import AuthenticateMiddleware
 from starlette.middleware.sessions import SessionMiddleware
@@ -114,13 +117,14 @@ app.add_middleware(
     expose_headers=['authorization'])
 
 app.add_middleware(
-    SessionMiddleware, secret_key=secrets.token_urlsafe(32), max_age=3600)
+    SessionMiddleware, secret_key=secrets.token_urlsafe(32), max_age=3600,
+    same_site='strict')
 
 #if config.API_AUTHENTICATION_ENABLED:
 #  configure_authentication_providers(app)
 
 set_operation_ids(app)
-serve_static_content(app)
+#serve_static_content(app)
 
 
 @app.get('/')
@@ -128,6 +132,46 @@ async def root(is_authenticated: bool = Depends(validate_auth)):
   """Default route."""
   if is_authenticated:
     return RedirectResponse('/web')
+  return RedirectResponse('/login')
+
+
+@app.get('/web')
+async def web(is_authenticated: bool = Depends(validate_auth)):
+  """Serves the Web UI main page."""
+  if is_authenticated:
+    response = HTMLResponse(
+        pkg_resources.resource_string(__name__, "../../web/dist/index.html"))
+    return response
+  return RedirectResponse('/login')
+
+
+@app.get('/css/{catchall:path}')
+async def serve_css(
+    request: Request, is_authenticated: bool = Depends(validate_auth)):
+  """Serves css content."""
+  this_path = pathlib.Path(__file__).parent.resolve()
+  static_content_path = this_path.parent.parent.joinpath('web/dist/css')
+  if is_authenticated:
+    path = request.path_params["catchall"]
+    file = static_content_path.joinpath(path)
+    if os.path.exists(file):
+      return FileResponse(file)
+
+  return RedirectResponse('/login')
+
+
+@app.get('/js/{catchall:path}')
+async def serve_js(
+    request: Request, is_authenticated: bool = Depends(validate_auth)):
+  """Serves JavaScript content."""
+  this_path = pathlib.Path(__file__).parent.resolve()
+  static_content_path = this_path.parent.parent.joinpath('web/dist/js')
+  if is_authenticated:
+    path = request.path_params["catchall"]
+    file = static_content_path.joinpath(path)
+    if os.path.exists(file):
+      return FileResponse(file)
+
   return RedirectResponse('/login')
 
 
