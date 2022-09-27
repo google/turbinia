@@ -18,9 +18,9 @@ import io
 import logging
 import pathlib
 import secrets
+import os
 import uvicorn
 import yaml
-import os
 import pkg_resources
 
 from fastapi import FastAPI, Depends
@@ -139,8 +139,11 @@ async def root(is_authenticated: bool = Depends(validate_auth)):
 async def web(is_authenticated: bool = Depends(validate_auth)):
   """Serves the Web UI main page."""
   if is_authenticated:
-    response = HTMLResponse(
-        pkg_resources.resource_string(__name__, "../../web/dist/index.html"))
+    this_path = pathlib.Path(__file__).parent.resolve()
+    static_content_path = this_path.parent.parent.joinpath(
+        'web/dist/index.html')
+    response = FileResponse(
+        path=static_content_path, headers={'Cache-Control': 'no-cache'})
     return response
   return RedirectResponse('/login')
 
