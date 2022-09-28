@@ -16,10 +16,12 @@
 
 import logging
 import os
+import mock
 import sys
 import tempfile
 import unittest
 
+from turbinia import TurbiniaException
 from turbinia.workers.analysis import yara
 from turbinia.workers.workers_test import TestTurbiniaTaskBase
 
@@ -63,6 +65,15 @@ class YaraAnalysisTaskTest(TestTurbiniaTaskBase):
     self.assertIn('Mimikatz', report)
     self.assertIn('Hadoop', report)
     self.assertIn('Gitlab', report)
+
+  def test_yara_no_stderr(self):
+    """Tests the runFraken method errors with no stderr output."""
+    self.task.execute = mock.MagicMock()
+    # Mocking execute means the stderr file will never get created.
+    self.task.execute.returns = (1, mock.MagicMock())
+
+    self.assertRaises(self.task.runFraken, TurbiniaException)
+    self.assertRaisesRegex(self.task.runFraken, 'Unknown (no stderr)')
 
 
 if __name__ == '__main__':

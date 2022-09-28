@@ -104,9 +104,11 @@ class YaraAnalysisTask(TurbiniaTask):
         cmd, result, stderr_file=stderr_file, stdout_file=stdout_file)
 
     if ret != 0:
-      error = "Unknown"
-      with open(stderr_file, 'r') as f:
-        error = f.readlines()
+      if os.path.exists(stderr_file):
+        with open(stderr_file, 'r') as f:
+          error = f.readlines()
+      else:
+        error = "Unknown (no stderr)"
       raise TurbiniaException(
           'Return code: {0:d}. Error: {1!s}'.format(ret, error))
 
@@ -122,7 +124,9 @@ class YaraAnalysisTask(TurbiniaTask):
       with open(stdout_file, 'r') as fraken_report:
         try:
           fraken_output = json.load(fraken_report)
-        except (TypeError, ValueError, json.JSONDecodeError) as exception:
+        except (
+            TypeError, ValueError, FileNotFoundError,
+            json.JSONDecodeError) as exception:
           raise TurbiniaException(
               'Error decoding JSON output from fraken: {0!s}'.format(exception))
         for row in fraken_output:
