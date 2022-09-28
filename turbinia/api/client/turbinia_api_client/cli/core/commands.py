@@ -43,7 +43,7 @@ def get_config(ctx: click.Context) -> None:
   api_instance = turbinia_configuration_api.TurbiniaConfigurationApi(client)
   try:
     api_response = api_instance.read_config()
-    click.echo(api_response)
+    click.echo(json.dumps(api_response))
   except exceptions.ApiException as exception:
     log.error(
         'Received status code {0!s} when calling get_config: {1!s}'.format(
@@ -101,7 +101,7 @@ def get_jobs(ctx: click.Context) -> None:
   api_instance = turbinia_jobs_api.TurbiniaJobsApi(client)
   try:
     api_response = api_instance.read_jobs()
-    click.echo(api_response)
+    click.echo(json.dumps(api_response))
   except exceptions.ApiException as exception:
     log.error(
         'Received status code {0!s} when calling get_jobs: {1!s}'.format(
@@ -146,7 +146,7 @@ def get_requests_summary(ctx: click.Context, report: bool) -> None:
       report = formatter.SummaryMarkdownReport(api_response).generate_markdown()
       click.echo(report)
     else:
-      click.echo(api_response)
+      click.echo(json.dumps(api_response))
   except exceptions.ApiException as exception:
     log.error(
         'Received status code {0!s} when calling get_requests_summary: {1!s}'
@@ -169,7 +169,7 @@ def get_task(ctx: click.Context, task_id: str, report: bool) -> None:
       report = formatter.TaskMarkdownReport(api_response).generate_markdown()
       click.echo(report)
     else:
-      click.echo(api_response)
+      click.echo(json.dumps(api_response))
   except exceptions.ApiException as exception:
     log.error(
         'Received status code {0!s} when calling get_task: {1!s}'.format(

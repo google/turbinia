@@ -25,7 +25,7 @@ from google.auth import exceptions as google_exceptions
 _LOGGER_FORMAT = '%(asctime)s %(levelname)s %(name)s - %(message)s'
 logging.basicConfig(format=_LOGGER_FORMAT)
 log = logging.getLogger('turbiniamgmt:helpers:auth')
-log.setLevel(logging.DEBUG)
+log.setLevel(logging.INFO)
 
 
 def get_oauth2_credentials():
