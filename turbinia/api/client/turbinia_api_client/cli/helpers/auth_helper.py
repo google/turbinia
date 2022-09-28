@@ -52,7 +52,6 @@ def get_oauth2_credentials():
           'Could not find a valid OAuth2 id_token, checking refresh token.')
       if credentials.refresh_token:
         log.debug('Found a refresh token. Requesting new id_token...')
-        print(credentials)
         try:
           credentials.refresh(Request())
         except google_exceptions.RefreshError as exception:
@@ -68,6 +67,4 @@ def get_oauth2_credentials():
     with open(_CREDENTIALS_FILENAME, 'w', encoding='utf-8') as token:
       token.write(credentials.to_json())
 
-  print(credentials)
-  log.debug(credentials.id_token)
   return credentials.id_token

@@ -16,24 +16,19 @@
 
 import io
 import logging
-import pathlib
 import secrets
-import os
 import uvicorn
 import yaml
 
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.routing import APIRoute
-from fastapi.requests import Request
-from fastapi.responses import Response, RedirectResponse, FileResponse
-from fastapi.staticfiles import StaticFiles
-from starlette_oauth2_api import AuthenticateMiddleware
+from fastapi.responses import Response
 from starlette.middleware.sessions import SessionMiddleware
 from turbinia import config
-from turbinia.api.routes.router import router
 from turbinia.api.routes.auth import auth_router
-from turbinia.api.routes.auth import validate_auth
+from turbinia.api.routes.router import api_router
+from turbinia.api.routes.ui import ui_router
 
 _LOGGER_FORMAT = '%(asctime)s %(levelname)s %(name)s - %(message)s'
 logging.basicConfig(format=_LOGGER_FORMAT)
@@ -44,140 +39,47 @@ log.setLevel(logging.DEBUG)
 def get_application():
   """Returns a FastAPI application object."""
   description = '''Turbinia API server'''
-  _app = FastAPI(
-      title='Turbinia API Server', description=description, version='1.0.0',
-      routes=router.routes + auth_router.routes)
-  return _app
+  fastapi_app = FastAPI(
+      title='Turbinia API Server', description=description, version='1.0.0')
+  return fastapi_app
 
 
-def set_operation_ids(app: FastAPI):
-  """Simplify operation ID names to be used by client generator.
+def set_operation_ids(fastapi_app: FastAPI):
+  """Simplifies operation ID names to be used by client generator.
 
  This method must only be called after all routes have been initialized.
   """
-  for route in app.routes:
+  for route in fastapi_app.routes:
     if isinstance(route, APIRoute):
       route.operation_id = route.name
 
 
-def serve_static_content(app: FastAPI):
-  """Configure the application to serve static content.
-
-  This method must be called after all routes have been initialized.
-  """
-  this_path = pathlib.Path(__file__).parent.resolve()
-  web_content_path = this_path.parent.parent.joinpath('web/dist')
-  css_content_path = web_content_path.joinpath('css')
-  js_content_path = web_content_path.joinpath('js')
-  if web_content_path.exists():
-    try:
-      app.mount(
-          "/web", StaticFiles(directory=web_content_path, html=True),
-          name="web")
-      app.mount("/css", StaticFiles(directory=css_content_path), name="css")
-      app.mount("/js", StaticFiles(directory=js_content_path), name="js")
-    except RuntimeError as exception:
-      log.error(
-          'Unable to serve Web UI static content: {0!s}'.format(exception))
-  else:
-    log.info(
-        'Web UI path {0!s} could not be found. Will not serve Web UI.'.format(
-            web_content_path))
-
-
-def configure_authentication_providers(app: FastAPI):
-  """Configure the application's authentication providers.
-
-  Example provider configuration using starlette-oauth2-pai:
-  """
-  app.add_middleware(
-      AuthenticateMiddleware,
-      providers={
-          'web-ui': {
-              'keys': 'https://www.googleapis.com/oauth2/v3/certs',
-              'issuer': 'https://accounts.google.com',
-              'audience': '<client_Id>',
-          },
-          'cli-client': {
-              'keys': 'https://www.googleapis.com/oauth2/v3/certs',
-              'issuer': 'https://accounts.google.com',
-              'audience': '<client_Id>',
-          }
-      },
-      public_paths={'/login', '/oauth2/callback'},
-  )
-
-
+# Create main FastAPI application.
 app = get_application()
 
+# Clean up OpenAPI operation identifiers.
+set_operation_ids(app)
+
+# Add CORS and Session middlewares.
 app.add_middleware(
     CORSMiddleware, allow_origins=config.API_ALLOWED_ORIGINS,
-    allow_credentials=False, allow_methods=["GET"], allow_headers=["*"],
-    expose_headers=['authorization'])
+    allow_credentials=False, allow_methods=["GET"], allow_headers=["*"])
 
 app.add_middleware(
     SessionMiddleware, secret_key=secrets.token_urlsafe(32), max_age=3600,
     same_site='strict')
 
-set_operation_ids(app)
-
-
-@app.get('/')
-async def root(is_authenticated: bool = Depends(validate_auth)):
-  """Default route."""
-  if is_authenticated:
-    return RedirectResponse('/web')
-  return RedirectResponse('/login')
-
-
-@app.get('/web')
-async def web(is_authenticated: bool = Depends(validate_auth)):
-  """Serves the Web UI main page."""
-  if is_authenticated:
-    this_path = pathlib.Path(__file__).parent.resolve()
-    static_content_path = this_path.parent.parent.joinpath(
-        'web/dist/index.html')
-    response = FileResponse(
-        path=static_content_path, headers={'Cache-Control': 'no-cache'})
-    return response
-  return RedirectResponse('/login')
-
-
-@app.get('/css/{catchall:path}')
-async def serve_css(
-    request: Request, is_authenticated: bool = Depends(validate_auth)):
-  """Serves css content."""
-  this_path = pathlib.Path(__file__).parent.resolve()
-  static_content_path = this_path.parent.parent.joinpath('web/dist/css')
-  if is_authenticated:
-    path = request.path_params["catchall"]
-    file = static_content_path.joinpath(path)
-    if os.path.exists(file):
-      return FileResponse(file)
-
-  return RedirectResponse('/login')
-
-
-@app.get('/js/{catchall:path}')
-async def serve_js(
-    request: Request, is_authenticated: bool = Depends(validate_auth)):
-  """Serves JavaScript content."""
-  this_path = pathlib.Path(__file__).parent.resolve()
-  static_content_path = this_path.parent.parent.joinpath('web/dist/js')
-  if is_authenticated:
-    path = request.path_params["catchall"]
-    file = static_content_path.joinpath(path)
-    if os.path.exists(file):
-      return FileResponse(file)
-
-  return RedirectResponse('/login')
+# Include all the necessary endpoint routers.
+app.include_router(api_router)
+app.include_router(auth_router)
+app.include_router(ui_router)
 
 
 @app.get(
     '/docs/openapi.yaml', tags=['OpenAPI Specification'],
     include_in_schema=False)
 def read_openapi_yaml():
-  """Serve the OpenAPI specification in YAML format."""
+  """Serves the OpenAPI specification in YAML format."""
   openapi_json = app.openapi()
   yaml_s = io.StringIO()
   yaml.dump(openapi_json, yaml_s)
@@ -187,13 +89,12 @@ def read_openapi_yaml():
 class TurbiniaAPIServer:
   """Turbinia API server."""
 
-  def __init__(self, app=None, router=None):
-    self.app = app if app else get_application()
-    self.router = router
-    self.openapi_spec = self.app.openapi()
+  def __init__(self, app):
+    self.app = app
+    print(self.app)
 
   def start(self, app_name: str):
-    """Runs the Turbinia API server
+    """Runs the Turbinia API server.
 
     Args:
       app_name (str): module:app string used by Uvicorn
@@ -206,5 +107,5 @@ class TurbiniaAPIServer:
 
 
 if __name__ == '__main__':
-  api_server = TurbiniaAPIServer(app=app, router=router)
+  api_server = TurbiniaAPIServer(app)
   api_server.start('api_server:app')
