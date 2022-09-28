@@ -18,9 +18,12 @@ import logging
 
 from fastapi import HTTPException, APIRouter
 from fastapi.responses import Response
+from fastapi.requests import Request
+
 from turbinia import config as turbinia_config
 from turbinia import state_manager
 from turbinia.api import utils as api_utils
+from turbinia.api.routes.auth import auth_required
 
 log = logging.getLogger('turbinia:api_server:result')
 
@@ -42,7 +45,8 @@ _ATTACHMENT_RESPONSE = {
 
 @router.get(
     "/task/{task_id}", response_class=Response, responses=_ATTACHMENT_RESPONSE)
-async def get_task_output(task_id: str):
+@auth_required
+async def get_task_output(request: Request, task_id: str):
   """Retrieves a task's output files."""
   # Get the request_id for the task. This is needed to find the right path.
   data = None
@@ -68,7 +72,8 @@ async def get_task_output(task_id: str):
 @router.get(
     "/request/{request_id}", response_class=Response,
     responses=_ATTACHMENT_RESPONSE)
-async def get_request_output(request_id: str):
+@auth_required
+async def get_request_output(request: Request, request_id: str):
   """Retrieve request output."""
   data = api_utils.create_zip(request_id, task_id=None)
 

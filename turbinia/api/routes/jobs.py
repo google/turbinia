@@ -19,9 +19,11 @@ import logging
 
 from fastapi import HTTPException, APIRouter
 from fastapi.responses import JSONResponse
+from fastapi.requests import Request
 
 from turbinia import config as turbinia_config
 from turbinia.jobs import manager as jobs_manager
+from turbinia.api.routes.auth import auth_required
 
 log = logging.getLogger('turbinia:api_server:jobs')
 
@@ -29,7 +31,8 @@ router = APIRouter(prefix='/jobs', tags=['Turbinia Jobs'])
 
 
 @router.get("/")
-async def read_jobs():
+@auth_required
+async def read_jobs(request: Request):
   """Return enabled jobs from the current Turbinia config."""
   try:
     _jobs_manager = jobs_manager.JobsManager()

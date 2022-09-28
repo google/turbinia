@@ -25,7 +25,7 @@ from pydantic import ValidationError
 from turbinia import TurbiniaException, client as turbinia_client
 from turbinia import evidence
 from turbinia.lib import recipe_helpers
-from turbinia.api.schemas import request
+from turbinia.api.schemas import request as turbinia_request
 from turbinia.api.models import request_status
 from turbinia.api.routes.auth import auth_required
 
@@ -63,7 +63,8 @@ async def get_requests_summary(request: Request):
 
 
 @router.get("/{request_id}")
-async def get_request_status(request_id: str):
+@auth_required
+async def get_request_status(request: Request, request_id: str):
   """Retrieves status for a Turbinia Request.
 
   Args:
@@ -91,7 +92,8 @@ async def get_request_status(request_id: str):
 
 
 @router.post("/")
-async def create_request(req: request.Request):
+@auth_required
+async def create_request(request: Request, req: turbinia_request.Request):
   """Create a new Turbinia request.
 
   Args:

@@ -46,14 +46,16 @@ async def read_config(request: Request):
 
 
 @router.get("/evidence")
-async def get_evidence_types():
+@auth_required
+async def get_evidence_types(request: Request):
   """Returns supported Evidence object types and required parameters."""
   attribute_mapping = evidence.map_evidence_attributes()
   return JSONResponse(content=attribute_mapping, status_code=200)
 
 
 @router.get("/evidence/{evidence_name}")
-async def get_evidence_attributes_by_name(evidence_name):
+@auth_required
+async def get_evidence_attributes_by_name(request: Request, evidence_name):
   """Returns supported Evidence object types and required parameters."""
   attribute_mapping = evidence.map_evidence_attributes()
   attribute_mapping = {evidence_name: attribute_mapping.get(evidence_name)}
@@ -65,7 +67,8 @@ async def get_evidence_attributes_by_name(evidence_name):
 
 
 @router.get("/request_options")
-async def get_request_options():
+@auth_required
+async def get_request_options(request: Request):
   """Returns a list BaseRequestOptions attributes."""
   attributes = request_options.BaseRequestOptions.__annotations__
   attributes_dict = {}

@@ -20,6 +20,7 @@ import os
 from google_auth_oauthlib import flow
 from google.oauth2.credentials import Credentials
 from google.auth.transport.requests import Request
+from google.auth import exceptions as google_exceptions
 
 _LOGGER_FORMAT = '%(asctime)s %(levelname)s %(name)s - %(message)s'
 logging.basicConfig(format=_LOGGER_FORMAT)
@@ -51,7 +52,11 @@ def get_oauth2_credentials():
           'Could not find a valid OAuth2 id_token, checking refresh token.')
       if credentials.refresh_token:
         log.debug('Found a refresh token. Requesting new id_token...')
-        credentials.refresh(Request())
+        print(credentials)
+        try:
+          credentials.refresh(Request())
+        except google_exceptions.RefreshError as exception:
+          log.error('{0!s}'.format(exception))
   else:
     # No refresh token, obtain new credentials via OAuth2 flow
     log.info('Could not find existing credentials. Requesting new tokens.')
@@ -63,4 +68,6 @@ def get_oauth2_credentials():
     with open(_CREDENTIALS_FILENAME, 'w', encoding='utf-8') as token:
       token.write(credentials.to_json())
 
+  print(credentials)
+  log.debug(credentials.id_token)
   return credentials.id_token

@@ -46,7 +46,7 @@ def get_config(ctx: click.Context) -> None:
     click.echo(api_response)
   except exceptions.ApiException as exception:
     log.error(
-        'Received status code {0!s} when calling create_request: {1!s}'.format(
+        'Received status code {0!s} when calling get_config: {1!s}'.format(
             exception.status, exception.body))
 
 
@@ -65,8 +65,8 @@ def get_request_result(ctx: click.Context, request_id: str) -> None:
       file.write(api_response.read())
   except exceptions.ApiException as exception:
     log.error(
-        'Received status code {0!s} when calling create_request: {1!s}'.format(
-            exception.status, exception.body))
+        'Received status code {0!s} when calling get_request_result: {1!s}'
+        .format(exception.status, exception.body))
   except OSError as exception:
     log.error('Unable to save file: {0!s}'.format(exception))
 
@@ -87,7 +87,7 @@ def get_task_result(ctx: click.Context, task_id: str) -> None:
       file.write(api_response.read())
   except exceptions.ApiException as exception:
     log.error(
-        'Received status code {0!s} when calling create_request: {1!s}'.format(
+        'Received status code {0!s} when calling get_task_result: {1!s}'.format(
             exception.status, exception.body))
   except OSError as exception:
     log.error('Unable to save file: {0!s}'.format(exception))
@@ -104,7 +104,7 @@ def get_jobs(ctx: click.Context) -> None:
     click.echo(api_response)
   except exceptions.ApiException as exception:
     log.error(
-        'Received status code {0!s} when calling create_request: {1!s}'.format(
+        'Received status code {0!s} when calling get_jobs: {1!s}'.format(
             exception.status, exception.body))
 
 
@@ -127,7 +127,7 @@ def get_request(ctx: click.Context, request_id: str, report: bool) -> None:
       click.echo(json.dumps(api_response))
   except exceptions.ApiException as exception:
     log.error(
-        'Received status code {0!s} when calling create_request: {1!s}'.format(
+        'Received status code {0!s} when calling get_request: {1!s}'.format(
             exception.status, exception.body))
 
 
@@ -149,8 +149,8 @@ def get_requests_summary(ctx: click.Context, report: bool) -> None:
       click.echo(api_response)
   except exceptions.ApiException as exception:
     log.error(
-        'Received status code {0!s} when calling create_request: {1!s}'.format(
-            exception.status, exception.body))
+        'Received status code {0!s} when calling get_requests_summary: {1!s}'
+        .format(exception.status, exception.body))
 
 
 @groups.status_group.command('task')
@@ -172,7 +172,7 @@ def get_task(ctx: click.Context, task_id: str, report: bool) -> None:
       click.echo(api_response)
   except exceptions.ApiException as exception:
     log.error(
-        'Received status code {0!s} when calling create_request: {1!s}'.format(
+        'Received status code {0!s} when calling get_task: {1!s}'.format(
             exception.status, exception.body))
 
 

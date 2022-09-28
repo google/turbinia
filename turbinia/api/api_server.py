@@ -21,13 +21,12 @@ import secrets
 import os
 import uvicorn
 import yaml
-import pkg_resources
 
 from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.routing import APIRoute
 from fastapi.requests import Request
-from fastapi.responses import Response, RedirectResponse, HTMLResponse, FileResponse
+from fastapi.responses import Response, RedirectResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 from starlette_oauth2_api import AuthenticateMiddleware
 from starlette.middleware.sessions import SessionMiddleware
@@ -120,11 +119,7 @@ app.add_middleware(
     SessionMiddleware, secret_key=secrets.token_urlsafe(32), max_age=3600,
     same_site='strict')
 
-#if config.API_AUTHENTICATION_ENABLED:
-#  configure_authentication_providers(app)
-
 set_operation_ids(app)
-#serve_static_content(app)
 
 
 @app.get('/')
@@ -178,6 +173,17 @@ async def serve_js(
   return RedirectResponse('/login')
 
 
+@app.get(
+    '/docs/openapi.yaml', tags=['OpenAPI Specification'],
+    include_in_schema=False)
+def read_openapi_yaml():
+  """Serve the OpenAPI specification in YAML format."""
+  openapi_json = app.openapi()
+  yaml_s = io.StringIO()
+  yaml.dump(openapi_json, yaml_s)
+  return Response(yaml_s.getvalue(), media_type='text/yaml')
+
+
 class TurbiniaAPIServer:
   """Turbinia API server."""
 
@@ -197,17 +203,6 @@ class TurbiniaAPIServer:
     uvicorn.run(
         app_name, host=_config.API_SERVER_ADDRESS, port=_config.API_SERVER_PORT,
         log_level="debug", reload=True)
-
-
-@app.get(
-    '/docs/openapi.yaml', tags=['OpenAPI Specification'],
-    include_in_schema=False)
-def read_openapi_yaml():
-  """Serve the OpenAPI specification in YAML format."""
-  openapi_json = app.openapi()
-  yaml_s = io.StringIO()
-  yaml.dump(openapi_json, yaml_s)
-  return Response(yaml_s.getvalue(), media_type='text/yaml')
 
 
 if __name__ == '__main__':

@@ -21,8 +21,8 @@ import logging
 import json
 import jwt
 import requests
-import google_auth_oauthlib.flow
 
+from google_auth_oauthlib import flow as oauthlib_flow
 from fastapi import HTTPException
 from fastapi import APIRouter
 from fastapi.requests import Request
@@ -30,6 +30,7 @@ from fastapi.responses import RedirectResponse, JSONResponse
 from turbinia import config
 
 log = logging.getLogger('turbinia:api_server')
+log.setLevel(logging.DEBUG)
 
 auth_router = APIRouter(tags=['Turbinia Authentication'])
 
@@ -100,6 +101,7 @@ async def validate_auth_header(request: Request):
       header_value = request.headers.get(header)
       if header_value.startswith('Bearer'):
         bearer_token = header_value.split(' ')[1]
+        log.debug('Found token: {}'.format(bearer_token))
         valid_header = await validate_token(bearer_token)
   return valid_header
 
@@ -167,7 +169,7 @@ async def authorize(request: Request):
   if await validate_auth(request):
     return RedirectResponse(request.url_for('/web'))
 
-  flow = google_auth_oauthlib.flow.Flow.from_client_secrets_file(
+  flow = oauthlib_flow.Flow.from_client_secrets_file(
       _config.WEBUI_CLIENT_SECRETS_FILE, scopes=_config.OIDC_SCOPE)
   flow.redirect_uri = request.url_for('oauth2_callback')
 
@@ -189,7 +191,7 @@ async def oauth2_callback(request: Request):
   if not state:
     raise HTTPException(
         status_code=401, detail='OAuth2 state not found in request.')
-  flow = google_auth_oauthlib.flow.Flow.from_client_secrets_file(
+  flow = oauthlib_flow.Flow.from_client_secrets_file(
       _config.WEBUI_CLIENT_SECRETS_FILE, scopes=_config.OIDC_SCOPE, state=state,
       autogenerate_code_verifier=True)
   flow.redirect_uri = request.url_for('oauth2_callback')

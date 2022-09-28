@@ -21,11 +21,13 @@ from collections import OrderedDict
 
 from fastapi import HTTPException, APIRouter
 from fastapi.responses import JSONResponse
+from fastapi.requests import Request
 from fastapi.encoders import jsonable_encoder
-from pydantic import ValidationError
 
+from pydantic import ValidationError
 from turbinia import state_manager
 from turbinia import config as turbinia_config
+from turbinia.api.routes.auth import auth_required
 
 log = logging.getLogger('turbinia:api_server:task')
 
@@ -33,7 +35,8 @@ router = APIRouter(prefix='/task', tags=['Turbinia Tasks'])
 
 
 @router.get("/{task_id}")
-async def get_task_status(task_id: str):
+@auth_required
+async def get_task_status(request: Request, task_id: str):
   """Retrieve task information."""
   try:
     _state_manager = state_manager.get_state_manager()
