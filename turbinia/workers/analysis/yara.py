@@ -124,9 +124,8 @@ class YaraAnalysisTask(TurbiniaTask):
       with open(stdout_file, 'r') as fraken_report:
         try:
           fraken_output = json.load(fraken_report)
-        except (
-            TypeError, ValueError, FileNotFoundError,
-            json.JSONDecodeError) as exception:
+        except (TypeError, ValueError, FileNotFoundError,
+                json.JSONDecodeError) as exception:
           raise TurbiniaException(
               'Error decoding JSON output from fraken: {0!s}'.format(exception))
         for row in fraken_output:
