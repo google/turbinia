@@ -73,7 +73,7 @@ class YaraAnalysisTaskTest(TestTurbiniaTaskBase):
     self.task.execute.return_value = (1, mock.MagicMock())
 
     self.assertRaisesRegex(
-        TurbiniaException, 'Unknown (no stderr)', self.task.runFraken,
+        TurbiniaException, '.*Unknown (no stderr).*', self.task.runFraken,
         self.result, self.evidence)
 
 
