@@ -70,7 +70,7 @@ class YaraAnalysisTaskTest(TestTurbiniaTaskBase):
     """Tests the runFraken method errors with no stderr output."""
     self.task.execute = mock.MagicMock()
     # Mocking execute means the stderr file will never get created.
-    self.task.execute.returns = (1, mock.MagicMock())
+    self.task.execute.return_value = (1, mock.MagicMock())
 
     self.assertRaisesRegex(
         TurbiniaException, 'Unknown (no stderr)', self.task.runFraken,
