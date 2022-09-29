@@ -49,7 +49,13 @@ class WebshellAnalyzerTask(TurbiniaTask):
     #Create evidence object
     output_evidence = ReportText(source_path=output_file_path)
 
-    (report, priority, summary) = self.find_webshells(result, evidence)
+    try:
+      (report, priority, summary) = self.find_webshells(result, evidence)
+    except TurbiniaException as exception:
+      result.close(
+          self, success=False, status='Unable to run wsa: {0:s}'.format(
+              str(exception)))
+      return result
 
     output_evidence.text_data = report
     result.report_priority = priority
@@ -69,16 +75,14 @@ class WebshellAnalyzerTask(TurbiniaTask):
     stdout_file = os.path.join(
         self.output_dir, '{0:s}_webshells_stdout.log'.format(self.id))
 
-    scan_directory = '/var/'
+    scan_directory = ['/var/']
+
     cmd = [
-        '/opt/webshell-analyzer/bins/linux_wsa', '-dir',
+        '/opt/webshell-analyzer/wsa', '-dir',
         evidence.local_path + scan_directory
     ]
 
-    (ret, result) = self.execute(cmd, result, stdout_file=stdout_file)
-
-    if ret != 0:
-      print('error')
+    result = self.execute(cmd, result, stdout_file=stdout_file)
 
     findings = []
     priority = Priority.LOW

