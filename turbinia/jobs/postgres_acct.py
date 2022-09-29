@@ -15,6 +15,7 @@
 """Job to execute postgresql_acct analysis task."""
 
 from turbinia.evidence import CompressedDirectory
+from turbinia.evidence import ContainerdContainer
 from turbinia.evidence import Directory
 from turbinia.evidence import DiskPartition
 from turbinia.evidence import DockerContainer
@@ -28,7 +29,8 @@ class PostgresAcctAnalysisJob(interface.TurbiniaJob):
   """PostgreSQL Account analysis job."""
 
   evidence_input = [
-      Directory, DiskPartition, CompressedDirectory, DockerContainer
+      Directory, DiskPartition, CompressedDirectory, DockerContainer,
+      ContainerdContainer
   ]
   evidence_output = [ReportText]
 

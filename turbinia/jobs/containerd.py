@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright 2021 Google Inc.
+# Copyright 2022 Google Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,40 +12,37 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Job to execute Yara analysis tasks."""
+"""Job to enumerate and mount containerd containers."""
 
-from turbinia.evidence import CompressedDirectory
-from turbinia.evidence import ContainerdContainer
-from turbinia.evidence import Directory
+from __future__ import unicode_literals
+
 from turbinia.evidence import DiskPartition
-from turbinia.evidence import DockerContainer
-from turbinia.evidence import ReportText
+from turbinia.evidence import ContainerdContainer
 from turbinia.jobs import interface
 from turbinia.jobs import manager
-from turbinia.workers.analysis import yara
+from turbinia.workers.containerd import ContainerdEnumerationTask
 
 
-class YaraAnalysisJob(interface.TurbiniaJob):
-  """Yara analysis job."""
+class ContainerdEnumerationJob(interface.TurbiniaJob):
+  """Containerd enumeration job."""
 
-  evidence_input = [
-      CompressedDirectory, ContainerdContainer, Directory, DiskPartition,
-      DockerContainer
-  ]
-  evidence_output = [ReportText]
+  # Types of evidence that this job will process
+  evidence_input = [DiskPartition]
+  evidence_output = [ContainerdContainer]
 
-  NAME = 'YaraAnalysisJob'
+  NAME = 'ContainerdEnumerationJob'
 
   def create_tasks(self, evidence):
     """Create task.
 
     Args:
-      evidence: List of evidence objects to process
+      evidence: List of evidence objects to process.
+
     Returns:
-        A list of tasks to schedule.
+      A list of tasks to schedule.
     """
-    tasks = [yara.YaraAnalysisTask() for _ in evidence]
+    tasks = [ContainerdEnumerationTask() for _ in evidence]
     return tasks
 
 
-manager.JobsManager.RegisterJob(YaraAnalysisJob)
+manager.JobsManager.RegisterJob(ContainerdEnumerationJob)
