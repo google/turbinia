@@ -61,7 +61,7 @@ def get_oauth2_credentials():
     log.info('Could not find existing credentials. Requesting new tokens.')
     appflow = flow.InstalledAppFlow.from_client_secrets_file(
         _CLIENT_SECRETS_FILENAME, scopes)
-    appflow.run_console()
+    appflow.run_local_server(host="localhost", port=8888)
     credentials = appflow.credentials
     # Save credentials
     with open(_CREDENTIALS_FILENAME, 'w', encoding='utf-8') as token:
