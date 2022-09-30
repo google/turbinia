@@ -39,6 +39,7 @@ RUN cd /oauth2-proxy && curl https://api.github.com/repos/oauth2-proxy/oauth2-pr
 
 RUN cp /oauth2-proxy/oauth2-proxy*.linux-amd64/oauth2-proxy /usr/local/bin/oauth2-proxy
 RUN chmod +x /usr/local/bin/oauth2-proxy
+RUN touch /etc/turbinia/auth.txt
 
 COPY docker/api_server/turbinia_services.conf /etc/supervisor/conf.d/turbinia_services.conf
 
