@@ -70,9 +70,10 @@ def serve_static_content(app: FastAPI):
   if web_content_path.exists():
     try:
       app.mount(
-          "/web", StaticFiles(directory=web_content_path, html=True), name="/")
-      app.mount("/css", StaticFiles(directory=css_content_path), name="/css")
-      app.mount("/js", StaticFiles(directory=js_content_path), name="/js")
+          "/web", StaticFiles(directory=web_content_path, html=True),
+          name="web")
+      app.mount("/css", StaticFiles(directory=css_content_path), name="css")
+      app.mount("/js", StaticFiles(directory=js_content_path), name="js")
     except RuntimeError as exception:
       log.error(
           'Unable to serve Web UI static content: {0!s}'.format(exception))

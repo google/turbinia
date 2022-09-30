@@ -27,6 +27,8 @@ import mock
 from fastapi.testclient import TestClient
 
 from turbinia.api.api_server import app
+from turbinia.api.routes.router import api_router
+
 from turbinia import config as turbinia_config
 from turbinia import state_manager
 from turbinia.jobs import manager as jobs_manager
@@ -82,10 +84,20 @@ class testTurbiniaAPIServer(unittest.TestCase):
     self.client = TestClient(app)
     self.state_manager = self._get_state_manager()
 
-  def testReadRoot(self):
-    """Test root route."""
-    response = self.client.get("/")
-    self.assertEqual(response.status_code, 200)
+  def testWebMounts(self):
+    """Test Web UI routes."""
+    routes = self.client.app.routes
+    route_names = [route.name for route in routes]
+    self.assertIn('root', route_names)
+    self.assertIn('web', route_names)
+    self.assertIn('js', route_names)
+    self.assertIn('css', route_names)
+
+  def testAPIroutes(self):
+    """Test Web UI routes."""
+    api_routes = api_router.routes
+    for route in api_routes:
+      self.assertIn(route, self.client.app.routes)
 
   def testGetConfig(self):
     """Test getting current Turbinia server config."""
