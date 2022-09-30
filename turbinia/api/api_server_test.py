@@ -28,6 +28,7 @@ from fastapi.testclient import TestClient
 
 from turbinia.api.api_server import app
 from turbinia.api.routes.router import api_router
+from turbinia.api.routes.ui import ui_router
 
 from turbinia import config as turbinia_config
 from turbinia import state_manager
@@ -84,14 +85,11 @@ class testTurbiniaAPIServer(unittest.TestCase):
     self.client = TestClient(app)
     self.state_manager = self._get_state_manager()
 
-  def testWebMounts(self):
+  def testWebRoutes(self):
     """Test Web UI routes."""
-    routes = self.client.app.routes
-    route_names = [route.name for route in routes]
-    self.assertIn('root', route_names)
-    self.assertIn('web', route_names)
-    self.assertIn('js', route_names)
-    self.assertIn('css', route_names)
+    ui_routes = ui_router.routes
+    for route in ui_routes:
+      self.assertIn(route, self.client.app.routes)
 
   def testAPIroutes(self):
     """Test API server routes."""
