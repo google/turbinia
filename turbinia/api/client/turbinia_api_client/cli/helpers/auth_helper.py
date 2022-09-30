@@ -30,12 +30,9 @@ log.setLevel(logging.INFO)
 
 def get_oauth2_credentials():
   """Authenticates the user using Google OAuth services."""
-  scopes = [
-      'openid', 'https://www.googleapis.com/auth/userinfo.email',
-      'https://www.googleapis.com/auth/userinfo.profile'
-  ]
-  _CREDENTIALS_FILENAME = 'credentials.json'
-  _CLIENT_SECRETS_FILENAME = 'client_secrets.json'
+  scopes = ['openid', 'https://www.googleapis.com/auth/userinfo.email']
+  _CREDENTIALS_FILENAME = '.credentials.json'
+  _CLIENT_SECRETS_FILENAME = '.client_secrets.json'
 
   credentials = None
 
@@ -59,8 +56,13 @@ def get_oauth2_credentials():
   else:
     # No refresh token, obtain new credentials via OAuth2 flow
     log.info('Could not find existing credentials. Requesting new tokens.')
-    appflow = flow.InstalledAppFlow.from_client_secrets_file(
-        _CLIENT_SECRETS_FILENAME, scopes)
+    try:
+      appflow = flow.InstalledAppFlow.from_client_secrets_file(
+          _CLIENT_SECRETS_FILENAME, scopes)
+    except FileNotFoundError as exception:
+      log.error(str(exception))
+      exit(1)
+
     appflow.run_local_server(host="localhost", port=8888)
     credentials = appflow.credentials
     # Save credentials

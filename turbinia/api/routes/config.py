@@ -24,15 +24,13 @@ from fastapi.requests import Request
 from turbinia import config as turbinia_config
 from turbinia import evidence
 from turbinia.api.schemas import request_options
-from turbinia.api.routes.auth import auth_required
 
-log = logging.getLogger('turbinia:api_server:config')
+log = logging.getLogger('turbinia:api_server')
 
 router = APIRouter(prefix='/config', tags=['Turbinia Configuration'])
 
 
 @router.get("/")
-@auth_required
 async def read_config(request: Request):
   """Retrieve turbinia config."""
   try:
@@ -46,7 +44,6 @@ async def read_config(request: Request):
 
 
 @router.get("/evidence")
-@auth_required
 async def get_evidence_types(request: Request):
   """Returns supported Evidence object types and required parameters."""
   attribute_mapping = evidence.map_evidence_attributes()
@@ -54,7 +51,6 @@ async def get_evidence_types(request: Request):
 
 
 @router.get("/evidence/{evidence_name}")
-@auth_required
 async def get_evidence_attributes_by_name(request: Request, evidence_name):
   """Returns supported Evidence object types and required parameters."""
   attribute_mapping = evidence.map_evidence_attributes()
@@ -67,7 +63,6 @@ async def get_evidence_attributes_by_name(request: Request, evidence_name):
 
 
 @router.get("/request_options")
-@auth_required
 async def get_request_options(request: Request):
   """Returns a list BaseRequestOptions attributes."""
   attributes = request_options.BaseRequestOptions.__annotations__

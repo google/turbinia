@@ -113,26 +113,11 @@ API_SERVER_ADDRESS = '0.0.0.0'
 API_SERVER_PORT = 8000
 
 # Allowed CORS origins
-API_ALLOWED_ORIGINS = ['http;//localhost:8000', 'http://localhost']
+API_ALLOWED_ORIGINS = ['http;//localhost:8000']
 
 # Enable/Disable API authentication. This will determine whether the API server will
 # check for OAuth 2.0 bearer tokens in the 'Authorization' header.
 API_AUTHENTICATION_ENABLED = False
-
-OIDC_SCOPE = [
-    'openid',
-    'https://www.googleapis.com/auth/userinfo.profile',
-    'https://www.googleapis.com/auth/userinfo.email',
-]
-
-OIDC_KEYS = 'https://www.googleapis.com/oauth2/v3/certs'
-
-OIDC_ISSUER = 'https://accounts.google.com'
-
-OIDC_VALID_CLIENT_IDS = ['']
-AUTHORIZED_EMAILS = ['']
-
-WEBUI_CLIENT_SECRETS_FILE = '/tmp/test.json'
 
 ################################################################################
 #                         External Dependency Configurations

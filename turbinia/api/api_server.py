@@ -16,70 +16,92 @@
 
 import io
 import logging
-import secrets
-import uvicorn
+import pathlib
 import yaml
+import uvicorn
 
 from fastapi import FastAPI
+from fastapi.responses import Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.routing import APIRoute
-from fastapi.responses import Response
-from starlette.middleware.sessions import SessionMiddleware
+from fastapi.staticfiles import StaticFiles
+
 from turbinia import config
-from turbinia.api.routes.auth import auth_router
 from turbinia.api.routes.router import api_router
 from turbinia.api.routes.ui import ui_router
 
-_LOGGER_FORMAT = '%(asctime)s %(levelname)s %(name)s - %(message)s'
-logging.basicConfig(format=_LOGGER_FORMAT)
+from turbinia.config import logger
+
+logger.setup()
 log = logging.getLogger('turbinia:api_server')
-log.setLevel(logging.DEBUG)
 
 
 def get_application():
   """Returns a FastAPI application object."""
   description = '''Turbinia API server'''
-  fastapi_app = FastAPI(
-      title='Turbinia API Server', description=description, version='1.0.0')
-  return fastapi_app
+  _app = FastAPI(
+      title='Turbinia API Server', description=description, version='1.0.0',
+      license_info={
+          'name': 'Apache License 2.0',
+          'url': 'https://www.apache.org/licenses/LICENSE-2.0.html'
+      })
+  return _app
 
 
-def set_operation_ids(fastapi_app: FastAPI):
-  """Simplifies operation ID names to be used by client generator.
+def set_operation_ids(app: FastAPI):
+  """Simplify operation ID names to be used by client generator.
 
  This method must only be called after all routes have been initialized.
   """
-  for route in fastapi_app.routes:
+  for route in app.routes:
     if isinstance(route, APIRoute):
       route.operation_id = route.name
 
 
-# Create main FastAPI application.
+def serve_static_content(app: FastAPI):
+  """Configure the application to serve static content.
+
+  This method must be called after all routes have been initialized.
+  """
+  this_path = pathlib.Path(__file__).parent.resolve()
+  web_content_path = this_path.parent.parent.joinpath('web/dist')
+  css_content_path = web_content_path.joinpath('css')
+  js_content_path = web_content_path.joinpath('js')
+  if web_content_path.exists():
+    try:
+      app.mount(
+          "/web", StaticFiles(directory=web_content_path, html=True), name="/")
+      app.mount("/css", StaticFiles(directory=css_content_path), name="/css")
+      app.mount("/js", StaticFiles(directory=js_content_path), name="/js")
+    except RuntimeError as exception:
+      log.error(
+          'Unable to serve Web UI static content: {0!s}'.format(exception))
+  else:
+    log.info(
+        'Web UI path {0!s} could not be found. Will not serve Web UI.'.format(
+            web_content_path))
+
+
 app = get_application()
 
-# Clean up OpenAPI operation identifiers.
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=config.API_ALLOWED_ORIGINS,
+    allow_credentials=False,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 set_operation_ids(app)
+serve_static_content(app)
 
-# Add CORS and Session middlewares.
-app.add_middleware(
-    CORSMiddleware, allow_origins=config.API_ALLOWED_ORIGINS,
-    allow_credentials=False, allow_methods=["GET"], allow_headers=["*"])
-
-app.add_middleware(
-    SessionMiddleware, secret_key=secrets.token_urlsafe(32), max_age=3600,
-    same_site='strict')
-
-# Include all the necessary endpoint routers.
 app.include_router(api_router)
-app.include_router(auth_router)
 app.include_router(ui_router)
 
 
-@app.get(
-    '/docs/openapi.yaml', tags=['OpenAPI Specification'],
-    include_in_schema=False)
+@app.get('/openapi.yaml', tags=['OpenAPI Specification'])
 def read_openapi_yaml():
-  """Serves the OpenAPI specification in YAML format."""
+  """Serve the OpenAPI specification in YAML format."""
   openapi_json = app.openapi()
   yaml_s = io.StringIO()
   yaml.dump(openapi_json, yaml_s)
@@ -89,12 +111,11 @@ def read_openapi_yaml():
 class TurbiniaAPIServer:
   """Turbinia API server."""
 
-  def __init__(self, app):
-    self.app = app
-    print(self.app)
+  def __init__(self, app=None):
+    self.app = app if app else get_application()
 
   def start(self, app_name: str):
-    """Runs the Turbinia API server.
+    """Runs the Turbinia API server
 
     Args:
       app_name (str): module:app string used by Uvicorn
@@ -103,9 +124,9 @@ class TurbiniaAPIServer:
     _config = config.LoadConfig()
     uvicorn.run(
         app_name, host=_config.API_SERVER_ADDRESS, port=_config.API_SERVER_PORT,
-        log_level="debug", reload=True)
+        log_level="info", reload=True)
 
 
 if __name__ == '__main__':
-  api_server = TurbiniaAPIServer(app)
+  api_server = TurbiniaAPIServer(app=app)
   api_server.start('api_server:app')

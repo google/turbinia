@@ -19,7 +19,6 @@ import logging
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 from fastapi.requests import Request
-from turbinia.api.routes.auth import auth_required
 
 log = logging.getLogger('turbinia:api_server:logs')
 
@@ -27,7 +26,6 @@ router = APIRouter(prefix='/logs', tags=['Logs'])
 
 
 @router.get("/{query}")
-@auth_required
 async def get_logs(request: Request, query: str):
   """Retrieve log data."""
   return JSONResponse(

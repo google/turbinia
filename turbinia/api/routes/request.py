@@ -27,14 +27,12 @@ from turbinia import evidence
 from turbinia.lib import recipe_helpers
 from turbinia.api.schemas import request as turbinia_request
 from turbinia.api.models import request_status
-from turbinia.api.routes.auth import auth_required
 
 log = logging.getLogger('turbinia:api_server:models:request')
 router = APIRouter(prefix="/request", tags=["Turbinia Requests"])
 
 
 @router.get("/summary")
-@auth_required
 async def get_requests_summary(request: Request):
   """Retrieves a summary of all Turbinia requests.
 
@@ -63,7 +61,6 @@ async def get_requests_summary(request: Request):
 
 
 @router.get("/{request_id}")
-@auth_required
 async def get_request_status(request: Request, request_id: str):
   """Retrieves status for a Turbinia Request.
 
@@ -92,7 +89,6 @@ async def get_request_status(request: Request, request_id: str):
 
 
 @router.post("/")
-@auth_required
 async def create_request(request: Request, req: turbinia_request.Request):
   """Create a new Turbinia request.
 

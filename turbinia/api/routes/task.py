@@ -27,7 +27,6 @@ from fastapi.encoders import jsonable_encoder
 from pydantic import ValidationError
 from turbinia import state_manager
 from turbinia import config as turbinia_config
-from turbinia.api.routes.auth import auth_required
 
 log = logging.getLogger('turbinia:api_server:task')
 
@@ -35,7 +34,6 @@ router = APIRouter(prefix='/task', tags=['Turbinia Tasks'])
 
 
 @router.get("/{task_id}")
-@auth_required
 async def get_task_status(request: Request, task_id: str):
   """Retrieve task information."""
   try:
