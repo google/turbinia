@@ -85,8 +85,7 @@ class testTurbiniaAPIServer(unittest.TestCase):
   def testReadRoot(self):
     """Test root route."""
     response = self.client.get("/")
-    self.assertEqual(response.status_code, 404)
-    self.assertEqual(response.json(), {"detail": "Not Found"})
+    self.assertEqual(response.status_code, 200)
 
   def testGetConfig(self):
     """Test getting current Turbinia server config."""
