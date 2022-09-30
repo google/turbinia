@@ -11,6 +11,9 @@ RUN rm /usr/local/bin/turbiniactl
 RUN mkdir /evidence && chmod 777 /evidence
 RUN mkdir -p /tmp/turbinia-mounts && chmod 777 /tmp/turbinia-mounts
 
+# Run apt-update before installing any packages
+RUN apt-get update -y
+
 # Install pylint, yapf and test tools
 RUN pip install pylint yapf
 RUN pip install mock nose coverage tox
