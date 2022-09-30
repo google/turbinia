@@ -30,6 +30,7 @@ from turbinia import config
 from turbinia import TurbiniaException
 from turbinia.lib.docker_manager import GetDockerPath
 from turbinia.processors import archive
+from turbinia.processors import containerd
 from turbinia.processors import docker
 from turbinia.processors import mount_local
 from turbinia.processors import resource_manager
@@ -47,6 +48,10 @@ def evidence_class_names(all_classes=False):
   Args:
     all_classes (bool): Flag to determine whether to include all classes
         in the module.
+  
+  Returns:
+    class_names (list[str]): A list of class names within the Evidence module,
+        minus the ignored class names.
   """
   predicate = lambda member: inspect.isclass(member) and not inspect.isbuiltin(
       member)
@@ -200,15 +205,24 @@ class Evidence:
         to the saved_path location.
     source (str): String indicating where evidence came from (including tool
         version that created it, if appropriate).
-    local_path (str): Path to the processed data (can be a blockdevice or a
-        mounted directory, etc).  This is the path that most Tasks should use to
-        access evidence after it's been processed on the worker (i.e. when the
-        Tasks `run()` method is called).  The last pre-processor to run should
-        set this path.
+    local_path (str): Generic path to the evidence data after pre-processing
+        has been run.  This is the path that most Tasks and any code that runs
+        after the pre-processors should use to access evidence. Depending on
+        the pre-processors and `REQUIRED_STATE` for the Task being run, this
+        could point to a blockdevice or a mounted directory. The last
+        pre-processor to run should always set this path. For example if the
+        Evidence is a `RawDisk`, the `source_path` will be a path to the image
+        file, then the pre-processors will (optionally, depending on the Task
+        requirements) create a loop device and mount it which will set the
+        `device_path` and `mount_path` respectively. After that, the
+        `local_path` should point to whatever path the last pre-processor has
+        created, in this case the mount_path.
     source_path (str): Path to the original un-processed source data for the
         Evidence.  This is the path that Evidence should be created and set up
-        with initially.  Tasks should generally not use this path, but instead
-        use the `local_path`.
+        with initially and used any time prior to when the pre-processors run.
+        Tasks should generally not use `source_path`, but instead use the
+        `local_path` (or other more specific paths like `device_path` or
+        `mount_path` depending on the Task requirements).
     mount_path (str): Path to a mounted file system (if relevant).
     credentials (list): Decryption keys for encrypted evidence.
     tags (dict): Extra tags associated with this evidence.
@@ -235,9 +249,9 @@ class Evidence:
   # The list of attributes a given piece of Evidence requires to be set
   REQUIRED_ATTRIBUTES = []
 
-  # An optional list of attributes that are generally used to describe
+  # An optional set of attributes that are generally used to describe
   # a given piece of Evidence.
-  OPTIONAL_ATTRIBUTES = ['name', 'source', 'description', 'tags']
+  OPTIONAL_ATTRIBUTES = {'name', 'source', 'description', 'tags'}
 
   # The list of EvidenceState states that the Evidence supports in its
   # pre/post-processing (e.g. MOUNTED, ATTACHED, etc).  See `preprocessor()`
@@ -689,8 +703,20 @@ class DiskPartition(Evidence):
       lv_uuid=None, path_spec=None, important=True, *args, **kwargs):
     """Initialization for raw volume evidence object."""
     self.partition_location = partition_location
-    self.partition_offset = partition_offset
-    self.partition_size = partition_size
+    if partition_offset:
+      try:
+        self.partition_offset = int(partition_offset)
+      except ValueError as exception:
+        log.error(
+            'Unable to cast partition_offset attribute to integer. {0!s}'
+            .format(exception))
+    if partition_size:
+      try:
+        self.partition_size = int(partition_size)
+      except ValueError as exception:
+        log.error(
+            'Unable to cast partition_size attribute to integer. {0!s}'.format(
+                exception))
     self.lv_uuid = lv_uuid
     self.path_spec = path_spec
     self.important = important
@@ -811,6 +837,7 @@ class GoogleCloudDisk(Evidence):
     self.cloud_only = True
     self.resource_tracked = True
     self.resource_id = self.disk_name
+    self.device_path = None
 
   def _preprocess(self, _, required_states):
     # The GoogleCloudDisk should never need to be mounted unless it has child
@@ -858,10 +885,6 @@ class GoogleCloudDiskRawEmbedded(GoogleCloudDisk):
         project=project, zone=zone, disk_name=disk_name, mount_partition=1,
         *args, **kwargs)
     self.embedded_path = embedded_path
-    self.project = project
-    self.zone = zone
-    self.disk_name = disk_name
-    self.mount_partition = mount_partition
     # This Evidence needs to have a GoogleCloudDisk as a parent
     self.context_dependent = True
 
@@ -1061,7 +1084,7 @@ class EwfDisk(Evidence):
   """Evidence object for a EWF based evidence.
 
   Attributes:
-    source_path (str): Path to the mounted loop device.
+    device_path (str): Path to a relevant 'raw' data source (ie: a block.
     ewf_path (str): Path to mounted EWF image.
     ewf_mount_path (str): Path to EWF mount directory.
   """
@@ -1090,3 +1113,53 @@ class EwfDisk(Evidence):
     if self.state[EvidenceState.ATTACHED]:
       self.state[EvidenceState.ATTACHED] = False
       mount_local.PostprocessUnmountPath(self.ewf_mount_path)
+
+
+class ContainerdContainer(Evidence):
+  """Evidence object for a containerd evidence.
+
+  Attributes:
+    namespace (str): Namespace of the container to be mounted.
+    container_id (str): ID of the container to be mounted.
+    _image_path (str): Path where disk image is mounted.
+    _container_fs_path (str): Path where containerd filesystem is mounted.
+  """
+
+  POSSIBLE_STATES = [EvidenceState.CONTAINER_MOUNTED]
+
+  def __init__(self, namespace=None, container_id=None, *args, **kwargs):
+    """Initialization of containerd container."""
+    super(ContainerdContainer, self).__init__(*args, **kwargs)
+    self.namespace = namespace
+    self.container_id = container_id
+    self._image_path = None
+    self._container_fs_path = None
+
+    self.context_dependent = True
+
+  @property
+  def name(self):
+    if self._name:
+      return self._name
+
+    if self.parent_evidence:
+      return ':'.join((self.parent_evidence.name, self.container_id))
+    else:
+      return ':'.join((self.type, self.container_id))
+
+  def _preprocess(self, _, required_states):
+    if EvidenceState.CONTAINER_MOUNTED in required_states:
+      self._image_path = self.parent_evidence.mount_path
+
+      # Mount containerd container
+      self._container_fs_path = containerd.PreprocessMountContainerdFS(
+          self._image_path, self.namespace, self.container_id)
+      self.mount_path = self._container_fs_path
+      self.local_path = self.mount_path
+      self.state[EvidenceState.CONTAINER_MOUNTED] = True
+
+  def _postprocess(self):
+    if self.state[EvidenceState.CONTAINER_MOUNTED]:
+      # Unmount the container
+      mount_local.PostprocessUnmountPath(self._container_fs_path)
+      self.state[EvidenceState.CONTAINER_MOUNTED] = False

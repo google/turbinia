@@ -25,6 +25,7 @@ if [[ "$*" == *--help ||  "$*" == *-h ]] ; then
   echo "--build-experimental           Deploy Turbinia experimental docker image"
   echo "--no-cluster                   Do not create the cluster"
   echo "--no-filestore                 Do not deploy Turbinia Filestore"
+  echo "--deploy-controller            Deploy Turbinia controller for load testing and troubleshooting" 
   echo "--deploy-dfdewey               Deploy dfDewey datastores"
   exit 1
 fi
@@ -114,6 +115,7 @@ echo "Deploying cluster to project $DEVSHELL_PROJECT_ID"
 # Setup appropriate directories and copy of deployment templates and Turbinia config
 echo "Copying over template deployment files to $DEPLOYMENT_FOLDER"
 mkdir -p $DEPLOYMENT_FOLDER
+cp common/* $DEPLOYMENT_FOLDER
 cp celery/* $DEPLOYMENT_FOLDER
 if [[ "$*" == *--deploy-dfdewey* ]] ; then
   cp dfdewey/* $DEPLOYMENT_FOLDER
@@ -206,6 +208,12 @@ fi
 # Deploy to cluster
 echo "Deploying Turbinia to $CLUSTER_NAME cluster"
 ./setup-celery.sh $TURBINIA_CONFIG
+
+# Deploy Turbinia Controller
+if [[ "$*" == *--deploy-controller* ]] ; then
+  echo "--deploy-controller specified. Deploying Turbinia controller."
+  kubectl create -f turbinia-controller.yaml
+fi
 
 # Deploy dfDewey
 if [[ "$*" == *--deploy-dfdewey* ]] ; then
