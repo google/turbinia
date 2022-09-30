@@ -26,7 +26,7 @@ from turbinia import config as turbinia_config
 log = logging.getLogger('turbinia:api_server:utils')
 
 
-def create_zip(request_id: str, task_id: str):
+def create_zip(request_id: str, task_id: str) -> bytes:
   """Compress a Turbinia request or task's output directories into a zip file.
 
   Args:
@@ -34,7 +34,7 @@ def create_zip(request_id: str, task_id: str):
     task_id (str): Turbinia task identifier.
 
   Returns:
-    A zip compressed bytes stream
+    bytes: A zip compressed bytes stream
 
   Raises:
     HTTPException if the request/task output paths could not be found

@@ -94,7 +94,7 @@ class testTurbiniaAPIServer(unittest.TestCase):
     self.assertIn('css', route_names)
 
   def testAPIroutes(self):
-    """Test Web UI routes."""
+    """Test API server routes."""
     api_routes = api_router.routes
     for route in api_routes:
       self.assertIn(route, self.client.app.routes)

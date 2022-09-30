@@ -36,19 +36,19 @@ logger.setup()
 log = logging.getLogger('turbinia:api_server')
 
 
-def get_application():
+def get_application() -> FastAPI:
   """Returns a FastAPI application object."""
-  description = '''Turbinia API server'''
-  _app = FastAPI(
+  description: str = 'Turbinia API server'
+  fastapi_app = FastAPI(
       title='Turbinia API Server', description=description, version='1.0.0',
       license_info={
           'name': 'Apache License 2.0',
           'url': 'https://www.apache.org/licenses/LICENSE-2.0.html'
       })
-  return _app
+  return fastapi_app
 
 
-def set_operation_ids(app: FastAPI):
+def set_operation_ids(app: FastAPI) -> None:
   """Simplify operation ID names to be used by client generator.
 
  This method must only be called after all routes have been initialized.
@@ -58,15 +58,15 @@ def set_operation_ids(app: FastAPI):
       route.operation_id = route.name
 
 
-def serve_static_content(app: FastAPI):
+def serve_static_content(app: FastAPI) -> None:
   """Configure the application to serve static content.
 
   This method must be called after all routes have been initialized.
   """
-  this_path = pathlib.Path(__file__).parent.resolve()
-  web_content_path = this_path.parent.parent.joinpath('web/dist')
-  css_content_path = web_content_path.joinpath('css')
-  js_content_path = web_content_path.joinpath('js')
+  this_path: pathlib.Path = pathlib.Path(__file__).parent.resolve()
+  web_content_path: pathlib.Path = this_path.parent.parent.joinpath('web/dist')
+  css_content_path: pathlib.Path = web_content_path.joinpath('css')
+  js_content_path: pathlib.Path = web_content_path.joinpath('js')
   if web_content_path.exists():
     try:
       app.mount(
@@ -113,7 +113,7 @@ class TurbiniaAPIServer:
   """Turbinia API server."""
 
   def __init__(self, app=None):
-    self.app = app if app else get_application()
+    self.app: FastAPI = app if app else get_application()
 
   def start(self, app_name: str):
     """Runs the Turbinia API server
@@ -122,7 +122,7 @@ class TurbiniaAPIServer:
       app_name (str): module:app string used by Uvicorn
           to start the HTTP server.
     """
-    _config = config.LoadConfig()
+    _config: config = config.LoadConfig()
     uvicorn.run(
         app_name, host=_config.API_SERVER_ADDRESS, port=_config.API_SERVER_PORT,
         log_level="info", reload=True)

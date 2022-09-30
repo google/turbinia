@@ -33,10 +33,10 @@ router = APIRouter(prefix='/jobs', tags=['Turbinia Jobs'])
 async def read_jobs(request: Request):
   """Return enabled jobs from the current Turbinia config."""
   try:
-    _jobs_manager = jobs_manager.JobsManager()
-    registered_jobs = set(_jobs_manager.GetJobNames())
-    disabled_jobs = set(turbinia_config.CONFIG.DISABLED_JOBS)
-    enabled_jobs = registered_jobs.difference(disabled_jobs)
+    _jobs_manager: jobs_manager.JobsManager = jobs_manager.JobsManager()
+    registered_jobs: set = set(_jobs_manager.GetJobNames())
+    disabled_jobs: set = set(turbinia_config.CONFIG.DISABLED_JOBS)
+    enabled_jobs: set = registered_jobs.difference(disabled_jobs)
 
     if not registered_jobs:
       raise HTTPException(status_code=404, detail='No registered jobs found.')

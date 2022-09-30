@@ -56,7 +56,7 @@ async def get_task_output(request: Request, task_id: str):
         status_code=404, detail='Task {0:s} not found.'.format(task_id))
   request_id = tasks[0].get('request_id')
   if request_id:
-    data = api_utils.create_zip(request_id, task_id)
+    data: bytes = api_utils.create_zip(request_id, task_id)
 
   if not data:
     raise HTTPException(
@@ -72,7 +72,7 @@ async def get_task_output(request: Request, task_id: str):
     responses=_ATTACHMENT_RESPONSE)
 async def get_request_output(request: Request, request_id: str):
   """Retrieve request output."""
-  data = api_utils.create_zip(request_id, task_id=None)
+  data: bytes = api_utils.create_zip(request_id, task_id=None)
 
   if not data:
     raise HTTPException(
