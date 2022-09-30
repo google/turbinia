@@ -58,31 +58,6 @@ def set_operation_ids(app: FastAPI) -> None:
       route.operation_id = route.name
 
 
-def serve_static_content(app: FastAPI) -> None:
-  """Configure the application to serve static content.
-
-  This method must be called after all routes have been initialized.
-  """
-  this_path: pathlib.Path = pathlib.Path(__file__).parent.resolve()
-  web_content_path: pathlib.Path = this_path.parent.parent.joinpath('web/dist')
-  css_content_path: pathlib.Path = web_content_path.joinpath('css')
-  js_content_path: pathlib.Path = web_content_path.joinpath('js')
-  if web_content_path.exists():
-    try:
-      app.mount(
-          "/web", StaticFiles(directory=web_content_path, html=True),
-          name="web")
-      app.mount("/css", StaticFiles(directory=css_content_path), name="css")
-      app.mount("/js", StaticFiles(directory=js_content_path), name="js")
-    except RuntimeError as exception:
-      log.error(
-          'Unable to serve Web UI static content: {0!s}'.format(exception))
-  else:
-    log.info(
-        'Web UI path {0!s} could not be found. Will not serve Web UI.'.format(
-            web_content_path))
-
-
 app = get_application()
 
 app.add_middleware(
@@ -94,7 +69,6 @@ app.add_middleware(
 )
 
 set_operation_ids(app)
-#serve_static_content(app)
 
 app.include_router(api_router)
 app.include_router(ui_router)

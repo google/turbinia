@@ -16,7 +16,7 @@
 
 import os
 import pathlib
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from fastapi.requests import Request
 from fastapi.responses import RedirectResponse, FileResponse
 
@@ -40,16 +40,20 @@ async def web(request: Request):
         path=static_content_path, headers={'Cache-Control': 'no-cache'})
     return response
 
+  raise HTTPException(status_code=404, detail='Not found')
+
 
 @ui_router.get('/css/{catchall:path}', name='css')
 async def serve_css(request: Request):
-  """Serves css content."""
+  """Serves CSS content."""
   this_path = pathlib.Path(__file__).parent.resolve()
   static_content_path = this_path.parent.parent.parent.joinpath('web/dist/css')
   path = request.path_params["catchall"]
   file = static_content_path.joinpath(path)
   if os.path.exists(file):
     return FileResponse(file)
+
+  raise HTTPException(status_code=404, detail='Not found')
 
 
 @ui_router.get('/js/{catchall:path}', name='js')
@@ -61,3 +65,5 @@ async def serve_js(request: Request):
   file = static_content_path.joinpath(path)
   if os.path.exists(file):
     return FileResponse(file)
+
+  raise HTTPException(status_code=404, detail='Not found')
