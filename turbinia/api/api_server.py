@@ -94,7 +94,7 @@ app.add_middleware(
 )
 
 set_operation_ids(app)
-serve_static_content(app)
+#serve_static_content(app)
 
 app.include_router(api_router)
 app.include_router(ui_router)

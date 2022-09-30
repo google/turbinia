@@ -14,8 +14,11 @@
 # limitations under the License.
 """Turbinia Web UI routes."""
 
+import os
+import pathlib
 from fastapi import APIRouter
-from fastapi.responses import RedirectResponse
+from fastapi.requests import Request
+from fastapi.responses import RedirectResponse, FileResponse
 
 ui_router = APIRouter(tags=['Turbinia Web UI'])
 
@@ -24,3 +27,37 @@ ui_router = APIRouter(tags=['Turbinia Web UI'])
 async def root():
   """Default route."""
   return RedirectResponse('/web')
+
+
+@ui_router.get('/web', name='web')
+async def web(request: Request):
+  """Serves the Web UI main page."""
+  this_path = pathlib.Path(__file__).parent.resolve()
+  static_content_path = this_path.parent.parent.parent.joinpath(
+      'web/dist/index.html')
+  if os.path.exists(static_content_path):
+    response = FileResponse(
+        path=static_content_path, headers={'Cache-Control': 'no-cache'})
+    return response
+
+
+@ui_router.get('/css/{catchall:path}', name='css')
+async def serve_css(request: Request):
+  """Serves css content."""
+  this_path = pathlib.Path(__file__).parent.resolve()
+  static_content_path = this_path.parent.parent.parent.joinpath('web/dist/css')
+  path = request.path_params["catchall"]
+  file = static_content_path.joinpath(path)
+  if os.path.exists(file):
+    return FileResponse(file)
+
+
+@ui_router.get('/js/{catchall:path}', name='js')
+async def serve_js(request: Request):
+  """Serves JavaScript content."""
+  this_path = pathlib.Path(__file__).parent.resolve()
+  static_content_path = this_path.parent.parent.parent.joinpath('web/dist/js')
+  path = request.path_params["catchall"]
+  file = static_content_path.joinpath(path)
+  if os.path.exists(file):
+    return FileResponse(file)
