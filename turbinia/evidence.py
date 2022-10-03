@@ -30,6 +30,7 @@ from turbinia import config
 from turbinia import TurbiniaException
 from turbinia.lib.docker_manager import GetDockerPath
 from turbinia.processors import archive
+from turbinia.processors import containerd
 from turbinia.processors import docker
 from turbinia.processors import mount_local
 from turbinia.processors import resource_manager
@@ -1111,3 +1112,53 @@ class EwfDisk(Evidence):
     if self.state[EvidenceState.ATTACHED]:
       self.state[EvidenceState.ATTACHED] = False
       mount_local.PostprocessUnmountPath(self.ewf_mount_path)
+
+
+class ContainerdContainer(Evidence):
+  """Evidence object for a containerd evidence.
+
+  Attributes:
+    namespace (str): Namespace of the container to be mounted.
+    container_id (str): ID of the container to be mounted.
+    _image_path (str): Path where disk image is mounted.
+    _container_fs_path (str): Path where containerd filesystem is mounted.
+  """
+
+  POSSIBLE_STATES = [EvidenceState.CONTAINER_MOUNTED]
+
+  def __init__(self, namespace=None, container_id=None, *args, **kwargs):
+    """Initialization of containerd container."""
+    super(ContainerdContainer, self).__init__(*args, **kwargs)
+    self.namespace = namespace
+    self.container_id = container_id
+    self._image_path = None
+    self._container_fs_path = None
+
+    self.context_dependent = True
+
+  @property
+  def name(self):
+    if self._name:
+      return self._name
+
+    if self.parent_evidence:
+      return ':'.join((self.parent_evidence.name, self.container_id))
+    else:
+      return ':'.join((self.type, self.container_id))
+
+  def _preprocess(self, _, required_states):
+    if EvidenceState.CONTAINER_MOUNTED in required_states:
+      self._image_path = self.parent_evidence.mount_path
+
+      # Mount containerd container
+      self._container_fs_path = containerd.PreprocessMountContainerdFS(
+          self._image_path, self.namespace, self.container_id)
+      self.mount_path = self._container_fs_path
+      self.local_path = self.mount_path
+      self.state[EvidenceState.CONTAINER_MOUNTED] = True
+
+  def _postprocess(self):
+    if self.state[EvidenceState.CONTAINER_MOUNTED]:
+      # Unmount the container
+      mount_local.PostprocessUnmountPath(self._container_fs_path)
+      self.state[EvidenceState.CONTAINER_MOUNTED] = False
