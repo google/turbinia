@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: turbinia-oauth2-svc
+  annotations:
+    cloud.google.com/neg: '{"ingress": true}'
+    cloud.google.com/backend-config: '{"ports": {"80":"turbinia-healthcheck-ng"}}'
+spec:
+  type: ClusterIP
+  selector:
+    run: turbinia-oauth2-server
+  ports:
+  - name: oauth2-http
+    port: 80
+    protocol: TCP
+    targetPort: 9376

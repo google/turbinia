@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: turbinia-oauth2-server
+  labels:
+    run: turbinia-oauth2-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      run: turbinia-oauth2-server
+  template:
+    metadata:
+      labels:
+        run: turbinia-oauth2-server
+    spec:
+      serviceAccountName: turbinia
+      containers:
+        - name: server
+          image: us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-oauth2:latest
+          env:
+            - name: OAUTH2_CONF
+              valueFrom:
+                configMapKeyRef:
+                  name: oauth2-config
+                  key: OAUTH2_CONF
+          ports:
+            - containerPort: 9376
+          resources: 
+            requests:
+              memory: "256Mi"
+              cpu: "500m"
+            limits:
+              memory: "8192Mi"
+              cpu: "4000m"

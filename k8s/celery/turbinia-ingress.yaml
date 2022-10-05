@@ -1,0 +1,10 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: turbinia-ingress
+spec:
+  defaultBackend:
+    service:
+      name: turbinia-oauth2-svc # Name of the Service targeted by the Ingress
+      port:
+        number: 80 # Should match the port used by the Service
