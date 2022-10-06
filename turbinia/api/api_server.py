@@ -16,7 +16,6 @@
 
 import io
 import logging
-import pathlib
 import yaml
 import uvicorn
 
@@ -24,7 +23,6 @@ from fastapi import FastAPI
 from fastapi.responses import Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.routing import APIRoute
-from fastapi.staticfiles import StaticFiles
 
 from turbinia import config
 from turbinia.api.routes.router import api_router

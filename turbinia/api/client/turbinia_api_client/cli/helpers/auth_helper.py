@@ -16,6 +16,7 @@
 
 import logging
 import os
+import sys
 
 from google_auth_oauthlib import flow
 from google.oauth2.credentials import Credentials
@@ -61,7 +62,7 @@ def get_oauth2_credentials():
           _CLIENT_SECRETS_FILENAME, scopes)
     except FileNotFoundError as exception:
       log.error(str(exception))
-      exit(1)
+      sys.exit(1)
 
     appflow.run_local_server(host="localhost", port=8888)
     credentials = appflow.credentials
