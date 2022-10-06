@@ -23,13 +23,13 @@ from fastapi.responses import RedirectResponse, FileResponse
 ui_router = APIRouter(tags=['Turbinia Web UI'])
 
 
-@ui_router.get('/')
+@ui_router.get('/', include_in_schema=False)
 async def root():
   """Default route."""
   return RedirectResponse('/web')
 
 
-@ui_router.get('/web', name='web')
+@ui_router.get('/web', name='web', include_in_schema=False)
 async def web(request: Request):
   """Serves the Web UI main page."""
   this_path = pathlib.Path(__file__).parent.resolve()
@@ -43,7 +43,7 @@ async def web(request: Request):
   raise HTTPException(status_code=404, detail='Not found')
 
 
-@ui_router.get('/css/{catchall:path}', name='css')
+@ui_router.get('/css/{catchall:path}', name='css', include_in_schema=False)
 async def serve_css(request: Request):
   """Serves CSS content."""
   this_path = pathlib.Path(__file__).parent.resolve()
@@ -56,7 +56,7 @@ async def serve_css(request: Request):
   raise HTTPException(status_code=404, detail='Not found')
 
 
-@ui_router.get('/js/{catchall:path}', name='js')
+@ui_router.get('/js/{catchall:path}', name='js', include_in_schema=False)
 async def serve_js(request: Request):
   """Serves JavaScript content."""
   this_path = pathlib.Path(__file__).parent.resolve()

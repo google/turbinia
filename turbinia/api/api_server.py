@@ -68,13 +68,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-set_operation_ids(app)
-
 app.include_router(api_router)
 app.include_router(ui_router)
 
+set_operation_ids(app)
 
-@app.get('/openapi.yaml', tags=['OpenAPI Specification'])
+
+@app.get(
+    '/openapi.yaml', tags=['OpenAPI Specification'], include_in_schema=False)
 def read_openapi_yaml():
   """Serve the OpenAPI specification in YAML format."""
   openapi_json = app.openapi()

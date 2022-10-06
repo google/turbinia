@@ -36,6 +36,7 @@ setup(
     install_requires=REQUIRES,
     packages=find_packages(exclude=["test", "tests"]),
     include_package_data=True,
+    license="Apache License 2.0",
     long_description="""\
     Turbinia API server  # noqa: E501
     """
