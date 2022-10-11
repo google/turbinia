@@ -78,7 +78,7 @@ class WebshellAnalyzerTask(TurbiniaTask):
     scan_directory = ['/var/']
 
     cmd = [
-        '/opt/webshell-analyzer/wsa', '-dir',
+        'sudo', '/opt/webshell-analyzer/wsa', '-dir',
         evidence.local_path + scan_directory
     ]
 
