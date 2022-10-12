@@ -2,9 +2,25 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: turbinia-ingress
+  annotations:
+    kubernetes.io/ingress.global-static-ip-name: "turbinia-webapps"
+    networking.gke.io/managed-certificates: turbinia-ssl
+    kubernetes.io/ingress.class: "gce"
+    networking.gke.io/v1beta1.FrontendConfig: turbinia-frontend
 spec:
+  rules:
+    - host: <DOMAIN>
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: turbinia-oauth2-svc
+                port:
+                  number: 8080
   defaultBackend:
     service:
       name: turbinia-oauth2-svc # Name of the Service targeted by the Ingress
       port:
-        number: 80 # Should match the port used by the Service
+        number: 8080 # Should match the port used by the Service
