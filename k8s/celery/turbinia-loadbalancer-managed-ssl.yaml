@@ -1,7 +1,7 @@
 apiVersion: networking.gke.io/v1
 kind: ManagedCertificate
 metadata:
-  name: turbinia-managed-ssl
+  name: turbinia-loadbalancer-managed-ssl
 spec:
   domains: 
-    - <DOMAIN>
+    - <DOMAIN> 

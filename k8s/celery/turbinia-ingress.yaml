@@ -4,9 +4,9 @@ metadata:
   name: turbinia-ingress
   annotations:
     kubernetes.io/ingress.global-static-ip-name: "turbinia-webapps"
-    networking.gke.io/managed-certificates: turbinia-ssl
+    networking.gke.io/managed-certificates: turbinia-loadbalancer-managed-ssl
+    networking.gke.io/v1beta1.FrontendConfig: turbinia-loadbalancer-frontend-config
     kubernetes.io/ingress.class: "gce"
-    networking.gke.io/v1beta1.FrontendConfig: turbinia-frontend
 spec:
   rules:
     - host: <DOMAIN>
@@ -16,11 +16,11 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: turbinia-oauth2-svc
+                name: turbinia-oauth2-service
                 port:
                   number: 8080
   defaultBackend:
     service:
-      name: turbinia-oauth2-svc # Name of the Service targeted by the Ingress
+      name: turbinia-oauth2-service # Name of the Service targeted by the Ingress
       port:
         number: 8080 # Should match the port used by the Service
