@@ -1,0 +1,19 @@
+# Google Cloud Build configuration for Turbinia controller
+steps:
+  - name: gcr.io/cloud-builders/docker
+    args:
+      [
+        "build",
+        "-t",
+        "us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-controller:$TAG_NAME",
+        "-t",
+        "us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-controller:latest",
+        "-f",
+        "docker/controller/Dockerfile",
+        ".",
+      ]
+    timeout: 4800s
+timeout: 4800s
+images:
+  - us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-controller:latest
+  - us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-controller:$TAG_NAME

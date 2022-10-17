@@ -40,6 +40,7 @@ class TaskLoader():
       'AbortTask',
       'BinaryExtractorTask',
       'BulkExtractorTask',
+      'ContainerdEnumerationTask',
       'DfdeweyTask',
       'DockerContainersEnumerationTask',
       'FileArtifactExtractionTask',
@@ -110,6 +111,7 @@ class TaskLoader():
     from turbinia.workers.artifact import FileArtifactExtractionTask
     from turbinia.workers.binary_extractor import BinaryExtractorTask
     from turbinia.workers.bulk_extractor import BulkExtractorTask
+    from turbinia.workers.containerd import ContainerdEnumerationTask
     from turbinia.workers.dfdewey import DfdeweyTask
     from turbinia.workers.docker import DockerContainersEnumerationTask
     from turbinia.workers.file_system_timeline import FileSystemTimelineTask

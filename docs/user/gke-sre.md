@@ -34,6 +34,32 @@ these failures.
 - If the issue seems to be related to the third party tool, file a bug to the
   associated repo else file one for the Turbinia team.
 
+### Turbinia Controller
+
+In addition to the troubleshooting steps above, you may also consider deploying
+the Turbinia controller to the GKE cluster for further troubleshooting. The
+controller pod has the Turbinia client installed and is configured to use your
+Turbinia GKE instance. You may create Turbinia requests from this pod to process
+GCP disks within your project as well as have access to all Turbinia logs and output
+stored in the Filestore path. To deploy the Turbinia controller, please take the following steps.
+
+If using Turbinia Pubsub
+
+```
+./k8s/tools/deploy-pubsub-gke.sh --deploy-controller
+```
+
+If using Turbinia Celery/Redis
+
+```
+./k8s/tools/deploy-celery-gke.sh --deploy-controller
+```
+
+Please note that the commands above will also deploy the rest of the infrastructure so
+if you'd like to deploy the pod to an existing infrastructure, you can run
+`kubectl create -f k8s/common/turbinia-controller.yaml`. Please ensure that you
+have the correct `turbiniavolume` filestore path prior to deploying.
+
 ## GKE Infrastructure
 
 ### Preparation
@@ -106,7 +132,7 @@ demand determined by the CPU utilization average across all pods. As demand
 increases, the number of pods scale up until the CPU utilization is below a
 determined threshold. Once processing is complete, the number of Worker pods
 will scale down. The current autoscaling policy is configured in the
-[turbinia-autoscale-cpu.yaml](https://github.com/google/turbinia/blob/master/k8s/gcp-pubsub/turbinia-autoscale-cpu.yaml)
+[turbinia-autoscale-cpu.yaml](https://github.com/google/turbinia/blob/master/k8s/common/turbinia-autoscale-cpu.yaml)
 file.
 
 There is a default setting of 3 Worker pods to run at any given time with the
@@ -114,7 +140,7 @@ ability to scale up to 50 Worker pods across all nodes in the GKE cluster.
 In order to update the minimum number of Worker pods running at a given time,
 update the `minReplicas` value with the desired number of pods. In order to update
 the max number of pods to scale, update the `maxReplicas` value with the desired
-number. These changes should be updated in the [turbinia-autoscale-cpu.yaml](https://github.com/google/turbinia/blob/master/k8s/gcp-pubsub/turbinia-autoscale-cpu.yaml)
+number. These changes should be updated in the [turbinia-autoscale-cpu.yaml](https://github.com/google/turbinia/blob/master/k8s/common/turbinia-autoscale-cpu.yaml)
 file then applied through the following command.
 
 - `$ kubectl replace -f turbinia-autoscale-cpu.yaml`
@@ -206,6 +232,53 @@ A verbose cheatsheet can also be found [here](https://kubernetes.io/docs/referen
 
   - `$ kubectl top nodes`
 
+## GKE Load Testing
+
+If you'd like to perform some performance testing, troubleshooting GKE related issues,
+or would like to test out a new features capability within GKE, a load test script is
+available for use within `k8s/tools/load-test.sh`. Prior to running, please ensure you
+review the script and update any variables for your test. Most importantly, the load test
+script does not currently support the creation of test GCP disks and would need to be created
+prior to running the script. By default, the script will look for GCP disks with the naming
+convention of `<DISK_NAME-i>`, `i` being a range of `1` and `MAX_DISKS`. Once test data has
+been created, you can run the script on any machine or pod that has the Turbinia client
+installed and configured to the correct Turbinia GKE instance. Please run the following
+command to execute the load test, passing in a path to store the load test results.
+
+```
+./k8s/tools/load-test.sh /OUTPUT/LOADTEST/RESULTS
+```
+
+To check for any failed Tasks once the load test is complete.
+
+```
+turbinia@turbinia-controller-6bfcc5db99-sdpvg:/$ grep "Failed" -A 1 /mnt/turbiniavolume/loadtests/test-disk-25gb-*
+/mnt/turbiniavolume/loadtests/test-disk-25gb-1.log:# Failed Tasks
+/mnt/turbiniavolume/loadtests/test-disk-25gb-1.log-* None
+--
+/mnt/turbiniavolume/loadtests/test-disk-25gb-2.log:# Failed Tasks
+/mnt/turbiniavolume/loadtests/test-disk-25gb-2.log-* None
+```
+
+To check for average run times of each request once the load test is complete.
+
+```
+turbinia@turbinia-controller-6bfcc5db99-sdpvg:/$ tail -n 3 /mnt/turbiniavolume/loadtests/test-disk-25gb-*
+==> /mnt/turbiniavolume/loadtests/test-disk-25gb-1.log <==
+real    12m7.661s
+user    0m5.069s
+sys     0m1.253s
+
+==> /mnt/turbiniavolume/loadtests/test-disk-25gb-2.log <==
+real    12m7.489s
+user    0m5.069s
+sys     0m1.249s
+```
+
+To check for any issues with disks not properly mounting, within the Turbinia controller,
+please trying running `losetup -a` to check attached loop devices, `lsof | grep <device>`
+to check for any remaining file handles left on a loop device or disk.
+
 ## GKE Metrics and Monitoring
 
 In order to monitor the Turbinia infrastructure within Kubernetes,
@@ -217,7 +290,7 @@ through manifest files.
 The Turbinia Server and Workers are instrumented with Prometheus code and expose
 application metrics.
 
-- Service manifest files were created for both the Turbinia [Server](https://github.com/google/turbinia/blob/master/k8s/gcp-pubsub/turbinia-server-metrics-service.yaml) and [Worker](https://github.com/google/turbinia/blob/master/k8s/gcp-pubsub/turbinia-worker-metrics-service.yaml).
+- Service manifest files were created for both the Turbinia [Server](https://github.com/google/turbinia/blob/master/k8s/common/turbinia-server-metrics-service.yaml) and [Worker](https://github.com/google/turbinia/blob/master/k8s/common/turbinia-worker-metrics-service.yaml).
 - The files create two services named `turbinia-server-metrics` and `turbinia-worker-metrics` which expose port 9200 to
   poll application metrics.
 - The Prometheus service, which is listening on port 9090 scrapes these services
