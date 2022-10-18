@@ -393,7 +393,7 @@ func filesystemScan(wait chan struct{}, c chan *Detection) {
 							}
 						}
 					}
-					if score >= minimumScore {
+					if score > minimumScore {
 						c <- newDetection(filePath, match.Rule, description, reference, score)
 					}
 				}
