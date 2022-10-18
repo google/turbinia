@@ -24,7 +24,7 @@ from fastapi.requests import Request
 from turbinia import config as turbinia_config
 from turbinia.jobs import manager as jobs_manager
 
-log = logging.getLogger('turbinia:api_server:jobs')
+log = logging.getLogger('turbinia')
 
 router = APIRouter(prefix='/jobs', tags=['Turbinia Jobs'])
 

@@ -31,7 +31,7 @@ from turbinia.api.routes.ui import ui_router
 from turbinia.config import logger
 
 logger.setup()
-log = logging.getLogger('turbinia:api_server')
+log = logging.getLogger('turbinia')
 
 
 def get_application() -> FastAPI:

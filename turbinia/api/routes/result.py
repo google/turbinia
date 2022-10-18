@@ -24,7 +24,7 @@ from turbinia import config as turbinia_config
 from turbinia import state_manager
 from turbinia.api import utils as api_utils
 
-log = logging.getLogger('turbinia:api_server:result')
+log = logging.getLogger('turbinia')
 
 router = APIRouter(prefix='/result', tags=['Turbinia Request Results'])
 

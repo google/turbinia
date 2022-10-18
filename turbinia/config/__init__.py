@@ -68,6 +68,7 @@ REQUIRED_VARS = [
     'API_SERVER_PORT',
     'API_ALLOWED_ORIGINS',
     'API_AUTHENTICATION_ENABLED',
+    'WEBUI_PATH',
 ]
 
 # Optional config vars.  Some may be mandatory depending on the configuration

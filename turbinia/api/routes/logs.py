@@ -20,7 +20,7 @@ from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 from fastapi.requests import Request
 
-log = logging.getLogger('turbinia:api_server:logs')
+log = logging.getLogger('turbinia')
 
 router = APIRouter(prefix='/logs', tags=['Logs'])
 

@@ -23,7 +23,7 @@ import os
 from fastapi import HTTPException
 from turbinia import config as turbinia_config
 
-log = logging.getLogger('turbinia:api_server:utils')
+log = logging.getLogger('turbinia')
 
 
 def create_zip(request_id: str, task_id: str) -> bytes:

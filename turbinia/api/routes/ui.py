@@ -19,8 +19,10 @@ import pathlib
 from fastapi import APIRouter, HTTPException
 from fastapi.requests import Request
 from fastapi.responses import RedirectResponse, FileResponse
+from turbinia import config
 
 ui_router = APIRouter(tags=['Turbinia Web UI'])
+_config = config.LoadConfig()
 
 
 @ui_router.get('/', include_in_schema=False)
@@ -32,9 +34,7 @@ async def root():
 @ui_router.get('/web', name='web', include_in_schema=False)
 async def web(request: Request):
   """Serves the Web UI main page."""
-  this_path = pathlib.Path(__file__).parent.resolve()
-  static_content_path = this_path.parent.parent.parent.joinpath(
-      'web/dist/index.html')
+  static_content_path = pathlib.Path(_config.WEBUI_PATH).joinpath('index.html')
   if os.path.exists(static_content_path):
     response = FileResponse(
         path=static_content_path, headers={'Cache-Control': 'no-cache'})
@@ -46,8 +46,7 @@ async def web(request: Request):
 @ui_router.get('/css/{catchall:path}', name='css', include_in_schema=False)
 async def serve_css(request: Request):
   """Serves CSS content."""
-  this_path = pathlib.Path(__file__).parent.resolve()
-  static_content_path = this_path.parent.parent.parent.joinpath('web/dist/css')
+  static_content_path = pathlib.Path(_config.WEBUI_PATH).joinpath('css')
   path = request.path_params["catchall"]
   file = static_content_path.joinpath(path)
   if os.path.exists(file):
@@ -59,8 +58,7 @@ async def serve_css(request: Request):
 @ui_router.get('/js/{catchall:path}', name='js', include_in_schema=False)
 async def serve_js(request: Request):
   """Serves JavaScript content."""
-  this_path = pathlib.Path(__file__).parent.resolve()
-  static_content_path = this_path.parent.parent.parent.joinpath('web/dist/js')
+  static_content_path = pathlib.Path(_config.WEBUI_PATH).joinpath('js')
   path = request.path_params["catchall"]
   file = static_content_path.joinpath(path)
   if os.path.exists(file):
