@@ -129,15 +129,14 @@ class YaraAnalysisTask(TurbiniaTask):
           raise TurbiniaException(
               'Error decoding JSON output from fraken: {0!s}'.format(exception))
         for row in fraken_output:
-          if row.get('Score', 0) > 40:
-            report_lines.append(
-                ' - '.join([
-                    dirRE.sub("/", row['ImagePath']), row['SHA256'],
-                    row['Signature'],
-                    row.get('Description', ''),
-                    row.get('Reference', ''),
-                    str(row.get('Score', 0))
-                ]))
+          report_lines.append(
+              ' - '.join([
+                  dirRE.sub("/", row['ImagePath']), row['SHA256'],
+                  row['Signature'],
+                  row.get('Description', ''),
+                  row.get('Reference', ''),
+                  str(row.get('Score', 0))
+              ]))
     except FileNotFoundError:
       pass  # No Yara rules matched
 

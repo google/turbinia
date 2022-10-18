@@ -67,6 +67,7 @@ var (
 	externalVariables = []string{"filepath", "filename", "filetype", "extension", "owner"}
 	maxGoroutines     = 10
 	maxScanFilesize   = 1073741824 /* 1 Gb */
+	minimumScore      = 40
 )
 
 func initMagics() error {
@@ -371,6 +372,9 @@ func filesystemScan(wait chan struct{}, c chan *Detection) {
 								parsedScore = m.Value.(int)
 							case string:
 								parsedScore, err = strconv.Atoi(strings.TrimSpace(m.Value.(string)))
+								if err != nil {
+									parsedScore = 50
+								}
 							default:
 								log.Printf("Unable to parse score for rule %v (type %v)): %v\n", match.Rule, g, m)
 							}
@@ -389,7 +393,9 @@ func filesystemScan(wait chan struct{}, c chan *Detection) {
 							}
 						}
 					}
-					c <- newDetection(filePath, match.Rule, description, reference, score)
+					if score >= minimumScore {
+						c <- newDetection(filePath, match.Rule, description, reference, score)
+					}
 				}
 			}
 			<-wait
