@@ -14,7 +14,12 @@ spec:
       labels:
         app: turbinia-oauth2-proxy
     spec:
-      serviceAccountName: turbinia
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 999
+        seccompProfile:
+          type: RuntimeDefault
       containers:
         - name: oauth2-proxy
           image: us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-oauth2:latest
@@ -33,3 +38,18 @@ spec:
             limits:
               memory: "8192Mi"
               cpu: "4000m"
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+            - name: conf
+              mountPath: /etc/turbinia
+          securityContext:
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false
+            runAsUser: 999
+      volumes:
+      - name: tmp
+        emptyDir: {}
+      - name: conf
+        emptyDir: {}

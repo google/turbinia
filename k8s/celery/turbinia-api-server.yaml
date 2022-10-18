@@ -17,17 +17,17 @@ spec:
       labels:
         app: turbinia-api-server
     spec:
-      serviceAccountName: turbinia
-      initContainers:
-        - name: init-filestore
-          image: busybox:1.28
-          command: ['sh', '-c', 'chmod go+w /mnt/turbiniavolume']
-          volumeMounts:
-            - mountPath: "/mnt/turbiniavolume"
-              name: turbiniavolume
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
+        runAsUser: 999
+        fsGroup: 999
+        fsGroupChangePolicy: "OnRootMismatch"
       containers:
         - name: api
-          image: us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-api-server:latest
+          image: us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-api-server-dev:latest
           env:
             - name: TURBINIA_CONF
               valueFrom:
@@ -41,10 +41,15 @@ spec:
           volumeMounts:
             - mountPath: /mnt/turbiniavolume
               name: turbiniavolume
+            - mountPath: /etc/turbinia
+              name: conf
+            - mountPath: /tmp
+              name: tmp
+            - mountPath: /var/log
+              name: logs
           ports:
             - containerPort: 9200
             - containerPort: 8000
-            - containerPort: 8080
           resources: 
             requests:
               memory: "256Mi"
@@ -52,8 +57,19 @@ spec:
             limits:
               memory: "4096Mi"
               cpu: "2000m"
+          securityContext:
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false
+            runAsUser: 999
       volumes:
         - name: turbiniavolume
           persistentVolumeClaim:
             claimName: turbiniavolume-claim
             readOnly: false
+        - name: conf
+          emptyDir: {}
+        - name: tmp
+          emptyDir: {}
+        - name: logs
+          emptyDir: {}
