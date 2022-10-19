@@ -63,6 +63,7 @@ var (
 	magicPathFlag     = flag.String("magic", "misc/file-type-signatures.txt", "A path under the rules path that contains File Magics")
 	yaraRulesFlag     = flag.String("extrayara", "", "Any additional Yara rules to be used")
 	testRulesFlag     = flag.Bool("testrules", false, "Test the given rules for syntax validity and then exit")
+	minScoreFlag      = flag.Int("minscore", 40, "Only rules with scores greather than this will be output")
 	magics            = make(map[string]string)
 	externalVariables = []string{"filepath", "filename", "filetype", "extension", "owner"}
 	maxGoroutines     = 10
@@ -343,7 +344,7 @@ func (s *Scanner) init() error {
 	return nil
 }
 
-func filesystemScan(wait chan struct{}, c chan *Detection) {
+func filesystemScan(wait chan struct{}, c chan *Detection, minimumScore int) {
 	if _, err := os.Stat(*scanPathFlag); err != nil {
 		log.Printf("Cannot scan %v: %v\n", *scanPathFlag, err)
 		close(c)
@@ -371,6 +372,9 @@ func filesystemScan(wait chan struct{}, c chan *Detection) {
 								parsedScore = m.Value.(int)
 							case string:
 								parsedScore, err = strconv.Atoi(strings.TrimSpace(m.Value.(string)))
+								if err != nil {
+									parsedScore = 50
+								}
 							default:
 								log.Printf("Unable to parse score for rule %v (type %v)): %v\n", match.Rule, g, m)
 							}
@@ -389,7 +393,9 @@ func filesystemScan(wait chan struct{}, c chan *Detection) {
 							}
 						}
 					}
-					c <- newDetection(filePath, match.Rule, description, reference, score)
+					if score > minimumScore {
+						c <- newDetection(filePath, match.Rule, description, reference, score)
+					}
 				}
 			}
 			<-wait
@@ -460,7 +466,7 @@ func main() {
 	}
 	waitChan := make(chan struct{}, maxGoroutines)
 	resultsChan := make(chan *Detection)
-	go filesystemScan(waitChan, resultsChan)
+	go filesystemScan(waitChan, resultsChan, *minScoreFlag)
 	var results []*Detection
 	for r := range resultsChan {
 		results = append(results, r)
