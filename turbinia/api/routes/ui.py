@@ -34,7 +34,8 @@ async def root():
 @ui_router.get('/web', name='web', include_in_schema=False)
 async def web(request: Request):
   """Serves the Web UI main page."""
-  static_content_path = pathlib.Path(_config.WEBUI_PATH).joinpath('dist/index.html')
+  static_content_path = pathlib.Path(
+      _config.WEBUI_PATH).joinpath('dist/index.html')
   if os.path.exists(static_content_path):
     response = FileResponse(
         path=static_content_path, headers={'Cache-Control': 'no-cache'})
