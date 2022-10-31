@@ -42,7 +42,7 @@ async def get_requests_summary():
   """
   requests_summary = request_status.RequestsSummary()
   try:
-    if not requests_summary.get_requests_summmary():
+    if not requests_summary.get_requests_summary():
       return JSONResponse(
           content={'detail': 'Request summary is empty'}, status_code=200)
     return requests_summary
