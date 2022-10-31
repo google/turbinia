@@ -118,7 +118,7 @@ async def create_request(req: request.Request):
 
     if recipe_data:
       # Use a client-provided recipe. recipe_data MUST be a Base64 encoded
-      # YAML representaiton of a Turbinia recipe. The recipe will be validated.
+      # YAML representation of a Turbinia recipe. The recipe will be validated.
       # We assume that if the client provided a custom recipe it will include
       # its own jobs_allowlist, filter_patterns and other settings.
       recipe = recipe_helpers.load_recipe_from_data(recipe_data)
