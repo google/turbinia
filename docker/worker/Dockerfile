@@ -15,6 +15,7 @@ RUN apt-get update && apt-get -y install \
     git \
     golang-1.18 \
     go-bindata \
+    john \
     john-data \
     hashcat \
     hashcat-data \
@@ -107,6 +108,11 @@ RUN cp /home/turbinia/password.lst /root/
 # Copy Kubernetes support tool to home folder
 COPY k8s/tools/check-lockfile.py /home/turbinia/check-lockfile.py
 RUN chown turbinia:turbinia /home/turbinia/check-lockfile.py
+
+# Install container-explorer
+RUN wget -O /tmp/container-explorer-setup.sh https://raw.githubusercontent.com/google/container-explorer/main/script/setup.sh
+RUN chmod +x /tmp/container-explorer-setup.sh
+RUN sudo /tmp/container-explorer-setup.sh install
 
 ADD . /tmp/
 # unshallow and fetch all tags so our build systems pickup the correct git tag if it's a shallow clone

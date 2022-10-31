@@ -15,5 +15,5 @@ rule suspicious_cron {
         $shell = "sh"
         $pgmem = "pg_mem"
    condition:
-      (filepath matches /cron/ or filepath matches /spool\/at/) and (($wget or all of ($options*)) or any of ($curl*) or $shm or $pgmem or (for all i in (1..#shell) : (@shell[i] > @pipechar[i])))
+      (filepath matches /cron/ or filepath matches /spool\/at/) and (($wget or all of ($options*)) or any of ($curl*) or $shm or $pgmem or (for all i in (1..#shell) : ((@shell[i] > @pipechar[i]) and (@shell[i] < @pipechar[i] + 10))))
 }

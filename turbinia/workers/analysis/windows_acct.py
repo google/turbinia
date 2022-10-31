@@ -57,10 +57,10 @@ class WindowsAccountAnalysisTask(TurbiniaTask):
 
     try:
       (location, num_files) = self._collect_windows_files(evidence)
-    except TurbiniaException as e:
+    except TurbiniaException as exception:
       result.close(
           self, success=True,
-          status='No Windows account files found: {0:s}'.format(str(e)))
+          status='No Windows account files found: {0:s}'.format(str(exception)))
       return result
     if num_files < 2:
       result.close(self, success=True, status='No Windows account files found')
@@ -68,15 +68,25 @@ class WindowsAccountAnalysisTask(TurbiniaTask):
     try:
       (creds, hashnames) = self._extract_windows_hashes(
           result, os.path.join(location, 'Windows', 'System32', 'config'))
-    except TurbiniaException as e:
+    except TurbiniaException as exception:
       result.close(
           self, success=False,
           status='Unable to extract hashes from registry files: {0:s}'.format(
-              str(e)))
+              str(exception)))
       return result
+    extra_summary = ""
+    if os.path.isfile(os.path.join(location, 'Windows', 'NTDS', 'ntds.dit')):
+      try:
+        (adcreds, adhashnames) = self._extract_ad_hashes(result, location)
+        creds.extend(adcreds)
+        # Merge dictionaries (Python version too low for | operator)
+        hashnames = {**hashnames, **adhashnames}
+      except TurbiniaException as exception:
+        extra_summary = " Unable to extract AD credentials (not a DC?)."
     timeout = self.task_config.get('bruteforce_timeout')
     (report, priority, summary) = self._analyse_windows_creds(
         creds, hashnames, timeout=timeout)
+    summary += extra_summary
     output_evidence.text_data = report
     result.report_priority = priority
     result.report_data = report
@@ -101,12 +111,13 @@ class WindowsAccountAnalysisTask(TurbiniaTask):
     """
     try:
       collected_artifacts = extract_artifacts(
-          artifact_names=['WindowsSystemRegistryFiles'],
-          disk_path=evidence.local_path, output_dir=self.output_dir,
+          artifact_names=[
+              'WindowsSystemRegistryFiles', 'WindowsActiveDirectoryDatabase'
+          ], disk_path=evidence.local_path, output_dir=self.output_dir,
           credentials=evidence.credentials)
-    except TurbiniaException as e:
+    except TurbiniaException as exception:
       raise TurbiniaException(
-          'artifact extraction failed: {0:s}'.format(str(e)))
+          'artifact extraction failed: {}'.format(str(exception)))
 
     # Extract base dir from our list of collected artifacts
     location = os.path.dirname(collected_artifacts[0])
@@ -119,6 +130,9 @@ class WindowsAccountAnalysisTask(TurbiniaTask):
     Args:
         result (TurbiniaTaskResult): The object to place task results into.
         location (str): File path to the extracted registry files.
+
+    Raises:
+        TurbiniaException
 
     Returns:
         creds (list): List of strings containing raw extracted credentials
@@ -148,7 +162,60 @@ class WindowsAccountAnalysisTask(TurbiniaTask):
           if passwdhash in IGNORE_CREDS:
             continue
           creds.append(line.strip())
-          hashnames[passwdhash] = username
+          if passwdhash in hashnames:
+            hashnames[passwdhash] = hashnames[passwdhash] + ", " + username
+          else:
+            hashnames[passwdhash] = username
+      os.remove(hash_file)
+    else:
+      raise TurbiniaException('Extracted hash file not found.')
+
+    return (creds, hashnames)
+
+  def _extract_ad_hashes(self, result, location):
+    """Dump the secrets from the Windows Active Directory NTDS file.
+
+    Args:
+        result (TurbiniaTaskResult): The object to place task results into.
+        location (str): File path to the extracted registry files.
+
+    Raises:
+        TurbiniaException
+
+    Returns:
+        creds (list): List of strings containing raw extracted credentials
+        hashnames (dict): Dict mapping hash back to username for convenience.
+    """
+
+    # Default (empty) hash
+    IGNORE_CREDS = ['31d6cfe0d16ae931b73c59d7e0c089c0']
+
+    hash_file = os.path.join(self.tmp_dir, 'ad_hashes')
+    cmd = [
+        'secretsdump.py', '-system',
+        os.path.join(location, 'Windows', 'System32', 'config',
+                     'SYSTEM'), '-ntds',
+        os.path.join(location, 'Windows', 'NTDS', 'ntds.dit'), '-hashes',
+        'lmhash:nthash', 'LOCAL', '-outputfile', hash_file
+    ]
+
+    impacket_log = os.path.join(self.output_dir, 'impacket.log')
+    self.execute(cmd, result, stdout_file=impacket_log)
+
+    creds = []
+    hashnames = {}
+    hash_file = hash_file + '.ntds'
+    if os.path.isfile(hash_file):
+      with open(hash_file, 'r') as fh:
+        for line in fh:
+          (username, _, _, passwdhash, _, _, _) = line.split(':')
+          if passwdhash in IGNORE_CREDS:
+            continue
+          creds.append(line.strip())
+          if passwdhash in hashnames:
+            hashnames[passwdhash] = hashnames[passwdhash] + ", " + username
+          else:
+            hashnames[passwdhash] = username
       os.remove(hash_file)
     else:
       raise TurbiniaException('Extracted hash file not found.')
@@ -171,7 +238,7 @@ class WindowsAccountAnalysisTask(TurbiniaTask):
       )
     """
     report = []
-    summary = 'No weak passwords found'
+    summary = 'No weak passwords found.'
     priority = Priority.LOW
 
     # 1000 is "NTLM"

@@ -36,6 +36,13 @@ class YaraAnalysisTask(TurbiniaTask):
       state.ATTACHED, state.MOUNTED, state.CONTAINER_MOUNTED, state.DECOMPRESSED
   ]
 
+  # Task configuration variables from recipe
+  TASK_CONFIG = {
+      # Only hits for rules greater than this score
+      # will be output.
+      'minscore': None
+  }
+
   def run(self, evidence, result):
     """Run the Yara worker.
 
@@ -54,10 +61,10 @@ class YaraAnalysisTask(TurbiniaTask):
 
     try:
       (report, priority, summary) = self.runFraken(result, evidence)
-    except TurbiniaException as e:
+    except TurbiniaException as exception:
       result.close(
           self, success=False, status='Unable to run Fraken: {0:s}'.format(
-              str(e)))
+              str(exception)))
       return result
 
     output_evidence.text_data = report
@@ -74,6 +81,16 @@ class YaraAnalysisTask(TurbiniaTask):
     return result
 
   def runFraken(self, result, evidence):
+    """Runs Fraken.
+
+      Args:
+        evidence (Evidence object):  The evidence to process
+        result (TurbiniaTaskResult): The object to place task results into.
+      Raises:
+        TurbiniaException
+      Returns:
+        report (tuple): A 3-tuple containing a report, priority and summary.
+    """
     stdout_file = os.path.join(
         self.output_dir, '{0:s}_fraken_stdout.log'.format(self.id))
     stderr_file = os.path.join(
@@ -83,6 +100,8 @@ class YaraAnalysisTask(TurbiniaTask):
         'sudo', '/opt/fraken/fraken', '-rules', '/opt/signature-base/',
         '-folder', evidence.local_path
     ]
+    if self.task_config.get('minscore'):
+      cmd.extend(['-minscore', self.task_config.get('minscore')])
 
     yr = self.task_config.get('yara_rules')
     if yr:
@@ -94,9 +113,11 @@ class YaraAnalysisTask(TurbiniaTask):
         cmd, result, stderr_file=stderr_file, stdout_file=stdout_file)
 
     if ret != 0:
-      error = "Unknown"
-      with open(stderr_file, 'r') as f:
-        error = f.readlines()
+      if os.path.exists(stderr_file):
+        with open(stderr_file, 'r') as f:
+          error = f.readlines()
+      else:
+        error = "Unknown (no stderr)"
       raise TurbiniaException(
           'Return code: {0:d}. Error: {1!s}'.format(ret, error))
 
@@ -112,19 +133,19 @@ class YaraAnalysisTask(TurbiniaTask):
       with open(stdout_file, 'r') as fraken_report:
         try:
           fraken_output = json.load(fraken_report)
-        except (TypeError, ValueError, json.JSONDecodeError) as e:
+        except (TypeError, ValueError, FileNotFoundError,
+                json.JSONDecodeError) as exception:
           raise TurbiniaException(
-              'Error decoding JSON output from fraken: {0!s}'.format(e))
+              'Error decoding JSON output from fraken: {0!s}'.format(exception))
         for row in fraken_output:
-          if row.get('Score', 0) > 40:
-            report_lines.append(
-                ' - '.join([
-                    dirRE.sub("/", row['ImagePath']), row['SHA256'],
-                    row['Signature'],
-                    row.get('Description', ''),
-                    row.get('Reference', ''),
-                    str(row.get('Score', 0))
-                ]))
+          report_lines.append(
+              ' - '.join([
+                  dirRE.sub("/", row['ImagePath']), row['SHA256'],
+                  row['Signature'],
+                  row.get('Description', ''),
+                  row.get('Reference', ''),
+                  str(row.get('Score', 0))
+              ]))
     except FileNotFoundError:
       pass  # No Yara rules matched
 

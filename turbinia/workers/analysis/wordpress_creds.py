@@ -67,16 +67,17 @@ class WordpressCredsAnalysisTask(TurbiniaTask):
       if num_files == 0:
         result.close(self, success=True, status='No Wordpress database found')
         return result
-    except TurbiniaException as e:
+    except TurbiniaException as exception:
       result.close(
           self, success=False,
-          status='Error retrieving Wordpress database: {0:s}'.format(str(e)))
+          status='Error retrieving Wordpress database: {0:s}'.format(
+              str(exception)))
       return result
 
     try:
       (creds, hashnames) = self._extract_wordpress_hashes(location)
-    except TurbiniaException as e:
-      result.close(self, success=False, status=str(e))
+    except TurbiniaException as exception:
+      result.close(self, success=False, status=str(exception))
       return result
 
     timeout = self.task_config.get('bruteforce_timeout')
@@ -111,9 +112,9 @@ class WordpressCredsAnalysisTask(TurbiniaTask):
           file_name=_WP_DB_NAME,
           disk_path=evidence.local_path, output_dir=os.path.join(
               self.output_dir, 'artifacts'), credentials=evidence.credentials)
-    except TurbiniaException as e:
+    except TurbiniaException as exception:
       raise TurbiniaException(
-          'artifact extraction failed: {0:s}'.format(str(e)))
+          'artifact extraction failed: {0:s}'.format(str(exception)))
 
     # Extract base dir from our list of collected artifacts
     location = os.path.dirname(collected_artifacts[0])
@@ -148,9 +149,9 @@ class WordpressCredsAnalysisTask(TurbiniaTask):
           if grep.returncode == 2:
             raise TurbiniaException(
                 'Error grepping file: {0:s}'.format(grep.stdout))
-        except subprocess.CalledProcessError as e:
+        except subprocess.CalledProcessError as exception:
           raise TurbiniaException(
-              'Unable to strings/grep file: {0:s}'.format(str(e)))
+              'Unable to strings/grep file: {0:s}'.format(str(exception)))
 
         for cred in grep.stdout.strip().split('\n'):
           m = re.match(_CREDS_REGEXP, cred)

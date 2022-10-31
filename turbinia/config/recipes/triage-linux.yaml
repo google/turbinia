@@ -7,22 +7,23 @@ globals:
     - YaraAnalysisJob
 
 plaso_base:
-  task: 'PlasoTask'
+  task: "PlasoParserTask"
 
-  artifact_filters: [
-      'AllUsersShellHistory',
-      'ApacheAccessLogs',
-      'BrowserCache',
-      'BrowserHistory',
-      'ChromeStorage',
-      'LinuxAuditLogs',
-      'LinuxAuthLogs',
-      'LinuxCronLogs',
-      'LinuxKernelLogFiles',
-      'LinuxLastlogFile',
-      'LinuxMessagesLogFiles',
-      'LinuxScheduleFiles',
-      'LinuxSysLogFiles',
-      'LinuxUtmpFiles',
-      'LinuxWtmp',
-  ]
+  artifact_filters:
+    [
+      "AllUsersShellHistory",
+      "ApacheAccessLogs",
+      "BrowserCache",
+      "BrowserHistory",
+      "ChromeStorage",
+      "LinuxAuditLogs",
+      "LinuxAuthLogs",
+      "LinuxCronLogs",
+      "LinuxKernelLogFiles",
+      "LinuxLastlogFile",
+      "LinuxMessagesLogFiles",
+      "LinuxScheduleFiles",
+      "LinuxSysLogFiles",
+      "LinuxUtmpFiles",
+      "LinuxWtmp",
+    ]

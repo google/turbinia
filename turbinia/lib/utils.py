@@ -46,11 +46,12 @@ def _image_export(command, output_dir, timeout=DEFAULT_TIMEOUT):
   log.debug('Running image_export as [{0:s}]'.format(' '.join(command)))
   try:
     subprocess.check_call(command, timeout=timeout)
-  except subprocess.CalledProcessError as e:
-    raise TurbiniaException('image_export.py failed: {0!s}'.format(e))
-  except subprocess.TimeoutExpired as e:
+  except subprocess.CalledProcessError as exception:
+    raise TurbiniaException('image_export.py failed: {0!s}'.format(exception))
+  except subprocess.TimeoutExpired as exception:
     raise TurbiniaException(
-        'image_export.py timed out after {0:d}s: {1!s}'.format(timeout, e))
+        'image_export.py timed out after {0:d}s: {1!s}'.format(
+            timeout, exception))
 
   collected_file_paths = []
   file_count = 0
@@ -184,14 +185,22 @@ def bruteforce_password_hashes(
   if not os.path.isfile(password_list_file_path):
     raise TurbiniaException('No password list available')
 
-  cmd = ['hashcat', '--force', '-a', '1']
-  if extra_args:
-    cmd = cmd + extra_args.split(' ')
-  cmd = cmd + ['--potfile-path={}'.format(pot_file)]
-  cmd = cmd + [
-      password_hashes_file_path, password_list_file_path,
-      password_list_file_path
-  ]
+  if '$y$' in ''.join(password_hashes):
+    cmd = [
+        'john', '--format=crypt',
+        '--wordlist={}'.format(password_list_file_path),
+        password_hashes_file_path
+    ]
+    pot_file = os.path.expanduser('~/.john/john.pot')
+  else:
+    cmd = ['hashcat', '--force', '-a', '1']
+    if extra_args:
+      cmd = cmd + extra_args.split(' ')
+    cmd = cmd + ['--potfile-path={}'.format(pot_file)]
+    cmd = cmd + [
+        password_hashes_file_path, password_list_file_path,
+        password_list_file_path
+    ]
 
   with open(os.devnull, 'w') as devnull:
     try:
@@ -202,8 +211,8 @@ def bruteforce_password_hashes(
       # Cancel the timer if the process is done before the timer.
       if timer.is_alive():
         timer.cancel()
-    except OSError as e:
-      raise TurbiniaException('hashcat failed: {0}'.format(str(e)))
+    except OSError as exception:
+      raise TurbiniaException('hashcat failed: {0}'.format(str(exception)))
 
   result = []
 

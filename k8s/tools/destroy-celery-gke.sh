@@ -1,11 +1,12 @@
 #!/bin/bash
-# Turbinia GKE cleanup script
-# This script can be used to cleanup the Turbinia stack within GKE PubSub. Note that
+# Turbinia GKE cleanup script for Celery configuration.
+# This script can be used to cleanup the Turbinia Celery stack within GKE. Note that
 # this script will not disable any APIs to avoid outage with any other applications 
 # deployed within the project. 
 # Requirements:
 # - have 'gcloud'installed.
 # - autheticate against your GCP project with "gcloud auth login"
+# - account being used to run script should have an IAM policy of instance.admin and container.admin used to delete resources.
 # - optionally have the GCP project set with "gcloud config set project [you-project-name]"
 #
 # Use --help to show you commands supported.
@@ -20,16 +21,12 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 source $DIR/.clusterconfig
 cd $DIR/..
 
-if [[ "$*" == *--help ]] ; then
+if [[ "$*" == *--help ||  "$*" == *-h ]] ; then
   echo "Turbinia cleanup script for Turbinia within Kubernetes"
   echo "Options:"
-  echo "--no-gcloud-auth               Do not use gcloud authentication and service key instead"
-  echo "--no-cloudfunctions            Do not cleanup Turbinia Cloud Functions"
-  echo "--no-datastore                 Do not cleanup Turbinia Datastore"
+  echo "--no-service-account           Do not delete the Turbinia service account"
   echo "--no-filestore                 Do not cleanup Turbinia Filestore share"
   echo "--no-dfdewey                   Do not cleanup dfDewey Filestore share"
-  echo "--no-gcs                       Do not delete the GCS bucket"
-  echo "--no-pubsub                    Do not delete the PubSub and PSQ topic/subscription"
   echo "--no-cluster                   Do not delete the cluster"
   exit 1
 fi
@@ -78,23 +75,6 @@ if [[ "$*" != *--no-cluster* ]] ; then
   gcloud -q --project $DEVSHELL_PROJECT_ID container clusters delete $CLUSTER_NAME --zone $ZONE
 fi
 
-# Delete the GCS storage bucket
-if [[ "$*" != *--no-gcs* ]] ; then
-  echo "Deleting GCS storage bucket gs://$INSTANCE_ID"
-  gsutil -q rm -r gs://$INSTANCE_ID
-fi
-
-# Delete PubSub topics
-if [[ "$*" != *--no-pubsub* ]] ; then
-  echo "Deleting PubSub topic $INSTANCE_ID"
-  gcloud -q --project $DEVSHELL_PROJECT_ID pubsub topics delete $INSTANCE_ID
-  gcloud -q --project $DEVSHELL_PROJECT_ID pubsub topics delete "$INSTANCE_ID-psq"
-
-  # Delete PubSub subscriptions
-  gcloud -q --project $DEVSHELL_PROJECT_ID pubsub subscriptions delete $INSTANCE_ID
-  gcloud -q --project $DEVSHELL_PROJECT_ID pubsub subscriptions delete "$INSTANCE_ID-psq"
-fi
-
 # Delete the Filestore instance
 if [[ "$*" != *--no-filestore* ]] ; then
   echo "Deleting Filestore instance $FILESTORE_NAME"
@@ -110,53 +90,21 @@ if [[ "$*" != *--no-dfdewey* ]] ; then
   fi
 fi
 
-# Remove cloud functions
-if [[ "$*" != *--no-cloudfunctions* ]] ; then
-  echo "Delete Google Cloud functions"
-  if gcloud functions --project $DEVSHELL_PROJECT_ID list | grep gettasks; then
-    gcloud -q --project $DEVSHELL_PROJECT_ID functions delete gettasks --region $REGION
-  fi
-  if gcloud functions --project $DEVSHELL_PROJECT_ID list | grep closetask; then
-    gcloud -q --project $DEVSHELL_PROJECT_ID functions delete closetask --region $REGION
-  fi
-  if gcloud functions --project $DEVSHELL_PROJECT_ID list | grep closetasks; then
-    gcloud -q --project $DEVSHELL_PROJECT_ID functions delete closetasks  --region $REGION
-  fi
-fi
-
-# Cleanup Datastore indexes
-if [[ "$*" != *--no-datastore* ]] ; then
-  echo "Cleaning up Datastore indexes"
-  gcloud -q --project $DEVSHELL_PROJECT_ID datastore indexes cleanup ../tools/gcf_init/index.yaml
-fi
-
 # Remove the service account if it was being used.
-if [[ "$*" == *--no-gcloud-auth* ]] ; then
+if [[ "$*" != *--no-service-account* ]] ; then
   SA_NAME="turbinia"
   SA_MEMBER="serviceAccount:$SA_NAME@$DEVSHELL_PROJECT_ID.iam.gserviceaccount.com"
 
   # Delete IAM roles from the service account
   echo "Delete permissions on service account"
-  gcloud projects remove-iam-policy-binding $DEVSHELL_PROJECT_ID --member=$SA_MEMBER --role='roles/cloudfunctions.admin'
-  gcloud projects remove-iam-policy-binding $DEVSHELL_PROJECT_ID --member=$SA_MEMBER --role='roles/cloudsql.admin'
-  gcloud projects remove-iam-policy-binding $DEVSHELL_PROJECT_ID --member=$SA_MEMBER --role='roles/compute.admin'
-  gcloud projects remove-iam-policy-binding $DEVSHELL_PROJECT_ID --member=$SA_MEMBER --role='roles/container.admin'
-  gcloud projects remove-iam-policy-binding $DEVSHELL_PROJECT_ID --member=$SA_MEMBER --role='roles/datastore.indexAdmin'
-  gcloud projects remove-iam-policy-binding $DEVSHELL_PROJECT_ID --member=$SA_MEMBER --role='roles/editor'
-  gcloud projects remove-iam-policy-binding $DEVSHELL_PROJECT_ID --member=$SA_MEMBER --role='roles/logging.logWriter'
-  gcloud projects remove-iam-policy-binding $DEVSHELL_PROJECT_ID --member=$SA_MEMBER --role='roles/pubsub.admin'
-  gcloud projects remove-iam-policy-binding $DEVSHELL_PROJECT_ID --member=$SA_MEMBER --role='roles/redis.admin'
-  gcloud projects remove-iam-policy-binding $DEVSHELL_PROJECT_ID --member=$SA_MEMBER --role='roles/servicemanagement.admin'
-  gcloud projects remove-iam-policy-binding $DEVSHELL_PROJECT_ID --member=$SA_MEMBER --role='roles/storage.admin'
+  gcloud projects add-iam-policy-binding $DEVSHELL_PROJECT_ID --member=$SA_MEMBER --role='roles/compute.instanceAdmin'
+  gcloud projects add-iam-policy-binding $DEVSHELL_PROJECT_ID --member=$SA_MEMBER --role='roles/logging.logWriter'
+  gcloud projects add-iam-policy-binding $DEVSHELL_PROJECT_ID --member=$SA_MEMBER --role='roles/errorreporting.writer'
+  gcloud projects add-iam-policy-binding $DEVSHELL_PROJECT_ID --member=$SA_MEMBER --role='roles/iam.serviceAccountUser'
 
   # Delete service account
   echo "Delete service account"
-  gcloud -q --project $DEVSHELL_PROJECT_ID iam service-accounts delete "${SA_NAME}@$DEVSHELL_PROJECT_ID.iam.gserviceaccount.com" 
-
-  # Remove the service account key
-  echo "Remove service account key"
-  rm ~/$TURBINIA_INSTANCE.json
-
+  gcloud -q --project $DEVSHELL_PROJECT_ID iam service-accounts delete "${SA_NAME}@$DEVSHELL_PROJECT_ID.iam.gserviceaccount.com"
 fi
 
 echo "The Turbinia deployment $INSTANCE_ID was succesfully removed from $DEVSHELL_PROJECT_ID"

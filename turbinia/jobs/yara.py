@@ -15,6 +15,7 @@
 """Job to execute Yara analysis tasks."""
 
 from turbinia.evidence import CompressedDirectory
+from turbinia.evidence import ContainerdContainer
 from turbinia.evidence import Directory
 from turbinia.evidence import DiskPartition
 from turbinia.evidence import DockerContainer
@@ -28,7 +29,8 @@ class YaraAnalysisJob(interface.TurbiniaJob):
   """Yara analysis job."""
 
   evidence_input = [
-      Directory, DiskPartition, CompressedDirectory, DockerContainer
+      CompressedDirectory, ContainerdContainer, Directory, DiskPartition,
+      DockerContainer
   ]
   evidence_output = [ReportText]
 

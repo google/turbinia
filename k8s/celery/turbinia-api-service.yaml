@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: turbinia-api-service
+  labels:
+    app: turbinia-api-service
+spec:
+  ports:
+  - name: web
+    port: 8000
+    targetPort: 8000
+  - name: oauth2
+    port: 8080
+    targetPort: 8080
+  - name: metrics
+    port: 9200
+    targetPort: 9200
+  selector:
+    app: turbinia-api-server

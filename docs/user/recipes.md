@@ -85,7 +85,7 @@ globals:
     - WindowsAccountAnalysisJob
 
 plaso_base:
-  task: 'PlasoTask'
+  task: 'PlasoParserTask'
   status_view: 'none'
   hashers: 'all'
   partition: 'all'

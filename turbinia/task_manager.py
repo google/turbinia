@@ -776,8 +776,8 @@ class PSQTaskManager(BaseTaskManager):
             psq_publisher, psq_subscriber, config.TURBINIA_PROJECT,
             name=config.PSQ_TOPIC,
             storage=psq.DatastoreStorage(datastore_client))
-      except exceptions.GoogleCloudError as e:
-        msg = 'Error creating PSQ Queue: {0:s}'.format(str(e))
+      except exceptions.GoogleCloudError as exception:
+        msg = 'Error creating PSQ Queue: {0:s}'.format(str(exception))
         log.error(msg)
         raise turbinia.TurbiniaException(msg)
     else:

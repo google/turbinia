@@ -22,8 +22,8 @@ to the `run()` method where most of our code will go:
 
 *   Running any pre- or post-processors that need to run to prepare the
     Evidence.
-*   If the Evidence is file-based, the pre-processor will add the path to the
-    processed evidence in `evidence.local_path`.
+*   Updating the `evidence.local_path` to be the local path of the evidence on
+    the worker machine the Task is currently running on.
 *   Setting up temporary directories (available as `self.output_dir` and
     `self.tmp_dir`).
 *   Preparing a TurbiniaResult object to save results into.
@@ -113,7 +113,7 @@ scheduled to process it.
 
 Each Task can set the Evidence state that is required (e.g. mounted, attached,
 etc) prior to execution by setting the state in `Task.REQUIRED_STATES`.  Each
-Evidence object can specify which states it supports in the
+Evidence object specifies which states it supports in the
 `Evidence.POSSIBLE_STATES` list attribute for that Task (e.g. see the
 [`GoogleCloudDisk` possible states
 here](https://github.com/google/turbinia/blob/cc79288ae36cfec749381b80694b4c1290d76583/turbinia/evidence.py#L661)).
@@ -128,16 +128,24 @@ docstrings](https://github.com/google/turbinia/blob/cc79288ae36cfec749381b80694b
 
 As mentioned above, the pre-processor that runs before the Task is executed
 will set the path `evidence.local_path` to point to the local Evidence. If the
-Task generates any new Evidence objects, you must set the `.source_path`
+Task generates any new output Evidence objects, you must set the `.source_path`
 attribute for that object before you add it to the results.  The `.source_path`
 is the original path the Evidence is created with and the `.local_path` is the
 path to access the Evidence after any pre-processors are run (e.g. the path it
-was mounted on if it was mounted, etc).  See the [docstrings for these
-attributes in the Evidence
+was mounted on if it was mounted, etc). In most cases, Tasks should use
+`.local_path` when processing or operating on the input Evidence and
+`.source_path` for the output Evidence that is created by the Task (and will
+be processed by other Tasks).
+
+Since not all Tasks can process all types/states of Evidence (e.g. device files
+and mounted directories), they can also reference other more specific paths for
+the input evidence if needed (e.g. `device_path` or `mount_path`), but
+generally this should not be needed as long as you set the
+`TurbiniaTask.REQUIRED_STATES` for the Task to match your actual requirements
+since the `local_path` should always be created by the pre-processors.
+See the [docstrings for these attributes in the Evidence
 object](https://github.com/google/turbinia/blob/cc79288ae36cfec749381b80694b4c1290d76583/turbinia/evidence.py#L127)
-for more details on the differences, but in summary, Tasks should use
-`.local_path` to process the incoming Evidence and `.source_path` for newly
-created Evidence.
+for more details. 
 
 ### Recipe configuration
 Tasks can also specify a set of variables that can be configured and set

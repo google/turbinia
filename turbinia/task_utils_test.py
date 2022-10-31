@@ -20,8 +20,7 @@ import unittest
 import mock
 
 from turbinia import task_utils
-from turbinia import TurbiniaException
-from turbinia.workers.plaso import PlasoTask
+from turbinia.workers.plaso import PlasoParserTask
 
 
 class TestTurbiniaTaskLoader(unittest.TestCase):
@@ -32,7 +31,7 @@ class TestTurbiniaTaskLoader(unittest.TestCase):
     task_loader = task_utils.TaskLoader()
 
     # Check valid task
-    self.assertTrue(task_loader.check_task_name('PlasoTask'))
+    self.assertTrue(task_loader.check_task_name('PlasoParserTask'))
 
     # Check invalid task
     self.assertFalse(task_loader.check_task_name('NoSuchTask'))
@@ -41,33 +40,34 @@ class TestTurbiniaTaskLoader(unittest.TestCase):
     """Basic test for get_task_names."""
     task_loader = task_utils.TaskLoader()
     task_names = task_loader.get_task_names()
-    self.assertIn('PlasoTask', task_names)
+    self.assertIn('PlasoParserTask', task_names)
 
   def testGetTask(self):
     """Basic test for get_task."""
     task_loader = task_utils.TaskLoader()
 
     # Check valid Task
-    task = task_loader.get_task('PlasoTask')
-    self.assertEqual(task.name, 'PlasoTask')
-    self.assertIsInstance(task, PlasoTask)
+    task = task_loader.get_task('PlasoParserTask')
+    self.assertEqual(task.name, 'PlasoParserTask')
+    self.assertIsInstance(task, PlasoParserTask)
 
     # Check invalid Task
     self.assertIsNone(task_loader.get_task('NoSuchTask'))
 
   def testTaskDeserialize(self):
     """Basic test for task_deserialize."""
-    task = PlasoTask(request_id='testRequestID', requester='testRequester')
+    task = PlasoParserTask(
+        request_id='testRequestID', requester='testRequester')
     task_dict = task.serialize()
     test_task = task_utils.task_deserialize(task_dict)
     self.assertEqual(test_task.request_id, 'testRequestID')
     self.assertEqual(test_task.requester, 'testRequester')
-    self.assertIsInstance(test_task, PlasoTask)
+    self.assertIsInstance(test_task, PlasoParserTask)
 
   @mock.patch('turbinia.task_utils.task_deserialize')
   def testTaskRunner(self, mock_task_deserialize):
     """Basic test for task_runner."""
-    task = PlasoTask()
+    task = PlasoParserTask()
     task.run_wrapper = lambda x: x
     mock_task_deserialize.return_value = task
     task_dict = task.serialize()
