@@ -17,7 +17,6 @@ RUN apt-get update && apt-get -y install \
     libterm-readline-gnu-perl \
     python3-pip \
     software-properties-common \
-    sudo \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy over web build
@@ -37,7 +36,7 @@ RUN if $(cd /tmp/ && git rev-parse --is-shallow-repository); then cd /tmp/ && gi
 
 RUN cd /tmp/ && python3 setup.py install
 
-RUN useradd -r -s /bin/nologin -G disk turbinia
+RUN useradd -r -s /bin/nologin -u 999 turbinia
 
 RUN mkdir /etc/turbinia && mkdir -p /mnt/turbinia/ && mkdir -p /var/lib/turbinia/ \
     && mkdir -p /var/log/turbinia/ && chown -R turbinia:turbinia /mnt/turbinia/ \

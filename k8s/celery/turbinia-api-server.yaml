@@ -17,6 +17,7 @@ spec:
       labels:
         app: turbinia-api-server
     spec:
+      serviceAccountName: turbinia
       automountServiceAccountToken: false
       securityContext:
         runAsNonRoot: true

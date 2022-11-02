@@ -1,8 +1,14 @@
 FROM ubuntu:20.04
 
 ENV DEBIAN_FRONTEND=noninteractive 
-RUN apt-get update && apt-get -y install wget supervisor curl
-RUN useradd -r -s /bin/nologin -G disk turbinia
+RUN apt-get update && apt-get -y install \
+    apt-transport-https \
+    apt-utils \
+    ca-certificates \
+    libterm-readline-gnu-perl \
+    software-properties-common \
+    && rm -rf /var/lib/apt/lists/*
+RUN useradd -r -s /bin/nologin -G disk -u 999 turbinia
 RUN mkdir -p /etc/turbinia && chown -R turbinia:turbinia /etc/turbinia/
 
 
