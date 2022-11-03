@@ -83,6 +83,7 @@ Various Turbinia specific additions/variations are:
 *   Using two spaces instead of four
 *   Quote strings as ' or """ instead of "
 *   Exception variables should be named 'exception' not 'e'.
+*   Use type annotations ("type hints") for newly created Python modules.
 *   Use f-String formatting instead of the % operator or str.format().
 *   Use positional or parameter format specifiers with typing e.g. '{0:s}' or
     '{text:s}' instead of '{0}', '{}' or '{:s}'. If we ever want to have
