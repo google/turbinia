@@ -6,6 +6,12 @@ then
     echo "${OAUTH2_CONF}" | base64 -d > /etc/turbinia/oauth2.conf
 fi
 
+# Write the auth.txt file
+if [ ! -z "$OAUTH2_AUTH_EMAILS" ] && [ ! -s /etc/turbinia/auth.txt ]
+then
+    echo "${OAUTH2_AUTH_EMAILS}" | base64 -d > /etc/turbinia/auth.txt
+fi
+
 oauth2-proxy --config /etc/turbinia/oauth2.conf 
 
 # Don't exit

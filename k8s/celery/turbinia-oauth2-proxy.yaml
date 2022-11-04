@@ -29,6 +29,11 @@ spec:
                 configMapKeyRef:
                   name: oauth2-config
                   key: OAUTH2_CONF
+            - name: OAUTH2_AUTH_EMAILS
+              valueFrom:
+                configMapKeyRef:
+                  name: auth-config
+                  key: OAUTH2_AUTH_EMAILS
           ports:
             - containerPort: 9376
           resources: 
@@ -53,3 +58,20 @@ spec:
         emptyDir: {}
       - name: conf
         emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: turbinia-oauth2-service
+  annotations:
+    cloud.google.com/neg: '{"ingress": true}'
+    cloud.google.com/backend-config: '{"ports": {"8080":"turbinia-neg-healthcheck"}}'
+spec:
+  type: ClusterIP
+  selector:
+    app: turbinia-oauth2-proxy
+  ports:
+  - name: oauth2-http
+    port: 8080
+    protocol: TCP
+    targetPort: 9376

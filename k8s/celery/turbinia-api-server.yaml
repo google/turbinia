@@ -44,8 +44,6 @@ spec:
               name: turbiniavolume
             - mountPath: /etc/turbinia
               name: conf
-            - mountPath: /tmp
-              name: tmp
             - mountPath: /var/log
               name: logs
           ports:
@@ -69,8 +67,6 @@ spec:
             claimName: turbiniavolume-claim
             readOnly: false
         - name: conf
-          emptyDir: {}
-        - name: tmp
           emptyDir: {}
         - name: logs
           emptyDir: {}

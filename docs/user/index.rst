@@ -8,6 +8,7 @@ User documentation
    install-gke-celery
    install-gke-pubsub
    install-gke-monitoring
+   install-gke-proxy
    install-gcp-pubsub
    gke-sre
    how-it-works

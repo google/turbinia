@@ -38,4 +38,4 @@ RUN chmod +rwx /home/turbinia/start.sh
 USER turbinia
 CMD ["/home/turbinia/start.sh"]
 # Expose Prometheus endpoint.
-EXPOSE 8000/tcp
+EXPOSE 9200/tcp

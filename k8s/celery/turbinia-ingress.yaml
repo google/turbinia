@@ -1,3 +1,33 @@
+apiVersion: cloud.google.com/v1
+kind: BackendConfig
+metadata:
+  name: turbinia-neg-healthcheck
+spec:
+  healthCheck:
+    checkIntervalSec: 5
+    timeoutSec: 5
+    healthyThreshold: 2
+    unhealthyThreshold: 2
+    type: HTTP
+    requestPath: /ping
+    port: 9376
+---
+apiVersion: networking.gke.io/v1beta1
+kind: FrontendConfig
+metadata:
+  name: turbinia-loadbalancer-frontend-config
+spec:
+  redirectToHttps:
+    enabled: true
+---
+apiVersion: networking.gke.io/v1
+kind: ManagedCertificate
+metadata:
+  name: turbinia-loadbalancer-managed-ssl
+spec:
+  domains: 
+    - <DOMAIN> 
+---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
