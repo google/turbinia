@@ -15,7 +15,7 @@ from the cluster.
 
 - A Google Cloud Account
 - A running GKE cluster with Turbinia deployed to
-- A set of Oauth2 Web and Native credentials to use with the Oauth2 Proxy. See blow for recommended approach.
+- A set of Oauth2 Web and Native credentials to use with the Oauth2 Proxy. See below for recommended approach
 - A domain name and the ability to create DNS records in that domain. See below for recommended approach
 
 ## **Deployment**

@@ -2,16 +2,16 @@
 
 ## **Introduction**
 
-These instructions cover the Redis installation of Turbinia using [Google Kubernetes Engine (GKE)](https://cloud.google.com/kubernetes-engine). However, development is still in progress and we
-recommend you use the [GKE PubSub Installation](install-gke-pubsub.md) for cloud installations.
+In this guide, you will learn how to deploy the Redis implementation of Turbinia using [Google Kubernetes Engine (GKE)](https://cloud.google.com/kubernetes-engine).
 
-Installing into GKE allows Turbinia Workers to scale based on processing demand. Currently, this is done through scaling on CPU utilization, which is determined when available Turbinia Workers process Tasks and reach a pre-defined CPU threshold. The GKE architecture closely resembles the [cloud architecture](how-it-works.md) with GKE being used to scale Turbinia Woker pods.
+GKE allows Turbinia workers to scale based on processing demand. Currently by scaling based on CPU utilization of Turbinia workers. The GKE architecture closely resembles the [cloud architecture](how-it-works.md).
 
-All steps in this document are required for getting Turbinia running on GKE.
+At the end, you will have a GKE cluster, a Filestore instance to store logs to, and a fully functioning Turbinia application locally running within the cluster.
 
 ### **Prerequisites**
 
-GKE is only supported for Google Cloud so a Google Cloud Project is required to work from.
+- A Google Cloud Account and a project to work from
+- The ability to create GKE clusters, service accounts, and GCP Filestore.
 
 ## **Installation**
 
@@ -25,9 +25,10 @@ Please follow these steps for deploying Turbinia to GKE. Ensure that the `.clust
   [Google Cloud Console](https://console.cloud.google.com).
 - Determine which GCP zone and region that you wish to deploy Turbinia into.
 - Review the `.clusterconfig` config file and please update any of the default values if necessary based on requirements.
-- Deploy Turbinia through the following command
+- Deploy Turbinia through the following command:
   - `./k8s/tools/deploy-celery-gke.sh`
-- The deployment script will automatically enable GCP APIs, create the cluster and GCP resources then deploy Turbinia to the cluster. At the end of the run, you should have a fully functioning Turbinia environment within GKE to use.
+- Turbinia will only be accessible within the cluster, please see [install-gke-external](install-gke-external.md)
+  for instructions on exposing Turbinia externally or see section below for making requests through port forwarding.
 
 **Follow these steps to destroy the Turbinia GKE environment.**
 
@@ -35,13 +36,27 @@ Please follow these steps for deploying Turbinia to GKE. Ensure that the `.clust
   - `./k8s/tools/destroy-celery-gke.sh`
   - **Note this will delete the Turbinia cluster including all processed output and log files as well as associated GCP resources**
 
-### **Making processing requests in GKE**
+### **Making requests locally**
 
-- You can either make requests via setting up a local `turbiniactl` client or through connecting to the server through the following steps.
-- Connect to cluster through `gcloud container clusters get-credentials <CLUSTER_NAME> --zone <ZONE> --project <PROJECT_NAME>`.
-- Use `kubectl get pods` to get a list of running pods.
-- Identify the pod named `turbinia-server-*` and exec into it via `kubectl exec --stdin --tty [CONTAINER-NAME] -- bash`
-- Use `turbiniactl` to kick off a request to process evidence.
+If you have not yet set up Turbinia to be accessed externally, you can make a request through the following steps.
+
+- Connect to the cluster:
+
+```
+gcloud container clusters get-credentials <CLUSTER_NAME> --zone <ZONE> --project <PROJECT_NAME>
+```
+
+- Forward the Turbinia API port locally to your machine:
+
+```
+kubectl port-forward service/turbinia-api-service 8000:8000
+```
+
+- Create a processing request:
+
+```
+turbinicatl googleclouddisk -d <DISK_NAME> -z <ZONE>
+```
 
 ## **Monitoring Installation**
 
