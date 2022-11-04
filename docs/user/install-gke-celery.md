@@ -52,7 +52,7 @@ gcloud container clusters get-credentials <CLUSTER_NAME> --zone <ZONE> --project
 kubectl port-forward service/turbinia-api-service 8000:8000
 ```
 
-- Create a processing request:
+- Please have the turbinia client installed locally then create a processing request via:
 
 ```
 turbinicatl googleclouddisk -d <DISK_NAME> -z <ZONE>
