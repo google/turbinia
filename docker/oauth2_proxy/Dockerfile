@@ -7,12 +7,14 @@ RUN apt-get update && apt-get -y install \
     ca-certificates \
     libterm-readline-gnu-perl \
     software-properties-common \
+    curl \ 
+    wget \
     && rm -rf /var/lib/apt/lists/*
 RUN useradd -r -s /bin/nologin -G disk -u 999 turbinia
 RUN mkdir -p /etc/turbinia && chown -R turbinia:turbinia /etc/turbinia/
 
 
-COPY start.sh /home/turbinia/start.sh
+COPY docker/oauth2_proxy/start.sh /home/turbinia/start.sh
 RUN chmod +rwx /home/turbinia/start.sh
 
 # Copy oauth2 proxy and start it

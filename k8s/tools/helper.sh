@@ -26,3 +26,7 @@ alias kdeld='kubectl delete deployment'
 alias kdelcm='kubectl delete configmap'
 alias kdels='kubectl delete svc'
 alias kdeli='kubectl delete ingress'
+# Restart resources
+alias krrd='kubectl rollout restart deployment'
+alias krrp='kubectl rollout restart pod'
+alias krrs='kubectl rollout restart svc'
