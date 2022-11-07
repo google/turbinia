@@ -2,14 +2,10 @@
 
 ## Introduction
 
-In this guide, you will learn how to externally expose the Turbinia application
-and will cover configuring a domain, TLS, and setting up authentication provided
-by an [Oauth2 Proxy](https://oauth2-proxy.github.io/oauth2-proxy/).
-
-This set of instructions are recommended for users who have already installed
-the Turbinia application to a GKE cluster, but would like to access the Web UI and
-API server through an externally available URL instead of port forwarding the Turbinia
-service locally from the cluster.
+In this guide you will learn how to externally expose the Turbinia application.
+This guide is recommended for users who have already deployed Turbinia to a GKE
+cluster, but would like to access the Web UI and API server through an externally
+available URL instead of port forwarding the Turbinia service locally from the cluster.
 
 ### Prerequisites
 
@@ -19,7 +15,7 @@ service locally from the cluster.
 
 ## Deployment
 
-Please follow these steps for configuring Turbinia to be externally accessible.
+Please follow the steps below for configuring Turbinia to be externally accessible.
 
 ### 1. Create a static external IP address
 
@@ -176,13 +172,16 @@ Congrats, you have now successfully configured Turbinia to be externally accessi
 
 ## Making Turbinia processing requests
 
-- Please have the Turbinia client configured locally then create a processing request via:
+Once Turbinia is externally accessible, install the Turbinia client and Oauth
+Desktop credentials locally on your machine.
+
+- To create a processing request for evidence run the following:
 
 ```
 turbinicatl googleclouddisk -d <DISK_NAME> -z <ZONE>
 ```
 
-- You can access the Turbinia Web UI via:
+- To access the Turbinia Web UI, point your browser to:
 
 ```
 https://<DOMAIN_YOU_CONFIGURED>
@@ -214,3 +213,17 @@ gcloud dns record-sets create DOMAIN_NAME --zone="turbinia-dns" --type="AAAA" --
 ```
 kubectl create -f ../celery/turbinia-ingress.yaml
 ```
+
+### Egress Connectivity for Nodes
+
+By default, the deployment script will bootstrap a private GKE cluster. This prevents
+nodes from having an external IP address to send and recieve external traffic from and
+traffic will only be allowed through the deployed load balancer.
+
+In cases where nodes require external network connectivity or egress to retrieve external
+helm and software packages, you'll need to create a [GCP NAT router](https://cloud.google.com/nat/docs/gke-example#create-nat). This allows traffic to be routed externally from the cluster
+nodes to the NAT router and then externally while denying inbound traffic, allowing the cluster
+nodes to stay private.
+
+One use case where this may come up is if you choose to deploy ExternalDNS or Certmanager
+to the cluster instead of the GCP equivalent for DNS and certificate management.
