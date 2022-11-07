@@ -1,28 +1,27 @@
 # Turbinia External Access and Authentication Instructions
 
-## **Introduction**
+## Introduction
 
-In this guide, you will learn how to deploy and configure a domain and TLS to access
-your Turbinia application on as well as setting up authentication provided by an
-[Oauth2 Proxy](https://oauth2-proxy.github.io/oauth2-proxy/).
+In this guide, you will learn how to externally expose the Turbinia application
+and will cover configuring a domain, TLS, and setting up authentication provided
+by an [Oauth2 Proxy](https://oauth2-proxy.github.io/oauth2-proxy/).
 
 This set of instructions are recommended for users who have already installed
-the Turbinia application to a cluser, but would like to access the Web UI and
-API server through an externally available URL instead of port forwarding locally
-from the cluster.
+the Turbinia application to a GKE cluster, but would like to access the Web UI and
+API server through an externally available URL instead of port forwarding the Turbinia
+service locally from the cluster.
 
-### **Prerequisites**
+### Prerequisites
 
-- A Google Cloud Account
-- A running GKE cluster with Turbinia deployed to
-- A set of Oauth2 Web and Native credentials to use with the Oauth2 Proxy. See below for recommended approach
-- A domain name and the ability to create DNS records in that domain. See below for recommended approach
+- A Google Cloud Account and a GKE cluster with Turbinia deployed
+- The ability to create GCP resources
+- `gcloud` and `kubectl` locally installed
 
-## **Deployment**
+## Deployment
 
-Please follow these steps for deploying Turbinia to GKE. Ensure that the `.clusterconfig` config file has been updated appropriately.
+Please follow these steps for configuring Turbinia to be externally accessible.
 
-### **1. Create a static external IP address**
+### 1. Create a static external IP address
 
 - Create a global static IP address as follows:
 
@@ -36,7 +35,7 @@ gcloud compute addresses create turbinia-webapps --global
 gcloud compute addresses list
 ```
 
-### **2. Create a domain or use pre-existing one**
+### 2. Create a domain or use pre-existing one
 
 You will need a domain to host Turbinia on. You can either register a new domain in a registrar
 of your choice or use a pre-existing one.
@@ -73,11 +72,11 @@ gcloud dns record-sets create DOMAIN_NAME --zone="turbinia-dns" --type="A" --ttl
 If you would like to register a domain and update its DNS record through Google Domains instead,
 you can skip this step altogether and follow handy instructions provided [here](https://cert-manager.io/docs/tutorials/getting-started-with-cert-manager-on-google-kubernetes-engine-using-lets-encrypt-for-ingress-ssl/#4-create-a-domain-name-for-your-website). Additionally, DNS can be managed through [ExternalDNS](https://github.com/kubernetes-sigs/external-dns), however setup is outside the scope of this documentation.
 
-### **3. Create Oauth2 Application IDs**
+### 3. Create Oauth2 Application IDs
 
-Authentication is handled by a proxy utility named [Oauth2 Proxy](https://oauth2-proxy.github.io/oauth2-proxy/). We will be configuring the Oauth2 Proxy with Google Oauth, however there are alternative [providers](https://oauth2-proxy.github.io/oauth2-proxy/docs/configuration/oauth_provider) that you may also choose to configure instead.
+Authentication is handled by a proxy utility named [Oauth2 Proxy](https://oauth2-proxy.github.io/oauth2-proxy/). We will be configuring the Oauth2 Proxy with Google Oauth, however there are alternative [providers](https://oauth2-proxy.github.io/oauth2-proxy/docs/configuration/oauth_provider) that you may configure instead.
 
-As part of this deployment, you will need to configure two seperate Oauth credentials. One for the Web client and one for the API/Native client.
+In this deployment, you will need to configure two Oauth credentials. One that will be for the Web client and one for the API/Desktop client.
 
 To create the Web Oauth credentials, take the following steps:
 
@@ -89,7 +88,7 @@ To create the Web Oauth credentials, take the following steps:
 6. Fill in Authorized redirect URIs with `https://<DOMAIN>/oauth2/callback`
 7. Please make a note of the generated `Client ID` and `Client Secret` for later use.
 
-To create the Native Oauth credentials, take the following steps:
+To create the API/Desktop Oauth credentials, take the following steps:
 
 1. Go to the [Credentials page](https://console.developers.google.com/apis/credentials).
 2. Click Create credentials > OAuth client ID.
@@ -156,7 +155,7 @@ Lastly, deploy the Oauth2 Proxy to the cluster through the following command:
 kubectl create -f ../celery/turbinia-oauth2-proxy.yaml
 ```
 
-### **4. Deploy the Load Balancer and Managed SSL**
+### 4. Deploy the Load Balancer and Managed SSL
 
 In the final step, edit `turbinia-ingress.yaml` located in the `k8s/celery` directory
 and replace the two placeholders `<DOMAIN>` with the domain you configured. Save
@@ -174,3 +173,44 @@ kubectl describe ingress turbinia-ingress
 ```
 
 Congrats, you have now successfully configured Turbinia to be externally accessible!
+
+## Making Turbinia processing requests
+
+- Please have the Turbinia client configured locally then create a processing request via:
+
+```
+turbinicatl googleclouddisk -d <DISK_NAME> -z <ZONE>
+```
+
+- You can access the Turbinia Web UI via:
+
+```
+https://<DOMAIN_YOU_CONFIGURED>
+```
+
+## Additional
+
+### Configuring an ipv6 address
+
+Please follow these steps if your environment requires an ipv6 address to be
+configured instead.
+
+- Create a ipv6 global static IP address as follows:
+
+```
+gcloud compute addresses create turbinia-webapps --global --ip-version ipv6
+```
+
+- Then add the DNS `AAAA` record pointing to the ipv6 address as follows:
+
+```
+gcloud dns record-sets create DOMAIN_NAME --zone="turbinia-dns" --type="AAAA" --ttl="300" --rrdatas="IPV6_ADDRESS"
+```
+
+- In the final step, edit `turbinia-ingress.yaml` located in the `k8s/celery` directory
+  and replace the two placeholders `<DOMAIN>` with the domain you configured. Save
+  the file then deploy it to the cluster:
+
+```
+kubectl create -f ../celery/turbinia-ingress.yaml
+```
