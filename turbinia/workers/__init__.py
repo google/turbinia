@@ -526,7 +526,7 @@ class TurbiniaTask:
       return True
 
     for arg in sys.argv:
-      if 'nosetests' in arg:
+      if 'nosetests' in arg or 'pytest' in arg or 'unittest' in arg:
         return True
 
     return False
