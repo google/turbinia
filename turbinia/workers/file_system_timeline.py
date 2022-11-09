@@ -23,16 +23,6 @@ from turbinia.workers import TurbiniaTask
 from turbinia.evidence import EvidenceState as state
 from turbinia.evidence import BodyFile
 
-if TurbiniaTask.check_worker_role():
-  try:
-    from dfimagetools import bodyfile
-    from dfimagetools import file_entry_lister
-    from dfvfs.helpers import volume_scanner
-    from dfvfs.lib import errors as dfvfs_errors
-  except ImportError as exception:
-    message = 'Could not import libraries: {0!s}'.format(exception)
-    raise TurbiniaException(message)
-
 
 class FileSystemTimelineTask(TurbiniaTask):
   """Task to generate file system timelines. """
@@ -51,6 +41,16 @@ class FileSystemTimelineTask(TurbiniaTask):
     Returns:
         TurbiniaTaskResult object.
     """
+    if TurbiniaTask.check_worker_role():
+      try:
+        from dfimagetools import bodyfile
+        from dfimagetools import file_entry_lister
+        from dfvfs.helpers import volume_scanner
+        from dfvfs.lib import errors as dfvfs_errors
+      except ImportError as exception:
+        message = 'Could not import libraries: {0!s}'.format(exception)
+        raise TurbiniaException(message)
+
     bodyfile_output = os.path.join(self.output_dir, 'file_system.bodyfile')
     output_evidence = BodyFile(source_path=bodyfile_output)
     number_of_entries = 0
