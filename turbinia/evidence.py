@@ -28,7 +28,6 @@ import filelock
 
 from turbinia import config
 from turbinia import TurbiniaException
-from turbinia.lib.docker_manager import GetDockerPath
 from turbinia.processors import archive
 from turbinia.processors import containerd
 from turbinia.processors import docker
@@ -1061,6 +1060,8 @@ class DockerContainer(Evidence):
 
   def _preprocess(self, _, required_states):
     if EvidenceState.CONTAINER_MOUNTED in required_states:
+      # Avoid circular dependency.
+      from turbinia.lib.docker_manager import GetDockerPath
       self._docker_root_directory = GetDockerPath(
           self.parent_evidence.mount_path)
       # Mounting the container's filesystem

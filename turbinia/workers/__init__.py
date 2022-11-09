@@ -43,7 +43,6 @@ from turbinia import state_manager
 from turbinia import task_utils
 from turbinia import TurbiniaException
 from turbinia import log_and_report
-from turbinia.lib import docker_manager
 from prometheus_client import Gauge
 from prometheus_client import Histogram
 
@@ -643,6 +642,8 @@ class TurbiniaTask:
     # Execute the job via docker.
     docker_image = job_manager.JobsManager.GetDockerImage(self.job_name)
     if docker_image:
+      # Avoid circular dependency
+      from turbinia.lib import docker_manager
       ro_paths = []
       for path in ['local_path', 'source_path', 'device_path', 'mount_path']:
         if hasattr(result.input_evidence, path):
