@@ -58,7 +58,7 @@ class PlasoJob(interface.TurbiniaJob):
     tasks = []
     for evidence_object in evidence:
       # No need to run the hasher task for BodyFile type.
-      if evidence_object.type is not 'BodyFile':
+      if evidence_object.type != 'BodyFile':
         tasks.append(PlasoHasherTask())
       tasks.append(PlasoParserTask())
     return tasks
