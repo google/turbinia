@@ -15,9 +15,11 @@
 # limitations under the License.
 """Script to run the tests."""
 
-import subprocess
+import unittest
+import sys
 
 if __name__ == '__main__':
-  subprocess.check_call([
-      'nosetests', '-vv', '--with-coverage', '--cover-package=turbinia', '--exe'
-  ])
+  test_suite = unittest.TestLoader().discover('turbinia', pattern='*_test.py')
+  test_results = unittest.TextTestRunner(verbosity=2).run(test_suite)
+  if not test_results.wasSuccessful():
+    sys.exit(1)
