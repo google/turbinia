@@ -46,8 +46,7 @@ class TurbiniaMgmtCli:
     self._config: turbinia_api_client.Configuration = config
 
     if not self.config:
-      host = 'http://{0:s}:{1:d}'.format(
-          self.api_server_address, self.api_server_port)
+      host = '{0:s}:{1:d}'.format(self.api_server_address, self.api_server_port)
       self.config = self.default_config(host)
     if not self.api_client:
       self.api_client = self.default_api_client(self.config)
