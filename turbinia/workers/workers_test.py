@@ -86,7 +86,6 @@ class TestTurbiniaTaskBase(unittest.TestCase):
         os.rmdir(directory)
 
     os.rmdir(self.base_output_dir)
-    self.task.job_name = None
 
   def setResults(
       self, setup=None, run=None, validate_result=None, mock_run=True):
