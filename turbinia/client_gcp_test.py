@@ -33,7 +33,7 @@ class TestTurbiniaClient(unittest.TestCase):
   """Test Turbinia client class."""
 
   @mock.patch('turbinia.client.task_manager.PSQTaskManager._backend_setup')
-  @mock.patch('turbinia.state_manager.datastore.Client')
+  @mock.patch('google.cloud.datastore.Client')
   def setUp(self, _, __):  #pylint: disable=arguments-differ
     """Initialize tests for Turbinia client."""
     config.LoadConfig()

@@ -44,7 +44,6 @@ from turbinia import state_manager
 from turbinia import task_utils
 from turbinia import TurbiniaException
 from turbinia import log_and_report
-from turbinia.lib import docker_manager
 
 METRICS = {}
 # Set the maximum size that the report can be before truncating it.  This is a
@@ -528,9 +527,8 @@ class TurbiniaTask:
     if config.TURBINIA_COMMAND in ('celeryworker', 'psqworker'):
       return True
 
-    for arg in sys.argv:
-      if 'nosetests' in arg:
-        return True
+    if 'unittest' in sys.modules.keys():
+      return True
 
     return False
 
@@ -645,6 +643,7 @@ class TurbiniaTask:
     # Execute the job via docker.
     docker_image = job_manager.JobsManager.GetDockerImage(self.job_name)
     if docker_image:
+      from turbinia.lib import docker_manager
       ro_paths = []
       for path in ['local_path', 'source_path', 'device_path', 'mount_path']:
         if hasattr(result.input_evidence, path):

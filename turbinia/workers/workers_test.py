@@ -86,6 +86,7 @@ class TestTurbiniaTaskBase(unittest.TestCase):
         os.rmdir(directory)
 
     os.rmdir(self.base_output_dir)
+    self.task.job_name = None
 
   def setResults(
       self, setup=None, run=None, validate_result=None, mock_run=True):
@@ -308,7 +309,7 @@ class TestTurbiniaTask(TestTurbiniaTaskBase):
 
   def testTurbiniaTaskExecuteTimeout(self):
     """Test execution with subprocess timeout case."""
-    cmd = 'sleep 10'
+    cmd = 'sleep 3'
     self.result.close = mock.MagicMock()
     ret, result = self.task.execute(cmd, self.result, shell=True, timeout=1)
 
@@ -363,7 +364,7 @@ class TestTurbiniaTask(TestTurbiniaTaskBase):
     """Test execution with new evidence source_path that exists but is empty."""
     cmd = 'test cmd'
     output = ('test stdout', 'test stderr')
-
+    self.task.job_name = 'PlasoJob'
     self.result.close = mock.MagicMock()
     proc_mock = mock.MagicMock()
     proc_mock.communicate.return_value = output

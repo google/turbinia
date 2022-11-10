@@ -26,7 +26,6 @@ from turbinia.evidence import EvidenceState as state
 from turbinia.lib import utils
 from turbinia.workers import Priority
 from turbinia.workers import TurbiniaTask
-from turbinia.lib.docker_manager import GetDockerPath
 from turbinia import config
 
 log = logging.getLogger('turbinia')
@@ -54,6 +53,7 @@ class DockerContainersEnumerationTask(TurbiniaTask):
       TurbiniaException: when the docker-explorer tool cannot be found or failed
           to run.
     """
+    from turbinia.lib.docker_manager import GetDockerPath
     config.LoadConfig()
     docker_dir = GetDockerPath(evidence.mount_path)
 
