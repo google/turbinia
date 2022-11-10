@@ -31,3 +31,4 @@ vine>=5.0.0
 PyJWT[crypto]<2
 idna==2.10
 grpcio-status<1.49.0,>=1.33.2
+pytest
