@@ -364,7 +364,7 @@ class TestTurbiniaTask(TestTurbiniaTaskBase):
     """Test execution with new evidence source_path that exists but is empty."""
     cmd = 'test cmd'
     output = ('test stdout', 'test stderr')
-    self.task.job_name = 'PlasoJob'
+
     self.result.close = mock.MagicMock()
     proc_mock = mock.MagicMock()
     proc_mock.communicate.return_value = output
