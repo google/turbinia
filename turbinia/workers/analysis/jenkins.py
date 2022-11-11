@@ -71,7 +71,7 @@ class JenkinsAnalysisTask(TurbiniaTask):
       return result
 
     jenkins_artifacts = []
-    jenkins_re = re.compile(r'^.*jenkins[^\/]*(\/users\/[^\/]+)*\/config\.xml$')
+    jenkins_re = re.compile(r'^.*jenkins[^\/]*(\/home)?(\/users\/[^\/]+)*\/config\.xml$')
     for collected_artifact in collected_artifacts:
       if re.match(jenkins_re, collected_artifact):
         jenkins_artifacts.append(collected_artifact)
