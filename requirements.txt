@@ -4,7 +4,6 @@ docker
 fakeredis>=1.8.1
 fastapi>=0.75.0
 filelock
-httpx
 google-api-core<2.0.0dev
 google-api-python-client
 google-auth<2.0.0.dev0
@@ -14,6 +13,7 @@ google-cloud-error-reporting
 google-cloud-logging>=2.0.0,<3.0.0dev
 google-cloud-pubsub==1.7.0
 google-cloud-storage<=2.2.1
+httpx
 pycryptodomex
 prometheus_client
 libcloudforensics
@@ -25,6 +25,7 @@ pyyaml>=5.4.1
 pyOpenSSL<=21.0.0
 redis<4.2
 six>=1.15.0
+starlette-oauth2-api
 urllib3[secure]
 uvicorn>=0.17.6
 vine>=5.0.0
