@@ -207,7 +207,7 @@ func fungeRules(filePath string) (string, error) {
 					not = "not "
 					filepath = filepath[1:]
 				}
-				t = t + fmt.Sprintf(" and %vfilepath matches /%v/", not, filepath)
+				t = t + fmt.Sprintf(" and %vfilepath matches /%v/", not, strings.ReplaceAll(filepath, `/`, `\/`))
 				filepath = ""
 				not = ""
 			}
@@ -216,7 +216,7 @@ func fungeRules(filePath string) (string, error) {
 					not = "not "
 					filename = filename[1:]
 				}
-				t = t + fmt.Sprintf(" and %vfilename matches /%v/", not, filename)
+				t = t + fmt.Sprintf(" and %vfilename matches /%v/", not, strings.ReplaceAll(filename, `/`, `\/`))
 				filename = ""
 				not = ""
 			}
