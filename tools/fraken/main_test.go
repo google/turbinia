@@ -39,7 +39,7 @@ rule TEST_BADCOND_RULE {
 rule TEST_EXTVAR_RULE {
 	meta:
 		description = "Is an external variable test rule"
-		filepath = "ls"
+		filepath = "bin/ls"
 	strings:
 		$s = "test" ascii
 	condition:
@@ -49,11 +49,11 @@ rule TEST_EXTVAR_RULE {
 rule TEST_EXTVAR_RULE {
 	meta:
 		description = "Is an external variable test rule"
-		filepath = "ls"
+		filepath = "bin/ls"
 	strings:
 		$s = "test" ascii
 	condition:
-		all of them and filepath matches /ls/
+		all of them and filepath matches /bin\/ls/
 }`
 )
 

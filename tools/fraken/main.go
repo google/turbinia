@@ -259,7 +259,6 @@ func fungeRules(filePath string) (string, error) {
 		}
 		ret = append(ret, t)
 	}
-	log.Println(strings.Join(ret, "\n"))
 	return strings.Join(ret, "\n"), nil
 }
 
