@@ -35,7 +35,8 @@ spec:
                   name: auth-config
                   key: OAUTH2_AUTH_EMAILS
           ports:
-            - containerPort: 9376
+            - containerPort: 8080
+            - containerPort: 9200
           resources: 
             requests:
               memory: "256Mi"
@@ -74,4 +75,4 @@ spec:
   - name: oauth2-http
     port: 8080
     protocol: TCP
-    targetPort: 9376
+    targetPort: 8080

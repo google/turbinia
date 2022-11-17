@@ -10,7 +10,7 @@ spec:
     unhealthyThreshold: 2
     type: HTTP
     requestPath: /ping
-    port: 9376
+    port: 8080
 ---
 apiVersion: networking.gke.io/v1beta1
 kind: FrontendConfig
@@ -26,7 +26,7 @@ metadata:
   name: turbinia-loadbalancer-managed-ssl
 spec:
   domains: 
-    - <DOMAIN> 
+    - <DOMAIN_NAME> 
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
@@ -39,7 +39,7 @@ metadata:
     kubernetes.io/ingress.class: "gce"
 spec:
   rules:
-    - host: <DOMAIN>
+    - host: <DOMAIN_NAME>
       http:
         paths:
           - path: /

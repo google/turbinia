@@ -28,7 +28,7 @@ spec:
         fsGroupChangePolicy: "OnRootMismatch"
       containers:
         - name: api
-          image: us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-api-server-dev:latest
+          image: us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-api-server:latest
           env:
             - name: TURBINIA_CONF
               valueFrom:

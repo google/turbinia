@@ -37,6 +37,14 @@ This section covers the steps for deploying a Turbinia GKE environment.
   - `./k8s/tools/destroy-celery-gke.sh`
   - **Note this will delete the Turbinia cluster including all processed output and log files as well as associated GCP resources**
 
+### Networks listed
+
+The following ports will be exposed as part of deployment:
+
+- 9200 - To collect Prometheus metrics from the Turbinia endpoints.
+- 8000 - the Turbinia API Service and Web UI.
+- 8080 - the Oauth2 Proxy Service.
+
 ## Making requests local to the cluster
 
 If you have not set up external access to Turbinia, you can make a request through the following steps.
