@@ -10,7 +10,7 @@ RUN apt-get update && apt-get -y install \
     curl \ 
     wget \
     && rm -rf /var/lib/apt/lists/*
-RUN useradd -r -s /bin/nologin -G disk -u 999 turbinia
+RUN useradd -r -s /bin/nologin -u 999 turbinia
 RUN mkdir -p /etc/turbinia && chown -R turbinia:turbinia /etc/turbinia/
 
 
@@ -25,4 +25,6 @@ RUN chmod +x /usr/local/bin/oauth2-proxy
 
 USER turbinia
 CMD ["/home/turbinia/start.sh"]
-EXPOSE 9376/tcp
+# Expose Prometheus and Oauth2 endpoints.
+EXPOSE 9200/tcp
+EXPOSE 8080/tcp

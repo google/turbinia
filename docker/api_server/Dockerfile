@@ -23,8 +23,7 @@ RUN apt-get update && apt-get -y install \
 COPY --from=build-stage /tmp/web/dist /tmp/web
 
 RUN pip3 install pip --upgrade
-RUN pip3 install requests --upgrade
-RUN pip3 install urllib3 cryptography --upgrade
+RUN pip3 install urllib3 cryptography requests --upgrade
 
 ADD requirements.txt /tmp/
 RUN cd /tmp/ && pip3 install -r requirements.txt
@@ -47,8 +46,8 @@ RUN mkdir /etc/turbinia && mkdir -p /mnt/turbinia/ && mkdir -p /var/lib/turbinia
 
 COPY docker/api_server/start.sh /home/turbinia/start.sh
 RUN chmod +rwx /home/turbinia/start.sh
-
 USER turbinia
 CMD ["/home/turbinia/start.sh"]
-# Expose tcp ports
+# Expose Prometheus and API endpoints.
+EXPOSE 9200/tcp
 EXPOSE 8000/tcp

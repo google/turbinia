@@ -25,12 +25,11 @@ This section covers the steps for deploying a Turbinia GKE environment.
 - Create or select a Google Cloud Platform project in the
   [Google Cloud Console](https://console.cloud.google.com).
 - Determine which GCP zone and region that you wish to deploy Turbinia into.
-- Review the `.clusterconfig` config file and please update any of the default values if necessary based on cluster requirements.
+- Review the `.clusterconfig` config file located in `k8s/tools` and please update any of the default values if necessary based on cluster requirements.
 - Deploy through the following command:
   - `./k8s/tools/deploy-celery-gke.sh`
   - **Note this script will create a GKE cluster and GCP resources then deploy Turbinia to the cluster**
-- Congrats, you have successfully deployed Turbinia locally! Please see [install-gke-external](install-gke-external.md)
-  for instructions on accessing Turbinia externally through a URL or see the section below for making Turbinia processing requests locally.
+- Congrats, you have successfully deployed Turbinia into GKE! In order to make requests into Turbinia at this stage see Making requests locally section below or if you'd like to set up external access to Turbinia via a URL see [install-gke-external](install-gke-external.md).
 
 ### Destroying the Turbinia cluster
 
@@ -38,7 +37,7 @@ This section covers the steps for deploying a Turbinia GKE environment.
   - `./k8s/tools/destroy-celery-gke.sh`
   - **Note this will delete the Turbinia cluster including all processed output and log files as well as associated GCP resources**
 
-## Making requests locally
+## Making requests local to the cluster
 
 If you have not set up external access to Turbinia, you can make a request through the following steps.
 
@@ -54,16 +53,45 @@ gcloud container clusters get-credentials <CLUSTER_NAME> --zone <ZONE> --project
 kubectl port-forward service/turbinia-api-service 8000:8000
 ```
 
-- Please have the Turbinia client installed locally then create a processing request via:
+- Install the Turbinia client locally on your machine or in a cloud shell console:
 
 ```
-turbinicatl googleclouddisk -d <DISK_NAME> -z <ZONE>
+pip3 install turbinia_api_client
+```
+
+- Create a processing request via:
+
+```
+turbiniamgmt submit googleclouddisk -d <DISK_NAME> -z <ZONE>
 ```
 
 - You can access the Turbinia Web UI via:
 
 ```
 http://localhost:8000
+```
+
+## Making requests within a pod in the cluster
+
+You may also make requests directly from a pod running within the cluster through
+the following steps.
+
+- Connect to the cluster:
+
+```
+gcloud container clusters get-credentials <CLUSTER_NAME> --zone <ZONE> --project <PROJECT_NAME>
+```
+
+- Get a list of running pods:
+
+```
+kubectl get pods
+```
+
+- Identify the pod named `turbinia-server-*` or `turbinia-controller-*` and exec into it via:
+
+```
+kubectl exec --stdin --tty [CONTAINER-NAME] -- bash
 ```
 
 ## Monitoring Installation

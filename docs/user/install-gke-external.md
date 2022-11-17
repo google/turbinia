@@ -2,10 +2,11 @@
 
 ## Introduction
 
-In this guide you will learn how to externally expose the Turbinia application.
-This guide is recommended for users who have already deployed Turbinia to a GKE
-cluster, but would like to access the Web UI and API server through an externally
-available URL instead of port forwarding the Turbinia service locally from the cluster.
+In this guide you will learn how to externally expose the Turbinia API Server and
+Web UI. This guide is recommended for users who have already [deployed Turbinia to
+a GKE cluster](install-gke-external.md), but would like to access the Web UI and
+API server through an externally available URL instead of port forwarding the
+Turbinia service locally from the cluster.
 
 ### Prerequisites
 
@@ -31,7 +32,7 @@ gcloud compute addresses create turbinia-webapps --global
 gcloud compute addresses list
 ```
 
-### 2. Create a domain or use pre-existing one
+### 2. Set up domain and DNS
 
 You will need a domain to host Turbinia on. You can either register a new domain in a registrar
 of your choice or use a pre-existing one.
