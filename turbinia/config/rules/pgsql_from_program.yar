@@ -6,7 +6,7 @@ rule pgsql_from_program {
       modified = "2022/05/31"
       score = 100
    strings:
-      $fp1 = /COPY .* FROM PROGRAM/i
+      $fp1 = "FROM PROGRAM" ascii
    condition:
-      $fp1 and (filename matches /postgresql-([0-9])+-.*.log(.[0-9]+)?/ or filepath matches /babelfish\/log/ or filepath matches /(yugabyte|yb-data)\/(master|tserver)\/logs/ or filename matches /pgss_query_texts.stat/)
+      $fp1 and (filename matches /postgresql-([0-9])+-.*.log(.[0-9]+)?/ or filepath matches /babelfish\/log/)
 }
