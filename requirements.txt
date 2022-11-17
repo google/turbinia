@@ -24,6 +24,7 @@ pyyaml>=5.4.1
 pyOpenSSL<=21.0.0
 redis<4.2
 six>=1.15.0
+starlette-oauth2-api
 urllib3[secure]
 uvicorn>=0.17.6
 vine>=5.0.0
