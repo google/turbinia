@@ -36,6 +36,13 @@ class YaraAnalysisTask(TurbiniaTask):
       state.ATTACHED, state.MOUNTED, state.CONTAINER_MOUNTED, state.DECOMPRESSED
   ]
 
+  # Task configuration variables from recipe
+  TASK_CONFIG = {
+      # Only hits for rules greater than this score
+      # will be output.
+      'minscore': None
+  }
+
   def run(self, evidence, result):
     """Run the Yara worker.
 
@@ -93,6 +100,8 @@ class YaraAnalysisTask(TurbiniaTask):
         'sudo', '/opt/fraken/fraken', '-rules', '/opt/signature-base/',
         '-folder', evidence.local_path
     ]
+    if self.task_config.get('minscore'):
+      cmd.extend(['-minscore', self.task_config.get('minscore')])
 
     yr = self.task_config.get('yara_rules')
     if yr:
@@ -129,15 +138,14 @@ class YaraAnalysisTask(TurbiniaTask):
           raise TurbiniaException(
               'Error decoding JSON output from fraken: {0!s}'.format(exception))
         for row in fraken_output:
-          if row.get('Score', 0) > 40:
-            report_lines.append(
-                ' - '.join([
-                    dirRE.sub("/", row['ImagePath']), row['SHA256'],
-                    row['Signature'],
-                    row.get('Description', ''),
-                    row.get('Reference', ''),
-                    str(row.get('Score', 0))
-                ]))
+          report_lines.append(
+              ' - '.join([
+                  dirRE.sub("/", row['ImagePath']), row['SHA256'],
+                  row['Signature'],
+                  row.get('Description', ''),
+                  row.get('Reference', ''),
+                  str(row.get('Score', 0))
+              ]))
     except FileNotFoundError:
       pass  # No Yara rules matched
 

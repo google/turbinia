@@ -82,9 +82,9 @@ Various Turbinia specific additions/variations are:
 
 *   Using two spaces instead of four
 *   Quote strings as ' or """ instead of "
-*   Textual strings should be Unicode strings so please include `from __future__
-    import unicode_literals` in new python files.
-*   Use the format() function instead of the %-way of formatting strings.
+*   Exception variables should be named 'exception' not 'e'.
+*   Use type annotations ("type hints") for newly created Python modules.
+*   Use f-String formatting instead of the % operator or str.format().
 *   Use positional or parameter format specifiers with typing e.g. '{0:s}' or
     '{text:s}' instead of '{0}', '{}' or '{:s}'. If we ever want to have
     language specific output strings we don't need to change the entire
