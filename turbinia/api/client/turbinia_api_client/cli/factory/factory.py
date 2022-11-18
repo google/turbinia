@@ -35,34 +35,6 @@ class FactoryInterface(ABC):
   """Factory Interface."""
 
   @classmethod
-  def get_evidence_names(cls: Type[T], evidence_mapping: dict) -> List[str]:
-    """Retrieves a list of evidence type names.
-
-    Args:
-      evidence_mapping (dict): A dictionary of Evidence types
-          and attributes retrieved from the Turbinia API server.
-
-    Returns:
-      list: A list of Evidence class names.
-    """
-    if evidence_mapping:
-      return [evidence_name for evidence_name in evidence_mapping.keys()]
-
-    return []
-
-  @classmethod
-  def get_request_options(cls: Type[T], request_options: dict) -> List[str]:
-    """Retrieves a list of request options.
-
-    Args:
-      request_options (dict): A dictionary of BaseRequestOptions
-          attributes and types retrieved from the Turbinia APi server.
-    """
-    if request_options:
-      return [request_option for request_option in request_options.keys()]
-    return []
-
-  @classmethod
   def get_evidence_attributes(
       cls: Type[T], evidence_mapping: dict) -> List[Tuple[str, Any, dict]]:
     """Retrieves a list of evidence attribute metadata.
@@ -72,14 +44,13 @@ class FactoryInterface(ABC):
           and attributes retrieved from the Turbinia API server.
 
     Returns:
-      list: A list of 3-tuples comprised the necessary parameters to create
+      list: A list of 3-tuples comprising the necessary parameters to create
           new click.Option objects.
     """
     map_types = dict(str=str, int=int)
     options_meta = []
     for evidence_name, options in evidence_mapping.items():
-      for option in options.items():
-        (option_name, option_parameters) = option
+      for option_name, option_parameters in options.items():
         param_decls = (['--' + option_name], option_name)
         param_type = map_types.get(option_parameters.get('type'))
         attrs = dict(
@@ -92,7 +63,9 @@ class FactoryInterface(ABC):
   def create_dynamic_objects(
       cls: Type[T], name: str, evidence_mapping: dict,
       request_options: dict) -> None:
-    """Creates multiple objects.
+    """An implementation of this method creates multiple
+        click objects of different types (e.g. click.Command,
+        click.Option).
 
     Args:
       evidence_mapping (dict): A dictionary of Evidence types
@@ -106,7 +79,8 @@ class FactoryInterface(ABC):
   @abstractmethod
   def create_object(
       cls: Type[T], name: str, params: Tuple[Any, dict], callback: Any):
-    """Creates an object of a specific type.
+    """An implementation of this method creates a single, custom Click
+        object using the specified parameters.
 
     Args:
       name (str): Object name.
@@ -124,10 +98,10 @@ class OptionFactory(FactoryInterface):
   def append_request_option_objects(
       cls: Type[T], params: List[click.Option],
       request_options: dict = None) -> None:
-    """Appends request options to a list of parameters for a 
+    """Appends request options to a list of parameters for a
         click.Command object.
     """
-    for request_option in OptionFactory.get_request_options(request_options):
+    for request_option in list(request_options.keys()):
       request_parameters = click_helper.generate_option_parameters(
           request_option)
       params.append(OptionFactory.create_object(params=request_parameters))
@@ -136,7 +110,7 @@ class OptionFactory(FactoryInterface):
   def create_dynamic_objects(
       cls, name: str = None, evidence_mapping: dict = None,
       request_options: dict = None) -> List[click.Option]:
-    """Implements create_dynamic_objects to create a list of 
+    """Implements create_dynamic_objects to create a list of
         click.Option objects.
     """
     option_objects = []
@@ -144,8 +118,7 @@ class OptionFactory(FactoryInterface):
       log.info('An evidence type was not provided.')
       return []
     options = OptionFactory.get_evidence_attributes(evidence_mapping)
-    for option in options:
-      (evidence_name, param_decls, attrs) = option
+    for evidence_name, param_decls, attrs in options:
       if name == evidence_name:
         log.debug('Creating option for {0:s}'.format(name))
         click_option = OptionFactory.create_object(params=(param_decls, attrs))
@@ -171,12 +144,12 @@ class CommandFactory(FactoryInterface):
   def create_dynamic_objects(
       cls, name: str = None, evidence_mapping: dict = None,
       request_options: dict = None) -> List[click.Command]:
-    """Implements create_dynamic_objects to create a list of 
+    """Implements create_dynamic_objects to create a list of
         click.Command objects.
     """
 
     command_objects = []
-    for evidence_name in CommandFactory.get_evidence_names(evidence_mapping):
+    for evidence_name in list(evidence_mapping.keys()):
       log.debug('Creating command for {0:s}'.format(evidence_name))
       params = OptionFactory.create_dynamic_objects(
           name=evidence_name, evidence_mapping=evidence_mapping,

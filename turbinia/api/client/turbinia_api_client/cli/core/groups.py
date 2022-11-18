@@ -19,17 +19,17 @@ import click
 
 @click.group('config')
 def config_group():
-  """Get turbinia configuration."""
+  """Get Turbinia configuration."""
 
 
 @click.group('status')
 def status_group():
-  """Get turbinia request/task status."""
+  """Get Turbinia request/task status."""
 
 
 @click.group('result')
 def result_group():
-  """Get turbinia task or request results."""
+  """Get Turbinia task or request results."""
 
 
 @click.group('jobs')

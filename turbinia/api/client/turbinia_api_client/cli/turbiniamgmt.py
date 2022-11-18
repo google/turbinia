@@ -46,7 +46,7 @@ class TurbiniaMgmtCli:
     self._config: turbinia_api_client.Configuration = config
 
     if not self.config:
-      host = '{0:s}:{1:d}'.format(self.api_server_address, self.api_server_port)
+      host = f'{self.api_server_address:s}:{self.api_server_port:d}'
       self.config = self.default_config(host)
     if not self.api_client:
       self.api_client = self.default_api_client(self.config)
@@ -99,7 +99,7 @@ class TurbiniaMgmtCli:
       self.evidence_mapping: dict = api_response
     except turbinia_api_client.ApiException as exception:
       log.error(
-          'Exception when calling get_evidence_types: {0!s}'.format(exception))
+          f'Error while attempting to contact the API server: {exception!s}')
     return api_response
 
   def get_request_options(self):
@@ -110,8 +110,7 @@ class TurbiniaMgmtCli:
     try:
       api_response = api_instance.get_request_options()
     except turbinia_api_client.ApiException as exception:
-      log.error(
-          'Exception when calling get_request_options: {0!s}'.format(exception))
+      log.error(f'Exception when calling get_request_options: {exception!s}')
     return api_response
 
   def read_api_configuration(self):
@@ -188,8 +187,7 @@ def main():
     cli.main()
   except (ConnectionRefusedError, urllib3_exceptions.MaxRetryError,
           urllib3_exceptions.NewConnectionError) as exception:
-    log.error(
-        'Error connecting to the Turbinia API server: {0!s}'.format(exception))
+    log.error(f'Error connecting to the Turbinia API server: {exception!s}')
     log.error('Exiting.')
     sys.exit(-1)
 

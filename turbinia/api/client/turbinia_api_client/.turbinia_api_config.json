@@ -1,6 +1,6 @@
 {
 	"_comment": "This file is used by turbiniamgmt to determine the loccation of the API server and if authentication will be used. These options should match your Turbinia deployment.",
-	"API_SERVER_ADDRESS": "https://turb.turbiniatest.com",
-	"API_SERVER_PORT": 443,
-	"API_AUTHENTICATION_ENABLED": true
+	"API_SERVER_ADDRESS": "http://localhost",
+	"API_SERVER_PORT": 8000,
+	"API_AUTHENTICATION_ENABLED": false
 }
