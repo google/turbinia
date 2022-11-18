@@ -37,10 +37,13 @@ log.setLevel(logging.DEBUG)
 class TurbiniaMgmtCli:
   """Turbinia API client tool."""
 
-  def __init__(self, api_client=None, config=None):
+  def __init__(self, api_client=None, config=None, config_template=None):
     self.api_server_address: str = None
     self.api_server_port: str = None
     self.api_authentication_enabled: str = None
+    self.credentials_file: str = None
+    self.secrets_file: str = None
+    self.config_template: str = config_template
     self.read_api_configuration()
     self._api_client: turbinia_api_client.ApiClient = api_client
     self._config: turbinia_api_client.Configuration = config
@@ -115,17 +118,22 @@ class TurbiniaMgmtCli:
 
   def read_api_configuration(self):
     """Reads the configuration file to obtain the API server URI."""
-    client_config_path = os.path.realpath(__file__)
-    client_config_path = os.path.dirname(os.path.dirname(client_config_path))
+    client_config_path = os.path.expanduser('~')
     client_config_path = os.path.join(
         client_config_path, '.turbinia_api_config.json')
     with open(client_config_path, encoding='utf-8') as config:
       try:
-        config_dict = json.loads(config.read())
+        config_data = json.loads(config.read())
+        config_dict = config_data.get(self.config_template)
+        if not config_dict:
+          log.error(
+              f'Error reading configuration template {self.config_template:s}.')
+          sys.exit(1)
         self.api_server_address = config_dict.get('API_SERVER_ADDRESS')
         self.api_server_port = config_dict.get('API_SERVER_PORT')
         self.api_authentication_enabled = config_dict.get(
             'API_AUTHENTICATION_ENABLED')
+        self._config_dict = config_dict
       except json.JSONDecodeError as exception:
         log.error(exception)
 
@@ -133,8 +141,12 @@ class TurbiniaMgmtCli:
 @click.group(context_settings={
     'help_option_names': ['-h', '--help'],
 })
+@click.option(
+    '--config_template', '-c', help='A configuration template name.',
+    show_default=True, show_envvar=True, type=str,
+    default=lambda: os.environ.get("TURBINIA_CONFIG_TEMPLATE", "default"))
 @click.pass_context
-def cli(ctx: click.Context) -> None:
+def cli(ctx: click.Context, config_template: str) -> None:
   """Turbinia API command-line tool (turbiniamgmt).
 
   \b                         ***    ***                                       
@@ -163,9 +175,10 @@ def cli(ctx: click.Context) -> None:
 
   This command-line tool interacts with Turbinia's API server.
 
-  You can specify the API server location in .turbinia_api_config.json
+  You can specify the API server location in ~/.turbinia_api_config.json
   """
-  ctx.obj = TurbiniaMgmtCli()
+  ctx.obj = TurbiniaMgmtCli(config_template=config_template)
+  log.info(f'Using configuration template -> {config_template}')
   request_commands = factory.CommandFactory.create_dynamic_objects(
       evidence_mapping=ctx.obj.evidence_mapping,
       request_options=ctx.obj.request_options)

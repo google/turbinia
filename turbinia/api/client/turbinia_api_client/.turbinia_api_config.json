@@ -1,6 +1,18 @@
 {
-	"_comment": "This file is used by turbiniamgmt to determine the loccation of the API server and if authentication will be used. These options should match your Turbinia deployment.",
-	"API_SERVER_ADDRESS": "http://localhost",
-	"API_SERVER_PORT": 8000,
-	"API_AUTHENTICATION_ENABLED": false
+	"default": {
+		"description": "This file is used by turbiniamgmt to determine the loccation of the API server and if authentication will be used. These options should match your Turbinia deployment.",
+		"API_SERVER_ADDRESS": "http://localhost",
+		"API_SERVER_PORT": 8000,
+		"API_AUTHENTICATION_ENABLED": false,
+		"_CLIENT_SECRETS_FILENAME": ".client_secrets.json",
+		"_CREDENTIALS_FILENAME": ".credentials_default.json"
+	},
+	"development": {
+		"description": "Development environment.",
+		"API_SERVER_ADDRESS": "http://localhost",
+		"API_SERVER_PORT": 8001,
+		"API_AUTHENTICATION_ENABLED": false,
+		"_CLIENT_SECRETS_FILENAME": ".client_secrets_dev.json",
+		"_CREDENTIALS_FILENAME": ".credentials_dev.json"
+	}
 }
