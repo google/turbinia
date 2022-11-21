@@ -199,8 +199,8 @@ class PostgresAccountAnalysisTask(TurbiniaTask):
               md5_hashnames[passwdhash[3:]] = str(username)
 
         grep = subprocess.run(
-          ['sudo', 'grep', '-Phar', r'SCRAM-SHA-256\$\d+:', dir], check=False,
-          text=False, capture_output=True)
+            ['sudo', 'grep', '-Phar', r'SCRAM-SHA-256\$\d+:', dir], check=False,
+            text=False, capture_output=True)
         if grep.returncode != 0:
           continue
         raw_lines = grep.stdout.split(b'\n')
