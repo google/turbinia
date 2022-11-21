@@ -28,7 +28,8 @@ from turbinia.lib.utils import extract_files
 from turbinia.workers import Priority
 from turbinia.workers import TurbiniaTask
 
-_CREDS_REGEXP = r'(?P<username>.*?)(?:\\xff)+I(?P<password>md5.{32})'
+_MD5_CREDS_REGEXP = r'(?P<username>.*?)(?:\\xff)+I(?P<password>md5.{32})'
+_SCRAM_CREDS_REGEXP = r'(?P<username>\w+).*?(?P<password>SCRAM-SHA-256\$\d+:\S{24}\$\S{44}:\S{44})'
 _PG_CONF_NAME = 'postgresql.conf'
 
 
@@ -81,7 +82,7 @@ class PostgresAccountAnalysisTask(TurbiniaTask):
       return result
     # 3) Extract creds
     try:
-      hashnames = self._extract_creds(data_dirs, evidence)
+      md5_hashnames, scram_hashnames = self._extract_creds(data_dirs, evidence)
     except TurbiniaException as exception:
       result.close(self, success=False, status=str(exception))
       return result
@@ -89,7 +90,7 @@ class PostgresAccountAnalysisTask(TurbiniaTask):
     # 4) Bruteforce
     timeout = self.task_config.get('bruteforce_timeout')
     (report, priority, summary) = self._analyse_postgres_creds(
-        hashnames, timeout=timeout)
+        md5_hashnames, scram_hashnames, timeout=timeout)
     output_evidence.text_data = report
     result.report_data = report
     result.report_priority = priority
@@ -138,8 +139,10 @@ class PostgresAccountAnalysisTask(TurbiniaTask):
     Returns:
       data_dirs (list): List of locations of pgsql databases
     """
-    data_dirs = []
+    data_dirs = set()
     for dirs, _, _ in os.walk(location):
+      if os.path.isfile(os.path.join(dirs, _PG_CONF_NAME)):
+        data_dirs.add(dirs)
       try:
         grep = subprocess.run(
             ['grep', r'data_directory',
@@ -149,9 +152,12 @@ class PostgresAccountAnalysisTask(TurbiniaTask):
           continue
 
         for directive in grep.stdout.strip().split('\n'):
+          if directive.startswith('#'):
+            continue
           parts = directive.split("'")
           if len(parts) == 3:
-            data_dirs.append(parts[1])
+            if os.path.sep in parts[1]:
+              data_dirs.add(parts[1])
           else:
             result.log(
                 'Unable to parse data_dir directive: {0:s}'.format(directive))
@@ -159,7 +165,7 @@ class PostgresAccountAnalysisTask(TurbiniaTask):
         raise TurbiniaException(
             'Unable to grep Postgres config file: {0:s}'.format(str(exception)))
 
-    return data_dirs
+    return list(data_dirs)
 
   def _extract_creds(self, locations, evidence):
     """Attempts to extract raw encrypted credentials from the database
@@ -169,38 +175,56 @@ class PostgresAccountAnalysisTask(TurbiniaTask):
       evidence (Evidence object):  The evidence to process
 
     Returns:
-      hashnames (dict): Dict mapping hash back to username.
+      hashnames (Tuple[dict, dict]): Dicts mapping hash back to username.
     """
-    hashnames = {}
+    md5_hashnames = {}
+    scram_hashnames = {}
+
     for location in locations:
       dir = os.path.normpath(evidence.local_path + location)
       try:
         grep = subprocess.run(
             ['sudo', 'egrep', '-hari', r'md5[a-zA-Z0-9]{32}', dir], check=False,
             text=False, capture_output=True)
+        if grep.returncode == 0:
+          # Process the raw binary data
+          raw_lines = str(grep.stdout).split('\\n')
+          for line in raw_lines:
+            values = line.replace('\\x00', '').replace('\\x01', '')
+            m = re.match(_MD5_CREDS_REGEXP, values[2:])
+            if not m:
+              continue
+            (username, passwdhash) = (m.group('username'), m.group('password'))
+            if passwdhash[3:] not in md5_hashnames:
+              md5_hashnames[passwdhash[3:]] = str(username)
+
+        grep = subprocess.run(
+          ['sudo', 'grep', '-Phar', r'SCRAM-SHA-256\$\d+:', dir],
+          check=False, text=False, capture_output=True)
         if grep.returncode != 0:
           continue
+        raw_lines = grep.stdout.split(b'\n')
+        for line in raw_lines:
+          m = re.match(_SCRAM_CREDS_REGEXP, line.decode('utf-8', 'ignore'))
+          if not m:
+            continue
+          (username, passwdhash) = (m.group('username'), m.group('password'))
+          if passwdhash not in scram_hashnames:
+            scram_hashnames[passwdhash] = str(username)
       except subprocess.CalledProcessError as exception:
         raise TurbiniaException(
             'Unable to grep raw database file: {0:s}'.format(str(exception)))
 
-      # Process the raw binary data
-      raw_lines = str(grep.stdout).split('\\n')
-      for line in raw_lines:
-        values = line.replace('\\x00', '').replace('\\x01', '')
-        m = re.match(_CREDS_REGEXP, values[2:])
-        if not m:
-          continue
-        (username, passwdhash) = (m.group('username'), m.group('password'))
-        if passwdhash[3:] not in hashnames:
-          hashnames[passwdhash[3:]] = str(username)
-    return hashnames
+    return (md5_hashnames, scram_hashnames)
 
-  def _analyse_postgres_creds(self, hashnames, timeout=300):
+  def _analyse_postgres_creds(self, md5_hashnames, scram_hashnames, timeout=300):
     """Attempt to brute force extracted PostgreSQL credentials.
 
     Args:
-        hashnames (dict): Dict mapping hash back to username for convenience.
+        md5_hashnames (dict): Dict mapping hash back to username
+          for convenience.
+        scram_hashnames (dict): Dict mapping hash back to username
+          for convenience.
         timeout (int): How long to spend cracking.
 
     Returns:
@@ -216,8 +240,13 @@ class PostgresAccountAnalysisTask(TurbiniaTask):
 
     # 0 is "md5"
     weak_passwords = bruteforce_password_hashes(
-        [v + ':' + k for (k, v) in hashnames.items()], tmp_dir=self.tmp_dir,
+        [v + ':' + k for (k, v) in md5_hashnames.items()], tmp_dir=self.tmp_dir,
         timeout=timeout, extra_args='--username -m 0')
+
+    # 28600 is PostgreSQL SCRAM-SHA-256
+    weak_passwords += bruteforce_password_hashes(
+        [v + ':' + k for (k, v) in scram_hashnames.items()], tmp_dir=self.tmp_dir,
+        timeout=timeout, extra_args='--username -m 28600')
 
     if weak_passwords:
       priority = Priority.CRITICAL
@@ -226,10 +255,11 @@ class PostgresAccountAnalysisTask(TurbiniaTask):
       report.insert(0, fmt.heading4(fmt.bold(summary)))
       line = '{0:n} weak password(s) found:'.format(len(weak_passwords))
       report.append(fmt.bullet(fmt.bold(line)))
+      combined_hashnames = {**md5_hashnames, **scram_hashnames}
       for password_hash, plaintext in weak_passwords:
-        if password_hash in hashnames:
+        if password_hash in combined_hashnames:
           line = """User '{0:s}' with password '{1:s}'""".format(
-              hashnames[password_hash], plaintext)
+              combined_hashnames[password_hash], plaintext)
           report.append(fmt.bullet(line, level=2))
     report = '\n'.join(report)
     return (report, priority, summary)
