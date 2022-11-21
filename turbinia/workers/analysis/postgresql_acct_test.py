@@ -28,7 +28,10 @@ class PostgresAcctAnalysisTaskTest(TestTurbiniaTaskBase):
   TEST_DATA_DIR = None
 
   EXPECTED_MD5_CREDENTIALS = {'5f4dcc3b5aa765d61d8327deb882cf99': 'postgres'}
-  EXPECTED_SCRAM_CREDENTIALS = {'SCRAM-SHA-256$4096:APJq+0/Y/X3zrBg2AWyKkQ==$Qe9RKFYZJPhd14z1Iqs1agjzxGlBPexsTEHIhos6wrM=:Z9MGrSmyQvM4owINbGzK8HxhFzVWDcSYYD+s44sQvV8=': 'postgres'}
+  EXPECTED_SCRAM_CREDENTIALS = {
+      'SCRAM-SHA-256$4096:APJq+0/Y/X3zrBg2AWyKkQ==$Qe9RKFYZJPhd14z1Iqs1agjzxGlBPexsTEHIhos6wrM=:Z9MGrSmyQvM4owINbGzK8HxhFzVWDcSYYD+s44sQvV8=':
+          'postgres'
+  }
 
   POSTGRES_REPORT = """#### **PostgreSQL analysis found 1 weak password(s)**
 * **1 weak password(s) found:**

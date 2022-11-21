@@ -199,8 +199,8 @@ class PostgresAccountAnalysisTask(TurbiniaTask):
               md5_hashnames[passwdhash[3:]] = str(username)
 
         grep = subprocess.run(
-          ['sudo', 'grep', '-Phar', r'SCRAM-SHA-256\$\d+:', dir],
-          check=False, text=False, capture_output=True)
+          ['sudo', 'grep', '-Phar', r'SCRAM-SHA-256\$\d+:', dir], check=False,
+          text=False, capture_output=True)
         if grep.returncode != 0:
           continue
         raw_lines = grep.stdout.split(b'\n')
@@ -217,7 +217,8 @@ class PostgresAccountAnalysisTask(TurbiniaTask):
 
     return (md5_hashnames, scram_hashnames)
 
-  def _analyse_postgres_creds(self, md5_hashnames, scram_hashnames, timeout=300):
+  def _analyse_postgres_creds(
+      self, md5_hashnames, scram_hashnames, timeout=300):
     """Attempt to brute force extracted PostgreSQL credentials.
 
     Args:
@@ -245,8 +246,8 @@ class PostgresAccountAnalysisTask(TurbiniaTask):
 
     # 28600 is PostgreSQL SCRAM-SHA-256
     weak_passwords += bruteforce_password_hashes(
-        [v + ':' + k for (k, v) in scram_hashnames.items()], tmp_dir=self.tmp_dir,
-        timeout=timeout, extra_args='--username -m 28600')
+        [v + ':' + k for (k, v) in scram_hashnames.items()],
+        tmp_dir=self.tmp_dir, timeout=timeout, extra_args='--username -m 28600')
 
     if weak_passwords:
       priority = Priority.CRITICAL
