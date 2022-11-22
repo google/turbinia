@@ -176,9 +176,6 @@ def validate_recipe(recipe_dict):
       log.error(message)
       return (False, message)
 
-  if 'group_id' not in recipe_dict['globals']:
-    recipe_dict['globals']['group_id'] = uuid.uuid4().hex
-
   for recipe_item, recipe_item_contents in recipe_dict.items():
     if recipe_item in tasks_with_recipe:
       message = (
