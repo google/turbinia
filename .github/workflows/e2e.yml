@@ -9,9 +9,9 @@ jobs:
     strategy:
       matrix:
         include:
-          - docker_base_image: "ubuntu:20.04"
+          - docker_base_image: "ubuntu:22.04"
             gift_ppa_track: "staging"
-          - docker_base_image: "ubuntu:20.04"
+          - docker_base_image: "ubuntu:22.04"
             gift_ppa_track: "stable"
     steps:
       - uses: actions/checkout@v2

@@ -118,7 +118,7 @@ class RequestsSummary(BaseModel):
   """Represents a summary view of multiple Turbinia requests."""
   requests_status: List[RequestStatus] = []
 
-  def get_requests_summmary(self):
+  def get_requests_summary(self):
     """Generates a status summary for each Turbinia request."""
     _state_manager = state_manager.get_state_manager()
     instance_id = turbinia_config.INSTANCE_ID

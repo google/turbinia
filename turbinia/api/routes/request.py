@@ -42,7 +42,7 @@ async def get_requests_summary():
   """
   requests_summary = request_status.RequestsSummary()
   try:
-    if not requests_summary.get_requests_summmary():
+    if not requests_summary.get_requests_summary():
       return JSONResponse(
           content={'detail': 'Request summary is empty'}, status_code=200)
     return requests_summary
@@ -118,7 +118,7 @@ async def create_request(req: request.Request):
 
     if recipe_data:
       # Use a client-provided recipe. recipe_data MUST be a Base64 encoded
-      # YAML representaiton of a Turbinia recipe. The recipe will be validated.
+      # YAML representation of a Turbinia recipe. The recipe will be validated.
       # We assume that if the client provided a custom recipe it will include
       # its own jobs_allowlist, filter_patterns and other settings.
       recipe = recipe_helpers.load_recipe_from_data(recipe_data)

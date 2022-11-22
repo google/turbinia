@@ -7,20 +7,11 @@ COPY web/. .
 RUN npm run build
 
 # Build Turbinia API Server, copy from build, and setup rest of requirements
-FROM ubuntu:20.04
-ENV DEBIAN_FRONTEND=noninteractive
-RUN apt-get update && apt-get -y install \
-    apt-transport-https \
-    apt-utils \
-    ca-certificates \
-    git \
-    libterm-readline-gnu-perl \
-    python3-pip \
-    software-properties-common \
-    && rm -rf /var/lib/apt/lists/*
+FROM ubuntu:22.04
 
-# Copy over web build
-COPY --from=build-stage /tmp/web/dist /tmp/web
+ENV DEBIAN_FRONTEND=noninteractive 
+COPY --from=build-stage /tmp/web/dist /web/dist
+RUN apt-get update && apt-get -y install python3-pip git wget supervisor curl
 
 RUN pip3 install pip --upgrade
 RUN pip3 install urllib3 cryptography requests --upgrade
