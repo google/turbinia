@@ -14,9 +14,11 @@
 # limitations under the License.
 """Turbinia API client / management tool."""
 
+import os
 import logging
 import json
 import click
+import base64
 
 from turbinia_api_client import exceptions
 from turbinia_api_client import api_client
@@ -46,8 +48,8 @@ def get_config(ctx: click.Context) -> None:
     click.echo(json.dumps(api_response))
   except exceptions.ApiException as exception:
     log.error(
-        'Received status code {0!s} when calling get_config: {1!s}'.format(
-            exception.status, exception.body))
+        'Received status code %s when calling get_config: %s', exception.status,
+        exception.body)
 
 
 @groups.result_group.command('request')
@@ -61,16 +63,15 @@ def get_request_result(ctx: click.Context, request_id: str) -> None:
     api_response = api_instance.get_request_output(request_id)
     filename = api_response.name.split('/')[-1]
     click.echo(
-        f'Saving request output for request {request_id:s} to file: {filename:s}'
-    )
+        f'Saving request output for request {request_id:s} to: {filename:s}')
     with open(filename, 'wb') as file:
       file.write(api_response.read())
   except exceptions.ApiException as exception:
     log.error(
-        'Received status code {0!s} when calling get_request_result: {1!s}'
-        .format(exception.status, exception.body))
+        'Received status code %s when calling get_request_result: %s',
+        exception.status, exception.body)
   except OSError as exception:
-    log.error(f'Unable to save file: {exception!s}')
+    log.error('Unable to save file: %s', exception)
 
 
 @groups.result_group.command('task')
@@ -90,10 +91,10 @@ def get_task_result(ctx: click.Context, task_id: str) -> None:
       file.write(api_response.read())
   except exceptions.ApiException as exception:
     log.error(
-        'Received status code {0!s} when calling get_task_result: {1!s}'.format(
-            exception.status, exception.body))
+        'Received status code %s when calling get_task_result: %s',
+        exception.status, exception.body)
   except OSError as exception:
-    log.error(f'Unable to save file: {exception!s}')
+    log.error('Unable to save file: %s', exception)
 
 
 @groups.jobs_group.command('list')
@@ -107,8 +108,8 @@ def get_jobs(ctx: click.Context) -> None:
     click.echo(json.dumps(api_response))
   except exceptions.ApiException as exception:
     log.error(
-        'Received status code {0!s} when calling get_jobs: {1!s}'.format(
-            exception.status, exception.body))
+        'Received status code %s when calling get_jobs: %s', exception.status,
+        exception.body)
 
 
 @groups.status_group.command('request')
@@ -130,8 +131,8 @@ def get_request(ctx: click.Context, request_id: str, json_dump: bool) -> None:
       click.echo(report)
   except exceptions.ApiException as exception:
     log.error(
-        'Received status code {0!s} when calling get_request: {1!s}'.format(
-            exception.status, exception.body))
+        'Received status code %s when calling get_request: %s',
+        exception.status, exception.body)
 
 
 @groups.status_group.command('summary')
@@ -152,8 +153,8 @@ def get_requests_summary(ctx: click.Context, json_dump: bool) -> None:
       click.echo(report)
   except exceptions.ApiException as exception:
     log.error(
-        'Received status code {0!s} when calling get_requests_summary: {1!s}'
-        .format(exception.status, exception.body))
+        'Received status code %s when calling get_requests_summary: %s',
+        exception.status, exception.body)
 
 
 @groups.status_group.command('task')
@@ -175,8 +176,8 @@ def get_task(ctx: click.Context, task_id: str, json_dump: bool) -> None:
       click.echo(report)
   except exceptions.ApiException as exception:
     log.error(
-        'Received status code {0!s} when calling get_task: {1!s}'.format(
-            exception.status, exception.body))
+        'Received status code %s when calling get_task: %s', exception.status,
+        exception.body)
 
 
 @click.pass_context
@@ -194,20 +195,35 @@ def create_request(ctx: click.Context, *args: int, **kwargs: int) -> None:
       # Check if the key is for evidence or request_options
       if not key in request_options:
         request['evidence'][key] = value
-      elif key == 'jobs_allowlist' or key == 'jobs_denylist':
+      elif key in ('jobs_allowlist', 'jobs_denylist'):
         jobs_list = value.split(',')
         request['request_options'][key] = jobs_list
       else:
         request['request_options'][key] = value
-  log.debug(f'Sending request: {request!s}')
+
+  if all(key in request['request_options']
+         for key in ('recipe_name', 'recipe_data')):
+    log.error('You can only provide one of recipe_data or recipe_name')
+    return
+
+  recipe_name = request['request_options'].get('recipe_name')
+  if recipe_name and os.path.isfile(recipe_name):
+    with open(recipe_name, 'r', encoding='utf-8') as recipe_file:
+      recipe_bytes = recipe_file.read().encode('utf-8')
+      recipe_data = base64.b64encode(recipe_bytes)
+      request['request_options'].pop('recipe_name')
+      request['request_options']['recipe_data'] = recipe_data.decode('utf-8')
+  else:
+    log.error('Unable to load recipe from file %s', recipe_name)
 
   # Send the request to the API server.
   try:
+    log.debug('Sending request: %s', request)
     api_response = api_instance.create_request(request)
-    log.debug(f'Received response: {api_response!s}')
+    log.debug('Received response: %s', api_response)
   except exceptions.ApiException as exception:
     log.error(
-        'Received status code {0!s} when calling create_request. {1!s}'.format(
-            exception.status, exception.body))
+        'Received status code %s when calling create_request. %s',
+        exception.status, exception.body)
   except (TypeError, exceptions.ApiTypeError) as exception:
-    log.error(f'The request object is invalid. {exception!s}')
+    log.error('The request object is invalid. %s', exception)

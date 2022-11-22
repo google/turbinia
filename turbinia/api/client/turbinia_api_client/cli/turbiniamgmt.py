@@ -37,13 +37,16 @@ log.setLevel(logging.DEBUG)
 class TurbiniaMgmtCli:
   """Turbinia API client tool."""
 
-  def __init__(self, api_client=None, config=None, config_template=None):
+  def __init__(
+      self, api_client=None, config=None, config_instance=None,
+      config_path=None):
     self.api_server_address: str = None
     self.api_server_port: str = None
     self.api_authentication_enabled: str = None
     self.credentials_file: str = None
     self.secrets_file: str = None
-    self.config_template: str = config_template
+    self.config_instance: str = config_instance
+    self.config_path: str = config_path
     self.read_api_configuration()
     self._api_client: turbinia_api_client.ApiClient = api_client
     self._config: turbinia_api_client.Configuration = config
@@ -102,7 +105,7 @@ class TurbiniaMgmtCli:
       self.evidence_mapping: dict = api_response
     except turbinia_api_client.ApiException as exception:
       log.error(
-          f'Error while attempting to contact the API server: {exception!s}')
+          'Error while attempting to contact the API server: %s', exception)
     return api_response
 
   def get_request_options(self):
@@ -113,22 +116,25 @@ class TurbiniaMgmtCli:
     try:
       api_response = api_instance.get_request_options()
     except turbinia_api_client.ApiException as exception:
-      log.error(f'Exception when calling get_request_options: {exception!s}')
+      log.error('Exception when calling get_request_options: %s', exception)
     return api_response
 
   def read_api_configuration(self):
     """Reads the configuration file to obtain the API server URI."""
-    client_config_path = os.path.expanduser('~')
-    client_config_path = os.path.join(
-        client_config_path, '.turbinia_api_config.json')
+    if self.config_path == '~':
+      client_config_path = os.path.expanduser('~')
+      client_config_path = os.path.join(
+          client_config_path, '.turbinia_api_config.json')
+    else:
+      client_config_path = os.path.join(
+          self.config_path, '.turbinia_api_config.json')
     with open(client_config_path, encoding='utf-8') as config:
       try:
         config_data = json.loads(config.read())
-        config_dict = config_data.get(self.config_template)
+        config_dict = config_data.get(self.config_instance)
         if not config_dict:
-          log.error(
-              f'Error reading configuration template {self.config_template:s}.')
-          sys.exit(1)
+          log.error('Error reading configuration key %s.', self.config_instance)
+          sys.exit(-1)
         self.api_server_address = config_dict.get('API_SERVER_ADDRESS')
         self.api_server_port = config_dict.get('API_SERVER_PORT')
         self.api_authentication_enabled = config_dict.get(
@@ -142,11 +148,15 @@ class TurbiniaMgmtCli:
     'help_option_names': ['-h', '--help'],
 })
 @click.option(
-    '--config_template', '-c', help='A configuration template name.',
+    '--config_instance', '-c', help='A Turbinia instance configuration name.',
     show_default=True, show_envvar=True, type=str,
     default=lambda: os.environ.get("TURBINIA_CONFIG_TEMPLATE", "default"))
+@click.option(
+    '--config_path', '-p', help='Path to the .turbinia_api_config.json file..',
+    show_default=True, show_envvar=True, type=str,
+    default=lambda: os.environ.get("TURBINIA_CLI_CONFIG_PATH", "~"))
 @click.pass_context
-def cli(ctx: click.Context, config_template: str) -> None:
+def cli(ctx: click.Context, config_instance: str, config_path: str) -> None:
   """Turbinia API command-line tool (turbiniamgmt).
 
   \b                         ***    ***                                       
@@ -177,8 +187,9 @@ def cli(ctx: click.Context, config_template: str) -> None:
 
   You can specify the API server location in ~/.turbinia_api_config.json
   """
-  ctx.obj = TurbiniaMgmtCli(config_template=config_template)
-  log.info(f'Using configuration template -> {config_template}')
+  ctx.obj = TurbiniaMgmtCli(
+      config_instance=config_instance, config_path=config_path)
+  log.info('Using configuration instance name -> {0:s}'.format(config_instance))
   request_commands = factory.CommandFactory.create_dynamic_objects(
       evidence_mapping=ctx.obj.evidence_mapping,
       request_options=ctx.obj.request_options)
@@ -200,8 +211,7 @@ def main():
     cli.main()
   except (ConnectionRefusedError, urllib3_exceptions.MaxRetryError,
           urllib3_exceptions.NewConnectionError) as exception:
-    log.error(f'Error connecting to the Turbinia API server: {exception!s}')
-    log.error('Exiting.')
+    log.error('Error connecting to the Turbinia API server: %s', exception)
     sys.exit(-1)
 
 
