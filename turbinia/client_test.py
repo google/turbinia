@@ -269,8 +269,12 @@ class TestBaseTurbiniaClient(unittest.TestCase):
     ] # yapf: disable
 
   @mock.patch('turbinia.client.task_manager.PSQTaskManager._backend_setup')
-  @mock.patch('turbinia.state_manager.datastore.Client')
-  def setUp(self, _, __):  #pylint: disable=arguments-differ
+  @mock.patch('google.cloud.datastore.Client')
+  def setUp(
+      self,
+      _,
+      __,
+  ):  #pylint: disable=arguments-differ
     """Initialize tests for Turbinia client."""
     config.LoadConfig()
     config.TASK_MANAGER = 'PSQ'

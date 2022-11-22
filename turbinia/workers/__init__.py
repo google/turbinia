@@ -20,6 +20,7 @@ from copy import deepcopy
 from datetime import datetime
 from datetime import timedelta
 from enum import IntEnum
+
 import json
 import logging
 import os
@@ -32,9 +33,9 @@ import tempfile
 import traceback
 import uuid
 import filelock
-import turbinia
 
-from turbinia import config
+from prometheus_client import CollectorRegistry, Gauge, Histogram
+from turbinia import __version__, config
 from turbinia.config import DATETIME_FORMAT
 from turbinia.evidence import evidence_decode
 from turbinia.processors import resource_manager
@@ -43,9 +44,6 @@ from turbinia import state_manager
 from turbinia import task_utils
 from turbinia import TurbiniaException
 from turbinia import log_and_report
-from turbinia.lib import docker_manager
-from prometheus_client import Gauge
-from prometheus_client import Histogram
 
 METRICS = {}
 # Set the maximum size that the report can be before truncating it.  This is a
@@ -57,19 +55,22 @@ REPORT_MAXSIZE = int(1048572 * 0.75)
 
 log = logging.getLogger('turbinia')
 
+registry = CollectorRegistry()
 turbinia_worker_tasks_started_total = Gauge(
     'turbinia_worker_tasks_started_total',
-    'Total number of started worker tasks')
+    'Total number of started worker tasks', registry=registry)
 turbinia_worker_tasks_completed_total = Gauge(
     'turbinia_worker_tasks_completed_total',
-    'Total number of completed worker tasks')
+    'Total number of completed worker tasks', registry=registry)
 turbinia_worker_tasks_queued_total = Gauge(
-    'turbinia_worker_tasks_queued_total', 'Total number of queued worker tasks')
+    'turbinia_worker_tasks_queued_total', 'Total number of queued worker tasks',
+    registry=registry)
 turbinia_worker_tasks_failed_total = Gauge(
-    'turbinia_worker_tasks_failed_total', 'Total number of failed worker tasks')
+    'turbinia_worker_tasks_failed_total', 'Total number of failed worker tasks',
+    registry=registry)
 turbinia_worker_tasks_timeout_total = Gauge(
     'turbinia_worker_tasks_timeout_total',
-    'Total number of worker tasks timed out.')
+    'Total number of worker tasks timed out.', registry=registry)
 
 
 class Priority(IntEnum):
@@ -483,7 +484,7 @@ class TurbiniaTask:
     self.start_time = datetime.now()
     self.stub = None
     self.tmp_dir = None
-    self.turbinia_version = turbinia.__version__
+    self.turbinia_version = __version__
     self.requester = requester if requester else 'user_unspecified'
     self._evidence_config = {}
     self.recipe = {}
@@ -527,9 +528,8 @@ class TurbiniaTask:
     if config.TURBINIA_COMMAND in ('celeryworker', 'psqworker'):
       return True
 
-    for arg in sys.argv:
-      if 'nosetests' in arg:
-        return True
+    if 'unittest' in sys.modules.keys():
+      return True
 
     return False
 
@@ -644,6 +644,7 @@ class TurbiniaTask:
     # Execute the job via docker.
     docker_image = job_manager.JobsManager.GetDockerImage(self.job_name)
     if docker_image:
+      from turbinia.lib import docker_manager
       ro_paths = []
       for path in ['local_path', 'source_path', 'device_path', 'mount_path']:
         if hasattr(result.input_evidence, path):
@@ -1012,10 +1013,10 @@ class TurbiniaTask:
 
         self.evidence_setup(evidence)
 
-        if self.turbinia_version != turbinia.__version__:
+        if self.turbinia_version != __version__:
           message = (
               'Worker and Server versions do not match: {0:s} != {1:s}'.format(
-                  self.turbinia_version, turbinia.__version__))
+                  self.turbinia_version, __version__))
           self.result.log(message, level=logging.ERROR)
           self.result.status = message
           self.result.successful = False

@@ -13,6 +13,7 @@ google-cloud-error-reporting
 google-cloud-logging>=2.0.0,<3.0.0dev
 google-cloud-pubsub==1.7.0
 google-cloud-storage<=2.2.1
+httpx
 pycryptodomex
 prometheus_client
 libcloudforensics

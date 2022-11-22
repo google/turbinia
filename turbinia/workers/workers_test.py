@@ -308,7 +308,7 @@ class TestTurbiniaTask(TestTurbiniaTaskBase):
 
   def testTurbiniaTaskExecuteTimeout(self):
     """Test execution with subprocess timeout case."""
-    cmd = 'sleep 10'
+    cmd = 'sleep 3'
     self.result.close = mock.MagicMock()
     ret, result = self.task.execute(cmd, self.result, shell=True, timeout=1)
 
