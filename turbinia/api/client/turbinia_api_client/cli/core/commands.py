@@ -209,9 +209,14 @@ def create_request(ctx: click.Context, *args: int, **kwargs: int) -> None:
   recipe_name = request['request_options'].get('recipe_name')
   if recipe_name and os.path.isfile(recipe_name):
     with open(recipe_name, 'r', encoding='utf-8') as recipe_file:
+      # Read the file and convert to base64 encoded bytes.
       recipe_bytes = recipe_file.read().encode('utf-8')
       recipe_data = base64.b64encode(recipe_bytes)
+      # We found the recipe file, so we will send it to the API server
+      # via the recipe_data parameter. To do so, we need to pop recipe_name
+      # from the request so that we only have recipe_data.
       request['request_options'].pop('recipe_name')
+      # recipe_data should be a UTF-8 encoded string.
       request['request_options']['recipe_data'] = recipe_data.decode('utf-8')
   else:
     log.error('Unable to load recipe from file %s', recipe_name)
