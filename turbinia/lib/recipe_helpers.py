@@ -21,7 +21,6 @@ import copy
 import logging
 import os
 import tempfile
-import uuid
 
 from yaml.parser import ParserError as yaml_error
 from yaml import Loader
