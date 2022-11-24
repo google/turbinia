@@ -190,7 +190,7 @@ class TaskMarkdownReport(MarkdownReportComponent):
     report: list[str] = []
     task: dict = self._request_data
     if not task:
-      return {}
+      return ''
 
     try:
       report.append(self.heading2(task.get('name')))
