@@ -19,6 +19,13 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 
+import logging
+
+_LOGGER_FORMAT = '%(asctime)s %(levelname)s %(name)s - %(message)s'
+logging.basicConfig(format=_LOGGER_FORMAT)
+log = logging.getLogger('turbiniamgmt:helpers:formatter')
+log.setLevel(logging.DEBUG)
+
 
 class MarkdownReportComponent(ABC):
   """Components for generating Turbinia request/task
@@ -157,24 +164,31 @@ class TaskMarkdownReport(MarkdownReportComponent):
     if not task:
       return {}
 
-    report.append(self.heading2(task.get('name')))
-    line = '{0:s} {1!s}'.format(
-        self.bold('Evidence:'), task.get('evidence_name'))
-    report.append(self.bullet(line))
-    line = '{0:s} {1:s}'.format(self.bold('Status:'), task.get('status'))
-    report.append(self.bullet(line))
-    report.append(self.bullet('Task Id: {0!s}'.format(task.get('id'))))
-    report.append(
-        self.bullet('Executed on worker {0!s}'.format(task.get('worker_name'))))
-    if task.get('report_data'):
+    try:
+      report.append(self.heading2(task.get('name')))
+      line = '{0:s} {1!s}'.format(
+          self.bold('Evidence:'), task.get('evidence_name'))
+      report.append(self.bullet(line))
+      line = '{0:s} {1:s}'.format(self.bold('Status:'), task.get('status'))
+      report.append(self.bullet(line))
+      report.append(self.bullet('Task Id: {0!s}'.format(task.get('id'))))
+      report.append(
+          self.bullet(
+              'Executed on worker {0!s}'.format(task.get('worker_name'))))
+      if task.get('report_data'):
+        report.append('')
+        report.append(self.heading3('Task Reported Data'))
+        report.extend(task.get('report_data').splitlines())
       report.append('')
-      report.append(self.heading3('Task Reported Data'))
-      report.extend(task.get('report_data').splitlines())
-    report.append('')
-    report.append(self.heading3('Saved Task Files:'))
-    for path in task.get('saved_paths'):
-      report.append(self.bullet(self.code(path)))
-      report.append('')
+      report.append(self.heading3('Saved Task Files:'))
+
+      saved_paths = task.get('saved_paths')
+      if saved_paths:
+        for path in saved_paths:
+          report.append(self.bullet(self.code(path)))
+          report.append('')
+    except TypeError as exception:
+      log.warning('Error formatting the Markdown report: %s', exception)
 
     self.report = '\n'.join(report)
     return self.report
@@ -189,9 +203,8 @@ class RequestMarkdownReport(MarkdownReportComponent):
     self._report: str = None
     self._request_data: dict = request_data
 
-    if request_data:
-      tasks = [TaskMarkdownReport(task) for task in request_data.get('tasks')]
-      self.add_components(tasks)
+    tasks = [TaskMarkdownReport(task) for task in request_data.get('tasks')]
+    self.add_components(tasks)
 
   def add(self, component: MarkdownReportComponent) -> None:
     if component:
@@ -224,35 +237,39 @@ class RequestMarkdownReport(MarkdownReportComponent):
     if not request_dict:
       return ''
 
-    report.append(
-        self.heading2(
-            'Request ID: {0!s}'.format(request_dict.get('request_id'))))
-    report.append(
-        self.bullet(
-            'Last Update: {0!s}'.format(
-                request_dict.get('last_task_update_time'))))
-    report.append(
-        self.bullet('Requester: {0!s}'.format(request_dict.get('requester'))))
-    report.append(
-        self.bullet('Reason: {0!s}'.format(request_dict.get('reason'))))
-    report.append(
-        self.bullet('Status: {0!s}'.format(request_dict.get('status'))))
-    report.append(
-        self.bullet(
-            'Failed tasks: {0:d}'.format(request_dict.get('failed_tasks'))))
-    report.append(
-        self.bullet(
-            'Running tasks: {0:d}'.format(request_dict.get('running_tasks'))))
-    report.append(
-        self.bullet(
-            'Successful tasks: {0:d}'.format(
-                request_dict.get('successful_tasks'))))
-    report.append(
-        self.bullet('Task Count: {0:d}'.format(request_dict.get('task_count'))))
-    report.append(
-        self.bullet(
-            'Queued tasks: {0:d}'.format(request_dict.get('queued_tasks'))))
-    report.append('')
+    try:
+      report.append(
+          self.heading2(
+              'Request ID: {0!s}'.format(request_dict.get('request_id'))))
+      report.append(
+          self.bullet(
+              'Last Update: {0!s}'.format(
+                  request_dict.get('last_task_update_time'))))
+      report.append(
+          self.bullet('Requester: {0!s}'.format(request_dict.get('requester'))))
+      report.append(
+          self.bullet('Reason: {0!s}'.format(request_dict.get('reason'))))
+      report.append(
+          self.bullet('Status: {0!s}'.format(request_dict.get('status'))))
+      report.append(
+          self.bullet(
+              'Failed tasks: {0:d}'.format(request_dict.get('failed_tasks'))))
+      report.append(
+          self.bullet(
+              'Running tasks: {0:d}'.format(request_dict.get('running_tasks'))))
+      report.append(
+          self.bullet(
+              'Successful tasks: {0:d}'.format(
+                  request_dict.get('successful_tasks'))))
+      report.append(
+          self.bullet(
+              'Task Count: {0:d}'.format(request_dict.get('task_count'))))
+      report.append(
+          self.bullet(
+              'Queued tasks: {0:d}'.format(request_dict.get('queued_tasks'))))
+      report.append('')
+    except TypeError as exception:
+      log.warning('Error formatting the Markdown report: %s', exception)
 
     for task in self._tasks:
       report.append(task.generate_markdown())

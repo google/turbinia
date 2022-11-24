@@ -122,6 +122,11 @@ def get_request(ctx: click.Context, request_id: str, json_dump: bool) -> None:
   """Gets Turbinia request status."""
   client: api_client.ApiClient = ctx.obj.api_client
   api_instance = turbinia_requests_api.TurbiniaRequestsApi(client)
+  if request_id == 'summary':
+    click.echo(
+        'Oops! "summary" is not a valid request identifier. '
+        'Did you mean to run "turbiniamgmt status summary" instead?')
+    return
   try:
     api_response = api_instance.get_request_status(request_id)
     if json_dump:

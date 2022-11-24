@@ -17,6 +17,6 @@ limitations under the License.
 module.exports = {
   devServer: {
     // See https://cli.vuejs.org/config/#devserver for more options
-    proxy: 'http://localhost:8080',
+    proxy: 'http://localhost:8000',
   },
 }
