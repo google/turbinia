@@ -40,6 +40,26 @@ class MarkdownReportComponent(ABC):
       markdown reports.
   """
 
+  def __init__(self):
+    """Instantiates a MarkdownReportComponent object."""
+    self._components: list(MarkdownReportComponent) = []
+    self._parent: MarkdownReportComponent = None
+    self._report: str = None
+
+  @property
+  def components(self):
+    """Returns the components list."""
+    return self._components
+
+  @property
+  def report(self):
+    """Returns the markdown report text."""
+    return self._report
+
+  @report.setter
+  def report(self, report):
+    self._report = report
+
   @property
   def parent(self) -> MarkdownReportComponent:
     """Returns the parent object."""
@@ -135,12 +155,21 @@ class MarkdownReportComponent(ABC):
     return f'`{text.strip():s}`'
 
   def add(self, component: MarkdownReportComponent) -> None:
+    """Adds a MarkdownReportComponent object to the components list.
+
+    This method should additionally set the parent object.
+    """
     pass
 
   def add_components(self, components: list[MarkdownReportComponent]) -> None:
+    """Adds multiple MarkdownReportComponent objects to the components list."""
     pass
 
   def remove(self, component: MarkdownReportComponent) -> None:
+    """Removes a MarkdownReportComponent object from the components list.
+
+    This method should set the component's object to None.
+    """
     pass
 
   @abstractmethod
@@ -153,17 +182,8 @@ class TaskMarkdownReport(MarkdownReportComponent):
 
   def __init__(self, request_data: dict = None):
     """Initialize TaskMarkdownReport"""
-    self._report: str = None
+    super().__init__()
     self._request_data: dict = request_data
-
-  @property
-  def report(self):
-    """Returns the markdown report text."""
-    return self._report
-
-  @report.setter
-  def report(self, report):
-    self._report = report
 
   def generate_markdown(self) -> str:
     """Generate a markdown report."""
@@ -204,9 +224,8 @@ class RequestMarkdownReport(MarkdownReportComponent):
   """Turbinia Request Markdown report."""
 
   def __init__(self, request_data: dict):
-    """seadsasd"""
-    self._tasks: list[TaskMarkdownReport] = []
-    self._report: str = None
+    """Initializes a RequestMarkdownReport object."""
+    super().__init__()
     self._request_data: dict = request_data
 
     tasks = [TaskMarkdownReport(task) for task in request_data.get('tasks')]
@@ -214,27 +233,18 @@ class RequestMarkdownReport(MarkdownReportComponent):
 
   def add(self, component: MarkdownReportComponent) -> None:
     if component:
-      self._tasks.append(component)
+      self.components.append(component)
       component.parent = self
 
   def remove(self, component: MarkdownReportComponent) -> None:
-    self._tasks.remove(component)
+    self.components.remove(component)
     component.parent = None
 
   def add_components(self, components: list[MarkdownReportComponent]) -> None:
     if components:
       for component in components:
-        self._tasks.append(component)
+        self.components.append(component)
         component.parent = self
-
-  @property
-  def report(self):
-    """Returns the markdown report text."""
-    return self._report
-
-  @report.setter
-  def report(self, report):
-    self._report = report
 
   def generate_markdown(self) -> str:
     """Generates a Markdown version of Requests results."""
@@ -268,7 +278,7 @@ class RequestMarkdownReport(MarkdownReportComponent):
     except TypeError as exception:
       log.warning('Error formatting the Markdown report: %s', exception)
 
-    for task in self._tasks:
+    for task in self.components:
       report.append(task.generate_markdown())
 
     self.report = '\n'.join(report)
@@ -280,17 +290,8 @@ class SummaryMarkdownReport(MarkdownReportComponent):
 
   def __init__(self, requests_summary: list[dict]):
     """Initialize SummaryMarkdownReport."""
+    super().__init__()
     self._requests_summary = requests_summary
-    self._report = None
-
-  @property
-  def report(self):
-    """Returns the markdown report text."""
-    return self._report
-
-  @report.setter
-  def report(self, report):
-    self._report = report
 
   def generate_markdown(self) -> str:
     """Generate a Markdown version of Requests summary results."""

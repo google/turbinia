@@ -43,7 +43,7 @@ def get_oauth2_credentials():
       credentials = Credentials.from_authorized_user_file(
           _CREDENTIALS_FILENAME, scopes)
     except ValueError as exception:
-      log.error('Error loading credentials: {0:s}'.format(exception))
+      log.error('Error loading credentials: %s', exception)
     # Refresh credentials using existing refresh_token or obtain a new token
     if credentials:
       log.debug(
@@ -53,7 +53,7 @@ def get_oauth2_credentials():
         try:
           credentials.refresh(Request())
         except google_exceptions.RefreshError as exception:
-          log.error('{0!s}'.format(exception))
+          log.error('Error refreshing credentials: %s', exception)
   else:
     # No refresh token, obtain new credentials via OAuth2 flow
     log.info('Could not find existing credentials. Requesting new tokens.')
@@ -61,9 +61,13 @@ def get_oauth2_credentials():
       appflow = flow.InstalledAppFlow.from_client_secrets_file(
           _CLIENT_SECRETS_FILENAME, scopes)
     except FileNotFoundError as exception:
-      log.error(str(exception))
+      log.error('Client secrets file not found: %s', exception)
       sys.exit(1)
 
+    log.info(
+        'Starting local HTTP server on localhost:8888 for OAUTH flow. '
+        'If running turbiniamgmt remotely over SSH you will need to tunnel '
+        'port 8888.')
     appflow.run_local_server(host="localhost", port=8888)
     credentials = appflow.credentials
     # Save credentials
