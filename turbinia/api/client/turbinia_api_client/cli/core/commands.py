@@ -16,7 +16,6 @@
 
 import os
 import logging
-import json
 import click
 import base64
 
@@ -45,7 +44,7 @@ def get_config(ctx: click.Context) -> None:
   api_instance = turbinia_configuration_api.TurbiniaConfigurationApi(client)
   try:
     api_response = api_instance.read_config()
-    click.echo(json.dumps(api_response))
+    formatter.echo_json(api_response)
   except exceptions.ApiException as exception:
     log.error(
         'Received status code %s when calling get_config: %s', exception.status,
@@ -105,7 +104,7 @@ def get_jobs(ctx: click.Context) -> None:
   api_instance = turbinia_jobs_api.TurbiniaJobsApi(client)
   try:
     api_response = api_instance.read_jobs()
-    click.echo(json.dumps(api_response))
+    formatter.echo_json(api_response)
   except exceptions.ApiException as exception:
     log.error(
         'Received status code %s when calling get_jobs: %s', exception.status,
@@ -130,7 +129,7 @@ def get_request(ctx: click.Context, request_id: str, json_dump: bool) -> None:
   try:
     api_response = api_instance.get_request_status(request_id)
     if json_dump:
-      click.echo(json.dumps(api_response))
+      formatter.echo_json(api_response)
     else:
       report = formatter.RequestMarkdownReport(api_response).generate_markdown()
       click.echo(report)
@@ -152,7 +151,7 @@ def get_requests_summary(ctx: click.Context, json_dump: bool) -> None:
   try:
     api_response = api_instance.get_requests_summary()
     if json_dump:
-      click.echo(json.dumps(api_response))
+      formatter.echo_json(api_response)
     else:
       report = formatter.SummaryMarkdownReport(api_response).generate_markdown()
       click.echo(report)
@@ -175,7 +174,7 @@ def get_task(ctx: click.Context, task_id: str, json_dump: bool) -> None:
   try:
     api_response = api_instance.get_task_status(task_id)
     if json_dump:
-      click.echo(json.dumps(api_response))
+      formatter.echo_json(api_response)
     else:
       report = formatter.TaskMarkdownReport(api_response).generate_markdown()
       click.echo(report)

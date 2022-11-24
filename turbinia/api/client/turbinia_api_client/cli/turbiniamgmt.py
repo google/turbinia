@@ -150,15 +150,14 @@ class TurbiniaMgmtCli:
 @click.option(
     '--config_instance', '-c', help='A Turbinia instance configuration name.',
     show_default=True, show_envvar=True, type=str,
-    default=lambda: os.environ.get("TURBINIA_CONFIG_TEMPLATE", "default"))
+    default=lambda: os.environ.get('TURBINIA_CONFIG_TEMPLATE', 'default'))
 @click.option(
     '--config_path', '-p', help='Path to the .turbinia_api_config.json file..',
     show_default=True, show_envvar=True, type=str,
-    default=lambda: os.environ.get("TURBINIA_CLI_CONFIG_PATH", "~"))
+    default=lambda: os.environ.get('TURBINIA_CLI_CONFIG_PATH', '~'))
 @click.pass_context
 def cli(ctx: click.Context, config_instance: str, config_path: str) -> None:
   """Turbinia API command-line tool (turbiniamgmt).
-
   \b                         ***    ***                                       
   \b                          *          *                                      
   \b                     ***             ******                                 
@@ -189,7 +188,7 @@ def cli(ctx: click.Context, config_instance: str, config_path: str) -> None:
   """
   ctx.obj = TurbiniaMgmtCli(
       config_instance=config_instance, config_path=config_path)
-  log.info('Using configuration instance name -> {0:s}'.format(config_instance))
+  log.info('Using configuration instance name -> %s', config_instance)
   request_commands = factory.CommandFactory.create_dynamic_objects(
       evidence_mapping=ctx.obj.evidence_mapping,
       request_options=ctx.obj.request_options)

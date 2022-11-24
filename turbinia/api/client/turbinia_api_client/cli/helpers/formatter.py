@@ -18,13 +18,21 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from click import echo as click_echo
 
 import logging
+import json
 
 _LOGGER_FORMAT = '%(asctime)s %(levelname)s %(name)s - %(message)s'
 logging.basicConfig(format=_LOGGER_FORMAT)
 log = logging.getLogger('turbiniamgmt:helpers:formatter')
 log.setLevel(logging.DEBUG)
+
+
+def echo_json(json_data: dict) -> None:
+  """Pretty print JSON data."""
+  if isinstance(json_data, dict):
+    click_echo(json.dumps(json_data, indent=2))
 
 
 class MarkdownReportComponent(ABC):
@@ -50,7 +58,7 @@ class MarkdownReportComponent(ABC):
     Return:
         string: Formatted text.
     """
-    return '**{0:s}**'.format(text.strip())
+    return f'**{text.strip():s}**'
 
   def heading1(self, text):
     """Formats text as heading 1 in Markdown format.
@@ -61,7 +69,7 @@ class MarkdownReportComponent(ABC):
     Return:
         string: Formatted text.
     """
-    return '# {0:s}'.format(text.strip())
+    return f'# {text.strip():s}'
 
   def heading2(self, text):
     """Formats text as heading 2 in Markdown format.
@@ -72,7 +80,7 @@ class MarkdownReportComponent(ABC):
     Return:
         string: Formatted text.
     """
-    return '## {0:s}'.format(text.strip())
+    return f'## {text.strip():s}'
 
   def heading3(self, text):
     """Formats text as heading 3 in Markdown format.
@@ -83,7 +91,7 @@ class MarkdownReportComponent(ABC):
     Return:
         string: Formatted text.
     """
-    return '### {0:s}'.format(text.strip())
+    return f'### {text.strip():s}'
 
   def heading4(self, text):
     """Formats text as heading 4 in Markdown format.
@@ -94,7 +102,7 @@ class MarkdownReportComponent(ABC):
     Return:
         string: Formatted text.
     """
-    return '#### {0:s}'.format(text.strip())
+    return f'#### {text.strip():s}'
 
   def heading5(self, text):
     """Formats text as heading 5 in Markdown format.
@@ -103,7 +111,7 @@ class MarkdownReportComponent(ABC):
      Return:
         string: Formatted text.
     """
-    return '##### {0:s}'.format(text.strip())
+    return f'##### {text.strip():s}'
 
   def bullet(self, text, level=1):
     """Formats text as a bullet in Markdown format.
@@ -113,7 +121,7 @@ class MarkdownReportComponent(ABC):
       Return:
         string: Formatted text.
     """
-    return '{0:s}* {1:s}'.format('    ' * (level - 1), text.strip())
+    return f"{'    ' * (level - 1):s}* {text.strip():s}"
 
   def code(self, text):
     """Formats text as code in Markdown format.
@@ -124,7 +132,7 @@ class MarkdownReportComponent(ABC):
      Return:
           string: Formatted text.
     """
-    return '`{0:s}`'.format(text.strip())
+    return f'`{text.strip():s}`'
 
   def add(self, component: MarkdownReportComponent) -> None:
     pass
@@ -166,15 +174,13 @@ class TaskMarkdownReport(MarkdownReportComponent):
 
     try:
       report.append(self.heading2(task.get('name')))
-      line = '{0:s} {1!s}'.format(
-          self.bold('Evidence:'), task.get('evidence_name'))
+      line = f"{self.bold('Evidence:'):s} {task.get('evidence_name')!s}"
       report.append(self.bullet(line))
-      line = '{0:s} {1:s}'.format(self.bold('Status:'), task.get('status'))
+      line = f"{self.bold('Status:'):s} {task.get('status'):s}"
       report.append(self.bullet(line))
-      report.append(self.bullet('Task Id: {0!s}'.format(task.get('id'))))
+      report.append(self.bullet(f"Task Id: {task.get('id')!s}"))
       report.append(
-          self.bullet(
-              'Executed on worker {0!s}'.format(task.get('worker_name'))))
+          self.bullet(f"Executed on worker {task.get('worker_name')!s}"))
       if task.get('report_data'):
         report.append('')
         report.append(self.heading3('Task Reported Data'))
@@ -239,34 +245,25 @@ class RequestMarkdownReport(MarkdownReportComponent):
 
     try:
       report.append(
-          self.heading2(
-              'Request ID: {0!s}'.format(request_dict.get('request_id'))))
+          self.heading2(f"Request ID: {request_dict.get('request_id')!s}"))
       report.append(
           self.bullet(
-              'Last Update: {0!s}'.format(
-                  request_dict.get('last_task_update_time'))))
+              f"Last Update: {request_dict.get('last_task_update_time')!s}"))
       report.append(
-          self.bullet('Requester: {0!s}'.format(request_dict.get('requester'))))
+          self.bullet(f"Requester: {request_dict.get('requester')!s}"))
+      report.append(self.bullet(f"Reason: {request_dict.get('reason')!s}"))
+      report.append(self.bullet(f"Status: {request_dict.get('status')!s}"))
       report.append(
-          self.bullet('Reason: {0!s}'.format(request_dict.get('reason'))))
+          self.bullet(f"Failed tasks: {request_dict.get('failed_tasks'):d}"))
       report.append(
-          self.bullet('Status: {0!s}'.format(request_dict.get('status'))))
-      report.append(
-          self.bullet(
-              'Failed tasks: {0:d}'.format(request_dict.get('failed_tasks'))))
+          self.bullet(f"Running tasks: {request_dict.get('running_tasks'):d}"))
       report.append(
           self.bullet(
-              'Running tasks: {0:d}'.format(request_dict.get('running_tasks'))))
+              f"Successful tasks: {request_dict.get('successful_tasks'):d}"))
       report.append(
-          self.bullet(
-              'Successful tasks: {0:d}'.format(
-                  request_dict.get('successful_tasks'))))
+          self.bullet(f"Task Count: {request_dict.get('task_count'):d}"))
       report.append(
-          self.bullet(
-              'Task Count: {0:d}'.format(request_dict.get('task_count'))))
-      report.append(
-          self.bullet(
-              'Queued tasks: {0:d}'.format(request_dict.get('queued_tasks'))))
+          self.bullet(f"Queued tasks: {request_dict.get('queued_tasks'):d}"))
       report.append('')
     except TypeError as exception:
       log.warning('Error formatting the Markdown report: %s', exception)
