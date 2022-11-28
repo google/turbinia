@@ -16,7 +16,7 @@ fi
 # Please ensure the disks you are testing have been created prior to running
 # this script as it does not handle test disk creation. Once that is done, update
 # the values below with the correct test disks.
-MAX_DISKS=5
+MAX_DISKS=100
 DISK_NAME='test-disk-20gb'
 DISK_ZONE='us-central1-f'
 
