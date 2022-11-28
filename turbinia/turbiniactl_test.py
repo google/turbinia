@@ -441,7 +441,7 @@ class TestTurbiniactl(unittest.TestCase):
     self.assertTrue(turbiniactl.process_evidence.called)
 
     # Raise error when running locally
-    config.CLOUD_PROVIDER = 'Local'
+    config.CLOUD_PROVIDER = 'local'
     with self.assertRaisesRegex(TurbiniaException, 'Cloud only'):
       turbiniactl.process_args([
           'googleclouddiskembedded', '--disk_name', 'disk1,disk2,disk3',
