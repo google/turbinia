@@ -506,7 +506,7 @@ def process_args(args):
   if args.debug_tasks:
     config.DEBUG_TASKS = True
 
-  if config.CLOUD_PROVIDER == 'GCP':
+  if config.CLOUD_PROVIDER.lower() == 'gcp':
     from turbinia.lib import google_cloud
     from libcloudforensics.providers.gcp import forensics as gcp_forensics
 

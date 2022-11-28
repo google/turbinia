@@ -35,7 +35,7 @@ from turbinia.processors import mount_local
 from turbinia.processors import resource_manager
 
 config.LoadConfig()
-if config.CLOUD_PROVIDER == 'GCP':
+if config.CLOUD_PROVIDER.lower() == 'gcp':
   from turbinia.processors import google_cloud
 
 log = logging.getLogger('turbinia')
