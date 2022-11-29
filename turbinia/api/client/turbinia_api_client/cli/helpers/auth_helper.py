@@ -26,19 +26,16 @@ from google.auth import exceptions as google_exceptions
 log = logging.getLogger('turbiniamgmt:helpers:auth')
 
 
-def get_oauth2_credentials():
+def get_oauth2_credentials(credentials_path, client_secrets_path):
   """Authenticates the user using Google OAuth services."""
   scopes = ['openid', 'https://www.googleapis.com/auth/userinfo.email']
-  _CREDENTIALS_FILENAME = '.credentials.json'
-  _CLIENT_SECRETS_FILENAME = '.client_secrets.json'
-
   credentials = None
 
   # Load credentials file if it exists
-  if os.path.exists(_CREDENTIALS_FILENAME):
+  if os.path.exists(credentials_path):
     try:
       credentials = Credentials.from_authorized_user_file(
-          _CREDENTIALS_FILENAME, scopes)
+          credentials_path, scopes)
     except ValueError as exception:
       log.error('Error loading credentials: %s', exception)
     # Refresh credentials using existing refresh_token
@@ -53,7 +50,7 @@ def get_oauth2_credentials():
     log.info('Could not find existing credentials. Requesting new tokens.')
     try:
       appflow = flow.InstalledAppFlow.from_client_secrets_file(
-          _CLIENT_SECRETS_FILENAME, scopes)
+          client_secrets_path, scopes)
     except FileNotFoundError as exception:
       log.error('Client secrets file not found: %s', exception)
       sys.exit(1)
@@ -64,8 +61,9 @@ def get_oauth2_credentials():
         'port 8888.')
     appflow.run_local_server(host="localhost", port=8888)
     credentials = appflow.credentials
+
     # Save credentials
-    with open(_CREDENTIALS_FILENAME, 'w', encoding='utf-8') as token:
+    with open(credentials_path, 'w', encoding='utf-8') as token:
       token.write(credentials.to_json())
 
   return credentials.id_token

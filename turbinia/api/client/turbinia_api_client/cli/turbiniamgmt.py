@@ -43,8 +43,8 @@ class TurbiniaMgmtCli:
     self.api_server_address: str = None
     self.api_server_port: int = None
     self.api_authentication_enabled: str = None
-    self.credentials_file: str = None
-    self.secrets_file: str = None
+    self.credentials_path: str = None
+    self.client_secrets_path: str = None
     self.config_instance: str = config_instance
     self.config_path: str = config_path
     self.read_api_configuration()
@@ -61,15 +61,29 @@ class TurbiniaMgmtCli:
 
   def setup(self) -> None:
     """Sets up authentication and preflight requests to the API server.
-    
+
     The preflight requests get_evidence_arguments and get_request_options
     are used to dynamically build command options.
     """
     if self.api_authentication_enabled:
-      self.config.access_token = auth_helper.get_oauth2_credentials()
+      log.info(
+          'Authentication is enabled. Using client_secrets file at: %s '
+          'and caching credentials at: %s', self.client_secrets_path,
+          self.credentials_path)
+      self.config.access_token = auth_helper.get_oauth2_credentials(
+          self.credentials_path, self.client_secrets_path)
 
-    self.evidence_mapping = self.get_evidence_arguments()
-    self.request_options = self.get_request_options()
+    log.info(
+        'Using configuration instance name -> %s, with host %s:%s',
+        self.config_instance, self.api_server_address, self.api_server_port)
+    try:
+      self.evidence_mapping = self.get_evidence_arguments()
+      self.request_options = self.get_request_options()
+    except turbinia_api_client.ApiException as exception:
+      log.error(
+          'Error while attempting to contact the API server during setup: %s',
+          exception)
+      sys.exit(-1)
 
   @property
   def api_client(self):
@@ -104,16 +118,12 @@ class TurbiniaMgmtCli:
     api_instance = turbinia_configuration_api.TurbiniaConfigurationApi(
         self.api_client)
     api_response = None
-    try:
-      if evidence_name:
-        api_response = api_instance.get_evidence_attributes_by_name(
-            evidence_name)
-      else:
-        api_response = api_instance.get_evidence_types()
-      self.evidence_mapping: dict = api_response
-    except turbinia_api_client.ApiException as exception:
-      log.error(
-          'Error while attempting to contact the API server: %s', exception)
+    if evidence_name:
+      api_response = api_instance.get_evidence_attributes_by_name(evidence_name)
+    else:
+      api_response = api_instance.get_evidence_types()
+
+    self.evidence_mapping: dict = api_response
     return api_response
 
   def get_request_options(self) -> dict:
@@ -121,10 +131,8 @@ class TurbiniaMgmtCli:
     api_response = None
     api_instance = turbinia_configuration_api.TurbiniaConfigurationApi(
         self.api_client)
-    try:
-      api_response = api_instance.get_request_options()
-    except turbinia_api_client.ApiException as exception:
-      log.error('Exception when calling get_request_options: %s', exception)
+    api_response = api_instance.get_request_options()
+
     return api_response
 
   def read_api_configuration(self) -> None:
@@ -147,6 +155,12 @@ class TurbiniaMgmtCli:
         self.api_server_port = config_dict.get('API_SERVER_PORT')
         self.api_authentication_enabled = config_dict.get(
             'API_AUTHENTICATION_ENABLED')
+        credentials_filename = config_dict.get('CREDENTIALS_FILENAME')
+        client_secrets_filename = config_dict.get('CLIENT_SECRETS_FILENAME')
+        home_path = os.path.expanduser('~')
+        self.credentials_path = os.path.join(home_path, credentials_filename)
+        self.client_secrets_path = os.path.join(
+            home_path, client_secrets_filename)
         self._config_dict = config_dict
       except json.JSONDecodeError as exception:
         log.error(exception)
@@ -182,10 +196,10 @@ def cli(ctx: click.Context, config_instance: str, config_path: str) -> None:
   \b %%                                                   %%  ***************   
   \b %%                                (%%%%%%%%%%%%%%%%%%%  *****  **          
   \b   %%%%%        %%%%%%%%%%%%%%%                                             
-                                                                             
+                                              
   \b   %%%%%%%%%%                     %%          **             ***              
-  \b      %%%                         %%  %%             %%%            %%%,      
-  \b      %%%      %%%   %%%   %%%%%  %%%   %%%   %%  %%%   %%%  %%%  %%   (%%    
+  \b      %%%                         %%  %%             %%%           %%%%,      
+  \b      %%%      %%%   %%%   %%%%%  %%%   %%%   %%  %%%   %%%  %%%       (%%    
   \b      %%%      %%%   %%%  %%%     %%     %%/  %%  %%%   %%%  %%%  %%%%%%%%    
   \b      %%%      %%%   %%%  %%%     %%%   %%%   %%  %%%   %%%  %%% %%%   %%%    
   \b      %%%        %%%%%    %%%       %%%%%     %%  %%%    %%  %%%   %%%%%      
@@ -197,7 +211,6 @@ def cli(ctx: click.Context, config_instance: str, config_path: str) -> None:
   ctx.obj = TurbiniaMgmtCli(
       config_instance=config_instance, config_path=config_path)
   ctx.obj.setup()
-  log.info('Using configuration instance name -> %s', config_instance)
   request_commands = factory.CommandFactory.create_dynamic_objects(
       evidence_mapping=ctx.obj.evidence_mapping,
       request_options=ctx.obj.request_options)
