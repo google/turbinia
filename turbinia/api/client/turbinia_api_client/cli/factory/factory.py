@@ -25,10 +25,7 @@ from turbinia_api_client.cli.core.commands import create_request
 
 T = TypeVar('T', bound='FactoryInterface')
 
-_LOGGER_FORMAT = '%(asctime)s %(levelname)s %(name)s - %(message)s'
-logging.basicConfig(format=_LOGGER_FORMAT)
 log = logging.getLogger('turbiniamgmt:factory')
-log.setLevel(logging.INFO)
 
 
 class FactoryInterface(ABC):

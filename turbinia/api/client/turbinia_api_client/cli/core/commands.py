@@ -30,10 +30,7 @@ from turbinia_api_client.api import turbinia_request_results_api
 from turbinia_api_client.cli.core import groups
 from turbinia_api_client.cli.helpers import formatter
 
-_LOGGER_FORMAT = '%(asctime)s %(levelname)s %(name)s - %(message)s'
-logging.basicConfig(format=_LOGGER_FORMAT)
 log = logging.getLogger('turbiniamgmt:core:commands')
-log.setLevel(logging.DEBUG)
 
 
 @groups.config_group.command('list')
@@ -104,7 +101,7 @@ def get_jobs(ctx: click.Context) -> None:
   api_instance = turbinia_jobs_api.TurbiniaJobsApi(client)
   try:
     api_response = api_instance.read_jobs()
-    formatter.echo_json(api_response)
+    click.echo(api_response)
   except exceptions.ApiException as exception:
     log.error(
         'Received status code %s when calling get_jobs: %s', exception.status,

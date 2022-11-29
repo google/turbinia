@@ -23,10 +23,7 @@ from google.oauth2.credentials import Credentials
 from google.auth.transport.requests import Request
 from google.auth import exceptions as google_exceptions
 
-_LOGGER_FORMAT = '%(asctime)s %(levelname)s %(name)s - %(message)s'
-logging.basicConfig(format=_LOGGER_FORMAT)
 log = logging.getLogger('turbiniamgmt:helpers:auth')
-log.setLevel(logging.INFO)
 
 
 def get_oauth2_credentials():
