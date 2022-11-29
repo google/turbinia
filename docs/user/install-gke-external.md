@@ -195,7 +195,7 @@ pip3 install turbinia_api_client`
 - To create a processing request for evidence run the following:
 
 ```
-turbiniamgmt submit googleclouddisk --project <PROJECT_NAME> --disk_name <DISK_NAME> --zone <ZONE>
+turbiniamgmt submit GoogleCloudDisk --project <PROJECT_NAME> --disk_name <DISK_NAME> --zone <ZONE>
 ```
 
 - To access the Turbinia Web UI, point your browser to:
