@@ -29,9 +29,8 @@ from turbinia_api_client.cli.factory import factory
 from turbinia_api_client.cli.helpers import auth_helper
 
 _LOGGER_FORMAT = '%(asctime)s %(levelname)s %(name)s - %(message)s'
-logging.basicConfig(format=_LOGGER_FORMAT)
+logging.basicConfig(format=_LOGGER_FORMAT, level=logging.INFO)
 log = logging.getLogger('turbiniamgmt')
-log.setLevel(logging.DEBUG)
 
 
 class TurbiniaMgmtCli:

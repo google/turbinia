@@ -221,12 +221,13 @@ def create_request(ctx: click.Context, *args: int, **kwargs: int) -> None:
       request['request_options']['recipe_data'] = recipe_data.decode('utf-8')
   else:
     log.error('Unable to load recipe from file %s', recipe_name)
+    return
 
   # Send the request to the API server.
   try:
-    log.debug('Sending request: %s', request)
+    log.info('Sending request: %s', request)
     api_response = api_instance.create_request(request)
-    log.debug('Received response: %s', api_response)
+    log.info('Received response: %s', api_response)
   except exceptions.ApiException as exception:
     log.error(
         'Received status code %s when calling create_request. %s',
