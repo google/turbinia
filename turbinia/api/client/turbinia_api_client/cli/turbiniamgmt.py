@@ -236,6 +236,7 @@ class TurbiniaMgmtCli:
 @click.pass_context
 def cli(ctx: click.Context, config_instance: str, config_path: str) -> None:
   """Turbinia API command-line tool (turbiniamgmt).
+  
   \b                         ***    ***                                       
   \b                          *          *                                      
   \b                     ***             ******                                 

@@ -187,6 +187,16 @@ def create_request(ctx: click.Context, *args: int, **kwargs: int) -> None:
   client: api_client.ApiClient = ctx.obj.api_client
   api_instance = turbinia_requests_api.TurbiniaRequestsApi(client)
   evidence_name = ctx.command.name
+  if 'GoogleCloud' in evidence_name:
+    api_instance_config = turbinia_configuration_api.TurbiniaConfigurationApi(
+        client)
+    cloud_provider = api_instance_config.read_config()['CLOUD_PROVIDER']
+    if cloud_provider != 'GCP':
+      log.error(
+          'The evidence type %s is Google Cloud only and the configuerd '
+          'provider for this Turbinia instance is %s.', evidence_name,
+          cloud_provider)
+      return
   request_options = list(ctx.obj.request_options.keys())
   request = {'evidence': {'type': evidence_name}, 'request_options': {}}
 
@@ -208,20 +218,25 @@ def create_request(ctx: click.Context, *args: int, **kwargs: int) -> None:
     return
 
   recipe_name = request['request_options'].get('recipe_name')
-  if recipe_name and os.path.isfile(recipe_name):
-    with open(recipe_name, 'r', encoding='utf-8') as recipe_file:
-      # Read the file and convert to base64 encoded bytes.
-      recipe_bytes = recipe_file.read().encode('utf-8')
-      recipe_data = base64.b64encode(recipe_bytes)
-      # We found the recipe file, so we will send it to the API server
-      # via the recipe_data parameter. To do so, we need to pop recipe_name
-      # from the request so that we only have recipe_data.
-      request['request_options'].pop('recipe_name')
-      # recipe_data should be a UTF-8 encoded string.
-      request['request_options']['recipe_data'] = recipe_data.decode('utf-8')
-  else:
-    log.error('Unable to load recipe from file %s', recipe_name)
-    return
+  if recipe_name:
+    if os.path.isfile(recipe_name):
+      with open(recipe_name, 'r', encoding='utf-8') as recipe_file:
+        # Read the file and convert to base64 encoded bytes.
+        recipe_bytes = recipe_file.read().encode('utf-8')
+        try:
+          recipe_data = base64.b64encode(recipe_bytes)
+        except TypeError as exception:
+          log.error('Error converting recipe data to Base64: %s', exception)
+          return
+        # We found the recipe file, so we will send it to the API server
+        # via the recipe_data parameter. To do so, we need to pop recipe_name
+        # from the request so that we only have recipe_data.
+        request['request_options'].pop('recipe_name')
+        # recipe_data should be a UTF-8 encoded string.
+        request['request_options']['recipe_data'] = recipe_data.decode('utf-8')
+    else:
+      log.error('Unable to load recipe from file %s', recipe_name)
+      return
 
   # Send the request to the API server.
   try:
