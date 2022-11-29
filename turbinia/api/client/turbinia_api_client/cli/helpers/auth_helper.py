@@ -41,18 +41,15 @@ def get_oauth2_credentials():
           _CREDENTIALS_FILENAME, scopes)
     except ValueError as exception:
       log.error('Error loading credentials: %s', exception)
-    # Refresh credentials using existing refresh_token or obtain a new token
-    if credentials:
-      log.debug(
-          'Could not find a valid OAuth2 id_token, checking refresh token.')
-      if credentials.refresh_token:
-        log.debug('Found a refresh token. Requesting new id_token...')
-        try:
-          credentials.refresh(Request())
-        except google_exceptions.RefreshError as exception:
-          log.error('Error refreshing credentials: %s', exception)
+    # Refresh credentials using existing refresh_token
+    if credentials and credentials.refresh_token:
+      log.debug('Found a refresh token. Requesting new id_token...')
+      try:
+        credentials.refresh(Request())
+      except google_exceptions.RefreshError as exception:
+        log.error('Error refreshing credentials: %s', exception)
   else:
-    # No refresh token, obtain new credentials via OAuth2 flow
+    # No credentials file, acquire new credentials from secrets file.
     log.info('Could not find existing credentials. Requesting new tokens.')
     try:
       appflow = flow.InstalledAppFlow.from_client_secrets_file(
