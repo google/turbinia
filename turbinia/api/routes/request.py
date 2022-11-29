@@ -33,7 +33,7 @@ log = logging.getLogger('turbinia')
 router = APIRouter(prefix="/request", tags=["Turbinia Requests"])
 
 
-@router.get("/summary")
+@router.get('/summary')
 async def get_requests_summary(request: Request):
   """Retrieves a summary of all Turbinia requests.
 
@@ -61,7 +61,7 @@ async def get_requests_summary(request: Request):
         detail='Error retrieving requests summary') from exception
 
 
-@router.get("/{request_id}")
+@router.get('/{request_id}')
 async def get_request_status(request: Request, request_id: str):
   """Retrieves status for a Turbinia Request.
 
@@ -89,7 +89,7 @@ async def get_request_status(request: Request, request_id: str):
         detail='Error retrieving request information') from exception
 
 
-@router.post("/")
+@router.post('/')
 async def create_request(request: Request, req: turbinia_request.Request):
   """Create a new Turbinia request.
 
@@ -199,5 +199,5 @@ async def create_request(request: Request, req: turbinia_request.Request):
         detail='Error creating new Turbinia request: {0!s}'.format(
             exception)) from exception
 
-  response = {"request_id": request_out.request_id}
+  response = {'request_id': request_out.request_id}
   return JSONResponse(content=response, status_code=200)

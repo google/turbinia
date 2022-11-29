@@ -29,7 +29,7 @@ log = logging.getLogger('turbinia')
 router = APIRouter(prefix='/jobs', tags=['Turbinia Jobs'])
 
 
-@router.get("/")
+@router.get('/')
 async def read_jobs(request: Request):
   """Return enabled jobs from the current Turbinia config."""
   try:

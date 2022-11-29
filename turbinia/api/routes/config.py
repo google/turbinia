@@ -30,7 +30,7 @@ log = logging.getLogger('turbinia')
 router = APIRouter(prefix='/config', tags=['Turbinia Configuration'])
 
 
-@router.get("/")
+@router.get('/')
 async def read_config(request: Request):
   """Retrieve turbinia config."""
   try:
@@ -43,14 +43,14 @@ async def read_config(request: Request):
         status_code=500, detail='error reading configuration') from exception
 
 
-@router.get("/evidence")
+@router.get('/evidence')
 async def get_evidence_types(request: Request):
   """Returns supported Evidence object types and required parameters."""
   attribute_mapping = evidence.map_evidence_attributes()
   return JSONResponse(content=attribute_mapping, status_code=200)
 
 
-@router.get("/evidence/{evidence_name}")
+@router.get('/evidence/{evidence_name}')
 async def get_evidence_attributes_by_name(request: Request, evidence_name):
   """Returns supported Evidence object types and required parameters."""
   attribute_mapping = evidence.map_evidence_attributes()
@@ -62,7 +62,7 @@ async def get_evidence_attributes_by_name(request: Request, evidence_name):
   return JSONResponse(content=attribute_mapping, status_code=200)
 
 
-@router.get("/request_options")
+@router.get('/request_options')
 async def get_request_options(request: Request):
   """Returns a list BaseRequestOptions attributes."""
   attributes = request_options.BaseRequestOptions.__annotations__

@@ -25,7 +25,7 @@ log = logging.getLogger('turbinia')
 router = APIRouter(prefix='/logs', tags=['Logs'])
 
 
-@router.get("/{query}")
+@router.get('/{query}')
 async def get_logs(request: Request, query: str):
   """Retrieve log data."""
   return JSONResponse(

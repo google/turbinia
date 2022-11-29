@@ -48,7 +48,7 @@ async def web(request: Request):
 async def serve_css(request: Request):
   """Serves CSS content."""
   static_content_path = pathlib.Path(_config.WEBUI_PATH).joinpath('dist/css')
-  path = request.path_params["catchall"]
+  path = request.path_params['catchall']
   file = static_content_path.joinpath(path)
   if os.path.exists(file):
     return FileResponse(file)
@@ -60,7 +60,7 @@ async def serve_css(request: Request):
 async def serve_js(request: Request):
   """Serves JavaScript content."""
   static_content_path = pathlib.Path(_config.WEBUI_PATH).joinpath('dist/js')
-  path = request.path_params["catchall"]
+  path = request.path_params['catchall']
   file = static_content_path.joinpath(path)
   if os.path.exists(file):
     return FileResponse(file)

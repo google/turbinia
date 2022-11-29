@@ -43,7 +43,7 @@ _ATTACHMENT_RESPONSE = {
 
 
 @router.get(
-    "/task/{task_id}", response_class=Response, responses=_ATTACHMENT_RESPONSE)
+    '/task/{task_id}', response_class=Response, responses=_ATTACHMENT_RESPONSE)
 async def get_task_output(request: Request, task_id: str):
   """Retrieves a task's output files."""
   # Get the request_id for the task. This is needed to find the right path.
@@ -68,7 +68,7 @@ async def get_task_output(request: Request, task_id: str):
 
 
 @router.get(
-    "/request/{request_id}", response_class=Response,
+    '/request/{request_id}', response_class=Response,
     responses=_ATTACHMENT_RESPONSE)
 async def get_request_output(request: Request, request_id: str):
   """Retrieve request output."""

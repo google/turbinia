@@ -33,7 +33,7 @@ log = logging.getLogger('turbinia:api_server:task')
 router = APIRouter(prefix='/task', tags=['Turbinia Tasks'])
 
 
-@router.get("/{task_id}")
+@router.get('/{task_id}')
 async def get_task_status(request: Request, task_id: str):
   """Retrieve task information."""
   try:
