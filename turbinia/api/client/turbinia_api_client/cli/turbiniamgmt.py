@@ -37,9 +37,7 @@ log.setLevel(logging.DEBUG)
 class TurbiniaMgmtCli:
   """Turbinia API client tool."""
 
-  def __init__(
-      self, api_client=None, config=None, config_instance=None,
-      config_path=None):
+  def __init__(self, config_instance=None, config_path=None):
     self.api_server_address: str = None
     self.api_server_port: int = None
     self.api_authentication_enabled: str = None
@@ -47,11 +45,21 @@ class TurbiniaMgmtCli:
     self.client_secrets_path: str = None
     self.config_instance: str = config_instance
     self.config_path: str = config_path
-    self.read_api_configuration()
-    self._api_client: turbinia_api_client.ApiClient = api_client
-    self._config: turbinia_api_client.Configuration = config
+    self._api_client: turbinia_api_client.ApiClient = None
+    self._config: turbinia_api_client.Configuration = None
+    self._config_dict: dict = {}
     self.evidence_mapping: dict = {}
     self.request_options: dict = {}
+
+  def setup(self) -> None:
+    """Sets up necessary attributes and preflight requests to the API server.
+
+    The preflight requests get_evidence_arguments and get_request_options
+    are used to dynamically build command options.
+    """
+
+    # Initialize attributes from config file.
+    self.read_api_configuration()
 
     if not self.config:
       host = f'{self.api_server_address:s}:{self.api_server_port:d}'
@@ -59,12 +67,6 @@ class TurbiniaMgmtCli:
     if not self.api_client:
       self.api_client = self.default_api_client(self.config)
 
-  def setup(self) -> None:
-    """Sets up authentication and preflight requests to the API server.
-
-    The preflight requests get_evidence_arguments and get_request_options
-    are used to dynamically build command options.
-    """
     if self.api_authentication_enabled:
       log.info(
           'Authentication is enabled. Using client_secrets file at: %s '
@@ -151,19 +153,23 @@ class TurbiniaMgmtCli:
         if not config_dict:
           log.error('Error reading configuration key %s.', self.config_instance)
           sys.exit(-1)
-        self.api_server_address = config_dict.get('API_SERVER_ADDRESS')
-        self.api_server_port = config_dict.get('API_SERVER_PORT')
-        self.api_authentication_enabled = config_dict.get(
-            'API_AUTHENTICATION_ENABLED')
-        credentials_filename = config_dict.get('CREDENTIALS_FILENAME')
-        client_secrets_filename = config_dict.get('CLIENT_SECRETS_FILENAME')
+        self.api_server_address = config_dict['API_SERVER_ADDRESS']
+        self.api_server_port = config_dict['API_SERVER_PORT']
+        self.api_authentication_enabled = config_dict[
+            'API_AUTHENTICATION_ENABLED']
+        credentials_filename = config_dict['CREDENTIALS_FILENAME']
+        client_secrets_filename = config_dict['CLIENT_SECRETS_FILENAME']
         home_path = os.path.expanduser('~')
         self.credentials_path = os.path.join(home_path, credentials_filename)
         self.client_secrets_path = os.path.join(
             home_path, client_secrets_filename)
         self._config_dict = config_dict
       except json.JSONDecodeError as exception:
-        log.error(exception)
+        log.error('Error decoding configuration file: %s', exception)
+        sys.exit(-1)
+      except KeyError as exception:
+        log.error('Required configuration key not found: %s', exception)
+        sys.exit(-1)
 
 
 @click.group(context_settings={
@@ -210,7 +216,11 @@ def cli(ctx: click.Context, config_instance: str, config_path: str) -> None:
   """
   ctx.obj = TurbiniaMgmtCli(
       config_instance=config_instance, config_path=config_path)
+
+  # Set up the tool based on the configuration file parameters.
   ctx.obj.setup()
+
+  # Build all the commands based on responses from the API server.
   request_commands = factory.CommandFactory.create_dynamic_objects(
       evidence_mapping=ctx.obj.evidence_mapping,
       request_options=ctx.obj.request_options)
