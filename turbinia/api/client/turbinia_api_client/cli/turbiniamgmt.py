@@ -35,21 +35,45 @@ log.setLevel(logging.DEBUG)
 
 
 class TurbiniaMgmtCli:
-  """Turbinia API client tool."""
+  """Turbinia API client tool.
+
+  Attributes:
+    _api_client (turbinia_api_client.ApiClient): An instance of the ApiClient
+        class.
+    _config (turbinia_api_client.Configuration): An instance of the
+        Configuration class.
+    _config_dict (dict): Contains all the cli configuration keys and values
+        from the config file.
+    _evidence_mapping (dict): Internal dictionary used to map Evidence object
+        names to Click commands.
+    _request_options (dict): Internal dictinoary used to map Request options
+        to Click options.
+    api_server_address (str): URL for the API server.
+    api_server_port (int): Port for the API server.
+    api_authentication_enabled (bool): If set to True, the client will attempt
+        to authenticate.
+    client_secrets_path (str): Full path to the client secrets file used for
+        authentication.
+    config_instance (str): A name defined in the configuration file that holds
+        all the configuration options for a specific Turbinia deployment.
+    config_path (str): Full path for the cli tool's configuration file.
+    credentials_path (str): Full path to the credentials cache file used for
+        re-authentication.
+  """
 
   def __init__(self, config_instance=None, config_path=None):
-    self.api_server_address: str = None
-    self.api_server_port: int = None
-    self.api_authentication_enabled: str = None
-    self.credentials_path: str = None
-    self.client_secrets_path: str = None
-    self.config_instance: str = config_instance
-    self.config_path: str = config_path
     self._api_client: turbinia_api_client.ApiClient = None
     self._config: turbinia_api_client.Configuration = None
     self._config_dict: dict = {}
-    self.evidence_mapping: dict = {}
-    self.request_options: dict = {}
+    self._evidence_mapping: dict = {}
+    self._request_options: dict = {}
+    self.api_server_address: str = None
+    self.api_server_port: int = None
+    self.api_authentication_enabled: str = None
+    self.client_secrets_path: str = None
+    self.config_instance: str = config_instance
+    self.config_path: str = config_path
+    self.credentials_path: str = None
 
   def setup(self) -> None:
     """Sets up necessary attributes and preflight requests to the API server.
@@ -104,6 +128,33 @@ class TurbiniaMgmtCli:
   @config.setter
   def config(self, config):
     self._config = config
+
+  @property
+  def config_dict(self):
+    """Returns an API client configuration object."""
+    return self._config_dict
+
+  @config_dict.setter
+  def config_dict(self, config_dict):
+    self._config_dict = config_dict
+
+  @property
+  def evidence_mapping(self):
+    """Returns a dictionary that contains Evidence object data."""
+    return self._evidence_mapping
+
+  @evidence_mapping.setter
+  def evidence_mapping(self, evidence_mapping):
+    self._evidence_mapping = evidence_mapping
+
+  @property
+  def request_options(self):
+    """Returns a dictionary that contains RequestOptions object data."""
+    return self._request_options
+
+  @request_options.setter
+  def request_options(self, request_options):
+    self._request_options = request_options
 
   def default_api_client(
       self, config: turbinia_api_client.Configuration
@@ -163,7 +214,7 @@ class TurbiniaMgmtCli:
         self.credentials_path = os.path.join(home_path, credentials_filename)
         self.client_secrets_path = os.path.join(
             home_path, client_secrets_filename)
-        self._config_dict = config_dict
+        self.config_dict = config_dict
       except json.JSONDecodeError as exception:
         log.error('Error decoding configuration file: %s', exception)
         sys.exit(-1)
