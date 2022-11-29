@@ -39,6 +39,7 @@ class TestTurbiniaClient(unittest.TestCase):
     config.LoadConfig()
     config.TASK_MANAGER = 'PSQ'
     config.STATE_MANAGER = 'Datastore'
+    config.CLOUD_PROVIDER = 'GCP'
 
     # Reload module using the config settings above.
     # This is needed due to the conditional imports in client.py

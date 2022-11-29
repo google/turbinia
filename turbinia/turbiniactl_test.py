@@ -317,6 +317,7 @@ class TestTurbiniactl(unittest.TestCase):
     """Test unequal number of args for cloud disk evidence type."""
     config.SHARED_FILESYSTEM = False
     config.TASK_MANAGER = 'PSQ'
+    config.CLOUD_PROVIDER = 'GCP'
     mockArgs = argparse.Namespace(
         all_fields=False, command='googleclouddisk', config_file=None,
         copy_only=False, debug=False, debug_tasks=False, decryption_keys=[],
@@ -387,6 +388,7 @@ class TestTurbiniactl(unittest.TestCase):
     # Fail when zones don't match
     config.SHARED_FILESYSTEM = False
     config.TASK_MANAGER = 'PSQ'
+    config.CLOUD_PROVIDER = 'GCP'
     self.assertRaises(
         TurbiniaException, turbiniactl.process_args, [
             'googleclouddiskembedded', '--disk_name', 'disk1,disk2,disk3',
@@ -439,7 +441,7 @@ class TestTurbiniactl(unittest.TestCase):
     self.assertTrue(turbiniactl.process_evidence.called)
 
     # Raise error when running locally
-    config.CLOUD_PROVIDER = ''
+    config.CLOUD_PROVIDER = 'local'
     with self.assertRaisesRegex(TurbiniaException, 'Cloud only'):
       turbiniactl.process_args([
           'googleclouddiskembedded', '--disk_name', 'disk1,disk2,disk3',
