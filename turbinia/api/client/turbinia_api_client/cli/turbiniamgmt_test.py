@@ -15,6 +15,8 @@
 """Turbinia API client / management tool tests."""
 
 import unittest
+import mock
+
 from turbinia_api_client.cli.turbiniamgmt import TurbiniaMgmtCli
 from fastapi.testclient import TestClient
 
@@ -56,4 +58,21 @@ class TestTurbiniamgmtCli(unittest.TestCase):
     self.assertEqual(self.client.config_dict, {})
     self.client.read_api_configuration()
     self.assertEqual(self.client.config_dict, self._DEFAULT_CONFIG_DICT)
-    print(self.client.config_dict)
+
+  @mock.patch(
+      'turbinia_api_client.api.turbinia_configuration_api.TurbiniaConfigurationApi.get_evidence_types'
+  )
+  def testGetEvidenceArguments(self, mock_response) -> None:
+    test_response = self.api_client.get('/api/config/evidence')
+    mock_response.return_value = test_response
+    api_response = self.client.get_evidence_arguments()
+    self.assertEqual(test_response, api_response)
+
+  @mock.patch(
+      'turbinia_api_client.api.turbinia_configuration_api.TurbiniaConfigurationApi.get_request_options'
+  )
+  def testGetRequestOptions(self, mock_response) -> None:
+    test_response = self.api_client.get('/api/config/request_options')
+    mock_response.return_value = test_response
+    api_response = self.client.get_request_options()
+    self.assertEqual(test_response, api_response)
