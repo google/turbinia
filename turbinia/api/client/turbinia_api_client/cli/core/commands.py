@@ -187,19 +187,20 @@ def create_request(ctx: click.Context, *args: int, **kwargs: int) -> None:
   client: api_client.ApiClient = ctx.obj.api_client
   api_instance = turbinia_requests_api.TurbiniaRequestsApi(client)
   evidence_name = ctx.command.name
+  request_options = list(ctx.obj.request_options.keys())
+  request = {'evidence': {'type': evidence_name}, 'request_options': {}}
+
   if 'GoogleCloud' in evidence_name:
     api_instance_config = turbinia_configuration_api.TurbiniaConfigurationApi(
         client)
     cloud_provider = api_instance_config.read_config()['CLOUD_PROVIDER']
     if cloud_provider != 'GCP':
       log.error(
-          'The evidence type %s is Google Cloud only and the configuerd '
+          'The evidence type %s is Google Cloud only and the configured '
           'provider for this Turbinia instance is %s.', evidence_name,
           cloud_provider)
       return
-  request_options = list(ctx.obj.request_options.keys())
-  request = {'evidence': {'type': evidence_name}, 'request_options': {}}
-
+    #request['evidence']['resource_id'] = kwargs['disk_name']
   for key, value in kwargs.items():
     # If the value is not empty, add it to the request.
     if kwargs.get(key):

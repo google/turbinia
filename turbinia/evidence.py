@@ -467,6 +467,8 @@ class Evidence:
     try:
       log.debug('Starting pre-processor for evidence {0:s}'.format(self.name))
       if self.resource_tracked:
+        if isinstance(self, GoogleCloudDisk):
+          self.resource_id = self.disk_name
         # Track resource and task id in state file
         with filelock.FileLock(config.RESOURCE_FILE_LOCK):
           resource_manager.PreprocessResourceState(self.resource_id, task_id)
@@ -835,7 +837,7 @@ class GoogleCloudDisk(Evidence):
     self.partition_paths = None
     self.cloud_only = True
     self.resource_tracked = True
-    self.resource_id = self.disk_name
+    #self.resource_id = self.disk_name
     self.device_path = None
 
   def _preprocess(self, _, required_states):
