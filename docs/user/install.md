@@ -66,7 +66,7 @@ to get a shell with access to your GCP resources.
     Alternatively, if you wish to store this information in GCS instead, you
     can edit `main.tf` and change the `bucket` parameter to the GCS bucket
     you wish to keep this state information in. See the
-    [Terraform documentation](https://www.terraform.io/docs/commands/index.html)
+    [Terraform documentation](https://developer.hashicorp.com/terraform/cli/commands)
     for more information.
   - The current configuration does not enable alert notifications by default.
     Please see [here](#grafana-smtp-setup) for the instructions
