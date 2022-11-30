@@ -150,6 +150,10 @@ def evidence_decode(evidence_dict, strict=False):
         evidence.collection = [
             evidence_decode(e) for e in evidence_dict['collection']
         ]
+      # Check if the resource_id was set properly
+      if evidence.resource_tracked and not evidence.resource_id:
+        if 'GoogleCloud' in evidence.type and evidence.disk_name:
+          evidence.resource_id = evidence.disk_name
       # We can just reinitialize instead of deserializing because the
       # state should be empty when just starting to process on a new machine.
       evidence.state = {}
@@ -467,8 +471,6 @@ class Evidence:
     try:
       log.debug('Starting pre-processor for evidence {0:s}'.format(self.name))
       if self.resource_tracked:
-        if isinstance(self, GoogleCloudDisk) and not self.resource_id:
-          self.resource_id = self.disk_name
         # Track resource and task id in state file
         with filelock.FileLock(config.RESOURCE_FILE_LOCK):
           resource_manager.PreprocessResourceState(self.resource_id, task_id)
