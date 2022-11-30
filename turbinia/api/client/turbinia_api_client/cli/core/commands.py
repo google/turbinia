@@ -200,7 +200,7 @@ def create_request(ctx: click.Context, *args: int, **kwargs: int) -> None:
           'provider for this Turbinia instance is %s.', evidence_name,
           cloud_provider)
       return
-    #request['evidence']['resource_id'] = kwargs['disk_name']
+
   for key, value in kwargs.items():
     # If the value is not empty, add it to the request.
     if kwargs.get(key):
