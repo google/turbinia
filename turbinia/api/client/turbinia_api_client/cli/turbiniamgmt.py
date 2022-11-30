@@ -18,18 +18,12 @@ import os
 import sys
 import logging
 import json
-import click
 import turbinia_api_client
 
-from urllib3 import exceptions as urllib3_exceptions
-
 from turbinia_api_client.api import turbinia_configuration_api
-from turbinia_api_client.cli.core import groups
-from turbinia_api_client.cli.factory import factory
+
 from turbinia_api_client.cli.helpers import auth_helper
 
-_LOGGER_FORMAT = '%(asctime)s %(levelname)s %(name)s - %(message)s'
-logging.basicConfig(format=_LOGGER_FORMAT, level=logging.INFO)
 log = logging.getLogger('turbiniamgmt')
 
 
@@ -55,7 +49,8 @@ class TurbiniaMgmtCli:
         authentication.
     config_instance (str): A name defined in the configuration file that holds
         all the configuration options for a specific Turbinia deployment.
-    config_path (str): Full path for the cli tool's configuration file.
+    config_path (str): Full path to the directory containing the cli tool's
+        configuration file.
     credentials_path (str): Full path to the credentials cache file used for
         re-authentication.
   """
@@ -220,81 +215,3 @@ class TurbiniaMgmtCli:
       except KeyError as exception:
         log.error('Required configuration key not found: %s', exception)
         sys.exit(-1)
-
-
-@click.group(context_settings={
-    'help_option_names': ['-h', '--help'],
-})
-@click.option(
-    '--config_instance', '-c', help='A Turbinia instance configuration name.',
-    show_default=True, show_envvar=True, type=str,
-    default=lambda: os.environ.get('TURBINIA_CONFIG_TEMPLATE', 'default'))
-@click.option(
-    '--config_path', '-p', help='Path to the .turbinia_api_config.json file..',
-    show_default=True, show_envvar=True, type=str,
-    default=lambda: os.environ.get('TURBINIA_CLI_CONFIG_PATH', '~'))
-@click.pass_context
-def cli(ctx: click.Context, config_instance: str, config_path: str) -> None:
-  """Turbinia API command-line tool (turbiniamgmt).
-  
-  \b                         ***    ***                                       
-  \b                          *          *                                      
-  \b                     ***             ******                                 
-  \b                    *                      *                                
-  \b                    **      *   *  **     ,*                                
-  \b                      *******  * ********                                  
-  \b                             *  * *                                         
-  \b                             *  * *                                         
-  \b                             %%%%%%                                         
-  \b                             %%%%%%                                         
-  \b                    %%%%%%%%%%%%%%%       %%%%%%                            
-  \b              %%%%%%%%%%%%%%%%%%%%%      %%%%%%%                            
-  \b %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%  ** *******       
-  \b %%                                                   %%  ***************   
-  \b %%                                (%%%%%%%%%%%%%%%%%%%  *****  **          
-  \b   %%%%%        %%%%%%%%%%%%%%%                                             
-                                              
-  \b   %%%%%%%%%%                     %%          **             ***              
-  \b      %%%                         %%  %%             %%%           %%%%,      
-  \b      %%%      %%%   %%%   %%%%%  %%%   %%%   %%  %%%   %%%  %%%       (%%    
-  \b      %%%      %%%   %%%  %%%     %%     %%/  %%  %%%   %%%  %%%  %%%%%%%%    
-  \b      %%%      %%%   %%%  %%%     %%%   %%%   %%  %%%   %%%  %%% %%%   %%%    
-  \b      %%%        %%%%%    %%%       %%%%%     %%  %%%    %%  %%%   %%%%%      
-
-  This command-line tool interacts with Turbinia's API server.
-
-  You can specify the API server location in ~/.turbinia_api_config.json
-  """
-  ctx.obj = TurbiniaMgmtCli(
-      config_instance=config_instance, config_path=config_path)
-
-  # Set up the tool based on the configuration file parameters.
-  ctx.obj.setup()
-
-  # Build all the commands based on responses from the API server.
-  request_commands = factory.CommandFactory.create_dynamic_objects(
-      evidence_mapping=ctx.obj.evidence_mapping,
-      request_options=ctx.obj.request_options)
-  for command in request_commands:
-    groups.submit_group.add_command(command)
-
-
-def main():
-  """Initialize the cli application."""
-
-  # Register all command groups.
-  cli.add_command(groups.submit_group)
-  cli.add_command(groups.config_group)
-  cli.add_command(groups.jobs_group)
-  cli.add_command(groups.result_group)
-  cli.add_command(groups.status_group)
-
-  try:
-    cli.main()
-  except (ConnectionRefusedError, urllib3_exceptions.MaxRetryError,
-          urllib3_exceptions.NewConnectionError) as exception:
-    log.error('Error connecting to the Turbinia API server: %s', exception)
-    sys.exit(-1)
-
-
-main()
