@@ -63,6 +63,7 @@ class TestTurbiniamgmtCli(unittest.TestCase):
       'turbinia_api_client.api.turbinia_configuration_api.TurbiniaConfigurationApi.get_evidence_types'
   )
   def testGetEvidenceArguments(self, mock_response) -> None:
+    """Tests the get_evidence_arguments method."""
     test_response = self.api_client.get('/api/config/evidence')
     mock_response.return_value = test_response
     api_response = self.client.get_evidence_arguments()
@@ -72,6 +73,7 @@ class TestTurbiniamgmtCli(unittest.TestCase):
       'turbinia_api_client.api.turbinia_configuration_api.TurbiniaConfigurationApi.get_request_options'
   )
   def testGetRequestOptions(self, mock_response) -> None:
+    """Tests the get_request_options method."""
     test_response = self.api_client.get('/api/config/request_options')
     mock_response.return_value = test_response
     api_response = self.client.get_request_options()
