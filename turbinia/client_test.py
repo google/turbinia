@@ -22,14 +22,10 @@ import importlib
 import textwrap
 import unittest
 import mock
-import fakeredis
-import json
 
 from turbinia import config
 from turbinia import state_manager
 from turbinia import client as TurbiniaClientProvider
-from turbinia.workers import TurbiniaTask
-from turbinia import task_manager
 
 DATETIME_FORMAT = '%Y-%m-%dT%H:%M:%S.%fZ'
 
