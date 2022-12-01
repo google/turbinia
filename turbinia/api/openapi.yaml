@@ -212,7 +212,7 @@ paths:
           description: Validation Error
       summary: Get Logs
       tags:
-      - Logs
+      - Turbinia Logs
   /api/request/:
     post:
       description: "Create a new Turbinia request.\n\nArgs:\n  request (turbinia.api.schema.request):\

@@ -49,7 +49,7 @@ Please follow the [installation procedure](#installation--usage) and then run th
 import time
 import turbinia_api_client
 from pprint import pprint
-from turbinia_api_client.api import logs_api
+from turbinia_api_client.api import turbinia_configuration_api
 from turbinia_api_client.model.http_validation_error import HTTPValidationError
 # Defining the host is optional and defaults to http://localhost
 # See configuration.py for a list of all supported configuration parameters.
@@ -72,15 +72,15 @@ configuration.access_token = 'YOUR_ACCESS_TOKEN'
 # Enter a context with an instance of the API client
 with turbinia_api_client.ApiClient(configuration) as api_client:
     # Create an instance of the API class
-    api_instance = logs_api.LogsApi(api_client)
-    query = "query_example" # str | 
+    api_instance = turbinia_configuration_api.TurbiniaConfigurationApi(api_client)
+    evidence_name = None # bool, date, datetime, dict, float, int, list, str, none_type | 
 
     try:
-        # Get Logs
-        api_response = api_instance.get_logs(query)
+        # Get Evidence Attributes By Name
+        api_response = api_instance.get_evidence_attributes_by_name(evidence_name)
         pprint(api_response)
     except turbinia_api_client.ApiException as e:
-        print("Exception when calling LogsApi->get_logs: %s\n" % e)
+        print("Exception when calling TurbiniaConfigurationApi->get_evidence_attributes_by_name: %s\n" % e)
 ```
 
 ## Documentation for API Endpoints
@@ -89,12 +89,12 @@ All URIs are relative to *http://localhost*
 
 Class | Method | HTTP request | Description
 ------------ | ------------- | ------------- | -------------
-*LogsApi* | [**get_logs**](docs/LogsApi.md#get_logs) | **GET** /api/logs/{query} | Get Logs
 *TurbiniaConfigurationApi* | [**get_evidence_attributes_by_name**](docs/TurbiniaConfigurationApi.md#get_evidence_attributes_by_name) | **GET** /api/config/evidence/{evidence_name} | Get Evidence Attributes By Name
 *TurbiniaConfigurationApi* | [**get_evidence_types**](docs/TurbiniaConfigurationApi.md#get_evidence_types) | **GET** /api/config/evidence | Get Evidence Types
 *TurbiniaConfigurationApi* | [**get_request_options**](docs/TurbiniaConfigurationApi.md#get_request_options) | **GET** /api/config/request_options | Get Request Options
 *TurbiniaConfigurationApi* | [**read_config**](docs/TurbiniaConfigurationApi.md#read_config) | **GET** /api/config/ | Read Config
 *TurbiniaJobsApi* | [**read_jobs**](docs/TurbiniaJobsApi.md#read_jobs) | **GET** /api/jobs/ | Read Jobs
+*TurbiniaLogsApi* | [**get_logs**](docs/TurbiniaLogsApi.md#get_logs) | **GET** /api/logs/{query} | Get Logs
 *TurbiniaRequestResultsApi* | [**get_request_output**](docs/TurbiniaRequestResultsApi.md#get_request_output) | **GET** /api/result/request/{request_id} | Get Request Output
 *TurbiniaRequestResultsApi* | [**get_task_output**](docs/TurbiniaRequestResultsApi.md#get_task_output) | **GET** /api/result/task/{task_id} | Get Task Output
 *TurbiniaRequestsApi* | [**create_request**](docs/TurbiniaRequestsApi.md#create_request) | **POST** /api/request/ | Create Request

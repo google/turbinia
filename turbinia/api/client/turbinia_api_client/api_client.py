@@ -792,11 +792,11 @@ class Endpoint(object):
         """ This method is invoked when endpoints are called
         Example:
 
-        api_instance = LogsApi()
-        api_instance.get_logs  # this is an instance of the class Endpoint
-        api_instance.get_logs()  # this invokes api_instance.get_logs.__call__()
+        api_instance = TurbiniaConfigurationApi()
+        api_instance.get_evidence_attributes_by_name  # this is an instance of the class Endpoint
+        api_instance.get_evidence_attributes_by_name()  # this invokes api_instance.get_evidence_attributes_by_name.__call__()
         which then invokes the callable functions stored in that endpoint at
-        api_instance.get_logs.callable or self.callable in this class
+        api_instance.get_evidence_attributes_by_name.callable or self.callable in this class
 
         """
         return self.callable(self, *args, **kwargs)

@@ -6,7 +6,7 @@
 # raise a `RecursionError`.
 # In order to avoid this, import only the API that you directly need like:
 #
-#   from turbinia_api_client.api.logs_api import LogsApi
+#   from turbinia_api_client.api.turbinia_configuration_api import TurbiniaConfigurationApi
 #
 # or import this package, but before doing it, use:
 #
@@ -14,9 +14,9 @@
 #   sys.setrecursionlimit(n)
 
 # Import APIs into API package:
-from turbinia_api_client.api.logs_api import LogsApi
 from turbinia_api_client.api.turbinia_configuration_api import TurbiniaConfigurationApi
 from turbinia_api_client.api.turbinia_jobs_api import TurbiniaJobsApi
+from turbinia_api_client.api.turbinia_logs_api import TurbiniaLogsApi
 from turbinia_api_client.api.turbinia_request_results_api import TurbiniaRequestResultsApi
 from turbinia_api_client.api.turbinia_requests_api import TurbiniaRequestsApi
 from turbinia_api_client.api.turbinia_tasks_api import TurbiniaTasksApi

@@ -22,7 +22,7 @@ from fastapi.requests import Request
 
 log = logging.getLogger('turbinia')
 
-router = APIRouter(prefix='/logs', tags=['Logs'])
+router = APIRouter(prefix='/logs', tags=['Turbinia Logs'])
 
 
 @router.get('/{query}')
