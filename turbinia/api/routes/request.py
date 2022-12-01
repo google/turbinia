@@ -104,14 +104,12 @@ async def create_request(request: Request, req: turbinia_request.Request):
   """
   client = turbinia_client.get_turbinia_client()
   evidence_list = []
-  request_id = req.request_id
-  group_id = req.group_id
-  requester = req.requester
-  reason = req.reason
   recipe = None
-  recipe_name = req.request_options.recipe_name
-  recipe_data = req.request_options.recipe_data
   options = req.request_options
+  recipe_name = options.recipe_name
+  recipe_data = options.recipe_data
+  request_id = options.request_id
+  group_id = options.group_id
 
   if not request_id:
     request_id = uuid.uuid4().hex
@@ -135,7 +133,7 @@ async def create_request(request: Request, req: turbinia_request.Request):
       # Use a client-provided recipe name or path for an existing recipe.
       recipe = client.create_recipe(
           group_id=group_id, recipe_name=recipe_name,
-          sketch_id=req.request_options.sketch_id)
+          sketch_id=options.sketch_id)
     elif (options.jobs_allowlist or options.jobs_denylist or
           options.filter_patterns or options.yara_rules):
       recipe = client.create_recipe(
@@ -158,9 +156,9 @@ async def create_request(request: Request, req: turbinia_request.Request):
       "request_options": {
         "sketch_id": 1234,
         "recipe_name": "triage-linux"
+        "reason": "test",
+        "requester": "tester"
       },
-      "reason": "test",
-      "requester": "tester"
     }
     ----
     {
@@ -173,9 +171,9 @@ async def create_request(request: Request, req: turbinia_request.Request):
       "request_options": {
       "sketch_id": 1234,
       "recipe_data": "Z2xvYmFsczoKICBqb2JzX2FsbG93bGlzdDoKICAgIC0gQ3JvbkV4dHJhY3Rpb25Kb2IKICAgIC0gQ3JvbkFuYWx5c2lzSm9iCiAgICAtIFBsYXNvSm9iCiAgICAtIFBzb3J0Sm9iCiAgICAtIEZpbGVTeXN0ZW1UaW1lbGluZUpvYgoKcGxhc29fYmFzZToKICB0YXNrOiAnUGxhc29UYXNrJwoKICBhcnRpZmFjdF9maWx0ZXJzOiBbCiAgICAnQWxsVXNlcnNTaGVsbEhpc3RvcnknLAogICAgJ0FwYWNoZUFjY2Vzc0xvZ3MnLAogICAgJ0Jyb3dzZXJDYWNoZScsCiAgICAnQnJvd3Nlckhpc3RvcnknLAogICAgJ0Nocm9tZVN0b3JhZ2UnLAogICAgJ0xpbnV4QXVkaXRMb2dzJywKICAgICdMaW51eEF1dGhMb2dzJywKICAgICdMaW51eENyb25Mb2dzJywKICAgICdMaW51eEtlcm5lbExvZ0ZpbGVzJywKICAgICdMaW51eExhc3Rsb2dGaWxlJywKICAgICdMaW51eE1lc3NhZ2VzTG9nRmlsZXMnLAogICAgJ0xpbnV4U2NoZWR1bGVGaWxlcycsCiAgICAnTGludXhTeXNMb2dGaWxlcycsCiAgICAnTGludXhVdG1wRmlsZXMnLAogICAgJ0xpbnV4V3RtcCcsCiAgXQ=="
-      },
       "reason": "test",
       "requester": "tester"
+      },
     }
     """
     evidence_object = evidence.evidence_decode(req.evidence, strict=True)
@@ -188,8 +186,8 @@ async def create_request(request: Request, req: turbinia_request.Request):
     # If at this point the recipe is None, the TurbiniaClient will create
     # a generic recipe based on recipe_helpers.DEFAULT_RECIPE.
     request_out = client.create_request(
-        evidence_=evidence_list, request_id=request_id, reason=reason,
-        recipe=recipe, group_id=group_id, requester=requester)
+        evidence_=evidence_list, request_id=request_id, reason=options.reason,
+        recipe=recipe, group_id=group_id, requester=options.requester)
     # Send the Turbinia request to the appropriate queue.
     client.send_request(request_out)
   except TurbiniaException as exception:

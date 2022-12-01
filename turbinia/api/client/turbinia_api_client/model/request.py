@@ -90,10 +90,6 @@ class Request(ModelNormal):
             'evidence': ({str: (bool, date, datetime, dict, float, int, list, str, none_type)},),  # noqa: E501
             'request_options': (BaseRequestOptions,),  # noqa: E501
             'description': (str,),  # noqa: E501
-            'group_id': (str,),  # noqa: E501
-            'reason': (str,),  # noqa: E501
-            'request_id': (str,),  # noqa: E501
-            'requester': (str,),  # noqa: E501
         }
 
     @cached_property
@@ -105,10 +101,6 @@ class Request(ModelNormal):
         'evidence': 'evidence',  # noqa: E501
         'request_options': 'request_options',  # noqa: E501
         'description': 'description',  # noqa: E501
-        'group_id': 'group_id',  # noqa: E501
-        'reason': 'reason',  # noqa: E501
-        'request_id': 'request_id',  # noqa: E501
-        'requester': 'requester',  # noqa: E501
     }
 
     read_only_vars = {
@@ -157,10 +149,6 @@ class Request(ModelNormal):
                                 through its discriminator because we passed in
                                 _visited_composed_classes = (Animal,)
             description (str): [optional] if omitted the server will use the default value of "Turbinia request object"  # noqa: E501
-            group_id (str): [optional]  # noqa: E501
-            reason (str): [optional]  # noqa: E501
-            request_id (str): [optional]  # noqa: E501
-            requester (str): [optional]  # noqa: E501
         """
 
         _check_type = kwargs.pop('_check_type', True)
@@ -253,10 +241,6 @@ class Request(ModelNormal):
                                 through its discriminator because we passed in
                                 _visited_composed_classes = (Animal,)
             description (str): [optional] if omitted the server will use the default value of "Turbinia request object"  # noqa: E501
-            group_id (str): [optional]  # noqa: E501
-            reason (str): [optional]  # noqa: E501
-            request_id (str): [optional]  # noqa: E501
-            requester (str): [optional]  # noqa: E501
         """
 
         _check_type = kwargs.pop('_check_type', True)

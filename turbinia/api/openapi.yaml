@@ -18,6 +18,9 @@ components:
             type: string
           title: Filter Patterns
           type: array
+        group_id:
+          title: Group Id
+          type: string
         jobs_allowlist:
           items:
             type: string
@@ -28,11 +31,20 @@ components:
             type: string
           title: Jobs Denylist
           type: array
+        reason:
+          title: Reason
+          type: string
         recipe_data:
           title: Recipe Data
           type: string
         recipe_name:
           title: Recipe Name
+          type: string
+        request_id:
+          title: Request Id
+          type: string
+        requester:
+          title: Requester
           type: string
         sketch_id:
           title: Sketch Id
@@ -61,20 +73,8 @@ components:
         evidence:
           title: Evidence
           type: object
-        group_id:
-          title: Group Id
-          type: string
-        reason:
-          title: Reason
-          type: string
-        request_id:
-          title: Request Id
-          type: string
         request_options:
           $ref: '#/components/schemas/BaseRequestOptions'
-        requester:
-          title: Requester
-          type: string
       required:
       - evidence
       - request_options

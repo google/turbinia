@@ -51,25 +51,25 @@ with turbinia_api_client.ApiClient(configuration) as api_client:
     request = Request(
         description="Turbinia request object",
         evidence={},
-        group_id="group_id_example",
-        reason="reason_example",
-        request_id="request_id_example",
         request_options=BaseRequestOptions(
             filter_patterns=[
                 "filter_patterns_example",
             ],
+            group_id="group_id_example",
             jobs_allowlist=[
                 "jobs_allowlist_example",
             ],
             jobs_denylist=[
                 "jobs_denylist_example",
             ],
+            reason="reason_example",
             recipe_data="recipe_data_example",
             recipe_name="recipe_name_example",
+            request_id="request_id_example",
+            requester="requester_example",
             sketch_id=1,
             yara_rules="yara_rules_example",
         ),
-        requester="requester_example",
     ) # Request | 
 
     # example passing only required values which don't have defaults set

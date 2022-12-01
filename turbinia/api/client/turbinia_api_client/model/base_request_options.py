@@ -82,10 +82,14 @@ class BaseRequestOptions(ModelNormal):
         """
         return {
             'filter_patterns': ([str],),  # noqa: E501
+            'group_id': (str,),  # noqa: E501
             'jobs_allowlist': ([str],),  # noqa: E501
             'jobs_denylist': ([str],),  # noqa: E501
+            'reason': (str,),  # noqa: E501
             'recipe_data': (str,),  # noqa: E501
             'recipe_name': (str,),  # noqa: E501
+            'request_id': (str,),  # noqa: E501
+            'requester': (str,),  # noqa: E501
             'sketch_id': (int,),  # noqa: E501
             'yara_rules': (str,),  # noqa: E501
         }
@@ -97,10 +101,14 @@ class BaseRequestOptions(ModelNormal):
 
     attribute_map = {
         'filter_patterns': 'filter_patterns',  # noqa: E501
+        'group_id': 'group_id',  # noqa: E501
         'jobs_allowlist': 'jobs_allowlist',  # noqa: E501
         'jobs_denylist': 'jobs_denylist',  # noqa: E501
+        'reason': 'reason',  # noqa: E501
         'recipe_data': 'recipe_data',  # noqa: E501
         'recipe_name': 'recipe_name',  # noqa: E501
+        'request_id': 'request_id',  # noqa: E501
+        'requester': 'requester',  # noqa: E501
         'sketch_id': 'sketch_id',  # noqa: E501
         'yara_rules': 'yara_rules',  # noqa: E501
     }
@@ -147,10 +155,14 @@ class BaseRequestOptions(ModelNormal):
                                 through its discriminator because we passed in
                                 _visited_composed_classes = (Animal,)
             filter_patterns ([str]): [optional]  # noqa: E501
+            group_id (str): [optional]  # noqa: E501
             jobs_allowlist ([str]): [optional]  # noqa: E501
             jobs_denylist ([str]): [optional]  # noqa: E501
+            reason (str): [optional]  # noqa: E501
             recipe_data (str): [optional]  # noqa: E501
             recipe_name (str): [optional]  # noqa: E501
+            request_id (str): [optional]  # noqa: E501
+            requester (str): [optional]  # noqa: E501
             sketch_id (int): [optional]  # noqa: E501
             yara_rules (str): [optional]  # noqa: E501
         """
@@ -239,10 +251,14 @@ class BaseRequestOptions(ModelNormal):
                                 through its discriminator because we passed in
                                 _visited_composed_classes = (Animal,)
             filter_patterns ([str]): [optional]  # noqa: E501
+            group_id (str): [optional]  # noqa: E501
             jobs_allowlist ([str]): [optional]  # noqa: E501
             jobs_denylist ([str]): [optional]  # noqa: E501
+            reason (str): [optional]  # noqa: E501
             recipe_data (str): [optional]  # noqa: E501
             recipe_name (str): [optional]  # noqa: E501
+            request_id (str): [optional]  # noqa: E501
+            requester (str): [optional]  # noqa: E501
             sketch_id (int): [optional]  # noqa: E501
             yara_rules (str): [optional]  # noqa: E501
         """

@@ -61,11 +61,10 @@ def evidence_class_names(all_classes=False):
     # 'output' and 'report' types.
     # Ignore classes that are not real Evidence types and the base class.
     ignored_classes = (
-        'BinaryExtraction', 'BodyFile', 'BulkExtractorOutput', 'Evidence',
-        'EvidenceState', 'EvidenceCollection', 'ExportedFileArtifact',
-        'FilteredTextFile', 'FinalReport', 'IntEnum', 'PlasoCsvFile',
-        'PlasoFile', 'PhotorecOutput', 'ReportText', 'TextFile',
-        'VolatilityReport', 'TurbiniaException')
+        'BinaryExtraction', 'BulkExtractorOutput', 'Evidence', 'EvidenceState',
+        'EvidenceCollection', 'ExportedFileArtifact', 'FilteredTextFile',
+        'FinalReport', 'IntEnum', 'PlasoCsvFile', 'PhotorecOutput',
+        'ReportText', 'TextFile', 'VolatilityReport', 'TurbiniaException')
     class_names = filter(
         lambda class_tuple: class_tuple[0] not in ignored_classes, class_names)
   return list(class_names)
@@ -133,7 +132,7 @@ def evidence_decode(evidence_dict, strict=False):
   evidence = None
   try:
     evidence_class = getattr(sys.modules[__name__], type_)
-    evidence = evidence_class.from_dict(evidence_dict)
+    evidence = evidence_class(**evidence_dict)
     evidence_object = evidence_class(source_path='dummy_object')
     if strict and evidence_object:
       for attribute_key in evidence_dict.keys():
@@ -150,10 +149,6 @@ def evidence_decode(evidence_dict, strict=False):
         evidence.collection = [
             evidence_decode(e) for e in evidence_dict['collection']
         ]
-      # Check if the resource_id was set properly
-      if evidence.resource_tracked and not evidence.resource_id:
-        if 'GoogleCloud' in evidence.type and evidence.disk_name:
-          evidence.resource_id = evidence.disk_name
       # We can just reinitialize instead of deserializing because the
       # state should be empty when just starting to process on a new machine.
       evidence.state = {}
@@ -247,6 +242,7 @@ class Evidence:
         in a state file to allow for access amongst multiple workers.
     resource_id (str): The unique id used to track the state of a given Evidence
         type for stateful tracking.
+    type (str): The appropriate evidence class name for the object.
   """
 
   # The list of attributes a given piece of Evidence requires to be set
@@ -262,17 +258,18 @@ class Evidence:
   POSSIBLE_STATES = []
 
   def __init__(
-      self, name=None, description=None, size=None, source=None,
-      source_path=None, tags=None, request_id=None, copyable=False):
+      self, *args, name=None, description=None, size=None, source=None,
+      source_path=None, tags=None, request_id=None, copyable=False,
+      credentials=None, config=None, **kwargs):
     """Initialization for Evidence."""
     self.copyable = copyable
-    self.config = {}
+    self.config = config if config else {}
     self.context_dependent = False
     self.cloud_only = False
     self.description = description
     self.size = size
     self.mount_path = None
-    self.credentials = []
+    self.credentials = credentials if credentials else []
     self.source = source
     self.source_path = source_path
     self.tags = tags if tags else {}
@@ -288,7 +285,13 @@ class Evidence:
     # List of jobs that have processed this evidence
     self.processed_by = []
     self.type = self.__class__.__name__
-    self._name = name
+    if name:
+      self.name = name
+    elif self.source_path:
+      self.name = self.source_path
+    else:
+      self.name = self.type
+
     self.saved_path = None
     self.saved_path_type = None
 
@@ -310,44 +313,6 @@ class Evidence:
 
   def __repr__(self):
     return self.__str__()
-
-  @property
-  def name(self):
-    """Returns evidence object name."""
-    if self._name:
-      return self._name
-    else:
-      return self.source_path if self.source_path else self.type
-
-  @name.setter
-  def name(self, value):
-    self._name = value
-
-  @name.deleter
-  def name(self):
-    del self._name
-
-  @classmethod
-  def from_dict(cls, dictionary):
-    """Instantiate an Evidence object from a dictionary of attributes.
-
-    Args:
-      dictionary(dict): the attributes to set for this object.
-    Returns:
-      Evidence: the instantiated evidence.
-    """
-    name = dictionary.pop('name', None)
-    description = dictionary.pop('description', None)
-    size = dictionary.pop('size', None)
-    source = dictionary.pop('source', None)
-    source_path = dictionary.pop('source_path', None)
-    tags = dictionary.pop('tags', None)
-    request_id = dictionary.pop('request_id', None)
-    new_object = cls(
-        name=name, description=description, size=size, source=source,
-        source_path=source_path, tags=tags, request_id=request_id)
-    new_object.__dict__.update(dictionary)
-    return new_object
 
   def serialize(self):
     """Return JSON serializable object."""
@@ -557,7 +522,7 @@ class EvidenceCollection(Evidence):
     collection(list): The underlying Evidence objects
   """
 
-  def __init__(self, collection=None, *args, **kwargs):
+  def __init__(self, *args, collection=None, **kwargs):
     """Initialization for Evidence Collection object."""
     super(EvidenceCollection, self).__init__(*args, **kwargs)
     self.collection = collection if collection else []
@@ -585,9 +550,8 @@ class Directory(Evidence):
   """
   REQUIRED_ATTRIBUTES = ['source_path']
 
-  def __init__(self, source_path=None, *args, **kwargs):
-    super(Directory, self).__init__(source_path=source_path, *args, **kwargs)
-    self.source_path = source_path
+  def __init__(self, *args, source_path=None, **kwargs):
+    super(Directory, self).__init__(*args, source_path=source_path, **kwargs)
 
 
 class CompressedDirectory(Evidence):
@@ -600,10 +564,10 @@ class CompressedDirectory(Evidence):
   REQUIRED_ATTRIBUTES = ['source_path']
   POSSIBLE_STATES = [EvidenceState.DECOMPRESSED]
 
-  def __init__(self, source_path=None, *args, **kwargs):
+  def __init__(self, *args, source_path=None, **kwargs):
     """Initialization for CompressedDirectory evidence object."""
     super(CompressedDirectory, self).__init__(
-        source_path=source_path, *args, **kwargs)
+        *args, source_path=source_path, **kwargs)
     self.compressed_directory = None
     self.uncompressed_directory = None
     self.copyable = True
@@ -649,11 +613,12 @@ class ChromiumProfile(Evidence):
 
   REQUIRED_ATTRIBUTES = ['browser_type', 'output_format']
 
-  def __init__(self, browser_type=None, output_format=None, *args, **kwargs):
+  def __init__(self, *args, browser_type=None, output_format=None, **kwargs):
     """Initialization for chromium profile evidence object."""
-    super(ChromiumProfile, self).__init__(copyable=True, *args, **kwargs)
+    super(ChromiumProfile, self).__init__(*args, **kwargs)
     self.browser_type = browser_type
     self.output_format = output_format
+    self.copyable = True
 
 
 class RawDisk(Evidence):
@@ -667,9 +632,9 @@ class RawDisk(Evidence):
   REQUIRED_ATTRIBUTES = ['source_path']
   POSSIBLE_STATES = [EvidenceState.ATTACHED]
 
-  def __init__(self, source_path=None, *args, **kwargs):
+  def __init__(self, *args, source_path=None, **kwargs):
     """Initialization for raw disk evidence object."""
-    super(RawDisk, self).__init__(source_path=source_path, *args, **kwargs)
+    super(RawDisk, self).__init__(*args, source_path=source_path, **kwargs)
     self.device_path = None
 
   def _preprocess(self, _, required_states):
@@ -702,9 +667,11 @@ class DiskPartition(Evidence):
   POSSIBLE_STATES = [EvidenceState.ATTACHED, EvidenceState.MOUNTED]
 
   def __init__(
-      self, partition_location=None, partition_offset=None, partition_size=None,
-      lv_uuid=None, path_spec=None, important=True, *args, **kwargs):
+      self, *args, partition_location=None, partition_offset=None,
+      partition_size=None, lv_uuid=None, path_spec=None, important=True,
+      **kwargs):
     """Initialization for raw volume evidence object."""
+    super(DiskPartition, self).__init__(*args, **kwargs)
     self.partition_location = partition_location
     if partition_offset:
       try:
@@ -723,15 +690,13 @@ class DiskPartition(Evidence):
     self.lv_uuid = lv_uuid
     self.path_spec = path_spec
     self.important = important
-    super(DiskPartition, self).__init__(*args, **kwargs)
 
     # This Evidence needs to have a parent
     self.context_dependent = True
 
-  @property
-  def name(self):
-    if self._name:
-      return self._name
+  def __str__(self):
+    if self.name:
+      return self.name
     else:
       if self.parent_evidence:
         return ':'.join((self.parent_evidence.name, self.partition_location))
@@ -828,7 +793,7 @@ class GoogleCloudDisk(Evidence):
   POSSIBLE_STATES = [EvidenceState.ATTACHED, EvidenceState.MOUNTED]
 
   def __init__(
-      self, project=None, zone=None, disk_name=None, mount_partition=1, *args,
+      self, *args, project=None, zone=None, disk_name=None, mount_partition=1,
       **kwargs):
     """Initialization for Google Cloud Disk."""
     super(GoogleCloudDisk, self).__init__(*args, **kwargs)
@@ -881,20 +846,21 @@ class GoogleCloudDiskRawEmbedded(GoogleCloudDisk):
   POSSIBLE_STATES = [EvidenceState.ATTACHED]
 
   def __init__(
-      self, embedded_path=None, project=None, zone=None, disk_name=None,
-      mount_partition=1, *args, **kwargs):
+      self, *args, embedded_path=None, project=None, zone=None, disk_name=None,
+      mount_partition=1, **kwargs):
     """Initialization for Google Cloud Disk containing a raw disk image."""
-    super(GoogleCloudDiskRawEmbedded, self).__init__(
-        project=project, zone=zone, disk_name=disk_name, mount_partition=1,
-        *args, **kwargs)
+    super(GoogleCloudDiskRawEmbedded, self).__init__(*args, **kwargs)
+    self.project = project
+    self.zone = zone
+    self.disk_name = disk_name
+    self.mount_partition = 1
     self.embedded_path = embedded_path
     # This Evidence needs to have a GoogleCloudDisk as a parent
     self.context_dependent = True
 
-  @property
-  def name(self):
-    if self._name:
-      return self._name
+  def __str__(self):
+    if self.name:
+      return self.name
     else:
       return ':'.join((self.disk_name, self.embedded_path))
 
@@ -939,30 +905,33 @@ class PlasoFile(Evidence):
     plaso_version: The version of plaso that processed this file.
   """
 
-  def __init__(self, plaso_version=None, *args, **kwargs):
+  def __init__(self, *args, plaso_version=None, **kwargs):
     """Initialization for Plaso File evidence."""
+    super(PlasoFile, self).__init__(*args, **kwargs)
     self.plaso_version = plaso_version
-    super(PlasoFile, self).__init__(copyable=True, *args, **kwargs)
     self.save_metadata = True
+    self.copyable = True
 
 
 class PlasoCsvFile(Evidence):
   """Psort output file evidence.  """
 
-  def __init__(self, plaso_version=None, *args, **kwargs):
+  def __init__(self, *args, plaso_version=None, **kwargs):
     """Initialization for Plaso File evidence."""
+    super(PlasoCsvFile, self).__init__(*args, **kwargs)
     self.plaso_version = plaso_version
-    super(PlasoCsvFile, self).__init__(copyable=True, *args, **kwargs)
     self.save_metadata = False
+    self.copyable = True
 
 
 # TODO(aarontp): Find a way to integrate this into TurbiniaTaskResult instead.
 class ReportText(Evidence):
   """Text data for general reporting."""
 
-  def __init__(self, text_data=None, *args, **kwargs):
-    super(ReportText, self).__init__(copyable=True, *args, **kwargs)
+  def __init__(self, *args, text_data=None, **kwargs):
+    super(ReportText, self).__init__(*args, **kwargs)
     self.text_data = text_data
+    self.copyable = True
 
 
 class FinalReport(ReportText):
@@ -977,7 +946,8 @@ class TextFile(Evidence):
   """Text data."""
 
   def __init__(self, *args, **kwargs):
-    super(TextFile, self).__init__(copyable=True, *args, **kwargs)
+    super(TextFile, self).__init__(*args, **kwargs)
+    self.copyable = True
 
 
 class FilteredTextFile(TextFile):
@@ -989,8 +959,9 @@ class BodyFile(Evidence):
   """Bodyfile data."""
 
   def __init__(self, *args, **kwargs):
+    super(BodyFile, self).__init__(*args, **kwargs)
+    self.copyable = True
     self.number_of_entries = None
-    super(BodyFile, self).__init__(copyable=True, *args, **kwargs)
 
 
 class ExportedFileArtifact(Evidence):
@@ -998,10 +969,11 @@ class ExportedFileArtifact(Evidence):
 
   REQUIRED_ATTRIBUTES = ['artifact_name']
 
-  def __init__(self, artifact_name=None, *args, **kwargs):
+  def __init__(self, *args, artifact_name=None, **kwargs):
     """Initializes an exported file artifact."""
-    super(ExportedFileArtifact, self).__init__(copyable=True, *args, **kwargs)
+    super(ExportedFileArtifact, self).__init__(*args, **kwargs)
     self.artifact_name = artifact_name
+    self.copyable = True
 
 
 class VolatilityReport(TextFile):
@@ -1020,9 +992,10 @@ class RawMemory(Evidence):
   REQUIRED_ATTRIBUTES = ['source_path', 'module_list', 'profile']
 
   def __init__(
-      self, source_path=None, module_list=None, profile=None, *args, **kwargs):
+      self, *args, source_path=None, module_list=None, profile=None, **kwargs):
     """Initialization for raw memory evidence object."""
-    super(RawMemory, self).__init__(source_path=source_path, *args, **kwargs)
+    super(RawMemory, self).__init__(*args, **kwargs)
+    self.source_path = source_path
     self.profile = profile
     self.module_list = module_list
 
@@ -1045,7 +1018,7 @@ class DockerContainer(Evidence):
   REQUIRED_ATTRIBUTES = ['container_id']
   POSSIBLE_STATES = [EvidenceState.CONTAINER_MOUNTED]
 
-  def __init__(self, container_id=None, *args, **kwargs):
+  def __init__(self, *args, container_id=None, **kwargs):
     """Initialization for Docker Container."""
     super(DockerContainer, self).__init__(*args, **kwargs)
     self.container_id = container_id
@@ -1053,10 +1026,9 @@ class DockerContainer(Evidence):
     self._docker_root_directory = None
     self.context_dependent = True
 
-  @property
-  def name(self):
-    if self._name:
-      return self._name
+  def __str__(self):
+    if self.name:
+      return self.name
     else:
       if self.parent_evidence:
         return ':'.join((self.parent_evidence.name, self.container_id))
@@ -1096,7 +1068,7 @@ class EwfDisk(Evidence):
   POSSIBLE_STATES = [EvidenceState.ATTACHED]
 
   def __init__(
-      self, source_path=None, ewf_path=None, ewf_mount_path=None, *args,
+      self, *args, source_path=None, ewf_path=None, ewf_mount_path=None,
       **kwargs):
     """Initialization for EWF evidence object."""
     super(EwfDisk, self).__init__(*args, **kwargs)
@@ -1128,23 +1100,21 @@ class ContainerdContainer(Evidence):
     _image_path (str): Path where disk image is mounted.
     _container_fs_path (str): Path where containerd filesystem is mounted.
   """
-
+  REQUIRED_ATTRIBUTES = ['namespace', 'container_id']
   POSSIBLE_STATES = [EvidenceState.CONTAINER_MOUNTED]
 
-  def __init__(self, namespace=None, container_id=None, *args, **kwargs):
+  def __init__(self, *args, namespace=None, container_id=None, **kwargs):
     """Initialization of containerd container."""
     super(ContainerdContainer, self).__init__(*args, **kwargs)
     self.namespace = namespace
     self.container_id = container_id
     self._image_path = None
     self._container_fs_path = None
-
     self.context_dependent = True
 
-  @property
-  def name(self):
-    if self._name:
-      return self._name
+  def __str__(self):
+    if self.name:
+      return self.name
 
     if self.parent_evidence:
       return ':'.join((self.parent_evidence.name, self.container_id))
