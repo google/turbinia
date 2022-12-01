@@ -31,12 +31,12 @@ CLOUD_PROVIDER = 'Local'
 # Which state manager to use. Valid options are 'Datastore' or 'Redis'.  Use
 # 'Datastore' for Cloud (GCP) or hybrid installations, and 'Redis' for local
 # installations.
-STATE_MANAGER = 'Redis'
+STATE_MANAGER = 'Datastore'
 
 # Which Task manager to use. Valid options are 'PSQ' and 'Celery'.  Use 'PSQ'
 # for Cloud (GCP) or hybrid installations, and 'Celery' for local
 # installations.
-TASK_MANAGER = 'Celery'
+TASK_MANAGER = 'PSQ'
 
 # Default base output directory for worker results and evidence.
 OUTPUT_DIR = '/var/tmp'
