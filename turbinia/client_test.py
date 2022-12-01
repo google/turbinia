@@ -438,7 +438,8 @@ class TestBaseTurbiniaClient(unittest.TestCase):
 class TestTurbiniaClientRedis(TestBaseTurbiniaClient):
   """Run tests using a Redis client."""
 
-  def setUp(self):  #pylint: disable=arguments-differ
+  @mock.patch('turbinia.client.task_manager.CeleryTaskManager._backend_setup')
+  def setUp(self, _):  #pylint: disable=arguments-differ
     """Initialize tests for Turbinia client."""
     config.LoadConfig()
     config.STATE_MANAGER = 'Redis'
@@ -447,29 +448,3 @@ class TestTurbiniaClientRedis(TestBaseTurbiniaClient):
     importlib.reload(TurbiniaClientProvider)
     self.client = TurbiniaClientProvider.get_turbinia_client()
     super().load_test_data()
-
-  @mock.patch('turbinia.state_manager.RedisStateManager.get_task_data')
-  def testCloseCeleryTasks(self, mock_data):
-    """Tests the close_tasks method."""
-    test_task = {
-        'id': '0xfakeTaskId',
-        'instance': 'MyTurbiniaInstance',
-        'last_update': '2022-12-01T00:00:00',
-        'name': 'TaskName',
-        'evidence_name': 'EvidenceName',
-        'report_data': '#### Fake Low priority Report\n* Fake Bullet',
-        'report_priority': 80,
-        'request_id': '0xFakeRequestId',
-        'run_time': '300',
-        'saved_paths': ['/no/path/', '/fake/path'],
-        'status': 'This fake task executed',
-        'successful': True,
-        'requester': 'myuser',
-        'worker_name': 'fake_worker'
-    }
-    mock_data.return_value = [test_task]
-    task_id = test_task.get('id')
-    # pylint: disable=no-value-for-parameter
-    result = self.client.close_tasks(
-        instance='MyTurbiniaInstance', task_id=task_id)
-    self.assertTrue(result)

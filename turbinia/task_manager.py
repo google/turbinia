@@ -19,7 +19,6 @@ from __future__ import unicode_literals, absolute_import
 import logging
 from datetime import datetime
 import time
-import sys
 
 from prometheus_client import Gauge
 
@@ -36,22 +35,17 @@ from turbinia.lib import recipe_helpers
 from turbinia.workers.abort import AbortTask
 
 config.LoadConfig()
-if 'unittest' in sys.modules.keys():
+if config.TASK_MANAGER.lower() == 'psq':
   import psq
+
   from google.cloud import exceptions
   from google.cloud import datastore
   from google.cloud import pubsub
-  from turbinia import pubsub as turbinia_pubsub
-  from celery import states as celery_states
-  from turbinia import tcelery as turbinia_celery
-elif config.TASK_MANAGER.lower() == 'psq':
-  import psq
-  from google.cloud import exceptions
-  from google.cloud import datastore
-  from google.cloud import pubsub
+
   from turbinia import pubsub as turbinia_pubsub
 elif config.TASK_MANAGER.lower() == 'celery':
   from celery import states as celery_states
+
   from turbinia import tcelery as turbinia_celery
 
 log = logging.getLogger('turbinia')
