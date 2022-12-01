@@ -148,12 +148,14 @@ class CommandFactory(FactoryInterface):
     command_objects = []
     for evidence_name in list(evidence_mapping.keys()):
       log.debug('Creating command for {0:s}'.format(evidence_name))
+      # Use lowercase evidence names.
+      evidence_name_lower = evidence_name.lower()
       params = OptionFactory.create_dynamic_objects(
           name=evidence_name, evidence_mapping=evidence_mapping,
           request_options=request_options)
       OptionFactory.append_request_option_objects(params, request_options)
       cmd = CommandFactory.create_object(
-          name=evidence_name, params=params, callback=create_request)
+          name=evidence_name_lower, params=params, callback=create_request)
       command_objects.append(cmd)
     return command_objects
 

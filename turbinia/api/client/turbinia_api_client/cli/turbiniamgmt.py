@@ -215,3 +215,12 @@ class TurbiniaMgmtCli:
       except KeyError as exception:
         log.error('Required configuration key not found: %s', exception)
         sys.exit(-1)
+
+  def normalize_evidence_name(self, evidence_name) -> str:
+    """Converts a lowercase evidence name into the proper class name."""
+    if not evidence_name:
+      log.error('Evidence name is not valid.')
+
+    for name in self.evidence_mapping.keys():
+      if evidence_name == name.lower():
+        return name

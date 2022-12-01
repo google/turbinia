@@ -302,3 +302,15 @@ class SummaryMarkdownReport(MarkdownReportComponent):
 
     self.report = '\n'.join(report)
     return self.report
+
+
+class WorkersMarkdownReport(MarkdownReportComponent):
+  """A markdown report of all tasks for a specific worker."""
+
+  def __init__(self, request_data: dict):
+    super().__init__()
+    self._request_data: dict = request_data
+
+  def generate_markdown(self) -> str:
+    """Generates a Markdown version of tasks per worker."""
+    raise NotImplementedError

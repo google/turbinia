@@ -136,6 +136,15 @@ def get_request(ctx: click.Context, request_id: str, json_dump: bool) -> None:
         exception.status, exception.body)
 
 
+@groups.status_group.command('workers')
+@click.pass_context
+@click.option(
+    '--json_dump', '-j', help='Generates JSON output.', is_flag=True,
+    required=False)
+def get_workers(ctx: click.Context, json_dump: bool) -> None:
+  click.echo('Not implemented yet.')
+
+
 @groups.status_group.command('summary')
 @click.pass_context
 @click.option(
@@ -187,10 +196,14 @@ def create_request(ctx: click.Context, *args: int, **kwargs: int) -> None:
   client: api_client.ApiClient = ctx.obj.api_client
   api_instance = turbinia_requests_api.TurbiniaRequestsApi(client)
   evidence_name = ctx.command.name
+
+  # Normalize the evidence class name from lowercase to the original name.
+  evidence_name = ctx.obj.normalize_evidence_name(evidence_name)
+  # Build request and reqeust_options objects to send to the API server.
   request_options = list(ctx.obj.request_options.keys())
   request = {'evidence': {'type': evidence_name}, 'request_options': {}}
 
-  if 'GoogleCloud' in evidence_name:
+  if 'googlecloud' in evidence_name:
     api_instance_config = turbinia_configuration_api.TurbiniaConfigurationApi(
         client)
     cloud_provider = api_instance_config.read_config()['CLOUD_PROVIDER']
@@ -220,24 +233,38 @@ def create_request(ctx: click.Context, *args: int, **kwargs: int) -> None:
 
   recipe_name = request['request_options'].get('recipe_name')
   if recipe_name:
+    if not recipe_name.endswith('.yaml'):
+      recipe_name = '{0:s}.yaml'.format(recipe_name)
+    # Fallback path for the recipe would be TURBINIA_CLI_CONFIG_PATH/recipe_name
+    # This is the same path where the client configuration is loaded from.
+    recipe_path_fallback = os.path.expanduser(ctx.obj.config_path)
+    recipe_path_fallback = os.path.join(recipe_path_fallback, recipe_name)
+
     if os.path.isfile(recipe_name):
-      with open(recipe_name, 'r', encoding='utf-8') as recipe_file:
-        # Read the file and convert to base64 encoded bytes.
-        recipe_bytes = recipe_file.read().encode('utf-8')
-        try:
-          recipe_data = base64.b64encode(recipe_bytes)
-        except TypeError as exception:
-          log.error('Error converting recipe data to Base64: %s', exception)
-          return
-        # We found the recipe file, so we will send it to the API server
-        # via the recipe_data parameter. To do so, we need to pop recipe_name
-        # from the request so that we only have recipe_data.
-        request['request_options'].pop('recipe_name')
-        # recipe_data should be a UTF-8 encoded string.
-        request['request_options']['recipe_data'] = recipe_data.decode('utf-8')
+      recipe_path = recipe_name
+    elif os.path.isfile(recipe_path_fallback):
+      recipe_path = recipe_path_fallback
     else:
       log.error('Unable to load recipe from file %s', recipe_name)
       return
+
+    try:
+      with open(recipe_path, 'r', encoding='utf-8') as recipe_file:
+        # Read the file and convert to base64 encoded bytes.
+        recipe_bytes = recipe_file.read().encode('utf-8')
+        recipe_data = base64.b64encode(recipe_bytes)
+    except OSError as exception:
+      log.error('Error opening recipe file %s: %s', recipe_path, exception)
+      return
+    except TypeError as exception:
+      log.error('Error converting recipe data to Base64: %s', exception)
+      return
+    # We found the recipe file, so we will send it to the API server
+    # via the recipe_data parameter. To do so, we need to pop recipe_name
+    # from the request so that we only have recipe_data.
+    request['request_options'].pop('recipe_name')
+    # recipe_data should be a UTF-8 encoded string.
+    request['request_options']['recipe_data'] = recipe_data.decode('utf-8')
 
   # Send the request to the API server.
   try:
