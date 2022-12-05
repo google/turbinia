@@ -11,6 +11,7 @@ RUN apt-get update && apt-get -y install \
     software-properties-common \
     lsof \
     vim \
+    curl \
     sudo \
     && rm -rf /var/lib/apt/lists/*
 
@@ -26,7 +27,7 @@ RUN if $(cd /tmp/ && git rev-parse --is-shallow-repository); then cd /tmp/ && gi
 
 RUN cd /tmp/ && python3 setup.py install
 
-RUN useradd -r -s /bin/nologin -G disk,sudo turbinia
+RUN useradd -r -s /bin/nologin -G disk,sudo -u 999 turbinia
 RUN echo "turbinia ALL = (root) NOPASSWD: ALL" > /etc/sudoers.d/turbinia
 
 RUN mkdir /etc/turbinia && mkdir -p /mnt/turbinia/ && mkdir -p /var/lib/turbinia/ \
