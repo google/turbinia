@@ -1,0 +1,78 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: turbinia-oauth2-proxy
+  labels:
+    app: turbinia-oauth2-proxy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: turbinia-oauth2-proxy
+  template:
+    metadata:
+      labels:
+        app: turbinia-oauth2-proxy
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 999
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: oauth2-proxy
+          image: us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-oauth2:latest
+          env:
+            - name: OAUTH2_CONF
+              valueFrom:
+                configMapKeyRef:
+                  name: oauth2-config
+                  key: OAUTH2_CONF
+            - name: OAUTH2_AUTH_EMAILS
+              valueFrom:
+                configMapKeyRef:
+                  name: auth-config
+                  key: OAUTH2_AUTH_EMAILS
+          ports:
+            - containerPort: 8080
+            - containerPort: 9200
+          resources: 
+            requests:
+              memory: "256Mi"
+              cpu: "500m"
+            limits:
+              memory: "8192Mi"
+              cpu: "4000m"
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+            - name: conf
+              mountPath: /etc/turbinia
+          securityContext:
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false
+            runAsUser: 999
+      volumes:
+      - name: tmp
+        emptyDir: {}
+      - name: conf
+        emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: turbinia-oauth2-service
+  annotations:
+    cloud.google.com/neg: '{"ingress": true}'
+    cloud.google.com/backend-config: '{"ports": {"8080":"turbinia-neg-healthcheck"}}'
+spec:
+  type: ClusterIP
+  selector:
+    app: turbinia-oauth2-proxy
+  ports:
+  - name: oauth2-http
+    port: 8080
+    protocol: TCP
+    targetPort: 8080

@@ -14,11 +14,14 @@ spec:
       labels:
         app: redis-server
     spec:
-      serviceAccountName: turbinia
+      automountServiceAccountToken: false
+      securityContext:
+        seccompProfile:
+          type: RuntimeDefault
       initContainers:
         - name: init-filestore
           image: busybox:1.28
-          command: ["sh", "-c", "chmod og+w /mnt/turbiniavolume && echo never > /host-sys/kernel/mm/transparent_hugepage/enabled"]
+          command: ["sh", "-c", "echo never > /host-sys/kernel/mm/transparent_hugepage/enabled"]
           volumeMounts:
             - mountPath: /mnt/turbiniavolume
               name: turbiniavolume
@@ -38,6 +41,8 @@ spec:
           volumeMounts:
             - mountPath: /mnt/turbiniavolume
               name: turbiniavolume
+          securityContext:
+            readOnlyRootFilesystem: true
       volumes:
         - name: turbiniavolume
           persistentVolumeClaim:

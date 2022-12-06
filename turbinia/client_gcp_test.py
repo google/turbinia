@@ -33,12 +33,13 @@ class TestTurbiniaClient(unittest.TestCase):
   """Test Turbinia client class."""
 
   @mock.patch('turbinia.client.task_manager.PSQTaskManager._backend_setup')
-  @mock.patch('turbinia.state_manager.datastore.Client')
+  @mock.patch('google.cloud.datastore.Client')
   def setUp(self, _, __):  #pylint: disable=arguments-differ
     """Initialize tests for Turbinia client."""
     config.LoadConfig()
     config.TASK_MANAGER = 'PSQ'
     config.STATE_MANAGER = 'Datastore'
+    config.CLOUD_PROVIDER = 'GCP'
 
     # Reload module using the config settings above.
     # This is needed due to the conditional imports in client.py

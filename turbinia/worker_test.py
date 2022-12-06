@@ -45,33 +45,32 @@ class TestTurbiniaPsqWorker(unittest.TestCase):
 
   def tearDown(self):
     manager.JobsManager._job_classes = self.saved_jobs
+    manager.JobsManager._job_classes['plasojob'].docker_image = None
+
     if 'turbinia-test' in self.tmp_dir:
       shutil.rmtree(self.tmp_dir)
 
-  @mock.patch('turbinia.worker.pubsub')
-  @mock.patch('turbinia.worker.datastore.Client')
-  @mock.patch('turbinia.worker.psq.Worker')
+  @mock.patch('google.cloud.datastore.Client')
+  @mock.patch('psq.Worker')
   @mock.patch('turbinia.lib.docker_manager.DockerManager')
-  def testTurbiniaPsqWorkerInit(self, _, __, ___, ____):
+  def testTurbiniaPsqWorkerInit(self, _, __, ___):
     """Basic test for PSQ worker."""
     worker = TurbiniaPsqWorker([], [])
     self.assertTrue(hasattr(worker, 'worker'))
 
-  @mock.patch('turbinia.worker.pubsub')
-  @mock.patch('turbinia.worker.datastore.Client')
-  @mock.patch('turbinia.worker.psq.Worker')
+  @mock.patch('google.cloud.datastore.Client')
+  @mock.patch('psq.Worker')
   @mock.patch('turbinia.lib.docker_manager.DockerManager')
-  def testTurbiniaWorkerNoDir(self, _, __, ___, ____):
+  def testTurbiniaWorkerNoDir(self, _, __, ___):
     """Test that OUTPUT_DIR path is created."""
     config.OUTPUT_DIR = os.path.join(self.tmp_dir, 'no_such_dir')
     TurbiniaPsqWorker([], [])
     self.assertTrue(os.path.exists(config.OUTPUT_DIR))
 
-  @mock.patch('turbinia.worker.pubsub')
-  @mock.patch('turbinia.worker.datastore.Client')
-  @mock.patch('turbinia.worker.psq.Worker')
+  @mock.patch('google.cloud.datastore.Client')
+  @mock.patch('psq.Worker')
   @mock.patch('turbinia.lib.docker_manager.DockerManager')
-  def testTurbiniaWorkerIsNonDir(self, _, __, ___, ____):
+  def testTurbiniaWorkerIsNonDir(self, _, __, ___):
     """Test that OUTPUT_DIR does not point to an existing non-directory."""
     config.OUTPUT_DIR = os.path.join(self.tmp_dir, 'empty_file')
     open(config.OUTPUT_DIR, 'a').close()
@@ -79,11 +78,10 @@ class TestTurbiniaPsqWorker(unittest.TestCase):
 
   @mock.patch('turbinia.worker.config')
   @mock.patch('turbinia.worker.check_directory')
-  @mock.patch('turbinia.worker.pubsub')
-  @mock.patch('turbinia.worker.datastore.Client')
-  @mock.patch('turbinia.worker.psq.Worker')
+  @mock.patch('google.cloud.datastore.Client')
+  @mock.patch('psq.Worker')
   @mock.patch('turbinia.lib.docker_manager.DockerManager')
-  def testTurbiniaWorkerJobsLists(self, _, __, ___, ____, _____, mock_config):
+  def testTurbiniaWorkerJobsLists(self, _, __, ___, ____, mock_config):
     """Test that worker job allowlist and denylists are setup correctly."""
     mock_config.PSQ_TOPIC = 'foo'
     manager.JobsManager._job_classes = {}

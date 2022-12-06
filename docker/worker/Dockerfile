@@ -1,4 +1,4 @@
-FROM ubuntu:20.04
+FROM ubuntu:22.04
 
 # Use: docker build --no-cache --build-arg PPA_TRACK="[staging|stable]"
 ARG PPA_TRACK=stable
@@ -13,7 +13,7 @@ RUN apt-get update && apt-get -y install \
     dh-autoreconf \
     gcc \
     git \
-    golang-1.16 \
+    golang \
     go-bindata \
     john \
     john-data \
@@ -72,7 +72,7 @@ RUN apt-get update && apt-get -y install \
     sleuthkit \
     --option Acquire::ForceIPv4=true --option Acquire::Retries=100 --option Acquire::http::Timeout=60
 
-RUN useradd -r -s /bin/nologin -G disk,sudo turbinia
+RUN useradd -r -s /bin/nologin -G disk,sudo -u 999 turbinia
 RUN echo "turbinia ALL = (root) NOPASSWD: ALL" > /etc/sudoers.d/turbinia
 
 RUN pip3 install impacket --no-deps
@@ -88,8 +88,7 @@ COPY --chown=turbinia:turbinia tools/fraken/* /opt/fraken/
 RUN cd /opt/fraken/yara && curl -s https://api.github.com/repos/VirusTotal/Yara/releases/latest | sed -n 's/.*"tarball_url": "\(.*\)",.*/\1/p' | xargs -n1 wget -O - -q | tar -xz --strip-components=1 \
     && ./bootstrap.sh \
     && ./configure \
-    && make && sudo make install && sudo ldconfig \
-    && sudo update-alternatives --install /usr/bin/go go /usr/lib/go-1.16/bin/go 10
+    && make && sudo make install && sudo ldconfig
 RUN cd /opt/fraken && go build -ldflags="-linkmode=external -extldflags=-ljemalloc" -o fraken
 
 RUN mkdir /etc/turbinia && mkdir -p /mnt/turbinia/ && mkdir -p /var/lib/turbinia/ \
@@ -124,4 +123,4 @@ RUN chmod +rwx /home/turbinia/start.sh
 USER turbinia
 CMD ["/home/turbinia/start.sh"]
 # Expose Prometheus endpoint.
-EXPOSE 8000/tcp
+EXPOSE 9200/tcp

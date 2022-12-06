@@ -62,8 +62,8 @@ setup(
     entry_points={'console_scripts': ['turbiniactl=turbinia.turbiniactl:main']},
     install_requires=requirements,
     extras_require={
-        'dev': ['mock', 'nose', 'yapf', 'celery>=4.1,<=4.4.7', 'coverage'],
-        'local': ['celery~=4.1', 'kombu~=4.1', 'redis~=3.0'],
+        'dev': ['mock', 'nose', 'yapf', 'celery', 'coverage'],
+        'local': ['celery', 'kombu', 'redis'],
         'worker': [
             'docker-explorer>=20191104',
             'impacket',

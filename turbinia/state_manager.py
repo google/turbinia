@@ -23,6 +23,7 @@ from __future__ import unicode_literals
 import codecs
 import json
 import logging
+import sys
 from datetime import datetime
 from datetime import timedelta
 
@@ -33,6 +34,12 @@ from turbinia.config import DATETIME_FORMAT
 from turbinia import TurbiniaException
 
 config.LoadConfig()
+if 'unittest' in sys.modules.keys():
+  from google.cloud import datastore
+  from google.cloud import exceptions
+  from google.auth import exceptions as auth_exceptions
+  import redis
+
 if config.STATE_MANAGER.lower() == 'datastore':
   from google.cloud import datastore
   from google.cloud import exceptions

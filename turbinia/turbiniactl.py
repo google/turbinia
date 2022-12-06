@@ -506,7 +506,7 @@ def process_args(args):
   if args.debug_tasks:
     config.DEBUG_TASKS = True
 
-  if config.CLOUD_PROVIDER:
+  if config.CLOUD_PROVIDER.lower() == 'gcp':
     from turbinia.lib import google_cloud
     from libcloudforensics.providers.gcp import forensics as gcp_forensics
 
@@ -613,7 +613,7 @@ def process_args(args):
           all_args=all_args)
   elif args.command in ('googleclouddisk', 'googleclouddiskembedded'):
     # Fail if this is a local instance
-    if not config.CLOUD_PROVIDER and not args.force_evidence:
+    if config.CLOUD_PROVIDER.lower() == 'local' and not args.force_evidence:
       msg = (
           'The evidence type {0:s} is Cloud only, and this instance of '
           'Turbinia is not a cloud instance.'.format(args.command))
