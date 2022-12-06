@@ -28,17 +28,18 @@ VPC_NETWORK='default'
 # to communicate privately.
 VPC_CONTROL_PANE='172.16.0.0/28' # Set to default
 
-# The cluster name, number of nodes, machine type and disk size of the
-# deployed cluster and nodes within it.
+# The cluster name, number of minimum and maximum nodes, machine type and disk 
+# size of the deployed cluster and nodes within it.
 CLUSTER_NAME=$INSTANCE_ID
-CLUSTER_NODE_SIZE='1'
+CLUSTER_MIN_NODE_SIZE='1'
+CLUSTER_MAX_NODE_SIZE='20'
 CLUSTER_MACHINE_TYPE='e2-standard-32'
-CLUSTER_MACHINE_SIZE='1000'
+CLUSTER_MACHINE_SIZE='200'
 
 # The Filestore share name, and size. Filestore will be used to retain shared output
 # from Turbinia, such as logs. Please specify size in terabytes(TB).
 FILESTORE_NAME='turbiniavolume'
-FILESTORE_CAPACITY='1T'
+FILESTORE_CAPACITY='10T'
 
 # Filestore share names, and sizes for dfDewey datastores (if deployed).
 FILESTORE_DFDEWEY_NAME='dfdeweyvolume'

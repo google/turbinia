@@ -25,6 +25,7 @@ if [[ "$*" == *--help ||  "$*" == *-h ]] ; then
   echo "--build-experimental           Deploy Turbinia experimental docker image"
   echo "--no-cluster                   Do not create the cluster"
   echo "--no-filestore                 Do not deploy Turbinia Filestore"
+  echo "--no-node-autoscale            Do not enable Node autoscaling"
   echo "--deploy-controller            Deploy Turbinia controller for load testing and troubleshooting" 
   echo "--deploy-dfdewey               Deploy dfDewey datastores"
   exit 1
@@ -126,8 +127,14 @@ cp ../turbinia/config/turbinia_config_tmpl.py $DEPLOYMENT_FOLDER/$TURBINIA_CONFI
 if [[ "$*" != *--no-cluster* ]] ; then
   echo "Enabling Container API"
   gcloud -q --project $DEVSHELL_PROJECT_ID services enable container.googleapis.com
-  echo "Creating cluser $CLUSTER_NAME with $CLUSTER_NODE_SIZE node(s) configured with machine type $CLUSTER_MACHINE_TYPE and disk size $CLUSTER_MACHINE_SIZE"
-  gcloud -q --project $DEVSHELL_PROJECT_ID container clusters create $CLUSTER_NAME --machine-type $CLUSTER_MACHINE_TYPE --disk-size $CLUSTER_MACHINE_SIZE --num-nodes $CLUSTER_NODE_SIZE --master-ipv4-cidr $VPC_CONTROL_PANE --network $VPC_NETWORK --zone $ZONE --shielded-secure-boot --shielded-integrity-monitoring --no-enable-master-authorized-networks --enable-private-nodes --enable-ip-alias --scopes "https://www.googleapis.com/auth/cloud-platform" --labels "turbinia-infra=true" --workload-pool=$DEVSHELL_PROJECT_ID.svc.id.goog
+  if [[ "$*" != *--no-node-autoscale* ]] ; then
+    echo "Creating cluster $CLUSTER_NAME with a minimum node size of $CLUSTER_MIN_NODE_SIZE to scale up to a maximum node size of $CLUSTER_MAX_NODE_SIZE. Each node will be configured with a machine type $CLUSTER_MACHINE_TYPE and disk size of $CLUSTER_MACHINE_SIZE"
+    gcloud -q --project $DEVSHELL_PROJECT_ID container clusters create $CLUSTER_NAME --machine-type $CLUSTER_MACHINE_TYPE --disk-size $CLUSTER_MACHINE_SIZE --num-nodes $CLUSTER_MIN_NODE_SIZE --master-ipv4-cidr $VPC_CONTROL_PANE --network $VPC_NETWORK --zone $ZONE --shielded-secure-boot --shielded-integrity-monitoring --no-enable-master-authorized-networks --enable-private-nodes --enable-ip-alias --scopes "https://www.googleapis.com/auth/cloud-platform" --labels "turbinia-infra=true" --workload-pool=$DEVSHELL_PROJECT_ID.svc.id.goog --default-max-pods-per-node=50 --enable-autoscaling --min-nodes=$CLUSTER_MIN_NODE_SIZE --max-nodes=$CLUSTER_MAX_NODE_SIZE
+  else
+    echo "--no-node-autoscale specified. Node size will remain constant at $CLUSTER_MIN_NODE_SIZE node(s)"
+    echo "Creating cluster $CLUSTER_NAME with a node size of $CLUSTER_MIN_NODE_SIZE. Each node will be configured with a machine type $CLUSTER_MACHINE_TYPE and disk size of $CLUSTER_MACHINE_SIZE"
+    gcloud -q --project $DEVSHELL_PROJECT_ID container clusters create $CLUSTER_NAME --machine-type $CLUSTER_MACHINE_TYPE --disk-size $CLUSTER_MACHINE_SIZE --num-nodes $CLUSTER_MIN_NODE_SIZE --master-ipv4-cidr $VPC_CONTROL_PANE --network $VPC_NETWORK --zone $ZONE --shielded-secure-boot --shielded-integrity-monitoring --no-enable-master-authorized-networks --enable-private-nodes --enable-ip-alias --scopes "https://www.googleapis.com/auth/cloud-platform" --labels "turbinia-infra=true" --workload-pool=$DEVSHELL_PROJECT_ID.svc.id.goog --default-max-pods-per-node=50
+  fi
 else
   echo "--no-cluster specified. Authenticating to pre-existing cluster $CLUSTER_NAME"
 fi
