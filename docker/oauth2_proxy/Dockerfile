@@ -1,12 +1,20 @@
 FROM ubuntu:20.04
 
 ENV DEBIAN_FRONTEND=noninteractive 
-RUN apt-get update && apt-get -y install wget supervisor curl
-RUN useradd -r -s /bin/nologin -G disk turbinia
+RUN apt-get update && apt-get -y install \
+    apt-transport-https \
+    apt-utils \
+    ca-certificates \
+    libterm-readline-gnu-perl \
+    software-properties-common \
+    curl \ 
+    wget \
+    && rm -rf /var/lib/apt/lists/*
+RUN useradd -r -s /bin/nologin -u 999 turbinia
 RUN mkdir -p /etc/turbinia && chown -R turbinia:turbinia /etc/turbinia/
 
 
-COPY start.sh /home/turbinia/start.sh
+COPY docker/oauth2_proxy/start.sh /home/turbinia/start.sh
 RUN chmod +rwx /home/turbinia/start.sh
 
 # Copy oauth2 proxy and start it
@@ -17,4 +25,6 @@ RUN chmod +x /usr/local/bin/oauth2-proxy
 
 USER turbinia
 CMD ["/home/turbinia/start.sh"]
-EXPOSE 9376/tcp
+# Expose Prometheus and Oauth2 endpoints.
+EXPOSE 9200/tcp
+EXPOSE 8080/tcp

@@ -72,7 +72,7 @@ RUN apt-get update && apt-get -y install \
     sleuthkit \
     --option Acquire::ForceIPv4=true --option Acquire::Retries=100 --option Acquire::http::Timeout=60
 
-RUN useradd -r -s /bin/nologin -G disk,sudo turbinia
+RUN useradd -r -s /bin/nologin -G disk,sudo -u 999 turbinia
 RUN echo "turbinia ALL = (root) NOPASSWD: ALL" > /etc/sudoers.d/turbinia
 
 RUN pip3 install impacket --no-deps
@@ -123,4 +123,4 @@ RUN chmod +rwx /home/turbinia/start.sh
 USER turbinia
 CMD ["/home/turbinia/start.sh"]
 # Expose Prometheus endpoint.
-EXPOSE 8000/tcp
+EXPOSE 9200/tcp

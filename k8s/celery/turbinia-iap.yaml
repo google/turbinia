@@ -1,0 +1,9 @@
+apiVersion: cloud.google.com/v1
+kind: BackendConfig
+metadata:
+  name: turbinia-iap
+spec:
+  iap:
+    enabled: true
+    oauthclientCredentials:
+      secretName: oauth-secret

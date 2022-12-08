@@ -208,7 +208,7 @@ DEPENDENCIES = [{
     'job': 'YaraAnalysisJob',
     'programs': ['/opt/fraken/fraken'],
     'docker_image': None,
-    'timeout': 1200
+    'timeout': 14400
 }, {
     'job': 'PartitionEnumerationJob',
     'programs': ['bdemount', 'blockdev'],
@@ -228,7 +228,7 @@ DEPENDENCIES = [{
     'job': 'PsortJob',
     'programs': ['psort.py'],
     'docker_image': None,
-    'timeout': 3600
+    'timeout': 14400
 }, {
     'job': 'StringsJob',
     'programs': ['strings'],

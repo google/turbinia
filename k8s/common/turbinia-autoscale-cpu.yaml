@@ -8,5 +8,5 @@ spec:
     kind: Deployment
     name: turbinia-worker
   minReplicas: 3
-  maxReplicas: 50
+  maxReplicas: 500
   targetCPUUtilizationPercentage: 90
