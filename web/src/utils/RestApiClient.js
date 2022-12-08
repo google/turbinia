@@ -31,4 +31,9 @@ export default {
   getRequestList() {
     return RestApiClient.get('/api/request/summary')
   },
+
+  // Task List
+  getTaskList(request_id) {
+    return RestApiClient.get('/api/request/' + request_id)
+  },
 }

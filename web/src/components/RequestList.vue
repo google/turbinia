@@ -33,7 +33,16 @@ limitations under the License.
         :items="requestSummary"
         :search="search"
         :footer-props="{ itemsPerPageOptions: [10, 20, 40, -1] }"
+        multi-sort
+        item-key="request_id_reason"
+        show-expand
+        single-expand
       >
+        <template v-slot:expanded-item="{ headers, item }">
+          <td :colspan="headers.length" :tasklist="getTaskList(item.request_id)">
+            More info about {{ item.request_id }}
+          </td>
+        </template>
       </v-data-table>
     </v-card>
   </section>
@@ -47,7 +56,7 @@ export default {
     return {
       search: '',
       headers: [
-        { text: 'Request', value: 'request_id' },
+        { text: 'Request', value: 'request_id_reason' },
         { text: 'Last Task Update Time', value: 'last_task_update_time' },
         { text: 'Requester', value: 'requester' },
         { text: 'Total Tasks', value: 'total_tasks' },
@@ -57,6 +66,7 @@ export default {
         { text: 'Status', value: 'status' },
       ],
       requestSummary: [],
+      taskList: [],
     }
   },
   methods: {
@@ -67,7 +77,8 @@ export default {
           let data = response.data['requests_status']
           for (const req in data) {
             requestSummary.push({
-              request_id: data[req].request_id + ' - ' + data[req].reason,
+              request_id_reason: data[req].request_id + ' - ' + data[req].reason,
+              request_id: data[req].request_id,
               last_task_update_time: data[req].last_task_update_time,
               requester: data[req].requester,
               total_tasks: data[req].task_count,
@@ -78,6 +89,28 @@ export default {
             })
           }
           this.requestSummary = requestSummary
+        })
+        .catch((e) => {
+          console.error(e)
+        })
+    },
+
+    getTaskList: function (request_id) {
+      ApiClient.getTaskList(request_id)
+        .then((response) => {
+          let taskList = []
+          let data = response.data['tasks']
+          this.taskList = taskList
+          for (const task in data) {
+            let task_dict = data[task]
+            taskList.push({
+              task_id: task_dict.id,
+              task_name: task_dict.name,
+              task_status: task_dict.status,
+            })
+          }
+          this.taskList = taskList
+          console.log(this.taskList)
         })
         .catch((e) => {
           console.error(e)
