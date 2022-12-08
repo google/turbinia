@@ -12,12 +12,13 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Turbinia API client / management tool."""
+"""Turbinia API client command-line tool."""
 
 import os
 import logging
 import click
 import base64
+import tarfile
 
 from turbinia_api_client import exceptions
 from turbinia_api_client import api_client
@@ -27,10 +28,10 @@ from turbinia_api_client.api import turbinia_configuration_api
 from turbinia_api_client.api import turbinia_jobs_api
 from turbinia_api_client.api import turbinia_request_results_api
 
-from turbinia_api_client.cli.core import groups
-from turbinia_api_client.cli.helpers import formatter
+from turbinia_client.core import groups
+from turbinia_client.helpers import formatter
 
-log = logging.getLogger('turbiniamgmt:core:commands')
+log = logging.getLogger('turbinia')
 
 
 @groups.config_group.command('list')
@@ -44,8 +45,8 @@ def get_config(ctx: click.Context) -> None:
     formatter.echo_json(api_response)
   except exceptions.ApiException as exception:
     log.error(
-        'Received status code %s when calling get_config: %s', exception.status,
-        exception.body)
+        f'Received status code {exception.status} '
+        f'when calling get_config: {exception.body}')
 
 
 @groups.result_group.command('request')
@@ -56,18 +57,22 @@ def get_request_result(ctx: click.Context, request_id: str) -> None:
   client: api_client.ApiClient = ctx.obj.api_client
   api_instance = turbinia_request_results_api.TurbiniaRequestResultsApi(client)
   try:
-    api_response = api_instance.get_request_output(request_id)
-    filename = api_response.name.split('/')[-1]
-    click.echo(
-        f'Saving request output for request {request_id:s} to: {filename:s}')
+    api_response = api_instance.get_request_output(
+        request_id, _preload_content=False, _request_timeout=(30, 120))
+    filename = f'{request_id}.tgz'
+    click.echo(f'Saving output for request {request_id} to: {filename}')
+    # Read the response and save into a local file.
     with open(filename, 'wb') as file:
-      file.write(api_response.read())
+      for chunk in api_response.read_chunked():
+        file.write(chunk)
   except exceptions.ApiException as exception:
     log.error(
-        'Received status code %s when calling get_request_result: %s',
-        exception.status, exception.body)
+        f'Received status code {exception.status} '
+        f'when calling get_request_output: {exception.body}')
   except OSError as exception:
-    log.error('Unable to save file: %s', exception)
+    log.error(f'Unable to save file: {exception}')
+  except (ValueError, tarfile.ReadError, tarfile.CompressionError) as exception:
+    log.error(f'Error reading saved results file {filename}: {exception}')
 
 
 @groups.result_group.command('task')
@@ -79,18 +84,22 @@ def get_task_result(ctx: click.Context, task_id: str) -> None:
   api_instance = turbinia_request_results_api.TurbiniaRequestResultsApi(client)
   try:
     api_response = api_instance.get_task_output(
-        task_id, _check_return_type=False)
-    filename = api_response.name.split('/')[-1]
-    click.echo(
-        f'Saving task output for request {task_id:s} to file: {filename:s}')
+        task_id, _preload_content=False, _request_timeout=(30, 120))
+    filename = f'{task_id}.tgz'
+    click.echo(f'Saving output for task {task_id} to: {filename}')
+
+    # Read the response and save into a local file.
     with open(filename, 'wb') as file:
-      file.write(api_response.read())
+      for chunk in api_response.read_chunked():
+        file.write(chunk)
   except exceptions.ApiException as exception:
     log.error(
-        'Received status code %s when calling get_task_result: %s',
-        exception.status, exception.body)
+        f'Received status code {exception.status} '
+        f'when calling get_task_output: {exception.body}')
   except OSError as exception:
-    log.error('Unable to save file: %s', exception)
+    log.error(f'Unable to save file: {exception}')
+  except (ValueError, tarfile.ReadError, tarfile.CompressionError) as exception:
+    log.error(f'Error reading saved results file {filename}: {exception}')
 
 
 @groups.jobs_group.command('list')
@@ -104,8 +113,8 @@ def get_jobs(ctx: click.Context) -> None:
     click.echo(api_response)
   except exceptions.ApiException as exception:
     log.error(
-        'Received status code %s when calling get_jobs: %s', exception.status,
-        exception.body)
+        f'Received status code {exception.status} '
+        f'when calling read_jobs: {exception.body}')
 
 
 @groups.status_group.command('request')
@@ -132,8 +141,8 @@ def get_request(ctx: click.Context, request_id: str, json_dump: bool) -> None:
       click.echo(report)
   except exceptions.ApiException as exception:
     log.error(
-        'Received status code %s when calling get_request: %s',
-        exception.status, exception.body)
+        f'Received status code {exception.status} '
+        f'when calling get_request_status: {exception.body}')
 
 
 @groups.status_group.command('workers')
@@ -163,8 +172,8 @@ def get_requests_summary(ctx: click.Context, json_dump: bool) -> None:
       click.echo(report)
   except exceptions.ApiException as exception:
     log.error(
-        'Received status code %s when calling get_requests_summary: %s',
-        exception.status, exception.body)
+        f'Received status code {exception.status} '
+        f'when calling get_requests_summary: {exception.body}')
 
 
 @groups.status_group.command('task')
@@ -186,8 +195,8 @@ def get_task(ctx: click.Context, task_id: str, json_dump: bool) -> None:
       click.echo(report)
   except exceptions.ApiException as exception:
     log.error(
-        'Received status code %s when calling get_task: %s', exception.status,
-        exception.body)
+        f'Received status code {exception.status} '
+        f'when calling get_task_status: {exception.body}')
 
 
 @click.pass_context
@@ -209,9 +218,9 @@ def create_request(ctx: click.Context, *args: int, **kwargs: int) -> None:
     cloud_provider = api_instance_config.read_config()['CLOUD_PROVIDER']
     if cloud_provider != 'GCP':
       log.error(
-          'The evidence type %s is Google Cloud only and the configured '
-          'provider for this Turbinia instance is %s.', evidence_name,
-          cloud_provider)
+          f'The evidence type {evidence_name} is Google Cloud only and '
+          f'the configured provider for this Turbinia instance is '
+          f'{cloud_provider}.')
       return
 
   for key, value in kwargs.items():
@@ -234,7 +243,7 @@ def create_request(ctx: click.Context, *args: int, **kwargs: int) -> None:
   recipe_name = request['request_options'].get('recipe_name')
   if recipe_name:
     if not recipe_name.endswith('.yaml'):
-      recipe_name = '{0:s}.yaml'.format(recipe_name)
+      recipe_name = f'{recipe_name}.yaml'
     # Fallback path for the recipe would be TURBINIA_CLI_CONFIG_PATH/recipe_name
     # This is the same path where the client configuration is loaded from.
     recipe_path_fallback = os.path.expanduser(ctx.obj.config_path)
@@ -245,7 +254,7 @@ def create_request(ctx: click.Context, *args: int, **kwargs: int) -> None:
     elif os.path.isfile(recipe_path_fallback):
       recipe_path = recipe_path_fallback
     else:
-      log.error('Unable to load recipe from file %s', recipe_name)
+      log.error(f'Unable to load recipe {recipe_name}.')
       return
 
     try:
@@ -254,10 +263,10 @@ def create_request(ctx: click.Context, *args: int, **kwargs: int) -> None:
         recipe_bytes = recipe_file.read().encode('utf-8')
         recipe_data = base64.b64encode(recipe_bytes)
     except OSError as exception:
-      log.error('Error opening recipe file %s: %s', recipe_path, exception)
+      log.error(f'Error opening recipe file {recipe_path}: {exception}')
       return
     except TypeError as exception:
-      log.error('Error converting recipe data to Base64: %s', exception)
+      log.error(f'Error converting recipe data to Base64: {exception}')
       return
     # We found the recipe file, so we will send it to the API server
     # via the recipe_data parameter. To do so, we need to pop recipe_name
@@ -268,12 +277,12 @@ def create_request(ctx: click.Context, *args: int, **kwargs: int) -> None:
 
   # Send the request to the API server.
   try:
-    log.info('Sending request: %s', request)
+    log.info(f'Sending request: {request}')
     api_response = api_instance.create_request(request)
-    log.info('Received response: %s', api_response)
+    log.info(f'Received response: {api_response}')
   except exceptions.ApiException as exception:
     log.error(
-        'Received status code %s when calling create_request. %s',
-        exception.status, exception.body)
+        f'Received status code {exception.status} '
+        f'when calling create_request: {exception.body}')
   except (TypeError, exceptions.ApiTypeError) as exception:
-    log.error('The request object is invalid. %s', exception)
+    log.error(f'The request object is invalid. {exception}')

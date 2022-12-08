@@ -299,7 +299,7 @@ paths:
       responses:
         '200':
           content:
-            application/x-zip-compressed:
+            application/octet-stream:
               schema:
                 format: binary
                 type: string
@@ -327,7 +327,7 @@ paths:
       responses:
         '200':
           content:
-            application/x-zip-compressed:
+            application/octet-stream:
               schema:
                 format: binary
                 type: string

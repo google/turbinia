@@ -75,7 +75,7 @@ Name | Type | Description  | Notes
 ### HTTP request headers
 
  - **Content-Type**: Not defined
- - **Accept**: application/x-zip-compressed, application/json
+ - **Accept**: application/octet-stream, application/json
 
 
 ### HTTP response details
@@ -154,7 +154,7 @@ Name | Type | Description  | Notes
 ### HTTP request headers
 
  - **Content-Type**: Not defined
- - **Accept**: application/x-zip-compressed, application/json
+ - **Accept**: application/octet-stream, application/json
 
 
 ### HTTP response details

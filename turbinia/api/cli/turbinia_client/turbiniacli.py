@@ -12,22 +12,23 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Turbinia API client / management tool."""
+"""Turbinia API client command-line tool."""
 
 import os
 import sys
 import logging
 import json
 import turbinia_api_client
+from typing import Union
 
 from turbinia_api_client.api import turbinia_configuration_api
 
-from turbinia_api_client.cli.helpers import auth_helper
+from turbinia_client.helpers import auth_helper
 
-log = logging.getLogger('turbiniamgmt')
+log = logging.getLogger('turbinia')
 
 
-class TurbiniaMgmtCli:
+class TurbiniaCli:
   """Turbinia API client tool.
 
   Attributes:
@@ -87,15 +88,15 @@ class TurbiniaMgmtCli:
 
     if self.api_authentication_enabled:
       log.info(
-          'Authentication is enabled. Using client_secrets file at: %s '
-          'and caching credentials at: %s', self.client_secrets_path,
-          self.credentials_path)
+          f'Authentication is enabled. Using client_secrets file at: '
+          f'{self.client_secrets_path:s} and caching credentials at: '
+          f'{self.credentials_path:s}')
       self.config.access_token = auth_helper.get_oauth2_credentials(
           self.credentials_path, self.client_secrets_path)
 
     log.info(
-        'Using configuration instance name -> %s, with host %s:%s',
-        self.config_instance, self.api_server_address, self.api_server_port)
+        f'Using configuration instance name -> {self.config_instance:s}'
+        f' with host {self.api_server_address:s}:{self.api_server_port:d}')
     try:
       self.evidence_mapping = self.get_evidence_arguments()
       self.request_options = self.get_request_options()
@@ -191,12 +192,12 @@ class TurbiniaMgmtCli:
     else:
       client_config_path = os.path.join(
           self.config_path, '.turbinia_api_config.json')
-    with open(client_config_path, encoding='utf-8') as config:
-      try:
+    try:
+      with open(client_config_path, encoding='utf-8') as config:
         config_data = json.loads(config.read())
         config_dict = config_data.get(self.config_instance)
         if not config_dict:
-          log.error('Error reading configuration key %s.', self.config_instance)
+          log.error(f'Error reading configuration key {self.config_instance:s}')
           sys.exit(-1)
         self.api_server_address = config_dict['API_SERVER_ADDRESS']
         self.api_server_port = config_dict['API_SERVER_PORT']
@@ -209,18 +210,26 @@ class TurbiniaMgmtCli:
         self.client_secrets_path = os.path.join(
             home_path, client_secrets_filename)
         self.config_dict = config_dict
-      except json.JSONDecodeError as exception:
-        log.error('Error decoding configuration file: %s', exception)
-        sys.exit(-1)
-      except KeyError as exception:
-        log.error('Required configuration key not found: %s', exception)
-        sys.exit(-1)
+    except (IOError, FileNotFoundError) as exception:
+      log.error(f'Unable to read the configuration file {exception!s}')
+      sys.exit(-1)
+    except json.JSONDecodeError as exception:
+      log.error(f'Error decoding configuration file: {exception!s}')
+      sys.exit(-1)
+    except KeyError as exception:
+      log.error(f'Required configuration key not found: {exception!s}')
+      sys.exit(-1)
 
-  def normalize_evidence_name(self, evidence_name) -> str:
+  def normalize_evidence_name(self, evidence_name_low) -> Union[str, None]:
     """Converts a lowercase evidence name into the proper class name."""
-    if not evidence_name:
-      log.error('Evidence name is not valid.')
+    evidence_name = None
+    if evidence_name_low:
+      for name in self.evidence_mapping.keys():
+        if evidence_name_low == name.lower():
+          evidence_name = name
 
-    for name in self.evidence_mapping.keys():
-      if evidence_name == name.lower():
-        return name
+    if not evidence_name:
+      log.error(f'Unable to map {evidence_name_low} to a valid Evidence name.')
+      sys.exit(-1)
+
+    return evidence_name

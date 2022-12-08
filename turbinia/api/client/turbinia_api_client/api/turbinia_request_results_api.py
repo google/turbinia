@@ -80,7 +80,7 @@ class TurbiniaRequestResultsApi(object):
             },
             headers_map={
                 'accept': [
-                    'application/x-zip-compressed',
+                    'application/octet-stream',
                     'application/json'
                 ],
                 'content_type': [],
@@ -132,7 +132,7 @@ class TurbiniaRequestResultsApi(object):
             },
             headers_map={
                 'accept': [
-                    'application/x-zip-compressed',
+                    'application/octet-stream',
                     'application/json'
                 ],
                 'content_type': [],

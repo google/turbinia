@@ -23,7 +23,7 @@ from click import echo as click_echo
 import logging
 import json
 
-log = logging.getLogger('turbiniamgmt:helpers:formatter')
+log = logging.getLogger('turbinia')
 
 
 def echo_json(json_data: dict) -> None:
@@ -211,7 +211,7 @@ class TaskMarkdownReport(MarkdownReportComponent):
           report.append(self.bullet(self.code(path)))
           report.append('')
     except TypeError as exception:
-      log.warning('Error formatting the Markdown report: %s', exception)
+      log.warning(f'Error formatting the Markdown report: {exception!s}')
 
     self.report = '\n'.join(report)
     return self.report
@@ -273,7 +273,7 @@ class RequestMarkdownReport(MarkdownReportComponent):
           self.bullet(f"Queued tasks: {request_dict.get('queued_tasks'):d}"))
       report.append('')
     except TypeError as exception:
-      log.warning('Error formatting the Markdown report: %s', exception)
+      log.warning(f'Error formatting the Markdown report: {exception!s}')
 
     for task in self.components:
       report.append(task.generate_markdown())

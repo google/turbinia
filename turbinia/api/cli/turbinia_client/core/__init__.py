@@ -12,14 +12,4 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Turbinia API client / management tool."""
-
-from typing import Tuple, Sequence
-
-
-def generate_option_parameters(
-    option_name: str) -> Tuple[Tuple[Sequence[str], str], dict]:
-  """Builds click.Option or click.Command arguments based on a given parameter 
-      name.
-  """
-  return ((['--' + option_name], option_name), {'required': False, 'type': str})
+"""Turbinia API client command-line tool."""

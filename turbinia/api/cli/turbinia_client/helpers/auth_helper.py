@@ -12,7 +12,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Turbinia API client / management tool."""
+"""Turbinia API client command-line tool."""
 
 import logging
 import os
@@ -23,7 +23,7 @@ from google.oauth2.credentials import Credentials
 from google.auth.transport.requests import Request
 from google.auth import exceptions as google_exceptions
 
-log = logging.getLogger('turbiniamgmt:helpers:auth')
+log = logging.getLogger('turbinia')
 
 
 def get_oauth2_credentials(credentials_path, client_secrets_path):
@@ -37,14 +37,14 @@ def get_oauth2_credentials(credentials_path, client_secrets_path):
       credentials = Credentials.from_authorized_user_file(
           credentials_path, scopes)
     except ValueError as exception:
-      log.error('Error loading credentials: %s', exception)
+      log.error(f'Error loading credentials: {exception!s}')
     # Refresh credentials using existing refresh_token
     if credentials and credentials.refresh_token:
       log.debug('Found a refresh token. Requesting new id_token...')
       try:
         credentials.refresh(Request())
       except google_exceptions.RefreshError as exception:
-        log.error('Error refreshing credentials: %s', exception)
+        log.error(f'Error refreshing credentials: {exception!s}')
   else:
     # No credentials file, acquire new credentials from secrets file.
     log.info('Could not find existing credentials. Requesting new tokens.')
@@ -52,7 +52,7 @@ def get_oauth2_credentials(credentials_path, client_secrets_path):
       appflow = flow.InstalledAppFlow.from_client_secrets_file(
           client_secrets_path, scopes)
     except FileNotFoundError as exception:
-      log.error('Client secrets file not found: %s', exception)
+      log.error(f'Client secrets file not found: {exception!s}')
       sys.exit(1)
 
     log.info(

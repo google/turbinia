@@ -12,31 +12,14 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Turbinia API client / management tool."""
+"""Turbinia API client command-line tool."""
 
-import click
-
-
-@click.group('config')
-def config_group():
-  """Get Turbinia configuration."""
+from typing import Tuple, Sequence
 
 
-@click.group('status')
-def status_group():
-  """Get Turbinia request/task status."""
-
-
-@click.group('result')
-def result_group():
-  """Get Turbinia task or request results."""
-
-
-@click.group('jobs')
-def jobs_group():
-  """Get a list of enabled Turbinia jobs."""
-
-
-@click.group('submit')
-def submit_group():
-  """Submit new requests to the Turbinia API server."""
+def generate_option_parameters(
+    option_name: str) -> Tuple[Tuple[Sequence[str], str], dict]:
+  """Builds click.Option or click.Command arguments based on a given parameter 
+      name.
+  """
+  return ((['--' + option_name], option_name), {'required': False, 'type': str})

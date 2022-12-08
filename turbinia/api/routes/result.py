@@ -17,7 +17,7 @@
 import logging
 
 from fastapi import HTTPException, APIRouter
-from fastapi.responses import Response
+from fastapi.responses import StreamingResponse
 from fastapi.requests import Request
 
 from turbinia import config as turbinia_config
@@ -31,7 +31,7 @@ router = APIRouter(prefix='/result', tags=['Turbinia Request Results'])
 _ATTACHMENT_RESPONSE = {
     '200': {
         'content': {
-            'application/x-zip-compressed': {
+            'application/octet-stream': {
                 'schema': {
                     'type': 'string',
                     'format': 'binary'
@@ -43,7 +43,8 @@ _ATTACHMENT_RESPONSE = {
 
 
 @router.get(
-    '/task/{task_id}', response_class=Response, responses=_ATTACHMENT_RESPONSE)
+    '/task/{task_id}', response_class=StreamingResponse,
+    responses=_ATTACHMENT_RESPONSE)
 async def get_task_output(request: Request, task_id: str):
   """Retrieves a task's output files."""
   # Get the request_id for the task. This is needed to find the right path.
@@ -54,31 +55,35 @@ async def get_task_output(request: Request, task_id: str):
   if not tasks:
     raise HTTPException(
         status_code=404, detail='Task {0:s} not found.'.format(task_id))
+
   request_id = tasks[0].get('request_id')
+  output_path = api_utils.get_task_output_path(request_id, task_id)
+
   if request_id:
-    data: bytes = api_utils.create_zip(request_id, task_id)
+    data: bytes = api_utils.create_tarball(output_path)
 
   if not data:
     raise HTTPException(
         status_code=500, detail='Unable to retrieve task output files.')
-  return Response(
-      status_code=200, content=data, headers={
-          "Content-Disposition": 'attachment;filename={}.zip'.format(task_id)
+  return StreamingResponse(
+      data, headers={
+          "Content-Disposition": 'attachment;filename={}.tgz'.format(task_id)
       })
 
 
 @router.get(
-    '/request/{request_id}', response_class=Response,
+    '/request/{request_id}', response_class=StreamingResponse,
     responses=_ATTACHMENT_RESPONSE)
 async def get_request_output(request: Request, request_id: str):
   """Retrieve request output."""
-  data: bytes = api_utils.create_zip(request_id, task_id=None)
+  request_output_path = api_utils.get_request_output_path(request_id)
+  data: bytes = api_utils.create_tarball(request_output_path)
 
   if not data:
     raise HTTPException(
         status_code=500, detail='Unable to retrieve task output files.')
-  return Response(
-      status_code=200, content=data, headers={
+  return StreamingResponse(
+      data, headers={
           "Content-Disposition":
-              'attachment;filename={}.zip'.format(request_id)
+              'attachment;filename={}.tgz'.format(request_id)
       })

@@ -20,12 +20,12 @@ from typing import TypeVar, Type, Tuple, Any, List
 import logging
 import click
 
-from turbinia_api_client.cli.helpers import click_helper
-from turbinia_api_client.cli.core.commands import create_request
+from turbinia_client.helpers import click_helper
+from turbinia_client.core.commands import create_request
 
 T = TypeVar('T', bound='FactoryInterface')
 
-log = logging.getLogger('turbiniamgmt:factory')
+log = logging.getLogger('turbinia')
 
 
 class FactoryInterface(ABC):
@@ -60,10 +60,8 @@ class FactoryInterface(ABC):
   def create_dynamic_objects(
       cls: Type[T], name: str, evidence_mapping: dict,
       request_options: dict) -> None:
-    """An implementation of this method creates multiple
-        click objects of different types (e.g. click.Command,
-        click.Option).
-
+    """Creates one or more click.Command or click.Options objects.
+    
     Args:
       evidence_mapping (dict): A dictionary of Evidence types
           and attributes retrieved from the Turbinia API server.
@@ -76,8 +74,7 @@ class FactoryInterface(ABC):
   @abstractmethod
   def create_object(
       cls: Type[T], name: str, params: Tuple[Any, dict], callback: Any):
-    """An implementation of this method creates a single, custom Click
-        object using the specified parameters.
+    """Creates a click.Command or click.Options object.
 
     Args:
       name (str): Object name.
@@ -95,9 +92,7 @@ class OptionFactory(FactoryInterface):
   def append_request_option_objects(
       cls: Type[T], params: List[click.Option],
       request_options: dict = None) -> None:
-    """Appends request options to a list of parameters for a
-        click.Command object.
-    """
+    """Appends options to a list of parameters for a click.Command object."""
     for request_option in list(request_options.keys()):
       request_parameters = click_helper.generate_option_parameters(
           request_option)
@@ -107,9 +102,7 @@ class OptionFactory(FactoryInterface):
   def create_dynamic_objects(
       cls, name: str = None, evidence_mapping: dict = None,
       request_options: dict = None) -> List[click.Option]:
-    """Implements create_dynamic_objects to create a list of
-        click.Option objects.
-    """
+    """Creates a list of click.Option objects."""
     option_objects = []
     if not name:
       log.info('An evidence type was not provided.')
@@ -141,9 +134,7 @@ class CommandFactory(FactoryInterface):
   def create_dynamic_objects(
       cls, name: str = None, evidence_mapping: dict = None,
       request_options: dict = None) -> List[click.Command]:
-    """Implements create_dynamic_objects to create a list of
-        click.Command objects.
-    """
+    """Creates a list of click.Command objects."""
 
     command_objects = []
     for evidence_name in list(evidence_mapping.keys()):
