@@ -1,6 +1,14 @@
 <template>
   <td :colspan="requestHeaders.length">
-    <v-data-table :headers="headers" :items="taskList" dense :item-key="task_id"> </v-data-table>
+    <v-data-table
+      :headers="headers"
+      :items="taskList"
+      item-key="task_id"
+      :footer-props="{ itemsPerPageOptions: [-1] }"
+      hide-default-footer
+      dense
+    >
+    </v-data-table>
   </td>
 </template>
 
