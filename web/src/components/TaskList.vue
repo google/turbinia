@@ -37,7 +37,6 @@ export default {
             taskList.push({
               task_name_id: task_dict.name + ' ( ' + task_dict.id + ' )',
               task_id: task_dict.id,
-              task_name: task_dict.name,
               task_status: task_dict.status,
             })
           }
