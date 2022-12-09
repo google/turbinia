@@ -39,9 +39,7 @@ limitations under the License.
         single-expand
       >
         <template v-slot:expanded-item="{ headers, item }">
-          <td :colspan="headers.length" :tasklist="getTaskList(item.request_id)">
-            More info about {{ item.request_id }}
-          </td>
+          <task-list :request-headers="headers" :request-id="item.request_id"> </task-list>
         </template>
       </v-data-table>
     </v-card>
@@ -50,8 +48,10 @@ limitations under the License.
 
 <script>
 import ApiClient from '../utils/RestApiClient.js'
+import TaskList from './TaskList'
 
 export default {
+  components: { TaskList },
   data() {
     return {
       search: '',
@@ -66,7 +66,6 @@ export default {
         { text: 'Status', value: 'status' },
       ],
       requestSummary: [],
-      taskList: [],
     }
   },
   methods: {
@@ -89,28 +88,6 @@ export default {
             })
           }
           this.requestSummary = requestSummary
-        })
-        .catch((e) => {
-          console.error(e)
-        })
-    },
-
-    getTaskList: function (request_id) {
-      ApiClient.getTaskList(request_id)
-        .then((response) => {
-          let taskList = []
-          let data = response.data['tasks']
-          this.taskList = taskList
-          for (const task in data) {
-            let task_dict = data[task]
-            taskList.push({
-              task_id: task_dict.id,
-              task_name: task_dict.name,
-              task_status: task_dict.status,
-            })
-          }
-          this.taskList = taskList
-          console.log(this.taskList)
         })
         .catch((e) => {
           console.error(e)
