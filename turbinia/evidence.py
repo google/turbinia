@@ -47,7 +47,7 @@ def evidence_class_names(all_classes=False):
   Args:
     all_classes (bool): Flag to determine whether to include all classes
         in the module.
-  
+
   Returns:
     class_names (list[str]): A list of class names within the Evidence module,
         minus the ignored class names.
@@ -708,6 +708,8 @@ class DiskPartition(Evidence):
         log.error(
             'Unable to cast partition_offset attribute to integer. {0!s}'
             .format(exception))
+    else:
+      self.partition_offset = None
     if partition_size:
       try:
         self.partition_size = int(partition_size)
@@ -715,6 +717,8 @@ class DiskPartition(Evidence):
         log.error(
             'Unable to cast partition_size attribute to integer. {0!s}'.format(
                 exception))
+    else:
+      self.partition_size = None
     self.lv_uuid = lv_uuid
     self.path_spec = path_spec
     self.important = important
