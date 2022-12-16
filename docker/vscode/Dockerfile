@@ -5,7 +5,7 @@ USER root
 
 # Cleanup installed turbinia from base image
 RUN pip uninstall -y turbinia
-RUN rm /usr/local/bin/turbiniactl
+RUN if [ -f /usr/local/bin/turbiniactl ] ; then rm /usr/local/bin/turbiniactl ; fi
 
 # Create /evidence and /tmp/turbinia-mounts folders (used in local stack configuration)
 RUN mkdir /evidence && chmod 777 /evidence
