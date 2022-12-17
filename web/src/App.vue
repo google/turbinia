@@ -35,24 +35,59 @@ limitations under the License.
       </v-app-bar>
     </nav>
     <v-main>
-      <request-list></request-list>
+      <v-container fluid>
+        <v-row>
+          <v-col cols="8">
+            <v-sheet rounded>
+              <request-list></request-list>
+            </v-sheet>
+          </v-col>
+          <v-col cols="4">
+            <v-card rounded v-if="taskDetails.length === 0">
+              <v-card-title> Task Details </v-card-title>
+              <v-card-subtitle> No Task Selected. Please click on a Task ID to see its details. </v-card-subtitle>
+            </v-card>
+            <v-card class="mx-auto" rounded v-if="taskDetails.length !== 0">
+              <task-details :taskDetails="this.taskDetails"></task-details>
+            </v-card>
+          </v-col>
+        </v-row>
+      </v-container>
     </v-main>
   </v-app>
 </template>
 
 <script>
 import RequestList from './components/RequestList'
+import TaskDetails from './components/TaskDetails'
+import ApiClient from './utils/RestApiClient.js'
 
 export default {
   name: 'app',
-  components: { RequestList },
+  components: { RequestList, TaskDetails },
+  provide() {
+    return {
+      getTaskDetails: this.getTaskDetails,
+    }
+  },
   data() {
-    return {}
+    return {
+      taskDetails: [],
+    }
   },
   methods: {
     toggleTheme: function () {
       this.$vuetify.theme.dark = !this.$vuetify.theme.dark
       localStorage.setItem('isDarkTheme', this.$vuetify.theme.dark.toString())
+    },
+    getTaskDetails: function (task_id) {
+      ApiClient.getTaskDetails(task_id)
+        .then((response) => {
+          this.taskDetails = response.data
+        })
+        .catch((e) => {
+          console.error(e)
+        })
     },
   },
 }
@@ -63,6 +98,6 @@ html,
 body {
   height: 100%;
   overflow: auto;
-  font-family: 'Arial';
+  font-family: 'Roboto';
 }
 </style>

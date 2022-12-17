@@ -38,8 +38,43 @@ limitations under the License.
         show-expand
         single-expand
       >
+        <template v-slot:[`item.status`]="{ item }">
+          <div v-if="item.status === 'successful'">
+            <v-tooltip left>
+              Completed successfully
+              <template v-slot:activator="{ on, attrs }">
+                <v-icon v-on="on" v-bind="attrs" color="green"> mdi-check </v-icon>
+              </template>
+            </v-tooltip>
+          </div>
+          <div v-else-if="item.status === 'completed_with_errors'">
+            <v-tooltip left>
+              Completed with Task failures
+              <template v-slot:activator="{ on, attrs }">
+                <v-icon v-on="on" v-bind="attrs" color="orange"> mdi-alert </v-icon>
+              </template>
+            </v-tooltip>
+          </div>
+          <div v-else-if="item.status === 'failed'">
+            <v-tooltip left>
+              <template v-slot:activator="{ on, attrs }">
+                <v-icon v-on="on" v-bind="attrs" color="red"> mdi-alert-circle </v-icon>
+              </template>
+            </v-tooltip>
+          </div>
+          <div v-else>
+            <v-tooltip left>
+              Running
+              <template v-slot:activator="{ on, attrs }">
+                <v-progress-circular v-on="on" v-bind="attrs" indeterminate color="blue"> </v-progress-circular>
+              </template>
+            </v-tooltip>
+          </div>
+        </template>
         <template v-slot:expanded-item="{ headers, item }">
-          <task-list :request-headers="headers" :request-id="item.request_id"> </task-list>
+          <td :colspan="headers.length">
+            <task-list :request-id="item.request_id" :key="item.request_id"> </task-list>
+          </td>
         </template>
       </v-data-table>
     </v-card>

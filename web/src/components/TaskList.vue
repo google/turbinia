@@ -1,22 +1,58 @@
+<!--
+Copyright 2022 Google Inc. All rights reserved.
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+    http://www.apache.org/licenses/LICENSE-2.0
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+
 <template>
-  <td :colspan="requestHeaders.length">
-    <v-data-table
-      :headers="headers"
-      :items="taskList"
-      item-key="task_id"
-      :footer-props="{ itemsPerPageOptions: [-1] }"
-      hide-default-footer
-      dense
-    >
-    </v-data-table>
-  </td>
+  <div>
+    <v-list dense>
+      <v-virtual-scroll :items="taskList" :item-height="40" :height="400">
+        <template v-slot:default="{ item }">
+          <v-list-item class="mb-8" :key="item.task_id">
+            <div v-if="item.task_success === true">
+              <v-list-item-avatar> <v-icon color="green"> mdi-check </v-icon> </v-list-item-avatar>
+            </div>
+            <div v-else-if="item.task_success === null">
+              <v-list-item-avatar>
+                <v-progress-circular indeterminate color="blue" :size="20"></v-progress-circular>
+              </v-list-item-avatar>
+            </div>
+            <div v-else-if="item.task_success === false">
+              <v-list-item-avatar> <v-icon color="red"> mdi-alert-circle </v-icon> </v-list-item-avatar>
+            </div>
+            <v-list-item-action>
+              <v-btn :ripple="true" class="text-lowercase" text @click="getTaskDetails(item.task_id)">
+                {{ item.task_id }}
+              </v-btn>
+            </v-list-item-action>
+            <v-list-item-content>
+              <v-list-item-title>
+                {{ item.task_name }}
+                >: {{ item.task_status }}
+              </v-list-item-title>
+            </v-list-item-content>
+          </v-list-item>
+          <v-divider> </v-divider>
+        </template>
+      </v-virtual-scroll>
+    </v-list>
+  </div>
 </template>
 
 <script>
 import ApiClient from '../utils/RestApiClient.js'
 
 export default {
-  props: ['requestHeaders', 'requestId'],
+  props: ['requestId'],
+  inject: ['getTaskDetails'],
   data() {
     return {
       headers: [
@@ -27,7 +63,7 @@ export default {
     }
   },
   methods: {
-    retrieveTaskList: function (request_id) {
+    getTaskList: function (request_id) {
       ApiClient.getTaskList(request_id)
         .then((response) => {
           let taskList = []
@@ -35,9 +71,10 @@ export default {
           for (const task in data) {
             let task_dict = data[task]
             taskList.push({
-              task_name_id: task_dict.name + ' ( ' + task_dict.id + ' )',
+              task_name: task_dict.name,
               task_id: task_dict.id,
               task_status: task_dict.status,
+              task_success: task_dict.successful,
             })
           }
           this.taskList = taskList
@@ -48,12 +85,17 @@ export default {
     },
   },
   created() {
-    this.retrieveTaskList(this.requestId)
-  },
-  computed: {
-    items() {
-      return Array.from({ length: 200 }, (k, v) => v + 1)
-    },
+    this.getTaskList(this.requestId)
   },
 }
 </script>
+
+<style scoped>
+.v-btn {
+  font-family: 'Roboto Mono', monospace;
+}
+
+.v-item {
+  font-family: 'Roboto Mono', monospace;
+}
+</style>
