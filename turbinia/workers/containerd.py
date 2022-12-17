@@ -142,11 +142,17 @@ class ContainerdEnumerationTask(TurbiniaTask):
       for container in containers:
         namespace = container.get('Namespace')
         container_id = container.get('ID')
+        container_type = container.get('ContainerType') or None
 
         if not namespace or not container_id:
           result.log(
               f'Value is empty. namespace={namespace}, container_id={container_id}'
           )
+          continue
+
+        # We want to process docker managed container using Docker-Explorer
+        if container_type and container_type.lower() == 'docker':
+          result.log(f'{container_id} is managed using docker. Skipping')
           continue
 
         container_evidence = ContainerdContainer(
