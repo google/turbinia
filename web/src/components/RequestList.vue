@@ -64,9 +64,11 @@ limitations under the License.
           </div>
           <div v-else>
             <v-tooltip right>
-              Running
+              {{ item.total_tasks - item.successful_tasks - item.failed_tasks }} Tasks remaining
               <template v-slot:activator="{ on, attrs }">
-                <v-progress-circular v-on="on" v-bind="attrs" indeterminate color="blue"> </v-progress-circular>
+                <v-progress-circular v-on="on" v-bind="attrs" :value="item.outstanding_perc" color="blue">
+                  {{ item.outstanding_perc }}
+                </v-progress-circular>
               </template>
             </v-tooltip>
           </div>
@@ -121,6 +123,9 @@ export default {
           let requestSummary = []
           let data = response.data['requests_status']
           for (const req in data) {
+            let outstanding_perc = Math.round(
+              ((data[req].failed_tasks + data[req].successful_tasks) / data[req].task_count) * 100
+            )
             requestSummary.push({
               request_id_reason: data[req].request_id + ' - ' + data[req].reason,
               request_id: data[req].request_id,
@@ -130,6 +135,7 @@ export default {
               running_tasks: data[req].running_tasks,
               successful_tasks: data[req].successful_tasks,
               failed_tasks: data[req].failed_tasks,
+              outstanding_perc: outstanding_perc,
               status: data[req].status,
             })
           }

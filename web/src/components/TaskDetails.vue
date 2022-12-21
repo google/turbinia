@@ -15,7 +15,7 @@ limitations under the License.
   <div>
     <v-card-title>
       {{ taskDetails.name }}
-      <v-tooltip right>
+      <v-tooltip top>
         Download Task output
         <template v-slot:activator="{ on, attrs }">
           <v-btn icon v-on="on" v-bind="attrs" @click="getTaskOutput(taskDetails.id)">
@@ -99,7 +99,7 @@ limitations under the License.
           </v-list-item>
           <v-list-item>
             <v-list-item-content>
-              <v-list-item-title> Run Time: </v-list-item-title>{{ taskDetails.run_time }}
+              <v-list-item-title> Run Time: </v-list-item-title>{{ taskDetails.run_time }} seconds
             </v-list-item-content>
           </v-list-item>
         </v-list-group>
