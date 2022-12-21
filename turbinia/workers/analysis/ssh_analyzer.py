@@ -22,7 +22,7 @@ import pandas as pd
 import re
 
 from datetime import datetime
-from typing import Any, List
+from typing import Tuple, List
 
 from turbinia import TurbiniaException
 
@@ -232,6 +232,39 @@ class LinuxSSHAnalysisTask(TurbiniaTask):
         f'Total number of SSH records {len(ssh_records)} in {log_filename}')
     return ssh_records
 
+  def get_priority_value(self, priority_string: str) -> Priority:
+    """Return priority value"""
+    analyzer_priority_string = priority_string.upper()
+
+    if analyzer_priority_string == 'CRITICAL':
+      return Priority.CRITICAL
+    elif analyzer_priority_string == 'HIGH':
+      return Priority.HIGH
+    elif analyzer_priority_string == 'MEDIUM':
+      return Priority.MEDIUM
+    else:
+      return Priority.LOW
+
+  def brute_force_analysis(self, df: pd.DataFrame) -> Tuple[Priority, str, str]:
+    """Run brute force analysis"""
+    bfa = BruteForceAnalyzer()
+    bfa_result = bfa.run(df)
+
+    print(bfa_result)
+
+    result_priority = bfa_result.get('result_priority') or ''
+    result_summary = bfa_result.get('result_summary') or ''
+    result_markdown = bfa_result.get('result_markdown') or ''
+
+    priority = self.get_priority_value(result_priority)
+
+    if not result_summary:
+      result_summary = 'No findings for brute force analysis'
+    if not result_markdown:
+      result_markdown = '## Brute Force Analysis\n\n- No findings'
+
+    return (priority, result_summary, result_markdown)
+
   def run(self, evidence, result):
     """Run the SSH Auth Analyzer worker.
 
@@ -243,7 +276,7 @@ class LinuxSSHAnalysisTask(TurbiniaTask):
     """
 
     # Output file and evidence
-    output_file_name = 'linux_ssh_auth_analysis.txt'
+    output_file_name = 'linux_ssh_analysis.md'
     output_file_path = os.path.join(self.output_dir, output_file_name)
     output_evidence = ReportText(source_path=output_file_path)
 
@@ -258,6 +291,7 @@ class LinuxSSHAnalysisTask(TurbiniaTask):
       collected_artifacts = extract_artifacts(
           artifact_names=['LinuxAuthLogs'], disk_path=evidence.local_path,
           output_dir=self.output_dir, credentials=evidence.credentials)
+      result.log(f'collected artifacts: {collected_artifacts}')
     except TurbiniaException as exception:
       result.close(self, success=False, status=str(exception))
       return result
@@ -277,22 +311,12 @@ class LinuxSSHAnalysisTask(TurbiniaTask):
       return result
 
     # 01. Brute Force Analyzer
-    bfa = BruteForceAnalyzer()
-    bfa_result = bfa.run(df)
-
-    if bfa_result:
-      bfa_result_summary = bfa_result['result_summary']
-      if bfa_result_summary:
-        output_summary_list.append(bfa_result_summary)
-
-      bfa_result_markdown = bfa_result['result_markdown']
-      if bfa_result_markdown:
-        output_report_list.append(bfa_result_markdown)
-        # TODO(rmaskey): add attributes
-    else:
-      output_summary_list.append('No finding for brute force analysis')
-      output_report_list.append('## Brute Force Analysis\n')
-      output_report_list.append('- No findings for brute force analysis')
+    result_priority, result_summary, result_markdown = self.brute_force_analysis(
+        df)
+    if result_priority < analyzer_output_priority:
+      analyzer_output_priority = result_priority
+    output_summary_list.append(result_summary)
+    output_report_list.append(result_markdown)
 
     # TODO(rmaskey): 02. Last X-Days Analyzer
     # TODO(rmaskey): 03. NICE Analyzer
