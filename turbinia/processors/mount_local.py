@@ -124,7 +124,9 @@ def PreprocessBitLocker(source_path, partition_offset=None, credentials=None):
   mount_path = tempfile.mkdtemp(prefix='turbinia', dir=mount_prefix)
 
   for credential_type, credential_data in credentials:
-    libbde_command = ['sudo', 'bdemount', '-o', str(partition_offset)]
+    libbde_command = ['sudo', 'bdemount']
+    if partition_offset:
+      libbde_command.extend(['-o', str(partition_offset)])
     if credential_type == 'password':
       libbde_command.extend(['-p', credential_data])
     elif credential_type == 'recovery_password':
@@ -205,9 +207,10 @@ def PreprocessLosetup(
     # TODO(aarontp): Remove hard-coded sudo in commands:
     # https://github.com/google/turbinia/issues/73
     losetup_command = ['sudo', 'losetup', '--show', '--find', '-r']
-    if partition_size:
+    if partition_offset:
       # Evidence is DiskPartition
       losetup_command.extend(['-o', str(partition_offset)])
+    if partition_size:
       losetup_command.extend(['--sizelimit', str(partition_size)])
     losetup_command.append(source_path)
     log.info('Running command {0:s}'.format(' '.join(losetup_command)))
@@ -278,8 +281,9 @@ def PreprocessMountEwfDisk(ewf_path):
 
 
 def GetEwfDiskPath(ewf_mount_path):
-  """Returns the path to the device in the EWF disk block. 
-      Only supports 1 block device.
+  """Returns the path to the device in the EWF disk block.
+
+  Only supports 1 block device.
 
   Args:
       ewf_mount_path (str): The path to the EWF disk block device.
