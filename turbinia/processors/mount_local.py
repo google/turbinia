@@ -510,8 +510,9 @@ def PostprocessDeleteLosetup(device_path, lv_uuid=None):
         if reg_search:
           # TODO(wyassine): Add lsof check for file handles on device path
           # https://github.com/google/turbinia/issues/1148
-          log.debug('losetup retry check {0!s}/{1!s} for device {2!s}').format(
-              _, RETRY_MAX, device_path)
+          log.debug(
+              'losetup retry check {0!s}/{1!s} for device {2!s}'.format(
+                  _, RETRY_MAX, device_path))
           time.sleep(1)
         else:
           break

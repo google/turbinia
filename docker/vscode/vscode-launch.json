@@ -15,6 +15,19 @@
       }
     },
     {
+      "name": "Turbinia API server",
+      "type": "python",
+      "request": "launch",
+      "program": "turbinia/turbiniactl.py",
+      "args": [
+        "api_server"
+      ],
+      "console": "integratedTerminal",
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}"
+      }
+    },
+    {
       "name": "Turbinia Celery Worker",
       "type": "python",
       "request": "launch",

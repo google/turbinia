@@ -44,12 +44,12 @@ class TestTurbiniaEvidence(unittest.TestCase):
   def testEvidenceCollectionDeserialization(self):
     """Test that EvidenceCollection deserializes."""
     rawdisk = evidence.RawDisk(name='My Evidence', source_path='/tmp/foo.img')
+    print('This is the dict! ', rawdisk.__dict__)
     collection = evidence.EvidenceCollection()
     collection.name = 'testCollection'
     collection.add_evidence(rawdisk)
     collection_json = collection.to_json()
     self.assertTrue(isinstance(collection_json, str))
-
     collection_new = evidence.evidence_decode(json.loads(collection_json))
     rawdisk_new = collection_new.collection[0]
     # Make sure that both the collection, and the things in the collection

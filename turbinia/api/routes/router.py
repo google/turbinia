@@ -24,12 +24,12 @@ from turbinia.api.routes import result
 from turbinia.api.routes import task
 
 # Prefix API endpoints with /api/
-router = APIRouter(prefix='/api')
+api_router = APIRouter(prefix='/api')
 
 # Register all API endpoints.
-router.include_router(config.router)
-router.include_router(jobs.router)
-router.include_router(logs.router)
-router.include_router(request.router)
-router.include_router(result.router)
-router.include_router(task.router)
+api_router.include_router(config.router)
+api_router.include_router(jobs.router)
+api_router.include_router(logs.router)
+api_router.include_router(request.router)
+api_router.include_router(result.router)
+api_router.include_router(task.router)

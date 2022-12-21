@@ -27,3 +27,7 @@ class BaseRequestOptions(BaseModel):
   filter_patterns: Optional[List[str]] = None
   yara_rules: Optional[str] = None
   sketch_id: Optional[int] = None
+  group_id: Optional[str] = None
+  reason: Optional[str] = None
+  request_id: Optional[str] = None
+  requester: Optional[str] = None

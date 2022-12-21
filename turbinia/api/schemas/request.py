@@ -24,7 +24,3 @@ class Request(BaseModel):
   description: Optional[str] = 'Turbinia request object'
   evidence: Dict[Any, Any]
   request_options: request_options.BaseRequestOptions
-  group_id: Optional[str] = None
-  reason: Optional[str] = None
-  request_id: Optional[str] = None
-  requester: Optional[str] = None
