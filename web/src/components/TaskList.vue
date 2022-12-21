@@ -28,11 +28,21 @@ limitations under the License.
             <div v-else-if="item.task_success === false">
               <v-list-item-avatar> <v-icon color="red"> mdi-alert-circle </v-icon> </v-list-item-avatar>
             </div>
-            <v-list-item-action>
-              <v-btn :ripple="true" class="text-lowercase" text @click="getTaskDetails(item.task_id)">
-                {{ item.task_id }}
-              </v-btn>
-            </v-list-item-action>
+            <div>
+              <v-list-item-action>
+                <v-btn
+                  text
+                  :ripple="true"
+                  :key="item.task_id"
+                  active-class="activated"
+                  class="text-lowercase"
+                  :class="{ activated: isActive == item.task_id }"
+                  @click="getTaskDetails(item.task_id) + selectActiveStatus(item.task_id)"
+                >
+                  {{ item.task_id }}
+                </v-btn>
+              </v-list-item-action>
+            </div>
             <v-list-item-content>
               <v-list-item-title>
                 {{ item.task_name }}
@@ -60,6 +70,7 @@ export default {
         { text: 'Status', value: 'task_status' },
       ],
       taskList: [],
+      isActive: false,
     }
   },
   methods: {
@@ -83,6 +94,9 @@ export default {
           console.error(e)
         })
     },
+    selectActiveStatus: function (task_id) {
+      this.isActive = task_id
+    },
   },
   created() {
     this.getTaskList(this.requestId)
@@ -93,9 +107,14 @@ export default {
 <style scoped>
 .v-btn {
   font-family: 'Roboto Mono', monospace;
+  font-weight: 500;
 }
 
 .v-item {
   font-family: 'Roboto Mono', monospace;
+}
+
+.activated {
+  background-color: rgba(128, 128, 128, 0.4);
 }
 </style>

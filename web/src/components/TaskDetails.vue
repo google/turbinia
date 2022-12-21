@@ -16,16 +16,23 @@ limitations under the License.
     <v-card-title>
       {{ taskDetails.name }}
       <v-tooltip right>
-        Export Task Output
+        Download Task output
         <template v-slot:activator="{ on, attrs }">
           <v-btn icon v-on="on" v-bind="attrs" @click="getTaskOutput(taskDetails.id)">
-            <v-icon> mdi-export-variant </v-icon>
+            <v-icon> mdi-file-download-outline </v-icon>
           </v-btn>
         </template>
       </v-tooltip>
     </v-card-title>
-    <v-card-subtitle> {{ taskDetails.status }} </v-card-subtitle>
-    <v-divider></v-divider>
+    <v-alert v-if="taskDetails.successful === true" type="success" border="bottom" colored-border>
+      {{ taskDetails.status }}
+    </v-alert>
+    <v-alert v-else-if="taskDetails.successful === false" type="error" border="bottom" colored-border>
+      {{ taskDetails.status }}
+    </v-alert>
+    <v-alert v-else type="info" border="bottom" colored-border>
+      {{ taskDetails.status }}
+    </v-alert>
     <v-card>
       <v-list dense>
         <v-list-group :value="true">
@@ -121,7 +128,6 @@ export default {
   },
   methods: {
     getTaskOutput: function (task_id) {
-      console.log(task_id)
       ApiClient.getTaskOutput(task_id)
         .then(({ data }) => {
           const downloadObj = window.URL.createObjectURL(new Blob([data]))
@@ -143,5 +149,10 @@ export default {
 <style scoped>
 .v-list-item {
   font-size: 12px;
+}
+
+.v-list-item__action {
+  margin-top: 0;
+  margin-bottom: 0;
 }
 </style>

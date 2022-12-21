@@ -32,6 +32,11 @@ export default {
     return RestApiClient.get('/api/request/summary')
   },
 
+  // Request Output
+  getRequestOutput(request_id) {
+    return RestApiClient.get('/api/result/request/' + request_id, { responseType: 'blob' })
+  },
+
   // Task List
   getTaskList(request_id) {
     return RestApiClient.get('/api/request/' + request_id)

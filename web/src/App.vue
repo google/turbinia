@@ -29,25 +29,25 @@ limitations under the License.
                 <v-icon>mdi-brightness-6</v-icon>
               </v-btn>
             </template>
-            Switch to dark mode
+            Toggle dark mode
           </v-tooltip>
         </div>
       </v-app-bar>
     </nav>
     <v-main>
       <v-container fluid>
-        <v-row>
-          <v-col cols="8">
+        <v-row class="justify-center align-center">
+          <v-col cols="9" align-self="start">
             <v-sheet rounded>
               <request-list></request-list>
             </v-sheet>
           </v-col>
-          <v-col cols="4">
+          <v-col cols="3" align-self="start">
             <v-card rounded v-if="taskDetails.length === 0">
               <v-card-title> Task Details </v-card-title>
               <v-card-subtitle> No Task Selected. Please click on a Task ID to see its details. </v-card-subtitle>
             </v-card>
-            <v-card class="mx-auto" rounded v-if="taskDetails.length !== 0">
+            <v-card rounded v-if="taskDetails.length !== 0">
               <task-details :taskDetails="this.taskDetails"></task-details>
             </v-card>
           </v-col>
@@ -89,6 +89,16 @@ export default {
           console.error(e)
         })
     },
+  },
+  mounted() {
+    const isDark = localStorage.getItem('isDarkTheme')
+    if (isDark) {
+      if (isDark === 'true') {
+        this.$vuetify.theme.dark = true
+      } else {
+        this.$vuetify.theme.dark = false
+      }
+    }
   },
 }
 </script>

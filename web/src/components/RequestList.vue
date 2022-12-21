@@ -40,7 +40,7 @@ limitations under the License.
       >
         <template v-slot:[`item.status`]="{ item }">
           <div v-if="item.status === 'successful'">
-            <v-tooltip left>
+            <v-tooltip right>
               Completed successfully
               <template v-slot:activator="{ on, attrs }">
                 <v-icon v-on="on" v-bind="attrs" color="green"> mdi-check </v-icon>
@@ -48,7 +48,7 @@ limitations under the License.
             </v-tooltip>
           </div>
           <div v-else-if="item.status === 'completed_with_errors'">
-            <v-tooltip left>
+            <v-tooltip right>
               Completed with Task failures
               <template v-slot:activator="{ on, attrs }">
                 <v-icon v-on="on" v-bind="attrs" color="orange"> mdi-alert </v-icon>
@@ -56,14 +56,14 @@ limitations under the License.
             </v-tooltip>
           </div>
           <div v-else-if="item.status === 'failed'">
-            <v-tooltip left>
+            <v-tooltip right>
               <template v-slot:activator="{ on, attrs }">
                 <v-icon v-on="on" v-bind="attrs" color="red"> mdi-alert-circle </v-icon>
               </template>
             </v-tooltip>
           </div>
           <div v-else>
-            <v-tooltip left>
+            <v-tooltip right>
               Running
               <template v-slot:activator="{ on, attrs }">
                 <v-progress-circular v-on="on" v-bind="attrs" indeterminate color="blue"> </v-progress-circular>
@@ -75,6 +75,16 @@ limitations under the License.
           <td :colspan="headers.length">
             <task-list :request-id="item.request_id" :key="item.request_id"> </task-list>
           </td>
+        </template>
+        <template v-slot:[`item.request_results`]="{ item }">
+          <v-tooltip right>
+            Download Request output
+            <template v-slot:activator="{ on, attrs }">
+              <v-btn icon v-on="on" v-bind="attrs" @click="getRequestOutput(item.request_id)">
+                <v-icon> mdi-folder-arrow-down-outline </v-icon>
+              </v-btn>
+            </template>
+          </v-tooltip>
         </template>
       </v-data-table>
     </v-card>
@@ -99,6 +109,7 @@ export default {
         { text: 'Successful Tasks', value: 'successful_tasks' },
         { text: 'Failed Tasks', value: 'failed_tasks' },
         { text: 'Status', value: 'status' },
+        { text: 'Results', value: 'request_results' },
       ],
       requestSummary: [],
     }
@@ -123,6 +134,21 @@ export default {
             })
           }
           this.requestSummary = requestSummary
+        })
+        .catch((e) => {
+          console.error(e)
+        })
+    },
+    getRequestOutput: function (request_id) {
+      ApiClient.getRequestOutput(request_id)
+        .then(({ data }) => {
+          const downloadObj = window.URL.createObjectURL(new Blob([data]))
+          const link = document.createElement('a')
+          link.href = downloadObj
+          link.setAttribute('download', request_id + '.zip')
+          document.body.appendChild(link)
+          link.click()
+          link.remove()
         })
         .catch((e) => {
           console.error(e)
