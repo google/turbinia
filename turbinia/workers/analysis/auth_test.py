@@ -116,17 +116,17 @@ class TestBruteForceAnalyzer(unittest.TestCase):
   """Test class for BruteForceAnalyzer"""
 
   EXPECTED_ANALYZER_OUTPUT = {
-      "platform": "turbinia",
-      "analyzer_identifier": "bruteforce.auth.analyzer",
-      "analyzer_name": "Brute Force Analyzer",
-      "result_status": "success",
-      "dfiq_question_id": "",
-      "dfiq_question_conclusion": "",
-      "result_priority": "LOW",
-      "result_summary": "No brute force detected",
-      "result_markdown": "",
-      "references": [],
-      "attributes": []
+      'platform': 'turbinia',
+      'analyzer_identifier': 'bruteforce.auth.analyzer',
+      'analyzer_name': 'Brute Force Analyzer',
+      'result_status': 'success',
+      'dfiq_question_id': '',
+      'dfiq_question_conclusion': '',
+      'result_priority': 'LOW',
+      'result_summary': 'No brute force detected',
+      'result_markdown': '## Brute Force Analysis\n\n',
+      'references': [],
+      'attributes': []
   }
 
   def test_run(self):
@@ -135,6 +135,7 @@ class TestBruteForceAnalyzer(unittest.TestCase):
 
     df = pd.read_csv('test_data/ssh_auth_data.csv')
     analyzer_output = bfa.run(df)
+
     self.assertEqual(analyzer_output, self.EXPECTED_ANALYZER_OUTPUT)
 
 
