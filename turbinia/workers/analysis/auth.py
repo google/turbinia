@@ -359,21 +359,22 @@ class BruteForceAnalyzer(AuthAnalyzer):
     """Perform authentication analysis per souce IP"""
 
     if self.df.empty:
-      log.info(f'source dataframe is empty')
+      log.info(f'[{self.NAME}] Source dataframe is empty')
       return {}
     df = self.df
 
     source_df = df[(df['source_ip'] == source_ip)]
     if source_df.empty:
-      log.info(f'{source_ip}: login analysis dataframe is empty')
+      log.info(
+          f'[{self.NAME}] Login analysis dataframe for {source_ip} is empty')
       return {}
 
     success_df = source_df[source_df['auth_result'] == 'success']
     if success_df.empty:
-      log.info(f'{source_ip}: no successful login dataframe')
+      log.info(f'[{self.NAME}] No successful login data for {source_ip}')
       return {}
 
-    # A same IP address can perform multiple brute force attempts
+    # Same IP address can perform multiple brute force attempts
     # and have successful login.
     #
     # We need to capture that.
@@ -387,8 +388,9 @@ class BruteForceAnalyzer(AuthAnalyzer):
       start_timestamp = login_ts - self.BRUTE_FORCE_WINDOW
       end_timestamp = login_ts
       log.info(
-          f'{source_ip}: checking bruteforce between {start_timestamp}'
-          f' and {end_timestamp}')
+          f'[{self.NAME}] Checking brute force from {source_ip} between'
+          f' {self.human_timestamp(start_timestamp)}'
+          f' and {self.human_timestamp(end_timestamp)}')
 
       df1 = source_df[(source_df['timestamp'] >= start_timestamp)
                       & (source_df['timestamp'] < end_timestamp) &
@@ -399,27 +401,27 @@ class BruteForceAnalyzer(AuthAnalyzer):
         success_count = df2['success']
       except KeyError:
         log.info(
-            f'{source_ip}: no successful login events - setting success_count'
-            f' to zero')
+            f'[{self.NAME}] No successful login events for {source_ip}.'
+            f' Setting success_count to zero')
         success_count = 0
 
       try:
         failed_count = df2['failure']
       except KeyError:
         log.info(
-            f'{source_ip}: no failed login events - setting failed_count to'
-            f' zero')
+            f'[{self.NAME}] No failed login events for {source_ip}.'
+            f' Setting failed_count to zero')
         failed_count = 0
 
       log.debug(
-          f'{source_ip}: login events distribution: successful {success_count},'
-          f' failure {failed_count}')
+          f'[{self.NAME}] Login events distribution from {source_ip}: successful'
+          f' {success_count}, failure {failed_count}')
 
       if success_count == 0 and failed_count >= self.BRUTE_FORCE_MIN_FAILED_EVENT:
         # TODO(rmaskey): Evaluate event timestamps
-        row_session_id = row['session_id']
-        row_domain = row['domain']
-        row_username = row['username']
+        row_session_id = row.get('session_id') or ''
+        row_domain = row.get('domain')
+        row_username = row.get('username')
 
         brute_force_records.append(
             self.get_login_session(
@@ -428,7 +430,7 @@ class BruteForceAnalyzer(AuthAnalyzer):
 
     # We only need to add enrichment steps if we have successful brute force.
     log.debug(
-        f'{source_ip}: total number of brute force records'
+        f'[{self.NAME}] Total number of brute force records from {source_ip} is'
         f' {len(brute_force_records)}')
     if not brute_force_records:
       return {}
@@ -438,11 +440,14 @@ class BruteForceAnalyzer(AuthAnalyzer):
     ip_summaries = []
     username_summaries = []
 
-    ip_summary = self.get_ip_summary(source_ip=source_ip)
-    if not ip_summary:
-      log.info(f'no ip summary for {source_ip}')
-    else:
-      ip_summaries.append(ip_summary.report())
+    try:
+      ip_summary = self.get_ip_summary(source_ip=source_ip)
+      if not ip_summary:
+        log.info(f'[{self.NAME}] No IP summary for {source_ip}')
+      else:
+        ip_summaries.append(ip_summary.report())
+    except:
+      log.error(f'[{self.NAME}] Failed to get IP summary for {source_ip}')
 
     # username summaries
     # There could be more than one username that was successfully
@@ -458,19 +463,28 @@ class BruteForceAnalyzer(AuthAnalyzer):
     checked_user_accounts = []
 
     for record in brute_force_records:
-      domain = record['domain']
-      username = record['username']
+      domain = record.get('domain')
+      username = record.get('username')
       user_account = f'{domain}_{username}'
 
-      log.debug(f'checking for domain:{domain}, username: {username}')
+      log.debug(
+          f'[{self.NAME}] Checking for domain:{domain}, username: {username}')
       if user_account in checked_user_accounts:
-        log.debug(f'skipping user account {user_account} - already checked')
+        log.debug(
+            f'[{self.NAME}] Skipping user account {user_account}. User account'
+            f' already checked')
         continue
-      user_summary = self.get_user_summary(domain=domain, username=username)
-      if not user_summary:
-        log.info(f'no user summary for domain: {domain}, username: {username}')
-        continue
-      username_summaries.append(user_summary.report())
+
+      try:
+        user_summary = self.get_user_summary(domain=domain, username=username)
+        if not user_summary:
+          log.info(
+              f'[{self.NAME}] No user summary for domain: {domain},'
+              f' username: {username}')
+          continue
+        username_summaries.append(user_summary.report())
+      except:
+        log.error(f'[{self.NAME}] Failed to get user summary for {username}')
 
     # Analysis report on the source_ip.
     ip_analysis_report = {
@@ -515,6 +529,7 @@ class BruteForceAnalyzer(AuthAnalyzer):
 
     # Generate result_markdown
     markdown = []
+    markdown.append('## Brute Force Analysis\n')
 
     for report in reports:
       markdown.append(f'### Brute Force from {report["source_ip"]}\n')
@@ -582,10 +597,11 @@ class BruteForceAnalyzer(AuthAnalyzer):
       AnalyzerResult: Result as AnalyzerResult object.
     """
     if df.empty:
-      raise AuthAnalyzerError('dataframe is empty')
+      raise AuthAnalyzerError('[{self.NAME}] Dataframe is empty')
 
     if not self.set_dataframe(df):
-      log.error(f'dataframe does not match the columns requirements')
+      log.error(
+          f'[{self.NAME}] Dataframe does not match the columns requirements')
       return {}
 
     ip_reports = []
@@ -593,10 +609,10 @@ class BruteForceAnalyzer(AuthAnalyzer):
     try:
       df = self.df
       success_ips = df[df['auth_result'] == 'success']['source_ip'].unique()
-      log.info(f'successful source IP addresses {success_ips}')
+      log.info(f'[{self.NAME}] Successful source IP addresses {success_ips}')
 
       for source_ip in success_ips:
-        log.info(f'checking for successful auth for {source_ip}')
+        log.info(f'[{self.NAME}] Checking for successful auth for {source_ip}')
         ip_report = self.login_analysis(source_ip=source_ip)
         if ip_report:
           ip_reports.append(ip_report)
