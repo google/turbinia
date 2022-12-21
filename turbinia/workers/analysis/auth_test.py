@@ -20,6 +20,7 @@ import pandas as pd
 import unittest
 
 from turbinia.workers.analysis.auth import AuthAnalyzer
+from turbinia.workers.analysis.auth import BruteForceAnalyzer
 
 log = logging.getLogger('turbinia')
 log.setLevel(logging.DEBUG)
@@ -109,6 +110,32 @@ class TestAuthAnalyzer(unittest.TestCase):
     summary = aa.get_user_summary(domain='', username='gametogenesis')
     user_summary = summary.report()
     self.assertEqual(user_summary, self.EXPECTED_USER_SUMMARY)
+
+
+class TestBruteForceAnalyzer(unittest.TestCase):
+  """Test class for BruteForceAnalyzer"""
+
+  EXPECTED_ANALYZER_OUTPUT = {
+      "platform": "turbinia",
+      "analyzer_identifier": "bruteforce.auth.analyzer",
+      "analyzer_name": "Brute Force Analyzer",
+      "result_status": "success",
+      "dfiq_question_id": "",
+      "dfiq_question_conclusion": "",
+      "result_priority": "LOW",
+      "result_summary": "No brute force detected",
+      "result_markdown": "",
+      "references": [],
+      "attributes": []
+  }
+
+  def test_run(self):
+    """Test run method."""
+    bfa = BruteForceAnalyzer()
+
+    df = pd.read_csv('test_data/ssh_auth_data.csv')
+    analyzer_output = bfa.run(df)
+    self.assertEqual(analyzer_output, self.EXPECTED_ANALYZER_OUTPUT)
 
 
 if __name__ == '__main__':
