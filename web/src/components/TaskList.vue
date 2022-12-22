@@ -17,7 +17,7 @@ limitations under the License.
       <v-virtual-scroll :items="taskList" :item-height="40" :height="400">
         <template v-slot:default="{ item }">
           <v-list-item class="mb-8" :key="item.task_id">
-            <div v-if="item.task_success === true">
+            <div v-if="item.task_success">
               <v-list-item-avatar> <v-icon color="green"> mdi-check </v-icon> </v-list-item-avatar>
             </div>
             <div v-else-if="item.task_success === null">
@@ -25,7 +25,7 @@ limitations under the License.
                 <v-progress-circular indeterminate color="blue" :size="20"></v-progress-circular>
               </v-list-item-avatar>
             </div>
-            <div v-else-if="item.task_success === false">
+            <div v-else>
               <v-list-item-avatar> <v-icon color="red"> mdi-alert-circle </v-icon> </v-list-item-avatar>
             </div>
             <div>

@@ -43,12 +43,12 @@ limitations under the License.
             </v-sheet>
           </v-col>
           <v-col cols="3" align-self="start">
-            <v-card rounded v-if="taskDetails.length === 0">
+            <v-card rounded v-if="Object.keys(taskDetails).length">
+              <task-details :taskDetails="this.taskDetails"></task-details>
+            </v-card>
+            <v-card rounded v-else>
               <v-card-title> Task Details </v-card-title>
               <v-card-subtitle> No Task Selected. Please click on a Task ID to see its details. </v-card-subtitle>
-            </v-card>
-            <v-card rounded v-if="taskDetails.length !== 0">
-              <task-details :taskDetails="this.taskDetails"></task-details>
             </v-card>
           </v-col>
         </v-row>
@@ -72,7 +72,7 @@ export default {
   },
   data() {
     return {
-      taskDetails: [],
+      taskDetails: {},
     }
   },
   methods: {

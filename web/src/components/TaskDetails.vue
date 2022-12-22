@@ -27,10 +27,10 @@ limitations under the License.
     <v-alert v-if="taskDetails.successful === true" type="success" border="bottom" colored-border>
       {{ taskDetails.status }}
     </v-alert>
-    <v-alert v-else-if="taskDetails.successful === false" type="error" border="bottom" colored-border>
+    <v-alert v-else-if="taskDetails.successful === null" type="info" border="bottom" colored-border>
       {{ taskDetails.status }}
     </v-alert>
-    <v-alert v-else type="info" border="bottom" colored-border>
+    <v-alert v-else type="error" border="bottom" colored-border>
       {{ taskDetails.status }}
     </v-alert>
     <v-card>
