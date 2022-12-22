@@ -122,6 +122,7 @@ class ContainerdEnumerationTask(TurbiniaTask):
     """
     summary = ''
     success = False
+    report_data = []
 
     image_path = evidence.mount_path
     if not image_path:
@@ -137,16 +138,30 @@ class ContainerdEnumerationTask(TurbiniaTask):
         return result
 
       container_ids = [x.get('ID') for x in containers]
+      report_data.append(
+          f'Found {len(container_ids)} containers: {", ".join(container_ids)}')
 
       # 2. Add containers as evidences
       for container in containers:
         namespace = container.get('Namespace')
         container_id = container.get('ID')
+        container_type = container.get('ContainerType') or None
 
         if not namespace or not container_id:
           result.log(
               f'Value is empty. namespace={namespace}, container_id={container_id}'
           )
+          report_data.append(
+              f'Skipping container with empty value namespace ({namespace})'
+              f' or container_id ({container_id})')
+          continue
+
+        # We want to process docker managed container using Docker-Explorer
+        if container_type and container_type.lower() == 'docker':
+          result.log(
+              f'Skipping docker managed container {namespace}:{container_id}')
+          report_data.append(
+              f'Skipping docker managed container {namespace}:{container_id}')
           continue
 
         container_evidence = ContainerdContainer(
@@ -158,9 +173,10 @@ class ContainerdEnumerationTask(TurbiniaTask):
       success = True
     except TurbiniaException as e:
       summary = f'Error enumerating containerd containers: {e}'
+      report_data.append(summary)
 
     # 3. Prepare result
     result.report_priority = Priority.LOW
-    result.report_data = summary
+    result.report_data = '\n'.join(report_data)
     result.close(self, success=success, status=summary)
     return result
