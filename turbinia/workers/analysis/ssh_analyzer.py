@@ -19,6 +19,7 @@ import hashlib
 import logging
 import os
 import pandas as pd
+import pyparsing
 import re
 
 from datetime import datetime
@@ -35,25 +36,6 @@ from turbinia.workers import TurbiniaTask
 from turbinia.workers.analysis.auth import BruteForceAnalyzer
 
 log = logging.getLogger('turbinia')
-
-SSH_CONNECTION_PATTERN = {
-    'accepted':
-        re.compile(
-            r'(\w+)\s+(\d+)\s+(\d{2}:\d{2}:\d{2})\s+([^\s]+)\s+sshd\[(\d+)\]:\s+Accepted\s+([^\s]+)\s+for\s+([^\s]+)\s+from\s+([^\s]+)\s+port\s+(\d+)\s+ssh?'
-        ),
-    'failed':
-        re.compile(
-            r'(\w+)\s+(\d+)\s+(\d{2}:\d{2}:\d{2})\s+([^\s]+)\s+sshd\[(\d+)\]:\s+Failed\s+([^\s]+)\s+for\s+([^\s]+)\s+from\s+([^\s]+)\s+port\s+(\d+)\s+ssh?'
-        ),
-    'invalid_user':
-        re.compile(
-            r'(\w+)\s+(\d+)\s+(\d{2}:\d{2}:\d{2})\s+([^\s]+)\s+sshd\[(\d+)\]:\s+Failed\s+([^\s]+)\s+for\s+invalid\s+user\s+([^\s]+)\s+from\s+([^\s]+)\s+port\s+(\d+)\s+ssh'
-        ),
-    'disconnected':
-        re.compile(
-            r'(\w+)\s+(\d+)\s+(\d{2}:\d{2}:\d{2})\s+([^\s]+)\s+sshd\[(\d+)\]:\s+Disconnected\s+from\s+user\s+([^\s]+)\s+([^\s]+)\s+port\s+(\d+)'
-        ),
-}
 
 
 class SSHEventData:
@@ -108,6 +90,63 @@ class LinuxSSHAnalysisTask(TurbiniaTask):
   # NOTE: Python datetime supports 9999 as maximum year
   MAX_LOG_YEAR = 9999
 
+  # Standard SSH authentication log
+  _MONTH = pyparsing.Word(pyparsing.alphas, max=3).setResultsName('month')
+  _DAY = pyparsing.Word(pyparsing.nums, max=2).setResultsName('day')
+  _TIME = pyparsing.Word(pyparsing.printables, max=9).setResultsName('time')
+
+  _DATETIME_DEFAULT = (_MONTH + _DAY + _TIME)
+
+  # Default datetime format for OpenSUSE
+  _DATETIME_SUSE = pyparsing.Word(pyparsing.printables)
+  _DATETIME = (_DATETIME_DEFAULT | _DATETIME_SUSE).setResultsName('datetime')
+
+  _HOSTNAME = pyparsing.Word(pyparsing.printables).setResultsName('hostname')
+  _PID = pyparsing.Word(pyparsing.nums).setResultsName('pid')
+  _AUTHENTICATION_METHOD = (
+      pyparsing.Keyword('password')
+      | pyparsing.Keyword('publickey')).setResultsName('auth_method')
+  _USERNAME = pyparsing.Word(pyparsing.alphanums).setResultsName('username')
+  _SOURCE_IP = pyparsing.Word(pyparsing.printables).setResultsName('source_ip')
+  _SOURCE_PORT = pyparsing.Word(pyparsing.nums,
+                                max=5).setResultsName('source_port')
+  _PROTOCOL = pyparsing.Word(pyparsing.printables,
+                             max=4).setResultsName('protocol')
+  _FINGERPRINT_TYPE = pyparsing.Word(
+      pyparsing.alphanums).setResultsName('fingerprint_type')
+  _FINGERPRINT = pyparsing.Word(
+      pyparsing.printables).setResultsName('fingerprint')
+
+  # SSH event grammar
+  _LOGIN_GRAMMAR = (
+      _DATETIME + _HOSTNAME + pyparsing.Literal('sshd[') + _PID +
+      pyparsing.Literal(']:') + pyparsing.Literal('Accepted') +
+      _AUTHENTICATION_METHOD + pyparsing.Literal('for') + _USERNAME +
+      pyparsing.Literal('from') + _SOURCE_IP + pyparsing.Literal('port') +
+      _SOURCE_PORT + _PROTOCOL + pyparsing.Optional(
+          pyparsing.Literal(':') + _FINGERPRINT_TYPE + _FINGERPRINT) +
+      pyparsing.StringEnd())
+
+  _FAILED_GRAMMER = (
+      _DATETIME + _HOSTNAME + pyparsing.Literal('sshd[') + _PID +
+      pyparsing.Literal(']:') + pyparsing.Literal('Failed') +
+      _AUTHENTICATION_METHOD + pyparsing.Literal('for') + pyparsing.Optional(
+          pyparsing.Literal('invalid') + pyparsing.Literal('user')) +
+      _USERNAME + pyparsing.Literal('from') + _SOURCE_IP +
+      pyparsing.Literal('port') + _SOURCE_PORT + _PROTOCOL)
+
+  _DISCONNECT_GRAMMAR = (
+      _DATETIME + _HOSTNAME + pyparsing.Literal('sshd[') + _PID +
+      pyparsing.Literal(']:') + pyparsing.Literal('Disconnected') +
+      pyparsing.Literal('from') + pyparsing.Literal('user') + _USERNAME +
+      _SOURCE_IP + pyparsing.Literal('port') + _SOURCE_PORT)
+
+  MESSAGE_GRAMMAR = {
+      'accepted': _LOGIN_GRAMMAR,
+      'failed': _FAILED_GRAMMER,
+      'disconnected': _DISCONNECT_GRAMMAR
+  }
+
   def read_logs(self, log_dir: str) -> pd.DataFrame:
     """Read SSH authentication logs."""
     ssh_records = []
@@ -158,6 +197,18 @@ class LinuxSSHAnalysisTask(TurbiniaTask):
     df = pd.DataFrame(ssh_data)
     return df
 
+  def parse_message_datetime(self, message_datetime, log_year):
+    """Parse and return datetime."""
+    # NOTE: returned datetime object contains naive datetime
+    # TODO(rmaskey): Better handle date time and timezone
+    if len(message_datetime) == 1:
+      return datetime.fromisoformat(message_datetime[0])
+    elif len(message_datetime) == 3:
+      datetime_string = f'{message_datetime[0]} {message_datetime[1]} {log_year} {message_datetime[2]}'
+      return datetime.strptime(datetime_string, '%b %d %Y %H:%M:%S')
+    else:
+      return datetime.fromtimestamp(0)
+
   def read_log_data(
       self, data, log_filename: str, log_year: int = None) -> List:
     """ Parses SSH authentication log."""
@@ -178,56 +229,58 @@ class LinuxSSHAnalysisTask(TurbiniaTask):
 
     ssh_records = []
 
-    for key, value_re in SSH_CONNECTION_PATTERN.items():
-      for line in value_re.findall(data):
-        ssh_record = {}
+    sshd_message_type_re = re.compile(
+        r'.*sshd\[\d+\]:\s+([^\s]+)\s+([^\s]+)\s.*')
 
-        if key == 'accepted':
-          event_type = 'authentication'
-          auth_method = line[5]
-          auth_result = 'success'
-          username = line[6]
-          source_ip = line[7]
-          source_port = int(line[8])
-        elif key == 'failed':
-          event_type = 'authentication'
-          auth_method = line[5]
-          auth_result = 'failure'
-          username = line[6]
-          source_ip = line[7]
-          source_port = int(line[8])
-        elif key == 'invalid_user':
-          event_type = 'authentication'
-          auth_method = line[5]
-          auth_result = 'failure'
-          username = line[6]
-          source_ip = line[7]
-          source_port = int(line[8])
-        elif key == 'disconnected':
-          event_type = 'disconnection'
-          auth_method = ''
-          auth_result = 'disconnect'
-          username = line[5]
-          source_ip = line[6]
-          source_port = int(line[7])
+    # Only processing authentication logs with pattern sshd[9820]
+    for line in re.findall(r'.*sshd\[\d+\].*', data):
+      try:
+        sshd_message_type = sshd_message_type_re.search(line).group(1)
+      except AttributeError:
+        # NOTE: This does not mean actual error. This means
+        log.error(f'Unable to get SSH message type: {line}')
+        continue
 
-        # common log items
-        dt_object = datetime.strptime(
-            f'{line[0]} {line[1]}, {log_year} {line[2]}', '%b %d, %Y %H:%M:%S')
-        timestamp = int(dt_object.strftime('%s'))
-        date = f'{line[0]} {line[1]}'
-        time = line[2]
-        hostname = line[3]
-        pid = int(line[4])
+      for key, value in self.MESSAGE_GRAMMAR.items():
+        if key.lower() == sshd_message_type.lower():
+          try:
+            print(key, type(value))
+            #m = value.parse_string(line)
+            m = value.parseString(line)
 
-        ssh_event_data = SSHEventData(
-            timestamp=timestamp, date=date, time=time, hostname=hostname,
-            pid=pid, event_key=key, event_type=event_type,
-            auth_method=auth_method, auth_result=auth_result, username=username,
-            source_ip=source_ip, source_port=source_port, source_hostname='')
-        ssh_event_data.calculate_session_id()
-        ssh_records.append(ssh_event_data)
+            # handle date/time
+            dt_object = self.parse_message_datetime(m.datetime, log_year)
+            event_date = dt_object.strftime('%Y-%m-%d')
+            event_time = dt_object.strftime('%H:%M:%S')
+            event_timestamp = dt_object.timestamp()
 
+            # event_type and auth_result
+            if key.lower() == 'accepted':
+              event_type = 'authentication'
+              auth_result = 'success'
+            elif key.lower() == 'failed':
+              event_type = 'authentication'
+              auth_result = 'failure'
+            elif key.lower() == 'disconnected':
+              event_type = 'disconnection'
+              auth_result = ''
+            else:
+              event_type = 'unknown'
+              auth_result = ''
+
+            ssh_event_data = SSHEventData(
+                timestamp=event_timestamp, date=event_date, time=event_time,
+                hostname=m.hostname, pid=m.pid, event_key=event_type,
+                event_type=event_type, auth_method=m.auth_method,
+                auth_result=auth_result, username=m.username,
+                source_hostname='', source_ip=m.source_ip,
+                source_port=m.source_port)
+            ssh_event_data.calculate_session_id()
+            ssh_records.append(ssh_event_data)
+            print(ssh_event_data.__dict__)
+          except pyparsing.ParseException as e:
+            if not str(e).startswith('Expected'):
+              log.info(f'parsing ssh message {line} {str(e)}')
     log.info(
         f'Total number of SSH records {len(ssh_records)} in {log_filename}')
     return ssh_records

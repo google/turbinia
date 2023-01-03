@@ -75,6 +75,14 @@ class LinuxSSHAnalysisTaskTest(TestTurbiniaTaskBase):
         '- Successful brute force from 192.168.40.6 as admin at 2022-10-08'
         ' 18:10:33 (duration=7)')
 
+  def test_read_log_data(self):
+    log_file = '/tmp/log/debian-server/var/log/auth.log'
+    with open(log_file, 'r', encoding='utf-8') as fh:
+      data = fh.read()
+    a = ssh_analyzer.LinuxSSHAnalysisTask()
+    results = a.read_log_data(data, log_file, log_year=2022)
+    print(results)
+
 
 if __name__ == '__main__':
   unittest.main()
