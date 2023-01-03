@@ -58,7 +58,7 @@ def get_request_result(ctx: click.Context, request_id: str) -> None:
   api_instance = turbinia_request_results_api.TurbiniaRequestResultsApi(client)
   try:
     api_response = api_instance.get_request_output(
-        request_id, _preload_content=False, _request_timeout=(30, 120))
+        request_id, _preload_content=False, _request_timeout=(30, 30))
     filename = f'{request_id}.tgz'
     click.echo(f'Saving output for request {request_id} to: {filename}')
     # Read the response and save into a local file.
@@ -84,7 +84,7 @@ def get_task_result(ctx: click.Context, task_id: str) -> None:
   api_instance = turbinia_request_results_api.TurbiniaRequestResultsApi(client)
   try:
     api_response = api_instance.get_task_output(
-        task_id, _preload_content=False, _request_timeout=(30, 120))
+        task_id, _preload_content=False, _request_timeout=(30, 30))
     filename = f'{task_id}.tgz'
     click.echo(f'Saving output for task {task_id} to: {filename}')
 

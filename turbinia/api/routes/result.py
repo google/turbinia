@@ -59,7 +59,7 @@ async def get_task_output(request: Request, task_id: str):
   request_id = tasks[0].get('request_id')
   output_path = api_utils.get_task_output_path(request_id, task_id)
 
-  if request_id:
+  if request_id and output_path:
     data: bytes = api_utils.create_tarball(output_path)
 
   if not data:
@@ -76,8 +76,10 @@ async def get_task_output(request: Request, task_id: str):
     responses=_ATTACHMENT_RESPONSE)
 async def get_request_output(request: Request, request_id: str):
   """Retrieve request output."""
+  data = None
   request_output_path = api_utils.get_request_output_path(request_id)
-  data: bytes = api_utils.create_tarball(request_output_path)
+  if request_output_path:
+    data: bytes = api_utils.create_tarball(request_output_path)
 
   if not data:
     raise HTTPException(

@@ -32,7 +32,7 @@ setup(
     include_package_data=True,
     entry_points={
         'console_scripts': [
-            'turbinia-clilent=turbinia_client.turbinia_client:main'
+            'turbinia-client=turbinia_client.turbiniacli_tool:main'
         ]
     },
     license='Apache License, Version 2.0',

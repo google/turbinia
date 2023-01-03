@@ -113,7 +113,7 @@ async def create_tarball(output_path: str) -> bytes:
   for root, _, filenames in os.walk(output_path):
     for filename in filenames:
       file_path = os.path.join(root, filename)
-      log.info(f'Adding %s to tarball for id {file_path}')
+      log.info(f'Adding {file_path} to tarball.')
       file_paths.append(file_path)
 
   with ByteStream() as stream:
