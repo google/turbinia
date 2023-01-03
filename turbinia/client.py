@@ -37,7 +37,7 @@ from turbinia import TurbiniaException
 from turbinia.lib import recipe_helpers
 from turbinia.lib import text_formatter as fmt
 from turbinia.message import TurbiniaRequest
-from turbinia.workers import Priority
+from turbinia.workers import Priority, TurbiniaTask
 
 MAX_RETRIES = 10
 RETRY_SLEEP = 60
@@ -1098,19 +1098,25 @@ class TurbiniaCeleryClient(BaseTurbiniaClient):
     Returns: True if a terminate command was successfully broadcast to the
         Celery workers.
     """
-    success = False
     tasks = self.redis.get_task_data(
         instance, task_id=task_id, request_id=request_id, group_id=group_id,
         user=user)
     task_ids = [task.get('id') for task in tasks if task.get('id')]
 
     if task_ids:
-      self.task_manager.celery.app.control.terminate(task_ids)
-      log.info('Closed task(s) %s', task_ids)
-      success = True
+      for _task_id in task_ids:
+        self.task_manager.celery.app.control.terminate(_task_id)
+        log.info(f'Closed task {_task_id}.')
+        task_dict = self.redis.get_task_data(
+            instance=config.INSTANCE_ID, task_id=_task_id)[0]
+        task = TurbiniaTask().deserialize(task_dict)
+        task['success'] = False
+        task['status'] = 'Task forcefully closed.'
+        self.redis.update_task(task)
+      result = True
     else:
       log.info('No tasks found with the given filter(s). Not closing any tasks')
-    return success
+    return bool(result)
 
   def send_request(self, request):
     """Sends a TurbiniaRequest message.
