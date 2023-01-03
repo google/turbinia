@@ -84,8 +84,7 @@ class LinuxSSHAnalysisTaskTest(TestTurbiniaTaskBase):
     with open(log_file, 'r', encoding='utf-8') as fh:
       data = fh.read()
     a = ssh_analyzer.LinuxSSHAnalysisTask()
-    results = a.read_log_data(data, log_file, log_year=2022)
-    print(results)
+    a.read_log_data(data, log_file, log_year=2022)
 
 
 if __name__ == '__main__':
