@@ -350,8 +350,8 @@ class LinuxSSHAnalysisTask(TurbiniaTask):
     result.log(f'Checking log directory {log_dir}')
 
     if not os.path.exists(log_dir):
-      summary = f'Log directory path {log_dir} does not exist'
-      result.close(self, success=False, status=summary)
+      summary = f'No SSH authentication logs in {evidence.local_path}'
+      result.close(self, success=True, status=summary)
       return result
 
     df = self.read_logs(log_dir=log_dir)
