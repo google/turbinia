@@ -76,7 +76,11 @@ class LinuxSSHAnalysisTaskTest(TestTurbiniaTaskBase):
         ' 18:10:33 (duration=7)')
 
   def test_read_log_data(self):
+    """Test reading log file on disk"""
     log_file = '/tmp/log/debian-server/var/log/auth.log'
+    if not os.path.exists(log_file):
+      return
+
     with open(log_file, 'r', encoding='utf-8') as fh:
       data = fh.read()
     a = ssh_analyzer.LinuxSSHAnalysisTask()

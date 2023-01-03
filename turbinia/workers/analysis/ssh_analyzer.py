@@ -244,8 +244,6 @@ class LinuxSSHAnalysisTask(TurbiniaTask):
       for key, value in self.MESSAGE_GRAMMAR.items():
         if key.lower() == sshd_message_type.lower():
           try:
-            print(key, type(value))
-            #m = value.parse_string(line)
             m = value.parseString(line)
 
             # handle date/time
@@ -277,7 +275,6 @@ class LinuxSSHAnalysisTask(TurbiniaTask):
                 source_port=m.source_port)
             ssh_event_data.calculate_session_id()
             ssh_records.append(ssh_event_data)
-            print(ssh_event_data.__dict__)
           except pyparsing.ParseException as e:
             if not str(e).startswith('Expected'):
               log.info(f'parsing ssh message {line} {str(e)}')
