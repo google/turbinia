@@ -196,7 +196,7 @@ class TurbiniaTaskResult:
       # Don't try to close twice.
       return
     self.successful = success
-    self.run_time = datetime.now() - task.start_time
+    self.run_time = datetime.now() - task.worker_start_time
     if success:
       turbinia_worker_tasks_completed_total.inc()
     else:
@@ -481,6 +481,7 @@ class TurbiniaTask:
     self.request_id = request_id
     self.state_key = None
     self.start_time = datetime.now()
+    self.worker_start_time = None
     self.stub = None
     self.tmp_dir = None
     self.turbinia_version = __version__
@@ -1024,7 +1025,7 @@ class TurbiniaTask:
         self.result.update_task_status(self, 'running')
         self._evidence_config = evidence.config
         self.task_config = self.get_task_recipe(evidence.config)
-
+        self.worker_start_time = datetime.now()
         self.result = self.run(evidence, self.result)
 
       # pylint: disable=broad-except
