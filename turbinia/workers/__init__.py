@@ -196,7 +196,8 @@ class TurbiniaTaskResult:
       # Don't try to close twice.
       return
     self.successful = success
-    self.run_time = datetime.now() - task.worker_start_time
+    if task.worker_start_time:
+      self.run_time = datetime.now() - task.worker_start_time
     if success:
       turbinia_worker_tasks_completed_total.inc()
     else:
