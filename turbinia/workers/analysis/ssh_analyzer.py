@@ -356,8 +356,8 @@ class LinuxSSHAnalysisTask(TurbiniaTask):
 
     df = self.read_logs(log_dir=log_dir)
     if df.empty:
-      summary = f'Empty dataframes from the logs in {log_dir}.'
-      result.close(self, success=False, status=summary)
+      summary = f'No SSH authentication events in {evidence.local_path}.'
+      result.close(self, success=True, status=summary)
       return result
 
     # 01. Brute Force Analyzer
