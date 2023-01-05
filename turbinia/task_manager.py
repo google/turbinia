@@ -57,7 +57,7 @@ PSQ_QUEUE_WAIT_SECONDS = 2
 # that the Server doesn't time out the Task before the Worker has a chance to
 # and should account for the Task scheduling and setup time that happens before
 # the Task starts.
-SERVER_TASK_TIMEOUT_BUFFER = 300
+SERVER_TASK_TIMEOUT_BUFFER = 86400
 
 # Define metrics
 turbinia_server_tasks_total = Gauge(
