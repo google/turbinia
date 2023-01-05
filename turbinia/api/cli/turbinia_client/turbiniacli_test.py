@@ -24,7 +24,7 @@ from turbinia.api.api_server import app
 
 
 class TestTurbiniaCli(unittest.TestCase):
-  """Turbiniamgmt cli tool tests."""
+  """Turbinia-client cli tool tests."""
 
   def setUp(self) -> None:
     """Sets up the client for the tests."""

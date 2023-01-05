@@ -57,7 +57,7 @@ def get_oauth2_credentials(credentials_path, client_secrets_path):
 
     log.info(
         'Starting local HTTP server on localhost:8888 for OAUTH flow. '
-        'If running turbiniamgmt remotely over SSH you will need to tunnel '
+        'If running turbinia-client remotely over SSH you will need to tunnel '
         'port 8888.')
     appflow.run_local_server(host='localhost', port=8888)
     credentials = appflow.credentials
