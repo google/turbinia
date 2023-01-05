@@ -51,10 +51,10 @@ spec:
             - containerPort: 8000
           resources: 
             requests:
-              memory: "1024Mi"
-              cpu: "500m"
+              memory: "4096Mi"
+              cpu: "2000m"
             limits:
-              memory: "16000Mi"
+              memory: "16384Mi"
               cpu: "4000m"
           securityContext:
             readOnlyRootFilesystem: true
