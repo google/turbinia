@@ -43,7 +43,7 @@ log = logging.getLogger('turbinia')
     default=lambda: os.environ.get('TURBINIA_API_CONFIG_PATH', '~'))
 @click.pass_context
 def cli(ctx: click.Context, config_instance: str, config_path: str) -> None:
-  """Turbinia API command-line tool (turbiniamgmt).
+  """Turbinia API command-line tool (turbinia-client).
   
   \b                         ***    ***                                       
   \b                          *          *                                      
