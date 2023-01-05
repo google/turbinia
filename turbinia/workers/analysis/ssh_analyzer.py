@@ -29,7 +29,6 @@ from turbinia import TurbiniaException
 
 from turbinia.evidence import EvidenceState as state
 from turbinia.evidence import ReportText
-from turbinia.lib import text_formatter as fmt
 from turbinia.lib.utils import extract_artifacts
 from turbinia.workers import Priority
 from turbinia.workers import TurbiniaTask
@@ -188,8 +187,8 @@ class LinuxSSHAnalysisTask(TurbiniaTask):
       log.info(f'No SSH authenticaiton events in {log_dir}')
       return pd.DataFrame()
     log.info(
-        f'Total number of SSH authentication events {len(ssh_records)} in {log_dir}.'
-    )
+        f'Total number of SSH authentication events {len(ssh_records)}'
+        f' in {log_dir}.')
 
     ssh_data = []
     for ssh_record in ssh_records:
@@ -204,7 +203,9 @@ class LinuxSSHAnalysisTask(TurbiniaTask):
     if len(message_datetime) == 1:
       return datetime.fromisoformat(message_datetime[0])
     elif len(message_datetime) == 3:
-      datetime_string = f'{message_datetime[0]} {message_datetime[1]} {log_year} {message_datetime[2]}'
+      datetime_string = (
+          f'{message_datetime[0]} {message_datetime[1]}'
+          f' {log_year} {message_datetime[2]}')
       return datetime.strptime(datetime_string, '%b %d %Y %H:%M:%S')
     else:
       return datetime.fromtimestamp(0)
@@ -221,11 +222,11 @@ class LinuxSSHAnalysisTask(TurbiniaTask):
           f'Log year not provided in {log_filename} - assuming log year as'
           f' {log_year}')
 
-    if log_year and (log_year < self.MIN_LOG_YEAR and
-                     log_year > self.MAX_LOG_YEAR):
-      raise TurbiniaException(
-          f'Log year {log_year} is outside of acceptable range in {log_filename}'
-      )
+    if log_year:
+      if log_year < self.MIN_LOG_YEAR or log_year > self.MAX_LOG_YEAR:
+        raise TurbiniaException(
+            f'Log year {log_year} is outside of acceptable range'
+            f' in {log_filename}')
 
     ssh_records = []
 
