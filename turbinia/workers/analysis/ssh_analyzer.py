@@ -301,8 +301,6 @@ class LinuxSSHAnalysisTask(TurbiniaTask):
     bfa = BruteForceAnalyzer()
     bfa_result = bfa.run(df)
 
-    print(bfa_result)
-
     result_priority = bfa_result.get('result_priority') or ''
     result_summary = bfa_result.get('result_summary') or ''
     result_markdown = bfa_result.get('result_markdown') or ''
