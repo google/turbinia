@@ -1091,7 +1091,7 @@ class EwfDisk(Evidence):
     ewf_path (str): Path to mounted EWF image.
     ewf_mount_path (str): Path to EWF mount directory.
   """
-  REQUIRED_ATTRIBUTES = ['source_path', 'ewf_path', 'ewf_mount_path']
+  REQUIRED_ATTRIBUTES = ['source_path']
   POSSIBLE_STATES = [EvidenceState.ATTACHED]
 
   def __init__(
