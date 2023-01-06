@@ -105,12 +105,11 @@ class LinuxSSHAnalysisTask(TurbiniaTask):
   _AUTHENTICATION_METHOD = (
       pyparsing.Keyword('password')
       | pyparsing.Keyword('publickey')).setResultsName('auth_method')
-  _USERNAME = pyparsing.Word(pyparsing.alphanums).setResultsName('username')
+  _USERNAME = pyparsing.Word(pyparsing.printables).setResultsName('username')
   _SOURCE_IP = pyparsing.Word(pyparsing.printables).setResultsName('source_ip')
   _SOURCE_PORT = pyparsing.Word(pyparsing.nums,
                                 max=5).setResultsName('source_port')
-  _PROTOCOL = pyparsing.Word(pyparsing.printables,
-                             max=4).setResultsName('protocol')
+  _PROTOCOL = pyparsing.Word(pyparsing.printables).setResultsName('protocol')
   _FINGERPRINT_TYPE = pyparsing.Word(
       pyparsing.alphanums).setResultsName('fingerprint_type')
   _FINGERPRINT = pyparsing.Word(
@@ -122,8 +121,8 @@ class LinuxSSHAnalysisTask(TurbiniaTask):
       pyparsing.Literal(']:') + pyparsing.Literal('Accepted') +
       _AUTHENTICATION_METHOD + pyparsing.Literal('for') + _USERNAME +
       pyparsing.Literal('from') + _SOURCE_IP + pyparsing.Literal('port') +
-      _SOURCE_PORT + _PROTOCOL + pyparsing.Optional(
-          pyparsing.Literal(':') + _FINGERPRINT_TYPE + _FINGERPRINT) +
+      _SOURCE_PORT + _PROTOCOL +
+      pyparsing.Optional(_FINGERPRINT_TYPE + _FINGERPRINT) +
       pyparsing.StringEnd())
 
   _FAILED_GRAMMER = (
@@ -245,6 +244,7 @@ class LinuxSSHAnalysisTask(TurbiniaTask):
       for key, value in self.MESSAGE_GRAMMAR.items():
         if key.lower() == sshd_message_type.lower():
           try:
+            log.debug(f'Procesing log line {line}')
             m = value.parseString(line)
 
             # handle date/time
@@ -275,10 +275,12 @@ class LinuxSSHAnalysisTask(TurbiniaTask):
                 source_hostname='', source_ip=m.source_ip,
                 source_port=m.source_port)
             ssh_event_data.calculate_session_id()
+
             ssh_records.append(ssh_event_data)
           except pyparsing.ParseException as e:
-            if not str(e).startswith('Expected'):
-              log.info(f'parsing ssh message {line} {str(e)}')
+            log.debug(f'Pyparsing parsing exception: {str(e)}')
+            continue
+
     log.info(
         f'Total number of SSH records {len(ssh_records)} in {log_filename}')
     return ssh_records
