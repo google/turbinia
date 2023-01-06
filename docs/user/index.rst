@@ -4,6 +4,7 @@ User documentation
 
 .. toctree::
    :maxdepth: 3
+   
    install
    install-gke-celery
    install-gke-pubsub
