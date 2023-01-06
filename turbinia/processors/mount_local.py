@@ -83,6 +83,86 @@ def GetDiskSize(source_path):
   return size
 
 
+def PreprocessAPFS(source_path, credentials=None):
+  """Uses libfsapfs on a target block device or image file.
+
+  Args:
+    source_path(str): the source path to run fsapfsmount on.
+    credentials(list[(str, str)]): decryption credentials set in evidence setup
+
+  Raises:
+    TurbiniaException: if source_path doesn't exist or if the fsapfsmount
+      command failed to create a virtual device.
+
+  Returns:
+    str: the path to the mounted filesystem.
+  """
+  config.LoadConfig()
+  mount_prefix = config.MOUNT_DIR_PREFIX
+
+  if not os.path.exists(source_path):
+    raise TurbiniaException(
+        'Could not mount partition {0:s}, the path does not exist'.format(
+            source_path))
+
+  if os.path.exists(mount_prefix) and not os.path.isdir(mount_prefix):
+    raise TurbiniaException(
+        'Mount dir {0:s} exists, but is not a directory'.format(mount_prefix))
+  if not os.path.exists(mount_prefix):
+    log.info('Creating local mount parent directory {0:s}'.format(mount_prefix))
+    try:
+      os.makedirs(mount_prefix)
+    except OSError as exception:
+      raise TurbiniaException(
+          'Could not create mount directory {0:s}: {1!s}'.format(
+              mount_prefix, exception))
+
+  mount_path = tempfile.mkdtemp(prefix='turbinia', dir=mount_prefix)
+  mounted = False
+
+  log.debug('Mounting APFS volume')
+
+  if credentials:
+    for credential_type, credential_data in credentials:
+      mount_cmd = ['sudo', 'fsapfsmount']
+      if credential_type == 'password':
+        mount_cmd.extend(['-p', credential_data])
+      elif credential_type == 'recovery_password':
+        mount_cmd.extend(['-r', credential_data])
+      else:
+        # Unsupported credential type, try the next
+        log.warning(
+            'Unsupported credential type: {0!s}'.format(credential_type))
+        continue
+      mount_cmd.extend(['-X', 'allow_other', source_path, mount_path])
+      # Not logging command since it will contain credentials
+      try:
+        subprocess.check_call(mount_cmd)
+      except subprocess.CalledProcessError as exception:
+        # Decryption failed with these credentials, try the next
+        continue
+      # Decrypted volume was mounted
+      mounted = True
+      break
+  else:
+    mount_cmd = [
+        'sudo', 'fsapfsmount', '-X', 'allow_other', source_path, mount_path
+    ]
+    log.info('Running: {0:s}'.format(' '.join(mount_cmd)))
+    try:
+      subprocess.check_call(mount_cmd)
+    except subprocess.CalledProcessError as exception:
+      raise TurbiniaException(
+          'Could not mount directory {0!s}'.format(exception))
+    mounted = True
+
+  if not mounted:
+    log.warning('Could not mount APFS volume {0:s}'.format(source_path))
+    mount_path = None
+
+  return mount_path
+
+
 def PreprocessBitLocker(source_path, partition_offset=None, credentials=None):
   """Uses libbde on a target block device or image file.
 
@@ -401,6 +481,8 @@ def PreprocessMountPartition(partition_path, filesystem_type):
 
   mount_path = tempfile.mkdtemp(prefix='turbinia', dir=mount_prefix)
 
+  log.debug('Mounting filesystem type: {0:s}'.format(filesystem_type))
+
   mount_cmd = ['sudo', 'mount', '-o', 'ro']
   if filesystem_type == 'EXT':
     # This is in case the underlying filesystem is dirty, as we want to mount
@@ -414,8 +496,18 @@ def PreprocessMountPartition(partition_path, filesystem_type):
   try:
     subprocess.check_call(mount_cmd)
   except subprocess.CalledProcessError as exception:
+    if filesystem_type == 'EXT':
+      # ext2 will not mount with the noload option, so this may be the cause of
+      # the error.
+      mount_cmd = ['sudo', 'mount', '-o', 'ro', partition_path, mount_path]
+      log.info('Mount failed, trying: {0:s}'.format(' '.join(mount_cmd)))
+      try:
+        subprocess.check_call(mount_cmd)
+      except subprocess.CalledProcessError as exception:
+        raise TurbiniaException(
+            'Could not mount directory {0!s}'.format(exception))
+      return mount_path
     raise TurbiniaException('Could not mount directory {0!s}'.format(exception))
-
   return mount_path
 
 

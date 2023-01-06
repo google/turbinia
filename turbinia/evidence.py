@@ -788,8 +788,12 @@ class DiskPartition(Evidence):
         self.local_path = self.device_path
 
     if EvidenceState.MOUNTED in required_states or self.has_child_evidence:
-      self.mount_path = mount_local.PreprocessMountPartition(
-          self.device_path, self.path_spec.type_indicator)
+      if self.path_spec.type_indicator == 'APFS':
+        self.mount_path = mount_local.PreprocessAPFS(
+            self.device_path, self.parent_evidence.credentials)
+      else:
+        self.mount_path = mount_local.PreprocessMountPartition(
+            self.device_path, self.path_spec.type_indicator)
       if self.mount_path:
         self.local_path = self.mount_path
         self.state[EvidenceState.MOUNTED] = True

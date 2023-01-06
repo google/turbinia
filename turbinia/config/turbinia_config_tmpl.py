@@ -208,7 +208,7 @@ DEPENDENCIES = [{
     'timeout': 14400
 }, {
     'job': 'PartitionEnumerationJob',
-    'programs': ['bdemount', 'blockdev'],
+    'programs': ['bdemount', 'blockdev', 'fsapfsmount'],
     'docker_image': None,
     'timeout': 1200
 }, {
