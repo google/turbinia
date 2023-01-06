@@ -1,5 +1,5 @@
 celery>=5.2.2
-cryptography>=2.0.2,<3.9
+cryptography>=2.0.2,>3.8
 docker
 fakeredis>=1.8.1
 fastapi>=0.75.0
