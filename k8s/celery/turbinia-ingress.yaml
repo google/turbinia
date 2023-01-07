@@ -3,6 +3,7 @@ kind: BackendConfig
 metadata:
   name: turbinia-neg-healthcheck
 spec:
+  timeoutSec: 300
   healthCheck:
     checkIntervalSec: 5
     timeoutSec: 5
