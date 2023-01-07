@@ -1091,7 +1091,7 @@ class EwfDisk(Evidence):
     ewf_path (str): Path to mounted EWF image.
     ewf_mount_path (str): Path to EWF mount directory.
   """
-  REQUIRED_ATTRIBUTES = ['source_path', 'ewf_path', 'ewf_mount_path']
+  REQUIRED_ATTRIBUTES = ['source_path']
   POSSIBLE_STATES = [EvidenceState.ATTACHED]
 
   def __init__(
@@ -1106,8 +1106,10 @@ class EwfDisk(Evidence):
 
   def _preprocess(self, _, required_states):
     if EvidenceState.ATTACHED in required_states or self.has_child_evidence:
-      self.ewf_mount_path = mount_local.PreprocessMountEwfDisk(self.source_path)
-      self.ewf_path = mount_local.GetEwfDiskPath(self.ewf_mount_path)
+      if not self.ewf_path and not self.ewf_mount_path:
+        self.ewf_mount_path = mount_local.PreprocessMountEwfDisk(
+            self.source_path)
+        self.ewf_path = mount_local.GetEwfDiskPath(self.ewf_mount_path)
       self.device_path = self.ewf_path
       self.local_path = self.ewf_path
       self.state[EvidenceState.ATTACHED] = True
