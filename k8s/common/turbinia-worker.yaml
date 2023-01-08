@@ -68,7 +68,7 @@ spec:
               memory: "2048Mi"
               cpu: "1500m"
             limits:
-              memory: "8192Mi"
+              memory: "65536Mi"
               cpu: "32000m"
       volumes:
         - name: dev
