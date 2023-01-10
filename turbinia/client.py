@@ -1102,6 +1102,7 @@ class TurbiniaCeleryClient(BaseTurbiniaClient):
         instance, task_id=task_id, request_id=request_id, group_id=group_id,
         user=user)
     task_ids = [task.get('id') for task in tasks if task.get('id')]
+    result = False
 
     if task_ids:
       for _task_id in task_ids:

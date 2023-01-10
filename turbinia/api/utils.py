@@ -24,7 +24,7 @@ from turbinia import config as turbinia_config
 log = logging.getLogger('turbinia')
 
 
-def get_request_output_path(request_id: str):
+def get_request_output_path(request_id: str) -> str:
   """Returns the output path for a request_id."""
   log_path = turbinia_config.toDict().get('OUTPUT_DIR')
   request_output_path = os.path.join(log_path, request_id)
@@ -36,7 +36,7 @@ def get_request_output_path(request_id: str):
   return request_output_path
 
 
-def get_task_output_path(request_id: str, task_id: str):
+def get_task_output_path(request_id: str, task_id: str) -> str:
   """Returns the output path for a task_id."""
   request_output_path = get_request_output_path(request_id)
   if task_id:
@@ -61,7 +61,7 @@ class ByteStream:
   def __init__(self):
     """Initialize the object."""
     self.buffer = io.BytesIO()
-    self.block_size = 4194304  # 4 MB
+    self.block_size = 4194304  # 4 MiB
     self.offset = 0
 
   def __enter__(self):

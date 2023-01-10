@@ -220,13 +220,15 @@ class TurbiniaCli:
       log.error(f'Required configuration key not found: {exception!s}')
       sys.exit(-1)
 
-  def normalize_evidence_name(self, evidence_name_low) -> Union[str, None]:
+  def normalize_evidence_name(self, evidence_name_low: str) -> Union[str, None]:
     """Converts a lowercase evidence name into the proper class name."""
     evidence_name = None
+    evidence_name_low = evidence_name_low.lower()
     if evidence_name_low:
       for name in self.evidence_mapping.keys():
         if evidence_name_low == name.lower():
           evidence_name = name
+          break
 
     if not evidence_name:
       log.error(f'Unable to map {evidence_name_low} to a valid Evidence name.')
