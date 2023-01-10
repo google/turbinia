@@ -14,16 +14,22 @@
 # limitations under the License.
 """Turbinia API server unit tests."""
 
+import importlib
+
+from collections import OrderedDict
+
 import unittest
 import json
-import fakeredis
 import os
+import fakeredis
 import mock
-import importlib
 
 from fastapi.testclient import TestClient
 
 from turbinia.api.api_server import app
+from turbinia.api.routes.router import api_router
+from turbinia.api.routes.ui import ui_router
+
 from turbinia import config as turbinia_config
 from turbinia import state_manager
 from turbinia.jobs import manager as jobs_manager
@@ -54,17 +60,17 @@ class testTurbiniaAPIServer(unittest.TestCase):
   }
 
   _REQUEST_TEST_DATA = {
-      'request_id': '41483253079448e59685d88f37ab91f7',
-      'reason': None,
-      'tasks': [],
-      'requester': 'root',
-      'last_task_update_time': '2022-04-01T19:17:14.791074Z',
-      'status': 'successful',
-      'task_count': 1,
-      'successful_tasks': 1,
-      'running_tasks': 0,
       'failed_tasks': 0,
-      'queued_tasks': 0
+      'last_task_update_time': '2022-04-01T19:17:14.791074Z',
+      'queued_tasks': 0,
+      'reason': None,
+      'request_id': '41483253079448e59685d88f37ab91f7',
+      'requester': 'root',
+      'running_tasks': 0,
+      'status': 'successful',
+      'successful_tasks': 1,
+      'task_count': 1,
+      'tasks': []
   }
 
   def _get_state_manager(self):
@@ -79,11 +85,17 @@ class testTurbiniaAPIServer(unittest.TestCase):
     self.client = TestClient(app)
     self.state_manager = self._get_state_manager()
 
-  def testReadRoot(self):
-    """Test root route."""
-    response = self.client.get("/")
-    self.assertEqual(response.status_code, 404)
-    self.assertEqual(response.json(), {"detail": "Not Found"})
+  def testWebRoutes(self):
+    """Test Web UI routes."""
+    ui_routes = ui_router.routes
+    for route in ui_routes:
+      self.assertIn(route, self.client.app.routes)
+
+  def testAPIroutes(self):
+    """Test API server routes."""
+    api_routes = api_router.routes
+    for route in api_routes:
+      self.assertIn(route, self.client.app.routes)
 
   def testGetConfig(self):
     """Test getting current Turbinia server config."""
@@ -120,11 +132,11 @@ class testTurbiniaAPIServer(unittest.TestCase):
     """Test getting task status."""
     redis_client = fakeredis.FakeStrictRedis()
     input_task = TurbiniaTask().deserialize(self._TASK_TEST_DATA)
-    expected_result = input_task.serialize()
+    expected_result_dict = OrderedDict(sorted(input_task.serialize().items()))
+    expected_result_str = json.dumps(expected_result_dict)
 
     redis_client.set(
-        'TurbiniaTask:41483253079448e59685d88f37ab91f7',
-        json.dumps(expected_result))
+        'TurbiniaTask:41483253079448e59685d88f37ab91f7', expected_result_str)
 
     testTaskData.return_value = [
         json.loads(
@@ -134,7 +146,7 @@ class testTurbiniaAPIServer(unittest.TestCase):
     result = self.client.get(
         '/api/task/{}'.format(self._TASK_TEST_DATA.get('id')))
     result = json.loads(result.content)
-    self.assertEqual(expected_result, result)
+    self.assertEqual(expected_result_dict, result)
 
   @mock.patch('turbinia.state_manager.RedisStateManager.get_task_data')
   def testRequestStatus(self, testTaskData):
@@ -144,6 +156,7 @@ class testTurbiniaAPIServer(unittest.TestCase):
     input_task_serialized = input_task.serialize()
     expected_result = self._REQUEST_TEST_DATA.copy()
     expected_result['tasks'] = [input_task_serialized]
+    expected_result_dict = OrderedDict(sorted(expected_result.items()))
 
     redis_client.set(
         'TurbiniaTask:41483253079448e59685d88f37ab91f7',
@@ -156,7 +169,7 @@ class testTurbiniaAPIServer(unittest.TestCase):
     result = self.client.get(
         '/api/request/{}'.format(self._REQUEST_TEST_DATA.get('request_id')))
     result = json.loads(result.content)
-    self.assertEqual(expected_result, result)
+    self.assertEqual(expected_result_dict, result)
 
   @mock.patch('turbinia.state_manager.RedisStateManager.get_task_data')
   def testRequestSummary(self, testTaskData):

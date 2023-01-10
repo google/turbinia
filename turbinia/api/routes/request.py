@@ -16,23 +16,25 @@
 
 import logging
 import uuid
+import json
 
 from fastapi import HTTPException, APIRouter
 from fastapi.responses import JSONResponse
-
+from fastapi.requests import Request
 from pydantic import ValidationError
 from turbinia import TurbiniaException, client as turbinia_client
 from turbinia import evidence
 from turbinia.lib import recipe_helpers
-from turbinia.api.schemas import request
+from turbinia.api.schemas import request as turbinia_request
 from turbinia.api.models import request_status
 
-log = logging.getLogger('turbinia:api_server:models:request')
+log = logging.getLogger('turbinia')
+
 router = APIRouter(prefix="/request", tags=["Turbinia Requests"])
 
 
-@router.get("/summary", response_model=request_status.RequestsSummary)
-async def get_requests_summary():
+@router.get('/summary')
+async def get_requests_summary(request: Request):
   """Retrieves a summary of all Turbinia requests.
 
   The response is validated against the RequestSummary model.
@@ -45,8 +47,12 @@ async def get_requests_summary():
     if not requests_summary.get_requests_summary():
       return JSONResponse(
           content={'detail': 'Request summary is empty'}, status_code=200)
-    return requests_summary
-  except (ValidationError, ValueError, TypeError) as exception:
+    response_json = requests_summary.json(sort_keys=True)
+    return JSONResponse(
+        status_code=200, content=json.loads(response_json),
+        media_type='application/json')
+  except (json.JSONDecodeError, TypeError, ValueError,
+          ValidationError) as exception:
     log.error(
         'Error retrieving requests summary: {0!s}'.format(exception),
         exc_info=True)
@@ -55,8 +61,8 @@ async def get_requests_summary():
         detail='Error retrieving requests summary') from exception
 
 
-@router.get("/{request_id}", response_model=request_status.RequestStatus)
-async def get_request_status(request_id: str):
+@router.get('/{request_id}')
+async def get_request_status(request: Request, request_id: str):
   """Retrieves status for a Turbinia Request.
 
   Args:
@@ -66,22 +72,25 @@ async def get_request_status(request_id: str):
     HTTPException: if another exception is caught.
   """
   request_out = request_status.RequestStatus(request_id=request_id)
-  response_ok = request_out.get_request_data(request_id)
   try:
-    if not response_ok:
+    if not request_out.get_request_data(request_id):
       raise HTTPException(
           status_code=404,
           detail='Request ID not found or the request had no associated tasks.')
-    return request_out
-  except (ValidationError, ValueError, TypeError) as exception:
+    response_json = request_out.json(sort_keys=True)
+    return JSONResponse(
+        status_code=200, content=json.loads(response_json),
+        media_type='application/json')
+  except (json.JSONDecodeError, TypeError, ValueError,
+          ValidationError) as exception:
     log.error('Error retrieving request information: {0!s}'.format(exception))
     raise HTTPException(
         status_code=500,
         detail='Error retrieving request information') from exception
 
 
-@router.post("/")
-async def create_request(req: request.Request):
+@router.post('/')
+async def create_request(request: Request, req: turbinia_request.Request):
   """Create a new Turbinia request.
 
   Args:
@@ -95,14 +104,12 @@ async def create_request(req: request.Request):
   """
   client = turbinia_client.get_turbinia_client()
   evidence_list = []
-  request_id = req.request_id
-  group_id = req.group_id
-  requester = req.requester
-  reason = req.reason
   recipe = None
-  recipe_name = req.request_options.recipe_name
-  recipe_data = req.request_options.recipe_data
   options = req.request_options
+  recipe_name = options.recipe_name
+  recipe_data = options.recipe_data
+  request_id = options.request_id
+  group_id = options.group_id
 
   if not request_id:
     request_id = uuid.uuid4().hex
@@ -126,7 +133,7 @@ async def create_request(req: request.Request):
       # Use a client-provided recipe name or path for an existing recipe.
       recipe = client.create_recipe(
           group_id=group_id, recipe_name=recipe_name,
-          sketch_id=req.request_options.sketch_id)
+          sketch_id=options.sketch_id)
     elif (options.jobs_allowlist or options.jobs_denylist or
           options.filter_patterns or options.yara_rules):
       recipe = client.create_recipe(
@@ -149,9 +156,9 @@ async def create_request(req: request.Request):
       "request_options": {
         "sketch_id": 1234,
         "recipe_name": "triage-linux"
+        "reason": "test",
+        "requester": "tester"
       },
-      "reason": "test",
-      "requester": "tester"
     }
     ----
     {
@@ -164,9 +171,9 @@ async def create_request(req: request.Request):
       "request_options": {
       "sketch_id": 1234,
       "recipe_data": "Z2xvYmFsczoKICBqb2JzX2FsbG93bGlzdDoKICAgIC0gQ3JvbkV4dHJhY3Rpb25Kb2IKICAgIC0gQ3JvbkFuYWx5c2lzSm9iCiAgICAtIFBsYXNvSm9iCiAgICAtIFBzb3J0Sm9iCiAgICAtIEZpbGVTeXN0ZW1UaW1lbGluZUpvYgoKcGxhc29fYmFzZToKICB0YXNrOiAnUGxhc29UYXNrJwoKICBhcnRpZmFjdF9maWx0ZXJzOiBbCiAgICAnQWxsVXNlcnNTaGVsbEhpc3RvcnknLAogICAgJ0FwYWNoZUFjY2Vzc0xvZ3MnLAogICAgJ0Jyb3dzZXJDYWNoZScsCiAgICAnQnJvd3Nlckhpc3RvcnknLAogICAgJ0Nocm9tZVN0b3JhZ2UnLAogICAgJ0xpbnV4QXVkaXRMb2dzJywKICAgICdMaW51eEF1dGhMb2dzJywKICAgICdMaW51eENyb25Mb2dzJywKICAgICdMaW51eEtlcm5lbExvZ0ZpbGVzJywKICAgICdMaW51eExhc3Rsb2dGaWxlJywKICAgICdMaW51eE1lc3NhZ2VzTG9nRmlsZXMnLAogICAgJ0xpbnV4U2NoZWR1bGVGaWxlcycsCiAgICAnTGludXhTeXNMb2dGaWxlcycsCiAgICAnTGludXhVdG1wRmlsZXMnLAogICAgJ0xpbnV4V3RtcCcsCiAgXQ=="
-      },
       "reason": "test",
       "requester": "tester"
+      },
     }
     """
     evidence_object = evidence.evidence_decode(req.evidence, strict=True)
@@ -179,8 +186,8 @@ async def create_request(req: request.Request):
     # If at this point the recipe is None, the TurbiniaClient will create
     # a generic recipe based on recipe_helpers.DEFAULT_RECIPE.
     request_out = client.create_request(
-        evidence_=evidence_list, request_id=request_id, reason=reason,
-        recipe=recipe, group_id=group_id, requester=requester)
+        evidence_=evidence_list, request_id=request_id, reason=options.reason,
+        recipe=recipe, group_id=group_id, requester=options.requester)
     # Send the Turbinia request to the appropriate queue.
     client.send_request(request_out)
   except TurbiniaException as exception:

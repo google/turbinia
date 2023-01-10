@@ -250,7 +250,8 @@ class TurbiniaTaskResult:
       except Exception as exception:
         message = 'Evidence post-processing for {0!s} failed: {1!s}'.format(
             self.input_evidence.name, exception)
-        self.log(message, level=logging.ERROR)
+        self.log(
+            message, level=logging.ERROR, traceback_=traceback.format_exc())
         with filelock.FileLock(config.RESOURCE_FILE_LOCK):
           resource_manager.PostProcessResourceState(
               self.input_evidence.resource_id, self.task_id)
@@ -304,7 +305,7 @@ class TurbiniaTaskResult:
       log.critical(message)
 
     if traceback_:
-      self.result.set_error(message, traceback_)
+      self.set_error(message, traceback_)
 
   def update_task_status(self, task, status=None):
     """Updates the task status and pushes it directly to datastore.

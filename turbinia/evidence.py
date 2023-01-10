@@ -63,7 +63,7 @@ def evidence_class_names(all_classes=False):
     ignored_classes = (
         'BinaryExtraction', 'BulkExtractorOutput', 'Evidence', 'EvidenceState',
         'EvidenceCollection', 'ExportedFileArtifact', 'FilteredTextFile',
-        'FinalReport', 'IntEnum', 'PlasoCsvFile', 'PlasoFile', 'PhotorecOutput',
+        'FinalReport', 'IntEnum', 'PlasoCsvFile', 'PhotorecOutput',
         'ReportText', 'TextFile', 'VolatilityReport', 'TurbiniaException')
     class_names = filter(
         lambda class_tuple: class_tuple[0] not in ignored_classes, class_names)
@@ -123,8 +123,8 @@ def evidence_decode(evidence_dict, strict=False):
     raise TurbiniaException(
         'Evidence_dict is not a dictionary, type is {0:s}'.format(
             str(type(evidence_dict))))
-
   type_ = evidence_dict.pop('type', None)
+  name_ = evidence_dict.pop('_name', None)
   if not type_:
     raise TurbiniaException(
         'No Type attribute for evidence object [{0:s}]'.format(
@@ -132,7 +132,7 @@ def evidence_decode(evidence_dict, strict=False):
   evidence = None
   try:
     evidence_class = getattr(sys.modules[__name__], type_)
-    evidence = evidence_class.from_dict(evidence_dict)
+    evidence = evidence_class(name=name_, type=type_, **evidence_dict)
     evidence_object = evidence_class(source_path='dummy_object')
     if strict and evidence_object:
       for attribute_key in evidence_dict.keys():
@@ -256,40 +256,40 @@ class Evidence:
   # docstrings for more info.
   POSSIBLE_STATES = []
 
-  def __init__(
-      self, name=None, description=None, size=None, source=None,
-      source_path=None, tags=None, request_id=None, copyable=False):
+  def __init__(self, *args, **kwargs):
     """Initialization for Evidence."""
-    self.copyable = copyable
-    self.config = {}
-    self.context_dependent = False
-    self.cloud_only = False
-    self.description = description
-    self.size = size
-    self.mount_path = None
-    self.credentials = []
-    self.source = source
-    self.source_path = source_path
-    self.tags = tags if tags else {}
-    self.request_id = request_id
-    self.has_child_evidence = False
-    self.parent_evidence = None
-    self.save_metadata = False
-    self.resource_tracked = False
-    self.resource_id = None
-
-    self.local_path = source_path
-
+    self.cloud_only = kwargs.get('cloud_only', False)
+    self.config = kwargs.get('config', {})
+    self.context_dependent = kwargs.get('context_dependent', False)
+    self.copyable = kwargs.get('copyable', False)
+    self.credentials = kwargs.get('credentials', [])
+    self.description = kwargs.get('description', None)
+    self.has_child_evidence = kwargs.get('has_child_evidence', False)
+    self.mount_path = kwargs.get('mount_path', None)
+    self._name = kwargs.get('name')
+    self.parent_evidence = kwargs.get('parent_evidence', None)
     # List of jobs that have processed this evidence
-    self.processed_by = []
+    self.processed_by = kwargs.get('processed_by', [])
+    self.request_id = kwargs.get('request_id', None)
+    self.resource_id = kwargs.get('resource_id', None)
+    self.resource_tracked = kwargs.get('resource_tracked', False)
+    self.save_metadata = kwargs.get('save_metadata', False)
+    self.saved_path = kwargs.get('saved_path', None)
+    self.saved_path_type = kwargs.get('saved_path_type', None)
+    self.size = kwargs.get('size', None)
+    self.source = kwargs.get('source', None)
+    self.source_path = kwargs.get('source_path', None)
+    self.tags = kwargs.get('tags', {})
     self.type = self.__class__.__name__
-    self._name = name
-    self.saved_path = None
-    self.saved_path_type = None
 
-    self.state = {}
-    for state in EvidenceState:
-      self.state[state] = False
+    self.local_path = self.source_path
+
+    if 'state' in kwargs:
+      self.state = kwargs.get('state')
+    else:
+      self.state = {}
+      for state in EvidenceState:
+        self.state[state] = False
 
     if self.copyable and not self.local_path:
       raise TurbiniaException(
@@ -646,9 +646,10 @@ class ChromiumProfile(Evidence):
 
   def __init__(self, browser_type=None, output_format=None, *args, **kwargs):
     """Initialization for chromium profile evidence object."""
-    super(ChromiumProfile, self).__init__(copyable=True, *args, **kwargs)
+    super(ChromiumProfile, self).__init__(*args, **kwargs)
     self.browser_type = browser_type
     self.output_format = output_format
+    self.copyable = True
 
 
 class RawDisk(Evidence):
@@ -944,9 +945,10 @@ class PlasoFile(Evidence):
 
   def __init__(self, plaso_version=None, *args, **kwargs):
     """Initialization for Plaso File evidence."""
-    self.plaso_version = plaso_version
-    super(PlasoFile, self).__init__(copyable=True, *args, **kwargs)
+    super(PlasoFile, self).__init__(*args, **kwargs)
     self.save_metadata = True
+    self.copyable = True
+    self.plaso_version = plaso_version
 
 
 class PlasoCsvFile(Evidence):
@@ -954,9 +956,10 @@ class PlasoCsvFile(Evidence):
 
   def __init__(self, plaso_version=None, *args, **kwargs):
     """Initialization for Plaso File evidence."""
-    self.plaso_version = plaso_version
-    super(PlasoCsvFile, self).__init__(copyable=True, *args, **kwargs)
+    super(PlasoCsvFile, self).__init__(*args, **kwargs)
     self.save_metadata = False
+    self.copyable = True
+    self.plaso_version = plaso_version
 
 
 # TODO(aarontp): Find a way to integrate this into TurbiniaTaskResult instead.
@@ -964,8 +967,9 @@ class ReportText(Evidence):
   """Text data for general reporting."""
 
   def __init__(self, text_data=None, *args, **kwargs):
-    super(ReportText, self).__init__(copyable=True, *args, **kwargs)
+    super(ReportText, self).__init__(*args, **kwargs)
     self.text_data = text_data
+    self.copyable = True
 
 
 class FinalReport(ReportText):
@@ -980,7 +984,8 @@ class TextFile(Evidence):
   """Text data."""
 
   def __init__(self, *args, **kwargs):
-    super(TextFile, self).__init__(copyable=True, *args, **kwargs)
+    super(TextFile, self).__init__(*args, **kwargs)
+    self.copyable = True
 
 
 class FilteredTextFile(TextFile):
@@ -992,8 +997,9 @@ class BodyFile(Evidence):
   """Bodyfile data."""
 
   def __init__(self, *args, **kwargs):
+    super(BodyFile, self).__init__(*args, **kwargs)
+    self.copyable = True
     self.number_of_entries = None
-    super(BodyFile, self).__init__(copyable=True, *args, **kwargs)
 
 
 class ExportedFileArtifact(Evidence):
@@ -1003,8 +1009,9 @@ class ExportedFileArtifact(Evidence):
 
   def __init__(self, artifact_name=None, *args, **kwargs):
     """Initializes an exported file artifact."""
-    super(ExportedFileArtifact, self).__init__(copyable=True, *args, **kwargs)
+    super(ExportedFileArtifact, self).__init__(*args, **kwargs)
     self.artifact_name = artifact_name
+    self.copyable = True
 
 
 class VolatilityReport(TextFile):
@@ -1133,7 +1140,7 @@ class ContainerdContainer(Evidence):
     _image_path (str): Path where disk image is mounted.
     _container_fs_path (str): Path where containerd filesystem is mounted.
   """
-
+  REQUIRED_ATTRIBUTES = ['namespace', 'container_id']
   POSSIBLE_STATES = [EvidenceState.CONTAINER_MOUNTED]
 
   def __init__(self, namespace=None, container_id=None, *args, **kwargs):

@@ -49,7 +49,6 @@ class TestTurbiniaEvidence(unittest.TestCase):
     collection.add_evidence(rawdisk)
     collection_json = collection.to_json()
     self.assertTrue(isinstance(collection_json, str))
-
     collection_new = evidence.evidence_decode(json.loads(collection_json))
     rawdisk_new = collection_new.collection[0]
     # Make sure that both the collection, and the things in the collection

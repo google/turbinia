@@ -723,8 +723,17 @@ class CeleryTaskManager(BaseTaskManager):
           evidence_.config['globals']['group_name'] = request.group_name
           evidence_.config['globals']['reason'] = request.reason
           evidence_.config['globals']['all_args'] = request.all_args
-          evidence_.config['globals']['group_id'] = request.recipe['globals'][
-              'group_id']
+
+          # A recipe could contain a group_id key so that tasks can be grouped
+          # together, but this is optional. If the recipe doesn't specify a
+          # group_id, then we grab it from the request object itself.
+          try:
+            recipe_group_id = request.recipe['globals']['group_id']
+            if recipe_group_id:
+              evidence_.config['globals']['group_id'] = recipe_group_id
+          except KeyError:
+            evidence_.config['globals']['group_id'] = request.group_id
+
           evidence_list.append(evidence_)
       turbinia_server_request_total.inc()
 

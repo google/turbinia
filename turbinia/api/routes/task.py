@@ -15,10 +15,16 @@
 """Turbinia API - Task router"""
 
 import logging
+import json
+
+from collections import OrderedDict
 
 from fastapi import HTTPException, APIRouter
-from pydantic import ValidationError
+from fastapi.responses import JSONResponse
+from fastapi.requests import Request
+from fastapi.encoders import jsonable_encoder
 
+from pydantic import ValidationError
 from turbinia import state_manager
 from turbinia import config as turbinia_config
 
@@ -27,8 +33,8 @@ log = logging.getLogger('turbinia:api_server:task')
 router = APIRouter(prefix='/task', tags=['Turbinia Tasks'])
 
 
-@router.get("/{task_id}")
-async def get_task_status(task_id: str):
+@router.get('/{task_id}')
+async def get_task_status(request: Request, task_id: str):
   """Retrieve task information."""
   try:
     _state_manager = state_manager.get_state_manager()
@@ -36,9 +42,14 @@ async def get_task_status(task_id: str):
         instance=turbinia_config.INSTANCE_ID, task_id=task_id)
     if tasks:
       task = tasks[0]
-      return task
+      task_json = jsonable_encoder(task)
+      task_json_sorted = OrderedDict(sorted(task_json.items()))
+      return JSONResponse(
+          status_code=200, content=task_json_sorted,
+          media_type='application/json')
     raise HTTPException(status_code=404, detail='Task ID not found.')
-  except ValidationError as exception:
+  except (json.JSONDecodeError, TypeError, ValueError,
+          ValidationError) as exception:
     log.error('Error retrieving task information: {0!s}'.format(exception))
     raise HTTPException(
         status_code=500,
