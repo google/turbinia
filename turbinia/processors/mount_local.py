@@ -135,7 +135,10 @@ def PreprocessAPFS(source_path, credentials=None):
             'Unsupported credential type: {0!s}'.format(credential_type))
         continue
       mount_cmd.extend(['-X', 'allow_other', source_path, mount_path])
-      # Not logging command since it will contain credentials
+      # Not logging full command since it will contain credentials
+      log.info(
+          'Running fsapfsmount with credential type: {0:s}'.format(
+              credential_type))
       try:
         subprocess.check_call(mount_cmd)
       except subprocess.CalledProcessError as exception:
@@ -219,6 +222,8 @@ def PreprocessBitLocker(source_path, partition_offset=None, credentials=None):
     libbde_command.extend(['-X', 'allow_other', source_path, mount_path])
 
     # Not logging command since it will contain credentials
+    log.info(
+        'Running bdemount with credential type: {0:s}'.format(credential_type))
     try:
       subprocess.check_call(libbde_command)
     except subprocess.CalledProcessError as exception:
@@ -480,6 +485,7 @@ def PreprocessMountPartition(partition_path, filesystem_type):
               mount_prefix, exception))
 
   mount_path = tempfile.mkdtemp(prefix='turbinia', dir=mount_prefix)
+  mounted = True
 
   log.debug('Mounting filesystem type: {0:s}'.format(filesystem_type))
 
@@ -496,18 +502,25 @@ def PreprocessMountPartition(partition_path, filesystem_type):
   try:
     subprocess.check_call(mount_cmd)
   except subprocess.CalledProcessError as exception:
-    if filesystem_type == 'EXT':
-      # ext2 will not mount with the noload option, so this may be the cause of
-      # the error.
-      mount_cmd = ['sudo', 'mount', '-o', 'ro', partition_path, mount_path]
-      log.info('Mount failed, trying: {0:s}'.format(' '.join(mount_cmd)))
-      try:
-        subprocess.check_call(mount_cmd)
-      except subprocess.CalledProcessError as exception:
-        raise TurbiniaException(
-            'Could not mount directory {0!s}'.format(exception))
-      return mount_path
-    raise TurbiniaException('Could not mount directory {0!s}'.format(exception))
+    mounted = False
+    log.info('Mount failed: {0!s}'.format(exception))
+
+  if filesystem_type == 'EXT':
+    # ext2 will not mount with the noload option, so this may be the cause of
+    # the error.
+    mounted = True
+    mount_cmd = ['sudo', 'mount', '-o', 'ro', partition_path, mount_path]
+    log.info('Trying again with: {0:s}'.format(' '.join(mount_cmd)))
+    try:
+      subprocess.check_call(mount_cmd)
+    except subprocess.CalledProcessError as exception:
+      mounted = False
+      log.info('Mount failed: {0!s}'.format(exception))
+
+  if not mounted:
+    raise TurbiniaException(
+        'Could not mount partition {0:s}'.format(partition_path))
+
   return mount_path
 
 
