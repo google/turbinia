@@ -16,7 +16,6 @@
 
 from __future__ import unicode_literals
 
-import glob
 import unittest
 import os
 import mock
