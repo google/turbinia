@@ -53,6 +53,7 @@ RUN pip3 install dfDewey
 #   dfImageTools
 #   docker-explorer
 #   libbde-tools
+#   libfsapfs-tools
 #   Plaso
 #   Sleuthkit
 RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 0x5e80511b10c598b8 \
@@ -65,6 +66,7 @@ RUN apt-get update && apt-get -y install \
     libewf \
     libewf-python3 \
     libewf-tools \
+    libfsapfs-tools \
     plaso-tools \
     python3-dfimagetools \
     python3-dfvfs \
