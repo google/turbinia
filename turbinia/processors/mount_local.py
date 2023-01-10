@@ -505,7 +505,7 @@ def PreprocessMountPartition(partition_path, filesystem_type):
     mounted = False
     log.info('Mount failed: {0!s}'.format(exception))
 
-  if filesystem_type == 'EXT':
+  if filesystem_type == 'EXT' and not mounted:
     # ext2 will not mount with the noload option, so this may be the cause of
     # the error.
     mounted = True
