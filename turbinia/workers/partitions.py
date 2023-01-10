@@ -101,14 +101,25 @@ class PartitionEnumerationTask(TurbiniaTask):
     is_lvm = False
     # File system location / identifier
     location = self._GetLocation(path_spec)
+    container_location = None
     log.debug(
         'Got location {0:s} for path_spec {1!s} with type {2:s}'.format(
             location, path_spec.CopyToDict(), path_spec.type_indicator))
     while child_path_spec.HasParent():
       type_indicator = child_path_spec.type_indicator
+      log.debug('Path spec type: {0:s}'.format(type_indicator))
+
       if type_indicator == dfvfs_definitions.TYPE_INDICATOR_APFS_CONTAINER:
         # APFS volume index
         volume_index = getattr(child_path_spec, 'volume_index', None)
+        # Since APFS can't be attached, we'll need to look for a container
+        if child_path_spec.HasParent():
+          container_location = getattr(child_path_spec.parent, 'location', None)
+          log.debug('Container location: {0!s}'.format(container_location))
+          # We only need the container if it's a partition, else we'll attach
+          # the whole disk
+          if container_location and container_location[:2] != '/p':
+            container_location = None
 
       if type_indicator in (dfvfs_definitions.TYPE_INDICATOR_GPT,
                             dfvfs_definitions.TYPE_INDICATOR_LVM,
@@ -125,7 +136,10 @@ class PartitionEnumerationTask(TurbiniaTask):
           volume_system = gpt_volume_system.GPTVolumeSystem()
         try:
           volume_system.Open(child_path_spec)
-          volume_identifier = location.replace('/', '')
+          if container_location:
+            volume_identifier = container_location.replace('/', '')
+          else:
+            volume_identifier = location.replace('/', '')
           volume = volume_system.GetVolumeByIdentifier(volume_identifier)
 
           if is_lvm:
