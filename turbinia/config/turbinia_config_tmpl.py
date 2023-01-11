@@ -120,7 +120,7 @@ API_ALLOWED_ORIGINS = ['http://localhost:8000']
 API_AUTHENTICATION_ENABLED = False
 
 # Path to Turbinia Web UI static files
-WEBUI_PATH = '/tmp/web'
+WEBUI_PATH = '/web'
 
 ################################################################################
 #                         External Dependency Configurations
