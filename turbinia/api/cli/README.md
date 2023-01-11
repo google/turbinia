@@ -4,6 +4,7 @@
 Turbinia-client is a command-line tool that provides an easy-to-use user interface for Turbinia's API server. It allows a user to perform Turbinia operations such as creating new Turbinia processing requests, getting status of existing requests and tasks, and downloading requests output and logs.
 
 ## Getting started
+To get started with the Turbinia API CLI tool you will need to install it on your system. To install the tool, follow the instructions below.
 
 ### Installation
 You can install the latest version of the tool via PyPi.
@@ -15,7 +16,7 @@ The package will install the ```turbinia-api-client``` library as a dependency. 
 ### Configuring the client
 The command-line tool uses a JSON configuration file. By default, the client will search for a ```.turbinia_api_config.json``` file within the user's home directory, or a path specified in the ``TURBINIA_API_CONFIG_PATH``` environment variable.
 
-Support for multiple Turbinia environments exists, and an example is provided in the sample configuration file. In the example below, there are two Turbinia environments, ```default``` and ```development```.
+Support for multiple Turbinia environments is possible in the configuration file. In the example below, there are two Turbinia environments, ```default``` and ```development```.
 
 ```
 {
