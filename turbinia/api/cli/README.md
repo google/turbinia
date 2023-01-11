@@ -150,6 +150,7 @@ turbinia-client result request <request_id>
 ```
 turbinia-client result task <task_id>
 ```
+By default, the downloaded file will be placed in the current working directory.
 
 ### Getting JSON responses from the API server
 By default, the tool will format the output from the API server to make it more human-readable. You can pass the ```-j``` argument to any command to print the API server's JSON response instead. For example:
