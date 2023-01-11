@@ -371,8 +371,8 @@ class MountLocalProcessorTest(unittest.TestCase):
     mock_subprocess.reset_mock()
     mount_path = mount_local.PreprocessMountPartition('/dev/loop0', 'XFS')
     expected_args = [
-        'sudo', 'mount', '-o', 'ro', '-o', 'norecovery', '-o', 'nouuid', '/dev/loop0',
-        '/mnt/turbinia/turbinia0ckdntz0'
+        'sudo', 'mount', '-o', 'ro', '-o', 'norecovery', '-o', 'nouuid',
+        '/dev/loop0', '/mnt/turbinia/turbinia0ckdntz0'
     ]
     mock_subprocess.assert_called_once_with(expected_args)
     self.assertEqual(mount_path, '/mnt/turbinia/turbinia0ckdntz0')
