@@ -50,6 +50,7 @@ The basic steps to get things running after the initial installation and
 configuration are:
 
 *   Start Turbinia server component with `turbiniactl server` command
+*   Start Turbinia API server component with `turbiniactl api_server` command
 *   Start one or more Turbinia workers with `turbiniactl psqworker`
 *   Send evidence to be processed from the turbinia client with `turbiniactl
     ${evidencetype}`
