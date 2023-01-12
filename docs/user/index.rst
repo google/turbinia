@@ -11,12 +11,13 @@ User documentation
    install-gke-monitoring
    install-gke-external
    install-gcp-pubsub
+   turbinia-local-stack
    gke-sre
    how-it-works
-   turbinia-local-stack
+   api-server
+   turbinia-web-ui
    using-docker
    operational-details
    recipes
    debugging
    faq
-   turbinia-web-ui
