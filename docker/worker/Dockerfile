@@ -87,8 +87,8 @@ COPY turbinia/config/rules/*.yar /opt/signature-base/yara/
 
 RUN mkdir -p /opt/fraken/yara && chown -R turbinia:turbinia /opt/fraken
 COPY --chown=turbinia:turbinia tools/fraken/* /opt/fraken/
-RUN cd /opt/fraken/yara && curl -s https://api.github.com/repos/VirusTotal/Yara/releases/latest | sed -n 's/.*"tarball_url": "\(.*\)",.*/\1/p' | xargs -n1 wget -O - -q | tar -xz --strip-components=1 \
-    && ./bootstrap.sh \
+RUN cd /opt/fraken/yara && curl -s -L --retry 5 "$(curl -s -L --retry 5 https://api.github.com/repos/VirusTotal/Yara/releases/latest | sed -n 's/.*"tarball_url": "\(.*\)",.*/\1/p')"  | tar -xz --strip-components=1
+RUN cd /opt/fraken/yara && ./bootstrap.sh \
     && ./configure \
     && make && sudo make install && sudo ldconfig
 RUN cd /opt/fraken && go build -ldflags="-linkmode=external -extldflags=-ljemalloc" -o fraken
