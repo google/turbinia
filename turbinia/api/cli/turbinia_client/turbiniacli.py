@@ -152,8 +152,8 @@ class TurbiniaCli:
     self._request_options = request_options
 
   def default_api_client(
-      self, config: turbinia_api_lib.Configuration
-  ) -> turbinia_api_lib.ApiClient:
+      self,
+      config: turbinia_api_lib.Configuration) -> turbinia_api_lib.ApiClient:
     """Default value for API client instance."""
     return turbinia_api_lib.ApiClient(configuration=config)
 
