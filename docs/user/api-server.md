@@ -9,19 +9,19 @@ The following sections describe how to get up the Turbinia API server up and run
 ### Installation
 To use the Turbinia API server you will need to deploy Turbinia in your environment with a configuration that uses Redis and Celery instead of GCP PubSub and PSQ.
 
-Please follow the instructions for deploying a (Turbinia GKE Celery cluster)[install-gke-celery.md] or (local stack using Celery)[turbinia-local-stack.md]
+Please follow the instructions for deploying a [Turbinia GKE Celery cluster](install-gke-celery.md) or [local stack using Celery](turbinia-local-stack.md)
 
 ### Configuration and UI
-If you plan on making the Turbinia API Server and Web UI externally accessible (e.g. internet access), follow the instructions for (external access and authentication)[install-gke-external.md]
+If you plan on making the Turbinia API Server and Web UI externally accessible (e.g. internet access), follow the instructions for [external access and authentication](install-gke-external.md)
 
 ### Usage
 You may access the API server at ```http://<API_SERVER_ADDRESS>:<API_SERVER_PORT>```, or via https if you deployed Turbinia for external access using a domain and HTTPS certificate.
 
 Because the Turbinia API Server is built using the FastAPI framework, it provides an interactive Swagger UI with a browser-based API client that is accessible at ```http://<API_SERVER_ADDRESS>:<API_SERVER_PORT>/docs```
 
-We also provide a (command-line tool)[../../turbinia/api/cli/README.md] and a (Python library)[../../turbinia/api/client/README.md] to interact with the API server.
+We also provide a [command-line tool]()../../turbinia/api/cli/README.md) and a [Python library]()../../turbinia/api/client/README.md) to interact with the API server.
 
 ### Authentication
-Turbinia API Server uses OAuth2-proxy to provide OpenID Connect and OAuth2 authentication support. If you deployed Turbinia using GCP and GKE cluster instructions, follow the guide for (external access and authentication)[install-gke-external.md] to complete the authentication configuration.
+Turbinia API Server uses OAuth2-proxy to provide OpenID Connect and OAuth2 authentication support. If you deployed Turbinia using GCP and GKE cluster instructions, follow the guide for [external access and authentication](install-gke-external.md) to complete the authentication configuration.
 
-For Turbinia deployments using the (local stack)[turbinia-local-stack.md], or a non-Google identity provider, make sure to edit the ```oauth2_proxy.cfg``` configuration file in ```docker/oauth2_proxy``` with the appropriate identity provider information such as ```client_id``` and ```client_secret``` prior to deploying the Docker containers in the local stack. If your deployment will use an identity provider other than Google, you will also need to change the ```provider``` and related settings. For more information and how to configure OAuth2-proxy for different providers, refer to the (OAuth2-Proxy Documentation)[https://oauth2-proxy.github.io/oauth2-proxy/docs/configuration/oauth_provider].
+For Turbinia deployments using the [local stack](turbinia-local-stack.md), or a non-Google identity provider, make sure to edit the ```oauth2_proxy.cfg``` configuration file in ```docker/oauth2_proxy``` with the appropriate identity provider information such as ```client_id``` and ```client_secret``` prior to deploying the Docker containers in the local stack. If your deployment will use an identity provider other than Google, you will also need to change the ```provider``` and related settings. For more information and how to configure OAuth2-proxy for different providers, refer to the [OAuth2-Proxy Documentation](https://oauth2-proxy.github.io/oauth2-proxy/docs/configuration/oauth_provider).
