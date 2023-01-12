@@ -186,16 +186,22 @@ Congrats, you have now successfully configured Turbinia to be externally accessi
 ## Making Turbinia processing requests
 
 Once Turbinia is externally accessible, download the Oauth Desktop credentials
-created above to your machine and install the Turbinia client:
+created above to your machine and install the command-line Turbinia client:
 
 ```
-pip3 install turbinia_api_client`
+pip3 install turbinia_client
+```
+
+or Python client library:
+
+```
+pip3 install turbinia_api_client
 ```
 
 - To create a processing request for evidence run the following:
 
 ```
-turbiniamgmt submit GoogleCloudDisk --project <PROJECT_NAME> --disk_name <DISK_NAME> --zone <ZONE>
+turbinia-client submit googleclouddisk --project <PROJECT_NAME> --disk_name <DISK_NAME> --zone <ZONE>
 ```
 
 - To access the Turbinia Web UI, point your browser to:
