@@ -11,7 +11,7 @@ VERSION = "1.0.0"
 
 REQUIRES = [
     "click",
-    "turbinia-api-client",
+    "turbinia-api-lib",
 ]
 
 this_directory = Path(__file__).parent

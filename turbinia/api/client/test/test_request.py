@@ -11,10 +11,10 @@
 import sys
 import unittest
 
-import turbinia_api_client
-from turbinia_api_client.model.base_request_options import BaseRequestOptions
+import turbinia_api_lib
+from turbinia_api_lib.model.base_request_options import BaseRequestOptions
 globals()['BaseRequestOptions'] = BaseRequestOptions
-from turbinia_api_client.model.request import Request
+from turbinia_api_lib.model.request import Request
 
 
 class TestRequest(unittest.TestCase):

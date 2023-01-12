@@ -11,8 +11,8 @@
 import sys
 import unittest
 
-import turbinia_api_client
-from turbinia_api_client.model.base_request_options import BaseRequestOptions
+import turbinia_api_lib
+from turbinia_api_lib.model.base_request_options import BaseRequestOptions
 
 
 class TestBaseRequestOptions(unittest.TestCase):
