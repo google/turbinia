@@ -1,6 +1,6 @@
 {
 	"default": {
-		"description": "This file is used by turbiniamgmt to determine the location of the API server and if authentication will be used. These options should match your Turbinia deployment.",
+		"description": "This file is used by turbinia-client to determine the location of the API server and if authentication will be used. These options should match your Turbinia deployment.",
 		"comments": "By default, the credentials and client secrets files are located in the user's home directory.",
 		"API_SERVER_ADDRESS": "http://localhost",
 		"API_SERVER_PORT": 8000,

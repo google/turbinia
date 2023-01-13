@@ -70,7 +70,7 @@ pip3 install turbinia_api_client
 - Create a processing request via:
 
 ```
-turbiniamgmt submit GoogleCloudDisk --project <PROJECT_NAME> --disk_name <DISK_NAME> --zone <ZONE>
+turbinia-client submit GoogleCloudDisk --project <PROJECT_NAME> --disk_name <DISK_NAME> --zone <ZONE>
 ```
 
 - You can access the Turbinia Web UI via:

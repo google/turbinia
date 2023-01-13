@@ -63,7 +63,7 @@ var (
 	magicPathFlag     = flag.String("magic", "misc/file-type-signatures.txt", "A path under the rules path that contains File Magics")
 	yaraRulesFlag     = flag.String("extrayara", "", "Any additional Yara rules to be used")
 	testRulesFlag     = flag.Bool("testrules", false, "Test the given rules for syntax validity and then exit")
-	minScoreFlag      = flag.Int("minscore", 40, "Only rules with scores greather than this will be output")
+	minScoreFlag      = flag.Int("minscore", 40, "Only rules with scores greater than this will be output")
 	magics            = make(map[string]string)
 	externalVariables = []string{"filepath", "filename", "filetype", "extension", "owner"}
 	maxGoroutines     = 10
