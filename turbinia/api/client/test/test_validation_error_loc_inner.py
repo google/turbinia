@@ -11,8 +11,8 @@
 import sys
 import unittest
 
-import turbinia_api_client
-from turbinia_api_client.model.validation_error_loc_inner import ValidationErrorLocInner
+import turbinia_api_lib
+from turbinia_api_lib.model.validation_error_loc_inner import ValidationErrorLocInner
 
 
 class TestValidationErrorLocInner(unittest.TestCase):

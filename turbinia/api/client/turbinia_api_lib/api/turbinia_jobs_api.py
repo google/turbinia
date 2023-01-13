@@ -11,8 +11,8 @@
 import re  # noqa: F401
 import sys  # noqa: F401
 
-from turbinia_api_client.api_client import ApiClient, Endpoint as _Endpoint
-from turbinia_api_client.model_utils import (  # noqa: F401
+from turbinia_api_lib.api_client import ApiClient, Endpoint as _Endpoint
+from turbinia_api_lib.model_utils import (  # noqa: F401
     check_allowed_values,
     check_validations,
     date,

@@ -189,7 +189,7 @@ Once Turbinia is externally accessible, download the Oauth Desktop credentials
 created above to your machine and install the Turbinia client:
 
 ```
-pip3 install turbinia_api_client`
+pip3 install turbinia-api-lib
 ```
 
 - To create a processing request for evidence run the following:

@@ -7,11 +7,11 @@ from setuptools import setup, find_packages
 from pathlib import Path
 
 NAME = "turbinia-client"
-VERSION = "1.0.0"
+VERSION = "1.0.1"
 
 REQUIRES = [
     "click",
-    "turbinia-api-client",
+    "turbinia-api-lib",
 ]
 
 this_directory = Path(__file__).parent

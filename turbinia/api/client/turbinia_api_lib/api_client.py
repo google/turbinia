@@ -20,10 +20,10 @@ from urllib.parse import quote
 from urllib3.fields import RequestField
 
 
-from turbinia_api_client import rest
-from turbinia_api_client.configuration import Configuration
-from turbinia_api_client.exceptions import ApiTypeError, ApiValueError, ApiException
-from turbinia_api_client.model_utils import (
+from turbinia_api_lib import rest
+from turbinia_api_lib.configuration import Configuration
+from turbinia_api_lib.exceptions import ApiTypeError, ApiValueError, ApiException
+from turbinia_api_lib.model_utils import (
     ModelNormal,
     ModelSimple,
     ModelComposed,
