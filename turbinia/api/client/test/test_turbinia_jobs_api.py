@@ -10,8 +10,8 @@
 
 import unittest
 
-import turbinia_api_client
-from turbinia_api_client.api.turbinia_jobs_api import TurbiniaJobsApi  # noqa: E501
+import turbinia_api_lib
+from turbinia_api_lib.api.turbinia_jobs_api import TurbiniaJobsApi  # noqa: E501
 
 
 class TestTurbiniaJobsApi(unittest.TestCase):

@@ -64,7 +64,7 @@ kubectl port-forward service/turbinia-api-service 8000:8000
 - Install the Turbinia client locally on your machine or in a cloud shell console:
 
 ```
-pip3 install turbinia_api_client
+pip3 install turbinia-api-lib
 ```
 
 - Create a processing request via:
