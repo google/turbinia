@@ -11,6 +11,8 @@ To use the Turbinia API server you will need to deploy Turbinia in your environm
 
 Please follow the instructions for deploying a [Turbinia GKE Celery cluster](install-gke-celery.md) or [local stack using Celery](turbinia-local-stack.md)
 
+Note that the Turbinia API server requires access to the Turbinia output directory (```OUTPUT_DIR```)
+
 ### Configuration and UI
 If you plan on making the Turbinia API Server and Web UI externally accessible (e.g. internet access), follow the instructions for [external access and authentication](install-gke-external.md)
 
