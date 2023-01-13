@@ -1,4 +1,4 @@
-# turbinia_api_client.TurbiniaLogsApi
+# turbinia_api_lib.TurbiniaLogsApi
 
 All URIs are relative to *http://localhost*
 
@@ -20,13 +20,13 @@ Retrieve log data.
 
 ```python
 import time
-import turbinia_api_client
-from turbinia_api_client.api import turbinia_logs_api
-from turbinia_api_client.model.http_validation_error import HTTPValidationError
+import turbinia_api_lib
+from turbinia_api_lib.api import turbinia_logs_api
+from turbinia_api_lib.model.http_validation_error import HTTPValidationError
 from pprint import pprint
 # Defining the host is optional and defaults to http://localhost
 # See configuration.py for a list of all supported configuration parameters.
-configuration = turbinia_api_client.Configuration(
+configuration = turbinia_api_lib.Configuration(
     host = "http://localhost"
 )
 
@@ -36,13 +36,13 @@ configuration = turbinia_api_client.Configuration(
 # satisfies your auth use case.
 
 # Configure OAuth2 access token for authorization: oAuth2
-configuration = turbinia_api_client.Configuration(
+configuration = turbinia_api_lib.Configuration(
     host = "http://localhost"
 )
 configuration.access_token = 'YOUR_ACCESS_TOKEN'
 
 # Enter a context with an instance of the API client
-with turbinia_api_client.ApiClient(configuration) as api_client:
+with turbinia_api_lib.ApiClient(configuration) as api_client:
     # Create an instance of the API class
     api_instance = turbinia_logs_api.TurbiniaLogsApi(api_client)
     query = "query_example" # str | 
@@ -52,7 +52,7 @@ with turbinia_api_client.ApiClient(configuration) as api_client:
         # Get Logs
         api_response = api_instance.get_logs(query)
         pprint(api_response)
-    except turbinia_api_client.ApiException as e:
+    except turbinia_api_lib.ApiException as e:
         print("Exception when calling TurbiniaLogsApi->get_logs: %s\n" % e)
 ```
 

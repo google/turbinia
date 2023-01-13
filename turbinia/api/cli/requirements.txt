@@ -1,2 +1,2 @@
-turbinia-api-client
 click
+turbinia-api-lib
