@@ -20,3 +20,4 @@ User documentation
    debugging
    faq
    turbinia-web-ui
+   api-lib-docs
