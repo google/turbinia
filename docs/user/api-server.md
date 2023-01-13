@@ -21,7 +21,7 @@ You may access the API server at ```http://<API_SERVER_ADDRESS>:<API_SERVER_PORT
 
 Because the Turbinia API Server is built using the FastAPI framework, it provides an interactive Swagger UI with a browser-based API client that is accessible at ```http://<API_SERVER_ADDRESS>:<API_SERVER_PORT>/docs```
 
-We also provide a [command-line tool](https://github.com/google/turbinia/blob/master/turbinia/api/cli/README.md) and a [Python library](https://github.com/google/turbinia/blob/master/turbinia/api/client/README.md) to interact with the API server.
+We also provide a [command-line tool](https://github.com/google/turbinia/tree/master/turbinia/api/cli) and a [Python library](https://github.com/google/turbinia/tree/master/turbinia/api/client) to interact with the API server.
 
 ### Authentication
 Turbinia API Server uses OAuth2-proxy to provide OpenID Connect and OAuth2 authentication support. If you deployed Turbinia using GCP and GKE cluster instructions, follow the guide for [external access and authentication](install-gke-external.md) to complete the authentication configuration.
