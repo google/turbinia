@@ -208,7 +208,7 @@ def create_request(ctx: click.Context, *args: int, **kwargs: int) -> None:
 
   # Normalize the evidence class name from lowercase to the original name.
   evidence_name = ctx.obj.normalize_evidence_name(evidence_name)
-  # Build request and reqeust_options objects to send to the API server.
+  # Build request and request_options objects to send to the API server.
   request_options = list(ctx.obj.request_options.keys())
   request = {'evidence': {'type': evidence_name}, 'request_options': {}}
 
