@@ -24,12 +24,12 @@ def config_group():
 
 @click.group('status')
 def status_group():
-  """Get Turbinia request/task status."""
+  """Get Turbinia request or task status."""
 
 
 @click.group('result')
 def result_group():
-  """Get Turbinia task or request results."""
+  """Get Turbinia request or task results."""
 
 
 @click.group('jobs')

@@ -14,7 +14,7 @@ pip install turbinia-client
 The package will install the ```turbinia-api-lib``` library as a dependency. More information on how to use the ```turbinia-api-lib``` Python library can be found [here](https://github.com/google/turbinia/master/turbinia/api/client).
 
 ### Configuring the client
-The command-line tool uses a JSON configuration file. By default, the client will search for a ```.turbinia_api_config.json``` file within the user's home directory, or a path specified in the ``TURBINIA_API_CONFIG_PATH``` environment variable.
+The command-line tool uses a JSON configuration file. By default, the client will search for a ```.turbinia_api_config.json``` file within the user's home directory, or a path specified in the ```TURBINIA_API_CONFIG_PATH``` environment variable.
 
 Support for multiple Turbinia environments is possible in the configuration file. In the example below, there are two Turbinia environments, ```default``` and ```development```.
 
@@ -88,8 +88,8 @@ Options:
 Commands:
   config  Get Turbinia configuration.
   jobs    Get a list of enabled Turbinia jobs.
-  result  Get Turbinia task or request results.
-  status  Get Turbinia request/task status.
+  result  Get Turbinia request or task results.
+  status  Get Turbinia request or task status.
   submit  Submit new requests to the Turbinia API server.
   ```
 
@@ -116,7 +116,7 @@ turbinia-client status summary
 ```
 
 ### Creating new requests
-New Turbinia requests can be submitted via turbinia-client using the ```submit``` command. In it's simplest form, you only need to pass the evidence type and any required arguments for the specific evidence type. As an example, to submit a new Turbinia request to process a ```RawDisk`` evidence type, run the following command:
+New Turbinia requests can be submitted via turbinia-client using the ```submit``` command. In its simplest form, you only need to pass the evidence type and any required arguments for the specific evidence type. As an example, to submit a new Turbinia request to process a ```RawDisk`` evidence type, run the following command:
 ```
 turbinia-client submit rawdisk --source_path /evidence/rawdisk.dd
 ```
@@ -132,17 +132,17 @@ turbinia-client submit -h
 ```
 
 ### Creating custom requests
-It is possible to customze requests with additional parameters. For example, you can provide your own Turbinia recipe and add it to a new Turbinia request as follows:
+It is possible to customize requests with additional parameters. For example, you can provide your own Turbinia recipe and add it to a new Turbinia request as follows:
 ```
 turbinia-client submit rawdisk --source_path /evidence/rawdisk.dd --recipe_name /home/user/my_triage_recipe.yaml --requester my_user --reason forensics_case_12345
 ```
 
-An alternative way of providing a Turbinia recipe is to use the ```recipe_data``` argument. The ```recipe_data``` argument takes in a string value. It expects the string to be the Base64 encoded content of a valid Turbinia recipe.
+An alternative way of providing a Turbinia recipe is to use the ```recipe_data``` argument. The ```recipe_data``` argument takes in a Base64 encoded string value of a valid Turbinia recipe.
 ```
 turbinia-client submit rawdisk --source_path /evidence/rawdisk.dd --recipe_data <base64_encoded_recipe_content>
 ```
 
-### Getting Turbinia request or task output0
+### Getting Turbinia request or task output
 The ```result``` command can be used to download the output of a specific Turbinia request or task. The current version of the API server will return a ```.tgz``` of the contents of the request or task output directory. The ```.tgz``` file will also include task and worker log files.
 ```
 turbinia-client result request <request_id>
