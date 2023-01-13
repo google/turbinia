@@ -21,3 +21,4 @@ User documentation
    faq
    turbinia-web-ui
    api-lib-docs
+   turbinia-client
