@@ -11,7 +11,7 @@ You can install the latest version of the tool via PyPi.
 ```
 pip install turbinia-client
 ```
-The package will install the ```turbinia-api-client``` library as a dependency. More information on how to use the ```turbinia-api-client``` Python library can be found [here](https://github.com/google/turbinia/master/turbinia/api/client).
+The package will install the ```turbinia-api-lib``` library as a dependency. More information on how to use the ```turbinia-api-lib``` Python library can be found [here](https://github.com/google/turbinia/master/turbinia/api/client).
 
 ### Configuring the client
 The command-line tool uses a JSON configuration file. By default, the client will search for a ```.turbinia_api_config.json``` file within the user's home directory, or a path specified in the ``TURBINIA_API_CONFIG_PATH``` environment variable.
