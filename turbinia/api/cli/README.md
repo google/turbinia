@@ -116,7 +116,7 @@ turbinia-client status summary
 ```
 
 ### Creating new requests
-New Turbinia requests can be submitted via turbinia-client using the ```submit``` command. In its simplest form, you only need to pass the evidence type and any required arguments for the specific evidence type. As an example, to submit a new Turbinia request to process a ```RawDisk`` evidence type, run the following command:
+New Turbinia requests can be submitted via turbinia-client using the ```submit``` command. In its simplest form, you only need to pass the evidence type and any required arguments for the specific evidence type. As an example, to submit a new Turbinia request to process a ```RawDisk``` evidence type, run the following command:
 ```
 turbinia-client submit rawdisk --source_path /evidence/rawdisk.dd
 ```
