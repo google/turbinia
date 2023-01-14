@@ -11,8 +11,8 @@
 import re  # noqa: F401
 import sys  # noqa: F401
 
-from turbinia_api_client.api_client import ApiClient, Endpoint as _Endpoint
-from turbinia_api_client.model_utils import (  # noqa: F401
+from turbinia_api_lib.api_client import ApiClient, Endpoint as _Endpoint
+from turbinia_api_lib.model_utils import (  # noqa: F401
     check_allowed_values,
     check_validations,
     date,
@@ -21,7 +21,7 @@ from turbinia_api_client.model_utils import (  # noqa: F401
     none_type,
     validate_and_convert_types
 )
-from turbinia_api_client.model.http_validation_error import HTTPValidationError
+from turbinia_api_lib.model.http_validation_error import HTTPValidationError
 
 
 class TurbiniaTasksApi(object):

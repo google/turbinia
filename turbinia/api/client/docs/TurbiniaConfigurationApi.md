@@ -1,4 +1,4 @@
-# turbinia_api_client.TurbiniaConfigurationApi
+# turbinia_api_lib.TurbiniaConfigurationApi
 
 All URIs are relative to *http://localhost*
 
@@ -23,13 +23,13 @@ Returns supported Evidence object types and required parameters.
 
 ```python
 import time
-import turbinia_api_client
-from turbinia_api_client.api import turbinia_configuration_api
-from turbinia_api_client.model.http_validation_error import HTTPValidationError
+import turbinia_api_lib
+from turbinia_api_lib.api import turbinia_configuration_api
+from turbinia_api_lib.model.http_validation_error import HTTPValidationError
 from pprint import pprint
 # Defining the host is optional and defaults to http://localhost
 # See configuration.py for a list of all supported configuration parameters.
-configuration = turbinia_api_client.Configuration(
+configuration = turbinia_api_lib.Configuration(
     host = "http://localhost"
 )
 
@@ -39,13 +39,13 @@ configuration = turbinia_api_client.Configuration(
 # satisfies your auth use case.
 
 # Configure OAuth2 access token for authorization: oAuth2
-configuration = turbinia_api_client.Configuration(
+configuration = turbinia_api_lib.Configuration(
     host = "http://localhost"
 )
 configuration.access_token = 'YOUR_ACCESS_TOKEN'
 
 # Enter a context with an instance of the API client
-with turbinia_api_client.ApiClient(configuration) as api_client:
+with turbinia_api_lib.ApiClient(configuration) as api_client:
     # Create an instance of the API class
     api_instance = turbinia_configuration_api.TurbiniaConfigurationApi(api_client)
     evidence_name = None # bool, date, datetime, dict, float, int, list, str, none_type | 
@@ -55,7 +55,7 @@ with turbinia_api_client.ApiClient(configuration) as api_client:
         # Get Evidence Attributes By Name
         api_response = api_instance.get_evidence_attributes_by_name(evidence_name)
         pprint(api_response)
-    except turbinia_api_client.ApiException as e:
+    except turbinia_api_lib.ApiException as e:
         print("Exception when calling TurbiniaConfigurationApi->get_evidence_attributes_by_name: %s\n" % e)
 ```
 
@@ -102,12 +102,12 @@ Returns supported Evidence object types and required parameters.
 
 ```python
 import time
-import turbinia_api_client
-from turbinia_api_client.api import turbinia_configuration_api
+import turbinia_api_lib
+from turbinia_api_lib.api import turbinia_configuration_api
 from pprint import pprint
 # Defining the host is optional and defaults to http://localhost
 # See configuration.py for a list of all supported configuration parameters.
-configuration = turbinia_api_client.Configuration(
+configuration = turbinia_api_lib.Configuration(
     host = "http://localhost"
 )
 
@@ -117,13 +117,13 @@ configuration = turbinia_api_client.Configuration(
 # satisfies your auth use case.
 
 # Configure OAuth2 access token for authorization: oAuth2
-configuration = turbinia_api_client.Configuration(
+configuration = turbinia_api_lib.Configuration(
     host = "http://localhost"
 )
 configuration.access_token = 'YOUR_ACCESS_TOKEN'
 
 # Enter a context with an instance of the API client
-with turbinia_api_client.ApiClient(configuration) as api_client:
+with turbinia_api_lib.ApiClient(configuration) as api_client:
     # Create an instance of the API class
     api_instance = turbinia_configuration_api.TurbiniaConfigurationApi(api_client)
 
@@ -132,7 +132,7 @@ with turbinia_api_client.ApiClient(configuration) as api_client:
         # Get Evidence Types
         api_response = api_instance.get_evidence_types()
         pprint(api_response)
-    except turbinia_api_client.ApiException as e:
+    except turbinia_api_lib.ApiException as e:
         print("Exception when calling TurbiniaConfigurationApi->get_evidence_types: %s\n" % e)
 ```
 
@@ -175,12 +175,12 @@ Returns a list BaseRequestOptions attributes.
 
 ```python
 import time
-import turbinia_api_client
-from turbinia_api_client.api import turbinia_configuration_api
+import turbinia_api_lib
+from turbinia_api_lib.api import turbinia_configuration_api
 from pprint import pprint
 # Defining the host is optional and defaults to http://localhost
 # See configuration.py for a list of all supported configuration parameters.
-configuration = turbinia_api_client.Configuration(
+configuration = turbinia_api_lib.Configuration(
     host = "http://localhost"
 )
 
@@ -190,13 +190,13 @@ configuration = turbinia_api_client.Configuration(
 # satisfies your auth use case.
 
 # Configure OAuth2 access token for authorization: oAuth2
-configuration = turbinia_api_client.Configuration(
+configuration = turbinia_api_lib.Configuration(
     host = "http://localhost"
 )
 configuration.access_token = 'YOUR_ACCESS_TOKEN'
 
 # Enter a context with an instance of the API client
-with turbinia_api_client.ApiClient(configuration) as api_client:
+with turbinia_api_lib.ApiClient(configuration) as api_client:
     # Create an instance of the API class
     api_instance = turbinia_configuration_api.TurbiniaConfigurationApi(api_client)
 
@@ -205,7 +205,7 @@ with turbinia_api_client.ApiClient(configuration) as api_client:
         # Get Request Options
         api_response = api_instance.get_request_options()
         pprint(api_response)
-    except turbinia_api_client.ApiException as e:
+    except turbinia_api_lib.ApiException as e:
         print("Exception when calling TurbiniaConfigurationApi->get_request_options: %s\n" % e)
 ```
 
@@ -248,12 +248,12 @@ Retrieve turbinia config.
 
 ```python
 import time
-import turbinia_api_client
-from turbinia_api_client.api import turbinia_configuration_api
+import turbinia_api_lib
+from turbinia_api_lib.api import turbinia_configuration_api
 from pprint import pprint
 # Defining the host is optional and defaults to http://localhost
 # See configuration.py for a list of all supported configuration parameters.
-configuration = turbinia_api_client.Configuration(
+configuration = turbinia_api_lib.Configuration(
     host = "http://localhost"
 )
 
@@ -263,13 +263,13 @@ configuration = turbinia_api_client.Configuration(
 # satisfies your auth use case.
 
 # Configure OAuth2 access token for authorization: oAuth2
-configuration = turbinia_api_client.Configuration(
+configuration = turbinia_api_lib.Configuration(
     host = "http://localhost"
 )
 configuration.access_token = 'YOUR_ACCESS_TOKEN'
 
 # Enter a context with an instance of the API client
-with turbinia_api_client.ApiClient(configuration) as api_client:
+with turbinia_api_lib.ApiClient(configuration) as api_client:
     # Create an instance of the API class
     api_instance = turbinia_configuration_api.TurbiniaConfigurationApi(api_client)
 
@@ -278,7 +278,7 @@ with turbinia_api_client.ApiClient(configuration) as api_client:
         # Read Config
         api_response = api_instance.read_config()
         pprint(api_response)
-    except turbinia_api_client.ApiException as e:
+    except turbinia_api_lib.ApiException as e:
         print("Exception when calling TurbiniaConfigurationApi->read_config: %s\n" % e)
 ```
 

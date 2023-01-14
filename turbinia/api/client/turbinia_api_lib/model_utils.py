@@ -20,7 +20,7 @@ import uuid
 
 from dateutil.parser import parse
 
-from turbinia_api_client.exceptions import (
+from turbinia_api_lib.exceptions import (
     ApiKeyError,
     ApiAttributeError,
     ApiTypeError,

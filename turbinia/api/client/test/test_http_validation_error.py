@@ -11,10 +11,10 @@
 import sys
 import unittest
 
-import turbinia_api_client
-from turbinia_api_client.model.validation_error import ValidationError
+import turbinia_api_lib
+from turbinia_api_lib.model.validation_error import ValidationError
 globals()['ValidationError'] = ValidationError
-from turbinia_api_client.model.http_validation_error import HTTPValidationError
+from turbinia_api_lib.model.http_validation_error import HTTPValidationError
 
 
 class TestHTTPValidationError(unittest.TestCase):

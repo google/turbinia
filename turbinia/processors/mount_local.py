@@ -495,7 +495,7 @@ def PreprocessMountPartition(partition_path, filesystem_type):
     # everything read-only.
     mount_cmd.extend(['-o', 'noload'])
   elif filesystem_type == 'XFS':
-    mount_cmd.extend(['-o', 'norecovery'])
+    mount_cmd.extend(['-o', 'norecovery', '-o', 'nouuid'])
   mount_cmd.extend([partition_path, mount_path])
 
   log.info('Running: {0:s}'.format(' '.join(mount_cmd)))

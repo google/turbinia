@@ -102,7 +102,7 @@ To create the API/Desktop Oauth credentials, take the following steps:
 1. Go to the [Credentials page](https://console.developers.google.com/apis/credentials).
 2. Click Create credentials > OAuth client ID.
 3. Select the `Desktop or Native application` application type.
-4. Fill in an appropiate application name.
+4. Fill in an appropriate application name.
 5. Please make a note of the generated `Client ID` and `Client Secret` for later use.
 
 You will then need to generate a cookie secret for later use:
@@ -186,16 +186,22 @@ Congrats, you have now successfully configured Turbinia to be externally accessi
 ## Making Turbinia processing requests
 
 Once Turbinia is externally accessible, download the Oauth Desktop credentials
-created above to your machine and install the Turbinia client:
+created above to your machine and install the command-line Turbinia client:
 
 ```
-pip3 install turbinia_api_client`
+pip3 install turbinia-client
+```
+
+or Python client library:
+
+```
+pip3 install turbinia-api-lib
 ```
 
 - To create a processing request for evidence run the following:
 
 ```
-turbiniamgmt submit GoogleCloudDisk --project <PROJECT_NAME> --disk_name <DISK_NAME> --zone <ZONE>
+turbinia-client submit googleclouddisk --project <PROJECT_NAME> --disk_name <DISK_NAME> --zone <ZONE>
 ```
 
 - To access the Turbinia Web UI, point your browser to:
@@ -234,7 +240,7 @@ kubectl create -f ../celery/turbinia-ingress.yaml
 ### Egress Connectivity for Nodes
 
 By default, the deployment script will bootstrap a private GKE cluster. This prevents
-nodes from having an external IP address to send and recieve external traffic from and
+nodes from having an external IP address to send and receive external traffic from and
 traffic will only be allowed through the deployed load balancer.
 
 In cases where nodes require external network connectivity or egress to retrieve external

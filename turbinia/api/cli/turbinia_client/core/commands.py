@@ -20,13 +20,13 @@ import click
 import base64
 import tarfile
 
-from turbinia_api_client import exceptions
-from turbinia_api_client import api_client
-from turbinia_api_client.api import turbinia_requests_api
-from turbinia_api_client.api import turbinia_tasks_api
-from turbinia_api_client.api import turbinia_configuration_api
-from turbinia_api_client.api import turbinia_jobs_api
-from turbinia_api_client.api import turbinia_request_results_api
+from turbinia_api_lib import exceptions
+from turbinia_api_lib import api_client
+from turbinia_api_lib.api import turbinia_requests_api
+from turbinia_api_lib.api import turbinia_tasks_api
+from turbinia_api_lib.api import turbinia_configuration_api
+from turbinia_api_lib.api import turbinia_jobs_api
+from turbinia_api_lib.api import turbinia_request_results_api
 
 from turbinia_client.core import groups
 from turbinia_client.helpers import formatter
@@ -208,7 +208,7 @@ def create_request(ctx: click.Context, *args: int, **kwargs: int) -> None:
 
   # Normalize the evidence class name from lowercase to the original name.
   evidence_name = ctx.obj.normalize_evidence_name(evidence_name)
-  # Build request and reqeust_options objects to send to the API server.
+  # Build request and request_options objects to send to the API server.
   request_options = list(ctx.obj.request_options.keys())
   request = {'evidence': {'type': evidence_name}, 'request_options': {}}
 

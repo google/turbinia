@@ -18,10 +18,10 @@ import os
 import sys
 import logging
 import json
-import turbinia_api_client
+import turbinia_api_lib
 from typing import Union
 
-from turbinia_api_client.api import turbinia_configuration_api
+from turbinia_api_lib.api import turbinia_configuration_api
 
 from turbinia_client.helpers import auth_helper
 
@@ -32,9 +32,9 @@ class TurbiniaCli:
   """Turbinia API client tool.
 
   Attributes:
-    _api_client (turbinia_api_client.ApiClient): An instance of the ApiClient
+    _api_client (turbinia_api_lib.ApiClient): An instance of the ApiClient
         class.
-    _config (turbinia_api_client.Configuration): An instance of the
+    _config (turbinia_api_lib.Configuration): An instance of the
         Configuration class.
     _config_dict (dict): Contains all the cli configuration keys and values
         from the config file.
@@ -57,8 +57,8 @@ class TurbiniaCli:
   """
 
   def __init__(self, config_instance=None, config_path=None):
-    self._api_client: turbinia_api_client.ApiClient = None
-    self._config: turbinia_api_client.Configuration = None
+    self._api_client: turbinia_api_lib.ApiClient = None
+    self._config: turbinia_api_lib.Configuration = None
     self._config_dict: dict = {}
     self._evidence_mapping: dict = {}
     self._request_options: dict = {}
@@ -100,7 +100,7 @@ class TurbiniaCli:
     try:
       self.evidence_mapping = self.get_evidence_arguments()
       self.request_options = self.get_request_options()
-    except turbinia_api_client.ApiException as exception:
+    except turbinia_api_lib.ApiException as exception:
       log.error(
           'Error while attempting to contact the API server during setup: %s',
           exception)
@@ -152,14 +152,14 @@ class TurbiniaCli:
     self._request_options = request_options
 
   def default_api_client(
-      self, config: turbinia_api_client.Configuration
-  ) -> turbinia_api_client.ApiClient:
+      self,
+      config: turbinia_api_lib.Configuration) -> turbinia_api_lib.ApiClient:
     """Default value for API client instance."""
-    return turbinia_api_client.ApiClient(configuration=config)
+    return turbinia_api_lib.ApiClient(configuration=config)
 
-  def default_config(self, host: str) -> turbinia_api_client.Configuration:
+  def default_config(self, host: str) -> turbinia_api_lib.Configuration:
     """Default value for API client configuration."""
-    return turbinia_api_client.Configuration(host=host)
+    return turbinia_api_lib.Configuration(host=host)
 
   def get_evidence_arguments(self, evidence_name=None) -> dict:
     """Gets arguments for Evidence types."""

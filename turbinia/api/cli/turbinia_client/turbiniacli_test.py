@@ -46,7 +46,7 @@ class TestTurbiniaCli(unittest.TestCase):
     self.assertIn('CREDENTIALS_FILENAME', self.client.config_dict)
 
   @mock.patch(
-      'turbinia_api_client.api.turbinia_configuration_api.TurbiniaConfigurationApi.get_evidence_types'
+      'turbinia_api_lib.api.turbinia_configuration_api.TurbiniaConfigurationApi.get_evidence_types'
   )
   def testGetEvidenceArguments(self, mock_response) -> None:
     """Tests the get_evidence_arguments method."""
@@ -56,7 +56,7 @@ class TestTurbiniaCli(unittest.TestCase):
     self.assertEqual(test_response, api_response)
 
   @mock.patch(
-      'turbinia_api_client.api.turbinia_configuration_api.TurbiniaConfigurationApi.get_request_options'
+      'turbinia_api_lib.api.turbinia_configuration_api.TurbiniaConfigurationApi.get_request_options'
   )
   def testGetRequestOptions(self, mock_response) -> None:
     """Tests the get_request_options method."""
