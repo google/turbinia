@@ -21,3 +21,6 @@ User documentation
    recipes
    debugging
    faq
+   turbinia-web-ui
+   api-lib-docs
+   turbinia-client
