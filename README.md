@@ -50,7 +50,8 @@ The basic steps to get things running after the initial installation and
 configuration are:
 
 *   Start Turbinia server component with `turbiniactl server` command
-*   Start one or more Turbinia workers with `turbiniactl psqworker`
+*   Start Turbinia API server component with `turbiniactl api_server` command if using Celery
+*   Start one or more Turbinia workers with `turbiniactl celeryworker` if using Celery, or `turbiniactl psqworker` if using PSQ
 *   Send evidence to be processed from the turbinia client with `turbiniactl
     ${evidencetype}`
 *   Check status of running tasks with `turbiniactl status`
