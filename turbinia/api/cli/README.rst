@@ -24,7 +24,7 @@ You can install the latest version of the tool via PyPi.
 
    pip install turbinia-client
 
-The package will install the ``turbinia-api-lib`` library as a dependency. More information on how to use the ``turbinia-api-lib`` Python library can be found `here <https://github.com/google/turbinia/tree/master/turbinia/api/client>`_.
+The package will install the ``turbinia-api-lib`` library as a dependency. More information on how to use the ``turbinia-api-lib`` Python library can be found `here <https://github.com/google/turbinia/blob/master/turbinia/api/cli/README.md>`.
 
 Configuring the client
 ^^^^^^^^^^^^^^^^^^^^^^
@@ -133,7 +133,7 @@ For task status:
 
    turbinia-client status task <task_id>
 
-where :raw-html-m2r:`<request_id>` and :raw-html-m2r:`<task_id>` are the respective Turbinia request or task identifiers.
+where ``<request_id>`` and ``<task_id>`` are the respective Turbinia request or task identifiers.
 
 To get a summary of all existing requests:
 
@@ -156,7 +156,7 @@ Each evidence type will have its own set of required and optional arguments. You
 
    turbinia-client submit <evidence_type> -h
 
-where :raw-html-m2r:`<evidence_type>` is a valid Turbinia evidence name.
+where ``<evidence_type>`` is a valid Turbinia evidence name.
 
 A list of all valid Turbinia evidence names can be viewed with:
 
