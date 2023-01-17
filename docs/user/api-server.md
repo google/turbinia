@@ -4,7 +4,7 @@
 Turbinia's API server provides a RESTful interface to Turbinia's functionality. It allows users to create and manage logical jobs, which are used to schedule forensic processing tasks. The API server also provides a way for users to monitor the status of their jobs and view the results of their processing tasks.
 
 ## Getting started
-The following sections describe how to get up the Turbinia API server up and running. Please note that The API server is only compatible with Turbinia deployments that use Redis as a datastore and Celery workers. If your deployment uses GCP PubSub and/or GCP PSQ workers you will not be able to use the API server. GCP PubSub/PSQ dependencies will be deprecated in the near future so it is recommended to redeploy Turbinia and use Redis and Celery.
+The following sections describe how to get the Turbinia API server up and running. Please note that The API server is only compatible with Turbinia deployments that use Redis as a datastore and Celery workers. If your deployment uses GCP PubSub and/or GCP PSQ workers you will not be able to use the API server. GCP PubSub/PSQ dependencies will be deprecated in the near future so it is recommended to redeploy Turbinia and use Redis and Celery.
 
 ### Installation
 To use the Turbinia API server you will need to deploy Turbinia in your environment with a configuration that uses Redis and Celery instead of GCP PubSub and PSQ.
