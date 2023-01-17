@@ -24,7 +24,7 @@ You can install the latest version of the tool via PyPi.
 
    pip install turbinia-client
 
-The package will install the ``turbinia-api-lib`` library as a dependency. More information on how to use the ``turbinia-api-lib`` Python library can be found `here <https://github.com/google/turbinia/blob/master/turbinia/api/cli/README.md>`_.
+The package will install the ``turbinia-api-lib`` library as a dependency. More information on how to use the ``turbinia-api-lib`` Python library can be found `here <https://github.com/google/turbinia/tree/master/turbinia/api/client>`_.
 
 Configuring the client
 ^^^^^^^^^^^^^^^^^^^^^^
