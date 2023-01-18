@@ -86,6 +86,79 @@ class MountLocalProcessorTest(unittest.TestCase):
   @mock.patch('os.path.isdir')
   @mock.patch('os.path.exists')
   @mock.patch('os.makedirs')
+  def testPreprocessAPFS(
+      self, _, mock_path_exists, mock_path_isdir, mock_subprocess, mock_mkdtemp,
+      mock_config):
+    """Test PreprocessAPFS method."""
+    mock_config.MOUNT_DIR_PREFIX = '/mnt/turbinia'
+    mock_path_exists.side_effect = _mock_bitlocker_returns
+    mock_mkdtemp.return_value = '/mnt/turbinia/turbinia0ckdntz0'
+
+    current_path = os.path.abspath(os.path.dirname(__file__))
+    source_path = os.path.join(
+        current_path, '..', '..', 'test_data', 'apfs.raw')
+    credentials = [('password', '123456')]
+
+    # Test APFS volume
+    mock_path_isdir.return_value = True
+    mount_path = mount_local.PreprocessAPFS(source_path, credentials=None)
+    expected_args = [
+        'sudo', 'fsapfsmount', '-X', 'allow_other', source_path,
+        '/mnt/turbinia/turbinia0ckdntz0'
+    ]
+    mock_subprocess.assert_called_once_with(expected_args)
+    self.assertEqual(mount_path, '/mnt/turbinia/turbinia0ckdntz0')
+
+    # Test encrypted APFS volume
+    mock_subprocess.reset_mock()
+    mount_path = mount_local.PreprocessAPFS(
+        source_path, credentials=credentials)
+    expected_args = [
+        'sudo', 'fsapfsmount', '-p', '123456', '-X', 'allow_other', source_path,
+        '/mnt/turbinia/turbinia0ckdntz0'
+    ]
+    mock_subprocess.assert_called_once_with(expected_args)
+    self.assertEqual(mount_path, '/mnt/turbinia/turbinia0ckdntz0')
+
+    # Test with recovery password
+    mock_subprocess.reset_mock()
+    credentials = [('recovery_password', '123456')]
+    mount_local.PreprocessAPFS(source_path, credentials=credentials)
+    expected_args = [
+        'sudo', 'fsapfsmount', '-r', '123456', '-X', 'allow_other', source_path,
+        '/mnt/turbinia/turbinia0ckdntz0'
+    ]
+    mock_subprocess.assert_called_once_with(expected_args)
+
+    # Test if source does not exist
+    with self.assertRaises(TurbiniaException):
+      mount_local.PreprocessAPFS('/dev/loop0p4', credentials=credentials)
+
+    # Test if mount path not directory
+    mock_path_isdir.return_value = False
+    with self.assertRaises(TurbiniaException):
+      mount_local.PreprocessAPFS(source_path, credentials=credentials)
+    mock_path_isdir.return_value = True
+
+    # Test decryption failure
+    mock_subprocess.reset_mock()
+    mock_subprocess.side_effect = CalledProcessError(1, 'fsapfsmount')
+    mount_path = mount_local.PreprocessAPFS(
+        source_path, credentials=credentials)
+    self.assertEqual(mount_path, None)
+
+    # Test with unsupported credential type
+    mock_subprocess.reset_mock()
+    credentials = [('startup_key', 'key.BEK')]
+    mount_local.PreprocessAPFS(source_path, credentials=credentials)
+    mock_subprocess.assert_not_called()
+
+  @mock.patch('turbinia.processors.mount_local.config')
+  @mock.patch('tempfile.mkdtemp')
+  @mock.patch('subprocess.check_call')
+  @mock.patch('os.path.isdir')
+  @mock.patch('os.path.exists')
+  @mock.patch('os.makedirs')
   def testPreprocessBitLocker(
       self, _, mock_path_exists, mock_path_isdir, mock_subprocess, mock_mkdtemp,
       mock_config):
@@ -298,8 +371,8 @@ class MountLocalProcessorTest(unittest.TestCase):
     mock_subprocess.reset_mock()
     mount_path = mount_local.PreprocessMountPartition('/dev/loop0', 'XFS')
     expected_args = [
-        'sudo', 'mount', '-o', 'ro', '-o', 'norecovery', '/dev/loop0',
-        '/mnt/turbinia/turbinia0ckdntz0'
+        'sudo', 'mount', '-o', 'ro', '-o', 'norecovery', '-o', 'nouuid',
+        '/dev/loop0', '/mnt/turbinia/turbinia0ckdntz0'
     ]
     mock_subprocess.assert_called_once_with(expected_args)
     self.assertEqual(mount_path, '/mnt/turbinia/turbinia0ckdntz0')

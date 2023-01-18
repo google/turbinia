@@ -12,9 +12,13 @@ class StyleTest(unittest.TestCase):
     """Check YAPF style enforcement runs cleanly."""
     turbinia_path = os.path.abspath(os.path.dirname(__file__))
     config_path = os.path.join(turbinia_path, '..', '.style.yapf')
+    api_client_path = '*api/client/*'
+    cli_tool_setup = '*api/cli/setup.py'
     try:
-      subprocess.check_output(
-          ['yapf', '--style', config_path, '--diff', '-r', turbinia_path])
+      subprocess.check_output([
+          'yapf', '--exclude', api_client_path, '--exclude', cli_tool_setup,
+          '--style', config_path, '--diff', '-r', turbinia_path
+      ])
     except subprocess.CalledProcessError as exception:
       if hasattr(exception, 'output'):
         raise Exception(

@@ -39,7 +39,6 @@ RUN mkdir /etc/turbinia && mkdir -p /mnt/turbinia/ && mkdir -p /var/lib/turbinia
 
 COPY docker/controller/start.sh /home/turbinia/start.sh
 COPY k8s/tools/load-test.sh /home/turbinia/load-test.sh
-RUN chmod +rwx /home/turbinia/start.sh
-RUN chmod +rwx /home/turbinia/load-test.sh
+RUN chmod +rwx /home/turbinia/start.sh /home/turbinia/load-test.sh && chown -R turbinia:turbinia /home/turbinia/
 USER turbinia
 CMD ["/home/turbinia/start.sh"]
