@@ -772,11 +772,12 @@ class DiskPartition(Evidence):
     if EvidenceState.ATTACHED in required_states or self.has_child_evidence:
       # Check for encryption
       encryption_type = partitions.GetPartitionEncryptionType(self.path_spec)
-      if encryption_type == 'BDE':
-        self.device_path = mount_local.PreprocessBitLocker(
+      if encryption_type:
+        self.device_path = mount_local.PreprocessEncryptedVolume(
             self.parent_evidence.device_path,
             partition_offset=self.partition_offset,
-            credentials=self.parent_evidence.credentials)
+            credentials=self.parent_evidence.credentials,
+            encryption_type=encryption_type)
         if not self.device_path:
           log.error('Could not decrypt partition.')
       else:

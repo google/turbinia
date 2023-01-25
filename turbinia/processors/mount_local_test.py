@@ -159,10 +159,10 @@ class MountLocalProcessorTest(unittest.TestCase):
   @mock.patch('os.path.isdir')
   @mock.patch('os.path.exists')
   @mock.patch('os.makedirs')
-  def testPreprocessBitLocker(
+  def testPreprocessEncryptedVolume(
       self, _, mock_path_exists, mock_path_isdir, mock_subprocess, mock_mkdtemp,
       mock_config):
-    """Test PreprocessBitLocker method."""
+    """Test PreprocessEncryptedVolume method."""
     mock_config.MOUNT_DIR_PREFIX = '/mnt/turbinia'
     mock_path_exists.side_effect = _mock_bitlocker_returns
     mock_mkdtemp.return_value = '/mnt/turbinia/turbinia0ckdntz0'
@@ -171,9 +171,11 @@ class MountLocalProcessorTest(unittest.TestCase):
     source_path = os.path.join(current_path, '..', '..', 'test_data', 'mbr.raw')
     credentials = [('password', '123456')]
 
+    # Test BDE
     mock_path_isdir.return_value = True
-    device = mount_local.PreprocessBitLocker(
-        source_path, partition_offset=65536, credentials=credentials)
+    device = mount_local.PreprocessEncryptedVolume(
+        source_path, partition_offset=65536, credentials=credentials,
+        encryption_type='BDE')
     expected_args = [
         'sudo', 'bdemount', '-o', '65536', '-p', '123456', '-X', 'allow_other',
         source_path, '/mnt/turbinia/turbinia0ckdntz0'
@@ -181,11 +183,25 @@ class MountLocalProcessorTest(unittest.TestCase):
     mock_subprocess.assert_called_once_with(expected_args)
     self.assertEqual(device, '/mnt/turbinia/turbinia0ckdntz0/bde1')
 
+    # Test LUKSDE
+    mock_subprocess.reset_mock()
+    mock_path_isdir.return_value = True
+    device = mount_local.PreprocessEncryptedVolume(
+        source_path, partition_offset=65536, credentials=credentials,
+        encryption_type='LUKSDE')
+    expected_args = [
+        'sudo', 'luksdemount', '-o', '65536', '-p', '123456', '-X',
+        'allow_other', source_path, '/mnt/turbinia/turbinia0ckdntz0'
+    ]
+    mock_subprocess.assert_called_once_with(expected_args)
+    self.assertEqual(device, '/mnt/turbinia/turbinia0ckdntz0/luksde1')
+
     # Test with recovery password
     mock_subprocess.reset_mock()
     credentials = [('recovery_password', '123456')]
-    mount_local.PreprocessBitLocker(
-        source_path, partition_offset=65536, credentials=credentials)
+    mount_local.PreprocessEncryptedVolume(
+        source_path, partition_offset=65536, credentials=credentials,
+        encryption_type='BDE')
     expected_args = [
         'sudo', 'bdemount', '-o', '65536', '-r', '123456', '-X', 'allow_other',
         source_path, '/mnt/turbinia/turbinia0ckdntz0'
@@ -194,28 +210,32 @@ class MountLocalProcessorTest(unittest.TestCase):
 
     # Test if source does not exist
     with self.assertRaises(TurbiniaException):
-      mount_local.PreprocessBitLocker(
-          '/dev/loop0p4', partition_offset=65536, credentials=credentials)
+      mount_local.PreprocessEncryptedVolume(
+          '/dev/loop0p4', partition_offset=65536, credentials=credentials,
+          encryption_type='BDE')
 
     # Test if mount path not directory
     mock_path_isdir.return_value = False
     with self.assertRaises(TurbiniaException):
-      mount_local.PreprocessBitLocker(
-          source_path, partition_offset=65536, credentials=credentials)
+      mount_local.PreprocessEncryptedVolume(
+          source_path, partition_offset=65536, credentials=credentials,
+          encryption_type='BDE')
     mock_path_isdir.return_value = True
 
     # Test decryption failure
     mock_subprocess.reset_mock()
     mock_subprocess.side_effect = CalledProcessError(1, 'bdemount')
-    device = mount_local.PreprocessBitLocker(
-        source_path, partition_offset=65536, credentials=credentials)
+    device = mount_local.PreprocessEncryptedVolume(
+        source_path, partition_offset=65536, credentials=credentials,
+        encryption_type='BDE')
     self.assertEqual(device, None)
 
     # Test with unsupported credential type
     mock_subprocess.reset_mock()
     credentials = [('startup_key', 'key.BEK')]
-    mount_local.PreprocessBitLocker(
-        source_path, partition_offset=65536, credentials=credentials)
+    mount_local.PreprocessEncryptedVolume(
+        source_path, partition_offset=65536, credentials=credentials,
+        encryption_type='BDE')
     mock_subprocess.assert_not_called()
 
   @mock.patch('turbinia.processors.mount_local.config')
