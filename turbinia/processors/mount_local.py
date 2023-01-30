@@ -166,15 +166,17 @@ def PreprocessAPFS(source_path, credentials=None):
   return mount_path
 
 
-def PreprocessBitLocker(source_path, partition_offset=None, credentials=None):
-  """Uses libbde on a target block device or image file.
+def PreprocessEncryptedVolume(
+    source_path, partition_offset=None, credentials=None, encryption_type=None):
+  """Attaches an encrypted volume using libyal tools.
 
   Creates a decrypted virtual device of the encrypted volume.
 
   Args:
     source_path(str): the source path to run bdemount on.
     partition_offset(int): offset of volume in bytes.
-    credentials(list[(str, str)]): decryption credentials set in evidence setup
+    credentials(list[(str, str)]): decryption credentials set in evidence setup.
+    encryption_type(str): type of encryption used.
 
   Raises:
     TurbiniaException: if source_path doesn't exist or if the bdemount command
@@ -186,6 +188,12 @@ def PreprocessBitLocker(source_path, partition_offset=None, credentials=None):
   config.LoadConfig()
   mount_prefix = config.MOUNT_DIR_PREFIX
   decrypted_device = None
+  mount_commands = {'BDE': 'bdemount', 'LUKSDE': 'luksdemount'}
+  mount_names = {'BDE': 'bde1', 'LUKSDE': 'luksde1'}
+
+  if not encryption_type:
+    raise TurbiniaException(
+        'Cannot create virtual device. Encryption type not provided.')
 
   if not os.path.exists(source_path):
     raise TurbiniaException(
@@ -207,31 +215,32 @@ def PreprocessBitLocker(source_path, partition_offset=None, credentials=None):
   mount_path = tempfile.mkdtemp(prefix='turbinia', dir=mount_prefix)
 
   for credential_type, credential_data in credentials:
-    libbde_command = ['sudo', 'bdemount']
+    mount_command = ['sudo', mount_commands[encryption_type]]
     if partition_offset:
-      libbde_command.extend(['-o', str(partition_offset)])
+      mount_command.extend(['-o', str(partition_offset)])
     if credential_type == 'password':
-      libbde_command.extend(['-p', credential_data])
-    elif credential_type == 'recovery_password':
-      libbde_command.extend(['-r', credential_data])
+      mount_command.extend(['-p', credential_data])
+    elif credential_type == 'recovery_password' and encryption_type != 'LUKSDE':
+      mount_command.extend(['-r', credential_data])
     else:
       # Unsupported credential type, try the next
       log.warning('Unsupported credential type: {0!s}'.format(credential_type))
       continue
 
-    libbde_command.extend(['-X', 'allow_other', source_path, mount_path])
+    mount_command.extend(['-X', 'allow_other', source_path, mount_path])
 
     # Not logging command since it will contain credentials
     log.info(
-        'Running bdemount with credential type: {0:s}'.format(credential_type))
+        'Running mount command with credential type: {0:s}'.format(
+            credential_type))
     try:
-      subprocess.check_call(libbde_command)
+      subprocess.check_call(mount_command)
     except subprocess.CalledProcessError as exception:
       # Decryption failed with these credentials, try the next
       continue
 
     # Decrypted volume was mounted
-    decrypted_device = os.path.join(mount_path, 'bde1')
+    decrypted_device = os.path.join(mount_path, mount_names[encryption_type])
     if not os.path.exists(decrypted_device):
       raise TurbiniaException(
           'Cannot attach decrypted device: {0!s}'.format(decrypted_device))

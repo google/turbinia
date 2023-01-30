@@ -2,4 +2,4 @@
 Turbinia Client
 #######################
 
-.. include:: ../../turbinia/api/cli/README.md
+.. include:: ../../turbinia/api/cli/README.rst

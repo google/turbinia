@@ -15,16 +15,14 @@
 # sys.path.insert(0, os.path.abspath('.'))
 
 from __future__ import unicode_literals
-import re
 
-from recommonmark.parser import CommonMarkParser
 from recommonmark.transform import AutoStructify
 from docutils import nodes, transforms
 
 # -- Project information -----------------------------------------------------
 
 project = 'Turbinia'
-copyright = '2022, Google Inc'
+copyright = '2023, Google Inc'
 author = 'Turbinia maintainers'
 
 # -- General configuration ---------------------------------------------------
@@ -81,7 +79,7 @@ linkcheck_retries = 3
 # Output file base name for HTML help builder.
 htmlhelp_basename = 'turbiniadoc'
 
-html_logo = "images/turbinia-logo.jpg"
+html_logo = 'images/turbinia-logo.jpg'
 
 
 class ProcessLink(transforms.Transform):

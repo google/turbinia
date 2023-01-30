@@ -86,4 +86,6 @@ def GetPartitionEncryptionType(path_spec):
 
   if path_spec.parent.type_indicator == dfvfs_definitions.TYPE_INDICATOR_BDE:
     encryption_type = 'BDE'
+  elif path_spec.parent.type_indicator == dfvfs_definitions.TYPE_INDICATOR_LUKSDE:
+    encryption_type = 'LUKSDE'
   return encryption_type
