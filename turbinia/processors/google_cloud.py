@@ -121,9 +121,10 @@ def PreprocessAttachDisk(disk_name):
       log.info(
           'Block device {0:s} mode is {1}'.format(path,
                                                   os.stat(path).st_mode))
-
-    # Final sleep to allow time between API calls
     time.sleep(SLEEP_TIME)
+
+  # Final sleep to allow time between API calls.
+  time.sleep(SLEEP_TIME)
 
   message = None
   if not os.path.exists(path):
@@ -173,5 +174,5 @@ def PostprocessDetachDisk(disk_name, local_path):
       break
     time.sleep(SLEEP_TIME)
 
-  # Final sleep to allow time between API calls
+  # Final sleep to allow time between API calls.
   time.sleep(SLEEP_TIME)

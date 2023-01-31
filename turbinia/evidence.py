@@ -472,7 +472,7 @@ class Evidence:
         # Track resource and task id in state file
         log.debug(
             'Evidence {0:s} is resource tracked. Acquiring filelock for'
-            'pre-processing'.format(self.name))
+            'preprocessing'.format(self.name))
         with filelock.FileLock(config.RESOURCE_FILE_LOCK):
           resource_manager.PreprocessResourceState(self.resource_id, task_id)
           self._preprocess(tmp_dir, required_states)
@@ -487,7 +487,7 @@ class Evidence:
               self.name, exception))
 
     log.info(
-        'Pre-processing evidence {0:s} is complete, and evidence is in state '
+        'Preprocessing evidence {0:s} is complete, and evidence is in state '
         '{1:s}'.format(self.name, self.format_state()))
 
   def postprocess(self, task_id):
@@ -500,7 +500,7 @@ class Evidence:
     Args:
       task_id(str): The id of a given Task.
     """
-    log.info('Starting post-processor for evidence {0:s}'.format(self.name))
+    log.info('Starting postprocessor for evidence {0:s}'.format(self.name))
     log.debug('Evidence state: {0:s}'.format(self.format_state()))
 
     if self.resource_tracked:
