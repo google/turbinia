@@ -32,6 +32,7 @@ from turbinia import TurbiniaException
 log = logging.getLogger('turbinia')
 
 RETRY_MAX = 10
+SLEEP_TIME = 3
 
 turbinia_nonexisting_disk_path = Gauge(
     'turbinia_nonexisting_disk_path',
@@ -120,7 +121,9 @@ def PreprocessAttachDisk(disk_name):
       log.info(
           'Block device {0:s} mode is {1}'.format(path,
                                                   os.stat(path).st_mode))
-    time.sleep(1)
+
+    # Final sleep to allow time between API calls
+    time.sleep(SLEEP_TIME)
 
   message = None
   if not os.path.exists(path):
@@ -168,4 +171,7 @@ def PostprocessDetachDisk(disk_name, local_path):
     if not os.path.exists(path):
       log.info('Block device {0:s} is no longer attached'.format(path))
       break
-    time.sleep(5)
+    time.sleep(SLEEP_TIME)
+
+  # Final sleep to allow time between API calls
+  time.sleep(SLEEP_TIME)

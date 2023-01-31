@@ -84,9 +84,18 @@ def PreprocessResourceState(resource_id, task_id):
   # Write back to state file.
   with open(config.RESOURCE_FILE, 'w', encoding='utf-8') as fh:
     json.dump(json_load, fh)
-    log.debug('The resource state file has been successfully updated.')
+    log.info('The resource state file has been successfully updated.') 
   fh.close()
-
+  
+  # Confirm resource state was properly updated.
+  curr_state = RetrieveResourceState()
+  if json_load != curr_state:
+    msg = ('Warning resource state mismatch detected. Intended state: {0:s} '
+           'Current state: {1:s}'
+           .format(json.dumps(json_load), json.dumps(curr_state)))
+    log.error(msg)
+    raise TurbiniaException(msg)
+  log.debug('Current resource state: {0:s}'.format(json.dumps(curr_state)))
 
 def PostProcessResourceState(resource_id, task_id):
   """Removes the Evidence resource_id and/or task_id from the state file
@@ -121,7 +130,17 @@ def PostProcessResourceState(resource_id, task_id):
   # Write back to state file.
   with open(config.RESOURCE_FILE, 'w', encoding='utf-8') as fh:
     json.dump(json_load, fh)
-    log.debug('The resource state file has been successfully updated.')
+    log.info('The resource state file has been successfully updated.')
   fh.close()
+
+  # Confirm resource state was properly updated.
+  curr_state = RetrieveResourceState()
+  if json_load != curr_state:
+    msg = ('Warning resource state mismatch detected. Intended state: {0:s} '
+           'Current state: {1:s}'
+           .format(json.dumps(json_load), json.dumps(curr_state)))
+    log.error(msg)
+    raise TurbiniaException(msg)
+  log.debug('Current resource state: {0:s}'.format(json.dumps(curr_state))) 
 
   return is_detachable
