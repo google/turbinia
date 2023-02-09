@@ -406,7 +406,6 @@ func filesystemScan(wait chan struct{}, c chan *Detection, minimumScore int) {
 		log.Printf("Error walking dir: %v\n", err)
 	}
 	wg.Wait()
-
 }
 
 func scanFile(s Scanner, filePath string, fileInfo os.FileInfo) (yara.MatchRules, error) {
