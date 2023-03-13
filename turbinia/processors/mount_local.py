@@ -83,15 +83,100 @@ def GetDiskSize(source_path):
   return size
 
 
-def PreprocessBitLocker(source_path, partition_offset=None, credentials=None):
-  """Uses libbde on a target block device or image file.
+def PreprocessAPFS(source_path, credentials=None):
+  """Uses libfsapfs on a target block device or image file.
+
+  Args:
+    source_path(str): the source path to run fsapfsmount on.
+    credentials(list[(str, str)]): decryption credentials set in evidence setup
+
+  Raises:
+    TurbiniaException: if source_path doesn't exist or if the fsapfsmount
+      command failed to create a virtual device.
+
+  Returns:
+    str: the path to the mounted filesystem.
+  """
+  config.LoadConfig()
+  mount_prefix = config.MOUNT_DIR_PREFIX
+
+  if not os.path.exists(source_path):
+    raise TurbiniaException(
+        'Could not mount partition {0:s}, the path does not exist'.format(
+            source_path))
+
+  if os.path.exists(mount_prefix) and not os.path.isdir(mount_prefix):
+    raise TurbiniaException(
+        'Mount dir {0:s} exists, but is not a directory'.format(mount_prefix))
+  if not os.path.exists(mount_prefix):
+    log.info('Creating local mount parent directory {0:s}'.format(mount_prefix))
+    try:
+      os.makedirs(mount_prefix)
+    except OSError as exception:
+      raise TurbiniaException(
+          'Could not create mount directory {0:s}: {1!s}'.format(
+              mount_prefix, exception))
+
+  mount_path = tempfile.mkdtemp(prefix='turbinia', dir=mount_prefix)
+  mounted = False
+
+  log.debug('Mounting APFS volume')
+
+  if credentials:
+    for credential_type, credential_data in credentials:
+      mount_cmd = ['sudo', 'fsapfsmount']
+      if credential_type == 'password':
+        mount_cmd.extend(['-p', credential_data])
+      elif credential_type == 'recovery_password':
+        mount_cmd.extend(['-r', credential_data])
+      else:
+        # Unsupported credential type, try the next
+        log.warning(
+            'Unsupported credential type: {0!s}'.format(credential_type))
+        continue
+      mount_cmd.extend(['-X', 'allow_other', source_path, mount_path])
+      # Not logging full command since it will contain credentials
+      log.info(
+          'Running fsapfsmount with credential type: {0:s}'.format(
+              credential_type))
+      try:
+        subprocess.check_call(mount_cmd)
+      except subprocess.CalledProcessError as exception:
+        # Decryption failed with these credentials, try the next
+        continue
+      # Decrypted volume was mounted
+      mounted = True
+      break
+  else:
+    mount_cmd = [
+        'sudo', 'fsapfsmount', '-X', 'allow_other', source_path, mount_path
+    ]
+    log.info('Running: {0:s}'.format(' '.join(mount_cmd)))
+    try:
+      subprocess.check_call(mount_cmd)
+    except subprocess.CalledProcessError as exception:
+      raise TurbiniaException(
+          'Could not mount directory {0!s}'.format(exception))
+    mounted = True
+
+  if not mounted:
+    log.warning('Could not mount APFS volume {0:s}'.format(source_path))
+    mount_path = None
+
+  return mount_path
+
+
+def PreprocessEncryptedVolume(
+    source_path, partition_offset=None, credentials=None, encryption_type=None):
+  """Attaches an encrypted volume using libyal tools.
 
   Creates a decrypted virtual device of the encrypted volume.
 
   Args:
     source_path(str): the source path to run bdemount on.
     partition_offset(int): offset of volume in bytes.
-    credentials(list[(str, str)]): decryption credentials set in evidence setup
+    credentials(list[(str, str)]): decryption credentials set in evidence setup.
+    encryption_type(str): type of encryption used.
 
   Raises:
     TurbiniaException: if source_path doesn't exist or if the bdemount command
@@ -103,6 +188,12 @@ def PreprocessBitLocker(source_path, partition_offset=None, credentials=None):
   config.LoadConfig()
   mount_prefix = config.MOUNT_DIR_PREFIX
   decrypted_device = None
+  mount_commands = {'BDE': 'bdemount', 'LUKSDE': 'luksdemount'}
+  mount_names = {'BDE': 'bde1', 'LUKSDE': 'luksde1'}
+
+  if not encryption_type:
+    raise TurbiniaException(
+        'Cannot create virtual device. Encryption type not provided.')
 
   if not os.path.exists(source_path):
     raise TurbiniaException(
@@ -124,29 +215,32 @@ def PreprocessBitLocker(source_path, partition_offset=None, credentials=None):
   mount_path = tempfile.mkdtemp(prefix='turbinia', dir=mount_prefix)
 
   for credential_type, credential_data in credentials:
-    libbde_command = ['sudo', 'bdemount']
+    mount_command = ['sudo', mount_commands[encryption_type]]
     if partition_offset:
-      libbde_command.extend(['-o', str(partition_offset)])
+      mount_command.extend(['-o', str(partition_offset)])
     if credential_type == 'password':
-      libbde_command.extend(['-p', credential_data])
-    elif credential_type == 'recovery_password':
-      libbde_command.extend(['-r', credential_data])
+      mount_command.extend(['-p', credential_data])
+    elif credential_type == 'recovery_password' and encryption_type != 'LUKSDE':
+      mount_command.extend(['-r', credential_data])
     else:
       # Unsupported credential type, try the next
       log.warning('Unsupported credential type: {0!s}'.format(credential_type))
       continue
 
-    libbde_command.extend(['-X', 'allow_other', source_path, mount_path])
+    mount_command.extend(['-X', 'allow_other', source_path, mount_path])
 
     # Not logging command since it will contain credentials
+    log.info(
+        'Running mount command with credential type: {0:s}'.format(
+            credential_type))
     try:
-      subprocess.check_call(libbde_command)
+      subprocess.check_call(mount_command)
     except subprocess.CalledProcessError as exception:
       # Decryption failed with these credentials, try the next
       continue
 
     # Decrypted volume was mounted
-    decrypted_device = os.path.join(mount_path, 'bde1')
+    decrypted_device = os.path.join(mount_path, mount_names[encryption_type])
     if not os.path.exists(decrypted_device):
       raise TurbiniaException(
           'Cannot attach decrypted device: {0!s}'.format(decrypted_device))
@@ -400,6 +494,9 @@ def PreprocessMountPartition(partition_path, filesystem_type):
               mount_prefix, exception))
 
   mount_path = tempfile.mkdtemp(prefix='turbinia', dir=mount_prefix)
+  mounted = True
+
+  log.debug('Mounting filesystem type: {0:s}'.format(filesystem_type))
 
   mount_cmd = ['sudo', 'mount', '-o', 'ro']
   if filesystem_type == 'EXT':
@@ -407,14 +504,31 @@ def PreprocessMountPartition(partition_path, filesystem_type):
     # everything read-only.
     mount_cmd.extend(['-o', 'noload'])
   elif filesystem_type == 'XFS':
-    mount_cmd.extend(['-o', 'norecovery'])
+    mount_cmd.extend(['-o', 'norecovery', '-o', 'nouuid'])
   mount_cmd.extend([partition_path, mount_path])
 
   log.info('Running: {0:s}'.format(' '.join(mount_cmd)))
   try:
     subprocess.check_call(mount_cmd)
   except subprocess.CalledProcessError as exception:
-    raise TurbiniaException('Could not mount directory {0!s}'.format(exception))
+    mounted = False
+    log.info('Mount failed: {0!s}'.format(exception))
+
+  if filesystem_type == 'EXT' and not mounted:
+    # ext2 will not mount with the noload option, so this may be the cause of
+    # the error.
+    mounted = True
+    mount_cmd = ['sudo', 'mount', '-o', 'ro', partition_path, mount_path]
+    log.info('Trying again with: {0:s}'.format(' '.join(mount_cmd)))
+    try:
+      subprocess.check_call(mount_cmd)
+    except subprocess.CalledProcessError as exception:
+      mounted = False
+      log.info('Mount failed: {0!s}'.format(exception))
+
+  if not mounted:
+    raise TurbiniaException(
+        'Could not mount partition {0:s}'.format(partition_path))
 
   return mount_path
 
@@ -510,8 +624,9 @@ def PostprocessDeleteLosetup(device_path, lv_uuid=None):
         if reg_search:
           # TODO(wyassine): Add lsof check for file handles on device path
           # https://github.com/google/turbinia/issues/1148
-          log.debug('losetup retry check {0!s}/{1!s} for device {2!s}').format(
-              _, RETRY_MAX, device_path)
+          log.debug(
+              'losetup retry check {0!s}/{1!s} for device {2!s}'.format(
+                  _, RETRY_MAX, device_path))
           time.sleep(1)
         else:
           break

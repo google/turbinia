@@ -5,7 +5,7 @@ metadata:
   labels:
     app: turbinia-worker
 spec:
-  replicas: 3
+  replicas: 5
   selector:
     matchLabels:
       app: turbinia-worker
@@ -68,8 +68,8 @@ spec:
               memory: "2048Mi"
               cpu: "1500m"
             limits:
-              memory: "8192Mi"
-              cpu: "32000m"
+              memory: "65536Mi"
+              cpu: "31000m"
       volumes:
         - name: dev
           hostPath:

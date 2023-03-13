@@ -37,7 +37,7 @@ from turbinia import TurbiniaException
 from turbinia.lib import recipe_helpers
 from turbinia.lib import text_formatter as fmt
 from turbinia.message import TurbiniaRequest
-from turbinia.workers import Priority
+from turbinia.workers import Priority, TurbiniaTask
 
 MAX_RETRIES = 10
 RETRY_SLEEP = 60
@@ -1077,17 +1077,47 @@ class TurbiniaCeleryClient(BaseTurbiniaClient):
     super(TurbiniaCeleryClient, self).__init__(*args, **kwargs)
     self.redis = RedisStateManager()
 
+  # pylint: disable=arguments-differ
   def close_tasks(
-      self, instance, project, region, request_id=None, task_id=None, user=None,
-      requester=None):
+      self, instance, request_id=None, group_id=None, task_id=None,
+      user=None) -> bool:
     """Close Turbinia Tasks based on Request ID.
 
-    Currently needs to be implemented for Redis/Celery:
-    https://github.com/google/turbinia/issues/999
+    This method uses Celery app.control.terminate to terminate and revoke a
+    task_id or a list of task_ids. If a task is revoked, the workers will
+    ignore the task and not execute it after all.
+
+    Args:
+      instance (string): The Turbinia instance name (by default the same as the
+          INSTANCE_ID in the config).
+      request_id (string): The request identifier we want tasks for.
+      task_id (string): The task identifier we want.
+      group_id (str): A group identifier we want tasks for.
+      user (string): The user of the request we want tasks for.
+
+    Returns: True if a terminate command was successfully broadcast to the
+        Celery workers.
     """
-    raise TurbiniaException(
-        '--close_tasks is not yet implemented for Redis: '
-        'https://github.com/google/turbinia/issues/999')
+    tasks = self.redis.get_task_data(
+        instance, task_id=task_id, request_id=request_id, group_id=group_id,
+        user=user)
+    task_ids = [task.get('id') for task in tasks if task.get('id')]
+    result = False
+
+    if task_ids:
+      for _task_id in task_ids:
+        self.task_manager.celery.app.control.terminate(_task_id)
+        log.info(f'Closed task {_task_id}.')
+        task_dict = self.redis.get_task_data(
+            instance=config.INSTANCE_ID, task_id=_task_id)[0]
+        task = TurbiniaTask().deserialize(task_dict)
+        task['success'] = False
+        task['status'] = 'Task forcefully closed.'
+        self.redis.update_task(task)
+      result = True
+    else:
+      log.info('No tasks found with the given filter(s). Not closing any tasks')
+    return bool(result)
 
   def send_request(self, request):
     """Sends a TurbiniaRequest message.

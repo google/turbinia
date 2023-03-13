@@ -41,7 +41,7 @@ class RequestStatus(BaseModel):
 
   def get_request_data(
       self, request_id: str, tasks: Optional[List[Dict]] = None,
-      summary: bool = False):
+      summary: bool = False) -> bool:
     """Gets task information for a specific Turbinia request.
 
     Args:
@@ -97,7 +97,7 @@ class RequestStatus(BaseModel):
             turbinia_config.DATETIME_FORMAT)
 
     if self.last_task_update_time:
-      if isinstance(self.last_task_update_time, datetime.datetime):
+      if isinstance(self.last_task_update_time, float):
         self.last_task_update_time = datetime.datetime.fromtimestamp(
             self.last_task_update_time).strftime(
                 turbinia_config.DATETIME_FORMAT)
@@ -118,7 +118,7 @@ class RequestsSummary(BaseModel):
   """Represents a summary view of multiple Turbinia requests."""
   requests_status: List[RequestStatus] = []
 
-  def get_requests_summary(self):
+  def get_requests_summary(self) -> bool:
     """Generates a status summary for each Turbinia request."""
     _state_manager = state_manager.get_state_manager()
     instance_id = turbinia_config.INSTANCE_ID

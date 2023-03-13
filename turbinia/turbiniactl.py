@@ -485,12 +485,12 @@ def process_args(args):
     config.OUTPUT_DIR = args.output_dir
 
   config.TURBINIA_COMMAND = args.command
-  server_flags_set = args.command == 'server'
-  worker_flags_set = args.command in ('psqworker', 'celeryworker')
+  flags_set = args.command in (
+      'api_server', 'server', 'psqworker', 'celeryworker')
   # Run logger setup again if we're running as a server or worker (or have a log
   # file explicitly set on the command line) to set a file-handler now that we
   # have the logfile path from the config.
-  if server_flags_set or worker_flags_set or args.log_file:
+  if flags_set or args.log_file:
     if args.log_file:
       logger.setup(log_file_path=user_specified_log)
     else:

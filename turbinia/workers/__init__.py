@@ -196,7 +196,8 @@ class TurbiniaTaskResult:
       # Don't try to close twice.
       return
     self.successful = success
-    self.run_time = datetime.now() - task.start_time
+    if task.worker_start_time:
+      self.run_time = datetime.now() - task.worker_start_time
     if success:
       turbinia_worker_tasks_completed_total.inc()
     else:
@@ -250,7 +251,8 @@ class TurbiniaTaskResult:
       except Exception as exception:
         message = 'Evidence post-processing for {0!s} failed: {1!s}'.format(
             self.input_evidence.name, exception)
-        self.log(message, level=logging.ERROR)
+        self.log(
+            message, level=logging.ERROR, traceback_=traceback.format_exc())
         with filelock.FileLock(config.RESOURCE_FILE_LOCK):
           resource_manager.PostProcessResourceState(
               self.input_evidence.resource_id, self.task_id)
@@ -304,7 +306,7 @@ class TurbiniaTaskResult:
       log.critical(message)
 
     if traceback_:
-      self.result.set_error(message, traceback_)
+      self.set_error(message, traceback_)
 
   def update_task_status(self, task, status=None):
     """Updates the task status and pushes it directly to datastore.
@@ -481,6 +483,7 @@ class TurbiniaTask:
     self.request_id = request_id
     self.state_key = None
     self.start_time = datetime.now()
+    self.worker_start_time = None
     self.stub = None
     self.tmp_dir = None
     self.turbinia_version = __version__
@@ -1024,7 +1027,7 @@ class TurbiniaTask:
         self.result.update_task_status(self, 'running')
         self._evidence_config = evidence.config
         self.task_config = self.get_task_recipe(evidence.config)
-
+        self.worker_start_time = datetime.now()
         self.result = self.run(evidence, self.result)
 
       # pylint: disable=broad-except

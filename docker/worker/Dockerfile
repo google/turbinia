@@ -53,6 +53,8 @@ RUN pip3 install dfDewey
 #   dfImageTools
 #   docker-explorer
 #   libbde-tools
+#   libfsapfs-tools
+#   libluksde-tools
 #   Plaso
 #   Sleuthkit
 RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 0x5e80511b10c598b8 \
@@ -65,6 +67,8 @@ RUN apt-get update && apt-get -y install \
     libewf \
     libewf-python3 \
     libewf-tools \
+    libfsapfs-tools \
+    libluksde-tools \
     plaso-tools \
     python3-dfimagetools \
     python3-dfvfs \
@@ -85,8 +89,8 @@ COPY turbinia/config/rules/*.yar /opt/signature-base/yara/
 
 RUN mkdir -p /opt/fraken/yara && chown -R turbinia:turbinia /opt/fraken
 COPY --chown=turbinia:turbinia tools/fraken/* /opt/fraken/
-RUN cd /opt/fraken/yara && curl -s https://api.github.com/repos/VirusTotal/Yara/releases/latest | sed -n 's/.*"tarball_url": "\(.*\)",.*/\1/p' | xargs -n1 wget -O - -q | tar -xz --strip-components=1 \
-    && ./bootstrap.sh \
+RUN cd /opt/fraken/yara && curl -s -L --retry 5 "$(curl -s -L --retry 5 https://api.github.com/repos/VirusTotal/Yara/releases/latest | sed -n 's/.*"tarball_url": "\(.*\)",.*/\1/p')"  | tar -xz --strip-components=1
+RUN cd /opt/fraken/yara && ./bootstrap.sh \
     && ./configure \
     && make && sudo make install && sudo ldconfig
 RUN cd /opt/fraken && go build -ldflags="-linkmode=external -extldflags=-ljemalloc" -o fraken
