@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Task for Linux SSH analysis."""
+import datetime
 import os
 import mock
 import pandas as pd
@@ -44,20 +45,59 @@ class LinuxSSHAnalysisTaskTest(TestTurbiniaTaskBase):
     if os.path.exists(self.base_output_dir):
       shutil.rmtree(self.base_output_dir)
 
+  def test_read_log_data(self):
+    """Test reading log file on disk"""
+    log_file = 'test_data/secure'
+    if not os.path.exists(log_file):
+      return
+
+    with open(log_file, 'r', encoding='utf-8') as fh:
+      data = fh.read()
+    a = ssh_analyzer.LinuxSSHAnalysisTask()
+    ssh_records = a.read_log_data(data, log_file, log_year=2022)
+    self.assertEqual(27719, len(ssh_records))
+
+  def test_parse_message_datetime(self):
+    """Test parsing message datetime fields."""
+    analyzer = ssh_analyzer.LinuxSSHAnalysisTask()
+
+    # Testing Feb 8 13:30:45 Debian/CentOS format
+    output = analyzer.parse_message_datetime(
+        message_datetime=['Feb', '8', '13:30:45'], log_year=2023)
+    expected_output = datetime.datetime(
+        2023, 2, 8, 13, 30, 45, tzinfo=datetime.timezone.utc)
+    self.assertEqual(expected_output, output)
+
+    # Testing 2023-02-08T13:30:45.123456+11:00 OpenSUSE format
+    output = analyzer.parse_message_datetime(
+        message_datetime=['2023-02-08T13:30:45.123456+11:00'], log_year=0)
+    expected_output = datetime.datetime(
+        2023, 2, 8, 2, 30, 45, 123456, datetime.timezone.utc)
+    self.assertEqual(expected_output, output)
+
+    # Invalid datetime 2023-13-10 22:10:10
+    output = analyzer.parse_message_datetime(
+        message_datetime=['2023-13-10 22:10:10'], log_year=0)
+    self.assertIsNone(output)
+
+    # Invalid datetime random
+    output = analyzer.parse_message_datetime(['random'], log_year=0)
+    self.assertIsNone(output)
+
   @mock.patch('turbinia.lib.utils.extract_artifacts')
   @mock.patch(
       'turbinia.workers.analysis.ssh_analyzer.LinuxSSHAnalysisTask.brute_force_analysis'
   )
   @mock.patch(
       'turbinia.workers.analysis.ssh_analyzer.LinuxSSHAnalysisTask.read_logs')
-  def testLinuxSSHAnalysisRun(
+  def test_run(
       self, mock_read_logs, mock_brute_force_analysis, mock_extract_artifacts):
     """Test LinuxSSHAnalysis task run."""
     self.task.setup(self.task)
 
     mock_extract_artifacts.return_value = ['secure', 'var/log/secure']
 
-    df = pd.read_csv('test_data/ssh_auth_data.csv')
+    df = pd.read_csv('test_data/secure.csv')
     mock_read_logs.return_value = df
 
     mock_brute_force_analysis.return_value = (
@@ -74,17 +114,6 @@ class LinuxSSHAnalysisTaskTest(TestTurbiniaTaskBase):
         '## Brute Force Analysis\n\n### Brute Force from 192.168.40.6\n\n'
         '- Successful brute force from 192.168.40.6 as admin at 2022-10-08'
         ' 18:10:33 (duration=7)')
-
-  def test_read_log_data(self):
-    """Test reading log file on disk"""
-    log_file = '/tmp/log/debian-server/var/log/auth.log'
-    if not os.path.exists(log_file):
-      return
-
-    with open(log_file, 'r', encoding='utf-8') as fh:
-      data = fh.read()
-    a = ssh_analyzer.LinuxSSHAnalysisTask()
-    a.read_log_data(data, log_file, log_year=2022)
 
 
 if __name__ == '__main__':
