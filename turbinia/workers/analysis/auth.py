@@ -728,7 +728,7 @@ class BruteForceAnalyzer(AuthAnalyzer):
 
       for login in summary.successful_logins:
         if login.session_duration >= self.BRUTE_FORCE_MIN_ACCESS_DURATION:
-          if priority < Priority.CRITICAL:
+          if priority > Priority.CRITICAL:
             priority = Priority.CRITICAL
 
       # Markdown report generation
@@ -766,7 +766,7 @@ class BruteForceAnalyzer(AuthAnalyzer):
 
     if result_summaries:
       output.result_summary = ', '.join(result_summaries)
-      if priority < Priority.HIGH:
+      if priority > Priority.HIGH:
         priority = Priority.HIGH
 
     if markdown_summaries:
