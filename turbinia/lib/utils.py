@@ -119,7 +119,7 @@ def extract_files(file_name, disk_path, output_dir, credentials=[]):
 
   image_export_cmd = [
       'sudo', 'image_export.py', '--name', file_name, '--write', output_dir,
-      '--partitions', 'all'
+      '--partitions', 'all', '--volumes', 'all'
   ]
 
   if credentials:
