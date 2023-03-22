@@ -7,6 +7,6 @@ spec:
     apiVersion: apps/v1
     kind: Deployment
     name: turbinia-worker
-  minReplicas: 3
-  maxReplicas: 500
+  minReplicas: 5
+  maxReplicas: 400
   targetCPUUtilizationPercentage: 90

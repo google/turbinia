@@ -462,21 +462,32 @@ class Evidence:
         raise TurbiniaException(
             'Evidence of type {0:s} needs parent_evidence to be set'.format(
                 self.type))
+      log.debug(
+          'Evidence is context dependent. Running preprocess for parent_evidence '
+          '{0:s}'.format(self.parent_evidence.name))
       self.parent_evidence.preprocess(task_id, tmp_dir, required_states)
     try:
-      log.debug('Starting pre-processor for evidence {0:s}'.format(self.name))
+      log.info('Starting preprocessor for evidence {0:s}'.format(self.name))
       if self.resource_tracked:
         # Track resource and task id in state file
+        log.debug(
+            'Evidence {0:s} is resource tracked. Acquiring filelock for'
+            'preprocessing'.format(self.name))
         with filelock.FileLock(config.RESOURCE_FILE_LOCK):
           resource_manager.PreprocessResourceState(self.resource_id, task_id)
-      self._preprocess(tmp_dir, required_states)
+          self._preprocess(tmp_dir, required_states)
+      else:
+        log.debug(
+            'Evidence {0:s} is not resource tracked. Running preprocess.'
+            .format(self.name))
+        self._preprocess(tmp_dir, required_states)
     except TurbiniaException as exception:
       log.error(
           'Error running preprocessor for {0:s}: {1!s}'.format(
               self.name, exception))
 
-    log.debug(
-        'Pre-processing evidence {0:s} is complete, and evidence is in state '
+    log.info(
+        'Preprocessing evidence {0:s} is complete, and evidence is in state '
         '{1:s}'.format(self.name, self.format_state()))
 
   def postprocess(self, task_id):
@@ -489,29 +500,42 @@ class Evidence:
     Args:
       task_id(str): The id of a given Task.
     """
-    log.info('Starting post-processor for evidence {0:s}'.format(self.name))
+    log.info('Starting postprocessor for evidence {0:s}'.format(self.name))
     log.debug('Evidence state: {0:s}'.format(self.format_state()))
 
-    is_detachable = True
     if self.resource_tracked:
+      log.debug(
+          'Evidence: {0:s} is resource tracked. Acquiring filelock for '
+          'postprocessing.'.format(self.name))
       with filelock.FileLock(config.RESOURCE_FILE_LOCK):
         # Run postprocess to either remove task_id or resource_id.
         is_detachable = resource_manager.PostProcessResourceState(
             self.resource_id, task_id)
         if not is_detachable:
-          # Prevent from running post process code if there are other tasks running.
+          # Skip post process if there are other tasks still processing the
+          # Evidence.
           log.info(
-              'Resource ID {0:s} still in use. Skipping detaching Evidence...'
+              'Resource ID {0:s} still in use. Skipping detaching Evidence.'
               .format(self.resource_id))
         else:
           self._postprocess()
-          # Set to False to prevent postprocess from running twice.
-          is_detachable = False
-
-    if is_detachable:
+          if self.parent_evidence:
+            log.debug(
+                'Evidence {0:s} has parent_evidence. Running postprocess '
+                'for parent evidence {1:s}.'.format(
+                    self.name, self.parent_evidence.name))
+            self.parent_evidence.postprocess(task_id)
+    else:
+      log.debug(
+          'Evidence {0:s} is not resource tracked. '
+          'Running postprocess.'.format(self.name))
       self._postprocess()
-    if self.parent_evidence:
-      self.parent_evidence.postprocess(task_id)
+      if self.parent_evidence:
+        log.debug(
+            'Evidence {0:s} has parent_evidence. Running postprocess '
+            'for parent evidence {1:s}.'.format(
+                self.name, self.parent_evidence.name))
+        self.parent_evidence.postprocess(task_id)
 
   def format_state(self):
     """Returns a string representing the current state of evidence.
@@ -853,16 +877,12 @@ class GoogleCloudDisk(Evidence):
     # DiskPartition evidence will be used. In this case we're breaking the
     # evidence layer isolation and having the child evidence manage the
     # mounting and unmounting.
-
-    # Explicitly lock this method to prevent race condition with two workers
-    # attempting to attach disk at same time, given delay with attaching in GCP.
-    with filelock.FileLock(config.RESOURCE_FILE_LOCK):
-      if EvidenceState.ATTACHED in required_states:
-        self.device_path, partition_paths = google_cloud.PreprocessAttachDisk(
-            self.disk_name)
-        self.partition_paths = partition_paths
-        self.local_path = self.device_path
-        self.state[EvidenceState.ATTACHED] = True
+    if EvidenceState.ATTACHED in required_states:
+      self.device_path, partition_paths = google_cloud.PreprocessAttachDisk(
+          self.disk_name)
+      self.partition_paths = partition_paths
+      self.local_path = self.device_path
+      self.state[EvidenceState.ATTACHED] = True
 
   def _postprocess(self):
     if self.state[EvidenceState.ATTACHED]:

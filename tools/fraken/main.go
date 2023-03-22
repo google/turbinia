@@ -340,14 +340,13 @@ func (s *Scanner) init() error {
 		s.rulesPath = *rulePathFlag
 		return s.compile()
 	}
-
-	return nil
+	return errors.New("no rulepath given")
 }
 
 func filesystemScan(wait chan struct{}, c chan *Detection, minimumScore int) {
+	defer close(c)
 	if _, err := os.Stat(*scanPathFlag); err != nil {
 		log.Printf("Cannot scan %v: %v\n", *scanPathFlag, err)
-		close(c)
 		return
 	}
 	var wg sync.WaitGroup
@@ -359,6 +358,7 @@ func filesystemScan(wait chan struct{}, c chan *Detection, minimumScore int) {
 		wg.Add(1)
 		wait <- struct{}{}
 		go func() {
+			defer wg.Done()
 			if fileInfo.Size() <= int64(maxScanFilesize) {
 				matches, _ := scanFile(scanner, filePath, fileInfo)
 				for _, match := range matches {
@@ -399,7 +399,6 @@ func filesystemScan(wait chan struct{}, c chan *Detection, minimumScore int) {
 				}
 			}
 			<-wait
-			wg.Done()
 		}()
 		return nil
 	})
@@ -407,7 +406,6 @@ func filesystemScan(wait chan struct{}, c chan *Detection, minimumScore int) {
 		log.Printf("Error walking dir: %v\n", err)
 	}
 	wg.Wait()
-	close(c)
 }
 
 func scanFile(s Scanner, filePath string, fileInfo os.FileInfo) (yara.MatchRules, error) {
@@ -437,7 +435,11 @@ func scanFile(s Scanner, filePath string, fileInfo os.FileInfo) (yara.MatchRules
 	ys.DefineVariable("filetype", ft)
 
 	// Scan the file.
-	err = ys.SetCallback(&matches).ScanFile(filePath)
+	f, err := os.Open(filePath)
+	if err != nil {
+		log.Printf("Unable to open file %v: %v\n", filePath, err)
+	}
+	err = ys.SetCallback(&matches).ScanFileDescriptor(f.Fd())
 
 	if err != nil {
 		return matches, err
