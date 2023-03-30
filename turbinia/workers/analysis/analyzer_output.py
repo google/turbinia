@@ -14,7 +14,6 @@
 # limitations under the License.
 """A class to store analyzer output"""
 
-import json
 import logging
 
 from turbinia import TurbiniaException

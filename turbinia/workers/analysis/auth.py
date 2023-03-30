@@ -32,16 +32,16 @@ class LoginRecord:
   """Successful login record.
   
   Attributes:
-    timestamp (int): Timestamp of successful login in seconds.
+    timestamp (int): Timestamp of successful login event in seconds.
     session_id (str): Session ID or pseudo session ID for login event.
-    session_duration (int): The length of login session in seconds.
-    source_hostname (str): The hostname of source IP. This is used in Windows
-      login events.
-    source_ip (src): The source IP that login.
-    source_port (int): The source port obseved in the login event.
-    domain (str): The domain name used in authentication. This is used in Windows
-      login events.
-    username (str): The username used in login.
+    session_duration (int): The length of the login session in seconds.
+    source_hostname (str): The hostname of the source system. Only available on
+        Windows for certain login events.
+    source_ip (src): Source IP address observed in the login event.
+    source_port (int): Source port observed in the login event.
+    domain (str): Domain name observed in the login event. Only available on
+        Windows login events.
+    username (str): Username observed in the login event.
   """
 
   def __init__(
@@ -58,7 +58,33 @@ class LoginRecord:
 
 
 class AuthSummaryData:
-  """Authentication summary data."""
+  """Authentication summary data.
+  
+  Attributes:
+    summary_type (str): The keyword used in generating summary. Valid values are
+        source_ip and username.
+    source_ip (str): Source IP used in logon events.
+    domain (str): Domain name used in logon events. Only applicable to Windows
+        logon events.
+    username (str): Username used in logon events.
+    first_seen (int): Time in seconds when user or source_ip was first seen.
+    last_seen (int): Time in seconds when user or source_ip was last seen.
+    first_auth (LoginRecord): Login record for the first successful login. This
+        does not have to be a brute force login.
+    brute_forces (List[LoginRecord]): A list of successful brute force logins. 
+    successful_logins (List[LoginRecord]): A list of successful LoginRecord.
+        This includes brute force logon events.
+    success_source_ip_list (List[str]): List of IP addresses that successfully
+        logged on to the system.
+    total_success_events (int): Count of successful logon events.
+    total_failed_events (int): Count of failed logon events.
+    distinct_source_ip_count (int): Distinct count of source IP addresses.
+    distinct_username_count (int): Distinct count of usernames.
+    top_source_ip (dict): Top 10 source IP addresses observed in logon events.
+        This includes successful and failed logon events.
+    top_username (dict): Top 10 username observed in logon events. This includes
+        successful and failed logon events.
+  """
 
   def __init__(self):
     # Summary information for source_ip or username
@@ -67,7 +93,7 @@ class AuthSummaryData:
     self.domain = ''
     self.username = ''
 
-    # The first time the source_ip or username observed in auth events.
+    # The first time the source_ip or username is observed in auth events.
     # This can be a successful or failed login event.
     self.first_seen = 0
 
@@ -75,7 +101,7 @@ class AuthSummaryData:
     # This can be a successful or failed login event.
     self.last_seen = 0
 
-    # The first time the source_ip or username successfully login.
+    # The first time the source_ip or username successfully logged in.
     self.first_auth = None
 
     # Successful bruteforce records
@@ -85,14 +111,14 @@ class AuthSummaryData:
     self.successful_logins = []
 
     # The list of IP addresses that successfully authenticated to the system.
-    # This is used when summary_type is username.
+    # This is used when summary_type is a username.
     self.success_source_ip_list = []
     self.success_username_list = []
 
     self.total_success_events = 0
     self.total_failed_events = 0
 
-    # The total number of unique IP addresses observed in the log
+    # The total number of unique IP addresses observed in the log.
     self.distinct_source_ip_count = 0
     self.distinct_username_count = 0
 
@@ -167,11 +193,12 @@ class AuthAnalyzer:
     sets the dataframe.
 
     Args:
-      df (pd.DataFrame): Authentication dataframe
+      df (pd.DataFrame): Dataframe containing authentication events.
 
     Returns:
       bool: Returns True if successfully set.
     """
+
     # We only want to proceed further if the panda dataframe
     # matches the required fields
     column_list = df.columns.tolist()
@@ -185,10 +212,10 @@ class AuthAnalyzer:
     return True
 
   def check_required_fields(self, fields: list) -> bool:
-    """Checks the required fields in the data frame.
+    """Checks the required fields in the dataframe.
 
     Args:
-      fields (list[str]): List of columns name in dataframe
+      fields (List[str]): List of columns name in dataframe
 
     Returns:
       bool: Returns true if required fields exist
@@ -201,14 +228,15 @@ class AuthAnalyzer:
     return True
 
   def session_duration(self, session_id: str, timestamp: int) -> int:
-    """Calculate session duration for a session ID
+    """Calculates session duration for a session ID.
     
     Args:
-      session_id (str): Authentication event session_id.
+      session_id (str): Authentication event session ID.
       timestamp (int): Authentication event timestamp.
 
     Returns:
-      int: Lenght of login session.
+      int: Length of login session or -1 if no valid session start time or end
+          time is found.
     """
     if not session_id or timestamp == 0:
       log.info(
@@ -221,41 +249,23 @@ class AuthAnalyzer:
       return -1
     df = self.df
 
+    session_start_ts = 0
     try:
       session_start_ts = df[(df['session_id'] == session_id)
                             & (df['auth_result'] == 'success') &
                             (df['timestamp'] >= timestamp)].iloc[0]['timestamp']
-    except KeyError as e:
-      log.error(
-          '[%s] Error getting session start time for %s. %s', self.NAME,
-          session_id, str(e))
-      return -1
-    except ValueError as e:
-      log.error(
-          '[%s] Error getting session start time for %s. %s', self.NAME,
-          session_id, str(e))
-      return -1
-    except IndexError as e:
+    except (KeyError, ValueError, IndexError) as e:
       log.error(
           '[%s] Error getting session start time for %s. %s', self.NAME,
           session_id, str(e))
       return -1
 
+    session_end_ts = 0
     try:
       session_end_ts = df[(df['session_id'] == session_id)
                           & (df['event_type'] == 'disconnection') &
                           (df['timestamp'] >= timestamp)].iloc[0]['timestamp']
-    except KeyError as e:
-      log.error(
-          '[%s] Error getting session end time for %s. %s', self.NAME,
-          session_id, str(e))
-      return -1
-    except ValueError as e:
-      log.error(
-          '[%s] Error getting session end time for %s. %s', self.NAME,
-          session_id, str(e))
-      return -1
-    except IndexError as e:
+    except (KeyError, ValueError, IndexError) as e:
       log.error(
           '[%s] Error getting session end time for %s. %s', self.NAME,
           session_id, str(e))
@@ -273,19 +283,19 @@ class AuthAnalyzer:
       AuthSummaryData: AuthSummaryData object for source IP or None.
     """
     if self.df.empty:
-      log.info('Source dataframe is empty')
+      log.info('Source data frame is empty')
       return None
     df = self.df
 
-    df1 = df[df['source_ip'] == source_ip]
-    if df1.empty:
+    srcip_df = df[df['source_ip'] == source_ip]
+    if srcip_df.empty:
       log.info('No data for source ip %s', source_ip)
       return None
     return self.get_auth_summary(
-        df=df1, summary_type='source_ip', value=source_ip)
+        df=srcip_df, summary_type='source_ip', value=source_ip)
 
   def get_user_summary(self, domain: str, username: str) -> AuthSummaryData:
-    """Username stats in the dataframe.
+    """Returns AuthSummaryData for a given domain/username.
 
     Args:
       domain (str): Filter dataframe using domain.
@@ -295,33 +305,33 @@ class AuthAnalyzer:
       AuthSummaryData: AuthSummaryData object for username or None.
     """
     if self.df.empty:
-      log.info('[%s] Source dataframe is empty', self.NAME)
+      log.info('[%s] Source data frame is empty', self.NAME)
       return None
     df = self.df
 
-    df1 = df[(df['domain'] == domain) & (df['username'] == username)]
-    if df1.empty:
+    username_df = df[(df['domain'] == domain) & (df['username'] == username)]
+    if username_df.empty:
       log.info(
           '[%s] User summary dataframe for domain %s and username %s is empty',
           self.NAME, domain, username)
       return None
 
-    df1.sort_values(by='timestamp', ascending=True)
+    username_df.sort_values(by='timestamp', ascending=True)
 
     useraccount = self.to_useraccount(domain, username)
     return self.get_auth_summary(
-        df=df1, summary_type='username', value=useraccount)
+        df=username_df, summary_type='username', value=useraccount)
 
   def get_auth_summary(
       self, df: pd.DataFrame, summary_type: str, value: str) -> AuthSummaryData:
-    """Returns AuthSummaryData for given attribute/value pari.
+    """Returns AuthSummaryData for the given attribute/value pair.
     
     Args:
       summary_type (str): Summary type to filter source_ip or username.
-      value (str): Value for the summary_type.
+      value (str): Value for the summary_type i.e. username or IP address.
 
     Returns:
-      AuthSummaryData: AuthSummaryData or None for given key-value.
+      AuthSummaryData: AuthSummaryData or None for the given key-value.
     """
     log.debug(
         '[%s] Checking auth summary for %s:%s', self.NAME, summary_type, value)
@@ -336,11 +346,11 @@ class AuthAnalyzer:
       raise TurbiniaException(
           f'[{self.NAME}] Value for summary type {summary_type} is empty')
 
-    df1 = df[df[summary_type] == value]
-    if df1.empty:
+    auth_summary_df = df[df[summary_type] == value]
+    if auth_summary_df.empty:
       log.info('No dataframe for %s: %s', summary_type, value)
       return None
-    df1.sort_values(by='timestamp', ascending=True)
+    auth_summary_df.sort_values(by='timestamp', ascending=True)
 
     summary = AuthSummaryData()
 
@@ -357,11 +367,12 @@ class AuthAnalyzer:
       return None
 
     # Step 1: First and last authentication event for IP address or useraccount
-    summary.first_seen = int(df1.iloc[0]['timestamp'])
-    summary.last_seen = int(df1.iloc[-1]['timestamp'])
+    summary.first_seen = int(auth_summary_df.iloc[0]['timestamp'])
+    summary.last_seen = int(auth_summary_df.iloc[-1]['timestamp'])
 
     # Step 2: Collect details about successful login events.
-    success_df = df1[df1['auth_result'] == 'success'].reset_index()
+    success_df = auth_summary_df[auth_summary_df['auth_result'] ==
+                                 'success'].reset_index()
     if success_df.empty:
       log.info(
           '[%s] No successful events for %s: %s', self.NAME, summary_type,
@@ -379,7 +390,7 @@ class AuthAnalyzer:
           source_ip=row_source_ip, domain=row_domain, username=row_username,
           session_id=row_session_id)
       login_record.timestamp = row_timestamp
-      login_record.source_port = row.get('source_port', 0)
+      login_record.source_port = int(row.get('source_port', 0))
       login_record.session_duration = self.session_duration(
           row_session_id, row_timestamp)
 
@@ -398,22 +409,23 @@ class AuthAnalyzer:
     # Step 4: Stats on success and failed events
     summary.total_success_events = len(success_df.index)
     summary.total_failed_events = len(
-        df1[df1['auth_result'] == 'failure'].index)
+        auth_summary_df[auth_summary_df['auth_result'] == 'failure'].index)
 
-    # Step 5: Stat on total number of unique IPs and usernames
-    summary.distinct_source_ip_count = len(df1['source_ip'].unique())
-    summary.distinct_username_count = len(df1['username'].unique())
+    # Step 5: Stats on total number of unique IPs and usernames
+    summary.distinct_source_ip_count = len(
+        auth_summary_df['source_ip'].unique())
+    summary.distinct_username_count = len(auth_summary_df['username'].unique())
 
     # Step 6: Top 10 IP addresses and usernames observed
-    summary.top_source_ips = df1.groupby(
+    summary.top_source_ips = auth_summary_df.groupby(
         by='source_ip')['timestamp'].nunique().nlargest(10).to_dict()
-    summary.top_usernames = df1.groupby(
+    summary.top_usernames = auth_summary_df.groupby(
         by='username')['timestamp'].nunique().nlargest(10).to_dict()
 
     return summary
 
   def to_useraccount(self, domain: str, username: str) -> str:
-    """Convert domain and username to useraccount.
+    """Converts domain and username to useraccount.
     
     Args:
       domain (str): Domain name if available.
@@ -428,7 +440,7 @@ class AuthAnalyzer:
     return f'{domain}\\{username}'
 
   def from_useraccount(self, useraccount: str) -> Tuple[str, str]:
-    """Split useraccount into domain and username.
+    """Splits useraccount into domain and username.
     
     Args:
       useraccount (str): Useraccount as DOMAIN\\USERNAME.
@@ -451,13 +463,13 @@ class AuthAnalyzer:
       return '', useraccount
 
   def human_timestamp(self, timestamp: int) -> str:
-    """Convert epoch timestamp to human readable date/time.
+    """Converts epoch timestamp to human readable date/time.
     
     Args:
-      timestamp (int): Timestamp since epoch
+      timestamp (int): Timestamp in seconds.
 
     Returns:
-      str: String timestamp in format YYYY-MM-DD HH:MM:SS
+      str: String timestamp in format YYYY-MM-DD HH:MM:SS.
     """
     return datetime.fromtimestamp(timestamp).astimezone(
         tz=timezone.utc).strftime('%Y-%m-%d %H:%M:%S')
@@ -468,10 +480,10 @@ class AuthAnalyzer:
     """Returns LoginRecord as per parameter.
     
     Args:
-      source_ip(str): Source IP address used in collecting login session.
-      domain(str): Domain of the login user.
-      username(str): Username of the login user.
-      session_id(str): Pseudo session ID for the login event.
+      source_ip (str): Source IP address used in collecting login sessions.
+      domain (str): Domain of the login user.
+      username (str): Username of the login user.
+      session_id (str): Pseudo session ID for the login event.
 
     Returns:
       LoginRecord: Login details as LoginRecord object or None.
@@ -479,7 +491,7 @@ class AuthAnalyzer:
     fname = 'get_login_session'
 
     if self.df.empty:
-      log.debug('[%s] Source dataframe is empty.', fname)
+      log.debug('[%s] Source data frame is empty.', fname)
       return None
     df = self.df
 
@@ -505,19 +517,14 @@ class AuthAnalyzer:
       return None
 
     login_ts = 0
+    source_port = 0
     try:
       login_ts = int(login_df.iloc[0]['timestamp'])
       source_port = int(login_df.iloc[0]['source_port'])
-
-    except IndexError as exception:
+    except (IndexError, KeyError) as exception:
       log.error(
-          '[%s] Error getting login timestamp for session ID %s due to index '
-          'error. %s', fname, session_id, str(exception))
-      return None
-    except KeyError as exception:
-      log.error(
-          '[%s] Error getting login timestamp for session ID %s due to key '
-          'error. %s', fname, session_id, str(exception))
+          '[%s] Error getting login timestamp for session ID %s. %s', fname,
+          session_id, str(exception))
       return None
 
     # Calculating logoff timestamp
@@ -530,17 +537,9 @@ class AuthAnalyzer:
     else:
       try:
         logoff_ts = int(logoff_df.iloc[0]['timestamp'])
-      except IndexError as exception:
+      except (IndexError, KeyError, ValueError) as exception:
         log.error(
-            '[%s] Error getting logoff timestamp for session ID %s due to '
-            'index error %s', fname, session_id, str(exception))
-      except KeyError as exception:
-        log.error(
-            '[%s] Error getting logoff timestamp for session ID %s due to '
-            'key error %s', fname, session_id, str(exception))
-      except ValueError as exception:
-        log.error(
-            '[%s] Invalid value for logoff time for session ID %s. %s', fname,
+            '[%s] Error getting logoff timestamp for session ID %s. %s', fname,
             session_id, str(exception))
 
     login_session = LoginRecord(
@@ -567,11 +566,11 @@ class BruteForceAnalyzer(AuthAnalyzer):
   DISPLAY_NAME = 'Brute Force Analyzer'
   DESCRIPTION = 'This analyzer identifies brute force authentication'
 
-  # The time duration before a successful login event to evalute for
+  # The time duration before a successful login event to evaluate for
   # brute force activity.
   BRUTE_FORCE_WINDOW = 3600
 
-  # The minimum number of failed events that must occure to be considered
+  # The minimum number of failed events that must occur to be considered
   # for brute force activity.
   BRUTE_FORCE_MIN_FAILED_EVENT = 20
 
@@ -588,7 +587,7 @@ class BruteForceAnalyzer(AuthAnalyzer):
     super().__init__(self.NAME, self.DISPLAY_NAME, self.DESCRIPTION)
 
   def login_analysis(self, source_ip: str) -> AuthSummaryData:
-    """Perform authentication analysis per source IP
+    """Performs brute force analysis for the given source IP.
     
     Args:
       source_ip (str): Check brute force activity from source_ip
@@ -601,7 +600,7 @@ class BruteForceAnalyzer(AuthAnalyzer):
       return None
 
     if self.df.empty:
-      log.info('[%s] Source dataframe is empty', self.NAME)
+      log.info('[%s] Source data frame is empty', self.NAME)
       return None
     df = self.df
 
@@ -633,29 +632,29 @@ class BruteForceAnalyzer(AuthAnalyzer):
           source_ip, self.human_timestamp(start_timestamp),
           self.human_timestamp(end_timestamp))
 
-      # Calcuating number of successful and failed events for source_ip
-      df1 = source_df[(source_df['timestamp'] >= start_timestamp)
-                      & (source_df['timestamp'] < end_timestamp) &
-                      (source_df['source_ip'] == source_ip)]
-      df2 = df1.groupby(by='auth_result')['timestamp'].count()
+      # Calculating number of successful and failed events for source_ip
+      bruteforce_window_df = source_df[
+          (source_df['timestamp'] >= start_timestamp)
+          & (source_df['timestamp'] <= end_timestamp) &
+          (source_df['source_ip'] == source_ip)]
+      bf_stat_df = bruteforce_window_df.groupby(
+          by='auth_result')['timestamp'].count()
 
+      success_count = 0
       try:
-        success_count = df2['success']
+        success_count = bf_stat_df['success']
       except KeyError:
-        # NOTE: KeyError occurs if there is no successful event in dataframe.
+        # NOTE: KeyError occurs if there is no successful event in the dataframe.
         log.info(
-            '[%s] No successful login events from source IP %s. Setting '
-            'success_count to zero', self.NAME, source_ip)
-        success_count = 0
+            '[%s] No successful login events from source IP %s', self.NAME,
+            source_ip)
 
+      failed_count = 0
       try:
-        failed_count = df2['failure']
+        failed_count = bf_stat_df['failure']
       except KeyError:
-        # NOTE: KeyError occurs if there is no failed event in dataframe.
-        log.info(
-            '[%s] No failed login events for %s.'
-            ' Setting failed_count to zero', self.NAME, source_ip)
-        failed_count = 0
+        # NOTE: KeyError occurs if there is no failed event in the dataframe.
+        log.info('[%s] No failed login events for %s.', self.NAME, source_ip)
 
       log.debug(
           '[%s] Login events distribution from %s:'
@@ -663,10 +662,13 @@ class BruteForceAnalyzer(AuthAnalyzer):
           failed_count)
 
       # The success_count calculates the number of successful login before the
-      # most recent login. For a bruteforce login, success_count MUST be zero
+      # most recent login. For a bruteforce login, success_count MUST be one
       # and failed_count MUST be greater than equal to
       # BRUTE_FORCE_MIN_FAILED_EVENT.
-      if (success_count > 0 or
+      #
+      # This code block checks for condition that does not meet brute force
+      # requirements.
+      if (success_count != 1 or
           failed_count < self.BRUTE_FORCE_MIN_FAILED_EVENT):
         log.debug(
             '[%s] Brute force threshold not met. success_count: %d, '
@@ -694,8 +696,8 @@ class BruteForceAnalyzer(AuthAnalyzer):
     """Generates brute force analyzer output.
     
     Args:
-      summaries(bool): List of summary information about brute force IP.
-      analyzer_success(bool): Indicate if the analyzer executed successfully.
+      summaries (bool): List of summary information about brute force IP.
+      analyzer_success (bool): Indicate if the analyzer executed successfully.
 
     Returns:
       AnalyzerOutput: An object of AnalyzerOuput.
@@ -714,7 +716,7 @@ class BruteForceAnalyzer(AuthAnalyzer):
     if summary_count == 0:
       output.result_summary = 'No brute force activity'
       output.result_markdown = (
-          '\n# Brute Force Analyzer\nNo brute force detected')
+          '\n#### Brute Force Analyzer\nNo brute force detected')
       return output
 
     result_summaries = []
@@ -733,7 +735,7 @@ class BruteForceAnalyzer(AuthAnalyzer):
 
       # Markdown report generation
       markdown_summaries.append(
-          f'\n## Brute Force Summary for {summary.source_ip}')
+          f'\n##### Brute Force Summary for {summary.source_ip}')
       for login in summary.brute_forces:
         if login.session_duration >= self.BRUTE_FORCE_MIN_ACCESS_DURATION:
           markdown_summaries.append(
@@ -744,7 +746,7 @@ class BruteForceAnalyzer(AuthAnalyzer):
             f'- Successful brute force on '
             f'{self.human_timestamp(login.timestamp)} as {login.username}')
 
-        markdown_summaries.append(f'\n### {summary.source_ip} Summary')
+        markdown_summaries.append(f'\n###### {summary.source_ip} Summary')
         markdown_summaries.append(
             f'- IP first seen on {self.human_timestamp(summary.first_seen)}')
         markdown_summaries.append(
@@ -760,7 +762,7 @@ class BruteForceAnalyzer(AuthAnalyzer):
               f'- First successful username: {summary.first_auth.username}')
 
         if summary.top_usernames:
-          markdown_summaries.append('\n### Top Usernames')
+          markdown_summaries.append('\n###### Top Usernames')
           for username, count in summary.top_usernames.items():
             markdown_summaries.append(f'- {username}: {count}')
 
@@ -770,7 +772,7 @@ class BruteForceAnalyzer(AuthAnalyzer):
         priority = Priority.HIGH
 
     if markdown_summaries:
-      markdown_summaries.insert(0, '\n# Brute Force Analyzer')
+      markdown_summaries.insert(0, '\n#### Brute Force Analyzer')
       output.result_markdown = '\n'.join(markdown_summaries)
 
     output.result_priority = priority.name

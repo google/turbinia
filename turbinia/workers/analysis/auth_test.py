@@ -14,19 +14,19 @@
 # limitations under the License.
 """AuthAnalyzer test class"""
 
-import copy
-import json
 import logging
 import os
 import pandas as pd
 import sys
+import textwrap
 import unittest
 
+from turbinia import TurbiniaException
+from turbinia.workers.analysis.analyzer_output import AnalyzerOutput
 from turbinia.workers.analysis.auth import AuthAnalyzer
 from turbinia.workers.analysis.auth import AuthSummaryData
 from turbinia.workers.analysis.auth import BruteForceAnalyzer
 from turbinia.workers.analysis.auth import LoginRecord
-from turbinia.workers.analysis.analyzer_output import AnalyzerOutput
 from turbinia.workers.analysis.ssh_analyzer import LinuxSSHAnalysisTask
 
 log = logging.getLogger('turbinia')
@@ -36,9 +36,9 @@ log.setLevel(logging.DEBUG)
 
 def load_test_dataframe() -> pd.DataFrame:
   """Loads SSH log file and returns dataframe."""
-  log_file = 'test_data/secure'
+  log_file = os.path.join('test_data', 'secure')
   if not os.path.exists(log_file):
-    return pd.DataFrame()
+    raise TurbiniaException(f'Log file {log_file} does not exist.')
 
   with open(log_file, 'r', encoding='utf-8') as fh:
     data = fh.read()
@@ -62,7 +62,7 @@ class TestAuthAnalyzer(unittest.TestCase):
       'first_seen': 1664739900,
       'last_seen': 1665252640,
       'first_auth': {
-          'timestamp': 1665252633.0,
+          'timestamp': 1665252633,
           'session_id':
               '7b45adc5a3d14261800c1782719f647b81b3b8013836f30893f23202b592e'
               '000',
@@ -75,7 +75,7 @@ class TestAuthAnalyzer(unittest.TestCase):
       },
       'brute_forces': [],
       'successful_logins': [{
-          'timestamp': 1665252633.0,
+          'timestamp': 1665252633,
           'session_id':
               '7b45adc5a3d14261800c1782719f647b81b3b8013836f30893f23202b592e'
               '000',
@@ -301,6 +301,7 @@ class TestAuthAnalyzer(unittest.TestCase):
   def test_check_required_fields(self):
     """Test check_required_fields method."""
     # Test 1: Does not meet required fields.
+    print('[+] Testing missing required fields')
     missing_fields = [
         'timestamp', 'event_type', 'auth_method', 'auth_result', 'hostname',
         'source_ip', 'source_port', 'source_hostname', 'domain', 'username'
@@ -308,6 +309,7 @@ class TestAuthAnalyzer(unittest.TestCase):
     self.assertFalse(self.analyzer.check_required_fields(missing_fields))
 
     # Test 2: Meets required fields
+    print('[+] Testing valid fields')
     valid_fields = [
         'timestamp', 'event_type', 'auth_method', 'auth_result', 'hostname',
         'source_ip', 'source_port', 'source_hostname', 'domain', 'username',
@@ -318,61 +320,60 @@ class TestAuthAnalyzer(unittest.TestCase):
   def test_session_duration(self):
     """Test session_duration method."""
     # Common dataframe for the rest of the unit tests
-    df = pd.read_csv('test_data/secure.csv')
+    df = load_test_dataframe()
     self.analyzer.set_dataframe(df)
 
-    print('Test 1: session_duration - emtpy session_id')
+    print('[+] Testing empty session_id')
     session_duration = self.analyzer.session_duration(
         session_id='', timestamp=12345678)
-    self.assertEqual(-1, session_duration)
+    self.assertEqual(session_duration, -1)
 
-    print('Test 2: session_duration - Invalid session_id')
+    print('[+] Testing invalid session_id')
     session_duration = self.analyzer.session_duration(
         session_id='invalid', timestamp=123456789)
-    self.assertEqual(-1, session_duration)
+    self.assertEqual(session_duration, -1)
 
-    print('Test 3: session_duration - valid session_id and invalid timestamp')
+    print('[+] Testing valid session_id and invalid timestamp')
     session_duration = self.analyzer.session_duration(
         session_id='7b45adc5a3d14261800c1782719f647b81b3b8013836f30893f23202'
         'b592e000', timestamp=None)
-    self.assertEqual(-1, session_duration)
+    self.assertEqual(session_duration, -1)
 
-    print('Test 4: session_duration - valid session_id and timestamp')
+    print('[+] Testing valid session_id and timestamp')
     session_duration = self.analyzer.session_duration(
         session_id='7b45adc5a3d14261800c1782719f647b81b3b8013836f30893f23202'
         'b592e000', timestamp=1665252633)
-    self.assertEqual(7, session_duration)
+    self.assertEqual(session_duration, 7)
 
   def test_get_ip_summary(self):
     """Test get_ip_summary method."""
     # Test 1: Empty dataframe.
-    name = 'get_ip_summary'
-    print(f'[{name}] Test 1: Empty dataframe')
+
+    print('[+] Testing empty dataframe')
     df = pd.DataFrame()
     self.analyzer.set_dataframe(df)
     summary = self.analyzer.get_ip_summary('100.100.100.100')
     self.assertIsNone(summary)
 
     # Common dataframe for the rest of the unit tests
-    df = pd.read_csv('test_data/secure.csv')
+    df = load_test_dataframe()
     self.analyzer.set_dataframe(df)
 
     # Test 2: Checking for non-existent source_ip
-    print(f'[{name}] Test 2: Non-existent IP address 100.100.100.100')
+    print('[+] Testing non-existent IP address 100.100.100.100')
     summary = self.analyzer.get_ip_summary('100.100.100.100')
     self.assertIsNone(summary)
 
     # Test 3: Checking a valid source_ip
-    print(f'[{name}] Test 3: Checking for valid IP 192.168.140.67')
+    print('[+] Testing valid IP 192.168.140.67 summary')
     summary = self.analyzer.get_ip_summary('192.168.140.67')
-    self.assertEqual(summary.to_dict(), self.EXPECTED_IP_SUMMARY)
+    self.assertDictEqual(summary.to_dict(), self.EXPECTED_IP_SUMMARY)
 
   def test_get_user_summary(self):
     """Test get_user_summary method."""
-    fname = 'get_user_summary'
 
-    # Test 1: Empty datafram
-    print(f'[{fname}] Test 1: Empty dataframe')
+    # Test 1: Empty dataframe
+    print('[+] Testing empty dataframe')
     df = pd.DataFrame()
     self.analyzer.set_dataframe(df)
     summary = self.analyzer.get_user_summary(
@@ -380,29 +381,27 @@ class TestAuthAnalyzer(unittest.TestCase):
     self.assertIsNone(summary)
 
     # Dataframe for the rest of the tests
-    df = pd.read_csv('test_data/secure.csv')
+    df = load_test_dataframe()
     self.analyzer.set_dataframe(df)
 
     # Test 2: Non-existent username
-    print(f'[{fname}] Test 2: Checking non-existent username supermario')
+    print('[+] Testing non-existent username supermario')
     summary = self.analyzer.get_user_summary(domain='', username='supermario')
     self.assertIsNone(summary)
 
     # Test 3: Valid username
-    print(f'[{fname}] Test 3: Checking for valid username kadmin')
+    print('[+] Testing valid username kadmin')
     summary = self.analyzer.get_user_summary(domain='', username='kadmin')
     self.assertIsNotNone(summary)
     user_summary = summary.to_dict()
-    #self.assertEqual(self.EXPECTED_USER_SUMMARY, user_summary)
     self.assertEqual(
-        self.EXPECTED_USER_SUMMARY['first_auth'], user_summary['first_auth'])
+        user_summary['first_auth'], self.EXPECTED_USER_SUMMARY['first_auth'])
 
   def test_get_auth_summary(self):
     """Test get_auth_summary method."""
-    fname = 'get_auth_summary'
 
     # Test 1: Empty dataframe
-    print(f'[{fname}] Test 1: Empty dataframe')
+    print('[+] Testing empty dataframe')
     df = pd.DataFrame()
     result = self.analyzer.set_dataframe(df)
     self.assertFalse(result)
@@ -410,34 +409,36 @@ class TestAuthAnalyzer(unittest.TestCase):
     self.assertIsNone(summary)
 
     # Dataframe for the rest of the tests
-    df = pd.read_csv('test_data/secure.csv')
+    df = load_test_dataframe()
     self.analyzer.set_dataframe(df)
 
     # Test 2: Invalid summary_type
-    print(f'[{fname}] Test 2: Invalid summary_type value')
+    print('[+] Testing invalid summary_type value')
     summary = self.analyzer.get_auth_summary(df, 'source_port', 54321)
     self.assertIsNone(summary)
 
     # Test 3: Valid summary_type source_ip
-    print(f'[{fname}] Test 3: Valid summary_type source_ip')
+    print('[+] Testing valid summary_type source_ip')
     summary = self.analyzer.get_auth_summary(df, 'source_ip', '192.168.140.67')
-    self.assertEqual(self.EXPECTED_AUTH_SUMMARY_3, summary.to_dict())
+    self.assertDictEqual(summary.to_dict(), self.EXPECTED_AUTH_SUMMARY_3)
 
     # Test 4: Valid summary_type username
-    print(f'[{fname}] Test 4: Valid source_type username')
+    print('[+] Testing valid source_type username')
     summary = self.analyzer.get_auth_summary(df, 'username', 'kadmin')
-    self.assertEqual(
-        self.EXPECTED_AUTH_SUMMARY_4['first_auth'],
-        summary.to_dict()['first_auth'])
+    self.assertDictEqual(
+        summary.to_dict()['first_auth'],
+        self.EXPECTED_AUTH_SUMMARY_4['first_auth'])
 
   def test_to_useraccount(self):
     """Test to_useraccount method."""
 
     # Test 1: Empty domain and username
+    print('[+] Testing empty domain and username')
     useraccount = self.analyzer.to_useraccount(domain='', username='')
     self.assertEqual(useraccount, '')
 
     # Test 2: Non-empty domain and username
+    print('[+] Testing username and domain')
     useraccount = self.analyzer.to_useraccount(
         domain='example', username='admin')
     self.assertEqual(useraccount, 'example\\admin')
@@ -446,11 +447,13 @@ class TestAuthAnalyzer(unittest.TestCase):
     """Test from_useraccount method."""
 
     # Test 1: Empty useraccount
+    print('[+] Testing empty useraccount')
     domain, username = self.analyzer.from_useraccount('')
     self.assertEqual(domain, '')
     self.assertEqual(username, '')
 
     # Test 2: Empty domain
+    print('[+] Testing empty domain and username')
     domain, username = self.analyzer.from_useraccount('admin')
     self.assertEqual(domain, '')
     self.assertEqual(username, 'admin')
@@ -470,40 +473,38 @@ class TestAuthAnalyzer(unittest.TestCase):
 
   def test_get_login_session(self):
     """Test get_login_session method."""
-    fname = 'get_login_session'
-
     # Test 1: Empty dataframe
-    print(f'[{fname}] Test 1: Empty dataframe and empty parameters')
+    print('[+] Testing empty dataframe and empty parameters')
     df = pd.DataFrame()
     self.analyzer.set_dataframe(df)
     login_session = self.analyzer.get_login_session('', '', '', '')
     self.assertIsNone(login_session)
 
     # Dataframe for the rest of the tests
-    df = pd.read_csv('test_data/secure.csv')
+    df = load_test_dataframe()
     self.analyzer.set_dataframe(df)
 
     # Test 2: Checking for non-existent parameter values
-    print(f'[{fname}] Test 2: Non-existent value of the parameters')
+    print('[+] Testing non-existent value of the parameters')
     login_session = self.analyzer.get_login_session(
         source_ip='100.100.100.100', domain='', username='gametogenesis',
         session_id='kurbtwhfwq')
     self.assertIsNone(login_session)
 
     # Test 3: Checking a valid session
-    print(f'[{fname}] Test 3: Checking for valid session')
+    print('[+] Testing valid login session')
     login_session = self.analyzer.get_login_session(
         source_ip='192.168.140.67', domain='', username='admin',
         session_id='7b45adc5a3d14261800c1782719f647b81b3b8013836f30893f23202b5'
         '92e000')
-    self.assertEqual(self.EXPECTED_LOGIN_SESSION, login_session.__dict__)
+    self.assertDictEqual(login_session.__dict__, self.EXPECTED_LOGIN_SESSION)
 
 
 class TestBruteForceAnalyzer(unittest.TestCase):
   """Test class for BruteForceAnalyzer"""
 
   def _authsummarydata(self) -> AuthSummaryData:
-    """Returns expected AuthSummaryData object.
+    """Returns the expected AuthSummaryData object.
     
     Returns:
         AuthSummaryData: Expected AuthSummaryData object.
@@ -549,19 +550,23 @@ class TestBruteForceAnalyzer(unittest.TestCase):
         analyzer_id='bruteforce.auth.analyzer',
         analyzer_name='Brute Force Analyzer')
     output.result_summary = '1 brute force from 192.168.140.67'
-    output.result_markdown = (
-        '\n# Brute Force Analyzer'
-        '\n\n## Brute Force Summary for 192.168.140.67'
-        '\n- Successful brute force on 2022-10-08 18:10:33 as admin'
-        '\n\n### 192.168.140.67 Summary'
-        '\n- IP first seen on 2022-10-02 19:45:00'
-        '\n- IP last seen on 2022-10-08 18:10:40'
-        '\n- First successful auth on 2022-10-08 18:10:33'
-        '\n- First successful source IP: 192.168.140.67'
-        '\n- First successful username: admin'
-        '\n\n### Top Usernames'
-        '\n- root: 5173'
-        '\n- admin: 31')
+    output.result_markdown = textwrap.dedent(
+        """
+        #### Brute Force Analyzer
+        
+        ##### Brute Force Summary for 192.168.140.67
+        - Successful brute force on 2022-10-08 18:10:33 as admin
+        
+        ###### 192.168.140.67 Summary
+        - IP first seen on 2022-10-02 19:45:00
+        - IP last seen on 2022-10-08 18:10:40
+        - First successful auth on 2022-10-08 18:10:33
+        - First successful source IP: 192.168.140.67
+        - First successful username: admin
+        
+        ###### Top Usernames
+        - root: 5173
+        - admin: 31""")
     output.attributes = self._authsummarydata()
     return output
 
@@ -570,47 +575,42 @@ class TestBruteForceAnalyzer(unittest.TestCase):
 
   def test_login_analysis_exceptions(self):
     """Test login_analysis method."""
-    fname = 'login_analysis'
-
     # Test 1: Empty dataframe
-    print(f'[{fname}] Test 1: Empty dataframe')
+    print('[+] Testing empty dataframe')
     df = pd.DataFrame()
     self.analyzer.set_dataframe(df)
     output = self.analyzer.login_analysis('100.100.100.100')
     self.assertIsNone(output)
 
-    # Common dataframe used for unit tests
-    df = pd.read_csv('test_data/secure.csv')
+    # Common data frame used for unit tests
+    df = load_test_dataframe()
     self.analyzer.set_dataframe(df)
 
     # Test 2: Login analysis with empty source_ip
-    print(f'[{fname}] Test 2: Empty source_ip in login_analysis')
+    print('[+] Testing empty source_ip in login_analysis')
     output = self.analyzer.login_analysis(source_ip='')
     self.assertIsNone(output)
 
     # Test 3: Log analysis for non-existent IP address
-    print(f'[{fname}] Test 3: Log analysis for non-existent IP address')
+    print('[+] Testing log analysis for non-existent IP address')
     output = self.analyzer.login_analysis(source_ip='100.100.100.100')
     self.assertIsNone(output)
 
     # Test 4: Login analysis for unsuccessful IP address
-    print(f'[{fname}] Test 4: Login analysis for unsuccessful IP address')
+    print('[+] Testing login analysis for unsuccessful IP address')
     output = self.analyzer.login_analysis(source_ip='172.30.151.91')
     self.assertIsNone(output)
 
   def test_login_analysis(self):
     """Test login_analysis method."""
-    fname = 'login_analysis'
-
-    # Common dataframe used for unit tests
-    df = pd.read_csv('test_data/secure.csv')
+    # Common data frame used for unit tests
+    df = load_test_dataframe()
     self.analyzer.set_dataframe(df)
 
-    print(f'[{fname}] Test Login analysis for successful IP address')
+    print('[+] Testing login analysis for successful IP address')
     output = self.analyzer.login_analysis(source_ip='192.168.140.67')
-
     expected_output = self._authsummarydata()
-    self.assertEqual(expected_output.to_dict(), output.to_dict())
+    self.assertDictEqual(output.to_dict(), expected_output.to_dict())
 
   def test_generate_report(self):
     """Test generate_report method."""
@@ -620,14 +620,14 @@ class TestBruteForceAnalyzer(unittest.TestCase):
     summaries.append(authsummarydata)
     output = self.analyzer.generate_analyzer_output(summaries, True)
     expected_output = self._analyzer_output()
-    self.assertEqual(expected_output.result_markdown, output.result_markdown)
+    self.assertEqual(output.result_markdown, expected_output.result_markdown)
 
   def test_run(self):
     """Test run method."""
     df = load_test_dataframe()
     output = self.analyzer.run(df)
     expected_output = self._analyzer_output()
-    self.assertEqual(expected_output.result_markdown, output.result_markdown)
+    self.assertEqual(output.result_markdown, expected_output.result_markdown)
 
 
 if __name__ == '__main__':

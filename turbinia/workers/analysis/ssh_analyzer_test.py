@@ -13,9 +13,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Task for Linux SSH analysis."""
+
 import datetime
-import os
 import mock
+import os
 import pandas as pd
 import shutil
 import unittest
@@ -47,15 +48,27 @@ class LinuxSSHAnalysisTaskTest(TestTurbiniaTaskBase):
 
   def test_read_log_data(self):
     """Test reading log file on disk"""
-    log_file = 'test_data/secure'
+    log_file = os.path.join('test_data', 'secure')
     if not os.path.exists(log_file):
-      return
+      raise FileNotFoundError(f'{log_file} does not exist.')
 
     with open(log_file, 'r', encoding='utf-8') as fh:
       data = fh.read()
     a = ssh_analyzer.LinuxSSHAnalysisTask()
     ssh_records = a.read_log_data(data, log_file, log_year=2022)
-    self.assertEqual(27719, len(ssh_records))
+    self.assertEqual(len(ssh_records), 27719)
+
+  def test_read_logs(self):
+    """Test read_logs method."""
+    analyzer = ssh_analyzer.LinuxSSHAnalysisTask()
+
+    print('[+] Checking empty log_dir')
+    result = analyzer.read_logs(log_dir='')
+    self.assertTrue(result.empty)
+
+    print('[+] Checking test_data as log_dir')
+    result = analyzer.read_logs(log_dir='test_data')
+    self.assertEqual(len(result), 27719)
 
   def test_parse_message_datetime(self):
     """Test parsing message datetime fields."""
@@ -66,14 +79,14 @@ class LinuxSSHAnalysisTaskTest(TestTurbiniaTaskBase):
         message_datetime=['Feb', '8', '13:30:45'], log_year=2023)
     expected_output = datetime.datetime(
         2023, 2, 8, 13, 30, 45, tzinfo=datetime.timezone.utc)
-    self.assertEqual(expected_output, output)
+    self.assertEqual(output, expected_output)
 
     # Testing 2023-02-08T13:30:45.123456+11:00 OpenSUSE format
     output = analyzer.parse_message_datetime(
         message_datetime=['2023-02-08T13:30:45.123456+11:00'], log_year=0)
     expected_output = datetime.datetime(
         2023, 2, 8, 2, 30, 45, 123456, datetime.timezone.utc)
-    self.assertEqual(expected_output, output)
+    self.assertEqual(output, expected_output)
 
     # Invalid datetime 2023-13-10 22:10:10
     output = analyzer.parse_message_datetime(
@@ -97,7 +110,16 @@ class LinuxSSHAnalysisTaskTest(TestTurbiniaTaskBase):
 
     mock_extract_artifacts.return_value = ['secure', 'var/log/secure']
 
-    df = pd.read_csv('test_data/secure.csv')
+    log_file = os.path.join('test_data', 'secure')
+    if not os.path.exists(log_file):
+      raise FileNotFoundError(f'{log_file} does not exist.')
+
+    with open(log_file, 'r', encoding='utf-8') as fh:
+      data = fh.read()
+    a = ssh_analyzer.LinuxSSHAnalysisTask()
+    ssh_records = a.read_log_data(data, log_file, log_year=2022)
+    df = pd.DataFrame(ssh_records)
+
     mock_read_logs.return_value = df
 
     mock_brute_force_analysis.return_value = (

@@ -15,7 +15,6 @@
 """Task for analyzing Linux SSH analysis."""
 
 import gzip
-import json
 import hashlib
 import logging
 import os
@@ -27,7 +26,6 @@ from datetime import datetime, timezone
 from typing import Tuple, List
 
 from turbinia import TurbiniaException
-
 from turbinia.evidence import Evidence
 from turbinia.evidence import EvidenceState as state
 from turbinia.evidence import ReportText
@@ -151,7 +149,7 @@ class LinuxSSHAnalysisTask(TurbiniaTask):
   }
 
   def read_logs(self, log_dir: str) -> pd.DataFrame:
-    """Read SSH logs directory and returns Pandas dataframe.
+    """Reads SSH logs directory and returns Pandas dataframe.
     
     Args:
       log_dir (str): Directory containing SSH authentication log.
@@ -159,15 +157,23 @@ class LinuxSSHAnalysisTask(TurbiniaTask):
     Returns:
       pd.DataFrame: Returns Pandas dataframe.
     """
+    if not log_dir:
+      return pd.DataFrame()
+
     ssh_records = []
 
+    log_filenames = None
     try:
       log_filenames = os.listdir(log_dir)
     except FileNotFoundError as e:
       log.error('Log directory %s not found. %s', log_dir, str(e))
       return pd.DataFrame()
 
+    if not log_filenames:
+      return pd.DataFrame()
+
     for log_filename in log_filenames:
+      # We only want to process files that hold SSH events.
       if not log_filename.startswith(
           'auth.log') and not log_filename.startswith(
               'secure') and not log_filename.startswith('message'):
@@ -199,15 +205,13 @@ class LinuxSSHAnalysisTask(TurbiniaTask):
           records = self.read_log_data(log_data, log_filename=log_filename)
           if records:
             ssh_records += records
-      except FileNotFoundError as e:
-        log.error('%s does not exist. %s', log_file, str(e))
-      except OSError as e:
+      except (FileNotFoundError, OSError) as e:
         log.error('%s does not exist. %s', log_file, str(e))
       finally:
         continue
 
     if not ssh_records:
-      log.info('No SSH authenticaiton events in %s', log_dir)
+      log.info('No SSH authentication events in %s', log_dir)
       return pd.DataFrame()
     log.info(
         'Total number of SSH authentication events %d in %s.', len(ssh_records),
@@ -221,15 +225,15 @@ class LinuxSSHAnalysisTask(TurbiniaTask):
 
   def parse_message_datetime(
       self, message_datetime: List, log_year: int) -> datetime:
-    """Parse and return datetime.
+    """Parses and returns datetime.
     
     Args:
-      message_datetime (List): A list containing syslog datetime separated by
-        spaces e.g. Feb 8 13:30:45 for Debian, and Red Hat, and
-        2023-02-08T13:30:45.123456+11:00 for OpenSUSE.
+      message_datetime (List[str]): A list containing syslog datetime separated
+          by spaces e.g. Feb 8 13:30:45 for Debian, and Red Hat, and
+          2023-02-08T13:30:45.123456+11:00 for OpenSUSE.
       log_year (int): A user provided log year for SSH events. The log year is 
       not captured by syslog and this is either provided by user or guessed
-      based on last SSH event and current date/time.
+      based on the last SSH event and current date/time.
 
     Returns:
       datetime.datetime: Returns datetime.datetime object or None.
@@ -254,14 +258,14 @@ class LinuxSSHAnalysisTask(TurbiniaTask):
       log.error('Invalid datetime format %s', ' '.join(message_datetime))
     return None
 
-  def read_log_data(
-      self, data, log_filename: str, log_year: int = None) -> List:
-    """ Parses SSH log data and returns list of SSHEventData.
+  def read_log_data(self, data, log_filename: str,
+                    log_year: int = None) -> List[SSHEventData]:
+    """Parses SSH log data and returns a list of SSHEventData.
     
     Args:
-      data(str): Content of authentication log file.
-      log_filename(str): Name of the log file whose content is read.
-      log_year(int): SSH authentication log year.
+      data (str): Content of authentication log file.
+      log_filename (str): Name of the log file whose content is read.
+      log_year (int): SSH authentication log year.
     
     Returns:
       List(SSHEventData): Returns SSH events as list of SSHEventData. 
@@ -286,6 +290,7 @@ class LinuxSSHAnalysisTask(TurbiniaTask):
     sshd_message_type_re = re.compile(
         r'.*sshd\[\d+\]:\s+([^\s]+)\s+([^\s]+)\s.*')
 
+    sshd_message_type = None
     # Only processing authentication logs with pattern sshd[9820]
     for line in re.findall(r'.*sshd\[\d+\].*', data):
       try:
@@ -297,13 +302,18 @@ class LinuxSSHAnalysisTask(TurbiniaTask):
         log.error('Unable to get SSH message type: %s', line)
         continue
 
+      if not sshd_message_type:
+        log.debug('SSH message type not set')
+        continue
+
       for key, value in self.MESSAGE_GRAMMAR.items():
         if key.lower() == sshd_message_type.lower():
           try:
-            m = value.parseString(line)
+            parsed_ssh_event = value.parseString(line)
 
             # handle date/time
-            dt_object = self.parse_message_datetime(m.datetime, log_year)
+            dt_object = self.parse_message_datetime(
+                parsed_ssh_event.datetime, log_year)
             if not dt_object:
               log.error('Error extracting date/time from %s', line)
               continue
@@ -327,11 +337,12 @@ class LinuxSSHAnalysisTask(TurbiniaTask):
 
             ssh_event_data = SSHEventData(
                 timestamp=event_timestamp, date=event_date, time=event_time,
-                hostname=m.hostname, pid=m.pid, event_key=event_type,
-                event_type=event_type, auth_method=m.auth_method,
-                auth_result=auth_result, username=m.username,
-                source_hostname='', source_ip=m.source_ip,
-                source_port=m.source_port)
+                hostname=parsed_ssh_event.hostname, pid=parsed_ssh_event.pid,
+                event_key=event_type, event_type=event_type,
+                auth_method=parsed_ssh_event.auth_method,
+                auth_result=auth_result, username=parsed_ssh_event.username,
+                source_hostname='', source_ip=parsed_ssh_event.source_ip,
+                source_port=parsed_ssh_event.source_port)
             ssh_event_data.calculate_session_id()
 
             ssh_records.append(ssh_event_data)
@@ -344,10 +355,10 @@ class LinuxSSHAnalysisTask(TurbiniaTask):
     return ssh_records
 
   def get_priority_value(self, priority_string: str) -> Priority:
-    """Return priority value
+    """Returns priority value.
     
     Args:
-      priority_string(str): Priority values as string e.g. HIGH, MEDIUM, LOW
+      priority_string (str): Priority values as string e.g. HIGH, MEDIUM, LOW
     
     Returns:
       Priority: Returns priority value of priority_string.
@@ -362,7 +373,7 @@ class LinuxSSHAnalysisTask(TurbiniaTask):
       return Priority.LOW
 
   def brute_force_analysis(self, df: pd.DataFrame) -> Tuple[Priority, str, str]:
-    """Run brute force analysis.
+    """Runs brute force analysis.
     
     Args:
       df (pd.DataFrame): Pandas dataframe of SSH events.
@@ -375,29 +386,32 @@ class LinuxSSHAnalysisTask(TurbiniaTask):
     """
     bfa = BruteForceAnalyzer()
 
-    bfa_result = bfa.run(df)
-    if not bfa_result:
-      return (
-          Priority.LOW, 'No findings for brute force analysis',
-          '## Brute force analysis\n\n- No findings')
+    try:
+      bfa_result = bfa.run(df)
+      if not bfa_result:
+        return (
+            Priority.LOW, 'No findings for brute force analysis',
+            '##### Brute force analysis\n\n- No findings')
+      result_priority = bfa_result.result_priority
+      result_summary = bfa_result.result_summary
+      result_markdown = bfa_result.result_markdown
 
-    result_priority = bfa_result.result_priority
-    result_summary = bfa_result.result_summary
-    result_markdown = bfa_result.result_markdown
+      priority = self.get_priority_value(result_priority)
 
-    priority = self.get_priority_value(result_priority)
+      if not result_summary:
+        result_summary = 'No findings for brute force analysis'
+      if not result_markdown:
+        result_markdown = '##### Brute Force Analysis\n\n- No findings'
 
-    if not result_summary:
-      result_summary = 'No findings for brute force analysis'
-    if not result_markdown:
-      result_markdown = '## Brute Force Analysis\n\n- No findings'
-
-    return (priority, result_summary, result_markdown)
+      return (priority, result_summary, result_markdown)
+    except TurbiniaException as exception:
+      log.error('Unable to run brute force analyzer. %s', str(exception))
+      return (Priority.LOW, '', '')
 
   def run(
       self, evidence: Evidence,
       result: TurbiniaTaskResult) -> TurbiniaTaskResult:
-    """Run the SSH Auth Analyzer worker.
+    """Runs the SSH Auth Analyzer worker.
 
     Args:
       evidence (Evidence object): The evidence being processed by analyzer.
@@ -431,10 +445,10 @@ class LinuxSSHAnalysisTask(TurbiniaTask):
     log_dir = os.path.join(self.output_dir, 'var', 'log')
     result.log(f'Checking log directory {log_dir}')
 
-    #if not os.path.exists(log_dir):
-    #  summary = f'No SSH log directory in {log_dir}'
-    #  result.close(self, success=True, status=summary)
-    #  return result
+    if not os.path.exists(log_dir):
+      summary = f'No SSH log directory in {log_dir}'
+      result.close(self, success=True, status=summary)
+      return result
 
     df = self.read_logs(log_dir=log_dir)
     if df.empty:
@@ -457,7 +471,7 @@ class LinuxSSHAnalysisTask(TurbiniaTask):
     if output_summary_list:
       analyzer_output_summary = '. '.join(output_summary_list)
     else:
-      analyzer_output_summary = 'No findings for SSH authenticaiton analyzer.'
+      analyzer_output_summary = 'No findings for SSH authentication analyzer.'
 
     if output_report_list:
       analyzer_output_report = '\n'.join(output_report_list)
