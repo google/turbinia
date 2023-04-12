@@ -15,11 +15,14 @@ def main():
     timeout = values.get('timeout')
     if timeout > max_timeout:
       max_timeout = timeout
+  config.log.info(f'Set max timeout: {max_timeout}')
   try:
     lock = filelock.FileLock(config.LOCK_FILE)
     with lock.acquire(timeout=max_timeout):
+      config.log.info(f'Lock {config.LOCK_FILE} acquired')
       return
   except filelock.Timeout:
+    config.log.info(f'Lock {config.LOCK_FILE} timed out')
     return
 
 
