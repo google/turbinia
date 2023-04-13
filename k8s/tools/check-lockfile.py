@@ -28,10 +28,10 @@ def main():
     config.log.debug(f'[check-lockfile] Acquiring lock {config.LOCK_FILE}')
     with lock.acquire(timeout=max_timeout):
       config.log.debug(f'[check-lockfile] Lock {config.LOCK_FILE} acquired')
-      return
   except filelock.Timeout:
     config.log.debug(f'[check-lockfile] Lock {config.LOCK_FILE} timed out')
     return
+  config.log.debug(f'[check-lockfile] Lock {config.LOCK_FILE} released')
 
 
 if __name__ == '__main__':
