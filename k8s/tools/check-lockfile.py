@@ -22,16 +22,16 @@ def main():
     timeout = values.get('timeout')
     if timeout > max_timeout:
       max_timeout = timeout
-  config.log.debug(f'[check-lockfile] Set max timeout: {max_timeout}')
+  log.debug(f'[check-lockfile] Set max timeout: {max_timeout}')
   try:
     lock = filelock.FileLock(config.LOCK_FILE)
-    config.log.debug(f'[check-lockfile] Acquiring lock {config.LOCK_FILE}')
+    log.debug(f'[check-lockfile] Acquiring lock {config.LOCK_FILE}')
     with lock.acquire(timeout=max_timeout):
-      config.log.debug(f'[check-lockfile] Lock {config.LOCK_FILE} acquired')
+      log.debug(f'[check-lockfile] Lock {config.LOCK_FILE} acquired')
   except filelock.Timeout:
-    config.log.debug(f'[check-lockfile] Lock {config.LOCK_FILE} timed out')
+    log.debug(f'[check-lockfile] Lock {config.LOCK_FILE} timed out')
     return
-  config.log.debug(f'[check-lockfile] Lock {config.LOCK_FILE} released')
+  log.debug(f'[check-lockfile] Lock {config.LOCK_FILE} released')
 
 
 if __name__ == '__main__':
