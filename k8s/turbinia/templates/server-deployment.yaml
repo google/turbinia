@@ -1,0 +1,91 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name:  {{ include "turbinia.fullname" . }}-server
+  namespace: {{ .Release.Namespace | quote }}
+  labels:
+    app.kubernetes.io/component: server
+    {{- include "turbinia.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: server
+      {{- include "turbinia.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- if .Values.metrics.enabled }} 
+      annotations:
+        prometheus.io/port: {{ .Values.metrics.port | quote }}
+        prometheus.io/scrape: "true"
+      {{- end }}
+      labels:
+        app.kubernetes.io/component: server
+        {{- include "turbinia.selectorLabels" . | nindent 8 }}
+    spec:
+      serviceAccountName: {{ include "turbinia.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.server.podSecurityContext | nindent 8 }}
+      initContainers:
+        - name: init-turbinia
+          image: busybox
+          command: ['sh', '-c', '/init/init-turbinia.sh']
+          env:
+            {{- if and .Values.redis.enabled .Values.redis.auth.enabled }}
+            - name: REDIS_PASSWORD
+              valueFrom:
+                # Referencing from charts/redis/templates/_helpers.tpl
+                secretKeyRef:
+                  name: {{ include "redis.secretName" .Subcharts.redis }}
+                  key: {{ include "redis.secretPasswordKey" .Subcharts.redis }}
+            {{- end }}
+          volumeMounts:
+            - mountPath: /init
+              name: init-turbinia
+            - mountPath: /etc/turbinia
+              name: turbiniavolume
+              subPath: configs
+      containers:
+        - name: server
+          securityContext:
+              {{- toYaml .Values.server.securityContext | nindent 12 }}
+          image: "{{ .Values.server.image.repository }}:{{ .Values.server.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.server.image.pullPolicy }}
+          env:
+            - name: TURBINIA_EXTRA_ARGS
+              value: "-d"
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+          volumeMounts:
+            - mountPath: /mnt/turbiniavolume
+              name: turbiniavolume
+            - mountPath: /etc/turbinia
+              name: turbiniavolume
+              subPath: configs
+          ports:
+            - containerPort: {{ .Values.metrics.port }}
+          resources:
+            {{- toYaml .Values.server.resources | nindent 12 }}
+      volumes:
+        - name: turbiniavolume
+          persistentVolumeClaim:
+            claimName: {{ include "turbinia.pvc.name"  . }}
+            readOnly: false
+        - name: init-turbinia
+          configMap:
+            name: {{ include "turbinia.fullname" . }}-init-configmap
+            defaultMode: 0744
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

@@ -1,0 +1,16 @@
+{{- if .Values.worker.autoscaling.enabled }}
+apiVersion: autoscaling/v1
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ include "turbinia.fullname" . }}
+  labels:
+    {{- include "turbinia.labels" . | nindent 4 }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ include "turbinia.fullname" . }}-worker
+  minReplicas: {{ .Values.worker.autoscaling.minReplicas }}
+  maxReplicas: {{ .Values.worker.autoscaling.maxReplicas }}
+  targetCPUUtilizationPercentage: {{ .Values.worker.autoscaling.targetCPUUtilizationPercentage }}
+{{- end }}
