@@ -4,6 +4,8 @@ kind: FrontendConfig
 metadata:
   name: {{ include "turbinia.fullname" . }}-frontend-config
   namespace: {{ .Release.Namespace | quote }}
+  labels:
+    {{- include "turbinia.labels" . | nindent 4 }}
 spec:
   redirectToHttps:
     enabled: true

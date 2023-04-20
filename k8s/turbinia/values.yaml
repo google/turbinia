@@ -322,11 +322,11 @@ gcp:
   ## @param gcp.gcpLogging Enables GCP Cloud Logging
   ## ref https://cloud.google.com/logging
   ##
-  gcpLogging: false
+  gcpLogging: true
   ## @param gcp.gcpErrorReporting Enables GCP Cloud Error Reporting
   ## ref https://cloud.google.com/error-reporting/docs/grouping-errors
   ##
-  gcpErrorReporting: false
+  gcpErrorReporting: true
 ## Turbinia service account parameters
 ##
 serviceAccount:

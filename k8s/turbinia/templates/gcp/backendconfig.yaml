@@ -4,6 +4,8 @@ kind: BackendConfig
 metadata:
   name: {{ include "turbinia.fullname" . }}-backend-config
   namespace: {{ .Release.Namespace | quote }}
+  labels:
+    {{- include "turbinia.labels" . | nindent 4 }}
 spec:
   timeoutSec: 300
   healthCheck:
