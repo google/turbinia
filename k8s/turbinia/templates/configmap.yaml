@@ -40,7 +40,7 @@ data:
     sed -i -e "s/^OUTPUT_DIR = .*$/OUTPUT_DIR = '\/mnt\/{{ .Values.persistence.name }}\/output'/g" turbinia.conf
     
     # Disable Turbinia Jobs
-    sed -i -e "s/^DISABLED_JOBS = .*$/DISABLED_JOBS = {{ .Values.disabledJobs }}/g" turbinia.conf
+    sed -i -e "s/^DISABLED_JOBS = .*$/DISABLED_JOBS = {{ .Values.config.disabledJobs }}/g" turbinia.conf
 
     {{- if .Values.metrics.enabled }}
     # Set up Prometheus metrics

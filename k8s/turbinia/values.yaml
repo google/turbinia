@@ -57,6 +57,18 @@ server:
     limits:
       cpu: 8000m
       memory: 16000Mi
+  ## @param server.nodeSelector Node labels for Turbinia server pods assignment
+  ## ref: https://kubernetes.io/docs/user-guide/node-selection/
+  ##
+  nodeSelector: {}
+  ## @param server.tolerations Tolerations for Turbinia server pods assignment
+  ## ref https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/
+  ##
+  tolerations: []
+  ## @param server.affinity Affinity for Turbinia server pods assignment
+  ## ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity
+  ##
+  affinity: {}
 ## Turbinia worker configuration
 ##
 worker:
@@ -124,6 +136,18 @@ worker:
     limits:
       cpu: 31000m
       memory: 65536Mi
+  ## @param worker.nodeSelector Node labels for Turbinia worker pods assignment
+  ## ref: https://kubernetes.io/docs/user-guide/node-selection/
+  ##
+  nodeSelector: {}
+  ## @param worker.tolerations Tolerations for Turbinia worker pods assignment
+  ## ref https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/
+  ##
+  tolerations: []
+  ## @param worker.affinity Affinity for Turbinia worker pods assignment
+  ## ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity
+  ##
+  affinity: {}
 ## Turbinia API / Web configuration
 ##
 api:
@@ -187,6 +211,18 @@ api:
     limits:
       cpu: 8000m
       memory: 16000Mi
+  ## @param api.nodeSelector Node labels for Turbinia api pods assignment
+  ## ref: https://kubernetes.io/docs/user-guide/node-selection/
+  ##
+  nodeSelector: {}
+  ## @param api.tolerations Tolerations for Turbinia api pods assignment
+  ## ref https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/
+  ##
+  tolerations: []
+  ## @param api.affinity Affinity for Turbinia api pods assignment
+  ## ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity
+  ##
+  affinity: {}
 ## Turbinia controller configuration
 ## The controller is not required to use Turbinia and serves as an extra
 ## container that can be used for troubleshooting
@@ -245,15 +281,30 @@ controller:
     limits:
       cpu: 4000m
       memory: 4000Mi
+  ## @param controller.nodeSelector Node labels for Turbinia controller pods assignment
+  ## ref: https://kubernetes.io/docs/user-guide/node-selection/
+  ##
+  nodeSelector: {}
+  ## @param controller.tolerations Tolerations for Turbinia controller pods assignment
+  ## ref https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/
+  ##
+  tolerations: []
+  ## @param controller.affinity Affinity for Turbinia controller pods assignment
+  ## ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity
+  ##
+  affinity: {}
 ## @param nameOverride String to partially override names.fullname
 ##
 nameOverride: ""
 ## @param fullnameOverride String to fully override names.fullname
 ##
 fullnameOverride: ""
-## @param disabledJobs List of Turbinia Jobs to disable
-##
-disabledJobs: "['BinaryExtractorJob', 'BulkExtractorJob', 'HindsightJob', 'PhotorecJob', 'VolatilityJob']"
+## Turbinia configuration parameters
+## ref: https://github.com/google/turbinia/blob/master/turbinia/config/turbinia_config_tmpl.py
+## 
+config:
+  ## @param disabledJobs List of Turbinia Jobs to disable. Overrides DISABLED_JOBS in the Turbinia config.
+  disabledJobs: "['BinaryExtractorJob', 'BulkExtractorJob', 'HindsightJob', 'PhotorecJob', 'VolatilityJob']"
 ## GCP configuration parameters
 ## IMPORTANT: The Turbinia Helm chart only supports GCP at the moment due to 
 ## missing functionality with attaching and detaching cloud disks for other providers
@@ -261,13 +312,13 @@ disabledJobs: "['BinaryExtractorJob', 'BulkExtractorJob', 'HindsightJob', 'Photo
 gcp:
   ## @param gcp.projectID GCP Project ID where your cluster is deployed
   ## 
-  projectID: ""
+  projectID: "turbiniang-dev-1"
   ## @param gcp.projectRegion Region where your cluster is deployed
   ##
-  projectRegion: ""
+  projectRegion: "us-central1"
   ## @param gcp.projectZone Zone where your cluster is deployed
   ##
-  projectZone: ""
+  projectZone: "us-central1-f"
   ## @param gcp.gcpLogging Enables GCP Cloud Logging
   ## ref https://cloud.google.com/logging
   ##

@@ -48,6 +48,9 @@ spec:
             - mountPath: /var/log
               name: logs
           ports:
+            {{- if .Values.metrics.enabled }}
+            - containerPort: {{ .Values.metrics.port }}
+            {{- end }}
             - containerPort: {{ .Values.service.port }}
           resources:
             {{- toYaml .Values.api.resources | nindent 12 }}
@@ -58,15 +61,15 @@ spec:
             readOnly: false
         - name: logs
           emptyDir: {}
-      {{- with .Values.nodeSelector }}
+      {{- with .Values.api.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with .Values.affinity }}
+      {{- with .Values.api.affinity }}
       affinity:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with .Values.tolerations }}
+      {{- with .Values.api.tolerations }}
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}

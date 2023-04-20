@@ -65,7 +65,9 @@ spec:
               name: turbiniavolume
               subPath: configs
           ports:
+            {{- if .Values.metrics.enabled }}
             - containerPort: {{ .Values.metrics.port }}
+            {{- end }}
           resources:
             {{- toYaml .Values.server.resources | nindent 12 }}
       volumes:
@@ -77,15 +79,15 @@ spec:
           configMap:
             name: {{ include "turbinia.fullname" . }}-init-configmap
             defaultMode: 0744
-      {{- with .Values.nodeSelector }}
+      {{- with .Values.server.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with .Values.affinity }}
+      {{- with .Values.server.affinity }}
       affinity:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with .Values.tolerations }}
+      {{- with .Values.server.tolerations }}
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}

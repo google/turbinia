@@ -64,7 +64,9 @@ spec:
               name: turbiniavolume
               subPath: configs
           ports:
+            {{- if .Values.metrics.enabled }}
             - containerPort: {{ .Values.metrics.port }}
+            {{- end }}
           resources:
             {{- toYaml .Values.worker.resources | nindent 12 }}
       volumes:
@@ -78,15 +80,15 @@ spec:
           persistentVolumeClaim:
             claimName: {{ include "turbinia.pvc.name"  . }}
             readOnly: false
-      {{- with .Values.nodeSelector }}
+      {{- with .Values.worker.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with .Values.affinity }}
+      {{- with .Values.worker.affinity }}
       affinity:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with .Values.tolerations }}
+      {{- with .Values.worker.tolerations }}
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
