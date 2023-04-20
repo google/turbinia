@@ -7,6 +7,9 @@
 set -o posix
 set -e
 
+# The GCP IAM service account name to create. If you choose a different name
+# from `turbinia`, please ensure to update .Values.serviceAccount.name in the
+# values.yaml file of the Helm chart.
 SA_NAME="turbinia"
 SA_MEMBER="serviceAccount:$SA_NAME@$GCP_PROJECT_ID.iam.gserviceaccount.com"
 
