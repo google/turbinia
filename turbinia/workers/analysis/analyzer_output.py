@@ -22,7 +22,27 @@ log = logging.getLogger('turbinia')
 
 
 class AnalyzerOutput:
-  """A class to record analyzer output."""
+  """A class to record analyzer output.
+
+  Attributes:
+    platform (str): [Required] Analyzer platfrom.
+    analyzer_identifier (str): [Required] Unique analyzer identifier. This
+      value may be platform specific.
+    analyzer_name (str): [Required] Analyzer name.
+    dfiq_question_id (str): [Optional] Digital Forensics Investigative Question
+      (DFIQ) questions ID.
+    dfiq_question_conclusion (str): [Optional] DFQI questions answer/conclusion.
+    result_priority (str): [Required] Priority of the result based on the
+      analysis findings. The valid values are CRITICAL, HIGH, MEDIUM, LOW.
+    result_summary (str): [Required] A summary statement of the analyzer
+      finding. A result summary must exist even if there is no finding.
+    result_markdown (str): [Optional] A detailed information about the analyzer
+      finding in a markdown format.
+    references (List[str]): A list of references about the analyzer or the
+      issue the analyzer attempts to address.
+    attributes (List[Any]): [Optional] A list of object that holds the finding
+      details.
+  """
 
   def __init__(self, analyzer_id: str, analyzer_name: str):
     self.platform = 'turbinia'
