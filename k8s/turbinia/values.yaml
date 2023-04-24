@@ -295,8 +295,12 @@ fullnameOverride: ""
 ## ref: https://github.com/google/turbinia/blob/master/turbinia/config/turbinia_config_tmpl.py
 ## 
 config:
+  ## @param config.override Overrides the default Turbinia config to instead use a user specified config. Please ensure
+  ## that the config file is either placed in the root of this directory or point the override flag to a path containing
+  ## your config file
+  ##
   override: turbinia.conf
-  ## @param disabledJobs List of Turbinia Jobs to disable. Overrides DISABLED_JOBS in the Turbinia config.
+  ## @param config.disabledJobs List of Turbinia Jobs to disable. Overrides DISABLED_JOBS in the Turbinia config.
   disabledJobs: "['BinaryExtractorJob', 'BulkExtractorJob', 'HindsightJob', 'PhotorecJob', 'VolatilityJob']"
 ## GCP configuration parameters
 ## IMPORTANT: The Turbinia Helm chart only supports GCP at the moment due to 
@@ -315,11 +319,11 @@ gcp:
   ## @param gcp.gcpLogging Enables GCP Cloud Logging
   ## ref https://cloud.google.com/logging
   ##
-  gcpLogging: true
+  gcpLogging: false
   ## @param gcp.gcpErrorReporting Enables GCP Cloud Error Reporting
   ## ref https://cloud.google.com/error-reporting/docs/grouping-errors
   ##
-  gcpErrorReporting: true
+  gcpErrorReporting: false
 ## Turbinia service account parameters
 ##
 serviceAccount:
