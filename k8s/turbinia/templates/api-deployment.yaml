@@ -1,3 +1,4 @@
+{{- $userconfigs := .Files.Get .Values.config.override }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -14,11 +15,13 @@ spec:
       {{- include "turbinia.selectorLabels" . | nindent 6 }}
   template:
     metadata:
-      {{- if .Values.metrics.enabled }} 
       annotations:
+        # Have Deployment restart after each upgrade
+        roll: {{ randAlphaNum 5 | quote }}
+        {{- if .Values.metrics.enabled }}
         prometheus.io/port: {{ .Values.metrics.port | quote }}
         prometheus.io/scrape: "true"
-      {{- end }}
+        {{- end }}
       labels:
         app.kubernetes.io/component: api
         {{- include "turbinia.selectorLabels" . | nindent 8 }}
@@ -26,6 +29,8 @@ spec:
       serviceAccountName: {{ include "turbinia.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.api.podSecurityContext | nindent 8 }}
+      initContainers:
+      {{- include "turbinia.initContainer" . | nindent 8 }} 
       containers:
         - name: api
           securityContext:
@@ -40,13 +45,12 @@ spec:
                 fieldRef:
                   fieldPath: spec.nodeName
           volumeMounts:
+            - mountPath: /var/log
+              name: logs
             - mountPath: /mnt/turbiniavolume
               name: turbiniavolume
             - mountPath: /etc/turbinia
-              name: turbiniavolume
-              subPath: configs
-            - mountPath: /var/log
-              name: logs
+              name: turbinia-configs
           ports:
             {{- if .Values.metrics.enabled }}
             - containerPort: {{ .Values.metrics.port }}
@@ -61,6 +65,17 @@ spec:
             readOnly: false
         - name: logs
           emptyDir: {}
+        - name: init-turbinia
+          configMap:
+            name: {{ include "turbinia.fullname" . }}-init-configmap
+            defaultMode: 0777
+        - name: turbinia-configs
+          emptyDir: {}
+        {{- if $userconfigs }}
+        - name: user-configs
+          configMap:
+            name: {{ include "turbinia.fullname" . }}-configmap
+        {{- end }}
       {{- with .Values.api.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

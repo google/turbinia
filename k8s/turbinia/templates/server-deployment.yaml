@@ -1,3 +1,4 @@
+{{- $userconfigs := .Files.Get .Values.config.override }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -14,11 +15,13 @@ spec:
       {{- include "turbinia.selectorLabels" . | nindent 6 }}
   template:
     metadata:
-      {{- if .Values.metrics.enabled }} 
       annotations:
+        # Have Deployment restart after each upgrade
+        roll: {{ randAlphaNum 5 | quote }}
+        {{- if .Values.metrics.enabled }}
         prometheus.io/port: {{ .Values.metrics.port | quote }}
         prometheus.io/scrape: "true"
-      {{- end }}
+        {{- end }}
       labels:
         app.kubernetes.io/component: server
         {{- include "turbinia.selectorLabels" . | nindent 8 }}
@@ -27,24 +30,7 @@ spec:
       securityContext:
         {{- toYaml .Values.server.podSecurityContext | nindent 8 }}
       initContainers:
-        - name: init-turbinia
-          image: busybox
-          command: ['sh', '-c', '/init/init-turbinia.sh']
-          env:
-            {{- if and .Values.redis.enabled .Values.redis.auth.enabled }}
-            - name: REDIS_PASSWORD
-              valueFrom:
-                # Referencing from charts/redis/templates/_helpers.tpl
-                secretKeyRef:
-                  name: {{ include "redis.secretName" .Subcharts.redis }}
-                  key: {{ include "redis.secretPasswordKey" .Subcharts.redis }}
-            {{- end }}
-          volumeMounts:
-            - mountPath: /init
-              name: init-turbinia
-            - mountPath: /etc/turbinia
-              name: turbiniavolume
-              subPath: configs
+      {{- include "turbinia.initContainer" . | nindent 8 }} 
       containers:
         - name: server
           securityContext:
@@ -62,8 +48,7 @@ spec:
             - mountPath: /mnt/turbiniavolume
               name: turbiniavolume
             - mountPath: /etc/turbinia
-              name: turbiniavolume
-              subPath: configs
+              name: turbinia-configs
           ports:
             {{- if .Values.metrics.enabled }}
             - containerPort: {{ .Values.metrics.port }}
@@ -79,6 +64,13 @@ spec:
           configMap:
             name: {{ include "turbinia.fullname" . }}-init-configmap
             defaultMode: 0744
+        - name: turbinia-configs
+          emptyDir: {}
+        {{- if $userconfigs }}
+        - name: user-configs
+          configMap:
+            name: {{ include "turbinia.fullname" . }}-configmap
+        {{- end }}
       {{- with .Values.server.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

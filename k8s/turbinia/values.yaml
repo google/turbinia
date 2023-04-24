@@ -175,13 +175,9 @@ api:
   ## e.g.
   ## fsgroup: 2000
   ##
-  podSecurityContext: 
-    runAsNonRoot: true
+  podSecurityContext:
     seccompProfile:
       type: RuntimeDefault
-    runAsUser: 999
-    fsGroup: 999
-    fsGroupChangePolicy: "OnRootMismatch"
   ## @param api.SecurityContext SecurityContext holds security configuration that will be applied to the API / Web container
   ## Some fields are present in both SecurityContext and PodSecurityContext. When both are set, the values in SecurityContext take precedence
   ## ref https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#securitycontext-v1-core
@@ -193,11 +189,7 @@ api:
   ## runAsNonRoot: true
   ## runAsUser: 1000
   ##
-  securityContext:
-    readOnlyRootFilesystem: true
-    runAsNonRoot: true
-    allowPrivilegeEscalation: false
-    runAsUser: 999
+  securityContext: {}
   ## Turbinia API / Web resource requests and limits
   ## @param api.resources.requests.cpu The requested cpu for the frontend container
   ## @param api.resources.requests.memory The requested memory for the frontend container
@@ -303,6 +295,7 @@ fullnameOverride: ""
 ## ref: https://github.com/google/turbinia/blob/master/turbinia/config/turbinia_config_tmpl.py
 ## 
 config:
+  override: turbinia.conf
   ## @param disabledJobs List of Turbinia Jobs to disable. Overrides DISABLED_JOBS in the Turbinia config.
   disabledJobs: "['BinaryExtractorJob', 'BulkExtractorJob', 'HindsightJob', 'PhotorecJob', 'VolatilityJob']"
 ## GCP configuration parameters
@@ -312,13 +305,13 @@ config:
 gcp:
   ## @param gcp.projectID GCP Project ID where your cluster is deployed
   ## 
-  projectID: "turbiniang-dev-1"
+  projectID: ""
   ## @param gcp.projectRegion Region where your cluster is deployed
   ##
-  projectRegion: "us-central1"
+  projectRegion: ""
   ## @param gcp.projectZone Zone where your cluster is deployed
   ##
-  projectZone: "us-central1-f"
+  projectZone: ""
   ## @param gcp.gcpLogging Enables GCP Cloud Logging
   ## ref https://cloud.google.com/logging
   ##
