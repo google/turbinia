@@ -68,7 +68,7 @@ class PlasoTask(TurbiniaTask):
       cli_args = [
           'status_view', 'hashers', 'hasher_file_size_limit', 'partitions',
           'vss_stores', 'custom_artifact_definitions', 'parsers',
-          'artifact_filters', 'file_filter', 'yara_rules'
+          'artifact_filters', 'file_filter', 'yara_rules', 'volumes'
       ]
       if (k not in cli_args or not v):
         continue
@@ -148,6 +148,7 @@ class PlasoParserTask(PlasoTask):
       'hashers': 'none',
       'hasher_file_size_limit': None,
       'partitions': 'all',
+      'volumes': 'all',
       'vss_stores': 'none',
       # artifact_filters and file_filter are mutually exclusive
       # parameters and Plaso will error out if both parameters are used.
@@ -170,6 +171,7 @@ class PlasoHasherTask(PlasoTask):
       'hashers': 'all',
       'hasher_file_size_limit': '1073741824',
       'partitions': 'all',
+      'volumes': 'all',
       'vss_stores': 'none',
       # artifact_filters and file_filter are mutually exclusive
       # parameters and Plaso will error out if both parameters are used.
