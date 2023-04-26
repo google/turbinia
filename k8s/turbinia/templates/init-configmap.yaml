@@ -10,6 +10,9 @@ data:
     #!/bin/sh
     set -e
 
+    # Fix Filestore permissions
+    chmod go+w /mnt/turbiniavolume
+
     # Create turbinia config directory
     mkdir -p /etc/turbinia
     cd /etc/turbinia
