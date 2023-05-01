@@ -11,6 +11,8 @@ A Helm chart for Turbinia. Turbinia is an open-source framework for deploying, m
 ```console
 helm install my-release oci://us-docker.pkg.dev/osdfir-registry/osdfir-charts/turbinia
 ```
+> **Tip**: To quickly get started with your own local Kubernetes cluster, see 
+install docs for [minikube](https://minikube.sigs.k8s.io/docs/start/).
 
 ## Introduction
 
