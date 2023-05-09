@@ -1,7 +1,7 @@
 <!--- app-name: Turbinia -->
 # Turbinia Helm Chart
 
-A Helm chart for Turbinia. Turbinia is an open-source framework for deploying, managing, and running distributed forensic workloads. It is intended to automate running of common forensic processing tools (i.e. Plaso, TSK, strings, etc) to help with processing evidence, scaling the processing of large amounts of evidence, and decreasing response time by parallelizing processing where possible.
+Turbinia is an open-source framework for deploying, managing, and running distributed forensic workloads. 
 
 [Overview of Turbinia](https://turbinia.readthedocs.io/en/latest/)
 
@@ -11,8 +11,7 @@ A Helm chart for Turbinia. Turbinia is an open-source framework for deploying, m
 ```console
 helm install my-release oci://us-docker.pkg.dev/osdfir-registry/osdfir-charts/turbinia
 ```
-> **Tip**: To quickly get started with your own local Kubernetes cluster, see 
-install docs for [minikube](https://minikube.sigs.k8s.io/docs/start/).
+> **Tip**: To quickly get started with a local cluster, see [minikube install docs](https://minikube.sigs.k8s.io/docs/start/).
 
 ## Introduction
 
@@ -24,10 +23,7 @@ This chart bootstraps a [Turbinia](https://github.com/google/turbinia/blob/maste
 - Helm 3.2.0+
 - PV provisioner support in the underlying infrastructure
 
-> **Note**: Due to Turbinia requiring additional permissions for attaching 
-persistent disks, currently only Google Kubernetes Engine (GKE) and Local 
-Kubernetes installations are supported at this time. See 
-[GKE Installations](#gke-installations) for deploying to GKE.
+> **Note**: Currently Turbinia only supports processing of GCP Persistent Disks and Local Evidence. See [GKE Installations](#gke-installations) for deploying to GKE.
 
 ## Installing the Chart
 
@@ -37,22 +33,9 @@ To install the chart with the release name `my-release`:
 helm install my-release oci://us-docker.pkg.dev/osdfir-registry/osdfir-charts/turbinia
 ```
 
-To pull the chart locally:
-```console
-helm pull oci://us-docker.pkg.dev/osdfir-registry/osdfir-charts/turbinia
-```
-
-To install the chart from a local repo with the release name `my-release`:
-```console
-helm install my-release ../turbinia
-```
-
-The install command deploys Turbinia on the Kubernetes cluster in the default 
-configuration without any resources defined. This is so we can increase the 
-chances our chart runs on environments with little resources, such as Minikube. 
-The [Parameters](#parameters) section lists the parameters that can be configured 
+The command deploys Turbinia on the Kubernetes cluster in the default configuration. The [Parameters](#parameters) section lists the parameters that can be configured 
 during installation or see [Installating for Production](#installing-for-production) 
-for a recommended production installation.
+for a recommended production installation. 
 
 > **Tip**:  You can override the default Turbinia configuration by placing the 
 `turbinia.conf` config at the root of the Helm chart. When choosing this option, 
@@ -60,16 +43,13 @@ pull and install the Helm chart locally.
 
 ## Installing for Production
 
-Pull the chart locally and review the `values.production.yaml` file for a list 
-of values that will be overridden as part of this installation. 
+Pull the chart locally and review the `values.production.yaml` file for a list of values that will be used for production.
 ```console
-helm pull oci://us-docker.pkg.dev/osdfir-registry/osdfir-charts/turbinia
+helm pull oci://us-docker.pkg.dev/osdfir-registry/osdfir-charts/turbinia --untar
 ```
 
 ### GKE Installations
-Please ensure that a Turbinia GCP service account has been created prior to 
-installing the chart. You can use the helper script from the locally pulled 
-chart in `tools/create-gcp-sa.sh` to automatically do this for you.
+Create a Turbinia GCP account using the helper script in `tools/create-gcp-sa.sh` prior to installing the chart. 
 
 Install the chart providing both the original values and the production values,
 and required GCP values with a release name `my-release`:
@@ -82,15 +62,10 @@ helm install my-release ../turbinia \
     --set gcp.projectZone=<GKE_ClUSTER_ZONE>
 ```
 
-To install Turbinia on GKE with external connectivity and authentication using
-the Oauth2 Proxy, install the chart replacing the required values:
+To upgrade an existing release with production values, externally expose Turbinia through a load balancer with GCP managed certificates, and deploy the Oauth2 Proxy for authentication, run:
 ```console
-helm install my-release ../turbinia \
+helm upgrade my-release \
     -f values.yaml -f values-production.yaml \
-    --set gcp.project=true \
-    --set gcp.projectID=<GCP_PROJECT_ID> \
-    --set gcp.projectRegion=<GKE_CLUSTER_REGION> \
-    --set gcp.projectZone=<GKE_ClUSTER_ZONE> \
     --set ingress.enabled=true
     --set ingress.host=<DOMAIN>
     --set ingress.gcp.managedCertificates=true
@@ -106,24 +81,6 @@ helm install my-release ../turbinia \
     --set oauth2proxy.service.annotations."cloud\.google\.com/backend-config=\{\"ports\": \{\"4180\": \"\{\{ .Release.Name \}\}-oauth2-backend-config\"\}\}"
 ```
 
-For non GCP production deployments, install the chart providing both the 
-original values and the production values with a release name `my-release`:
-```console
-helm install my-release ../turbinia -f values.yaml -f values-production.yaml
-```
-
-To upgrade an existing release name `my-release` using production values, run:
-```console
-helm upgrade my-release -f values-production.yaml
-```
-
-Installing or upgrading a Turbinia deployment with `values-production.yaml` 
-file will override a subset of values in the `values.yaml` file with a recommended
-set of resources and replica pods needed for a production Turbinia installation
-and deploys a GCP Filestore persistent volume for shared storage. For non GCP 
-installations, please update the `persistence.storageClass` value with a 
-storageClass supported by your provider.
-
 ## Uninstalling the Chart
 
 To uninstall/delete the `my-release` deployment:
@@ -133,7 +90,7 @@ helm delete my-release
 ```
 > **Tip**: List all releases using `helm list`
 
-The command removes all the Kubernetes components but PVC's associated with the chart and deletes the release.
+The command removes all the Kubernetes components but Persistent Volumes (PVC) associated with the chart and deletes the release.
 
 To delete the PVC's associated with `my-release`:
 
@@ -306,54 +263,40 @@ Specify each parameter using the --set key=value[,key=value] argument to helm in
 
 ```console
 helm install my-release \
-    --set metrics.port=9300
+    --set controller.enabled=true
     oci://us-docker.pkg.dev/osdfir-registry/osdfir-charts/turbinia
 ```
 
-The above command updates the Turbinia metrics port to `9300`.
+The above command installs Turbinia with the Turbinia Controller deployed.
 
-
-Alternatively, the `values.yaml` file can be directly updated if the Helm chart 
-was pulled locally. For example,
+Alternatively, the `values.yaml` and `values-production.yaml` file can be 
+directly updated if the Helm chart was pulled locally. For example,
 
 ```console
 helm pull oci://us-docker.pkg.dev/osdfir-registry/osdfir-charts/turbinia --untar
 ```
 
-Then make changes to the downloaded `values.yaml`. A `turbinia.conf` config file
-containing user-provided Turbinia config can also be placed at this point to override
-the default one. Once done, install the local chart with the updated values.
+Then make changes to the downloaded `values.yaml` and once done, install the 
+chart with the updated values.
 
 ```console
 helm install my-release ../turbinia
 ```
 
-Lastly, a YAML file that specifies the values for the parameters can also be provided while installing the chart. For example,
-
-```console
-helm install my-release -f newvalues.yaml oci://us-docker.pkg.dev/osdfir-registry/osdfir-charts/turbinia
-```
 ## Persistence
 
 The Turbinia deployment stores data at the `/mnt/turbiniavolume` path of the container and stores configuration files at the `/etc/turbinia` path of the container. 
 
-Persistent Volume Claims are used to keep the data across deployments. By default the Turbinia deployment attempts to use dynamic persistent volume provisioning to automatically configure storage, but the `persistent.storageClass` value can be updated to a storageClass supported by your provider. See the [Parameters](#parameters) section to configure the PVC or to disable persistence.
-
-To install the Turbinia chart with more storage capacity, run:
-```console
-helm install my-release \
-    --set persistence.size=10T
-    oci://us-docker.pkg.dev/osdfir-registry/osdfir-charts/turbinia
-```
-
-The above command installs the Turbinia chart with a persistent volume size of 10 Terabytes.
+Persistent Volume Claims are used to keep the data across deployments. This is 
+known to work in GCE and minikube. See the Parameters section to configure the 
+PVC or to disable persistence.
 
 ## Upgrading
 
-If you need to upgrade an existing release to update a value in, such as
+If you need to upgrade an existing release to update a value, such as
 persistent volume size or upgrading to a new release, you can run 
-[helm upgrade](https://helm.sh/docs/helm/helm_upgrade/). For example, to set a 
-new release and upgrade storage capacity, run:
+[helm upgrade](https://helm.sh/docs/helm/helm_upgrade/). 
+For example, to set a new release and upgrade storage capacity, run:
 ```console
 helm upgrade my-release \
     --set image.tag=latest
@@ -361,8 +304,7 @@ helm upgrade my-release \
 ```
 
 The above command upgrades an existing release named `my-release` updating the
-image tag to `latest` and increasing persistent volume size of an existing volume
-to 10 Terabytes
+image tag to `latest` and increasing persistent volume size of an existing volume to 10 Terabytes.
 
 ## License
 
