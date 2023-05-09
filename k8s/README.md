@@ -75,12 +75,35 @@ Install the chart providing both the original values and the production values,
 and required GCP values with a release name `my-release`:
 ```console
 helm install my-release ../turbinia \
-    -f values.yaml \ 
-    -f values-production.yaml \
+    -f values.yaml -f values-production.yaml \
     --set gcp.project=true \
     --set gcp.projectID=<GCP_PROJECT_ID> \
     --set gcp.projectRegion=<GKE_CLUSTER_REGION> \
     --set gcp.projectZone=<GKE_ClUSTER_ZONE>
+```
+
+To install Turbinia on GKE with external connectivity and authentication using
+the Oauth2 Proxy, install the chart replacing the required values:
+```console
+helm install my-release ../turbinia \
+    -f values.yaml -f values-production.yaml \
+    --set gcp.project=true \
+    --set gcp.projectID=<GCP_PROJECT_ID> \
+    --set gcp.projectRegion=<GKE_CLUSTER_REGION> \
+    --set gcp.projectZone=<GKE_ClUSTER_ZONE> \
+    --set ingress.enabled=true
+    --set ingress.host=<DOMAIN>
+    --set ingress.gcp.managedCertificates=true
+    --set ingress.gcp.staticIPName=<GCP_STATIC_IP_NAME>
+    --set oauth2proxy.enabled=true
+    --set oauth2proxy.configuration.clientID=<WEB_OAUTH_CLIENT_ID> \
+    --set oauth2proxy.configuration.clientSecret=<WEB_OAUTH_CLIENT_SECRET> \
+    --set oauth2proxy.configuration.nativeClientID=<NATIVE_OAUTH_CLIENT_ID> \
+    --set oauth2proxy.configuration.cookieSecret=<COOKIE_SECRET> \
+    --set oauth2proxy.configuration.redirectUrl=https://<DOMAIN>/oauth2/callback
+    --set oauth2proxy.configuration.authenticatedEmailsFile.content=\{email1@domain.com, email2@domain.com\}
+    --set oauth2proxy.service.annotations."cloud\.google\.com/neg=\{\"ingress\": true\}" \
+    --set oauth2proxy.service.annotations."cloud\.google\.com/backend-config=\{\"ports\": \{\"4180\": \"\{\{ .Release.Name \}\}-oauth2-backend-config\"\}\}"
 ```
 
 For non GCP production deployments, install the chart providing both the 
@@ -121,6 +144,13 @@ kubectl delete pvc -l release=my-release
 > **Note**: Deleting the PVC's will delete Turbinia data as well. Please be cautious before doing it.
 
 ## Parameters
+
+### Global parameters
+
+| Name                  | Description                                                                           | Value |
+| --------------------- | ------------------------------------------------------------------------------------- | ----- |
+| `global.existingPVC`  | Existing claim for Turbinia persistent volume (overrides `persistent.name`)           | `""`  |
+| `global.storageClass` | StorageClass for the Turbinia persistent volume (overrides `persistent.storageClass`) | `""`  |
 
 ### Turbinia configuration
 
@@ -165,19 +195,19 @@ kubectl delete pvc -l release=my-release
 
 ### Turbinia API / Web configuration
 
-| Name                                         | Description                                                                  | Value                                                                    |
-| -------------------------------------------- | ---------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
-| `api.image.repository`                       | Turbinia image repository for API / Web server                               | `us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-api-server` |
-| `api.image.pullPolicy`                       | Turbinia image pull policy                                                   | `IfNotPresent`                                                           |
-| `api.image.tag`                              | Overrides the image tag whose default is the chart appVersion                | `latest`                                                                 |
-| `api.image.imagePullSecrets`                 | Specify secrets if pulling from a private repository                         | `[]`                                                                     |
-| `api.podSecurityContext.seccompProfile.type` | Deploys the default seccomp profile to the container                         | `RuntimeDefault`                                                         |
-| `api.securityContext`                        | Holds security configuration that will be applied to the API / Web container | `{}`                                                                     |
-| `api.resources.limits`                       | Resource limits for the api container                                        | `{}`                                                                     |
-| `api.resources.requests`                     | Requested resources for the api container                                    | `{}`                                                                     |
-| `api.nodeSelector`                           | Node labels for Turbinia api pods assignment                                 | `{}`                                                                     |
-| `api.tolerations`                            | Tolerations for Turbinia api pods assignment                                 | `[]`                                                                     |
-| `api.affinity`                               | Affinity for Turbinia api pods assignment                                    | `{}`                                                                     |
+| Name                         | Description                                                                         | Value                                                                    |
+| ---------------------------- | ----------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| `api.image.repository`       | Turbinia image repository for API / Web server                                      | `us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-api-server` |
+| `api.image.pullPolicy`       | Turbinia image pull policy                                                          | `IfNotPresent`                                                           |
+| `api.image.tag`              | Overrides the image tag whose default is the chart appVersion                       | `latest`                                                                 |
+| `api.image.imagePullSecrets` | Specify secrets if pulling from a private repository                                | `[]`                                                                     |
+| `api.podSecurityContext`     | Holds pod-level security attributes that will be applied to the API / Web container | `{}`                                                                     |
+| `api.securityContext`        | Holds security configuration that will be applied to the API / Web container        | `{}`                                                                     |
+| `api.resources.limits`       | Resource limits for the api container                                               | `{}`                                                                     |
+| `api.resources.requests`     | Requested resources for the api container                                           | `{}`                                                                     |
+| `api.nodeSelector`           | Node labels for Turbinia api pods assignment                                        | `{}`                                                                     |
+| `api.tolerations`            | Tolerations for Turbinia api pods assignment                                        | `[]`                                                                     |
+| `api.affinity`               | Affinity for Turbinia api pods assignment                                           | `{}`                                                                     |
 
 ### Turbinia controller configuration
 
@@ -212,7 +242,8 @@ kubectl delete pvc -l release=my-release
 | `gcp.gcpErrorReporting`           | Enables GCP Cloud Error Reporting                                                                                                                                                                                    | `false`                                                                                      |
 | `serviceAccount.create`           | Specifies whether a service account should be created                                                                                                                                                                | `true`                                                                                       |
 | `serviceAccount.annotations`      | Annotations to add to the service account                                                                                                                                                                            | `{}`                                                                                         |
-| `serviceAccount.name`             | The name of the service account to use                                                                                                                                                                               | `turbinia`                                                                                   |
+| `serviceAccount.name`             | The name of the Kubernetes service account to use                                                                                                                                                                    | `turbinia`                                                                                   |
+| `serviceAccount.gcpName`          | The name of the GCP service account to annotate with the Kubernetes service account                                                                                                                                  | `turbinia`                                                                                   |
 | `service.type`                    | Turbinia service type                                                                                                                                                                                                | `ClusterIP`                                                                                  |
 | `service.port`                    | Turbinia api service port                                                                                                                                                                                            | `8000`                                                                                       |
 | `metrics.enabled`                 | Enables metrics scraping                                                                                                                                                                                             | `true`                                                                                       |
@@ -235,6 +266,7 @@ kubectl delete pvc -l release=my-release
 | Name                                | Description                                                                                  | Value       |
 | ----------------------------------- | -------------------------------------------------------------------------------------------- | ----------- |
 | `redis.enabled`                     | enabled Enables the Redis deployment                                                         | `true`      |
+| `redis.auth.enabled`                | Enables Redis Authentication. Disabled due to incompatibility with Turbinia                  | `false`     |
 | `redis.sentinel.enabled`            | Enables Redis Sentinel on Redis pods                                                         | `false`     |
 | `redis.master.count`                | Number of Redis master instances to deploy (experimental, requires additional configuration) | `1`         |
 | `redis.master.service.type`         | Redis master service type                                                                    | `ClusterIP` |
@@ -248,6 +280,27 @@ kubectl delete pvc -l release=my-release
 | `redis.replica.persistence.size`    | Persistent Volume size                                                                       | `8Gi`       |
 | `redis.replica.resources.limits`    | Resources limits for the Redis replica containers                                            | `{}`        |
 | `redis.replica.resources.requests`  | Requested resources for the Redis replica containers                                         | `{}`        |
+
+### Oauth2 Proxy configuration parameters
+
+| Name                                                               | Description                                                                            | Value                         |
+| ------------------------------------------------------------------ | -------------------------------------------------------------------------------------- | ----------------------------- |
+| `oauth2proxy.enabled`                                              | Enables the Oauth2 Proxy deployment                                                    | `false`                       |
+| `oauth2proxy.service.type`                                         | OAuth2 Proxy service type                                                              | `ClusterIP`                   |
+| `oauth2proxy.service.port`                                         | OAuth2 Proxy service HTTP port                                                         | `8080`                        |
+| `oauth2proxy.service.annotations`                                  | Additional custom annotations for OAuth2 Proxy service                                 | `{}`                          |
+| `oauth2proxy.configuration.turbiniaSvcPort`                        | Turbinia service port referenced from `.Values.service.port` to be used in Oauth setup | `8000`                        |
+| `oauth2proxy.configuration.clientID`                               | OAuth client ID for Turbinia Web UI.                                                   | `""`                          |
+| `oauth2proxy.configuration.clientSecret`                           | OAuth client secret for Turbinia Web UI.                                               | `""`                          |
+| `oauth2proxy.configuration.nativeClientID`                         | Native Oauth client ID for Turbinia CLI.                                               | `""`                          |
+| `oauth2proxy.configuration.cookieSecret`                           | OAuth cookie secret (e.g.  openssl rand -base64 32 | head -c 32 | base64)              | `""`                          |
+| `oauth2proxy.configuration.content`                                | Default configuration                                                                  | `""`                          |
+| `oauth2proxy.configuration.authenticatedEmailsFile.enabled`        | Enable authenticated emails file                                                       | `true`                        |
+| `oauth2proxy.configuration.authenticatedEmailsFile.content`        | Restricted access list (one email per line)                                            | `""`                          |
+| `oauth2proxy.configuration.authenticatedEmailsFile.existingSecret` | Secret with the authenticated emails file                                              | `""`                          |
+| `oauth2proxy.configuration.oidcIssuerUrl`                          | OpenID Connect issuer URL                                                              | `https://accounts.google.com` |
+| `oauth2proxy.configuration.redirectUrl`                            | OAuth Redirect URL                                                                     | `""`                          |
+| `oauth2proxy.redis.enabled`                                        | Enable Redis for OAuth Session Storage                                                 | `false`                       |
 
 Specify each parameter using the --set key=value[,key=value] argument to helm install. For example,
 
