@@ -15,7 +15,7 @@ REQUIRES = [
 ]
 
 this_directory = Path(__file__).parent
-README = (this_directory / "README.md").read_text()
+README = (this_directory / "README.rst").read_text()
 
 setup(
     name=NAME, 
