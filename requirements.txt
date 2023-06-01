@@ -16,7 +16,7 @@ google-cloud-storage<=2.2.1
 httpx
 pycryptodomex
 prometheus_client
-libcloudforensics
+libcloudforensics==20230601
 pandas
 protobuf>=3.19.0,<4.0.0dev
 proto-plus<2.0.0dev,>=1.22.0

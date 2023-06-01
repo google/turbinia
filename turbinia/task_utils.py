@@ -217,6 +217,13 @@ def task_runner(obj, *args, **kwargs):
   # Celery is configured to receive only one Task per worker
   # so no need to create a FileLock.
   elif config.TASK_MANAGER.lower() == 'celery':
-    run = obj.run_wrapper(*args, **kwargs)
+    try:
+      lock = filelock.FileLock(config.LOCK_FILE)
+      with lock.acquire(timeout=10):
+        run = obj.run_wrapper(*args, **kwargs)
+    except filelock.Timeout:
+      raise TurbiniaException(f'Could not acquire lock on {config.LOCK_FILE}')
+    finally:
+      lock.release()
 
   return run
