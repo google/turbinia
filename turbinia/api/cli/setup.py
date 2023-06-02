@@ -12,6 +12,7 @@ VERSION = "1.0.1"
 REQUIRES = [
     "click",
     "turbinia-api-lib",
+    'google-auth-oauthlib'
 ]
 
 this_directory = Path(__file__).parent
