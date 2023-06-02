@@ -102,7 +102,7 @@ class RequestStatus(BaseModel):
             self.last_task_update_time).strftime(
                 turbinia_config.DATETIME_FORMAT)
 
-    if self.running_tasks > 0:
+    if self.running_tasks > 0 or self.queued_tasks > 0:
       self.status = 'running'
     elif self.failed_tasks == self.task_count:
       self.status = 'failed'
