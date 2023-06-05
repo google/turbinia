@@ -292,10 +292,14 @@ class SummaryMarkdownReport(MarkdownReportComponent):
 
   def generate_markdown(self) -> str:
     """Generate a Markdown version of Requests summary results."""
-    if not self._requests_summary:
-      return ''
     report: list[str] = []
-    requests_status_list = self._requests_summary.get('requests_status')
+    requests_status_list = None
+    if self._requests_summary:
+      requests_status_list = self._requests_summary.get('requests_status')
+
+    if not requests_status_list:
+      return '## No requests found.'
+
     for request_dict in requests_status_list:
       request_report = RequestMarkdownReport(request_dict).generate_markdown()
       report.append(request_report)
