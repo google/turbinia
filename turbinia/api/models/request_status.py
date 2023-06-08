@@ -120,7 +120,7 @@ class RequestStatus(BaseModel):
       #    and none have failed/succeeded.
       #  (e.g. all tasks scheduled on the Turbinia server and none picked
       #    up by any worker yet.)
-      #  3) Zero tasks are running, zero or more tasks are queued
+      #  3) Zero tasks are running, one or more tasks are queued
       #    and some have failed/succeeded.
       #  (e.g. some tasks have completed, others are scheduled on the
       #    Turbinia server but not picked up by a worker yet.)
