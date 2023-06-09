@@ -112,6 +112,7 @@ export default {
         { text: 'Failed Tasks', value: 'failed_tasks' },
         { text: 'Status', value: 'status' },
         { text: 'Results', value: 'request_results' },
+        { text: 'Evidence Name', value: 'evidence_name' },
       ],
       requestSummary: [],
     }
@@ -131,12 +132,13 @@ export default {
               request_id: data[req].request_id,
               last_task_update_time: data[req].last_task_update_time,
               requester: data[req].requester,
-              total_tasks: data[req].task_count,
+              `to`tal_tasks: data[req].task_count,
               running_tasks: data[req].running_tasks,
               successful_tasks: data[req].successful_tasks,
               failed_tasks: data[req].failed_tasks,
               outstanding_perc: outstanding_perc,
               status: data[req].status,
+              evidence_name: data[req].evidence_name,
             })
           }
           this.requestSummary = requestSummary
