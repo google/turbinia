@@ -58,9 +58,8 @@ class LinuxAccountAnalysisTask(TurbiniaTask):
 
     try:
       collected_artifacts = extract_artifacts(
-          artifact_names=['UnixShadowFile'],
-          disk_path=evidence.local_path, output_dir=self.output_dir,
-          credentials=evidence.credentials)
+          artifact_names=['UnixShadowFile'], disk_path=evidence.local_path,
+          output_dir=self.output_dir, credentials=evidence.credentials)
     except TurbiniaException as exception:
       result.close(self, success=False, status=str(exception))
       return result
