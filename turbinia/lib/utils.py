@@ -33,8 +33,8 @@ def _image_export(command, output_dir, timeout=DEFAULT_TIMEOUT):
   """Runs image_export command.
 
   Args:
-    file_name: Name of file (without path) to be extracted.
-    output_dir: Path to directory to store the the extracted files.
+    command: image_export command to run.
+    output_dir: Path to directory to store the extracted files.
 
   Returns:
     list: paths to extracted files.
@@ -70,7 +70,7 @@ def extract_artifacts(artifact_names, disk_path, output_dir, credentials=[]):
   Args:
     artifact_names: List of artifact definition names.
     disk_path: Path to either a raw disk image or a block device.
-    output_dir: Path to directory to store the the extracted files.
+    output_dir: Path to directory to store the extracted files.
     credentials: List of credentials to use for decryption.
 
   Returns:
@@ -104,7 +104,7 @@ def extract_files(file_name, disk_path, output_dir, credentials=[]):
   Args:
     file_name: Name of file (without path) to be extracted.
     disk_path: Path to either a raw disk image or a block device.
-    output_dir: Path to directory to store the the extracted files.
+    output_dir: Path to directory to store the extracted files.
     credentials: List of credentials to use for decryption.
 
   Returns:
@@ -125,8 +125,7 @@ def extract_files(file_name, disk_path, output_dir, credentials=[]):
   if credentials:
     for credential_type, credential_data in credentials:
       image_export_cmd.extend([
-          '--credential', '{0:s}:{1:s}'.format(
-              credential_type, credential_data)
+          '--credential', f'{credential_type}:{credential_data}'
       ])
 
   image_export_cmd.append(disk_path)
@@ -155,7 +154,7 @@ def get_exe_path(filename):
 
 def bruteforce_password_hashes(
     password_hashes, tmp_dir, timeout=300, extra_args=''):
-  """Bruteforce password hashes using Hashcat.
+  """Bruteforce password hashes using Hashcat or john.
 
   Args:
     password_hashes (list): Password hashes as strings.
@@ -187,8 +186,7 @@ def bruteforce_password_hashes(
 
   if '$y$' in ''.join(password_hashes):
     cmd = [
-        'john', '--format=crypt',
-        '--wordlist={}'.format(password_list_file_path),
+        'john', '--format=crypt', f'--wordlist={password_list_file_path}',
         password_hashes_file_path
     ]
     pot_file = os.path.expanduser('~/.john/john.pot')
@@ -196,7 +194,7 @@ def bruteforce_password_hashes(
     cmd = ['hashcat', '--force', '-a', '1']
     if extra_args:
       cmd = cmd + extra_args.split(' ')
-    cmd = cmd + ['--potfile-path={}'.format(pot_file)]
+    cmd = cmd + [f'--potfile-path={pot_file}']
     cmd = cmd + [
         password_hashes_file_path, password_list_file_path,
         password_list_file_path
@@ -212,7 +210,7 @@ def bruteforce_password_hashes(
       if timer.is_alive():
         timer.cancel()
     except OSError as exception:
-      raise TurbiniaException('hashcat failed: {0}'.format(str(exception)))
+      raise TurbiniaException(f'{" ".join(cmd)} failed: {exception}')
 
   result = []
 
