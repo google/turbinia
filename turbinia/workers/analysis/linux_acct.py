@@ -100,7 +100,10 @@ class LinuxAccountAnalysisTask(TurbiniaTask):
     """
     hash_names = {}
     for line in shadow:
-      (username, password_hash, _) = line.split(':', maxsplit=2)
+      try:
+        (username, password_hash, _) = line.split(':', maxsplit=2)
+      except ValueError:
+        continue
       hash_names[password_hash] = username
     return hash_names
 
