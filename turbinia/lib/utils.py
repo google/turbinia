@@ -124,9 +124,8 @@ def extract_files(file_name, disk_path, output_dir, credentials=[]):
 
   if credentials:
     for credential_type, credential_data in credentials:
-      image_export_cmd.extend([
-          '--credential', f'{credential_type}:{credential_data}'
-      ])
+      image_export_cmd.extend(
+          ['--credential', f'{credential_type}:{credential_data}'])
 
   image_export_cmd.append(disk_path)
 
