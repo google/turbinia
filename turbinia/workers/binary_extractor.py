@@ -153,8 +153,7 @@ class BinaryExtractorTask(TurbiniaTask):
 
     status = (
         f'Extracted {hash_cnt:d} hashes and {binary_cnt:d} files from the '
-        f'evidence.'
-    )
+        f'evidence.')
 
     if hash_cnt != binary_cnt:
       result.log(
