@@ -67,7 +67,7 @@ class DockerContainersEnumerationTask(TurbiniaTask):
 
     # Check if docker folder exists
     if not path.exists(docker_dir):
-      log.info('docker_dir {0:s} does not exist'.format(docker_dir))
+      log.info(f'docker_dir {docker_dir:s} does not exist')
       return containers_info
 
     docker_explorer_command = ['sudo', de_binary]
@@ -77,18 +77,17 @@ class DockerContainersEnumerationTask(TurbiniaTask):
 
     docker_explorer_command.extend(['-r', docker_dir, 'list', 'all_containers'])
 
-    log.info('Running {0:s}'.format(' '.join(docker_explorer_command)))
+    log.info(f"Running {' '.join(docker_explorer_command):s}")
     try:
       json_string = subprocess.check_output(docker_explorer_command).decode(
           'utf-8')
       containers_info = json.loads(json_string)
     except json.JSONDecodeError as exception:
       raise TurbiniaException(
-          'Error decoding JSON output from de.py: {0!s} {1!s}'.format(
-              exception, json_string))
+          f'Error decoding JSON output from de.py: {exception!s} {json_string!s}'
+      )
     except subprocess.CalledProcessError as exception:
-      raise TurbiniaException(
-          'de.py returned an error: {0!s}'.format(exception))
+      raise TurbiniaException(f'de.py returned an error: {exception!s}')
 
     return containers_info
 
@@ -121,8 +120,7 @@ class DockerContainersEnumerationTask(TurbiniaTask):
       status_report = 'Found {0!s} containers: {1:s}'.format(
           len(found_containers), ' '.join(found_containers))
     except TurbiniaException as exception:
-      status_report = 'Error enumerating Docker containers: {0!s}'.format(
-          exception)
+      status_report = f'Error enumerating Docker containers: {exception!s}'
 
     result.report_priority = Priority.LOW
     result.report_data = status_report

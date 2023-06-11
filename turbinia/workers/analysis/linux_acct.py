@@ -134,14 +134,12 @@ class LinuxAccountAnalysisTask(TurbiniaTask):
 
     if weak_passwords:
       priority = Priority.CRITICAL
-      summary = 'Shadow file analysis found {0:n} weak password(s)'.format(
-          len(weak_passwords))
+      summary = f'Shadow file analysis found {len(weak_passwords):n} weak password(s)'
       report.insert(0, fmt.heading4(fmt.bold(summary)))
-      line = '{0:n} weak password(s) found:'.format(len(weak_passwords))
+      line = f'{len(weak_passwords):n} weak password(s) found:'
       report.append(fmt.bullet(fmt.bold(line)))
       for password_hash, plaintext in weak_passwords:
-        line = """User '{0:s}' with password '{1:s}'""".format(
-            hashes[password_hash], plaintext)
+        line = f"""User '{hashes[password_hash]:s}' with password '{plaintext:s}'"""
         report.append(fmt.bullet(line, level=2))
     report = '\n'.join(report)
     return (report, priority, summary)

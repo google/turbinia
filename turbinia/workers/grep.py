@@ -48,25 +48,23 @@ class GrepTask(TurbiniaTask):
 
     # Create a path that we can write the new file to.
     base_name = os.path.basename(evidence.local_path)
-    output_file_path = os.path.join(
-        self.output_dir, '{0:s}.filtered'.format(base_name))
+    output_file_path = os.path.join(self.output_dir, f'{base_name:s}.filtered')
 
     output_evidence = FilteredTextFile(source_path=output_file_path)
     cmd = 'grep -E -b -n -f {0:s} {1:s} > {2:s}'.format(
         patterns_file_path, evidence.local_path, output_file_path)
 
-    result.log('Running [{0:s}]'.format(cmd))
+    result.log(f'Running [{cmd:s}]')
     ret, result = self.execute(
         cmd, result, new_evidence=[output_evidence], shell=True,
         success_codes=[0, 1])
 
     # Grep returns 0 on success and 1 if no results are found.
     if ret == 0:
-      status = 'Grep Task found results in {0:s}'.format(evidence.name)
+      status = f'Grep Task found results in {evidence.name:s}'
       result.close(self, success=True, status=status)
     elif ret == 1:
-      status = 'Grep Task did not find any results in {0:s}'.format(
-          evidence.name)
+      status = f'Grep Task did not find any results in {evidence.name:s}'
       result.close(self, success=True, status=status)
     else:
       result.close(self, success=False)

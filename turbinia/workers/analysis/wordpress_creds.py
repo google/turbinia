@@ -70,8 +70,7 @@ class WordpressCredsAnalysisTask(TurbiniaTask):
     except TurbiniaException as exception:
       result.close(
           self, success=False,
-          status='Error retrieving Wordpress database: {0:s}'.format(
-              str(exception)))
+          status=f'Error retrieving Wordpress database: {str(exception):s}')
       return result
 
     try:
@@ -113,8 +112,7 @@ class WordpressCredsAnalysisTask(TurbiniaTask):
           disk_path=evidence.local_path, output_dir=os.path.join(
               self.output_dir, 'artifacts'), credentials=evidence.credentials)
     except TurbiniaException as exception:
-      raise TurbiniaException(
-          'artifact extraction failed: {0:s}'.format(str(exception)))
+      raise TurbiniaException(f'artifact extraction failed: {str(exception):s}')
 
     # Extract base dir from our list of collected artifacts
     location = os.path.dirname(collected_artifacts[0])
@@ -147,18 +145,17 @@ class WordpressCredsAnalysisTask(TurbiniaTask):
           if grep.returncode == 1:
             raise TurbiniaException('No Wordpress credentials found')
           if grep.returncode == 2:
-            raise TurbiniaException(
-                'Error grepping file: {0:s}'.format(grep.stdout))
+            raise TurbiniaException(f'Error grepping file: {grep.stdout:s}')
         except subprocess.CalledProcessError as exception:
           raise TurbiniaException(
-              'Unable to strings/grep file: {0:s}'.format(str(exception)))
+              f'Unable to strings/grep file: {str(exception):s}')
 
         for cred in grep.stdout.strip().split('\n'):
           m = re.match(_CREDS_REGEXP, cred)
           if not m:
             continue
           (username, passwdhash) = (m.group('username'), m.group('password'))
-          creds.append('{0:s}:{1:s}'.format(username, passwdhash))
+          creds.append(f'{username:s}:{passwdhash:s}')
           hashnames[passwdhash] = username
     return (creds, hashnames)
 
@@ -188,10 +185,9 @@ class WordpressCredsAnalysisTask(TurbiniaTask):
 
     if weak_passwords:
       priority = Priority.CRITICAL
-      summary = 'Wordpress analysis found {0:d} weak password(s)'.format(
-          len(weak_passwords))
+      summary = f'Wordpress analysis found {len(weak_passwords):d} weak password(s)'
       report.insert(0, fmt.heading4(fmt.bold(summary)))
-      line = '{0:n} weak password(s) found:'.format(len(weak_passwords))
+      line = f'{len(weak_passwords):n} weak password(s) found:'
       report.append(fmt.bullet(fmt.bold(line)))
       for password_hash, plaintext in weak_passwords:
         if password_hash in hashnames:
