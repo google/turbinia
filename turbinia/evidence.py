@@ -121,13 +121,14 @@ def evidence_decode(evidence_dict, strict=False):
   """
   if not isinstance(evidence_dict, dict):
     raise TurbiniaException(
-        f'Evidence_dict is not a dictionary, type is {str(type(evidence_dict)):s}'
-    )
+        'Evidence_dict is not a dictionary, type is {0:s}'.format(
+            str(type(evidence_dict))))
   type_ = evidence_dict.pop('type', None)
   name_ = evidence_dict.pop('_name', None)
   if not type_:
     raise TurbiniaException(
-        f'No Type attribute for evidence object [{str(evidence_dict):s}]')
+        'No Type attribute for evidence object [{0:s}]'.format(
+            str(evidence_dict)))
   evidence = None
   try:
     evidence_class = getattr(sys.modules[__name__], type_)
@@ -136,7 +137,8 @@ def evidence_decode(evidence_dict, strict=False):
     if strict and evidence_object:
       for attribute_key in evidence_dict.keys():
         if not attribute_key in evidence_object.__dict__:
-          message = f'Invalid attribute {attribute_key!s} for evidence type {type_:s}'
+          message = 'Invalid attribute {0!s} for evidence type {1:s}'.format(
+              attribute_key, type_)
           log.error(message)
           raise TurbiniaException(message)
     if evidence:
@@ -153,7 +155,8 @@ def evidence_decode(evidence_dict, strict=False):
       for state in EvidenceState:
         evidence.state[state] = False
   except AttributeError:
-    message = f'No Evidence object of type {type_!s} in evidence module'
+    message = 'No Evidence object of type {0!s} in evidence module'.format(
+        type_)
     log.error(message)
     raise TurbiniaException(message) from AttributeError
 
@@ -298,7 +301,7 @@ class Evidence:
     # self.validate()
 
   def __str__(self):
-    return f'{self.type:s}:{self.name:s}:{self.source_path!s}'
+    return '{0:s}:{1:s}:{2!s}'.format(self.type, self.name, self.source_path)
 
   def __repr__(self):
     return self.__str__()
@@ -457,13 +460,14 @@ class Evidence:
     if self.context_dependent:
       if not self.parent_evidence:
         raise TurbiniaException(
-            f'Evidence of type {self.type:s} needs parent_evidence to be set')
+            'Evidence of type {0:s} needs parent_evidence to be set'.format(
+                self.type))
       log.debug(
           'Evidence is context dependent. Running preprocess for parent_evidence '
           '{0:s}'.format(self.parent_evidence.name))
       self.parent_evidence.preprocess(task_id, tmp_dir, required_states)
     try:
-      log.info(f'Starting preprocessor for evidence {self.name:s}')
+      log.info('Starting preprocessor for evidence {0:s}'.format(self.name))
       if self.resource_tracked:
         # Track resource and task id in state file
         log.debug(
@@ -474,11 +478,13 @@ class Evidence:
           self._preprocess(tmp_dir, required_states)
       else:
         log.debug(
-            f'Evidence {self.name:s} is not resource tracked. Running preprocess.'
-        )
+            'Evidence {0:s} is not resource tracked. Running preprocess.'
+            .format(self.name))
         self._preprocess(tmp_dir, required_states)
     except TurbiniaException as exception:
-      log.error(f'Error running preprocessor for {self.name:s}: {exception!s}')
+      log.error(
+          'Error running preprocessor for {0:s}: {1!s}'.format(
+              self.name, exception))
 
     log.info(
         'Preprocessing evidence {0:s} is complete, and evidence is in state '
@@ -494,8 +500,8 @@ class Evidence:
     Args:
       task_id(str): The id of a given Task.
     """
-    log.info(f'Starting postprocessor for evidence {self.name:s}')
-    log.debug(f'Evidence state: {self.format_state():s}')
+    log.info('Starting postprocessor for evidence {0:s}'.format(self.name))
+    log.debug('Evidence state: {0:s}'.format(self.format_state()))
 
     if self.resource_tracked:
       log.debug(
@@ -521,8 +527,8 @@ class Evidence:
             self.parent_evidence.postprocess(task_id)
     else:
       log.debug(
-          f'Evidence {self.name:s} is not resource tracked. Running postprocess.'
-      )
+          'Evidence {0:s} is not resource tracked. '
+          'Running postprocess.'.format(self.name))
       self._postprocess()
       if self.parent_evidence:
         log.debug(
@@ -539,8 +545,8 @@ class Evidence:
     """
     output = []
     for state, value in self.state.items():
-      output.append(f'{state.name:s}: {value!s}')
-    return f"[{', '.join(output):s}]"
+      output.append('{0:s}: {1!s}'.format(state.name, value))
+    return '[{0:s}]'.format(', '.join(output))
 
   def validate(self):
     """Runs validation to verify evidence meets minimum requirements.
@@ -725,8 +731,8 @@ class DiskPartition(Evidence):
         self.partition_offset = int(partition_offset)
       except ValueError as exception:
         log.error(
-            f'Unable to cast partition_offset attribute to integer. {exception!s}'
-        )
+            'Unable to cast partition_offset attribute to integer. {0!s}'
+            .format(exception))
     else:
       self.partition_offset = None
     if partition_size:
@@ -734,8 +740,8 @@ class DiskPartition(Evidence):
         self.partition_size = int(partition_size)
       except ValueError as exception:
         log.error(
-            f'Unable to cast partition_size attribute to integer. {exception!s}'
-        )
+            'Unable to cast partition_size attribute to integer. {0!s}'.format(
+                exception))
     else:
       self.partition_size = None
     self.lv_uuid = lv_uuid
@@ -782,7 +788,8 @@ class DiskPartition(Evidence):
               self.path_spec.CopyToDict(), self.parent_evidence.name))
     else:
       raise TurbiniaException(
-          f'Could not find path_spec for location {self.partition_location:s}')
+          'Could not find path_spec for location {0:s}'.format(
+              self.partition_location))
 
     # In attaching a partition, we create a new loopback device using the
     # partition offset and size.
@@ -933,8 +940,8 @@ class GoogleCloudDiskRawEmbedded(GoogleCloudDisk):
           self.parent_evidence.mount_path, self.embedded_path)
       if not os.path.exists(rawdisk_path):
         raise TurbiniaException(
-            f'Unable to find raw disk image {rawdisk_path:s} in GoogleCloudDisk'
-        )
+            'Unable to find raw disk image {0:s} in GoogleCloudDisk'.format(
+                rawdisk_path))
       self.device_path = mount_local.PreprocessLosetup(rawdisk_path)
       self.state[EvidenceState.ATTACHED] = True
       self.local_path = self.device_path

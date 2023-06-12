@@ -170,7 +170,7 @@ def task_deserialize(input_dict):
   task_loader = TaskLoader()
   task = task_loader.get_task(type_)
   if not task:
-    raise TurbiniaException(f'Could not load Task module {type_:s}')
+    raise TurbiniaException('Could not load Task module {0:s}'.format(type_))
   # Remove serialized output manager because this gets reinstantiated when the
   # empty Task is instantiated and we don't want to overwrite it.
   try:

@@ -94,7 +94,8 @@ def get_task_manager():
   elif config.TASK_MANAGER.lower() == 'celery':
     return CeleryTaskManager()
   else:
-    msg = f'Task Manager type "{config.TASK_MANAGER:s}" not implemented'
+    msg = 'Task Manager type "{0:s}" not implemented'.format(
+        config.TASK_MANAGER)
     raise turbinia.TurbiniaException(msg)
 
 
@@ -175,7 +176,7 @@ class BaseTaskManager:
     self.jobs = [job for _, job in jobs_manager.JobsManager.GetJobs(job_names)]
     dependencies = config.ParseDependencies()
     job_utils.register_job_timeouts(dependencies)
-    log.debug(f'Registered job list: {str(job_names):s}')
+    log.debug('Registered job list: {0:s}'.format(str(job_names)))
 
   def abort_request(self, request_id, requester, evidence_name, message):
     """Abort the request by creating an AbortTask.
@@ -194,7 +195,8 @@ class BaseTaskManager:
     abort_task = AbortTask(request_id=request_id, requester=requester)
     result = workers.TurbiniaTaskResult(
         request_id=request_id, no_output_manager=True)
-    result.status = f'Processing request for {evidence_name:s} aborted: {message:s}'
+    result.status = 'Processing request for {0:s} aborted: {1:s}'.format(
+        evidence_name, message)
     result.successful = False
     abort_task.result = result
     self.state_manager.update_task(abort_task)
@@ -213,7 +215,7 @@ class BaseTaskManager:
     if not self.jobs:
       raise turbinia.TurbiniaException(
           'Jobs must be registered before evidence can be added')
-    log.info(f'Adding new evidence: {str(evidence_):s}')
+    log.info('Adding new evidence: {0:s}'.format(str(evidence_)))
     job_count = 0
     jobs_list = []
 
@@ -249,7 +251,8 @@ class BaseTaskManager:
 
         self.running_jobs.append(job_instance)
         log.info(
-            f'Adding {job_instance.name:s} job to process {evidence_.name:s}')
+            'Adding {0:s} job to process {1:s}'.format(
+                job_instance.name, evidence_.name))
         job_count += 1
         turbinia_jobs_total.inc()
 
@@ -509,8 +512,8 @@ class BaseTaskManager:
     job = self.get_job(task_result.job_id)
     if not job:
       log.warning(
-          f'Received task results for unknown Job from Task ID {task_result.task_id:s}'
-      )
+          'Received task results for unknown Job from Task ID {0:s}'.format(
+              task_result.task_id))
 
     # Reprocess new evidence and save instance for later consumption by finalize
     # tasks.
@@ -542,12 +545,15 @@ class BaseTaskManager:
       job (TurbiniaJob): The Job to process
       task (TurbiniaTask): The Task that just completed.
     """
-    log.debug(f'Processing Job {job.name:s} for completed Task {task.id:s}')
+    log.debug(
+        'Processing Job {0:s} for completed Task {1:s}'.format(
+            job.name, task.id))
     self.state_manager.update_task(task)
     job.remove_task(task.id)
     turbinia_server_tasks_completed_total.inc()
     if job.check_done() and not (job.is_finalize_job or task.is_finalize_task):
-      log.debug(f'Job {job.name:s} completed, creating Job finalize tasks')
+      log.debug(
+          'Job {0:s} completed, creating Job finalize tasks'.format(job.name))
       final_task = job.create_final_task()
       if final_task:
         final_task.is_finalize_task = True
@@ -659,20 +665,20 @@ class CeleryTaskManager(BaseTaskManager):
       check_timeout = False
       celery_task = task.stub
       if not celery_task:
-        log.debug(f'Task {task.stub.task_id:s} not yet created')
+        log.debug('Task {0:s} not yet created'.format(task.stub.task_id))
         check_timeout = True
       elif celery_task.status == celery_states.STARTED:
-        log.debug(f'Task {celery_task.id:s} not finished')
+        log.debug('Task {0:s} not finished'.format(celery_task.id))
         check_timeout = True
       elif celery_task.status == celery_states.FAILURE:
-        log.warning(f'Task {celery_task.id:s} failed.')
+        log.warning('Task {0:s} failed.'.format(celery_task.id))
         completed_tasks.append(task)
       elif celery_task.status == celery_states.SUCCESS:
         task.result = workers.TurbiniaTaskResult.deserialize(celery_task.result)
         completed_tasks.append(task)
       else:
         check_timeout = True
-        log.debug(f'Task {celery_task.id:s} status unknown')
+        log.debug('Task {0:s} status unknown'.format(celery_task.id))
 
       # For certain Task states we want to check whether the Task has timed out
       # or not.
@@ -687,7 +693,7 @@ class CeleryTaskManager(BaseTaskManager):
 
     outstanding_task_count = len(self.tasks) - len(completed_tasks)
     if outstanding_task_count > 0:
-      log.info(f'{outstanding_task_count:d} Tasks still outstanding.')
+      log.info('{0:d} Tasks still outstanding.'.format(outstanding_task_count))
     return completed_tasks
 
   def get_evidence(self):
@@ -703,7 +709,9 @@ class CeleryTaskManager(BaseTaskManager):
         if not evidence_.request_id:
           evidence_.request_id = request.request_id
 
-        log.info(f'Received evidence [{str(evidence_):s}] from Kombu message.')
+        log.info(
+            'Received evidence [{0:s}] from Kombu message.'.format(
+                str(evidence_)))
 
         success, message = recipe_helpers.validate_recipe(request.recipe)
         if not success:
@@ -733,8 +741,8 @@ class CeleryTaskManager(BaseTaskManager):
 
   def enqueue_task(self, task, evidence_):
     log.info(
-        f'Adding Celery task {task.name:s} with evidence {evidence_.name:s} to queue'
-    )
+        'Adding Celery task {0:s} with evidence {1:s} to queue'.format(
+            task.name, evidence_.name))
     task.stub = self.celery_runner.delay(
         task.serialize(), evidence_.serialize())
 
@@ -778,7 +786,7 @@ class PSQTaskManager(BaseTaskManager):
             name=config.PSQ_TOPIC,
             storage=psq.DatastoreStorage(datastore_client))
       except exceptions.GoogleCloudError as exception:
-        msg = f'Error creating PSQ Queue: {str(exception):s}'
+        msg = 'Error creating PSQ Queue: {0:s}'.format(str(exception))
         log.error(msg)
         raise turbinia.TurbiniaException(msg)
     else:
@@ -792,12 +800,12 @@ class PSQTaskManager(BaseTaskManager):
       # This handles tasks that have failed at the PSQ layer.
       if not psq_task:
         check_timeout = True
-        log.debug(f'Task {task.stub.task_id:s} not yet created')
+        log.debug('Task {0:s} not yet created'.format(task.stub.task_id))
       elif psq_task.status not in (psq.task.FINISHED, psq.task.FAILED):
         check_timeout = True
-        log.debug(f'Task {psq_task.id:s} not finished')
+        log.debug('Task {0:s} not finished'.format(psq_task.id))
       elif psq_task.status == psq.task.FAILED:
-        log.warning(f'Task {psq_task.id:s} failed.')
+        log.warning('Task {0:s} failed.'.format(psq_task.id))
         completed_tasks.append(task)
       else:
         task.result = workers.TurbiniaTaskResult.deserialize(
@@ -817,7 +825,7 @@ class PSQTaskManager(BaseTaskManager):
 
     outstanding_task_count = len(self.tasks) - len(completed_tasks)
     if outstanding_task_count > 0:
-      log.info(f'{outstanding_task_count:d} Tasks still outstanding.')
+      log.info('{0:d} Tasks still outstanding.'.format(outstanding_task_count))
     return completed_tasks
 
   def get_evidence(self):
@@ -828,7 +836,9 @@ class PSQTaskManager(BaseTaskManager):
         if not evidence_.request_id:
           evidence_.request_id = request.request_id
 
-        log.info(f'Received evidence [{str(evidence_):s}] from PubSub message.')
+        log.info(
+            'Received evidence [{0:s}] from PubSub message.'.format(
+                str(evidence_)))
 
         success, message = recipe_helpers.validate_recipe(request.recipe)
         if not success:
@@ -844,8 +854,8 @@ class PSQTaskManager(BaseTaskManager):
 
   def enqueue_task(self, task, evidence_):
     log.info(
-        f'Adding PSQ task {task.name:s} with evidence {evidence_.name:s} to queue'
-    )
+        'Adding PSQ task {0:s} with evidence {1:s} to queue'.format(
+            task.name, evidence_.name))
     task.stub = self.psq.enqueue(
         task_utils.task_runner, task.serialize(), evidence_.serialize())
     time.sleep(PSQ_QUEUE_WAIT_SECONDS)
