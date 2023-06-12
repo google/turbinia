@@ -99,12 +99,12 @@ class DockerManager:
       docker_client = docker.from_env()
     except docker.errors.APIError as exception:
       raise TurbiniaException(
-          'An issue has occurred connecting to the Docker daemon: {0!s}'.format(
-              exception))
+          f'An issue has occurred connecting to the Docker daemon: {exception!s}'
+      )
     except docker.errors.DockerException as exception:
       raise TurbiniaException(
-          'An issue has occurred connecting to the Docker daemon: {0!s}'.format(
-              exception))
+          f'An issue has occurred connecting to the Docker daemon: {exception!s}'
+      )
     return docker_client
 
   def get_image(self, image_id):
@@ -151,7 +151,7 @@ class DockerManager:
         ]
     except docker.errors.APIError as exception:
       raise TurbiniaException(
-          'An error occurred retrieving the images: {0!s}'.format(exception))
+          f'An error occurred retrieving the images: {exception!s}')
     return images
 
 
@@ -240,10 +240,10 @@ class ContainerManager(DockerManager):
     # Override the entrypoint to /bin/sh
     kwargs['entrypoint'] = '/bin/sh'
     if shell:
-      cmd = '-c ' + '\"{0:s}\"'.format(cmd)
+      cmd = '-c ' + f'"{cmd:s}"'
     else:
       cmd = ' '.join(cmd)
-      cmd = '-c ' + '\"{0:s}\"'.format(cmd)
+      cmd = '-c ' + f'"{cmd:s}"'
 
     # Create the device and file mount paths
     device_paths = []
@@ -277,8 +277,7 @@ class ContainerManager(DockerManager):
     except docker.errors.APIError as exception:
       if container:
         container.remove(v=True)
-      message = (
-          'An error has occurred with the container: {0!s}'.format(exception))
+      message = (f'An error has occurred with the container: {exception!s}')
       log.error(message)
       raise TurbiniaException(message)
 
