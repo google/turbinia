@@ -59,6 +59,7 @@ class OutputManager:
       name (str): The name of the Request or Task.
       uid (str): The unique identifier of the Request or Task.
       request_id(str): The ID of the Request.
+      remote_only (bool): Whether to only use remote output writers.
 
     Returns:
       A list of OutputWriter objects.
@@ -460,7 +461,7 @@ class GCSOutputWriter(OutputWriter):
     """Copies output file from the managed location to the local output dir.
 
     Args:
-      source_file (string): A path to a source file in the managed storage
+      source_path (string): A path to a source file in the managed storage
           location.  This path should be in a format matching the storage type
           (e.g. GCS paths are formatted like 'gs://bucketfoo/' and local paths
           are like '/foo/bar'.

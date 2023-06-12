@@ -63,6 +63,7 @@ class FactoryInterface(ABC):
     """Creates one or more click.Command or click.Options objects.
     
     Args:
+      name (str): Object name.
       evidence_mapping (dict): A dictionary of Evidence types
           and attributes retrieved from the Turbinia API server.
       request_options (dict): A dictionary of BaseRequestOptions

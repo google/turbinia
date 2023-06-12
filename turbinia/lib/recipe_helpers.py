@@ -80,6 +80,7 @@ def load_recipe_from_file(recipe_file, validate=True):
 
   Args:
     recipe_file(str): Name of the recipe file to be read.
+    validate(bool): Whether to validate the recipe or not.
 
   Returns:
     dict: Validated and corrected recipe dictionary.
