@@ -110,7 +110,7 @@ class OptionFactory(FactoryInterface):
     options = OptionFactory.get_evidence_attributes(evidence_mapping)
     for evidence_name, param_decls, attrs in options:
       if name == evidence_name:
-        log.debug('Creating option for {0:s}'.format(name))
+        log.debug(f'Creating option for {name:s}')
         click_option = OptionFactory.create_object(params=(param_decls, attrs))
         option_objects.append(click_option)
     return option_objects
@@ -138,7 +138,7 @@ class CommandFactory(FactoryInterface):
 
     command_objects = []
     for evidence_name in list(evidence_mapping.keys()):
-      log.debug('Creating command for {0:s}'.format(evidence_name))
+      log.debug(f'Creating command for {evidence_name:s}')
       # Use lowercase evidence names.
       evidence_name_lower = evidence_name.lower()
       params = OptionFactory.create_dynamic_objects(
