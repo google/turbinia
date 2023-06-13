@@ -105,6 +105,7 @@ export default {
       headers: [
         { text: 'Request', value: 'request_id_reason' },
         { text: 'Last Task Update Time', value: 'last_task_update_time' },
+        { text: 'Evidence Name', value: 'evidence_name' },
         { text: 'Requester', value: 'requester' },
         { text: 'Total Tasks', value: 'total_tasks' },
         { text: 'Running Tasks', value: 'running_tasks' },
@@ -112,7 +113,6 @@ export default {
         { text: 'Failed Tasks', value: 'failed_tasks' },
         { text: 'Status', value: 'status' },
         { text: 'Results', value: 'request_results' },
-        { text: 'Evidence Name', value: 'evidence_name' },
       ],
       requestSummary: [],
     }
@@ -132,7 +132,7 @@ export default {
               request_id: data[req].request_id,
               last_task_update_time: data[req].last_task_update_time,
               requester: data[req].requester,
-              `to`tal_tasks: data[req].task_count,
+              total_tasks: data[req].task_count,
               running_tasks: data[req].running_tasks,
               successful_tasks: data[req].successful_tasks,
               failed_tasks: data[req].failed_tasks,

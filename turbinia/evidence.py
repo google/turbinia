@@ -125,6 +125,9 @@ def evidence_decode(evidence_dict, strict=False):
             str(type(evidence_dict))))
   type_ = evidence_dict.pop('type', None)
   name_ = evidence_dict.pop('_name', None)
+
+  print(str(evidence_dict))
+
   if not type_:
     raise TurbiniaException(
         'No Type attribute for evidence object [{0:s}]'.format(
@@ -159,6 +162,8 @@ def evidence_decode(evidence_dict, strict=False):
         type_)
     log.error(message)
     raise TurbiniaException(message) from AttributeError
+
+  print(evidence.__dict__)
 
   return evidence
 
@@ -350,6 +355,9 @@ class Evidence:
     if hasattr(self, 'path_spec'):
       self.path_spec = None
     serialized_evidence = self.__dict__.copy()
+    print(
+        "\n\n\n\n igormr SERIALIZED EVIDENCE:" + str(self.size) +
+        str(serialized_evidence) + "\n\n\n\n\n")
     if self.parent_evidence:
       serialized_evidence['parent_evidence'] = self.parent_evidence.serialize()
     return serialized_evidence
@@ -456,7 +464,9 @@ class Evidence:
     self.local_path = self.source_path
     if not required_states:
       required_states = []
-
+    if self.size is None and self.source_path and mount_local.GetDiskSize(
+        self.source_path) is not None:
+      self.size = mount_local.GetDiskSize(self.source_path)
     if self.context_dependent:
       if not self.parent_evidence:
         raise TurbiniaException(
@@ -503,6 +513,8 @@ class Evidence:
     log.info('Starting postprocessor for evidence {0:s}'.format(self.name))
     log.debug('Evidence state: {0:s}'.format(self.format_state()))
 
+    print("\n\n\n\n igormr POSTPROCESS START:" + str(self.size) + "\n\n\n\n\n")
+
     if self.resource_tracked:
       log.debug(
           'Evidence: {0:s} is resource tracked. Acquiring filelock for '
@@ -536,6 +548,7 @@ class Evidence:
             'for parent evidence {1:s}.'.format(
                 self.name, self.parent_evidence.name))
         self.parent_evidence.postprocess(task_id)
+    print("\n\n\n\n igormr POSTPROCESS END:" + str(self.size) + "\n\n\n\n\n")
 
   def format_state(self):
     """Returns a string representing the current state of evidence.
@@ -628,6 +641,9 @@ class CompressedDirectory(Evidence):
     self.copyable = True
 
   def _preprocess(self, tmp_dir, required_states):
+    if self.size is None:
+      self.size = mount_local.GetDiskSize(self.source_path)
+
     # Uncompress a given tar file and return the uncompressed path.
     if EvidenceState.DECOMPRESSED in required_states:
       self.uncompressed_directory = archive.UncompressTarFile(

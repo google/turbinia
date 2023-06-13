@@ -442,8 +442,8 @@ class TurbiniaTask:
 
   # The list of attributes that we will persist into storage
   STORED_ATTRIBUTES = [
-      'id', 'job_id', 'last_update', 'name', 'evidence_name', 'request_id',
-      'requester', 'group_name', 'reason', 'all_args', 'group_id'
+      'id', 'job_id', 'last_update', 'name', 'evidence_name', 'evidence_size',
+      'request_id', 'requester', 'group_name', 'reason', 'all_args', 'group_id'
   ]
 
   # The list of evidence states that are required by a Task in order to run.
@@ -477,6 +477,7 @@ class TurbiniaTask:
     self.last_update = datetime.now()
     self.name = name if name else self.__class__.__name__
     self.evidence_name = None
+    self.evidence_size = None
     self.output_dir = None
     self.output_manager = output_manager.OutputManager()
     self.result = None
@@ -506,6 +507,9 @@ class TurbiniaTask:
     task_copy['output_manager'] = self.output_manager.__dict__
     task_copy['last_update'] = self.last_update.strftime(DATETIME_FORMAT)
     task_copy['start_time'] = self.start_time.strftime(DATETIME_FORMAT)
+    print(
+        "\n\n\n\n igormr SERIALIZED TASK:" + str(self.evidence_size) +
+        str(task_copy) + "\n\n\n\n\n")
     return task_copy
 
   @classmethod
@@ -546,8 +550,13 @@ class TurbiniaTask:
           state does not meet the required state.
     """
     evidence.validate()
+
     evidence.preprocess(
         self.id, tmp_dir=self.tmp_dir, required_states=self.REQUIRED_STATES)
+
+    if self.evidence_size is None and evidence.size is not None:
+      self.evidence_size = evidence.size
+      print("\n\n\n\n igormrSIZE:" + str(self.evidence_size) + "\n\n\n\n\n")
 
     # Final check to make sure that the required evidence state has been met
     # for Evidence types that have those capabilities.
@@ -792,7 +801,6 @@ class TurbiniaTask:
     self.tmp_dir, self.output_dir = self.output_manager.get_local_output_dirs()
     if not self.result:
       self.result = self.create_result(input_evidence=evidence)
-
     if evidence.copyable and not config.SHARED_FILESYSTEM:
       self.output_manager.retrieve_evidence(evidence)
 

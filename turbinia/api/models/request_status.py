@@ -28,6 +28,7 @@ log = logging.getLogger('turbinia:api_server:routes:request')
 class RequestStatus(BaseModel):
   """Represents a Turbinia request status object."""
   request_id: str = None
+  evidence_name: str = None
   tasks: List[Dict] = []
   reason: str = None
   requester: str = None
@@ -63,17 +64,21 @@ class RequestStatus(BaseModel):
         if current_request_id == request_id:
           self.tasks.append(task)
 
+    first_start_time = None
+
     for task in tasks:
       self.request_id = task.get('request_id')
       self.requester = task.get('requester')
       self.reason = task.get('reason')
       self.task_count = len(tasks)
+      if first_start_time is None or first_start_time > task.get('start_time'):
+        first_start_time = task.get('start_time')
+        self.evidence_name = task.get('evidence_name')
       task_status = task.get('status')
       if isinstance(task.get('last_update'), datetime.datetime):
         task_last_update = datetime.datetime.timestamp(task.get('last_update'))
       else:
         task_last_update = task.get('last_update')
-
       if not self.last_task_update_time:
         self.last_task_update_time = task_last_update
       else:

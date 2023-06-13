@@ -71,15 +71,10 @@ def GetDiskSize(source_path):
         'Unexpected output from blockdev: {0:s}'.format(
             cmd_output[0].decode('utf-8')))
 
-  #TODO(igormr) Use python library to get size of file in bytes
-
   if size is None:
-    # evidence is not a block device, check image file size
-    cmd = ['ls', '-s', source_path]
+    # evidence is not a block device, check file size
     try:
-      cmd_output = subprocess.check_output(cmd).split()
-      size = int(cmd_output[0].decode('utf-8'))
-      print("\n\n\n\n SIZE:" + str(size) + "\n\n\n\n\n")
+      size = os.path.getsize(source_path)
     except subprocess.CalledProcessError as exception:
       log.warning('Checking disk size failed: {0!s}'.format(exception))
 

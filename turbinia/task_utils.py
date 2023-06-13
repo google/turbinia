@@ -182,6 +182,10 @@ def task_deserialize(input_dict):
   task.start_time = datetime.strptime(input_dict['start_time'], DATETIME_FORMAT)
   task.last_update = datetime.strptime(
       input_dict['last_update'], DATETIME_FORMAT)
+
+  print(
+      "\n\n\n\n igormr DESERIALIZED TASK:" + str(task.evidence_size) +
+      "\n\n\n\n\n")
   return task
 
 
@@ -225,5 +229,5 @@ def task_runner(obj, *args, **kwargs):
       raise TurbiniaException(f'Could not acquire lock on {config.LOCK_FILE}')
     finally:
       lock.release()
-
+  print("\n\n\n igormr RUN_TASK END: " + str(obj.evidence_size) + "\n\n\n")
   return run

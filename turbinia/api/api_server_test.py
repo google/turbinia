@@ -60,6 +60,8 @@ class testTurbiniaAPIServer(unittest.TestCase):
   }
 
   _REQUEST_TEST_DATA = {
+      #TODO(igormr) Add evidence name for tests
+      'evidence_name': '',
       'failed_tasks': 0,
       'last_task_update_time': '2022-04-01T19:17:14.791074Z',
       'queued_tasks': 0,

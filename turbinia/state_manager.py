@@ -134,6 +134,8 @@ class BaseStateManager:
     task_dict.update({'instance': config.INSTANCE_ID})
     if isinstance(task_dict['instance'], six.binary_type):
       task_dict['instance'] = codecs.decode(task_dict['instance'], 'utf-8')
+
+    print("\n\n\n igormr TASK_DICT: " + str(task_dict) + "\n\n\n\n\n")
     return task_dict
 
   def _validate_data(self, data):
