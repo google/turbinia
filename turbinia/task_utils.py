@@ -52,6 +52,7 @@ class TaskLoader():
       'JenkinsAnalysisTask',
       'JupyterAnalysisTask',
       'LinuxAccountAnalysisTask',
+      'LinuxSSHAnalysisTask',
       'YaraAnalysisTask',
       'PartitionEnumerationTask',
       'PhotorecTask',
@@ -104,6 +105,7 @@ class TaskLoader():
     from turbinia.workers.analysis.linux_acct import LinuxAccountAnalysisTask
     from turbinia.workers.analysis.yara import YaraAnalysisTask
     from turbinia.workers.analysis.postgresql_acct import PostgresAccountAnalysisTask
+    from turbinia.workers.analysis.ssh_analyzer import LinuxSSHAnalysisTask
     from turbinia.workers.analysis.windows_acct import WindowsAccountAnalysisTask
     from turbinia.workers.analysis.wordpress_access import WordpressAccessLogAnalysisTask
     from turbinia.workers.analysis.wordpress_creds import WordpressCredsAnalysisTask
@@ -215,6 +217,13 @@ def task_runner(obj, *args, **kwargs):
   # Celery is configured to receive only one Task per worker
   # so no need to create a FileLock.
   elif config.TASK_MANAGER.lower() == 'celery':
-    run = obj.run_wrapper(*args, **kwargs)
+    try:
+      lock = filelock.FileLock(config.LOCK_FILE)
+      with lock.acquire(timeout=10):
+        run = obj.run_wrapper(*args, **kwargs)
+    except filelock.Timeout:
+      raise TurbiniaException(f'Could not acquire lock on {config.LOCK_FILE}')
+    finally:
+      lock.release()
 
   return run

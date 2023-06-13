@@ -12,10 +12,11 @@ VERSION = "1.0.1"
 REQUIRES = [
     "click",
     "turbinia-api-lib",
+    'google-auth-oauthlib'
 ]
 
 this_directory = Path(__file__).parent
-README = (this_directory / "README.md").read_text()
+README = (this_directory / "README.rst").read_text()
 
 setup(
     name=NAME, 
