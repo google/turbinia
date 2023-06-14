@@ -462,7 +462,7 @@ class Evidence:
     if not required_states:
       required_states = []
 
-    if not self.size and self.copyable:
+    if not self.size:
       self.size = mount_local.GetDiskSize(self.source_path)
       log.warning(f'Setting rawdisk {self.source_path} size to {self.size} ')
     log.warning(f'got rawdisk {self.source_path} evidence size {self.size}')
