@@ -128,6 +128,7 @@ class TurbiniaTaskResult:
 
     self.closed = False
     self.evidence = evidence if evidence else []
+    self.evidence_size = None
     self.input_evidence = input_evidence
     self.id = uuid.uuid4().hex
     self.job_id = job_id
@@ -169,6 +170,8 @@ class TurbiniaTaskResult:
     self.task_id = task.id
     self.task_name = task.name
     self.requester = task.requester
+    #self.evidence_size = task.evidence_size
+    #log.info(f'taskresult setting evidence size to {self.evidence_size}')
     if not self.no_state_manager:
       self.state_manager = state_manager.get_state_manager()
     if not self.no_output_manager:
@@ -507,9 +510,6 @@ class TurbiniaTask:
     task_copy['output_manager'] = self.output_manager.__dict__
     task_copy['last_update'] = self.last_update.strftime(DATETIME_FORMAT)
     task_copy['start_time'] = self.start_time.strftime(DATETIME_FORMAT)
-    print(
-        "\n\n\n\n igormr SERIALIZED TASK:" + str(self.evidence_size) +
-        str(task_copy) + "\n\n\n\n\n")
     return task_copy
 
   @classmethod
@@ -553,11 +553,9 @@ class TurbiniaTask:
 
     evidence.preprocess(
         self.id, tmp_dir=self.tmp_dir, required_states=self.REQUIRED_STATES)
-
-    if self.evidence_size is None and evidence.size is not None:
-      self.evidence_size = evidence.size
-      print("\n\n\n\n igormrSIZE:" + str(self.evidence_size) + "\n\n\n\n\n")
-
+    self.evidence_size = evidence.size
+    log.warning(
+        f'setting evidence size to {self.evidence_size} for task {self.id}')
     # Final check to make sure that the required evidence state has been met
     # for Evidence types that have those capabilities.
     for state in self.REQUIRED_STATES:
@@ -808,6 +806,7 @@ class TurbiniaTask:
       raise TurbiniaException(
           'Evidence source path {0:s} does not exist'.format(
               evidence.source_path))
+    #self.result.evidence_size = evidence.size
     return self.result
 
   def setup_metrics(self, task_list=None):
