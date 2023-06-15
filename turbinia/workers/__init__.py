@@ -170,8 +170,6 @@ class TurbiniaTaskResult:
     self.task_id = task.id
     self.task_name = task.name
     self.requester = task.requester
-    #self.evidence_size = task.evidence_size
-    #log.info(f'taskresult setting evidence size to {self.evidence_size}')
     if not self.no_state_manager:
       self.state_manager = state_manager.get_state_manager()
     if not self.no_output_manager:
@@ -550,7 +548,6 @@ class TurbiniaTask:
           state does not meet the required state.
     """
     evidence.validate()
-
     evidence.preprocess(
         self.id, tmp_dir=self.tmp_dir, required_states=self.REQUIRED_STATES)
     self.evidence_size = evidence.size
@@ -806,7 +803,6 @@ class TurbiniaTask:
       raise TurbiniaException(
           'Evidence source path {0:s} does not exist'.format(
               evidence.source_path))
-    #self.result.evidence_size = evidence.size
     return self.result
 
   def setup_metrics(self, task_list=None):

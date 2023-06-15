@@ -72,7 +72,6 @@ def GetDiskSize(source_path):
             cmd_output[0].decode('utf-8')))
 
   if size is None:
-    # evidence is not a block device, check file size
     try:
       size = os.path.getsize(source_path)
     except subprocess.CalledProcessError as exception:

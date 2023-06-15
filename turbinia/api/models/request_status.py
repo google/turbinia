@@ -65,7 +65,6 @@ class RequestStatus(BaseModel):
           self.tasks.append(task)
 
     first_finish_time = None
-
     for task in tasks:
       self.request_id = task.get('request_id')
       self.requester = task.get('requester')

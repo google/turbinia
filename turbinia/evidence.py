@@ -160,8 +160,6 @@ def evidence_decode(evidence_dict, strict=False):
     log.error(message)
     raise TurbiniaException(message) from AttributeError
 
-  print(evidence.__dict__)
-
   return evidence
 
 
@@ -461,8 +459,6 @@ class Evidence:
 
     if not self.size:
       self.size = mount_local.GetDiskSize(self.source_path)
-      log.warning(f'Setting rawdisk {self.source_path} size to {self.size} ')
-    log.warning(f'got rawdisk {self.source_path} evidence size {self.size}')
 
     if self.context_dependent:
       if not self.parent_evidence:
