@@ -64,15 +64,16 @@ class RequestStatus(BaseModel):
         if current_request_id == request_id:
           self.tasks.append(task)
 
-    first_start_time = None
+    first_finish_time = None
 
     for task in tasks:
       self.request_id = task.get('request_id')
       self.requester = task.get('requester')
       self.reason = task.get('reason')
       self.task_count = len(tasks)
-      if first_start_time is None or first_start_time > task.get('start_time'):
-        first_start_time = task.get('start_time')
+      if first_finish_time is None or first_finish_time > task.get(
+          'last_update'):
+        first_finish_time = task.get('last_update')
         self.evidence_name = task.get('evidence_name')
       task_status = task.get('status')
       if isinstance(task.get('last_update'), datetime.datetime):
