@@ -102,14 +102,32 @@ class RequestStatus(BaseModel):
             self.last_task_update_time).strftime(
                 turbinia_config.DATETIME_FORMAT)
 
-    if self.running_tasks > 0 or self.queued_tasks > 0:
-      self.status = 'running'
+    completed_tasks = self.successful_tasks + self.failed_tasks
+
+    if completed_tasks == self.task_count and self.failed_tasks > 0:
+      self.status = 'completed_with_errors'
     elif self.failed_tasks == self.task_count:
       self.status = 'failed'
     elif self.successful_tasks == self.task_count:
       self.status = 'successful'
     else:
-      self.status = 'completed_with_errors'
+      # TODO(leaniz): Add a 'pending' state to tasks for cases 2 and 3.
+      # ref: https://github.com/google/turbinia/issues/1239
+      #
+      # A 'running' status for a request covers multiple cases:
+      #  1) One or more tasks are still in a running status.
+      #  2) Zero tasks are running, zero or more tasks are queued
+      #    and none have failed/succeeded.
+      #  (e.g. all tasks scheduled on the Turbinia server and none picked
+      #    up by any worker yet.)
+      #  3) Zero tasks are running, one or more tasks are queued
+      #    and some have failed/succeeded.
+      #  (e.g. some tasks have completed, others are scheduled on the
+      #    Turbinia server but not picked up by a worker yet.)
+      #
+      # Note that this method is concerned with a Turbiania request's status
+      # which is different than the status of an individual task.
+      self.status = 'running'
 
     return bool(self.tasks)
 
