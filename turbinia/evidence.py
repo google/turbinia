@@ -125,9 +125,6 @@ def evidence_decode(evidence_dict, strict=False):
             str(type(evidence_dict))))
   type_ = evidence_dict.pop('type', None)
   name_ = evidence_dict.pop('_name', None)
-
-  print(str(evidence_dict))
-
   if not type_:
     raise TurbiniaException(
         'No Type attribute for evidence object [{0:s}]'.format(
