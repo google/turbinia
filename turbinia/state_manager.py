@@ -135,7 +135,6 @@ class BaseStateManager:
     if isinstance(task_dict['instance'], six.binary_type):
       task_dict['instance'] = codecs.decode(task_dict['instance'], 'utf-8')
 
-    print("\n\n\n igormr TASK_DICT: " + str(task_dict) + "\n\n\n\n\n")
     return task_dict
 
   def _validate_data(self, data):
@@ -306,6 +305,12 @@ class RedisStateManager(BaseStateManager):
     if not key:
       self.write_new_task(task)
       return
+    log.warn(f'updating task {task.__dict__}')
+    stored_task_data = json.loads(self.client.get(f'TurbiniaTask:{task.id}'))
+    stored_evidence_size = stored_task_data.get('evidence_size')
+    log.info(f'update_task found existing evidence_size {stored_evidence_size}')
+    if not task.evidence_size and stored_evidence_size:
+      task.evidence_size = stored_evidence_size
     log.info('Updating task {0:s} in Redis'.format(task.name))
     task_data = self.get_task_dict(task)
     task_data['last_update'] = task_data['last_update'].strftime(
