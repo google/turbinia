@@ -41,7 +41,7 @@ class testTurbiniaAPIServer(unittest.TestCase):
 
   _TASK_TEST_DATA = {
       'id': 'c8f73a5bc5084086896023c12c7cc026',
-      'evidence_name': '/evidence/test.txt',
+      'evidence_name': '/evidence/test.tgz',
       'all_args': 'compresseddirectory -l /evidence/test.tgz',
       'job_id': '1db0dc47d8f244f5b4fa7e15b8a87861',
       'start_time': '2022-04-01T19:15:14.791074Z',

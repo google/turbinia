@@ -76,6 +76,9 @@ class RequestStatus(BaseModel):
           if arguments[i] == '-l':
             self.evidence_name = arguments[i + 1]
             break
+      else:
+        pass
+        #todo(igormr): Add way to get task with evidence_name
       if isinstance(task.get('last_update'), datetime.datetime):
         task_last_update = datetime.datetime.timestamp(task.get('last_update'))
       else:

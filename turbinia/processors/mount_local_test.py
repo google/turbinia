@@ -64,7 +64,7 @@ class MountLocalProcessorTest(unittest.TestCase):
     self.assertEqual(size, 100)
 
     # Test for image file
-    source_path = 'test.dd'
+    source_path = 'artifact_disk.dd'
     size = mount_local.GetDiskSize(source_path)
     expected_args = os.stat('test.dd').st_size
     mock_subprocess.assert_called_with(expected_args)
