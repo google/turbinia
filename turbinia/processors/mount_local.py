@@ -73,7 +73,7 @@ def GetDiskSize(source_path):
 
   if size is None:
     try:
-      size = os.path.getsize(source_path)
+      size = os.stat(source_path).st_size
     except subprocess.CalledProcessError as exception:
       log.warning('Checking disk size failed: {0!s}'.format(exception))
 

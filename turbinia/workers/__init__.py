@@ -551,6 +551,7 @@ class TurbiniaTask:
     evidence.preprocess(
         self.id, tmp_dir=self.tmp_dir, required_states=self.REQUIRED_STATES)
     self.evidence_size = evidence.size
+
     # Final check to make sure that the required evidence state has been met
     # for Evidence types that have those capabilities.
     for state in self.REQUIRED_STATES:

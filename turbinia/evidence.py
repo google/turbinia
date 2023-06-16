@@ -457,7 +457,7 @@ class Evidence:
     if not required_states:
       required_states = []
 
-    if not self.size and self.name != 'EvidenceCollection':
+    if not self.size and self.source_path:
       self.size = mount_local.GetDiskSize(self.source_path)
 
     if self.context_dependent:
