@@ -106,7 +106,6 @@ export default {
         { text: 'Request', value: 'request_id_reason' },
         { text: 'Last Task Update Time', value: 'last_task_update_time' },
         { text: 'Evidence Name', value: 'evidence_name' },
-        { text: 'Evidence Size', value: 'evidence_size' },
         { text: 'Requester', value: 'requester' },
         { text: 'Total Tasks', value: 'total_tasks' },
         { text: 'Running Tasks', value: 'running_tasks' },
