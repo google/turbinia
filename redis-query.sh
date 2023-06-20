@@ -2,7 +2,7 @@
 
 field=$1
 field_value=$2
-show_value=$3 # y/N
+
 
 for key in $(redis-cli --scan | head -10); do 
     key_type=${key%:*}
@@ -19,8 +19,7 @@ for key in $(redis-cli --scan | head -10); do
             # Gets the Task value and split its key:value pairs into an array
             pair="${pair#"${pair%%[![:space:]]*}"}"
             if  [ "$pair"  == "$field: $field_value"  ]; then
-                #echo -e "\033[0;31m$key\033[0m";
-                if [ "$show_value" == "y" ]; then echo -e "$value\n"; fi
+                echo -e "$value\n"
             fi
         done
     fi
