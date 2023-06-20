@@ -64,21 +64,24 @@ class RequestStatus(BaseModel):
         if current_request_id == request_id:
           self.tasks.append(task)
 
+    if len(tasks) >= 1 and tasks[0].get('all_args'):
+      initial_start_time = tasks[0].get('start_time')
+      arguments = tasks[0].get('all_args', 0).split()
+      for i in range(len(arguments) - 1):
+        if arguments[i] == '-l':
+          self.evidence_name = arguments[i + 1]
+          initial_start_time = None
+          break
+
     for task in tasks:
       self.request_id = task.get('request_id')
       self.requester = task.get('requester')
       self.reason = task.get('reason')
       self.task_count = len(tasks)
       task_status = task.get('status')
-      if not self.evidence_name and task.get('all_args'):
-        arguments = task.get('all_args', 0).split()
-        for i in range(len(arguments) - 1):
-          if arguments[i] == '-l':
-            self.evidence_name = arguments[i + 1]
-            break
-      else:
-        pass
-        #todo(igormr): Add way to get task with evidence_name
+      if initial_start_time and task.get('start_time') <= initial_start_time:
+        initial_start_time = task.get('start_time')
+        self.evidence_name = task.get('name')
       if isinstance(task.get('last_update'), datetime.datetime):
         task_last_update = datetime.datetime.timestamp(task.get('last_update'))
       else:
