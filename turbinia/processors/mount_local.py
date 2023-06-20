@@ -83,7 +83,7 @@ def GetDiskSize(source_path):
 
 def PreprocessAPFS(source_path, credentials=None):
   """Uses libfsapfs on a target block device or image file.
-s
+
   Args:
     source_path(str): the source path to run fsapfsmount on.
     credentials(list[(str, str)]): decryption credentials set in evidence setup
