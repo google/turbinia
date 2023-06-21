@@ -33,8 +33,8 @@ def _image_export(command, output_dir, timeout=DEFAULT_TIMEOUT):
   """Runs image_export command.
 
   Args:
-    file_name: Name of file (without path) to be extracted.
-    output_dir: Path to directory to store the the extracted files.
+    command: image_export command to run.
+    output_dir: Path to directory to store the extracted files.
 
   Returns:
     list: paths to extracted files.
@@ -69,7 +69,7 @@ def extract_artifacts(artifact_names, disk_path, output_dir, credentials=[]):
   Args:
     artifact_names: List of artifact definition names.
     disk_path: Path to either a raw disk image or a block device.
-    output_dir: Path to directory to store the the extracted files.
+    output_dir: Path to directory to store the extracted files.
     credentials: List of credentials to use for decryption.
 
   Returns:
@@ -101,7 +101,7 @@ def extract_files(file_name, disk_path, output_dir, credentials=[]):
   Args:
     file_name: Name of file (without path) to be extracted.
     disk_path: Path to either a raw disk image or a block device.
-    output_dir: Path to directory to store the the extracted files.
+    output_dir: Path to directory to store the extracted files.
     credentials: List of credentials to use for decryption.
 
   Returns:
@@ -150,7 +150,7 @@ def get_exe_path(filename):
 
 def bruteforce_password_hashes(
     password_hashes, tmp_dir, timeout=300, extra_args=''):
-  """Bruteforce password hashes using Hashcat.
+  """Bruteforce password hashes using Hashcat or john.
 
   Args:
     password_hashes (list): Password hashes as strings.
@@ -206,7 +206,7 @@ def bruteforce_password_hashes(
       if timer.is_alive():
         timer.cancel()
     except OSError as exception:
-      raise TurbiniaException(f'hashcat failed: {str(exception)}')
+      raise TurbiniaException(f'{" ".join(cmd)} failed: {exception}')
 
   result = []
 
