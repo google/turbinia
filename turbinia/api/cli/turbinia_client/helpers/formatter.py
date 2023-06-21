@@ -135,6 +135,7 @@ class MarkdownReportComponent(ABC):
 
       Args:
         text(string): Text to format
+        level(int): Indentation level.
       Return:
         string: Formatted text.
     """

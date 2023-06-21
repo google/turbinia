@@ -28,7 +28,7 @@ def bold(text):
   Return:
     string: Formatted text.
   """
-  return '**{0:s}**'.format(text.strip())
+  return f'**{text.strip():s}**'
 
 
 def heading1(text):
@@ -40,7 +40,7 @@ def heading1(text):
   Return:
     string: Formatted text.
   """
-  return '# {0:s}'.format(text.strip())
+  return f'# {text.strip():s}'
 
 
 def heading2(text):
@@ -52,7 +52,7 @@ def heading2(text):
   Return:
     string: Formatted text.
   """
-  return '## {0:s}'.format(text.strip())
+  return f'## {text.strip():s}'
 
 
 def heading3(text):
@@ -64,7 +64,7 @@ def heading3(text):
   Return:
     string: Formatted text.
   """
-  return '### {0:s}'.format(text.strip())
+  return f'### {text.strip():s}'
 
 
 def heading4(text):
@@ -76,7 +76,7 @@ def heading4(text):
   Return:
     string: Formatted text.
   """
-  return '#### {0:s}'.format(text.strip())
+  return f'#### {text.strip():s}'
 
 
 def heading5(text):
@@ -88,7 +88,7 @@ def heading5(text):
   Return:
     string: Formatted text.
   """
-  return '##### {0:s}'.format(text.strip())
+  return f'##### {text.strip():s}'
 
 
 def bullet(text, level=1):
@@ -96,11 +96,12 @@ def bullet(text, level=1):
 
   Args:
     text(string): Text to format
+    level(int): Indentation level
 
   Return:
     string: Formatted text.
   """
-  return '{0:s}* {1:s}'.format('    ' * (level - 1), text.strip())
+  return f"{'    ' * (level - 1):s}* {text.strip():s}"
 
 
 def code(text):
@@ -112,4 +113,4 @@ def code(text):
   Return:
     string: Formatted text.
   """
-  return '`{0:s}`'.format(text.strip())
+  return f'`{text.strip():s}`'

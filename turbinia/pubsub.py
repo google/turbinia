@@ -68,10 +68,9 @@ class TurbiniaPubSub(TurbiniaMessageBase):
     # for more information on using the API, see
     # https://cloud.google.com/pubsub/docs/reference/rest
     self.pubsub_api_client = gcp_common.CreateService('pubsub', 'v1')
-    self.topic_path = 'projects/{0:s}/topics/{1:s}'.format(
-        config.TURBINIA_PROJECT, self.topic_name)
+    self.topic_path = f'projects/{config.TURBINIA_PROJECT:s}/topics/{self.topic_name:s}'
     try:
-      log.debug('Trying to create pubsub topic {0:s}'.format(self.topic_path))
+      log.debug(f'Trying to create pubsub topic {self.topic_path:s}')
       topics_client = self.pubsub_api_client.projects().topics()
       # the ExecuteRequest takes API URI, method name as string and parameters
       # as a dict, it executes the API call, handles paging and return response.
@@ -79,12 +78,12 @@ class TurbiniaPubSub(TurbiniaMessageBase):
           topics_client, 'create', {'name': self.topic_path})
     except HttpError as exception:
       if exception.resp.status == 409:
-        log.debug('PubSub topic {0:s} already exists.'.format(self.topic_path))
+        log.debug(f'PubSub topic {self.topic_path:s} already exists.')
       else:
         raise TurbiniaException(
             'Unknown error occurred when creating Topic:'
             ' {0!s}'.format(exception), __name__) from exception
-    log.debug('Setup PubSub publisher at {0:s}'.format(self.topic_path))
+    log.debug(f'Setup PubSub publisher at {self.topic_path:s}')
 
   def setup_subscriber(self):
     """Set up the pubsub subscriber."""
@@ -101,9 +100,9 @@ class TurbiniaPubSub(TurbiniaMessageBase):
               subscription_path, self.topic_path))
       self.subscriber.create_subscription(subscription_path, self.topic_path)
     except exceptions.Conflict:
-      log.debug('Subscription {0:s} already exists.'.format(subscription_path))
+      log.debug(f'Subscription {subscription_path:s} already exists.')
 
-    log.debug('Setup PubSub Subscription {0:s}'.format(subscription_path))
+    log.debug(f'Setup PubSub Subscription {subscription_path:s}')
     self.subscription = self.subscriber.subscribe(
         subscription_path, self._callback)
 
@@ -114,7 +113,7 @@ class TurbiniaPubSub(TurbiniaMessageBase):
       message: A pubsub message object
     """
     data = codecs.decode(message.data, 'utf-8')
-    log.debug('Received pubsub message: {0:s}'.format(data))
+    log.debug(f'Received pubsub message: {data:s}')
     message.ack()
     self._queue.put(message)
 
@@ -128,13 +127,13 @@ class TurbiniaPubSub(TurbiniaMessageBase):
     for _ in xrange(self._queue.qsize()):
       message = self._queue.get()
       data = message.data
-      log.info('Processing PubSub message {0:s}'.format(message.message_id))
+      log.info(f'Processing PubSub message {message.message_id:s}')
 
       request = self._validate_message(data)
       if request:
         requests.append(request)
       else:
-        log.error('Error processing PubSub message: {0:s}'.format(data))
+        log.error(f'Error processing PubSub message: {data:s}')
 
     return requests
 
@@ -159,12 +158,9 @@ class TurbiniaPubSub(TurbiniaMessageBase):
     # Safe to unpack since response is unpaged.
     if not response[0]['messageIds']:
       raise TurbiniaException(
-          'Message {0:s} was not published to topic {1:s}'.format(
-              message, self.topic_path))
+          f'Message {message:s} was not published to topic {self.topic_path:s}')
     msg_id = response[0]['messageIds'][0]
-    log.info(
-        'Published message {0!s} to topic {1!s}'.format(
-            msg_id, self.topic_name))
+    log.info(f'Published message {msg_id!s} to topic {self.topic_name!s}')
 
   def send_request(self, request):
     """Sends a TurbiniaRequest message.

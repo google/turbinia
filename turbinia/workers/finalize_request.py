@@ -44,13 +44,13 @@ class FinalizeRequestTask(TurbiniaTask):
     client = TurbiniaClientProvider.get_turbinia_client()
 
     report_file = os.path.join(
-        self.tmp_dir, 'final_turbinia_report_{0:s}.md'.format(self.id))
+        self.tmp_dir, f'final_turbinia_report_{self.id:s}.md')
     report = FinalReport(source_path=report_file)
     report_data = client.format_task_status(
         config.INSTANCE_ID, config.TURBINIA_PROJECT, config.TURBINIA_REGION,
         request_id=evidence.request_id, full_report=True)
 
-    result.log('Writing report data to [{0:s}]'.format(report.local_path))
+    result.log(f'Writing report data to [{report.local_path:s}]')
     with open(report.local_path, 'wb') as file_handle:
       file_handle.write(report_data.encode('utf-8'))
 

@@ -291,8 +291,7 @@ class MountLocalProcessorTest(unittest.TestCase):
         '0:8192:1:-1:0:-1:-1:-1\n')
     device = mount_local.PreprocessLosetup(source_path, lv_uuid=lv_uuid)
     expected_args = [
-        'sudo', 'lvdisplay', '--colon', '--select',
-        'lv_uuid={0:s}'.format(lv_uuid)
+        'sudo', 'lvdisplay', '--colon', '--select', f'lv_uuid={lv_uuid:s}'
     ]
     mock_output.assert_called_once_with(expected_args, universal_newlines=True)
     mock_subprocess.assert_called_once_with(
@@ -458,8 +457,7 @@ class MountLocalProcessorTest(unittest.TestCase):
         '0:8192:1:-1:0:-1:-1:-1\n')
     mount_local.PostprocessDeleteLosetup(None, lv_uuid=lv_uuid)
     expected_args = [
-        'sudo', 'lvdisplay', '--colon', '--select',
-        'lv_uuid={0:s}'.format(lv_uuid)
+        'sudo', 'lvdisplay', '--colon', '--select', f'lv_uuid={lv_uuid:s}'
     ]
     mock_output.assert_called_once_with(expected_args, universal_newlines=True)
     mock_subprocess.assert_called_once_with(

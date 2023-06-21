@@ -68,11 +68,10 @@ def load_recipe_from_data(recipe_data):
       return load_recipe_from_file(temp_file.name)
     except binascii_error as exception:
       log.error(
-          'Unable to decode recipe_data: {0!s} with error: {1!s}'.format(
-              recipe_data, exception))
+          f'Unable to decode recipe_data: {recipe_data!s} with error: {exception!s}'
+      )
       raise TurbiniaException(
-          'Unable to decode recipe_data: {0!s}'.format(
-              exception)) from exception
+          f'Unable to decode recipe_data: {exception!s}') from exception
 
 
 def load_recipe_from_file(recipe_file, validate=True):
@@ -80,6 +79,7 @@ def load_recipe_from_file(recipe_file, validate=True):
 
   Args:
     recipe_file(str): Name of the recipe file to be read.
+    validate(bool): Whether to validate the recipe or not.
 
   Returns:
     dict: Validated and corrected recipe dictionary.
@@ -88,7 +88,7 @@ def load_recipe_from_file(recipe_file, validate=True):
   if not recipe_file:
     return copy.deepcopy(DEFAULT_RECIPE)
   try:
-    log.info('Loading recipe file from {0:s}'.format(recipe_file))
+    log.info(f'Loading recipe file from {recipe_file:s}')
     with open(recipe_file, 'r', encoding='utf-8') as r_file:
       recipe_file_contents = r_file.read()
       recipe_dict = load(recipe_file_contents, Loader=Loader)
@@ -99,14 +99,10 @@ def load_recipe_from_file(recipe_file, validate=True):
       else:
         return recipe_dict
   except yaml_error as exception:
-    message = (
-        'Invalid YAML on recipe file {0:s}: {1!s}.'.format(
-            recipe_file, exception))
+    message = (f'Invalid YAML on recipe file {recipe_file:s}: {exception!s}.')
     log.error(message)
   except IOError as exception:
-    log.error(
-        'Failed to read recipe file {0:s}: {1!s}'.format(
-            recipe_file, exception))
+    log.error(f'Failed to read recipe file {recipe_file:s}: {exception!s}')
   return {}
 
 
@@ -136,8 +132,7 @@ def validate_globals_recipe(proposed_globals_recipe):
   diff = set(proposed_globals_recipe) - set(DEFAULT_GLOBALS_RECIPE)
   if diff:
     message = (
-        'Invalid recipe: Unknown keys [{0:s}] found in globals recipe'.format(
-            str(diff)))
+        f'Invalid recipe: Unknown keys [{str(diff):s}] found in globals recipe')
     log.error(message)
     return (False, message)
 

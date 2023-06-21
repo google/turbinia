@@ -37,8 +37,8 @@ class MockImage:
 
   def __init__(self, id, short_id):
     """Initialization of the MockImage class."""
-    self.id = 'sha256:{0:s}'.format(id)
-    self.short_id = 'sha256:{0:s}'.format(short_id)
+    self.id = f'sha256:{id:s}'
+    self.short_id = f'sha256:{short_id:s}'
 
 
 class MockContainer:
