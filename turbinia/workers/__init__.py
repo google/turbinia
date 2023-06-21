@@ -291,7 +291,7 @@ class TurbiniaTaskResult:
     Args:
       message (string): Message to log.
       level (int): Log level as defined by logging enums (e.g. logging.INFO)
-      traceback (string): Trace message to log
+      traceback_ (string): Trace message to log
     """
     self._log.append(message)
     if level == logging.DEBUG:
@@ -849,6 +849,7 @@ class TurbiniaTask:
       status(str): A one line descriptive task status.
       message(str): An error message to show when returning the result.
       trace: Stack traceback for errors.
+      no_output_manager(bool): Whether to create an output manager for the task.
     """
     result = TurbiniaTaskResult(
         base_output_dir=self.base_output_dir, request_id=self.request_id,

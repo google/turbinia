@@ -96,6 +96,7 @@ def bullet(text, level=1):
 
   Args:
     text(string): Text to format
+    level(int): Indentation level
 
   Return:
     string: Formatted text.

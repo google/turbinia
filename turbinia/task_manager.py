@@ -394,6 +394,7 @@ class BaseTaskManager:
 
     Args:
       task: An instantiated Turbinia Task
+      job: The TurbiniaJob that created this Task.
       evidence_: An Evidence object to be processed.
     """
     if evidence_.request_id:

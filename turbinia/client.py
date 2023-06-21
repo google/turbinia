@@ -1143,6 +1143,8 @@ class TurbiniaCeleryClient(BaseTurbiniaClient):
       request_id (string): The Id of the request we want tasks for.
       group_id (string): Group Id of the requests.
       user (string): The user of the request we want tasks for.
+      function_name (string): unused.
+      output_json (bool): unused.
 
     Returns:
       List of Task dict objects.

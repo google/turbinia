@@ -881,7 +881,7 @@ def process_evidence(
     browser_type(str): Browser type used for hindsight.
     disk_name(str): Disk name used for processing cloud evidence.
     embedded_path(str): Embedded path for clouddiskembedded.
-    filter_pattern(str): Filter patterns used for processing evidence.
+    filter_patterns(str): Filter patterns used for processing evidence.
     format(str): Output format for hindsight.
     mount_partition(int): Mount partition for clouddiskembedded.
     name(str): Evidence name.
