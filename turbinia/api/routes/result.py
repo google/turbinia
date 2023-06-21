@@ -53,8 +53,7 @@ async def get_task_output(request: Request, task_id: str):
   tasks = _state_manager.get_task_data(
       instance=turbinia_config.INSTANCE_ID, task_id=task_id)
   if not tasks:
-    raise HTTPException(
-        status_code=404, detail='Task {0:s} not found.'.format(task_id))
+    raise HTTPException(status_code=404, detail=f'Task {task_id:s} not found.')
 
   request_id = tasks[0].get('request_id')
   output_path = api_utils.get_task_output_path(request_id, task_id)
@@ -66,9 +65,8 @@ async def get_task_output(request: Request, task_id: str):
     raise HTTPException(
         status_code=500, detail='Unable to retrieve task output files.')
   return StreamingResponse(
-      data, headers={
-          "Content-Disposition": 'attachment;filename={}.tgz'.format(task_id)
-      })
+      data,
+      headers={"Content-Disposition": f'attachment;filename={task_id}.tgz'})
 
 
 @router.get(
@@ -85,7 +83,5 @@ async def get_request_output(request: Request, request_id: str):
     raise HTTPException(
         status_code=500, detail='Unable to retrieve task output files.')
   return StreamingResponse(
-      data, headers={
-          "Content-Disposition":
-              'attachment;filename={}.tgz'.format(request_id)
-      })
+      data,
+      headers={"Content-Disposition": f'attachment;filename={request_id}.tgz'})

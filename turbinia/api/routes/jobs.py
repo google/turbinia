@@ -42,6 +42,6 @@ async def read_jobs(request: Request):
       raise HTTPException(status_code=404, detail='No registered jobs found.')
     return JSONResponse(content=list(enabled_jobs), status_code=200)
   except (json.JSONDecodeError, TypeError) as exception:
-    log.error('Error listing jobs: {0!s}'.format(exception))
+    log.error(f'Error listing jobs: {exception!s}')
     raise HTTPException(
         status_code=500, detail='error listing jobs') from exception
