@@ -75,7 +75,7 @@ limitations under the License.
           <v-list-item>
             <v-list-item-content>
               <v-list-item-title> Evidence Size: </v-list-item-title>
-              {{ taskDetails.evidence_size }}
+              {{ taskDetails.evidence_size }} Bytes
             </v-list-item-content>
           </v-list-item>
           <v-list-item>
