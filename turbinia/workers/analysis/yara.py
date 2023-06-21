@@ -63,8 +63,8 @@ class YaraAnalysisTask(TurbiniaTask):
       (report, priority, summary) = self.runFraken(result, evidence)
     except TurbiniaException as exception:
       result.close(
-          self, success=False, status='Unable to run Fraken: {0:s}'.format(
-              str(exception)))
+          self, success=False,
+          status=f'Unable to run Fraken: {str(exception):s}')
       return result
 
     output_evidence.text_data = report
@@ -92,9 +92,9 @@ class YaraAnalysisTask(TurbiniaTask):
         report (tuple): A 3-tuple containing a report, priority and summary.
     """
     stdout_file = os.path.join(
-        self.output_dir, '{0:s}_fraken_stdout.log'.format(self.id))
+        self.output_dir, f'{self.id:s}_fraken_stdout.log')
     stderr_file = os.path.join(
-        self.output_dir, '{0:s}_fraken_stderr.log'.format(self.id))
+        self.output_dir, f'{self.id:s}_fraken_stderr.log')
 
     cmd = [
         'sudo', '/opt/fraken/fraken', '-rules', '/opt/signature-base/',
@@ -118,8 +118,7 @@ class YaraAnalysisTask(TurbiniaTask):
           error = f.readlines()
       else:
         error = "Unknown (no stderr)"
-      raise TurbiniaException(
-          'Return code: {0:d}. Error: {1!s}'.format(ret, error))
+      raise TurbiniaException(f'Return code: {ret:d}. Error: {error!s}')
 
     report = []
     summary = 'No Yara rules matched'
@@ -136,7 +135,7 @@ class YaraAnalysisTask(TurbiniaTask):
         except (TypeError, ValueError, FileNotFoundError,
                 json.JSONDecodeError) as exception:
           raise TurbiniaException(
-              'Error decoding JSON output from fraken: {0!s}'.format(exception))
+              f'Error decoding JSON output from fraken: {exception!s}')
         for row in fraken_output:
           report_lines.append(
               ' - '.join([
@@ -151,9 +150,9 @@ class YaraAnalysisTask(TurbiniaTask):
 
     if report_lines:
       priority = Priority.HIGH
-      summary = 'Yara analysis found {0:d} alert(s)'.format(len(report_lines))
+      summary = f'Yara analysis found {len(report_lines):d} alert(s)'
       report.insert(0, fmt.heading4(fmt.bold(summary)))
-      line = '{0:n} alerts(s) found:'.format(len(report_lines))
+      line = f'{len(report_lines):n} alerts(s) found:'
       report.append(fmt.bullet(fmt.bold(line)))
       for line in report_lines:
         report.append(fmt.bullet(line, level=2))

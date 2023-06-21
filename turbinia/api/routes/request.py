@@ -54,8 +54,7 @@ async def get_requests_summary(request: Request):
   except (json.JSONDecodeError, TypeError, ValueError,
           ValidationError) as exception:
     log.error(
-        'Error retrieving requests summary: {0!s}'.format(exception),
-        exc_info=True)
+        f'Error retrieving requests summary: {exception!s}', exc_info=True)
     raise HTTPException(
         status_code=500,
         detail='Error retrieving requests summary') from exception
@@ -66,6 +65,7 @@ async def get_request_status(request: Request, request_id: str):
   """Retrieves status for a Turbinia Request.
 
   Args:
+    request (Request): FastAPI request object.
     request_id (str): A Turbinia request identifier.
 
   Raises:
@@ -83,7 +83,7 @@ async def get_request_status(request: Request, request_id: str):
         media_type='application/json')
   except (json.JSONDecodeError, TypeError, ValueError,
           ValidationError) as exception:
-    log.error('Error retrieving request information: {0!s}'.format(exception))
+    log.error(f'Error retrieving request information: {exception!s}')
     raise HTTPException(
         status_code=500,
         detail='Error retrieving request information') from exception
@@ -94,7 +94,8 @@ async def create_request(request: Request, req: turbinia_request.Request):
   """Create a new Turbinia request.
 
   Args:
-    request (turbinia.api.schema.request): JSON object from the HTTP POST data
+    request (Request): FastAPI request object.
+    req (turbinia.api.schema.request): JSON object from the HTTP POST data
         matching the schema defined for a Turbinia Request. The schema is used
         by pydantic for field validation.
 
@@ -180,8 +181,7 @@ async def create_request(request: Request, req: turbinia_request.Request):
     if not evidence_object:
       raise HTTPException(
           status_code=400,
-          detail='Error creating evidence object from {0!s}'.format(
-              req.evidence))
+          detail=f'Error creating evidence object from {req.evidence!s}')
     evidence_list.append(evidence_object)
     # If at this point the recipe is None, the TurbiniaClient will create
     # a generic recipe based on recipe_helpers.DEFAULT_RECIPE.
@@ -191,11 +191,11 @@ async def create_request(request: Request, req: turbinia_request.Request):
     # Send the Turbinia request to the appropriate queue.
     client.send_request(request_out)
   except TurbiniaException as exception:
-    log.error('Error creating new Turbinia request: {0!s}'.format(exception))
+    log.error(f'Error creating new Turbinia request: {exception!s}')
     raise HTTPException(
         status_code=400,
-        detail='Error creating new Turbinia request: {0!s}'.format(
-            exception)) from exception
+        detail=f'Error creating new Turbinia request: {exception!s}'
+    ) from exception
 
   response = {'request_id': request_out.request_id}
   return JSONResponse(content=response, status_code=200)

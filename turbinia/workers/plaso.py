@@ -61,7 +61,7 @@ class PlasoTask(TurbiniaTask):
       String for valid Log2timeline command.
     """
     self.result.log(
-        'Generating Plaso command line from arguments: {0!s}'.format(conf),
+        f'Generating Plaso command line from arguments: {conf!s}',
         level=logging.DEBUG)
     cmd = [base_command]
     for k, v in conf.items():
@@ -108,9 +108,9 @@ class PlasoTask(TurbiniaTask):
 
     # Write plaso file into tmp_dir because sqlite has issues with some shared
     # filesystems (e.g NFS).
-    plaso_file = os.path.join(self.tmp_dir, '{0:s}.plaso'.format(self.id))
+    plaso_file = os.path.join(self.tmp_dir, f'{self.id:s}.plaso')
     plaso_evidence = PlasoFile(source_path=plaso_file)
-    plaso_log = os.path.join(self.output_dir, '{0:s}.log'.format(self.id))
+    plaso_log = os.path.join(self.output_dir, f'{self.id:s}.log')
 
     cmd = self.build_plaso_command('log2timeline.py', self.task_config)
 
@@ -119,10 +119,7 @@ class PlasoTask(TurbiniaTask):
 
     if evidence.credentials:
       for credential_type, credential_data in evidence.credentials:
-        cmd.extend([
-            '--credential', '{0:s}:{1:s}'.format(
-                credential_type, credential_data)
-        ])
+        cmd.extend(['--credential', f'{credential_type:s}:{credential_data:s}'])
 
     cmd.extend(['--temporary_directory', self.tmp_dir])
     cmd.extend(['--logfile', plaso_log])
@@ -130,7 +127,7 @@ class PlasoTask(TurbiniaTask):
     cmd.extend(['--storage_file', plaso_file])
     cmd.extend([evidence.local_path])
 
-    result.log('Running {0:s} as [{1:s}]'.format(self.name, ' '.join(cmd)))
+    result.log(f"Running {self.name:s} as [{' '.join(cmd):s}]")
     self.execute(
         cmd, result, log_files=[plaso_log], new_evidence=[plaso_evidence],
         close=True)

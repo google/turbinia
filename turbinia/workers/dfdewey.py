@@ -73,7 +73,7 @@ class DfdeweyTask(TurbiniaTask):
       for configvar in config_vars:
         configval = getattr(config, configvar)
         if configvar != 'DFDEWEY_OS_URL' or configval:
-          env[configvar] = '{0!s}'.format(getattr(config, configvar))
+          env[configvar] = f'{getattr(config, configvar)!s}'
 
       cmd.append('dfdewey')
       cmd.append(self.task_config.get('case'))
@@ -82,15 +82,14 @@ class DfdeweyTask(TurbiniaTask):
         cmd.extend(['-s', self.task_config.get('search')])
       output_evidence = ReportText(source_path=dfdewey_output)
 
-      result.log('Running dfDewey as [{0:s}]'.format(' '.join(cmd)))
+      result.log(f"Running dfDewey as [{' '.join(cmd):s}]")
       ret, _ = self.execute(
           cmd, result, stdout_file=dfdewey_output,
           new_evidence=[output_evidence], close=True, env=env)
-      status_summary = 'dfDewey executed with [{0:s}]'.format(' '.join(cmd))
+      status_summary = f"dfDewey executed with [{' '.join(cmd):s}]"
       if ret != 0:
         success = False
-        status_summary = 'dfDewey execution failed. Return code: {0:d}'.format(
-            ret)
+        status_summary = f'dfDewey execution failed. Return code: {ret:d}'
         result.log(status_summary)
     else:
       status_summary = (

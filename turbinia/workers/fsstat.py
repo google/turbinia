@@ -52,7 +52,7 @@ class FsstatTask(TurbiniaTask):
     else:
       output_evidence = ReportText(source_path=fsstat_output)
       cmd = ['sudo', 'fsstat', evidence.device_path]
-      result.log('Running fsstat as [{0!s}]'.format(cmd))
+      result.log(f'Running fsstat as [{cmd!s}]')
       self.execute(
           cmd, result, stdout_file=fsstat_output,
           new_evidence=[output_evidence], close=True)

@@ -86,7 +86,7 @@ def check_docker_dependencies(dependencies):
 
     if docker_image in images:
       for program in values['programs']:
-        cmd = 'type {0:s}'.format(program)
+        cmd = f'type {program:s}'
         stdout, stderr, ret = docker_manager.ContainerManager(
             values['docker_image']).execute_container(cmd, shell=True)
         if ret != 0:
@@ -123,11 +123,10 @@ def check_system_dependencies(dependencies):
       continue
     elif not values.get('docker_image'):
       for program in values['programs']:
-        cmd = 'type {0:s}'.format(program)
+        cmd = f'type {program:s}'
         proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
         output, _ = proc.communicate()
-        log.debug(
-            'Dependency resolved: {0:s}'.format(output.strip().decode('utf8')))
+        log.debug(f"Dependency resolved: {output.strip().decode('utf8'):s}")
         ret = proc.returncode
         if ret != 0:
           raise TurbiniaException(
@@ -147,22 +146,20 @@ def check_directory(directory):
   """
   if os.path.exists(directory) and not os.path.isdir(directory):
     raise TurbiniaException(
-        'File {0:s} exists, but is not a directory'.format(directory))
+        f'File {directory:s} exists, but is not a directory')
 
   if not os.path.exists(directory):
     try:
       os.makedirs(directory)
     except OSError:
-      raise TurbiniaException(
-          'Can not create Directory {0:s}'.format(directory))
+      raise TurbiniaException(f'Can not create Directory {directory:s}')
 
   if not os.access(directory, os.W_OK):
     try:
       mode = os.stat(directory)[0]
       os.chmod(directory, mode | stat.S_IWUSR)
     except OSError:
-      raise TurbiniaException(
-          'Can not add write permissions to {0:s}'.format(directory))
+      raise TurbiniaException(f'Can not add write permissions to {directory:s}')
 
 
 class TurbiniaWorkerBase:
@@ -286,10 +283,10 @@ class TurbiniaPsqWorker(TurbiniaWorkerBase):
           psq_publisher, psq_subscriber, config.TURBINIA_PROJECT,
           name=config.PSQ_TOPIC, storage=psq.DatastoreStorage(datastore_client))
     except exceptions.GoogleCloudError as exception:
-      msg = 'Error creating PSQ Queue: {0:s}'.format(str(exception))
+      msg = f'Error creating PSQ Queue: {str(exception):s}'
       log.error(msg)
       raise TurbiniaException(msg)
-    log.info('Starting PSQ listener on queue {0:s}'.format(self.psq.name))
+    log.info(f'Starting PSQ listener on queue {self.psq.name:s}')
     self.worker = psq.Worker(queue=self.psq)
 
   def start(self):

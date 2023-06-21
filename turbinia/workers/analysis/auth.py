@@ -327,6 +327,7 @@ class AuthAnalyzer:
     """Returns AuthSummaryData for the given attribute/value pair.
     
     Args:
+      df (pd.DataFrame): Dataframe containing authentication events.
       summary_type (str): Summary type to filter source_ip or username.
       value (str): Value for the summary_type i.e. username or IP address.
 

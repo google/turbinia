@@ -75,7 +75,7 @@ class JupyterAnalysisTask(TurbiniaTask):
     """Extract security related configs from Jupyter configuration files.
 
     Args:
-      config (str): configuration file content.
+      jupyter_config (str): configuration file content.
 
     Returns:
       Tuple(

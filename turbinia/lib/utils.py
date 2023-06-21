@@ -43,15 +43,14 @@ def _image_export(command, output_dir, timeout=DEFAULT_TIMEOUT):
     TurbiniaException: If an error occurs when running image_export.
   """
   # TODO: Consider using the exec helper to gather stdin/err.
-  log.debug('Running image_export as [{0:s}]'.format(' '.join(command)))
+  log.debug(f"Running image_export as [{' '.join(command):s}]")
   try:
     subprocess.check_call(command, timeout=timeout)
   except subprocess.CalledProcessError as exception:
-    raise TurbiniaException('image_export.py failed: {0!s}'.format(exception))
+    raise TurbiniaException(f'image_export.py failed: {exception!s}')
   except subprocess.TimeoutExpired as exception:
     raise TurbiniaException(
-        'image_export.py timed out after {0:d}s: {1!s}'.format(
-            timeout, exception))
+        f'image_export.py timed out after {timeout:d}s: {exception!s}')
 
   collected_file_paths = []
   file_count = 0
@@ -60,7 +59,7 @@ def _image_export(command, output_dir, timeout=DEFAULT_TIMEOUT):
       collected_file_paths.append(os.path.join(dirpath, filename))
       file_count += 1
 
-  log.debug('Collected {0:d} files with image_export'.format(file_count))
+  log.debug(f'Collected {file_count:d} files with image_export')
   return collected_file_paths
 
 
@@ -88,10 +87,8 @@ def extract_artifacts(artifact_names, disk_path, output_dir, credentials=[]):
 
   if credentials:
     for credential_type, credential_data in credentials:
-      image_export_cmd.extend([
-          '--credential', '{0:s}:{1:s}'.format(
-              credential_type, credential_data)
-      ])
+      image_export_cmd.extend(
+          ['--credential', f'{credential_type:s}:{credential_data:s}'])
 
   image_export_cmd.append(disk_path)
 
@@ -125,7 +122,7 @@ def extract_files(file_name, disk_path, output_dir, credentials=[]):
   if credentials:
     for credential_type, credential_data in credentials:
       image_export_cmd.extend(
-          ['--credential', f'{credential_type}:{credential_data}'])
+          ['--credential', f'{credential_type:s}:{credential_data:s}'])
 
   image_export_cmd.append(disk_path)
 
