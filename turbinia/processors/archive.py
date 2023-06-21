@@ -40,8 +40,7 @@ def ValidateTarFile(compressed_directory):
   """
   if not os.path.exists(compressed_directory):
     raise TurbiniaException(
-        'The File or Directory does not exist: {0:s}'.format(
-            compressed_directory))
+        f'The File or Directory does not exist: {compressed_directory:s}')
 
   # TODO(wyassine): rewrite this check so it is not dependent
   # on a list of hard coded extensions and instead have a
@@ -66,8 +65,7 @@ def CompressDirectory(uncompressed_directory, output_path=None):
   # Error handling check for a non-existent file or directory.
   if not os.path.exists(uncompressed_directory):
     raise TurbiniaException(
-        'The File or Directory does not exist: {0:s}'.format(
-            uncompressed_directory))
+        f'The File or Directory does not exist: {uncompressed_directory:s}')
 
   # Iterate through a given list of files and compress them.
   compressed_directory = uncompressed_directory + '.tar.gz'
@@ -82,10 +80,10 @@ def CompressDirectory(uncompressed_directory, output_path=None):
           'The tar file has been created and '
           'can be found at: {0:s}'.format(compressed_directory))
   except IOError as exception:
-    raise TurbiniaException('An error has occurred: {0!s}'.format(exception))
+    raise TurbiniaException(f'An error has occurred: {exception!s}')
   except tarfile.TarError as exception:
     raise TurbiniaException(
-        'An error has while compressing the directory: {0!s}'.format(exception))
+        f'An error has while compressing the directory: {exception!s}')
   return compressed_directory
 
 
@@ -116,9 +114,9 @@ def UncompressTarFile(compressed_directory, output_tmp):
         'The tar file has been uncompressed to the following directory: {0:s}'
         .format(uncompressed_directory))
   except IOError as exception:
-    raise TurbiniaException('An error has occurred: {0!s}'.format(exception))
+    raise TurbiniaException(f'An error has occurred: {exception!s}')
   except tarfile.TarError as exception:
     raise TurbiniaException(
-        'An error has occurred while uncompressing the tar '
-        'file: {0!s}'.format(exception))
+        f'An error has occurred while uncompressing the tar file: {exception!s}'
+    )
   return uncompressed_directory

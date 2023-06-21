@@ -43,8 +43,7 @@ def Enumerate(evidence, location=None):
   options.volumes = ['all']
   if location:
     log.debug(
-        'Scanning {0:s} for partition at location {1!s}'.format(
-            evidence.name, location))
+        f'Scanning {evidence.name:s} for partition at location {location!s}')
     # APFS and LVM are volumes rather than partitions.
     if location.find('apfs') != -1 or location.find('lvm') != -1:
       options.volumes = [location.replace('/', '')]
@@ -64,8 +63,8 @@ def Enumerate(evidence, location=None):
     path_specs = scanner.GetBasePathSpecs(evidence.local_path, options=options)
   except dfvfs_errors.ScannerError as exception:
     raise TurbiniaException(
-        'Could not enumerate partitions [{0!s}]: {1!s}'.format(
-            evidence.local_path, exception))
+        f'Could not enumerate partitions [{evidence.local_path!s}]: {exception!s}'
+    )
 
   return path_specs
 

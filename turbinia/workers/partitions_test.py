@@ -66,8 +66,7 @@ class PartitionEnumerationTaskTest(TestTurbiniaTaskBase):
     self.assertEqual(len(result.evidence), 1)
     expected_report = []
     expected_report.append(
-        fmt.heading4(
-            'Found 1 partition(s) in [{0:s}]'.format(self.evidence.local_path)))
+        fmt.heading4(f'Found 1 partition(s) in [{self.evidence.local_path:s}]'))
     expected_report.append(fmt.heading5('/p1:'))
     expected_report.append(fmt.bullet('Important: False'))
     expected_report.append(fmt.bullet('Filesystem: NTFS'))
@@ -103,8 +102,7 @@ class PartitionEnumerationTaskTest(TestTurbiniaTaskBase):
     # Ensure run method returns a TurbiniaTaskResult instance.
     expected_report = []
     expected_report.append(
-        fmt.heading4(
-            'Found 1 partition(s) in [{0:s}]'.format(self.evidence.local_path)))
+        fmt.heading4(f'Found 1 partition(s) in [{self.evidence.local_path:s}]'))
     expected_report.append(fmt.heading5('/apfs1:'))
     expected_report.append(fmt.bullet('Important: True'))
     expected_report.append(fmt.bullet('Filesystem: APFS'))
@@ -138,8 +136,7 @@ class PartitionEnumerationTaskTest(TestTurbiniaTaskBase):
     # Ensure run method returns a TurbiniaTaskResult instance.
     expected_report = []
     expected_report.append(
-        fmt.heading4(
-            'Found 1 partition(s) in [{0:s}]'.format(self.evidence.local_path)))
+        fmt.heading4(f'Found 1 partition(s) in [{self.evidence.local_path:s}]'))
     expected_report.append(fmt.heading5('/p1:'))
     expected_report.append(fmt.bullet('Important: False'))
     expected_report.append(fmt.bullet('Filesystem: EXT'))
@@ -174,8 +171,7 @@ class PartitionEnumerationTaskTest(TestTurbiniaTaskBase):
     # Ensure run method returns a TurbiniaTaskResult instance.
     expected_report = []
     expected_report.append(
-        fmt.heading4(
-            'Found 1 partition(s) in [{0:s}]'.format(self.evidence.local_path)))
+        fmt.heading4(f'Found 1 partition(s) in [{self.evidence.local_path:s}]'))
     expected_report.append(fmt.heading5('/lvm1:'))
     expected_report.append(fmt.bullet('Important: False'))
     expected_report.append(fmt.bullet('Filesystem: XFS'))
@@ -209,8 +205,7 @@ class PartitionEnumerationTaskTest(TestTurbiniaTaskBase):
     # Ensure run method returns a TurbiniaTaskResult instance.
     expected_report = []
     expected_report.append(
-        fmt.heading4(
-            'Found 1 partition(s) in [{0:s}]'.format(self.evidence.local_path)))
+        fmt.heading4(f'Found 1 partition(s) in [{self.evidence.local_path:s}]'))
     expected_report.append(fmt.heading5('/p1:'))
     expected_report.append(fmt.bullet('Important: False'))
     expected_report.append(fmt.bullet('Filesystem: TAR'))

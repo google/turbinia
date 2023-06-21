@@ -47,8 +47,7 @@ if config.STATE_MANAGER.lower() == 'datastore':
 elif config.STATE_MANAGER.lower() == 'redis':
   import redis
 else:
-  msg = 'State Manager type "{0:s}" not implemented'.format(
-      config.STATE_MANAGER)
+  msg = f'State Manager type "{config.STATE_MANAGER:s}" not implemented'
   raise TurbiniaException(msg)
 
 MAX_DATASTORE_STRLEN = 1500
@@ -71,8 +70,7 @@ def get_state_manager():
   elif config.STATE_MANAGER.lower() == 'redis':
     return RedisStateManager()
   else:
-    msg = 'State Manager type "{0:s}" not implemented'.format(
-        config.STATE_MANAGER)
+    msg = f'State Manager type "{config.STATE_MANAGER:s}" not implemented'
     raise TurbiniaException(msg)
 
 
@@ -99,7 +97,7 @@ class BaseStateManager:
     for attr in task.STORED_ATTRIBUTES:
       if not hasattr(task, attr):
         raise TurbiniaException(
-            'Task {0:s} does not have attribute {1:s}'.format(task.name, attr))
+            f'Task {task.name:s} does not have attribute {attr:s}')
       task_dict[attr] = getattr(task, attr)
       if isinstance(task_dict[attr], six.binary_type):
         task_dict[attr] = codecs.decode(task_dict[attr], 'utf-8')
@@ -108,8 +106,7 @@ class BaseStateManager:
       for attr in task.result.STORED_ATTRIBUTES:
         if not hasattr(task.result, attr):
           raise TurbiniaException(
-              'Task {0:s} result does not have attribute {1:s}'.format(
-                  task.name, attr))
+              f'Task {task.name:s} result does not have attribute {attr:s}')
         task_dict[attr] = getattr(task.result, attr)
         if isinstance(task_dict[attr], six.binary_type):
           task_dict[attr] = six.u(task_dict[attr])
@@ -208,12 +205,11 @@ class DatastoreStateManager(BaseStateManager):
           return
         entity = self.client.get(task.state_key)
         entity.update(self.get_task_dict(task))
-        log.debug('Updating Task {0:s} in Datastore'.format(task.name))
+        log.debug(f'Updating Task {task.name:s} in Datastore')
         self.client.put(entity)
     except exceptions.GoogleCloudError as exception:
       log.error(
-          'Failed to update task {0:s} in datastore: {1!s}'.format(
-              task.name, exception))
+          f'Failed to update task {task.name:s} in datastore: {exception!s}')
 
   def write_new_task(self, task):
     key = self.client.key('TurbiniaTask', task.id)
@@ -224,13 +220,12 @@ class DatastoreStateManager(BaseStateManager):
         task_data['status'] = 'Task scheduled at {0:s}'.format(
             datetime.now().strftime(DATETIME_FORMAT))
       entity.update(task_data)
-      log.info('Writing new task {0:s} into Datastore'.format(task.name))
+      log.info(f'Writing new task {task.name:s} into Datastore')
       self.client.put(entity)
       task.state_key = key
     except exceptions.GoogleCloudError as exception:
       log.error(
-          'Failed to update task {0:s} in datastore: {1!s}'.format(
-              task.name, exception))
+          f'Failed to update task {task.name:s} in datastore: {exception!s}')
     return key
 
 
@@ -310,19 +305,18 @@ class RedisStateManager(BaseStateManager):
     log.info(f'update_task found existing evidence_size {stored_evidence_size}')
     if not task.evidence_size and stored_evidence_size:
       task.evidence_size = stored_evidence_size
-    log.info('Updating task {0:s} in Redis'.format(task.name))
+    log.info(f'Updating task {task.name:s} in Redis')
     task_data = self.get_task_dict(task)
     task_data['last_update'] = task_data['last_update'].strftime(
         DATETIME_FORMAT)
     # Need to use json.dumps, else redis returns single quoted string which
     # is invalid json
     if not self.client.set(key, json.dumps(task_data)):
-      log.error(
-          'Unsuccessful in updating task {0:s} in Redis'.format(task.name))
+      log.error(f'Unsuccessful in updating task {task.name:s} in Redis')
 
   def write_new_task(self, task):
     key = ':'.join(['TurbiniaTask', task.id])
-    log.info('Writing new task {0:s} into Redis'.format(task.name))
+    log.info(f'Writing new task {task.name:s} into Redis')
     task_data = self.get_task_dict(task)
     task_data['last_update'] = task_data['last_update'].strftime(
         DATETIME_FORMAT)
@@ -333,7 +327,6 @@ class RedisStateManager(BaseStateManager):
       task_data['run_time'] = task_data['run_time'].total_seconds()
     # nx=True prevents overwriting (i.e. no unintentional task clobbering)
     if not self.client.set(key, json.dumps(task_data), nx=True):
-      log.error(
-          'Unsuccessful in writing new task {0:s} into Redis'.format(task.name))
+      log.error(f'Unsuccessful in writing new task {task.name:s} into Redis')
     task.state_key = key
     return key
