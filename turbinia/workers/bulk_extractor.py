@@ -84,7 +84,7 @@ class BulkExtractorTask(TurbiniaTask):
 
       cmd.append(evidence.local_path)
 
-      result.log('Running Bulk Extractor as [{0:s}]'.format(' '.join(cmd)))
+      result.log(f"Running Bulk Extractor as [{' '.join(cmd):s}]")
       self.execute(cmd, result, new_evidence=[output_evidence])
 
       # Generate bulk extractor report
@@ -163,8 +163,8 @@ class BulkExtractorTask(TurbiniaTask):
                       'creator/execution_environment/start_time'))))
       findings.append(
           fmt.bullet(
-              'Elapsed Time: {0}'.format(
-                  self.check_xml_attrib('report/elapsed_seconds'))))
+              f"Elapsed Time: {self.check_xml_attrib('report/elapsed_seconds')}"
+          ))
 
       # Retrieve results from each of the scanner runs
       feature_files = self.xml.find('feature_files')
@@ -175,14 +175,13 @@ class BulkExtractorTask(TurbiniaTask):
           if f.tag == 'feature_file':
             name = next(feature_iter)
             count = next(feature_iter)
-            findings.append(fmt.bullet('{0}:{1}'.format(name.text, count.text)))
+            findings.append(fmt.bullet(f'{name.text}:{count.text}'))
             features_count += int(count.text)
       else:
         findings.append(fmt.heading5("There are no findings to report."))
     except AttributeError as exception:
       log.warning(
-          'Error parsing feature from Bulk Extractor report: {0!s}'.format(
-              exception))
-    summary = '{0} artifacts have been extracted.'.format(features_count)
+          f'Error parsing feature from Bulk Extractor report: {exception!s}')
+    summary = f'{features_count} artifacts have been extracted.'
     report = '\n'.join(findings)
     return (report, summary)

@@ -59,7 +59,7 @@ class PhotorecTask(TurbiniaTask):
       cmd.append('options,paranoid,keep_corrupted_file,search')
       cmd = ' '.join(cmd)
       # Add a log line to the result that will be returned.
-      result.log('Running photorec as [{0:s}]'.format(cmd))
+      result.log(f'Running photorec as [{cmd:s}]')
       # Actually execute the binary
       self.execute(
           cmd, result, log_files=[photorec_log], new_evidence=[output_evidence],

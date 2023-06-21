@@ -75,10 +75,9 @@ class PsortTask(TurbiniaTask):
       output_suffix = self.task_config.get('output_format')
     else:
       output_suffix = 'csv'
-    psort_file = os.path.join(
-        self.output_dir, '{0:s}.{1:s}'.format(self.id, output_suffix))
+    psort_file = os.path.join(self.output_dir, f'{self.id:s}.{output_suffix:s}')
     psort_evidence = PlasoCsvFile(source_path=psort_file)
-    psort_log = os.path.join(self.output_dir, '{0:s}.log'.format(self.id))
+    psort_log = os.path.join(self.output_dir, f'{self.id:s}.log')
 
     cmd = self.build_plaso_command('psort.py', self.task_config)
 
@@ -88,7 +87,7 @@ class PsortTask(TurbiniaTask):
 
     cmd.extend(['-w', psort_file, evidence.local_path])
 
-    result.log('Running psort as [{0:s}]'.format(' '.join(cmd)))
+    result.log(f"Running psort as [{' '.join(cmd):s}]")
 
     self.execute(
         cmd, result, log_files=[psort_log], new_evidence=[psort_evidence],
