@@ -110,10 +110,9 @@ class TurbiniaJob:
 
     if remove_task:
       self.tasks.remove(remove_task)
-      log.debug('Removed task {0:s} from Job {1:s}'.format(task_id, self.name))
+      log.debug(f'Removed task {task_id:s} from Job {self.name:s}')
       self.completed_task_count += 1
     else:
       log.debug(
-          'Could not find task {0:s} to remove from Job {1:s}'.format(
-              task_id, self.name))
+          f'Could not find task {task_id:s} to remove from Job {self.name:s}')
     return bool(remove_task)
