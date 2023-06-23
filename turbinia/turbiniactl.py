@@ -524,7 +524,6 @@ def process_args(args):
   from turbinia.worker import TurbiniaCeleryWorker
   from turbinia.worker import TurbiniaPsqWorker
   from turbinia.server import TurbiniaServer
-  from turbinia.api.api_server import TurbiniaAPIServer
 
   # Print out config if requested
   if args.command == 'config':
@@ -705,6 +704,7 @@ def process_args(args):
         jobs_denylist=args.jobs_denylist, jobs_allowlist=args.jobs_allowlist)
     server.start()
   elif args.command == 'api_server':
+    from turbinia.api.api_server import TurbiniaAPIServer
     api_server = TurbiniaAPIServer()
     api_server.start('turbinia.api.api_server:app')
   elif args.command == 'status':
