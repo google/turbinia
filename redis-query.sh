@@ -3,6 +3,9 @@
 field=$1
 field_value=$2
 
+#todo(igormr) add functions to close, delete and dumpall
+#todo(igormr) add keyword for all keys
+
 
 for key in $(redis-cli --scan | head -10); do 
     key_type=${key%:*}
