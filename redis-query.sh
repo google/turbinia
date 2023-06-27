@@ -1,7 +1,8 @@
 #!/bin/bash
 
-field=$1
-field_value=$2
+action=$1 # query / delete / dump
+field=$2 # 
+field_value=$3
 
 #todo(igormr) add functions to close, delete and dumpall
 #todo(igormr) add keyword for all keys
@@ -21,8 +22,10 @@ for key in $(redis-cli --scan | head -10); do
         for pair in "${array[@]}"; do
             # Gets the Task value and split its key:value pairs into an array
             pair="${pair#"${pair%%[![:space:]]*}"}"
-            if  [ "$pair"  == "$field: $field_value"  ]; then
-                echo -e "$value\n"
+            if  [ "$pair"  == "$field: $field_value" ] || [ "$field" == "any" ]; then
+                if [ "$action" == "query"]; then echo -e "$value\n"; fi
+                if [ "$action" == "delete"]; then redis-cli DEL "$keys"; fi
+                if [ "$action" == "query"]; then echo -e "$value\n"; fi #todo(igormr): dump
             fi
         done
     fi
