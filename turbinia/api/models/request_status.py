@@ -64,8 +64,16 @@ class RequestStatus(BaseModel):
         if current_request_id == request_id:
           self.tasks.append(task)
 
-    if len(tasks) >= 1 and tasks[0].get('all_args'):
-      initial_start_time = tasks[0].get('start_time')
+    # Tries to get the evidence_name from the -l argument of the first task,
+    # which is the argument passed in the terminal to determine the evidence.
+    # If successful, sets the initial_start_time to None, if not, to the
+    # current time, so that it can be used later to determine the first started
+    # task and then get the evidence_name, as later tasks may have a different
+    # evidence name. There is a small chance of the first task having a
+    # different evidence_name, so getting it from arguments is prefered when they exist.
+    # todo(igormr): Save request information in redis to get the evidence_name
+    initial_start_time = tasks[0].get('start_time')
+    if tasks[0].get('all_args'):
       arguments = tasks[0].get('all_args', 0).split()
       for i in range(len(arguments) - 1):
         if arguments[i] == '-l':
@@ -79,6 +87,7 @@ class RequestStatus(BaseModel):
       self.reason = task.get('reason')
       self.task_count = len(tasks)
       task_status = task.get('status')
+      # Gets the evidence_name from the first started task.
       if initial_start_time and task.get('start_time') <= initial_start_time:
         initial_start_time = task.get('start_time')
         self.evidence_name = task.get('name')

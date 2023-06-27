@@ -299,10 +299,8 @@ class RedisStateManager(BaseStateManager):
     if not key:
       self.write_new_task(task)
       return
-    log.warn(f'updating task {task.__dict__}')
     stored_task_data = json.loads(self.client.get(f'TurbiniaTask:{task.id}'))
     stored_evidence_size = stored_task_data.get('evidence_size')
-    log.info(f'update_task found existing evidence_size {stored_evidence_size}')
     if not task.evidence_size and stored_evidence_size:
       task.evidence_size = stored_evidence_size
     log.info(f'Updating task {task.name:s} in Redis')
