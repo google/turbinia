@@ -72,7 +72,7 @@ class RequestStatus(BaseModel):
     # evidence name. There is a small chance of the first task having a
     # different evidence_name, so getting it from arguments is prefered when they exist.
     # todo(igormr): Save request information in redis to get the evidence_name
-    if len(tasks) >= 1:
+    if tasks:
       initial_start_time = tasks[0].get('start_time')
       if tasks[0].get('all_args'):
         arguments = tasks[0].get('all_args', 0).split()

@@ -73,7 +73,7 @@ def GetDiskSize(source_path):
     # evidence is not a block device, check image file size
     try:
       size = os.stat(source_path).st_size
-    except FileNotFoundError as exception:
+    except OSError as exception:
       log.warning(f'Checking disk size failed: {exception!s}')
 
   return size
