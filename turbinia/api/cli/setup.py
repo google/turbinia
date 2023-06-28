@@ -7,7 +7,7 @@ from setuptools import setup, find_packages
 from pathlib import Path
 
 NAME = "turbinia-client"
-VERSION = "1.0.1"
+VERSION = "1.0.3"
 
 REQUIRES = ["click", "turbinia-api-lib", 'google-auth-oauthlib']
 
