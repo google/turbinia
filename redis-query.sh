@@ -1,8 +1,19 @@
 #!/bin/bash
+# This script iterates over the Turbinia Redis keys to find keys matching the
+# passed arguments. The first parameter indicates the action to be performed 
+# by the script. If "query" is chosen, the value of the the matching keys
+# will be printed. This can be piped to jq to improve visualization. If 
+# "delete" is chosen the matching keys will be deleted from redis. If "dump" is
+# chosen, the matching keys will be dumped to the file indicated by the 4th
+# argument ("dump_file"). The second argument indicates the field of the Redis
+# value that will be queried, and the Third argument indicates the value that
+# this field should have for a key to be selected. The keyword "all" can be
+# passed to the second parameter so that all keys will be selected.
 
-action=$1 # query / delete / dump
-field=$2 # "all" or field name
+action=$1 # "query" / "delete" / "dump"
+field=$2 # "all" / Field name
 field_value=$3 # Field value
+dump_file=$4 # File to dump 
 
 if [ "$action" != "query" ]; then
     key_array=()
@@ -23,7 +34,7 @@ for key in $(redis-cli --scan); do
         for pair in "${array[@]}"; do
             # Cleans the pair to allow comparison with given field and value
             pair="${pair#"${pair%%[![:space:]]*}"}"
-            if  [ "$pair"  == "$field: $field_value" ] || [ "$field" == "all" ]; then
+            if   [ "$field" == "all" ] || [ "$pair"  == "$field: $field_value" ]; then
                 if [ "$action" == "query" ]; then
                     echo -e "$value\n";
                 else
@@ -39,12 +50,13 @@ done
 if [ "$action" == "delete" ] || [ "$action" == "dump" ] && [ -n "$array" ]; then
     echo Do you want to "$action" the keys above? [y/N]
     read answer
-    if [ "$answer" == 'y' ]; then
+    if [ "$answer" == 'y' ] || [ "$answer" == 'Y' ]; then
         if [ "$action" == "delete" ]; then redis-cli DEL "${key_array[@]}"; fi
         if [ "$action" == "dump" ]; then
             for key in ${key_array[@]}; do
-                redis-cli DUMP "$key"
+                redis-cli DUMP "$key" >> "$dump_file"
             done
+            echo Dumped in "$dump_file"
         fi
     fi
 fi
