@@ -132,7 +132,7 @@ class TestLocalOutputManager(unittest.TestCase):
     self.assertIn(dst_file, return_evidence.saved_path)
     # Makes sure evidence without save_metadata set does not generate a
     # metadata file
-    self.assertFalse(os.path.exists('{0:s}.metadata.json'.format(dst_file)))
+    self.assertFalse(os.path.exists(f'{dst_file:s}.metadata.json'))
 
   def testSaveEvidenceWithMetadata(self):
     """Test the save_evidence method with metadata file."""
@@ -162,7 +162,7 @@ class TestLocalOutputManager(unittest.TestCase):
     self.assertTrue(os.path.exists(dst_file))
     self.assertIsInstance(return_evidence, evidence.Evidence)
     self.assertIn(dst_file, return_evidence.saved_path)
-    metadata_file = '{0:s}.metadata.json'.format(dst_file)
+    metadata_file = f'{dst_file:s}.metadata.json'
     self.assertTrue(os.path.exists(metadata_file))
     config_input['evidence_path'] = dst_file
     metadata_contents = json.loads(open(metadata_file, 'rb').read())

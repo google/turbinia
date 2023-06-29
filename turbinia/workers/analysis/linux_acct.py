@@ -12,7 +12,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Task for analysing Linux account passwords."""
+"""Task for analyzing Linux account passwords."""
 
 import os
 
@@ -58,26 +58,20 @@ class LinuxAccountAnalysisTask(TurbiniaTask):
 
     try:
       collected_artifacts = extract_artifacts(
-          artifact_names=['LoginPolicyConfiguration'],
-          disk_path=evidence.local_path, output_dir=self.output_dir,
-          credentials=evidence.credentials)
+          artifact_names=['UnixShadowFile'], disk_path=evidence.local_path,
+          output_dir=self.output_dir, credentials=evidence.credentials)
     except TurbiniaException as exception:
       result.close(self, success=False, status=str(exception))
       return result
 
     for filepath in collected_artifacts:
-      if not filepath.endswith('shadow'):
-        continue
-
-      shadow_file = []
-      # Read the input file
       with open(filepath, 'r') as input_file:
         shadow_file = input_file.readlines()
 
-      hashnames = self._extract_linux_credentials(shadow_file)
+      hash_names = self._extract_linux_credentials(shadow_file)
       timeout = self.task_config.get('bruteforce_timeout')
       (report, priority, summary) = self.analyse_shadow_file(
-          shadow_file, hashnames, timeout=timeout)
+          shadow_file, hash_names, timeout=timeout)
       output_evidence.text_data = report
       result.report_priority = priority
       result.report_data = report
@@ -90,6 +84,7 @@ class LinuxAccountAnalysisTask(TurbiniaTask):
       result.add_evidence(output_evidence, evidence.config)
       result.close(self, success=True, status=summary)
       return result
+
     result.close(self, success=True, status='No shadow files found')
     return result
 
@@ -103,11 +98,14 @@ class LinuxAccountAnalysisTask(TurbiniaTask):
     Returns:
       dict: of hash against username.
     """
-    hashnames = {}
+    hash_names = {}
     for line in shadow:
-      (username, passwdhash, _) = line.split(':', maxsplit=2)
-      hashnames[passwdhash] = username
-    return hashnames
+      try:
+        (username, password_hash, _) = line.split(':', maxsplit=2)
+      except ValueError:
+        continue
+      hash_names[password_hash] = username
+    return hash_names
 
   def analyse_shadow_file(self, shadow, hashes, timeout=300):
     """Analyses a Linux shadow file.
@@ -134,14 +132,12 @@ class LinuxAccountAnalysisTask(TurbiniaTask):
 
     if weak_passwords:
       priority = Priority.CRITICAL
-      summary = 'Shadow file analysis found {0:n} weak password(s)'.format(
-          len(weak_passwords))
+      summary = f'Shadow file analysis found {len(weak_passwords):n} weak password(s)'
       report.insert(0, fmt.heading4(fmt.bold(summary)))
-      line = '{0:n} weak password(s) found:'.format(len(weak_passwords))
+      line = f'{len(weak_passwords):n} weak password(s) found:'
       report.append(fmt.bullet(fmt.bold(line)))
       for password_hash, plaintext in weak_passwords:
-        line = """User '{0:s}' with password '{1:s}'""".format(
-            hashes[password_hash], plaintext)
+        line = f"""User '{hashes[password_hash]:s}' with password '{plaintext:s}'"""
         report.append(fmt.bullet(line, level=2))
     report = '\n'.join(report)
-    return (report, priority, summary)
+    return report, priority, summary

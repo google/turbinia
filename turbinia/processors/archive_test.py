@@ -43,12 +43,12 @@ class ArchiveProcessorTest(unittest.TestCase):
     file_max = 10
     counter = 0
     while counter <= file_max:
-      file_name = 'file{0:s}.txt'.format(str(counter))
+      file_name = f'file{str(counter):s}.txt'
       file_path = os.path.join(self.tmp_files_dir, file_name)
       file_open = open(file_path, 'w+')
       rand_nums = [randint(0, 1000) for i in range(50)]
       for i in rand_nums:
-        file_open.write('%s\n' % str(i))
+        file_open.write(f'{str(i)}\n')
       file_open.close()
       counter += 1
       self.test_files.append(file_name)

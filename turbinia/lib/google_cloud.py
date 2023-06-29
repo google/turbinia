@@ -72,7 +72,7 @@ def setup_stackdriver_handler(project_id, origin):
     logger.addHandler(cloud_handler)
 
   except exceptions.GoogleCloudError as exception:
-    msg = 'Error enabling Stackdriver Logging: {0:s}'.format(str(exception))
+    msg = f'Error enabling Stackdriver Logging: {str(exception):s}'
     raise TurbiniaException(msg)
 
 
@@ -90,7 +90,7 @@ def setup_stackdriver_traceback(project_id):
   try:
     client = error_reporting.Client(project=project_id)
   except exceptions.GoogleCloudError as exception:
-    msg = 'Error enabling GCP Error Reporting: {0:s}'.format(str(exception))
+    msg = f'Error enabling GCP Error Reporting: {str(exception):s}'
     raise TurbiniaException(msg)
   return client
 
@@ -110,18 +110,18 @@ def get_logs(project_id, output_dir=None, days=1, query=None):
     query = 'jsonPayload.python_logger="turbinia"'
   start_time = datetime.datetime.now() - timedelta(days=days)
   start_string = start_time.strftime(DATETIME_FORMAT)
-  complete_query = '{0:s} timestamp>="{1:s}"'.format(query, start_string)
+  complete_query = f'{query:s} timestamp>="{start_string:s}"'
   if output_dir:
     file_path = os.path.join(
         output_dir, 'turbinia_stackdriver_logs_{0:s}.jsonl'.format(
             datetime.datetime.now().strftime('%s')))
     output_file = open(file_path, 'w')
-    logger.info('Writing the logs to {0:s}'.format(file_path))
+    logger.info(f'Writing the logs to {file_path:s}')
   try:
     client = cloud_logging.Client(project=project_id)
     logger.info(
-        'Collecting the stackdriver logs with the following query: {0:s}'
-        .format(complete_query))
+        f'Collecting the stackdriver logs with the following query: {complete_query:s}'
+    )
 
     for entry in client.list_entries(order_by=cloud_logging.DESCENDING,
                                      filter_=complete_query):
@@ -133,13 +133,12 @@ def get_logs(project_id, output_dir=None, days=1, query=None):
     if output_dir:
       output_file.close()
   except google_api_exceptions.InvalidArgument as exception:
-    msg = 'Unable to parse query {0!s} with error {1!s}'.format(
-        query, exception)
+    msg = f'Unable to parse query {query!s} with error {exception!s}'
     raise TurbiniaException(msg)
   except HttpError as exception:
     msg = 'HTTP error querying logs. Make sure you have the right access on the project.{0!s}'.format(
         exception)
     raise TurbiniaException(msg)
   except google_api_exceptions.GoogleAPIError as exception:
-    msg = 'Something went wrong with the API. {0!s}'.format(exception)
+    msg = f'Something went wrong with the API. {exception!s}'
     raise TurbiniaException(msg)

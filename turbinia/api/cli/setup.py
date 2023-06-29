@@ -7,37 +7,24 @@ from setuptools import setup, find_packages
 from pathlib import Path
 
 NAME = "turbinia-client"
-VERSION = "1.0.1"
+VERSION = "1.0.3"
 
-REQUIRES = [
-    "click",
-    "turbinia-api-lib",
-    'google-auth-oauthlib'
-]
+REQUIRES = ["click", "turbinia-api-lib", 'google-auth-oauthlib']
 
 this_directory = Path(__file__).parent
 README = (this_directory / "README.rst").read_text()
 
 setup(
-    name=NAME, 
-    version=VERSION,
+    name=NAME, version=VERSION,
     description="Turbinia API Client command-line tool.",
     long_description_content_type="text/markdown",
-    long_description=README,
-    keywords=[
+    long_description=README, keywords=[
         "Turbinia Client", "Turbinia", "Turbinia API Server"
-    ], 
-    python_requires=">=3.6", 
-    install_requires=REQUIRES,
-    packages=find_packages(),
-    include_package_data=True,
-    entry_points={
+    ], python_requires=">=3.6", install_requires=REQUIRES,
+    packages=find_packages(), include_package_data=True, entry_points={
         'console_scripts': [
             'turbinia-client=turbinia_client.turbiniacli_tool:main'
         ]
-    },
-    license='Apache License, Version 2.0',
-    url='http://turbinia.plumbing/',
+    }, license='Apache License, Version 2.0', url='http://turbinia.plumbing/',
     maintainer='Turbinia development team',
-    maintainer_email='turbinia-dev@googlegroups.com'
-)
+    maintainer_email='turbinia-dev@googlegroups.com')

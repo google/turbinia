@@ -72,8 +72,7 @@ def get_turbinia_client():
   elif config.TASK_MANAGER.lower() == 'celery':
     return TurbiniaCeleryClient()
   else:
-    msg = 'Task Manager type "{0:s}" not implemented'.format(
-        config.TASK_MANAGER)
+    msg = f'Task Manager type "{config.TASK_MANAGER:s}" not implemented'
     raise TurbiniaException(msg)
 
 
@@ -225,14 +224,14 @@ class BaseTurbiniaClient:
         recipe_path = recipe_helpers.get_recipe_path_from_name(recipe_name)
 
       if not os.path.exists(recipe_path):
-        msg = 'Could not find recipe file at {0:s}'.format(recipe_path)
+        msg = f'Could not find recipe file at {recipe_path:s}'
         log.error(msg)
         raise TurbiniaException(msg)
 
       recipe = recipe_helpers.load_recipe_from_file(
           recipe_path, skip_recipe_validation)
       if not recipe:
-        msg = 'Could not load recipe from file at {0:s}.'.format(recipe_path)
+        msg = f'Could not load recipe from file at {recipe_path:s}.'
         raise TurbiniaException(msg)
 
     # Set any additional recipe parameters, if specified.
@@ -272,7 +271,7 @@ class BaseTurbiniaClient:
     # the task manager from the client.
     log.info('Available Jobs:')
     for job in self.task_manager.jobs:
-      log.info('\t{0:s}'.format(job.NAME))
+      log.info(f'\t{job.NAME:s}')
 
   def wait_for_request(
       self, instance, project, region, request_id=None, user=None,
@@ -311,7 +310,7 @@ class BaseTurbiniaClient:
         task_name = task.get('name')
         tasks[task_name] = tasks.get(task_name, 0) + 1
       for task, count in sorted(tasks.items()):
-        completed_names_list.append('{0:s}:{1:d}'.format(task, count))
+        completed_names_list.append(f'{task:s}:{count:d}')
       completed_names = ', '.join(completed_names_list)
 
       tasks = {}
@@ -321,7 +320,7 @@ class BaseTurbiniaClient:
         task_name = task.get('name')
         tasks[task_name] = tasks.get(task_name, 0) + 1
       for task, count in sorted(tasks.items()):
-        uncompleted_names_list.append('{0:s}:{1:d}'.format(task, count))
+        uncompleted_names_list.append(f'{task:s}:{count:d}')
       uncompleted_names = ', '.join(uncompleted_names_list)
 
       total_count = len(completed_tasks) + len(uncompleted_tasks)
@@ -339,7 +338,7 @@ class BaseTurbiniaClient:
       last_uncompleted_count = len(uncompleted_tasks)
       time.sleep(poll_interval)
 
-    log.info('All {0:d} Tasks completed'.format(len(task_results)))
+    log.info(f'All {len(task_results):d} Tasks completed')
 
   def get_task_data(
       self, instance, project, region, days=0, task_id=None, request_id=None,
@@ -425,12 +424,11 @@ class BaseTurbiniaClient:
     if not response or 'result' not in response:
       log.error('No results found')
       if response.get('error'):
-        msg = 'Error executing Cloud Function: [{0!s}].'.format(
-            response.get('error'))
+        msg = f"Error executing Cloud Function: [{response.get('error')!s}]."
         log.error(msg)
-      log.debug('Invalid or empty GCF response: {0!s}'.format(response))
+      log.debug(f'Invalid or empty GCF response: {response!s}')
       raise TurbiniaException(
-          'Cloud Function {0:s} returned no results.'.format(function_name))
+          f'Cloud Function {function_name:s} returned no results.')
 
     try:
       results = json.loads(response.get('result'))
@@ -474,14 +472,12 @@ class BaseTurbiniaClient:
     status = task.get('status') or 'No task status'
 
     report.append(fmt.heading2(task.get('name')))
-    line = '{0:s} {1!s}'.format(
-        fmt.bold('Evidence:'), task.get('evidence_name'))
+    line = f"{fmt.bold('Evidence:'):s} {task.get('evidence_name')!s}"
     report.append(fmt.bullet(line))
-    line = '{0:s} {1:s}'.format(fmt.bold('Status:'), status)
+    line = f"{fmt.bold('Status:'):s} {status:s}"
     report.append(fmt.bullet(line))
-    report.append(fmt.bullet('Task Id: {0!s}'.format(task.get('id'))))
-    report.append(
-        fmt.bullet('Executed on worker {0!s}'.format(task.get('worker_name'))))
+    report.append(fmt.bullet(f"Task Id: {task.get('id')!s}"))
+    report.append(fmt.bullet(f"Executed on worker {task.get('worker_name')!s}"))
     if task.get('report_data'):
       report.append('')
       report.append(fmt.heading3('Task Reported Data'))
@@ -503,15 +499,13 @@ class BaseTurbiniaClient:
       list: Formatted task data
     """
     report = []
-    report.append(
-        fmt.bullet('{0:s} - {1:s}'.format(task['task_id'], task['task_name'])))
+    report.append(fmt.bullet(f"{task['task_id']:s} - {task['task_name']:s}"))
     report.append(
         fmt.bullet(
-            'Last Update: {0:s}'.format(
-                task['last_update'].strftime(DATETIME_FORMAT)), level=2))
-    report.append(fmt.bullet('Status: {0:s}'.format(task['status']), level=2))
-    report.append(
-        fmt.bullet('Run Time: {0:s}'.format(str(task['run_time'])), level=2))
+            f"Last Update: {task['last_update'].strftime(DATETIME_FORMAT):s}",
+            level=2))
+    report.append(fmt.bullet(f"Status: {task['status']:s}", level=2))
+    report.append(fmt.bullet(f"Run Time: {str(task['run_time']):s}", level=2))
     report.append('')
     return report
 
@@ -530,8 +524,8 @@ class BaseTurbiniaClient:
     status = task.get('status') or 'No task status'
     report.append(
         fmt.bullet(
-            '{0:s} ({1!s}): {2:s}'.format(
-                task.get('name'), task.get('evidence_name'), status)))
+            f"{task.get('name'):s} ({task.get('evidence_name')!s}): {status:s}")
+    )
     if show_files:
       for path in saved_paths:
         report.append(fmt.bullet(fmt.code(path), level=2))
@@ -602,7 +596,7 @@ class BaseTurbiniaClient:
       if task_type in task_stats['tasks_per_type']:
         task_type_stats = task_stats['tasks_per_type'].get(task_type)
       else:
-        task_type_stats = TurbiniaStats('Task type {0:s}'.format(task_type))
+        task_type_stats = TurbiniaStats(f'Task type {task_type:s}')
         task_stats['tasks_per_type'][task_type] = task_type_stats
       task_type_stats.add_task(task)
 
@@ -610,7 +604,7 @@ class BaseTurbiniaClient:
       if worker in task_stats['tasks_per_worker']:
         worker_stats = task_stats['tasks_per_worker'].get(worker)
       else:
-        worker_stats = TurbiniaStats('Worker {0:s}'.format(worker))
+        worker_stats = TurbiniaStats(f'Worker {worker:s}')
         task_stats['tasks_per_worker'][worker] = worker_stats
       worker_stats.add_task(task)
 
@@ -618,7 +612,7 @@ class BaseTurbiniaClient:
       if user in task_stats['tasks_per_user']:
         user_stats = task_stats['tasks_per_user'].get(user)
       else:
-        user_stats = TurbiniaStats('User {0:s}'.format(user))
+        user_stats = TurbiniaStats(f'User {user:s}')
         task_stats['tasks_per_user'][user] = user_stats
       user_stats.add_task(task)
 
@@ -774,17 +768,15 @@ class BaseTurbiniaClient:
     report = []
     report.append(
         fmt.heading1(
-            'Turbinia report for Worker activity within {0:d} days'.format(
-                num_days)))
-    report.append(
-        fmt.bullet('{0:d} Worker(s) found.'.format(len(workers_dict.keys()))))
+            f'Turbinia report for Worker activity within {num_days:d} days'))
+    report.append(fmt.bullet(f'{len(workers_dict.keys()):d} Worker(s) found.'))
     report.append(
         fmt.bullet(
             '{0:d} Task(s) unassigned or scheduled and pending Worker assignment.'
             .format(scheduled_counter)))
     for worker_node, tasks in workers_dict.items():
       report.append('')
-      report.append(fmt.heading2('Worker Node: {0:s}'.format(worker_node)))
+      report.append(fmt.heading2(f'Worker Node: {worker_node:s}'))
       # Append the statuses chronologically
       run_status, queued_status, other_status = [], [], []
       for task in tasks:
@@ -869,23 +861,21 @@ class BaseTurbiniaClient:
     report = []
     report.append(
         fmt.heading1(
-            'Turbinia report for Requests made within {0:d} days'.format(
-                num_days)))
+            f'Turbinia report for Requests made within {num_days:d} days'))
     report.append(
         fmt.bullet(
-            '{0:d} requests were made within this timeframe.'.format(
-                len(request_dict.keys()))))
+            f'{len(request_dict.keys()):d} requests were made within this timeframe.'
+        ))
     # Print report data for Requests
     for request_id, values in request_dict.items():
       report.append('')
-      report.append(fmt.heading2('Request ID: {0:s}'.format(request_id)))
+      report.append(fmt.heading2(f'Request ID: {request_id:s}'))
       report.append(
           fmt.bullet(
-              'Last Update: {0:s}'.format(
-                  values['last_update'].strftime(DATETIME_FORMAT))))
-      report.append(fmt.bullet('Requester: {0:s}'.format(values['requester'])))
-      report.append(
-          fmt.bullet('Task Count: {0:d}'.format(len(values['task_id']))))
+              f"Last Update: {values['last_update'].strftime(DATETIME_FORMAT):s}"
+          ))
+      report.append(fmt.bullet(f"Requester: {values['requester']:s}"))
+      report.append(fmt.bullet(f"Task Count: {len(values['task_id']):d}"))
       if all_fields:
         report.append(fmt.bullet('Associated Evidence:'))
         # Append all saved paths in request
@@ -944,7 +934,7 @@ class BaseTurbiniaClient:
     if not num_results:
       msg = 'No Turbinia Tasks found.'
       log.info(msg)
-      return '\n{0:s}'.format(msg)
+      return f'\n{msg:s}'
 
     # Build up data
     if report is None:
@@ -974,8 +964,7 @@ class BaseTurbiniaClient:
 
     if group_id:
       report.append('\n')
-      report.append(
-          fmt.heading1('Turbinia report for group ID {0:s}'.format(group_id)))
+      report.append(fmt.heading1(f'Turbinia report for group ID {group_id:s}'))
       for request_id, success_counts in requests.items():
         report.append(
             fmt.bullet(
@@ -995,16 +984,14 @@ class BaseTurbiniaClient:
 
     # Generate report header
     report.append('\n')
-    report.append(fmt.heading1('Turbinia report {0:s}'.format(request_id)))
+    report.append(fmt.heading1(f'Turbinia report {request_id:s}'))
     report.append(
-        fmt.bullet(
-            'Processed {0:d} Tasks for user {1:s}'.format(
-                num_results, requester)))
+        fmt.bullet(f'Processed {num_results:d} Tasks for user {requester:s}'))
 
     # Print report data for tasks
     for success_type in success_types:
       report.append('')
-      report.append(fmt.heading1('{0:s} Tasks'.format(success_type)))
+      report.append(fmt.heading1(f'{success_type:s} Tasks'))
       if not task_map[success_type]:
         report.append(fmt.bullet('None'))
       task_counter = defaultdict(int)
@@ -1022,7 +1009,7 @@ class BaseTurbiniaClient:
           if v == 1:
             report.append(k)
           else:
-            report.append('{0:s} x {1:d}'.format(k, v))
+            report.append(f'{k:s} x {v:d}')
 
     return '\n'.join(report)
 
@@ -1061,7 +1048,7 @@ class BaseTurbiniaClient:
         'requester': requester
     }
     response = cloud_function.ExecuteFunction('closetasks', region, func_args)
-    return 'Closed Task IDs: %s' % response.get('result')
+    return f"Closed Task IDs: {response.get('result')}"
 
 
 class TurbiniaCeleryClient(BaseTurbiniaClient):
@@ -1143,6 +1130,8 @@ class TurbiniaCeleryClient(BaseTurbiniaClient):
       request_id (string): The Id of the request we want tasks for.
       group_id (string): Group Id of the requests.
       user (string): The user of the request we want tasks for.
+      function_name (string): unused.
+      output_json (bool): unused.
 
     Returns:
       List of Task dict objects.

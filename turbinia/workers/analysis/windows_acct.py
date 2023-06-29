@@ -60,7 +60,7 @@ class WindowsAccountAnalysisTask(TurbiniaTask):
     except TurbiniaException as exception:
       result.close(
           self, success=True,
-          status='No Windows account files found: {0:s}'.format(str(exception)))
+          status=f'No Windows account files found: {str(exception):s}')
       return result
     if num_files < 2:
       result.close(self, success=True, status='No Windows account files found')
@@ -71,8 +71,8 @@ class WindowsAccountAnalysisTask(TurbiniaTask):
     except TurbiniaException as exception:
       result.close(
           self, success=False,
-          status='Unable to extract hashes from registry files: {0:s}'.format(
-              str(exception)))
+          status=f'Unable to extract hashes from registry files: {str(exception):s}'
+      )
       return result
     extra_summary = ""
     if os.path.isfile(os.path.join(location, 'Windows', 'NTDS', 'ntds.dit')):
@@ -116,8 +116,7 @@ class WindowsAccountAnalysisTask(TurbiniaTask):
           ], disk_path=evidence.local_path, output_dir=self.output_dir,
           credentials=evidence.credentials)
     except TurbiniaException as exception:
-      raise TurbiniaException(
-          'artifact extraction failed: {}'.format(str(exception)))
+      raise TurbiniaException(f'artifact extraction failed: {str(exception)}')
 
     # Extract base dir from our list of collected artifacts
     location = os.path.dirname(collected_artifacts[0])
@@ -247,10 +246,9 @@ class WindowsAccountAnalysisTask(TurbiniaTask):
 
     if weak_passwords:
       priority = Priority.CRITICAL
-      summary = 'Registry analysis found {0:d} weak password(s)'.format(
-          len(weak_passwords))
+      summary = f'Registry analysis found {len(weak_passwords):d} weak password(s)'
       report.insert(0, fmt.heading4(fmt.bold(summary)))
-      line = '{0:n} weak password(s) found:'.format(len(weak_passwords))
+      line = f'{len(weak_passwords):n} weak password(s) found:'
       report.append(fmt.bullet(fmt.bold(line)))
       for password_hash, plaintext in weak_passwords:
         if password_hash in hashnames:
