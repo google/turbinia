@@ -38,7 +38,7 @@ async def read_config(request: Request):
     if current_config:
       return JSONResponse(content=current_config, status_code=200)
   except (json.JSONDecodeError, TypeError) as exception:
-    log.error('Error reading configuration: {0!s}'.format(exception))
+    log.error(f'Error reading configuration: {exception!s}')
     raise HTTPException(
         status_code=500, detail='error reading configuration') from exception
 
@@ -57,8 +57,7 @@ async def get_evidence_attributes_by_name(request: Request, evidence_name):
   attribute_mapping = {evidence_name: attribute_mapping.get(evidence_name)}
   if not attribute_mapping:
     raise HTTPException(
-        status_code=404,
-        detail='Evidence type ({0:s}) not found.'.format(evidence_name))
+        status_code=404, detail=f'Evidence type ({evidence_name:s}) not found.')
   return JSONResponse(content=attribute_mapping, status_code=200)
 
 

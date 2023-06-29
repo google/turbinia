@@ -64,8 +64,7 @@ def setup(need_file_handler=True, need_stream_handler=True, log_file_path=None):
       config.LoadConfig()
     except TurbiniaException as exception:
       print(
-          'Could not load config file ({0!s}).\n{1:s}'.format(
-              exception, config.CONFIG_MSG))
+          f'Could not load config file ({exception!s}).\n{config.CONFIG_MSG:s}')
       sys.exit(1)
 
     # Check if a user specified log path was provided else create default path
@@ -76,7 +75,7 @@ def setup(need_file_handler=True, need_stream_handler=True, log_file_path=None):
       log_name = os.uname().nodename
       # Check if NODE_NAME available for GKE setups
       if ENVNODENAME in os.environ:
-        log_name = log_name + '.{0!s}'.format(os.environ[ENVNODENAME])
+        log_name = log_name + f'.{os.environ[ENVNODENAME]!s}'
       log_file_path = os.path.join(config.LOG_DIR, log_name) + '.log'
 
     file_handler = logging.FileHandler(log_file_path)
