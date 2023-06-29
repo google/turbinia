@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 # This script provides tools to be used with the TurbiniaEvidence keys in
-# redis. There are 5 main functions: keys, values, delete, dump and restore.
+# Redis. There are 5 main functions: keys, values, delete, dump and restore.
 # The first five will query over Redis to find keys that have the same value
 # in a specific field, as determined by the passed arguments. Restore will
 # restore all keys dumped in a directory. Setting [Field Name] to “all” and
@@ -27,7 +27,7 @@
 # ./redis-tools values id f5bd194d9424427c9d82a57eedc531d0
 # ./redis-tools dump request_id 09879dbc90a44c6db80dc9f68113d829 storagefolder
 # ./redis-tools delete all any
-# ./redis-tools restore storage
+# ./redis-tools restore storagefolder
 
 action=$1 # "keys" / "values" / "delete" / "dump" / "restore"
 arg1=$2
