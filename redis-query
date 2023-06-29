@@ -1,0 +1,75 @@
+#!/bin/bash
+#
+# This script iterates over the Turbinia Redis keys to find keys matching the
+# passed arguments. The first argument indicates the action to be performed 
+# by the script. If "keys" is chosen, the matching keys will be printed out.
+# If "values" is chosen, the value of the the matching keys will
+# be printed out. This can be piped to jq to improve visualization. If 
+# "delete" is chosen the matching keys will be deleted from redis. If "dump" is
+# chosen, the matching keys will be dumped to the file indicated by the 4th
+# argument ("dump_file"). The second argument indicates the field of the Redis
+# value that will be queried, and the Third argument indicates the value that
+# this field should have for a key to be selected. The keyword "all" can be
+# passed to the second argument to select all keys.
+#
+# Examples:
+# ./redis-query values request_id 09879dbc90a44c6db80dc9f68113d829
+# ./redis-query dump id 0181aacd7d7d4967a493bb633d9f52e9 firstdump.txt
+# ./redis-query dump all any seconddump.txt
+# ./redis-query delete all
+
+action=$1 # "keys" / "values" / "delete" / "dump"
+field=$2 # "all" / Field name
+field_value=$3 # Field value
+dump_file=$4 # File to dump 
+
+if [[ "$action" != "values" ]]; then
+  declare -a key_array
+  echo Keys found:
+fi
+
+for key in $(redis-cli --scan); do 
+  key_type=${key%:*}
+  if [[ "$key_type" == "TurbiniaTask" ]]; then
+    # Gets the Task value and split its key:value pairs into an array
+    value=$(redis-cli get "$key")
+    modified_value="${value//\"/}"
+    modified_value="${modified_value//\{/}"
+    modified_value="${modified_value//\}/}"
+    IFS=',' read -r -a array <<< "$modified_value"
+
+    for pair in "${array[@]}"; do
+      # Cleans the pair to allow comparison with given field and value
+      pair="${pair#"${pair%%[![:space:]]*}"}"
+      if [[ "$field" == "all" ]] || [[ "$pair"  == "$field: $field_value" ]]
+      then
+        if [[ "$action" == "values" ]]; then
+          echo -e "$value\n";
+        else
+          echo "$key"
+          key_array+=( "$key" )
+        fi
+        break
+      fi
+    done
+  fi
+done
+
+if [[ "$action" == "delete" ]] || [[ "$action" == "dump" ]] && [[ -n "$array" ]]
+then
+  echo Do you want to "$action" the keys above? [y/N]
+  read -r answer
+  if [[ "$answer" == 'y' ]] || [[ "$answer" == 'Y' ]]; then
+    if [[ "$action" == "delete" ]]
+    then
+      redis-cli DEL "${key_array[@]}"
+    else
+      for key in ${key_array[@]}; do
+        echo "$key" >> "$dump_file"
+        redis-cli DUMP "$key" >> "$dump_file"
+        echo >> "$dump_file"
+      done
+      echo Dumped in "$dump_file"
+    fi
+  fi
+fi
