@@ -4,29 +4,29 @@
 # Redis. There are 5 main functions: keys, values, delete, dump and restore.
 # The first five will query over Redis to find keys that have the same value
 # in a specific field, as determined by the passed arguments. Restore will
-# restore all keys dumped in a directory. Setting [Field Name] to “all” and
-# [Field Value] to any value will select all keys.
+# restore all keys dumped in a directory. If [Field Name] and [Field Value] 
+# are replaced with "all", all keys will be selected. 
 # 
 # ./redis-tools keys [Field Name] [Field Value]
 # The matching keys are printed out.
 # 
 # ./redis-tools values [Field Name] [Field Value]
-# The values of the matching keys will be printed out.
+# The values of the matching keys are printed out.
 # 
 # ./redis-tools delete [Field Name] [Field Value]
-# The matching keys will be deleted from redis.
+# The matching keys are deleted from redis.
 # 
 # ./redis-tools dump [Field Name] [Field Value] [Directory to Dump]
-# The matching keys will be dumped to the indicated directory.
+# The matching keys are dumped to the indicated directory.
 # 
 # ./redis-tools restore [Directory to Restore] 
-# Restore all keys dumped in the directory.
+# The keys dumped in the directory are restored.
 #
 # Examples: 
-# ./redis-tools keys all any
+# ./redis-tools keys all
 # ./redis-tools values id f5bd194d9424427c9d82a57eedc531d0
 # ./redis-tools dump request_id 09879dbc90a44c6db80dc9f68113d829 storagefolder
-# ./redis-tools delete all any
+# ./redis-tools delete all
 # ./redis-tools restore storagefolder
 
 action=$1 # "keys" / "values" / "delete" / "dump" / "restore"
@@ -42,9 +42,12 @@ then
     cat "$filename" | redis-cli -x restore "$key" 0
   done
 else
+  # Ignores [Field Value] if "all" is passed
+  if [[ "$arg1" == "all" ]]; then arg3=$arg2; fi
+
   if [[ "$action" != "values" ]]; then
     declare -a key_array
-    echo Keys found:
+    if [[ "$action" == keys ]] || [[ "$arg1" != "all" ]]; then echo Keys found:; fi
   fi
 
   for key in $(redis-cli --scan); do 
@@ -57,26 +60,37 @@ else
       modified_value="${modified_value//\}/}"
       IFS=',' read -r -a array <<< "$modified_value"
 
-      for pair in "${array[@]}"; do
-        # Cleans the pair to allow comparison with given field and value
-        pair="${pair#"${pair%%[![:space:]]*}"}"
-        if [[ "$arg1" == "all" ]] || [[ "$pair"  == "$arg1: $arg2" ]]
+      if [[ "$arg1" == "all" ]]
+      then
+        if [[ "$action" == "values" ]]
         then
-          if [[ "$action" == "values" ]]; then
-            echo -e "$value\n";
-          else
-            echo "$key"
-            key_array+=( "$key" )
-          fi
-          break
+          echo -e "$value\n"
+        else
+          if [[ "$action" == keys ]]; then echo "$key"; fi
+          key_array+=( "$key" )
         fi
-      done
+      else
+        for pair in "${array[@]}"; do
+          # Cleans the pair to allow comparison with given field and value
+          pair="${pair#"${pair%%[![:space:]]*}"}"
+          if [[ "$pair"  == "$arg1: $arg2" ]]
+          then
+            if [[ "$action" == "values" ]]; then
+              echo -e "$value\n";
+            else
+              echo "$key"
+              key_array+=( "$key" )
+            fi
+            break
+          fi
+        done
+      fi
     fi
   done
 
   if [[ "$action" == "delete" ]] || [[ "$action" == "dump" ]] && [[ -n "$array" ]]
   then
-    echo Do you want to "$action" the keys above? [y/N]
+    echo Do you want to "$action" "${#key_array[@]}" keys? [y/N]
     read -r answer
     if [[ "$answer" == 'y' ]] || [[ "$answer" == 'Y' ]]; then
       if [[ "$action" == "delete" ]]
