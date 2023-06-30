@@ -37,7 +37,7 @@ arg3=$4
 if [[ "$action" == "restore" ]]
 then
   for filename in "$arg1"/*; do
-    key="$(echo $filename | sed 's|.*/||')"
+    key="$(echo "$filename" | sed 's|.*/||')"
     echo Restoring "$key"
     cat "$filename" | redis-cli -x restore "$key" 0
   done
@@ -88,7 +88,7 @@ else
     fi
   done
 
-  if [[ "$action" == "delete" ]] || [[ "$action" == "dump" ]] && [[ -n "$array" ]]
+  if [[ "$action" == "delete" ]] || [[ "$action" == "dump" ]]
   then
     echo Do you want to "$action" "${#key_array[@]}" keys? [y/N]
     read -r answer
