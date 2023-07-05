@@ -19,15 +19,16 @@ import logging
 import os
 import hashlib
 
-from fastapi import HTTPException, APIRouter, UploadFile, Query
+from fastapi import HTTPException, APIRouter, UploadFile, Query, File, Depends, Form
 from fastapi.responses import JSONResponse
 from fastapi.requests import Request
-from typing import List
+from typing import List, Dict, Union
 
 from turbinia import config as turbinia_config
 from turbinia import evidence
 from turbinia.api.schemas import request_options
 from turbinia import client as TurbiniaClientProvider
+from turbinia.processors import mount_local
 
 log = logging.getLogger('turbinia')
 
@@ -57,13 +58,24 @@ async def get_evidence_types(request: Request):
 
 
 from pydantic import BaseModel
+from typing import Optional
 
 
-class UploadedEvidence(UploadFile, BaseModel):
+class Arguments(BaseModel):
   """Base request object. """
 
-  names: str = Query(None)
-  evidence_types: str = Query(None)
+  name: str
+  evidence_type: str
+  browser_type: Optional[str] = None
+  disk_name: Optional[str] = None
+  embedded_path: Optional[str] = None
+  format: Optional[str] = None
+  mount_partition: Optional[str] = None
+  name: Optional[str] = None
+  profile: Optional[str] = None
+  project: Optional[str] = None
+  source: Optional[str] = None
+  zone: Optional[str] = None
 
 
 #todo(igormr) add max file length
@@ -71,16 +83,15 @@ class UploadedEvidence(UploadFile, BaseModel):
 # request id
 # evidence type
 # fastapi model class for parameters
-#use getdisksize below
 #handle errors with delete
-#use fast hash, probably hash() or sha256
 # Make TurbiniaRequest on redis pointing to TurbiniaEvidence and back
 #make a python object and serialize it before storing in redis
 #use validate to check if the type makes sense
 @router.post('/evidence/upload')
 async def upload_evidence(
-    request: Request, evidence: List[List[str, UploadedEvidence]]) -> None:
-  """Upload evidence file to the /evidence/ folder for processing.
+    request: Request, names: List[str], evidence_types: List[str],
+    files: List[UploadFile] = File(...)):
+  """Upload evidence file to the OUTPUT_DIR folder for processing.
   Args:
     file: Evidence file to be uploaded to evidences folder for later
         processing. The maximum size of the file is 10 GB. 
@@ -91,6 +102,10 @@ async def upload_evidence(
   Raises:
     HTTPException: If pre-conditions are not met.
   """
+
+  #if len(files) != len(names) or len(files) != len(evidence_types):
+  #  log.error(f'Wrong number of arguments: {TypeError}')
+  #  raise TypeError('Wrong number of arguments')
   if len(files) != len(names) or len(files) != len(evidence_types):
     log.error(f'Wrong number of arguments: {TypeError}')
     raise TypeError('Wrong number of arguments')
@@ -119,14 +134,23 @@ async def upload_evidence(
       files_information.append(message)
       log.error(message)
     else:
+      evidence_ = evidence.create_evidence(
+          evidence_type=evidence_types, source_path=file_path,
+          browser_type="browser_type", disk_name="disk_name",
+          embedded_path="embedded_path", format="format",
+          mount_partition="mount_partition", name="name", profile="profile",
+          project="project", source="source", zone="zone")
+
       files_information.append({
           'name': name,
           'path': file_path,
           'evidence_type': evidence_types[i],
-          'size': os.stat(file_path).st_size,
-          'hash': file_hash
+          'size': mount_local.GetDiskSize(file_path),
+          'hash': file_hash,
+          'evidence': evidence_.serialize()
       })
       client.redis.write_new_evidence(files_information[i])
+
   return files_information
 
 
