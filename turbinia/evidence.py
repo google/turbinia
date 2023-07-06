@@ -33,6 +33,8 @@ from turbinia.processors import containerd
 from turbinia.processors import docker
 from turbinia.processors import mount_local
 from turbinia.processors import resource_manager
+from turbinia.config import DATETIME_FORMAT
+from datetime import datetime
 
 config.LoadConfig()
 if config.CLOUD_PROVIDER.lower() == 'gcp':
@@ -163,19 +165,25 @@ def evidence_decode(evidence_dict, strict=False):
 def create_evidence(
     args=None, evidence_type=None, browser_type=None, disk_name=None,
     embedded_path=None, format=None, mount_partition=None, name=None,
-    profile=None, project=None, source=None, source_path=None, zone=None):
+    profile=None, project=None, source=None, source_path=None, zone=None,
+    file_hash=None):
 
   evidence = None
 
-  if not evidence_type:
+  #if file_hash and client.get_evidence(file_hash):
+  #  evidence = evidence_decode(client.get_evidence(file_hash))
+
+  if not evidence_type and args:
     evidence_type = args.command
 
   if evidence_type == 'rawdisk':
     evidence = RawDisk(
-        name=name, source_path=os.path.abspath(source_path), source=source)
+        name=name, source_path=os.path.abspath(source_path), source=source,
+        file_hash=file_hash)
   elif evidence_type == 'ewfdisk':
     evidence = EwfDisk(
-        name=name, source_path=os.path.abspath(source_path), source=source)
+        name=name, source_path=os.path.abspath(source_path), source=source,
+        file_hash=file_hash)
   elif evidence_type == 'directory':
     source_path = os.path.abspath(source_path)
     if not config.SHARED_FILESYSTEM:
@@ -185,13 +193,15 @@ def create_evidence(
       source_path = archive.CompressDirectory(
           source_path, output_path=config.TMP_DIR)
       evidence = CompressedDirectory(
-          name=name, source_path=source_path, source=source)
+          name=name, source_path=source_path, source=source,
+          file_hash=file_hash)
     else:
       evidence = Directory(name=name, source_path=source_path, source=source)
   elif evidence_type == 'compresseddirectory':
     archive.ValidateTarFile(source_path)
     evidence = CompressedDirectory(
-        name=name, source_path=os.path.abspath(source_path), source=source)
+        name=name, source_path=os.path.abspath(source_path), source=source,
+        file_hash=file_hash)
   elif evidence_type == 'googleclouddisk':
     evidence = GoogleCloudDisk(
         name=name, disk_name=disk_name, project=project, zone=zone,
@@ -220,6 +230,9 @@ def create_evidence(
     evidence = RawMemory(
         name=name, source_path=source_path, profile=profile,
         module_list=args.module_list)
+
+  #if file_hash:
+  #  client.write_new_evidence(evidence)
 
   return evidence
 
@@ -342,6 +355,13 @@ class Evidence:
     self.source_path = kwargs.get('source_path', None)
     self.tags = kwargs.get('tags', {})
     self.type = self.__class__.__name__
+
+    self.hash = kwargs.get('hash', None)
+    self.request_ids = kwargs.get('request_ids', set())
+    if self.request_id:
+      self.request_ids.add(self.request_id)
+    self.creation_time = datetime.now().strftime(DATETIME_FORMAT)
+    self.last_updated = datetime.now().strftime(DATETIME_FORMAT)
 
     self.local_path = self.source_path
 
@@ -677,13 +697,14 @@ class CompressedDirectory(Evidence):
   REQUIRED_ATTRIBUTES = ['source_path']
   POSSIBLE_STATES = [EvidenceState.DECOMPRESSED]
 
-  def __init__(self, source_path=None, *args, **kwargs):
+  def __init__(self, source_path=None, file_hash=None, *args, **kwargs):
     """Initialization for CompressedDirectory evidence object."""
     super(CompressedDirectory, self).__init__(
         source_path=source_path, *args, **kwargs)
     self.compressed_directory = None
     self.uncompressed_directory = None
     self.copyable = True
+    self.hash = file_hash
 
   def _preprocess(self, tmp_dir, required_states):
     # Uncompress a given tar file and return the uncompressed path.
@@ -726,12 +747,15 @@ class ChromiumProfile(Evidence):
 
   REQUIRED_ATTRIBUTES = ['browser_type', 'output_format']
 
-  def __init__(self, browser_type=None, output_format=None, *args, **kwargs):
+  def __init__(
+      self, browser_type=None, output_format=None, file_hash=None, *args,
+      **kwargs):
     """Initialization for chromium profile evidence object."""
     super(ChromiumProfile, self).__init__(*args, **kwargs)
     self.browser_type = browser_type
     self.output_format = output_format
     self.copyable = True
+    self.hash = file_hash
 
 
 class RawDisk(Evidence):
@@ -745,10 +769,11 @@ class RawDisk(Evidence):
   REQUIRED_ATTRIBUTES = ['source_path']
   POSSIBLE_STATES = [EvidenceState.ATTACHED]
 
-  def __init__(self, source_path=None, *args, **kwargs):
+  def __init__(self, source_path=None, file_hash=None, *args, **kwargs):
     """Initialization for raw disk evidence object."""
     super(RawDisk, self).__init__(source_path=source_path, *args, **kwargs)
     self.device_path = None
+    self.hash = file_hash
 
   def _preprocess(self, _, required_states):
     if self.size is None:
@@ -781,9 +806,11 @@ class DiskPartition(Evidence):
 
   def __init__(
       self, partition_location=None, partition_offset=None, partition_size=None,
-      lv_uuid=None, path_spec=None, important=True, *args, **kwargs):
+      lv_uuid=None, path_spec=None, important=True, file_hash=None, *args,
+      **kwargs):
     """Initialization for raw volume evidence object."""
     self.partition_location = partition_location
+    self.hash = file_hash
     if partition_offset:
       try:
         self.partition_offset = int(partition_offset)

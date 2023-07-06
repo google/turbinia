@@ -32,6 +32,7 @@ import six
 from turbinia import config
 from turbinia.config import DATETIME_FORMAT
 from turbinia import TurbiniaException
+from turbinia import evidence
 
 config.LoadConfig()
 if 'unittest' in sys.modules.keys():
@@ -326,17 +327,13 @@ class RedisStateManager(BaseStateManager):
     return key
 
   #todo(igormr): change set to hset to store map instead of string
-  def write_new_evidence(self, file_information):
-    key = ':'.join(['TurbiniaEvidence', file_information['hash']])
-    name = file_information['name']
-    file_information['upload_time'] = datetime.now().strftime(DATETIME_FORMAT)
-    file_information['last_updated'] = file_information['upload_time']
-    file_information['request_ids'] = []
-    log.info(f'Writing new evidence {name:s} into Redis')
+  def write_new_evidence(self, evidence_):
+    key = ':'.join(['TurbiniaEvidence', evidence_.hash])
+    log.info(f'Writing new evidence {evidence_.name:s} into Redis')
     # nx=True prevents overwriting (i.e. no unintentional task clobbering)
-    if not self.client.set(key, json.dumps(file_information), nx=True):
-      log.error(f'Unsuccessful in writing evidence {name:s} into Redis')
-    file_information['key'] = key
+    if not self.client.set(key, json.dumps(evidence_.serialize()), nx=True):
+      log.error(
+          f'Unsuccessful in writing evidence {evidence_.name:s} into Redis')
     return key
 
   def get_evidence(self, file_hash):
@@ -344,16 +341,17 @@ class RedisStateManager(BaseStateManager):
 
   def update_evidence(self, file_hash, request_id):
     key = ':'.join(['TurbiniaEvidence', file_hash])
-    evidence_info = self.client.get(key)
-    if evidence_info:
-      evidence_data = json.loads(evidence_info)
-      evidence_data['request_id'] = request_id
-      evidence_data['last_updated'] = datetime.now().strftime(DATETIME_FORMAT)
+    serialized_evidence = self.client.get(key)
+
+    if serialized_evidence:
+      evidence_ = evidence.evidence_decode(serialized_evidence)
+      evidence_.request_ids.add(request_id)
+      evidence_.last_updated = datetime.now().strftime(DATETIME_FORMAT)
       # Need to use json.dumps, else redis returns single quoted string which
       # is invalid json
-      if not self.client.set(key, json.dumps(task_data)):
+      if not self.client.set(key, json.dumps(evidence_.serialize())):
         log.error(
-            'Unsuccessful in updating task {0:s} in Redis'.format(task.name))
+            f'Unsuccessful in updating evidence {evidence_.name:s} in Redis')
     else:
       log.error(
-          'Unsuccessful in updating evidence {0:s} in Redis'.format(file_hash))
+          f'Unsuccessful in updating evidence {evidence_.name:s} in Redis')

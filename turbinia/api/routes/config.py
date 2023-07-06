@@ -28,7 +28,9 @@ from turbinia import config as turbinia_config
 from turbinia import evidence
 from turbinia.api.schemas import request_options
 from turbinia import client as TurbiniaClientProvider
-from turbinia.processors import mount_local
+
+from pydantic import BaseModel, validator
+from typing import Optional
 
 log = logging.getLogger('turbinia')
 
@@ -57,13 +59,8 @@ async def get_evidence_types(request: Request):
   return JSONResponse(content=attribute_mapping, status_code=200)
 
 
-from pydantic import BaseModel
-from typing import Optional
-
-
-class Arguments(BaseModel):
-  """Base request object. """
-
+class Model(BaseModel):
+  """Base information object"""
   name: str
   evidence_type: str
   browser_type: Optional[str] = None
@@ -77,20 +74,34 @@ class Arguments(BaseModel):
   source: Optional[str] = None
   zone: Optional[str] = None
 
+  @classmethod
+  def __get_validators__(cls):
+    yield cls.validate_to_json
+
+  @classmethod
+  def validate_to_json(cls, value):
+    if isinstance(value, str):
+      return cls(**json.loads(value))
+    return value
+
+  @validator('evidence_type')
+  @classmethod
+  def check_storage_type(cls, value):
+    if value not in (evidence.map_evidence_attributes().keys()):
+      raise ValueError(f'{value:s} is not an evidence type.')
+    return value
+
 
 #todo(igormr) add max file length
-#todo(igormr) store saved files in redis (TurbiniaEvidence) and evidencecollection
-# request id
-# evidence type
-# fastapi model class for parameters
-#handle errors with delete
-# Make TurbiniaRequest on redis pointing to TurbiniaEvidence and back
-#make a python object and serialize it before storing in redis
-#use validate to check if the type makes sense
+#todo(igormr) store evidencecollection in redis
+#todo(igormr) update request_ids for every request
+#todo(igormr) Make TurbiniaRequest on redis pointing to TurbiniaEvidence and back
+
+
 @router.post('/evidence/upload')
 async def upload_evidence(
-    request: Request, names: List[str], evidence_types: List[str],
-    files: List[UploadFile] = File(...)):
+    request: Request, information: List[Model], files: List[UploadFile] = File(
+        ...)):
   """Upload evidence file to the OUTPUT_DIR folder for processing.
   Args:
     file: Evidence file to be uploaded to evidences folder for later
@@ -103,55 +114,53 @@ async def upload_evidence(
     HTTPException: If pre-conditions are not met.
   """
 
-  #if len(files) != len(names) or len(files) != len(evidence_types):
+  #if len(files) != len(information):
   #  log.error(f'Wrong number of arguments: {TypeError}')
   #  raise TypeError('Wrong number of arguments')
-  if len(files) != len(names) or len(files) != len(evidence_types):
-    log.error(f'Wrong number of arguments: {TypeError}')
-    raise TypeError('Wrong number of arguments')
-  files_information = []
+  evidences = {}
   separator = '' if turbinia_config.OUTPUT_DIR[-1] == '/' else '/'
   for i in range(len(files)):
-    name = names[i]
+    name = information[i].name
     file_path = separator.join([turbinia_config.OUTPUT_DIR, name])
     equal_files = 1
     while os.path.exists(file_path):
       equal_files += 1
-      name = f'({equal_files})' + names[i]
+      name = f'({equal_files})' + information[i].name
       file_path = separator.join([turbinia_config.OUTPUT_DIR, name])
     with open(file_path, 'wb') as saved_file:
-      md5_hash = hashlib.md5()
+      sha_hash = hashlib.sha3_256()
       while chunk := await files[i].read(1024):
         saved_file.write(chunk)
-        md5_hash.update(chunk)
-      file_hash = md5_hash.hexdigest()
+        sha_hash.update(chunk)
+      file_hash = sha_hash.hexdigest()
     files[i].file.close()
     if client.redis.get_evidence(file_hash):
-      os.remove(file_path)
-      message = {(
-          f'File {names[i]} was uploaded before,\n' +
-          f'check TurbiniaEvidence:{file_hash}')}
-      files_information.append(message)
+      message = {
+          ' '.join([
+              f'File {information[i].name} was uploaded before',
+              f'check TurbiniaEvidence:{file_hash}'
+          ])
+      }
+      evidences.append(message)
       log.error(message)
+      try:
+        os.remove(file_path)
+      except OSError:
+        log.error(f'Could not remove duplicate file {file_path}')
     else:
       evidence_ = evidence.create_evidence(
-          evidence_type=evidence_types, source_path=file_path,
-          browser_type="browser_type", disk_name="disk_name",
-          embedded_path="embedded_path", format="format",
-          mount_partition="mount_partition", name="name", profile="profile",
-          project="project", source="source", zone="zone")
-
-      files_information.append({
-          'name': name,
-          'path': file_path,
-          'evidence_type': evidence_types[i],
-          'size': mount_local.GetDiskSize(file_path),
-          'hash': file_hash,
-          'evidence': evidence_.serialize()
-      })
-      client.redis.write_new_evidence(files_information[i])
-
-  return files_information
+          evidence_type=information[i].evidence_type.lower(),
+          source_path=file_path, browser_type=information[i].browser_type,
+          disk_name=information[i].disk_name,
+          embedded_path=information[i].embedded_path,
+          format=information[i].format,
+          mount_partition=information[i].mount_partition,
+          name=information[i].name, profile=information[i].profile,
+          project=information[i].project, source=information[i].source,
+          zone=information[i].zone, file_hash=file_hash)
+      key = client.redis.write_new_evidence(evidence_)
+      evidences[key] = evidence_.serialize()
+  return evidences
 
 
 @router.get('/evidence/{hash}')
