@@ -168,6 +168,10 @@ def create_evidence(
     profile=None, project=None, source=None, source_path=None, zone=None,
     file_hash=None):
 
+  # Avoid circular dependency.
+  #from turbinia import client as TurbiniaClientProvider
+  #client = TurbiniaClientProvider.get_turbinia_client()
+
   evidence = None
 
   #if file_hash and client.get_evidence(file_hash):
