@@ -59,7 +59,7 @@ async def get_evidence_types(request: Request):
   return JSONResponse(content=attribute_mapping, status_code=200)
 
 
-class Model(BaseModel):
+class EvidenceInformation(BaseModel):
   """Base information object"""
   name: str
   evidence_type: str
@@ -81,7 +81,12 @@ class Model(BaseModel):
   @classmethod
   def validate_to_json(cls, value):
     if isinstance(value, str):
-      return cls(**json.loads(value))
+      entries = value.split('},')
+      value = []
+      for entry in entries:
+        if entry[-1] != '}':
+          entry = entry + '}'
+        value.append(cls(**json.loads(entry)))
     return value
 
   @validator('evidence_type')
@@ -100,8 +105,8 @@ class Model(BaseModel):
 
 @router.post('/evidence/upload')
 async def upload_evidence(
-    request: Request, information: List[Model], files: List[UploadFile] = File(
-        ...)):
+    request: Request, information: List[EvidenceInformation],
+    files: List[UploadFile] = File(...)):
   """Upload evidence file to the OUTPUT_DIR folder for processing.
   Args:
     file: Evidence file to be uploaded to evidences folder for later
@@ -113,10 +118,12 @@ async def upload_evidence(
   Raises:
     HTTPException: If pre-conditions are not met.
   """
-
-  #if len(files) != len(information):
-  #  log.error(f'Wrong number of arguments: {TypeError}')
-  #  raise TypeError('Wrong number of arguments')
+  # Extracts nested list
+  if information:
+    information = information[0]
+  if len(files) != len(information):
+    log.error(f'Wrong number of arguments: {TypeError}')
+    raise TypeError('Wrong number of arguments')
   evidences = {}
   separator = '' if turbinia_config.OUTPUT_DIR[-1] == '/' else '/'
   for i in range(len(files)):
@@ -141,7 +148,7 @@ async def upload_evidence(
               f'check TurbiniaEvidence:{file_hash}'
           ])
       }
-      evidences.append(message)
+      evidences[f'TurbiniaEvidence:{file_hash}'] = message
       log.error(message)
       try:
         os.remove(file_path)

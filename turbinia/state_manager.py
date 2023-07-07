@@ -345,7 +345,7 @@ class RedisStateManager(BaseStateManager):
 
     if serialized_evidence:
       evidence_ = evidence.evidence_decode(serialized_evidence)
-      evidence_.request_ids.add(request_id)
+      #evidence_.request_ids.add(request_id)
       evidence_.last_updated = datetime.now().strftime(DATETIME_FORMAT)
       # Need to use json.dumps, else redis returns single quoted string which
       # is invalid json

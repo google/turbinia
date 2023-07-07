@@ -357,9 +357,9 @@ class Evidence:
     self.type = self.__class__.__name__
 
     self.hash = kwargs.get('hash', None)
-    self.request_ids = kwargs.get('request_ids', set())
-    if self.request_id:
-      self.request_ids.add(self.request_id)
+    #self.request_ids = kwargs.get('request_ids', set())
+    #if self.request_id:
+    # self.request_ids.add(self.request_id)
     self.creation_time = datetime.now().strftime(DATETIME_FORMAT)
     self.last_updated = datetime.now().strftime(DATETIME_FORMAT)
 
