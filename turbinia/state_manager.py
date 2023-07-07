@@ -342,7 +342,7 @@ class RedisStateManager(BaseStateManager):
   def get_evidence_summary(self):
     evidences = {}
     for key in self.client.scan_iter():
-      if key.split(':')[0] == 'TurbiniaEvidence':
+      if key.split(b':')[0] == b'TurbiniaEvidence':
         evidences[key] = self.client.get(key)
     return evidences
 

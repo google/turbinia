@@ -55,18 +55,21 @@ async def get_evidence_attributes_by_type(request: Request, evidence_type):
 
 @router.get('/summary')
 async def get_evidence_summary(request: Request):
-  """Retrieves a serialized evidence by its hash (SHA3-256).
+  """Retrieves a summary of all evidences in redis.
   Raises:
     HTTPException: if another exception is caught.
   """
-  return client.redis.get_evidence_summary()
+  evidences = client.redis.get_evidence_summary()
+  if evidences:
+    return client.redis.get_evidence_summary()
+  raise HTTPException(status_code=404, detail='No evidences found.')
 
 
 @router.get('/{file_hash}')
 async def get_evidence_by_hash(request: Request, file_hash):
-  """Retrieves a serialized evidence by its hash (SHA3-256).
+  """Retrieves an evidence in redis by its hash (SHA3-256).
   Args:
-    request_id (str): A Turbinia request identifier.
+    file_hash (str): SHA3-256 hash of file
   Raises:
     HTTPException: if another exception is caught.
   """
