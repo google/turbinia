@@ -175,6 +175,7 @@ def create_evidence(
   evidence = None
 
   #if file_hash and client.get_evidence(file_hash):
+
   #  evidence = evidence_decode(client.get_evidence(file_hash))
 
   if not evidence_type and args:

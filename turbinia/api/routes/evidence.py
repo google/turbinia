@@ -14,20 +14,19 @@
 # limitations under the License.
 """Turbinia API - Config router"""
 
-import json
+import hashlib
 import logging
 import os
-import hashlib
 
 from fastapi import HTTPException, APIRouter, UploadFile, File
-from fastapi.responses import JSONResponse
 from fastapi.requests import Request
-from typing import List, Optional
-from pydantic import BaseModel, validator
+from fastapi.responses import JSONResponse
+from typing import List
 
-from turbinia import config as turbinia_config
-from turbinia import evidence
 from turbinia.api.schemas import request_options
+from turbinia.api.schemas import evidence as api_evidence
+from turbinia import evidence
+from turbinia import config as turbinia_config
 from turbinia import client as TurbiniaClientProvider
 
 log = logging.getLogger('turbinia')
@@ -57,7 +56,7 @@ async def get_evidence_attributes_by_type(request: Request, evidence_type):
 async def get_evidence_summary(request: Request):
   """Retrieves a summary of all evidences in redis.
   Raises:
-    HTTPException: if another exception is caught.
+    HTTPException: if there are no evidences.
   """
   evidences = client.redis.get_evidence_summary()
   if evidences:
@@ -67,11 +66,11 @@ async def get_evidence_summary(request: Request):
 
 @router.get('/{file_hash}')
 async def get_evidence_by_hash(request: Request, file_hash):
-  """Retrieves an evidence in redis by its hash (SHA3-256).
+  """Retrieves an evidence in redis by its hash (SHA3-224).
   Args:
-    file_hash (str): SHA3-256 hash of file
+    file_hash (str): SHA3-224 hash of file
   Raises:
-    HTTPException: if another exception is caught.
+    HTTPException: if the evidence is not found.
   """
   if client.redis.get_evidence(file_hash):
     return client.redis.get_evidence(file_hash)
@@ -81,55 +80,14 @@ async def get_evidence_by_hash(request: Request, file_hash):
         detail=f'Hash {file_hash} not found or it had no associated evidences.')
 
 
-#TODO(IGORMR) add nested classes for each type
-class EvidenceInformation(BaseModel):
-  """Base information object"""
-  name: str
-  evidence_type: str
-  browser_type: Optional[str] = None
-  disk_name: Optional[str] = None
-  embedded_path: Optional[str] = None
-  format: Optional[str] = None
-  mount_partition: Optional[str] = None
-  name: Optional[str] = None
-  profile: Optional[str] = None
-  project: Optional[str] = None
-  source: Optional[str] = None
-  zone: Optional[str] = None
-
-  @classmethod
-  def __get_validators__(cls):
-    yield cls.validate_to_json
-
-  @classmethod
-  def validate_to_json(cls, value):
-    """Converts the multiple json inputs to a list[EvidenceInformation]"""
-    if isinstance(value, str):
-      entries = value.split('},')
-      value = []
-      for entry in entries:
-        if entry[-1] != '}':
-          entry = entry + '}'
-        value.append(cls(**json.loads(entry)))
-    return value
-
-  @validator('evidence_type')
-  @classmethod
-  def check_storage_type(cls, value):
-    if value not in (evidence.map_evidence_attributes().keys()):
-      raise ValueError(f'{value:s} is not an evidence type.')
-    return value
-
-
 #todo(igormr) add max file length
-#todo(igormr) store evidencecollection in redis
 #todo(igormr) update request_ids for every request
 #todo(igormr) Make TurbiniaRequest on redis pointing to TurbiniaEvidence and back
 
 
 @router.post('/upload')
 async def upload_evidence(
-    request: Request, information: List[EvidenceInformation],
+    request: Request, information: List[api_evidence.Evidence],
     files: List[UploadFile] = File(...)):
   """Upload evidence file to the OUTPUT_DIR folder for processing.
   Args:
@@ -143,23 +101,22 @@ async def upload_evidence(
     HTTPException: If pre-conditions are not met.
   """
   # Extracts nested list
-  if information:
-    information = information[0]
+  information = information[0]
   if len(files) != len(information):
     log.error(f'Wrong number of arguments: {TypeError}')
     raise TypeError('Wrong number of arguments')
   evidences = []
-  separator = '' if turbinia_config.OUTPUT_DIR[-1] == '/' else '/'
+  separator = '' if turbinia_config.TMP_DIR[-1] == '/' else '/'
   for i in range(len(files)):
     name = information[i].name
-    file_path = separator.join([turbinia_config.OUTPUT_DIR, name])
+    file_path = separator.join([turbinia_config.TMP_DIR, name])
     equal_files = 1
     while os.path.exists(file_path):
       equal_files += 1
-      name = f'({equal_files})' + information[i].name
-      file_path = separator.join([turbinia_config.OUTPUT_DIR, name])
+      name = f'({equal_files} {information[i].name})'
+      file_path = separator.join([turbinia_config.TMP_DIR, name])
     with open(file_path, 'wb') as saved_file:
-      sha_hash = hashlib.sha3_256()
+      sha_hash = hashlib.sha3_224()
       while chunk := await files[i].read(1024):
         saved_file.write(chunk)
         sha_hash.update(chunk)

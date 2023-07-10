@@ -334,6 +334,7 @@ class RedisStateManager(BaseStateManager):
     if not self.client.set(key, json.dumps(evidence_.serialize()), nx=True):
       log.error(
           f'Unsuccessful in writing evidence {evidence_.name:s} into Redis')
+    self.client.sadd('TurbiniaEvidenceCollection', key)
     return key
 
   def get_evidence(self, file_hash):
@@ -341,9 +342,8 @@ class RedisStateManager(BaseStateManager):
 
   def get_evidence_summary(self):
     evidences = {}
-    for key in self.client.scan_iter():
-      if key.split(b':')[0] == b'TurbiniaEvidence':
-        evidences[key] = self.client.get(key)
+    for key in self.client.smembers('TurbiniaEvidenceCollection'):
+      evidences[key] = self.client.get(key)
     return evidences
 
   def update_evidence(self, file_hash, request_id):
