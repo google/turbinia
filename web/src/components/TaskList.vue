@@ -86,6 +86,8 @@ export default {
               task_id: task_dict.id,
               task_status: task_dict.status,
               task_success: task_dict.successful,
+              evidence_name: task_dict.evidence_name,
+              evidence_size: task_dict.evidence_size,
             })
           }
           this.taskList = taskList

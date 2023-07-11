@@ -51,11 +51,13 @@ class MountLocalProcessorTest(unittest.TestCase):
   """Tests for mount_local processor."""
 
   @mock.patch('subprocess.check_output')
+  @mock.patch('os.stat')
   @mock.patch('os.path.exists')
-  def testGetDiskSize(self, mock_path_exists, mock_subprocess):
+  def testGetDiskSize(self, mock_path_exists, mock_stat, mock_subprocess):
     """Test GetDiskSize method."""
     mock_path_exists.return_value = True
     source_path = '/dev/loop0'
+
     # Test for block device
     mock_subprocess.side_effect = _mock_disk_size_returns
     size = mount_local.GetDiskSize(source_path)
@@ -65,12 +67,15 @@ class MountLocalProcessorTest(unittest.TestCase):
 
     # Test for image file
     source_path = 'test.dd'
+    mock_stat_object = mock.MagicMock()
+    mock_stat_object.st_size = 1234
+    mock_stat.return_value = mock_stat_object
     size = mount_local.GetDiskSize(source_path)
-    expected_args = ['ls', '-s', source_path]
-    mock_subprocess.assert_called_with(expected_args)
-    self.assertEqual(size, 100)
+    mock_stat.assert_called_with(source_path)
+    self.assertEqual(size, 1234)
 
     # Test ls failure
+    mock_stat_object.st_size = None
     source_path = 'test2.dd'
     size = mount_local.GetDiskSize(source_path)
     self.assertIsNone(size)

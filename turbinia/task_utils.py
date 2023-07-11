@@ -225,5 +225,4 @@ def task_runner(obj, *args, **kwargs):
       raise TurbiniaException(f'Could not acquire lock on {config.LOCK_FILE}')
     finally:
       lock.release()
-
   return run

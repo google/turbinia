@@ -128,6 +128,7 @@ class TurbiniaTaskResult:
 
     self.closed = False
     self.evidence = evidence if evidence else []
+    self.evidence_size = None
     self.input_evidence = input_evidence
     self.id = uuid.uuid4().hex
     self.job_id = job_id
@@ -440,8 +441,8 @@ class TurbiniaTask:
 
   # The list of attributes that we will persist into storage
   STORED_ATTRIBUTES = [
-      'id', 'job_id', 'last_update', 'name', 'evidence_name', 'request_id',
-      'requester', 'group_name', 'reason', 'all_args', 'group_id'
+      'id', 'job_id', 'last_update', 'name', 'evidence_name', 'evidence_size',
+      'request_id', 'requester', 'group_name', 'reason', 'all_args', 'group_id'
   ]
 
   # The list of evidence states that are required by a Task in order to run.
@@ -475,6 +476,7 @@ class TurbiniaTask:
     self.last_update = datetime.now()
     self.name = name if name else self.__class__.__name__
     self.evidence_name = None
+    self.evidence_size = None
     self.output_dir = None
     self.output_manager = output_manager.OutputManager()
     self.result = None
@@ -546,6 +548,7 @@ class TurbiniaTask:
     evidence.validate()
     evidence.preprocess(
         self.id, tmp_dir=self.tmp_dir, required_states=self.REQUIRED_STATES)
+    self.evidence_size = evidence.size
 
     # Final check to make sure that the required evidence state has been met
     # for Evidence types that have those capabilities.
@@ -786,7 +789,6 @@ class TurbiniaTask:
     self.tmp_dir, self.output_dir = self.output_manager.get_local_output_dirs()
     if not self.result:
       self.result = self.create_result(input_evidence=evidence)
-
     if evidence.copyable and not config.SHARED_FILESYSTEM:
       self.output_manager.retrieve_evidence(evidence)
 

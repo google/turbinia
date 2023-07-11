@@ -272,6 +272,8 @@ class RequestMarkdownReport(MarkdownReportComponent):
           self.bullet(f"Task Count: {request_dict.get('task_count'):d}"))
       report.append(
           self.bullet(f"Queued tasks: {request_dict.get('queued_tasks'):d}"))
+      report.append(
+          self.bullet(f"Evidence Name: {request_dict.get('evidence_name'):d}"))
       report.append('')
     except TypeError as exception:
       log.warning(f'Error formatting the Markdown report: {exception!s}')

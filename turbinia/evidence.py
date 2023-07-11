@@ -454,6 +454,9 @@ class Evidence:
     if not required_states:
       required_states = []
 
+    if not self.size and self.source_path:
+      self.size = mount_local.GetDiskSize(self.source_path)
+
     if self.context_dependent:
       if not self.parent_evidence:
         raise TurbiniaException(
@@ -687,8 +690,6 @@ class RawDisk(Evidence):
     self.device_path = None
 
   def _preprocess(self, _, required_states):
-    if self.size is None:
-      self.size = mount_local.GetDiskSize(self.source_path)
     if EvidenceState.ATTACHED in required_states or self.has_child_evidence:
       self.device_path = mount_local.PreprocessLosetup(self.source_path)
       self.state[EvidenceState.ATTACHED] = True
