@@ -326,7 +326,6 @@ class RedisStateManager(BaseStateManager):
     task.state_key = key
     return key
 
-  #todo(igormr): change set to hset to store map instead of string
   def write_new_evidence(self, evidence_):
     key = ':'.join(('TurbiniaEvidence', evidence_.hash))
     log.info(f'Writing new evidence {evidence_.name:s} into Redis')
@@ -338,7 +337,10 @@ class RedisStateManager(BaseStateManager):
     return key
 
   def get_evidence(self, file_hash):
-    return self.client.get(':'.join(('TurbiniaEvidence', file_hash)))
+    serialized_evidence = self.client.get(
+        ':'.join(('TurbiniaEvidence', file_hash)))
+    if serialized_evidence:
+      return json.loads(serialized_evidence)
 
   def get_evidence_summary(self):
     evidences = {}

@@ -27,6 +27,7 @@ import inspect
 import filelock
 
 from turbinia import config
+from turbinia import state_manager
 from turbinia import TurbiniaException
 from turbinia.processors import archive
 from turbinia.processors import containerd
@@ -41,6 +42,8 @@ if config.CLOUD_PROVIDER.lower() == 'gcp':
   from turbinia.processors import google_cloud
 
 log = logging.getLogger('turbinia')
+
+redis_manager = state_manager.RedisStateManager()
 
 
 def evidence_class_names(all_classes=False):
@@ -168,77 +171,71 @@ def create_evidence(
     profile=None, project=None, source=None, source_path=None, zone=None,
     file_hash=None):
 
-  # Avoid circular dependency.
-  #from turbinia import client as TurbiniaClientProvider
-  #client = TurbiniaClientProvider.get_turbinia_client()
-
   evidence = None
 
-  #if file_hash and client.get_evidence(file_hash):
+  if file_hash and redis_manager.get_evidence(file_hash):
+    evidence = evidence_decode(redis_manager.get_evidence(file_hash))
+  else:
+    if not evidence_type and args:
+      evidence_type = args.command
 
-  #  evidence = evidence_decode(client.get_evidence(file_hash))
-
-  if not evidence_type and args:
-    evidence_type = args.command
-
-  if evidence_type == 'rawdisk':
-    evidence = RawDisk(
-        name=name, source_path=os.path.abspath(source_path), source=source,
-        file_hash=file_hash)
-  elif evidence_type == 'ewfdisk':
-    evidence = EwfDisk(
-        name=name, source_path=os.path.abspath(source_path), source=source,
-        file_hash=file_hash)
-  elif evidence_type == 'directory':
-    source_path = os.path.abspath(source_path)
-    if not config.SHARED_FILESYSTEM:
-      log.info(
-          'A Cloud Only Architecture has been detected. '
-          'Compressing the directory for GCS upload.')
-      source_path = archive.CompressDirectory(
-          source_path, output_path=config.TMP_DIR)
-      evidence = CompressedDirectory(
-          name=name, source_path=source_path, source=source,
+    if evidence_type == 'rawdisk':
+      evidence = RawDisk(
+          name=name, source_path=os.path.abspath(source_path), source=source,
           file_hash=file_hash)
-    else:
-      evidence = Directory(name=name, source_path=source_path, source=source)
-  elif evidence_type == 'compresseddirectory':
-    archive.ValidateTarFile(source_path)
-    evidence = CompressedDirectory(
-        name=name, source_path=os.path.abspath(source_path), source=source,
-        file_hash=file_hash)
-  elif evidence_type == 'googleclouddisk':
-    evidence = GoogleCloudDisk(
-        name=name, disk_name=disk_name, project=project, zone=zone,
-        source=source)
-  elif evidence_type == 'googleclouddiskembedded':
-    parent_evidence_ = GoogleCloudDisk(
-        name=name, disk_name=disk_name, project=project, source=source,
-        mount_partition=mount_partition, zone=zone)
-    evidence = GoogleCloudDiskRawEmbedded(
-        name=name, disk_name=disk_name, project=project, zone=zone,
-        embedded_path=embedded_path)
-    evidence.set_parent(parent_evidence_)
-  elif evidence_type == 'hindsight':
-    if format not in ['xlsx', 'sqlite', 'jsonl']:
-      msg = 'Invalid output format.'
-      raise TurbiniaException(msg)
-    if browser_type not in ['Chrome', 'Brave']:
-      msg = 'Browser type not supported.'
-      raise TurbiniaException(msg)
-    source_path = os.path.abspath(source_path)
-    evidence = ChromiumProfile(
-        name=name, source_path=source_path, output_format=format,
-        browser_type=browser_type)
-  elif evidence_type == 'rawmemory':
-    source_path = os.path.abspath(source_path)
-    evidence = RawMemory(
-        name=name, source_path=source_path, profile=profile,
-        module_list=args.module_list)
+    elif evidence_type == 'ewfdisk':
+      evidence = EwfDisk(
+          name=name, source_path=os.path.abspath(source_path), source=source,
+          file_hash=file_hash)
+    elif evidence_type == 'directory':
+      source_path = os.path.abspath(source_path)
+      if not config.SHARED_FILESYSTEM:
+        log.info(
+            'A Cloud Only Architecture has been detected. '
+            'Compressing the directory for GCS upload.')
+        source_path = archive.CompressDirectory(
+            source_path, output_path=config.TMP_DIR)
+        evidence = CompressedDirectory(
+            name=name, source_path=source_path, source=source,
+            file_hash=file_hash)
+      else:
+        evidence = Directory(name=name, source_path=source_path, source=source)
+    elif evidence_type == 'compresseddirectory':
+      archive.ValidateTarFile(source_path)
+      evidence = CompressedDirectory(
+          name=name, source_path=os.path.abspath(source_path), source=source,
+          file_hash=file_hash)
+    elif evidence_type == 'googleclouddisk':
+      evidence = GoogleCloudDisk(
+          name=name, disk_name=disk_name, project=project, zone=zone,
+          source=source)
+    elif evidence_type == 'googleclouddiskembedded':
+      parent_evidence_ = GoogleCloudDisk(
+          name=name, disk_name=disk_name, project=project, source=source,
+          mount_partition=mount_partition, zone=zone)
+      evidence = GoogleCloudDiskRawEmbedded(
+          name=name, disk_name=disk_name, project=project, zone=zone,
+          embedded_path=embedded_path)
+      evidence.set_parent(parent_evidence_)
+    elif evidence_type == 'hindsight':
+      if format not in ['xlsx', 'sqlite', 'jsonl']:
+        msg = 'Invalid output format.'
+        raise TurbiniaException(msg)
+      if browser_type not in ['Chrome', 'Brave']:
+        msg = 'Browser type not supported.'
+        raise TurbiniaException(msg)
+      source_path = os.path.abspath(source_path)
+      evidence = ChromiumProfile(
+          name=name, source_path=source_path, output_format=format,
+          browser_type=browser_type)
+    elif evidence_type == 'rawmemory':
+      source_path = os.path.abspath(source_path)
+      evidence = RawMemory(
+          name=name, source_path=source_path, profile=profile,
+          module_list=args.module_list)
 
-  #if file_hash:
-  #  client.write_new_evidence(evidence)
-
+    if file_hash:
+      redis_manager.write_new_evidence(evidence)
   return evidence
 
 

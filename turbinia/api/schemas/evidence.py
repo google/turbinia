@@ -18,6 +18,7 @@ import json
 
 from typing import Optional
 from pydantic import BaseModel, validator
+from os import path
 
 from turbinia import evidence
 
@@ -26,8 +27,9 @@ from turbinia import evidence
 
 class Evidence(BaseModel):
   """Base evidence object"""
-  name: str
+  file_name: str
   evidence_type: str
+  new_name: Optional[str] = None
   browser_type: Optional[str] = None
   disk_name: Optional[str] = None
   embedded_path: Optional[str] = None
@@ -48,12 +50,16 @@ class Evidence(BaseModel):
     """Converts the multiple json inputs to a list[EvidenceInformation]"""
     if isinstance(value, str):
       entries = value.split('},')
-      value = []
+      information = {}
       for entry in entries:
         if entry[-1] != '}':
           entry = entry + '}'
-        value.append(cls(**json.loads(entry)))
-    return value
+        evidence_info = cls(**json.loads(entry))
+        if not evidence_info.new_name or evidence_info.new_name == 'string':
+          evidence_info.new_name = evidence_info.file_name
+        # Uses the file name (without extension) as the key to get the evidence
+        information[evidence_info.file_name] = evidence_info
+    return information
 
   @validator('evidence_type')
   @classmethod
