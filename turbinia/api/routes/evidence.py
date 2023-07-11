@@ -111,10 +111,6 @@ async def upload_evidence(
   """
   # Extracts nested dict
   information = information[0]
-  print(information)
-  if len(files) != len(information):
-    log.error(f'Wrong number of arguments: {TypeError}')
-    raise TypeError('Wrong number of arguments')
   evidences = []
   separator = '' if turbinia_config.TMP_DIR[-1] == '/' else '/'
   for file in files:
@@ -140,7 +136,7 @@ async def upload_evidence(
       file.file.close()
       if redis_manager.get_evidence(file_hash):
         message = ', '.join((
-            f'File {file_info.name} was uploaded before',
+            f'File {file.filename} was uploaded before',
             f'check TurbiniaEvidence:{file_hash}'))
         evidences.append(message)
         log.error(message)

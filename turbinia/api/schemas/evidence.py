@@ -18,7 +18,6 @@ import json
 
 from typing import Optional
 from pydantic import BaseModel, validator
-from os import path
 
 from turbinia import evidence
 
@@ -59,11 +58,11 @@ class Evidence(BaseModel):
           evidence_info.new_name = evidence_info.file_name
         # Uses the file name (without extension) as the key to get the evidence
         information[evidence_info.file_name] = evidence_info
-    return information
+      return information
 
   @validator('evidence_type')
   @classmethod
-  def check_storage_type(cls, value):
+  def check_evidence_type(cls, value):
     if value not in (evidence.map_evidence_attributes().keys()):
       raise ValueError(f'{value:s} is not an evidence type.')
     return value
