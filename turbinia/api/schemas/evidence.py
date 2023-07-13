@@ -46,7 +46,8 @@ class Evidence(BaseModel):
 
   @classmethod
   def validate_to_json(cls, value):
-    """Converts the multiple json inputs to a list[EvidenceInformation]"""
+    """Converts the multiple json inputs to a
+    dict[EvidenceInformation.file_name: EvidenceInformation]"""
     if isinstance(value, str):
       entries = value.split('},')
       information = {}
@@ -56,7 +57,6 @@ class Evidence(BaseModel):
         evidence_info = cls(**json.loads(entry))
         if not evidence_info.new_name or evidence_info.new_name == 'string':
           evidence_info.new_name = evidence_info.file_name
-        # Uses the file name (without extension) as the key to get the evidence
         information[evidence_info.file_name] = evidence_info
       return information
 

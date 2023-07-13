@@ -65,11 +65,33 @@ async def get_evidence_summary(request: Request):
   """
   evidences = redis_manager.get_evidence_summary()
   if evidences:
-    return redis_manager.get_evidence_summary()
+    return JSONResponse(
+        content=redis_manager.get_evidence_summary(), status_code=200)
   raise HTTPException(status_code=404, detail='No evidences found.')
 
 
-@router.get('/{file_hash}')
+@router.get('/id')
+async def get_evidence_by_id(request: Request, evidence_id):
+  """Retrieves an evidence in redis by using its UUID.
+
+  Args:
+    evidence_id (str): The UUID of the evidence.
+  
+  Raises:
+    HTTPException: if the evidence is not found.
+
+  Returns:
+
+  """
+  if redis_manager.get_evidence(evidence_id):
+    return JSONResponse(
+        content=redis_manager.get_evidence(evidence_id), status_code=200)
+  raise HTTPException(
+      status_code=404,
+      detail=f'UUID {evidence_id} not found or it had no associated evidences.')
+
+
+@router.get('/{hash}')
 async def get_evidence_by_hash(request: Request, file_hash):
   """Retrieves an evidence in redis by using its hash (SHA3-224).
 
@@ -78,18 +100,22 @@ async def get_evidence_by_hash(request: Request, file_hash):
   
   Raises:
     HTTPException: if the evidence is not found.
+
+  Returns:
+
   """
-  if redis_manager.get_evidence(file_hash):
-    return redis_manager.get_evidence(file_hash)
-  else:
-    raise HTTPException(
-        status_code=404,
-        detail=f'Hash {file_hash} not found or it had no associated evidences.')
+  if redis_manager.get_evidence_by_hash(file_hash):
+    return JSONResponse(
+        content=redis_manager.get_evidence_by_hash(file_hash), status_code=200)
+  raise HTTPException(
+      status_code=404,
+      detail=f'Hash {file_hash} not found or it had no associated evidences.')
 
 
-#todo(igormr) add max file length
 #todo(igormr) update request_ids for every request
 #todo(igormr) Make TurbiniaRequest on redis pointing to TurbiniaEvidence and back
+#todo(igormr) Add
+#todo(igormr) Use something else other than the hash as the key
 
 
 @router.post('/upload')
@@ -108,42 +134,51 @@ async def upload_evidence(
   
   Raises:
     TypeError: If pre-conditions are not met.
+  
+  Returns:
+    List of uploaded evidences or warning messages if any.
   """
   # Extracts nested dict
   information = information[0]
   evidences = []
-  separator = '' if turbinia_config.TMP_DIR[-1] == '/' else '/'
+  separator = '' if turbinia_config.OUTPUT_DIR[-1] == '/' else '/'
   for file in files:
     file_info = information.get(file.filename, None)
     if not file_info:
-      message = f'No information found for file {file.filename}'
-      evidences.append(message)
-      log.error(message)
+      warning_message = f'No information found for file {file.filename}'
+      evidences.append(warning_message)
+      log.error(warning_message)
     else:
       name = file_info.new_name
-      file_path = separator.join([turbinia_config.TMP_DIR, name])
+      file_path = separator.join([turbinia_config.OUTPUT_DIR, name])
       equal_files = 1
       while os.path.exists(file_path):
         equal_files += 1
-        name = f'(({equal_files}) {file_info.new_name})'
-        file_path = separator.join([turbinia_config.TMP_DIR, name])
+        name = f'({equal_files}) {file_info.new_name}'
+        file_path = separator.join([turbinia_config.OUTPUT_DIR, name])
+      sha_hash = hashlib.sha3_224()
+      size = 0
+      warning_message = None
       with open(file_path, 'wb') as saved_file:
-        sha_hash = hashlib.sha3_224()
-        while chunk := await file.read(1024):
+        while (chunk := await file.read(1024)) and size < 10737418240:
           saved_file.write(chunk)
           sha_hash.update(chunk)
-        file_hash = sha_hash.hexdigest()
+          size += 1024
+          if size >= 10737418240:
+            warning_message = ', '.join(
+                (f'Unable to upload file {file.filename} greater than 10 GB'))
       file.file.close()
-      if redis_manager.get_evidence(file_hash):
-        message = ', '.join((
-            f'File {file.filename} was uploaded before',
-            f'check TurbiniaEvidence:{file_hash}'))
-        evidences.append(message)
-        log.error(message)
+      file_hash = sha_hash.hexdigest()
+      if evidence_ := redis_manager.get_evidence_by_hash(file_hash):
+        warning_message = (
+            f'File {file.filename} was uploaded before, check {evidence_[0]}')
+      if warning_message:
+        evidences.append(warning_message)
+        log.error(warning_message)
         try:
           os.remove(file_path)
         except OSError:
-          log.error(f'Could not remove duplicate file {file_path}')
+          log.error(f'Could not remove file {file_path}')
       else:
         evidence_ = evidence.create_evidence(
             evidence_type=file_info.evidence_type.lower(),
@@ -154,4 +189,4 @@ async def upload_evidence(
             profile=file_info.profile, project=file_info.project,
             source=file_info.source, zone=file_info.zone, file_hash=file_hash)
         evidences.append(evidence_.serialize())
-  return evidences
+  return JSONResponse(content=evidences, status_code=200)

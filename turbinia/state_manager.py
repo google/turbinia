@@ -327,29 +327,37 @@ class RedisStateManager(BaseStateManager):
     return key
 
   def write_new_evidence(self, evidence_):
-    key = ':'.join(('TurbiniaEvidence', evidence_.hash))
+    key = ':'.join(('TurbiniaEvidence', evidence_.id))
     log.info(f'Writing new evidence {evidence_.name:s} into Redis')
     # nx=True prevents overwriting (i.e. no unintentional task clobbering)
     if not self.client.set(key, json.dumps(evidence_.serialize()), nx=True):
       log.error(
           f'Unsuccessful in writing evidence {evidence_.name:s} into Redis')
-    self.client.sadd('TurbiniaEvidenceCollection', key)
+    else:
+      self.client.sadd('TurbiniaEvidenceCollection', key)
+      if evidence_.hash:
+        key = self.client.hset('TurbiniaEvidenceHashes', evidence_.hash, key)
     return key
 
-  def get_evidence(self, file_hash):
+  def get_evidence(self, evidence_id):
     serialized_evidence = self.client.get(
-        ':'.join(('TurbiniaEvidence', file_hash)))
+        ':'.join(('TurbiniaEvidence', evidence_id)))
     if serialized_evidence:
       return json.loads(serialized_evidence)
+
+  def get_evidence_by_hash(self, file_hash):
+    key = self.client.hget('TurbiniaEvidenceHashes', file_hash)
+    if key:
+      return (key.decode(), json.loads(self.client.get(key)))
 
   def get_evidence_summary(self):
     evidences = {}
     for key in self.client.smembers('TurbiniaEvidenceCollection'):
-      evidences[key] = self.client.get(key)
+      evidences[key.decode()] = json.loads(self.client.get(key))
     return evidences
 
-  def update_evidence(self, file_hash, request_id):
-    key = ':'.join(('TurbiniaEvidence', file_hash))
+  def update_evidence(self, evidence_id, request_id):
+    key = ':'.join(('TurbiniaEvidence', evidence_id))
     serialized_evidence = self.client.get(key)
 
     if serialized_evidence:
