@@ -1,7 +1,8 @@
 FROM ubuntu:20.04
 
 ENV DEBIAN_FRONTEND=noninteractive 
-RUN apt-get update && apt-get -y install \
+RUN apt-get update && apt-get -y upgrade
+RUN apt-get -y install \
     apt-transport-https \
     apt-utils \
     ca-certificates \
