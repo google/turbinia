@@ -46,6 +46,9 @@ log = logging.getLogger('turbinia')
 
 redis_manager = state_manager.RedisStateManager()
 
+#TODO(IGORMR) SET THIS
+IMPORTANT_ATTRIBUTES = ()
+
 
 def evidence_class_names(all_classes=False):
   """Returns a list of class names for the evidence module.
@@ -183,8 +186,7 @@ def create_evidence(
         file_hash=file_hash)
   elif evidence_type == 'ewfdisk':
     evidence = EwfDisk(
-        name=name, source_path=os.path.abspath(source_path), source=source,
-        file_hash=file_hash)
+        name=name, source_path=os.path.abspath(source_path), source=source)
   elif evidence_type == 'directory':
     source_path = os.path.abspath(source_path)
     if not config.SHARED_FILESYSTEM:
@@ -201,8 +203,7 @@ def create_evidence(
   elif evidence_type == 'compresseddirectory':
     archive.ValidateTarFile(source_path)
     evidence = CompressedDirectory(
-        name=name, source_path=os.path.abspath(source_path), source=source,
-        file_hash=file_hash)
+        name=name, source_path=os.path.abspath(source_path), source=source)
   elif evidence_type == 'googleclouddisk':
     evidence = GoogleCloudDisk(
         name=name, disk_name=disk_name, project=project, zone=zone,
@@ -231,9 +232,6 @@ def create_evidence(
     evidence = RawMemory(
         name=name, source_path=source_path, profile=profile,
         module_list=args.module_list)
-
-  if evidence:
-    redis_manager.write_new_evidence(evidence)
 
   return evidence
 
@@ -331,8 +329,9 @@ class Evidence:
   # docstrings for more info.
   POSSIBLE_STATES = []
 
-  def __init__(self, *args, **kwargs):
+  def __init__(self, file_hash=None, *args, **kwargs):
     """Initialization for Evidence."""
+    self.hash = file_hash
     self.cloud_only = kwargs.get('cloud_only', False)
     self.config = kwargs.get('config', {})
     self.context_dependent = kwargs.get('context_dependent', False)
@@ -356,12 +355,8 @@ class Evidence:
     self.source_path = kwargs.get('source_path', None)
     self.tags = kwargs.get('tags', {})
     self.type = self.__class__.__name__
-
-    self.hash = kwargs.get('hash', None)
-    self.id = uuid.uuid4().hex
-    #self.request_ids = kwargs.get('request_ids', set())
-    #if self.request_id:
-    # self.request_ids.add(self.request_id)
+    self.request_ids = kwargs.get(
+        'request_ids', [self.request_id] if self.request_id else [])
     self.creation_time = datetime.now().strftime(DATETIME_FORMAT)
     self.last_updated = datetime.now().strftime(DATETIME_FORMAT)
 
@@ -379,6 +374,13 @@ class Evidence:
           'Unable to initialize object, {0:s} is a copyable '
           'evidence and needs a source_path'.format(self.type))
 
+    evidence_id = kwargs.get('id', None)
+    if not evidence_id:
+      evidence_id = self.find_in_redis(file_hash=file_hash)
+      self.id = evidence_id if evidence_id else uuid.uuid4().hex
+
+    redis_manager.write_new_evidence(self)
+
     # TODO: Validating for required attributes breaks some units tests.
     # Github issue: https://github.com/google/turbinia/issues/1136
     # self.validate()
@@ -388,6 +390,15 @@ class Evidence:
 
   def __repr__(self):
     return self.__str__()
+
+  def __setattr__(self, name, value):
+    self.__dict__[name] = value
+    if 'id' in self.__dict__:
+      if redis_manager.update_evidence_attribute(
+          self.id, name, value) and name != 'last_updated':
+        self.last_updated = datetime.now().strftime(DATETIME_FORMAT)
+        redis_manager.update_evidence_attribute(
+            self.id, 'last_updated', self.last_updated)
 
   @property
   def name(self):
@@ -426,6 +437,27 @@ class Evidence:
         source_path=source_path, tags=tags, request_id=request_id)
     new_object.__dict__.update(dictionary)
     return new_object
+
+  #todo(igormr): Finish this to make it recognize equal evidences
+  #todo(igormr): Save evidence_id in task/request
+  def find_in_redis(self, file_hash=None):
+    if file_hash:
+      if redis_manager.get_evidence_by_hash(file_hash):
+        return redis_manager.get_evidence_id_by_hash(self.id).split(':')[1]
+    else:
+      evidence_summary = redis_manager.get_evidence_summary().get(
+          str(type(self)), None)
+      if evidence_summary:
+        for saved_evidence in IMPORTANT_ATTRIBUTES:
+          equal = True
+          for attribute in IMPORTANT_ATTRIBUTES:
+            if self.__dict__.get(attribute, None) and saved_evidence.get(
+                attribute, None):
+              if self.__dict__[attribute] != saved_evidence[attribute]:
+                equal = False
+          if equal:
+            return saved_evidence.id
+    return False
 
   def serialize(self):
     """Return JSON serializable object."""
@@ -702,11 +734,10 @@ class CompressedDirectory(Evidence):
   def __init__(self, source_path=None, file_hash=None, *args, **kwargs):
     """Initialization for CompressedDirectory evidence object."""
     super(CompressedDirectory, self).__init__(
-        source_path=source_path, *args, **kwargs)
+        source_path=source_path, file_hash=file_hash, *args, **kwargs)
     self.compressed_directory = None
     self.uncompressed_directory = None
     self.copyable = True
-    self.hash = file_hash
 
   def _preprocess(self, tmp_dir, required_states):
     # Uncompress a given tar file and return the uncompressed path.
@@ -749,15 +780,12 @@ class ChromiumProfile(Evidence):
 
   REQUIRED_ATTRIBUTES = ['browser_type', 'output_format']
 
-  def __init__(
-      self, browser_type=None, output_format=None, file_hash=None, *args,
-      **kwargs):
+  def __init__(self, browser_type=None, output_format=None, *args, **kwargs):
     """Initialization for chromium profile evidence object."""
     super(ChromiumProfile, self).__init__(*args, **kwargs)
     self.browser_type = browser_type
     self.output_format = output_format
     self.copyable = True
-    self.hash = file_hash
 
 
 class RawDisk(Evidence):
@@ -773,9 +801,9 @@ class RawDisk(Evidence):
 
   def __init__(self, source_path=None, file_hash=None, *args, **kwargs):
     """Initialization for raw disk evidence object."""
-    super(RawDisk, self).__init__(source_path=source_path, *args, **kwargs)
+    super(RawDisk, self).__init__(
+        source_path=source_path, file_hash=file_hash, *args, **kwargs)
     self.device_path = None
-    self.hash = file_hash
 
   def _preprocess(self, _, required_states):
     if self.size is None:
@@ -808,11 +836,9 @@ class DiskPartition(Evidence):
 
   def __init__(
       self, partition_location=None, partition_offset=None, partition_size=None,
-      lv_uuid=None, path_spec=None, important=True, file_hash=None, *args,
-      **kwargs):
+      lv_uuid=None, path_spec=None, important=True, *args, **kwargs):
     """Initialization for raw volume evidence object."""
     self.partition_location = partition_location
-    self.hash = file_hash
     if partition_offset:
       try:
         self.partition_offset = int(partition_offset)
