@@ -71,11 +71,9 @@ def GetDiskSize(source_path):
 
   if size is None:
     # evidence is not a block device, check image file size
-    cmd = ['ls', '-s', source_path]
     try:
-      cmd_output = subprocess.check_output(cmd).split()
-      size = int(cmd_output[0].decode('utf-8'))
-    except subprocess.CalledProcessError as exception:
+      size = os.stat(source_path).st_size
+    except OSError as exception:
       log.warning(f'Checking disk size failed: {exception!s}')
 
   return size

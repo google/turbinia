@@ -105,6 +105,7 @@ export default {
       headers: [
         { text: 'Request', value: 'request_id_reason' },
         { text: 'Last Task Update Time', value: 'last_task_update_time' },
+        { text: 'Evidence Name', value: 'evidence_name' },
         { text: 'Requester', value: 'requester' },
         { text: 'Total Tasks', value: 'total_tasks' },
         { text: 'Running Tasks', value: 'running_tasks' },
@@ -137,6 +138,7 @@ export default {
               failed_tasks: data[req].failed_tasks,
               outstanding_perc: outstanding_perc,
               status: data[req].status,
+              evidence_name: data[req].evidence_name,
             })
           }
           this.requestSummary = requestSummary
