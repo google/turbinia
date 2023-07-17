@@ -95,7 +95,7 @@ async def get_evidence_by_id(request: Request, evidence_id):
 async def get_evidence_by_hash(request: Request, file_hash):
   """Retrieves an evidence in redis by using its hash (SHA3-224).
 
-  Args:
+  Args: 
     file_hash (str): SHA3-224 hash of file.
   
   Raises:
@@ -104,9 +104,10 @@ async def get_evidence_by_hash(request: Request, file_hash):
   Returns:
 
   """
-  if redis_manager.get_evidence_by_hash(file_hash):
+  if key := redis_manager.get_evidence_key_by_hash(file_hash):
     return JSONResponse(
-        content=redis_manager.get_evidence_by_hash(file_hash), status_code=200)
+        content={key: redis_manager.get_evidence_by_hash(file_hash)},
+        status_code=200)
   raise HTTPException(
       status_code=404,
       detail=f'Hash {file_hash} not found or it had no associated evidences.')
@@ -114,8 +115,7 @@ async def get_evidence_by_hash(request: Request, file_hash):
 
 #todo(igormr) update request_ids for every request
 #todo(igormr) Make TurbiniaRequest on redis pointing to TurbiniaEvidence and back
-#todo(igormr) Add
-#todo(igormr) Use something else other than the hash as the key
+#todo(igormr) Check if turbinia client works with new endpoints, especially upload
 
 
 @router.post('/upload')
@@ -169,9 +169,9 @@ async def upload_evidence(
                 (f'Unable to upload file {file.filename} greater than 10 GB'))
       file.file.close()
       file_hash = sha_hash.hexdigest()
-      if evidence_ := redis_manager.get_evidence_by_hash(file_hash):
+      if redis_evidence := redis_manager.get_evidence_key_by_hash(file_hash):
         warning_message = (
-            f'File {file.filename} was uploaded before, check {evidence_[0]}')
+            f'File {file.filename} was uploaded before, check {redis_evidence}')
       if warning_message:
         evidences.append(warning_message)
         log.error(warning_message)
