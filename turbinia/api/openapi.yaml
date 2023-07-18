@@ -318,7 +318,7 @@ paths:
       summary: Upload Evidence
       tags:
         - Turbinia Evidence
-  /api/evidence/{hash}:
+  /api/evidence/{file_hash}:
     get:
       description:
         "Retrieves an evidence in redis by using its hash (SHA3-224).\n\
@@ -326,7 +326,7 @@ paths:
         \ if the evidence is not found.\n\nReturns:"
       operationId: get_evidence_by_hash
       parameters:
-        - in: query
+        - in: path
           name: file_hash
           required: true
           schema:

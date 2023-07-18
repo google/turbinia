@@ -91,7 +91,7 @@ async def get_evidence_by_id(request: Request, evidence_id):
       detail=f'UUID {evidence_id} not found or it had no associated evidences.')
 
 
-@router.get('/{hash}')
+@router.get('/{file_hash}')
 async def get_evidence_by_hash(request: Request, file_hash):
   """Retrieves an evidence in redis by using its hash (SHA3-224).
 
