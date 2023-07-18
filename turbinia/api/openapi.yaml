@@ -204,9 +204,9 @@ paths:
   /api/evidence/id:
     get:
       description:
-        "Retrieves an evidence in redis by using its hash (SHA3-224).\n\
-        \nArgs:\n  evidence_id (str): The UUID of the evidence.\n\nRaises:\n  HTTPException:\
-        \ if the evidence is not found."
+        "Retrieves an evidence in redis by using its UUID.\n\nArgs:\n \
+        \ evidence_id (str): The UUID of the evidence.\n\nRaises:\n  HTTPException:\
+        \ if the evidence is not found.\n\nReturns:"
       operationId: get_evidence_by_id
       parameters:
         - in: query
@@ -322,8 +322,8 @@ paths:
     get:
       description:
         "Retrieves an evidence in redis by using its hash (SHA3-224).\n\
-        \nArgs:\n  file_hash (str): SHA3-224 hash of file.\n\nRaises:\n  HTTPException:\
-        \ if the evidence is not found."
+        \nArgs: \n  file_hash (str): SHA3-224 hash of file.\n\nRaises:\n  HTTPException:\
+        \ if the evidence is not found.\n\nReturns:"
       operationId: get_evidence_by_hash
       parameters:
         - in: query
