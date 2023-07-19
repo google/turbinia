@@ -4,7 +4,9 @@ FROM ubuntu:22.04
 ARG PPA_TRACK=stable
 
 ENV DEBIAN_FRONTEND=noninteractive
-RUN apt-get update && apt-get -y install \
+#RUN apt-get update && apt-get -y upgrade
+RUN apt-get update
+RUN apt-get -y install \
     apt-transport-https \
     apt-utils \
     automake \
@@ -14,6 +16,7 @@ RUN apt-get update && apt-get -y install \
     gcc \
     git \
     golang \
+    gpg \
     go-bindata \
     john \
     john-data \
@@ -57,8 +60,10 @@ RUN pip3 install dfDewey
 #   libluksde-tools
 #   Plaso
 #   Sleuthkit
-RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 0x5e80511b10c598b8 \
-    && add-apt-repository -y ppa:gift/$PPA_TRACK
+
+RUN curl -sS https://keyserver.ubuntu.com/pks/lookup?op=get\&search=0x3ed1eaece81894b171d7da5b5e80511b10c598b8 | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/gift.gpg
+#RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 0x5e80511b10c598b8 \
+RUN add-apt-repository -y ppa:gift/$PPA_TRACK
 RUN apt-get update && apt-get -y install \
     bulk-extractor \
     dfimagetools-tools \
