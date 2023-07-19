@@ -27,6 +27,7 @@ from turbinia_api_lib.api import turbinia_tasks_api
 from turbinia_api_lib.api import turbinia_configuration_api
 from turbinia_api_lib.api import turbinia_jobs_api
 from turbinia_api_lib.api import turbinia_request_results_api
+from turbinia_api_lib.api import turbinia_evidence_api
 
 from turbinia_client.core import groups
 from turbinia_client.helpers import formatter
@@ -286,3 +287,26 @@ def create_request(ctx: click.Context, *args: int, **kwargs: int) -> None:
         f'when calling create_request: {exception.body}')
   except (TypeError, exceptions.ApiTypeError) as exception:
     log.error(f'The request object is invalid. {exception}')
+
+
+@groups.status_group.command('evidence')
+@click.pass_context
+@click.argument('evidence_id')
+@click.option(
+    '--json_dump', '-j', help='Generates JSON output.', is_flag=True,
+    required=False)
+def get_evidence(ctx: click.Context, task_id: str, json_dump: bool) -> None:
+  """Gets Turbinia evidence status."""
+  client: api_client.ApiClient = ctx.obj.api_client
+  api_instance = turbinia_evidence_api.TurbiniaEvidenceApi(client)
+  try:
+    api_response = api_instance.get_evidence_by_id(task_id)
+    if json_dump:
+      formatter.echo_json(api_response)
+    else:
+      report = formatter.TaskMarkdownReport(api_response).generate_markdown()
+      click.echo(report)
+  except exceptions.ApiException as exception:
+    log.error(
+        f'Received status code {exception.status} '
+        f'when calling get_task_status: {exception.body}')
