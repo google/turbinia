@@ -348,7 +348,7 @@ following steps.
 
 - Clone the github repo [kube-prometheus](https://github.com/prometheus-operator/kube-prometheus)
   locally.
-- Once cloned, navigate to the [manifests/prometheus-prometheus.yaml](https://github.com/prometheus-operator/kube-prometheus/blob/master/main/manifests/prometheus-prometheus.yaml) file and make any necessary changes.
+- Once cloned, navigate to the [manifests/prometheus-prometheus.yaml](https://github.com/prometheus-operator/kube-prometheus/blob/main/manifests/prometheus-prometheus.yaml) file and make any necessary changes.
 - Also ensure that the additional scrape config is added back into the bottom of the file as it’s required for Prometheus to query for Turbinia metrics.
 
   ```
