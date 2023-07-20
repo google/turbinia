@@ -1,7 +1,7 @@
 @echo off
 
 rem Script to generate dfVFS test files on Windows.
-rem Copied with permission from: https://github.com/log2timeline/dfvfs/blob/main/utils/generate_test_data_windows.bat
+rem Copied with permission from: https://github.com/log2timeline/dfvfs/blob/master/main/utils/generate_test_data_windows.bat
 rem Requires Windows 7 or later
 
 rem Split the output of ver e.g. "Microsoft Windows [Version 10.0.10586]"
