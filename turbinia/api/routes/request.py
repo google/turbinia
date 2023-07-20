@@ -53,8 +53,7 @@ async def get_requests_summary(request: Request):
     if isinstance(response, dict):
       response = OrderedDict(sorted(response.items()))
     return JSONResponse(
-        status_code=200, content=json.loads(response_json),
-        media_type='application/json')
+        status_code=200, content=response, media_type='application/json')
   except (json.JSONDecodeError, TypeError, ValueError,
           ValidationError) as exception:
     log.error(
