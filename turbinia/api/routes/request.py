@@ -47,7 +47,7 @@ async def get_requests_summary(request: Request):
     if not requests_summary.get_requests_summary():
       return JSONResponse(
           content={'detail': 'Request summary is empty'}, status_code=200)
-    response_json = requests_summary.json(sort_keys=True)
+    response_json = requests_summary.model_dump_json()
     return JSONResponse(
         status_code=200, content=json.loads(response_json),
         media_type='application/json')
@@ -77,7 +77,8 @@ async def get_request_status(request: Request, request_id: str):
       raise HTTPException(
           status_code=404,
           detail='Request ID not found or the request had no associated tasks.')
-    response_json = request_out.json(sort_keys=True)
+    #todo(igormr): Sort dictionary
+    response_json = request_out.model_dump_json()
     return JSONResponse(
         status_code=200, content=json.loads(response_json),
         media_type='application/json')
