@@ -329,6 +329,10 @@ class RedisStateManager(BaseStateManager):
     task.state_key = key
     return key
 
+
+#todo(igormr) add docstrings and type annotations
+#todo(igormr) split state_manager & evidence class (core) / api_client / api_server /
+
   def write_new_evidence(self, evidence_):
     key = ':'.join(('TurbiniaEvidence', evidence_.id))
     log.info(f'Writing new evidence {evidence_.name:s} into Redis')

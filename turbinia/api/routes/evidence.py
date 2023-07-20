@@ -164,6 +164,7 @@ async def upload_evidence(
           saved_file.write(chunk)
           sha_hash.update(chunk)
           size += 1024
+          #Todo(igormr): save size in config and make hashing optional
           if size >= 10737418240:
             warning_message = ', '.join(
                 (f'Unable to upload file {file.filename} greater than 10 GB'))
