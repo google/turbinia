@@ -116,13 +116,13 @@ etc) prior to execution by setting the state in `Task.REQUIRED_STATES`.  Each
 Evidence object specifies which states it supports in the
 `Evidence.POSSIBLE_STATES` list attribute for that Task (e.g. see the
 [`GoogleCloudDisk` possible states
-here](https://github.com/google/turbinia/blob/cc79288ae36cfec749381b80694b4c1290d76583/turbinia/evidence.py#L661)).
+here](https://github.com/google/turbinia/blob/cc79288ae36cfec749381b80694b4c1290d76583/turbinia/evidence.py#L717)).
 These states are set up by the pre-processors and then after the Task is
 completed, the post-processor will tear down this state (e.g. unmount or
 detach, etc).  For more details on the different states and how the
 pre/post-processors will set these up at runtime, see the
 [`Evidence.preprocess()`
-docstrings](https://github.com/google/turbinia/blob/cc79288ae36cfec749381b80694b4c1290d76583/turbinia/evidence.py#L291).
+docstrings](https://github.com/google/turbinia/blob/cc79288ae36cfec749381b80694b4c1290d76583/turbinia/evidence.py#L405).
 
 ### Evidence Paths
 
@@ -144,7 +144,7 @@ generally this should not be needed as long as you set the
 `TurbiniaTask.REQUIRED_STATES` for the Task to match your actual requirements
 since the `local_path` should always be created by the pre-processors.
 See the [docstrings for these attributes in the Evidence
-object](https://github.com/google/turbinia/blob/cc79288ae36cfec749381b80694b4c1290d76583/turbinia/evidence.py#L127)
+object](https://github.com/google/turbinia/blob/cc79288ae36cfec749381b80694b4c1290d76583/turbinia/evidence.py#203)
 for more details. 
 
 ### Recipe configuration
