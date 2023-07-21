@@ -116,13 +116,13 @@ etc) prior to execution by setting the state in `Task.REQUIRED_STATES`.  Each
 Evidence object specifies which states it supports in the
 `Evidence.POSSIBLE_STATES` list attribute for that Task (e.g. see the
 [`GoogleCloudDisk` possible states
-here](https://github.com/google/turbinia/blob/master/turbinia/evidence.py#L717)).
+here](https://github.com/google/turbinia/blob/master/turbinia/evidence.py)).
 These states are set up by the pre-processors and then after the Task is
 completed, the post-processor will tear down this state (e.g. unmount or
 detach, etc).  For more details on the different states and how the
 pre/post-processors will set these up at runtime, see the
 [`Evidence.preprocess()`
-docstrings](https://github.com/google/turbinia/blob/master/turbinia/evidence.py#L405).
+docstrings](https://github.com/google/turbinia/blob/master/turbinia/evidence.py).
 
 ### Evidence Paths
 
@@ -155,7 +155,7 @@ should be run.  Each Task has a `TASK_CONFIG` dictionary set at the object
 level that defines each of the variables that can be used along with the
 default values that the Task will use when the recipe does not specify that
 variable, or there is no recipe used.  See the [Plaso
-Task](https://github.com/google/turbinia/blob/master/turbinia/workers/plaso.py#L35)
+Task](https://github.com/google/turbinia/blob/master/turbinia/workers/plaso.py)
 `TASK_CONFIG` as an example. Tasks can access these variables by referencing
 the dictionary at `self.task_config`.
 
