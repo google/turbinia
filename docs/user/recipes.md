@@ -45,7 +45,7 @@ with the defaults:
 
 These generally correlate with similarly named command line flags.  The current
 full list can be [found
-here](https://github.com/google/turbinia/blob/master/turbinia/lib/recipe_helpers.py#L36).
+here](https://github.com/google/turbinia/blob/master/turbinia/lib/recipe_helpers.py#L28).
 Each Task specifies the available recipe keys in a `TASK_CONFIG` attribute for
 the Task object (e.g. [here is the `TASK_CONFIG` for the Plaso
 Task](https://github.com/google/turbinia/blob/master/turbinia/workers/plaso.py#L141)).
