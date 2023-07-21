@@ -49,12 +49,10 @@ async def get_requests_summary(request: Request):
       return JSONResponse(
           content={'detail': 'Request summary is empty'}, status_code=200)
     response_json = requests_summary.model_dump_json()
-    response = json.loads(response_json)
-    if isinstance(response, dict):
-      response = OrderedDict(sorted(response.items()))
+    response = OrderedDict(sorted(json.loads(response_json).items()))
     return JSONResponse(
         status_code=200, content=response, media_type='application/json')
-  except (json.JSONDecodeError, TypeError, ValueError,
+  except (json.JSONDecodeError, TypeError, ValueError, AttributeError,
           ValidationError) as exception:
     log.error(
         f'Error retrieving requests summary: {exception!s}', exc_info=True)
@@ -81,12 +79,10 @@ async def get_request_status(request: Request, request_id: str):
           status_code=404,
           detail='Request ID not found or the request had no associated tasks.')
     response_json = request_out.model_dump_json()
-    response = json.loads(response_json)
-    if isinstance(response, dict):
-      response = OrderedDict(sorted(response.items()))
+    response = OrderedDict(sorted(json.loads(response_json).items()))
     return JSONResponse(
         status_code=200, content=response, media_type='application/json')
-  except (json.JSONDecodeError, TypeError, ValueError,
+  except (json.JSONDecodeError, TypeError, ValueError, AttributeError,
           ValidationError) as exception:
     log.error(f'Error retrieving request information: {exception!s}')
     raise HTTPException(

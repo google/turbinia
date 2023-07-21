@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 # Script to generate dfVFS test files on Linux.
-# Copied with permission from: https://github.com/log2timeline/dfvfs/blob/master/main/utils/generate_test_data_linux.sh
+# Copied with permission from: https://github.com/log2timeline/dfvfs/blob//main/utils/generate_test_data_linux.sh
 #
 # Requires:
 # * Linux
