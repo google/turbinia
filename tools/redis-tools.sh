@@ -32,20 +32,20 @@ action=$1 # "keys" / "values" / "delete" / "dump" / "restore"
 case "$action" in
   "restore")
     directory=$2
-    if [[ -z "directory" ]]; then
-      err Directory is empty
+    if [[ -z "$directory" ]]; then
+      >&2 echo Error: directory not provided
     else
-      for filename in "$directory"/*; do
-        key="$(echo "$filename" | sed 's|.*/||')"
+      for filepath in "$directory"/*; do
+        key=$(basename "$filepath")
         echo Restoring "$key"
-        cat "$filename" | redis-cli -x restore "$key" 0
+        cat "$filepath" | redis-cli -x restore "$key" 0
       done
     fi
   ;;
 
   "keys"|"values"|"dump"|"delete")
     # Ignores [Field Value] if "all" is passed
-    field_name = "$2"
+    field_name="$2"
     if [[ "$field_name" == "all" ]]; then
       directory="$3";
     else
@@ -53,58 +53,68 @@ case "$action" in
       directory="$4"
     fi
 
-    if [[ "$action" != "values" ]]; then
-      declare -a key_array
-      if [[ "$action" == keys ]] || [[ "$field_name" != "all" ]]; then echo Keys found:; fi
-    fi
-
-    for key in $(redis-cli --scan); do 
-      key_type=${key%:*}
-      if [[ "$key_type" == "TurbiniaTask" ]]; then
-        # Gets the Task value and split its key:value pairs into an array
-        value=$(redis-cli get "$key")
-        modified_value="${value//\"/}"
-        modified_value="${modified_value//\{/}"
-        modified_value="${modified_value//\}/}"
-        IFS=',' read -r -a array <<< "$modified_value"
-
-        if [[ "$field_name" == "all" ]]; then
-          if [[ "$action" == "values" ]]; then
-            echo -e "$value\n"
-          else
-            if [[ "$action" == keys ]]; then echo "$key"; fi
-            key_array+=( "$key" )
-          fi
-        else
-          for pair in "${array[@]}"; do
-            # Cleans the pair to allow comparison with given field and value
-            pair="${pair#"${pair%%[![:space:]]*}"}"
-            if [[ "$pair"  == "$field_name: $field_value" ]]; then
-              if [[ "$action" == "values" ]]; then
-                echo -e "$value\n";
-              else
-                echo "$key"
-                key_array+=( "$key" )
-              fi
-              break
-            fi
-          done
+    if [[ "$action" == "dump" ]] && [[ -z "$directory" ]]; then
+      >&2 echo Error: directory not provided
+    else
+      if [[ "$action" != "values" ]]; then
+        declare -a key_array
+        if [[ "$action" == keys ]] || [[ "$field_name" != "all" ]]; then
+          echo Keys found:
         fi
       fi
-    done
 
-    if [[ "$action" == "delete" ]] || [[ "$action" == "dump" ]]; then
-      echo Do you want to "$action" "${#key_array[@]}" keys? [y/N]
-      read -r answer
-      if [[ "$answer" == 'y' ]] || [[ "$answer" == 'Y' ]]; then
-        if [[ "$action" == "delete" ]]; then
-          redis-cli DEL "${key_array[@]}"
-        else
-          mkdir -p "$directory"
-          for key in ${key_array[@]}; do
-            redis-cli --raw dump "$key" | head -c-1 > "$directory"/"$key"
-          done
-          echo Dumped in "$directory"
+      for key in $(redis-cli --scan); do 
+        # Gets the first 8 digits fo the key to check if it belongs to Turbinia
+        key_type=$(echo "$key" | sed 's/:.*//')
+        if [[ "$key_type" == "TurbiniaTask" ]]; then
+          # Gets the Task value and split its key:value pairs into an array
+          value=$(redis-cli get "$key")
+          modified_value="${value//\"/}"
+          modified_value="${modified_value//\{/}"
+          modified_value="${modified_value//\}/}"
+          IFS=',' read -r -a array <<< "$modified_value"
+
+          if [[ "$field_name" == "all" ]]; then
+            if [[ "$action" == "values" ]]; then
+              echo -e "$value\n"
+            else
+              if [[ "$action" == keys ]]; then echo "$key"; fi
+              key_array+=( "$key" )
+            fi
+          else
+            for pair in "${array[@]}"; do
+              # Splits pair into field and value based on separating comma
+              current_field=$(echo "$pair" | sed 's/:.*//' | xargs)
+              current_value=$(echo "$pair" | sed 's/.*://' | xargs)
+              if [[ "$current_field"  == "$field_name" ]]; then
+                if [[ "$current_value" == "$field_value" ]]; then
+                  if [[ "$action" == "values" ]]; then
+                    echo -e "$value\n";
+                  else
+                    echo "$key"
+                    key_array+=( "$key" )
+                  fi
+                fi
+                break
+              fi
+            done
+          fi
+        fi
+      done
+
+      if [[ "$action" == "delete" ]] || [[ "$action" == "dump" ]]; then
+        echo Do you want to "$action" "${#key_array[@]}" keys? [y/N]
+        read -r answer
+        if [[ "$answer" == 'y' ]] || [[ "$answer" == 'Y' ]]; then
+          if [[ "$action" == "delete" ]]; then
+            redis-cli DEL "${key_array[@]}"
+          else
+            mkdir -p "$directory"
+            for key in ${key_array[@]}; do
+              redis-cli --raw dump "$key" | head -c-1 > "$directory"/"$key"
+            done
+            echo Dumped in "$directory"
+          fi
         fi
       fi
     fi
