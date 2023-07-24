@@ -11,7 +11,8 @@ FROM ubuntu:22.04
 
 ENV DEBIAN_FRONTEND=noninteractive 
 COPY --from=build-stage /tmp/web/dist /web/dist
-RUN apt-get update && apt-get -y install python3-pip git wget supervisor curl
+RUN apt-get update && apt-get -y upgrade
+RUN apt-get -y install python3-pip git wget supervisor curl
 
 RUN pip3 install pip --upgrade
 RUN pip3 install urllib3 cryptography requests --upgrade
