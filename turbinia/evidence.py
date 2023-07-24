@@ -18,6 +18,7 @@ from __future__ import unicode_literals
 
 from enum import IntEnum
 from collections import defaultdict
+from typing import Any
 
 import filelock
 import inspect
@@ -166,72 +167,7 @@ def evidence_decode(evidence_dict, strict=False):
     log.error(message)
     raise TurbiniaException(message) from AttributeError
 
-  return evidence
-
-
-def create_evidence(
-    args=None, evidence_type=None, browser_type=None, disk_name=None,
-    embedded_path=None, format=None, mount_partition=None, name=None,
-    profile=None, project=None, source=None, source_path=None, zone=None,
-    file_hash=None):
-
-  evidence = None
-
-  if not evidence_type and args:
-    evidence_type = args.command
-
-  if evidence_type == 'rawdisk':
-    evidence = RawDisk(
-        name=name, source_path=os.path.abspath(source_path), source=source,
-        file_hash=file_hash)
-  elif evidence_type == 'ewfdisk':
-    evidence = EwfDisk(
-        name=name, source_path=os.path.abspath(source_path), source=source)
-  elif evidence_type == 'directory':
-    source_path = os.path.abspath(source_path)
-    if not config.SHARED_FILESYSTEM:
-      log.info(
-          'A Cloud Only Architecture has been detected. '
-          'Compressing the directory for GCS upload.')
-      source_path = archive.CompressDirectory(
-          source_path, output_path=config.TMP_DIR)
-      evidence = CompressedDirectory(
-          name=name, source_path=source_path, source=source,
-          file_hash=file_hash)
-    else:
-      evidence = Directory(name=name, source_path=source_path, source=source)
-  elif evidence_type == 'compresseddirectory':
-    archive.ValidateTarFile(source_path)
-    evidence = CompressedDirectory(
-        name=name, source_path=os.path.abspath(source_path), source=source)
-  elif evidence_type == 'googleclouddisk':
-    evidence = GoogleCloudDisk(
-        name=name, disk_name=disk_name, project=project, zone=zone,
-        source=source)
-  elif evidence_type == 'googleclouddiskembedded':
-    parent_evidence_ = GoogleCloudDisk(
-        name=name, disk_name=disk_name, project=project, source=source,
-        mount_partition=mount_partition, zone=zone)
-    evidence = GoogleCloudDiskRawEmbedded(
-        name=name, disk_name=disk_name, project=project, zone=zone,
-        embedded_path=embedded_path)
-    evidence.set_parent(parent_evidence_)
-  elif evidence_type == 'hindsight':
-    if format not in ['xlsx', 'sqlite', 'jsonl']:
-      msg = 'Invalid output format.'
-      raise TurbiniaException(msg)
-    if browser_type not in ['Chrome', 'Brave']:
-      msg = 'Browser type not supported.'
-      raise TurbiniaException(msg)
-    source_path = os.path.abspath(source_path)
-    evidence = ChromiumProfile(
-        name=name, source_path=source_path, output_format=format,
-        browser_type=browser_type)
-  elif evidence_type == 'rawmemory':
-    source_path = os.path.abspath(source_path)
-    evidence = RawMemory(
-        name=name, source_path=source_path, profile=profile,
-        module_list=args.module_list)
+  redis_manager.write_new_evidence(evidence)
 
   return evidence
 
@@ -379,8 +315,6 @@ class Evidence:
       evidence_id = self.find_in_redis(file_hash=file_hash)
       self.id = evidence_id if evidence_id else uuid.uuid4().hex
 
-    redis_manager.write_new_evidence(self)
-
     # TODO: Validating for required attributes breaks some units tests.
     # Github issue: https://github.com/google/turbinia/issues/1136
     # self.validate()
@@ -391,14 +325,23 @@ class Evidence:
   def __repr__(self):
     return self.__str__()
 
-  def __setattr__(self, name, value):
+  def __setattr__(self, name: str, value: Any):
+    """sets the value of the attribute of the object and stores it in redis.
+
+    Args:
+      name (str): name of the attribute to be set.
+      value (Any): value to be set.
+    """
     self.__dict__[name] = value
     if 'id' in self.__dict__:
-      if redis_manager.update_evidence_attribute(
-          self.id, name, value) and name != 'last_updated':
-        self.last_updated = datetime.now().strftime(DATETIME_FORMAT)
-        redis_manager.update_evidence_attribute(
-            self.id, 'last_updated', self.last_updated)
+      try:
+        redis_manager.update_evidence_attribute(self.id, name, value)
+        if name != 'last_updated':
+          self.last_updated = datetime.now().strftime(DATETIME_FORMAT)
+          redis_manager.update_evidence_attribute(
+              self.id, 'last_updated', self.last_updated)
+      except (TypeError, OverflowError):
+        log.error(f'Evidence {self.id} could not be updated')
 
   @property
   def name(self):

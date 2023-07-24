@@ -857,6 +857,8 @@ def process_args(args):
     log.warning(f'Command {args.command!s} not implemented.')
 
 
+# TODO: shard this function and move some of its functionalities to other files
+# (move some  of this to evidence.py to run the checks etc)
 def process_evidence(
     client, group_id, args=None, browser_type=None, disk_name=None,
     embedded_path=None, filter_patterns=None, format=None, mount_partition=None,
