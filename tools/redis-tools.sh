@@ -43,7 +43,7 @@ case "$action" in
     for filepath in "$directory"/*; do
       key=$(basename "$filepath")
       echo Restoring "$key"
-      cat "$filepath" | redis-cli -x restore "$key" 0
+      redis-cli -x restore "$key" 0 < "$filepath"
     done
   ;;
 
@@ -94,7 +94,7 @@ case "$action" in
         if [[ "$current_field"  == "$field_name" ]]; then
           if [[ "$current_value" == "$field_value" ]]; then
             if [[ "$action" == "values" ]]; then
-              echo -e "$value\n";
+              echo -e "$value\n"
             else
               echo "$key"
               key_array+=( "$key" )
@@ -112,7 +112,7 @@ case "$action" in
           redis-cli DEL "${key_array[@]}"
         else
           mkdir -p "$directory"
-          for key in ${key_array[@]}; do
+          for key in "${key_array[@]}"; do
             redis-cli --raw dump "$key" | head -c-1 > "$directory"/"$key"
           done
           echo Dumped in "$directory"
