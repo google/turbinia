@@ -19,26 +19,35 @@ from __future__ import unicode_literals
 from enum import IntEnum
 from collections import defaultdict
 
+import filelock
+import inspect
 import json
 import logging
 import os
 import sys
-import inspect
-import filelock
+import uuid
 
 from turbinia import config
+from turbinia import state_manager
 from turbinia import TurbiniaException
 from turbinia.processors import archive
 from turbinia.processors import containerd
 from turbinia.processors import docker
 from turbinia.processors import mount_local
 from turbinia.processors import resource_manager
+from turbinia.config import DATETIME_FORMAT
+from datetime import datetime
 
 config.LoadConfig()
 if config.CLOUD_PROVIDER.lower() == 'gcp':
   from turbinia.processors import google_cloud
 
 log = logging.getLogger('turbinia')
+
+redis_manager = state_manager.RedisStateManager()
+
+#TODO(IGORMR) SET THIS
+IMPORTANT_ATTRIBUTES = ()
 
 
 def evidence_class_names(all_classes=False):
@@ -160,6 +169,73 @@ def evidence_decode(evidence_dict, strict=False):
   return evidence
 
 
+def create_evidence(
+    args=None, evidence_type=None, browser_type=None, disk_name=None,
+    embedded_path=None, format=None, mount_partition=None, name=None,
+    profile=None, project=None, source=None, source_path=None, zone=None,
+    file_hash=None):
+
+  evidence = None
+
+  if not evidence_type and args:
+    evidence_type = args.command
+
+  if evidence_type == 'rawdisk':
+    evidence = RawDisk(
+        name=name, source_path=os.path.abspath(source_path), source=source,
+        file_hash=file_hash)
+  elif evidence_type == 'ewfdisk':
+    evidence = EwfDisk(
+        name=name, source_path=os.path.abspath(source_path), source=source)
+  elif evidence_type == 'directory':
+    source_path = os.path.abspath(source_path)
+    if not config.SHARED_FILESYSTEM:
+      log.info(
+          'A Cloud Only Architecture has been detected. '
+          'Compressing the directory for GCS upload.')
+      source_path = archive.CompressDirectory(
+          source_path, output_path=config.TMP_DIR)
+      evidence = CompressedDirectory(
+          name=name, source_path=source_path, source=source,
+          file_hash=file_hash)
+    else:
+      evidence = Directory(name=name, source_path=source_path, source=source)
+  elif evidence_type == 'compresseddirectory':
+    archive.ValidateTarFile(source_path)
+    evidence = CompressedDirectory(
+        name=name, source_path=os.path.abspath(source_path), source=source)
+  elif evidence_type == 'googleclouddisk':
+    evidence = GoogleCloudDisk(
+        name=name, disk_name=disk_name, project=project, zone=zone,
+        source=source)
+  elif evidence_type == 'googleclouddiskembedded':
+    parent_evidence_ = GoogleCloudDisk(
+        name=name, disk_name=disk_name, project=project, source=source,
+        mount_partition=mount_partition, zone=zone)
+    evidence = GoogleCloudDiskRawEmbedded(
+        name=name, disk_name=disk_name, project=project, zone=zone,
+        embedded_path=embedded_path)
+    evidence.set_parent(parent_evidence_)
+  elif evidence_type == 'hindsight':
+    if format not in ['xlsx', 'sqlite', 'jsonl']:
+      msg = 'Invalid output format.'
+      raise TurbiniaException(msg)
+    if browser_type not in ['Chrome', 'Brave']:
+      msg = 'Browser type not supported.'
+      raise TurbiniaException(msg)
+    source_path = os.path.abspath(source_path)
+    evidence = ChromiumProfile(
+        name=name, source_path=source_path, output_format=format,
+        browser_type=browser_type)
+  elif evidence_type == 'rawmemory':
+    source_path = os.path.abspath(source_path)
+    evidence = RawMemory(
+        name=name, source_path=source_path, profile=profile,
+        module_list=args.module_list)
+
+  return evidence
+
+
 class EvidenceState(IntEnum):
   """Runtime state of Evidence.
 
@@ -253,8 +329,9 @@ class Evidence:
   # docstrings for more info.
   POSSIBLE_STATES = []
 
-  def __init__(self, *args, **kwargs):
+  def __init__(self, file_hash=None, *args, **kwargs):
     """Initialization for Evidence."""
+    self.hash = file_hash
     self.cloud_only = kwargs.get('cloud_only', False)
     self.config = kwargs.get('config', {})
     self.context_dependent = kwargs.get('context_dependent', False)
@@ -278,6 +355,10 @@ class Evidence:
     self.source_path = kwargs.get('source_path', None)
     self.tags = kwargs.get('tags', {})
     self.type = self.__class__.__name__
+    self.request_ids = kwargs.get(
+        'request_ids', [self.request_id] if self.request_id else [])
+    self.creation_time = datetime.now().strftime(DATETIME_FORMAT)
+    self.last_updated = datetime.now().strftime(DATETIME_FORMAT)
 
     self.local_path = self.source_path
 
@@ -293,6 +374,13 @@ class Evidence:
           'Unable to initialize object, {0:s} is a copyable '
           'evidence and needs a source_path'.format(self.type))
 
+    evidence_id = kwargs.get('id', None)
+    if not evidence_id:
+      evidence_id = self.find_in_redis(file_hash=file_hash)
+      self.id = evidence_id if evidence_id else uuid.uuid4().hex
+
+    redis_manager.write_new_evidence(self)
+
     # TODO: Validating for required attributes breaks some units tests.
     # Github issue: https://github.com/google/turbinia/issues/1136
     # self.validate()
@@ -302,6 +390,15 @@ class Evidence:
 
   def __repr__(self):
     return self.__str__()
+
+  def __setattr__(self, name, value):
+    self.__dict__[name] = value
+    if 'id' in self.__dict__:
+      if redis_manager.update_evidence_attribute(
+          self.id, name, value) and name != 'last_updated':
+        self.last_updated = datetime.now().strftime(DATETIME_FORMAT)
+        redis_manager.update_evidence_attribute(
+            self.id, 'last_updated', self.last_updated)
 
   @property
   def name(self):
@@ -340,6 +437,27 @@ class Evidence:
         source_path=source_path, tags=tags, request_id=request_id)
     new_object.__dict__.update(dictionary)
     return new_object
+
+  #todo(igormr): Finish this to make it recognize equal evidences
+  #todo(igormr): Save evidence_id in task/request
+  def find_in_redis(self, file_hash=None):
+    if file_hash:
+      if redis_manager.get_evidence_by_hash(file_hash):
+        return redis_manager.get_evidence_id_by_hash(self.id).split(':')[1]
+    else:
+      evidence_summary = redis_manager.get_evidence_summary().get(
+          str(type(self)), None)
+      if evidence_summary:
+        for saved_evidence in IMPORTANT_ATTRIBUTES:
+          equal = True
+          for attribute in IMPORTANT_ATTRIBUTES:
+            if self.__dict__.get(attribute, None) and saved_evidence.get(
+                attribute, None):
+              if self.__dict__[attribute] != saved_evidence[attribute]:
+                equal = False
+          if equal:
+            return saved_evidence.id
+    return False
 
   def serialize(self):
     """Return JSON serializable object."""
@@ -616,10 +734,10 @@ class CompressedDirectory(Evidence):
   REQUIRED_ATTRIBUTES = ['source_path']
   POSSIBLE_STATES = [EvidenceState.DECOMPRESSED]
 
-  def __init__(self, source_path=None, *args, **kwargs):
+  def __init__(self, source_path=None, file_hash=None, *args, **kwargs):
     """Initialization for CompressedDirectory evidence object."""
     super(CompressedDirectory, self).__init__(
-        source_path=source_path, *args, **kwargs)
+        source_path=source_path, file_hash=file_hash, *args, **kwargs)
     self.compressed_directory = None
     self.uncompressed_directory = None
     self.copyable = True
@@ -684,9 +802,10 @@ class RawDisk(Evidence):
   REQUIRED_ATTRIBUTES = ['source_path']
   POSSIBLE_STATES = [EvidenceState.ATTACHED]
 
-  def __init__(self, source_path=None, *args, **kwargs):
+  def __init__(self, source_path=None, file_hash=None, *args, **kwargs):
     """Initialization for raw disk evidence object."""
-    super(RawDisk, self).__init__(source_path=source_path, *args, **kwargs)
+    super(RawDisk, self).__init__(
+        source_path=source_path, file_hash=file_hash, *args, **kwargs)
     self.device_path = None
 
   def _preprocess(self, _, required_states):
