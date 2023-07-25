@@ -15,7 +15,7 @@ usage() {
     ./redis-tools.sh values [Field Name] [Field Value]
         The values of the matching keys are printed out.
     ./redis-tools.sh count [Field Name] [Field Value]
-        The amount of keys matching keys is printed out.
+        The amount of matching keys is printed out.
     ./redis-tools.sh delete [Field Name] [Field Value]
         The matching keys are deleted from redis.
     ./redis-tools.sh dump [Field Name] [Field Value] [Directory to Dump]
