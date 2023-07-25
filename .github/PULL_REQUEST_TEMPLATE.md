@@ -3,7 +3,7 @@
 
  - Describe what the change does.
  - Please run any tests that can exercise your modified code.
- - Please have an issue created and ready to be linked to the PR. 
+ - Please add links for any issues that are related to this PR.
  -->
 
 ### Description of the change
@@ -23,6 +23,6 @@
 
 <!-- [Place an '[X]' (no spaces) in all applicable fields. Please remove unrelated fields.] -->
 
-- [ ] All tests succeed.
+- [ ] All tests were successful.
 - [ ] Unit tests added.
 - [ ] Documentation updated.
