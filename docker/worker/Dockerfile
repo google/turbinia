@@ -74,7 +74,7 @@ RUN apt-get update && apt-get -y install \
     libewf-tools \
     libfsapfs-tools \
     libluksde-tools \
-    plaso-tools \
+    plaso-tools=20230311-1ppa1~jammy \
     python3-dfimagetools \
     python3-dfvfs \
     python3-plaso \
