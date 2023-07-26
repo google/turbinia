@@ -18,6 +18,7 @@ import hashlib
 import logging
 import os
 
+from datetime import datetime
 from fastapi import HTTPException, APIRouter, UploadFile, File
 from fastapi.requests import Request
 from fastapi.responses import JSONResponse
@@ -25,6 +26,7 @@ from typing import List
 
 from turbinia.api.schemas import request_options
 from turbinia.api.schemas import evidence as api_evidence
+from turbinia.config import DATETIME_FORMAT
 from turbinia import evidence
 from turbinia import config as turbinia_config
 from turbinia import state_manager
@@ -120,17 +122,12 @@ async def get_evidence_by_hash(request: Request, file_hash):
 
 @router.post('/upload')
 async def upload_evidence(
-    request: Request, information: List[api_evidence.Evidence],
-    files: List[UploadFile] = File(...)):
+    request: Request, ticked_id: str, files: List[UploadFile] = File(...)):
   """Upload evidence file to server for processing.
 
   Args:
     file (List[UploadFile]): Evidence file to be uploaded to folder for later
         processing. The maximum size of the file is 10 GB. 
-    information (List[Evidence]): The information about each of the files
-        uploaded. The attributes "file_name" and "evidence_type" are mandatory
-        for all evidences, the other attributes are necessary depending on the 
-        evidence type. Check /api/evidence/types for more info.
   
   Raises:
     TypeError: If pre-conditions are not met.
@@ -139,55 +136,45 @@ async def upload_evidence(
     List of uploaded evidences or warning messages if any.
   """
   # Extracts nested dict
-  information = information[0]
   evidences = []
   separator = '' if turbinia_config.OUTPUT_DIR[-1] == '/' else '/'
   for file in files:
-    file_info = information.get(file.filename, None)
-    if not file_info:
-      warning_message = f'No information found for file {file.filename}'
+    file_name = os.path.splitext(file.filename)[0]
+    file_extension = os.path.splitext(file.filename)[1]
+    file_path = ''.join([
+        turbinia_config.OUTPUT_DIR, separator, ticked_id, '/', file_name, '_',
+        datetime.now.strtime, file_extension
+    ])
+    sha_hash = hashlib.sha3_224()
+    size = 0
+    warning_message = None
+    with open(file_path, 'wb') as saved_file:
+      while (chunk := await file.read(1024)) and size < 10737418240:
+        saved_file.write(chunk)
+        sha_hash.update(chunk)
+        size += 1024
+        #Todo(igormr): save size in config and make hashing optional
+        if size >= 10737418240:
+          warning_message = ', '.join(
+              (f'Unable to upload file {file.filename} greater than 10 GB'))
+    file.file.close()
+    file_hash = sha_hash.hexdigest()
+    if redis_evidence := redis_manager.get_evidence_key_by_hash(file_hash):
+      warning_message = (
+          f'File {file.filename} was uploaded before, check {redis_evidence}')
+    if warning_message:
       evidences.append(warning_message)
       log.error(warning_message)
+      try:
+        os.remove(file_path)
+      except OSError:
+        log.error(f'Could not remove file {file_path}')
     else:
-      name = file_info.new_name
-      file_path = separator.join([turbinia_config.OUTPUT_DIR, name])
-      equal_files = 1
-      while os.path.exists(file_path):
-        equal_files += 1
-        name = f'({equal_files}) {file_info.new_name}'
-        file_path = separator.join([turbinia_config.OUTPUT_DIR, name])
-      sha_hash = hashlib.sha3_224()
-      size = 0
-      warning_message = None
-      with open(file_path, 'wb') as saved_file:
-        while (chunk := await file.read(1024)) and size < 10737418240:
-          saved_file.write(chunk)
-          sha_hash.update(chunk)
-          size += 1024
-          #Todo(igormr): save size in config and make hashing optional
-          if size >= 10737418240:
-            warning_message = ', '.join(
-                (f'Unable to upload file {file.filename} greater than 10 GB'))
-      file.file.close()
-      file_hash = sha_hash.hexdigest()
-      if redis_evidence := redis_manager.get_evidence_key_by_hash(file_hash):
-        warning_message = (
-            f'File {file.filename} was uploaded before, check {redis_evidence}')
-      if warning_message:
-        evidences.append(warning_message)
-        log.error(warning_message)
-        try:
-          os.remove(file_path)
-        except OSError:
-          log.error(f'Could not remove file {file_path}')
-      else:
-        evidence_ = evidence.create_evidence(
-            evidence_type=file_info.evidence_type.lower(),
-            source_path=file_path, browser_type=file_info.browser_type,
-            disk_name=file_info.disk_name,
-            embedded_path=file_info.embedded_path, format=file_info.format,
-            mount_partition=file_info.mount_partition, name=file_info.name,
-            profile=file_info.profile, project=file_info.project,
-            source=file_info.source, zone=file_info.zone, file_hash=file_hash)
-        evidences.append(evidence_.serialize())
+      evidences.append({
+          'Original Name': file.file_name,
+          'Saved Name': os.path.basename(file_path),
+          'File Path': file_path,
+          'Size': size,
+          'Hash': file_hash
+      })
   return JSONResponse(content=evidences, status_code=200)
