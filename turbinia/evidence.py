@@ -29,8 +29,8 @@ import sys
 import uuid
 
 from turbinia import config
-from turbinia import state_manager
 from turbinia import TurbiniaException
+from turbinia.state_manager import RedisStateManager
 from turbinia.processors import archive
 from turbinia.processors import containerd
 from turbinia.processors import docker
@@ -45,10 +45,7 @@ if config.CLOUD_PROVIDER.lower() == 'gcp':
 
 log = logging.getLogger('turbinia')
 
-redis_manager = state_manager.RedisStateManager()
-
-#TODO(IGORMR) SET THIS
-IMPORTANT_ATTRIBUTES = ()
+redis_manager = RedisStateManager()
 
 
 def evidence_class_names(all_classes=False):
@@ -166,8 +163,6 @@ def evidence_decode(evidence_dict, strict=False):
     message = f'No Evidence object of type {type_!s} in evidence module'
     log.error(message)
     raise TurbiniaException(message) from AttributeError
-
-  redis_manager.write_new_evidence(evidence)
 
   return evidence
 
@@ -291,8 +286,8 @@ class Evidence:
     self.source_path = kwargs.get('source_path', None)
     self.tags = kwargs.get('tags', {})
     self.type = self.__class__.__name__
-    self.request_ids = kwargs.get(
-        'request_ids', [self.request_id] if self.request_id else [])
+    self.previuos_requests = kwargs.get(
+        'previuos_requests', [self.request_id] if self.request_id else [])
     self.creation_time = datetime.now().strftime(DATETIME_FORMAT)
     self.last_updated = datetime.now().strftime(DATETIME_FORMAT)
 
@@ -310,10 +305,15 @@ class Evidence:
           'Unable to initialize object, {0:s} is a copyable '
           'evidence and needs a source_path'.format(self.type))
 
-    evidence_id = kwargs.get('id', None)
-    if not evidence_id:
-      evidence_id = self.find_in_redis(file_hash=file_hash)
-      self.id = evidence_id if evidence_id else uuid.uuid4().hex
+    if evidence_id := kwargs.get('id', None):
+      self.id = evidence_id
+    elif evidence_id := redis_manager.get_evidence_key_by_hash(self.hash):
+      evidence_id = ':'.split(evidence_id)[1]
+      self.id = evidence_id
+    elif evidence_id := redis_manager.get_evidence_by_attributes(self):
+      self.id = evidence_id
+    else:
+      self.id = uuid.uuid4().hex
 
     # TODO: Validating for required attributes breaks some units tests.
     # Github issue: https://github.com/google/turbinia/issues/1136
@@ -380,27 +380,6 @@ class Evidence:
         source_path=source_path, tags=tags, request_id=request_id)
     new_object.__dict__.update(dictionary)
     return new_object
-
-  #todo(igormr): Finish this to make it recognize equal evidences
-  #todo(igormr): Save evidence_id in task/request
-  def find_in_redis(self, file_hash=None):
-    if file_hash:
-      if redis_manager.get_evidence_by_hash(file_hash):
-        return redis_manager.get_evidence_id_by_hash(self.id).split(':')[1]
-    else:
-      evidence_summary = redis_manager.get_evidence_summary().get(
-          str(type(self)), None)
-      if evidence_summary:
-        for saved_evidence in IMPORTANT_ATTRIBUTES:
-          equal = True
-          for attribute in IMPORTANT_ATTRIBUTES:
-            if self.__dict__.get(attribute, None) and saved_evidence.get(
-                attribute, None):
-              if self.__dict__[attribute] != saved_evidence[attribute]:
-                equal = False
-          if equal:
-            return saved_evidence.id
-    return False
 
   def serialize(self):
     """Return JSON serializable object."""

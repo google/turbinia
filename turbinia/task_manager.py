@@ -260,6 +260,11 @@ class BaseTaskManager:
           'configured to allow this type of Evidence as input'.format(
               str(evidence_)))
 
+    #todo(igormr) associate with tasks somewhere
+    #todo(igormr) update task
+    #todo(igormr): change (2) to timestamp on api upload rename
+    self.state_manager.write_new_evidence(evidence_)
+
   def check_done(self):
     """Checks if we have any outstanding tasks.
 
