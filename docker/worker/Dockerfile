@@ -4,8 +4,7 @@ FROM ubuntu:22.04
 ARG PPA_TRACK=stable
 
 ENV DEBIAN_FRONTEND=noninteractive
-#RUN apt-get update && apt-get -y upgrade
-RUN apt-get update
+RUN apt-get update && apt-get -y upgrade
 RUN apt-get -y install \
     apt-transport-https \
     apt-utils \
