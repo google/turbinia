@@ -37,7 +37,8 @@ RUN apt-get update && apt-get -y upgrade && apt-get -y install \
     sudo \
     testdisk \
     wget \
-    && apt-get clean && rm -rf /var/lib/apt/lists/*
+    && apt-get clean && rm -rf /var/cache/apt/* /var/lib/apt/lists/*
+
 
 # Add a symlink as we install the non-default golang 1.20 compiler (latest for 22.04)
 RUN ln -s /usr/lib/go-1.20/bin/go /usr/bin/go
@@ -81,7 +82,8 @@ RUN apt-get update && apt-get -y install \
     python3-plaso \
     sleuthkit \
     --option Acquire::ForceIPv4=true --option Acquire::Retries=100 --option Acquire::http::Timeout=60 \
-     && apt-get clean && rm -rf /var/lib/apt/lists/*
+     && apt-get clean && rm -rf /var/cache/apt/* /var/lib/apt/lists/*
+
 
 
 RUN useradd -r -s /bin/nologin -G disk,sudo -u 999 turbinia
@@ -91,21 +93,19 @@ RUN pip3 install --no-cache-dir impacket --no-deps
 
 RUN cd /opt \
     && git clone https://github.com/Neo23x0/signature-base.git \
-    && sudo chown -R turbinia:turbinia /opt/signature-base
-# Cleanup folder as Fraken only uses rules with .yar or .yara extensions
-RUN find /opt/signature-base/ -type f ! -iname "*.yar*" -delete
+    && sudo chown -R turbinia:turbinia /opt/signature-base \
+    && find /opt/signature-base/ -type f ! -iname "*.yar*" -delete
 
 COPY turbinia/config/rules/*.yar /opt/signature-base/yara/
 
 RUN mkdir -p /opt/fraken/yara && chown -R turbinia:turbinia /opt/fraken
 COPY --chown=turbinia:turbinia tools/fraken/* /opt/fraken/
-RUN cd /opt/fraken/yara && curl -s -L --retry 5 "$(curl -s -L --retry 5 https://api.github.com/repos/VirusTotal/Yara/releases/latest | sed -n 's/.*"tarball_url": "\(.*\)",.*/\1/p')"  | tar -xz --strip-components=1
-RUN cd /opt/fraken/yara && ./bootstrap.sh \
+RUN cd /opt/fraken/yara && curl -s -L --retry 5 "$(curl -s -L --retry 5 https://api.github.com/repos/VirusTotal/Yara/releases/latest | sed -n 's/.*"tarball_url": "\(.*\)",.*/\1/p')"  | tar -xz --strip-components=1 \
+    && cd /opt/fraken/yara && ./bootstrap.sh \
     && ./configure \
-    && make && sudo make install && sudo ldconfig
-RUN cd /opt/fraken && go build -ldflags="-linkmode=external -extldflags=-ljemalloc" -o fraken
-#  Cleanup fraken build folder and yara library source
-RUN find /opt/fraken/ -type f ! -iname "fraken" -delete && rm -fr /opt/fraken/yara
+    && make && sudo make install && sudo ldconfig \
+    && cd /opt/fraken && go build -ldflags="-linkmode=external -extldflags=-ljemalloc" -o fraken \
+    && find /opt/fraken/ -type f ! -iname "fraken" -delete && rm -fr /opt/fraken/yara
 
 
 RUN mkdir /etc/turbinia && mkdir -p /mnt/turbinia/ && mkdir -p /var/lib/turbinia/ \
@@ -132,10 +132,10 @@ RUN sudo /tmp/container-explorer-setup.sh install
 
 ADD . /tmp/
 # unshallow and fetch all tags so our build systems pickup the correct git tag if it's a shallow clone
-RUN if $(cd /tmp/ && git rev-parse --is-shallow-repository); then cd /tmp/ && git fetch --prune --unshallow && git fetch --depth=1 origin +refs/tags/*:refs/tags/*; fi
-RUN cd /tmp/ && python3 setup.py install
-# Cleanup /tmp folder (including dot files)
-RUN find /tmp/ -mindepth 1 -delete
+# install turbinia and cleanup /tmp
+RUN if $(cd /tmp/ && git rev-parse --is-shallow-repository); then cd /tmp/ && git fetch --prune --unshallow && git fetch --depth=1 origin +refs/tags/*:refs/tags/*; fi \
+    && cd /tmp/ && python3 setup.py install \
+    && find /tmp/ -mindepth 1 -delete
 
 COPY docker/worker/start.sh /home/turbinia/start.sh
 RUN chmod +rwx /home/turbinia/start.sh
