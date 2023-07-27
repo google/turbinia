@@ -119,6 +119,15 @@ API_ALLOWED_ORIGINS = ['http://localhost:8000']
 # check for OAuth 2.0 bearer tokens in the 'Authorization' header.
 API_AUTHENTICATION_ENABLED = False
 
+# Chunk size in bytes for chunk reading when uploading evidences to server.
+CHUNK_SIZE = 1024
+
+# Default path to where uploaded evidence will be stored on server.
+EVIDENCE_UPLOAD_DIR = '/evidence'
+
+# Max size in bytes for evidence uploaded to server.
+MAX_UPLOAD_SIZE = 10737418240
+
 # Path to Turbinia Web UI static files
 WEBUI_PATH = '/web'
 

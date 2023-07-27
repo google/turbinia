@@ -19,14 +19,13 @@ import logging
 import os
 
 from datetime import datetime
-from fastapi import HTTPException, APIRouter, UploadFile, File
+from fastapi import HTTPException, APIRouter, UploadFile, File, Query
 from fastapi.requests import Request
 from fastapi.responses import JSONResponse
 from typing import List
 
 from turbinia.api.schemas import request_options
 from turbinia.api.schemas import evidence as api_evidence
-from turbinia.config import DATETIME_FORMAT
 from turbinia import evidence
 from turbinia import config as turbinia_config
 from turbinia import state_manager
@@ -34,6 +33,47 @@ from turbinia import state_manager
 log = logging.getLogger('turbinia')
 router = APIRouter(prefix='/evidence', tags=['Turbinia Evidence'])
 redis_manager = state_manager.RedisStateManager()
+
+
+async def upload_file(
+    file: UploadFile, file_path: str, calculate_hash: bool = False):
+  """Upload file from FastAPI to server.
+
+  Args:
+    file (List[UploadFile]): Evidence file to be uploaded to folder for later
+        processing. The maximum size of the file is set on the Turbinia
+        configuration file. 
+  
+  Raises:
+    IOError: If file is greater than the maximum size.
+  
+  Returns:
+    List of uploaded evidences or warning messages if any.
+  """
+  size = 0
+  sha_hash = hashlib.sha3_224()
+  with open(file_path, 'wb') as saved_file:
+    while (chunk := await file.read(
+        turbinia_config.CHUNK_SIZE)) and size < turbinia_config.MAX_UPLOAD_SIZE:
+      saved_file.write(chunk)
+      if calculate_hash:
+        sha_hash.update(chunk)
+      size += turbinia_config.CHUNK_SIZE
+      if size >= turbinia_config.MAX_UPLOAD_SIZE:
+        error_message = ' '.join((
+            f'Unable to upload file {file.filename} greater',
+            f'than {turbinia_config.MAX_UPLOAD_SIZE / (1024 ** 3)} GB'))
+        log.error(error_message)
+        raise IOError(error_message)
+    file_info = {
+        'Original Name': file.file_name,
+        'Saved Name': os.path.basename(file_path),
+        'File Path': file_path,
+        'Size': size
+    }
+    if calculate_hash:
+      file_info['Hash'] = sha_hash.hexdigest()
+  return file_info
 
 
 @router.get('/types')
@@ -118,11 +158,13 @@ async def get_evidence_by_hash(request: Request, file_hash):
 #todo(igormr) update request_ids for every request
 #todo(igormr) Make TurbiniaRequest on redis pointing to TurbiniaEvidence and back
 #todo(igormr) Check if turbinia client works with new endpoints, especially upload
+#todo(igormr) Make link from evidence to task
 
 
 @router.post('/upload')
 async def upload_evidence(
-    request: Request, ticked_id: str, files: List[UploadFile] = File(...)):
+    request: Request, ticked_id: str, calculate_hash: bool = Query(
+        False, choices=(False, True)), files: List[UploadFile] = File(...)):
   """Upload evidence file to server for processing.
 
   Args:
@@ -135,33 +177,24 @@ async def upload_evidence(
   Returns:
     List of uploaded evidences or warning messages if any.
   """
-  # Extracts nested dict
   evidences = []
-  separator = '' if turbinia_config.OUTPUT_DIR[-1] == '/' else '/'
   for file in files:
     file_name = os.path.splitext(file.filename)[0]
     file_extension = os.path.splitext(file.filename)[1]
-    file_path = ''.join([
-        turbinia_config.OUTPUT_DIR, separator, ticked_id, '/', file_name, '_',
-        datetime.now.strtime, file_extension
-    ])
-    sha_hash = hashlib.sha3_224()
-    size = 0
+    file_path = ''.join((
+        turbinia_config.OUTPUT_DIR, '/', ticked_id, '/', file_name, '_',
+        datetime.now().strftime(
+            turbinia_config.DATETIME_FORMAT), file_extension))
     warning_message = None
-    with open(file_path, 'wb') as saved_file:
-      while (chunk := await file.read(1024)) and size < 10737418240:
-        saved_file.write(chunk)
-        sha_hash.update(chunk)
-        size += 1024
-        #Todo(igormr): save size in config and make hashing optional
-        if size >= 10737418240:
-          warning_message = ', '.join(
-              (f'Unable to upload file {file.filename} greater than 10 GB'))
+    try:
+      file_info = upload_file(file, file_path, calculate_hash)
+    except IOError as exception:
+      warning_message = exception
     file.file.close()
-    file_hash = sha_hash.hexdigest()
-    if redis_evidence := redis_manager.get_evidence_key_by_hash(file_hash):
+    if evidence_key := redis_manager.get_evidence_key_by_hash(
+        file_info['hash']):
       warning_message = (
-          f'File {file.filename} was uploaded before, check {redis_evidence}')
+          f'File {file.filename} was uploaded before, check {evidence_key}')
     if warning_message:
       evidences.append(warning_message)
       log.error(warning_message)
@@ -170,11 +203,5 @@ async def upload_evidence(
       except OSError:
         log.error(f'Could not remove file {file_path}')
     else:
-      evidences.append({
-          'Original Name': file.file_name,
-          'Saved Name': os.path.basename(file_path),
-          'File Path': file_path,
-          'Size': size,
-          'Hash': file_hash
-      })
+      evidences.append()
   return JSONResponse(content=evidences, status_code=200)

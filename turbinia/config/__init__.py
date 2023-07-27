@@ -68,7 +68,10 @@ REQUIRED_VARS = [
     'API_SERVER_PORT',
     'API_ALLOWED_ORIGINS',
     'API_AUTHENTICATION_ENABLED',
-    'WEBUI_PATH',
+    'CHUNK_SIZE',
+    'EVIDENCE_UPLOAD_DIR',
+    'MAX_UPLOAD_SIZE',
+    'WEBUI_PATH'
 ]
 
 # Optional config vars.  Some may be mandatory depending on the configuration
