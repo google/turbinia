@@ -20,7 +20,7 @@ import logging
 from datetime import datetime
 import time
 
-from prometheus_client import Gauge
+from prometheus_client import Counter
 
 import turbinia
 from turbinia import workers
@@ -60,20 +60,20 @@ PSQ_QUEUE_WAIT_SECONDS = 2
 SERVER_TASK_TIMEOUT_BUFFER = 86400
 
 # Define metrics
-turbinia_server_tasks_total = Gauge(
+turbinia_server_tasks_total = Counter(
     'turbinia_server_tasks_total', 'Turbinia Server Total Tasks')
-turbinia_server_tasks_completed_total = Gauge(
+turbinia_server_tasks_completed_total = Counter(
     'turbinia_server_tasks_completed_total',
     'Total number of completed server tasks')
-turbinia_jobs_total = Gauge('turbinia_jobs_total', 'Total number jobs created')
-turbinia_jobs_completed_total = Gauge(
+turbinia_jobs_total = Counter('turbinia_jobs_total', 'Total number jobs created')
+turbinia_jobs_completed_total = Counter(
     'turbinia_jobs_completed_total', 'Total number jobs resolved')
-turbinia_server_request_total = Gauge(
+turbinia_server_request_total = Counter(
     'turbinia_server_request_total', 'Total number of requests received.')
-turbinia_server_task_timeout_total = Gauge(
+turbinia_server_task_timeout_total = Counter(
     'turbinia_server_task_timeout_total',
     'Total number of Tasks that have timed out on the Server.')
-turbinia_result_success_invalid = Gauge(
+turbinia_result_success_invalid = Counter(
     'turbinia_result_success_invalid',
     'The result returned from the Task had an invalid success status of None')
 
