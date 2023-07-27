@@ -1,3 +1,5 @@
+# Multi-stage build
+# Build 0 - fraken
 FROM ubuntu:22.04
 RUN apt-get update && apt-get -y upgrade && apt-get -y install \
     automake \
@@ -12,16 +14,17 @@ RUN apt-get update && apt-get -y upgrade && apt-get -y install \
     libtool \
     make \
     pkg-config \
-    && apt-get clean && rm -rf /var/cache/apt/* /var/lib/apt/lists/*
+    sudo 
+# Add a symlink as we install the non-default golang 1.20 compiler (latest for 22.04)
+RUN ln -s /usr/lib/go-1.20/bin/go /usr/bin/go
 
 RUN mkdir -p /opt/fraken/yara
-RUN cd /opt/fraken/yara && curl -s -L --retry 5 "$(curl -s -L --retry 5 https://api.github.com/repos/VirusTotal/Yara/releases/latest | sed -n 's/.*"tarball_url": "\(.*\)",.*/\1/p')"  | tar -xz --strip-components=1 \
-    && cd /opt/fraken/yara && ./bootstrap.sh \
-    && ./configure \
-    && make && sudo make install && sudo ldconfig \
-    && cd /opt/fraken && go build -ldflags="-linkmode=external -extldflags=-static -extldflags=-ljemalloc" -o fraken \
-    && find /opt/fraken/ -type f ! -iname "fraken" -delete && rm -fr /opt/fraken/yara
+RUN cd /opt/fraken/yara && curl -s -L --retry 5 "$(curl -s -L --retry 5 https://api.github.com/repos/VirusTotal/Yara/releases/latest | sed -n 's/.*"tarball_url": "\(.*\)",.*/\1/p')"  | tar -xz --strip-components=1 
+RUN cd /opt/fraken/yara && ./bootstrap.sh && ./configure && make && sudo make install && sudo ldconfig 
+COPY tools/fraken/* /opt/fraken/
+RUN cd /opt/fraken && go build -ldflags="-linkmode=external -extldflags=-static -extldflags=-ljemalloc" -o fraken 
 
+# Build 1 - Turbinia Worker
 FROM ubuntu:22.04
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -52,9 +55,6 @@ RUN apt-get update && apt-get -y upgrade && apt-get -y install \
     wget \
     && apt-get clean && rm -rf /var/cache/apt/* /var/lib/apt/lists/*
 
-
-# Add a symlink as we install the non-default golang 1.20 compiler (latest for 22.04)
-RUN ln -s /usr/lib/go-1.20/bin/go /usr/bin/go
 
 ADD requirements.txt /tmp/
 RUN cd /tmp/ && pip3 install --no-cache-dir -r requirements.txt
@@ -96,8 +96,6 @@ RUN apt-get update && apt-get -y install \
     sleuthkit \
     --option Acquire::ForceIPv4=true --option Acquire::Retries=100 --option Acquire::http::Timeout=60 \
      && apt-get clean && rm -rf /var/cache/apt/* /var/lib/apt/lists/*
-
-
 
 RUN useradd -r -s /bin/nologin -G disk,sudo -u 999 turbinia
 RUN echo "turbinia ALL = (root) NOPASSWD: ALL" > /etc/sudoers.d/turbinia
