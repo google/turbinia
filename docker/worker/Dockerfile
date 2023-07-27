@@ -104,9 +104,10 @@ RUN cd /opt/fraken/yara && curl -s -L --retry 5 "$(curl -s -L --retry 5 https://
     && cd /opt/fraken/yara && ./bootstrap.sh \
     && ./configure \
     && make && sudo make install && sudo ldconfig \
-    && cd /opt/fraken && go build -ldflags="-linkmode=external -extldflags=-ljemalloc" -o fraken \
+    && cd /opt/fraken && go build -ldflags="-linkmode=external -extldflags=-static -extldflags=-ljemalloc" -o fraken \
     && find /opt/fraken/ -type f ! -iname "fraken" -delete && rm -fr /opt/fraken/yara
 
+RUN ls -al /opt/fraken
 
 RUN mkdir /etc/turbinia && mkdir -p /mnt/turbinia/ && mkdir -p /var/lib/turbinia/ \
     && mkdir -p /etc/turbinia/ && chown -R turbinia:turbinia /etc/turbinia/ \
@@ -122,8 +123,7 @@ RUN cd /home/turbinia && curl -s https://raw.githubusercontent.com/danielmiessle
 RUN cp /home/turbinia/password.lst /root/
 
 # Copy Kubernetes support tool to home folder
-COPY k8s/tools/check-lockfile.py /home/turbinia/check-lockfile.py
-RUN chown turbinia:turbinia /home/turbinia/check-lockfile.py
+COPY --chown=turbinia:turbinia k8s/tools/check-lockfile.py /home/turbinia/check-lockfile.py
 
 # Install container-explorer
 RUN wget -O /tmp/container-explorer-setup.sh https://raw.githubusercontent.com/google/container-explorer/main/script/setup.sh
