@@ -262,7 +262,6 @@ class BaseTaskManager:
 
     #todo(igormr) associate with tasks somewhere
     #todo(igormr) update task
-    #todo(igormr): change (2) to timestamp on api upload rename
     self.state_manager.write_new_evidence(evidence_)
 
   def check_done(self):

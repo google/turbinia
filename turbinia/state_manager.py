@@ -355,7 +355,6 @@ class RedisStateManager(BaseStateManager):
     if hasattr(evidence, 'type') and evidence.type:
       key = ':'.join(('TurbiniaEvidence', evidence.id))
       log.info(f'Writing new evidence {evidence.id:s} into Redis')
-      # nx=True prevents overwriting (i.e. no unintentional task clobbering)
       for attribute_key, attribute_value in evidence.__dict__.items():
         try:
           if not self.client.hset(key, attribute_key,
@@ -384,7 +383,6 @@ class RedisStateManager(BaseStateManager):
     key = ':'.join(('TurbiniaEvidence', evidence_id))
     message = f'attribute {name} for evidence {value} in Redis'
     log.info(f'Updating {message}')
-    # nx=True prevents overwriting (i.e. no unintentional task clobbering)
     try:
       if self.client.hset(key, name, json.dumps(value)):
         if name == 'hash' and value:
