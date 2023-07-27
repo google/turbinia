@@ -1,4 +1,29 @@
 FROM ubuntu:22.04
+RUN apt-get update && apt-get -y upgrade && apt-get -y install \
+    automake \
+    curl \
+    dh-autoreconf \
+    gcc \
+    golang-1.20 \
+    go-bindata \
+    libjemalloc-dev \
+    libprotobuf-c-dev \
+    libssl-dev \
+    libtool \
+    make \
+    pkg-config \
+    && apt-get clean && rm -rf /var/cache/apt/* /var/lib/apt/lists/*
+
+RUN mkdir -p /opt/fraken/yara
+RUN cd /opt/fraken/yara && curl -s -L --retry 5 "$(curl -s -L --retry 5 https://api.github.com/repos/VirusTotal/Yara/releases/latest | sed -n 's/.*"tarball_url": "\(.*\)",.*/\1/p')"  | tar -xz --strip-components=1 \
+    && cd /opt/fraken/yara && ./bootstrap.sh \
+    && ./configure \
+    && make && sudo make install && sudo ldconfig \
+    && cd /opt/fraken && go build -ldflags="-linkmode=external -extldflags=-static -extldflags=-ljemalloc" -o fraken \
+    && find /opt/fraken/ -type f ! -iname "fraken" -delete && rm -fr /opt/fraken/yara
+
+FROM ubuntu:22.04
+ENV DEBIAN_FRONTEND=noninteractive
 
 # Use: docker build --no-cache --build-arg PPA_TRACK="[staging|stable]"
 ARG PPA_TRACK=stable
@@ -98,16 +123,9 @@ RUN cd /opt \
 
 COPY turbinia/config/rules/*.yar /opt/signature-base/yara/
 
-RUN mkdir -p /opt/fraken/yara && chown -R turbinia:turbinia /opt/fraken
-COPY --chown=turbinia:turbinia tools/fraken/* /opt/fraken/
-RUN cd /opt/fraken/yara && curl -s -L --retry 5 "$(curl -s -L --retry 5 https://api.github.com/repos/VirusTotal/Yara/releases/latest | sed -n 's/.*"tarball_url": "\(.*\)",.*/\1/p')"  | tar -xz --strip-components=1 \
-    && cd /opt/fraken/yara && ./bootstrap.sh \
-    && ./configure \
-    && make && sudo make install && sudo ldconfig \
-    && cd /opt/fraken && go build -ldflags="-linkmode=external -extldflags=-static -extldflags=-ljemalloc" -o fraken \
-    && find /opt/fraken/ -type f ! -iname "fraken" -delete && rm -fr /opt/fraken/yara
-
-RUN ls -al /opt/fraken
+# copy fraken in
+RUN mkdir -p /opt/fraken
+COPY --chown=turbinia:turbinia --from=0 /opt/fraken/fraken /opt/fraken/fraken
 
 RUN mkdir /etc/turbinia && mkdir -p /mnt/turbinia/ && mkdir -p /var/lib/turbinia/ \
     && mkdir -p /etc/turbinia/ && chown -R turbinia:turbinia /etc/turbinia/ \
