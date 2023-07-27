@@ -6,8 +6,7 @@ ARG PPA_TRACK=stable
 ENV PIP_NO_CACHE_DIR=1
 ENV DEBIAN_FRONTEND=noninteractive
 RUN --mount=type=cache,target=/var/cache/apt \
-    apt-get update && apt-get -y upgrade &&
-    apt-get -y install \
+    apt-get update && apt-get -y upgrade && apt-get -y install \
     apt-transport-https \
     apt-utils \
     automake \
