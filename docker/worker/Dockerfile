@@ -1,6 +1,6 @@
 # Multi-stage build
 # Build 0 - fraken
-FROM ubuntu:22.04
+FROM ubuntu:22.04 AS fraken-builder
 RUN apt-get update && apt-get -y upgrade && apt-get -y install \
     automake \
     curl \
@@ -15,6 +15,8 @@ RUN apt-get update && apt-get -y upgrade && apt-get -y install \
     make \
     pkg-config \
     sudo 
+ #   musl-dev \
+ #   musl-tools
 # Add a symlink as we install the non-default golang 1.20 compiler (latest for 22.04)
 RUN ln -s /usr/lib/go-1.20/bin/go /usr/bin/go
 
@@ -22,10 +24,12 @@ RUN mkdir -p /opt/fraken/yara
 RUN cd /opt/fraken/yara && curl -s -L --retry 5 "$(curl -s -L --retry 5 https://api.github.com/repos/VirusTotal/Yara/releases/latest | sed -n 's/.*"tarball_url": "\(.*\)",.*/\1/p')"  | tar -xz --strip-components=1 
 RUN cd /opt/fraken/yara && ./bootstrap.sh && ./configure && make && sudo make install && sudo ldconfig 
 COPY tools/fraken/* /opt/fraken/
-RUN cd /opt/fraken && go build -ldflags="-linkmode=external -extldflags=-static -extldflags=-ljemalloc" -o fraken 
+#RUN cd /opt/fraken && CGO_ENABLED=1 CC=musl-gcc go build --ldflags="-linkmode=external -extldflags=-static" -tags yara_static -o fraken 
+RUN cd /opt/fraken && go build -ldflags="-linkmode=external -extldflags=-static" -tags yara_static -o fraken 
+RUN ldd /opt/fraken/fraken
 
 # Build 1 - Turbinia Worker
-FROM ubuntu:22.04
+FROM ubuntu:22.04 AS worker-builder
 ENV DEBIAN_FRONTEND=noninteractive
 
 # Use: docker build --no-cache --build-arg PPA_TRACK="[staging|stable]"
@@ -111,7 +115,7 @@ COPY turbinia/config/rules/*.yar /opt/signature-base/yara/
 
 # copy fraken in
 RUN mkdir -p /opt/fraken
-COPY --chown=turbinia:turbinia --from=0 /opt/fraken/fraken /opt/fraken/fraken
+COPY --chown=turbinia:turbinia --from=fraken-builder /opt/fraken/fraken /opt/fraken/fraken
 
 RUN mkdir /etc/turbinia && mkdir -p /mnt/turbinia/ && mkdir -p /var/lib/turbinia/ \
     && mkdir -p /etc/turbinia/ && chown -R turbinia:turbinia /etc/turbinia/ \
