@@ -38,6 +38,9 @@ RUN apt-get update && apt-get -y upgrade && apt-get -y install \
     wget \
     && rm -rf /var/lib/apt/lists/*
 
+# Add a symlink as we install the non-default golang compiler
+RUN ln -s /usr/lib/go-1.20/bin/go /usr/bin/go
+
 ADD requirements.txt /tmp/
 RUN cd /tmp/ && pip3 install --no-cache-dir -r requirements.txt
 
