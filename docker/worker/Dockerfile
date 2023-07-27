@@ -34,29 +34,17 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get -y upgrade && apt-get -y install \
     apt-transport-https \
     apt-utils \
-    automake \
     ca-certificates \
     curl \
-    dh-autoreconf \
-    gcc \
     git \
-    golang-1.20 \
-    gpg \
-    go-bindata \
     john \
     john-data \
     hashcat \
     hashcat-data \
-    libjemalloc-dev \
     libleveldb1d \
     libleveldb-dev \
-    libprotobuf-c-dev \
-    libssl-dev \
     libterm-readline-gnu-perl \
-    libtool \
     lvm2 \
-    make \
-    pkg-config \
     python3-pip \
     software-properties-common \
     sudo \
