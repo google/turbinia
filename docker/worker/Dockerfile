@@ -5,8 +5,7 @@ ARG PPA_TRACK=stable
 
 ENV PIP_NO_CACHE_DIR=1
 ENV DEBIAN_FRONTEND=noninteractive
-RUN --mount=type=cache,target=/var/cache/apt \
-    apt-get update && apt-get -y upgrade && apt-get -y install \
+RUN apt-get update && apt-get -y upgrade && apt-get -y install \
     apt-transport-https \
     apt-utils \
     automake \
@@ -40,14 +39,14 @@ RUN --mount=type=cache,target=/var/cache/apt \
     && rm -rf /var/lib/apt/lists/*
 
 ADD requirements.txt /tmp/
-RUN cd /tmp/ && pip3 install -r requirements.txt
+RUN cd /tmp/ && pip3 install --no-cache-dir -r requirements.txt
 
-RUN pip3 install pip --upgrade
-RUN pip3 install requests --upgrade
-RUN pip3 install urllib3 cryptography --upgrade
+RUN pip3 install --no-cache-dir pip --upgrade
+RUN pip3 install --no-cache-dir requests --upgrade
+RUN pip3 install --no-cache-dir urllib3 cryptography --upgrade
 
 # Install third-party worker dependencies
-RUN pip3 install dfDewey
+RUN pip3 install --no-cache-dir dfDewey
 # TODO(hacktobeer) uncomment when protobuf lib dependency if fixed upstream
 # RUN pip3 install pyhindsight
 
@@ -64,8 +63,7 @@ RUN pip3 install dfDewey
 RUN curl -sS https://keyserver.ubuntu.com/pks/lookup?op=get\&search=0x3ed1eaece81894b171d7da5b5e80511b10c598b8 | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/gift.gpg
 #RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 0x5e80511b10c598b8 \
 RUN add-apt-repository -y ppa:gift/$PPA_TRACK
-RUN --mount=type=cache,target=/var/cache/apt \ 
-    apt-get update && apt-get -y install \
+RUN apt-get update && apt-get -y install \
     bulk-extractor \
     dfimagetools-tools \
     docker-explorer-tools \
@@ -82,10 +80,12 @@ RUN --mount=type=cache,target=/var/cache/apt \
     sleuthkit \
     --option Acquire::ForceIPv4=true --option Acquire::Retries=100 --option Acquire::http::Timeout=60
 
+RUN apt-get clean
+
 RUN useradd -r -s /bin/nologin -G disk,sudo -u 999 turbinia
 RUN echo "turbinia ALL = (root) NOPASSWD: ALL" > /etc/sudoers.d/turbinia
 
-RUN pip3 install impacket --no-deps
+RUN pip3 install --no-cache-dir impacket --no-deps
 
 RUN cd /opt \
     && git clone https://github.com/Neo23x0/signature-base.git \
