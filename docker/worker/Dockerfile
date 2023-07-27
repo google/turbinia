@@ -5,6 +5,7 @@ ARG PPA_TRACK=stable
 
 ENV PIP_NO_CACHE_DIR=1
 ENV DEBIAN_FRONTEND=noninteractive
+
 RUN apt-get update && apt-get -y upgrade && apt-get -y install \
     apt-transport-https \
     apt-utils \
@@ -36,7 +37,7 @@ RUN apt-get update && apt-get -y upgrade && apt-get -y install \
     sudo \
     testdisk \
     wget \
-    && rm -rf /var/lib/apt/lists/*
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Add a symlink as we install the non-default golang 1.20 compiler (latest for 22.04)
 RUN ln -s /usr/lib/go-1.20/bin/go /usr/bin/go
@@ -79,10 +80,9 @@ RUN apt-get update && apt-get -y install \
     python3-dfvfs \
     python3-plaso \
     sleuthkit \
-    --option Acquire::ForceIPv4=true --option Acquire::Retries=100 --option Acquire::http::Timeout=60
+    --option Acquire::ForceIPv4=true --option Acquire::Retries=100 --option Acquire::http::Timeout=60 \
+     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# Cleanup apt files
-RUN apt-get clean
 
 RUN useradd -r -s /bin/nologin -G disk,sudo -u 999 turbinia
 RUN echo "turbinia ALL = (root) NOPASSWD: ALL" > /etc/sudoers.d/turbinia
