@@ -65,7 +65,8 @@ turbinia_server_tasks_total = Counter(
 turbinia_server_tasks_completed_total = Counter(
     'turbinia_server_tasks_completed_total',
     'Total number of completed server tasks')
-turbinia_jobs_total = Counter('turbinia_jobs_total', 'Total number jobs created')
+turbinia_jobs_total = Counter(
+    'turbinia_jobs_total', 'Total number jobs created')
 turbinia_jobs_completed_total = Counter(
     'turbinia_jobs_completed_total', 'Total number jobs resolved')
 turbinia_server_request_total = Counter(
