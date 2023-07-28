@@ -767,7 +767,7 @@ class TurbiniaTask:
           except TurbiniaException as exception:
             message = (
                 f'Not adding evidence {evidence.local_path} from task '
-                f'{result.task_name}:{result.task_id} because evidence '
+                f'{result.task_name}:{result.task_id}. Evidence '
                 f'validation failed with error: {exception!s}')
             result.log(message, level=logging.INFO)
       if close:
