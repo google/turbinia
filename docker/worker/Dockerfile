@@ -15,8 +15,6 @@ RUN apt-get update && apt-get -y upgrade && apt-get -y install \
     make \
     pkg-config \
     sudo \
- #   musl-dev \
- #   musl-tools \
     && apt-get clean && rm -rf /var/cache/apt/* /var/lib/apt/lists/*
 
 
@@ -26,6 +24,7 @@ RUN curl -LO https://go.dev/dl/go$GOVERSION.linux-amd64.tar.gz
 RUN tar -C /usr/local -xf go$GOVERSION.linux-amd64.tar.gz
 ENV PATH="$PATH:/usr/local/go/bin"
 
+# Fetch and compile libyara and fraken
 RUN mkdir -p /opt/fraken/yara
 RUN cd /opt/fraken/yara && curl -s -L --retry 5 "$(curl -s -L --retry 5 https://api.github.com/repos/VirusTotal/Yara/releases/latest | sed -n 's/.*"tarball_url": "\(.*\)",.*/\1/p')"  | tar -xz --strip-components=1 
 RUN cd /opt/fraken/yara && ./bootstrap.sh && ./configure && make && sudo make install && sudo ldconfig 
@@ -63,16 +62,19 @@ RUN apt-get update && apt-get -y upgrade && apt-get -y install \
     && apt-get clean && rm -rf /var/cache/apt/* /var/lib/apt/lists/*
 
 ADD requirements.txt /tmp/
-RUN cd /tmp/ && pip3 install --no-cache-dir -r requirements.txt
+RUN cd /tmp/ && pip3 install -r requirements.txt
 
-RUN pip3 install --no-cache-dir pip --upgrade
-RUN pip3 install --no-cache-dir requests --upgrade
-RUN pip3 install --no-cache-dir urllib3 cryptography --upgrade
+RUN pip3 install pip --upgrade
+RUN pip3 install requests --upgrade
+RUN pip3 install urllib3 cryptography --upgrade
 
-# Install third-party worker dependencies
-RUN pip3 install --no-cache-dir dfDewey
-RUN pip3 install --no-cache-dir pyhindsight
-RUN pip3 install --no-cache-dir impacket --no-deps
+# Install third-party dependencies
+#   dfwdewey
+#   pyhindsight
+#   impacket
+RUN pip3 install dfDewey
+RUN pip3 install pyhindsight
+RUN pip3 install impacket --no-deps
 
 # Install various packages from the GIFT PPA
 #   bulkextractor
@@ -102,12 +104,11 @@ RUN apt-get update && apt-get -y install \
     sleuthkit \
     && apt-get clean && rm -rf /var/cache/apt/* /var/lib/apt/lists/*
 
+# Add turbinia user to system and sudoers
 RUN useradd -r -s /bin/nologin -G disk,sudo -u 999 turbinia
 RUN echo "turbinia ALL = (root) NOPASSWD: ALL" > /etc/sudoers.d/turbinia
 
-# RUN pip3 install --no-cache-dir impacket --no-deps
-
-# Install yara rules and fraken.
+# Install yara rules and fraken binary.
 RUN cd /opt \
     && git clone https://github.com/Neo23x0/signature-base.git \
     && sudo chown -R turbinia:turbinia /opt/signature-base \
@@ -122,6 +123,7 @@ RUN wget -O /tmp/container-explorer-setup.sh https://raw.githubusercontent.com/g
 RUN chmod +x /tmp/container-explorer-setup.sh
 RUN sudo /tmp/container-explorer-setup.sh install
 
+# Setup turbinia user folders and permissions
 RUN mkdir /etc/turbinia && mkdir -p /mnt/turbinia/ && mkdir -p /var/lib/turbinia/ \
     && mkdir -p /etc/turbinia/ && chown -R turbinia:turbinia /etc/turbinia/ \
     && mkdir -p /var/log/turbinia/ && chown -R turbinia:turbinia /mnt/turbinia/ \
@@ -138,9 +140,10 @@ RUN cp /home/turbinia/password.lst /root/
 # Copy Kubernetes support tool to home folder
 COPY --chown=turbinia:turbinia k8s/tools/check-lockfile.py /home/turbinia/check-lockfile.py
 
-ADD . /tmp/
+# Install Turbinia
 # unshallow and fetch all tags so our build systems pickup the correct git tag if it's a shallow clone
 # install turbinia and cleanup /tmp
+ADD . /tmp/
 RUN if $(cd /tmp/ && git rev-parse --is-shallow-repository); then cd /tmp/ && git fetch --prune --unshallow && git fetch --depth=1 origin +refs/tags/*:refs/tags/*; fi \
     && cd /tmp/ && python3 setup.py install \
     && find /tmp/ -mindepth 1 -delete
