@@ -1,4 +1,6 @@
 # Multi-stage build
+# Use: docker build --no-cache --build-arg PPA_TRACK="[staging|stable] GOVERSION=[1.20.6|1.18|?]"
+
 # Build 0 - fraken
 FROM ubuntu:22.04 AS fraken-builder
 RUN apt-get update && apt-get -y upgrade && apt-get -y install \
@@ -6,8 +8,6 @@ RUN apt-get update && apt-get -y upgrade && apt-get -y install \
     curl \
     dh-autoreconf \
     gcc \
-    golang-1.20 \
-    go-bindata \
     libjemalloc-dev \
     libprotobuf-c-dev \
     libssl-dev \
@@ -18,21 +18,26 @@ RUN apt-get update && apt-get -y upgrade && apt-get -y install \
  #   musl-dev \
  #   musl-tools
 # Add a symlink as we install the non-default golang 1.20 compiler (latest for 22.04)
-RUN ln -s /usr/lib/go-1.20/bin/go /usr/bin/go
+#RUN ln -s /usr/lib/go-1.20/bin/go /usr/bin/go
+
+# Install latest golang as ubuntu base image provides outdated version.
+ARG GOVERSION=1.20.6
+RUN curl -LO https://go.dev/dl/go$GOVERSION.linux-amd64.tar.gz
+RUN tar -C /usr/local -xvf go$GOVERSION.linux-amd64.tar.gz
+ENV PATH="$PATH:/usr/local/go/bin"
 
 RUN mkdir -p /opt/fraken/yara
 RUN cd /opt/fraken/yara && curl -s -L --retry 5 "$(curl -s -L --retry 5 https://api.github.com/repos/VirusTotal/Yara/releases/latest | sed -n 's/.*"tarball_url": "\(.*\)",.*/\1/p')"  | tar -xz --strip-components=1 
 RUN cd /opt/fraken/yara && ./bootstrap.sh && ./configure && make && sudo make install && sudo ldconfig 
 COPY tools/fraken/* /opt/fraken/
+# TODO(rbdebere): Rework to use musl-gcc for full static build! 
 #RUN cd /opt/fraken && CGO_ENABLED=1 CC=musl-gcc go build --ldflags="-linkmode=external -extldflags=-static" -tags yara_static -o fraken 
 RUN cd /opt/fraken && go build -ldflags="-linkmode=external -extldflags=-static" -tags yara_static -o fraken 
-RUN ldd /opt/fraken/fraken
 
 # Build 1 - Turbinia Worker
 FROM ubuntu:22.04 AS worker-builder
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Use: docker build --no-cache --build-arg PPA_TRACK="[staging|stable]"
 ARG PPA_TRACK=stable
 
 ENV PIP_NO_CACHE_DIR=1
