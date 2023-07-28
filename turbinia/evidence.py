@@ -978,7 +978,7 @@ class PlasoFile(Evidence):
     total_file_events = 0
 
     try:
-      log.info('Running pinfo.py to validate Plaso file')
+      log.info(f'Running pinfo.py to validate PlasoFile {self.local_path}')
       command = subprocess.run(cmd, capture_output=True, check=True)
       storage_counters_json = command.stdout.decode('utf-8').strip()
       storage_counters = json.loads(storage_counters_json)
@@ -987,7 +987,7 @@ class PlasoFile(Evidence):
       log.info(f'pinfo.py found {total_file_events} events.')
       if not total_file_events:
         raise TurbiniaException(
-            'PlasoFile validation failed, pinfo found no events.')
+            'PlasoFile validation failed, pinfo.py found no events.')
     except subprocess.CalledProcessError as exception:
       raise TurbiniaException(
           f'Error validating plaso file: {exception!s}') from exception
