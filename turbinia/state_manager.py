@@ -309,8 +309,11 @@ class RedisStateManager(BaseStateManager):
       return
     stored_task_data = json.loads(self.client.get(f'TurbiniaTask:{task.id}'))
     stored_evidence_size = stored_task_data.get('evidence_size')
+    stored_evidence_id = stored_task_data.get('evidence_id')
     if not task.evidence_size and stored_evidence_size:
       task.evidence_size = stored_evidence_size
+    if not task.evidence_ids and stored_evidence_id:
+      task.evidence_ids = stored_evidence_id
     log.info(f'Updating task {task.name:s} in Redis')
     task_data = self.get_task_dict(task)
     task_data['last_update'] = task_data['last_update'].strftime(
