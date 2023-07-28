@@ -111,7 +111,7 @@ RUN echo "turbinia ALL = (root) NOPASSWD: ALL" > /etc/sudoers.d/turbinia
 RUN cd /opt \
     && git clone https://github.com/Neo23x0/signature-base.git \
     && sudo chown -R turbinia:turbinia /opt/signature-base \
-    && find /opt/signature/base -type f -not -iname '*.yar' -not -iname '*.yara' -not -iname 'file-type-signatures.txt' -delete
+    && find /opt/signature-base -type f -not -iname '*.yar' -not -iname '*.yara' -not -iname 'file-type-signatures.txt' -delete
 COPY turbinia/config/rules/*.yar /opt/signature-base/yara/
 # Install fraken binary from multi-stage build 
 RUN mkdir -p /opt/fraken
