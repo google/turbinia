@@ -25,6 +25,7 @@ import os
 import sys
 import inspect
 import filelock
+import subprocess
 
 from turbinia import config
 from turbinia import TurbiniaException
@@ -545,6 +546,9 @@ class Evidence:
       output.append(f'{state.name:s}: {value!s}')
     return f"[{', '.join(output):s}]"
 
+  def _validate(self):
+    return True
+
   def validate(self):
     """Runs validation to verify evidence meets minimum requirements.
 
@@ -564,6 +568,8 @@ class Evidence:
             '{1:s} is not set. Please check original request.'.format(
                 attribute, self.type))
         raise TurbiniaException(message)
+
+    return self._validate()
 
 
 class EvidenceCollection(Evidence):
@@ -964,6 +970,32 @@ class PlasoFile(Evidence):
     self.save_metadata = True
     self.copyable = True
     self.plaso_version = plaso_version
+
+  def _validate(self):
+    cmd = [
+        'pinfo.py',
+        '--output-format',
+        'json',
+        '--sections',
+        'events',
+        self.local_path,
+    ]
+    total_file_events = 0
+
+    try:
+      log.info('Running pinfo.py to validate Plaso file')
+      command = subprocess.run(cmd, capture_output=True, check=True)
+      storage_counters_json = command.stdout.decode('utf-8').strip()
+      storage_counters = json.loads(storage_counters_json)
+      total_file_events = storage_counters.get('storage_counters', {}).get(
+          'parsers', {}).get('total', 0)
+      log.info(f'pinfo.py found {total_file_events} events.')
+    except subprocess.CalledProcessError as exception:
+      raise TurbiniaException(
+          f'Error validating plaso file: {exception!s}') from exception
+
+    log.info(f'Validate returning {total_file_events} events.')
+    return total_file_events
 
 
 class PlasoCsvFile(Evidence):
