@@ -14,11 +14,11 @@ RUN apt-get update && apt-get -y upgrade && apt-get -y install \
     libtool \
     make \
     pkg-config \
-    sudo 
+    sudo \
  #   musl-dev \
- #   musl-tools
-# Add a symlink as we install the non-default golang 1.20 compiler (latest for 22.04)
-#RUN ln -s /usr/lib/go-1.20/bin/go /usr/bin/go
+ #   musl-tools \
+    && apt-get clean && rm -rf /var/cache/apt/* /var/lib/apt/lists/*
+
 
 # Install latest golang as ubuntu base image provides outdated version.
 ARG GOVERSION=1.20.6
@@ -64,7 +64,6 @@ RUN apt-get update && apt-get -y upgrade && apt-get -y install \
     wget \
     && apt-get clean && rm -rf /var/cache/apt/* /var/lib/apt/lists/*
 
-
 ADD requirements.txt /tmp/
 RUN cd /tmp/ && pip3 install --no-cache-dir -r requirements.txt
 
@@ -74,8 +73,8 @@ RUN pip3 install --no-cache-dir urllib3 cryptography --upgrade
 
 # Install third-party worker dependencies
 RUN pip3 install --no-cache-dir dfDewey
-# TODO(hacktobeer) uncomment when protobuf lib dependency if fixed upstream
-# RUN pip3 install pyhindsight
+RUN pip3 install --no-cache-dir pyhindsight
+RUN pip3 install --no-cache-dir impacket --no-deps
 
 # Install various packages from the GIFT PPA
 #   bulkextractor
@@ -103,22 +102,21 @@ RUN apt-get update && apt-get -y install \
     python3-dfvfs \
     python3-plaso \
     sleuthkit \
-    --option Acquire::ForceIPv4=true --option Acquire::Retries=100 --option Acquire::http::Timeout=60 \
+#    --option Acquire::ForceIPv4=true --option Acquire::Retries=100 --option Acquire::http::Timeout=60 \
      && apt-get clean && rm -rf /var/cache/apt/* /var/lib/apt/lists/*
 
 RUN useradd -r -s /bin/nologin -G disk,sudo -u 999 turbinia
 RUN echo "turbinia ALL = (root) NOPASSWD: ALL" > /etc/sudoers.d/turbinia
 
-RUN pip3 install --no-cache-dir impacket --no-deps
+# RUN pip3 install --no-cache-dir impacket --no-deps
 
+# Install fraken and yara rules.
 RUN cd /opt \
     && git clone https://github.com/Neo23x0/signature-base.git \
     && sudo chown -R turbinia:turbinia /opt/signature-base \
     && find /opt/signature-base/ -type f ! -iname "*.yar*" -delete
-
 COPY turbinia/config/rules/*.yar /opt/signature-base/yara/
-
-# copy fraken in
+# Install fraken binary from multi-stage build 
 RUN mkdir -p /opt/fraken
 COPY --chown=turbinia:turbinia --from=fraken-builder /opt/fraken/fraken /opt/fraken/fraken
 
@@ -129,7 +127,7 @@ RUN mkdir /etc/turbinia && mkdir -p /mnt/turbinia/ && mkdir -p /var/lib/turbinia
     && chown -R turbinia:turbinia /var/log/turbinia/ \
     && mkdir -p /home/turbinia && chown -R turbinia:turbinia /home/turbinia
 
-# Get a decent password list
+# Get a decent password list for john/hashcat
 RUN cd /home/turbinia && echo "" > password.lst
 RUN cd /home/turbinia && curl -s https://raw.githubusercontent.com/danielmiessler/SecLists/285474cf9bff85f3323c5a1ae436f78acd1cb62c/Passwords/UserPassCombo-Jay.txt >> password.lst
 RUN cd /home/turbinia && curl -s https://raw.githubusercontent.com/danielmiessler/SecLists/master/Passwords/Common-Credentials/10-million-password-list-top-1000000.txt >> password.lst
