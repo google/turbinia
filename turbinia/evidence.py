@@ -26,7 +26,6 @@ import json
 import logging
 import os
 import sys
-import uuid
 
 from turbinia import config
 from turbinia import TurbiniaException
@@ -262,14 +261,16 @@ class Evidence:
 
   def __init__(self, file_hash=None, *args, **kwargs):
     """Initialization for Evidence."""
-    self.hash = file_hash
     self.cloud_only = kwargs.get('cloud_only', False)
     self.config = kwargs.get('config', {})
     self.context_dependent = kwargs.get('context_dependent', False)
     self.copyable = kwargs.get('copyable', False)
+    self.creation_time = datetime.now().strftime(DATETIME_FORMAT)
     self.credentials = kwargs.get('credentials', [])
     self.description = kwargs.get('description', None)
     self.has_child_evidence = kwargs.get('has_child_evidence', False)
+    self.hash = file_hash
+    self.id = kwargs.get('id', None)
     self.mount_path = kwargs.get('mount_path', None)
     self._name = kwargs.get('name')
     self.parent_evidence = kwargs.get('parent_evidence', None)
@@ -284,12 +285,11 @@ class Evidence:
     self.size = kwargs.get('size', None)
     self.source = kwargs.get('source', None)
     self.source_path = kwargs.get('source_path', None)
-    self.tags = kwargs.get('tags', {})
-    self.type = self.__class__.__name__
     self.previuos_requests = kwargs.get(
         'previuos_requests', [self.request_id] if self.request_id else [])
-    self.creation_time = datetime.now().strftime(DATETIME_FORMAT)
-    self.last_updated = datetime.now().strftime(DATETIME_FORMAT)
+    self.tags = kwargs.get('tags', {})
+    self.tasks = kwargs.get('task_ids', [])
+    self.type = self.__class__.__name__
 
     self.local_path = self.source_path
 
@@ -304,16 +304,6 @@ class Evidence:
       raise TurbiniaException(
           'Unable to initialize object, {0:s} is a copyable '
           'evidence and needs a source_path'.format(self.type))
-
-    if evidence_id := kwargs.get('id', None):
-      self.id = evidence_id
-    elif evidence_id := redis_manager.get_evidence_key_by_hash(self.hash):
-      evidence_id = ':'.split(evidence_id)[1]
-      self.id = evidence_id
-    elif evidence_id := redis_manager.get_evidence_by_attributes(self):
-      self.id = evidence_id
-    else:
-      self.id = uuid.uuid4().hex
 
     # TODO: Validating for required attributes breaks some units tests.
     # Github issue: https://github.com/google/turbinia/issues/1136
@@ -333,7 +323,7 @@ class Evidence:
       value (Any): value to be set.
     """
     self.__dict__[name] = value
-    if 'id' in self.__dict__:
+    if hasattr(self, 'id') and self.id:
       try:
         redis_manager.update_evidence_attribute(self.id, name, value)
         if name != 'last_updated':

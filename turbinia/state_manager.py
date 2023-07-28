@@ -348,7 +348,7 @@ class RedisStateManager(BaseStateManager):
     """
     if not (hasattr(evidence, 'id') and evidence.id):
       error_message = ', '.join((
-          f'Unsuccessful in writing evidence {evidence.id} into Redis',
+          f'Unsuccessful in writing evidence {evidence.name} into Redis',
           'evidence has no id'))
       log.error(error_message)
       raise AttributeError(error_message)

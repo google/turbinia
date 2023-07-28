@@ -19,6 +19,7 @@ from __future__ import unicode_literals, absolute_import
 import logging
 from datetime import datetime
 import time
+import uuid
 
 from prometheus_client import Gauge
 
@@ -228,6 +229,14 @@ class BaseTaskManager:
     else:
       jobs_list = self.jobs
 
+    if evidence_id := self.state_manager.get_evidence_key_by_hash(
+        evidence_.hash):
+      evidence_.id = ':'.split(evidence_id)[1]
+    # elif evidence_id := self.state_manager.get_evidence_by_attributes(self):
+    #   evidence_.id = ':'.split(evidence_id)[1]
+    else:
+      evidence_.id = uuid.uuid4().hex
+
     # TODO(aarontp): Add some kind of loop detection in here so that jobs can
     # register for Evidence(), or or other evidence types that may be a super
     # class of the output of the job itself.  Short term we could potentially
@@ -253,16 +262,17 @@ class BaseTaskManager:
         job_count += 1
         turbinia_jobs_total.inc()
 
+    #todo(igormr) associate with tasks somewhere
+    #todo(igormr) update task
+    if isinstance(evidence_, evidence.Evidence):
+      self.state_manager.write_new_evidence(evidence_)
+
     if not job_count:
       log.warning(
           'No Jobs/Tasks were created for Evidence [{0:s}]. '
           'Request or recipe parsing may have failed, or Jobs may need to be '
           'configured to allow this type of Evidence as input'.format(
               str(evidence_)))
-
-    #todo(igormr) associate with tasks somewhere
-    #todo(igormr) update task
-    self.state_manager.write_new_evidence(evidence_)
 
   def check_done(self):
     """Checks if we have any outstanding tasks.
@@ -423,6 +433,8 @@ class BaseTaskManager:
     self.state_manager.write_new_task(task)
     self.enqueue_task(task, evidence_)
     turbinia_server_tasks_total.inc()
+    if task.id not in evidence_.tasks:
+      evidence_.tasks.append(task.id)
 
   def remove_jobs(self, request_id):
     """Removes the all Jobs for the given request ID.
