@@ -760,14 +760,16 @@ class TurbiniaTask:
               'Evidence {0:s} source_path {1:s} is empty. Not returning '
               'empty new Evidence.'.format(evidence.name, evidence.source_path))
           result.log(message, level=logging.WARN)
-        elif not evidence.validate():
-          message = (
-              f'Not running {result.task_name}:{result.task_id} because '
-              f'evidence validation failed.')
-          result.log(message, level=logging.INFO)
         else:
-          result.add_evidence(evidence, self._evidence_config)
-
+          try:
+            evidence.validate()
+            result.add_evidence(evidence, self._evidence_config)
+          except TurbiniaException as exception:
+            message = (
+                f'Not adding evidence {evidence.local_path} from task '
+                f'{result.task_name}:{result.task_id} because evidence '
+                f'validation failed with error: {exception!s}')
+            result.log(message, level=logging.INFO)
       if close:
         result.close(self, success=True)
 

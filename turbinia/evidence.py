@@ -546,9 +546,6 @@ class Evidence:
       output.append(f'{state.name:s}: {value!s}')
     return f"[{', '.join(output):s}]"
 
-  def _validate(self):
-    return True
-
   def validate(self):
     """Runs validation to verify evidence meets minimum requirements.
 
@@ -558,7 +555,7 @@ class Evidence:
     called by the worker, prior to the pre/post-processors running.
 
     Raises:
-      TurbiniaException: If validation fails
+      TurbiniaException: If validation fails, or when encountering an error.
     """
     for attribute in self.REQUIRED_ATTRIBUTES:
       attribute_value = getattr(self, attribute, None)
@@ -568,8 +565,6 @@ class Evidence:
             '{1:s} is not set. Please check original request.'.format(
                 attribute, self.type))
         raise TurbiniaException(message)
-
-    return self._validate()
 
 
 class EvidenceCollection(Evidence):
@@ -971,7 +966,7 @@ class PlasoFile(Evidence):
     self.copyable = True
     self.plaso_version = plaso_version
 
-  def _validate(self):
+  def validate(self):
     cmd = [
         'pinfo.py',
         '--output-format',
@@ -990,12 +985,12 @@ class PlasoFile(Evidence):
       total_file_events = storage_counters.get('storage_counters', {}).get(
           'parsers', {}).get('total', 0)
       log.info(f'pinfo.py found {total_file_events} events.')
+      if not total_file_events:
+        raise TurbiniaException(
+            'PlasoFile validation failed, pinfo found no events.')
     except subprocess.CalledProcessError as exception:
       raise TurbiniaException(
           f'Error validating plaso file: {exception!s}') from exception
-
-    log.info(f'Validate returning {total_file_events} events.')
-    return total_file_events
 
 
 class PlasoCsvFile(Evidence):
