@@ -24,7 +24,7 @@ import time
 import filelock
 import re
 
-from prometheus_client import Gauge
+from prometheus_client import Counter
 from turbinia import config
 from turbinia import TurbiniaException
 
@@ -32,7 +32,7 @@ log = logging.getLogger('turbinia')
 
 RETRY_MAX = 10
 
-turbinia_failed_loop_device_detach = Gauge(
+turbinia_failed_loop_device_detach = Counter(
     'turbinia_failed_loop_device_detach',
     'Total number of loop devices failed to detach')
 
