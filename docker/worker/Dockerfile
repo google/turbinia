@@ -31,7 +31,7 @@ RUN cd /opt/fraken/yara && ./bootstrap.sh && ./configure && make && sudo make in
 COPY tools/fraken/* /opt/fraken/
 # TODO(rbdebeer): Rework to use musl-gcc for full static build! 
 #RUN cd /opt/fraken && CGO_ENABLED=1 CC=musl-gcc go build --ldflags="-linkmode=external -extldflags=-static" -tags yara_static -o fraken 
-RUN cd /opt/fraken && go build -ldflags="-linkmode=external -extldflags=-static" -tags yara_static -o fraken 
+RUN cd /opt/fraken && go build -ldflags="-linkmode=external -extldflags=-ljemalloc -extldflags=-static" -tags yara_static -o fraken 
 
 # Build 1 - Turbinia Worker
 FROM ubuntu:22.04 AS worker-builder
