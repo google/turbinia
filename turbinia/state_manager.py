@@ -312,8 +312,8 @@ class RedisStateManager(BaseStateManager):
     stored_evidence_id = stored_task_data.get('evidence_id')
     if not task.evidence_size and stored_evidence_size:
       task.evidence_size = stored_evidence_size
-    if not task.evidence_ids and stored_evidence_id:
-      task.evidence_ids = stored_evidence_id
+    if not task.evidence_id and stored_evidence_id:
+      task.evidence_id = stored_evidence_id
     log.info(f'Updating task {task.name:s} in Redis')
     task_data = self.get_task_dict(task)
     task_data['last_update'] = task_data['last_update'].strftime(
@@ -384,8 +384,7 @@ class RedisStateManager(BaseStateManager):
       TypeError, OverflowError: Value is not Json Serializable. 
     """
     key = ':'.join(('TurbiniaEvidence', evidence_id))
-    message = f'attribute {name} for evidence {value} in Redis'
-    log.info(f'Updating {message}')
+    log.info(f'Updating attribute {name} for evidence {value} in Redis')
     try:
       if self.client.hset(key, name, json.dumps(value)):
         if name == 'hash' and value:

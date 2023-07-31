@@ -128,7 +128,7 @@ class TurbiniaTaskResult:
 
     self.closed = False
     self.evidence = evidence if evidence else []
-    self.evidence_ids = None
+    self.evidence_id = None
     self.evidence_size = None
     self.input_evidence = input_evidence
     self.id = uuid.uuid4().hex
@@ -478,7 +478,7 @@ class TurbiniaTask:
     self.last_update = datetime.now()
     self.name = name if name else self.__class__.__name__
     self.evidence_name = None
-    self.evidence_ids = None
+    self.evidence_id = None
     self.evidence_size = None
     self.output_dir = None
     self.output_manager = output_manager.OutputManager()

@@ -75,7 +75,7 @@ limitations under the License.
           <v-list-item>
             <v-list-item-content>
               <v-list-item-title> Evidence ID: </v-list-item-title>
-              {{ taskDetails.evidence_ids }}
+              {{ taskDetails.evidence_id }}
             </v-list-item-content>
           </v-list-item>
           <v-list-item>

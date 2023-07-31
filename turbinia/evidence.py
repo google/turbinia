@@ -26,6 +26,7 @@ import json
 import logging
 import os
 import sys
+import uuid
 
 from turbinia import config
 from turbinia import TurbiniaException
@@ -261,6 +262,7 @@ class Evidence:
 
   def __init__(self, file_hash=None, *args, **kwargs):
     """Initialization for Evidence."""
+    self.id = kwargs.get('id', uuid.uuid4().hex)
     self.cloud_only = kwargs.get('cloud_only', False)
     self.config = kwargs.get('config', {})
     self.context_dependent = kwargs.get('context_dependent', False)
@@ -270,7 +272,6 @@ class Evidence:
     self.description = kwargs.get('description', None)
     self.has_child_evidence = kwargs.get('has_child_evidence', False)
     self.hash = file_hash
-    self.id = kwargs.get('id', None)
     self.mount_path = kwargs.get('mount_path', None)
     self._name = kwargs.get('name')
     self.parent_evidence = kwargs.get('parent_evidence', None)
@@ -316,13 +317,17 @@ class Evidence:
     return self.__str__()
 
   def __setattr__(self, name: str, value: Any):
-    """sets the value of the attribute of the object and stores it in redis.
+    """Sets the value of the attribute of the object and stores it in redis.
 
     Args:
       name (str): name of the attribute to be set.
       value (Any): value to be set.
     """
     self.__dict__[name] = value
+    if not isinstance(value, list):
+      self.update_redis(name, value)
+
+  def update_redis(self, name: str, value: Any):
     if hasattr(self, 'id') and self.id:
       try:
         redis_manager.update_evidence_attribute(self.id, name, value)

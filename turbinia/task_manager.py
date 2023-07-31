@@ -229,14 +229,6 @@ class BaseTaskManager:
     else:
       jobs_list = self.jobs
 
-    if evidence_id := self.state_manager.get_evidence_key_by_hash(
-        evidence_.hash):
-      evidence_.id = ':'.split(evidence_id)[1]
-    # elif evidence_id := self.state_manager.get_evidence_by_attributes(self):
-    #   evidence_.id = ':'.split(evidence_id)[1]
-    else:
-      evidence_.id = uuid.uuid4().hex
-
     # TODO(aarontp): Add some kind of loop detection in here so that jobs can
     # register for Evidence(), or or other evidence types that may be a super
     # class of the output of the job itself.  Short term we could potentially
@@ -435,6 +427,7 @@ class BaseTaskManager:
     turbinia_server_tasks_total.inc()
     if task.id not in evidence_.tasks:
       evidence_.tasks.append(task.id)
+      evidence_.update_redis('tasks', evidence_.tasks)
 
   def remove_jobs(self, request_id):
     """Removes the all Jobs for the given request ID.
