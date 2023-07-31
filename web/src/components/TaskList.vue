@@ -87,7 +87,7 @@ export default {
               task_status: task_dict.status,
               task_success: task_dict.successful,
               evidence_name: task_dict.evidence_name,
-              evidence_id: task_dict.evidence_ids,
+              evidence_id: task_dict.evidence_id,
               evidence_size: task_dict.evidence_size,
             })
           }

@@ -94,13 +94,14 @@ class RequestStatus(BaseModel):
       self.task_count = len(tasks)
       task_status = task.get('status')
       # Gets the evidence_name from the first started task.
-      if task.get('last_updated') and task.get(
+      if name_from_args:
+        if task.get('evidence_name') == self.evidence_name:
+          self.evidence_id = task.get('evidence_id')
+      elif task.get('last_updated') and task.get(
           'last_updated') < initial_start_time:
         initial_start_time = task.get('last_updated')
         if not name_from_args:
           self.evidence_name = task.get('evidence_name')
-          self.evidence_id = task.get('evidence_id')
-        elif task.get('evidence_name') == self.evidence_name:
           self.evidence_id = task.get('evidence_id')
       if isinstance(task.get('last_update'), datetime.datetime):
         task_last_update = datetime.datetime.timestamp(task.get('last_update'))
