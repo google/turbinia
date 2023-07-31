@@ -254,8 +254,6 @@ class BaseTaskManager:
         job_count += 1
         turbinia_jobs_total.inc()
 
-    #todo(igormr) associate with tasks somewhere
-    #todo(igormr) update task
     if isinstance(evidence_, evidence.Evidence):
       self.state_manager.write_new_evidence(evidence_)
 
