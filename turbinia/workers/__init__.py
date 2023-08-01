@@ -932,8 +932,9 @@ class TurbiniaTask:
           result.evidence.remove(evidence)
       # Append evidence validation error messages to the result
       # so the client knows what happened
-      result.log(validation_error)
-      result.status = f'{result.status}. {validation_error}'
+      if validation_error:
+        result.log(validation_error)
+        result.status = f'{result.status}. {validation_error}'
     else:
       # Handle any serialization type errors
       log.error(serialization_error)
