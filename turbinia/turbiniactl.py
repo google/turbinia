@@ -92,7 +92,7 @@ def process_args(args):
     args(namespace): turbiniactl args.
   
   Raises:
-    TurbiniaException: If theres an error processing args.
+    TurbiniaException: If there's an error processing args.
   """
   parser = argparse.ArgumentParser(
       description='Turbinia can bulk process multiple evidence of same type '
@@ -437,7 +437,7 @@ def process_args(args):
       '-i', '--instance_id',
       help='Instance ID used to run tasks/requests. You must provide an '
       'instance ID if the task/request was not processed on the same instance '
-      'as your confing file.')
+      'as your config file.')
   # Server
   subparsers.add_parser('server', help='Run Turbinia Server')
 

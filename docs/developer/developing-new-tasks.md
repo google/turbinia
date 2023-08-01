@@ -136,7 +136,7 @@ was mounted on if it was mounted, etc).  See the [docstrings for these
 attributes in the Evidence
 object](https://github.com/google/turbinia/blob/cc79288ae36cfec749381b80694b4c1290d76583/turbinia/evidence.py#L127)
 for more details on the differences, but in summary, Tasks should use
-`.local_path` to process the incomming Evidence and `.source_path` for newly
+`.local_path` to process the incoming Evidence and `.source_path` for newly
 created Evidence.
 
 ### Recipe configuration

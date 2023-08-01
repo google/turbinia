@@ -43,7 +43,7 @@ class TestResourceManager(unittest.TestCase):
 
   def testRetrieveStateFile(self):
     """Tests the RetrieveResourceState() method."""
-    # Test call was succesful
+    # Test call was successful
     self.assertEqual(resource_manager.RetrieveResourceState(), {})
 
     # Test file was created

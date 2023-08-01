@@ -3,7 +3,7 @@
 # This script can be used to manage a Turbinia stack deployed to GCP. 
 # Requirements:
 # - have 'gcloud' installed.
-# - autheticate against your GCP project with "gcloud auth login"
+# - authenticate against your GCP project with "gcloud auth login"
 # - optionally have the GCP project set with "gcloud config set project [you-project-name]"
 #
 # Use --help to show you commands supported.
@@ -113,7 +113,7 @@ function update_config {
     show_infra
 
     CONFIG_BASE64=`cat $CONFIG_FILE | base64 -w 0`
-    # Update server and workers wit the new configuration
+    # Update server and workers with the new configuration
     for INSTANCE in `$GCLOUD compute instances list --filter="zone:$ZONE" --filter="name ~ $INSTANCEID" --format="json(name)" | jq -r '.[] | .name'`
     do
         $GCLOUD compute instances update-container $INSTANCE --zone $ZONE --container-env TURBINIA_CONF=$CONFIG_BASE64
