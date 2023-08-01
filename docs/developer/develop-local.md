@@ -25,7 +25,7 @@ Rebuild Turbinia server and/or worker Docker images.
 $ docker build -t turbinia-worker-dev -f docker/worker/Dockerfile .
 ```
 #### Step 4
-Change the ```image:``` location in the ```docker/local/docker-compose.yml``` file to point to your localy build image (eg turbinia-worker-dev).
+Change the ```image:``` location in the ```docker/local/docker-compose.yml``` file to point to your locally build image (eg turbinia-worker-dev).
 
 #### Step 5
 Let's bring up the local Turbinia stack 

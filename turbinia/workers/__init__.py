@@ -586,7 +586,7 @@ class TurbiniaTask:
     """Gets histogram metric for current Task.
 
     Returns:
-      prometheus_client.Historgram: For the current task,
+      prometheus_client.Histogram: For the current task,
           or None if they are not initialized.
 
     Raises:
