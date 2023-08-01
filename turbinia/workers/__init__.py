@@ -857,6 +857,45 @@ class TurbiniaTask:
       result.set_error(message, trace)
     return result
 
+  def check_serialization_errors(self, result):
+    """Checks the TurbiniaTaskResult is valid for serialization.
+    
+    This method checks the 'reuslt'' obejct is the correct type and whether
+    it is pickle/JSON serializable or not.
+
+    Args:
+      result(TurbiniaTaskResult): A TurbiniaTaskResult object.
+
+    Returns:
+      str | None: An error message, or None.
+    """
+    error_message = None
+
+    # Check for serialization errors
+    if isinstance(result, TurbiniaTaskResult):
+      try:
+        log.debug('Checking TurbiniaTaskResult for pickle serializability')
+        pickle.dumps(result.serialize())
+      except (TypeError, pickle.PicklingError) as exception:
+        error_message = (
+            f'Error pickling TurbiniaTaskResult object. Returning a new result '
+            f'with the pickling error, and all previous result data will be '
+            f'lost. Pickle Error: {exception!s}')
+      try:
+        log.debug('Checking TurbiniaTaskResult for JSON serializability')
+        json.dumps(result.serialize())
+      except (TypeError) as exception:
+        error_message = (
+            f'Error JSON serializing TurbiniaTaskResult object. Returning a new'
+            f' result with the JSON error, and all previous result data will '
+            f'be lost. JSON Error: {exception!s}')
+    else:
+      error_message = (
+          f'Task returned type [{type(result)!s}] instead of '
+          f'TurbiniaTaskResult.')
+
+    return error_message
+
   def validate_result(self, result):
     """Checks to make sure that the result is valid.
 
@@ -877,61 +916,37 @@ class TurbiniaTask:
       The original result object if it is OK, otherwise an empty result object
       indicating a failure.
     """
-    serialization_error_message = None
-    validation_error_message = None
+    serialization_error = self.check_serialization_errors(result)
+    validation_error = None
     check_status = 'Successful'
 
-    # Check for serialization errors
-    if isinstance(result, TurbiniaTaskResult):
-      try:
-        log.debug('Checking TurbiniaTaskResult for pickle serializability')
-        pickle.dumps(result.serialize())
-      except (TypeError, pickle.PicklingError) as exception:
-        serialization_error_message = (
-            f'Error pickling TurbiniaTaskResult object. Returning a new result '
-            f'with the pickling error, and all previous result data will be '
-            f'lost. Pickle Error: {exception!s}')
-      try:
-        log.debug('Checking TurbiniaTaskResult for JSON serializability')
-        json.dumps(result.serialize())
-      except (TypeError) as exception:
-        serialization_error_message = (
-            f'Error JSON serializing TurbiniaTaskResult object. Returning a new'
-            f' result with the JSON error, and all previous result data will '
-            f'be lost. JSON Error: {exception!s}')
-    else:
-      serialization_error_message = (
-          f'Task returned type [{type(result)!s}] instead of '
-          f'TurbiniaTaskResult.')
-
     # Validate the new evidence objects
-    for evidence in result.evidence[:]:
-      try:
-        evidence.validate()
-      except TurbiniaException as exception:
-        validation_error_message = (
-            f'Not adding evidence {evidence.local_path}. Evidence '
-            f'validation failed with error: {exception!s}')
-        result.evidence.remove(evidence)
-
-    # Handle any serialization type errors
-    if serialization_error_message:
-      log.error(serialization_error_message)
+    if not serialization_error:
+      for evidence in result.evidence[:]:
+        try:
+          evidence.validate()
+        except TurbiniaException as exception:
+          validation_error = (
+              f'Not adding evidence {evidence.local_path}. Evidence '
+              f'validation failed with error: {exception!s}')
+          result.evidence.remove(evidence)
+      # Append evidence validation error messages to the result
+      # so the client knows what happened
+      result.log(validation_error)
+      result.status = f'{result.status}. {validation_error}'
+    else:
+      # Handle any serialization type errors
+      log.error(serialization_error)
       if result and hasattr(result, 'status') and result.status:
         status = result.status
       else:
         status = 'No previous status'
 
       result = self.create_result(
-          status=status, message=serialization_error_message,
+          status=status, message=serialization_error,
           trace=traceback.format_exc())
-      result.close(self, success=False, status=serialization_error_message)
+      result.close(self, success=False, status=serialization_error)
       check_status = 'Failed, but replaced with empty result'
-    # Append evidence validation error messages to the result
-    # so the client knows what happened
-    elif validation_error_message:
-      result.log(validation_error_message)
-      result.status = f'{result.status}. {validation_error_message}'
 
     log.info(f'Result check: {check_status:s}')
     return result
