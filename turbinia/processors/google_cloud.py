@@ -25,7 +25,7 @@ import time
 from six.moves import urllib
 
 from libcloudforensics.providers.gcp.internal import project as gcp_project
-from prometheus_client import Gauge
+from prometheus_client import Counter
 from turbinia import config
 from turbinia import TurbiniaException
 
@@ -35,7 +35,7 @@ RETRY_MAX = 10
 ATTACH_SLEEP_TIME = 3
 DETACH_SLEEP_TIME = 5
 
-turbinia_nonexisting_disk_path = Gauge(
+turbinia_nonexisting_disk_path = Counter(
     'turbinia_nonexisting_disk_path',
     'Total number of non existing disk paths after attempts to attach')
 
