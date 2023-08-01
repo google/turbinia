@@ -707,6 +707,7 @@ class CeleryTaskManager(BaseTaskManager):
     requests = self.kombu.check_messages()
     evidence_list = []
     for request in requests:
+      #todo(igormr): Create request object in redis
       for evidence_ in request.evidence:
         if not evidence_.request_id:
           evidence_.request_id = request.request_id
