@@ -34,7 +34,7 @@ import traceback
 import uuid
 import filelock
 
-from prometheus_client import CollectorRegistry, Gauge, Histogram
+from prometheus_client import CollectorRegistry, Counter, Histogram
 from turbinia import __version__, config
 from turbinia.config import DATETIME_FORMAT
 from turbinia.evidence import evidence_decode
@@ -56,19 +56,19 @@ REPORT_MAXSIZE = int(1048572 * 0.75)
 log = logging.getLogger('turbinia')
 
 registry = CollectorRegistry()
-turbinia_worker_tasks_started_total = Gauge(
+turbinia_worker_tasks_started_total = Counter(
     'turbinia_worker_tasks_started_total',
     'Total number of started worker tasks', registry=registry)
-turbinia_worker_tasks_completed_total = Gauge(
+turbinia_worker_tasks_completed_total = Counter(
     'turbinia_worker_tasks_completed_total',
     'Total number of completed worker tasks', registry=registry)
-turbinia_worker_tasks_queued_total = Gauge(
+turbinia_worker_tasks_queued_total = Counter(
     'turbinia_worker_tasks_queued_total', 'Total number of queued worker tasks',
     registry=registry)
-turbinia_worker_tasks_failed_total = Gauge(
+turbinia_worker_tasks_failed_total = Counter(
     'turbinia_worker_tasks_failed_total', 'Total number of failed worker tasks',
     registry=registry)
-turbinia_worker_tasks_timeout_total = Gauge(
+turbinia_worker_tasks_timeout_total = Counter(
     'turbinia_worker_tasks_timeout_total',
     'Total number of worker tasks timed out.', registry=registry)
 
