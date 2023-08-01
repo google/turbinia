@@ -546,6 +546,14 @@ class Evidence:
       output.append(f'{state.name:s}: {value!s}')
     return f"[{', '.join(output):s}]"
 
+  def _validate(self):
+    """Runs additional logic to validate evidence requirements.
+    
+    Evidence subclasses can override this method to perform custom
+    validation of evidence objects.
+    """
+    pass
+
   def validate(self):
     """Runs validation to verify evidence meets minimum requirements.
 
@@ -565,6 +573,8 @@ class Evidence:
             '{1:s} is not set. Please check original request.'.format(
                 attribute, self.type))
         raise TurbiniaException(message)
+
+    self._validate()
 
 
 class EvidenceCollection(Evidence):
@@ -966,7 +976,12 @@ class PlasoFile(Evidence):
     self.copyable = True
     self.plaso_version = plaso_version
 
-  def validate(self):
+  def _validate(self):
+    """Validates whether the Plaso file contains any events.
+    
+    Raises:
+      TurbiniaException: if validation fails.
+    """
     cmd = [
         'pinfo.py',
         '--output-format',
