@@ -102,7 +102,7 @@ class TurbiniaTaskResult:
           be used to order report sections.
       request_id (str): The id of the initial request to process this evidence.
       run_time (datetime): Length of time the task ran for.
-      saved_Fpaths (list(str)): Paths where output has been saved.
+      saved_paths (list(str)): Paths where output has been saved.
       status (str): A one line descriptive task status.
       successful (bool): Indicates success status.
       task_id (str): Task ID of the parent task.
