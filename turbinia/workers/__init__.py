@@ -102,7 +102,7 @@ class TurbiniaTaskResult:
           be used to order report sections.
       request_id (str): The id of the initial request to process this evidence.
       run_time (datetime): Length of time the task ran for.
-      saved_paths (list(str)): Paths where output has been saved.
+      saved_Fpaths (list(str)): Paths where output has been saved.
       status (str): A one line descriptive task status.
       successful (bool): Indicates success status.
       task_id (str): Task ID of the parent task.
@@ -927,9 +927,10 @@ class TurbiniaTask:
           evidence.validate()
         except TurbiniaException as exception:
           validation_error = (
-              f'Not adding evidence {evidence.local_path}. Evidence '
+              f'Not adding evidence {evidence.source_path}. Evidence '
               f'validation failed with error: {exception!s}')
           result.evidence.remove(evidence)
+          result.saved_paths.remove(evidence.source_path)
       # Append evidence validation error messages to the result
       # so the client knows what happened
       if validation_error:
