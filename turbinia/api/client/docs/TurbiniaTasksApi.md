@@ -8,7 +8,7 @@ Method | HTTP request | Description
 
 
 # **get_task_status**
-> bool, date, datetime, dict, float, int, list, str, none_type get_task_status(task_id)
+> object get_task_status(task_id)
 
 Get Task Status
 
@@ -17,13 +17,13 @@ Retrieve task information.
 ### Example
 
 * OAuth Authentication (oAuth2):
-
 ```python
 import time
+import os
 import turbinia_api_lib
-from turbinia_api_lib.api import turbinia_tasks_api
-from turbinia_api_lib.model.http_validation_error import HTTPValidationError
+from turbinia_api_lib.rest import ApiException
 from pprint import pprint
+
 # Defining the host is optional and defaults to http://localhost
 # See configuration.py for a list of all supported configuration parameters.
 configuration = turbinia_api_lib.Configuration(
@@ -35,24 +35,20 @@ configuration = turbinia_api_lib.Configuration(
 # Examples for each auth method are provided below, use the example that
 # satisfies your auth use case.
 
-# Configure OAuth2 access token for authorization: oAuth2
-configuration = turbinia_api_lib.Configuration(
-    host = "http://localhost"
-)
-configuration.access_token = 'YOUR_ACCESS_TOKEN'
+configuration.access_token = os.environ["ACCESS_TOKEN"]
 
 # Enter a context with an instance of the API client
 with turbinia_api_lib.ApiClient(configuration) as api_client:
     # Create an instance of the API class
-    api_instance = turbinia_tasks_api.TurbiniaTasksApi(api_client)
-    task_id = "task_id_example" # str | 
+    api_instance = turbinia_api_lib.TurbiniaTasksApi(api_client)
+    task_id = 'task_id_example' # str | 
 
-    # example passing only required values which don't have defaults set
     try:
         # Get Task Status
         api_response = api_instance.get_task_status(task_id)
+        print("The response of TurbiniaTasksApi->get_task_status:\n")
         pprint(api_response)
-    except turbinia_api_lib.ApiException as e:
+    except Exception as e:
         print("Exception when calling TurbiniaTasksApi->get_task_status: %s\n" % e)
 ```
 
@@ -61,11 +57,11 @@ with turbinia_api_lib.ApiClient(configuration) as api_client:
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **task_id** | **str**|  |
+ **task_id** | **str**|  | 
 
 ### Return type
 
-**bool, date, datetime, dict, float, int, list, str, none_type**
+**object**
 
 ### Authorization
 
@@ -76,9 +72,7 @@ Name | Type | Description  | Notes
  - **Content-Type**: Not defined
  - **Accept**: application/json
 
-
 ### HTTP response details
-
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
 **200** | Successful Response |  -  |
