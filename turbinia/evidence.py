@@ -110,7 +110,8 @@ def map_evidence_attributes():
   return object_attribute_mapping
 
 
-def evidence_decode(evidence_dict, strict=False):
+def evidence_decode(
+    evidence_dict, strict=False):  #todo(igormr): Check if this works
   """Decode JSON into appropriate Evidence object.
 
   Args:
@@ -267,11 +268,12 @@ class Evidence:
     self.config = kwargs.get('config', {})
     self.context_dependent = kwargs.get('context_dependent', False)
     self.copyable = kwargs.get('copyable', False)
-    self.creation_time = datetime.now().strftime(DATETIME_FORMAT)
+    self.creation_time = datetime.now().strftime(
+        DATETIME_FORMAT)  #todo(igormr): add kwargs here
     self.credentials = kwargs.get('credentials', [])
     self.description = kwargs.get('description', None)
     self.has_child_evidence = kwargs.get('has_child_evidence', False)
-    self.hash = file_hash
+    self.hash = file_hash  #todo(igormr): add kwargs here
     self.mount_path = kwargs.get('mount_path', None)
     self._name = kwargs.get('name')
     self.parent_evidence = kwargs.get('parent_evidence', None)
@@ -376,7 +378,8 @@ class Evidence:
     new_object.__dict__.update(dictionary)
     return new_object
 
-  def serialize(self):
+  def serialize(
+      self):  #todo(igormr): modify this to serialize for state_manager and here
     """Return JSON serializable object."""
     # Clear any partition path_specs before serializing
     if hasattr(self, 'path_spec'):
@@ -581,6 +584,7 @@ class Evidence:
     return f"[{', '.join(output):s}]"
 
   def validate(self):
+    #todo(igormr):add id and type here and remove check from state_manager
     """Runs validation to verify evidence meets minimum requirements.
 
     This default implementation will just check that the attributes listed in

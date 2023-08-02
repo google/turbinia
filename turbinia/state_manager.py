@@ -58,7 +58,7 @@ MAX_DATASTORE_STRLEN = 1500
 log = logging.getLogger('turbinia')
 
 
-class Evidence:
+class Evidence:  #todo(igormr): Remove this and circular import
   pass
 
 

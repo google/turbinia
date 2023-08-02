@@ -128,7 +128,6 @@ class TurbiniaTaskResult:
 
     self.closed = False
     self.evidence = evidence if evidence else []
-    self.evidence_id = None
     self.evidence_size = None
     self.input_evidence = input_evidence
     self.id = uuid.uuid4().hex
