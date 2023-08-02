@@ -19,8 +19,6 @@ import warnings
 from pydantic import validate_arguments, ValidationError
 from typing_extensions import Annotated
 
-from pydantic import StrictStr
-
 from typing import Any
 
 
@@ -45,7 +43,7 @@ class TurbiniaLogsApi(object):
         self.api_client = api_client
 
     @validate_arguments
-    def get_logs(self, query : StrictStr, **kwargs) -> object:  # noqa: E501
+    def get_logs(self, query : Any, **kwargs) -> object:  # noqa: E501
         """Get Logs  # noqa: E501
 
         Retrieve log data.  # noqa: E501
@@ -56,7 +54,7 @@ class TurbiniaLogsApi(object):
         >>> result = thread.get()
 
         :param query: (required)
-        :type query: str
+        :type query: object
         :param async_req: Whether to execute the request asynchronously.
         :type async_req: bool, optional
         :param _request_timeout: timeout setting for this request. If one
@@ -74,7 +72,7 @@ class TurbiniaLogsApi(object):
         return self.get_logs_with_http_info(query, **kwargs)  # noqa: E501
 
     @validate_arguments
-    def get_logs_with_http_info(self, query : StrictStr, **kwargs) -> ApiResponse:  # noqa: E501
+    def get_logs_with_http_info(self, query : Any, **kwargs) -> ApiResponse:  # noqa: E501
         """Get Logs  # noqa: E501
 
         Retrieve log data.  # noqa: E501
@@ -85,7 +83,7 @@ class TurbiniaLogsApi(object):
         >>> result = thread.get()
 
         :param query: (required)
-        :type query: str
+        :type query: object
         :param async_req: Whether to execute the request asynchronously.
         :type async_req: bool, optional
         :param _preload_content: if False, the ApiResponse.data will

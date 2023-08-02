@@ -16,6 +16,5 @@
 # import models into model package
 from turbinia_api_lib.models.base_request_options import BaseRequestOptions
 from turbinia_api_lib.models.http_validation_error import HTTPValidationError
-from turbinia_api_lib.models.location_inner import LocationInner
 from turbinia_api_lib.models.request import Request
 from turbinia_api_lib.models.validation_error import ValidationError

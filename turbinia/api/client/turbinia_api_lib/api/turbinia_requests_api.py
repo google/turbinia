@@ -19,8 +19,6 @@ import warnings
 from pydantic import validate_arguments, ValidationError
 from typing_extensions import Annotated
 
-from pydantic import StrictStr
-
 from typing import Any
 
 from turbinia_api_lib.models.request import Request
@@ -193,7 +191,7 @@ class TurbiniaRequestsApi(object):
             _request_auth=_params.get('_request_auth'))
 
     @validate_arguments
-    def get_request_status(self, request_id : StrictStr, **kwargs) -> object:  # noqa: E501
+    def get_request_status(self, request_id : Any, **kwargs) -> object:  # noqa: E501
         """Get Request Status  # noqa: E501
 
         Retrieves status for a Turbinia Request.  Args:   request (Request): FastAPI request object.   request_id (str): A Turbinia request identifier.  Raises:   HTTPException: if another exception is caught.  # noqa: E501
@@ -204,7 +202,7 @@ class TurbiniaRequestsApi(object):
         >>> result = thread.get()
 
         :param request_id: (required)
-        :type request_id: str
+        :type request_id: object
         :param async_req: Whether to execute the request asynchronously.
         :type async_req: bool, optional
         :param _request_timeout: timeout setting for this request. If one
@@ -222,7 +220,7 @@ class TurbiniaRequestsApi(object):
         return self.get_request_status_with_http_info(request_id, **kwargs)  # noqa: E501
 
     @validate_arguments
-    def get_request_status_with_http_info(self, request_id : StrictStr, **kwargs) -> ApiResponse:  # noqa: E501
+    def get_request_status_with_http_info(self, request_id : Any, **kwargs) -> ApiResponse:  # noqa: E501
         """Get Request Status  # noqa: E501
 
         Retrieves status for a Turbinia Request.  Args:   request (Request): FastAPI request object.   request_id (str): A Turbinia request identifier.  Raises:   HTTPException: if another exception is caught.  # noqa: E501
@@ -233,7 +231,7 @@ class TurbiniaRequestsApi(object):
         >>> result = thread.get()
 
         :param request_id: (required)
-        :type request_id: str
+        :type request_id: object
         :param async_req: Whether to execute the request asynchronously.
         :type async_req: bool, optional
         :param _preload_content: if False, the ApiResponse.data will

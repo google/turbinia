@@ -112,7 +112,6 @@ Class | Method | HTTP request | Description
 
  - [BaseRequestOptions](docs/BaseRequestOptions.md)
  - [HTTPValidationError](docs/HTTPValidationError.md)
- - [LocationInner](docs/LocationInner.md)
  - [Request](docs/Request.md)
  - [ValidationError](docs/ValidationError.md)
 

@@ -41,7 +41,7 @@ configuration.access_token = os.environ["ACCESS_TOKEN"]
 with turbinia_api_lib.ApiClient(configuration) as api_client:
     # Create an instance of the API class
     api_instance = turbinia_api_lib.TurbiniaTasksApi(api_client)
-    task_id = 'task_id_example' # str | 
+    task_id = None # object | 
 
     try:
         # Get Task Status
@@ -57,7 +57,7 @@ with turbinia_api_lib.ApiClient(configuration) as api_client:
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **task_id** | **str**|  | 
+ **task_id** | [**object**](.md)|  | 
 
 ### Return type
 

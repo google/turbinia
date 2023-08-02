@@ -19,8 +19,6 @@ import warnings
 from pydantic import validate_arguments, ValidationError
 from typing_extensions import Annotated
 
-from pydantic import StrictStr
-
 from typing import Any
 
 
@@ -45,7 +43,7 @@ class TurbiniaTasksApi(object):
         self.api_client = api_client
 
     @validate_arguments
-    def get_task_status(self, task_id : StrictStr, **kwargs) -> object:  # noqa: E501
+    def get_task_status(self, task_id : Any, **kwargs) -> object:  # noqa: E501
         """Get Task Status  # noqa: E501
 
         Retrieve task information.  # noqa: E501
@@ -56,7 +54,7 @@ class TurbiniaTasksApi(object):
         >>> result = thread.get()
 
         :param task_id: (required)
-        :type task_id: str
+        :type task_id: object
         :param async_req: Whether to execute the request asynchronously.
         :type async_req: bool, optional
         :param _request_timeout: timeout setting for this request. If one
@@ -74,7 +72,7 @@ class TurbiniaTasksApi(object):
         return self.get_task_status_with_http_info(task_id, **kwargs)  # noqa: E501
 
     @validate_arguments
-    def get_task_status_with_http_info(self, task_id : StrictStr, **kwargs) -> ApiResponse:  # noqa: E501
+    def get_task_status_with_http_info(self, task_id : Any, **kwargs) -> ApiResponse:  # noqa: E501
         """Get Task Status  # noqa: E501
 
         Retrieve task information.  # noqa: E501
@@ -85,7 +83,7 @@ class TurbiniaTasksApi(object):
         >>> result = thread.get()
 
         :param task_id: (required)
-        :type task_id: str
+        :type task_id: object
         :param async_req: Whether to execute the request asynchronously.
         :type async_req: bool, optional
         :param _preload_content: if False, the ApiResponse.data will

@@ -22,6 +22,7 @@ import turbinia_api_lib
 from typing import Union
 
 from turbinia_api_lib.api import turbinia_configuration_api
+from turbinia_api_lib.api import turbinia_evidence_api
 
 from turbinia_client.helpers import auth_helper
 
@@ -163,11 +164,10 @@ class TurbiniaCli:
 
   def get_evidence_arguments(self, evidence_name=None) -> dict:
     """Gets arguments for Evidence types."""
-    api_instance = turbinia_configuration_api.TurbiniaConfigurationApi(
-        self.api_client)
+    api_instance = turbinia_evidence_api.TurbiniaEvidenceApi(self.api_client)
     api_response = None
     if evidence_name:
-      api_response = api_instance.get_evidence_attributes_by_name(evidence_name)
+      api_response = api_instance.get_evidence_attributes(evidence_name)
     else:
       api_response = api_instance.get_evidence_types()
 

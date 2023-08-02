@@ -19,9 +19,7 @@ import warnings
 from pydantic import validate_arguments, ValidationError
 from typing_extensions import Annotated
 
-from pydantic import StrictStr
-
-from typing import Union
+from typing import Any
 
 
 from turbinia_api_lib.api_client import ApiClient
@@ -45,7 +43,7 @@ class TurbiniaRequestResultsApi(object):
         self.api_client = api_client
 
     @validate_arguments
-    def get_request_output(self, request_id : StrictStr, **kwargs) -> bytearray:  # noqa: E501
+    def get_request_output(self, request_id : Any, **kwargs) -> object:  # noqa: E501
         """Get Request Output  # noqa: E501
 
         Retrieve request output.  # noqa: E501
@@ -56,7 +54,7 @@ class TurbiniaRequestResultsApi(object):
         >>> result = thread.get()
 
         :param request_id: (required)
-        :type request_id: str
+        :type request_id: object
         :param async_req: Whether to execute the request asynchronously.
         :type async_req: bool, optional
         :param _request_timeout: timeout setting for this request. If one
@@ -66,7 +64,7 @@ class TurbiniaRequestResultsApi(object):
         :return: Returns the result object.
                  If the method is called asynchronously,
                  returns the request thread.
-        :rtype: bytearray
+        :rtype: object
         """
         kwargs['_return_http_data_only'] = True
         if '_preload_content' in kwargs:
@@ -74,7 +72,7 @@ class TurbiniaRequestResultsApi(object):
         return self.get_request_output_with_http_info(request_id, **kwargs)  # noqa: E501
 
     @validate_arguments
-    def get_request_output_with_http_info(self, request_id : StrictStr, **kwargs) -> ApiResponse:  # noqa: E501
+    def get_request_output_with_http_info(self, request_id : Any, **kwargs) -> ApiResponse:  # noqa: E501
         """Get Request Output  # noqa: E501
 
         Retrieve request output.  # noqa: E501
@@ -85,7 +83,7 @@ class TurbiniaRequestResultsApi(object):
         >>> result = thread.get()
 
         :param request_id: (required)
-        :type request_id: str
+        :type request_id: object
         :param async_req: Whether to execute the request asynchronously.
         :type async_req: bool, optional
         :param _preload_content: if False, the ApiResponse.data will
@@ -108,7 +106,7 @@ class TurbiniaRequestResultsApi(object):
         :return: Returns the result object.
                  If the method is called asynchronously,
                  returns the request thread.
-        :rtype: tuple(bytearray, status_code(int), headers(HTTPHeaderDict))
+        :rtype: tuple(object, status_code(int), headers(HTTPHeaderDict))
         """
 
         _params = locals()
@@ -163,7 +161,7 @@ class TurbiniaRequestResultsApi(object):
         _auth_settings = ['oAuth2']  # noqa: E501
 
         _response_types_map = {
-            '200': "bytearray",
+            '200': "object",
             '422': "HTTPValidationError",
         }
 
@@ -185,7 +183,7 @@ class TurbiniaRequestResultsApi(object):
             _request_auth=_params.get('_request_auth'))
 
     @validate_arguments
-    def get_task_output(self, task_id : StrictStr, **kwargs) -> bytearray:  # noqa: E501
+    def get_task_output(self, task_id : Any, **kwargs) -> object:  # noqa: E501
         """Get Task Output  # noqa: E501
 
         Retrieves a task's output files.  # noqa: E501
@@ -196,7 +194,7 @@ class TurbiniaRequestResultsApi(object):
         >>> result = thread.get()
 
         :param task_id: (required)
-        :type task_id: str
+        :type task_id: object
         :param async_req: Whether to execute the request asynchronously.
         :type async_req: bool, optional
         :param _request_timeout: timeout setting for this request. If one
@@ -206,7 +204,7 @@ class TurbiniaRequestResultsApi(object):
         :return: Returns the result object.
                  If the method is called asynchronously,
                  returns the request thread.
-        :rtype: bytearray
+        :rtype: object
         """
         kwargs['_return_http_data_only'] = True
         if '_preload_content' in kwargs:
@@ -214,7 +212,7 @@ class TurbiniaRequestResultsApi(object):
         return self.get_task_output_with_http_info(task_id, **kwargs)  # noqa: E501
 
     @validate_arguments
-    def get_task_output_with_http_info(self, task_id : StrictStr, **kwargs) -> ApiResponse:  # noqa: E501
+    def get_task_output_with_http_info(self, task_id : Any, **kwargs) -> ApiResponse:  # noqa: E501
         """Get Task Output  # noqa: E501
 
         Retrieves a task's output files.  # noqa: E501
@@ -225,7 +223,7 @@ class TurbiniaRequestResultsApi(object):
         >>> result = thread.get()
 
         :param task_id: (required)
-        :type task_id: str
+        :type task_id: object
         :param async_req: Whether to execute the request asynchronously.
         :type async_req: bool, optional
         :param _preload_content: if False, the ApiResponse.data will
@@ -248,7 +246,7 @@ class TurbiniaRequestResultsApi(object):
         :return: Returns the result object.
                  If the method is called asynchronously,
                  returns the request thread.
-        :rtype: tuple(bytearray, status_code(int), headers(HTTPHeaderDict))
+        :rtype: tuple(object, status_code(int), headers(HTTPHeaderDict))
         """
 
         _params = locals()
@@ -303,7 +301,7 @@ class TurbiniaRequestResultsApi(object):
         _auth_settings = ['oAuth2']  # noqa: E501
 
         _response_types_map = {
-            '200': "bytearray",
+            '200': "object",
             '422': "HTTPValidationError",
         }
 

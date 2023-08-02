@@ -18,15 +18,14 @@ import re  # noqa: F401
 import json
 
 
-from typing import List, Optional
-from pydantic import BaseModel, conlist
-from turbinia_api_lib.models.validation_error import ValidationError
+from typing import Any, Optional
+from pydantic import BaseModel
 
 class HTTPValidationError(BaseModel):
     """
     HTTPValidationError
     """
-    detail: Optional[conlist(ValidationError)] = None
+    detail: Optional[Any] = None
     __properties = ["detail"]
 
     class Config:
@@ -53,13 +52,11 @@ class HTTPValidationError(BaseModel):
                           exclude={
                           },
                           exclude_none=True)
-        # override the default output from pydantic by calling `to_dict()` of each item in detail (list)
-        _items = []
-        if self.detail:
-            for _item in self.detail:
-                if _item:
-                    _items.append(_item.to_dict())
-            _dict['detail'] = _items
+        # set to None if detail (nullable) is None
+        # and __fields_set__ contains the field
+        if self.detail is None and "detail" in self.__fields_set__:
+            _dict['detail'] = None
+
         return _dict
 
     @classmethod
@@ -72,7 +69,7 @@ class HTTPValidationError(BaseModel):
             return HTTPValidationError.parse_obj(obj)
 
         _obj = HTTPValidationError.parse_obj({
-            "detail": [ValidationError.from_dict(_item) for _item in obj.get("detail")] if obj.get("detail") is not None else None
+            "detail": obj.get("detail")
         })
         return _obj
 

@@ -155,10 +155,7 @@ async def get_evidence_by_hash(request: Request, file_hash):
       detail=f'Hash {file_hash} not found or it had no associated evidences.')
 
 
-#todo(igormr) update request_ids for every request
-#todo(igormr) Make TurbiniaRequest on redis pointing to TurbiniaEvidence and back
 #todo(igormr) Check if turbinia client works with new endpoints, especially upload
-#todo(igormr) Make link from evidence to task
 
 
 @router.post('/upload')

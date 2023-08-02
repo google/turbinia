@@ -18,17 +18,16 @@ import re  # noqa: F401
 import json
 
 
-from typing import List
-from pydantic import BaseModel, Field, StrictStr, conlist
-from turbinia_api_lib.models.location_inner import LocationInner
+from typing import Any, Optional
+from pydantic import BaseModel, Field
 
 class ValidationError(BaseModel):
     """
     ValidationError
     """
-    loc: conlist(LocationInner) = Field(...)
-    msg: StrictStr = Field(...)
-    type: StrictStr = Field(...)
+    loc: Optional[Any] = Field(...)
+    msg: Optional[Any] = Field(...)
+    type: Optional[Any] = Field(...)
     __properties = ["loc", "msg", "type"]
 
     class Config:
@@ -55,13 +54,21 @@ class ValidationError(BaseModel):
                           exclude={
                           },
                           exclude_none=True)
-        # override the default output from pydantic by calling `to_dict()` of each item in loc (list)
-        _items = []
-        if self.loc:
-            for _item in self.loc:
-                if _item:
-                    _items.append(_item.to_dict())
-            _dict['loc'] = _items
+        # set to None if loc (nullable) is None
+        # and __fields_set__ contains the field
+        if self.loc is None and "loc" in self.__fields_set__:
+            _dict['loc'] = None
+
+        # set to None if msg (nullable) is None
+        # and __fields_set__ contains the field
+        if self.msg is None and "msg" in self.__fields_set__:
+            _dict['msg'] = None
+
+        # set to None if type (nullable) is None
+        # and __fields_set__ contains the field
+        if self.type is None and "type" in self.__fields_set__:
+            _dict['type'] = None
+
         return _dict
 
     @classmethod
@@ -74,7 +81,7 @@ class ValidationError(BaseModel):
             return ValidationError.parse_obj(obj)
 
         _obj = ValidationError.parse_obj({
-            "loc": [LocationInner.from_dict(_item) for _item in obj.get("loc")] if obj.get("loc") is not None else None,
+            "loc": obj.get("loc"),
             "msg": obj.get("msg"),
             "type": obj.get("type")
         })

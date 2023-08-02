@@ -19,11 +19,8 @@ import warnings
 from pydantic import validate_arguments, ValidationError
 from typing_extensions import Annotated
 
-from pydantic import StrictBytes, StrictStr, conlist
+from typing import Any, Optional
 
-from typing import Any, Union
-
-from turbinia_api_lib.models.evidence import Evidence
 
 from turbinia_api_lib.api_client import ApiClient
 from turbinia_api_lib.api_response import ApiResponse
@@ -728,20 +725,22 @@ class TurbiniaEvidenceApi(object):
             _request_auth=_params.get('_request_auth'))
 
     @validate_arguments
-    def upload_evidence(self, files : conlist(Union[StrictBytes, StrictStr]), information : conlist(Evidence), **kwargs) -> object:  # noqa: E501
+    def upload_evidence(self, ticked_id : Any, files : Optional[Any], calculate_hash : Optional[Any] = None, **kwargs) -> object:  # noqa: E501
         """Upload Evidence  # noqa: E501
 
-        Upload evidence file to server for processing.  Args:   file (List[UploadFile]): Evidence file to be uploaded to folder for later       processing. The maximum size of the file is 10 GB.    information (List[Evidence]): The information about each of the files       uploaded. The attributes \"file_name\" and \"evidence_type\" are mandatory       for all evidences, the other attributes are necessary depending on the        evidence type. Check /api/evidence/types for more info.  Raises:   TypeError: If pre-conditions are not met.  Returns:   List of uploaded evidences or warning messages if any.  # noqa: E501
+        Upload evidence file to server for processing.  Args:   file (List[UploadFile]): Evidence file to be uploaded to folder for later       processing. The maximum size of the file is 10 GB.   Raises:   TypeError: If pre-conditions are not met.  Returns:   List of uploaded evidences or warning messages if any.  # noqa: E501
         This method makes a synchronous HTTP request by default. To make an
         asynchronous HTTP request, please pass async_req=True
 
-        >>> thread = api.upload_evidence(files, information, async_req=True)
+        >>> thread = api.upload_evidence(ticked_id, files, calculate_hash, async_req=True)
         >>> result = thread.get()
 
+        :param ticked_id: (required)
+        :type ticked_id: object
         :param files: (required)
-        :type files: List[bytearray]
-        :param information: (required)
-        :type information: List[Evidence]
+        :type files: object
+        :param calculate_hash:
+        :type calculate_hash: object
         :param async_req: Whether to execute the request asynchronously.
         :type async_req: bool, optional
         :param _request_timeout: timeout setting for this request. If one
@@ -756,23 +755,25 @@ class TurbiniaEvidenceApi(object):
         kwargs['_return_http_data_only'] = True
         if '_preload_content' in kwargs:
             raise ValueError("Error! Please call the upload_evidence_with_http_info method with `_preload_content` instead and obtain raw data from ApiResponse.raw_data")
-        return self.upload_evidence_with_http_info(files, information, **kwargs)  # noqa: E501
+        return self.upload_evidence_with_http_info(ticked_id, files, calculate_hash, **kwargs)  # noqa: E501
 
     @validate_arguments
-    def upload_evidence_with_http_info(self, files : conlist(Union[StrictBytes, StrictStr]), information : conlist(Evidence), **kwargs) -> ApiResponse:  # noqa: E501
+    def upload_evidence_with_http_info(self, ticked_id : Any, files : Optional[Any], calculate_hash : Optional[Any] = None, **kwargs) -> ApiResponse:  # noqa: E501
         """Upload Evidence  # noqa: E501
 
-        Upload evidence file to server for processing.  Args:   file (List[UploadFile]): Evidence file to be uploaded to folder for later       processing. The maximum size of the file is 10 GB.    information (List[Evidence]): The information about each of the files       uploaded. The attributes \"file_name\" and \"evidence_type\" are mandatory       for all evidences, the other attributes are necessary depending on the        evidence type. Check /api/evidence/types for more info.  Raises:   TypeError: If pre-conditions are not met.  Returns:   List of uploaded evidences or warning messages if any.  # noqa: E501
+        Upload evidence file to server for processing.  Args:   file (List[UploadFile]): Evidence file to be uploaded to folder for later       processing. The maximum size of the file is 10 GB.   Raises:   TypeError: If pre-conditions are not met.  Returns:   List of uploaded evidences or warning messages if any.  # noqa: E501
         This method makes a synchronous HTTP request by default. To make an
         asynchronous HTTP request, please pass async_req=True
 
-        >>> thread = api.upload_evidence_with_http_info(files, information, async_req=True)
+        >>> thread = api.upload_evidence_with_http_info(ticked_id, files, calculate_hash, async_req=True)
         >>> result = thread.get()
 
+        :param ticked_id: (required)
+        :type ticked_id: object
         :param files: (required)
-        :type files: List[bytearray]
-        :param information: (required)
-        :type information: List[Evidence]
+        :type files: object
+        :param calculate_hash:
+        :type calculate_hash: object
         :param async_req: Whether to execute the request asynchronously.
         :type async_req: bool, optional
         :param _preload_content: if False, the ApiResponse.data will
@@ -801,8 +802,9 @@ class TurbiniaEvidenceApi(object):
         _params = locals()
 
         _all_params = [
+            'ticked_id',
             'files',
-            'information'
+            'calculate_hash'
         ]
         _all_params.extend(
             [
@@ -833,18 +835,19 @@ class TurbiniaEvidenceApi(object):
 
         # process the query parameters
         _query_params = []
+        if _params.get('ticked_id') is not None:  # noqa: E501
+            _query_params.append(('ticked_id', _params['ticked_id']))
+
+        if _params.get('calculate_hash') is not None:  # noqa: E501
+            _query_params.append(('calculate_hash', _params['calculate_hash']))
+
         # process the header parameters
         _header_params = dict(_params.get('_headers', {}))
         # process the form parameters
         _form_params = []
         _files = {}
         if _params['files']:
-            _files['files'] = _params['files']
-            _collection_formats['files'] = 'csv'
-
-        if _params['information']:
-            _form_params.append(('information', _params['information']))
-            _collection_formats['information'] = 'csv'
+            _form_params.append(('files', _params['files']))
 
         # process the body parameter
         _body_params = None

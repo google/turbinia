@@ -22,6 +22,11 @@ def config_group():
   """Get Turbinia configuration."""
 
 
+@click.group('evidence')
+def evidence_group():
+  """Evidence."""
+
+
 @click.group('status')
 def status_group():
   """Get Turbinia request or task status."""
