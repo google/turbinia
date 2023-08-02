@@ -27,6 +27,7 @@ from turbinia_api_lib.api import turbinia_tasks_api
 from turbinia_api_lib.api import turbinia_configuration_api
 from turbinia_api_lib.api import turbinia_jobs_api
 from turbinia_api_lib.api import turbinia_request_results_api
+from turbinia_api_lib.api import turbinia_evidence_api
 
 from turbinia_client.core import groups
 from turbinia_client.helpers import formatter
