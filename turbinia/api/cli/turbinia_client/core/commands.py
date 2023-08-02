@@ -289,18 +289,18 @@ def create_request(ctx: click.Context, *args: int, **kwargs: int) -> None:
     log.error(f'The request object is invalid. {exception}')
 
 
-@groups.status_group.command('evidence')
+@groups.evidence_group.command('get_evidence')
 @click.pass_context
 @click.argument('evidence_id')
 @click.option(
     '--json_dump', '-j', help='Generates JSON output.', is_flag=True,
     required=False)
-def get_evidence(ctx: click.Context, task_id: str, json_dump: bool) -> None:
+def get_evidence(ctx: click.Context, evidence_id: str, json_dump: bool) -> None:
   """Gets Turbinia evidence status."""
   client: api_client.ApiClient = ctx.obj.api_client
   api_instance = turbinia_evidence_api.TurbiniaEvidenceApi(client)
   try:
-    api_response = api_instance.get_evidence_by_id(task_id)
+    api_response = api_instance.get_evidence_by_id(evidence_id)
     if json_dump:
       formatter.echo_json(api_response)
     else:
@@ -310,3 +310,6 @@ def get_evidence(ctx: click.Context, task_id: str, json_dump: bool) -> None:
     log.error(
         f'Received status code {exception.status} '
         f'when calling get_task_status: {exception.body}')
+
+
+#todo(igormr): Add upload command and check size of file on client side
