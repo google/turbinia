@@ -60,16 +60,16 @@ async def upload_file(
         sha_hash.update(chunk)
       size += turbinia_config.CHUNK_SIZE
       if size >= turbinia_config.MAX_UPLOAD_SIZE:
-        error_message = ' '.join((
+        error_message = ' '.join(( #todo(igormr): remove join for fstrings
             f'Unable to upload file {file.filename} greater',
             f'than {turbinia_config.MAX_UPLOAD_SIZE / (1024 ** 3)} GB'))
         log.error(error_message)
         raise IOError(error_message)
     file_info = {
-        'Original Name': file.file_name,
-        'Saved Name': os.path.basename(file_path),
-        'File Path': file_path,
-        'Size': size
+        'uploaded_name': file.file_name,
+        'file_name': os.path.basename(file_path),
+        'file_path': file_path,
+        'size': size
     }
     if calculate_hash:
       file_info['Hash'] = sha_hash.hexdigest()
@@ -201,4 +201,5 @@ async def upload_evidence(
         log.error(f'Could not remove file {file_path}')
     else:
       evidences.append()
+    #todo(igormr): maybe save generic evidence to pass to server
   return JSONResponse(content=evidences, status_code=200)
