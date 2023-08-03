@@ -35,7 +35,7 @@ class TurbiniaRequest:
   Attributes:
     request_id(str): A client specified ID for this request.
     group_id(str): A client specified group id for this request.
-    requester(str): The username of who made the request.
+    requestor(str): The username of who made the request.
     recipe(dict): Recipe to use when processing this request.
     context(dict): A Dict of context data to be passed around with this request.
     evidence(list): A list of Evidence objects.

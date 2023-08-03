@@ -5,7 +5,7 @@
 # deployed within the project. 
 # Requirements:
 # - have 'gcloud'installed.
-# - authenticate against your GCP project with "gcloud auth login"
+# - autheticate against your GCP project with "gcloud auth login"
 # - optionally have the GCP project set with "gcloud config set project [you-project-name]"
 #
 # Use --help to show you commands supported.

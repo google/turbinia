@@ -34,7 +34,7 @@ import traceback
 import uuid
 import filelock
 
-from prometheus_client import CollectorRegistry, Counter, Histogram
+from prometheus_client import CollectorRegistry, Gauge, Histogram
 from turbinia import __version__, config
 from turbinia.config import DATETIME_FORMAT
 from turbinia.evidence import evidence_decode
@@ -56,19 +56,19 @@ REPORT_MAXSIZE = int(1048572 * 0.75)
 log = logging.getLogger('turbinia')
 
 registry = CollectorRegistry()
-turbinia_worker_tasks_started_total = Counter(
+turbinia_worker_tasks_started_total = Gauge(
     'turbinia_worker_tasks_started_total',
     'Total number of started worker tasks', registry=registry)
-turbinia_worker_tasks_completed_total = Counter(
+turbinia_worker_tasks_completed_total = Gauge(
     'turbinia_worker_tasks_completed_total',
     'Total number of completed worker tasks', registry=registry)
-turbinia_worker_tasks_queued_total = Counter(
+turbinia_worker_tasks_queued_total = Gauge(
     'turbinia_worker_tasks_queued_total', 'Total number of queued worker tasks',
     registry=registry)
-turbinia_worker_tasks_failed_total = Counter(
+turbinia_worker_tasks_failed_total = Gauge(
     'turbinia_worker_tasks_failed_total', 'Total number of failed worker tasks',
     registry=registry)
-turbinia_worker_tasks_timeout_total = Counter(
+turbinia_worker_tasks_timeout_total = Gauge(
     'turbinia_worker_tasks_timeout_total',
     'Total number of worker tasks timed out.', registry=registry)
 
@@ -589,7 +589,7 @@ class TurbiniaTask:
     """Gets histogram metric for current Task.
 
     Returns:
-      prometheus_client.Histogram: For the current task,
+      prometheus_client.Historgram: For the current task,
           or None if they are not initialized.
 
     Raises:
@@ -765,6 +765,7 @@ class TurbiniaTask:
           result.log(message, level=logging.WARN)
         else:
           result.add_evidence(evidence, self._evidence_config)
+
       if close:
         result.close(self, success=True)
 
@@ -860,51 +861,8 @@ class TurbiniaTask:
       result.set_error(message, trace)
     return result
 
-  def check_serialization_errors(self, result):
-    """Checks the TurbiniaTaskResult is valid for serialization.
-    
-    This method checks the 'reuslt'' obejct is the correct type and whether
-    it is pickle/JSON serializable or not.
-
-    Args:
-      result(TurbiniaTaskResult): A TurbiniaTaskResult object.
-
-    Returns:
-      str | None: An error message, or None.
-    """
-    error_message = None
-
-    # Check for serialization errors
-    if isinstance(result, TurbiniaTaskResult):
-      try:
-        log.debug('Checking TurbiniaTaskResult for pickle serializability')
-        pickle.dumps(result.serialize())
-      except (TypeError, pickle.PicklingError) as exception:
-        error_message = (
-            f'Error pickling TurbiniaTaskResult object. Returning a new result '
-            f'with the pickling error, and all previous result data will be '
-            f'lost. Pickle Error: {exception!s}')
-      try:
-        log.debug('Checking TurbiniaTaskResult for JSON serializability')
-        json.dumps(result.serialize())
-      except (TypeError) as exception:
-        error_message = (
-            f'Error JSON serializing TurbiniaTaskResult object. Returning a new'
-            f' result with the JSON error, and all previous result data will '
-            f'be lost. JSON Error: {exception!s}')
-    else:
-      error_message = (
-          f'Task returned type [{type(result)!s}] instead of '
-          f'TurbiniaTaskResult.')
-
-    return error_message
-
   def validate_result(self, result):
     """Checks to make sure that the result is valid.
-
-    This method runs validation logic defined in Evidence.validate() to
-    ensure that newly created evidence is usable as input for TurbiniaTask
-    objects.
 
     We occasionally get something added into a TurbiniaTaskResult that makes
     it unpickleable.  We don't necessarily know what caused it to be in that
@@ -919,38 +877,41 @@ class TurbiniaTask:
       The original result object if it is OK, otherwise an empty result object
       indicating a failure.
     """
-    serialization_error = self.check_serialization_errors(result)
-    validation_error = None
+    message = None
     check_status = 'Successful'
 
-    # Validate the new evidence objects
-    if not serialization_error:
-      for evidence in result.evidence[:]:
-        try:
-          evidence.validate()
-        except TurbiniaException as exception:
-          validation_error = (
-              f'Not adding evidence {evidence.source_path}. Evidence '
-              f'validation failed with error: {exception!s}')
-          result.evidence.remove(evidence)
-          result.saved_paths.remove(evidence.source_path)
-      # Append evidence validation error messages to the result
-      # so the client knows what happened
-      if validation_error:
-        result.log(validation_error)
-        result.status = f'{result.status}. {validation_error}'
+    if isinstance(result, TurbiniaTaskResult):
+      try:
+        log.debug('Checking TurbiniaTaskResult for pickle serializability')
+        pickle.dumps(result.serialize())
+      except (TypeError, pickle.PicklingError) as exception:
+        message = (
+            'Error pickling TurbiniaTaskResult object. Returning a new result '
+            'with the pickling error, and all previous result data will be '
+            'lost. Pickle Error: {0!s}'.format(exception))
+      try:
+        log.debug('Checking TurbiniaTaskResult for JSON serializability')
+        json.dumps(result.serialize())
+      except (TypeError) as exception:
+        message = (
+            'Error JSON serializing TurbiniaTaskResult object. Returning a new '
+            'result with the JSON error, and all previous result data will '
+            'be lost. JSON Error: {0!s}'.format(exception))
     else:
-      # Handle any serialization type errors
-      log.error(serialization_error)
+      message = (
+          'Task returned type [{0!s}] instead of TurbiniaTaskResult.').format(
+              type(result))
+
+    if message:
+      log.error(message)
       if result and hasattr(result, 'status') and result.status:
         status = result.status
       else:
         status = 'No previous status'
 
       result = self.create_result(
-          status=status, message=serialization_error,
-          trace=traceback.format_exc())
-      result.close(self, success=False, status=serialization_error)
+          status=status, message=message, trace=traceback.format_exc())
+      result.close(self, success=False, status=message)
       check_status = 'Failed, but replaced with empty result'
 
     log.info(f'Result check: {check_status:s}')

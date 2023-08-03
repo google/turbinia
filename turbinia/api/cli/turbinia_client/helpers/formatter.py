@@ -194,7 +194,7 @@ class TaskMarkdownReport(MarkdownReportComponent):
       report.append(self.heading2(task.get('name')))
       line = f"{self.bold('Evidence:'):s} {task.get('evidence_name')!s}"
       report.append(self.bullet(line))
-      line = f"{self.bold('Status:'):s} {task.get('status')!s}"
+      line = f"{self.bold('Status:'):s} {task.get('status'):s}"
       report.append(self.bullet(line))
       report.append(self.bullet(f"Task Id: {task.get('id')!s}"))
       report.append(
@@ -253,24 +253,25 @@ class RequestMarkdownReport(MarkdownReportComponent):
 
     try:
       report.append(
-          self.heading2(f"Request ID: {request_dict.get('request_id')}"))
+          self.heading2(f"Request ID: {request_dict.get('request_id')!s}"))
       report.append(
           self.bullet(
-              f"Last Update: {request_dict.get('last_task_update_time')}"))
-      report.append(self.bullet(f"Requester: {request_dict.get('requester')}"))
-      report.append(self.bullet(f"Reason: {request_dict.get('reason')}"))
-      report.append(self.bullet(f"Status: {request_dict.get('status')}"))
+              f"Last Update: {request_dict.get('last_task_update_time')!s}"))
       report.append(
-          self.bullet(f"Failed tasks: {request_dict.get('failed_tasks')}"))
+          self.bullet(f"Requester: {request_dict.get('requester')!s}"))
+      report.append(self.bullet(f"Reason: {request_dict.get('reason')!s}"))
+      report.append(self.bullet(f"Status: {request_dict.get('status')!s}"))
       report.append(
-          self.bullet(f"Running tasks: {request_dict.get('running_tasks')}"))
+          self.bullet(f"Failed tasks: {request_dict.get('failed_tasks'):d}"))
+      report.append(
+          self.bullet(f"Running tasks: {request_dict.get('running_tasks'):d}"))
       report.append(
           self.bullet(
-              f"Successful tasks: {request_dict.get('successful_tasks')}"))
+              f"Successful tasks: {request_dict.get('successful_tasks'):d}"))
       report.append(
-          self.bullet(f"Task Count: {request_dict.get('task_count')}"))
+          self.bullet(f"Task Count: {request_dict.get('task_count'):d}"))
       report.append(
-          self.bullet(f"Queued tasks: {request_dict.get('queued_tasks')}"))
+          self.bullet(f"Queued tasks: {request_dict.get('queued_tasks'):d}"))
       report.append(
           self.bullet(f"Evidence Name: {request_dict.get('evidence_name'):d}"))
       report.append(
