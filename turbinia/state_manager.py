@@ -336,7 +336,8 @@ class RedisStateManager(BaseStateManager):
     """Writes a new evidence into redis.
 
     Args:
-      evidence_dict (dict[str]): A dictionary containing the serialized evidence attributes that will be saved.
+      evidence_dict (dict[str]): A dictionary containing the serialized
+      evidence attributes that will be saved.
 
     Returns:
       key (str): The key corresponding to the evidence in redis
@@ -361,9 +362,6 @@ class RedisStateManager(BaseStateManager):
       evidence_id (str): The ID of the stored evidence.
       name (str): name of the attribute to be updated.
       json_value (str): json value to be updated.
-    
-    Raises:
-      TypeError, OverflowError: Value is not Json Serializable. 
     """
     key = ':'.join(('TurbiniaEvidence', evidence_id))
     log.info(f'Updating attribute {name} for evidence {evidence_id} in Redis')

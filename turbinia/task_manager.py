@@ -255,7 +255,7 @@ class BaseTaskManager:
         turbinia_jobs_total.inc()
 
     try:
-      evidence.validate()
+      evidence_.validate()
       if isinstance(evidence_, evidence.Evidence):
         self.state_manager.write_new_evidence(evidence_.serialize(True))
     except TurbiniaException as exception:
@@ -429,7 +429,8 @@ class BaseTaskManager:
     turbinia_server_tasks_total.inc()
     if task.id not in evidence_.tasks:
       evidence_.tasks.append(task.id)
-      evidence_.update_redis('tasks', evidence_.tasks)
+      # update_redis must be called, because append doesn't call __setattr__
+      evidence_.update_redis('tasks')
 
   def remove_jobs(self, request_id):
     """Removes the all Jobs for the given request ID.

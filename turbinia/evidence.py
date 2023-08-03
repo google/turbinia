@@ -310,7 +310,7 @@ class Evidence:
 
     # TODO: Validating for required attributes breaks some units tests.
     # Github issue: https://github.com/google/turbinia/issues/1136
-    # self.validate()
+    #self.validate()
 
   def __str__(self):
     return f'{self.type:s}:{self.name:s}:{self.source_path!s}'
@@ -327,20 +327,18 @@ class Evidence:
     """
     self.__dict__[name] = value
     if not isinstance(value, list):
-      self.update_redis(name, value)
+      self.update_redis(name)
+    if name != 'last_updated':
+      self.last_updated = datetime.now().strftime(DATETIME_FORMAT)
 
-  def update_redis(self, name: str, value: Any):
-    if hasattr(self, 'id') and self.id:
-      try:
-        self.validate()
+  def update_redis(self, name: str):
+    try:
+      self.validate()
+      if serialized_attribute := self.serialize_attribute(name):
         redis_manager.update_evidence_attribute(
-            self.id, name, self.serialize_attribute(value))
-        if name != 'last_updated':
-          self.last_updated = datetime.now().strftime(DATETIME_FORMAT)
-          redis_manager.update_evidence_attribute(
-              self.id, 'last_updated', self.serialize_attribute('last_updated'))
-      except TurbiniaException as exception:
-        log.error(f'Evidence {self.id} could not be updated: {exception}')
+            self.id, name, serialized_attribute)
+    except TurbiniaException as exception:
+      log.error(f'Evidence {self.id} could not be updated: {exception}')
 
   @property
   def name(self):
@@ -381,11 +379,14 @@ class Evidence:
     return new_object
 
   def serialize_attribute(self, name):
-    """Return JSON serialized attribute."""
-    try:
-      return json.dumps(getattr(self, name))
-    except (TypeError, OverflowError):
-      log.error(f'Attribute {name} in evidence {self.id} is not serializable')
+    """Returns JSON serialized attribute."""
+    if hasattr(self, name):
+      try:
+        return json.dumps(getattr(self, name))
+      except (TypeError, OverflowError):
+        log.error(f'Attribute {name} in evidence {self.id} is not serializable')
+    else:
+      log.error(f'Evidence {self.id} has no attribute {name}')
 
   def serialize(self, json_values=False):
     """Return JSON serializable object."""
@@ -395,8 +396,8 @@ class Evidence:
     serialized_evidence = {}
     if json_values:
       for attribute_name in self.__dict__:
-        serialized_evidence[attribute_name] = self.serialize_attribute(
-            attribute_name)
+        if serialized_attribute := self.serialize_attribute(attribute_name):
+          serialized_evidence[attribute_name] = serialized_attribute
     else:
       serialized_evidence = self.__dict__.copy()
       if self.parent_evidence:
@@ -613,9 +614,9 @@ class Evidence:
       attribute_value = getattr(self, attribute, None)
       if not attribute_value:
         message = (
-            'Evidence validation failed: Required attribute {0:s} for class '
-            '{1:s} is not set. Please check original request.'.format(
-                attribute, self.type))
+            f'Evidence validation failed: Required attribute {attribute} for '
+            f'class {getattr(self, attribute, "Evidence")} is not set. Please '
+            'check original request.')
         raise TurbiniaException(message)
 
 
@@ -666,7 +667,7 @@ class CompressedDirectory(Evidence):
     compressed_directory: The path to the compressed directory.
     uncompressed_directory: The path to the uncompressed directory.
   """
-  REQUIRED_ATTRIBUTES = ['id', 'type', 'source_path']
+  REQUIRED_ATTRIBUTES = ['source_path']
   POSSIBLE_STATES = [EvidenceState.DECOMPRESSED]
 
   def __init__(self, source_path=None, *args, **kwargs):
@@ -716,7 +717,7 @@ class ChromiumProfile(Evidence):
     format: Output format (default is sqlite, other options are xlsx and jsonl)
   """
 
-  REQUIRED_ATTRIBUTES = ['id', 'type', 'browser_type', 'output_format']
+  REQUIRED_ATTRIBUTES = ['browser_type', 'output_format']
 
   def __init__(self, browser_type=None, output_format=None, *args, **kwargs):
     """Initialization for chromium profile evidence object."""
@@ -734,7 +735,7 @@ class RawDisk(Evidence):
         device or a raw disk image).
     mount_partition: The mount partition for this disk (if any).
   """
-  REQUIRED_ATTRIBUTES = ['id', 'type', 'source_path']
+  REQUIRED_ATTRIBUTES = ['source_path']
   POSSIBLE_STATES = [EvidenceState.ATTACHED]
 
   def __init__(self, source_path=None, *args, **kwargs):
@@ -900,7 +901,7 @@ class GoogleCloudDisk(Evidence):
     disk_name: The cloud disk name.
   """
 
-  REQUIRED_ATTRIBUTES = ['id', 'type', 'disk_name', 'project', 'zone']
+  REQUIRED_ATTRIBUTES = ['disk_name', 'project', 'zone']
   POSSIBLE_STATES = [EvidenceState.ATTACHED, EvidenceState.MOUNTED]
 
   def __init__(
@@ -949,9 +950,7 @@ class GoogleCloudDiskRawEmbedded(GoogleCloudDisk):
     embedded_path: The path of the raw disk image inside the Persistent Disk
   """
 
-  REQUIRED_ATTRIBUTES = [
-      'id', 'type', 'disk_name', 'project', 'zone', 'embedded_path'
-  ]
+  REQUIRED_ATTRIBUTES = ['disk_name', 'project', 'zone', 'embedded_path']
   POSSIBLE_STATES = [EvidenceState.ATTACHED]
 
   def __init__(
@@ -1075,7 +1074,7 @@ class BodyFile(Evidence):
 class ExportedFileArtifact(Evidence):
   """Exported file artifact."""
 
-  REQUIRED_ATTRIBUTES = ['id', 'type', 'artifact_name']
+  REQUIRED_ATTRIBUTES = ['artifact_name']
 
   def __init__(self, artifact_name=None, *args, **kwargs):
     """Initializes an exported file artifact."""
@@ -1097,7 +1096,7 @@ class RawMemory(Evidence):
     module_list (list): Module used for the analysis
     """
 
-  REQUIRED_ATTRIBUTES = ['id', 'type', 'source_path', 'module_list', 'profile']
+  REQUIRED_ATTRIBUTES = ['source_path', 'module_list', 'profile']
 
   def __init__(
       self, source_path=None, module_list=None, profile=None, *args, **kwargs):
@@ -1122,7 +1121,7 @@ class DockerContainer(Evidence):
     _docker_root_directory(str): Full path to the docker root directory.
   """
 
-  REQUIRED_ATTRIBUTES = ['id', 'type', 'container_id']
+  REQUIRED_ATTRIBUTES = ['container_id']
   POSSIBLE_STATES = [EvidenceState.CONTAINER_MOUNTED]
 
   def __init__(self, container_id=None, *args, **kwargs):
@@ -1172,7 +1171,7 @@ class EwfDisk(Evidence):
     ewf_path (str): Path to mounted EWF image.
     ewf_mount_path (str): Path to EWF mount directory.
   """
-  REQUIRED_ATTRIBUTES = ['id', 'type', 'source_path']
+  REQUIRED_ATTRIBUTES = ['source_path']
   POSSIBLE_STATES = [EvidenceState.ATTACHED]
 
   def __init__(
@@ -1210,7 +1209,7 @@ class ContainerdContainer(Evidence):
     _image_path (str): Path where disk image is mounted.
     _container_fs_path (str): Path where containerd filesystem is mounted.
   """
-  REQUIRED_ATTRIBUTES = ['id', 'type', 'namespace', 'container_id']
+  REQUIRED_ATTRIBUTES = ['namespace', 'container_id']
   POSSIBLE_STATES = [EvidenceState.CONTAINER_MOUNTED]
 
   def __init__(self, namespace=None, container_id=None, *args, **kwargs):
