@@ -254,8 +254,12 @@ class BaseTaskManager:
         job_count += 1
         turbinia_jobs_total.inc()
 
-    if isinstance(evidence_, evidence.Evidence):
-      self.state_manager.write_new_evidence(evidence_)
+    try:
+      evidence.validate()
+      if isinstance(evidence_, evidence.Evidence):
+        self.state_manager.write_new_evidence(evidence_.serialize(True))
+    except TurbiniaException as exception:
+      log.error(f'Unsuccessful in writing new evidence in redis: {exception}')
 
     if not job_count:
       log.warning(

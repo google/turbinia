@@ -26,7 +26,6 @@ import logging
 import sys
 from datetime import datetime
 from datetime import timedelta
-from typing import Any
 
 import six
 
@@ -51,15 +50,8 @@ else:
   msg = f'State Manager type "{config.STATE_MANAGER:s}" not implemented'
   raise TurbiniaException(msg)
 
-IMPORTANT_ATTRIBUTES = (
-    'hash', 'id', 'type', 'source_path', 'local_path', 'mount_path', 'size',
-    'source')
 MAX_DATASTORE_STRLEN = 1500
 log = logging.getLogger('turbinia')
-
-
-class Evidence:  #todo(igormr): Remove this and circular import
-  pass
 
 
 def get_state_manager():
@@ -340,63 +332,44 @@ class RedisStateManager(BaseStateManager):
     task.state_key = key
     return key
 
-  def write_new_evidence(self, evidence: Evidence):
+  def write_new_evidence(self, evidence_dict: dict[str]):
     """Writes a new evidence into redis.
 
     Args:
-      evidence (Evidence): The evidence that will be saved.
+      evidence_dict (dict[str]): A dictionary containing the serialized evidence attributes that will be saved.
 
     Returns:
       key (str): The key corresponding to the evidence in redis
     """
-    if not (hasattr(evidence, 'id') and evidence.id):
-      error_message = ', '.join((
-          f'Unsuccessful in writing evidence {evidence.name} into Redis',
-          'evidence has no id'))
-      log.error(error_message)
-      raise AttributeError(error_message)
-    if hasattr(evidence, 'type') and evidence.type:
-      key = ':'.join(('TurbiniaEvidence', evidence.id))
-      log.info(f'Writing new evidence {evidence.id:s} into Redis')
-      for attribute_key, attribute_value in evidence.__dict__.items():
-        try:
-          if not self.client.hset(key, attribute_key,
-                                  json.dumps(attribute_value)):
-            log.error(
-                f'Unsuccessful in writing evidence {evidence.id} into Redis')
-        except (TypeError, OverflowError):
-          log.error(
-              f'Attribute {attribute_key} in {evidence.id} is not serializable')
-      self.client.sadd('TurbiniaEvidenceCollection', key)
-      if evidence.hash:
-        key = self.client.hset('TurbiniaEvidenceHashes', evidence.hash, key)
-      return key
+    key = ':'.join(('TurbiniaEvidence', evidence_dict['id']))
+    log.info(f'Writing new evidence {evidence_dict["id"]} into Redis')
+    for attribute_key, attribute_value in evidence_dict.items():
+      if not self.client.hset(key, attribute_key, json.dumps(attribute_value)):
+        log.error(
+            f'Unsuccessful in writing {attribute_key} of '
+            f'{evidence_dict["id"]} into Redis')
+    if evidence_dict['hash']:
+      key = self.client.hset(
+          'TurbiniaEvidenceHashes', evidence_dict['hash'], key)
+    return key
 
-  def update_evidence_attribute(self, evidence_id: str, name: str, value: Any):
+  def update_evidence_attribute(
+      self, evidence_id: str, name: str, json_value: str):
     """Updates one attribute of the evidence in Redis.
 
     Args:
       evidence_id (str): The ID of the stored evidence.
       name (str): name of the attribute to be updated.
-      value (Any): value to be updated.
+      json_value (str): json value to be updated.
     
     Raises:
       TypeError, OverflowError: Value is not Json Serializable. 
     """
     key = ':'.join(('TurbiniaEvidence', evidence_id))
-    log.info(f'Updating attribute {name} for evidence {value} in Redis')
-    try:
-      if self.client.hset(key, name, json.dumps(value)):
-        if name == 'hash' and value:
-          key = self.client.hset('TurbiniaEvidenceHashes', value, key)
-        if name == 'request_id':
-          requests = json.loads(self.client.hget(key, 'previuos_requests'))
-          if value not in requests:
-            requests.append(value)
-            self.client.hset(key, 'previuos_requests', json.dumps(requests))
-    except (TypeError, OverflowError) as exception:
-      log.error(f'Attribute {name} in {evidence_id} is not serializable')
-      raise exception
+    log.info(f'Updating attribute {name} for evidence {evidence_id} in Redis')
+    if self.client.hset(key, name, json_value):
+      if name == 'hash' and json_value:
+        key = self.client.hset('TurbiniaEvidenceHashes', json_value, key)
 
   def get_evidence(self, evidence_id: str):
     """Gets one evidence from Redis given its ID.
@@ -433,7 +406,7 @@ class RedisStateManager(BaseStateManager):
       summary (dict): Dict containing evidences of each type. 
     """
     summary = {}
-    for key in self.client.smembers('TurbiniaEvidenceCollection'):
+    for key in self.client.scan_iter('TurbiniaEvidence:*'):
       value = self.get_evidence(key.decode().split(':')[1])
       evidence_type = value.get('type', 'Evidence')
       if evidence_type not in summary:
@@ -466,22 +439,3 @@ class RedisStateManager(BaseStateManager):
     """
     evidence_id = self.get_evidence_key_by_hash(file_hash).split(':')[1]
     return self.get_evidence(evidence_id)
-
-  def get_evidence_by_attributes(self, evidence: Evidence):
-    """Gets the evidence given its hash. 
-
-    Args:
-      file_hash (str): The hash of the stored evidence.
-
-    Returns:
-      evidence_dict (dict): Dict containing evidence attributes. 
-    """
-    for key in self.client.smembers('TurbiniaEvidenceCollection'):
-      equal = True
-      for attribute in IMPORTANT_ATTRIBUTES:
-        if attribute in evidence.__dict__ and evidence.__dict__[
-            attribute] != json.loads(self.client.hget(key, attribute)):
-          equal = False
-          break
-      if equal:
-        return key.decode()

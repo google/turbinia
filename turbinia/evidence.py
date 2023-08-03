@@ -250,7 +250,7 @@ class Evidence:
   """
 
   # The list of attributes a given piece of Evidence requires to be set
-  REQUIRED_ATTRIBUTES = []
+  REQUIRED_ATTRIBUTES = ['id', 'type']
 
   # An optional set of attributes that are generally used to describe
   # a given piece of Evidence.
@@ -261,24 +261,26 @@ class Evidence:
   # docstrings for more info.
   POSSIBLE_STATES = []
 
-  def __init__(self, file_hash=None, *args, **kwargs):
+  def __init__(self, *args, **kwargs):
     """Initialization for Evidence."""
     self.id = kwargs.get('id', uuid.uuid4().hex)
     self.cloud_only = kwargs.get('cloud_only', False)
     self.config = kwargs.get('config', {})
     self.context_dependent = kwargs.get('context_dependent', False)
     self.copyable = kwargs.get('copyable', False)
-    self.creation_time = datetime.now().strftime(
-        DATETIME_FORMAT)  #todo(igormr): add kwargs here
+    self.creation_time = kwargs.get(
+        'creation_time',
+        datetime.now().strftime(DATETIME_FORMAT))
     self.credentials = kwargs.get('credentials', [])
     self.description = kwargs.get('description', None)
     self.has_child_evidence = kwargs.get('has_child_evidence', False)
-    self.hash = file_hash  #todo(igormr): add kwargs here
+    self.hash = kwargs.get('hash', None)
     self.mount_path = kwargs.get('mount_path', None)
     self._name = kwargs.get('name')
     self.parent_evidence = kwargs.get('parent_evidence', None)
     # List of jobs that have processed this evidence
     self.processed_by = kwargs.get('processed_by', [])
+    self.redis_function = None
     self.request_id = kwargs.get('request_id', None)
     self.resource_id = kwargs.get('resource_id', None)
     self.resource_tracked = kwargs.get('resource_tracked', False)
@@ -288,10 +290,8 @@ class Evidence:
     self.size = kwargs.get('size', None)
     self.source = kwargs.get('source', None)
     self.source_path = kwargs.get('source_path', None)
-    self.previuos_requests = kwargs.get(
-        'previuos_requests', [self.request_id] if self.request_id else [])
     self.tags = kwargs.get('tags', {})
-    self.tasks = kwargs.get('task_ids', [])
+    self.tasks = kwargs.get('tasks', [])
     self.type = self.__class__.__name__
 
     self.local_path = self.source_path
@@ -332,13 +332,15 @@ class Evidence:
   def update_redis(self, name: str, value: Any):
     if hasattr(self, 'id') and self.id:
       try:
-        redis_manager.update_evidence_attribute(self.id, name, value)
+        self.validate()
+        redis_manager.update_evidence_attribute(
+            self.id, name, self.serialize_attribute(value))
         if name != 'last_updated':
           self.last_updated = datetime.now().strftime(DATETIME_FORMAT)
           redis_manager.update_evidence_attribute(
-              self.id, 'last_updated', self.last_updated)
-      except (TypeError, OverflowError):
-        log.error(f'Evidence {self.id} could not be updated')
+              self.id, 'last_updated', self.serialize_attribute('last_updated'))
+      except TurbiniaException as exception:
+        log.error(f'Evidence {self.id} could not be updated: {exception}')
 
   @property
   def name(self):
@@ -378,15 +380,28 @@ class Evidence:
     new_object.__dict__.update(dictionary)
     return new_object
 
-  def serialize(
-      self):  #todo(igormr): modify this to serialize for state_manager and here
+  def serialize_attribute(self, name):
+    """Return JSON serialized attribute."""
+    try:
+      return json.dumps(getattr(self, name))
+    except (TypeError, OverflowError):
+      log.error(f'Attribute {name} in evidence {self.id} is not serializable')
+
+  def serialize(self, json_values=False):
     """Return JSON serializable object."""
     # Clear any partition path_specs before serializing
     if hasattr(self, 'path_spec'):
       self.path_spec = None
-    serialized_evidence = self.__dict__.copy()
-    if self.parent_evidence:
-      serialized_evidence['parent_evidence'] = self.parent_evidence.serialize()
+    serialized_evidence = {}
+    if json_values:
+      for attribute_name in self.__dict__:
+        serialized_evidence[attribute_name] = self.serialize_attribute(
+            attribute_name)
+    else:
+      serialized_evidence = self.__dict__.copy()
+      if self.parent_evidence:
+        serialized_evidence['parent_evidence'] = self.parent_evidence.serialize(
+        )
     return serialized_evidence
 
   def to_json(self):
@@ -584,7 +599,6 @@ class Evidence:
     return f"[{', '.join(output):s}]"
 
   def validate(self):
-    #todo(igormr):add id and type here and remove check from state_manager
     """Runs validation to verify evidence meets minimum requirements.
 
     This default implementation will just check that the attributes listed in
@@ -652,13 +666,13 @@ class CompressedDirectory(Evidence):
     compressed_directory: The path to the compressed directory.
     uncompressed_directory: The path to the uncompressed directory.
   """
-  REQUIRED_ATTRIBUTES = ['source_path']
+  REQUIRED_ATTRIBUTES = ['id', 'type', 'source_path']
   POSSIBLE_STATES = [EvidenceState.DECOMPRESSED]
 
-  def __init__(self, source_path=None, file_hash=None, *args, **kwargs):
+  def __init__(self, source_path=None, *args, **kwargs):
     """Initialization for CompressedDirectory evidence object."""
     super(CompressedDirectory, self).__init__(
-        source_path=source_path, file_hash=file_hash, *args, **kwargs)
+        source_path=source_path, *args, **kwargs)
     self.compressed_directory = None
     self.uncompressed_directory = None
     self.copyable = True
@@ -702,7 +716,7 @@ class ChromiumProfile(Evidence):
     format: Output format (default is sqlite, other options are xlsx and jsonl)
   """
 
-  REQUIRED_ATTRIBUTES = ['browser_type', 'output_format']
+  REQUIRED_ATTRIBUTES = ['id', 'type', 'browser_type', 'output_format']
 
   def __init__(self, browser_type=None, output_format=None, *args, **kwargs):
     """Initialization for chromium profile evidence object."""
@@ -720,13 +734,12 @@ class RawDisk(Evidence):
         device or a raw disk image).
     mount_partition: The mount partition for this disk (if any).
   """
-  REQUIRED_ATTRIBUTES = ['source_path']
+  REQUIRED_ATTRIBUTES = ['id', 'type', 'source_path']
   POSSIBLE_STATES = [EvidenceState.ATTACHED]
 
-  def __init__(self, source_path=None, file_hash=None, *args, **kwargs):
+  def __init__(self, source_path=None, *args, **kwargs):
     """Initialization for raw disk evidence object."""
-    super(RawDisk, self).__init__(
-        source_path=source_path, file_hash=file_hash, *args, **kwargs)
+    super(RawDisk, self).__init__(source_path=source_path, *args, **kwargs)
     self.device_path = None
 
   def _preprocess(self, _, required_states):
@@ -887,7 +900,7 @@ class GoogleCloudDisk(Evidence):
     disk_name: The cloud disk name.
   """
 
-  REQUIRED_ATTRIBUTES = ['disk_name', 'project', 'zone']
+  REQUIRED_ATTRIBUTES = ['id', 'type', 'disk_name', 'project', 'zone']
   POSSIBLE_STATES = [EvidenceState.ATTACHED, EvidenceState.MOUNTED]
 
   def __init__(
@@ -936,7 +949,9 @@ class GoogleCloudDiskRawEmbedded(GoogleCloudDisk):
     embedded_path: The path of the raw disk image inside the Persistent Disk
   """
 
-  REQUIRED_ATTRIBUTES = ['disk_name', 'project', 'zone', 'embedded_path']
+  REQUIRED_ATTRIBUTES = [
+      'id', 'type', 'disk_name', 'project', 'zone', 'embedded_path'
+  ]
   POSSIBLE_STATES = [EvidenceState.ATTACHED]
 
   def __init__(
@@ -1060,7 +1075,7 @@ class BodyFile(Evidence):
 class ExportedFileArtifact(Evidence):
   """Exported file artifact."""
 
-  REQUIRED_ATTRIBUTES = ['artifact_name']
+  REQUIRED_ATTRIBUTES = ['id', 'type', 'artifact_name']
 
   def __init__(self, artifact_name=None, *args, **kwargs):
     """Initializes an exported file artifact."""
@@ -1082,7 +1097,7 @@ class RawMemory(Evidence):
     module_list (list): Module used for the analysis
     """
 
-  REQUIRED_ATTRIBUTES = ['source_path', 'module_list', 'profile']
+  REQUIRED_ATTRIBUTES = ['id', 'type', 'source_path', 'module_list', 'profile']
 
   def __init__(
       self, source_path=None, module_list=None, profile=None, *args, **kwargs):
@@ -1107,7 +1122,7 @@ class DockerContainer(Evidence):
     _docker_root_directory(str): Full path to the docker root directory.
   """
 
-  REQUIRED_ATTRIBUTES = ['container_id']
+  REQUIRED_ATTRIBUTES = ['id', 'type', 'container_id']
   POSSIBLE_STATES = [EvidenceState.CONTAINER_MOUNTED]
 
   def __init__(self, container_id=None, *args, **kwargs):
@@ -1157,7 +1172,7 @@ class EwfDisk(Evidence):
     ewf_path (str): Path to mounted EWF image.
     ewf_mount_path (str): Path to EWF mount directory.
   """
-  REQUIRED_ATTRIBUTES = ['source_path']
+  REQUIRED_ATTRIBUTES = ['id', 'type', 'source_path']
   POSSIBLE_STATES = [EvidenceState.ATTACHED]
 
   def __init__(
@@ -1195,7 +1210,7 @@ class ContainerdContainer(Evidence):
     _image_path (str): Path where disk image is mounted.
     _container_fs_path (str): Path where containerd filesystem is mounted.
   """
-  REQUIRED_ATTRIBUTES = ['namespace', 'container_id']
+  REQUIRED_ATTRIBUTES = ['id', 'type', 'namespace', 'container_id']
   POSSIBLE_STATES = [EvidenceState.CONTAINER_MOUNTED]
 
   def __init__(self, namespace=None, container_id=None, *args, **kwargs):
