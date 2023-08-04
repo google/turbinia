@@ -458,7 +458,7 @@ def process_args(args):
       '-i', '--instance_id',
       help='Instance ID used to run tasks/requests. You must provide an '
       'instance ID if the task/request was not processed on the same instance '
-      'as your config file.')
+      'as your confing file.')
   # Server
   subparsers.add_parser('server', help='Run Turbinia Server')
   # API server
