@@ -3,7 +3,7 @@
 # This script can be used to deploy the Turbinia stack to GKE PubSub. 
 # Requirements:
 # - have 'gcloud' and 'kubectl' installed.
-# - autheticate against your GCP project with "gcloud auth login"
+# - authenticate against your GCP project with "gcloud auth login"
 # - optionally have the GCP project set with "gcloud config set project [you-project-name]"
 #
 # Use --help to show you commands supported.
