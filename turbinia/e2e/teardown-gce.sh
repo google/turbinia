@@ -35,7 +35,7 @@ do
 done
 
 # Remove IAM bindings and terraform service account
-echo "Removing IAM bidings and service account..."
+echo "Removing IAM bindings and service account..."
 gcloud -q --project=$PROJECT projects remove-iam-policy-binding $PROJECT --member=serviceAccount:$SA_MEMBER --role='roles/editor'
 gcloud -q --project=$PROJECT projects remove-iam-policy-binding $PROJECT --member=serviceAccount:$SA_MEMBER --role='roles/compute.admin'
 gcloud -q --project=$PROJECT projects remove-iam-policy-binding $PROJECT --member=serviceAccount:$SA_MEMBER --role='roles/cloudfunctions.admin'
