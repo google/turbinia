@@ -264,7 +264,6 @@ class Evidence:
 
   def __init__(self, *args, **kwargs):
     """Initialization for Evidence."""
-    self.id = kwargs.get('id', uuid.uuid4().hex)
     self.cloud_only = kwargs.get('cloud_only', False)
     self.config = kwargs.get('config', {})
     self.context_dependent = kwargs.get('context_dependent', False)
@@ -276,6 +275,7 @@ class Evidence:
     self.description = kwargs.get('description', None)
     self.has_child_evidence = kwargs.get('has_child_evidence', False)
     self.hash = kwargs.get('hash', None)
+    self.id = kwargs.get('id', uuid.uuid4().hex)
     self.mount_path = kwargs.get('mount_path', None)
     self._name = kwargs.get('name')
     self.parent_evidence = kwargs.get('parent_evidence', None)
@@ -335,11 +335,13 @@ class Evidence:
   def update_redis(self, name: str):
     try:
       self.validate()
-      if serialized_attribute := self.serialize_attribute(name):
-        redis_manager.update_evidence_attribute(
-            self.id, name, serialized_attribute)
+      if redis_manager.evidence_exists(self.id):
+        if serialized_attribute := self.serialize_attribute(name):
+          redis_manager.update_evidence_attribute(
+              self.id, name, serialized_attribute)
     except TurbiniaException as exception:
-      log.error(f'Evidence {self.id} could not be updated: {exception}')
+      log.error(
+          f'Could not update Evidence {getattr(self, "id", "")}: {exception}')
 
   @property
   def name(self):
