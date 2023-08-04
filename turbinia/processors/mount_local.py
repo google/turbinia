@@ -49,7 +49,7 @@ def GetDiskSize(source_path):
   Returns:
     int: the size of the disk in bytes.
   """
-  size = None
+  size = 0
 
   if not os.path.exists(source_path):
     log.error(
@@ -57,19 +57,20 @@ def GetDiskSize(source_path):
     return None
 
   cmd = ['blockdev', '--getsize64', source_path]
-  log.info(f'Running {cmd!s}')
+  log.info(f'Getting evidence size via {cmd!s}')
 
   # Run blockdev first, this will fail if evidence is not a block device
   try:
     cmd_output = subprocess.check_output(cmd, stderr=subprocess.STDOUT).split()
     size = int(cmd_output[0].decode('utf-8'))
   except subprocess.CalledProcessError:
-    log.debug('blockdev failed, attempting to get file size')
-  except ValueError:
     log.debug(
+        'blockdev failed, attempting to get file size using stat() instead')
+  except ValueError:
+    log.warning(
         f"Unexpected output from blockdev: {cmd_output[0].decode('utf-8'):s}")
 
-  if size is None:
+  if not size:
     # evidence is not a block device, check image file size
     try:
       size = os.stat(source_path).st_size
