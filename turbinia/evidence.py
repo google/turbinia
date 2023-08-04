@@ -251,7 +251,7 @@ class Evidence:
   """
 
   # The list of attributes a given piece of Evidence requires to be set
-  REQUIRED_ATTRIBUTES = ['id', 'type']
+  REQUIRED_ATTRIBUTES = []
 
   # An optional set of attributes that are generally used to describe
   # a given piece of Evidence.
@@ -264,6 +264,7 @@ class Evidence:
 
   def __init__(self, *args, **kwargs):
     """Initialization for Evidence."""
+    self.id = kwargs.get('id', uuid.uuid4().hex)
     self.cloud_only = kwargs.get('cloud_only', False)
     self.config = kwargs.get('config', {})
     self.context_dependent = kwargs.get('context_dependent', False)
@@ -275,7 +276,6 @@ class Evidence:
     self.description = kwargs.get('description', None)
     self.has_child_evidence = kwargs.get('has_child_evidence', False)
     self.hash = kwargs.get('hash', None)
-    self.id = kwargs.get('id', uuid.uuid4().hex)
     self.mount_path = kwargs.get('mount_path', None)
     self._name = kwargs.get('name')
     self.parent_evidence = kwargs.get('parent_evidence', None)
@@ -334,14 +334,16 @@ class Evidence:
 
   def update_redis(self, name: str):
     try:
-      self.validate()
+      self.validate_attributes()
+    except TurbiniaException as exception:
+      log.error(
+          f'Could not update Evidence '
+          f'{getattr(self, "id", "(ID not set)")}: {exception}')
+    else:
       if redis_manager.evidence_exists(self.id):
         if serialized_attribute := self.serialize_attribute(name):
           redis_manager.update_evidence_attribute(
               self.id, name, serialized_attribute)
-    except TurbiniaException as exception:
-      log.error(
-          f'Could not update Evidence {getattr(self, "id", "")}: {exception}')
 
   @property
   def name(self):
@@ -610,7 +612,7 @@ class Evidence:
     """
     pass
 
-  def validate(self):
+  def validate_attributes(self):
     """Runs validation to verify evidence meets minimum requirements.
 
     This default implementation will just check that the attributes listed in
@@ -626,10 +628,24 @@ class Evidence:
       if not attribute_value:
         message = (
             f'Evidence validation failed: Required attribute {attribute} for '
-            f'class {getattr(self, attribute, "Evidence")} is not set. Please '
-            'check original request.')
+            f'evidence {getattr(self, "id", "(ID not set)")} of class '
+            f'{getattr(self, "type", "(type not set)")} is not set. Please '
+            f'check original request.')
         raise TurbiniaException(message)
 
+  def validate(self):
+    """Runs validation to verify evidence meets minimum requirements, including
+    PlasoFile evidence.
+
+    This default implementation will just check that the attributes listed in
+    REQUIRED_ATTRIBUTES are set, but other evidence types can override this
+    method to implement their own more stringent checks as needed.  This is
+    called by the worker, prior to the pre/post-processors running.
+
+    Raises:
+      TurbiniaException: If validation fails, or when encountering an error.
+    """
+    self.validate_attributes()
     self._validate()
 
 
@@ -787,6 +803,7 @@ class DiskPartition(Evidence):
       self, partition_location=None, partition_offset=None, partition_size=None,
       lv_uuid=None, path_spec=None, important=True, *args, **kwargs):
     """Initialization for raw volume evidence object."""
+    super(DiskPartition, self).__init__(*args, **kwargs)
     self.partition_location = partition_location
     if partition_offset:
       try:
@@ -809,7 +826,6 @@ class DiskPartition(Evidence):
     self.lv_uuid = lv_uuid
     self.path_spec = path_spec
     self.important = important
-    super(DiskPartition, self).__init__(*args, **kwargs)
 
     # This Evidence needs to have a parent
     self.context_dependent = True
