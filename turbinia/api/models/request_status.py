@@ -29,6 +29,7 @@ class RequestStatus(BaseModel):
   """Represents a Turbinia request status object."""
   request_id: str = None
   evidence_name: str = None
+  evidence_id: str = None
   tasks: List[Dict] = []
   reason: str = None
   requester: str = None
@@ -73,15 +74,19 @@ class RequestStatus(BaseModel):
     # different evidence_name, so getting it from arguments is prefered when
     # they exist.
     # todo(igormr): Save request information in redis to get the evidence_name
+
+    name_from_args = False
+
     if tasks:
-      initial_start_time = tasks[0].get('start_time')
       if tasks[0].get('all_args'):
         arguments = tasks[0].get('all_args', 0).split()
         for i in range(len(arguments) - 1):
           if arguments[i] == '-l':
             self.evidence_name = arguments[i + 1]
-            initial_start_time = None
+            name_from_args = True
             break
+
+    initial_start_time = datetime.datetime.now()
 
     for task in tasks:
       self.request_id = task.get('request_id')
@@ -89,10 +94,14 @@ class RequestStatus(BaseModel):
       self.reason = task.get('reason')
       self.task_count = len(tasks)
       task_status = task.get('status')
-      # Gets the evidence_name based on the oldest task.
-      if initial_start_time and task.get('last_updated') < initial_start_time:
+      # Gets the evidence_name from the first started task.
+      if name_from_args and task.get('evidence_name') == self.evidence_name:
+        self.evidence_id = task.get('evidence_id')
+      elif not name_from_args and task.get('last_updated') and task.get(
+          'last_updated') < initial_start_time:
         initial_start_time = task.get('last_updated')
-        self.evidence_name = task.get('name')
+        self.evidence_name = task.get('evidence_name')
+        self.evidence_id = task.get('evidence_id')
       if isinstance(task.get('last_update'), datetime.datetime):
         task_last_update = datetime.datetime.timestamp(task.get('last_update'))
       else:

@@ -19,6 +19,7 @@ from __future__ import unicode_literals, absolute_import
 import logging
 from datetime import datetime
 import time
+import uuid
 
 from prometheus_client import Counter
 
@@ -254,6 +255,13 @@ class BaseTaskManager:
         job_count += 1
         turbinia_jobs_total.inc()
 
+    try:
+      evidence_.validate()
+      if isinstance(evidence_, evidence.Evidence):
+        self.state_manager.write_new_evidence(evidence_.serialize(True))
+    except TurbiniaException as exception:
+      log.error(f'Unsuccessful in writing new evidence in redis: {exception}')
+
     if not job_count:
       log.warning(
           'No Jobs/Tasks were created for Evidence [{0:s}]. '
@@ -420,6 +428,10 @@ class BaseTaskManager:
     self.state_manager.write_new_task(task)
     self.enqueue_task(task, evidence_)
     turbinia_server_tasks_total.inc()
+    if task.id not in evidence_.tasks:
+      evidence_.tasks.append(task.id)
+      # update_redis must be called, because append doesn't call __setattr__
+      evidence_.update_redis('tasks')
 
   def remove_jobs(self, request_id):
     """Removes the all Jobs for the given request ID.
@@ -701,6 +713,7 @@ class CeleryTaskManager(BaseTaskManager):
     requests = self.kombu.check_messages()
     evidence_list = []
     for request in requests:
+      #todo(igormr): Create request object in redis
       for evidence_ in request.evidence:
         if not evidence_.request_id:
           evidence_.request_id = request.request_id

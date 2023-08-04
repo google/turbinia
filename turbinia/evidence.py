@@ -18,28 +18,34 @@ from __future__ import unicode_literals
 
 from enum import IntEnum
 from collections import defaultdict
+from typing import Any
 
+import filelock
+import inspect
 import json
 import logging
 import os
 import sys
-import inspect
-import filelock
-import subprocess
+import uuid
 
 from turbinia import config
 from turbinia import TurbiniaException
+from turbinia.state_manager import RedisStateManager
 from turbinia.processors import archive
 from turbinia.processors import containerd
 from turbinia.processors import docker
 from turbinia.processors import mount_local
 from turbinia.processors import resource_manager
+from turbinia.config import DATETIME_FORMAT
+from datetime import datetime
 
 config.LoadConfig()
 if config.CLOUD_PROVIDER.lower() == 'gcp':
   from turbinia.processors import google_cloud
 
 log = logging.getLogger('turbinia')
+
+redis_manager = RedisStateManager()
 
 
 def evidence_class_names(all_classes=False):
@@ -104,7 +110,8 @@ def map_evidence_attributes():
   return object_attribute_mapping
 
 
-def evidence_decode(evidence_dict, strict=False):
+def evidence_decode(
+    evidence_dict, strict=False):  #todo(igormr): Check if this works
   """Decode JSON into appropriate Evidence object.
 
   Args:
@@ -243,7 +250,7 @@ class Evidence:
   """
 
   # The list of attributes a given piece of Evidence requires to be set
-  REQUIRED_ATTRIBUTES = []
+  REQUIRED_ATTRIBUTES = ['id', 'type']
 
   # An optional set of attributes that are generally used to describe
   # a given piece of Evidence.
@@ -256,18 +263,24 @@ class Evidence:
 
   def __init__(self, *args, **kwargs):
     """Initialization for Evidence."""
+    self.id = kwargs.get('id', uuid.uuid4().hex)
     self.cloud_only = kwargs.get('cloud_only', False)
     self.config = kwargs.get('config', {})
     self.context_dependent = kwargs.get('context_dependent', False)
     self.copyable = kwargs.get('copyable', False)
+    self.creation_time = kwargs.get(
+        'creation_time',
+        datetime.now().strftime(DATETIME_FORMAT))
     self.credentials = kwargs.get('credentials', [])
     self.description = kwargs.get('description', None)
     self.has_child_evidence = kwargs.get('has_child_evidence', False)
+    self.hash = kwargs.get('hash', None)
     self.mount_path = kwargs.get('mount_path', None)
     self._name = kwargs.get('name')
     self.parent_evidence = kwargs.get('parent_evidence', None)
     # List of jobs that have processed this evidence
     self.processed_by = kwargs.get('processed_by', [])
+    self.redis_function = None
     self.request_id = kwargs.get('request_id', None)
     self.resource_id = kwargs.get('resource_id', None)
     self.resource_tracked = kwargs.get('resource_tracked', False)
@@ -278,6 +291,7 @@ class Evidence:
     self.source = kwargs.get('source', None)
     self.source_path = kwargs.get('source_path', None)
     self.tags = kwargs.get('tags', {})
+    self.tasks = kwargs.get('tasks', [])
     self.type = self.__class__.__name__
 
     self.local_path = self.source_path
@@ -296,13 +310,35 @@ class Evidence:
 
     # TODO: Validating for required attributes breaks some units tests.
     # Github issue: https://github.com/google/turbinia/issues/1136
-    # self.validate()
+    #self.validate()
 
   def __str__(self):
     return f'{self.type:s}:{self.name:s}:{self.source_path!s}'
 
   def __repr__(self):
     return self.__str__()
+
+  def __setattr__(self, name: str, value: Any):
+    """Sets the value of the attribute of the object and stores it in redis.
+
+    Args:
+      name (str): name of the attribute to be set.
+      value (Any): value to be set.
+    """
+    self.__dict__[name] = value
+    if not isinstance(value, list):
+      self.update_redis(name)
+    if name != 'last_updated':
+      self.last_updated = datetime.now().strftime(DATETIME_FORMAT)
+
+  def update_redis(self, name: str):
+    try:
+      self.validate()
+      if serialized_attribute := self.serialize_attribute(name):
+        redis_manager.update_evidence_attribute(
+            self.id, name, serialized_attribute)
+    except TurbiniaException as exception:
+      log.error(f'Evidence {self.id} could not be updated: {exception}')
 
   @property
   def name(self):
@@ -342,14 +378,31 @@ class Evidence:
     new_object.__dict__.update(dictionary)
     return new_object
 
-  def serialize(self):
+  def serialize_attribute(self, name):
+    """Returns JSON serialized attribute."""
+    if hasattr(self, name):
+      try:
+        return json.dumps(getattr(self, name))
+      except (TypeError, OverflowError):
+        log.error(f'Attribute {name} in evidence {self.id} is not serializable')
+    else:
+      log.error(f'Evidence {self.id} has no attribute {name}')
+
+  def serialize(self, json_values=False):
     """Return JSON serializable object."""
     # Clear any partition path_specs before serializing
     if hasattr(self, 'path_spec'):
       self.path_spec = None
-    serialized_evidence = self.__dict__.copy()
-    if self.parent_evidence:
-      serialized_evidence['parent_evidence'] = self.parent_evidence.serialize()
+    serialized_evidence = {}
+    if json_values:
+      for attribute_name in self.__dict__:
+        if serialized_attribute := self.serialize_attribute(attribute_name):
+          serialized_evidence[attribute_name] = serialized_attribute
+    else:
+      serialized_evidence = self.__dict__.copy()
+      if self.parent_evidence:
+        serialized_evidence['parent_evidence'] = self.parent_evidence.serialize(
+        )
     return serialized_evidence
 
   def to_json(self):
@@ -569,9 +622,9 @@ class Evidence:
       attribute_value = getattr(self, attribute, None)
       if not attribute_value:
         message = (
-            'Evidence validation failed: Required attribute {0:s} for class '
-            '{1:s} is not set. Please check original request.'.format(
-                attribute, self.type))
+            f'Evidence validation failed: Required attribute {attribute} for '
+            f'class {getattr(self, attribute, "Evidence")} is not set. Please '
+            'check original request.')
         raise TurbiniaException(message)
 
     self._validate()

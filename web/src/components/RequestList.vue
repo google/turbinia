@@ -139,6 +139,7 @@ export default {
               outstanding_perc: outstanding_perc,
               status: data[req].status,
               evidence_name: data[req].evidence_name,
+              evidence_id: data[req].evidence_id,
             })
           }
           this.requestSummary = requestSummary
