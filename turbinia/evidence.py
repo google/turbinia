@@ -140,6 +140,9 @@ def evidence_decode(
   evidence = None
   try:
     evidence_class = getattr(sys.modules[__name__], type_)
+    # There may be a 'name' in evidence_dict, making _name just a property name
+    if 'name' in evidence_dict:
+      name_ = evidence_dict.pop('name')
     evidence = evidence_class(name=name_, type=type_, **evidence_dict)
     evidence_object = evidence_class(source_path='dummy_object')
     if strict and evidence_object:
@@ -319,17 +322,17 @@ class Evidence:
   def __repr__(self):
     return self.__str__()
 
-  def __setattr__(self, name: str, value: Any):
+  def __setattr__(self, attribute: str, value: Any):
     """Sets the value of the attribute of the object and stores it in redis.
 
     Args:
       name (str): name of the attribute to be set.
       value (Any): value to be set.
     """
-    self.__dict__[name] = value
+    self.__dict__[attribute] = value
     if not isinstance(value, list):
-      self.update_redis(name)
-    if name != 'last_updated':
+      self.update_redis(attribute)
+    if attribute != 'last_updated':
       self.last_updated = datetime.now().strftime(DATETIME_FORMAT)
 
   def update_redis(self, name: str):
