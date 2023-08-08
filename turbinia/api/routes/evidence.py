@@ -40,10 +40,9 @@ EVIDENCE_ATTRIBUTES = (
     'resource_id', 'resource_tracked', 'save_metadata', 'saved_path',
     'saved_path_type', 'size', 'source', 'source_path', 'tasks', 'type')
 
-from fastapi import File
 
-
-async def upload_file(file: File, file_path: str, calculate_hash: bool = False):
+async def upload_file(
+    file: UploadFile, file_path: str, calculate_hash: bool = False):
   """Upload file from FastAPI to server.
 
   Args:

@@ -401,22 +401,22 @@ def upload_evidence(
           f'{file_path} greater than {MAX_UPLOAD_SIZE / (1024 ** 3)} GB')
       log.error(error_message)
       continue
-    with open(file_path, 'rb') as file_io:
-      files.append(
-          UploadFile(file_io, size=size, filename=os.path.basename(file_path)))
+    files = (open(file_path, 'rb').read())
   try:
-    api_response = api_instance.api_client.call_api(
-        '/api/evidence/upload', 'POST', {}, [('ticked_id', '123456'),
-                                             ('calculate_hash', False)],
-        {
-            'Accept': 'application/json',
-            'Content-Type': 'multipart/form-data'
-        }, post_params=[], files=files[0], response_types_map={
-            '200': 'object',
-            '422': 'HTTPValidationError'
-        }, auth_settings=['oAuth2'], async_req=None,
-        _return_http_data_only=True, _preload_content=True,
-        _request_timeout=None, collection_formats={}, _request_auth=None)
+    api_response = api_instance.upload_evidence(
+        ticked_id, files, calculate_hash)
+    #api_client.call_api(
+    #    '/api/evidence/upload', 'POST', {}, [('ticked_id', '123456'),
+    #                                         ('calculate_hash', False)],
+    #    {
+    ###        'Accept': 'application/json',
+    #        'Content-Type': 'multipart/form-data'
+    #    }, post_params=[], files=files[0], response_types_map={
+    #        '200': 'object',
+    #        '422': 'HTTPValidationError'
+    #    }, auth_settings=['oAuth2'], async_req=None,
+    #    _return_http_data_only=True, _preload_content=True,
+    #    _request_timeout=None, collection_formats={}, _request_auth=None)
     if json_dump:
       formatter.echo_json(api_response)
     else:
