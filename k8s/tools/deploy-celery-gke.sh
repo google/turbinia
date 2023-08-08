@@ -3,7 +3,7 @@
 # This script can be used to deploy the Turbinia Celery stack to GKE. 
 # Requirements:
 # - have 'gcloud' and 'kubectl' installed.
-# - autheticate against your GCP project with "gcloud auth login"
+# - authenticate against your GCP project with "gcloud auth login"
 # - account being used to run script should have an IAM policy of instance.admin and container.admin used to create the necessary resources.
 # - optionally have the GCP project set with "gcloud config set project [you-project-name]"
 #
