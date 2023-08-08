@@ -183,146 +183,6 @@ class TurbiniaEvidenceApi(object):
             _request_auth=_params.get('_request_auth'))
 
     @validate_arguments
-    def get_evidence_by_hash(self, file_hash : Any, **kwargs) -> object:  # noqa: E501
-        """Get Evidence By Hash  # noqa: E501
-
-        Retrieves an evidence in redis by using its hash (SHA3-224).  Args:    file_hash (str): SHA3-224 hash of file.  Raises:   HTTPException: if the evidence is not found.  Returns:  # noqa: E501
-        This method makes a synchronous HTTP request by default. To make an
-        asynchronous HTTP request, please pass async_req=True
-
-        >>> thread = api.get_evidence_by_hash(file_hash, async_req=True)
-        >>> result = thread.get()
-
-        :param file_hash: (required)
-        :type file_hash: object
-        :param async_req: Whether to execute the request asynchronously.
-        :type async_req: bool, optional
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :return: Returns the result object.
-                 If the method is called asynchronously,
-                 returns the request thread.
-        :rtype: object
-        """
-        kwargs['_return_http_data_only'] = True
-        if '_preload_content' in kwargs:
-            raise ValueError("Error! Please call the get_evidence_by_hash_with_http_info method with `_preload_content` instead and obtain raw data from ApiResponse.raw_data")
-        return self.get_evidence_by_hash_with_http_info(file_hash, **kwargs)  # noqa: E501
-
-    @validate_arguments
-    def get_evidence_by_hash_with_http_info(self, file_hash : Any, **kwargs) -> ApiResponse:  # noqa: E501
-        """Get Evidence By Hash  # noqa: E501
-
-        Retrieves an evidence in redis by using its hash (SHA3-224).  Args:    file_hash (str): SHA3-224 hash of file.  Raises:   HTTPException: if the evidence is not found.  Returns:  # noqa: E501
-        This method makes a synchronous HTTP request by default. To make an
-        asynchronous HTTP request, please pass async_req=True
-
-        >>> thread = api.get_evidence_by_hash_with_http_info(file_hash, async_req=True)
-        >>> result = thread.get()
-
-        :param file_hash: (required)
-        :type file_hash: object
-        :param async_req: Whether to execute the request asynchronously.
-        :type async_req: bool, optional
-        :param _preload_content: if False, the ApiResponse.data will
-                                 be set to none and raw_data will store the 
-                                 HTTP response body without reading/decoding.
-                                 Default is True.
-        :type _preload_content: bool, optional
-        :param _return_http_data_only: response data instead of ApiResponse
-                                       object with status code, headers, etc
-        :type _return_http_data_only: bool, optional
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the authentication
-                              in the spec for a single request.
-        :type _request_auth: dict, optional
-        :type _content_type: string, optional: force content-type for the request
-        :return: Returns the result object.
-                 If the method is called asynchronously,
-                 returns the request thread.
-        :rtype: tuple(object, status_code(int), headers(HTTPHeaderDict))
-        """
-
-        _params = locals()
-
-        _all_params = [
-            'file_hash'
-        ]
-        _all_params.extend(
-            [
-                'async_req',
-                '_return_http_data_only',
-                '_preload_content',
-                '_request_timeout',
-                '_request_auth',
-                '_content_type',
-                '_headers'
-            ]
-        )
-
-        # validate the arguments
-        for _key, _val in _params['kwargs'].items():
-            if _key not in _all_params:
-                raise ApiTypeError(
-                    "Got an unexpected keyword argument '%s'"
-                    " to method get_evidence_by_hash" % _key
-                )
-            _params[_key] = _val
-        del _params['kwargs']
-
-        _collection_formats = {}
-
-        # process the path parameters
-        _path_params = {}
-        if _params['file_hash']:
-            _path_params['file_hash'] = _params['file_hash']
-
-
-        # process the query parameters
-        _query_params = []
-        # process the header parameters
-        _header_params = dict(_params.get('_headers', {}))
-        # process the form parameters
-        _form_params = []
-        _files = {}
-        # process the body parameter
-        _body_params = None
-        # set the HTTP header `Accept`
-        _header_params['Accept'] = self.api_client.select_header_accept(
-            ['application/json'])  # noqa: E501
-
-        # authentication setting
-        _auth_settings = ['oAuth2']  # noqa: E501
-
-        _response_types_map = {
-            '200': "object",
-            '422': "HTTPValidationError",
-        }
-
-        return self.api_client.call_api(
-            '/api/evidence/{file_hash}', 'GET',
-            _path_params,
-            _query_params,
-            _header_params,
-            body=_body_params,
-            post_params=_form_params,
-            files=_files,
-            response_types_map=_response_types_map,
-            auth_settings=_auth_settings,
-            async_req=_params.get('async_req'),
-            _return_http_data_only=_params.get('_return_http_data_only'),  # noqa: E501
-            _preload_content=_params.get('_preload_content', True),
-            _request_timeout=_params.get('_request_timeout'),
-            collection_formats=_collection_formats,
-            _request_auth=_params.get('_request_auth'))
-
-    @validate_arguments
     def get_evidence_by_id(self, evidence_id : Any, **kwargs) -> object:  # noqa: E501
         """Get Evidence By Id  # noqa: E501
 
@@ -420,12 +280,12 @@ class TurbiniaEvidenceApi(object):
 
         # process the path parameters
         _path_params = {}
+        if _params['evidence_id']:
+            _path_params['evidence_id'] = _params['evidence_id']
+
 
         # process the query parameters
         _query_params = []
-        if _params.get('evidence_id') is not None:  # noqa: E501
-            _query_params.append(('evidence_id', _params['evidence_id']))
-
         # process the header parameters
         _header_params = dict(_params.get('_headers', {}))
         # process the form parameters
@@ -446,7 +306,7 @@ class TurbiniaEvidenceApi(object):
         }
 
         return self.api_client.call_api(
-            '/api/evidence/id', 'GET',
+            '/api/evidence/{evidence_id}', 'GET',
             _path_params,
             _query_params,
             _header_params,
@@ -463,16 +323,20 @@ class TurbiniaEvidenceApi(object):
             _request_auth=_params.get('_request_auth'))
 
     @validate_arguments
-    def get_evidence_summary(self, **kwargs) -> object:  # noqa: E501
+    def get_evidence_summary(self, sort : Optional[Any] = None, output : Optional[Any] = None, **kwargs) -> object:  # noqa: E501
         """Get Evidence Summary  # noqa: E501
 
-        Retrieves a summary of all evidences in redis.  Raises:   HTTPException: if there are no evidences.  # noqa: E501
+        Retrieves a summary of all evidences in redis.  Args:   sort Optional(str): Attribute used to sort summary.  Returns:   summary (dict): Summary of all evidences and their content.  Raises:   HTTPException: if there are no evidences.  # noqa: E501
         This method makes a synchronous HTTP request by default. To make an
         asynchronous HTTP request, please pass async_req=True
 
-        >>> thread = api.get_evidence_summary(async_req=True)
+        >>> thread = api.get_evidence_summary(sort, output, async_req=True)
         >>> result = thread.get()
 
+        :param sort:
+        :type sort: object
+        :param output:
+        :type output: object
         :param async_req: Whether to execute the request asynchronously.
         :type async_req: bool, optional
         :param _request_timeout: timeout setting for this request. If one
@@ -487,19 +351,23 @@ class TurbiniaEvidenceApi(object):
         kwargs['_return_http_data_only'] = True
         if '_preload_content' in kwargs:
             raise ValueError("Error! Please call the get_evidence_summary_with_http_info method with `_preload_content` instead and obtain raw data from ApiResponse.raw_data")
-        return self.get_evidence_summary_with_http_info(**kwargs)  # noqa: E501
+        return self.get_evidence_summary_with_http_info(sort, output, **kwargs)  # noqa: E501
 
     @validate_arguments
-    def get_evidence_summary_with_http_info(self, **kwargs) -> ApiResponse:  # noqa: E501
+    def get_evidence_summary_with_http_info(self, sort : Optional[Any] = None, output : Optional[Any] = None, **kwargs) -> ApiResponse:  # noqa: E501
         """Get Evidence Summary  # noqa: E501
 
-        Retrieves a summary of all evidences in redis.  Raises:   HTTPException: if there are no evidences.  # noqa: E501
+        Retrieves a summary of all evidences in redis.  Args:   sort Optional(str): Attribute used to sort summary.  Returns:   summary (dict): Summary of all evidences and their content.  Raises:   HTTPException: if there are no evidences.  # noqa: E501
         This method makes a synchronous HTTP request by default. To make an
         asynchronous HTTP request, please pass async_req=True
 
-        >>> thread = api.get_evidence_summary_with_http_info(async_req=True)
+        >>> thread = api.get_evidence_summary_with_http_info(sort, output, async_req=True)
         >>> result = thread.get()
 
+        :param sort:
+        :type sort: object
+        :param output:
+        :type output: object
         :param async_req: Whether to execute the request asynchronously.
         :type async_req: bool, optional
         :param _preload_content: if False, the ApiResponse.data will
@@ -528,6 +396,8 @@ class TurbiniaEvidenceApi(object):
         _params = locals()
 
         _all_params = [
+            'sort',
+            'output'
         ]
         _all_params.extend(
             [
@@ -558,6 +428,12 @@ class TurbiniaEvidenceApi(object):
 
         # process the query parameters
         _query_params = []
+        if _params.get('sort') is not None:  # noqa: E501
+            _query_params.append(('sort', _params['sort']))
+
+        if _params.get('output') is not None:  # noqa: E501
+            _query_params.append(('output', _params['output']))
+
         # process the header parameters
         _header_params = dict(_params.get('_headers', {}))
         # process the form parameters
@@ -574,6 +450,7 @@ class TurbiniaEvidenceApi(object):
 
         _response_types_map = {
             '200': "object",
+            '422': "HTTPValidationError",
         }
 
         return self.api_client.call_api(
@@ -709,6 +586,160 @@ class TurbiniaEvidenceApi(object):
 
         return self.api_client.call_api(
             '/api/evidence/types', 'GET',
+            _path_params,
+            _query_params,
+            _header_params,
+            body=_body_params,
+            post_params=_form_params,
+            files=_files,
+            response_types_map=_response_types_map,
+            auth_settings=_auth_settings,
+            async_req=_params.get('async_req'),
+            _return_http_data_only=_params.get('_return_http_data_only'),  # noqa: E501
+            _preload_content=_params.get('_preload_content', True),
+            _request_timeout=_params.get('_request_timeout'),
+            collection_formats=_collection_formats,
+            _request_auth=_params.get('_request_auth'))
+
+    @validate_arguments
+    def query_evidence(self, value : Any, field : Optional[Any] = None, output : Optional[Any] = None, **kwargs) -> object:  # noqa: E501
+        """Query Evidence  # noqa: E501
+
+        This method makes a synchronous HTTP request by default. To make an
+        asynchronous HTTP request, please pass async_req=True
+
+        >>> thread = api.query_evidence(value, field, output, async_req=True)
+        >>> result = thread.get()
+
+        :param value: (required)
+        :type value: object
+        :param field:
+        :type field: object
+        :param output:
+        :type output: object
+        :param async_req: Whether to execute the request asynchronously.
+        :type async_req: bool, optional
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :return: Returns the result object.
+                 If the method is called asynchronously,
+                 returns the request thread.
+        :rtype: object
+        """
+        kwargs['_return_http_data_only'] = True
+        if '_preload_content' in kwargs:
+            raise ValueError("Error! Please call the query_evidence_with_http_info method with `_preload_content` instead and obtain raw data from ApiResponse.raw_data")
+        return self.query_evidence_with_http_info(value, field, output, **kwargs)  # noqa: E501
+
+    @validate_arguments
+    def query_evidence_with_http_info(self, value : Any, field : Optional[Any] = None, output : Optional[Any] = None, **kwargs) -> ApiResponse:  # noqa: E501
+        """Query Evidence  # noqa: E501
+
+        This method makes a synchronous HTTP request by default. To make an
+        asynchronous HTTP request, please pass async_req=True
+
+        >>> thread = api.query_evidence_with_http_info(value, field, output, async_req=True)
+        >>> result = thread.get()
+
+        :param value: (required)
+        :type value: object
+        :param field:
+        :type field: object
+        :param output:
+        :type output: object
+        :param async_req: Whether to execute the request asynchronously.
+        :type async_req: bool, optional
+        :param _preload_content: if False, the ApiResponse.data will
+                                 be set to none and raw_data will store the 
+                                 HTTP response body without reading/decoding.
+                                 Default is True.
+        :type _preload_content: bool, optional
+        :param _return_http_data_only: response data instead of ApiResponse
+                                       object with status code, headers, etc
+        :type _return_http_data_only: bool, optional
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the authentication
+                              in the spec for a single request.
+        :type _request_auth: dict, optional
+        :type _content_type: string, optional: force content-type for the request
+        :return: Returns the result object.
+                 If the method is called asynchronously,
+                 returns the request thread.
+        :rtype: tuple(object, status_code(int), headers(HTTPHeaderDict))
+        """
+
+        _params = locals()
+
+        _all_params = [
+            'value',
+            'field',
+            'output'
+        ]
+        _all_params.extend(
+            [
+                'async_req',
+                '_return_http_data_only',
+                '_preload_content',
+                '_request_timeout',
+                '_request_auth',
+                '_content_type',
+                '_headers'
+            ]
+        )
+
+        # validate the arguments
+        for _key, _val in _params['kwargs'].items():
+            if _key not in _all_params:
+                raise ApiTypeError(
+                    "Got an unexpected keyword argument '%s'"
+                    " to method query_evidence" % _key
+                )
+            _params[_key] = _val
+        del _params['kwargs']
+
+        _collection_formats = {}
+
+        # process the path parameters
+        _path_params = {}
+
+        # process the query parameters
+        _query_params = []
+        if _params.get('field') is not None:  # noqa: E501
+            _query_params.append(('field', _params['field']))
+
+        if _params.get('value') is not None:  # noqa: E501
+            _query_params.append(('value', _params['value']))
+
+        if _params.get('output') is not None:  # noqa: E501
+            _query_params.append(('output', _params['output']))
+
+        # process the header parameters
+        _header_params = dict(_params.get('_headers', {}))
+        # process the form parameters
+        _form_params = []
+        _files = {}
+        # process the body parameter
+        _body_params = None
+        # set the HTTP header `Accept`
+        _header_params['Accept'] = self.api_client.select_header_accept(
+            ['application/json'])  # noqa: E501
+
+        # authentication setting
+        _auth_settings = ['oAuth2']  # noqa: E501
+
+        _response_types_map = {
+            '200': "object",
+            '422': "HTTPValidationError",
+        }
+
+        return self.api_client.call_api(
+            '/api/evidence/query', 'GET',
             _path_params,
             _query_params,
             _header_params,

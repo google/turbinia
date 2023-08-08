@@ -25,7 +25,6 @@ from fastapi.responses import JSONResponse
 from typing import List
 
 from turbinia.api.schemas import request_options
-from turbinia.api.schemas import evidence as api_evidence
 from turbinia import evidence
 from turbinia import config as turbinia_config
 from turbinia import state_manager
@@ -34,9 +33,17 @@ log = logging.getLogger('turbinia')
 router = APIRouter(prefix='/evidence', tags=['Turbinia Evidence'])
 redis_manager = state_manager.RedisStateManager()
 
+EVIDENCE_ATTRIBUTES = (
+    '_name', 'cloud_only', 'context_dependent', 'copyable', 'creation_time',
+    'credentials', 'description', 'has_child_evidence', 'last_updated',
+    'local_path', 'mount_path', 'parent_evidence', 'processed_by', 'request_id',
+    'resource_id', 'resource_tracked', 'save_metadata', 'saved_path',
+    'saved_path_type', 'size', 'source', 'source_path', 'tasks', 'type')
 
-async def upload_file(
-    file: UploadFile, file_path: str, calculate_hash: bool = False):
+from fastapi import File
+
+
+async def upload_file(file: File, file_path: str, calculate_hash: bool = False):
   """Upload file from FastAPI to server.
 
   Args:
@@ -59,10 +66,11 @@ async def upload_file(
       if calculate_hash:
         sha_hash.update(chunk)
       size += turbinia_config.CHUNK_SIZE
+      #todo(igormr): remove join for fstrings
       if size >= turbinia_config.MAX_UPLOAD_SIZE:
-        error_message = ' '.join(( #todo(igormr): remove join for fstrings
+        error_message = (
             f'Unable to upload file {file.filename} greater',
-            f'than {turbinia_config.MAX_UPLOAD_SIZE / (1024 ** 3)} GB'))
+            f'than {turbinia_config.MAX_UPLOAD_SIZE / (1024 ** 3)} GB')
         log.error(error_message)
         raise IOError(error_message)
     file_info = {
@@ -99,20 +107,43 @@ async def get_evidence_attributes(request: Request, evidence_type):
 
 
 @router.get('/summary')
-async def get_evidence_summary(request: Request):
+async def get_evidence_summary(
+    request: Request, sort: str = Query(None, enum=EVIDENCE_ATTRIBUTES),
+    output: str = Query('keys', enum=('keys', 'values', 'count'))):
   """Retrieves a summary of all evidences in redis.
+
+  Args:
+    sort Optional(str): Attribute used to sort summary.
+
+  Returns:
+    summary (dict): Summary of all evidences and their content.
   
   Raises:
     HTTPException: if there are no evidences.
   """
-  evidences = redis_manager.get_evidence_summary()
-  if evidences:
-    return JSONResponse(
-        content=redis_manager.get_evidence_summary(), status_code=200)
+  if evidences := redis_manager.get_evidence_summary(sort, output):
+    return JSONResponse(content=evidences, status_code=200)
   raise HTTPException(status_code=404, detail='No evidences found.')
 
 
-@router.get('/id')
+@router.get('/query')
+async def query_evidence(
+    request: Request, field: str = Query(
+        'request_id', enum=EVIDENCE_ATTRIBUTES), value: str = Query(),
+    output: str = Query('keys', enum=('keys', 'values', 'count'))):
+  evidences_found = None
+  if value == 'hash':
+    evidences_found = redis_manager.get_evidence_key_by_hash(field)
+  else:
+    evidences_found = redis_manager.query_evidence(field, value, output)
+  if evidences_found:
+    return JSONResponse(content=evidences_found, status_code=200)
+  raise HTTPException(
+      status_code=404,
+      detail=f'No evidence found with value {value} in field {field}.')
+
+
+@router.get('/{evidence_id}')
 async def get_evidence_by_id(request: Request, evidence_id):
   """Retrieves an evidence in redis by using its UUID.
 
@@ -125,34 +156,11 @@ async def get_evidence_by_id(request: Request, evidence_id):
   Returns:
 
   """
-  if redis_manager.get_evidence(evidence_id):
-    return JSONResponse(
-        content=redis_manager.get_evidence(evidence_id), status_code=200)
+  if stored_evidence := redis_manager.get_evidence(evidence_id):
+    return JSONResponse(content=stored_evidence, status_code=200)
   raise HTTPException(
       status_code=404,
       detail=f'UUID {evidence_id} not found or it had no associated evidences.')
-
-
-@router.get('/{file_hash}')
-async def get_evidence_by_hash(request: Request, file_hash):
-  """Retrieves an evidence in redis by using its hash (SHA3-224).
-
-  Args: 
-    file_hash (str): SHA3-224 hash of file.
-  
-  Raises:
-    HTTPException: if the evidence is not found.
-
-  Returns:
-
-  """
-  if key := redis_manager.get_evidence_key_by_hash(file_hash):
-    return JSONResponse(
-        content={key: redis_manager.get_evidence_by_hash(file_hash)},
-        status_code=200)
-  raise HTTPException(
-      status_code=404,
-      detail=f'Hash {file_hash} not found or it had no associated evidences.')
 
 
 #todo(igormr) Check if turbinia client works with new endpoints, especially upload

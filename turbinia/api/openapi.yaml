@@ -14,66 +14,44 @@ components:
       description: "Base Request Options class to be extended by other option types. "
       properties:
         filter_patterns:
-          anyOf:
-            - items:
-                type: string
-              type: array
-            - type: "null"
+          items:
+            type: string
           title: Filter Patterns
+          type: array
         group_id:
-          anyOf:
-            - type: string
-            - type: "null"
           title: Group Id
+          type: string
         jobs_allowlist:
-          anyOf:
-            - items:
-                type: string
-              type: array
-            - type: "null"
+          items:
+            type: string
           title: Jobs Allowlist
+          type: array
         jobs_denylist:
-          anyOf:
-            - items:
-                type: string
-              type: array
-            - type: "null"
+          items:
+            type: string
           title: Jobs Denylist
+          type: array
         reason:
-          anyOf:
-            - type: string
-            - type: "null"
           title: Reason
+          type: string
         recipe_data:
-          anyOf:
-            - type: string
-            - type: "null"
           title: Recipe Data
+          type: string
         recipe_name:
-          anyOf:
-            - type: string
-            - type: "null"
           title: Recipe Name
+          type: string
         request_id:
-          anyOf:
-            - type: string
-            - type: "null"
           title: Request Id
+          type: string
         requester:
-          anyOf:
-            - type: string
-            - type: "null"
           title: Requester
+          type: string
         sketch_id:
-          anyOf:
-            - type: integer
-            - type: "null"
           title: Sketch Id
+          type: integer
         yara_rules:
-          anyOf:
-            - type: string
-            - type: "null"
           title: Yara Rules
+          type: string
       title: BaseRequestOptions
       type: object
     Body_upload_evidence_api_evidence_upload_post:
@@ -101,11 +79,9 @@ components:
       description: "Base request object. "
       properties:
         description:
-          anyOf:
-            - type: string
-            - type: "null"
           default: Turbinia request object
           title: Description
+          type: string
         evidence:
           title: Evidence
           type: object
@@ -172,19 +148,59 @@ paths:
       summary: Get Request Options
       tags:
         - Turbinia Configuration
-  /api/evidence/id:
+  /api/evidence/query:
     get:
-      description:
-        "Retrieves an evidence in redis by using its UUID.\n\nArgs:\n \
-        \ evidence_id (str): The UUID of the evidence.\n\nRaises:\n  HTTPException:\
-        \ if the evidence is not found.\n\nReturns:"
-      operationId: get_evidence_by_id
+      operationId: query_evidence
       parameters:
         - in: query
-          name: evidence_id
+          name: field
+          required: false
+          schema:
+            default: request_id
+            enum:
+              - _name
+              - cloud_only
+              - context_dependent
+              - copyable
+              - creation_time
+              - credentials
+              - description
+              - has_child_evidence
+              - last_updated
+              - local_path
+              - mount_path
+              - parent_evidence
+              - processed_by
+              - request_id
+              - resource_id
+              - resource_tracked
+              - save_metadata
+              - saved_path
+              - saved_path_type
+              - size
+              - source
+              - source_path
+              - tasks
+              - type
+            title: Field
+            type: string
+        - in: query
+          name: value
           required: true
           schema:
-            title: Evidence Id
+            title: Value
+            type: string
+        - in: query
+          name: output
+          required: false
+          schema:
+            default: keys
+            enum:
+              - keys
+              - values
+              - count
+            title: Output
+            type: string
       responses:
         "200":
           content:
@@ -197,21 +213,72 @@ paths:
               schema:
                 $ref: "#/components/schemas/HTTPValidationError"
           description: Validation Error
-      summary: Get Evidence By Id
+      summary: Query Evidence
       tags:
         - Turbinia Evidence
   /api/evidence/summary:
     get:
       description:
-        "Retrieves a summary of all evidences in redis.\n\nRaises:\n  HTTPException:\
+        "Retrieves a summary of all evidences in redis.\n\nArgs:\n  sort\
+        \ Optional(str): Attribute used to sort summary.\n\nReturns:\n  summary (dict):\
+        \ Summary of all evidences and their content.\n\nRaises:\n  HTTPException:\
         \ if there are no evidences."
       operationId: get_evidence_summary
+      parameters:
+        - in: query
+          name: sort
+          required: false
+          schema:
+            enum:
+              - _name
+              - cloud_only
+              - context_dependent
+              - copyable
+              - creation_time
+              - credentials
+              - description
+              - has_child_evidence
+              - last_updated
+              - local_path
+              - mount_path
+              - parent_evidence
+              - processed_by
+              - request_id
+              - resource_id
+              - resource_tracked
+              - save_metadata
+              - saved_path
+              - saved_path_type
+              - size
+              - source
+              - source_path
+              - tasks
+              - type
+            title: Sort
+            type: string
+        - in: query
+          name: output
+          required: false
+          schema:
+            default: keys
+            enum:
+              - keys
+              - values
+              - count
+            title: Output
+            type: string
       responses:
         "200":
           content:
             application/json:
               schema: {}
           description: Successful Response
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+          description: Validation Error
       summary: Get Evidence Summary
       tags:
         - Turbinia Evidence
@@ -302,19 +369,19 @@ paths:
       summary: Upload Evidence
       tags:
         - Turbinia Evidence
-  /api/evidence/{file_hash}:
+  /api/evidence/{evidence_id}:
     get:
       description:
-        "Retrieves an evidence in redis by using its hash (SHA3-224).\n\
-        \nArgs: \n  file_hash (str): SHA3-224 hash of file.\n\nRaises:\n  HTTPException:\
+        "Retrieves an evidence in redis by using its UUID.\n\nArgs:\n \
+        \ evidence_id (str): The UUID of the evidence.\n\nRaises:\n  HTTPException:\
         \ if the evidence is not found.\n\nReturns:"
-      operationId: get_evidence_by_hash
+      operationId: get_evidence_by_id
       parameters:
         - in: path
-          name: file_hash
+          name: evidence_id
           required: true
           schema:
-            title: File Hash
+            title: Evidence Id
       responses:
         "200":
           content:
@@ -327,7 +394,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/HTTPValidationError"
           description: Validation Error
-      summary: Get Evidence By Hash
+      summary: Get Evidence By Id
       tags:
         - Turbinia Evidence
   /api/jobs/:

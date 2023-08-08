@@ -93,10 +93,10 @@ Class | Method | HTTP request | Description
 *TurbiniaConfigurationApi* | [**get_request_options**](docs/TurbiniaConfigurationApi.md#get_request_options) | **GET** /api/config/request_options | Get Request Options
 *TurbiniaConfigurationApi* | [**read_config**](docs/TurbiniaConfigurationApi.md#read_config) | **GET** /api/config/ | Read Config
 *TurbiniaEvidenceApi* | [**get_evidence_attributes**](docs/TurbiniaEvidenceApi.md#get_evidence_attributes) | **GET** /api/evidence/types/{evidence_type} | Get Evidence Attributes
-*TurbiniaEvidenceApi* | [**get_evidence_by_hash**](docs/TurbiniaEvidenceApi.md#get_evidence_by_hash) | **GET** /api/evidence/{file_hash} | Get Evidence By Hash
-*TurbiniaEvidenceApi* | [**get_evidence_by_id**](docs/TurbiniaEvidenceApi.md#get_evidence_by_id) | **GET** /api/evidence/id | Get Evidence By Id
+*TurbiniaEvidenceApi* | [**get_evidence_by_id**](docs/TurbiniaEvidenceApi.md#get_evidence_by_id) | **GET** /api/evidence/{evidence_id} | Get Evidence By Id
 *TurbiniaEvidenceApi* | [**get_evidence_summary**](docs/TurbiniaEvidenceApi.md#get_evidence_summary) | **GET** /api/evidence/summary | Get Evidence Summary
 *TurbiniaEvidenceApi* | [**get_evidence_types**](docs/TurbiniaEvidenceApi.md#get_evidence_types) | **GET** /api/evidence/types | Get Evidence Types
+*TurbiniaEvidenceApi* | [**query_evidence**](docs/TurbiniaEvidenceApi.md#query_evidence) | **GET** /api/evidence/query | Query Evidence
 *TurbiniaEvidenceApi* | [**upload_evidence**](docs/TurbiniaEvidenceApi.md#upload_evidence) | **POST** /api/evidence/upload | Upload Evidence
 *TurbiniaJobsApi* | [**read_jobs**](docs/TurbiniaJobsApi.md#read_jobs) | **GET** /api/jobs/ | Read Jobs
 *TurbiniaLogsApi* | [**get_logs**](docs/TurbiniaLogsApi.md#get_logs) | **GET** /api/logs/{query} | Get Logs
