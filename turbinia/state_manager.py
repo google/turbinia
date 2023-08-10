@@ -26,6 +26,7 @@ import logging
 import sys
 from datetime import datetime
 from datetime import timedelta
+from typing import Any
 
 import six
 
@@ -332,8 +333,8 @@ class RedisStateManager(BaseStateManager):
     task.state_key = key
     return key
 
-  def write_new_evidence(self, evidence_dict: dict[str]):
-    """Writes a new evidence into redis.
+  def write_evidence(self, evidence_dict: dict[str]):
+    """Writes evidence into redis.
 
     Args:
       evidence_dict (dict[str]): A dictionary containing the serialized
@@ -349,8 +350,7 @@ class RedisStateManager(BaseStateManager):
         log.error(
             f'Unsuccessful in writing {attribute_key} of {key} into Redis')
     if evidence_hash := json.loads(evidence_dict.get('hash')):
-      key = self.client.hset(
-          'TurbiniaEvidenceHashes', evidence_hash, key)
+      key = self.client.hset('TurbiniaEvidenceHashes', evidence_hash, key)
     return key
 
   def update_evidence_attribute(
@@ -397,20 +397,59 @@ class RedisStateManager(BaseStateManager):
     """
     return self.client.exists(':'.join(('TurbiniaEvidence', evidence_id)))
 
-  def get_evidence_summary(self):
+  def get_evidence_summary(self, sort: str = None, output: str = 'keys'):
     """Gets a summary of all evidences.
+
+    Args:
+      sort (str): Name of the evidence attribute used to sort the output.
+      output (str): Value to be output by the function (keys | values | count).
+
+    Returns:
+      summary (dict | int): Object containing evidences. 
+    """
+    if output == 'count' and not sort:
+      return sum(1 for _ in self.client.scan_iter('TurbiniaEvidence:*'))
+    summary = {} if sort else []
+    for key in self.client.scan_iter('TurbiniaEvidence:*'):
+      value = self.get_evidence(key.decode().split(':')[1])
+      stored_value = value if output == 'values' else key.decode()
+      if sort:
+        attribute_value = value.get(sort, None)
+        if attribute_value not in summary:
+          summary[attribute_value] = [stored_value] if output != 'count' else 1
+        elif output == 'count':
+          summary[attribute_value] += 1
+        else:
+          summary[attribute_value].append(stored_value)
+        continue
+      summary.append(stored_value)
+    return summary
+
+  def query_evidence(
+      self, attribute_name: str, value: Any, output: str = 'keys'):
+    """Queries for evidences with the specified attribute matching the passed
+    value.
+
+    Args:
+      attribute_name (str): Name of the attribute containing the value.
+      value (Any): Value stored in the attribute.
+      output (str): Value to be output by the function (keys | values | count).
 
     Returns:
       summary (dict): Dict containing evidences of each type. 
     """
-    summary = {}
+    keys = []
     for key in self.client.scan_iter('TurbiniaEvidence:*'):
-      value = self.get_evidence(key.decode().split(':')[1])
-      evidence_type = value.get('type', 'Evidence')
-      if evidence_type not in summary:
-        summary[evidence_type] = {}
-      summary[evidence_type][key.decode()] = value
-    return summary
+      if stored_value := self.client.hget(key, attribute_name):
+        if (attribute_name == 'tasks' and
+            value in json.loads(stored_value)) or stored_value.decode(
+            ) == value or json.loads(stored_value) == value:
+          keys.append(key.decode())
+    if output == 'values':
+      return [self.get_evidence(key.split(':')[1]) for key in keys]
+    elif output == 'count':
+      return len(keys)
+    return keys
 
   def get_evidence_key_by_hash(self, file_hash: str):
     """Gets the evidence key given its hash.
