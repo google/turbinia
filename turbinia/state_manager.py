@@ -333,8 +333,8 @@ class RedisStateManager(BaseStateManager):
     task.state_key = key
     return key
 
-  def write_new_evidence(self, evidence_dict: dict[str]):
-    """Writes a new evidence into redis.
+  def write_evidence(self, evidence_dict: dict[str]):
+    """Writes evidence into redis.
 
     Args:
       evidence_dict (dict[str]): A dictionary containing the serialized
@@ -400,6 +400,10 @@ class RedisStateManager(BaseStateManager):
   def get_evidence_summary(self, sort: str = None, output: str = 'keys'):
     """Gets a summary of all evidences.
 
+    Args:
+      sort (str): Name of the evidence attribute used to sort the output.
+      output (str): Value to be output by the function (keys | values | count).
+
     Returns:
       summary (dict | int): Object containing evidences. 
     """
@@ -423,7 +427,13 @@ class RedisStateManager(BaseStateManager):
 
   def query_evidence(
       self, attribute_name: str, value: Any, output: str = 'keys'):
-    """Gets a summary of all evidences.
+    """Queries for evidences with the specified attribute matching the passed
+    value.
+
+    Args:
+      attribute_name (str): Name of the attribute containing the value.
+      value (Any): Value stored in the attribute.
+      output (str): Value to be output by the function (keys | values | count).
 
     Returns:
       summary (dict): Dict containing evidences of each type. 
