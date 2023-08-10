@@ -33,12 +33,14 @@ log = logging.getLogger('turbinia')
 router = APIRouter(prefix='/evidence', tags=['Turbinia Evidence'])
 redis_manager = state_manager.RedisStateManager()
 
-EVIDENCE_ATTRIBUTES = (
+EVIDENCE_SUMMARY_ATTRIBUTES = (
     '_name', 'cloud_only', 'context_dependent', 'copyable', 'creation_time',
-    'credentials', 'description', 'has_child_evidence', 'last_updated',
-    'local_path', 'mount_path', 'parent_evidence', 'processed_by', 'request_id',
-    'resource_id', 'resource_tracked', 'save_metadata', 'saved_path',
-    'saved_path_type', 'size', 'source', 'source_path', 'tasks', 'type')
+    'description', 'has_child_evidence', 'last_updated', 'local_path',
+    'mount_path', 'parent_evidence', 'request_id', 'resource_id',
+    'resource_tracked', 'save_metadata', 'saved_path', 'saved_path_type',
+    'size', 'source', 'source_path', 'tasks', 'type', 'creation_time')
+
+EVIDENCE_QUERY_ATTRIBUTES = EVIDENCE_SUMMARY_ATTRIBUTES + ('tasks',)
 
 
 async def upload_file(
@@ -73,13 +75,13 @@ async def upload_file(
         log.error(error_message)
         raise IOError(error_message)
     file_info = {
-        'uploaded_name': file.file_name,
+        'uploaded_name': file.filename,
         'file_name': os.path.basename(file_path),
         'file_path': file_path,
         'size': size
     }
     if calculate_hash:
-      file_info['Hash'] = sha_hash.hexdigest()
+      file_info['hash'] = sha_hash.hexdigest()
   return file_info
 
 
@@ -107,7 +109,7 @@ async def get_evidence_attributes(request: Request, evidence_type):
 
 @router.get('/summary')
 async def get_evidence_summary(
-    request: Request, sort: str = Query(None, enum=EVIDENCE_ATTRIBUTES),
+    request: Request, sort: str = Query(None, enum=EVIDENCE_SUMMARY_ATTRIBUTES),
     output: str = Query('keys', enum=('keys', 'values', 'count'))):
   """Retrieves a summary of all evidences in redis.
 
@@ -120,6 +122,11 @@ async def get_evidence_summary(
   Raises:
     HTTPException: if there are no evidences.
   """
+  if sort and sort not in EVIDENCE_SUMMARY_ATTRIBUTES:
+    raise HTTPException(
+        status_code=400, detail=(
+            f'Cannot sort by attribute {sort}. '
+            f'Sortable attributes: {EVIDENCE_SUMMARY_ATTRIBUTES}'))
   if evidences := redis_manager.get_evidence_summary(sort, output):
     return JSONResponse(content=evidences, status_code=200)
   raise HTTPException(status_code=404, detail='No evidences found.')
@@ -127,19 +134,26 @@ async def get_evidence_summary(
 
 @router.get('/query')
 async def query_evidence(
-    request: Request, field: str = Query(
-        'request_id', enum=EVIDENCE_ATTRIBUTES), value: str = Query(),
+    request: Request, attribute_name: str = Query(
+        'request_id', enum=EVIDENCE_QUERY_ATTRIBUTES), value: str = Query(),
     output: str = Query('keys', enum=('keys', 'values', 'count'))):
+  if attribute_name and attribute_name not in EVIDENCE_QUERY_ATTRIBUTES:
+    raise HTTPException(
+        status_code=400, detail=(
+            f'Cannot query by {attribute_name}. '
+            f'Queryable attributes: {EVIDENCE_QUERY_ATTRIBUTES}'))
   evidences_found = None
   if value == 'hash':
-    evidences_found = redis_manager.get_evidence_key_by_hash(field)
+    evidences_found = redis_manager.get_evidence_key_by_hash(attribute_name)
   else:
-    evidences_found = redis_manager.query_evidence(field, value, output)
+    evidences_found = redis_manager.query_evidence(
+        attribute_name, value, output)
   if evidences_found:
     return JSONResponse(content=evidences_found, status_code=200)
   raise HTTPException(
-      status_code=404,
-      detail=f'No evidence found with value {value} in field {field}.')
+      status_code=404, detail=(
+          f'No evidence found with value {value} in attribute '
+          f'{attribute_name}.'))
 
 
 @router.get('/{evidence_id}')
@@ -164,11 +178,16 @@ async def get_evidence_by_id(request: Request, evidence_id):
 
 #todo(igormr) Check if turbinia client works with new endpoints, especially upload
 
+from typing import Annotated
+from fastapi import Form
+
 
 @router.post('/upload')
 async def upload_evidence(
-    request: Request, ticked_id: str, calculate_hash: bool = Query(
-        False, choices=(False, True)), files: List[UploadFile] = File(...)):
+    #ticket_id: Annotated[str, Form()], calculate_hash: Annotated[bool,
+    #                                                             Form()],
+    #files: Annotated[[UploadFile], File()]):
+    files: UploadFile):
   """Upload evidence file to server for processing.
 
   Args:
@@ -181,17 +200,20 @@ async def upload_evidence(
   Returns:
     List of uploaded evidences or warning messages if any.
   """
+  ticket_id = 123456
+  calculate_hash = False
   evidences = []
   for file in files:
     file_name = os.path.splitext(file.filename)[0]
     file_extension = os.path.splitext(file.filename)[1]
-    file_path = ''.join((
-        turbinia_config.OUTPUT_DIR, '/', ticked_id, '/', file_name, '_',
-        datetime.now().strftime(
-            turbinia_config.DATETIME_FORMAT), file_extension))
+    os.makedirs(f'{turbinia_config.OUTPUT_DIR}/{ticket_id}', exist_ok=True)
+    file_path = (
+        f'{turbinia_config.OUTPUT_DIR}/{ticket_id}/{file_name}_'
+        f'{datetime.now().strftime(turbinia_config.DATETIME_FORMAT)}'
+        f'{file_extension}')
     warning_message = None
     try:
-      file_info = upload_file(file, file_path, calculate_hash)
+      file_info = await upload_file(file, file_path, calculate_hash)
     except IOError as exception:
       warning_message = exception
     file.file.close()
@@ -207,6 +229,6 @@ async def upload_evidence(
       except OSError:
         log.error(f'Could not remove file {file_path}')
     else:
-      evidences.append()
+      evidences.append(file_info)
     #todo(igormr): maybe save generic evidence to pass to server
   return JSONResponse(content=evidences, status_code=200)

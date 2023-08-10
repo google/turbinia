@@ -410,18 +410,19 @@ class RedisStateManager(BaseStateManager):
       value = self.get_evidence(key.decode().split(':')[1])
       stored_value = value if output == 'values' else key.decode()
       if sort:
-        field = value.get(sort, None)
-        if field not in summary:
-          summary[field] = [stored_value] if output != 'count' else 1
+        attribute_value = value.get(sort, None)
+        if attribute_value not in summary:
+          summary[attribute_value] = [stored_value] if output != 'count' else 1
         elif output == 'count':
-          summary[field] += 1
+          summary[attribute_value] += 1
         else:
-          summary[field].append(stored_value)
+          summary[attribute_value].append(stored_value)
         continue
       summary.append(stored_value)
     return summary
 
-  def query_evidence(self, field: str, value: Any, output: str = 'keys'):
+  def query_evidence(
+      self, attribute_name: str, value: Any, output: str = 'keys'):
     """Gets a summary of all evidences.
 
     Returns:
@@ -429,8 +430,8 @@ class RedisStateManager(BaseStateManager):
     """
     keys = []
     for key in self.client.scan_iter('TurbiniaEvidence:*'):
-      if stored_value := self.client.hget(key, field):
-        if (field == 'tasks' and
+      if stored_value := self.client.hget(key, attribute_name):
+        if (attribute_name == 'tasks' and
             value in json.loads(stored_value)) or stored_value.decode(
             ) == value or json.loads(stored_value) == value:
           keys.append(key.decode())

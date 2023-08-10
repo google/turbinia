@@ -57,11 +57,9 @@ components:
     Body_upload_evidence_api_evidence_upload_post:
       properties:
         files:
-          items:
-            format: binary
-            type: string
+          format: binary
           title: Files
-          type: array
+          type: string
       required:
         - files
       title: Body_upload_evidence_api_evidence_upload_post
@@ -153,7 +151,7 @@ paths:
       operationId: query_evidence
       parameters:
         - in: query
-          name: field
+          name: attribute_name
           required: false
           schema:
             default: request_id
@@ -182,7 +180,7 @@ paths:
               - source_path
               - tasks
               - type
-            title: Field
+            title: Attribute Name
             type: string
         - in: query
           name: value
@@ -331,23 +329,6 @@ paths:
         \ If pre-conditions are not met.\n\nReturns:\n  List of uploaded evidences\
         \ or warning messages if any."
       operationId: upload_evidence
-      parameters:
-        - in: query
-          name: ticked_id
-          required: true
-          schema:
-            title: Ticked Id
-            type: string
-        - in: query
-          name: calculate_hash
-          required: false
-          schema:
-            choices:
-              - false
-              - true
-            default: false
-            title: Calculate Hash
-            type: boolean
       requestBody:
         content:
           multipart/form-data:

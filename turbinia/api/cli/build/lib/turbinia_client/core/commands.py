@@ -304,7 +304,8 @@ def create_request(ctx: click.Context, *args: int, **kwargs: int) -> None:
     '--json_dump', '-j', help='Generates JSON output.', is_flag=True,
     required=False)
 def get_evidence_summary(
-    ctx: click.Context, sort: str, output: str, json_dump: bool) -> None:
+    ctx: click.Context, sort: str = None, output: str = 'keys',
+    json_dump: bool = None) -> None:
   """Gets Turbinia evidence status."""
   client: api_client.ApiClient = ctx.obj.api_client
   api_instance = turbinia_evidence_api.TurbiniaEvidenceApi(client)
@@ -313,34 +314,36 @@ def get_evidence_summary(
     if json_dump:
       formatter.echo_json(api_response)
     else:
-      report = formatter.TaskMarkdownReport(api_response).generate_markdown()
+      report = formatter.EvidenceSummaryMarkdownReport(
+          api_response).generate_summary_markdown(output)
       click.echo(report)
   except exceptions.ApiException as exception:
     log.error(
         f'Received status code {exception.status} '
-        f'when calling get_task_status: {exception.body}')
+        f'when calling get_evidence_summary: {exception.body}')
 
 
 @groups.evidence_group.command('query')
 @click.pass_context
-@click.argument('field')
+@click.argument('attribute')
 @click.argument('value')
 @click.option('--output', '-o', help='Type of output.', required=False)
 @click.option(
     '--json_dump', '-j', help='Generates JSON output.', is_flag=True,
     required=False)
 def query_evidence(
-    ctx: click.Context, field: str, value: str, output: str,
+    ctx: click.Context, attribute: str, value: str, output: str,
     json_dump: bool) -> None:
-  """Gets Turbinia evidence status."""
+  """Gets Turbinia task status."""
   client: api_client.ApiClient = ctx.obj.api_client
   api_instance = turbinia_evidence_api.TurbiniaEvidenceApi(client)
   try:
-    api_response = api_instance.query_evidence(value, field, output)
+    api_response = api_instance.query_evidence(value, attribute, output)
     if json_dump:
       formatter.echo_json(api_response)
     else:
-      report = formatter.TaskMarkdownReport(api_response).generate_markdown()
+      report = formatter.EvidenceSummaryMarkdownReport(
+          api_response).generate_summary_markdown(output)
       click.echo(report)
   except exceptions.ApiException as exception:
     log.error(
@@ -352,9 +355,17 @@ def query_evidence(
 @click.pass_context
 @click.argument('evidence_id')
 @click.option(
+    '--show_ignored', '-i', help='Shows ignored evidence attributes.',
+    is_flag=True, required=False)
+@click.option(
+    '--show_null', '-n', help='Shows evidence attributes with null value.',
+    is_flag=True, required=False)
+@click.option(
     '--json_dump', '-j', help='Generates JSON output.', is_flag=True,
     required=False)
-def get_evidence(ctx: click.Context, evidence_id: str, json_dump: bool) -> None:
+def get_evidence(
+    ctx: click.Context, evidence_id: str, show_ignored: bool, show_null: bool,
+    json_dump: bool) -> None:
   """Gets Turbinia evidence status."""
   client: api_client.ApiClient = ctx.obj.api_client
   api_instance = turbinia_evidence_api.TurbiniaEvidenceApi(client)
@@ -363,17 +374,18 @@ def get_evidence(ctx: click.Context, evidence_id: str, json_dump: bool) -> None:
     if json_dump:
       formatter.echo_json(api_response)
     else:
-      report = formatter.TaskMarkdownReport(api_response).generate_markdown()
+      report = formatter.EvidenceMarkdownReport(api_response).generate_markdown(
+          1, show_ignored, show_null)
       click.echo(report)
   except exceptions.ApiException as exception:
     log.error(
         f'Received status code {exception.status} '
-        f'when calling get_task_status: {exception.body}')
+        f'when calling get_evidence: {exception.body}')
 
 
 @groups.evidence_group.command('upload')
 @click.pass_context
-@click.argument('ticked_id')
+@click.argument('ticket_id')
 @click.option(
     '--file', '-f', help='List of files', required=False, multiple=True)
 @click.option(
@@ -386,7 +398,7 @@ def get_evidence(ctx: click.Context, evidence_id: str, json_dump: bool) -> None:
     '--json_dump', '-j', help='Generates JSON output.', is_flag=True,
     required=False)
 def upload_evidence(
-    ctx: click.Context, ticked_id: str, file: list, directory: list,
+    ctx: click.Context, ticket_id: str, file: list, directory: list,
     calculate_hash: bool, json_dump: bool) -> None:
   """Gets Turbinia evidence status."""
   client: api_client.ApiClient = ctx.obj.api_client
@@ -401,22 +413,9 @@ def upload_evidence(
           f'{file_path} greater than {MAX_UPLOAD_SIZE / (1024 ** 3)} GB')
       log.error(error_message)
       continue
-    files = (open(file_path, 'rb').read())
+    files = open(file_path, 'rb').read()
   try:
-    api_response = api_instance.upload_evidence(
-        ticked_id, files, calculate_hash)
-    #api_client.call_api(
-    #    '/api/evidence/upload', 'POST', {}, [('ticked_id', '123456'),
-    #                                         ('calculate_hash', False)],
-    #    {
-    ###        'Accept': 'application/json',
-    #        'Content-Type': 'multipart/form-data'
-    #    }, post_params=[], files=files[0], response_types_map={
-    #        '200': 'object',
-    #        '422': 'HTTPValidationError'
-    #    }, auth_settings=['oAuth2'], async_req=None,
-    #    _return_http_data_only=True, _preload_content=True,
-    #    _request_timeout=None, collection_formats={}, _request_auth=None)
+    api_response = api_instance.upload_evidence(files)
     if json_dump:
       formatter.echo_json(api_response)
     else:
@@ -425,7 +424,7 @@ def upload_evidence(
   except exceptions.ApiException as exception:
     log.error(
         f'Received status code {exception.status} '
-        f'when calling get_task_status: {exception.body}')
+        f'when calling upload_evidence: {exception.body}')
 
 
 #todo(igormr): Add upload command and check size of file on client side
