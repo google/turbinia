@@ -187,7 +187,7 @@ async def upload_evidence(
     #ticket_id: Annotated[str, Form()], calculate_hash: Annotated[bool,
     #                                                             Form()],
     #files: Annotated[[UploadFile], File()]):
-    files: UploadFile):
+    files: UploadFile = File(...)):
   """Upload evidence file to server for processing.
 
   Args:
@@ -203,6 +203,7 @@ async def upload_evidence(
   ticket_id = 123456
   calculate_hash = False
   evidences = []
+  files = [files]
   for file in files:
     file_name = os.path.splitext(file.filename)[0]
     file_extension = os.path.splitext(file.filename)[1]
@@ -218,7 +219,7 @@ async def upload_evidence(
       warning_message = exception
     file.file.close()
     if evidence_key := redis_manager.get_evidence_key_by_hash(
-        file_info['hash']):
+        file_info.get('hash')):
       warning_message = (
           f'File {file.filename} was uploaded before, check {evidence_key}')
     if warning_message:

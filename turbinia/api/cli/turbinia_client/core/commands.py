@@ -383,6 +383,9 @@ def get_evidence(
         f'when calling get_evidence: {exception.body}')
 
 
+import requests
+
+
 @groups.evidence_group.command('upload')
 @click.pass_context
 @click.argument('ticket_id')
@@ -404,22 +407,34 @@ def upload_evidence(
   client: api_client.ApiClient = ctx.obj.api_client
   api_instance = turbinia_evidence_api.TurbiniaEvidenceApi(client)
   files = []
-  print(directory)
   for file_path in file:
-    size = os.path.getsize(file_path)
-    if size > MAX_UPLOAD_SIZE:
-      error_message = (
-          f'Unable to upload {size / (1024 ** 3)} GB file',
-          f'{file_path} greater than {MAX_UPLOAD_SIZE / (1024 ** 3)} GB')
-      log.error(error_message)
+    try:
+      size = os.path.getsize(file_path)
+      if size > MAX_UPLOAD_SIZE:
+        error_message = (
+            f'Unable to upload {size / (1024 ** 3)} GB file',
+            f'{file_path} greater than {MAX_UPLOAD_SIZE / (1024 ** 3)} GB')
+        log.error(error_message)
+        continue
+      files = bytes(open(file_path, 'rb').read())
+
+    except OSError:
+      log.error(f'Unable to read file in {file_path}')
       continue
-    files = open(file_path, 'rb').read()
   try:
     api_response = api_instance.upload_evidence(files)
+    files = {
+        'files': open(file_path, 'rb').read(),
+    }
+    import json
+    response = requests.post(
+        'http://127.0.0.1:8000/api/evidence/upload', files=files, timeout=10)
     if json_dump:
       formatter.echo_json(api_response)
     else:
-      report = formatter.TaskMarkdownReport(api_response).generate_markdown()
+      report = '\n'.join(
+          formatter.EvidenceMarkdownReport(api_response).list_to_markdown(
+              json.loads(response.content)))
       click.echo(report)
   except exceptions.ApiException as exception:
     log.error(

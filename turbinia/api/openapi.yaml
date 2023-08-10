@@ -161,14 +161,12 @@ paths:
               - context_dependent
               - copyable
               - creation_time
-              - credentials
               - description
               - has_child_evidence
               - last_updated
               - local_path
               - mount_path
               - parent_evidence
-              - processed_by
               - request_id
               - resource_id
               - resource_tracked
@@ -180,6 +178,8 @@ paths:
               - source_path
               - tasks
               - type
+              - creation_time
+              - tasks
             title: Attribute Name
             type: string
         - in: query
@@ -233,14 +233,12 @@ paths:
               - context_dependent
               - copyable
               - creation_time
-              - credentials
               - description
               - has_child_evidence
               - last_updated
               - local_path
               - mount_path
               - parent_evidence
-              - processed_by
               - request_id
               - resource_id
               - resource_tracked
@@ -252,6 +250,7 @@ paths:
               - source_path
               - tasks
               - type
+              - creation_time
             title: Sort
             type: string
         - in: query

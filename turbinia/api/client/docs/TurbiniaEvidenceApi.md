@@ -377,7 +377,7 @@ Name | Type | Description  | Notes
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **upload_evidence**
-> object upload_evidence(files)
+> object upload_evidence(body_upload_evidence_api_evidence_upload_post)
 
 Upload Evidence
 
@@ -390,6 +390,7 @@ Upload evidence file to server for processing.  Args:   file (List[UploadFile]):
 import time
 import os
 import turbinia_api_lib
+from turbinia_api_lib.models.body_upload_evidence_api_evidence_upload_post import BodyUploadEvidenceApiEvidenceUploadPost
 from turbinia_api_lib.rest import ApiException
 from pprint import pprint
 
@@ -410,11 +411,11 @@ configuration.access_token = os.environ["ACCESS_TOKEN"]
 with turbinia_api_lib.ApiClient(configuration) as api_client:
     # Create an instance of the API class
     api_instance = turbinia_api_lib.TurbiniaEvidenceApi(api_client)
-    files = None # object | 
+    body_upload_evidence_api_evidence_upload_post = turbinia_api_lib.BodyUploadEvidenceApiEvidenceUploadPost() # BodyUploadEvidenceApiEvidenceUploadPost | 
 
     try:
         # Upload Evidence
-        api_response = api_instance.upload_evidence(files)
+        api_response = api_instance.upload_evidence(body_upload_evidence_api_evidence_upload_post)
         print("The response of TurbiniaEvidenceApi->upload_evidence:\n")
         pprint(api_response)
     except Exception as e:
@@ -426,7 +427,7 @@ with turbinia_api_lib.ApiClient(configuration) as api_client:
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **files** | [**object**](object.md)|  | 
+ **body_upload_evidence_api_evidence_upload_post** | [**BodyUploadEvidenceApiEvidenceUploadPost**](BodyUploadEvidenceApiEvidenceUploadPost.md)|  | 
 
 ### Return type
 
@@ -438,7 +439,7 @@ Name | Type | Description  | Notes
 
 ### HTTP request headers
 
- - **Content-Type**: multipart/form-data
+ - **Content-Type**: application/octet-stream
  - **Accept**: application/json
 
 ### HTTP response details

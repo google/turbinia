@@ -38,6 +38,7 @@ from turbinia_api_lib.exceptions import ApiException
 
 # import models into sdk package
 from turbinia_api_lib.models.base_request_options import BaseRequestOptions
+from turbinia_api_lib.models.body_upload_evidence_api_evidence_upload_post import BodyUploadEvidenceApiEvidenceUploadPost
 from turbinia_api_lib.models.http_validation_error import HTTPValidationError
 from turbinia_api_lib.models.request import Request
 from turbinia_api_lib.models.validation_error import ValidationError

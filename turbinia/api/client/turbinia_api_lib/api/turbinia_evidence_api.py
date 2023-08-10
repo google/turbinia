@@ -21,6 +21,7 @@ from typing_extensions import Annotated
 
 from typing import Any, Optional
 
+from turbinia_api_lib.models.body_upload_evidence_api_evidence_upload_post import BodyUploadEvidenceApiEvidenceUploadPost
 
 from turbinia_api_lib.api_client import ApiClient
 from turbinia_api_lib.api_response import ApiResponse
@@ -756,18 +757,18 @@ class TurbiniaEvidenceApi(object):
             _request_auth=_params.get('_request_auth'))
 
     @validate_arguments
-    def upload_evidence(self, files : Optional[Any], **kwargs) -> object:  # noqa: E501
+    def upload_evidence(self, body_upload_evidence_api_evidence_upload_post : BodyUploadEvidenceApiEvidenceUploadPost, **kwargs) -> object:  # noqa: E501
         """Upload Evidence  # noqa: E501
 
         Upload evidence file to server for processing.  Args:   file (List[UploadFile]): Evidence file to be uploaded to folder for later       processing. The maximum size of the file is 10 GB.   Raises:   TypeError: If pre-conditions are not met.  Returns:   List of uploaded evidences or warning messages if any.  # noqa: E501
         This method makes a synchronous HTTP request by default. To make an
         asynchronous HTTP request, please pass async_req=True
 
-        >>> thread = api.upload_evidence(files, async_req=True)
+        >>> thread = api.upload_evidence(body_upload_evidence_api_evidence_upload_post, async_req=True)
         >>> result = thread.get()
 
-        :param files: (required)
-        :type files: object
+        :param body_upload_evidence_api_evidence_upload_post: (required)
+        :type body_upload_evidence_api_evidence_upload_post: BodyUploadEvidenceApiEvidenceUploadPost
         :param async_req: Whether to execute the request asynchronously.
         :type async_req: bool, optional
         :param _request_timeout: timeout setting for this request. If one
@@ -782,21 +783,21 @@ class TurbiniaEvidenceApi(object):
         kwargs['_return_http_data_only'] = True
         if '_preload_content' in kwargs:
             raise ValueError("Error! Please call the upload_evidence_with_http_info method with `_preload_content` instead and obtain raw data from ApiResponse.raw_data")
-        return self.upload_evidence_with_http_info(files, **kwargs)  # noqa: E501
+        return self.upload_evidence_with_http_info(body_upload_evidence_api_evidence_upload_post, **kwargs)  # noqa: E501
 
     @validate_arguments
-    def upload_evidence_with_http_info(self, files : Optional[Any], **kwargs) -> ApiResponse:  # noqa: E501
+    def upload_evidence_with_http_info(self, body_upload_evidence_api_evidence_upload_post : BodyUploadEvidenceApiEvidenceUploadPost, **kwargs) -> ApiResponse:  # noqa: E501
         """Upload Evidence  # noqa: E501
 
         Upload evidence file to server for processing.  Args:   file (List[UploadFile]): Evidence file to be uploaded to folder for later       processing. The maximum size of the file is 10 GB.   Raises:   TypeError: If pre-conditions are not met.  Returns:   List of uploaded evidences or warning messages if any.  # noqa: E501
         This method makes a synchronous HTTP request by default. To make an
         asynchronous HTTP request, please pass async_req=True
 
-        >>> thread = api.upload_evidence_with_http_info(files, async_req=True)
+        >>> thread = api.upload_evidence_with_http_info(body_upload_evidence_api_evidence_upload_post, async_req=True)
         >>> result = thread.get()
 
-        :param files: (required)
-        :type files: object
+        :param body_upload_evidence_api_evidence_upload_post: (required)
+        :type body_upload_evidence_api_evidence_upload_post: BodyUploadEvidenceApiEvidenceUploadPost
         :param async_req: Whether to execute the request asynchronously.
         :type async_req: bool, optional
         :param _preload_content: if False, the ApiResponse.data will
@@ -825,7 +826,7 @@ class TurbiniaEvidenceApi(object):
         _params = locals()
 
         _all_params = [
-            'files'
+            'body_upload_evidence_api_evidence_upload_post'
         ]
         _all_params.extend(
             [
@@ -861,11 +862,11 @@ class TurbiniaEvidenceApi(object):
         # process the form parameters
         _form_params = []
         _files = {}
-        if _params['files']:
-            _form_params.append(('files', _params['files']))
-
         # process the body parameter
         _body_params = None
+        if _params['body_upload_evidence_api_evidence_upload_post'] is not None:
+            _body_params = _params['body_upload_evidence_api_evidence_upload_post']
+
         # set the HTTP header `Accept`
         _header_params['Accept'] = self.api_client.select_header_accept(
             ['application/json'])  # noqa: E501
@@ -873,7 +874,7 @@ class TurbiniaEvidenceApi(object):
         # set the HTTP header `Content-Type`
         _content_types_list = _params.get('_content_type',
             self.api_client.select_header_content_type(
-                ['multipart/form-data']))
+                ['application/octet-stream']))
         if _content_types_list:
                 _header_params['Content-Type'] = _content_types_list
 
