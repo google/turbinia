@@ -111,8 +111,7 @@ def map_evidence_attributes():
   return object_attribute_mapping
 
 
-def evidence_decode(
-    evidence_dict, strict=False):  #todo(igormr): Check if this works
+def evidence_decode(evidence_dict, strict=False):
   """Decode JSON into appropriate Evidence object.
 
   Args:
