@@ -318,22 +318,27 @@ class Evidence:
   def __repr__(self):
     return self.__str__()
 
-  def __setattr__(self, attribute: str, value: Any):
+  def __setattr__(self, attribute_name: str, attribute_value: Any):
     """Sets the value of the attribute of the object and stores it in redis.
 
     Args:
-      name (str): name of the attribute to be set.
-      value (Any): value to be set.
+      attribute_name (str): name of the attribute to be set.
+      attribute_value (Any): value to be set.
     """
-    if attribute == 'name':
-      attribute = '_name'
-    self.__dict__[attribute] = value
-    if not isinstance(value, list):
-      self.update_redis(attribute)
-    if attribute != 'last_updated':
+    if attribute_name == 'name':
+      attribute_name = '_name'
+    self.__dict__[attribute_name] = attribute_value
+    if not isinstance(attribute_value, list):
+      self.update_redis(attribute_name)
+    if attribute_name != 'last_updated':
       self.last_updated = datetime.now().strftime(DATETIME_FORMAT)
 
-  def update_redis(self, name: str):
+  def update_redis(self, attribute_name: str):
+    """Stores the current value of the object attribute in redis.
+
+    Args:
+      attribute_name (str): name of the attribute to be set.
+    """
     try:
       self.validate_attributes()
     except TurbiniaException as exception:
@@ -342,9 +347,9 @@ class Evidence:
           f'{getattr(self, "id", "(ID not set)")}: {exception}')
     else:
       if redis_manager.evidence_exists(self.id):
-        if serialized_attribute := self.serialize_attribute(name):
+        if serialized_attribute := self.serialize_attribute(attribute_name):
           redis_manager.update_evidence_attribute(
-              self.id, name, serialized_attribute)
+              self.id, attribute_name, serialized_attribute)
 
   @property
   def name(self):
