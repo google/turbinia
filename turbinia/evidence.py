@@ -139,9 +139,6 @@ def evidence_decode(evidence_dict, strict=False):
   evidence = None
   try:
     evidence_class = getattr(sys.modules[__name__], type_)
-    # There may be a 'name' in evidence_dict, making _name just a property name
-    if 'name' in evidence_dict:
-      name_ = evidence_dict.pop('name')
     evidence = evidence_class(name=name_, type=type_, **evidence_dict)
     evidence_object = evidence_class(source_path='dummy_object')
     if strict and evidence_object:
@@ -328,6 +325,8 @@ class Evidence:
       name (str): name of the attribute to be set.
       value (Any): value to be set.
     """
+    if attribute == 'name':
+      attribute = '_name'
     self.__dict__[attribute] = value
     if not isinstance(value, list):
       self.update_redis(attribute)
@@ -354,10 +353,6 @@ class Evidence:
       return self._name
     else:
       return self.source_path if self.source_path else self.type
-
-  @name.setter
-  def name(self, value):
-    self._name = value
 
   @name.deleter
   def name(self):
