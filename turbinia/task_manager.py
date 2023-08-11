@@ -261,7 +261,7 @@ class BaseTaskManager:
       log.error(f'Unsuccessful in writing new evidence in redis: {exception}')
     else:
       if isinstance(evidence_, evidence.Evidence):
-        self.state_manager.write_new_evidence(evidence_.serialize(True))
+        self.state_manager.write_evidence(evidence_.serialize(True))
 
     if not job_count:
       log.warning(

@@ -38,7 +38,7 @@ class TestPSQStateManager(unittest.TestCase):
     config.STATE_MANAGER = 'Datastore'
     return state_manager.get_state_manager()
 
-  @mock.patch('turbinia.state_manager.redis.Client')
+  @mock.patch('turbinia.state_manager.datastore.Client')
   def setUp(self, _):
     self.remove_files = []
     self.remove_dirs = []
