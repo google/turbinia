@@ -280,7 +280,6 @@ class Evidence:
     self.parent_evidence = kwargs.get('parent_evidence', None)
     # List of jobs that have processed this evidence
     self.processed_by = kwargs.get('processed_by', [])
-    self.redis_function = None
     self.request_id = kwargs.get('request_id', None)
     self.resource_id = kwargs.get('resource_id', None)
     self.resource_tracked = kwargs.get('resource_tracked', False)
@@ -310,7 +309,7 @@ class Evidence:
 
     # TODO: Validating for required attributes breaks some units tests.
     # Github issue: https://github.com/google/turbinia/issues/1136
-    #self.validate()
+    # self.validate()
 
   def __str__(self):
     return f'{self.type:s}:{self.name:s}:{self.source_path!s}'

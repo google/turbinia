@@ -126,10 +126,7 @@ class TestRedisEvidenceStateManager(unittest.TestCase):
 
   @mock.patch('turbinia.state_manager.datastore.Client')
   def setUp(self, _):
-    self.remove_files = []
-    self.remove_dirs = []
     self.state_manager = None
-
     config.LoadConfig()
     self.state_manager_save = config.STATE_MANAGER
 
@@ -139,7 +136,7 @@ class TestRedisEvidenceStateManager(unittest.TestCase):
       test_data = test_data.read()
       self.test_data = json.loads(test_data)
 
-    self.values_sort_summary = {
+    self.sorted_values_summary = {
         '5581344e306b42ccb965a19028d4fc58': [
             self.test_data['TurbiniaEvidence:b510ab6bf11a410da1fd9d9b128e7d74']
         ],
@@ -148,8 +145,7 @@ class TestRedisEvidenceStateManager(unittest.TestCase):
             self.test_data['TurbiniaEvidence:0114968b6293410e818eb1ec72db56f8']
         ]
     }
-
-    self.keys_sort_summary = {
+    self.sorted_keys_summary = {
         '5581344e306b42ccb965a19028d4fc58': [
             'TurbiniaEvidence:b510ab6bf11a410da1fd9d9b128e7d74'
         ],
@@ -158,8 +154,7 @@ class TestRedisEvidenceStateManager(unittest.TestCase):
             'TurbiniaEvidence:0114968b6293410e818eb1ec72db56f8'
         ]
     }
-    self.count_sort_summary = {True: 2, False: 1}
-
+    self.sorted_count_summary = {True: 2, False: 1}
     self.fake_redis_dict = {}
 
   def hkeys_side_effect(self, key):
@@ -202,7 +197,7 @@ class TestRedisEvidenceStateManager(unittest.TestCase):
         self.test_data[evidence_key].values(), result.values()):
       self.assertEqual(expected_value, result_value)
     self.assertIn('tasks', result)
-    self.assertIn(self.expected_data[evidence_key]['tasks'][0], result['tasks'])
+    self.assertIn(self.test_data[evidence_key]['tasks'][0], result['tasks'])
 
   @mock.patch('redis.StrictRedis')
   def testStateManagerWriteEvidence(self, mock_redis):
@@ -239,7 +234,7 @@ class TestRedisEvidenceStateManager(unittest.TestCase):
 
   @mock.patch('redis.StrictRedis')
   def testStateManagerUpdateEvidenceAttribute(self, mock_redis):
-    """Test State Manager update_evidence()."""
+    """Test State Manager update_evidence_attribute()."""
 
     evidence_key = 'TurbiniaEvidence:b510ab6bf11a410da1fd9d9b128e7d74'
 
@@ -283,7 +278,7 @@ class TestRedisEvidenceStateManager(unittest.TestCase):
   @mock.patch('turbinia.state_manager.RedisStateManager.get_evidence')
   def testStateManagerEvidenceSummaryValues(
       self, mock_get_evidence, mock_redis):
-    """Test State Manager get_evidence()."""
+    """Test State Manager get_evidence_summary() outputting values."""
 
     self.state_manager = self._get_state_manager()
 
@@ -304,7 +299,7 @@ class TestRedisEvidenceStateManager(unittest.TestCase):
   @mock.patch('redis.StrictRedis')
   @mock.patch('turbinia.state_manager.RedisStateManager.get_evidence')
   def testStateManagerEvidenceSummaryKeys(self, mock_get_evidence, mock_redis):
-    """Test State Manager get_evidence()."""
+    """Test State Manager get_evidence_summary() outputting keys."""
 
     self.state_manager = self._get_state_manager()
 
@@ -321,7 +316,7 @@ class TestRedisEvidenceStateManager(unittest.TestCase):
 
   @mock.patch('redis.StrictRedis')
   def testStateManagerEvidenceSummaryCount(self, mock_redis):
-    """Test State Manager get_evidence()."""
+    """Test State Manager get_evidence_summary() outputting count."""
 
     self.state_manager = self._get_state_manager()
 
@@ -338,7 +333,7 @@ class TestRedisEvidenceStateManager(unittest.TestCase):
   @mock.patch('turbinia.state_manager.RedisStateManager.get_evidence')
   def testStateManagerEvidenceSummaryValuesSort(
       self, mock_get_evidence, mock_redis):
-    """Test State Manager get_evidence()."""
+    """Test State Manager sorted get_evidence_summary() outputting values."""
 
     self.state_manager = self._get_state_manager()
 
@@ -351,7 +346,7 @@ class TestRedisEvidenceStateManager(unittest.TestCase):
         sort='request_id', output='values')
 
     # Check if the returned summary contains all of our test data
-    for key, value in self.values_sort_summary.items():
+    for key, value in self.sorted_values_summary.items():
       for expected_value, summary_value in zip(value, result[key]):
         for expected_attribute, summary_attribute in zip(
             expected_value.values(), summary_value.values()):
@@ -361,7 +356,7 @@ class TestRedisEvidenceStateManager(unittest.TestCase):
   @mock.patch('turbinia.state_manager.RedisStateManager.get_evidence')
   def testStateManagerEvidenceSummaryKeysSort(
       self, mock_get_evidence, mock_redis):
-    """Test State Manager get_evidence()."""
+    """Test State Manager sorted get_evidence_summary() outputting keys."""
 
     self.state_manager = self._get_state_manager()
 
@@ -374,7 +369,7 @@ class TestRedisEvidenceStateManager(unittest.TestCase):
         sort='request_id', output='keys')
 
     # Check if the returned summary contains all of our test data
-    for key, value in self.keys_sort_summary.items():
+    for key, value in self.sorted_keys_summary.items():
       for expected_key, summary_key in zip(value, result[key]):
         self.assertEqual(expected_key, summary_key)
 
@@ -382,7 +377,7 @@ class TestRedisEvidenceStateManager(unittest.TestCase):
   @mock.patch('turbinia.state_manager.RedisStateManager.get_evidence')
   def testStateManagerEvidenceSummaryCountSort(
       self, mock_get_evidence, mock_redis):
-    """Test State Manager get_evidence()."""
+    """Test State Manager sorted get_evidence_summary() outputting count."""
 
     self.state_manager = self._get_state_manager()
 
@@ -395,13 +390,13 @@ class TestRedisEvidenceStateManager(unittest.TestCase):
         sort='copyable', output='count')
 
     # Check if the returned summary contains all of our test data
-    for key, value in self.count_sort_summary.items():
+    for key, value in self.sorted_count_summary.items():
       self.assertEqual(result[key], value)
 
   @mock.patch('redis.StrictRedis')
   @mock.patch('turbinia.state_manager.RedisStateManager.get_evidence')
   def testStateManagerEvidenceQueryValues(self, mock_get_evidence, mock_redis):
-    """Test State Manager get_evidence()."""
+    """Test State Manager query_evidence() outputting values."""
 
     self.state_manager = self._get_state_manager()
 
@@ -416,7 +411,7 @@ class TestRedisEvidenceStateManager(unittest.TestCase):
 
     # Check if the returned summary contains all of our test data
     for expected_value, query_value in zip(
-        self.values_sort_summary['6d6f85f44487441c9d4da1bda56ae90a'], result):
+        self.sorted_values_summary['6d6f85f44487441c9d4da1bda56ae90a'], result):
       for expected_attribute, query_attribute in zip(expected_value.values(),
                                                      query_value.values()):
         self.assertEqual(expected_attribute, query_attribute)
@@ -424,7 +419,7 @@ class TestRedisEvidenceStateManager(unittest.TestCase):
   @mock.patch('redis.StrictRedis')
   @mock.patch('turbinia.state_manager.RedisStateManager.get_evidence')
   def testStateManagerEvidenceQueryKeys(self, mock_get_evidence, mock_redis):
-    """Test State Manager get_evidence()."""
+    """Test State Manager query_evidence() outputting keys."""
 
     self.state_manager = self._get_state_manager()
 
@@ -439,13 +434,13 @@ class TestRedisEvidenceStateManager(unittest.TestCase):
 
     # Check if the returned summary contains all of our test data
     for expected_key, query_key in zip(
-        self.keys_sort_summary['6d6f85f44487441c9d4da1bda56ae90a'], result):
+        self.sorted_keys_summary['6d6f85f44487441c9d4da1bda56ae90a'], result):
       self.assertEqual(expected_key, query_key)
 
   @mock.patch('redis.StrictRedis')
   @mock.patch('turbinia.state_manager.RedisStateManager.get_evidence')
   def testStateManagerEvidenceQueryCount(self, mock_get_evidence, mock_redis):
-    """Test State Manager get_evidence()."""
+    """Test State Manager query_evidence() outputting count."""
 
     self.state_manager = self._get_state_manager()
 
@@ -458,4 +453,4 @@ class TestRedisEvidenceStateManager(unittest.TestCase):
     result = self.state_manager.query_evidence('copyable', True, output='count')
 
     # Check if the returned summary contains all of our test data
-    self.assertEqual(self.count_sort_summary[True], result)
+    self.assertEqual(self.sorted_count_summary[True], result)

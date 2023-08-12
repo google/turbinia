@@ -91,7 +91,6 @@
     "context_dependent": false,
     "state": {},
     "id": "e2d9bff0c78b471e820db55080012f44",
-    "redis_function": null,
     "hash": null,
     "description": null
   },
@@ -142,7 +141,6 @@
       "4": false
     },
     "id": "0114968b6293410e818eb1ec72db56f8",
-    "redis_function": null,
     "hash": null,
     "text_data": "",
     "description": null
