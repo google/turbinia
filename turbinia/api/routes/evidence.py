@@ -19,10 +19,10 @@ import logging
 import os
 
 from datetime import datetime
-from fastapi import HTTPException, APIRouter, UploadFile, File, Query
+from fastapi import HTTPException, APIRouter, UploadFile, File, Query, Form
 from fastapi.requests import Request
 from fastapi.responses import JSONResponse
-from typing import List
+from typing import List, Annotated
 
 from turbinia.api.schemas import request_options
 from turbinia import evidence
@@ -135,24 +135,25 @@ async def get_evidence_summary(
 @router.get('/query')
 async def query_evidence(
     request: Request, attribute_name: str = Query(
-        'request_id', enum=EVIDENCE_QUERY_ATTRIBUTES), value: str = Query(),
-    output: str = Query('keys', enum=('keys', 'values', 'count'))):
+        'request_id', enum=EVIDENCE_QUERY_ATTRIBUTES),
+    attribute_value: str = Query(), output: str = Query(
+        'keys', enum=('keys', 'values', 'count'))):
   if attribute_name and attribute_name not in EVIDENCE_QUERY_ATTRIBUTES:
     raise HTTPException(
         status_code=400, detail=(
             f'Cannot query by {attribute_name}. '
             f'Queryable attributes: {EVIDENCE_QUERY_ATTRIBUTES}'))
   evidences_found = None
-  if value == 'hash':
+  if attribute_value == 'hash':
     evidences_found = redis_manager.get_evidence_key_by_hash(attribute_name)
   else:
     evidences_found = redis_manager.query_evidence(
-        attribute_name, value, output)
+        attribute_name, attribute_value, output)
   if evidences_found:
     return JSONResponse(content=evidences_found, status_code=200)
   raise HTTPException(
       status_code=404, detail=(
-          f'No evidence found with value {value} in attribute '
+          f'No evidence found with value {attribute_value} in attribute '
           f'{attribute_name}.'))
 
 
@@ -177,9 +178,6 @@ async def get_evidence_by_id(request: Request, evidence_id):
 
 
 #todo(igormr) Check if turbinia client works with new endpoints, especially upload
-
-from typing import Annotated
-from fastapi import Form
 
 
 @router.post('/upload')

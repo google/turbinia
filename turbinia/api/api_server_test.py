@@ -32,6 +32,7 @@ from turbinia.api.routes.ui import ui_router
 
 from turbinia import config as turbinia_config
 from turbinia import state_manager
+from turbinia import state_manager_test
 from turbinia.jobs import manager as jobs_manager
 from turbinia.workers import TurbiniaTask
 
@@ -75,6 +76,65 @@ class testTurbiniaAPIServer(unittest.TestCase):
       'task_count': 1,
       'tasks': []
   }
+
+  _EVIDENCE_TEST_DATA = {
+      'request_id': '5581344e306b42ccb965a19028d4fc58',
+      'tasks': [
+          'b73d484634164e0eb1870d101ca9ce2f',
+          'dd810119ac2443e18b69ea56c10c0a9b', 'ac4dc14080b144478437818a694e2f4d'
+      ],
+      'copyable': False,
+      'cloud_only': False,
+      'local_path': '/workspaces/turbinia/test_data/artifact_disk.dd',
+      'source_path': '/workspaces/turbinia/test_data/artifact_disk.dd',
+      'resource_tracked': False,
+      'processed_by': [],
+      'resource_id': None,
+      'credentials': [],
+      'config': {
+          'globals': {
+              'debug_tasks': False,
+              'jobs_allowlist': [],
+              'jobs_denylist': [],
+              'yara_rules': '',
+              'filter_patterns': [],
+              'sketch_id': None,
+              'group_name': '',
+              'reason': '',
+              'all_args': 'turbinia/turbiniactl.py rawdisk -l disk.dd',
+              'group_id': '55ce6e98dc154e73990b24f0c79ab07e',
+              'requester': 'root'
+          }
+      },
+      'tags': {},
+      'creation_time': '2023-08-04T19:16:28.182774Z',
+      'last_updated': '2023-08-04T19:17:58.769212Z',
+      'parent_evidence': None,
+      'size': 20971520,
+      'mount_path': None,
+      'device_path': None,
+      'has_child_evidence': False,
+      'save_metadata': False,
+      'type': 'RawDisk',
+      '_name': '/workspaces/turbinia/test_data/artifact_disk.dd',
+      'context_dependent': False,
+      'state': {},
+      'id': 'b510ab6bf11a410da1fd9d9b128e7d74',
+      'hash': '4cf679344af02c2b89e4a902f939f4608bcac0fbf81511da13d7d9b9',
+      'description': None
+  }
+
+  _SORTED_KEYS_SUMMARY = {
+      '5581344e306b42ccb965a19028d4fc58': [
+          'TurbiniaEvidence:b510ab6bf11a410da1fd9d9b128e7d74'
+      ],
+      '6d6f85f44487441c9d4da1bda56ae90a': [
+          'TurbiniaEvidence:e2d9bff0c78b471e820db55080012f44',
+          'TurbiniaEvidence:0114968b6293410e818eb1ec72db56f8'
+      ]
+  }
+
+  _COUNT_SUMMARY = 3
 
   def _get_state_manager(self):
     """Gets a Redis State Manager object for test."""
@@ -225,3 +285,89 @@ class testTurbiniaAPIServer(unittest.TestCase):
     result = self.client.get('/api/jobs')
     result = json.loads(result.content)
     self.assertEqual(expected_result, result)
+
+  @mock.patch('turbinia.api.routes.evidence.redis_manager.get_evidence')
+  def testGetEvidence(self, testGetEvidence):
+    """Test getting empty task result files."""
+    testGetEvidence.return_value = self._EVIDENCE_TEST_DATA
+    response = self.client.get(
+        f'/api/evidence/{self._EVIDENCE_TEST_DATA["id"]}')
+    result = json.loads(response.content)
+    self.assertEqual(self._EVIDENCE_TEST_DATA, result)
+
+  @mock.patch('turbinia.api.routes.evidence.redis_manager.get_evidence')
+  def testGetEvidenceNotFound(self, testGetEvidence):
+    """Test getting empty task result files."""
+    testGetEvidence.return_value = {}
+    evidence_id = '4774873a11f049233e863a009b997'
+    response = self.client.get(f'/api/evidence/{evidence_id}')
+    self.assertEqual(response.status_code, 404)
+    self.assertEqual(
+        response.json(), {
+            'detail':
+                f'UUID {evidence_id} not found or it had no associated '
+                f'evidences.'
+        })
+
+  @mock.patch('turbinia.api.routes.evidence.redis_manager.get_evidence_summary')
+  def testEvidenceSummary(self, testGetEvidenceSummary):
+    """Test getting empty task result files."""
+    testGetEvidenceSummary.return_value = self._SORTED_KEYS_SUMMARY
+    response = self.client.get(
+        '/api/evidence/summary?output=keys, sort=request_id')
+    sorted_keys_result = json.loads(response.content)
+    testGetEvidenceSummary.return_value = self._COUNT_SUMMARY
+    response = self.client.get('/api/evidence/summary?output=count')
+    count_result = json.loads(response.content)
+    self.assertEqual(self._SORTED_KEYS_SUMMARY, sorted_keys_result)
+    self.assertEqual(self._COUNT_SUMMARY, count_result)
+
+  def testEvidenceSummaryWrongAttribute(self):
+    attribute = 'test_attribute'
+    response = self.client.get(f'api/evidence/summary?sort={attribute}')
+    self.assertEqual(response.status_code, 400)
+    self.assertEqual(
+        response.json()['detail'].split('.')[0],
+        f'Cannot sort by attribute {attribute}')
+
+  @mock.patch('turbinia.api.routes.evidence.redis_manager.get_evidence_summary')
+  def testEvidenceSummaryNotFound(self, testGetEvidenceSummary):
+    """Test getting empty task result files."""
+    testGetEvidenceSummary.return_value = {}
+    response = self.client.get(f'/api/evidence/summary')
+    self.assertEqual(response.status_code, 404)
+    self.assertEqual(response.json(), {'detail': f'No evidences found.'})
+
+  @mock.patch('turbinia.api.routes.evidence.redis_manager.query_evidence')
+  def testEvidenceQuery(self, testQueryEvidence):
+    request_id = '6d6f85f44487441c9d4da1bda56ae90a'
+    testQueryEvidence.return_value = self._SORTED_KEYS_SUMMARY[request_id]
+    response = self.client.get(
+        f'/api/evidence/query?attribute_name=request_id'
+        f'&attribute_value={request_id}&output=keys')
+    result = json.loads(response.content)
+    self.assertEqual(self._SORTED_KEYS_SUMMARY[request_id], result)
+
+  def testEvidenceQueryWrongAttribute(self):
+    attribute = 'test_attribute'
+    response = self.client.get(
+        f'api/evidence/query?attribute_name={attribute}&attribute_value="test"')
+    self.assertEqual(response.status_code, 400)
+    self.assertEqual(
+        response.json()['detail'].split('.')[0], f'Cannot query by {attribute}')
+
+  @mock.patch('turbinia.api.routes.evidence.redis_manager.query_evidence')
+  def testEvidenceQueryNotFound(self, testQueryEvidence):
+    """Test getting empty task result files."""
+    request_id = '6d6f85f44487441c9d4da1bda56ae90a'
+    testQueryEvidence.return_value = {}
+    response = self.client.get(
+        f'/api/evidence/query?attribute_name=request_id'
+        f'&attribute_value={request_id}')
+    self.assertEqual(response.status_code, 404)
+    self.assertEqual(
+        response.json(), {
+            'detail': (
+                f'No evidence found with value {request_id} in attribute '
+                f'request_id.')
+        })

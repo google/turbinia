@@ -350,24 +350,23 @@ class RedisStateManager(BaseStateManager):
         log.error(
             f'Unsuccessful in writing {attribute_key} of {key} into Redis')
     if evidence_hash := json.loads(evidence_dict.get('hash')):
-      key = self.client.hset('TurbiniaEvidenceHashes', evidence_hash, key)
+      self.client.hset('TurbiniaEvidenceHashes', evidence_hash, key)
     return key
 
   def update_evidence_attribute(
-      self, evidence_id: str, name: str, json_value: str):
+      self, evidence_id: str, attribute_name: str, json_value: str):
     """Updates one attribute of the evidence in Redis.
 
     Args:
       evidence_id (str): The ID of the stored evidence.
-      name (str): name of the attribute to be updated.
+      attribute_name (str): name of the attribute to be updated.
       json_value (str): json value to be updated.
     """
     key = ':'.join(('TurbiniaEvidence', evidence_id))
-    log.info(f'Updating attribute {name} for evidence {key} in Redis')
-    if self.client.hset(key, name, json_value):
-      if name == 'hash' and json_value:
-        key = self.client.hset(
-            'TurbiniaEvidenceHashes', json.loads(json_value), key)
+    log.info(f'Updating attribute {attribute_name} for evidence {key} in Redis')
+    if self.client.hset(key, attribute_name, json_value):
+      if attribute_name == 'hash' and json_value:
+        self.client.hset('TurbiniaEvidenceHashes', json.loads(json_value), key)
 
   def get_evidence(self, evidence_id: str):
     """Gets one evidence from Redis given its ID.
