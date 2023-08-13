@@ -21,7 +21,7 @@ from pydantic import BaseModel, validator
 
 from turbinia import evidence
 
-#TODO(IGORMR) add nested classes for each type
+#todo(igormr): remove this
 
 
 class Evidence(BaseModel):

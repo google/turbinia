@@ -371,3 +371,7 @@ class testTurbiniaAPIServer(unittest.TestCase):
                 f'No evidence found with value {request_id} in attribute '
                 f'request_id.')
         })
+
+  #todo(igormr): Add upload_evidence test
+  def testEvidenceUpload(self):
+    pass

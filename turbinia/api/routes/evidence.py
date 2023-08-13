@@ -67,7 +67,6 @@ async def upload_file(
       if calculate_hash:
         sha_hash.update(chunk)
       size += turbinia_config.CHUNK_SIZE
-      #todo(igormr): remove join for fstrings
       if size >= turbinia_config.MAX_UPLOAD_SIZE:
         error_message = (
             f'Unable to upload file {file.filename} greater',
@@ -177,7 +176,7 @@ async def get_evidence_by_id(request: Request, evidence_id):
       detail=f'UUID {evidence_id} not found or it had no associated evidences.')
 
 
-#todo(igormr) Check if turbinia client works with new endpoints, especially upload
+#todo(igormr): Check if turbinia client works with new endpoints, especially upload
 
 
 @router.post('/upload')
