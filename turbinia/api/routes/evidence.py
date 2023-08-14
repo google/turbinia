@@ -183,7 +183,7 @@ async def get_evidence_by_id(request: Request, evidence_id):
 async def upload_evidence(
     #ticket_id: Annotated[str, Form()], calculate_hash: Annotated[bool,
     #                                                             Form()],
-    #files: Annotated[[UploadFile], File()]):
+    # files: UploadFile(bytes)):
     files: UploadFile = File(...)):
   """Upload evidence file to server for processing.
 

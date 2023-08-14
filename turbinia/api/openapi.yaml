@@ -183,10 +183,10 @@ paths:
             title: Attribute Name
             type: string
         - in: query
-          name: value
+          name: attribute_value
           required: true
           schema:
-            title: Value
+            title: Attribute Value
             type: string
         - in: query
           name: output

@@ -422,19 +422,20 @@ def upload_evidence(
       log.error(f'Unable to read file in {file_path}')
       continue
   try:
-    api_response = api_instance.upload_evidence(files)
+    #api_response = api_instance.upload_evidence(files)
     files = {
-        'files': open(file_path, 'rb').read(),
+        'files': ('foo.gif', open(file_path, 'rb').read(), 'text/png'),
     }
+
     import json
-    response = requests.post(
+    api_response = requests.post(
         'http://127.0.0.1:8000/api/evidence/upload', files=files, timeout=10)
     if json_dump:
       formatter.echo_json(api_response)
     else:
       report = '\n'.join(
           formatter.EvidenceMarkdownReport(api_response).list_to_markdown(
-              json.loads(response.content)))
+              json.loads(api_response.content)))
       click.echo(report)
   except exceptions.ApiException as exception:
     log.error(
