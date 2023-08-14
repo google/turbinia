@@ -147,6 +147,14 @@ class TurbiniaStats:
     return '{0:s}, {1:d}, {2!s}, {3!s}, {4!s}'.format(
         self.description, self.count, self.min, self.mean, self.max)
 
+  def to_dict(self):
+    return {
+        'count': len(self.tasks),
+        'min': str(self.min),
+        'mean': str(self.mean),
+        'max': str(self.max)
+    }
+
 
 class BaseTurbiniaClient:
   """Client class for Turbinia.

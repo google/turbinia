@@ -21,12 +21,12 @@ from collections import OrderedDict
 from datetime import datetime
 from datetime import timedelta
 
-from fastapi import HTTPException, APIRouter, Query
+from fastapi import HTTPException, APIRouter
 from fastapi.responses import JSONResponse
 from fastapi.requests import Request
 from fastapi.encoders import jsonable_encoder
 
-from operator import itemgetter
+from operator import itemgetter, attrgetter
 from pydantic import ValidationError
 from turbinia import state_manager
 from turbinia import config as turbinia_config
@@ -141,10 +141,59 @@ def worker_status(instance, project, region, days=0, all_fields=False):
   return report
 
 
+def format_task_statistics(
+    instance, project, region, days=0, task_id=None, request_id=None,
+    user=None):
+  """Formats statistics for Turbinia execution data.
+
+    Args:
+      instance (string): The Turbinia instance name (by default the same as the
+          INSTANCE_ID in the config).
+      project (string): The name of the project.
+      region (string): The name of the zone to execute in.
+      days (int): The number of days we want history for.
+      task_id (string): The Id of the task.
+      request_id (string): The Id of the request we want tasks for.
+      user (string): The user of the request we want tasks for.
+      csv (bool): Whether we want the output in CSV format.
+
+    Returns:
+      String of task statistics report
+    """
+  task_stats = client.get_task_statistics(
+      instance, project, region, days, task_id, request_id, user)
+  if not task_stats:
+    return 'No tasks found.'
+
+  stats_order = [
+      'all_tasks', 'successful_tasks', 'failed_tasks', 'requests',
+      'tasks_per_type', 'tasks_per_worker', 'tasks_per_user'
+  ]
+
+  report = {}
+
+  for stat_name in stats_order:
+    report[stat_name] = {}
+    stat_obj = task_stats[stat_name]
+    if isinstance(stat_obj, dict):
+      # Sort by description so that we get consistent report output
+      inner_stat_objs = sorted(stat_obj.values(), key=attrgetter('description'))
+      for inner_stat_obj in inner_stat_objs:
+        if stat_name == 'tasks_per_worker':
+          description = inner_stat_obj.description.replace('Worker ', '', 1)
+        elif stat_name == 'tasks_per_user':
+          description = inner_stat_obj.description.replace('User ', '', 1)
+        else:
+          description = inner_stat_obj.description.replace('Task type ', '', 1)
+        report[stat_name][description] = inner_stat_obj.to_dict()
+      continue
+    report[stat_name] = stat_obj.to_dict()
+
+  return report
+
+
 @router.get('/workers')
-async def get_workers_status(
-    request: Request, days: int = Query(...), all_fields=Query(
-        False, enum=(False, True))):
+async def get_workers_status(request: Request, days: int = 7):
   """Retrieves an evidence in redis by using its UUID.
   Args:
     evidence_id (str): The UUID of the evidence.
@@ -159,6 +208,28 @@ async def get_workers_status(
       region=turbinia_config.TURBINIA_REGION, days=days)
   if workers_dict:
     return JSONResponse(content=workers_dict, status_code=200)
+  raise HTTPException(status_code=404, detail='No worker status found.')
+
+
+@router.get('/statistics')
+async def get_task_statistics(
+    request: Request, days: int = None, task_id: str = None,
+    request_id: str = None, user: str = None):
+  """Retrieves an evidence in redis by using its UUID.
+  Args:
+    evidence_id (str): The UUID of the evidence.
+  
+  Raises:
+    HTTPException: if the evidence is not found.
+  Returns:
+  """
+  statistics = format_task_statistics(
+      instance=turbinia_config.INSTANCE_ID,
+      project=turbinia_config.TURBINIA_PROJECT,
+      region=turbinia_config.TURBINIA_REGION, days=days, task_id=task_id,
+      request_id=request_id, user=user)
+  if statistics:
+    return JSONResponse(content=statistics, status_code=200)
   raise HTTPException(status_code=404, detail='No worker status found.')
 
 

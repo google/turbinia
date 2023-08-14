@@ -19,7 +19,7 @@ import warnings
 from pydantic import validate_arguments, ValidationError
 from typing_extensions import Annotated
 
-from pydantic import StrictBool, StrictInt, StrictStr
+from pydantic import StrictInt, StrictStr
 
 from typing import Any, Optional
 
@@ -43,6 +43,170 @@ class TurbiniaTasksApi(object):
         if api_client is None:
             api_client = ApiClient.get_default()
         self.api_client = api_client
+
+    @validate_arguments
+    def get_task_statistics(self, days : Optional[StrictInt] = None, task_id : Optional[StrictStr] = None, request_id : Optional[StrictStr] = None, user : Optional[StrictStr] = None, **kwargs) -> object:  # noqa: E501
+        """Get Task Statistics  # noqa: E501
+
+        Retrieves an evidence in redis by using its UUID. Args:   evidence_id (str): The UUID of the evidence.  Raises:   HTTPException: if the evidence is not found. Returns:  # noqa: E501
+        This method makes a synchronous HTTP request by default. To make an
+        asynchronous HTTP request, please pass async_req=True
+
+        >>> thread = api.get_task_statistics(days, task_id, request_id, user, async_req=True)
+        >>> result = thread.get()
+
+        :param days:
+        :type days: int
+        :param task_id:
+        :type task_id: str
+        :param request_id:
+        :type request_id: str
+        :param user:
+        :type user: str
+        :param async_req: Whether to execute the request asynchronously.
+        :type async_req: bool, optional
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :return: Returns the result object.
+                 If the method is called asynchronously,
+                 returns the request thread.
+        :rtype: object
+        """
+        kwargs['_return_http_data_only'] = True
+        if '_preload_content' in kwargs:
+            raise ValueError("Error! Please call the get_task_statistics_with_http_info method with `_preload_content` instead and obtain raw data from ApiResponse.raw_data")
+        return self.get_task_statistics_with_http_info(days, task_id, request_id, user, **kwargs)  # noqa: E501
+
+    @validate_arguments
+    def get_task_statistics_with_http_info(self, days : Optional[StrictInt] = None, task_id : Optional[StrictStr] = None, request_id : Optional[StrictStr] = None, user : Optional[StrictStr] = None, **kwargs) -> ApiResponse:  # noqa: E501
+        """Get Task Statistics  # noqa: E501
+
+        Retrieves an evidence in redis by using its UUID. Args:   evidence_id (str): The UUID of the evidence.  Raises:   HTTPException: if the evidence is not found. Returns:  # noqa: E501
+        This method makes a synchronous HTTP request by default. To make an
+        asynchronous HTTP request, please pass async_req=True
+
+        >>> thread = api.get_task_statistics_with_http_info(days, task_id, request_id, user, async_req=True)
+        >>> result = thread.get()
+
+        :param days:
+        :type days: int
+        :param task_id:
+        :type task_id: str
+        :param request_id:
+        :type request_id: str
+        :param user:
+        :type user: str
+        :param async_req: Whether to execute the request asynchronously.
+        :type async_req: bool, optional
+        :param _preload_content: if False, the ApiResponse.data will
+                                 be set to none and raw_data will store the 
+                                 HTTP response body without reading/decoding.
+                                 Default is True.
+        :type _preload_content: bool, optional
+        :param _return_http_data_only: response data instead of ApiResponse
+                                       object with status code, headers, etc
+        :type _return_http_data_only: bool, optional
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the authentication
+                              in the spec for a single request.
+        :type _request_auth: dict, optional
+        :type _content_type: string, optional: force content-type for the request
+        :return: Returns the result object.
+                 If the method is called asynchronously,
+                 returns the request thread.
+        :rtype: tuple(object, status_code(int), headers(HTTPHeaderDict))
+        """
+
+        _params = locals()
+
+        _all_params = [
+            'days',
+            'task_id',
+            'request_id',
+            'user'
+        ]
+        _all_params.extend(
+            [
+                'async_req',
+                '_return_http_data_only',
+                '_preload_content',
+                '_request_timeout',
+                '_request_auth',
+                '_content_type',
+                '_headers'
+            ]
+        )
+
+        # validate the arguments
+        for _key, _val in _params['kwargs'].items():
+            if _key not in _all_params:
+                raise ApiTypeError(
+                    "Got an unexpected keyword argument '%s'"
+                    " to method get_task_statistics" % _key
+                )
+            _params[_key] = _val
+        del _params['kwargs']
+
+        _collection_formats = {}
+
+        # process the path parameters
+        _path_params = {}
+
+        # process the query parameters
+        _query_params = []
+        if _params.get('days') is not None:  # noqa: E501
+            _query_params.append(('days', _params['days']))
+
+        if _params.get('task_id') is not None:  # noqa: E501
+            _query_params.append(('task_id', _params['task_id']))
+
+        if _params.get('request_id') is not None:  # noqa: E501
+            _query_params.append(('request_id', _params['request_id']))
+
+        if _params.get('user') is not None:  # noqa: E501
+            _query_params.append(('user', _params['user']))
+
+        # process the header parameters
+        _header_params = dict(_params.get('_headers', {}))
+        # process the form parameters
+        _form_params = []
+        _files = {}
+        # process the body parameter
+        _body_params = None
+        # set the HTTP header `Accept`
+        _header_params['Accept'] = self.api_client.select_header_accept(
+            ['application/json'])  # noqa: E501
+
+        # authentication setting
+        _auth_settings = ['oAuth2']  # noqa: E501
+
+        _response_types_map = {
+            '200': "object",
+            '422': "HTTPValidationError",
+        }
+
+        return self.api_client.call_api(
+            '/api/task/statistics', 'GET',
+            _path_params,
+            _query_params,
+            _header_params,
+            body=_body_params,
+            post_params=_form_params,
+            files=_files,
+            response_types_map=_response_types_map,
+            auth_settings=_auth_settings,
+            async_req=_params.get('async_req'),
+            _return_http_data_only=_params.get('_return_http_data_only'),  # noqa: E501
+            _preload_content=_params.get('_preload_content', True),
+            _request_timeout=_params.get('_request_timeout'),
+            collection_formats=_collection_formats,
+            _request_auth=_params.get('_request_auth'))
 
     @validate_arguments
     def get_task_status(self, task_id : StrictStr, **kwargs) -> object:  # noqa: E501
@@ -185,20 +349,18 @@ class TurbiniaTasksApi(object):
             _request_auth=_params.get('_request_auth'))
 
     @validate_arguments
-    def get_workers_status(self, days : StrictInt, all_fields : Optional[StrictBool] = None, **kwargs) -> object:  # noqa: E501
+    def get_workers_status(self, days : Optional[StrictInt] = None, **kwargs) -> object:  # noqa: E501
         """Get Workers Status  # noqa: E501
 
         Retrieves an evidence in redis by using its UUID. Args:   evidence_id (str): The UUID of the evidence.  Raises:   HTTPException: if the evidence is not found. Returns:  # noqa: E501
         This method makes a synchronous HTTP request by default. To make an
         asynchronous HTTP request, please pass async_req=True
 
-        >>> thread = api.get_workers_status(days, all_fields, async_req=True)
+        >>> thread = api.get_workers_status(days, async_req=True)
         >>> result = thread.get()
 
-        :param days: (required)
+        :param days:
         :type days: int
-        :param all_fields:
-        :type all_fields: bool
         :param async_req: Whether to execute the request asynchronously.
         :type async_req: bool, optional
         :param _request_timeout: timeout setting for this request. If one
@@ -213,23 +375,21 @@ class TurbiniaTasksApi(object):
         kwargs['_return_http_data_only'] = True
         if '_preload_content' in kwargs:
             raise ValueError("Error! Please call the get_workers_status_with_http_info method with `_preload_content` instead and obtain raw data from ApiResponse.raw_data")
-        return self.get_workers_status_with_http_info(days, all_fields, **kwargs)  # noqa: E501
+        return self.get_workers_status_with_http_info(days, **kwargs)  # noqa: E501
 
     @validate_arguments
-    def get_workers_status_with_http_info(self, days : StrictInt, all_fields : Optional[StrictBool] = None, **kwargs) -> ApiResponse:  # noqa: E501
+    def get_workers_status_with_http_info(self, days : Optional[StrictInt] = None, **kwargs) -> ApiResponse:  # noqa: E501
         """Get Workers Status  # noqa: E501
 
         Retrieves an evidence in redis by using its UUID. Args:   evidence_id (str): The UUID of the evidence.  Raises:   HTTPException: if the evidence is not found. Returns:  # noqa: E501
         This method makes a synchronous HTTP request by default. To make an
         asynchronous HTTP request, please pass async_req=True
 
-        >>> thread = api.get_workers_status_with_http_info(days, all_fields, async_req=True)
+        >>> thread = api.get_workers_status_with_http_info(days, async_req=True)
         >>> result = thread.get()
 
-        :param days: (required)
+        :param days:
         :type days: int
-        :param all_fields:
-        :type all_fields: bool
         :param async_req: Whether to execute the request asynchronously.
         :type async_req: bool, optional
         :param _preload_content: if False, the ApiResponse.data will
@@ -258,8 +418,7 @@ class TurbiniaTasksApi(object):
         _params = locals()
 
         _all_params = [
-            'days',
-            'all_fields'
+            'days'
         ]
         _all_params.extend(
             [
@@ -292,9 +451,6 @@ class TurbiniaTasksApi(object):
         _query_params = []
         if _params.get('days') is not None:  # noqa: E501
             _query_params.append(('days', _params['days']))
-
-        if _params.get('all_fields') is not None:  # noqa: E501
-            _query_params.append(('all_fields', _params['all_fields']))
 
         # process the header parameters
         _header_params = dict(_params.get('_headers', {}))

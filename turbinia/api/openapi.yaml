@@ -345,6 +345,53 @@ paths:
       summary: Get Task Output
       tags:
         - Turbinia Request Results
+  /api/task/statistics:
+    get:
+      description:
+        "Retrieves an evidence in redis by using its UUID.\nArgs:\n  evidence_id\
+        \ (str): The UUID of the evidence.\n\nRaises:\n  HTTPException: if the evidence\
+        \ is not found.\nReturns:"
+      operationId: get_task_statistics
+      parameters:
+        - in: query
+          name: days
+          required: false
+          schema:
+            title: Days
+            type: integer
+        - in: query
+          name: task_id
+          required: false
+          schema:
+            title: Task Id
+            type: string
+        - in: query
+          name: request_id
+          required: false
+          schema:
+            title: Request Id
+            type: string
+        - in: query
+          name: user
+          required: false
+          schema:
+            title: User
+            type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+          description: Validation Error
+      summary: Get Task Statistics
+      tags:
+        - Turbinia Tasks
   /api/task/workers:
     get:
       description:
@@ -355,19 +402,11 @@ paths:
       parameters:
         - in: query
           name: days
-          required: true
-          schema:
-            title: Days
-            type: integer
-        - in: query
-          name: all_fields
           required: false
           schema:
-            default: false
-            enum:
-              - false
-              - true
-            title: All Fields
+            default: 7
+            title: Days
+            type: integer
       responses:
         "200":
           content:

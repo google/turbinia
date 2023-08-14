@@ -146,8 +146,8 @@ def get_request(ctx: click.Context, request_id: str, json_dump: bool) -> None:
 
 
 @groups.status_group.command('workers')
-@click.argument('days', required=False)
 @click.pass_context
+@click.option('--days', '-d', help='Specifies status timeframe', required=False)
 @click.option(
     '--all_fields', '-a', help='Returns all fields.', is_flag=True,
     required=False)
@@ -156,17 +156,58 @@ def get_request(ctx: click.Context, request_id: str, json_dump: bool) -> None:
     required=False)
 def get_workers(
     ctx: click.Context, days: int, all_fields: bool, json_dump: bool) -> None:
-  """Gets a summary of all Turbinia requests."""
+  """Show Worker status information."""
   days = int(days) if days else 7
   client: api_client.ApiClient = ctx.obj.api_client
   api_instance = turbinia_tasks_api.TurbiniaTasksApi(client)
   try:
-    api_response = api_instance.get_workers_status(days, all_fields)
+    api_response = api_instance.get_workers_status(days)
     if json_dump:
       formatter.echo_json(api_response)
     else:
       report = formatter.WorkersMarkdownReport(api_response,
                                                days).generate_markdown()
+      click.echo(report)
+  except exceptions.ApiException as exception:
+    log.error(
+        f'Received status code {exception.status} '
+        f'when calling get_requests_summary: {exception.body}')
+
+
+@groups.status_group.command('statistics')
+@click.pass_context
+@click.option(
+    '--days', '-d', help='Specifies statistics timeframe', required=False)
+@click.option(
+    '--task_id', '-t', help='Gets stats for specific task', required=False)
+@click.option(
+    '--request_id', '-r', help='Gets stats for specific request',
+    required=False)
+@click.option(
+    '--user', '-u', help='Gets stats for specific user', required=False)
+@click.option(
+    '--csv', '-c', help='Outputs statistics as CSV', is_flag=True,
+    required=False)
+@click.option(
+    '--json_dump', '-j', help='Generates JSON output.', is_flag=True,
+    required=False)
+def get_statistics(
+    ctx: click.Context, days: int, task_id: str, request_id: str, user: str,
+    csv: bool, json_dump: bool) -> None:
+  """Show Worker status information."""
+  client: api_client.ApiClient = ctx.obj.api_client
+  api_instance = turbinia_tasks_api.TurbiniaTasksApi(client)
+  try:
+    api_response = api_instance.get_task_statistics(
+        days=days, task_id=task_id, request_id=request_id, user=user)
+    if json_dump:
+      formatter.echo_json(api_response)
+    else:
+      stat_formatter = formatter.StatsMarkdownReport(api_response)
+      if csv:
+        report = stat_formatter.generate_csv()
+      else:
+        report = stat_formatter.generate_markdown()
       click.echo(report)
   except exceptions.ApiException as exception:
     log.error(

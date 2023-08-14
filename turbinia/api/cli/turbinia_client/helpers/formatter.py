@@ -170,6 +170,27 @@ class MarkdownReportComponent(ABC):
     """
     pass
 
+  def dict_to_markdown(
+      self, original_dict, level=1, ignore=None, show_null=False,
+      format_name=True):
+    if not original_dict:
+      return [self.bullet('[EMPTY DICTIONARY]', level)]
+    report: list[str] = []
+    for key, value in original_dict.items():
+      if (ignore and
+          key in ignore) or not (show_null or value or value is False):
+        continue
+      name = key.replace('_', ' ').title() if format_name else key
+      if isinstance(value, dict):
+        report.append(self.bullet(f'{name}:', level))
+        report.extend(self.dict_to_markdown(value, level + 1))
+      elif isinstance(value, list):
+        report.append(self.bullet(f'{name}:', level))
+        report.extend(self.list_to_markdown(value, level + 1))
+      else:
+        report.append(self.bullet(f'{name}: {value}', level))
+    return report
+
   @abstractmethod
   def generate_markdown(self) -> str:
     pass
@@ -348,5 +369,60 @@ class WorkersMarkdownReport(MarkdownReportComponent):
               report.append(
                   self.bullet(f'{formatted_name}: {attribute_value}', level=2))
           report.append('')
+
+    return '\n'.join(report)
+
+
+class StatsMarkdownReport(MarkdownReportComponent):
+  """A markdown report of all tasks for a specific worker."""
+
+  def __init__(self, statistics: dict):
+    super().__init__()
+    self._statistics: dict = statistics
+
+  def stat_to_markdown(self, stat_dict):
+    report = []
+    for description, value in stat_dict.items():
+      description = description.replace('_', ' ').title()
+      report.append(f'{description}: {value}')
+    return ' | '.join(report)
+
+  def generate_markdown(self) -> str:
+    """Generates a Markdown version of tasks per worker."""
+    report = [self.heading1('Execution time statistics for Turbinia:')]
+
+    for stat_group, stat_dict in self._statistics.items():
+      stat_group = stat_group.replace('_', ' ').title()
+      if stat_group in ('All Tasks', 'Successful Tasks', 'Failed Tasks',
+                        'Requests'):
+        report.append(
+            self.heading2(f'{stat_group}: {self.stat_to_markdown(stat_dict)}'))
+        continue
+      report.append(self.heading2(f'{stat_group}:'))
+      for description, inner_dict in stat_dict.items():
+        report.append(
+            self.bullet(
+                f'{description}: {self.stat_to_markdown(inner_dict)}', 2))
+    return '\n'.join(report)
+
+  def stat_to_csv(self, description, stat_dict):
+    report = [description]
+    for stat in ('count', 'min', 'mean', 'max'):
+      report.append(str(stat_dict[stat]))
+    return ', '.join(report)
+
+  def generate_csv(self):
+    report = ['stat_type, count, min, mean, max']
+
+    for stat_group, stat_dict in self._statistics.items():
+      stat_group = stat_group.replace('_', ' ').title()
+      if stat_group in ('All Tasks', 'Successful Tasks', 'Failed Tasks',
+                        'Requests'):
+        report.append(self.stat_to_csv(stat_group, stat_dict))
+        continue
+      for description, inner_dict in stat_dict.items():
+        report.append(
+            self.stat_to_csv(
+                f'{stat_group.split(" ")[-1]} {description}', inner_dict))
 
     return '\n'.join(report)
