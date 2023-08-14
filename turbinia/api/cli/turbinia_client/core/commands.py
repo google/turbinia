@@ -146,12 +146,32 @@ def get_request(ctx: click.Context, request_id: str, json_dump: bool) -> None:
 
 
 @groups.status_group.command('workers')
+@click.argument('days', required=False)
 @click.pass_context
+@click.option(
+    '--all_fields', '-a', help='Returns all fields.', is_flag=True,
+    required=False)
 @click.option(
     '--json_dump', '-j', help='Generates JSON output.', is_flag=True,
     required=False)
-def get_workers(ctx: click.Context, json_dump: bool) -> None:
-  click.echo('Not implemented yet.')
+def get_workers(
+    ctx: click.Context, days: int, all_fields: bool, json_dump: bool) -> None:
+  """Gets a summary of all Turbinia requests."""
+  days = int(days) if days else 7
+  client: api_client.ApiClient = ctx.obj.api_client
+  api_instance = turbinia_tasks_api.TurbiniaTasksApi(client)
+  try:
+    api_response = api_instance.get_workers_status(days, all_fields)
+    if json_dump:
+      formatter.echo_json(api_response)
+    else:
+      report = formatter.WorkersMarkdownReport(api_response,
+                                               days).generate_markdown()
+      click.echo(report)
+  except exceptions.ApiException as exception:
+    log.error(
+        f'Received status code {exception.status} '
+        f'when calling get_requests_summary: {exception.body}')
 
 
 @groups.status_group.command('summary')

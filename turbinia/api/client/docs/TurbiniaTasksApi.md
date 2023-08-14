@@ -5,10 +5,11 @@ All URIs are relative to *http://localhost*
 Method | HTTP request | Description
 ------------- | ------------- | -------------
 [**get_task_status**](TurbiniaTasksApi.md#get_task_status) | **GET** /api/task/{task_id} | Get Task Status
+[**get_workers_status**](TurbiniaTasksApi.md#get_workers_status) | **GET** /api/task/workers | Get Workers Status
 
 
 # **get_task_status**
-> bool, date, datetime, dict, float, int, list, str, none_type get_task_status(task_id)
+> object get_task_status(task_id)
 
 Get Task Status
 
@@ -17,13 +18,13 @@ Retrieve task information.
 ### Example
 
 * OAuth Authentication (oAuth2):
-
 ```python
 import time
+import os
 import turbinia_api_lib
-from turbinia_api_lib.api import turbinia_tasks_api
-from turbinia_api_lib.model.http_validation_error import HTTPValidationError
+from turbinia_api_lib.rest import ApiException
 from pprint import pprint
+
 # Defining the host is optional and defaults to http://localhost
 # See configuration.py for a list of all supported configuration parameters.
 configuration = turbinia_api_lib.Configuration(
@@ -35,24 +36,20 @@ configuration = turbinia_api_lib.Configuration(
 # Examples for each auth method are provided below, use the example that
 # satisfies your auth use case.
 
-# Configure OAuth2 access token for authorization: oAuth2
-configuration = turbinia_api_lib.Configuration(
-    host = "http://localhost"
-)
-configuration.access_token = 'YOUR_ACCESS_TOKEN'
+configuration.access_token = os.environ["ACCESS_TOKEN"]
 
 # Enter a context with an instance of the API client
 with turbinia_api_lib.ApiClient(configuration) as api_client:
     # Create an instance of the API class
-    api_instance = turbinia_tasks_api.TurbiniaTasksApi(api_client)
-    task_id = "task_id_example" # str | 
+    api_instance = turbinia_api_lib.TurbiniaTasksApi(api_client)
+    task_id = 'task_id_example' # str | 
 
-    # example passing only required values which don't have defaults set
     try:
         # Get Task Status
         api_response = api_instance.get_task_status(task_id)
+        print("The response of TurbiniaTasksApi->get_task_status:\n")
         pprint(api_response)
-    except turbinia_api_lib.ApiException as e:
+    except Exception as e:
         print("Exception when calling TurbiniaTasksApi->get_task_status: %s\n" % e)
 ```
 
@@ -61,11 +58,11 @@ with turbinia_api_lib.ApiClient(configuration) as api_client:
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **task_id** | **str**|  |
+ **task_id** | **str**|  | 
 
 ### Return type
 
-**bool, date, datetime, dict, float, int, list, str, none_type**
+**object**
 
 ### Authorization
 
@@ -76,9 +73,82 @@ Name | Type | Description  | Notes
  - **Content-Type**: Not defined
  - **Accept**: application/json
 
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+**200** | Successful Response |  -  |
+**422** | Validation Error |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
+
+# **get_workers_status**
+> object get_workers_status(days, all_fields=all_fields)
+
+Get Workers Status
+
+Retrieves an evidence in redis by using its UUID. Args:   evidence_id (str): The UUID of the evidence.  Raises:   HTTPException: if the evidence is not found. Returns:
+
+### Example
+
+* OAuth Authentication (oAuth2):
+```python
+import time
+import os
+import turbinia_api_lib
+from turbinia_api_lib.rest import ApiException
+from pprint import pprint
+
+# Defining the host is optional and defaults to http://localhost
+# See configuration.py for a list of all supported configuration parameters.
+configuration = turbinia_api_lib.Configuration(
+    host = "http://localhost"
+)
+
+# The client must configure the authentication and authorization parameters
+# in accordance with the API server security policy.
+# Examples for each auth method are provided below, use the example that
+# satisfies your auth use case.
+
+configuration.access_token = os.environ["ACCESS_TOKEN"]
+
+# Enter a context with an instance of the API client
+with turbinia_api_lib.ApiClient(configuration) as api_client:
+    # Create an instance of the API class
+    api_instance = turbinia_api_lib.TurbiniaTasksApi(api_client)
+    days = 56 # int | 
+    all_fields = False # bool |  (optional) (default to False)
+
+    try:
+        # Get Workers Status
+        api_response = api_instance.get_workers_status(days, all_fields=all_fields)
+        print("The response of TurbiniaTasksApi->get_workers_status:\n")
+        pprint(api_response)
+    except Exception as e:
+        print("Exception when calling TurbiniaTasksApi->get_workers_status: %s\n" % e)
+```
+
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **days** | **int**|  | 
+ **all_fields** | **bool**|  | [optional] [default to False]
+
+### Return type
+
+**object**
+
+### Authorization
+
+[oAuth2](../README.md#oAuth2)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/json
 
 ### HTTP response details
-
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
 **200** | Successful Response |  -  |

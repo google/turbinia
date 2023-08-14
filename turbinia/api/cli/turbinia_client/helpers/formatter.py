@@ -313,10 +313,40 @@ class SummaryMarkdownReport(MarkdownReportComponent):
 class WorkersMarkdownReport(MarkdownReportComponent):
   """A markdown report of all tasks for a specific worker."""
 
-  def __init__(self, request_data: dict):
+  def __init__(self, workers_status: dict, days: int):
     super().__init__()
-    self._request_data: dict = request_data
+    self._workers_status: dict = workers_status
+    self._days: int = days
 
   def generate_markdown(self) -> str:
     """Generates a Markdown version of tasks per worker."""
-    raise NotImplementedError
+    report = []
+    worker_status = self._workers_status.copy()
+    scheduled_tasks = worker_status.pop('scheduled_tasks')
+    report.append(
+        self.heading1(
+            f'Turbinia report for Worker activity within {self._days} days'))
+    report.append(self.bullet(f'{len(worker_status.keys())} Worker(s) found.'))
+    report.append(
+        self.bullet(
+            f'{scheduled_tasks} Task(s) unassigned or scheduled and pending Worker assignment.'
+        ))
+    for worker_node, task_types in worker_status.items():
+      report.append('')
+      report.append(self.heading2(f'Worker Node: {worker_node:s}'))
+      for task_type, tasks in task_types.items():
+        report.append(self.heading3(task_type.replace('_', ' ').title()))
+        if not tasks:
+          report.append(self.bullet('No Tasks found.'))
+          continue
+        for task_id, task_attributes in tasks.items():
+          report.append(
+              self.bullet(f'{task_id} - {task_attributes["task_name"]}'))
+          for attribute_name, attribute_value in task_attributes.items():
+            if attribute_name != 'task_name':
+              formatted_name = attribute_name.replace('_', ' ').title()
+              report.append(
+                  self.bullet(f'{formatted_name}: {attribute_value}', level=2))
+          report.append('')
+
+    return '\n'.join(report)

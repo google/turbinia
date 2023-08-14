@@ -39,11 +39,9 @@ router = APIRouter(prefix='/task', tags=['Turbinia Tasks'])
 client = TurbiniaClientProvider.get_turbinia_client()
 
 
-def worker_status(instance, project, region, days=0):
-  # Set number of days to retrieve data
-  num_days = days if days != 0 else 7
+def get_workers_dict(instance, project, region, days=0):
+  task_results = client.get_task_data(instance, project, region, days=days)
 
-  task_results = client.get_task_data(instance, project, region, days=num_days)
   if not task_results:
     return ''
 
@@ -56,6 +54,7 @@ def worker_status(instance, project, region, days=0):
   workers_dict = {}
   unassigned_dict = {}
   scheduled_counter = 0
+
   for result in task_results:
     worker_node = result.get('worker_name')
     status = result.get('status')
@@ -89,7 +88,57 @@ def worker_status(instance, project, region, days=0):
       else:
         workers_dict[worker_node].append(task_dict)
 
-  return workers_dict
+  return workers_dict, unassigned_dict, scheduled_counter
+
+
+def get_worker_task_dict(task):
+  task_dict = {
+      'task_name':
+          task['task_name'],
+      'last_update':
+          task['last_update'].strftime(turbinia_config.DATETIME_FORMAT),
+      'status':
+          task['status'],
+      'run_time':
+          str(task['run_time'])
+  }
+  return task_dict
+
+
+def worker_status(instance, project, region, days=0, all_fields=False):
+  workers_dict, unassigned_dict, scheduled_counter = get_workers_dict(
+      instance, project, region, days=days)
+
+  report = {'scheduled_tasks': scheduled_counter}
+
+  for worker_node, tasks in workers_dict.items():
+    report[worker_node] = {}
+    # Append the statuses chronologically
+    run_status, queued_status, other_status = {}, {}, {}
+    for task in tasks:
+      if 'running' in task['status']:
+        run_status[task['task_id']] = get_worker_task_dict(task)
+      elif 'queued' in task['status']:
+        queued_status[task['task_id']] = get_worker_task_dict(task)
+      else:
+        other_status[task['task_id']] = get_worker_task_dict(task)
+  # Add each of the status lists back to report list
+    report[worker_node]['run_status'] = run_status
+    report[worker_node]['queued_status'] = queued_status
+    # Add Finished Tasks
+    if all_fields:
+      report[worker_node]['other_status'] = other_status
+
+    # Add unassigned worker tasks
+    unassigned_status = []
+    for tasks in unassigned_dict.values():
+      for task in tasks:
+        unassigned_status.append(get_worker_task_dict(task))
+    # Now add to main report
+    if all_fields:
+      report[worker_node]['unassigned_status'] = unassigned_status
+
+  return report
 
 
 @router.get('/workers')
@@ -110,7 +159,7 @@ async def get_workers_status(
       region=turbinia_config.TURBINIA_REGION, days=days)
   if workers_dict:
     return JSONResponse(content=workers_dict, status_code=200)
-  raise HTTPException(status_code=404, detail=f'No worker status found.')
+  raise HTTPException(status_code=404, detail='No worker status found.')
 
 
 @router.get('/{task_id}')
