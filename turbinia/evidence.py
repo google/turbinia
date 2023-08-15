@@ -31,7 +31,7 @@ import uuid
 
 from turbinia import config
 from turbinia import TurbiniaException
-from turbinia.state_manager import RedisStateManager
+from turbinia import state_manager
 from turbinia.processors import archive
 from turbinia.processors import containerd
 from turbinia.processors import docker
@@ -45,8 +45,6 @@ if config.CLOUD_PROVIDER.lower() == 'gcp':
   from turbinia.processors import google_cloud
 
 log = logging.getLogger('turbinia')
-
-redis_manager = RedisStateManager()
 
 
 def evidence_class_names(all_classes=False):
@@ -345,6 +343,7 @@ class Evidence:
           f'Could not update Evidence '
           f'{getattr(self, "id", "(ID not set)")}: {exception}')
     else:
+      redis_manager = state_manager.RedisStateManager()
       if redis_manager.evidence_exists(self.id):
         if serialized_attribute := self.serialize_attribute(attribute_name):
           redis_manager.update_evidence_attribute(
@@ -384,8 +383,14 @@ class Evidence:
     new_object.__dict__.update(dictionary)
     return new_object
 
-  def serialize_attribute(self, name):
-    """Returns JSON serialized attribute."""
+  def serialize_attribute(self, name: str) -> str:
+    """Returns JSON serialized attribute.
+    
+    Args:
+      name(str): the name of the attribute that will be serialized.
+    Returns:
+      A string containing the serialized attribute.
+    """
     if hasattr(self, name):
       try:
         return json.dumps(getattr(self, name))
@@ -394,8 +399,18 @@ class Evidence:
     else:
       log.error(f'Evidence {self.id} has no attribute {name}')
 
-  def serialize(self, json_values=False):
-    """Return JSON serializable object."""
+  def serialize(self, json_values: bool = False):
+    """Returns a JSON serialized object. The function will return A string
+    containing the serialized evidence_dict or a dict of serialized attributes
+    if json_values is true.
+    
+    Args:
+      json_values(bool): Returns only values of the dictionary as json strings
+        instead of the entire dictionary.
+
+    Returns:
+      JSON serialized object.
+    """
     # Clear any partition path_specs before serializing
     if hasattr(self, 'path_spec'):
       self.path_spec = None
