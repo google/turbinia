@@ -343,7 +343,7 @@ class BaseTaskManager:
 
     return timeout
 
-  def get_evidence(self):
+  def get_evidence_data(self):
     """Checks for new evidence to process.
 
     Returns:
@@ -596,7 +596,7 @@ class BaseTaskManager:
     log.info('Starting Task Manager run loop')
     while True:
       # pylint: disable=expression-not-assigned
-      [self.add_evidence(x) for x in self.get_evidence()]
+      [self.add_evidence(x) for x in self.get_evidence_data()]
 
       for task in self.process_tasks():
         if task.result:
@@ -705,7 +705,7 @@ class CeleryTaskManager(BaseTaskManager):
       log.info(f'{outstanding_task_count:d} Tasks still outstanding.')
     return completed_tasks
 
-  def get_evidence(self):
+  def get_evidence_data(self):
     """Receives new evidence.
 
     Returns:
@@ -836,7 +836,7 @@ class PSQTaskManager(BaseTaskManager):
       log.info(f'{outstanding_task_count:d} Tasks still outstanding.')
     return completed_tasks
 
-  def get_evidence(self):
+  def get_evidence_data(self):
     requests = self.server_pubsub.check_messages()
     evidence_list = []
     for request in requests:

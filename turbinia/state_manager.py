@@ -314,7 +314,7 @@ class RedisStateManager(BaseStateManager):
     # Need to use json.dumps, else redis returns single quoted string which
     # is invalid json
     if not self.client.set(key, json.dumps(task_data)):
-      log.error(f'Unsuccessful in updating task {task.name:s} in Redis')
+      log.error(f'Error in updating task {task.name:s} in Redis')
 
   def write_new_task(self, task):
     key = ':'.join(('TurbiniaTask', task.id))
@@ -329,11 +329,11 @@ class RedisStateManager(BaseStateManager):
       task_data['run_time'] = task_data['run_time'].total_seconds()
     # nx=True prevents overwriting (i.e. no unintentional task clobbering)
     if not self.client.set(key, json.dumps(task_data), nx=True):
-      log.error(f'Unsuccessful in writing new task {task.name:s} into Redis')
+      log.error(f'Error in writing new task {task.name:s} into Redis')
     task.state_key = key
     return key
 
-  def write_evidence(self, evidence_dict: dict[str]):
+  def write_evidence(self, evidence_dict: dict[str]) -> str:
     """Writes evidence into redis.
 
     Args:
@@ -341,17 +341,18 @@ class RedisStateManager(BaseStateManager):
       evidence attributes that will be saved.
 
     Returns:
-      key (str): The key corresponding to the evidence in redis
+      evidence_key (str): The key corresponding to the evidence in Redis
     """
-    key = ':'.join(('TurbiniaEvidence', json.loads(evidence_dict['id'])))
-    log.info(f'Writing new evidence {key} into Redis')
+    evidence_key = ':'.join(
+        ('TurbiniaEvidence', json.loads(evidence_dict['id'])))
+    log.info(f'Writing new evidence {evidence_key} into Redis')
     for attribute_key, attribute_value in evidence_dict.items():
-      if not self.client.hset(key, attribute_key, attribute_value):
+      if not self.client.hset(evidence_key, attribute_key, attribute_value):
         log.error(
-            f'Unsuccessful in writing {attribute_key} of {key} into Redis')
+            f'Error in setting {attribute_key} of {evidence_key} into Redis')
     if evidence_hash := json.loads(evidence_dict.get('hash')):
-      self.client.hset('TurbiniaEvidenceHashes', evidence_hash, key)
-    return key
+      self.client.hset('TurbiniaEvidenceHashes', evidence_hash, evidence_key)
+    return evidence_key
 
   def update_evidence_attribute(
       self, evidence_id: str, attribute_name: str, json_value: str):
@@ -362,14 +363,23 @@ class RedisStateManager(BaseStateManager):
       attribute_name (str): name of the attribute to be updated.
       json_value (str): json value to be updated.
     """
-    key = ':'.join(('TurbiniaEvidence', evidence_id))
-    log.info(f'Updating attribute {attribute_name} for evidence {key} in Redis')
-    if self.client.hset(key, attribute_name, json_value):
+    evidence_key = ':'.join(('TurbiniaEvidence', evidence_id))
+    log.info(
+        f'Updating attribute {attribute_name} for evidence {evidence_key} in Redis'
+    )
+    if self.client.hset(evidence_key, attribute_name, json_value):
       if attribute_name == 'hash' and json_value:
-        self.client.hset('TurbiniaEvidenceHashes', json.loads(json_value), key)
+        self.client.hset(
+            'TurbiniaEvidenceHashes', json.loads(json_value), evidence_key)
+    else:
+      log.info(
+          f'Updating attribute {attribute_name} for evidence {evidence_key} in Redis'
+      )
 
-  def get_evidence(self, evidence_id: str):
-    """Gets one evidence from Redis given its ID.
+  def get_evidence_data(self, evidence_id: str) -> dict:
+    """Returns a dictionary representing an Evidence object given its ID.
+
+
 
     Args:
       evidence_id (str): The ID of the stored evidence.
@@ -385,7 +395,7 @@ class RedisStateManager(BaseStateManager):
           self.client.hget(key, attribute_key))
     return evidence_dict
 
-  def evidence_exists(self, evidence_id):
+  def evidence_exists(self, evidence_id) -> bool:
     """Checks if the evidence is saved in Redis given its ID.
 
     Args:
@@ -396,7 +406,8 @@ class RedisStateManager(BaseStateManager):
     """
     return self.client.exists(':'.join(('TurbiniaEvidence', evidence_id)))
 
-  def get_evidence_summary(self, sort: str = None, output: str = 'keys'):
+  def get_evidence_summary(
+      self, sort: str = None, output: str = 'keys') -> dict | int:
     """Gets a summary of all evidences.
 
     Args:
@@ -409,11 +420,13 @@ class RedisStateManager(BaseStateManager):
     if output == 'count' and not sort:
       return sum(1 for _ in self.client.scan_iter('TurbiniaEvidence:*'))
     summary = {} if sort else []
-    for key in self.client.scan_iter('TurbiniaEvidence:*'):
-      value = self.get_evidence(key.decode().split(':')[1])
-      stored_value = value if output == 'values' else key.decode()
+    for evidence_key in self.client.scan_iter('TurbiniaEvidence:*'):
+      evidence_dictionary = self.get_evidence_data(
+          evidence_key.decode().split(':')[1])
+      stored_value = evidence_dictionary if output == 'values' else (
+          evidence_key.decode())
       if sort:
-        attribute_value = value.get(sort, None)
+        attribute_value = evidence_dictionary.get(sort, None)
         if attribute_value not in summary:
           summary[attribute_value] = [stored_value] if output != 'count' else 1
         elif output == 'count':
@@ -425,7 +438,8 @@ class RedisStateManager(BaseStateManager):
     return summary
 
   def query_evidence(
-      self, attribute_name: str, value: Any, output: str = 'keys'):
+      self, attribute_name: str, value: Any,
+      output: str = 'keys') -> dict | list | int:
     """Queries for evidences with the specified attribute matching the passed
     value.
 
@@ -435,17 +449,17 @@ class RedisStateManager(BaseStateManager):
       output (str): Value to be output by the function (keys | values | count).
 
     Returns:
-      summary (dict): Dict containing evidences of each type. 
+      query_result (dict | list | int): Result of the query. 
     """
     keys = []
-    for key in self.client.scan_iter('TurbiniaEvidence:*'):
-      if stored_value := self.client.hget(key, attribute_name):
+    for evidence_key in self.client.scan_iter('TurbiniaEvidence:*'):
+      if stored_value := self.client.hget(evidence_key, attribute_name):
         if (attribute_name == 'tasks' and
             value in json.loads(stored_value)) or stored_value.decode(
             ) == value or json.loads(stored_value) == value:
-          keys.append(key.decode())
+          keys.append(evidence_key.decode())
     if output == 'values':
-      return [self.get_evidence(key.split(':')[1]) for key in keys]
+      return [self.get_evidence_data(key.split(':')[1]) for key in keys]
     elif output == 'count':
       return len(keys)
     return keys
@@ -474,4 +488,4 @@ class RedisStateManager(BaseStateManager):
       evidence_dict (dict): Dict containing evidence attributes. 
     """
     evidence_id = self.get_evidence_key_by_hash(file_hash).split(':')[1]
-    return self.get_evidence(evidence_id)
+    return self.get_evidence_data(evidence_id)

@@ -17,6 +17,7 @@
 from __future__ import unicode_literals
 
 import copy
+import fakeredis
 import json
 import os
 import tempfile
@@ -117,10 +118,11 @@ class TestPSQStateManager(unittest.TestCase):
 
 
 class TestRedisEvidenceStateManager(unittest.TestCase):
-  """Test PSQStateManager class."""
+  """Test RedisStateManager class."""
 
   def _get_state_manager(self):
     """Gets a Datastore State Manager object for test."""
+    redis_client = fakeredis.FakeStrictRedis()
     config.STATE_MANAGER = 'Redis'
     return state_manager.get_state_manager()
 
@@ -180,7 +182,7 @@ class TestRedisEvidenceStateManager(unittest.TestCase):
 
   @mock.patch('redis.StrictRedis')
   def testStateManagerGetEvidence(self, mock_redis):
-    """Test State Manager get_evidence()."""
+    """Test State Manager get_evidence_data()."""
 
     evidence_key = 'TurbiniaEvidence:b510ab6bf11a410da1fd9d9b128e7d74'
 
@@ -190,7 +192,8 @@ class TestRedisEvidenceStateManager(unittest.TestCase):
 
     mock_redis.return_value.hget.side_effect = self.hget_side_effect
 
-    result = self.state_manager.get_evidence(self.test_data[evidence_key]['id'])
+    result = self.state_manager.get_evidence_data(
+        self.test_data[evidence_key]['id'])
 
     # Check if the returned evidence_dict contains all of our test data
     for (expected_value, result_value) in zip(
