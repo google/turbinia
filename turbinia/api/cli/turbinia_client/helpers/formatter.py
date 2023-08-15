@@ -170,27 +170,6 @@ class MarkdownReportComponent(ABC):
     """
     pass
 
-  def dict_to_markdown(
-      self, original_dict, level=1, ignore=None, show_null=False,
-      format_name=True):
-    if not original_dict:
-      return [self.bullet('[EMPTY DICTIONARY]', level)]
-    report: list[str] = []
-    for key, value in original_dict.items():
-      if (ignore and
-          key in ignore) or not (show_null or value or value is False):
-        continue
-      name = key.replace('_', ' ').title() if format_name else key
-      if isinstance(value, dict):
-        report.append(self.bullet(f'{name}:', level))
-        report.extend(self.dict_to_markdown(value, level + 1))
-      elif isinstance(value, list):
-        report.append(self.bullet(f'{name}:', level))
-        report.extend(self.list_to_markdown(value, level + 1))
-      else:
-        report.append(self.bullet(f'{name}: {value}', level))
-    return report
-
   @abstractmethod
   def generate_markdown(self) -> str:
     pass
@@ -395,7 +374,7 @@ class StatsMarkdownReport(MarkdownReportComponent):
     return ', '.join(report)
 
   def generate_markdown(self) -> str:
-    """Generates a Markdown version of tasks per worker."""
+    """Generates a Markdown version of task statistics."""
     report = [self.heading1('Execution time statistics for Turbinia:')]
 
     for stat_group, stat_dict in self._statistics.items():
@@ -413,7 +392,7 @@ class StatsMarkdownReport(MarkdownReportComponent):
     return '\n'.join(report)
 
   def generate_csv(self) -> str:
-    """Generates a csv version of tasks per worker."""
+    """Generates a csv version of task statistics."""
     report = ['stat_type, count, min, mean, max']
 
     for stat_group, stat_dict in self._statistics.items():

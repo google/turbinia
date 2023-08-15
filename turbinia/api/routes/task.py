@@ -226,28 +226,6 @@ def format_task_statistics(
   return report
 
 
-@router.get('/workers')
-async def get_workers_status(
-    request: Request, days: int = 7, all_fields: bool = False):
-  """Retrieves the workers status.
-
-  Args:
-    days (int): The UUID of the evidence.
-  
-  Raises:
-    HTTPException: if no worker is found.
-  Returns:
-  """
-  workers_dict = WorkerStatus(
-      instance=turbinia_config.INSTANCE_ID,
-      project=turbinia_config.TURBINIA_PROJECT,
-      region=turbinia_config.TURBINIA_REGION,
-      days=days).get_worker_status(all_fields)
-  if workers_dict:
-    return JSONResponse(content=workers_dict, status_code=200)
-  raise HTTPException(status_code=404, detail='No workers found.')
-
-
 @router.get('/statistics')
 async def get_task_statistics(
     request: Request, days: int = None, task_id: str = None,
@@ -271,6 +249,28 @@ async def get_task_statistics(
   if statistics:
     return JSONResponse(content=statistics, status_code=200)
   raise HTTPException(status_code=404, detail='No task found.')
+
+
+@router.get('/workers')
+async def get_workers_status(
+    request: Request, days: int = 7, all_fields: bool = False):
+  """Retrieves the workers status.
+
+  Args:
+    days (int): The UUID of the evidence.
+  
+  Raises:
+    HTTPException: if no worker is found.
+  Returns:
+  """
+  workers_dict = WorkerStatus(
+      instance=turbinia_config.INSTANCE_ID,
+      project=turbinia_config.TURBINIA_PROJECT,
+      region=turbinia_config.TURBINIA_REGION,
+      days=days).get_worker_status(all_fields)
+  if workers_dict:
+    return JSONResponse(content=workers_dict, status_code=200)
+  raise HTTPException(status_code=404, detail='No workers found.')
 
 
 @router.get('/{task_id}')
