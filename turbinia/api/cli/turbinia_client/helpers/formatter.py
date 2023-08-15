@@ -350,8 +350,8 @@ class WorkersMarkdownReport(MarkdownReportComponent):
     report.append(self.bullet(f'{len(worker_status.keys())} Worker(s) found.'))
     report.append(
         self.bullet(
-            f'{scheduled_tasks} Task(s) unassigned or scheduled and pending Worker assignment.'
-        ))
+            f'{scheduled_tasks} Task(s) unassigned or scheduled and pending '
+            f'Worker assignment.'))
     for worker_node, task_types in worker_status.items():
       report.append('')
       report.append(self.heading2(f'Worker Node: {worker_node:s}'))
@@ -359,6 +359,7 @@ class WorkersMarkdownReport(MarkdownReportComponent):
         report.append(self.heading3(task_type.replace('_', ' ').title()))
         if not tasks:
           report.append(self.bullet('No Tasks found.'))
+          report.append('')
           continue
         for task_id, task_attributes in tasks.items():
           report.append(
@@ -368,13 +369,13 @@ class WorkersMarkdownReport(MarkdownReportComponent):
               formatted_name = attribute_name.replace('_', ' ').title()
               report.append(
                   self.bullet(f'{formatted_name}: {attribute_value}', level=2))
-          report.append('')
+        report.append('')
 
     return '\n'.join(report)
 
 
 class StatsMarkdownReport(MarkdownReportComponent):
-  """A markdown report of all tasks for a specific worker."""
+  """A markdown report of the task statistics."""
 
   def __init__(self, statistics: dict):
     super().__init__()
@@ -386,6 +387,12 @@ class StatsMarkdownReport(MarkdownReportComponent):
       description = description.replace('_', ' ').title()
       report.append(f'{description}: {value}')
     return ' | '.join(report)
+
+  def stat_to_csv(self, description, stat_dict):
+    report = [description]
+    for stat in ('count', 'min', 'mean', 'max'):
+      report.append(str(stat_dict[stat]))
+    return ', '.join(report)
 
   def generate_markdown(self) -> str:
     """Generates a Markdown version of tasks per worker."""
@@ -405,13 +412,8 @@ class StatsMarkdownReport(MarkdownReportComponent):
                 f'{description}: {self.stat_to_markdown(inner_dict)}', 2))
     return '\n'.join(report)
 
-  def stat_to_csv(self, description, stat_dict):
-    report = [description]
-    for stat in ('count', 'min', 'mean', 'max'):
-      report.append(str(stat_dict[stat]))
-    return ', '.join(report)
-
-  def generate_csv(self):
+  def generate_csv(self) -> str:
+    """Generates a csv version of tasks per worker."""
     report = ['stat_type, count, min, mean, max']
 
     for stat_group, stat_dict in self._statistics.items():

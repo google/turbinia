@@ -19,7 +19,7 @@ import warnings
 from pydantic import validate_arguments, ValidationError
 from typing_extensions import Annotated
 
-from pydantic import StrictInt, StrictStr
+from pydantic import StrictBool, StrictInt, StrictStr
 
 from typing import Any, Optional
 
@@ -349,18 +349,20 @@ class TurbiniaTasksApi(object):
             _request_auth=_params.get('_request_auth'))
 
     @validate_arguments
-    def get_workers_status(self, days : Optional[StrictInt] = None, **kwargs) -> object:  # noqa: E501
+    def get_workers_status(self, days : Optional[StrictInt] = None, all_fields : Optional[StrictBool] = None, **kwargs) -> object:  # noqa: E501
         """Get Workers Status  # noqa: E501
 
         Retrieves an evidence in redis by using its UUID. Args:   evidence_id (str): The UUID of the evidence.  Raises:   HTTPException: if the evidence is not found. Returns:  # noqa: E501
         This method makes a synchronous HTTP request by default. To make an
         asynchronous HTTP request, please pass async_req=True
 
-        >>> thread = api.get_workers_status(days, async_req=True)
+        >>> thread = api.get_workers_status(days, all_fields, async_req=True)
         >>> result = thread.get()
 
         :param days:
         :type days: int
+        :param all_fields:
+        :type all_fields: bool
         :param async_req: Whether to execute the request asynchronously.
         :type async_req: bool, optional
         :param _request_timeout: timeout setting for this request. If one
@@ -375,21 +377,23 @@ class TurbiniaTasksApi(object):
         kwargs['_return_http_data_only'] = True
         if '_preload_content' in kwargs:
             raise ValueError("Error! Please call the get_workers_status_with_http_info method with `_preload_content` instead and obtain raw data from ApiResponse.raw_data")
-        return self.get_workers_status_with_http_info(days, **kwargs)  # noqa: E501
+        return self.get_workers_status_with_http_info(days, all_fields, **kwargs)  # noqa: E501
 
     @validate_arguments
-    def get_workers_status_with_http_info(self, days : Optional[StrictInt] = None, **kwargs) -> ApiResponse:  # noqa: E501
+    def get_workers_status_with_http_info(self, days : Optional[StrictInt] = None, all_fields : Optional[StrictBool] = None, **kwargs) -> ApiResponse:  # noqa: E501
         """Get Workers Status  # noqa: E501
 
         Retrieves an evidence in redis by using its UUID. Args:   evidence_id (str): The UUID of the evidence.  Raises:   HTTPException: if the evidence is not found. Returns:  # noqa: E501
         This method makes a synchronous HTTP request by default. To make an
         asynchronous HTTP request, please pass async_req=True
 
-        >>> thread = api.get_workers_status_with_http_info(days, async_req=True)
+        >>> thread = api.get_workers_status_with_http_info(days, all_fields, async_req=True)
         >>> result = thread.get()
 
         :param days:
         :type days: int
+        :param all_fields:
+        :type all_fields: bool
         :param async_req: Whether to execute the request asynchronously.
         :type async_req: bool, optional
         :param _preload_content: if False, the ApiResponse.data will
@@ -418,7 +422,8 @@ class TurbiniaTasksApi(object):
         _params = locals()
 
         _all_params = [
-            'days'
+            'days',
+            'all_fields'
         ]
         _all_params.extend(
             [
@@ -451,6 +456,9 @@ class TurbiniaTasksApi(object):
         _query_params = []
         if _params.get('days') is not None:  # noqa: E501
             _query_params.append(('days', _params['days']))
+
+        if _params.get('all_fields') is not None:  # noqa: E501
+            _query_params.append(('all_fields', _params['all_fields']))
 
         # process the header parameters
         _header_params = dict(_params.get('_headers', {}))

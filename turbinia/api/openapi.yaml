@@ -407,6 +407,13 @@ paths:
             default: 7
             title: Days
             type: integer
+        - in: query
+          name: all_fields
+          required: false
+          schema:
+            default: false
+            title: All Fields
+            type: boolean
       responses:
         "200":
           content:

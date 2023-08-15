@@ -148,6 +148,11 @@ class TurbiniaStats:
         self.description, self.count, self.min, self.mean, self.max)
 
   def to_dict(self):
+    """Formats statistics data into a json-serializable dict.
+
+    Returns:
+      Dict of statistics data.
+    """
     return {
         'count': len(self.tasks),
         'min': str(self.min),

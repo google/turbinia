@@ -162,7 +162,7 @@ Name | Type | Description  | Notes
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **get_workers_status**
-> object get_workers_status(days=days)
+> object get_workers_status(days=days, all_fields=all_fields)
 
 Get Workers Status
 
@@ -196,10 +196,11 @@ with turbinia_api_lib.ApiClient(configuration) as api_client:
     # Create an instance of the API class
     api_instance = turbinia_api_lib.TurbiniaTasksApi(api_client)
     days = 7 # int |  (optional) (default to 7)
+    all_fields = False # bool |  (optional) (default to False)
 
     try:
         # Get Workers Status
-        api_response = api_instance.get_workers_status(days=days)
+        api_response = api_instance.get_workers_status(days=days, all_fields=all_fields)
         print("The response of TurbiniaTasksApi->get_workers_status:\n")
         pprint(api_response)
     except Exception as e:
@@ -212,6 +213,7 @@ with turbinia_api_lib.ApiClient(configuration) as api_client:
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
  **days** | **int**|  | [optional] [default to 7]
+ **all_fields** | **bool**|  | [optional] [default to False]
 
 ### Return type
 

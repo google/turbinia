@@ -161,7 +161,7 @@ def get_workers(
   client: api_client.ApiClient = ctx.obj.api_client
   api_instance = turbinia_tasks_api.TurbiniaTasksApi(client)
   try:
-    api_response = api_instance.get_workers_status(days)
+    api_response = api_instance.get_workers_status(days, all_fields)
     if json_dump:
       formatter.echo_json(api_response)
     else:
@@ -179,12 +179,12 @@ def get_workers(
 @click.option(
     '--days', '-d', help='Specifies statistics timeframe', required=False)
 @click.option(
-    '--task_id', '-t', help='Gets stats for specific task', required=False)
+    '--task_id', '-t', help='Gets statistics for specific task', required=False)
 @click.option(
-    '--request_id', '-r', help='Gets stats for specific request',
+    '--request_id', '-r', help='Gets statistics for specific request',
     required=False)
 @click.option(
-    '--user', '-u', help='Gets stats for specific user', required=False)
+    '--user', '-u', help='Gets statistics for specific user', required=False)
 @click.option(
     '--csv', '-c', help='Outputs statistics as CSV', is_flag=True,
     required=False)
@@ -194,7 +194,7 @@ def get_workers(
 def get_statistics(
     ctx: click.Context, days: int, task_id: str, request_id: str, user: str,
     csv: bool, json_dump: bool) -> None:
-  """Show Worker status information."""
+  """Show Worker task statistics."""
   client: api_client.ApiClient = ctx.obj.api_client
   api_instance = turbinia_tasks_api.TurbiniaTasksApi(client)
   try:
