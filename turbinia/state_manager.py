@@ -328,3 +328,28 @@ class RedisStateManager(BaseStateManager):
       log.error(f'Unsuccessful in writing new task {task.name:s} into Redis')
     task.state_key = key
     return key
+
+  def write_new_request(self, request_dict):
+    """Writes request into redis.
+    Args:
+      request_dict (dict[str]): A dictionary containing the request attributes.
+    Returns:
+      evidence_key (str): The key corresponding to the request in Redis
+    """
+    request_key = ':'.join(('TurbiniaRequest', request_dict['request_id']))
+
+    log.info(f'Writing new request {request_key} into Redis')
+
+    if evidence_list := request_dict.pop('evidence'):
+      request_dict['original_evidence'] = evidence_list[0].name
+      request_dict['evidence_list'] = [
+          evidence.name for evidence in evidence_list
+      ]
+
+    for attribute_key, attribute_value in request_dict.items():
+      if not self.client.hset(request_key, attribute_key,
+                              json.dumps(attribute_value)):
+        log.error(
+            f'Error in setting {attribute_key} of {request_key} into Redis')
+
+    return request_key
