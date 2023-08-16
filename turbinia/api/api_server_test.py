@@ -64,6 +64,7 @@ class testTurbiniaAPIServer(unittest.TestCase):
   _REQUEST_TEST_DATA = {
       'evidence_name': '/evidence/test.tgz',
       'failed_tasks': 0,
+      'task_start_time': '2022-04-01T19:15:14.791074Z',
       'last_task_update_time': '2022-04-01T19:17:14.791074Z',
       'queued_tasks': 0,
       'reason': None,
@@ -192,6 +193,28 @@ class testTurbiniaAPIServer(unittest.TestCase):
 
     result = self.client.get('/api/request/summary')
     result = json.loads(result.content)
+    self.assertEqual(expected_result, result)
+
+  @mock.patch('turbinia.state_manager.RedisStateManager.get_task_data')
+  def testRequestEvidenceName(self, testTaskData):
+    """Test getting Turbinia Request evidence name."""
+    redis_client = fakeredis.FakeStrictRedis()
+    self._TASK_TEST_DATA.pop('all_args')
+    input_task = TurbiniaTask().deserialize(self._TASK_TEST_DATA)
+    input_task_serialized = input_task.serialize()
+    expected_result = self._REQUEST_TEST_DATA['evidence_name']
+
+    redis_client.set(
+        'TurbiniaTask:41483253079448e59685d88f37ab91f7',
+        json.dumps(input_task_serialized))
+
+    testTaskData.return_value = [
+        json.loads(
+            redis_client.get('TurbiniaTask:41483253079448e59685d88f37ab91f7'))
+    ]
+
+    result = self.client.get('/api/request/summary')
+    result = json.loads(result.content).get('evidence_name')
     self.assertEqual(expected_result, result)
 
   @mock.patch('turbinia.state_manager.RedisStateManager.get_task_data')
