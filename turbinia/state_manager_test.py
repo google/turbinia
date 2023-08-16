@@ -18,6 +18,7 @@ from __future__ import unicode_literals
 
 import copy
 import fakeredis
+import importlib
 import json
 import os
 import tempfile
@@ -121,9 +122,10 @@ class TestRedisEvidenceStateManager(unittest.TestCase):
   """Test RedisStateManager class."""
 
   def _get_state_manager(self):
-    """Gets a Datastore State Manager object for test."""
-    redis_client = fakeredis.FakeStrictRedis()
+    """Gets a Redis State Manager object for test."""
     config.STATE_MANAGER = 'Redis'
+    # force state_manager module to reload using Redis state manager.
+    importlib.reload(state_manager)
     return state_manager.get_state_manager()
 
   @mock.patch('turbinia.state_manager.datastore.Client')
@@ -184,16 +186,23 @@ class TestRedisEvidenceStateManager(unittest.TestCase):
   def testStateManagerGetEvidence(self, mock_redis):
     """Test State Manager get_evidence_data()."""
 
-    evidence_key = 'TurbiniaEvidence:b510ab6bf11a410da1fd9d9b128e7d74'
-
     self.state_manager = self._get_state_manager()
 
-    mock_redis.return_value.hkeys.side_effect = self.hkeys_side_effect
+    self.state_manager.client = fakeredis.FakeStrictRedis
 
-    mock_redis.return_value.hget.side_effect = self.hget_side_effect
+    evidence_key = 'TurbiniaEvidence:b510ab6bf11a410da1fd9d9b128e7d74'
+
+    for attribute_name, attribute_value in self.test_data[evidence_key].items():
+      self.state_manager.client.hset(
+          evidence_key, attribute_name, json.dumps(attribute_value))
+    #mock_redis.return_value.hkeys.side_effect = self.hkeys_side_effect
+
+    #mock_redis.return_value.hget.side_effect = self.hget_side_effect
 
     result = self.state_manager.get_evidence_data(
         self.test_data[evidence_key]['id'])
+
+    raise Exception(result)
 
     # Check if the returned evidence_dict contains all of our test data
     for (expected_value, result_value) in zip(
