@@ -26,10 +26,6 @@ import pandas
 
 log = logging.getLogger('turbinia')
 
-LONGEST_TURBINIA_TASK_LENGTH = 31
-MAX_COUNT_DIGITS = 10
-STAT_CELL_SPACES = 2
-
 
 def echo_json(json_data: dict) -> None:
   """Pretty print JSON data."""
@@ -368,7 +364,13 @@ class StatsMarkdownReport(MarkdownReportComponent):
   def __init__(self, statistics: dict):
     super().__init__()
     self._statistics: dict = statistics
-    self.dict = {'TASK': [], 'COUNT': [], 'MIN': [], 'MEAN': [], 'MAX': []}
+    self.table_dict = {
+        'TASK': [],
+        'COUNT': [],
+        'MIN': [],
+        'MEAN': [],
+        'MAX': []
+    }
 
   def stat_to_markdown(self, task, stat_dict: dict) -> str:
     """Generates a single-line Markdown version of tasks per worker.
@@ -376,11 +378,11 @@ class StatsMarkdownReport(MarkdownReportComponent):
     Returns:
       markdown (str): Single-line Markdown version of stat.
     """
-    self.dict['TASK'].append(f'{task}')
-    self.dict['COUNT'].append(stat_dict.get('count', ''))
-    self.dict['MIN'].append(stat_dict.get('min', ''))
-    self.dict['MEAN'].append(stat_dict.get('mean', ''))
-    self.dict['MAX'].append(stat_dict.get('max', ''))
+    self.table_dict['TASK'].append(f'{task}')
+    self.table_dict['COUNT'].append(stat_dict.get('count', ''))
+    self.table_dict['MIN'].append(stat_dict.get('min', ''))
+    self.table_dict['MEAN'].append(stat_dict.get('mean', ''))
+    self.table_dict['MAX'].append(stat_dict.get('max', ''))
 
   def generate_data_frame(self, markdown=False):
     for stat_group, stat_dict in self._statistics.items():
