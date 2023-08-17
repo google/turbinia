@@ -9,7 +9,7 @@ Method | HTTP request | Description
 
 
 # **get_request_output**
-> file_type get_request_output(request_id)
+> object get_request_output(request_id)
 
 Get Request Output
 
@@ -18,13 +18,13 @@ Retrieve request output.
 ### Example
 
 * OAuth Authentication (oAuth2):
-
 ```python
 import time
+import os
 import turbinia_api_lib
-from turbinia_api_lib.api import turbinia_request_results_api
-from turbinia_api_lib.model.http_validation_error import HTTPValidationError
+from turbinia_api_lib.rest import ApiException
 from pprint import pprint
+
 # Defining the host is optional and defaults to http://localhost
 # See configuration.py for a list of all supported configuration parameters.
 configuration = turbinia_api_lib.Configuration(
@@ -36,24 +36,20 @@ configuration = turbinia_api_lib.Configuration(
 # Examples for each auth method are provided below, use the example that
 # satisfies your auth use case.
 
-# Configure OAuth2 access token for authorization: oAuth2
-configuration = turbinia_api_lib.Configuration(
-    host = "http://localhost"
-)
-configuration.access_token = 'YOUR_ACCESS_TOKEN'
+configuration.access_token = os.environ["ACCESS_TOKEN"]
 
 # Enter a context with an instance of the API client
 with turbinia_api_lib.ApiClient(configuration) as api_client:
     # Create an instance of the API class
-    api_instance = turbinia_request_results_api.TurbiniaRequestResultsApi(api_client)
-    request_id = "request_id_example" # str | 
+    api_instance = turbinia_api_lib.TurbiniaRequestResultsApi(api_client)
+    request_id = None # object | 
 
-    # example passing only required values which don't have defaults set
     try:
         # Get Request Output
         api_response = api_instance.get_request_output(request_id)
+        print("The response of TurbiniaRequestResultsApi->get_request_output:\n")
         pprint(api_response)
-    except turbinia_api_lib.ApiException as e:
+    except Exception as e:
         print("Exception when calling TurbiniaRequestResultsApi->get_request_output: %s\n" % e)
 ```
 
@@ -62,11 +58,11 @@ with turbinia_api_lib.ApiClient(configuration) as api_client:
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **request_id** | **str**|  |
+ **request_id** | [**object**](.md)|  | 
 
 ### Return type
 
-**file_type**
+**object**
 
 ### Authorization
 
@@ -77,9 +73,7 @@ Name | Type | Description  | Notes
  - **Content-Type**: Not defined
  - **Accept**: application/octet-stream, application/json
 
-
 ### HTTP response details
-
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
 **200** | Successful Response |  -  |
@@ -88,7 +82,7 @@ Name | Type | Description  | Notes
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **get_task_output**
-> file_type get_task_output(task_id)
+> object get_task_output(task_id)
 
 Get Task Output
 
@@ -97,13 +91,13 @@ Retrieves a task's output files.
 ### Example
 
 * OAuth Authentication (oAuth2):
-
 ```python
 import time
+import os
 import turbinia_api_lib
-from turbinia_api_lib.api import turbinia_request_results_api
-from turbinia_api_lib.model.http_validation_error import HTTPValidationError
+from turbinia_api_lib.rest import ApiException
 from pprint import pprint
+
 # Defining the host is optional and defaults to http://localhost
 # See configuration.py for a list of all supported configuration parameters.
 configuration = turbinia_api_lib.Configuration(
@@ -115,24 +109,20 @@ configuration = turbinia_api_lib.Configuration(
 # Examples for each auth method are provided below, use the example that
 # satisfies your auth use case.
 
-# Configure OAuth2 access token for authorization: oAuth2
-configuration = turbinia_api_lib.Configuration(
-    host = "http://localhost"
-)
-configuration.access_token = 'YOUR_ACCESS_TOKEN'
+configuration.access_token = os.environ["ACCESS_TOKEN"]
 
 # Enter a context with an instance of the API client
 with turbinia_api_lib.ApiClient(configuration) as api_client:
     # Create an instance of the API class
-    api_instance = turbinia_request_results_api.TurbiniaRequestResultsApi(api_client)
-    task_id = "task_id_example" # str | 
+    api_instance = turbinia_api_lib.TurbiniaRequestResultsApi(api_client)
+    task_id = None # object | 
 
-    # example passing only required values which don't have defaults set
     try:
         # Get Task Output
         api_response = api_instance.get_task_output(task_id)
+        print("The response of TurbiniaRequestResultsApi->get_task_output:\n")
         pprint(api_response)
-    except turbinia_api_lib.ApiException as e:
+    except Exception as e:
         print("Exception when calling TurbiniaRequestResultsApi->get_task_output: %s\n" % e)
 ```
 
@@ -141,11 +131,11 @@ with turbinia_api_lib.ApiClient(configuration) as api_client:
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **task_id** | **str**|  |
+ **task_id** | [**object**](.md)|  | 
 
 ### Return type
 
-**file_type**
+**object**
 
 ### Authorization
 
@@ -156,9 +146,7 @@ Name | Type | Description  | Notes
  - **Content-Type**: Not defined
  - **Accept**: application/octet-stream, application/json
 
-
 ### HTTP response details
-
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
 **200** | Successful Response |  -  |
