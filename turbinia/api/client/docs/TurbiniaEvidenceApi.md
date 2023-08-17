@@ -90,7 +90,7 @@ Name | Type | Description  | Notes
 
 Get Evidence By Id
 
-Retrieves an evidence in redis by using its UUID.  Args:   evidence_id (str): The UUID of the evidence.  Raises:   HTTPException: if the evidence is not found.  Returns:
+Retrieves an evidence in redis by using its UUID.  Args:   evidence_id (str): The UUID of the evidence.  Raises:   HTTPException: if the evidence is not found.  Returns:   Dictionary of the stored evidence
 
 ### Example
 
@@ -377,11 +377,11 @@ Name | Type | Description  | Notes
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **upload_evidence**
-> object upload_evidence(files)
+> object upload_evidence(calculate_hash, files, ticket_id)
 
 Upload Evidence
 
-Upload evidence file to server for processing.  Args:   file (List[UploadFile]): Evidence file to be uploaded to folder for later       processing. The maximum size of the file is 10 GB.   Raises:   TypeError: If pre-conditions are not met.  Returns:   List of uploaded evidences or warning messages if any.
+Upload evidence file to server for processing.  Args:   ticket_id (str): ID of the ticket, which will be the name of the folder      where the evidence will be saved.   calculate_hash (bool): Boolean defining if the hash of the evidence should     be calculated.   file (List[UploadFile]): Evidence files to be uploaded to folder for later       processing. The maximum size of the file is 10 GB.   Returns:   List of uploaded evidences or warning messages if any.
 
 ### Example
 
@@ -410,11 +410,13 @@ configuration.access_token = os.environ["ACCESS_TOKEN"]
 with turbinia_api_lib.ApiClient(configuration) as api_client:
     # Create an instance of the API class
     api_instance = turbinia_api_lib.TurbiniaEvidenceApi(api_client)
+    calculate_hash = None # object | 
     files = None # object | 
+    ticket_id = None # object | 
 
     try:
         # Upload Evidence
-        api_response = api_instance.upload_evidence(files)
+        api_response = api_instance.upload_evidence(calculate_hash, files, ticket_id)
         print("The response of TurbiniaEvidenceApi->upload_evidence:\n")
         pprint(api_response)
     except Exception as e:
@@ -426,7 +428,9 @@ with turbinia_api_lib.ApiClient(configuration) as api_client:
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
+ **calculate_hash** | [**object**](object.md)|  | 
  **files** | [**object**](object.md)|  | 
+ **ticket_id** | [**object**](object.md)|  | 
 
 ### Return type
 
