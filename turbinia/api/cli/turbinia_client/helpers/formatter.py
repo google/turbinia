@@ -372,11 +372,12 @@ class StatsMarkdownReport(MarkdownReportComponent):
         'MAX': []
     }
 
-  def stat_to_markdown(self, task, stat_dict: dict) -> str:
-    """Generates a single-line Markdown version of tasks per worker.
+  def stat_to_row(self, task: str, stat_dict: dict):
+    """Generates a row of the statistics table.
     
-    Returns:
-      markdown (str): Single-line Markdown version of stat.
+    Args:
+      task (str): Name of the current task.
+      stat_dict (dict): Dictionary with information about current row.
     """
     self.table_dict['TASK'].append(f'{task}')
     self.table_dict['COUNT'].append(stat_dict.get('count', ''))
@@ -384,7 +385,15 @@ class StatsMarkdownReport(MarkdownReportComponent):
     self.table_dict['MEAN'].append(stat_dict.get('mean', ''))
     self.table_dict['MAX'].append(stat_dict.get('max', ''))
 
-  def generate_data_frame(self, markdown=False):
+  def generate_data_frame(self, markdown: bool = False) -> pandas.DataFrame:
+    """Generates a panda DataFrame of the statistics table
+
+    Args:
+      markdown (bool): Bool defining if the tasks should be in markdown format.
+    
+    Returns: 
+      data_frame (DataFrame): Statistics table in pandas DataFrame format.
+    """
     for stat_group, stat_dict in self._statistics.items():
       stat_group = stat_group.replace('_', ' ').title()
       if stat_group in ('All Tasks', 'Successful Tasks', 'Failed Tasks',
@@ -404,11 +413,16 @@ class StatsMarkdownReport(MarkdownReportComponent):
     return pandas.DataFrame(self.dict)
 
   def ljust(self, s):
+    """Left justifies cells in data_frame."""
     s = s.astype(str).str.strip()
     return s.str.ljust(s.str.len().max())
 
   def generate_markdown(self) -> str:
-    """Generates a Markdown version of task statistics."""
+    """Generates a Markdown version of task statistics.
+    
+    Returns:
+      markdown(str): Markdown version of task statistics.
+    """
     report = [self.heading1('Execution time statistics for Turbinia:')]
 
     data_frame = self.generate_data_frame(True)
@@ -421,5 +435,9 @@ class StatsMarkdownReport(MarkdownReportComponent):
     return '\n'.join(report)
 
   def generate_csv(self) -> str:
-    """Generates a csv version of task statistics."""
+    """Generates a CSV version of task statistics.
+    
+    Returns:
+      csv(str): CSV version of task statistics.
+    """
     return self.generate_data_frame().to_csv(index=False)
