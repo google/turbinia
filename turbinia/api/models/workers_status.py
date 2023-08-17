@@ -125,9 +125,10 @@ class WorkersStatus(BaseModel):
     """Formats the workers_dict with relevant and serializable information.
     
     Args:
-      all_fields (bool): Returns all worker fields if set to true.
+      all_fields (bool): Returns all status fields if set to true.
+
     Returns:
-      task_dict (dict): A json-serializable and workers status dictionary.
+      status (dict): A json-serializable workers status dictionary.
     """
 
     workers_info = WorkersInfo()

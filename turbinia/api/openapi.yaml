@@ -348,9 +348,11 @@ paths:
   /api/task/statistics:
     get:
       description:
-        "Retrieves an evidence in redis by using its UUID.\nArgs:\n  evidence_id\
-        \ (str): The UUID of the evidence.\n\nRaises:\n  HTTPException: if the evidence\
-        \ is not found.\nReturns:"
+        "Retrieves  statistics for Turbinia execution.\n\nArgs:\n  days\
+        \ (int): The number of days we want history for.\n  task_id (string): The\
+        \ Id of the task.\n  request_id (string): The Id of the request we want tasks\
+        \ for.\n  user (string): The user of the request we want tasks for.\n\nReturns:\n\
+        \  statistics (dict): Task statistics report."
       operationId: get_task_statistics
       parameters:
         - in: query
@@ -395,9 +397,8 @@ paths:
   /api/task/workers:
     get:
       description:
-        "Retrieves an evidence in redis by using its UUID.\nArgs:\n  evidence_id\
-        \ (str): The UUID of the evidence.\n\nRaises:\n  HTTPException: if the evidence\
-        \ is not found.\nReturns:"
+        "Retrieves the workers status.\n\nArgs:\n  days (int): The UUID\
+        \ of the evidence.\n\nRaises:\n  HTTPException: if no worker is found.\nReturns:"
       operationId: get_workers_status
       parameters:
         - in: query
