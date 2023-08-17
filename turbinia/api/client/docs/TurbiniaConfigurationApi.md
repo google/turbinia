@@ -11,7 +11,7 @@ Method | HTTP request | Description
 
 
 # **get_evidence_attributes_by_name**
-> object get_evidence_attributes_by_name(evidence_name)
+> bool, date, datetime, dict, float, int, list, str, none_type get_evidence_attributes_by_name(evidence_name)
 
 Get Evidence Attributes By Name
 
@@ -20,13 +20,13 @@ Returns supported Evidence object types and required parameters.
 ### Example
 
 * OAuth Authentication (oAuth2):
+
 ```python
 import time
-import os
 import turbinia_api_lib
-from turbinia_api_lib.rest import ApiException
+from turbinia_api_lib.api import turbinia_configuration_api
+from turbinia_api_lib.model.http_validation_error import HTTPValidationError
 from pprint import pprint
-
 # Defining the host is optional and defaults to http://localhost
 # See configuration.py for a list of all supported configuration parameters.
 configuration = turbinia_api_lib.Configuration(
@@ -38,20 +38,24 @@ configuration = turbinia_api_lib.Configuration(
 # Examples for each auth method are provided below, use the example that
 # satisfies your auth use case.
 
-configuration.access_token = os.environ["ACCESS_TOKEN"]
+# Configure OAuth2 access token for authorization: oAuth2
+configuration = turbinia_api_lib.Configuration(
+    host = "http://localhost"
+)
+configuration.access_token = 'YOUR_ACCESS_TOKEN'
 
 # Enter a context with an instance of the API client
 with turbinia_api_lib.ApiClient(configuration) as api_client:
     # Create an instance of the API class
-    api_instance = turbinia_api_lib.TurbiniaConfigurationApi(api_client)
-    evidence_name = None # object | 
+    api_instance = turbinia_configuration_api.TurbiniaConfigurationApi(api_client)
+    evidence_name = None # bool, date, datetime, dict, float, int, list, str, none_type | 
 
+    # example passing only required values which don't have defaults set
     try:
         # Get Evidence Attributes By Name
         api_response = api_instance.get_evidence_attributes_by_name(evidence_name)
-        print("The response of TurbiniaConfigurationApi->get_evidence_attributes_by_name:\n")
         pprint(api_response)
-    except Exception as e:
+    except turbinia_api_lib.ApiException as e:
         print("Exception when calling TurbiniaConfigurationApi->get_evidence_attributes_by_name: %s\n" % e)
 ```
 
@@ -60,11 +64,11 @@ with turbinia_api_lib.ApiClient(configuration) as api_client:
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **evidence_name** | [**object**](.md)|  | 
+ **evidence_name** | **bool, date, datetime, dict, float, int, list, str, none_type**|  |
 
 ### Return type
 
-**object**
+**bool, date, datetime, dict, float, int, list, str, none_type**
 
 ### Authorization
 
@@ -75,7 +79,9 @@ Name | Type | Description  | Notes
  - **Content-Type**: Not defined
  - **Accept**: application/json
 
+
 ### HTTP response details
+
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
 **200** | Successful Response |  -  |
@@ -84,7 +90,7 @@ Name | Type | Description  | Notes
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **get_evidence_types**
-> object get_evidence_types()
+> bool, date, datetime, dict, float, int, list, str, none_type get_evidence_types()
 
 Get Evidence Types
 
@@ -93,13 +99,12 @@ Returns supported Evidence object types and required parameters.
 ### Example
 
 * OAuth Authentication (oAuth2):
+
 ```python
 import time
-import os
 import turbinia_api_lib
-from turbinia_api_lib.rest import ApiException
+from turbinia_api_lib.api import turbinia_configuration_api
 from pprint import pprint
-
 # Defining the host is optional and defaults to http://localhost
 # See configuration.py for a list of all supported configuration parameters.
 configuration = turbinia_api_lib.Configuration(
@@ -111,19 +116,23 @@ configuration = turbinia_api_lib.Configuration(
 # Examples for each auth method are provided below, use the example that
 # satisfies your auth use case.
 
-configuration.access_token = os.environ["ACCESS_TOKEN"]
+# Configure OAuth2 access token for authorization: oAuth2
+configuration = turbinia_api_lib.Configuration(
+    host = "http://localhost"
+)
+configuration.access_token = 'YOUR_ACCESS_TOKEN'
 
 # Enter a context with an instance of the API client
 with turbinia_api_lib.ApiClient(configuration) as api_client:
     # Create an instance of the API class
-    api_instance = turbinia_api_lib.TurbiniaConfigurationApi(api_client)
+    api_instance = turbinia_configuration_api.TurbiniaConfigurationApi(api_client)
 
+    # example, this endpoint has no required or optional parameters
     try:
         # Get Evidence Types
         api_response = api_instance.get_evidence_types()
-        print("The response of TurbiniaConfigurationApi->get_evidence_types:\n")
         pprint(api_response)
-    except Exception as e:
+    except turbinia_api_lib.ApiException as e:
         print("Exception when calling TurbiniaConfigurationApi->get_evidence_types: %s\n" % e)
 ```
 
@@ -133,7 +142,7 @@ This endpoint does not need any parameter.
 
 ### Return type
 
-**object**
+**bool, date, datetime, dict, float, int, list, str, none_type**
 
 ### Authorization
 
@@ -144,7 +153,9 @@ This endpoint does not need any parameter.
  - **Content-Type**: Not defined
  - **Accept**: application/json
 
+
 ### HTTP response details
+
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
 **200** | Successful Response |  -  |
@@ -152,7 +163,7 @@ This endpoint does not need any parameter.
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **get_request_options**
-> object get_request_options()
+> bool, date, datetime, dict, float, int, list, str, none_type get_request_options()
 
 Get Request Options
 
@@ -161,13 +172,12 @@ Returns a list BaseRequestOptions attributes.
 ### Example
 
 * OAuth Authentication (oAuth2):
+
 ```python
 import time
-import os
 import turbinia_api_lib
-from turbinia_api_lib.rest import ApiException
+from turbinia_api_lib.api import turbinia_configuration_api
 from pprint import pprint
-
 # Defining the host is optional and defaults to http://localhost
 # See configuration.py for a list of all supported configuration parameters.
 configuration = turbinia_api_lib.Configuration(
@@ -179,19 +189,23 @@ configuration = turbinia_api_lib.Configuration(
 # Examples for each auth method are provided below, use the example that
 # satisfies your auth use case.
 
-configuration.access_token = os.environ["ACCESS_TOKEN"]
+# Configure OAuth2 access token for authorization: oAuth2
+configuration = turbinia_api_lib.Configuration(
+    host = "http://localhost"
+)
+configuration.access_token = 'YOUR_ACCESS_TOKEN'
 
 # Enter a context with an instance of the API client
 with turbinia_api_lib.ApiClient(configuration) as api_client:
     # Create an instance of the API class
-    api_instance = turbinia_api_lib.TurbiniaConfigurationApi(api_client)
+    api_instance = turbinia_configuration_api.TurbiniaConfigurationApi(api_client)
 
+    # example, this endpoint has no required or optional parameters
     try:
         # Get Request Options
         api_response = api_instance.get_request_options()
-        print("The response of TurbiniaConfigurationApi->get_request_options:\n")
         pprint(api_response)
-    except Exception as e:
+    except turbinia_api_lib.ApiException as e:
         print("Exception when calling TurbiniaConfigurationApi->get_request_options: %s\n" % e)
 ```
 
@@ -201,7 +215,7 @@ This endpoint does not need any parameter.
 
 ### Return type
 
-**object**
+**bool, date, datetime, dict, float, int, list, str, none_type**
 
 ### Authorization
 
@@ -212,7 +226,9 @@ This endpoint does not need any parameter.
  - **Content-Type**: Not defined
  - **Accept**: application/json
 
+
 ### HTTP response details
+
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
 **200** | Successful Response |  -  |
@@ -220,7 +236,7 @@ This endpoint does not need any parameter.
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **read_config**
-> object read_config()
+> bool, date, datetime, dict, float, int, list, str, none_type read_config()
 
 Read Config
 
@@ -229,13 +245,12 @@ Retrieve turbinia config.
 ### Example
 
 * OAuth Authentication (oAuth2):
+
 ```python
 import time
-import os
 import turbinia_api_lib
-from turbinia_api_lib.rest import ApiException
+from turbinia_api_lib.api import turbinia_configuration_api
 from pprint import pprint
-
 # Defining the host is optional and defaults to http://localhost
 # See configuration.py for a list of all supported configuration parameters.
 configuration = turbinia_api_lib.Configuration(
@@ -247,19 +262,23 @@ configuration = turbinia_api_lib.Configuration(
 # Examples for each auth method are provided below, use the example that
 # satisfies your auth use case.
 
-configuration.access_token = os.environ["ACCESS_TOKEN"]
+# Configure OAuth2 access token for authorization: oAuth2
+configuration = turbinia_api_lib.Configuration(
+    host = "http://localhost"
+)
+configuration.access_token = 'YOUR_ACCESS_TOKEN'
 
 # Enter a context with an instance of the API client
 with turbinia_api_lib.ApiClient(configuration) as api_client:
     # Create an instance of the API class
-    api_instance = turbinia_api_lib.TurbiniaConfigurationApi(api_client)
+    api_instance = turbinia_configuration_api.TurbiniaConfigurationApi(api_client)
 
+    # example, this endpoint has no required or optional parameters
     try:
         # Read Config
         api_response = api_instance.read_config()
-        print("The response of TurbiniaConfigurationApi->read_config:\n")
         pprint(api_response)
-    except Exception as e:
+    except turbinia_api_lib.ApiException as e:
         print("Exception when calling TurbiniaConfigurationApi->read_config: %s\n" % e)
 ```
 
@@ -269,7 +288,7 @@ This endpoint does not need any parameter.
 
 ### Return type
 
-**object**
+**bool, date, datetime, dict, float, int, list, str, none_type**
 
 ### Authorization
 
@@ -280,7 +299,9 @@ This endpoint does not need any parameter.
  - **Content-Type**: Not defined
  - **Accept**: application/json
 
+
 ### HTTP response details
+
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
 **200** | Successful Response |  -  |

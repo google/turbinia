@@ -1,3 +1,0 @@
-click
-google-auth-oauthlib
-turbinia-api-lib

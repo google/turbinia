@@ -1,3 +1,0 @@
-[console_scripts]
-turbinia-client = turbinia_client.turbiniacli_tool:main
-
