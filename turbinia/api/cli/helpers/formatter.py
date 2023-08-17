@@ -25,16 +25,21 @@ import json
 
 log = logging.getLogger('turbinia')
 
+IMPORTANT_ATTRIBUTES = {
+    'id', '_name', 'type', 'size', 'request_id', 'tasks', 'source_path',
+    'local_path', 'creation_time', 'last_updated'
+}
+
 
 def echo_json(json_data: dict) -> None:
   """Pretty print JSON data."""
-  if isinstance(json_data, dict):
+  if isinstance(json_data, (dict, list, int)):
     click_echo(json.dumps(json_data, indent=2))
 
 
 class MarkdownReportComponent(ABC):
-  """Components for generating Turbinia request/task
-      markdown reports.
+  """Components for generating Turbinia request/task	
+      markdown reports.	
   """
 
   def __init__(self):
@@ -67,95 +72,91 @@ class MarkdownReportComponent(ABC):
     self._parent = parent
 
   def bold(self, text):
-    """Formats text as bold in Markdown format.
-
-    Args:
-        text(string): Text to format
-
-    Return:
-        string: Formatted text.
+    """Formats text as bold in Markdown format.	
+    Args:	
+        text(string): Text to format	
+    Return:	
+        string: Formatted text.	
     """
     return f'**{text.strip():s}**'
 
-  def heading1(self, text):
-    """Formats text as heading 1 in Markdown format.
-
-    Args:
-        text(string): Text to format
-
-    Return:
-        string: Formatted text.
+  def heading(self, text, number):
+    """Formats text as heading in Markdown format.	
+    Args:	
+        text(string): Text to format	
+        number(int): Heading number	
+    Return:	
+        string: Formatted text.	
     """
-    return f'# {text.strip():s}'
+    return f'{"#"*number} {text.strip():s}'
+
+  def heading1(self, text):
+    """Formats text as heading 1 in Markdown format.	
+    Args:	
+        text(string): Text to format	
+    Return:	
+        string: Formatted text.	
+    """
+    return self.heading(text, 1)
 
   def heading2(self, text):
-    """Formats text as heading 2 in Markdown format.
-
-    Args:
-        text(string): Text to format
-
-    Return:
-        string: Formatted text.
+    """Formats text as heading 2 in Markdown format.	
+    Args:	
+        text(string): Text to format	
+    Return:	
+        string: Formatted text.	
     """
-    return f'## {text.strip():s}'
+    return self.heading(text, 2)
 
   def heading3(self, text):
-    """Formats text as heading 3 in Markdown format.
-
-    Args:
-        text(string): Text to format
-
-    Return:
-        string: Formatted text.
+    """Formats text as heading 3 in Markdown format.	
+    Args:	
+        text(string): Text to format	
+    Return:	
+        string: Formatted text.	
     """
-    return f'### {text.strip():s}'
+    return self.heading(text, 3)
 
   def heading4(self, text):
-    """Formats text as heading 4 in Markdown format.
-
-    Args:
-        text(string): Text to format
-
-    Return:
-        string: Formatted text.
+    """Formats text as heading 4 in Markdown format.	
+    Args:	
+        text(string): Text to format	
+    Return:	
+        string: Formatted text.	
     """
-    return f'#### {text.strip():s}'
+    return self.heading(text, 4)
 
   def heading5(self, text):
-    """Formats text as heading 5 in Markdown format.
-     Args:
-        text(string): Text to format
-     Return:
-        string: Formatted text.
+    """Formats text as heading 5 in Markdown format.	
+     Args:	
+        text(string): Text to format	
+     Return:	
+        string: Formatted text.	
     """
-    return f'##### {text.strip():s}'
+    return self.heading(text, 5)
 
   def bullet(self, text, level=1):
-    """Formats text as a bullet in Markdown format.
-
-      Args:
-        text(string): Text to format
-        level(int): Indentation level.
-      Return:
-        string: Formatted text.
+    """Formats text as a bullet in Markdown format.	
+      Args:	
+        text(string): Text to format	
+        level(int): Indentation level.	
+      Return:	
+        string: Formatted text.	
     """
     return f"{'    ' * (level - 1):s}* {text.strip():s}"
 
   def code(self, text):
-    """Formats text as code in Markdown format.
-
-      Args:
-          text(string): Text to format
-
-     Return:
-          string: Formatted text.
+    """Formats text as code in Markdown format.	
+      Args:	
+          text(string): Text to format	
+     Return:	
+          string: Formatted text.	
     """
     return f'`{text.strip():s}`'
 
   def add(self, component: MarkdownReportComponent) -> None:
-    """Adds a MarkdownReportComponent object to the components list.
-
-    This method should additionally set the parent object.
+    """Adds a MarkdownReportComponent object to the components list.	
+    This method should additionally set the parent object.	
     """
     pass
 
@@ -164,11 +165,44 @@ class MarkdownReportComponent(ABC):
     pass
 
   def remove(self, component: MarkdownReportComponent) -> None:
-    """Removes a MarkdownReportComponent object from the components list.
-
-    This method should set the component's object to None.
+    """Removes a MarkdownReportComponent object from the components list.	
+    This method should set the component's object to None.	
     """
     pass
+
+  def list_to_markdown(self, original_list, level=1):
+    if not original_list:
+      return [self.bullet('[EMPTY LIST]', level)]
+    report = []
+    for item in original_list:
+      if isinstance(item, dict):
+        report.extend(self.dict_to_markdown(item, level + 1))
+      elif isinstance(item, list):
+        report.extend(self.list_to_markdown(item, level + 1))
+      else:
+        report.append(self.bullet(item, level))
+    return report
+
+  def dict_to_markdown(
+      self, original_dict, level=1, ignore=None, show_null=False,
+      format_name=True):
+    if not original_dict:
+      return [self.bullet('[EMPTY DICTIONARY]', level)]
+    report: list[str] = []
+    for key, value in original_dict.items():
+      if (ignore and
+          key in ignore) or not (show_null or value or value is False):
+        continue
+      name = key.replace('_', ' ').title() if format_name else key
+      if isinstance(value, dict):
+        report.append(self.bullet(f'{name}:', level))
+        report.extend(self.dict_to_markdown(value, level + 1))
+      elif isinstance(value, list):
+        report.append(self.bullet(f'{name}:', level))
+        report.extend(self.list_to_markdown(value, level + 1))
+      else:
+        report.append(self.bullet(f'{name}: {value}', level))
+    return report
 
   @abstractmethod
   def generate_markdown(self) -> str:
@@ -320,3 +354,99 @@ class WorkersMarkdownReport(MarkdownReportComponent):
   def generate_markdown(self) -> str:
     """Generates a Markdown version of tasks per worker."""
     raise NotImplementedError
+
+
+class EvidenceMarkdownReport(MarkdownReportComponent):
+  """Turbinia Evidence Markdown report."""
+
+  def __init__(self, evidence_data: dict):
+    """Initializes a EvidenceMarkdownReport object."""
+    super().__init__()
+    self._evidence_data: dict = evidence_data
+
+  def generate_markdown(
+      self, level=1, show_ignored=False, show_null=False) -> str:
+    """Generates a Markdown version of Requests results."""
+    report: list[str] = []
+    evidence_dict: dict = self._evidence_data
+    if not evidence_dict:
+      return ''
+    try:
+      report.append(
+          self.heading(
+              f"Evidence ID: {evidence_dict.get('id', 'null')}", level + 1))
+      report.append(
+          self.bullet(
+              f"Evidence Name: {evidence_dict.get('_name', 'null')}", level))
+      report.append(
+          self.bullet(
+              f"Evidence Type: {evidence_dict.get('type', 'null')}", level))
+      report.append(
+          self.bullet(
+              f"Evidence Size: {evidence_dict.get('size', 'null')}", level))
+      report.append(
+          self.bullet(
+              f"Request ID: {evidence_dict.get('request_id', 'null')}", level))
+      report.append(self.bullet('Tasks:', level))
+      report.extend(
+          self.list_to_markdown(evidence_dict.get('tasks'), level + 1))
+      report.append(
+          self.bullet(
+              f"Source Path: {evidence_dict.get('source_path', 'null')}",
+              level))
+      report.append(
+          self.bullet(
+              f"Local Path: {evidence_dict.get('local_path', 'null')}", level))
+      report.append(
+          self.bullet(
+              f"Creation Time: {evidence_dict.get('creation_time', 'null'),}",
+              level))
+      report.append(
+          self.bullet(
+              f"Last Update: {evidence_dict.get('last_updated', 'null')}",
+              level))
+
+      if show_ignored:
+        report.extend(
+            self.dict_to_markdown(
+                evidence_dict, level, IMPORTANT_ATTRIBUTES, show_null))
+
+      report.append('')
+
+    except TypeError as exception:
+      log.warning(f'Error formatting the Markdown report: {exception!s}')
+
+    self.report = '\n'.join(report)
+    return self.report
+
+
+class EvidenceSummaryMarkdownReport(EvidenceMarkdownReport):
+  """Turbinia Evidence Markdown report."""
+
+  def __init__(self, summary: dict | list | int):
+    """Initializes a EvidenceMarkdownReport object."""
+    super().__init__({})
+    self._summary = summary
+
+  def generate_value_markdown(self, summary, level=1):
+    report = []
+    for item in summary:
+      self._evidence_data = item
+      report.append(self.generate_markdown(level + 1))
+    return report
+
+  def generate_summary_markdown(self, output='keys'):
+    if output == 'values':
+      if isinstance(self._summary, dict):
+        report = []
+        for attribute_value, value in self._summary.items():
+          report.append(self.bullet(f'{attribute_value}:'))
+          report.extend(self.generate_value_markdown(value, 2))
+        return '\n'.join(report)
+      return '\n'.join(self.generate_value_markdown(self._summary))
+    elif isinstance(self._summary, list):
+      return '\n'.join(self.list_to_markdown(self._summary))
+    elif isinstance(self._summary, dict):
+      return '\n'.join(self.dict_to_markdown(self._summary, format_name=False))
+    elif isinstance(self._summary, int):
+      return self.heading2(f'{self._summary} evidences found')

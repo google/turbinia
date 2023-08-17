@@ -20,6 +20,8 @@ import click
 import base64
 import tarfile
 
+from fastapi import UploadFile
+
 from turbinia_api_lib import exceptions
 from turbinia_api_lib import api_client
 from turbinia_api_lib.api import turbinia_requests_api
@@ -27,9 +29,13 @@ from turbinia_api_lib.api import turbinia_tasks_api
 from turbinia_api_lib.api import turbinia_configuration_api
 from turbinia_api_lib.api import turbinia_jobs_api
 from turbinia_api_lib.api import turbinia_request_results_api
+from turbinia_api_lib.api import turbinia_evidence_api
 
 from turbinia_client.core import groups
 from turbinia_client.helpers import formatter
+
+from turbinia.processors.mount_local import GetDiskSize
+from turbinia.config.turbinia_config_tmpl import MAX_UPLOAD_SIZE
 
 log = logging.getLogger('turbinia')
 
@@ -286,3 +292,155 @@ def create_request(ctx: click.Context, *args: int, **kwargs: int) -> None:
         f'when calling create_request: {exception.body}')
   except (TypeError, exceptions.ApiTypeError) as exception:
     log.error(f'The request object is invalid. {exception}')
+
+
+@groups.evidence_group.command('summary')
+@click.pass_context
+@click.option(
+    '--sort', '-s', help='Attribute by which output will be sort.',
+    required=False)
+@click.option('--output', '-o', help='Type of output.', required=False)
+@click.option(
+    '--json_dump', '-j', help='Generates JSON output.', is_flag=True,
+    required=False)
+def get_evidence_summary(
+    ctx: click.Context, sort: str = None, output: str = 'keys',
+    json_dump: bool = None) -> None:
+  """Gets Turbinia evidence status."""
+  client: api_client.ApiClient = ctx.obj.api_client
+  api_instance = turbinia_evidence_api.TurbiniaEvidenceApi(client)
+  try:
+    api_response = api_instance.get_evidence_summary(sort, output)
+    if json_dump:
+      formatter.echo_json(api_response)
+    else:
+      report = formatter.EvidenceSummaryMarkdownReport(
+          api_response).generate_summary_markdown(output)
+      click.echo(report)
+  except exceptions.ApiException as exception:
+    log.error(
+        f'Received status code {exception.status} '
+        f'when calling get_evidence_summary: {exception.body}')
+
+
+@groups.evidence_group.command('query')
+@click.pass_context
+@click.argument('attribute')
+@click.argument('value')
+@click.option('--output', '-o', help='Type of output.', required=False)
+@click.option(
+    '--json_dump', '-j', help='Generates JSON output.', is_flag=True,
+    required=False)
+def query_evidence(
+    ctx: click.Context, attribute: str, value: str, output: str,
+    json_dump: bool) -> None:
+  """Gets Turbinia task status."""
+  client: api_client.ApiClient = ctx.obj.api_client
+  api_instance = turbinia_evidence_api.TurbiniaEvidenceApi(client)
+  try:
+    api_response = api_instance.query_evidence(value, attribute, output)
+    if json_dump:
+      formatter.echo_json(api_response)
+    else:
+      report = formatter.EvidenceSummaryMarkdownReport(
+          api_response).generate_summary_markdown(output)
+      click.echo(report)
+  except exceptions.ApiException as exception:
+    log.error(
+        f'Received status code {exception.status} '
+        f'when calling get_task_status: {exception.body}')
+
+
+@groups.evidence_group.command('get')
+@click.pass_context
+@click.argument('evidence_id')
+@click.option(
+    '--show_ignored', '-i', help='Shows ignored evidence attributes.',
+    is_flag=True, required=False)
+@click.option(
+    '--show_null', '-n', help='Shows evidence attributes with null value.',
+    is_flag=True, required=False)
+@click.option(
+    '--json_dump', '-j', help='Generates JSON output.', is_flag=True,
+    required=False)
+def get_evidence(
+    ctx: click.Context, evidence_id: str, show_ignored: bool, show_null: bool,
+    json_dump: bool) -> None:
+  """Gets Turbinia evidence status."""
+  client: api_client.ApiClient = ctx.obj.api_client
+  api_instance = turbinia_evidence_api.TurbiniaEvidenceApi(client)
+  try:
+    api_response = api_instance.get_evidence_by_id(evidence_id)
+    if json_dump:
+      formatter.echo_json(api_response)
+    else:
+      report = formatter.EvidenceMarkdownReport(api_response).generate_markdown(
+          1, show_ignored, show_null)
+      click.echo(report)
+  except exceptions.ApiException as exception:
+    log.error(
+        f'Received status code {exception.status} '
+        f'when calling get_evidence: {exception.body}')
+
+
+import requests
+
+
+@groups.evidence_group.command('upload')
+@click.pass_context
+@click.argument('ticket_id')
+@click.option(
+    '--file', '-f', help='List of files', required=False, multiple=True)
+@click.option(
+    '--directory', '-d', help='Directory of files', required=False,
+    multiple=True)
+@click.option(
+    '--calculate_hash', '-c', help='Calculates file hash.', is_flag=True,
+    required=False)
+@click.option(
+    '--json_dump', '-j', help='Generates JSON output.', is_flag=True,
+    required=False)
+def upload_evidence(
+    ctx: click.Context, ticket_id: str, file: list, directory: list,
+    calculate_hash: bool, json_dump: bool) -> None:
+  """Gets Turbinia evidence status."""
+  client: api_client.ApiClient = ctx.obj.api_client
+  api_instance = turbinia_evidence_api.TurbiniaEvidenceApi(client)
+  files = []
+  for file_path in file:
+    try:
+      size = os.path.getsize(file_path)
+      if size > MAX_UPLOAD_SIZE:
+        error_message = (
+            f'Unable to upload {size / (1024 ** 3)} GB file',
+            f'{file_path} greater than {MAX_UPLOAD_SIZE / (1024 ** 3)} GB')
+        log.error(error_message)
+        continue
+      files = bytes(open(file_path, 'rb').read())
+
+    except OSError:
+      log.error(f'Unable to read file in {file_path}')
+      continue
+  try:
+    #api_response = api_instance.upload_evidence(files)
+    files = {
+        'files': ('foo.gif', open(file_path, 'rb').read(), 'text/png'),
+    }
+
+    import json
+    api_response = requests.post(
+        'http://127.0.0.1:8000/api/evidence/upload', files=files, timeout=10)
+    if json_dump:
+      formatter.echo_json(api_response)
+    else:
+      report = '\n'.join(
+          formatter.EvidenceMarkdownReport(api_response).list_to_markdown(
+              json.loads(api_response.content)))
+      click.echo(report)
+  except exceptions.ApiException as exception:
+    log.error(
+        f'Received status code {exception.status} '
+        f'when calling upload_evidence: {exception.body}')
+
+
+#todo(igormr): Add upload command and check size of file on client side
