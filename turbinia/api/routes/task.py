@@ -18,19 +18,18 @@ import logging
 import json
 
 from collections import OrderedDict
-from datetime import datetime
-from datetime import timedelta
 
 from fastapi import HTTPException, APIRouter
 from fastapi.responses import JSONResponse
 from fastapi.requests import Request
 from fastapi.encoders import jsonable_encoder
 
-from operator import itemgetter, attrgetter
+from operator import attrgetter
 from pydantic import ValidationError
 from turbinia import state_manager
 from turbinia import config as turbinia_config
 from turbinia import client as TurbiniaClientProvider
+from turbinia.api.models import workers_status
 
 log = logging.getLogger('turbinia:api_server:task')
 
@@ -39,147 +38,9 @@ router = APIRouter(prefix='/task', tags=['Turbinia Tasks'])
 client = TurbiniaClientProvider.get_turbinia_client()
 
 
-class WorkerStatus:
-  """A json-serializable report of the workers status."""
-
-  def __init__(self, instance: str, project: str, region: str, days: int = 7):
-    """Initializes the WorkerStatus class.
-
-    Args:
-      instance (string): The Turbinia instance name (by default the same as the
-          INSTANCE_ID in the config).
-      project (string): The name of the project.
-      region (string): The name of the zone to execute in.
-      days (int): The number of days we want the report for.
-    """
-
-    self.instance = instance
-    self.project = project
-    self.region = region
-    self.days = days
-    self.workers_dict = {}
-    self.unassigned_dict = {}
-    self.scheduled_counter = 0
-
-  def simplify_task_dict(self, task: dict) -> dict:
-    """Creates a json-serializable dict for one Task.
-
-    Args:
-      task (dict): Original Task dictionary
-    
-    Returns:
-      task_dict (dict): Json-serializable Task dictionary.
-    """
-
-    task_dict = {
-        'task_name':
-            task['task_name'],
-        'last_update':
-            task['last_update'].strftime(turbinia_config.DATETIME_FORMAT),
-        'status':
-            task['status'],
-        'run_time':
-            str(task['run_time'])
-    }
-    return task_dict
-
-  def get_workers_dict(self):
-    """Retrieves the general workers dict.
-    
-    Returns:
-      task_dict (dict): A non-serializable workers status dictionary.
-    """
-
-    task_results = client.get_task_data(
-        self.instance, self.project, self.region, self.days)
-
-    # Sort task_results by last updated timestamp.
-    task_results = sorted(
-        task_results, key=itemgetter('last_update'), reverse=True)
-
-    for result in task_results:
-      worker_node = result.get('worker_name')
-      status = result.get('status')
-      status = status if status else 'No task status'
-      if worker_node and worker_node not in self.workers_dict:
-        self.workers_dict[worker_node] = []
-      elif not worker_node:
-        # Track scheduled/unassigned Tasks for reporting.
-        self.scheduled_counter += 1
-        worker_node = 'Unassigned'
-        if worker_node not in self.unassigned_dict:
-          self.unassigned_dict[worker_node] = []
-      if worker_node:
-        task_dict = {}
-        task_dict['task_id'] = result.get('id')
-        task_dict['last_update'] = result.get('last_update')
-        task_dict['task_name'] = result.get('name')
-        task_dict['status'] = status
-        # Check status for anything that is running.
-        if 'running' in status:
-          run_time = (datetime.utcnow() -
-                      result.get('last_update')).total_seconds()
-          run_time = timedelta(seconds=run_time)
-          task_dict['run_time'] = run_time
-        else:
-          run_time = result.get('run_time')
-          task_dict['run_time'] = run_time if run_time else 'No run time.'
-        # Update to correct dictionary
-        if worker_node == 'Unassigned':
-          self.unassigned_dict[worker_node].append(task_dict)
-        else:
-          self.workers_dict[worker_node].append(task_dict)
-
-  def get_worker_status(self, all_fields: bool = False):
-    """Formats the workers_dict with relevant and serializable information.
-    
-    Args:
-      all_fields (bool): Returns all worker fields if set to true.
-
-    Returns:
-      task_dict (dict): A json-serializable and workers status dictionary.
-    """
-
-    self.get_workers_dict()
-
-    if not self.workers_dict:
-      return {}
-
-    report = {'scheduled_tasks': self.scheduled_counter}
-
-    for worker_node, tasks in self.workers_dict.items():
-      report[worker_node] = {}
-      # Adds the statuses chronologically
-      run_status, queued_status, other_status = {}, {}, {}
-      for task in tasks:
-        if 'running' in task['status']:
-          run_status[task['task_id']] = self.simplify_task_dict(task)
-        elif 'queued' in task['status']:
-          queued_status[task['task_id']] = self.simplify_task_dict(task)
-        else:
-          other_status[task['task_id']] = self.simplify_task_dict(task)
-    # Add each of the status lists back to report list
-      report[worker_node]['run_status'] = run_status
-      report[worker_node]['queued_status'] = queued_status
-      # Add Finished Tasks
-      if all_fields:
-        report[worker_node]['other_status'] = other_status
-
-      # Add unassigned worker tasks
-      unassigned_status = {}
-      for tasks in self.unassigned_dict.values():
-        for task in tasks:
-          unassigned_status[task['task_id']] = self.simplify_task_dict(task)
-      # Now add to main report
-      if all_fields:
-        report[worker_node]['unassigned_status'] = unassigned_status
-
-    return report
-
-
 def format_task_statistics(
-    instance, project, region, days=0, task_id=None, request_id=None,
-    user=None) -> dict:
+    instance: str, project: str, region: str, days: int = 0,
+    task_id: str = None, request_id: str = None, user: str = None) -> dict:
   """Formats statistics for Turbinia execution data as a json-serializable dict.
 
     Args:
@@ -263,13 +124,9 @@ async def get_workers_status(
     HTTPException: if no worker is found.
   Returns:
   """
-  workers_dict = WorkerStatus(
-      instance=turbinia_config.INSTANCE_ID,
-      project=turbinia_config.TURBINIA_PROJECT,
-      region=turbinia_config.TURBINIA_REGION,
-      days=days).get_worker_status(all_fields)
-  if workers_dict:
-    return JSONResponse(content=workers_dict, status_code=200)
+  workers_dict = workers_status.WorkersStatus()
+  if workers_dict.get_workers_status(days, all_fields):
+    return JSONResponse(content=workers_dict.status, status_code=200)
   raise HTTPException(status_code=404, detail='No workers found.')
 
 
