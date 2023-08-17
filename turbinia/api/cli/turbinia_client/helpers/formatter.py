@@ -398,23 +398,24 @@ class StatsMarkdownReport(MarkdownReportComponent):
       stat_group = stat_group.replace('_', ' ').title()
       if stat_group in ('All Tasks', 'Successful Tasks', 'Failed Tasks',
                         'Requests'):
-        first_column = self.heading2(
+        first_column = self.heading1(
             f'{stat_group}:') if markdown else stat_group
-        self.stat_to_markdown(first_column, stat_dict)
+        self.stat_to_row(first_column, stat_dict)
         continue
       if markdown:
-        self.stat_to_markdown(self.heading2(stat_group), {})
+        self.stat_to_row(self.heading1(f'{stat_group}:'), {})
       for description, inner_dict in stat_dict.items():
         first_column = self.bullet(
-            f'{description}:',
-            2) if markdown else f'{stat_group.split(" ")[-1]} {description}'
-        self.stat_to_markdown(first_column, inner_dict)
+            f'{description}:'
+        ) if markdown else f'{stat_group.split(" ")[-1]} {description}'
+        self.stat_to_row(first_column, inner_dict)
 
-    return pandas.DataFrame(self.dict)
+    return pandas.DataFrame(self.table_dict)
 
   def ljust(self, s):
     """Left justifies cells in data_frame."""
     s = s.astype(str).str.strip()
+
     return s.str.ljust(s.str.len().max())
 
   def generate_markdown(self) -> str:
@@ -423,7 +424,7 @@ class StatsMarkdownReport(MarkdownReportComponent):
     Returns:
       markdown(str): Markdown version of task statistics.
     """
-    report = [self.heading1('Execution time statistics for Turbinia:')]
+    report = ['Execution time statistics for Turbinia:']
 
     data_frame = self.generate_data_frame(True)
 
