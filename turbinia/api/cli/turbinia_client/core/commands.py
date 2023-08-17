@@ -433,7 +433,7 @@ def upload_evidence(
     else:
       report = '\n'.join(
           formatter.EvidenceMarkdownReport(api_response).list_to_markdown(
-              api_response.content))
+              api_response))
       click.echo(report)
   except exceptions.ApiException as exception:
     log.error(
