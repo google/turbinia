@@ -299,17 +299,21 @@ def create_request(ctx: click.Context, *args: int, **kwargs: int) -> None:
 @click.option(
     '--sort', '-s', help='Attribute by which output will be sort.',
     required=False)
-@click.option('--output', '-o', help='Type of output.', required=False)
+@click.option(
+    '--values', '-v', help='Outputs values.', is_flag=True, required=False)
+@click.option(
+    '--count', '-c', help='Outputs count.', is_flag=True, required=False)
 @click.option(
     '--json_dump', '-j', help='Generates JSON output.', is_flag=True,
     required=False)
 def get_evidence_summary(
-    ctx: click.Context, sort: str = None, output: str = 'keys',
-    json_dump: bool = None) -> None:
+    ctx: click.Context, sort: str = None, values: bool = False,
+    count: bool = False, json_dump: bool = False) -> None:
   """Gets Turbinia evidence status."""
   client: api_client.ApiClient = ctx.obj.api_client
   api_instance = turbinia_evidence_api.TurbiniaEvidenceApi(client)
   try:
+    output = 'values' if values else 'count' if count else 'keys'
     api_response = api_instance.get_evidence_summary(sort, output)
     if json_dump:
       formatter.echo_json(api_response)
@@ -327,17 +331,21 @@ def get_evidence_summary(
 @click.pass_context
 @click.argument('attribute')
 @click.argument('value')
-@click.option('--output', '-o', help='Type of output.', required=False)
+@click.option(
+    '--values', '-v', help='Outputs values.', is_flag=True, required=False)
+@click.option(
+    '--count', '-c', help='Outputs count.', is_flag=True, required=False)
 @click.option(
     '--json_dump', '-j', help='Generates JSON output.', is_flag=True,
     required=False)
 def query_evidence(
-    ctx: click.Context, attribute: str, value: str, output: str,
+    ctx: click.Context, attribute: str, value: str, values: bool, count: bool,
     json_dump: bool) -> None:
   """Gets Turbinia task status."""
   client: api_client.ApiClient = ctx.obj.api_client
   api_instance = turbinia_evidence_api.TurbiniaEvidenceApi(client)
   try:
+    output = 'values' if values else 'count' if count else 'keys'
     api_response = api_instance.query_evidence(value, attribute, output)
     if json_dump:
       formatter.echo_json(api_response)
@@ -383,9 +391,6 @@ def get_evidence(
         f'when calling get_evidence: {exception.body}')
 
 
-import requests
-
-
 @groups.evidence_group.command('upload')
 @click.pass_context
 @click.argument('ticket_id')
@@ -416,31 +421,21 @@ def upload_evidence(
             f'{file_path} greater than {MAX_UPLOAD_SIZE / (1024 ** 3)} GB')
         log.error(error_message)
         continue
-      files = bytes(open(file_path, 'rb').read())
-
+      files.append(open(file_path, 'rb').read())
     except OSError:
       log.error(f'Unable to read file in {file_path}')
       continue
   try:
-    #api_response = api_instance.upload_evidence(files)
-    files = {
-        'files': ('foo.gif', open(file_path, 'rb').read(), 'text/png'),
-    }
-
-    import json
-    api_response = requests.post(
-        'http://127.0.0.1:8000/api/evidence/upload', files=files, timeout=10)
+    api_response = api_instance.upload_evidence(
+        calculate_hash, files, ticket_id)
     if json_dump:
       formatter.echo_json(api_response)
     else:
       report = '\n'.join(
           formatter.EvidenceMarkdownReport(api_response).list_to_markdown(
-              json.loads(api_response.content)))
+              api_response.content))
       click.echo(report)
   except exceptions.ApiException as exception:
     log.error(
         f'Received status code {exception.status} '
         f'when calling upload_evidence: {exception.body}')
-
-
-#todo(igormr): Add upload command and check size of file on client side
