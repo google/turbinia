@@ -1,5 +1,6 @@
-# -*- coding: utf-8 -*-
-# Copyright 2022 Google Inc.
+#!/usr/bin/env python
+#
+# Copyright 2017 Google Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,221 +13,440 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Turbinia API - Config router"""
+"""Methods for formatting text."""
 
-import hashlib
+from __future__ import annotations
+
+from abc import ABC, abstractmethod
+from click import echo as click_echo
+
 import logging
-import os
-
-from datetime import datetime
-from fastapi import HTTPException, APIRouter, UploadFile, File, Query, Form
-from fastapi.requests import Request
-from fastapi.responses import JSONResponse
-from typing import List, Annotated
-
-from turbinia.api.schemas import request_options
-from turbinia import evidence
-from turbinia import config as turbinia_config
-from turbinia import state_manager
+import json
 
 log = logging.getLogger('turbinia')
-router = APIRouter(prefix='/evidence', tags=['Turbinia Evidence'])
-redis_manager = state_manager.RedisStateManager()
 
-EVIDENCE_SUMMARY_ATTRIBUTES = (
-    '_name', 'cloud_only', 'context_dependent', 'copyable', 'creation_time',
-    'description', 'has_child_evidence', 'last_updated', 'local_path',
-    'mount_path', 'parent_evidence', 'request_id', 'resource_id',
-    'resource_tracked', 'save_metadata', 'saved_path', 'saved_path_type',
-    'size', 'source', 'source_path', 'tasks', 'type', 'creation_time')
-
-EVIDENCE_QUERY_ATTRIBUTES = EVIDENCE_SUMMARY_ATTRIBUTES + ('tasks',)
+IMPORTANT_ATTRIBUTES = {
+    'id', '_name', 'type', 'size', 'request_id', 'tasks', 'source_path',
+    'local_path', 'creation_time', 'last_updated'
+}
 
 
-async def upload_file(
-    file: UploadFile, file_path: str, calculate_hash: bool = False):
-  """Upload file from FastAPI to server.
+def echo_json(json_data: dict) -> None:
+  """Pretty print JSON data."""
+  if isinstance(json_data, (dict, list, int)):
+    click_echo(json.dumps(json_data, indent=2))
 
-  Args:
-    file (List[UploadFile]): Evidence file to be uploaded to folder for later
-        processing. The maximum size of the file is set on the Turbinia
-        configuration file. 
-  
-  Raises:
-    IOError: If file is greater than the maximum size.
-  
-  Returns:
-    List of uploaded evidences or warning messages if any.
+
+class MarkdownReportComponent(ABC):
+  """Components for generating Turbinia request/task	
+      markdown reports.	
   """
-  size = 0
-  sha_hash = hashlib.sha3_224()
-  with open(file_path, 'wb') as saved_file:
-    while (chunk := await file.read(
-        turbinia_config.CHUNK_SIZE)) and size < turbinia_config.MAX_UPLOAD_SIZE:
-      saved_file.write(chunk)
-      if calculate_hash:
-        sha_hash.update(chunk)
-      size += turbinia_config.CHUNK_SIZE
-      if size >= turbinia_config.MAX_UPLOAD_SIZE:
-        error_message = (
-            f'Unable to upload file {file.filename} greater',
-            f'than {turbinia_config.MAX_UPLOAD_SIZE / (1024 ** 3)} GB')
-        log.error(error_message)
-        raise IOError(error_message)
-    file_info = {
-        'uploaded_name': file.filename,
-        'file_name': os.path.basename(file_path),
-        'file_path': file_path,
-        'size': size
-    }
-    if calculate_hash:
-      file_info['hash'] = sha_hash.hexdigest()
-  return file_info
+
+  def __init__(self):
+    """Instantiates a MarkdownReportComponent object."""
+    self._components: list(MarkdownReportComponent) = []
+    self._parent: MarkdownReportComponent = None
+    self._report: str = None
+
+  @property
+  def components(self):
+    """Returns the components list."""
+    return self._components
+
+  @property
+  def report(self):
+    """Returns the markdown report text."""
+    return self._report
+
+  @report.setter
+  def report(self, report):
+    self._report = report
+
+  @property
+  def parent(self) -> MarkdownReportComponent:
+    """Returns the parent object."""
+    return self._parent
+
+  @parent.setter
+  def parent(self, parent: MarkdownReportComponent):
+    self._parent = parent
+
+  def bold(self, text):
+    """Formats text as bold in Markdown format.	
+    Args:	
+        text(string): Text to format	
+    Return:	
+        string: Formatted text.	
+    """
+    return f'**{text.strip():s}**'
+
+  def heading(self, text, number):
+    """Formats text as heading in Markdown format.	
+    Args:	
+        text(string): Text to format	
+        number(int): Heading number	
+    Return:	
+        string: Formatted text.	
+    """
+    return f'{"#"*number} {text.strip():s}'
+
+  def heading1(self, text):
+    """Formats text as heading 1 in Markdown format.	
+    Args:	
+        text(string): Text to format	
+    Return:	
+        string: Formatted text.	
+    """
+    return self.heading(text, 1)
+
+  def heading2(self, text):
+    """Formats text as heading 2 in Markdown format.	
+    Args:	
+        text(string): Text to format	
+    Return:	
+        string: Formatted text.	
+    """
+    return self.heading(text, 2)
+
+  def heading3(self, text):
+    """Formats text as heading 3 in Markdown format.	
+    Args:	
+        text(string): Text to format	
+    Return:	
+        string: Formatted text.	
+    """
+    return self.heading(text, 3)
+
+  def heading4(self, text):
+    """Formats text as heading 4 in Markdown format.	
+    Args:	
+        text(string): Text to format	
+    Return:	
+        string: Formatted text.	
+    """
+    return self.heading(text, 4)
+
+  def heading5(self, text):
+    """Formats text as heading 5 in Markdown format.	
+     Args:	
+        text(string): Text to format	
+     Return:	
+        string: Formatted text.	
+    """
+    return self.heading(text, 5)
+
+  def bullet(self, text, level=1):
+    """Formats text as a bullet in Markdown format.	
+      Args:	
+        text(string): Text to format	
+        level(int): Indentation level.	
+      Return:	
+        string: Formatted text.	
+    """
+    return f"{'    ' * (level - 1):s}* {text.strip():s}"
+
+  def code(self, text):
+    """Formats text as code in Markdown format.	
+      Args:	
+          text(string): Text to format	
+     Return:	
+          string: Formatted text.	
+    """
+    return f'`{text.strip():s}`'
+
+  def add(self, component: MarkdownReportComponent) -> None:
+    """Adds a MarkdownReportComponent object to the components list.	
+    This method should additionally set the parent object.	
+    """
+    pass
+
+  def add_components(self, components: list[MarkdownReportComponent]) -> None:
+    """Adds multiple MarkdownReportComponent objects to the components list."""
+    pass
+
+  def remove(self, component: MarkdownReportComponent) -> None:
+    """Removes a MarkdownReportComponent object from the components list.	
+    This method should set the component's object to None.	
+    """
+    pass
+
+  def list_to_markdown(self, original_list, level=1):
+    if not original_list:
+      return [self.bullet('[EMPTY LIST]', level)]
+    report = []
+    for item in original_list:
+      if isinstance(item, dict):
+        report.extend(self.dict_to_markdown(item, level + 1))
+      elif isinstance(item, list):
+        report.extend(self.list_to_markdown(item, level + 1))
+      else:
+        report.append(self.bullet(item, level))
+    return report
+
+  def dict_to_markdown(
+      self, original_dict, level=1, ignore=None, show_null=False,
+      format_name=True):
+    if not original_dict:
+      return [self.bullet('[EMPTY DICTIONARY]', level)]
+    report: list[str] = []
+    for key, value in original_dict.items():
+      if (ignore and
+          key in ignore) or not (show_null or value or value is False):
+        continue
+      name = key.replace('_', ' ').title() if format_name else key
+      if isinstance(value, dict):
+        report.append(self.bullet(f'{name}:', level))
+        report.extend(self.dict_to_markdown(value, level + 1))
+      elif isinstance(value, list):
+        report.append(self.bullet(f'{name}:', level))
+        report.extend(self.list_to_markdown(value, level + 1))
+      else:
+        report.append(self.bullet(f'{name}: {value}', level))
+    return report
+
+  @abstractmethod
+  def generate_markdown(self) -> str:
+    pass
 
 
-@router.get('/types')
-async def get_evidence_types(request: Request):
-  """Returns supported Evidence object types and required parameters."""
-  attribute_mapping = evidence.map_evidence_attributes()
-  return JSONResponse(content=attribute_mapping, status_code=200)
+class TaskMarkdownReport(MarkdownReportComponent):
+  """Turbinia Task markdown report."""
 
+  def __init__(self, request_data: dict = None):
+    """Initialize TaskMarkdownReport"""
+    super().__init__()
+    self._request_data: dict = request_data
 
-@router.get('/types/{evidence_type}')
-async def get_evidence_attributes(request: Request, evidence_type):
-  """Returns supported Evidence object types and required parameters.
-  
-  Args:
-    evidence_type (str): Name of evidence type.
-  """
-  attribute_mapping = evidence.map_evidence_attributes()
-  attribute_mapping = {evidence_type: attribute_mapping.get(evidence_type)}
-  if not attribute_mapping:
-    raise HTTPException(
-        status_code=404, detail=f'Evidence type ({evidence_type:s}) not found.')
-  return JSONResponse(content=attribute_mapping, status_code=200)
+  def generate_markdown(self) -> str:
+    """Generate a markdown report."""
+    report: list[str] = []
+    task: dict = self._request_data
+    if not task:
+      return ''
 
-
-@router.get('/summary')
-async def get_evidence_summary(
-    request: Request, sort: str = Query(None, enum=EVIDENCE_SUMMARY_ATTRIBUTES),
-    output: str = Query('keys', enum=('keys', 'values', 'count'))):
-  """Retrieves a summary of all evidences in redis.
-
-  Args:
-    sort Optional(str): Attribute used to sort summary.
-
-  Returns:
-    summary (dict): Summary of all evidences and their content.
-  
-  Raises:
-    HTTPException: if there are no evidences.
-  """
-  if sort and sort not in EVIDENCE_SUMMARY_ATTRIBUTES:
-    raise HTTPException(
-        status_code=400, detail=(
-            f'Cannot sort by attribute {sort}. '
-            f'Sortable attributes: {EVIDENCE_SUMMARY_ATTRIBUTES}'))
-  if evidences := redis_manager.get_evidence_summary(sort, output):
-    return JSONResponse(content=evidences, status_code=200)
-  raise HTTPException(status_code=404, detail='No evidences found.')
-
-
-@router.get('/query')
-async def query_evidence(
-    request: Request, attribute_name: str = Query(
-        'request_id', enum=EVIDENCE_QUERY_ATTRIBUTES),
-    attribute_value: str = Query(), output: str = Query(
-        'keys', enum=('keys', 'values', 'count'))):
-  if attribute_name and attribute_name not in EVIDENCE_QUERY_ATTRIBUTES:
-    raise HTTPException(
-        status_code=400, detail=(
-            f'Cannot query by {attribute_name}. '
-            f'Queryable attributes: {EVIDENCE_QUERY_ATTRIBUTES}'))
-  evidences_found = None
-  if attribute_value == 'hash':
-    evidences_found = redis_manager.get_evidence_key_by_hash(attribute_name)
-  else:
-    evidences_found = redis_manager.query_evidence(
-        attribute_name, attribute_value, output)
-  if evidences_found:
-    return JSONResponse(content=evidences_found, status_code=200)
-  raise HTTPException(
-      status_code=404, detail=(
-          f'No evidence found with value {attribute_value} in attribute '
-          f'{attribute_name}.'))
-
-
-@router.get('/{evidence_id}')
-async def get_evidence_by_id(request: Request, evidence_id):
-  """Retrieves an evidence in redis by using its UUID.
-
-  Args:
-    evidence_id (str): The UUID of the evidence.
-  
-  Raises:
-    HTTPException: if the evidence is not found.
-
-  Returns:
-
-  """
-  if stored_evidence := redis_manager.get_evidence(evidence_id):
-    return JSONResponse(content=stored_evidence, status_code=200)
-  raise HTTPException(
-      status_code=404,
-      detail=f'UUID {evidence_id} not found or it had no associated evidences.')
-
-
-#todo(igormr): Check if turbinia client works with new endpoints, especially upload
-
-
-@router.post('/upload')
-async def upload_evidence(
-    #ticket_id: Annotated[str, Form()], calculate_hash: Annotated[bool,
-    #                                                             Form()],
-    # files: UploadFile(bytes)):
-    files: UploadFile = File(...)):
-  """Upload evidence file to server for processing.
-
-  Args:
-    file (List[UploadFile]): Evidence file to be uploaded to folder for later
-        processing. The maximum size of the file is 10 GB. 
-  
-  Raises:
-    TypeError: If pre-conditions are not met.
-  
-  Returns:
-    List of uploaded evidences or warning messages if any.
-  """
-  ticket_id = 123456
-  calculate_hash = False
-  evidences = []
-  files = [files]
-  for file in files:
-    file_name = os.path.splitext(file.filename)[0]
-    file_extension = os.path.splitext(file.filename)[1]
-    os.makedirs(f'{turbinia_config.OUTPUT_DIR}/{ticket_id}', exist_ok=True)
-    file_path = (
-        f'{turbinia_config.OUTPUT_DIR}/{ticket_id}/{file_name}_'
-        f'{datetime.now().strftime(turbinia_config.DATETIME_FORMAT)}'
-        f'{file_extension}')
-    warning_message = None
     try:
-      file_info = await upload_file(file, file_path, calculate_hash)
-    except IOError as exception:
-      warning_message = exception
-    file.file.close()
-    if evidence_key := redis_manager.get_evidence_key_by_hash(
-        file_info.get('hash')):
-      warning_message = (
-          f'File {file.filename} was uploaded before, check {evidence_key}')
-    if warning_message:
-      evidences.append(warning_message)
-      log.error(warning_message)
-      try:
-        os.remove(file_path)
-      except OSError:
-        log.error(f'Could not remove file {file_path}')
-    else:
-      evidences.append(file_info)
-    #todo(igormr): maybe save generic evidence to pass to server
-  return JSONResponse(content=evidences, status_code=200)
+      report.append(self.heading2(task.get('name')))
+      line = f"{self.bold('Evidence:'):s} {task.get('evidence_name')!s}"
+      report.append(self.bullet(line))
+      line = f"{self.bold('Status:'):s} {task.get('status')!s}"
+      report.append(self.bullet(line))
+      report.append(self.bullet(f"Task Id: {task.get('id')!s}"))
+      report.append(
+          self.bullet(f"Executed on worker {task.get('worker_name')!s}"))
+      if task.get('report_data'):
+        report.append('')
+        report.append(self.heading3('Task Reported Data'))
+        report.extend(task.get('report_data').splitlines())
+      report.append('')
+      report.append(self.heading3('Saved Task Files:'))
+
+      saved_paths = task.get('saved_paths')
+      if saved_paths:
+        for path in saved_paths:
+          report.append(self.bullet(self.code(path)))
+          report.append('')
+    except TypeError as exception:
+      log.warning(f'Error formatting the Markdown report: {exception!s}')
+
+    self.report = '\n'.join(report)
+    return self.report
+
+
+class RequestMarkdownReport(MarkdownReportComponent):
+  """Turbinia Request Markdown report."""
+
+  def __init__(self, request_data: dict):
+    """Initializes a RequestMarkdownReport object."""
+    super().__init__()
+    self._request_data: dict = request_data
+
+    tasks = [TaskMarkdownReport(task) for task in request_data.get('tasks')]
+    self.add_components(tasks)
+
+  def add(self, component: MarkdownReportComponent) -> None:
+    if component:
+      self.components.append(component)
+      component.parent = self
+
+  def remove(self, component: MarkdownReportComponent) -> None:
+    self.components.remove(component)
+    component.parent = None
+
+  def add_components(self, components: list[MarkdownReportComponent]) -> None:
+    if components:
+      for component in components:
+        self.components.append(component)
+        component.parent = self
+
+  def generate_markdown(self) -> str:
+    """Generates a Markdown version of Requests results."""
+    report: list[str] = []
+    request_dict: dict = self._request_data
+    if not request_dict:
+      return ''
+
+    try:
+      report.append(
+          self.heading2(f"Request ID: {request_dict.get('request_id')}"))
+      report.append(
+          self.bullet(
+              f"Last Update: {request_dict.get('last_task_update_time')}"))
+      report.append(self.bullet(f"Requester: {request_dict.get('requester')}"))
+      report.append(self.bullet(f"Reason: {request_dict.get('reason')}"))
+      report.append(self.bullet(f"Status: {request_dict.get('status')}"))
+      report.append(
+          self.bullet(f"Failed tasks: {request_dict.get('failed_tasks')}"))
+      report.append(
+          self.bullet(f"Running tasks: {request_dict.get('running_tasks')}"))
+      report.append(
+          self.bullet(
+              f"Successful tasks: {request_dict.get('successful_tasks')}"))
+      report.append(
+          self.bullet(f"Task Count: {request_dict.get('task_count')}"))
+      report.append(
+          self.bullet(f"Queued tasks: {request_dict.get('queued_tasks')}"))
+      report.append(
+          self.bullet(f"Evidence Name: {request_dict.get('evidence_name')}"))
+      report.append('')
+    except TypeError as exception:
+      log.warning(f'Error formatting the Markdown report: {exception!s}')
+
+    for task in self.components:
+      report.append(task.generate_markdown())
+
+    self.report = '\n'.join(report)
+    return self.report
+
+
+class SummaryMarkdownReport(MarkdownReportComponent):
+  """A markdown report summary of all Turbinia Requests."""
+
+  def __init__(self, requests_summary: list[dict]):
+    """Initialize SummaryMarkdownReport."""
+    super().__init__()
+    self._requests_summary = requests_summary
+
+  def generate_markdown(self) -> str:
+    """Generate a Markdown version of Requests summary results."""
+    report: list[str] = []
+    requests_status_list = None
+    if self._requests_summary:
+      requests_status_list = self._requests_summary.get('requests_status')
+
+    if not requests_status_list:
+      return '## No requests found.'
+
+    for request_dict in requests_status_list:
+      request_report = RequestMarkdownReport(request_dict).generate_markdown()
+      report.append(request_report)
+
+    self.report = '\n'.join(report)
+    return self.report
+
+
+class WorkersMarkdownReport(MarkdownReportComponent):
+  """A markdown report of all tasks for a specific worker."""
+
+  def __init__(self, request_data: dict):
+    super().__init__()
+    self._request_data: dict = request_data
+
+  def generate_markdown(self) -> str:
+    """Generates a Markdown version of tasks per worker."""
+    raise NotImplementedError
+
+
+class EvidenceMarkdownReport(MarkdownReportComponent):
+  """Turbinia Evidence Markdown report."""
+
+  def __init__(self, evidence_data: dict):
+    """Initializes a EvidenceMarkdownReport object."""
+    super().__init__()
+    self._evidence_data: dict = evidence_data
+
+  def generate_markdown(
+      self, level=1, show_ignored=False, show_null=False) -> str:
+    """Generates a Markdown version of Requests results."""
+    report: list[str] = []
+    evidence_dict: dict = self._evidence_data
+    if not evidence_dict:
+      return ''
+    try:
+      report.append(
+          self.heading(
+              f"Evidence ID: {evidence_dict.get('id', 'null')}", level + 1))
+      report.append(
+          self.bullet(
+              f"Evidence Name: {evidence_dict.get('_name', 'null')}", level))
+      report.append(
+          self.bullet(
+              f"Evidence Type: {evidence_dict.get('type', 'null')}", level))
+      report.append(
+          self.bullet(
+              f"Evidence Size: {evidence_dict.get('size', 'null')}", level))
+      report.append(
+          self.bullet(
+              f"Request ID: {evidence_dict.get('request_id', 'null')}", level))
+      report.append(self.bullet('Tasks:', level))
+      report.extend(
+          self.list_to_markdown(evidence_dict.get('tasks'), level + 1))
+      report.append(
+          self.bullet(
+              f"Source Path: {evidence_dict.get('source_path', 'null')}",
+              level))
+      report.append(
+          self.bullet(
+              f"Local Path: {evidence_dict.get('local_path', 'null')}", level))
+      report.append(
+          self.bullet(
+              f"Creation Time: {evidence_dict.get('creation_time', 'null'),}",
+              level))
+      report.append(
+          self.bullet(
+              f"Last Update: {evidence_dict.get('last_updated', 'null')}",
+              level))
+
+      if show_ignored:
+        report.extend(
+            self.dict_to_markdown(
+                evidence_dict, level, IMPORTANT_ATTRIBUTES, show_null))
+
+      report.append('')
+
+    except TypeError as exception:
+      log.warning(f'Error formatting the Markdown report: {exception!s}')
+
+    self.report = '\n'.join(report)
+    return self.report
+
+
+class EvidenceSummaryMarkdownReport(EvidenceMarkdownReport):
+  """Turbinia Evidence Markdown report."""
+
+  def __init__(self, summary: dict | list | int):
+    """Initializes a EvidenceMarkdownReport object."""
+    super().__init__({})
+    self._summary = summary
+
+  def generate_value_markdown(self, summary, level=1):
+    report = []
+    for item in summary:
+      self._evidence_data = item
+      report.append(self.generate_markdown(level + 1))
+    return report
+
+  def generate_summary_markdown(self, output='keys'):
+    if output == 'values':
+      if isinstance(self._summary, dict):
+        report = []
+        for attribute_value, value in self._summary.items():
+          report.append(self.bullet(f'{attribute_value}:'))
+          report.extend(self.generate_value_markdown(value, 2))
+        return '\n'.join(report)
+      return '\n'.join(self.generate_value_markdown(self._summary))
+    elif isinstance(self._summary, list):
+      return '\n'.join(self.list_to_markdown(self._summary))
+    elif isinstance(self._summary, dict):
+      return '\n'.join(self.dict_to_markdown(self._summary, format_name=False))
+    elif isinstance(self._summary, int):
+      return self.heading2(f'{self._summary} evidences found')
