@@ -19,7 +19,7 @@ import logging
 import os
 
 from datetime import datetime
-from fastapi import HTTPException, APIRouter, UploadFile, Query, Form
+from fastapi import HTTPException, APIRouter, UploadFile, File, Query, Form
 from fastapi.requests import Request
 from fastapi.responses import JSONResponse
 from typing import List, Annotated
@@ -43,42 +43,20 @@ EVIDENCE_SUMMARY_ATTRIBUTES = (
 EVIDENCE_QUERY_ATTRIBUTES = EVIDENCE_SUMMARY_ATTRIBUTES + ('tasks',)
 
 
-async def get_file_path(file_name: str, ticket_id: str) -> str:
-  """Gets the path where the file will be saved.
-
-  Args:
-    file_name (str): Original name of the file.
-    ticked_id (str): ID of the current ticket
-  
-  Returns:
-    file_path (str): Path where the file will be saved.
-  """
-  file_name = os.path.splitext(file_name)[0]
-  file_extension = os.path.splitext(file_name)[1]
-  new_name = ''.join((
-      file_name, '_', datetime.now().strftime(
-          turbinia_config.DATETIME_FORMAT), file_extension))
-  os.makedirs(f'{turbinia_config.OUTPUT_DIR}/{ticket_id}', exist_ok=True)
-  return os.path.join(turbinia_config.OUTPUT_DIR, ticket_id, new_name)
-
-
 async def upload_file(
-    file: UploadFile, file_path: str, calculate_hash: bool = False) -> dict:
-  """Uploads file from FastAPI to server.
+    file: UploadFile, file_path: str, calculate_hash: bool = False):
+  """Upload file from FastAPI to server.
 
   Args:
-    file (UploadFile): Evidence file to be uploaded to folder for later
+    file (List[UploadFile]): Evidence file to be uploaded to folder for later
         processing. The maximum size of the file is set on the Turbinia
         configuration file. 
-    file_path (str): Path where the file will be saved.
-    calculate_hash (bool): Boolean defining if the hash of the evidence should
-      be calculated.
   
   Raises:
     IOError: If file is greater than the maximum size.
   
   Returns:
-    file_info (dict): Information about the uploaded file.
+    List of uploaded evidences or warning messages if any.
   """
   size = 0
   sha_hash = hashlib.sha3_224()
@@ -150,7 +128,7 @@ async def get_evidence_summary(
             f'Sortable attributes: {EVIDENCE_SUMMARY_ATTRIBUTES}'))
   if evidences := redis_manager.get_evidence_summary(sort, output):
     return JSONResponse(content=evidences, status_code=200)
-  raise HTTPException(status_code=404, detail='No evidence found.')
+  raise HTTPException(status_code=404, detail='No evidences found.')
 
 
 @router.get('/query')
@@ -189,7 +167,7 @@ async def get_evidence_by_id(request: Request, evidence_id):
     HTTPException: if the evidence is not found.
 
   Returns:
-    Dictionary of the stored evidence
+
   """
   if stored_evidence := redis_manager.get_evidence(evidence_id):
     return JSONResponse(content=stored_evidence, status_code=200)
@@ -198,33 +176,40 @@ async def get_evidence_by_id(request: Request, evidence_id):
       detail=f'UUID {evidence_id} not found or it had no associated evidences.')
 
 
+#todo(igormr): Check if turbinia client works with new endpoints, especially upload
+
+
 @router.post('/upload')
 async def upload_evidence(
-    ticket_id: Annotated[str, Form()], calculate_hash: Annotated[bool,
-                                                                 Form()],
-    files: List[UploadFile]):
+    #ticket_id: Annotated[str, Form()], calculate_hash: Annotated[bool,
+    #                                                             Form()],
+    # files: UploadFile(bytes)):
+    files: UploadFile = File(...)):
   """Upload evidence file to server for processing.
 
   Args:
-    ticket_id (str): ID of the ticket, which will be the name of the folder 
-      where the evidence will be saved.
-    calculate_hash (bool): Boolean defining if the hash of the evidence should
-      be calculated.
-    file (List[UploadFile]): Evidence files to be uploaded to folder for later
+    file (List[UploadFile]): Evidence file to be uploaded to folder for later
         processing. The maximum size of the file is 10 GB. 
+  
+  Raises:
+    TypeError: If pre-conditions are not met.
   
   Returns:
     List of uploaded evidences or warning messages if any.
   """
+  ticket_id = 123456
+  calculate_hash = False
   evidences = []
+  files = [files]
   for file in files:
+    file_name = os.path.splitext(file.filename)[0]
+    file_extension = os.path.splitext(file.filename)[1]
+    os.makedirs(f'{turbinia_config.OUTPUT_DIR}/{ticket_id}', exist_ok=True)
+    file_path = (
+        f'{turbinia_config.OUTPUT_DIR}/{ticket_id}/{file_name}_'
+        f'{datetime.now().strftime(turbinia_config.DATETIME_FORMAT)}'
+        f'{file_extension}')
     warning_message = None
-    try:
-      file_path = await get_file_path(file.filename, ticket_id)
-    except OSError as exception:
-      warning_message = (
-          f'Failed in setting path for file {file.filename} in ticket '
-          f'{ticket_id}: {exception}')
     try:
       file_info = await upload_file(file, file_path, calculate_hash)
     except IOError as exception:
@@ -239,8 +224,9 @@ async def upload_evidence(
       log.error(warning_message)
       try:
         os.remove(file_path)
-      except OSError as exception:
-        log.error(f'Could not remove file {file_path}: {exception}')
+      except OSError:
+        log.error(f'Could not remove file {file_path}')
     else:
       evidences.append(file_info)
+    #todo(igormr): maybe save generic evidence to pass to server
   return JSONResponse(content=evidences, status_code=200)

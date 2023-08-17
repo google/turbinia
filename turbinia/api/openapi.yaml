@@ -56,21 +56,11 @@ components:
       type: object
     Body_upload_evidence_api_evidence_upload_post:
       properties:
-        calculate_hash:
-          title: Calculate Hash
-          type: boolean
         files:
-          items:
-            format: binary
-            type: string
+          format: binary
           title: Files
-          type: array
-        ticket_id:
-          title: Ticket Id
           type: string
       required:
-        - ticket_id
-        - calculate_hash
         - files
       title: Body_upload_evidence_api_evidence_upload_post
       type: object
@@ -332,12 +322,10 @@ paths:
   /api/evidence/upload:
     post:
       description:
-        "Upload evidence file to server for processing.\n\nArgs:\n  ticket_id\
-        \ (str): ID of the ticket, which will be the name of the folder \n    where\
-        \ the evidence will be saved.\n  calculate_hash (bool): Boolean defining if\
-        \ the hash of the evidence should\n    be calculated.\n  file (List[UploadFile]):\
-        \ Evidence files to be uploaded to folder for later\n      processing. The\
-        \ maximum size of the file is 10 GB. \n\nReturns:\n  List of uploaded evidences\
+        "Upload evidence file to server for processing.\n\nArgs:\n  file\
+        \ (List[UploadFile]): Evidence file to be uploaded to folder for later\n \
+        \     processing. The maximum size of the file is 10 GB. \n\nRaises:\n  TypeError:\
+        \ If pre-conditions are not met.\n\nReturns:\n  List of uploaded evidences\
         \ or warning messages if any."
       operationId: upload_evidence
       requestBody:
@@ -366,7 +354,7 @@ paths:
       description:
         "Retrieves an evidence in redis by using its UUID.\n\nArgs:\n \
         \ evidence_id (str): The UUID of the evidence.\n\nRaises:\n  HTTPException:\
-        \ if the evidence is not found.\n\nReturns:\n  Dictionary of the stored evidence"
+        \ if the evidence is not found.\n\nReturns:"
       operationId: get_evidence_by_id
       parameters:
         - in: path
