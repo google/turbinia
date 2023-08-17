@@ -25,6 +25,10 @@ import json
 
 log = logging.getLogger('turbinia')
 
+LONGEST_TURBINIA_TASK_LENGTH = 31
+MAX_COUNT_DIGITS = 6
+STAT_CELL_SPACES = 2
+
 
 def echo_json(json_data: dict) -> None:
   """Pretty print JSON data."""
@@ -319,7 +323,11 @@ class WorkersMarkdownReport(MarkdownReportComponent):
     self._days: int = days
 
   def generate_markdown(self) -> str:
-    """Generates a Markdown version of tasks per worker."""
+    """Generates a Markdown version of tasks per worker.
+    
+    Returns:
+      markdown (str): Markdown version of tasks per worker.
+    """
     report = []
     worker_status = self._workers_status.copy()
     scheduled_tasks = worker_status.pop('scheduled_tasks')
@@ -360,12 +368,24 @@ class StatsMarkdownReport(MarkdownReportComponent):
     super().__init__()
     self._statistics: dict = statistics
 
-  def stat_to_markdown(self, stat_dict):
-    report = []
-    for description, value in stat_dict.items():
-      description = description.replace('_', ' ').title()
-      report.append(f'{description}: {value}')
-    return ' | '.join(report)
+  def stat_to_markdown(self, stat_dict: dict) -> str:
+    """Generates a single-line Markdown version of tasks per worker.
+    
+    Returns:
+      markdown (str): Single-line Markdown version of stat.
+    """
+    for key, value in stat_dict.items():
+      if value == 'None':
+        stat_dict[key] = '==N/A=='
+
+    cell_spaces = ' ' * STAT_CELL_SPACES
+    count_space = ' ' * abs(MAX_COUNT_DIGITS - len(str(stat_dict["count"])))
+    count_cell = f'Count: {count_space}{stat_dict["count"]}'
+    min_cell = f'Min: {stat_dict["min"]}'
+    mean_cell = f'Mean: {stat_dict["mean"]}'
+    max_cell = f'Max: {stat_dict["max"]}'
+
+    return cell_spaces.join((count_cell, min_cell, mean_cell, max_cell))
 
   def stat_to_csv(self, description, stat_dict):
     report = [description]
@@ -381,14 +401,19 @@ class StatsMarkdownReport(MarkdownReportComponent):
       stat_group = stat_group.replace('_', ' ').title()
       if stat_group in ('All Tasks', 'Successful Tasks', 'Failed Tasks',
                         'Requests'):
+        spacing = LONGEST_TURBINIA_TASK_LENGTH - len(stat_group) + 3
         report.append(
-            self.heading2(f'{stat_group}: {self.stat_to_markdown(stat_dict)}'))
+            self.heading2(
+                f'{stat_group}: {" "*spacing}'
+                f'{self.stat_to_markdown(stat_dict)}'))
         continue
       report.append(self.heading2(f'{stat_group}:'))
       for description, inner_dict in stat_dict.items():
+        spacing = LONGEST_TURBINIA_TASK_LENGTH - len(description)
         report.append(
             self.bullet(
-                f'{description}: {self.stat_to_markdown(inner_dict)}', 2))
+                f'{description}: {" "*spacing}'
+                f'{self.stat_to_markdown(inner_dict)}', 2))
     return '\n'.join(report)
 
   def generate_csv(self) -> str:

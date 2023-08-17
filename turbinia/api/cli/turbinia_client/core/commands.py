@@ -147,7 +147,8 @@ def get_request(ctx: click.Context, request_id: str, json_dump: bool) -> None:
 
 @groups.status_group.command('workers')
 @click.pass_context
-@click.option('--days', '-d', help='Specifies status timeframe', required=False)
+@click.option(
+    '--days', '-d', help='Specifies status timeframe.', required=False)
 @click.option(
     '--all_fields', '-a', help='Returns all fields.', is_flag=True,
     required=False)
@@ -156,7 +157,7 @@ def get_request(ctx: click.Context, request_id: str, json_dump: bool) -> None:
     required=False)
 def get_workers(
     ctx: click.Context, days: int, all_fields: bool, json_dump: bool) -> None:
-  """Show Worker status information."""
+  """Shows Workers status information."""
   days = int(days) if days else 7
   client: api_client.ApiClient = ctx.obj.api_client
   api_instance = turbinia_tasks_api.TurbiniaTasksApi(client)
@@ -171,22 +172,23 @@ def get_workers(
   except exceptions.ApiException as exception:
     log.error(
         f'Received status code {exception.status} '
-        f'when calling get_requests_summary: {exception.body}')
+        f'when calling get_workers_status: {exception.body}')
 
 
 @groups.status_group.command('statistics')
 @click.pass_context
 @click.option(
-    '--days', '-d', help='Specifies statistics timeframe', required=False)
+    '--days', '-d', help='Specifies statistics timeframe.', required=False)
 @click.option(
-    '--task_id', '-t', help='Gets statistics for specific task', required=False)
-@click.option(
-    '--request_id', '-r', help='Gets statistics for specific request',
+    '--task_id', '-t', help='Gets statistics for a specific task.',
     required=False)
 @click.option(
-    '--user', '-u', help='Gets statistics for specific user', required=False)
+    '--request_id', '-r', help='Gets statistics for a specific request.',
+    required=False)
 @click.option(
-    '--csv', '-c', help='Outputs statistics as CSV', is_flag=True,
+    '--user', '-u', help='Gets statistics for a specific user.', required=False)
+@click.option(
+    '--csv', '-c', help='Outputs statistics as CSV.', is_flag=True,
     required=False)
 @click.option(
     '--json_dump', '-j', help='Generates JSON output.', is_flag=True,
@@ -194,7 +196,7 @@ def get_workers(
 def get_statistics(
     ctx: click.Context, days: int, task_id: str, request_id: str, user: str,
     csv: bool, json_dump: bool) -> None:
-  """Show Worker task statistics."""
+  """Shows statistics about tasks."""
   client: api_client.ApiClient = ctx.obj.api_client
   api_instance = turbinia_tasks_api.TurbiniaTasksApi(client)
   try:
@@ -212,7 +214,7 @@ def get_statistics(
   except exceptions.ApiException as exception:
     log.error(
         f'Received status code {exception.status} '
-        f'when calling get_requests_summary: {exception.body}')
+        f'when calling get_task_statistics: {exception.body}')
 
 
 @groups.status_group.command('summary')
