@@ -22,11 +22,12 @@ from click import echo as click_echo
 
 import logging
 import json
+import pandas
 
 log = logging.getLogger('turbinia')
 
 LONGEST_TURBINIA_TASK_LENGTH = 31
-MAX_COUNT_DIGITS = 6
+MAX_COUNT_DIGITS = 10
 STAT_CELL_SPACES = 2
 
 
@@ -367,68 +368,56 @@ class StatsMarkdownReport(MarkdownReportComponent):
   def __init__(self, statistics: dict):
     super().__init__()
     self._statistics: dict = statistics
+    self.dict = {'TASK': [], 'COUNT': [], 'MIN': [], 'MEAN': [], 'MAX': []}
 
-  def stat_to_markdown(self, stat_dict: dict) -> str:
+  def stat_to_markdown(self, task, stat_dict: dict) -> str:
     """Generates a single-line Markdown version of tasks per worker.
     
     Returns:
       markdown (str): Single-line Markdown version of stat.
     """
-    for key, value in stat_dict.items():
-      if value == 'None':
-        stat_dict[key] = '==N/A=='
+    self.dict['TASK'].append(f'{task}')
+    self.dict['COUNT'].append(stat_dict.get('count', ''))
+    self.dict['MIN'].append(stat_dict.get('min', ''))
+    self.dict['MEAN'].append(stat_dict.get('mean', ''))
+    self.dict['MAX'].append(stat_dict.get('max', ''))
 
-    cell_spaces = ' ' * STAT_CELL_SPACES
-    count_space = ' ' * abs(MAX_COUNT_DIGITS - len(str(stat_dict["count"])))
-    count_cell = f'Count: {count_space}{stat_dict["count"]}'
-    min_cell = f'Min: {stat_dict["min"]}'
-    mean_cell = f'Mean: {stat_dict["mean"]}'
-    max_cell = f'Max: {stat_dict["max"]}'
+  def generate_data_frame(self, markdown=False):
+    for stat_group, stat_dict in self._statistics.items():
+      stat_group = stat_group.replace('_', ' ').title()
+      if stat_group in ('All Tasks', 'Successful Tasks', 'Failed Tasks',
+                        'Requests'):
+        first_column = self.heading2(
+            f'{stat_group}:') if markdown else stat_group
+        self.stat_to_markdown(first_column, stat_dict)
+        continue
+      if markdown:
+        self.stat_to_markdown(self.heading2(stat_group), {})
+      for description, inner_dict in stat_dict.items():
+        first_column = self.bullet(
+            f'{description}:',
+            2) if markdown else f'{stat_group.split(" ")[-1]} {description}'
+        self.stat_to_markdown(first_column, inner_dict)
 
-    return cell_spaces.join((count_cell, min_cell, mean_cell, max_cell))
+    return pandas.DataFrame(self.dict)
 
-  def stat_to_csv(self, description, stat_dict):
-    report = [description]
-    for stat in ('count', 'min', 'mean', 'max'):
-      report.append(str(stat_dict[stat]))
-    return ', '.join(report)
+  def ljust(self, s):
+    s = s.astype(str).str.strip()
+    return s.str.ljust(s.str.len().max())
 
   def generate_markdown(self) -> str:
     """Generates a Markdown version of task statistics."""
     report = [self.heading1('Execution time statistics for Turbinia:')]
 
-    for stat_group, stat_dict in self._statistics.items():
-      stat_group = stat_group.replace('_', ' ').title()
-      if stat_group in ('All Tasks', 'Successful Tasks', 'Failed Tasks',
-                        'Requests'):
-        spacing = LONGEST_TURBINIA_TASK_LENGTH - len(stat_group) + 3
-        report.append(
-            self.heading2(
-                f'{stat_group}: {" "*spacing}'
-                f'{self.stat_to_markdown(stat_dict)}'))
-        continue
-      report.append(self.heading2(f'{stat_group}:'))
-      for description, inner_dict in stat_dict.items():
-        spacing = LONGEST_TURBINIA_TASK_LENGTH - len(description)
-        report.append(
-            self.bullet(
-                f'{description}: {" "*spacing}'
-                f'{self.stat_to_markdown(inner_dict)}', 2))
+    data_frame = self.generate_data_frame(True)
+
+    table = data_frame.apply(self.ljust).to_string(
+        index=False, justify='left', col_space=8)
+
+    report.append(table)
+
     return '\n'.join(report)
 
   def generate_csv(self) -> str:
     """Generates a csv version of task statistics."""
-    report = ['stat_type, count, min, mean, max']
-
-    for stat_group, stat_dict in self._statistics.items():
-      stat_group = stat_group.replace('_', ' ').title()
-      if stat_group in ('All Tasks', 'Successful Tasks', 'Failed Tasks',
-                        'Requests'):
-        report.append(self.stat_to_csv(stat_group, stat_dict))
-        continue
-      for description, inner_dict in stat_dict.items():
-        report.append(
-            self.stat_to_csv(
-                f'{stat_group.split(" ")[-1]} {description}', inner_dict))
-
-    return '\n'.join(report)
+    return self.generate_data_frame().to_csv(index=False)
