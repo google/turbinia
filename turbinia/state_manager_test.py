@@ -182,22 +182,26 @@ class TestRedisEvidenceStateManager(unittest.TestCase):
   def get_evidence_side_effect(self, evidence_id):
     return self.test_data[':'.join(('TurbiniaEvidence', evidence_id))]
 
-  @mock.patch('redis.StrictRedis')
-  def testStateManagerGetEvidence(self, mock_redis):
+  @mock.patch('turbinia.state_manager.RedisStateManager.get_attribute')
+  @mock.patch(
+      'turbinia.state_manager.RedisStateManager.iterate_attribute_names')
+  def testStateManagerGetEvidence(
+      self, mock_attribute_iterator, mock_get_attribute):
     """Test State Manager get_evidence_data()."""
-
     self.state_manager = self._get_state_manager()
-
-    self.state_manager.client = fakeredis.FakeStrictRedis
-
+    redis_client = fakeredis.FakeStrictRedis()
     evidence_key = 'TurbiniaEvidence:b510ab6bf11a410da1fd9d9b128e7d74'
+    input_task = self.test_data[evidence_key]
+    # expected_result_dict = OrderedDict(sorted(input_task.serialize().items()))
+    #expected_result_str = json.dumps(expected_result_dict)
 
-    for attribute_name, attribute_value in self.test_data[evidence_key].items():
-      self.state_manager.client.hset(
+    for attribute_name, attribute_value in input_task:
+      redis_client.hset(
           evidence_key, attribute_name, json.dumps(attribute_value))
-    #mock_redis.return_value.hkeys.side_effect = self.hkeys_side_effect
 
-    #mock_redis.return_value.hget.side_effect = self.hget_side_effect
+    mock_attribute_iterator.yield_value = input_task.keys()
+
+    mock_get_attribute.side_effect = self.hget_side_effect
 
     result = self.state_manager.get_evidence_data(
         self.test_data[evidence_key]['id'])
