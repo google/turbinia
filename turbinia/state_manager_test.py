@@ -221,7 +221,7 @@ class TestRedisEvidenceStateManager(unittest.TestCase):
 
     mock_redis.return_value.hset.side_effect = self.hset_side_effect
 
-    self.state_manager.write_evidence({
+    self.state_manager.write_new_evidence({
         key: json.dumps(value)
         for key, value in self.test_data[evidence_key].items()
     })

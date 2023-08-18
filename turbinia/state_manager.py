@@ -434,23 +434,22 @@ class RedisStateManager(BaseStateManager):
     except ValueError as exception:
       self.handle_exception(exception, f'decoding attribute in {key}')
 
-  def evidence_exists(self, evidence_id) -> bool:
-    """Checks if the evidence is saved in Redis given its ID.
+  def key_exists(self, key) -> bool:
+    """Checks if the key is saved in Redis.
 
     Args:
-      evidence_id (str): The ID of the stored evidence.
+      key (str): The key to be checked.
 
     Returns:
-      evidence_id (bool): Boolean indicating if evidence is saved. 
+      exists (bool): Boolean indicating if evidence is saved. 
     """
-    key = ':'.join(('TurbiniaEvidence', evidence_id))
     try:
       return self.client.exists(key)
     except redis.RedisError as exception:
       self.handle_exception(exception, f'checking existence of {key}')
 
-  def write_evidence(self, evidence_dict: dict[str]) -> str:
-    """Writes evidence into redis.
+  def write_new_evidence(self, evidence_dict: dict[str]) -> str:
+    """Writes new evidence into redis.
 
     Args:
       evidence_dict (dict[str]): A dictionary containing the serialized
@@ -461,12 +460,14 @@ class RedisStateManager(BaseStateManager):
     """
     evidence_key = ':'.join(
         ('TurbiniaEvidence', json.loads(evidence_dict['id'])))
-    log.info(f'Writing new evidence {evidence_key} into Redis')
-    for attribute_name, attribute_value in evidence_dict.items():
-      self.set_attribute(evidence_key, attribute_name, attribute_value)
-    if evidence_hash := json.loads(evidence_dict.get('hash')):
-      self.set_attribute('TurbiniaEvidenceHashes', evidence_hash, evidence_key)
-    return evidence_key
+    if not self.key_exists(evidence_key):
+      log.info(f'Writing new evidence {evidence_key} into Redis')
+      for attribute_name, attribute_value in evidence_dict.items():
+        self.set_attribute(evidence_key, attribute_name, attribute_value)
+      if evidence_hash := json.loads(evidence_dict.get('hash')):
+        self.set_attribute(
+            'TurbiniaEvidenceHashes', evidence_hash, evidence_key)
+      return evidence_key
 
   def update_evidence_attribute(
       self, evidence_id: str, attribute_name: str, json_value: str):
@@ -478,13 +479,14 @@ class RedisStateManager(BaseStateManager):
       json_value (str): json value to be updated.
     """
     evidence_key = ':'.join(('TurbiniaEvidence', evidence_id))
-    log.info(
-        f'Updating attribute {attribute_name} for evidence {evidence_key} in Redis'
-    )
-    if self.set_attribute(evidence_key, attribute_name, json_value):
-      if attribute_name == 'hash':
-        self.set_attribute(
-            'TurbiniaEvidenceHashes', json.loads(json_value), evidence_key)
+    if self.key_exists(evidence_key):
+      log.info(
+          f'Updating attribute {attribute_name} for evidence {evidence_key} '
+          f'in Redis')
+      if self.set_attribute(evidence_key, attribute_name, json_value):
+        if attribute_name == 'hash':
+          self.set_attribute(
+              'TurbiniaEvidenceHashes', json.loads(json_value), evidence_key)
 
   def get_evidence_data(self, evidence_id: str) -> dict:
     """Returns a dictionary representing an Evidence object given its ID.

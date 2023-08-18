@@ -248,7 +248,7 @@ class Evidence:
   """
 
   # The list of attributes a given piece of Evidence requires to be set
-  REQUIRED_ATTRIBUTES = []
+  REQUIRED_ATTRIBUTES = ['id']
 
   # An optional set of attributes that are generally used to describe
   # a given piece of Evidence.
@@ -344,10 +344,9 @@ class Evidence:
           f'{getattr(self, "id", "(ID not set)")}: {exception}')
     else:
       redis_manager = state_manager.RedisStateManager()
-      if redis_manager.evidence_exists(self.id):
-        if serialized_attribute := self.serialize_attribute(attribute_name):
-          redis_manager.update_evidence_attribute(
-              self.id, attribute_name, serialized_attribute)
+      if serialized_attribute := self.serialize_attribute(attribute_name):
+        redis_manager.update_evidence_attribute(
+            self.id, attribute_name, serialized_attribute)
 
   @property
   def name(self):

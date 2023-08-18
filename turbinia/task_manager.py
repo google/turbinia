@@ -261,7 +261,7 @@ class BaseTaskManager:
       log.error(f'Unsuccessful in writing new evidence in redis: {exception}')
     else:
       if isinstance(evidence_, evidence.Evidence):
-        self.state_manager.write_evidence(evidence_.serialize(True))
+        self.state_manager.write_new_evidence(evidence_.serialize(True))
 
     if not job_count:
       log.warning(
@@ -343,7 +343,7 @@ class BaseTaskManager:
 
     return timeout
 
-  def get_evidence_data(self):
+  def get_evidence(self):
     """Checks for new evidence to process.
 
     Returns:
@@ -596,7 +596,7 @@ class BaseTaskManager:
     log.info('Starting Task Manager run loop')
     while True:
       # pylint: disable=expression-not-assigned
-      [self.add_evidence(x) for x in self.get_evidence_data()]
+      [self.add_evidence(x) for x in self.get_evidence()]
 
       for task in self.process_tasks():
         if task.result:
@@ -705,7 +705,7 @@ class CeleryTaskManager(BaseTaskManager):
       log.info(f'{outstanding_task_count:d} Tasks still outstanding.')
     return completed_tasks
 
-  def get_evidence_data(self):
+  def get_evidence(self):
     """Receives new evidence.
 
     Returns:
@@ -836,7 +836,7 @@ class PSQTaskManager(BaseTaskManager):
       log.info(f'{outstanding_task_count:d} Tasks still outstanding.')
     return completed_tasks
 
-  def get_evidence_data(self):
+  def get_evidence(self):
     requests = self.server_pubsub.check_messages()
     evidence_list = []
     for request in requests:
