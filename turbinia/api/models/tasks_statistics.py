@@ -38,7 +38,7 @@ class TasksStatistics(BaseModel):
 
   def get_statistics(
       self, instance: str, days: int = 0, task_id: str = None,
-      request_id: str = None, user: str = None):
+      request_id: str = None, user: str = None) -> dict:
     """Gathers statistics for Turbinia execution data.
 
       Args:
@@ -152,7 +152,7 @@ class TasksStatistics(BaseModel):
 
   def format_task_statistics(
       self, days: int = 0, task_id: str = None, request_id: str = None,
-      user: str = None) -> dict:
+      user: str = None) -> bool:
     """Formats statistics for Turbinia execution data as a json-serializable dict.
 
       Args:
