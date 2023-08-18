@@ -14,44 +14,55 @@ components:
       description: "Base Request Options class to be extended by other option types. "
       properties:
         filter_patterns:
-          items:
-            type: string
+          anyOf:
+            - items:
+                type: string
+              type: array
           title: Filter Patterns
-          type: array
         group_id:
+          anyOf:
+            - type: string
           title: Group Id
-          type: string
         jobs_allowlist:
-          items:
-            type: string
+          anyOf:
+            - items:
+                type: string
+              type: array
           title: Jobs Allowlist
-          type: array
         jobs_denylist:
-          items:
-            type: string
+          anyOf:
+            - items:
+                type: string
+              type: array
           title: Jobs Denylist
-          type: array
         reason:
+          anyOf:
+            - type: string
           title: Reason
-          type: string
         recipe_data:
+          anyOf:
+            - type: string
           title: Recipe Data
-          type: string
         recipe_name:
+          anyOf:
+            - type: string
           title: Recipe Name
-          type: string
         request_id:
+          anyOf:
+            - type: string
           title: Request Id
-          type: string
         requester:
+          anyOf:
+            - type: string
           title: Requester
-          type: string
         sketch_id:
+          anyOf:
+            - type: integer
           title: Sketch Id
-          type: integer
         yara_rules:
+          anyOf:
+            - type: string
           title: Yara Rules
-          type: string
       title: BaseRequestOptions
       type: object
     HTTPValidationError:
@@ -67,9 +78,11 @@ components:
       description: "Base request object. "
       properties:
         description:
+          anyOf:
+            - type: string
+
           default: Turbinia request object
           title: Description
-          type: string
         evidence:
           title: Evidence
           type: object

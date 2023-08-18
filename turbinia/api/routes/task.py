@@ -24,67 +24,15 @@ from fastapi.responses import JSONResponse
 from fastapi.requests import Request
 from fastapi.encoders import jsonable_encoder
 
-from operator import attrgetter
 from pydantic import ValidationError
-from turbinia import state_manager
 from turbinia import config as turbinia_config
-from turbinia import client as TurbiniaClientProvider
+from turbinia import state_manager
 from turbinia.api.models import workers_status
+from turbinia.api.models import tasks_statistics
 
 log = logging.getLogger('turbinia:api_server:task')
 
 router = APIRouter(prefix='/task', tags=['Turbinia Tasks'])
-
-client = TurbiniaClientProvider.get_turbinia_client()
-
-
-def format_task_statistics(
-    instance: str, project: str, region: str, days: int = 0,
-    task_id: str = None, request_id: str = None, user: str = None) -> dict:
-  """Formats statistics for Turbinia execution data as a json-serializable dict.
-
-    Args:
-      instance (string): The Turbinia instance name (by default the same as the
-          INSTANCE_ID in the config).
-      project (string): The name of the project.
-      region (string): The name of the zone to execute in.
-      days (int): The number of days we want history for.
-      task_id (string): The Id of the task.
-      request_id (string): The Id of the request we want tasks for.
-      user (string): The user of the request we want tasks for.
-
-    Returns:
-      report (dict): Task statistics report.
-    """
-  task_stats = client.get_task_statistics(
-      instance, project, region, days, task_id, request_id, user)
-
-  report = {}
-  if not task_stats:
-    return report
-
-  stats_order = [
-      'all_tasks', 'successful_tasks', 'failed_tasks', 'requests',
-      'tasks_per_type', 'tasks_per_worker', 'tasks_per_user'
-  ]
-  for stat_name in stats_order:
-    report[stat_name] = {}
-    stat_obj = task_stats[stat_name]
-    if isinstance(stat_obj, dict):
-      # Sort by description so that we get consistent report output
-      inner_stat_objs = sorted(stat_obj.values(), key=attrgetter('description'))
-      for inner_stat_obj in inner_stat_objs:
-        if stat_name == 'tasks_per_worker':
-          description = inner_stat_obj.description.replace('Worker ', '', 1)
-        elif stat_name == 'tasks_per_user':
-          description = inner_stat_obj.description.replace('User ', '', 1)
-        else:
-          description = inner_stat_obj.description.replace('Task type ', '', 1)
-        report[stat_name][description] = inner_stat_obj.to_dict()
-      continue
-    report[stat_name] = stat_obj.to_dict()
-
-  return report
 
 
 @router.get('/statistics')
@@ -102,13 +50,10 @@ async def get_task_statistics(
   Returns:
     statistics (dict): Task statistics report.
   """
-  statistics = format_task_statistics(
-      instance=turbinia_config.INSTANCE_ID,
-      project=turbinia_config.TURBINIA_PROJECT,
-      region=turbinia_config.TURBINIA_REGION, days=days, task_id=task_id,
-      request_id=request_id, user=user)
-  if statistics:
-    return JSONResponse(content=statistics, status_code=200)
+  statistics = tasks_statistics.TasksStatistics()
+  if statistics.format_task_statistics(days=days, task_id=task_id,
+                                       request_id=request_id, user=user):
+    return JSONResponse(content=statistics.model_dump(), status_code=200)
   raise HTTPException(status_code=404, detail='No task found.')
 
 

@@ -30,8 +30,8 @@ from datetime import timedelta
 import six
 
 from turbinia import config
-from turbinia.config import DATETIME_FORMAT
 from turbinia import TurbiniaException
+from turbinia.config import DATETIME_FORMAT
 
 config.LoadConfig()
 if 'unittest' in sys.modules.keys():

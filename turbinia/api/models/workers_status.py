@@ -23,7 +23,7 @@ from operator import itemgetter
 from pydantic import BaseModel
 from typing import ClassVar
 
-from turbinia import client as TurbiniaClientProvider
+from turbinia import state_manager
 from turbinia import config as turbinia_config
 
 log = logging.getLogger('turbinia:api_server:routes:request')
@@ -43,9 +43,8 @@ class WorkersInfo:
       workers_dict (dict): A non-serializable dictionary about the status of
         all tasks.
     """
-    task_results = TurbiniaClientProvider.get_turbinia_client().get_task_data(
-        turbinia_config.INSTANCE_ID, turbinia_config.TURBINIA_PROJECT,
-        turbinia_config.TURBINIA_REGION, days)
+    task_results = state_manager.get_state_manager().get_task_data(
+        turbinia_config.INSTANCE_ID, days)
 
     self.workers_dict = {}
     self.unassigned_dict = {}
