@@ -37,7 +37,8 @@ class TasksStatistics(BaseModel):
   tasks_per_user: dict = {}
 
   def get_statistics(
-      self, instance, days=0, task_id=None, request_id=None, user=None):
+      self, instance: str, days: int = 0, task_id: str = None,
+      request_id: str = None, user: str = None):
     """Gathers statistics for Turbinia execution data.
 
       Args:
