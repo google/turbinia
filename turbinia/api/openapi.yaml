@@ -14,71 +14,50 @@ components:
       description: "Base Request Options class to be extended by other option types. "
       properties:
         filter_patterns:
-          anyOf:
-            - items:
-                type: string
-              type: array
-            - type: "null"
+          items:
+            type: string
           title: Filter Patterns
+          type: array
         group_id:
-          anyOf:
-            - type: string
-            - type: "null"
           title: Group Id
+          type: string
         jobs_allowlist:
-          anyOf:
-            - items:
-                type: string
-              type: array
-            - type: "null"
+          items:
+            type: string
           title: Jobs Allowlist
+          type: array
         jobs_denylist:
-          anyOf:
-            - items:
-                type: string
-              type: array
-            - type: "null"
+          items:
+            type: string
           title: Jobs Denylist
+          type: array
         reason:
-          anyOf:
-            - type: string
-            - type: "null"
           title: Reason
+          type: string
         recipe_data:
-          anyOf:
-            - type: string
-            - type: "null"
           title: Recipe Data
+          type: string
         recipe_name:
-          anyOf:
-            - type: string
-            - type: "null"
           title: Recipe Name
+          type: string
         request_id:
-          anyOf:
-            - type: string
-            - type: "null"
           title: Request Id
+          type: string
         requester:
-          anyOf:
-            - type: string
-            - type: "null"
           title: Requester
+          type: string
         sketch_id:
-          anyOf:
-            - type: integer
-            - type: "null"
           title: Sketch Id
+          type: integer
         yara_rules:
-          anyOf:
-            - type: string
-            - type: "null"
           title: Yara Rules
+          type: string
       title: BaseRequestOptions
       type: object
     Body_upload_evidence_api_evidence_upload_post:
       properties:
         calculate_hash:
+          default: false
           title: Calculate Hash
           type: boolean
         files:
@@ -92,7 +71,6 @@ components:
           type: string
       required:
         - ticket_id
-        - calculate_hash
         - files
       title: Body_upload_evidence_api_evidence_upload_post
       type: object
@@ -109,11 +87,9 @@ components:
       description: "Base request object. "
       properties:
         description:
-          anyOf:
-            - type: string
-            - type: "null"
           default: Turbinia request object
           title: Description
+          type: string
         evidence:
           title: Evidence
           type: object

@@ -756,22 +756,22 @@ class TurbiniaEvidenceApi(object):
             _request_auth=_params.get('_request_auth'))
 
     @validate_arguments
-    def upload_evidence(self, calculate_hash : Optional[Any], files : Optional[Any], ticket_id : Optional[Any], **kwargs) -> object:  # noqa: E501
+    def upload_evidence(self, files : Optional[Any], ticket_id : Optional[Any], calculate_hash : Optional[Any] = None, **kwargs) -> object:  # noqa: E501
         """Upload Evidence  # noqa: E501
 
         Upload evidence file to server for processing.  Args:   ticket_id (str): ID of the ticket, which will be the name of the folder      where the evidence will be saved.   calculate_hash (bool): Boolean defining if the hash of the evidence should     be calculated.   file (List[UploadFile]): Evidence files to be uploaded to folder for later       processing. The maximum size of the file is 10 GB.   Returns:   List of uploaded evidences or warning messages if any.  # noqa: E501
         This method makes a synchronous HTTP request by default. To make an
         asynchronous HTTP request, please pass async_req=True
 
-        >>> thread = api.upload_evidence(calculate_hash, files, ticket_id, async_req=True)
+        >>> thread = api.upload_evidence(files, ticket_id, calculate_hash, async_req=True)
         >>> result = thread.get()
 
-        :param calculate_hash: (required)
-        :type calculate_hash: object
         :param files: (required)
         :type files: object
         :param ticket_id: (required)
         :type ticket_id: object
+        :param calculate_hash:
+        :type calculate_hash: object
         :param async_req: Whether to execute the request asynchronously.
         :type async_req: bool, optional
         :param _request_timeout: timeout setting for this request. If one
@@ -786,25 +786,25 @@ class TurbiniaEvidenceApi(object):
         kwargs['_return_http_data_only'] = True
         if '_preload_content' in kwargs:
             raise ValueError("Error! Please call the upload_evidence_with_http_info method with `_preload_content` instead and obtain raw data from ApiResponse.raw_data")
-        return self.upload_evidence_with_http_info(calculate_hash, files, ticket_id, **kwargs)  # noqa: E501
+        return self.upload_evidence_with_http_info(files, ticket_id, calculate_hash, **kwargs)  # noqa: E501
 
     @validate_arguments
-    def upload_evidence_with_http_info(self, calculate_hash : Optional[Any], files : Optional[Any], ticket_id : Optional[Any], **kwargs) -> ApiResponse:  # noqa: E501
+    def upload_evidence_with_http_info(self, files : Optional[Any], ticket_id : Optional[Any], calculate_hash : Optional[Any] = None, **kwargs) -> ApiResponse:  # noqa: E501
         """Upload Evidence  # noqa: E501
 
         Upload evidence file to server for processing.  Args:   ticket_id (str): ID of the ticket, which will be the name of the folder      where the evidence will be saved.   calculate_hash (bool): Boolean defining if the hash of the evidence should     be calculated.   file (List[UploadFile]): Evidence files to be uploaded to folder for later       processing. The maximum size of the file is 10 GB.   Returns:   List of uploaded evidences or warning messages if any.  # noqa: E501
         This method makes a synchronous HTTP request by default. To make an
         asynchronous HTTP request, please pass async_req=True
 
-        >>> thread = api.upload_evidence_with_http_info(calculate_hash, files, ticket_id, async_req=True)
+        >>> thread = api.upload_evidence_with_http_info(files, ticket_id, calculate_hash, async_req=True)
         >>> result = thread.get()
 
-        :param calculate_hash: (required)
-        :type calculate_hash: object
         :param files: (required)
         :type files: object
         :param ticket_id: (required)
         :type ticket_id: object
+        :param calculate_hash:
+        :type calculate_hash: object
         :param async_req: Whether to execute the request asynchronously.
         :type async_req: bool, optional
         :param _preload_content: if False, the ApiResponse.data will
@@ -833,9 +833,9 @@ class TurbiniaEvidenceApi(object):
         _params = locals()
 
         _all_params = [
-            'calculate_hash',
             'files',
-            'ticket_id'
+            'ticket_id',
+            'calculate_hash'
         ]
         _all_params.extend(
             [

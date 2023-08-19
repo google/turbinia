@@ -377,7 +377,7 @@ Name | Type | Description  | Notes
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **upload_evidence**
-> object upload_evidence(calculate_hash, files, ticket_id)
+> object upload_evidence(files, ticket_id, calculate_hash=calculate_hash)
 
 Upload Evidence
 
@@ -410,13 +410,13 @@ configuration.access_token = os.environ["ACCESS_TOKEN"]
 with turbinia_api_lib.ApiClient(configuration) as api_client:
     # Create an instance of the API class
     api_instance = turbinia_api_lib.TurbiniaEvidenceApi(api_client)
-    calculate_hash = None # object | 
     files = None # object | 
     ticket_id = None # object | 
+    calculate_hash = None # object |  (optional)
 
     try:
         # Upload Evidence
-        api_response = api_instance.upload_evidence(calculate_hash, files, ticket_id)
+        api_response = api_instance.upload_evidence(files, ticket_id, calculate_hash=calculate_hash)
         print("The response of TurbiniaEvidenceApi->upload_evidence:\n")
         pprint(api_response)
     except Exception as e:
@@ -428,9 +428,9 @@ with turbinia_api_lib.ApiClient(configuration) as api_client:
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **calculate_hash** | [**object**](object.md)|  | 
  **files** | [**object**](object.md)|  | 
  **ticket_id** | [**object**](object.md)|  | 
+ **calculate_hash** | [**object**](object.md)|  | [optional] 
 
 ### Return type
 

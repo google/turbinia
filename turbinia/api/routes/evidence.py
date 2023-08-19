@@ -38,7 +38,7 @@ EVIDENCE_SUMMARY_ATTRIBUTES = (
     'description', 'has_child_evidence', 'last_updated', 'local_path',
     'mount_path', 'parent_evidence', 'request_id', 'resource_id',
     'resource_tracked', 'save_metadata', 'saved_path', 'saved_path_type',
-    'size', 'source', 'source_path', 'tasks', 'type', 'creation_time')
+    'size', 'source', 'source_path', 'tasks', 'type')
 
 EVIDENCE_QUERY_ATTRIBUTES = EVIDENCE_SUMMARY_ATTRIBUTES + ('tasks',)
 
@@ -96,7 +96,7 @@ async def upload_file(
         log.error(error_message)
         raise IOError(error_message)
     file_info = {
-        'uploaded_name': file.filename,
+        'original_name': file.filename,
         'file_name': os.path.basename(file_path),
         'file_path': file_path,
         'size': size
@@ -200,9 +200,8 @@ async def get_evidence_by_id(request: Request, evidence_id):
 
 @router.post('/upload')
 async def upload_evidence(
-    ticket_id: Annotated[str, Form()], calculate_hash: Annotated[bool,
-                                                                 Form()],
-    files: List[UploadFile]):
+    ticket_id: Annotated[str, Form()], files: List[UploadFile],
+    calculate_hash: Annotated[bool, Form()] = False):
   """Upload evidence file to server for processing.
 
   Args:
