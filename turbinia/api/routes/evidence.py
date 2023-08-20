@@ -55,9 +55,9 @@ async def get_file_path(file_name: str, ticket_id: str) -> str:
   """
   file_name = os.path.splitext(file_name)[0]
   file_extension = os.path.splitext(file_name)[1]
-  new_name = ''.join((
-      file_name, '_', datetime.now().strftime(
-          turbinia_config.DATETIME_FORMAT), file_extension))
+  file_extension = '.' + file_extension if file_extension else ''
+  current_time = datetime.now().strftime(turbinia_config.DATETIME_FORMAT)
+  new_name = (f'{file_name}_{current_time}{file_extension}')
   os.makedirs(f'{turbinia_config.OUTPUT_DIR}/{ticket_id}', exist_ok=True)
   return os.path.join(turbinia_config.OUTPUT_DIR, ticket_id, new_name)
 
@@ -88,7 +88,7 @@ async def upload_file(
       saved_file.write(chunk)
       if calculate_hash:
         sha_hash.update(chunk)
-      size += turbinia_config.CHUNK_SIZE
+      size += len(chunk)
       if size >= turbinia_config.MAX_UPLOAD_SIZE:
         error_message = (
             f'Unable to upload file {file.filename} greater',

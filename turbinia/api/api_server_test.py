@@ -18,6 +18,7 @@ import importlib
 
 from collections import OrderedDict
 
+import datetime
 import unittest
 import json
 import os
@@ -336,7 +337,7 @@ class testTurbiniaAPIServer(unittest.TestCase):
     testGetEvidenceSummary.return_value = {}
     response = self.client.get(f'/api/evidence/summary')
     self.assertEqual(response.status_code, 404)
-    self.assertEqual(response.json(), {'detail': f'No evidences found.'})
+    self.assertEqual(response.json(), {'detail': f'No evidence found.'})
 
   @mock.patch('turbinia.api.routes.evidence.redis_manager.query_evidence')
   def testEvidenceQuery(self, testQueryEvidence):
@@ -372,6 +373,54 @@ class testTurbiniaAPIServer(unittest.TestCase):
                 f'request_id.')
         })
 
-  #todo(igormr): Add upload_evidence test
-  def testEvidenceUpload(self):
-    pass
+  @mock.patch('turbinia.api.routes.evidence.datetime')
+  @mock.patch('turbinia.api.routes.evidence.os.makedirs')
+  def testEvidenceUpload(self, mock_makedirs, mock_datetime):
+    mocked_now = datetime.datetime.now()
+    mock_datetime.now.return_value = mocked_now
+    mocked_now_str = mocked_now.strftime(turbinia_config.DATETIME_FORMAT)
+
+    filedir = os.path.dirname(os.path.realpath(__file__))
+    evidence_1_name = 'wordpress_access_logs.txt'
+    evidence_2_name = 'mbr.raw'
+    evidence_1_path = os.path.join(
+        filedir, '..', '..', 'test_data', evidence_1_name)
+    evidence_2_path = os.path.join(
+        filedir, '..', '..', 'test_data', evidence_2_name)
+    ticket_id = '981234098'
+
+    expected_evidence_1_name = (
+        f'{os.path.splitext(evidence_1_name)[0]}_{mocked_now_str}')
+    expected_evidence_2_name = (
+        f'{os.path.splitext(evidence_2_name)[0]}_{mocked_now_str}')
+    expected_evidence_1_path = os.path.join(
+        turbinia_config.OUTPUT_DIR, ticket_id, expected_evidence_1_name)
+    expected_evidence_2_path = os.path.join(
+        turbinia_config.OUTPUT_DIR, ticket_id, expected_evidence_2_name)
+    expected_response = [{
+        'original_name': evidence_1_name,
+        'file_name': expected_evidence_1_name,
+        'file_path': expected_evidence_1_path,
+        'size': 2265,
+        'hash': '2bc7c964403ea416bf2cf9871f2385dcccdc625c46fa8d12a3f54b86'
+    }, {
+        'original_name': evidence_2_name,
+        'file_name': expected_evidence_2_name,
+        'file_path': expected_evidence_2_path,
+        'size': 4194304,
+        'hash': 'b5cfa74c1c6e1ba459c7ef68fc1bf3725d2c0a9bb63923350a13ea76'
+    }]
+
+    files = [('files', open(evidence_1_path, 'rb')),
+             ('files', open(evidence_2_path, 'rb'))]
+    with mock.patch('turbinia.api.routes.evidence.open',
+                    mock.mock_open()) as mocked_file:
+      response = self.client.post(
+          '/api/evidence/upload', files=files, data={
+              'ticket_id': ticket_id,
+              'calculate_hash': True
+          })
+      mocked_file.assert_called()
+      mocked_file.assert_called_with(expected_evidence_2_path, 'wb')
+    self.assertEqual(response.status_code, 200)
+    self.assertEqual(json.loads(response.content), expected_response)
