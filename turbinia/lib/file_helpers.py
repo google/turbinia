@@ -32,12 +32,12 @@ def file_to_str(file_path):
   """
   file_contents = ''
   if not os.path.exists(file_path):
-    log.error('File {0:s} not found.'.format(file_path))
+    log.error(f'File {file_path:s} not found.')
   else:
     try:
       file_contents = open(file_path).read()
     except IOError as exception:
-      log.error('Cannot open file {0:s} [{1!s}]'.format(file_path, exception))
+      log.error(f'Cannot open file {file_path:s} [{exception!s}]')
   return file_contents
 
 
@@ -55,7 +55,7 @@ def file_to_list(file_path):
       content = fh.readlines()
       return [x.rstrip() for x in content]
   except IOError as exception:
-    log.error('Cannot open file {0:s} [{1!s}]'.format(file_path, exception))
+    log.error(f'Cannot open file {file_path:s} [{exception!s}]')
   return []
 
 
@@ -95,6 +95,5 @@ def write_list_to_temp_file(entries, preferred_dir=None):
       fh.write('\n'.join(entries))
       return fh.name
   except:
-    log.error(
-        'Could not write entries [{0!s}] to temporary file.'.format(entries))
+    log.error(f'Could not write entries [{entries!s}] to temporary file.')
   return None

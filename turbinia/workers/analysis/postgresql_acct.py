@@ -71,8 +71,7 @@ class PostgresAccountAnalysisTask(TurbiniaTask):
     except TurbiniaException as exception:
       result.close(
           self, success=False,
-          status='Error retrieving PostgreSQL config: {0:s}'.format(
-              str(exception)))
+          status=f'Error retrieving PostgreSQL config: {str(exception):s}')
       return result
     # 2) Grep for data dirs
     try:
@@ -121,8 +120,7 @@ class PostgresAccountAnalysisTask(TurbiniaTask):
           disk_path=evidence.local_path, output_dir=os.path.join(
               self.output_dir, 'artifacts'), credentials=evidence.credentials)
     except TurbiniaException as exception:
-      raise TurbiniaException(
-          'artifact extraction failed: {0:s}'.format(str(exception)))
+      raise TurbiniaException(f'artifact extraction failed: {str(exception):s}')
 
     # Extract base dir from our list of collected artifacts
     location = os.path.dirname(collected_artifacts[0])
@@ -159,11 +157,10 @@ class PostgresAccountAnalysisTask(TurbiniaTask):
             if os.path.sep in parts[1]:
               data_dirs.add(parts[1])
           else:
-            result.log(
-                'Unable to parse data_dir directive: {0:s}'.format(directive))
+            result.log(f'Unable to parse data_dir directive: {directive:s}')
       except subprocess.CalledProcessError as exception:
         raise TurbiniaException(
-            'Unable to grep Postgres config file: {0:s}'.format(str(exception)))
+            f'Unable to grep Postgres config file: {str(exception):s}')
 
     return list(data_dirs)
 
@@ -213,7 +210,7 @@ class PostgresAccountAnalysisTask(TurbiniaTask):
             scram_hashnames[passwdhash] = str(username)
       except subprocess.CalledProcessError as exception:
         raise TurbiniaException(
-            'Unable to grep raw database file: {0:s}'.format(str(exception)))
+            f'Unable to grep raw database file: {str(exception):s}')
 
     return (md5_hashnames, scram_hashnames)
 
@@ -251,10 +248,9 @@ class PostgresAccountAnalysisTask(TurbiniaTask):
 
     if weak_passwords:
       priority = Priority.CRITICAL
-      summary = 'PostgreSQL analysis found {0:d} weak password(s)'.format(
-          len(weak_passwords))
+      summary = f'PostgreSQL analysis found {len(weak_passwords):d} weak password(s)'
       report.insert(0, fmt.heading4(fmt.bold(summary)))
-      line = '{0:n} weak password(s) found:'.format(len(weak_passwords))
+      line = f'{len(weak_passwords):n} weak password(s) found:'
       report.append(fmt.bullet(fmt.bold(line)))
       combined_hashnames = {**md5_hashnames, **scram_hashnames}
       for password_hash, plaintext in weak_passwords:

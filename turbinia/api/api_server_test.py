@@ -41,6 +41,8 @@ class testTurbiniaAPIServer(unittest.TestCase):
 
   _TASK_TEST_DATA = {
       'id': 'c8f73a5bc5084086896023c12c7cc026',
+      'evidence_name': '/evidence/test.tgz',
+      'all_args': 'compresseddirectory -l /evidence/test.tgz',
       'job_id': '1db0dc47d8f244f5b4fa7e15b8a87861',
       'start_time': '2022-04-01T19:15:14.791074Z',
       'last_update': '2022-04-01T19:17:14.791074Z',
@@ -60,6 +62,7 @@ class testTurbiniaAPIServer(unittest.TestCase):
   }
 
   _REQUEST_TEST_DATA = {
+      'evidence_name': '/evidence/test.tgz',
       'failed_tasks': 0,
       'last_task_update_time': '2022-04-01T19:17:14.791074Z',
       'queued_tasks': 0,
@@ -106,7 +109,7 @@ class testTurbiniaAPIServer(unittest.TestCase):
   def testRequestResultsNotFound(self):
     """Test getting empty request result files."""
     request_id = self._REQUEST_TEST_DATA.get('request_id')
-    response = self.client.get('/api/result/request/{}'.format(request_id))
+    response = self.client.get(f'/api/result/request/{request_id}')
     log_path = turbinia_config.toDict().get('OUTPUT_DIR')
     output_path = os.path.join(log_path, request_id)
     self.assertEqual(response.status_code, 404)
@@ -122,10 +125,10 @@ class testTurbiniaAPIServer(unittest.TestCase):
     """Test getting empty task result files."""
     testTaskData.return_value = []
     task_id = self._TASK_TEST_DATA.get('id')
-    response = self.client.get('/api/result/task/{}'.format(task_id))
+    response = self.client.get(f'/api/result/task/{task_id}')
     self.assertEqual(response.status_code, 404)
     self.assertEqual(
-        response.json(), {'detail': 'Task {0:s} not found.'.format(task_id)})
+        response.json(), {'detail': f'Task {task_id:s} not found.'})
 
   @mock.patch('turbinia.state_manager.RedisStateManager.get_task_data')
   def testGetTaskStatus(self, testTaskData):
@@ -143,8 +146,7 @@ class testTurbiniaAPIServer(unittest.TestCase):
             redis_client.get('TurbiniaTask:41483253079448e59685d88f37ab91f7'))
     ]
 
-    result = self.client.get(
-        '/api/task/{}'.format(self._TASK_TEST_DATA.get('id')))
+    result = self.client.get(f"/api/task/{self._TASK_TEST_DATA.get('id')}")
     result = json.loads(result.content)
     self.assertEqual(expected_result_dict, result)
 
@@ -167,7 +169,7 @@ class testTurbiniaAPIServer(unittest.TestCase):
     ]
 
     result = self.client.get(
-        '/api/request/{}'.format(self._REQUEST_TEST_DATA.get('request_id')))
+        f"/api/request/{self._REQUEST_TEST_DATA.get('request_id')}")
     result = json.loads(result.content)
     self.assertEqual(expected_result_dict, result)
 
@@ -200,7 +202,7 @@ class testTurbiniaAPIServer(unittest.TestCase):
     }
     testTaskData.return_value = []
     result = self.client.get(
-        '/api/request/{}'.format(self._REQUEST_TEST_DATA.get('request_id')))
+        f"/api/request/{self._REQUEST_TEST_DATA.get('request_id')}")
     result = json.loads(result.content)
     self.assertEqual(expected_result, result)
 
@@ -209,8 +211,7 @@ class testTurbiniaAPIServer(unittest.TestCase):
     """Test getting invalid Turbinia task status."""
     expected_result = {'detail': 'Task ID not found.'}
     testTaskData.return_value = []
-    result = self.client.get(
-        '/api/task/{}'.format(self._TASK_TEST_DATA.get('id')))
+    result = self.client.get(f"/api/task/{self._TASK_TEST_DATA.get('id')}")
     result = json.loads(result.content)
     self.assertEqual(expected_result, result)
 

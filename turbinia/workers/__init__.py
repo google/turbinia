@@ -34,7 +34,7 @@ import traceback
 import uuid
 import filelock
 
-from prometheus_client import CollectorRegistry, Gauge, Histogram
+from prometheus_client import CollectorRegistry, Counter, Histogram
 from turbinia import __version__, config
 from turbinia.config import DATETIME_FORMAT
 from turbinia.evidence import evidence_decode
@@ -56,19 +56,19 @@ REPORT_MAXSIZE = int(1048572 * 0.75)
 log = logging.getLogger('turbinia')
 
 registry = CollectorRegistry()
-turbinia_worker_tasks_started_total = Gauge(
+turbinia_worker_tasks_started_total = Counter(
     'turbinia_worker_tasks_started_total',
     'Total number of started worker tasks', registry=registry)
-turbinia_worker_tasks_completed_total = Gauge(
+turbinia_worker_tasks_completed_total = Counter(
     'turbinia_worker_tasks_completed_total',
     'Total number of completed worker tasks', registry=registry)
-turbinia_worker_tasks_queued_total = Gauge(
+turbinia_worker_tasks_queued_total = Counter(
     'turbinia_worker_tasks_queued_total', 'Total number of queued worker tasks',
     registry=registry)
-turbinia_worker_tasks_failed_total = Gauge(
+turbinia_worker_tasks_failed_total = Counter(
     'turbinia_worker_tasks_failed_total', 'Total number of failed worker tasks',
     registry=registry)
-turbinia_worker_tasks_timeout_total = Gauge(
+turbinia_worker_tasks_timeout_total = Counter(
     'turbinia_worker_tasks_timeout_total',
     'Total number of worker tasks timed out.', registry=registry)
 
@@ -128,6 +128,7 @@ class TurbiniaTaskResult:
 
     self.closed = False
     self.evidence = evidence if evidence else []
+    self.evidence_size = None
     self.input_evidence = input_evidence
     self.id = uuid.uuid4().hex
     self.job_id = job_id
@@ -206,8 +207,7 @@ class TurbiniaTaskResult:
       status = 'Completed successfully in {0:s} on {1:s}'.format(
           str(self.run_time), self.worker_name)
     elif not status and not self.successful:
-      status = 'Run failed in {0:s} on {1:s}'.format(
-          str(self.run_time), self.worker_name)
+      status = f'Run failed in {str(self.run_time):s} on {self.worker_name:s}'
     self.log(status)
     self.status = status
 
@@ -223,8 +223,7 @@ class TurbiniaTaskResult:
               'not saving.'.format(evidence.name, evidence.source_path))
       else:
         self.log(
-            'Evidence {0:s} has empty source_path so '
-            'not saving.'.format(evidence.name))
+            f'Evidence {evidence.name:s} has empty source_path so not saving.')
 
       # Truncate report text data if it is approaching the size of the max
       # datastore entity size (See REPORT_MAXSIZE definition for details).
@@ -281,7 +280,7 @@ class TurbiniaTaskResult:
         task.output_manager.save_local_file(logfile, self)
 
     self.closed = True
-    log.debug('Result close successful. Status is [{0:s}]'.format(self.status))
+    log.debug(f'Result close successful. Status is [{self.status:s}]')
 
   def log(self, message, level=logging.INFO, traceback_=None):
     """Log Task messages.
@@ -291,7 +290,7 @@ class TurbiniaTaskResult:
     Args:
       message (string): Message to log.
       level (int): Log level as defined by logging enums (e.g. logging.INFO)
-      traceback (string): Trace message to log
+      traceback_ (string): Trace message to log
     """
     self._log.append(message)
     if level == logging.DEBUG:
@@ -442,8 +441,8 @@ class TurbiniaTask:
 
   # The list of attributes that we will persist into storage
   STORED_ATTRIBUTES = [
-      'id', 'job_id', 'last_update', 'name', 'evidence_name', 'request_id',
-      'requester', 'group_name', 'reason', 'all_args', 'group_id'
+      'id', 'job_id', 'last_update', 'name', 'evidence_name', 'evidence_size',
+      'request_id', 'requester', 'group_name', 'reason', 'all_args', 'group_id'
   ]
 
   # The list of evidence states that are required by a Task in order to run.
@@ -477,6 +476,7 @@ class TurbiniaTask:
     self.last_update = datetime.now()
     self.name = name if name else self.__class__.__name__
     self.evidence_name = None
+    self.evidence_size = None
     self.output_dir = None
     self.output_manager = output_manager.OutputManager()
     self.result = None
@@ -548,6 +548,7 @@ class TurbiniaTask:
     evidence.validate()
     evidence.preprocess(
         self.id, tmp_dir=self.tmp_dir, required_states=self.REQUIRED_STATES)
+    self.evidence_size = evidence.size
 
     # Final check to make sure that the required evidence state has been met
     # for Evidence types that have those capabilities.
@@ -585,7 +586,7 @@ class TurbiniaTask:
     """Gets histogram metric for current Task.
 
     Returns:
-      prometheus_client.Historgram: For the current task,
+      prometheus_client.Histogram: For the current task,
           or None if they are not initialized.
 
     Raises:
@@ -696,8 +697,7 @@ class TurbiniaTask:
       if not stderr_file:
         _, stderr_file = tempfile.mkstemp(
             suffix='.txt', prefix='stderr-', dir=self.output_dir)
-      result.log(
-          'Writing stderr to {0:s}'.format(stderr_file), level=logging.DEBUG)
+      result.log(f'Writing stderr to {stderr_file:s}', level=logging.DEBUG)
       with open(stderr_file, 'w+') as fh:
         fh.write(stderr)
       log_files.append(stderr_file)
@@ -710,8 +710,7 @@ class TurbiniaTask:
       if not stdout_file:
         _, stdout_file = tempfile.mkstemp(
             suffix='.txt', prefix='stdout-', dir=self.output_dir)
-      result.log(
-          'Writing stdout to {0:s}'.format(stdout_file), level=logging.DEBUG)
+      result.log(f'Writing stdout to {stdout_file:s}', level=logging.DEBUG)
       with open(stdout_file, 'w+') as fh:
         fh.write(stdout)
       log_files.append(stdout_file)
@@ -720,33 +719,31 @@ class TurbiniaTask:
     for file_ in log_files:
       if not os.path.exists(file_):
         result.log(
-            'Log file {0:s} does not exist to save'.format(file_),
-            level=logging.DEBUG)
+            f'Log file {file_:s} does not exist to save', level=logging.DEBUG)
         continue
       if os.path.getsize(file_) == 0:
         result.log(
-            'Log file {0:s} is empty. Not saving'.format(file_),
-            level=logging.DEBUG)
+            f'Log file {file_:s} is empty. Not saving', level=logging.DEBUG)
         continue
-      result.log('Output log file found at {0:s}'.format(file_))
+      result.log(f'Output log file found at {file_:s}')
       self.output_manager.save_local_file(file_, result)
 
     if fail_message:
       result.close(self, success=False, status=fail_message)
     elif ret not in success_codes:
-      message = 'Execution of [{0!s}] failed with status {1:d}'.format(cmd, ret)
+      message = f'Execution of [{cmd!s}] failed with status {ret:d}'
       result.log(message)
       if close:
         result.close(self, success=False, status=message)
     else:
-      result.log('Execution of [{0!s}] succeeded'.format(cmd))
+      result.log(f'Execution of [{cmd!s}] succeeded')
       for file_ in save_files:
         if os.path.getsize(file_) == 0:
           result.log(
-              'Output file {0:s} is empty. Not saving'.format(file_),
+              f'Output file {file_:s} is empty. Not saving',
               level=logging.DEBUG)
           continue
-        result.log('Output save file at {0:s}'.format(file_))
+        result.log(f'Output save file at {file_:s}')
         self.output_manager.save_local_file(file_, result)
 
       for evidence in new_evidence:
@@ -765,7 +762,6 @@ class TurbiniaTask:
           result.log(message, level=logging.WARN)
         else:
           result.add_evidence(evidence, self._evidence_config)
-
       if close:
         result.close(self, success=True)
 
@@ -792,14 +788,12 @@ class TurbiniaTask:
     self.tmp_dir, self.output_dir = self.output_manager.get_local_output_dirs()
     if not self.result:
       self.result = self.create_result(input_evidence=evidence)
-
     if evidence.copyable and not config.SHARED_FILESYSTEM:
       self.output_manager.retrieve_evidence(evidence)
 
     if evidence.source_path and not os.path.exists(evidence.source_path):
       raise TurbiniaException(
-          'Evidence source path {0:s} does not exist'.format(
-              evidence.source_path))
+          f'Evidence source path {evidence.source_path:s} does not exist')
     return self.result
 
   def setup_metrics(self, task_list=None):
@@ -827,11 +821,10 @@ class TurbiniaTask:
       if task_name in METRICS:
         continue
       metric = Histogram(
-          '{0:s}_duration_seconds'.format(task_name),
-          'Seconds to run {0:s}'.format(task_name))
+          f'{task_name:s}_duration_seconds', f'Seconds to run {task_name:s}')
       METRICS[task_name] = metric
 
-    log.debug('Registered {0:d} task metrics'.format(len(METRICS)))
+    log.debug(f'Registered {len(METRICS):d} task metrics')
 
     return METRICS
 
@@ -849,6 +842,7 @@ class TurbiniaTask:
       status(str): A one line descriptive task status.
       message(str): An error message to show when returning the result.
       trace: Stack traceback for errors.
+      no_output_manager(bool): Whether to create an output manager for the task.
     """
     result = TurbiniaTaskResult(
         base_output_dir=self.base_output_dir, request_id=self.request_id,
@@ -857,15 +851,57 @@ class TurbiniaTask:
     result.setup(self)
     if message:
       if status:
-        result.status = '{0:s}. Previous status: [{1:s}]'.format(
-            message, status)
+        result.status = f'{message:s}. Previous status: [{status:s}]'
       else:
         result.status = message
       result.set_error(message, trace)
     return result
 
+  def check_serialization_errors(self, result):
+    """Checks the TurbiniaTaskResult is valid for serialization.
+    
+    This method checks the 'reuslt'' obejct is the correct type and whether
+    it is pickle/JSON serializable or not.
+
+    Args:
+      result(TurbiniaTaskResult): A TurbiniaTaskResult object.
+
+    Returns:
+      str | None: An error message, or None.
+    """
+    error_message = None
+
+    # Check for serialization errors
+    if isinstance(result, TurbiniaTaskResult):
+      try:
+        log.debug('Checking TurbiniaTaskResult for pickle serializability')
+        pickle.dumps(result.serialize())
+      except (TypeError, pickle.PicklingError) as exception:
+        error_message = (
+            f'Error pickling TurbiniaTaskResult object. Returning a new result '
+            f'with the pickling error, and all previous result data will be '
+            f'lost. Pickle Error: {exception!s}')
+      try:
+        log.debug('Checking TurbiniaTaskResult for JSON serializability')
+        json.dumps(result.serialize())
+      except (TypeError) as exception:
+        error_message = (
+            f'Error JSON serializing TurbiniaTaskResult object. Returning a new'
+            f' result with the JSON error, and all previous result data will '
+            f'be lost. JSON Error: {exception!s}')
+    else:
+      error_message = (
+          f'Task returned type [{type(result)!s}] instead of '
+          f'TurbiniaTaskResult.')
+
+    return error_message
+
   def validate_result(self, result):
     """Checks to make sure that the result is valid.
+
+    This method runs validation logic defined in Evidence.validate() to
+    ensure that newly created evidence is usable as input for TurbiniaTask
+    objects.
 
     We occasionally get something added into a TurbiniaTaskResult that makes
     it unpickleable.  We don't necessarily know what caused it to be in that
@@ -880,44 +916,41 @@ class TurbiniaTask:
       The original result object if it is OK, otherwise an empty result object
       indicating a failure.
     """
-    message = None
+    serialization_error = self.check_serialization_errors(result)
+    validation_error = None
     check_status = 'Successful'
 
-    if isinstance(result, TurbiniaTaskResult):
-      try:
-        log.debug('Checking TurbiniaTaskResult for pickle serializability')
-        pickle.dumps(result.serialize())
-      except (TypeError, pickle.PicklingError) as exception:
-        message = (
-            'Error pickling TurbiniaTaskResult object. Returning a new result '
-            'with the pickling error, and all previous result data will be '
-            'lost. Pickle Error: {0!s}'.format(exception))
-      try:
-        log.debug('Checking TurbiniaTaskResult for JSON serializability')
-        json.dumps(result.serialize())
-      except (TypeError) as exception:
-        message = (
-            'Error JSON serializing TurbiniaTaskResult object. Returning a new '
-            'result with the JSON error, and all previous result data will '
-            'be lost. JSON Error: {0!s}'.format(exception))
+    # Validate the new evidence objects
+    if not serialization_error:
+      for evidence in result.evidence[:]:
+        try:
+          evidence.validate()
+        except TurbiniaException as exception:
+          validation_error = (
+              f'Not adding evidence {evidence.source_path}. Evidence '
+              f'validation failed with error: {exception!s}')
+          result.evidence.remove(evidence)
+          result.saved_paths.remove(evidence.source_path)
+      # Append evidence validation error messages to the result
+      # so the client knows what happened
+      if validation_error:
+        result.log(validation_error)
+        result.status = f'{result.status}. {validation_error}'
     else:
-      message = (
-          'Task returned type [{0!s}] instead of TurbiniaTaskResult.').format(
-              type(result))
-
-    if message:
-      log.error(message)
+      # Handle any serialization type errors
+      log.error(serialization_error)
       if result and hasattr(result, 'status') and result.status:
         status = result.status
       else:
         status = 'No previous status'
 
       result = self.create_result(
-          status=status, message=message, trace=traceback.format_exc())
-      result.close(self, success=False, status=message)
+          status=status, message=serialization_error,
+          trace=traceback.format_exc())
+      result.close(self, success=False, status=serialization_error)
       check_status = 'Failed, but replaced with empty result'
 
-    log.info('Result check: {0:s}'.format(check_status))
+    log.info(f'Result check: {check_status:s}')
     return result
 
   def get_task_recipe(self, recipe):
@@ -934,9 +967,7 @@ class TurbiniaTask:
       if isinstance(task_recipe, dict):
         task = task_recipe.get('task', None)
         if task and task == self.name and self.validate_task_conf(task_recipe):
-          log.debug(
-              'Setting recipe data for task {0:s}: {1!s}'.format(
-                  task, task_recipe))
+          log.debug(f'Setting recipe data for task {task:s}: {task_recipe!s}')
           recipe_data.update(task_recipe)
           recipe_data.pop('task')
           break
@@ -969,7 +1000,7 @@ class TurbiniaTask:
     # Avoid circular dependency.
     from turbinia.jobs import manager as job_manager
 
-    log.debug('Task {0:s} {1:s} awaiting execution'.format(self.name, self.id))
+    log.debug(f'Task {self.name:s} {self.id:s} awaiting execution')
     try:
       evidence = evidence_decode(evidence)
       self.result = self.setup(evidence)
@@ -978,8 +1009,7 @@ class TurbiniaTask:
       task_runtime_metrics = self.get_metrics()
     except TurbiniaException as exception:
       message = (
-          '{0:s} Task setup failed with exception: [{1!s}]'.format(
-              self.name, exception))
+          f'{self.name:s} Task setup failed with exception: [{exception!s}]')
       # Logging explicitly here because the result is in an unknown state
       trace = traceback.format_exc()
       log.error(message)
@@ -996,7 +1026,7 @@ class TurbiniaTask:
       self.result.close(self, success=False)
       return self.result.serialize()
 
-    log.info('Starting Task {0:s} {1:s}'.format(self.name, self.id))
+    log.info(f'Starting Task {self.name:s} {self.id:s}')
     original_result_id = None
     turbinia_worker_tasks_started_total.inc()
     with task_runtime_metrics.time():
@@ -1032,9 +1062,7 @@ class TurbiniaTask:
 
       # pylint: disable=broad-except
       except Exception as exception:
-        message = (
-            '{0:s} Task failed with exception: [{1!s}]'.format(
-                self.name, exception))
+        message = (f'{self.name:s} Task failed with exception: [{exception!s}]')
         # Logging explicitly here because the result is in an unknown state
         trace = traceback.format_exc()
         log_and_report(message, trace)
@@ -1077,7 +1105,7 @@ class TurbiniaTask:
       # listed above.
       # pylint: disable=broad-except
       except Exception as exception:
-        log.error('TurbiniaTaskResult close failed: {0!s}'.format(exception))
+        log.error(f'TurbiniaTaskResult close failed: {exception!s}')
         if not self.result.status:
           self.result.status = message
       # Check the result again after closing to make sure it's still good.
@@ -1090,8 +1118,8 @@ class TurbiniaTask:
               self.result.id, original_result_id))
     else:
       log.debug(
-          'Returning original result object {0:s} after task execution'.format(
-              self.result.id))
+          f'Returning original result object {self.result.id:s} after task execution'
+      )
     return self.result.serialize()
 
   def run(self, evidence, result):

@@ -54,7 +54,7 @@ class HindsightTask(TurbiniaTask):
         '--output', output_file_path, '-l', hindsight_log
     ]
 
-    result.log('Running hindsight as [{0:s}]'.format(' '.join(cmd)))
+    result.log(f"Running hindsight as [{' '.join(cmd):s}]")
     self.execute(
         cmd, result, log_files=[hindsight_log], new_evidence=[output_evidence],
         close=True)

@@ -49,7 +49,7 @@ class FileSystemTimelineTask(TurbiniaTask):
         from dfvfs.helpers import volume_scanner
         from dfvfs.lib import errors as dfvfs_errors
       except ImportError as exception:
-        message = 'Could not import libraries: {0!s}'.format(exception)
+        message = f'Could not import libraries: {exception!s}'
         raise TurbiniaException(message)
 
     bodyfile_output = os.path.join(self.output_dir, 'file_system.bodyfile')
@@ -82,7 +82,7 @@ class FileSystemTimelineTask(TurbiniaTask):
       base_path_specs = entry_lister.GetBasePathSpecs(
           evidence.local_path, options=volume_scanner_options)
     except dfvfs_errors.ScannerError as exception:
-      status = 'Unable to open evidence: {0!s}'.format(exception)
+      status = f'Unable to open evidence: {exception!s}'
       result.close(self, success=False, status=status)
       return result
 
@@ -91,7 +91,7 @@ class FileSystemTimelineTask(TurbiniaTask):
     try:
       bodyfile_fileobj = open(bodyfile_output, 'w', encoding='utf-8')
     except IOError as exception:
-      status = 'Failed to open local output file: {0!s}'.format(exception)
+      status = f'Failed to open local output file: {exception!s}'
       result.close(self, success=False, status=status)
       return result
 
@@ -112,7 +112,7 @@ class FileSystemTimelineTask(TurbiniaTask):
       except (dfvfs_errors.AccessError, dfvfs_errors.BackEndError,
               dfvfs_errors.MountPointError, dfvfs_errors.PathSpecError,
               IOError) as exception:
-        status = 'Unable to process file entry: {0!s}'.format(exception)
+        status = f'Unable to process file entry: {exception!s}'
         result.log(status)
 
     bodyfile_fileobj.close()

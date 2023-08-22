@@ -47,8 +47,7 @@ def RetrieveResourceState():
     with open(config.RESOURCE_FILE, encoding='utf-8') as fh:
       json_load = json.load(fh)
   except ValueError as exception:
-    message = 'Can not load json from resource state file: {0!s}'.format(
-        exception)
+    message = f'Can not load json from resource state file: {exception!s}'
     log.error(message)
     raise TurbiniaException(message)
   finally:
@@ -96,7 +95,7 @@ def PreprocessResourceState(resource_id, task_id):
             json.dumps(json_load), json.dumps(curr_state)))
     log.error(msg)
     raise TurbiniaException(msg)
-  log.debug('Current resource state: {0:s}'.format(json.dumps(curr_state)))
+  log.debug(f'Current resource state: {json.dumps(curr_state):s}')
 
 
 def PostProcessResourceState(resource_id, task_id):
@@ -144,6 +143,6 @@ def PostProcessResourceState(resource_id, task_id):
             json.dumps(json_load), json.dumps(curr_state)))
     log.error(msg)
     raise TurbiniaException(msg)
-  log.debug('Current resource state: {0:s}'.format(json.dumps(curr_state)))
+  log.debug(f'Current resource state: {json.dumps(curr_state):s}')
 
   return is_detachable

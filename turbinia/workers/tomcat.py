@@ -105,7 +105,7 @@ class TomcatAnalysisTask(TurbiniaTask):
       count += 1
 
     if findings:
-      msg = 'Tomcat analysis found {0:d} results'.format(count)
+      msg = f'Tomcat analysis found {count:d} results'
       findings.insert(0, fmt.heading4(fmt.bold(msg)))
       report = '\n'.join(findings)
       return (report, Priority.HIGH, msg)

@@ -1,7 +1,8 @@
 FROM ubuntu:22.04
 
 ENV DEBIAN_FRONTEND=noninteractive 
-RUN apt-get update && apt-get -y install \
+ENV PIP_NO_CACHE_DIR=1
+RUN apt-get update && apt-get -y upgrade && apt-get -y install \
     apt-transport-https \
     apt-utils \
     ca-certificates \
@@ -10,19 +11,17 @@ RUN apt-get update && apt-get -y install \
     python3-pip \
     software-properties-common \
     sudo \
-    && rm -rf /var/lib/apt/lists/*
+    && apt-get clean && rm -rf /var/cache/apt/* /var/lib/apt/lists/*
 
-RUN pip3 install pip --upgrade
-RUN pip3 install urllib3 cryptography requests --upgrade
-
-ADD requirements.txt /tmp/
-RUN cd /tmp/ && pip3 install -r requirements.txt
+RUN pip3 install pip --upgrade \
+    && pip3 install urllib3 cryptography requests --upgrade
 
 ADD . /tmp/
-# unshallow and fetch all tags so our build systems pickup the correct git tag if it's a shallow clone
-RUN if $(cd /tmp/ && git rev-parse --is-shallow-repository); then cd /tmp/ && git fetch --prune --unshallow && git fetch --depth=1 origin +refs/tags/*:refs/tags/*; fi
+RUN cd /tmp/ && pip3 install -r requirements.txt
 
-RUN cd /tmp/ && python3 setup.py install
+# unshallow and fetch all tags so our build systems pickup the correct git tag if it's a shallow clone
+RUN if $(cd /tmp/ && git rev-parse --is-shallow-repository); then cd /tmp/ && git fetch --prune --unshallow && git fetch --depth=1 origin +refs/tags/*:refs/tags/*; fi \
+    && cd /tmp/ && python3 setup.py install
 
 RUN useradd -r -s /bin/nologin -u 999 turbinia
 

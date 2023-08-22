@@ -458,7 +458,7 @@ def process_args(args):
       '-i', '--instance_id',
       help='Instance ID used to run tasks/requests. You must provide an '
       'instance ID if the task/request was not processed on the same instance '
-      'as your confing file.')
+      'as your config file.')
   # Server
   subparsers.add_parser('server', help='Run Turbinia Server')
   # API server
@@ -474,9 +474,7 @@ def process_args(args):
     else:
       config.LoadConfig()
   except TurbiniaException as exception:
-    print(
-        'Could not load config file ({0!s}).\n{1:s}'.format(
-            exception, config.CONFIG_MSG))
+    print(f'Could not load config file ({exception!s}).\n{config.CONFIG_MSG:s}')
     sys.exit(1)
 
   if args.log_file:
@@ -515,7 +513,7 @@ def process_args(args):
       google_cloud.setup_stackdriver_handler(
           config.TURBINIA_PROJECT, args.command)
 
-  log.info('Turbinia version: {0:s}'.format(__version__))
+  log.info(f'Turbinia version: {__version__:s}')
 
   # Do late import of other needed Turbinia modules.  This is needed because the
   # config is loaded by these modules at load time, and we want to wait to load
@@ -526,12 +524,11 @@ def process_args(args):
   from turbinia.worker import TurbiniaCeleryWorker
   from turbinia.worker import TurbiniaPsqWorker
   from turbinia.server import TurbiniaServer
-  from turbinia.api.api_server import TurbiniaAPIServer
 
   # Print out config if requested
   if args.command == 'config':
     if args.file_only:
-      log.info('Config file path is {0:s}\n'.format(config.configSource))
+      log.info(f'Config file path is {config.configSource:s}\n')
       sys.exit(0)
 
     try:
@@ -540,8 +537,7 @@ def process_args(args):
         sys.exit(0)
     except IOError as exception:
       msg = (
-          'Failed to read config file {0:s}: {1!s}'.format(
-              config.configSource, exception))
+          f'Failed to read config file {config.configSource:s}: {exception!s}')
       raise TurbiniaException(msg)
   #sends test notification
   if args.command == 'testnotify':
@@ -557,8 +553,7 @@ def process_args(args):
   filter_patterns = []
   if (args.filter_patterns_file and
       not os.path.exists(args.filter_patterns_file)):
-    msg = 'Filter patterns file {0:s} does not exist.'.format(
-        args.filter_patterns_file)
+    msg = f'Filter patterns file {args.filter_patterns_file:s} does not exist.'
     raise TurbiniaException(msg)
   elif args.filter_patterns_file:
     try:
@@ -566,22 +561,18 @@ def process_args(args):
                              encoding='utf-8').read().splitlines()
     except IOError as exception:
       log.warning(
-          'Cannot open file {0:s} [{1!s}]'.format(
-              args.filter_patterns_file, exception))
+          f'Cannot open file {args.filter_patterns_file:s} [{exception!s}]')
 
   # Read yara rules
   yara_rules = ''
   if (args.yara_rules_file and not os.path.exists(args.yara_rules_file)):
-    msg = 'Filter patterns file {0:s} does not exist.'.format(
-        args.yara_rules_file)
+    msg = f'Filter patterns file {args.yara_rules_file:s} does not exist.'
     raise TurbiniaException(msg)
   elif args.yara_rules_file:
     try:
       yara_rules = open(args.yara_rules_file, encoding='utf-8').read()
     except IOError as exception:
-      msg = (
-          'Cannot open file {0:s} [{1!s}]'.format(
-              args.yara_rules_file, exception))
+      msg = (f'Cannot open file {args.yara_rules_file:s} [{exception!s}]')
       raise TurbiniaException(msg)
 
   # Create Client object
@@ -662,8 +653,8 @@ def process_args(args):
         disk_name = new_disk.name
         if args.copy_only:
           log.info(
-              '--copy_only specified, so not processing {0:s} with '
-              'Turbinia'.format(disk_name))
+              f'--copy_only specified, so not processing {disk_name:s} with Turbinia'
+          )
           continue
 
       process_evidence(
@@ -713,6 +704,7 @@ def process_args(args):
         jobs_denylist=args.jobs_denylist, jobs_allowlist=args.jobs_allowlist)
     server.start()
   elif args.command == 'api_server':
+    from turbinia.api.api_server import TurbiniaAPIServer
     api_server = TurbiniaAPIServer()
     api_server.start('turbinia.api.api_server:app')
   elif args.command == 'status':
@@ -806,12 +798,12 @@ def process_args(args):
       query = args.query
     if args.worker_logs:
       if query:
-        query = 'jsonPayload.origin="psqworker" {0:s}'.format(query)
+        query = f'jsonPayload.origin="psqworker" {query:s}'
       else:
         query = 'jsonPayload.origin="psqworker"'
     if args.server_logs:
       if query:
-        query = 'jsonPayload.origin="server" {0:s}'.format(query)
+        query = f'jsonPayload.origin="server" {query:s}'
       else:
         query = 'jsonPayload.origin="server"'
     google_cloud.get_logs(
@@ -860,9 +852,9 @@ def process_args(args):
         output_writer.copy_from_gcs(paths)
 
     except TurbiniaException as exception:
-      log.error('Failed to pull the data {0!s}'.format(exception))
+      log.error(f'Failed to pull the data {exception!s}')
   else:
-    log.warning('Command {0!s} not implemented.'.format(args.command))
+    log.warning(f'Command {args.command!s} not implemented.')
 
 
 # TODO: shard this function and move some of its functionalities to other files
@@ -881,7 +873,7 @@ def process_evidence(
     browser_type(str): Browser type used for hindsight.
     disk_name(str): Disk name used for processing cloud evidence.
     embedded_path(str): Embedded path for clouddiskembedded.
-    filter_pattern(str): Filter patterns used for processing evidence.
+    filter_patterns(str): Filter patterns used for processing evidence.
     format(str): Output format for hindsight.
     mount_partition(int): Mount partition for clouddiskembedded.
     name(str): Evidence name.
@@ -1031,8 +1023,7 @@ def process_evidence(
       client.send_request(request)
 
     if args.wait:
-      log.info(
-          'Waiting for request {0:s} to complete'.format(request.request_id))
+      log.info(f'Waiting for request {request.request_id:s} to complete')
       region = config.TURBINIA_REGION
       client.wait_for_request(
           instance=config.INSTANCE_ID, project=config.TURBINIA_PROJECT,
@@ -1050,9 +1041,7 @@ def main():
   try:
     process_args(sys.argv[1:])
   except TurbiniaException as exception:
-    log.error(
-        'There was a problem processing arguments: {0:s}'.format(
-            str(exception)))
+    log.error(f'There was a problem processing arguments: {str(exception):s}')
     sys.exit(1)
   log.info('Done.')
   sys.exit(0)

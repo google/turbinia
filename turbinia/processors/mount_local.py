@@ -24,7 +24,7 @@ import time
 import filelock
 import re
 
-from prometheus_client import Gauge
+from prometheus_client import Counter
 from turbinia import config
 from turbinia import TurbiniaException
 
@@ -32,7 +32,7 @@ log = logging.getLogger('turbinia')
 
 RETRY_MAX = 10
 
-turbinia_failed_loop_device_detach = Gauge(
+turbinia_failed_loop_device_detach = Counter(
     'turbinia_failed_loop_device_detach',
     'Total number of loop devices failed to detach')
 
@@ -49,36 +49,33 @@ def GetDiskSize(source_path):
   Returns:
     int: the size of the disk in bytes.
   """
-  size = None
+  size = 0
 
   if not os.path.exists(source_path):
     log.error(
-        'Cannot check disk size for non-existing source_path {0!s}'.format(
-            source_path))
+        f'Cannot check disk size for non-existing source_path {source_path!s}')
     return None
 
   cmd = ['blockdev', '--getsize64', source_path]
-  log.info('Running {0!s}'.format(cmd))
+  log.info(f'Getting evidence size via {cmd!s}')
 
   # Run blockdev first, this will fail if evidence is not a block device
   try:
     cmd_output = subprocess.check_output(cmd, stderr=subprocess.STDOUT).split()
     size = int(cmd_output[0].decode('utf-8'))
   except subprocess.CalledProcessError:
-    log.debug('blockdev failed, attempting to get file size')
-  except ValueError:
     log.debug(
-        'Unexpected output from blockdev: {0:s}'.format(
-            cmd_output[0].decode('utf-8')))
+        'blockdev failed, attempting to get file size using stat() instead')
+  except ValueError:
+    log.warning(
+        f"Unexpected output from blockdev: {cmd_output[0].decode('utf-8'):s}")
 
-  if size is None:
+  if not size:
     # evidence is not a block device, check image file size
-    cmd = ['ls', '-s', source_path]
     try:
-      cmd_output = subprocess.check_output(cmd).split()
-      size = int(cmd_output[0].decode('utf-8'))
-    except subprocess.CalledProcessError as exception:
-      log.warning('Checking disk size failed: {0!s}'.format(exception))
+      size = os.stat(source_path).st_size
+    except OSError as exception:
+      log.warning(f'Checking disk size failed: {exception!s}')
 
   return size
 
@@ -102,20 +99,18 @@ def PreprocessAPFS(source_path, credentials=None):
 
   if not os.path.exists(source_path):
     raise TurbiniaException(
-        'Could not mount partition {0:s}, the path does not exist'.format(
-            source_path))
+        f'Could not mount partition {source_path:s}, the path does not exist')
 
   if os.path.exists(mount_prefix) and not os.path.isdir(mount_prefix):
     raise TurbiniaException(
-        'Mount dir {0:s} exists, but is not a directory'.format(mount_prefix))
+        f'Mount dir {mount_prefix:s} exists, but is not a directory')
   if not os.path.exists(mount_prefix):
-    log.info('Creating local mount parent directory {0:s}'.format(mount_prefix))
+    log.info(f'Creating local mount parent directory {mount_prefix:s}')
     try:
       os.makedirs(mount_prefix)
     except OSError as exception:
       raise TurbiniaException(
-          'Could not create mount directory {0:s}: {1!s}'.format(
-              mount_prefix, exception))
+          f'Could not create mount directory {mount_prefix:s}: {exception!s}')
 
   mount_path = tempfile.mkdtemp(prefix='turbinia', dir=mount_prefix)
   mounted = False
@@ -131,14 +126,11 @@ def PreprocessAPFS(source_path, credentials=None):
         mount_cmd.extend(['-r', credential_data])
       else:
         # Unsupported credential type, try the next
-        log.warning(
-            'Unsupported credential type: {0!s}'.format(credential_type))
+        log.warning(f'Unsupported credential type: {credential_type!s}')
         continue
       mount_cmd.extend(['-X', 'allow_other', source_path, mount_path])
       # Not logging full command since it will contain credentials
-      log.info(
-          'Running fsapfsmount with credential type: {0:s}'.format(
-              credential_type))
+      log.info(f'Running fsapfsmount with credential type: {credential_type:s}')
       try:
         subprocess.check_call(mount_cmd)
       except subprocess.CalledProcessError as exception:
@@ -151,16 +143,15 @@ def PreprocessAPFS(source_path, credentials=None):
     mount_cmd = [
         'sudo', 'fsapfsmount', '-X', 'allow_other', source_path, mount_path
     ]
-    log.info('Running: {0:s}'.format(' '.join(mount_cmd)))
+    log.info(f"Running: {' '.join(mount_cmd):s}")
     try:
       subprocess.check_call(mount_cmd)
     except subprocess.CalledProcessError as exception:
-      raise TurbiniaException(
-          'Could not mount directory {0!s}'.format(exception))
+      raise TurbiniaException(f'Could not mount directory {exception!s}')
     mounted = True
 
   if not mounted:
-    log.warning('Could not mount APFS volume {0:s}'.format(source_path))
+    log.warning(f'Could not mount APFS volume {source_path:s}')
     mount_path = None
 
   return mount_path
@@ -202,15 +193,14 @@ def PreprocessEncryptedVolume(
 
   if os.path.exists(mount_prefix) and not os.path.isdir(mount_prefix):
     raise TurbiniaException(
-        'Mount dir {0:s} exists, but is not a directory'.format(mount_prefix))
+        f'Mount dir {mount_prefix:s} exists, but is not a directory')
   if not os.path.exists(mount_prefix):
-    log.info('Creating local mount parent directory {0:s}'.format(mount_prefix))
+    log.info(f'Creating local mount parent directory {mount_prefix:s}')
     try:
       os.makedirs(mount_prefix)
     except OSError as exception:
       raise TurbiniaException(
-          'Could not create mount directory {0:s}: {1!s}'.format(
-              mount_prefix, exception))
+          f'Could not create mount directory {mount_prefix:s}: {exception!s}')
 
   mount_path = tempfile.mkdtemp(prefix='turbinia', dir=mount_prefix)
 
@@ -224,15 +214,13 @@ def PreprocessEncryptedVolume(
       mount_command.extend(['-r', credential_data])
     else:
       # Unsupported credential type, try the next
-      log.warning('Unsupported credential type: {0!s}'.format(credential_type))
+      log.warning(f'Unsupported credential type: {credential_type!s}')
       continue
 
     mount_command.extend(['-X', 'allow_other', source_path, mount_path])
 
     # Not logging command since it will contain credentials
-    log.info(
-        'Running mount command with credential type: {0:s}'.format(
-            credential_type))
+    log.info(f'Running mount command with credential type: {credential_type:s}')
     try:
       subprocess.check_call(mount_command)
     except subprocess.CalledProcessError as exception:
@@ -243,9 +231,9 @@ def PreprocessEncryptedVolume(
     decrypted_device = os.path.join(mount_path, mount_names[encryption_type])
     if not os.path.exists(decrypted_device):
       raise TurbiniaException(
-          'Cannot attach decrypted device: {0!s}'.format(decrypted_device))
+          f'Cannot attach decrypted device: {decrypted_device!s}')
     else:
-      log.info('Decrypted device attached: {0!s}'.format(decrypted_device))
+      log.info(f'Decrypted device attached: {decrypted_device!s}')
 
     return decrypted_device
 
@@ -272,25 +260,23 @@ def PreprocessLosetup(
   if lv_uuid:
     # LVM
     lvdisplay_command = [
-        'sudo', 'lvdisplay', '--colon', '--select',
-        'lv_uuid={0:s}'.format(lv_uuid)
+        'sudo', 'lvdisplay', '--colon', '--select', f'lv_uuid={lv_uuid:s}'
     ]
-    log.info('Running: {0:s}'.format(' '.join(lvdisplay_command)))
+    log.info(f"Running: {' '.join(lvdisplay_command):s}")
     try:
       lvdetails = subprocess.check_output(
           lvdisplay_command, universal_newlines=True).split('\n')[-2].strip()
     except subprocess.CalledProcessError as exception:
       raise TurbiniaException(
-          'Could not determine logical volume device {0!s}'.format(exception))
+          f'Could not determine logical volume device {exception!s}')
     lvdetails = lvdetails.split(':')
     volume_group = lvdetails[1]
     vgchange_command = ['sudo', 'vgchange', '-a', 'y', volume_group]
-    log.info('Running: {0:s}'.format(' '.join(vgchange_command)))
+    log.info(f"Running: {' '.join(vgchange_command):s}")
     try:
       subprocess.check_call(vgchange_command)
     except subprocess.CalledProcessError as exception:
-      raise TurbiniaException(
-          'Could not activate volume group {0!s}'.format(exception))
+      raise TurbiniaException(f'Could not activate volume group {exception!s}')
     losetup_device = lvdetails[0]
   else:
     if not os.path.exists(source_path):
@@ -307,18 +293,16 @@ def PreprocessLosetup(
     if partition_size:
       losetup_command.extend(['--sizelimit', str(partition_size)])
     losetup_command.append(source_path)
-    log.info('Running command {0:s}'.format(' '.join(losetup_command)))
+    log.info(f"Running command {' '.join(losetup_command):s}")
     try:
       # File lock to prevent race condition with PostProcessLosetup.
       with filelock.FileLock(config.RESOURCE_FILE_LOCK):
         losetup_device = subprocess.check_output(
             losetup_command, universal_newlines=True).strip()
     except subprocess.CalledProcessError as exception:
-      raise TurbiniaException(
-          'Could not set losetup devices {0!s}'.format(exception))
+      raise TurbiniaException(f'Could not set losetup devices {exception!s}')
     log.info(
-        'Loop device {0:s} created for evidence {1:s}'.format(
-            losetup_device, source_path))
+        f'Loop device {losetup_device:s} created for evidence {source_path:s}')
 
   return losetup_device
 
@@ -341,23 +325,21 @@ def PreprocessMountEwfDisk(ewf_path):
 
   if not os.path.exists(ewf_path):
     raise TurbiniaException(
-        'Could not mount EWF disk image {0:s}, the path does not exist'.format(
-            ewf_path))
+        f'Could not mount EWF disk image {ewf_path:s}, the path does not exist')
 
   # Checks if the mount path is a directory
   if os.path.exists(block_prefix) and not os.path.isdir(block_prefix):
     raise TurbiniaException(
-        'Mount dir {0:s} exists, but is not a directory'.format(block_prefix))
+        f'Mount dir {block_prefix:s} exists, but is not a directory')
 
   # Checks if the mount path does not exist; if not, create the directory
   if not os.path.exists(block_prefix):
-    log.info('Creating local mount parent directory {0:s}'.format(block_prefix))
+    log.info(f'Creating local mount parent directory {block_prefix:s}')
     try:
       os.makedirs(block_prefix)
     except OSError as exception:
       raise TurbiniaException(
-          'Could not create mount directory {0:s}: {1!s}'.format(
-              block_prefix, exception))
+          f'Could not create mount directory {block_prefix:s}: {exception!s}')
 
   # Creates a temporary directory for the mount path
   ewf_mount_path = tempfile.mkdtemp(prefix='turbinia', dir=block_prefix)
@@ -365,11 +347,11 @@ def PreprocessMountEwfDisk(ewf_path):
       'sudo', 'ewfmount', '-X', 'allow_other', ewf_path, ewf_mount_path
   ]
 
-  log.info('Running: {0:s}'.format(' '.join(mount_cmd)))
+  log.info(f"Running: {' '.join(mount_cmd):s}")
   try:
     subprocess.check_call(mount_cmd)
   except subprocess.CalledProcessError as exception:
-    raise TurbiniaException('Could not mount directory {0!s}'.format(exception))
+    raise TurbiniaException(f'Could not mount directory {exception!s}')
 
   return ewf_mount_path
 
@@ -387,10 +369,10 @@ def GetEwfDiskPath(ewf_mount_path):
   """
   ewf_devices = os.listdir(ewf_mount_path)
   if ewf_devices:
-    ewf_path = '{0:s}/{1:s}'.format(ewf_mount_path, ewf_devices[0])
+    ewf_path = f'{ewf_mount_path:s}/{ewf_devices[0]:s}'
   else:
     raise TurbiniaException(
-        'No EWF block device found after ewfmount {0:s}'.format(ewf_mount_path))
+        f'No EWF block device found after ewfmount {ewf_mount_path:s}')
   return ewf_path
 
 
@@ -426,20 +408,19 @@ def PreprocessMountDisk(partition_paths, partition_number):
 
   if not os.path.exists(partition_path):
     raise TurbiniaException(
-        'Could not mount partition {0:s}, the path does not exist'.format(
-            partition_path))
+        f'Could not mount partition {partition_path:s}, the path does not exist'
+    )
 
   if os.path.exists(mount_prefix) and not os.path.isdir(mount_prefix):
     raise TurbiniaException(
-        'Mount dir {0:s} exists, but is not a directory'.format(mount_prefix))
+        f'Mount dir {mount_prefix:s} exists, but is not a directory')
   if not os.path.exists(mount_prefix):
-    log.info('Creating local mount parent directory {0:s}'.format(mount_prefix))
+    log.info(f'Creating local mount parent directory {mount_prefix:s}')
     try:
       os.makedirs(mount_prefix)
     except OSError as exception:
       raise TurbiniaException(
-          'Could not create mount directory {0:s}: {1!s}'.format(
-              mount_prefix, exception))
+          f'Could not create mount directory {mount_prefix:s}: {exception!s}')
 
   mount_path = tempfile.mkdtemp(prefix='turbinia', dir=mount_prefix)
 
@@ -451,11 +432,11 @@ def PreprocessMountDisk(partition_paths, partition_number):
     mount_cmd.extend(['-o', 'noload'])
   mount_cmd.extend([partition_path, mount_path])
 
-  log.info('Running: {0:s}'.format(' '.join(mount_cmd)))
+  log.info(f"Running: {' '.join(mount_cmd):s}")
   try:
     subprocess.check_call(mount_cmd)
   except subprocess.CalledProcessError as exception:
-    raise TurbiniaException('Could not mount directory {0!s}'.format(exception))
+    raise TurbiniaException(f'Could not mount directory {exception!s}')
 
   return mount_path
 
@@ -478,25 +459,24 @@ def PreprocessMountPartition(partition_path, filesystem_type):
 
   if not os.path.exists(partition_path):
     raise TurbiniaException(
-        'Could not mount partition {0:s}, the path does not exist'.format(
-            partition_path))
+        f'Could not mount partition {partition_path:s}, the path does not exist'
+    )
 
   if os.path.exists(mount_prefix) and not os.path.isdir(mount_prefix):
     raise TurbiniaException(
-        'Mount dir {0:s} exists, but is not a directory'.format(mount_prefix))
+        f'Mount dir {mount_prefix:s} exists, but is not a directory')
   if not os.path.exists(mount_prefix):
-    log.info('Creating local mount parent directory {0:s}'.format(mount_prefix))
+    log.info(f'Creating local mount parent directory {mount_prefix:s}')
     try:
       os.makedirs(mount_prefix)
     except OSError as exception:
       raise TurbiniaException(
-          'Could not create mount directory {0:s}: {1!s}'.format(
-              mount_prefix, exception))
+          f'Could not create mount directory {mount_prefix:s}: {exception!s}')
 
   mount_path = tempfile.mkdtemp(prefix='turbinia', dir=mount_prefix)
   mounted = True
 
-  log.debug('Mounting filesystem type: {0:s}'.format(filesystem_type))
+  log.debug(f'Mounting filesystem type: {filesystem_type:s}')
 
   mount_cmd = ['sudo', 'mount', '-o', 'ro']
   if filesystem_type == 'EXT':
@@ -507,28 +487,27 @@ def PreprocessMountPartition(partition_path, filesystem_type):
     mount_cmd.extend(['-o', 'norecovery', '-o', 'nouuid'])
   mount_cmd.extend([partition_path, mount_path])
 
-  log.info('Running: {0:s}'.format(' '.join(mount_cmd)))
+  log.info(f"Running: {' '.join(mount_cmd):s}")
   try:
     subprocess.check_call(mount_cmd)
   except subprocess.CalledProcessError as exception:
     mounted = False
-    log.info('Mount failed: {0!s}'.format(exception))
+    log.info(f'Mount failed: {exception!s}')
 
   if filesystem_type == 'EXT' and not mounted:
     # ext2 will not mount with the noload option, so this may be the cause of
     # the error.
     mounted = True
     mount_cmd = ['sudo', 'mount', '-o', 'ro', partition_path, mount_path]
-    log.info('Trying again with: {0:s}'.format(' '.join(mount_cmd)))
+    log.info(f"Trying again with: {' '.join(mount_cmd):s}")
     try:
       subprocess.check_call(mount_cmd)
     except subprocess.CalledProcessError as exception:
       mounted = False
-      log.info('Mount failed: {0!s}'.format(exception))
+      log.info(f'Mount failed: {exception!s}')
 
   if not mounted:
-    raise TurbiniaException(
-        'Could not mount partition {0:s}'.format(partition_path))
+    raise TurbiniaException(f'Could not mount partition {partition_path:s}')
 
   return mount_path
 
@@ -542,23 +521,22 @@ def GetFilesystem(path):
     str: the filesystem detected (for example: 'ext4')
   """
   cmd = ['fsstat', '-t', path]
-  log.info('Running {0!s}'.format(cmd))
+  log.info(f'Running {cmd!s}')
   for retry in range(RETRY_MAX):
     fstype = subprocess.check_output(cmd).split()
     if fstype:
       break
     else:
       log.debug(
-          'Filesystem type for {0:s} not found, retry {1:d} of {2:d}'.format(
-              path, retry, RETRY_MAX))
+          f'Filesystem type for {path:s} not found, retry {retry:d} of {RETRY_MAX:d}'
+      )
       time.sleep(1)
 
   if len(fstype) != 1:
     raise TurbiniaException(
-        '{0:s} should contain exactly one partition, found {1:d}'.format(
-            path, len(fstype)))
+        f'{path:s} should contain exactly one partition, found {len(fstype):d}')
   fstype = fstype[0].decode('utf-8').strip()
-  log.info('Found filesystem type {0:s} for path {1:s}'.format(fstype, path))
+  log.info(f'Found filesystem type {fstype:s} for path {path:s}')
   return fstype
 
 
@@ -578,31 +556,29 @@ def PostprocessDeleteLosetup(device_path, lv_uuid=None):
     # Rather than detaching a loopback device, we need to deactivate the volume
     # group.
     lvdisplay_command = [
-        'sudo', 'lvdisplay', '--colon', '--select',
-        'lv_uuid={0:s}'.format(lv_uuid)
+        'sudo', 'lvdisplay', '--colon', '--select', f'lv_uuid={lv_uuid:s}'
     ]
-    log.info('Running: {0:s}'.format(' '.join(lvdisplay_command)))
+    log.info(f"Running: {' '.join(lvdisplay_command):s}")
     try:
       lvdetails = subprocess.check_output(
           lvdisplay_command, universal_newlines=True).split('\n')[-2].strip()
     except subprocess.CalledProcessError as exception:
-      raise TurbiniaException(
-          'Could not determine volume group {0!s}'.format(exception))
+      raise TurbiniaException(f'Could not determine volume group {exception!s}')
     lvdetails = lvdetails.split(':')
     volume_group = lvdetails[1]
 
     vgchange_command = ['sudo', 'vgchange', '-a', 'n', volume_group]
-    log.info('Running: {0:s}'.format(' '.join(vgchange_command)))
+    log.info(f"Running: {' '.join(vgchange_command):s}")
     try:
       subprocess.check_call(vgchange_command)
     except subprocess.CalledProcessError as exception:
       raise TurbiniaException(
-          'Could not deactivate volume group {0!s}'.format(exception))
+          f'Could not deactivate volume group {exception!s}')
   else:
     # TODO(aarontp): Remove hard-coded sudo in commands:
     # https://github.com/google/turbinia/issues/73
     losetup_cmd = ['sudo', 'losetup', '-d', device_path]
-    log.info('Running: {0:s}'.format(' '.join(losetup_cmd)))
+    log.info(f"Running: {' '.join(losetup_cmd):s}")
     # File lock to prevent race condition with PreProcessLosetup
     with filelock.FileLock(config.RESOURCE_FILE_LOCK):
       try:
@@ -610,7 +586,7 @@ def PostprocessDeleteLosetup(device_path, lv_uuid=None):
       except subprocess.CalledProcessError as exception:
         turbinia_failed_loop_device_detach.inc()
         raise TurbiniaException(
-            'Could not delete losetup device {0!s}'.format(exception))
+            f'Could not delete losetup device {exception!s}')
 
       # Check that the device was actually removed
       losetup_cmd = ['sudo', 'losetup', '-a']
@@ -619,14 +595,14 @@ def PostprocessDeleteLosetup(device_path, lv_uuid=None):
           output = subprocess.check_output(losetup_cmd, text=True)
         except subprocess.CalledProcessError as exception:
           raise TurbiniaException(
-              'Could not check losetup device status {0!s}'.format(exception))
+              f'Could not check losetup device status {exception!s}')
         reg_search = re.search(device_path + ':.*', output)
         if reg_search:
           # TODO(wyassine): Add lsof check for file handles on device path
           # https://github.com/google/turbinia/issues/1148
           log.debug(
-              'losetup retry check {0!s}/{1!s} for device {2!s}'.format(
-                  _, RETRY_MAX, device_path))
+              f'losetup retry check {_!s}/{RETRY_MAX!s} for device {device_path!s}'
+          )
           time.sleep(1)
         else:
           break
@@ -634,10 +610,10 @@ def PostprocessDeleteLosetup(device_path, lv_uuid=None):
     if reg_search:
       turbinia_failed_loop_device_detach.inc()
       raise TurbiniaException(
-          'losetup device still present, unable to delete the device {0!s}'
-          .format(device_path))
+          f'losetup device still present, unable to delete the device {device_path!s}'
+      )
 
-    log.info('losetup device [{0!s}] deleted.'.format(device_path))
+    log.info(f'losetup device [{device_path!s}] deleted.')
 
 
 def PostprocessUnmountPath(mount_path):
@@ -652,17 +628,15 @@ def PostprocessUnmountPath(mount_path):
   # TODO(aarontp): Remove hard-coded sudo in commands:
   # https://github.com/google/turbinia/issues/73
   umount_cmd = ['sudo', 'umount', mount_path]
-  log.info('Running: {0:s}'.format(' '.join(umount_cmd)))
+  log.info(f"Running: {' '.join(umount_cmd):s}")
   try:
     subprocess.check_call(umount_cmd)
   except subprocess.CalledProcessError as exception:
-    raise TurbiniaException(
-        'Could not unmount directory {0!s}'.format(exception))
+    raise TurbiniaException(f'Could not unmount directory {exception!s}')
 
-  log.info('Removing mount path {0:s}'.format(mount_path))
+  log.info(f'Removing mount path {mount_path:s}')
   try:
     os.rmdir(mount_path)
   except OSError as exception:
     raise TurbiniaException(
-        'Could not remove mount path directory {0:s}: {1!s}'.format(
-            mount_path, exception))
+        f'Could not remove mount path directory {mount_path:s}: {exception!s}')

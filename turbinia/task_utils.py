@@ -170,7 +170,7 @@ def task_deserialize(input_dict):
   task_loader = TaskLoader()
   task = task_loader.get_task(type_)
   if not task:
-    raise TurbiniaException('Could not load Task module {0:s}'.format(type_))
+    raise TurbiniaException(f'Could not load Task module {type_:s}')
   # Remove serialized output manager because this gets reinstantiated when the
   # empty Task is instantiated and we don't want to overwrite it.
   try:
@@ -225,5 +225,4 @@ def task_runner(obj, *args, **kwargs):
       raise TurbiniaException(f'Could not acquire lock on {config.LOCK_FILE}')
     finally:
       lock.release()
-
   return run

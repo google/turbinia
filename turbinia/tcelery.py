@@ -53,6 +53,7 @@ class TurbiniaCelery:
     self.app = celery.Celery(
         'turbinia', broker=config.CELERY_BROKER, backend=config.CELERY_BACKEND)
     self.app.conf.update(
+        broker_connection_retry_on_startup=True,
         task_default_queue=config.INSTANCE_ID,
         accept_content=['json'],
         task_acks_late=True,
@@ -109,10 +110,10 @@ class TurbiniaKombu(TurbiniaMessageBase):
       except OperationalError as exception:
         log.warning(
             'Caught recoverable message transport connection error when ' +
-            'fetching from queue: {0!s}'.format(exception))
+            f'fetching from queue: {exception!s}')
         break
 
-    log.debug('Received {0:d} messages'.format(len(requests)))
+    log.debug(f'Received {len(requests):d} messages')
     return requests
 
   def send_message(self, message):

@@ -35,7 +35,7 @@ if TurbiniaTask.check_worker_role():
     from turbinia.processors import mount_local
     from turbinia.processors import partitions
   except ImportError as exception:
-    message = 'Could not import dfVFS libraries: {0!s}'.format(exception)
+    message = f'Could not import dfVFS libraries: {exception!s}'
     raise TurbiniaException(message)
 
 log = logging.getLogger('turbinia')
@@ -107,7 +107,7 @@ class PartitionEnumerationTask(TurbiniaTask):
             location, path_spec.CopyToDict(), path_spec.type_indicator))
     while child_path_spec.HasParent():
       type_indicator = child_path_spec.type_indicator
-      log.debug('Path spec type: {0:s}'.format(type_indicator))
+      log.debug(f'Path spec type: {type_indicator:s}')
 
       if type_indicator == dfvfs_definitions.TYPE_INDICATOR_APFS_CONTAINER:
         # APFS volume index
@@ -115,7 +115,7 @@ class PartitionEnumerationTask(TurbiniaTask):
         # Since APFS can't be attached, we'll need to look for a container
         if child_path_spec.HasParent():
           container_location = getattr(child_path_spec.parent, 'location', None)
-          log.debug('Container location: {0!s}'.format(container_location))
+          log.debug(f'Container location: {container_location!s}')
           # We only need the container if it's a partition, else we'll attach
           # the whole disk
           if container_location and container_location[:2] != '/p':
@@ -151,8 +151,7 @@ class PartitionEnumerationTask(TurbiniaTask):
           partition_offset = volume.extents[0].offset
           partition_size = volume.extents[0].size
         except dfvfs_errors.VolumeSystemError as exception:
-          raise TurbiniaException(
-              'Could not process partition: {0!s}'.format(exception))
+          raise TurbiniaException(f'Could not process partition: {exception!s}')
         break
 
       child_path_spec = child_path_spec.parent
@@ -177,20 +176,17 @@ class PartitionEnumerationTask(TurbiniaTask):
     if lv_uuid:
       mount_local.PostprocessDeleteLosetup(None, lv_uuid=lv_uuid)
 
-    status_report.append(fmt.heading5('{0!s}:'.format(location)))
-    status_report.append(fmt.bullet('Important: {0!s}'.format(important)))
+    status_report.append(fmt.heading5(f'{location!s}:'))
+    status_report.append(fmt.bullet(f'Important: {important!s}'))
     status_report.append(
-        fmt.bullet('Filesystem: {0!s}'.format(path_spec.type_indicator)))
+        fmt.bullet(f'Filesystem: {path_spec.type_indicator!s}'))
     if volume_index is not None:
-      status_report.append(
-          fmt.bullet('Volume index: {0!s}'.format(volume_index)))
+      status_report.append(fmt.bullet(f'Volume index: {volume_index!s}'))
     if partition_index is not None:
+      status_report.append(fmt.bullet(f'Partition index: {partition_index!s}'))
       status_report.append(
-          fmt.bullet('Partition index: {0!s}'.format(partition_index)))
-      status_report.append(
-          fmt.bullet('Partition offset: {0!s}'.format(partition_offset)))
-      status_report.append(
-          fmt.bullet('Partition size: {0!s}'.format(partition_size)))
+          fmt.bullet(f'Partition offset: {partition_offset!s}'))
+      status_report.append(fmt.bullet(f'Partition size: {partition_size!s}'))
     if volume_index is None and partition_index is None:
       status_report.append(fmt.bullet('Source evidence is a volume image'))
 
@@ -219,7 +215,7 @@ class PartitionEnumerationTask(TurbiniaTask):
     process_important = self.task_config.get('process_important')
     process_unimportant = self.task_config.get('process_unimportant')
 
-    result.log('Scanning [{0:s}] for partitions'.format(evidence.name))
+    result.log(f'Scanning [{evidence.name:s}] for partitions')
 
     path_specs = []
     success = False
@@ -227,8 +223,7 @@ class PartitionEnumerationTask(TurbiniaTask):
 
     try:
       path_specs = partitions.Enumerate(evidence)
-      status_summary = 'Found {0:d} partition(s) in [{1:s}]'.format(
-          len(path_specs), evidence.name)
+      status_summary = f'Found {len(path_specs):d} partition(s) in [{evidence.name:s}]'
 
       # Debug output
       path_spec_debug = ['Base path specs:']
@@ -239,12 +234,11 @@ class PartitionEnumerationTask(TurbiniaTask):
           path_spec_types.insert(0, child_path_spec.parent.type_indicator)
           child_path_spec = child_path_spec.parent
         path_spec_debug.append(
-            ' | '.join((
-                '{0!s}'.format(
-                    path_spec.CopyToDict()), ' -> '.join(path_spec_types))))
+            ' | '.join(
+                (f'{path_spec.CopyToDict()!s}', ' -> '.join(path_spec_types))))
       log.debug('\n'.join(path_spec_debug))
     except dfvfs_errors.ScannerError as exception:
-      status_summary = 'Error scanning for partitions: {0!s}'.format(exception)
+      status_summary = f'Error scanning for partitions: {exception!s}'
 
     status_report = [fmt.heading4(status_summary)]
 
@@ -265,10 +259,10 @@ class PartitionEnumerationTask(TurbiniaTask):
       status_report = '\n'.join(status_report)
       success = True
     except TurbiniaException as exception:
-      status_summary = 'Error enumerating partitions: {0!s}'.format(exception)
+      status_summary = f'Error enumerating partitions: {exception!s}'
       status_report = status_summary
 
-    result.log('Scanning of [{0:s}] is complete'.format(evidence.name))
+    result.log(f'Scanning of [{evidence.name:s}] is complete')
     status_summary = ' '.join((
         status_summary, 'Processing {0!s} partition{1:s}:'.format(
             processing, '' if processing == 1 else 's')))

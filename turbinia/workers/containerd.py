@@ -44,7 +44,7 @@ class ContainerdEnumerationTask(TurbiniaTask):
 
     Args:
       evidence (Evidence): Input evidence to be processed.
-      result (TurbiniaTaskResult): Object to store logs.
+      detailed_output (bool): Check if detailed output is required.
 
     Returns:
       list(dict): Containers information

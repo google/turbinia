@@ -180,13 +180,13 @@ class JenkinsAnalysisTask(TurbiniaTask):
 
     if not version:
       version = 'Unknown'
-    report.append(fmt.bullet('Jenkins version: {0:s}'.format(version)))
+    report.append(fmt.bullet(f'Jenkins version: {version:s}'))
 
     if weak_passwords:
       priority = Priority.CRITICAL
       summary = 'Jenkins analysis found potential issues'
       report.insert(0, fmt.heading4(fmt.bold(summary)))
-      line = '{0:n} weak password(s) found:'.format(len(weak_passwords))
+      line = f'{len(weak_passwords):n} weak password(s) found:'
       report.append(fmt.bullet(fmt.bold(line)))
       for password_hash, plaintext in weak_passwords:
         line = 'User "{0:s}" with password "{1:s}"'.format(

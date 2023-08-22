@@ -106,8 +106,7 @@ class WordpressAccessLogAnalysisTask(TurbiniaTask):
     for log_line in config.split('\n'):
 
       if self.install_step_regex.search(log_line):
-        line = '{0:s}: Wordpress installation successful'.format(
-            self._get_timestamp(log_line))
+        line = f'{self._get_timestamp(log_line):s}: Wordpress installation successful'
         report.append(fmt.bullet(line))
         findings_summary.add('install')
 
@@ -120,7 +119,7 @@ class WordpressAccessLogAnalysisTask(TurbiniaTask):
 
     if report:
       findings_summary = ', '.join(sorted(list(findings_summary)))
-      summary = 'Wordpress access logs found ({0:s})'.format(findings_summary)
+      summary = f'Wordpress access logs found ({findings_summary:s})'
 
       report.insert(0, fmt.heading4(fmt.bold(summary)))
       report_text = '\n'.join(report)

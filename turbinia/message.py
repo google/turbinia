@@ -35,7 +35,7 @@ class TurbiniaRequest:
   Attributes:
     request_id(str): A client specified ID for this request.
     group_id(str): A client specified group id for this request.
-    requestor(str): The username of who made the request.
+    requester(str): The username of who made the request.
     recipe(dict): Recipe to use when processing this request.
     context(dict): A Dict of context data to be passed around with this request.
     evidence(list): A list of Evidence objects.
@@ -94,11 +94,11 @@ class TurbiniaRequest:
       obj = json.loads(json_str)
     except ValueError as exception:
       raise TurbiniaException(
-          'Can not load json from string {0:s}'.format(str(exception)))
+          f'Can not load json from string {str(exception):s}')
 
     if obj.get('type', None) != self.type:
       raise TurbiniaException(
-          'Deserialized object does not have type of {0:s}'.format(self.type))
+          f'Deserialized object does not have type of {self.type:s}')
 
     obj['evidence'] = [evidence.evidence_decode(e) for e in obj['evidence']]
     # pylint: disable=attribute-defined-outside-init
@@ -136,7 +136,7 @@ class TurbiniaMessageBase:
     try:
       request.from_json(message)
     except TurbiniaException as exception:
-      log.error('Error decoding message: {0:s}'.format(str(exception)))
+      log.error(f'Error decoding message: {str(exception):s}')
       return None
 
     return request

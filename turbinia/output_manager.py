@@ -59,6 +59,7 @@ class OutputManager:
       name (str): The name of the Request or Task.
       uid (str): The unique identifier of the Request or Task.
       request_id(str): The ID of the Request.
+      remote_only (bool): Whether to only use remote output writers.
 
     Returns:
       A list of OutputWriter objects.
@@ -66,7 +67,7 @@ class OutputManager:
     config.LoadConfig()
     epoch = str(int(time.time()))
     unique_dir = os.path.join(
-        str(request_id), '{0:s}-{1:s}-{2:s}'.format(epoch, str(uid), name))
+        str(request_id), f'{epoch:s}-{str(uid):s}-{name:s}')
     writers = []
     local_output_dir = None
 
@@ -127,8 +128,7 @@ class OutputManager:
     for writer in self._output_writers:
       if writer.name == evidence_.saved_path_type:
         log.info(
-            'Retrieving copyable evidence data from {0:s}'.format(
-                evidence_.saved_path))
+            f'Retrieving copyable evidence data from {evidence_.saved_path:s}')
         evidence_.source_path = writer.copy_from(evidence_.saved_path)
     return evidence_
 
@@ -151,7 +151,7 @@ class OutputManager:
     if evidence_.save_metadata:
       metadata = evidence_.config.copy()
       metadata['evidence_path'] = path
-      metadata_path = '{0:s}.metadata.json'.format(local_path)
+      metadata_path = f'{local_path:s}.metadata.json'
       try:
         json_str = json.dumps(metadata)
       except TypeError as exception:
@@ -160,13 +160,12 @@ class OutputManager:
                 evidence_.name, exception))
 
       try:
-        log.debug('Writing metadata file to {0:s}'.format(metadata_path))
+        log.debug(f'Writing metadata file to {metadata_path:s}')
         with open(metadata_path, 'wb') as file_handle:
           file_handle.write(json_str.encode('utf-8'))
       except IOError as exception:
         raise TurbiniaException(
-            'Could not write metadata file {0:s}: {1!s}'.format(
-                metadata_path, exception))
+            f'Could not write metadata file {metadata_path:s}: {exception!s}')
 
       self.save_local_file(metadata_path, result)
 
@@ -178,8 +177,7 @@ class OutputManager:
     evidence_.saved_path = path
     evidence_.saved_path_type = path_type
     if evidence_.saved_path:
-      log.info(
-          'Saved copyable evidence data to {0:s}'.format(evidence_.saved_path))
+      log.info(f'Saved copyable evidence data to {evidence_.saved_path:s}')
     return evidence_
 
   def save_local_file(self, file_, result):
@@ -340,11 +338,11 @@ class LocalOutputWriter(OutputWriter):
     output_dir = os.path.join(base_path, self.unique_dir)
     if not os.path.exists(output_dir):
       try:
-        log.debug('Creating new directory {0:s}'.format(output_dir))
+        log.debug(f'Creating new directory {output_dir:s}')
         os.makedirs(output_dir)
       except OSError as exception:
         if exception.errno == errno.EACCES:
-          message = 'Permission error ({0:s})'.format(str(exception))
+          message = f'Permission error ({str(exception):s})'
         else:
           message = str(exception)
         raise TurbiniaException(message)
@@ -370,16 +368,15 @@ class LocalOutputWriter(OutputWriter):
               file_path, self.local_output_dir))
       return None
     if not os.path.exists(file_path):
-      log.warning('Source file [{0:s}] does not exist.'.format(file_path))
+      log.warning(f'Source file [{file_path:s}] does not exist.')
       return None
     if os.path.exists(destination_file):
       log.warning(
-          'Target output file path [{0:s}] already exists.'.format(
-              destination_file))
+          f'Target output file path [{destination_file:s}] already exists.')
       return None
 
     shutil.copy(file_path, destination_file)
-    log.debug('Copied file {0:s} to {1:s}'.format(file_path, destination_file))
+    log.debug(f'Copied file {file_path:s} to {destination_file:s}')
     return destination_file
 
   def copy_to(self, source_file):
@@ -426,7 +423,7 @@ class GCSOutputWriter(OutputWriter):
     match = re.search(r'gs://(.*?)/(.*$)', file_)
     if not match:
       raise TurbiniaException(
-          'Cannot find bucket and path from GCS config {0:s}'.format(file_))
+          f'Cannot find bucket and path from GCS config {file_:s}')
     return match.group(1), match.group(2)
 
   def create_output_dir(self, base_path=None):
@@ -437,21 +434,19 @@ class GCSOutputWriter(OutputWriter):
   def copy_to(self, source_path):
     if os.path.getsize(source_path) == 0:
       message = (
-          'Local source file {0:s} is empty.  Not uploading to GCS'.format(
-              source_path))
+          f'Local source file {source_path:s} is empty.  Not uploading to GCS')
       log.warning(message)
       return None
 
     bucket = self.client.get_bucket(self.bucket)
     destination_path = os.path.join(
         self.base_output_dir, self.unique_dir, os.path.basename(source_path))
-    log.info(
-        'Writing {0:s} to GCS path {1:s}'.format(source_path, destination_path))
+    log.info(f'Writing {source_path:s} to GCS path {destination_path:s}')
     try:
       blob = storage.Blob(destination_path, bucket, chunk_size=self.CHUNK_SIZE)
       blob.upload_from_filename(source_path, client=self.client)
     except exceptions.GoogleCloudError as exception:
-      message = 'File upload to GCS failed: {0!s}'.format(exception)
+      message = f'File upload to GCS failed: {exception!s}'
       log.error(message)
       raise TurbiniaException(message)
     return os.path.join('gs://', self.bucket, destination_path)
@@ -460,7 +455,7 @@ class GCSOutputWriter(OutputWriter):
     """Copies output file from the managed location to the local output dir.
 
     Args:
-      source_file (string): A path to a source file in the managed storage
+      source_path (string): A path to a source file in the managed storage
           location.  This path should be in a format matching the storage type
           (e.g. GCS paths are formatted like 'gs://bucketfoo/' and local paths
           are like '/foo/bar'.
@@ -476,19 +471,17 @@ class GCSOutputWriter(OutputWriter):
     destination_path = os.path.join(
         self.local_output_dir, os.path.basename(source_path))
     log.info(
-        'Writing GCS file {0:s} to local path {1:s}'.format(
-            source_path, destination_path))
+        f'Writing GCS file {source_path:s} to local path {destination_path:s}')
     try:
       blob = storage.Blob(gcs_path, bucket, chunk_size=self.CHUNK_SIZE)
       blob.download_to_filename(destination_path, client=self.client)
     except exceptions.RequestRangeNotSatisfiable as exception:
       message = (
-          'File retrieval from GCS failed, file may be empty: {0!s}'.format(
-              exception))
+          f'File retrieval from GCS failed, file may be empty: {exception!s}')
       log.error(message)
       raise TurbiniaException(message)
     except exceptions.GoogleCloudError as exception:
-      message = 'File retrieval from GCS failed: {0!s}'.format(exception)
+      message = f'File retrieval from GCS failed: {exception!s}'
       log.error(message)
       raise TurbiniaException(message)
 
@@ -523,9 +516,7 @@ class GCSOutputWriter(OutputWriter):
           destination_path = os.path.join(self.local_output_dir, directory)
           Path(destination_path).mkdir(parents=True, exist_ok=True)
           if not os.path.exists(destination_path):
-            message = (
-                'Failed to create the file path {0:s}.'.format(
-                    destination_path))
+            message = (f'Failed to create the file path {destination_path:s}.')
             log.error(message)
             raise TurbiniaException(message)
 
@@ -534,15 +525,15 @@ class GCSOutputWriter(OutputWriter):
           # Get the file from GCS
           blob = storage.Blob(gcs_path, bucket, chunk_size=self.CHUNK_SIZE)
           blob.download_to_filename(file_name, client=self.client)
-          log.info('Downloaded {0:s} to {1:s}.'.format(path, file_name))
+          log.info(f'Downloaded {path:s} to {file_name:s}.')
         except exceptions.RequestRangeNotSatisfiable as exception:
           message = (
-              'File retrieval from GCS failed, file may be empty: {0!s}'.format(
-                  exception))
+              f'File retrieval from GCS failed, file may be empty: {exception!s}'
+          )
           log.error(message)
           raise TurbiniaException(message)
         except exceptions.GoogleCloudError as exception:
-          message = 'File retrieval from GCS failed: {0!s}'.format(exception)
+          message = f'File retrieval from GCS failed: {exception!s}'
           log.error(message)
           raise TurbiniaException(message)
 

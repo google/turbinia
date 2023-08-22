@@ -116,13 +116,13 @@ etc) prior to execution by setting the state in `Task.REQUIRED_STATES`.  Each
 Evidence object specifies which states it supports in the
 `Evidence.POSSIBLE_STATES` list attribute for that Task (e.g. see the
 [`GoogleCloudDisk` possible states
-here](https://github.com/google/turbinia/blob/cc79288ae36cfec749381b80694b4c1290d76583/turbinia/evidence.py#L661)).
+here - Line 717](https://github.com/google/turbinia/blob/master/turbinia/evidence.py)).
 These states are set up by the pre-processors and then after the Task is
 completed, the post-processor will tear down this state (e.g. unmount or
 detach, etc).  For more details on the different states and how the
 pre/post-processors will set these up at runtime, see the
 [`Evidence.preprocess()`
-docstrings](https://github.com/google/turbinia/blob/cc79288ae36cfec749381b80694b4c1290d76583/turbinia/evidence.py#L291).
+docstrings - Line 405](https://github.com/google/turbinia/blob/master/turbinia/evidence.py).
 
 ### Evidence Paths
 
@@ -144,7 +144,7 @@ generally this should not be needed as long as you set the
 `TurbiniaTask.REQUIRED_STATES` for the Task to match your actual requirements
 since the `local_path` should always be created by the pre-processors.
 See the [docstrings for these attributes in the Evidence
-object](https://github.com/google/turbinia/blob/cc79288ae36cfec749381b80694b4c1290d76583/turbinia/evidence.py#L127)
+object - Line 203](https://github.com/google/turbinia/blob/master/turbinia/evidence.py)
 for more details. 
 
 ### Recipe configuration
@@ -155,7 +155,7 @@ should be run.  Each Task has a `TASK_CONFIG` dictionary set at the object
 level that defines each of the variables that can be used along with the
 default values that the Task will use when the recipe does not specify that
 variable, or there is no recipe used.  See the [Plaso
-Task](https://github.com/google/turbinia/blob/8aafea5d4ba165aa72748ed7f1f196c8b9d7175c/turbinia/workers/plaso.py#L35)
+Task - Line 29](https://github.com/google/turbinia/blob/master/turbinia/workers/plaso.py)
 `TASK_CONFIG` as an example. Tasks can access these variables by referencing
 the dictionary at `self.task_config`.
 
