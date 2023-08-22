@@ -28,21 +28,21 @@ RUN apk add --no-cache -t .build-deps \
   python3 \
   python3-dev \
   sudo
-  
+
 RUN set -x \
-  && echo "Compiling Yara from source..." 
+  && echo "Compiling Yara from source..."
 
 # Fetch and compile libyara
 RUN mkdir -p /opt/fraken/yara
-WORKDIR /opt/fraken/yara 
+WORKDIR /opt/fraken/yara
 RUN cd /opt/fraken/yara && curl -s -L --retry 5 "$(curl -s -L --retry 5 https://api.github.com/repos/VirusTotal/Yara/releases/latest | sed -n 's/.*"tarball_url": "\(.*\)",.*/\1/p')"  | tar -xz --strip-components=1
-RUN ./bootstrap.sh 
-RUN sync 
+RUN ./bootstrap.sh
+RUN sync
 RUN ./configure --with-crypto \
   --enable-magic \
-  --enable-cuckoo 
-RUN make 
-RUN sudo make install 
+  --enable-cuckoo
+RUN make
+RUN sudo make install
 
 # Compile fraken statically
 COPY tools/fraken/* /opt/fraken/
@@ -63,12 +63,11 @@ RUN apt-get update && apt-get -y upgrade && apt-get -y install \
     git \
     john \
     john-data \
-    hashcat \
-    hashcat-data \
     libleveldb1d \
     libleveldb-dev \
     libterm-readline-gnu-perl \
     lvm2 \
+    p7zip-full \
     python3-pip \
     software-properties-common \
     sudo \
@@ -128,9 +127,14 @@ RUN cd /opt \
     && sudo chown -R turbinia:turbinia /opt/signature-base \
     && find /opt/signature-base -type f -not -iname '*.yar' -not -iname '*.yara' -not -iname 'file-type-signatures.txt' -delete
 COPY turbinia/config/rules/*.yar /opt/signature-base/yara/
-# Install fraken binary from multi-stage build 
+# Install fraken binary from multi-stage build
 RUN mkdir -p /opt/fraken
 COPY --chown=turbinia:turbinia --from=fraken-builder /opt/fraken/fraken /opt/fraken/fraken
+
+# Install latest hashcat
+RUN cd /opt \
+    && wget https://hashcat.net/files/hashcat-6.2.6.7z \
+    && 7z x hashcat-6.2.6.7z
 
 # Install container-explorer
 RUN wget -O /tmp/container-explorer-setup.sh https://raw.githubusercontent.com/google/container-explorer/main/script/setup.sh

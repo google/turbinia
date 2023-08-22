@@ -196,12 +196,12 @@ DEPENDENCIES = [{
     'timeout': 1200
 }, {
     'job': 'JenkinsAnalysisJob',
-    'programs': ['hashcat'],
+    'programs': ['/opt/hashcat-6.2.6/hashcat.bin'],
     'docker_image': None,
     'timeout': 1200
 }, {
     'job': 'LinuxAccountAnalysisJob',
-    'programs': ['hashcat', 'john'],
+    'programs': ['/opt/hashcat-6.2.6/hashcat.bin', 'john'],
     'docker_image': None,
     'timeout': 1200
 }, {
@@ -241,12 +241,12 @@ DEPENDENCIES = [{
     'timeout': 3600
 }, {
     'job': 'WindowsAccountAnalysisJob',
-    'programs': ['hashcat', 'secretsdump.py'],
+    'programs': ['/opt/hashcat-6.2.6/hashcat.bin', 'secretsdump.py'],
     'docker_image': None,
     'timeout': 3600
 }, {
     'job': 'WordpressCredsAnalysisJob',
-    'programs': ['hashcat', 'grep', 'strings'],
+    'programs': ['/opt/hashcat-6.2.6/hashcat.bin', 'grep', 'strings'],
     'docker_image': None,
     'timeout': 3600
 }]
