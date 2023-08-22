@@ -131,11 +131,6 @@ COPY turbinia/config/rules/*.yar /opt/signature-base/yara/
 RUN mkdir -p /opt/fraken
 COPY --chown=turbinia:turbinia --from=fraken-builder /opt/fraken/fraken /opt/fraken/fraken
 
-# Install latest hashcat
-RUN cd /opt \
-    && wget https://hashcat.net/files/hashcat-6.2.6.7z \
-    && 7z x hashcat-6.2.6.7z
-
 # Install container-explorer
 RUN wget -O /tmp/container-explorer-setup.sh https://raw.githubusercontent.com/google/container-explorer/main/script/setup.sh
 RUN chmod +x /tmp/container-explorer-setup.sh
@@ -148,6 +143,11 @@ RUN mkdir /etc/turbinia && mkdir -p /mnt/turbinia/ && mkdir -p /var/lib/turbinia
     && chown -R turbinia:turbinia /var/lib/turbinia/ \
     && chown -R turbinia:turbinia /var/log/turbinia/ \
     && mkdir -p /home/turbinia && chown -R turbinia:turbinia /home/turbinia
+
+# Install latest hashcat
+RUN cd /home/turbinia \
+    && wget https://hashcat.net/files/hashcat-6.2.6.7z \
+    && 7z x hashcat-6.2.6.7z
 
 # Get a decent password list for john/hashcat
 RUN cd /home/turbinia && echo "" > password.lst

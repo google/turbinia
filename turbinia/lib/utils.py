@@ -187,7 +187,7 @@ def bruteforce_password_hashes(
     ]
     pot_file = os.path.expanduser('~/.john/john.pot')
   else:
-    cmd = ['/opt/hashcat-6.2.6/hashcat.bin', '--force', '-a', '1']
+    cmd = ['/home/turbinia/hashcat-6.2.6/hashcat.bin', '--force', '-a', '1']
     if extra_args:
       cmd = cmd + extra_args.split(' ')
     cmd = cmd + [f'--potfile-path={pot_file}']
