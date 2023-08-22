@@ -310,7 +310,7 @@ def create_request(ctx: click.Context, *args: int, **kwargs: int) -> None:
 def get_evidence_summary(
     ctx: click.Context, sort: str = None, values: bool = False,
     count: bool = False, json_dump: bool = False) -> None:
-  """Gets Turbinia evidence status."""
+  """Gets Turbinia evidence summary."""
   client: api_client.ApiClient = ctx.obj.api_client
   api_instance = turbinia_evidence_api.TurbiniaEvidenceApi(client)
   try:
@@ -342,7 +342,7 @@ def get_evidence_summary(
 def query_evidence(
     ctx: click.Context, attribute: str, value: str, values: bool, count: bool,
     json_dump: bool) -> None:
-  """Gets Turbinia task status."""
+  """Queries Turbinia evidence."""
   client: api_client.ApiClient = ctx.obj.api_client
   api_instance = turbinia_evidence_api.TurbiniaEvidenceApi(client)
   try:
@@ -375,7 +375,7 @@ def query_evidence(
 def get_evidence(
     ctx: click.Context, evidence_id: str, show_ignored: bool, show_null: bool,
     json_dump: bool) -> None:
-  """Gets Turbinia evidence status."""
+  """Get Turbinia evidence."""
   client: api_client.ApiClient = ctx.obj.api_client
   api_instance = turbinia_evidence_api.TurbiniaEvidenceApi(client)
   try:
@@ -412,7 +412,7 @@ def get_evidence(
 def upload_evidence(
     ctx: click.Context, ticket_id: str, file: list, directory: list,
     calculate_hash: bool, json_dump: bool) -> None:
-  """Gets Turbinia evidence status."""
+  """Uploads evidence to Turbinia server."""
   client: api_client.ApiClient = ctx.obj.api_client
   api_instance = turbinia_evidence_api.TurbiniaEvidenceApi(client)
   all_files = list(file)
