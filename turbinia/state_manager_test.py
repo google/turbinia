@@ -121,352 +121,231 @@ class TestPSQStateManager(unittest.TestCase):
 class TestRedisEvidenceStateManager(unittest.TestCase):
   """Test RedisStateManager class."""
 
-  def _get_state_manager(self):
-    """Gets a Redis State Manager object for test."""
-    config.STATE_MANAGER = 'Redis'
-    # force state_manager module to reload using Redis state manager.
-    importlib.reload(state_manager)
-    return state_manager.get_state_manager()
-
-  @mock.patch('turbinia.state_manager.datastore.Client')
-  def setUp(self, _):
-    self.state_manager = None
-    config.LoadConfig()
-    self.state_manager_save = config.STATE_MANAGER
-
-    with open(os.path.join(os.path.dirname(__file__),
+  def get_evidence_data(self):
+    with open(os.path.join(os.path.dirname(__file__), '..', 'test_data',
                            'state_manager_test_data.json'), 'r',
               encoding='utf-8') as test_data:
       test_data = test_data.read()
       self.test_data = json.loads(test_data)
 
     self.sorted_values_summary = {
+        '6d6f85f44487441c9d4da1bda56ae90a': [
+            self.test_data['TurbiniaEvidence:0114968b6293410e818eb1ec72db56f8'],
+            self.test_data['TurbiniaEvidence:e2d9bff0c78b471e820db55080012f44']
+        ],
         '5581344e306b42ccb965a19028d4fc58': [
             self.test_data['TurbiniaEvidence:b510ab6bf11a410da1fd9d9b128e7d74']
-        ],
-        '6d6f85f44487441c9d4da1bda56ae90a': [
-            self.test_data['TurbiniaEvidence:e2d9bff0c78b471e820db55080012f44'],
-            self.test_data['TurbiniaEvidence:0114968b6293410e818eb1ec72db56f8']
         ]
     }
     self.sorted_keys_summary = {
+        '6d6f85f44487441c9d4da1bda56ae90a': [
+            'TurbiniaEvidence:0114968b6293410e818eb1ec72db56f8',
+            'TurbiniaEvidence:e2d9bff0c78b471e820db55080012f44'
+        ],
         '5581344e306b42ccb965a19028d4fc58': [
             'TurbiniaEvidence:b510ab6bf11a410da1fd9d9b128e7d74'
-        ],
-        '6d6f85f44487441c9d4da1bda56ae90a': [
-            'TurbiniaEvidence:e2d9bff0c78b471e820db55080012f44',
-            'TurbiniaEvidence:0114968b6293410e818eb1ec72db56f8'
         ]
     }
+
     self.sorted_count_summary = {True: 2, False: 1}
-    self.fake_redis_dict = {}
 
-  def hkeys_side_effect(self, key):
-    return [
-        bytes(attribute_key, 'utf-8') for attribute_key in self.test_data[key]
-    ]
+  def write_evidence_in_fake_redis(self):
+    for evidence_key, evidence_value in self.test_data.items():
+      for attribute_name, attribute_value in evidence_value.items():
+        self.state_manager.client.hset(
+            evidence_key, attribute_name, json.dumps(attribute_value))
 
-  def hget_side_effect(self, name, key):
-    if isinstance(name, bytes):
-      name = name.decode()
-    if isinstance(key, bytes):
-      key = key.decode()
-    return bytes(json.dumps(self.test_data[name][key]), 'utf-8')
+  def get_data_from_fake_redis(self):
+    for evidence_key, evidence_value in self.test_data.items():
+      for attribute_name, attribute_value in evidence_value.items():
+        self.state_manager.client.hset(
+            evidence_key, attribute_name, json.dumps(attribute_value))
 
-  def hset_side_effect(self, name, key, value):
-    if name not in self.fake_redis_dict:
-      self.fake_redis_dict[name] = {}
-    self.fake_redis_dict[name][key] = value
-    return 1
+  @mock.patch('redis.StrictRedis')
+  @mock.patch('turbinia.state_manager.datastore.Client')
+  def setUp(self, _, mock_redis):
+    self.state_manager = None
+    config.LoadConfig()
+    self.state_manager_save = config.STATE_MANAGER
 
-  def get_evidence_side_effect(self, evidence_id):
-    return self.test_data[':'.join(('TurbiniaEvidence', evidence_id))]
+    mock_redis = fakeredis.FakeStrictRedis()
+    config.STATE_MANAGER = 'Redis'
+    # force state_manager module to reload using Redis state manager.
+    importlib.reload(state_manager)
+    self.state_manager = state_manager.get_state_manager()
+    self.state_manager.set_client(mock_redis)
 
-  @mock.patch('turbinia.state_manager.RedisStateManager.get_attribute')
-  @mock.patch(
-      'turbinia.state_manager.RedisStateManager.iterate_attribute_names')
-  def testStateManagerGetEvidence(
-      self, mock_attribute_iterator, mock_get_attribute):
+    self.get_evidence_data()
+
+  def testStateManagerGetEvidenceData(self):
     """Test State Manager get_evidence_data()."""
-    self.state_manager = self._get_state_manager()
-    redis_client = fakeredis.FakeStrictRedis()
+    self.write_evidence_in_fake_redis()
+
     evidence_key = 'TurbiniaEvidence:b510ab6bf11a410da1fd9d9b128e7d74'
-    input_task = self.test_data[evidence_key]
-    # expected_result_dict = OrderedDict(sorted(input_task.serialize().items()))
-    #expected_result_str = json.dumps(expected_result_dict)
+    input_evidence = self.test_data[evidence_key]
 
-    for attribute_name, attribute_value in input_task:
-      redis_client.hset(
-          evidence_key, attribute_name, json.dumps(attribute_value))
-
-    mock_attribute_iterator.yield_value = input_task.keys()
-
-    mock_get_attribute.side_effect = self.hget_side_effect
-
-    result = self.state_manager.get_evidence_data(
-        self.test_data[evidence_key]['id'])
-
-    raise Exception(result)
+    result = self.state_manager.get_evidence_data(input_evidence['id'])
 
     # Check if the returned evidence_dict contains all of our test data
-    for (expected_value, result_value) in zip(
-        self.test_data[evidence_key].values(), result.values()):
-      self.assertEqual(expected_value, result_value)
-    self.assertIn('tasks', result)
-    self.assertIn(self.test_data[evidence_key]['tasks'][0], result['tasks'])
+    self.assertEqual(input_evidence, result)
 
-  @mock.patch('redis.StrictRedis')
-  def testStateManagerWriteEvidence(self, mock_redis):
+  def testStateManagerWriteNewEvidence(self):
     """Test State Manager write_evidence()."""
-
     evidence_key = 'TurbiniaEvidence:b510ab6bf11a410da1fd9d9b128e7d74'
 
-    self.state_manager = self._get_state_manager()
-
-    mock_redis.return_value.hset.side_effect = self.hset_side_effect
-
-    self.state_manager.write_new_evidence({
+    json_dumped_evidence = {
         key: json.dumps(value)
         for key, value in self.test_data[evidence_key].items()
-    })
+    }
 
-    written_evidence = self.fake_redis_dict[evidence_key]
+    self.state_manager.write_new_evidence(json_dumped_evidence)
+
+    result = {}
+    for attribute_name, attribute_value in self.state_manager.client.hscan_iter(
+        evidence_key):
+      result[attribute_name.decode()] = attribute_value.decode()
 
     # Check if the stored evidence contains all of our test data
-    self.assertIn('tasks', written_evidence)
-    for (test_value, written_value) in zip(
-        self.test_data[evidence_key].values(), written_evidence.values()):
-      self.assertEqual(json.dumps(test_value), written_value)
-    self.assertIn('tasks', written_evidence)
-    self.assertIn(
-        self.test_data[evidence_key]['tasks'][0], written_evidence['tasks'])
-    self.assertIn('TurbiniaEvidenceHashes', self.fake_redis_dict)
-    self.assertEqual(
-        self.fake_redis_dict['TurbiniaEvidenceHashes'][
-            self.test_data[evidence_key]['hash']], evidence_key)
+    self.assertEqual(result, json_dumped_evidence)
 
-    # Flushes fake redis
-    self.fake_redis_dict = {}
-
-  @mock.patch('redis.StrictRedis')
-  def testStateManagerUpdateEvidenceAttribute(self, mock_redis):
+  def testStateManagerUpdateEvidenceAttribute(self):
     """Test State Manager update_evidence_attribute()."""
+    self.write_evidence_in_fake_redis()
 
-    evidence_key = 'TurbiniaEvidence:b510ab6bf11a410da1fd9d9b128e7d74'
-
-    self.state_manager = self._get_state_manager()
-
-    mock_redis.return_value.hset.side_effect = self.hset_side_effect
-
-    for attribute_name, attribute_value in self.test_data[evidence_key].items():
-      self.state_manager.update_evidence_attribute(
-          self.test_data[evidence_key]['id'], attribute_name,
-          json.dumps(attribute_value))
+    existent_key = 'TurbiniaEvidence:b510ab6bf11a410da1fd9d9b128e7d74'
+    non_existent_id = 'FakeID12345'
 
     # Tests writting extra attribute
     self.state_manager.update_evidence_attribute(
-        self.test_data[evidence_key]['id'], 'test_attribute',
+        self.test_data[existent_key]['id'], 'test_attribute',
         json.dumps('test_value'))
 
-    written_evidence = self.fake_redis_dict[evidence_key]
+    # Tests updating existing attribute attribute
+    self.state_manager.update_evidence_attribute(
+        self.test_data[existent_key]['id'], 'request_id',
+        json.dumps('123456789'))
 
-    # Check if the stored evidence contains all of our test data
-    self.assertIn('tasks', written_evidence)
-    for (test_value, written_value) in zip(
-        self.test_data[evidence_key].values(), written_evidence.values()):
-      self.assertEqual(json.dumps(test_value), written_value)
-    self.assertIn('tasks', written_evidence)
-    self.assertIn(
-        self.test_data[evidence_key]['tasks'][0], written_evidence['tasks'])
-    self.assertIn('TurbiniaEvidenceHashes', self.fake_redis_dict)
-    self.assertEqual(
-        self.fake_redis_dict['TurbiniaEvidenceHashes'][
-            self.test_data[evidence_key]['hash']], evidence_key)
-    self.assertIn('test_attribute', self.fake_redis_dict[evidence_key])
-    self.assertEqual(
-        json.dumps('test_value'),
-        self.fake_redis_dict[evidence_key]['test_attribute'])
+    # Tests updating nonexistant key
+    self.state_manager.update_evidence_attribute(
+        non_existent_id, 'test_attribute', json.dumps('test_value'))
 
-    # Flushes fake redis
-    self.fake_redis_dict = {}
+    expected_result = copy.deepcopy(self.test_data)
+    expected_result[existent_key]['test_attribute'] = 'test_value'
+    expected_result[existent_key]['request_id'] = '123456789'
 
-  @mock.patch('redis.StrictRedis')
-  @mock.patch('turbinia.state_manager.RedisStateManager.get_evidence')
-  def testStateManagerEvidenceSummaryValues(
-      self, mock_get_evidence, mock_redis):
+    result = {}
+    for evidence_key in self.state_manager.client.scan_iter():
+      result[evidence_key.decode()] = {}
+      for attribute_name, attribute_value in self.state_manager.client.hscan_iter(
+          evidence_key):
+        result[evidence_key.decode()][
+            attribute_name.decode()] = attribute_value.decode()
+
+    self.assertNotIn(non_existent_id, result)
+
+    self.assertEqual(len(result), len(expected_result))
+
+    for evidence_key, evidence_dict in expected_result.items():
+      for attribute_name, attribute_value in evidence_dict.items():
+        self.assertEqual(
+            result[evidence_key][attribute_name], json.dumps(attribute_value))
+
+  def testStateManagerEvidenceSummaryValues(self):
     """Test State Manager get_evidence_summary() outputting values."""
 
-    self.state_manager = self._get_state_manager()
-
-    mock_redis.return_value.scan_iter.return_value = [
-        bytes(key, 'utf-8') for key in self.test_data
-    ]
-    mock_get_evidence.side_effect = self.get_evidence_side_effect
+    self.write_evidence_in_fake_redis()
 
     result = self.state_manager.get_evidence_summary(output='values')
 
     # Check if the returned summary contains all of our test data
-    for (expected_evidence, summary_evidence) in zip(self.test_data.values(),
-                                                     result):
-      for (expected_attribute, summary_attribute) in zip(
-          expected_evidence.values(), summary_evidence.values()):
-        self.assertEqual(expected_attribute, summary_attribute)
+    self.assertEqual(len(result), len(self.test_data))
+    for result_evidence_dict in result:
+      evidence_id = result_evidence_dict['id']
+      self.assertEqual(
+          result_evidence_dict,
+          self.test_data[f'TurbiniaEvidence:{evidence_id}'])
 
-  @mock.patch('redis.StrictRedis')
-  @mock.patch('turbinia.state_manager.RedisStateManager.get_evidence')
-  def testStateManagerEvidenceSummaryKeys(self, mock_get_evidence, mock_redis):
+  def testStateManagerEvidenceSummaryKeys(self):
     """Test State Manager get_evidence_summary() outputting keys."""
 
-    self.state_manager = self._get_state_manager()
-
-    mock_redis.return_value.scan_iter.return_value = [
-        bytes(key, 'utf-8') for key in self.test_data
-    ]
-    mock_get_evidence.side_effect = self.get_evidence_side_effect
+    self.write_evidence_in_fake_redis()
 
     result = self.state_manager.get_evidence_summary(output='keys')
 
     # Check if the returned summary contains all of our test data
-    for (expected_key, summary_key) in zip(self.test_data.keys(), result):
-      self.assertEqual(expected_key, summary_key)
+    self.assertEqual(
+        result.sort(), [key for key in self.test_data.keys()].sort())
 
-  @mock.patch('redis.StrictRedis')
-  def testStateManagerEvidenceSummaryCount(self, mock_redis):
+  def testStateManagerEvidenceSummaryCount(self):
     """Test State Manager get_evidence_summary() outputting count."""
 
-    self.state_manager = self._get_state_manager()
-
-    mock_redis.return_value.scan_iter.return_value = [
-        bytes(key, 'utf-8') for key in self.test_data
-    ]
+    self.write_evidence_in_fake_redis()
 
     result = self.state_manager.get_evidence_summary(output='count')
 
     # Check if the returned summary contains all of our test data
-    self.assertEqual(len(self.test_data), result)
+    self.assertEqual(result, len(self.test_data))
 
-  @mock.patch('redis.StrictRedis')
-  @mock.patch('turbinia.state_manager.RedisStateManager.get_evidence')
-  def testStateManagerEvidenceSummaryValuesSort(
-      self, mock_get_evidence, mock_redis):
+  def testStateManagerEvidenceSummaryValuesSort(self):
     """Test State Manager sorted get_evidence_summary() outputting values."""
-
-    self.state_manager = self._get_state_manager()
-
-    mock_redis.return_value.scan_iter.return_value = [
-        bytes(key, 'utf-8') for key in self.test_data
-    ]
-    mock_get_evidence.side_effect = self.get_evidence_side_effect
+    self.write_evidence_in_fake_redis()
 
     result = self.state_manager.get_evidence_summary(
         sort='request_id', output='values')
 
     # Check if the returned summary contains all of our test data
-    for key, value in self.sorted_values_summary.items():
-      for expected_value, summary_value in zip(value, result[key]):
-        for expected_attribute, summary_attribute in zip(
-            expected_value.values(), summary_value.values()):
-          self.assertEqual(expected_attribute, summary_attribute)
+    self.assertEqual(result, self.sorted_values_summary)
 
-  @mock.patch('redis.StrictRedis')
-  @mock.patch('turbinia.state_manager.RedisStateManager.get_evidence')
-  def testStateManagerEvidenceSummaryKeysSort(
-      self, mock_get_evidence, mock_redis):
+  def testStateManagerEvidenceSummaryKeysSort(self):
     """Test State Manager sorted get_evidence_summary() outputting keys."""
-
-    self.state_manager = self._get_state_manager()
-
-    mock_redis.return_value.scan_iter.return_value = [
-        bytes(key, 'utf-8') for key in self.test_data
-    ]
-    mock_get_evidence.side_effect = self.get_evidence_side_effect
+    self.write_evidence_in_fake_redis()
 
     result = self.state_manager.get_evidence_summary(
         sort='request_id', output='keys')
 
     # Check if the returned summary contains all of our test data
-    for key, value in self.sorted_keys_summary.items():
-      for expected_key, summary_key in zip(value, result[key]):
-        self.assertEqual(expected_key, summary_key)
+    self.assertEqual(result, self.sorted_keys_summary)
 
-  @mock.patch('redis.StrictRedis')
-  @mock.patch('turbinia.state_manager.RedisStateManager.get_evidence')
-  def testStateManagerEvidenceSummaryCountSort(
-      self, mock_get_evidence, mock_redis):
+  def testStateManagerEvidenceSummaryCountSort(self):
     """Test State Manager sorted get_evidence_summary() outputting count."""
-
-    self.state_manager = self._get_state_manager()
-
-    mock_redis.return_value.scan_iter.return_value = [
-        bytes(key, 'utf-8') for key in self.test_data
-    ]
-    mock_get_evidence.side_effect = self.get_evidence_side_effect
+    self.write_evidence_in_fake_redis()
 
     result = self.state_manager.get_evidence_summary(
         sort='copyable', output='count')
 
     # Check if the returned summary contains all of our test data
-    for key, value in self.sorted_count_summary.items():
-      self.assertEqual(result[key], value)
+    self.assertEqual(result, self.sorted_count_summary)
 
-  @mock.patch('redis.StrictRedis')
-  @mock.patch('turbinia.state_manager.RedisStateManager.get_evidence')
-  def testStateManagerEvidenceQueryValues(self, mock_get_evidence, mock_redis):
+  def testStateManagerEvidenceQueryValues(self):
     """Test State Manager query_evidence() outputting values."""
 
-    self.state_manager = self._get_state_manager()
-
-    mock_redis.return_value.hget.side_effect = self.hget_side_effect
-    mock_redis.return_value.scan_iter.return_value = [
-        bytes(key, 'utf-8') for key in self.test_data
-    ]
-    mock_get_evidence.side_effect = self.get_evidence_side_effect
+    self.write_evidence_in_fake_redis()
 
     result = self.state_manager.query_evidence(
         'request_id', '6d6f85f44487441c9d4da1bda56ae90a', output='values')
 
-    # Check if the returned summary contains all of our test data
-    for expected_value, query_value in zip(
-        self.sorted_values_summary['6d6f85f44487441c9d4da1bda56ae90a'], result):
-      for expected_attribute, query_attribute in zip(expected_value.values(),
-                                                     query_value.values()):
-        self.assertEqual(expected_attribute, query_attribute)
+    # Check if the returned evidence contains all of our test data
+    self.assertEqual(
+        result, self.sorted_values_summary['6d6f85f44487441c9d4da1bda56ae90a'])
 
-  @mock.patch('redis.StrictRedis')
-  @mock.patch('turbinia.state_manager.RedisStateManager.get_evidence')
-  def testStateManagerEvidenceQueryKeys(self, mock_get_evidence, mock_redis):
+  def testStateManagerEvidenceQueryKeys(self):
     """Test State Manager query_evidence() outputting keys."""
 
-    self.state_manager = self._get_state_manager()
-
-    mock_redis.return_value.hget.side_effect = self.hget_side_effect
-    mock_redis.return_value.scan_iter.return_value = [
-        bytes(key, 'utf-8') for key in self.test_data
-    ]
-    mock_get_evidence.side_effect = self.get_evidence_side_effect
+    self.write_evidence_in_fake_redis()
 
     result = self.state_manager.query_evidence(
         'request_id', '6d6f85f44487441c9d4da1bda56ae90a', output='keys')
 
-    # Check if the returned summary contains all of our test data
-    for expected_key, query_key in zip(
-        self.sorted_keys_summary['6d6f85f44487441c9d4da1bda56ae90a'], result):
-      self.assertEqual(expected_key, query_key)
+    # Check if the returned keys contains all of our test data
+    self.assertEqual(
+        result, self.sorted_keys_summary['6d6f85f44487441c9d4da1bda56ae90a'])
 
-  @mock.patch('redis.StrictRedis')
-  @mock.patch('turbinia.state_manager.RedisStateManager.get_evidence')
-  def testStateManagerEvidenceQueryCount(self, mock_get_evidence, mock_redis):
+  def testStateManagerEvidenceQueryCount(self):
     """Test State Manager query_evidence() outputting count."""
 
-    self.state_manager = self._get_state_manager()
-
-    mock_redis.return_value.hget.side_effect = self.hget_side_effect
-    mock_redis.return_value.scan_iter.return_value = [
-        bytes(key, 'utf-8') for key in self.test_data
-    ]
-    mock_get_evidence.side_effect = self.get_evidence_side_effect
+    self.write_evidence_in_fake_redis()
 
     result = self.state_manager.query_evidence('copyable', True, output='count')
 
-    # Check if the returned summary contains all of our test data
-    self.assertEqual(self.sorted_count_summary[True], result)
+    # Check if the returned count is equal to our test data
+    self.assertEqual(result, self.sorted_count_summary[True])

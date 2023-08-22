@@ -412,7 +412,8 @@ class RedisStateManager(BaseStateManager):
     except redis.RedisError as exception:
       self.handle_exception(exception, f'getting {key_type} keys')
     try:
-      yield keys.decode()
+      for key in keys:
+        yield key.decode()
     except ValueError as exception:
       self.handle_exception(exception, 'decoding key')
 
@@ -426,11 +427,12 @@ class RedisStateManager(BaseStateManager):
       attribute_name (str): Decoded name of object attribute. 
     """
     try:
-      attribute_names = self.client.hscan_iter(key)
+      attributes = self.client.hscan_iter(key)
     except redis.RedisError as exception:
-      self.handle_exception(exception, f'getting attribute_names from {key}')
+      self.handle_exception(exception, f'getting attributes from {key}')
     try:
-      yield attribute_names.decode()
+      for attribute in attributes:
+        yield attribute[0].decode()
     except ValueError as exception:
       self.handle_exception(exception, f'decoding attribute in {key}')
 
