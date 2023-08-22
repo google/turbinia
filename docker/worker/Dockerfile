@@ -67,6 +67,7 @@ RUN apt-get update && apt-get -y upgrade && apt-get -y install \
     libleveldb-dev \
     libterm-readline-gnu-perl \
     lvm2 \
+    pocl-opencl-icd \
     p7zip-full \
     python3-pip \
     software-properties-common \
@@ -147,7 +148,8 @@ RUN mkdir /etc/turbinia && mkdir -p /mnt/turbinia/ && mkdir -p /var/lib/turbinia
 # Install latest hashcat
 RUN cd /home/turbinia \
     && wget https://hashcat.net/files/hashcat-6.2.6.7z \
-    && 7z x hashcat-6.2.6.7z
+    && 7z x hashcat-6.2.6.7z \
+    && chown -R turbinia:turbinia /home/turbinia/hashcat-6.2.6/
 
 # Get a decent password list for john/hashcat
 RUN cd /home/turbinia && echo "" > password.lst
