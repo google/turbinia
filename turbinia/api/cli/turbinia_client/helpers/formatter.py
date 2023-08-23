@@ -416,7 +416,7 @@ class EvidenceMarkdownReport(MarkdownReportComponent):
               f"Local Path: {evidence_dict.get('local_path', 'null')}", level))
       report.append(
           self.bullet(
-              f"Creation Time: {evidence_dict.get('creation_time', 'null'),}",
+              f"Creation Time: {evidence_dict.get('creation_time', 'null')}",
               level))
       report.append(
           self.bullet(

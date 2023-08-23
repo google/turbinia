@@ -191,7 +191,7 @@ async def get_evidence_by_id(request: Request, evidence_id):
   Returns:
     Dictionary of the stored evidence
   """
-  if stored_evidence := redis_manager.get_evidence(evidence_id):
+  if stored_evidence := redis_manager.get_evidence_data(evidence_id):
     return JSONResponse(content=stored_evidence, status_code=200)
   raise HTTPException(
       status_code=404,
