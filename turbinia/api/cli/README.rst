@@ -106,7 +106,7 @@ You can view the help menu with the ``-h`` argument
 
    Commands:
      config    Get Turbinia configuration.
-     evidence  Get Evidence
+     evidence  Get or upload Turbinia evidence.
      jobs      Get a list of enabled Turbinia jobs.
      result    Get Turbinia request or task results.
      status    Get Turbinia request or task status.

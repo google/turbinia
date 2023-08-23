@@ -7,10 +7,6 @@
 # restore all keys dumped in a directory. If "all" is used in [Field Name]
 # and [Field Value] is left empty, all keys will be selected. 
 
-
-
-
-
 usage() {
   cat << EOF
   Usage:

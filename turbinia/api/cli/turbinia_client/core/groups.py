@@ -24,7 +24,7 @@ def config_group():
 
 @click.group('evidence')
 def evidence_group():
-  """Get Turbinia evidence."""
+  """Get or upload Turbinia evidence."""
 
 
 @click.group('status')
