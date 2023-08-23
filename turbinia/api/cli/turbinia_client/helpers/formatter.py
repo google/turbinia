@@ -398,12 +398,12 @@ class StatsMarkdownReport(MarkdownReportComponent):
       stat_group = stat_group.replace('_', ' ').title()
       if stat_group in ('All Tasks', 'Successful Tasks', 'Failed Tasks',
                         'Requests'):
-        first_column = self.heading1(
+        first_column = self.heading3(
             f'{stat_group}:') if markdown else stat_group
         self.stat_to_row(first_column, stat_dict)
         continue
       if markdown:
-        self.stat_to_row(self.heading1(f'{stat_group}:'), {})
+        self.stat_to_row(self.heading3(f'{stat_group}:'), {})
       for description, inner_dict in stat_dict.items():
         first_column = self.bullet(
             f'{description}:'
@@ -423,14 +423,14 @@ class StatsMarkdownReport(MarkdownReportComponent):
     Returns:
       markdown(str): Markdown version of task statistics.
     """
-    report = ['Execution time statistics for Turbinia:']
+    report = [self.heading1('Execution time statistics for Turbinia:')]
 
     data_frame = self.generate_data_frame(True)
 
     table = data_frame.apply(self.ljust).to_string(
         index=False, justify='left', col_space=8)
 
-    report.append(table)
+    report.append(self.heading2(table))
 
     return '\n'.join(report)
 
