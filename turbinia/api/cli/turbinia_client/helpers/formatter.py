@@ -377,7 +377,7 @@ class EvidenceMarkdownReport(MarkdownReportComponent):
   """Turbinia Evidence Markdown report."""
 
   def __init__(self, evidence_data: dict):
-    """Initializes a EvidenceMarkdownReport object."""
+    """Initializes an EvidenceMarkdownReport object."""
     super().__init__()
     self._evidence_data: dict = evidence_data
 
@@ -441,7 +441,7 @@ class EvidenceSummaryMarkdownReport(EvidenceMarkdownReport):
   """Turbinia Evidence Markdown report."""
 
   def __init__(self, summary: dict | list | int):
-    """Initializes a EvidenceMarkdownReport object."""
+    """Initializes an EvidenceSummaryMarkdownReport object."""
     super().__init__({})
     self._summary = summary
 
