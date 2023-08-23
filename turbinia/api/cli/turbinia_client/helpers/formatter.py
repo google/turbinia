@@ -427,10 +427,12 @@ class StatsMarkdownReport(MarkdownReportComponent):
 
     data_frame = self.generate_data_frame(True)
 
+    data_frame = data_frame.rename(columns={'TASK': self.heading2('TASK')})
+
     table = data_frame.apply(self.ljust).to_string(
         index=False, justify='left', col_space=8)
 
-    report.append(self.heading2(table))
+    report.append(table)
 
     return '\n'.join(report)
 
