@@ -10,23 +10,23 @@ Method | HTTP request | Description
 
 
 # **create_request**
-> object create_request(request)
+> bool, date, datetime, dict, float, int, list, str, none_type create_request(request)
 
 Create Request
 
-Create a new Turbinia request.  Args:   request (Request): FastAPI request object.   req (turbinia.api.schema.request): JSON object from the HTTP POST data       matching the schema defined for a Turbinia Request. The schema is used       by pydantic for field validation.  Raises:   ValidationError: if the Request object contains invalid data.   HTTPException: If pre-conditions are not met.
+Create a new Turbinia request.  Args:   request (turbinia.api.schema.request): JSON object from the HTTP POST data       matching the schema defined for a Turbinia Request. The schema is used       by pydantic for field validation.  Raises:   ValidationError: if the Request object contains invalid data.   HTTPException: If pre-conditions are not met.
 
 ### Example
 
 * OAuth Authentication (oAuth2):
+
 ```python
 import time
-import os
 import turbinia_api_lib
-from turbinia_api_lib.models.request import Request
-from turbinia_api_lib.rest import ApiException
+from turbinia_api_lib.api import turbinia_requests_api
+from turbinia_api_lib.model.http_validation_error import HTTPValidationError
+from turbinia_api_lib.model.request import Request
 from pprint import pprint
-
 # Defining the host is optional and defaults to http://localhost
 # See configuration.py for a list of all supported configuration parameters.
 configuration = turbinia_api_lib.Configuration(
@@ -38,20 +38,46 @@ configuration = turbinia_api_lib.Configuration(
 # Examples for each auth method are provided below, use the example that
 # satisfies your auth use case.
 
-configuration.access_token = os.environ["ACCESS_TOKEN"]
+# Configure OAuth2 access token for authorization: oAuth2
+configuration = turbinia_api_lib.Configuration(
+    host = "http://localhost"
+)
+configuration.access_token = 'YOUR_ACCESS_TOKEN'
 
 # Enter a context with an instance of the API client
 with turbinia_api_lib.ApiClient(configuration) as api_client:
     # Create an instance of the API class
-    api_instance = turbinia_api_lib.TurbiniaRequestsApi(api_client)
-    request = turbinia_api_lib.Request() # Request | 
+    api_instance = turbinia_requests_api.TurbiniaRequestsApi(api_client)
+    request = Request(
+        description="Turbinia request object",
+        evidence={},
+        request_options=BaseRequestOptions(
+            filter_patterns=[
+                "filter_patterns_example",
+            ],
+            group_id="group_id_example",
+            jobs_allowlist=[
+                "jobs_allowlist_example",
+            ],
+            jobs_denylist=[
+                "jobs_denylist_example",
+            ],
+            reason="reason_example",
+            recipe_data="recipe_data_example",
+            recipe_name="recipe_name_example",
+            request_id="request_id_example",
+            requester="requester_example",
+            sketch_id=1,
+            yara_rules="yara_rules_example",
+        ),
+    ) # Request | 
 
+    # example passing only required values which don't have defaults set
     try:
         # Create Request
         api_response = api_instance.create_request(request)
-        print("The response of TurbiniaRequestsApi->create_request:\n")
         pprint(api_response)
-    except Exception as e:
+    except turbinia_api_lib.ApiException as e:
         print("Exception when calling TurbiniaRequestsApi->create_request: %s\n" % e)
 ```
 
@@ -60,11 +86,11 @@ with turbinia_api_lib.ApiClient(configuration) as api_client:
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **request** | [**Request**](Request.md)|  | 
+ **request** | [**Request**](Request.md)|  |
 
 ### Return type
 
-**object**
+**bool, date, datetime, dict, float, int, list, str, none_type**
 
 ### Authorization
 
@@ -75,7 +101,9 @@ Name | Type | Description  | Notes
  - **Content-Type**: application/json
  - **Accept**: application/json
 
+
 ### HTTP response details
+
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
 **200** | Successful Response |  -  |
@@ -84,22 +112,22 @@ Name | Type | Description  | Notes
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **get_request_status**
-> object get_request_status(request_id)
+> bool, date, datetime, dict, float, int, list, str, none_type get_request_status(request_id)
 
 Get Request Status
 
-Retrieves status for a Turbinia Request.  Args:   request (Request): FastAPI request object.   request_id (str): A Turbinia request identifier.  Raises:   HTTPException: if another exception is caught.
+Retrieves status for a Turbinia Request.  Args:   request_id (str): A Turbinia request identifier.  Raises:   HTTPException: if another exception is caught.
 
 ### Example
 
 * OAuth Authentication (oAuth2):
+
 ```python
 import time
-import os
 import turbinia_api_lib
-from turbinia_api_lib.rest import ApiException
+from turbinia_api_lib.api import turbinia_requests_api
+from turbinia_api_lib.model.http_validation_error import HTTPValidationError
 from pprint import pprint
-
 # Defining the host is optional and defaults to http://localhost
 # See configuration.py for a list of all supported configuration parameters.
 configuration = turbinia_api_lib.Configuration(
@@ -111,20 +139,24 @@ configuration = turbinia_api_lib.Configuration(
 # Examples for each auth method are provided below, use the example that
 # satisfies your auth use case.
 
-configuration.access_token = os.environ["ACCESS_TOKEN"]
+# Configure OAuth2 access token for authorization: oAuth2
+configuration = turbinia_api_lib.Configuration(
+    host = "http://localhost"
+)
+configuration.access_token = 'YOUR_ACCESS_TOKEN'
 
 # Enter a context with an instance of the API client
 with turbinia_api_lib.ApiClient(configuration) as api_client:
     # Create an instance of the API class
-    api_instance = turbinia_api_lib.TurbiniaRequestsApi(api_client)
-    request_id = None # object | 
+    api_instance = turbinia_requests_api.TurbiniaRequestsApi(api_client)
+    request_id = "request_id_example" # str | 
 
+    # example passing only required values which don't have defaults set
     try:
         # Get Request Status
         api_response = api_instance.get_request_status(request_id)
-        print("The response of TurbiniaRequestsApi->get_request_status:\n")
         pprint(api_response)
-    except Exception as e:
+    except turbinia_api_lib.ApiException as e:
         print("Exception when calling TurbiniaRequestsApi->get_request_status: %s\n" % e)
 ```
 
@@ -133,11 +165,11 @@ with turbinia_api_lib.ApiClient(configuration) as api_client:
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **request_id** | [**object**](.md)|  | 
+ **request_id** | **str**|  |
 
 ### Return type
 
-**object**
+**bool, date, datetime, dict, float, int, list, str, none_type**
 
 ### Authorization
 
@@ -148,7 +180,9 @@ Name | Type | Description  | Notes
  - **Content-Type**: Not defined
  - **Accept**: application/json
 
+
 ### HTTP response details
+
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
 **200** | Successful Response |  -  |
@@ -157,7 +191,7 @@ Name | Type | Description  | Notes
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **get_requests_summary**
-> object get_requests_summary()
+> bool, date, datetime, dict, float, int, list, str, none_type get_requests_summary()
 
 Get Requests Summary
 
@@ -166,13 +200,12 @@ Retrieves a summary of all Turbinia requests.  The response is validated against
 ### Example
 
 * OAuth Authentication (oAuth2):
+
 ```python
 import time
-import os
 import turbinia_api_lib
-from turbinia_api_lib.rest import ApiException
+from turbinia_api_lib.api import turbinia_requests_api
 from pprint import pprint
-
 # Defining the host is optional and defaults to http://localhost
 # See configuration.py for a list of all supported configuration parameters.
 configuration = turbinia_api_lib.Configuration(
@@ -184,19 +217,23 @@ configuration = turbinia_api_lib.Configuration(
 # Examples for each auth method are provided below, use the example that
 # satisfies your auth use case.
 
-configuration.access_token = os.environ["ACCESS_TOKEN"]
+# Configure OAuth2 access token for authorization: oAuth2
+configuration = turbinia_api_lib.Configuration(
+    host = "http://localhost"
+)
+configuration.access_token = 'YOUR_ACCESS_TOKEN'
 
 # Enter a context with an instance of the API client
 with turbinia_api_lib.ApiClient(configuration) as api_client:
     # Create an instance of the API class
-    api_instance = turbinia_api_lib.TurbiniaRequestsApi(api_client)
+    api_instance = turbinia_requests_api.TurbiniaRequestsApi(api_client)
 
+    # example, this endpoint has no required or optional parameters
     try:
         # Get Requests Summary
         api_response = api_instance.get_requests_summary()
-        print("The response of TurbiniaRequestsApi->get_requests_summary:\n")
         pprint(api_response)
-    except Exception as e:
+    except turbinia_api_lib.ApiException as e:
         print("Exception when calling TurbiniaRequestsApi->get_requests_summary: %s\n" % e)
 ```
 
@@ -206,7 +243,7 @@ This endpoint does not need any parameter.
 
 ### Return type
 
-**object**
+**bool, date, datetime, dict, float, int, list, str, none_type**
 
 ### Authorization
 
@@ -217,7 +254,9 @@ This endpoint does not need any parameter.
  - **Content-Type**: Not defined
  - **Accept**: application/json
 
+
 ### HTTP response details
+
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
 **200** | Successful Response |  -  |
