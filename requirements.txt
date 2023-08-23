@@ -24,6 +24,7 @@ psq
 pyparsing<3
 pyyaml>=5.4.1
 pyOpenSSL
+python-multipart
 redis<4.2
 six>=1.15.0
 urllib3[secure]
