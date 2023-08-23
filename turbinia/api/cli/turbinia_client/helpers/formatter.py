@@ -197,7 +197,10 @@ class MarkdownReportComponent(ABC):
       elif isinstance(item, list):
         report.extend(self.list_to_markdown(item, level + 1))
       else:
-        report.append(self.bullet(item, level))
+        if level == 0:
+          report.append(self.heading1(item))
+        else:
+          report.append(self.bullet(item, level))
     return report
 
   def dict_to_markdown(
@@ -212,13 +215,22 @@ class MarkdownReportComponent(ABC):
         continue
       name = key.replace('_', ' ').title() if format_name else key
       if isinstance(value, dict):
-        report.append(self.bullet(f'{name}:', level))
+        if level == 0:
+          report.append(self.heading1(f'{name}:'))
+        else:
+          report.append(self.bullet(f'{name}:', level))
         report.extend(self.dict_to_markdown(value, level + 1))
       elif isinstance(value, list):
-        report.append(self.bullet(f'{name}:', level))
+        if level == 0:
+          report.append(self.heading1(f'{name}:'))
+        else:
+          report.append(self.bullet(f'{name}:', level))
         report.extend(self.list_to_markdown(value, level + 1))
       else:
-        report.append(self.bullet(f'{name}: {value}', level))
+        if level == 0:
+          report.append(self.heading1(f'{name}: {value}'))
+        else:
+          report.append(self.bullet(f'{name}: {value}', level))
     return report
 
   @abstractmethod
@@ -391,7 +403,7 @@ class EvidenceMarkdownReport(MarkdownReportComponent):
     try:
       report.append(
           self.heading(
-              f"Evidence ID: {evidence_dict.get('id', 'null')}", level + 1))
+              f"Evidence ID: {evidence_dict.get('id', 'null')}", level))
       report.append(
           self.bullet(
               f"Evidence Name: {evidence_dict.get('_name', 'null')}", level))
@@ -462,8 +474,9 @@ class EvidenceSummaryMarkdownReport(EvidenceMarkdownReport):
         return '\n'.join(report)
       return '\n'.join(self.generate_value_markdown(self._summary))
     elif isinstance(self._summary, list):
-      return '\n'.join(self.list_to_markdown(self._summary))
+      return '\n'.join(self.list_to_markdown(self._summary, 0))
     elif isinstance(self._summary, dict):
-      return '\n'.join(self.dict_to_markdown(self._summary, format_name=False))
+      return '\n'.join(
+          self.dict_to_markdown(self._summary, 0, format_name=False))
     elif isinstance(self._summary, int):
-      return self.heading2(f'{self._summary} evidences found')
+      return self.heading1(f'{self._summary} evidences found')

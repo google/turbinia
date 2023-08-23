@@ -456,5 +456,5 @@ def upload_evidence(
   else:
     report = '\n'.join(
         formatter.EvidenceMarkdownReport({}).dict_to_markdown(
-            report, format_name=False))
+            report, 0, format_name=False))
     click.echo(report)
