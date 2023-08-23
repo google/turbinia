@@ -14,44 +14,66 @@ components:
       description: "Base Request Options class to be extended by other option types. "
       properties:
         filter_patterns:
-          items:
-            type: string
+          anyOf:
+            - items:
+                type: string
+              type: array
+            - type: "null"
           title: Filter Patterns
-          type: array
         group_id:
+          anyOf:
+            - type: string
+            - type: "null"
           title: Group Id
-          type: string
         jobs_allowlist:
-          items:
-            type: string
+          anyOf:
+            - items:
+                type: string
+              type: array
+            - type: "null"
           title: Jobs Allowlist
-          type: array
         jobs_denylist:
-          items:
-            type: string
+          anyOf:
+            - items:
+                type: string
+              type: array
+            - type: "null"
           title: Jobs Denylist
-          type: array
         reason:
+          anyOf:
+            - type: string
+            - type: "null"
           title: Reason
-          type: string
         recipe_data:
+          anyOf:
+            - type: string
+            - type: "null"
           title: Recipe Data
-          type: string
         recipe_name:
+          anyOf:
+            - type: string
+            - type: "null"
           title: Recipe Name
-          type: string
         request_id:
+          anyOf:
+            - type: string
+            - type: "null"
           title: Request Id
-          type: string
         requester:
+          anyOf:
+            - type: string
+            - type: "null"
           title: Requester
-          type: string
         sketch_id:
+          anyOf:
+            - type: integer
+            - type: "null"
           title: Sketch Id
-          type: integer
         yara_rules:
+          anyOf:
+            - type: string
+            - type: "null"
           title: Yara Rules
-          type: string
       title: BaseRequestOptions
       type: object
     Body_upload_evidence_api_evidence_upload_post:
@@ -87,9 +109,11 @@ components:
       description: "Base request object. "
       properties:
         description:
+          anyOf:
+            - type: string
+            - type: "null"
           default: Turbinia request object
           title: Description
-          type: string
         evidence:
           title: Evidence
           type: object
@@ -158,6 +182,13 @@ paths:
         - Turbinia Configuration
   /api/evidence/query:
     get:
+      description:
+        "Queries evidence in Redis that have the specified attribute value.\n\
+        \nArgs:\n  attribute_name (str): Name of attribute to be queried.\n  attribute_value\
+        \ (str): Value the attribute must have.\n  output Optional(str): Sets how\
+        \ the evidence found will be output.\n\nReturns:\n  summary (dict): Summary\
+        \ of all evidences and their content.\n\nRaises:\n  HTTPException: If no matching\
+        \ evidence is found."
       operationId: query_evidence
       parameters:
         - in: query
@@ -188,7 +219,6 @@ paths:
               - source_path
               - tasks
               - type
-              - creation_time
               - tasks
             title: Attribute Name
             type: string
@@ -227,8 +257,9 @@ paths:
   /api/evidence/summary:
     get:
       description:
-        "Retrieves a summary of all evidences in redis.\n\nArgs:\n  sort\
-        \ Optional(str): Attribute used to sort summary.\n\nReturns:\n  summary (dict):\
+        "Retrieves a summary of all evidences in Redis.\n\nArgs:\n  sort\
+        \ Optional(str): Attribute used to sort summary.\n  output Optional(str):\
+        \ Sets how the evidence found will be output. \n\nReturns:\n  summary (dict):\
         \ Summary of all evidences and their content.\n\nRaises:\n  HTTPException:\
         \ if there are no evidences."
       operationId: get_evidence_summary
@@ -260,7 +291,6 @@ paths:
               - source_path
               - tasks
               - type
-              - creation_time
             title: Sort
             type: string
         - in: query
@@ -305,8 +335,8 @@ paths:
   /api/evidence/types/{evidence_type}:
     get:
       description:
-        "Returns supported Evidence object types and required parameters.\n\
-        \nArgs:\n  evidence_type (str): Name of evidence type."
+        "Returns supported required parameters for evidence type.\n\nArgs:\n\
+        \  evidence_type (str): Name of evidence type."
       operationId: get_evidence_attributes
       parameters:
         - in: path
@@ -364,7 +394,7 @@ paths:
   /api/evidence/{evidence_id}:
     get:
       description:
-        "Retrieves an evidence in redis by using its UUID.\n\nArgs:\n \
+        "Retrieves an evidence in Redis by using its UUID.\n\nArgs:\n \
         \ evidence_id (str): The UUID of the evidence.\n\nRaises:\n  HTTPException:\
         \ if the evidence is not found.\n\nReturns:\n  Dictionary of the stored evidence"
       operationId: get_evidence_by_id

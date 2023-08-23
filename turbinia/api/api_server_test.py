@@ -287,18 +287,18 @@ class testTurbiniaAPIServer(unittest.TestCase):
     result = json.loads(result.content)
     self.assertEqual(expected_result, result)
 
-  @mock.patch('turbinia.api.routes.evidence.redis_manager.get_evidence')
+  @mock.patch('turbinia.api.routes.evidence.redis_manager.get_evidence_data')
   def testGetEvidence(self, testGetEvidence):
-    """Test getting empty task result files."""
+    """Test getting Turbinia evidence."""
     testGetEvidence.return_value = self._EVIDENCE_TEST_DATA
     response = self.client.get(
         f'/api/evidence/{self._EVIDENCE_TEST_DATA["id"]}')
     result = json.loads(response.content)
     self.assertEqual(self._EVIDENCE_TEST_DATA, result)
 
-  @mock.patch('turbinia.api.routes.evidence.redis_manager.get_evidence')
+  @mock.patch('turbinia.api.routes.evidence.redis_manager.get_evidence_data')
   def testGetEvidenceNotFound(self, testGetEvidence):
-    """Test getting empty task result files."""
+    """Test getting non-existent evidence."""
     testGetEvidence.return_value = {}
     evidence_id = '4774873a11f049233e863a009b997'
     response = self.client.get(f'/api/evidence/{evidence_id}')
@@ -312,7 +312,7 @@ class testTurbiniaAPIServer(unittest.TestCase):
 
   @mock.patch('turbinia.api.routes.evidence.redis_manager.get_evidence_summary')
   def testEvidenceSummary(self, testGetEvidenceSummary):
-    """Test getting empty task result files."""
+    """Test getting evidence summary."""
     testGetEvidenceSummary.return_value = self._SORTED_KEYS_SUMMARY
     response = self.client.get(
         '/api/evidence/summary?output=keys, sort=request_id')
@@ -324,6 +324,7 @@ class testTurbiniaAPIServer(unittest.TestCase):
     self.assertEqual(self._COUNT_SUMMARY, count_result)
 
   def testEvidenceSummaryWrongAttribute(self):
+    """Test getting evidence summary sorted with invalid attribute."""
     attribute = 'test_attribute'
     response = self.client.get(f'api/evidence/summary?sort={attribute}')
     self.assertEqual(response.status_code, 400)
@@ -333,7 +334,7 @@ class testTurbiniaAPIServer(unittest.TestCase):
 
   @mock.patch('turbinia.api.routes.evidence.redis_manager.get_evidence_summary')
   def testEvidenceSummaryNotFound(self, testGetEvidenceSummary):
-    """Test getting empty task result files."""
+    """Test getting evidence summary with no evidence in the server."""
     testGetEvidenceSummary.return_value = {}
     response = self.client.get(f'/api/evidence/summary')
     self.assertEqual(response.status_code, 404)
@@ -341,6 +342,7 @@ class testTurbiniaAPIServer(unittest.TestCase):
 
   @mock.patch('turbinia.api.routes.evidence.redis_manager.query_evidence')
   def testEvidenceQuery(self, testQueryEvidence):
+    """Test querying evidence."""
     request_id = '6d6f85f44487441c9d4da1bda56ae90a'
     testQueryEvidence.return_value = self._SORTED_KEYS_SUMMARY[request_id]
     response = self.client.get(
@@ -350,6 +352,7 @@ class testTurbiniaAPIServer(unittest.TestCase):
     self.assertEqual(self._SORTED_KEYS_SUMMARY[request_id], result)
 
   def testEvidenceQueryWrongAttribute(self):
+    """Test querying evidence with invalid attribute."""
     attribute = 'test_attribute'
     response = self.client.get(
         f'api/evidence/query?attribute_name={attribute}&attribute_value="test"')
@@ -359,7 +362,7 @@ class testTurbiniaAPIServer(unittest.TestCase):
 
   @mock.patch('turbinia.api.routes.evidence.redis_manager.query_evidence')
   def testEvidenceQueryNotFound(self, testQueryEvidence):
-    """Test getting empty task result files."""
+    """Test querying evidence with no evidence in the server."""
     request_id = '6d6f85f44487441c9d4da1bda56ae90a'
     testQueryEvidence.return_value = {}
     response = self.client.get(
@@ -376,6 +379,7 @@ class testTurbiniaAPIServer(unittest.TestCase):
   @mock.patch('turbinia.api.routes.evidence.datetime')
   @mock.patch('turbinia.api.routes.evidence.os.makedirs')
   def testEvidenceUpload(self, mock_makedirs, mock_datetime):
+    """Tests uploading evidence."""
     mocked_now = datetime.datetime.now()
     mock_datetime.now.return_value = mocked_now
     mocked_now_str = mocked_now.strftime(turbinia_config.DATETIME_FORMAT)

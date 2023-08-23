@@ -9,7 +9,7 @@ from pathlib import Path
 NAME = "turbinia-client"
 VERSION = "1.0.3"
 
-REQUIRES = ["click", "turbinia-api-lib", 'google-auth-oauthlib']
+REQUIRES = ["click", "turbinia-api-lib", 'google-auth-oauthlib', 'pandas']
 
 this_directory = Path(__file__).parent
 README = (this_directory / "README.rst").read_text()

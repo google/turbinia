@@ -115,7 +115,7 @@ async def get_evidence_types(request: Request):
 
 @router.get('/types/{evidence_type}')
 async def get_evidence_attributes(request: Request, evidence_type):
-  """Returns supported Evidence object types and required parameters.
+  """Returns supported required parameters for evidence type.
   
   Args:
     evidence_type (str): Name of evidence type.
@@ -132,10 +132,11 @@ async def get_evidence_attributes(request: Request, evidence_type):
 async def get_evidence_summary(
     request: Request, sort: str = Query(None, enum=EVIDENCE_SUMMARY_ATTRIBUTES),
     output: str = Query('keys', enum=('keys', 'values', 'count'))):
-  """Retrieves a summary of all evidences in redis.
+  """Retrieves a summary of all evidences in Redis.
 
   Args:
     sort Optional(str): Attribute used to sort summary.
+    output Optional(str): Sets how the evidence found will be output. 
 
   Returns:
     summary (dict): Summary of all evidences and their content.
@@ -159,6 +160,19 @@ async def query_evidence(
         'request_id', enum=EVIDENCE_QUERY_ATTRIBUTES),
     attribute_value: str = Query(), output: str = Query(
         'keys', enum=('keys', 'values', 'count'))):
+  """Queries evidence in Redis that have the specified attribute value.
+
+  Args:
+    attribute_name (str): Name of attribute to be queried.
+    attribute_value (str): Value the attribute must have.
+    output Optional(str): Sets how the evidence found will be output.
+
+  Returns:
+    summary (dict): Summary of all evidences and their content.
+  
+  Raises:
+    HTTPException: If no matching evidence is found.
+  """
   if attribute_name and attribute_name not in EVIDENCE_QUERY_ATTRIBUTES:
     raise HTTPException(
         status_code=400, detail=(
@@ -180,7 +194,7 @@ async def query_evidence(
 
 @router.get('/{evidence_id}')
 async def get_evidence_by_id(request: Request, evidence_id):
-  """Retrieves an evidence in redis by using its UUID.
+  """Retrieves an evidence in Redis by using its UUID.
 
   Args:
     evidence_id (str): The UUID of the evidence.

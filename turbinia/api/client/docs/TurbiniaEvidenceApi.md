@@ -17,7 +17,7 @@ Method | HTTP request | Description
 
 Get Evidence Attributes
 
-Returns supported Evidence object types and required parameters.  Args:   evidence_type (str): Name of evidence type.
+Returns supported required parameters for evidence type.  Args:   evidence_type (str): Name of evidence type.
 
 ### Example
 
@@ -90,7 +90,7 @@ Name | Type | Description  | Notes
 
 Get Evidence By Id
 
-Retrieves an evidence in redis by using its UUID.  Args:   evidence_id (str): The UUID of the evidence.  Raises:   HTTPException: if the evidence is not found.  Returns:   Dictionary of the stored evidence
+Retrieves an evidence in Redis by using its UUID.  Args:   evidence_id (str): The UUID of the evidence.  Raises:   HTTPException: if the evidence is not found.  Returns:   Dictionary of the stored evidence
 
 ### Example
 
@@ -163,7 +163,7 @@ Name | Type | Description  | Notes
 
 Get Evidence Summary
 
-Retrieves a summary of all evidences in redis.  Args:   sort Optional(str): Attribute used to sort summary.  Returns:   summary (dict): Summary of all evidences and their content.  Raises:   HTTPException: if there are no evidences.
+Retrieves a summary of all evidences in Redis.  Args:   sort Optional(str): Attribute used to sort summary.   output Optional(str): Sets how the evidence found will be output.   Returns:   summary (dict): Summary of all evidences and their content.  Raises:   HTTPException: if there are no evidences.
 
 ### Example
 
@@ -305,6 +305,8 @@ This endpoint does not need any parameter.
 > object query_evidence(attribute_value, attribute_name=attribute_name, output=output)
 
 Query Evidence
+
+Queries evidence in Redis that have the specified attribute value.  Args:   attribute_name (str): Name of attribute to be queried.   attribute_value (str): Value the attribute must have.   output Optional(str): Sets how the evidence found will be output.  Returns:   summary (dict): Summary of all evidences and their content.  Raises:   HTTPException: If no matching evidence is found.
 
 ### Example
 

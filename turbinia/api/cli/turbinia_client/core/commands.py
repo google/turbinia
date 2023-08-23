@@ -21,8 +21,6 @@ import base64
 import mimetypes
 import tarfile
 
-from fastapi import UploadFile
-
 from turbinia_api_lib import exceptions
 from turbinia_api_lib import api_client
 from turbinia_api_lib.api import turbinia_requests_api
@@ -34,9 +32,6 @@ from turbinia_api_lib.api import turbinia_evidence_api
 
 from turbinia_client.core import groups
 from turbinia_client.helpers import formatter
-
-from turbinia.processors.mount_local import GetDiskSize
-from turbinia.config.turbinia_config_tmpl import MAX_UPLOAD_SIZE
 
 log = logging.getLogger('turbinia')
 
@@ -414,6 +409,9 @@ def upload_evidence(
     calculate_hash: bool, json_dump: bool) -> None:
   """Uploads evidence to Turbinia server."""
   client: api_client.ApiClient = ctx.obj.api_client
+  api_instance_config = turbinia_configuration_api.TurbiniaConfigurationApi(
+      client)
+  max_upload_size = api_instance_config.read_config()['MAX_UPLOAD_SIZE']
   api_instance = turbinia_evidence_api.TurbiniaEvidenceApi(client)
   all_files = list(file)
   for current_directory in directory:
@@ -425,10 +423,10 @@ def upload_evidence(
   for file_path in all_files:
     try:
       size = os.path.getsize(file_path)
-      if size > MAX_UPLOAD_SIZE:
+      if size > max_upload_size:
         error_message = (
             f'Unable to upload {size / (1024 ** 3)} GB file',
-            f'{file_path} greater than {MAX_UPLOAD_SIZE / (1024 ** 3)} GB')
+            f'{file_path} greater than {max_upload_size / (1024 ** 3)} GB')
         log.error(error_message)
         continue
       abs_path = os.path.abspath(file_path)
@@ -451,7 +449,9 @@ def upload_evidence(
           f'when calling upload_evidence: {exception}')
       log.error(error_message)
       report[abs_path] = error_message
-  if json_dump:
+  if not all_files:
+    log.error('No file was passed in the arguments.')
+  elif json_dump:
     formatter.echo_json(report)
   else:
     report = '\n'.join(

@@ -46,7 +46,7 @@ class TurbiniaEvidenceApi(object):
     def get_evidence_attributes(self, evidence_type : Any, **kwargs) -> object:  # noqa: E501
         """Get Evidence Attributes  # noqa: E501
 
-        Returns supported Evidence object types and required parameters.  Args:   evidence_type (str): Name of evidence type.  # noqa: E501
+        Returns supported required parameters for evidence type.  Args:   evidence_type (str): Name of evidence type.  # noqa: E501
         This method makes a synchronous HTTP request by default. To make an
         asynchronous HTTP request, please pass async_req=True
 
@@ -75,7 +75,7 @@ class TurbiniaEvidenceApi(object):
     def get_evidence_attributes_with_http_info(self, evidence_type : Any, **kwargs) -> ApiResponse:  # noqa: E501
         """Get Evidence Attributes  # noqa: E501
 
-        Returns supported Evidence object types and required parameters.  Args:   evidence_type (str): Name of evidence type.  # noqa: E501
+        Returns supported required parameters for evidence type.  Args:   evidence_type (str): Name of evidence type.  # noqa: E501
         This method makes a synchronous HTTP request by default. To make an
         asynchronous HTTP request, please pass async_req=True
 
@@ -186,7 +186,7 @@ class TurbiniaEvidenceApi(object):
     def get_evidence_by_id(self, evidence_id : Any, **kwargs) -> object:  # noqa: E501
         """Get Evidence By Id  # noqa: E501
 
-        Retrieves an evidence in redis by using its UUID.  Args:   evidence_id (str): The UUID of the evidence.  Raises:   HTTPException: if the evidence is not found.  Returns:   Dictionary of the stored evidence  # noqa: E501
+        Retrieves an evidence in Redis by using its UUID.  Args:   evidence_id (str): The UUID of the evidence.  Raises:   HTTPException: if the evidence is not found.  Returns:   Dictionary of the stored evidence  # noqa: E501
         This method makes a synchronous HTTP request by default. To make an
         asynchronous HTTP request, please pass async_req=True
 
@@ -215,7 +215,7 @@ class TurbiniaEvidenceApi(object):
     def get_evidence_by_id_with_http_info(self, evidence_id : Any, **kwargs) -> ApiResponse:  # noqa: E501
         """Get Evidence By Id  # noqa: E501
 
-        Retrieves an evidence in redis by using its UUID.  Args:   evidence_id (str): The UUID of the evidence.  Raises:   HTTPException: if the evidence is not found.  Returns:   Dictionary of the stored evidence  # noqa: E501
+        Retrieves an evidence in Redis by using its UUID.  Args:   evidence_id (str): The UUID of the evidence.  Raises:   HTTPException: if the evidence is not found.  Returns:   Dictionary of the stored evidence  # noqa: E501
         This method makes a synchronous HTTP request by default. To make an
         asynchronous HTTP request, please pass async_req=True
 
@@ -326,7 +326,7 @@ class TurbiniaEvidenceApi(object):
     def get_evidence_summary(self, sort : Optional[Any] = None, output : Optional[Any] = None, **kwargs) -> object:  # noqa: E501
         """Get Evidence Summary  # noqa: E501
 
-        Retrieves a summary of all evidences in redis.  Args:   sort Optional(str): Attribute used to sort summary.  Returns:   summary (dict): Summary of all evidences and their content.  Raises:   HTTPException: if there are no evidences.  # noqa: E501
+        Retrieves a summary of all evidences in Redis.  Args:   sort Optional(str): Attribute used to sort summary.   output Optional(str): Sets how the evidence found will be output.   Returns:   summary (dict): Summary of all evidences and their content.  Raises:   HTTPException: if there are no evidences.  # noqa: E501
         This method makes a synchronous HTTP request by default. To make an
         asynchronous HTTP request, please pass async_req=True
 
@@ -357,7 +357,7 @@ class TurbiniaEvidenceApi(object):
     def get_evidence_summary_with_http_info(self, sort : Optional[Any] = None, output : Optional[Any] = None, **kwargs) -> ApiResponse:  # noqa: E501
         """Get Evidence Summary  # noqa: E501
 
-        Retrieves a summary of all evidences in redis.  Args:   sort Optional(str): Attribute used to sort summary.  Returns:   summary (dict): Summary of all evidences and their content.  Raises:   HTTPException: if there are no evidences.  # noqa: E501
+        Retrieves a summary of all evidences in Redis.  Args:   sort Optional(str): Attribute used to sort summary.   output Optional(str): Sets how the evidence found will be output.   Returns:   summary (dict): Summary of all evidences and their content.  Raises:   HTTPException: if there are no evidences.  # noqa: E501
         This method makes a synchronous HTTP request by default. To make an
         asynchronous HTTP request, please pass async_req=True
 
@@ -605,6 +605,7 @@ class TurbiniaEvidenceApi(object):
     def query_evidence(self, attribute_value : Any, attribute_name : Optional[Any] = None, output : Optional[Any] = None, **kwargs) -> object:  # noqa: E501
         """Query Evidence  # noqa: E501
 
+        Queries evidence in Redis that have the specified attribute value.  Args:   attribute_name (str): Name of attribute to be queried.   attribute_value (str): Value the attribute must have.   output Optional(str): Sets how the evidence found will be output.  Returns:   summary (dict): Summary of all evidences and their content.  Raises:   HTTPException: If no matching evidence is found.  # noqa: E501
         This method makes a synchronous HTTP request by default. To make an
         asynchronous HTTP request, please pass async_req=True
 
@@ -637,6 +638,7 @@ class TurbiniaEvidenceApi(object):
     def query_evidence_with_http_info(self, attribute_value : Any, attribute_name : Optional[Any] = None, output : Optional[Any] = None, **kwargs) -> ApiResponse:  # noqa: E501
         """Query Evidence  # noqa: E501
 
+        Queries evidence in Redis that have the specified attribute value.  Args:   attribute_name (str): Name of attribute to be queried.   attribute_value (str): Value the attribute must have.   output Optional(str): Sets how the evidence found will be output.  Returns:   summary (dict): Summary of all evidences and their content.  Raises:   HTTPException: If no matching evidence is found.  # noqa: E501
         This method makes a synchronous HTTP request by default. To make an
         asynchronous HTTP request, please pass async_req=True
 
