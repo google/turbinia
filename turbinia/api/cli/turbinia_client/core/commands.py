@@ -18,9 +18,8 @@ import os
 import logging
 import click
 import base64
+import mimetypes
 import tarfile
-
-from fastapi import UploadFile
 
 from turbinia_api_lib import exceptions
 from turbinia_api_lib import api_client
@@ -33,9 +32,6 @@ from turbinia_api_lib.api import turbinia_evidence_api
 
 from turbinia_client.core import groups
 from turbinia_client.helpers import formatter
-
-from turbinia.processors.mount_local import GetDiskSize
-from turbinia.config.turbinia_config_tmpl import MAX_UPLOAD_SIZE
 
 log = logging.getLogger('turbinia')
 
@@ -309,7 +305,7 @@ def create_request(ctx: click.Context, *args: int, **kwargs: int) -> None:
 def get_evidence_summary(
     ctx: click.Context, sort: str = None, values: bool = False,
     count: bool = False, json_dump: bool = False) -> None:
-  """Gets Turbinia evidence status."""
+  """Gets Turbinia evidence summary."""
   client: api_client.ApiClient = ctx.obj.api_client
   api_instance = turbinia_evidence_api.TurbiniaEvidenceApi(client)
   try:
@@ -341,7 +337,7 @@ def get_evidence_summary(
 def query_evidence(
     ctx: click.Context, attribute: str, value: str, values: bool, count: bool,
     json_dump: bool) -> None:
-  """Gets Turbinia task status."""
+  """Queries Turbinia evidence."""
   client: api_client.ApiClient = ctx.obj.api_client
   api_instance = turbinia_evidence_api.TurbiniaEvidenceApi(client)
   try:
@@ -374,7 +370,7 @@ def query_evidence(
 def get_evidence(
     ctx: click.Context, evidence_id: str, show_ignored: bool, show_null: bool,
     json_dump: bool) -> None:
-  """Gets Turbinia evidence status."""
+  """Get Turbinia evidence."""
   client: api_client.ApiClient = ctx.obj.api_client
   api_instance = turbinia_evidence_api.TurbiniaEvidenceApi(client)
   try:
@@ -395,9 +391,12 @@ def get_evidence(
 @click.pass_context
 @click.argument('ticket_id')
 @click.option(
-    '--file', '-f', help='List of files', required=False, multiple=True)
+    '--file', '-f', help='Path of file to be uploaded.', required=False,
+    multiple=True)
 @click.option(
-    '--directory', '-d', help='Directory of files', required=False,
+    '--directory', '-d', help=(
+        'Path of directory of files to be uploaded '
+        '(does not include files in subfolders).'), required=False,
     multiple=True)
 @click.option(
     '--calculate_hash', '-c', help='Calculates file hash.', is_flag=True,
@@ -408,34 +407,54 @@ def get_evidence(
 def upload_evidence(
     ctx: click.Context, ticket_id: str, file: list, directory: list,
     calculate_hash: bool, json_dump: bool) -> None:
-  """Gets Turbinia evidence status."""
+  """Uploads evidence to Turbinia server."""
   client: api_client.ApiClient = ctx.obj.api_client
+  api_instance_config = turbinia_configuration_api.TurbiniaConfigurationApi(
+      client)
+  max_upload_size = api_instance_config.read_config()['MAX_UPLOAD_SIZE']
   api_instance = turbinia_evidence_api.TurbiniaEvidenceApi(client)
-  files = []
-  for file_path in file:
+  all_files = list(file)
+  for current_directory in directory:
+    for file_name in os.listdir(current_directory):
+      file_path = os.path.join(current_directory, file_name)
+      if os.path.isfile(file_path):
+        all_files.append(file_path)
+  report = {}
+  for file_path in all_files:
     try:
       size = os.path.getsize(file_path)
-      if size > MAX_UPLOAD_SIZE:
+      if size > max_upload_size:
         error_message = (
             f'Unable to upload {size / (1024 ** 3)} GB file',
-            f'{file_path} greater than {MAX_UPLOAD_SIZE / (1024 ** 3)} GB')
+            f'{file_path} greater than {max_upload_size / (1024 ** 3)} GB')
         log.error(error_message)
         continue
-      files.append(open(file_path, 'rb').read())
+      abs_path = os.path.abspath(file_path)
+      with open(file_path, 'rb') as f:
+        filename = os.path.basename(f.name)
+        filedata = f.read()
+        mimetype = (
+            mimetypes.guess_type(filename)[0] or 'application/octet-stream')
+        upload_file = tuple([filename, filedata, mimetype])
     except OSError:
       log.error(f'Unable to read file in {file_path}')
       continue
-  try:
-    api_response = api_instance.upload_evidence(
-        calculate_hash, files, ticket_id)
-    if json_dump:
-      formatter.echo_json(api_response)
-    else:
-      report = '\n'.join(
-          formatter.EvidenceMarkdownReport(api_response).list_to_markdown(
-              api_response))
-      click.echo(report)
-  except exceptions.ApiException as exception:
-    log.error(
-        f'Received status code {exception.status} '
-        f'when calling upload_evidence: {exception.body}')
+    try:
+      api_response = api_instance.upload_evidence(
+          upload_file, ticket_id, calculate_hash)
+      report[abs_path] = api_response
+    except exceptions.ApiException as exception:
+      error_message = (
+          f'Received status code {exception.status} '
+          f'when calling upload_evidence: {exception}')
+      log.error(error_message)
+      report[abs_path] = error_message
+  if not all_files:
+    log.error('No file was passed in the arguments.')
+  elif json_dump:
+    formatter.echo_json(report)
+  else:
+    report = '\n'.join(
+        formatter.EvidenceMarkdownReport({}).dict_to_markdown(
+            report, 0, format_name=False))
+    click.echo(report)

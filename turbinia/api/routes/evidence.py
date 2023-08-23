@@ -38,7 +38,7 @@ EVIDENCE_SUMMARY_ATTRIBUTES = (
     'description', 'has_child_evidence', 'last_updated', 'local_path',
     'mount_path', 'parent_evidence', 'request_id', 'resource_id',
     'resource_tracked', 'save_metadata', 'saved_path', 'saved_path_type',
-    'size', 'source', 'source_path', 'tasks', 'type', 'creation_time')
+    'size', 'source', 'source_path', 'tasks', 'type')
 
 EVIDENCE_QUERY_ATTRIBUTES = EVIDENCE_SUMMARY_ATTRIBUTES + ('tasks',)
 
@@ -55,9 +55,9 @@ async def get_file_path(file_name: str, ticket_id: str) -> str:
   """
   file_name = os.path.splitext(file_name)[0]
   file_extension = os.path.splitext(file_name)[1]
-  new_name = ''.join((
-      file_name, '_', datetime.now().strftime(
-          turbinia_config.DATETIME_FORMAT), file_extension))
+  file_extension = '.' + file_extension if file_extension else ''
+  current_time = datetime.now().strftime(turbinia_config.DATETIME_FORMAT)
+  new_name = (f'{file_name}_{current_time}{file_extension}')
   os.makedirs(f'{turbinia_config.OUTPUT_DIR}/{ticket_id}', exist_ok=True)
   return os.path.join(turbinia_config.OUTPUT_DIR, ticket_id, new_name)
 
@@ -88,7 +88,7 @@ async def upload_file(
       saved_file.write(chunk)
       if calculate_hash:
         sha_hash.update(chunk)
-      size += turbinia_config.CHUNK_SIZE
+      size += len(chunk)
       if size >= turbinia_config.MAX_UPLOAD_SIZE:
         error_message = (
             f'Unable to upload file {file.filename} greater',
@@ -96,7 +96,7 @@ async def upload_file(
         log.error(error_message)
         raise IOError(error_message)
     file_info = {
-        'uploaded_name': file.filename,
+        'original_name': file.filename,
         'file_name': os.path.basename(file_path),
         'file_path': file_path,
         'size': size
@@ -115,7 +115,7 @@ async def get_evidence_types(request: Request):
 
 @router.get('/types/{evidence_type}')
 async def get_evidence_attributes(request: Request, evidence_type):
-  """Returns supported Evidence object types and required parameters.
+  """Returns supported required parameters for evidence type.
   
   Args:
     evidence_type (str): Name of evidence type.
@@ -132,10 +132,11 @@ async def get_evidence_attributes(request: Request, evidence_type):
 async def get_evidence_summary(
     request: Request, sort: str = Query(None, enum=EVIDENCE_SUMMARY_ATTRIBUTES),
     output: str = Query('keys', enum=('keys', 'values', 'count'))):
-  """Retrieves a summary of all evidences in redis.
+  """Retrieves a summary of all evidences in Redis.
 
   Args:
     sort Optional(str): Attribute used to sort summary.
+    output Optional(str): Sets how the evidence found will be output. 
 
   Returns:
     summary (dict): Summary of all evidences and their content.
@@ -159,6 +160,19 @@ async def query_evidence(
         'request_id', enum=EVIDENCE_QUERY_ATTRIBUTES),
     attribute_value: str = Query(), output: str = Query(
         'keys', enum=('keys', 'values', 'count'))):
+  """Queries evidence in Redis that have the specified attribute value.
+
+  Args:
+    attribute_name (str): Name of attribute to be queried.
+    attribute_value (str): Value the attribute must have.
+    output Optional(str): Sets how the evidence found will be output.
+
+  Returns:
+    summary (dict): Summary of all evidences and their content.
+  
+  Raises:
+    HTTPException: If no matching evidence is found.
+  """
   if attribute_name and attribute_name not in EVIDENCE_QUERY_ATTRIBUTES:
     raise HTTPException(
         status_code=400, detail=(
@@ -180,7 +194,7 @@ async def query_evidence(
 
 @router.get('/{evidence_id}')
 async def get_evidence_by_id(request: Request, evidence_id):
-  """Retrieves an evidence in redis by using its UUID.
+  """Retrieves an evidence in Redis by using its UUID.
 
   Args:
     evidence_id (str): The UUID of the evidence.
@@ -191,7 +205,7 @@ async def get_evidence_by_id(request: Request, evidence_id):
   Returns:
     Dictionary of the stored evidence
   """
-  if stored_evidence := redis_manager.get_evidence(evidence_id):
+  if stored_evidence := redis_manager.get_evidence_data(evidence_id):
     return JSONResponse(content=stored_evidence, status_code=200)
   raise HTTPException(
       status_code=404,
@@ -200,9 +214,8 @@ async def get_evidence_by_id(request: Request, evidence_id):
 
 @router.post('/upload')
 async def upload_evidence(
-    ticket_id: Annotated[str, Form()], calculate_hash: Annotated[bool,
-                                                                 Form()],
-    files: List[UploadFile]):
+    ticket_id: Annotated[str, Form()], files: List[UploadFile],
+    calculate_hash: Annotated[bool, Form()] = False):
   """Upload evidence file to server for processing.
 
   Args:
