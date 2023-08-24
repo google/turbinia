@@ -63,6 +63,7 @@ def _image_export(command, output_dir, disk_path, timeout=DEFAULT_TIMEOUT):
     log.debug('DOCKER stderr: {0:s}'.format(stderr))
     log.debug('DOCKER ret: {0:d}'.format(ret))
   else: # execute with local install of image_export.py
+    command.insert(0,'sudo')
     log.debug(f"Running image_export as [{' '.join(command):s}]")
     try:
       subprocess.check_call(command, timeout=timeout)
