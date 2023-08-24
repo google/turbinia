@@ -665,7 +665,7 @@ class TurbiniaTask:
       log.debug('DOCKER stdout: {0:s}'.format(stdout))
       log.debug('DOCKER stderr: {0:s}'.format(stderr))
       log.debug('DOCKER ret: {0:d}'.format(ret))
-    else: # Execute the job on the host system.
+    else:  # Execute the job on the host system.
       try:
         if shell:
           proc = subprocess.Popen(

@@ -44,11 +44,12 @@ def _image_export(command, output_dir, disk_path, timeout=DEFAULT_TIMEOUT):
     TurbiniaException: If an error occurs when running image_export.
   """
   # TODO: Consider using the exec helper to gather stdin/err.
-  
+
   # Execute the job via docker.
   if config.DOCKER_ENABLED == True:
     dependencies = config.ParseDependencies()
-    docker_image = dependencies['FileArtifactExtractionJob'.lower()]['docker_image']
+    docker_image = dependencies[
+        'FileArtifactExtractionJob'.lower()]['docker_image']
     log.debug('DOCKER docker_image: {0:s}'.format(docker_image))
     from turbinia.lib import docker_manager
     ro_paths = [disk_path]
@@ -62,8 +63,8 @@ def _image_export(command, output_dir, disk_path, timeout=DEFAULT_TIMEOUT):
     log.debug('DOCKER stdout: {0:s}'.format(stdout))
     log.debug('DOCKER stderr: {0:s}'.format(stderr))
     log.debug('DOCKER ret: {0:d}'.format(ret))
-  else: # execute with local install of image_export.py
-    command.insert(0,'sudo')
+  else:  # execute with local install of image_export.py
+    command.insert(0, 'sudo')
     log.debug(f"Running image_export as [{' '.join(command):s}]")
     try:
       subprocess.check_call(command, timeout=timeout)
@@ -102,8 +103,8 @@ def extract_artifacts(artifact_names, disk_path, output_dir, credentials=[]):
   # Plaso image_export expects artifact names as a comma separated string.
   artifacts = ','.join(artifact_names)
   image_export_cmd = [
-      'image_export.py', '--artifact_filters', artifacts, '--write',
-      output_dir, '--partitions', 'all', '--volumes', 'all', '--unattended'
+      'image_export.py', '--artifact_filters', artifacts, '--write', output_dir,
+      '--partitions', 'all', '--volumes', 'all', '--unattended'
   ]
 
   if credentials:
