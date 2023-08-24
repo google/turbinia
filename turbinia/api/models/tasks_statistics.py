@@ -83,9 +83,8 @@ class TasksStatistics(BaseModel):
       user = task.get('requester')
       if not task.get('run_time'):
         log.debug(
-            'Ignoring task {0:s} in statistics because the run_time is not '
-            'set, and it is required to calculate stats'.format(
-                task.get('name')))
+            f'Ignoring task {task.get("name")} in statistics because the '
+            f'run_time is not set, and it is required to calculate stats')
         continue
 
       # Stats for all/successful/failed tasks

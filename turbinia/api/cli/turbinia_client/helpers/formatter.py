@@ -409,7 +409,6 @@ class StatsMarkdownReport(MarkdownReportComponent):
             f'{description}:'
         ) if markdown else f'{stat_group.split(" ")[-1]} {description}'
         self.stat_to_row(first_column, inner_dict)
-
     return pandas.DataFrame(self.table_dict)
 
   def ljust(self, s):
@@ -424,16 +423,11 @@ class StatsMarkdownReport(MarkdownReportComponent):
       markdown(str): Markdown version of task statistics.
     """
     report = [self.heading1('Execution time statistics for Turbinia:')]
-
     data_frame = self.generate_data_frame(True)
-
     data_frame = data_frame.rename(columns={'TASK': self.heading2('TASK')})
-
     table = data_frame.apply(self.ljust).to_string(
         index=False, justify='left', col_space=8)
-
     report.append(table)
-
     return '\n'.join(report)
 
   def generate_csv(self) -> str:
