@@ -2,13 +2,14 @@ version: "3.2"
 services:
     dind:
         image: docker:24.0.5-dind
+        hostname: dind
         privileged: true
         expose:
-            - 2375
-        environment:
-            - DOCKER_TLS_CERTDIR=
+            - 2376
         healthcheck:
             test: docker ps
+        volumes:
+            - $PWD/certs:/certs
 
     redis:
         image: "redis:alpine"
@@ -65,12 +66,15 @@ services:
         volumes:
             - $PWD/evidence:/evidence
             - $PWD/conf/turbinia.conf:/etc/turbinia/turbinia.conf
+            - $PWD/certs:/certs
 
         environment:
             - LC_ALL=C.UTF-8
             - LANG=C.UTF-8
             - TURBINIA_EXTRA_ARGS=${TURBINIA_EXTRA_ARGS}
-            - DOCKER_HOST=tcp://dind:2375
+            - DOCKER_HOST=tcp://dind:2376
+            - DOCKER_TLS_VERIFY=1
+            - DOCKER_CERT_PATH=/certs/client
 
     # Uncomment below in case you want to run a second worker on the same host.
     #  turbinia-worker2:

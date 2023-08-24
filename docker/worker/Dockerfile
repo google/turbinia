@@ -67,12 +67,12 @@ RUN apt-get update && apt-get -y install \
     bulk-extractor \
     dfimagetools-tools \
     docker-explorer-tools \
-#     libbde-tools \
-#     libewf \
-#     libewf-python3 \
-#     libewf-tools \
-#     libfsapfs-tools \
-#     libluksde-tools \
+    libbde-tools \
+    libewf \
+    libewf-python3 \
+    libewf-tools \
+    libfsapfs-tools \
+    libluksde-tools \
 #     plaso-tools \
 #     python3-dfimagetools \
     python3-dfvfs \
