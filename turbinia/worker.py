@@ -84,8 +84,10 @@ def check_docker_dependencies(dependencies):
     if docker_image and len(docker_image) > 10:
       docker_image = docker_image[0:10]
 
-    if docker_image in images:
-      for program in values['programs']:
+    # if docker_image in images:
+    for program in values['programs']:
+      if values['docker_image'] != None:
+        log.info('docker_image: {0:s}'.format(values['docker_image']))
         cmd = f'type {program:s}'
         stdout, stderr, ret = docker_manager.ContainerManager(
             values['docker_image']).execute_container(cmd, shell=True)
@@ -94,12 +96,12 @@ def check_docker_dependencies(dependencies):
               'Job dependency {0:s} not found for job {1:s}. Please install '
               'the dependency for the container or disable the job.'.format(
                   program, job))
-      job_manager.JobsManager.RegisterDockerImage(job, values['docker_image'])
-    elif docker_image:
-      raise TurbiniaException(
-          'Docker image {0:s} was not found for the job {1:s}. Please '
-          'update the config with the correct image id'.format(
-              values['docker_image'], job))
+        job_manager.JobsManager.RegisterDockerImage(job, values['docker_image'])
+  # elif docker_image:
+    #   raise TurbiniaException(
+    #       'Docker image {0:s} was not found for the job {1:s}. Please '
+    #       'update the config with the correct image id'.format(
+    #           values['docker_image'], job))
 
 
 def check_system_dependencies(dependencies):

@@ -61,22 +61,22 @@ RUN pip3 install dfDewey
 #   Sleuthkit
 
 RUN curl -sS https://keyserver.ubuntu.com/pks/lookup?op=get\&search=0x3ed1eaece81894b171d7da5b5e80511b10c598b8 | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/gift.gpg
-#RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 0x5e80511b10c598b8 \
+# #RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 0x5e80511b10c598b8 \
 RUN add-apt-repository -y ppa:gift/$PPA_TRACK
 RUN apt-get update && apt-get -y install \
     bulk-extractor \
     dfimagetools-tools \
     docker-explorer-tools \
-    libbde-tools \
-    libewf \
-    libewf-python3 \
-    libewf-tools \
-    libfsapfs-tools \
-    libluksde-tools \
-    plaso-tools \
-    python3-dfimagetools \
+#     libbde-tools \
+#     libewf \
+#     libewf-python3 \
+#     libewf-tools \
+#     libfsapfs-tools \
+#     libluksde-tools \
+#     plaso-tools \
+#     python3-dfimagetools \
     python3-dfvfs \
-    python3-plaso \
+#     python3-plaso \
     sleuthkit \
     --option Acquire::ForceIPv4=true --option Acquire::Retries=100 --option Acquire::http::Timeout=60
 
@@ -122,6 +122,11 @@ RUN chmod +x /tmp/container-explorer-setup.sh
 RUN sudo /tmp/container-explorer-setup.sh install
 
 ADD . /tmp/
+
+# Install docker cli
+RUN wget -O /tmp/docker.deb https://download.docker.com/linux/ubuntu/dists/jammy/pool/stable/amd64/docker-ce-cli_24.0.5-1~ubuntu.22.04~jammy_amd64.deb
+RUN dpkg -i /tmp/docker.deb
+
 # unshallow and fetch all tags so our build systems pickup the correct git tag if it's a shallow clone
 RUN if $(cd /tmp/ && git rev-parse --is-shallow-repository); then cd /tmp/ && git fetch --prune --unshallow && git fetch --depth=1 origin +refs/tags/*:refs/tags/*; fi
 RUN cd /tmp/ && python3 setup.py install

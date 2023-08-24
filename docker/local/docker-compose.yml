@@ -1,5 +1,15 @@
 version: "3.2"
 services:
+    dind:
+        image: docker:24.0.5-dind
+        privileged: true
+        expose:
+            - 2375
+        environment:
+            - DOCKER_TLS_CERTDIR=
+        healthcheck:
+            test: docker ps
+
     redis:
         image: "redis:alpine"
 
@@ -44,10 +54,13 @@ services:
             - TURBINIA_EXTRA_ARGS=${TURBINIA_EXTRA_ARGS}
 
     turbinia-worker:
-        #image: "turbinia-worker-dev" # Use this for local development and comment out below line
-        image: "us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-worker:latest" # Latest stable
+        image: "turbinia-worker-dev" # Use this for local development and comment out below line
+        #image: "us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-worker:latest" # Latest stable
         container_name: turbinia-worker
         privileged: true
+        depends_on:
+            dind:
+                condition: service_healthy
 
         volumes:
             - $PWD/evidence:/evidence
@@ -57,6 +70,8 @@ services:
             - LC_ALL=C.UTF-8
             - LANG=C.UTF-8
             - TURBINIA_EXTRA_ARGS=${TURBINIA_EXTRA_ARGS}
+            - DOCKER_HOST=tcp://dind:2375
+
     # Uncomment below in case you want to run a second worker on the same host.
     #  turbinia-worker2:
     #     #image: "turbinia-worker-dev" # Use this for local development and comment out below line
