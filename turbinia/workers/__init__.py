@@ -646,6 +646,7 @@ class TurbiniaTask:
       timeout_limit = job_manager.JobsManager.GetTimeoutValue(self.job_name)
 
     # Execute the job via docker.
+    log.debug('DOCKER job_name: {0:s}'.format(self.job_name))
     docker_image = job_manager.JobsManager.GetDockerImage(self.job_name)
     if docker_image:
       log.debug('DOCKER docker_image: {0:s}'.format(docker_image))
@@ -663,13 +664,8 @@ class TurbiniaTask:
           timeout_limit=timeout_limit)
       log.debug('DOCKER stdout: {0:s}'.format(stdout))
       log.debug('DOCKER stderr: {0:s}'.format(stderr))
-      log.debug('DOCKER ret: {0:s}'.format(ret))
-
-
-
-
-    # Execute the job on the host system.
-    else:
+      log.debug('DOCKER ret: {0:d}'.format(ret))
+    else: # Execute the job on the host system.
       try:
         if shell:
           proc = subprocess.Popen(
