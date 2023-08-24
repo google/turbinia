@@ -266,6 +266,7 @@ class ContainerManager(DockerManager):
       args[key] = value
 
     try:
+      log.debug('DOCKER cmd: {0:s}'.format(cmd))
       container = self.client.containers.create(self.image, cmd, **args)
       container.start()
       # Stream program stdout from container
@@ -282,8 +283,9 @@ class ContainerManager(DockerManager):
       log.error(message)
       raise TurbiniaException(message)
 
-    log.info(results)
-    log.info(stdout)
+    log.debug('DOCKER results manager dict:')
+    log.debug(results)
+    log.debug('DOCKER stdout manager: {0:s}'.format(stdout))
 
     stderr = ""
     ret = results['StatusCode']

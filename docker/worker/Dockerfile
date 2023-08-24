@@ -57,7 +57,6 @@ RUN pip3 install dfDewey
 #   libbde-tools
 #   libfsapfs-tools
 #   libluksde-tools
-#   Plaso
 #   Sleuthkit
 
 RUN curl -sS https://keyserver.ubuntu.com/pks/lookup?op=get\&search=0x3ed1eaece81894b171d7da5b5e80511b10c598b8 | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/gift.gpg
@@ -73,10 +72,7 @@ RUN apt-get update && apt-get -y install \
     libewf-tools \
     libfsapfs-tools \
     libluksde-tools \
-#     plaso-tools \
-#     python3-dfimagetools \
     python3-dfvfs \
-#     python3-plaso \
     sleuthkit \
     --option Acquire::ForceIPv4=true --option Acquire::Retries=100 --option Acquire::http::Timeout=60
 

@@ -646,8 +646,8 @@ class TurbiniaTask:
 
     # Execute the job via docker.
     docker_image = job_manager.JobsManager.GetDockerImage(self.job_name)
-    log.info('job docker_image: {0:s}'.format(docker_image))
     if docker_image:
+      log.debug('DOCKER docker_image: {0:s}'.format(docker_image))
       from turbinia.lib import docker_manager
       ro_paths = []
       for path in ['local_path', 'source_path', 'device_path', 'mount_path']:
@@ -660,7 +660,11 @@ class TurbiniaTask:
       stdout, stderr, ret = container_manager.execute_container(
           cmd, shell, ro_paths=ro_paths, rw_paths=rw_paths,
           timeout_limit=timeout_limit)
-      log.info('job docker stdout: {0:s}'.format(stdout))
+      log.debug('DOCKER stdout: {0:s}'.format(stdout))
+      log.debug('DOCKER stderr: {0:s}'.format(stderr))
+      log.debug('DOCKER ret: {0:s}'.format(ret))
+
+
 
 
     # Execute the job on the host system.
