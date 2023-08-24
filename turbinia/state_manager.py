@@ -314,6 +314,7 @@ class RedisStateManager(BaseStateManager):
     task_data = self.get_task_dict(task)
     task_data['last_update'] = task_data['last_update'].strftime(
         DATETIME_FORMAT)
+    task_data['start_time'] = task_data['start_time'].strftime(DATETIME_FORMAT)
     # Need to use json.dumps, else redis returns single quoted string which
     # is invalid json
     if not self.client.set(key, json.dumps(task_data)):
@@ -325,6 +326,7 @@ class RedisStateManager(BaseStateManager):
     task_data = self.get_task_dict(task)
     task_data['last_update'] = task_data['last_update'].strftime(
         DATETIME_FORMAT)
+    task_data['start_time'] = task_data['start_time'].strftime(DATETIME_FORMAT)
     if not task_data.get('status'):
       task_data['status'] = 'Task scheduled at {0:s}'.format(
           datetime.now().strftime(DATETIME_FORMAT))

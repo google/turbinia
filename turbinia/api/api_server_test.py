@@ -197,6 +197,30 @@ class testTurbiniaAPIServer(unittest.TestCase):
     self.assertEqual(expected_result, result)
 
   @mock.patch('turbinia.state_manager.RedisStateManager.get_task_data')
+  def testRequestEvidenceNoArgs(self, testTaskData):
+    """Test getting Turbinia Request evidence name without all_args."""
+    redis_client = fakeredis.FakeStrictRedis()
+    input_task = TurbiniaTask().deserialize(self._TASK_TEST_DATA)
+    input_task_serialized = input_task.serialize()
+    input_task_serialized.pop('all_args')
+    expected_result = self._REQUEST_TEST_DATA['evidence_name']
+
+    redis_client.set(
+        'TurbiniaTask:41483253079448e59685d88f37ab91f7',
+        json.dumps(input_task_serialized))
+
+    testTaskData.return_value = [
+        json.loads(
+            redis_client.get('TurbiniaTask:41483253079448e59685d88f37ab91f7'))
+    ]
+
+    result = self.client.get('/api/request/summary')
+    result = json.loads(result.content)
+    evidence_name = result['requests_status'][0]['evidence_name']
+
+    self.assertEqual(expected_result, evidence_name)
+
+  @mock.patch('turbinia.state_manager.RedisStateManager.get_task_data')
   def testRequestNotFound(self, testTaskData):
     """Test getting invalid Turbinia Request status."""
     expected_result = {
