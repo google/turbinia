@@ -53,6 +53,7 @@ class TurbiniaCelery:
     self.app = celery.Celery(
         'turbinia', broker=config.CELERY_BROKER, backend=config.CELERY_BACKEND)
     self.app.conf.update(
+        broker_connection_retry_on_startup=True,
         task_default_queue=config.INSTANCE_ID,
         accept_content=['json'],
         task_acks_late=True,
