@@ -286,7 +286,7 @@ class ContainerManager(DockerManager):
     log.debug(results)
     log.debug('DOCKER stdout manager: {0:s}'.format(stdout))
 
-    stderr = ""
+    stderr = None
     ret = results['StatusCode']
     if ret != 0:
       stderr = results['Error']

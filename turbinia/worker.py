@@ -70,7 +70,6 @@ def check_docker_dependencies(dependencies):
   # does not have bash or which installed. (no linux fs layer).
   log.info('Performing docker dependency check.')
   job_names = list(job_manager.JobsManager.GetJobNames())
-  images = docker_manager.DockerManager().list_images(return_filter='short_id')
 
   # Iterate through list of jobs
   for job, values in dependencies.items():

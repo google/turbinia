@@ -173,11 +173,6 @@ class TestTurbiniaPsqWorker(unittest.TestCase):
     mock_cm.execute_container.return_value = ['exists', None, 0]
     check_docker_dependencies(dependencies)
 
-    # Docker image not found
-    mock_dm.list_images.return_value = ['non_exist']
-    self.assertRaises(
-        TurbiniaException, check_docker_dependencies, dependencies)
-
     # Job not found.
     dependencies['non_exist'] = dependencies.pop('plasojob')
     check_docker_dependencies(dependencies)
