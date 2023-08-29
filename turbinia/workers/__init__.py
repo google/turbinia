@@ -262,6 +262,17 @@ class TurbiniaTaskResult:
           'during Task execution and this may result in resources (e.g. '
           'mounted disks) accumulating on the Worker.', level=logging.WARNING)
 
+    # Updates evidence objects in Redis
+    for evidence in self.evidence:
+      if isinstance(evidence, evidence.Evidence):
+        try:
+          evidence.validate_attributes()
+        except TurbiniaException as exception:
+          log.error(f'Error updating evidence in redis: {exception}')
+        else:
+          self.state_manager.write_evidence(
+              evidence.serialize(json_values=True), allow_overwrite=False)
+
     # Now that we've post-processed the input_evidence, we can unset it
     # because we don't need to return it.
     self.input_evidence = None
@@ -441,7 +452,7 @@ class TurbiniaTask:
 
   # The list of attributes that we will persist into storage
   STORED_ATTRIBUTES = [
-      'id', 'job_id', 'start_time', 'last_update', 'name', 'evidence_name', 
+      'id', 'job_id', 'start_time', 'last_update', 'name', 'evidence_name',
       'evidence_id', 'evidence_size', 'request_id', 'requester', 'group_name',
       'reason', 'all_args', 'group_id'
   ]

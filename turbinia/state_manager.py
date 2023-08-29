@@ -26,7 +26,7 @@ import logging
 import sys
 from datetime import datetime
 from datetime import timedelta
-from typing import Any
+from typing import Any, Iterator
 
 import six
 
@@ -318,10 +318,10 @@ class RedisStateManager(BaseStateManager):
     # Need to use json.dumps, else redis returns single quoted string which
     # is invalid json
     if not self.client.set(key, json.dumps(task_data)):
-      log.error(f'Error in updating task {task.name:s} in Redis')
+      log.error(f'Error updating task {task.name:s} in Redis')
 
   def write_new_task(self, task):
-    key = ':'.join(('TurbiniaTask', task.id))
+    key = ':'.join(['TurbiniaTask', task.id])
     log.info(f'Writing new task {task.name:s} into Redis')
     task_data = self.get_task_dict(task)
     task_data['last_update'] = task_data['last_update'].strftime(
@@ -334,23 +334,9 @@ class RedisStateManager(BaseStateManager):
       task_data['run_time'] = task_data['run_time'].total_seconds()
     # nx=True prevents overwriting (i.e. no unintentional task clobbering)
     if not self.client.set(key, json.dumps(task_data), nx=True):
-      log.error(f'Error in writing new task {task.name:s} into Redis')
+      log.error(f'Error writing new task {task.name:s} into Redis')
     task.state_key = key
     return key
-
-  def handle_exception(self, exception: Exception, problem: str):
-    """Iterates over the Turbinia keys of a specific type.
-
-    Args:
-      exception (Exception): The exception to be handled.
-      problem (str): The problem that caused the exception.
-
-    Raises:
-      TurbiniaException (str): Formated exception. 
-    """
-    error_message = f'Error in {problem} in Redis'
-    log.error(f'{error_message}: {exception}')
-    raise TurbiniaException(error_message) from exception
 
   def set_attribute(
       self, redis_key: str, attribute_name: str, json_value: str) -> bool:
@@ -366,12 +352,14 @@ class RedisStateManager(BaseStateManager):
     """
     try:
       if not self.client.hset(redis_key, attribute_name, json_value):
-        log.error(f'Error in setting {attribute_name} on {redis_key} in Redis')
+        log.error(f'Error setting {attribute_name} on {redis_key} in Redis')
         return False
       return True
     except redis.RedisError as exception:
-      self.handle_exception(
-          exception, f'setting {attribute_name} on {redis_key}')
+      error_message = (
+          f'Error setting {attribute_name} on {redis_key} in Redis')
+      log.error(f'{error_message}: {exception}')
+      raise TurbiniaException(error_message) from exception
 
   def get_attribute(
       self, redis_key: str, attribute_name: str,
@@ -387,24 +375,29 @@ class RedisStateManager(BaseStateManager):
       attribute_value (any): sucessful. 
     """
     try:
-      json_attribute = self.client.hget(redis_key, attribute_name)
+      attribute_value = self.client.hget(redis_key, attribute_name)
     except redis.RedisError as exception:
-      self.handle_exception(
-          exception, f'getting {attribute_name} from {redis_key}')
+      error_message = (
+          f'Error getting {attribute_name} from {redis_key} in Redis')
+      log.error(f'{error_message}: {exception}')
+      raise TurbiniaException(error_message) from exception
     if decode_json:
       try:
-        return json.loads(json_attribute)
+        return json.loads(attribute_value)
       except (TypeError, ValueError) as exception:
-        self.handle_exception(
-            exception, f'decoding json {attribute_name} from {redis_key}')
+        error_message = (
+            f'Error decoding JSON {attribute_name} on {redis_key} '
+            f'in Redis')
+        log.error(f'{error_message}: {exception}')
+        raise TurbiniaException(error_message) from exception
     else:
-      return json_attribute
+      return attribute_value
 
-  def iterate_keys(self, key_type: str) -> str:
+  def iterate_keys(self, key_type: str) -> Iterator[str]:
     """Iterates over the Turbinia keys of a specific type.
 
     Args:
-      key_type (str): The type of the Turbinia key.
+      key_type (str): The type of the Turbinia key (e.g. Task, Evidence)
 
     Yields:
       key (str): Decoded key of stored Turbinia object. 
@@ -412,14 +405,18 @@ class RedisStateManager(BaseStateManager):
     try:
       keys = self.client.scan_iter(f'Turbinia{key_type.title()}:*')
     except redis.RedisError as exception:
-      self.handle_exception(exception, f'getting {key_type} keys')
+      error_message = f'Error getting {key_type} keys in Redis'
+      log.error(f'{error_message}: {exception}')
+      raise TurbiniaException(error_message) from exception
     try:
       for key in keys:
         yield key.decode()
     except ValueError as exception:
-      self.handle_exception(exception, 'decoding key')
+      error_message = 'Error decoding key in Redis'
+      log.error(f'{error_message}: {exception}')
+      raise TurbiniaException(error_message) from exception
 
-  def iterate_attribute_names(self, key: str) -> str:
+  def iterate_attribute_names(self, key: str) -> Iterator[str]:
     """Iterates over the attribute names of the Redis hash object.
 
     Args:
@@ -431,14 +428,18 @@ class RedisStateManager(BaseStateManager):
     try:
       attributes = self.client.hscan_iter(key)
     except redis.RedisError as exception:
-      self.handle_exception(exception, f'getting attributes from {key}')
+      error_message = f'Error getting attributes from {key} in Redis'
+      log.error(f'{error_message}: {exception}')
+      raise TurbiniaException(error_message) from exception
     try:
       for attribute in attributes:
-        yield attribute[0].decode()
-    except ValueError as exception:
-      self.handle_exception(exception, f'decoding attribute in {key}')
+        yield (attribute[0].decode(), json.loads(attribute[1]))
+    except (TypeError, ValueError) as exception:
+      error_message = f'Error decoding attribute in {key} in Redis'
+      log.error(f'{error_message}: {exception}')
+      raise TurbiniaException(error_message) from exception
 
-  def key_exists(self, key) -> bool:
+  def key_exists(self, redis_key) -> bool:
     """Checks if the key is saved in Redis.
 
     Args:
@@ -448,12 +449,31 @@ class RedisStateManager(BaseStateManager):
       exists (bool): Boolean indicating if evidence is saved. 
     """
     try:
-      return self.client.exists(key)
+      return self.client.exists(redis_key)
     except redis.RedisError as exception:
-      self.handle_exception(exception, f'checking existence of {key}')
+      error_message = f'Error checking existence of {redis_key} in Redis'
+      log.error(f'{error_message}: {exception}')
+      raise TurbiniaException(error_message) from exception
 
-  def write_new_evidence(self, evidence_dict: dict[str]) -> str:
-    """Writes new evidence into redis.
+  def write_hash_object(self, redis_key, object_dict):
+    """Writes new hash object into redis.
+
+    Args:
+      object_dict (dict[str]): A dictionary containing the serialized
+      attributes that will be saved.
+
+    Returns:
+      redis_key (str): The key corresponding to the object in Redis
+    """
+    log.info(f'Writing hash object {redis_key} into Redis')
+    for attribute_name, attribute_value in object_dict.items():
+      # Only saves non-empty attributes
+      if attribute_value or attribute_value is False or attribute_value == 0:
+        self.set_attribute(redis_key, attribute_name, attribute_value)
+
+  def write_evidence(
+      self, evidence_dict: dict[str], allow_overwrite=True) -> str:
+    """Writes evidence into redis.
 
     Args:
       evidence_dict (dict[str]): A dictionary containing the serialized
@@ -462,35 +482,20 @@ class RedisStateManager(BaseStateManager):
     Returns:
       evidence_key (str): The key corresponding to the evidence in Redis
     """
-    evidence_key = ':'.join(
-        ('TurbiniaEvidence', json.loads(evidence_dict['id'])))
-    if not self.key_exists(evidence_key):
-      log.info(f'Writing new evidence {evidence_key} into Redis')
-      for attribute_name, attribute_value in evidence_dict.items():
-        self.set_attribute(evidence_key, attribute_name, attribute_value)
-      if evidence_hash := json.loads(evidence_dict.get('hash')):
+    try:
+      evidence_key = ':'.join(
+          ('TurbiniaEvidence', json.loads(evidence_dict['id'])))
+      evidence_hash = json.loads(evidence_dict.get('hash'))
+    except (TypeError, ValueError) as exception:
+      error_message = 'Error deserializing evidence attribute.'
+      log.error(f'{error_message}: {exception}')
+      raise TurbiniaException(error_message) from exception
+    if allow_overwrite or not self.key_exists(evidence_key):
+      self.write_hash_object(evidence_key, evidence_dict)
+      if evidence_hash:
         self.set_attribute(
             'TurbiniaEvidenceHashes', evidence_hash, evidence_key)
       return evidence_key
-
-  def update_evidence_attribute(
-      self, evidence_id: str, attribute_name: str, json_value: str):
-    """Updates one attribute of the evidence in Redis.
-
-    Args:
-      evidence_id (str): The ID of the stored evidence.
-      attribute_name (str): name of the attribute to be updated.
-      json_value (str): json value to be updated.
-    """
-    evidence_key = ':'.join(('TurbiniaEvidence', evidence_id))
-    if self.key_exists(evidence_key):
-      log.info(
-          f'Updating attribute {attribute_name} for evidence {evidence_key} '
-          f'in Redis')
-      if self.set_attribute(evidence_key, attribute_name, json_value):
-        if attribute_name == 'hash':
-          self.set_attribute(
-              'TurbiniaEvidenceHashes', json.loads(json_value), evidence_key)
 
   def get_evidence_data(self, evidence_id: str) -> dict:
     """Returns a dictionary representing an Evidence object given its ID.
@@ -503,31 +508,32 @@ class RedisStateManager(BaseStateManager):
     """
     evidence_key = ':'.join(('TurbiniaEvidence', evidence_id))
     evidence_dict = {}
-    for attribute_name in self.iterate_attribute_names(evidence_key):
-      evidence_dict[attribute_name] = self.get_attribute(
-          evidence_key, attribute_name)
+    for attribute_name, attribute_value in self.iterate_attribute_names(
+        evidence_key):
+      evidence_dict[attribute_name] = attribute_value
     return evidence_dict
 
   def get_evidence_summary(
-      self, sort: str = None, output: str = 'keys') -> dict | int:
+      self, group: str = None, output: str = 'keys') -> dict | list | int:
     """Gets a summary of all evidences.
 
     Args:
-      sort (str): Name of the evidence attribute used to sort the output.
-      output (str): Value to be output by the function (keys | values | count).
+      group (str): Name of the evidence attribute by wich evidence will be
+        grouped.
+      output (str): Output of the function (keys | content | count).
 
     Returns:
-      summary (dict | int): Object containing evidences. 
+      summary (dict | list | int): Object containing evidences. 
     """
-    if output == 'count' and not sort:
+    if output == 'count' and not group:
       return sum(1 for _ in self.iterate_keys('Evidence'))
-    summary = {} if sort else []
+    summary = {} if group else []
     for evidence_key in self.iterate_keys('Evidence'):
       evidence_dictionary = self.get_evidence_data(evidence_key.split(':')[1])
-      stored_value = evidence_dictionary if output == 'values' else (
+      stored_value = evidence_dictionary if output == 'content' else (
           evidence_key)
-      if sort:
-        attribute_value = evidence_dictionary.get(sort, None)
+      if group:
+        attribute_value = evidence_dictionary.get(group, None)
         if attribute_value not in summary:
           summary[attribute_value] = [stored_value] if output != 'count' else 1
         elif output == 'count':
@@ -539,32 +545,32 @@ class RedisStateManager(BaseStateManager):
     return summary
 
   def query_evidence(
-      self, attribute_name: str, value: Any,
-      output: str = 'keys') -> dict | list | int:
-    """Queries for evidences with the specified attribute matching the passed
-    value.
+      self, attribute_name: str, attribute_value: Any,
+      output: str = 'keys') -> list | int:
+    """Queries for evidences with the specified attribute attribute_value.
 
     Args:
-      attribute_name (str): Name of the attribute containing the value.
-      value (Any): Value stored in the attribute.
-      output (str): Value to be output by the function (keys | values | count).
+      attribute_name (str): Name of the attribute to be queried.
+      attribute_value (Any): Value stored in the attribute.
+      output (str): Output of the function (keys | content | count).
 
     Returns:
-      query_result (dict | list | int): Result of the query. 
+      query_result (list | int): Result of the query. 
     """
     keys = []
     for evidence_key in self.iterate_keys('Evidence'):
-      if attribute_value := self.get_attribute(evidence_key, attribute_name):
-        if (attribute_name == 'tasks' and value in attribute_value
-           ) or attribute_value == value or str(attribute_value) == str(value):
+      if stored_value := self.get_attribute(evidence_key, attribute_name):
+        if (attribute_name == 'tasks' and attribute_value
+            in stored_value) or stored_value == attribute_value or str(
+                stored_value) == str(attribute_value):
           keys.append(evidence_key)
-    if output == 'values':
+    if output == 'content':
       return [self.get_evidence_data(key.split(':')[1]) for key in keys]
     elif output == 'count':
       return len(keys)
     return keys
 
-  def get_evidence_key_by_hash(self, file_hash: str):
+  def get_evidence_key_by_hash(self, file_hash: str) -> str | None:
     """Gets the evidence key given its hash.
 
     Args:
@@ -574,9 +580,10 @@ class RedisStateManager(BaseStateManager):
       key (str): Key of the stored evidence. 
     """
     if file_hash:
-      return self.get_attribute('TurbiniaEvidenceHashes', file_hash, False)
+      return self.get_attribute(
+          'TurbiniaEvidenceHashes', file_hash, decode_json=False)
 
-  def get_evidence_by_hash(self, file_hash: str):
+  def get_evidence_by_hash(self, file_hash: str) -> dict | None:
     """Gets the evidence given its hash.
 
     Args:

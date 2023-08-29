@@ -255,13 +255,13 @@ class BaseTaskManager:
         job_count += 1
         turbinia_jobs_total.inc()
 
-    try:
-      evidence_.validate_attributes()
-    except TurbiniaException as exception:
-      log.error(f'Unsuccessful in writing new evidence in redis: {exception}')
-    else:
-      if isinstance(evidence_, evidence.Evidence):
-        self.state_manager.write_new_evidence(evidence_.serialize(True))
+    if isinstance(evidence_, evidence.Evidence):
+      try:
+        evidence_.validate_attributes()
+      except TurbiniaException as exception:
+        log.error(f'Error writing new evidence to redis: {exception}')
+      else:
+        self.state_manager.write_evidence(evidence_.serialize(json_values=True))
 
     if not job_count:
       log.warning(
@@ -431,8 +431,6 @@ class BaseTaskManager:
     turbinia_server_tasks_total.inc()
     if task.id not in evidence_.tasks:
       evidence_.tasks.append(task.id)
-      # update_redis must be called, because append doesn't call __setattr__
-      evidence_.update_redis('tasks')
 
   def remove_jobs(self, request_id):
     """Removes the all Jobs for the given request ID.

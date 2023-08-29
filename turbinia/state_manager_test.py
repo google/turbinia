@@ -128,7 +128,7 @@ class TestRedisEvidenceStateManager(unittest.TestCase):
       test_data = test_data.read()
       self.test_data = json.loads(test_data)
 
-    self.sorted_values_summary = {
+    self.grouped_content_summary = {
         '6d6f85f44487441c9d4da1bda56ae90a': [
             self.test_data['TurbiniaEvidence:0114968b6293410e818eb1ec72db56f8'],
             self.test_data['TurbiniaEvidence:e2d9bff0c78b471e820db55080012f44']
@@ -137,7 +137,7 @@ class TestRedisEvidenceStateManager(unittest.TestCase):
             self.test_data['TurbiniaEvidence:b510ab6bf11a410da1fd9d9b128e7d74']
         ]
     }
-    self.sorted_keys_summary = {
+    self.grouped_keys_summary = {
         '6d6f85f44487441c9d4da1bda56ae90a': [
             'TurbiniaEvidence:0114968b6293410e818eb1ec72db56f8',
             'TurbiniaEvidence:e2d9bff0c78b471e820db55080012f44'
@@ -147,7 +147,7 @@ class TestRedisEvidenceStateManager(unittest.TestCase):
         ]
     }
 
-    self.sorted_count_summary = {True: 2, False: 1}
+    self.grouped_count_summary = {True: 2, False: 1}
 
   def write_evidence_in_fake_redis(self):
     for evidence_key, evidence_value in self.test_data.items():
@@ -189,7 +189,7 @@ class TestRedisEvidenceStateManager(unittest.TestCase):
     # Check if the returned evidence_dict contains all of our test data
     self.assertEqual(input_evidence, result)
 
-  def testStateManagerWriteNewEvidence(self):
+  def testStateManagerWriteEvidence(self):
     """Test State Manager write_evidence()."""
     evidence_key = 'TurbiniaEvidence:b510ab6bf11a410da1fd9d9b128e7d74'
 
@@ -198,7 +198,7 @@ class TestRedisEvidenceStateManager(unittest.TestCase):
         for key, value in self.test_data[evidence_key].items()
     }
 
-    self.state_manager.write_new_evidence(json_dumped_evidence)
+    self.state_manager.write_evidence(json_dumped_evidence)
 
     result = {}
     for attribute_name, attribute_value in self.state_manager.client.hscan_iter(
@@ -208,54 +208,12 @@ class TestRedisEvidenceStateManager(unittest.TestCase):
     # Check if the stored evidence contains all of our test data
     self.assertEqual(result, json_dumped_evidence)
 
-  def testStateManagerUpdateEvidenceAttribute(self):
-    """Test State Manager update_evidence_attribute()."""
-    self.write_evidence_in_fake_redis()
-
-    existent_key = 'TurbiniaEvidence:b510ab6bf11a410da1fd9d9b128e7d74'
-    non_existent_id = 'FakeID12345'
-
-    # Tests writting extra attribute
-    self.state_manager.update_evidence_attribute(
-        self.test_data[existent_key]['id'], 'test_attribute',
-        json.dumps('test_value'))
-
-    # Tests updating existing attribute attribute
-    self.state_manager.update_evidence_attribute(
-        self.test_data[existent_key]['id'], 'request_id',
-        json.dumps('123456789'))
-
-    # Tests updating nonexistant key
-    self.state_manager.update_evidence_attribute(
-        non_existent_id, 'test_attribute', json.dumps('test_value'))
-
-    expected_result = copy.deepcopy(self.test_data)
-    expected_result[existent_key]['test_attribute'] = 'test_value'
-    expected_result[existent_key]['request_id'] = '123456789'
-
-    result = {}
-    for evidence_key in self.state_manager.client.scan_iter():
-      result[evidence_key.decode()] = {}
-      for attribute_name, attribute_value in self.state_manager.client.hscan_iter(
-          evidence_key):
-        result[evidence_key.decode()][
-            attribute_name.decode()] = attribute_value.decode()
-
-    self.assertNotIn(non_existent_id, result)
-
-    self.assertEqual(len(result), len(expected_result))
-
-    for evidence_key, evidence_dict in expected_result.items():
-      for attribute_name, attribute_value in evidence_dict.items():
-        self.assertEqual(
-            result[evidence_key][attribute_name], json.dumps(attribute_value))
-
-  def testStateManagerEvidenceSummaryValues(self):
-    """Test State Manager get_evidence_summary() outputting values."""
+  def testStateManagerEvidenceSummaryContent(self):
+    """Test State Manager get_evidence_summary() outputting content."""
 
     self.write_evidence_in_fake_redis()
 
-    result = self.state_manager.get_evidence_summary(output='values')
+    result = self.state_manager.get_evidence_summary(output='content')
 
     # Check if the returned summary contains all of our test data
     self.assertEqual(len(result), len(self.test_data))
@@ -286,47 +244,48 @@ class TestRedisEvidenceStateManager(unittest.TestCase):
     # Check if the returned summary contains all of our test data
     self.assertEqual(result, len(self.test_data))
 
-  def testStateManagerEvidenceSummaryValuesSort(self):
-    """Test State Manager sorted get_evidence_summary() outputting values."""
+  def testStateManagerEvidenceSummaryContentGroup(self):
+    """Test State Manager grouped get_evidence_summary() outputting content."""
     self.write_evidence_in_fake_redis()
 
     result = self.state_manager.get_evidence_summary(
-        sort='request_id', output='values')
+        group='request_id', output='content')
 
     # Check if the returned summary contains all of our test data
-    self.assertEqual(result, self.sorted_values_summary)
+    self.assertEqual(result, self.grouped_content_summary)
 
-  def testStateManagerEvidenceSummaryKeysSort(self):
-    """Test State Manager sorted get_evidence_summary() outputting keys."""
+  def testStateManagerEvidenceSummaryKeysGroup(self):
+    """Test State Manager grouped get_evidence_summary() outputting keys."""
     self.write_evidence_in_fake_redis()
 
     result = self.state_manager.get_evidence_summary(
-        sort='request_id', output='keys')
+        group='request_id', output='keys')
 
     # Check if the returned summary contains all of our test data
-    self.assertEqual(result, self.sorted_keys_summary)
+    self.assertEqual(result, self.grouped_keys_summary)
 
-  def testStateManagerEvidenceSummaryCountSort(self):
-    """Test State Manager sorted get_evidence_summary() outputting count."""
+  def testStateManagerEvidenceSummaryCountGroup(self):
+    """Test State Manager grouped get_evidence_summary() outputting count."""
     self.write_evidence_in_fake_redis()
 
     result = self.state_manager.get_evidence_summary(
-        sort='copyable', output='count')
+        group='copyable', output='count')
 
     # Check if the returned summary contains all of our test data
-    self.assertEqual(result, self.sorted_count_summary)
+    self.assertEqual(result, self.grouped_count_summary)
 
-  def testStateManagerEvidenceQueryValues(self):
-    """Test State Manager query_evidence() outputting values."""
+  def testStateManagerEvidenceQueryContent(self):
+    """Test State Manager query_evidence() outputting content."""
 
     self.write_evidence_in_fake_redis()
 
     result = self.state_manager.query_evidence(
-        'request_id', '6d6f85f44487441c9d4da1bda56ae90a', output='values')
+        'request_id', '6d6f85f44487441c9d4da1bda56ae90a', output='content')
 
     # Check if the returned evidence contains all of our test data
     self.assertEqual(
-        result, self.sorted_values_summary['6d6f85f44487441c9d4da1bda56ae90a'])
+        result,
+        self.grouped_content_summary['6d6f85f44487441c9d4da1bda56ae90a'])
 
   def testStateManagerEvidenceQueryKeys(self):
     """Test State Manager query_evidence() outputting keys."""
@@ -338,7 +297,7 @@ class TestRedisEvidenceStateManager(unittest.TestCase):
 
     # Check if the returned keys contains all of our test data
     self.assertEqual(
-        result, self.sorted_keys_summary['6d6f85f44487441c9d4da1bda56ae90a'])
+        result, self.grouped_keys_summary['6d6f85f44487441c9d4da1bda56ae90a'])
 
   def testStateManagerEvidenceQueryCount(self):
     """Test State Manager query_evidence() outputting count."""
@@ -348,4 +307,4 @@ class TestRedisEvidenceStateManager(unittest.TestCase):
     result = self.state_manager.query_evidence('copyable', True, output='count')
 
     # Check if the returned count is equal to our test data
-    self.assertEqual(result, self.sorted_count_summary[True])
+    self.assertEqual(result, self.grouped_count_summary[True])
