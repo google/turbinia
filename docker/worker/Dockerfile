@@ -98,6 +98,7 @@ RUN pip3 install impacket --no-deps
 #   libbde-tools
 #   libfsapfs-tools
 #   libluksde-tools
+#   Plaso
 #   Sleuthkit
 RUN add-apt-repository -y ppa:gift/$PPA_TRACK
 RUN apt-get update && apt-get -y install \
@@ -110,7 +111,10 @@ RUN apt-get update && apt-get -y install \
     libewf-tools \
     libfsapfs-tools \
     libluksde-tools \
+    plaso-tools \
+    python3-dfimagetools \
     python3-dfvfs \
+    python3-plaso \
     sleuthkit \
     && apt-get clean && rm -rf /var/cache/apt/* /var/lib/apt/lists/*
 
@@ -149,17 +153,6 @@ RUN cp /home/turbinia/password.lst /root/
 
 # Copy Kubernetes support tool to home folder
 COPY --chown=turbinia:turbinia k8s/tools/check-lockfile.py /home/turbinia/check-lockfile.py
-
-# Install container-explorer
-RUN wget -O /tmp/container-explorer-setup.sh https://raw.githubusercontent.com/google/container-explorer/main/script/setup.sh
-RUN chmod +x /tmp/container-explorer-setup.sh
-RUN sudo /tmp/container-explorer-setup.sh install
-
-ADD . /tmp/
-
-# Install docker cli
-RUN wget -O /tmp/docker.deb https://download.docker.com/linux/ubuntu/dists/jammy/pool/stable/amd64/docker-ce-cli_24.0.5-1~ubuntu.22.04~jammy_amd64.deb
-RUN dpkg -i /tmp/docker.deb
 
 # Install Turbinia
 # unshallow and fetch all tags so our build systems pickup the correct git tag if it's a shallow clone
