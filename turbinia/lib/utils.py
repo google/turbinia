@@ -36,6 +36,7 @@ def _image_export(command, output_dir, disk_path, timeout=DEFAULT_TIMEOUT):
   Args:
     command: image_export command to run.
     output_dir: Path to directory to store the extracted files.
+    disk_path: Path to either a raw disk image or a block device.
 
   Returns:
     list: paths to extracted files.
