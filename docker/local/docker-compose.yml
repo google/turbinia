@@ -83,11 +83,20 @@ services:
     #     image: "us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-worker:latest" # Latest stable
     #     container_name: turbinia-worker2
     #     privileged: true
+    #       depends_on:
+    #         dind:
+    #             condition: service_healthy
 
     #     volumes:
     #      - $PWD/evidence:/evidence
     #      - $PWD/conf/turbinia.conf:/etc/turbinia/turbinia.conf
+    #      - $PWD/certs:/certs
+
 
     #     environment:
     #      - LC_ALL=C.UTF-8
     #      - LANG=C.UTF-8
+    #      - TURBINIA_EXTRA_ARGS=${TURBINIA_EXTRA_ARGS}
+    #      - DOCKER_HOST=tcp://dind:2376
+    #      - DOCKER_TLS_VERIFY=1
+    #      - DOCKER_CERT_PATH=/certs/client
