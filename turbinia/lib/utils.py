@@ -51,19 +51,13 @@ def _image_export(command, output_dir, disk_path, timeout=DEFAULT_TIMEOUT):
     dependencies = config.ParseDependencies()
     docker_image = dependencies[
         'FileArtifactExtractionJob'.lower()]['docker_image']
-    log.debug('DOCKER docker_image: {0:s}'.format(docker_image))
     from turbinia.lib import docker_manager
     ro_paths = [disk_path]
     rw_paths = [output_dir]
-    log.debug('DOCKER output_dir: {0:s}'.format(output_dir))
-    log.debug('DOCKER command: {0:s}'.format(' '.join(command)))
     container_manager = docker_manager.ContainerManager(docker_image)
     stdout, stderr, ret = container_manager.execute_container(
         command, shell=False, ro_paths=ro_paths, rw_paths=rw_paths,
         timeout_limit=timeout)
-    log.debug('DOCKER stdout: {0:s}'.format(stdout))
-    log.debug('DOCKER stderr: {0:s}'.format(stderr))
-    log.debug('DOCKER ret: {0:d}'.format(ret))
   else:  # execute with local install of image_export.py
     command.insert(0, 'sudo')
     log.debug(f"Running image_export as [{' '.join(command):s}]")

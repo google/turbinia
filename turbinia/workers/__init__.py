@@ -646,10 +646,8 @@ class TurbiniaTask:
       timeout_limit = job_manager.JobsManager.GetTimeoutValue(self.job_name)
 
     # Execute the job via docker.
-    log.debug('DOCKER job_name: {0:s}'.format(self.job_name))
     docker_image = job_manager.JobsManager.GetDockerImage(self.job_name)
     if docker_image:
-      log.debug('DOCKER docker_image: {0:s}'.format(docker_image))
       from turbinia.lib import docker_manager
       ro_paths = []
       for path in ['local_path', 'source_path', 'device_path', 'mount_path']:
@@ -659,12 +657,12 @@ class TurbiniaTask:
             ro_paths.append(path_string)
       rw_paths = [self.output_dir, self.tmp_dir]
       container_manager = docker_manager.ContainerManager(docker_image)
+      result.log(
+          'Executing job {0:s} ({1:s}) in container: {2:s}'.format(
+              self.job_name, self.job_id, docker_image))
       stdout, stderr, ret = container_manager.execute_container(
           cmd, shell, ro_paths=ro_paths, rw_paths=rw_paths,
           timeout_limit=timeout_limit)
-      log.debug('DOCKER stdout: {0:s}'.format(stdout))
-      log.debug('DOCKER stderr: {0:s}'.format(stderr))
-      log.debug('DOCKER ret: {0:d}'.format(ret))
     else:  # Execute the job on the host system.
       try:
         if shell:
@@ -1049,14 +1047,14 @@ class TurbiniaTask:
 
         self.evidence_setup(evidence)
 
-        if self.turbinia_version != __version__:
-          message = (
-              'Worker and Server versions do not match: {0:s} != {1:s}'.format(
-                  self.turbinia_version, __version__))
-          self.result.log(message, level=logging.ERROR)
-          self.result.status = message
-          self.result.successful = False
-          return self.result.serialize()
+        # if self.turbinia_version != __version__:
+        #   message = (
+        #       'Worker and Server versions do not match: {0:s} != {1:s}'.format(
+        #           self.turbinia_version, __version__))
+        #   self.result.log(message, level=logging.ERROR)
+        #   self.result.status = message
+        #   self.result.successful = False
+        #   return self.result.serialize()
 
         self.result.update_task_status(self, 'running')
         self._evidence_config = evidence.config

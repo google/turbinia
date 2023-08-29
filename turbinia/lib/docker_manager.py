@@ -26,7 +26,7 @@ import docker
 from turbinia import TurbiniaException
 
 log = logging.getLogger('turbinia')
-
+checked_image_list = []
 
 def IsBlockDevice(path):
   """Checks path to determine whether it is a block device.
@@ -106,6 +106,24 @@ class DockerManager:
           f'An issue has occurred connecting to the Docker daemon: {exception!s}'
       )
     return docker_client
+
+  def image_exists(self, image_id):
+    """Check if image exists in registry
+    Args:
+      image_id(str): The image id.
+
+    Returns:
+      bool: True or False.
+    """
+    try:
+      if image_id not in checked_image_list:
+        regdata = self.client.images.get_registry_data(image_id)
+        # Add image digest to checked image list
+        checked_image_list.append(image_id)
+    except docker.errors.APIError as exception:
+      raise TurbiniaException(
+          f'An error occurred checking if image exists: {exception!s}')
+    return True
 
   def get_image(self, image_id):
     """Retrieve the Docker Image object.
@@ -265,7 +283,6 @@ class ContainerManager(DockerManager):
       args[key] = value
 
     try:
-      log.debug('DOCKER cmd: {0:s}'.format(cmd))
       container = self.client.containers.create(self.image, cmd, **args)
       container.start()
       # Stream program stdout from container
@@ -281,10 +298,6 @@ class ContainerManager(DockerManager):
       message = (f'An error has occurred with the container: {exception!s}')
       log.error(message)
       raise TurbiniaException(message)
-
-    log.debug('DOCKER results manager dict:')
-    log.debug(results)
-    log.debug('DOCKER stdout manager: {0:s}'.format(stdout))
 
     stderr = None
     ret = results['StatusCode']

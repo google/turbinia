@@ -78,10 +78,21 @@ def check_docker_dependencies(dependencies):
           'The job {0:s} was not found or has been disabled. Skipping '
           'dependency check...'.format(job))
       continue
-    docker_image = values.get('docker_image')
+
     for program in values['programs']:
       if values['docker_image'] != None:
+        docker_image = values.get('docker_image')
         log.info('docker_image: {0:s}'.format(values['docker_image']))
+        # Check if docker_image exists in registry.
+        exists = docker_manager.DockerManager().image_exists(docker_image)
+        if not exists:
+          raise TurbiniaException(
+              'Docker image {0:s} does not exist for the job {1:s}. Please '
+              'update the config with the correct image name'.format(
+                  values['docker_image'], job))
+        # Check if job program exists in docker image.
+        # TODO(rbdebeer) consider removing this part as it will download all
+        # docker images configured in turbinia.conf each time a worker starts!
         cmd = f'type {program:s}'
         stdout, stderr, ret = docker_manager.ContainerManager(
             values['docker_image']).execute_container(cmd, shell=True)
