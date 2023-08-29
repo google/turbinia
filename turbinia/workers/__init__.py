@@ -38,6 +38,7 @@ from prometheus_client import CollectorRegistry, Counter, Histogram
 from turbinia import __version__, config
 from turbinia.config import DATETIME_FORMAT
 from turbinia.evidence import evidence_decode
+from turbinia.evidence import Evidence
 from turbinia.processors import resource_manager
 from turbinia import output_manager
 from turbinia import state_manager
@@ -263,15 +264,16 @@ class TurbiniaTaskResult:
           'mounted disks) accumulating on the Worker.', level=logging.WARNING)
 
     # Updates evidence objects in Redis
-    for evidence in self.evidence:
-      if isinstance(evidence, evidence.Evidence):
-        try:
-          evidence.validate_attributes()
-        except TurbiniaException as exception:
-          log.error(f'Error updating evidence in redis: {exception}')
-        else:
-          self.state_manager.write_evidence(
-              evidence.serialize(json_values=True), allow_overwrite=False)
+    if self.state_manager:
+      for evidence in self.evidence:
+        if isinstance(evidence, Evidence):
+          try:
+            evidence.validate_attributes()
+          except TurbiniaException as exception:
+            log.error(f'Error updating evidence in redis: {exception}')
+          else:
+            self.state_manager.write_evidence(
+                evidence.serialize(json_values=True), allow_overwrite=False)
 
     # Now that we've post-processed the input_evidence, we can unset it
     # because we don't need to return it.

@@ -205,6 +205,13 @@ class TestRedisEvidenceStateManager(unittest.TestCase):
         evidence_key):
       result[attribute_name.decode()] = attribute_value.decode()
 
+    null_keys = []
+    for key, value in json_dumped_evidence.items():
+      if value in ('null', '[]', '{}'):
+        null_keys.append(key)
+    for key in null_keys:
+      json_dumped_evidence.pop(key)
+
     # Check if the stored evidence contains all of our test data
     self.assertEqual(result, json_dumped_evidence)
 

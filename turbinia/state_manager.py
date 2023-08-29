@@ -51,6 +51,7 @@ else:
   msg = f'State Manager type "{config.STATE_MANAGER:s}" not implemented'
   raise TurbiniaException(msg)
 
+EMPTY_JSON_VALUES = ('null', '{}', '[]')
 MAX_DATASTORE_STRLEN = 1500
 log = logging.getLogger('turbinia')
 
@@ -467,8 +468,7 @@ class RedisStateManager(BaseStateManager):
     """
     log.info(f'Writing hash object {redis_key} into Redis')
     for attribute_name, attribute_value in object_dict.items():
-      # Only saves non-empty attributes
-      if attribute_value or attribute_value is False or attribute_value == 0:
+      if attribute_value not in EMPTY_JSON_VALUES:
         self.set_attribute(redis_key, attribute_name, attribute_value)
 
   def write_evidence(
