@@ -204,7 +204,7 @@ paths:
               - creation_time
               - description
               - has_child_evidence
-              - last_updated
+              - last_update
               - local_path
               - mount_path
               - parent_evidence
@@ -276,7 +276,7 @@ paths:
               - creation_time
               - description
               - has_child_evidence
-              - last_updated
+              - last_update
               - local_path
               - mount_path
               - parent_evidence

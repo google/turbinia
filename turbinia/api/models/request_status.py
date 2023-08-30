@@ -90,8 +90,8 @@ class RequestStatus(BaseModel):
       self.task_count = len(tasks)
       task_status = task.get('status')
       # Gets the evidence_name based on the oldest task.
-      if initial_start_time and task.get('last_updated') < initial_start_time:
-        initial_start_time = task.get('last_updated')
+      if initial_start_time and task.get('last_update') < initial_start_time:
+        initial_start_time = task.get('last_update')
         self.evidence_name = task.get('name')
       if isinstance(task.get('last_update'), datetime.datetime):
         task_last_update = datetime.datetime.timestamp(task.get('last_update'))

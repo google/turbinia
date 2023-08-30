@@ -108,7 +108,7 @@ class testTurbiniaAPIServer(unittest.TestCase):
       },
       'tags': {},
       'creation_time': '2023-08-04T19:16:28.182774Z',
-      'last_updated': '2023-08-04T19:17:58.769212Z',
+      'last_update': '2023-08-04T19:17:58.769212Z',
       'parent_evidence': None,
       'size': 20971520,
       'mount_path': None,

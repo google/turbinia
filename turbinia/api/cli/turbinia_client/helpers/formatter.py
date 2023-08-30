@@ -27,7 +27,7 @@ log = logging.getLogger('turbinia')
 
 IMPORTANT_ATTRIBUTES = {
     'id', '_name', 'type', 'size', 'request_id', 'tasks', 'source_path',
-    'local_path', 'creation_time', 'last_updated'
+    'local_path', 'creation_time', 'last_update'
 }
 
 
@@ -432,7 +432,7 @@ class EvidenceMarkdownReport(MarkdownReportComponent):
               level))
       report.append(
           self.bullet(
-              f"Last Update: {evidence_dict.get('last_updated', 'null')}",
+              f"Last Update: {evidence_dict.get('last_update', 'null')}",
               level))
 
       if show_ignored:

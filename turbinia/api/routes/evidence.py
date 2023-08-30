@@ -35,7 +35,7 @@ redis_manager = state_manager.RedisStateManager()
 
 EVIDENCE_SUMMARY_ATTRIBUTES = (
     '_name', 'cloud_only', 'context_dependent', 'copyable', 'creation_time',
-    'description', 'has_child_evidence', 'last_updated', 'local_path',
+    'description', 'has_child_evidence', 'last_update', 'local_path',
     'mount_path', 'parent_evidence', 'request_id', 'resource_id',
     'resource_tracked', 'save_metadata', 'saved_path', 'saved_path_type',
     'size', 'source', 'source_path', 'type')
