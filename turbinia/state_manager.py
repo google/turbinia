@@ -350,6 +350,9 @@ class RedisStateManager(BaseStateManager):
 
     Returns:
       (bool): Boolean specifying whether the function call was sucessful. 
+
+    Raises:
+      TurbiniaException: When Redis fails in updating the attribute.
     """
     try:
       if not self.client.hset(redis_key, attribute_name, json_value):
@@ -374,6 +377,10 @@ class RedisStateManager(BaseStateManager):
 
     Returns:
       attribute_value (any): sucessful. 
+
+    Raises:
+      TurbiniaException: If Redis fails in getting the attribute or if
+        json loads fails.
     """
     try:
       attribute_value = self.client.hget(redis_key, attribute_name)
@@ -402,6 +409,10 @@ class RedisStateManager(BaseStateManager):
 
     Yields:
       key (str): Decoded key of stored Turbinia object. 
+
+    Raises:
+      TurbiniaException: If Redis fails in getting the keys or if
+        decode fails.
     """
     try:
       keys = self.client.scan_iter(f'Turbinia{key_type.title()}:*')
@@ -417,14 +428,18 @@ class RedisStateManager(BaseStateManager):
       log.error(f'{error_message}: {exception}')
       raise TurbiniaException(error_message) from exception
 
-  def iterate_attribute_names(self, key: str) -> Iterator[str]:
+  def iterate_attributes(self, key: str) -> Iterator[tuple]:
     """Iterates over the attribute names of the Redis hash object.
 
     Args:
       key (str): The key of the stored hash object.
 
     Yields:
-      attribute_name (str): Decoded name of object attribute. 
+      attribute_name (tuple): Decoded name of object attribute.
+
+    Raises:
+      TurbiniaException: If Redis fails in getting the attributes or if
+        decode or json loads fails. 
     """
     try:
       attributes = self.client.hscan_iter(key)
@@ -448,6 +463,9 @@ class RedisStateManager(BaseStateManager):
 
     Returns:
       exists (bool): Boolean indicating if evidence is saved. 
+
+    Raises:
+      TurbiniaException: If Redis fails in checking the existence of the key.
     """
     try:
       return self.client.exists(redis_key)
@@ -481,6 +499,9 @@ class RedisStateManager(BaseStateManager):
 
     Returns:
       evidence_key (str): The key corresponding to the evidence in Redis
+    
+    Raises:
+      TurbiniaException: If the attribute deserialization fails.
     """
     try:
       evidence_key = ':'.join(
@@ -508,7 +529,7 @@ class RedisStateManager(BaseStateManager):
     """
     evidence_key = ':'.join(('TurbiniaEvidence', evidence_id))
     evidence_dict = {}
-    for attribute_name, attribute_value in self.iterate_attribute_names(
+    for attribute_name, attribute_value in self.iterate_attributes(
         evidence_key):
       evidence_dict[attribute_name] = attribute_value
     return evidence_dict
@@ -577,13 +598,16 @@ class RedisStateManager(BaseStateManager):
       file_hash (str): The hash of the stored evidence.
 
     Returns:
-      key (str): Key of the stored evidence. 
+      key (str | None): Key of the stored evidence. 
     """
-    if file_hash:
-      return self.get_attribute(
-          'TurbiniaEvidenceHashes', file_hash, decode_json=False)
+    try:
+      if file_hash:
+        return self.get_attribute(
+            'TurbiniaEvidenceHashes', file_hash, decode_json=False)
+    except TurbiniaException:
+      return None
 
-  def get_evidence_by_hash(self, file_hash: str) -> dict | None:
+  def get_evidence_by_hash(self, file_hash: str) -> dict:
     """Gets the evidence given its hash.
 
     Args:
