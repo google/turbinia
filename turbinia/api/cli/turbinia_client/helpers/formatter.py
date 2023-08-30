@@ -385,7 +385,7 @@ class StatsMarkdownReport(MarkdownReportComponent):
     self.table_dict['MEAN'].append(stat_dict.get('mean', ''))
     self.table_dict['MAX'].append(stat_dict.get('max', ''))
 
-  def generate_data_frame(self, markdown: bool = False) -> pandas.DataFrame:
+  def generate_data_frame(self) -> pandas.DataFrame:
     """Generates a pandas DataFrame of the statistics table
 
     Args:
@@ -398,23 +398,13 @@ class StatsMarkdownReport(MarkdownReportComponent):
       stat_group = stat_group.replace('_', ' ').title()
       if stat_group in ('All Tasks', 'Successful Tasks', 'Failed Tasks',
                         'Requests'):
-        first_column = self.heading2(
-            f'{stat_group}:') if markdown else stat_group
+        first_column = stat_group
         self.stat_to_row(first_column, stat_dict)
         continue
-      if markdown:
-        self.stat_to_row(self.heading2(f'{stat_group}:'), {})
       for description, inner_dict in stat_dict.items():
-        first_column = self.bullet(
-            f'{description}:'
-        ) if markdown else f'{stat_group.split(" ")[-1]} {description}'
+        first_column = f'{stat_group.split(" ")[-1]} {description}'
         self.stat_to_row(first_column, inner_dict)
     return pandas.DataFrame(self.table_dict)
-
-  def ljust(self, s):
-    """Left justifies cells in data_frame."""
-    s = s.astype(str).str.strip()
-    return s.str.ljust(s.str.len().max())
 
   def generate_markdown(self) -> str:
     """Generates a Markdown version of task statistics.
@@ -423,10 +413,8 @@ class StatsMarkdownReport(MarkdownReportComponent):
       markdown(str): Markdown version of task statistics.
     """
     report = [self.heading1('Execution time statistics for Turbinia:')]
-    data_frame = self.generate_data_frame(True)
-    data_frame = data_frame.rename(columns={'TASK': self.heading2('TASK')})
-    table = data_frame.apply(self.ljust).to_string(
-        index=False, justify='left', col_space=8)
+    data_frame = self.generate_data_frame()
+    table = data_frame.to_markdown(index=False)
     report.append(table)
     return '\n'.join(report)
 

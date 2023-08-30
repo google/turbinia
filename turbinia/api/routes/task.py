@@ -48,9 +48,9 @@ async def get_task_statistics(
     user (string): The user of the request we want tasks for.
 
   Returns:
-    statistics (dict): Task statistics report.
+    statistics (str): JSON-formatted task statistics report.
   """
-  statistics = tasks_statistics.TasksStatistics()
+  statistics = tasks_statistics.CompleteTurbiniaStats()
   if statistics.format_task_statistics(days=days, task_id=task_id,
                                        request_id=request_id, user=user):
     return JSONResponse(content=statistics.model_dump(), status_code=200)
@@ -64,10 +64,13 @@ async def get_workers_status(
 
   Args:
     days (int): The UUID of the evidence.
-  
+    all_fields (bool): Returns all status fields if set to true.
+
+  Returns:
+    workers_status (str): JSON-formatted workers status.
+
   Raises:
     HTTPException: if no worker is found.
-  Returns:
   """
   workers_dict = workers_status.WorkersStatus()
   if workers_dict.get_workers_status(days, all_fields):

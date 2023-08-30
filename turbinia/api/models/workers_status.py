@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright 2022 Google Inc.
+# Copyright 2023 Google Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -26,29 +26,27 @@ from typing import ClassVar
 from turbinia import state_manager
 from turbinia import config as turbinia_config
 
-log = logging.getLogger('turbinia:api_server:routes:request')
+log = logging.getLogger('turbinia:api_server:models:workers_status')
 
 
-class WorkersInfo:
-  """Information about the Workers."""
+class WorkersInfo(BaseModel):
+  """Information about Workers."""
 
   workers_dict: ClassVar[dict] = {}
   unassigned_dict: ClassVar[dict] = {}
   scheduled_counter: ClassVar[int] = 0
 
-  def get_workers_information(self, days: int = 7) -> dict:
+  def get_workers_information(self, days: int = 7) -> bool:
     """Retrieves the general workers dict.
+
+    Args:
+      days (int): The number of days we want status for.
     
     Returns:
-      workers_dict (dict): A non-serializable dictionary about the status of
-        all tasks.
+        bool: True if report was sucessfully acquired.
     """
     task_results = state_manager.get_state_manager().get_task_data(
         turbinia_config.INSTANCE_ID, days)
-
-    self.workers_dict = {}
-    self.unassigned_dict = {}
-    self.scheduled_counter = 0
 
     # Sort task_results by last updated timestamp.
     task_results = sorted(
@@ -91,7 +89,7 @@ class WorkersInfo:
 
 
 class WorkersStatus(BaseModel):
-  """A json-serializable report of the workers status."""
+  """A json-serializable report of workers status."""
 
   status: ClassVar[dict] = {}
 
@@ -120,14 +118,15 @@ class WorkersStatus(BaseModel):
     }
     return task_dict
 
-  def get_workers_status(self, days: int = 7, all_fields: bool = False) -> dict:
+  def get_workers_status(self, days: int = 7, all_fields: bool = False) -> bool:
     """Formats the workers_dict with relevant and serializable information.
     
     Args:
+      days (int): The number of days we want status for.
       all_fields (bool): Returns all status fields if set to true.
 
     Returns:
-      status (dict): A json-serializable workers status dictionary.
+        bool: True if report was sucessfully acquired.
     """
 
     workers_info = WorkersInfo()
