@@ -475,7 +475,10 @@ class RedisStateManager(BaseStateManager):
       raise TurbiniaException(error_message) from exception
 
   def write_hash_object(self, redis_key, object_dict):
-    """Writes new hash object into redis.
+    """Writes new hash object into redis. To save storage, the function does not
+    write values that are null, empty lists or empty dictionaries. Thus, if the 
+    value is deserialized from Redis into the original object, the default 
+    values will be used for those attributes.
 
     Args:
       object_dict (dict[str]): A dictionary containing the serialized
@@ -489,8 +492,7 @@ class RedisStateManager(BaseStateManager):
       if attribute_value not in EMPTY_JSON_VALUES:
         self.set_attribute(redis_key, attribute_name, attribute_value)
 
-  def write_evidence(
-      self, evidence_dict: dict[str], allow_overwrite=True) -> str:
+  def write_evidence(self, evidence_dict: dict[str], update=True) -> str:
     """Writes evidence into redis.
 
     Args:
@@ -511,7 +513,7 @@ class RedisStateManager(BaseStateManager):
       error_message = 'Error deserializing evidence attribute.'
       log.error(f'{error_message}: {exception}')
       raise TurbiniaException(error_message) from exception
-    if allow_overwrite or not self.key_exists(evidence_key):
+    if not self.key_exists(evidence_key) ^ update:
       self.write_hash_object(evidence_key, evidence_dict)
       if evidence_hash:
         self.set_attribute(
