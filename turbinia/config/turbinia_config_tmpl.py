@@ -196,12 +196,12 @@ DEPENDENCIES = [{
     'timeout': 1200
 }, {
     'job': 'JenkinsAnalysisJob',
-    'programs': ['/home/turbinia/hashcat-6.2.6/hashcat.bin'],
+    'programs': ['hashcat'],
     'docker_image': None,
     'timeout': 1200
 }, {
     'job': 'LinuxAccountAnalysisJob',
-    'programs': ['/home/turbinia/hashcat-6.2.6/hashcat.bin', 'john'],
+    'programs': ['hashcat', 'john'],
     'docker_image': None,
     'timeout': 1200
 }, {
@@ -241,12 +241,12 @@ DEPENDENCIES = [{
     'timeout': 3600
 }, {
     'job': 'WindowsAccountAnalysisJob',
-    'programs': ['/home/turbinia/hashcat-6.2.6/hashcat.bin', 'secretsdump.py'],
+    'programs': ['hashcat', 'secretsdump.py'],
     'docker_image': None,
     'timeout': 3600
 }, {
     'job': 'WordpressCredsAnalysisJob',
-    'programs': ['/home/turbinia/hashcat-6.2.6/hashcat.bin', 'grep', 'strings'],
+    'programs': ['hashcat', 'grep', 'strings'],
     'docker_image': None,
     'timeout': 3600
 }]
