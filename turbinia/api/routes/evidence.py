@@ -38,7 +38,7 @@ EVIDENCE_SUMMARY_ATTRIBUTES = (
     'description', 'has_child_evidence', 'last_updated', 'local_path',
     'mount_path', 'parent_evidence', 'request_id', 'resource_id',
     'resource_tracked', 'save_metadata', 'saved_path', 'saved_path_type',
-    'size', 'source', 'source_path', 'tasks', 'type')
+    'size', 'source', 'source_path', 'type')
 
 EVIDENCE_QUERY_ATTRIBUTES = EVIDENCE_SUMMARY_ATTRIBUTES + ('tasks',)
 
@@ -57,9 +57,11 @@ async def get_file_path(file_name: str, ticket_id: str) -> str:
   file_extension = os.path.splitext(file_name)[1]
   file_extension = '.' + file_extension if file_extension else ''
   current_time = datetime.now().strftime(turbinia_config.DATETIME_FORMAT)
-  new_name = (f'{file_name}_{current_time}{file_extension}')
-  os.makedirs(f'{turbinia_config.OUTPUT_DIR}/{ticket_id}', exist_ok=True)
-  return os.path.join(turbinia_config.OUTPUT_DIR, ticket_id, new_name)
+  new_name = f'{file_name}_{current_time}{file_extension}'
+  os.makedirs(
+      f'{turbinia_config.API_EVIDENCE_UPLOAD_DIR}/{ticket_id}', exist_ok=True)
+  return os.path.join(
+      turbinia_config.API_EVIDENCE_UPLOAD_DIR, ticket_id, new_name)
 
 
 async def upload_file(
@@ -83,16 +85,17 @@ async def upload_file(
   size = 0
   sha_hash = hashlib.sha3_224()
   with open(file_path, 'wb') as saved_file:
-    while (chunk := await file.read(
-        turbinia_config.CHUNK_SIZE)) and size < turbinia_config.MAX_UPLOAD_SIZE:
+    while (chunk := await
+           file.read(turbinia_config.API_UPLOAD_CHUNK_SIZE
+                    )) and size < turbinia_config.API_MAX_UPLOAD_SIZE:
       saved_file.write(chunk)
       if calculate_hash:
         sha_hash.update(chunk)
       size += len(chunk)
-      if size >= turbinia_config.MAX_UPLOAD_SIZE:
+      if size >= turbinia_config.API_MAX_UPLOAD_SIZE:
         error_message = (
             f'Unable to upload file {file.filename} greater',
-            f'than {turbinia_config.MAX_UPLOAD_SIZE / (1024 ** 3)} GB')
+            f'than {turbinia_config.API_MAX_UPLOAD_SIZE / (1024 ** 3)} GB')
         log.error(error_message)
         raise IOError(error_message)
     file_info = {

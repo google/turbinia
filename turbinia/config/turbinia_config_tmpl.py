@@ -120,13 +120,13 @@ API_ALLOWED_ORIGINS = ['http://localhost:8000']
 API_AUTHENTICATION_ENABLED = False
 
 # Chunk size in bytes for chunk reading when uploading evidences to server.
-CHUNK_SIZE = 1024
+API_UPLOAD_CHUNK_SIZE = 1024
 
 # Default path to where uploaded evidence will be stored on server.
-EVIDENCE_UPLOAD_DIR = '/evidence'
+API_EVIDENCE_UPLOAD_DIR = '/evidence'
 
 # Max size in bytes for evidence uploaded to server.
-MAX_UPLOAD_SIZE = 10737418240
+API_MAX_UPLOAD_SIZE = 10737418240
 
 # Path to Turbinia Web UI static files
 WEBUI_PATH = '/web'

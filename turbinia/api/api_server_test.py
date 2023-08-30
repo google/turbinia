@@ -33,7 +33,6 @@ from turbinia.api.routes.ui import ui_router
 
 from turbinia import config as turbinia_config
 from turbinia import state_manager
-from turbinia import state_manager_test
 from turbinia.jobs import manager as jobs_manager
 from turbinia.workers import TurbiniaTask
 

@@ -411,7 +411,7 @@ def upload_evidence(
   client: api_client.ApiClient = ctx.obj.api_client
   api_instance_config = turbinia_configuration_api.TurbiniaConfigurationApi(
       client)
-  max_upload_size = api_instance_config.read_config()['MAX_UPLOAD_SIZE']
+  max_upload_size = api_instance_config.read_config()['API_MAX_UPLOAD_SIZE']
   api_instance = turbinia_evidence_api.TurbiniaEvidenceApi(client)
   all_files = list(file)
   for current_directory in directory:
