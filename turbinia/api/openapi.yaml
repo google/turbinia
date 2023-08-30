@@ -257,15 +257,15 @@ paths:
   /api/evidence/summary:
     get:
       description:
-        "Retrieves a summary of all evidences in Redis.\n\nArgs:\n  sort\
-        \ Optional(str): Attribute used to sort summary.\n  output Optional(str):\
+        "Retrieves a summary of all evidences in Redis.\n\nArgs:\n  group\
+        \ Optional(str): Attribute used to group summary.\n  output Optional(str):\
         \ Sets how the evidence found will be output. \n\nReturns:\n  summary (dict):\
         \ Summary of all evidences and their content.\n\nRaises:\n  HTTPException:\
         \ if there are no evidences."
       operationId: get_evidence_summary
       parameters:
         - in: query
-          name: sort
+          name: group
           required: false
           schema:
             enum:
@@ -291,7 +291,7 @@ paths:
               - source_path
               - tasks
               - type
-            title: Sort
+            title: Group
             type: string
         - in: query
           name: output

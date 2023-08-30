@@ -82,7 +82,7 @@ class MarkdownReportComponent(ABC):
     """
     return f'**{text.strip():s}**'
 
-  def heading(self, text, number):
+  def heading(self, text: str, number: int) -> str:
     """Formats text as heading in Markdown format.
 
     Args:
@@ -187,7 +187,16 @@ class MarkdownReportComponent(ABC):
     """
     pass
 
-  def list_to_markdown(self, original_list, level=1):
+  def list_to_markdown(self, original_list: list, level: int = 1) -> list:
+    """Generates a Markdown based on a python list.
+
+      Args:
+        original_list(list): List to format
+        level(int): Indentation level.
+
+      Returns:
+        report (list): List of Markdown lines.
+    """
     if not original_list:
       return [self.bullet('[EMPTY LIST]', level)]
     report = []
@@ -204,16 +213,27 @@ class MarkdownReportComponent(ABC):
     return report
 
   def dict_to_markdown(
-      self, original_dict, level=1, ignore=None, show_null=False,
-      format_name=True):
+      self, original_dict: dict, level: int = 1, excluded_keys: list = (),
+      format_keys: bool = True) -> list:
+    """Generates a Markdown based on a python dictionary.
+
+      Args:
+        original_dict(dict): Dict to format.
+        level(int): Indentation level.
+        excluded_keys (list): List of dict keys to be ignored.
+        format_keys (bool): Capitalizes and removes underscores from dict keys
+          if True
+
+      Returns:
+        report (list): List of Markdown lines.
+    """
     if not original_dict:
       return [self.bullet('[EMPTY DICTIONARY]', level)]
     report: list[str] = []
     for key, value in original_dict.items():
-      if (ignore and
-          key in ignore) or not (show_null or value or value is False):
+      if key in excluded_keys:
         continue
-      name = key.replace('_', ' ').title() if format_name else key
+      name = key.replace('_', ' ').title() if format_keys else key
       if isinstance(value, dict):
         if level == 0:
           report.append(self.heading1(f'{name}:'))
@@ -393,9 +413,16 @@ class EvidenceMarkdownReport(MarkdownReportComponent):
     super().__init__()
     self._evidence_data: dict = evidence_data
 
-  def generate_markdown(
-      self, level=1, show_ignored=False, show_null=False) -> str:
-    """Generates a Markdown version of Requests results."""
+  def generate_markdown(self, level=1, show_all=False) -> str:
+    """Generates a Markdown version of Evidence.
+
+      Args:
+        level (int): Indentation level.
+        show_all (bool): Shows all evidence attributes if True.
+
+      Returns:
+        report (str): Markdown report.
+    """
     report: list[str] = []
     evidence_dict: dict = self._evidence_data
     if not evidence_dict:
@@ -435,10 +462,10 @@ class EvidenceMarkdownReport(MarkdownReportComponent):
               f"Last Update: {evidence_dict.get('last_update', 'null')}",
               level))
 
-      if show_ignored:
+      if show_all:
         report.extend(
             self.dict_to_markdown(
-                evidence_dict, level, IMPORTANT_ATTRIBUTES, show_null))
+                evidence_dict, level=level, excluded_keys=IMPORTANT_ATTRIBUTES))
 
       report.append('')
 
@@ -457,26 +484,43 @@ class EvidenceSummaryMarkdownReport(EvidenceMarkdownReport):
     super().__init__({})
     self._summary = summary
 
-  def generate_value_markdown(self, summary, level=1):
+  def generate_content_markdown(self, summary, level=1):
+    """Generates the content Markdown summary.
+
+      Args:
+        summary (bool): Evidence summary.
+        level (int): Indentation level.
+
+      Returns:
+        report (list): List with Markdown lines.
+    """
     report = []
     for item in summary:
       self._evidence_data = item
-      report.append(self.generate_markdown(level + 1))
+      report.append(self.generate_markdown(level=(level + 1)))
     return report
 
-  def generate_summary_markdown(self, output='keys'):
-    if output == 'values':
+  def generate_summary_markdown(self, output: str = 'keys') -> str:
+    """Generates the evidence summary Markdown.
+
+      Args:
+        output (str):Type of output (keys | content | count).
+
+      Returns:
+        report (str): Markdown report.
+    """
+    if output == 'content':
       if isinstance(self._summary, dict):
         report = []
-        for attribute_value, value in self._summary.items():
-          report.append(self.bullet(f'{attribute_value}:'))
-          report.extend(self.generate_value_markdown(value, 2))
+        for attribute, summary in self._summary.items():
+          report.append(self.bullet(f'{attribute}:'))
+          report.extend(self.generate_content_markdown(summary, level=2))
         return '\n'.join(report)
-      return '\n'.join(self.generate_value_markdown(self._summary))
+      return '\n'.join(self.generate_content_markdown(self._summary))
     elif isinstance(self._summary, list):
-      return '\n'.join(self.list_to_markdown(self._summary, 0))
+      return '\n'.join(self.list_to_markdown(self._summary, level=0))
     elif isinstance(self._summary, dict):
       return '\n'.join(
-          self.dict_to_markdown(self._summary, 0, format_name=False))
+          self.dict_to_markdown(self._summary, level=0, format_keys=False))
     elif isinstance(self._summary, int):
       return self.heading1(f'{self._summary} evidences found')

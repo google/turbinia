@@ -293,24 +293,21 @@ def create_request(ctx: click.Context, *args: int, **kwargs: int) -> None:
 @groups.evidence_group.command('summary')
 @click.pass_context
 @click.option(
-    '--sort', '-s', help='Attribute by which output will be sort.',
-    required=False)
+    '--group', '-g', help='Attribute by which output will be grouped.',
+    default=None, required=False)
 @click.option(
-    '--values', '-v', help='Outputs values.', is_flag=True, required=False)
-@click.option(
-    '--count', '-c', help='Outputs count.', is_flag=True, required=False)
+    '--output', '-o', help='Type of output (keys | content | count).',
+    default='keys', required=False)
 @click.option(
     '--json_dump', '-j', help='Generates JSON output.', is_flag=True,
     required=False)
 def get_evidence_summary(
-    ctx: click.Context, sort: str = None, values: bool = False,
-    count: bool = False, json_dump: bool = False) -> None:
+    ctx: click.Context, group: str, output: str, json_dump: bool) -> None:
   """Gets Turbinia evidence summary."""
   client: api_client.ApiClient = ctx.obj.api_client
   api_instance = turbinia_evidence_api.TurbiniaEvidenceApi(client)
   try:
-    output = 'values' if values else 'count' if count else 'keys'
-    api_response = api_instance.get_evidence_summary(sort, output)
+    api_response = api_instance.get_evidence_summary(group, output)
     if json_dump:
       formatter.echo_json(api_response)
     else:
@@ -325,24 +322,23 @@ def get_evidence_summary(
 
 @groups.evidence_group.command('query')
 @click.pass_context
-@click.argument('attribute')
-@click.argument('value')
+@click.argument('attribute_name')
+@click.argument('attribute_value')
 @click.option(
-    '--values', '-v', help='Outputs values.', is_flag=True, required=False)
-@click.option(
-    '--count', '-c', help='Outputs count.', is_flag=True, required=False)
+    '--output', '-o', help='Type of output (keys | content | count).',
+    default='keys', is_flag=False, required=False)
 @click.option(
     '--json_dump', '-j', help='Generates JSON output.', is_flag=True,
     required=False)
 def query_evidence(
-    ctx: click.Context, attribute: str, value: str, values: bool, count: bool,
+    ctx: click.Context, attribute_name: str, attribute_value: str, output: str,
     json_dump: bool) -> None:
   """Queries Turbinia evidence."""
   client: api_client.ApiClient = ctx.obj.api_client
   api_instance = turbinia_evidence_api.TurbiniaEvidenceApi(client)
   try:
-    output = 'values' if values else 'count' if count else 'keys'
-    api_response = api_instance.query_evidence(value, attribute, output)
+    api_response = api_instance.query_evidence(
+        attribute_value, attribute_name, output)
     if json_dump:
       formatter.echo_json(api_response)
     else:
@@ -359,16 +355,13 @@ def query_evidence(
 @click.pass_context
 @click.argument('evidence_id')
 @click.option(
-    '--show_ignored', '-i', help='Shows ignored evidence attributes.',
-    is_flag=True, required=False)
-@click.option(
-    '--show_null', '-n', help='Shows evidence attributes with null value.',
-    is_flag=True, required=False)
+    '--show_all', '-a', help='Shows all evidence attributes.', is_flag=True,
+    required=False)
 @click.option(
     '--json_dump', '-j', help='Generates JSON output.', is_flag=True,
     required=False)
 def get_evidence(
-    ctx: click.Context, evidence_id: str, show_ignored: bool, show_null: bool,
+    ctx: click.Context, evidence_id: str, show_all: bool,
     json_dump: bool) -> None:
   """Get Turbinia evidence."""
   client: api_client.ApiClient = ctx.obj.api_client
@@ -379,7 +372,7 @@ def get_evidence(
       formatter.echo_json(api_response)
     else:
       report = formatter.EvidenceMarkdownReport(api_response).generate_markdown(
-          1, show_ignored, show_null)
+          1, show_all=show_all)
       click.echo(report)
   except exceptions.ApiException as exception:
     log.error(
@@ -391,13 +384,8 @@ def get_evidence(
 @click.pass_context
 @click.argument('ticket_id')
 @click.option(
-    '--file', '-f', help='Path of file to be uploaded.', required=False,
-    multiple=True)
-@click.option(
-    '--directory', '-d', help=(
-        'Path of directory of files to be uploaded '
-        '(does not include files in subfolders).'), required=False,
-    multiple=True)
+    '--path', '-p', help='Path of file or directory to be uploaded.',
+    required=True, multiple=True)
 @click.option(
     '--calculate_hash', '-c', help='Calculates file hash.', is_flag=True,
     required=False)
@@ -405,22 +393,25 @@ def get_evidence(
     '--json_dump', '-j', help='Generates JSON output.', is_flag=True,
     required=False)
 def upload_evidence(
-    ctx: click.Context, ticket_id: str, file: list, directory: list,
-    calculate_hash: bool, json_dump: bool) -> None:
+    ctx: click.Context, ticket_id: str, path: list, calculate_hash: bool,
+    json_dump: bool) -> None:
   """Uploads evidence to Turbinia server."""
   client: api_client.ApiClient = ctx.obj.api_client
   api_instance_config = turbinia_configuration_api.TurbiniaConfigurationApi(
       client)
   max_upload_size = api_instance_config.read_config()['API_MAX_UPLOAD_SIZE']
   api_instance = turbinia_evidence_api.TurbiniaEvidenceApi(client)
-  all_files = list(file)
-  for current_directory in directory:
-    for file_name in os.listdir(current_directory):
-      file_path = os.path.join(current_directory, file_name)
+  files = []
+  for current_path in path:
+    if os.path.isfile(current_path):
+      files.append(current_path)
+      continue
+    for file_name in os.listdir(current_path):
+      file_path = os.path.join(current_path, file_name)
       if os.path.isfile(file_path):
-        all_files.append(file_path)
+        files.append(file_path)
   report = {}
-  for file_path in all_files:
+  for file_path in files:
     try:
       size = os.path.getsize(file_path)
       if size > max_upload_size:
@@ -449,12 +440,10 @@ def upload_evidence(
           f'when calling upload_evidence: {exception}')
       log.error(error_message)
       report[abs_path] = error_message
-  if not all_files:
-    log.error('No file was passed in the arguments.')
-  elif json_dump:
+  if json_dump:
     formatter.echo_json(report)
   else:
     report = '\n'.join(
         formatter.EvidenceMarkdownReport({}).dict_to_markdown(
-            report, 0, format_name=False))
+            report, 0, format_keys=False))
     click.echo(report)

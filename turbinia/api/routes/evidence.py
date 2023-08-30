@@ -28,6 +28,7 @@ from turbinia.api.schemas import request_options
 from turbinia import evidence
 from turbinia import config as turbinia_config
 from turbinia import state_manager
+from turbinia import TurbiniaException
 
 log = logging.getLogger('turbinia')
 router = APIRouter(prefix='/evidence', tags=['Turbinia Evidence'])
@@ -53,15 +54,20 @@ async def get_file_path(file_name: str, ticket_id: str) -> str:
   Returns:
     file_path (str): Path where the file will be saved.
   """
-  file_name = os.path.splitext(file_name)[0]
-  file_extension = os.path.splitext(file_name)[1]
-  file_extension = '.' + file_extension if file_extension else ''
-  current_time = datetime.now().strftime(turbinia_config.DATETIME_FORMAT)
-  new_name = f'{file_name}_{current_time}{file_extension}'
-  os.makedirs(
-      f'{turbinia_config.API_EVIDENCE_UPLOAD_DIR}/{ticket_id}', exist_ok=True)
-  return os.path.join(
-      turbinia_config.API_EVIDENCE_UPLOAD_DIR, ticket_id, new_name)
+  try:
+    file_name = os.path.splitext(file_name)[0]
+    file_extension = os.path.splitext(file_name)[1]
+    file_extension = '.' + file_extension if file_extension else ''
+    current_time = datetime.now().strftime(turbinia_config.DATETIME_FORMAT)
+    new_name = f'{file_name}_{current_time}{file_extension}'
+    os.makedirs(
+        f'{turbinia_config.API_EVIDENCE_UPLOAD_DIR}/{ticket_id}', exist_ok=True)
+    return os.path.join(
+        turbinia_config.API_EVIDENCE_UPLOAD_DIR, ticket_id, new_name)
+  except OSError as exception:
+    raise TurbiniaException(
+        f'Failed in setting path for file {file_name} in ticket '
+        f'{ticket_id}') from exception
 
 
 async def upload_file(
@@ -97,7 +103,7 @@ async def upload_file(
             f'Unable to upload file {file.filename} greater',
             f'than {turbinia_config.API_MAX_UPLOAD_SIZE / (1024 ** 3)} GB')
         log.error(error_message)
-        raise IOError(error_message)
+        raise TurbiniaException(error_message)
     file_info = {
         'original_name': file.filename,
         'file_name': os.path.basename(file_path),
@@ -133,12 +139,13 @@ async def get_evidence_attributes(request: Request, evidence_type):
 
 @router.get('/summary')
 async def get_evidence_summary(
-    request: Request, sort: str = Query(None, enum=EVIDENCE_SUMMARY_ATTRIBUTES),
-    output: str = Query('keys', enum=('keys', 'values', 'count'))):
+    request: Request, group: str = Query(
+        None, enum=EVIDENCE_SUMMARY_ATTRIBUTES), output: str = Query(
+            'keys', enum=('keys', 'content', 'count'))):
   """Retrieves a summary of all evidences in Redis.
 
   Args:
-    sort Optional(str): Attribute used to sort summary.
+    group Optional(str): Attribute used to group summary.
     output Optional(str): Sets how the evidence found will be output. 
 
   Returns:
@@ -147,12 +154,12 @@ async def get_evidence_summary(
   Raises:
     HTTPException: if there are no evidences.
   """
-  if sort and sort not in EVIDENCE_SUMMARY_ATTRIBUTES:
+  if group and group not in EVIDENCE_SUMMARY_ATTRIBUTES:
     raise HTTPException(
         status_code=400, detail=(
-            f'Cannot sort by attribute {sort}. '
-            f'Sortable attributes: {EVIDENCE_SUMMARY_ATTRIBUTES}'))
-  if evidences := redis_manager.get_evidence_summary(sort, output):
+            f'Cannot group by attribute {group}. '
+            f'Groupable attributes: {EVIDENCE_SUMMARY_ATTRIBUTES}'))
+  if evidences := redis_manager.get_evidence_summary(group, output):
     return JSONResponse(content=evidences, status_code=200)
   raise HTTPException(status_code=404, detail='No evidence found.')
 
@@ -162,7 +169,7 @@ async def query_evidence(
     request: Request, attribute_name: str = Query(
         'request_id', enum=EVIDENCE_QUERY_ATTRIBUTES),
     attribute_value: str = Query(), output: str = Query(
-        'keys', enum=('keys', 'values', 'count'))):
+        'keys', enum=('keys', 'content', 'count'))):
   """Queries evidence in Redis that have the specified attribute value.
 
   Args:
@@ -237,19 +244,15 @@ async def upload_evidence(
     warning_message = None
     try:
       file_path = await get_file_path(file.filename, ticket_id)
-    except OSError as exception:
-      warning_message = (
-          f'Failed in setting path for file {file.filename} in ticket '
-          f'{ticket_id}: {exception}')
-    try:
       file_info = await upload_file(file, file_path, calculate_hash)
-    except IOError as exception:
+      file.file.close()
+    except TurbiniaException as exception:
       warning_message = exception
-    file.file.close()
-    if evidence_key := redis_manager.get_evidence_key_by_hash(
-        file_info.get('hash')):
-      warning_message = (
-          f'File {file.filename} was uploaded before, check {evidence_key}')
+    else:
+      if evidence_key := redis_manager.get_evidence_key_by_hash(
+          file_info.get('hash')):
+        warning_message = (
+            f'File {file.filename} was uploaded before, check {evidence_key}')
     if warning_message:
       evidences.append(warning_message)
       log.error(warning_message)

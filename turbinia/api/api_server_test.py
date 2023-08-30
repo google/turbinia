@@ -314,22 +314,22 @@ class testTurbiniaAPIServer(unittest.TestCase):
     """Test getting evidence summary."""
     testGetEvidenceSummary.return_value = self._SORTED_KEYS_SUMMARY
     response = self.client.get(
-        '/api/evidence/summary?output=keys, sort=request_id')
-    sorted_keys_result = json.loads(response.content)
+        '/api/evidence/summary?output=keys, group=request_id')
+    grouped_keys_result = json.loads(response.content)
     testGetEvidenceSummary.return_value = self._COUNT_SUMMARY
     response = self.client.get('/api/evidence/summary?output=count')
     count_result = json.loads(response.content)
-    self.assertEqual(self._SORTED_KEYS_SUMMARY, sorted_keys_result)
+    self.assertEqual(self._SORTED_KEYS_SUMMARY, grouped_keys_result)
     self.assertEqual(self._COUNT_SUMMARY, count_result)
 
   def testEvidenceSummaryWrongAttribute(self):
-    """Test getting evidence summary sorted with invalid attribute."""
+    """Test getting evidence summary grouped with invalid attribute."""
     attribute = 'test_attribute'
-    response = self.client.get(f'api/evidence/summary?sort={attribute}')
+    response = self.client.get(f'api/evidence/summary?group={attribute}')
     self.assertEqual(response.status_code, 400)
     self.assertEqual(
         response.json()['detail'].split('.')[0],
-        f'Cannot sort by attribute {attribute}')
+        f'Cannot group by attribute {attribute}')
 
   @mock.patch('turbinia.api.routes.evidence.redis_manager.get_evidence_summary')
   def testEvidenceSummaryNotFound(self, testGetEvidenceSummary):
