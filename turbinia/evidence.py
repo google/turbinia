@@ -315,7 +315,7 @@ class Evidence:
     return self.__str__()
 
   def __setattr__(self, attribute_name: str, attribute_value: Any):
-    """Sets the value of the attribute and updates last_updated.
+    """Sets the value of the attribute and updates last_update.
 
     Args:
       attribute_name (str): name of the attribute to be set.
@@ -324,8 +324,8 @@ class Evidence:
     if attribute_name == 'name':
       attribute_name = '_name'
     self.__dict__[attribute_name] = attribute_value
-    if attribute_name != 'last_updated':
-      self.last_updated = datetime.now().strftime(DATETIME_FORMAT)
+    if attribute_name != 'last_update':
+      self.last_update = datetime.now().strftime(DATETIME_FORMAT)
 
   @property
   def name(self):
