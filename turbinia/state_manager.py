@@ -245,6 +245,7 @@ class RedisStateManager(BaseStateManager):
         socket_timeout=10, socket_keepalive=True, socket_connect_timeout=10)
 
   def set_client(self, redis_client):
+    """Sets the Turbinia state manager"""
     self.client = redis_client
 
   def _validate_data(self, data):

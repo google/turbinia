@@ -397,9 +397,11 @@ class testTurbiniaAPIServer(unittest.TestCase):
     expected_evidence_2_name = (
         f'{os.path.splitext(evidence_2_name)[0]}_{mocked_now_str}')
     expected_evidence_1_path = os.path.join(
-        turbinia_config.OUTPUT_DIR, ticket_id, expected_evidence_1_name)
+        turbinia_config.API_EVIDENCE_UPLOAD_DIR, ticket_id,
+        expected_evidence_1_name)
     expected_evidence_2_path = os.path.join(
-        turbinia_config.OUTPUT_DIR, ticket_id, expected_evidence_2_name)
+        turbinia_config.API_EVIDENCE_UPLOAD_DIR, ticket_id,
+        expected_evidence_2_name)
     expected_response = [{
         'original_name': evidence_1_name,
         'file_name': expected_evidence_1_name,
