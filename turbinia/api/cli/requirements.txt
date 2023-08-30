@@ -2,4 +2,3 @@ click
 turbinia-api-lib
 google-auth-oauthlib
 pandas
-mimetypes
