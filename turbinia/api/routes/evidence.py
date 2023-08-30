@@ -32,7 +32,7 @@ from turbinia import TurbiniaException
 
 log = logging.getLogger('turbinia')
 router = APIRouter(prefix='/evidence', tags=['Turbinia Evidence'])
-redis_manager = state_manager.get_state_manager()
+redis_manager = state_manager.RedisStateManager()
 
 EVIDENCE_SUMMARY_ATTRIBUTES = (
     '_name', 'cloud_only', 'context_dependent', 'copyable', 'creation_time',
