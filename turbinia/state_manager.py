@@ -492,12 +492,14 @@ class RedisStateManager(BaseStateManager):
       if attribute_value not in EMPTY_JSON_VALUES:
         self.set_attribute(redis_key, attribute_name, attribute_value)
 
-  def write_evidence(self, evidence_dict: dict[str], update=True) -> str:
+  def write_evidence(self, evidence_dict: dict[str], update=False) -> str:
     """Writes evidence into redis.
 
     Args:
       evidence_dict (dict[str]): A dictionary containing the serialized
-      evidence attributes that will be saved.
+        evidence attributes that will be saved.
+      update (bool): Allows overwriting previous key and blocks writing new 
+        ones.
 
     Returns:
       evidence_key (str): The key corresponding to the evidence in Redis
@@ -513,6 +515,7 @@ class RedisStateManager(BaseStateManager):
       error_message = 'Error deserializing evidence attribute.'
       log.error(f'{error_message}: {exception}')
       raise TurbiniaException(error_message) from exception
+    # Either updates or write new key
     if not self.key_exists(evidence_key) ^ update:
       self.write_hash_object(evidence_key, evidence_dict)
       if evidence_hash:
