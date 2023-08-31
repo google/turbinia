@@ -516,7 +516,7 @@ class RedisStateManager(BaseStateManager):
       log.error(f'{error_message}: {exception}')
       raise TurbiniaException(error_message) from exception
     # Either updates or write new key
-    if not self.key_exists(evidence_key) ^ update:
+    if update == self.key_exists(evidence_key):
       self.write_hash_object(evidence_key, evidence_dict)
       if evidence_hash:
         self.set_attribute(
