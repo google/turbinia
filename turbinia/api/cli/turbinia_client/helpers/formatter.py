@@ -22,6 +22,7 @@ from click import echo as click_echo
 
 import logging
 import json
+import pandas
 
 log = logging.getLogger('turbinia')
 
@@ -313,10 +314,114 @@ class SummaryMarkdownReport(MarkdownReportComponent):
 class WorkersMarkdownReport(MarkdownReportComponent):
   """A markdown report of all tasks for a specific worker."""
 
-  def __init__(self, request_data: dict):
+  def __init__(self, workers_status: dict, days: int):
     super().__init__()
-    self._request_data: dict = request_data
+    self._workers_status: dict = workers_status
+    self._days: int = days
 
   def generate_markdown(self) -> str:
-    """Generates a Markdown version of tasks per worker."""
-    raise NotImplementedError
+    """Generates a Markdown version of tasks per worker.
+    
+    Returns:
+      markdown (str): Markdown version of tasks per worker.
+    """
+    report = []
+    worker_status = self._workers_status.copy()
+    scheduled_tasks = worker_status.pop('scheduled_tasks')
+    report.append(
+        self.heading1(
+            f'Turbinia report for Worker activity within {self._days} days'))
+    report.append(self.bullet(f'{len(worker_status.keys())} Worker(s) found.'))
+    report.append(
+        self.bullet(
+            f'{scheduled_tasks} Task(s) unassigned or scheduled and pending '
+            f'Worker assignment.'))
+    for worker_node, task_types in worker_status.items():
+      report.append('')
+      report.append(self.heading2(f'Worker Node: {worker_node:s}'))
+      for task_type, tasks in task_types.items():
+        report.append(self.heading3(task_type.replace('_', ' ').title()))
+        if not tasks:
+          report.append(self.bullet('No Tasks found.'))
+          report.append('')
+          continue
+        for task_id, task_attributes in tasks.items():
+          report.append(
+              self.bullet(f'{task_id} - {task_attributes["task_name"]}'))
+          for attribute_name, attribute_value in task_attributes.items():
+            if attribute_name != 'task_name':
+              formatted_name = attribute_name.replace('_', ' ').title()
+              report.append(
+                  self.bullet(f'{formatted_name}: {attribute_value}', level=2))
+        report.append('')
+
+    return '\n'.join(report)
+
+
+class StatsMarkdownReport(MarkdownReportComponent):
+  """A markdown report of the task statistics."""
+
+  def __init__(self, statistics: dict):
+    super().__init__()
+    self._statistics: dict = statistics
+    self.table_dict = {
+        'TASK': [],
+        'COUNT': [],
+        'MIN': [],
+        'MEAN': [],
+        'MAX': []
+    }
+
+  def stat_to_row(self, task: str, stat_dict: dict):
+    """Generates a row of the statistics table.
+    
+    Args:
+      task (str): Name of the current task.
+      stat_dict (dict): Dictionary with information about current row.
+    """
+    self.table_dict['TASK'].append(f'{task}')
+    self.table_dict['COUNT'].append(stat_dict.get('count', ''))
+    self.table_dict['MIN'].append(stat_dict.get('min', ''))
+    self.table_dict['MEAN'].append(stat_dict.get('mean', ''))
+    self.table_dict['MAX'].append(stat_dict.get('max', ''))
+
+  def generate_data_frame(self) -> pandas.DataFrame:
+    """Generates a pandas DataFrame of the statistics table
+
+    Args:
+      markdown (bool): Bool defining if the tasks should be in markdown format.
+    
+    Returns: 
+      data_frame (DataFrame): Statistics table in pandas DataFrame format.
+    """
+    for stat_group, stat_dict in self._statistics.items():
+      stat_group = stat_group.replace('_', ' ').title()
+      if stat_group in ('All Tasks', 'Successful Tasks', 'Failed Tasks',
+                        'Requests'):
+        first_column = stat_group
+        self.stat_to_row(first_column, stat_dict)
+        continue
+      for description, inner_dict in stat_dict.items():
+        first_column = f'{stat_group.split(" ")[-1]} {description}'
+        self.stat_to_row(first_column, inner_dict)
+    return pandas.DataFrame(self.table_dict)
+
+  def generate_markdown(self) -> str:
+    """Generates a Markdown version of task statistics.
+    
+    Returns:
+      markdown(str): Markdown version of task statistics.
+    """
+    report = [self.heading1('Execution time statistics for Turbinia:')]
+    data_frame = self.generate_data_frame()
+    table = data_frame.to_markdown(index=False)
+    report.append(table)
+    return '\n'.join(report)
+
+  def generate_csv(self) -> str:
+    """Generates a CSV version of task statistics.
+    
+    Returns:
+      csv(str): CSV version of task statistics.
+    """
+    return self.generate_data_frame().to_csv(index=False)

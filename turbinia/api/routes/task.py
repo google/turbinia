@@ -25,12 +25,58 @@ from fastapi.requests import Request
 from fastapi.encoders import jsonable_encoder
 
 from pydantic import ValidationError
-from turbinia import state_manager
 from turbinia import config as turbinia_config
+from turbinia import state_manager
+from turbinia.api.models import workers_status
+from turbinia.api.models import tasks_statistics
 
 log = logging.getLogger('turbinia:api_server:task')
 
 router = APIRouter(prefix='/task', tags=['Turbinia Tasks'])
+
+
+@router.get('/statistics')
+async def get_task_statistics(
+    request: Request, days: int = None, task_id: str = None,
+    request_id: str = None,
+    user: str = None) -> tasks_statistics.CompleteTurbiniaStats:
+  """Retrieves  statistics for Turbinia execution.
+
+  Args:
+    days (int): The number of days we want history for.
+    task_id (string): The Id of the task.
+    request_id (string): The Id of the request we want tasks for.
+    user (string): The user of the request we want tasks for.
+
+  Returns:
+    statistics (str): JSON-formatted task statistics report.
+  """
+  statistics = tasks_statistics.CompleteTurbiniaStats()
+  if statistics.format_task_statistics(days=days, task_id=task_id,
+                                       request_id=request_id, user=user):
+    return statistics
+  raise HTTPException(status_code=404, detail='No task found.')
+
+
+@router.get('/workers')
+async def get_workers_status(
+    request: Request, days: int = 7, all_fields: bool = False):
+  """Retrieves the workers status.
+
+  Args:
+    days (int): The UUID of the evidence.
+    all_fields (bool): Returns all status fields if set to true.
+
+  Returns:
+    workers_status (str): JSON-formatted workers status.
+
+  Raises:
+    HTTPException: if no worker is found.
+  """
+  workers_dict = workers_status.WorkersStatus()
+  if workers_dict.get_workers_status(days, all_fields):
+    return JSONResponse(content=workers_dict.status, status_code=200)
+  raise HTTPException(status_code=404, detail='No workers found.')
 
 
 @router.get('/{task_id}')
