@@ -588,6 +588,91 @@ paths:
       summary: Get Task Output
       tags:
         - Turbinia Request Results
+  /api/task/statistics:
+    get:
+      description:
+        "Retrieves  statistics for Turbinia execution.\n\nArgs:\n  days\
+        \ (int): The number of days we want history for.\n  task_id (string): The\
+        \ Id of the task.\n  request_id (string): The Id of the request we want tasks\
+        \ for.\n  user (string): The user of the request we want tasks for.\n\nReturns:\n\
+        \  statistics (dict): Task statistics report."
+      operationId: get_task_statistics
+      parameters:
+        - in: query
+          name: days
+          required: false
+          schema:
+            title: Days
+            type: integer
+        - in: query
+          name: task_id
+          required: false
+          schema:
+            title: Task Id
+            type: string
+        - in: query
+          name: request_id
+          required: false
+          schema:
+            title: Request Id
+            type: string
+        - in: query
+          name: user
+          required: false
+          schema:
+            title: User
+            type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+          description: Validation Error
+      summary: Get Task Statistics
+      tags:
+        - Turbinia Tasks
+  /api/task/workers:
+    get:
+      description:
+        "Retrieves the workers status.\n\nArgs:\n  days (int): The UUID\
+        \ of the evidence.\n\nRaises:\n  HTTPException: if no worker is found.\nReturns:"
+      operationId: get_workers_status
+      parameters:
+        - in: query
+          name: days
+          required: false
+          schema:
+            default: 7
+            title: Days
+            type: integer
+        - in: query
+          name: all_fields
+          required: false
+          schema:
+            default: false
+            title: All Fields
+            type: boolean
+      responses:
+        "200":
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+          description: Validation Error
+      summary: Get Workers Status
+      tags:
+        - Turbinia Tasks
   /api/task/{task_id}:
     get:
       description: Retrieve task information.

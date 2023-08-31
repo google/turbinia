@@ -30,11 +30,14 @@ from fastapi.testclient import TestClient
 from turbinia.api.api_server import app
 from turbinia.api.routes.router import api_router
 from turbinia.api.routes.ui import ui_router
+from turbinia.api.cli.turbinia_client.helpers import formatter
 
 from turbinia import config as turbinia_config
 from turbinia import state_manager
 from turbinia.jobs import manager as jobs_manager
 from turbinia.workers import TurbiniaTask
+
+from textwrap import dedent
 
 
 class testTurbiniaAPIServer(unittest.TestCase):
