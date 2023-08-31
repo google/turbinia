@@ -38,7 +38,8 @@ router = APIRouter(prefix='/task', tags=['Turbinia Tasks'])
 @router.get('/statistics')
 async def get_task_statistics(
     request: Request, days: int = None, task_id: str = None,
-    request_id: str = None, user: str = None):
+    request_id: str = None,
+    user: str = None) -> tasks_statistics.CompleteTurbiniaStats:
   """Retrieves  statistics for Turbinia execution.
 
   Args:
@@ -53,7 +54,7 @@ async def get_task_statistics(
   statistics = tasks_statistics.CompleteTurbiniaStats()
   if statistics.format_task_statistics(days=days, task_id=task_id,
                                        request_id=request_id, user=user):
-    return JSONResponse(content=statistics.model_dump(), status_code=200)
+    return statistics
   raise HTTPException(status_code=404, detail='No task found.')
 
 
