@@ -85,8 +85,9 @@ class SingleTurbiniaStats:
     Returns:
       String of statistics data
     """
-    return '{0:s}: Count: {1:d}, Min: {2!s}, Mean: {3!s}, Max: {4!s}'.format(
-        self.description, self.count, self.min, self.mean, self.max)
+    return (
+        f'{self.description}: Count: {self.count}, Min: {self.min}, '
+        f'Mean: {self.mean}, Max: {self.maxs}')
 
   def format_stats_csv(self):
     """Formats statistics data into CSV output.
@@ -94,8 +95,9 @@ class SingleTurbiniaStats:
     Returns:
       String of statistics data in CSV format
     """
-    return '{0:s}, {1:d}, {2!s}, {3!s}, {4!s}'.format(
-        self.description, self.count, self.min, self.mean, self.max)
+    return (
+        f'{self.description}, {self.count}, {self.min}, {self.mean}, '
+        f'{self.max}')
 
   def to_dict(self):
     """Formats statistics data into a json-serializable dict.
@@ -237,7 +239,8 @@ class CompleteTurbiniaStats(BaseModel):
   def format_task_statistics(
       self, days: int = 0, task_id: str = None, request_id: str = None,
       user: str = None) -> bool:
-    """Formats statistics for Turbinia execution data as a json-serializable dict.
+    """Formats statistics for Turbinia execution data as a json-serializable 
+    dict.
 
       Args:
         days (int): The number of days we want history for.
