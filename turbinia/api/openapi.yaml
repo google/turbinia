@@ -96,6 +96,47 @@ components:
         - files
       title: Body_upload_evidence_api_evidence_upload_post
       type: object
+    CompleteTurbiniaStats:
+      description: Statistics for different groups of tasks.
+      properties:
+        all_tasks:
+          default: {}
+          title: All Tasks
+          type: object
+        failed_tasks:
+          default: {}
+          title: Failed Tasks
+          type: object
+        requests:
+          default: {}
+          title: Requests
+          type: object
+        successful_tasks:
+          default: {}
+          title: Successful Tasks
+          type: object
+        tasks_per_type:
+          default: {}
+          title: Tasks Per Type
+          type: object
+        tasks_per_user:
+          default: {}
+          title: Tasks Per User
+          type: object
+        tasks_per_worker:
+          default: {}
+          title: Tasks Per Worker
+          type: object
+      required:
+        - all_tasks
+        - successful_tasks
+        - failed_tasks
+        - requests
+        - tasks_per_type
+        - tasks_per_worker
+        - tasks_per_user
+      title: CompleteTurbiniaStats
+      type: object
     HTTPValidationError:
       properties:
         detail:
@@ -595,7 +636,7 @@ paths:
         \ (int): The number of days we want history for.\n  task_id (string): The\
         \ Id of the task.\n  request_id (string): The Id of the request we want tasks\
         \ for.\n  user (string): The user of the request we want tasks for.\n\nReturns:\n\
-        \  statistics (dict): Task statistics report."
+        \  statistics (str): JSON-formatted task statistics report."
       operationId: get_task_statistics
       parameters:
         - in: query
@@ -626,7 +667,8 @@ paths:
         "200":
           content:
             application/json:
-              schema: {}
+              schema:
+                $ref: "#/components/schemas/CompleteTurbiniaStats"
           description: Successful Response
         "422":
           content:
@@ -641,7 +683,9 @@ paths:
     get:
       description:
         "Retrieves the workers status.\n\nArgs:\n  days (int): The UUID\
-        \ of the evidence.\n\nRaises:\n  HTTPException: if no worker is found.\nReturns:"
+        \ of the evidence.\n  all_fields (bool): Returns all status fields if set\
+        \ to true.\n\nReturns:\n  workers_status (str): JSON-formatted workers status.\n\
+        \nRaises:\n  HTTPException: if no worker is found."
       operationId: get_workers_status
       parameters:
         - in: query

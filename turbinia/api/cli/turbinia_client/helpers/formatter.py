@@ -506,7 +506,7 @@ class StatsMarkdownReport(MarkdownReportComponent):
     Returns: 
       data_frame (DataFrame): Statistics table in pandas DataFrame format.
     """
-    for stat_group, stat_dict in self._statistics.items():
+    for stat_group, stat_dict in self._statistics.__dict__.items():
       stat_group = stat_group.replace('_', ' ').title()
       if stat_group in ('All Tasks', 'Successful Tasks', 'Failed Tasks',
                         'Requests'):
