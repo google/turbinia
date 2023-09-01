@@ -18,52 +18,83 @@ components:
             - items:
                 type: string
               type: array
+            - type: "null"
           title: Filter Patterns
         group_id:
           anyOf:
             - type: string
+            - type: "null"
           title: Group Id
         jobs_allowlist:
           anyOf:
             - items:
                 type: string
               type: array
+            - type: "null"
           title: Jobs Allowlist
         jobs_denylist:
           anyOf:
             - items:
                 type: string
               type: array
+            - type: "null"
           title: Jobs Denylist
         reason:
           anyOf:
             - type: string
+            - type: "null"
           title: Reason
         recipe_data:
           anyOf:
             - type: string
+            - type: "null"
           title: Recipe Data
         recipe_name:
           anyOf:
             - type: string
+            - type: "null"
           title: Recipe Name
         request_id:
           anyOf:
             - type: string
+            - type: "null"
           title: Request Id
         requester:
           anyOf:
             - type: string
+            - type: "null"
           title: Requester
         sketch_id:
           anyOf:
             - type: integer
+            - type: "null"
           title: Sketch Id
         yara_rules:
           anyOf:
             - type: string
+            - type: "null"
           title: Yara Rules
       title: BaseRequestOptions
+      type: object
+    Body_upload_evidence_api_evidence_upload_post:
+      properties:
+        calculate_hash:
+          default: false
+          title: Calculate Hash
+          type: boolean
+        files:
+          items:
+            format: binary
+            type: string
+          title: Files
+          type: array
+        ticket_id:
+          title: Ticket Id
+          type: string
+      required:
+        - ticket_id
+        - files
+      title: Body_upload_evidence_api_evidence_upload_post
       type: object
     HTTPValidationError:
       properties:
@@ -80,7 +111,7 @@ components:
         description:
           anyOf:
             - type: string
-
+            - type: "null"
           default: Turbinia request object
           title: Description
         evidence:
@@ -121,7 +152,7 @@ info:
     url: https://www.apache.org/licenses/LICENSE-2.0.html
   title: Turbinia API Server
   version: 1.0.0
-openapi: 3.0.2
+openapi: 3.1.0
 paths:
   /api/config/:
     get:
@@ -134,44 +165,6 @@ paths:
               schema: {}
           description: Successful Response
       summary: Read Config
-      tags:
-        - Turbinia Configuration
-  /api/config/evidence:
-    get:
-      description: Returns supported Evidence object types and required parameters.
-      operationId: get_evidence_types
-      responses:
-        "200":
-          content:
-            application/json:
-              schema: {}
-          description: Successful Response
-      summary: Get Evidence Types
-      tags:
-        - Turbinia Configuration
-  /api/config/evidence/{evidence_name}:
-    get:
-      description: Returns supported Evidence object types and required parameters.
-      operationId: get_evidence_attributes_by_name
-      parameters:
-        - in: path
-          name: evidence_name
-          required: true
-          schema:
-            title: Evidence Name
-      responses:
-        "200":
-          content:
-            application/json:
-              schema: {}
-          description: Successful Response
-        "422":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/HTTPValidationError"
-          description: Validation Error
-      summary: Get Evidence Attributes By Name
       tags:
         - Turbinia Configuration
   /api/config/request_options:
@@ -187,6 +180,243 @@ paths:
       summary: Get Request Options
       tags:
         - Turbinia Configuration
+  /api/evidence/query:
+    get:
+      description:
+        "Queries evidence in Redis that have the specified attribute value.\n\
+        \nArgs:\n  attribute_name (str): Name of attribute to be queried.\n  attribute_value\
+        \ (str): Value the attribute must have.\n  output Optional(str): Sets how\
+        \ the evidence found will be output.\n\nReturns:\n  summary (dict): Summary\
+        \ of all evidences and their content.\n\nRaises:\n  HTTPException: If no matching\
+        \ evidence is found."
+      operationId: query_evidence
+      parameters:
+        - in: query
+          name: attribute_name
+          required: false
+          schema:
+            default: request_id
+            enum:
+              - _name
+              - cloud_only
+              - context_dependent
+              - copyable
+              - creation_time
+              - description
+              - has_child_evidence
+              - last_update
+              - local_path
+              - mount_path
+              - parent_evidence
+              - request_id
+              - resource_id
+              - resource_tracked
+              - save_metadata
+              - saved_path
+              - saved_path_type
+              - size
+              - source
+              - source_path
+              - type
+              - tasks
+            title: Attribute Name
+            type: string
+        - in: query
+          name: attribute_value
+          required: true
+          schema:
+            title: Attribute Value
+            type: string
+        - in: query
+          name: output
+          required: false
+          schema:
+            default: keys
+            enum:
+              - keys
+              - content
+              - count
+            title: Output
+            type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+          description: Validation Error
+      summary: Query Evidence
+      tags:
+        - Turbinia Evidence
+  /api/evidence/summary:
+    get:
+      description:
+        "Retrieves a summary of all evidences in Redis.\n\nArgs:\n  group\
+        \ Optional(str): Attribute used to group summary.\n  output Optional(str):\
+        \ Sets how the evidence found will be output. \n\nReturns:\n  summary (dict):\
+        \ Summary of all evidences and their content.\n\nRaises:\n  HTTPException:\
+        \ if there are no evidences."
+      operationId: get_evidence_summary
+      parameters:
+        - in: query
+          name: group
+          required: false
+          schema:
+            enum:
+              - _name
+              - cloud_only
+              - context_dependent
+              - copyable
+              - creation_time
+              - description
+              - has_child_evidence
+              - last_update
+              - local_path
+              - mount_path
+              - parent_evidence
+              - request_id
+              - resource_id
+              - resource_tracked
+              - save_metadata
+              - saved_path
+              - saved_path_type
+              - size
+              - source
+              - source_path
+              - type
+            title: Group
+            type: string
+        - in: query
+          name: output
+          required: false
+          schema:
+            default: keys
+            enum:
+              - keys
+              - content
+              - count
+            title: Output
+            type: string
+      responses:
+        "200":
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+          description: Validation Error
+      summary: Get Evidence Summary
+      tags:
+        - Turbinia Evidence
+  /api/evidence/types:
+    get:
+      description: Returns supported Evidence object types and required parameters.
+      operationId: get_evidence_types
+      responses:
+        "200":
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+      summary: Get Evidence Types
+      tags:
+        - Turbinia Evidence
+  /api/evidence/types/{evidence_type}:
+    get:
+      description:
+        "Returns supported required parameters for evidence type.\n\nArgs:\n\
+        \  evidence_type (str): Name of evidence type."
+      operationId: get_evidence_attributes
+      parameters:
+        - in: path
+          name: evidence_type
+          required: true
+          schema:
+            title: Evidence Type
+      responses:
+        "200":
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+          description: Validation Error
+      summary: Get Evidence Attributes
+      tags:
+        - Turbinia Evidence
+  /api/evidence/upload:
+    post:
+      description:
+        "Upload evidence file to server for processing.\n\nArgs:\n  ticket_id\
+        \ (str): ID of the ticket, which will be the name of the folder \n    where\
+        \ the evidence will be saved.\n  calculate_hash (bool): Boolean defining if\
+        \ the hash of the evidence should\n    be calculated.\n  file (List[UploadFile]):\
+        \ Evidence files to be uploaded to folder for later\n      processing. The\
+        \ maximum size of the file is 10 GB. \n\nReturns:\n  List of uploaded evidences\
+        \ or warning messages if any."
+      operationId: upload_evidence
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: "#/components/schemas/Body_upload_evidence_api_evidence_upload_post"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+          description: Validation Error
+      summary: Upload Evidence
+      tags:
+        - Turbinia Evidence
+  /api/evidence/{evidence_id}:
+    get:
+      description:
+        "Retrieves an evidence in Redis by using its UUID.\n\nArgs:\n \
+        \ evidence_id (str): The UUID of the evidence.\n\nRaises:\n  HTTPException:\
+        \ if the evidence is not found.\n\nReturns:\n  Dictionary of the stored evidence"
+      operationId: get_evidence_by_id
+      parameters:
+        - in: path
+          name: evidence_id
+          required: true
+          schema:
+            title: Evidence Id
+      responses:
+        "200":
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+          description: Validation Error
+      summary: Get Evidence By Id
+      tags:
+        - Turbinia Evidence
   /api/jobs/:
     get:
       description: Return enabled jobs from the current Turbinia config.
