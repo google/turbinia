@@ -123,9 +123,14 @@ def get_jobs(ctx: click.Context) -> None:
 @click.pass_context
 @click.argument('request_id')
 @click.option(
+    '--show_all', '-a', help='Shows all field regardless of priority.',
+    is_flag=True, required=False)
+@click.option(
     '--json_dump', '-j', help='Generates JSON output.', is_flag=True,
     required=False)
-def get_request(ctx: click.Context, request_id: str, json_dump: bool) -> None:
+def get_request(
+    ctx: click.Context, request_id: str, show_all: bool,
+    json_dump: bool) -> None:
   """Gets Turbinia request status."""
   client: api_client.ApiClient = ctx.obj.api_client
   api_instance = turbinia_requests_api.TurbiniaRequestsApi(client)
@@ -139,7 +144,8 @@ def get_request(ctx: click.Context, request_id: str, json_dump: bool) -> None:
     if json_dump:
       formatter.echo_json(api_response)
     else:
-      report = formatter.RequestMarkdownReport(api_response).generate_markdown()
+      report = formatter.RequestMarkdownReport(api_response).generate_markdown(
+          show_all=show_all)
       click.echo(report)
   except exceptions.ApiException as exception:
     log.error(
@@ -246,9 +252,13 @@ def get_requests_summary(ctx: click.Context, json_dump: bool) -> None:
 @click.pass_context
 @click.argument('task_id')
 @click.option(
+    '--show_all', '-a', help='Shows all field regardless of priority.',
+    is_flag=True, required=False)
+@click.option(
     '--json_dump', '-j', help='Generates JSON output.', is_flag=True,
     required=False)
-def get_task(ctx: click.Context, task_id: str, json_dump: bool) -> None:
+def get_task(
+    ctx: click.Context, task_id: str, show_all: bool, json_dump: bool) -> None:
   """Gets Turbinia task status."""
   client: api_client.ApiClient = ctx.obj.api_client
   api_instance = turbinia_tasks_api.TurbiniaTasksApi(client)
@@ -257,7 +267,8 @@ def get_task(ctx: click.Context, task_id: str, json_dump: bool) -> None:
     if json_dump:
       formatter.echo_json(api_response)
     else:
-      report = formatter.TaskMarkdownReport(api_response).generate_markdown()
+      report = formatter.TaskMarkdownReport(api_response).generate_markdown(
+          show_all=show_all)
       click.echo(report)
   except exceptions.ApiException as exception:
     log.error(

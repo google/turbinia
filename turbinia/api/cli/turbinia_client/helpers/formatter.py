@@ -24,6 +24,10 @@ import logging
 import json
 import pandas
 
+MEDIUM_PRIORITY = 50
+HIGH_PRIORITY = 20
+CRITICAL_PRIORITY = 10
+
 log = logging.getLogger('turbinia')
 
 IMPORTANT_ATTRIBUTES = {
@@ -267,34 +271,54 @@ class TaskMarkdownReport(MarkdownReportComponent):
     super().__init__()
     self._request_data: dict = request_data
 
-  def generate_markdown(self) -> str:
+  def generate_markdown(self, show_all=False, compact=False) -> str:
     """Generate a markdown report."""
     report: list[str] = []
     task: dict = self._request_data
     if not task:
       return ''
 
+    priority = task.get('report_priority') if task.get(
+        'report_priority') else MEDIUM_PRIORITY
+
+    if priority <= CRITICAL_PRIORITY:
+      name = f'{task.get("name")} ({"CRITICAL PRIORITY"})'
+    elif priority <= HIGH_PRIORITY:
+      name = f'{task.get("name")} ({"HIGH PRIORITY"})'
+    elif priority <= MEDIUM_PRIORITY:
+      name = f'{task.get("name")} ({"MEDIUM PRIORITY"})'
+    else:
+      name = f'{task.get("name")} ({"LOW PRIORITY"})'
+
     try:
-      report.append(self.heading2(task.get('name')))
+      report.append(self.heading2(name))
       line = f"{self.bold('Evidence:'):s} {task.get('evidence_name')!s}"
       report.append(self.bullet(line))
       line = f"{self.bold('Status:'):s} {task.get('status')!s}"
       report.append(self.bullet(line))
-      report.append(self.bullet(f"Task Id: {task.get('id')!s}"))
-      report.append(
-          self.bullet(f"Executed on worker {task.get('worker_name')!s}"))
-      if task.get('report_data'):
-        report.append('')
-        report.append(self.heading3('Task Reported Data'))
-        report.extend(task.get('report_data').splitlines())
-      report.append('')
-      report.append(self.heading3('Saved Task Files:'))
-
-      saved_paths = task.get('saved_paths')
-      if saved_paths:
-        for path in saved_paths:
-          report.append(self.bullet(self.code(path)))
+      if show_all or priority <= MEDIUM_PRIORITY:
+        report.append(self.bullet(f"Task Id: {task.get('id')!s}"))
+        report.append(
+            self.bullet(f"Executed on worker {task.get('worker_name')!s}"))
+      if show_all or priority <= HIGH_PRIORITY:
+        if task.get('report_data'):
+          if not compact:
+            report.append('')
+          report.append(self.heading3('Task Reported Data'))
+          report.extend(task.get('report_data').splitlines())
+        if not compact:
           report.append('')
+      if show_all or priority <= CRITICAL_PRIORITY:
+        if not compact:
+          report.append('')
+        report.append(self.heading3('Saved Task Files:'))
+        saved_paths = task.get('saved_paths')
+        if saved_paths:
+          for path in saved_paths:
+            report.append(self.bullet(self.code(path)))
+            if not compact:
+              report.append('')
+      report.append('')
     except TypeError as exception:
       log.warning(f'Error formatting the Markdown report: {exception!s}')
 
@@ -310,7 +334,10 @@ class RequestMarkdownReport(MarkdownReportComponent):
     super().__init__()
     self._request_data: dict = request_data
 
-    tasks = [TaskMarkdownReport(task) for task in request_data.get('tasks')]
+    sorted_tasks = sorted(
+        request_data.get('tasks'), key=lambda x: x['report_priority'])
+
+    tasks = [TaskMarkdownReport(task) for task in sorted_tasks]
     self.add_components(tasks)
 
   def add(self, component: MarkdownReportComponent) -> None:
@@ -328,7 +355,7 @@ class RequestMarkdownReport(MarkdownReportComponent):
         self.components.append(component)
         component.parent = self
 
-  def generate_markdown(self) -> str:
+  def generate_markdown(self, show_all=False) -> str:
     """Generates a Markdown version of Requests results."""
     report: list[str] = []
     request_dict: dict = self._request_data
@@ -357,12 +384,14 @@ class RequestMarkdownReport(MarkdownReportComponent):
           self.bullet(f"Queued tasks: {request_dict.get('queued_tasks')}"))
       report.append(
           self.bullet(f"Evidence Name: {request_dict.get('evidence_name')}"))
+      report.append(
+          self.bullet(f"Evidence ID: {request_dict.get('evidence_id')}"))
       report.append('')
     except TypeError as exception:
       log.warning(f'Error formatting the Markdown report: {exception!s}')
 
     for task in self.components:
-      report.append(task.generate_markdown())
+      report.append(task.generate_markdown(show_all=show_all, compact=True))
 
     self.report = '\n'.join(report)
     return self.report

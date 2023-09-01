@@ -46,6 +46,7 @@ class testTurbiniaAPIServer(unittest.TestCase):
   _TASK_TEST_DATA = {
       'id': 'c8f73a5bc5084086896023c12c7cc026',
       'evidence_name': '/evidence/test.tgz',
+      'evidence_id': '084d5904f3d2412b99dc29ed34853a16',
       'all_args': 'compresseddirectory -l /evidence/test.tgz',
       'job_id': '1db0dc47d8f244f5b4fa7e15b8a87861',
       'start_time': '2022-04-01T19:15:14.791074Z',
@@ -67,6 +68,7 @@ class testTurbiniaAPIServer(unittest.TestCase):
 
   _REQUEST_TEST_DATA = {
       'evidence_name': '/evidence/test.tgz',
+      'evidence_id': '084d5904f3d2412b99dc29ed34853a16',
       'failed_tasks': 0,
       'last_task_update_time': '2022-04-01T19:17:14.791074Z',
       'queued_tasks': 0,
