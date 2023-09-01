@@ -211,6 +211,7 @@ def get_statistics(
   try:
     api_response = api_instance.get_task_statistics(
         days=days, task_id=task_id, request_id=request_id, user=user)
+    api_response = api_response.__dict__
     if json_dump:
       formatter.echo_json(api_response)
     else:
