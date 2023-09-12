@@ -15,23 +15,23 @@ services:
         environment:
             - REDIS_REPLICATION_MODE=master
 
-    turbinia-server:
+    #turbinia-server:
         #image: "turbinia-server-dev" # Use this for local development and comment out below line
-        image: "us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-server:latest" # Latest stable
-        container_name: turbinia-server
+    #    image: "us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-server:latest" # Latest stable
+    #    container_name: turbinia-server
 
-        volumes:
-            - $PWD/evidence:/evidence
-            - $PWD/conf/turbinia.conf:/etc/turbinia/turbinia.conf
+    #    volumes:
+    #        - $PWD/evidence:/evidence
+    #        - $PWD/conf/turbinia.conf:/etc/turbinia/turbinia.conf
 
-        environment:
-            - LC_ALL=C.UTF-8
-            - LANG=C.UTF-8
-            - TURBINIA_EXTRA_ARGS=${TURBINIA_EXTRA_ARGS}
+    #    environment:
+    #        - LC_ALL=C.UTF-8
+    #        - LANG=C.UTF-8
+    #        - TURBINIA_EXTRA_ARGS=${TURBINIA_EXTRA_ARGS}
 
     turbinia-api-server:
-        #image: "turbinia-api-server-dev" # Use this for local development and comment out below line
-        image: "us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-api-server:latest" # Latest stable
+        #image: "turbinia-api-server-jl" # Use this for local development and comment out below line
+        image: "us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-api-server-jl:latest" # Latest stable
         container_name: turbinia-api-server
 
         volumes:
@@ -43,20 +43,20 @@ services:
             - LANG=C.UTF-8
             - TURBINIA_EXTRA_ARGS=${TURBINIA_EXTRA_ARGS}
 
-    turbinia-worker:
-        #image: "turbinia-worker-dev" # Use this for local development and comment out below line
-        image: "us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-worker:latest" # Latest stable
-        container_name: turbinia-worker
-        privileged: true
+    #turbinia-worker:
+    #    #image: "turbinia-worker-dev" # Use this for local development and comment out below line
+    #    image: "us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-worker:latest" # Latest stable
+    #    container_name: turbinia-worker
+    #    privileged: true
 
-        volumes:
-            - $PWD/evidence:/evidence
-            - $PWD/conf/turbinia.conf:/etc/turbinia/turbinia.conf
+    #    volumes:
+    #        - $PWD/evidence:/evidence
+    #        - $PWD/conf/turbinia.conf:/etc/turbinia/turbinia.conf
 
-        environment:
-            - LC_ALL=C.UTF-8
-            - LANG=C.UTF-8
-            - TURBINIA_EXTRA_ARGS=${TURBINIA_EXTRA_ARGS}
+    #    environment:
+    #        - LC_ALL=C.UTF-8
+    #        - LANG=C.UTF-8
+    #        - TURBINIA_EXTRA_ARGS=${TURBINIA_EXTRA_ARGS}
     # Uncomment below in case you want to run a second worker on the same host.
     #  turbinia-worker2:
     #     #image: "turbinia-worker-dev" # Use this for local development and comment out below line

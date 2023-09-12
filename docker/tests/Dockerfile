@@ -63,6 +63,7 @@ RUN apt-get update && apt-get -y upgrade && apt-get -y install \
     git \
     john \
     john-data \
+    libssl-dev \
     libleveldb1d \
     libleveldb-dev \
     libterm-readline-gnu-perl \
@@ -70,49 +71,30 @@ RUN apt-get update && apt-get -y upgrade && apt-get -y install \
     pocl-opencl-icd \
     p7zip-full \
     python3-pip \
+    python3.10-venv \
     software-properties-common \
     sudo \
     testdisk \
+    tox \
     wget \
     && apt-get clean && rm -rf /var/cache/apt/* /var/lib/apt/lists/*
 
-#ADD requirements.txt /tmp/
-#RUN cd /tmp/ && pip3 install -r requirements.txt
-
 RUN pip3 install pip --upgrade
 RUN pip3 install poetry
-#RUN pip3 install requests --upgrade
-#RUN pip3 install urllib3 cryptography --upgrade
 
 # Install various packages from the GIFT PPA
 #   bulkextractor
-#   dfImageTools
 #   docker-explorer
-#   libbde-tools
-#   libfsapfs-tools
-#   libluksde-tools
-#   Plaso
 #   Sleuthkit
 RUN add-apt-repository -y ppa:gift/$PPA_TRACK
 RUN apt-get update && apt-get -y install \
     bulk-extractor \
-    dfimagetools-tools \
     docker-explorer-tools \
-    libbde-tools \
-    libewf \
-    libewf-python3 \
-    libewf-tools \
-    libfsapfs-tools \
-    libluksde-tools \
-    plaso-tools \
-    python3-dfimagetools \
-    python3-dfvfs \
-    python3-plaso \
     sleuthkit \
     && apt-get clean && rm -rf /var/cache/apt/* /var/lib/apt/lists/*
 
 # Add turbinia user to system and sudoers
-RUN useradd -r -s /bin/nologin -G disk,sudo -u 999 turbinia
+RUN useradd -r -s /sbin/nologin -G disk,sudo -u 999 turbinia
 RUN echo "turbinia ALL = (root) NOPASSWD: ALL" > /etc/sudoers.d/turbinia
 
 # Install yara rules and fraken binary.
@@ -151,18 +133,21 @@ RUN cd /home/turbinia && echo "" > password.lst
 RUN cd /home/turbinia && curl -s https://raw.githubusercontent.com/danielmiessler/SecLists/285474cf9bff85f3323c5a1ae436f78acd1cb62c/Passwords/UserPassCombo-Jay.txt >> password.lst
 RUN cd /home/turbinia && curl -s https://raw.githubusercontent.com/danielmiessler/SecLists/master/Passwords/Common-Credentials/10-million-password-list-top-1000000.txt >> password.lst
 RUN cp /home/turbinia/password.lst /root/
-RUN echo ':\nd' > /home/turbinia/turbinia-password-cracking.rules
 
 # Copy Kubernetes support tool to home folder
 COPY --chown=turbinia:turbinia k8s/tools/check-lockfile.py /home/turbinia/check-lockfile.py
 
-# Use the REELASE_TAG argument passed via --build-arg cli argument
-ARG RELEASE_TAG
-RUN pip3 install turbinia[worker]==$RELEASE_TAG
+RUN python3 -m venv /venv
+ENV PATH="/venv/bin:$PATH" VIRTUAL_ENV=/venv
 
-COPY docker/worker/start.sh /home/turbinia/start.sh
-RUN chmod +rwx /home/turbinia/start.sh
-USER turbinia
-CMD ["/home/turbinia/start.sh"]
-# Expose Prometheus endpoint.
-EXPOSE 9200/tcp
+# Install third-party dependencies
+RUN python3 -m pip install impacket --no-deps
+
+# Install Turbinia in /venv using Poetry
+ADD . /tmp/
+WORKDIR /tmp/
+# RUN if $(cd /tmp/ && git rev-parse --is-shallow-repository); then cd /tmp/ && git fetch --prune --unshallow && git fetch --depth=1 origin +refs/tags/*:refs/tags/*; fi
+RUN poetry install --no-ansi -E worker -E gcp --with test
+# We need to install the current dev version of turbinia-api-lib for the cli tool test in case the API client changes
+RUN cd turbinia/api/client && pip3 install -e .
+CMD ["/bin/bash"]

@@ -220,6 +220,9 @@ click==8.1.7 ; python_version >= "3.10" and python_version < "4.0" \
 colorama==0.4.6 ; python_version >= "3.10" and python_version < "4.0" and (platform_system == "Windows" or sys_platform == "win32") \
     --hash=sha256:08695f5cb7ed6e0531a20572697297273c47b8cae5a63ffc6d6ed5c201be6e44 \
     --hash=sha256:4f1d9991f5acc0ca119f9d443620b77f9d6b33703e51011c16baf57afb285fc6
+colorlog==2.10.0 ; python_version >= "3.10" and python_version < "4.0" \
+    --hash=sha256:188a8f47b797fdf001891b5a55263789a2fda0ba7ba4c44f12741d0a8d5e9e03 \
+    --hash=sha256:229cd0794a19d8f33b2b4a4b70e1225b6c010af96c2dc8615279abbc1bb3929a
 cryptography==41.0.4 ; python_version >= "3.10" and python_version < "4.0" \
     --hash=sha256:004b6ccc95943f6a9ad3142cfabcc769d7ee38a3f60fb0dddbfb431f818c3a67 \
     --hash=sha256:047c4603aeb4bbd8db2756e38f5b8bd7e94318c047cfe4efeb5d715e08b49311 \
@@ -268,6 +271,9 @@ filelock==3.12.4 ; python_version >= "3.10" and python_version < "4.0" \
 google-api-core==1.34.0 ; python_version >= "3.10" and python_version < "4.0" \
     --hash=sha256:6fb380f49d19ee1d09a9722d0379042b7edb06c0112e4796c7a395078a043e71 \
     --hash=sha256:7421474c39d396a74dfa317dddbc69188f2336835f526087c7648f91105e32ff
+google-api-core[grpc]==1.34.0 ; python_version >= "3.10" and python_version < "4.0" \
+    --hash=sha256:6fb380f49d19ee1d09a9722d0379042b7edb06c0112e4796c7a395078a043e71 \
+    --hash=sha256:7421474c39d396a74dfa317dddbc69188f2336835f526087c7648f91105e32ff
 google-api-python-client==2.101.0 ; python_version >= "3.10" and python_version < "4.0" \
     --hash=sha256:71760dcf11d191b65520d1c13757a776f4f43cf87f302097a0d8e491c2ef87b0 \
     --hash=sha256:e9620a809251174818e1fce16604006f10a9c2ac0d3d94a139cdddcd4dbea2d8
@@ -277,9 +283,160 @@ google-auth-httplib2==0.1.1 ; python_version >= "3.10" and python_version < "4.0
 google-auth==1.35.0 ; python_version >= "3.10" and python_version < "4.0" \
     --hash=sha256:997516b42ecb5b63e8d80f5632c1a61dddf41d2a4c2748057837e06e00014258 \
     --hash=sha256:b7033be9028c188ee30200b204ea00ed82ea1162e8ac1df4aa6ded19a191d88e
+google-cloud-appengine-logging==1.3.1 ; python_version >= "3.10" and python_version < "4.0" \
+    --hash=sha256:8b1ec202de1ad4dbe5e40076af0324e179695b8dc4735c7dcedf6297786e761f \
+    --hash=sha256:b3f5f797d6bacc60654de21901902f8a7878f7168d76be5d47c7775fe0c3e0a8
+google-cloud-audit-log==0.2.5 ; python_version >= "3.10" and python_version < "4.0" \
+    --hash=sha256:18b94d4579002a450b7902cd2e8b8fdcb1ea2dd4df3b41f8f82be6d9f7fcd746 \
+    --hash=sha256:86e2faba3383adc8fd04a5bd7fd4f960b3e4aedaa7ed950f2f891ce16902eb6b
+google-cloud-core==1.7.3 ; python_version >= "3.10" and python_version < "4.0" \
+    --hash=sha256:d5af737c60a73b9588a0511332ac0cdc6294ad8e477c7b82be03a1afc7c3f7b6 \
+    --hash=sha256:dfa40e9d75a825632103326cc52617e3652658c17c6f7360448388d6c9d009fe
+google-cloud-datastore==2.0.0 ; python_version >= "3.10" and python_version < "4.0" \
+    --hash=sha256:6873ff457d565ee373b56dab0fa564b3d89f89f36d0acba54cec809d643605bb \
+    --hash=sha256:dd83b82650b179cbbf010dd7bbb2fac871e1f5baea019f1bd080669b97c3bd8f
+google-cloud-error-reporting==1.9.2 ; python_version >= "3.10" and python_version < "4.0" \
+    --hash=sha256:4beef1ea02312437d5ed77ba0ce0556c934c4446254452f21a8f0112921d228c \
+    --hash=sha256:efd7d9011c58113e68bb17da5ce532c309b444b30694caecd0f5be2420fe5c66
+google-cloud-logging==2.7.2 ; python_version >= "3.10" and python_version < "4.0" \
+    --hash=sha256:1ecc36a5a232b5561ac067023ad27bdea83f40cada4190e141a8bb802644bd0a \
+    --hash=sha256:a35707c44afb940fa6a1a07ba20014a0417257ff64a477e7d44abcb86b5b86a2
+google-cloud-pubsub==1.7.0 ; python_version >= "3.10" and python_version < "4.0" \
+    --hash=sha256:b7f577621f991b513034c50f3314ef66838701b3b0dd1fca0d5e9a0e82f9f801 \
+    --hash=sha256:c8d098ebd208d00c8f3bb55eefecd8553e7391d59700426a97d35125f0dcb248
+google-cloud-storage==2.2.1 ; python_version >= "3.10" and python_version < "4.0" \
+    --hash=sha256:0244f4612710cb5ec445fc6774387564e23f9823363fb408b28724e2102401b7 \
+    --hash=sha256:abdf0fadf26516172e804e00b9c24819a3b3f7351cd32f35ca249bbfac965494
+google-crc32c==1.5.0 ; python_version >= "3.10" and python_version < "4.0" \
+    --hash=sha256:024894d9d3cfbc5943f8f230e23950cd4906b2fe004c72e29b209420a1e6b05a \
+    --hash=sha256:02c65b9817512edc6a4ae7c7e987fea799d2e0ee40c53ec573a692bee24de876 \
+    --hash=sha256:02ebb8bf46c13e36998aeaad1de9b48f4caf545e91d14041270d9dca767b780c \
+    --hash=sha256:07eb3c611ce363c51a933bf6bd7f8e3878a51d124acfc89452a75120bc436289 \
+    --hash=sha256:1034d91442ead5a95b5aaef90dbfaca8633b0247d1e41621d1e9f9db88c36298 \
+    --hash=sha256:116a7c3c616dd14a3de8c64a965828b197e5f2d121fedd2f8c5585c547e87b02 \
+    --hash=sha256:19e0a019d2c4dcc5e598cd4a4bc7b008546b0358bd322537c74ad47a5386884f \
+    --hash=sha256:1c7abdac90433b09bad6c43a43af253e688c9cfc1c86d332aed13f9a7c7f65e2 \
+    --hash=sha256:1e986b206dae4476f41bcec1faa057851f3889503a70e1bdb2378d406223994a \
+    --hash=sha256:272d3892a1e1a2dbc39cc5cde96834c236d5327e2122d3aaa19f6614531bb6eb \
+    --hash=sha256:278d2ed7c16cfc075c91378c4f47924c0625f5fc84b2d50d921b18b7975bd210 \
+    --hash=sha256:2ad40e31093a4af319dadf503b2467ccdc8f67c72e4bcba97f8c10cb078207b5 \
+    --hash=sha256:2e920d506ec85eb4ba50cd4228c2bec05642894d4c73c59b3a2fe20346bd00ee \
+    --hash=sha256:3359fc442a743e870f4588fcf5dcbc1bf929df1fad8fb9905cd94e5edb02e84c \
+    --hash=sha256:37933ec6e693e51a5b07505bd05de57eee12f3e8c32b07da7e73669398e6630a \
+    --hash=sha256:398af5e3ba9cf768787eef45c803ff9614cc3e22a5b2f7d7ae116df8b11e3314 \
+    --hash=sha256:3b747a674c20a67343cb61d43fdd9207ce5da6a99f629c6e2541aa0e89215bcd \
+    --hash=sha256:461665ff58895f508e2866824a47bdee72497b091c730071f2b7575d5762ab65 \
+    --hash=sha256:4c6fdd4fccbec90cc8a01fc00773fcd5fa28db683c116ee3cb35cd5da9ef6c37 \
+    --hash=sha256:5829b792bf5822fd0a6f6eb34c5f81dd074f01d570ed7f36aa101d6fc7a0a6e4 \
+    --hash=sha256:596d1f98fc70232fcb6590c439f43b350cb762fb5d61ce7b0e9db4539654cc13 \
+    --hash=sha256:5ae44e10a8e3407dbe138984f21e536583f2bba1be9491239f942c2464ac0894 \
+    --hash=sha256:635f5d4dd18758a1fbd1049a8e8d2fee4ffed124462d837d1a02a0e009c3ab31 \
+    --hash=sha256:64e52e2b3970bd891309c113b54cf0e4384762c934d5ae56e283f9a0afcd953e \
+    --hash=sha256:66741ef4ee08ea0b2cc3c86916ab66b6aef03768525627fd6a1b34968b4e3709 \
+    --hash=sha256:67b741654b851abafb7bc625b6d1cdd520a379074e64b6a128e3b688c3c04740 \
+    --hash=sha256:6ac08d24c1f16bd2bf5eca8eaf8304812f44af5cfe5062006ec676e7e1d50afc \
+    --hash=sha256:6f998db4e71b645350b9ac28a2167e6632c239963ca9da411523bb439c5c514d \
+    --hash=sha256:72218785ce41b9cfd2fc1d6a017dc1ff7acfc4c17d01053265c41a2c0cc39b8c \
+    --hash=sha256:74dea7751d98034887dbd821b7aae3e1d36eda111d6ca36c206c44478035709c \
+    --hash=sha256:759ce4851a4bb15ecabae28f4d2e18983c244eddd767f560165563bf9aefbc8d \
+    --hash=sha256:77e2fd3057c9d78e225fa0a2160f96b64a824de17840351b26825b0848022906 \
+    --hash=sha256:7c074fece789b5034b9b1404a1f8208fc2d4c6ce9decdd16e8220c5a793e6f61 \
+    --hash=sha256:7c42c70cd1d362284289c6273adda4c6af8039a8ae12dc451dcd61cdabb8ab57 \
+    --hash=sha256:7f57f14606cd1dd0f0de396e1e53824c371e9544a822648cd76c034d209b559c \
+    --hash=sha256:83c681c526a3439b5cf94f7420471705bbf96262f49a6fe546a6db5f687a3d4a \
+    --hash=sha256:8485b340a6a9e76c62a7dce3c98e5f102c9219f4cfbf896a00cf48caf078d438 \
+    --hash=sha256:84e6e8cd997930fc66d5bb4fde61e2b62ba19d62b7abd7a69920406f9ecca946 \
+    --hash=sha256:89284716bc6a5a415d4eaa11b1726d2d60a0cd12aadf5439828353662ede9dd7 \
+    --hash=sha256:8b87e1a59c38f275c0e3676fc2ab6d59eccecfd460be267ac360cc31f7bcde96 \
+    --hash=sha256:8f24ed114432de109aa9fd317278518a5af2d31ac2ea6b952b2f7782b43da091 \
+    --hash=sha256:98cb4d057f285bd80d8778ebc4fde6b4d509ac3f331758fb1528b733215443ae \
+    --hash=sha256:998679bf62b7fb599d2878aa3ed06b9ce688b8974893e7223c60db155f26bd8d \
+    --hash=sha256:9ba053c5f50430a3fcfd36f75aff9caeba0440b2d076afdb79a318d6ca245f88 \
+    --hash=sha256:9c99616c853bb585301df6de07ca2cadad344fd1ada6d62bb30aec05219c45d2 \
+    --hash=sha256:a1fd716e7a01f8e717490fbe2e431d2905ab8aa598b9b12f8d10abebb36b04dd \
+    --hash=sha256:a2355cba1f4ad8b6988a4ca3feed5bff33f6af2d7f134852cf279c2aebfde541 \
+    --hash=sha256:b1f8133c9a275df5613a451e73f36c2aea4fe13c5c8997e22cf355ebd7bd0728 \
+    --hash=sha256:b8667b48e7a7ef66afba2c81e1094ef526388d35b873966d8a9a447974ed9178 \
+    --hash=sha256:ba1eb1843304b1e5537e1fca632fa894d6f6deca8d6389636ee5b4797affb968 \
+    --hash=sha256:be82c3c8cfb15b30f36768797a640e800513793d6ae1724aaaafe5bf86f8f346 \
+    --hash=sha256:c02ec1c5856179f171e032a31d6f8bf84e5a75c45c33b2e20a3de353b266ebd8 \
+    --hash=sha256:c672d99a345849301784604bfeaeba4db0c7aae50b95be04dd651fd2a7310b93 \
+    --hash=sha256:c6c777a480337ac14f38564ac88ae82d4cd238bf293f0a22295b66eb89ffced7 \
+    --hash=sha256:cae0274952c079886567f3f4f685bcaf5708f0a23a5f5216fdab71f81a6c0273 \
+    --hash=sha256:cd67cf24a553339d5062eff51013780a00d6f97a39ca062781d06b3a73b15462 \
+    --hash=sha256:d3515f198eaa2f0ed49f8819d5732d70698c3fa37384146079b3799b97667a94 \
+    --hash=sha256:d5280312b9af0976231f9e317c20e4a61cd2f9629b7bfea6a693d1878a264ebd \
+    --hash=sha256:de06adc872bcd8c2a4e0dc51250e9e65ef2ca91be023b9d13ebd67c2ba552e1e \
+    --hash=sha256:e1674e4307fa3024fc897ca774e9c7562c957af85df55efe2988ed9056dc4e57 \
+    --hash=sha256:e2096eddb4e7c7bdae4bd69ad364e55e07b8316653234a56552d9c988bd2d61b \
+    --hash=sha256:e560628513ed34759456a416bf86b54b2476c59144a9138165c9a1575801d0d9 \
+    --hash=sha256:edfedb64740750e1a3b16152620220f51d58ff1b4abceb339ca92e934775c27a \
+    --hash=sha256:f13cae8cc389a440def0c8c52057f37359014ccbc9dc1f0827936bcd367c6100 \
+    --hash=sha256:f314013e7dcd5cf45ab1945d92e713eec788166262ae8deb2cfacd53def27325 \
+    --hash=sha256:f583edb943cf2e09c60441b910d6a20b4d9d626c75a36c8fcac01a6c96c01183 \
+    --hash=sha256:fd8536e902db7e365f49e7d9029283403974ccf29b13fc7028b97e2295b33556 \
+    --hash=sha256:fe70e325aa68fa4b5edf7d1a4b6f691eb04bbccac0ace68e34820d283b5f80d4
+google-resumable-media==2.6.0 ; python_version >= "3.10" and python_version < "4.0" \
+    --hash=sha256:972852f6c65f933e15a4a210c2b96930763b47197cdf4aa5f5bea435efb626e7 \
+    --hash=sha256:fc03d344381970f79eebb632a3c18bb1828593a2dc5572b5f90115ef7d11e81b
 googleapis-common-protos==1.60.0 ; python_version >= "3.10" and python_version < "4.0" \
     --hash=sha256:69f9bbcc6acde92cab2db95ce30a70bd2b81d20b12eff3f1aabaffcbe8a93918 \
     --hash=sha256:e73ebb404098db405ba95d1e1ae0aa91c3e15a71da031a2eeb6b2e23e7bc3708
+googleapis-common-protos[grpc]==1.60.0 ; python_version >= "3.10" and python_version < "4.0" \
+    --hash=sha256:69f9bbcc6acde92cab2db95ce30a70bd2b81d20b12eff3f1aabaffcbe8a93918 \
+    --hash=sha256:e73ebb404098db405ba95d1e1ae0aa91c3e15a71da031a2eeb6b2e23e7bc3708
+grpc-google-iam-v1==0.12.6 ; python_version >= "3.10" and python_version < "4.0" \
+    --hash=sha256:2bc4b8fdf22115a65d751c9317329322602c39b7c86a289c9b72d228d960ef5f \
+    --hash=sha256:5c10f3d8dc2d88678ab1a9b0cb5482735c5efee71e6c0cd59f872eef22913f5c
+grpcio-status==1.48.2 ; python_version >= "3.10" and python_version < "4.0" \
+    --hash=sha256:2c33bbdbe20188b2953f46f31af669263b6ee2a9b2d38fa0d36ee091532e21bf \
+    --hash=sha256:53695f45da07437b7c344ee4ef60d370fd2850179f5a28bb26d8e2aa1102ec11
+grpcio==1.58.0 ; python_version >= "3.10" and python_version < "4.0" \
+    --hash=sha256:002f228d197fea12797a14e152447044e14fb4fdb2eb5d6cfa496f29ddbf79ef \
+    --hash=sha256:039003a5e0ae7d41c86c768ef8b3ee2c558aa0a23cf04bf3c23567f37befa092 \
+    --hash=sha256:09206106848462763f7f273ca93d2d2d4d26cab475089e0de830bb76be04e9e8 \
+    --hash=sha256:128eb1f8e70676d05b1b0c8e6600320fc222b3f8c985a92224248b1367122188 \
+    --hash=sha256:1c1c5238c6072470c7f1614bf7c774ffde6b346a100521de9ce791d1e4453afe \
+    --hash=sha256:1ed979b273a81de36fc9c6716d9fb09dd3443efa18dcc8652501df11da9583e9 \
+    --hash=sha256:201e550b7e2ede113b63e718e7ece93cef5b0fbf3c45e8fe4541a5a4305acd15 \
+    --hash=sha256:212f38c6a156862098f6bdc9a79bf850760a751d259d8f8f249fc6d645105855 \
+    --hash=sha256:24765a627eb4d9288ace32d5104161c3654128fe27f2808ecd6e9b0cfa7fc8b9 \
+    --hash=sha256:24edec346e69e672daf12b2c88e95c6f737f3792d08866101d8c5f34370c54fd \
+    --hash=sha256:2ef8d4a76d2c7d8065aba829f8d0bc0055495c998dce1964ca5b302d02514fb3 \
+    --hash=sha256:2f85f87e2f087d9f632c085b37440a3169fda9cdde80cb84057c2fc292f8cbdf \
+    --hash=sha256:3886b4d56bd4afeac518dbc05933926198aa967a7d1d237a318e6fbc47141577 \
+    --hash=sha256:3e6bebf1dfdbeb22afd95650e4f019219fef3ab86d3fca8ebade52e4bc39389a \
+    --hash=sha256:458899d2ebd55d5ca2350fd3826dfd8fcb11fe0f79828ae75e2b1e6051d50a29 \
+    --hash=sha256:4891bbb4bba58acd1d620759b3be11245bfe715eb67a4864c8937b855b7ed7fa \
+    --hash=sha256:4b12754af201bb993e6e2efd7812085ddaaef21d0a6f0ff128b97de1ef55aa4a \
+    --hash=sha256:532410c51ccd851b706d1fbc00a87be0f5312bd6f8e5dbf89d4e99c7f79d7499 \
+    --hash=sha256:5b23d75e5173faa3d1296a7bedffb25afd2fddb607ef292dfc651490c7b53c3d \
+    --hash=sha256:62831d5e251dd7561d9d9e83a0b8655084b2a1f8ea91e4bd6b3cedfefd32c9d2 \
+    --hash=sha256:652978551af02373a5a313e07bfef368f406b5929cf2d50fa7e4027f913dbdb4 \
+    --hash=sha256:6801ff6652ecd2aae08ef994a3e49ff53de29e69e9cd0fd604a79ae4e545a95c \
+    --hash=sha256:6cba491c638c76d3dc6c191d9c75041ca5b8f5c6de4b8327ecdcab527f130bb4 \
+    --hash=sha256:7e473a7abad9af48e3ab5f3b5d237d18208024d28ead65a459bd720401bd2f8f \
+    --hash=sha256:8774219e21b05f750eef8adc416e9431cf31b98f6ce9def288e4cea1548cbd22 \
+    --hash=sha256:8f061722cad3f9aabb3fbb27f3484ec9d4667b7328d1a7800c3c691a98f16bb0 \
+    --hash=sha256:92ae871a902cf19833328bd6498ec007b265aabf2fda845ab5bd10abcaf4c8c6 \
+    --hash=sha256:9f13a171281ebb4d7b1ba9f06574bce2455dcd3f2f6d1fbe0fd0d84615c74045 \
+    --hash=sha256:a2d67ff99e70e86b2be46c1017ae40b4840d09467d5455b2708de6d4c127e143 \
+    --hash=sha256:b5e8db0aff0a4819946215f156bd722b6f6c8320eb8419567ffc74850c9fd205 \
+    --hash=sha256:ba0af11938acf8cd4cf815c46156bcde36fa5850518120920d52620cc3ec1830 \
+    --hash=sha256:bc325fed4d074367bebd465a20763586e5e1ed5b943e9d8bc7c162b1f44fd602 \
+    --hash=sha256:bc7ffef430b80345729ff0a6825e9d96ac87efe39216e87ac58c6c4ef400de93 \
+    --hash=sha256:cde11577d5b6fd73a00e6bfa3cf5f428f3f33c2d2878982369b5372bbc4acc60 \
+    --hash=sha256:d4cef77ad2fed42b1ba9143465856d7e737279854e444925d5ba45fc1f3ba727 \
+    --hash=sha256:d79b660681eb9bc66cc7cbf78d1b1b9e335ee56f6ea1755d34a31108b80bd3c8 \
+    --hash=sha256:d81c2b2b24c32139dd2536972f1060678c6b9fbd106842a9fcdecf07b233eccd \
+    --hash=sha256:dc72e04620d49d3007771c0e0348deb23ca341c0245d610605dddb4ac65a37cb \
+    --hash=sha256:dcfba7befe3a55dab6fe1eb7fc9359dc0c7f7272b30a70ae0af5d5b063842f28 \
+    --hash=sha256:e9f995a8a421405958ff30599b4d0eec244f28edc760de82f0412c71c61763d2 \
+    --hash=sha256:eb6b92036ff312d5b4182fa72e8735d17aceca74d0d908a7f08e375456f03e07 \
+    --hash=sha256:f0241f7eb0d2303a545136c59bc565a35c4fc3b924ccbd69cb482f4828d6f31c \
+    --hash=sha256:fad9295fe02455d4f158ad72c90ef8b4bcaadfdb5efb5795f7ab0786ad67dd58 \
+    --hash=sha256:fbcecb6aedd5c1891db1d70efbfbdc126c986645b5dd616a045c07d6bd2dfa86 \
+    --hash=sha256:fe643af248442221db027da43ed43e53b73e11f40c9043738de9a2b4b6ca7697
 h11==0.14.0 ; python_version >= "3.10" and python_version < "4.0" \
     --hash=sha256:8f19fbbe99e72420ff35c00b27a34cb9937e902a8b810e2c88300c6f0a3b699d \
     --hash=sha256:e3fe4ac4b851c468cc8363d500db52c2ead036020723024a109d37346efaa761
@@ -352,6 +509,37 @@ kubernetes==28.1.0 ; python_version >= "3.10" and python_version < "4.0" \
 libcloudforensics==20230601 ; python_version >= "3.10" and python_version < "4.0" \
     --hash=sha256:2a6dc01767ce52d341f41759b4d3455d8741bca5afa2535e7a10c561a167a23c \
     --hash=sha256:66bbac27fed58255f3b593695db2b140769c2e2845c359b1d7c02f8fd82be475
+libcst==1.0.1 ; python_version >= "3.10" and python_version < "4.0" \
+    --hash=sha256:0138068baf09561268c7f079373bda45f0e2b606d2d19df1307ca8a5134fc465 \
+    --hash=sha256:119ba709f1dcb785a4458cf36cedb51d6f9cb2eec0acd7bb171f730eac7cb6ce \
+    --hash=sha256:1adcfa7cafb6a0d39a1a0bec541355608038b45815e0c5019c95f91921d42884 \
+    --hash=sha256:37187337f979ba426d8bfefc08008c3c1b09b9e9f9387050804ed2da88107570 \
+    --hash=sha256:414350df5e334ddf0db1732d63da44e81b734d45abe1c597b5e5c0dd46aa4156 \
+    --hash=sha256:440887e5f82efb299f2e98d4bfa5663851a878cfc0efed652ab8c50205191436 \
+    --hash=sha256:47dba43855e9c7b06d8b256ee81f0ebec6a4f43605456519577e09dfe4b4288c \
+    --hash=sha256:4840a3de701778f0a19582bb3085c61591329153f801dc25da84689a3733960b \
+    --hash=sha256:4b4e336f6d68456017671cdda8ddebf9caebce8052cc21a3f494b03d7bd28386 \
+    --hash=sha256:5599166d5fec40e18601fb8868519dde99f77b6e4ad6074958018f9545da7abd \
+    --hash=sha256:5e3293e77657ba62533553bb9f0c5fb173780e164c65db1ea2a3e0d03944a284 \
+    --hash=sha256:600c4d3a9a2f75d5a055fed713a5a4d812709947909610aa6527abe08a31896f \
+    --hash=sha256:6caa33430c0c7a0fcad921b0deeec61ddb96796b6f88dca94966f6db62065f4f \
+    --hash=sha256:80423311f09fc5fc3270ede44d30d9d8d3c2d3dd50dbf703a581ca7346949fa6 \
+    --hash=sha256:8420926791b0b6206cb831a7ec73d26ae820e65bdf07ce9813c7754c7722c07a \
+    --hash=sha256:8c50541c3fd6b1d5a3765c4bb5ee8ecbba9d0e798e48f79fd5adf3b6752de4d0 \
+    --hash=sha256:8d31ce2790eab59c1bd8e33fe72d09cfc78635c145bdc3f08296b360abb5f443 \
+    --hash=sha256:967c66fabd52102954207bf1541312b467afc210fdf7033f32da992fb6c2372c \
+    --hash=sha256:9a4931feceab171e6fce73de94e13880424367247dad6ff2b49cabfec733e144 \
+    --hash=sha256:9d6dec2a3c443792e6af7c36fadc256e4ea586214c76b52f0d18118811dbe351 \
+    --hash=sha256:a6b5aea04c35e13109edad3cf83bc6dcd74309b150a781d2189eecb288b73a87 \
+    --hash=sha256:ae49dcbfadefb82e830d41d9f0a1db0af3b771224768f431f1b7b3a9803ed7e3 \
+    --hash=sha256:ae7f4e71d714f256b5f2ff98b5a9effba0f9dff4d779d8f35d7eb157bef78f59 \
+    --hash=sha256:b0533de4e35396c61aeb3a6266ac30369a855910c2385aaa902ff4aabd60d409 \
+    --hash=sha256:b666a605f4205c8357696f3b6571a38f6a8537cdcbb8f357587d35168298af34 \
+    --hash=sha256:b97f652b15c50e91df411a9c8d5e6f75882b30743a49b387dcedd3f68ed94d75 \
+    --hash=sha256:c90c74a8a314f0774f045122323fb60bacba79cbf5f71883c0848ecd67179541 \
+    --hash=sha256:d237e9164a43caa7d6765ee560412264484e7620c546a2ee10a8d01bd56884e0 \
+    --hash=sha256:ddd4e0eeec499d1c824ab545e62e957dbbd69a16bc4273208817638eb7d6b3c6 \
+    --hash=sha256:f2cb687e1514625e91024e50a5d2e485c0ad3be24f199874ebf32b5de0346150
 markupsafe==2.1.3 ; python_version >= "3.10" and python_version < "4.0" \
     --hash=sha256:05fb21170423db021895e1ea1e1f3ab3adb85d1c2333cbc2310f2a26bc77272e \
     --hash=sha256:0a4e4a1aff6c7ac4cd55792abf96c915634c2b97e3cc1c7129578aa68ebd754e \
@@ -425,6 +613,9 @@ msrest==0.7.1 ; python_version >= "3.10" and python_version < "4.0" \
 msrestazure==0.6.4 ; python_version >= "3.10" and python_version < "4.0" \
     --hash=sha256:3de50f56147ef529b31e099a982496690468ecef33f0544cb0fa0cfe1e1de5b9 \
     --hash=sha256:a06f0dabc9a6f5efe3b6add4bd8fb623aeadacf816b7a35b0f89107e0544d189
+mypy-extensions==1.0.0 ; python_version >= "3.10" and python_version < "4.0" \
+    --hash=sha256:4392f6c0eb8a5668a69e23d168ffa70f0be9ccfd32b5cc2d26a34ae5b844552d \
+    --hash=sha256:75dbf8955dc00442a438fc4d0666508a9a97b6bd41aa2f0ffe9d2f2725af0782
 netaddr==0.9.0 ; python_version >= "3.10" and python_version < "4.0" \
     --hash=sha256:5148b1055679d2a1ec070c521b7db82137887fabd6d7e37f5199b44f775c3bb1 \
     --hash=sha256:7b46fa9b1a2d71fd5de9e4a3784ef339700a53a08c8040f08baf5f1194da0128
@@ -563,6 +754,9 @@ prometheus-client==0.17.1 ; python_version >= "3.10" and python_version < "4.0" 
 prompt-toolkit==3.0.39 ; python_version >= "3.10" and python_version < "4.0" \
     --hash=sha256:04505ade687dc26dc4284b1ad19a83be2f2afe83e7a828ace0c72f3a1df72aac \
     --hash=sha256:9dffbe1d8acf91e3de75f3b544e4842382fc06c6babe903ac9acb74dc6e08d88
+proto-plus==1.22.3 ; python_version >= "3.10" and python_version < "4.0" \
+    --hash=sha256:a49cd903bc0b6ab41f76bf65510439d56ca76f868adf0274e738bfdd096894df \
+    --hash=sha256:fdcd09713cbd42480740d2fe29c990f7fbd885a67efc328aa8be6ee3e9f76a6b
 protobuf==3.20.3 ; python_version >= "3.10" and python_version < "4.0" \
     --hash=sha256:03038ac1cfbc41aa21f6afcbcd357281d7521b4157926f30ebecc8d4ea59dcb7 \
     --hash=sha256:28545383d61f55b57cf4df63eebd9827754fd2dc25f80c5253f9184235db242c \
@@ -586,6 +780,9 @@ protobuf==3.20.3 ; python_version >= "3.10" and python_version < "4.0" \
     --hash=sha256:e64857f395505ebf3d2569935506ae0dfc4a15cb80dc25261176c784662cdcc4 \
     --hash=sha256:f4bd856d702e5b0d96a00ec6b307b0f51c1982c2bf9c0052cf9019e9a544ba99 \
     --hash=sha256:f4c42102bc82a51108e449cbb32b19b180022941c727bac0cfd50170341f16ee
+psq==0.8.0 ; python_version >= "3.10" and python_version < "4.0" \
+    --hash=sha256:69608f691ecc5b8f0bfa633cf61d96db209342264d8f7d0833eda297a9cfe03c \
+    --hash=sha256:c79de0aa7853799cb3dd06fa1b4076511aa9ec4e5db873a95001fc67abe8c381
 pyasn1-modules==0.3.0 ; python_version >= "3.10" and python_version < "4.0" \
     --hash=sha256:5bd01446b736eb9d31512a30d46c1ac3395d676c6f3cafa4c03eb54b9925631c \
     --hash=sha256:d3ccd6ed470d9ffbc716be08bd90efbd44d0734bc9303818f7336070984a162d
@@ -857,6 +1054,9 @@ starlette==0.27.0 ; python_version >= "3.10" and python_version < "4.0" \
 typing-extensions==4.8.0 ; python_version >= "3.10" and python_version < "4.0" \
     --hash=sha256:8f92fc8806f9a6b641eaa5318da32b44d401efaac0f6678c9bc448ba3605faa0 \
     --hash=sha256:df8e4339e9cb77357558cbdbceca33c303714cf861d1eef15e1070055ae8b7ef
+typing-inspect==0.9.0 ; python_version >= "3.10" and python_version < "4.0" \
+    --hash=sha256:9ee6fc59062311ef8547596ab6b955e1b8aa46242d854bfc78f4f6b0eff35f9f \
+    --hash=sha256:b23fc42ff6f6ef6954e4852c1fb512cdd18dbea03134f91f856a95ccc9461f78
 tzdata==2023.3 ; python_version >= "3.10" and python_version < "4.0" \
     --hash=sha256:11ef1e08e54acb0d4f95bdb1be05da659673de4acbd21bf9c69e94cc5e907a3a \
     --hash=sha256:7e65763eef3120314099b6939b5546db7adce1e7d6f2e179e3df563c70511eda
@@ -1048,3 +1248,6 @@ websockets==11.0.3 ; python_version >= "3.10" and python_version < "4.0" \
     --hash=sha256:f61bdb1df43dc9c131791fbc2355535f9024b9a04398d3bd0684fc16ab07df74 \
     --hash=sha256:fb06eea71a00a7af0ae6aefbb932fb8a7df3cb390cc217d51a9ad7343de1b8d0 \
     --hash=sha256:ffd7dcaf744f25f82190856bc26ed81721508fc5cbf2a330751e135ff1283564
+werkzeug==0.16.1 ; python_version >= "3.10" and python_version < "4.0" \
+    --hash=sha256:1e0dedc2acb1f46827daa2e399c1485c8fa17c0d8e70b6b875b4e7f54bf408d2 \
+    --hash=sha256:b353856d37dec59d6511359f97f6a4b2468442e454bd1c98298ddce53cac1f04

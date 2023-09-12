@@ -44,8 +44,11 @@ def _image_export(command, output_dir, timeout=DEFAULT_TIMEOUT):
   """
   # TODO: Consider using the exec helper to gather stdin/err.
   log.debug(f"Running image_export as [{' '.join(command):s}]")
+
+  # Pass the current PATH variable to the subprocess call.
+  env_path = os.getenv('PATH')
   try:
-    subprocess.check_call(command, timeout=timeout)
+    subprocess.check_call(command, env={'PATH': env_path}, timeout=timeout)
   except subprocess.CalledProcessError as exception:
     raise TurbiniaException(f'image_export.py failed: {exception!s}')
   except subprocess.TimeoutExpired as exception:

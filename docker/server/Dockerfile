@@ -13,15 +13,12 @@ RUN apt-get update && apt-get -y upgrade && apt-get -y install \
     sudo \
     && apt-get clean && rm -rf /var/cache/apt/* /var/lib/apt/lists/*
 
-RUN pip3 install pip --upgrade \
-    && pip3 install urllib3 cryptography requests --upgrade
-
+RUN pip3 install pip --upgrade
 ADD . /tmp/
-RUN cd /tmp/ && pip3 install -r requirements.txt
 
-# unshallow and fetch all tags so our build systems pickup the correct git tag if it's a shallow clone
-RUN if $(cd /tmp/ && git rev-parse --is-shallow-repository); then cd /tmp/ && git fetch --prune --unshallow && git fetch --depth=1 origin +refs/tags/*:refs/tags/*; fi \
-    && cd /tmp/ && python3 setup.py install
+# Use the REELASE_TAG argument passed via --build-arg cli argument
+ARG RELEASE_TAG
+RUN pip3 install turbinia==$RELEASE_TAG
 
 RUN useradd -r -s /bin/nologin -u 999 turbinia
 
