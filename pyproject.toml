@@ -1,0 +1,94 @@
+[tool.poetry]
+name = "turbinia"
+version = "2023112"
+description = ""
+authors = ["Turbinia Developers <turbinia-dev@googlegroups.com>"]
+license = "Apache"
+readme = "README.md"
+
+[tool.poetry.scripts]
+turbiniactl = "turbinia.turbiniactl:main"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+celery = "^5.2.2"
+cryptography = "*"
+docker = "*"
+filelock = "*"
+pycryptodomex = "*"
+prometheus_client = "*"
+libcloudforensics = "20230601"
+pandas = "*"
+pyparsing = "*"
+#pyyaml = "^5.4.1"
+pyOpenSSL = "*"
+python-multipart = "*" 
+redis = "*"
+six = "^1.15.0"
+urllib3 = "*"
+vine = "^5.0.0"
+PyJWT = "*"
+idna = "^2.10"
+
+[tool.poetry.group.gcp]
+optional = true
+
+[tool.poetry.group.gcp.dependencies]
+google-api-core = "<2.0.0dev"
+google-api-python-client = "*"
+google-auth = "<2.0.0.dev0"
+google-cloud-core = "<2.0dev"
+google-cloud-datastore = "<=2.0.0"
+google-cloud-error-reporting = "*"
+google-cloud-logging = ">=2.0.0,<3.0.0dev"
+google-cloud-pubsub = "1.7.0"
+google-cloud-storage = "<=2.2.1"
+grpcio-status = "<1.49.0,>=1.33.2"
+protobuf = ">=3.19.0,<4.0.0dev"
+proto-plus = "<2.0.0dev,>=1.22.0"
+psq = "*"
+
+[tool.poetry.group.api.dependencies]
+fastapi = ">=0.75.0"
+uvicorn = ">=0.17.6"
+httpx = "*"
+
+[tool.poetry.group.worker]
+optional = true
+
+[tool.poetry.group.worker.dependencies]
+dfvfs = ">=20210606"
+cffi = ">=1.9.1"
+dfdatetime = ">=20210509"
+dfimagetools = ">=20220312"
+dtfabric = ">=20170524"
+libbde-python = ">=20140531"
+libewf-python = ">=20131210"
+libfsapfs-python = ">=20201107"
+libfsext-python = ">=20210721"
+libfshfs-python = ">=20210722"
+libfsntfs-python = ">=20200921"
+libfsxfs-python = ">=20210726"
+libfvde-python = ">=20160719"
+libfwnt-python = ">=20210717"
+libluksde-python = ">=20200101"
+libmodi-python = ">=20210405"
+libqcow-python = ">=20201213"
+libsigscan-python = ">=20191221"
+libsmdev-python = ">=20140529"
+libsmraw-python = ">=20140612"
+libvhdi-python = ">=20201014"
+libvmdk-python = ">=20140421"
+libvsgpt-python = ">=20210207"
+libvshadow-python = ">=20160109"
+libvslvm-python = ">=20210807"
+
+[tool.poetry.group.test]
+optional = true
+
+[tool.poetry.group.test.dependencies]
+fakeredis = ">=1.8.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
