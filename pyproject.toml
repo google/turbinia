@@ -82,12 +82,19 @@ libvmdk-python = ">=20140421"
 libvsgpt-python = ">=20210207"
 libvshadow-python = ">=20160109"
 libvslvm-python = ">=20210807"
+dfDewey = "^20220603"
+pyhindsight = "*"
+impacket = "*"
 
 [tool.poetry.group.test]
 optional = true
 
 [tool.poetry.group.test.dependencies]
+coverage = "*"
 fakeredis = ">=1.8.1"
+mock = "*"
+yapf = "*"
+tox = "*"
 
 [build-system]
 requires = ["poetry-core"]
