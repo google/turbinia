@@ -31,8 +31,7 @@ jobs:
       - name: Install and configure test dependencies
         run: |
           docker exec -u root -t turbinia-worker bash -c "/usr/bin/python -m pip install --quiet --upgrade pip"
-          docker exec -u root -t turbinia-worker bash -c "/usr/bin/python -m pip install --quiet mock nose coverage yapf"
-          docker exec -u root -t turbinia-worker bash -c "/usr/bin/python -m pip install --quiet tox"
+          docker exec -u root -t turbinia-worker bash -c "cd /tmp && /usr/bin/python -m pip install --quiet ."
       - name: Run Tests
         run: |
           docker exec -u root -t turbinia-worker bash -c "cd /tmp && ./run_tests.py"
