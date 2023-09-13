@@ -18,12 +18,12 @@ jobs:
       - name: Pull latest docker image for cache
         run: |
           docker pull ${{ matrix.docker_base_image }}
-          docker pull us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-worker-dev:latest
+          docker pull us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-worker-jl:latest
       - name: Build Turbinia worker docker image
         run: docker build --build-arg PPA_TRACK=${{ matrix.gift_ppa_track }} --cache-from=${{ matrix.docker_base_image }},us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-worker-dev:latest -t turbinia-worker-dev -f docker/worker/Dockerfile .
       - name: Run test (turbinia-worker) container
         run: |
-          docker run --name turbinia-worker --entrypoint "/bin/bash" -it -d -t turbinia-worker-dev:latest
+          docker run --name turbinia-worker --entrypoint "/bin/bash" -it -d -t turbinia-worker-jl:latest
       - name: Configure python3
         run: |
           docker exec -u root -t turbinia-worker bash -c "update-alternatives --install /usr/bin/python python /usr/bin/python3 1"
@@ -31,8 +31,9 @@ jobs:
       - name: Install and configure test dependencies
         run: |
           docker exec -u root -t turbinia-worker bash -c "/usr/bin/python -m pip install --quiet --upgrade pip"
-          docker exec -u root -t turbinia-worker bash -c "cd /tmp && /usr/bin/python -m pip install --quiet ."
+          docker exec -u root -t turbinia-worker bash -c "/usr/bin/python -m pip install --quiet poetry"
+          docker exec -u root -t turbinia-worker bash -c "cd /tmp && poetry install --with worker --with gcp --with test"
       - name: Run Tests
         run: |
-          docker exec -u root -t turbinia-worker bash -c "cd /tmp && ./run_tests.py"
-          docker exec -u root -t turbinia-worker bash -c "cd /tmp && tox --sitepackages ${TOXENV}"
+          docker exec -u root -t turbinia-worker bash -c "cd /tmp && poetry run ./run_tests.py"
+          docker exec -u root -t turbinia-worker bash -c "cd /tmp && poetry run tox --sitepackages ${TOXENV}"
