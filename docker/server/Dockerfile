@@ -14,14 +14,16 @@ RUN apt-get update && apt-get -y upgrade && apt-get -y install \
     && apt-get clean && rm -rf /var/cache/apt/* /var/lib/apt/lists/*
 
 RUN pip3 install pip --upgrade \
-    && pip3 install urllib3 cryptography requests --upgrade
+    && pip3 install poetry
 
 ADD . /tmp/
-RUN cd /tmp/ && pip3 install -r requirements.txt
+#RUN cd /tmp/ && pip3 install -r requirements.txt
 
 # unshallow and fetch all tags so our build systems pickup the correct git tag if it's a shallow clone
-RUN if $(cd /tmp/ && git rev-parse --is-shallow-repository); then cd /tmp/ && git fetch --prune --unshallow && git fetch --depth=1 origin +refs/tags/*:refs/tags/*; fi \
-    && cd /tmp/ && python3 setup.py install
+RUN if $(cd /tmp/ && git rev-parse --is-shallow-repository); then cd /tmp/ && git fetch --prune --unshallow && git fetch --depth=1 origin +refs/tags/*:refs/tags/*; fi
+
+# Install package using poetry
+RUN cd /tmp/ && poetry install
 
 RUN useradd -r -s /bin/nologin -u 999 turbinia
 

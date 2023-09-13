@@ -76,20 +76,13 @@ RUN apt-get update && apt-get -y upgrade && apt-get -y install \
     wget \
     && apt-get clean && rm -rf /var/cache/apt/* /var/lib/apt/lists/*
 
-ADD requirements.txt /tmp/
-RUN cd /tmp/ && pip3 install -r requirements.txt
+#ADD requirements.txt /tmp/
+#RUN cd /tmp/ && pip3 install -r requirements.txt
 
 RUN pip3 install pip --upgrade
-RUN pip3 install requests --upgrade
-RUN pip3 install urllib3 cryptography --upgrade
-
-# Install third-party dependencies
-#   dfwdewey
-#   pyhindsight
-#   impacket
-RUN pip3 install dfDewey
-RUN pip3 install pyhindsight
-RUN pip3 install impacket --no-deps
+RUN pip3 install poetry
+#RUN pip3 install requests --upgrade
+#RUN pip3 install urllib3 cryptography --upgrade
 
 # Install various packages from the GIFT PPA
 #   bulkextractor
@@ -166,8 +159,10 @@ COPY --chown=turbinia:turbinia k8s/tools/check-lockfile.py /home/turbinia/check-
 # unshallow and fetch all tags so our build systems pickup the correct git tag if it's a shallow clone
 # install turbinia and cleanup /tmp
 ADD . /tmp/
-RUN if $(cd /tmp/ && git rev-parse --is-shallow-repository); then cd /tmp/ && git fetch --prune --unshallow && git fetch --depth=1 origin +refs/tags/*:refs/tags/*; fi \
-    && cd /tmp/ && python3 setup.py install
+RUN if $(cd /tmp/ && git rev-parse --is-shallow-repository); then cd /tmp/ && git fetch --prune --unshallow && git fetch --depth=1 origin +refs/tags/*:refs/tags/*; fi
+
+# Install package using poetry
+RUN cd /tmp/ && poetry install --with worker
 
 COPY docker/worker/start.sh /home/turbinia/start.sh
 RUN chmod +rwx /home/turbinia/start.sh

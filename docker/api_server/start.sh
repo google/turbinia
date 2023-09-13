@@ -7,7 +7,7 @@ then
 fi
 
 # Start Turbinia API server
-/usr/local/bin/turbiniactl api_server
+poetry run turbiniactl api_server
 
 # Don't exit
 while sleep 1000; do :; done

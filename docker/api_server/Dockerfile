@@ -15,17 +15,18 @@ RUN apt-get update && apt-get -y upgrade
 RUN apt-get -y install python3-pip git wget supervisor curl
 
 RUN pip3 install pip --upgrade
-RUN pip3 install urllib3 cryptography requests --upgrade
+RUN pip3 install poetry
 
-ADD requirements.txt /tmp/
-RUN cd /tmp/ && pip3 install -r requirements.txt
+#ADD requirements.txt /tmp/
+#RUN cd /tmp/ && pip3 install -r requirements.txt
 
 ADD . /tmp/
 
 # unshallow and fetch all tags so our build systems pickup the correct git tag if it's a shallow clone
 RUN if $(cd /tmp/ && git rev-parse --is-shallow-repository); then cd /tmp/ && git fetch --prune --unshallow && git fetch --depth=1 origin +refs/tags/*:refs/tags/*; fi
 
-RUN cd /tmp/ && python3 setup.py install
+# Install the package using poetry
+RUN cd /tmp/ && poetry install
 
 RUN useradd -r -s /bin/nologin -u 999 turbinia
 
