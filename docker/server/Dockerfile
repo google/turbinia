@@ -23,7 +23,7 @@ ADD . /tmp/
 RUN if $(cd /tmp/ && git rev-parse --is-shallow-repository); then cd /tmp/ && git fetch --prune --unshallow && git fetch --depth=1 origin +refs/tags/*:refs/tags/*; fi
 
 # Install package using poetry
-RUN cd /tmp/ && poetry install
+RUN cd /tmp/ && poetry config virtualenvs.create false && poetry install
 
 RUN useradd -r -s /bin/nologin -u 999 turbinia
 

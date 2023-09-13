@@ -162,7 +162,7 @@ ADD . /tmp/
 RUN if $(cd /tmp/ && git rev-parse --is-shallow-repository); then cd /tmp/ && git fetch --prune --unshallow && git fetch --depth=1 origin +refs/tags/*:refs/tags/*; fi
 
 # Install package using poetry
-RUN cd /tmp/ && poetry install --with worker
+RUN cd /tmp/ && poetry config virtualenvs.create false && poetry install --with worker
 
 COPY docker/worker/start.sh /home/turbinia/start.sh
 RUN chmod +rwx /home/turbinia/start.sh

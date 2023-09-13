@@ -6,8 +6,10 @@ then
     echo "${TURBINIA_CONF}" | base64 -d > /etc/turbinia/turbinia.conf
 fi
 
+. /venv/bin/activate
+
 # Start Turbinia API server
-poetry run turbiniactl api_server
+/venv/bin/turbiniactl api_server
 
 # Don't exit
 while sleep 1000; do :; done
