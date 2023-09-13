@@ -13,24 +13,20 @@ ENV DEBIAN_FRONTEND=noninteractive
 COPY --from=build-stage /tmp/web/dist /web/dist
 RUN apt-get update && apt-get -y upgrade
 RUN apt-get -y install git python3-pip python3.10-venv
-
 RUN pip3 install pip --upgrade
 RUN pip3 install poetry
 RUN python3 -m venv /venv
-
-#ADD requirements.txt /tmp/
-#RUN cd /tmp/ && pip3 install -r requirements.txt
 
 COPY . /tmp/
 
 # unshallow and fetch all tags so our build systems pickup the correct git tag if it's a shallow clone
 RUN if $(cd /tmp/ && git rev-parse --is-shallow-repository); then cd /tmp/ && git fetch --prune --unshallow && git fetch --depth=1 origin +refs/tags/*:refs/tags/*; fi
 
-# Install the package using poetry
+# Build and install the package wheel using pip (will pull dependencies from pyproject.toml)
 ENV PATH="/venv/bin:$PATH" VIRTUAL_ENV=/venv
-RUN cd /tmp/ && pip install .
-#RUN cd /tmp/ && poetry config virtualenvs.in-project true && poetry install
+RUN cd /tmp/ && pip3 install wheel && pip3 install .[worker]
 
+# Final stage contains python and the virtualenv built in stage2
 FROM ubuntu:22.04 as build-final
 
 COPY --from=build-stage2 /venv /venv

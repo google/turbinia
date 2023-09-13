@@ -67,7 +67,7 @@ trio = ["trio (<0.22)"]
 name = "artifacts"
 version = "20230723"
 description = "ForensicArtifacts.com Artifact Repository."
-optional = false
+optional = true
 python-versions = "*"
 files = [
     {file = "artifacts-20230723.tar.gz", hash = "sha256:476d23e01052b685c4e877f2f5d309302c317dae2092e45b1db4a4e46c0b3f05"},
@@ -302,7 +302,7 @@ crt = ["awscrt (==0.16.26)"]
 name = "bottle"
 version = "0.12.25"
 description = "Fast and simple WSGI-framework for small web-applications."
-optional = false
+optional = true
 python-versions = "*"
 files = [
     {file = "bottle-0.12.25-py3-none-any.whl", hash = "sha256:d6f15f9d422670b7c073d63bd8d287b135388da187a0f3e3c19293626ce034ea"},
@@ -624,7 +624,7 @@ files = [
 name = "colorlog"
 version = "2.10.0"
 description = "Log formatting with colors!"
-optional = false
+optional = true
 python-versions = "*"
 files = [
     {file = "colorlog-2.10.0-py2.py3-none-any.whl", hash = "sha256:188a8f47b797fdf001891b5a55263789a2fda0ba7ba4c44f12741d0a8d5e9e03"},
@@ -747,7 +747,7 @@ test-randomorder = ["pytest-randomly"]
 name = "dfdatetime"
 version = "20230506"
 description = "Digital Forensics date and time (dfDateTime)."
-optional = false
+optional = true
 python-versions = "*"
 files = [
     {file = "dfdatetime-20230506-py2.py3-none-any.whl", hash = "sha256:91441058c089de8822cf01d0a93acd5112a2d08ad7861ed3fe4cff1cd185ab79"},
@@ -761,7 +761,7 @@ pip = ">=7.0.0"
 name = "dfdewey"
 version = "20220603"
 description = "dfDewey is a digital forensics string extraction, indexing, and searching tool."
-optional = false
+optional = true
 python-versions = ">=3.6"
 files = [
     {file = "dfDewey-20220603-py3-none-any.whl", hash = "sha256:f515275563ddb63a2d478736f1e82f0bc09d86efe267ee8ed0bb958643bd75fe"},
@@ -781,7 +781,7 @@ dev = ["coverage", "mock", "nose", "yapf"]
 name = "dfimagetools"
 version = "20230806"
 description = "Storage media image tools"
-optional = false
+optional = true
 python-versions = "*"
 files = [
     {file = "dfimagetools-20230806.tar.gz", hash = "sha256:d6cc0c8f4788f9a33ecde160b372161834ee20e73d3ef99ae382c8b608dc44e2"},
@@ -829,7 +829,7 @@ PyYAML = ">=3.10"
 name = "dfvfs"
 version = "20230531"
 description = "Digital Forensics Virtual File System (dfVFS)."
-optional = false
+optional = true
 python-versions = "*"
 files = [
     {file = "dfvfs-20230531-py2.py3-none-any.whl", hash = "sha256:4d1c89321689e2848b2cf0166d3771daeb7d70fc0b177c9d452887562deaa88e"},
@@ -873,7 +873,7 @@ PyYAML = ">=3.10"
 name = "dfwinreg"
 version = "20221218"
 description = "Digital Forensics Windows Registry (dfWinReg)."
-optional = false
+optional = true
 python-versions = "*"
 files = [
     {file = "dfwinreg-20221218.tar.gz", hash = "sha256:a98e3dc115c6b8af3a944d76a49cf5ec0c5b2a0fa8003dac5d7cbc78b4b72d2d"},
@@ -902,7 +902,7 @@ files = [
 name = "dnspython"
 version = "2.4.2"
 description = "DNS toolkit"
-optional = false
+optional = true
 python-versions = ">=3.8,<4.0"
 files = [
     {file = "dnspython-2.4.2-py3-none-any.whl", hash = "sha256:57c6fbaaeaaf39c891292012060beb141791735dbb4004798328fc2c467402d8"},
@@ -942,7 +942,7 @@ ssh = ["paramiko (>=2.4.3)"]
 name = "dsinternals"
 version = "1.2.4"
 description = ""
-optional = false
+optional = true
 python-versions = ">=3.4"
 files = [
     {file = "dsinternals-1.2.4.tar.gz", hash = "sha256:030f935a70583845f68d6cfc5a22be6ce3300907788ba74faba50d6df859e91d"},
@@ -952,7 +952,7 @@ files = [
 name = "dtfabric"
 version = "20230520"
 description = "Data type fabric (dtfabric)"
-optional = false
+optional = true
 python-versions = "*"
 files = [
     {file = "dtfabric-20230520.tar.gz", hash = "sha256:ac93c111efde010ece3cf6477856e89a46fc71add64e178386cfe273a1a88553"},
@@ -1035,27 +1035,25 @@ all = ["email-validator (>=2.0.0)", "httpx (>=0.23.0)", "itsdangerous (>=1.1.0)"
 
 [[package]]
 name = "filelock"
-version = "3.12.3"
+version = "3.12.4"
 description = "A platform independent file lock."
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "filelock-3.12.3-py3-none-any.whl", hash = "sha256:f067e40ccc40f2b48395a80fcbd4728262fab54e232e090a4063ab804179efeb"},
-    {file = "filelock-3.12.3.tar.gz", hash = "sha256:0ecc1dd2ec4672a10c8550a8182f1bd0c0a5088470ecd5a125e45f49472fac3d"},
+    {file = "filelock-3.12.4-py3-none-any.whl", hash = "sha256:08c21d87ded6e2b9da6728c3dff51baf1dcecf973b768ef35bcbc3447edb9ad4"},
+    {file = "filelock-3.12.4.tar.gz", hash = "sha256:2e6f249f1f3654291606e046b09f1fd5eac39b360664c27f5aad072012f8bcbd"},
 ]
-
-[package.dependencies]
-typing-extensions = {version = ">=4.7.1", markers = "python_version < \"3.11\""}
 
 [package.extras]
 docs = ["furo (>=2023.7.26)", "sphinx (>=7.1.2)", "sphinx-autodoc-typehints (>=1.24)"]
 testing = ["covdefaults (>=2.3)", "coverage (>=7.3)", "diff-cover (>=7.7)", "pytest (>=7.4)", "pytest-cov (>=4.1)", "pytest-mock (>=3.11.1)", "pytest-timeout (>=2.1)"]
+typing = ["typing-extensions (>=4.7.1)"]
 
 [[package]]
 name = "flask"
 version = "1.1.2"
 description = "A simple framework for building complex web applications."
-optional = false
+optional = true
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
 files = [
     {file = "Flask-1.1.2-py2.py3-none-any.whl", hash = "sha256:8a4fdd8936eba2512e9c85df320a37e694c93945b33ef33c89946a340a238557"},
@@ -1077,7 +1075,7 @@ dotenv = ["python-dotenv"]
 name = "future"
 version = "0.18.3"
 description = "Clean single-source support for Python 3 and 2"
-optional = false
+optional = true
 python-versions = ">=2.6, !=3.0.*, !=3.1.*, !=3.2.*"
 files = [
     {file = "future-0.18.3.tar.gz", hash = "sha256:34a17436ed1e96697a86f9de3d15a3b0be01d8bc8de9c1dffd59fb8234ed5307"},
@@ -1167,7 +1165,7 @@ httplib2 = ">=0.19.0"
 name = "google-cloud-appengine-logging"
 version = "1.3.1"
 description = "Google Cloud Appengine Logging API client library"
-optional = false
+optional = true
 python-versions = ">=3.7"
 files = [
     {file = "google-cloud-appengine-logging-1.3.1.tar.gz", hash = "sha256:b3f5f797d6bacc60654de21901902f8a7878f7168d76be5d47c7775fe0c3e0a8"},
@@ -1186,7 +1184,7 @@ protobuf = ">=3.19.5,<3.20.0 || >3.20.0,<3.20.1 || >3.20.1,<4.21.0 || >4.21.0,<4
 name = "google-cloud-audit-log"
 version = "0.2.5"
 description = "Google Cloud Audit Protos"
-optional = false
+optional = true
 python-versions = ">=3.7"
 files = [
     {file = "google-cloud-audit-log-0.2.5.tar.gz", hash = "sha256:86e2faba3383adc8fd04a5bd7fd4f960b3e4aedaa7ed950f2f891ce16902eb6b"},
@@ -1201,7 +1199,7 @@ protobuf = ">=3.19.5,<3.20.0 || >3.20.0,<3.20.1 || >3.20.1,<4.21.1 || >4.21.1,<4
 name = "google-cloud-core"
 version = "1.7.3"
 description = "Google Cloud API client core library"
-optional = false
+optional = true
 python-versions = ">=2.7,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,!=3.5.*"
 files = [
     {file = "google-cloud-core-1.7.3.tar.gz", hash = "sha256:dfa40e9d75a825632103326cc52617e3652658c17c6f7360448388d6c9d009fe"},
@@ -1220,7 +1218,7 @@ grpc = ["grpcio (>=1.8.2,<2.0dev)"]
 name = "google-cloud-datastore"
 version = "2.0.0"
 description = "Google Cloud Datastore API client library"
-optional = false
+optional = true
 python-versions = ">=3.6"
 files = [
     {file = "google-cloud-datastore-2.0.0.tar.gz", hash = "sha256:dd83b82650b179cbbf010dd7bbb2fac871e1f5baea019f1bd080669b97c3bd8f"},
@@ -1237,7 +1235,7 @@ proto-plus = ">=1.4.0"
 name = "google-cloud-error-reporting"
 version = "1.9.2"
 description = "Google Cloud Error Reporting API client library"
-optional = false
+optional = true
 python-versions = ">=3.7"
 files = [
     {file = "google-cloud-error-reporting-1.9.2.tar.gz", hash = "sha256:4beef1ea02312437d5ed77ba0ce0556c934c4446254452f21a8f0112921d228c"},
@@ -1257,7 +1255,7 @@ protobuf = ">=3.19.5,<3.20.0 || >3.20.0,<3.20.1 || >3.20.1,<4.21.0 || >4.21.0,<4
 name = "google-cloud-logging"
 version = "2.7.2"
 description = "Stackdriver Logging API client library"
-optional = false
+optional = true
 python-versions = ">=3.6"
 files = [
     {file = "google-cloud-logging-2.7.2.tar.gz", hash = "sha256:a35707c44afb940fa6a1a07ba20014a0417257ff64a477e7d44abcb86b5b86a2"},
@@ -1277,7 +1275,7 @@ protobuf = "<4.0.0dev"
 name = "google-cloud-pubsub"
 version = "1.7.0"
 description = "Google Cloud Pub/Sub API client library"
-optional = false
+optional = true
 python-versions = ">=2.7,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*"
 files = [
     {file = "google-cloud-pubsub-1.7.0.tar.gz", hash = "sha256:c8d098ebd208d00c8f3bb55eefecd8553e7391d59700426a97d35125f0dcb248"},
@@ -1292,7 +1290,7 @@ grpc-google-iam-v1 = ">=0.12.3,<0.13dev"
 name = "google-cloud-storage"
 version = "2.2.1"
 description = "Google Cloud Storage API client library"
-optional = false
+optional = true
 python-versions = ">=3.7"
 files = [
     {file = "google-cloud-storage-2.2.1.tar.gz", hash = "sha256:0244f4612710cb5ec445fc6774387564e23f9823363fb408b28724e2102401b7"},
@@ -1311,7 +1309,7 @@ requests = ">=2.18.0,<3.0.0dev"
 name = "google-crc32c"
 version = "1.5.0"
 description = "A python wrapper of the C library 'Google CRC32C'"
-optional = false
+optional = true
 python-versions = ">=3.7"
 files = [
     {file = "google-crc32c-1.5.0.tar.gz", hash = "sha256:89284716bc6a5a415d4eaa11b1726d2d60a0cd12aadf5439828353662ede9dd7"},
@@ -1391,7 +1389,7 @@ testing = ["pytest"]
 name = "google-resumable-media"
 version = "2.6.0"
 description = "Utilities for Google Media Downloads and Resumable Uploads"
-optional = false
+optional = true
 python-versions = ">= 3.7"
 files = [
     {file = "google-resumable-media-2.6.0.tar.gz", hash = "sha256:972852f6c65f933e15a4a210c2b96930763b47197cdf4aa5f5bea435efb626e7"},
@@ -1427,7 +1425,7 @@ grpc = ["grpcio (>=1.44.0,<2.0.0.dev0)"]
 name = "grpc-google-iam-v1"
 version = "0.12.6"
 description = "IAM API client library"
-optional = false
+optional = true
 python-versions = ">=3.7"
 files = [
     {file = "grpc-google-iam-v1-0.12.6.tar.gz", hash = "sha256:2bc4b8fdf22115a65d751c9317329322602c39b7c86a289c9b72d228d960ef5f"},
@@ -1443,7 +1441,7 @@ protobuf = ">=3.19.5,<3.20.0 || >3.20.0,<3.20.1 || >3.20.1,<4.21.1 || >4.21.1,<4
 name = "grpcio"
 version = "1.58.0"
 description = "HTTP/2-based RPC framework"
-optional = false
+optional = true
 python-versions = ">=3.7"
 files = [
     {file = "grpcio-1.58.0-cp310-cp310-linux_armv7l.whl", hash = "sha256:3e6bebf1dfdbeb22afd95650e4f019219fef3ab86d3fca8ebade52e4bc39389a"},
@@ -1500,7 +1498,7 @@ protobuf = ["grpcio-tools (>=1.58.0)"]
 name = "grpcio-status"
 version = "1.48.2"
 description = "Status proto mapping for gRPC"
-optional = false
+optional = true
 python-versions = ">=3.6"
 files = [
     {file = "grpcio-status-1.48.2.tar.gz", hash = "sha256:53695f45da07437b7c344ee4ef60d370fd2850179f5a28bb26d8e2aa1102ec11"},
@@ -1596,7 +1594,7 @@ files = [
 name = "impacket"
 version = "0.11.0"
 description = "Network protocols Constructors and Dissectors"
-optional = false
+optional = true
 python-versions = "*"
 files = [
     {file = "impacket-0.11.0.tar.gz", hash = "sha256:ee4039b4d2aede8f5f64478bc59faac86036796be24dea8dc18f009fb0905e4a"},
@@ -1662,7 +1660,7 @@ six = "*"
 name = "itsdangerous"
 version = "2.1.2"
 description = "Safely pass data to untrusted environments and back."
-optional = false
+optional = true
 python-versions = ">=3.7"
 files = [
     {file = "itsdangerous-2.1.2-py3-none-any.whl", hash = "sha256:2c2349112351b88699d8d4b6b075022c0808887cb7ad10069318a8b0bc88db44"},
@@ -1673,7 +1671,7 @@ files = [
 name = "jaraco-classes"
 version = "3.3.0"
 description = "Utility functions for Python class constructs"
-optional = false
+optional = true
 python-versions = ">=3.8"
 files = [
     {file = "jaraco.classes-3.3.0-py3-none-any.whl", hash = "sha256:10afa92b6743f25c0cf5f37c6bb6e18e2c5bb84a16527ccfc0040ea377e7aaeb"},
@@ -1691,7 +1689,7 @@ testing = ["pytest (>=6)", "pytest-black (>=0.3.7)", "pytest-checkdocs (>=2.4)",
 name = "jeepney"
 version = "0.8.0"
 description = "Low-level, pure Python DBus protocol wrapper."
-optional = false
+optional = true
 python-versions = ">=3.7"
 files = [
     {file = "jeepney-0.8.0-py3-none-any.whl", hash = "sha256:c0a454ad016ca575060802ee4d590dd912e35c122fa04e70306de3d076cce755"},
@@ -1706,7 +1704,7 @@ trio = ["async_generator", "trio"]
 name = "jinja2"
 version = "3.1.2"
 description = "A very fast and expressive template engine."
-optional = false
+optional = true
 python-versions = ">=3.7"
 files = [
     {file = "Jinja2-3.1.2-py3-none-any.whl", hash = "sha256:6088930bfe239f0e6710546ab9c19c9ef35e29792895fed6e6e31a023a182a61"},
@@ -1734,7 +1732,7 @@ files = [
 name = "keyring"
 version = "24.2.0"
 description = "Store and access your passwords safely."
-optional = false
+optional = true
 python-versions = ">=3.8"
 files = [
     {file = "keyring-24.2.0-py3-none-any.whl", hash = "sha256:4901caaf597bfd3bbd78c9a0c7c4c29fcd8310dab2cffefe749e916b6527acd6"},
@@ -1815,7 +1813,7 @@ adal = ["adal (>=1.0.2)"]
 name = "ldap3"
 version = "2.9.1"
 description = "A strictly RFC 4510 conforming LDAP V3 pure Python client library"
-optional = false
+optional = true
 python-versions = "*"
 files = [
     {file = "ldap3-2.9.1-py2.py3-none-any.whl", hash = "sha256:5869596fc4948797020d3f03b7939da938778a0f9e2009f7a072ccf92b8e8d70"},
@@ -1829,7 +1827,7 @@ pyasn1 = ">=0.4.6"
 name = "ldapdomaindump"
 version = "0.9.4"
 description = "Active Directory information dumper via LDAP"
-optional = false
+optional = true
 python-versions = "*"
 files = [
     {file = "ldapdomaindump-0.9.4-py2-none-any.whl", hash = "sha256:c05ee1d892e6a0eb2d7bf167242d4bf747ff7758f625588a11795510d06de01f"},
@@ -1846,7 +1844,7 @@ ldap3 = ">2.5.0,<2.5.2 || >2.5.2,<2.6 || >2.6"
 name = "libbde-python"
 version = "20221031"
 description = "Python bindings module for libbde"
-optional = false
+optional = true
 python-versions = "*"
 files = [
     {file = "libbde-python-20221031.tar.gz", hash = "sha256:eb69fd1206dda243269a1dca42714975564b55a458736011c93c11275d233b30"},
@@ -1898,7 +1896,7 @@ urllib3 = ">=1.21.1,<1.27"
 name = "libcreg-python"
 version = "20221022"
 description = "Python bindings module for libcreg"
-optional = false
+optional = true
 python-versions = "*"
 files = [
     {file = "libcreg-python-20221022.tar.gz", hash = "sha256:37f134bb75b25defb3453d0d02bd0ea1eaa5362410719b08ea14e00fe261b00a"},
@@ -1913,7 +1911,7 @@ files = [
 name = "libcst"
 version = "1.0.1"
 description = "A concrete syntax tree with AST-like properties for Python 3.5, 3.6, 3.7, 3.8, 3.9, and 3.10 programs."
-optional = false
+optional = true
 python-versions = ">=3.7"
 files = [
     {file = "libcst-1.0.1-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:80423311f09fc5fc3270ede44d30d9d8d3c2d3dd50dbf703a581ca7346949fa6"},
@@ -1960,7 +1958,7 @@ dev = ["Sphinx (>=5.1.1)", "black (==23.3.0)", "build (>=0.10.0)", "coverage (>=
 name = "libewf-python"
 version = "20230212"
 description = "Python bindings module for libewf"
-optional = false
+optional = true
 python-versions = "*"
 files = [
     {file = "libewf-python-20230212.tar.gz", hash = "sha256:6bb6cf255a2f3ee9065ab395d6978cdf5e30f5a941dca93e3b0d563250f9f8b0"},
@@ -1977,7 +1975,7 @@ files = [
 name = "libfsapfs-python"
 version = "20230617"
 description = "Python bindings module for libfsapfs"
-optional = false
+optional = true
 python-versions = "*"
 files = [
     {file = "libfsapfs-python-20230617.tar.gz", hash = "sha256:cc23857976ee45078e28b15fdfb057a5348e21787e5f209dba3c449f08b4882d"},
@@ -1994,7 +1992,7 @@ files = [
 name = "libfsext-python"
 version = "20230603"
 description = "Python bindings module for libfsext"
-optional = false
+optional = true
 python-versions = "*"
 files = [
     {file = "libfsext-python-20230603.tar.gz", hash = "sha256:3c3dd65bcb3f45e7236d306be9170f25515c7cb9e5f0636337cad8c218e10fe9"},
@@ -2011,7 +2009,7 @@ files = [
 name = "libfsfat-python"
 version = "20220925"
 description = "Python bindings module for libfsfat"
-optional = false
+optional = true
 python-versions = "*"
 files = [
     {file = "libfsfat-python-20220925.tar.gz", hash = "sha256:76fd6919b34eef7c68817ae6a27d6cc268cdbb920210828ac7f0f7b9674d369e"},
@@ -2026,7 +2024,7 @@ files = [
 name = "libfshfs-python"
 version = "20220831"
 description = "Python bindings module for libfshfs"
-optional = false
+optional = true
 python-versions = "*"
 files = [
     {file = "libfshfs-python-20220831.tar.gz", hash = "sha256:bca65aa50cffc4afd8aef678fab30274877c8ffe848e206733800cc03d44d74f"},
@@ -2041,7 +2039,7 @@ files = [
 name = "libfsntfs-python"
 version = "20230606"
 description = "Python bindings module for libfsntfs"
-optional = false
+optional = true
 python-versions = "*"
 files = [
     {file = "libfsntfs-python-20230606.tar.gz", hash = "sha256:373f0065888ef9db047d12ecc016b20bf077d0a0bfa9cd6306b564b5071ac370"},
@@ -2058,7 +2056,7 @@ files = [
 name = "libfsxfs-python"
 version = "20220829"
 description = "Python bindings module for libfsxfs"
-optional = false
+optional = true
 python-versions = "*"
 files = [
     {file = "libfsxfs-python-20220829.tar.gz", hash = "sha256:98dbd22cefc1ebdcd020b11c5534db2f761724924e9b4a3be121b61d9d3e5343"},
@@ -2073,7 +2071,7 @@ files = [
 name = "libfvde-python"
 version = "20220915"
 description = "Python bindings module for libfvde"
-optional = false
+optional = true
 python-versions = "*"
 files = [
     {file = "libfvde-python-20220915.tar.gz", hash = "sha256:b449a64af72c7bbfe8c4e6e28091dc4e5d345930e1e684235fda926e4a260333"},
@@ -2088,7 +2086,7 @@ files = [
 name = "libfwnt-python"
 version = "20220922"
 description = "Python bindings module for libfwnt"
-optional = false
+optional = true
 python-versions = "*"
 files = [
     {file = "libfwnt-python-20220922.tar.gz", hash = "sha256:48250ae5c36930d754023d4f49786a8609c057c5567c37f8bd81e26ac9a65da1"},
@@ -2103,7 +2101,7 @@ files = [
 name = "libluksde-python"
 version = "20221103"
 description = "Python bindings module for libluksde"
-optional = false
+optional = true
 python-versions = "*"
 files = [
     {file = "libluksde-python-20221103.tar.gz", hash = "sha256:80fa660a5ba7c8add013cf3d2b7d132bf817dae19b547437b23496abaec1e5f6"},
@@ -2118,7 +2116,7 @@ files = [
 name = "libmodi-python"
 version = "20221023"
 description = "Python bindings module for libmodi"
-optional = false
+optional = true
 python-versions = "*"
 files = [
     {file = "libmodi-python-20221023.tar.gz", hash = "sha256:465aa3f9ff0d8a32a2df45ffaf7ffac1cc98977d35087f759e30bceaf17eddca"},
@@ -2133,7 +2131,7 @@ files = [
 name = "libphdi-python"
 version = "20221025"
 description = "Python bindings module for libphdi"
-optional = false
+optional = true
 python-versions = "*"
 files = [
     {file = "libphdi-python-20221025.tar.gz", hash = "sha256:e4588b2ef1afe38ef40dd70a6d62c45a9c407e7dda1f006666e53df2602f886a"},
@@ -2144,7 +2142,7 @@ files = [
 name = "libqcow-python"
 version = "20221124"
 description = "Python bindings module for libqcow"
-optional = false
+optional = true
 python-versions = "*"
 files = [
     {file = "libqcow-python-20221124.tar.gz", hash = "sha256:a7409d35c4f7b7629d893a75834d20c3db6cc66ba82972277f2401860fbae272"},
@@ -2159,7 +2157,7 @@ files = [
 name = "libregf-python"
 version = "20230319"
 description = "Python bindings module for libregf"
-optional = false
+optional = true
 python-versions = "*"
 files = [
     {file = "libregf-python-20230319.tar.gz", hash = "sha256:538594d8ed5e85b47e849b11b64c747d34fa4db16086e568ec87ece82fe10084"},
@@ -2176,7 +2174,7 @@ files = [
 name = "libsigscan-python"
 version = "20230109"
 description = "Python bindings module for libsigscan"
-optional = false
+optional = true
 python-versions = "*"
 files = [
     {file = "libsigscan-python-20230109.tar.gz", hash = "sha256:4fa0dad6f1b9825f8b19099fb803fbc239cca4108da3986403c6f3986bf1ff63"},
@@ -2193,7 +2191,7 @@ files = [
 name = "libsmdev-python"
 version = "20221028"
 description = "Python bindings module for libsmdev"
-optional = false
+optional = true
 python-versions = "*"
 files = [
     {file = "libsmdev-python-20221028.tar.gz", hash = "sha256:ed4606b30fee75e5dd428cd84a2a8f50f1321908583e80b7c9096b9a660951bd"},
@@ -2208,7 +2206,7 @@ files = [
 name = "libsmraw-python"
 version = "20230320"
 description = "Python bindings module for libsmraw"
-optional = false
+optional = true
 python-versions = "*"
 files = [
     {file = "libsmraw-python-20230320.tar.gz", hash = "sha256:f2ed5a4c4a60e443b1590a119f6180daf319e1904f7c24faecf5389fb2c7be09"},
@@ -2225,7 +2223,7 @@ files = [
 name = "libvhdi-python"
 version = "20221124"
 description = "Python bindings module for libvhdi"
-optional = false
+optional = true
 python-versions = "*"
 files = [
     {file = "libvhdi-python-20221124.tar.gz", hash = "sha256:2310de5cf043f1ac628bfd8d179ba01bcf066f313ae06e7a5b504b2a08dd5903"},
@@ -2240,7 +2238,7 @@ files = [
 name = "libvmdk-python"
 version = "20221124"
 description = "Python bindings module for libvmdk"
-optional = false
+optional = true
 python-versions = "*"
 files = [
     {file = "libvmdk-python-20221124.tar.gz", hash = "sha256:81482880ffdc70f7cee5ab912847794390741ab44895e2edf81cb72d788e617a"},
@@ -2255,7 +2253,7 @@ files = [
 name = "libvsapm-python"
 version = "20230506"
 description = "Python bindings module for libvsapm"
-optional = false
+optional = true
 python-versions = "*"
 files = [
     {file = "libvsapm-python-20230506.tar.gz", hash = "sha256:22b789dc02e481e6f209b21f6f320d223c590badc97ff9793aafd30b63468271"},
@@ -2272,7 +2270,7 @@ files = [
 name = "libvsgpt-python"
 version = "20221029"
 description = "Python bindings module for libvsgpt"
-optional = false
+optional = true
 python-versions = "*"
 files = [
     {file = "libvsgpt-python-20221029.tar.gz", hash = "sha256:d868a93ef44c034be25902880429e9f8f88b2e9a3817439eb8d9b4ccc43f4925"},
@@ -2287,7 +2285,7 @@ files = [
 name = "libvshadow-python"
 version = "20221030"
 description = "Python bindings module for libvshadow"
-optional = false
+optional = true
 python-versions = "*"
 files = [
     {file = "libvshadow-python-20221030.tar.gz", hash = "sha256:53d7309bc3727bd7836fbec5901dfd5377c132a9f58c212aa5b8b37176422d08"},
@@ -2302,7 +2300,7 @@ files = [
 name = "libvslvm-python"
 version = "20221025"
 description = "Python bindings module for libvslvm"
-optional = false
+optional = true
 python-versions = "*"
 files = [
     {file = "libvslvm-python-20221025.tar.gz", hash = "sha256:214a92ce5b13a9972a6010578d8e0cc919ce2fafcab381600553777e2ef4b80f"},
@@ -2317,7 +2315,7 @@ files = [
 name = "markupsafe"
 version = "2.1.3"
 description = "Safely add untrusted strings to HTML/XML markup."
-optional = false
+optional = true
 python-versions = ">=3.7"
 files = [
     {file = "MarkupSafe-2.1.3-cp310-cp310-macosx_10_9_universal2.whl", hash = "sha256:cd0f502fe016460680cd20aaa5a76d241d6f35a1c3350c474bac1273803893fa"},
@@ -2402,7 +2400,7 @@ test = ["pytest", "pytest-cov"]
 name = "more-itertools"
 version = "10.1.0"
 description = "More routines for operating on iterables, beyond itertools"
-optional = false
+optional = true
 python-versions = ">=3.8"
 files = [
     {file = "more-itertools-10.1.0.tar.gz", hash = "sha256:626c369fa0eb37bac0291bce8259b332fd59ac792fa5497b59837309cd5b114a"},
@@ -2487,7 +2485,7 @@ six = "*"
 name = "mypy-extensions"
 version = "1.0.0"
 description = "Type system extensions for programs checked with the mypy type checker."
-optional = false
+optional = true
 python-versions = ">=3.5"
 files = [
     {file = "mypy_extensions-1.0.0-py3-none-any.whl", hash = "sha256:4392f6c0eb8a5668a69e23d168ffa70f0be9ccfd32b5cc2d26a34ae5b844552d"},
@@ -2559,7 +2557,7 @@ signedtoken = ["cryptography (>=3.0.0)", "pyjwt (>=2.0.0,<3)"]
 name = "opensearch-py"
 version = "2.3.1"
 description = "Python client for OpenSearch"
-optional = false
+optional = true
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, <4"
 files = [
     {file = "opensearch-py-2.3.1.tar.gz", hash = "sha256:f82a2e914835f7d645a632777de9a62d0c0de60ffd2f8cdae2ccfa4cfc40a185"},
@@ -2655,7 +2653,7 @@ xml = ["lxml (>=4.8.0)"]
 name = "pip"
 version = "23.2.1"
 description = "The PyPA recommended tool for installing Python packages."
-optional = false
+optional = true
 python-versions = ">=3.7"
 files = [
     {file = "pip-23.2.1-py3-none-any.whl", hash = "sha256:7ccf472345f20d35bdc9d1841ff5f313260c2c33fe417f48c30ac46cccabf5be"},
@@ -2743,7 +2741,7 @@ wcwidth = "*"
 name = "proto-plus"
 version = "1.22.3"
 description = "Beautiful, Pythonic protocol buffers."
-optional = false
+optional = true
 python-versions = ">=3.6"
 files = [
     {file = "proto-plus-1.22.3.tar.gz", hash = "sha256:fdcd09713cbd42480740d2fe29c990f7fbd885a67efc328aa8be6ee3e9f76a6b"},
@@ -2791,7 +2789,7 @@ files = [
 name = "psq"
 version = "0.8.0"
 description = "A simple task queue using Google Cloud Pub/Sub"
-optional = false
+optional = true
 python-versions = "*"
 files = [
     {file = "psq-0.8.0-py2.py3-none-any.whl", hash = "sha256:69608f691ecc5b8f0bfa633cf61d96db209342264d8f7d0833eda297a9cfe03c"},
@@ -2809,7 +2807,7 @@ werkzeug = ">=0.10.0,<1.0.0"
 name = "psycopg2-binary"
 version = "2.9.7"
 description = "psycopg2 - Python-PostgreSQL Database Adapter"
-optional = false
+optional = true
 python-versions = ">=3.6"
 files = [
     {file = "psycopg2-binary-2.9.7.tar.gz", hash = "sha256:1b918f64a51ffe19cd2e230b3240ba481330ce1d4b7875ae67305bd1d37b041c"},
@@ -2878,7 +2876,7 @@ files = [
 name = "puremagic"
 version = "1.15"
 description = "Pure python implementation of magic file detection"
-optional = false
+optional = true
 python-versions = "*"
 files = [
     {file = "puremagic-1.15-py3-none-any.whl", hash = "sha256:349e179f04bcc14eb0e2c3941cd9ee4ea74881ab6ccac63ea0c37c98f7a80b22"},
@@ -3155,7 +3153,7 @@ typing-extensions = ">=4.6.0,<4.7.0 || >4.7.0"
 name = "pyhindsight"
 version = "20230327.0"
 description = "Browser forensics for Google Chrome/Chromium"
-optional = false
+optional = true
 python-versions = ">=3.8"
 files = [
     {file = "pyhindsight-20230327.0-py3-none-any.whl", hash = "sha256:65bcd250b8ff0a32f5fd360a62e2d3fa2b9dbbe461bd9c15300b60ce7e13879d"},
@@ -3276,7 +3274,7 @@ dev = ["atomicwrites (==1.2.1)", "attrs (==19.2.0)", "coverage (==6.5.0)", "hatc
 name = "pytsk3"
 version = "20230125"
 description = "Python bindings for the sleuthkit"
-optional = false
+optional = true
 python-versions = "*"
 files = [
     {file = "pytsk3-20230125.tar.gz", hash = "sha256:4406a88490afcc649cd44aa3e8bd5e8b0767822c17c50cf6c6898fbb9605ac42"},
@@ -3320,7 +3318,7 @@ files = [
 name = "pywin32-ctypes"
 version = "0.2.2"
 description = "A (partial) reimplementation of pywin32 using ctypes/cffi"
-optional = false
+optional = true
 python-versions = ">=3.6"
 files = [
     {file = "pywin32-ctypes-0.2.2.tar.gz", hash = "sha256:3426e063bdd5fd4df74a14fa3cf80a0b42845a87e1d1e81f6549f9daec593a60"},
@@ -3331,7 +3329,7 @@ files = [
 name = "pyxattr"
 version = "0.8.1"
 description = "Filesystem extended attributes for python"
-optional = false
+optional = true
 python-versions = ">=3.7"
 files = [
     {file = "pyxattr-0.8.1.tar.gz", hash = "sha256:48c578ecf8ea0bd4351b1752470e301a90a3761c7c21f00f953dcf6d6fa6ee5a"},
@@ -3478,7 +3476,7 @@ crt = ["botocore[crt] (>=1.20.29,<2.0a.0)"]
 name = "secretstorage"
 version = "3.3.3"
 description = "Python bindings to FreeDesktop.org Secret Service API"
-optional = false
+optional = true
 python-versions = ">=3.6"
 files = [
     {file = "SecretStorage-3.3.3-py3-none-any.whl", hash = "sha256:f356e6628222568e3af06f2eba8df495efa13b3b63081dafd4f7d9a7b7bc9f99"},
@@ -3577,7 +3575,7 @@ full = ["httpx (>=0.22.0)", "itsdangerous", "jinja2", "python-multipart", "pyyam
 name = "tabulate"
 version = "0.9.0"
 description = "Pretty-print tabular data"
-optional = false
+optional = true
 python-versions = ">=3.7"
 files = [
     {file = "tabulate-0.9.0-py3-none-any.whl", hash = "sha256:024ca478df22e9340661486f85298cff5f6dcdba14f3813e8830015b9ed1948f"},
@@ -3638,7 +3636,7 @@ files = [
 name = "typing-inspect"
 version = "0.9.0"
 description = "Runtime inspection utilities for typing module."
-optional = false
+optional = true
 python-versions = "*"
 files = [
     {file = "typing_inspect-0.9.0-py3-none-any.whl", hash = "sha256:9ee6fc59062311ef8547596ab6b955e1b8aa46242d854bfc78f4f6b0eff35f9f"},
@@ -3768,7 +3766,7 @@ test = ["websockets"]
 name = "werkzeug"
 version = "0.16.1"
 description = "The comprehensive WSGI web application library."
-optional = false
+optional = true
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
 files = [
     {file = "Werkzeug-0.16.1-py2.py3-none-any.whl", hash = "sha256:1e0dedc2acb1f46827daa2e399c1485c8fa17c0d8e70b6b875b4e7f54bf408d2"},
@@ -3784,7 +3782,7 @@ watchdog = ["watchdog"]
 name = "xlsxwriter"
 version = "3.1.3"
 description = "A Python module for creating Excel XLSX files."
-optional = false
+optional = true
 python-versions = ">=3.6"
 files = [
     {file = "XlsxWriter-3.1.3-py3-none-any.whl", hash = "sha256:b1fde9b60dc25fff589f3baf58e95178048ba87a7916d45f6e3bce4a61f56e64"},
@@ -3822,7 +3820,11 @@ files = [
 docs = ["furo", "jaraco.packaging (>=9.3)", "jaraco.tidelift (>=1.4)", "rst.linker (>=1.9)", "sphinx (>=3.5)", "sphinx-lint"]
 testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "pytest (>=6)", "pytest-black (>=0.3.7)", "pytest-checkdocs (>=2.4)", "pytest-cov", "pytest-enabler (>=2.2)", "pytest-ignore-flaky", "pytest-mypy (>=0.9.1)", "pytest-ruff"]
 
+[extras]
+gcp = ["google-api-core", "google-api-python-client", "google-auth", "google-cloud-datastore", "google-cloud-error-reporting", "google-cloud-logging", "google-cloud-pubsub", "google-cloud-storage", "grpcio-status", "proto-plus", "protobuf", "psq"]
+worker = ["cffi", "dfDewey", "dfdatetime", "dfimagetools", "dfvfs", "dtfabric", "impacket", "libbde-python", "libewf-python", "libfsapfs-python", "libfsext-python", "libfshfs-python", "libfsntfs-python", "libfsxfs-python", "libfvde-python", "libfwnt-python", "libluksde-python", "libmodi-python", "libqcow-python", "libsigscan-python", "libsmdev-python", "libsmraw-python", "libvhdi-python", "libvmdk-python", "libvsgpt-python", "libvshadow-python", "libvslvm-python", "pyhindsight"]
+
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "34484e89f4eaf9834742f76daa0bc4202a8ee1cc9beec1b522852386e8548b88"
+content-hash = "b208d77b04870a6a3d12edd4372a3e5e33c8de9da7dc437cd527c0aa7a7a4bfa"
