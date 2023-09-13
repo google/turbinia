@@ -14,7 +14,6 @@ COPY --from=build-stage /tmp/web/dist /web/dist
 RUN apt-get update && apt-get -y upgrade
 RUN apt-get -y install git python3-pip python3.10-venv
 RUN pip3 install pip --upgrade
-RUN pip3 install poetry
 RUN python3 -m venv /venv
 
 COPY . /tmp/
@@ -24,14 +23,14 @@ RUN if $(cd /tmp/ && git rev-parse --is-shallow-repository); then cd /tmp/ && gi
 
 # Build and install the package wheel using pip (will pull dependencies from pyproject.toml)
 ENV PATH="/venv/bin:$PATH" VIRTUAL_ENV=/venv
-RUN cd /tmp/ && pip3 install wheel && pip3 install .[worker]
+RUN cd /tmp/ && pip3 install wheel && pip3 install .
 
 # Final stage contains python and the virtualenv built in stage2
 FROM ubuntu:22.04 as build-final
 
 COPY --from=build-stage2 /venv /venv
 RUN apt-get update && apt-get -y upgrade
-RUN apt-get -y install python3
+RUN apt-get -y install python3-pip
 RUN useradd -r -s /bin/nologinpoet -u 999 turbinia
 RUN mkdir /etc/turbinia && mkdir -p /mnt/turbinia/ && mkdir -p /var/lib/turbinia/ \
     && mkdir -p /var/log/turbinia/ && chown -R turbinia:turbinia /mnt/turbinia/ \

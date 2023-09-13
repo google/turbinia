@@ -32,8 +32,8 @@ jobs:
         run: |
           docker exec -u root -t turbinia-worker bash -c "/usr/bin/python -m pip install --quiet --upgrade pip"
           docker exec -u root -t turbinia-worker bash -c "/usr/bin/python -m pip install --quiet poetry"
-          docker exec -u root -t turbinia-worker bash -c "cd /tmp && poetry config virtualenvs.create false && poetry install --with worker --with gcp --with test"
+          docker exec -u root -t turbinia-worker bash -c "cd /tmp && poetry config virtualenvs.in-project true && poetry install -E worker -E gcp --with test"
       - name: Run Tests
         run: |
-          docker exec -u root -t turbinia-worker bash -c "cd /tmp && /usr/bin/python ./run_tests.py"
-          docker exec -u root -t turbinia-worker bash -c "cd /tmp && tox --sitepackages ${TOXENV}"
+          docker exec -u root -t turbinia-worker bash -c "cd /tmp && ./venv/bin/python ./run_tests.py"
+          docker exec -u root -t turbinia-worker bash -c "cd /tmp && ./venv/bin/tox --sitepackages ${TOXENV}"
