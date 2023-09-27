@@ -56,25 +56,25 @@ ENV PIP_NO_CACHE_DIR=1
 ARG PPA_TRACK=stable
 
 RUN apt-get update && apt-get -y upgrade && apt-get -y install \
-    apt-transport-https \
-    apt-utils \
-    ca-certificates \
-    curl \
-    git \
-    john \
-    john-data \
-    libleveldb1d \
-    libleveldb-dev \
-    libterm-readline-gnu-perl \
-    lvm2 \
-    pocl-opencl-icd \
-    p7zip-full \
-    python3-pip \
-    software-properties-common \
-    sudo \
-    testdisk \
-    wget \
-    && apt-get clean && rm -rf /var/cache/apt/* /var/lib/apt/lists/*
+  apt-transport-https \
+  apt-utils \
+  ca-certificates \
+  curl \
+  git \
+  john \
+  john-data \
+  libleveldb1d \
+  libleveldb-dev \
+  libterm-readline-gnu-perl \
+  lvm2 \
+  pocl-opencl-icd \
+  p7zip-full \
+  python3-pip \
+  software-properties-common \
+  sudo \
+  testdisk \
+  wget \
+  && apt-get clean && rm -rf /var/cache/apt/* /var/lib/apt/lists/*
 
 ADD requirements.txt /tmp/
 RUN cd /tmp/ && pip3 install -r requirements.txt
@@ -102,21 +102,21 @@ RUN pip3 install impacket --no-deps
 #   Sleuthkit
 RUN add-apt-repository -y ppa:gift/$PPA_TRACK
 RUN apt-get update && apt-get -y install \
-    bulk-extractor \
-    dfimagetools-tools \
-    docker-explorer-tools \
-    libbde-tools \
-    libewf \
-    libewf-python3 \
-    libewf-tools \
-    libfsapfs-tools \
-    libluksde-tools \
-    plaso-tools \
-    python3-dfimagetools \
-    python3-dfvfs \
-    python3-plaso \
-    sleuthkit \
-    && apt-get clean && rm -rf /var/cache/apt/* /var/lib/apt/lists/*
+  bulk-extractor \
+  dfimagetools-tools \
+  docker-explorer-tools \
+  libbde-tools \
+  libewf \
+  libewf-python3 \
+  libewf-tools \
+  libfsapfs-tools \
+  libluksde-tools \
+  plaso-tools \
+  python3-dfimagetools \
+  python3-dfvfs \
+  python3-plaso \
+  sleuthkit \
+  && apt-get clean && rm -rf /var/cache/apt/* /var/lib/apt/lists/*
 
 # Add turbinia user to system and sudoers
 RUN useradd -r -s /bin/nologin -G disk,sudo -u 999 turbinia
@@ -124,9 +124,9 @@ RUN echo "turbinia ALL = (root) NOPASSWD: ALL" > /etc/sudoers.d/turbinia
 
 # Install yara rules and fraken binary.
 RUN cd /opt \
-    && git clone https://github.com/Neo23x0/signature-base.git \
-    && sudo chown -R turbinia:turbinia /opt/signature-base \
-    && find /opt/signature-base -type f -not -iname '*.yar' -not -iname '*.yara' -not -iname 'file-type-signatures.txt' -delete
+  && git clone https://github.com/Neo23x0/signature-base.git \
+  && sudo chown -R turbinia:turbinia /opt/signature-base \
+  && find /opt/signature-base -type f -not -iname '*.yar' -not -iname '*.yara' -not -iname 'file-type-signatures.txt' -delete
 COPY turbinia/config/rules/*.yar /opt/signature-base/yara/
 # Install fraken binary from multi-stage build
 RUN mkdir -p /opt/fraken
@@ -139,18 +139,18 @@ RUN sudo /tmp/container-explorer-setup.sh install
 
 # Setup turbinia user folders and permissions
 RUN mkdir /etc/turbinia && mkdir -p /mnt/turbinia/ && mkdir -p /var/lib/turbinia/ \
-    && mkdir -p /etc/turbinia/ && chown -R turbinia:turbinia /etc/turbinia/ \
-    && mkdir -p /var/log/turbinia/ && chown -R turbinia:turbinia /mnt/turbinia/ \
-    && chown -R turbinia:turbinia /var/lib/turbinia/ \
-    && chown -R turbinia:turbinia /var/log/turbinia/ \
-    && mkdir -p /home/turbinia && chown -R turbinia:turbinia /home/turbinia
+  && mkdir -p /etc/turbinia/ && chown -R turbinia:turbinia /etc/turbinia/ \
+  && mkdir -p /var/log/turbinia/ && chown -R turbinia:turbinia /mnt/turbinia/ \
+  && chown -R turbinia:turbinia /var/lib/turbinia/ \
+  && chown -R turbinia:turbinia /var/log/turbinia/ \
+  && mkdir -p /home/turbinia && chown -R turbinia:turbinia /home/turbinia
 
 # Install latest hashcat
 RUN cd /home/turbinia \
-    && wget https://hashcat.net/files/hashcat-6.2.6.7z \
-    && 7z x hashcat-6.2.6.7z \
-    && chown -R turbinia:turbinia /home/turbinia/hashcat-6.2.6/ \
-    && cp /home/turbinia/hashcat-6.2.6/hashcat.bin /home/turbinia/hashcat-6.2.6/hashcat
+  && wget https://hashcat.net/files/hashcat-6.2.6.7z \
+  && 7z x hashcat-6.2.6.7z \
+  && chown -R turbinia:turbinia /home/turbinia/hashcat-6.2.6/ \
+  && cp /home/turbinia/hashcat-6.2.6/hashcat.bin /home/turbinia/hashcat-6.2.6/hashcat
 ENV PATH="$PATH:/home/turbinia/hashcat-6.2.6/"
 
 # Get a decent password list for john/hashcat
@@ -162,12 +162,19 @@ RUN cp /home/turbinia/password.lst /root/
 # Copy Kubernetes support tool to home folder
 COPY --chown=turbinia:turbinia k8s/tools/check-lockfile.py /home/turbinia/check-lockfile.py
 
+# Install docker
+RUN curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+RUN echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+RUN apt-get update
+RUN apt-get -y install docker-ce
+RUN usermod -aG docker turbinia
+
 # Install Turbinia
 # unshallow and fetch all tags so our build systems pickup the correct git tag if it's a shallow clone
 # install turbinia and cleanup /tmp
 ADD . /tmp/
 RUN if $(cd /tmp/ && git rev-parse --is-shallow-repository); then cd /tmp/ && git fetch --prune --unshallow && git fetch --depth=1 origin +refs/tags/*:refs/tags/*; fi \
-    && cd /tmp/ && python3 setup.py install
+  && cd /tmp/ && python3 setup.py install
 
 COPY docker/worker/start.sh /home/turbinia/start.sh
 RUN chmod +rwx /home/turbinia/start.sh

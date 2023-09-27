@@ -11,6 +11,7 @@ services:
         volumes:
             - $PWD/certs:/certs
             - $PWD/evidence:/evidence
+            - $PWD/tmp:/tmp # change this to match the TMP_DIR folder in turbinia.conf
 
     redis:
         image: "redis:alpine"
@@ -56,8 +57,8 @@ services:
             - TURBINIA_EXTRA_ARGS=${TURBINIA_EXTRA_ARGS}
 
     turbinia-worker:
-        #image: "turbinia-worker-dev" # Use this for local development and comment out below line
-        image: "us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-worker:latest" # Latest stable
+        image: "turbinia-worker-dev" # Use this for local development and comment out below line
+        #image: "us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-worker:latest" # Latest stable
         container_name: turbinia-worker
         privileged: true
         depends_on:
@@ -68,6 +69,7 @@ services:
             - $PWD/evidence:/evidence
             - $PWD/conf/turbinia.conf:/etc/turbinia/turbinia.conf
             - $PWD/certs:/certs
+            - $PWD/tmp:/tmp # change this to match the TMP_DIR folder in turbinia.conf
 
         environment:
             - LC_ALL=C.UTF-8
@@ -76,7 +78,6 @@ services:
             - DOCKER_HOST=tcp://dind:2376
             - DOCKER_TLS_VERIFY=1
             - DOCKER_CERT_PATH=/certs/client
-
     # Uncomment below in case you want to run a second worker on the same host.
     #  turbinia-worker2:
     #     #image: "turbinia-worker-dev" # Use this for local development and comment out below line

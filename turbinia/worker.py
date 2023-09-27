@@ -90,10 +90,10 @@ def check_docker_dependencies(dependencies):
               'Docker image {0:s} does not exist for the job {1:s}. Please '
               'update the config with the correct image name'.format(
                   values['docker_image'], job))
-        # Check if job program exists in docker image.
-        # Comment out this part if you want to verify the command in all
-        # job docker images. Note: This will download *all* docker images
-        # each time a worker is started.
+        # # Check if job program exists in docker image.
+        # # Comment out this part if you want to verify the command in all
+        # # job docker images. Note: This will download *all* docker images
+        # # each time a worker is started.
         # cmd = f'type {program:s}'
         # stdout, stderr, ret = docker_manager.ContainerManager(
         #     values['docker_image']).execute_container(cmd, shell=True)
