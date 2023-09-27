@@ -64,8 +64,7 @@ class PostgresAcctAnalysisTaskTest(TestTurbiniaTaskBase):
     hashes, _ = task._extract_creds(['/database'], self.evidence)
     self.assertDictEqual(hashes, self.EXPECTED_MD5_CREDENTIALS)
 
-
-  def test_extract_scram_creds(self, bruteforce_mock):
+  def test_extract_scram_creds(self):
     """Tests the _extract_creds method."""
     config.LoadConfig()
     task = postgresql_acct.PostgresAccountAnalysisTask()
@@ -74,15 +73,15 @@ class PostgresAcctAnalysisTaskTest(TestTurbiniaTaskBase):
     _, hashes = task._extract_creds(['/scram_database'], self.evidence)
     self.assertDictEqual(hashes, self.EXPECTED_SCRAM_CREDENTIALS)
 
-  @mock.patch('turbinia.workers.analysis.postgresql_acct.bruteforce_password_hashes')
+  @mock.patch(
+      'turbinia.workers.analysis.postgresql_acct.bruteforce_password_hashes')
   def test_analyse_md5_postgres_creds(self, bruteforce_mock):
     """Tests the _analyse_postgres_creds method."""
     config.LoadConfig()
     task = postgresql_acct.PostgresAccountAnalysisTask()
 
     bruteforce_mock.side_effect = [
-        [(list(self.EXPECTED_MD5_CREDENTIALS.keys())[0], 'postgres')],
-        []
+        [(list(self.EXPECTED_MD5_CREDENTIALS.keys())[0], 'postgres')], []
     ]
 
     (report, priority, summary) = task._analyse_postgres_creds(
@@ -91,15 +90,15 @@ class PostgresAcctAnalysisTaskTest(TestTurbiniaTaskBase):
     self.assertEqual(priority, 10)
     self.assertEqual(summary, 'PostgreSQL analysis found 1 weak password(s)')
 
-  @mock.patch('turbinia.workers.analysis.postgresql_acct.bruteforce_password_hashes')
+  @mock.patch(
+      'turbinia.workers.analysis.postgresql_acct.bruteforce_password_hashes')
   def test_analyse_scram_postgres_creds(self, bruteforce_mock):
     """Tests the _analyse_postgres_creds method."""
     config.LoadConfig()
     task = postgresql_acct.PostgresAccountAnalysisTask()
 
     bruteforce_mock.side_effect = [
-        [],
-        [(list(self.EXPECTED_SCRAM_CREDENTIALS.keys())[0], 'postgres')]
+        [], [(list(self.EXPECTED_SCRAM_CREDENTIALS.keys())[0], 'postgres')]
     ]
 
     (report, priority, summary) = task._analyse_postgres_creds(
