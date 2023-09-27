@@ -12,25 +12,10 @@ FROM ubuntu:22.04 as build-stage2
 ENV DEBIAN_FRONTEND=noninteractive 
 COPY --from=build-stage /tmp/web/dist /web/dist
 RUN apt-get update && apt-get -y upgrade
-RUN apt-get -y install git python3-pip python3.10-venv
+RUN apt-get -y install git python3-pip
 RUN pip3 install pip --upgrade
-RUN python3 -m venv /venv
-
-COPY . /tmp/
-
-# unshallow and fetch all tags so our build systems pickup the correct git tag if it's a shallow clone
-RUN if $(cd /tmp/ && git rev-parse --is-shallow-repository); then cd /tmp/ && git fetch --prune --unshallow && git fetch --depth=1 origin +refs/tags/*:refs/tags/*; fi
-
-# Build and install the package wheel using pip (will pull dependencies from pyproject.toml)
-ENV PATH="/venv/bin:$PATH" VIRTUAL_ENV=/venv
-RUN cd /tmp/ && pip3 install wheel && pip3 install .
-
-# Final stage contains python and the virtualenv built in stage2
-FROM ubuntu:22.04 as build-final
-
-COPY --from=build-stage2 /venv /venv
-RUN apt-get update && apt-get -y upgrade
-RUN apt-get -y install python3-pip
+ARG RELEASE_TAG
+RUN pip3 install turbinia==$RELEASE_TAG
 RUN useradd -r -s /bin/nologinpoet -u 999 turbinia
 RUN mkdir /etc/turbinia && mkdir -p /mnt/turbinia/ && mkdir -p /var/lib/turbinia/ \
     && mkdir -p /var/log/turbinia/ && chown -R turbinia:turbinia /mnt/turbinia/ \
