@@ -155,20 +155,24 @@ class TestTurbiniaPsqWorker(unittest.TestCase):
     dependencies = {
         'plasojob': {
             'programs': ['non_exist'],
-            'docker_image': 'test_img'
+            'docker_image': 'non_existing_img'
         }
     }
 
     # Set up mock objects
     mock_dm = mock_dockermgr.return_value
-    mock_dm.list_images.return_value = ['non_existing_img']
     mock_cm = mock_contmgr.return_value
 
     # Image not found.
-    mock_cm.execute_container.return_value = ['non_exist', None, 1]
     self.assertRaises(
         TurbiniaException, check_docker_dependencies, dependencies)
 
+    dependencies = {
+        'plasojob': {
+            'programs': ['non_exist'],
+            'docker_image': 'test_img'
+        }
+    }
     mock_dm.list_images.return_value = ['test_img']
     # # Dependency not found.
     # mock_cm.execute_container.return_value = ['non_exist', None, 1]
