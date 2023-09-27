@@ -97,6 +97,10 @@ SHARED_FILESYSTEM = False
 # problems.
 DEBUG_TASKS = False
 
+# This indicates whether the server and worker version need to be the same.
+# Makes sense to set to False while developing.
+VERSION_CHECK = True
+
 # Directory keeping all eligible recipes
 RECIPE_FILE_DIR = None
 
