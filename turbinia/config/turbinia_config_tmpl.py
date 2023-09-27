@@ -184,6 +184,11 @@ DEPENDENCIES = [{
     'docker_image': None,
     'timeout': 1200
 }, {
+    'job': 'FileArtifactExtractionJob',
+    'programs': ['image_export.py'],
+    'docker_image': None,
+    'timeout': 1200
+}, {
     'job': 'FileSystemTimelineJob',
     'programs': ['list_file_entries.py'],
     'docker_image': None,
