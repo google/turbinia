@@ -181,6 +181,12 @@ def bruteforce_password_hashes(
   if not os.path.isfile(password_list_file_path):
     raise TurbiniaException('No password list available')
 
+  # Does rules file exist? If not make a temp one
+  if not os.path.isfile(password_rules_file_path):
+    with tempfile.NamedTemporaryFile(delete=False, mode='w+') as rf:
+      password_rules_file_path = rf.name
+      rf.write('\n'.join([':', 'd']))
+
   if '$y$' in ''.join(password_hashes):
     cmd = [
         'john', '--format=crypt', f'--wordlist={password_list_file_path}',
