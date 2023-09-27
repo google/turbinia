@@ -82,7 +82,9 @@ def check_docker_dependencies(dependencies):
     for program in values['programs']:
       docker_image = values.get('docker_image')
       if docker_image is not None:
-        log.info('docker_image: {0:s}'.format(values['docker_image']))
+        log.info(
+            'docker_image: {0:s} program: {1:s}'.format(
+                values['docker_image'], program))
         # Check if docker_image exists in registry.
         exists = docker_manager.DockerManager().image_exists(docker_image)
         if not exists:

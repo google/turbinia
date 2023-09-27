@@ -28,6 +28,7 @@ from turbinia import TurbiniaException
 log = logging.getLogger('turbinia')
 checked_image_list = []
 
+
 def IsBlockDevice(path):
   """Checks path to determine whether it is a block device.
 

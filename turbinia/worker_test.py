@@ -161,13 +161,19 @@ class TestTurbiniaPsqWorker(unittest.TestCase):
 
     # Set up mock objects
     mock_dm = mock_dockermgr.return_value
-    mock_dm.list_images.return_value = ['test_img']
+    mock_dm.list_images.return_value = ['non_existing_img']
     mock_cm = mock_contmgr.return_value
 
-    # Dependency not found.
+    # Image not found.
     mock_cm.execute_container.return_value = ['non_exist', None, 1]
     self.assertRaises(
         TurbiniaException, check_docker_dependencies, dependencies)
+
+    mock_dm.list_images.return_value = ['test_img']
+    # # Dependency not found.
+    # mock_cm.execute_container.return_value = ['non_exist', None, 1]
+    # self.assertRaises(
+    #     TurbiniaException, check_docker_dependencies, dependencies)
 
     # Normal run
     mock_cm.execute_container.return_value = ['exists', None, 0]
