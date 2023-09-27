@@ -187,14 +187,12 @@ def bruteforce_password_hashes(
     ]
     pot_file = os.path.expanduser('~/.john/john.pot')
   else:
-    cmd = ['hashcat', '--force', '-a', '1']
+    cmd = ['hashcat', '--force', '-a', '0']
     if extra_args:
       cmd = cmd + extra_args.split(' ')
     cmd = cmd + [f'--potfile-path={pot_file}']
     cmd = cmd + [
-        password_hashes_file_path, password_list_file_path,
-        password_list_file_path
-    ]
+        password_hashes_file_path, password_list_file_path]
 
   with open(os.devnull, 'w') as devnull:
     try:
