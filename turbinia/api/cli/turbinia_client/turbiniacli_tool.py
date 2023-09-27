@@ -92,6 +92,7 @@ def main():
 
   # Register all command groups.
   cli.add_command(groups.submit_group)
+  cli.add_command(groups.evidence_group)
   cli.add_command(groups.config_group)
   cli.add_command(groups.jobs_group)
   cli.add_command(groups.result_group)

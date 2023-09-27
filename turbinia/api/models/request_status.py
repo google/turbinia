@@ -29,6 +29,7 @@ class RequestStatus(BaseModel):
   """Represents a Turbinia request status object."""
   request_id: str = None
   evidence_name: str = None
+  evidence_id: str = None
   tasks: List[Dict] = []
   reason: str = None
   requester: str = None
@@ -85,7 +86,6 @@ class RequestStatus(BaseModel):
 
     initial_start_time = datetime.datetime.now().strftime(
         turbinia_config.DATETIME_FORMAT)
-
     for task in tasks:
       self.request_id = task.get('request_id')
       self.requester = task.get('requester')
@@ -93,10 +93,13 @@ class RequestStatus(BaseModel):
       self.task_count = len(tasks)
       task_status = task.get('status')
       # Gets the evidence_name from the first started task.
-      if not name_from_args and task.get('start_time') and task.get(
+      if name_from_args and task.get('evidence_name') == self.evidence_name:
+        self.evidence_id = task.get('evidence_id')
+      elif not name_from_args and task.get('start_time') and task.get(
           'start_time') < initial_start_time:
         initial_start_time = task.get('start_time')
         self.evidence_name = task.get('evidence_name')
+        self.evidence_id = task.get('evidence_id')
       if isinstance(task.get('last_update'), datetime.datetime):
         task_last_update = datetime.datetime.timestamp(task.get('last_update'))
       else:

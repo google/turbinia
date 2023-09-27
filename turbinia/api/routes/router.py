@@ -17,6 +17,7 @@
 from fastapi import APIRouter
 
 from turbinia.api.routes import config
+from turbinia.api.routes import evidence
 from turbinia.api.routes import jobs
 from turbinia.api.routes import logs
 from turbinia.api.routes import request
@@ -28,6 +29,7 @@ api_router = APIRouter(prefix='/api')
 
 # Register all API endpoints.
 api_router.include_router(config.router)
+api_router.include_router(evidence.router)
 api_router.include_router(jobs.router)
 api_router.include_router(logs.router)
 api_router.include_router(request.router)

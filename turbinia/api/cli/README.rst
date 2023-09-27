@@ -105,11 +105,12 @@ You can view the help menu with the ``-h`` argument
      -h, --help                  Show this message and exit.
 
    Commands:
-     config  Get Turbinia configuration.
-     jobs    Get a list of enabled Turbinia jobs.
-     result  Get Turbinia request or task results.
-     status  Get Turbinia request or task status.
-     submit  Submit new requests to the Turbinia API server.
+     config    Get Turbinia configuration.
+     evidence  Get or upload Turbinia evidence.
+     jobs      Get a list of enabled Turbinia jobs.
+     result    Get Turbinia request or task results.
+     status    Get Turbinia request or task status.
+     submit    Submit new requests to the Turbinia API server.
 
 Getting the server configuration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

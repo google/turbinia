@@ -22,13 +22,23 @@ from click import echo as click_echo
 
 import logging
 import json
+import pandas
+
+MEDIUM_PRIORITY = 50
+HIGH_PRIORITY = 20
+CRITICAL_PRIORITY = 10
 
 log = logging.getLogger('turbinia')
+
+IMPORTANT_ATTRIBUTES = {
+    'id', '_name', 'type', 'size', 'request_id', 'tasks', 'source_path',
+    'local_path', 'creation_time', 'last_update'
+}
 
 
 def echo_json(json_data: dict) -> None:
   """Pretty print JSON data."""
-  if isinstance(json_data, dict):
+  if isinstance(json_data, (dict, list, int)):
     click_echo(json.dumps(json_data, indent=2))
 
 
@@ -77,6 +87,18 @@ class MarkdownReportComponent(ABC):
     """
     return f'**{text.strip():s}**'
 
+  def heading(self, text: str, number: int) -> str:
+    """Formats text as heading in Markdown format.
+
+    Args:
+        text(string): Text to format
+        number(int): Heading number
+
+    Return:
+        string: Formatted text.
+    """
+    return f'{"#"*number} {text.strip():s}'
+
   def heading1(self, text):
     """Formats text as heading 1 in Markdown format.
 
@@ -86,7 +108,7 @@ class MarkdownReportComponent(ABC):
     Return:
         string: Formatted text.
     """
-    return f'# {text.strip():s}'
+    return self.heading(text, 1)
 
   def heading2(self, text):
     """Formats text as heading 2 in Markdown format.
@@ -97,7 +119,7 @@ class MarkdownReportComponent(ABC):
     Return:
         string: Formatted text.
     """
-    return f'## {text.strip():s}'
+    return self.heading(text, 2)
 
   def heading3(self, text):
     """Formats text as heading 3 in Markdown format.
@@ -108,7 +130,7 @@ class MarkdownReportComponent(ABC):
     Return:
         string: Formatted text.
     """
-    return f'### {text.strip():s}'
+    return self.heading(text, 3)
 
   def heading4(self, text):
     """Formats text as heading 4 in Markdown format.
@@ -119,7 +141,7 @@ class MarkdownReportComponent(ABC):
     Return:
         string: Formatted text.
     """
-    return f'#### {text.strip():s}'
+    return self.heading(text, 4)
 
   def heading5(self, text):
     """Formats text as heading 5 in Markdown format.
@@ -128,7 +150,7 @@ class MarkdownReportComponent(ABC):
      Return:
         string: Formatted text.
     """
-    return f'##### {text.strip():s}'
+    return self.heading(text, 5)
 
   def bullet(self, text, level=1):
     """Formats text as a bullet in Markdown format.
@@ -170,6 +192,72 @@ class MarkdownReportComponent(ABC):
     """
     pass
 
+  def list_to_markdown(self, original_list: list, level: int = 1) -> list:
+    """Generates a Markdown based on a python list.
+
+      Args:
+        original_list(list): List to format
+        level(int): Indentation level.
+
+      Returns:
+        report (list): List of Markdown lines.
+    """
+    if not original_list:
+      return [self.bullet('[EMPTY LIST]', level)]
+    report = []
+    for item in original_list:
+      if isinstance(item, dict):
+        report.extend(self.dict_to_markdown(item, level + 1))
+      elif isinstance(item, list):
+        report.extend(self.list_to_markdown(item, level + 1))
+      else:
+        if level == 0:
+          report.append(self.heading1(item))
+        else:
+          report.append(self.bullet(item, level))
+    return report
+
+  def dict_to_markdown(
+      self, original_dict: dict, level: int = 1, excluded_keys: list = (),
+      format_keys: bool = True) -> list:
+    """Generates a Markdown based on a python dictionary.
+
+      Args:
+        original_dict(dict): Dict to format.
+        level(int): Indentation level.
+        excluded_keys (list): List of dict keys to be ignored.
+        format_keys (bool): Capitalizes and removes underscores from dict keys
+          if True
+
+      Returns:
+        report (list): List of Markdown lines.
+    """
+    if not original_dict:
+      return [self.bullet('[EMPTY DICTIONARY]', level)]
+    report: list[str] = []
+    for key, value in original_dict.items():
+      if key in excluded_keys:
+        continue
+      name = key.replace('_', ' ').title() if format_keys else key
+      if isinstance(value, dict):
+        if level == 0:
+          report.append(self.heading1(f'{name}:'))
+        else:
+          report.append(self.bullet(f'{name}:', level))
+        report.extend(self.dict_to_markdown(value, level + 1))
+      elif isinstance(value, list):
+        if level == 0:
+          report.append(self.heading1(f'{name}:'))
+        else:
+          report.append(self.bullet(f'{name}:', level))
+        report.extend(self.list_to_markdown(value, level + 1))
+      else:
+        if level == 0:
+          report.append(self.heading1(f'{name}: {value}'))
+        else:
+          report.append(self.bullet(f'{name}: {value}', level))
+    return report
+
   @abstractmethod
   def generate_markdown(self) -> str:
     pass
@@ -183,34 +271,54 @@ class TaskMarkdownReport(MarkdownReportComponent):
     super().__init__()
     self._request_data: dict = request_data
 
-  def generate_markdown(self) -> str:
+  def generate_markdown(self, show_all=False, compact=False) -> str:
     """Generate a markdown report."""
     report: list[str] = []
     task: dict = self._request_data
     if not task:
       return ''
 
+    priority = task.get('report_priority') if task.get(
+        'report_priority') else MEDIUM_PRIORITY
+
+    if priority <= CRITICAL_PRIORITY:
+      name = f'{task.get("name")} ({"CRITICAL PRIORITY"})'
+    elif priority <= HIGH_PRIORITY:
+      name = f'{task.get("name")} ({"HIGH PRIORITY"})'
+    elif priority <= MEDIUM_PRIORITY:
+      name = f'{task.get("name")} ({"MEDIUM PRIORITY"})'
+    else:
+      name = f'{task.get("name")} ({"LOW PRIORITY"})'
+
     try:
-      report.append(self.heading2(task.get('name')))
+      report.append(self.heading2(name))
       line = f"{self.bold('Evidence:'):s} {task.get('evidence_name')!s}"
       report.append(self.bullet(line))
       line = f"{self.bold('Status:'):s} {task.get('status')!s}"
       report.append(self.bullet(line))
-      report.append(self.bullet(f"Task Id: {task.get('id')!s}"))
-      report.append(
-          self.bullet(f"Executed on worker {task.get('worker_name')!s}"))
-      if task.get('report_data'):
-        report.append('')
-        report.append(self.heading3('Task Reported Data'))
-        report.extend(task.get('report_data').splitlines())
-      report.append('')
-      report.append(self.heading3('Saved Task Files:'))
-
-      saved_paths = task.get('saved_paths')
-      if saved_paths:
-        for path in saved_paths:
-          report.append(self.bullet(self.code(path)))
+      if show_all or priority <= MEDIUM_PRIORITY:
+        report.append(self.bullet(f"Task Id: {task.get('id')!s}"))
+        report.append(
+            self.bullet(f"Executed on worker {task.get('worker_name')!s}"))
+      if show_all or priority <= HIGH_PRIORITY:
+        if task.get('report_data'):
+          if not compact:
+            report.append('')
+          report.append(self.heading3('Task Reported Data'))
+          report.extend(task.get('report_data').splitlines())
+        if not compact:
           report.append('')
+      if show_all or priority <= CRITICAL_PRIORITY:
+        if not compact:
+          report.append('')
+        report.append(self.heading3('Saved Task Files:'))
+        saved_paths = task.get('saved_paths')
+        if saved_paths:
+          for path in saved_paths:
+            report.append(self.bullet(self.code(path)))
+            if not compact:
+              report.append('')
+      report.append('')
     except TypeError as exception:
       log.warning(f'Error formatting the Markdown report: {exception!s}')
 
@@ -226,7 +334,10 @@ class RequestMarkdownReport(MarkdownReportComponent):
     super().__init__()
     self._request_data: dict = request_data
 
-    tasks = [TaskMarkdownReport(task) for task in request_data.get('tasks')]
+    sorted_tasks = sorted(
+        request_data.get('tasks'), key=lambda x: x['report_priority'])
+
+    tasks = [TaskMarkdownReport(task) for task in sorted_tasks]
     self.add_components(tasks)
 
   def add(self, component: MarkdownReportComponent) -> None:
@@ -244,7 +355,7 @@ class RequestMarkdownReport(MarkdownReportComponent):
         self.components.append(component)
         component.parent = self
 
-  def generate_markdown(self) -> str:
+  def generate_markdown(self, show_all=False) -> str:
     """Generates a Markdown version of Requests results."""
     report: list[str] = []
     request_dict: dict = self._request_data
@@ -273,12 +384,14 @@ class RequestMarkdownReport(MarkdownReportComponent):
           self.bullet(f"Queued tasks: {request_dict.get('queued_tasks')}"))
       report.append(
           self.bullet(f"Evidence Name: {request_dict.get('evidence_name')}"))
+      report.append(
+          self.bullet(f"Evidence ID: {request_dict.get('evidence_id')}"))
       report.append('')
     except TypeError as exception:
       log.warning(f'Error formatting the Markdown report: {exception!s}')
 
     for task in self.components:
-      report.append(task.generate_markdown())
+      report.append(task.generate_markdown(show_all=show_all, compact=True))
 
     self.report = '\n'.join(report)
     return self.report
@@ -313,10 +426,235 @@ class SummaryMarkdownReport(MarkdownReportComponent):
 class WorkersMarkdownReport(MarkdownReportComponent):
   """A markdown report of all tasks for a specific worker."""
 
-  def __init__(self, request_data: dict):
+  def __init__(self, workers_status: dict, days: int):
     super().__init__()
-    self._request_data: dict = request_data
+    self._workers_status: dict = workers_status
+    self._days: int = days
 
   def generate_markdown(self) -> str:
-    """Generates a Markdown version of tasks per worker."""
-    raise NotImplementedError
+    """Generates a Markdown version of tasks per worker.
+    
+    Returns:
+      markdown (str): Markdown version of tasks per worker.
+    """
+    report = []
+    worker_status = self._workers_status.copy()
+    scheduled_tasks = worker_status.pop('scheduled_tasks')
+    report.append(
+        self.heading1(
+            f'Turbinia report for Worker activity within {self._days} days'))
+    report.append(self.bullet(f'{len(worker_status.keys())} Worker(s) found.'))
+    report.append(
+        self.bullet(
+            f'{scheduled_tasks} Task(s) unassigned or scheduled and pending '
+            f'Worker assignment.'))
+    for worker_node, task_types in worker_status.items():
+      report.append('')
+      report.append(self.heading2(f'Worker Node: {worker_node:s}'))
+      for task_type, tasks in task_types.items():
+        report.append(self.heading3(task_type.replace('_', ' ').title()))
+        if not tasks:
+          report.append(self.bullet('No Tasks found.'))
+          report.append('')
+          continue
+        for task_id, task_attributes in tasks.items():
+          report.append(
+              self.bullet(f'{task_id} - {task_attributes["task_name"]}'))
+          for attribute_name, attribute_value in task_attributes.items():
+            if attribute_name != 'task_name':
+              formatted_name = attribute_name.replace('_', ' ').title()
+              report.append(
+                  self.bullet(f'{formatted_name}: {attribute_value}', level=2))
+        report.append('')
+
+    return '\n'.join(report)
+
+
+class StatsMarkdownReport(MarkdownReportComponent):
+  """A markdown report of the task statistics."""
+
+  def __init__(self, statistics: dict):
+    super().__init__()
+    self._statistics: dict = statistics
+    self.table_dict = {
+        'TASK': [],
+        'COUNT': [],
+        'MIN': [],
+        'MEAN': [],
+        'MAX': []
+    }
+
+  def stat_to_row(self, task: str, stat_dict: dict):
+    """Generates a row of the statistics table.
+    
+    Args:
+      task (str): Name of the current task.
+      stat_dict (dict): Dictionary with information about current row.
+    """
+    self.table_dict['TASK'].append(f'{task}')
+    self.table_dict['COUNT'].append(stat_dict.get('count', ''))
+    self.table_dict['MIN'].append(stat_dict.get('min', ''))
+    self.table_dict['MEAN'].append(stat_dict.get('mean', ''))
+    self.table_dict['MAX'].append(stat_dict.get('max', ''))
+
+  def generate_data_frame(self) -> pandas.DataFrame:
+    """Generates a pandas DataFrame of the statistics table
+
+    Args:
+      markdown (bool): Bool defining if the tasks should be in markdown format.
+    
+    Returns: 
+      data_frame (DataFrame): Statistics table in pandas DataFrame format.
+    """
+    for stat_group, stat_dict in self._statistics.items():
+      stat_group = stat_group.replace('_', ' ').title()
+      if stat_group in ('All Tasks', 'Successful Tasks', 'Failed Tasks',
+                        'Requests'):
+        first_column = stat_group
+        self.stat_to_row(first_column, stat_dict)
+        continue
+      for description, inner_dict in stat_dict.items():
+        first_column = f'{stat_group.split(" ")[-1]} {description}'
+        self.stat_to_row(first_column, inner_dict)
+    return pandas.DataFrame(self.table_dict)
+
+  def generate_markdown(self) -> str:
+    """Generates a Markdown version of task statistics.
+    
+    Returns:
+      markdown(str): Markdown version of task statistics.
+    """
+    report = [self.heading1('Execution time statistics for Turbinia:')]
+    data_frame = self.generate_data_frame()
+    table = data_frame.to_markdown(index=False)
+    report.append(table)
+    return '\n'.join(report)
+
+  def generate_csv(self) -> str:
+    """Generates a CSV version of task statistics.
+    
+    Returns:
+      csv(str): CSV version of task statistics.
+    """
+    return self.generate_data_frame().to_csv(index=False)
+
+
+class EvidenceMarkdownReport(MarkdownReportComponent):
+  """Turbinia Evidence Markdown report."""
+
+  def __init__(self, evidence_data: dict):
+    """Initializes an EvidenceMarkdownReport object."""
+    super().__init__()
+    self._evidence_data: dict = evidence_data
+
+  def generate_markdown(self, level=1, show_all=False) -> str:
+    """Generates a Markdown version of Evidence.
+
+      Args:
+        level (int): Indentation level.
+        show_all (bool): Shows all evidence attributes if True.
+
+      Returns:
+        report (str): Markdown report.
+    """
+    report: list[str] = []
+    evidence_dict: dict = self._evidence_data
+    if not evidence_dict:
+      return ''
+    try:
+      report.append(
+          self.heading(
+              f"Evidence ID: {evidence_dict.get('id', 'null')}", level))
+      report.append(
+          self.bullet(
+              f"Evidence Name: {evidence_dict.get('_name', 'null')}", level))
+      report.append(
+          self.bullet(
+              f"Evidence Type: {evidence_dict.get('type', 'null')}", level))
+      report.append(
+          self.bullet(
+              f"Evidence Size: {evidence_dict.get('size', 'null')}", level))
+      report.append(
+          self.bullet(
+              f"Request ID: {evidence_dict.get('request_id', 'null')}", level))
+      report.append(self.bullet('Tasks:', level))
+      report.extend(
+          self.list_to_markdown(evidence_dict.get('tasks'), level + 1))
+      report.append(
+          self.bullet(
+              f"Source Path: {evidence_dict.get('source_path', 'null')}",
+              level))
+      report.append(
+          self.bullet(
+              f"Local Path: {evidence_dict.get('local_path', 'null')}", level))
+      report.append(
+          self.bullet(
+              f"Creation Time: {evidence_dict.get('creation_time', 'null')}",
+              level))
+      report.append(
+          self.bullet(
+              f"Last Update: {evidence_dict.get('last_update', 'null')}",
+              level))
+
+      if show_all:
+        report.extend(
+            self.dict_to_markdown(
+                evidence_dict, level=level, excluded_keys=IMPORTANT_ATTRIBUTES))
+
+      report.append('')
+
+    except TypeError as exception:
+      log.warning(f'Error formatting the Markdown report: {exception!s}')
+
+    self.report = '\n'.join(report)
+    return self.report
+
+
+class EvidenceSummaryMarkdownReport(EvidenceMarkdownReport):
+  """Turbinia Evidence Markdown report."""
+
+  def __init__(self, summary: dict | list | int):
+    """Initializes an EvidenceSummaryMarkdownReport object."""
+    super().__init__({})
+    self._summary = summary
+
+  def generate_content_markdown(self, summary, level=1):
+    """Generates the content Markdown summary.
+
+      Args:
+        summary (bool): Evidence summary.
+        level (int): Indentation level.
+
+      Returns:
+        report (list): List with Markdown lines.
+    """
+    report = []
+    for item in summary:
+      self._evidence_data = item
+      report.append(self.generate_markdown(level=(level + 1)))
+    return report
+
+  def generate_summary_markdown(self, output: str = 'keys') -> str:
+    """Generates the evidence summary Markdown.
+
+      Args:
+        output (str):Type of output (keys | content | count).
+
+      Returns:
+        report (str): Markdown report.
+    """
+    if output == 'content':
+      if isinstance(self._summary, dict):
+        report = []
+        for attribute, summary in self._summary.items():
+          report.append(self.bullet(f'{attribute}:'))
+          report.extend(self.generate_content_markdown(summary, level=2))
+        return '\n'.join(report)
+      return '\n'.join(self.generate_content_markdown(self._summary))
+    elif isinstance(self._summary, list):
+      return '\n'.join(self.list_to_markdown(self._summary, level=0))
+    elif isinstance(self._summary, dict):
+      return '\n'.join(
+          self.dict_to_markdown(self._summary, level=0, format_keys=False))
+    elif isinstance(self._summary, int):
+      return self.heading1(f'{self._summary} evidences found')
