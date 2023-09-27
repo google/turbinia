@@ -46,11 +46,12 @@ def _image_export(command, output_dir, disk_path, timeout=DEFAULT_TIMEOUT):
   """
   # TODO: Consider using the exec helper to gather stdin/err.
 
-  # Execute the job via docker.
-  if config.DOCKER_ENABLED == True:
-    dependencies = config.ParseDependencies()
-    docker_image = dependencies[
-        'FileArtifactExtractionJob'.lower()]['docker_image']
+  dependencies = config.ParseDependencies()
+  docker_image = dependencies[
+      'FileArtifactExtractionJob'.lower()]['docker_image']
+  # Execute the job via docker if docker is enabled and the Job has an image configured
+  # The image should be of the log2timeline/plaso type.
+  if (config.DOCKER_ENABLED and docker_image is not None):
     from turbinia.lib import docker_manager
     ro_paths = [disk_path]
     rw_paths = [output_dir]

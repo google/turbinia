@@ -80,8 +80,8 @@ def check_docker_dependencies(dependencies):
       continue
 
     for program in values['programs']:
-      if values['docker_image'] != None:
-        docker_image = values.get('docker_image')
+      docker_image = values.get('docker_image')
+      if docker_image is not None:
         log.info('docker_image: {0:s}'.format(values['docker_image']))
         # Check if docker_image exists in registry.
         exists = docker_manager.DockerManager().image_exists(docker_image)
@@ -91,16 +91,17 @@ def check_docker_dependencies(dependencies):
               'update the config with the correct image name'.format(
                   values['docker_image'], job))
         # Check if job program exists in docker image.
-        # TODO(rbdebeer) consider removing this part as it will download all
-        # docker images configured in turbinia.conf each time a worker starts!
-        cmd = f'type {program:s}'
-        stdout, stderr, ret = docker_manager.ContainerManager(
-            values['docker_image']).execute_container(cmd, shell=True)
-        if ret != 0:
-          raise TurbiniaException(
-              'Job dependency {0:s} not found for job {1:s}. Please install '
-              'the dependency for the container or disable the job.'.format(
-                  program, job))
+        # Comment out this part if you want to verify the command in all
+        # job docker images. Note: This will download *all* docker images
+        # each time a worker is started.
+        # cmd = f'type {program:s}'
+        # stdout, stderr, ret = docker_manager.ContainerManager(
+        #     values['docker_image']).execute_container(cmd, shell=True)
+        # if ret != 0:
+        #   raise TurbiniaException(
+        #       'Job dependency {0:s} not found for job {1:s}. Please install '
+        #       'the dependency for the container or disable the job.'.format(
+        #           program, job))
         job_manager.JobsManager.RegisterDockerImage(job, values['docker_image'])
 
 

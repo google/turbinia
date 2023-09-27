@@ -65,7 +65,7 @@ class FileArtifactExtractionTask(TurbiniaTask):
         self.artifact_name,
     ]
 
-    if config.DOCKER_ENABLED != True:
+    if not config.DOCKER_ENABLED:
       cmd.insert(0, 'sudo')
 
     if config.DEBUG_TASKS or self.task_config.get('debug_tasks'):
