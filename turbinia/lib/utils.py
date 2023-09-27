@@ -171,6 +171,7 @@ def bruteforce_password_hashes(
 
   pot_file = os.path.join((tmp_dir or tempfile.gettempdir()), 'hashcat.pot')
   password_list_file_path = os.path.expanduser('~/password.lst')
+  password_rules_file_path = os.path.expanduser('~/turbinia.rules')
 
   # Fallback
   if not os.path.isfile(password_list_file_path):
@@ -193,6 +194,7 @@ def bruteforce_password_hashes(
     cmd = cmd + [f'--potfile-path={pot_file}']
     cmd = cmd + [
         password_hashes_file_path, password_list_file_path]
+    cmd = cmd + ['-r', password_rules_file_path]
 
   with open(os.devnull, 'w') as devnull:
     try:

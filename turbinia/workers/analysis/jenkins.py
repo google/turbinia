@@ -37,7 +37,7 @@ class JenkinsAnalysisTask(TurbiniaTask):
   TASK_CONFIG = {
       # This is the length of time in seconds that the collected passwords will
       # be bruteforced.
-      'bruteforce_timeout': 300
+      'bruteforce_timeout': 600
   }
 
   def run(self, evidence, result):
@@ -72,7 +72,7 @@ class JenkinsAnalysisTask(TurbiniaTask):
 
     jenkins_artifacts = []
     jenkins_re = re.compile(
-        r'^.*jenkins[^\/]*(\/home)?(\/users\/[^\/]+)*\/config\.xml$')
+        r'^.*?jenkins[^\/]*(\/home)?(\/users)?(\/.*?)\/config\.xml$')
     for collected_artifact in collected_artifacts:
       if re.match(jenkins_re, collected_artifact):
         jenkins_artifacts.append(collected_artifact)
