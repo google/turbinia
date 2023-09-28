@@ -164,7 +164,7 @@ class TestTurbiniaPsqWorker(unittest.TestCase):
     mock_cm = mock_contmgr.return_value
 
     # Image not found.
-    mock_dm.image_exists.return_value = None
+    mock_dm.image_exists.return_value = False
     self.assertRaises(
         TurbiniaException, check_docker_dependencies, dependencies)
 
@@ -177,12 +177,12 @@ class TestTurbiniaPsqWorker(unittest.TestCase):
 
     dependencies = {
         'plasojob': {
-            'programs': ['log2timelne.py'],
+            'programs': ['log2timeline.py'],
             'docker_image': 'log2timeline/plaso'
         }
     }
     # Normal run
-    mock_dm.image_exists.return_value = 1
+    mock_dm.image_exists.return_value = True
     mock_cm.execute_container.return_value = ['exists', None, 0]
     check_docker_dependencies(dependencies)
 
