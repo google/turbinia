@@ -164,7 +164,7 @@ class TestTurbiniaPsqWorker(unittest.TestCase):
     mock_cm = mock_contmgr.return_value
 
     # Image not found.
-    mock.dm.image_exists.return_value = None
+    mock_dm.image_exists.return_value = None
     self.assertRaises(
         TurbiniaException, check_docker_dependencies, dependencies)
 
