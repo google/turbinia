@@ -155,7 +155,7 @@ class TestTurbiniaPsqWorker(unittest.TestCase):
     dependencies = {
         'plasojob': {
             'programs': ['non_exist'],
-            'docker_image': 'non_existing_img'
+            'docker_image': 'test_img'
         }
     }
 
@@ -168,19 +168,21 @@ class TestTurbiniaPsqWorker(unittest.TestCase):
     self.assertRaises(
         TurbiniaException, check_docker_dependencies, dependencies)
 
-    dependencies = {
-        'plasojob': {
-            'programs': ['non_exist'],
-            'docker_image': 'test_img'
-        }
-    }
-    mock_dm.list_images.return_value = ['test_img']
+    # # Uncommment when the program dependency program check is uncommented
+    # # in worker.py as well.
     # # Dependency not found.
     # mock_cm.execute_container.return_value = ['non_exist', None, 1]
     # self.assertRaises(
     #     TurbiniaException, check_docker_dependencies, dependencies)
 
+    dependencies = {
+        'plasojob': {
+            'programs': ['log2timelne.py'],
+            'docker_image': 'log2timeline/plaso'
+        }
+    }
     # Normal run
+    mock_dm.image_exists.return_value = 1
     mock_cm.execute_container.return_value = ['exists', None, 0]
     check_docker_dependencies(dependencies)
 
