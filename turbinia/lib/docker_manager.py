@@ -298,7 +298,7 @@ class ContainerManager(DockerManager):
       for stdo in stdstream:
         stdo = codecs.decode(stdo, 'utf-8').strip()
         log.debug(stdo)
-        stdout += stdo 
+        stdout += stdo
       results = container.wait(timeout=timeout_limit)
     except docker.errors.APIError as exception:
       if container:
