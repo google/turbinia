@@ -96,6 +96,12 @@ class TestDockerManager(unittest.TestCase):
     self.docker_mgr.client.images.get.return_value = test_img
     assert test_img == self.docker_mgr.get_image(test_img)
 
+    # Ensure exception is being handled when image doesn't exist.
+    self.docker_mgr.client.images.get.side_effect = docker.errors.ImageNotFound(
+        'mock test fail.')
+    self.assertRaises(TurbiniaException, self.docker_mgr.get_image, test_img)
+
+
   def testListImages(self):
     """Tests DockerManager.list_images() method."""
     id_smpl = ['123456', '234567']

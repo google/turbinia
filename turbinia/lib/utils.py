@@ -44,7 +44,6 @@ def _image_export(command, output_dir, disk_path, timeout=DEFAULT_TIMEOUT):
   Raises:
     TurbiniaException: If an error occurs when running image_export.
   """
-  # TODO: Consider using the exec helper to gather stdin/err.
 
   # Execute the job via docker if docker is enabled and the Job has an image configured
   # The image should be of the log2timeline/plaso type.

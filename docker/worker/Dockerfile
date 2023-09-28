@@ -174,7 +174,7 @@ RUN usermod -aG docker turbinia
 # install turbinia and cleanup /tmp
 ADD . /tmp/
 RUN if $(cd /tmp/ && git rev-parse --is-shallow-repository); then cd /tmp/ && git fetch --prune --unshallow && git fetch --depth=1 origin +refs/tags/*:refs/tags/*; fi \
-  && cd /tmp/ && python3 setup.py install
+    && cd /tmp/ && python3 setup.py install
 
 COPY docker/worker/start.sh /home/turbinia/start.sh
 RUN chmod +rwx /home/turbinia/start.sh
