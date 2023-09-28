@@ -114,7 +114,10 @@ class DockerManager:
       image_id(str): The image id.
 
     Returns:
-      bool: True or False.
+      regdata: The RegistryData object.
+    
+    Raises:
+      TurbiniaException: If the Docker Image is not found in the registry.
     """
     try:
       if image_id not in checked_image_list:
@@ -124,7 +127,7 @@ class DockerManager:
     except docker.errors.APIError as exception:
       raise TurbiniaException(
           f'An error occurred checking if image exists: {exception!s}')
-    return True
+    return regdata
 
   def get_image(self, image_id):
     """Retrieve the Docker Image object.

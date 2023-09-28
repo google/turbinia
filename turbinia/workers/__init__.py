@@ -678,7 +678,8 @@ class TurbiniaTask:
       stdout, stderr, ret = container_manager.execute_container(
           cmd, shell, ro_paths=ro_paths, rw_paths=rw_paths,
           timeout_limit=timeout_limit)
-    else:  # Execute the job on the host system.
+    # Execute the job on the host system.
+    else:
       try:
         if shell:
           proc = subprocess.Popen(

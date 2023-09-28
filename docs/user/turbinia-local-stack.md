@@ -19,7 +19,7 @@ $ cd turbinia
 #### Step 2
 Generate configuration file using sed with default local stack values to the ```./conf``` folder. This folder (and supporting folders) will be mapped by docker compose into the containers.
 ```
-$ mkdir -p ./conf && mkdir -p ./tmp && mkdir -p ./evidence && mkdir -p ./certs && chmod 777 ./tmp ./evidence ./conf ./certs
+$ mkdir -p ./conf && mkdir -p ./tmp && mkdir -p ./evidence && mkdir -p ./certs && chmod 777 ./conf ./tmp ./evidence ./certs
 $ sed -f docker/local/local-config.sed turbinia/config/turbinia_config_tmpl.py > conf/turbinia.conf
 ```
 #### Step 3

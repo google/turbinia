@@ -57,8 +57,8 @@ services:
             - TURBINIA_EXTRA_ARGS=${TURBINIA_EXTRA_ARGS}
 
     turbinia-worker:
-        image: "turbinia-worker-dev" # Use this for local development and comment out below line
-        #image: "us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-worker:latest" # Latest stable
+        #image: "turbinia-worker-dev" # Use this for local development and comment out below line
+        image: "us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-worker:latest" # Latest stable
         container_name: turbinia-worker
         privileged: true
         depends_on:
