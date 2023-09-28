@@ -58,7 +58,7 @@ def _image_export(command, output_dir, disk_path, timeout=DEFAULT_TIMEOUT):
     from turbinia.lib import docker_manager
     ro_paths = [disk_path]
     rw_paths = [output_dir]
-    container_manager = docker_manager.ContainerManager(docker_image)
+    container_manager = docker_manager.ContainerManager(docker_image_fileartifactextractionjob)
     stdout, stderr, ret = container_manager.execute_container(
         command, shell=False, ro_paths=ro_paths, rw_paths=rw_paths,
         timeout_limit=timeout)
