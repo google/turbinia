@@ -101,7 +101,6 @@ class TestDockerManager(unittest.TestCase):
         'mock test fail.')
     self.assertRaises(TurbiniaException, self.docker_mgr.get_image, test_img)
 
-
   def testListImages(self):
     """Tests DockerManager.list_images() method."""
     id_smpl = ['123456', '234567']

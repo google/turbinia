@@ -121,9 +121,9 @@ class DockerManager:
     """
     try:
       if image_id not in checked_image_list:
-        base_image=image_id.split(':')[0]
-        found=self.client.images.search(base_image)
-        if len(found)==0:
+        base_image = image_id.split(':')[0]
+        found = self.client.images.search(base_image)
+        if len(found) == 0:
           return False
         # Add image digest to checked image list
         checked_image_list.append(image_id)
@@ -298,7 +298,7 @@ class ContainerManager(DockerManager):
       for stdo in stdstream:
         stdo = codecs.decode(stdo, 'utf-8').strip()
         log.debug(stdo)
-        stdout += stdo
+        stdout += stdo 
       results = container.wait(timeout=timeout_limit)
     except docker.errors.APIError as exception:
       if container:

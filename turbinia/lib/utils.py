@@ -49,16 +49,18 @@ def _image_export(command, output_dir, disk_path, timeout=DEFAULT_TIMEOUT):
   # The image should be of the log2timeline/plaso type.
   config.LoadConfig()
   dependencies = config.ParseDependencies()
-  docker_image_fileartifactextractionjob = None
-  if dependencies.get('FileArtifactExtractionJob'.lower()):
-    docker_image_fileartifactextractionjob = dependencies.get(
-        'FileArtifactExtractionJob'.lower()).get('docker_image')
-  if (config.DOCKER_ENABLED and
-      docker_image_fileartifactextractionjob is not None):
+  docker_image = None
+  job_name = 'FileArtifactExtractionJob'.lower()
+  if dependencies.get(job_name):
+    docker_image = dependencies.get(job_name).get('docker_image')
+  if (config.DOCKER_ENABLED and docker_image is not None):
     from turbinia.lib import docker_manager
     ro_paths = [disk_path]
     rw_paths = [output_dir]
-    container_manager = docker_manager.ContainerManager(docker_image_fileartifactextractionjob)
+    container_manager = docker_manager.ContainerManager(docker_image)
+    log.info(
+        'Executing job {0:s} in container: {1:s}'.format(
+            job_name, docker_image))
     stdout, stderr, ret = container_manager.execute_container(
         command, shell=False, ro_paths=ro_paths, rw_paths=rw_paths,
         timeout_limit=timeout)
