@@ -1,0 +1,11 @@
+.git/*
+.venv/*
+charts/*
+docker/*
+test_data/*
+.github/*
+.devcontainer/*
+docs/*
+**/*.yaml
+config/*
+conf/*
