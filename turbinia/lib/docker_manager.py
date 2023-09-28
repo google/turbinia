@@ -142,7 +142,7 @@ class DockerManager:
       TurbiniaException: If the Docker Image is not found.
     """
     try:
-      image = self.client.images.pull(image_id)
+      image = self.client.images.get(image_id)
     except docker.errors.ImageNotFound as exception:
       message = 'The Docker image {0!s} could not be found: {1!s}'
       raise TurbiniaException(message.format(image_id, exception))

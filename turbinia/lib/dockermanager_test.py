@@ -93,7 +93,7 @@ class TestDockerManager(unittest.TestCase):
     # Test normal execution.
     test_img = '1234'
     self.docker_mgr.client = mock.MagicMock()
-    self.docker_mgr.client.images.pull.return_value = test_img
+    self.docker_mgr.client.images.get.return_value = test_img
     assert test_img == self.docker_mgr.get_image(test_img)
 
   def testListImages(self):

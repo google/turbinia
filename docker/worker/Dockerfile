@@ -4,30 +4,30 @@
 # Build 0 - fraken
 FROM golang:alpine AS fraken-builder
 RUN apk add --no-cache -t .build-deps \
-    autoconf \
-    automake \
-    bison \
-    build-base \
-    curl \
-    file \
-    file-dev \
-    flex \
-    git \
-    jansson \
-    jansson-dev \
-    jansson-static \
-    libc-dev \
-    libmagic \
-    libmagic-static \
-    libtool \
-    linux-headers \
-    openssl \
-    openssl-dev \
-    openssl-libs-static \
-    py3-setuptools \
-    python3 \
-    python3-dev \
-    sudo
+  autoconf \
+  automake \
+  bison \
+  build-base \
+  curl \
+  file \
+  file-dev \
+  flex \
+  git \
+  jansson \
+  jansson-dev \
+  jansson-static \
+  libc-dev \
+  libmagic \
+  libmagic-static \
+  libtool \
+  linux-headers \
+  openssl \
+  openssl-dev \
+  openssl-libs-static \
+  py3-setuptools \
+  python3 \
+  python3-dev \
+  sudo
 
 RUN set -x \
   && echo "Compiling Yara from source..."
@@ -56,25 +56,25 @@ ENV PIP_NO_CACHE_DIR=1
 ARG PPA_TRACK=stable
 
 RUN apt-get update && apt-get -y upgrade && apt-get -y install \
-  apt-transport-https \
-  apt-utils \
-  ca-certificates \
-  curl \
-  git \
-  john \
-  john-data \
-  libleveldb1d \
-  libleveldb-dev \
-  libterm-readline-gnu-perl \
-  lvm2 \
-  pocl-opencl-icd \
-  p7zip-full \
-  python3-pip \
-  software-properties-common \
-  sudo \
-  testdisk \
-  wget \
-  && apt-get clean && rm -rf /var/cache/apt/* /var/lib/apt/lists/*
+    apt-transport-https \
+    apt-utils \
+    ca-certificates \
+    curl \
+    git \
+    john \
+    john-data \
+    libleveldb1d \
+    libleveldb-dev \
+    libterm-readline-gnu-perl \
+    lvm2 \
+    pocl-opencl-icd \
+    p7zip-full \
+    python3-pip \
+    software-properties-common \
+    sudo \
+    testdisk \
+    wget \
+    && apt-get clean && rm -rf /var/cache/apt/* /var/lib/apt/lists/*
 
 ADD requirements.txt /tmp/
 RUN cd /tmp/ && pip3 install -r requirements.txt
@@ -174,7 +174,7 @@ RUN usermod -aG docker turbinia
 # install turbinia and cleanup /tmp
 ADD . /tmp/
 RUN if $(cd /tmp/ && git rev-parse --is-shallow-repository); then cd /tmp/ && git fetch --prune --unshallow && git fetch --depth=1 origin +refs/tags/*:refs/tags/*; fi \
-    && cd /tmp/ && python3 setup.py install
+  && cd /tmp/ && python3 setup.py install
 
 COPY docker/worker/start.sh /home/turbinia/start.sh
 RUN chmod +rwx /home/turbinia/start.sh
