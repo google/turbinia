@@ -172,7 +172,7 @@ def bruteforce_password_hashes(
   pot_file = os.path.join((tmp_dir or tempfile.gettempdir()), 'hashcat.pot')
   password_list_file_path = os.path.expanduser('~/password.lst')
   password_rules_file_path = os.path.expanduser(
-    '~/turbinia-password-cracking.rules')
+      '~/turbinia-password-cracking.rules')
 
   # Fallback
   if not os.path.isfile(password_list_file_path):
