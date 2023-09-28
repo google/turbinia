@@ -138,13 +138,14 @@ RUN cp /home/turbinia/password.lst /root/
 # Copy Kubernetes support tool to home folder
 COPY --chown=turbinia:turbinia k8s/tools/check-lockfile.py /home/turbinia/check-lockfile.py
 
+# Create venv and activate it
 RUN python3 -m venv /venv
 ENV PATH="/venv/bin:$PATH" VIRTUAL_ENV=/venv
 
 # Install third-party dependencies
 RUN python3 -m pip install impacket --no-deps
 
-# Install Turbinia in /venv using Poetry
+# Install Turbinia and dependencies in /venv using Poetry
 ADD . /tmp/
 WORKDIR /tmp/
 # RUN if $(cd /tmp/ && git rev-parse --is-shallow-repository); then cd /tmp/ && git fetch --prune --unshallow && git fetch --depth=1 origin +refs/tags/*:refs/tags/*; fi
