@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: turbiniavolume
+spec:
+  storageClassName: standard
+  capacity:
+    storage: 3Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/data/turbiniavolume"
+
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: redisvolume
+spec:
+  storageClassName: standard
+  capacity:
+    storage: 3Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/data/redisvolume"
