@@ -12,7 +12,7 @@ build:
         - turbinia/**
     - image: turbinia-server
       docker:
-        dockerfile: docker/server/Dockerfile
+        dockerfile: docker/server/Dockerfile.dev
     # - image: turbinia-api
     #   docker:
     #     dockerfile: docker/api_server/Dockerfile.dev
