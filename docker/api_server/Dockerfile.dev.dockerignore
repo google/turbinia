@@ -7,5 +7,3 @@ test_data/*
 .devcontainer/*
 docs/*
 **/*.yaml
-config/*
-conf/*

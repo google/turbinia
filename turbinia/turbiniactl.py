@@ -39,6 +39,8 @@ log = logging.getLogger('turbinia')
 # file handler later once we have read the log path from the config.
 logger.setup(need_file_handler=False)
 
+import jurigged
+jurigged.watch('/tmp/turbinia')
 
 def csv_list(string):
   """Helper method for having CSV argparse types.
