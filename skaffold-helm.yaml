@@ -4,19 +4,22 @@ metadata:
   name: turbinia
 build:
   artifacts:
-    # - image: turbinia-api-server
-    #   docker:
-    #     dockerfile: docker/api_server/Dockerfile
-    # - image: turbinia-server
-    #   docker:
-    #     dockerfile: docker/server/Dockerfile
     - image: turbinia-worker
       docker:
         dockerfile: docker/worker/Dockerfile.dev
+      sync:
+        infer:
+        - turbinia/**
+    - image: turbinia-server
+      docker:
+        dockerfile: docker/server/Dockerfile
+    # - image: turbinia-api
+    #   docker:
+    #     dockerfile: docker/api_server/Dockerfile.dev
   #local:
     # useDockerCLI: true
     # useBuildkit: true 
-    #concurrency: 0
+    # concurrency: 0
     # tryImportMissing: true
 deploy:
   helm:
@@ -24,6 +27,20 @@ deploy:
     - name: dev-release
       #remoteChart: oci://us-docker.pkg.dev/osdfir-registry/osdfir-charts/turbinia
       chartPath: ./charts/turbinia
+      setValues:
+        config.override: ./conf/turbinia.conf
       setValueTemplates:
         worker.image.repository: "{{.IMAGE_REPO_turbinia_worker}}"
         worker.image.tag: "{{.IMAGE_TAG_turbinia_worker}}@{{.IMAGE_DIGEST_turbinia_worker}}"
+        server.image.repository: "{{.IMAGE_REPO_turbinia_server}}"
+        server.image.tag: "{{.IMAGE_TAG_turbinia_server}}@{{.IMAGE_DIGEST_turbinia_server}}"
+        # api.image.repository: "{{.IMAGE_REPO_turbinia_api}}"
+        # api.image.tag: "{{.IMAGE_TAG_turbinia_api}}@{{.IMAGE_DIGEST_turbinia_api}}"
+portForward:
+- resourceType: deployment
+  resourceName: turbinia-worker
+  port: 10000 # worker debugpy port
+- resourceType: deployment
+  resourceName: turbinia-api
+  port: 8000
+
