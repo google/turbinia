@@ -36,11 +36,15 @@ deploy:
         server.image.tag: "{{.IMAGE_TAG_turbinia_server}}@{{.IMAGE_DIGEST_turbinia_server}}"
         # api.image.repository: "{{.IMAGE_REPO_turbinia_api}}"
         # api.image.tag: "{{.IMAGE_TAG_turbinia_api}}@{{.IMAGE_DIGEST_turbinia_api}}"
-portForward:
-- resourceType: deployment
-  resourceName: turbinia-worker
-  port: 10000 # worker debugpy port
-- resourceType: deployment
-  resourceName: turbinia-api
-  port: 8000
+# portForward:
+# - resourceType: pod
+#   resourceName: turbinia-worker
+#   port: 10000 # worker debugpy port
+# - resourceType: pod
+#   resourceName: turbinia-server
+#   port: 20000 # worker debugpy port
+# - resourceType: pod
+#   resourceName: turbinia-api
+#   port: 8000
+
 

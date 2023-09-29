@@ -28,12 +28,13 @@ RUN mkdir /etc/turbinia && mkdir -p /mnt/turbinia/ && mkdir -p /var/lib/turbinia
     && chown -R turbinia:turbinia /etc/turbinia/ \
     && chown -R turbinia:turbinia /var/log/turbinia/
 
-ADD . /tmp
+RUN pip3 install debugpy
+
+USER turbinia
+ADD --chown=turbinia:turbinia . /tmp
 # unshallow and fetch all tags so our build systems pickup the correct git tag if it's a shallow clone
 RUN if $(cd /tmp/ && git rev-parse --is-shallow-repository); then cd /tmp/ && git fetch --prune --unshallow && git fetch --depth=1 origin +refs/tags/*:refs/tags/*; fi
 
-RUN pip3 install debugpy
-USER turbinia
 WORKDIR /tmp
 ENV PYTHONPATH .
 CMD ["python3","-m","debugpy","--listen","0.0.0.0:20000","turbinia/turbiniactl.py","-d","server"]
