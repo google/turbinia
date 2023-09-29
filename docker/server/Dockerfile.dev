@@ -29,7 +29,7 @@ RUN mkdir /etc/turbinia && mkdir -p /mnt/turbinia/ && mkdir -p /var/lib/turbinia
     && chown -R turbinia:turbinia /var/log/turbinia/
 
 RUN pip3 install debugpy
-
+RUN pip3 install jurigged
 USER turbinia
 ADD --chown=turbinia:turbinia . /tmp
 # unshallow and fetch all tags so our build systems pickup the correct git tag if it's a shallow clone
@@ -40,5 +40,5 @@ ENV PYTHONPATH .
 CMD ["python3","-m","debugpy","--listen","0.0.0.0:20000","turbinia/turbiniactl.py","-d","server"]
 # Expose Prometheus and debug endpoint.
 EXPOSE 9200/tcp
-EXPOSE 20000/tcp
+#EXPOSE 20000/tcp
 

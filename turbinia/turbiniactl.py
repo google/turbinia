@@ -30,6 +30,9 @@ logger.setup(need_file_handler=False)
 
 log = logging.getLogger('turbinia')
 
+import jurigged
+jurigged.watch('/tmp/turbinia')
+
 
 def csv_list(string):
   """Helper method for having CSV argparse types.
