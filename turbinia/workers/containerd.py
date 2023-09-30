@@ -39,6 +39,42 @@ class ContainerdEnumerationTask(TurbiniaTask):
 
   REQUIRED_STATES = [state.ATTACHED, state.MOUNTED]
 
+  TASK_CONFIG = {
+      # These filters will all match on partial matches, e.g. an image filter of
+      # ['gke.gcr.io/'] will filter out image `gke.gcr.io/event-exporter`.
+      #
+      # Which k8 namespaces to filter out by default
+      filter_namespaces: ['kube-system'],
+      filter_containers: ['sidecar', 'konnectivity-agent'],
+      # Taken from https://github.com/google/container-explorer/blob/main/supportcontainer.yaml
+      filter_images: [
+          'gcr.io/gke-release-staging/cluster-proportional-autoscaler-amd64',
+          'gcr.io/k8s-ingress-image-push/ingress-gce-404-server-with-metrics',
+          'gke.gcr.io/cluster-proportional-autoscaler',
+          'gke.gcr.io/csi-node-driver-registrar',
+          'gke.gcr.io/event-exporter',
+          'gke.gcr.io/fluent-bit',
+          'gke.gcr.io/fluent-bit-gke-exporter',
+          'gke.gcr.io/gcp-compute-persistent-disk-csi-driver',
+          'gke.gcr.io/gke-metrics-agent',
+          'gke.gcr.io/k8s-dns-dnsmasq-nanny',
+          'gke.gcr.io/k8s-dns-kube-dns',
+          'gke.gcr.io/k8s-dns-sidecar',
+          'gke.gcr.io/kube-proxy-amd64',
+          'gke.gcr.io/prometheus-to-sd',
+          'gke.gcr.io/proxy-agent',
+          'k8s.gcr.io/metrics-server/metrics-server',
+          'k8s.gcr.io/pause',
+          'gcr.io/gke-release-staging/addon-resizer',
+          'gcr.io/gke-release-staging/cpvpa-amd64',
+          'gcr.io/google-containers/pause-amd64',
+          'gke.gcr.io/addon-resizer',
+          'gke.gcr.io/cpvpa-amd64',
+          'k8s.gcr.io/kube-proxy-amd64',
+          'k8s.gcr.io/prometheus-to-sd',
+      ],
+  }
+
   def list_containers(self, evidence, _, detailed_output=False):
     """List containerd containers in the evidence.
 
@@ -95,7 +131,8 @@ class ContainerdEnumerationTask(TurbiniaTask):
       return containers
 
     basic_fields = [
-        'Namespace', 'Image', 'ContainerType', 'ID', 'Hostname', 'CreatedAt'
+        'Name', 'Namespace', 'Image', 'ContainerType', 'ID', 'Hostname',
+        'CreatedAt'
         'Labels'
     ]
     basic_containers = []
@@ -123,6 +160,10 @@ class ContainerdEnumerationTask(TurbiniaTask):
     summary = ''
     success = False
     report_data = []
+    filter_namespaces = self.task_conig.get('filter_namespaces')
+    filter_containers = self.task_conig.get('filter_containers')
+    filter_images = self.task_conig.get('filter_images')
+    filtered_container_list = []
 
     image_path = evidence.mount_path
     if not image_path:
@@ -145,7 +186,9 @@ class ContainerdEnumerationTask(TurbiniaTask):
       for container in containers:
         namespace = container.get('Namespace')
         container_id = container.get('ID')
+        container_name = container.get('Name')
         container_type = container.get('ContainerType') or None
+        image = container.get('Image')
 
         if not namespace or not container_id:
           result.log(
@@ -155,6 +198,35 @@ class ContainerdEnumerationTask(TurbiniaTask):
               f'Skipping container with empty value namespace ({namespace})'
               f' or container_id ({container_id})')
           continue
+
+        # Filter out configured namespaces/containers/images
+        if filter_namespaces:
+          if namespace in filter_namespaces:
+            message = (
+                f'Filtering out container {container_id} because namespace '
+                f'matches filter {filter_namespaces}')
+            result.log(message)
+            report_data.append(message)
+            filtered_container_list.append(container_id)
+            continue
+        if filter_images:
+          if image in filter_images:
+            message = (
+                f'Filtering out image {image} because image '
+                f'matches filter {filter_images}')
+            result.log(message)
+            report_data.append(message)
+            filtered_container_list.append(container_id)
+            continue
+        if filter_containers:
+          if container_name in filter_containers:
+            message = (
+                f'Filtering out container {container_id} because container '
+                f'name matches filter {filter_containers}')
+            result.log(message)
+            report_data.append(message)
+            filtered_container_list.append(container_id)
+            continue
 
         # We want to process docker managed container using Docker-Explorer
         if container_type and container_type.lower() == 'docker':
@@ -171,6 +243,13 @@ class ContainerdEnumerationTask(TurbiniaTask):
       summary = (
           f'Found {len(container_ids)} containers: {", ".join(container_ids)}')
       success = True
+      if filtered_container_list:
+        report_data.append(
+            f'Filtered out {len(filtered_container_list)} containers: '
+            f'{{", ".join(filtered_container_list)}}')
+        report_data.append(
+            'To process filtered containers, adjust the ContainerEnumeration Task '
+            'filter* parameters with a recipe')
     except TurbiniaException as e:
       summary = f'Error enumerating containerd containers: {e}'
       report_data.append(summary)
