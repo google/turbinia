@@ -166,6 +166,8 @@ COPY --chown=turbinia:turbinia k8s/tools/check-lockfile.py /home/turbinia/check-
 # Install Turbinia
 # unshallow and fetch all tags so our build systems pickup the correct git tag if it's a shallow clone
 # install turbinia and cleanup /tmp
+
+FROM worker-builder as turbinia-worker
 ADD . /tmp/
 RUN if $(cd /tmp/ && git rev-parse --is-shallow-repository); then cd /tmp/ && git fetch --prune --unshallow && git fetch --depth=1 origin +refs/tags/*:refs/tags/*; fi \
     && cd /tmp/ && python3 setup.py install
@@ -176,3 +178,19 @@ USER turbinia
 CMD ["/home/turbinia/start.sh"]
 # Expose Prometheus endpoint.
 EXPOSE 9200/tcp
+
+FROM worker-builder as turbinia-worker-dev
+RUN pip3 install debugpy
+RUN pip3 install jurigged
+
+USER turbinia
+ADD --chown=turbinia:turbinia . /tmp
+WORKDIR /tmp
+ENV PYTHONPATH .
+ENV TURBINIA_DEBUG 1
+ENV TURBINIA_HOTRELOAD 1
+CMD ["python3","-m","debugpy","--listen","0.0.0.0:10000","turbinia/turbiniactl.py","-d","celeryworker"]
+# Expose Prometheus and debug endpoint.
+EXPOSE 9200/tcp
+EXPOSE 10000/tcp
+
