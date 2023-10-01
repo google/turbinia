@@ -31,8 +31,10 @@ deploy:
       #remoteChart: oci://us-docker.pkg.dev/osdfir-registry/osdfir-charts/turbinia
       chartPath: ./charts/turbinia
       setValues:
-        config.override: /tmp/turbinia/conf/turbinia.conf
+        config.override: "/tmp/turbinia/conf/turbinia.conf"
+        versioncheck.enabled: False
       setValueTemplates:
+        config.override: "/tmp/turbinia/conf/turbinia.conf"
         worker.image.repository: "{{.IMAGE_REPO_turbinia_worker}}"
         worker.image.tag: "{{.IMAGE_TAG_turbinia_worker}}@{{.IMAGE_DIGEST_turbinia_worker}}"
         server.image.repository: "{{.IMAGE_REPO_turbinia_server}}"
@@ -45,9 +47,9 @@ portForward:
   port: 10000 # worker debugpy port
 - resourceType: deployment
   resourceName: dev-release-turbinia-server
-  port: 20000 # worker debugpy port
+  port: 20000 # server debugpy port
 - resourceType: deployment
   resourceName: dev-release-turbinia-api
-  port: 8000
+  port: 8000 # API and WebUI port
 
 
