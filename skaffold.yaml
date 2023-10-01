@@ -31,10 +31,9 @@ deploy:
       #remoteChart: oci://us-docker.pkg.dev/osdfir-registry/osdfir-charts/turbinia
       chartPath: ./charts/turbinia
       setValues:
-        config.override: "/tmp/turbinia/conf/turbinia.conf"
+        # config.override: "/tmp/turbinia/conf/turbinia.conf"
         versioncheck.enabled: False
       setValueTemplates:
-        config.override: "/tmp/turbinia/conf/turbinia.conf"
         worker.image.repository: "{{.IMAGE_REPO_turbinia_worker}}"
         worker.image.tag: "{{.IMAGE_TAG_turbinia_worker}}@{{.IMAGE_DIGEST_turbinia_worker}}"
         server.image.repository: "{{.IMAGE_REPO_turbinia_server}}"
