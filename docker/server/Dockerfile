@@ -1,4 +1,4 @@
-FROM ubuntu:22.04
+FROM ubuntu:22.04 as server-builder
 
 ENV DEBIAN_FRONTEND=noninteractive 
 ENV PIP_NO_CACHE_DIR=1
@@ -16,12 +16,8 @@ RUN apt-get update && apt-get -y upgrade && apt-get -y install \
 RUN pip3 install pip --upgrade \
     && pip3 install urllib3 cryptography requests --upgrade
 
-ADD . /tmp/
+ADD requirements.txt /tmp
 RUN cd /tmp/ && pip3 install -r requirements.txt
-
-# unshallow and fetch all tags so our build systems pickup the correct git tag if it's a shallow clone
-RUN if $(cd /tmp/ && git rev-parse --is-shallow-repository); then cd /tmp/ && git fetch --prune --unshallow && git fetch --depth=1 origin +refs/tags/*:refs/tags/*; fi \
-    && cd /tmp/ && python3 setup.py install
 
 RUN useradd -r -s /bin/nologin -u 999 turbinia
 
@@ -32,9 +28,34 @@ RUN mkdir /etc/turbinia && mkdir -p /mnt/turbinia/ && mkdir -p /var/lib/turbinia
     && chown -R turbinia:turbinia /etc/turbinia/ \
     && chown -R turbinia:turbinia /var/log/turbinia/
 
+ADD . /tmp
+
+FROM server-builder AS turbinia-server
 COPY docker/server/start.sh /home/turbinia/start.sh
 RUN chmod +rwx /home/turbinia/start.sh
+
+# unshallow and fetch all tags so our build systems pickup the correct git tag if it's a shallow clone
+RUN if $(cd /tmp/ && git rev-parse --is-shallow-repository); then cd /tmp/ && git fetch --prune --unshallow && git fetch --depth=1 origin +refs/tags/*:refs/tags/*; fi \
+    && cd /tmp/ && python3 setup.py install
+
 USER turbinia
 CMD ["/home/turbinia/start.sh"]
 # Expose Prometheus endpoint.
 EXPOSE 9200/tcp
+
+FROM server-builder AS turbinia-server-dev
+RUN pip3 install debugpy
+RUN pip3 install jurigged
+USER turbinia
+ADD --chown=turbinia:turbinia . /tmp
+# unshallow and fetch all tags so our build systems pickup the correct git tag if it's a shallow clone
+RUN if $(cd /tmp/ && git rev-parse --is-shallow-repository); then cd /tmp/ && git fetch --prune --unshallow && git fetch --depth=1 origin +refs/tags/*:refs/tags/*; fi
+
+WORKDIR /tmp
+ENV PYTHONPATH .
+ENV TURBINIA_DEBUG 1
+ENV TURBINIA_HOTRELOAD 1
+CMD ["python3","-m","debugpy","--listen","0.0.0.0:20000","turbinia/turbiniactl.py","-d","server"]
+# Expose Prometheus and debug endpoint.
+EXPOSE 9200/tcp
+EXPOSE 20000/tcp
