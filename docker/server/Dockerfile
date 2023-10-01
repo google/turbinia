@@ -1,4 +1,4 @@
-FROM ubuntu:22.04
+FROM ubuntu:22.04 as server-builder
 
 ENV DEBIAN_FRONTEND=noninteractive 
 ENV PIP_NO_CACHE_DIR=1
@@ -48,3 +48,20 @@ RUN poetry install --no-interaction --no-ansi
 CMD ["/home/turbinia/start.sh"]
 # Expose Prometheus endpoint.
 EXPOSE 9200/tcp
+
+FROM server-builder AS turbinia-server-dev
+RUN pip3 install debugpy
+RUN pip3 install jurigged
+USER turbinia
+ADD --chown=turbinia:turbinia . /tmp
+# unshallow and fetch all tags so our build systems pickup the correct git tag if it's a shallow clone
+RUN if $(cd /tmp/ && git rev-parse --is-shallow-repository); then cd /tmp/ && git fetch --prune --unshallow && git fetch --depth=1 origin +refs/tags/*:refs/tags/*; fi
+
+WORKDIR /tmp
+ENV PYTHONPATH .
+ENV TURBINIA_DEBUG 1
+ENV TURBINIA_HOTRELOAD 1
+CMD ["python3","-m","debugpy","--listen","0.0.0.0:20000","turbinia/turbiniactl.py","-d","server"]
+# Expose Prometheus and debug endpoint.
+EXPOSE 9200/tcp
+EXPOSE 20000/tcp

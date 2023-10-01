@@ -3,6 +3,11 @@ kind: Config
 metadata:
   name: turbinia
 build:
+  local:
+    useDockerCLI: true
+    useBuildkit: true 
+    concurrency: 0
+    #tryImportMissing: true
   artifacts:
     - image: turbinia-worker
       docker:
@@ -13,18 +18,14 @@ build:
         - turbinia/**
     - image: turbinia-server
       docker:
-        dockerfile: docker/server/Dockerfile.dev
+        dockerfile: docker/server/Dockerfile
+        target: turbinia-server-dev
       sync:
         infer:
         - turbinia/**
     # - image: turbinia-api
     #   docker:
     #     dockerfile: docker/api_server/Dockerfile.dev
-  #local:
-    # useDockerCLI: true
-    # useBuildkit: true 
-    # concurrency: 0
-    # tryImportMissing: true
 deploy:
   helm:
     releases:
