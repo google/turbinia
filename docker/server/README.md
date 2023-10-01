@@ -3,7 +3,7 @@ This Docker configuration is for building Turbinia worker and server images to b
 
 ### Build the image
 ```
-docker build -t turbinia-server:dev .
+docker build -t turbinia-server --target turbinia-server .
 ```
 
 ### Base64 encode turbinia.conf
