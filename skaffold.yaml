@@ -6,7 +6,8 @@ build:
   artifacts:
     - image: turbinia-worker
       docker:
-        dockerfile: docker/worker/Dockerfile.dev
+        dockerfile: docker/worker/Dockerfile
+        target: turbinia-worker-dev
       sync:
         infer:
         - turbinia/**

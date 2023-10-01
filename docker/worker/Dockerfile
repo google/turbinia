@@ -121,3 +121,19 @@ RUN poetry install --no-interaction --no-ansi -E worker
 CMD ["/home/turbinia/start.sh"]
 # Expose Prometheus endpoint.
 EXPOSE 9200/tcp
+
+FROM worker-builder as turbinia-worker-dev
+RUN pip3 install debugpy
+RUN pip3 install jurigged
+
+USER turbinia
+ADD --chown=turbinia:turbinia . /tmp
+WORKDIR /tmp
+ENV PYTHONPATH .
+ENV TURBINIA_DEBUG 1
+ENV TURBINIA_HOTRELOAD 1
+CMD ["python3","-m","debugpy","--listen","0.0.0.0:10000","turbinia/turbiniactl.py","-d","celeryworker"]
+# Expose Prometheus and debug endpoint.
+EXPOSE 9200/tcp
+EXPOSE 10000/tcp
+
