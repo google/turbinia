@@ -8,6 +8,8 @@ steps:
         "us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-server:$TAG_NAME",
         "-t",
         "us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-server:latest",
+        "--target",
+        "turbinia-server",
         "-f",
         "docker/server/Dockerfile",
         ".",
