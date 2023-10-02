@@ -56,12 +56,14 @@ USER turbinia
 ADD --chown=turbinia:turbinia . /tmp
 # unshallow and fetch all tags so our build systems pickup the correct git tag if it's a shallow clone
 RUN if $(cd /tmp/ && git rev-parse --is-shallow-repository); then cd /tmp/ && git fetch --prune --unshallow && git fetch --depth=1 origin +refs/tags/*:refs/tags/*; fi
-
 WORKDIR /tmp
 ENV PYTHONPATH .
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
 ENV TURBINIA_DEBUG 1
+ENV TURBINIA_DEBUG_PORT 20000
 ENV TURBINIA_HOTRELOAD 1
-CMD ["python3","-m","debugpy","--listen","0.0.0.0:20000","turbinia/turbiniactl.py","-d","server"]
+CMD ["python3","turbinia/turbiniactl.py","-d","server"]
 # Expose Prometheus and debug endpoint.
 EXPOSE 9200/tcp
 EXPOSE 20000/tcp
