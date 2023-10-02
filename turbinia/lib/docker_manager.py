@@ -284,7 +284,7 @@ class ContainerManager(DockerManager):
 
     args['devices'] = device_paths
     args['volumes'] = file_paths
-    args['privileged'] = True # as the container must be able to read block devices
+    args['privileged'] = True
 
     # Add any additional arguments
     for key, value in kwargs.items():
