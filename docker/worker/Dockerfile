@@ -2,7 +2,7 @@
 # Use: docker build --no-cache --build-arg PPA_TRACK="[staging|stable] GOVERSION=[1.20.6|1.18|?]"
 
 # Build 0 - fraken
-FROM golang:alpine AS fraken-builder
+FROM golang:1.21-alpine3.18 AS fraken-builder
 RUN apk add --no-cache -t .build-deps \
   autoconf \
   automake \
@@ -182,14 +182,16 @@ EXPOSE 9200/tcp
 FROM worker-builder as turbinia-worker-dev
 RUN pip3 install debugpy
 RUN pip3 install jurigged
-
 USER turbinia
 ADD --chown=turbinia:turbinia . /tmp
 WORKDIR /tmp
 ENV PYTHONPATH .
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
 ENV TURBINIA_DEBUG 1
+ENV TURBINIA_DEBUG_PORT 10000
 ENV TURBINIA_HOTRELOAD 1
-CMD ["python3","-m","debugpy","--listen","0.0.0.0:10000","turbinia/turbiniactl.py","-d","celeryworker"]
+CMD ["python3","turbinia/turbiniactl.py","-d","celeryworker"]
 # Expose Prometheus and debug endpoint.
 EXPOSE 9200/tcp
 EXPOSE 10000/tcp

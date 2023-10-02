@@ -26,6 +26,7 @@ import os
 import sys
 import uuid
 
+from debug import initialize_debugmode_if_requested
 from turbinia import config
 from turbinia import TurbiniaException
 from turbinia.config import logger
@@ -39,8 +40,7 @@ log = logging.getLogger('turbinia')
 # file handler later once we have read the log path from the config.
 logger.setup(need_file_handler=False)
 
-import jurigged
-jurigged.watch('/tmp/turbinia')
+initialize_debugmode_if_requested()
 
 def csv_list(string):
   """Helper method for having CSV argparse types.
