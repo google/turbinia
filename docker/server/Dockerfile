@@ -53,7 +53,9 @@ FROM server-builder AS turbinia-server-dev
 RUN pip3 install debugpy
 RUN pip3 install jurigged
 USER turbinia
-ADD --chown=turbinia:turbinia . /tmp
+#RUN mkdir -p /tmp/turbinia && mkdir -p /tmp/test_data
+ADD --chown=turbinia:turbinia turbinia /tmp/turbinia
+#ADD --chown=turbinia:turbinia test_data /tmp/test_data
 # unshallow and fetch all tags so our build systems pickup the correct git tag if it's a shallow clone
 RUN if $(cd /tmp/ && git rev-parse --is-shallow-repository); then cd /tmp/ && git fetch --prune --unshallow && git fetch --depth=1 origin +refs/tags/*:refs/tags/*; fi
 WORKDIR /tmp

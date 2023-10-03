@@ -126,7 +126,8 @@ FROM worker-builder as turbinia-worker-dev
 RUN pip3 install debugpy
 RUN pip3 install jurigged
 USER turbinia
-ADD --chown=turbinia:turbinia . /tmp
+ADD --chown=turbinia:turbinia turbinia /tmp/turbinia
+#ADD --chown=turbinia:turbinia test_data /tmp/test_data
 WORKDIR /tmp
 ENV PYTHONPATH .
 ENV PYTHONDONTWRITEBYTECODE 1
