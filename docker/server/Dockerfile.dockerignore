@@ -1,5 +1,6 @@
 .git/*
 .venv/*
+.vscode/*
 charts/*
 docker/*
 test_data/*
