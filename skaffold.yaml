@@ -7,7 +7,7 @@ build:
     useDockerCLI: true
     useBuildkit: true 
     concurrency: 0
-    #tryImportMissing: true
+    # tryImportMissing: true
   artifacts:
     - image: turbinia-worker
       docker:
@@ -27,11 +27,12 @@ build:
     #   docker:
     #     dockerfile: docker/api_server/Dockerfile.dev
 deploy:
+  statusCheckDeadlineSeconds: 30
   helm:
     releases:
     - name: dev-release
-      #remoteChart: oci://us-docker.pkg.dev/osdfir-registry/osdfir-charts/turbinia
-      chartPath: ./charts/turbinia
+      remoteChart: oci://us-docker.pkg.dev/osdfir-registry/osdfir-charts/turbinia
+      # chartPath: ./charts/turbinia
       setValues:
         # config.override: "/tmp/turbinia/conf/turbinia.conf"
         versioncheck.enabled: False
@@ -43,14 +44,22 @@ deploy:
         # api.image.repository: "{{.IMAGE_REPO_turbinia_api}}"
         # api.image.tag: "{{.IMAGE_TAG_turbinia_api}}@{{.IMAGE_DIGEST_turbinia_api}}"
 portForward:
-- resourceType: deployment
-  resourceName: dev-release-turbinia-worker
-  port: 10000 # worker debugpy port
-- resourceType: deployment
-  resourceName: dev-release-turbinia-server
-  port: 20000 # server debugpy port
+# - resourceType: deployment
+#   resourceName: dev-release-turbinia-worker
+#   port: 10000 # worker debugpy port
+# - resourceType: deployment
+#   resourceName: dev-release-turbinia-server
+#   port: 20000 # server debugpy port
 - resourceType: deployment
   resourceName: dev-release-turbinia-api
   port: 8000 # API and WebUI port
-
+# - resourceType: deployment
+#   resourceName: dev-release-turbinia-api-metrics
+#   port: 9200 
+# - resourceType: deployment
+#   resourceName: dev-release-turbinia-worker-metrics
+#   port: 9200 
+# - resourceType: deployment
+#   resourceName: dev-release-turbinia-server-metrics
+#   port: 9200 
 
