@@ -3,11 +3,7 @@ kind: Config
 metadata:
   name: turbinia
 build:
-  local:
-    useDockerCLI: true
-    useBuildkit: true 
-    concurrency: 0
-    # tryImportMissing: true
+  googleCloudBuild: { projectId: ramses-test3 }
   artifacts:
     - image: turbinia-worker
       docker:
