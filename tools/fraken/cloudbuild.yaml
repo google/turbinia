@@ -1,0 +1,19 @@
+# Google Cloud Build configuration for Turbinia worker release
+steps:
+  - name: gcr.io/cloud-builders/docker
+    args:
+      [
+        "build",
+        "-t",
+        "us-docker.pkg.dev/osdfir-registry/turbinia/release/fraken:$TAG_NAME",
+        "-t",
+        "us-docker.pkg.dev/osdfir-registry/turbinia/release/fraken:latest",
+        "-f",
+        "tools/fraken/Dockerfile",
+        ".",
+      ]
+    timeout: 4800s
+timeout: 4800s
+images:
+  - us-docker.pkg.dev/osdfir-registry/turbinia/release/fraken:latest
+  - us-docker.pkg.dev/osdfir-registry/turbinia/release/fraken:$TAG_NAME
