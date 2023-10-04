@@ -19,7 +19,7 @@ RUN pip3 install pip --upgrade
 ARG RELEASE_TAG
 RUN pip3 install turbinia==$RELEASE_TAG
 
-RUN useradd -r -s /bin/nologinpoet -u 999 turbinia
+RUN useradd -r -s /sbin/nologin -u 999 turbinia
 RUN mkdir /etc/turbinia && mkdir -p /mnt/turbinia/ && mkdir -p /var/lib/turbinia/ \
     && mkdir -p /var/log/turbinia/ && chown -R turbinia:turbinia /mnt/turbinia/ \
     && mkdir -p /etc/turbinia/ \
