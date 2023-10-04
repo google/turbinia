@@ -161,9 +161,9 @@ class ContainerdEnumerationTask(TurbiniaTask):
     summary = ''
     success = False
     report_data = []
-    filter_namespaces = self.task_conig.get('filter_namespaces')
-    filter_containers = self.task_conig.get('filter_containers')
-    filter_images = self.task_conig.get('filter_images')
+    filter_namespaces = self.task_config.get('filter_namespaces')
+    filter_containers = self.task_config.get('filter_containers')
+    filter_images = self.task_config.get('filter_images')
     filtered_container_list = []
 
     image_path = evidence.mount_path
