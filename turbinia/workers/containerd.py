@@ -44,10 +44,11 @@ class ContainerdEnumerationTask(TurbiniaTask):
       # ['gke.gcr.io/'] will filter out image `gke.gcr.io/event-exporter`.
       #
       # Which k8 namespaces to filter out by default
-      filter_namespaces: ['kube-system'],
-      filter_containers: ['sidecar', 'konnectivity-agent'],
-      # Taken from https://github.com/google/container-explorer/blob/main/supportcontainer.yaml
-      filter_images: [
+      'filter_namespaces': ['kube-system'],
+      'filter_containers': ['sidecar', 'konnectivity-agent'],
+      # Taken from
+      # https://github.com/google/container-explorer/blob/main/supportcontainer.yaml
+      'filter_images': [
           'gcr.io/gke-release-staging/cluster-proportional-autoscaler-amd64',
           'gcr.io/k8s-ingress-image-push/ingress-gce-404-server-with-metrics',
           'gke.gcr.io/cluster-proportional-autoscaler',
@@ -167,7 +168,9 @@ class ContainerdEnumerationTask(TurbiniaTask):
 
     image_path = evidence.mount_path
     if not image_path:
-      summary = f'Evidence {evidence.name}:{evidence.source_path} is not mounted'
+      summary = (
+          f'Evidence {evidence.name}:{evidence.source_path} is not '
+          'mounted')
       result.close(self, success=False, status=summary)
       return result
 
@@ -192,8 +195,8 @@ class ContainerdEnumerationTask(TurbiniaTask):
 
         if not namespace or not container_id:
           result.log(
-              f'Value is empty. namespace={namespace}, container_id={container_id}'
-          )
+              f'Value is empty. namespace={namespace}, '
+              f'container_id={container_id}')
           report_data.append(
               f'Skipping container with empty value namespace ({namespace})'
               f' or container_id ({container_id})')
