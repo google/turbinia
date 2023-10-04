@@ -26,13 +26,14 @@ build:
     # - image: turbinia-api
     #   docker:
     #     dockerfile: docker/api_server/Dockerfile.dev
+    #     target: turbinia-api-dev
 deploy:
   statusCheckDeadlineSeconds: 30
   helm:
     releases:
     - name: dev-release
-      repo: https://us-docker.pkg.dev/osdfir-registry/osdfir-charts/
-      remoteChart: turbinia
+      repo: https://us-docker.pkg.dev/osdfir-registry/
+      remoteChart: osdfir-charts/turbinia
       # chartPath: ./charts/turbinia
       setValues:
         # config.override: "/tmp/turbinia/conf/turbinia.conf"

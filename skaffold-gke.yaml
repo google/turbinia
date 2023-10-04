@@ -9,6 +9,8 @@ build:
       docker:
         dockerfile: docker/worker/Dockerfile
         target: turbinia-worker-dev
+        cacheFrom:
+        - gcr.io/ramses-test3/turbinia-worker:latest
       sync:
         infer:
         - turbinia/**
@@ -16,18 +18,21 @@ build:
       docker:
         dockerfile: docker/server/Dockerfile
         target: turbinia-server-dev
+        cacheFrom:
+        - gcr.io/ramses-test3/turbinia-server:latest
       sync:
         infer:
         - turbinia/**
     # - image: turbinia-api
     #   docker:
     #     dockerfile: docker/api_server/Dockerfile.dev
+    #     target: turbinia-api-dev
 deploy:
   statusCheckDeadlineSeconds: 30
   helm:
     releases:
     - name: dev-release
-      repo: https://us-docker.pkg.dev/osdfir-registry/osdfir-charts/
+      repo: oci://us-docker.pkg.dev/osdfir-registry/osdfir-charts/
       remoteChart: turbinia
       # chartPath: ./charts/turbinia
       setValues:
