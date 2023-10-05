@@ -271,7 +271,8 @@ class TaskMarkdownReport(MarkdownReportComponent):
     super().__init__()
     self._request_data: dict = request_data
 
-  def generate_markdown(self, show_all=False, compact=False) -> str:
+  def generate_markdown(
+      self, priority_filter=None, show_all=False, compact=False) -> str:
     """Generate a markdown report."""
     report: list[str] = []
     task: dict = self._request_data
@@ -291,16 +292,21 @@ class TaskMarkdownReport(MarkdownReportComponent):
       name = f'{task.get("name")} ({"LOW PRIORITY"})'
 
     try:
-      report.append(self.heading2(name))
-      line = f"{self.bold('Evidence:'):s} {task.get('evidence_name')!s}"
-      report.append(self.bullet(line))
-      line = f"{self.bold('Status:'):s} {task.get('status')!s}"
-      report.append(self.bullet(line))
-      if show_all or priority <= MEDIUM_PRIORITY:
+      # Only show Task details if the Task has more priority than the
+      # priority_filter
+      if priority > priority_filter:
+        report.append(f'{self.heading2(name)}: {task.get('status')!s}')
+      else:
+        report.append(self.heading2(name))
+        line = f"{self.bold('Evidence:'):s} {task.get('evidence_name')!s}"
+        report.append(self.bullet(line))
+        line = f"{self.bold('Status:'):s} {task.get('status')!s}"
+        report.append(self.bullet(line))
+
         report.append(self.bullet(f"Task Id: {task.get('id')!s}"))
         report.append(
             self.bullet(f"Executed on worker {task.get('worker_name')!s}"))
-      if show_all or priority <= HIGH_PRIORITY:
+
         if task.get('report_data'):
           if not compact:
             report.append('')
@@ -308,7 +314,8 @@ class TaskMarkdownReport(MarkdownReportComponent):
           report.extend(task.get('report_data').splitlines())
         if not compact:
           report.append('')
-      if show_all or priority <= CRITICAL_PRIORITY:
+
+      if show_all and priority <= priority_filter:
         if not compact:
           report.append('')
         report.append(self.heading3('Saved Task Files:'))
@@ -318,6 +325,8 @@ class TaskMarkdownReport(MarkdownReportComponent):
             report.append(self.bullet(self.code(path)))
             if not compact:
               report.append('')
+        else:
+          report.append('No saved files')
       report.append('')
     except TypeError as exception:
       log.warning(f'Error formatting the Markdown report: {exception!s}')
@@ -433,7 +442,7 @@ class WorkersMarkdownReport(MarkdownReportComponent):
 
   def generate_markdown(self) -> str:
     """Generates a Markdown version of tasks per worker.
-    
+
     Returns:
       markdown (str): Markdown version of tasks per worker.
     """
@@ -486,7 +495,7 @@ class StatsMarkdownReport(MarkdownReportComponent):
 
   def stat_to_row(self, task: str, stat_dict: dict):
     """Generates a row of the statistics table.
-    
+
     Args:
       task (str): Name of the current task.
       stat_dict (dict): Dictionary with information about current row.
@@ -502,8 +511,8 @@ class StatsMarkdownReport(MarkdownReportComponent):
 
     Args:
       markdown (bool): Bool defining if the tasks should be in markdown format.
-    
-    Returns: 
+
+    Returns:
       data_frame (DataFrame): Statistics table in pandas DataFrame format.
     """
     for stat_group, stat_dict in self._statistics.items():
@@ -520,7 +529,7 @@ class StatsMarkdownReport(MarkdownReportComponent):
 
   def generate_markdown(self) -> str:
     """Generates a Markdown version of task statistics.
-    
+
     Returns:
       markdown(str): Markdown version of task statistics.
     """
@@ -532,7 +541,7 @@ class StatsMarkdownReport(MarkdownReportComponent):
 
   def generate_csv(self) -> str:
     """Generates a CSV version of task statistics.
-    
+
     Returns:
       csv(str): CSV version of task statistics.
     """
