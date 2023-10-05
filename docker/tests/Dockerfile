@@ -96,11 +96,14 @@ RUN cp /home/turbinia/password.lst /root/
 # Copy Kubernetes support tool to home folder
 COPY --chown=turbinia:turbinia k8s/tools/check-lockfile.py /home/turbinia/check-lockfile.py
 
+# Drop privileges and set the working directory
+USER turbinia
+WORKDIR /home/turbinia
+
 # Copy only requirements, to cache them in docker layer
-COPY ./pyproject.toml ./poetry.toml ./poetry.lock /home/turbinia/
+COPY --chown=turbinia:turbinia ./pyproject.toml ./poetry.toml ./poetry.lock /home/turbinia/
 
 # Install dependencies using Poetry
-WORKDIR /home/turbinia
 RUN poetry install --no-interaction --no-ansi -E worker -E gcp --with test
 RUN poetry run python3 -m pip install impacket --no-deps
 
