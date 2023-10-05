@@ -9,9 +9,9 @@ fi
 # Start Turbinia API server
 if [ ! -z ${TURBINIA_LOG_FILE+x} ]
 then
-    /usr/local/bin/turbiniactl $TURBINIA_EXTRA_ARGS -L $TURBINIA_LOG_FILE api_server
+    poetry run python3 /home/turbinia/turbinia/turbiniactl.py $TURBINIA_EXTRA_ARGS -L $TURBINIA_LOG_FILE api_server
 else
-    /usr/local/bin/turbiniactl $TURBINIA_EXTRA_ARGS api_server
+    poetry run python3 /home/turbinia/turbinia/turbiniactl.py $TURBINIA_EXTRA_ARGS api_server
 fi
 
 # Don't exit

@@ -76,13 +76,8 @@ RUN apt-get update && apt-get -y upgrade && apt-get -y install \
     wget \
     && apt-get clean && rm -rf /var/cache/apt/* /var/lib/apt/lists/*
 
-#ADD requirements.txt /tmp/
-#RUN cd /tmp/ && pip3 install -r requirements.txt
-
 RUN pip3 install pip --upgrade
 RUN pip3 install poetry
-#RUN pip3 install requests --upgrade
-#RUN pip3 install urllib3 cryptography --upgrade
 
 # Install various packages from the GIFT PPA
 #   bulkextractor
@@ -96,18 +91,7 @@ RUN pip3 install poetry
 RUN add-apt-repository -y ppa:gift/$PPA_TRACK
 RUN apt-get update && apt-get -y install \
     bulk-extractor \
-    dfimagetools-tools \
     docker-explorer-tools \
-    libbde-tools \
-    libewf \
-    libewf-python3 \
-    libewf-tools \
-    libfsapfs-tools \
-    libluksde-tools \
-    plaso-tools \
-    python3-dfimagetools \
-    python3-dfvfs \
-    python3-plaso \
     sleuthkit \
     && apt-get clean && rm -rf /var/cache/apt/* /var/lib/apt/lists/*
 
@@ -122,6 +106,7 @@ RUN cd /opt \
     && sudo chown -R turbinia:turbinia /opt/signature-base \
     && find /opt/signature-base -type f -not -iname '*.yar' -not -iname '*.yara' -not -iname 'file-type-signatures.txt' -delete
 COPY turbinia/config/rules/*.yar /opt/signature-base/yara/
+
 # Install fraken binary from multi-stage build
 RUN mkdir -p /opt/fraken
 COPY --chown=turbinia:turbinia --from=fraken-builder /opt/fraken/fraken /opt/fraken/fraken
@@ -157,9 +142,21 @@ RUN echo ':\nd' > /home/turbinia/turbinia-password-cracking.rules
 # Copy Kubernetes support tool to home folder
 COPY --chown=turbinia:turbinia k8s/tools/check-lockfile.py /home/turbinia/check-lockfile.py
 
-# Use the REELASE_TAG argument passed via --build-arg cli argument
-# ARG RELEASE_TAG
-# RUN pip3 install turbinia[worker]==$RELEASE_TAG
+# Copy only requirements, to cache them in docker layer
+COPY ./pyproject.toml ./poetry.toml ./poetry.lock /home/turbinia/
+
+# Install dependencies using Poetry
+WORKDIR /home/turbinia
+RUN poetry install --no-interaction --no-ansi
+RUN poetry run python3 -m pip install impacket --no-deps
+
+ENV PATH="/home/turbinia/.venv/bin:$PATH" \
+    VIRTUAL_ENV=/home/turbinia/.venv
+
+# Copy the source directory to /tmp
+COPY . /home/turbinia/
+
+# RUN if $(git rev-parse --is-shallow-repository); then git fetch --prune --unshallow && git fetch --depth=1 origin +refs/tags/*:refs/tags/*; fi
 
 COPY docker/worker/start.sh /home/turbinia/start.sh
 RUN chmod +rwx /home/turbinia/start.sh

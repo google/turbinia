@@ -4,8 +4,6 @@ steps:
     args:
       [
         "build",
-        '--build-arg',
-        'RELEASE_TAG=$TAG_NAME',
         "-t",
         "us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-api-server:$TAG_NAME",
         "-t",

@@ -14,10 +14,7 @@ COPY --from=build-stage /tmp/web/dist /web/dist
 RUN apt-get update && apt-get -y upgrade
 RUN apt-get -y install git python3-pip
 RUN pip3 install pip --upgrade
-
-# Use the REELASE_TAG argument passed via --build-arg cli argument
-ARG RELEASE_TAG
-RUN pip3 install turbinia==$RELEASE_TAG
+RUN pip3 install poetry
 
 RUN useradd -r -s /sbin/nologin -u 999 turbinia
 RUN mkdir /etc/turbinia && mkdir -p /mnt/turbinia/ && mkdir -p /var/lib/turbinia/ \
@@ -25,7 +22,25 @@ RUN mkdir /etc/turbinia && mkdir -p /mnt/turbinia/ && mkdir -p /var/lib/turbinia
     && mkdir -p /etc/turbinia/ \
     && chown -R turbinia:turbinia /var/lib/turbinia/ \
     && chown -R turbinia:turbinia /etc/turbinia/ \
-    && chown -R turbinia:turbinia /var/log/turbinia/
+    && chown -R turbinia:turbinia /var/log/turbinia/ \
+    && mkdir -p /home/turbinia && chown -R turbinia:turbinia /home/turbinia
+
+# Copy only requirements, to cache them in docker layer
+COPY ./pyproject.toml ./poetry.toml ./poetry.lock /home/turbinia/
+
+# Install dependencies using Poetry
+WORKDIR /home/turbinia
+RUN poetry install --no-interaction --no-ansi
+RUN poetry run python3 -m pip install impacket --no-deps
+
+ENV PATH="/home/turbinia/.venv/bin:$PATH" \
+    VIRTUAL_ENV=/home/turbinia/.venv
+
+# Copy the source directory to /tmp
+COPY . /home/turbinia/
+
+# RUN if $(git rev-parse --is-shallow-repository); then git fetch --prune --unshallow && git fetch --depth=1 origin +refs/tags/*:refs/tags/*; fi
+
 COPY docker/api_server/start.sh /home/turbinia/start.sh
 RUN chmod +rwx /home/turbinia/start.sh
 USER turbinia
