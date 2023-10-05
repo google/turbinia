@@ -104,7 +104,7 @@ WORKDIR /home/turbinia
 COPY --chown=turbinia:turbinia ./pyproject.toml ./poetry.toml ./poetry.lock /home/turbinia/
 
 # Install dependencies using Poetry
-RUN poetry install --no-interaction --no-ansi -E worker -E gcp --with test
+RUN poetry install --no-interaction --no-ansi -E worker -E gcp --with test --no-root
 RUN poetry run python3 -m pip install impacket --no-deps
 
 # Install Turbinia and dependencies in /venv using Poetry
