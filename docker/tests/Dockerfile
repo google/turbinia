@@ -99,8 +99,7 @@ RUN cp /home/turbinia/password.lst /root/
 # Copy Kubernetes support tool to home folder
 COPY --chown=turbinia:turbinia k8s/tools/check-lockfile.py /home/turbinia/check-lockfile.py
 
-# Drop privileges and set the working directory
-USER turbinia
+# Set the working directory
 WORKDIR /home/turbinia
 
 # Copy only requirements, to cache them in docker layer

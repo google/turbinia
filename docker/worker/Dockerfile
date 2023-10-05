@@ -143,7 +143,8 @@ RUN echo ':\nd' > /home/turbinia/turbinia-password-cracking.rules
 # Copy Kubernetes support tool to home folder
 COPY --chown=turbinia:turbinia k8s/tools/check-lockfile.py /home/turbinia/check-lockfile.py
 
-# Set the working directory
+# Drop privileges and set the working directory
+USER turbinia
 WORKDIR /home/turbinia
 
 # Copy requirements and install dependencies to cache them in docker layer
