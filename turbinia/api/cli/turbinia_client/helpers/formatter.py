@@ -295,7 +295,7 @@ class TaskMarkdownReport(MarkdownReportComponent):
       # Only show Task details if the Task has more priority than the
       # priority_filter
       if priority > priority_filter:
-        report.append(f'{self.heading2(name)}: {task.get('status')!s}')
+        report.append(f'{self.heading2(name)}: {task.get("status")!s}')
       else:
         report.append(self.heading2(name))
         line = f"{self.bold('Evidence:'):s} {task.get('evidence_name')!s}"
