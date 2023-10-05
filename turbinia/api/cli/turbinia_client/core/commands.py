@@ -494,18 +494,12 @@ def upload_evidence(
         log.error(error_message)
         continue
       abs_path = os.path.abspath(file_path)
-      with open(file_path, 'rb') as f:
-        filename = os.path.basename(f.name)
-        filedata = f.read()
-        mimetype = (
-            mimetypes.guess_type(filename)[0] or 'application/octet-stream')
-        upload_file = tuple([filename, filedata, mimetype])
     except OSError:
       log.error(f'Unable to read file in {file_path}')
       continue
     try:
-      api_response = api_instance.upload_evidence(
-          upload_file, ticket_id, calculate_hash)
+      api_response = api_instance.upload_evidence([file_path], ticket_id,
+                                                  calculate_hash)
       report[abs_path] = api_response
     except exceptions.ApiException as exception:
       error_message = (
