@@ -38,7 +38,6 @@ turbinia_description = (
 
 setup(
     name='turbinia',
-    version=turbinia.__version__,
     description='Automation and Scaling of Digital Forensics Tools',
     long_description=turbinia_description,
     license='Apache License, Version 2.0',

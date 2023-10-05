@@ -1,28 +1,22 @@
 FROM ubuntu:22.04
-
-# Use: docker build --no-cache --build-arg PPA_TRACK="[staging|stable]"
+ENV DEBIAN_FRONTEND=noninteractive \
+    PIP_NO_CACHE_DIR=1 
 ARG PPA_TRACK=stable
-ENV DEBIAN_FRONTEND=noninteractive
-ENV PIP_NO_CACHE_DIR=1
 
-ENV DEBIAN_FRONTEND=noninteractive
-RUN apt-get update && apt-get -y upgrade
-RUN apt-get -y install \
+RUN apt-get update && apt-get -y upgrade && apt-get -y install \
     apt-transport-https \
     apt-utils \
     automake \
     ca-certificates \
     curl \
     dh-autoreconf \
-    gcc \
     git \
+    gcc \
     golang \
     gpg \
     go-bindata \
     john \
     john-data \
-    hashcat \
-    hashcat-data \
     libjemalloc-dev \
     libleveldb1d \
     libleveldb-dev \
@@ -32,6 +26,7 @@ RUN apt-get -y install \
     libtool \
     lvm2 \
     make \
+    pocl-opencl-icd \
     p7zip-full \
     pkg-config \
     python3-pip \
@@ -39,10 +34,11 @@ RUN apt-get -y install \
     software-properties-common \
     sudo \
     testdisk \
+    tox \
     wget \
-    && rm -rf /var/lib/apt/lists/*
+    && apt-get clean && rm -rf /var/cache/apt/* /var/lib/apt/lists/*
 
-# Install third-party worker dependencies
+# Install Poetry
 RUN pip3 install pip --upgrade
 RUN pip3 install poetry
 
@@ -60,8 +56,9 @@ RUN apt-get update && apt-get -y install \
 # Add turbinia user to system and sudoers
 RUN useradd -r -s /sbin/nologin -G disk,sudo -u 999 turbinia
 RUN echo "turbinia ALL = (root) NOPASSWD: ALL" > /etc/sudoers.d/turbinia
-RUN echo "Defaults secure_path=\"/venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin\"" >> /etc/sudoers.d/turbinia
+RUN echo "Defaults secure_path=\"/home/turbinia/.venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin\"" >> /etc/sudoers.d/turbinia
 
+# Install yara rules and fraken binary.
 RUN cd /opt \
     && git clone https://github.com/Neo23x0/signature-base.git \
     && sudo chown -R turbinia:turbinia /opt/signature-base
@@ -73,7 +70,7 @@ COPY --chown=turbinia:turbinia tools/fraken/* /opt/fraken/
 RUN cd /opt/fraken/yara && curl -s -L --retry 5 "$(curl -s -L --retry 5 https://api.github.com/repos/VirusTotal/Yara/releases/latest | sed -n 's/.*"tarball_url": "\(.*\)",.*/\1/p')"  | tar -xz --strip-components=1
 RUN cd /opt/fraken/yara && ./bootstrap.sh \
     && ./configure \
-    && make -j8 && sudo make install && sudo ldconfig
+    && make && sudo make install && sudo ldconfig
 RUN cd /opt/fraken && go build -ldflags="-linkmode=external -extldflags=-ljemalloc" -o fraken
 
 # Install container-explorer
@@ -106,12 +103,13 @@ RUN cp /home/turbinia/password.lst /root/
 # Copy Kubernetes support tool to home folder
 COPY --chown=turbinia:turbinia k8s/tools/check-lockfile.py /home/turbinia/check-lockfile.py
 
-# Create venv and activate it
-RUN python3 -m venv /venv
-ENV PATH="/venv/bin:$PATH" VIRTUAL_ENV=/venv
+# Copy only requirements, to cache them in docker layer
+COPY ./pyproject.toml ./poetry.toml ./poetry.lock /home/turbinia/
 
-# Install third-party dependencies
-RUN python3 -m pip install impacket --no-deps
+# Install dependencies using Poetry
+WORKDIR /home/turbinia
+RUN poetry install --no-interaction --no-ansi -E worker -E gcp --with test
+RUN poetry run python3 -m pip install impacket --no-deps
 
 # Install Turbinia and dependencies in /venv using Poetry
 ADD . /tmp/

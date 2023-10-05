@@ -145,7 +145,7 @@ RUN cd /home/turbinia \
     && 7z x hashcat-6.2.6.7z \
     && chown -R turbinia:turbinia /home/turbinia/hashcat-6.2.6/ \
     && cp /home/turbinia/hashcat-6.2.6/hashcat.bin /home/turbinia/hashcat-6.2.6/hashcat
-ENV PATH="$PATH:/home/turbinia/hashcat-6.2.6/"
+ENV PATH="/home/turbinia/hashcat-6.2.6/:$PATH"
 
 # Get a decent password list for john/hashcat
 RUN cd /home/turbinia && echo "" > password.lst
@@ -158,8 +158,8 @@ RUN echo ':\nd' > /home/turbinia/turbinia-password-cracking.rules
 COPY --chown=turbinia:turbinia k8s/tools/check-lockfile.py /home/turbinia/check-lockfile.py
 
 # Use the REELASE_TAG argument passed via --build-arg cli argument
-ARG RELEASE_TAG
-RUN pip3 install turbinia[worker]==$RELEASE_TAG
+# ARG RELEASE_TAG
+# RUN pip3 install turbinia[worker]==$RELEASE_TAG
 
 COPY docker/worker/start.sh /home/turbinia/start.sh
 RUN chmod +rwx /home/turbinia/start.sh
