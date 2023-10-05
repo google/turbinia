@@ -155,8 +155,11 @@ components:
       title: ValidationError
       type: object
 info:
-  description: Turbinia is an open-source framework for deploying,managing, and running
+  description: Turbinia is an open-source framework for deploying, managing, and running
     distributed forensic workloads
+  license:
+    name: Apache License 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0.html
   title: Turbinia API Server
   version: 1.0.0
 openapi: 3.0.2

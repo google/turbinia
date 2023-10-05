@@ -36,7 +36,9 @@ log = logging.getLogger('turbinia')
 
 def get_application() -> FastAPI:
   """Returns a FastAPI application object."""
-  description: str = 'Turbinia API server'
+  description: str = (
+      'Turbinia is an open-source framework for deploying,'
+      ' managing, and running distributed forensic workloads')
   fastapi_app = FastAPI(
       title='Turbinia API Server', description=description, version='1.0.0',
       license_info={
