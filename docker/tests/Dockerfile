@@ -42,6 +42,9 @@ RUN apt-get update && apt-get -y upgrade && apt-get -y install \
 RUN pip3 install pip --upgrade
 RUN pip3 install poetry
 
+# Install impacket to get secretsdump.py
+RUN pip3 install impacket --no-deps
+
 # Install various packages from the GIFT PPA
 #   bulkextractor
 #   docker-explorer

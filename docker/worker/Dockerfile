@@ -78,6 +78,7 @@ RUN apt-get update && apt-get -y upgrade && apt-get -y install \
 
 RUN pip3 install pip --upgrade
 RUN pip3 install poetry
+RUN pip3 install impacket --no-deps
 
 # Install various packages from the GIFT PPA
 #   bulkextractor
@@ -148,9 +149,7 @@ WORKDIR /home/turbinia
 
 # Copy requirements and install dependencies to cache them in docker layer
 COPY --chown=turbinia:turbinia ./pyproject.toml ./poetry.toml ./poetry.lock /home/turbinia/
-RUN poetry install --no-interaction --no-ansi --sync --no-root
-RUN poetry run python3 -m pip install impacket --no-deps
-
+RUN poetry install --no-interaction --no-ansi -E worker --no-root
 ENV PATH="/home/turbinia/.venv/bin:$PATH" \
     VIRTUAL_ENV=/home/turbinia/.venv
 
@@ -160,7 +159,7 @@ COPY --chown=turbinia:turbinia docker/api_server/start.sh /home/turbinia/start.s
 RUN chmod +rwx /home/turbinia/start.sh
 
 # Install Turbinia package -- will skip dependencies if installed
-RUN poetry install --no-interaction --no-ansi --sync
+RUN poetry install --no-interaction --no-ansi --sync -E worker
 
 CMD ["/home/turbinia/start.sh"]
 # Expose Prometheus endpoint.
