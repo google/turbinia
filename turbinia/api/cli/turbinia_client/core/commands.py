@@ -58,15 +58,14 @@ def get_request_result(ctx: click.Context, request_id: str) -> None:
   """Gets Turbinia request results / output files."""
   client: api_client.ApiClient = ctx.obj.api_client
   api_instance = turbinia_request_results_api.TurbiniaRequestResultsApi(client)
+  filename = f'{request_id}.tgz'
   try:
-    api_response = api_instance.get_request_output(
-        request_id, _preload_content=False, _request_timeout=(30, 30))
-    filename = f'{request_id}.tgz'
+    api_response = api_instance.get_request_output_with_http_info(
+        request_id, _preload_content=False, _request_timeout=(30, 300))
     click.echo(f'Saving output for request {request_id} to: {filename}')
     # Read the response and save into a local file.
     with open(filename, 'wb') as file:
-      for chunk in api_response.read_chunked():
-        file.write(chunk)
+      file.write(api_response.raw_data)
   except exceptions.ApiException as exception:
     log.error(
         f'Received status code {exception.status} '
@@ -84,16 +83,14 @@ def get_task_result(ctx: click.Context, task_id: str) -> None:
   """Gets Turbinia task results / output files."""
   client: api_client.ApiClient = ctx.obj.api_client
   api_instance = turbinia_request_results_api.TurbiniaRequestResultsApi(client)
+  filename = f'{task_id}.tgz'
   try:
-    api_response = api_instance.get_task_output(
-        task_id, _preload_content=False, _request_timeout=(30, 30))
-    filename = f'{task_id}.tgz'
+    api_response = api_instance.get_task_output_with_http_info(
+        task_id, _preload_content=False, request_timeout=(30, 300))
     click.echo(f'Saving output for task {task_id} to: {filename}')
-
     # Read the response and save into a local file.
     with open(filename, 'wb') as file:
-      for chunk in api_response.read_chunked():
-        file.write(chunk)
+      file.write(api_response.raw_data)
   except exceptions.ApiException as exception:
     log.error(
         f'Received status code {exception.status} '

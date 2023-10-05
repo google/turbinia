@@ -5,13 +5,13 @@ Statistics for different groups of tasks.
 ## Properties
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**all_tasks** | **object** |  | 
-**failed_tasks** | **object** |  | 
-**requests** | **object** |  | 
-**successful_tasks** | **object** |  | 
-**tasks_per_type** | **object** |  | 
-**tasks_per_user** | **object** |  | 
-**tasks_per_worker** | **object** |  | 
+**all_tasks** | **object** |  | [optional] 
+**failed_tasks** | **object** |  | [optional] 
+**requests** | **object** |  | [optional] 
+**successful_tasks** | **object** |  | [optional] 
+**tasks_per_type** | **object** |  | [optional] 
+**tasks_per_user** | **object** |  | [optional] 
+**tasks_per_worker** | **object** |  | [optional] 
 
 ## Example
 

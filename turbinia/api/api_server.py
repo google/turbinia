@@ -18,7 +18,6 @@ import io
 import logging
 import yaml
 import uvicorn
-import pathlib
 
 from fastapi import FastAPI
 from fastapi.responses import Response

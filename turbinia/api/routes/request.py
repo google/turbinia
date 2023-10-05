@@ -31,7 +31,7 @@ from turbinia.api.models import request_status
 
 log = logging.getLogger('turbinia')
 
-router = APIRouter(prefix="/request", tags=["Turbinia Requests"])
+router = APIRouter(prefix='/request', tags=['Turbinia Requests'])
 
 
 @router.get('/summary')

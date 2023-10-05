@@ -9,7 +9,7 @@ Method | HTTP request | Description
 
 
 # **get_request_output**
-> object get_request_output(request_id)
+> bytearray get_request_output(request_id)
 
 Get Request Output
 
@@ -42,7 +42,7 @@ configuration.access_token = os.environ["ACCESS_TOKEN"]
 with turbinia_api_lib.ApiClient(configuration) as api_client:
     # Create an instance of the API class
     api_instance = turbinia_api_lib.TurbiniaRequestResultsApi(api_client)
-    request_id = None # object | 
+    request_id = 'request_id_example' # str | 
 
     try:
         # Get Request Output
@@ -54,15 +54,16 @@ with turbinia_api_lib.ApiClient(configuration) as api_client:
 ```
 
 
+
 ### Parameters
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **request_id** | [**object**](.md)|  | 
+ **request_id** | **str**|  | 
 
 ### Return type
 
-**object**
+**bytearray**
 
 ### Authorization
 
@@ -82,7 +83,7 @@ Name | Type | Description  | Notes
 [[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **get_task_output**
-> object get_task_output(task_id)
+> bytearray get_task_output(task_id)
 
 Get Task Output
 
@@ -115,7 +116,7 @@ configuration.access_token = os.environ["ACCESS_TOKEN"]
 with turbinia_api_lib.ApiClient(configuration) as api_client:
     # Create an instance of the API class
     api_instance = turbinia_api_lib.TurbiniaRequestResultsApi(api_client)
-    task_id = None # object | 
+    task_id = 'task_id_example' # str | 
 
     try:
         # Get Task Output
@@ -127,15 +128,16 @@ with turbinia_api_lib.ApiClient(configuration) as api_client:
 ```
 
 
+
 ### Parameters
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **task_id** | [**object**](.md)|  | 
+ **task_id** | **str**|  | 
 
 ### Return type
 
-**object**
+**bytearray**
 
 ### Authorization
 

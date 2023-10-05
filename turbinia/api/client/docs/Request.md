@@ -5,7 +5,7 @@ Base request object.
 ## Properties
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**description** | **object** |  | [optional] 
+**description** | **str** |  | [optional] [default to 'Turbinia request object']
 **evidence** | **object** |  | 
 **request_options** | [**BaseRequestOptions**](BaseRequestOptions.md) |  | 
 

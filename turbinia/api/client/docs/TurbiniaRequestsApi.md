@@ -56,6 +56,7 @@ with turbinia_api_lib.ApiClient(configuration) as api_client:
 ```
 
 
+
 ### Parameters
 
 Name | Type | Description  | Notes
@@ -117,7 +118,7 @@ configuration.access_token = os.environ["ACCESS_TOKEN"]
 with turbinia_api_lib.ApiClient(configuration) as api_client:
     # Create an instance of the API class
     api_instance = turbinia_api_lib.TurbiniaRequestsApi(api_client)
-    request_id = None # object | 
+    request_id = 'request_id_example' # str | 
 
     try:
         # Get Request Status
@@ -129,11 +130,12 @@ with turbinia_api_lib.ApiClient(configuration) as api_client:
 ```
 
 
+
 ### Parameters
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **request_id** | [**object**](.md)|  | 
+ **request_id** | **str**|  | 
 
 ### Return type
 
@@ -199,6 +201,7 @@ with turbinia_api_lib.ApiClient(configuration) as api_client:
     except Exception as e:
         print("Exception when calling TurbiniaRequestsApi->get_requests_summary: %s\n" % e)
 ```
+
 
 
 ### Parameters
