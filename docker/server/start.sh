@@ -9,7 +9,7 @@ fi
 # Use log file path from environment variable is it exists, else get the path from the config.
 if [ ! -z ${TURBINIA_LOG_FILE+x} ]
 then
-    poetry run python3 /home/turbinia/turbinia/turbiniactl.py $TURBINIA_EXTRA_ARGS -L $TURBINIA_LOG_FILE server
+    poetry run turbiniactl $TURBINIA_EXTRA_ARGS -L $TURBINIA_LOG_FILE server
 else
-    poetry run python3 /home/turbinia/turbinia/turbiniactl.py $TURBINIA_EXTRA_ARGS server
+    poetry run turbiniactl $TURBINIA_EXTRA_ARGS server
 fi
