@@ -2,7 +2,7 @@ celery>=5.2.2
 cryptography>=2.0.2,>3.8
 docker
 fakeredis>=1.8.1
-fastapi>=0.75.0
+fastapi>=0.75.0, <0.99.0
 filelock
 google-api-core<2.0.0dev
 google-api-python-client
@@ -21,13 +21,14 @@ pandas
 protobuf>=3.19.0,<4.0.0dev
 proto-plus<2.0.0dev,>=1.22.0
 psq
+pydantic >= 1.10.5, < 2
 pyparsing<3
 pyyaml>=5.4.1
-pyOpenSSL
+pyOpenSSL>=23.2.0
 python-multipart
 redis<4.2
 six>=1.15.0
-urllib3[secure]
+urllib3 >= 1.25.3, < 2
 uvicorn>=0.17.6
 vine>=5.0.0
 PyJWT[crypto]<2

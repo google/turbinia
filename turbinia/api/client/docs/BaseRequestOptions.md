@@ -5,17 +5,17 @@ Base Request Options class to be extended by other option types.
 ## Properties
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**filter_patterns** | **object** |  | [optional] 
-**group_id** | **object** |  | [optional] 
-**jobs_allowlist** | **object** |  | [optional] 
-**jobs_denylist** | **object** |  | [optional] 
-**reason** | **object** |  | [optional] 
-**recipe_data** | **object** |  | [optional] 
-**recipe_name** | **object** |  | [optional] 
-**request_id** | **object** |  | [optional] 
-**requester** | **object** |  | [optional] 
-**sketch_id** | **object** |  | [optional] 
-**yara_rules** | **object** |  | [optional] 
+**filter_patterns** | **List[str]** |  | [optional] 
+**group_id** | **str** |  | [optional] 
+**jobs_allowlist** | **List[str]** |  | [optional] 
+**jobs_denylist** | **List[str]** |  | [optional] 
+**reason** | **str** |  | [optional] 
+**recipe_data** | **str** |  | [optional] 
+**recipe_name** | **str** |  | [optional] 
+**request_id** | **str** |  | [optional] 
+**requester** | **str** |  | [optional] 
+**sketch_id** | **int** |  | [optional] 
+**yara_rules** | **str** |  | [optional] 
 
 ## Example
 
