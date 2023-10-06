@@ -6,7 +6,6 @@ dist
 test_data
 .github
 .devcontainer
-docs
 config
 build
 *.pyc
