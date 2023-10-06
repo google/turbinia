@@ -39,7 +39,7 @@ ENV PATH="/home/turbinia/.venv/bin:$PATH" \
 
 # Copy the source directory to the container
 COPY --chown=turbinia:turbinia . /home/turbinia/
-COPY --chown=turbinia:turbinia docker/api_server/start.sh /home/turbinia/start.sh
+COPY --chown=turbinia:turbinia docker/server/start.sh /home/turbinia/start.sh
 RUN chmod +rwx /home/turbinia/start.sh
 
 # Install Turbinia package -- will skip dependencies if installed

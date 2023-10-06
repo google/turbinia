@@ -42,9 +42,6 @@ RUN apt-get update && apt-get -y upgrade && apt-get -y install \
 RUN pip3 install pip --upgrade
 RUN pip3 install poetry
 
-# Install impacket to get secretsdump.py
-RUN pip3 install impacket --no-deps
-
 # Install various packages from the GIFT PPA
 #   bulkextractor
 #   docker-explorer
@@ -64,7 +61,8 @@ RUN echo "Defaults secure_path=\"/home/turbinia/.venv/bin:/usr/local/sbin:/usr/l
 # Install yara rules and fraken binary.
 RUN cd /opt \
     && git clone https://github.com/Neo23x0/signature-base.git \
-    && sudo chown -R turbinia:turbinia /opt/signature-base
+    && sudo chown -R turbinia:turbinia /opt/signature-base \
+    && find /opt/signature-base -type f -not -iname '*.yar' -not -iname '*.yara' -not -iname 'file-type-signatures.txt' -delete
 COPY turbinia/config/rules/*.yar /opt/signature-base/yara/
 RUN mkdir -p /opt/fraken && chown -R turbinia:turbinia /opt/fraken
 COPY --from=us-docker.pkg.dev/osdfir-registry/turbinia/release/fraken:latest --chown=turbinia:turbinia /bin/fraken /opt/fraken/fraken
