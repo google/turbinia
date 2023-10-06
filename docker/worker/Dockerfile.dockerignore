@@ -1,0 +1,13 @@
+.git/*
+.venv/*
+.vscode/*
+charts/*
+docker/*
+test_data/*
+.github/*
+.devcontainer/*
+docs/*
+config/*
+dist/*
+build/*
+**/*.pyc
