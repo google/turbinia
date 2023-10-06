@@ -159,7 +159,7 @@ COPY --chown=turbinia:turbinia docker/api_server/start.sh /home/turbinia/start.s
 RUN chmod +rwx /home/turbinia/start.sh
 
 # Install Turbinia package -- will skip dependencies if installed
-RUN poetry install --no-interaction --no-ansi --sync -E worker
+RUN poetry install --no-interaction --no-ansi -E worker
 
 CMD ["/home/turbinia/start.sh"]
 # Expose Prometheus endpoint.
