@@ -2,12 +2,14 @@
 .venv/*
 .vscode/*
 charts/*
-docker/*
-test_data/*
 .github/*
 .devcontainer/*
 docs/*
 config/*
 dist/*
 build/*
-**/*.pyc
+*.pyc
+*.pyo
+*.pyd
+__pycache__
+.cache
