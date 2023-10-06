@@ -4558,9 +4558,9 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 
 [extras]
 gcp = ["google-api-core", "google-api-python-client", "google-auth", "google-cloud-datastore", "google-cloud-error-reporting", "google-cloud-logging", "google-cloud-pubsub", "google-cloud-storage", "grpcio-status", "proto-plus", "protobuf", "psq"]
-worker = ["dfDewey", "dfimagetools", "dfvfs", "plaso", "pyhindsight"]
+worker = ["dfDewey", "dfimagetools", "plaso", "pyhindsight"]
 
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "cc84b0706287c77203f2e907e29a364d908e2e8dccfa04a30de85989a81513d3"
+content-hash = "f7b7ac7b079c3bb0f75321b6dc663c4174fea67bb5d09c9aeedd4857ed5c246d"

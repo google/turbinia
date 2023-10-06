@@ -16,7 +16,7 @@ RUN apt-get update && apt-get -y upgrade && apt-get -y install \
 RUN pip3 install pip --upgrade
 RUN pip3 install poetry
 
-RUN useradd -r -s /bin/nologin -u 999 turbinia
+RUN useradd -r -s /sbin/nologin -u 999 turbinia
 
 RUN mkdir /etc/turbinia && mkdir -p /mnt/turbinia/ && mkdir -p /var/lib/turbinia/ \
     && mkdir -p /var/log/turbinia/ && chown -R turbinia:turbinia /mnt/turbinia/ \
