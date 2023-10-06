@@ -16,13 +16,15 @@
 
 import logging
 
+from importlib import metadata as importlib_metadata
+
 log = logging.getLogger('turbinia')
 
-from pkg_resources import get_distribution, DistributionNotFound
 try:
-  __version__ = get_distribution(__name__).version
-except DistributionNotFound:
-  __version__ = "unknown"
+  dist = importlib_metadata.distribution(__name__)
+  __version__ = dist.version
+except importlib_metadata.PackageNotFoundError:
+  __version__ = 'unknown'
 
 
 def log_and_report(message, trace):

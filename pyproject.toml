@@ -1,10 +1,10 @@
 [tool.poetry]
 name = "turbinia"
-version = "20231002"
+version = "20231006"
 description = "Automation and Scaling of Digital Forensics Tools"
 authors = ["Turbinia Developers <turbinia-dev@googlegroups.com>"]
 maintainers = ["Turbinia Developers <turbinia-dev@googlegroups.com>"]
-license = "Apache"
+license = "Apache-2.0"
 readme = "README.md"
 repository = "https://github.com/google/turbinia"
 documentation = "https://turbinia.readthedocs.io/en/latest/"
