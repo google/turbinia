@@ -6,26 +6,16 @@ ARG PPA_TRACK=stable
 RUN apt-get update && apt-get -y upgrade && apt-get -y install \
     apt-transport-https \
     apt-utils \
-    automake \
     ca-certificates \
     curl \
-    dh-autoreconf \
     git \
-    gcc \
-    golang \
     gpg \
-    go-bindata \
     john \
     john-data \
-    libjemalloc-dev \
-    libleveldb1d \
-    libleveldb-dev \
-    libprotobuf-c-dev \
     libssl-dev \
     libterm-readline-gnu-perl \
     libtool \
     lvm2 \
-    make \
     pocl-opencl-icd \
     p7zip-full \
     pkg-config \
@@ -85,7 +75,8 @@ RUN cd /home/turbinia \
     && wget https://hashcat.net/files/hashcat-6.2.6.7z \
     && 7z x hashcat-6.2.6.7z \
     && chown -R turbinia:turbinia /home/turbinia/hashcat-6.2.6/ \
-    && cp /home/turbinia/hashcat-6.2.6/hashcat.bin /home/turbinia/hashcat-6.2.6/hashcat
+    && cp /home/turbinia/hashcat-6.2.6/hashcat.bin /home/turbinia/hashcat-6.2.6/hashcat \
+    && rm -f /home/turbinia/hashcat-6.2.6.7z
 ENV PATH="$PATH:/home/turbinia/hashcat-6.2.6/"
 
 # Get a decent password list for john/hashcat

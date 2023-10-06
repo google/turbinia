@@ -72,7 +72,8 @@ RUN cd /home/turbinia \
     && wget https://hashcat.net/files/hashcat-6.2.6.7z \
     && 7z x hashcat-6.2.6.7z \
     && chown -R turbinia:turbinia /home/turbinia/hashcat-6.2.6/ \
-    && cp /home/turbinia/hashcat-6.2.6/hashcat.bin /home/turbinia/hashcat-6.2.6/hashcat
+    && cp /home/turbinia/hashcat-6.2.6/hashcat.bin /home/turbinia/hashcat-6.2.6/hashcat \
+    && rm -f /home/turbinia/hashcat-6.2.6.7z
 ENV PATH="/home/turbinia/hashcat-6.2.6/:$PATH"
 
 # Get a decent password list for john/hashcat

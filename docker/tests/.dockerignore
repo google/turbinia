@@ -12,3 +12,4 @@ build
 *.pyd
 __pycache__
 .cache
+turbinia.egg-info
