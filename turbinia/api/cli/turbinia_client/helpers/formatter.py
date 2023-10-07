@@ -281,6 +281,7 @@ class TaskMarkdownReport(MarkdownReportComponent):
 
     priority = task.get('report_priority') if task.get(
         'report_priority') else MEDIUM_PRIORITY
+    priority_filter = priority_filter if priority_filter else HIGH_PRIORITY
 
     if priority <= CRITICAL_PRIORITY:
       name = f'{task.get("name")} ({"CRITICAL PRIORITY"})'
@@ -364,7 +365,7 @@ class RequestMarkdownReport(MarkdownReportComponent):
         self.components.append(component)
         component.parent = self
 
-  def generate_markdown(self, show_all=False) -> str:
+  def generate_markdown(self, priority_filter=None, show_all=False) -> str:
     """Generates a Markdown version of Requests results."""
     report: list[str] = []
     request_dict: dict = self._request_data
@@ -400,7 +401,9 @@ class RequestMarkdownReport(MarkdownReportComponent):
       log.warning(f'Error formatting the Markdown report: {exception!s}')
 
     for task in self.components:
-      report.append(task.generate_markdown(show_all=show_all, compact=True))
+      report.append(
+          task.generate_markdown(
+              priority_filter=priority_filter, show_all=show_all, compact=True))
 
     self.report = '\n'.join(report)
     return self.report
