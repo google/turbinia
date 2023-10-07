@@ -31,7 +31,7 @@ class LinuxAccountAnalysisTask(TurbiniaTask):
   """Task to analyze a Linux password file."""
 
   REQUIRED_STATES = [
-      state.ATTACHED, state.CONTAINER_MOUNTED, state.DECOMPRESSED
+      state.ATTACHED, state.MOUNTED, state.CONTAINER_MOUNTED, state.DECOMPRESSED
   ]
 
   TASK_CONFIG = {

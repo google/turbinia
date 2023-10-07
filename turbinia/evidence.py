@@ -363,7 +363,7 @@ class Evidence:
 
   def serialize_attribute(self, name: str) -> str:
     """Returns JSON serialized attribute.
-    
+
     Args:
       name(str): the name of the attribute that will be serialized.
     Returns:
@@ -381,7 +381,7 @@ class Evidence:
     """Returns a JSON serialized object. The function will return A string
     containing the serialized evidence_dict or a dict of serialized attributes
     if json_values is true.
-    
+
     Args:
       json_values(bool): Returns only values of the dictionary as json strings
         instead of the entire dictionary.
@@ -600,7 +600,7 @@ class Evidence:
 
   def _validate(self):
     """Runs additional logic to validate evidence requirements.
-    
+
     Evidence subclasses can override this method to perform custom
     validation of evidence objects.
     """
@@ -847,13 +847,13 @@ class DiskPartition(Evidence):
     except TurbiniaException as exception:
       log.error(exception)
 
-    if len(path_specs) > 1:
+    if path_spec and len(path_specs) > 1:
       path_specs_dicts = [path_spec.CopyToDict() for path_spec in path_specs]
       raise TurbiniaException(
           'Found more than one path_spec for {0:s} {1:s}: {2!s}'.format(
               self.parent_evidence.name, self.partition_location,
               path_specs_dicts))
-    elif len(path_specs) == 1:
+    elif path_spec and len(path_specs) == 1:
       self.path_spec = path_specs[0]
       log.debug(
           'Found path_spec {0!s} for parent evidence {1:s}'.format(
@@ -1044,7 +1044,7 @@ class PlasoFile(Evidence):
 
   def _validate(self):
     """Validates whether the Plaso file contains any events.
-    
+
     Raises:
       TurbiniaException: if validation fails.
     """

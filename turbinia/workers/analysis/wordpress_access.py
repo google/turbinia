@@ -30,6 +30,7 @@ from turbinia.workers import TurbiniaTask
 class WordpressAccessLogAnalysisTask(TurbiniaTask):
   """Task to analyze Wordpress access logs."""
 
+  # Input is typically extracted artifact so does not need to be MOUNTED
   REQUIRED_STATES = [state.ATTACHED, state.CONTAINER_MOUNTED]
 
   timestamp_regex = re.compile(r'\[(?P<timestamp>.+)\]')

@@ -29,6 +29,7 @@ from turbinia.workers import Priority
 class TomcatAnalysisTask(TurbiniaTask):
   """Task to analyze a Tomcat file."""
 
+  # Input is typically extracted artifact so does not need to be MOUNTED
   REQUIRED_STATES = [state.ATTACHED, state.CONTAINER_MOUNTED]
 
   def run(self, evidence, result):

@@ -35,7 +35,7 @@ class WordpressCredsAnalysisTask(TurbiniaTask):
   """Task to analyze the credentials of a Wordpress instance."""
 
   REQUIRED_STATES = [
-      state.ATTACHED, state.CONTAINER_MOUNTED, state.DECOMPRESSED
+      state.ATTACHED, state.MOUNTED, state.CONTAINER_MOUNTED, state.DECOMPRESSED
   ]
 
   TASK_CONFIG = {
