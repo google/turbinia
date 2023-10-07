@@ -129,8 +129,8 @@ def get_jobs(ctx: click.Context) -> None:
     'shown in full detail, and tasks with a higher value will only have '
     'a summary shown.  The default is 20 which corresponds to "HIGH_PRIORITY"'
     'To see all tasks report output in full detail, set --priority_filter=100 '
-    'or to see CRITICAL only set --priority_filter=10', is_flag=True, type=int,
-    default=80, required=False)
+    'or to see CRITICAL only set --priority_filter=10', show_default=True,
+    default=80, type=int, required=False)
 @click.option(
     '--show_all', '-a', help='Shows all fields including saved output paths.',
     is_flag=True, required=False)
