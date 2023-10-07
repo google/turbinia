@@ -1,6 +1,6 @@
 name: "Feature request"
 description: Suggest an idea for this project
-title: ""
+title: "[FR]: "
 labels: ["enhancement", "Needs triage"]
 body:
   - type: markdown
