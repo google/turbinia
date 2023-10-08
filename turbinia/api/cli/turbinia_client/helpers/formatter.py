@@ -20,6 +20,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from click import echo as click_echo
 
+from collections import defaultdict
 import logging
 import json
 import pandas
@@ -345,10 +346,28 @@ class RequestMarkdownReport(MarkdownReportComponent):
     self._request_data: dict = request_data
 
     sorted_tasks = sorted(
-        request_data.get('tasks'), key=lambda x: x['report_priority'])
+        request_data.get('tasks'), key=lambda x:
+        (x['report_priority'], x['name']))
 
     tasks = [TaskMarkdownReport(task) for task in sorted_tasks]
-    self.add_components(tasks)
+    task_counter = defaultdict(int)
+    unique_tasks = []
+    filtered_tasks = []
+
+    # Get unique tasks and task counts
+    for task in tasks:
+      task_counter[task] += 1
+      if task not in unique_tasks:
+        unique_tasks.append(task)
+
+    # Generate task list with counts
+    for task in unique_tasks:
+      if task_counter[task] > 1:
+        filtered_tasks.append(f'{task_counter[task]} x {task}')
+      else:
+        filtered_tasks.append(task)
+
+    self.add_components(filtered_tasks)
 
   def add(self, component: MarkdownReportComponent) -> None:
     if component:
