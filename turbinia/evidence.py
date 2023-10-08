@@ -840,6 +840,7 @@ class DiskPartition(Evidence):
 
     # We need to enumerate partitions in preprocessing so the path_specs match
     # the parent evidence location for each task.
+    path_specs = None
     try:
       # We should only get one path_spec here since we're specifying the location.
       path_specs = partitions.Enumerate(
@@ -847,20 +848,20 @@ class DiskPartition(Evidence):
     except TurbiniaException as exception:
       log.error(exception)
 
-    if path_spec and len(path_specs) > 1:
+    if not path_specs:
+      raise TurbiniaException(
+          f'Could not find path_spec for location {self.partition_location:s}')
+    elif path_specs and len(path_specs) > 1:
       path_specs_dicts = [path_spec.CopyToDict() for path_spec in path_specs]
       raise TurbiniaException(
           'Found more than one path_spec for {0:s} {1:s}: {2!s}'.format(
               self.parent_evidence.name, self.partition_location,
               path_specs_dicts))
-    elif path_spec and len(path_specs) == 1:
+    elif path_specs and len(path_specs) == 1:
       self.path_spec = path_specs[0]
       log.debug(
           'Found path_spec {0!s} for parent evidence {1:s}'.format(
               self.path_spec.CopyToDict(), self.parent_evidence.name))
-    else:
-      raise TurbiniaException(
-          f'Could not find path_spec for location {self.partition_location:s}')
 
     # In attaching a partition, we create a new loopback device using the
     # partition offset and size.
