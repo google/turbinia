@@ -81,7 +81,8 @@ class SSHEventData:
 class LinuxSSHAnalysisTask(TurbiniaTask):
   """Task to analyze Linux SSH authentication."""
 
-  REQUIRED_STATES = [state.ATTACHED, state.MOUNTED, state.CONTAINER_MOUNTED]
+  # Does not need to be MOUNTED as this Task uses extract_artifacts()
+  REQUIRED_STATES = [state.ATTACHED, state.CONTAINER_MOUNTED]
 
   # Log year validation
   # The minimum supported log year

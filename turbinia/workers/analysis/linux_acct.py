@@ -30,8 +30,9 @@ from turbinia.workers import TurbiniaTask
 class LinuxAccountAnalysisTask(TurbiniaTask):
   """Task to analyze a Linux password file."""
 
+  # Does not need to be MOUNTED as this Task uses extract_artifacts()
   REQUIRED_STATES = [
-      state.ATTACHED, state.MOUNTED, state.CONTAINER_MOUNTED, state.DECOMPRESSED
+      state.ATTACHED, state.CONTAINER_MOUNTED, state.DECOMPRESSED
   ]
 
   TASK_CONFIG = {
