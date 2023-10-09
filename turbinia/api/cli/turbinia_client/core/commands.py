@@ -86,7 +86,7 @@ def get_task_result(ctx: click.Context, task_id: str) -> None:
   filename = f'{task_id}.tgz'
   try:
     api_response = api_instance.get_task_output_with_http_info(
-        task_id, _preload_content=False, request_timeout=(30, 300))
+        task_id, _preload_content=False, _request_timeout=(30, 300))
     click.echo(f'Saving output for task {task_id} to: {filename}')
     # Read the response and save into a local file.
     with open(filename, 'wb') as file:
