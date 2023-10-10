@@ -942,6 +942,13 @@ class GoogleCloudDisk(Evidence):
     self.resource_id = self.disk_name
     self.device_path = None
 
+  @property
+  def name(self):
+    if self._name:
+      return self._name
+    else:
+      return ':'.join((self.type, self.project, self.disk_name))
+
   def _preprocess(self, _, required_states):
     # The GoogleCloudDisk should never need to be mounted unless it has child
     # evidence (GoogleCloudDiskRawEmbedded). In all other cases, the
