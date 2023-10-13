@@ -108,7 +108,7 @@ Commands:
   submit    Submit new requests to the Turbinia API server.
 ```
 
-Check out the `turbinia-client` documentation page for a detailed user guide.
+Check out the `turbinia-client` documentation [page]((https://turbinia.readthedocs.io/en/latest/user/turbinia-client.html#turbinia-api-cli-tool-turbinia-client)) for a detailed user guide.
 
 You can also interact with Turbinia directly from Python by using the API library. We provide some examples [here](https://github.com/google/turbinia/tree/master/turbinia/api/client)
 
