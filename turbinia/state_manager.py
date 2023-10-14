@@ -398,6 +398,29 @@ class RedisStateManager(BaseStateManager):
       log.error(f'{error_message}: {exception}')
       raise TurbiniaException(error_message) from exception
 
+  def add_to_list(self, redis_key, list_name, new_item, repeated=False):
+    """Appends new item to a list attribute in a hashed Redis object.
+
+    Args:
+      redis_key (str): Key of the Redis object.
+      list_name (str): Name of the list attribute.
+      new_item (Any): Item to be saved.
+      repeated (bool): Allows repeated items to be saved.
+
+    Returns:
+      redis_key (str): The key corresponding to the object in Redis
+    """
+    try:
+      saved_list = self.get_attribute(redis_key, list_name)
+      if new_item not in saved_list and not repeated:
+        saved_list.append(new_item)
+      self.set_attribute(redis_key, list_name, json.dumps(saved_list))
+    except (TypeError, ValueError) as exception:
+      error_message = (
+          f'Error encoding list {saved_list} from {redis_key} in Redis')
+      log.error(f'{error_message}: {exception}')
+      raise TurbiniaException(error_message) from exception
+
   def write_hash_object(self, redis_key, object_dict):
     """Writes new hash object into redis. To save storage, the function does not
     write values that are null, empty lists or empty dictionaries. Thus, if the 
@@ -432,19 +455,23 @@ class RedisStateManager(BaseStateManager):
       TurbiniaException: If the attribute deserialization fails.
     """
     try:
-      evidence_key = ':'.join(
-          ('TurbiniaEvidence', json.loads(evidence_dict['id'])))
+      evidence_id = json.loads(evidence_dict['id'])
       evidence_hash = json.loads(evidence_dict.get('hash'))
+      request_key = ':'.join(
+          ('TurbiniaRequest', json.loads(evidence_dict['request_id'])))
     except (TypeError, ValueError) as exception:
       error_message = 'Error deserializing evidence attribute.'
       log.error(f'{error_message}: {exception}')
       raise TurbiniaException(error_message) from exception
-    # Either updates or write new key
+    evidence_key = ':'.join(('TurbiniaEvidence', evidence_id))
+    # Either updates or writes new key
     if update == self.key_exists(evidence_key):
       self.write_hash_object(evidence_key, evidence_dict)
       if evidence_hash:
         self.set_attribute(
             'TurbiniaEvidenceHashes', evidence_hash, evidence_key)
+      if not update:
+        self.add_to_list(request_key, 'evidence_ids', evidence_id)
       return evidence_key
 
   def get_evidence_data(self, evidence_id: str) -> dict:
@@ -547,3 +574,73 @@ class RedisStateManager(BaseStateManager):
     """
     evidence_id = self.get_evidence_key_by_hash(file_hash).split(':')[1]
     return self.get_evidence_data(evidence_id)
+
+  def write_request(self, request_dict: dict, update=False):
+    """Writes request into redis.
+
+    Args:
+      request_dict (dict[str]): A dictionary containing the serialized
+        request attributes that will be saved.
+      update (bool): Allows overwriting previous key and blocks writing new 
+        ones.
+
+    Returns:
+      request_key (str): The key corresponding to the evidence in Redis
+    
+    Raises:
+      TurbiniaException: If the attribute deserialization fails.
+    """
+    try:
+      request_key = ':'.join(
+          ('TurbiniaRequest', json.loads(request_dict['request_id'])))
+    except (TypeError, ValueError) as exception:
+      error_message = 'Error deserializing request attribute.'
+      log.error(f'{error_message}: {exception}')
+      raise TurbiniaException(error_message) from exception
+
+    # Either updates or write new key
+    if update == self.key_exists(request_key):
+      self.write_hash_object(request_key, request_dict)
+      return request_key
+
+  def get_request_data(self, request_id: str) -> dict:
+    """Returns a dictionary representing a Request object given its ID.
+
+    Args:
+      request_id (str): The ID of the stored request.
+
+    Returns:
+      request_dict (dict): Dict containing request attributes. 
+    """
+    request_key = ':'.join(('TurbiniaRequest', request_id))
+    request_dict = {}
+    for attribute_name, attribute_value in self.iterate_attributes(request_key):
+      request_dict[attribute_name] = attribute_value
+    return request_dict
+
+  def query_requests(
+      self, attribute_name: str, attribute_value: Any,
+      output: str = 'keys') -> list | int:
+    """Queries for requests with the specified attribute attribute_value.
+
+    Args:
+      attribute_name (str): Name of the attribute to be queried.
+      attribute_value (Any): Value stored in the attribute.
+      output (str): Output of the function (keys | content | count).
+
+    Returns:
+      query_result (list | int): Result of the query. 
+    """
+    keys = []
+    for request_key in self.iterate_keys('request'):
+      if stored_value := self.get_attribute(request_key, attribute_name):
+        if (attribute_name == 'evidence_ids' and attribute_value in stored_value
+           ) or (attribute_name == 'task_ids' and attribute_value
+                 in stored_value) or stored_value == attribute_value or str(
+                     stored_value) == str(attribute_value):
+          keys.append(request_key)
+    if output == 'content':
+      return [self.get_request_data(key.split(':')[1]) for key in keys]
+    elif output == 'count':
+      return len(keys)
+    return keys

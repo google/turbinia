@@ -59,23 +59,47 @@ class TurbiniaRequest:
     self.all_args = all_args if all_args else ''
     self.type = self.__class__.__name__
 
-  def to_json(self):
+  def to_json(self, json_values=False):
     """Convert object to JSON.
+
+    Args:
+      json_values (bool): Returns only values of the dictionary as json strings
+        instead of the entire dictionary.
 
     Returns:
       A JSON serialized object.
     """
     serializable = copy.deepcopy(self.__dict__)
-    serializable['evidence'] = [x.serialize() for x in serializable['evidence']]
 
-    try:
-      serialized = json.dumps(serializable)
-    except TypeError as exception:
-      msg = (
-          'JSON serialization of TurbiniaRequest object {0:s} failed: '
-          '{1:s}'.format(self.type, str(exception)))
-      raise TurbiniaException(msg)
-
+    if json_values:
+      if evidence_list := serializable.pop('evidence'):
+        serializable['original_evidence'] = {
+            'name': evidence_list[0].name,
+            'id': evidence_list[0].id
+        }
+        serializable['evidence_ids'] = [
+            evidence.id for evidence in evidence_list
+        ]
+      serialized = {}
+      try:
+        for attribute_name, attribute_value in serializable.items():
+          serialized[attribute_name] = json.dumps(attribute_value)
+      except TypeError as exception:
+        msg = (
+            f'JSON serialization of TurbiniaRequest object {self.type} '
+            f'failed: {str(exception)}')
+        raise TurbiniaException(msg) from exception
+    else:
+      serializable['evidence'] = [
+          x.serialize() for x in serializable['evidence']
+      ]
+      try:
+        serialized = json.dumps(serializable)
+      except TypeError as exception:
+        msg = (
+            f'JSON serialization of TurbiniaRequest object {self.type} '
+            f'failed: {str(exception)}')
+        raise TurbiniaException(msg) from exception
     return serialized
 
   def from_json(self, json_str):
