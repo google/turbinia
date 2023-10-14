@@ -17,6 +17,7 @@
 from __future__ import unicode_literals, absolute_import
 
 import logging
+from copy import deepcopy
 from datetime import datetime
 import time
 
@@ -699,7 +700,8 @@ class CeleryTaskManager(BaseTaskManager):
     requests = self.kombu.check_messages()
     evidence_list = []
     for request in requests:
-      #todo(igormr): Create request object in redis
+      self.state_manager.write_request(
+          deepcopy(request.to_json(json_values=True)))
       for evidence_ in request.evidence:
         if not evidence_.request_id:
           evidence_.request_id = request.request_id
