@@ -228,6 +228,7 @@ def bruteforce_password_hashes(
     cmd = cmd + [password_hashes_file_path, password_list_file_path]
     cmd = cmd + ['-r', password_rules_file_path]
 
+  log.info(f'Running password cracking with timeout {timeout}: {" ".join(cmd)}')
   with open(os.devnull, 'w') as devnull:
     try:
       child = subprocess.Popen(cmd, stdout=devnull, stderr=devnull)
