@@ -193,7 +193,7 @@ class BulkExtractorTask(TurbiniaTask):
         findings.append(fmt.heading5('Scanner Results\n'))
         for name, count in zip(self.xml.findall(".//feature_file/name"),
                                self.xml.findall(".//feature_file/count")):
-          scanner_results.append({"Name": name.text, "Count": count.text})
+          scanner_results.append({"Name": name.text, "Count": int(count.text)})
           features_count += int(count.text)
         sorted_scanner_results = sorted(
             scanner_results, key=lambda x: x["Count"], reverse=True)
