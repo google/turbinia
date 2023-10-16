@@ -76,7 +76,7 @@ class BulkExtractorTask(TurbiniaTask):
       bulk_extractor_args = None
 
     if self.task_config.get('regex_pattern_files'):
-      regex_pattern_files = [pattern_file_path for pattern_file_path in self.task_config.get('regex_pattern_files')]
+      regex_pattern_files = self.task_config.get('regex_pattern_files')
       result.log(f"Regex Files detected.")
     else:
       regex_pattern_files = None
@@ -107,6 +107,7 @@ class BulkExtractorTask(TurbiniaTask):
       output_evidence.text_data = report
       result.report_data = output_evidence.text_data
 
+      # Write report to file
       with open(report_path, 'wb') as fh:
         fh.write(output_evidence.text_data.encode('utf-8'))
 
@@ -189,15 +190,18 @@ class BulkExtractorTask(TurbiniaTask):
       scanner_results = []
       if feature_files is not None:
         findings.append(fmt.heading5('Scanner Results\n'))
-        for name, count in zip(self.xml.findall(".//feature_file/name"), self.xml.findall(".//feature_file/count")):
+        for name, count in zip(self.xml.findall(".//feature_file/name"),
+                               self.xml.findall(".//feature_file/count")):
           scanner_results.append({"Name": name.text, "Count": count.text})
           features_count += int(count.text)
-        sorted_scanner_results = sorted(scanner_results, key=lambda x: x["Count"], reverse=True)
+        sorted_scanner_results = sorted(
+            scanner_results, key=lambda x: x["Count"], reverse=True)
         columns = scanner_results[0].keys()
         findings.append(" | ".join(columns))
         findings.append(" | ".join(["---"] * len(columns)))
         for scanner_result in sorted_scanner_results:
-          findings.append(" | ".join(str(scanner_result[column]) for column in columns))
+          findings.append(
+              " | ".join(str(scanner_result[column]) for column in columns))
       else:
         findings.append(fmt.heading5("There are no findings to report."))
     except AttributeError as exception:
