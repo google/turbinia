@@ -193,7 +193,7 @@ class BulkExtractorTask(TurbiniaTask):
           if f.tag == 'feature_file':
             name = next(feature_iter)
             count = next(feature_iter)
-            findings.append(fmt.bullet(f'{name.text}:{count.text}'))
+            findings.append(fmt.bullet(f'{name.text}: {count.text}'))
             features_count += int(count.text)
       else:
         findings.append(fmt.heading5("There are no findings to report."))
