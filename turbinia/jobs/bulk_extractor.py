@@ -35,7 +35,7 @@ class BulkExtractorJob(interface.TurbiniaJob):
 
   # The types of evidence that this Job will process
   evidence_input = [
-      RawDisk, GoogleCloudDisk, GoogleCloudDiskRawEmbedded, EwfDisk
+      RawDisk, GoogleCloudDisk, GoogleCloudDiskRawEmbedded, EwfDisk, Directory, CompressedDirectory
   ]
   evidence_output = [BulkExtractorOutput]
 
