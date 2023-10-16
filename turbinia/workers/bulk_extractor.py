@@ -36,7 +36,8 @@ class BulkExtractorTask(TurbiniaTask):
 
   TASK_CONFIG = {
       # These are extra arguments passed when running bulk_extractor
-      'bulk_extractor_args': None
+      'bulk_extractor_args': None,
+      'regex_pattern_files': []
   }
 
   def run(self, evidence, result):
@@ -59,6 +60,7 @@ class BulkExtractorTask(TurbiniaTask):
     # Create a path that we can write the new file to.
     base_name = os.path.basename(evidence.local_path)
     output_file_path = os.path.join(self.output_dir, base_name)
+    report_path = os.path.join(self.output_dir, "report.md")
     # Add the output path to the evidence so we can automatically save it
     # later.
     output_evidence.local_path = output_file_path
@@ -73,14 +75,27 @@ class BulkExtractorTask(TurbiniaTask):
     else:
       bulk_extractor_args = None
 
+    if self.task_config.get('regex_pattern_files'):
+      regex_pattern_files = [pattern_file_path for pattern_file_path in self.task_config.get('regex_pattern_files')]
+      result.log(f"Regex Files detected.")
+    else:
+      regex_pattern_files = None
+
     try:
       # Generate the command we want to run then execute.
       cmd = ['bulk_extractor']
 
+      # if evidence type is Directory we need to add an -R parameter to the command
+      if evidence.type == "Directory" or evidence.type == "CompressedDirectory":
+        cmd.extend(['-R'])
       cmd.extend(['-o', output_file_path])
 
       if bulk_extractor_args:
         cmd.extend(bulk_extractor_args)
+      if regex_pattern_files:
+        for regex_pattern_file in regex_pattern_files:
+          cmd.extend(['-F'])
+          cmd.extend([regex_pattern_file])
 
       cmd.append(evidence.local_path)
 
@@ -91,6 +106,9 @@ class BulkExtractorTask(TurbiniaTask):
       (report, summary) = self.generate_summary_report(output_file_path)
       output_evidence.text_data = report
       result.report_data = output_evidence.text_data
+
+      with open(report_path, 'wb') as fh:
+        fh.write(output_evidence.text_data.encode('utf-8'))
 
       # Compress the bulk extractor output directory.
       output_evidence.compress()
