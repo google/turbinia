@@ -17,6 +17,8 @@
 from __future__ import unicode_literals
 
 from turbinia.evidence import GoogleCloudDisk
+from turbinia.evidence import Directory
+from turbinia.evidence import CompressedDirectory
 from turbinia.evidence import GoogleCloudDiskRawEmbedded
 from turbinia.evidence import RawDisk
 from turbinia.evidence import EwfDisk
