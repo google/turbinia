@@ -184,17 +184,20 @@ class BulkExtractorTask(TurbiniaTask):
               f"Elapsed Time: {self.check_xml_attrib('report/elapsed_seconds')}"
           ))
 
-      # Retrieve results from each of the scanner runs
+      # Retrieve results from each of the scanner runs and display in table
       feature_files = self.xml.find(".//feature_files")
+      scanner_results = []
       if feature_files is not None:
-        feature_iter = feature_files.iter()
-        findings.append(fmt.heading5('Scanner Results'))
-        for f in feature_iter:
-          if f.tag == 'feature_file':
-            name = next(feature_iter)
-            count = next(feature_iter)
-            findings.append(fmt.bullet(f'{name.text}: {count.text}'))
-            features_count += int(count.text)
+        findings.append(fmt.heading5('Scanner Results\n'))
+        for name, count in zip(self.xml.findall(".//feature_file/name"), self.xml.findall(".//feature_file/count")):
+          scanner_results.append({"Name": name.text, "Count": count.text})
+          features_count += int(count.text)
+        sorted_scanner_results = sorted(scanner_results, key=lambda x: x["Count"], reverse=True)
+        columns = scanner_results[0].keys()
+        findings.append(" | ".join(columns))
+        findings.append(" | ".join(["---"] * len(columns)))
+        for scanner_result in sorted_scanner_results:
+          findings.append(" | ".join(str(scanner_result[column]) for column in columns))
       else:
         findings.append(fmt.heading5("There are no findings to report."))
     except AttributeError as exception:
