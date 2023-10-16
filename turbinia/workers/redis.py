@@ -29,7 +29,8 @@ from turbinia.workers import Priority
 class RedisAnalysisTask(TurbiniaTask):
   """Task to analyze a Redis configuration file."""
 
-  REQUIRED_STATES = [state.ATTACHED, state.CONTAINER_MOUNTED]
+  # Input Evidence is ExportedFileArtifact so does not need to be pre-processed.
+  REQUIRED_STATES = []
 
   def run(self, evidence, result):
     """Run the Redis configuration analysis worker.
