@@ -185,7 +185,7 @@ class BulkExtractorTask(TurbiniaTask):
           ))
 
       # Retrieve results from each of the scanner runs
-      feature_files = self.xml.find('feature_files')
+      feature_files = self.xml.find(".//feature_files")
       if feature_files is not None:
         feature_iter = feature_files.iter()
         findings.append(fmt.heading5('Scanner Results'))
