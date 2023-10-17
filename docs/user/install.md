@@ -1,6 +1,6 @@
 **Note**: **_This installation method will be deprecated by the end of 2022.
 The current recommended method for installing Turbinia is
-[here](https://github.com/google/osdfir-infrastructure/tree/main/charts/turbinia)._**
+[here](https://github.com/google/osdfir-infrastructure)._**
 
 # **Turbinia Quick Installation Instructions**
 
