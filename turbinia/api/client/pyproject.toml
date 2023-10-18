@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "turbinia_api_lib"
+name = "turbinia-api-lib"
 version = "1.0.2"
 description = "Turbinia API Server"
 authors = ["OpenAPI Generator Community <team@openapitools.org>"]
