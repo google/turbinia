@@ -35,7 +35,6 @@ class BulkExtractorTask(TurbiniaTask):
 
   REQUIRED_STATES = [state.ATTACHED]
 
-
   TASK_CONFIG = {
       # These are extra arguments passed when running bulk_extractor
       'bulk_extractor_args': None,
@@ -79,11 +78,13 @@ class BulkExtractorTask(TurbiniaTask):
 
     regex_pattern_file_paths = []
     if self.task_config.get('regex_pattern_files'):
-      for regex_pattern_file_path in self.task_config.get('regex_pattern_files'):
+      for regex_pattern_file_path in self.task_config.get(
+          'regex_pattern_files'):
         if os.path.exists(regex_pattern_file_path):
           regex_pattern_file_paths.append(regex_pattern_file_path)
       if regex_pattern_file_paths:
-        result.log(f"{len(regex_pattern_file_paths):} valid Pattern Files detected.")
+        result.log(
+            f"{len(regex_pattern_file_paths):} valid Pattern Files detected.")
 
     try:
       # Generate the command we want to run then execute.
