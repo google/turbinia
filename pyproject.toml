@@ -23,7 +23,7 @@ filelock = { version = "*" }
 # TODO: Cleanup GCP libs and their dependencies when psq/pubsub is deprecated
 google-api-core = { version = "<2.0.0dev", optional = true }
 google-api-python-client = { version = "*", optional = true }
-google-auth = { version = "<2.0.0.dev0", optional = true }
+google-auth = { version = "^1.35.0", optional = true }
 google-cloud-core = { version = "<2.0dev", optional = true }
 google-cloud-datastore = { version = "<=2.0.0", optional = true }
 google-cloud-error-reporting = { version = "*", optional = true }
@@ -49,6 +49,7 @@ optional = true
 [tool.poetry.group.test.dependencies]
 coverage = "*"
 fakeredis = "^1.8.1"
+google-auth-oauthlib = "^1.1.0"
 mock = "*"
 pytest = "*"
 yapf = "*"

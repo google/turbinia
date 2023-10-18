@@ -98,11 +98,11 @@ COPY --chown=turbinia:turbinia ./pyproject.toml ./poetry.toml ./poetry.lock /hom
 RUN poetry install --no-interaction --no-ansi -E worker -E gcp --with test --no-root
 RUN poetry run python3 -m pip install impacket --no-deps
 
-# Install Turbinia and dependencies in /venv using Poetry
+# Install Turbinia and dependencies in /home/turbinia/.venv using Poetry
 ADD . /tmp/
 WORKDIR /tmp/
 # RUN if $(cd /tmp/ && git rev-parse --is-shallow-repository); then cd /tmp/ && git fetch --prune --unshallow && git fetch --depth=1 origin +refs/tags/*:refs/tags/*; fi
 RUN poetry install --no-ansi -E worker -E gcp --with test
 # We need to install the current dev version of turbinia-api-lib for the cli tool test in case the API client changes
-RUN cd turbinia/api/client && pip3 install -e .
+RUN cd turbinia/api/client && poetry install
 CMD ["/bin/bash"]
