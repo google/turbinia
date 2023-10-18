@@ -100,9 +100,8 @@ class BulkExtractorTask(TurbiniaTask):
       if bulk_extractor_args:
         cmd.extend(bulk_extractor_args)
       if regex_pattern_file_paths:
-        for regex_pattern_file in regex_pattern_file_paths:
-          cmd.extend(['-F'])
-          cmd.extend([regex_pattern_file])
+        for regex_pattern_file_path in regex_pattern_file_paths:
+          cmd.extend(['-F', regex_pattern_file_path])
 
       cmd.append(evidence.local_path)
 
