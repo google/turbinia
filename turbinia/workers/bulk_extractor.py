@@ -77,11 +77,13 @@ class BulkExtractorTask(TurbiniaTask):
     else:
       bulk_extractor_args = None
 
+    regex_pattern_file_paths = []
     if self.task_config.get('regex_pattern_files'):
-      regex_pattern_files = self.task_config.get('regex_pattern_files')
-      result.log(f"Regex Files detected.")
-    else:
-      regex_pattern_files = None
+      for regex_pattern_file_path in self.task_config.get('regex_pattern_files'):
+        if os.path.exists(regex_pattern_file_path):
+          regex_pattern_file_paths.append(regex_pattern_file_path)
+      if regex_pattern_file_paths:
+        result.log(f"{len(regex_pattern_file_paths):} valid Pattern Files detected.")
 
     try:
       # Generate the command we want to run then execute.
@@ -97,8 +99,8 @@ class BulkExtractorTask(TurbiniaTask):
 
       if bulk_extractor_args:
         cmd.extend(bulk_extractor_args)
-      if regex_pattern_files:
-        for regex_pattern_file in regex_pattern_files:
+      if regex_pattern_file_paths:
+        for regex_pattern_file in regex_pattern_file_paths:
           cmd.extend(['-F'])
           cmd.extend([regex_pattern_file])
 
