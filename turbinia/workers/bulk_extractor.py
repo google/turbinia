@@ -27,11 +27,14 @@ from turbinia.workers import TurbiniaTask
 
 log = logging.getLogger('turbinia')
 
+REPORT_FILENAME = "report.md"
+
 
 class BulkExtractorTask(TurbiniaTask):
   """Task to generate Bulk Extractor output."""
 
   REQUIRED_STATES = [state.ATTACHED]
+
 
   TASK_CONFIG = {
       # These are extra arguments passed when running bulk_extractor
@@ -59,7 +62,7 @@ class BulkExtractorTask(TurbiniaTask):
     # Create a path that we can write the new file to.
     base_name = os.path.basename(evidence.local_path)
     output_file_path = os.path.join(self.output_dir, base_name)
-    report_path = os.path.join(self.output_dir, "report.md")
+    report_path = os.path.join(self.output_dir, REPORT_FILENAME)
     # Add the output path to the evidence so we can automatically save it
     # later.
     output_evidence.local_path = output_file_path
