@@ -45,15 +45,3 @@ $ docker exec -ti turbinia-server turbiniactl -a status -r b998efb5dcb64949963d9
 ```
 #### Step 7
 Test and debug your new feature and repeat steps 1-7 until satisfied. 
-
-### Step 8
-If you are adding a new dependency or changing the version of a dependency:
-
-*   Edit ```pyproject.toml``` with the new version for the dependency.
-*   Run ```poetry lock``` to resolve any dependency conflicts. This will regenerate ```poetry.lock```.
-
-If you are creating a new Turbinia reelase:
-
-*   Update the version in ```pyproject.toml``` and commit the change to ```master```.
-*   Create a new release and tag on Github.
-*   Publish the new release once all tests pass.

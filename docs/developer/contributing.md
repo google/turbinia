@@ -97,6 +97,14 @@ Various Turbinia specific additions/variations are:
     instead of "# pylint: disable=E0213". For a list of overrides see:
     http://docs.pylint.org/features.html
 
+#### Updating dependencies
+
+If you are adding a new dependency or changing the version of a dependency:
+
+*   Edit ```pyproject.toml``` with the new version for the dependency.
+*   Run ```poetry lock``` to resolve any dependency conflicts. This will regenerate ```poetry.lock```.
+
+
 #### The small print
 
 Contributions made by corporations are covered by a different agreement than the
