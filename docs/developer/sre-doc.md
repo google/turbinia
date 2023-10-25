@@ -7,7 +7,7 @@ This document will cover topics to manage Turbinia infrastructure in cloud
 and includes Prometheus/Grafana monitoring stack how tos.
 
 ## Cutting a new Turbinia release
-If you are creating a new Turbinia reelase:
+If you are creating a new Turbinia release:
 
 *   Update the version in ```pyproject.toml``` and commit the change to ```master```.
 *   Run ```poetry lock``` to update dependencies and identify potential conflicts.
