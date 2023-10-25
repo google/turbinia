@@ -363,7 +363,7 @@ class RequestMarkdownReport(MarkdownReportComponent):
     # Generate task list with counts
     for task in unique_tasks:
       if task_counter[task] > 1:
-        filtered_tasks.append(f'{task_counter[task]} x {task}')
+        filtered_tasks.append(f'{task} ({task_counter[task]}x)')
       else:
         filtered_tasks.append(task)
 
