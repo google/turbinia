@@ -43,7 +43,7 @@ RUN apt-get update && apt-get -y install \
 # Add turbinia user to system and sudoers
 RUN useradd -r -s /sbin/nologin -G disk,sudo -u 999 turbinia
 RUN echo "turbinia ALL = (root) NOPASSWD: ALL" > /etc/sudoers.d/turbinia
-RUN echo "Defaults secure_path=\"/venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin\"" >> /etc/sudoers.d/turbinia
+RUN echo "Defaults secure_path=\"/home/turbinia/.venv/bin:/opt/fraken:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin\"" >> /etc/sudoers.d/turbinia
 
 # Install yara rules and fraken binary.
 RUN cd /opt \
