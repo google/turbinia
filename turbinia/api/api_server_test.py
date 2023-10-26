@@ -404,9 +404,11 @@ class testTurbiniaAPIServer(unittest.TestCase):
                 f'request_id.')
         })
 
+  @mock.patch('turbinia.state_manager.RedisStateManager.get_attribute')
   @mock.patch('turbinia.api.routes.evidence.datetime')
   @mock.patch('turbinia.api.routes.evidence.os.makedirs')
-  def testEvidenceUpload(self, mock_makedirs, mock_datetime):
+  def testEvidenceUpload(
+      self, mock_makedirs, mock_datetime, mock_get_attribute):
     """Tests uploading evidence."""
     mocked_now = datetime.datetime.now()
     mock_datetime.now.return_value = mocked_now

@@ -7,7 +7,12 @@ then
 fi
 
 # Start Turbinia API server
-/usr/local/bin/turbiniactl api_server
+if [ ! -z ${TURBINIA_LOG_FILE+x} ]
+then
+    poetry run turbiniactl $TURBINIA_EXTRA_ARGS -L $TURBINIA_LOG_FILE api_server
+else
+    poetry run turbiniactl $TURBINIA_EXTRA_ARGS api_server
+fi
 
 # Don't exit
 while sleep 1000; do :; done

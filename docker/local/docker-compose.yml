@@ -57,17 +57,18 @@ services:
             - LC_ALL=C.UTF-8
             - LANG=C.UTF-8
             - TURBINIA_EXTRA_ARGS=${TURBINIA_EXTRA_ARGS}
-    # Uncomment below in case you want to run a second worker on the same host.
-    #  turbinia-worker2:
-    #     #image: "turbinia-worker-dev" # Use this for local development and comment out below line
-    #     image: "us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-worker:latest" # Latest stable
-    #     container_name: turbinia-worker2
-    #     privileged: true
 
-    #     volumes:
-    #      - $PWD/evidence:/evidence
-    #      - $PWD/conf/turbinia.conf:/etc/turbinia/turbinia.conf
+      # Uncomment below in case you want to run a second worker on the same host.
+      # turbinia-worker2:
+      #   image: "turbinia-worker-dev" # Use this for local development and comment out below line
+      #   image: "us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-worker:latest" # Latest stable
+      #   container_name: turbinia-worker2
+      #   privileged: true
 
-    #     environment:
-    #      - LC_ALL=C.UTF-8
-    #      - LANG=C.UTF-8
+      #   volumes:
+      #    - $PWD/evidence:/evidence
+      #    - $PWD/conf/turbinia.conf:/etc/turbinia/turbinia.conf
+
+      #   environment:
+      #    - LC_ALL=C.UTF-8
+      #    - LANG=C.UTF-8

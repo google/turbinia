@@ -1,0 +1,24 @@
+[tool.poetry]
+name = "turbinia-client"
+version = "1.0.3"
+description = "Turbinia command-line tool"
+authors = ["Turbinia Developers <turbinia-dev@googlegroups.com>"]
+maintainers = ["Turbinia Developers <turbinia-dev@googlegroups.com>"]
+license = "Apache-2.0"
+readme = "README.rst"
+repository = "https://github.com/google/turbinia"
+documentation = "https://turbinia.readthedocs.io/en/latest/"
+
+[tool.poetry.scripts]
+turbinia-client = "turbinia_client.turbiniacli_tool:main"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+click = "^8.1.7"
+turbinia-api-lib = "^1.0.1"
+google-auth-oauthlib = "^1.1.0"
+pandas = "^2.1.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
