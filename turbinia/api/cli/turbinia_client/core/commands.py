@@ -120,13 +120,22 @@ def get_jobs(ctx: click.Context) -> None:
 @click.pass_context
 @click.argument('request_id')
 @click.option(
-    '--show_all', '-a', help='Shows all field regardless of priority.',
+    '--priority_filter', '-p', help='This sets what report sections are '
+    'shown in full detail in report output.  Any tasks that have set a '
+    'report_priority value equal to or lower than this setting will be '
+    'shown in full detail, and tasks with a higher value will only have '
+    'a summary shown.  The default is 20 which corresponds to "HIGH_PRIORITY"'
+    'To see all tasks report output in full detail, set --priority_filter=100 '
+    'or to see CRITICAL only set --priority_filter=10', show_default=True,
+    default=20, type=int, required=False)
+@click.option(
+    '--show_all', '-a', help='Shows all fields including saved output paths.',
     is_flag=True, required=False)
 @click.option(
     '--json_dump', '-j', help='Generates JSON output.', is_flag=True,
     required=False)
 def get_request(
-    ctx: click.Context, request_id: str, show_all: bool,
+    ctx: click.Context, request_id: str, priority_filter: int, show_all: bool,
     json_dump: bool) -> None:
   """Gets Turbinia request status."""
   client: api_client.ApiClient = ctx.obj.api_client
@@ -142,7 +151,7 @@ def get_request(
       formatter.echo_json(api_response)
     else:
       report = formatter.RequestMarkdownReport(api_response).generate_markdown(
-          show_all=show_all)
+          priority_filter=priority_filter, show_all=show_all)
       click.echo(report)
   except exceptions.ApiException as exception:
     log.error(
