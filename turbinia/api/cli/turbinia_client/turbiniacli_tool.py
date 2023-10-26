@@ -23,7 +23,7 @@ from urllib3 import exceptions as urllib3_exceptions
 
 from turbinia_client.turbiniacli import TurbiniaCli
 from turbinia_client.core import groups
-from turbinia_client.factory import factory
+from turbinia_client.core.commands import version
 
 _LOGGER_FORMAT = '%(asctime)s %(levelname)s %(name)s - %(message)s'
 logging.basicConfig(format=_LOGGER_FORMAT, level=logging.INFO)
@@ -79,13 +79,6 @@ def cli(ctx: click.Context, config_instance: str, config_path: str) -> None:
   # Set up the tool based on the configuration file parameters.
   ctx.obj.setup()
 
-  # Build all the commands based on responses from the API server.
-  request_commands = factory.CommandFactory.create_dynamic_objects(
-      evidence_mapping=ctx.obj.evidence_mapping,
-      request_options=ctx.obj.request_options)
-  for command in request_commands:
-    groups.submit_group.add_command(command)
-
 
 def main():
   """Initialize the cli application."""
@@ -97,7 +90,7 @@ def main():
   cli.add_command(groups.jobs_group)
   cli.add_command(groups.result_group)
   cli.add_command(groups.status_group)
-
+  cli.add_command(version)
   try:
     cli.main()
   except (ConnectionRefusedError, urllib3_exceptions.MaxRetryError,
