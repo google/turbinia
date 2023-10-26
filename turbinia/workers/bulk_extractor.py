@@ -38,6 +38,7 @@ class BulkExtractorTask(TurbiniaTask):
   TASK_CONFIG = {
       # These are extra arguments passed when running bulk_extractor
       'bulk_extractor_args': None,
+      # List of paths that contain any sort of regex divided by newline. These files must be accessible to the workers.
       'regex_pattern_files': []
   }
 
