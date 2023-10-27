@@ -1,7 +1,6 @@
 #!/usr/bin/env python
-# -*- coding: utf-8 -*-
 #
-# Copyright 2017 Google Inc.
+# Copyright 2023 Google Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,18 +17,15 @@
 
 # yapf: disable
 
-from __future__ import unicode_literals
-
 import sys
 
 from setuptools import find_packages
 from setuptools import setup
 
+import turbinia  # pylint: disable=wrong-import-position
 
 # make sure turbinia is in path
 sys.path.insert(0, '.')
-
-import turbinia  # pylint: disable=wrong-import-position
 
 turbinia_description = (
     'Turbinia is an open-source framework for deploying, managing, and running'
@@ -39,9 +35,7 @@ turbinia_description = (
     'large amounts of evidence, and decreasing response time by parallelizing'
     'processing where possible.')
 
-requirements = []
-with open('requirements.txt','r') as f:
-  requirements = f.read().splitlines()
+
 setup(
     name='turbinia',
     description='Automation and Scaling of Digital Forensics Tools',
@@ -60,17 +54,4 @@ setup(
     include_package_data=True,
     zip_safe=False,
     entry_points={'console_scripts': ['turbiniactl=turbinia.turbiniactl:main']},
-    install_requires=requirements,
-    extras_require={
-        'dev': ['mock', 'nose', 'yapf', 'celery', 'coverage'],
-        'local': ['celery', 'kombu', 'redis'],
-        'worker': [
-            'docker-explorer>=20191104',
-            'impacket',
-            'plaso>=20200430',
-            'pyhindsight>=20200607'
-        ]
-    },
-    use_scm_version=True,
-    setup_requires=['setuptools_scm']
 )

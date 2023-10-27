@@ -58,6 +58,7 @@ with turbinia_api_lib.ApiClient(configuration) as api_client:
 ```
 
 
+
 ### Parameters
 
 Name | Type | Description  | Notes
@@ -131,6 +132,7 @@ with turbinia_api_lib.ApiClient(configuration) as api_client:
 ```
 
 
+
 ### Parameters
 
 Name | Type | Description  | Notes
@@ -192,8 +194,8 @@ configuration.access_token = os.environ["ACCESS_TOKEN"]
 with turbinia_api_lib.ApiClient(configuration) as api_client:
     # Create an instance of the API class
     api_instance = turbinia_api_lib.TurbiniaEvidenceApi(api_client)
-    group = None # object |  (optional)
-    output = None # object |  (optional)
+    group = 'group_example' # str |  (optional)
+    output = 'keys' # str |  (optional) (default to 'keys')
 
     try:
         # Get Evidence Summary
@@ -205,12 +207,13 @@ with turbinia_api_lib.ApiClient(configuration) as api_client:
 ```
 
 
+
 ### Parameters
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **group** | [**object**](.md)|  | [optional] 
- **output** | [**object**](.md)|  | [optional] 
+ **group** | **str**|  | [optional] 
+ **output** | **str**|  | [optional] [default to &#39;keys&#39;]
 
 ### Return type
 
@@ -278,6 +281,7 @@ with turbinia_api_lib.ApiClient(configuration) as api_client:
 ```
 
 
+
 ### Parameters
 This endpoint does not need any parameter.
 
@@ -335,9 +339,9 @@ configuration.access_token = os.environ["ACCESS_TOKEN"]
 with turbinia_api_lib.ApiClient(configuration) as api_client:
     # Create an instance of the API class
     api_instance = turbinia_api_lib.TurbiniaEvidenceApi(api_client)
-    attribute_value = None # object | 
-    attribute_name = None # object |  (optional)
-    output = None # object |  (optional)
+    attribute_value = 'attribute_value_example' # str | 
+    attribute_name = 'request_id' # str |  (optional) (default to 'request_id')
+    output = 'keys' # str |  (optional) (default to 'keys')
 
     try:
         # Query Evidence
@@ -349,13 +353,14 @@ with turbinia_api_lib.ApiClient(configuration) as api_client:
 ```
 
 
+
 ### Parameters
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **attribute_value** | [**object**](.md)|  | 
- **attribute_name** | [**object**](.md)|  | [optional] 
- **output** | [**object**](.md)|  | [optional] 
+ **attribute_value** | **str**|  | 
+ **attribute_name** | **str**|  | [optional] [default to &#39;request_id&#39;]
+ **output** | **str**|  | [optional] [default to &#39;keys&#39;]
 
 ### Return type
 
@@ -412,9 +417,9 @@ configuration.access_token = os.environ["ACCESS_TOKEN"]
 with turbinia_api_lib.ApiClient(configuration) as api_client:
     # Create an instance of the API class
     api_instance = turbinia_api_lib.TurbiniaEvidenceApi(api_client)
-    files = None # object | 
-    ticket_id = None # object | 
-    calculate_hash = None # object |  (optional)
+    files = None # List[bytearray] | 
+    ticket_id = 'ticket_id_example' # str | 
+    calculate_hash = False # bool |  (optional) (default to False)
 
     try:
         # Upload Evidence
@@ -426,13 +431,14 @@ with turbinia_api_lib.ApiClient(configuration) as api_client:
 ```
 
 
+
 ### Parameters
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **files** | [**object**](object.md)|  | 
- **ticket_id** | [**object**](object.md)|  | 
- **calculate_hash** | [**object**](object.md)|  | [optional] 
+ **files** | **List[bytearray]**|  | 
+ **ticket_id** | **str**|  | 
+ **calculate_hash** | **bool**|  | [optional] [default to False]
 
 ### Return type
 

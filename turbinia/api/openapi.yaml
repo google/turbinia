@@ -11,69 +11,47 @@ components:
           scopes: {}
   schemas:
     BaseRequestOptions:
-      description: "Base Request Options class to be extended by other option types. "
+      description: 'Base Request Options class to be extended by other option types. '
       properties:
         filter_patterns:
-          anyOf:
-            - items:
-                type: string
-              type: array
-            - type: "null"
+          items:
+            type: string
           title: Filter Patterns
+          type: array
         group_id:
-          anyOf:
-            - type: string
-            - type: "null"
           title: Group Id
+          type: string
         jobs_allowlist:
-          anyOf:
-            - items:
-                type: string
-              type: array
-            - type: "null"
+          items:
+            type: string
           title: Jobs Allowlist
+          type: array
         jobs_denylist:
-          anyOf:
-            - items:
-                type: string
-              type: array
-            - type: "null"
+          items:
+            type: string
           title: Jobs Denylist
+          type: array
         reason:
-          anyOf:
-            - type: string
-            - type: "null"
           title: Reason
+          type: string
         recipe_data:
-          anyOf:
-            - type: string
-            - type: "null"
           title: Recipe Data
+          type: string
         recipe_name:
-          anyOf:
-            - type: string
-            - type: "null"
           title: Recipe Name
+          type: string
         request_id:
-          anyOf:
-            - type: string
-            - type: "null"
           title: Request Id
+          type: string
         requester:
-          anyOf:
-            - type: string
-            - type: "null"
           title: Requester
+          type: string
         sketch_id:
-          anyOf:
-            - type: integer
-            - type: "null"
           title: Sketch Id
+          type: integer
         yara_rules:
-          anyOf:
-            - type: string
-            - type: "null"
           title: Yara Rules
+          type: string
       title: BaseRequestOptions
       type: object
     Body_upload_evidence_api_evidence_upload_post:
@@ -92,8 +70,8 @@ components:
           title: Ticket Id
           type: string
       required:
-        - ticket_id
-        - files
+      - ticket_id
+      - files
       title: Body_upload_evidence_api_evidence_upload_post
       type: object
     CompleteTurbiniaStats:
@@ -127,42 +105,32 @@ components:
           default: {}
           title: Tasks Per Worker
           type: object
-      required:
-        - all_tasks
-        - successful_tasks
-        - failed_tasks
-        - requests
-        - tasks_per_type
-        - tasks_per_worker
-        - tasks_per_user
       title: CompleteTurbiniaStats
       type: object
     HTTPValidationError:
       properties:
         detail:
           items:
-            $ref: "#/components/schemas/ValidationError"
+            $ref: '#/components/schemas/ValidationError'
           title: Detail
           type: array
       title: HTTPValidationError
       type: object
     Request:
-      description: "Base request object. "
+      description: 'Base request object. '
       properties:
         description:
-          anyOf:
-            - type: string
-            - type: "null"
           default: Turbinia request object
           title: Description
+          type: string
         evidence:
           title: Evidence
           type: object
         request_options:
-          $ref: "#/components/schemas/BaseRequestOptions"
+          $ref: '#/components/schemas/BaseRequestOptions'
       required:
-        - evidence
-        - request_options
+      - evidence
+      - request_options
       title: Request
       type: object
     ValidationError:
@@ -170,8 +138,8 @@ components:
         loc:
           items:
             anyOf:
-              - type: string
-              - type: integer
+            - type: string
+            - type: integer
           title: Location
           type: array
         msg:
@@ -181,50 +149,50 @@ components:
           title: Error Type
           type: string
       required:
-        - loc
-        - msg
-        - type
+      - loc
+      - msg
+      - type
       title: ValidationError
       type: object
 info:
-  description: Turbinia API server
+  description: Turbinia is an open-source framework for deploying, managing, and running
+    distributed forensic workloads
   license:
     name: Apache License 2.0
     url: https://www.apache.org/licenses/LICENSE-2.0.html
   title: Turbinia API Server
   version: 1.0.0
-openapi: 3.1.0
+openapi: 3.0.2
 paths:
   /api/config/:
     get:
       description: Retrieve turbinia config.
       operationId: read_config
       responses:
-        "200":
+        '200':
           content:
             application/json:
               schema: {}
           description: Successful Response
       summary: Read Config
       tags:
-        - Turbinia Configuration
+      - Turbinia Configuration
   /api/config/request_options:
     get:
       description: Returns a list BaseRequestOptions attributes.
       operationId: get_request_options
       responses:
-        "200":
+        '200':
           content:
             application/json:
               schema: {}
           description: Successful Response
       summary: Get Request Options
       tags:
-        - Turbinia Configuration
+      - Turbinia Configuration
   /api/evidence/query:
     get:
-      description:
-        "Queries evidence in Redis that have the specified attribute value.\n\
+      description: "Queries evidence in Redis that have the specified attribute value.\n\
         \nArgs:\n  attribute_name (str): Name of attribute to be queried.\n  attribute_value\
         \ (str): Value the attribute must have.\n  output Optional(str): Sets how\
         \ the evidence found will be output.\n\nReturns:\n  summary (dict): Summary\
@@ -232,176 +200,173 @@ paths:
         \ evidence is found."
       operationId: query_evidence
       parameters:
-        - in: query
-          name: attribute_name
-          required: false
-          schema:
-            default: request_id
-            enum:
-              - _name
-              - cloud_only
-              - context_dependent
-              - copyable
-              - creation_time
-              - description
-              - has_child_evidence
-              - last_update
-              - local_path
-              - mount_path
-              - parent_evidence
-              - request_id
-              - resource_id
-              - resource_tracked
-              - save_metadata
-              - saved_path
-              - saved_path_type
-              - size
-              - source
-              - source_path
-              - type
-              - tasks
-            title: Attribute Name
-            type: string
-        - in: query
-          name: attribute_value
-          required: true
-          schema:
-            title: Attribute Value
-            type: string
-        - in: query
-          name: output
-          required: false
-          schema:
-            default: keys
-            enum:
-              - keys
-              - content
-              - count
-            title: Output
-            type: string
+      - in: query
+        name: attribute_name
+        required: false
+        schema:
+          default: request_id
+          enum:
+          - _name
+          - cloud_only
+          - context_dependent
+          - copyable
+          - creation_time
+          - description
+          - has_child_evidence
+          - last_update
+          - local_path
+          - mount_path
+          - parent_evidence
+          - request_id
+          - resource_id
+          - resource_tracked
+          - save_metadata
+          - saved_path
+          - saved_path_type
+          - size
+          - source
+          - source_path
+          - type
+          - tasks
+          title: Attribute Name
+          type: string
+      - in: query
+        name: attribute_value
+        required: true
+        schema:
+          title: Attribute Value
+          type: string
+      - in: query
+        name: output
+        required: false
+        schema:
+          default: keys
+          enum:
+          - keys
+          - content
+          - count
+          title: Output
+          type: string
       responses:
-        "200":
+        '200':
           content:
             application/json:
               schema: {}
           description: Successful Response
-        "422":
+        '422':
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/HTTPValidationError"
+                $ref: '#/components/schemas/HTTPValidationError'
           description: Validation Error
       summary: Query Evidence
       tags:
-        - Turbinia Evidence
+      - Turbinia Evidence
   /api/evidence/summary:
     get:
-      description:
-        "Retrieves a summary of all evidences in Redis.\n\nArgs:\n  group\
+      description: "Retrieves a summary of all evidences in Redis.\n\nArgs:\n  group\
         \ Optional(str): Attribute used to group summary.\n  output Optional(str):\
         \ Sets how the evidence found will be output. \n\nReturns:\n  summary (dict):\
         \ Summary of all evidences and their content.\n\nRaises:\n  HTTPException:\
         \ if there are no evidences."
       operationId: get_evidence_summary
       parameters:
-        - in: query
-          name: group
-          required: false
-          schema:
-            enum:
-              - _name
-              - cloud_only
-              - context_dependent
-              - copyable
-              - creation_time
-              - description
-              - has_child_evidence
-              - last_update
-              - local_path
-              - mount_path
-              - parent_evidence
-              - request_id
-              - resource_id
-              - resource_tracked
-              - save_metadata
-              - saved_path
-              - saved_path_type
-              - size
-              - source
-              - source_path
-              - type
-            title: Group
-            type: string
-        - in: query
-          name: output
-          required: false
-          schema:
-            default: keys
-            enum:
-              - keys
-              - content
-              - count
-            title: Output
-            type: string
+      - in: query
+        name: group
+        required: false
+        schema:
+          enum:
+          - _name
+          - cloud_only
+          - context_dependent
+          - copyable
+          - creation_time
+          - description
+          - has_child_evidence
+          - last_update
+          - local_path
+          - mount_path
+          - parent_evidence
+          - request_id
+          - resource_id
+          - resource_tracked
+          - save_metadata
+          - saved_path
+          - saved_path_type
+          - size
+          - source
+          - source_path
+          - type
+          title: Group
+          type: string
+      - in: query
+        name: output
+        required: false
+        schema:
+          default: keys
+          enum:
+          - keys
+          - content
+          - count
+          title: Output
+          type: string
       responses:
-        "200":
+        '200':
           content:
             application/json:
               schema: {}
           description: Successful Response
-        "422":
+        '422':
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/HTTPValidationError"
+                $ref: '#/components/schemas/HTTPValidationError'
           description: Validation Error
       summary: Get Evidence Summary
       tags:
-        - Turbinia Evidence
+      - Turbinia Evidence
   /api/evidence/types:
     get:
       description: Returns supported Evidence object types and required parameters.
       operationId: get_evidence_types
       responses:
-        "200":
+        '200':
           content:
             application/json:
               schema: {}
           description: Successful Response
       summary: Get Evidence Types
       tags:
-        - Turbinia Evidence
+      - Turbinia Evidence
   /api/evidence/types/{evidence_type}:
     get:
-      description:
-        "Returns supported required parameters for evidence type.\n\nArgs:\n\
+      description: "Returns supported required parameters for evidence type.\n\nArgs:\n\
         \  evidence_type (str): Name of evidence type."
       operationId: get_evidence_attributes
       parameters:
-        - in: path
-          name: evidence_type
-          required: true
-          schema:
-            title: Evidence Type
+      - in: path
+        name: evidence_type
+        required: true
+        schema:
+          title: Evidence Type
       responses:
-        "200":
+        '200':
           content:
             application/json:
               schema: {}
           description: Successful Response
-        "422":
+        '422':
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/HTTPValidationError"
+                $ref: '#/components/schemas/HTTPValidationError'
           description: Validation Error
       summary: Get Evidence Attributes
       tags:
-        - Turbinia Evidence
+      - Turbinia Evidence
   /api/evidence/upload:
     post:
-      description:
-        "Upload evidence file to server for processing.\n\nArgs:\n  ticket_id\
+      description: "Upload evidence file to server for processing.\n\nArgs:\n  ticket_id\
         \ (str): ID of the ticket, which will be the name of the folder \n    where\
         \ the evidence will be saved.\n  calculate_hash (bool): Boolean defining if\
         \ the hash of the evidence should\n    be calculated.\n  file (List[UploadFile]):\
@@ -413,94 +378,92 @@ paths:
         content:
           multipart/form-data:
             schema:
-              $ref: "#/components/schemas/Body_upload_evidence_api_evidence_upload_post"
+              $ref: '#/components/schemas/Body_upload_evidence_api_evidence_upload_post'
         required: true
       responses:
-        "200":
+        '200':
           content:
             application/json:
               schema: {}
           description: Successful Response
-        "422":
+        '422':
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/HTTPValidationError"
+                $ref: '#/components/schemas/HTTPValidationError'
           description: Validation Error
       summary: Upload Evidence
       tags:
-        - Turbinia Evidence
+      - Turbinia Evidence
   /api/evidence/{evidence_id}:
     get:
-      description:
-        "Retrieves an evidence in Redis by using its UUID.\n\nArgs:\n \
+      description: "Retrieves an evidence in Redis by using its UUID.\n\nArgs:\n \
         \ evidence_id (str): The UUID of the evidence.\n\nRaises:\n  HTTPException:\
         \ if the evidence is not found.\n\nReturns:\n  Dictionary of the stored evidence"
       operationId: get_evidence_by_id
       parameters:
-        - in: path
-          name: evidence_id
-          required: true
-          schema:
-            title: Evidence Id
+      - in: path
+        name: evidence_id
+        required: true
+        schema:
+          title: Evidence Id
       responses:
-        "200":
+        '200':
           content:
             application/json:
               schema: {}
           description: Successful Response
-        "422":
+        '422':
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/HTTPValidationError"
+                $ref: '#/components/schemas/HTTPValidationError'
           description: Validation Error
       summary: Get Evidence By Id
       tags:
-        - Turbinia Evidence
+      - Turbinia Evidence
   /api/jobs/:
     get:
       description: Return enabled jobs from the current Turbinia config.
       operationId: read_jobs
       responses:
-        "200":
+        '200':
           content:
             application/json:
               schema: {}
           description: Successful Response
       summary: Read Jobs
       tags:
-        - Turbinia Jobs
+      - Turbinia Jobs
   /api/logs/{query}:
     get:
       description: Retrieve log data.
       operationId: get_logs
       parameters:
-        - in: path
-          name: query
-          required: true
-          schema:
-            title: Query
-            type: string
+      - in: path
+        name: query
+        required: true
+        schema:
+          title: Query
+          type: string
       responses:
-        "200":
+        '200':
           content:
             application/json:
               schema: {}
           description: Successful Response
-        "422":
+        '422':
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/HTTPValidationError"
+                $ref: '#/components/schemas/HTTPValidationError'
           description: Validation Error
       summary: Get Logs
       tags:
-        - Turbinia Logs
+      - Turbinia Logs
   /api/request/:
     post:
-      description:
-        "Create a new Turbinia request.\n\nArgs:\n  request (Request):\
+      description: "Create a new Turbinia request.\n\nArgs:\n  request (Request):\
         \ FastAPI request object.\n  req (turbinia.api.schema.request): JSON object\
         \ from the HTTP POST data\n      matching the schema defined for a Turbinia\
         \ Request. The schema is used\n      by pydantic for field validation.\n\n\
@@ -511,237 +474,233 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/Request"
+              $ref: '#/components/schemas/Request'
         required: true
       responses:
-        "200":
+        '200':
           content:
             application/json:
               schema: {}
           description: Successful Response
-        "422":
+        '422':
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/HTTPValidationError"
+                $ref: '#/components/schemas/HTTPValidationError'
           description: Validation Error
       summary: Create Request
       tags:
-        - Turbinia Requests
+      - Turbinia Requests
   /api/request/summary:
     get:
-      description:
-        "Retrieves a summary of all Turbinia requests.\n\nThe response\
+      description: "Retrieves a summary of all Turbinia requests.\n\nThe response\
         \ is validated against the RequestSummary model.\n\nRaises:\n  HTTPException:\
         \ if another exception is caught."
       operationId: get_requests_summary
       responses:
-        "200":
+        '200':
           content:
             application/json:
               schema: {}
           description: Successful Response
       summary: Get Requests Summary
       tags:
-        - Turbinia Requests
+      - Turbinia Requests
   /api/request/{request_id}:
     get:
-      description:
-        "Retrieves status for a Turbinia Request.\n\nArgs:\n  request (Request):\
+      description: "Retrieves status for a Turbinia Request.\n\nArgs:\n  request (Request):\
         \ FastAPI request object.\n  request_id (str): A Turbinia request identifier.\n\
         \nRaises:\n  HTTPException: if another exception is caught."
       operationId: get_request_status
       parameters:
-        - in: path
-          name: request_id
-          required: true
-          schema:
-            title: Request Id
-            type: string
+      - in: path
+        name: request_id
+        required: true
+        schema:
+          title: Request Id
+          type: string
       responses:
-        "200":
+        '200':
           content:
             application/json:
               schema: {}
           description: Successful Response
-        "422":
+        '422':
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/HTTPValidationError"
+                $ref: '#/components/schemas/HTTPValidationError'
           description: Validation Error
       summary: Get Request Status
       tags:
-        - Turbinia Requests
+      - Turbinia Requests
   /api/result/request/{request_id}:
     get:
       description: Retrieve request output.
       operationId: get_request_output
       parameters:
-        - in: path
-          name: request_id
-          required: true
-          schema:
-            title: Request Id
-            type: string
+      - in: path
+        name: request_id
+        required: true
+        schema:
+          title: Request Id
+          type: string
       responses:
-        "200":
+        '200':
           content:
             application/octet-stream:
               schema:
                 format: binary
                 type: string
           description: Successful Response
-        "422":
+        '422':
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/HTTPValidationError"
+                $ref: '#/components/schemas/HTTPValidationError'
           description: Validation Error
       summary: Get Request Output
       tags:
-        - Turbinia Request Results
+      - Turbinia Request Results
   /api/result/task/{task_id}:
     get:
       description: Retrieves a task's output files.
       operationId: get_task_output
       parameters:
-        - in: path
-          name: task_id
-          required: true
-          schema:
-            title: Task Id
-            type: string
+      - in: path
+        name: task_id
+        required: true
+        schema:
+          title: Task Id
+          type: string
       responses:
-        "200":
+        '200':
           content:
             application/octet-stream:
               schema:
                 format: binary
                 type: string
           description: Successful Response
-        "422":
+        '422':
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/HTTPValidationError"
+                $ref: '#/components/schemas/HTTPValidationError'
           description: Validation Error
       summary: Get Task Output
       tags:
-        - Turbinia Request Results
+      - Turbinia Request Results
   /api/task/statistics:
     get:
-      description:
-        "Retrieves  statistics for Turbinia execution.\n\nArgs:\n  days\
+      description: "Retrieves  statistics for Turbinia execution.\n\nArgs:\n  days\
         \ (int): The number of days we want history for.\n  task_id (string): The\
         \ Id of the task.\n  request_id (string): The Id of the request we want tasks\
         \ for.\n  user (string): The user of the request we want tasks for.\n\nReturns:\n\
         \  statistics (str): JSON-formatted task statistics report."
       operationId: get_task_statistics
       parameters:
-        - in: query
-          name: days
-          required: false
-          schema:
-            title: Days
-            type: integer
-        - in: query
-          name: task_id
-          required: false
-          schema:
-            title: Task Id
-            type: string
-        - in: query
-          name: request_id
-          required: false
-          schema:
-            title: Request Id
-            type: string
-        - in: query
-          name: user
-          required: false
-          schema:
-            title: User
-            type: string
+      - in: query
+        name: days
+        required: false
+        schema:
+          title: Days
+          type: integer
+      - in: query
+        name: task_id
+        required: false
+        schema:
+          title: Task Id
+          type: string
+      - in: query
+        name: request_id
+        required: false
+        schema:
+          title: Request Id
+          type: string
+      - in: query
+        name: user
+        required: false
+        schema:
+          title: User
+          type: string
       responses:
-        "200":
+        '200':
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/CompleteTurbiniaStats"
+                $ref: '#/components/schemas/CompleteTurbiniaStats'
           description: Successful Response
-        "422":
+        '422':
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/HTTPValidationError"
+                $ref: '#/components/schemas/HTTPValidationError'
           description: Validation Error
       summary: Get Task Statistics
       tags:
-        - Turbinia Tasks
+      - Turbinia Tasks
   /api/task/workers:
     get:
-      description:
-        "Retrieves the workers status.\n\nArgs:\n  days (int): The UUID\
+      description: "Retrieves the workers status.\n\nArgs:\n  days (int): The UUID\
         \ of the evidence.\n  all_fields (bool): Returns all status fields if set\
         \ to true.\n\nReturns:\n  workers_status (str): JSON-formatted workers status.\n\
         \nRaises:\n  HTTPException: if no worker is found."
       operationId: get_workers_status
       parameters:
-        - in: query
-          name: days
-          required: false
-          schema:
-            default: 7
-            title: Days
-            type: integer
-        - in: query
-          name: all_fields
-          required: false
-          schema:
-            default: false
-            title: All Fields
-            type: boolean
+      - in: query
+        name: days
+        required: false
+        schema:
+          default: 7
+          title: Days
+          type: integer
+      - in: query
+        name: all_fields
+        required: false
+        schema:
+          default: false
+          title: All Fields
+          type: boolean
       responses:
-        "200":
+        '200':
           content:
             application/json:
               schema: {}
           description: Successful Response
-        "422":
+        '422':
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/HTTPValidationError"
+                $ref: '#/components/schemas/HTTPValidationError'
           description: Validation Error
       summary: Get Workers Status
       tags:
-        - Turbinia Tasks
+      - Turbinia Tasks
   /api/task/{task_id}:
     get:
       description: Retrieve task information.
       operationId: get_task_status
       parameters:
-        - in: path
-          name: task_id
-          required: true
-          schema:
-            title: Task Id
-            type: string
+      - in: path
+        name: task_id
+        required: true
+        schema:
+          title: Task Id
+          type: string
       responses:
-        "200":
+        '200':
           content:
             application/json:
               schema: {}
           description: Successful Response
-        "422":
+        '422':
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/HTTPValidationError"
+                $ref: '#/components/schemas/HTTPValidationError'
           description: Validation Error
       summary: Get Task Status
       tags:
-        - Turbinia Tasks
+      - Turbinia Tasks
 security:
   - oAuth2: []

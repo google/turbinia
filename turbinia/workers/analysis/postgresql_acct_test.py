@@ -15,6 +15,7 @@
 """Tests for the PostgreSQL account analysis task."""
 
 import os
+import mock
 import unittest
 
 from turbinia import config
@@ -35,7 +36,7 @@ class PostgresAcctAnalysisTaskTest(TestTurbiniaTaskBase):
 
   POSTGRES_REPORT = """#### **PostgreSQL analysis found 1 weak password(s)**
 * **1 weak password(s) found:**
-    * User 'postgres' with password 'password'"""
+    * User 'postgres' with password 'postgres'"""
 
   def setUp(self):
     super(PostgresAcctAnalysisTaskTest, self).setUp()
@@ -72,10 +73,16 @@ class PostgresAcctAnalysisTaskTest(TestTurbiniaTaskBase):
     _, hashes = task._extract_creds(['/scram_database'], self.evidence)
     self.assertDictEqual(hashes, self.EXPECTED_SCRAM_CREDENTIALS)
 
-  def test_analyse_md5_postgres_creds(self):
+  @mock.patch(
+      'turbinia.workers.analysis.postgresql_acct.bruteforce_password_hashes')
+  def test_analyse_md5_postgres_creds(self, bruteforce_mock):
     """Tests the _analyse_postgres_creds method."""
     config.LoadConfig()
     task = postgresql_acct.PostgresAccountAnalysisTask()
+
+    bruteforce_mock.side_effect = [
+        [(list(self.EXPECTED_MD5_CREDENTIALS.keys())[0], 'postgres')], []
+    ]
 
     (report, priority, summary) = task._analyse_postgres_creds(
         self.EXPECTED_MD5_CREDENTIALS, {})
@@ -83,10 +90,16 @@ class PostgresAcctAnalysisTaskTest(TestTurbiniaTaskBase):
     self.assertEqual(priority, 10)
     self.assertEqual(summary, 'PostgreSQL analysis found 1 weak password(s)')
 
-  def test_analyse_scram_postgres_creds(self):
+  @mock.patch(
+      'turbinia.workers.analysis.postgresql_acct.bruteforce_password_hashes')
+  def test_analyse_scram_postgres_creds(self, bruteforce_mock):
     """Tests the _analyse_postgres_creds method."""
     config.LoadConfig()
     task = postgresql_acct.PostgresAccountAnalysisTask()
+
+    bruteforce_mock.side_effect = [
+        [], [(list(self.EXPECTED_SCRAM_CREDENTIALS.keys())[0], 'postgres')]
+    ]
 
     (report, priority, summary) = task._analyse_postgres_creds(
         {}, self.EXPECTED_SCRAM_CREDENTIALS)

@@ -194,6 +194,8 @@ def bruteforce_password_hashes(
 
   pot_file = os.path.join((tmp_dir or tempfile.gettempdir()), 'hashcat.pot')
   password_list_file_path = os.path.expanduser('~/password.lst')
+  password_rules_file_path = os.path.expanduser(
+      '~/turbinia-password-cracking.rules')
 
   # Fallback
   if not os.path.isfile(password_list_file_path):
@@ -203,6 +205,12 @@ def bruteforce_password_hashes(
   if not os.path.isfile(password_list_file_path):
     raise TurbiniaException('No password list available')
 
+  # Does rules file exist? If not make a temp one
+  if not os.path.isfile(password_rules_file_path):
+    with tempfile.NamedTemporaryFile(delete=False, mode='w+') as rf:
+      password_rules_file_path = rf.name
+      rf.write('\n'.join([':', 'd']))
+
   if '$y$' in ''.join(password_hashes):
     cmd = [
         'john', '--format=crypt', f'--wordlist={password_list_file_path}',
@@ -210,14 +218,13 @@ def bruteforce_password_hashes(
     ]
     pot_file = os.path.expanduser('~/.john/john.pot')
   else:
-    cmd = ['hashcat', '--force', '-a', '1']
+    # Ignore warnings & plain word list attack (with rules)
+    cmd = ['hashcat', '--force', '-a', '0']
     if extra_args:
       cmd = cmd + extra_args.split(' ')
     cmd = cmd + [f'--potfile-path={pot_file}']
-    cmd = cmd + [
-        password_hashes_file_path, password_list_file_path,
-        password_list_file_path
-    ]
+    cmd = cmd + [password_hashes_file_path, password_list_file_path]
+    cmd = cmd + ['-r', password_rules_file_path]
 
   with open(os.devnull, 'w') as devnull:
     try:

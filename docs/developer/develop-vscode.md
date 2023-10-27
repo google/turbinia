@@ -4,7 +4,7 @@
 
 This procedure will get you up and running with a Visual Studio Code environment for Turbinia development. The provided configuration files will create a development container containing all dependencies, pylint and yapf correctly setup and launch configurations for both client, server and workers. With this setup it is possible to initiate full Turbinia debug sessions including breakpoints, watches and stepping.
 
-You can set Visual Studio Code up to run a local stack (using redis and celery) or use a hybrid GCP stack (using pubsub, datastore and cloud functions). We advice you to run a local stack if you don't need to debug or develop Turbinia GCP functionality.
+You can set Visual Studio Code up to run a local stack (using redis and celery).
 
 ## Before you start
 
@@ -39,8 +39,6 @@ _Note_: If vscode does not ask you to reopen in a container you need to verify y
 
 _Note_: The instructions contain shell commands to execute, please execute those commands in the vscode terminal (which runs in the development container) and not in a terminal on your host!
 
-Continue with Step 4 for a local Turbinia setup or Step 5 for a GCP hybrid setup.
-
 #### Step 4 - Local Turbinia setup
 
 The local turbinia setup will use redis and celery. Let's create the configuration file for this setup.
@@ -51,53 +49,11 @@ _Note_: This command needs to be executed in the vscode terminal!
 $ sed -f ./docker/vscode/redis-config.sed ./turbinia/config/turbinia_config_tmpl.py > ~/.turbiniarc
 ```
 
-Let's verify the installation in Step 6.
+Let's verify the installation in Step 5.
 
-#### Step 5 - GCP hybrid Turbinia setup
+#### Step 5 - Turbinia installation verification
 
-Follow the ‘GCP Setup’ section [here](../user/install-gcp-pubsub.md) and setup Cloud Functions, a GCE bucket, Datastore and PubSub.
-
-- Create a pubsub topic, eg ‘turbinia-dev’
-- Create a GCE storage bucket with a unique name
-
-Create the Turbinia hybrid configuration file.
-
-_Note_: This command needs to be executed in the vscode terminal!
-
-```
-$ sed -f ./docker/vscode/psq-config.sed ./turbinia/config/turbinia_config_tmpl.py > ~/.turbiniarc
-```
-
-Edit the configuration file `~/.turbiniarc` and set below variables according to the GCP project you are using. Make sure all values are between quotes!
-
-```
-TURBINIA_PROJECT = '[your_gcp_project_name]'
-TURBINIA_REGION = '[your_preferred_region]'  eg 'us-central1'
-TURBINIA_ZONE = '[your_preferred_zone]'  eg 'us-central1-f'
-PUBSUB_TOPIC = '[your_gcp_pubsub_topic_name]'  eg 'turbinia-dev'
-BUCKET_NAME = '[your_gcp_bucket_name]'
-```
-
-Setup authentication for the GCP project.
-
-_Note_: These commands need to be executed in the vscode terminal!
-
-```
-$ gcloud auth login
-$ gcloud auth application-default login
-```
-
-Deploy the Google Cloud Functions
-
-_Note_: This command needs to be executed in the vscode terminal!
-
-```
-$ PYTHONPATH=. python3 tools/gcf_init/deploy_gcf.py
-```
-
-#### Step 6 - Turbinia installation verification
-
-Let's verify that the GCP hybrid setup is working before we start developing and debugging. We are going to start a server and worker in separate vscode terminals and create a Turbinia request in a third. Open up 3 vscode terminals and execute below commands.
+Let's verify that the local setup is working before we start developing and debugging. We are going to start a server and worker in separate vscode terminals and create a Turbinia request in a third. Open up 3 vscode terminals and execute below commands.
 
 _Note_: These commands need to be executed in the vscode terminal!
 
@@ -114,12 +70,6 @@ For a local setup
 $ python3 turbinia/turbiniactl.py celeryworker
 ```
 
-For a GCP hybrid setup
-
-```
-$ python3 turbinia/turbiniactl.py psqworker
-```
-
 Terminal 3 - Fetch and process some evidence
 
 ```
@@ -129,7 +79,7 @@ $ python3 turbinia/turbiniactl.py compresseddirectory -l /evidence/history.tgz
 $ python3 turbinia/turbiniactl.py -a status -r [request_id]
 ```
 
-This should process the evidence and show output in each terminal for server and worker. Results will be stored in `/evidence` and in the GCS bucket.
+This should process the evidence and show output in each terminal for server and worker. Results will be stored in `/evidence`.
 
 #### Step 8 - Debugging example
 

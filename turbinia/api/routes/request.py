@@ -31,7 +31,7 @@ from turbinia.api.models import request_status
 
 log = logging.getLogger('turbinia')
 
-router = APIRouter(prefix="/request", tags=["Turbinia Requests"])
+router = APIRouter(prefix='/request', tags=['Turbinia Requests'])
 
 
 @router.get('/summary')
@@ -48,7 +48,7 @@ async def get_requests_summary(request: Request):
     if not requests_summary.get_requests_summary():
       return JSONResponse(
           content={'detail': 'Request summary is empty'}, status_code=200)
-    response_json = requests_summary.model_dump_json()
+    response_json = requests_summary.json()
     response = OrderedDict(sorted(json.loads(response_json).items()))
     return JSONResponse(
         status_code=200, content=response, media_type='application/json')
@@ -78,7 +78,7 @@ async def get_request_status(request: Request, request_id: str):
       raise HTTPException(
           status_code=404,
           detail='Request ID not found or the request had no associated tasks.')
-    response_json = request_out.model_dump_json()
+    response_json = request_out.json()
     response = OrderedDict(sorted(json.loads(response_json).items()))
     return JSONResponse(
         status_code=200, content=response, media_type='application/json')

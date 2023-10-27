@@ -363,7 +363,7 @@ class Evidence:
 
   def serialize_attribute(self, name: str) -> str:
     """Returns JSON serialized attribute.
-    
+
     Args:
       name(str): the name of the attribute that will be serialized.
     Returns:
@@ -381,7 +381,7 @@ class Evidence:
     """Returns a JSON serialized object. The function will return A string
     containing the serialized evidence_dict or a dict of serialized attributes
     if json_values is true.
-    
+
     Args:
       json_values(bool): Returns only values of the dictionary as json strings
         instead of the entire dictionary.
@@ -600,7 +600,7 @@ class Evidence:
 
   def _validate(self):
     """Runs additional logic to validate evidence requirements.
-    
+
     Evidence subclasses can override this method to perform custom
     validation of evidence objects.
     """
@@ -840,6 +840,7 @@ class DiskPartition(Evidence):
 
     # We need to enumerate partitions in preprocessing so the path_specs match
     # the parent evidence location for each task.
+    path_specs = None
     try:
       # We should only get one path_spec here since we're specifying the location.
       path_specs = partitions.Enumerate(
@@ -847,20 +848,20 @@ class DiskPartition(Evidence):
     except TurbiniaException as exception:
       log.error(exception)
 
-    if len(path_specs) > 1:
+    if not path_specs:
+      raise TurbiniaException(
+          f'Could not find path_spec for location {self.partition_location:s}')
+    elif path_specs and len(path_specs) > 1:
       path_specs_dicts = [path_spec.CopyToDict() for path_spec in path_specs]
       raise TurbiniaException(
           'Found more than one path_spec for {0:s} {1:s}: {2!s}'.format(
               self.parent_evidence.name, self.partition_location,
               path_specs_dicts))
-    elif len(path_specs) == 1:
+    elif path_specs and len(path_specs) == 1:
       self.path_spec = path_specs[0]
       log.debug(
           'Found path_spec {0!s} for parent evidence {1:s}'.format(
               self.path_spec.CopyToDict(), self.parent_evidence.name))
-    else:
-      raise TurbiniaException(
-          f'Could not find path_spec for location {self.partition_location:s}')
 
     # In attaching a partition, we create a new loopback device using the
     # partition offset and size.
@@ -941,6 +942,13 @@ class GoogleCloudDisk(Evidence):
     self.resource_tracked = True
     self.resource_id = self.disk_name
     self.device_path = None
+
+  @property
+  def name(self):
+    if self._name:
+      return self._name
+    else:
+      return ':'.join((self.type, self.project, self.disk_name))
 
   def _preprocess(self, _, required_states):
     # The GoogleCloudDisk should never need to be mounted unless it has child
@@ -1044,7 +1052,7 @@ class PlasoFile(Evidence):
 
   def _validate(self):
     """Validates whether the Plaso file contains any events.
-    
+
     Raises:
       TurbiniaException: if validation fails.
     """

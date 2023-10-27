@@ -44,10 +44,10 @@ configuration.access_token = os.environ["ACCESS_TOKEN"]
 with turbinia_api_lib.ApiClient(configuration) as api_client:
     # Create an instance of the API class
     api_instance = turbinia_api_lib.TurbiniaTasksApi(api_client)
-    days = None # object |  (optional)
-    task_id = None # object |  (optional)
-    request_id = None # object |  (optional)
-    user = None # object |  (optional)
+    days = 56 # int |  (optional)
+    task_id = 'task_id_example' # str |  (optional)
+    request_id = 'request_id_example' # str |  (optional)
+    user = 'user_example' # str |  (optional)
 
     try:
         # Get Task Statistics
@@ -59,14 +59,15 @@ with turbinia_api_lib.ApiClient(configuration) as api_client:
 ```
 
 
+
 ### Parameters
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **days** | [**object**](.md)|  | [optional] 
- **task_id** | [**object**](.md)|  | [optional] 
- **request_id** | [**object**](.md)|  | [optional] 
- **user** | [**object**](.md)|  | [optional] 
+ **days** | **int**|  | [optional] 
+ **task_id** | **str**|  | [optional] 
+ **request_id** | **str**|  | [optional] 
+ **user** | **str**|  | [optional] 
 
 ### Return type
 
@@ -123,7 +124,7 @@ configuration.access_token = os.environ["ACCESS_TOKEN"]
 with turbinia_api_lib.ApiClient(configuration) as api_client:
     # Create an instance of the API class
     api_instance = turbinia_api_lib.TurbiniaTasksApi(api_client)
-    task_id = None # object | 
+    task_id = 'task_id_example' # str | 
 
     try:
         # Get Task Status
@@ -135,11 +136,12 @@ with turbinia_api_lib.ApiClient(configuration) as api_client:
 ```
 
 
+
 ### Parameters
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **task_id** | [**object**](.md)|  | 
+ **task_id** | **str**|  | 
 
 ### Return type
 
@@ -196,8 +198,8 @@ configuration.access_token = os.environ["ACCESS_TOKEN"]
 with turbinia_api_lib.ApiClient(configuration) as api_client:
     # Create an instance of the API class
     api_instance = turbinia_api_lib.TurbiniaTasksApi(api_client)
-    days = None # object |  (optional)
-    all_fields = None # object |  (optional)
+    days = 7 # int |  (optional) (default to 7)
+    all_fields = False # bool |  (optional) (default to False)
 
     try:
         # Get Workers Status
@@ -209,12 +211,13 @@ with turbinia_api_lib.ApiClient(configuration) as api_client:
 ```
 
 
+
 ### Parameters
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **days** | [**object**](.md)|  | [optional] 
- **all_fields** | [**object**](.md)|  | [optional] 
+ **days** | **int**|  | [optional] [default to 7]
+ **all_fields** | **bool**|  | [optional] [default to False]
 
 ### Return type
 

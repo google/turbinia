@@ -18,22 +18,17 @@ jobs:
       - name: Pull latest docker image for cache
         run: |
           docker pull ${{ matrix.docker_base_image }}
-          docker pull us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-worker-dev:latest
-      - name: Build Turbinia worker docker image
-        run: docker build --build-arg PPA_TRACK=${{ matrix.gift_ppa_track }} --cache-from=${{ matrix.docker_base_image }},us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-worker-dev:latest -t turbinia-worker-dev -f docker/worker/Dockerfile .
-      - name: Run test (turbinia-worker) container
+          docker pull us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-unit-tests:latest
+      - name: Build Turbinia unit test docker image
+        run: docker build --build-arg PPA_TRACK=${{ matrix.gift_ppa_track }} --cache-from=${{ matrix.docker_base_image }},us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-unit-tests:latest -t turbinia-unit-tests -f docker/tests/Dockerfile .
+      - name: Run test (turbinia-unit-tests) container
         run: |
-          docker run --name turbinia-worker --entrypoint "/bin/bash" -it -d -t turbinia-worker-dev:latest
+          docker run --name turbinia-unit-tests --entrypoint "/bin/bash" -it -d -t turbinia-unit-tests:latest
       - name: Configure python3
         run: |
-          docker exec -u root -t turbinia-worker bash -c "update-alternatives --install /usr/bin/python python /usr/bin/python3 1"
-          docker exec -u root -t turbinia-worker bash -c "/usr/bin/python -V"
-      - name: Install and configure test dependencies
-        run: |
-          docker exec -u root -t turbinia-worker bash -c "/usr/bin/python -m pip install --quiet --upgrade pip"
-          docker exec -u root -t turbinia-worker bash -c "/usr/bin/python -m pip install --quiet mock nose coverage yapf"
-          docker exec -u root -t turbinia-worker bash -c "/usr/bin/python -m pip install --quiet tox"
+          docker exec -u root -t turbinia-unit-tests bash -c "update-alternatives --install /usr/bin/python python /usr/bin/python3 1"
+          docker exec -u root -t turbinia-unit-tests bash -c "/usr/bin/python -V"
       - name: Run Tests
         run: |
-          docker exec -u root -t turbinia-worker bash -c "cd /tmp && ./run_tests.py"
-          docker exec -u root -t turbinia-worker bash -c "cd /tmp && tox --sitepackages ${TOXENV}"
+          docker exec -u root -t turbinia-unit-tests bash -c "poetry run ./run_tests.py"
+          docker exec -u root -t turbinia-unit-tests bash -c "tox --sitepackages ${TOXENV}"

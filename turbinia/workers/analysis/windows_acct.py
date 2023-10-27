@@ -29,6 +29,7 @@ from turbinia.workers import TurbiniaTask
 class WindowsAccountAnalysisTask(TurbiniaTask):
   """Task to analyze Windows accounts."""
 
+  # Does not need to be MOUNTED as this Task uses extract_artifacts()
   REQUIRED_STATES = [
       state.ATTACHED, state.CONTAINER_MOUNTED, state.DECOMPRESSED
   ]

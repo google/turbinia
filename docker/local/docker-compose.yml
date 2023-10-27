@@ -80,7 +80,7 @@ services:
             - DOCKER_CERT_PATH=/certs/client
     # Uncomment below in case you want to run a second worker on the same host.
     #  turbinia-worker2:
-    #     #image: "turbinia-worker-dev" # Use this for local development and comment out below line
+    #     image: "turbinia-worker-dev" # Use this for local development and comment out below line
     #     image: "us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-worker:latest" # Latest stable
     #     container_name: turbinia-worker2
     #     privileged: true
