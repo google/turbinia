@@ -81,7 +81,7 @@ def check_docker_dependencies(dependencies):
 
     for program in values['programs']:
       docker_image = values.get('docker_image')
-      if docker_image is not None:
+      if (config.DOCKER_ENABLED and docker_image is not None):
         log.info(
             'docker_image({0:s}): {1:s} program: {2:s}'.format(
                 job, values['docker_image'], program))

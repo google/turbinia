@@ -60,10 +60,13 @@ def _image_export(command, output_dir, disk_path, timeout=DEFAULT_TIMEOUT):
     container_manager = docker_manager.ContainerManager(docker_image)
     log.info(
         'Executing job {0:s} in container: {1:s}'.format(
-            job_name, docker_image))
+            command, docker_image))
+    job_timeout = dependencies.get(job_name).get('timeout')
+    if job_timeout is None:
+      job_timeout = timeout
     stdout, stderr, ret = container_manager.execute_container(
         command, shell=False, ro_paths=ro_paths, rw_paths=rw_paths,
-        timeout_limit=timeout)
+        timeout_limit=job_timeout)
   else:  # execute with local install of image_export.py
     command.insert(0, 'sudo')
     log.debug(f"Running image_export as [{' '.join(command):s}]")
