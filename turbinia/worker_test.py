@@ -147,7 +147,7 @@ class TestTurbiniaPsqWorker(unittest.TestCase):
     mock_logger.assert_called_with(
         'The job non_exist was not found or has been disabled. '
         'Skipping dependency check...')
-  
+
   @mock.patch('turbinia.worker.config')
   @mock.patch('turbinia.lib.docker_manager.DockerManager')
   @mock.patch('turbinia.lib.docker_manager.ContainerManager')
