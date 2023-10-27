@@ -117,9 +117,10 @@ class TestTurbiniaPsqWorker(unittest.TestCase):
     manager.JobsManager.RegisterJob(manager_test.TestJob2)
     manager.JobsManager.RegisterJob(manager_test.TestJob3)
 
+  @mock.patch('turbinia.worker.config')
   @mock.patch('turbinia.worker.subprocess.Popen')
   @mock.patch('logging.Logger.warning')
-  def testSystemDependencyCheck(self, mock_logger, popen_mock):
+  def testSystemDependencyCheck(self, mock_logger, popen_mock, mock_config):
     """Test system dependency check."""
     dependencies = {
         'plasojob': {
@@ -127,6 +128,7 @@ class TestTurbiniaPsqWorker(unittest.TestCase):
             'docker_image': None
         }
     }
+    mock_config.DOCKER_ENABLED = True
     # Dependency not found.
     proc_mock = mock.MagicMock()
     proc_mock.communicate.return_value = (b'no', b'thing')

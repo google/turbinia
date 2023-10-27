@@ -59,8 +59,7 @@ def _image_export(command, output_dir, disk_path, timeout=DEFAULT_TIMEOUT):
     rw_paths = [output_dir]
     container_manager = docker_manager.ContainerManager(docker_image)
     log.info(
-        'Executing job {0:s} in container: {1:s}'.format(
-            command, docker_image))
+        'Executing job {0:s} in container: {1:s}'.format(command, docker_image))
     job_timeout = dependencies.get(job_name).get('timeout')
     if job_timeout is None:
       job_timeout = timeout
