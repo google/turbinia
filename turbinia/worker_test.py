@@ -147,12 +147,13 @@ class TestTurbiniaPsqWorker(unittest.TestCase):
     mock_logger.assert_called_with(
         'The job non_exist was not found or has been disabled. '
         'Skipping dependency check...')
-
+  
+  @mock.patch('turbinia.worker.config')
   @mock.patch('turbinia.lib.docker_manager.DockerManager')
   @mock.patch('turbinia.lib.docker_manager.ContainerManager')
   @mock.patch('logging.Logger.warning')
   def testDockerDependencyCheck(
-      self, mock_logger, mock_contmgr, mock_dockermgr):
+      self, mock_logger, mock_contmgr, mock_dockermgr, mock_config):
     """Test Docker dependency check."""
     dependencies = {
         'plasojob': {
@@ -160,6 +161,7 @@ class TestTurbiniaPsqWorker(unittest.TestCase):
             'docker_image': 'test_img'
         }
     }
+    mock_config.DOCKER_ENABLED = True
 
     # Set up mock objects
     mock_dm = mock_dockermgr.return_value
