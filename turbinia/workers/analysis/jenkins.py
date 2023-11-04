@@ -32,6 +32,7 @@ from turbinia.lib.utils import bruteforce_password_hashes
 class JenkinsAnalysisTask(TurbiniaTask):
   """Task to analyze a Jenkins install."""
 
+  # Does not need to be MOUNTED as this Task uses extract_files()
   REQUIRED_STATES = [state.ATTACHED, state.CONTAINER_MOUNTED]
 
   TASK_CONFIG = {

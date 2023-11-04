@@ -29,7 +29,8 @@ from turbinia.workers import Priority
 class SSHDAnalysisTask(TurbiniaTask):
   """Task to analyze a sshd_config file."""
 
-  REQUIRED_STATES = [state.ATTACHED, state.CONTAINER_MOUNTED]
+  # Input Evidence is ExportedFileArtifact so does not need to be pre-processed.
+  REQUIRED_STATES = []
 
   def run(self, evidence, result):
     """Run the sshd_config analysis worker.

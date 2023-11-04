@@ -98,14 +98,6 @@ class TurbiniaCli:
     log.info(
         f'Using configuration instance name -> {self.config_instance:s}'
         f' with host {self.api_server_address:s}:{self.api_server_port:d}')
-    try:
-      self.evidence_mapping = self.get_evidence_arguments()
-      self.request_options = self.get_request_options()
-    except turbinia_api_lib.ApiException as exception:
-      log.error(
-          'Error while attempting to contact the API server during setup: %s',
-          exception)
-      sys.exit(-1)
 
   @property
   def api_client(self):

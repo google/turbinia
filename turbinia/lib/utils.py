@@ -44,6 +44,7 @@ def _image_export(command, output_dir, timeout=DEFAULT_TIMEOUT):
   """
   # TODO: Consider using the exec helper to gather stdin/err.
   log.debug(f"Running image_export as [{' '.join(command):s}]")
+
   try:
     subprocess.check_call(command, timeout=timeout)
   except subprocess.CalledProcessError as exception:

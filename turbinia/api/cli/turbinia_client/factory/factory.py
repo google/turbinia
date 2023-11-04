@@ -21,7 +21,6 @@ import logging
 import click
 
 from turbinia_client.helpers import click_helper
-from turbinia_client.core.commands import create_request
 
 T = TypeVar('T', bound='FactoryInterface')
 
@@ -147,7 +146,8 @@ class CommandFactory(FactoryInterface):
           request_options=request_options)
       OptionFactory.append_request_option_objects(params, request_options)
       cmd = CommandFactory.create_object(
-          name=evidence_name_lower, params=params, callback=create_request)
+          name=evidence_name_lower, params=params,
+          callback=click_helper.create_request)
       command_objects.append(cmd)
     return command_objects
 

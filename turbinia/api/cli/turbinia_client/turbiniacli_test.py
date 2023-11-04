@@ -16,6 +16,7 @@
 
 import unittest
 import mock
+import pathlib
 
 from turbinia_client.turbiniacli import TurbiniaCli
 from fastapi.testclient import TestClient
@@ -29,7 +30,9 @@ class TestTurbiniaCli(unittest.TestCase):
   def setUp(self) -> None:
     """Sets up the client for the tests."""
     self.api_client = TestClient(app)
-    self.client = TurbiniaCli(config_instance='default', config_path='../')
+    config_path = pathlib.Path(__file__).parent.parent
+    self.client = TurbiniaCli(
+        config_instance='default', config_path=config_path)
 
   def testInitialization(self) -> None:
     """Tests if the client was initialized properly."""
@@ -46,11 +49,11 @@ class TestTurbiniaCli(unittest.TestCase):
     self.assertIn('CREDENTIALS_FILENAME', self.client.config_dict)
 
   @mock.patch(
-      'turbinia_api_lib.api.turbinia_configuration_api.TurbiniaConfigurationApi.get_evidence_types'
+      'turbinia_api_lib.api.turbinia_evidence_api.TurbiniaEvidenceApi.get_evidence_types'
   )
   def testGetEvidenceArguments(self, mock_response) -> None:
     """Tests the get_evidence_arguments method."""
-    test_response = self.api_client.get('/api/config/evidence')
+    test_response = self.api_client.get('/api/evidence/types')
     mock_response.return_value = test_response
     api_response = self.client.get_evidence_arguments()
     self.assertEqual(test_response, api_response)

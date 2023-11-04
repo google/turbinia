@@ -1,0 +1,83 @@
+[tool.poetry]
+name = "turbinia"
+version = "20231025"
+description = "Automation and Scaling of Digital Forensics Tools"
+authors = ["Turbinia Developers <turbinia-dev@googlegroups.com>"]
+maintainers = ["Turbinia Developers <turbinia-dev@googlegroups.com>"]
+license = "Apache-2.0"
+readme = "README.md"
+repository = "https://github.com/google/turbinia"
+documentation = "https://turbinia.readthedocs.io/en/latest/"
+
+[tool.poetry.scripts]
+turbiniactl = "turbinia.turbiniactl:main"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+celery = { version = "^5.2.2" }
+dfDewey = { version = "^20220603", optional = true }
+dfimagetools = { version = "^20230806", optional = true }
+docker = { version = "^6.1.3" }
+fastapi = {extras = ["all"], version = ">=0.75.0,<0.99.0"}
+filelock = { version = "*" }
+# TODO: Cleanup GCP libs and their dependencies when psq/pubsub is deprecated
+google-api-core = { version = "<2.0.0dev", optional = true }
+google-api-python-client = { version = "*", optional = true }
+google-auth = { version = ">=2.15.0", optional = true }
+google-cloud-core = { version = "<2.0dev", optional = true }
+google-cloud-datastore = { version = "<=2.0.0", optional = true }
+google-cloud-error-reporting = { version = "*", optional = true }
+google-cloud-logging = { version = ">=2.0.0,<3.0.0dev", optional = true }
+google-cloud-pubsub = { version = "1.7.0", optional = true }
+google-cloud-storage = { version = "<=2.2.1", optional = true }
+grpcio-status = { version = "<1.49.0,>=1.33.2", optional = true }
+libcloudforensics = { version = "20230601" }
+pandas = { version = "^2.1.0" }
+plaso = { version = "^20230717", optional = true }
+prometheus_client = { version = "^0.17.1" }
+protobuf = { version = ">=3.19.0,<4.0.0dev", optional = true }
+proto-plus = { version = "<2.0.0dev,>=1.22.0", optional = true }
+psq = { version = "*", optional = true }
+pydantic = { version = "^1.10.5,<2"}
+pyhindsight = { version = "^20230327.0", optional = true }
+redis = { version = "^4.4.4" }
+urllib3 = { version = ">=1.25.3,<2" }
+
+[tool.poetry.group.test]
+optional = true
+
+[tool.poetry.group.test.dependencies]
+coverage = "*"
+fakeredis = "^1.8.1"
+google-auth-oauthlib = "^1.1.0"
+mock = "*"
+pytest = "*"
+yapf = "*"
+
+[tool.poetry.extras]
+worker = [
+  "dfimagetools",
+  "dfDewey",
+  "plaso",
+  "pyhindsight",
+]
+
+gcp = [
+  "google-api-core",
+  "google-api-python-client",
+  "google-auth",
+  "google-cloud-coverage",
+  "google-cloud-datastore",
+  "google-cloud-error-reporting",
+  "google-cloud-logging",
+  "google-cloud-pubsub",
+  "google-cloud-storage",
+  "grpcio-status",
+  "protobuf",
+  "proto-plus",
+  "psq",
+]
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

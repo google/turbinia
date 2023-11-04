@@ -11,13 +11,13 @@ body:
         Please fill in as much of the following form as you're able.
   - type: textarea
     attributes:
-      label: What would this feature improve or what problem would it solve?
+      label: What is the feature you are proposing?
+      description: Describe the feature. If you already have something in mind... PRs are welcome!
     validations:
       required: true
   - type: textarea
     attributes:
-      label: What is the feature you are proposing?
-      description: Describe the feature. If you already have something in mind... PRs are welcome!
+      label: What would this feature improve or what problem would it solve?
     validations:
       required: true
   - type: textarea

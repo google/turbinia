@@ -64,7 +64,7 @@ class SSHEventData:
   def calculate_session_id(self) -> None:
     """Calculates pseudo session_id for SSH login.
 
-    The pseudo session_id is based on date, hostname, username, source_ip, 
+    The pseudo session_id is based on date, hostname, username, source_ip,
     and source_port.
     """
     # TODO(rmaskey): Find a better way to generate pseudo session_id. Current
@@ -81,7 +81,8 @@ class SSHEventData:
 class LinuxSSHAnalysisTask(TurbiniaTask):
   """Task to analyze Linux SSH authentication."""
 
-  REQUIRED_STATES = [state.MOUNTED, state.CONTAINER_MOUNTED]
+  # Does not need to be MOUNTED as this Task uses extract_artifacts()
+  REQUIRED_STATES = [state.ATTACHED, state.CONTAINER_MOUNTED]
 
   # Log year validation
   # The minimum supported log year
@@ -150,10 +151,10 @@ class LinuxSSHAnalysisTask(TurbiniaTask):
 
   def read_logs(self, log_dir: str) -> pd.DataFrame:
     """Reads SSH logs directory and returns Pandas dataframe.
-    
+
     Args:
       log_dir (str): Directory containing SSH authentication log.
-    
+
     Returns:
       pd.DataFrame: Returns Pandas dataframe.
     """
@@ -226,12 +227,12 @@ class LinuxSSHAnalysisTask(TurbiniaTask):
   def parse_message_datetime(
       self, message_datetime: List, log_year: int) -> datetime:
     """Parses and returns datetime.
-    
+
     Args:
       message_datetime (List[str]): A list containing syslog datetime separated
           by spaces e.g. Feb 8 13:30:45 for Debian, and Red Hat, and
           2023-02-08T13:30:45.123456+11:00 for OpenSUSE.
-      log_year (int): A user provided log year for SSH events. The log year is 
+      log_year (int): A user provided log year for SSH events. The log year is
       not captured by syslog and this is either provided by user or guessed
       based on the last SSH event and current date/time.
 
@@ -261,14 +262,14 @@ class LinuxSSHAnalysisTask(TurbiniaTask):
   def read_log_data(self, data, log_filename: str,
                     log_year: int = None) -> List[SSHEventData]:
     """Parses SSH log data and returns a list of SSHEventData.
-    
+
     Args:
       data (str): Content of authentication log file.
       log_filename (str): Name of the log file whose content is read.
       log_year (int): SSH authentication log year.
-    
+
     Returns:
-      List(SSHEventData): Returns SSH events as list of SSHEventData. 
+      List(SSHEventData): Returns SSH events as list of SSHEventData.
     """
     # check valid year is provided
     # If valid year isn't provided raise error
@@ -356,10 +357,10 @@ class LinuxSSHAnalysisTask(TurbiniaTask):
 
   def get_priority_value(self, priority_string: str) -> Priority:
     """Returns priority value.
-    
+
     Args:
       priority_string (str): Priority values as string e.g. HIGH, MEDIUM, LOW
-    
+
     Returns:
       Priority: Returns priority value of priority_string.
     """
@@ -374,15 +375,15 @@ class LinuxSSHAnalysisTask(TurbiniaTask):
 
   def brute_force_analysis(self, df: pd.DataFrame) -> Tuple[Priority, str, str]:
     """Runs brute force analysis.
-    
+
     Args:
       df (pd.DataFrame): Pandas dataframe of SSH events.
-    
+
     Returns:
       Tuple[Priority, str, str]: Returns brute force analysis result as tuple.
         Priority: Priority of the findings.
         str: Brief summary of the findings.
-        str: Detailed information as markdown. 
+        str: Detailed information as markdown.
     """
     bfa = BruteForceAnalyzer()
 
@@ -416,7 +417,7 @@ class LinuxSSHAnalysisTask(TurbiniaTask):
     Args:
       evidence (Evidence object): The evidence being processed by analyzer.
       result (TurbiniaTaskResult): The object to place task results into.
-    
+
     Returns:
       TurbiniaTaskResult object.
     """

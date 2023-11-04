@@ -34,6 +34,7 @@ _WP_DB_NAME = 'wp_users.ibd'
 class WordpressCredsAnalysisTask(TurbiniaTask):
   """Task to analyze the credentials of a Wordpress instance."""
 
+  # Does not need to be MOUNTED as uses extract_files()
   REQUIRED_STATES = [
       state.ATTACHED, state.CONTAINER_MOUNTED, state.DECOMPRESSED
   ]
