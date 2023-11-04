@@ -250,9 +250,54 @@ class RedisStateManager(BaseStateManager):
   def _validate_data(self, data):
     return data
 
+  def get_task_legacy(self, task_id: str) -> dict:
+    """Returns a dictionary representing a Task object given its ID. This 
+      function is used to get data of old TurbiniaTask objects stored as
+      string in Redis.
+
+    Args:
+      task_id (str): The ID of the stored task.
+
+    Returns:
+      task_dict (dict): Dict containing task attributes. 
+    """
+    try:
+      return json.loads(self.client.get(task_id))
+    except redis.RedisError as exception:
+      error_message = f'Error decoding key {task_id} in Redis'
+      log.error(f'{error_message}: {exception}')
+      raise TurbiniaException(error_message) from exception
+  
+  def get_task(self, task_id: str) -> dict:
+    """Returns a dictionary representing a Task object given its ID.
+
+    Args:
+      task_id (str): The ID of the stored task.
+
+    Returns:
+      task_dict (dict): Dict containing task attributes. 
+    """
+    task_key = ':'.join(('TurbiniaEvidence', task_id))
+
+    if self.get_key_type(task_key) == 'string':
+      task_dict = self.get_task_legacy(task_id)
+    else:
+      task_dict = {}
+      for attribute_name, attribute_value in self.iterate_attributes(
+          task_key):
+        task_dict[attribute_name] = attribute_value
+  
+    if task_dict.get('last_update'):
+      task_dict['last_update'] = datetime.strptime(
+          task_dict.get('last_update'), DATETIME_FORMAT)
+    if task_dict.get('run_time'):
+      task_dict['run_time'] = timedelta(seconds=task_dict['run_time'])
+
+    return task_dict
+
   def get_task_data(
-      self, instance, days=0, task_id=None, request_id=None, group_id=None,
-      user=None):
+      self, instance: str, days: int=0, task_id: str=None,
+      request_id: str=None, group_id: str=None, user: str=None):
     """Gets task data from Redis.
 
     Args:
@@ -267,30 +312,26 @@ class RedisStateManager(BaseStateManager):
     Returns:
       List of Task dict objects.
     """
-    tasks = [
-        json.loads(self.client.get(task))
-        for task in self.client.scan_iter('TurbiniaTask:*')
-        if json.loads(self.client.get(task)).get('instance') == instance or
-        not instance
-    ]
-
-    # Convert relevant date attributes back into dates/timedeltas
-    for task in tasks:
-      if task.get('last_update'):
-        task['last_update'] = datetime.strptime(
-            task.get('last_update'), DATETIME_FORMAT)
-      if task.get('run_time'):
-        task['run_time'] = timedelta(seconds=task['run_time'])
+    if task_id:
+      task = self.get_task(task_id)
+      tasks = [task] if not request_id or task.request_id == request_id else []
+    elif request_id:
+      request_key = ':'.join(('TurbiniaRequest', request_id))
+      if self.key_exists(request_key):
+        task_ids = self.get_attribute(
+          request_key, 'task_ids', decode_json = True)
+        tasks = [self.get_task(task_id) for task_id in task_ids]
+    else:
+      tasks = [
+        self.get_data(task_key) for task_key in self.iterate_keys('Task')]
 
     # pylint: disable=no-else-return
+    if instance:
+      tasks = [task for task in tasks if task.get('instance') == instance]
     if days:
       start_time = datetime.now() - timedelta(days=days)
       # Redis only supports strings; we convert to/from datetime here and below
       tasks = [task for task in tasks if task.get('last_update') > start_time]
-    if task_id:
-      tasks = [task for task in tasks if task.get('id') == task_id]
-    if request_id:
-      tasks = [task for task in tasks if task.get('request_id') == request_id]
     if group_id:
       tasks = [task for task in tasks if task.get('group_id') == group_id]
     if user:
@@ -298,46 +339,64 @@ class RedisStateManager(BaseStateManager):
 
     return tasks
 
+  def format_task(self, task):
+    task_dict = self.get_task_dict(task)
+    task_dict['last_update'] = task_dict['last_update'].strftime(
+        DATETIME_FORMAT)
+    task_dict['start_time'] = task_dict['start_time'].strftime(DATETIME_FORMAT)
+    if not task_dict.get('status'):
+      task_dict['status'] = (
+        f'Task scheduled at {datetime.now().strftime(DATETIME_FORMAT)}')
+    if task_dict['run_time']:
+      task_dict['run_time'] = task_dict['run_time'].total_seconds()
+    for key, value in task_dict.items():
+      try:
+        task_dict[key] = json.dumps(value)
+      except (TypeError, ValueError) as exception:
+        error_message = f'Error serializing task attribute for task {task.id}.'
+        log.error(f'{error_message}: {exception}')
+        raise TurbiniaException(error_message) from exception
+    return task_dict
+
+  def write_new_task(self, task):
+    """Writes task into redis.
+
+    Args:
+      task_dict (dict[str]): A dictionary containing the serialized
+        request attributes that will be saved.
+      update (bool): Allows overwriting previous key and blocks writing new 
+        ones.
+
+    Returns:
+      request_key (str): The key corresponding to the evidence in Redis
+    
+    Raises:
+      TurbiniaException: If the attribute deserialization fails.
+    """
+    log.info(f'Writing new task {task.name:s} into Redis')
+    task_key = ':'.join(('TurbiniaTask', task.id))
+    task_dict = self.format_task(task)
+    self.write_hash_object(task_key, task_dict)
+    task.state_key = task_key
+    return task_key
+
   def update_task(self, task):
     task.touch()
-    key = task.state_key
-    if not key:
+    task_key = task.state_key
+    if not task_key:
       self.write_new_task(task)
       return
-    stored_task_data = json.loads(self.client.get(f'TurbiniaTask:{task.id}'))
-    stored_evidence_size = stored_task_data.get('evidence_size')
-    stored_evidence_id = stored_task_data.get('evidence_id')
+    stored_task_dict = self.get_task(task_key)
+    stored_evidence_size = stored_task_dict.get('evidence_size')
+    stored_evidence_id = stored_task_dict.get('evidence_id')
     if not task.evidence_size and stored_evidence_size:
       task.evidence_size = stored_evidence_size
     if not task.evidence_id and stored_evidence_id:
       task.evidence_id = stored_evidence_id
     log.info(f'Updating task {task.name:s} in Redis')
-    task_data = self.get_task_dict(task)
-    task_data['last_update'] = task_data['last_update'].strftime(
-        DATETIME_FORMAT)
-    task_data['start_time'] = task_data['start_time'].strftime(DATETIME_FORMAT)
-    # Need to use json.dumps, else redis returns single quoted string which
-    # is invalid json
-    if not self.client.set(key, json.dumps(task_data)):
-      log.error(f'Error updating task {task.name:s} in Redis')
-
-  def write_new_task(self, task):
-    key = ':'.join(['TurbiniaTask', task.id])
-    log.info(f'Writing new task {task.name:s} into Redis')
-    task_data = self.get_task_dict(task)
-    task_data['last_update'] = task_data['last_update'].strftime(
-        DATETIME_FORMAT)
-    task_data['start_time'] = task_data['start_time'].strftime(DATETIME_FORMAT)
-    if not task_data.get('status'):
-      task_data['status'] = 'Task scheduled at {0:s}'.format(
-          datetime.now().strftime(DATETIME_FORMAT))
-    if task_data['run_time']:
-      task_data['run_time'] = task_data['run_time'].total_seconds()
-    # nx=True prevents overwriting (i.e. no unintentional task clobbering)
-    if not self.client.set(key, json.dumps(task_data), nx=True):
-      log.error(f'Error writing new task {task.name:s} into Redis')
-    task.state_key = key
-    return key
+    task_dict = self.format_task(task)
+    self.write_hash_object(task_key, task_dict)
+    return task_key
 
   def set_attribute(
       self, redis_key: str, attribute_name: str, json_value: str) -> bool:
@@ -459,7 +518,7 @@ class RedisStateManager(BaseStateManager):
     """Checks if the key is saved in Redis.
 
     Args:
-      key (str): The key to be checked.
+      redis_key (str): The key to be checked.
 
     Returns:
       exists (bool): Boolean indicating if evidence is saved. 
@@ -471,6 +530,25 @@ class RedisStateManager(BaseStateManager):
       return self.client.exists(redis_key)
     except redis.RedisError as exception:
       error_message = f'Error checking existence of {redis_key} in Redis'
+      log.error(f'{error_message}: {exception}')
+      raise TurbiniaException(error_message) from exception
+
+  def get_key_type(self, redis_key) -> bool:
+    """Gets the type of the Redis key.
+
+    Args:
+      redis_key (str): The key to be checked.
+
+    Returns:
+      type (str): Type of the Redis key. 
+
+    Raises:
+      TurbiniaException: If Redis fails in getting the type of the key.
+    """
+    try:
+      return self.client.type(redis_key)
+    except redis.RedisError as exception:
+      error_message = f'Error getting type of {redis_key} in Redis'
       log.error(f'{error_message}: {exception}')
       raise TurbiniaException(error_message) from exception
 
