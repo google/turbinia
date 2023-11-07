@@ -27,12 +27,24 @@ jobs:
           tags: turbinia-api-server-dev
           cache-from: type=gha
           cache-to: type=gha,mode=max
-      # - name: Build Turbinia API server Docker image
-      #   run: docker build --cache-from=${{ matrix.docker_base_image }},us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-api-server-dev:latest -t turbinia-api-server-dev -f docker/api_server/Dockerfile .
-      # - name: Build Turbinia server Docker image
-      #   run: docker build --cache-from=${{ matrix.docker_base_image }},us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-server-dev:latest -t turbinia-server-dev -f docker/server/Dockerfile .
-      # - name: Build Turbinia worker Docker image
-      #   run: docker build --build-arg PPA_TRACK=${{ matrix.gift_ppa_track }} --cache-from=${{ matrix.docker_base_image }},us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-worker-dev:latest -t turbinia-worker-dev -f docker/worker/Dockerfile .
+      - name: Build Turbinia Server Docker image
+        uses: docker/build-push-action@v5
+        with:
+          file: docker/server/Dockerfile
+          context: .
+          load: true
+          tags: turbinia-server-dev
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      - name: Build Turbinia Worker Docker image
+        uses: docker/build-push-action@v5
+        with:
+          file: docker/worker/Dockerfile
+          context: .
+          load: true
+          tags: turbinia-worker-dev
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
       - name: Prepare Turbinia configuration
         run: |
           mkdir ./conf
