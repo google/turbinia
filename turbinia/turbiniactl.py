@@ -508,11 +508,6 @@ def process_args(args):
     from turbinia.lib import google_cloud
     from libcloudforensics.providers.gcp import forensics as gcp_forensics
 
-    # Enable GCP Stackdriver Logging
-    if config.STACKDRIVER_LOGGING:
-      google_cloud.setup_stackdriver_handler(
-          config.TURBINIA_PROJECT, args.command)
-
   log.info(f'Turbinia version: {__version__:s}')
 
   # Do late import of other needed Turbinia modules.  This is needed because the
