@@ -33,10 +33,14 @@ RUN pip3 install poetry
 #   bulkextractor
 #   docker-explorer
 #   Sleuthkit
+#   bdemount, apfs and luks tools
 RUN add-apt-repository -y ppa:gift/$PPA_TRACK
 RUN apt-get update && apt-get -y install \
     bulk-extractor \
     docker-explorer-tools \
+    libbde-tools \
+    libfsapfs-tools \
+    libluksde-tools \
     sleuthkit \
     && apt-get clean && rm -rf /var/cache/apt/* /var/lib/apt/lists/*
 
