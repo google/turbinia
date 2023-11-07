@@ -12,11 +12,8 @@ RUN apt-get update && apt-get -y upgrade && apt-get -y install \
     git \
     john \
     john-data \
-    libbde-utils \
-    libfsapfs-utils \
     libleveldb1d \
     libleveldb-dev \
-    libluksde-utils \
     libssl-dev \
     libterm-readline-gnu-perl \
     lvm2 \
@@ -36,10 +33,14 @@ RUN pip3 install poetry
 #   bulkextractor
 #   docker-explorer
 #   Sleuthkit
+#   bdemount, apfs and luks tools
 RUN add-apt-repository -y ppa:gift/$PPA_TRACK
 RUN apt-get update && apt-get -y install \
     bulk-extractor \
     docker-explorer-tools \
+    libbde-tools \
+    libfsapfs-tools \
+    libluksde-tools \
     sleuthkit \
     && apt-get clean && rm -rf /var/cache/apt/* /var/lib/apt/lists/*
 
