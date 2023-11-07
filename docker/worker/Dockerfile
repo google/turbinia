@@ -13,6 +13,7 @@ RUN apt-get update && apt-get -y upgrade && apt-get -y install \
     john \
     john-data \
     libbde-utils \
+    libfsapfs-utils \
     libleveldb1d \
     libleveldb-dev \
     libssl-dev \
