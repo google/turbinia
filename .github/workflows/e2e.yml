@@ -30,7 +30,7 @@ jobs:
           tags: turbinia-server-dev
           cache-from: type=gha,scope=server
           cache-to: type=gha,mode=max,scope=server
-      # - name: Build Turbinia Worker Docker image
+      # - name: Buid Turbinia Worker Docker image
       #   uses: docker/build-push-action@v5
       #   with:
       #     file: docker/worker/Dockerfile
