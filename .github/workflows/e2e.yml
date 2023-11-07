@@ -6,6 +6,13 @@ jobs:
   e2e-test:
     name: Run local stack e2e test
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - docker_base_image: "ubuntu:22.04"
+            gift_ppa_track: "staging"
+          - docker_base_image: "ubuntu:22.04"
+            gift_ppa_track: "stable"
 
     steps:
       - name: checkout
@@ -35,6 +42,8 @@ jobs:
         with:
           file: docker/worker/Dockerfile
           context: .
+          build-args: |
+            "PPA_TRACK=${{ matrix.gift_ppa_track }}"
           load: true
           tags: turbinia-worker-dev
           cache-from: type=gha,scope=worker
