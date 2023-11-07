@@ -16,6 +16,7 @@ RUN apt-get update && apt-get -y upgrade && apt-get -y install \
     libfsapfs-utils \
     libleveldb1d \
     libleveldb-dev \
+    libluksde-utils \
     libssl-dev \
     libterm-readline-gnu-perl \
     lvm2 \
