@@ -19,8 +19,8 @@ jobs:
           context: .
           load: true
           tags: turbinia-api-server-dev
-          # cache-from: type=gha,scope=api-server
-          # cache-to: type=gha,mode=max,scope=api-server
+          cache-from: type=gha,scope=api-server
+          cache-to: type=gha,mode=max,scope=api-server
       - name: Build Turbinia Server Docker image
         uses: docker/build-push-action@v5
         with:
