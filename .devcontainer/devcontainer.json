@@ -1,6 +1,6 @@
 // For format details, see https://aka.ms/devcontainer.json.
 {
-	"name": "Turbinia Development Container TEST",
+	"name": "Turbinia Development Container",
 	"build": {
 		"dockerfile": "../docker/vscode/Dockerfile"
 	},

@@ -19,8 +19,8 @@ jobs:
           context: .
           load: true
           tags: turbinia-api-server-dev
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=gha,scope=api-server
+          cache-to: type=gha,mode=max,scope=api-server
       - name: Build Turbinia Server Docker image
         uses: docker/build-push-action@v5
         with:
@@ -28,17 +28,17 @@ jobs:
           context: .
           load: true
           tags: turbinia-server-dev
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-      - name: Build Turbinia Worker Docker image
-        uses: docker/build-push-action@v5
-        with:
-          file: docker/worker/Dockerfile
-          context: .
-          load: true
-          tags: turbinia-worker-dev
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=gha,scope=server
+          cache-to: type=gha,mode=max,scope=server
+      # - name: Build Turbinia Worker Docker image
+      #   uses: docker/build-push-action@v5
+      #   with:
+      #     file: docker/worker/Dockerfile
+      #     context: .
+      #     load: true
+      #     tags: turbinia-worker-dev
+      #     cache-from: type=gha,scope=worker
+      #     cache-to: type=gha,mode=max,scope=worker
       - name: Prepare Turbinia configuration
         run: |
           mkdir ./conf
