@@ -21,7 +21,7 @@ jobs:
       - name: Build Turbinia API server Docker image
         uses: docker/build-push-action@v5
         with:
-          file: docker/api-server/Dockerfile
+          file: docker/api_server/Dockerfile
           context: .
           load: true
           tags: turbinia-api-server-dev
