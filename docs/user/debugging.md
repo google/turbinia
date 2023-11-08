@@ -17,9 +17,9 @@ There are a few different logs that may be useful when debugging:
     executed from a Task. For example, Plaso generates its own log file, and
     that gets saved by the Task. As with the Task logs, these can be stored in
     GCS and retrieved with `gsutil`.
-*   If you have `STACKDRIVER_LOGGING` and/or `STACKDRIVER_TRACEBACK` enabled
-    in the config, the logs and/or traceback exceptions will also be logged into
-    stackdriver in same project that Turbinia is configured to run in.
+*   If you have deployed Turbinia in GKE and/or have `STACKDRIVER_TRACEBACK`
+    enabled in the config, the logs and/or traceback exceptions will also be
+    logged into the Stackdriver Console of the same project that Turbinia is in.
 
 ## Request Debugging
 

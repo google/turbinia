@@ -32,7 +32,7 @@ WORKDIR /home/turbinia
 
 # Copy requirements and install dependencies to cache them in docker layer
 COPY --chown=turbinia:turbinia ./pyproject.toml ./poetry.toml ./poetry.lock /home/turbinia/
-RUN poetry install --no-interaction --no-ansi --no-root
+RUN poetry install --no-interaction --no-ansi --no-root -E gcp
 
 ENV PATH="/home/turbinia/.venv/bin:$PATH" \
     VIRTUAL_ENV=/home/turbinia/.venv
@@ -43,7 +43,7 @@ COPY --chown=turbinia:turbinia docker/server/start.sh /home/turbinia/start.sh
 RUN chmod +rwx /home/turbinia/start.sh
 
 # Install Turbinia package -- will skip dependencies if installed
-RUN poetry install --no-interaction --no-ansi
+RUN poetry install --no-interaction --no-ansi -E gcp
 
 CMD ["/home/turbinia/start.sh"]
 # Expose Prometheus endpoint.

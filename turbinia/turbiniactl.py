@@ -508,11 +508,6 @@ def process_args(args):
     from turbinia.lib import google_cloud
     from libcloudforensics.providers.gcp import forensics as gcp_forensics
 
-    # Enable GCP Stackdriver Logging
-    if config.STACKDRIVER_LOGGING:
-      google_cloud.setup_stackdriver_handler(
-          config.TURBINIA_PROJECT, args.command)
-
   log.info(f'Turbinia version: {__version__:s}')
 
   # Do late import of other needed Turbinia modules.  This is needed because the
@@ -786,28 +781,6 @@ def process_args(args):
   elif args.command == 'listjobs':
     log.info('Available Jobs:')
     client.list_jobs()
-  elif args.command == 'gcplogs':
-    if not config.STACKDRIVER_LOGGING:
-      msg = 'Stackdriver logging must be enabled in order to use this.'
-      raise TurbiniaException(msg)
-    if args.output_dir and not os.path.isdir(args.output_dir):
-      msg = 'Please provide a valid directory path.'
-      raise TurbiniaException(msg)
-    query = None
-    if args.query:
-      query = args.query
-    if args.worker_logs:
-      if query:
-        query = f'jsonPayload.origin="psqworker" {query:s}'
-      else:
-        query = 'jsonPayload.origin="psqworker"'
-    if args.server_logs:
-      if query:
-        query = f'jsonPayload.origin="server" {query:s}'
-      else:
-        query = 'jsonPayload.origin="server"'
-    google_cloud.get_logs(
-        config.TURBINIA_PROJECT, args.output_dir, args.days_history, query)
   elif args.command == 'dumpgcs':
     if not config.GCS_OUTPUT_PATH and not args.bucket:
       msg = 'GCS storage must be enabled in order to use this.'
