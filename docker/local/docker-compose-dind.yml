@@ -1,0 +1,63 @@
+version: "3.2"
+services:
+    dind:
+        image: docker:24.0.5-dind
+        hostname: dind
+        privileged: true
+        expose:
+            - 2376
+        healthcheck:
+            test: docker ps
+        volumes:
+            - $PWD/certs:/certs
+            - $PWD/evidence:/evidence
+            - $PWD/tmp:/tmp # change this to match the TMP_DIR folder in turbinia.conf
+
+    redis:
+        extends:
+            file: docker-compose.yml
+            service: redis
+
+    turbinia-server:
+        extends:
+            file: docker-compose.yml
+            service: turbinia-server
+
+    turbinia-api-server:
+        extends:
+            file: docker-compose.yml
+            service: turbinia-api-server
+
+    turbinia-worker:
+        extends:
+            file: docker-compose.yml
+            service: turbinia-worker
+        depends_on:
+            dind:
+                condition: service_healthy
+
+        volumes:
+            - $PWD/certs:/certs
+            - $PWD/tmp:/tmp # change this to match the TMP_DIR folder in turbinia.conf
+
+        environment:
+            - DOCKER_HOST=tcp://dind:2376
+            - DOCKER_TLS_VERIFY=1
+            - DOCKER_CERT_PATH=/certs/client
+    # Uncomment below in case you want to run a second worker on the same host.
+    #  turbinia-worker2:
+    #     extends:
+    #         file: docker-compose.yml
+    #         service: turbinia-worker2
+    #     depends_on:
+    #         dind:
+    #             condition: service_healthy
+
+    #     volumes:
+    #      - $PWD/certs:/certs
+    #      - $PWD/tmp:/tmp # change this to match the TMP_DIR folder in turbinia.conf
+
+    #     environment:
+    #      - DOCKER_HOST=tcp://dind:2376
+    #      - DOCKER_TLS_VERIFY=1
+    #      - DOCKER_CERT_PATH=/certs/client
