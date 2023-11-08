@@ -17,9 +17,9 @@
 import os
 import logging
 import click
-import base64
-import mimetypes
 import tarfile
+
+from importlib.metadata import version as importlib_version
 
 from turbinia_api_lib import exceptions
 from turbinia_api_lib import api_client
@@ -58,15 +58,14 @@ def get_request_result(ctx: click.Context, request_id: str) -> None:
   """Gets Turbinia request results / output files."""
   client: api_client.ApiClient = ctx.obj.api_client
   api_instance = turbinia_request_results_api.TurbiniaRequestResultsApi(client)
+  filename = f'{request_id}.tgz'
   try:
-    api_response = api_instance.get_request_output(
-        request_id, _preload_content=False, _request_timeout=(30, 30))
-    filename = f'{request_id}.tgz'
+    api_response = api_instance.get_request_output_with_http_info(
+        request_id, _preload_content=False, _request_timeout=(30, 300))
     click.echo(f'Saving output for request {request_id} to: {filename}')
     # Read the response and save into a local file.
     with open(filename, 'wb') as file:
-      for chunk in api_response.read_chunked():
-        file.write(chunk)
+      file.write(api_response.raw_data)
   except exceptions.ApiException as exception:
     log.error(
         f'Received status code {exception.status} '
@@ -84,16 +83,14 @@ def get_task_result(ctx: click.Context, task_id: str) -> None:
   """Gets Turbinia task results / output files."""
   client: api_client.ApiClient = ctx.obj.api_client
   api_instance = turbinia_request_results_api.TurbiniaRequestResultsApi(client)
+  filename = f'{task_id}.tgz'
   try:
-    api_response = api_instance.get_task_output(
-        task_id, _preload_content=False, _request_timeout=(30, 30))
-    filename = f'{task_id}.tgz'
+    api_response = api_instance.get_task_output_with_http_info(
+        task_id, _preload_content=False, _request_timeout=(30, 300))
     click.echo(f'Saving output for task {task_id} to: {filename}')
-
     # Read the response and save into a local file.
     with open(filename, 'wb') as file:
-      for chunk in api_response.read_chunked():
-        file.write(chunk)
+      file.write(api_response.raw_data)
   except exceptions.ApiException as exception:
     log.error(
         f'Received status code {exception.status} '
@@ -123,13 +120,22 @@ def get_jobs(ctx: click.Context) -> None:
 @click.pass_context
 @click.argument('request_id')
 @click.option(
-    '--show_all', '-a', help='Shows all field regardless of priority.',
+    '--priority_filter', '-p', help='This sets what report sections are '
+    'shown in full detail in report output.  Any tasks that have set a '
+    'report_priority value equal to or lower than this setting will be '
+    'shown in full detail, and tasks with a higher value will only have '
+    'a summary shown.  The default is 20 which corresponds to "HIGH_PRIORITY"'
+    'To see all tasks report output in full detail, set --priority_filter=100 '
+    'or to see CRITICAL only set --priority_filter=10', show_default=True,
+    default=20, type=int, required=False)
+@click.option(
+    '--show_all', '-a', help='Shows all fields including saved output paths.',
     is_flag=True, required=False)
 @click.option(
     '--json_dump', '-j', help='Generates JSON output.', is_flag=True,
     required=False)
 def get_request(
-    ctx: click.Context, request_id: str, show_all: bool,
+    ctx: click.Context, request_id: str, priority_filter: int, show_all: bool,
     json_dump: bool) -> None:
   """Gets Turbinia request status."""
   client: api_client.ApiClient = ctx.obj.api_client
@@ -145,7 +151,7 @@ def get_request(
       formatter.echo_json(api_response)
     else:
       report = formatter.RequestMarkdownReport(api_response).generate_markdown(
-          show_all=show_all)
+          priority_filter=priority_filter, show_all=show_all)
       click.echo(report)
   except exceptions.ApiException as exception:
     log.error(
@@ -275,95 +281,6 @@ def get_task(
     log.error(
         f'Received status code {exception.status} '
         f'when calling get_task_status: {exception.body}')
-
-
-@click.pass_context
-def create_request(ctx: click.Context, *args: int, **kwargs: int) -> None:
-  """Creates and submits a new Turbinia request."""
-  client: api_client.ApiClient = ctx.obj.api_client
-  api_instance = turbinia_requests_api.TurbiniaRequestsApi(client)
-  evidence_name = ctx.command.name
-
-  # Normalize the evidence class name from lowercase to the original name.
-  evidence_name = ctx.obj.normalize_evidence_name(evidence_name)
-  # Build request and request_options objects to send to the API server.
-  request_options = list(ctx.obj.request_options.keys())
-  request = {'evidence': {'type': evidence_name}, 'request_options': {}}
-
-  if 'googlecloud' in evidence_name:
-    api_instance_config = turbinia_configuration_api.TurbiniaConfigurationApi(
-        client)
-    cloud_provider = api_instance_config.read_config()['CLOUD_PROVIDER']
-    if cloud_provider != 'GCP':
-      log.error(
-          f'The evidence type {evidence_name} is Google Cloud only and '
-          f'the configured provider for this Turbinia instance is '
-          f'{cloud_provider}.')
-      return
-
-  for key, value in kwargs.items():
-    # If the value is not empty, add it to the request.
-    if kwargs.get(key):
-      # Check if the key is for evidence or request_options
-      if not key in request_options:
-        request['evidence'][key] = value
-      elif key in ('jobs_allowlist', 'jobs_denylist'):
-        jobs_list = value.split(',')
-        request['request_options'][key] = jobs_list
-      else:
-        request['request_options'][key] = value
-
-  if all(key in request['request_options']
-         for key in ('recipe_name', 'recipe_data')):
-    log.error('You can only provide one of recipe_data or recipe_name')
-    return
-
-  recipe_name = request['request_options'].get('recipe_name')
-  if recipe_name:
-    if not recipe_name.endswith('.yaml'):
-      recipe_name = f'{recipe_name}.yaml'
-    # Fallback path for the recipe would be TURBINIA_CLI_CONFIG_PATH/recipe_name
-    # This is the same path where the client configuration is loaded from.
-    recipe_path_fallback = os.path.expanduser(ctx.obj.config_path)
-    recipe_path_fallback = os.path.join(recipe_path_fallback, recipe_name)
-
-    if os.path.isfile(recipe_name):
-      recipe_path = recipe_name
-    elif os.path.isfile(recipe_path_fallback):
-      recipe_path = recipe_path_fallback
-    else:
-      log.error(f'Unable to load recipe {recipe_name}.')
-      return
-
-    try:
-      with open(recipe_path, 'r', encoding='utf-8') as recipe_file:
-        # Read the file and convert to base64 encoded bytes.
-        recipe_bytes = recipe_file.read().encode('utf-8')
-        recipe_data = base64.b64encode(recipe_bytes)
-    except OSError as exception:
-      log.error(f'Error opening recipe file {recipe_path}: {exception}')
-      return
-    except TypeError as exception:
-      log.error(f'Error converting recipe data to Base64: {exception}')
-      return
-    # We found the recipe file, so we will send it to the API server
-    # via the recipe_data parameter. To do so, we need to pop recipe_name
-    # from the request so that we only have recipe_data.
-    request['request_options'].pop('recipe_name')
-    # recipe_data should be a UTF-8 encoded string.
-    request['request_options']['recipe_data'] = recipe_data.decode('utf-8')
-
-  # Send the request to the API server.
-  try:
-    log.info(f'Sending request: {request}')
-    api_response = api_instance.create_request(request)
-    log.info(f'Received response: {api_response}')
-  except exceptions.ApiException as exception:
-    log.error(
-        f'Received status code {exception.status} '
-        f'when calling create_request: {exception.body}')
-  except (TypeError, exceptions.ApiTypeError) as exception:
-    log.error(f'The request object is invalid. {exception}')
 
 
 @groups.evidence_group.command('summary')
@@ -497,18 +414,12 @@ def upload_evidence(
         log.error(error_message)
         continue
       abs_path = os.path.abspath(file_path)
-      with open(file_path, 'rb') as f:
-        filename = os.path.basename(f.name)
-        filedata = f.read()
-        mimetype = (
-            mimetypes.guess_type(filename)[0] or 'application/octet-stream')
-        upload_file = tuple([filename, filedata, mimetype])
     except OSError:
       log.error(f'Unable to read file in {file_path}')
       continue
     try:
-      api_response = api_instance.upload_evidence(
-          upload_file, ticket_id, calculate_hash)
+      api_response = api_instance.upload_evidence([file_path], ticket_id,
+                                                  calculate_hash)
       report[abs_path] = api_response
     except exceptions.ApiException as exception:
       error_message = (
@@ -523,3 +434,10 @@ def upload_evidence(
         formatter.EvidenceMarkdownReport({}).dict_to_markdown(
             report, 0, format_keys=False))
     click.echo(report)
+
+
+@click.command('version')
+def version():
+  """Returns the turbinia-client package distribution version."""
+  cli_version = importlib_version('turbinia-client')
+  click.echo(f'turbinia-client version {cli_version}')

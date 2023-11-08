@@ -145,7 +145,7 @@ export default {
           const downloadObj = window.URL.createObjectURL(new Blob([data]))
           const link = document.createElement('a')
           link.href = downloadObj
-          link.setAttribute('download', task_id + '.zip')
+          link.setAttribute('download', task_id + '.tgz')
           document.body.appendChild(link)
           link.click()
           link.remove()

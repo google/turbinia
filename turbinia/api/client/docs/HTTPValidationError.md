@@ -4,7 +4,7 @@
 ## Properties
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**detail** | **object** |  | [optional] 
+**detail** | [**List[ValidationError]**](ValidationError.md) |  | [optional] 
 
 ## Example
 

@@ -53,6 +53,7 @@ with turbinia_api_lib.ApiClient(configuration) as api_client:
 ```
 
 
+
 ### Parameters
 This endpoint does not need any parameter.
 
@@ -119,6 +120,7 @@ with turbinia_api_lib.ApiClient(configuration) as api_client:
     except Exception as e:
         print("Exception when calling TurbiniaConfigurationApi->read_config: %s\n" % e)
 ```
+
 
 
 ### Parameters

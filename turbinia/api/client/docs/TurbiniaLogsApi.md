@@ -41,7 +41,7 @@ configuration.access_token = os.environ["ACCESS_TOKEN"]
 with turbinia_api_lib.ApiClient(configuration) as api_client:
     # Create an instance of the API class
     api_instance = turbinia_api_lib.TurbiniaLogsApi(api_client)
-    query = None # object | 
+    query = 'query_example' # str | 
 
     try:
         # Get Logs
@@ -53,11 +53,12 @@ with turbinia_api_lib.ApiClient(configuration) as api_client:
 ```
 
 
+
 ### Parameters
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **query** | [**object**](.md)|  | 
+ **query** | **str**|  | 
 
 ### Return type
 

@@ -4,9 +4,9 @@
 ## Properties
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**loc** | **object** |  | 
-**msg** | **object** |  | 
-**type** | **object** |  | 
+**loc** | [**List[LocationInner]**](LocationInner.md) |  | 
+**msg** | **str** |  | 
+**type** | **str** |  | 
 
 ## Example
 
