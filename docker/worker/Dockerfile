@@ -90,21 +90,7 @@ RUN echo ':\nd' > /home/turbinia/turbinia-password-cracking.rules
 # Copy Kubernetes support tool to home folder
 COPY --chown=turbinia:turbinia k8s/tools/check-lockfile.py /home/turbinia/check-lockfile.py
 
-<<<<<<< HEAD
-# Install Turbinia
-# unshallow and fetch all tags so our build systems pickup the correct git tag if it's a shallow clone
-# install turbinia and cleanup /tmp
-
-FROM worker-builder as turbinia-worker
-ADD . /tmp/
-RUN if $(cd /tmp/ && git rev-parse --is-shallow-repository); then cd /tmp/ && git fetch --prune --unshallow && git fetch --depth=1 origin +refs/tags/*:refs/tags/*; fi \
-    && cd /tmp/ && python3 setup.py install
-
-COPY docker/worker/start.sh /home/turbinia/start.sh
-RUN chmod +rwx /home/turbinia/start.sh
-=======
 # Drop privileges and set the working directory
->>>>>>> master
 USER turbinia
 WORKDIR /home/turbinia
 
