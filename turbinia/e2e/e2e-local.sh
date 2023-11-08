@@ -21,8 +21,20 @@ docker-compose -f ./docker/local/docker-compose.yml up -d
 echo "==> Sleep for 10s"
 sleep 10s
 
-echo "==> Show running instances"
-docker ps -a
+echo "==> Show and check running containers"
+containers=( turbinia-server turbinia-worker turbinia-api-server redis )
+for container in "${containers[@]}"
+do
+        docker ps | grep "$container"
+        RET=$?
+        if [ $RET -ne 0 ]; then
+                echo "ERROR: $container container not up, exiting."
+                echo "==> Show $container logs"
+                docker logs $container
+                exit 1
+        fi
+done
+echo "All containers up and running!"
 
 echo "==> Show loop device availability in worker"
 docker exec -t turbinia-worker /sbin/losetup -a
@@ -34,6 +46,7 @@ docker exec -t turbinia-worker ls -al /evidence/
 echo "==> Show container logs"
 docker logs turbinia-server
 docker logs turbinia-worker
+docker logs turbinia-api-server
 
 echo "==> Create Turbinia request"
 docker exec -t turbinia-server turbiniactl -r 123456789 -P /evidence/e2e-recipe.yaml rawdisk -l /evidence/artifact_disk.dd
