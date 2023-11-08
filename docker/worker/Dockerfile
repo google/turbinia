@@ -139,4 +139,3 @@ CMD ["python3","turbinia/turbiniactl.py","-d","celeryworker"]
 # Expose Prometheus and debug endpoint.
 EXPOSE 9200/tcp
 EXPOSE 10000/tcp
-
