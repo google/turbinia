@@ -24,6 +24,7 @@ from turbinia import TurbiniaException
 
 logger = logging.getLogger('turbinia')
 
+
 def setup_stackdriver_traceback(project_id):
   """Set up Google Cloud Error Reporting
 
