@@ -32,6 +32,7 @@ class FileArtifactExtractionTask(TurbiniaTask):
   def __init__(self, artifact_name='FileArtifact'):
     super(FileArtifactExtractionTask, self).__init__()
     self.artifact_name = artifact_name
+    self.job_name = "FileArtifactExtractionJob"
 
   def run(self, evidence, result):
     """Extracts artifacts using Plaso image_export.py.
@@ -49,7 +50,6 @@ class FileArtifactExtractionTask(TurbiniaTask):
     image_export_log = os.path.join(self.output_dir, f'{self.id:s}.log')
 
     cmd = [
-        'sudo',
         'image_export.py',
         '--no-hashes',
         '--logfile',
@@ -64,6 +64,10 @@ class FileArtifactExtractionTask(TurbiniaTask):
         '--artifact_filters',
         self.artifact_name,
     ]
+
+    if not config.DOCKER_ENABLED:
+      cmd.insert(0, 'sudo')
+
     if config.DEBUG_TASKS or self.task_config.get('debug_tasks'):
       cmd.append('-d')
 

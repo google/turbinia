@@ -93,11 +93,11 @@ class TestDockerManager(unittest.TestCase):
     # Test normal execution.
     test_img = '1234'
     self.docker_mgr.client = mock.MagicMock()
-    self.docker_mgr.client.images.get.return_value = test_img
+    self.docker_mgr.client.images.pull.return_value = test_img
     assert test_img == self.docker_mgr.get_image(test_img)
 
     # Ensure exception is being handled when image doesn't exist.
-    self.docker_mgr.client.images.get.side_effect = docker.errors.ImageNotFound(
+    self.docker_mgr.client.images.pull.side_effect = docker.errors.ImageNotFound(
         'mock test fail.')
     self.assertRaises(TurbiniaException, self.docker_mgr.get_image, test_img)
 
@@ -144,7 +144,7 @@ class TestContainerManager(unittest.TestCase):
     """Tests __init__ method of ContainerManager."""
     # Ensure correct instance and image id
     assert self.container_mgr.client == docker.client.DockerClient
-    assert self.container_mgr.image == self.test_img
+    assert self.container_mgr.image_id == self.test_img
 
   @mock.patch('turbinia.lib.docker_manager.IsBlockDevice')
   def testCreateMountPoints(self, mock_blockcheck):

@@ -22,6 +22,7 @@ import subprocess
 import tempfile
 import threading
 
+from turbinia import config
 from turbinia import TurbiniaException
 
 log = logging.getLogger('turbinia')
@@ -29,12 +30,13 @@ log = logging.getLogger('turbinia')
 DEFAULT_TIMEOUT = 7200
 
 
-def _image_export(command, output_dir, timeout=DEFAULT_TIMEOUT):
+def _image_export(command, output_dir, disk_path, timeout=DEFAULT_TIMEOUT):
   """Runs image_export command.
 
   Args:
     command: image_export command to run.
     output_dir: Path to directory to store the extracted files.
+    disk_path: Path to either a raw disk image or a block device.
 
   Returns:
     list: paths to extracted files.
@@ -42,16 +44,38 @@ def _image_export(command, output_dir, timeout=DEFAULT_TIMEOUT):
   Raises:
     TurbiniaException: If an error occurs when running image_export.
   """
-  # TODO: Consider using the exec helper to gather stdin/err.
-  log.debug(f"Running image_export as [{' '.join(command):s}]")
 
-  try:
-    subprocess.check_call(command, timeout=timeout)
-  except subprocess.CalledProcessError as exception:
-    raise TurbiniaException(f'image_export.py failed: {exception!s}')
-  except subprocess.TimeoutExpired as exception:
-    raise TurbiniaException(
-        f'image_export.py timed out after {timeout:d}s: {exception!s}')
+  # Execute the job via docker if docker is enabled and the Job has an image configured
+  # The image should be of the log2timeline/plaso type.
+  config.LoadConfig()
+  dependencies = config.ParseDependencies()
+  docker_image = None
+  job_name = 'FileArtifactExtractionJob'.lower()
+  if dependencies.get(job_name):
+    docker_image = dependencies.get(job_name).get('docker_image')
+  if (config.DOCKER_ENABLED and docker_image is not None):
+    from turbinia.lib import docker_manager
+    ro_paths = [disk_path]
+    rw_paths = [output_dir]
+    container_manager = docker_manager.ContainerManager(docker_image)
+    log.info(
+        'Executing job {0:s} in container: {1:s}'.format(command, docker_image))
+    job_timeout = dependencies.get(job_name).get('timeout')
+    if job_timeout is None:
+      job_timeout = timeout
+    stdout, stderr, ret = container_manager.execute_container(
+        command, shell=False, ro_paths=ro_paths, rw_paths=rw_paths,
+        timeout_limit=job_timeout)
+  else:  # execute with local install of image_export.py
+    command.insert(0, 'sudo')
+    log.debug(f"Running image_export as [{' '.join(command):s}]")
+    try:
+      subprocess.check_call(command, timeout=timeout)
+    except subprocess.CalledProcessError as exception:
+      raise TurbiniaException(f'image_export.py failed: {exception!s}')
+    except subprocess.TimeoutExpired as exception:
+      raise TurbiniaException(
+          f'image_export.py timed out after {timeout:d}s: {exception!s}')
 
   collected_file_paths = []
   file_count = 0
@@ -82,8 +106,8 @@ def extract_artifacts(artifact_names, disk_path, output_dir, credentials=[]):
   # Plaso image_export expects artifact names as a comma separated string.
   artifacts = ','.join(artifact_names)
   image_export_cmd = [
-      'sudo', 'image_export.py', '--artifact_filters', artifacts, '--write',
-      output_dir, '--partitions', 'all', '--volumes', 'all', '--unattended'
+      'image_export.py', '--artifact_filters', artifacts, '--write', output_dir,
+      '--partitions', 'all', '--volumes', 'all', '--unattended'
   ]
 
   if credentials:
@@ -93,7 +117,7 @@ def extract_artifacts(artifact_names, disk_path, output_dir, credentials=[]):
 
   image_export_cmd.append(disk_path)
 
-  return _image_export(image_export_cmd, output_dir)
+  return _image_export(image_export_cmd, output_dir, disk_path)
 
 
 def extract_files(file_name, disk_path, output_dir, credentials=[]):
@@ -116,7 +140,7 @@ def extract_files(file_name, disk_path, output_dir, credentials=[]):
         'image_export.py failed: Attempted to run with no local_path')
 
   image_export_cmd = [
-      'sudo', 'image_export.py', '--name', file_name, '--write', output_dir,
+      'image_export.py', '--name', file_name, '--write', output_dir,
       '--partitions', 'all', '--volumes', 'all'
   ]
 
@@ -127,7 +151,7 @@ def extract_files(file_name, disk_path, output_dir, credentials=[]):
 
   image_export_cmd.append(disk_path)
 
-  return _image_export(image_export_cmd, output_dir)
+  return _image_export(image_export_cmd, output_dir, disk_path)
 
 
 def get_exe_path(filename):

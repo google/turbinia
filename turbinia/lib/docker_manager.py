@@ -26,6 +26,7 @@ import docker
 from turbinia import TurbiniaException
 
 log = logging.getLogger('turbinia')
+checked_image_list = []
 
 
 def IsBlockDevice(path):
@@ -107,11 +108,35 @@ class DockerManager:
       )
     return docker_client
 
+  def image_exists(self, image_id):
+    """Check if image exists in registry
+    Args:
+      image_id(str): The image id.
+
+    Returns:
+      bool: True or False.
+    
+    Raises:
+      TurbiniaException: If the Docker Image is not found in the registry.
+    """
+    try:
+      if image_id not in checked_image_list:
+        base_image = image_id.split(':')[0]
+        found = self.client.images.search(base_image)
+        if len(found) == 0:
+          return False
+        # Add image digest to checked image list
+        checked_image_list.append(image_id)
+    except docker.errors.APIError as exception:
+      raise TurbiniaException(
+          f'An error occurred checking if image exists: {exception!s}')
+    return True
+
   def get_image(self, image_id):
     """Retrieve the Docker Image object.
 
     Args:
-      image_id(str): The short image id.
+      image_id(str): The image id.
 
     Returns:
       image(Image): The Image object.
@@ -120,7 +145,7 @@ class DockerManager:
       TurbiniaException: If the Docker Image is not found.
     """
     try:
-      image = self.client.images.get(image_id)
+      image = self.client.images.pull(image_id)
     except docker.errors.ImageNotFound as exception:
       message = 'The Docker image {0!s} could not be found: {1!s}'
       raise TurbiniaException(message.format(image_id, exception))
@@ -169,7 +194,7 @@ class ContainerManager(DockerManager):
       image_id(str): The image id to create a container from.
     """
     super(ContainerManager, self).__init__()
-    self.image = self.get_image(image_id)
+    self.image_id = image_id
 
   def _create_mount_points(self, mount_paths, mode='rw'):
     """Creates file and device mounting arguments.
@@ -259,13 +284,15 @@ class ContainerManager(DockerManager):
 
     args['devices'] = device_paths
     args['volumes'] = file_paths
+    args['privileged'] = True
 
     # Add any additional arguments
     for key, value in kwargs.items():
       args[key] = value
 
     try:
-      container = self.client.containers.create(self.image, cmd, **args)
+      image = self.get_image(self.image_id)
+      container = self.client.containers.create(image, cmd, **args)
       container.start()
       # Stream program stdout from container
       stdstream = container.logs(stream=True)
@@ -281,7 +308,10 @@ class ContainerManager(DockerManager):
       log.error(message)
       raise TurbiniaException(message)
 
-    stderr, ret = results['Error'], results['StatusCode']
+    stderr = None
+    ret = results['StatusCode']
+    if ret != 0:
+      stderr = results['Error']
     if container:
       container.remove(v=True)
 

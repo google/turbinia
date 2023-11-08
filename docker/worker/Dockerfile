@@ -63,6 +63,14 @@ RUN wget -O /tmp/container-explorer-setup.sh https://raw.githubusercontent.com/g
 RUN chmod +x /tmp/container-explorer-setup.sh
 RUN sudo /tmp/container-explorer-setup.sh install
 
+# Install docker CLI
+RUN curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+RUN echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+RUN apt-get update
+RUN apt-get -y install docker-ce-cli
+RUN groupadd docker
+RUN usermod -aG docker turbinia
+
 # Setup turbinia user folders and permissions
 RUN mkdir /etc/turbinia && mkdir -p /mnt/turbinia/ && mkdir -p /var/lib/turbinia/ \
     && mkdir -p /etc/turbinia/ && chown -R turbinia:turbinia /etc/turbinia/ \
