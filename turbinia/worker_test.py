@@ -117,9 +117,10 @@ class TestTurbiniaPsqWorker(unittest.TestCase):
     manager.JobsManager.RegisterJob(manager_test.TestJob2)
     manager.JobsManager.RegisterJob(manager_test.TestJob3)
 
+  @mock.patch('turbinia.worker.config')
   @mock.patch('turbinia.worker.subprocess.Popen')
   @mock.patch('logging.Logger.warning')
-  def testSystemDependencyCheck(self, mock_logger, popen_mock):
+  def testSystemDependencyCheck(self, mock_logger, popen_mock, mock_config):
     """Test system dependency check."""
     dependencies = {
         'plasojob': {
@@ -127,6 +128,7 @@ class TestTurbiniaPsqWorker(unittest.TestCase):
             'docker_image': None
         }
     }
+    mock_config.DOCKER_ENABLED = True
     # Dependency not found.
     proc_mock = mock.MagicMock()
     proc_mock.communicate.return_value = (b'no', b'thing')
@@ -146,11 +148,12 @@ class TestTurbiniaPsqWorker(unittest.TestCase):
         'The job non_exist was not found or has been disabled. '
         'Skipping dependency check...')
 
+  @mock.patch('turbinia.worker.config')
   @mock.patch('turbinia.lib.docker_manager.DockerManager')
   @mock.patch('turbinia.lib.docker_manager.ContainerManager')
   @mock.patch('logging.Logger.warning')
   def testDockerDependencyCheck(
-      self, mock_logger, mock_contmgr, mock_dockermgr):
+      self, mock_logger, mock_contmgr, mock_dockermgr, mock_config):
     """Test Docker dependency check."""
     dependencies = {
         'plasojob': {
@@ -158,25 +161,34 @@ class TestTurbiniaPsqWorker(unittest.TestCase):
             'docker_image': 'test_img'
         }
     }
+    mock_config.DOCKER_ENABLED = True
 
     # Set up mock objects
     mock_dm = mock_dockermgr.return_value
-    mock_dm.list_images.return_value = ['test_img']
     mock_cm = mock_contmgr.return_value
 
-    # Dependency not found.
-    mock_cm.execute_container.return_value = ['non_exist', None, 1]
+    # Image not found.
+    mock_dm.image_exists.return_value = False
     self.assertRaises(
         TurbiniaException, check_docker_dependencies, dependencies)
 
+    # # Uncommment when the program dependency program check is uncommented
+    # # in worker.py as well.
+    # # Dependency not found.
+    # mock_cm.execute_container.return_value = ['non_exist', None, 1]
+    # self.assertRaises(
+    #     TurbiniaException, check_docker_dependencies, dependencies)
+
+    dependencies = {
+        'plasojob': {
+            'programs': ['log2timeline.py'],
+            'docker_image': 'log2timeline/plaso'
+        }
+    }
     # Normal run
+    mock_dm.image_exists.return_value = True
     mock_cm.execute_container.return_value = ['exists', None, 0]
     check_docker_dependencies(dependencies)
-
-    # Docker image not found
-    mock_dm.list_images.return_value = ['non_exist']
-    self.assertRaises(
-        TurbiniaException, check_docker_dependencies, dependencies)
 
     # Job not found.
     dependencies['non_exist'] = dependencies.pop('plasojob')
