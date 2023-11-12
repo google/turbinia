@@ -28,7 +28,6 @@ from turbinia import TurbiniaException
 
 log = logging.getLogger(__name__)
 
-
 class TurbiniaRequest:
   """An object to request evidence to be processed.
 
@@ -54,6 +53,9 @@ class TurbiniaRequest:
     self.recipe = recipe if recipe else {'globals': {}}
     self.context = context if context else {}
     self.evidence = evidence if evidence else []
+    self.original_evidence = {}
+    if evidence and len(evidence) > 0:
+      self.original_evidence = {'id': evidence[0].id, 'name': evidence[0].name}
     self.group_name = group_name if group_name else ''
     self.reason = reason if reason else ''
     self.all_args = all_args if all_args else ''
@@ -70,13 +72,11 @@ class TurbiniaRequest:
       A JSON serialized object.
     """
     serializable = copy.deepcopy(self.__dict__)
-
     if json_values:
       if evidence_list := serializable.pop('evidence'):
-        serializable['original_evidence'] = {
-            'name': evidence_list[0].name,
-            'id': evidence_list[0].id
-        }
+        if not serializable.get('original_evidence') and len(evidence_list) > 0:
+          serializable['original_evidence'] = {'name': evidence_list[0].name,
+                                              'id': evidence_list[0].id}
         serializable['evidence_ids'] = [
             evidence.id for evidence in evidence_list
         ]
