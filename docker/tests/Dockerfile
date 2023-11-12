@@ -1,7 +1,6 @@
-# Build 1 - Turbinia Worker
 FROM ubuntu:22.04
 ENV DEBIAN_FRONTEND=noninteractive \
-    PIP_NO_CACHE_DIR=1
+    PIP_NO_CACHE_DIR=1 
 ARG PPA_TRACK=stable
 
 RUN apt-get update && apt-get -y upgrade && apt-get -y install \
@@ -10,22 +9,26 @@ RUN apt-get update && apt-get -y upgrade && apt-get -y install \
     ca-certificates \
     curl \
     git \
+    gpg \
     john \
     john-data \
-    libleveldb1d \
-    libleveldb-dev \
     libssl-dev \
     libterm-readline-gnu-perl \
+    libtool \
     lvm2 \
     pocl-opencl-icd \
     p7zip-full \
+    pkg-config \
     python3-pip \
+    python3.10-venv \
     software-properties-common \
     sudo \
     testdisk \
+    tox \
     wget \
     && apt-get clean && rm -rf /var/cache/apt/* /var/lib/apt/lists/*
 
+# Install Poetry
 RUN pip3 install pip --upgrade
 RUN pip3 install poetry
 
@@ -43,7 +46,7 @@ RUN apt-get update && apt-get -y install \
 # Add turbinia user to system and sudoers
 RUN useradd -r -s /sbin/nologin -G disk,sudo -u 999 turbinia
 RUN echo "turbinia ALL = (root) NOPASSWD: ALL" > /etc/sudoers.d/turbinia
-RUN echo "Defaults secure_path=\"/home/turbinia/.venv/bin:/opt/fraken:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin\"" >> /etc/sudoers.d/turbinia
+RUN echo "Defaults secure_path=\"/home/turbinia/.venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin\"" >> /etc/sudoers.d/turbinia
 
 # Install yara rules and fraken binary.
 RUN cd /opt \
@@ -74,37 +77,35 @@ RUN cd /home/turbinia \
     && chown -R turbinia:turbinia /home/turbinia/hashcat-6.2.6/ \
     && cp /home/turbinia/hashcat-6.2.6/hashcat.bin /home/turbinia/hashcat-6.2.6/hashcat \
     && rm -f /home/turbinia/hashcat-6.2.6.7z
-ENV PATH="/home/turbinia/hashcat-6.2.6/:$PATH"
+ENV PATH="$PATH:/home/turbinia/hashcat-6.2.6/"
 
 # Get a decent password list for john/hashcat
 RUN cd /home/turbinia && echo "" > password.lst
 RUN cd /home/turbinia && curl -s https://raw.githubusercontent.com/danielmiessler/SecLists/285474cf9bff85f3323c5a1ae436f78acd1cb62c/Passwords/UserPassCombo-Jay.txt >> password.lst
 RUN cd /home/turbinia && curl -s https://raw.githubusercontent.com/danielmiessler/SecLists/master/Passwords/Common-Credentials/10-million-password-list-top-1000000.txt >> password.lst
 RUN cp /home/turbinia/password.lst /root/
-RUN echo ':\nd' > /home/turbinia/turbinia-password-cracking.rules
 
 # Copy Kubernetes support tool to home folder
 COPY --chown=turbinia:turbinia k8s/tools/check-lockfile.py /home/turbinia/check-lockfile.py
 
-# Drop privileges and set the working directory
-USER turbinia
+# Set the working directory
 WORKDIR /home/turbinia
 
-# Copy requirements and install dependencies to cache them in docker layer
+# Copy only requirements, to cache them in docker layer
 COPY --chown=turbinia:turbinia ./pyproject.toml ./poetry.toml ./poetry.lock /home/turbinia/
-RUN poetry install --no-interaction --no-ansi -E worker --no-root
-RUN poetry run pip3 install impacket --no-deps 
+
+# Install dependencies using Poetry
+RUN poetry install --no-interaction --no-ansi -E worker -E gcp --with test --no-root
+RUN poetry run python3 -m pip install impacket --no-deps
+
+# Activate the virtualenv
 ENV PATH="/home/turbinia/.venv/bin:$PATH" \
     VIRTUAL_ENV=/home/turbinia/.venv
 
-# Copy the source directory to the container
-COPY --chown=turbinia:turbinia . /home/turbinia/
-COPY --chown=turbinia:turbinia docker/worker/start.sh /home/turbinia/start.sh
-RUN chmod +rwx /home/turbinia/start.sh
-
-# Install Turbinia package -- will skip dependencies if installed
-RUN poetry install --no-interaction --no-ansi -E worker
-
-CMD ["/home/turbinia/start.sh"]
-# Expose Prometheus endpoint.
-EXPOSE 9200/tcp
+# Install Turbinia and dependencies in /home/turbinia/.venv using Poetry
+ADD . /home/turbinia/
+# RUN if $(cd /tmp/ && git rev-parse --is-shallow-repository); then cd /tmp/ && git fetch --prune --unshallow && git fetch --depth=1 origin +refs/tags/*:refs/tags/*; fi
+RUN poetry install --no-interaction --no-ansi -E worker -E gcp --with test
+# We need to install the current dev version of turbinia-api-lib for the cli tool test in case the API client changes
+RUN cd turbinia/api/client && poetry install
+CMD ["/bin/bash"]

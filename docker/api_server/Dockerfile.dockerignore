@@ -1,0 +1,17 @@
+nodemodules
+dist
+.git
+.venv
+.vscode
+test_data
+.github
+.devcontainer
+docs
+config
+build
+*.pyc
+*.pyo
+*.pyd
+__pycache__
+.cache
+turbinia.egg-info
