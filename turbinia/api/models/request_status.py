@@ -54,78 +54,29 @@ class RequestStatus(BaseModel):
     Returns:
       bool: True if the request has at least one task associated with it.
     """
-    if not tasks:
-      _state_manager = state_manager.get_state_manager()
-      tasks = _state_manager.get_task_data(
-          instance=turbinia_config.INSTANCE_ID, request_id=request_id)
+    _state_manager = state_manager.get_state_manager()
 
-    if not summary:
-      for task in tasks:
-        current_request_id = task.get('request_id')
-        if current_request_id == request_id:
-          self.tasks.append(task)
+    self.request_id = request_id
 
-    # Tries to get the evidence_name from the -l argument of the first task,
-    # which is the argument passed in the terminal to determine the evidence.
-    # If successful, sets the initial_start_time to None, if not, to the
-    # current time, so that it can be used later to determine the first started
-    # task and then get the evidence_name, as later tasks may have a different
-    # evidence name. There is a small chance of the first task having a
-    # different evidence_name, so getting it from arguments is prefered when
-    # they exist.
-    # todo(igormr): Save request information in redis to get the evidence_name
-    name_from_args = False
-    if tasks:
-      if tasks[0].get('all_args'):
-        arguments = tasks[0].get('all_args', 0).split()
-        for i in range(len(arguments) - 1):
-          if arguments[i] == '-l':
-            self.evidence_name = arguments[i + 1]
-            name_from_args = True
-            break
-
-    initial_start_time = datetime.datetime.now().strftime(
-        turbinia_config.DATETIME_FORMAT)
-    for task in tasks:
-      self.request_id = task.get('request_id')
-      self.requester = task.get('requester')
-      self.reason = task.get('reason')
-      self.task_count = len(tasks)
-      task_status = task.get('status')
-      # Gets the evidence_name from the first started task.
-      if name_from_args and task.get('evidence_name') == self.evidence_name:
-        self.evidence_id = task.get('evidence_id')
-      elif not name_from_args and task.get('start_time') and task.get(
-          'start_time') < initial_start_time:
-        initial_start_time = task.get('start_time')
-        self.evidence_name = task.get('evidence_name')
-        self.evidence_id = task.get('evidence_id')
-      if isinstance(task.get('last_update'), datetime.datetime):
-        task_last_update = datetime.datetime.timestamp(task.get('last_update'))
-      else:
-        task_last_update = task.get('last_update')
-      if not self.last_task_update_time:
-        self.last_task_update_time = task_last_update
-      else:
-        self.last_task_update_time = max(
-            self.last_task_update_time, task_last_update)
-
-      if task.get('successful'):
-        self.successful_tasks += 1
-      # 'successful' could be None or False, which means different things.
-      # If False, the task has failed, If None, could be queued or running.
-      elif task.get('successful') is False:
-        self.failed_tasks += 1
-      elif task.get('successful') is None:
-        if task_status:
-          if 'running' in task_status:
-            self.running_tasks += 1
-        else:
-          # 'successful' is None and 'status' is None
-          self.queued_tasks += 1
-      if isinstance(task['last_update'], datetime.datetime):
-        task['last_update'] = task['last_update'].strftime(
-            turbinia_config.DATETIME_FORMAT)
+    # Gets the information from the request if it is stored in Redis
+    if _state_manager.key_exists(f'TurbiniaRequest:{request_id}'):
+      saved_request = _state_manager.get_request_data(request_id)
+      self.evidence_name = saved_request.get('original_evidence').get('name')
+      self.evidence_id = saved_request.get('original_evidence').get('id')
+      self.requester = saved_request.get('requester')
+      self.reason = saved_request.get('reason')
+      self.task_status = saved_request.get('status')
+      self.task_last_update = saved_request.get('last_update')
+      self.sucessful_tasks = len(saved_request.get('succesful_tasks'))
+      self.failed_tasks = len(saved_request.get('failed_tasks'))
+      self.queued_tasks = len(saved_request.get('queued_tasks'))
+      self.running_tasks = len(saved_request.get('running_tasks'))
+    # If the request is not stored in redis, uses legacy get_request_data
+    else:
+      if not tasks:
+        tasks = _state_manager.get_task_data(
+            instance=turbinia_config.INSTANCE_ID, request_id=request_id)
+      self.get_request_data_legacy(request_id, tasks, summary)
 
     if self.last_task_update_time:
       if isinstance(self.last_task_update_time, float):
@@ -162,6 +113,82 @@ class RequestStatus(BaseModel):
 
     return bool(self.tasks)
 
+  def get_request_data_legacy(self, request_id: str, tasks: Optional[List[Dict]] = None,
+      summary: bool = False):
+    """Gets information about the original evidence for a specific Turbinia
+    request.
+
+    Args:
+      request_id (str): A Turbinia request identifier.
+      tasks (list): List of tasks.
+    """      
+    if not summary:
+      for task in tasks:
+        current_request_id = task.get('request_id')
+        if current_request_id == request_id:
+          self.tasks.append(task)
+
+    # Tries to get the evidence_name from the -l argument of the first task,
+    # which is the argument passed in the terminal to determine the evidence.
+    # If successful, sets the initial_start_time to None, if not, to the
+    # current time, so that it can be used later to determine the first started
+    # task and then get the evidence_name, as later tasks may have a different
+    # evidence name. There is a small chance of the first task having a
+    # different evidence_name, so getting it from arguments is prefered when
+    # they exist.
+    name_from_args = False
+    if tasks:
+      if tasks[0].get('all_args'):
+        arguments = tasks[0].get('all_args', 0).split()
+        for i in range(len(arguments) - 1):
+          if arguments[i] == '-l':
+            self.evidence_name = arguments[i + 1]
+            name_from_args = True
+            break
+
+    initial_start_time = datetime.datetime.now().strftime(
+        turbinia_config.DATETIME_FORMAT)
+    
+    self.taks_count = len(tasks)
+
+    for task in tasks:
+      self.requester = task.get('requester')
+      self.reason = task.get('reason')
+      task_status = task.get('status')
+      # Gets the evidence_name from the first started task.
+      if name_from_args and task.get('evidence_name') == self.evidence_name:
+        self.evidence_id = task.get('evidence_id')
+      elif not name_from_args and task.get('start_time') and task.get(
+          'start_time') < initial_start_time:
+        initial_start_time = task.get('start_time')
+        self.evidence_name = task.get('evidence_name')
+        self.evidence_id = task.get('evidence_id')
+      if isinstance(task.get('last_update'), datetime.datetime):
+        task_last_update = datetime.datetime.timestamp(task.get('last_update'))
+      else:
+        task_last_update = task.get('last_update')
+      if not self.last_task_update_time:
+        self.last_task_update_time = task_last_update
+      else:
+        self.last_task_update_time = max(
+            self.last_task_update_time, task_last_update)
+
+      if task.get('successful'):
+        self.successful_tasks += 1
+      # 'successful' could be None or False, which means different things.
+      # If False, the task has failed, If None, could be queued or running.
+      elif task.get('successful') is False:
+        self.failed_tasks += 1
+      elif task.get('successful') is None:
+        if task_status:
+          if 'running' in task_status:
+            self.running_tasks += 1
+        else:
+          # 'successful' is None and 'status' is None
+          self.queued_tasks += 1
+      if isinstance(task['last_update'], datetime.datetime):
+        task['last_update'] = task['last_update'].strftime(
+            turbinia_config.DATETIME_FORMAT)
 
 class RequestsSummary(BaseModel):
   """Represents a summary view of multiple Turbinia requests."""
