@@ -194,24 +194,17 @@ class RequestsSummary(BaseModel):
   """Represents a summary view of multiple Turbinia requests."""
   requests_status: List[RequestStatus] = []
 
+  #Todo(igormr): Change this to iterate over requests only
+
   def get_requests_summary(self) -> bool:
     """Generates a status summary for each Turbinia request."""
     _state_manager = state_manager.get_state_manager()
-    instance_id = turbinia_config.INSTANCE_ID
-    tasks = _state_manager.get_task_data(instance=instance_id)
+    request_ids = [request_key.split(':')[1] for request_key in _state_manager.iterate_keys('Requests')]
     request_ids = set()
 
-    for task in tasks:
-      request_id = task.get('request_id')
-      if not request_id in request_ids:
-        request_ids.add(request_id)
-
     for request_id in request_ids:
-      filtered_tasks = [
-          task for task in tasks if task.get('request_id') == request_id
-      ]
       request_status = RequestStatus()
-      request_status.get_request_data(request_id, filtered_tasks, summary=True)
+      request_status.get_request_data(request_id, summary=True)
       self.requests_status.append(request_status)
 
     return bool(self.requests_status)
