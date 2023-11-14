@@ -70,6 +70,12 @@ class LinuxAccountAnalysisTask(TurbiniaTask):
         shadow_file = input_file.readlines()
 
       hash_names = self._extract_linux_credentials(shadow_file)
+      if hash_names:
+        result.log(
+            f'Found {len(hash_names)} credential(s) to crack in shadow file '
+            f'{filepath}: {" ".join(hash_names.values())}')
+      else:
+        result.log(f'Found no credentials to crack in shadow file {filepath}')
       timeout = self.task_config.get('bruteforce_timeout')
       (report, priority, summary) = self.analyse_shadow_file(
           shadow_file, hash_names, timeout=timeout)
