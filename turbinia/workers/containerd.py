@@ -194,12 +194,11 @@ class ContainerdEnumerationTask(TurbiniaTask):
         image = container.get('Image')
 
         if not namespace or not container_id:
-          result.log(
-              f'Value is empty. namespace={namespace}, '
-              f'container_id={container_id}')
-          report_data.append(
+          message = (
               f'Skipping container with empty value namespace ({namespace})'
               f' or container_id ({container_id})')
+          result.log(message)
+          report_data.append(message)
           continue
 
         # Filter out configured namespaces/containers/images
@@ -243,6 +242,10 @@ class ContainerdEnumerationTask(TurbiniaTask):
             namespace=namespace, container_id=container_id)
 
         result.add_evidence(container_evidence, evidence.config)
+        result.log(
+            f'Adding container evidence: id {container_id} '
+            f'name {container_name} type {container_type} image {image}')
+
       summary = (
           f'Found {len(container_ids)} containers: {", ".join(container_ids)}')
       success = True
@@ -251,8 +254,8 @@ class ContainerdEnumerationTask(TurbiniaTask):
             f'Filtered out {len(filtered_container_list)} containers: '
             f'{{", ".join(filtered_container_list)}}')
         report_data.append(
-            'To process filtered containers, adjust the ContainerEnumeration Task '
-            'filter* parameters with a recipe')
+            'To process filtered containers, adjust the ContainerEnumeration '
+            'Task config filter* parameters with a recipe')
     except TurbiniaException as e:
       summary = f'Error enumerating containerd containers: {e}'
       report_data.append(summary)
