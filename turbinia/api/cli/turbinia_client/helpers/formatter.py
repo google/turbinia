@@ -329,7 +329,10 @@ class TaskMarkdownReport(MarkdownReportComponent):
               report.append('')
         else:
           report.append('No saved files')
-      report.append('')
+
+      if priority <= priority_filter:
+        report.append('')
+
     except TypeError as exception:
       log.warning(f'Error formatting the Markdown report: {exception!s}')
 
@@ -347,27 +350,9 @@ class RequestMarkdownReport(MarkdownReportComponent):
 
     sorted_tasks = sorted(
         request_data.get('tasks'), key=lambda x:
-        (x['report_priority'], x['name']))
+        (x['report_priority'] if x['report_priority'] else 0, x['name']))
 
-    tasks = [TaskMarkdownReport(task) for task in sorted_tasks]
-    task_counter = defaultdict(int)
-    unique_tasks = []
-    filtered_tasks = []
-
-    # Get unique tasks and task counts
-    for task in tasks:
-      task_counter[task] += 1
-      if task not in unique_tasks:
-        unique_tasks.append(task)
-
-    # Generate task list with counts
-    for task in unique_tasks:
-      if task_counter[task] > 1:
-        filtered_tasks.append(f'{task} ({task_counter[task]}x)')
-      else:
-        filtered_tasks.append(task)
-
-    self.add_components(filtered_tasks)
+    self.add_components([TaskMarkdownReport(task) for task in sorted_tasks])
 
   def add(self, component: MarkdownReportComponent) -> None:
     if component:
@@ -419,10 +404,21 @@ class RequestMarkdownReport(MarkdownReportComponent):
     except TypeError as exception:
       log.warning(f'Error formatting the Markdown report: {exception!s}')
 
+    task_counter = defaultdict(int)
+    unique_tasks = []
     for task in self.components:
-      report.append(
-          task.generate_markdown(
-              priority_filter=priority_filter, show_all=show_all, compact=True))
+      markdown = task.generate_markdown(
+          priority_filter=priority_filter, show_all=show_all, compact=True)
+      task_counter[markdown] += 1
+      if markdown not in unique_tasks:
+        unique_tasks.append(markdown)
+
+    # Generate task list with counts
+    for task in unique_tasks:
+      if task_counter[task] > 1:
+        report.append(f'{task} ({task_counter[task]}x)')
+      else:
+        report.append(task)
 
     self.report = '\n'.join(report)
     return self.report
