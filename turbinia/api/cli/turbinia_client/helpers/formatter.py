@@ -446,7 +446,9 @@ class SummaryMarkdownReport(MarkdownReportComponent):
     if not requests_status_list:
       return '## No requests found.'
 
-    for request_dict in requests_status_list:
+    sorted_requests = sorted(
+        requests_status_list, key=lambda x: x['last_task_update_time'])
+    for request_dict in sorted_requests:
       request_report = RequestMarkdownReport(request_dict).generate_markdown()
       report.append(request_report)
 
