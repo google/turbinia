@@ -194,7 +194,8 @@ class ContainerdEnumerationTask(TurbiniaTask):
         namespace = container.get('Namespace')
         container_id = container.get('ID')
         if container.get('Labels'):
-          pod_name = container.get('Labels').get(POD_NAME_LABEL, 'UnknownPodName')
+          pod_name = container.get('Labels').get(
+              POD_NAME_LABEL, 'UnknownPodName')
         else:
           pod_name = 'UnknownPodName'
         container_type = container.get('ContainerType') or None
