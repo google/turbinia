@@ -1274,11 +1274,15 @@ class ContainerdContainer(Evidence):
   REQUIRED_ATTRIBUTES = ['namespace', 'container_id']
   POSSIBLE_STATES = [EvidenceState.CONTAINER_MOUNTED]
 
-  def __init__(self, namespace=None, container_id=None, *args, **kwargs):
+  def __init__(
+      self, namespace=None, container_id=None, image_name=None, pod_name=None,
+      *args, **kwargs):
     """Initialization of containerd container."""
     super(ContainerdContainer, self).__init__(*args, **kwargs)
     self.namespace = namespace
     self.container_id = container_id
+    self.image_name = image_name if image_name else 'UnknownImageName'
+    self.pod_name = pod_name if pod_name else 'UnknownPodName'
     self._image_path = None
     self._container_fs_path = None
 
@@ -1290,9 +1294,12 @@ class ContainerdContainer(Evidence):
       return self._name
 
     if self.parent_evidence:
-      return ':'.join((self.parent_evidence.name, self.container_id))
+      return ':'.join((
+          self.parent_evidence.name, self.image_name, self.pod_name,
+          self.container_id))
     else:
-      return ':'.join((self.type, self.container_id))
+      return ':'.join(
+          (self.type, self.image_name, self.pod_name, self.container_id))
 
   def _preprocess(self, _, required_states):
     if EvidenceState.CONTAINER_MOUNTED in required_states:
