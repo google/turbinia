@@ -191,8 +191,8 @@ class ContainerdEnumerationTask(TurbiniaTask):
       # 2. Add containers as evidences
       new_evidence = []
       for container in containers:
-        namespace = container.get('Namespace')
-        container_id = container.get('ID')
+        namespace = container.get('Namespace', 'UnknownNamespace')
+        container_id = container.get('ID', 'UnknownContainerID')
         if container.get('Labels'):
           pod_name = container.get('Labels').get(
               POD_NAME_LABEL, 'UnknownPodName')
