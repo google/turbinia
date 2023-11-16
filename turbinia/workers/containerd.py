@@ -189,6 +189,7 @@ class ContainerdEnumerationTask(TurbiniaTask):
           f'Found {len(container_ids)} containers: {", ".join(container_ids)}')
 
       # 2. Add containers as evidences
+      new_evidence = []
       for container in containers:
         namespace = container.get('Namespace')
         container_id = container.get('ID')
@@ -251,6 +252,7 @@ class ContainerdEnumerationTask(TurbiniaTask):
         container_evidence = ContainerdContainer(
             namespace=namespace, container_id=container_id,
             image_name=image_short, pod_name=pod_name)
+        new_evidence.append(container_evidence.name)
 
         result.add_evidence(container_evidence, evidence.config)
         result.log(
@@ -258,10 +260,8 @@ class ContainerdEnumerationTask(TurbiniaTask):
             f'type {container_type}')
 
       summary = (
-          f'Found {len(container_ids)} containers, added '
-          f'{len(filtered_container_list)} (filtered out '
-          f'{len(container_ids) - len(filtered_container_list)}): '
-          f'{", ".join(filtered_container_list)}')
+          f'Found {len(container_ids)} containers, added {len(new_evidence)} '
+          f'(filtered out {len(filtered_container_list)})')
       success = True
       if filtered_container_list:
         report_data.append(
