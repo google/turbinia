@@ -32,12 +32,53 @@ log = logging.getLogger('turbinia')
 
 CE_BINARY = '/opt/container-explorer/bin/ce'
 CE_SUPPORT_FILE = '/opt/container-explorer/etc/supportcontainer.yaml'
+POD_NAME_LABEL = 'io.kubernetes.pod.name'
 
 
 class ContainerdEnumerationTask(TurbiniaTask):
   """Enumerate containerd containers on Linux."""
 
   REQUIRED_STATES = [state.ATTACHED, state.MOUNTED]
+
+  TASK_CONFIG = {
+      # These filters will all match on partial matches, e.g. an image filter of
+      # ['gke.gcr.io/'] will filter out image `gke.gcr.io/event-exporter`.
+      #
+      # Which k8 namespaces to filter out by default
+      'filter_namespaces': ['kube-system'],
+      'filter_pod_names': ['sidecar', 'k8s-sidecar', 'konnectivity-agent'],
+      # Taken from
+      # https://github.com/google/container-explorer/blob/main/supportcontainer.yaml
+      'filter_images': [
+          'gcr.io/gke-release-staging/cluster-proportional-autoscaler-amd64',
+          'gcr.io/k8s-ingress-image-push/ingress-gce-404-server-with-metrics',
+          'gke.gcr.io/ingress-gce-404-server-with-metrics',
+          'gke.gcr.io/cluster-proportional-autoscaler',
+          'gke.gcr.io/csi-node-driver-registrar',
+          'gke.gcr.io/event-exporter',
+          'gke.gcr.io/fluent-bit',
+          'gke.gcr.io/fluent-bit-gke-exporter',
+          'gke.gcr.io/gcp-compute-persistent-disk-csi-driver',
+          'gke.gcr.io/gke-metrics-agent',
+          'gke.gcr.io/k8s-dns-dnsmasq-nanny',
+          'gke.gcr.io/k8s-dns-kube-dns',
+          'gke.gcr.io/k8s-dns-sidecar',
+          'gke.gcr.io/kube-proxy-amd64',
+          'gke.gcr.io/prometheus-to-sd',
+          'gke.gcr.io/proxy-agent',
+          'k8s.gcr.io/metrics-server/metrics-server',
+          'gke.gcr.io/metrics-server',
+          'k8s.gcr.io/pause',
+          'gke.gcr.io/pause',
+          'gcr.io/gke-release-staging/addon-resizer',
+          'gcr.io/gke-release-staging/cpvpa-amd64',
+          'gcr.io/google-containers/pause-amd64',
+          'gke.gcr.io/addon-resizer',
+          'gke.gcr.io/cpvpa-amd64',
+          'k8s.gcr.io/kube-proxy-amd64',
+          'k8s.gcr.io/prometheus-to-sd',
+      ],
+  }
 
   def list_containers(self, evidence, _, detailed_output=False):
     """List containerd containers in the evidence.
@@ -95,8 +136,8 @@ class ContainerdEnumerationTask(TurbiniaTask):
       return containers
 
     basic_fields = [
-        'Namespace', 'Image', 'ContainerType', 'ID', 'Hostname', 'CreatedAt'
-        'Labels'
+        'Name', 'Namespace', 'Image', 'ContainerType', 'ID', 'Hostname',
+        'CreatedAt', 'Labels'
     ]
     basic_containers = []
 
@@ -123,10 +164,16 @@ class ContainerdEnumerationTask(TurbiniaTask):
     summary = ''
     success = False
     report_data = []
+    filter_namespaces = self.task_config.get('filter_namespaces')
+    filter_pod_names = self.task_config.get('filter_pod_names')
+    filter_images = self.task_config.get('filter_images')
+    filtered_container_list = []
 
     image_path = evidence.mount_path
     if not image_path:
-      summary = f'Evidence {evidence.name}:{evidence.source_path} is not mounted'
+      summary = (
+          f'Evidence {evidence.name}:{evidence.source_path} is not '
+          'mounted')
       result.close(self, success=False, status=summary)
       return result
 
@@ -142,19 +189,61 @@ class ContainerdEnumerationTask(TurbiniaTask):
           f'Found {len(container_ids)} containers: {", ".join(container_ids)}')
 
       # 2. Add containers as evidences
+      new_evidence = []
       for container in containers:
-        namespace = container.get('Namespace')
-        container_id = container.get('ID')
+        namespace = container.get('Namespace', 'UnknownNamespace')
+        container_id = container.get('ID', 'UnknownContainerID')
+        if container.get('Labels'):
+          pod_name = container.get('Labels').get(
+              POD_NAME_LABEL, 'UnknownPodName')
+        else:
+          pod_name = 'UnknownPodName'
         container_type = container.get('ContainerType') or None
+        image = container.get('Image')
+        if image:
+          image_short = image.split('@')[0]
+          image_short = image_short.split(':')[0]
+        else:
+          image_short = 'UnknownImageName'
 
         if not namespace or not container_id:
-          result.log(
-              f'Value is empty. namespace={namespace}, container_id={container_id}'
-          )
-          report_data.append(
+          message = (
               f'Skipping container with empty value namespace ({namespace})'
               f' or container_id ({container_id})')
+          result.log(message)
+          report_data.append(message)
           continue
+
+        # Filter out configured namespaces/containers/images.  Even though we
+        # could let container explorer filter these before we get them we want
+        # to do it here so that we can report on what was available and filtered
+        # out to give the analyst the option to reprocess these containers.
+        if filter_namespaces:
+          if namespace in filter_namespaces:
+            message = (
+                f'Filtering out container {container_id} because namespace '
+                f'matches filter.')
+            result.log(message)
+            report_data.append(message)
+            filtered_container_list.append(container_id)
+            continue
+        if filter_images:
+          if image_short in filter_images:
+            message = (
+                f'Filtering out image {image} because image matches filter')
+            result.log(message)
+            report_data.append(message)
+            filtered_container_list.append(container_id)
+            continue
+        if filter_pod_names:
+          if pod_name in filter_pod_names:
+            message = (
+                f'Filtering out container {container_id} because container '
+                f'name matches filter')
+            result.log(message)
+            report_data.append(message)
+            filtered_container_list.append(container_id)
+            continue
 
         # We want to process docker managed container using Docker-Explorer
         if container_type and container_type.lower() == 'docker':
@@ -165,12 +254,29 @@ class ContainerdEnumerationTask(TurbiniaTask):
           continue
 
         container_evidence = ContainerdContainer(
-            namespace=namespace, container_id=container_id)
+            namespace=namespace, container_id=container_id,
+            image_name=image_short, pod_name=pod_name)
+        new_evidence.append(container_evidence.name)
 
         result.add_evidence(container_evidence, evidence.config)
+        result.log(
+            f'Adding container evidence {container_evidence.name} '
+            f'type {container_type}')
+
       summary = (
-          f'Found {len(container_ids)} containers: {", ".join(container_ids)}')
+          f'Found {len(container_ids)} containers, added {len(new_evidence)} '
+          f'(filtered out {len(filtered_container_list)})')
       success = True
+      if filtered_container_list:
+        report_data.append(
+            f'Filtered out {len(filtered_container_list)} containers: '
+            f'{", ".join(filtered_container_list)}')
+        report_data.append(
+            f'Container filter lists: Namespaces: {filter_namespaces}, Images: {filter_images}, '
+            f'Pod Names: {filter_pod_names}')
+        report_data.append(
+            'To process filtered containers, adjust the ContainerEnumeration '
+            'Task config filter* parameters with a recipe')
     except TurbiniaException as e:
       summary = f'Error enumerating containerd containers: {e}'
       report_data.append(summary)
