@@ -45,12 +45,13 @@ class ContainerdEnumerationTask(TurbiniaTask):
       #
       # Which k8 namespaces to filter out by default
       'filter_namespaces': ['kube-system'],
-      'filter_containers': ['sidecar', 'konnectivity-agent'],
+      'filter_containers': ['sidecar', 'k8s-sidecar', 'konnectivity-agent'],
       # Taken from
       # https://github.com/google/container-explorer/blob/main/supportcontainer.yaml
       'filter_images': [
           'gcr.io/gke-release-staging/cluster-proportional-autoscaler-amd64',
           'gcr.io/k8s-ingress-image-push/ingress-gce-404-server-with-metrics',
+          'gke.gcr.io/ingress-gce-404-server-with-metrics',
           'gke.gcr.io/cluster-proportional-autoscaler',
           'gke.gcr.io/csi-node-driver-registrar',
           'gke.gcr.io/event-exporter',
@@ -65,7 +66,9 @@ class ContainerdEnumerationTask(TurbiniaTask):
           'gke.gcr.io/prometheus-to-sd',
           'gke.gcr.io/proxy-agent',
           'k8s.gcr.io/metrics-server/metrics-server',
+          'gke.gcr.io/metrics-server',
           'k8s.gcr.io/pause',
+          'gke.gcr.io/pause',
           'gcr.io/gke-release-staging/addon-resizer',
           'gcr.io/gke-release-staging/cpvpa-amd64',
           'gcr.io/google-containers/pause-amd64',
@@ -133,8 +136,7 @@ class ContainerdEnumerationTask(TurbiniaTask):
 
     basic_fields = [
         'Name', 'Namespace', 'Image', 'ContainerType', 'ID', 'Hostname',
-        'CreatedAt'
-        'Labels'
+        'CreatedAt', 'Labels'
     ]
     basic_containers = []
 
@@ -206,16 +208,17 @@ class ContainerdEnumerationTask(TurbiniaTask):
           if namespace in filter_namespaces:
             message = (
                 f'Filtering out container {container_id} because namespace '
-                f'matches filter {filter_namespaces}')
+                f'matches filter.')
             result.log(message)
             report_data.append(message)
             filtered_container_list.append(container_id)
             continue
         if filter_images:
-          if image in filter_images:
+          image_short = image.split('@')[0]
+          image_short = image.split(':')[0]
+          if image_short in filter_images:
             message = (
-                f'Filtering out image {image} because image '
-                f'matches filter {filter_images}')
+                f'Filtering out image {image} because image matches filter')
             result.log(message)
             report_data.append(message)
             filtered_container_list.append(container_id)
@@ -224,7 +227,7 @@ class ContainerdEnumerationTask(TurbiniaTask):
           if container_name in filter_containers:
             message = (
                 f'Filtering out container {container_id} because container '
-                f'name matches filter {filter_containers}')
+                f'name matches filter')
             result.log(message)
             report_data.append(message)
             filtered_container_list.append(container_id)
@@ -253,6 +256,9 @@ class ContainerdEnumerationTask(TurbiniaTask):
         report_data.append(
             f'Filtered out {len(filtered_container_list)} containers: '
             f'{{", ".join(filtered_container_list)}}')
+        report_data.append(
+            f'Container filter lists: Namespaces: {filter_namespaces}, Images: {filter_images}, '
+            f'Containers: {filter_containers}')
         report_data.append(
             'To process filtered containers, adjust the ContainerEnumeration '
             'Task config filter* parameters with a recipe')
