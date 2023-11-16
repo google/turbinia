@@ -200,8 +200,11 @@ class ContainerdEnumerationTask(TurbiniaTask):
           pod_name = 'UnknownPodName'
         container_type = container.get('ContainerType') or None
         image = container.get('Image')
-        image_short = image.split('@')[0]
-        image_short = image_short.split(':')[0]
+        if image:
+          image_short = image.split('@')[0]
+          image_short = image_short.split(':')[0]
+        else:
+          image_short = 'UnknownImageName'
 
         if not namespace or not container_id:
           message = (
