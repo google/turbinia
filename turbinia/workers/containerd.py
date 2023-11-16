@@ -215,7 +215,7 @@ class ContainerdEnumerationTask(TurbiniaTask):
             continue
         if filter_images:
           image_short = image.split('@')[0]
-          image_short = image.split(':')[0]
+          image_short = image_short.split(':')[0]
           if image_short in filter_images:
             message = (
                 f'Filtering out image {image} because image matches filter')
@@ -255,7 +255,7 @@ class ContainerdEnumerationTask(TurbiniaTask):
       if filtered_container_list:
         report_data.append(
             f'Filtered out {len(filtered_container_list)} containers: '
-            f'{{", ".join(filtered_container_list)}}')
+            f'{", ".join(filtered_container_list)}')
         report_data.append(
             f'Container filter lists: Namespaces: {filter_namespaces}, Images: {filter_images}, '
             f'Containers: {filter_containers}')
