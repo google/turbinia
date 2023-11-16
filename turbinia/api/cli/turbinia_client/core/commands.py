@@ -275,7 +275,7 @@ def get_task(
       formatter.echo_json(api_response)
     else:
       report = formatter.TaskMarkdownReport(api_response).generate_markdown(
-          show_all=show_all)
+          show_all=show_all, priority_filter=100)
       click.echo(report)
   except exceptions.ApiException as exception:
     log.error(
