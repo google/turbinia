@@ -32,6 +32,7 @@ log = logging.getLogger('turbinia')
 
 CE_BINARY = '/opt/container-explorer/bin/ce'
 CE_SUPPORT_FILE = '/opt/container-explorer/etc/supportcontainer.yaml'
+POD_NAME_LABEL = 'io.kubernetes.pod.name'
 
 
 class ContainerdEnumerationTask(TurbiniaTask):
@@ -45,7 +46,7 @@ class ContainerdEnumerationTask(TurbiniaTask):
       #
       # Which k8 namespaces to filter out by default
       'filter_namespaces': ['kube-system'],
-      'filter_containers': ['sidecar', 'k8s-sidecar', 'konnectivity-agent'],
+      'filter_pod_names': ['sidecar', 'k8s-sidecar', 'konnectivity-agent'],
       # Taken from
       # https://github.com/google/container-explorer/blob/main/supportcontainer.yaml
       'filter_images': [
@@ -164,7 +165,7 @@ class ContainerdEnumerationTask(TurbiniaTask):
     success = False
     report_data = []
     filter_namespaces = self.task_config.get('filter_namespaces')
-    filter_containers = self.task_config.get('filter_containers')
+    filter_pod_names = self.task_config.get('filter_pod_names')
     filter_images = self.task_config.get('filter_images')
     filtered_container_list = []
 
@@ -191,9 +192,14 @@ class ContainerdEnumerationTask(TurbiniaTask):
       for container in containers:
         namespace = container.get('Namespace')
         container_id = container.get('ID')
-        container_name = container.get('Name')
+        if container.get('Labels'):
+          pod_name = container.get('Labels').get(POD_NAME_LABEL, 'UnknownPodName')
+        else:
+          pod_name = 'UnknownPodName'
         container_type = container.get('ContainerType') or None
         image = container.get('Image')
+        image_short = image.split('@')[0]
+        image_short = image_short.split(':')[0]
 
         if not namespace or not container_id:
           message = (
@@ -203,7 +209,10 @@ class ContainerdEnumerationTask(TurbiniaTask):
           report_data.append(message)
           continue
 
-        # Filter out configured namespaces/containers/images
+        # Filter out configured namespaces/containers/images.  Even though we
+        # could let container explorer filter these before we get them we want
+        # to do it here so that we can report on what was available and filtered
+        # out to give the analyst the option to reprocess these containers.
         if filter_namespaces:
           if namespace in filter_namespaces:
             message = (
@@ -214,8 +223,6 @@ class ContainerdEnumerationTask(TurbiniaTask):
             filtered_container_list.append(container_id)
             continue
         if filter_images:
-          image_short = image.split('@')[0]
-          image_short = image_short.split(':')[0]
           if image_short in filter_images:
             message = (
                 f'Filtering out image {image} because image matches filter')
@@ -223,8 +230,8 @@ class ContainerdEnumerationTask(TurbiniaTask):
             report_data.append(message)
             filtered_container_list.append(container_id)
             continue
-        if filter_containers:
-          if container_name in filter_containers:
+        if filter_pod_names:
+          if pod_name in filter_pod_names:
             message = (
                 f'Filtering out container {container_id} because container '
                 f'name matches filter')
@@ -242,15 +249,19 @@ class ContainerdEnumerationTask(TurbiniaTask):
           continue
 
         container_evidence = ContainerdContainer(
-            namespace=namespace, container_id=container_id)
+            namespace=namespace, container_id=container_id,
+            image_name=image_short, pod_name=pod_name)
 
         result.add_evidence(container_evidence, evidence.config)
         result.log(
-            f'Adding container evidence: id {container_id} '
-            f'name {container_name} type {container_type} image {image}')
+            f'Adding container evidence {container_evidence.name} '
+            f'type {container_type}')
 
       summary = (
-          f'Found {len(container_ids)} containers: {", ".join(container_ids)}')
+          f'Found {len(container_ids)} containers, added '
+          f'{len(filtered_container_list)} (filtered out '
+          f'{len(container_ids) - len(filtered_container_list)}): '
+          f'{", ".join(filtered_container_list)}')
       success = True
       if filtered_container_list:
         report_data.append(
@@ -258,7 +269,7 @@ class ContainerdEnumerationTask(TurbiniaTask):
             f'{", ".join(filtered_container_list)}')
         report_data.append(
             f'Container filter lists: Namespaces: {filter_namespaces}, Images: {filter_images}, '
-            f'Containers: {filter_containers}')
+            f'Pod Names: {filter_pod_names}')
         report_data.append(
             'To process filtered containers, adjust the ContainerEnumeration '
             'Task config filter* parameters with a recipe')
