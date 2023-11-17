@@ -878,7 +878,7 @@ class TurbiniaTask:
   def check_serialization_errors(self, result):
     """Checks the TurbiniaTaskResult is valid for serialization.
     
-    This method checks the 'reuslt'' obejct is the correct type and whether
+    This method checks the 'result'' object is the correct type and whether
     it is pickle/JSON serializable or not.
 
     Args:
