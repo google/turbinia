@@ -349,7 +349,7 @@ class RedisStateManager(BaseStateManager):
       json_value (str): The json-serialized value to be set
 
     Returns:
-      (bool): Boolean specifying whether the function call was sucessful. 
+      (bool): Boolean specifying whether the function call was successful. 
 
     Raises:
       TurbiniaException: When Redis fails in updating the attribute.
@@ -376,7 +376,7 @@ class RedisStateManager(BaseStateManager):
       decode_json (bool): Boolean specifying if the value should be loaded.
 
     Returns:
-      attribute_value (any): sucessful. 
+      attribute_value (any): successful. 
 
     Raises:
       TurbiniaException: If Redis fails in getting the attribute or if
@@ -544,7 +544,7 @@ class RedisStateManager(BaseStateManager):
     """Gets a summary of all evidences.
 
     Args:
-      group (str): Name of the evidence attribute by wich evidence will be
+      group (str): Name of the evidence attribute by which evidence will be
         grouped.
       output (str): Output of the function (keys | content | count).
 

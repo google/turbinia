@@ -43,7 +43,7 @@ class WorkersInfo(BaseModel):
       days (int): The number of days we want status for.
     
     Returns:
-        bool: True if report was sucessfully acquired.
+        bool: True if report was successfully acquired.
     """
     task_results = state_manager.get_state_manager().get_task_data(
         turbinia_config.INSTANCE_ID, days)
@@ -126,7 +126,7 @@ class WorkersStatus(BaseModel):
       all_fields (bool): Returns all status fields if set to true.
 
     Returns:
-        bool: True if report was sucessfully acquired.
+        bool: True if report was successfully acquired.
     """
 
     workers_info = WorkersInfo()
