@@ -88,14 +88,14 @@ class TurbiniaCli:
       self.api_client = self.default_api_client(self.config)
 
     if self.api_authentication_enabled:
-      log.info(
+      log.debug(
           f'Authentication is enabled. Using client_secrets file at: '
           f'{self.client_secrets_path:s} and caching credentials at: '
           f'{self.credentials_path:s}')
       self.config.access_token = auth_helper.get_oauth2_credentials(
           self.credentials_path, self.client_secrets_path)
 
-    log.info(
+    log.debug(
         f'Using configuration instance name -> {self.config_instance:s}'
         f' with host {self.api_server_address:s}:{self.api_server_port:d}')
 
