@@ -25,6 +25,7 @@ from turbinia_api_lib.api import turbinia_configuration_api
 from turbinia_api_lib.api import turbinia_evidence_api
 
 from turbinia_client.helpers import auth_helper
+from turbinia_client.helpers import formatter
 
 log = logging.getLogger('turbinia')
 
@@ -88,14 +89,14 @@ class TurbiniaCli:
       self.api_client = self.default_api_client(self.config)
 
     if self.api_authentication_enabled:
-      log.info(
+      log.debug(
           f'Authentication is enabled. Using client_secrets file at: '
           f'{self.client_secrets_path:s} and caching credentials at: '
           f'{self.credentials_path:s}')
       self.config.access_token = auth_helper.get_oauth2_credentials(
           self.credentials_path, self.client_secrets_path)
 
-    log.info(
+    log.debug(
         f'Using configuration instance name -> {self.config_instance:s}'
         f' with host {self.api_server_address:s}:{self.api_server_port:d}')
 
@@ -159,21 +160,21 @@ class TurbiniaCli:
     api_instance = turbinia_evidence_api.TurbiniaEvidenceApi(self.api_client)
     api_response = None
     if evidence_name:
-      api_response = api_instance.get_evidence_attributes(evidence_name)
+      api_response = api_instance.get_evidence_attributes_with_http_info(
+          evidence_name)
     else:
-      api_response = api_instance.get_evidence_types()
-
-    self.evidence_mapping: dict = api_response
-    return api_response
+      api_response = api_instance.get_evidence_types_with_http_info()
+    decoded_response = formatter.decode_api_response(api_response)
+    self.evidence_mapping: dict = decoded_response
+    return decoded_response
 
   def get_request_options(self) -> dict:
     """Gets BaseRequestOptions attributes."""
     api_response = None
     api_instance = turbinia_configuration_api.TurbiniaConfigurationApi(
         self.api_client)
-    api_response = api_instance.get_request_options()
-
-    return api_response
+    api_response = api_instance.get_request_options_with_http_info()
+    return formatter.decode_api_response(api_response)
 
   def read_api_configuration(self) -> None:
     """Reads the configuration file to obtain the API server URI."""
