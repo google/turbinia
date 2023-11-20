@@ -57,11 +57,14 @@ def decode_api_response(data: Any) -> str:
   """Decodes ApiResponse data into a Python object"""
   if not isinstance(data, ApiResponse):
     return data
+  data_attribute = None
+  response = ''
   try:
     if data_attribute := getattr(data, 'data'):
       response = data_attribute
-    elif data_attribute := getattr(data, 'raw_data'):
-      response = json.loads(data_attribute)
+    if not data_attribute:
+      if data_attribute := getattr(data, 'raw_data'):
+        response = json.loads(data_attribute)
     return response
   except json.JSONDecodeError as exception:
     raise RuntimeError('Unable to decode API response') from exception
