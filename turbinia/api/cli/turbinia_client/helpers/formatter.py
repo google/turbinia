@@ -20,8 +20,10 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from click import echo as click_echo
 from typing import Any
-
 from collections import defaultdict
+
+from turbinia_api_lib.api_response import ApiResponse
+
 import logging
 import json
 import pandas
@@ -52,11 +54,18 @@ def echo_json(data: Any) -> None:
 
 
 def decode_api_response(data: Any) -> str:
-  """Converts a raw API response into a Python object"""
+  """Decodes ApiResponse data into a Python object"""
+  if not isinstance(data, ApiResponse):
+    return data
   try:
-    response = json.loads(data)
+    if data_attribute := getattr(data, 'data'):
+      response = data_attribute
+    elif data_attribute := getattr(data, 'raw_data'):
+      response = json.loads(data_attribute)
     return response
   except json.JSONDecodeError as exception:
+    raise RuntimeError('Unable to decode API response') from exception
+  except AttributeError as exception:
     raise RuntimeError('Unable to decode API response') from exception
 
 
