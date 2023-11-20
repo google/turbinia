@@ -164,10 +164,9 @@ class TurbiniaCli:
           evidence_name)
     else:
       api_response = api_instance.get_evidence_types_with_http_info()
-
-    decoded_response = formatter.decode_api_response(api_response)
+    decoded_response = formatter.decode_api_response(api_response.raw_data)
     self.evidence_mapping: dict = decoded_response
-    return api_response
+    return decoded_response
 
   def get_request_options(self) -> dict:
     """Gets BaseRequestOptions attributes."""
@@ -175,8 +174,7 @@ class TurbiniaCli:
     api_instance = turbinia_configuration_api.TurbiniaConfigurationApi(
         self.api_client)
     api_response = api_instance.get_request_options_with_http_info()
-
-    return formatter.decode_api_response(api_response)
+    return formatter.decode_api_response(api_response.raw_data)
 
   def read_api_configuration(self) -> None:
     """Reads the configuration file to obtain the API server URI."""
