@@ -25,6 +25,7 @@ from turbinia_api_lib.api import turbinia_configuration_api
 from turbinia_api_lib.api import turbinia_evidence_api
 
 from turbinia_client.helpers import auth_helper
+from turbinia_client.helpers import formatter
 
 log = logging.getLogger('turbinia')
 
@@ -159,11 +160,13 @@ class TurbiniaCli:
     api_instance = turbinia_evidence_api.TurbiniaEvidenceApi(self.api_client)
     api_response = None
     if evidence_name:
-      api_response = api_instance.get_evidence_attributes(evidence_name)
+      api_response = api_instance.get_evidence_attributes_with_http_info(
+          evidence_name)
     else:
-      api_response = api_instance.get_evidence_types()
+      api_response = api_instance.get_evidence_types_with_http_info()
 
-    self.evidence_mapping: dict = api_response
+    decoded_response = formatter.decode_api_response(api_response)
+    self.evidence_mapping: dict = decoded_response
     return api_response
 
   def get_request_options(self) -> dict:
@@ -171,9 +174,9 @@ class TurbiniaCli:
     api_response = None
     api_instance = turbinia_configuration_api.TurbiniaConfigurationApi(
         self.api_client)
-    api_response = api_instance.get_request_options()
+    api_response = api_instance.get_request_options_with_http_info()
 
-    return api_response
+    return formatter.decode_api_response(api_response)
 
   def read_api_configuration(self) -> None:
     """Reads the configuration file to obtain the API server URI."""
