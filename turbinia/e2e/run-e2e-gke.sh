@@ -61,7 +61,7 @@ sleep 5
 
 # List Turbinia config
 echo "Listing Turbinia config..."
-turbinia-cient config list
+turbinia-client config list
 
 # Run Turbinia googleclouddisk processing
 echo "Running Turbinia: turbinia-client submit googleclouddisk --project $GCP_PROJECT --zone $GCP_ZONE --disk_name $DISK --request_id $REQUEST_ID"
