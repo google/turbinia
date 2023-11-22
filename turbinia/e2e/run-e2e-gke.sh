@@ -56,11 +56,17 @@ echo "Starting e2e test for Turbinia..."
 # Forward k8s services
 echo "Forwarding Turbinia API k8s $RELEASE service"
 kubectl --namespace default port-forward service/$RELEASE-turbinia 8000:8000  > /dev/null 2>&1 &
+# Give time before submitting request to service
+sleep 5
+
+# List Turbinia config
+echo "Listing Turbinia config..."
+turbinia-cient config list
 
 # Run Turbinia googleclouddisk processing
 echo "Running Turbinia: turbinia-client submit googleclouddisk --project $GCP_PROJECT --zone $GCP_ZONE --disk_name $DISK --request_id $REQUEST_ID"
 turbinia-client submit googleclouddisk --project $GCP_PROJECT --zone $GCP_ZONE --disk_name $DISK --request_id $REQUEST_ID
-# To give time for Tasks to populate
+# Give time for Tasks to populate
 sleep 5
 
 # Wait until request is complete
