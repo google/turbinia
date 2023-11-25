@@ -296,24 +296,36 @@ class RedisStateManager(BaseStateManager):
     request_key = ':'.join(('TurbiniaRequest', task.request_id))
     self.add_to_list(request_key, 'task_ids', task.id)
     request_last_update = datetime.strptime(self.get_attribute(
-      request_key, 'last_update', decode_json=False).decode(), DATETIME_FORMAT)
-    last_update = max(request_last_update, task.last_update).strftime(
-      DATETIME_FORMAT)
+      request_key, 'last_update'), DATETIME_FORMAT)
+    try:
+      last_update = json.dumps(max(request_last_update, task.last_update).strftime(
+        DATETIME_FORMAT))
+    except redis.RedisError as exception:
+      error_message = f'Error encoding key {request_key} in Redis'
+      log.error(f'{error_message}: {exception}')
+      raise TurbiniaException(error_message) from exception   
     self.set_attribute(request_key, 'last_update',last_update)
+    statuses_to_remove = ['succesful_tasks', 'failed_tasks','running_tasks', 'queued_tasks']
     # 'successful' could be None or False, which means different things.
     # If False, the task has failed, If None, could be queued or running.
     if hasattr(task, 'succesful'):
       if task.successful:
         self.add_to_list(request_key, 'succesful_tasks', task.id)
+        statuses_to_remove.remove('succesful_tasks')
       if task.successful is False:
         self.add_to_list(request_key, 'failed_tasks', task.id)
+        statuses_to_remove.remove('failed_tasks')
       elif task.successful is None:
         if task.status:
           if 'running' in task.status:
             self.add_to_list(request_key, 'running_tasks', task.id)
+            statuses_to_remove.remove('running_tasks')
         else:
           # 'successful' is None and 'status' is None
-          self.add_to_list(request_key, 'running_tasks', task.id)
+          self.add_to_list(request_key, 'queued_tasks', task.id)
+          statuses_to_remove.remove('queued_tasks')
+    for status_name in statuses_to_remove:
+      self.remove_from_list(request_key, status_name, task.id)
 
   def write_new_task(self, task):
     """Writes task into redis.
@@ -344,6 +356,7 @@ class RedisStateManager(BaseStateManager):
     if not task_key:
       self.write_new_task(task)
       return
+    self.update_request_task(task)
     stored_task_dict = self.get_task(task_key)
     stored_evidence_size = stored_task_dict.get('evidence_size')
     stored_evidence_id = stored_task_dict.get('evidence_id')
@@ -354,7 +367,6 @@ class RedisStateManager(BaseStateManager):
     log.info(f'Updating task {task.name:s} in Redis')
     task_dict = self.format_task(task)
     self.write_hash_object(task_key, task_dict)
-
     return task_key
 
   def set_attribute(
@@ -462,13 +474,13 @@ class RedisStateManager(BaseStateManager):
       error_message = f'Error getting attributes from {key} in Redis'
       log.error(f'{error_message}: {exception}')
       raise TurbiniaException(error_message) from exception
-    try:
-      for attribute in attributes:
+    for attribute in attributes:
+      try:
         yield (attribute[0].decode(), json.loads(attribute[1]))
-    except (TypeError, ValueError) as exception:
-      error_message = f'Error decoding attribute in {key} in Redis'
-      log.error(f'{error_message}: {exception}')
-      raise TurbiniaException(error_message) from exception
+      except (TypeError, ValueError) as exception:
+        error_message = f'Error decoding {attribute} in {key} in Redis'
+        log.error(f'{error_message}: {exception}')
+        raise TurbiniaException(error_message) from exception
 
   def key_exists(self, redis_key) -> bool:
     """Checks if the key is saved in Redis.
@@ -538,23 +550,41 @@ class RedisStateManager(BaseStateManager):
       list_name (str): Name of the list attribute.
       new_item (Any): Item to be saved.
       repeated (bool): Allows repeated items to be saved.
-
-    Returns:
-      redis_key (str): The key corresponding to the object in Redis
     """
     if not self.attribute_exists(redis_key, list_name):
       list_attribute = [new_item]
     else:
+      list_attribute = self.get_attribute(redis_key, list_name)
+      if new_item not in list_attribute and not allow_repeated:
+        list_attribute.append(new_item)
       try:
-        list_attribute = self.get_attribute(redis_key, list_name)
-        if new_item not in list_attribute and not allow_repeated:
-          list_attribute.append(new_item)
+        self.set_attribute(redis_key, list_name, json.dumps(list_attribute))
       except (TypeError, ValueError) as exception:
         error_message = (
             f'Error encoding list {list_attribute} from {redis_key} in Redis')
         log.error(f'{error_message}: {exception}')
         raise TurbiniaException(error_message) from exception
-    self.set_attribute(redis_key, list_name, json.dumps(list_attribute))
+
+  def remove_from_list(self, redis_key, list_name, item):
+    """Removes an item from a list attribute in a hashed Redis object.
+
+    Args:
+      redis_key (str): Key of the Redis object.
+      list_name (str): Name of the list attribute.
+      item (Any): Item to be removed.
+    """
+    if not self.attribute_exists(redis_key, list_name):
+      return
+    list_attribute = self.get_attribute(redis_key, list_name)
+    if item in list_attribute:
+      list_attribute.remove(item)
+    try:
+      self.set_attribute(redis_key, list_name, json.dumps(list_attribute))
+    except (TypeError, ValueError) as exception:
+      error_message = (
+          f'Error encoding list {list_attribute} from {redis_key} in Redis')
+      log.error(f'{error_message}: {exception}')
+      raise TurbiniaException(error_message) from exception
 
   def write_hash_object(self, redis_key, object_dict):
     """Writes new hash object into redis. To save storage, the function does not
@@ -732,10 +762,16 @@ class RedisStateManager(BaseStateManager):
       error_message = 'Error deserializing request attribute.'
       log.error(f'{error_message}: {exception}')
       raise TurbiniaException(error_message) from exception
-    if not request_dict.get('last_update'):
-      request_dict['start_time'] = datetime.now().strftime(DATETIME_FORMAT)
-    if not request_dict.get('last_update'):
-      request_dict['last_update'] = datetime.now().strftime(DATETIME_FORMAT)
+    try:
+      if not request_dict.get('last_update'):
+        request_dict['start_time'] = json.dumps(datetime.now().strftime(DATETIME_FORMAT))
+      if not request_dict.get('last_update'):
+        request_dict['last_update'] = json.dumps(datetime.now().strftime(DATETIME_FORMAT))
+      request_dict['status'] = json.dumps(f'Task scheduled at {datetime.now().strftime(DATETIME_FORMAT)}')
+    except redis.RedisError as exception:
+      error_message = f'Error encoding key {request_key} in Redis'
+      log.error(f'{error_message}: {exception}')
+      raise TurbiniaException(error_message) from exception
     # Either updates or write new key
     if update == self.key_exists(request_key):
       self.write_hash_object(request_key, request_dict)
