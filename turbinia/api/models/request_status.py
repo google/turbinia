@@ -58,6 +58,10 @@ class RequestStatus(BaseModel):
 
     self.request_id = request_id
 
+    if not summary:
+      self.tasks = tasks if tasks else _state_manager.get_task_data(
+            instance=turbinia_config.INSTANCE_ID, request_id=request_id)
+
     # Gets the information from the request if it is stored in Redis
     if _state_manager.key_exists(f'TurbiniaRequest:{request_id}'):
       saved_request = _state_manager.get_request_data(request_id)
@@ -65,12 +69,12 @@ class RequestStatus(BaseModel):
       self.evidence_id = saved_request.get('original_evidence').get('id')
       self.requester = saved_request.get('requester')
       self.reason = saved_request.get('reason')
-      self.task_status = saved_request.get('status')
-      self.task_last_update = saved_request.get('last_update')
-      self.sucessful_tasks = len(saved_request.get('succesful_tasks'))
-      self.failed_tasks = len(saved_request.get('failed_tasks'))
-      self.queued_tasks = len(saved_request.get('queued_tasks'))
-      self.running_tasks = len(saved_request.get('running_tasks'))
+      self.status = saved_request.get('status')
+      self.last_task_update_time = saved_request.get('last_update')
+      self.successful_tasks = len(saved_request.get('succesful_tasks', []))
+      self.failed_tasks = len(saved_request.get('failed_tasks', []))
+      self.queued_tasks = len(saved_request.get('queued_tasks', []))
+      self.running_tasks = len(saved_request.get('running_tasks', []))
     # If the request is not stored in redis, uses legacy get_request_data
     else:
       if not tasks:
@@ -194,17 +198,13 @@ class RequestsSummary(BaseModel):
   """Represents a summary view of multiple Turbinia requests."""
   requests_status: List[RequestStatus] = []
 
-  #Todo(igormr): Change this to iterate over requests only
-
   def get_requests_summary(self) -> bool:
     """Generates a status summary for each Turbinia request."""
     _state_manager = state_manager.get_state_manager()
-    request_ids = [request_key.split(':')[1] for request_key in _state_manager.iterate_keys('Requests')]
-    request_ids = set()
+    request_ids = [request_key.split(':')[1] for request_key in _state_manager.iterate_keys('Request')]
 
     for request_id in request_ids:
       request_status = RequestStatus()
       request_status.get_request_data(request_id, summary=True)
       self.requests_status.append(request_status)
-
     return bool(self.requests_status)
