@@ -9,7 +9,7 @@ The following sections describe how to get the Turbinia API server up and runnin
 ### Installation
 To use the Turbinia API server you will need to deploy Turbinia in your environment with a configuration that uses Redis and Celery.
 
-Please follow the instructions for deploying a [Turbinia GKE Celery cluster](https://github.com/google/osdfir-infrastructure/tree/main/charts/turbinia) or [local stack using Celery](turbinia-local-stack.md)
+Please follow the [instructions](install.md) for deploying Turbinia to Kubernetes or Docker.
 
 Note that the Turbinia API server requires access to the Turbinia output directory (```OUTPUT_DIR```)
 

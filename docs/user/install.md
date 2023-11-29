@@ -10,7 +10,8 @@ which will be covered in this guide.
 
 To get started quickly, ensure you have [Helm](https://helm.sh/docs/intro/install/)
 and [Kubectl](https://kubernetes.io/docs/tasks/tools/) installed and are authenticated
-to your Kubernetes cluster.
+to your Kubernetes cluster. Please use the [init-gke.sh](https://github.com/google/osdfir-infrastructure/blob/main/tools/init-gke.sh) script for assistance
+initializing a Google Kubernetes Cluster.
 
 Once complete, add the repo containing the Helm charts as follows:
 
@@ -65,8 +66,8 @@ intend to start developing please [fork](https://docs.github.com/en/github/getti
 the repository on github first and check out your own forked instance.
 
 ```console
-$ git clone https://github.com/google/turbinia.git
-$ cd turbinia
+git clone https://github.com/google/turbinia.git
+cd turbinia
 ```
 
 #### Step 2
@@ -75,8 +76,8 @@ Generate configuration file using sed with default local stack values to the ```
 This folder (and supporting folders) will be mapped by docker compose into the containers.
 
 ```console
-$ mkdir -p ./conf && mkdir -p ./tmp && mkdir -p ./evidence && mkdir -p ./certs && chmod 777 ./conf ./tmp ./evidence ./certs
-$ sed -f docker/local/local-config.sed turbinia/config/turbinia_config_tmpl.py > conf/turbinia.conf
+mkdir -p ./conf && mkdir -p ./tmp && mkdir -p ./evidence && mkdir -p ./certs && chmod 777 ./conf ./tmp ./evidence ./certs
+sed -f docker/local/local-config.sed turbinia/config/turbinia_config_tmpl.py > conf/turbinia.conf
 ```
 
 #### Step 3
@@ -84,7 +85,7 @@ $ sed -f docker/local/local-config.sed turbinia/config/turbinia_config_tmpl.py >
 Let's bring up the local Turbinia stack
 
 ```console
-$ docker-compose -f ./docker/local/docker-compose.yml up
+docker-compose -f ./docker/local/docker-compose.yml up
 ```
 
 Redis, a Turbinia server and worker should now be running on your local system
@@ -92,7 +93,7 @@ and a local persistent 'evidence' folder will have been created containing the
 Turbinia log file and processing output.
 > **Note**: Redis will store it's data in a volume that is mapped to ```./redis-data/```. You can adjust this in the docker-compose.yml configuration.
 
-#### Step 4
+## Processing Evidence
 
 Let's process evidence to test your setup, eg a Chrome Browser history file.
 

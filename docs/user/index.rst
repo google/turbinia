@@ -6,7 +6,6 @@ User documentation
    :maxdepth: 3
    
    install
-   turbinia-local-stack
    how-it-works
    api-server
    turbinia-web-ui
