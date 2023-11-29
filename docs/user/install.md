@@ -3,15 +3,19 @@
 ## Overview
 
 Turbinia can be deployed on either Google Cloud Platform or local machines using
-two primary installation methods: Kubernetes deployment and Docker installation,
-which will be covered in this guide.
+two primary installation methods: Kubernetes or Docker, which will be covered in this guide.
+
+Once Turbinia is up and running using either Kubernetes or Docker, install and
+configure the `turbinia-client` CLI using the provided [documentation](https://github.com/google/turbinia/tree/master/turbinia/api/cli) to kick off your first processing request.
 
 ## K8s Installation
 
 To get started quickly, ensure you have [Helm](https://helm.sh/docs/intro/install/)
 and [Kubectl](https://kubernetes.io/docs/tasks/tools/) installed and are authenticated
-to your Kubernetes cluster. Please use the [init-gke.sh](https://github.com/google/osdfir-infrastructure/blob/main/tools/init-gke.sh) script for assistance
-initializing a Google Kubernetes Cluster.
+to your Kubernetes cluster.
+> **Note**: To simplify the process of initializing a Google Kubernetes Engine Cluster (GKE),
+use the [init-gke.sh](https://github.com/google/osdfir-infrastructure/blob/main/tools/init-gke.sh)
+script. Alternatively, for local installations, consider using [KIND](https://kind.sigs.k8s.io/docs/user/quick-start/) or [Minikube](https://minikube.sigs.k8s.io/docs/start/).
 
 Once complete, add the repo containing the Helm charts as follows:
 
@@ -48,14 +52,14 @@ The second way to run Turbinia is through the provided Docker containers.
 ### Caveats
 
 rawdisk: As Turbinia uses the loop device to mount different types of evidence
-(eg raw disks) the host operating system should support the loop device.Linux is
+(eg raw disks) the host operating system should support the loop device. Linux is
 currently the only OS that supports the processing of raw disks.
 
 googleclouddisk: Turbinia running in Docker cannot currently process Google Cloud
 disks.
 
 DOCKER_ENABLED: If you plan to enable running dependencies in containers make
-sure you have docker installed.
+sure you have Docker installed.
 
 ### Steps
 
@@ -88,30 +92,7 @@ Let's bring up the local Turbinia stack
 docker-compose -f ./docker/local/docker-compose.yml up
 ```
 
-Redis, a Turbinia server and worker should now be running on your local system
+A Turbinia server, worker, api and Redis should now be running on your local system
 and a local persistent 'evidence' folder will have been created containing the
 Turbinia log file and processing output.
 > **Note**: Redis will store it's data in a volume that is mapped to ```./redis-data/```. You can adjust this in the docker-compose.yml configuration.
-
-## Processing Evidence
-
-Let's process evidence to test your setup, eg a Chrome Browser history file.
-
-```console
-$ curl https://raw.githubusercontent.com/obsidianforensics/hindsight/master/tests/fixtures/profiles/60/History > History
-$ tar -vzcf ./evidence/history.tgz History
-```
-
-This command runs the turbinia client, turbiniactl, within the turbinia server docker container and generates a processing request.
-
-```console
-$ docker exec -ti turbinia-server turbiniactl compresseddirectory -l /evidence/history.tgz
-```
-
-This will create a task in Turbinia to process the evidence file. A request ID will be returned and we can query the status with below command.
-
-```console
-$ docker exec -ti turbinia-server turbiniactl -a status -r {REQUEST_ID}
-```
-
-There will be server and worker output displayed both on the docker-compose terminal as well as in the ```./evidence``` folder.

@@ -1,6 +1,6 @@
 # Developing on a local Turbinia setup (no cloud required)
 
-See [here](../user/install.md#docker-installation) on how to setup the local Turbinia stack with Docker.
+See [here](../user/install.md) on how to setup the local Turbinia stack with Docker.
 
 After you have the local stack up and running a usual development cycle would look like below.
 
