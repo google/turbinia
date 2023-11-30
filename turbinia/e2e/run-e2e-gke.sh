@@ -2,9 +2,12 @@
 # Turbinia GKE e2e tests
 # The e2e test will test Turbinia googleclouddisk processing
 # Requirements:
-# - have 'kubectl', 'jq' packages installed
-# - have the Turbinia Helm chart deployed and are authenticated to the GKE cluster
+# TODO: Have seperate checks for each of the requirements
+# - have 'kubectl', 'jq', and 'uuid-runtime' packages installed
 # - have the 'turbinia-client' CLI installed
+# - have authenticated to your GKE cluster via `gcloud container clusters get-credentials [clustername] --zone [zone] --project [project_name]`
+# - have the Turbinia Helm chart deployed and the Helm release name matching the $RELEASE variable
+# - have a GCP disk created that matches the $DISK variable name
 
 set -o posix
 set -e
@@ -36,8 +39,8 @@ then
 fi
 
 # Replace Turbinia config with test config
-echo "Writing turbinia config to $HOME/.turbinia_api_config.json..."
-cat > $HOME/.turbinia_api_config.json <<EOL
+echo "Writing turbinia config to ~/.turbinia_api_config.json..."
+cat > ~/.turbinia_api_config.json <<EOL
 {
 	"default": {
 		"description": "Turbinia client test config",
@@ -50,8 +53,8 @@ cat > $HOME/.turbinia_api_config.json <<EOL
 }
 EOL
 
-# Turbinia e2e test
-echo "Starting e2e test for Turbinia..."
+# Turbinia GKE e2e test
+echo "Starting GKE e2e test for Turbinia..."
 
 # Forward k8s services
 echo "Forwarding Turbinia API k8s $RELEASE service"
@@ -66,25 +69,22 @@ turbinia-client config list
 # Run Turbinia googleclouddisk processing
 echo "Running Turbinia: turbinia-client submit googleclouddisk --project $GCP_PROJECT --zone $GCP_ZONE --disk_name $DISK --request_id $REQUEST_ID"
 turbinia-client submit googleclouddisk --project $GCP_PROJECT --zone $GCP_ZONE --disk_name $DISK --request_id $REQUEST_ID
-# Give time for Tasks to populate
-sleep 5
 
 # Wait until request is complete
-req_complete=0
-while [ $req_complete -eq 0 ]
+sleep 5
+req_status=$(turbinia-client status request $REQUEST_ID -j | jq -r '.status')
+while [ $req_status = "running" ]
 do
   req_status=$(turbinia-client status request $REQUEST_ID -j | jq -r '.status')
-  if [[ $req_status != "running" ]]
+  if [[ $req_status = "running" ]]
   then
-    req_complete=1
-  else
     echo "Turbinia request $REQUEST_ID is still running. Sleeping for 10 seconds..."
     sleep 10
   fi
 done
 
 # Grab all Tasks where successful = false
-echo "Checking the status of Turbinia request: $REQUEST_ID"
+echo "Request $REQUEST_ID complete. Checking the results for failed tasks..."
 status=$(turbinia-client status request $REQUEST_ID -j)
 task_status=$(echo $status | jq '[.tasks[]] | map({name: .name, id: .id, successful: .successful, worker_name: .worker_name}) | map(select(.successful==false))')
 length=$(echo $task_status | jq '. | length')
@@ -92,16 +92,16 @@ length=$(echo $task_status | jq '. | length')
 # Check if there is a failed Turbinia Task
 if [[ $length > 0 ]]
 then
-	echo "A failed Task for Turbinia Request $req has been detected."
-	echo "Listing failed Tasks..."
+  echo "A failed Task for Turbinia Request $req has been detected."
+  echo "Listing failed Tasks..."
   # Grab the Task ID
   tasks=$(echo $task_status | jq -r '.[] | .id')
-	FAILED=1
-	for t in $tasks
+  FAILED=1
+  for t in $tasks
   do
-	  echo "Failed Task ID: $t"
-	  turbinia-client status task $t
-	done
+    echo "Failed Task ID: $t"
+    turbinia-client status task $t
+  done
   # Grab Turbinia worker logs from the server pod
   server=$(kubectl get pods -o name  | grep turbinia-server)
   workers=$(echo $task_status | jq -r '.[] | .worker_name')
@@ -117,6 +117,13 @@ then
 # If no failed Tasks were detected
 else
   echo "No failed Tasks detected for Turbinia request $req"
+fi
+
+# Restore previous Turbinia config
+if  [ -f ~/.turbinia_api_config.json.$DATE ]
+then
+  echo "Restoring previous Turbinia config from ~/.turbinia_api_config.json.$DATE"
+  mv ~/.turbinia_api_config.json.$DATE ~/.turbinia_api_config.json
 fi
 
 # If there was a failed Task
