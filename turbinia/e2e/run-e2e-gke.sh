@@ -72,7 +72,7 @@ turbinia-client submit googleclouddisk --project $GCP_PROJECT --zone $GCP_ZONE -
 
 # Wait until request is received
 req=$(turbinia-client status request $REQUEST_ID -j)
-while [ -z $req ]
+while [[ -z "$req" ]]
 do
   echo "Request $REQUEST_ID is still populating. Sleeping for 5 seconds..."
   sleep 5
@@ -81,7 +81,7 @@ done
 
 # Wait until request is complete 
 req_status=$(turbinia-client status request $REQUEST_ID -j | jq -r '.status')
-while [ $req_status = "running" ]
+while [[ $req_status = "running" ]]
 do
   req_status=$(turbinia-client status request $REQUEST_ID -j | jq -r '.status')
   if [[ $req_status = "running" ]]
