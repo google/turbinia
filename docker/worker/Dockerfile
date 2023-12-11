@@ -1,5 +1,5 @@
 # Build 1 - Turbinia Worker
-FROM ubuntu:22.04
+FROM ubuntu:22.04 as worker-builder
 ENV DEBIAN_FRONTEND=noninteractive \
     PIP_NO_CACHE_DIR=1
 ARG PPA_TRACK=stable
