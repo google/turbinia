@@ -32,8 +32,8 @@ deploy:
   helm:
     releases:
     - name: dev-release
-      repo: https://us-docker.pkg.dev/osdfir-registry/
-      remoteChart: osdfir-charts/turbinia
+      repo: https://google.github.io/osdfir-infrastructure
+      remoteChart: osdfir-infrastructure/turbinia
       # chartPath: ./charts/turbinia
       setValues:
         # config.override: "/tmp/turbinia/conf/turbinia.conf"
