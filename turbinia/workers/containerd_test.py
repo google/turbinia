@@ -47,10 +47,12 @@ class ContainerdEnumerationTaskTest(TestTurbiniaTaskBase):
         {
             'Namespace': 'default',
             'ID': 'nginx01',
+            'Image': 'nginx01-image',
         },
         {
             'Namespace': 'default',
             'ID': 'apache01',
+            'Image': 'apache01-image',
         },
     ]
     result = self.task.run(self.evidence, self.result)

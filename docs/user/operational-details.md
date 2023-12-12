@@ -41,34 +41,36 @@ to configure all of your worker nodes to mounting your GCS bucket at a common
 path. Once your GCS bucket is mounted, you can process these images as the
 'rawdisk' Evidence type.
 
-### Stackdriver Logging 
-Stackdriver Logging can be enabled within Turbinia, which would allow for all Turbinia logs to be centralized into the Stackdriver Logging console. 
+### Stackdriver Logging
 
-In order to enable this feature, please set the `STACKDRIVER_LOGGING` config variable to `True` within the `.turbiniarc` configuration file as illustrated below. 
-```
-# Set this to True if you would like to enable Google Cloud Stackdriver Logging.
-STACKDRIVER_LOGGING = True
-```
-### Stackdriver Error Reporting 
+Stackdriver Logging is automatically enabled for GKE deployments and will store
+all Turbinia logs in the Stackdriver Logging console.
+
+### Stackdriver Error Reporting
+
 Stackdriver Error Reporting can be enabled within Turbinia, which would allow for full Traceback logging and alerting within the GCP Error Reporting console. Please note that Error Reporting will only alert on failures of a `Task` running on a `Worker`.
 
-In order to enable this feature, please set the `STACKDRIVER_TRACEBACK` config variable to `True` within the `.turbiniarc` configuration file as illustrated below. 
-```
+In order to enable this feature, please set the `STACKDRIVER_TRACEBACK` config variable to `True` within the `.turbiniarc` configuration file as illustrated below.
+
+```console
 # Set this to True if you would like to enable Google Cloud Error Reporting.
 STACKDRIVER_TRACEBACK = True
 ```
 
 ### Prometheus instrumentation
-The Turbinia worker and server expose metrics based on [Prometheus](https://prometheus.io/). The implementation exposes a port so monitoring systems can poll the server and worker to fetch running metrics. The configuration (listening port and address) are defined within the `.turbiniarc` configuration file as illustrated below. 
-```
+
+The Turbinia worker and server expose metrics based on [Prometheus](https://prometheus.io/). The implementation exposes a port so monitoring systems can poll the server and worker to fetch running metrics. The configuration (listening port and address) are defined within the `.turbiniarc` configuration file as illustrated below.
+
+```console
 # Prometheus listen address and port
 PROMETHEUS_ADDR = '0.0.0.0'
 PROMETHEUS_PORT = 8000
 ```
+
 By default it will listen on all interfaces on port 8000.
 
 ## General Notes
 
-*   Turbinia currently assumes that Evidence is equally available to all worker
-    nodes (e.g. through locally mapped storage, or through attachable persistent
-    Google Cloud Disks, etc).
+* Turbinia currently assumes that Evidence is equally available to all worker
+  nodes (e.g. through locally mapped storage, or through attachable persistent
+  Google Cloud Disks, etc).

@@ -6,6 +6,8 @@ rawdisk: As Turbinia uses the loop device to mount different types of evidence (
 
 googleclouddisk: Turbinia as local stack cannot currently process Google Cloud disks.
 
+DOCKER_ENABLED: If you plan to enable running dependencies in containers make sure you have docker installed.
+
 ### Running
 
 #### Step 1
@@ -15,9 +17,9 @@ $ git clone https://github.com/google/turbinia.git
 $ cd turbinia
 ```
 #### Step 2
-Generate configuration file using sed with default local stack values to the ```./conf``` folder. This folder will be mapped by docker compose into the containers.
+Generate configuration file using sed with default local stack values to the ```./conf``` folder. This folder (and supporting folders) will be mapped by docker compose into the containers.
 ```
-$ mkdir ./conf
+$ mkdir -p ./conf && mkdir -p ./tmp && mkdir -p ./evidence && mkdir -p ./certs && chmod 777 ./conf ./tmp ./evidence ./certs
 $ sed -f docker/local/local-config.sed turbinia/config/turbinia_config_tmpl.py > conf/turbinia.conf
 ```
 #### Step 3
