@@ -24,7 +24,6 @@ from turbinia import notify
 class TestSendmail(unittest.TestCase):
   """Test Notifier module."""
 
-
   def setUp(self):
     self.config = config
     self.config.EMAIL_NOTIFICATIONS = True
@@ -61,8 +60,7 @@ class TestSendmail(unittest.TestCase):
       self.assertEqual(
           turbinia_info_log.output[0],
           'INFO:turbinia:Email password is blank, attempting to continue '
-          'without logging in'
-      )
+          'without logging in')
       mock_smtp.assert_called_once()
     self.config.EMAIL_PASSWORD = 'testpassword'
 
@@ -77,8 +75,7 @@ class TestSendmail(unittest.TestCase):
       self.assertEqual(
           turbinia_error_log.output[1],
           'ERROR:turbinia:Email failed to send, SMTP has raised an error, '
-          'this likely means that there is a problem with the config'
-      )
+          'this likely means that there is a problem with the config')
 
     # Test that email is not sent when SMTP raises a TypeError
     mock_smtp.side_effect = TypeError()
@@ -90,8 +87,7 @@ class TestSendmail(unittest.TestCase):
       self.assertEqual(
           turbinia_error_log.output[0],
           'ERROR:turbinia:Email failed to send, there is likely a problem '
-          'with the config'
-      )
+          'with the config')
 
     # Test that email is not sent when SMTP raises a NameError
     mock_smtp.reset_mock()
@@ -104,5 +100,4 @@ class TestSendmail(unittest.TestCase):
       self.assertEqual(
           turbinia_info_log.output[0],
           'ERROR:turbinia:Email failed to send, A value which is required '
-          'for email notifications is not defined in the config'
-      )
+          'for email notifications is not defined in the config')
