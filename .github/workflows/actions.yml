@@ -13,14 +13,23 @@ jobs:
             gift_ppa_track: "staging"
           - docker_base_image: "ubuntu:22.04"
             gift_ppa_track: "stable"
+
     steps:
-      - uses: actions/checkout@v2
-      - name: Pull latest docker image for cache
-        run: |
-          docker pull ${{ matrix.docker_base_image }}
-          docker pull us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-unit-tests:latest
-      - name: Build Turbinia unit test docker image
-        run: docker build --build-arg PPA_TRACK=${{ matrix.gift_ppa_track }} --cache-from=${{ matrix.docker_base_image }},us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-unit-tests:latest -t turbinia-unit-tests -f docker/tests/Dockerfile .
+      - name: checkout
+        uses: actions/checkout@v3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Buid Turbinia Unit Tests Docker image
+        uses: docker/build-push-action@v5
+        with:
+          file: docker/tests/Dockerfile
+          context: .
+          build-args: |
+            "PPA_TRACK=${{ matrix.gift_ppa_track }}"
+          load: true
+          tags: turbinia-unit-tests
+          cache-from: type=gha,scope=unittests
+          cache-to: type=gha,mode=max,scope=unittests
       - name: Run test (turbinia-unit-tests) container
         run: |
           docker run --name turbinia-unit-tests --entrypoint "/bin/bash" -it -d -t turbinia-unit-tests:latest
