@@ -29,7 +29,7 @@ from turbinia.workers.workers_test import TestTurbiniaTaskBase
 class YaraAnalysisTaskTest(TestTurbiniaTaskBase):
   """Tests for YaraAnalysisTask Task."""
 
-  YARA_SUMMARY = 'Yara analysis found 3 alert(s)'
+  YARA_SUMMARY = 'Yara analysis found 4 alert(s)'
 
   TEST_DATA_DIR = None
 
