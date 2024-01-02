@@ -10,7 +10,6 @@
 # - have a GCP disk created that matches the $DISK variable name
 
 set -o posix
-set -e
 
 RELEASE="test"
 DISK="disk-1"
@@ -59,8 +58,17 @@ echo "Starting GKE e2e test for Turbinia..."
 # Forward k8s services
 echo "Forwarding Turbinia API k8s $RELEASE service"
 kubectl --namespace default port-forward service/$RELEASE-turbinia 8000:8000  > /dev/null 2>&1 &
-# Give time before submitting request to service
-sleep 5
+
+# Ensure connection is stable before running test
+turbinia-client status summary
+if [ $? != "0" ]
+then
+  echo "Connection to the Turbinia service failed. Retrying k8s port-forward..."
+  kubectl --namespace default port-forward service/$RELEASE-turbinia 8000:8000  > /dev/null 2>&1 &
+fi
+
+# Exit on any failures after this point
+set -e
 
 # List Turbinia config
 echo "Listing Turbinia config..."
