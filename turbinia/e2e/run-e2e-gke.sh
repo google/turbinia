@@ -113,20 +113,20 @@ then
   # Grab the Task ID
   tasks=$(echo $task_status | jq -r '.[] | .id')
   FAILED=1
-  for t in $tasks
+  for task in $tasks
   do
-    echo "Failed Task ID: $t"
-    turbinia-client status task $t
+    echo "Failed Task ID: $task"
+    turbinia-client status task $task
   done
   # Grab Turbinia worker logs from the server pod
   server=$(kubectl get pods -o name  | grep turbinia-server)
   workers=$(echo $task_status | jq -r '.[] | .worker_name')
-  for w in $workers
+  for worker in $workers
   do
-    wlogs=$(kubectl exec $server -- find /mnt/turbiniavolume/logs -path "*$w*")
+    wlogs=$(kubectl exec $server -- find /mnt/turbiniavolume/logs -path "*$worker*")
     if [ -n $wlogs ] && [ -n  $server ]
     then
-      echo "Grabbing logs for Turbinia worker $w"
+      echo "Grabbing logs for Turbinia worker $worker"
       kubectl exec $server -- cat $wlogs 
     fi
   done
