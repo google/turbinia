@@ -65,6 +65,7 @@ if [ $? != "0" ]
 then
   echo "Connection to the Turbinia service failed. Retrying k8s port-forward..."
   kubectl --namespace default port-forward service/$RELEASE-turbinia 8000:8000  > /dev/null 2>&1 &
+  sleep 5
 fi
 
 # Exit on any failures after this point
