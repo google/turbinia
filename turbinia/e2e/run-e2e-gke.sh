@@ -10,7 +10,6 @@
 # - have a GCP disk created that matches the $DISK variable name
 
 set -o posix
-set -e
 
 RELEASE="test"
 DISK="disk-1"
@@ -59,8 +58,18 @@ echo "Starting GKE e2e test for Turbinia..."
 # Forward k8s services
 echo "Forwarding Turbinia API k8s $RELEASE service"
 kubectl --namespace default port-forward service/$RELEASE-turbinia 8000:8000  > /dev/null 2>&1 &
-# Give time before submitting request to service
-sleep 5
+
+# Ensure connection is stable before running test
+turbinia-client status summary
+if [ $? != "0" ]
+then
+  echo "Connection to the Turbinia service failed. Retrying k8s port-forward..."
+  kubectl --namespace default port-forward service/$RELEASE-turbinia 8000:8000  > /dev/null 2>&1 &
+  sleep 5
+fi
+
+# Exit on any failures after this point
+set -e
 
 # List Turbinia config
 echo "Listing Turbinia config..."
@@ -70,16 +79,24 @@ turbinia-client config list
 echo "Running Turbinia: turbinia-client submit googleclouddisk --project $GCP_PROJECT --zone $GCP_ZONE --disk_name $DISK --request_id $REQUEST_ID"
 turbinia-client submit googleclouddisk --project $GCP_PROJECT --zone $GCP_ZONE --disk_name $DISK --request_id $REQUEST_ID
 
-# Wait until request is complete
-sleep 5
+# Wait until request is received
+req=$(turbinia-client status request $REQUEST_ID -j)
+while [[ -z "$req" ]]
+do
+  echo "Request $REQUEST_ID is still populating. Sleeping for 5 seconds..."
+  sleep 5
+  req=$(turbinia-client status request $REQUEST_ID -j)
+done
+
+# Wait until request is complete 
 req_status=$(turbinia-client status request $REQUEST_ID -j | jq -r '.status')
-while [ $req_status = "running" ]
+while [[ $req_status = "running" ]]
 do
   req_status=$(turbinia-client status request $REQUEST_ID -j | jq -r '.status')
   if [[ $req_status = "running" ]]
   then
-    echo "Turbinia request $REQUEST_ID is still running. Sleeping for 10 seconds..."
-    sleep 10
+    echo "Turbinia request $REQUEST_ID is still running. Sleeping for 180 seconds..."
+    sleep 180
   fi
 done
 
@@ -92,31 +109,31 @@ length=$(echo $task_status | jq '. | length')
 # Check if there is a failed Turbinia Task
 if [[ $length > 0 ]]
 then
-  echo "A failed Task for Turbinia Request $req has been detected."
+  echo "A failed Task for Turbinia Request $REQUEST_ID has been detected"
   echo "Listing failed Tasks..."
   # Grab the Task ID
   tasks=$(echo $task_status | jq -r '.[] | .id')
   FAILED=1
-  for t in $tasks
+  for task in $tasks
   do
-    echo "Failed Task ID: $t"
-    turbinia-client status task $t
+    echo "Failed Task ID: $task"
+    turbinia-client status task $task
   done
   # Grab Turbinia worker logs from the server pod
   server=$(kubectl get pods -o name  | grep turbinia-server)
   workers=$(echo $task_status | jq -r '.[] | .worker_name')
-  for w in $workers
+  for worker in $workers
   do
-    wlogs=$(kubectl exec $server -- find /mnt/turbiniavolume/logs -path "*$w*")
+    wlogs=$(kubectl exec $server -- find /mnt/turbiniavolume/logs -path "*$worker*")
     if [ -n $wlogs ] && [ -n  $server ]
     then
-      echo "Grabbing logs for Turbinia worker $w"
+      echo "Grabbing logs for Turbinia worker $worker"
       kubectl exec $server -- cat $wlogs 
     fi
   done
 # If no failed Tasks were detected
 else
-  echo "No failed Tasks detected for Turbinia request $req"
+  echo "No failed Tasks detected for Turbinia request $REQUEST_ID"
 fi
 
 # Restore previous Turbinia config
