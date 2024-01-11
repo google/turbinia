@@ -6,9 +6,9 @@ Turbinia supports the use of Docker by allowing a Task to execute its command th
 ## Enabling Docker usage
 In order to enable this feature, please take the following steps. 
 1. Install the Docker daemon on the Worker's host machine. Please visit the Docker website for the [Installation Guide](https://docs.docker.com/install/).
-2. In the `.turbiniarc` configuration file, set the `DOCKER_ENABLED` flag to `True` to enable the usage of Docker. 
-3. Review the `DEPENDENCIES` flag in the `.turbiniarc` configuration file and identify which Job you would like to execute a Docker container for. Once identified, replace the value for `docker_image` with the `image_id` of the Docker image. 
-4. Save the `.turbiniarc` configuration file then restart all Workers for the changes to take into effect. 
+2. In the `turbina.conf` configuration file, set the `DOCKER_ENABLED` flag to `True` to enable the usage of Docker. 
+3. Review the `DEPENDENCIES` flag in the `turbina.conf` configuration file and identify which Job you would like to execute a Docker container for. Once identified, replace the value for `docker_image` with the name of the Docker image. 
+4. Save the `turbina.conf` configuration file then restart all Workers for the changes to take into effect. 
 5. When the Workers start, they will perform dependency checks to ensure that the binaries required by the Job are installed in the Container, and if that check passes, it will execute those in the configured Docker Container. 
 6. If you no longer would like to use the Docker image, set the `docker_image` value back to `None`.
 
@@ -16,21 +16,21 @@ In order to enable this feature, please take the following steps.
 The following section provides an example of the steps mentioned above for the Plaso Job by using the Docker CLI to retrieve the required information.
 1. Retrieve the latest Plaso Docker image either locally or through a preconfigured registry containing the image.
     * ` docker pull log2timeline/plaso`
-2. Identify the  `image_id` for the retrieved image. 
+2. Identify the  name for the retrieved image. 
     * `docker image ls`  
 
-    Then copy the value listed under the column `IMAGE ID`.
+    Then copy the value listed under the column `REPOSITORY`.
     ```
     REPOSITORY                                      TAG                 IMAGE ID            CREATED             SIZE
     log2timeline/plaso                              latest              9c22665bff50        4 days ago          314MB
     ```
-3. Open up the `.turbiniarc` configuration file then set the attribute `DOCKER_ENABLED` to `True`. 
-4. Identify the `DEPENDENCIES` attribute and look for the Job `PlasoJob`, then replace the `docker_image` value with the identified `IMAGE ID`. 
+3. Open up the `turbina.conf` configuration file then set the attribute `DOCKER_ENABLED` to `True`. 
+4. Identify the `DEPENDENCIES` attribute and look for the Job `PlasoJob`, then replace the `docker_image` value with the identified `REPOSITORY`. 
     ```python
     {
         'job': 'PlasoJob'
         'programs': ['log2timeline.py'],
-        'docker_image': '9c22665bff50' 
+        'docker_image': 'log2timeline/plaso' 
     }
     ```
 5. Save the configuration file, then restart the turbinia Worker.
