@@ -6,9 +6,9 @@ Turbinia supports the use of Docker by allowing a Task to execute its command th
 ## Enabling Docker usage
 In order to enable this feature, please take the following steps. 
 1. Install the Docker daemon on the Worker's host machine. Please visit the Docker website for the [Installation Guide](https://docs.docker.com/install/).
-2. In the `turbina.conf` configuration file, set the `DOCKER_ENABLED` flag to `True` to enable the usage of Docker. 
-3. Review the `DEPENDENCIES` flag in the `turbina.conf` configuration file and identify which Job you would like to execute a Docker container for. Once identified, replace the value for `docker_image` with the name of the Docker image. 
-4. Save the `turbina.conf` configuration file then restart all Workers for the changes to take into effect. 
+2. In the `turbinia.conf` configuration file, set the `DOCKER_ENABLED` flag to `True` to enable the usage of Docker. 
+3. Review the `DEPENDENCIES` flag in the `turbinia.conf` configuration file and identify which Job you would like to execute a Docker container for. Once identified, replace the value for `docker_image` with the name of the Docker image. 
+4. Save the `turbinia.conf` configuration file then restart all Workers for the changes to take into effect. 
 5. When the Workers start, they will perform dependency checks to ensure that the binaries required by the Job are installed in the Container, and if that check passes, it will execute those in the configured Docker Container. 
 6. If you no longer would like to use the Docker image, set the `docker_image` value back to `None`.
 
@@ -24,7 +24,7 @@ The following section provides an example of the steps mentioned above for the P
     REPOSITORY                                      TAG                 IMAGE ID            CREATED             SIZE
     log2timeline/plaso                              latest              9c22665bff50        4 days ago          314MB
     ```
-3. Open up the `turbina.conf` configuration file then set the attribute `DOCKER_ENABLED` to `True`. 
+3. Open up the `turbinia.conf` configuration file then set the attribute `DOCKER_ENABLED` to `True`. 
 4. Identify the `DEPENDENCIES` attribute and look for the Job `PlasoJob`, then replace the `docker_image` value with the identified `REPOSITORY`. 
     ```python
     {
