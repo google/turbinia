@@ -19,7 +19,7 @@ from __future__ import unicode_literals
 import unittest
 
 from turbinia import config
-from turbinia.workers import sshd
+from turbinia.workers.analysis import sshd
 
 
 class SSHDAnalysisTaskTest(unittest.TestCase):
