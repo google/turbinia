@@ -173,6 +173,21 @@ def get_exe_path(filename):
   return binary
 
 
+def is_block_device(path):
+  """Checks path to determine whether it is a block device.
+
+  Args:
+      path: String of path to check.
+
+  Returns:
+      Bool indicating success.
+  """
+  if not os.path.exists(path):
+    return False
+  mode = os.stat(path).st_mode
+  return stat.S_ISBLK(mode)
+
+
 def bruteforce_password_hashes(
     password_hashes, tmp_dir, timeout=300, extra_args=''):
   """Bruteforce password hashes using Hashcat or john.

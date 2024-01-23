@@ -917,6 +917,59 @@ class DiskPartition(Evidence):
         self.state[EvidenceState.ATTACHED] = False
 
 
+class AwsEbsDisk(Evidence):
+  """Evidence object for an AWS EC2 EBS Disk.
+
+  Attributes:
+    project: The cloud project name this disk is associated with.
+    zone: The geographic zone.
+    disk_name: The cloud disk name.
+  """
+
+  REQUIRED_ATTRIBUTES = ['disk_name', 'project', 'zone']
+  POSSIBLE_STATES = [EvidenceState.ATTACHED, EvidenceState.MOUNTED]
+
+  def __init__(
+      self, project=None, zone=None, disk_name=None, mount_partition=1, *args,
+      **kwargs):
+    """Initialization for Google Cloud Disk."""
+    super(GoogleCloudDisk, self).__init__(*args, **kwargs)
+    self.project = project
+    self.zone = zone
+    self.disk_name = disk_name
+    self.mount_partition = mount_partition
+    self.partition_paths = None
+    self.cloud_only = True
+    self.resource_tracked = True
+    self.resource_id = self.disk_name
+    self.device_path = None
+
+  @property
+  def name(self):
+    if self._name:
+      return self._name
+    else:
+      return ':'.join((self.type, self.project, self.disk_name))
+
+  def _preprocess(self, _, required_states):
+    # The GoogleCloudDisk should never need to be mounted unless it has child
+    # evidence (GoogleCloudDiskRawEmbedded). In all other cases, the
+    # DiskPartition evidence will be used. In this case we're breaking the
+    # evidence layer isolation and having the child evidence manage the
+    # mounting and unmounting.
+    if EvidenceState.ATTACHED in required_states:
+      self.device_path, partition_paths = aws.PreprocessAttachDisk(
+          self.disk_name)
+      self.partition_paths = partition_paths
+      self.local_path = self.device_path
+      self.state[EvidenceState.ATTACHED] = True
+
+  def _postprocess(self):
+    if self.state[EvidenceState.ATTACHED]:
+      aws.PostprocessDetachDisk(self.disk_name, self.device_path)
+      self.state[EvidenceState.ATTACHED] = False
+
+
 class GoogleCloudDisk(Evidence):
   """Evidence object for a Google Cloud Disk.
 

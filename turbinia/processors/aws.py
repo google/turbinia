@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright 2017 Google Inc.
+# Copyright 2024 Google Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,25 +12,20 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Evidence processor for Google Cloud resources."""
-
-from __future__ import unicode_literals
+"""Evidence processor for AWS resources."""
 
 import glob
 import logging
 import os
-import stat
 import time
 
-from six.moves import urllib
-
-from libcloudforensics.providers.gcp.internal import project as gcp_project
-from prometheus_client import Counter
+from libcloudforensics.providers.aws.internal import account
+from libcloudforensics.providers.aws.internal import project as gcp_project
 from turbinia import config
 from turbinia.lib import util
 from turbinia import TurbiniaException
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('turbinia')
 
 RETRY_MAX = 10
 ATTACH_SLEEP_TIME = 3
@@ -41,31 +36,20 @@ turbinia_nonexisting_disk_path = Counter(
     'Total number of non existing disk paths after attempts to attach')
 
 
-def GetLocalInstanceName():
-  """Gets the instance name of the current machine.
+def GetLocalInstanceId():
+  """Gets the instance Id of the current machine.
 
   Returns:
-    The instance name as a string
+    The instance Id as a string
 
   Raises:
     TurbiniaException: If instance name cannot be determined from metadata
         server.
   """
-  # TODO(aarontp): Use cloud API instead of manual requests to metadata service.
-  req = urllib.request.Request(
-      'http://metadata.google.internal/computeMetadata/v1/instance/hostname',
-      None, {'Metadata-Flavor': 'Google'})
-  try:
-    instance = urllib.request.urlopen(req).read().decode('utf-8')
-    #Grab everything excluding the domain part of the hostname
-    instance = instance.split('.')[0]
-  except urllib.error.HTTPError as exception:
-    raise TurbiniaException(f'Could not get instance name: {exception!s}')
-
-  return instance
+  aws_account = account.AWSAccount(zone, aws_profile)
 
 
-def PreprocessAttachDisk(disk_name):
+def PreprocessAttachDisk(disk_id):
   """Attaches Google Cloud Disk to an instance.
 
   Args:
@@ -82,20 +66,29 @@ def PreprocessAttachDisk(disk_name):
   Raises:
     TurbiniaException: If the device is not a block device.
   """
-  path = f'/dev/disk/by-id/google-{disk_name:s}'
+  # TODO need: awsprofile
+  config.LoadConfig()
+  aws_account = account.AWSAccount(config.TURBINIA_ZONE, aws_profile)
+  instance_id = GetLocalInstanceId()
+  instance = aws_account.ec2.GetInstanceById(instance_id)
+  path = f'/dev/sd-{disk_id}'
   if util.is_block_device(path):
     log.info(f'Disk {disk_name:s} already attached!')
+    # TODO need to see if partition devices are created automatically or need to
+    # be enumerated in other ways.
     return (path, sorted(glob.glob(f'{path:s}-part*')))
 
-  config.LoadConfig()
-  instance_name = GetLocalInstanceName()
-  project = gcp_project.GoogleCloudProject(
-      config.TURBINIA_PROJECT, default_zone=config.TURBINIA_ZONE)
-  instance = project.compute.GetInstance(instance_name)
+  instance.AttachVolume(aws_account.ebs.GetVolumeById(disk_id), path)
 
-  disk = project.compute.GetDisk(disk_name)
-  log.info(f'Attaching disk {disk_name:s} to instance {instance_name:s}')
-  instance.AttachDisk(disk)
+  # instance_name = GetLocalInstanceName()
+  # project = gcp_project.GoogleCloudProject(
+  #     config.TURBINIA_PROJECT, default_zone=config.TURBINIA_ZONE)
+  # instance = project.compute.GetInstance(instance_name)
+
+  # disk = project.compute.GetDisk(disk_name)
+  # log.info(f'Attaching disk {disk_name:s} to instance {instance_name:s}')
+  # instance.AttachDisk(disk)
+
 
   # Make sure we have a proper block device
   for _ in range(RETRY_MAX):
