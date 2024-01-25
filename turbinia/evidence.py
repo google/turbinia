@@ -29,6 +29,7 @@ import subprocess
 import sys
 import uuid
 
+from plaso.cli import pinfo_tool
 from turbinia import config
 from turbinia import TurbiniaException
 from turbinia.processors import archive
@@ -1056,30 +1057,22 @@ class PlasoFile(Evidence):
     Raises:
       TurbiniaException: if validation fails.
     """
-    cmd = [
-        'pinfo.py',
-        '--output-format',
-        'json',
-        '--sections',
-        'events',
-        self.local_path,
-    ]
-    total_file_events = 0
-
     try:
       log.info(f'Running pinfo.py to validate PlasoFile {self.local_path}')
-      command = subprocess.run(cmd, capture_output=True, check=True)
-      storage_counters_json = command.stdout.decode('utf-8').strip()
-      # pinfo.py might print warnings (non-json) so we only need to last line of output
-      storage_counters_json = storage_counters_json.splitlines()[-1]
-      storage_counters = json.loads(storage_counters_json)
-      total_file_events = storage_counters.get('storage_counters', {}).get(
-          'parsers', {}).get('total', 0)
-      log.info(f'pinfo.py found {total_file_events} events.')
+      pinfo = pinfo_tool.PinfoTool()
+      storage_reader = pinfo._GetStorageReader(  # pylint: disable=protected-access
+          self.local_path
+      )
+      storage_counters = (
+          pinfo._CalculateStorageCounters(  # pylint: disable=protected-access
+              storage_reader
+          )
+      total_file_events = storage_counters.get("parsers", {}).get("total")
       if not total_file_events:
         raise TurbiniaException(
             'PlasoFile validation failed, pinfo.py found no events.')
-    except subprocess.CalledProcessError as exception:
+      log.info(f'pinfo.py found {total_file_events} events.')
+    except Exception as e:  # pylint: disable=broad-except
       raise TurbiniaException(
           f'Error validating plaso file: {exception!s}') from exception
 
