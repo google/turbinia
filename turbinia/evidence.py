@@ -1067,6 +1067,7 @@ class PlasoFile(Evidence):
           pinfo._CalculateStorageCounters(  # pylint: disable=protected-access
               storage_reader
           )
+      )
       total_file_events = storage_counters.get("parsers", {}).get("total")
       if not total_file_events:
         raise TurbiniaException(
