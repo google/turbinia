@@ -15,12 +15,15 @@
 """Evidence processor for AWS resources."""
 
 import glob
+import json
 import logging
 import os
+import subprocess
 import time
+import urllib
 
 from libcloudforensics.providers.aws.internal import account
-from libcloudforensics.providers.aws.internal import project as gcp_project
+from prometheus_client import Counter
 from turbinia import config
 from turbinia.lib import util
 from turbinia import TurbiniaException
@@ -36,6 +39,67 @@ turbinia_nonexisting_disk_path = Counter(
     'Total number of non existing disk paths after attempts to attach')
 
 
+def GetDevicePath():
+  """Gets the next free block device path from the local system.
+
+  Returns:
+    new_path(str|None): The new device path name if one is found, else None.
+  """
+  path_base = '/dev/sd'
+  # Recommended device names are /dev/sd[f-p] as per:
+  # https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/device_naming.html#available-ec2-device-names
+  have_path = False
+  for i in range(ord('f'), ord('p') + 1):
+    new_path = f'{path_base}{chr(i)}'
+    # Using `exists` instead of `is_block_device` because even if the file
+    # exists and isn't a block device we still won't be able to use it as a new
+    # device path.
+    if not os.path.exists(new_path):
+      have_path = True
+      break
+
+  if have_path:
+    return new_path
+
+  return None
+
+def CheckVolumeAttached(disk_id):
+  """Uses lsblk to determine if the disk is already attached.
+
+  AWS EBS puts the volume ID in the serial number for the device:
+  https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/nvme-ebs-volumes.html#identify-nvme-ebs-device
+
+  Returns:
+    device_name(str|None): The name of the device if it is attached, else None
+
+  Raises:
+    TurbiniaException: If the output from lsblk cannot be parsed.
+  """
+  # From testing the volume ID seems to have the dash removed from the volume ID listed
+  # in the AWS console.
+  serial_num = disk_id.replace('-', '')
+  command = ['lsblk', '-o', 'NAME,SERIAL', '-J']
+  result = subprocess.run(command, check=True, capture_output=True, text=True)
+  device_name = None
+
+  if result.returncode == 0:
+    try:
+      lsblk_results = json.loads(result.stdout)
+    except json.JSONDecodeError as exception:
+      raise TurbiniaException(f'Unable to parse output from {command}: {exception}')
+
+    for device in lsblk_results.get('blockdevices', []):
+      if device.get('serial').lower() == serial_num.lower() and device.get('name'):
+        device_name = f'/dev/{device.get("name")}'
+        log.info(f'Found device {device_name} attached with serial {serial_num}')
+        break
+  else:
+    log.info(
+        f'Received non-zero exit status {result.returncode} from {command}')
+
+  return device_name
+
+
 def GetLocalInstanceId():
   """Gets the instance Id of the current machine.
 
@@ -46,90 +110,100 @@ def GetLocalInstanceId():
     TurbiniaException: If instance name cannot be determined from metadata
         server.
   """
-  aws_account = account.AWSAccount(zone, aws_profile)
+  req = urllib.request.Request(
+      'http://169.254.169.254/latest/meta-data/instance-id')
+  try:
+    instance = urllib.request.urlopen(req).read().decode('utf-8')
+  except urllib.error.HTTPError as exception:
+    raise TurbiniaException(f'Could not get instance name: {exception}')
+
+  return instance
 
 
-def PreprocessAttachDisk(disk_id):
-  """Attaches Google Cloud Disk to an instance.
+def PreprocessAttachDisk(volume_id):
+  """Attaches AWS EBS volume to an instance.
 
   Args:
-    disk_name(str): The name of the Cloud Disk to attach.
+    disk_id(str): The name of volume to attach.
 
   Returns:
     (str, list(str)): a tuple consisting of the path to the 'disk' block device
       and a list of paths to partition block devices. For example:
       (
-       '/dev/disk/by-id/google-disk0',
-       ['/dev/disk/by-id/google-disk0-part1', '/dev/disk/by-id/google-disk0-p2']
+       '/dev/sdf',
+       ['/dev/sdf1', '/dev/sdf2']
       )
 
   Raises:
     TurbiniaException: If the device is not a block device.
   """
-  # TODO need: awsprofile
+  # Check if volume is already attached
+  attached_device = CheckVolumeAttached(volume_id)
+  if attached_device:
+    log.info(f'Disk {volume_id} already attached as {attached_device}')
+    # TODO: Fix globbing for partitions
+    return (attached_device, sorted(glob.glob(f'{attached_device}+')))
+
+  # Volume is not attached so need to attach it
   config.LoadConfig()
-  aws_account = account.AWSAccount(config.TURBINIA_ZONE, aws_profile)
+  aws_account = account.AWSAccount(config.TURBINIA_ZONE)
   instance_id = GetLocalInstanceId()
   instance = aws_account.ec2.GetInstanceById(instance_id)
-  path = f'/dev/sd-{disk_id}'
-  if util.is_block_device(path):
-    log.info(f'Disk {disk_name:s} already attached!')
-    # TODO need to see if partition devices are created automatically or need to
-    # be enumerated in other ways.
-    return (path, sorted(glob.glob(f'{path:s}-part*')))
+  device_path = GetDevicePath()
 
-  instance.AttachVolume(aws_account.ebs.GetVolumeById(disk_id), path)
-
-  # instance_name = GetLocalInstanceName()
-  # project = gcp_project.GoogleCloudProject(
-  #     config.TURBINIA_PROJECT, default_zone=config.TURBINIA_ZONE)
-  # instance = project.compute.GetInstance(instance_name)
-
-  # disk = project.compute.GetDisk(disk_name)
-  # log.info(f'Attaching disk {disk_name:s} to instance {instance_name:s}')
-  # instance.AttachDisk(disk)
-
+  instance.AttachVolume(aws_account.ebs.GetVolumeById(volume_id), device_path)
 
   # Make sure we have a proper block device
   for _ in range(RETRY_MAX):
-    if util.is_block_device(path):
-      log.info(f'Block device {path:s} successfully attached')
+    # The device path is provided in the above attach volume command but that
+    # name/path is not guaranted to be the actual device name that is used by
+    # the host so we need to check the device names again here.  See here for
+    # more details:
+    # https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/nvme-ebs-volumes.html#identify-nvme-ebs-device
+    device_path = CheckVolumeAttached(volume_id)
+    if device_path and util.is_block_device(device_path):
+      log.info(f'Block device {device_path:s} successfully attached')
       break
-    if os.path.exists(path):
-      log.info(f'Block device {path:s} mode is {os.stat(path).st_mode}')
+    if device_path and os.path.exists(device_path):
+      log.info(
+          f'Block device {device_path:s} mode is '
+          f'{os.stat(device_path).st_mode}')
     time.sleep(ATTACH_SLEEP_TIME)
 
   # Final sleep to allow time between API calls.
   time.sleep(ATTACH_SLEEP_TIME)
 
   message = None
-  if not os.path.exists(path):
+  if not device_path:
+    message = 'No valid device paths found after attaching'
+  elif not os.path.exists(device_path):
     turbinia_nonexisting_disk_path.inc()
-    message = f'Device path {path:s} does not exist'
-  elif not util.is_block_device(path):
-    message = f'Device path {path:s} is not a block device'
+    message = f'Device path {device_path:s} does not exist'
+  elif not util.is_block_device(device_path):
+    message = f'Device path {device_path:s} is not a block device'
   if message:
     log.error(message)
     raise TurbiniaException(message)
 
-  return (path, sorted(glob.glob(f'{path:s}-part*')))
+  # TODO: Fix globbing for partitions
+  return (device_path, sorted(glob.glob(f'{device_path}+')))
 
 
-def PostprocessDetachDisk(disk_name, local_path):
-  """Detaches Google Cloud Disk from an instance.
+def PostprocessDetachDisk(volume_id, local_path):
+  """Detaches AWS EBS volume from an instance.
 
   Args:
-    disk_name(str): The name of the Cloud Disk to detach.
+    volume_id(str): The name of the Cloud Disk to detach.
     local_path(str): The local path to the block device to detach.
   """
   #TODO: can local_path be something different than the /dev/disk/by-id/google*
   if local_path:
     path = local_path
   else:
-    path = f'/dev/disk/by-id/google-{disk_name:s}'
+    path = f'/dev/disk/by-id/google-{volume_id:s}'
 
   if not util.is_block_device(path):
-    log.info(f'Disk {disk_name:s} already detached!')
+    log.info(f'Disk {volume_id:s} already detached!')
     return
 
   config.LoadConfig()
@@ -137,8 +211,8 @@ def PostprocessDetachDisk(disk_name, local_path):
   project = gcp_project.GoogleCloudProject(
       config.TURBINIA_PROJECT, default_zone=config.TURBINIA_ZONE)
   instance = project.compute.GetInstance(instance_name)
-  disk = project.compute.GetDisk(disk_name)
-  log.info(f'Detaching disk {disk_name:s} from instance {instance_name:s}')
+  disk = project.compute.GetDisk(volume_id)
+  log.info(f'Detaching disk {volume_id:s} from instance {instance_name:s}')
   instance.DetachDisk(disk)
 
   # Make sure device is Detached

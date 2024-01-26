@@ -24,8 +24,7 @@
 # separate when running with the same Cloud projects or backend servers.
 INSTANCE_ID = 'turbinia-instance1'
 
-# Which Cloud provider to use. Valid options are 'Local' and 'GCP'. Use 'GCP'
-# for GCP or hybrid installations, and 'Local' for local installations.
+# Which Cloud provider to use. Valid options are 'Local', 'GCP' or 'AWS'.
 CLOUD_PROVIDER = 'Local'
 
 # Task manager only supports 'Celery'.

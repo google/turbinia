@@ -42,6 +42,8 @@ from datetime import datetime
 config.LoadConfig()
 if config.CLOUD_PROVIDER.lower() == 'gcp':
   from turbinia.processors import google_cloud
+elif config.CLOUD_PROVIDER.lower() == 'aws':
+  from turbinia.processors import aws
 
 log = logging.getLogger(__name__)
 
@@ -917,7 +919,7 @@ class DiskPartition(Evidence):
         self.state[EvidenceState.ATTACHED] = False
 
 
-class AwsEbsDisk(Evidence):
+class AwsEbsVolume(Evidence):
   """Evidence object for an AWS EC2 EBS Disk.
 
   Attributes:
@@ -926,17 +928,17 @@ class AwsEbsDisk(Evidence):
     disk_name: The cloud disk name.
   """
 
-  REQUIRED_ATTRIBUTES = ['disk_name', 'project', 'zone']
+  REQUIRED_ATTRIBUTES = ['volume_id', 'project', 'zone']
   POSSIBLE_STATES = [EvidenceState.ATTACHED, EvidenceState.MOUNTED]
 
   def __init__(
-      self, project=None, zone=None, disk_name=None, mount_partition=1, *args,
+      self, project=None, zone=None, volume_id=None, mount_partition=1, *args,
       **kwargs):
     """Initialization for Google Cloud Disk."""
-    super(GoogleCloudDisk, self).__init__(*args, **kwargs)
+    super(AwsEbsVolume, self).__init__(*args, **kwargs)
     self.project = project
     self.zone = zone
-    self.disk_name = disk_name
+    self.volume_id = volume_id
     self.mount_partition = mount_partition
     self.partition_paths = None
     self.cloud_only = True
