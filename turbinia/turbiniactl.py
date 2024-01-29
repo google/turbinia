@@ -19,7 +19,7 @@ import argparse
 import logging
 import sys
 
-from debug import initialize_debugmode_if_requested
+from turbinia.debug import initialize_debugmode_if_requested
 from turbinia import config
 from turbinia import TurbiniaException
 from turbinia.config import logger
