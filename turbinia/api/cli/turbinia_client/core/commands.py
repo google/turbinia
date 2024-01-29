@@ -23,13 +23,13 @@ from importlib.metadata import version as importlib_version
 
 from turbinia_api_lib import exceptions
 from turbinia_api_lib import api_client
+from turbinia_api_lib import models
 from turbinia_api_lib.api import turbinia_requests_api
 from turbinia_api_lib.api import turbinia_tasks_api
 from turbinia_api_lib.api import turbinia_configuration_api
 from turbinia_api_lib.api import turbinia_jobs_api
 from turbinia_api_lib.api import turbinia_request_results_api
 from turbinia_api_lib.api import turbinia_evidence_api
-
 from turbinia_client.core import groups
 from turbinia_client.helpers import formatter
 
@@ -43,8 +43,9 @@ def get_config(ctx: click.Context) -> None:
   client: api_client.ApiClient = ctx.obj.api_client
   api_instance = turbinia_configuration_api.TurbiniaConfigurationApi(client)
   try:
-    api_response = api_instance.read_config()
-    formatter.echo_json(api_response)
+    api_response = api_instance.read_config_with_http_info()
+    decoded_response = formatter.decode_api_response(api_response)
+    formatter.echo_json(decoded_response)
   except exceptions.ApiException as exception:
     log.error(
         f'Received status code {exception.status} '
@@ -108,8 +109,9 @@ def get_jobs(ctx: click.Context) -> None:
   client: api_client.ApiClient = ctx.obj.api_client
   api_instance = turbinia_jobs_api.TurbiniaJobsApi(client)
   try:
-    api_response = api_instance.read_jobs()
-    click.echo(api_response)
+    api_response = api_instance.read_jobs_with_http_info()
+    decoded_response = formatter.decode_api_response(api_response)
+    formatter.echo_json(decoded_response)
   except exceptions.ApiException as exception:
     log.error(
         f'Received status code {exception.status} '
@@ -146,12 +148,14 @@ def get_request(
         'Did you mean to run "turbinia-client status summary" instead?')
     return
   try:
-    api_response = api_instance.get_request_status(request_id)
+    api_response = api_instance.get_request_status_with_http_info(request_id)
+    decoded_response = formatter.decode_api_response(api_response)
     if json_dump:
-      formatter.echo_json(api_response)
+      formatter.echo_json(decoded_response)
     else:
-      report = formatter.RequestMarkdownReport(api_response).generate_markdown(
-          priority_filter=priority_filter, show_all=show_all)
+      report = formatter.RequestMarkdownReport(
+          decoded_response).generate_markdown(
+              priority_filter=priority_filter, show_all=show_all)
       click.echo(report)
   except exceptions.ApiException as exception:
     log.error(
@@ -176,11 +180,14 @@ def get_workers(
   client: api_client.ApiClient = ctx.obj.api_client
   api_instance = turbinia_tasks_api.TurbiniaTasksApi(client)
   try:
-    api_response = api_instance.get_workers_status(days, all_fields)
+    api_response = api_instance.get_workers_status_with_http_info(
+        days, all_fields)
+    decoded_response = formatter.decode_api_response(api_response)
+
     if json_dump:
-      formatter.echo_json(api_response)
+      formatter.echo_json(decoded_response)
     else:
-      report = formatter.WorkersMarkdownReport(api_response,
+      report = formatter.WorkersMarkdownReport(decoded_response,
                                                days).generate_markdown()
       click.echo(report)
   except exceptions.ApiException as exception:
@@ -215,13 +222,14 @@ def get_statistics(
   client: api_client.ApiClient = ctx.obj.api_client
   api_instance = turbinia_tasks_api.TurbiniaTasksApi(client)
   try:
-    api_response = api_instance.get_task_statistics(
+    api_response = api_instance.get_task_statistics_with_http_info(
         days=days, task_id=task_id, request_id=request_id, user=user)
-    api_response = api_response.__dict__
+    decoded_response: models.CompleteTurbiniaStats = (
+        formatter.decode_api_response(api_response))
     if json_dump:
-      formatter.echo_json(api_response)
+      formatter.echo_json(decoded_response)
     else:
-      stat_formatter = formatter.StatsMarkdownReport(api_response)
+      stat_formatter = formatter.StatsMarkdownReport(decoded_response.dict())
       if csv:
         report = stat_formatter.generate_csv()
       else:
@@ -243,11 +251,14 @@ def get_requests_summary(ctx: click.Context, json_dump: bool) -> None:
   client: api_client.ApiClient = ctx.obj.api_client
   api_instance = turbinia_requests_api.TurbiniaRequestsApi(client)
   try:
-    api_response = api_instance.get_requests_summary()
+    api_response = api_instance.get_requests_summary_with_http_info()
+    decoded_response = formatter.decode_api_response(api_response)
+
     if json_dump:
-      formatter.echo_json(api_response)
+      formatter.echo_json(decoded_response)
     else:
-      report = formatter.SummaryMarkdownReport(api_response).generate_markdown()
+      report = formatter.SummaryMarkdownReport(
+          decoded_response).generate_markdown()
       click.echo(report)
   except exceptions.ApiException as exception:
     log.error(
@@ -270,12 +281,13 @@ def get_task(
   client: api_client.ApiClient = ctx.obj.api_client
   api_instance = turbinia_tasks_api.TurbiniaTasksApi(client)
   try:
-    api_response = api_instance.get_task_status(task_id)
+    api_response = api_instance.get_task_status_with_http_info(task_id)
+    decoded_response = formatter.decode_api_response(api_response)
     if json_dump:
-      formatter.echo_json(api_response)
+      formatter.echo_json(decoded_response)
     else:
-      report = formatter.TaskMarkdownReport(api_response).generate_markdown(
-          show_all=show_all)
+      report = formatter.TaskMarkdownReport(decoded_response).generate_markdown(
+          show_all=show_all, priority_filter=100)
       click.echo(report)
   except exceptions.ApiException as exception:
     log.error(
@@ -300,12 +312,15 @@ def get_evidence_summary(
   client: api_client.ApiClient = ctx.obj.api_client
   api_instance = turbinia_evidence_api.TurbiniaEvidenceApi(client)
   try:
-    api_response = api_instance.get_evidence_summary(group, output)
+    api_response = api_instance.get_evidence_summary_with_http_info(
+        group, output)
+    decoded_response = formatter.decode_api_response(api_response)
+
     if json_dump:
-      formatter.echo_json(api_response)
+      formatter.echo_json(decoded_response)
     else:
       report = formatter.EvidenceSummaryMarkdownReport(
-          api_response).generate_summary_markdown(output)
+          decoded_response).generate_summary_markdown(output)
       click.echo(report)
   except exceptions.ApiException as exception:
     log.error(
@@ -330,13 +345,15 @@ def query_evidence(
   client: api_client.ApiClient = ctx.obj.api_client
   api_instance = turbinia_evidence_api.TurbiniaEvidenceApi(client)
   try:
-    api_response = api_instance.query_evidence(
+    api_response = api_instance.query_evidence_with_http_info(
         attribute_value, attribute_name, output)
+    decoded_response = formatter.decode_api_response(api_response)
+
     if json_dump:
-      formatter.echo_json(api_response)
+      formatter.echo_json(decoded_response)
     else:
       report = formatter.EvidenceSummaryMarkdownReport(
-          api_response).generate_summary_markdown(output)
+          decoded_response).generate_summary_markdown(output)
       click.echo(report)
   except exceptions.ApiException as exception:
     log.error(
@@ -360,12 +377,14 @@ def get_evidence(
   client: api_client.ApiClient = ctx.obj.api_client
   api_instance = turbinia_evidence_api.TurbiniaEvidenceApi(client)
   try:
-    api_response = api_instance.get_evidence_by_id(evidence_id)
+    api_response = api_instance.get_evidence_by_id_with_http_info(evidence_id)
+    decoded_response = formatter.decode_api_response(api_response)
+
     if json_dump:
-      formatter.echo_json(api_response)
+      formatter.echo_json(decoded_response)
     else:
-      report = formatter.EvidenceMarkdownReport(api_response).generate_markdown(
-          1, show_all=show_all)
+      report = formatter.EvidenceMarkdownReport(
+          decoded_response).generate_markdown(1, show_all=show_all)
       click.echo(report)
   except exceptions.ApiException as exception:
     log.error(
@@ -418,9 +437,9 @@ def upload_evidence(
       log.error(f'Unable to read file in {file_path}')
       continue
     try:
-      api_response = api_instance.upload_evidence([file_path], ticket_id,
-                                                  calculate_hash)
-      report[abs_path] = api_response
+      api_response = api_instance.upload_evidence_with_http_info(
+          [file_path], ticket_id, calculate_hash)
+      report[abs_path] = formatter.decode_api_response(api_response)
     except exceptions.ApiException as exception:
       error_message = (
           f'Received status code {exception.status} '

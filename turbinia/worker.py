@@ -70,7 +70,6 @@ def check_docker_dependencies(dependencies):
   # does not have bash or which installed. (no linux fs layer).
   log.info('Performing docker dependency check.')
   job_names = list(job_manager.JobsManager.GetJobNames())
-  images = docker_manager.DockerManager().list_images(return_filter='short_id')
 
   # Iterate through list of jobs
   for job, values in dependencies.items():
@@ -79,27 +78,33 @@ def check_docker_dependencies(dependencies):
           'The job {0:s} was not found or has been disabled. Skipping '
           'dependency check...'.format(job))
       continue
-    docker_image = values.get('docker_image')
-    # short id only pulls the first 10 characters of image id.
-    if docker_image and len(docker_image) > 10:
-      docker_image = docker_image[0:10]
 
-    if docker_image in images:
-      for program in values['programs']:
-        cmd = f'type {program:s}'
-        stdout, stderr, ret = docker_manager.ContainerManager(
-            values['docker_image']).execute_container(cmd, shell=True)
-        if ret != 0:
+    for program in values['programs']:
+      docker_image = values.get('docker_image')
+      if (config.DOCKER_ENABLED and docker_image is not None):
+        log.info(
+            'docker_image({0:s}): {1:s} program: {2:s}'.format(
+                job, values['docker_image'], program))
+        # Check if docker_image exists in registry.
+        exists = docker_manager.DockerManager().image_exists(docker_image)
+        if not exists:
           raise TurbiniaException(
-              'Job dependency {0:s} not found for job {1:s}. Please install '
-              'the dependency for the container or disable the job.'.format(
-                  program, job))
-      job_manager.JobsManager.RegisterDockerImage(job, values['docker_image'])
-    elif docker_image:
-      raise TurbiniaException(
-          'Docker image {0:s} was not found for the job {1:s}. Please '
-          'update the config with the correct image id'.format(
-              values['docker_image'], job))
+              'Docker image {0:s} does not exist for the job {1:s}. Please '
+              'update the config with the correct image name'.format(
+                  values['docker_image'], job))
+        # # Check if job program exists in docker image.
+        # # Comment out this part if you want to verify the command in all
+        # # job docker images. Note: This will download *all* docker images
+        # # each time a worker is started.
+        # cmd = f'type {program:s}'
+        # stdout, stderr, ret = docker_manager.ContainerManager(
+        #     values['docker_image']).execute_container(cmd, shell=True)
+        # if ret != 0:
+        #   raise TurbiniaException(
+        #       'Job dependency {0:s} not found for job {1:s}. Please install '
+        #       'the dependency for the container or disable the job.'.format(
+        #           program, job))
+        job_manager.JobsManager.RegisterDockerImage(job, values['docker_image'])
 
 
 def check_system_dependencies(dependencies):

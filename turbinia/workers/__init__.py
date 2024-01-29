@@ -672,10 +672,12 @@ class TurbiniaTask:
             ro_paths.append(path_string)
       rw_paths = [self.output_dir, self.tmp_dir]
       container_manager = docker_manager.ContainerManager(docker_image)
+      result.log(
+          'Executing job {0:s} ({1:s}) in container: {2:s}'.format(
+              self.job_name, self.job_id, docker_image))
       stdout, stderr, ret = container_manager.execute_container(
           cmd, shell, ro_paths=ro_paths, rw_paths=rw_paths,
           timeout_limit=timeout_limit)
-
     # Execute the job on the host system.
     else:
       try:
@@ -876,7 +878,7 @@ class TurbiniaTask:
   def check_serialization_errors(self, result):
     """Checks the TurbiniaTaskResult is valid for serialization.
     
-    This method checks the 'reuslt'' obejct is the correct type and whether
+    This method checks the 'result'' object is the correct type and whether
     it is pickle/JSON serializable or not.
 
     Args:

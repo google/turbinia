@@ -717,7 +717,9 @@ class CeleryTaskManager(BaseTaskManager):
         if not evidence_.request_id:
           evidence_.request_id = request.request_id
 
-        log.info(f'Received evidence [{str(evidence_):s}] from Kombu message.')
+        log.info(
+            f'Received evidence [{str(evidence_):s}] with request ID '
+            f'{request.request_id} from Kombu message.')
 
         success, message = recipe_helpers.validate_recipe(request.recipe)
         if not success:

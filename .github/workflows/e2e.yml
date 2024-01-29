@@ -13,20 +13,41 @@ jobs:
             gift_ppa_track: "staging"
           - docker_base_image: "ubuntu:22.04"
             gift_ppa_track: "stable"
+
     steps:
-      - uses: actions/checkout@v2
-      - name: Pull docker images for cache
-        run: |
-          docker pull ${{ matrix.docker_base_image }}
-          docker pull us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-api-server-dev:latest
-          docker pull us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-server-dev:latest
-          docker pull us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-worker-dev:latest
+      - name: checkout
+        uses: actions/checkout@v3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
       - name: Build Turbinia API server Docker image
-        run: docker build --cache-from=${{ matrix.docker_base_image }},us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-api-server-dev:latest -t turbinia-api-server-dev -f docker/api_server/Dockerfile .
-      - name: Build Turbinia server Docker image
-        run: docker build --cache-from=${{ matrix.docker_base_image }},us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-server-dev:latest -t turbinia-server-dev -f docker/server/Dockerfile .
-      - name: Build Turbinia worker Docker image
-        run: docker build --build-arg PPA_TRACK=${{ matrix.gift_ppa_track }} --cache-from=${{ matrix.docker_base_image }},us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-worker-dev:latest -t turbinia-worker-dev -f docker/worker/Dockerfile .
+        uses: docker/build-push-action@v5
+        with:
+          file: docker/api_server/Dockerfile
+          context: .
+          load: true
+          tags: turbinia-api-server-dev
+          cache-from: type=gha,scope=api-server
+          cache-to: type=gha,mode=max,scope=api-server
+      - name: Build Turbinia Server Docker image
+        uses: docker/build-push-action@v5
+        with:
+          file: docker/server/Dockerfile
+          context: .
+          load: true
+          tags: turbinia-server-dev
+          cache-from: type=gha,scope=server
+          cache-to: type=gha,mode=max,scope=server
+      - name: Buid Turbinia Worker Docker image
+        uses: docker/build-push-action@v5
+        with:
+          file: docker/worker/Dockerfile
+          context: .
+          build-args: |
+            "PPA_TRACK=${{ matrix.gift_ppa_track }}"
+          load: true
+          tags: turbinia-worker-dev
+          cache-from: type=gha,scope=worker
+          cache-to: type=gha,mode=max,scope=worker
       - name: Prepare Turbinia configuration
         run: |
           mkdir ./conf

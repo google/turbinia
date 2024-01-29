@@ -9,7 +9,7 @@ The following sections describe how to get the Turbinia API server up and runnin
 ### Installation
 To use the Turbinia API server you will need to deploy Turbinia in your environment with a configuration that uses Redis and Celery.
 
-Please follow the instructions for deploying a [Turbinia GKE Celery cluster](https://github.com/google/osdfir-infrastructure/tree/main/charts/turbinia) or [local stack using Celery](turbinia-local-stack.md)
+Please follow the [instructions](install.md) for deploying Turbinia to Kubernetes or Docker.
 
 Note that the Turbinia API server requires access to the Turbinia output directory (```OUTPUT_DIR```)
 
@@ -26,4 +26,4 @@ We also provide a [command-line tool](https://github.com/google/turbinia/tree/ma
 ### Authentication
 Turbinia API Server uses OAuth2-proxy to provide OpenID Connect and OAuth2 authentication support. If you deployed Turbinia using GCP and GKE cluster instructions, follow the guide for [external access and authentication](https://github.com/google/osdfir-infrastructure/tree/main/charts/turbinia) to complete the authentication configuration.
 
-For Turbinia deployments using the [local stack](turbinia-local-stack.md), or a non-Google identity provider, make sure to edit the ```oauth2_proxy.cfg``` configuration file in ```docker/oauth2_proxy``` with the appropriate identity provider information such as ```client_id``` and ```client_secret``` prior to deploying the Docker containers in the local stack. If your deployment will use an identity provider other than Google, you will also need to change the ```provider``` and related settings. For more information and how to configure OAuth2-proxy for different providers, refer to the [OAuth2-Proxy Documentation](https://oauth2-proxy.github.io/oauth2-proxy/docs/configuration/oauth_provider).
+For Turbinia deployments using the [Docker Installation method](install.md), or a non-Google identity provider, make sure to edit the ```oauth2_proxy.cfg``` configuration file in ```docker/oauth2_proxy``` with the appropriate identity provider information such as ```client_id``` and ```client_secret``` prior to deploying the Docker containers in the local stack. If your deployment will use an identity provider other than Google, you will also need to change the ```provider``` and related settings. For more information and how to configure OAuth2-proxy for different providers, refer to the [OAuth2-Proxy Documentation](https://oauth2-proxy.github.io/oauth2-proxy/docs/configuration/oauth_provider).
