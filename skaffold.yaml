@@ -16,6 +16,7 @@ build:
         buildArgs:
           TURBINIA_DEBUG: 1
           TURBINIA_HOTRELOAD: 1
+          TURBINIA_DEBUG_PORT: 10000
       sync:
         infer:
         - turbinia/**
