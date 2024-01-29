@@ -118,8 +118,10 @@ RUN chmod +rwx /home/turbinia/start.sh
 # Debug and hot reload env
 ARG TURBINIA_DEBUG
 ARG TURBINIA_HOTRELOAD
+ARG TURBINIA_DEBUG_PORT
 ENV TURBINIA_DEBUG ${TURBINIA_DEBUG}
 ENV TURBINIA_HOTRELOAD ${TURBINIA_HOTRELOAD}
+ENV TURBINIA_DEBUG_PORT ${TURBINIA_DEBUG_PORT}
 
 # Install Turbinia package -- will skip dependencies if installed
 RUN poetry install --no-interaction --no-ansi -E worker
