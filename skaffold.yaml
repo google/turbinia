@@ -35,9 +35,12 @@ deploy:
   helm:
     releases:
     - name: dev-release
-      repo: https://google.github.io/osdfir-infrastructure
-      remoteChart: osdfir-infrastructure/turbinia
-      # chartPath: ./charts/turbinia
+      #repo: oci://us-docker.pkg.dev/osdfir-registry/osdfir-charts/
+      #remoteChart: turbinia
+      #repo: https://google.github.io/osdfir-infrastructure/
+      #remoteChart: turbinia
+      #remoteChart: osdfir-charts/osdfir-infrastructure/turbinia
+      chartPath: ./osdfir-infrastructure/charts/turbinia
       setValues:
         # config.override: "/tmp/turbinia/conf/turbinia.conf"
         versioncheck.enabled: False

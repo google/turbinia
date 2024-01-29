@@ -15,3 +15,6 @@ build
 __pycache__
 .cache
 turbinia.egg-info
+*.yar
+skaffold.yaml
+osdfir-infrastructure
