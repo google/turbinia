@@ -15,4 +15,3 @@ build
 __pycache__
 .cache
 turbinia.egg-info
-*.yaml
