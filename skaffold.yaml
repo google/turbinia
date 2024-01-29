@@ -13,6 +13,9 @@ build:
       docker:
         dockerfile: docker/worker/Dockerfile
         target: turbinia-worker-dev
+	buildArgs:
+	  DEBUG: 1
+          HOTRELOAD: 1
       sync:
         infer:
         - turbinia/**
