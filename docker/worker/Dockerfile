@@ -114,6 +114,12 @@ COPY --chown=turbinia:turbinia . /home/turbinia/
 COPY --chown=turbinia:turbinia docker/worker/start.sh /home/turbinia/start.sh
 RUN chmod +rwx /home/turbinia/start.sh
 
+# Debug and hot reload env
+ARG TURBINIA_DEBUG
+ARG TURBINIA_HOTRELOAD
+ENV TURBINIA_DEBUG ${TURBINIA_DEBUG}
+ENV TURBINIA_HOTRELOAD ${TURBINIA_HOTRELOAD}
+
 # Install Turbinia package -- will skip dependencies if installed
 RUN poetry install --no-interaction --no-ansi -E worker -E gcp
 

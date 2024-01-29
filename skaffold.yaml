@@ -12,20 +12,20 @@ build:
     - image: turbinia-worker
       docker:
         dockerfile: docker/worker/Dockerfile
-        target: turbinia-worker-dev
+        # target: turbinia-worker-dev
         buildArgs:
           TURBINIA_DEBUG: 1
           TURBINIA_HOTRELOAD: 1
       sync:
         infer:
         - turbinia/**
-    - image: turbinia-server
-      docker:
-        dockerfile: docker/server/Dockerfile
-        target: turbinia-server-dev
-      sync:
-        infer:
-        - turbinia/**
+    # - image: turbinia-server
+    #   docker:
+    #     dockerfile: docker/server/Dockerfile
+    #     # target: turbinia-server-dev
+    #   sync:
+    #     infer:
+    #     - turbinia/**
     # - image: turbinia-api
     #   docker:
     #     dockerfile: docker/api_server/Dockerfile.dev
@@ -44,8 +44,8 @@ deploy:
       setValueTemplates:
         worker.image.repository: "{{.IMAGE_REPO_turbinia_worker}}"
         worker.image.tag: "{{.IMAGE_TAG_turbinia_worker}}@{{.IMAGE_DIGEST_turbinia_worker}}"
-        server.image.repository: "{{.IMAGE_REPO_turbinia_server}}"
-        server.image.tag: "{{.IMAGE_TAG_turbinia_server}}@{{.IMAGE_DIGEST_turbinia_server}}"
+        # server.image.repository: "{{.IMAGE_REPO_turbinia_server}}"
+        # server.image.tag: "{{.IMAGE_TAG_turbinia_server}}@{{.IMAGE_DIGEST_turbinia_server}}"
         # api.image.repository: "{{.IMAGE_REPO_turbinia_api}}"
         # api.image.tag: "{{.IMAGE_TAG_turbinia_api}}@{{.IMAGE_DIGEST_turbinia_api}}"
 portForward:
