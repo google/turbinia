@@ -63,6 +63,7 @@ def GetDevicePath():
 
   return None
 
+
 def CheckVolumeAttached(disk_id):
   """Uses lsblk to determine if the disk is already attached.
 
@@ -86,12 +87,15 @@ def CheckVolumeAttached(disk_id):
     try:
       lsblk_results = json.loads(result.stdout)
     except json.JSONDecodeError as exception:
-      raise TurbiniaException(f'Unable to parse output from {command}: {exception}')
+      raise TurbiniaException(
+          f'Unable to parse output from {command}: {exception}')
 
     for device in lsblk_results.get('blockdevices', []):
-      if device.get('serial').lower() == serial_num.lower() and device.get('name'):
+      if device.get('serial').lower() == serial_num.lower() and device.get(
+          'name'):
         device_name = f'/dev/{device.get("name")}'
-        log.info(f'Found device {device_name} attached with serial {serial_num}')
+        log.info(
+            f'Found device {device_name} attached with serial {serial_num}')
         break
   else:
     log.info(
@@ -189,38 +193,36 @@ def PreprocessAttachDisk(volume_id):
   return (device_path, sorted(glob.glob(f'{device_path}+')))
 
 
-def PostprocessDetachDisk(volume_id, local_path):
+def PostprocessDetachDisk(volume_id):
   """Detaches AWS EBS volume from an instance.
 
   Args:
     volume_id(str): The name of the Cloud Disk to detach.
-    local_path(str): The local path to the block device to detach.
   """
-  #TODO: can local_path be something different than the /dev/disk/by-id/google*
-  if local_path:
-    path = local_path
-  else:
-    path = f'/dev/disk/by-id/google-{volume_id:s}'
-
-  if not util.is_block_device(path):
-    log.info(f'Disk {volume_id:s} already detached!')
+  attached_device = CheckVolumeAttached(volume_id)
+  if not attached_device:
+    log.info(f'Disk {volume_id} no longer attached')
     return
 
   config.LoadConfig()
-  instance_name = GetLocalInstanceName()
-  project = gcp_project.GoogleCloudProject(
-      config.TURBINIA_PROJECT, default_zone=config.TURBINIA_ZONE)
-  instance = project.compute.GetInstance(instance_name)
-  disk = project.compute.GetDisk(volume_id)
-  log.info(f'Detaching disk {volume_id:s} from instance {instance_name:s}')
-  instance.DetachDisk(disk)
+  aws_account = account.AWSAccount(config.TURBINIA_ZONE)
+  instance_id = GetLocalInstanceId()
+  instance = aws_account.ec2.GetInstanceById(instance_id)
+
+  log.info(f'Detaching disk {volume_id:s} from instance {instance_id:s}')
+  instance.DetachVolume(
+      aws_account.ebs.GetVolumeById(volume_id), attached_device)
 
   # Make sure device is Detached
   for _ in range(RETRY_MAX):
-    if not os.path.exists(path):
-      log.info(f'Block device {path:s} is no longer attached')
+    if not os.path.exists(attached_device):
+      log.info(f'Block device {attached_device:s} is no longer attached')
       break
     time.sleep(DETACH_SLEEP_TIME)
 
-  # Final sleep to allow time between API calls.
-  time.sleep(DETACH_SLEEP_TIME)
+  if os.path.exists(attached_device):
+    raise TurbiniaException(
+        f'Could not detach volume {volume_id} with device name '
+        f'{attached_device}')
+  else:
+    log.info(f'Detached volume {volume_id} with device name {attached_device}')
