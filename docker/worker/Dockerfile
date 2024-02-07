@@ -119,9 +119,9 @@ RUN chmod +rwx /home/turbinia/start.sh
 ARG TURBINIA_DEBUG
 ARG TURBINIA_HOTRELOAD
 ARG TURBINIA_DEBUG_PORT
-ENV TURBINIA_DEBUG ${TURBINIA_DEBUG}
-ENV TURBINIA_HOTRELOAD ${TURBINIA_HOTRELOAD}
-ENV TURBINIA_DEBUG_PORT ${TURBINIA_DEBUG_PORT}
+ENV TURBINIA_DEBUG ${TURBINIA_DEBUG:-0}
+ENV TURBINIA_HOTRELOAD ${TURBINIA_HOTRELOAD:-0}
+ENV TURBINIA_DEBUG_PORT ${TURBINIA_DEBUG_PORT:-10000}
 
 # Install Turbinia package -- will skip dependencies if installed
 RUN poetry install --no-interaction --no-ansi -E worker
@@ -145,4 +145,4 @@ ENV TURBINIA_HOTRELOAD 1
 CMD ["python3","turbinia/turbiniactl.py","-d","celeryworker"]
 # Expose Prometheus and debug endpoint.
 EXPOSE 9200/tcp
-EXPOSE 10000/tcp
+EXPOSE ${TURBINIA_DEBUG_PORT:-10000}

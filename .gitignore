@@ -30,7 +30,6 @@ terraform/gcp/*.auto.tfvars
 
 # Exclude IDE files
 .idea/
-.vscode/
 
 # Exclude  logs
 *.log
