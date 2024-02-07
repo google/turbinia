@@ -5,13 +5,16 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Kubernetes: Run/Debug",
+            "name": "Attach to Worker",
             "type": "cloudcode.kubernetes",
-            "request": "launch",
-            "skaffoldConfig": "${workspaceFolder}/skaffold.yaml",
-            "watch": false,
-            "cleanUp": true,
-            "portForward": true
-        }
+            "request": "attach",
+            "language": "Python",
+            "debugPort": 10000,
+            "podSelector": {
+               "app.kubernetes.io/component": "worker"
+            },
+            "localRoot": "${workspaceFolder}",
+            "remoteRoot": "/home/turbinia"
+          }
     ]
 }

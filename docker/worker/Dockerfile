@@ -118,9 +118,9 @@ RUN chmod +rwx /home/turbinia/start.sh
 ARG TURBINIA_DEBUG
 ARG TURBINIA_HOTRELOAD
 ARG TURBINIA_DEBUG_PORT
-ENV TURBINIA_DEBUG ${TURBINIA_DEBUG}
-ENV TURBINIA_HOTRELOAD ${TURBINIA_HOTRELOAD}
-ENV TURBINIA_DEBUG_PORT ${TURBINIA_DEBUG_PORT}
+ENV TURBINIA_DEBUG ${TURBINIA_DEBUG:-0}
+ENV TURBINIA_HOTRELOAD ${TURBINIA_HOTRELOAD:-0}
+ENV TURBINIA_DEBUG_PORT ${TURBINIA_DEBUG_PORT:-10000}
 
 # Install Turbinia package -- will skip dependencies if installed
 RUN poetry install --no-interaction --no-ansi -E worker -E gcp
@@ -128,3 +128,4 @@ RUN poetry install --no-interaction --no-ansi -E worker -E gcp
 CMD ["/home/turbinia/start.sh"]
 # Expose Prometheus endpoint.
 EXPOSE 9200/tcp
+EXPOSE ${TURBINIA_DEBUG_PORT:-10000}
