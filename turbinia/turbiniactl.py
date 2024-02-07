@@ -40,7 +40,6 @@ log = logging.getLogger('turbinia')
 # file handler later once we have read the log path from the config.
 logger.setup(need_file_handler=False)
 
-initialize_debugmode_if_requested()
 
 def csv_list(string):
   """Helper method for having CSV argparse types.
@@ -693,14 +692,17 @@ def process_args(args):
     worker.start()
   elif args.command == 'celeryworker':
     logger.setup()
+    initialize_debugmode_if_requested()
     worker = TurbiniaCeleryWorker(
         jobs_denylist=args.jobs_denylist, jobs_allowlist=args.jobs_allowlist)
     worker.start()
   elif args.command == 'server':
+    initialize_debugmode_if_requested()
     server = TurbiniaServer(
         jobs_denylist=args.jobs_denylist, jobs_allowlist=args.jobs_allowlist)
     server.start()
   elif args.command == 'api_server':
+    initialize_debugmode_if_requested()
     from turbinia.api.api_server import TurbiniaAPIServer
     api_server = TurbiniaAPIServer()
     api_server.start('turbinia.api.api_server:app')
