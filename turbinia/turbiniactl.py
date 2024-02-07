@@ -31,8 +31,6 @@ logger.setup(need_file_handler=False)
 
 log = logging.getLogger('turbinia')
 
-initialize_debugmode_if_requested()
-
 
 def csv_list(string):
   """Helper method for having CSV argparse types.
