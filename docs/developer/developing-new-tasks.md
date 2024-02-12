@@ -231,7 +231,7 @@ There is a `TestTurbiniaTaskBase` object that task tests can sub-class for
 relatively easy testing of the basic run method.  See the [photorec
 test](https://github.com/google/turbinia/blob/master/turbinia/workers/photorec_test.py)
 for a simple example. For a task test with reporting output see the [sshd
-test](https://github.com/google/turbinia/blob/master/turbinia/workers/sshd_test.py) as an example.
+test](https://github.com/google/turbinia/blob/master/turbinia/workers/analysis/sshd_test.py) as an example.
 
 ## Notes
 
