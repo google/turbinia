@@ -17,7 +17,7 @@
 from __future__ import unicode_literals
 
 from turbinia.workers import artifact
-from turbinia.workers import redis
+from turbinia.workers.analysis import redis
 from turbinia.evidence import ContainerdContainer
 from turbinia.evidence import Directory
 from turbinia.evidence import DockerContainer

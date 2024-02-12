@@ -19,7 +19,7 @@ from __future__ import unicode_literals
 import unittest
 
 from turbinia import config
-from turbinia.workers import tomcat
+from turbinia.workers.analysis import tomcat
 
 
 class TomcatAnalysisTaskTest(unittest.TestCase):
