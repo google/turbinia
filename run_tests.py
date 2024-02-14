@@ -15,13 +15,28 @@
 # limitations under the License.
 """Script to run the tests."""
 
+import coverage
 import unittest
 import sys
 
 if __name__ == '__main__':
   test_suite = unittest.TestLoader().discover('turbinia', pattern='*_test.py')
-  test_suite.addTests(
-      unittest.TestLoader().discover('turbinia/api/cli', pattern='*_test.py'))
-  test_results = unittest.TextTestRunner(verbosity=2).run(test_suite)
+  test_results = None
+
+  cov = coverage.Coverage(include='turbinia/**/*.py', omit='*_test.py')
+  cov.start()
+
+  try:
+    test_suite.addTests(
+        unittest.TestLoader().discover('turbinia/api/cli', pattern='*_test.py'))
+    test_results = unittest.TextTestRunner(verbosity=2).run(test_suite)
+  except Exception:
+    pass
+
+  cov.stop()
+  cov.save()
+
+  cov.report(file=sys.stdout)
+
   if not test_results.wasSuccessful():
     sys.exit(1)

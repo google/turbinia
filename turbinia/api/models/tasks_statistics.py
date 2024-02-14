@@ -249,7 +249,7 @@ class CompleteTurbiniaStats(BaseModel):
         user (string): The user of the request we want tasks for.
 
       Returns:
-        bool: True if report was sucessfully acquired.
+        bool: True if report was successfully acquired.
       """
     task_stats = self.get_statistics(
         turbinia_config.INSTANCE_ID, days, task_id, request_id, user)

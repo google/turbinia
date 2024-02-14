@@ -103,12 +103,15 @@ class TaskLoader():
     from turbinia.workers.analysis.jenkins import JenkinsAnalysisTask
     from turbinia.workers.analysis.jupyter import JupyterAnalysisTask
     from turbinia.workers.analysis.linux_acct import LinuxAccountAnalysisTask
-    from turbinia.workers.analysis.yara import YaraAnalysisTask
     from turbinia.workers.analysis.postgresql_acct import PostgresAccountAnalysisTask
+    from turbinia.workers.analysis.redis import RedisAnalysisTask
     from turbinia.workers.analysis.ssh_analyzer import LinuxSSHAnalysisTask
+    from turbinia.workers.analysis.sshd import SSHDAnalysisTask
+    from turbinia.workers.analysis.tomcat import TomcatAnalysisTask
     from turbinia.workers.analysis.windows_acct import WindowsAccountAnalysisTask
     from turbinia.workers.analysis.wordpress_access import WordpressAccessLogAnalysisTask
     from turbinia.workers.analysis.wordpress_creds import WordpressCredsAnalysisTask
+    from turbinia.workers.analysis.yara import YaraAnalysisTask
     from turbinia.workers.artifact import FileArtifactExtractionTask
     from turbinia.workers.binary_extractor import BinaryExtractorTask
     from turbinia.workers.bulk_extractor import BulkExtractorTask
@@ -122,14 +125,11 @@ class TaskLoader():
     from turbinia.workers.hindsight import HindsightTask
     from turbinia.workers.partitions import PartitionEnumerationTask
     from turbinia.workers.photorec import PhotorecTask
-    from turbinia.workers.plaso import PlasoParserTask
     from turbinia.workers.plaso import PlasoHasherTask
+    from turbinia.workers.plaso import PlasoParserTask
     from turbinia.workers.psort import PsortTask
-    from turbinia.workers.redis import RedisAnalysisTask
-    from turbinia.workers.sshd import SSHDAnalysisTask
     from turbinia.workers.strings import StringsAsciiTask
     from turbinia.workers.strings import StringsUnicodeTask
-    from turbinia.workers.tomcat import TomcatAnalysisTask
     from turbinia.workers.volatility import VolatilityTask
     from turbinia.workers.worker_stat import StatTask
 

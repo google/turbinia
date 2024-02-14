@@ -19,8 +19,11 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from click import echo as click_echo
-
+from typing import Any
 from collections import defaultdict
+
+from turbinia_api_lib.api_response import ApiResponse
+
 import logging
 import json
 import pandas
@@ -37,10 +40,36 @@ IMPORTANT_ATTRIBUTES = {
 }
 
 
-def echo_json(json_data: dict) -> None:
+def echo_json(data: Any) -> None:
   """Pretty print JSON data."""
-  if isinstance(json_data, (dict, list, int)):
-    click_echo(json.dumps(json_data, indent=2))
+  try:
+    if isinstance(data, str):
+      json_string: str = json.loads(data)
+      json_string = json.dumps(json_string, indent=2)
+    else:
+      json_string: str = json.dumps(data, indent=2)
+    click_echo(json_string)
+  except json.JSONDecodeError as exception:
+    raise RuntimeError('Unable to decode API response') from exception
+
+
+def decode_api_response(data: Any) -> str:
+  """Decodes ApiResponse data into a Python object"""
+  if not isinstance(data, ApiResponse):
+    return data
+  data_attribute = None
+  response = ''
+  try:
+    if data_attribute := getattr(data, 'data'):
+      response = data_attribute
+    if not data_attribute:
+      if data_attribute := getattr(data, 'raw_data'):
+        response = json.loads(data_attribute)
+    return response
+  except json.JSONDecodeError as exception:
+    raise RuntimeError('Unable to decode API response') from exception
+  except AttributeError as exception:
+    raise RuntimeError('Unable to decode API response') from exception
 
 
 class MarkdownReportComponent(ABC):
@@ -297,7 +326,7 @@ class TaskMarkdownReport(MarkdownReportComponent):
       # Only show Task details if the Task has more priority than the
       # priority_filter
       if priority > priority_filter:
-        report.append(f'{self.heading2(name)}: {task.get("status")!s}')
+        report.append(f'{self.heading3(name)}: {task.get("status")!s}')
       else:
         report.append(self.heading2(name))
         line = f"{self.bold('Evidence:'):s} {task.get('evidence_name')!s}"

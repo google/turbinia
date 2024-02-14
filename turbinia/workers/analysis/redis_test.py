@@ -19,7 +19,7 @@ from __future__ import unicode_literals
 import unittest
 
 from turbinia import config
-from turbinia.workers import redis
+from turbinia.workers.analysis import redis
 
 
 class RedisAnalysisTaskTest(unittest.TestCase):

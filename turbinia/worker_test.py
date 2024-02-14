@@ -172,7 +172,7 @@ class TestTurbiniaPsqWorker(unittest.TestCase):
     self.assertRaises(
         TurbiniaException, check_docker_dependencies, dependencies)
 
-    # # Uncommment when the program dependency program check is uncommented
+    # # Uncomment when the program dependency program check is uncommented
     # # in worker.py as well.
     # # Dependency not found.
     # mock_cm.execute_container.return_value = ['non_exist', None, 1]
