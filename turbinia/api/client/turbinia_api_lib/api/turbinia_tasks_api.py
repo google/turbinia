@@ -308,7 +308,7 @@ class TurbiniaTasksApi:
 
         # process the path parameters
         _path_params = {}
-        if _params['task_id']:
+        if _params['task_id'] is not None:
             _path_params['task_id'] = _params['task_id']
 
 

@@ -25,7 +25,7 @@ Returns supported required parameters for evidence type.  Args:   evidence_type 
 ```python
 import time
 import os
-import turbinia_api_lib
+
 from turbinia_api_lib.rest import ApiException
 from pprint import pprint
 
