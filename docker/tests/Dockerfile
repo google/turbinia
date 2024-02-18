@@ -41,6 +41,7 @@ RUN apt-get update && apt-get -y install \
     bulk-extractor \
     docker-explorer-tools \
     sleuthkit \
+    libewf-tools \
     && apt-get clean && rm -rf /var/cache/apt/* /var/lib/apt/lists/*
 
 # Add turbinia user to system and sudoers
