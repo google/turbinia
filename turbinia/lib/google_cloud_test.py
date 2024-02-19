@@ -24,7 +24,10 @@ class GoogleCLoudErrorReportingTest(unittest.TestCase):
   """Tests for GCP Error reporting functions."""
 
   @mock.patch('google.auth.default')
-  def testStackDriverSetup(self, mock_credentials):
+  @mock.patch('googleapiclient.discovery.build')
+  @mock.patch('turbinia.lib.google_cloud.GCPErrorReporting._send_error_report')
+  def testStackDriverSetup(self, mock_send, mock_build, mock_credentials):
     """Test object instantiation."""
+    mock_credentials.return_value = ('fake-project-id', 'fake-credentials')
     client_test = google_cloud.GCPErrorReporting()
     self.assertIsInstance(client_test, google_cloud.GCPErrorReporting)
