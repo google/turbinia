@@ -99,8 +99,7 @@ class TurbiniaCli:
           f'{self.client_secrets_path:s} and caching credentials at: '
           f'{self.credentials_path:s}')
       self.config.id_token = auth_helper.get_oauth2_token_id(
-          self.credentials_path, self.client_secrets_path
-      )
+          self.credentials_path, self.client_secrets_path)
 
     log.debug(
         f'Using configuration instance name -> {self.config_instance:s}'
