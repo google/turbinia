@@ -39,7 +39,7 @@ class Configuration:
       The dict value is an API key prefix when generating the auth data.
     :param username: Username for HTTP basic authentication.
     :param password: Password for HTTP basic authentication.
-    :param access_token: Access token.
+    :param id_token: OpenID token.
     :param server_index: Index to servers configuration.
     :param server_variables: Mapping with string values to replace variables in
       templated server configuration. The validation of enums is performed for
@@ -61,7 +61,7 @@ class Configuration:
     def __init__(self, host=None,
                  api_key=None, api_key_prefix=None,
                  username=None, password=None,
-                 access_token=None,
+                 id_token=None,
                  server_index=None, server_variables=None,
                  server_operation_index=None, server_operation_variables=None,
                  ssl_ca_cert=None,
@@ -102,8 +102,8 @@ class Configuration:
         self.password = password
         """Password for HTTP basic authentication
         """
-        self.access_token = access_token
-        """Access token
+        self.id_token = id_token
+        """ID token
         """
         self.logger = {}
         """Logging Settings
@@ -358,12 +358,12 @@ class Configuration:
         :return: The Auth Settings information dict.
         """
         auth = {}
-        if self.access_token is not None:
+        if self.id_token is not None:
             auth['oAuth2'] = {
                 'type': 'oauth2',
                 'in': 'header',
                 'key': 'Authorization',
-                'value': 'Bearer ' + self.access_token
+                'value': 'Bearer ' + self.id_token
             }
         return auth
 
