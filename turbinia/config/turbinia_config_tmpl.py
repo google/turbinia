@@ -265,6 +265,24 @@ DEPENDENCIES = [{
     'timeout': 3600
 }]
 
+################################################################################
+#                        Google Cloud Platform (GCP)
+#
+# Options in this section are required if the TASK_MANAGER is set to 'PSQ'.
+################################################################################
+
+# GCP project, region and zone where Turbinia will run.  Note that Turbinia does
+# not currently support multi-zone operation.  Even if you are running Turbinia
+# in Hybrid mode (with the Server and Workers running on local machines), you
+# will still need to provide these three parameters.
+TURBINIA_PROJECT = None
+TURBINIA_ZONE = None
+TURBINIA_REGION = None
+
+# GCS bucket that has Turbinia specific scripts and can be used to store logs.
+# This must be globally unique within GCP.
+BUCKET_NAME = None
+
 # GCS Path to copy worker results and Evidence output to.
 # Otherwise, set this as 'None' if output will be stored in shared storage.
 # GCS_OUTPUT_PATH = 'gs://%s/output' % BUCKET_NAME
