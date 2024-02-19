@@ -56,14 +56,15 @@ class TurbiniaCli:
         configuration file.
     credentials_path (str): Full path to the credentials cache file used for
         re-authentication.
+    id_token (str): An access token to use for authentication.
   """
 
-  def __init__(self, config_instance=None, config_path=None):
+  def __init__(self, config_instance=None, config_path=None, id_token=None):
     self._api_client: turbinia_api_lib.ApiClient = None
     self._config: turbinia_api_lib.Configuration = None
-    self._config_dict: dict = {}
-    self._evidence_mapping: dict = {}
-    self._request_options: dict = {}
+    self._config_dict: dict[str, str] = {}
+    self._evidence_mapping: dict[str, str] = {}
+    self._request_options: dict[str, str] = {}
     self.api_server_address: str = None
     self.api_server_port: int = None
     self.api_authentication_enabled: str = None
@@ -71,6 +72,7 @@ class TurbiniaCli:
     self.config_instance: str = config_instance
     self.config_path: str = config_path
     self.credentials_path: str = None
+    self.id_token: str = id_token
 
   def setup(self) -> None:
     """Sets up necessary attributes and preflight requests to the API server.
@@ -88,13 +90,17 @@ class TurbiniaCli:
     if not self.api_client:
       self.api_client = self.default_api_client(self.config)
 
-    if self.api_authentication_enabled:
+    if self.id_token:
+      log.debug('Using user provided id_token')
+      self.config.id_token = self.id_token
+    elif self.api_authentication_enabled:
       log.debug(
           f'Authentication is enabled. Using client_secrets file at: '
           f'{self.client_secrets_path:s} and caching credentials at: '
           f'{self.credentials_path:s}')
-      self.config.access_token = auth_helper.get_oauth2_credentials(
-          self.credentials_path, self.client_secrets_path)
+      self.config.id_token = auth_helper.get_oauth2_token_id(
+          self.credentials_path, self.client_secrets_path
+      )
 
     log.debug(
         f'Using configuration instance name -> {self.config_instance:s}'
@@ -155,22 +161,20 @@ class TurbiniaCli:
     """Default value for API client configuration."""
     return turbinia_api_lib.Configuration(host=host)
 
-  def get_evidence_arguments(self, evidence_name=None) -> dict:
+  def get_evidence_arguments(self, evidence_name=None) -> dict[str, str]:
     """Gets arguments for Evidence types."""
     api_instance = turbinia_evidence_api.TurbiniaEvidenceApi(self.api_client)
-    api_response = None
     if evidence_name:
       api_response = api_instance.get_evidence_attributes_with_http_info(
           evidence_name)
     else:
       api_response = api_instance.get_evidence_types_with_http_info()
     decoded_response = formatter.decode_api_response(api_response)
-    self.evidence_mapping: dict = decoded_response
+    self._evidence_mapping = decoded_response
     return decoded_response
 
-  def get_request_options(self) -> dict:
+  def get_request_options(self) -> dict[str, str]:
     """Gets BaseRequestOptions attributes."""
-    api_response = None
     api_instance = turbinia_configuration_api.TurbiniaConfigurationApi(
         self.api_client)
     api_response = api_instance.get_request_options_with_http_info()
