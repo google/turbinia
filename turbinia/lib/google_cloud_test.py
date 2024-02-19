@@ -14,6 +14,7 @@
 # limitations under the License.
 """Google Cloud resources library."""
 
+import mock
 import unittest
 
 from turbinia.lib import google_cloud
@@ -22,7 +23,8 @@ from turbinia.lib import google_cloud
 class GoogleCLoudErrorReportingTest(unittest.TestCase):
   """Tests for GCP Error reporting functions."""
 
-  def testStackDriverSetup(self):
+  @mock.patch('google.auth.default')
+  def testStackDriverSetup(self, mock_credentials):
     """Test object instantiation."""
     client_test = google_cloud.GCPErrorReporting()
     self.assertIsInstance(client_test, google_cloud.GCPErrorReporting)

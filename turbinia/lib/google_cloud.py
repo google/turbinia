@@ -60,7 +60,7 @@ class GCPErrorReporting:
   def _send_error_report(self, message, report_location) -> None:
     payload = {
         'serviceContext': {
-            'service': self.service,
+            'service': 'Turbinia',
         },
         'message': f'{message}',
         'context': {
@@ -70,3 +70,9 @@ class GCPErrorReporting:
 
     self.logging_client.projects().events().report(
         projectName=f'projects/{self._project}', body=payload).execute()
+
+def main():
+  error_client = GCPErrorReporting()
+  error_client.report("test")
+
+main()
