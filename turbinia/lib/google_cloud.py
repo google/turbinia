@@ -70,9 +70,3 @@ class GCPErrorReporting:
 
     self.logging_client.projects().events().report(
         projectName=f'projects/{self._project}', body=payload).execute()
-
-def main():
-  error_client = GCPErrorReporting()
-  error_client.report("test")
-
-main()
