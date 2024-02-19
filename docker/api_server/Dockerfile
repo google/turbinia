@@ -33,7 +33,7 @@ WORKDIR /home/turbinia
 
 # Copy requirements and install dependencies to cache them in docker layer
 COPY --chown=turbinia:turbinia ./pyproject.toml ./poetry.toml ./poetry.lock /home/turbinia/
-RUN poetry install --no-interaction --no-ansi --no-root -E gcp
+RUN poetry install --no-interaction --no-ansi --no-root
 
 ENV PATH="/home/turbinia/.venv/bin:$PATH" \
     VIRTUAL_ENV=/home/turbinia/.venv
