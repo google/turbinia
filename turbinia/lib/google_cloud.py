@@ -14,12 +14,13 @@
 # limitations under the License.
 """Google Cloud resources library."""
 
-from __future__ import unicode_literals
 import logging
 import traceback
 
 import google.auth
 import googleapiclient.discovery
+
+from turbinia import __version__
 
 logger = logging.getLogger('turbinia')
 
@@ -61,6 +62,7 @@ class GCPErrorReporting:
     payload = {
         'serviceContext': {
             'service': 'Turbinia',
+            'version': __version__
         },
         'message': f'{message}',
         'context': {
