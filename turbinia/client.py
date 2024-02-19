@@ -20,15 +20,12 @@ from collections import defaultdict
 from datetime import datetime
 from datetime import timedelta
 
-import httplib2
-import json
 import logging
 from operator import itemgetter
 from operator import attrgetter
 import os
 import time
 
-from google import auth
 from turbinia import config
 from turbinia.config import logger
 from turbinia.config import DATETIME_FORMAT
@@ -67,9 +64,7 @@ def get_turbinia_client():
   """
   # pylint: disable=no-else-return
   setup(is_client=True)
-  if config.TASK_MANAGER.lower() == 'psq':
-    return BaseTurbiniaClient()
-  elif config.TASK_MANAGER.lower() == 'celery':
+  if config.TASK_MANAGER.lower() == 'celery':
     return TurbiniaCeleryClient()
   else:
     msg = f'Task Manager type "{config.TASK_MANAGER:s}" not implemented'
@@ -339,123 +334,6 @@ class BaseTurbiniaClient:
       time.sleep(poll_interval)
 
     log.info(f'All {len(task_results):d} Tasks completed')
-
-  def get_task_data(
-      self, instance, project, region, days=0, task_id=None, request_id=None,
-      group_id=None, user=None, function_name='gettasks', output_json=False):
-    """Gets task data from Google Cloud Functions.
-
-    Args:
-      instance (string): The Turbinia instance name (by default the same as the
-          INSTANCE_ID in the config).
-      project (string): The name of the project.
-      region (string): The name of the region to execute in.
-      days (int): The number of days we want history for.
-      task_id (string): The Id of the task.
-      group_id (string): The group Id of the requests.
-      request_id (string): The Id of the request we want tasks for.
-      user (string): The user of the request we want tasks for.
-      function_name (string): The GCF function we want to call.
-      output_json (bool): Whether to return JSON output.
-
-    Returns:
-      (List|JSON string) of Task dict objects
-    """
-    cloud_function = gcp_function.GoogleCloudFunction(project)
-    func_args = {'instance': instance, 'kind': 'TurbiniaTask'}
-
-    if days:
-      start_time = datetime.now() - timedelta(days=days)
-      # Format this like '1990-01-01T00:00:00z' so we can cast it directly to a
-      # javascript Date() object in the cloud function.
-      start_string = start_time.strftime(DATETIME_FORMAT)
-      func_args.update({'start_time': start_string})
-    elif task_id:
-      func_args.update({'task_id': task_id})
-    elif group_id:
-      func_args.update({'group_id': group_id})
-    elif request_id:
-      func_args.update({'request_id': request_id})
-
-    if user:
-      func_args.update({'user': user})
-
-    response = {}
-    retry_count = 0
-    credential_error_count = 0
-    while not response and retry_count < MAX_RETRIES:
-      try:
-        response = cloud_function.ExecuteFunction(
-            function_name, region, func_args)
-      except auth.exceptions.RefreshError as exception:
-        if credential_error_count == 0:
-          log.info(
-              'GCP Credentials need to be refreshed by running gcloud auth '
-              'application-default login, please refresh in another terminal '
-              'and run turbiniactl -w status -r {0!s} and this process will '
-              'resume. Error: {1!s}'.format(request_id, exception))
-        else:
-          log.debug(
-              'GCP Credentials need to be refreshed by running gcloud auth '
-              'application-default login, please refresh in another terminal '
-              'and run turbiniactl -w status -r {0!s} and this process will '
-              'resume. Attempt {1:d}. Error: '
-              '{2!s}'.format(request_id, credential_error_count + 1, exception))
-        # Note, we are intentionally not incrementing the retry_count here because
-        # we will retry indefinitely while we wait for the user to reauth.
-        credential_error_count += 1
-      except httplib2.ServerNotFoundError as exception:
-        log.info(
-            'Error connecting to server, will retry [{0:d} of {1:d} retries]: '
-            '{2!s}'.format(retry_count, MAX_RETRIES, exception))
-        retry_count += 1
-
-      if not response:
-        retry_count += 1
-        time.sleep(RETRY_SLEEP)
-      elif response.get('error', {}).get('code') == 503:
-        log.warning(
-            'Retriable error response from cloud functions: [{0!s}]'.format(
-                response.get('error')))
-        retry_count += 1
-        response = {}
-        time.sleep(RETRY_SLEEP)
-
-    if not response or 'result' not in response:
-      log.error('No results found')
-      if response.get('error'):
-        msg = f"Error executing Cloud Function: [{response.get('error')!s}]."
-        log.error(msg)
-      log.debug(f'Invalid or empty GCF response: {response!s}')
-      raise TurbiniaException(
-          f'Cloud Function {function_name:s} returned no results.')
-
-    try:
-      results = json.loads(response.get('result'))
-    except (TypeError, ValueError) as exception:
-      raise TurbiniaException(
-          'Could not deserialize result [{0!s}] from GCF: [{1!s}]'.format(
-              response.get('result'), exception))
-
-    task_data = results[0]
-    if output_json:
-      try:
-        json_data = json.dumps(task_data)
-      except (TypeError, ValueError) as exception:
-        raise TurbiniaException(
-            'Could not re-serialize result [{0!s}] from GCF: [{1!s}]'.format(
-                str(task_data), exception))
-      return json_data
-
-    # Convert run_time/last_update back into datetime objects
-    for task in task_data:
-      if task.get('run_time'):
-        task['run_time'] = timedelta(seconds=task['run_time'])
-      if task.get('last_update'):
-        task['last_update'] = datetime.strptime(
-            task['last_update'], DATETIME_FORMAT)
-
-    return task_data
 
   def format_task_detail(self, task, show_files=False):
     """Formats a single task in detail.
@@ -1019,36 +897,7 @@ class BaseTurbiniaClient:
     Args:
       request: A TurbiniaRequest object.
     """
-    self.task_manager.server_pubsub.send_request(request)
-
-  def close_tasks(
-      self, instance, project, region, request_id=None, task_id=None, user=None,
-      requester=None):
-    """Close Turbinia Tasks based on Request ID.
-
-    Args:
-      instance (string): The Turbinia instance name (by default the same as the
-          INSTANCE_ID in the config).
-      project (string): The name of the project.
-      region (string): The name of the zone to execute in.
-      request_id (string): The Id of the request we want tasks for.
-      task_id (string): The Id of the request we want task for.
-      user (string): The user of the request we want tasks for.
-      requester (string): The user making the request to close tasks.
-
-    Returns: String of closed Task IDs.
-    """
-    cloud_function = gcp_function.GoogleCloudFunction(project)
-    func_args = {
-        'instance': instance,
-        'kind': 'TurbiniaTask',
-        'request_id': request_id,
-        'task_id': task_id,
-        'user': user,
-        'requester': requester
-    }
-    response = cloud_function.ExecuteFunction('closetasks', region, func_args)
-    return f"Closed Task IDs: {response.get('result')}"
+    pass
 
 
 class TurbiniaCeleryClient(BaseTurbiniaClient):

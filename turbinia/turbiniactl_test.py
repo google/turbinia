@@ -316,7 +316,6 @@ class TestTurbiniactl(unittest.TestCase):
   def testUnequalCloudDiskArgs(self, mockParser, mock_copyDisk, _):
     """Test unequal number of args for cloud disk evidence type."""
     config.SHARED_FILESYSTEM = False
-    config.TASK_MANAGER = 'PSQ'
     config.CLOUD_PROVIDER = 'GCP'
     mockArgs = argparse.Namespace(
         all_fields=False, command='googleclouddisk', config_file=None,
@@ -387,7 +386,7 @@ class TestTurbiniactl(unittest.TestCase):
     """Test unequal number of args for cloud embedded disk evidence type."""
     # Fail when zones don't match
     config.SHARED_FILESYSTEM = False
-    config.TASK_MANAGER = 'PSQ'
+    config.TASK_MANAGER = 'Celery'
     config.CLOUD_PROVIDER = 'GCP'
     self.assertRaises(
         TurbiniaException, turbiniactl.process_args, [

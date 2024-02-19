@@ -29,10 +29,10 @@ class TestTurbiniaServerPSQ(unittest.TestCase):
   def setUp(self):  #pylint: disable=arguments-differ
     """Initialize tests for Turbinia Server."""
     config.LoadConfig()
-    config.STATE_MANAGER = 'Datastore'
-    config.TASK_MANAGER = 'PSQ'
+    config.STATE_MANAGER = 'Redis'
+    config.TASK_MANAGER = 'Celery'
 
-  @mock.patch('turbinia.client.task_manager.PSQTaskManager._backend_setup')
+  @mock.patch('turbinia.client.task_manager.CeleryTaskManager._backend_setup')
   @mock.patch('turbinia.state_manager.get_state_manager')
   def testTurbiniaServerInit(self, _, __):
     """Basic test for Turbinia Server init."""

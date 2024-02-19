@@ -268,17 +268,15 @@ class TestBaseTurbiniaClient(unittest.TestCase):
         }
     ] # yapf: disable
 
-  @mock.patch('turbinia.client.task_manager.PSQTaskManager._backend_setup')
-  @mock.patch('google.cloud.datastore.Client')
+  @mock.patch('turbinia.client.task_manager.CeleryTaskManager._backend_setup')
   def setUp(
       self,
       _,
-      __,
   ):  #pylint: disable=arguments-differ
     """Initialize tests for Turbinia client."""
     config.LoadConfig()
-    config.TASK_MANAGER = 'PSQ'
-    config.STATE_MANAGER = 'Datastore'
+    config.TASK_MANAGER = 'Celery'
+    config.STATE_MANAGER = 'Redis'
     importlib.reload(state_manager)
     importlib.reload(TurbiniaClientProvider)
     self.client = TurbiniaClientProvider.get_turbinia_client()
