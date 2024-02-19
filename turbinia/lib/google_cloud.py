@@ -23,8 +23,10 @@ import googleapiclient.discovery
 
 logger = logging.getLogger('turbinia')
 
+
 class GCPErrorReporting:
   """This class is used to report errors to Google Cloud."""
+
   def __init__(self):
     self._credentials, self._project = self._create_credentials()
     self.logging_client = googleapiclient.discovery.build(
@@ -67,5 +69,4 @@ class GCPErrorReporting:
     }
 
     self.logging_client.projects().events().report(
-        projectName=f'projects/{self._project}',
-        body=payload).execute()
+        projectName=f'projects/{self._project}', body=payload).execute()
