@@ -26,8 +26,8 @@ from google.auth import exceptions as google_exceptions
 log = logging.getLogger('turbinia')
 
 
-def get_oauth2_credentials(credentials_path, client_secrets_path):
-  """Authenticates the user using Google OAuth services."""
+def get_oauth2_token_id(credentials_path, client_secrets_path):
+  """Authenticates the user using Google OAuth and get ID Token."""
   scopes = ['openid', 'https://www.googleapis.com/auth/userinfo.email']
   credentials = None
 
