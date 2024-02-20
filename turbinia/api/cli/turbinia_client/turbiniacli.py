@@ -92,13 +92,15 @@ class TurbiniaCli:
 
     if self.id_token:
       log.debug('Using user provided id_token')
-      self.config.id_token = self.id_token
+      # Class attribute config.access_token is not changed to id_token to not
+      # break OpenAPIs config automation.
+      self.config.access_token = self.id_token
     elif self.api_authentication_enabled:
       log.debug(
           f'Authentication is enabled. Using client_secrets file at: '
           f'{self.client_secrets_path:s} and caching credentials at: '
           f'{self.credentials_path:s}')
-      self.config.id_token = auth_helper.get_oauth2_token_id(
+      self.config.access_token = auth_helper.get_oauth2_token_id(
           self.credentials_path, self.client_secrets_path)
 
     log.debug(
