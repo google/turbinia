@@ -3,7 +3,8 @@
 from __future__ import unicode_literals
 
 from turbinia import evidence as evidence_module
-from turbinia import jobs
+from turbinia.jobs import interface
+from turbinia.jobs import manager
 from turbinia import workers
 from turbinia.workers.analysis import llm_analyzer as llm_analyzer_module
 
@@ -60,7 +61,7 @@ LLM_ARTIFACTS = [
 ]
 
 
-class LLMArtifactsExtractionJob(jobs.TurbiniaJob):
+class LLMArtifactsExtractionJob(interface.TurbiniaJob):
   """LLM artifacts extraction job."""
 
   evidence_input = [
@@ -95,7 +96,7 @@ class LLMArtifactsExtractionJob(jobs.TurbiniaJob):
     return tasks
 
 
-class LLMAnalysisJob(jobs.TurbiniaJob):
+class LLMAnalysisJob(interface.TurbiniaJob):
   """LLM analysis job for selected history, logs and config files."""
 
   evidence_input = [evidence_module.ExportedFileArtifact]
@@ -116,5 +117,4 @@ class LLMAnalysisJob(jobs.TurbiniaJob):
     return [llm_analyzer_module.LLMAnalyzerTask() for _ in evidence]
 
 
-jobs.manager.JobsManager.RegisterJobs(
-    [LLMArtifactsExtractionJob, LLMAnalysisJob])
+manager.JobsManager.RegisterJobs([LLMArtifactsExtractionJob, LLMAnalysisJob])
