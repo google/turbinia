@@ -3,6 +3,8 @@
 globals:
   jobs_allowlist:
     - FileSystemTimelineJob
+    - LLMArtifactsExtractionJob
+    - LLMAnalysisJob
     - PlasoJob
 
 plaso_base:

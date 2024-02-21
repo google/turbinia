@@ -122,7 +122,10 @@ OPTIONAL_VARS = [
     'OIDC_ISSUER',
     'OIDC_VALID_CLIENT_IDS',
     'AUTHORIZED_EMAILS',
-    'WEBUI_CLIENT_SECRETS_FILE'
+    'WEBUI_CLIENT_SECRETS_FILE',
+    # LLM Config
+    'GCP_GENERATIVE_LANGUAGE_API_KEY',
+    'LLM_PROVIDER'
 ]
 
 # Environment variable to look for path data in
