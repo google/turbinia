@@ -280,6 +280,50 @@ class MountLocalProcessorTest(unittest.TestCase):
     with self.assertRaises(TurbiniaException):
       mount_local.PreprocessLosetup(source_path)
 
+  @mock.patch('turbinia.processors.mount_local.config')
+  @mock.patch('tempfile.mkdtemp')
+  @mock.patch('subprocess.check_call')
+  @mock.patch('os.path.isdir')
+  @mock.patch('os.path.exists')
+  @mock.patch('os.makedirs')
+  def testPreprocessMountEwfDisk(
+      self, _, mock_path_exists, mock_path_isdir, mock_subprocess, mock_mkdtemp,
+      mock_config):
+    """Test PreprocessMountEwfDisk method."""
+    mock_config.MOUNT_DIR_PREFIX = '/mnt/turbinia'
+    mock_path_exists.side_effect = _mock_bitlocker_returns
+    mock_mkdtemp.return_value = '/mnt/turbinia/turbinia0ckdntz0'
+
+    current_path = os.path.abspath(os.path.dirname(__file__))
+    source_path = os.path.join(
+        current_path, '..', '..', 'test_data', 'ext2.E01')
+
+    # Test ewfmount
+    mock_path_isdir.return_value = True
+    device = mount_local.PreprocessMountEwfDisk(source_path)
+    expected_args = [
+        'sudo', 'ewfmount', '-X', 'allow_other', source_path,
+        '/mnt/turbinia/turbinia0ckdntz0'
+    ]
+    mock_subprocess.assert_called_once_with(expected_args)
+    self.assertEqual(device, '/mnt/turbinia/turbinia0ckdntz0')
+
+    # Test if source does not exist
+    with self.assertRaises(TurbiniaException):
+      mount_local.PreprocessMountEwfDisk('/dev/loop0p4')
+
+    # Test if mount path not directory
+    mock_path_isdir.return_value = False
+    with self.assertRaises(TurbiniaException):
+      mount_local.PreprocessMountEwfDisk(source_path)
+    mock_path_isdir.return_value = True
+
+    # Test ewfmount failure
+    mock_subprocess.reset_mock()
+    mock_subprocess.side_effect = CalledProcessError(1, 'ewfmount')
+    with self.assertRaises(TurbiniaException):
+      device = mount_local.PreprocessMountEwfDisk(source_path)
+
   @mock.patch('subprocess.check_output')
   @mock.patch('subprocess.check_call')
   def testPreprocessLVM(self, mock_subprocess, mock_output):
