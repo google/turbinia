@@ -59,7 +59,8 @@ class LinuxAccountAnalysisTask(TurbiniaTask):
 
     try:
       collected_artifacts = extract_artifacts(
-          artifact_names=['UnixShadowFile'], disk_path=evidence.local_path,
+          artifact_names=['UnixShadowFile', 'UnixShadowBackupFile'],
+          disk_path=evidence.local_path,
           output_dir=self.output_dir, credentials=evidence.credentials)
     except TurbiniaException as exception:
       result.close(self, success=False, status=str(exception))
@@ -72,7 +73,7 @@ class LinuxAccountAnalysisTask(TurbiniaTask):
       hash_names = self._extract_linux_credentials(shadow_file)
       timeout = self.task_config.get('bruteforce_timeout')
       (report, priority, summary) = self.analyse_shadow_file(
-          shadow_file, hash_names, timeout=timeout)
+          shadow_file, filepath, hash_names, timeout=timeout)
       output_evidence.text_data = report
       result.report_priority = priority
       result.report_data = report
@@ -108,11 +109,12 @@ class LinuxAccountAnalysisTask(TurbiniaTask):
       hash_names[password_hash] = username
     return hash_names
 
-  def analyse_shadow_file(self, shadow, hashes, timeout=300):
+  def analyse_shadow_file(self, shadow, path, hashes, timeout=300):
     """Analyses a Linux shadow file.
 
     Args:
       shadow (list): shadow file content (list of str).
+      path (str): File path that these hashes came from.
       hashes (dict): dict of hashes to usernames
       timeout (int): Time in seconds to run password bruteforcing.
 
@@ -133,7 +135,7 @@ class LinuxAccountAnalysisTask(TurbiniaTask):
 
     if weak_passwords:
       priority = Priority.CRITICAL
-      summary = f'Shadow file analysis found {len(weak_passwords):n} weak password(s)'
+      summary = f'Shadow file analysis of {path} found {len(weak_passwords):n} weak password(s)'
       report.insert(0, fmt.heading4(fmt.bold(summary)))
       line = f'{len(weak_passwords):n} weak password(s) found:'
       report.append(fmt.bullet(fmt.bold(line)))
