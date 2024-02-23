@@ -105,9 +105,6 @@ class TurbiniaVertexAILib(llm_lib_base.TurbiniaLLMLibBase):
     except Exception as e:
       log.warning("Exception while calling VertexAI: %s", e)
       raise
-    text_response = ",".join([
-        part.text
-        for part in response.candidates[0].content.parts
-        if response.candidates[0].content.parts
-    ])
+    text_response = ",".join(
+        [part.text for part in response.candidates[0].content.parts])
     return (text_response, chat)

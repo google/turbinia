@@ -3,61 +3,76 @@
 from __future__ import unicode_literals
 
 from turbinia import evidence as evidence_module
+from turbinia import workers
 from turbinia.jobs import interface
 from turbinia.jobs import manager
-from turbinia import workers
 from turbinia.workers.analysis import llm_analyzer as llm_analyzer_module
 
 LLM_ARTIFACTS = [
+    # Keep sorted
+    'ApacheAccessLogs',
+    'ApacheConfigurationFolder',
     'BashShellConfigurationFile',
     'BashShellHistoryFile',
     'BashShellSessionFile',
     'BourneShellHistoryFile',
     'CShellConfigurationFile',
-    'FishShellConfigurationFile',
-    'FishShellHistoryFile',
-    'KornShellConfigurationFile',
-    'RootUserShellConfigs',
-    'RootUserShellHistory',
-    'ShellConfigurationFile',
-    'ShellHistoryFile',
-    'ShellLogoutFile',
-    'ShellProfileFile',
-    'TeeShellConfigurationFile',
-    'ZShellConfigurationFile',
-    'ZShellHistoryFile',
-    'JupyterConfigFile',
-    'NfsExportsFile',
-    'RedisConfigFile',
+    'ContainerdConfig',
+    'ContainerdLogs',
     'DNSResolvConfFile',
-    'SambaConfigFile',
-    'SshdConfigFile',
-    'SshUserConfigFile',
-    'GKEDockerContainerLogs',
     'DockerContainerConfig',
-    'NginxAccessLogs',
-    'ApacheAccessLogs',
-    'WordpressConfigFile',
-    'MicrosoftIISLogs',
     'ElasticsearchAccessLog',
     'ElasticsearchAuditLog',
     'ElasticsearchGCLog',
     'ElasticsearchLogs',
     'ElasticsearchServerLog',
+    'FishShellConfigurationFile',
+    'FishShellHistoryFile',
+    'GKEDockerContainerLogs',
+    'HadoopAppLogs',
+    'HadoopAppRoot',
+    'HadoopYarnLogs',
+    'JupyterConfigFile',
+    'KornShellConfigurationFile',
+    'LinuxAuthLogs',
+    'LinuxCronLogs',
+    'LoginPolicyConfiguration',
+    'MicrosoftIISLogs',
     'MongoDBConfigurationFile',
     'MongoDBDatabasePath',
     'MongoDBLogFiles',
     'MySQLConfigurationFiles',
     'MySQLDataDictionary',
     'MySQLDataDirectory',
+    'MySQLHistoryFile',
     'MySQLLogFiles',
+    'NfsExportsFile',
+    'NginxAccessLogs',
     'OpenSearchLogFiles',
     'PostgreSQLConfigurationFiles',
     'PostgreSQLDataDirectory',
+    'PostgreSQLHistoryFile',
     'PostgreSQLLogFiles',
+    'PythonHistoryFile',
+    'RedisConfigFile',
     'RedisConfigurationFile',
     'RedisDataDirectory',
     'RedisLogFiles',
+    'RootUserShellConfigs',
+    'RootUserShellHistory',
+    'SSHAuthorizedKeysFiles',
+    'SambaConfigFile',
+    'ShellConfigurationFile',
+    'ShellHistoryFile',
+    'ShellLogoutFile',
+    'ShellProfileFile',
+    'SshUserConfigFile',
+    'SshdConfigFile',
+    'TeeShellConfigurationFile',
+    'WindowsScheduledTasks',
+    'WordpressConfigFile',
+    'ZShellConfigurationFile',
+    'ZShellHistoryFile',
 ]
 
 
@@ -113,7 +128,9 @@ class LLMAnalysisJob(interface.TurbiniaJob):
     Returns:
         A list of tasks to schedule.
     """
-    evidence = [e for e in evidence if e.artifact_name in LLM_ARTIFACTS]
+    evidence = [
+        e for e in list(set(evidence)) if e.artifact_name in LLM_ARTIFACTS
+    ]
     return [llm_analyzer_module.LLMAnalyzerTask() for _ in evidence]
 
 

@@ -106,6 +106,9 @@ class LLMAnalyzerTask(workers.TurbiniaTask):
     with open_function(evidence.local_path, "rb") as input_file:
       artifact_content = input_file.read().decode("utf-8")
 
+    if not artifact_content:
+      result.log(f"Artifact {evidence.artifact_name} has empty content")
+      raise ValueError(f"Artifact {evidence.artifact_name} has empty content")
     (report, priority, summary) = self.llm_analyze_artifact(
         artifact_content, evidence.artifact_name)
     output_evidence.text_data = report
@@ -145,7 +148,7 @@ class LLMAnalyzerTask(workers.TurbiniaTask):
     # https://ai.google.dev/models/gemini#model-variations
     # This will make sure we send the full content of a very long config file
     if turbinia_config.LLM_PROVIDER == "vertexai":
-      chunks = self.split_into_chunks(artifact_content, max_size=30500)
+      chunks = self.split_into_chunks(artifact_content, max_size=30200)
     else:
       chunks = [artifact_content]
     for i, chunk in enumerate(chunks):
@@ -175,6 +178,10 @@ class LLMAnalyzerTask(workers.TurbiniaTask):
     current_chunk = ""
     # Multiplying token count by 4 as one token is about 4 chars
     max_size = max_size * 4
+    # Some config files my have very long key data which will be considered
+    # as one word after split and needs to be chunked to multiple words.
+    words = self.chunk_long_strings_config_file(words, max_size)
+    # Add words to each chunk as long as less than or equal the max_size.
     for word in words:
       if len(current_chunk) + len(word) <= max_size:
         current_chunk += " " + word
@@ -185,3 +192,17 @@ class LLMAnalyzerTask(workers.TurbiniaTask):
     if current_chunk.strip():
       chunks.append(current_chunk.strip())
     return chunks
+
+  def chunk_long_strings_config_file(self, words, max_size):
+    """Chunks long strings in config files."""
+    result = []
+    for word in words:
+      if len(word) > max_size:
+        while len(word) > max_size:
+          result.append(word[:max_size])
+          word = word[max_size:]
+        if word:
+          result.append(word)
+      else:
+        result.append(word)
+    return result
