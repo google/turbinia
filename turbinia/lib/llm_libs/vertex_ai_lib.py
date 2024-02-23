@@ -4,10 +4,16 @@ from __future__ import unicode_literals
 
 import logging
 
+import backoff
+from google.api_core import exceptions
 import google.generativeai as genai
+import ratelimit
 from turbinia import config as turbinia_config
 from turbinia.lib.llm_libs import llm_lib_base
 
+CALL_LIMIT = 20  # Number of calls to allow within a period
+ONE_MINUTE = 60  # One minute in seconds
+FIVE_MINUTE = 5 * ONE_MINUTE
 MODEL_NAME = "gemini-1.0-pro"
 MAX_OUTOUT_TOKEN = 2048
 MODEL_TEMPRATURE = 0.2
@@ -17,10 +23,6 @@ GENERATIVE_CONFIG = {
     "max_output_tokens": MAX_OUTOUT_TOKEN,
 }
 SAFETY_SETTINGS = [
-    {
-        "category": "HARM_CATEGORY_DANGEROUS",
-        "threshold": "BLOCK_NONE",
-    },
     {
         "category": "HARM_CATEGORY_HARASSMENT",
         "threshold": "BLOCK_NONE",
@@ -41,9 +43,32 @@ SAFETY_SETTINGS = [
 log = logging.getLogger("turbinia")
 
 
+def backoff_hdlr(details):
+  """Backoff handler for VertexAI calls."""
+  log.info(
+      "Backing off %s seconds after %s tries", details["wait"],
+      details["tries"])
+
+
 class TurbiniaVertexAILib(llm_lib_base.TurbiniaLLMLibBase):
   """Turbinia LLM library that uses VertexAI APIs."""
 
+  # Retry with exponential backoff strategy when exceptions occur
+  @backoff.on_exception(
+      backoff.expo,
+      (
+          exceptions.ResourceExhausted,
+          exceptions.ServiceUnavailable,
+          exceptions.GoogleAPIError,
+          exceptions.InternalServerError,
+          exceptions.Cancelled,
+          ratelimit.RateLimitException,
+      ),  # Exceptions to retry on
+      max_time=FIVE_MINUTE,
+      on_backoff=backoff_hdlr,  # Function to call when retrying
+  )
+  # Limit the number of calls to the model per minute
+  @ratelimit.limits(calls=CALL_LIMIT, period=ONE_MINUTE)
   def prompt_with_history(
       self, prompt_text: str, history_session: genai.ChatSession = None) -> str:
     """Sends a prompt to the Gemini-pro model using VertexAI.
@@ -51,7 +76,7 @@ class TurbiniaVertexAILib(llm_lib_base.TurbiniaLLMLibBase):
     Args:
         prompt_text: The text of the prompt.
         history_session: optional conversation history if it is desired to keep
-        the state of the conversation, i.e. a chat.
+          the state of the conversation, i.e. a chat.
 
     Returns:
         A tuple of the response from the Gemini-pro model and a history session.
@@ -61,8 +86,9 @@ class TurbiniaVertexAILib(llm_lib_base.TurbiniaLLMLibBase):
       log.warning(
           "GCP_GENERATIVE_LANGUAGE_API_KEY config is not set, "
           "will not call VertexAI APIs, LLM results will be empty.")
-      return ("Error while calling VertexAI: "
-              "GCP_GENERATIVE_LANGUAGE_API_KEY is not set"), None
+      return (
+          "Error while calling VertexAI: "
+          "GCP_GENERATIVE_LANGUAGE_API_KEY is not set"), None
     genai.configure(api_key=turbinia_config.GCP_GENERATIVE_LANGUAGE_API_KEY)
     chat = history_session
     if not chat:
@@ -75,7 +101,10 @@ class TurbiniaVertexAILib(llm_lib_base.TurbiniaLLMLibBase):
     try:
       response = chat.send_message(prompt_text)
     except genai.types.generation_types.StopCandidateException as e:
-      return f"Exception while calling VertexAI: {e}", chat
+      return f"VertexAI LLM response was stopped because of: {e}", chat
+    except Exception as e:
+      log.warning("Exception while calling VertexAI: %s", e)
+      raise
     text_response = ",".join([
         part.text
         for part in response.candidates[0].content.parts
