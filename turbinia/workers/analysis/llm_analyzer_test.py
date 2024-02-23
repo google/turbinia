@@ -46,10 +46,55 @@ having to enter password
         self.BAD_SUDOERS_FILE, "sudoers_file")
 
     chat_instance.send_message.assert_called_with(
-        "\nPlease summarize all findings in a single statement\n")
+        "\nPlease summarize all findings in a single statement, summary should"
+        " be short and to the point\n")
     self.assertEqual(report, self.BAD_CONFIG_REPORT)
     self.assertEqual(priority, workers.Priority.CRITICAL)
     self.assertEqual(summary, self.BAD_CONFIG_SUMMARY)
+
+  def test_split_into_chunks(self):
+    text = (
+        "This is a very long string that needs to be split into multiple"
+        " chunks.")
+    max_size = 3
+    task = llm_analyzer.LLMAnalyzerTask()
+    result = task.split_into_chunks(text, max_size)
+    self.assertEqual(
+        result,
+        [
+            "This is a",
+            "very long",
+            "string that",
+            "needs to be",
+            "split into",
+            "multiple",
+            "chunks.",
+        ],
+    )
+
+  def test_chunk_long_strings_config_file(self):
+    words = ["Hello", "World", "This", "is", "a", "verylongstring"]
+    max_size = 3
+    task = llm_analyzer.LLMAnalyzerTask()
+    result = task.chunk_long_strings_config_file(words, max_size)
+    self.assertEqual(
+        result,
+        [
+            "Hel",
+            "lo",
+            "Wor",
+            "ld",
+            "Thi",
+            "s",
+            "is",
+            "a",
+            "ver",
+            "ylo",
+            "ngs",
+            "tri",
+            "ng",
+        ],
+    )
 
 
 def make_gen_ai_response(text):
