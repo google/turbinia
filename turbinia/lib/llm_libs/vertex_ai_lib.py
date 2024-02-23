@@ -57,6 +57,12 @@ class TurbiniaVertexAILib(llm_lib_base.TurbiniaLLMLibBase):
         A tuple of the response from the Gemini-pro model and a history session.
     """
     log.info('Calling VertexAI using generative model "%s"', MODEL_NAME)
+    if turbinia_config.toDict.get('GCP_GENERATIVE_LANGUAGE_API_KEY', None):
+      log.warning(
+          "GCP_GENERATIVE_LANGUAGE_API_KEY config is not set, "
+          "will not call VertexAI APIs, LLM results will be empty.")
+      return ("Error while calling VertexAI: "
+              "GCP_GENERATIVE_LANGUAGE_API_KEY is not set"), None
     genai.configure(api_key=turbinia_config.GCP_GENERATIVE_LANGUAGE_API_KEY)
     chat = history_session
     if not chat:

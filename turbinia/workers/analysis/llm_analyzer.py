@@ -21,6 +21,7 @@ import os
 
 from turbinia import evidence as evidence_module
 from turbinia.lib.llm_libs import llm_client
+from turbinia import config as turbinia_config
 from turbinia import workers
 
 CONTEXT_PROMPT = """
@@ -143,7 +144,10 @@ class LLMAnalyzerTask(workers.TurbiniaTask):
     # Max input token limit of Gemini 1.0 is 30720, see
     # https://ai.google.dev/models/gemini#model-variations
     # This will make sure we send the full content of a very long config file
-    chunks = self.split_into_chunks(artifact_content, max_size=30500)
+    if turbinia_config.LLM_PROVIDER == "vertexai":
+      chunks = self.split_into_chunks(artifact_content, max_size=30500)
+    else:
+      chunks = [artifact_content]
     for i, chunk in enumerate(chunks):
       content_prompt_chunk = CONTENT_PROMPT.format(
           i=i + 1, chunks_len=len(chunks), chunk=chunk)

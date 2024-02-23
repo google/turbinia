@@ -20,5 +20,5 @@ class TurbiniaLLMLibBase(metaclass=abc.ABCMeta):
           the state of the conversation, i.e. a chat.
 
     Returns:
-        A tuple of the response from the Gemini-pro model and a history session.
+        A tuple of the response from the model and a history session.
     """
