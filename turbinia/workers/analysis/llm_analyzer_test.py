@@ -48,7 +48,7 @@ having to enter password
     chat_instance.send_message.assert_called_with(
         "\nPlease summarize all findings in a single statement, keep summary"
         " short and don't describe the summary\n")
-    self.assertEqual(report, self.BAD_CONFIG_REPORT)
+    self.assertEqual(report, self.BAD_CONFIG_REPORT.rstrip().strip())
     self.assertEqual(priority, workers.Priority.CRITICAL)
     self.assertEqual(summary, self.BAD_CONFIG_SUMMARY)
 

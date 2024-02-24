@@ -19,7 +19,7 @@ from __future__ import unicode_literals
 import os
 
 from turbinia import config
-from turbinia.evidence import ExportedFileArtifact
+from turbinia import evidence as evidence_module
 from turbinia.evidence import EvidenceState as state
 from turbinia.workers import TurbiniaTask
 
@@ -29,10 +29,11 @@ class FileArtifactExtractionTask(TurbiniaTask):
 
   REQUIRED_STATES = [state.ATTACHED, state.CONTAINER_MOUNTED]
 
-  def __init__(self, artifact_name='FileArtifact'):
+  def __init__(self, artifact_name='FileArtifact', llm_artifact=False):
     super(FileArtifactExtractionTask, self).__init__()
     self.artifact_name = artifact_name
     self.job_name = "FileArtifactExtractionJob"
+    self.llm_artifact = llm_artifact
 
   def run(self, evidence, result):
     """Extracts artifacts using Plaso image_export.py.
@@ -94,9 +95,13 @@ class FileArtifactExtractionTask(TurbiniaTask):
           f'image_export.py failed for artifact {self.artifact_name:s}.')
       return result
 
+    artifact_type = getattr(evidence_module, 'ExportedFileArtifact')
+    if self.llm_artifact:
+      artifact_type = getattr(evidence_module, 'ExportedFileArtifactLLM')
+      
     for dirpath, _, filenames in os.walk(export_directory):
       for filename in filenames:
-        exported_artifact = ExportedFileArtifact(
+        exported_artifact = artifact_type(
             artifact_name=self.artifact_name, source_path=os.path.join(
                 dirpath, filename))
         result.log(f'Adding artifact {filename:s}')

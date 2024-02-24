@@ -64,8 +64,10 @@ CONTENT_PROMPT = """
 "**Artifact Content (Part {i} of {chunks_len}):** \n```\n{chunk}\n```"
 """
 PRIORITY_PROMPT = """
-Please set the findings priority, the answer can only be one of: 
-[LOW, MEDIUM, HIGH, CRITICAL]
+Please set the findings priority, your answer must be a single word from the following list: [LOW, MEDIUM, HIGH, CRITICAL]
+
+**Examples answer:**
+CRITICAL
 """
 SUMMARY_PROMPT = """
 Please summarize all findings in a single statement, keep summary short and don't describe the summary
@@ -75,7 +77,7 @@ Please summarize all findings in a single statement, keep summary short and don'
 class LLMAnalyzerTask(workers.TurbiniaTask):
   """LLM analysis task for selected history, logs and config files."""
 
-  # Input Evidence is ExportedFileArtifact so does not need to be preprocessed.
+  # Input Evidence ExportedFileArtifactLLM does not need to be preprocessed.
   REQUIRED_STATES = []
 
   def run(self, evidence, result):
@@ -91,7 +93,7 @@ class LLMAnalyzerTask(workers.TurbiniaTask):
 
     result.log(f"Running LLMAnalyzerTask task on {evidence.artifact_name}")
     # Where to store the resulting output file.
-    output_file_name = "llm_analysis.txt"
+    output_file_name = f"{evidence.artifact_name}-llm_analysis.txt"
     output_file_path = os.path.join(self.output_dir, output_file_name)
     result.log(f"LLMAnalyzerTask output_file_path {output_file_path}")
     # Set the output file as the data source for the output evidence.
@@ -157,19 +159,21 @@ class LLMAnalyzerTask(workers.TurbiniaTask):
       # Send 'prompt' to your Gemini-1.0-pro model
       (chunk_report, history_session) = client.prompt_with_history(
           content_prompt_chunk, history_session)
-      report += chunk_report if not report else "\n" + chunk_report
+      report += (
+          chunk_report.rstrip().strip() if not report else "\n" +
+          chunk_report.rstrip().strip())
     (priority, history_session) = client.prompt_with_history(
         PRIORITY_PROMPT, history_session)
     (summary, _) = client.prompt_with_history(SUMMARY_PROMPT, history_session)
-    if priority == "MEDIUM":
-      priority = workers.Priority.MEDIUM
-    elif priority == "HIGH":
-      priority = workers.Priority.HIGH
-    elif priority == "CRITICAL":
+    if "CRITICAL" in priority.upper():
       priority = workers.Priority.CRITICAL
+    elif "HIGH" in priority.upper():
+      priority = workers.Priority.HIGH
+    elif "MEDIUM" in priority.upper():
+      priority = workers.Priority.MEDIUM
     else:
       priority = workers.Priority.LOW
-    return (report, priority, summary)
+    return (report.rstrip().strip(), priority, summary.replace("\n", ""))
 
   def split_into_chunks(self, text, max_size):
     """Splits text into chunks respecting token limits."""

@@ -104,9 +104,13 @@ class LLMArtifactsExtractionJob(interface.TurbiniaJob):
     """
     tasks = []
     for artifact_name in LLM_ARTIFACTS:
+      # To avoid redundent processing between LLM analyzer and other
+      # analyzers using same evidence type. LLM analyzer uses evidence
+      # type `ExportedFileArtifactLLM` supported by
+      # FileArtifactExtractionTask when llm_artifact=True.
       tasks.extend([
-          workers.artifact.FileArtifactExtractionTask(artifact_name)
-          for _ in evidence
+          workers.artifact.FileArtifactExtractionTask(
+              artifact_name=artifact_name, llm_artifact=True) for _ in evidence
       ])
     return tasks
 
@@ -114,7 +118,11 @@ class LLMArtifactsExtractionJob(interface.TurbiniaJob):
 class LLMAnalysisJob(interface.TurbiniaJob):
   """LLM analysis job for selected history, logs and config files."""
 
-  evidence_input = [evidence_module.ExportedFileArtifact]
+  # To avoid redundent processing between LLM analyzer and other
+  # analyzers using same evidence type. LLM analyzer uses seperate
+  # evidence type supported by FileArtifactExtractionTask when
+  # llm_artifact=True.
+  evidence_input = [evidence_module.ExportedFileArtifactLLM]
   evidence_output = [evidence_module.ReportText]
 
   NAME = 'LLMAnalysisJob'
@@ -128,9 +136,7 @@ class LLMAnalysisJob(interface.TurbiniaJob):
     Returns:
         A list of tasks to schedule.
     """
-    evidence = [
-        e for e in list(set(evidence)) if e.artifact_name in LLM_ARTIFACTS
-    ]
+    evidence = [e for e in evidence if e.artifact_name in LLM_ARTIFACTS]
     return [llm_analyzer_module.LLMAnalyzerTask() for _ in evidence]
 
 
