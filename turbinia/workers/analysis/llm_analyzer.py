@@ -68,7 +68,7 @@ Please set the findings priority, the answer can only be one of:
 [LOW, MEDIUM, HIGH, CRITICAL]
 """
 SUMMARY_PROMPT = """
-Please summarize all findings in a single statement, summary should be short and to the point
+Please summarize all findings in a single statement, keep summary short and don't describe the summary
 """
 
 

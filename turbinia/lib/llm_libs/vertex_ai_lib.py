@@ -98,6 +98,20 @@ class TurbiniaVertexAILib(llm_lib_base.TurbiniaLLMLibBase):
           safety_settings=SAFETY_SETTINGS,
       )
       chat = model.start_chat()
+    else:
+      # Since this is a multi-turn converastion, the history is sent with each
+      # new request, the model's reply sent in the history with the next message
+      # can't be empty else the proto validators will complain behind the scene.
+      # However in some cases the model sends and empty content, we patch it and
+      # replace it with an ack message to avoid erroring out when re-sending the
+      # empty content with the next message.
+      history = chat.history
+      history_patched = []
+      for content in history:
+        if not content.parts:
+          content.parts = [genai.types.content_types.to_part("ack")]
+        history_patched.append(content)
+      chat.history = history_patched
     try:
       response = chat.send_message(prompt_text)
     except genai.types.generation_types.StopCandidateException as e:
