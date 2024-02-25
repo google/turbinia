@@ -30,6 +30,12 @@ class FileArtifactExtractionTask(TurbiniaTask):
   REQUIRED_STATES = [state.ATTACHED, state.CONTAINER_MOUNTED]
 
   def __init__(self, artifact_name='FileArtifact', llm_artifact=False):
+    """Initialize the FileArtifactExtractionTask.
+
+    Args:
+      artifact_name (str): The name of the artifact to extract.
+      llm_artifact (bool): Whether the artifact is for LLM analyzer.
+    """
     super(FileArtifactExtractionTask, self).__init__()
     self.artifact_name = artifact_name
     self.job_name = "FileArtifactExtractionJob"
@@ -95,10 +101,13 @@ class FileArtifactExtractionTask(TurbiniaTask):
           f'image_export.py failed for artifact {self.artifact_name:s}.')
       return result
 
+    # LLM analyzer uses a seperate version of ExportedFileArtifact to avoid
+    # redundent processing of artifacts exported several times by LLM Analyzer
+    # and other analyzers.
     artifact_type = getattr(evidence_module, 'ExportedFileArtifact')
     if self.llm_artifact:
       artifact_type = getattr(evidence_module, 'ExportedFileArtifactLLM')
-      
+
     for dirpath, _, filenames in os.walk(export_directory):
       for filename in filenames:
         exported_artifact = artifact_type(
