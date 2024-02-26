@@ -380,6 +380,10 @@ GCP_GENERATIVE_LANGUAGE_API_KEY = ''
 # Specify the choosen LLm provider to be used with LLM analyzer
 ###############################################################################
 
-# Currently only vertexai is supported
+# To add a new LLM provider, first add a new implementation class
+# implementing turbinia.lib.llm_libs.llm_lib_base.TurbiniaLLMLibBase
+# in a new module under turbinia.lib.llm_libs. Then extend the PROVIDERS_MAP
+# in llm_client.py module with the provider name (as key) and
+# implementationclass (as value).
 # possible values ["vertexai"]
 LLM_PROVIDER = "vertexai"

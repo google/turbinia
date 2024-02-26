@@ -64,13 +64,13 @@ CONTENT_PROMPT = """
 "**Artifact Content (Part {i} of {chunks_len}):** \n```\n{chunk}\n```"
 """
 PRIORITY_PROMPT = """
-Please set the findings priority, your answer must be a single word from the following list: [LOW, MEDIUM, HIGH, CRITICAL]
+Please set the severity of the security findings, your response must be a single word from the following list: [LOW, MEDIUM, HIGH, CRITICAL]
 
 **Examples answer:**
 CRITICAL
 """
 SUMMARY_PROMPT = """
-Please summarize all findings in a single statement, keep summary short and don't describe the summary
+Please summarize all security findings in a single statement, keep summary short and don't describe the summary
 """
 
 
@@ -171,8 +171,11 @@ class LLMAnalyzerTask(workers.TurbiniaTask):
       priority = workers.Priority.HIGH
     elif "MEDIUM" in priority.upper():
       priority = workers.Priority.MEDIUM
-    else:
+    elif "LOW" in priority.upper():
       priority = workers.Priority.LOW
+    else:
+      # Default to high to err on the side of cautious
+      priority = workers.Priority.HIGH
     return (report.rstrip().strip(), priority, summary.replace("\n", ""))
 
   def split_into_chunks(self, text, max_size):

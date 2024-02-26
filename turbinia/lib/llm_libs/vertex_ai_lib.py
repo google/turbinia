@@ -83,7 +83,7 @@ class TurbiniaVertexAILib(llm_lib_base.TurbiniaLLMLibBase):
     """
     log.info('Calling VertexAI using generative model "%s"', MODEL_NAME)
     if not turbinia_config.GCP_GENERATIVE_LANGUAGE_API_KEY:
-      log.warning(
+      log.error(
           "GCP_GENERATIVE_LANGUAGE_API_KEY config is not set, "
           "will not call VertexAI APIs, LLM results will be empty.")
       return (
