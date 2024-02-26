@@ -185,8 +185,9 @@ class LLMAnalyzerTask(workers.TurbiniaTask):
     current_chunk = ""
     # Multiplying token count by 4 as one token is about 4 chars
     max_size = max_size * 4
-    # Some config files my have very long key data which will be considered
-    # as one word after split and needs to be chunked to multiple words.
+    # Some config files my have very long lines (e.g. base64 strings) which
+    # will be considered as one word after split and needs to be chunked to
+    # multiple words.
     words = self.chunk_long_strings_config_file(words, max_size)
     # Add words to each chunk as long as less than or equal the max_size.
     for word in words:

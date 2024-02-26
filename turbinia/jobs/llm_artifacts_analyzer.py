@@ -162,7 +162,8 @@ class LLMAnalysisJob(interface.TurbiniaJob):
       # We can't filter using evidence.source_path as in our case turbinia calls
       # create_tasks on each single evidence, i.e. the incoming list "evidence"
       # has one item. Thus we read all evidence under this evidence folder of
-      # this job to make sure that an artifact isn't processed twice.
+      # this job and only process the first created evidence of redundent
+      # evidence files to make sure evidence files are not duplicates.
       source_paths = [e.source_path for e in evidence]
       source_filenames = [os.path.basename(p) for p in source_paths]
       jobs_evidence_dir = os.path.sep.join(
@@ -224,7 +225,7 @@ def drop_random_path_part(path):
       # drop the first part with FileArtifactExtractionTask and break
       path.remove(path_part)
       break
-  return '/'.join(path)
+  return os.path.sep.join(path)
 
 
 manager.JobsManager.RegisterJobs([LLMArtifactsExtractionJob, LLMAnalysisJob])
