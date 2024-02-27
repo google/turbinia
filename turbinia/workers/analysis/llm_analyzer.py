@@ -14,7 +14,6 @@
 # limitations under the License.
 """Task for analyzing artifacts using LLM analyzer."""
 
-
 import gzip
 import os
 

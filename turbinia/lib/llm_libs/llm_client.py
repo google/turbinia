@@ -1,6 +1,5 @@
 """Library to call LLM APIs."""
 
-
 from turbinia import config as turbinia_config
 from turbinia.lib.llm_libs import vertex_ai_lib
 
