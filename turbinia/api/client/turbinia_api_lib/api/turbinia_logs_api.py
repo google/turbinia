@@ -142,7 +142,7 @@ class TurbiniaLogsApi:
 
         # process the path parameters
         _path_params = {}
-        if _params['query']:
+        if _params['query'] is not None:
             _path_params['query'] = _params['query']
 
 
