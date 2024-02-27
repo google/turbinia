@@ -19,7 +19,10 @@ import traceback
 import google.auth
 import googleapiclient.discovery
 
+from googleapiclient.errors import HttpError
+
 from turbinia import __version__
+from turbinia import TurbiniaException
 
 logger = logging.getLogger('turbinia')
 
@@ -29,11 +32,15 @@ class GCPErrorReporting:
 
   def __init__(self):
     self._credentials, self._project = self._create_credentials()
-    self.logging_client = googleapiclient.discovery.build(
-        'clouderrorreporting',
-        'v1beta1',
-        credentials=self._credentials,
-    )
+    try:
+      self.logging_client = googleapiclient.discovery.build(
+          'clouderrorreporting',
+          'v1beta1',
+         credentials=self._credentials,
+      )
+    except google.auth.exceptions.MutualTLSChannelError as exception:
+      raise TurbiniaException(
+          'Error creating Google API client: {exception}') from exception
 
   @staticmethod
   def _create_credentials() -> google.auth.credentials.Credentials:
@@ -51,11 +58,11 @@ class GCPErrorReporting:
         'lineNumber': line_number,
         'functionName': function_name
     }
-    # logger.warning(message, caller)
+
     try:
       self._send_error_report(message, report_location=report_location)
-    except Exception:
-      logger.exception('Unable to report error: %s', message)
+    except HttpError as exception:
+      logger.exception('Unable to report error: %s', exception)
 
   def _send_error_report(self, message, report_location) -> None:
     payload = {
