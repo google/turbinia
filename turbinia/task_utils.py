@@ -17,7 +17,6 @@
 from datetime import datetime
 
 import logging
-import os
 import filelock
 
 from turbinia import config
@@ -197,32 +196,14 @@ def task_runner(obj, *args, **kwargs):
     Output from TurbiniaTask (should be TurbiniaTaskResult).
   """
   obj = task_deserialize(obj)
-  if config.TASK_MANAGER.lower() == 'psq':
-    # Late import because this is only needed for PSQ
-    import psq
-    # GKE PSQ Specific - do not queue more work if pod places this file
-    if os.path.exists(config.SCALEDOWN_WORKER_FILE):
-      raise psq.Retry()
-    # Try to acquire lock, timeout and requeue task if the worker
-    # is already processing a task.
-    try:
-      lock = filelock.FileLock(config.LOCK_FILE)
-      with lock.acquire(timeout=0.001):
-        run = obj.run_wrapper(*args, **kwargs)
-    except filelock.Timeout:
-      raise psq.Retry()
-    # *Always* make sure we release the lock
-    finally:
-      lock.release()
   # Celery is configured to receive only one Task per worker
   # so no need to create a FileLock.
-  elif config.TASK_MANAGER.lower() == 'celery':
-    try:
-      lock = filelock.FileLock(config.LOCK_FILE)
-      with lock.acquire(timeout=10):
-        run = obj.run_wrapper(*args, **kwargs)
-    except filelock.Timeout:
-      raise TurbiniaException(f'Could not acquire lock on {config.LOCK_FILE}')
-    finally:
-      lock.release()
+  try:
+    lock = filelock.FileLock(config.LOCK_FILE)
+    with lock.acquire(timeout=10):
+      run = obj.run_wrapper(*args, **kwargs)
+  except filelock.Timeout:
+    raise TurbiniaException(f'Could not acquire lock on {config.LOCK_FILE}')
+  finally:
+    lock.release()
   return run

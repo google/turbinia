@@ -1,5 +1,4 @@
-# -*- coding: utf-8 -*-
-# Copyright 2017 Google Inc.
+# Copyright 2024 Google Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,31 +13,68 @@
 # limitations under the License.
 """Google Cloud resources library."""
 
-from __future__ import unicode_literals
 import logging
+import traceback
 
-from google.cloud import error_reporting
-from google.cloud import exceptions
+import google.auth
+import googleapiclient.discovery
 
+from googleapiclient.errors import HttpError
+
+from turbinia import __version__
 from turbinia import TurbiniaException
 
 logger = logging.getLogger('turbinia')
 
 
-def setup_stackdriver_traceback(project_id):
-  """Set up Google Cloud Error Reporting
+class GCPErrorReporting:
+  """This class is used to report errors to Google Cloud."""
 
-  This method will enable Google Cloud Error Reporting.
-  All exceptions that occur within a Turbinia Task will be logged.
+  def __init__(self):
+    self._credentials, self._project = self._create_credentials()
+    try:
+      self.logging_client = googleapiclient.discovery.build(
+          'clouderrorreporting',
+          'v1beta1',
+          credentials=self._credentials,
+      )
+    except google.auth.exceptions.MutualTLSChannelError as exception:
+      raise TurbiniaException(
+          'Error creating Google API client: {exception}') from exception
 
-  Attributes:
-    project_id: The name of the Google Cloud project.
-  Raises:
-    TurbiniaException: When an error occurs enabling GCP Error Reporting.
-  """
-  try:
-    client = error_reporting.Client(project=project_id)
-  except exceptions.GoogleCloudError as exception:
-    msg = f'Error enabling GCP Error Reporting: {str(exception):s}'
-    raise TurbiniaException(msg)
-  return client
+  @staticmethod
+  def _create_credentials() -> google.auth.credentials.Credentials:
+    return google.auth.default()
+
+  def report(self, message, caller=None) -> None:
+    if not caller:
+      stack = traceback.extract_stack()
+      caller = stack[-2]
+    file_path = caller[0]
+    line_number = caller[1]
+    function_name = caller[2]
+    report_location = {
+        'filePath': file_path,
+        'lineNumber': line_number,
+        'functionName': function_name
+    }
+
+    try:
+      self._send_error_report(message, report_location=report_location)
+    except HttpError as exception:
+      logger.exception('Unable to report error: %s', exception)
+
+  def _send_error_report(self, message, report_location) -> None:
+    payload = {
+        'serviceContext': {
+            'service': 'Turbinia',
+            'version': __version__
+        },
+        'message': f'{message}',
+        'context': {
+            'reportLocation': report_location
+        }
+    }
+
+    self.logging_client.projects().events().report(
+        projectName=f'projects/{self._project}', body=payload).execute()

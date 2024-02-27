@@ -24,7 +24,7 @@ import tempfile
 import mock
 
 from turbinia import config
-from turbinia.worker import TurbiniaPsqWorker
+from turbinia.worker import TurbiniaCeleryWorker
 from turbinia.worker import check_system_dependencies
 from turbinia.worker import check_docker_dependencies
 from turbinia.jobs import manager
@@ -32,8 +32,8 @@ from turbinia.jobs import manager_test
 from turbinia import TurbiniaException
 
 
-class TestTurbiniaPsqWorker(unittest.TestCase):
-  """Test Turbinia PSQ Worker class."""
+class TestTurbiniaCeleryWorker(unittest.TestCase):
+  """Test Turbinia Celery Worker class."""
 
   def setUp(self):
     self.tmp_dir = tempfile.mkdtemp(prefix='turbinia-test')
@@ -50,47 +50,42 @@ class TestTurbiniaPsqWorker(unittest.TestCase):
     if 'turbinia-test' in self.tmp_dir:
       shutil.rmtree(self.tmp_dir)
 
-  @mock.patch('google.cloud.datastore.Client')
-  @mock.patch('psq.Worker')
+  @mock.patch('turbinia.client.task_manager.CeleryTaskManager._backend_setup')
   @mock.patch('turbinia.lib.docker_manager.DockerManager')
-  def testTurbiniaPsqWorkerInit(self, _, __, ___):
-    """Basic test for PSQ worker."""
-    worker = TurbiniaPsqWorker([], [])
+  def testTurbiniaCeleryWorkerInit(self, _, __):
+    """Basic test for Celery worker."""
+    worker = TurbiniaCeleryWorker([], [])
     self.assertTrue(hasattr(worker, 'worker'))
 
-  @mock.patch('google.cloud.datastore.Client')
-  @mock.patch('psq.Worker')
+  @mock.patch('turbinia.client.task_manager.CeleryTaskManager._backend_setup')
   @mock.patch('turbinia.lib.docker_manager.DockerManager')
-  def testTurbiniaWorkerNoDir(self, _, __, ___):
+  def testTurbiniaWorkerNoDir(self, _, __):
     """Test that OUTPUT_DIR path is created."""
     config.OUTPUT_DIR = os.path.join(self.tmp_dir, 'no_such_dir')
-    TurbiniaPsqWorker([], [])
+    TurbiniaCeleryWorker([], [])
     self.assertTrue(os.path.exists(config.OUTPUT_DIR))
 
-  @mock.patch('google.cloud.datastore.Client')
-  @mock.patch('psq.Worker')
+  @mock.patch('turbinia.client.task_manager.CeleryTaskManager._backend_setup')
   @mock.patch('turbinia.lib.docker_manager.DockerManager')
-  def testTurbiniaWorkerIsNonDir(self, _, __, ___):
+  def testTurbiniaWorkerIsNonDir(self, _, __):
     """Test that OUTPUT_DIR does not point to an existing non-directory."""
     config.OUTPUT_DIR = os.path.join(self.tmp_dir, 'empty_file')
     open(config.OUTPUT_DIR, 'a').close()
-    self.assertRaises(TurbiniaException, TurbiniaPsqWorker)
+    self.assertRaises(TurbiniaException, TurbiniaCeleryWorker)
 
   @mock.patch('turbinia.worker.config')
   @mock.patch('turbinia.worker.check_directory')
-  @mock.patch('google.cloud.datastore.Client')
-  @mock.patch('psq.Worker')
+  @mock.patch('turbinia.client.task_manager.CeleryTaskManager._backend_setup')
   @mock.patch('turbinia.lib.docker_manager.DockerManager')
-  def testTurbiniaWorkerJobsLists(self, _, __, ___, ____, mock_config):
+  def testTurbiniaWorkerJobsLists(self, _, __, ___, mock_config):
     """Test that worker job allowlist and denylists are setup correctly."""
-    mock_config.PSQ_TOPIC = 'foo'
     manager.JobsManager._job_classes = {}
     manager.JobsManager.RegisterJob(manager_test.TestJob1)
     manager.JobsManager.RegisterJob(manager_test.TestJob2)
     manager.JobsManager.RegisterJob(manager_test.TestJob3)
 
     # Check denylist
-    TurbiniaPsqWorker(['testjob1'], [])
+    TurbiniaCeleryWorker(['testjob1'], [])
     self.assertListEqual(
         sorted(list(manager.JobsManager.GetJobNames())),
         ['testjob2', 'testjob3'])
@@ -98,21 +93,21 @@ class TestTurbiniaPsqWorker(unittest.TestCase):
 
     # Check denylist with DISABLED_JOBS config
     mock_config.DISABLED_JOBS = ['testjob1']
-    TurbiniaPsqWorker(['testjob2'], [])
+    TurbiniaCeleryWorker(['testjob2'], [])
     self.assertListEqual(list(manager.JobsManager.GetJobNames()), ['testjob3'])
     manager.JobsManager.RegisterJob(manager_test.TestJob1)
     manager.JobsManager.RegisterJob(manager_test.TestJob2)
     mock_config.DISABLED_JOBS = ['']
 
     # Check allowlist
-    TurbiniaPsqWorker([], ['testjob1'])
+    TurbiniaCeleryWorker([], ['testjob1'])
     self.assertListEqual(list(manager.JobsManager.GetJobNames()), ['testjob1'])
     manager.JobsManager.RegisterJob(manager_test.TestJob2)
     manager.JobsManager.RegisterJob(manager_test.TestJob3)
 
     # Check allowlist of item in DISABLED_JOBS config
     mock_config.DISABLED_JOBS = ['testjob1', 'testjob2']
-    TurbiniaPsqWorker([], ['testjob1'])
+    TurbiniaCeleryWorker([], ['testjob1'])
     self.assertListEqual(list(manager.JobsManager.GetJobNames()), ['testjob1'])
     manager.JobsManager.RegisterJob(manager_test.TestJob2)
     manager.JobsManager.RegisterJob(manager_test.TestJob3)

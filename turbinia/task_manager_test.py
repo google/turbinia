@@ -18,7 +18,6 @@ from __future__ import unicode_literals
 
 import mock
 
-from turbinia import config
 from turbinia import TurbiniaException
 from turbinia import task_manager
 from turbinia.jobs import manager as jobs_manager

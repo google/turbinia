@@ -28,15 +28,11 @@ INSTANCE_ID = 'turbinia-instance1'
 # for GCP or hybrid installations, and 'Local' for local installations.
 CLOUD_PROVIDER = 'Local'
 
-# Which state manager to use. Valid options are 'Datastore' or 'Redis'.  Use
-# 'Datastore' for Cloud (GCP) or hybrid installations, and 'Redis' for local
-# installations.
-STATE_MANAGER = 'Datastore'
+# Task manager only supports 'Celery'.
+TASK_MANAGER = 'Celery'
 
-# Which Task manager to use. Valid options are 'PSQ' and 'Celery'.  Use 'PSQ'
-# for Cloud (GCP) or hybrid installations, and 'Celery' for local
-# installations.
-TASK_MANAGER = 'PSQ'
+# Which state manager to use. The only valid option is 'Redis'.
+STATE_MANAGER = 'Redis'
 
 # Default base output directory for worker results and evidence.
 OUTPUT_DIR = '/var/tmp'
@@ -286,15 +282,6 @@ TURBINIA_REGION = None
 # GCS bucket that has Turbinia specific scripts and can be used to store logs.
 # This must be globally unique within GCP.
 BUCKET_NAME = None
-
-# This is the internal PubSub topic that PSQ will use.  This should be different
-# than the PUBSUB_TOPIC variable.  The actual PubSub topic created will be this
-# variable prefixed with 'psq-'.
-PSQ_TOPIC = 'turbinia-psq'
-
-# The PubSub topic Turbinia will listen on for new requests.  This should be
-# different than the PSQ_TOPIC variable.
-PUBSUB_TOPIC = INSTANCE_ID
 
 # GCS Path to copy worker results and Evidence output to.
 # Otherwise, set this as 'None' if output will be stored in shared storage.

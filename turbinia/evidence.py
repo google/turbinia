@@ -1070,7 +1070,7 @@ class PlasoFile(Evidence):
       log.info(f'Running pinfo.py to validate PlasoFile {self.local_path}')
       command = subprocess.run(cmd, capture_output=True, check=True)
       storage_counters_json = command.stdout.decode('utf-8').strip()
-      # pinfo.py might print warnings (non-json) so we only need to last line of output
+      # pinfo.py might print warnings so we only need to last line of output
       storage_counters_json = storage_counters_json.splitlines()[-1]
       storage_counters = json.loads(storage_counters_json)
       total_file_events = storage_counters.get('storage_counters', {}).get(
@@ -1082,6 +1082,10 @@ class PlasoFile(Evidence):
     except subprocess.CalledProcessError as exception:
       raise TurbiniaException(
           f'Error validating plaso file: {exception!s}') from exception
+    except json.decoder.JSONDecodeError as exception:
+      log.warning(
+          f'Skipping validation, pinfo failed to read the Plaso '
+          f'file: {exception!s}')
 
 
 class PlasoCsvFile(Evidence):
