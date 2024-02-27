@@ -36,7 +36,7 @@ class GCPErrorReporting:
       self.logging_client = googleapiclient.discovery.build(
           'clouderrorreporting',
           'v1beta1',
-         credentials=self._credentials,
+          credentials=self._credentials,
       )
     except google.auth.exceptions.MutualTLSChannelError as exception:
       raise TurbiniaException(
