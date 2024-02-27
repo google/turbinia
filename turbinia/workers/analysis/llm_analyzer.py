@@ -14,7 +14,6 @@
 # limitations under the License.
 """Task for analyzing artifacts using LLM analyzer."""
 
-from __future__ import unicode_literals
 
 import gzip
 import os
