@@ -33,18 +33,12 @@ from turbinia.tcelery import TurbiniaCelery
 
 config.LoadConfig()
 task_manager_type = config.TASK_MANAGER.lower()
-if task_manager_type == 'psq':
-  import psq
-
-  from google.cloud import exceptions
-  from google.cloud import datastore
-  from google.cloud import pubsub
-elif task_manager_type == 'celery':
+if task_manager_type == 'celery':
   from turbinia import tcelery as turbinia_celery
 else:
   raise TurbiniaException(
-      'Unknown task manager {0:s} found, please update config to use "psq" or '
-      '"celery"'.format(task_manager_type))
+      'Unknown task manager {0:s} found, please update config to use "Celery"'
+      .format(task_manager_type))
 
 log = logging.getLogger('turbinia')
 
@@ -261,42 +255,3 @@ class TurbiniaCeleryWorker(TurbiniaWorkerBase):
         '--without-mingle'
     ]
     self.worker.start(argv)
-
-
-class TurbiniaPsqWorker(TurbiniaWorkerBase):
-  """Turbinia PSQ Worker class.
-
-  Attributes:
-    worker (psq.Worker): PSQ Worker object
-    psq (psq.Queue): A Task queue object
-
-  Raises:
-    TurbiniaException: When errors occur
-  """
-
-  def __init__(self, *args, **kwargs):
-    super(TurbiniaPsqWorker, self).__init__(*args, **kwargs)
-    self.worker = None
-    self.psq = None
-
-  def _backend_setup(self):
-    psq_publisher = pubsub.PublisherClient()
-    psq_subscriber = pubsub.SubscriberClient()
-    datastore_client = datastore.Client(project=config.TURBINIA_PROJECT)
-    try:
-      self.psq = psq.Queue(
-          psq_publisher, psq_subscriber, config.TURBINIA_PROJECT,
-          name=config.PSQ_TOPIC, storage=psq.DatastoreStorage(datastore_client))
-    except exceptions.GoogleCloudError as exception:
-      msg = f'Error creating PSQ Queue: {str(exception):s}'
-      log.error(msg)
-      raise TurbiniaException(msg)
-    log.info(f'Starting PSQ listener on queue {self.psq.name:s}')
-    self.worker = psq.Worker(queue=self.psq)
-
-  def start(self):
-    """Start Turbinia PSQ Worker."""
-    log.info('Running Turbinia PSQ Worker.')
-    self._monitoring_setup()
-    self._backend_setup()
-    self.worker.listen()

@@ -36,16 +36,10 @@ from turbinia import TurbiniaException
 
 config.LoadConfig()
 if 'unittest' in sys.modules.keys():
-  from google.cloud import datastore
-  from google.cloud import exceptions
   from google.auth import exceptions as auth_exceptions
   import redis
 
-if config.STATE_MANAGER.lower() == 'datastore':
-  from google.cloud import datastore
-  from google.cloud import exceptions
-  from google.auth import exceptions as auth_exceptions
-elif config.STATE_MANAGER.lower() == 'redis':
+if config.STATE_MANAGER.lower() == 'redis':
   import redis
 else:
   msg = f'State Manager type "{config.STATE_MANAGER:s}" not implemented'
@@ -67,9 +61,7 @@ def get_state_manager():
   """
   config.LoadConfig()
   # pylint: disable=no-else-return
-  if config.STATE_MANAGER.lower() == 'datastore':
-    return DatastoreStateManager()
-  elif config.STATE_MANAGER.lower() == 'redis':
+  if config.STATE_MANAGER.lower() == 'redis':
     return RedisStateManager()
   else:
     msg = f'State Manager type "{config.STATE_MANAGER:s}" not implemented'
@@ -126,9 +118,6 @@ class BaseStateManager:
     task_dict.update({k: None for k in all_attrs if k not in task_dict})
     task_dict = self._validate_data(task_dict)
 
-    # Using the pubsub topic as an instance attribute in order to have a unique
-    # namespace per Turbinia installation.
-    # TODO(aarontp): Migrate this to actual Datastore namespaces
     config.LoadConfig()
     task_dict.update({'instance': config.INSTANCE_ID})
     if isinstance(task_dict['instance'], six.binary_type):
@@ -164,71 +153,6 @@ class BaseStateManager:
       Key for written object
     """
     raise NotImplementedError
-
-
-class DatastoreStateManager(BaseStateManager):
-  """Datastore State Manager.
-
-  Attributes:
-    client: A Datastore client object.
-  """
-
-  def __init__(self):
-    config.LoadConfig()
-    try:
-      self.client = datastore.Client(project=config.TURBINIA_PROJECT)
-    except (EnvironmentError,
-            auth_exceptions.DefaultCredentialsError) as exception:
-      message = (
-          'Could not create Datastore client: {0!s}\n'
-          'Have you run $ gcloud auth application-default login?'.format(
-              exception))
-      raise TurbiniaException(message)
-
-  def _validate_data(self, data):
-    for key, value in iter(data.items()):
-      if (isinstance(value, six.string_types) and
-          len(value) >= MAX_DATASTORE_STRLEN):
-        log.warning(
-            'Warning: key {0:s} with value {1:s} is longer than {2:d} bytes. '
-            'Truncating in order to fit in Datastore.'.format(
-                key, value, MAX_DATASTORE_STRLEN))
-        suffix = '[...]'
-        data[key] = value[:MAX_DATASTORE_STRLEN - len(suffix)] + suffix
-
-    return data
-
-  def update_task(self, task):
-    task.touch()
-    try:
-      with self.client.transaction():
-        if not task.state_key:
-          self.write_new_task(task)
-          return
-        entity = self.client.get(task.state_key)
-        entity.update(self.get_task_dict(task))
-        log.debug(f'Updating Task {task.name:s} in Datastore')
-        self.client.put(entity)
-    except exceptions.GoogleCloudError as exception:
-      log.error(
-          f'Failed to update task {task.name:s} in datastore: {exception!s}')
-
-  def write_new_task(self, task):
-    key = self.client.key('TurbiniaTask', task.id)
-    try:
-      entity = datastore.Entity(key)
-      task_data = self.get_task_dict(task)
-      if not task_data.get('status'):
-        task_data['status'] = 'Task scheduled at {0:s}'.format(
-            datetime.now().strftime(DATETIME_FORMAT))
-      entity.update(task_data)
-      log.info(f'Writing new task {task.name:s} into Datastore')
-      self.client.put(entity)
-      task.state_key = key
-    except exceptions.GoogleCloudError as exception:
-      log.error(
-          f'Failed to update task {task.name:s} in datastore: {exception!s}')
-    return key
 
 
 class RedisStateManager(BaseStateManager):

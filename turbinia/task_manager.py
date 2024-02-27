@@ -19,7 +19,6 @@ from __future__ import unicode_literals, absolute_import
 import logging
 from datetime import datetime
 import time
-import uuid
 
 from prometheus_client import Counter
 
@@ -36,23 +35,13 @@ from turbinia.lib import recipe_helpers
 from turbinia.workers.abort import AbortTask
 
 config.LoadConfig()
-if config.TASK_MANAGER.lower() == 'psq':
-  import psq
 
-  from google.cloud import exceptions
-  from google.cloud import datastore
-  from google.cloud import pubsub
-
-  from turbinia import pubsub as turbinia_pubsub
-elif config.TASK_MANAGER.lower() == 'celery':
+if config.TASK_MANAGER.lower() == 'celery':
   from celery import states as celery_states
-
   from turbinia import tcelery as turbinia_celery
 
 log = logging.getLogger('turbinia')
 
-PSQ_TASK_TIMEOUT_SECONDS = 604800
-PSQ_QUEUE_WAIT_SECONDS = 2
 # The amount of time in seconds that the Server will wait in addition to the
 # Job/Task timeout value before it times out a given Task. This is to make sure
 # that the Server doesn't time out the Task before the Worker has a chance to
@@ -91,9 +80,7 @@ def get_task_manager():
   """
   config.LoadConfig()
   # pylint: disable=no-else-return
-  if config.TASK_MANAGER.lower() == 'psq':
-    return PSQTaskManager()
-  elif config.TASK_MANAGER.lower() == 'celery':
+  if config.TASK_MANAGER.lower() == 'celery':
     return CeleryTaskManager()
   else:
     msg = f'Task Manager type "{config.TASK_MANAGER:s}" not implemented'
@@ -478,7 +465,7 @@ class BaseTaskManager:
     """Runs final task results recording.
 
     self.process_tasks handles things that have failed at the task queue layer
-    (i.e. PSQ), and this method handles tasks that have potentially failed
+    (i.e. Celery), and this method handles tasks that have potentially failed
     below that layer (i.e. somewhere in our Task code).
 
     This also adds the Evidence to the running jobs and running requests so we
@@ -753,115 +740,3 @@ class CeleryTaskManager(BaseTaskManager):
     )
     task.stub = self.celery_runner.delay(
         task.serialize(), evidence_.serialize())
-
-
-class PSQTaskManager(BaseTaskManager):
-  """PSQ implementation of BaseTaskManager.
-
-  Attributes:
-    psq: PSQ Queue object.
-    server_pubsub: A PubSubClient object for receiving new evidence messages.
-  """
-
-  def __init__(self):
-    self.psq = None
-    self.server_pubsub = None
-    config.LoadConfig()
-    super(PSQTaskManager, self).__init__()
-
-  # pylint: disable=keyword-arg-before-vararg
-  def _backend_setup(self, server=True, *args, **kwargs):
-    """
-    Args:
-      server (bool): Whether this is the client or a server
-
-    Raises:
-      TurbiniaException: When there are errors creating PSQ Queue
-    """
-
-    log.debug(
-        'Setting up PSQ Task Manager requirements on project {0:s}'.format(
-            config.TURBINIA_PROJECT))
-    self.server_pubsub = turbinia_pubsub.TurbiniaPubSub(config.PUBSUB_TOPIC)
-    if server:
-      self.server_pubsub.setup_subscriber()
-      psq_publisher = pubsub.PublisherClient()
-      psq_subscriber = pubsub.SubscriberClient()
-      datastore_client = datastore.Client(project=config.TURBINIA_PROJECT)
-      try:
-        self.psq = psq.Queue(
-            psq_publisher, psq_subscriber, config.TURBINIA_PROJECT,
-            name=config.PSQ_TOPIC,
-            storage=psq.DatastoreStorage(datastore_client))
-      except exceptions.GoogleCloudError as exception:
-        msg = f'Error creating PSQ Queue: {str(exception):s}'
-        log.error(msg)
-        raise turbinia.TurbiniaException(msg)
-    else:
-      self.server_pubsub.setup_publisher()
-
-  def process_tasks(self):
-    completed_tasks = []
-    for task in self.tasks:
-      check_timeout = False
-      psq_task = task.stub.get_task()
-      # This handles tasks that have failed at the PSQ layer.
-      if not psq_task:
-        check_timeout = True
-        log.debug(f'Task {task.stub.task_id:s} not yet created')
-      elif psq_task.status not in (psq.task.FINISHED, psq.task.FAILED):
-        check_timeout = True
-        log.debug(f'Task {psq_task.id:s} not finished')
-      elif psq_task.status == psq.task.FAILED:
-        log.warning(f'Task {psq_task.id:s} failed.')
-        completed_tasks.append(task)
-      else:
-        task.result = workers.TurbiniaTaskResult.deserialize(
-            task.stub.result(timeout=PSQ_TASK_TIMEOUT_SECONDS))
-        completed_tasks.append(task)
-
-      # For certain Task states we want to check whether the Task has timed out
-      # or not.
-      if check_timeout:
-        timeout = self.check_task_timeout(task)
-        if timeout:
-          log.warning(
-              'Task {0:s} timed on server out after {1:d} seconds. Auto-closing Task.'
-              .format(task.id, timeout))
-          task = self.timeout_task(task, timeout)
-          completed_tasks.append(task)
-
-    outstanding_task_count = len(self.tasks) - len(completed_tasks)
-    if outstanding_task_count > 0:
-      log.info(f'{outstanding_task_count:d} Tasks still outstanding.')
-    return completed_tasks
-
-  def get_evidence(self):
-    requests = self.server_pubsub.check_messages()
-    evidence_list = []
-    for request in requests:
-      for evidence_ in request.evidence:
-        if not evidence_.request_id:
-          evidence_.request_id = request.request_id
-
-        log.info(f'Received evidence [{str(evidence_):s}] from PubSub message.')
-
-        success, message = recipe_helpers.validate_recipe(request.recipe)
-        if not success:
-          self.abort_request(
-              evidence_.request_id, request.requester, evidence_.name, message)
-        else:
-          evidence_.config = request.recipe
-          evidence_.config['globals']['requester'] = request.requester
-          evidence_list.append(evidence_)
-      turbinia_server_request_total.inc()
-
-    return evidence_list
-
-  def enqueue_task(self, task, evidence_):
-    log.info(
-        f'Adding PSQ task {task.name:s} with evidence {evidence_.name:s} to queue'
-    )
-    task.stub = self.psq.enqueue(
-        task_utils.task_runner, task.serialize(), evidence_.serialize())
-    time.sleep(PSQ_QUEUE_WAIT_SECONDS)

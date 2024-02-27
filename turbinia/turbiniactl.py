@@ -32,7 +32,6 @@ from turbinia.config import logger
 from turbinia import __version__
 from turbinia.processors import archive
 from turbinia.output_manager import OutputManager
-from turbinia.output_manager import GCSOutputWriter
 
 log = logging.getLogger('turbinia')
 # We set up the logger first without the file handler, and we will set up the
@@ -348,12 +347,6 @@ def process_args(args):
       help='List all available Jobs. These Job names can be used by '
       '--jobs_allowlist and --jobs_denylist')
 
-  # PSQ Worker
-  parser_psqworker = subparsers.add_parser('psqworker', help='Run PSQ worker')
-  parser_psqworker.add_argument(
-      '-S', '--single_threaded', action='store_true',
-      help='Run PSQ Worker in a single thread', required=False)
-
   # Celery Worker
   subparsers.add_parser('celeryworker', help='Run Celery worker')
 
@@ -483,8 +476,7 @@ def process_args(args):
     config.OUTPUT_DIR = args.output_dir
 
   config.TURBINIA_COMMAND = args.command
-  flags_set = args.command in (
-      'api_server', 'server', 'psqworker', 'celeryworker')
+  flags_set = args.command in ('api_server', 'server', 'celeryworker')
   # Run logger setup again if we're running as a server or worker (or have a log
   # file explicitly set on the command line) to set a file-handler now that we
   # have the logfile path from the config.
@@ -517,7 +509,6 @@ def process_args(args):
   from turbinia import notify
   from turbinia import client as TurbiniaClientProvider
   from turbinia.worker import TurbiniaCeleryWorker
-  from turbinia.worker import TurbiniaPsqWorker
   from turbinia.server import TurbiniaServer
 
   # Print out config if requested
@@ -572,7 +563,7 @@ def process_args(args):
 
   # Create Client object
   client = None
-  if args.command not in ('psqworker', 'server'):
+  if args.command not in ('server'):
     client = TurbiniaClientProvider.get_turbinia_client()
 
   # Set group id
@@ -651,14 +642,13 @@ def process_args(args):
               f'--copy_only specified, so not processing {disk_name:s} with Turbinia'
           )
           continue
-
       process_evidence(
           args=args, disk_name=disk_name, name=name, source=source,
           project=project, zone=zone, embedded_path=embedded_path,
           mount_partition=mount_partition, group_id=group_id,
           filter_patterns=filter_patterns, client=client, yara_rules=yara_rules,
           group_name=group_name, reason=reason, all_args=all_args)
-  elif args.command == 'rawmemory':
+  if args.command == 'rawmemory':
     # Checks if length of args match
     args.name, args.profile = check_args(
         args.source_path, [args.name, args.profile])
@@ -682,13 +672,6 @@ def process_args(args):
           group_id=group_id, client=client, filter_patterns=filter_patterns,
           yara_rules=yara_rules, browser_type=browser_type,
           group_name=group_name, reason=reason, all_args=all_args)
-  elif args.command == 'psqworker':
-    # Set up root logger level which is normally set by the psqworker command
-    # which we are bypassing.
-    logger.setup()
-    worker = TurbiniaPsqWorker(
-        jobs_denylist=args.jobs_denylist, jobs_allowlist=args.jobs_allowlist)
-    worker.start()
   elif args.command == 'celeryworker':
     logger.setup()
     worker = TurbiniaCeleryWorker(
@@ -709,22 +692,6 @@ def process_args(args):
           'Cannot run status command with request ID and group ID. Please '
           'only specify one.')
       raise TurbiniaException(msg)
-    if args.close_tasks:
-      if args.group_id:
-        msg = 'The --close_task flag is not compatible with --group_id.'
-        raise TurbiniaException(msg)
-      if args.user or args.request_id or args.task_id:
-        print(
-            client.close_tasks(
-                instance=config.INSTANCE_ID, project=config.TURBINIA_PROJECT,
-                region=region, request_id=args.request_id, task_id=args.task_id,
-                user=args.user, requester=getpass.getuser()))
-        sys.exit(0)
-      else:
-        log.info(
-            '--close_tasks (-c) requires --user, --request_id, or/and --task_id'
-        )
-        sys.exit(1)
 
     if args.dump_json and (args.statistics or args.requests or args.workers):
       log.info(
@@ -749,7 +716,6 @@ def process_args(args):
       log.info(
           '--wait requires --request_id, which is not specified. '
           'turbiniactl will exit without waiting.')
-
     if args.requests:
       print(
           client.format_request_status(
@@ -757,7 +723,6 @@ def process_args(args):
               region=region, days=args.days_history,
               all_fields=args.all_fields))
       sys.exit(0)
-
     if args.workers:
       print(
           client.format_worker_status(
@@ -781,51 +746,6 @@ def process_args(args):
   elif args.command == 'listjobs':
     log.info('Available Jobs:')
     client.list_jobs()
-  elif args.command == 'dumpgcs':
-    if not config.GCS_OUTPUT_PATH and not args.bucket:
-      msg = 'GCS storage must be enabled in order to use this.'
-      raise TurbiniaException(msg)
-    if not args.task_id and not args.request_id:
-      msg = 'You must specify one of task_id or request_id.'
-      raise TurbiniaException(msg)
-    if not os.path.isdir(args.output_dir):
-      msg = 'Please provide a valid directory path.'
-      raise TurbiniaException(msg)
-
-    gcs_bucket = args.bucket if args.bucket else config.GCS_OUTPUT_PATH
-    instance_id = args.instance_id if args.instance_id else config.INSTANCE_ID
-
-    try:
-      task_data = client.get_task_data(
-          instance=instance_id, days=args.days_history,
-          project=config.TURBINIA_PROJECT, region=config.TURBINIA_REGION,
-          task_id=args.task_id, request_id=args.request_id,
-          function_name='gettasks')
-      output_writer = GCSOutputWriter(
-          gcs_bucket, local_output_dir=args.output_dir)
-      if not task_data:
-        msg = 'No Tasks found for task/request ID'
-        raise TurbiniaException(msg)
-      if args.task_id:
-        log.info(
-            'Downloading GCS files for task_id {0:s} to {1:s}.'.format(
-                args.task_id, args.output_dir))
-        for task in task_data:
-          if task['id'] == args.task_id:
-            if task['saved_paths']:
-              output_writer.copy_from_gcs(task['saved_paths'])
-      if args.request_id:
-        log.info(
-            'Downloading GCS files for request_id {0:s} to {1:s}.'.format(
-                args.request_id, args.output_dir))
-        paths = []
-        for task in task_data:
-          if task['saved_paths']:
-            paths.extend(task['saved_paths'])
-        output_writer.copy_from_gcs(paths)
-
-    except TurbiniaException as exception:
-      log.error(f'Failed to pull the data {exception!s}')
   else:
     log.warning(f'Command {args.command!s} not implemented.')
 
