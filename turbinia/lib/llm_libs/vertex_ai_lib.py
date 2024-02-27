@@ -13,7 +13,7 @@ from turbinia.lib.llm_libs import llm_lib_base
 
 CALL_LIMIT = 20  # Number of calls to allow within a period
 ONE_MINUTE = 60  # One minute in seconds
-FIVE_MINUTE = 5 * ONE_MINUTE
+TEN_MINUTE = 10 * ONE_MINUTE
 MODEL_NAME = "gemini-1.0-pro"
 MAX_OUTOUT_TOKEN = 2048
 MODEL_TEMPRATURE = 0.2
@@ -64,7 +64,7 @@ class TurbiniaVertexAILib(llm_lib_base.TurbiniaLLMLibBase):
           exceptions.Cancelled,
           ratelimit.RateLimitException,
       ),  # Exceptions to retry on
-      max_time=FIVE_MINUTE,
+      max_time=TEN_MINUTE,
       on_backoff=backoff_hdlr,  # Function to call when retrying
   )
   # Limit the number of calls to the model per minute
