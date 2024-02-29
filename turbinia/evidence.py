@@ -67,9 +67,10 @@ def evidence_class_names(all_classes=False):
     # Ignore classes that are not real Evidence types and the base class.
     ignored_classes = (
         'BinaryExtraction', 'BulkExtractorOutput', 'Evidence', 'EvidenceState',
-        'EvidenceCollection', 'ExportedFileArtifact', 'FilteredTextFile',
-        'FinalReport', 'IntEnum', 'PlasoCsvFile', 'PhotorecOutput',
-        'ReportText', 'TextFile', 'VolatilityReport', 'TurbiniaException')
+        'EvidenceCollection', 'ExportedFileArtifact', 'ExportedFileArtifactLLM',
+        'FilteredTextFile', 'FinalReport', 'IntEnum', 'PlasoCsvFile',
+        'PhotorecOutput', 'ReportText', 'TextFile', 'VolatilityReport',
+        'TurbiniaException')
     class_names = filter(
         lambda class_tuple: class_tuple[0] not in ignored_classes, class_names)
   return list(class_names)
@@ -1147,6 +1148,18 @@ class ExportedFileArtifact(Evidence):
   def __init__(self, artifact_name=None, *args, **kwargs):
     """Initializes an exported file artifact."""
     super(ExportedFileArtifact, self).__init__(*args, **kwargs)
+    self.artifact_name = artifact_name
+    self.copyable = True
+
+
+class ExportedFileArtifactLLM(Evidence):
+  """Exported file artifact."""
+
+  REQUIRED_ATTRIBUTES = ['artifact_name']
+
+  def __init__(self, artifact_name=None, *args, **kwargs):
+    """Initializes an exported file artifact."""
+    super(ExportedFileArtifactLLM, self).__init__(*args, **kwargs)
     self.artifact_name = artifact_name
     self.copyable = True
 

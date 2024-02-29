@@ -72,6 +72,8 @@ globals:
     - JupyterExtractionJob
     - JupyterAnalysisJob
     - LinuxAccountAnalysisJob
+    - LLMArtifactsExtractionJob
+    - LLMAnalysisJob
     - PartitionEnumerationJob
     - PlasoJob
     - PsortJob

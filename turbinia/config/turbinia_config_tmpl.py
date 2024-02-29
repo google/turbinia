@@ -263,6 +263,16 @@ DEPENDENCIES = [{
     'programs': ['hashcat', 'grep', 'strings'],
     'docker_image': None,
     'timeout': 3600
+}, {
+    'job': 'LLMAnalysisJob',
+    'programs': [],
+    'docker_image': None,
+    'timeout': 3600
+}, {
+    'job': 'LLMArtifactsExtractionJob',
+    'programs': [],
+    'docker_image': None,
+    'timeout': 3600
 }]
 
 ################################################################################
@@ -364,3 +374,26 @@ DFDEWEY_OS_PORT = 9200
 # OS_URL can be used to specify a RFC-1738 formatted URL
 # Example: OS_URL = 'https://user:secret@127.0.0.1:9200/'
 DFDEWEY_OS_URL = None
+
+###############################################################################
+#                           GCP Gen-AI Configs
+#
+# These options are required for the VertexAI LLM analyzer
+###############################################################################
+
+# see https://ai.google.dev/tutorials/setup
+GCP_GENERATIVE_LANGUAGE_API_KEY = ''
+
+###############################################################################
+#                           LLM Providers
+#
+# Specify the choosen LLm provider to be used with LLM analyzer
+###############################################################################
+
+# To add a new LLM provider, first add a new implementation class
+# implementing turbinia.lib.llm_libs.llm_lib_base.TurbiniaLLMLibBase
+# in a new module under turbinia.lib.llm_libs. Then extend the PROVIDERS_MAP
+# in llm_client.py module with the provider name (as key) and
+# implementationclass (as value).
+# possible values ["vertexai"]
+LLM_PROVIDER = "vertexai"
