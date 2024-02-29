@@ -263,6 +263,16 @@ DEPENDENCIES = [{
     'programs': ['hashcat', 'grep', 'strings'],
     'docker_image': None,
     'timeout': 3600
+}, {
+    'job': 'LLMAnalysisJob',
+    'programs': [],
+    'docker_image': None,
+    'timeout': 3600
+}, {
+    'job': 'LLMArtifactsExtractionJob',
+    'programs': [],
+    'docker_image': None,
+    'timeout': 3600
 }]
 
 ################################################################################
