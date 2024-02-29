@@ -52,6 +52,7 @@ class TaskLoader():
       'JupyterAnalysisTask',
       'LinuxAccountAnalysisTask',
       'LinuxSSHAnalysisTask',
+      'LLMAnalyzerTask',
       'YaraAnalysisTask',
       'PartitionEnumerationTask',
       'PhotorecTask',
@@ -102,6 +103,7 @@ class TaskLoader():
     from turbinia.workers.analysis.jenkins import JenkinsAnalysisTask
     from turbinia.workers.analysis.jupyter import JupyterAnalysisTask
     from turbinia.workers.analysis.linux_acct import LinuxAccountAnalysisTask
+    from turbinia.workers.analysis.llm_analyzer import LLMAnalyzerTask
     from turbinia.workers.analysis.postgresql_acct import PostgresAccountAnalysisTask
     from turbinia.workers.analysis.redis import RedisAnalysisTask
     from turbinia.workers.analysis.ssh_analyzer import LinuxSSHAnalysisTask

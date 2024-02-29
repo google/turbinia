@@ -31,6 +31,7 @@ RUN apt-get update && apt-get -y upgrade && apt-get -y install \
 # Install Poetry
 RUN pip3 install pip --upgrade
 RUN pip3 install poetry
+RUN pip3 install -U packaging
 
 # Install various packages from the GIFT PPA
 #   bulkextractor
