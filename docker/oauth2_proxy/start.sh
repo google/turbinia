@@ -12,7 +12,7 @@ then
     echo "${OAUTH2_AUTH_EMAILS}" | base64 -d > /etc/turbinia/auth.txt
 fi
 
-oauth2-proxy --config /etc/turbinia/oauth2.conf 
+oauth2-proxy --config /etc/turbinia/oauth2.conf --upstream-timeout 900s
 
 # Don't exit
 while sleep 1000; do :; done
