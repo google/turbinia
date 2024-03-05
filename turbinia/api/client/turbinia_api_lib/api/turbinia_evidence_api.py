@@ -142,7 +142,7 @@ class TurbiniaEvidenceApi:
 
         # process the path parameters
         _path_params = {}
-        if _params['evidence_type']:
+        if _params['evidence_type'] is not None:
             _path_params['evidence_type'] = _params['evidence_type']
 
 
@@ -283,7 +283,7 @@ class TurbiniaEvidenceApi:
 
         # process the path parameters
         _path_params = {}
-        if _params['evidence_id']:
+        if _params['evidence_id'] is not None:
             _path_params['evidence_id'] = _params['evidence_id']
 
 
@@ -880,14 +880,14 @@ class TurbiniaEvidenceApi:
         # process the form parameters
         _form_params = []
         _files = {}
-        if _params['calculate_hash']:
+        if _params['calculate_hash'] is not None:
             _form_params.append(('calculate_hash', _params['calculate_hash']))
 
-        if _params['files']:
+        if _params['files'] is not None:
             _files['files'] = _params['files']
             _collection_formats['files'] = 'csv'
 
-        if _params['ticket_id']:
+        if _params['ticket_id'] is not None:
             _form_params.append(('ticket_id', _params['ticket_id']))
 
         # process the body parameter

@@ -291,7 +291,7 @@ class TurbiniaRequestsApi:
 
         # process the path parameters
         _path_params = {}
-        if _params['request_id']:
+        if _params['request_id'] is not None:
             _path_params['request_id'] = _params['request_id']
 
 
