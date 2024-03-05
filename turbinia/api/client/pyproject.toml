@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "turbinia-api-lib"
-version = "1.0.2"
+version = "1.0.3"
 description = "Turbinia API Server"
 authors = ["OpenAPI Generator Community <team@openapitools.org>"]
 license = "Apache License 2.0"
@@ -10,9 +10,12 @@ keywords = ["OpenAPI", "OpenAPI-Generator", "Turbinia API Server"]
 include = ["turbinia_api_lib/py.typed"]
 
 [tool.poetry.dependencies]
-python = "^3.7"
+python = "^3.9"
 
-urllib3 = ">= 1.25.3, <2"
+urllib3 = [
+  {version = ">=1.25.4,<1.27", python = "<3.10"},
+  {version = ">=1.25.4,<2.1", python = ">=3.10"}
+]
 python-dateutil = ">=2.8.2"
 pydantic = "^1.10.5, <2"
 aenum = ">=3.1.11"
