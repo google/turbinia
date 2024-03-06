@@ -15,7 +15,7 @@ turbinia-client = "turbinia_client.turbiniacli_tool:main"
 [tool.poetry.dependencies]
 python = "^3.9"
 click = "^8.1.7"
-turbinia-api-lib = "^1.0.2"
+turbinia-api-lib = "^1.0.3"
 google-auth-oauthlib = "^1.1.0"
 pandas = "^2.1.0"
 
