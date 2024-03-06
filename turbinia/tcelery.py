@@ -113,7 +113,8 @@ class TurbiniaKombu(TurbiniaMessageBase):
             f'fetching from queue: {exception!s}')
         break
 
-    log.debug(f'Received {len(requests):d} messages')
+    if len(requests):
+      log.debug(f'Received {len(requests):d} messages')
     return requests
 
   def send_message(self, message):
