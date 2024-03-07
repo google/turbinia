@@ -1,33 +1,21 @@
 {
   "name": "turbinia-web",
-  "version": "0.1.0",
-  "private": true,
+  "version": "1.0.0",
   "scripts": {
-    "serve": "vue-cli-service serve",
-    "build": "vue-cli-service build",
-    "lint": "vue-cli-service lint"
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
   },
   "dependencies": {
-    "axios": "^1.6.0",
-    "core-js": "^3.27.1",
-    "vue": "^2.6.14",
-    "vuetify": "^2.6.14"
+    "@mdi/font": "7.0.96",
+    "axios": "^1.6.5",
+    "vue": "^3.2.0",
+    "vuetify": "^3.0.0"
   },
   "devDependencies": {
-    "@babel/core": "^7.20.12",
-    "@babel/eslint-parser": "^7.19.1",
-    "@vue/cli-plugin-babel": "~5.0.8",
-    "@vue/cli-plugin-eslint": "~5.0.8",
-    "@vue/cli-service": "~5.0.8",
-    "eslint": "^8.31.0",
-    "eslint-config-prettier": "^8.6.0",
-    "eslint-plugin-prettier": "^4.2.1",
-    "eslint-plugin-vue": "^9.8.0",
-    "prettier": "^2.8.2",
-    "sass": "~1.57.1",
-    "sass-loader": "^13.2.0",
-    "vue-cli-plugin-vuetify": "~2.5.8",
-    "vue-template-compiler": "^2.7.14",
-    "vuetify-loader": "^1.9.2"
+    "@vitejs/plugin-vue": "^4.0.0",
+    "unplugin-fonts": "^1.0.3",
+    "vite": "^4.2.0",
+    "vite-plugin-vuetify": "^1.0.0"
   }
 }

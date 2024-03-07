@@ -1,4 +1,4 @@
-# web
+# Turbinia Web
 
 ## Project setup
 

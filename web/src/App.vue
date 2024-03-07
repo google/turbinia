@@ -14,18 +14,16 @@ limitations under the License.
 <template>
   <v-app id="app">
     <nav class="navbar">
-      <v-app-bar app flat>
-        <div class="turbinia-logo">
-          <v-img src="./assets/turbinia-logo-mark.png" max-height="50" max-width="70" contain />
-        </div>
-        <div class="turbinia-title">
-          <v-toolbar-title>Turbinia</v-toolbar-title>
-        </div>
+      <v-app-bar flat :elevation="1" >
+        <template v-slot:prepend>
+          <v-img src="./assets/turbinia-logo-mark.png" height="50" width="70"></v-img>
+        </template>
+        <v-app-bar-title>Turbinia</v-app-bar-title>
         <v-spacer></v-spacer>
         <div class="dark-theme-btn">
           <v-tooltip left>
-            <template v-slot:activator="{ on, attrs }">
-              <v-btn icon v-on:click="toggleTheme" v-bind="attrs" v-on="on">
+            <template v-slot:activator="{ props }">
+              <v-btn icon v-on:click="toggleTheme" v-bind="props">
                 <v-icon>mdi-brightness-6</v-icon>
               </v-btn>
             </template>
@@ -44,7 +42,7 @@ limitations under the License.
           </v-col>
           <v-col cols="3" align-self="start">
             <v-card rounded v-if="Object.keys(taskDetails).length">
-              <task-details :taskDetails="this.taskDetails"></task-details>
+              <task-details :taskDetails="taskDetails"></task-details>
             </v-card>
             <v-card rounded v-else>
               <v-card-title> Task Details </v-card-title>
@@ -58,8 +56,8 @@ limitations under the License.
 </template>
 
 <script>
-import RequestList from './components/RequestList'
-import TaskDetails from './components/TaskDetails'
+import RequestList from './components/RequestList.vue'
+import TaskDetails from './components/TaskDetails.vue'
 import ApiClient from './utils/RestApiClient.js'
 
 export default {
@@ -76,10 +74,6 @@ export default {
     }
   },
   methods: {
-    toggleTheme: function () {
-      this.$vuetify.theme.dark = !this.$vuetify.theme.dark
-      localStorage.setItem('isDarkTheme', this.$vuetify.theme.dark.toString())
-    },
     getTaskDetails: function (task_id) {
       ApiClient.getTaskDetails(task_id)
         .then((response) => {
@@ -90,16 +84,16 @@ export default {
         })
     },
   },
-  mounted() {
-    const isDark = localStorage.getItem('isDarkTheme')
-    if (isDark) {
-      if (isDark === 'true') {
-        this.$vuetify.theme.dark = true
-      } else {
-        this.$vuetify.theme.dark = false
-      }
-    }
-  },
+}
+</script>
+
+<script setup>
+import { useTheme } from 'vuetify'
+
+const theme = useTheme()
+
+function toggleTheme () {
+  theme.global.name.value = theme.global.current.value.dark ? 'light' : 'dark'
 }
 </script>
 
