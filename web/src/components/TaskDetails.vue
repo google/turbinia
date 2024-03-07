@@ -17,109 +17,87 @@ limitations under the License.
       {{ taskDetails.name }}
       <v-tooltip top>
         Download Task output
-        <template v-slot:activator="{ on, attrs }">
-          <v-btn icon v-on="on" v-bind="attrs" @click="getTaskOutput(taskDetails.id)">
+        <template v-slot:activator="{ props }">
+          <v-btn icon v-bind="props" @click="getTaskOutput(taskDetails.id)">
             <v-icon> mdi-file-download-outline </v-icon>
           </v-btn>
         </template>
       </v-tooltip>
     </v-card-title>
-    <v-alert v-if="taskDetails.successful === true" type="success" border="bottom" colored-border>
+    <v-alert v-if="taskDetails.successful === true" type="success" prominent>
       {{ taskDetails.status }}
     </v-alert>
-    <v-alert v-else-if="taskDetails.successful === null" type="info" border="bottom" colored-border>
+    <v-alert v-else-if="taskDetails.successful === null" type="info" prominent>
       {{ taskDetails.status }}
     </v-alert>
-    <v-alert v-else type="error" border="bottom" colored-border>
+    <v-alert v-else type="error" prominent>
       {{ taskDetails.status }}
     </v-alert>
     <v-card>
-      <v-list dense>
-        <v-list-group :value="true">
-          <template v-slot:activator>
-            <v-list-item-title>Associated IDs</v-list-item-title>
+      <v-list v-model:opened="openGroups">
+        <v-list-group value="ids">
+          <template v-slot:activator="{ props }">
+            <v-list-item
+            v-bind="props"
+            title="Associated IDs"
+          ></v-list-item>
           </template>
-          <v-list-item>
-            <v-list-item-content>
-              <v-list-item-title> Task ID: </v-list-item-title>
-              {{ taskDetails.id }}
-            </v-list-item-content>
+          <v-list-item title="Task ID:">
+            {{ taskDetails.id }}
           </v-list-item>
-          <v-list-item>
-            <v-list-item-content>
-              <v-list-item-title> Request ID: </v-list-item-title>
-              {{ taskDetails.request_id }}
-            </v-list-item-content>
+          <v-list-item title="Request ID:">
+            {{ taskDetails.request_id }}
           </v-list-item>
-          <v-list-item>
-            <v-list-item-content>
-              <v-list-item-title> Evidence ID: </v-list-item-title>
-              {{ taskDetails.evidence_id }}
-            </v-list-item-content>
+          <v-list-item title="Evidence ID:">
+            {{ taskDetails.evidence_id }}
           </v-list-item>
-          <v-list-item>
-            <v-list-item-content>
-              <v-list-item-title> Group ID: </v-list-item-title> {{ taskDetails.group_id }}
-            </v-list-item-content>
+          <v-list-item title="Group ID:">
+            {{ taskDetails.group_id }}
           </v-list-item>
-          <v-list-item>
-            <v-list-item-content>
-              <v-list-item-title> Job ID: </v-list-item-title>{{ taskDetails.job_id }}
-            </v-list-item-content>
+          <v-list-item title="Job ID:">
+            {{ taskDetails.job_id }}
           </v-list-item>
         </v-list-group>
-        <v-list-group :value="true">
-          <template v-slot:activator>
-            <v-list-item-title>Processing Details</v-list-item-title>
+        <v-list-group value="details">
+          <template v-slot:activator="{ props }">
+            <v-list-item
+            v-bind="props"
+            title="Processing Details"
+          ></v-list-item>
           </template>
-          <v-list-item>
-            <v-list-item-content>
-              <v-list-item-title> Evidence Name: </v-list-item-title>
-              {{ taskDetails.evidence_name }}
-            </v-list-item-content>
+          <v-list-item title="Evidence Name:">
+            {{ taskDetails.evidence_name }}
           </v-list-item>
-          <v-list-item>
-            <v-list-item-content>
-              <v-list-item-title> Evidence Size: </v-list-item-title>
-              {{ taskDetails.evidence_size }} bytes
-            </v-list-item-content>
+          <v-list-item title="Evidence Size:">
+            {{ taskDetails.evidence_size }} bytes
           </v-list-item>
-          <v-list-item>
-            <v-list-item-content>
-              <v-list-item-title> Arguments: </v-list-item-title> {{ taskDetails.all_args }}
-            </v-list-item-content>
+          <v-list-item title="Arguments:">
+            {{ taskDetails.all_args }}
           </v-list-item>
-          <v-list-item>
-            <v-list-item-content>
-              <v-list-item-title> Last Update: </v-list-item-title> {{ taskDetails.last_update }}
-            </v-list-item-content>
+          <v-list-item title="Last Update:">
+            {{ taskDetails.last_update }}
           </v-list-item>
-          <v-list-item>
-            <v-list-item-content>
-              <v-list-item-title> Requester: </v-list-item-title>{{ taskDetails.requester }}
-            </v-list-item-content>
+          <v-list-item title="Requester:">
+            {{ taskDetails.requester }}
           </v-list-item>
-          <v-list-item>
-            <v-list-item-content>
-              <v-list-item-title> Worker: </v-list-item-title>{{ taskDetails.worker_name }}
-            </v-list-item-content>
+          <v-list-item title="Worker:">
+            {{ taskDetails.worker_name }}
           </v-list-item>
-          <v-list-item>
-            <v-list-item-content>
-              <v-list-item-title> Successful: </v-list-item-title>{{ taskDetails.successful }}
-            </v-list-item-content>
+          <v-list-item title="Successful:">
+            {{ taskDetails.successful }}
           </v-list-item>
-          <v-list-item>
-            <v-list-item-content>
-              <v-list-item-title> Run Time: </v-list-item-title>{{ taskDetails.run_time }} seconds
-            </v-list-item-content>
+          <v-list-item title="Run Time:">
+            {{ taskDetails.run_time }} seconds
           </v-list-item>
         </v-list-group>
         <div v-if="taskDetails.saved_paths">
-          <v-list-group :value="false">
-            <template v-slot:activator>
-              <v-list-item-title>Saved Paths: </v-list-item-title>
-            </template>
+          <v-list-group>
+          <template v-slot:activator="{ props }">
+            <v-list-item
+            v-bind="props"
+            title="Saved Paths:"
+          ></v-list-item>
+          </template>
             <v-list-item dense v-for="(path, idx) in taskDetails.saved_paths" :key="idx">
               {{ path }}
             </v-list-item>
@@ -136,7 +114,9 @@ import ApiClient from '../utils/RestApiClient.js'
 export default {
   props: ['taskDetails'],
   data() {
-    return {}
+    return {
+      openGroups: ['ids', 'details'],
+    }
   },
   methods: {
     getTaskOutput: function (task_id) {

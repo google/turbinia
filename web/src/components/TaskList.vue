@@ -13,29 +13,28 @@ limitations under the License.
 
 <template>
   <div>
-    <v-list dense>
+    <v-list density="compact">
       <v-virtual-scroll :items="taskList" :item-height="40" :height="400">
         <template v-slot:default="{ item }">
-          <v-list-item class="mb-8" :key="item.task_id">
+          <v-list-item :key="item.task_id" v-slot:prepend>
             <div v-if="item.task_success">
-              <v-list-item-avatar> <v-icon color="green"> mdi-check </v-icon> </v-list-item-avatar>
+              <v-list-item> <v-icon color="green" icon="mdi-check"> </v-icon> </v-list-item>
             </div>
             <div v-else-if="item.task_success === null">
-              <v-list-item-avatar>
+              <v-list-item>
                 <v-progress-circular indeterminate color="blue" :size="20"></v-progress-circular>
-              </v-list-item-avatar>
+              </v-list-item>
             </div>
             <div v-else>
-              <v-list-item-avatar> <v-icon color="red"> mdi-alert-circle </v-icon> </v-list-item-avatar>
+              <v-list-item> <v-icon color="red" icon="mdi-alert-circle"> </v-icon> </v-list-item>
             </div>
             <div>
               <v-list-item-action>
                 <v-btn
-                  text
+                  variant="text"
                   :ripple="true"
                   :key="item.task_id"
-                  active-class="activated"
-                  class="text-lowercase"
+                  selected-class="activated"
                   :class="{ activated: isActive == item.task_id }"
                   @click="getTaskDetails(item.task_id) + selectActiveStatus(item.task_id)"
                 >
@@ -43,12 +42,10 @@ limitations under the License.
                 </v-btn>
               </v-list-item-action>
             </div>
-            <v-list-item-content>
-              <v-list-item-title>
-                {{ item.task_name }}
-                >: {{ item.task_status }}
-              </v-list-item-title>
-            </v-list-item-content>
+            <v-list-item>
+              {{ item.task_name }}
+              >: {{ item.task_status }}
+            </v-list-item>
           </v-list-item>
           <v-divider> </v-divider>
         </template>
