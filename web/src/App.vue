@@ -16,7 +16,7 @@ limitations under the License.
     <nav class="navbar">
       <v-app-bar flat :elevation="1" >
         <template v-slot:prepend>
-          <v-img src="./assets/turbinia-logo-mark.png" height="50" width="70"></v-img>
+          <v-img src="./turbinia-logo-mark.png" height="50" width="70"></v-img>
         </template>
         <v-app-bar-title>Turbinia</v-app-bar-title>
         <v-spacer></v-spacer>
