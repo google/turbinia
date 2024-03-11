@@ -44,7 +44,8 @@ async def web(request: Request):
   raise HTTPException(status_code=404, detail='Not found')
 
 
-@ui_router.get('/assets/{catchall:path}', name='assets', include_in_schema=False)
+@ui_router.get(
+    '/assets/{catchall:path}', name='assets', include_in_schema=False)
 async def serve_assets(request: Request):
   """Serves assets content."""
   static_content_path = pathlib.Path(_config.WEBUI_PATH).joinpath('dist/assets')
