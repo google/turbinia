@@ -160,7 +160,7 @@ DISABLED_JOBS = ['BinaryExtractorJob', 'BulkExtractorJob', 'DfdeweyJob', 'Hindsi
 # Configure additional job dependency checks below.
 DEPENDENCIES = [{
     'job': 'BinaryExtractorJob',
-    'programs': ['image_export.py'],
+    'programs': ['image_export'],
     'docker_image': None,
     'timeout': 7200
 }, {
@@ -185,7 +185,7 @@ DEPENDENCIES = [{
     'timeout': 1200
 }, {
     'job': 'FileArtifactExtractionJob',
-    'programs': ['image_export.py'],
+    'programs': ['image_export'],
     'docker_image': None,
     'timeout': 1200
 }, {
@@ -230,7 +230,7 @@ DEPENDENCIES = [{
     'timeout': 1200
 }, {
     'job': 'PlasoJob',
-    'programs': ['log2timeline.py'],
+    'programs': ['log2timeline'],
     'docker_image': None,
     'timeout': 86400
 }, {
@@ -240,7 +240,7 @@ DEPENDENCIES = [{
     'timeout': 14400
 }, {
     'job': 'PsortJob',
-    'programs': ['psort.py'],
+    'programs': ['psort'],
     'docker_image': None,
     'timeout': 14400
 }, {

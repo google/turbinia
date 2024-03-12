@@ -46,7 +46,7 @@ class FileArtifactExtractionTask(TurbiniaTask):
     self.llm_artifacts = llm_artifacts
 
   def run(self, evidence, result):
-    """Extracts artifacts using Plaso image_export.py.
+    """Extracts artifacts using Plaso image_export.
 
     Args:
         evidence (Evidence object):  The evidence we will process.
@@ -62,7 +62,7 @@ class FileArtifactExtractionTask(TurbiniaTask):
       result.close(
           self,
           False,
-          'image_export.py failed for artifacts {0:s} - artifact_name or'
+          'image_export failed for artifacts {0:s} - artifact_name or'
           ' artifact_names not provided.'.format(self.artifact_names),
       )
       return result
@@ -71,7 +71,7 @@ class FileArtifactExtractionTask(TurbiniaTask):
       result.close(
           self,
           False,
-          'image_export.py failed for artifacts {0:s} - local_path not'
+          'image_export failed for artifacts {0:s} - local_path not'
           ' provided.'.format(self.artifact_names),
       )
       return result
@@ -97,7 +97,7 @@ class FileArtifactExtractionTask(TurbiniaTask):
 
       ret, _ = self.execute(cmd, result, log_files=[image_export_log])
       if ret:
-        result.log(f'image_export.py failed for artifact {artifact_name:s}.')
+        result.log(f'image_export failed for artifact {artifact_name:s}.')
         err_cnt += 1
 
       # LLM analyzer uses a seperate version of ExportedFileArtifact to avoid
@@ -125,7 +125,7 @@ class FileArtifactExtractionTask(TurbiniaTask):
     if err_cnt == len(self.artifact_names):
       result.close(
           self, False,
-          f'image_export.py failed for artifacts {self.artifact_names}.')
+          f'image_export failed for artifacts {self.artifact_names}.')
       return result
 
     result.close(
@@ -153,7 +153,7 @@ class FileArtifactExtractionTask(TurbiniaTask):
     """
 
     cmd = [
-        'image_export.py',
+        'image_export',
         '--no-hashes',
         '--logfile',
         image_export_log,

@@ -118,12 +118,6 @@ RUN chmod +rwx /home/turbinia/start.sh
 # Install Turbinia package -- will skip dependencies if installed
 RUN poetry install --no-interaction --no-ansi -E worker
 
-# Rename Plaso binaries due to job configuration specifying `.py` equivalents
-# TODO: Explore using Plaso docker entrypoint instead to call binaries
-RUN mv /home/turbinia/.venv/bin/log2timeline /home/turbinia/.venv/bin/log2timeline.py
-RUN mv /home/turbinia/.venv/bin/image_export /home/turbinia/.venv/bin/image_export.py
-RUN mv /home/turbinia/.venv/bin/psort /home/turbinia/.venv/bin/psort.py
-
 CMD ["/home/turbinia/start.sh"]
 # Expose Prometheus endpoint.
 EXPOSE 9200/tcp

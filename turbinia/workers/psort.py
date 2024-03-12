@@ -79,7 +79,7 @@ class PsortTask(TurbiniaTask):
     psort_evidence = PlasoCsvFile(source_path=psort_file)
     psort_log = os.path.join(self.output_dir, f'{self.id:s}.log')
 
-    cmd = self.build_plaso_command('psort.py', self.task_config)
+    cmd = self.build_plaso_command('psort', self.task_config)
 
     cmd.extend(['--logfile', psort_log])
     if config.DEBUG_TASKS or self.task_config.get('debug_tasks'):

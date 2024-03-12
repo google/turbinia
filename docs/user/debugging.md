@@ -103,7 +103,7 @@ Using the saved paths above we can display the output with `gsutil`.
 ```
 $ gsutil cat gs://my-turbinia-bucket/output/1512601742-1f8c4b321f444614bde296b0a00bb91f-PsortTask/worker-log.txt
 
-Running psort as [psort.py --status_view none --logfile /var/tmp/1512601742-1f8c4b321f444614bde296b0a00bb91f-PsortTask/1f8c4b321f444614bde296b0a00bb91f.log -w /var/tmp/1512601742-1f8c4b321f444614bde296b0a00bb91f-PsortTask/1f8c4b321f444614bde296b0a00bb91f.csv /var/tmp/1512601730-b04f479ef9094954968474431aa30e8a-PsortTask/b04f479ef9094954968474431aa30e8a.csv]
+Running psort as [psort --status_view none --logfile /var/tmp/1512601742-1f8c4b321f444614bde296b0a00bb91f-PsortTask/1f8c4b321f444614bde296b0a00bb91f.log -w /var/tmp/1512601742-1f8c4b321f444614bde296b0a00bb91f-PsortTask/1f8c4b321f444614bde296b0a00bb91f.csv /var/tmp/1512601730-b04f479ef9094954968474431aa30e8a-PsortTask/b04f479ef9094954968474431aa30e8a.csv]
 Execution failed with status 1
 ```
 

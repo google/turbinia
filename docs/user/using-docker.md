@@ -1,7 +1,7 @@
 # Using Docker for Job execution
 
 ## Overview 
-Turbinia supports the use of Docker by allowing a Task to execute its command through a Docker Container instead. For example, when a Task for a PlasoJob is passed to a Worker, the Task will execute the command `log2timeline.py <ARGS>` through the Container and pass back the associated data to the Worker for further processing. The benefit being that it eliminates having to install the required dependencies and/or external programs for a Job on the Worker's host machine. Please note that Turbinia does not provide the Docker Images necessary for each Job and they will need to either be created or pulled from a container registry.
+Turbinia supports the use of Docker by allowing a Task to execute its command through a Docker Container instead. For example, when a Task for a PlasoJob is passed to a Worker, the Task will execute the command `log2timeline <ARGS>` through the Container and pass back the associated data to the Worker for further processing. The benefit being that it eliminates having to install the required dependencies and/or external programs for a Job on the Worker's host machine. Please note that Turbinia does not provide the Docker Images necessary for each Job and they will need to either be created or pulled from a container registry.
 
 ## Enabling Docker usage
 In order to enable this feature, please take the following steps. 
@@ -28,7 +28,7 @@ The following section provides an example of the steps mentioned above for the P
     ```python
     {
         'job': 'PlasoJob'
-        'programs': ['log2timeline.py'],
+        'programs': ['log2timeline'],
         'docker_image': 'log2timeline/plaso' 
     }
     ```
