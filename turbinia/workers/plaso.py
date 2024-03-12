@@ -54,7 +54,7 @@ class PlasoTask(TurbiniaTask):
     """Builds a typical plaso command, contains logic specific to log2timeline.
 
     Args:
-      base_command (str): Command to invoke log2timeline (e.g. log2timeline.py)
+      base_command (str): Command to invoke log2timeline (e.g. log2timeline)
       conf (dict): Dynamic config containing the parameters for the command.
 
     Returns:
@@ -112,7 +112,7 @@ class PlasoTask(TurbiniaTask):
     plaso_evidence = PlasoFile(source_path=plaso_file)
     plaso_log = os.path.join(self.output_dir, f'{self.id:s}.log')
 
-    cmd = self.build_plaso_command('log2timeline.py', self.task_config)
+    cmd = self.build_plaso_command('log2timeline', self.task_config)
 
     if config.DEBUG_TASKS or self.task_config.get('debug_tasks'):
       cmd.append('-d')

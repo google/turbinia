@@ -66,16 +66,16 @@ def _image_export(command, output_dir, disk_path, timeout=DEFAULT_TIMEOUT):
     stdout, stderr, ret = container_manager.execute_container(
         command, shell=False, ro_paths=ro_paths, rw_paths=rw_paths,
         timeout_limit=job_timeout)
-  else:  # execute with local install of image_export.py
+  else:  # execute with local install of image_export
     command.insert(0, 'sudo')
     log.debug(f"Running image_export as [{' '.join(command):s}]")
     try:
       subprocess.check_call(command, timeout=timeout)
     except subprocess.CalledProcessError as exception:
-      raise TurbiniaException(f'image_export.py failed: {exception!s}')
+      raise TurbiniaException(f'image_export failed: {exception!s}')
     except subprocess.TimeoutExpired as exception:
       raise TurbiniaException(
-          f'image_export.py timed out after {timeout:d}s: {exception!s}')
+          f'image_export timed out after {timeout:d}s: {exception!s}')
 
   collected_file_paths = []
   file_count = 0
@@ -106,7 +106,7 @@ def extract_artifacts(artifact_names, disk_path, output_dir, credentials=[]):
   # Plaso image_export expects artifact names as a comma separated string.
   artifacts = ','.join(artifact_names)
   image_export_cmd = [
-      'image_export.py', '--artifact_filters', artifacts, '--write', output_dir,
+      'image_export', '--artifact_filters', artifacts, '--write', output_dir,
       '--partitions', 'all', '--volumes', 'all', '--unattended'
   ]
 
@@ -137,10 +137,10 @@ def extract_files(file_name, disk_path, output_dir, credentials=[]):
   """
   if not disk_path:
     raise TurbiniaException(
-        'image_export.py failed: Attempted to run with no local_path')
+        'image_export failed: Attempted to run with no local_path')
 
   image_export_cmd = [
-      'image_export.py', '--name', file_name, '--write', output_dir,
+      'image_export', '--name', file_name, '--write', output_dir,
       '--partitions', 'all', '--volumes', 'all'
   ]
 
