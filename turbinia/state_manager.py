@@ -366,7 +366,7 @@ class RedisStateManager(BaseStateManager):
         decode or json loads fails. 
     """
     try:
-      attributes = self.client.hscan_iter(match=key, count=100)
+      attributes = self.client.hscan_iter(key, count=100)
     except redis.RedisError as exception:
       error_message = f'Error getting attributes from {key} in Redis'
       log.error(f'{error_message}: {exception}')
