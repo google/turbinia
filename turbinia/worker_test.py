@@ -176,7 +176,7 @@ class TestTurbiniaCeleryWorker(unittest.TestCase):
 
     dependencies = {
         'plasojob': {
-            'programs': ['log2timeline.py'],
+            'programs': ['log2timeline'],
             'docker_image': 'log2timeline/plaso'
         }
     }

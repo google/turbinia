@@ -25,7 +25,7 @@ from turbinia.workers.workers_test import TestTurbiniaTaskBase
 class PlasoTaskTest(TestTurbiniaTaskBase):
   """Tests for PlasoTask."""
 
-  _BASE_COMMAND = "log2timeline.py"
+  _BASE_COMMAND = "log2timeline"
   _YARA_RULE = """
 rule rulename {
   strings:
