@@ -110,4 +110,11 @@ ADD . /home/turbinia/
 RUN poetry install --no-interaction --no-ansi -E worker --with test
 # We need to install the current dev version of turbinia-api-lib for the cli tool test in case the API client changes
 RUN cd turbinia/api/client && poetry install
+
+# Rename Plaso binaries due to job configuration specifying `.py` equivalents
+# TODO: Explore using Plaso docker entrypoint instead to call binaries
+RUN mv /home/turbinia/.venv/bin/log2timeline /home/turbinia/.venv/bin/log2timeline.py
+RUN mv /home/turbinia/.venv/bin/image_export /home/turbinia/.venv/bin/image_export.py
+RUN mv /home/turbinia/.venv/bin/psort /home/turbinia/.venv/bin/psort.py
+
 CMD ["/bin/bash"]
