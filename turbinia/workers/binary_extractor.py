@@ -79,7 +79,7 @@ class BinaryExtractorTask(TurbiniaTask):
     return (binary_cnt, hash_cnt)
 
   def run(self, evidence, result):
-    """Task that extracts binaries with image_export.py.
+    """Task that extracts binaries with image_export.
 
     Args:
         evidence (Evidence object):  The evidence we will process.
@@ -100,7 +100,7 @@ class BinaryExtractorTask(TurbiniaTask):
     self.json_path = os.path.join(self.binary_extraction_dir, 'hashes.json')
 
     cmd = [
-        'image_export.py', '--partitions', 'all', '--volumes', 'all',
+        'image_export', '--partitions', 'all', '--volumes', 'all',
         '--vss_stores', 'none', '--unattended', '--logfile', image_export_log
     ]
 
@@ -159,7 +159,7 @@ class BinaryExtractorTask(TurbiniaTask):
       result.log(
           'Number of extracted binaries is not equal to the number '
           'of extracted hashes. This might indicate issues with '
-          'image_export.py. Check binary_extraction.log for more '
+          'image_export. Check binary_extraction.log for more '
           'details.', logging.WARNING)
 
     binary_extraction_evidence.compress()
