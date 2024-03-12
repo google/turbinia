@@ -193,7 +193,7 @@ class RedisStateManager(BaseStateManager):
     """
     tasks = [
         json.loads(self.client.get(task))
-        for task in self.client.scan_iter('TurbiniaTask:*')
+        for task in self.client.scan_iter(match='TurbiniaTask:*', count=1000)
         if json.loads(self.client.get(task)).get('instance') == instance or
         not instance
     ]
@@ -339,7 +339,7 @@ class RedisStateManager(BaseStateManager):
         decode fails.
     """
     try:
-      keys = self.client.scan_iter(f'Turbinia{key_type.title()}:*')
+      keys = self.client.scan_iter(f'Turbinia{key_type.title()}:*', count=1000)
     except redis.RedisError as exception:
       error_message = f'Error getting {key_type} keys in Redis'
       log.error(f'{error_message}: {exception}')
@@ -366,7 +366,7 @@ class RedisStateManager(BaseStateManager):
         decode or json loads fails. 
     """
     try:
-      attributes = self.client.hscan_iter(key)
+      attributes = self.client.hscan_iter(match=key, count=100)
     except redis.RedisError as exception:
       error_message = f'Error getting attributes from {key} in Redis'
       log.error(f'{error_message}: {exception}')
