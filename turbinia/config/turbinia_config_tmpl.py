@@ -230,7 +230,7 @@ DEPENDENCIES = [{
     'timeout': 1200
 }, {
     'job': 'PlasoJob',
-    'programs': ['log2timeline'],
+    'programs': ['log2timeline', 'pinfo'],
     'docker_image': None,
     'timeout': 86400
 }, {
