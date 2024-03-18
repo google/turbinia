@@ -192,7 +192,7 @@ class RedisStateManager(BaseStateManager):
       error_message = f'Error decoding key {task_id} in Redis'
       log.error(f'{error_message}: {exception}')
       raise TurbiniaException(error_message) from exception
-  
+
   def get_task(self, task_id: str) -> dict:
     """Returns a dictionary representing a Task object given its ID.
 
@@ -218,7 +218,7 @@ class RedisStateManager(BaseStateManager):
       task_dict['run_time'] = timedelta(seconds=task_dict['run_time'])
 
     return task_dict
-  
+
   def validate_task(self, task, instance: str, days: int, group_id: str, user: str):
     if days:
       start_time = datetime.now() - timedelta(days=days)
@@ -262,7 +262,8 @@ class RedisStateManager(BaseStateManager):
         request_key, 'task_ids', decode_json = True)
     # If no task_id or request_id is passed, gets all valid saved tasks
     else:
-      task_ids = [task_key.split(':')[1] for task_key in self.iterate_keys('Task')]
+      task_ids = [
+        task_key.split(':')[1] for task_key in self.iterate_keys('Task')]
 
     tasks = []
 
@@ -270,7 +271,7 @@ class RedisStateManager(BaseStateManager):
       task = self.get_task(task_id)
       if self.validate_task(task, instance, days, group_id, user):
         tasks.append(task)
-    
+
     return tasks
 
   def format_task(self, task):
@@ -298,14 +299,16 @@ class RedisStateManager(BaseStateManager):
     request_last_update = datetime.strptime(self.get_attribute(
       request_key, 'last_update'), DATETIME_FORMAT)
     try:
-      last_update = json.dumps(max(request_last_update, task.last_update).strftime(
-        DATETIME_FORMAT))
+      last_update = json.dumps(max(
+          request_last_update, task.last_update).strftime(
+          DATETIME_FORMAT))
     except redis.RedisError as exception:
       error_message = f'Error encoding key {request_key} in Redis'
       log.error(f'{error_message}: {exception}')
       raise TurbiniaException(error_message) from exception   
     self.set_attribute(request_key, 'last_update',last_update)
-    statuses_to_remove = ['succesful_tasks', 'failed_tasks','running_tasks', 'queued_tasks']
+    statuses_to_remove = [
+      'succesful_tasks', 'failed_tasks','running_tasks', 'queued_tasks']
     # 'successful' could be None or False, which means different things.
     # If False, the task has failed, If None, could be queued or running.
     if hasattr(task, 'succesful'):
@@ -500,7 +503,7 @@ class RedisStateManager(BaseStateManager):
       error_message = f'Error checking existence of {redis_key} in Redis'
       log.error(f'{error_message}: {exception}')
       raise TurbiniaException(error_message) from exception
-    
+
   def attribute_exists(self, redis_key, attribute_name) -> bool:
     """Checks if the attribute of the hashed key is saved in Redis.
 
