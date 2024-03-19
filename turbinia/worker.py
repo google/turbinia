@@ -252,6 +252,6 @@ class TurbiniaCeleryWorker(TurbiniaWorkerBase):
     self.worker.task(task_utils.task_runner, name='task_runner')
     argv = [
         'worker', '--loglevel=info', '--pool=solo', '--without-gossip',
-        '--without-mingle'
+        '--without-mingle', '-E'
     ]
     self.worker.start(argv)

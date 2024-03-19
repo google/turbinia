@@ -704,7 +704,7 @@ class CeleryTaskManager(BaseTaskManager):
     evidence_list = []
     for request in requests:
       self.state_manager.write_request(
-          deepcopy(request.to_json(json_values=True)))
+          deepcopy(request.to_json(json_values=True))) 
       for evidence_ in request.evidence:
         if not evidence_.request_id:
           evidence_.request_id = request.request_id

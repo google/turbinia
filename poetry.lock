@@ -4151,40 +4151,6 @@ files = [
 ]
 
 [[package]]
-name = "turbinia-api-lib"
-version = "1.0.2"
-description = "Turbinia API Server"
-optional = false
-python-versions = ">=3.7,<4.0"
-files = [
-    {file = "turbinia_api_lib-1.0.2-py3-none-any.whl", hash = "sha256:04b3f471fb01046d81031cc0f95e5368f855647251eb7823dad00d0c07f8f80b"},
-    {file = "turbinia_api_lib-1.0.2.tar.gz", hash = "sha256:b1885c43987591294c0beacd03732fb07decb5608f0c69a3158ead178f3c6b9e"},
-]
-
-[package.dependencies]
-aenum = ">=3.1.11"
-pydantic = ">=1.10.5,<2.0.0"
-python-dateutil = ">=2.8.2"
-urllib3 = ">=1.25.3,<2"
-
-[[package]]
-name = "turbinia-api-lib"
-version = "1.0.2"
-description = "Turbinia API Server"
-optional = false
-python-versions = ">=3.7,<4.0"
-files = [
-    {file = "turbinia_api_lib-1.0.2-py3-none-any.whl", hash = "sha256:04b3f471fb01046d81031cc0f95e5368f855647251eb7823dad00d0c07f8f80b"},
-    {file = "turbinia_api_lib-1.0.2.tar.gz", hash = "sha256:b1885c43987591294c0beacd03732fb07decb5608f0c69a3158ead178f3c6b9e"},
-]
-
-[package.dependencies]
-aenum = ">=3.1.11"
-pydantic = ">=1.10.5,<2.0.0"
-python-dateutil = ">=2.8.2"
-urllib3 = ">=1.25.3,<2"
-
-[[package]]
 name = "tqdm"
 version = "4.66.4"
 description = "Fast, Extensible Progress Meter"
@@ -4230,9 +4196,6 @@ python-versions = ">=3.8"
 files = [
     {file = "typing_extensions-4.10.0-py3-none-any.whl", hash = "sha256:69b1a937c3a517342112fb4c6df7e72fc39a38e7891a5730ed4985b5214b5475"},
     {file = "typing_extensions-4.10.0.tar.gz", hash = "sha256:b0abd7c89e8fb96f98db18d86106ff1d90ab692004eb746cf6eda2682f91b3cb"},
-]
-    {file = "typing_extensions-4.9.0-py3-none-any.whl", hash = "sha256:af72aea155e91adfc61c3ae9e0e342dbc0cba726d6cba4b6c72c1f34e47291cd"},
-    {file = "typing_extensions-4.9.0.tar.gz", hash = "sha256:23478f88c37f27d76ac8aee6c905017a143b0b1b886c3c9f66bc2fd94f9f5783"},
 ]
 
 [[package]]
