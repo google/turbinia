@@ -105,11 +105,6 @@ class BaseStateManager:
         if isinstance(task_dict[attr], six.binary_type):
           task_dict[attr] = six.u(task_dict[attr])
 
-    # We'll store the run_time as seconds instead of a timedelta()
-    #DELETE
-    #if task_dict.get('run_time'):
-    #  task_dict['run_time'] = task_dict['run_time'].total_seconds()
-
     #Importing these here to avoid circular dependencies.
     from turbinia.workers import TurbiniaTask
     from turbinia.workers import TurbiniaTaskResult
@@ -308,19 +303,19 @@ class RedisStateManager(BaseStateManager):
       raise TurbiniaException(error_message) from exception   
     self.set_attribute(request_key, 'last_update',last_update)
     statuses_to_remove = [
-      'succesful_tasks', 'failed_tasks','running_tasks', 'queued_tasks']
+      'successful_tasks', 'failed_tasks','running_tasks', 'queued_tasks']
     # 'successful' could be None or False, which means different things.
     # If False, the task has failed, If None, could be queued or running.
-    if hasattr(task, 'succesful'):
-      if task.successful:
-        self.add_to_list(request_key, 'succesful_tasks', task.id)
-        statuses_to_remove.remove('succesful_tasks')
-      if task.successful is False:
+    if hasattr(task.result, 'successful'):
+      if task.result.successful:
+        self.add_to_list(request_key, 'successful_tasks', task.id)
+        statuses_to_remove.remove('successful_tasks')
+      if task.result.successful is False:
         self.add_to_list(request_key, 'failed_tasks', task.id)
         statuses_to_remove.remove('failed_tasks')
-      elif task.successful is None:
-        if task.status:
-          if 'running' in task.status:
+      elif task.result.successful is None:
+        if task.result.status:
+          if 'running' in task.result.status:
             self.add_to_list(request_key, 'running_tasks', task.id)
             statuses_to_remove.remove('running_tasks')
         else:
@@ -414,12 +409,15 @@ class RedisStateManager(BaseStateManager):
     """
     try:
       attribute_value = self.client.hget(redis_key, attribute_name)
+      if not attribute_value:
+        message = f'Attribute {attribute_name} for key {redis_key} not found.'
+        log.warning(message)
     except redis.RedisError as exception:
       error_message = (
           f'Error getting {attribute_name} from {redis_key} in Redis')
       log.error(f'{error_message}: {exception}')
       raise TurbiniaException(error_message) from exception
-    if decode_json:
+    if decode_json and attribute_value:
       try:
         return json.loads(attribute_value)
       except (TypeError, ValueError) as exception:
@@ -558,15 +556,15 @@ class RedisStateManager(BaseStateManager):
       list_attribute = [new_item]
     else:
       list_attribute = self.get_attribute(redis_key, list_name)
-      if new_item not in list_attribute and not allow_repeated:
-        list_attribute.append(new_item)
-      try:
-        self.set_attribute(redis_key, list_name, json.dumps(list_attribute))
-      except (TypeError, ValueError) as exception:
-        error_message = (
-            f'Error encoding list {list_attribute} from {redis_key} in Redis')
-        log.error(f'{error_message}: {exception}')
-        raise TurbiniaException(error_message) from exception
+    if new_item not in list_attribute and not allow_repeated:
+      list_attribute.append(new_item)
+    try:
+      self.set_attribute(redis_key, list_name, json.dumps(list_attribute))
+    except (TypeError, ValueError) as exception:
+      error_message = (
+          f'Error encoding list {list_attribute} from {redis_key} in Redis')
+      log.error(f'{error_message}: {exception}')
+      raise TurbiniaException(error_message) from exception
 
   def remove_from_list(self, redis_key, list_name, item):
     """Removes an item from a list attribute in a hashed Redis object.
@@ -604,8 +602,8 @@ class RedisStateManager(BaseStateManager):
     """
     log.info(f'Writing hash object {redis_key} into Redis')
     for attribute_name, attribute_value in object_dict.items():
-      if attribute_value not in EMPTY_JSON_VALUES:
-        self.set_attribute(redis_key, attribute_name, attribute_value)
+      #if attribute_value not in EMPTY_JSON_VALUES:
+      self.set_attribute(redis_key, attribute_name, attribute_value)
 
   def write_evidence(self, evidence_dict: dict[str], update=False) -> str:
     """Writes evidence into redis.

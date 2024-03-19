@@ -100,7 +100,7 @@ class TurbiniaAPIServer:
     _config: config = config.LoadConfig()
     uvicorn.run(
         app_name, host=_config.API_SERVER_ADDRESS, port=_config.API_SERVER_PORT,
-        log_level="info", reload=False, workers=4)
+        log_level="info", reload=True, workers=1)
 
 
 if __name__ == '__main__':

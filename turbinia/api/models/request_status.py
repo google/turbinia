@@ -21,6 +21,7 @@ from typing import Optional, List, Dict
 from pydantic import BaseModel
 from turbinia import state_manager
 from turbinia import config as turbinia_config
+from turbinia import TurbiniaException
 
 log = logging.getLogger('turbinia:api_server:routes:request')
 
@@ -71,16 +72,19 @@ class RequestStatus(BaseModel):
       self.reason = saved_request.get('reason')
       self.status = saved_request.get('status')
       self.last_task_update_time = saved_request.get('last_update')
-      self.successful_tasks = len(saved_request.get('succesful_tasks', []))
+      self.successful_tasks = len(saved_request.get('successful_tasks', []))
       self.failed_tasks = len(saved_request.get('failed_tasks', []))
       self.queued_tasks = len(saved_request.get('queued_tasks', []))
       self.running_tasks = len(saved_request.get('running_tasks', []))
+      task_ids = saved_request.get('task_ids', [])
+      self.task_count = len(task_ids)
     # If the request is not stored in redis, uses legacy get_request_data
     else:
       if not tasks:
-        tasks = _state_manager.get_task_data(
+        self.tasks = _state_manager.get_task_data(
             instance=turbinia_config.INSTANCE_ID, request_id=request_id)
-      self.get_request_data_legacy(request_id, tasks, summary)
+        self.task_count = len(self.tasks)
+        self.get_request_data_legacy(request_id, self.tasks, summary)
 
     if self.last_task_update_time:
       if isinstance(self.last_task_update_time, float):
@@ -117,7 +121,8 @@ class RequestStatus(BaseModel):
 
     return bool(self.tasks)
 
-  def get_request_data_legacy(self, request_id: str, tasks: Optional[List[Dict]] = None,
+  def get_request_data_legacy(
+      self, request_id: str, tasks: Optional[List[Dict]] = None,
       summary: bool = False):
     """Gets information about the original evidence for a specific Turbinia
     request.
@@ -152,8 +157,6 @@ class RequestStatus(BaseModel):
 
     initial_start_time = datetime.datetime.now().strftime(
         turbinia_config.DATETIME_FORMAT)
-    
-    self.taks_count = len(tasks)
 
     for task in tasks:
       self.requester = task.get('requester')
@@ -201,7 +204,9 @@ class RequestsSummary(BaseModel):
   def get_requests_summary(self) -> bool:
     """Generates a status summary for each Turbinia request."""
     _state_manager = state_manager.get_state_manager()
-    request_ids = [request_key.split(':')[1] for request_key in _state_manager.iterate_keys('Request')]
+    request_ids = [
+      request_key.split(':')[1]
+      for request_key in _state_manager.iterate_keys('Request')]
 
     for request_id in request_ids:
       request_status = RequestStatus()
