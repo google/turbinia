@@ -15,6 +15,18 @@
             },
             "localRoot": "${workspaceFolder}",
             "remoteRoot": "/home/turbinia"
-          }
+        },
+        {
+            "name": "Attach to Server",
+            "type": "cloudcode.kubernetes",
+            "request": "attach",
+            "language": "Python",
+            "debugPort": 20000,
+            "podSelector": {
+               "app.kubernetes.io/component": "server"
+            },
+            "localRoot": "${workspaceFolder}",
+            "remoteRoot": "/home/turbinia"
+        }
     ]
 }
