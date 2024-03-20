@@ -24,6 +24,10 @@ build:
     - image: turbinia-server
       docker:
         dockerfile: docker/server/Dockerfile
+        buildArgs:
+          TURBINIA_DEBUG: 1
+          TURBINIA_HOTRELOAD: 1
+          TURBINIA_DEBUG_PORT: 20000
       sync:
         infer:
         - turbinia/**
