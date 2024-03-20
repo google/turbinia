@@ -7,49 +7,48 @@ build:
     useDockerCLI: true
     useBuildkit: true 
     concurrency: 0
-    # tryImportMissing: true
   artifacts:
-    - image: turbinia-worker
-      docker:
-        dockerfile: docker/worker/Dockerfile
-        # target: turbinia-worker-dev
-        buildArgs:
-          TURBINIA_DEBUG: 1
-          TURBINIA_HOTRELOAD: 1
-          TURBINIA_DEBUG_PORT: 10000
-      sync:
-        infer:
-        - turbinia/**
-    # - image: turbinia-server
+    # Uncomment when developing on the Turbinia Worker
+    # - image: turbinia-worker
     #   docker:
-    #     dockerfile: docker/server/Dockerfile
-    #     # target: turbinia-server-dev
+    #     dockerfile: docker/worker/Dockerfile
+    #     buildArgs:
+    #       TURBINIA_DEBUG: 1
+    #       TURBINIA_HOTRELOAD: 1
+    #       TURBINIA_DEBUG_PORT: 10000
     #   sync:
     #     infer:
     #     - turbinia/**
+
+    # Uncomment when developing on the Turbinia Server
+    - image: turbinia-server
+      docker:
+        dockerfile: docker/server/Dockerfile
+      sync:
+        infer:
+        - turbinia/**
+
+    # Uncomment when developing on the Turbinia API Server or Web UI
     # - image: turbinia-api
     #   docker:
     #     dockerfile: docker/api_server/Dockerfile.dev
-    #     target: turbinia-api-dev
 deploy:
   statusCheckDeadlineSeconds: 30
   helm:
     releases:
     - name: dev-release
-      #repo: oci://us-docker.pkg.dev/osdfir-registry/osdfir-charts/
-      #remoteChart: turbinia
-      #repo: https://google.github.io/osdfir-infrastructure/
-      #remoteChart: turbinia
-      #remoteChart: osdfir-charts/osdfir-infrastructure/turbinia
-      chartPath: ./osdfir-infrastructure/charts/turbinia
+      # Uncomment if using remote helm charts
+      repo: https://google.github.io/osdfir-infrastructure/
+      remoteChart: turbinia
+      # Uncomment if using local helm charts
+      #chartPath: ./osdfir-infrastructure/charts/turbinia
       setValues:
-        # config.override: "/tmp/turbinia/conf/turbinia.conf"
         versioncheck.enabled: False
       setValueTemplates:
-        worker.image.repository: "{{.IMAGE_REPO_turbinia_worker}}"
-        worker.image.tag: "{{.IMAGE_TAG_turbinia_worker}}@{{.IMAGE_DIGEST_turbinia_worker}}"
-        # server.image.repository: "{{.IMAGE_REPO_turbinia_server}}"
-        # server.image.tag: "{{.IMAGE_TAG_turbinia_server}}@{{.IMAGE_DIGEST_turbinia_server}}"
+        # worker.image.repository: "{{.IMAGE_REPO_turbinia_worker}}"
+        # worker.image.tag: "{{.IMAGE_TAG_turbinia_worker}}@{{.IMAGE_DIGEST_turbinia_worker}}"
+        server.image.repository: "{{.IMAGE_REPO_turbinia_server}}"
+        server.image.tag: "{{.IMAGE_TAG_turbinia_server}}@{{.IMAGE_DIGEST_turbinia_server}}"
         # api.image.repository: "{{.IMAGE_REPO_turbinia_api}}"
         # api.image.tag: "{{.IMAGE_TAG_turbinia_api}}@{{.IMAGE_DIGEST_turbinia_api}}"
 portForward:
@@ -62,6 +61,7 @@ portForward:
 # - resourceType: deployment
 #   resourceName: dev-release-turbinia-server
 #   port: 20000 # server debugpy port
+# Uncomment bekow if working on metrics
 # - resourceType: deployment
 #   resourceName: dev-release-turbinia-api-metrics
 #   port: 9200 
