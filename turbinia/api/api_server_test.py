@@ -413,7 +413,7 @@ class testTurbiniaAPIServer(unittest.TestCase):
     mocked_now = datetime.datetime.now()
     mock_datetime.now.return_value = mocked_now
     mocked_now_str = mocked_now.strftime(turbinia_config.DATETIME_FORMAT)
-
+    self.maxDiff = None
     filedir = os.path.dirname(os.path.realpath(__file__))
     evidence_1_name = 'wordpress_access_logs.txt'
     evidence_2_name = 'mbr.raw'
@@ -424,9 +424,9 @@ class testTurbiniaAPIServer(unittest.TestCase):
     ticket_id = '981234098'
 
     expected_evidence_1_name = (
-        f'{os.path.splitext(evidence_1_name)[0]}_{mocked_now_str}')
+        f'{os.path.splitext(evidence_1_name)[0]}_{mocked_now_str}') + '.txt'
     expected_evidence_2_name = (
-        f'{os.path.splitext(evidence_2_name)[0]}_{mocked_now_str}')
+        f'{os.path.splitext(evidence_2_name)[0]}_{mocked_now_str}') + '.raw'
     expected_evidence_1_path = os.path.join(
         turbinia_config.API_EVIDENCE_UPLOAD_DIR, ticket_id,
         expected_evidence_1_name)
