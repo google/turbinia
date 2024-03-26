@@ -257,6 +257,7 @@ async def upload_evidence(
       evidences.append(warning_message)
       log.error(warning_message)
       try:
+        file_path = await get_file_path(file.filename, ticket_id)
         os.remove(file_path)
       except OSError as exception:
         log.error(f'Could not remove file {file_path}: {exception}')
