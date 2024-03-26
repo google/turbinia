@@ -102,6 +102,31 @@ def get_task_result(ctx: click.Context, task_id: str) -> None:
     log.error(f'Error reading saved results file {filename}: {exception}')
 
 
+@groups.result_group.command('plasofile')
+@click.pass_context
+@click.argument('task_id')
+def get_plaso_file(ctx: click.Context, task_id: str) -> None:
+  """Gets Turbinia task results / output files."""
+  client: api_client.ApiClient = ctx.obj.api_client
+  api_instance = turbinia_request_results_api.TurbiniaRequestResultsApi(client)
+  filename = f'{task_id}.plaso'
+  click.echo(f'Downloading output for task {task_id} to: {filename}')
+  try:
+    api_response = api_instance.get_plaso_file_with_http_info(
+        task_id, _preload_content=False, _request_timeout=(30, 900))
+    # Read the response and save into a local file.
+    with open(filename, 'wb') as file:
+      file.write(api_response.raw_data)
+  except exceptions.ApiException as exception:
+    log.error(
+        f'Received status code {exception.status} '
+        f'when calling get_plaso_file_with_http_info: {exception.body}')
+  except OSError as exception:
+    log.error(f'Unable to save file: {exception}')
+  except (ValueError, tarfile.ReadError, tarfile.CompressionError) as exception:
+    log.error(f'Error reading saved results file {filename}: {exception}')
+
+
 @groups.jobs_group.command('list')
 @click.pass_context
 def get_jobs(ctx: click.Context) -> None:

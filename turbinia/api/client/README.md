@@ -101,6 +101,7 @@ Class | Method | HTTP request | Description
 *TurbiniaEvidenceApi* | [**upload_evidence**](docs/TurbiniaEvidenceApi.md#upload_evidence) | **POST** /api/evidence/upload | Upload Evidence
 *TurbiniaJobsApi* | [**read_jobs**](docs/TurbiniaJobsApi.md#read_jobs) | **GET** /api/jobs/ | Read Jobs
 *TurbiniaLogsApi* | [**get_logs**](docs/TurbiniaLogsApi.md#get_logs) | **GET** /api/logs/{query} | Get Logs
+*TurbiniaRequestResultsApi* | [**get_plaso_file**](docs/TurbiniaRequestResultsApi.md#get_plaso_file) | **GET** /api/result/plasofile/{task_id} | Get Plaso File
 *TurbiniaRequestResultsApi* | [**get_request_output**](docs/TurbiniaRequestResultsApi.md#get_request_output) | **GET** /api/result/request/{request_id} | Get Request Output
 *TurbiniaRequestResultsApi* | [**get_task_output**](docs/TurbiniaRequestResultsApi.md#get_task_output) | **GET** /api/result/task/{task_id} | Get Task Output
 *TurbiniaRequestsApi* | [**create_request**](docs/TurbiniaRequestsApi.md#create_request) | **POST** /api/request/ | Create Request
