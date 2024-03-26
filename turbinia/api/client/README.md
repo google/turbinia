@@ -92,6 +92,7 @@ All URIs are relative to *http://localhost*
 Class | Method | HTTP request | Description
 ------------ | ------------- | ------------- | -------------
 *TurbiniaConfigurationApi* | [**get_request_options**](docs/TurbiniaConfigurationApi.md#get_request_options) | **GET** /api/config/request_options | Get Request Options
+*TurbiniaConfigurationApi* | [**get_version**](docs/TurbiniaConfigurationApi.md#get_version) | **GET** /api/config/version | Get Version
 *TurbiniaConfigurationApi* | [**read_config**](docs/TurbiniaConfigurationApi.md#read_config) | **GET** /api/config/ | Read Config
 *TurbiniaEvidenceApi* | [**get_evidence_attributes**](docs/TurbiniaEvidenceApi.md#get_evidence_attributes) | **GET** /api/evidence/types/{evidence_type} | Get Evidence Attributes
 *TurbiniaEvidenceApi* | [**get_evidence_by_id**](docs/TurbiniaEvidenceApi.md#get_evidence_by_id) | **GET** /api/evidence/{evidence_id} | Get Evidence By Id
