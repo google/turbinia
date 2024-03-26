@@ -58,6 +58,7 @@ def get_task_objects(task_id: str) -> List[Any]:
     raise HTTPException(status_code=404, detail=f'Task {task_id:s} not found.')
   return tasks
 
+
 @router.get(
     '/task/{task_id}', response_class=StreamingResponse,
     responses=ATTACHMENT_RESPONSE)
@@ -73,13 +74,14 @@ async def get_task_output(request: Request, task_id: str) -> StreamingResponse:
 
   if request_id and output_path:
     return StreamingResponse(
-        api_utils.create_tarball(output_path),
-        headers={
-          'Content-Disposition': f'attachment;filename={task_id}.tgz',
-          'Transfer-Encoding': 'chunked'})
+        api_utils.create_tarball(output_path), headers={
+            'Content-Disposition': f'attachment;filename={task_id}.tgz',
+            'Transfer-Encoding': 'chunked'
+        })
   else:
     raise HTTPException(
         status_code=404, detail='The requested file was not found.')
+
 
 @router.get(
     '/request/{request_id}', response_class=StreamingResponse,
@@ -94,15 +96,17 @@ async def get_request_output(
   request_output_path = api_utils.get_request_output_path(request_id)
   if request_output_path:
     return StreamingResponse(
-        api_utils.create_tarball(request_output_path),
-        headers={
-          'Content-Disposition': f'attachment;filename={request_id}.tgz',
-          'Transfer-Encoding': 'chunked'})
+        api_utils.create_tarball(request_output_path), headers={
+            'Content-Disposition': f'attachment;filename={request_id}.tgz',
+            'Transfer-Encoding': 'chunked'
+        })
   else:
     raise HTTPException(
         status_code=404, detail='The requested file was not found.')
 
-@router.get('/plasofile/{task_id}', response_class=FileResponse,
+
+@router.get(
+    '/plasofile/{task_id}', response_class=FileResponse,
     responses=ATTACHMENT_RESPONSE)
 async def get_plaso_file(request: Request, task_id: str) -> FileResponse:
   """Retrieves a task's Plaso file."""

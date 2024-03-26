@@ -52,6 +52,7 @@ async def get_request_options(request: Request):
     attributes_dict[attribute_name] = {'type': str(attribute_type)}
   return JSONResponse(content=attributes_dict, status_code=200)
 
+
 @router.get('/version')
 async def get_version(request: Request):
   """Returns the Turbinia version."""

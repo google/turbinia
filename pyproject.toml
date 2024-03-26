@@ -48,6 +48,7 @@ fakeredis = "^1.8.1"
 google-auth-oauthlib = "^1.1.0"
 mock = "*"
 pytest = "*"
+tabulate = "*"
 turbinia-api-lib = "^1.0.2"
 yapf = "*"
 

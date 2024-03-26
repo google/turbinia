@@ -34,6 +34,7 @@ logger.setup()
 log = logging.getLogger('turbinia')
 log.setLevel(logging.INFO)
 
+
 def get_application() -> FastAPI:
   """Returns a FastAPI application object."""
   description: str = (
@@ -98,12 +99,8 @@ class TurbiniaAPIServer:
           to start the HTTP server.
     """
     uvicorn.run(
-        app_name, host=config.API_SERVER_ADDRESS,
-        port=config.API_SERVER_PORT,
-        log_config=None,
-        log_level='info',
-        reload=False,
-        workers=4)
+        app_name, host=config.API_SERVER_ADDRESS, port=config.API_SERVER_PORT,
+        log_config=None, log_level='info', reload=False, workers=4)
 
 
 if __name__ == '__main__':

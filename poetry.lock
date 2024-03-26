@@ -4129,7 +4129,7 @@ full = ["httpx (>=0.22.0)", "itsdangerous", "jinja2", "python-multipart", "pyyam
 name = "tabulate"
 version = "0.9.0"
 description = "Pretty-print tabular data"
-optional = true
+optional = false
 python-versions = ">=3.7"
 files = [
     {file = "tabulate-0.9.0-py3-none-any.whl", hash = "sha256:024ca478df22e9340661486f85298cff5f6dcdba14f3813e8830015b9ed1948f"},
@@ -4892,4 +4892,4 @@ worker = ["dfDewey", "dfimagetools", "plaso", "pyhindsight"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "09725821f0863f6d11cda1af569bc0aac989d93c9e3e12ef886a93e8d2d39a8c"
+content-hash = "8b59ea156d4e4727ab82b90eadfcd4573c515b2ad14a15543cdf5e96e4a2a698"
