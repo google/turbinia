@@ -18,6 +18,9 @@ import logging
 import os
 import tarfile
 import io
+
+from typing import Any, AsyncGenerator
+
 from fastapi import HTTPException
 from turbinia import config as turbinia_config
 
@@ -95,7 +98,7 @@ class ByteStream:
     return data
 
 
-async def create_tarball(output_path: str) -> bytes:
+async def create_tarball(output_path: str) -> AsyncGenerator[bytes, Any]:
   """Creates an in-memory TGZ file from output_path contents.
 
   Partially inspired by the StreamingTarGenerator class from Google's GRR.
