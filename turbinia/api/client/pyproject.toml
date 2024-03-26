@@ -1,0 +1,33 @@
+[tool.poetry]
+name = "turbinia-api-lib"
+version = "1.0.4"
+description = "Turbinia API Server"
+authors = ["OpenAPI Generator Community <team@openapitools.org>"]
+license = "Apache License 2.0"
+readme = "README.md"
+repository = "https://github.com/google/turbinia"
+keywords = ["OpenAPI", "OpenAPI-Generator", "Turbinia API Server"]
+include = ["turbinia_api_lib/py.typed"]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+
+urllib3 = [
+  {version = ">=1.25.4,<1.27", python = "<3.10"},
+  {version = ">=1.25.4,<2.1", python = ">=3.10"}
+]
+python-dateutil = ">=2.8.2"
+pydantic = "^1.10.5, <2"
+aenum = ">=3.1.11"
+
+[tool.poetry.dev-dependencies]
+pytest = ">=7.2.1"
+tox = ">=3.9.0"
+flake8 = ">=4.0.0"
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[tool.pylint.'MESSAGES CONTROL']
+extension-pkg-whitelist = "pydantic"
