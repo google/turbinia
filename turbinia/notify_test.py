@@ -59,7 +59,7 @@ class TestSendmail(unittest.TestCase):
       notify.sendmail('test@example.com', 'Test Subject', 'Test Message')
       self.assertEqual(
           turbinia_info_log.output[0],
-          'INFO:turbinia:Email password is blank, attempting to continue '
+          'INFO:turbinia.notify:Email password is blank, attempting to continue '
           'without logging in')
       mock_smtp.assert_called_once()
     self.config.EMAIL_PASSWORD = 'testpassword'
