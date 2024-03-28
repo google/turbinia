@@ -124,8 +124,8 @@ OpenAPI generator docker container to update the API client library.
 
 This will generate an update library in ```turbinia/api/client```.
 
-Make sure to review and revert any unnecessary changes to the ```pyproject.toml``` file
-(e.g. the version number)
+Make sure to review and make any necessary changes to the ```pyproject.toml``` file
+(e.g. the version number) and run ```poetry lock``` from the ```api/client``` directory when done.
 
 #### The small print
 
