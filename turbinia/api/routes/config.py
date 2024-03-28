@@ -56,4 +56,5 @@ async def get_request_options(request: Request):
 @router.get('/version')
 async def get_version(request: Request):
   """Returns the Turbinia version."""
-  return JSONResponse(content=__version__, status_code=200)
+  response = {'version': __version__}
+  return JSONResponse(content=response, status_code=200)

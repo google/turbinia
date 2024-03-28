@@ -51,6 +51,20 @@ def get_config(ctx: click.Context) -> None:
         f'Received status code {exception.status} '
         f'when calling read_config_with_http_info: {exception.body}')
 
+@groups.config_group.command('version')
+@click.pass_context
+def get_api_server_version(ctx: click.Context) -> None:
+  """Gets Turbinia API server version."""
+  client: api_client.ApiClient = ctx.obj.api_client
+  api_instance = turbinia_configuration_api.TurbiniaConfigurationApi(client)
+  try:
+    api_response = api_instance.get_version()
+    decoded_response = formatter.decode_api_response(api_response)
+    formatter.echo_json(decoded_response)
+  except exceptions.ApiException as exception:
+    log.error(
+        f'Received status code {exception.status} '
+        f'when calling get_version: {exception.body}')
 
 @groups.result_group.command('request')
 @click.pass_context
