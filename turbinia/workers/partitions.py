@@ -38,7 +38,7 @@ if TurbiniaTask.check_worker_role():
     message = f'Could not import dfVFS libraries: {exception!s}'
     raise TurbiniaException(message)
 
-log = logging.getLogger('turbinia')
+log = logging.getLogger(__name__)
 
 
 class PartitionEnumerationTask(TurbiniaTask):

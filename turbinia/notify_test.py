@@ -59,7 +59,7 @@ class TestSendmail(unittest.TestCase):
       notify.sendmail('test@example.com', 'Test Subject', 'Test Message')
       self.assertEqual(
           turbinia_info_log.output[0],
-          'INFO:turbinia:Email password is blank, attempting to continue '
+          'INFO:turbinia.notify:Email password is blank, attempting to continue '
           'without logging in')
       mock_smtp.assert_called_once()
     self.config.EMAIL_PASSWORD = 'testpassword'
@@ -74,7 +74,7 @@ class TestSendmail(unittest.TestCase):
         pass
       self.assertEqual(
           turbinia_error_log.output[1],
-          'ERROR:turbinia:Email failed to send, SMTP has raised an error, '
+          'ERROR:turbinia.notify:Email failed to send, SMTP has raised an error, '
           'this likely means that there is a problem with the config')
 
     # Test that email is not sent when SMTP raises a TypeError
@@ -86,7 +86,7 @@ class TestSendmail(unittest.TestCase):
         pass
       self.assertEqual(
           turbinia_error_log.output[0],
-          'ERROR:turbinia:Email failed to send, there is likely a problem '
+          'ERROR:turbinia.notify:Email failed to send, there is likely a problem '
           'with the config')
 
     # Test that email is not sent when SMTP raises a NameError
@@ -99,5 +99,5 @@ class TestSendmail(unittest.TestCase):
         pass
       self.assertEqual(
           turbinia_info_log.output[0],
-          'ERROR:turbinia:Email failed to send, A value which is required '
+          'ERROR:turbinia.notify:Email failed to send, A value which is required '
           'for email notifications is not defined in the config')

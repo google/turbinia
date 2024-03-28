@@ -35,7 +35,7 @@ from turbinia.workers import TurbiniaTask
 from turbinia.workers import TurbiniaTaskResult
 from turbinia.workers.analysis.auth import BruteForceAnalyzer
 
-log = logging.getLogger('turbinia')
+log = logging.getLogger(__name__)
 
 
 class SSHEventData:

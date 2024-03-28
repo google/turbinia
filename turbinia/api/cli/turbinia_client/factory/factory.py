@@ -24,7 +24,7 @@ from turbinia_client.helpers import click_helper
 
 T = TypeVar('T', bound='FactoryInterface')
 
-log = logging.getLogger('turbinia')
+log = logging.getLogger(__name__)
 
 
 class FactoryInterface(ABC):

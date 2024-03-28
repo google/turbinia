@@ -29,7 +29,7 @@ from prometheus_client import Counter
 from turbinia import config
 from turbinia import TurbiniaException
 
-log = logging.getLogger('turbinia')
+log = logging.getLogger(__name__)
 
 RETRY_MAX = 10
 ATTACH_SLEEP_TIME = 3

@@ -20,7 +20,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from turbinia import config
 
-log = logging.getLogger('turbinia')
+log = logging.getLogger(__name__)
 
 
 #Sends notifications via email

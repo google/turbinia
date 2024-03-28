@@ -25,7 +25,7 @@ import threading
 from turbinia import config
 from turbinia import TurbiniaException
 
-log = logging.getLogger('turbinia')
+log = logging.getLogger(__name__)
 
 DEFAULT_TIMEOUT = 7200
 

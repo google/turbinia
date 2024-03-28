@@ -190,6 +190,19 @@ paths:
       summary: Get Request Options
       tags:
       - Turbinia Configuration
+  /api/config/version:
+      get:
+        description: Returns the Turbinia version.
+        operationId: get_version
+        responses:
+          '200':
+            content:
+              application/json:
+                schema: {}
+            description: Successful Response
+        summary: Get Version
+        tags:
+        - Turbinia Configuration
   /api/evidence/query:
     get:
       description: "Queries evidence in Redis that have the specified attribute value.\n\
@@ -534,6 +547,33 @@ paths:
       summary: Get Request Status
       tags:
       - Turbinia Requests
+  /api/result/plasofile/{task_id}:
+    get:
+      operationId: get_plaso_file
+      parameters:
+      - in: path
+        name: task_id
+        required: true
+        schema:
+          title: Task Id
+          type: string
+      responses:
+        '200':
+          content:
+            application/octet-stream:
+              schema:
+                format: binary
+                type: string
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: Get Plaso File
+      tags:
+      - Turbinia Request Results
   /api/result/request/{request_id}:
     get:
       description: Retrieve request output.

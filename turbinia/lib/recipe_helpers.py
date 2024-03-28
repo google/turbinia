@@ -30,7 +30,7 @@ from turbinia.lib.file_helpers import file_to_str
 from turbinia.lib.file_helpers import file_to_list
 from turbinia.task_utils import TaskLoader
 
-log = logging.getLogger('turbinia')
+log = logging.getLogger(__name__)
 
 #Attributes allowed on the 'globals' task recipe
 DEFAULT_GLOBALS_RECIPE = {

@@ -11,7 +11,8 @@ from turbinia.jobs import interface
 from turbinia.jobs import manager
 from turbinia.workers.analysis import llm_analyzer as llm_analyzer_module
 
-log = logging.getLogger('turbinia')
+log = logging.getLogger(__name__)
+
 LLM_ARTIFACTS = [
     # Keep sorted
     'ApacheAccessLogs',

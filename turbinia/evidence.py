@@ -43,7 +43,7 @@ config.LoadConfig()
 if config.CLOUD_PROVIDER.lower() == 'gcp':
   from turbinia.processors import google_cloud
 
-log = logging.getLogger('turbinia')
+log = logging.getLogger(__name__)
 
 
 def evidence_class_names(all_classes=False):
@@ -105,7 +105,7 @@ def map_evidence_attributes():
             'type': 'str'
         }
     except ValueError as exception:
-      log.info(exception)
+      log.debug(exception)
   return object_attribute_mapping
 
 

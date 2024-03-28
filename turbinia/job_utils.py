@@ -19,7 +19,7 @@ import logging
 from turbinia import config
 from turbinia.jobs import manager as job_manager
 
-log = logging.getLogger('turbinia')
+log = logging.getLogger(__name__)
 
 config.LoadConfig()
 

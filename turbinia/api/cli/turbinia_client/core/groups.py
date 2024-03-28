@@ -21,7 +21,7 @@ import sys
 from turbinia_api_lib import exceptions
 from turbinia_client.factory import factory
 
-log = logging.getLogger('turbinia')
+log = logging.getLogger(__name__)
 
 
 @click.group('config')

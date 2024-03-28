@@ -33,7 +33,7 @@ from amqp.exceptions import ChannelError
 from turbinia import config
 from turbinia.message import TurbiniaMessageBase
 
-log = logging.getLogger('turbinia')
+log = logging.getLogger(__name__)
 
 
 class TurbiniaCelery:

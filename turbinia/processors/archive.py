@@ -23,7 +23,7 @@ import logging
 from time import time
 from turbinia import TurbiniaException
 
-log = logging.getLogger('turbinia')
+log = logging.getLogger(__name__)
 
 
 def ValidateTarFile(compressed_directory):

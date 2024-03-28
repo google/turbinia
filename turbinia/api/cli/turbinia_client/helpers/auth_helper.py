@@ -23,7 +23,7 @@ from google.oauth2.credentials import Credentials
 from google.auth.transport.requests import Request
 from google.auth import exceptions as google_exceptions
 
-log = logging.getLogger('turbinia')
+log = logging.getLogger(__name__)
 
 
 def get_oauth2_token_id(credentials_path, client_secrets_path):

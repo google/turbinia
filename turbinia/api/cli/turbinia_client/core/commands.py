@@ -33,7 +33,7 @@ from turbinia_api_lib.api import turbinia_evidence_api
 from turbinia_client.core import groups
 from turbinia_client.helpers import formatter
 
-log = logging.getLogger('turbinia')
+log = logging.getLogger(__name__)
 
 
 @groups.config_group.command('list')
@@ -49,7 +49,23 @@ def get_config(ctx: click.Context) -> None:
   except exceptions.ApiException as exception:
     log.error(
         f'Received status code {exception.status} '
-        f'when calling get_config: {exception.body}')
+        f'when calling read_config_with_http_info: {exception.body}')
+
+
+@groups.config_group.command('version')
+@click.pass_context
+def get_api_server_version(ctx: click.Context) -> None:
+  """Gets Turbinia API server version."""
+  client: api_client.ApiClient = ctx.obj.api_client
+  api_instance = turbinia_configuration_api.TurbiniaConfigurationApi(client)
+  try:
+    api_response = api_instance.get_version()
+    decoded_response = formatter.decode_api_response(api_response)
+    formatter.echo_json(decoded_response)
+  except exceptions.ApiException as exception:
+    log.error(
+        f'Received status code {exception.status} '
+        f'when calling get_version: {exception.body}')
 
 
 @groups.result_group.command('request')
@@ -60,17 +76,17 @@ def get_request_result(ctx: click.Context, request_id: str) -> None:
   client: api_client.ApiClient = ctx.obj.api_client
   api_instance = turbinia_request_results_api.TurbiniaRequestResultsApi(client)
   filename = f'{request_id}.tgz'
+  click.echo(f'Downloading output for request {request_id} to: {filename}')
   try:
     api_response = api_instance.get_request_output_with_http_info(
-        request_id, _preload_content=False, _request_timeout=(30, 300))
-    click.echo(f'Saving output for request {request_id} to: {filename}')
+        request_id, _preload_content=False, _request_timeout=(30, 900))
     # Read the response and save into a local file.
     with open(filename, 'wb') as file:
       file.write(api_response.raw_data)
   except exceptions.ApiException as exception:
     log.error(
         f'Received status code {exception.status} '
-        f'when calling get_request_output: {exception.body}')
+        f'when calling get_request_output_with_http_info: {exception.body}')
   except OSError as exception:
     log.error(f'Unable to save file: {exception}')
   except (ValueError, tarfile.ReadError, tarfile.CompressionError) as exception:
@@ -85,17 +101,42 @@ def get_task_result(ctx: click.Context, task_id: str) -> None:
   client: api_client.ApiClient = ctx.obj.api_client
   api_instance = turbinia_request_results_api.TurbiniaRequestResultsApi(client)
   filename = f'{task_id}.tgz'
+  click.echo(f'Downloading output for task {task_id} to: {filename}')
   try:
     api_response = api_instance.get_task_output_with_http_info(
-        task_id, _preload_content=False, _request_timeout=(30, 300))
-    click.echo(f'Saving output for task {task_id} to: {filename}')
+        task_id, _preload_content=False, _request_timeout=(30, 900))
     # Read the response and save into a local file.
     with open(filename, 'wb') as file:
       file.write(api_response.raw_data)
   except exceptions.ApiException as exception:
     log.error(
         f'Received status code {exception.status} '
-        f'when calling get_task_output: {exception.body}')
+        f'when calling get_task_output_with_http_info: {exception.body}')
+  except OSError as exception:
+    log.error(f'Unable to save file: {exception}')
+  except (ValueError, tarfile.ReadError, tarfile.CompressionError) as exception:
+    log.error(f'Error reading saved results file {filename}: {exception}')
+
+
+@groups.result_group.command('plasofile')
+@click.pass_context
+@click.argument('task_id')
+def get_plaso_file(ctx: click.Context, task_id: str) -> None:
+  """Gets Turbinia task results / output files."""
+  client: api_client.ApiClient = ctx.obj.api_client
+  api_instance = turbinia_request_results_api.TurbiniaRequestResultsApi(client)
+  filename = f'{task_id}.plaso'
+  click.echo(f'Downloading output for task {task_id} to: {filename}')
+  try:
+    api_response = api_instance.get_plaso_file_with_http_info(
+        task_id, _preload_content=False, _request_timeout=(30, 900))
+    # Read the response and save into a local file.
+    with open(filename, 'wb') as file:
+      file.write(api_response.raw_data)
+  except exceptions.ApiException as exception:
+    log.error(
+        f'Received status code {exception.status} '
+        f'when calling get_plaso_file_with_http_info: {exception.body}')
   except OSError as exception:
     log.error(f'Unable to save file: {exception}')
   except (ValueError, tarfile.ReadError, tarfile.CompressionError) as exception:
@@ -115,7 +156,7 @@ def get_jobs(ctx: click.Context) -> None:
   except exceptions.ApiException as exception:
     log.error(
         f'Received status code {exception.status} '
-        f'when calling read_jobs: {exception.body}')
+        f'when calling read_jobs_with_http_info: {exception.body}')
 
 
 @groups.status_group.command('request')
@@ -160,7 +201,7 @@ def get_request(
   except exceptions.ApiException as exception:
     log.error(
         f'Received status code {exception.status} '
-        f'when calling get_request_status: {exception.body}')
+        f'when calling get_request_status_with_http_info: {exception.body}')
 
 
 @groups.status_group.command('workers')
@@ -193,7 +234,7 @@ def get_workers(
   except exceptions.ApiException as exception:
     log.error(
         f'Received status code {exception.status} '
-        f'when calling get_workers_status: {exception.body}')
+        f'when calling get_workers_status_with_http_info: {exception.body}')
 
 
 @groups.status_group.command('statistics')
@@ -238,7 +279,7 @@ def get_statistics(
   except exceptions.ApiException as exception:
     log.error(
         f'Received status code {exception.status} '
-        f'when calling get_task_statistics: {exception.body}')
+        f'when calling get_task_statistics_with_http_info: {exception.body}')
 
 
 @groups.status_group.command('summary')
@@ -263,7 +304,7 @@ def get_requests_summary(ctx: click.Context, json_dump: bool) -> None:
   except exceptions.ApiException as exception:
     log.error(
         f'Received status code {exception.status} '
-        f'when calling get_requests_summary: {exception.body}')
+        f'when calling get_requests_summary_with_http_info: {exception.body}')
 
 
 @groups.status_group.command('task')
@@ -292,7 +333,7 @@ def get_task(
   except exceptions.ApiException as exception:
     log.error(
         f'Received status code {exception.status} '
-        f'when calling get_task_status: {exception.body}')
+        f'when calling get_task_status_with_http_info: {exception.body}')
 
 
 @groups.evidence_group.command('summary')
@@ -325,7 +366,7 @@ def get_evidence_summary(
   except exceptions.ApiException as exception:
     log.error(
         f'Received status code {exception.status} '
-        f'when calling get_evidence_summary: {exception.body}')
+        f'when calling get_evidence_summary_with_http_info: {exception.body}')
 
 
 @groups.evidence_group.command('query')
@@ -358,7 +399,7 @@ def query_evidence(
   except exceptions.ApiException as exception:
     log.error(
         f'Received status code {exception.status} '
-        f'when calling get_task_status: {exception.body}')
+        f'when calling query_evidence_with_http_info: {exception.body}')
 
 
 @groups.evidence_group.command('get')
@@ -389,7 +430,7 @@ def get_evidence(
   except exceptions.ApiException as exception:
     log.error(
         f'Received status code {exception.status} '
-        f'when calling get_evidence: {exception.body}')
+        f'when calling get_evidence_by_id_with_http_info: {exception.body}')
 
 
 @groups.evidence_group.command('upload')
@@ -443,7 +484,7 @@ def upload_evidence(
     except exceptions.ApiException as exception:
       error_message = (
           f'Received status code {exception.status} '
-          f'when calling upload_evidence: {exception}')
+          f'when calling upload_evidence_with_http_info: {exception}')
       log.error(error_message)
       report[abs_path] = error_message
   if json_dump:

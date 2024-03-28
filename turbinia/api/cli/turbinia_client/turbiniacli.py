@@ -27,7 +27,7 @@ from turbinia_api_lib.api import turbinia_evidence_api
 from turbinia_client.helpers import auth_helper
 from turbinia_client.helpers import formatter
 
-log = logging.getLogger('turbinia')
+log = logging.getLogger(__name__)
 
 
 class TurbiniaCli:
@@ -156,6 +156,7 @@ class TurbiniaCli:
       self,
       config: turbinia_api_lib.Configuration) -> turbinia_api_lib.ApiClient:
     """Default value for API client instance."""
+    config.retries = 3
     return turbinia_api_lib.ApiClient(configuration=config)
 
   def default_config(self, host: str) -> turbinia_api_lib.Configuration:

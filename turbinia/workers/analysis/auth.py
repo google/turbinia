@@ -25,7 +25,7 @@ from turbinia import TurbiniaException
 from turbinia.workers import Priority
 from turbinia.workers.analysis.analyzer_output import AnalyzerOutput
 
-log = logging.getLogger('turbinia')
+log = logging.getLogger(__name__)
 
 
 class LoginRecord:

@@ -32,7 +32,7 @@ MEDIUM_PRIORITY = 50
 HIGH_PRIORITY = 20
 CRITICAL_PRIORITY = 10
 
-log = logging.getLogger('turbinia')
+log = logging.getLogger(__name__)
 
 IMPORTANT_ATTRIBUTES = {
     'id', '_name', 'type', 'size', 'request_id', 'tasks', 'source_path',

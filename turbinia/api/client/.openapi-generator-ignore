@@ -21,3 +21,11 @@
 #docs/*.md
 # Then explicitly reverse the ignore rule for a single file:
 #!docs/README.md
+
+pyproject.toml
+setup.py
+setup.cfg
+*requirements.txt
+test/*
+.openapi-generator-ignore
+LICENSE

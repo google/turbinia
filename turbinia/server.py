@@ -49,7 +49,7 @@ class TurbiniaServer:
     """
     setup()
     self.task_manager = task_manager.get_task_manager()
-    self.task_manager.setup(jobs_denylist, jobs_allowlist)
+    self.task_manager.setup(jobs_denylist, jobs_allowlist, server=True)
 
   def start(self):
     """Start Turbinia Server."""

@@ -28,7 +28,7 @@ from turbinia.workers import Priority
 from turbinia.workers import TurbiniaTask
 from turbinia import config
 
-log = logging.getLogger('turbinia')
+log = logging.getLogger(__name__)
 
 
 class DockerContainersEnumerationTask(TurbiniaTask):

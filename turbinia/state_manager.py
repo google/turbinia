@@ -47,7 +47,7 @@ else:
 
 EMPTY_JSON_VALUES = ('null', '{}', '[]')
 MAX_DATASTORE_STRLEN = 1500
-log = logging.getLogger('turbinia')
+log = logging.getLogger(__name__)
 
 
 def get_state_manager():

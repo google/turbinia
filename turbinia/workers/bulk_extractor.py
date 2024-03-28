@@ -25,7 +25,7 @@ from turbinia.evidence import EvidenceState as state
 from turbinia.lib import text_formatter as fmt
 from turbinia.workers import TurbiniaTask
 
-log = logging.getLogger('turbinia')
+log = logging.getLogger(__name__)
 
 REPORT_FILENAME = "report.md"
 
