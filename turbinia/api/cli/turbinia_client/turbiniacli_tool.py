@@ -27,7 +27,7 @@ from turbinia_client.core.commands import version
 
 _LOGGER_FORMAT = '%(asctime)s %(levelname)s %(name)s - %(message)s'
 logging.basicConfig(format=_LOGGER_FORMAT, level=logging.INFO)
-log = logging.getLogger('turbinia')
+log = logging.getLogger(__name__)
 
 
 @click.group(context_settings={

@@ -40,7 +40,7 @@ if config.TASK_MANAGER.lower() == 'celery':
   from celery import states as celery_states
   from turbinia import tcelery as turbinia_celery
 
-log = logging.getLogger('turbinia')
+log = logging.getLogger(__name__)
 
 # The amount of time in seconds that the Server will wait in addition to the
 # Job/Task timeout value before it times out a given Task. This is to make sure
@@ -132,20 +132,22 @@ class BaseTaskManager:
       jobs_denylist (list): Jobs that will be excluded from running
       jobs_allowlist (list): The only Jobs will be included to run
     """
+    # Both client and server isntances of the task  manager require backends.
     self._backend_setup(*args, **kwargs)
+    # Only server instances of the task manager need to set up jobs.
+    if kwargs.get('server') is False:
+      return
     job_names = jobs_manager.JobsManager.GetJobNames()
     if jobs_denylist or jobs_allowlist:
       selected_jobs = jobs_denylist or jobs_allowlist
       for job in selected_jobs:
         if job.lower() not in job_names:
-          msg = (
-              'Error creating server. Job {0!s} is not found in registered '
-              'jobs {1!s}.'.format(job, job_names))
+          msg = (f'Error creating server. Job {job} is not found in registered'
+                 f' jobs {job_names}')
           log.error(msg)
           raise TurbiniaException(msg)
-      log.info(
-          'Filtering Jobs with allowlist {0!s} and denylist {1!s}'.format(
-              jobs_allowlist, jobs_denylist))
+      log.info(f'Filtering Jobs with allowlist {jobs_allowlist} and denylist '
+          f'{jobs_denylist}')
       job_names = jobs_manager.JobsManager.FilterJobNames(
           job_names, jobs_denylist, jobs_allowlist)
 
@@ -155,9 +157,8 @@ class BaseTaskManager:
     if jobs_allowlist:
       disabled_jobs = list(set(disabled_jobs) - set(jobs_allowlist))
     if disabled_jobs:
-      log.info(
-          'Disabling non-allowlisted jobs configured to be disabled in the '
-          'config file: {0:s}'.format(', '.join(disabled_jobs)))
+      log.info(f'Disabling non-allowlisted jobs configured to be disabled in '
+          f'the config file: {"".join(disabled_jobs)}')
       job_names = jobs_manager.JobsManager.FilterJobNames(
           job_names, disabled_jobs, [])
 
@@ -183,7 +184,8 @@ class BaseTaskManager:
     abort_task = AbortTask(request_id=request_id, requester=requester)
     result = workers.TurbiniaTaskResult(
         request_id=request_id, no_output_manager=True)
-    result.status = f'Processing request for {evidence_name:s} aborted: {message:s}'
+    result.status = (
+        f'Processing request for {evidence_name:s} aborted: {message:s}')
     result.successful = False
     abort_task.result = result
     self.state_manager.update_task(abort_task)
@@ -209,9 +211,8 @@ class BaseTaskManager:
     jobs_allowlist = evidence_.config['globals'].get('jobs_allowlist', [])
     jobs_denylist = evidence_.config['globals'].get('jobs_denylist', [])
     if jobs_denylist or jobs_allowlist:
-      log.info(
-          'Filtering Jobs with allowlist {0!s} and denylist {1!s}'.format(
-              jobs_allowlist, jobs_denylist))
+      log.info(f'Filtering Jobs with allowlist {jobs_allowlist} and denylist '
+               f'{jobs_denylist}')
       jobs_list = jobs_manager.JobsManager.FilterJobObjects(
           self.jobs, jobs_denylist, jobs_allowlist)
     else:
@@ -252,10 +253,9 @@ class BaseTaskManager:
 
     if not job_count:
       log.warning(
-          'No Jobs/Tasks were created for Evidence [{0:s}]. '
-          'Request or recipe parsing may have failed, or Jobs may need to be '
-          'configured to allow this type of Evidence as input'.format(
-              str(evidence_)))
+          f'No Jobs/Tasks were created for Evidence {str(evidence_)}. '
+          f'Request or recipe parsing may have failed, or Jobs may need to be '
+          f'configured to allow this type of Evidence as input')
 
   def check_done(self):
     """Checks if we have any outstanding tasks.
@@ -366,8 +366,8 @@ class BaseTaskManager:
     final_job.request_id = request_id
     final_job.evidence.config = job.evidence.config
     log.debug(
-        'Request {0:s} done, but not finalized, creating FinalizeRequestJob '
-        '{1:s}'.format(request_id, final_job.id))
+        f'Request {request_id} done, but not finalized, creating '
+        f'FinalizeRequestJob{final_job.id}')
 
     # Finalize tasks use EvidenceCollection with all evidence created by the
     # request or job.
@@ -397,8 +397,8 @@ class BaseTaskManager:
       task.request_id = job.request_id
     else:
       log.error(
-          'Request ID not found in Evidence {0!s} or Task {1!s}. Not adding '
-          'new Task because of undefined state'.format(evidence_, task))
+          f'Request ID not found in Evidence {evidence_} or Task {task}.'
+          f' Not adding new Task because of undefined state')
       return
 
     evidence_.config = job.evidence.config
@@ -427,8 +427,8 @@ class BaseTaskManager:
     """
     remove_jobs = [j for j in self.running_jobs if j.request_id == request_id]
     log.debug(
-        'Removing {0:d} completed Job(s) for request ID {1:s}.'.format(
-            len(remove_jobs), request_id))
+        f'Removing {len(remove_jobs)} completed Job(s) for request ID '
+        f'{request_id}.')
     # pylint: disable=expression-not-assigned
     [self.remove_job(j.id) for j in remove_jobs]
 
@@ -479,11 +479,12 @@ class BaseTaskManager:
     """
     if task_result.successful is None:
       log.error(
-          'Task {0:s} from {1:s} returned invalid success status "None". '
-          'Setting this to False so the client knows the Task is complete. '
-          'Usually this means that the Task returning the TurbiniaTaskResult '
-          'did not call the close() method on it.'.format(
-              task_result.task_name, task_result.worker_name))
+        f'''Task {task_result.task_name} from {task_result.worker_name}  
+          returned invalid success status "None". Setting this to False 
+          so the client knows the Task is complete. Usually this means 
+          that the Task returning the TurbiniaTaskResult did not call 
+          the close() method on it.
+        ''')
       turbinia_result_success_invalid.inc()
       task_result.successful = False
       if task_result.status:
@@ -491,25 +492,23 @@ class BaseTaskManager:
             task_result.status + ' (Success status forcefully set to False)')
 
     if not task_result.successful:
-      log.error(
-          'Task {0:s} from {1:s} was not successful'.format(
-              task_result.task_name, task_result.worker_name))
+      log.error(f'Task {task_result.task_name} from {task_result.worker_name} '
+                f'was not successful')
     else:
-      log.info(
-          'Task {0:s} from {1:s} executed with status [{2:s}]'.format(
-              task_result.task_name, task_result.worker_name,
-              task_result.status))
+      log.info(f'Task {task_result.task_name} from {task_result.worker_name} '
+               f'executed with status [{task_result.status}]')
 
     if not isinstance(task_result.evidence, list):
       log.warning(
-          'Task {0:s} from {1:s} did not return evidence list'.format(
-              task_result.task_name, task_result.worker_name))
+          f'Task {task_result.task_name} from {task_result.worker_name} '
+          f'did not return evidence list')
       task_result.evidence = []
 
     job = self.get_job(task_result.job_id)
     if not job:
       log.warning(
-          f'Received task results for unknown Job from Task ID {task_result.task_id:s}'
+          f'Received task results for unknown Job from Task ID '
+          f'{task_result.task_id:s}'
       )
 
     # Reprocess new evidence and save instance for later consumption by finalize
@@ -517,17 +516,15 @@ class BaseTaskManager:
     for evidence_ in task_result.evidence:
       if isinstance(evidence_, evidence.Evidence):
         log.info(
-            'Task {0:s} from {1:s} returned Evidence {2:s}'.format(
-                task_result.task_name, task_result.worker_name, evidence_.name))
+            f'Task {task_result.task_name} from {task_result.worker_name} '
+            f'returned Evidence {evidence_.name}')
         self.add_evidence(evidence_)
         if job:
           job.evidence.add_evidence(evidence_)
       else:
         log.error(
-            'Task {0:s} from {1:s} returned non-Evidence output type '
-            '{2:s}'.format(
-                task_result.task_name, task_result.worker_name,
-                type(task_result.evidence)))
+            f'Task {task_result.task_name} from {task_result.worker_name} '
+            f'returned non-Evidence output type {type(task_result.evidence)}')
 
     return job
 
@@ -613,9 +610,8 @@ class BaseTaskManager:
         request_id=task.request_id, no_output_manager=True,
         no_state_manager=True)
     result.setup(task)
-    result.status = (
-        'Task {0:s} timed out on the Server and was auto-closed after '
-        '{1:d} seconds'.format(task.name, timeout))
+    result.status = (f'Task {task.name} timed out on the Server and was '
+                     f'auto-closed after {timeout} seconds')
     result.successful = False
     result.closed = True
     task.result = result
@@ -641,12 +637,13 @@ class CeleryTaskManager(BaseTaskManager):
     super(CeleryTaskManager, self).__init__()
 
   def _backend_setup(self, *args, **kwargs):
-    self.celery = turbinia_celery.TurbiniaCelery()
-    self.celery.setup()
     self.kombu = turbinia_celery.TurbiniaKombu(config.KOMBU_CHANNEL)
     self.kombu.setup()
-    self.celery_runner = self.celery.app.task(
-        task_utils.task_runner, name="task_runner")
+    if kwargs.get('server') is True:
+      self.celery = turbinia_celery.TurbiniaCelery()
+      self.celery.setup()
+      self.celery_runner = self.celery.app.task(
+          task_utils.task_runner, name='task_runner')
 
   def process_tasks(self):
     """Determine the current state of our tasks.
@@ -679,9 +676,8 @@ class CeleryTaskManager(BaseTaskManager):
       if check_timeout:
         timeout = self.check_task_timeout(task)
         if timeout:
-          log.warning(
-              'Task {0:s} timed out on server after {1:d} seconds. '
-              'Auto-closing Task.'.format(celery_task.id, timeout))
+          log.warning(f'Task {celery_task.id} timed out on server after '
+                      f'{timeout} seconds. Auto-closing Task')
           task = self.timeout_task(task, timeout)
           completed_tasks.append(task)
 
@@ -736,7 +732,7 @@ class CeleryTaskManager(BaseTaskManager):
 
   def enqueue_task(self, task, evidence_):
     log.info(
-        f'Adding Celery task {task.name:s} with evidence {evidence_.name:s} to queue'
-    )
+        f'Adding Celery task {task.name:s} with evidence  {evidence_.name:s}'
+        f' to queue')
     task.stub = self.celery_runner.delay(
         task.serialize(), evidence_.serialize())

@@ -26,7 +26,7 @@ import six
 from turbinia import evidence
 from turbinia import TurbiniaException
 
-log = logging.getLogger('turbinia')
+log = logging.getLogger(__name__)
 
 
 class TurbiniaRequest:

@@ -29,7 +29,7 @@ from turbinia.lib import recipe_helpers
 from turbinia.api.schemas import request as turbinia_request
 from turbinia.api.models import request_status
 
-log = logging.getLogger('turbinia')
+log = logging.getLogger(__name__)
 
 router = APIRouter(prefix='/request', tags=['Turbinia Requests'])
 

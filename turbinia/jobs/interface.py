@@ -19,7 +19,7 @@ import logging
 
 from turbinia.evidence import EvidenceCollection
 
-log = logging.getLogger('turbinia')
+log = logging.getLogger(__name__)
 
 
 class TurbiniaJob:

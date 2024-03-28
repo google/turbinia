@@ -24,7 +24,7 @@ import tempfile
 from turbinia import config
 from turbinia import TurbiniaException
 
-log = logging.getLogger('turbinia')
+log = logging.getLogger(__name__)
 
 
 def PreprocessMountContainerdFS(image_path, namespace, container_id):

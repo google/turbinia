@@ -25,7 +25,7 @@ import docker
 
 from turbinia import TurbiniaException
 
-log = logging.getLogger('turbinia')
+log = logging.getLogger(__name__)
 checked_image_list = []
 
 

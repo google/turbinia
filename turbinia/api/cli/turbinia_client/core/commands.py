@@ -33,7 +33,7 @@ from turbinia_api_lib.api import turbinia_evidence_api
 from turbinia_client.core import groups
 from turbinia_client.helpers import formatter
 
-log = logging.getLogger('turbinia')
+log = logging.getLogger(__name__)
 
 
 @groups.config_group.command('list')

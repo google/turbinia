@@ -25,7 +25,7 @@ from turbinia import __version__
 from turbinia import config as turbinia_config
 from turbinia.api.schemas import request_options
 
-log = logging.getLogger('turbinia')
+log = logging.getLogger(__name__)
 
 router = APIRouter(prefix='/config', tags=['Turbinia Configuration'])
 

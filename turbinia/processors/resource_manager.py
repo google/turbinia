@@ -24,7 +24,7 @@ from turbinia import config
 from turbinia import TurbiniaException
 
 config.LoadConfig()
-log = logging.getLogger('turbinia')
+log = logging.getLogger(__name__)
 
 
 def RetrieveResourceState():

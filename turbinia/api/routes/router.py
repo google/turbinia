@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Turbinia API server."""
+import logging
 
 from fastapi import APIRouter
 
@@ -23,6 +24,8 @@ from turbinia.api.routes import logs
 from turbinia.api.routes import request
 from turbinia.api.routes import result
 from turbinia.api.routes import task
+
+log = logging.getLogger('turbinia')
 
 # Prefix API endpoints with /api/
 api_router = APIRouter(prefix='/api')

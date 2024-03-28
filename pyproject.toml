@@ -52,6 +52,11 @@ tabulate = "*"
 turbinia-api-lib = "^1.0.2"
 yapf = "*"
 
+[tool.yapfignore]
+ignore_patterns = [
+  "api/client/**/*.py",
+]
+
 [tool.poetry.extras]
 worker = [
   "dfimagetools",

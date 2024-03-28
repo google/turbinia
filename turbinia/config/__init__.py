@@ -133,7 +133,7 @@ ENVCONFIGVAR = 'TURBINIA_CONFIG_PATH'
 
 CONFIG = None
 
-log = logging.getLogger('turbinia')
+log = logging.getLogger(__name__)
 
 
 def LoadConfig(config_file=None):

@@ -16,9 +16,8 @@
 
 from __future__ import unicode_literals
 import logging
-
-import warnings
 import logging.handlers
+import warnings
 import os
 import sys
 
@@ -79,14 +78,15 @@ def setup(need_file_handler=True, need_stream_handler=True, log_file_path=None):
       log_file_path = os.path.join(config.LOG_DIR, log_name) + '.log'
 
     file_handler = logging.FileHandler(log_file_path)
-    formatter = logging.Formatter('%(asctime)s:%(levelname)s:%(message)s')
+    formatter = logging.Formatter(
+        '%(asctime)s [%(levelname)s] %(name)s | %(message)s')
     file_handler.setFormatter(formatter)
     file_handler.setLevel(logging.DEBUG)
     logger.addHandler(file_handler)
 
   console_handler = logging.StreamHandler(sys.stdout)
   formatter = logging.Formatter(
-      '%(asctime)s [%(levelname)s] %(message)s', "%Y-%m-%d %H:%M:%S")
+      '%(asctime)s [%(levelname)s] %(name)s | %(message)s', '%Y-%m-%d %H:%M:%S')
   console_handler.setFormatter(formatter)
   if need_stream_handler:
     logger.addHandler(console_handler)
@@ -102,4 +102,4 @@ def setup(need_file_handler=True, need_stream_handler=True, log_file_path=None):
     root_log.addHandler(file_handler)
 
   # Set filelock logging to ERROR due to log spam
-  logging.getLogger("filelock").setLevel(logging.ERROR)
+  logging.getLogger('filelock').setLevel(logging.ERROR)

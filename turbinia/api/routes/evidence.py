@@ -30,7 +30,7 @@ from turbinia import config as turbinia_config
 from turbinia import state_manager
 from turbinia import TurbiniaException
 
-log = logging.getLogger('turbinia')
+log = logging.getLogger(__name__)
 router = APIRouter(prefix='/evidence', tags=['Turbinia Evidence'])
 redis_manager = state_manager.RedisStateManager()
 

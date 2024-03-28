@@ -33,7 +33,7 @@ if config.GCS_OUTPUT_PATH and config.GCS_OUTPUT_PATH.lower() != 'none':
   from google.cloud import storage
   from google.cloud import exceptions
 
-log = logging.getLogger('turbinia')
+log = logging.getLogger(__name__)
 
 
 class OutputManager:

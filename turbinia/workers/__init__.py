@@ -54,7 +54,7 @@ METRICS = {}
 # [1]https://cloud.google.com/datastore/docs/concepts/limits
 REPORT_MAXSIZE = int(1048572 * 0.75)
 
-log = logging.getLogger('turbinia')
+log = logging.getLogger(__name__)
 
 registry = CollectorRegistry()
 turbinia_worker_tasks_started_total = Counter(
