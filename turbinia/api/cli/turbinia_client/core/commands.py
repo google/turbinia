@@ -51,6 +51,7 @@ def get_config(ctx: click.Context) -> None:
         f'Received status code {exception.status} '
         f'when calling read_config_with_http_info: {exception.body}')
 
+
 @groups.config_group.command('version')
 @click.pass_context
 def get_api_server_version(ctx: click.Context) -> None:
@@ -65,6 +66,7 @@ def get_api_server_version(ctx: click.Context) -> None:
     log.error(
         f'Received status code {exception.status} '
         f'when calling get_version: {exception.body}')
+
 
 @groups.result_group.command('request')
 @click.pass_context
