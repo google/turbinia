@@ -39,6 +39,7 @@ logger.setup(need_file_handler=False)
 
 log = logging.getLogger('turbinia')
 
+
 def csv_list(string):
   """Helper method for having CSV argparse types.
 

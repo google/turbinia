@@ -40,6 +40,7 @@ ATTACHMENT_RESPONSE = {
     }
 }
 
+
 @router.get(
     '/task/{task_id}', response_class=StreamingResponse,
     responses=ATTACHMENT_RESPONSE)

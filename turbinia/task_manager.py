@@ -142,11 +142,13 @@ class BaseTaskManager:
       selected_jobs = jobs_denylist or jobs_allowlist
       for job in selected_jobs:
         if job.lower() not in job_names:
-          msg = (f'Error creating server. Job {job} is not found in registered'
-                 f' jobs {job_names}')
+          msg = (
+              f'Error creating server. Job {job} is not found in registered'
+              f' jobs {job_names}')
           log.error(msg)
           raise TurbiniaException(msg)
-      log.info(f'Filtering Jobs with allowlist {jobs_allowlist} and denylist '
+      log.info(
+          f'Filtering Jobs with allowlist {jobs_allowlist} and denylist '
           f'{jobs_denylist}')
       job_names = jobs_manager.JobsManager.FilterJobNames(
           job_names, jobs_denylist, jobs_allowlist)
@@ -157,7 +159,8 @@ class BaseTaskManager:
     if jobs_allowlist:
       disabled_jobs = list(set(disabled_jobs) - set(jobs_allowlist))
     if disabled_jobs:
-      log.info(f'Disabling non-allowlisted jobs configured to be disabled in '
+      log.info(
+          f'Disabling non-allowlisted jobs configured to be disabled in '
           f'the config file: {"".join(disabled_jobs)}')
       job_names = jobs_manager.JobsManager.FilterJobNames(
           job_names, disabled_jobs, [])
@@ -211,8 +214,9 @@ class BaseTaskManager:
     jobs_allowlist = evidence_.config['globals'].get('jobs_allowlist', [])
     jobs_denylist = evidence_.config['globals'].get('jobs_denylist', [])
     if jobs_denylist or jobs_allowlist:
-      log.info(f'Filtering Jobs with allowlist {jobs_allowlist} and denylist '
-               f'{jobs_denylist}')
+      log.info(
+          f'Filtering Jobs with allowlist {jobs_allowlist} and denylist '
+          f'{jobs_denylist}')
       jobs_list = jobs_manager.JobsManager.FilterJobObjects(
           self.jobs, jobs_denylist, jobs_allowlist)
     else:
@@ -479,7 +483,7 @@ class BaseTaskManager:
     """
     if task_result.successful is None:
       log.error(
-        f'''Task {task_result.task_name} from {task_result.worker_name}  
+          f'''Task {task_result.task_name} from {task_result.worker_name}  
           returned invalid success status "None". Setting this to False 
           so the client knows the Task is complete. Usually this means 
           that the Task returning the TurbiniaTaskResult did not call 
@@ -492,11 +496,13 @@ class BaseTaskManager:
             task_result.status + ' (Success status forcefully set to False)')
 
     if not task_result.successful:
-      log.error(f'Task {task_result.task_name} from {task_result.worker_name} '
-                f'was not successful')
+      log.error(
+          f'Task {task_result.task_name} from {task_result.worker_name} '
+          f'was not successful')
     else:
-      log.info(f'Task {task_result.task_name} from {task_result.worker_name} '
-               f'executed with status [{task_result.status}]')
+      log.info(
+          f'Task {task_result.task_name} from {task_result.worker_name} '
+          f'executed with status [{task_result.status}]')
 
     if not isinstance(task_result.evidence, list):
       log.warning(
@@ -508,8 +514,7 @@ class BaseTaskManager:
     if not job:
       log.warning(
           f'Received task results for unknown Job from Task ID '
-          f'{task_result.task_id:s}'
-      )
+          f'{task_result.task_id:s}')
 
     # Reprocess new evidence and save instance for later consumption by finalize
     # tasks.
@@ -610,8 +615,9 @@ class BaseTaskManager:
         request_id=task.request_id, no_output_manager=True,
         no_state_manager=True)
     result.setup(task)
-    result.status = (f'Task {task.name} timed out on the Server and was '
-                     f'auto-closed after {timeout} seconds')
+    result.status = (
+        f'Task {task.name} timed out on the Server and was '
+        f'auto-closed after {timeout} seconds')
     result.successful = False
     result.closed = True
     task.result = result
@@ -676,8 +682,9 @@ class CeleryTaskManager(BaseTaskManager):
       if check_timeout:
         timeout = self.check_task_timeout(task)
         if timeout:
-          log.warning(f'Task {celery_task.id} timed out on server after '
-                      f'{timeout} seconds. Auto-closing Task')
+          log.warning(
+              f'Task {celery_task.id} timed out on server after '
+              f'{timeout} seconds. Auto-closing Task')
           task = self.timeout_task(task, timeout)
           completed_tasks.append(task)
 

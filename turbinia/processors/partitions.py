@@ -63,9 +63,8 @@ def Enumerate(evidence, location=None):
     path_specs = scanner.GetBasePathSpecs(evidence.local_path, options=options)
   except dfvfs_errors.ScannerError as exception:
     raise TurbiniaException(
-        f'Could not enumerate partitions [{evidence.local_path!s}]: ' 
-        f'{exception!s}'
-    ) from exception
+        f'Could not enumerate partitions [{evidence.local_path!s}]: '
+        f'{exception!s}') from exception
 
   return path_specs
 
@@ -86,7 +85,7 @@ def GetPartitionEncryptionType(path_spec):
 
   if path_spec.parent.type_indicator == dfvfs_definitions.TYPE_INDICATOR_BDE:
     encryption_type = 'BDE'
-  elif path_spec.parent.type_indicator == ( 
+  elif path_spec.parent.type_indicator == (
       dfvfs_definitions.TYPE_INDICATOR_LUKSDE):
     encryption_type = 'LUKSDE'
   return encryption_type
