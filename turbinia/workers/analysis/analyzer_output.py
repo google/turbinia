@@ -18,7 +18,7 @@ import logging
 
 from turbinia import TurbiniaException
 
-log = logging.getLogger('turbinia')
+log = logging.getLogger(__name__)
 
 
 class AnalyzerOutput:

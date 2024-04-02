@@ -26,7 +26,7 @@ from turbinia_api_lib.api import turbinia_requests_api
 from turbinia_api_lib import exceptions
 from turbinia_api_lib import api_client
 
-log = logging.getLogger('turbinia')
+log = logging.getLogger(__name__)
 
 
 def generate_option_parameters(
@@ -115,9 +115,9 @@ def create_request(ctx: click.Context, *args: int, **kwargs: int) -> None:
 
   # Send the request to the API server.
   try:
-    log.info(f'Sending request: {request}')
+    click.echo(f'Sending request: {request}')
     api_response = api_instance.create_request(request)
-    log.info(f'Received response: {api_response}')
+    click.echo(f'Received response: {api_response}')
   except exceptions.ApiException as exception:
     log.error(
         f'Received status code {exception.status} '

@@ -18,7 +18,7 @@ import os
 import logging
 from tempfile import NamedTemporaryFile
 
-log = logging.getLogger('turbinia')
+log = logging.getLogger(__name__)
 
 
 def file_to_str(file_path):

@@ -15,14 +15,19 @@ limitations under the License.
   <div>
     <v-card-title>
       {{ taskDetails.name }}
-      <v-tooltip top>
-        Download Task output
-        <template v-slot:activator="{ props }">
-          <v-btn icon v-bind="props" @click="getTaskOutput(taskDetails.id)">
-            <v-icon> mdi-file-download-outline </v-icon>
-          </v-btn>
+      <v-snackbar timeout="5000" color="primary" location="top" height="55">
+        Task output is <strong>downloading in the background</strong>, please wait
+        <v-progress-circular color="white" indeterminate></v-progress-circular>
+        <template v-slot:activator="{ props: snackbar }">
+          <v-tooltip top text="Download task output">
+            <template v-slot:activator="{ props: tooltip }">
+              <v-btn icon v-bind="mergeProps(snackbar, tooltip)" @click="getTaskOutput(taskDetails.id)">
+                <v-icon> mdi-file-download-outline </v-icon>
+              </v-btn>
+            </template>
+          </v-tooltip>
         </template>
-      </v-tooltip>
+      </v-snackbar>
     </v-card-title>
     <v-alert v-if="taskDetails.successful === true" type="success" prominent>
       {{ taskDetails.status }}
@@ -37,10 +42,7 @@ limitations under the License.
       <v-list v-model:opened="openGroups">
         <v-list-group value="ids">
           <template v-slot:activator="{ props }">
-            <v-list-item
-            v-bind="props"
-            title="Associated IDs"
-          ></v-list-item>
+            <v-list-item v-bind="props" title="Associated IDs"></v-list-item>
           </template>
           <v-list-item title="Task ID:">
             {{ taskDetails.id }}
@@ -60,10 +62,7 @@ limitations under the License.
         </v-list-group>
         <v-list-group value="details">
           <template v-slot:activator="{ props }">
-            <v-list-item
-            v-bind="props"
-            title="Processing Details"
-          ></v-list-item>
+            <v-list-item v-bind="props" title="Processing Details"></v-list-item>
           </template>
           <v-list-item title="Evidence Name:">
             {{ taskDetails.evidence_name }}
@@ -92,12 +91,9 @@ limitations under the License.
         </v-list-group>
         <div v-if="taskDetails.saved_paths">
           <v-list-group>
-          <template v-slot:activator="{ props }">
-            <v-list-item
-            v-bind="props"
-            title="Saved Paths:"
-          ></v-list-item>
-          </template>
+            <template v-slot:activator="{ props }">
+              <v-list-item v-bind="props" title="Saved Paths:"></v-list-item>
+            </template>
             <v-list-item dense v-for="(path, idx) in taskDetails.saved_paths" :key="idx">
               {{ path }}
             </v-list-item>
@@ -110,6 +106,7 @@ limitations under the License.
 
 <script>
 import ApiClient from '../utils/RestApiClient.js'
+import { mergeProps } from 'vue'
 
 export default {
   props: ['taskDetails'],
@@ -119,6 +116,7 @@ export default {
     }
   },
   methods: {
+    mergeProps,
     getTaskOutput: function (task_id) {
       ApiClient.getTaskOutput(task_id)
         .then(({ data }) => {

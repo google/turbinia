@@ -18,7 +18,7 @@ import logging
 
 from importlib import metadata as importlib_metadata
 
-log = logging.getLogger('turbinia')
+log = logging.getLogger(__name__)
 
 try:
   dist = importlib_metadata.distribution(__name__)

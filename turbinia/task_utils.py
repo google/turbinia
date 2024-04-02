@@ -23,7 +23,7 @@ from turbinia import config
 from turbinia.config import DATETIME_FORMAT
 from turbinia import TurbiniaException
 
-log = logging.getLogger('turbinia')
+log = logging.getLogger(__name__)
 
 config.LoadConfig()
 

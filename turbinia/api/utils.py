@@ -18,10 +18,30 @@ import logging
 import os
 import tarfile
 import io
-from fastapi import HTTPException
-from turbinia import config as turbinia_config
 
-log = logging.getLogger('turbinia')
+from typing import Any, AsyncGenerator, List
+
+from fastapi import HTTPException
+from turbinia import TurbiniaException
+from turbinia import config as turbinia_config
+from turbinia import state_manager
+
+log = logging.getLogger(__name__)
+
+
+def get_task_objects(task_id: str) -> List[Any]:
+  """Returns a list of Turbinia tasks.
+  
+  Riases:
+    HTTPException: if the specified task was not found.
+  """
+  _state_manager = state_manager.get_state_manager()
+  tasks = _state_manager.get_task_data(
+      instance=turbinia_config.INSTANCE_ID, task_id=task_id)
+
+  if not tasks:
+    raise HTTPException(status_code=404, detail=f'Task {task_id:s} not found.')
+  return tasks
 
 
 def get_request_output_path(request_id: str) -> str:
@@ -39,6 +59,7 @@ def get_request_output_path(request_id: str) -> str:
 def get_task_output_path(request_id: str, task_id: str) -> str:
   """Returns the output path for a task_id."""
   request_output_path = get_request_output_path(request_id)
+  task_output_path = request_output_path
   if task_id:
     try:
       request_dirs = os.listdir(request_output_path)
@@ -48,11 +69,31 @@ def get_task_output_path(request_id: str, task_id: str) -> str:
       log.error(message)
       raise HTTPException(status_code=404, detail=message) from exception
 
-    for request_dir in request_dirs:
-      if task_id in request_dir:
-        request_output_path = os.path.join(request_output_path, request_dir)
-        break
-    return request_output_path
+    latest_timestamp = 0
+    for task_dir in request_dirs:
+      # We'll check the timestamp that's part of the directory name
+      # to make sure we grab the most recent directory for the task
+      # in case there are more than one.
+      if task_id in task_dir:
+        timestamp = int(task_dir.split('-')[0])
+        if timestamp > latest_timestamp:
+          latest_timestamp = timestamp
+          task_output_path = os.path.join(request_output_path, task_dir)
+
+    return task_output_path
+
+
+def get_plaso_file_path(task_id: str) -> str:
+  """Returns the saved_path for a specific Plaso task."""
+  task = get_task_objects(task_id)[0]
+  output_dir = turbinia_config.toDict().get('OUTPUT_DIR')
+
+  if not task or not task.get('name').startswith('Plaso'):
+    raise TurbiniaException(f'Task {task_id} not found or is not a Plaso task.')
+
+  for saved_path in task.get('saved_paths'):
+    if saved_path.startswith(output_dir) and saved_path.endswith('.plaso'):
+      return saved_path
 
 
 class ByteStream:
@@ -95,7 +136,7 @@ class ByteStream:
     return data
 
 
-async def create_tarball(output_path: str) -> bytes:
+async def create_tarball(output_path: str) -> AsyncGenerator[bytes, Any]:
   """Creates an in-memory TGZ file from output_path contents.
 
   Partially inspired by the StreamingTarGenerator class from Google's GRR.
@@ -113,8 +154,10 @@ async def create_tarball(output_path: str) -> bytes:
   for root, _, filenames in os.walk(output_path):
     for filename in filenames:
       file_path = os.path.join(root, filename)
-      log.info(f'Adding {file_path} to tarball.')
-      file_paths.append(file_path)
+      # skip empty files
+      if os.stat(file_path).st_size > 0:
+        log.info(f'Adding {file_path} to tarball.')
+        file_paths.append(file_path)
 
   with ByteStream() as stream:
     with tarfile.TarFile.open(fileobj=stream, mode='w:gz',

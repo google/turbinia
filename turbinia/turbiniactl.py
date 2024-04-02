@@ -33,10 +33,11 @@ from turbinia import __version__
 from turbinia.processors import archive
 from turbinia.output_manager import OutputManager
 
-log = logging.getLogger('turbinia')
 # We set up the logger first without the file handler, and we will set up the
 # file handler later once we have read the log path from the config.
 logger.setup(need_file_handler=False)
+
+log = logging.getLogger('turbinia')
 
 
 def csv_list(string):

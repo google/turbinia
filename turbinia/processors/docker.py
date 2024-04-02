@@ -25,7 +25,7 @@ from turbinia import config
 from turbinia import TurbiniaException
 from turbinia.lib import utils
 
-log = logging.getLogger('turbinia')
+log = logging.getLogger(__name__)
 
 
 def PreprocessMountDockerFS(docker_dir, container_id):

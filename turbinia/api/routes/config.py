@@ -21,10 +21,11 @@ from fastapi import HTTPException, APIRouter
 from fastapi.responses import JSONResponse
 from fastapi.requests import Request
 
+from turbinia import __version__
 from turbinia import config as turbinia_config
 from turbinia.api.schemas import request_options
 
-log = logging.getLogger('turbinia')
+log = logging.getLogger(__name__)
 
 router = APIRouter(prefix='/config', tags=['Turbinia Configuration'])
 
@@ -50,3 +51,10 @@ async def get_request_options(request: Request):
   for attribute_name, attribute_type in attributes.items():
     attributes_dict[attribute_name] = {'type': str(attribute_type)}
   return JSONResponse(content=attributes_dict, status_code=200)
+
+
+@router.get('/version')
+async def get_version(request: Request):
+  """Returns the Turbinia version."""
+  response = {'version': __version__}
+  return JSONResponse(content=response, status_code=200)

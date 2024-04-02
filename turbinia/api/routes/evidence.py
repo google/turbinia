@@ -30,7 +30,7 @@ from turbinia import config as turbinia_config
 from turbinia import state_manager
 from turbinia import TurbiniaException
 
-log = logging.getLogger('turbinia')
+log = logging.getLogger(__name__)
 router = APIRouter(prefix='/evidence', tags=['Turbinia Evidence'])
 redis_manager = state_manager.RedisStateManager()
 
@@ -55,11 +55,9 @@ async def get_file_path(file_name: str, ticket_id: str) -> str:
     file_path (str): Path where the file will be saved.
   """
   try:
-    file_name = os.path.splitext(file_name)[0]
-    file_extension = os.path.splitext(file_name)[1]
-    file_extension = '.' + file_extension if file_extension else ''
+    file_name_without_ext, file_extension = os.path.splitext(file_name)
     current_time = datetime.now().strftime(turbinia_config.DATETIME_FORMAT)
-    new_name = f'{file_name}_{current_time}{file_extension}'
+    new_name = f'{file_name_without_ext}_{current_time}{file_extension}'
     os.makedirs(
         f'{turbinia_config.API_EVIDENCE_UPLOAD_DIR}/{ticket_id}', exist_ok=True)
     return os.path.join(
@@ -257,6 +255,7 @@ async def upload_evidence(
       evidences.append(warning_message)
       log.error(warning_message)
       try:
+        file_path = await get_file_path(file.filename, ticket_id)
         os.remove(file_path)
       except OSError as exception:
         log.error(f'Could not remove file {file_path}: {exception}')

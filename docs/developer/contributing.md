@@ -74,6 +74,10 @@ over the code in hopes of finding potential bugs or errors (before they become
 bugs and errors). This also improves the overall code quality and makes sure
 that every developer knows to (largely) expect the same coding style.
 
+All Python code changes in the ```turbinia/api/client/``` directory can be
+ignored during reviews. The API client library is auto-generated using
+[OpenAPI Client Generator](https://github.com/OpenAPITools/openapi-generator).
+
 #### Style guide
 
 We primarily follow the
@@ -104,6 +108,24 @@ If you are adding a new dependency or changing the version of a dependency:
 *   Edit ```pyproject.toml``` with the new version for the dependency.
 *   Run ```poetry lock``` to resolve any dependency conflicts. This will regenerate ```poetry.lock```.
 
+#### Updating the API server endpoints and client library
+
+If you are making changes to the API endpoints or adding new ones, make sure to
+reflect the changes in the ```openapi.yaml``` specification file.
+
+Once the updates are reflected in the ```openapi.yaml``` file, you can run the
+OpenAPI generator docker container to update the API client library.
+
+    $ docker pull openapitools/openapi-generator-cli:latest-release
+
+    $ docker run --rm -v ${PWD}:/local openapitools/openapi-generator-cli:latest-release generate -i \
+      /local/turbinia/api/openapi.yaml -g python-pydantic-v1 -o /local/turbinia/api/client \
+      --additional-properties packageName=turbinia_api_lib
+
+This will generate an update library in ```turbinia/api/client```.
+
+Make sure to review and make any necessary changes to the ```pyproject.toml``` file
+(e.g. the version number) and run ```poetry lock``` from the ```api/client``` directory when done.
 
 #### The small print
 

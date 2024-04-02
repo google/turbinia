@@ -32,6 +32,7 @@ from turbinia.config import logger
 
 logger.setup()
 log = logging.getLogger('turbinia')
+log.setLevel(logging.INFO)
 
 
 def get_application() -> FastAPI:
@@ -64,8 +65,8 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=config.API_ALLOWED_ORIGINS,
     allow_credentials=False,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=['GET', 'POST'],
+    allow_headers=['*'],
 )
 
 app.include_router(api_router)
@@ -97,10 +98,9 @@ class TurbiniaAPIServer:
       app_name (str): module:app string used by Uvicorn
           to start the HTTP server.
     """
-    _config: config = config.LoadConfig()
     uvicorn.run(
-        app_name, host=_config.API_SERVER_ADDRESS, port=_config.API_SERVER_PORT,
-        log_level="info", reload=False, workers=4)
+        app_name, host=config.API_SERVER_ADDRESS, port=config.API_SERVER_PORT,
+        log_config=None, log_level='info', reload=False, workers=4)
 
 
 if __name__ == '__main__':

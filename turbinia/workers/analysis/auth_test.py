@@ -29,7 +29,7 @@ from turbinia.workers.analysis.auth import BruteForceAnalyzer
 from turbinia.workers.analysis.auth import LoginRecord
 from turbinia.workers.analysis.ssh_analyzer import LinuxSSHAnalysisTask
 
-log = logging.getLogger('turbinia')
+log = logging.getLogger(__name__)
 log.addHandler(logging.StreamHandler(sys.stdout))
 log.setLevel(logging.DEBUG)
 

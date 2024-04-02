@@ -28,7 +28,7 @@ from turbinia.evidence import EvidenceState as state
 from turbinia.workers import Priority
 from turbinia.workers import TurbiniaTask
 
-log = logging.getLogger('turbinia')
+log = logging.getLogger(__name__)
 
 CE_BINARY = '/opt/container-explorer/bin/ce'
 CE_SUPPORT_FILE = '/opt/container-explorer/etc/supportcontainer.yaml'

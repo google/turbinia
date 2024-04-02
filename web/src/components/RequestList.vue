@@ -18,28 +18,22 @@ limitations under the License.
         Request List
         <v-spacer></v-spacer>
         <v-text-field v-model="search" append-icon="mdi-magnify" label="Search" single-line hide-details>
-          <template  v-slot:append>
+          <template v-slot:append>
             <v-tooltip right>
-            <template v-slot:activator="{ props }">
-              <v-btn icon="mdi-refresh" color="blue lighten-2" @click="getRequestList()" v-bind="props" location="bottom">
-              </v-btn>
-            </template>
-            Refresh Request List
-          </v-tooltip>
-        </template>
+              <template v-slot:activator="{ props }">
+                <v-btn icon="mdi-refresh" color="blue lighten-2" @click="getRequestList()" v-bind="props"
+                  location="bottom">
+                </v-btn>
+              </template>
+              Refresh Request List
+            </v-tooltip>
+          </template>
         </v-text-field>
         <v-spacer></v-spacer>
       </v-card-title>
-      <v-data-table
-        :headers="headers"
-        :items="requestSummary"
-        :search="search"
-        :footer-props="{ itemsPerPageOptions: [10, 20, 40, -1] }"
-        multi-sort
-        item-value="request_id_reason"
-        show-expand
-        hover
-      >
+      <v-data-table :headers="headers" :items="requestSummary" :search="search"
+        :footer-props="{ itemsPerPageOptions: [10, 20, 40, -1] }" multi-sort item-value="request_id_reason" show-expand
+        hover>
         <template v-slot:[`item.status`]="{ item }">
           <div v-if="item.status === 'successful'">
             <v-tooltip text="Completed successfully">
@@ -81,13 +75,19 @@ limitations under the License.
           </tr>
         </template>
         <template v-slot:[`item.request_results`]="{ item }">
-          <v-tooltip right>
-            Download Request output
-            <template v-slot:activator="{ props }">
-              <v-btn icon="mdi-folder-arrow-down-outline" variant="text" v-bind="props" @click="getRequestOutput(item.request_id)">
-              </v-btn>
+          <v-snackbar timeout="5000" color="primary" location="top" height="55">
+            Request output is <strong>downloading in the background</strong>, please wait
+            <v-progress-circular color="white" indeterminate></v-progress-circular>
+            <template v-slot:activator="{ props: snackbar }">
+              <v-tooltip top text="Download request output">
+                <template v-slot:activator="{ props: tooltip }">
+                  <v-btn icon="mdi-folder-arrow-down-outline" variant="text" v-bind="mergeProps(snackbar, tooltip)"
+                    @click="getRequestOutput(item.request_id)">
+                  </v-btn>
+                </template>
+              </v-tooltip>
             </template>
-          </v-tooltip>
+          </v-snackbar>
         </template>
       </v-data-table>
     </v-card>
@@ -97,6 +97,7 @@ limitations under the License.
 <script>
 import ApiClient from '../utils/RestApiClient.js'
 import TaskList from './TaskList.vue'
+import { mergeProps } from 'vue'
 
 export default {
   components: { TaskList },
@@ -113,12 +114,13 @@ export default {
         { title: 'Successful Tasks', key: 'successful_tasks' },
         { title: 'Failed Tasks', key: 'failed_tasks' },
         { title: 'Status', key: 'status' },
-        { title: 'Results', key: 'request_results' }, 
+        { title: 'Results', key: 'request_results' },
       ],
       requestSummary: [],
     }
   },
   methods: {
+    mergeProps,
     getRequestList: function () {
       ApiClient.getRequestList()
         .then((response) => {

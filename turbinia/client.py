@@ -45,7 +45,7 @@ if config.CLOUD_PROVIDER.lower() == 'gcp':
 if config.TASK_MANAGER.lower() == 'celery':
   from turbinia.state_manager import RedisStateManager
 
-log = logging.getLogger('turbinia')
+log = logging.getLogger(__name__)
 
 
 def setup(is_client=False):
