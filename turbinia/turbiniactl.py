@@ -24,7 +24,6 @@ from turbinia import TurbiniaException
 from turbinia.config import logger
 from turbinia import __version__
 
-
 # We set up the logger first without the file handler, and we will set up the
 # file handler later once we have read the log path from the config.
 logger.setup(need_file_handler=False)
@@ -166,6 +165,20 @@ def process_args(args):
     log.setLevel(logging.INFO)
 
   log.info(f'Turbinia version: {__version__:s}')
+
+  # Print out config if requested
+  if args.command == 'config':
+    if args.file_only:
+      log.info(f'Config file path is {config.configSource:s}\n')
+      sys.exit(0)
+    try:
+      with open(config.configSource, "r", encoding='utf-8') as f:
+        print(f.read())
+        sys.exit(0)
+    except IOError as exception:
+      msg = (
+          f'Failed to read config file {config.configSource:s}: {exception!s}')
+      raise TurbiniaException(msg) from exception
 
   # Do late import of other needed Turbinia modules.  This is needed because the
   # config is loaded by these modules at load time, and we want to wait to load
