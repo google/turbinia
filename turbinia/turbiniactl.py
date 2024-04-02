@@ -83,11 +83,8 @@ def process_args(args):
     TurbiniaException: If there's an error processing args.
   """
   parser = argparse.ArgumentParser(
-      description='Turbinia can bulk process multiple evidence of same type '
-      '(i.e. rawdisk, google cloud disk). For bulk processing, pass in csv '
-      'list of args to be processed. If all pieces of evidence share the same '
-      'property, such as project or source, there is no need for repeating '
-      'those values in the command.')
+      description=('turbiniactl is used to start the different Turbinia '
+                  'components (e.g. API server, workers, Turbinia server).'))
   parser.add_argument(
       '-q', '--quiet', action='store_true', help='Show minimal output')
   parser.add_argument(
@@ -118,12 +115,10 @@ def process_args(args):
 
   subparsers = parser.add_subparsers(
       dest='command', title='Commands', metavar='<command>')
-
   # Action for printing config
   parser_config = subparsers.add_parser('config', help='Print out config file')
   parser_config.add_argument(
       '-f', '--file_only', action='store_true', help='Print out file path only')
-
   # Celery Worker
   subparsers.add_parser('celeryworker', help='Run Celery worker')
   # Server
@@ -172,7 +167,7 @@ def process_args(args):
       log.info(f'Config file path is {config.configSource:s}\n')
       sys.exit(0)
     try:
-      with open(config.configSource, "r", encoding='utf-8') as f:
+      with open(config.configSource, 'r', encoding='utf-8') as f:
         print(f.read())
         sys.exit(0)
     except IOError as exception:
@@ -184,23 +179,23 @@ def process_args(args):
   # config is loaded by these modules at load time, and we want to wait to load
   # the config until after we parse the args so that we can use those arguments
   # to point to config paths.
-  from turbinia.worker import TurbiniaCeleryWorker
-  from turbinia.server import TurbiniaServer
-
-  if args.command == 'celeryworker':
+  elif args.command == 'celeryworker':
+    # pylint: disable=import-outside-toplevel
+    from turbinia.worker import TurbiniaCeleryWorker
     worker = TurbiniaCeleryWorker(
         jobs_denylist=args.jobs_denylist, jobs_allowlist=args.jobs_allowlist)
     worker.start()
   elif args.command == 'server':
+    # pylint: disable=import-outside-toplevel
+    from turbinia.server import TurbiniaServer
     server = TurbiniaServer(
         jobs_denylist=args.jobs_denylist, jobs_allowlist=args.jobs_allowlist)
     server.start()
   elif args.command == 'api_server':
+    # pylint: disable=import-outside-toplevel
     from turbinia.api.api_server import TurbiniaAPIServer
     api_server = TurbiniaAPIServer()
     api_server.start('turbinia.api.api_server:app')
-  else:
-    log.warning(f'Command {args.command!s} not implemented.')
 
 
 def main():
