@@ -16,14 +16,11 @@
 
 import unittest
 import argparse
-import tempfile
 
 from unittest import mock
 
 from turbinia import config
 from turbinia import turbiniactl
-from turbinia.lib import recipe_helpers
-from turbinia.message import TurbiniaRequest
 
 
 class TestTurbiniactl(unittest.TestCase):
@@ -35,25 +32,52 @@ class TestTurbiniactl(unittest.TestCase):
   def setUp(self, _, __):
     super(TestTurbiniactl, self).setUp()
     config.TASK_MANAGER = 'celery'
-    self.output_manager = mock.MagicMock()
-    self.base_dir = tempfile.mkdtemp()
-    self.source_path = tempfile.mkstemp(dir=self.base_dir)[1]
-
-  @mock.patch('turbinia.client.get_turbinia_client')
-  def testTurbiniaClientRequest(self, mockClient):
-    """Test Turbinia client request creation."""
-    config.TASK_MANAGER = 'celery'
-    mockClient.create_request = mock.MagicMock()
-    mockClient.create_request.return_value = TurbiniaRequest(
-        recipe=recipe_helpers.DEFAULT_RECIPE)
-    test_request = mockClient.create_request()
-    self.assertIsNotNone(test_request)
-    test_default_recipe = recipe_helpers.DEFAULT_RECIPE
-    self.assertEqual(test_request.recipe, test_default_recipe)
 
   def testInvalidCommand(self):
     """Test an invalid command."""
     args = argparse.Namespace(command='badCommand')
     self.assertRaises(
-        (argparse.ArgumentError,SystemExit),
+        (argparse.ArgumentError, SystemExit),
         turbiniactl.process_args, [args.command])
+
+  @mock.patch('turbinia.worker.TurbiniaCeleryWorker')
+  def testCeleryWorkerCommand(self, mock_worker):
+    """Test CeleryWorker command."""
+    args = argparse.Namespace(command='celeryworker')
+    turbiniactl.process_args([args.command])
+    mock_worker.assert_called_once_with(jobs_denylist=[], jobs_allowlist=[])
+
+  @mock.patch('turbinia.worker.TurbiniaCeleryWorker.start')
+  def testCeleryWorkerCommandStart(self, mock_worker):
+    """Test CeleryWorker start."""
+    args = argparse.Namespace(command='celeryworker')
+    turbiniactl.process_args([args.command])
+    mock_worker.assert_called_once_with()
+
+  @mock.patch('turbinia.server.TurbiniaServer')
+  def testServerCommand(self, mock_server):
+    """Test Server command."""
+    args = argparse.Namespace(command='server')
+    turbiniactl.process_args([args.command])
+    mock_server.assert_called_once_with(jobs_denylist=[], jobs_allowlist=[])
+
+  @mock.patch('turbinia.server.TurbiniaServer.start')
+  def testServerCommandStart(self, mock_server):
+    """Test Server start."""
+    args = argparse.Namespace(command='server')
+    turbiniactl.process_args([args.command])
+    mock_server.assert_called_once_with()
+
+  @mock.patch('turbinia.api.api_server.TurbiniaAPIServer')
+  def testAPIServerCommand(self, mock_api_server):
+    """Test API server command."""
+    args = argparse.Namespace(command='api_server')
+    turbiniactl.process_args([args.command])
+    mock_api_server.assert_called_once_with()
+
+  @mock.patch('turbinia.api.api_server.TurbiniaAPIServer.start')
+  def testAPIServerCommandStart(self, mock_api_server):
+    """Test API server start."""
+    args = argparse.Namespace(command='api_server')
+    turbiniactl.process_args([args.command])
+    mock_api_server.assert_called_once_with('turbinia.api.api_server:app')
