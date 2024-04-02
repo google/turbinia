@@ -89,7 +89,7 @@ def get_plaso_file_path(task_id: str) -> str:
   output_dir = turbinia_config.toDict().get('OUTPUT_DIR')
 
   if not task or not task.get('name').startswith('Plaso'):
-    raise TurbiniaException(f'Task {task_id} is invalid for this operation.')
+    raise TurbiniaException(f'Task {task_id} not found or is not a Plaso task.')
 
   for saved_path in task.get('saved_paths'):
     if saved_path.startswith(output_dir) and saved_path.endswith('.plaso'):

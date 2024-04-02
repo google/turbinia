@@ -161,7 +161,7 @@ class BaseTaskManager:
     if disabled_jobs:
       log.info(
           f'Disabling non-allowlisted jobs configured to be disabled in '
-          f'the config file: {"".join(disabled_jobs)}')
+          f'the config file: {", ".join(disabled_jobs)}')
       job_names = jobs_manager.JobsManager.FilterJobNames(
           job_names, disabled_jobs, [])
 
