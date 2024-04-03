@@ -61,11 +61,6 @@ docker exec -t turbinia-worker ls -al /dev/loop*
 echo "==> Show evidence volume contents in worker"
 docker exec -t turbinia-worker ls -al /evidence/
 
-echo "==> Show container logs"
-docker logs turbinia-server
-docker logs turbinia-worker
-docker logs turbinia-api-server
-
 echo "==> Create Turbinia request"
 RECIPE_DATA=`cat ./evidence/e2e-recipe.yaml | base64 -w0`
 turbinia-client -p ./evidence submit rawdisk --source_path /evidence/artifact_disk.dd --request_id 123456789 --recipe_data {$RECIPE_DATA} 
@@ -112,6 +107,6 @@ docker exec -t turbinia-worker ls -al /evidence/
 docker exec -t turbinia-worker find /evidence -ls
 
 echo "==> Show PlasoParserTask logs"
-for i in cat `turbinia-client status request 63a09c9e4f484c658f7a22242877ce0b -j | jq '.tasks[] | select(.name == "PlasoParserTask") | .saved_paths[]' | grep \.txt`; do docker exec turbinia-worker cat $i; done
+for i in cat `turbinia-client -p ./evidence status request 123456789 -j | jq '.tasks[] | select(.name == "PlasoParserTask") | .saved_paths[]' | grep \.txt | tr -d '"'`; do docker exec turbinia-worker cat $i; done
 
 exit $RET
