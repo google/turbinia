@@ -5,6 +5,7 @@
 
 # Set default return value
 RET=1
+set -o posix
 
 echo "Create evidence folder"
 mkdir -p ./evidence
@@ -37,6 +38,7 @@ done
 echo "All containers up and running!"
 
 echo "==> Getting the turbinia-api-server container IP address"
+docker inspect turbinia-api-server
 API_SERVER=`docker inspect turbinia-api-server | jq '.[].NetworkSettings.Networks.[].IPAddress' | tr -d '"'`
 echo "==> Got IP address: $API_SERVER"
 

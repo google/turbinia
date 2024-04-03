@@ -58,6 +58,10 @@ jobs:
       - name: Patch docker-compose config to use locally build images
         run: |
           sed -i -e 's/#image: "t/image: "t/g' -e 's/image: "u/#image: "u/g' ./docker/local/docker-compose.yml
+      - name: Update pip
+        run: python -m pip install --upgrade pip
+      - name: Install turbinia-client
+        run: pip install turbinia-client
       - name: Run E2E test
         run: |
           chmod +x ./turbinia/e2e/e2e-local.sh
