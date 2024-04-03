@@ -190,7 +190,7 @@ DEPENDENCIES = [{
     'timeout': 1200
 }, {
     'job': 'FileSystemTimelineJob',
-    'programs': ['list_file_entries', 'list_file_entries.py'],
+    'programs': ['list_file_entries.py'],
     'docker_image': None,
     'timeout': 1800
 }, {
