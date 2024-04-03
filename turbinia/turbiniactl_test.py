@@ -36,9 +36,8 @@ class TestTurbiniactl(unittest.TestCase):
   def testInvalidCommand(self):
     """Test an invalid command."""
     args = argparse.Namespace(command='badCommand')
-    self.assertRaises(
-        (argparse.ArgumentError, SystemExit),
-        turbiniactl.process_args, [args.command])
+    self.assertRaises((argparse.ArgumentError, SystemExit),
+                      turbiniactl.process_args, [args.command])
 
   @mock.patch('turbinia.worker.TurbiniaCeleryWorker')
   def testCeleryWorkerCommand(self, mock_worker):
