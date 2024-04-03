@@ -15,8 +15,6 @@ echo "==> Copy test artifacts to /evidence"
 cp ./test_data/artifact_disk.dd ./evidence/
 cp ./turbinia/e2e/e2e-recipe.yaml ./evidence/
 
-sleep 5
-
 echo "==> Startup local turbinia docker-compose stack"
 export TURBINIA_EXTRA_ARGS="-d"
 docker-compose -f ./docker/local/docker-compose.yml up -d
@@ -78,7 +76,7 @@ do
   req_status=$(turbinia-client -p ./evidence status request 123456789 -j | jq -r '.status')
   if [[ $req_status = "running" ]]
   then
-    echo "Turbinia request 123456789 is still running. Sleeping for 15 seconds..."
+    echo "Turbinia request 123456789 is still running. Sleeping for 10 seconds..."
     sleep 10
   fi
 done
