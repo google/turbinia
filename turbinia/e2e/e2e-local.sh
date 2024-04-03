@@ -38,7 +38,7 @@ done
 echo "All containers up and running!"
 
 echo "==> Getting the turbinia-api-server container IP address"
-API_SERVER=`docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}'`
+API_SERVER=`docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' turbinia-api-server`
 echo "==> Got IP address: $API_SERVER"
 
 echo "==> Generating turbinia-client configuration"

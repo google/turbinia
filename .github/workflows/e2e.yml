@@ -12,9 +12,16 @@ jobs:
         include:
           - docker_base_image: "ubuntu:22.04"
             gift_ppa_track: "staging"
+            python-version: "3.10"
+          - docker_base_image: "ubuntu:22.04"
+            gift_ppa_track: "staging"
+            python-version: "3.11"
           - docker_base_image: "ubuntu:22.04"
             gift_ppa_track: "stable"
-
+            python-version: "3.10"
+          - docker_base_image: "ubuntu:22.04"
+            gift_ppa_track: "stable"
+            python-version: "3.11"
     steps:
       - name: checkout
         uses: actions/checkout@v4
