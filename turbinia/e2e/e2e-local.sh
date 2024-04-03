@@ -1,4 +1,4 @@
-#!/usr/bin/bash
+#!/bin/bash
 # This scripts executes a Turbinia end-to-end test against a local 
 # docker-compose Turbinia stack
 # The evidence processed is a prepared raw disk image.
@@ -79,7 +79,7 @@ do
   if [[ $req_status = "running" ]]
   then
     echo "Turbinia request 123456789 is still running. Sleeping for 15 seconds..."
-    sleep 15
+    sleep 10
   fi
 done
 
