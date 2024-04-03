@@ -46,8 +46,9 @@ class TestTurbiniactl(unittest.TestCase):
     turbiniactl.process_args([args.command])
     mock_worker.assert_called_once_with(jobs_denylist=[], jobs_allowlist=[])
 
+  @mock.patch('turbinia.config.ParseDependencies')
   @mock.patch('turbinia.worker.TurbiniaCeleryWorker.start')
-  def testCeleryWorkerCommandStart(self, mock_worker):
+  def testCeleryWorkerCommandStart(self, mock_worker, _):
     """Test CeleryWorker start."""
     args = argparse.Namespace(command='celeryworker')
     turbiniactl.process_args([args.command])
@@ -60,8 +61,9 @@ class TestTurbiniactl(unittest.TestCase):
     turbiniactl.process_args([args.command])
     mock_server.assert_called_once_with(jobs_denylist=[], jobs_allowlist=[])
 
+  @mock.patch('turbinia.task_manager.CeleryTaskManager._backend_setup')
   @mock.patch('turbinia.server.TurbiniaServer.start')
-  def testServerCommandStart(self, mock_server):
+  def testServerCommandStart(self, mock_server, _):
     """Test Server start."""
     args = argparse.Namespace(command='server')
     turbiniactl.process_args([args.command])

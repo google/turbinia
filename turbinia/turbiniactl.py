@@ -83,8 +83,9 @@ def process_args(args):
     TurbiniaException: If there's an error processing args.
   """
   parser = argparse.ArgumentParser(
-      description=('turbiniactl is used to start the different Turbinia '
-                  'components (e.g. API server, workers, Turbinia server).'))
+      description=(
+          'turbiniactl is used to start the different Turbinia '
+          'components (e.g. API server, workers, Turbinia server).'))
   parser.add_argument(
       '-q', '--quiet', action='store_true', help='Show minimal output')
   parser.add_argument(

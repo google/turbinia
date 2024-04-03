@@ -12,6 +12,8 @@ RUN apt-get update && apt-get -y upgrade && apt-get -y install \
     gpg \
     john \
     john-data \
+    libleveldb1d \
+    libleveldb-dev \
     libssl-dev \
     libterm-readline-gnu-perl \
     libtool \
@@ -41,6 +43,9 @@ RUN add-apt-repository -y ppa:gift/$PPA_TRACK
 RUN apt-get update && apt-get -y install \
     bulk-extractor \
     docker-explorer-tools \
+    libbde-tools \
+    libfsapfs-tools \
+    libluksde-tools \
     sleuthkit \
     libewf-tools \
     && apt-get clean && rm -rf /var/cache/apt/* /var/lib/apt/lists/*
