@@ -112,6 +112,6 @@ docker exec -t turbinia-worker ls -al /evidence/
 docker exec -t turbinia-worker find /evidence -ls
 
 echo "==> Show PlasoParserTask logs"
-for i in cat `docker exec turbinia-server turbiniactl -a status -r 123456789|grep -Eo '*/evidence/123456789/.*PlasoParserTask.*txt'`; do docker exec turbinia-worker cat $i; done
+for i in cat `turbinia-client status request 63a09c9e4f484c658f7a22242877ce0b -j | jq '.tasks[] | select(.name == "PlasoParserTask") | .saved_paths[]' | grep \.txt`; do docker exec turbinia-worker cat $i; done
 
 exit $RET

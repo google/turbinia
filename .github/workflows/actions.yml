@@ -8,12 +8,10 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        include:
-          - docker_base_image: "ubuntu:22.04"
-            gift_ppa_track: "staging"
-          - docker_base_image: "ubuntu:22.04"
-            gift_ppa_track: "stable"
-
+        os:
+          - ubuntu-22.04
+        python-version: ["3.10", "3.11"]
+        gift_ppa_track: ["staging", "stable"]
     steps:
       - name: checkout
         uses: actions/checkout@v3
