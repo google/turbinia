@@ -8,15 +8,12 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        include:
-          - docker_base_image: "ubuntu:22.04"
-            gift_ppa_track: "staging"
-          - docker_base_image: "ubuntu:22.04"
-            gift_ppa_track: "stable"
-
+        os:
+          - ubuntu-22.04
+        gift_ppa_track: ["staging", "stable"]
     steps:
       - name: checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
       - name: Buid Turbinia Unit Tests Docker image

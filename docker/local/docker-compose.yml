@@ -7,10 +7,8 @@ services:
         # See https://docs.docker.com/compose/compose-file/compose-file-v3/#expose
         expose:
             - "6379"
-
         volumes:
             - $PWD/redis-data:/var/lib/redis
-
         environment:
             - REDIS_REPLICATION_MODE=master
 
@@ -18,11 +16,11 @@ services:
         #image: "turbinia-server-dev" # Use this for local development and comment out below line
         image: "us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-server:latest" # Latest stable
         container_name: turbinia-server
-
+        depends_on:
+            - redis
         volumes:
             - $PWD/evidence:/evidence
             - $PWD/conf/turbinia.conf:/etc/turbinia/turbinia.conf
-
         environment:
             - LC_ALL=C.UTF-8
             - LANG=C.UTF-8
@@ -32,30 +30,33 @@ services:
         #image: "turbinia-api-server-dev" # Use this for local development and comment out below line
         image: "us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-api-server:latest" # Latest stable
         container_name: turbinia-api-server
-
+        depends_on:
+            - redis
         volumes:
             - $PWD/evidence:/evidence
             - $PWD/conf/turbinia.conf:/etc/turbinia/turbinia.conf
-
         environment:
             - LC_ALL=C.UTF-8
             - LANG=C.UTF-8
             - TURBINIA_EXTRA_ARGS=${TURBINIA_EXTRA_ARGS}
+        expose:
+            - "8000"
 
     turbinia-worker:
         #image: "turbinia-worker-dev" # Use this for local development and comment out below line
         image: "us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-worker:latest" # Latest stable
         container_name: turbinia-worker
         privileged: true
-
+        depends_on:
+            - redis
         volumes:
             - $PWD/evidence:/evidence
             - $PWD/conf/turbinia.conf:/etc/turbinia/turbinia.conf
-
         environment:
             - LC_ALL=C.UTF-8
             - LANG=C.UTF-8
             - TURBINIA_EXTRA_ARGS=${TURBINIA_EXTRA_ARGS}
+
     # Uncomment below in case you want to run a second worker on the same host.
     #  turbinia-worker2:
     #     image: "turbinia-worker-dev" # Use this for local development and comment out below line

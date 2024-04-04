@@ -1,4 +1,5 @@
 # Turbinia
+![Unit tests](https://github.com/google/turbinia/actions/workflows/actions.yml/badge.svg) ![e2e tests](https://github.com/google/turbinia/actions/workflows/e2e.yml/badge.svg)
 
 ## Summary
 

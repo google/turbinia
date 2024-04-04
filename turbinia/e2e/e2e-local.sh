@@ -4,7 +4,8 @@
 # The evidence processed is a prepared raw disk image.
 
 # Set default return value
-RET=0
+RET=1
+set -o posix
 
 echo "Create evidence folder"
 mkdir -p ./evidence
@@ -18,8 +19,8 @@ echo "==> Startup local turbinia docker-compose stack"
 export TURBINIA_EXTRA_ARGS="-d"
 docker-compose -f ./docker/local/docker-compose.yml up -d
 
-echo "==> Sleep for 10s"
-sleep 10s
+echo "==> Sleep for 10 seconds to let containers start"
+sleep 10
 
 echo "==> Show and check running containers"
 containers=( turbinia-server turbinia-worker turbinia-api-server redis )
@@ -36,6 +37,23 @@ do
 done
 echo "All containers up and running!"
 
+echo "==> Getting the turbinia-api-server container IP address"
+API_SERVER=`docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' turbinia-api-server`
+echo "==> Got IP address: $API_SERVER"
+
+echo "==> Generating turbinia-client configuration"
+echo '{
+  "default": {
+        "description": "Local e2e test environment",
+        "API_SERVER_ADDRESS": "http://turbinia-api-server",
+        "API_SERVER_PORT": 8000,
+        "API_AUTHENTICATION_ENABLED": false,
+        "CLIENT_SECRETS_FILENAME": ".client_secrets.json",
+        "CREDENTIALS_FILENAME": ".credentials.json"
+  }
+}' | sed s/turbinia-api-server/$API_SERVER/> ./evidence/.turbinia_api_config.json
+cat ./evidence/.turbinia_api_config.json
+
 echo "==> Show loop device availability in worker"
 docker exec -t turbinia-worker /sbin/losetup -a
 docker exec -t turbinia-worker ls -al /dev/loop*
@@ -43,26 +61,37 @@ docker exec -t turbinia-worker ls -al /dev/loop*
 echo "==> Show evidence volume contents in worker"
 docker exec -t turbinia-worker ls -al /evidence/
 
-echo "==> Show container logs"
-docker logs turbinia-server
-docker logs turbinia-worker
-docker logs turbinia-api-server
-
 echo "==> Create Turbinia request"
-docker exec -t turbinia-server turbiniactl -r 123456789 -P /evidence/e2e-recipe.yaml rawdisk -l /evidence/artifact_disk.dd
+RECIPE_DATA=`cat ./evidence/e2e-recipe.yaml | base64 -w0`
+turbinia-client -p ./evidence submit rawdisk --source_path /evidence/artifact_disk.dd --request_id 123456789 --recipe_data {$RECIPE_DATA} 
 
-echo "==> Sleep for 150 seconds to let Turbinia process evidence"
-sleep 150s
+echo "==> Waiting 5 seconds before polling request status"
+sleep 5
 
-echo "==> Display Turbinia request status"
-docker exec turbinia-server turbiniactl -a status -r 123456789
+echo "==> Polling the API server for request status"
+# Wait until request is complete 
+req_status=$(turbinia-client -p ./evidence status request 123456789 -j | jq -r '.status')
+while [[ $req_status = "running" ]]
+do
+  req_status=$(turbinia-client -p ./evidence status request 123456789 -j | jq -r '.status')
+  if [[ $req_status = "running" ]]
+  then
+    echo "Turbinia request 123456789 is still running. Sleeping for 10 seconds..."
+    sleep 10
+  fi
+done
 
-echo "==> See if any tasks failed"
-FAILED=`docker exec turbinia-server turbiniactl -a status -r 123456789 | awk '/Failed Tasks/,/\* None/' | wc -l`
-if [ "$FAILED" != "2" ]; then
-    echo 'Tasks failed!'
-    RET=1
+echo "==> Check the status of the request"
+if [ $req_status != "successful" ]
+then
+    echo "Request is not running and the status is not successful!"
+else
+    echo "Request successfully completed"
+    RET=0
 fi
+
+echo "==> Displaying request status"
+turbinia-client -p ./evidence status request 123456789 -j
 
 echo "==> Show Turbinia server logs"
 docker logs turbinia-server
@@ -70,12 +99,14 @@ docker logs turbinia-server
 echo "==> Show Turbinia worker logs"
 docker logs turbinia-worker
 
+echo "==> Show Turbinia API server logs"
+docker logs turbinia-api-server
+
 echo "==> Show evidence volume contents in worker"
 docker exec -t turbinia-worker ls -al /evidence/
 docker exec -t turbinia-worker find /evidence -ls
 
 echo "==> Show PlasoParserTask logs"
-for i in cat `docker exec turbinia-server turbiniactl -a status -r 123456789|grep -Eo '*/evidence/123456789/.*PlasoParserTask.*txt'`; do docker exec turbinia-worker cat $i; done
-
+for i in cat `turbinia-client -p ./evidence status request 123456789 -j | jq '.tasks[] | select(.name == "PlasoParserTask") | .saved_paths[]' | grep \.txt | tr -d '"'`; do docker exec turbinia-worker cat $i; done
 
 exit $RET

@@ -28,9 +28,6 @@ from turbinia import config
 from turbinia.api.routes.router import api_router
 from turbinia.api.routes.ui import ui_router
 
-from turbinia.config import logger
-
-logger.setup()
 log = logging.getLogger('turbinia')
 log.setLevel(logging.INFO)
 
