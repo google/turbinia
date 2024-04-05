@@ -76,12 +76,26 @@ cd turbinia
 
 #### Step 2
 
-Generate configuration file using sed with default local stack values to the ```./conf``` folder.
-This folder (and supporting folders) will be mapped by docker compose into the containers.
+Setup the appropriate folders. These folders will be mapped by docker compose
+into the containers.
 
 ```console
 mkdir -p ./conf && mkdir -p ./tmp && mkdir -p ./evidence && mkdir -p ./certs && chmod 777 ./conf ./tmp ./evidence ./certs
-sed -f docker/local/local-config.sed turbinia/config/turbinia_config_tmpl.py > conf/turbinia.conf
+```
+
+Grab the release configuration file
+
+```console
+RELEASE_TAG=$(wget -O- https://api.github.com/repos/google/turbinia/releases | jq -r '.[0] | .tag_name')
+wget "https://raw.githubusercontent.com/google/turbinia/$RELEASE_TAG/turbinia/config/turbinia_config_tmpl.py" -O turbinia.conf
+```
+
+> NOTE: The latest release tag can also be retrieved by visiting <https://github.com/google/turbinia/releases/latest>
+
+Generate configuration file using sed with default local stack values to the ```./conf``` folder.
+
+```console
+sed -f docker/local/local-config.sed turbinia.conf > conf/turbinia.conf
 ```
 
 #### Step 3
