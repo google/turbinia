@@ -1777,13 +1777,13 @@ files = [
 
 [[package]]
 name = "libcloudforensics"
-version = "20240214"
+version = "20240325"
 description = "libcloudforensics is a set of tools to help acquire forensic evidence from Cloud platforms."
 optional = false
-python-versions = ">=3.8,<4.0"
+python-versions = "<4.0,>=3.8"
 files = [
-    {file = "libcloudforensics-20240214-py3-none-any.whl", hash = "sha256:a56755bb4ffc3763704a756ed9c95235317c6fbb925f1f93f95b44cdee6daf60"},
-    {file = "libcloudforensics-20240214.tar.gz", hash = "sha256:e312d1b3b879ee20e80bbd6776c6267f9b36993eb747e759e0b3312195559ed3"},
+    {file = "libcloudforensics-20240325-py3-none-any.whl", hash = "sha256:2fbc6f8345d5e9498e258c4ec0cceab55ef46944db295ad2cc6cc598f051d7fd"},
+    {file = "libcloudforensics-20240325.tar.gz", hash = "sha256:a2ad4ae114d92e9039ffb1390e99265559f31d5673980e663a3823e2af2559b3"},
 ]
 
 [package.dependencies]
@@ -4694,6 +4694,7 @@ description = "Python interface for YARA"
 optional = true
 python-versions = "*"
 files = [
+    {file = "yara-python-4.5.0.tar.gz", hash = "sha256:4feecc56d2fe1d23ecb17cb2d3bc2e3859ebf7a2201d0ca3ae0756a728122b27"},
     {file = "yara_python-4.5.0-cp310-cp310-macosx_10_9_universal2.whl", hash = "sha256:3feb72c2146c50e583d7e3cacbb49f280fb5cac0494cae1b48e5980ecbdc1571"},
     {file = "yara_python-4.5.0-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:1a036c41eaebdf6c0a674e0bd9d37c9d06d1d7427455866ace09d3a159c442b0"},
     {file = "yara_python-4.5.0-cp310-cp310-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:acbc950b051a576dd4c6825bf4ebb1c0f0c5eea35b3e01bde921b744e2cc92e1"},
@@ -4892,4 +4893,4 @@ worker = ["dfDewey", "dfimagetools", "plaso", "pyhindsight"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "8b59ea156d4e4727ab82b90eadfcd4573c515b2ad14a15543cdf5e96e4a2a698"
+content-hash = "f9b6c359acac77b91f2790dbe3b25bea00fd056c29647218c79e82b5dd29879d"
