@@ -56,7 +56,6 @@ class TurbiniaCelery:
         broker_connection_retry_on_startup=True,
         task_default_queue=config.INSTANCE_ID,
         accept_content=['json'],
-        task_acks_late=True,
         worker_cancel_long_running_tasks_on_connection_loss=True,
         worker_concurrency=1,
         worker_prefetch_multiplier=1,
