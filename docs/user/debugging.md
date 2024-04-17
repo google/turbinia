@@ -37,8 +37,8 @@ When processing requests are submitted via the client (e.g.
 `turbinia-client submit <evidence type>`) it will print out the request ID for
 that request. This can be used with
 `turbinia-client status request <request id>` to get the current state of the
-processing request.  Alternately you can also use the [WEB
-UI](turbinia-web-ui.md) to get details as well.  For more details on using the
+processing request.  Alternately you can also use the [web
+ui](turbinia-web-ui.md) to get details as well.  For more details on using the
 client [see the documentation here](turbinia-client.md).  If you do not have
 your request ID, you can list a summary of all recent requests and their request
 IDs with: `turbinia-client status summary`.
@@ -81,13 +81,13 @@ other Tasks or because the Workers are failing to come up for some reason.  You
 can use `turbinia-client status workers` to see what Turbinia thinks the states
 of the workers are.  If the Workers are crashing though, this will not show the
 true state of the Workers so you may need to tail the Worker logs to see what is
-going on (See the `Server and Worker Logs` section above for details on how to
-do that.).
+going on (see the `Server and Worker Logs` section above for details on how to
+do that).
 
 
 ## Example Debugging Scenario
 
-The following is an example of using the `turbinia-client` tracking down the
+The following is an example of using `turbinia-client` to track down the
 recent processing requests and debugging a related Task failure.
 
 
@@ -122,11 +122,12 @@ $ turbinia-client status summary
 * Evidence ID: 79fa702fe21a476f8a560dab4fcdae23
 ```
 
-The above command doesn't show anything about the Tasks associated with those
-requests, but now that we have the request IDs we can use that to find more
-info.  `turbinia-client status request <req id>` will get the details for the
-given request ID and the associated Tasks that were generated to process the
-input Evidence.
+The above output shows that there were two requests recently executed, but
+doesn't show anything about the Tasks associated with those requests and now
+that we have the request IDs we can use that to find more info.
+`turbinia-client status request <req id>` will get the details for the given
+request ID and the associated Tasks that were generated to process the input
+Evidence.
 ```
 $ turbinia-client status request 63de1268000f97d85198949e3fdb8dk5
 
@@ -217,7 +218,8 @@ The above output gives us several paths that are useful for debugging:
   code.  This will have anything that is logged from the Task using
   `TurbiniaResult.log`.
 * The stderr and stdout for all executions of binary dependencies (e.g. Plaso)
-  are available in the files named `stderr-` or `stdout-` respectively.
+  are available in the filenames prefixed with `stderr-` or `stdout-`
+  respectively.
 * Paths in `/tmp/` are the temporary locations for
   output and are local to the Worker that executed that Task.  The hostname
   for the Worker this Task was executed on is also listed in the output above.
