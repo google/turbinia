@@ -37,11 +37,12 @@ When processing requests are submitted via the client (e.g.
 `turbinia-client submit <evidence type>`) it will print out the request ID for
 that request. This can be used with
 `turbinia-client status request <request id>` to get the current state of the
-processing request.  Alternately you can also use the [web
-ui](turbinia-web-ui.md) to get details as well.  For more details on using the
-client [see the documentation here](turbinia-client.md).  If you do not have
-your request ID, you can list a summary of all recent requests and their request
-IDs with: `turbinia-client status summary`.
+processing request.  Alternatively you can also use the [web
+ui](turbinia-web-ui.md) to get details and download the output as well.  For
+more details on using the client [see the documentation
+here](turbinia-client.md).  If you do not have your request ID, you can list a
+summary of all recent requests and their request IDs with:
+`turbinia-client status summary`.
 
 
 ## Task Debugging
@@ -52,9 +53,12 @@ To see the request output you can specify
 filtered to only show high priority Task report output (as determined by the
 Task at runtime) in order to filter out uninteresting report info. You can
 specify `-p <prio num>` to set what priority you want to show in the output
-report.  To see all report output you can specify `-p 100`.  To also show all
-saved files you can specify `-a`.  Putting these together will show all output
-and can be quite a large amount of data:
+report. Priorities [are defined
+here](https://github.com/google/turbinia/blob/0e575693eedf363468ee2ca666e8e7e9643e7ef8/turbinia/workers/__init__.py#L77)
+and can range from `0` to `100` where priority `0` is the highest and `100` is
+the lowest priority and so to see all report output you can specify `-p 100`.
+To also show all saved files you can specify `-a`.  Putting these together will
+show all output and can be quite a large amount of data:
 `turbinia-client status request <request id> -a -p 100`.
 
 ### Determining Worker status
@@ -157,8 +161,7 @@ keep the output manageable.
 
 To show more details for Tasks with lower priorities we can set the priority
 filter with `--priority_filter` or `-p` and to see all tasks we can set `-p 100`
-(priorities range from `0` to `100` where priority `0` is the highest and `100`
-is the lowest priority).
+which is the lowest priority.
 
 
 In order to get the Task IDs and output file paths we can specify `-a` to get
@@ -231,16 +234,19 @@ $ turbinia-client result task 5159b8915b5b4443bcbf3b6c2b9e7cf2
 Saving output for task 5159b8915b5b4443bcbf3b6c2b9e7cf2 to: 5159b8915b5b4443bcbf3b6c2b9e7cf2.tgz
 ```
 
-To get the files in /tmp on the Worker you'll need to get those from the Worker
-directly and the method to do so depends on the your instance configuration.  As
-an example, here is how you might gather the `worker-log.txt` from a worker
-running in a GKE/Kubernetes cluster.  Note that in this case we wouldn't
-actually need to do this because that same file was available in the output we
-were able to get with `turbinia-client result task <task id>`, but sometimes
-there are other temporary files that do not get copied into the `OUTPUT_DIR`.
+Not all files will be copied into the `OUTPUT_DIR` and some temporary files will
+remain in `TMP_DIR` on the worker.  In the example above, these are the files in
+the `Saved Task Files` list that start with `/tmp`. The method to get these
+files from the worker depends on the your instance configuration.  As an
+example, here is how you might gather the `4148a8915b5b4443bcbf3b6c2b9e7cf2.csv`
+from a worker running in a GKE/Kubernetes cluster.
 
 ```
 $ gcloud container clusters get-credentials turbinia-cluster --zone us-central1-f --project turbinia-project-name
 
-$ kubectl exec turbinia-worker-1 -- cat /tmp/63de1268000f97d85198949e3fdb8dk5/1713143967-5159b8915b5b4443bcbf3b6c2b9e7cf2-PsortTask/worker-log.txt`
+$ kubectl exec turbinia-worker-1 -- cat /tmp/63de1268000f97d85198949e3fdb8dk5/1713143967-5159b8915b5b4443bcbf3b6c2b9e7cf2-PsortTask/4148a8915b5b4443bcbf3b6c2b9e7cf2.csv`
 ```
+
+*Note:* In this example case we wouldn't actually need to do this because that
+same file was available in the output we were able to get with
+`turbinia-client result task <task id>`.
