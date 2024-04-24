@@ -53,8 +53,8 @@ To see the request output you can specify
 filtered to only show high priority Task report output (as determined by the
 Task at runtime) in order to filter out uninteresting report info. You can
 specify `-p <prio num>` to set what priority you want to show in the output
-report. Priorities [are defined
-here](https://github.com/google/turbinia/blob/0e575693eedf363468ee2ca666e8e7e9643e7ef8/turbinia/workers/__init__.py#L77)
+report. Priorities [are defined in the Priority class
+here](https://github.com/google/turbinia/blob/0e575693eedf363468ee2ca666e8e7e9643e7ef8/turbinia/workers/__init__.py)
 and can range from `0` to `100` where priority `0` is the highest and `100` is
 the lowest priority and so to see all report output you can specify `-p 100`.
 To also show all saved files you can specify `-a`.  Putting these together will
