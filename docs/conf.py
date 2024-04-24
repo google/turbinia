@@ -76,6 +76,14 @@ html_sidebars = {
 # Adding retries to linkchecks before declaring a link broken
 linkcheck_retries = 3
 
+# linkcheck loads pages without using javascript so many github pages will not
+# load all the content and thus the anchors will not be present and tests will
+# fail so disabling anchor checks for all github pages (the page itself will
+# still be checked to ensure it exists though).
+linkcheck_anchors_ignore_for_url = [
+  'https://github.com/',
+]
+
 # Output file base name for HTML help builder.
 htmlhelp_basename = 'turbiniadoc'
 
