@@ -932,7 +932,8 @@ class AwsEbsVolume(Evidence):
   POSSIBLE_STATES = [EvidenceState.ATTACHED, EvidenceState.MOUNTED]
 
   def __init__(
-      self, zone, volume_id, disk_name=None, mount_partition=1, *args, **kwargs):
+      self, zone, volume_id, disk_name=None, mount_partition=1, *args,
+      **kwargs):
     """Initialization for AWS EBS Disk."""
     super(AwsEbsVolume, self).__init__(*args, **kwargs)
     self.zone = zone
