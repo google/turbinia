@@ -25,7 +25,7 @@ import urllib
 from libcloudforensics.providers.aws.internal import account
 from prometheus_client import Counter
 from turbinia import config
-from turbinia.lib import util
+from turbinia.lib import utils
 from turbinia import TurbiniaException
 
 log = logging.getLogger('turbinia')
@@ -139,7 +139,8 @@ def PreprocessAttachDisk(volume_id):
       )
 
   Raises:
-    TurbiniaException: If the device is not a block device.
+    TurbiniaException: If the device is not a block device or the config does
+        not have the required variables configured.
   """
   # Check if volume is already attached
   attached_device = CheckVolumeAttached(volume_id)
@@ -150,7 +151,12 @@ def PreprocessAttachDisk(volume_id):
 
   # Volume is not attached so need to attach it
   config.LoadConfig()
-  aws_account = account.AWSAccount(config.TURBINIA_ZONE)
+  if not config.AWS_ZONE:
+    msg = f'AWS_ZONE must be set in configuration file in order to attach AWS disks.'
+    log.error(msg)
+    raise TurbiniaException(msg)
+
+  aws_account = account.AWSAccount(config.AWS_ZONE)
   instance_id = GetLocalInstanceId()
   instance = aws_account.ec2.GetInstanceById(instance_id)
   device_path = GetDevicePath()
@@ -165,7 +171,7 @@ def PreprocessAttachDisk(volume_id):
     # more details:
     # https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/nvme-ebs-volumes.html#identify-nvme-ebs-device
     device_path = CheckVolumeAttached(volume_id)
-    if device_path and util.is_block_device(device_path):
+    if device_path and utils.is_block_device(device_path):
       log.info(f'Block device {device_path:s} successfully attached')
       break
     if device_path and os.path.exists(device_path):
@@ -205,7 +211,7 @@ def PostprocessDetachDisk(volume_id):
     return
 
   config.LoadConfig()
-  aws_account = account.AWSAccount(config.TURBINIA_ZONE)
+  aws_account = account.AWSAccount(config.AWS_ZONE)
   instance_id = GetLocalInstanceId()
   instance = aws_account.ec2.GetInstanceById(instance_id)
 

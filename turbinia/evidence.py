@@ -964,7 +964,7 @@ class AwsEbsVolume(Evidence):
 
   def _postprocess(self):
     if self.state[EvidenceState.ATTACHED]:
-      aws.PostprocessDetachDisk(self.volume_id, self.device_path)
+      aws.PostprocessDetachDisk(self.volume_id)
       self.state[EvidenceState.ATTACHED] = False
 
 

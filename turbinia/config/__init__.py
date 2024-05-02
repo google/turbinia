@@ -87,6 +87,8 @@ OPTIONAL_VARS = [
     'GCS_OUTPUT_PATH',
     'RECIPE_FILE_DIR',
     'STACKDRIVER_TRACEBACK',
+    # AWS config
+    'AWS_ZONE',
     # REDIS CONFIG
     'REDIS_HOST',
     'REDIS_PORT',

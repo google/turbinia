@@ -19,7 +19,6 @@ from __future__ import unicode_literals
 import glob
 import logging
 import os
-import stat
 import time
 
 from six.moves import urllib
