@@ -24,7 +24,6 @@ from fastapi.requests import Request
 from fastapi.responses import JSONResponse
 from typing import List, Annotated
 
-from turbinia.api.schemas import request_options
 from turbinia import evidence
 from turbinia import config as turbinia_config
 from turbinia import state_manager
@@ -97,9 +96,10 @@ async def upload_file(
         sha_hash.update(chunk)
       size += len(chunk)
       if size >= turbinia_config.API_MAX_UPLOAD_SIZE:
+        msg_size = turbinia_config.API_MAX_UPLOAD_SIZE / (1024**3)
         error_message = (
             f'Unable to upload file {file.filename} greater',
-            f'than {turbinia_config.API_MAX_UPLOAD_SIZE / (1024 ** 3)} GB')
+            f'than {msg_size} GB')
         log.error(error_message)
         raise TurbiniaException(error_message)
     file_info = {
@@ -217,7 +217,7 @@ async def get_evidence_by_id(request: Request, evidence_id):
     return JSONResponse(content=stored_evidence, status_code=200)
   raise HTTPException(
       status_code=404,
-      detail=f'UUID {evidence_id} not found or it had no associated evidences.')
+      detail=f'UUID {evidence_id} not found or it had no associated evidence.')
 
 
 @router.post('/upload')
@@ -251,6 +251,7 @@ async def upload_evidence(
           file_info.get('hash')):
         warning_message = (
             f'File {file.filename} was uploaded before, check {evidence_key}')
+
     if warning_message:
       evidences.append(warning_message)
       log.error(warning_message)

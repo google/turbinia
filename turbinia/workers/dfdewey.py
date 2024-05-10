@@ -14,8 +14,6 @@
 # limitations under the License.
 """Task for running dfDewey."""
 
-from __future__ import unicode_literals
-
 import os
 
 from turbinia import config
@@ -93,7 +91,7 @@ class DfdeweyTask(TurbiniaTask):
         result.log(status_summary)
     else:
       status_summary = (
-          'Not running dfDewey. Case was not provided in task config.')
+          'Not running dfDewey. Case was not provided in taskconfig.')
       result.log(status_summary)
 
     result.close(self, success=success, status=status_summary)

@@ -14,8 +14,6 @@
 # limitations under the License.
 """Tests for VolatilityTask."""
 
-from __future__ import unicode_literals
-
 import os
 import mock
 

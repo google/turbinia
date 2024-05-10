@@ -9,6 +9,7 @@
   "dependencies": {
     "@mdi/font": "7.0.96",
     "axios": "^1.6.5",
+    "streamsaver": "^2.0.6",
     "vue": "^3.2.0",
     "vuetify": "^3.0.0"
   },

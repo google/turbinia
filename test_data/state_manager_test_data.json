@@ -24,7 +24,6 @@
         "sketch_id": null,
         "group_name": "",
         "reason": "",
-        "all_args": "turbinia/turbiniactl.py rawdisk -l /workspaces/turbinia/test_data/artifact_disk.dd",
         "group_id": "55ce6e98dc154e73990b24f0c79ab07e",
         "requester": "root"
       }
@@ -70,7 +69,6 @@
         "sketch_id": null,
         "group_name": "",
         "reason": "",
-        "all_args": "turbinia/turbiniactl.py rawdisk -l /workspaces/turbinia/test_data/artifact_disk.dd",
         "group_id": "55ce6e98dc154e73990b24f0c79ab07e",
         "requester": "root"
       }
@@ -115,7 +113,6 @@
         "sketch_id": null,
         "group_name": "",
         "reason": "",
-        "all_args": "turbinia/turbiniactl.py rawdisk -l /workspaces/turbinia/test_data/artifact_disk.dd",
         "group_id": "55ce6e98dc154e73990b24f0c79ab07e",
         "requester": "root"
       }

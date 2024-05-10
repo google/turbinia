@@ -14,8 +14,6 @@
 # limitations under the License.
 """Evidence processor for Google Cloud resources."""
 
-from __future__ import unicode_literals
-
 import glob
 import logging
 import os

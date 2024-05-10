@@ -14,8 +14,6 @@
 # limitations under the License.
 """Tests for Turbinia evidence."""
 
-from __future__ import unicode_literals
-
 import json
 import mock
 import unittest

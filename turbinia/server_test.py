@@ -14,8 +14,6 @@
 # limitations under the License.
 """Tests for Turbinia server module."""
 
-from __future__ import unicode_literals
-
 import unittest
 import mock
 

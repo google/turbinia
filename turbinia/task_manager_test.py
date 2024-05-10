@@ -14,8 +14,6 @@
 # limitations under the License.
 """Tests for Turbinia task_manager module."""
 
-from __future__ import unicode_literals
-
 import mock
 
 from turbinia import TurbiniaException

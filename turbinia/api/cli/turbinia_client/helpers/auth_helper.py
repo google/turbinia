@@ -40,7 +40,7 @@ def get_oauth2_token_id(credentials_path, client_secrets_path):
       log.error(f'Error loading credentials: {exception!s}')
     # Refresh credentials using existing refresh_token
     if credentials and credentials.refresh_token:
-      log.debug('Found a refresh token. Requesting new id_token...')
+      log.debug('Found a refresh token. Requesting new id_token..')
       try:
         credentials.refresh(Request())
       except google_exceptions.RefreshError as exception:

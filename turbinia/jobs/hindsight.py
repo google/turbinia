@@ -14,8 +14,6 @@
 # limitations under the License.
 """Job to execute Hindsight tasks."""
 
-from __future__ import unicode_literals
-
 from turbinia.evidence import ChromiumProfile
 from turbinia.evidence import TextFile
 from turbinia.jobs import interface

@@ -15,8 +15,6 @@
 # -*- coding: utf-8 -*-
 """Tests that all jobs are imported correctly."""
 
-from __future__ import unicode_literals
-
 import io
 import re
 import os

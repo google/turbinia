@@ -137,7 +137,7 @@ def process_args(args):
     else:
       config.LoadConfig()
   except TurbiniaException as exception:
-    print(f'Could not load config file ({exception!s}).\n{config.CONFIG_MSG:s}')
+    print(f'Could not load config file ({exception!s}).\n{config._MSG:s}')
     sys.exit(1)
 
   if args.log_file:
@@ -165,7 +165,7 @@ def process_args(args):
   # Print out config if requested
   if args.command == 'config':
     if args.file_only:
-      log.info(f'Config file path is {config.configSource:s}\n')
+      log.info(f'Config file path is {config.Source:s}\n')
       sys.exit(0)
     try:
       with open(config.configSource, 'r', encoding='utf-8') as f:
@@ -204,8 +204,7 @@ def main():
   try:
     process_args(sys.argv[1:])
   except TurbiniaException as exception:
-    log.error(f'There was a problem processing arguments: {str(exception):s}')
-    sys.exit(1)
+    log.error(f'{str(exception):s}')
   log.info('Done.')
   sys.exit(0)
 

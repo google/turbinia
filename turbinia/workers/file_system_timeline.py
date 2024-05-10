@@ -14,8 +14,6 @@
 # limitations under the License.
 """Task to run dfimagetools FileEntryLister on disk partitions."""
 
-from __future__ import unicode_literals
-
 import os
 
 from turbinia import TurbiniaException

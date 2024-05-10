@@ -30,14 +30,12 @@ from fastapi.testclient import TestClient
 from turbinia.api.api_server import app
 from turbinia.api.routes.router import api_router
 from turbinia.api.routes.ui import ui_router
-from turbinia.api.cli.turbinia_client.helpers import formatter
 
 from turbinia import config as turbinia_config
 from turbinia import state_manager
 from turbinia.jobs import manager as jobs_manager
 from turbinia.workers import TurbiniaTask
-
-from textwrap import dedent
+from turbinia.message import TurbiniaRequest
 
 
 class testTurbiniaAPIServer(unittest.TestCase):
@@ -45,9 +43,8 @@ class testTurbiniaAPIServer(unittest.TestCase):
 
   _TASK_TEST_DATA = {
       'id': 'c8f73a5bc5084086896023c12c7cc026',
-      'evidence_name': '/evidence/test.tgz',
+      'evidence_name': 'test_data/artifact_disk.dd',
       'evidence_id': '084d5904f3d2412b99dc29ed34853a16',
-      'all_args': 'compresseddirectory -l /evidence/test.tgz',
       'job_id': '1db0dc47d8f244f5b4fa7e15b8a87861',
       'start_time': '2022-04-01T19:15:14.791074Z',
       'last_update': '2022-04-01T19:17:14.791074Z',
@@ -67,12 +64,62 @@ class testTurbiniaAPIServer(unittest.TestCase):
   }
 
   _REQUEST_TEST_DATA = {
-      'evidence_name': '/evidence/test.tgz',
+      'group_name': '',
+      'evidence_ids': ["084d5904f3d2412b99dc29ed34853a16"],
+      'status': 'Task scheduled at 2022-04-01T19:15:14.791074Z',
+      'type': 'TurbiniaRequest',
+      'running_tasks': [],
+      'context': {},
+      'reason': '',
+      'task_ids': ["c8f73a5bc5084086896023c12c7cc026"],
+      'requester': 'root',
+      'last_update': '2022-04-01T19:17:14.791074Z',
+      'group_id': '1234',
+      'original_evidence': {
+          "id": "084d5904f3d2412b99dc29ed34853a16",
+          "name": "test_data/artifact_disk.dd"
+      },
+      'successful_tasks': ["c8f73a5bc5084086896023c12c7cc026"],
+      'recipe': {
+          "globals": {
+              "debug_tasks": False,
+              "jobs_allowlist": [],
+              "jobs_denylist": [],
+              "yara_rules": "",
+              "filter_patterns": [],
+              "sketch_id": '',
+              "group_name": "",
+              "reason": "",
+              "group_id": ""
+          }
+      },
+      'request_id': '41483253079448e59685d88f37ab91f7',
+      'start_time': '2022-04-01T19:15:14.791074Z',
+  }
+
+  _REQUEST_STATUS_TEST_DATA = {
       'evidence_id': '084d5904f3d2412b99dc29ed34853a16',
+      'evidence_name': 'test_data/artifact_disk.dd',
       'failed_tasks': 0,
       'last_task_update_time': '2022-04-01T19:17:14.791074Z',
       'queued_tasks': 0,
-      'reason': None,
+      'reason': '',
+      'request_id': '41483253079448e59685d88f37ab91f7',
+      'requester': 'root',
+      'running_tasks': 0,
+      'status': 'successful',
+      'successful_tasks': 1,
+      'task_count': 1,
+      'tasks': ['c8f73a5bc5084086896023c12c7cc026']
+  }
+
+  _REQUEST_STATUS_SUMMARY_DATA = {
+      'evidence_id': '084d5904f3d2412b99dc29ed34853a16',
+      'evidence_name': 'test_data/artifact_disk.dd',
+      'failed_tasks': 0,
+      'last_task_update_time': '2022-04-01T19:17:14.791074Z',
+      'queued_tasks': 0,
+      'reason': '',
       'request_id': '41483253079448e59685d88f37ab91f7',
       'requester': 'root',
       'running_tasks': 0,
@@ -83,15 +130,12 @@ class testTurbiniaAPIServer(unittest.TestCase):
   }
 
   _EVIDENCE_TEST_DATA = {
-      'request_id': '5581344e306b42ccb965a19028d4fc58',
-      'tasks': [
-          'b73d484634164e0eb1870d101ca9ce2f',
-          'dd810119ac2443e18b69ea56c10c0a9b', 'ac4dc14080b144478437818a694e2f4d'
-      ],
+      'request_id': '41483253079448e59685d88f37ab91f7',
+      'tasks': ['c8f73a5bc5084086896023c12c7cc026'],
       'copyable': False,
       'cloud_only': False,
-      'local_path': '/workspaces/turbinia/test_data/artifact_disk.dd',
-      'source_path': '/workspaces/turbinia/test_data/artifact_disk.dd',
+      'local_path': 'test_data/artifact_disk.dd',
+      'source_path': 'test_data/artifact_disk.dd',
       'resource_tracked': False,
       'processed_by': [],
       'resource_id': None,
@@ -106,8 +150,7 @@ class testTurbiniaAPIServer(unittest.TestCase):
               'sketch_id': None,
               'group_name': '',
               'reason': '',
-              'all_args': 'turbinia/turbiniactl.py rawdisk -l disk.dd',
-              'group_id': '55ce6e98dc154e73990b24f0c79ab07e',
+              'group_id': '1234',
               'requester': 'root'
           }
       },
@@ -121,10 +164,10 @@ class testTurbiniaAPIServer(unittest.TestCase):
       'has_child_evidence': False,
       'save_metadata': False,
       'type': 'RawDisk',
-      '_name': '/workspaces/turbinia/test_data/artifact_disk.dd',
+      '_name': 'test_data/artifact_disk.dd',
       'context_dependent': False,
       'state': {},
-      'id': 'b510ab6bf11a410da1fd9d9b128e7d74',
+      'id': '084d5904f3d2412b99dc29ed34853a16',
       'hash': '4cf679344af02c2b89e4a902f939f4608bcac0fbf81511da13d7d9b9',
       'description': None
   }
@@ -149,7 +192,7 @@ class testTurbiniaAPIServer(unittest.TestCase):
     return state_manager.get_state_manager()
 
   def setUp(self):
-    """This method will write a temporary key to redis for testing purposes."""
+    """Set up necessary objects."""
     self.client = TestClient(app)
     self.state_manager = self._get_state_manager()
 
@@ -173,7 +216,7 @@ class testTurbiniaAPIServer(unittest.TestCase):
 
   def testRequestResultsNotFound(self):
     """Test getting empty request result files."""
-    request_id = self._REQUEST_TEST_DATA.get('request_id')
+    request_id = self._REQUEST_STATUS_TEST_DATA.get('request_id')
     response = self.client.get(f'/api/result/request/{request_id}')
     log_path = turbinia_config.toDict().get('OUTPUT_DIR')
     output_path = os.path.join(log_path, request_id)
@@ -215,44 +258,72 @@ class testTurbiniaAPIServer(unittest.TestCase):
     result = json.loads(result.content)
     self.assertEqual(expected_result_dict, result)
 
+  @mock.patch('turbinia.state_manager.RedisStateManager.get_request_data')
   @mock.patch('turbinia.state_manager.RedisStateManager.get_task_data')
-  def testRequestStatus(self, testTaskData):
+  @mock.patch('turbinia.redis_client.RedisClient.key_exists')
+  def testRequestStatus(self, testKeyExists, testTaskData, testRequestData):
     """Test getting Turbinia Request status."""
     redis_client = fakeredis.FakeStrictRedis()
     input_task = TurbiniaTask().deserialize(self._TASK_TEST_DATA)
     input_task_serialized = input_task.serialize()
-    expected_result = self._REQUEST_TEST_DATA.copy()
+    expected_result = self._REQUEST_STATUS_TEST_DATA.copy()
     expected_result['tasks'] = [input_task_serialized]
-    expected_result_dict = OrderedDict(sorted(expected_result.items()))
+    input_request = self._REQUEST_TEST_DATA
+    testKeyExists.return_value = True
 
     redis_client.set(
-        'TurbiniaTask:41483253079448e59685d88f37ab91f7',
+        'TurbiniaRequest:41483253079448e59685d88f37ab91f7',
+        json.dumps(input_request))
+
+    redis_client.set(
+        'TurbiniaTask:c8f73a5bc5084086896023c12c7cc026',
         json.dumps(input_task_serialized))
+
+    testRequestData.return_value = json.loads(
+        redis_client.get('TurbiniaRequest:41483253079448e59685d88f37ab91f7'))
+
     testTaskData.return_value = [
         json.loads(
-            redis_client.get('TurbiniaTask:41483253079448e59685d88f37ab91f7'))
+            redis_client.get('TurbiniaTask:c8f73a5bc5084086896023c12c7cc026'))
     ]
 
     result = self.client.get(
-        f"/api/request/{self._REQUEST_TEST_DATA.get('request_id')}")
+        f"/api/request/{self._REQUEST_STATUS_TEST_DATA.get('request_id')}")
     result = json.loads(result.content)
-    self.assertEqual(expected_result_dict, result)
+    self.assertEqual(expected_result, result)
 
+  @mock.patch('turbinia.state_manager.RedisStateManager.get_request_data')
   @mock.patch('turbinia.state_manager.RedisStateManager.get_task_data')
-  def testRequestSummary(self, testTaskData):
+  @mock.patch('turbinia.redis_client.RedisClient.key_exists')
+  @mock.patch('turbinia.redis_client.RedisClient.iterate_keys')
+  def testRequestSummary(
+      self, testIterateKeys, testKeyExists, testTaskData, testRequestData):
     """Test getting Turbinia Request status summary."""
     redis_client = fakeredis.FakeStrictRedis()
+    expected_result = self._REQUEST_STATUS_SUMMARY_DATA.copy()
+    expected_result = {'requests_status': [self._REQUEST_STATUS_SUMMARY_DATA]}
     input_task = TurbiniaTask().deserialize(self._TASK_TEST_DATA)
     input_task_serialized = input_task.serialize()
-    expected_result = {'requests_status': [self._REQUEST_TEST_DATA]}
+    input_request = self._REQUEST_TEST_DATA
+    testKeyExists.return_value = True
+    testIterateKeys.return_value = [
+        f'TurbiniaRequest:{self._REQUEST_TEST_DATA.get("request_id")}'
+    ]
 
     redis_client.set(
-        'TurbiniaTask:41483253079448e59685d88f37ab91f7',
+        'TurbiniaRequest:41483253079448e59685d88f37ab91f7',
+        json.dumps(input_request))
+
+    redis_client.set(
+        'TurbiniaTask:c8f73a5bc5084086896023c12c7cc026',
         json.dumps(input_task_serialized))
+
+    testRequestData.return_value = json.loads(
+        redis_client.get('TurbiniaRequest:41483253079448e59685d88f37ab91f7'))
 
     testTaskData.return_value = [
         json.loads(
-            redis_client.get('TurbiniaTask:41483253079448e59685d88f37ab91f7'))
+            redis_client.get('TurbiniaTask:c8f73a5bc5084086896023c12c7cc026'))
     ]
 
     result = self.client.get('/api/request/summary')
@@ -261,12 +332,11 @@ class testTurbiniaAPIServer(unittest.TestCase):
 
   @mock.patch('turbinia.state_manager.RedisStateManager.get_task_data')
   def testRequestEvidenceNoArgs(self, testTaskData):
-    """Test getting Turbinia Request evidence name without all_args."""
+    """Test getting Turbinia Request evidence name."""
     redis_client = fakeredis.FakeStrictRedis()
     input_task = TurbiniaTask().deserialize(self._TASK_TEST_DATA)
     input_task_serialized = input_task.serialize()
-    input_task_serialized.pop('all_args')
-    expected_result = self._REQUEST_TEST_DATA['evidence_name']
+    expected_result = self._REQUEST_STATUS_TEST_DATA['evidence_name']
 
     redis_client.set(
         'TurbiniaTask:41483253079448e59685d88f37ab91f7',
@@ -280,7 +350,6 @@ class testTurbiniaAPIServer(unittest.TestCase):
     result = self.client.get('/api/request/summary')
     result = json.loads(result.content)
     evidence_name = result['requests_status'][0]['evidence_name']
-
     self.assertEqual(expected_result, evidence_name)
 
   @mock.patch('turbinia.state_manager.RedisStateManager.get_task_data')
@@ -291,7 +360,7 @@ class testTurbiniaAPIServer(unittest.TestCase):
     }
     testTaskData.return_value = []
     result = self.client.get(
-        f"/api/request/{self._REQUEST_TEST_DATA.get('request_id')}")
+        f"/api/request/{self._REQUEST_STATUS_TEST_DATA.get('request_id')}")
     result = json.loads(result.content)
     self.assertEqual(expected_result, result)
 
@@ -308,7 +377,7 @@ class testTurbiniaAPIServer(unittest.TestCase):
     """Test getting Turbinia job names."""
     _jobs_manager = jobs_manager.JobsManager()
     registered_jobs = set(_jobs_manager.GetJobNames())
-    disabled_jobs = set(turbinia_config.CONFIG.DISABLED_JOBS)
+    disabled_jobs = set(turbinia_config.DISABLED_JOBS)
     expected_result = list(registered_jobs.difference(disabled_jobs))
 
     result = self.client.get('/api/jobs')
@@ -404,16 +473,14 @@ class testTurbiniaAPIServer(unittest.TestCase):
                 f'request_id.')
         })
 
-  @mock.patch('turbinia.state_manager.RedisStateManager.get_attribute')
+  @mock.patch('turbinia.redis_client.RedisClient.get_attribute')
   @mock.patch('turbinia.api.routes.evidence.datetime')
-  @mock.patch('turbinia.api.routes.evidence.os.makedirs')
-  def testEvidenceUpload(
-      self, mock_makedirs, mock_datetime, mock_get_attribute):
+  def testEvidenceUpload(self, mock_datetime, mock_get_attribute):
     """Tests uploading evidence."""
     mocked_now = datetime.datetime.now()
     mock_datetime.now.return_value = mocked_now
     mocked_now_str = mocked_now.strftime(turbinia_config.DATETIME_FORMAT)
-    self.maxDiff = None
+    mock_get_attribute.return_value = None
     filedir = os.path.dirname(os.path.realpath(__file__))
     evidence_1_name = 'wordpress_access_logs.txt'
     evidence_2_name = 'mbr.raw'

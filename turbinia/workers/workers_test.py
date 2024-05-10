@@ -14,8 +14,6 @@
 # limitations under the License.
 """Tests for workers __init__."""
 
-from __future__ import unicode_literals
-
 import json
 import os
 import tempfile

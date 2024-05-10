@@ -14,7 +14,6 @@
 # limitations under the License.
 """Sets up logging."""
 
-from __future__ import unicode_literals
 import logging
 import logging.handlers
 import warnings

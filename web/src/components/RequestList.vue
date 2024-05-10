@@ -31,9 +31,9 @@ limitations under the License.
         </v-text-field>
         <v-spacer></v-spacer>
       </v-card-title>
-      <v-data-table :headers="headers" :items="requestSummary" :search="search"
-        :footer-props="{ itemsPerPageOptions: [10, 20, 40, -1] }" multi-sort item-value="request_id_reason" show-expand
-        hover>
+      <v-data-table :headers="headers" :items="requestSummary" :search="search" density="compact"
+        :footer-props="{ itemsPerPageOptions: [10, 20, 40, -1] }" :loading="isLoading" item-value="request_id_reason"
+        show-expand hover>
         <template v-slot:[`item.status`]="{ item }">
           <div v-if="item.status === 'successful'">
             <v-tooltip text="Completed successfully">
@@ -104,6 +104,7 @@ export default {
   data() {
     return {
       search: '',
+      isLoading: false,
       headers: [
         { title: 'Request', key: 'request_id_reason' },
         { title: 'Last Task Update Time', key: 'last_task_update_time' },
@@ -117,6 +118,7 @@ export default {
         { title: 'Results', key: 'request_results' },
       ],
       requestSummary: [],
+      sortBy: [{ key: 'last_task_update_time', order: 'desc' }],
     }
   },
   methods: {
@@ -124,6 +126,7 @@ export default {
     getRequestList: function () {
       ApiClient.getRequestList()
         .then((response) => {
+          this.isLoading = true
           let requestSummary = []
           let data = response.data['requests_status']
           for (const req in data) {
@@ -145,6 +148,7 @@ export default {
               evidence_id: data[req].evidence_id,
             })
           }
+          this.isLoading = false
           this.requestSummary = requestSummary
         })
         .catch((e) => {

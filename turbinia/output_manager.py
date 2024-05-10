@@ -14,8 +14,6 @@
 # limitations under the License.
 """Classes to write output to various location types."""
 
-from __future__ import unicode_literals
-
 import errno
 import json
 import logging

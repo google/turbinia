@@ -14,7 +14,6 @@
 # limitations under the License.
 """Tests for the Docker Containers Enumeration job."""
 
-from __future__ import unicode_literals
 from io import StringIO
 
 import unittest

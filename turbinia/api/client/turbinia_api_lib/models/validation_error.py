@@ -26,9 +26,9 @@ class ValidationError(BaseModel):
     """
     ValidationError
     """
-    loc: conlist(LocationInner) = Field(...)
-    msg: StrictStr = Field(...)
-    type: StrictStr = Field(...)
+    loc: conlist(LocationInner) = Field(..)
+    msg: StrictStr = Field(..)
+    type: StrictStr = Field(..)
     __properties = ["loc", "msg", "type"]
 
     class Config:

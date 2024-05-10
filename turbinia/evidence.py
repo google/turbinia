@@ -14,8 +14,6 @@
 # limitations under the License.
 """Turbinia Evidence objects."""
 
-from __future__ import unicode_literals
-
 from enum import IntEnum
 from collections import defaultdict
 from typing import Any
@@ -276,8 +274,6 @@ class Evidence:
     self.mount_path = kwargs.get('mount_path', None)
     self._name = kwargs.get('name')
     self.parent_evidence = kwargs.get('parent_evidence', None)
-    # List of jobs that have processed this evidence
-    self.processed_by = kwargs.get('processed_by', [])
     self.request_id = kwargs.get('request_id', None)
     self.resource_id = kwargs.get('resource_id', None)
     self.resource_tracked = kwargs.get('resource_tracked', False)
@@ -290,7 +286,6 @@ class Evidence:
     self.tags = kwargs.get('tags', {})
     self.tasks = kwargs.get('tasks', [])
     self.type = self.__class__.__name__
-
     self.local_path = self.source_path
 
     if 'state' in kwargs:
@@ -502,7 +497,7 @@ class Evidence:
     Raises:
       TurbiniaException: If the required evidence state cannot be met by the
           possible states of the Evidence or if the parent evidence object does
-          not exist when it is required by the Evidence type..
+          not exist when it is required by the Evidence type.
     """
     self.local_path = self.source_path
     if not required_states:

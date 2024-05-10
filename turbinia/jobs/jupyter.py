@@ -14,8 +14,6 @@
 # limitations under the License.
 """Job to execute Jupyter Notebook config analysis."""
 
-from __future__ import unicode_literals
-
 from turbinia.workers import artifact
 from turbinia.evidence import ContainerdContainer
 from turbinia.evidence import Directory

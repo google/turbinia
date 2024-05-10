@@ -14,8 +14,6 @@
 # limitations under the License.
 """This file contains a class for managing jobs."""
 
-from __future__ import unicode_literals
-
 from turbinia import TurbiniaException
 
 DEFAULT_TIMEOUT = 7200

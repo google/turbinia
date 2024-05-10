@@ -14,8 +14,6 @@
 # limitations under the License.
 """Client objects for Turbinia."""
 
-from __future__ import unicode_literals
-
 import logging
 import os
 import stat

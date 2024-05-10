@@ -14,8 +14,6 @@
 # limitations under the License.
 """Core classes for Turbinia Requests and Messaging components."""
 
-from __future__ import unicode_literals
-
 import codecs
 import copy
 import json
@@ -23,10 +21,14 @@ import uuid
 import logging
 import six
 
+from datetime import datetime
+
 from turbinia import evidence
 from turbinia import TurbiniaException
+from turbinia.config import DATETIME_FORMAT
 
 log = logging.getLogger(__name__)
+
 
 class TurbiniaRequest:
   """An object to request evidence to be processed.
@@ -40,12 +42,11 @@ class TurbiniaRequest:
     evidence(list): A list of Evidence objects.
     group_name (str): Name for grouping evidence.
     reason (str): Reason or justification for Turbinia requests.
-    all_args (str): a string of commandline arguments provided to run client.
   """
 
   def __init__(
       self, request_id=None, group_id=None, requester=None, recipe=None,
-      context=None, evidence=None, group_name=None, reason=None, all_args=None):
+      context=None, evidence=None, group_name=None, reason=None):
     """Initialization for TurbiniaRequest."""
     self.request_id = request_id if request_id else uuid.uuid4().hex
     self.group_id = group_id if group_id else uuid.uuid4().hex
@@ -58,7 +59,19 @@ class TurbiniaRequest:
       self.original_evidence = {'id': evidence[0].id, 'name': evidence[0].name}
     self.group_name = group_name if group_name else ''
     self.reason = reason if reason else ''
-    self.all_args = all_args if all_args else ''
+    self.successful_tasks = []
+    self.successful_tasks_cnt = 0
+    self.failed_tasks = []
+    self.failed_tasks_cnt = 0
+    self.queued_tasks = []
+    self.queued_tasks_cnt = 0
+    self.running_tasks = []
+    self.running_tasks_cnt = 0
+    self.status = ''
+    self.task_ids = []
+    self.total_tasks = 0
+    self.last_update = datetime.now().strftime(DATETIME_FORMAT)
+    self.start_time = datetime.now().strftime(DATETIME_FORMAT)
     self.type = self.__class__.__name__
 
   def to_json(self, json_values=False):
@@ -75,14 +88,20 @@ class TurbiniaRequest:
     if json_values:
       if evidence_list := serializable.pop('evidence'):
         if not serializable.get('original_evidence') and len(evidence_list) > 0:
-          serializable['original_evidence'] = {'name': evidence_list[0].name,
-                                              'id': evidence_list[0].id}
+          serializable['original_evidence'] = {
+              'name': evidence_list[0].name,
+              'id': evidence_list[0].id
+          }
         serializable['evidence_ids'] = [
             evidence.id for evidence in evidence_list
         ]
       serialized = {}
       try:
         for attribute_name, attribute_value in serializable.items():
+          #print(f'Serializing {attribute_name}:{attribute_value}')
+          #if attribute_name == 'last_update' or attribute_name == 'start_time':
+          #  attribute_value = datetime.strftime(
+          #      attribute_value, DATETIME_FORMAT)
           serialized[attribute_name] = json.dumps(attribute_value)
       except TypeError as exception:
         msg = (

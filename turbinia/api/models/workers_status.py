@@ -26,7 +26,7 @@ from typing import ClassVar
 from turbinia import state_manager
 from turbinia import config as turbinia_config
 
-log = logging.getLogger('turbinia:api_server:models:workers_status')
+log = logging.getLogger(__name__)
 
 
 class WorkersInfo(BaseModel):

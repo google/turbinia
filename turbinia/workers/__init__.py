@@ -14,8 +14,6 @@
 # limitations under the License.
 """Turbinia task."""
 
-from __future__ import unicode_literals
-
 from copy import deepcopy
 from datetime import datetime
 from datetime import timedelta
@@ -118,7 +116,7 @@ class TurbiniaTaskResult:
   # The list of attributes that we will persist into storage
   STORED_ATTRIBUTES = [
       'worker_name', 'report_data', 'report_priority', 'run_time', 'status',
-      'saved_paths', 'successful'
+      'saved_paths', 'successful', 'evidence_size'
   ]
 
   def __init__(
@@ -135,7 +133,6 @@ class TurbiniaTaskResult:
     self.job_id = job_id
     self.base_output_dir = base_output_dir
     self.request_id = request_id
-
     self.task_id = None
     self.task_name = None
     self.requester = None
@@ -253,7 +250,7 @@ class TurbiniaTaskResult:
             self.input_evidence.name, exception)
         self.log(
             message, level=logging.ERROR, traceback_=traceback.format_exc())
-        with filelock.FileLock(config.RESOURCE_FILE_LOCK):
+        with filelock.FileLock(config.CONFIG.RESOURCE_FILE_LOCK):
           resource_manager.PostProcessResourceState(
               self.input_evidence.resource_id, self.task_id)
     else:
@@ -332,6 +329,8 @@ class TurbiniaTaskResult:
       task.result.status = 'Task {0!s} is {1!s} on {2!s}'.format(
           self.task_name, status, self.worker_name)
     if self.state_manager:
+      log.info(
+          f'update_task_status() updating task {task.id} with status {status}')
       self.state_manager.update_task(task)
     else:
       self.log(
@@ -356,7 +355,7 @@ class TurbiniaTaskResult:
       return
 
     # We want to enforce this here to make sure that any new Evidence objects
-    # created also contain the config.  We could create a closure to do this
+    # created also contain theconfig.  We could create a closure to do this
     # automatically, but the real fix is to attach this to a separate object.
     # See https://github.com/google/turbinia/issues/211 for more details.
     evidence.config = evidence_config
@@ -449,14 +448,13 @@ class TurbiniaTask:
             no recipe is explicitly provided for the task.
       group_name (str): group name for the evidence
       reason (str): reason of the evidence
-      all_args (str): Terminal arguments input by user for evidence
   """
 
   # The list of attributes that we will persist into storage
   STORED_ATTRIBUTES = [
       'id', 'job_id', 'start_time', 'last_update', 'name', 'evidence_name',
       'evidence_id', 'evidence_size', 'request_id', 'requester', 'group_name',
-      'reason', 'all_args', 'group_id'
+      'reason', 'group_id'
   ]
 
   # The list of evidence states that are required by a Task in order to run.
@@ -469,7 +467,7 @@ class TurbiniaTask:
 
   def __init__(
       self, name=None, base_output_dir=None, request_id=None, requester=None,
-      group_name=None, reason=None, all_args=None, group_id=None):
+      group_name=None, reason=None, group_id=None):
     """Initialization for TurbiniaTask.
 
     Args:
@@ -508,7 +506,6 @@ class TurbiniaTask:
     self.task_config = {}
     self.group_name = group_name
     self.reason = reason
-    self.all_args = all_args
     self.group_id = group_id
 
   def serialize(self):
@@ -542,6 +539,7 @@ class TurbiniaTask:
     Returns:
       bool: If the current execution is in a worker or nosetests.
     """
+    config.LoadConfig()
     if config.TURBINIA_COMMAND in ('celeryworker', 'psqworker'):
       return True
 
@@ -563,6 +561,7 @@ class TurbiniaTask:
     evidence.validate()
     evidence.preprocess(
         self.id, tmp_dir=self.tmp_dir, required_states=self.REQUIRED_STATES)
+    self.evidence_name = evidence.name
     self.evidence_id = evidence.id
     self.evidence_size = evidence.size
 
@@ -1022,7 +1021,8 @@ class TurbiniaTask:
     try:
       evidence = evidence_decode(evidence)
       self.result = self.setup(evidence)
-      self.result.update_task_status(self, 'queued')
+      #log.info(f'run_wrapper updating task status queued')
+      #self.result.update_task_status(self, 'queued')
       turbinia_worker_tasks_queued_total.inc()
       task_runtime_metrics = self.get_metrics()
     except TurbiniaException as exception:
@@ -1062,6 +1062,7 @@ class TurbiniaTask:
           return self.result.serialize()
 
         self.evidence_setup(evidence)
+        self.result.evidence_size = evidence.size
 
         if config.VERSION_CHECK:
           if self.turbinia_version != __version__:
@@ -1073,7 +1074,8 @@ class TurbiniaTask:
             self.result.successful = False
             return self.result.serialize()
 
-        self.result.update_task_status(self, 'running')
+        #log.info(f'run_wrapper updating task status running')
+        #self.result.update_task_status(self, 'running')
         self._evidence_config = evidence.config
         self.task_config = self.get_task_recipe(evidence.config)
         self.worker_start_time = datetime.now()
@@ -1098,8 +1100,9 @@ class TurbiniaTask:
           log.error('No TurbiniaTaskResult object found after task execution.')
 
     self.result = self.validate_result(self.result)
-    if self.result:
-      self.result.update_task_status(self)
+    #if self.result:
+    #  log.info(f'run_wrapper updating task status end')
+    #  self.result.update_task_status(self)
 
     # Trying to close the result if possible so that we clean up what we can.
     # This has a higher likelihood of failing because something must have gone

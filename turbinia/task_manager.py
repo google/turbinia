@@ -14,8 +14,6 @@
 # limitations under the License.
 """Task manager for Turbinia."""
 
-from __future__ import unicode_literals, absolute_import
-
 import logging
 from copy import deepcopy
 from datetime import datetime
@@ -408,11 +406,11 @@ class BaseTaskManager:
 
     evidence_.config = job.evidence.config
     task.evidence_name = evidence_.name
+    task.evidence_id = evidence_.id
     task.base_output_dir = config.OUTPUT_DIR
     task.requester = evidence_.config.get('globals', {}).get('requester')
     task.group_name = evidence_.config.get('globals', {}).get('group_name')
     task.reason = evidence_.config.get('globals', {}).get('reason')
-    task.all_args = evidence_.config.get('globals', {}).get('all_args')
     task.group_id = evidence_.config.get('globals', {}).get('group_id')
     if job:
       task.job_id = job.id
@@ -498,17 +496,17 @@ class BaseTaskManager:
 
     if not task_result.successful:
       log.error(
-          f'Task {task_result.task_name} from {task_result.worker_name} '
-          f'was not successful')
+          f'Task {task_result.task_id} {task_result.task_name} '
+          f'from {task_result.worker_name} was not successful')
     else:
       log.info(
-          f'Task {task_result.task_name} from {task_result.worker_name} '
-          f'executed with status [{task_result.status}]')
+          f'Task {task_result.task_id} {task_result.task_name} '
+          f'from {task_result.worker_name} executed with status [{task_result.status}]')
 
     if not isinstance(task_result.evidence, list):
       log.warning(
-          f'Task {task_result.task_name} from {task_result.worker_name} '
-          f'did not return evidence list')
+          f'Task {task_result.task_id} {task_result.task_name} '
+          f'from {task_result.worker_name}did not return evidence list')
       task_result.evidence = []
 
     job = self.get_job(task_result.job_id)
@@ -704,7 +702,7 @@ class CeleryTaskManager(BaseTaskManager):
     evidence_list = []
     for request in requests:
       self.state_manager.write_request(
-          deepcopy(request.to_json(json_values=True))) 
+          deepcopy(request.to_json(json_values=True)))
       for evidence_ in request.evidence:
         if not evidence_.request_id:
           evidence_.request_id = request.request_id
@@ -722,7 +720,6 @@ class CeleryTaskManager(BaseTaskManager):
           evidence_.config['globals']['requester'] = request.requester
           evidence_.config['globals']['group_name'] = request.group_name
           evidence_.config['globals']['reason'] = request.reason
-          evidence_.config['globals']['all_args'] = request.all_args
 
           # A recipe could contain a group_id key so that tasks can be grouped
           # together, but this is optional. If the recipe doesn't specify a
@@ -741,7 +738,7 @@ class CeleryTaskManager(BaseTaskManager):
 
   def enqueue_task(self, task, evidence_):
     log.info(
-        f'Adding Celery task {task.name:s} with evidence  {evidence_.name:s}'
+        f'Adding Celery task {task.name:s} with evidence {evidence_.name:s}'
         f' to queue')
     task.stub = self.celery_runner.delay(
         task.serialize(), evidence_.serialize())

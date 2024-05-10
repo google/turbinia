@@ -38,7 +38,7 @@ log = logging.getLogger(__name__)
     show_default=True, show_envvar=True, type=str,
     default=lambda: os.environ.get('TURBINIA_CONFIG_INSTANCE', 'default'))
 @click.option(
-    '--config_path', '-p', help='Path to the .turbinia_api_config.json file..',
+    '--config_path', '-p', help='Path to the .turbinia_api_config.json file.',
     show_default=True, show_envvar=True, type=str,
     default=lambda: os.environ.get('TURBINIA_API_CONFIG_PATH', '~'))
 @click.pass_context

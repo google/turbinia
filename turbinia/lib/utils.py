@@ -14,8 +14,6 @@
 # limitations under the License.
 """Common utils."""
 
-from __future__ import unicode_literals
-
 import logging
 import os
 import subprocess
