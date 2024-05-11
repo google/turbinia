@@ -48,10 +48,11 @@ async def web(request: Request):
     '/assets/{catchall:path}', name='assets', include_in_schema=False)
 async def serve_assets(request: Request):
   """Serves assets content."""
-  static_content_path = pathlib.Path(_config.WEBUI_PATH).joinpath('dist/assets')
-  path = request.path_params['catchall']
-  file = static_content_path.joinpath(path)
-  if os.path.exists(file):
-    return FileResponse(file)
+  web_root_path = pathlib.Path(_config.WEBUI_PATH).joinpath('dist/assets')
+  requested_path = request.path_params['catchall']
+  absolute_path = web_root_path.joinpath(requested_path).resolve()
+  if os.path.exists(absolute_path) and absolute_path.is_relative_to(
+      web_root_path) and absolute_path.is_file():
+    return FileResponse(absolute_path)
 
   raise HTTPException(status_code=404, detail='Not found')
