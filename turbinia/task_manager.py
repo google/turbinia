@@ -46,8 +46,11 @@ log = logging.getLogger(__name__)
 # Job/Task timeout value before it times out a given Task. This is to make sure
 # that the Server doesn't time out the Task before the Worker has a chance to
 # and should account for the Task scheduling and setup time that happens before
-# the Task starts.
-SERVER_TASK_TIMEOUT_BUFFER = 86400
+# the Task starts.  This time will be measured from the time the task is
+# enqueue'd, not from when it actually starts on the worker so if there is a
+# long wait for tasks to be executed they could potentially be timed out before
+# even getting a chance to start so this limit is set conservatively high.
+SERVER_TASK_TIMEOUT_BUFFER = 7200
 
 # Define metrics
 turbinia_server_tasks_total = Counter(
@@ -177,7 +180,7 @@ class BaseTaskManager:
     continue, an AbortTask will be created with the error message and is written
     directly to the state database. This way the client will get a reasonable
     error in response to the failure.
-    
+
     Args:
       request_id(str): The request ID.
       requester(str): The username of the requester.
@@ -418,7 +421,8 @@ class BaseTaskManager:
       task.job_name = job.name
       job.tasks.append(task)
     self.state_manager.write_new_task(task)
-    self.enqueue_task(task, evidence_)
+    timeout_limit = jobs_manager.JobsManager.GetTimeoutValue(task.job_name)
+    self.enqueue_task(task, evidence_, timeout_limit)
     turbinia_server_tasks_total.inc()
     if task.id not in evidence_.tasks:
       evidence_.tasks.append(task.id)
@@ -456,12 +460,13 @@ class BaseTaskManager:
       turbinia_jobs_completed_total.inc()
     return bool(remove_job)
 
-  def enqueue_task(self, task, evidence_):
+  def enqueue_task(self, task, evidence_, timeout_limit):
     """Enqueues a task and evidence in the implementation specific task queue.
 
     Args:
       task: An instantiated Turbinia Task
       evidence_: An Evidence object to be processed.
+      timeout_limit(int): The timeout for the Task in seconds.
     """
     raise NotImplementedError
 
@@ -483,10 +488,10 @@ class BaseTaskManager:
     """
     if task_result.successful is None:
       log.error(
-          f'''Task {task_result.task_name} from {task_result.worker_name}  
-          returned invalid success status "None". Setting this to False 
-          so the client knows the Task is complete. Usually this means 
-          that the Task returning the TurbiniaTaskResult did not call 
+          f'''Task {task_result.task_name} from {task_result.worker_name}
+          returned invalid success status "None". Setting this to False
+          so the client knows the Task is complete. Usually this means
+          that the Task returning the TurbiniaTaskResult did not call
           the close() method on it.
         ''')
       turbinia_result_success_invalid.inc()
@@ -737,9 +742,23 @@ class CeleryTaskManager(BaseTaskManager):
 
     return evidence_list
 
-  def enqueue_task(self, task, evidence_):
+  def enqueue_task(self, task, evidence_, timeout):
     log.info(
         f'Adding Celery task {task.name:s} with evidence  {evidence_.name:s}'
-        f' to queue')
-    task.stub = self.celery_runner.delay(
-        task.serialize(), evidence_.serialize())
+        f' to queue with timeout {timeout}')
+    self.celery_runner.max_retries = 0
+    # https://docs.celeryq.dev/en/stable/userguide/configuration.html#task-time-limit
+    # Hard limit in seconds, the worker processing the task will be killed and
+    # replaced with a new one when this is exceeded.
+    self.celery_runner.task_time_limit = 60
+    # TODO: change tiemouts to be between client and server timeouts.
+    # TODO: check exception in client and handle
+    # TODO: Add time to expire to account for scheduling wait
+    # Time limits described here:
+    #     https://docs.celeryq.dev/en/stable/userguide/workers.html#time-limits
+    # task.stub = self.celery_runner.apply_async(
+    #     (task.serialize(), evidence_.serialize()), retry=False,
+    #     soft_time_limit=30, time_limit=60, expires=timeout)
+    task.stub = self.celery_runner.apply_async(
+        (task.serialize(), evidence_.serialize()), retry=False,
+        time_limit=60, expires=timeout)

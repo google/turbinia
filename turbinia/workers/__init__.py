@@ -27,6 +27,8 @@ import os
 import pickle
 import platform
 import pprint
+import psutil
+import signal
 import subprocess
 import sys
 import tempfile
@@ -692,6 +694,15 @@ class TurbiniaTask:
               env=env, text=True, encoding="utf-8")
           stdout, stderr = proc.communicate(timeout=timeout_limit)
       except subprocess.TimeoutExpired as exception:
+        result.log(
+            'Job {0:s} with Task {1:s} has reached timeout limit of {2:d} so '
+            'killing child processes.'.format(
+                self.job_id, self.id, timeout_limit))
+        # Kill child processes and parent process so we can return, otherwise
+        # communicate() will hang waiting for the grand-children to be reaped.
+        psutil_proc = psutil.Process(proc.pid)
+        for child in psutil_proc.children(recursive=True):
+            child.send_signal(signal.SIGKILL)
         proc.kill()
         # Get any potential partial output so we can save it later.
         stdout, stderr = proc.communicate()
@@ -877,7 +888,7 @@ class TurbiniaTask:
 
   def check_serialization_errors(self, result):
     """Checks the TurbiniaTaskResult is valid for serialization.
-    
+
     This method checks the 'result'' object is the correct type and whether
     it is pickle/JSON serializable or not.
 

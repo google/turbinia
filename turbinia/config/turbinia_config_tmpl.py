@@ -155,7 +155,7 @@ DOCKER_ENABLED = False
 # still be enabled with the --jobs_allowlist flag on the server, but the client
 # will not be able to allowlist jobs that have been disabled or denylisted on
 # the server.
-DISABLED_JOBS = ['BinaryExtractorJob', 'BulkExtractorJob', 'DfdeweyJob', 'HindsightJob', 'PhotorecJob']  # yapf: disable
+DISABLED_JOBS = ['VolatilityJob', 'BinaryExtractorJob', 'BulkExtractorJob', 'DfdeweyJob', 'HindsightJob', 'PhotorecJob']  # yapf: disable
 
 # Configure additional job dependency checks below.
 DEPENDENCIES = [{
@@ -232,7 +232,7 @@ DEPENDENCIES = [{
     'job': 'PlasoJob',
     'programs': ['log2timeline', 'pinfo'],
     'docker_image': None,
-    'timeout': 86400
+    'timeout': 600
 }, {
     'job': 'PhotorecJob',
     'programs': ['photorec'],
@@ -351,7 +351,7 @@ EMAIL_PASSWORD = 'Hunter2'
 # These options are required for customizing the prometheus configuration
 ###############################################################################
 # This will enable the Prometheus service for the workers and server.
-PROMETHEUS_ENABLED = True
+PROMETHEUS_ENABLED = False
 
 # Prometheus listen address and port
 PROMETHEUS_ADDR = '0.0.0.0'
