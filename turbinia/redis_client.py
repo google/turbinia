@@ -274,17 +274,11 @@ class RedisClient:
     Raises:
       TurbiniaException: if there was an error writing the key.
     """
-    log.info(f'Updating key {redis_key}')
-    fields_set = 0
+    log.debug(f'Updating key {redis_key}')
     try:
-      fields_set = self.client.hset(redis_key, mapping=object_dict)
-      log.info(f'Updated {fields_set} attributes for key {redis_key}')
+      self.client.hset(redis_key, mapping=object_dict)
     except redis.RedisError as exception:
       error_message = f'Error writing {redis_key}'
       log.error(f'{error_message}: {exception}')
       raise TurbiniaException(error_message) from exception
-
-    if not fields_set:
-      log.debug(f'No fields were updated for {redis_key}')
-
     return redis_key

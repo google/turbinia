@@ -77,4 +77,3 @@ def submit_group(ctx: click.Context):
   of available evidence types.
   """
   ctx.invoke(setup_submit)
-  click.echo(submit_group.get_help(ctx))

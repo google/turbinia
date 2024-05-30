@@ -317,25 +317,6 @@ class TurbiniaTaskResult:
     if traceback_:
       self.set_error(message, traceback_)
 
-  def update_task_status(self, task, status=None):
-    """Updates the task status and pushes it directly to datastore.
-
-    Args:
-      task (TurbiniaTask): The calling Task object
-      status (str): Brief word or phrase for Task state. If not supplied, the
-          existing Task status will be used.
-    """
-    if status:
-      task.result.status = 'Task {0!s} is {1!s} on {2!s}'.format(
-          self.task_name, status, self.worker_name)
-    if self.state_manager:
-      log.info(
-          f'update_task_status() updating task {task.id} with status {status}')
-      self.state_manager.update_task(task)
-    else:
-      self.log(
-          'No state_manager initialized, not updating Task info', logging.DEBUG)
-
   def add_evidence(self, evidence, evidence_config):
     """Populate the results list.
 
@@ -405,7 +386,7 @@ class TurbiniaTaskResult:
     result = TurbiniaTaskResult()
     result.__dict__.update(input_dict)
     if result.state_manager:
-      result.state_manager = None
+      result.state_manager = state_manager.get_state_manager()
     if result.run_time:
       result.run_time = timedelta(seconds=result.run_time)
     if result.input_evidence:
@@ -492,6 +473,7 @@ class TurbiniaTask:
     self.evidence_size = None
     self.output_dir = None
     self.output_manager = output_manager.OutputManager()
+    self.state_manager = state_manager.get_state_manager()
     self.result = None
     self.request_id = request_id
     self.state_key = None
@@ -507,6 +489,7 @@ class TurbiniaTask:
     self.group_name = group_name
     self.reason = reason
     self.group_id = group_id
+    self.worker_name = platform.node()
 
   def serialize(self):
     """Converts the TurbiniaTask object into a serializable dict.
@@ -514,6 +497,7 @@ class TurbiniaTask:
     Returns:
       Dict: Dictionary representing this object, ready to be serialized.
     """
+    self.state_manager = None
     task_copy = deepcopy(self.__dict__)
     task_copy['output_manager'] = self.output_manager.__dict__
     task_copy['last_update'] = self.last_update.strftime(DATETIME_FORMAT)
@@ -1021,8 +1005,7 @@ class TurbiniaTask:
     try:
       evidence = evidence_decode(evidence)
       self.result = self.setup(evidence)
-      #log.info(f'run_wrapper updating task status queued')
-      #self.result.update_task_status(self, 'queued')
+      self.update_task_status(self, 'queued')
       turbinia_worker_tasks_queued_total.inc()
       task_runtime_metrics = self.get_metrics()
     except TurbiniaException as exception:
@@ -1074,8 +1057,7 @@ class TurbiniaTask:
             self.result.successful = False
             return self.result.serialize()
 
-        #log.info(f'run_wrapper updating task status running')
-        #self.result.update_task_status(self, 'running')
+        self.update_task_status(self, 'running')
         self._evidence_config = evidence.config
         self.task_config = self.get_task_recipe(evidence.config)
         self.worker_start_time = datetime.now()
@@ -1100,9 +1082,6 @@ class TurbiniaTask:
           log.error('No TurbiniaTaskResult object found after task execution.')
 
     self.result = self.validate_result(self.result)
-    #if self.result:
-    #  log.info(f'run_wrapper updating task status end')
-    #  self.result.update_task_status(self)
 
     # Trying to close the result if possible so that we clean up what we can.
     # This has a higher likelihood of failing because something must have gone
@@ -1155,3 +1134,22 @@ class TurbiniaTask:
         TurbiniaTaskResult object.
     """
     raise NotImplementedError
+
+  def update_task_status(self, task, status=None):
+    """Updates the task status and pushes it directly to datastore.
+
+    Args:
+      task (TurbiniaTask): The calling Task object
+      status (str): Brief word or phrase for Task state. If not supplied, the
+          existing Task status will be used.
+    """
+    if status:
+      task.status = 'Task {0!s} is {1!s} on {2!s}'.format(
+          self.name, status, self.worker_name)
+    if not self.state_manager:
+      self.state_manager = state_manager.get_state_manager()
+    if self.state_manager:
+      self.state_manager.redis_client.set_attribute(
+          f'TurbiniaTask:{task.id}', 'status', json.dumps(status))
+    else:
+      log.info('No state_manager initialized, not updating Task info')

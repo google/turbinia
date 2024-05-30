@@ -245,7 +245,8 @@ class RedisStateManager(BaseStateManager):
     # If no task_id or request_id is passed, gets all valid saved tasks
     else:
       task_ids = [
-          task_key.split(':')[1] for task_key in self.iterate_keys('Task')
+          task_key.split(':')[1]
+          for task_key in self.redis_client.iterate_keys('Task')
       ]
 
     tasks = []

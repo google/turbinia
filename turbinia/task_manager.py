@@ -501,7 +501,8 @@ class BaseTaskManager:
     else:
       log.info(
           f'Task {task_result.task_id} {task_result.task_name} '
-          f'from {task_result.worker_name} executed with status [{task_result.status}]')
+          f'from {task_result.worker_name} executed with status [{task_result.status}]'
+      )
 
     if not isinstance(task_result.evidence, list):
       log.warning(

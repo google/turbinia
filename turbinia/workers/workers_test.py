@@ -104,7 +104,7 @@ class TestTurbiniaTaskBase(unittest.TestCase):
 
     self.result.input_evidence = evidence.RawDisk()
     self.result.status = 'TestStatus'
-    self.result.update_task_status = mock.MagicMock()
+    self.update_task_status = mock.MagicMock()
     self.result.close = mock.MagicMock()
     self.task.setup = mock.MagicMock(return_value=setup)
     self.result.worker_name = 'worker1'

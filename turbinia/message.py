@@ -60,16 +60,11 @@ class TurbiniaRequest:
     self.group_name = group_name if group_name else ''
     self.reason = reason if reason else ''
     self.successful_tasks = []
-    self.successful_tasks_cnt = 0
     self.failed_tasks = []
-    self.failed_tasks_cnt = 0
     self.queued_tasks = []
-    self.queued_tasks_cnt = 0
     self.running_tasks = []
-    self.running_tasks_cnt = 0
     self.status = ''
     self.task_ids = []
-    self.total_tasks = 0
     self.last_update = datetime.now().strftime(DATETIME_FORMAT)
     self.start_time = datetime.now().strftime(DATETIME_FORMAT)
     self.type = self.__class__.__name__
