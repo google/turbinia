@@ -92,7 +92,7 @@ class TurbiniaCli:
 
     if self.id_token:
       log.debug('Using user provided id_token')
-      # Class attributeconfig.access_token is not changed to id_token to not
+      # Class attribute config.access_token is not changed to id_token to not
       # break OpenAPIs config automation.
       self.config.access_token = self.id_token
     elif self.api_authentication_enabled:

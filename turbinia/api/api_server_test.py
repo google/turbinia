@@ -35,7 +35,6 @@ from turbinia import config as turbinia_config
 from turbinia import state_manager
 from turbinia.jobs import manager as jobs_manager
 from turbinia.workers import TurbiniaTask
-from turbinia.message import TurbiniaRequest
 
 
 class testTurbiniaAPIServer(unittest.TestCase):
@@ -184,17 +183,13 @@ class testTurbiniaAPIServer(unittest.TestCase):
 
   _COUNT_SUMMARY = 3
 
-  def _get_state_manager(self):
-    """Gets a Redis State Manager object for test."""
-    turbinia_config.STATE_MANAGER = 'Redis'
-    # force state_manager module to reload using Redis state manager.
-    importlib.reload(state_manager)
-    return state_manager.get_state_manager()
-
-  def setUp(self):
-    """Set up necessary objects."""
+  @mock.patch('redis.StrictRedis')
+  @mock.patch('turbinia.state_manager.get_state_manager')
+  def setUp(self, _, mock_redis):
     self.client = TestClient(app)
-    self.state_manager = self._get_state_manager()
+    mock_redis = fakeredis.FakeStrictRedis()
+    self.state_manager = state_manager.get_state_manager()
+    self.state_manager.redis_client.client = mock_redis
 
   def testWebRoutes(self):
     """Test Web UI routes."""
@@ -332,21 +327,36 @@ class testTurbiniaAPIServer(unittest.TestCase):
     result = json.loads(result.content)
     self.assertEqual(expected_result, result)
 
+  @mock.patch('turbinia.state_manager.RedisStateManager.get_request_data')
   @mock.patch('turbinia.state_manager.RedisStateManager.get_task_data')
-  def testRequestEvidenceNoArgs(self, testTaskData):
+  @mock.patch('turbinia.redis_client.RedisClient.iterate_keys')
+  @mock.patch('turbinia.redis_client.RedisClient.key_exists')
+  def testRequestEvidenceNoArgs(
+      self, testKeyExists, testIterateKeys, testTaskData, testRequestData):
     """Test getting Turbinia Request evidence name."""
-    redis_client = fakeredis.FakeStrictRedis()
+    redis_client = self.state_manager.redis_client.client
+    input_request = self._REQUEST_TEST_DATA
     input_task = TurbiniaTask().deserialize(self._TASK_TEST_DATA)
     input_task_serialized = input_task.serialize()
     expected_result = self._REQUEST_STATUS_TEST_DATA['evidence_name']
+    testIterateKeys.return_value = [
+        f'TurbiniaRequest:{self._REQUEST_TEST_DATA.get("request_id")}'
+    ]
+    testKeyExists.return_value = True
+    redis_client.set(
+        'TurbiniaRequest:41483253079448e59685d88f37ab91f7',
+        json.dumps(input_request))
 
     redis_client.set(
-        'TurbiniaTask:41483253079448e59685d88f37ab91f7',
+        'TurbiniaTask:c8f73a5bc5084086896023c12c7cc026',
         json.dumps(input_task_serialized))
+
+    testRequestData.return_value = json.loads(
+        redis_client.get('TurbiniaRequest:41483253079448e59685d88f37ab91f7'))
 
     testTaskData.return_value = [
         json.loads(
-            redis_client.get('TurbiniaTask:41483253079448e59685d88f37ab91f7'))
+            redis_client.get('TurbiniaTask:c8f73a5bc5084086896023c12c7cc026'))
     ]
 
     result = self.client.get('/api/request/summary')
@@ -354,13 +364,17 @@ class testTurbiniaAPIServer(unittest.TestCase):
     evidence_name = result['requests_status'][0]['evidence_name']
     self.assertEqual(expected_result, evidence_name)
 
+  @mock.patch('turbinia.state_manager.RedisStateManager.get_request_data')
   @mock.patch('turbinia.state_manager.RedisStateManager.get_task_data')
-  def testRequestNotFound(self, testTaskData):
+  @mock.patch('turbinia.redis_client.RedisClient.key_exists')
+  def testRequestNotFound(self, testKeyExists, testTaskData, testRequestData):
     """Test getting invalid Turbinia Request status."""
     expected_result = {
         'detail': 'Request ID not found or the request had no associated tasks.'
     }
     testTaskData.return_value = []
+    testRequestData.return_value = self._REQUEST_TEST_DATA
+    testKeyExists.return_value = False
     result = self.client.get(
         f"/api/request/{self._REQUEST_STATUS_TEST_DATA.get('request_id')}")
     result = json.loads(result.content)

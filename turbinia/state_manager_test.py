@@ -73,14 +73,11 @@ class TestRedisStateManager(unittest.TestCase):
   def setUp(self, _, mock_redis):
     self.state_manager = None
     config.LoadConfig()
-    self.state_manager_save = config.STATE_MANAGER
-
     mock_redis = fakeredis.FakeStrictRedis()
     config.STATE_MANAGER = 'Redis'
     # force state_manager module to reload using Redis state manager.
     importlib.reload(state_manager)
     self.state_manager = state_manager.get_state_manager()
-    #self.state_manager.set_client(mock_redis)
     self.state_manager.redis_client.client = mock_redis
 
     self.get_evidence_data()

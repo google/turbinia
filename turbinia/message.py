@@ -93,10 +93,6 @@ class TurbiniaRequest:
       serialized = {}
       try:
         for attribute_name, attribute_value in serializable.items():
-          #print(f'Serializing {attribute_name}:{attribute_value}')
-          #if attribute_name == 'last_update' or attribute_name == 'start_time':
-          #  attribute_value = datetime.strftime(
-          #      attribute_value, DATETIME_FORMAT)
           serialized[attribute_name] = json.dumps(attribute_value)
       except TypeError as exception:
         msg = (
