@@ -32,8 +32,8 @@ limitations under the License.
         <v-spacer></v-spacer>
       </v-card-title>
       <v-data-table :headers="headers" :items="requestSummary" :search="search" density="compact"
-        :footer-props="{ itemsPerPageOptions: [10, 20, 40, -1] }" :loading="isLoading" :sort-by="sortBy" show-expand
-        hover>
+        item-value="request_id" :footer-props="{ itemsPerPageOptions: [10, 20, 40, -1] }" :loading="isLoading"
+        :sort-by="sortBy" show-expand hover>
         <template v-slot:[`item.status`]="{ item }">
           <div v-if="item.status === 'successful'">
             <v-tooltip text="Completed successfully">
