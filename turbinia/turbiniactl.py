@@ -165,7 +165,7 @@ def process_args(args):
   # Print out config if requested
   if args.command == 'config':
     if args.file_only:
-      log.info(f'Config file path is {config.Source:s}\n')
+      log.info(f'Config file path is {config.configSource:s}\n')
       sys.exit(0)
     try:
       with open(config.configSource, 'r', encoding='utf-8') as f:
