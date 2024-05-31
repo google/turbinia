@@ -38,7 +38,7 @@ limitations under the License.
               </v-list-item-action>
             </div>
             <v-list-item>
-              {{ item.task_name }} {{ item.task_status }}
+              {{ item.task_name }} {{ $filters.truncate(item.task_status, 128, '...') }}
             </v-list-item>
           </v-list-item>
           <v-divider> </v-divider>
@@ -73,13 +73,13 @@ export default {
           for (const task in data) {
             let task_dict = data[task]
             taskList.push({
-              //task_name: task_dict.name,
+              task_name: task_dict.name,
               task_id: task_dict.id,
               task_status: task_dict.status,
-              //task_success: task_dict.successful,
-              //evidence_name: task_dict.evidence_name,
-              //evidence_id: task_dict.evidence_id,
-              //evidence_size: task_dict.evidence_size,
+              task_success: task_dict.successful,
+              evidence_name: task_dict.evidence_name,
+              evidence_id: task_dict.evidence_id,
+              evidence_size: task_dict.evidence_size,
             })
           }
           this.taskList = taskList

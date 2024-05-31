@@ -66,7 +66,7 @@ class testTurbiniaAPIServer(unittest.TestCase):
   _REQUEST_TEST_DATA = {
       'group_name': '',
       'evidence_ids': ["084d5904f3d2412b99dc29ed34853a16"],
-      'status': 'Task scheduled at 2022-04-01T19:15:14.791074Z',
+      'status': 'successful',
       'type': 'TurbiniaRequest',
       'running_tasks': [],
       'context': {},
@@ -263,6 +263,7 @@ class testTurbiniaAPIServer(unittest.TestCase):
   @mock.patch('turbinia.redis_client.RedisClient.key_exists')
   def testRequestStatus(self, testKeyExists, testTaskData, testRequestData):
     """Test getting Turbinia Request status."""
+    self.maxDiff = None
     redis_client = fakeredis.FakeStrictRedis()
     input_task = TurbiniaTask().deserialize(self._TASK_TEST_DATA)
     input_task_serialized = input_task.serialize()
@@ -299,6 +300,7 @@ class testTurbiniaAPIServer(unittest.TestCase):
   def testRequestSummary(
       self, testIterateKeys, testKeyExists, testTaskData, testRequestData):
     """Test getting Turbinia Request status summary."""
+    self.maxDiff = None
     redis_client = fakeredis.FakeStrictRedis()
     expected_result = self._REQUEST_STATUS_SUMMARY_DATA.copy()
     expected_result = {'requests_status': [self._REQUEST_STATUS_SUMMARY_DATA]}
@@ -404,7 +406,7 @@ class testTurbiniaAPIServer(unittest.TestCase):
         response.json(), {
             'detail':
                 f'UUID {evidence_id} not found or it had no associated '
-                f'evidences.'
+                f'evidence.'
         })
 
   @mock.patch('turbinia.api.routes.evidence.redis_manager.get_evidence_summary')

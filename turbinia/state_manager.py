@@ -337,14 +337,9 @@ class RedisStateManager(BaseStateManager):
       task_dict: A dictionary containing updated task metadata.
     """
     task_dict = self.get_task_dict(task)
-    #task_dict['last_update'] = task_dict['last_update']
-    #task_dict['start_time'] = task_dict['start_time']
     task_dict['last_update'] = task_dict['last_update'].strftime(
         DATETIME_FORMAT)
     task_dict['start_time'] = task_dict['start_time'].strftime(DATETIME_FORMAT)
-    #if not task_dict.get('status'):
-    #  task_dict['status'] = (
-    #      f'Task scheduled at {datetime.now().strftime(DATETIME_FORMAT)}')
     if task_dict['run_time']:
       task_dict['run_time'] = task_dict['run_time'].total_seconds()
     for key, value in task_dict.items():
