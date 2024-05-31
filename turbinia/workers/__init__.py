@@ -231,7 +231,7 @@ class TurbiniaTaskResult:
             'The text_data attribute has a size {0:d} larger than the max '
             'size {1:d} so truncating the response.'.format(
                 len(evidence.text_data), REPORT_MAXSIZE))
-        self.log(message, logging.WARN)
+        self.log(message, logging.WARNING)
         evidence.text_data = evidence.text_data[:REPORT_MAXSIZE] + '\n'
         evidence.text_data += message
 
@@ -307,8 +307,8 @@ class TurbiniaTaskResult:
       log.debug(message)
     elif level == logging.INFO:
       log.info(message)
-    elif level == logging.WARN:
-      log.warn(message)
+    elif level == logging.WARNING:
+      log.warning(message)
     elif level == logging.ERROR:
       log.error(message)
     elif level == logging.CRITICAL:

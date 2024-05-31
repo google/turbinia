@@ -79,6 +79,7 @@ class RequestStatus(BaseModel):
 
     return bool(self.tasks)
 
+
 class RequestsSummary(BaseModel):
   """Represents a summary view of multiple Turbinia requests."""
   requests_status: List[RequestStatus] = []
