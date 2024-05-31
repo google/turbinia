@@ -27,8 +27,8 @@ class Request(BaseModel):
     Base request object.   # noqa: E501
     """
     description: Optional[StrictStr] = 'Turbinia request object'
-    evidence: Dict[str, Any] = Field(..)
-    request_options: BaseRequestOptions = Field(..)
+    evidence: Dict[str, Any] = Field(...)
+    request_options: BaseRequestOptions = Field(...)
     __properties = ["description", "evidence", "request_options"]
 
     class Config:
