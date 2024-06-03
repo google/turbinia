@@ -50,7 +50,18 @@ log = logging.getLogger(__name__)
 # enqueue'd, not from when it actually starts on the worker so if there is a
 # long wait for tasks to be executed they could potentially be timed out before
 # even getting a chance to start so this limit is set conservatively high.
-SERVER_TASK_TIMEOUT_BUFFER = 7200
+SERVER_TASK_TIMEOUT_BUFFER = 14400 # 4hr
+# Amount of buffer time to give between task timeout and the celery soft timeout
+# as we'd prefer for the task to timeout itself if possible so it has the most
+# control over setting the correct results.  This should be caught in the
+# `TurbiniaTask.run_wrapper()`.
+CELERY_SOFT_TIMEOUT_BUFFER = 120
+# Buffer time between task timeout and the hard celery timeout.  The hard
+# timeout cannot be caught by the worker so we want to give the task timeout and
+# soft timeout a chance for a graceful exit before falling back to this.
+# Because the worker is killed it will not send any results back to the server
+# and the server will have to time out the task there.
+CELERY_HARD_TIMEOUT_BUFFER = 240
 
 # Define metrics
 turbinia_server_tasks_total = Counter(
@@ -750,15 +761,12 @@ class CeleryTaskManager(BaseTaskManager):
     # https://docs.celeryq.dev/en/stable/userguide/configuration.html#task-time-limit
     # Hard limit in seconds, the worker processing the task will be killed and
     # replaced with a new one when this is exceeded.
-    self.celery_runner.task_time_limit = 60
-    # TODO: change tiemouts to be between client and server timeouts.
-    # TODO: check exception in client and handle
-    # TODO: Add time to expire to account for scheduling wait
+    celery_soft_timeout = timeout + CELERY_SOFT_TIMEOUT_BUFFER
+    celery_hard_timeout = timeout + CELERY_HARD_TIMEOUT_BUFFER
+    self.celery_runner.task_time_limit = celery_hard_timeout
     # Time limits described here:
     #     https://docs.celeryq.dev/en/stable/userguide/workers.html#time-limits
-    # task.stub = self.celery_runner.apply_async(
-    #     (task.serialize(), evidence_.serialize()), retry=False,
-    #     soft_time_limit=30, time_limit=60, expires=timeout)
     task.stub = self.celery_runner.apply_async(
         (task.serialize(), evidence_.serialize()), retry=False,
-        time_limit=60, expires=timeout)
+        soft_time_limit=celery_soft_timeout, time_limit=celery_hard_timeout,
+        expires=timeout)
