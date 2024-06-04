@@ -74,9 +74,6 @@ SCALEDOWN_WORKER_FILE = f'{TMP_DIR}/turbinia-to-scaledown.lock'
 # Time in seconds to sleep in task management loops
 SLEEP_TIME = 10
 
-# Whether to run as a single run, or to keep server running indefinitely
-SINGLE_RUN = False
-
 # Local directory in the worker to put other mount directories for locally
 # mounting images/disks
 MOUNT_DIR_PREFIX = '/mnt/turbinia-mounts'

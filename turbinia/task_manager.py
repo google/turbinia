@@ -493,9 +493,6 @@ class BaseTaskManager:
 
     Args:
       task_result: The TurbiniaTaskResult object
-
-    Returns:
-      TurbiniaJob|None: The Job for the processed task, else None
     """
     if task_result.successful is None:
       log.error(
@@ -603,14 +600,15 @@ class BaseTaskManager:
 
       for task in self.process_tasks():
         if task.result:
-          job = self.process_result(task.result)
-          if job:
-            self.process_job(job, task)
+          self.process_result(task.result)
+        job = self.get_job(task.job_id)
+        if job:
+          self.process_job(job, task)
+        else:
+          log.warning(
+              f'Received task results for unknown Job {task.job_id} from Task '
+              f'ID {task.id:s}')
         self.state_manager.update_task(task)
-
-      if config.SINGLE_RUN and self.check_done():
-        log.info('No more tasks to process.  Exiting now.')
-        return
 
       if under_test:
         break
@@ -755,18 +753,18 @@ class CeleryTaskManager(BaseTaskManager):
 
   def enqueue_task(self, task, evidence_, timeout):
     log.info(
-        f'Adding Celery task {task.name:s} with evidence  {evidence_.name:s}'
-        f' to queue with timeout {timeout}')
-    self.celery_runner.max_retries = 0
+        f'Adding Celery task {task.name:s} with evidence {evidence_.name:s}'
+        f' to queue with base task timeout {timeout}')
     # https://docs.celeryq.dev/en/stable/userguide/configuration.html#task-time-limit
     # Hard limit in seconds, the worker processing the task will be killed and
     # replaced with a new one when this is exceeded.
     celery_soft_timeout = timeout + CELERY_SOFT_TIMEOUT_BUFFER
     celery_hard_timeout = timeout + CELERY_HARD_TIMEOUT_BUFFER
+    self.celery_runner.max_retries = 0
     self.celery_runner.task_time_limit = celery_hard_timeout
     # Time limits described here:
     #     https://docs.celeryq.dev/en/stable/userguide/workers.html#time-limits
     task.stub = self.celery_runner.apply_async(
         (task.serialize(), evidence_.serialize()), retry=False,
         soft_time_limit=celery_soft_timeout, time_limit=celery_hard_timeout,
-        expires=timeout)
+        expires=celery_hard_timeout)
