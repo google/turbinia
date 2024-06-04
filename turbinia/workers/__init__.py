@@ -704,15 +704,16 @@ class TurbiniaTask:
               env=env, text=True, encoding="utf-8")
           stdout, stderr = proc.communicate(timeout=timeout_limit)
       except subprocess.TimeoutExpired as exception:
+        # DONOTSUBMIT
         result.log(
-            'Job {0:s} with Task {1:s} has reached timeout limit of {2:d} so '
+            'Job {0:s} with Task {1:s} has reached timeout limit of {2!s} so '
             'killing child processes.'.format(
                 self.job_id, self.id, timeout_limit))
         # Kill child processes and parent process so we can return, otherwise
         # communicate() will hang waiting for the grand-children to be reaped.
         psutil_proc = psutil.Process(proc.pid)
         for child in psutil_proc.children(recursive=True):
-            child.send_signal(signal.SIGKILL)
+          child.send_signal(signal.SIGKILL)
         proc.kill()
         # Get any potential partial output so we can save it later.
         stdout, stderr = proc.communicate()

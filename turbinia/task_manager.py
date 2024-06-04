@@ -50,7 +50,7 @@ log = logging.getLogger(__name__)
 # enqueue'd, not from when it actually starts on the worker so if there is a
 # long wait for tasks to be executed they could potentially be timed out before
 # even getting a chance to start so this limit is set conservatively high.
-SERVER_TASK_TIMEOUT_BUFFER = 14400 # 4hr
+SERVER_TASK_TIMEOUT_BUFFER = 14400  # 4hr
 # Amount of buffer time to give between task timeout and the celery soft timeout
 # as we'd prefer for the task to timeout itself if possible so it has the most
 # control over setting the correct results.  This should be caught in the

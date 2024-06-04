@@ -248,7 +248,7 @@ class TestTaskManager(TestTurbiniaTaskBase):
 
     self.job1.create_final_task.assert_called()
     self.manager.enqueue_task.assert_called()
-    test_task, test_evidence = self.manager.enqueue_task.call_args[0]
+    test_task, test_evidence, _ = self.manager.enqueue_task.call_args[0]
     # Make sure the evidence originally associated with the job is the same as
     # the new evidence collection.
     self.assertListEqual(test_evidence.collection, [self.evidence])
