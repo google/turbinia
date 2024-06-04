@@ -706,7 +706,7 @@ class TurbiniaTask:
       except subprocess.TimeoutExpired as exception:
         # DONOTSUBMIT
         result.log(
-            'Job {0!s} with Task {1!s} has reached timeout limit of {2!s} so '
+            'Job {0:s} with Task {1:s} has reached timeout limit of {2:d} so '
             'killing child processes.'.format(
                 self.job_id, self.id, timeout_limit))
         # Kill child processes and parent process so we can return, otherwise
