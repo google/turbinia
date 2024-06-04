@@ -305,7 +305,8 @@ class TestTaskManager(TestTurbiniaTaskBase):
     self.manager.add_evidence = mock.MagicMock()
     self.task.result = self.result
     self.manager.process_tasks = mock.MagicMock(return_value=[self.task])
-    self.manager.process_result = mock.MagicMock(return_value=self.job1)
+    self.manager.process_result = mock.MagicMock()
+    self.manager.get_job = mock.MagicMock(return_value=self.job1)
     self.manager.process_job = mock.MagicMock()
     self.manager.run(under_test=True)
 

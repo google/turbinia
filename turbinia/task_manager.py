@@ -544,8 +544,6 @@ class BaseTaskManager:
             f'Task {task_result.task_name} from {task_result.worker_name} '
             f'returned non-Evidence output type {type(task_result.evidence)}')
 
-    return job
-
   def process_job(self, job, task):
     """Processes the Job after Task completes.
 
