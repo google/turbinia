@@ -704,7 +704,6 @@ class TurbiniaTask:
               env=env, text=True, encoding="utf-8")
           stdout, stderr = proc.communicate(timeout=timeout_limit)
       except subprocess.TimeoutExpired as exception:
-        # DONOTSUBMIT
         result.log(
             'Job {0:s} with Task {1:s} has reached timeout limit of {2:d} so '
             'killing child processes.'.format(
