@@ -27,7 +27,6 @@ import os
 import pickle
 import platform
 import pprint
-import psutil
 import signal
 import subprocess
 import sys
@@ -656,6 +655,7 @@ class TurbiniaTask:
       Tuple of the return code, and the TurbiniaTaskResult object
     """
     # Avoid circular dependency.
+    import psutil
     from turbinia.jobs import manager as job_manager
 
     save_files = save_files if save_files else []
