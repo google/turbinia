@@ -725,8 +725,9 @@ class TurbiniaTask:
         # Get any potential partial output so we can save it later.
         stdout, stderr = proc.communicate()
         fail_message = (
-            'Execution of [{0!s}] failed due to job timeout of '
-            '{1:d} seconds has been reached.'.format(cmd, timeout_limit))
+            'Execution of [{0!s}] failed due to {1:s} timeout of '
+            '{2:d} seconds has been reached.'.format(
+                  cmd, timeout_type, timeout_limit))
         result.log(fail_message)
         # Increase timeout metric. Not re-raising an exception so we can save
         # any potential output.
