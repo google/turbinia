@@ -55,7 +55,7 @@ class TurbiniaRequest:
 
   def __init__(
       self, request_id=None, group_id=None, requester=None, recipe=None,
-      context=None, evidence=None, group_name=None, reason=None):
+      evidence=None, group_name=None, reason=None):
     """Initialization for TurbiniaRequest."""
     self.evidence = evidence if evidence else []
     if evidence and len(evidence) > 0:
@@ -137,7 +137,7 @@ class TurbiniaRequest:
       obj = json.loads(json_str)
     except ValueError as exception:
       raise TurbiniaException(
-          f'Can not load json from string {str(exception):s}')
+          f'Can not load json from string {str(exception):s}') from exception
 
     if obj.get('type', None) != self.type:
       raise TurbiniaException(

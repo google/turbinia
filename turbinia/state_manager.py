@@ -309,8 +309,6 @@ class RedisStateManager(BaseStateManager):
     Args:
       task_dict (dict[str]): A dictionary containing the serialized
         request attributes that will be saved.
-      update (bool): Allows overwriting previous key and blocks writing new 
-        ones.
 
     Returns:
       task_key Optional[str]: The key corresponding for the task.
@@ -386,7 +384,9 @@ class RedisStateManager(BaseStateManager):
       task_dict = self.update_task_helper(task)
       self.redis_client.write_hash_object(task_key, task_dict)
     except TurbiniaException as exception:
-      log.error(f'Error (update_task): {exception}')
+      log.error(f'Error uupdating task {task.id}: {exception}')
+    except RedisClientError as exception:
+      log.error(f'Error writing task data for task {task.id}: {exception}')
     return task_key
 
   def write_evidence(self, evidence_dict: dict[str], update=False) -> str:
