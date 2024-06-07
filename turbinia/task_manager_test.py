@@ -212,7 +212,8 @@ class TestTaskManager(TestTurbiniaTaskBase):
     self.result.evidence.append(self.evidence)
     self.manager.add_evidence = mock.MagicMock()
     self.manager.running_jobs.append(self.job1)
-    test_job = self.manager.process_result(self.result)
+    self.manager.process_result(self.result)
+    test_job = self.manager.get_job(self.job1.id)
     self.assertEqual(test_job.id, job_id)
     self.assertEqual(test_job, self.manager.running_jobs[0])
     self.assertEqual(test_job.evidence.collection[0], self.evidence)
@@ -248,7 +249,7 @@ class TestTaskManager(TestTurbiniaTaskBase):
 
     self.job1.create_final_task.assert_called()
     self.manager.enqueue_task.assert_called()
-    test_task, test_evidence = self.manager.enqueue_task.call_args[0]
+    test_task, test_evidence, _ = self.manager.enqueue_task.call_args[0]
     # Make sure the evidence originally associated with the job is the same as
     # the new evidence collection.
     self.assertListEqual(test_evidence.collection, [self.evidence])
@@ -305,7 +306,8 @@ class TestTaskManager(TestTurbiniaTaskBase):
     self.manager.add_evidence = mock.MagicMock()
     self.task.result = self.result
     self.manager.process_tasks = mock.MagicMock(return_value=[self.task])
-    self.manager.process_result = mock.MagicMock(return_value=self.job1)
+    self.manager.process_result = mock.MagicMock()
+    self.manager.get_job = mock.MagicMock(return_value=self.job1)
     self.manager.process_job = mock.MagicMock()
     self.manager.run(under_test=True)
 

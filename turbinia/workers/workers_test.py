@@ -58,6 +58,7 @@ class TestTurbiniaTaskBase(unittest.TestCase):
         None, None)
     self.task = self.task_class(base_output_dir=self.base_output_dir)
     self.task.job_name = 'PlasoJob'
+    self.task.job_id = 'FakeJobID'
     self.task.output_manager = mock.MagicMock()
     self.task.output_manager.get_local_output_dirs.return_value = (None, None)
     self.task.get_metrics = mock.MagicMock()

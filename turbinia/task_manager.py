@@ -46,8 +46,22 @@ log = logging.getLogger(__name__)
 # Job/Task timeout value before it times out a given Task. This is to make sure
 # that the Server doesn't time out the Task before the Worker has a chance to
 # and should account for the Task scheduling and setup time that happens before
-# the Task starts.
-SERVER_TASK_TIMEOUT_BUFFER = 86400
+# the Task starts.  This time will be measured from the time the task is
+# enqueue'd, not from when it actually starts on the worker so if there is a
+# long wait for tasks to be executed they could potentially be timed out before
+# even getting a chance to start so this limit is set conservatively high.
+SERVER_TASK_TIMEOUT_BUFFER = 14400  # 4hr
+# Amount of buffer time to give between task timeout and the celery soft timeout
+# as we'd prefer for the task to timeout itself if possible so it has the most
+# control over setting the correct results.  This should be caught in the
+# `TurbiniaTask.run_wrapper()`.
+CELERY_SOFT_TIMEOUT_BUFFER = 120
+# Buffer time between task timeout and the hard celery timeout.  The hard
+# timeout cannot be caught by the worker so we want to give the task timeout and
+# soft timeout a chance for a graceful exit before falling back to this.
+# Because the worker is killed it will not send any results back to the server
+# and the server will have to time out the task there.
+CELERY_HARD_TIMEOUT_BUFFER = 240
 
 # Define metrics
 turbinia_server_tasks_total = Counter(
@@ -177,7 +191,7 @@ class BaseTaskManager:
     continue, an AbortTask will be created with the error message and is written
     directly to the state database. This way the client will get a reasonable
     error in response to the failure.
-    
+
     Args:
       request_id(str): The request ID.
       requester(str): The username of the requester.
@@ -418,7 +432,8 @@ class BaseTaskManager:
       task.job_name = job.name
       job.tasks.append(task)
     self.state_manager.write_new_task(task)
-    self.enqueue_task(task, evidence_)
+    timeout_limit = jobs_manager.JobsManager.GetTimeoutValue(task.job_name)
+    self.enqueue_task(task, evidence_, timeout_limit)
     turbinia_server_tasks_total.inc()
     if task.id not in evidence_.tasks:
       evidence_.tasks.append(task.id)
@@ -456,12 +471,13 @@ class BaseTaskManager:
       turbinia_jobs_completed_total.inc()
     return bool(remove_job)
 
-  def enqueue_task(self, task, evidence_):
+  def enqueue_task(self, task, evidence_, timeout_limit):
     """Enqueues a task and evidence in the implementation specific task queue.
 
     Args:
       task: An instantiated Turbinia Task
       evidence_: An Evidence object to be processed.
+      timeout_limit(int): The timeout for the Task in seconds.
     """
     raise NotImplementedError
 
@@ -477,16 +493,13 @@ class BaseTaskManager:
 
     Args:
       task_result: The TurbiniaTaskResult object
-
-    Returns:
-      TurbiniaJob|None: The Job for the processed task, else None
     """
     if task_result.successful is None:
       log.error(
-          f'''Task {task_result.task_name} from {task_result.worker_name}  
-          returned invalid success status "None". Setting this to False 
-          so the client knows the Task is complete. Usually this means 
-          that the Task returning the TurbiniaTaskResult did not call 
+          f'''Task {task_result.task_name} from {task_result.worker_name}
+          returned invalid success status "None". Setting this to False
+          so the client knows the Task is complete. Usually this means
+          that the Task returning the TurbiniaTaskResult did not call
           the close() method on it.
         ''')
       turbinia_result_success_invalid.inc()
@@ -530,8 +543,6 @@ class BaseTaskManager:
         log.error(
             f'Task {task_result.task_name} from {task_result.worker_name} '
             f'returned non-Evidence output type {type(task_result.evidence)}')
-
-    return job
 
   def process_job(self, job, task):
     """Processes the Job after Task completes.
@@ -587,14 +598,15 @@ class BaseTaskManager:
 
       for task in self.process_tasks():
         if task.result:
-          job = self.process_result(task.result)
-          if job:
-            self.process_job(job, task)
+          self.process_result(task.result)
+        job = self.get_job(task.job_id)
+        if job:
+          self.process_job(job, task)
+        else:
+          log.warning(
+              f'Received task results for unknown Job {task.job_id} from Task '
+              f'ID {task.id:s}')
         self.state_manager.update_task(task)
-
-      if config.SINGLE_RUN and self.check_done():
-        log.info('No more tasks to process.  Exiting now.')
-        return
 
       if under_test:
         break
@@ -737,9 +749,20 @@ class CeleryTaskManager(BaseTaskManager):
 
     return evidence_list
 
-  def enqueue_task(self, task, evidence_):
+  def enqueue_task(self, task, evidence_, timeout):
     log.info(
-        f'Adding Celery task {task.name:s} with evidence  {evidence_.name:s}'
-        f' to queue')
-    task.stub = self.celery_runner.delay(
-        task.serialize(), evidence_.serialize())
+        f'Adding Celery task {task.name:s} with evidence {evidence_.name:s}'
+        f' to queue with base task timeout {timeout}')
+    # https://docs.celeryq.dev/en/stable/userguide/configuration.html#task-time-limit
+    # Hard limit in seconds, the worker processing the task will be killed and
+    # replaced with a new one when this is exceeded.
+    celery_soft_timeout = timeout + CELERY_SOFT_TIMEOUT_BUFFER
+    celery_hard_timeout = timeout + CELERY_HARD_TIMEOUT_BUFFER
+    self.celery_runner.max_retries = 0
+    self.celery_runner.task_time_limit = celery_hard_timeout
+    # Time limits described here:
+    #     https://docs.celeryq.dev/en/stable/userguide/workers.html#time-limits
+    task.stub = self.celery_runner.apply_async(
+        (task.serialize(), evidence_.serialize()), retry=False,
+        soft_time_limit=celery_soft_timeout, time_limit=celery_hard_timeout,
+        expires=celery_hard_timeout)
