@@ -80,7 +80,7 @@ limitations under the License.
             <v-list-item v-bind="props" title="Processing Details"></v-list-item>
           </template>
           <v-list-item title="Evidence Name:">
-            <div v-if="taskDetails.evidence_size">
+            <div v-if="taskDetails.evidence_name">
               {{ taskDetails.evidence_name }}
             </div>
             <div v-else>N/A</div>

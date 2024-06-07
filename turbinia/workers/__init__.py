@@ -93,6 +93,7 @@ class TurbiniaTaskResult:
       output_dir (str): Full path for local output
       error (dict): Error data ('error' and 'traceback' are some valid keys)
       evidence (list[Evidence]): Newly created Evidence objects.
+      evidence_size (int): Size of evidence in bytes.
       id (str): Unique Id of result (string of hex)
       input_evidence (Evidence): The evidence this task processed.
       job_id (str): The ID of the Job that generated this Task/TaskResult
@@ -399,8 +400,14 @@ class TurbiniaTask:
   """Base class for Turbinia tasks.
 
   Attributes:
+      _evidence_config (dict): The config that we want to pass to all new
+          evidence created from this task.
       base_output_dir (str): The base directory that output will go into.
           Per-task directories will be created under this.
+      evidence (list): List of Evidence objects.
+      evidence_size (int): The size of the evidence.
+      group_id (str): group id for the evidence
+      group_name (str): group name for the evidence
       id (str): Unique Id of task (string of hex)
       is_finalize_task (bool): Whether this is a finalize Task or not.
       job_id (str): Job ID the Task was created by.
@@ -411,30 +418,30 @@ class TurbiniaTask:
       output_dir (str): The directory output will go into (including per-task
           folder).
       output_manager (OutputManager): The object that manages saving output.
-      result (TurbiniaTaskResult): A TurbiniaTaskResult object.
+      reason (str): reason of the evidence
+      recipe (dict): Validated recipe to be used as the task configuration.
       request_id (str): The id of the initial request to process this evidence.
+      requester (str): The user who requested the task.
+      result (TurbiniaTaskResult): A TurbiniaTaskResult object.
       start_time (datetime): When the task was started
       state_key (str): A key used to manage task state
-      stub (psq.task.TaskResult|celery.app.Task): The task manager
-          implementation specific task stub that exists server side to keep a
-          reference to the remote task objects.  For PSQ this is a task result
-          object, but other implementations have their own stub objects.
+      state_manager (state_manager): Turbinia state manager object.
+      stub (celery.result.AsyncResult): The task manager implementation
+          specific task stub that exists server side to keep a reference to the
+          remote task objects.
+      task_config (dict): Default task configuration, in effect if no recipe is
+          explicitly provided for the task.
       tmp_dir (str): Temporary directory for Task to write to.
-      requester (str): The user who requested the task.
-      _evidence_config (dict): The config that we want to pass to all new
-            evidence created from this task.
-      recipe (dict): Validated recipe to be used as the task configuration.
-      task_config (dict): Default task configuration, in effect if
-            no recipe is explicitly provided for the task.
-      group_name (str): group name for the evidence
-      reason (str): reason of the evidence
-  """
+      turbinia_version (str): The version of Turbinia that was used to run the
+          task.
+      worker_start_time (datetime): The time the worker started the task.
+      """
 
   # The list of attributes that we will persist into storage
   STORED_ATTRIBUTES = [
       'id', 'job_id', 'start_time', 'last_update', 'name', 'evidence_name',
-      'evidence_id', 'evidence_size', 'request_id', 'requester', 'group_name',
-      'reason', 'group_id'
+      'evidence_id', 'request_id', 'requester', 'group_name', 'reason',
+      'group_id'
   ]
 
   # The list of evidence states that are required by a Task in order to run.
@@ -469,7 +476,6 @@ class TurbiniaTask:
     self.name = name if name else self.__class__.__name__
     self.evidence_name = None
     self.evidence_id = None
-    self.evidence_size = None
     self.output_dir = None
     self.output_manager = output_manager.OutputManager()
     self.state_manager = state_manager.get_state_manager()
@@ -546,7 +552,6 @@ class TurbiniaTask:
         self.id, tmp_dir=self.tmp_dir, required_states=self.REQUIRED_STATES)
     self.evidence_name = evidence.name
     self.evidence_id = evidence.id
-    self.evidence_size = evidence.size
 
     # Final check to make sure that the required evidence state has been met
     # for Evidence types that have those capabilities.
