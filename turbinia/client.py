@@ -244,7 +244,7 @@ class BaseTurbiniaClient:
 
   def create_request(
       self, request_id=None, group_id=None, requester=None, recipe=None,
-      context=None, evidence_=None, group_name=None, reason=None):
+      evidence_=None, group_name=None, reason=None):
     """Wrapper method to create a Turbinia request."""
     default_recipe = self.create_recipe()
     request = TurbiniaRequest(

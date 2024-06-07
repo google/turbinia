@@ -23,7 +23,7 @@ import six
 
 from datetime import datetime
 
-from turbinia import evidence
+from turbinia import evidence as turbinia_evidence
 from turbinia import TurbiniaException
 from turbinia.config import DATETIME_FORMAT
 
@@ -51,6 +51,13 @@ class TurbiniaRequest:
     successful_tasks (list): List of successful tasks.
     task_ids (list): Lost of all tasks associated with the request.
     type (str): 'TurbiniaRequest' or class name.
+
+  Note:
+    Objects of this class will be stored by the state manager. The state
+    manager will persist all attributes that are serializable to JSON by
+    calling to_json(). Evidence objects are not serializable, but the
+    evidence identifiers (IDs) are. Evidence IDs are stored in the
+    evidence_ids key of the JSON object.
   """
 
   def __init__(
@@ -143,7 +150,9 @@ class TurbiniaRequest:
       raise TurbiniaException(
           f'Deserialized object does not have type of {self.type:s}')
 
-    obj['evidence'] = [evidence.evidence_decode(e) for e in obj['evidence']]
+    obj['evidence'] = [
+        turbinia_evidence.evidence_decode(e) for e in obj['evidence']
+    ]
     # pylint: disable=attribute-defined-outside-init
     self.__dict__ = obj
 
