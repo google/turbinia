@@ -137,7 +137,6 @@ class TurbiniaTaskResult:
     self.task_name = None
     self.requester = None
     self.output_dir = None
-
     self.report_data = None
     self.report_priority = Priority.MEDIUM
     self.run_time = None
@@ -250,7 +249,7 @@ class TurbiniaTaskResult:
             self.input_evidence.name, exception)
         self.log(
             message, level=logging.ERROR, traceback_=traceback.format_exc())
-        with filelock.FileLock(config.CONFIG.RESOURCE_FILE_LOCK):
+        with filelock.FileLock(config.RESOURCE_FILE_LOCK):
           resource_manager.PostProcessResourceState(
               self.input_evidence.resource_id, self.task_id)
     else:
@@ -336,7 +335,7 @@ class TurbiniaTaskResult:
       return
 
     # We want to enforce this here to make sure that any new Evidence objects
-    # created also contain theconfig.  We could create a closure to do this
+    # created also contain the config.  We could create a closure to do this
     # automatically, but the real fix is to attach this to a separate object.
     # See https://github.com/google/turbinia/issues/211 for more details.
     evidence.config = evidence_config
@@ -1149,7 +1148,9 @@ class TurbiniaTask:
     if not self.state_manager:
       self.state_manager = state_manager.get_state_manager()
     if self.state_manager:
+      task_key = self.state_manager.redis_client.build_key_name(
+          'task', {task.id})
       self.state_manager.redis_client.set_attribute(
-          f'TurbiniaTask:{task.id}', 'status', json.dumps(status))
+          task_key, 'status', json.dumps(status))
     else:
       log.info('No state_manager initialized, not updating Task info')

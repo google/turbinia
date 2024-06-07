@@ -213,3 +213,17 @@ class TestRedisStateManager(unittest.TestCase):
 
     # Check if the returned count is equal to our test data
     self.assertEqual(result, self.grouped_count_summary[True])
+
+  def testBuildKeyName(self):
+    """Test State Manager build_key_name() method."""
+    key_types = ('evidence', 'task', 'request')
+    for key_type in key_types:
+      key_name = self.state_manager.redis_client.build_key_name(
+          key_type, '1234')
+      self.assertIsInstance(key_name, str)
+
+  def testBuildInvalidKeyName(self):
+    """Test State Manager build_key_name() method, invalid key type"""
+    self.assertRaises(
+        ValueError, self.state_manager.redis_client.build_key_name, 'wrong',
+        '1234')

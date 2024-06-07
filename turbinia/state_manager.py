@@ -31,7 +31,7 @@ import six
 from turbinia import config
 from turbinia.config import DATETIME_FORMAT
 from turbinia import TurbiniaException
-from turbinia.redis_client import RedisClient
+from turbinia.redis_client import RedisClient, RedisClientError
 
 config.LoadConfig()
 if 'unittest' in sys.modules.keys():
@@ -186,7 +186,7 @@ class RedisStateManager(BaseStateManager):
             task_dict.get('last_update'), DATETIME_FORMAT)
       if task_dict.get('run_time'):
         task_dict['run_time'] = timedelta(seconds=task_dict['run_time'])
-    except TurbiniaException as exception:
+    except RedisClientError as exception:
       log.error(f'Error retrieving task data {exception}')
     return task_dict
 
@@ -235,7 +235,7 @@ class RedisStateManager(BaseStateManager):
       valid_task = self.validate_task(task, instance, days, group_id, user)
       return [task] if valid_request and valid_task else []
 
-    request_key = f'TurbiniaRequest:{request_id}' if request_id else None
+    request_key = self.redis_client.build_key_name('request', request_id)
 
     # If request_id is passed, gets valid tasks from that request
     if request_key and self.redis_client.key_exists(request_key):
@@ -265,6 +265,7 @@ class RedisStateManager(BaseStateManager):
       task (str): Turbinia task ID.
     """
     request_key = ':'.join(('TurbiniaRequest', task.request_id))
+    request_key = self.redis_client.build_key_name('request', task.request_id)
     try:
       self.redis_client.add_to_list(request_key, 'task_ids', task.id)
       request_last_update = datetime.strptime(
@@ -298,7 +299,7 @@ class RedisStateManager(BaseStateManager):
             statuses_to_remove.remove('queued_tasks')
       for status_name in statuses_to_remove:
         self.redis_client.remove_from_list(request_key, status_name, task.id)
-    except TurbiniaException as exception:
+    except RedisClientError as exception:
       error_message = f'Error encoding key {request_key} in Redis'
       log.error(f'{error_message}: {exception}')
 
@@ -313,18 +314,22 @@ class RedisStateManager(BaseStateManager):
 
     Returns:
       task_key Optional[str]: The key corresponding for the task.
-    
-    Raises:
-      TurbiniaException: If the attribute deserialization fails.
     """
     log.info(f'Writing metadata for new task {task.name:s} with id {task.id:s}')
-    task_key = ':'.join(('TurbiniaTask', task.id))
-    self.update_request_task(task)
-    task_dict = self.update_task_helper(task)
-
-    if task_key := self.redis_client.write_hash_object(task_key, task_dict):
-      task.state_key = task_key
-    return task_key
+    try:
+      task_key = self.redis_client.build_key_name('task', task.id)
+    except ValueError as exception:
+      log.error(exception)
+    try:
+      self.update_request_task(task)
+      task_dict = self.update_task_helper(task)
+      if task_key := self.redis_client.write_hash_object(task_key, task_dict):
+        task.state_key = task_key
+      return task_key
+    except RedisClientError as exception:
+      log.error(f'Error writing task {task.id} data: {exception}')
+    except TurbiniaException as exception:
+      log.error(f'Error decoding task {task.id} metadata: {exception}')
 
   def update_task_helper(self, task) -> Dict[str, Any]:
     """Retrieves TurbiniaTask metadata to update time-related and status
@@ -374,9 +379,9 @@ class RedisStateManager(BaseStateManager):
       self.update_request_task(task)
       # Set the current status for the TurbiniaRequest
       request_status = self.get_request_status(task.request_id)
+      request_key = self.redis_client.build_key_name('request', task.request_id)
       self.redis_client.set_attribute(
-          f'TurbiniaRequest:{task.request_id}', 'status',
-          json.dumps(request_status))
+          request_key, 'status', json.dumps(request_status))
       log.debug(f'Updating metadata for task {task.name} with key {task.id}')
       task_dict = self.update_task_helper(task)
       self.redis_client.write_hash_object(task_key, task_dict)
@@ -399,32 +404,42 @@ class RedisStateManager(BaseStateManager):
     Raises:
       TurbiniaException: If the attribute deserialization fails.
     """
+    evidence_key = ''
+    request_key = ''
     try:
       evidence_id = json.loads(evidence_dict['id'])
       evidence_hash = json.loads(evidence_dict.get('hash'))
-      try:
-        # Don't keep the config value since we don't really use it
-        # and it can be quite verbose if a complex recipe is used.
-        evidence_dict.pop('config')
-      except KeyError:
-        # Nothing to do if the key doesn't exist.
-        pass
-      request_key = ':'.join(
-          ('TurbiniaRequest', json.loads(evidence_dict['request_id'])))
+      request_id = json.loads(evidence_dict['request_id'])
+      request_key = self.redis_client.build_key_name('request', request_id)
+      evidence_key = self.redis_client.build_key_name('evidence', evidence_id)
     except (TypeError, ValueError) as exception:
       error_message = 'Error deserializing evidence attribute.'
       log.error(f'{error_message}: {exception}')
       raise TurbiniaException(error_message) from exception
-    evidence_key = ':'.join(('TurbiniaEvidence', evidence_id))
-    # Either updates or writes new key
-    if update == self.redis_client.key_exists(evidence_key):
-      self.redis_client.write_hash_object(evidence_key, evidence_dict)
-      if evidence_hash:
-        self.redis_client.set_attribute(
-            'TurbiniaEvidenceHashes', evidence_hash, evidence_key)
-      if not update:
-        self.redis_client.add_to_list(request_key, 'evidence_ids', evidence_id)
-      return evidence_key
+
+    # Don't keep the config value since we don't really use it
+    # and it can be quite verbose if a complex recipe is used.
+    try:
+      evidence_dict.pop('config')
+    except KeyError:
+      # Nothing to do if the key doesn't exist.
+      pass
+
+    try:
+      # Either updates or writes new key
+      if update == self.redis_client.key_exists(evidence_key):
+        self.redis_client.write_hash_object(evidence_key, evidence_dict)
+        if evidence_hash:
+          self.redis_client.set_attribute(
+              'TurbiniaEvidenceHashes', evidence_hash, evidence_key)
+        # This is a new key/evidence so we add it to the list of evidence ids
+        # for the request
+        if not update:
+          self.redis_client.add_to_list(
+              request_key, 'evidence_ids', evidence_id)
+        return evidence_key
+    except RedisClientError as exception:
+      log.error(f'There was an error writing data to Redis: {exception}')
 
   def get_evidence_data(self, evidence_id: str) -> dict:
     """Returns a dictionary representing an Evidence object given its ID.
@@ -528,45 +543,49 @@ class RedisStateManager(BaseStateManager):
     evidence_id = self.get_evidence_key_by_hash(file_hash).split(':')[1]
     return self.get_evidence_data(evidence_id)
 
-  def write_request(self, request_dict: dict, update=False):
+  def write_request(self, request_dict: dict, overwrite=False):
     """Writes request into redis.
 
     Args:
       request_dict (dict[str]): A dictionary containing the serialized
         request attributes that will be saved.
-      update (bool): Allows overwriting previous key and blocks writing new 
+      overwrite (bool): Allows overwriting previous key and blocks writing new 
         ones.
 
     Returns:
       request_key (str): The key corresponding to the evidence in Redis
     
     Raises:
-      TurbiniaException: If the attribute deserialization fails.
+      TurbiniaException: If the attribute deserialization fails or tried to
+          overwrite an existing key without overwrite=True
     """
     try:
-      request_key = ':'.join(
-          ('TurbiniaRequest', json.loads(request_dict['request_id'])))
+      request_id = json.loads(request_dict['request_id'])
+      request_key = self.redis_client.build_key_name('request', request_id)
     except (TypeError, ValueError) as exception:
       error_message = 'Error deserializing request attribute.'
       log.error(f'{error_message}: {exception}')
       raise TurbiniaException(error_message) from exception
     try:
-      if not request_dict.get('last_update'):
+      if not request_dict.get('start_time'):
         request_dict['start_time'] = json.dumps(
             datetime.now().strftime(DATETIME_FORMAT))
       if not request_dict.get('last_update'):
         request_dict['last_update'] = json.dumps(
             datetime.now().strftime(DATETIME_FORMAT))
-      #request_dict['status'] = json.dumps(
-      #    f'Task scheduled at {datetime.now().strftime(DATETIME_FORMAT)}')
+      # Either updates or write new key
+      if not overwrite and self.redis_client.key_exists(request_key):
+        raise TurbiniaException(
+            f'Error, attempted to overwrite an existing key: {request_key} '
+            f'but overwrite was not set.')
+      else:
+        self.redis_client.write_hash_object(request_key, request_dict)
     except redis.RedisError as exception:
       error_message = f'Error encoding key {request_key} in Redis'
       log.error(f'{error_message}: {exception}')
       raise TurbiniaException(error_message) from exception
-    # Either updates or write new key
-    if update == self.redis_client.key_exists(request_key):
-      self.redis_client.write_hash_object(request_key, request_dict)
-      return request_key
+
+    return request_key
 
   def get_request_data(self, request_id: str) -> dict:
     """Returns a dictionary representing a Request object given its ID.
@@ -627,10 +646,9 @@ class RedisStateManager(BaseStateManager):
     for request_key in self.redis_client.iterate_keys('request'):
       if stored_value := self.redis_client.get_attribute(request_key,
                                                          attribute_name):
-        if (attribute_name == 'evidence_ids' and attribute_value in stored_value
-           ) or (attribute_name == 'task_ids' and attribute_value
-                 in stored_value) or stored_value == attribute_value or str(
-                     stored_value) == str(attribute_value):
+        if (attribute_name in ('evidence_ids', 'task_ids') and attribute_value
+            in stored_value) or stored_value == attribute_value or str(
+                stored_value) == str(attribute_value):
           keys.append(request_key)
     if output == 'content':
       return [self.get_request_data(key.split(':')[1]) for key in keys]

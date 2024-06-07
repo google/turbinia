@@ -249,8 +249,8 @@ class BaseTurbiniaClient:
     default_recipe = self.create_recipe()
     request = TurbiniaRequest(
         request_id=request_id, group_id=group_id, requester=requester,
-        recipe=recipe if recipe else default_recipe, context=context,
-        evidence=evidence_, group_name=group_name, reason=reason)
+        recipe=recipe if recipe else default_recipe, evidence=evidence_, 
+        group_name=group_name, reason=reason)
     return request
 
   def list_jobs(self):

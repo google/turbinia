@@ -137,7 +137,7 @@ def process_args(args):
     else:
       config.LoadConfig()
   except TurbiniaException as exception:
-    print(f'Could not load config file ({exception!s}).\n{config._MSG:s}')
+    print(f'Could not load config file ({exception!s}).\n{config.CONFIG_MSG:s}')
     sys.exit(1)
 
   if args.log_file:

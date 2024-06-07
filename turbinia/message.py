@@ -34,39 +34,48 @@ class TurbiniaRequest:
   """An object to request evidence to be processed.
 
   Attributes:
-    request_id(str): A client specified ID for this request.
+    evidence (list): A list of Evidence objects.
+    failed_tasks (list): List of failed tasks.
     group_id(str): A client specified group id for this request.
-    requester(str): The username of who made the request.
-    recipe(dict): Recipe to use when processing this request.
-    context(dict): A Dict of context data to be passed around with this request.
-    evidence(list): A list of Evidence objects.
     group_name (str): Name for grouping evidence.
+    last_update (datetime.datetime): Last modification timestmap. 
+    original_evidence
+    queued_tasks (list): List of queued tasks.
     reason (str): Reason or justification for Turbinia requests.
+    recipe(dict): Recipe to use when processing this request.
+    request_id(str): A client specified ID for this request.
+    requester(str): The username of who made the request.
+    running_tasks (list): List of running tasks.
+    start_time (datetime.datetime): Task start timestamp.
+    status (str): The status of the request.
+    successful_tasks (list): List of successful tasks.
+    task_ids (list): Lost of all tasks associated with the request.
+    type (str): 'TurbiniaRequest' or class name.
   """
 
   def __init__(
       self, request_id=None, group_id=None, requester=None, recipe=None,
       context=None, evidence=None, group_name=None, reason=None):
     """Initialization for TurbiniaRequest."""
-    self.request_id = request_id if request_id else uuid.uuid4().hex
-    self.group_id = group_id if group_id else uuid.uuid4().hex
-    self.requester = requester if requester else 'user_unspecified'
-    self.recipe = recipe if recipe else {'globals': {}}
-    self.context = context if context else {}
     self.evidence = evidence if evidence else []
-    self.original_evidence = {}
     if evidence and len(evidence) > 0:
       self.original_evidence = {'id': evidence[0].id, 'name': evidence[0].name}
-    self.group_name = group_name if group_name else ''
-    self.reason = reason if reason else ''
-    self.successful_tasks = []
+    else:
+      self.original_evidence = {}
     self.failed_tasks = []
-    self.queued_tasks = []
-    self.running_tasks = []
-    self.status = ''
-    self.task_ids = []
+    self.group_id = group_id if group_id else uuid.uuid4().hex
+    self.group_name = group_name if group_name else ''
     self.last_update = datetime.now().strftime(DATETIME_FORMAT)
+    self.queued_tasks = []
+    self.reason = reason if reason else ''
+    self.recipe = recipe if recipe else {'globals': {}}
+    self.request_id = request_id if request_id else uuid.uuid4().hex
+    self.requester = requester if requester else 'user_unspecified'
+    self.running_tasks = []
     self.start_time = datetime.now().strftime(DATETIME_FORMAT)
+    self.status = ''
+    self.successful_tasks = []
+    self.task_ids = []
     self.type = self.__class__.__name__
 
   def to_json(self, json_values=False):

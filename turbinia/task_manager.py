@@ -545,7 +545,6 @@ class BaseTaskManager:
       task (TurbiniaTask): The Task that just completed.
     """
     log.debug(f'Processing Job {job.name:s} for completed Task {task.id:s}')
-    # self.state_manager.update_task(task)
     job.remove_task(task.id)
     turbinia_server_tasks_completed_total.inc()
     if job.check_done() and not (job.is_finalize_job or task.is_finalize_task):
