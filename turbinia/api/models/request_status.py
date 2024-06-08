@@ -61,7 +61,9 @@ class RequestStatus(BaseModel):
           instance=turbinia_config.INSTANCE_ID, request_id=request_id)
 
     # Gets the information from the request if it is stored in Redis
-    if state_client.redis_client.key_exists(f'TurbiniaRequest:{request_id}'):
+    request_key = state_client.redis_client.build_key_name(
+        'request', request_id)
+    if state_client.redis_client.key_exists(request_key):
       saved_request = state_client.get_request_data(request_id)
       self.evidence_name = saved_request.get('original_evidence').get('name')
       self.evidence_id = saved_request.get('original_evidence').get('id')

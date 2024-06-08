@@ -193,15 +193,19 @@ class RedisStateManager(BaseStateManager):
   def validate_task(
       self, task, instance: str, days: int, group_id: str, user: str) -> bool:
     """Returns True if the Task matches the required filters."""
-    if days:
-      start_time = datetime.now() - timedelta(days=days)
-      valid_days = task.get('last_update') > start_time
-    else:
-      valid_days = True
-    valid_instance = not instance or task.get('instance') == instance
-    valid_group = not group_id or task.get('group_id') == group_id
-    valid_user = not user or task.get('requester') == user
-    result: bool = valid_days and valid_instance and valid_group and valid_user
+    result: bool = False
+    try:
+      if days:
+        start_time = datetime.now() - timedelta(days=days)
+        valid_days = task.get('last_update') > start_time
+      else:
+        valid_days = True
+      valid_instance = not instance or task.get('instance') == instance
+      valid_group = not group_id or task.get('group_id') == group_id
+      valid_user = not user or task.get('requester') == user
+      result = valid_days and valid_instance and valid_group and valid_user
+    except TypeError as exception:
+      log.error(f'Error validating task {task.get("id")}: {exception}')
     return result
 
   def get_task_data(
@@ -596,7 +600,7 @@ class RedisStateManager(BaseStateManager):
     Returns:
       request_dict (dict): Dict containing request attributes. 
     """
-    request_key = ':'.join(('TurbiniaRequest', request_id))
+    request_key = self.redis_client.build_key_name('request', request_id)
     request_dict = {}
     try:
       for (

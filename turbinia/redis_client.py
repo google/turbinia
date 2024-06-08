@@ -76,6 +76,10 @@ class RedisClient:
       RedisClientError: If Redis fails in getting the keys or if
         decode fails.
     """
+    valid_key_types = ('evidence', 'task', 'request')
+    if key_type.lower() not in valid_key_types:
+      raise RedisClientError(f'Invalid key type: {key_type}')
+
     try:
       keys = self.client.scan_iter(f'Turbinia{key_type.title()}:*', count=1000)
     except redis.RedisError as exception:
