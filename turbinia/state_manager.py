@@ -336,10 +336,10 @@ class RedisStateManager(BaseStateManager):
   def update_task_helper(self, task) -> Dict[str, Any]:
     """Retrieves TurbiniaTask metadata to update time-related and status
     attributes.
-    
+
     Args:
       task (TurbiniaTask): A TurbiniaTask object.
-     
+
     Returns:
       task_dict: A dictionary containing updated task metadata.
     """
