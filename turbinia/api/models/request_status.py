@@ -77,7 +77,7 @@ class RequestStatus(BaseModel):
       self.running_tasks = len(saved_request.get('running_tasks', []))
       task_ids = saved_request.get('task_ids', [])
       self.task_count = len(task_ids)
-      self.status = saved_request.get('status', '')
+      self.status = saved_request.get('status', 'pending')
 
     return bool(self.tasks)
 

@@ -266,10 +266,10 @@ class RedisStateManager(BaseStateManager):
     """Adds a Turbinia task to the corresponding request list.
     
     Args:
-      task (str): Turbinia task ID.
+      task (TurbiniaTask): Turbinia task object.
     """
-    request_key = ':'.join(('TurbiniaRequest', task.request_id))
     request_key = self.redis_client.build_key_name('request', task.request_id)
+    task_key = self.redis_client.build_key_name('task', task.id)
     try:
       self.redis_client.add_to_list(request_key, 'task_ids', task.id)
       request_last_update = datetime.strptime(
@@ -288,19 +288,16 @@ class RedisStateManager(BaseStateManager):
           self.redis_client.add_to_list(
               request_key, 'successful_tasks', task.id)
           statuses_to_remove.remove('successful_tasks')
-        if task.result.successful is False:
+        elif task.result.successful is False:
           self.redis_client.add_to_list(request_key, 'failed_tasks', task.id)
           statuses_to_remove.remove('failed_tasks')
-        elif task.result.successful is None:
-          if task.result.status:
-            if 'running' in task.result.status:
-              self.redis_client.add_to_list(
-                  request_key, 'running_tasks', task.id)
-              statuses_to_remove.remove('running_tasks')
-          else:
-            # 'successful' is None and 'status' is None
-            self.redis_client.add_to_list(request_key, 'queued_tasks', task.id)
-            statuses_to_remove.remove('queued_tasks')
+      task_status = self.redis_client.get_attribute(task_key, 'status')
+      if task_status == 'running':
+        self.redis_client.add_to_list(request_key, 'running_tasks', task.id)
+        statuses_to_remove.remove('running_tasks')
+      elif task_status is None or task_status == 'queued':
+        self.redis_client.add_to_list(request_key, 'queued_tasks', task.id)
+        statuses_to_remove.remove('queued_tasks')
       for status_name in statuses_to_remove:
         self.redis_client.remove_from_list(request_key, status_name, task.id)
     except RedisClientError as exception:
@@ -323,10 +320,10 @@ class RedisStateManager(BaseStateManager):
     except ValueError as exception:
       log.error(exception)
     try:
-      self.update_request_task(task)
       task_dict = self.update_task_helper(task)
       if task_key := self.redis_client.write_hash_object(task_key, task_dict):
         task.state_key = task_key
+        self.update_request_task(task)
       return task_key
     except RedisClientError as exception:
       log.error(f'Error writing task {task.id} data: {exception}')
@@ -377,6 +374,9 @@ class RedisStateManager(BaseStateManager):
         return task_key
       return None
     try:
+      log.debug(f'Updating metadata for task {task.name} with key {task.id}')
+      task_dict = self.update_task_helper(task)
+      self.redis_client.write_hash_object(task_key, task_dict)
       # Add the task to the associated TurbiniaReqest task_ids list.
       self.update_request_task(task)
       # Set the current status for the TurbiniaRequest
@@ -384,9 +384,6 @@ class RedisStateManager(BaseStateManager):
       request_key = self.redis_client.build_key_name('request', task.request_id)
       self.redis_client.set_attribute(
           request_key, 'status', json.dumps(request_status))
-      log.debug(f'Updating metadata for task {task.name} with key {task.id}')
-      task_dict = self.update_task_helper(task)
-      self.redis_client.write_hash_object(task_key, task_dict)
     except TurbiniaException as exception:
       log.error(f'Error uupdating task {task.id}: {exception}')
     except RedisClientError as exception:
@@ -631,6 +628,7 @@ class RedisStateManager(BaseStateManager):
       request_status = 'completed_with_errors'
     else:
       request_status = 'pending'
+    log.debug(f'Request {request_id} status: {request_status}')
     return request_status
 
   def query_requests(

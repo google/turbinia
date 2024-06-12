@@ -1061,10 +1061,10 @@ class TurbiniaTask:
             self.result.successful = False
             return self.result.serialize()
 
-        self.update_task_status(self, 'running')
         self._evidence_config = evidence.config
         self.task_config = self.get_task_recipe(evidence.config)
         self.worker_start_time = datetime.now()
+        self.update_task_status(self, 'running')
         self.result = self.run(evidence, self.result)
 
       # pylint: disable=broad-except
@@ -1153,9 +1153,9 @@ class TurbiniaTask:
     if not self.state_manager:
       self.state_manager = state_manager.get_state_manager()
     if self.state_manager:
-      task_key = self.state_manager.redis_client.build_key_name(
-          'task', {task.id})
+      task_key = self.state_manager.redis_client.build_key_name('task', task.id)
       self.state_manager.redis_client.set_attribute(
           task_key, 'status', json.dumps(status))
+      self.state_manager.update_request_task(task)
     else:
       log.info('No state_manager initialized, not updating Task info')
