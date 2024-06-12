@@ -74,9 +74,6 @@ SCALEDOWN_WORKER_FILE = f'{TMP_DIR}/turbinia-to-scaledown.lock'
 # Time in seconds to sleep in task management loops
 SLEEP_TIME = 10
 
-# Whether to run as a single run, or to keep server running indefinitely
-SINGLE_RUN = False
-
 # Local directory in the worker to put other mount directories for locally
 # mounting images/disks
 MOUNT_DIR_PREFIX = '/mnt/turbinia-mounts'
@@ -155,7 +152,7 @@ DOCKER_ENABLED = False
 # still be enabled with the --jobs_allowlist flag on the server, but the client
 # will not be able to allowlist jobs that have been disabled or denylisted on
 # the server.
-DISABLED_JOBS = ['BinaryExtractorJob', 'BulkExtractorJob', 'DfdeweyJob', 'HindsightJob', 'PhotorecJob']  # yapf: disable
+DISABLED_JOBS = ['VolatilityJob', 'BinaryExtractorJob', 'BulkExtractorJob', 'DfdeweyJob', 'HindsightJob', 'PhotorecJob']  # yapf: disable
 
 # Configure additional job dependency checks below.
 DEPENDENCIES = [{

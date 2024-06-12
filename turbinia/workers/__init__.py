@@ -25,6 +25,7 @@ import os
 import pickle
 import platform
 import pprint
+import signal
 import subprocess
 import sys
 import tempfile
@@ -44,6 +45,8 @@ from turbinia import task_utils
 from turbinia import TurbiniaException
 from turbinia import log_and_report
 
+from celery.exceptions import SoftTimeLimitExceeded
+
 METRICS = {}
 # Set the maximum size that the report can be before truncating it.  This is a
 # best effort estimate and not a guarantee and comes from the limit for
@@ -55,6 +58,9 @@ REPORT_MAXSIZE = int(1048572 * 0.75)
 log = logging.getLogger(__name__)
 
 registry = CollectorRegistry()
+turbinia_worker_exception_failure = Counter(
+    'turbinia_worker_exception_failure',
+    'Total number Tasks failed due to uncaught exception', registry=registry)
 turbinia_worker_tasks_started_total = Counter(
     'turbinia_worker_tasks_started_total',
     'Total number of started worker tasks', registry=registry)
@@ -69,7 +75,12 @@ turbinia_worker_tasks_failed_total = Counter(
     registry=registry)
 turbinia_worker_tasks_timeout_total = Counter(
     'turbinia_worker_tasks_timeout_total',
-    'Total number of worker tasks timed out.', registry=registry)
+    'Total number of worker tasks timed out during dependency execution.',
+    registry=registry)
+turbinia_worker_tasks_timeout_celery_soft = Counter(
+    'turbinia_worker_tasks_timeout_celery_soft',
+    'Total number of Tasks timed out due to Celery soft timeout',
+    registry=registry)
 
 
 class Priority(IntEnum):
@@ -631,6 +642,7 @@ class TurbiniaTask:
       Tuple of the return code, and the TurbiniaTaskResult object
     """
     # Avoid circular dependency.
+    import psutil
     from turbinia.jobs import manager as job_manager
 
     save_files = save_files if save_files else []
@@ -678,13 +690,31 @@ class TurbiniaTask:
               cmd, stderr=subprocess.PIPE, stdout=subprocess.PIPE, cwd=cwd,
               env=env, text=True, encoding="utf-8")
           stdout, stderr = proc.communicate(timeout=timeout_limit)
-      except subprocess.TimeoutExpired as exception:
+      except (subprocess.TimeoutExpired, SoftTimeLimitExceeded) as exception:
+        # Catching the celery soft time limit here in addition to in the
+        # `run_wrapper()` so we can allow this except block to clean up the
+        # child processes appropriately when we are in this method.
+        if isinstance(exception, SoftTimeLimitExceeded):
+          timeout_type = 'celery soft'
+          turbinia_worker_tasks_timeout_celery_soft.inc()
+        else:
+          timeout_type = 'subprocess'
+        result.log(
+            'Job {0:s} with Task {1:s} has reached {2:s} timeout limit of '
+            '{3:d} so killing child processes.'.format(
+                self.job_id, self.id, timeout_type, timeout_limit))
+        # Kill child processes and parent process so we can return, otherwise
+        # communicate() will hang waiting for the grand-children to be reaped.
+        psutil_proc = psutil.Process(proc.pid)
+        for child in psutil_proc.children(recursive=True):
+          child.send_signal(signal.SIGKILL)
         proc.kill()
         # Get any potential partial output so we can save it later.
         stdout, stderr = proc.communicate()
         fail_message = (
-            'Execution of [{0!s}] failed due to job timeout of '
-            '{1:d} seconds has been reached.'.format(cmd, timeout_limit))
+            'Execution of [{0!s}] failed due to {1:s} timeout of '
+            '{2:d} seconds has been reached.'.format(
+                cmd, timeout_type, timeout_limit))
         result.log(fail_message)
         # Increase timeout metric. Not re-raising an exception so we can save
         # any potential output.
@@ -864,7 +894,7 @@ class TurbiniaTask:
 
   def check_serialization_errors(self, result):
     """Checks the TurbiniaTaskResult is valid for serialization.
-    
+
     This method checks the 'result'' object is the correct type and whether
     it is pickle/JSON serializable or not.
 
@@ -1006,6 +1036,7 @@ class TurbiniaTask:
     from turbinia.jobs import manager as job_manager
 
     log.debug(f'Task {self.name:s} {self.id:s} awaiting execution')
+    failure_message = None
     try:
       evidence = evidence_decode(evidence)
       self.result = self.setup(evidence)
@@ -1068,22 +1099,33 @@ class TurbiniaTask:
         self.result = self.run(evidence, self.result)
 
       # pylint: disable=broad-except
+      except SoftTimeLimitExceeded as exception:
+        failure_message = (
+            f'{self.name:s} Task timed out via Celery soft limit: {exception}')
+        if self.result:
+          self.result.log(failure_message, level=logging.ERROR)
+        else:
+          log.error(failure_message)
+        turbinia_worker_tasks_timeout_celery_soft.inc()
+
       except Exception as exception:
-        message = (f'{self.name:s} Task failed with exception: [{exception!s}]')
+        failure_message = (
+            f'{self.name:s} Task failed with exception: [{exception!s}]')
         # Logging explicitly here because the result is in an unknown state
         trace = traceback.format_exc()
-        log_and_report(message, trace)
+        log_and_report(failure_message, trace)
 
         if self.result:
-          self.result.log(message, level=logging.ERROR)
+          self.result.log(failure_message, level=logging.ERROR)
           self.result.log(trace)
           if hasattr(exception, 'message'):
             self.result.set_error(exception.message, traceback.format_exc())
           else:
             self.result.set_error(exception.__class__, traceback.format_exc())
-          self.result.status = message
+          self.result.status = failure_message
         else:
           log.error('No TurbiniaTaskResult object found after task execution.')
+        turbinia_worker_exception_failure.inc()
 
     self.result = self.validate_result(self.result)
 
@@ -1099,20 +1141,22 @@ class TurbiniaTask:
         status = self.result.status
       else:
         status = 'No previous status'
-      message = (
-          'Task Result was auto-closed from task executor on {0:s} likely '
-          'due to previous failures.  Previous status: [{1:s}]'.format(
-              self.result.worker_name, status))
-      self.result.log(message)
+      # Failure message can be set during previous exception handling.
+      if not failure_message:
+        failure_message = (
+            'Task Result was auto-closed from task executor on {0:s} likely '
+            'due to previous failures.  Previous status: [{1:s}]'.format(
+                self.result.worker_name, status))
+      self.result.log(failure_message)
       try:
-        self.result.close(self, False, message)
+        self.result.close(self, False, failure_message)
       # Using broad except here because lots can go wrong due to the reasons
       # listed above.
       # pylint: disable=broad-except
       except Exception as exception:
         log.error(f'TurbiniaTaskResult close failed: {exception!s}')
         if not self.result.status:
-          self.result.status = message
+          self.result.status = failure_message
       # Check the result again after closing to make sure it's still good.
       self.result = self.validate_result(self.result)
 

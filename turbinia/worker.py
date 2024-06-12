@@ -248,5 +248,8 @@ class TurbiniaCeleryWorker(TurbiniaWorkerBase):
     # Disable worker ping checks per amount of signals these generate,
     # no apparent benefit from having this enabled at the moment.
     self.worker.task(task_utils.task_runner, name='task_runner')
-    argv = ['worker', '--loglevel=info', '-E']
+    argv = [
+        'worker', '--loglevel=info', '--concurrency=1', '--without-gossip',
+        '--without-mingle'
+    ]
     self.worker.start(argv)
