@@ -35,7 +35,7 @@ import traceback
 import uuid
 import filelock
 
-from prometheus_client import CollectorRegistry, Counter, Histogram
+from prometheus_client import Counter, Histogram
 from turbinia import __version__, config
 from turbinia.config import DATETIME_FORMAT
 from turbinia.evidence import evidence_decode
@@ -59,30 +59,25 @@ REPORT_MAXSIZE = int(1048572 * 0.75)
 
 log = logging.getLogger(__name__)
 
-registry = CollectorRegistry()
 turbinia_worker_exception_failure = Counter(
     'turbinia_worker_exception_failure',
-    'Total number Tasks failed due to uncaught exception', registry=registry)
+    'Total number Tasks failed due to uncaught exception')
 turbinia_worker_tasks_started_total = Counter(
     'turbinia_worker_tasks_started_total',
-    'Total number of started worker tasks', registry=registry)
+    'Total number of started worker tasks')
 turbinia_worker_tasks_completed_total = Counter(
     'turbinia_worker_tasks_completed_total',
-    'Total number of completed worker tasks', registry=registry)
+    'Total number of completed worker tasks')
 turbinia_worker_tasks_queued_total = Counter(
-    'turbinia_worker_tasks_queued_total', 'Total number of queued worker tasks',
-    registry=registry)
+    'turbinia_worker_tasks_queued_total', 'Total number of queued worker tasks')
 turbinia_worker_tasks_failed_total = Counter(
-    'turbinia_worker_tasks_failed_total', 'Total number of failed worker tasks',
-    registry=registry)
+    'turbinia_worker_tasks_failed_total', 'Total number of failed worker tasks')
 turbinia_worker_tasks_timeout_total = Counter(
     'turbinia_worker_tasks_timeout_total',
-    'Total number of worker tasks timed out during dependency execution.',
-    registry=registry)
+    'Total number of worker tasks timed out during dependency execution.')
 turbinia_worker_tasks_timeout_celery_soft = Counter(
     'turbinia_worker_tasks_timeout_celery_soft',
-    'Total number of Tasks timed out due to Celery soft timeout',
-    registry=registry)
+    'Total number of Tasks timed out due to Celery soft timeout')
 
 
 class Priority(IntEnum):
