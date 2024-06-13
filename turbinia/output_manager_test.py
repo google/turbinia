@@ -62,7 +62,7 @@ class TestLocalOutputManager(unittest.TestCase):
     output_manager.storage = mock.MagicMock()
     writers = output_manager.OutputManager.get_output_writers(
         self.task.name, self.task.id, self.task.request_id, remote_only=False)
-    self.assertEquals(len(writers), 2)
+    self.assertEqual(len(writers), 2)
     for writer in writers:
       self.assertIsInstance(writer, output_manager.OutputWriter)
 

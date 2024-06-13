@@ -53,7 +53,7 @@ class JobImportTest(unittest.TestCase):
         module_name, _, _ = filename.partition('.')
         import_expression = re.compile(r' import {0:s}\b'.format(module_name))
 
-        self.assertRegexpMatches(
+        self.assertRegex(
             init_content, import_expression,
             f'{module_name:s} not imported in {init_path:s}')
 
