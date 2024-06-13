@@ -151,7 +151,7 @@ export default {
               failed_tasks: data[req].failed_tasks,
               outstanding_perc: outstanding_perc,
               status: data[req].status,
-              evidence_name: data[req].evidence_name,
+              evidence_name: data[req].evidence_name.substring(0, 64) + '...',
               evidence_id: data[req].evidence_id,
             })
           }
