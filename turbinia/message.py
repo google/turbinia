@@ -39,7 +39,6 @@ class TurbiniaRequest:
     group_id(str): A client specified group id for this request.
     group_name (str): Name for grouping evidence.
     last_update (datetime.datetime): Last modification timestmap. 
-    original_evidence
     queued_tasks (list): List of queued tasks.
     reason (str): Reason or justification for Turbinia requests.
     recipe(dict): Recipe to use when processing this request.
@@ -49,7 +48,7 @@ class TurbiniaRequest:
     start_time (datetime.datetime): Task start timestamp.
     status (str): The status of the request.
     successful_tasks (list): List of successful tasks.
-    task_ids (list): Lost of all tasks associated with the request.
+    task_ids (list): List of all tasks associated with the request.
     type (str): 'TurbiniaRequest' or class name.
 
   Note:
