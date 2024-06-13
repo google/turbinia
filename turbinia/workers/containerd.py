@@ -14,8 +14,6 @@
 # limitations under the License.
 """Task for analyzing containerd containers."""
 
-from __future__ import unicode_literals
-
 import json
 import logging
 import subprocess

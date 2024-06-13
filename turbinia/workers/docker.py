@@ -13,8 +13,6 @@
 # limitations under the License.
 """Task for running docker-explorer."""
 
-from __future__ import unicode_literals
-
 import json
 import logging
 from os import path

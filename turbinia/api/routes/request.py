@@ -17,7 +17,6 @@
 import logging
 import uuid
 import json
-from collections import OrderedDict
 
 from fastapi import HTTPException, APIRouter
 from fastapi.responses import JSONResponse
@@ -48,10 +47,9 @@ async def get_requests_summary(request: Request):
     if not requests_summary.get_requests_summary():
       return JSONResponse(
           content={'detail': 'Request summary is empty'}, status_code=200)
-    response_json = requests_summary.json()
-    response = OrderedDict(sorted(json.loads(response_json).items()))
+    response_json = json.loads(requests_summary.json())
     return JSONResponse(
-        status_code=200, content=response, media_type='application/json')
+        status_code=200, content=response_json, media_type='application/json')
   except (json.JSONDecodeError, TypeError, ValueError, AttributeError,
           ValidationError) as exception:
     log.error(
@@ -78,13 +76,13 @@ async def get_request_status(request: Request, request_id: str):
       raise HTTPException(
           status_code=404,
           detail='Request ID not found or the request had no associated tasks.')
-    response_json = request_out.json()
-    response = OrderedDict(sorted(json.loads(response_json).items()))
+    response_json = json.loads(request_out.json())
     return JSONResponse(
-        status_code=200, content=response, media_type='application/json')
+        status_code=200, content=response_json, media_type='application/json')
   except (json.JSONDecodeError, TypeError, ValueError, AttributeError,
-          ValidationError) as exception:
-    log.error(f'Error retrieving request information: {exception!s}')
+          TurbiniaException) as exception:
+    log.error(
+        f'Error retrieving request information: {exception!s}', exc_info=True)
     raise HTTPException(
         status_code=500,
         detail='Error retrieving request information') from exception

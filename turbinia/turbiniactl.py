@@ -204,8 +204,7 @@ def main():
   try:
     process_args(sys.argv[1:])
   except TurbiniaException as exception:
-    log.error(f'There was a problem processing arguments: {str(exception):s}')
-    sys.exit(1)
+    log.error(f'{str(exception):s}')
   log.info('Done.')
   sys.exit(0)
 

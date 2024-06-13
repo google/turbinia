@@ -14,8 +14,6 @@
 # limitations under the License.
 """Core classes for Turbinia Requests and Messaging components."""
 
-from __future__ import unicode_literals
-
 import codecs
 import copy
 import json
@@ -23,8 +21,11 @@ import uuid
 import logging
 import six
 
-from turbinia import evidence
+from datetime import datetime
+
+from turbinia import evidence as turbinia_evidence
 from turbinia import TurbiniaException
+from turbinia.config import DATETIME_FORMAT
 
 log = logging.getLogger(__name__)
 
@@ -33,49 +34,97 @@ class TurbiniaRequest:
   """An object to request evidence to be processed.
 
   Attributes:
-    request_id(str): A client specified ID for this request.
+    evidence (list): A list of Evidence objects.
+    failed_tasks (list): List of failed tasks.
     group_id(str): A client specified group id for this request.
-    requester(str): The username of who made the request.
-    recipe(dict): Recipe to use when processing this request.
-    context(dict): A Dict of context data to be passed around with this request.
-    evidence(list): A list of Evidence objects.
     group_name (str): Name for grouping evidence.
+    last_update (datetime.datetime): Last modification timestmap. 
+    queued_tasks (list): List of queued tasks.
     reason (str): Reason or justification for Turbinia requests.
-    all_args (str): a string of commandline arguments provided to run client.
+    recipe(dict): Recipe to use when processing this request.
+    request_id(str): A client specified ID for this request.
+    requester(str): The username of who made the request.
+    running_tasks (list): List of running tasks.
+    start_time (datetime.datetime): Task start timestamp.
+    status (str): The status of the request.
+    successful_tasks (list): List of successful tasks.
+    task_ids (list): List of all tasks associated with the request.
+    type (str): 'TurbiniaRequest' or class name.
+
+  Note:
+    Objects of this class will be stored by the state manager. The state
+    manager will persist all attributes that are serializable to JSON by
+    calling to_json(). Evidence objects are not serializable, but the
+    evidence identifiers (IDs) are. Evidence IDs are stored in the
+    evidence_ids key of the JSON object.
   """
 
   def __init__(
       self, request_id=None, group_id=None, requester=None, recipe=None,
-      context=None, evidence=None, group_name=None, reason=None, all_args=None):
+      evidence=None, group_name=None, reason=None):
     """Initialization for TurbiniaRequest."""
-    self.request_id = request_id if request_id else uuid.uuid4().hex
-    self.group_id = group_id if group_id else uuid.uuid4().hex
-    self.requester = requester if requester else 'user_unspecified'
-    self.recipe = recipe if recipe else {'globals': {}}
-    self.context = context if context else {}
     self.evidence = evidence if evidence else []
+    if evidence and len(evidence) > 0:
+      self.original_evidence = {'id': evidence[0].id, 'name': evidence[0].name}
+    else:
+      self.original_evidence = {}
+    self.failed_tasks = []
+    self.group_id = group_id if group_id else uuid.uuid4().hex
     self.group_name = group_name if group_name else ''
+    self.last_update = datetime.now().strftime(DATETIME_FORMAT)
+    self.queued_tasks = []
     self.reason = reason if reason else ''
-    self.all_args = all_args if all_args else ''
+    self.recipe = recipe if recipe else {'globals': {}}
+    self.request_id = request_id if request_id else uuid.uuid4().hex
+    self.requester = requester if requester else 'user_unspecified'
+    self.running_tasks = []
+    self.start_time = datetime.now().strftime(DATETIME_FORMAT)
+    self.status = 'pending'
+    self.successful_tasks = []
+    self.task_ids = []
     self.type = self.__class__.__name__
 
-  def to_json(self):
+  def to_json(self, json_values=False):
     """Convert object to JSON.
+
+    Args:
+      json_values (bool): Returns only values of the dictionary as json strings
+        instead of the entire dictionary.
 
     Returns:
       A JSON serialized object.
     """
     serializable = copy.deepcopy(self.__dict__)
-    serializable['evidence'] = [x.serialize() for x in serializable['evidence']]
-
-    try:
-      serialized = json.dumps(serializable)
-    except TypeError as exception:
-      msg = (
-          'JSON serialization of TurbiniaRequest object {0:s} failed: '
-          '{1:s}'.format(self.type, str(exception)))
-      raise TurbiniaException(msg)
-
+    if json_values:
+      if evidence_list := serializable.pop('evidence'):
+        if not serializable.get('original_evidence') and len(evidence_list) > 0:
+          serializable['original_evidence'] = {
+              'name': evidence_list[0].name,
+              'id': evidence_list[0].id
+          }
+        serializable['evidence_ids'] = [
+            evidence.id for evidence in evidence_list
+        ]
+      serialized = {}
+      try:
+        for attribute_name, attribute_value in serializable.items():
+          serialized[attribute_name] = json.dumps(attribute_value)
+      except TypeError as exception:
+        msg = (
+            f'JSON serialization of TurbiniaRequest object {self.type} '
+            f'failed: {str(exception)}')
+        raise TurbiniaException(msg) from exception
+    else:
+      serializable['evidence'] = [
+          x.serialize() for x in serializable['evidence']
+      ]
+      try:
+        serialized = json.dumps(serializable)
+      except TypeError as exception:
+        msg = (
+            f'JSON serialization of TurbiniaRequest object {self.type} '
+            f'failed: {str(exception)}')
+        raise TurbiniaException(msg) from exception
     return serialized
 
   def from_json(self, json_str):
@@ -94,13 +143,15 @@ class TurbiniaRequest:
       obj = json.loads(json_str)
     except ValueError as exception:
       raise TurbiniaException(
-          f'Can not load json from string {str(exception):s}')
+          f'Can not load json from string {str(exception):s}') from exception
 
     if obj.get('type', None) != self.type:
       raise TurbiniaException(
           f'Deserialized object does not have type of {self.type:s}')
 
-    obj['evidence'] = [evidence.evidence_decode(e) for e in obj['evidence']]
+    obj['evidence'] = [
+        turbinia_evidence.evidence_decode(e) for e in obj['evidence']
+    ]
     # pylint: disable=attribute-defined-outside-init
     self.__dict__ = obj
 

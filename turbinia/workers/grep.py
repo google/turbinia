@@ -14,8 +14,6 @@
 # limitations under the License.
 """Task to filter a text file using extended regular expression patterns."""
 
-from __future__ import unicode_literals
-
 import os
 
 from turbinia.evidence import FilteredTextFile

@@ -14,8 +14,6 @@
 # limitations under the License.
 """Job to enumerate and mount containerd containers."""
 
-from __future__ import unicode_literals
-
 from turbinia.evidence import DiskPartition
 from turbinia.evidence import ContainerdContainer
 from turbinia.jobs import interface

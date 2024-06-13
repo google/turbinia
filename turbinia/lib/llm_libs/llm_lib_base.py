@@ -1,7 +1,5 @@
 """Base class for Turbinia LLM libraries."""
 
-from __future__ import unicode_literals
-
 import abc
 import typing
 

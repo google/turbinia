@@ -14,8 +14,6 @@
 # limitations under the License.
 """Task for analysing redis_config files."""
 
-from __future__ import unicode_literals
-
 import os
 import re
 

@@ -30,7 +30,7 @@ from turbinia import state_manager
 from turbinia.api.models import workers_status
 from turbinia.api.models import tasks_statistics
 
-log = logging.getLogger('turbinia:api_server:task')
+log = logging.getLogger(__name__)
 
 router = APIRouter(prefix='/task', tags=['Turbinia Tasks'])
 
@@ -83,8 +83,8 @@ async def get_workers_status(
 async def get_task_status(request: Request, task_id: str):
   """Retrieve task information."""
   try:
-    _state_manager = state_manager.get_state_manager()
-    tasks = _state_manager.get_task_data(
+    state_client = state_manager.get_state_manager()
+    tasks = state_client.get_task_data(
         instance=turbinia_config.INSTANCE_ID, task_id=task_id)
     if tasks:
       task = tasks[0]

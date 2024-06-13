@@ -14,7 +14,6 @@
 # limitations under the License.
 """Tests for the Bulk Extractor job."""
 
-from __future__ import unicode_literals
 from shutil import rmtree
 from io import StringIO
 

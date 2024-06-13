@@ -14,8 +14,6 @@
 # limitations under the License.
 """Client objects for Turbinia."""
 
-from __future__ import unicode_literals
-
 import logging
 import os
 import stat
@@ -251,7 +249,7 @@ class TurbiniaCeleryWorker(TurbiniaWorkerBase):
     # no apparent benefit from having this enabled at the moment.
     self.worker.task(task_utils.task_runner, name='task_runner')
     argv = [
-        'worker', '--loglevel=info', '--pool=solo', '--without-gossip',
+        'worker', '--loglevel=info', '--concurrency=1', '--without-gossip',
         '--without-mingle'
     ]
     self.worker.start(argv)

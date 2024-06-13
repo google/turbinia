@@ -14,8 +14,6 @@
 # limitations under the License.
 """Tests for the Wordpress access log analysis task."""
 
-from __future__ import unicode_literals
-
 import os
 import unittest
 

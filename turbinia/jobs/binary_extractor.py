@@ -14,8 +14,6 @@
 # limitations under the License.
 """Job to execute binary_extractor task."""
 
-from __future__ import unicode_literals
-
 from turbinia.evidence import Directory
 from turbinia.evidence import GoogleCloudDisk
 from turbinia.evidence import GoogleCloudDiskRawEmbedded

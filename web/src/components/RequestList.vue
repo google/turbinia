@@ -31,9 +31,9 @@ limitations under the License.
         </v-text-field>
         <v-spacer></v-spacer>
       </v-card-title>
-      <v-data-table :headers="headers" :items="requestSummary" :search="search"
-        :footer-props="{ itemsPerPageOptions: [10, 20, 40, -1] }" multi-sort item-value="request_id_reason" show-expand
-        hover>
+      <v-data-table :headers="headers" :items="requestSummary" :search="search" density="compact"
+        item-value="request_id" :footer-props="{ itemsPerPageOptions: [10, 20, 40, -1] }" :loading="isLoading"
+        :sort-by="sortBy" show-expand hover>
         <template v-slot:[`item.status`]="{ item }">
           <div v-if="item.status === 'successful'">
             <v-tooltip text="Completed successfully">
@@ -104,11 +104,13 @@ export default {
   data() {
     return {
       search: '',
+      isLoading: false,
       headers: [
-        { title: 'Request', key: 'request_id_reason' },
-        { title: 'Last Task Update Time', key: 'last_task_update_time' },
+        { title: 'Request', key: 'request_id' },
+        { title: 'Last Task Update Time', key: 'last_task_update_time', sortable: true },
         { title: 'Evidence Name', key: 'evidence_name' },
         { title: 'Requester', key: 'requester' },
+        { title: 'Reason', key: 'request_id_reason' },
         { title: 'Total Tasks', key: 'total_tasks' },
         { title: 'Running Tasks', key: 'running_tasks' },
         { title: 'Successful Tasks', key: 'successful_tasks' },
@@ -117,6 +119,7 @@ export default {
         { title: 'Results', key: 'request_results' },
       ],
       requestSummary: [],
+      sortBy: [{ key: 'last_task_update_time', order: 'desc' }],
     }
   },
   methods: {
@@ -124,14 +127,21 @@ export default {
     getRequestList: function () {
       ApiClient.getRequestList()
         .then((response) => {
+          this.isLoading = true
           let requestSummary = []
           let data = response.data['requests_status']
           for (const req in data) {
             let outstanding_perc = Math.round(
               ((data[req].failed_tasks + data[req].successful_tasks) / data[req].task_count) * 100
             )
+            let reason = null
+            if (data[req].reason) {
+              reason = data[req].reason
+            } else {
+              reason = 'N/A'
+            }
             requestSummary.push({
-              request_id_reason: data[req].request_id + ' - ' + data[req].reason,
+              request_id_reason: reason,
               request_id: data[req].request_id,
               last_task_update_time: data[req].last_task_update_time,
               requester: data[req].requester,
@@ -141,10 +151,11 @@ export default {
               failed_tasks: data[req].failed_tasks,
               outstanding_perc: outstanding_perc,
               status: data[req].status,
-              evidence_name: data[req].evidence_name,
+              evidence_name: data[req].evidence_name.substring(0, 64) + '...',
               evidence_id: data[req].evidence_id,
             })
           }
+          this.isLoading = false
           this.requestSummary = requestSummary
         })
         .catch((e) => {

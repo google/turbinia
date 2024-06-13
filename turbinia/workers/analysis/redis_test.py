@@ -14,8 +14,6 @@
 # limitations under the License.
 """Tests for the Redis analysis task."""
 
-from __future__ import unicode_literals
-
 import unittest
 
 from turbinia import config

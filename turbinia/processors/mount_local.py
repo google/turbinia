@@ -14,8 +14,6 @@
 # limitations under the License.
 """Evidence processor to mount local images or disks."""
 
-from __future__ import unicode_literals
-
 import logging
 import os
 import subprocess
@@ -65,17 +63,16 @@ def GetDiskSize(source_path):
     size = int(cmd_output[0].decode('utf-8'))
   except subprocess.CalledProcessError:
     log.debug(
-        'blockdev failed, attempting to get file size using stat() instead')
+        'blockdev failed, attempting to get evidence size using stat() instead')
   except ValueError:
     log.warning(
         f"Unexpected output from blockdev: {cmd_output[0].decode('utf-8'):s}")
-
   if not size:
     # evidence is not a block device, check image file size
     try:
       size = os.stat(source_path).st_size
     except OSError as exception:
-      log.warning(f'Checking disk size failed: {exception!s}')
+      log.warning(f'Checking evidence size failed: {exception!s}')
 
   return size
 

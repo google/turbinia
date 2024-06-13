@@ -41,7 +41,7 @@ def register_job_timeouts(dependencies):
     timeout = values.get('timeout')
     if not isinstance(timeout, int):
       log.warning(
-          'No timeout found for job: {0:s}. Setting default timeout of {1:d} seconds.'
-          .format(job, timeout_default))
+          f'No timeout found for job: {job}. '
+          'Setting default timeout of {timeout_default} seconds.')
       timeout = timeout_default
     job_manager.JobsManager.RegisterTimeout(job, timeout)

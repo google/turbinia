@@ -14,8 +14,6 @@
 # limitations under the License.
 """Tests for docker_manager module."""
 
-from __future__ import unicode_literals
-
 import unittest
 import codecs
 import mock

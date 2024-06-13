@@ -14,8 +14,6 @@
 # limitations under the License.
 """Task to extract binary files from an evidence object provided."""
 
-from __future__ import unicode_literals
-
 import logging
 import json
 import os

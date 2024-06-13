@@ -14,8 +14,6 @@
 # limitations under the License.
 """Tests for Turbinia Jobs interface."""
 
-from __future__ import unicode_literals
-
 from turbinia import evidence
 from turbinia.jobs import interface
 from turbinia.workers.workers_test import TestTurbiniaTaskBase

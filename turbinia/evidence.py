@@ -14,8 +14,6 @@
 # limitations under the License.
 """Turbinia Evidence objects."""
 
-from __future__ import unicode_literals
-
 from enum import IntEnum
 from collections import defaultdict
 from typing import Any
@@ -196,8 +194,10 @@ class Evidence:
     copyable (bool): Whether this evidence can be copied.  This will be set to
         True for object types that we want to copy to/from storage (e.g.
         PlasoFile, but not RawDisk).
+    creation_time (datetime): The time the evidence was created.
     name (str): Name of evidence.
     description (str): Description of evidence.
+    hash (str): The hash value of the file/device associated with this evidence.
     size (int): The evidence size in bytes where available (Used for metric
         tracking).
     saved_path (str): Path to secondary location evidence is saved for later
@@ -227,6 +227,7 @@ class Evidence:
     mount_path (str): Path to a mounted file system (if relevant).
     credentials (list): Decryption keys for encrypted evidence.
     tags (dict): Extra tags associated with this evidence.
+    tasks (list): List of tasks that have processed this evidence.
     request_id (str): The id of the request this evidence came from, if any.
     has_child_evidence (bool): This property indicates the evidence object has
         child evidence.
@@ -245,6 +246,17 @@ class Evidence:
         in a state file to allow for access amongst multiple workers.
     resource_id (str): The unique id used to track the state of a given Evidence
         type for stateful tracking.
+
+  Note:
+    Evidence objects will be serialized by the state manager through the
+    `to_json()` method. The state manager will store JSON serializable
+    evidence objects in the datastore (e.g Redis) as TurbiniaEvidence keys
+    by calling the `write_evidence()` method. The `TurbiniaEvidence` keys
+    will contain all the attributes except the `config` attribute because
+    it can be quite large and is currently not necessary to store it. If
+    the evidence object contains the `hash` attribute, the state manager
+    will update a `TurbiniaEvidenceHashes` key with the corresponding hash
+    value and evidence id.
   """
 
   # The list of attributes a given piece of Evidence requires to be set
@@ -276,8 +288,6 @@ class Evidence:
     self.mount_path = kwargs.get('mount_path', None)
     self._name = kwargs.get('name')
     self.parent_evidence = kwargs.get('parent_evidence', None)
-    # List of jobs that have processed this evidence
-    self.processed_by = kwargs.get('processed_by', [])
     self.request_id = kwargs.get('request_id', None)
     self.resource_id = kwargs.get('resource_id', None)
     self.resource_tracked = kwargs.get('resource_tracked', False)
@@ -290,7 +300,6 @@ class Evidence:
     self.tags = kwargs.get('tags', {})
     self.tasks = kwargs.get('tasks', [])
     self.type = self.__class__.__name__
-
     self.local_path = self.source_path
 
     if 'state' in kwargs:
@@ -502,7 +511,7 @@ class Evidence:
     Raises:
       TurbiniaException: If the required evidence state cannot be met by the
           possible states of the Evidence or if the parent evidence object does
-          not exist when it is required by the Evidence type..
+          not exist when it is required by the Evidence type.
     """
     self.local_path = self.source_path
     if not required_states:

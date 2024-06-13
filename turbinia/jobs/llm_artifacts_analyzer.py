@@ -1,7 +1,5 @@
 """Job to execute LLM analysis on log, config and history files."""
 
-from __future__ import unicode_literals
-
 import logging
 
 from turbinia import config as turbinia_config

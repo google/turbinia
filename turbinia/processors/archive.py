@@ -14,8 +14,6 @@
 # limitations under the License.
 """File archiving processor"""
 
-from __future__ import unicode_literals
-
 import os
 import tarfile
 import logging

@@ -14,8 +14,6 @@
 # limitations under the License.
 """Task for executing hindsight."""
 
-from __future__ import unicode_literals
-
 import os
 
 from turbinia.evidence import TextFile
