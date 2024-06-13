@@ -31,6 +31,8 @@ from turbinia.jobs import manager
 from turbinia.jobs import manager_test
 from turbinia import TurbiniaException
 
+from prometheus_client import REGISTRY
+
 
 class TestTurbiniaCeleryWorker(unittest.TestCase):
   """Test Turbinia Celery Worker class."""
@@ -49,6 +51,12 @@ class TestTurbiniaCeleryWorker(unittest.TestCase):
 
     if 'turbinia-test' in self.tmp_dir:
       shutil.rmtree(self.tmp_dir)
+    self.unregisterMetrics()
+
+  def unregisterMetrics(self):
+    """Unset all the metrics to avoid duplicated timeseries error."""
+    for collector, names in tuple(REGISTRY._collector_to_names.items()):
+      REGISTRY.unregister(collector)
 
   @mock.patch('turbinia.client.task_manager.CeleryTaskManager._backend_setup')
   @mock.patch('turbinia.lib.docker_manager.DockerManager')
