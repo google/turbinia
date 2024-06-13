@@ -17,6 +17,8 @@
 import os
 import unittest
 
+from pathlib import Path
+
 from turbinia import config
 from turbinia.workers.analysis import linux_acct
 
@@ -43,11 +45,18 @@ class LinuxAccountAnalysisTaskTest(unittest.TestCase):
   def setUp(self):
     super(LinuxAccountAnalysisTaskTest, self).setUp()
     filedir = os.path.dirname(os.path.realpath(__file__))
-    test_data = os.path.join(filedir, '..', '..', '..', 'test_data', 'shadow')
+    print(filedir)
+    #test_data = os.path.join(filedir, '..', '..', '..', 'test_data', 'shadow')
+    test_data = Path(filedir).parent.parent.parent.joinpath(
+        'test_data/shadow').as_posix()
+    print(test_data)
     with open(test_data, 'r') as data:
       self.SHADOW_FILE = data.readlines()
-    test_data = os.path.join(
-        filedir, '..', '..', '..', 'test_data', 'deb11_shadow')
+    test_data = Path(filedir).parent.parent.parent.joinpath(
+        'test_data/deb11_shadow').as_posix()
+    print(test_data)
+    #test_data = os.path.join(
+    #    filedir, '..', '..', '..', 'test_data', 'deb11_shadow')
     with open(test_data, 'r') as data:
       self.YESCRYPT_SHADOW_FILE = data.readlines()
 
