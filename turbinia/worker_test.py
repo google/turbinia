@@ -31,8 +31,6 @@ from turbinia.jobs import manager
 from turbinia.jobs import manager_test
 from turbinia import TurbiniaException
 
-from prometheus_client import REGISTRY
-
 
 class TestTurbiniaCeleryWorker(unittest.TestCase):
   """Test Turbinia Celery Worker class."""
