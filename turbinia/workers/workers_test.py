@@ -85,6 +85,7 @@ class TestTurbiniaTaskBase(unittest.TestCase):
         os.rmdir(directory)
 
     os.rmdir(self.base_output_dir)
+    self.unregisterMetrics()
 
   def setResults(
       self, setup=None, run=None, validate_result=None, mock_run=True):
@@ -116,7 +117,7 @@ class TestTurbiniaTaskBase(unittest.TestCase):
 
   def unregisterMetrics(self):
     """Unset all the metrics to avoid duplicated timeseries error."""
-    for collector, names in tuple(REGISTRY._collector_to_names.items()):
+    for collector, _ in tuple(REGISTRY._collector_to_names.items()):
       REGISTRY.unregister(collector)
 
 
@@ -148,7 +149,6 @@ class TestTurbiniaTask(TestTurbiniaTaskBase):
   @mock.patch('turbinia.redis_client.RedisClient.set_attribute')
   def testTurbiniaTaskRunWrapper(self, _):
     """Test that the run wrapper executes task run."""
-    self.unregisterMetrics()
     self.setResults()
     self.result.closed = True
     new_result = self.task.run_wrapper(self.evidence.__dict__)
@@ -160,7 +160,6 @@ class TestTurbiniaTask(TestTurbiniaTaskBase):
   @mock.patch('turbinia.redis_client.RedisClient.set_attribute')
   def testTurbiniaTaskRunWrapperAutoClose(self, _):
     """Test that the run wrapper closes the task."""
-    self.unregisterMetrics()
     self.setResults()
     new_result = self.task.run_wrapper(self.evidence.__dict__)
     new_result = TurbiniaTaskResult.deserialize(new_result)
@@ -171,7 +170,6 @@ class TestTurbiniaTask(TestTurbiniaTaskBase):
   @mock.patch('turbinia.redis_client.RedisClient.set_attribute')
   def testTurbiniaTaskRunWrapperBadResult(self, _, __):
     """Test that the run wrapper recovers from run returning bad result."""
-    self.unregisterMetrics()
     bad_result = 'Not a TurbiniaTaskResult'
     checked_result = TurbiniaTaskResult(base_output_dir=self.base_output_dir)
     checked_result.setup(self.task)
@@ -186,7 +184,6 @@ class TestTurbiniaTask(TestTurbiniaTaskBase):
   @mock.patch('turbinia.redis_client.RedisClient.set_attribute')
   def testTurbiniaTaskJobUnavailable(self, _):
     """Test that the run wrapper can fail if the job doesn't exist."""
-    self.unregisterMetrics()
     self.setResults()
     self.task.job_name = 'non_exist'
     canary_status = (
@@ -199,7 +196,6 @@ class TestTurbiniaTask(TestTurbiniaTaskBase):
   @mock.patch('turbinia.redis_client.RedisClient.set_attribute')
   def testTurbiniaTaskRunWrapperExceptionThrown(self, _):
     """Test that the run wrapper recovers from run throwing an exception."""
-    self.unregisterMetrics()
     self.setResults()
     self.task.run = mock.MagicMock(side_effect=TurbiniaException)
 
