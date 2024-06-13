@@ -225,7 +225,7 @@ class RedisClient:
     except redis.RedisError as exception:
       error_message = (
           f'Error checking existence of attribute {attribute_name}'
-          f'for key {redis_key}')
+          f' for key {redis_key}')
       log.error(f'{error_message}: {exception}')
       raise RedisClientError(error_message) from exception
 

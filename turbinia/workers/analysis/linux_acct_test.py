@@ -60,8 +60,6 @@ class LinuxAccountAnalysisTaskTest(unittest.TestCase):
     credentials = task._extract_linux_credentials(self.SHADOW_FILE)
     self.assertEqual(credentials, self.EXPECTED_CREDENTIALS)
 
-
-'''
   def test_analyse_shadow_file(self):
     """Tests the analyse_shadow_file method."""
     config.LoadConfig()
@@ -71,7 +69,8 @@ class LinuxAccountAnalysisTaskTest(unittest.TestCase):
         self.SHADOW_FILE, '/etc/shadow', self.EXPECTED_CREDENTIALS)
     self.assertEqual(report, self.SHADOW_REPORT)
     self.assertEqual(priority, 10)
-    self.assertEqual(summary, 'Shadow file analysis of /etc/shadow found 1 weak password(s)')
+    self.assertEqual(
+        summary, 'Shadow file analysis of /etc/shadow found 1 weak password(s)')
 
   def test_analyse_yescrypt_shadow(self):
     """Tests the analyse_shadow_file method with a yescrypt credential."""
@@ -79,11 +78,13 @@ class LinuxAccountAnalysisTaskTest(unittest.TestCase):
     task = linux_acct.LinuxAccountAnalysisTask()
 
     (report, priority, summary) = task.analyse_shadow_file(
-        self.YESCRYPT_SHADOW_FILE, '/etc/shadow', self.YESCRYPT_EXPECTED_CREDENTIALS)
-    self.assertRegexpMatches(report, "User 'root' with password 'password'")
+        self.YESCRYPT_SHADOW_FILE, '/etc/shadow',
+        self.YESCRYPT_EXPECTED_CREDENTIALS)
+    self.assertRegex(report, "User 'root' with password 'password'")
     self.assertEqual(priority, 10)
-    self.assertEqual(summary, 'Shadow file analysis of /etc/shadow found 1 weak password(s)')
-'''
+    self.assertEqual(
+        summary, 'Shadow file analysis of /etc/shadow found 1 weak password(s)')
+
 
 if __name__ == '__main__':
   unittest.main()
