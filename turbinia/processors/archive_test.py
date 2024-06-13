@@ -14,8 +14,6 @@
 # limitations under the License.
 """Tests for the Archive processor to compress and decompress folders."""
 
-from __future__ import unicode_literals
-
 import os
 import tarfile
 import unittest

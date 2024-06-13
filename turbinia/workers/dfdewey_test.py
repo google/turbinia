@@ -14,8 +14,6 @@
 # limitations under the License.
 """Tests for the dfDewey job."""
 
-from __future__ import unicode_literals
-
 import unittest
 import mock
 

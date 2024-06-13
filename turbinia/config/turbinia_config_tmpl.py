@@ -393,4 +393,4 @@ GCP_GENERATIVE_LANGUAGE_API_KEY = ''
 # in llm_client.py module with the provider name (as key) and
 # implementationclass (as value).
 # possible values ["vertexai"]
-LLM_PROVIDER = "vertexai"
+LLM_PROVIDER = 'vertexai'

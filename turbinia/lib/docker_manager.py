@@ -14,8 +14,6 @@
 # limitations under the License.
 """Library to handle docker related queries."""
 
-from __future__ import unicode_literals
-
 import logging
 import codecs
 import os

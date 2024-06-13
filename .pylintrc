@@ -102,7 +102,6 @@ disable=abstract-method,
         no-init,  # added
         no-member,
         no-name-in-module,
-        no-self-use,
         nonzero-method,
         oct-method,
         old-division,

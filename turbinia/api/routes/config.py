@@ -32,7 +32,7 @@ router = APIRouter(prefix='/config', tags=['Turbinia Configuration'])
 
 @router.get('/')
 async def read_config(request: Request):
-  """Retrieve turbinia config."""
+  """Retrieves Turbinia configuration."""
   try:
     current_config = turbinia_config.toDict()
     if current_config:

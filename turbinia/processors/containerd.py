@@ -14,8 +14,6 @@
 # limitations under the License.
 """Evidence processor to mount local containerd containers."""
 
-from __future__ import unicode_literals
-
 import logging
 import os
 import subprocess

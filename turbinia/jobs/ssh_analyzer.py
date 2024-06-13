@@ -14,8 +14,6 @@
 # limitations under the License.
 """Job to execute SSH analyzer task."""
 
-from __future__ import unicode_literals
-
 from turbinia.evidence import ContainerdContainer
 from turbinia.evidence import Directory
 from turbinia.evidence import DockerContainer

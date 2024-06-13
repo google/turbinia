@@ -14,8 +14,6 @@
 # limitations under the License.
 """Job to execute docker-explorer, and generate new Evidence per container"""
 
-from __future__ import unicode_literals
-
 from turbinia.evidence import DiskPartition
 from turbinia.evidence import DockerContainer
 from turbinia.jobs import interface

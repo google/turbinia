@@ -14,8 +14,6 @@
 # limitations under the License.
 """Tests for Turbinia client module."""
 
-from __future__ import unicode_literals
-
 from datetime import datetime
 from datetime import timedelta
 import unittest

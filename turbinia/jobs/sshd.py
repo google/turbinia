@@ -14,8 +14,6 @@
 # limitations under the License.
 """Job to execute sshd_config analysis task."""
 
-from __future__ import unicode_literals
-
 from turbinia.workers import artifact
 from turbinia.workers.analysis import sshd
 from turbinia.evidence import ContainerdContainer

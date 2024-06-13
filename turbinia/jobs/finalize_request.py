@@ -14,8 +14,6 @@
 # limitations under the License.
 """Job to finalize a request."""
 
-from __future__ import unicode_literals
-
 from turbinia.evidence import FinalReport
 from turbinia.jobs import interface
 from turbinia.jobs import manager

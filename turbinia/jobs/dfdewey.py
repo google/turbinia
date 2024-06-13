@@ -14,8 +14,6 @@
 # limitations under the License.
 """Job to execute dfDewey task."""
 
-from __future__ import unicode_literals
-
 from turbinia.evidence import GoogleCloudDisk
 from turbinia.evidence import GoogleCloudDiskRawEmbedded
 from turbinia.evidence import RawDisk

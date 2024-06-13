@@ -14,8 +14,6 @@
 # limitations under the License.
 """Turbinia task."""
 
-from __future__ import unicode_literals
-
 from copy import deepcopy
 from datetime import datetime
 from datetime import timedelta
@@ -106,6 +104,7 @@ class TurbiniaTaskResult:
       output_dir (str): Full path for local output
       error (dict): Error data ('error' and 'traceback' are some valid keys)
       evidence (list[Evidence]): Newly created Evidence objects.
+      evidence_size (int): Size of evidence in bytes.
       id (str): Unique Id of result (string of hex)
       input_evidence (Evidence): The evidence this task processed.
       job_id (str): The ID of the Job that generated this Task/TaskResult
@@ -129,7 +128,7 @@ class TurbiniaTaskResult:
   # The list of attributes that we will persist into storage
   STORED_ATTRIBUTES = [
       'worker_name', 'report_data', 'report_priority', 'run_time', 'status',
-      'saved_paths', 'successful'
+      'saved_paths', 'successful', 'evidence_size'
   ]
 
   def __init__(
@@ -146,12 +145,10 @@ class TurbiniaTaskResult:
     self.job_id = job_id
     self.base_output_dir = base_output_dir
     self.request_id = request_id
-
     self.task_id = None
     self.task_name = None
     self.requester = None
     self.output_dir = None
-
     self.report_data = None
     self.report_priority = Priority.MEDIUM
     self.run_time = None
@@ -245,7 +242,7 @@ class TurbiniaTaskResult:
             'The text_data attribute has a size {0:d} larger than the max '
             'size {1:d} so truncating the response.'.format(
                 len(evidence.text_data), REPORT_MAXSIZE))
-        self.log(message, logging.WARN)
+        self.log(message, logging.WARNING)
         evidence.text_data = evidence.text_data[:REPORT_MAXSIZE] + '\n'
         evidence.text_data += message
 
@@ -284,7 +281,7 @@ class TurbiniaTaskResult:
             log.error(f'Error updating evidence in redis: {exception}')
           else:
             self.state_manager.write_evidence(
-                evidence.serialize(json_values=True), update=True)
+                evidence.serialize(json_values=True))
 
     # Now that we've post-processed the input_evidence, we can unset it
     # because we don't need to return it.
@@ -321,8 +318,8 @@ class TurbiniaTaskResult:
       log.debug(message)
     elif level == logging.INFO:
       log.info(message)
-    elif level == logging.WARN:
-      log.warn(message)
+    elif level == logging.WARNING:
+      log.warning(message)
     elif level == logging.ERROR:
       log.error(message)
     elif level == logging.CRITICAL:
@@ -330,23 +327,6 @@ class TurbiniaTaskResult:
 
     if traceback_:
       self.set_error(message, traceback_)
-
-  def update_task_status(self, task, status=None):
-    """Updates the task status and pushes it directly to datastore.
-
-    Args:
-      task (TurbiniaTask): The calling Task object
-      status (str): Brief word or phrase for Task state. If not supplied, the
-          existing Task status will be used.
-    """
-    if status:
-      task.result.status = 'Task {0!s} is {1!s} on {2!s}'.format(
-          self.task_name, status, self.worker_name)
-    if self.state_manager:
-      self.state_manager.update_task(task)
-    else:
-      self.log(
-          'No state_manager initialized, not updating Task info', logging.DEBUG)
 
   def add_evidence(self, evidence, evidence_config):
     """Populate the results list.
@@ -417,7 +397,7 @@ class TurbiniaTaskResult:
     result = TurbiniaTaskResult()
     result.__dict__.update(input_dict)
     if result.state_manager:
-      result.state_manager = None
+      result.state_manager = state_manager.get_state_manager()
     if result.run_time:
       result.run_time = timedelta(seconds=result.run_time)
     if result.input_evidence:
@@ -431,8 +411,14 @@ class TurbiniaTask:
   """Base class for Turbinia tasks.
 
   Attributes:
+      _evidence_config (dict): The config that we want to pass to all new
+          evidence created from this task.
       base_output_dir (str): The base directory that output will go into.
           Per-task directories will be created under this.
+      evidence (list): List of Evidence objects.
+      evidence_size (int): The size of the evidence.
+      group_id (str): group id for the evidence
+      group_name (str): group name for the evidence
       id (str): Unique Id of task (string of hex)
       is_finalize_task (bool): Whether this is a finalize Task or not.
       job_id (str): Job ID the Task was created by.
@@ -443,31 +429,30 @@ class TurbiniaTask:
       output_dir (str): The directory output will go into (including per-task
           folder).
       output_manager (OutputManager): The object that manages saving output.
-      result (TurbiniaTaskResult): A TurbiniaTaskResult object.
+      reason (str): reason of the evidence
+      recipe (dict): Validated recipe to be used as the task configuration.
       request_id (str): The id of the initial request to process this evidence.
+      requester (str): The user who requested the task.
+      result (TurbiniaTaskResult): A TurbiniaTaskResult object.
       start_time (datetime): When the task was started
       state_key (str): A key used to manage task state
-      stub (psq.task.TaskResult|celery.app.Task): The task manager
-          implementation specific task stub that exists server side to keep a
-          reference to the remote task objects.  For PSQ this is a task result
-          object, but other implementations have their own stub objects.
+      state_manager (state_manager): Turbinia state manager object.
+      stub (celery.result.AsyncResult): The task manager implementation
+          specific task stub that exists server side to keep a reference to the
+          remote task objects.
+      task_config (dict): Default task configuration, in effect if no recipe is
+          explicitly provided for the task.
       tmp_dir (str): Temporary directory for Task to write to.
-      requester (str): The user who requested the task.
-      _evidence_config (dict): The config that we want to pass to all new
-            evidence created from this task.
-      recipe (dict): Validated recipe to be used as the task configuration.
-      task_config (dict): Default task configuration, in effect if
-            no recipe is explicitly provided for the task.
-      group_name (str): group name for the evidence
-      reason (str): reason of the evidence
-      all_args (str): Terminal arguments input by user for evidence
-  """
+      turbinia_version (str): The version of Turbinia that was used to run the
+          task.
+      worker_start_time (datetime): The time the worker started the task.
+      """
 
   # The list of attributes that we will persist into storage
   STORED_ATTRIBUTES = [
       'id', 'job_id', 'start_time', 'last_update', 'name', 'evidence_name',
-      'evidence_id', 'evidence_size', 'request_id', 'requester', 'group_name',
-      'reason', 'all_args', 'group_id'
+      'evidence_id', 'request_id', 'requester', 'group_name', 'reason',
+      'group_id'
   ]
 
   # The list of evidence states that are required by a Task in order to run.
@@ -480,7 +465,7 @@ class TurbiniaTask:
 
   def __init__(
       self, name=None, base_output_dir=None, request_id=None, requester=None,
-      group_name=None, reason=None, all_args=None, group_id=None):
+      group_name=None, reason=None, group_id=None):
     """Initialization for TurbiniaTask.
 
     Args:
@@ -502,9 +487,9 @@ class TurbiniaTask:
     self.name = name if name else self.__class__.__name__
     self.evidence_name = None
     self.evidence_id = None
-    self.evidence_size = None
     self.output_dir = None
     self.output_manager = output_manager.OutputManager()
+    self.state_manager = state_manager.get_state_manager()
     self.result = None
     self.request_id = request_id
     self.state_key = None
@@ -519,8 +504,8 @@ class TurbiniaTask:
     self.task_config = {}
     self.group_name = group_name
     self.reason = reason
-    self.all_args = all_args
     self.group_id = group_id
+    self.worker_name = platform.node()
 
   def serialize(self):
     """Converts the TurbiniaTask object into a serializable dict.
@@ -528,6 +513,7 @@ class TurbiniaTask:
     Returns:
       Dict: Dictionary representing this object, ready to be serialized.
     """
+    self.state_manager = None
     task_copy = deepcopy(self.__dict__)
     task_copy['output_manager'] = self.output_manager.__dict__
     task_copy['last_update'] = self.last_update.strftime(DATETIME_FORMAT)
@@ -553,6 +539,7 @@ class TurbiniaTask:
     Returns:
       bool: If the current execution is in a worker or nosetests.
     """
+    config.LoadConfig()
     if config.TURBINIA_COMMAND in ('celeryworker', 'psqworker'):
       return True
 
@@ -574,8 +561,8 @@ class TurbiniaTask:
     evidence.validate()
     evidence.preprocess(
         self.id, tmp_dir=self.tmp_dir, required_states=self.REQUIRED_STATES)
+    self.evidence_name = evidence.name
     self.evidence_id = evidence.id
-    self.evidence_size = evidence.size
 
     # Final check to make sure that the required evidence state has been met
     # for Evidence types that have those capabilities.
@@ -1053,7 +1040,7 @@ class TurbiniaTask:
     try:
       evidence = evidence_decode(evidence)
       self.result = self.setup(evidence)
-      self.result.update_task_status(self, 'queued')
+      self.update_task_status(self, 'queued')
       turbinia_worker_tasks_queued_total.inc()
       task_runtime_metrics = self.get_metrics()
     except TurbiniaException as exception:
@@ -1093,6 +1080,7 @@ class TurbiniaTask:
           return self.result.serialize()
 
         self.evidence_setup(evidence)
+        self.result.evidence_size = evidence.size
 
         if config.VERSION_CHECK:
           if self.turbinia_version != __version__:
@@ -1104,10 +1092,10 @@ class TurbiniaTask:
             self.result.successful = False
             return self.result.serialize()
 
-        self.result.update_task_status(self, 'running')
         self._evidence_config = evidence.config
         self.task_config = self.get_task_recipe(evidence.config)
         self.worker_start_time = datetime.now()
+        self.update_task_status(self, 'running')
         self.result = self.run(evidence, self.result)
 
       # pylint: disable=broad-except
@@ -1140,8 +1128,6 @@ class TurbiniaTask:
         turbinia_worker_exception_failure.inc()
 
     self.result = self.validate_result(self.result)
-    if self.result:
-      self.result.update_task_status(self)
 
     # Trying to close the result if possible so that we clean up what we can.
     # This has a higher likelihood of failing because something must have gone
@@ -1196,3 +1182,24 @@ class TurbiniaTask:
         TurbiniaTaskResult object.
     """
     raise NotImplementedError
+
+  def update_task_status(self, task, status=None):
+    """Updates the task status and pushes it directly to datastore.
+
+    Args:
+      task (TurbiniaTask): The calling Task object
+      status (str): Brief word or phrase for Task state. If not supplied, the
+          existing Task status will be used.
+    """
+    if status:
+      task.status = 'Task {0!s} is {1!s} on {2!s}'.format(
+          self.name, status, self.worker_name)
+    if not self.state_manager:
+      self.state_manager = state_manager.get_state_manager()
+    if self.state_manager:
+      task_key = self.state_manager.redis_client.build_key_name('task', task.id)
+      self.state_manager.redis_client.set_attribute(
+          task_key, 'status', json.dumps(status))
+      self.state_manager.update_request_task(task)
+    else:
+      log.info('No state_manager initialized, not updating Task info')

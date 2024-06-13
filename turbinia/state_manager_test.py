@@ -14,8 +14,6 @@
 # limitations under the License.
 """Tests the state manager module."""
 
-from __future__ import unicode_literals
-
 import fakeredis
 import importlib
 import json
@@ -27,7 +25,7 @@ from turbinia import config
 from turbinia import state_manager
 
 
-class TestRedisEvidenceStateManager(unittest.TestCase):
+class TestRedisStateManager(unittest.TestCase):
   """Test RedisStateManager class."""
 
   def get_evidence_data(self):
@@ -61,13 +59,13 @@ class TestRedisEvidenceStateManager(unittest.TestCase):
   def write_evidence_in_fake_redis(self):
     for evidence_key, evidence_value in self.test_data.items():
       for attribute_name, attribute_value in evidence_value.items():
-        self.state_manager.client.hset(
+        self.state_manager.redis_client.client.hset(
             evidence_key, attribute_name, json.dumps(attribute_value))
 
   def get_data_from_fake_redis(self):
     for evidence_key, evidence_value in self.test_data.items():
       for attribute_name, attribute_value in evidence_value.items():
-        self.state_manager.client.hset(
+        self.state_manager.redis_client.client.hset(
             evidence_key, attribute_name, json.dumps(attribute_value))
 
   @mock.patch('redis.StrictRedis')
@@ -75,14 +73,12 @@ class TestRedisEvidenceStateManager(unittest.TestCase):
   def setUp(self, _, mock_redis):
     self.state_manager = None
     config.LoadConfig()
-    self.state_manager_save = config.STATE_MANAGER
-
     mock_redis = fakeredis.FakeStrictRedis()
     config.STATE_MANAGER = 'Redis'
     # force state_manager module to reload using Redis state manager.
     importlib.reload(state_manager)
     self.state_manager = state_manager.get_state_manager()
-    self.state_manager.set_client(mock_redis)
+    self.state_manager.redis_client.client = mock_redis
 
     self.get_evidence_data()
 
@@ -110,16 +106,9 @@ class TestRedisEvidenceStateManager(unittest.TestCase):
     self.state_manager.write_evidence(json_dumped_evidence)
 
     result = {}
-    for attribute_name, attribute_value in self.state_manager.client.hscan_iter(
-        evidence_key):
+    for attribute_name, attribute_value in (
+        self.state_manager.redis_client.client.hscan_iter(evidence_key)):
       result[attribute_name.decode()] = attribute_value.decode()
-
-    null_keys = []
-    for key, value in json_dumped_evidence.items():
-      if value in ('null', '[]', '{}'):
-        null_keys.append(key)
-    for key in null_keys:
-      json_dumped_evidence.pop(key)
 
     # Check if the stored evidence contains all of our test data
     self.assertEqual(result, json_dumped_evidence)
@@ -224,3 +213,17 @@ class TestRedisEvidenceStateManager(unittest.TestCase):
 
     # Check if the returned count is equal to our test data
     self.assertEqual(result, self.grouped_count_summary[True])
+
+  def testBuildKeyName(self):
+    """Test State Manager build_key_name() method."""
+    key_types = ('evidence', 'task', 'request')
+    for key_type in key_types:
+      key_name = self.state_manager.redis_client.build_key_name(
+          key_type, '1234')
+      self.assertIsInstance(key_name, str)
+
+  def testBuildInvalidKeyName(self):
+    """Test State Manager build_key_name() method, invalid key type"""
+    self.assertRaises(
+        ValueError, self.state_manager.redis_client.build_key_name, 'wrong',
+        '1234')

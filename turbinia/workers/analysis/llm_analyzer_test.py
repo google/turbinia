@@ -28,6 +28,7 @@ having to enter password
   @mock.patch("google.generativeai.GenerativeModel")
   def test_llm_analyze_artifact(self, mock_gen_model, mock_gen_config):
     config.LoadConfig()
+    config.LLM_PROVIDER = "vertexai"
     config.GCP_GENERATIVE_LANGUAGE_API_KEY = "fakeGcpApiKey"
     task = llm_analyzer.LLMAnalyzerTask()
     mock_gen_config.side_effect = None

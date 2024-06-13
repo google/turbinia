@@ -23,7 +23,7 @@ from pydantic import BaseModel
 from turbinia import state_manager
 from turbinia import config as turbinia_config
 
-log = logging.getLogger('turbinia:api_server:models:tasks_statistics')
+log = logging.getLogger(__name__)
 
 
 class SingleTurbiniaStats:
@@ -87,7 +87,7 @@ class SingleTurbiniaStats:
     """
     return (
         f'{self.description}: Count: {self.count}, Min: {self.min}, '
-        f'Mean: {self.mean}, Max: {self.maxs}')
+        f'Mean: {self.mean}, Max: {self.max}')
 
   def format_stats_csv(self):
     """Formats statistics data into CSV output.

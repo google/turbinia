@@ -39,25 +39,40 @@ limitations under the License.
       {{ taskDetails.status }}
     </v-alert>
     <v-card>
-      <v-list v-model:opened="openGroups">
+      <v-list density="compact" v-model:opened="openGroups">
         <v-list-group value="ids">
           <template v-slot:activator="{ props }">
             <v-list-item v-bind="props" title="Associated IDs"></v-list-item>
           </template>
           <v-list-item title="Task ID:">
-            {{ taskDetails.id }}
+            <div v-if="taskDetails.id">
+              {{ taskDetails.id }}
+            </div>
+            <div v-else>N/A</div>
           </v-list-item>
           <v-list-item title="Request ID:">
-            {{ taskDetails.request_id }}
+            <div v-if="taskDetails.request_id">
+              {{ taskDetails.request_id }}
+            </div>
+            <div v-else>N/A</div>
           </v-list-item>
           <v-list-item title="Evidence ID:">
-            {{ taskDetails.evidence_id }}
+            <div v-if="taskDetails.evidence_id">
+              {{ taskDetails.evidence_id }}
+            </div>
+            <div v-else>N/A</div>
           </v-list-item>
           <v-list-item title="Group ID:">
-            {{ taskDetails.group_id }}
+            <div v-if="taskDetails.group_id">
+              {{ taskDetails.group_id }}
+            </div>
+            <div v-else>N/A</div>
           </v-list-item>
           <v-list-item title="Job ID:">
-            {{ taskDetails.job_id }}
+            <div v-if="taskDetails.job_id">
+              {{ taskDetails.job_id }}
+            </div>
+            <div v-else>N/A</div>
           </v-list-item>
         </v-list-group>
         <v-list-group value="details">
@@ -65,28 +80,46 @@ limitations under the License.
             <v-list-item v-bind="props" title="Processing Details"></v-list-item>
           </template>
           <v-list-item title="Evidence Name:">
-            {{ taskDetails.evidence_name }}
+            <div v-if="taskDetails.evidence_name">
+              {{ taskDetails.evidence_name }}
+            </div>
+            <div v-else>N/A</div>
           </v-list-item>
           <v-list-item title="Evidence Size:">
-            {{ taskDetails.evidence_size }} bytes
-          </v-list-item>
-          <v-list-item title="Arguments:">
-            {{ taskDetails.all_args }}
+            <div v-if="taskDetails.evidence_size">
+              {{ taskDetails.evidence_size }} bytes
+            </div>
+            <div v-else>N/A</div>
           </v-list-item>
           <v-list-item title="Last Update:">
-            {{ taskDetails.last_update }}
+            <div v-if="taskDetails.last_update">
+              {{ taskDetails.last_update }}
+            </div>
+            <div v-else>N/A</div>
           </v-list-item>
           <v-list-item title="Requester:">
-            {{ taskDetails.requester }}
+            <div v-if="taskDetails.requester">
+              {{ taskDetails.requester }}
+            </div>
+            <div v-else>N/A</div>
           </v-list-item>
           <v-list-item title="Worker:">
-            {{ taskDetails.worker_name }}
+            <div v-if="taskDetails.worker_name">
+              {{ taskDetails.worker_name }}
+            </div>
+            <div v-else>N/A</div>
           </v-list-item>
           <v-list-item title="Successful:">
-            {{ taskDetails.successful }}
+            <div v-if="taskDetails.successful">
+              {{ taskDetails.successful }}
+            </div>
+            <div v-else>N/A</div>
           </v-list-item>
           <v-list-item title="Run Time:">
-            {{ taskDetails.run_time }} seconds
+            <div v-if="taskDetails.run_time">
+              {{ taskDetails.run_time }} seconds
+            </div>
+            <div v-else>N/A</div>
           </v-list-item>
         </v-list-group>
         <div v-if="taskDetails.saved_paths">

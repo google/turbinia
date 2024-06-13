@@ -1,7 +1,5 @@
 """Turbinia LLM library that uses VertexAI APIs."""
 
-from __future__ import unicode_literals
-
 import logging
 
 import backoff

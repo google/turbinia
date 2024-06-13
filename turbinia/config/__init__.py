@@ -12,9 +12,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Basic Turbinia config."""
-
-from __future__ import unicode_literals
+"""Basic Turbiniaconfig."""
 
 import importlib.util
 import importlib.machinery
@@ -169,7 +167,7 @@ def LoadConfig(config_file=None):
   # Warn about using fallback source config, but it's currently necessary for
   # tests. See issue #446.
   if 'turbinia_config_tmpl' in config_file:
-    log.warning(f'Using fallback source config. {CONFIG_MSG:s}')
+    log.warning(f'Using fallback source config {CONFIG_MSG:s}')
   try:
     config_loader = importlib.machinery.SourceFileLoader('config', config_file)
     config_spec = importlib.util.spec_from_loader(
@@ -190,7 +188,7 @@ def LoadConfig(config_file=None):
     os.environ['GOOGLE_CLOUD_PROJECT'] = _config.TURBINIA_PROJECT
 
   CONFIG = _config
-  log.debug(f'Returning parsed config loaded from {CONFIG.configSource:s}')
+  log.debug(f'Returning parsed config loaded from {_config.configSource:s}')
   return _config
 
 

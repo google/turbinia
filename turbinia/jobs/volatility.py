@@ -14,8 +14,6 @@
 # limitations under the License.
 """Job to execute volatility tasks."""
 
-from __future__ import unicode_literals
-
 from turbinia.evidence import RawMemory
 from turbinia.evidence import VolatilityReport
 from turbinia.jobs import interface

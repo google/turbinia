@@ -14,8 +14,6 @@
 # limitations under the License.
 """Tests for the Jenkins analysis task."""
 
-from __future__ import unicode_literals
-
 import unittest
 import mock
 

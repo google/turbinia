@@ -14,8 +14,6 @@
 # limitations under the License.
 """Client objects for Turbinia."""
 
-from __future__ import unicode_literals
-
 from collections import defaultdict
 from datetime import datetime
 from datetime import timedelta
@@ -164,7 +162,7 @@ class BaseTurbiniaClient:
       self, debug_tasks=False, filter_patterns=None, group_id='',
       jobs_allowlist=None, jobs_denylist=None, recipe_name=None, sketch_id=None,
       skip_recipe_validation=False, yara_rules=None, group_name=None,
-      reason=None, all_args=None):
+      reason=None):
     """Creates a Turbinia recipe.
 
     If no recipe_name is specified, this  method returns a default recipe.
@@ -186,7 +184,6 @@ class BaseTurbiniaClient:
       yara_rules (str): a string containing yara rules.
       group_name (str): Name for grouping evidence.
       reason (str): Reason or justification for Turbinia requests.
-      all_args (str): a string of commandline arguments provided to run client.
 
     Returns:
       dict: a Turbinia recipe dictionary.
@@ -240,8 +237,6 @@ class BaseTurbiniaClient:
       recipe['globals']['group_name'] = group_name
     if reason:
       recipe['globals']['reason'] = reason
-    if all_args:
-      recipe['globals']['all_args'] = all_args
     if yara_rules:
       recipe['globals']['yara_rules'] = yara_rules
 
@@ -249,15 +244,13 @@ class BaseTurbiniaClient:
 
   def create_request(
       self, request_id=None, group_id=None, requester=None, recipe=None,
-      context=None, evidence_=None, group_name=None, reason=None,
-      all_args=None):
+      evidence_=None, group_name=None, reason=None):
     """Wrapper method to create a Turbinia request."""
     default_recipe = self.create_recipe()
     request = TurbiniaRequest(
         request_id=request_id, group_id=group_id, requester=requester,
-        recipe=recipe if recipe else default_recipe, context=context,
-        evidence=evidence_, group_name=group_name, reason=reason,
-        all_args=all_args)
+        recipe=recipe if recipe else default_recipe, evidence=evidence_,
+        group_name=group_name, reason=reason)
     return request
 
   def list_jobs(self):

@@ -14,7 +14,7 @@ limitations under the License.
 <template>
   <div>
     <v-list density="compact">
-      <v-virtual-scroll :items="taskList" :item-height="40" :height="400">
+      <v-virtual-scroll :items="taskList" :item-height="40" :height="400" :width="auto">
         <template v-slot:default="{ item }">
           <v-list-item :key="item.task_id" v-slot:prepend>
             <div v-if="item.task_success">
@@ -30,21 +30,15 @@ limitations under the License.
             </div>
             <div>
               <v-list-item-action>
-                <v-btn
-                  variant="text"
-                  :ripple="true"
-                  :key="item.task_id"
-                  selected-class="activated"
+                <v-btn variant="text" :ripple="true" :key="item.task_id" selected-class="activated"
                   :class="{ activated: isActive == item.task_id }"
-                  @click="getTaskDetails(item.task_id) + selectActiveStatus(item.task_id)"
-                >
+                  @click="getTaskDetails(item.task_id) + selectActiveStatus(item.task_id)">
                   {{ item.task_id }}
                 </v-btn>
               </v-list-item-action>
             </div>
             <v-list-item>
-              {{ item.task_name }}
-              >: {{ item.task_status }}
+              {{ item.task_name }} {{ $filters.truncate(item.task_status, 128, '...') }}
             </v-list-item>
           </v-list-item>
           <v-divider> </v-divider>

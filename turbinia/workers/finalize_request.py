@@ -14,8 +14,6 @@
 # limitations under the License.
 """Task to finalize the request."""
 
-from __future__ import unicode_literals
-
 import os
 
 from turbinia import config

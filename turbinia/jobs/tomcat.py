@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Job to execute Apache Tomcat analysis task."""
-from __future__ import unicode_literals
+
 from turbinia.workers import artifact
 from turbinia.workers.analysis import tomcat
 from turbinia.evidence import ContainerdContainer

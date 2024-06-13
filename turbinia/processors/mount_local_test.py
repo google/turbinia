@@ -14,8 +14,6 @@
 # limitations under the License.
 """Tests for mount_local processor."""
 
-from __future__ import unicode_literals
-
 import os
 from subprocess import CalledProcessError
 from subprocess import STDOUT

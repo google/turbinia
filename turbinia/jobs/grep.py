@@ -14,8 +14,6 @@
 # limitations under the License.
 """Job to execute grep task."""
 
-from __future__ import unicode_literals
-
 from turbinia.evidence import TextFile
 from turbinia.evidence import FilteredTextFile
 from turbinia.evidence import PlasoCsvFile

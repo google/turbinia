@@ -14,8 +14,6 @@
 # limitations under the License.
 """Job to execute strings task."""
 
-from __future__ import unicode_literals
-
 from turbinia.evidence import DiskPartition
 from turbinia.evidence import TextFile
 from turbinia.jobs import interface

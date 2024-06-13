@@ -19,14 +19,11 @@ Handles worker communication and new evidence requests.
 
 # fix celery naming collision (this file vs. module)
 from __future__ import absolute_import
-from __future__ import unicode_literals
 
 import logging
-
-from six.moves import queue
-
 import celery
 import kombu
+
 from kombu.exceptions import OperationalError
 from amqp.exceptions import ChannelError
 
@@ -102,7 +99,7 @@ class TurbiniaKombu(TurbiniaMessageBase):
           requests.append(request)
           if self.queue.queue.durable:
             message.ack()
-      except queue.Empty:
+      except self.queue.Empty:
         break
       except ChannelError:
         break

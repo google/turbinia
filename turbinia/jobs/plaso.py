@@ -14,8 +14,6 @@
 # limitations under the License.
 """Job to execute Plaso task."""
 
-from __future__ import unicode_literals
-
 import logging
 
 from turbinia.evidence import EwfDisk

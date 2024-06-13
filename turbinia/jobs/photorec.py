@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """Job to run photorec Task."""
-from __future__ import unicode_literals
+
 from turbinia.evidence import DiskPartition
 from turbinia.jobs import interface
 from turbinia.jobs import manager

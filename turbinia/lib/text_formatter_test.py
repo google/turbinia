@@ -14,8 +14,6 @@
 # limitations under the License.
 """Tests for text_formatter."""
 
-from __future__ import unicode_literals
-
 import unittest
 
 from turbinia.lib import text_formatter as fmt
