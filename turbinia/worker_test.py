@@ -51,12 +51,6 @@ class TestTurbiniaCeleryWorker(unittest.TestCase):
 
     if 'turbinia-test' in self.tmp_dir:
       shutil.rmtree(self.tmp_dir)
-    self.unregisterMetrics()
-
-  def unregisterMetrics(self):
-    """Unset all the metrics to avoid duplicated timeseries error."""
-    for collector, names in tuple(REGISTRY._collector_to_names.items()):
-      REGISTRY.unregister(collector)
 
   @mock.patch('turbinia.client.task_manager.CeleryTaskManager._backend_setup')
   @mock.patch('turbinia.lib.docker_manager.DockerManager')
