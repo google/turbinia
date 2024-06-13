@@ -55,7 +55,7 @@ class TestTurbiniaCeleryWorker(unittest.TestCase):
 
   def unregisterMetrics(self):
     """Unset all the metrics to avoid duplicated timeseries error."""
-    for collector, names in tuple(REGISTRY.get_names()):
+    for collector, names in tuple(REGISTRY._get_names()):
       REGISTRY.unregister(collector)
 
   @mock.patch('turbinia.client.task_manager.CeleryTaskManager._backend_setup')
