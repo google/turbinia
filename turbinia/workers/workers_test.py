@@ -119,7 +119,8 @@ class TestTurbiniaTaskBase(unittest.TestCase):
 
   def unregisterMetrics(self):
     """Unset all the metrics to avoid duplicated timeseries error."""
-    for collector, names in tuple(REGISTRY._get_names()):
+    for collector, names in tuple(REGISTRY._collector_to_names.items()):
+      print(collector, names)
       REGISTRY.unregister(collector)
 
 

@@ -21,6 +21,7 @@ from datetime import datetime
 from datetime import timedelta
 from enum import IntEnum
 
+from itertools import chain
 import json
 import logging
 import os
@@ -48,6 +49,7 @@ from turbinia import TurbiniaException
 from turbinia import log_and_report
 
 from celery.exceptions import SoftTimeLimitExceeded
+from prometheus_client import REGISTRY
 
 METRICS = {}
 # Set the maximum size that the report can be before truncating it.  This is a
@@ -59,25 +61,30 @@ REPORT_MAXSIZE = int(1048572 * 0.75)
 
 log = logging.getLogger(__name__)
 
-turbinia_worker_exception_failure = Counter(
-    'turbinia_worker_exception_failure',
-    'Total number Tasks failed due to uncaught exception')
-turbinia_worker_tasks_started_total = Counter(
-    'turbinia_worker_tasks_started_total',
-    'Total number of started worker tasks')
-turbinia_worker_tasks_completed_total = Counter(
-    'turbinia_worker_tasks_completed_total',
-    'Total number of completed worker tasks')
-turbinia_worker_tasks_queued_total = Counter(
-    'turbinia_worker_tasks_queued_total', 'Total number of queued worker tasks')
-turbinia_worker_tasks_failed_total = Counter(
-    'turbinia_worker_tasks_failed_total', 'Total number of failed worker tasks')
-turbinia_worker_tasks_timeout_total = Counter(
-    'turbinia_worker_tasks_timeout_total',
-    'Total number of worker tasks timed out during dependency execution.')
-turbinia_worker_tasks_timeout_celery_soft = Counter(
-    'turbinia_worker_tasks_timeout_celery_soft',
-    'Total number of Tasks timed out due to Celery soft timeout')
+# Prevent re-registering metrics if module is loaded multiple times.
+metric_names = list(chain.from_iterable(REGISTRY._collector_to_names.values()))
+if 'turbinia_worker_exception_failure' not in metric_names:
+  turbinia_worker_exception_failure = Counter(
+      'turbinia_worker_exception_failure',
+      'Total number Tasks failed due to uncaught exception')
+  turbinia_worker_tasks_started_total = Counter(
+      'turbinia_worker_tasks_started_total',
+      'Total number of started worker tasks')
+  turbinia_worker_tasks_completed_total = Counter(
+      'turbinia_worker_tasks_completed_total',
+      'Total number of completed worker tasks')
+  turbinia_worker_tasks_queued_total = Counter(
+      'turbinia_worker_tasks_queued_total',
+      'Total number of queued worker tasks')
+  turbinia_worker_tasks_failed_total = Counter(
+      'turbinia_worker_tasks_failed_total',
+      'Total number of failed worker tasks')
+  turbinia_worker_tasks_timeout_total = Counter(
+      'turbinia_worker_tasks_timeout_total',
+      'Total number of worker tasks timed out during dependency execution.')
+  turbinia_worker_tasks_timeout_celery_soft = Counter(
+      'turbinia_worker_tasks_timeout_celery_soft',
+      'Total number of Tasks timed out due to Celery soft timeout')
 
 
 class Priority(IntEnum):
