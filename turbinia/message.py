@@ -80,7 +80,7 @@ class TurbiniaRequest:
     self.requester = requester if requester else 'user_unspecified'
     self.running_tasks = []
     self.start_time = datetime.now().strftime(DATETIME_FORMAT)
-    self.status = ''
+    self.status = 'pending'
     self.successful_tasks = []
     self.task_ids = []
     self.type = self.__class__.__name__

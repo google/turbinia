@@ -390,14 +390,12 @@ class RedisStateManager(BaseStateManager):
       log.error(f'Error writing task data for task {task.id}: {exception}')
     return task_key
 
-  def write_evidence(self, evidence_dict: dict[str], update=False) -> str:
+  def write_evidence(self, evidence_dict: dict[str]) -> str:
     """Writes evidence into redis.
 
     Args:
       evidence_dict (dict[str]): A dictionary containing the serialized
         evidence attributes that will be saved.
-      update (bool): Allows overwriting previous key and blocks writing new 
-        ones.
 
     Returns:
       evidence_key (str): The key corresponding to the evidence in Redis
@@ -427,18 +425,13 @@ class RedisStateManager(BaseStateManager):
       pass
 
     try:
-      # Either updates or writes new key
-      if update == self.redis_client.key_exists(evidence_key):
+      if not self.redis_client.key_exists(evidence_key):
         self.redis_client.write_hash_object(evidence_key, evidence_dict)
         if evidence_hash:
           self.redis_client.set_attribute(
               'TurbiniaEvidenceHashes', evidence_hash, evidence_key)
-        # This is a new key/evidence so we add it to the list of evidence ids
-        # for the request
-        if not update:
-          self.redis_client.add_to_list(
-              request_key, 'evidence_ids', evidence_id)
-        return evidence_key
+      self.redis_client.add_to_list(request_key, 'evidence_ids', evidence_id)
+      return evidence_key
     except RedisClientError as exception:
       log.error(f'There was an error writing data to Redis: {exception}')
 
@@ -614,7 +607,7 @@ class RedisStateManager(BaseStateManager):
 
   def get_request_status(self, request_id):
     request_data = self.get_request_data(request_id)
-    request_status = ''
+    request_status = 'pending'
     finished_tasks = len(request_data['failed_tasks']) + (
         len(request_data['successful_tasks']))
     all_tasks_finished = finished_tasks == len(request_data['task_ids'])
@@ -628,7 +621,7 @@ class RedisStateManager(BaseStateManager):
       request_status = 'completed_with_errors'
     else:
       request_status = 'pending'
-    log.debug(f'Request {request_id} status: {request_status}')
+    log.info(f'Request {request_id} status: {request_status}')
     return request_status
 
   def query_requests(

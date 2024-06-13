@@ -281,7 +281,7 @@ class TurbiniaTaskResult:
             log.error(f'Error updating evidence in redis: {exception}')
           else:
             self.state_manager.write_evidence(
-                evidence.serialize(json_values=True), update=True)
+                evidence.serialize(json_values=True))
 
     # Now that we've post-processed the input_evidence, we can unset it
     # because we don't need to return it.
