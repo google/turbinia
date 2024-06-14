@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "turbinia-client"
-version = "1.0.6"
+version = "1.0.7"
 description = "Turbinia command-line tool"
 authors = ["Turbinia Developers <turbinia-dev@googlegroups.com>"]
 maintainers = ["Turbinia Developers <turbinia-dev@googlegroups.com>"]
