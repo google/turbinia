@@ -90,10 +90,10 @@ done
 
 # Wait until request is complete 
 req_status=$(turbinia-client status request $REQUEST_ID -j | jq -r '.status')
-while [[ $req_status = "running" ]]
+while [[ $req_status = "running" || $req_status = "pending" ]]
 do
   req_status=$(turbinia-client status request $REQUEST_ID -j | jq -r '.status')
-  if [[ $req_status = "running" ]]
+  if [[ $req_status = "running" || $req_status = "pending" ]]
   then
     echo "Turbinia request $REQUEST_ID is still running. Sleeping for 180 seconds..."
     sleep 180
