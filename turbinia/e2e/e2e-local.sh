@@ -76,7 +76,7 @@ if [ -z "$req_status" ]
 then
   echo "Unable to get request status, exiting with error code 1"
   exit $RET
-FI
+fi
 
 while [[ $req_status = "running" || $req_status = "pending" ]]
 do
