@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "turbinia"
-version = "20240614.1"
+version = "20240614.2"
 description = "Automation and Scaling of Digital Forensics Tools"
 authors = ["Turbinia Developers <turbinia-dev@googlegroups.com>"]
 maintainers = ["Turbinia Developers <turbinia-dev@googlegroups.com>"]
@@ -14,6 +14,7 @@ turbiniactl = "turbinia.turbiniactl:main"
 
 [tool.poetry.dependencies]
 python = "^3.10"
+acstore = { version = "20240128" }
 backoff = { version = ">=2.2.1" }
 celery = { version = "^5.2.2" }
 dfDewey = { version = "^20231016", optional = true }
