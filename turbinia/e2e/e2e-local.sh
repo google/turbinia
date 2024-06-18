@@ -66,15 +66,15 @@ RECIPE_DATA=`cat ./evidence/e2e-recipe.yaml | base64 -w0`
 turbinia-client -p ./evidence submit rawdisk --source_path /evidence/artifact_disk.dd --request_id 123456789 --recipe_data {$RECIPE_DATA} 
 
 echo "==> Waiting 5 seconds before polling request status"
-sleep 5
+sleep 10
 
 echo "==> Polling the API server for request status"
 # Wait until request is complete 
 req_status=$(turbinia-client -p ./evidence status request 123456789 -j | jq -r '.status')
-while [[ $req_status = "running" ]]
+while [[ $req_status = "running" || $req_status = "pending" ]]
 do
   req_status=$(turbinia-client -p ./evidence status request 123456789 -j | jq -r '.status')
-  if [[ $req_status = "running" ]]
+  if [[ $req_status = "running" || $req_status = "pending" ]]
   then
     echo "Turbinia request 123456789 is still running. Sleeping for 10 seconds..."
     sleep 10
