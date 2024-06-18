@@ -69,8 +69,15 @@ echo "==> Waiting 5 seconds before polling request status"
 sleep 10
 
 echo "==> Polling the API server for request status"
+
 # Wait until request is complete 
 req_status=$(turbinia-client -p ./evidence status request 123456789 -j | jq -r '.status')
+if [ -z "$req_status" ]
+then
+  echo "Unable to get request status, exiting with error code 1"
+  exit $RET
+FI
+
 while [[ $req_status = "running" || $req_status = "pending" ]]
 do
   req_status=$(turbinia-client -p ./evidence status request 123456789 -j | jq -r '.status')
