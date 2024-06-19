@@ -16,6 +16,7 @@ DISK="disk-1"
 FAILED=0
 REQUEST_ID=$(uuidgen -rt)
 DATE=$(date -I)
+MAX_RETRIES=30
 
 if [ $# -ne  2 ]
 then
@@ -83,8 +84,14 @@ turbinia-client submit googleclouddisk --project $GCP_PROJECT --zone $GCP_ZONE -
 req_status=$(turbinia-client status request $REQUEST_ID -j | jq -r '.status')
 while [[ $req_status != "running" ]]
 do
+  MAX_RETRIES-=1
+  if [[ $MAX_RETRIES = 0 ]]
+  then
+    echo "ERROR: Max retries reached, exiting."
+    exit $RET
+  fi
   req_status=$(turbinia-client status request $REQUEST_ID -j | jq -r '.status')
-  echo "Request $REQUEST_ID is pending. Sleeping for 5 seconds..."
+  echo "Request $REQUEST_ID is pending. Retrying in 5 seconds..."
   sleep 5
 done
 
@@ -94,7 +101,13 @@ do
   req_status=$(turbinia-client status request $REQUEST_ID -j | jq -r '.status')
   if [[ $req_status = "running" ]]
   then
-    echo "Turbinia request $REQUEST_ID is still running. Sleeping for 180 seconds..."
+    MAX_RETRIES-=1
+    if [[ $MAX_RETRIES = 0 ]]
+    then
+      echo "ERROR: Max retries reached, exiting."
+      exit $RET
+    fi
+    echo "Turbinia request $REQUEST_ID is still running. Retrying in 100 seconds..."
     sleep 180
   fi
 done

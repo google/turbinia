@@ -5,6 +5,7 @@
 
 # Set default return value
 RET=1
+MAX_RETRIES=30
 set -o posix
 
 echo "Create evidence folder"
@@ -74,10 +75,18 @@ echo "==> Polling the API server for request status"
 req_status=$(turbinia-client -p ./evidence status request 123456789 -j | jq -r '.status')
 while [[ $req_status != "running" ]]
 do
+  MAX_RETRIES-=1
+  if [[ $MAX_RETRIES = 0 ]]
+  then
+    echo "ERROR: Max retries reached, exiting."
+    exit $RET
+  fi
   req_status=$(turbinia-client -p ./evidence status request 123456789 -j | jq -r '.status')
-  echo "Request $REQUEST_ID is pending. Sleeping for 5 seconds..."
+  echo "Turbinia request 123456789 is pending. Retrying in 5 seconds..."
   sleep 5
 done
+
+MAX_RETRIES=30
 
 # Wait until request is complete 
 while [[ $req_status = "running" ]]
@@ -85,7 +94,13 @@ do
   req_status=$(turbinia-client -p ./evidence status request 123456789 -j | jq -r '.status')
   if [[ $req_status = "running" ]]
   then
-    echo "Turbinia request 123456789 is still running. Sleeping for 10 seconds..."
+    MAX_RETRIES-=1
+    if [[ $MAX_RETRIES = 0 ]]
+    then
+      echo "ERROR: Max retries reached, exiting."
+      exit $RET
+    fi
+    echo "Turbinia request 123456789 is still running. Retrying in 10 seconds..."
     sleep 10
   fi
 done
