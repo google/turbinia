@@ -25,9 +25,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.routing import APIRoute
 
 from turbinia import config
+from turbinia.config import logger
 from turbinia.api.routes.router import api_router
 from turbinia.api.routes.ui import ui_router
 
+logger.setup(need_file_handler=True, need_stream_handler=True)
 log = logging.getLogger('turbinia')
 log.setLevel(logging.INFO)
 

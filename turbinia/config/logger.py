@@ -100,5 +100,13 @@ def setup(need_file_handler=True, need_stream_handler=True, log_file_path=None):
   if need_file_handler:
     root_log.addHandler(file_handler)
 
+  # Set up uvicorn loggers
+  uvicron_error = logging.getLogger('uvicorn.error')
+  uvicorn_access = logging.getLogger('uvicorn.access')
+  for handler in logger.handlers:
+    if isinstance(handler, logging.FileHandler):
+      uvicron_error.addHandler(handler)
+      uvicorn_access.addHandler(handler)
+
   # Set filelock logging to ERROR due to log spam
   logging.getLogger('filelock').setLevel(logging.ERROR)
