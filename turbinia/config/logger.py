@@ -77,6 +77,7 @@ def setup(need_file_handler=True, need_stream_handler=True, log_file_path=None):
       log_file_path = os.path.join(config.LOG_DIR, log_name) + '.log'
 
     file_handler = logging.FileHandler(log_file_path)
+    file_handler.name = 'turbinia_filelog'
     formatter = logging.Formatter(
         '%(asctime)s [%(levelname)s] %(name)s | %(message)s')
     file_handler.setFormatter(formatter)
@@ -84,6 +85,7 @@ def setup(need_file_handler=True, need_stream_handler=True, log_file_path=None):
     logger.addHandler(file_handler)
 
   console_handler = logging.StreamHandler(sys.stdout)
+  console_handler.name = 'turbinia_streamlog'
   formatter = logging.Formatter(
       '%(asctime)s [%(levelname)s] %(name)s | %(message)s', '%Y-%m-%d %H:%M:%S')
   console_handler.setFormatter(formatter)
@@ -99,6 +101,14 @@ def setup(need_file_handler=True, need_stream_handler=True, log_file_path=None):
   root_log.addHandler(console_handler)
   if need_file_handler:
     root_log.addHandler(file_handler)
+
+  # Set up uvicorn loggers
+  uvicron_error = logging.getLogger('uvicorn.error')
+  uvicorn_access = logging.getLogger('uvicorn.access')
+  for handler in logger.handlers:
+    if isinstance(handler, logging.FileHandler):
+      uvicron_error.addHandler(handler)
+      uvicorn_access.addHandler(handler)
 
   # Set filelock logging to ERROR due to log spam
   logging.getLogger('filelock').setLevel(logging.ERROR)
