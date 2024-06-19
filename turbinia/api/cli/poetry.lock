@@ -520,14 +520,34 @@ files = [
 ]
 
 [[package]]
+name = "tqdm"
+version = "4.66.4"
+description = "Fast, Extensible Progress Meter"
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "tqdm-4.66.4-py3-none-any.whl", hash = "sha256:b75ca56b413b030bc3f00af51fd2c1a1a5eac6a0c1cca83cbb37a5c52abce644"},
+    {file = "tqdm-4.66.4.tar.gz", hash = "sha256:e4d936c9de8727928f3be6079590e97d9abfe8d39a590be678eb5919ffc186bb"},
+]
+
+[package.dependencies]
+colorama = {version = "*", markers = "platform_system == \"Windows\""}
+
+[package.extras]
+dev = ["pytest (>=6)", "pytest-cov", "pytest-timeout", "pytest-xdist"]
+notebook = ["ipywidgets (>=6)"]
+slack = ["slack-sdk"]
+telegram = ["requests"]
+
+[[package]]
 name = "turbinia-api-lib"
-version = "1.0.3"
+version = "1.0.4"
 description = "Turbinia API Server"
 optional = false
-python-versions = ">=3.9,<4.0"
+python-versions = "<4.0,>=3.9"
 files = [
-    {file = "turbinia_api_lib-1.0.3-py3-none-any.whl", hash = "sha256:93aceb3c2eb99d718cb793b1a01445cc4643d43076de037ae85191e047d3163c"},
-    {file = "turbinia_api_lib-1.0.3.tar.gz", hash = "sha256:b8ee44ee85b0b4b92976a0ee57c2d6d54c6b5f8c85abf94235b790f314150372"},
+    {file = "turbinia_api_lib-1.0.4-py3-none-any.whl", hash = "sha256:6755673c9c498916fe6203d6d88598deacb0b0919b6b9265d7e20093381af18a"},
+    {file = "turbinia_api_lib-1.0.4.tar.gz", hash = "sha256:456582aa2ab8e28d012994338550552f55c659c1da0cbe31dcdb4c38d3f89ba0"},
 ]
 
 [package.dependencies]
@@ -577,7 +597,24 @@ brotli = ["brotli (==1.0.9)", "brotli (>=1.0.9)", "brotlicffi (>=0.8.0)", "brotl
 secure = ["certifi", "cryptography (>=1.3.4)", "idna (>=2.0.0)", "ipaddress", "pyOpenSSL (>=0.14)", "urllib3-secure-extra"]
 socks = ["PySocks (>=1.5.6,!=1.5.7,<2.0)"]
 
+[[package]]
+name = "urllib3"
+version = "2.0.7"
+description = "HTTP library with thread-safe connection pooling, file post, and more."
+optional = false
+python-versions = ">=3.7"
+files = [
+    {file = "urllib3-2.0.7-py3-none-any.whl", hash = "sha256:fdb6d215c776278489906c2f8916e6e7d4f5a9b602ccbcfdf7f016fc8da0596e"},
+    {file = "urllib3-2.0.7.tar.gz", hash = "sha256:c97dfde1f7bd43a71c8d2a58e369e9b2bf692d1334ea9f9cae55add7d0dd0f84"},
+]
+
+[package.extras]
+brotli = ["brotli (>=1.0.9)", "brotlicffi (>=0.8.0)"]
+secure = ["certifi", "cryptography (>=1.9)", "idna (>=2.0.0)", "pyopenssl (>=17.1.0)", "urllib3-secure-extra"]
+socks = ["pysocks (>=1.5.6,!=1.5.7,<2.0)"]
+zstd = ["zstandard (>=0.18.0)"]
+
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "a4a664abc86733d9bcd43fc4a7cc58f6f8ccaab52953d79fc020c95ccdbbd401"
+content-hash = "b841a9ea4df5f812aa8ebe16776c5c42105bbfd3fa40985cb16dbdc08311edba"

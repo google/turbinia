@@ -17,62 +17,78 @@ import pprint
 import re  # noqa: F401
 import json
 
-
-from typing import Any, Dict, Optional
-from pydantic import BaseModel, Field, StrictStr
+from pydantic import BaseModel, ConfigDict, StrictStr
+from typing import Any, ClassVar, Dict, List, Optional
 from turbinia_api_lib.models.base_request_options import BaseRequestOptions
+from typing import Optional, Set
+from typing_extensions import Self
 
 class Request(BaseModel):
     """
-    Base request object.   # noqa: E501
-    """
+    Base request object. 
+    """ # noqa: E501
     description: Optional[StrictStr] = 'Turbinia request object'
-    evidence: Dict[str, Any] = Field(...)
-    request_options: BaseRequestOptions = Field(...)
-    __properties = ["description", "evidence", "request_options"]
+    evidence: Dict[str, Any]
+    request_options: BaseRequestOptions
+    __properties: ClassVar[List[str]] = ["description", "evidence", "request_options"]
 
-    class Config:
-        """Pydantic configuration"""
-        allow_population_by_field_name = True
-        validate_assignment = True
+    model_config = ConfigDict(
+        populate_by_name=True,
+        validate_assignment=True,
+        protected_namespaces=(),
+    )
+
 
     def to_str(self) -> str:
         """Returns the string representation of the model using alias"""
-        return pprint.pformat(self.dict(by_alias=True))
+        return pprint.pformat(self.model_dump(by_alias=True))
 
     def to_json(self) -> str:
         """Returns the JSON representation of the model using alias"""
+        # TODO: pydantic v2: use .model_dump_json(by_alias=True, exclude_unset=True) instead
         return json.dumps(self.to_dict())
 
     @classmethod
-    def from_json(cls, json_str: str) -> Request:
+    def from_json(cls, json_str: str) -> Optional[Self]:
         """Create an instance of Request from a JSON string"""
         return cls.from_dict(json.loads(json_str))
 
-    def to_dict(self):
-        """Returns the dictionary representation of the model using alias"""
-        _dict = self.dict(by_alias=True,
-                          exclude={
-                          },
-                          exclude_none=True)
+    def to_dict(self) -> Dict[str, Any]:
+        """Return the dictionary representation of the model using alias.
+
+        This has the following differences from calling pydantic's
+        `self.model_dump(by_alias=True)`:
+
+        * `None` is only added to the output dict for nullable fields that
+          were set at model initialization. Other fields with value `None`
+          are ignored.
+        """
+        excluded_fields: Set[str] = set([
+        ])
+
+        _dict = self.model_dump(
+            by_alias=True,
+            exclude=excluded_fields,
+            exclude_none=True,
+        )
         # override the default output from pydantic by calling `to_dict()` of request_options
         if self.request_options:
             _dict['request_options'] = self.request_options.to_dict()
         return _dict
 
     @classmethod
-    def from_dict(cls, obj: dict) -> Request:
+    def from_dict(cls, obj: Optional[Dict[str, Any]]) -> Optional[Self]:
         """Create an instance of Request from a dict"""
         if obj is None:
             return None
 
         if not isinstance(obj, dict):
-            return Request.parse_obj(obj)
+            return cls.model_validate(obj)
 
-        _obj = Request.parse_obj({
+        _obj = cls.model_validate({
             "description": obj.get("description") if obj.get("description") is not None else 'Turbinia request object',
             "evidence": obj.get("evidence"),
-            "request_options": BaseRequestOptions.from_dict(obj.get("request_options")) if obj.get("request_options") is not None else None
+            "request_options": BaseRequestOptions.from_dict(obj["request_options"]) if obj.get("request_options") is not None else None
         })
         return _obj
 
