@@ -82,10 +82,11 @@ turbinia-client submit googleclouddisk --project $GCP_PROJECT --zone $GCP_ZONE -
 
 # Wait until request is running
 req_status=$(turbinia-client status request $REQUEST_ID -j | jq -r '.status')
+RETRIES=0
 while [[ $req_status != "running" ]]
 do
-  MAX_RETRIES-=1
-  if [[ $MAX_RETRIES = 0 ]]
+  RETRIES-=1
+  if [[ $RETRIES = $MAX_RETRIES ]]
   then
     echo "ERROR: Max retries reached, exiting."
     exit $RET
@@ -96,13 +97,14 @@ do
 done
 
 # Wait until request is complete 
+RETRIES=0
 while [[ $req_status = "running" ]]
 do
   req_status=$(turbinia-client status request $REQUEST_ID -j | jq -r '.status')
   if [[ $req_status = "running" ]]
   then
-    MAX_RETRIES-=1
-    if [[ $MAX_RETRIES = 0 ]]
+    RETRIES-=1
+    if [[ $RETRIES = $MAX_RETRIES ]]
     then
       echo "ERROR: Max retries reached, exiting."
       exit $RET

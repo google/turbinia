@@ -72,11 +72,12 @@ sleep 10
 echo "==> Polling the API server for request status"
 
 # Wait until request is running
+RETRIES=0
 req_status=$(turbinia-client -p ./evidence status request 123456789 -j | jq -r '.status')
 while [[ $req_status != "running" ]]
 do
-  MAX_RETRIES-=1
-  if [[ $MAX_RETRIES = 0 ]]
+  RETRIES-=1
+  if [[ $RETRIES = $MAX_RETRIES ]]
   then
     echo "ERROR: Max retries reached, exiting."
     exit $RET
@@ -86,16 +87,15 @@ do
   sleep 5
 done
 
-MAX_RETRIES=30
-
 # Wait until request is complete 
+RETRIES=30
 while [[ $req_status = "running" ]]
 do
   req_status=$(turbinia-client -p ./evidence status request 123456789 -j | jq -r '.status')
   if [[ $req_status = "running" ]]
   then
-    MAX_RETRIES-=1
-    if [[ $MAX_RETRIES = 0 ]]
+    RETRIES-=1
+    if [[ $RETRIES = $MAX_RETRIES ]]
     then
       echo "ERROR: Max retries reached, exiting."
       exit $RET
