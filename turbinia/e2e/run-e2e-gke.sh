@@ -79,21 +79,20 @@ turbinia-client config list
 echo "Running Turbinia: turbinia-client submit googleclouddisk --project $GCP_PROJECT --zone $GCP_ZONE --disk_name $DISK --request_id $REQUEST_ID"
 turbinia-client submit googleclouddisk --project $GCP_PROJECT --zone $GCP_ZONE --disk_name $DISK --request_id $REQUEST_ID
 
-# Wait until request is received
-req=$(turbinia-client status request $REQUEST_ID -j)
-while [[ -z "$req" ]]
+# Wait until request is running
+req_status=$(turbinia-client status request $REQUEST_ID -j | jq -r '.status')
+while [[ $req_status != "running" ]]
 do
-  echo "Request $REQUEST_ID is still populating. Sleeping for 5 seconds..."
+  req_status=$(turbinia-client status request $REQUEST_ID -j | jq -r '.status')
+  echo "Request $REQUEST_ID is pending. Sleeping for 5 seconds..."
   sleep 5
-  req=$(turbinia-client status request $REQUEST_ID -j)
 done
 
 # Wait until request is complete 
-req_status=$(turbinia-client status request $REQUEST_ID -j | jq -r '.status')
-while [[ $req_status = "running" || $req_status = "pending" ]]
+while [[ $req_status = "running" ]]
 do
   req_status=$(turbinia-client status request $REQUEST_ID -j | jq -r '.status')
-  if [[ $req_status = "running" || $req_status = "pending" ]]
+  if [[ $req_status = "running" ]]
   then
     echo "Turbinia request $REQUEST_ID is still running. Sleeping for 180 seconds..."
     sleep 180

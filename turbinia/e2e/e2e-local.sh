@@ -70,18 +70,20 @@ sleep 10
 
 echo "==> Polling the API server for request status"
 
-# Wait until request is complete 
+# Wait until request is running
 req_status=$(turbinia-client -p ./evidence status request 123456789 -j | jq -r '.status')
-if [ -z "$req_status" ]
-then
-  echo "Unable to get request status, exiting with error code 1"
-  exit $RET
-fi
-
-while [[ $req_status = "running" || $req_status = "pending" ]]
+while [[ $req_status != "running" ]]
 do
   req_status=$(turbinia-client -p ./evidence status request 123456789 -j | jq -r '.status')
-  if [[ $req_status = "running" || $req_status = "pending" ]]
+  echo "Request $REQUEST_ID is pending. Sleeping for 5 seconds..."
+  sleep 5
+done
+
+# Wait until request is complete 
+while [[ $req_status = "running" ]]
+do
+  req_status=$(turbinia-client -p ./evidence status request 123456789 -j | jq -r '.status')
+  if [[ $req_status = "running" ]]
   then
     echo "Turbinia request 123456789 is still running. Sleeping for 10 seconds..."
     sleep 10
