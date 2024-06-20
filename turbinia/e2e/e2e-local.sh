@@ -5,6 +5,7 @@
 
 # Set default return value
 RET=1
+MAX_RETRIES=30
 set -o posix
 
 echo "Create evidence folder"
@@ -66,17 +67,41 @@ RECIPE_DATA=`cat ./evidence/e2e-recipe.yaml | base64 -w0`
 turbinia-client -p ./evidence submit rawdisk --source_path /evidence/artifact_disk.dd --request_id 123456789 --recipe_data {$RECIPE_DATA} 
 
 echo "==> Waiting 5 seconds before polling request status"
-sleep 5
+sleep 10
 
 echo "==> Polling the API server for request status"
-# Wait until request is complete 
+
+# Wait until request is running
+RETRIES=0
 req_status=$(turbinia-client -p ./evidence status request 123456789 -j | jq -r '.status')
+while [[ $req_status != "running" ]]
+do
+  RETRIES+=1
+  if [[ $RETRIES -eq $MAX_RETRIES ]]
+  then
+    echo "ERROR: Max retries reached, exiting."
+    exit $RET
+  fi
+  req_status=$(turbinia-client -p ./evidence status request 123456789 -j | jq -r '.status')
+  echo "Turbinia request 123456789 is pending. Retrying in 5 seconds..."
+  sleep 5
+done
+
+# Wait until request is complete 
+RETRIES=0
 while [[ $req_status = "running" ]]
 do
   req_status=$(turbinia-client -p ./evidence status request 123456789 -j | jq -r '.status')
   if [[ $req_status = "running" ]]
   then
-    echo "Turbinia request 123456789 is still running. Sleeping for 10 seconds..."
+    RETRIES+=1
+    if [[ $RETRIES -eq $MAX_RETRIES ]]
+    then
+      echo "ERROR: Max retries reached, displaying current status and exiting."
+      turbinia-client -p ./evidence status request 123456789 -j
+      exit $RET
+    fi
+    echo "Turbinia request 123456789 is still running. Retrying in 10 seconds..."
     sleep 10
   fi
 done
