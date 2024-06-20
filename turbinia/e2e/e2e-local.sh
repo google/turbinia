@@ -97,7 +97,8 @@ do
     RETRIES+=1
     if [[ $RETRIES = $MAX_RETRIES ]]
     then
-      echo "ERROR: Max retries reached, exiting."
+      echo "ERROR: Max retries reached, displaying current status and exiting."
+      turbinia-client -p ./evidence status request 123456789 -j
       exit $RET
     fi
     echo "Turbinia request 123456789 is still running. Retrying in 10 seconds..."
