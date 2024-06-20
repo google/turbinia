@@ -77,7 +77,7 @@ req_status=$(turbinia-client -p ./evidence status request 123456789 -j | jq -r '
 while [[ $req_status != "running" ]]
 do
   RETRIES+=1
-  if [[ $RETRIES = $MAX_RETRIES ]]
+  if [[ $RETRIES == $MAX_RETRIES ]]
   then
     echo "ERROR: Max retries reached, exiting."
     exit $RET
@@ -95,7 +95,7 @@ do
   if [[ $req_status = "running" ]]
   then
     RETRIES+=1
-    if [[ $RETRIES = $MAX_RETRIES ]]
+    if [[ $RETRIES == $MAX_RETRIES ]]
     then
       echo "ERROR: Max retries reached, displaying current status and exiting."
       turbinia-client -p ./evidence status request 123456789 -j
