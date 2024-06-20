@@ -86,7 +86,7 @@ RETRIES=0
 while [[ $req_status != "running" ]]
 do
   RETRIES+=1
-  if [[ $RETRIES == $MAX_RETRIES ]]
+  if [[ $RETRIES -eq $MAX_RETRIES ]]
   then
     echo "ERROR: Max retries reached, exiting."
     exit $RET
@@ -104,7 +104,7 @@ do
   if [[ $req_status = "running" ]]
   then
     RETRIES+=1
-    if [[ $RETRIES == $MAX_RETRIES ]]
+    if [[ $RETRIES -eq $MAX_RETRIES ]]
     then
       echo "ERROR: Max retries reached, exiting."
       exit $RET
