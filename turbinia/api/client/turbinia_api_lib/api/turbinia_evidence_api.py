@@ -11,24 +11,17 @@
     Do not edit the class manually.
 """  # noqa: E501
 
-
-import re  # noqa: F401
-import io
 import warnings
+from pydantic import validate_call, Field, StrictFloat, StrictStr, StrictInt
+from typing import Any, Dict, List, Optional, Tuple, Union
+from typing_extensions import Annotated
 
-from pydantic import validate_arguments, ValidationError
+from pydantic import StrictBool, StrictBytes, StrictStr, field_validator
+from typing import Any, List, Optional, Union
 
-from pydantic import StrictBool, StrictBytes, StrictStr, conlist
-
-from typing import Any, Optional, Union
-
-
-from turbinia_api_lib.api_client import ApiClient
+from turbinia_api_lib.api_client import ApiClient, RequestSerialized
 from turbinia_api_lib.api_response import ApiResponse
-from turbinia_api_lib.exceptions import (  # noqa: F401
-    ApiTypeError,
-    ApiValueError
-)
+from turbinia_api_lib.rest import RESTResponseType
 
 
 class TurbiniaEvidenceApi:
@@ -43,579 +36,1074 @@ class TurbiniaEvidenceApi:
             api_client = ApiClient.get_default()
         self.api_client = api_client
 
-    @validate_arguments
-    def get_evidence_attributes(self, evidence_type : Any, **kwargs) -> object:  # noqa: E501
-        """Get Evidence Attributes  # noqa: E501
 
-        Returns supported required parameters for evidence type.  Args:   evidence_type (str): Name of evidence type.  # noqa: E501
-        This method makes a synchronous HTTP request by default. To make an
-        asynchronous HTTP request, please pass async_req=True
+    @validate_call
+    def get_evidence_attributes(
+        self,
+        evidence_type: Any,
+        _request_timeout: Union[
+            None,
+            Annotated[StrictFloat, Field(gt=0)],
+            Tuple[
+                Annotated[StrictFloat, Field(gt=0)],
+                Annotated[StrictFloat, Field(gt=0)]
+            ]
+        ] = None,
+        _request_auth: Optional[Dict[StrictStr, Any]] = None,
+        _content_type: Optional[StrictStr] = None,
+        _headers: Optional[Dict[StrictStr, Any]] = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> object:
+        """Get Evidence Attributes
 
-        >>> thread = api.get_evidence_attributes(evidence_type, async_req=True)
-        >>> result = thread.get()
-
-        :param evidence_type: (required)
-        :type evidence_type: object
-        :param async_req: Whether to execute the request asynchronously.
-        :type async_req: bool, optional
-        :param _request_timeout: timeout setting for this request.
-               If one number provided, it will be total request
-               timeout. It can also be a pair (tuple) of
-               (connection, read) timeouts.
-        :return: Returns the result object.
-                 If the method is called asynchronously,
-                 returns the request thread.
-        :rtype: object
-        """
-        kwargs['_return_http_data_only'] = True
-        if '_preload_content' in kwargs:
-            message = "Error! Please call the get_evidence_attributes_with_http_info method with `_preload_content` instead and obtain raw data from ApiResponse.raw_data"  # noqa: E501
-            raise ValueError(message)
-        return self.get_evidence_attributes_with_http_info(evidence_type, **kwargs)  # noqa: E501
-
-    @validate_arguments
-    def get_evidence_attributes_with_http_info(self, evidence_type : Any, **kwargs) -> ApiResponse:  # noqa: E501
-        """Get Evidence Attributes  # noqa: E501
-
-        Returns supported required parameters for evidence type.  Args:   evidence_type (str): Name of evidence type.  # noqa: E501
-        This method makes a synchronous HTTP request by default. To make an
-        asynchronous HTTP request, please pass async_req=True
-
-        >>> thread = api.get_evidence_attributes_with_http_info(evidence_type, async_req=True)
-        >>> result = thread.get()
+        Returns supported required parameters for evidence type.  Args:   evidence_type (str): Name of evidence type.
 
         :param evidence_type: (required)
         :type evidence_type: object
-        :param async_req: Whether to execute the request asynchronously.
-        :type async_req: bool, optional
-        :param _preload_content: if False, the ApiResponse.data will
-                                 be set to none and raw_data will store the
-                                 HTTP response body without reading/decoding.
-                                 Default is True.
-        :type _preload_content: bool, optional
-        :param _return_http_data_only: response data instead of ApiResponse
-                                       object with status code, headers, etc
-        :type _return_http_data_only: bool, optional
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
                                  (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
         :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the authentication
-                              in the spec for a single request.
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
         :type _request_auth: dict, optional
-        :type _content_type: string, optional: force content-type for the request
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
         :return: Returns the result object.
-                 If the method is called asynchronously,
-                 returns the request thread.
-        :rtype: tuple(object, status_code(int), headers(HTTPHeaderDict))
-        """
+        """ # noqa: E501
 
-        _params = locals()
-
-        _all_params = [
-            'evidence_type'
-        ]
-        _all_params.extend(
-            [
-                'async_req',
-                '_return_http_data_only',
-                '_preload_content',
-                '_request_timeout',
-                '_request_auth',
-                '_content_type',
-                '_headers'
-            ]
+        _param = self._get_evidence_attributes_serialize(
+            evidence_type=evidence_type,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index
         )
 
-        # validate the arguments
-        for _key, _val in _params['kwargs'].items():
-            if _key not in _all_params:
-                raise ApiTypeError(
-                    "Got an unexpected keyword argument '%s'"
-                    " to method get_evidence_attributes" % _key
-                )
-            _params[_key] = _val
-        del _params['kwargs']
-
-        _collection_formats = {}
-
-        # process the path parameters
-        _path_params = {}
-        if _params['evidence_type'] is not None:
-            _path_params['evidence_type'] = _params['evidence_type']
-
-
-        # process the query parameters
-        _query_params = []
-        # process the header parameters
-        _header_params = dict(_params.get('_headers', {}))
-        # process the form parameters
-        _form_params = []
-        _files = {}
-        # process the body parameter
-        _body_params = None
-        # set the HTTP header `Accept`
-        _header_params['Accept'] = self.api_client.select_header_accept(
-            ['application/json'])  # noqa: E501
-
-        # authentication setting
-        _auth_settings = ['oAuth2']  # noqa: E501
-
-        _response_types_map = {
+        _response_types_map: Dict[str, Optional[str]] = {
             '200': "object",
             '422': "HTTPValidationError",
         }
-
-        return self.api_client.call_api(
-            '/api/evidence/types/{evidence_type}', 'GET',
-            _path_params,
-            _query_params,
-            _header_params,
-            body=_body_params,
-            post_params=_form_params,
-            files=_files,
+        response_data = self.api_client.call_api(
+            *_param,
+            _request_timeout=_request_timeout
+        )
+        response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
             response_types_map=_response_types_map,
-            auth_settings=_auth_settings,
-            async_req=_params.get('async_req'),
-            _return_http_data_only=_params.get('_return_http_data_only'),  # noqa: E501
-            _preload_content=_params.get('_preload_content', True),
-            _request_timeout=_params.get('_request_timeout'),
-            collection_formats=_collection_formats,
-            _request_auth=_params.get('_request_auth'))
+        ).data
 
-    @validate_arguments
-    def get_evidence_by_id(self, evidence_id : Any, **kwargs) -> object:  # noqa: E501
-        """Get Evidence By Id  # noqa: E501
 
-        Retrieves an evidence in Redis by using its UUID.  Args:   evidence_id (str): The UUID of the evidence.  Raises:   HTTPException: if the evidence is not found.  Returns:   Dictionary of the stored evidence  # noqa: E501
-        This method makes a synchronous HTTP request by default. To make an
-        asynchronous HTTP request, please pass async_req=True
+    @validate_call
+    def get_evidence_attributes_with_http_info(
+        self,
+        evidence_type: Any,
+        _request_timeout: Union[
+            None,
+            Annotated[StrictFloat, Field(gt=0)],
+            Tuple[
+                Annotated[StrictFloat, Field(gt=0)],
+                Annotated[StrictFloat, Field(gt=0)]
+            ]
+        ] = None,
+        _request_auth: Optional[Dict[StrictStr, Any]] = None,
+        _content_type: Optional[StrictStr] = None,
+        _headers: Optional[Dict[StrictStr, Any]] = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[object]:
+        """Get Evidence Attributes
 
-        >>> thread = api.get_evidence_by_id(evidence_id, async_req=True)
-        >>> result = thread.get()
+        Returns supported required parameters for evidence type.  Args:   evidence_type (str): Name of evidence type.
 
-        :param evidence_id: (required)
-        :type evidence_id: object
-        :param async_req: Whether to execute the request asynchronously.
-        :type async_req: bool, optional
-        :param _request_timeout: timeout setting for this request.
-               If one number provided, it will be total request
-               timeout. It can also be a pair (tuple) of
-               (connection, read) timeouts.
-        :return: Returns the result object.
-                 If the method is called asynchronously,
-                 returns the request thread.
-        :rtype: object
-        """
-        kwargs['_return_http_data_only'] = True
-        if '_preload_content' in kwargs:
-            message = "Error! Please call the get_evidence_by_id_with_http_info method with `_preload_content` instead and obtain raw data from ApiResponse.raw_data"  # noqa: E501
-            raise ValueError(message)
-        return self.get_evidence_by_id_with_http_info(evidence_id, **kwargs)  # noqa: E501
-
-    @validate_arguments
-    def get_evidence_by_id_with_http_info(self, evidence_id : Any, **kwargs) -> ApiResponse:  # noqa: E501
-        """Get Evidence By Id  # noqa: E501
-
-        Retrieves an evidence in Redis by using its UUID.  Args:   evidence_id (str): The UUID of the evidence.  Raises:   HTTPException: if the evidence is not found.  Returns:   Dictionary of the stored evidence  # noqa: E501
-        This method makes a synchronous HTTP request by default. To make an
-        asynchronous HTTP request, please pass async_req=True
-
-        >>> thread = api.get_evidence_by_id_with_http_info(evidence_id, async_req=True)
-        >>> result = thread.get()
-
-        :param evidence_id: (required)
-        :type evidence_id: object
-        :param async_req: Whether to execute the request asynchronously.
-        :type async_req: bool, optional
-        :param _preload_content: if False, the ApiResponse.data will
-                                 be set to none and raw_data will store the
-                                 HTTP response body without reading/decoding.
-                                 Default is True.
-        :type _preload_content: bool, optional
-        :param _return_http_data_only: response data instead of ApiResponse
-                                       object with status code, headers, etc
-        :type _return_http_data_only: bool, optional
+        :param evidence_type: (required)
+        :type evidence_type: object
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
                                  (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
         :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the authentication
-                              in the spec for a single request.
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
         :type _request_auth: dict, optional
-        :type _content_type: string, optional: force content-type for the request
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
         :return: Returns the result object.
-                 If the method is called asynchronously,
-                 returns the request thread.
-        :rtype: tuple(object, status_code(int), headers(HTTPHeaderDict))
-        """
+        """ # noqa: E501
 
-        _params = locals()
-
-        _all_params = [
-            'evidence_id'
-        ]
-        _all_params.extend(
-            [
-                'async_req',
-                '_return_http_data_only',
-                '_preload_content',
-                '_request_timeout',
-                '_request_auth',
-                '_content_type',
-                '_headers'
-            ]
+        _param = self._get_evidence_attributes_serialize(
+            evidence_type=evidence_type,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index
         )
 
-        # validate the arguments
-        for _key, _val in _params['kwargs'].items():
-            if _key not in _all_params:
-                raise ApiTypeError(
-                    "Got an unexpected keyword argument '%s'"
-                    " to method get_evidence_by_id" % _key
-                )
-            _params[_key] = _val
-        del _params['kwargs']
-
-        _collection_formats = {}
-
-        # process the path parameters
-        _path_params = {}
-        if _params['evidence_id'] is not None:
-            _path_params['evidence_id'] = _params['evidence_id']
-
-
-        # process the query parameters
-        _query_params = []
-        # process the header parameters
-        _header_params = dict(_params.get('_headers', {}))
-        # process the form parameters
-        _form_params = []
-        _files = {}
-        # process the body parameter
-        _body_params = None
-        # set the HTTP header `Accept`
-        _header_params['Accept'] = self.api_client.select_header_accept(
-            ['application/json'])  # noqa: E501
-
-        # authentication setting
-        _auth_settings = ['oAuth2']  # noqa: E501
-
-        _response_types_map = {
+        _response_types_map: Dict[str, Optional[str]] = {
             '200': "object",
             '422': "HTTPValidationError",
         }
+        response_data = self.api_client.call_api(
+            *_param,
+            _request_timeout=_request_timeout
+        )
+        response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        )
 
-        return self.api_client.call_api(
-            '/api/evidence/{evidence_id}', 'GET',
-            _path_params,
-            _query_params,
-            _header_params,
+
+    @validate_call
+    def get_evidence_attributes_without_preload_content(
+        self,
+        evidence_type: Any,
+        _request_timeout: Union[
+            None,
+            Annotated[StrictFloat, Field(gt=0)],
+            Tuple[
+                Annotated[StrictFloat, Field(gt=0)],
+                Annotated[StrictFloat, Field(gt=0)]
+            ]
+        ] = None,
+        _request_auth: Optional[Dict[StrictStr, Any]] = None,
+        _content_type: Optional[StrictStr] = None,
+        _headers: Optional[Dict[StrictStr, Any]] = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Get Evidence Attributes
+
+        Returns supported required parameters for evidence type.  Args:   evidence_type (str): Name of evidence type.
+
+        :param evidence_type: (required)
+        :type evidence_type: object
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """ # noqa: E501
+
+        _param = self._get_evidence_attributes_serialize(
+            evidence_type=evidence_type,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index
+        )
+
+        _response_types_map: Dict[str, Optional[str]] = {
+            '200': "object",
+            '422': "HTTPValidationError",
+        }
+        response_data = self.api_client.call_api(
+            *_param,
+            _request_timeout=_request_timeout
+        )
+        return response_data.response
+
+
+    def _get_evidence_attributes_serialize(
+        self,
+        evidence_type,
+        _request_auth,
+        _content_type,
+        _headers,
+        _host_index,
+    ) -> RequestSerialized:
+
+        _host = None
+
+        _collection_formats: Dict[str, str] = {
+        }
+
+        _path_params: Dict[str, str] = {}
+        _query_params: List[Tuple[str, str]] = []
+        _header_params: Dict[str, Optional[str]] = _headers or {}
+        _form_params: List[Tuple[str, str]] = []
+        _files: Dict[str, Union[str, bytes]] = {}
+        _body_params: Optional[bytes] = None
+
+        # process the path parameters
+        if evidence_type is not None:
+            _path_params['evidence_type'] = evidence_type
+        # process the query parameters
+        # process the header parameters
+        # process the form parameters
+        # process the body parameter
+
+
+        # set the HTTP header `Accept`
+        _header_params['Accept'] = self.api_client.select_header_accept(
+            [
+                'application/json'
+            ]
+        )
+
+
+        # authentication setting
+        _auth_settings: List[str] = [
+            'oAuth2'
+        ]
+
+        return self.api_client.param_serialize(
+            method='GET',
+            resource_path='/api/evidence/types/{evidence_type}',
+            path_params=_path_params,
+            query_params=_query_params,
+            header_params=_header_params,
             body=_body_params,
             post_params=_form_params,
             files=_files,
-            response_types_map=_response_types_map,
             auth_settings=_auth_settings,
-            async_req=_params.get('async_req'),
-            _return_http_data_only=_params.get('_return_http_data_only'),  # noqa: E501
-            _preload_content=_params.get('_preload_content', True),
-            _request_timeout=_params.get('_request_timeout'),
             collection_formats=_collection_formats,
-            _request_auth=_params.get('_request_auth'))
+            _host=_host,
+            _request_auth=_request_auth
+        )
 
-    @validate_arguments
-    def get_evidence_summary(self, group : Optional[StrictStr] = None, output : Optional[StrictStr] = None, **kwargs) -> object:  # noqa: E501
-        """Get Evidence Summary  # noqa: E501
 
-        Retrieves a summary of all evidences in Redis.  Args:   group Optional(str): Attribute used to group summary.   output Optional(str): Sets how the evidence found will be output.   Returns:   summary (dict): Summary of all evidences and their content.  Raises:   HTTPException: if there are no evidences.  # noqa: E501
-        This method makes a synchronous HTTP request by default. To make an
-        asynchronous HTTP request, please pass async_req=True
 
-        >>> thread = api.get_evidence_summary(group, output, async_req=True)
-        >>> result = thread.get()
+
+    @validate_call
+    def get_evidence_by_id(
+        self,
+        evidence_id: Any,
+        _request_timeout: Union[
+            None,
+            Annotated[StrictFloat, Field(gt=0)],
+            Tuple[
+                Annotated[StrictFloat, Field(gt=0)],
+                Annotated[StrictFloat, Field(gt=0)]
+            ]
+        ] = None,
+        _request_auth: Optional[Dict[StrictStr, Any]] = None,
+        _content_type: Optional[StrictStr] = None,
+        _headers: Optional[Dict[StrictStr, Any]] = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> object:
+        """Get Evidence By Id
+
+        Retrieves an evidence in Redis by using its UUID.  Args:   evidence_id (str): The UUID of the evidence.  Raises:   HTTPException: if the evidence is not found.  Returns:   Dictionary of the stored evidence
+
+        :param evidence_id: (required)
+        :type evidence_id: object
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """ # noqa: E501
+
+        _param = self._get_evidence_by_id_serialize(
+            evidence_id=evidence_id,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index
+        )
+
+        _response_types_map: Dict[str, Optional[str]] = {
+            '200': "object",
+            '422': "HTTPValidationError",
+        }
+        response_data = self.api_client.call_api(
+            *_param,
+            _request_timeout=_request_timeout
+        )
+        response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        ).data
+
+
+    @validate_call
+    def get_evidence_by_id_with_http_info(
+        self,
+        evidence_id: Any,
+        _request_timeout: Union[
+            None,
+            Annotated[StrictFloat, Field(gt=0)],
+            Tuple[
+                Annotated[StrictFloat, Field(gt=0)],
+                Annotated[StrictFloat, Field(gt=0)]
+            ]
+        ] = None,
+        _request_auth: Optional[Dict[StrictStr, Any]] = None,
+        _content_type: Optional[StrictStr] = None,
+        _headers: Optional[Dict[StrictStr, Any]] = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[object]:
+        """Get Evidence By Id
+
+        Retrieves an evidence in Redis by using its UUID.  Args:   evidence_id (str): The UUID of the evidence.  Raises:   HTTPException: if the evidence is not found.  Returns:   Dictionary of the stored evidence
+
+        :param evidence_id: (required)
+        :type evidence_id: object
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """ # noqa: E501
+
+        _param = self._get_evidence_by_id_serialize(
+            evidence_id=evidence_id,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index
+        )
+
+        _response_types_map: Dict[str, Optional[str]] = {
+            '200': "object",
+            '422': "HTTPValidationError",
+        }
+        response_data = self.api_client.call_api(
+            *_param,
+            _request_timeout=_request_timeout
+        )
+        response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        )
+
+
+    @validate_call
+    def get_evidence_by_id_without_preload_content(
+        self,
+        evidence_id: Any,
+        _request_timeout: Union[
+            None,
+            Annotated[StrictFloat, Field(gt=0)],
+            Tuple[
+                Annotated[StrictFloat, Field(gt=0)],
+                Annotated[StrictFloat, Field(gt=0)]
+            ]
+        ] = None,
+        _request_auth: Optional[Dict[StrictStr, Any]] = None,
+        _content_type: Optional[StrictStr] = None,
+        _headers: Optional[Dict[StrictStr, Any]] = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Get Evidence By Id
+
+        Retrieves an evidence in Redis by using its UUID.  Args:   evidence_id (str): The UUID of the evidence.  Raises:   HTTPException: if the evidence is not found.  Returns:   Dictionary of the stored evidence
+
+        :param evidence_id: (required)
+        :type evidence_id: object
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """ # noqa: E501
+
+        _param = self._get_evidence_by_id_serialize(
+            evidence_id=evidence_id,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index
+        )
+
+        _response_types_map: Dict[str, Optional[str]] = {
+            '200': "object",
+            '422': "HTTPValidationError",
+        }
+        response_data = self.api_client.call_api(
+            *_param,
+            _request_timeout=_request_timeout
+        )
+        return response_data.response
+
+
+    def _get_evidence_by_id_serialize(
+        self,
+        evidence_id,
+        _request_auth,
+        _content_type,
+        _headers,
+        _host_index,
+    ) -> RequestSerialized:
+
+        _host = None
+
+        _collection_formats: Dict[str, str] = {
+        }
+
+        _path_params: Dict[str, str] = {}
+        _query_params: List[Tuple[str, str]] = []
+        _header_params: Dict[str, Optional[str]] = _headers or {}
+        _form_params: List[Tuple[str, str]] = []
+        _files: Dict[str, Union[str, bytes]] = {}
+        _body_params: Optional[bytes] = None
+
+        # process the path parameters
+        if evidence_id is not None:
+            _path_params['evidence_id'] = evidence_id
+        # process the query parameters
+        # process the header parameters
+        # process the form parameters
+        # process the body parameter
+
+
+        # set the HTTP header `Accept`
+        _header_params['Accept'] = self.api_client.select_header_accept(
+            [
+                'application/json'
+            ]
+        )
+
+
+        # authentication setting
+        _auth_settings: List[str] = [
+            'oAuth2'
+        ]
+
+        return self.api_client.param_serialize(
+            method='GET',
+            resource_path='/api/evidence/{evidence_id}',
+            path_params=_path_params,
+            query_params=_query_params,
+            header_params=_header_params,
+            body=_body_params,
+            post_params=_form_params,
+            files=_files,
+            auth_settings=_auth_settings,
+            collection_formats=_collection_formats,
+            _host=_host,
+            _request_auth=_request_auth
+        )
+
+
+
+
+    @validate_call
+    def get_evidence_summary(
+        self,
+        group: Optional[StrictStr] = None,
+        output: Optional[StrictStr] = None,
+        _request_timeout: Union[
+            None,
+            Annotated[StrictFloat, Field(gt=0)],
+            Tuple[
+                Annotated[StrictFloat, Field(gt=0)],
+                Annotated[StrictFloat, Field(gt=0)]
+            ]
+        ] = None,
+        _request_auth: Optional[Dict[StrictStr, Any]] = None,
+        _content_type: Optional[StrictStr] = None,
+        _headers: Optional[Dict[StrictStr, Any]] = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> object:
+        """Get Evidence Summary
+
+        Retrieves a summary of all evidences in Redis.  Args:   group Optional(str): Attribute used to group summary.   output Optional(str): Sets how the evidence found will be output.   Returns:   summary (dict): Summary of all evidences and their content.  Raises:   HTTPException: if there are no evidences.
 
         :param group:
         :type group: str
         :param output:
         :type output: str
-        :param async_req: Whether to execute the request asynchronously.
-        :type async_req: bool, optional
-        :param _request_timeout: timeout setting for this request.
-               If one number provided, it will be total request
-               timeout. It can also be a pair (tuple) of
-               (connection, read) timeouts.
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
         :return: Returns the result object.
-                 If the method is called asynchronously,
-                 returns the request thread.
-        :rtype: object
-        """
-        kwargs['_return_http_data_only'] = True
-        if '_preload_content' in kwargs:
-            message = "Error! Please call the get_evidence_summary_with_http_info method with `_preload_content` instead and obtain raw data from ApiResponse.raw_data"  # noqa: E501
-            raise ValueError(message)
-        return self.get_evidence_summary_with_http_info(group, output, **kwargs)  # noqa: E501
+        """ # noqa: E501
 
-    @validate_arguments
-    def get_evidence_summary_with_http_info(self, group : Optional[StrictStr] = None, output : Optional[StrictStr] = None, **kwargs) -> ApiResponse:  # noqa: E501
-        """Get Evidence Summary  # noqa: E501
+        _param = self._get_evidence_summary_serialize(
+            group=group,
+            output=output,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index
+        )
 
-        Retrieves a summary of all evidences in Redis.  Args:   group Optional(str): Attribute used to group summary.   output Optional(str): Sets how the evidence found will be output.   Returns:   summary (dict): Summary of all evidences and their content.  Raises:   HTTPException: if there are no evidences.  # noqa: E501
-        This method makes a synchronous HTTP request by default. To make an
-        asynchronous HTTP request, please pass async_req=True
+        _response_types_map: Dict[str, Optional[str]] = {
+            '200': "object",
+            '422': "HTTPValidationError",
+        }
+        response_data = self.api_client.call_api(
+            *_param,
+            _request_timeout=_request_timeout
+        )
+        response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        ).data
 
-        >>> thread = api.get_evidence_summary_with_http_info(group, output, async_req=True)
-        >>> result = thread.get()
+
+    @validate_call
+    def get_evidence_summary_with_http_info(
+        self,
+        group: Optional[StrictStr] = None,
+        output: Optional[StrictStr] = None,
+        _request_timeout: Union[
+            None,
+            Annotated[StrictFloat, Field(gt=0)],
+            Tuple[
+                Annotated[StrictFloat, Field(gt=0)],
+                Annotated[StrictFloat, Field(gt=0)]
+            ]
+        ] = None,
+        _request_auth: Optional[Dict[StrictStr, Any]] = None,
+        _content_type: Optional[StrictStr] = None,
+        _headers: Optional[Dict[StrictStr, Any]] = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[object]:
+        """Get Evidence Summary
+
+        Retrieves a summary of all evidences in Redis.  Args:   group Optional(str): Attribute used to group summary.   output Optional(str): Sets how the evidence found will be output.   Returns:   summary (dict): Summary of all evidences and their content.  Raises:   HTTPException: if there are no evidences.
 
         :param group:
         :type group: str
         :param output:
         :type output: str
-        :param async_req: Whether to execute the request asynchronously.
-        :type async_req: bool, optional
-        :param _preload_content: if False, the ApiResponse.data will
-                                 be set to none and raw_data will store the
-                                 HTTP response body without reading/decoding.
-                                 Default is True.
-        :type _preload_content: bool, optional
-        :param _return_http_data_only: response data instead of ApiResponse
-                                       object with status code, headers, etc
-        :type _return_http_data_only: bool, optional
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
                                  (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
         :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the authentication
-                              in the spec for a single request.
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
         :type _request_auth: dict, optional
-        :type _content_type: string, optional: force content-type for the request
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
         :return: Returns the result object.
-                 If the method is called asynchronously,
-                 returns the request thread.
-        :rtype: tuple(object, status_code(int), headers(HTTPHeaderDict))
-        """
+        """ # noqa: E501
 
-        _params = locals()
-
-        _all_params = [
-            'group',
-            'output'
-        ]
-        _all_params.extend(
-            [
-                'async_req',
-                '_return_http_data_only',
-                '_preload_content',
-                '_request_timeout',
-                '_request_auth',
-                '_content_type',
-                '_headers'
-            ]
+        _param = self._get_evidence_summary_serialize(
+            group=group,
+            output=output,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index
         )
 
-        # validate the arguments
-        for _key, _val in _params['kwargs'].items():
-            if _key not in _all_params:
-                raise ApiTypeError(
-                    "Got an unexpected keyword argument '%s'"
-                    " to method get_evidence_summary" % _key
-                )
-            _params[_key] = _val
-        del _params['kwargs']
-
-        _collection_formats = {}
-
-        # process the path parameters
-        _path_params = {}
-
-        # process the query parameters
-        _query_params = []
-        if _params.get('group') is not None:  # noqa: E501
-            _query_params.append(('group', _params['group']))
-
-        if _params.get('output') is not None:  # noqa: E501
-            _query_params.append(('output', _params['output']))
-
-        # process the header parameters
-        _header_params = dict(_params.get('_headers', {}))
-        # process the form parameters
-        _form_params = []
-        _files = {}
-        # process the body parameter
-        _body_params = None
-        # set the HTTP header `Accept`
-        _header_params['Accept'] = self.api_client.select_header_accept(
-            ['application/json'])  # noqa: E501
-
-        # authentication setting
-        _auth_settings = ['oAuth2']  # noqa: E501
-
-        _response_types_map = {
+        _response_types_map: Dict[str, Optional[str]] = {
             '200': "object",
             '422': "HTTPValidationError",
         }
-
-        return self.api_client.call_api(
-            '/api/evidence/summary', 'GET',
-            _path_params,
-            _query_params,
-            _header_params,
-            body=_body_params,
-            post_params=_form_params,
-            files=_files,
+        response_data = self.api_client.call_api(
+            *_param,
+            _request_timeout=_request_timeout
+        )
+        response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
             response_types_map=_response_types_map,
-            auth_settings=_auth_settings,
-            async_req=_params.get('async_req'),
-            _return_http_data_only=_params.get('_return_http_data_only'),  # noqa: E501
-            _preload_content=_params.get('_preload_content', True),
-            _request_timeout=_params.get('_request_timeout'),
-            collection_formats=_collection_formats,
-            _request_auth=_params.get('_request_auth'))
+        )
 
-    @validate_arguments
-    def get_evidence_types(self, **kwargs) -> object:  # noqa: E501
-        """Get Evidence Types  # noqa: E501
 
-        Returns supported Evidence object types and required parameters.  # noqa: E501
-        This method makes a synchronous HTTP request by default. To make an
-        asynchronous HTTP request, please pass async_req=True
+    @validate_call
+    def get_evidence_summary_without_preload_content(
+        self,
+        group: Optional[StrictStr] = None,
+        output: Optional[StrictStr] = None,
+        _request_timeout: Union[
+            None,
+            Annotated[StrictFloat, Field(gt=0)],
+            Tuple[
+                Annotated[StrictFloat, Field(gt=0)],
+                Annotated[StrictFloat, Field(gt=0)]
+            ]
+        ] = None,
+        _request_auth: Optional[Dict[StrictStr, Any]] = None,
+        _content_type: Optional[StrictStr] = None,
+        _headers: Optional[Dict[StrictStr, Any]] = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Get Evidence Summary
 
-        >>> thread = api.get_evidence_types(async_req=True)
-        >>> result = thread.get()
+        Retrieves a summary of all evidences in Redis.  Args:   group Optional(str): Attribute used to group summary.   output Optional(str): Sets how the evidence found will be output.   Returns:   summary (dict): Summary of all evidences and their content.  Raises:   HTTPException: if there are no evidences.
 
-        :param async_req: Whether to execute the request asynchronously.
-        :type async_req: bool, optional
-        :param _request_timeout: timeout setting for this request.
-               If one number provided, it will be total request
-               timeout. It can also be a pair (tuple) of
-               (connection, read) timeouts.
-        :return: Returns the result object.
-                 If the method is called asynchronously,
-                 returns the request thread.
-        :rtype: object
-        """
-        kwargs['_return_http_data_only'] = True
-        if '_preload_content' in kwargs:
-            message = "Error! Please call the get_evidence_types_with_http_info method with `_preload_content` instead and obtain raw data from ApiResponse.raw_data"  # noqa: E501
-            raise ValueError(message)
-        return self.get_evidence_types_with_http_info(**kwargs)  # noqa: E501
-
-    @validate_arguments
-    def get_evidence_types_with_http_info(self, **kwargs) -> ApiResponse:  # noqa: E501
-        """Get Evidence Types  # noqa: E501
-
-        Returns supported Evidence object types and required parameters.  # noqa: E501
-        This method makes a synchronous HTTP request by default. To make an
-        asynchronous HTTP request, please pass async_req=True
-
-        >>> thread = api.get_evidence_types_with_http_info(async_req=True)
-        >>> result = thread.get()
-
-        :param async_req: Whether to execute the request asynchronously.
-        :type async_req: bool, optional
-        :param _preload_content: if False, the ApiResponse.data will
-                                 be set to none and raw_data will store the
-                                 HTTP response body without reading/decoding.
-                                 Default is True.
-        :type _preload_content: bool, optional
-        :param _return_http_data_only: response data instead of ApiResponse
-                                       object with status code, headers, etc
-        :type _return_http_data_only: bool, optional
+        :param group:
+        :type group: str
+        :param output:
+        :type output: str
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
                                  (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
         :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the authentication
-                              in the spec for a single request.
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
         :type _request_auth: dict, optional
-        :type _content_type: string, optional: force content-type for the request
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
         :return: Returns the result object.
-                 If the method is called asynchronously,
-                 returns the request thread.
-        :rtype: tuple(object, status_code(int), headers(HTTPHeaderDict))
-        """
+        """ # noqa: E501
 
-        _params = locals()
+        _param = self._get_evidence_summary_serialize(
+            group=group,
+            output=output,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index
+        )
 
-        _all_params = [
-        ]
-        _all_params.extend(
+        _response_types_map: Dict[str, Optional[str]] = {
+            '200': "object",
+            '422': "HTTPValidationError",
+        }
+        response_data = self.api_client.call_api(
+            *_param,
+            _request_timeout=_request_timeout
+        )
+        return response_data.response
+
+
+    def _get_evidence_summary_serialize(
+        self,
+        group,
+        output,
+        _request_auth,
+        _content_type,
+        _headers,
+        _host_index,
+    ) -> RequestSerialized:
+
+        _host = None
+
+        _collection_formats: Dict[str, str] = {
+        }
+
+        _path_params: Dict[str, str] = {}
+        _query_params: List[Tuple[str, str]] = []
+        _header_params: Dict[str, Optional[str]] = _headers or {}
+        _form_params: List[Tuple[str, str]] = []
+        _files: Dict[str, Union[str, bytes]] = {}
+        _body_params: Optional[bytes] = None
+
+        # process the path parameters
+        # process the query parameters
+        if group is not None:
+            
+            _query_params.append(('group', group))
+            
+        if output is not None:
+            
+            _query_params.append(('output', output))
+            
+        # process the header parameters
+        # process the form parameters
+        # process the body parameter
+
+
+        # set the HTTP header `Accept`
+        _header_params['Accept'] = self.api_client.select_header_accept(
             [
-                'async_req',
-                '_return_http_data_only',
-                '_preload_content',
-                '_request_timeout',
-                '_request_auth',
-                '_content_type',
-                '_headers'
+                'application/json'
             ]
         )
 
-        # validate the arguments
-        for _key, _val in _params['kwargs'].items():
-            if _key not in _all_params:
-                raise ApiTypeError(
-                    "Got an unexpected keyword argument '%s'"
-                    " to method get_evidence_types" % _key
-                )
-            _params[_key] = _val
-        del _params['kwargs']
-
-        _collection_formats = {}
-
-        # process the path parameters
-        _path_params = {}
-
-        # process the query parameters
-        _query_params = []
-        # process the header parameters
-        _header_params = dict(_params.get('_headers', {}))
-        # process the form parameters
-        _form_params = []
-        _files = {}
-        # process the body parameter
-        _body_params = None
-        # set the HTTP header `Accept`
-        _header_params['Accept'] = self.api_client.select_header_accept(
-            ['application/json'])  # noqa: E501
 
         # authentication setting
-        _auth_settings = ['oAuth2']  # noqa: E501
+        _auth_settings: List[str] = [
+            'oAuth2'
+        ]
 
-        _response_types_map = {
-            '200': "object",
-        }
-
-        return self.api_client.call_api(
-            '/api/evidence/types', 'GET',
-            _path_params,
-            _query_params,
-            _header_params,
+        return self.api_client.param_serialize(
+            method='GET',
+            resource_path='/api/evidence/summary',
+            path_params=_path_params,
+            query_params=_query_params,
+            header_params=_header_params,
             body=_body_params,
             post_params=_form_params,
             files=_files,
-            response_types_map=_response_types_map,
             auth_settings=_auth_settings,
-            async_req=_params.get('async_req'),
-            _return_http_data_only=_params.get('_return_http_data_only'),  # noqa: E501
-            _preload_content=_params.get('_preload_content', True),
-            _request_timeout=_params.get('_request_timeout'),
             collection_formats=_collection_formats,
-            _request_auth=_params.get('_request_auth'))
+            _host=_host,
+            _request_auth=_request_auth
+        )
 
-    @validate_arguments
-    def query_evidence(self, attribute_value : StrictStr, attribute_name : Optional[StrictStr] = None, output : Optional[StrictStr] = None, **kwargs) -> object:  # noqa: E501
-        """Query Evidence  # noqa: E501
 
-        Queries evidence in Redis that have the specified attribute value.  Args:   attribute_name (str): Name of attribute to be queried.   attribute_value (str): Value the attribute must have.   output Optional(str): Sets how the evidence found will be output.  Returns:   summary (dict): Summary of all evidences and their content.  Raises:   HTTPException: If no matching evidence is found.  # noqa: E501
-        This method makes a synchronous HTTP request by default. To make an
-        asynchronous HTTP request, please pass async_req=True
 
-        >>> thread = api.query_evidence(attribute_value, attribute_name, output, async_req=True)
-        >>> result = thread.get()
+
+    @validate_call
+    def get_evidence_types(
+        self,
+        _request_timeout: Union[
+            None,
+            Annotated[StrictFloat, Field(gt=0)],
+            Tuple[
+                Annotated[StrictFloat, Field(gt=0)],
+                Annotated[StrictFloat, Field(gt=0)]
+            ]
+        ] = None,
+        _request_auth: Optional[Dict[StrictStr, Any]] = None,
+        _content_type: Optional[StrictStr] = None,
+        _headers: Optional[Dict[StrictStr, Any]] = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> object:
+        """Get Evidence Types
+
+        Returns supported Evidence object types and required parameters.
+
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """ # noqa: E501
+
+        _param = self._get_evidence_types_serialize(
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index
+        )
+
+        _response_types_map: Dict[str, Optional[str]] = {
+            '200': "object",
+        }
+        response_data = self.api_client.call_api(
+            *_param,
+            _request_timeout=_request_timeout
+        )
+        response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        ).data
+
+
+    @validate_call
+    def get_evidence_types_with_http_info(
+        self,
+        _request_timeout: Union[
+            None,
+            Annotated[StrictFloat, Field(gt=0)],
+            Tuple[
+                Annotated[StrictFloat, Field(gt=0)],
+                Annotated[StrictFloat, Field(gt=0)]
+            ]
+        ] = None,
+        _request_auth: Optional[Dict[StrictStr, Any]] = None,
+        _content_type: Optional[StrictStr] = None,
+        _headers: Optional[Dict[StrictStr, Any]] = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[object]:
+        """Get Evidence Types
+
+        Returns supported Evidence object types and required parameters.
+
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """ # noqa: E501
+
+        _param = self._get_evidence_types_serialize(
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index
+        )
+
+        _response_types_map: Dict[str, Optional[str]] = {
+            '200': "object",
+        }
+        response_data = self.api_client.call_api(
+            *_param,
+            _request_timeout=_request_timeout
+        )
+        response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        )
+
+
+    @validate_call
+    def get_evidence_types_without_preload_content(
+        self,
+        _request_timeout: Union[
+            None,
+            Annotated[StrictFloat, Field(gt=0)],
+            Tuple[
+                Annotated[StrictFloat, Field(gt=0)],
+                Annotated[StrictFloat, Field(gt=0)]
+            ]
+        ] = None,
+        _request_auth: Optional[Dict[StrictStr, Any]] = None,
+        _content_type: Optional[StrictStr] = None,
+        _headers: Optional[Dict[StrictStr, Any]] = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Get Evidence Types
+
+        Returns supported Evidence object types and required parameters.
+
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """ # noqa: E501
+
+        _param = self._get_evidence_types_serialize(
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index
+        )
+
+        _response_types_map: Dict[str, Optional[str]] = {
+            '200': "object",
+        }
+        response_data = self.api_client.call_api(
+            *_param,
+            _request_timeout=_request_timeout
+        )
+        return response_data.response
+
+
+    def _get_evidence_types_serialize(
+        self,
+        _request_auth,
+        _content_type,
+        _headers,
+        _host_index,
+    ) -> RequestSerialized:
+
+        _host = None
+
+        _collection_formats: Dict[str, str] = {
+        }
+
+        _path_params: Dict[str, str] = {}
+        _query_params: List[Tuple[str, str]] = []
+        _header_params: Dict[str, Optional[str]] = _headers or {}
+        _form_params: List[Tuple[str, str]] = []
+        _files: Dict[str, Union[str, bytes]] = {}
+        _body_params: Optional[bytes] = None
+
+        # process the path parameters
+        # process the query parameters
+        # process the header parameters
+        # process the form parameters
+        # process the body parameter
+
+
+        # set the HTTP header `Accept`
+        _header_params['Accept'] = self.api_client.select_header_accept(
+            [
+                'application/json'
+            ]
+        )
+
+
+        # authentication setting
+        _auth_settings: List[str] = [
+            'oAuth2'
+        ]
+
+        return self.api_client.param_serialize(
+            method='GET',
+            resource_path='/api/evidence/types',
+            path_params=_path_params,
+            query_params=_query_params,
+            header_params=_header_params,
+            body=_body_params,
+            post_params=_form_params,
+            files=_files,
+            auth_settings=_auth_settings,
+            collection_formats=_collection_formats,
+            _host=_host,
+            _request_auth=_request_auth
+        )
+
+
+
+
+    @validate_call
+    def query_evidence(
+        self,
+        attribute_value: StrictStr,
+        attribute_name: Optional[StrictStr] = None,
+        output: Optional[StrictStr] = None,
+        _request_timeout: Union[
+            None,
+            Annotated[StrictFloat, Field(gt=0)],
+            Tuple[
+                Annotated[StrictFloat, Field(gt=0)],
+                Annotated[StrictFloat, Field(gt=0)]
+            ]
+        ] = None,
+        _request_auth: Optional[Dict[StrictStr, Any]] = None,
+        _content_type: Optional[StrictStr] = None,
+        _headers: Optional[Dict[StrictStr, Any]] = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> object:
+        """Query Evidence
+
+        Queries evidence in Redis that have the specified attribute value.  Args:   attribute_name (str): Name of attribute to be queried.   attribute_value (str): Value the attribute must have.   output Optional(str): Sets how the evidence found will be output.  Returns:   summary (dict): Summary of all evidences and their content.  Raises:   HTTPException: If no matching evidence is found.
 
         :param attribute_value: (required)
         :type attribute_value: str
@@ -623,33 +1111,75 @@ class TurbiniaEvidenceApi:
         :type attribute_name: str
         :param output:
         :type output: str
-        :param async_req: Whether to execute the request asynchronously.
-        :type async_req: bool, optional
-        :param _request_timeout: timeout setting for this request.
-               If one number provided, it will be total request
-               timeout. It can also be a pair (tuple) of
-               (connection, read) timeouts.
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
         :return: Returns the result object.
-                 If the method is called asynchronously,
-                 returns the request thread.
-        :rtype: object
-        """
-        kwargs['_return_http_data_only'] = True
-        if '_preload_content' in kwargs:
-            message = "Error! Please call the query_evidence_with_http_info method with `_preload_content` instead and obtain raw data from ApiResponse.raw_data"  # noqa: E501
-            raise ValueError(message)
-        return self.query_evidence_with_http_info(attribute_value, attribute_name, output, **kwargs)  # noqa: E501
+        """ # noqa: E501
 
-    @validate_arguments
-    def query_evidence_with_http_info(self, attribute_value : StrictStr, attribute_name : Optional[StrictStr] = None, output : Optional[StrictStr] = None, **kwargs) -> ApiResponse:  # noqa: E501
-        """Query Evidence  # noqa: E501
+        _param = self._query_evidence_serialize(
+            attribute_value=attribute_value,
+            attribute_name=attribute_name,
+            output=output,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index
+        )
 
-        Queries evidence in Redis that have the specified attribute value.  Args:   attribute_name (str): Name of attribute to be queried.   attribute_value (str): Value the attribute must have.   output Optional(str): Sets how the evidence found will be output.  Returns:   summary (dict): Summary of all evidences and their content.  Raises:   HTTPException: If no matching evidence is found.  # noqa: E501
-        This method makes a synchronous HTTP request by default. To make an
-        asynchronous HTTP request, please pass async_req=True
+        _response_types_map: Dict[str, Optional[str]] = {
+            '200': "object",
+            '422': "HTTPValidationError",
+        }
+        response_data = self.api_client.call_api(
+            *_param,
+            _request_timeout=_request_timeout
+        )
+        response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        ).data
 
-        >>> thread = api.query_evidence_with_http_info(attribute_value, attribute_name, output, async_req=True)
-        >>> result = thread.get()
+
+    @validate_call
+    def query_evidence_with_http_info(
+        self,
+        attribute_value: StrictStr,
+        attribute_name: Optional[StrictStr] = None,
+        output: Optional[StrictStr] = None,
+        _request_timeout: Union[
+            None,
+            Annotated[StrictFloat, Field(gt=0)],
+            Tuple[
+                Annotated[StrictFloat, Field(gt=0)],
+                Annotated[StrictFloat, Field(gt=0)]
+            ]
+        ] = None,
+        _request_auth: Optional[Dict[StrictStr, Any]] = None,
+        _content_type: Optional[StrictStr] = None,
+        _headers: Optional[Dict[StrictStr, Any]] = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[object]:
+        """Query Evidence
+
+        Queries evidence in Redis that have the specified attribute value.  Args:   attribute_name (str): Name of attribute to be queried.   attribute_value (str): Value the attribute must have.   output Optional(str): Sets how the evidence found will be output.  Returns:   summary (dict): Summary of all evidences and their content.  Raises:   HTTPException: If no matching evidence is found.
 
         :param attribute_value: (required)
         :type attribute_value: str
@@ -657,273 +1187,498 @@ class TurbiniaEvidenceApi:
         :type attribute_name: str
         :param output:
         :type output: str
-        :param async_req: Whether to execute the request asynchronously.
-        :type async_req: bool, optional
-        :param _preload_content: if False, the ApiResponse.data will
-                                 be set to none and raw_data will store the
-                                 HTTP response body without reading/decoding.
-                                 Default is True.
-        :type _preload_content: bool, optional
-        :param _return_http_data_only: response data instead of ApiResponse
-                                       object with status code, headers, etc
-        :type _return_http_data_only: bool, optional
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
                                  (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
         :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the authentication
-                              in the spec for a single request.
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
         :type _request_auth: dict, optional
-        :type _content_type: string, optional: force content-type for the request
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
         :return: Returns the result object.
-                 If the method is called asynchronously,
-                 returns the request thread.
-        :rtype: tuple(object, status_code(int), headers(HTTPHeaderDict))
-        """
+        """ # noqa: E501
 
-        _params = locals()
-
-        _all_params = [
-            'attribute_value',
-            'attribute_name',
-            'output'
-        ]
-        _all_params.extend(
-            [
-                'async_req',
-                '_return_http_data_only',
-                '_preload_content',
-                '_request_timeout',
-                '_request_auth',
-                '_content_type',
-                '_headers'
-            ]
+        _param = self._query_evidence_serialize(
+            attribute_value=attribute_value,
+            attribute_name=attribute_name,
+            output=output,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index
         )
 
-        # validate the arguments
-        for _key, _val in _params['kwargs'].items():
-            if _key not in _all_params:
-                raise ApiTypeError(
-                    "Got an unexpected keyword argument '%s'"
-                    " to method query_evidence" % _key
-                )
-            _params[_key] = _val
-        del _params['kwargs']
-
-        _collection_formats = {}
-
-        # process the path parameters
-        _path_params = {}
-
-        # process the query parameters
-        _query_params = []
-        if _params.get('attribute_name') is not None:  # noqa: E501
-            _query_params.append(('attribute_name', _params['attribute_name']))
-
-        if _params.get('attribute_value') is not None:  # noqa: E501
-            _query_params.append(('attribute_value', _params['attribute_value']))
-
-        if _params.get('output') is not None:  # noqa: E501
-            _query_params.append(('output', _params['output']))
-
-        # process the header parameters
-        _header_params = dict(_params.get('_headers', {}))
-        # process the form parameters
-        _form_params = []
-        _files = {}
-        # process the body parameter
-        _body_params = None
-        # set the HTTP header `Accept`
-        _header_params['Accept'] = self.api_client.select_header_accept(
-            ['application/json'])  # noqa: E501
-
-        # authentication setting
-        _auth_settings = ['oAuth2']  # noqa: E501
-
-        _response_types_map = {
+        _response_types_map: Dict[str, Optional[str]] = {
             '200': "object",
             '422': "HTTPValidationError",
         }
-
-        return self.api_client.call_api(
-            '/api/evidence/query', 'GET',
-            _path_params,
-            _query_params,
-            _header_params,
-            body=_body_params,
-            post_params=_form_params,
-            files=_files,
+        response_data = self.api_client.call_api(
+            *_param,
+            _request_timeout=_request_timeout
+        )
+        response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
             response_types_map=_response_types_map,
-            auth_settings=_auth_settings,
-            async_req=_params.get('async_req'),
-            _return_http_data_only=_params.get('_return_http_data_only'),  # noqa: E501
-            _preload_content=_params.get('_preload_content', True),
-            _request_timeout=_params.get('_request_timeout'),
-            collection_formats=_collection_formats,
-            _request_auth=_params.get('_request_auth'))
+        )
 
-    @validate_arguments
-    def upload_evidence(self, files : conlist(Union[StrictBytes, StrictStr]), ticket_id : StrictStr, calculate_hash : Optional[StrictBool] = None, **kwargs) -> object:  # noqa: E501
-        """Upload Evidence  # noqa: E501
 
-        Upload evidence file to server for processing.  Args:   ticket_id (str): ID of the ticket, which will be the name of the folder      where the evidence will be saved.   calculate_hash (bool): Boolean defining if the hash of the evidence should     be calculated.   file (List[UploadFile]): Evidence files to be uploaded to folder for later       processing. The maximum size of the file is 10 GB.   Returns:   List of uploaded evidences or warning messages if any.  # noqa: E501
-        This method makes a synchronous HTTP request by default. To make an
-        asynchronous HTTP request, please pass async_req=True
+    @validate_call
+    def query_evidence_without_preload_content(
+        self,
+        attribute_value: StrictStr,
+        attribute_name: Optional[StrictStr] = None,
+        output: Optional[StrictStr] = None,
+        _request_timeout: Union[
+            None,
+            Annotated[StrictFloat, Field(gt=0)],
+            Tuple[
+                Annotated[StrictFloat, Field(gt=0)],
+                Annotated[StrictFloat, Field(gt=0)]
+            ]
+        ] = None,
+        _request_auth: Optional[Dict[StrictStr, Any]] = None,
+        _content_type: Optional[StrictStr] = None,
+        _headers: Optional[Dict[StrictStr, Any]] = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Query Evidence
 
-        >>> thread = api.upload_evidence(files, ticket_id, calculate_hash, async_req=True)
-        >>> result = thread.get()
+        Queries evidence in Redis that have the specified attribute value.  Args:   attribute_name (str): Name of attribute to be queried.   attribute_value (str): Value the attribute must have.   output Optional(str): Sets how the evidence found will be output.  Returns:   summary (dict): Summary of all evidences and their content.  Raises:   HTTPException: If no matching evidence is found.
 
-        :param files: (required)
-        :type files: List[bytearray]
-        :param ticket_id: (required)
-        :type ticket_id: str
-        :param calculate_hash:
-        :type calculate_hash: bool
-        :param async_req: Whether to execute the request asynchronously.
-        :type async_req: bool, optional
-        :param _request_timeout: timeout setting for this request.
-               If one number provided, it will be total request
-               timeout. It can also be a pair (tuple) of
-               (connection, read) timeouts.
-        :return: Returns the result object.
-                 If the method is called asynchronously,
-                 returns the request thread.
-        :rtype: object
-        """
-        kwargs['_return_http_data_only'] = True
-        if '_preload_content' in kwargs:
-            message = "Error! Please call the upload_evidence_with_http_info method with `_preload_content` instead and obtain raw data from ApiResponse.raw_data"  # noqa: E501
-            raise ValueError(message)
-        return self.upload_evidence_with_http_info(files, ticket_id, calculate_hash, **kwargs)  # noqa: E501
-
-    @validate_arguments
-    def upload_evidence_with_http_info(self, files : conlist(Union[StrictBytes, StrictStr]), ticket_id : StrictStr, calculate_hash : Optional[StrictBool] = None, **kwargs) -> ApiResponse:  # noqa: E501
-        """Upload Evidence  # noqa: E501
-
-        Upload evidence file to server for processing.  Args:   ticket_id (str): ID of the ticket, which will be the name of the folder      where the evidence will be saved.   calculate_hash (bool): Boolean defining if the hash of the evidence should     be calculated.   file (List[UploadFile]): Evidence files to be uploaded to folder for later       processing. The maximum size of the file is 10 GB.   Returns:   List of uploaded evidences or warning messages if any.  # noqa: E501
-        This method makes a synchronous HTTP request by default. To make an
-        asynchronous HTTP request, please pass async_req=True
-
-        >>> thread = api.upload_evidence_with_http_info(files, ticket_id, calculate_hash, async_req=True)
-        >>> result = thread.get()
-
-        :param files: (required)
-        :type files: List[bytearray]
-        :param ticket_id: (required)
-        :type ticket_id: str
-        :param calculate_hash:
-        :type calculate_hash: bool
-        :param async_req: Whether to execute the request asynchronously.
-        :type async_req: bool, optional
-        :param _preload_content: if False, the ApiResponse.data will
-                                 be set to none and raw_data will store the
-                                 HTTP response body without reading/decoding.
-                                 Default is True.
-        :type _preload_content: bool, optional
-        :param _return_http_data_only: response data instead of ApiResponse
-                                       object with status code, headers, etc
-        :type _return_http_data_only: bool, optional
+        :param attribute_value: (required)
+        :type attribute_value: str
+        :param attribute_name:
+        :type attribute_name: str
+        :param output:
+        :type output: str
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
                                  (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
         :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the authentication
-                              in the spec for a single request.
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
         :type _request_auth: dict, optional
-        :type _content_type: string, optional: force content-type for the request
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
         :return: Returns the result object.
-                 If the method is called asynchronously,
-                 returns the request thread.
-        :rtype: tuple(object, status_code(int), headers(HTTPHeaderDict))
-        """
+        """ # noqa: E501
 
-        _params = locals()
+        _param = self._query_evidence_serialize(
+            attribute_value=attribute_value,
+            attribute_name=attribute_name,
+            output=output,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index
+        )
 
-        _all_params = [
-            'files',
-            'ticket_id',
-            'calculate_hash'
-        ]
-        _all_params.extend(
+        _response_types_map: Dict[str, Optional[str]] = {
+            '200': "object",
+            '422': "HTTPValidationError",
+        }
+        response_data = self.api_client.call_api(
+            *_param,
+            _request_timeout=_request_timeout
+        )
+        return response_data.response
+
+
+    def _query_evidence_serialize(
+        self,
+        attribute_value,
+        attribute_name,
+        output,
+        _request_auth,
+        _content_type,
+        _headers,
+        _host_index,
+    ) -> RequestSerialized:
+
+        _host = None
+
+        _collection_formats: Dict[str, str] = {
+        }
+
+        _path_params: Dict[str, str] = {}
+        _query_params: List[Tuple[str, str]] = []
+        _header_params: Dict[str, Optional[str]] = _headers or {}
+        _form_params: List[Tuple[str, str]] = []
+        _files: Dict[str, Union[str, bytes]] = {}
+        _body_params: Optional[bytes] = None
+
+        # process the path parameters
+        # process the query parameters
+        if attribute_name is not None:
+            
+            _query_params.append(('attribute_name', attribute_name))
+            
+        if attribute_value is not None:
+            
+            _query_params.append(('attribute_value', attribute_value))
+            
+        if output is not None:
+            
+            _query_params.append(('output', output))
+            
+        # process the header parameters
+        # process the form parameters
+        # process the body parameter
+
+
+        # set the HTTP header `Accept`
+        _header_params['Accept'] = self.api_client.select_header_accept(
             [
-                'async_req',
-                '_return_http_data_only',
-                '_preload_content',
-                '_request_timeout',
-                '_request_auth',
-                '_content_type',
-                '_headers'
+                'application/json'
             ]
         )
 
-        # validate the arguments
-        for _key, _val in _params['kwargs'].items():
-            if _key not in _all_params:
-                raise ApiTypeError(
-                    "Got an unexpected keyword argument '%s'"
-                    " to method upload_evidence" % _key
-                )
-            _params[_key] = _val
-        del _params['kwargs']
 
-        _collection_formats = {}
+        # authentication setting
+        _auth_settings: List[str] = [
+            'oAuth2'
+        ]
+
+        return self.api_client.param_serialize(
+            method='GET',
+            resource_path='/api/evidence/query',
+            path_params=_path_params,
+            query_params=_query_params,
+            header_params=_header_params,
+            body=_body_params,
+            post_params=_form_params,
+            files=_files,
+            auth_settings=_auth_settings,
+            collection_formats=_collection_formats,
+            _host=_host,
+            _request_auth=_request_auth
+        )
+
+
+
+
+    @validate_call
+    def upload_evidence(
+        self,
+        files: List[Union[StrictBytes, StrictStr]],
+        ticket_id: StrictStr,
+        calculate_hash: Optional[StrictBool] = None,
+        _request_timeout: Union[
+            None,
+            Annotated[StrictFloat, Field(gt=0)],
+            Tuple[
+                Annotated[StrictFloat, Field(gt=0)],
+                Annotated[StrictFloat, Field(gt=0)]
+            ]
+        ] = None,
+        _request_auth: Optional[Dict[StrictStr, Any]] = None,
+        _content_type: Optional[StrictStr] = None,
+        _headers: Optional[Dict[StrictStr, Any]] = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> object:
+        """Upload Evidence
+
+        Upload evidence file to server for processing.  Args:   ticket_id (str): ID of the ticket, which will be the name of the folder      where the evidence will be saved.   calculate_hash (bool): Boolean defining if the hash of the evidence should     be calculated.   file (List[UploadFile]): Evidence files to be uploaded to folder for later       processing. The maximum size of the file is 10 GB.   Returns:   List of uploaded evidences or warning messages if any.
+
+        :param files: (required)
+        :type files: List[bytearray]
+        :param ticket_id: (required)
+        :type ticket_id: str
+        :param calculate_hash:
+        :type calculate_hash: bool
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """ # noqa: E501
+
+        _param = self._upload_evidence_serialize(
+            files=files,
+            ticket_id=ticket_id,
+            calculate_hash=calculate_hash,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index
+        )
+
+        _response_types_map: Dict[str, Optional[str]] = {
+            '200': "object",
+            '422': "HTTPValidationError",
+        }
+        response_data = self.api_client.call_api(
+            *_param,
+            _request_timeout=_request_timeout
+        )
+        response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        ).data
+
+
+    @validate_call
+    def upload_evidence_with_http_info(
+        self,
+        files: List[Union[StrictBytes, StrictStr]],
+        ticket_id: StrictStr,
+        calculate_hash: Optional[StrictBool] = None,
+        _request_timeout: Union[
+            None,
+            Annotated[StrictFloat, Field(gt=0)],
+            Tuple[
+                Annotated[StrictFloat, Field(gt=0)],
+                Annotated[StrictFloat, Field(gt=0)]
+            ]
+        ] = None,
+        _request_auth: Optional[Dict[StrictStr, Any]] = None,
+        _content_type: Optional[StrictStr] = None,
+        _headers: Optional[Dict[StrictStr, Any]] = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> ApiResponse[object]:
+        """Upload Evidence
+
+        Upload evidence file to server for processing.  Args:   ticket_id (str): ID of the ticket, which will be the name of the folder      where the evidence will be saved.   calculate_hash (bool): Boolean defining if the hash of the evidence should     be calculated.   file (List[UploadFile]): Evidence files to be uploaded to folder for later       processing. The maximum size of the file is 10 GB.   Returns:   List of uploaded evidences or warning messages if any.
+
+        :param files: (required)
+        :type files: List[bytearray]
+        :param ticket_id: (required)
+        :type ticket_id: str
+        :param calculate_hash:
+        :type calculate_hash: bool
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """ # noqa: E501
+
+        _param = self._upload_evidence_serialize(
+            files=files,
+            ticket_id=ticket_id,
+            calculate_hash=calculate_hash,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index
+        )
+
+        _response_types_map: Dict[str, Optional[str]] = {
+            '200': "object",
+            '422': "HTTPValidationError",
+        }
+        response_data = self.api_client.call_api(
+            *_param,
+            _request_timeout=_request_timeout
+        )
+        response_data.read()
+        return self.api_client.response_deserialize(
+            response_data=response_data,
+            response_types_map=_response_types_map,
+        )
+
+
+    @validate_call
+    def upload_evidence_without_preload_content(
+        self,
+        files: List[Union[StrictBytes, StrictStr]],
+        ticket_id: StrictStr,
+        calculate_hash: Optional[StrictBool] = None,
+        _request_timeout: Union[
+            None,
+            Annotated[StrictFloat, Field(gt=0)],
+            Tuple[
+                Annotated[StrictFloat, Field(gt=0)],
+                Annotated[StrictFloat, Field(gt=0)]
+            ]
+        ] = None,
+        _request_auth: Optional[Dict[StrictStr, Any]] = None,
+        _content_type: Optional[StrictStr] = None,
+        _headers: Optional[Dict[StrictStr, Any]] = None,
+        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
+    ) -> RESTResponseType:
+        """Upload Evidence
+
+        Upload evidence file to server for processing.  Args:   ticket_id (str): ID of the ticket, which will be the name of the folder      where the evidence will be saved.   calculate_hash (bool): Boolean defining if the hash of the evidence should     be calculated.   file (List[UploadFile]): Evidence files to be uploaded to folder for later       processing. The maximum size of the file is 10 GB.   Returns:   List of uploaded evidences or warning messages if any.
+
+        :param files: (required)
+        :type files: List[bytearray]
+        :param ticket_id: (required)
+        :type ticket_id: str
+        :param calculate_hash:
+        :type calculate_hash: bool
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :type _request_timeout: int, tuple(int, int), optional
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the
+                              authentication in the spec for a single request.
+        :type _request_auth: dict, optional
+        :param _content_type: force content-type for the request.
+        :type _content_type: str, Optional
+        :param _headers: set to override the headers for a single
+                         request; this effectively ignores the headers
+                         in the spec for a single request.
+        :type _headers: dict, optional
+        :param _host_index: set to override the host_index for a single
+                            request; this effectively ignores the host_index
+                            in the spec for a single request.
+        :type _host_index: int, optional
+        :return: Returns the result object.
+        """ # noqa: E501
+
+        _param = self._upload_evidence_serialize(
+            files=files,
+            ticket_id=ticket_id,
+            calculate_hash=calculate_hash,
+            _request_auth=_request_auth,
+            _content_type=_content_type,
+            _headers=_headers,
+            _host_index=_host_index
+        )
+
+        _response_types_map: Dict[str, Optional[str]] = {
+            '200': "object",
+            '422': "HTTPValidationError",
+        }
+        response_data = self.api_client.call_api(
+            *_param,
+            _request_timeout=_request_timeout
+        )
+        return response_data.response
+
+
+    def _upload_evidence_serialize(
+        self,
+        files,
+        ticket_id,
+        calculate_hash,
+        _request_auth,
+        _content_type,
+        _headers,
+        _host_index,
+    ) -> RequestSerialized:
+
+        _host = None
+
+        _collection_formats: Dict[str, str] = {
+            'files': 'csv',
+        }
+
+        _path_params: Dict[str, str] = {}
+        _query_params: List[Tuple[str, str]] = []
+        _header_params: Dict[str, Optional[str]] = _headers or {}
+        _form_params: List[Tuple[str, str]] = []
+        _files: Dict[str, Union[str, bytes]] = {}
+        _body_params: Optional[bytes] = None
 
         # process the path parameters
-        _path_params = {}
-
         # process the query parameters
-        _query_params = []
         # process the header parameters
-        _header_params = dict(_params.get('_headers', {}))
         # process the form parameters
-        _form_params = []
-        _files = {}
-        if _params['calculate_hash'] is not None:
-            _form_params.append(('calculate_hash', _params['calculate_hash']))
-
-        if _params['files'] is not None:
-            _files['files'] = _params['files']
-            _collection_formats['files'] = 'csv'
-
-        if _params['ticket_id'] is not None:
-            _form_params.append(('ticket_id', _params['ticket_id']))
-
+        if calculate_hash is not None:
+            _form_params.append(('calculate_hash', calculate_hash))
+        if files is not None:
+            _files['files'] = files
+        if ticket_id is not None:
+            _form_params.append(('ticket_id', ticket_id))
         # process the body parameter
-        _body_params = None
+
+
         # set the HTTP header `Accept`
         _header_params['Accept'] = self.api_client.select_header_accept(
-            ['application/json'])  # noqa: E501
+            [
+                'application/json'
+            ]
+        )
 
         # set the HTTP header `Content-Type`
-        _content_types_list = _params.get('_content_type',
-            self.api_client.select_header_content_type(
-                ['multipart/form-data']))
-        if _content_types_list:
-                _header_params['Content-Type'] = _content_types_list
+        if _content_type:
+            _header_params['Content-Type'] = _content_type
+        else:
+            _default_content_type = (
+                self.api_client.select_header_content_type(
+                    [
+                        'multipart/form-data'
+                    ]
+                )
+            )
+            if _default_content_type is not None:
+                _header_params['Content-Type'] = _default_content_type
 
         # authentication setting
-        _auth_settings = ['oAuth2']  # noqa: E501
+        _auth_settings: List[str] = [
+            'oAuth2'
+        ]
 
-        _response_types_map = {
-            '200': "object",
-            '422': "HTTPValidationError",
-        }
-
-        return self.api_client.call_api(
-            '/api/evidence/upload', 'POST',
-            _path_params,
-            _query_params,
-            _header_params,
+        return self.api_client.param_serialize(
+            method='POST',
+            resource_path='/api/evidence/upload',
+            path_params=_path_params,
+            query_params=_query_params,
+            header_params=_header_params,
             body=_body_params,
             post_params=_form_params,
             files=_files,
-            response_types_map=_response_types_map,
             auth_settings=_auth_settings,
-            async_req=_params.get('async_req'),
-            _return_http_data_only=_params.get('_return_http_data_only'),  # noqa: E501
-            _preload_content=_params.get('_preload_content', True),
-            _request_timeout=_params.get('_request_timeout'),
             collection_formats=_collection_formats,
-            _request_auth=_params.get('_request_auth'))
+            _host=_host,
+            _request_auth=_request_auth
+        )
+
+

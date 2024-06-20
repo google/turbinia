@@ -19,9 +19,8 @@ Create a new Turbinia request.  Args:   request (Request): FastAPI request objec
 ### Example
 
 * OAuth Authentication (oAuth2):
+
 ```python
-import time
-import os
 import turbinia_api_lib
 from turbinia_api_lib.models.request import Request
 from turbinia_api_lib.rest import ApiException
@@ -59,6 +58,7 @@ with turbinia_api_lib.ApiClient(configuration) as api_client:
 
 ### Parameters
 
+
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
  **request** | [**Request**](Request.md)|  | 
@@ -77,6 +77,7 @@ Name | Type | Description  | Notes
  - **Accept**: application/json
 
 ### HTTP response details
+
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
 **200** | Successful Response |  -  |
@@ -94,9 +95,8 @@ Retrieves status for a Turbinia Request.  Args:   request (Request): FastAPI req
 ### Example
 
 * OAuth Authentication (oAuth2):
+
 ```python
-import time
-import os
 import turbinia_api_lib
 from turbinia_api_lib.rest import ApiException
 from pprint import pprint
@@ -133,6 +133,7 @@ with turbinia_api_lib.ApiClient(configuration) as api_client:
 
 ### Parameters
 
+
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
  **request_id** | **str**|  | 
@@ -151,6 +152,7 @@ Name | Type | Description  | Notes
  - **Accept**: application/json
 
 ### HTTP response details
+
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
 **200** | Successful Response |  -  |
@@ -168,9 +170,8 @@ Retrieves a summary of all Turbinia requests.  The response is validated against
 ### Example
 
 * OAuth Authentication (oAuth2):
+
 ```python
-import time
-import os
 import turbinia_api_lib
 from turbinia_api_lib.rest import ApiException
 from pprint import pprint
@@ -205,6 +206,7 @@ with turbinia_api_lib.ApiClient(configuration) as api_client:
 
 
 ### Parameters
+
 This endpoint does not need any parameter.
 
 ### Return type
@@ -221,6 +223,7 @@ This endpoint does not need any parameter.
  - **Accept**: application/json
 
 ### HTTP response details
+
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
 **200** | Successful Response |  -  |

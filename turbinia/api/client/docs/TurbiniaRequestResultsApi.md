@@ -17,9 +17,8 @@ Get Plaso File
 ### Example
 
 * OAuth Authentication (oAuth2):
+
 ```python
-import time
-import os
 import turbinia_api_lib
 from turbinia_api_lib.rest import ApiException
 from pprint import pprint
@@ -56,6 +55,7 @@ with turbinia_api_lib.ApiClient(configuration) as api_client:
 
 ### Parameters
 
+
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
  **task_id** | **str**|  | 
@@ -74,6 +74,7 @@ Name | Type | Description  | Notes
  - **Accept**: application/octet-stream, application/json
 
 ### HTTP response details
+
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
 **200** | Successful Response |  -  |
@@ -91,9 +92,8 @@ Retrieve request output.
 ### Example
 
 * OAuth Authentication (oAuth2):
+
 ```python
-import time
-import os
 import turbinia_api_lib
 from turbinia_api_lib.rest import ApiException
 from pprint import pprint
@@ -130,6 +130,7 @@ with turbinia_api_lib.ApiClient(configuration) as api_client:
 
 ### Parameters
 
+
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
  **request_id** | **str**|  | 
@@ -148,6 +149,7 @@ Name | Type | Description  | Notes
  - **Accept**: application/octet-stream, application/json
 
 ### HTTP response details
+
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
 **200** | Successful Response |  -  |
@@ -165,9 +167,8 @@ Retrieves a task's output files.
 ### Example
 
 * OAuth Authentication (oAuth2):
+
 ```python
-import time
-import os
 import turbinia_api_lib
 from turbinia_api_lib.rest import ApiException
 from pprint import pprint
@@ -204,6 +205,7 @@ with turbinia_api_lib.ApiClient(configuration) as api_client:
 
 ### Parameters
 
+
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
  **task_id** | **str**|  | 
@@ -222,6 +224,7 @@ Name | Type | Description  | Notes
  - **Accept**: application/octet-stream, application/json
 
 ### HTTP response details
+
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
 **200** | Successful Response |  -  |

@@ -17,7 +17,6 @@
 import os
 import logging
 import click
-import tarfile
 
 from importlib.metadata import version as importlib_version
 
@@ -31,7 +30,7 @@ from turbinia_api_lib.api import turbinia_jobs_api
 from turbinia_api_lib.api import turbinia_request_results_api
 from turbinia_api_lib.api import turbinia_evidence_api
 from turbinia_client.core import groups
-from turbinia_client.helpers import formatter
+from turbinia_client.helpers import formatter, download_helper
 
 log = logging.getLogger(__name__)
 
@@ -78,19 +77,14 @@ def get_request_result(ctx: click.Context, request_id: str) -> None:
   filename = f'{request_id}.tgz'
   click.echo(f'Downloading output for request {request_id} to: {filename}')
   try:
-    api_response = api_instance.get_request_output_with_http_info(
-        request_id, _preload_content=False, _request_timeout=(30, 900))
-    # Read the response and save into a local file.
-    with open(filename, 'wb') as file:
-      file.write(api_response.raw_data)
+    api_response = api_instance.get_request_output_without_preload_content(
+        request_id)
+    download_helper.download_with_progressbar(api_response, filename)
   except exceptions.ApiException as exception:
     log.error(
         f'Received status code {exception.status} '
-        f'when calling get_request_output_with_http_info: {exception.body}')
-  except OSError as exception:
-    log.error(f'Unable to save file: {exception}')
-  except (ValueError, tarfile.ReadError, tarfile.CompressionError) as exception:
-    log.error(f'Error reading saved results file {filename}: {exception}')
+        f'when calling get_request_output_without_preload_content: '
+        f'{exception.body}')
 
 
 @groups.result_group.command('task')
@@ -103,19 +97,13 @@ def get_task_result(ctx: click.Context, task_id: str) -> None:
   filename = f'{task_id}.tgz'
   click.echo(f'Downloading output for task {task_id} to: {filename}')
   try:
-    api_response = api_instance.get_task_output_with_http_info(
-        task_id, _preload_content=False, _request_timeout=(30, 900))
-    # Read the response and save into a local file.
-    with open(filename, 'wb') as file:
-      file.write(api_response.raw_data)
+    api_response = api_instance.get_task_output_without_preload_content(task_id)
+    download_helper.download_with_progressbar(api_response, filename)
   except exceptions.ApiException as exception:
     log.error(
         f'Received status code {exception.status} '
-        f'when calling get_task_output_with_http_info: {exception.body}')
-  except OSError as exception:
-    log.error(f'Unable to save file: {exception}')
-  except (ValueError, tarfile.ReadError, tarfile.CompressionError) as exception:
-    log.error(f'Error reading saved results file {filename}: {exception}')
+        f'when calling get_task_output_without_preload_content: '
+        f'{exception.body}')
 
 
 @groups.result_group.command('plasofile')
@@ -128,19 +116,13 @@ def get_plaso_file(ctx: click.Context, task_id: str) -> None:
   filename = f'{task_id}.plaso'
   click.echo(f'Downloading output for task {task_id} to: {filename}')
   try:
-    api_response = api_instance.get_plaso_file_with_http_info(
-        task_id, _preload_content=False, _request_timeout=(30, 900))
-    # Read the response and save into a local file.
-    with open(filename, 'wb') as file:
-      file.write(api_response.raw_data)
+    api_response = api_instance.get_plaso_file_without_preload_content(task_id)
+    download_helper.download_with_progressbar(api_response, filename)
   except exceptions.ApiException as exception:
     log.error(
         f'Received status code {exception.status} '
-        f'when calling get_plaso_file_with_http_info: {exception.body}')
-  except OSError as exception:
-    log.error(f'Unable to save file: {exception}')
-  except (ValueError, tarfile.ReadError, tarfile.CompressionError) as exception:
-    log.error(f'Error reading saved results file {filename}: {exception}')
+        f'when calling get_plaso_file_without_preload_content: {exception.body}'
+    )
 
 
 @groups.jobs_group.command('list')

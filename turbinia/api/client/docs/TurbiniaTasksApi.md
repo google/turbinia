@@ -19,9 +19,8 @@ Retrieves  statistics for Turbinia execution.  Args:   days (int): The number of
 ### Example
 
 * OAuth Authentication (oAuth2):
+
 ```python
-import time
-import os
 import turbinia_api_lib
 from turbinia_api_lib.models.complete_turbinia_stats import CompleteTurbiniaStats
 from turbinia_api_lib.rest import ApiException
@@ -62,6 +61,7 @@ with turbinia_api_lib.ApiClient(configuration) as api_client:
 
 ### Parameters
 
+
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
  **days** | **int**|  | [optional] 
@@ -83,6 +83,7 @@ Name | Type | Description  | Notes
  - **Accept**: application/json
 
 ### HTTP response details
+
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
 **200** | Successful Response |  -  |
@@ -100,9 +101,8 @@ Retrieve task information.
 ### Example
 
 * OAuth Authentication (oAuth2):
+
 ```python
-import time
-import os
 import turbinia_api_lib
 from turbinia_api_lib.rest import ApiException
 from pprint import pprint
@@ -139,6 +139,7 @@ with turbinia_api_lib.ApiClient(configuration) as api_client:
 
 ### Parameters
 
+
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
  **task_id** | **str**|  | 
@@ -157,6 +158,7 @@ Name | Type | Description  | Notes
  - **Accept**: application/json
 
 ### HTTP response details
+
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
 **200** | Successful Response |  -  |
@@ -174,9 +176,8 @@ Retrieves the workers status.  Args:   days (int): The UUID of the evidence.   a
 ### Example
 
 * OAuth Authentication (oAuth2):
+
 ```python
-import time
-import os
 import turbinia_api_lib
 from turbinia_api_lib.rest import ApiException
 from pprint import pprint
@@ -214,6 +215,7 @@ with turbinia_api_lib.ApiClient(configuration) as api_client:
 
 ### Parameters
 
+
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
  **days** | **int**|  | [optional] [default to 7]
@@ -233,6 +235,7 @@ Name | Type | Description  | Notes
  - **Accept**: application/json
 
 ### HTTP response details
+
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
 **200** | Successful Response |  -  |

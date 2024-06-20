@@ -22,9 +22,8 @@ Returns supported required parameters for evidence type.  Args:   evidence_type 
 ### Example
 
 * OAuth Authentication (oAuth2):
+
 ```python
-import time
-import os
 import turbinia_api_lib
 from turbinia_api_lib.rest import ApiException
 from pprint import pprint
@@ -61,6 +60,7 @@ with turbinia_api_lib.ApiClient(configuration) as api_client:
 
 ### Parameters
 
+
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
  **evidence_type** | [**object**](.md)|  | 
@@ -79,6 +79,7 @@ Name | Type | Description  | Notes
  - **Accept**: application/json
 
 ### HTTP response details
+
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
 **200** | Successful Response |  -  |
@@ -96,9 +97,8 @@ Retrieves an evidence in Redis by using its UUID.  Args:   evidence_id (str): Th
 ### Example
 
 * OAuth Authentication (oAuth2):
+
 ```python
-import time
-import os
 import turbinia_api_lib
 from turbinia_api_lib.rest import ApiException
 from pprint import pprint
@@ -135,6 +135,7 @@ with turbinia_api_lib.ApiClient(configuration) as api_client:
 
 ### Parameters
 
+
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
  **evidence_id** | [**object**](.md)|  | 
@@ -153,6 +154,7 @@ Name | Type | Description  | Notes
  - **Accept**: application/json
 
 ### HTTP response details
+
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
 **200** | Successful Response |  -  |
@@ -170,9 +172,8 @@ Retrieves a summary of all evidences in Redis.  Args:   group Optional(str): Att
 ### Example
 
 * OAuth Authentication (oAuth2):
+
 ```python
-import time
-import os
 import turbinia_api_lib
 from turbinia_api_lib.rest import ApiException
 from pprint import pprint
@@ -210,6 +211,7 @@ with turbinia_api_lib.ApiClient(configuration) as api_client:
 
 ### Parameters
 
+
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
  **group** | **str**|  | [optional] 
@@ -229,6 +231,7 @@ Name | Type | Description  | Notes
  - **Accept**: application/json
 
 ### HTTP response details
+
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
 **200** | Successful Response |  -  |
@@ -246,9 +249,8 @@ Returns supported Evidence object types and required parameters.
 ### Example
 
 * OAuth Authentication (oAuth2):
+
 ```python
-import time
-import os
 import turbinia_api_lib
 from turbinia_api_lib.rest import ApiException
 from pprint import pprint
@@ -283,6 +285,7 @@ with turbinia_api_lib.ApiClient(configuration) as api_client:
 
 
 ### Parameters
+
 This endpoint does not need any parameter.
 
 ### Return type
@@ -299,6 +302,7 @@ This endpoint does not need any parameter.
  - **Accept**: application/json
 
 ### HTTP response details
+
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
 **200** | Successful Response |  -  |
@@ -315,9 +319,8 @@ Queries evidence in Redis that have the specified attribute value.  Args:   attr
 ### Example
 
 * OAuth Authentication (oAuth2):
+
 ```python
-import time
-import os
 import turbinia_api_lib
 from turbinia_api_lib.rest import ApiException
 from pprint import pprint
@@ -356,6 +359,7 @@ with turbinia_api_lib.ApiClient(configuration) as api_client:
 
 ### Parameters
 
+
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
  **attribute_value** | **str**|  | 
@@ -376,6 +380,7 @@ Name | Type | Description  | Notes
  - **Accept**: application/json
 
 ### HTTP response details
+
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
 **200** | Successful Response |  -  |
@@ -393,9 +398,8 @@ Upload evidence file to server for processing.  Args:   ticket_id (str): ID of t
 ### Example
 
 * OAuth Authentication (oAuth2):
+
 ```python
-import time
-import os
 import turbinia_api_lib
 from turbinia_api_lib.rest import ApiException
 from pprint import pprint
@@ -434,6 +438,7 @@ with turbinia_api_lib.ApiClient(configuration) as api_client:
 
 ### Parameters
 
+
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
  **files** | **List[bytearray]**|  | 
@@ -454,6 +459,7 @@ Name | Type | Description  | Notes
  - **Accept**: application/json
 
 ### HTTP response details
+
 | Status code | Description | Response headers |
 |-------------|-------------|------------------|
 **200** | Successful Response |  -  |

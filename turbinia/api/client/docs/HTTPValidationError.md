@@ -2,6 +2,7 @@
 
 
 ## Properties
+
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **detail** | [**List[ValidationError]**](ValidationError.md) |  | [optional] 
@@ -16,12 +17,12 @@ json = "{}"
 # create an instance of HTTPValidationError from a JSON string
 http_validation_error_instance = HTTPValidationError.from_json(json)
 # print the JSON string representation of the object
-print HTTPValidationError.to_json()
+print(HTTPValidationError.to_json())
 
 # convert the object into a dict
 http_validation_error_dict = http_validation_error_instance.to_dict()
 # create an instance of HTTPValidationError from a dict
-http_validation_error_form_dict = http_validation_error.from_dict(http_validation_error_dict)
+http_validation_error_from_dict = HTTPValidationError.from_dict(http_validation_error_dict)
 ```
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
 
