@@ -76,7 +76,7 @@ RETRIES=0
 req_status=$(turbinia-client -p ./evidence status request 123456789 -j | jq -r '.status')
 while [[ $req_status != "running" ]]
 do
-  RETRIES-=1
+  RETRIES+=1
   if [[ $RETRIES = $MAX_RETRIES ]]
   then
     echo "ERROR: Max retries reached, exiting."
@@ -88,13 +88,13 @@ do
 done
 
 # Wait until request is complete 
-RETRIES=30
+RETRIES=0
 while [[ $req_status = "running" ]]
 do
   req_status=$(turbinia-client -p ./evidence status request 123456789 -j | jq -r '.status')
   if [[ $req_status = "running" ]]
   then
-    RETRIES-=1
+    RETRIES+=1
     if [[ $RETRIES = $MAX_RETRIES ]]
     then
       echo "ERROR: Max retries reached, exiting."

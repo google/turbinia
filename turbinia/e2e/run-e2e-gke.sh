@@ -85,7 +85,7 @@ req_status=$(turbinia-client status request $REQUEST_ID -j | jq -r '.status')
 RETRIES=0
 while [[ $req_status != "running" ]]
 do
-  RETRIES-=1
+  RETRIES+=1
   if [[ $RETRIES = $MAX_RETRIES ]]
   then
     echo "ERROR: Max retries reached, exiting."
@@ -103,7 +103,7 @@ do
   req_status=$(turbinia-client status request $REQUEST_ID -j | jq -r '.status')
   if [[ $req_status = "running" ]]
   then
-    RETRIES-=1
+    RETRIES+=1
     if [[ $RETRIES = $MAX_RETRIES ]]
     then
       echo "ERROR: Max retries reached, exiting."
