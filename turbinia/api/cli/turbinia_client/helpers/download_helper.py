@@ -27,7 +27,6 @@ def download_with_progressbar(
     api_response: RESTResponseType, filename: str) -> None:
   """Download the response and save into a local file."""
   try:
-    file_path = 
     with open(filename, 'wb') as file:
       with tqdm(
           # all optional kwargs
