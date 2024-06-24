@@ -25,11 +25,9 @@ parallel. One or more workers run continuously to process tasks from the server.
 Any new evidence created or discovered by the tasks will be fed back into
 Turbinia for further processing.
 
-Communication from the client to the server is currently done with either Google
-Cloud PubSub or [Kombu](https://github.com/celery/kombu) messaging. The worker
-implementation can use either [PSQ](https://github.com/GoogleCloudPlatform/psq)
-(a Google Cloud PubSub Task Queue) or [Celery](http://www.celeryproject.org/)
-for task scheduling.
+Communication from the client to the server is currently done with 
+[Kombu](https://github.com/celery/kombu) messaging. The worker implementation uses 
+[Celery](http://www.celeryproject.org/) for task scheduling.
 
 The main documentation for Turbinia can be
 [found here](https://turbinia.readthedocs.io/). You can also find out more about
@@ -52,7 +50,7 @@ configuration are:
 
 *   Start Turbinia server component with `turbiniactl server` command
 *   Start Turbinia API server component with `turbiniactl api_server` command if using Celery
-*   Start one or more Turbinia workers with `turbiniactl celeryworker` if using Celery, or `turbiniactl psqworker` if using PSQ
+*   Start one or more Turbinia workers with `turbiniactl celeryworker`
 *   Install `turbinia-client` via `pip install turbinia-client`
 *   Send evidence to be processed from the turbinia client with `turbinia-client submit ${evidencetype}`
 *   Check status of running tasks with `turbinia-client status`
