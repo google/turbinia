@@ -26,7 +26,7 @@ Any new evidence created or discovered by the tasks will be fed back into
 Turbinia for further processing.
 
 Communication from the client to the server is currently done with 
-[Kombu](https://github.com/celery/kombu) messaging. The workerimplementation uses 
+[Kombu](https://github.com/celery/kombu) messaging. The worker implementation uses 
 [Celery](http://www.celeryproject.org/) for task scheduling.
 
 The main documentation for Turbinia can be
