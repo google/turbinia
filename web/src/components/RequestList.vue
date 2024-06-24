@@ -98,6 +98,7 @@ limitations under the License.
 import ApiClient from '../utils/RestApiClient.js'
 import TaskList from './TaskList.vue'
 import { mergeProps } from 'vue'
+import { truncate } from '../App.vue'
 
 export default {
   components: { TaskList },
@@ -151,7 +152,7 @@ export default {
               failed_tasks: data[req].failed_tasks,
               outstanding_perc: outstanding_perc,
               status: data[req].status,
-              evidence_name: data[req].evidence_name.substring(0, 64) + '...',
+              evidence_name: truncate(data[req].evidence_name, 64, '...'),
               evidence_id: data[req].evidence_id,
             })
           }
