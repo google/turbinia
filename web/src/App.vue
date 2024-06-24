@@ -14,7 +14,7 @@ limitations under the License.
 <template>
   <v-app id="app">
     <nav class="navbar">
-      <v-app-bar flat :elevation="1" >
+      <v-app-bar flat :elevation="1">
         <template v-slot:prepend>
           <v-img src="./turbinia-logo-mark.png" height="50" width="70"></v-img>
         </template>
@@ -60,6 +60,14 @@ import RequestList from './components/RequestList.vue'
 import TaskDetails from './components/TaskDetails.vue'
 import ApiClient from './utils/RestApiClient.js'
 
+export function truncate(text, length, suffix) {
+  if (text.length > length) {
+    return text.substring(0, length) + suffix;
+  } else {
+    return text;
+  }
+}
+
 export default {
   name: 'app',
   components: { RequestList, TaskDetails },
@@ -92,7 +100,7 @@ import { useTheme } from 'vuetify'
 
 const theme = useTheme()
 
-function toggleTheme () {
+function toggleTheme() {
   theme.global.name.value = theme.global.current.value.dark ? 'light' : 'dark'
 }
 </script>
