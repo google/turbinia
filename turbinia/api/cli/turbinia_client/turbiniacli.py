@@ -59,7 +59,9 @@ class TurbiniaCli:
     id_token (str): An access token to use for authentication.
   """
 
-  def __init__(self, config_instance=None, config_path=None, id_token=None):
+  def __init__(
+      self, config_instance=None, config_path=None, download_path=None,
+      id_token=None):
     self._api_client: turbinia_api_lib.ApiClient = None
     self._config: turbinia_api_lib.Configuration = None
     self._config_dict: dict[str, str] = {}
@@ -72,6 +74,11 @@ class TurbiniaCli:
     self.config_instance: str = config_instance
     self.config_path: str = config_path
     self.credentials_path: str = None
+    self.download_path: str = download_path
+    if self.download_path == '~':
+      self.download_path = os.path.expanduser('~')
+    if not self.download_path.endswith('/'):
+      self.download_path += '/'
     self.id_token: str = id_token
 
   def setup(self) -> None:

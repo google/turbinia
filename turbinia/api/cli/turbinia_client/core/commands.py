@@ -74,7 +74,7 @@ def get_request_result(ctx: click.Context, request_id: str) -> None:
   """Gets Turbinia request results / output files."""
   client: api_client.ApiClient = ctx.obj.api_client
   api_instance = turbinia_request_results_api.TurbiniaRequestResultsApi(client)
-  filename = f'{request_id}.tgz'
+  filename = f'{ctx.obj.download_path}{request_id}.tgz'
   click.echo(f'Downloading output for request {request_id} to: {filename}')
   try:
     api_response = api_instance.get_request_output_without_preload_content(

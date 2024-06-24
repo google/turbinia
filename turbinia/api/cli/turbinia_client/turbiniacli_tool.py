@@ -41,8 +41,14 @@ log = logging.getLogger(__name__)
     '--config_path', '-p', help='Path to the .turbinia_api_config.json file.',
     show_default=True, show_envvar=True, type=str,
     default=lambda: os.environ.get('TURBINIA_API_CONFIG_PATH', '~'))
+@click.option(
+    '--download_path', '-d', help='Path to use for downloading files.',
+    show_default=True, show_envvar=True, type=str,
+    default=lambda: os.environ.get('TURBINIA_API_DOWNLOAD_PATH', '~'))
 @click.pass_context
-def cli(ctx: click.Context, config_instance: str, config_path: str) -> None:
+def cli(
+    ctx: click.Context, config_instance: str, config_path: str,
+    download_path: str) -> None:
   """Turbinia API command-line tool (turbinia-client).
   
   \b                         ***    ***                                       
@@ -74,7 +80,8 @@ def cli(ctx: click.Context, config_instance: str, config_path: str) -> None:
   You can specify the API server location in ~/.turbinia_api_config.json
   """
   ctx.obj = TurbiniaCli(
-      config_instance=config_instance, config_path=config_path)
+      config_instance=config_instance, config_path=config_path,
+      download_path=download_path)
 
   # Set up the tool based on the configuration file parameters.
   ctx.obj.setup()
