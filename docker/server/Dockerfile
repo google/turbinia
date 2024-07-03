@@ -1,4 +1,4 @@
-FROM ubuntu:22.04 as server-builder
+FROM ubuntu:22.04
 
 ENV DEBIAN_FRONTEND=noninteractive 
 ENV PIP_NO_CACHE_DIR=1

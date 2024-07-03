@@ -19,9 +19,9 @@ import argparse
 import logging
 import sys
 
-from turbinia.debug import initialize_debugmode_if_requested
 from turbinia import config
 from turbinia import TurbiniaException
+from turbinia.debug import initialize_debugmode_if_requested
 from turbinia.config import logger
 from turbinia import __version__
 
@@ -185,7 +185,6 @@ def process_args(args):
     initialize_debugmode_if_requested()
     # pylint: disable=import-outside-toplevel
     from turbinia.worker import TurbiniaCeleryWorker
-    logger.setup()
     worker = TurbiniaCeleryWorker(
         jobs_denylist=args.jobs_denylist, jobs_allowlist=args.jobs_allowlist)
     worker.start()

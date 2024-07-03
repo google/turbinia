@@ -9,6 +9,7 @@ test_data
 docs
 config
 build
+chart
 *.pyc
 *.pyo
 *.pyd
