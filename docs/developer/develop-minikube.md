@@ -44,10 +44,20 @@ This will build a Turbinia Server image succesfully if skaffold has been correct
 
 ### Install the Turbinia Client
 We will install the Turbinia client into a Python virtual environment to be able to control Turbinia during our development workflow.
-* `python -m venv .venv`
-* 
+* `python -m venv .venv` (or use your favorite virtual env manager)
+* `./venv/bin/activate`
+* `pip install turbinia-client`
+
+Create the Turbinia Client configuration file in `˜/.turbinia_api_config.json` using the base configuration from [here](
+https://pypi.org/project/turbinia-client/).
+
 ### Run
+Now we are ready to run the development cluster of Turbinia from the root of our cloned Turbinia repository.
+* `skaffold dev`
+
 ### Verify debugging and hot-reloading
 ### Next
-Try our development 101 codelab [here](develop-codelab.md)
-### Troubleshooting
+Try our Turbinia minikube development 101 codelab [here](develop-codelab.md)
+### Troubleshooting and Tips
+#### K9s
+Install [k9s](https://k9scli.io/) to easily manage your k8s cluster (eg logs and shells into pods)
