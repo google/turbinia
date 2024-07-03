@@ -130,19 +130,3 @@ CMD ["/home/turbinia/start.sh"]
 # Expose Prometheus endpoint.
 EXPOSE 9200/tcp
 
-FROM worker-builder as turbinia-worker-dev
-RUN pip3 install debugpy
-RUN pip3 install jurigged
-USER turbinia
-ADD --chown=turbinia:turbinia turbinia /tmp/turbinia
-#ADD --chown=turbinia:turbinia test_data /tmp/test_data
-WORKDIR /tmp
-ENV PYTHONPATH .
-ENV PYTHONDONTWRITEBYTECODE 1
-ENV PYTHONUNBUFFERED 1
-ENV TURBINIA_DEBUG 1
-ENV TURBINIA_HOTRELOAD 1
-CMD ["python3","turbinia/turbiniactl.py","-d","celeryworker"]
-# Expose Prometheus and debug endpoint.
-EXPOSE 9200/tcp
-EXPOSE ${TURBINIA_DEBUG_PORT:-10000}

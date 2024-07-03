@@ -8,7 +8,7 @@ build:
     useBuildkit: true 
     concurrency: 0
   artifacts:
-    # Uncomment when developing on the Turbinia Worker
+    # Uncomment below when developing on the Turbinia Worker
     # - image: turbinia-worker
     #   docker:
     #     dockerfile: docker/worker/Dockerfile
@@ -20,7 +20,7 @@ build:
     #     infer:
     #     - turbinia/**
 
-    # Uncomment when developing on the Turbinia Server
+    # Uncomment below when developing on the Turbinia Server
     - image: turbinia-server
       docker:
         dockerfile: docker/server/Dockerfile
@@ -31,48 +31,29 @@ build:
       sync:
         infer:
         - turbinia/**
-
-    # Uncomment when developing on the Turbinia API Server or Web UI
-    # - image: turbinia-api
-    #   docker:
-    #     dockerfile: docker/api_server/Dockerfile.dev
 deploy:
   statusCheckDeadlineSeconds: 30
   helm:
     releases:
     - name: dev-release
-      # Uncomment if using remote helm charts
-      repo: https://google.github.io/osdfir-infrastructure/
-      remoteChart: turbinia
-      # Uncomment if using local helm charts
-      #chartPath: ./osdfir-infrastructure/charts/turbinia
+      ## Uncomment below if using remote helm charts
+      ## Blocked: https://github.com/GoogleContainerTools/skaffold/issues/9347
+      # repo: https://google.github.io/osdfir-infrastructure/
+      # remoteChart: turbinia
+      ## Uncomment below if using local helm charts
+      chartPath: ./charts/turbinia
       setValues:
         versioncheck.enabled: False
       setValueTemplates:
+        ## Uncomment below if doing worker development
         # worker.image.repository: "{{.IMAGE_REPO_turbinia_worker}}"
         # worker.image.tag: "{{.IMAGE_TAG_turbinia_worker}}@{{.IMAGE_DIGEST_turbinia_worker}}"
+        ## Uncomment below if doing server development
         server.image.repository: "{{.IMAGE_REPO_turbinia_server}}"
         server.image.tag: "{{.IMAGE_TAG_turbinia_server}}@{{.IMAGE_DIGEST_turbinia_server}}"
-        # api.image.repository: "{{.IMAGE_REPO_turbinia_api}}"
-        # api.image.tag: "{{.IMAGE_TAG_turbinia_api}}@{{.IMAGE_DIGEST_turbinia_api}}"
 portForward:
 - resourceType: deployment
   resourceName: dev-release-turbinia-api
   port: 8000 # API and WebUI port
-# - resourceType: deployment
-#   resourceName: dev-release-turbinia-worker
-#   port: 10000 # worker debugpy port
-# - resourceType: deployment
-#   resourceName: dev-release-turbinia-server
-#   port: 20000 # server debugpy port
-# Uncomment bekow if working on metrics
-# - resourceType: deployment
-#   resourceName: dev-release-turbinia-api-metrics
-#   port: 9200 
-# - resourceType: deployment
-#   resourceName: dev-release-turbinia-worker-metrics
-#   port: 9200 
-# - resourceType: deployment
-#   resourceName: dev-release-turbinia-server-metrics
-#   port: 9200 
+
 
