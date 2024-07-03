@@ -185,6 +185,7 @@ def process_args(args):
     initialize_debugmode_if_requested()
     # pylint: disable=import-outside-toplevel
     from turbinia.worker import TurbiniaCeleryWorker
+    logger.setup()
     worker = TurbiniaCeleryWorker(
         jobs_denylist=args.jobs_denylist, jobs_allowlist=args.jobs_allowlist)
     worker.start()

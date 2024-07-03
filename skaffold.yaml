@@ -56,4 +56,3 @@ portForward:
   resourceName: dev-release-turbinia-api
   port: 8000 # API and WebUI port
 
-

@@ -129,4 +129,3 @@ RUN poetry install --no-interaction --no-ansi -E worker
 CMD ["/home/turbinia/start.sh"]
 # Expose Prometheus endpoint.
 EXPOSE 9200/tcp
-
