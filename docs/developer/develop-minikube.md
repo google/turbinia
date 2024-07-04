@@ -5,11 +5,18 @@ This document will describe how to setup a local development environment using V
 
 This setup will provide run time debugging with breakpoints/watches in VSCode as well as hot-reloading of code changes to the live Turbinia deployment without having to rebuild the containers or restart the deployment.
 
+---
+NOTE: This setup has been tested and is in active use by the Turbinia developers in the following configurations.
+* MacAir M3 8GB with Docker Desktop
+* Debian 12/bookworm 16GB with Docker Engine (Running on GCP using the [VSCode Remote SSH extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-ssh))
+
+---
 ## Setup
 ### Requirements
 Please install the following requirements into your system.
 * [Docker](https://docs.docker.com/engine/install/), you can install Docker Desktop or only the engine.
-* [Helm](https://helm.sh/docs/helm/helm_install/), to manage the deployment of Turbinia.
+   * Make sure docker can be execute as non-root (`docker run hello-world`). See [here](https://docs.docker.com/engine/install/linux-postinstall/) for instructions.
+* [Helm](https://helm.sh/docs/intro/install/), to manage the deployment of Turbinia.
 * [VSCode](https://code.visualstudio.com/Download), our IDE of choice for this setup.
 
 ### Configure VSCode
@@ -35,6 +42,7 @@ We will now start the minikube k8s cluster
 ![Minikube Start](../images/cloudcode-startminikube.png)
 
 ![Minikube Start Output](../images/cloudcode-minikubestart.png)
+
 ----
 NOTE: If you want to change the default cluster CPU and Memory usage, you can set those before starting the cluster
 
@@ -77,7 +85,7 @@ We will install the Turbinia client into a Python virtual environment to be able
     $ ./venv/bin/activate
     $ pip install turbinia-client
 
-Create the Turbinia Client configuration file in `˜/.turbinia_api_config.json` using the base configuration from [here](
+Create the Turbinia Client configuration file in `$HOME/.turbinia_api_config.json` using the base configuration from [here](
 https://pypi.org/project/turbinia-client/).
 
 ![Turbinia Client](../images/cloudcode-turbiniaclient.png)
@@ -86,6 +94,7 @@ https://pypi.org/project/turbinia-client/).
 Now we are ready to run the development cluster of Turbinia. This will startup the Turbinia API server, the worker and the server in the local k8s cluster running in minikube.
 
     $ skaffold dev
+
 
 ---
 NOTE: if one of the services fails to deploy, try again. Sometimes a time-out occurs due to Redis starting too slow.
@@ -141,17 +150,21 @@ Try our Turbinia minikube development 101 codelab [here](develop-codelab.md)
 * Remove the Google Cloud Code Extension from VSCode
 
 ### Troubleshooting and Tips
-#### K9s
+#### Google Cloud Code tools not found (minikube, skaffold, kubectl)
+The extension will add the PATH automtically to your config. But if you have a different or custom shell configuration this may fail. Add the path manually to your PATH.
+* Linux: `$HOME/.cache/cloud-code/installer/google-cloud-sdk/bin`
+* Mac: `$HOME/Library/Application Support/cloud-code/installer/google-cloud-sdk/bin/minikube`
+#### Installing K9s
 Install [k9s](https://k9scli.io/) to easily manage your k8s cluster (eg logs and shells into pods)
-#### Skaffold
+#### skaffold commands  
 * Enable more debugging info `skaffold dev -v debug
-#### Minikube
+#### minikube commands
 * Status `minikube status`
 * Stop `minikube stop`
 * Purge clusters to start over `minikube delete --all --purge`
-#### Helm
+#### helm commands
 * Remove stale Turbinia cluster `helm list && helm uninstall dev-release`
-#### Kubectl
+#### kubectl commands
 Advice is to install and use `k9s`(see above) but `kubectl` can be used as well.
 * `kubectl get pods`
 * `kubctl logs [podname]`

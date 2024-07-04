@@ -55,4 +55,10 @@ portForward:
 - resourceType: deployment
   resourceName: dev-release-turbinia-api
   port: 8000 # API and WebUI port
+- resourceType: deployment
+  resourceName: dev-release-turbinia-worker
+  port: 10000 # Worker debug port
+- resourceType: deployment
+  resourceName: dev-release-turbinia-server
+  port: 20000 # Server debug port
 
