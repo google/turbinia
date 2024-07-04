@@ -1,63 +1,158 @@
 # Develop local with VSCode and Minikube
 
 ## Introduction
-This document will describe how to setup a local development environment using VSCode as the IDE,  Minikube as the k8s cluster to run Turbinia and Skaffold to handle the development cycle. This setup will provide run time debugging with breakpoints/watches in VSCode as well as hot-reloading of code changes to the live Turbinia setup without having to rebuild the containers.
+This document will describe how to setup a local development environment using VSCode as the IDE,  Minikube as the k8s cluster to run Turbinia and Skaffold to handle the development cycle. 
+
+This setup will provide run time debugging with breakpoints/watches in VSCode as well as hot-reloading of code changes to the live Turbinia deployment without having to rebuild the containers or restart the deployment.
 
 ## Setup
 ### Requirements
 Please install the following requirements into your system.
 * [Docker](https://docs.docker.com/engine/install/), you can install Docker Desktop or only the engine.
-* [Helm](https://helm.sh/docs/helm/helm_install/), to manage the deployment of Turbinia .
+* [Helm](https://helm.sh/docs/helm/helm_install/), to manage the deployment of Turbinia.
 * [VSCode](https://code.visualstudio.com/Download), our IDE of choice for this setup.
 
 ### Configure VSCode
 Start VSCode and install the following extensions:
-* Python
-* Gemini Code Assist + Google Cloud Code
+* [Python](https://marketplace.visualstudio.com/items?itemName=ms-python.python)
+* [Gemini Code Assist + Google Cloud Code](https://marketplace.visualstudio.com/items?itemName=GoogleCloudTools.cloudcode)
 
-Restart VSCode. Once VSCode has restarted let's install the development dependencies (minikube, skaffold and kubectl). We will let the extension manage the dependencies and they will be installed in a seperate folder, not in your system folders. In VSCode:
- * Control-P (or Command-P on Macs) to open the command menu
- * Choose "Cloud Code:  Control Minikube"
- * Choose "Continue with Managed dependencies"
+Restart VSCode. Once VSCode has restarted let's install the development dependencies (minikube, skaffold and kubectl). We will let the Google Cloud Code extension manage the dependencies and they will be installed in a seperate folder, not in your system folders. In VSCode:
+ * Control-Shift-P (or Command-Shift-P on Macs) to open the command menu
+ * Choose `Cloud Code:  Control Minikube`
+ * Choose `Continue with Managed dependencies`
 
-This will have VSCode install the dependencies and it can take a while.
+This will have VSCode install the dependencies (minikube, skaffold and kubectl) and it can take a while.
+
+![Cloud Code Dependencies Install](../images/cloudcode-dependencies.png)
+
+### Start Minkube cluster
+We will now start the minikube k8s cluster
+ * Control-Shift-P (or Command-Shift-P on Macs) to open the command menu
+ * Choose `Cloud Code:  Control Minikube`
+ * Choose `Start` 
+
+![Minikube Start](../images/cloudcode-startminikube.png)
+
+![Minikube Start Output](../images/cloudcode-minikubestart.png)
+----
+NOTE: If you want to change the default cluster CPU and Memory usage, you can set those before starting the cluster
+
+    $ minikube config set cpus 4
+    $ minikube config set memory 16384
+----
 
 ### Turbinia source and deployment code 
 Now we have VSCode setup we are going to get a copy of the Turbinia source and development code.
 Clone the [Turbinia repository](https://github.com/google/turbinia) by forking the Turbinia repository into your own Github account and clone it locally from there.
-* `git clone ssh://git@github.com:[YOUR_GITHUB_ACCOUNT]/turbinia.git`
+
+    $ git clone ssh://git@github.com:[YOUR_GITHUB_ACCOUNT]/turbinia.git
 
 Let's get the helm charts for the Turbinia deployment. In your cloned turbinia repository
-* `mkdir charts && cd charts`
-* `helm pull oci://us-docker.pkg.dev/osdfir-registry/osdfir-charts/turbinia --untar && cd ..`
+
+    $ mkdir charts && cd charts
+
+    $ helm pull oci://us-docker.pkg.dev/osdfir-registry/osdfir-charts/turbinia --untar && cd ..
 
 ### Prepare Cluster
-Open a terminal (inside VSCode is the easiest, but any terminal will do) and let's configure the skaffold and the local cluster.
-* `skaffold config set --global local-cluster true`
-* `eval $(minikube -p minikube docker-env)`
-* `helm repo add bitnami https://charts.bitnami.com/bitnami`
+Open a terminal (inside VSCode is the easiest, but any terminal will do) and let's configure skaffold, the local cluster and the additional helm repository for Redis.
+
+    $ skaffold config set --global local-cluster true
+    $ eval $(minikube -p minikube docker-env)
+    $ helm repo add bitnami https://charts.bitnami.com/bitnami
 
 ### Verify Setup
 Execute a build with skaffold (from the root of the cloned Turbinia Github repository)
-* `skaffold build`
-This will build a Turbinia Server image succesfully if skaffold has been correctlty setup and configured as described above,
+
+    $ skaffold build
+
+This will build a Turbinia Server container image succesfully if skaffold has been correctlty setup and configured as described above.
+
+![Skaffold Build](../images/cloudcode-skaffoldbuild.png)
 
 ### Install the Turbinia Client
 We will install the Turbinia client into a Python virtual environment to be able to control Turbinia during our development workflow.
-* `python -m venv .venv` (or use your favorite virtual env manager)
-* `./venv/bin/activate`
-* `pip install turbinia-client`
+
+    $ python -m venv .venv (or use your favorite virtual env manager)
+    $ ./venv/bin/activate
+    $ pip install turbinia-client
 
 Create the Turbinia Client configuration file in `˜/.turbinia_api_config.json` using the base configuration from [here](
 https://pypi.org/project/turbinia-client/).
 
+![Turbinia Client](../images/cloudcode-turbiniaclient.png)
+
 ### Run
-Now we are ready to run the development cluster of Turbinia from the root of our cloned Turbinia repository.
-* `skaffold dev`
+Now we are ready to run the development cluster of Turbinia. This will startup the Turbinia API server, the worker and the server in the local k8s cluster running in minikube.
+
+    $ skaffold dev
+
+---
+NOTE: if one of the services fails to deploy, try again. Sometimes a time-out occurs due to Redis starting too slow.
+---
+
+The Turbinia WebUI should now be available on http://localhost:8000.
+
+![Turbinia WebUI](../images/cloudcode-webui.png)
+
 
 ### Verify debugging and hot-reloading
+#### Debugging
+The Turbinia containers are started with the python debugger enabled and listening on port 10000 (worker) and 20000 (server). VSCode launch debug configurations have been provided.
+
+While the cluster is running in development mode with skaffold you can use those launch configuration to connect to the cluster, set breakpoints and inspect watches.
+
+![Turbinia VSCode Launch Configurations](../images/cloudcode-vscodedebug.png)
+
+#### Hot-reloading
+Hot reloading has been enabled through the python `jurigged`module and will monitor for any change on the `/home/turbinia` folder in the containers. When you change a file in VSCode, skaffold will sync that file into the container and `jurigged` will hot reload that file into the running process.
+
+![Turbinia Hot Reloading](../images/cloudcode-hotreload.png)
+
+---
+NOTE: As python hot reloading of code into an already running process is tricky it may not work in all cases (see). If that happens let skaffold rebuild the container by touching the `skaffold.yaml`file.
+---
+
+## Test Run
+Let's test the whole setup by executing a request with rawdisk image located in `test_data/artifact_disk.dd`.
+
+Copy the disk to one of the containers in the shared `/mnt/turbiniavolume` folder.
+
+    $ kubectl cp artifact_disk.dd dev-release-turbinia-server-6d6:/mnt/turbiniavolume/
+
+Start a Turbinia rawdisk request.
+
+    $ turbinia-client submit rawdisk --source_path /mnt/turbiniavolume/artifact_disk.dd
+   
+    Sending request: {'evidence': {'type': 'RawDisk', 'source_path': '/mnt/turbiniavolume/artifact_disk.dd'}, 'request_options': {}} 
+    Received response: {'request_id': '4d76df84849c484a835d37fbc7668122'}
+
+You can check the Turbinia WebUI at http://localhost:8000 or use the turbinia-client to verify the status of the request.
+
+    $ turbinia-client status request 4d76df84849c484a835d37fbc7668122
+
+
 ### Next
 Try our Turbinia minikube development 101 codelab [here](develop-codelab.md)
+
+### Cleanup development environment
+* Remove all minikube clusters `minikube delete --all --purge`
+* Remove all images/containers/volumes from Docker `docker system prune -a`
+* Remove the Google Cloud Code Extension from VSCode
+
 ### Troubleshooting and Tips
 #### K9s
 Install [k9s](https://k9scli.io/) to easily manage your k8s cluster (eg logs and shells into pods)
+#### Skaffold
+* Enable more debugging info `skaffold dev -v debug
+#### Minikube
+* Status `minikube status`
+* Stop `minikube stop`
+* Purge clusters to start over `minikube delete --all --purge`
+#### Helm
+* Remove stale Turbinia cluster `helm list && helm uninstall dev-release`
+#### Kubectl
+Advice is to install and use `k9s`(see above) but `kubectl` can be used as well.
+* `kubectl get pods`
+* `kubctl logs [podname]`
+* `kubectl exec -it [podname] -- /bin/bash`
