@@ -8,7 +8,18 @@ This setup will provide run time debugging with breakpoints/watches in VSCode as
 ---
 NOTE: This setup has been tested and is in active use by the Turbinia developers in the following configurations.
 * MacAir M3 8GB with Docker Desktop
-* Debian 12/bookworm 16GB with Docker Engine (Running on GCP using the [VSCode Remote SSH extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-ssh))
+* GCE (e2-standard-4) Debian 12/bookworm 16GB with Docker Engine (Running on GCP using the [VSCode Remote SSH extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-ssh))
+   * Setting up the VSCode Remote-SSH extension is outside of scope for this documentation but more information can be found [here](https://code.visualstudio.com/docs/remote/ssh).
+
+## Components
+### Minikube
+As the main supported way to run Turbinia is on k8s it makes sense to also develop as close to a production setup as possible. [Minikube](https://minikube.sigs.k8s.io/docs/) is local Kubernetes cluster so you can run the complete Turbinia stack from your laptop.
+
+### Skaffold
+[Skaffold](https://skaffold.dev/) is a development workflow manager that takes care of building and deploying and monitoring for code changes so you can focus on writing code instead of manually building or restarting containers after every code change.
+
+### VSCode + Google Cloud Code
+VSCode is an IDE that combined with the Google Cloud Code extension will manage the dependencies needed for the development workflow and provide an interface to debug through breakpoints and watches.
 
 ---
 ## Setup
@@ -16,6 +27,7 @@ NOTE: This setup has been tested and is in active use by the Turbinia developers
 Please install the following requirements into your system.
 * [Docker](https://docs.docker.com/engine/install/), you can install Docker Desktop or only the engine.
    * Make sure docker can be execute as non-root (`docker run hello-world`). See [here](https://docs.docker.com/engine/install/linux-postinstall/) for instructions.
+   * Some operating systems can run Minikube (faster) with other hypervisors. If you choose so expect some extra custom setup to be done. We advice the use of Docker for Minikube.
 * [Helm](https://helm.sh/docs/intro/install/), to manage the deployment of Turbinia.
 * [VSCode](https://code.visualstudio.com/Download), our IDE of choice for this setup.
 
@@ -61,6 +73,8 @@ Let's get the helm charts for the Turbinia deployment. In your cloned turbinia r
     $ mkdir charts && cd charts
 
     $ helm pull oci://us-docker.pkg.dev/osdfir-registry/osdfir-charts/turbinia --untar && cd ..
+
+Open up the turbinia folder in VSCode.
 
 ### Prepare Cluster
 Open a terminal (inside VSCode is the easiest, but any terminal will do) and let's configure skaffold, the local cluster and the additional helm repository for Redis.
