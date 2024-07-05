@@ -127,7 +127,7 @@ Hot reloading has been enabled through the python `jurigged` [module](https://gi
 
 ![Turbinia Hot Reloading](../images/cloudcode-hotreload.png)
 
-NOTE: As python hot reloading of code into an already running process is tricky it may not work in all cases (see [here](https://github.com/breuleux/jurigged?tab=readme-ov-file#caveats)). If that happens let skaffold rebuild the container by touching the `skaffold.yaml`file.
+NOTE: As python hot reloading of code into an already running process is tricky it may not work in all cases (see Caveats section [here](https://github.com/breuleux/jurigged?tab=readme-ov-file)). If that happens let skaffold rebuild the container by touching the `skaffold.yaml`file.
 
 ## Test Run
 Let's test the whole setup by executing a request with a disk image located at `test_data/artifact_disk.dd`.
