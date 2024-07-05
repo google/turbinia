@@ -55,12 +55,10 @@ We will now start the minikube k8s cluster
 
 ![Minikube Start Output](../images/cloudcode-minikubestart.png)
 
-----
 NOTE: If you want to change the default cluster CPU and Memory usage, you can set those before starting the cluster
 
     $ minikube config set cpus 4
     $ minikube config set memory 16384
-----
 
 ### Turbinia source and deployment code 
 Now we have VSCode setup we are going to get a copy of the Turbinia source and development code.
@@ -109,10 +107,7 @@ Now we are ready to run the development cluster of Turbinia. This will startup t
 
     $ skaffold dev
 
-
----
 NOTE: if one of the services fails to deploy, try again. Sometimes a time-out occurs due to Redis starting too slow.
----
 
 The Turbinia WebUI should now be available on http://localhost:8000.
 
