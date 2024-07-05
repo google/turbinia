@@ -24,7 +24,7 @@ VSCode is an IDE that combined with the Google Cloud Code extension will manage 
 ---
 ## Setup
 ### Requirements
-Please install the following requirements into your system.
+Please install the following requirements on your system.
 * [Docker](https://docs.docker.com/engine/install/), you can install Docker Desktop or only the engine.
    * Make sure docker can be execute as non-root (`docker run hello-world`). See [here](https://docs.docker.com/engine/install/linux-postinstall/) for instructions.
    * Some operating systems can run Minikube (faster) with other hypervisors. If you choose so expect some extra custom setup to be done. We advice the use of Docker for Minikube.
@@ -61,7 +61,7 @@ NOTE: If you want to change the default cluster CPU and Memory usage, you can se
     $ minikube config set memory 16384
 
 ### Turbinia source and deployment code 
-Now we have VSCode setup we are going to get a copy of the Turbinia source and development code.
+Now we have VSCode setup we are going to get a copy of the Turbinia source and deployment code.
 Clone the [Turbinia repository](https://github.com/google/turbinia) by forking the Turbinia repository into your own Github account and clone it locally from there.
 
     $ git clone ssh://git@github.com:[YOUR_GITHUB_ACCOUNT]/turbinia.git
@@ -103,7 +103,7 @@ https://pypi.org/project/turbinia-client/).
 ![Turbinia Client](../images/cloudcode-turbiniaclient.png)
 
 ### Run
-Now we are ready to run the development cluster of Turbinia. This will startup the Turbinia API server, the worker and the server in the local k8s cluster running in minikube.
+Now we are ready to run the development cluster of Turbinia. This will startup the Turbinia API server, the worker and the server in the local minikube k8s cluster.
 
     $ skaffold dev
 
@@ -118,21 +118,19 @@ The Turbinia WebUI should now be available on http://localhost:8000.
 #### Debugging
 The Turbinia containers are started with the python debugger enabled and listening on port 10000 (worker) and 20000 (server). VSCode launch debug configurations have been provided.
 
-While the cluster is running in development mode with skaffold you can use those launch configuration to connect to the cluster, set breakpoints and inspect watches.
+While the cluster is running in development mode with skaffold you can use those launch configuration to connect to the worker and server (yes, at the same time if you want that!), set breakpoints and inspect watches.
 
 ![Turbinia VSCode Launch Configurations](../images/cloudcode-vscodedebug.png)
 
 #### Hot-reloading
-Hot reloading has been enabled through the python `jurigged`module and will monitor for any change on the `/home/turbinia` folder in the containers. When you change a file in VSCode, skaffold will sync that file into the container and `jurigged` will hot reload that file into the running process.
+Hot reloading has been enabled through the python `jurigged` [module](https://github.com/breuleux/jurigged) and will monitor for any change on the `/home/turbinia` folder in the containers. When you change a file in VSCode, skaffold will sync that file into the container and `jurigged` will hot reload that file into the running process.
 
 ![Turbinia Hot Reloading](../images/cloudcode-hotreload.png)
 
----
-NOTE: As python hot reloading of code into an already running process is tricky it may not work in all cases (see). If that happens let skaffold rebuild the container by touching the `skaffold.yaml`file.
----
+NOTE: As python hot reloading of code into an already running process is tricky it may not work in all cases (see [here](https://github.com/breuleux/jurigged?tab=readme-ov-file#caveats)). If that happens let skaffold rebuild the container by touching the `skaffold.yaml`file.
 
 ## Test Run
-Let's test the whole setup by executing a request with rawdisk image located in `test_data/artifact_disk.dd`.
+Let's test the whole setup by executing a request with a disk image located at `test_data/artifact_disk.dd`.
 
 Copy the disk to one of the containers in the shared `/mnt/turbiniavolume` folder.
 
@@ -160,13 +158,13 @@ Try our Turbinia minikube development 101 codelab [here](develop-codelab.md)
 
 ### Troubleshooting and Tips
 #### Google Cloud Code tools not found (minikube, skaffold, kubectl)
-The extension will add the PATH automtically to your config. But if you have a different or custom shell configuration this may fail. Add the path manually to your PATH.
+The extension will add the PATH automatically to your config. But if you have a different or custom shell configuration this may fail. Add the path manually to your PATH.
 * Linux: `$HOME/.cache/cloud-code/installer/google-cloud-sdk/bin`
-* Mac: `$HOME/Library/Application Support/cloud-code/installer/google-cloud-sdk/bin/minikube`
+* Mac: `$HOME/Library/Application Support/cloud-code/installer/google-cloud-sdk/bin`
 #### Installing K9s
 Install [k9s](https://k9scli.io/) to easily manage your k8s cluster (eg logs and shells into pods)
 #### skaffold commands  
-* Enable more debugging info `skaffold dev -v debug
+* Enable more debugging info with `skaffold dev -v debug`
 #### minikube commands
 * Status `minikube status`
 * Stop `minikube stop`
