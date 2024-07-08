@@ -89,7 +89,9 @@ class LLMAnalyzerTask(workers.TurbiniaTask):
       TurbiniaTaskResult object.
     """
 
-    result.log(f"Running LLMAnalyzerTask task on {evidence.artifact_name}")
+    result.log(
+        f"Running LLMAnalyzerTask task on {evidence.artifact_name} {evidence.local_path}"
+    )
     # Where to store the resulting output file.
     output_file_name = f"{evidence.artifact_name}-llm_analysis.txt"
     output_file_path = os.path.join(self.output_dir, output_file_name)
@@ -106,8 +108,10 @@ class LLMAnalyzerTask(workers.TurbiniaTask):
     try:
       with open_function(evidence.local_path, "rb") as input_file:
         artifact_content = input_file.read().decode("utf-8")
-    except UnicodeDecodeError as e:
-      result.log(f"Artifact {evidence.local_path} not UTF-8 encoded")
+    except UnicodeDecodeError:
+      result.log(
+          f"UnicodeDecodeError: Artifact {evidence.local_path} not UTF-8 encoded"
+      )
 
     if not artifact_content:
       result.log(
