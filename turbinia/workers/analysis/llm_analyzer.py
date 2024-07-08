@@ -110,8 +110,12 @@ class LLMAnalyzerTask(workers.TurbiniaTask):
       result.log(f"Artifact {evidence.local_path} not UTF-8 encoded")
 
     if not artifact_content:
-      result.log(f"Artifact {evidence.artifact_name} has empty content or not UTF-8 encoded")
-      raise ValueError(f"Artifact {evidence.artifact_name} has empty content or not UTF-8 encoded")
+      result.log(
+          f"Artifact {evidence.artifact_name} has empty content or not UTF-8 encoded"
+      )
+      raise ValueError(
+          f"Artifact {evidence.artifact_name} has empty content or not UTF-8 encoded"
+      )
     (report, priority, summary) = self.llm_analyze_artifact(
         artifact_content, evidence.artifact_name)
     output_evidence.text_data = report
