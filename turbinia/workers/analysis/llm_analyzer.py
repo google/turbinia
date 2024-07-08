@@ -103,12 +103,15 @@ class LLMAnalyzerTask(workers.TurbiniaTask):
       open_function = gzip.open
 
     # Read the input file
-    with open_function(evidence.local_path, "rb") as input_file:
-      artifact_content = input_file.read().decode("utf-8")
+    try:
+      with open_function(evidence.local_path, "rb") as input_file:
+        artifact_content = input_file.read().decode("utf-8")
+    except UnicodeDecodeError as e:
+      result.log(f"Artifact {evidence.local_path} not UTF-8 encoded")
 
     if not artifact_content:
-      result.log(f"Artifact {evidence.artifact_name} has empty content")
-      raise ValueError(f"Artifact {evidence.artifact_name} has empty content")
+      result.log(f"Artifact {evidence.artifact_name} has empty content or not UTF-8 encoded")
+      raise ValueError(f"Artifact {evidence.artifact_name} has empty content or not UTF-8 encoded")
     (report, priority, summary) = self.llm_analyze_artifact(
         artifact_content, evidence.artifact_name)
     output_evidence.text_data = report
