@@ -69,8 +69,8 @@ Clone the [Turbinia repository](https://github.com/google/turbinia) by forking t
 Let's get the helm charts for the Turbinia deployment. In your cloned turbinia repository
 
     $ mkdir charts && cd charts
-
-    $ helm pull oci://us-docker.pkg.dev/osdfir-registry/osdfir-charts/turbinia --untar && cd ..
+    $ helm repo add osdfir-charts https://google.github.io/osdfir-infrastructure
+    $ helm pull osdfir-charts/turbinia --untar && cd ..
 
 Open up the turbinia folder in VSCode.
 
