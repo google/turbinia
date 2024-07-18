@@ -239,12 +239,12 @@ class RedisStateManager(BaseStateManager):
       valid_task = self.validate_task(task, instance, days, group_id, user)
       return [task] if valid_request and valid_task else []
 
-    request_key = self.redis_client.build_key_name('request', request_id)
-
     # If request_id is passed, gets valid tasks from that request
-    if request_key and self.redis_client.key_exists(request_key):
-      task_ids = self.redis_client.get_attribute(
-          request_key, 'task_ids', decode_json=True)
+    elif request_id:
+      request_key = self.redis_client.build_key_name('request', request_id)
+      if request_key and self.redis_client.key_exists(request_key):
+        task_ids = self.redis_client.get_attribute(
+            request_key, 'task_ids', decode_json=True)
 
     # If no task_id or request_id is passed, gets all valid saved tasks
     else:
