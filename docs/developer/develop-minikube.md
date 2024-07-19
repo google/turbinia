@@ -95,7 +95,9 @@ We will install the Turbinia client into a Python virtual environment to be able
 
     $ python -m venv .venv (or use your favorite virtual env manager)
     $ ./venv/bin/activate
-    $ pip install turbinia-client
+    $ cd turbinia/api/cli
+    $ pip install poetry
+    $ poetry install
 
 Create the Turbinia Client configuration file in `$HOME/.turbinia_api_config.json` using the base configuration from [here](
 https://pypi.org/project/turbinia-client/).
