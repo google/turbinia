@@ -10,6 +10,7 @@ NOTE: This setup has been tested and is in active use by the Turbinia developers
 * MacAir M3 8GB with Docker Desktop
 * GCE (e2-standard-4) Debian 12/bookworm 16GB with Docker Engine (Running on GCP using the [VSCode Remote SSH extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-ssh))
    * Setting up the VSCode Remote-SSH extension is outside of scope for this documentation but more information can be found [here](https://code.visualstudio.com/docs/remote/ssh).
+   * NOTE: The GCE machine is used as a local machine running in GCP where you will install minikube and the other dependencies on.
 
 ## Components
 ### Minikube
@@ -18,8 +19,10 @@ As the main supported way to run Turbinia is on k8s it makes sense to also devel
 ### Skaffold
 [Skaffold](https://skaffold.dev/) is a development workflow manager that takes care of building and deploying and monitoring for code changes so you can focus on writing code instead of manually building or restarting containers after every code change.
 
-### VSCode + Google Cloud Code
-VSCode is an IDE that combined with the Google Cloud Code extension will manage the dependencies needed for the development workflow and provide an interface to debug through breakpoints and watches.
+### VSCode + [Gemini Code Assist/Google Cloud Code extension](https://marketplace.visualstudio.com/items?itemName=GoogleCloudTools.cloudcode)
+VSCode is an IDE that combined with the Google Cloud Code extension will manage the dependencies needed for the development workflow and provide an interface to debug through breakpoints and watches. The extension will manage minikube, skaffold, kubectl and their setup and configuration in a seperate folder as not to interfere with your system configuration.
+
+NOTE: Gemini Code Assist is disabled by default and can be enabled through the extension setting Cloudcode -> Duet AI -> Enable. This will give you LLM supported code advice. See [here](https://cloud.google.com/products/gemini/code-assist?hl=en) for further details about Gemini Code Assist.
 
 ---
 ## Setup
