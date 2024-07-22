@@ -6,11 +6,15 @@ This document will describe how to setup a local development environment using V
 This setup will provide run time debugging with breakpoints/watches in VSCode as well as hot-reloading of code changes to the live Turbinia deployment without having to rebuild the containers or restart the deployment.
 
 ---
-NOTE: This setup has been tested and is in active use by the Turbinia developers in the following configurations.
+NOTE: This setup has been tested by the Turbinia developers in the following configurations.
 * MacAir M3 8GB with Docker Desktop
 * GCE (e2-standard-4) Debian 12/bookworm 16GB with Docker Engine (Running on GCP using the [VSCode Remote SSH extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-ssh))
    * Setting up the VSCode Remote-SSH extension is outside of scope for this documentation but more information can be found [here](https://code.visualstudio.com/docs/remote/ssh).
    * NOTE: The GCE machine is used as a local machine running in GCP where you will install minikube and the other dependencies on.
+* If you want to develop with a full VSCode web interface you can use the [GCP Cloud Shell Editor](https://shell.cloud.google.com/)
+   * This setup has all the dependecies and VSCode extensions neeeded for Turbinia development pre-installed and configured. You can continue the setup at the section [here](#start-minkube-cluster).
+   * Take note of the limitations [here](https://cloud.google.com/shell/docs/quotas-limits)
+   * If the limitations are an issue for you, have a look into at the (paid) version called [Google Cloud Workstation](https://cloud.google.com/workstations/).
 
 ## Components
 ### Minikube
@@ -83,6 +87,7 @@ Open a terminal (inside VSCode is the easiest, but any terminal will do) and let
     $ skaffold config set --global local-cluster true
     $ eval $(minikube -p minikube docker-env)
     $ helm repo add bitnami https://charts.bitnami.com/bitnami
+    $ helm repo add kube-prometheus-stack https://prometheus-community.github.io/helm-charts
 
 ### Verify Setup
 Execute a build with skaffold (from the root of the cloned Turbinia Github repository)
@@ -97,9 +102,9 @@ This will build a Turbinia Server container image succesfully if skaffold has be
 We will install the Turbinia client into a Python virtual environment to be able to control Turbinia during our development workflow.
 
     $ python -m venv .venv (or use your favorite virtual env manager)
-    $ ./venv/bin/activate
-    $ cd turbinia/api/cli
+    $ source .venv/bin/activate
     $ pip install poetry
+    $ cd turbinia/api/cli
     $ poetry install
 
 Create the Turbinia Client configuration file in `$HOME/.turbinia_api_config.json` using the base configuration from [here](
