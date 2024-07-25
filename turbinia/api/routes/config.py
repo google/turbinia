@@ -65,8 +65,8 @@ async def get_version(request: Request):
 async def download_config(request: Request):
   """Downloads Turbinia configuration."""
   try:
-    contents = api_utils.get_configuration_content()
-    return Response(content=contents, status_code=200)
+    content = api_utils.get_configuration_content()
+    return Response(content=content, status_code=200)
   except Exception as exception:
     log.error(f'Error reading configuration file: {exception!s}')
     raise HTTPException(
