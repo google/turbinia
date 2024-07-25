@@ -1,0 +1,29 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Attach to Worker",
+            "type": "cloudcode.kubernetes",
+            "request": "attach",
+            "language": "Python",
+            "debugPort": 10000,
+            "podSelector": {
+               "app.kubernetes.io/component": "worker"
+            },
+            "localRoot": "${workspaceFolder}",
+            "remoteRoot": "/home/turbinia"
+        },
+        {
+            "name": "Attach to Server",
+            "type": "cloudcode.kubernetes",
+            "request": "attach",
+            "language": "Python",
+            "debugPort": 20000,
+            "podSelector": {
+               "app.kubernetes.io/component": "server"
+            },
+            "localRoot": "${workspaceFolder}",
+            "remoteRoot": "/home/turbinia"
+        }
+    ]
+}

@@ -6,6 +6,7 @@ Developer documentation
    :maxdepth: 3
 
    contributing
+   develop-minikube
    developing-new-tasks
    develop-local
    develop-vscode
