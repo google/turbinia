@@ -40,12 +40,12 @@ def get_configuration_content() -> str:
   try:
     with open(path, 'r', encoding='utf-8') as configfile:
       lines = configfile.readlines()
-      contents = ''.join(lines)
+      content = ''.join(lines)
   except FileNotFoundError as exception:
     raise HTTPException(
         status_code=404,
         detail=f'Configuration file not found at  {path:s}.') from exception
-  return contents
+  return content
 
 
 def get_task_objects(task_id: str) -> List[Any]:
