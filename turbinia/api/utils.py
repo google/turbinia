@@ -21,7 +21,6 @@ import io
 
 from typing import Any, AsyncGenerator, List
 
-from fastapi.responses import FileResponse
 from fastapi import HTTPException
 from turbinia import TurbiniaException
 from turbinia import config as turbinia_config

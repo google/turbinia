@@ -215,7 +215,6 @@ class testTurbiniaAPIServer(unittest.TestCase):
               encoding='utf-8') as file:
       content = ''.join(file.readlines())
     response = self.client.get('/api/config/download')
-    print(content)
     self.assertEqual(response.text, content)
 
   def testRequestResultsNotFound(self):
