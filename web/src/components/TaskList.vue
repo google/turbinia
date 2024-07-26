@@ -14,7 +14,7 @@ limitations under the License.
 <template>
   <div>
     <v-list density="compact">
-      <v-virtual-scroll :items="taskList" :item-height="40" :height="400" :width="auto">
+      <v-virtual-scroll :items="taskList" :item-height="40" :height="400">
         <template v-slot:default="{ item }">
           <v-list-item :key="item.task_id" v-slot:prepend>
             <div v-if="item.task_success">
@@ -37,7 +37,7 @@ limitations under the License.
                 </v-btn>
               </v-list-item-action>
             </div>
-            <v-list-item>
+            <v-list-item :max-width="800">
               {{ item.task_name }} {{ $filters.truncate(item.task_status, 128, '...') }}
             </v-list-item>
           </v-list-item>
@@ -52,7 +52,7 @@ limitations under the License.
 import ApiClient from '../utils/RestApiClient.js'
 
 export default {
-  props: ['requestId'],
+  props: ['requestId', 'filterFailed', 'filterSuccess', 'filterRunning', 'filterJobs', 'radioFilter'],
   inject: ['getTaskDetails'],
   data() {
     return {
@@ -72,15 +72,46 @@ export default {
           let data = response.data['tasks']
           for (const task in data) {
             let task_dict = data[task]
-            taskList.push({
-              task_name: task_dict.name,
-              task_id: task_dict.id,
-              task_status: task_dict.status,
-              task_success: task_dict.successful,
-              evidence_name: task_dict.evidence_name,
-              evidence_id: task_dict.evidence_id,
-              evidence_size: task_dict.evidence_size,
-            })
+            let taskStatusTemp = task_dict.status
+            // As queued status requests show as null
+            if (taskStatusTemp === null) {
+              taskStatusTemp = 'queued'
+            }
+            if (this.filterJobs.length > 0) {
+              let jobName = task_dict.job_name.toLowerCase()
+              console.log(this.radioFilter)
+              if ( this.radioFilter && !this.filterJobs.includes(jobName)) {
+                continue;
+              } else if ( !this.radioFilter && this.filterJobs.includes(jobName)) {
+                continue
+              }
+            }
+            let taskListTemp = {
+                job_name: task_dict.job_name,
+                task_name: task_dict.name,
+                task_id: task_dict.id,
+                task_status: taskStatusTemp,
+                task_success: task_dict.successful,
+                evidence_name: task_dict.evidence_name,
+                evidence_id: task_dict.evidence_id,
+                evidence_size: task_dict.evidence_size,
+              }
+            // When Failed filter chip is applied
+            if (task_dict.successful === false && this.filterFailed) {
+              taskList.push(taskListTemp)
+            }
+            // When Success filter chip is applied
+            if (task_dict.successful && this.filterSuccess) {
+              taskList.push(taskListTemp)
+            }
+            // When Running filter chip is applied
+            if (task_dict.successful === null && this.filterRunning) {
+              taskList.push(taskListTemp)
+            }
+            // When no filter chip is applied
+            if (!this.filterRunning && !this.filterSuccess && !this.filterFailed) {
+              taskList.push(taskListTemp)
+            }
           }
           this.taskList = taskList
         })

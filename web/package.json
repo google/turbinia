@@ -7,16 +7,16 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@mdi/font": "7.0.96",
-    "axios": "^1.6.5",
+    "@mdi/font": "7.4.47",
+    "axios": "^1.7.2",
     "streamsaver": "^2.0.6",
-    "vue": "^3.2.0",
-    "vuetify": "^3.0.0"
+    "vue": "^3.4.34",
+    "vuetify": "^3.6.13"
   },
   "devDependencies": {
-    "@vitejs/plugin-vue": "^4.0.0",
-    "unplugin-fonts": "^1.0.3",
-    "vite": "^4.5.3",
-    "vite-plugin-vuetify": "^1.0.0"
+    "@vitejs/plugin-vue": "^5.1.0",
+    "unplugin-fonts": "^1.1.1",
+    "vite": "^5.3.4",
+    "vite-plugin-vuetify": "^2.0.3"
   }
 }
