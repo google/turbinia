@@ -21,30 +21,13 @@ import io
 
 from typing import Any, AsyncGenerator, List
 
+from fastapi.responses import FileResponse
 from fastapi import HTTPException
 from turbinia import TurbiniaException
 from turbinia import config as turbinia_config
 from turbinia import state_manager
 
 log = logging.getLogger(__name__)
-
-
-def get_configuration_content() -> str:
-  """Returns the Turbinia configuration file content.
-  
-  Riases:
-    HTTPException: if the configuration file was not found.
-  """
-  path = turbinia_config.CONFIG.__file__
-  try:
-    with open(path, 'r', encoding='utf-8') as configfile:
-      lines = configfile.readlines()
-      content = ''.join(lines)
-  except FileNotFoundError as exception:
-    raise HTTPException(
-        status_code=404,
-        detail=f'Configuration file not found at  {path:s}.') from exception
-  return content
 
 
 def get_task_objects(task_id: str) -> List[Any]:

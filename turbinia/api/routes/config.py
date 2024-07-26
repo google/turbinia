@@ -18,7 +18,7 @@ import json
 import logging
 
 from fastapi import HTTPException, APIRouter
-from fastapi.responses import JSONResponse, Response
+from fastapi.responses import JSONResponse, FileResponse
 from fastapi.requests import Request
 
 from turbinia import __version__
@@ -65,8 +65,8 @@ async def get_version(request: Request):
 async def download_config(request: Request):
   """Downloads Turbinia configuration."""
   try:
-    content = api_utils.get_configuration_content()
-    return Response(content=content, status_code=200)
+    path = turbinia_config.CONFIG.__file__
+    return FileResponse(path)
   except Exception as exception:
     log.error(f'Error reading configuration file: {exception!s}')
     raise HTTPException(
