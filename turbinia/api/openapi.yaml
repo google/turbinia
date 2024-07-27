@@ -519,6 +519,28 @@ paths:
       summary: Get Requests Summary
       tags:
       - Turbinia Requests
+  /api/request/report/{request_id}:
+    get:
+      description: "Retrieves the markdown report for a Turbinia Request.\n\nArgs:\n  request (Request):\
+        \ FastAPI request object.\n  request_id (str): A Turbinia request identifier.\n\
+        \nRaises:\n  HTTPException: if another exception is caught."
+      operationId: get_request_report
+      parameters:
+      - in: path
+        name: request_id
+        required: true
+        schema:
+          title: Request Id
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+      summary: Get Request Report
+      tags:
+      - Turbinia Requests
   /api/request/{request_id}:
     get:
       description: "Retrieves status for a Turbinia Request.\n\nArgs:\n  request (Request):\

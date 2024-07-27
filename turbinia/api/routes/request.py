@@ -19,12 +19,13 @@ import uuid
 import json
 
 from fastapi import HTTPException, APIRouter
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, PlainTextResponse
 from fastapi.requests import Request
 from pydantic import ValidationError
 from turbinia import TurbiniaException, client as turbinia_client
 from turbinia import evidence
 from turbinia.lib import recipe_helpers
+from turbinia.api.cli.turbinia_client.helpers.formatter import RequestMarkdownReport
 from turbinia.api.schemas import request as turbinia_request
 from turbinia.api.models import request_status
 
@@ -57,6 +58,32 @@ async def get_requests_summary(request: Request):
     raise HTTPException(
         status_code=500,
         detail='Error retrieving requests summary') from exception
+
+
+@router.get('/report')
+async def get_request_report(request: Request, request_id: str):
+  """Retrieves the MarkDown report of a Turbinia request.
+
+  Raises:
+    HTTPException: if another exception is caught.
+  """
+  try:
+    request_out = request_status.RequestStatus(request_id=request_id)
+    if not request_out.get_request_data(request_id):
+      raise HTTPException(
+          status_code=404,
+          detail='Request ID not found or the request had no associated tasks.')
+    request_data = json.loads(request_out.json())
+    markdownreport = RequestMarkdownReport(
+        request_data=request_data).generate_markdown()
+
+    return PlainTextResponse(content=markdownreport, status_code=200)
+  except (json.JSONDecodeError, TypeError, ValueError, AttributeError,
+          ValidationError) as exception:
+    log.error(f'Error retrieving markdown report: {exception!s}', exc_info=True)
+    raise HTTPException(
+        status_code=500,
+        detail='Error retrieving markdown report') from exception
 
 
 @router.get('/{request_id}')
