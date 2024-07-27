@@ -23,7 +23,6 @@ from fastapi.requests import Request
 
 from turbinia import __version__
 from turbinia import config as turbinia_config
-from turbinia.api import utils as api_utils
 from turbinia.api.schemas import request_options
 
 log = logging.getLogger(__name__)
