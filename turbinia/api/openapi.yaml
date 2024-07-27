@@ -203,6 +203,20 @@ paths:
         summary: Get Version
         tags:
         - Turbinia Configuration
+  /api/config/download:
+      get:
+        description: Downloads the Turbinia configuration.
+        operationId: download_config
+        responses:
+          '200':
+            content:
+              application/text:
+                schema:
+                  type: string
+            description: Successful Response
+        summary: Download Configuration
+        tags:
+        - Turbinia Configuration
   /api/evidence/query:
     get:
       description: "Queries evidence in Redis that have the specified attribute value.\n\

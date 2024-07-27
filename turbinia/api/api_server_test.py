@@ -209,6 +209,14 @@ class testTurbiniaAPIServer(unittest.TestCase):
     response = self.client.get('/api/config')
     self.assertEqual(response.json(), config_dict)
 
+  def testDownloadConfig(self):
+    """Test downloading current Turbinia server config."""
+    with open(turbinia_config.CONFIG.__file__, mode='r',
+              encoding='utf-8') as file:
+      content = ''.join(file.readlines())
+    response = self.client.get('/api/config/download')
+    self.assertEqual(response.text, content)
+
   def testRequestResultsNotFound(self):
     """Test getting empty request result files."""
     request_id = self._REQUEST_STATUS_TEST_DATA.get('request_id')
