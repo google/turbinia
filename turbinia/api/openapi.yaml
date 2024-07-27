@@ -535,10 +535,11 @@ paths:
       responses:
         '200':
           content:
-            application/json:
-              schema: {}
+            application/text:
+              schema:
+                type: string
           description: Successful Response
-      summary: Get Request Report
+      summary: Get Request Markdown Report
       tags:
       - Turbinia Requests
   /api/request/{request_id}:
