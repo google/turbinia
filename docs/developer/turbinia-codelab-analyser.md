@@ -6,7 +6,7 @@ This document is the Turbinia analyser codelab 101 using the new development env
 
 We will write a very simple analyser for Turbinia that will detect the operating system to show you how to do a development flow with Turbinia including building, deploying and debugging. 
 
-We will be using the Google Cloud Shell Editor which has all the dependencies setup and provides a web based VSCode editor. We will not be using any Google Cloud functionality so if you are more comfortable running this on your local computer please follow the setup instructions \[HERE\] to setup a local Turbinia development environment before continuing.
+We will be using the Google Cloud Shell Editor which is a free system in the cloud which has all the dependencies setup and provides a web based VSCode editor. We will not be using any Google Cloud functionality so if you are more comfortable running this on your local computer please follow the setup instructions [here](https://github.com/google/turbinia/blob/master/docs/developer/develop-minikube.md) to setup a local Turbinia development environment before continuing.
 
 ## Reading
 
@@ -14,14 +14,30 @@ Read up on [how Turbinia works](https://turbinia.readthedocs.io/en/latest/user/h
 
 ## Prepare git work branch
 
-Open up the [Cloud Shell Editor](https://shell.cloud.google.com/?pli=1\&show=ide\&environment\_deployment=ide), fork the [Turbinia Github Repo](https://github.com/google/turbinia), clone your fork and create a new branch called `turbiniacodelab101`. Open up this folder in the [Cloud Shell Editor](https://shell.cloud.google.com/?pli=1\&show=ide\&environment\_deployment=ide). 
+Open up the [Cloud Shell Editor](https://ide.cloud.google.com/), fork the [Turbinia Github Repo](https://github.com/google/turbinia), clone your fork and create a new branch called `turbiniacodelab101`. Open up this folder in the [Cloud Shell Editor](https://shell.cloud.google.com/?pli=1\&show=ide\&environment\_deployment=ide). 
 
 ```
 git clone https://github.com/your_github_name/turbinia.git && cd turbinia
 git checkout -b turbiniacodelab101
 ```
 
-Get the Turbinia HELM charts as described in [https://github.com/google/turbinia/blob/c8231b13ee907070283a1ba2f545e37a9af44fbd/docs/developer/develop-minikube.md\#turbinia-source-and-deployment-code](https://github.com/google/turbinia/blob/c8231b13ee907070283a1ba2f545e37a9af44fbd/docs/developer/develop-minikube.md\#turbinia-source-and-deployment-code)
+Get the Turbinia Helm charts as described [here](https://github.com/google/turbinia/blob/master/docs/developer/develop-minikube.md#turbinia-source-and-deployment-code) and start minikube, the local k8s hypervisor.
+
+```
+$ minikube start
+😄  minikube v1.33.1 on Ubuntu 22.04 (amd64)
+✨  Automatically selected the docker driver. Other choices: ssh, none
+📌  Using Docker driver with root privileges
+👍  Starting "minikube" primary control-plane node in "minikube" cluster
+🚜  Pulling base image v0.0.44 ...
+💾  Downloading Kubernetes v1.30.0 preload ...
+🔥  Creating docker container (CPUs=2, Memory=4000MB) ...
+🐳  Preparing Kubernetes v1.30.0 on Docker 26.1.1 ...
+🔗  Configuring bridge CNI (Container Networking Interface) ...
+🔎  Verifying Kubernetes components...
+🌟  Enabled addons: storage-provisioner, default-storageclass
+🏄  Done! kubectl is now configured to use "minikube" cluster and "default" namespace by default
+```
 
 ## Create analyser template files
 
@@ -257,23 +273,24 @@ dev-release-turbinia-worker-577dcb8787-jvhqz   1/1     Running   0             4
 
 ```
 
+NOTE: *Install [k9s](https://k9scli.io/topics/install/) to make monitoring of your k8s cluster more convenient.*
+
 You can take a look at the Turbinia WebUI by using the Web Preview functionality. Change the port to 8000 and the Turbinia WebUI loads in your browser.  
 
 ![WebPreview](../images/codelab-webpreview.png)
 
 ## Install Turbinia Client
 
-Install the Turbinia Client as described in [https://github.com/google/turbinia/blob/c8231b13ee907070283a1ba2f545e37a9af44fbd/docs/developer/develop-minikube.md\#install-the-turbinia-client](https://github.com/google/turbinia/blob/c8231b13ee907070283a1ba2f545e37a9af44fbd/docs/developer/develop-minikube.md\#install-the-turbinia-client)
+Install the Turbinia Client as described [here](https://github.com/google/turbinia/blob/master/docs/developer/develop-minikube.md#install-the-turbinia-client)
 
 ## Adjust configuration file
 
 As skaffold uses the default Turbinia Helm charts with default configuration we need to adjust the configuration for the deployment with our new configuration.
 
-Write the current configuration file to the root of the Helm chart folder (find the correct pod name with `kubectl get pods`
+Download and write the current configuration file to the root of the Turbinia Helm chart folder.
 
 ```
-TODO:$ turbinia-client config list > charts/turbinia/turbinia.conf
-$ kubectl cp dev-release-turbinia-api-7dfd8988b8-bprxd:/etc/turbinia/turbinia.conf charts/turbinia/turbinia.conf
+$ turbinia-client config download > charts/turbinia/turbinia.conf
 ```
 
 Add the new `OSInfoAnalyserJob` configuration to that file as well.
