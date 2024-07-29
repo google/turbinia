@@ -1,0 +1,12 @@
+{
+	// List of extensions which should be recommended for users of this workspace.
+	"recommendations": [
+		"ms-python.python",
+		"googlecloudtools.cloudcode"
+	],
+	// List of extensions recommended by VS Code that should not be recommended for users of this workspace.
+	"unwantedRecommendations": [
+		"ms-vscode-remote.remote-containers",
+		"ms-azuretools.vscode-docker"
+	]
+}

@@ -1,0 +1,64 @@
+apiVersion: skaffold/v4beta6
+kind: Config
+metadata:
+  name: turbinia
+build:
+  local:
+    useDockerCLI: true
+    useBuildkit: true 
+    concurrency: 0
+  artifacts:
+    # Uncomment below when developing on the Turbinia Worker
+    # - image: turbinia-worker
+    #   docker:
+    #     dockerfile: docker/worker/Dockerfile
+    #     buildArgs:
+    #       TURBINIA_DEBUG: 1
+    #       TURBINIA_HOTRELOAD: 1
+    #       TURBINIA_DEBUG_PORT: 10000
+    #   sync:
+    #     infer:
+    #     - turbinia/**
+
+    # Uncomment below when developing on the Turbinia Server
+    - image: turbinia-server
+      docker:
+        dockerfile: docker/server/Dockerfile
+        buildArgs:
+          TURBINIA_DEBUG: 1
+          TURBINIA_HOTRELOAD: 1
+          TURBINIA_DEBUG_PORT: 20000
+      sync:
+        infer:
+        - turbinia/**
+deploy:
+  statusCheckDeadlineSeconds: 30
+  helm:
+    releases:
+    - name: dev-release
+      ## Uncomment below if using remote helm charts
+      ## Blocked: https://github.com/GoogleContainerTools/skaffold/issues/9347
+      # repo: https://google.github.io/osdfir-infrastructure/
+      # remoteChart: turbinia
+      ## Uncomment below if using local helm charts
+      chartPath: ./charts/turbinia
+      setValues:
+        versioncheck.enabled: False
+      setValueTemplates:
+        ## Uncomment below if doing worker development
+        # worker.image.repository: "{{.IMAGE_REPO_turbinia_worker}}"
+        # worker.image.tag: "{{.IMAGE_TAG_turbinia_worker}}@{{.IMAGE_DIGEST_turbinia_worker}}"
+        ## Uncomment below if doing server development
+        server.image.repository: "{{.IMAGE_REPO_turbinia_server}}"
+        server.image.tag: "{{.IMAGE_TAG_turbinia_server}}@{{.IMAGE_DIGEST_turbinia_server}}"
+portForward:
+- resourceType: deployment
+  resourceName: dev-release-turbinia-api
+  port: 8000 # API and WebUI port
+- resourceType: deployment
+  resourceName: dev-release-turbinia-worker
+  port: 10000 # Worker debug port
+- resourceType: deployment
+  resourceName: dev-release-turbinia-server
+  port: 20000 # Server debug port
+

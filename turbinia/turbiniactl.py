@@ -21,6 +21,7 @@ import sys
 
 from turbinia import config
 from turbinia import TurbiniaException
+from turbinia.debug import initialize_debugmode_if_requested
 from turbinia.config import logger
 from turbinia import __version__
 
@@ -181,12 +182,14 @@ def process_args(args):
   # the config until after we parse the args so that we can use those arguments
   # to point to config paths.
   elif args.command == 'celeryworker':
+    initialize_debugmode_if_requested()
     # pylint: disable=import-outside-toplevel
     from turbinia.worker import TurbiniaCeleryWorker
     worker = TurbiniaCeleryWorker(
         jobs_denylist=args.jobs_denylist, jobs_allowlist=args.jobs_allowlist)
     worker.start()
   elif args.command == 'server':
+    initialize_debugmode_if_requested()
     # pylint: disable=import-outside-toplevel
     from turbinia.server import TurbiniaServer
     server = TurbiniaServer(

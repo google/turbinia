@@ -39,7 +39,8 @@ urllib3 = [
   {version = ">=1.25.4,<1.27", python = "<3.10"},
   {version = ">=1.25.4,<2.1", python = ">=3.10"}
 ]
-
+debugpy = "^1.8.0"
+jurigged = "^0.5.7"
 [tool.poetry.group.test]
 optional = true
 
