@@ -71,6 +71,12 @@ html_sidebars = {
     ]
 }
 
+# Add linkcheck anchor names that should be ignored in validation
+# Due to https://github.com/sphinx-doc/sphinx/issues/9255
+linkcheck_anchors_ignore = [
+    'turbinia-source-and-deployment-code', 'install-the-turbinia-client'
+]
+
 # Adding retries to linkchecks before declaring a link broken
 linkcheck_retries = 3
 

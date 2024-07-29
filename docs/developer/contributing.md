@@ -130,7 +130,7 @@ Make sure to review and make any necessary changes to the ```pyproject.toml``` f
 #### Development flows
 
 We have written several documents for you to get started developing. If you use VSCode you can 
-follow our [codelab](turbinia-codelab-analyser.md) and accompanying [VSCode Development Setup](develop-minikube.html) document to get started. 
+follow our [codelab](turbinia-codelab-analyser.md) and accompanying [VSCode Development Setup](develop-minikube.md) document to get started. 
 Should you prefer a different development flow we have written a couple of documents to get you started [here](https://turbinia.readthedocs.io/en/latest/developer/index.html) 
 
 #### The small print
