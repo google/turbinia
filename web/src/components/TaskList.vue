@@ -113,6 +113,8 @@ export default {
               taskList.push(taskListTemp)
             }
           }
+          // Sort by task name
+          taskList = taskList.sort((a, b) => (a.task_name > b.task_name ? 1 : -1))
           this.taskList = taskList
         })
         .catch((e) => {

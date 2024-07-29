@@ -244,8 +244,6 @@ export default {
       })
    },
    filterSelectedJobs: function() {
-    console.log(this.filterJobs)
-    console.log(this.radioFilter)
     if (this.filterJobs.length > 0) {
       this.jobFilterActive = true
     } else {
