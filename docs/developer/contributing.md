@@ -127,6 +127,12 @@ This will generate an update library in ```turbinia/api/client```.
 Make sure to review and make any necessary changes to the ```pyproject.toml``` file
 (e.g. the version number) and run ```poetry lock``` from the ```api/client``` directory when done.
 
+#### Development flows
+
+We have written several documents for you to get started developing. If you use VSCode you can 
+follow our [codelab](https://turbinia.readthedocs.io/en/latest/developer/turbinia-codelab-analyser.html) and accompanying [VSCode Development Setup](https://turbinia.readthedocs.io/en/latest/developer/develop-vscode.html) document to get started. 
+Should you prefer a different development flow we have written a couple of documents to get you started [here](https://turbinia.readthedocs.io/en/latest/developer/index.html) 
+
 #### The small print
 
 Contributions made by corporations are covered by a different agreement than the
