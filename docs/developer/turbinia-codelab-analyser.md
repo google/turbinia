@@ -6,7 +6,7 @@ This document is the Turbinia analyser codelab 101 using the new development env
 
 We will write a very simple analyser for Turbinia that will detect the operating system to show you how to do a development flow with Turbinia including building, deploying and debugging. 
 
-We will be using the Google Cloud Shell Editor which is a free system in the cloud which has all the dependencies setup and provides a web based VSCode editor. We will not be using any Google Cloud functionality so if you are more comfortable running this on your local computer please follow the setup instructions [here](https://github.com/google/turbinia/blob/master/docs/developer/develop-minikube.md) to setup a local Turbinia development environment before continuing.
+We will be using the Google Cloud Shell Editor which is a free system in the cloud which has all the dependencies setup and provides a web based VSCode editor. We will not be using any Google Cloud functionality so if you are more comfortable running this on your local computer please follow the setup instructions [here](develop-minikube.md) to setup a local Turbinia development environment before continuing.
 
 ## Reading
 
