@@ -86,7 +86,8 @@ limitations under the License.
         :sort-by="sortBy" multi-sort show-expand hover>
         <template v-slot:[`item.request_id`]="{ item }">
           <v-btn variant="text" :ripple="true" :key="item.request_id" 
-          @click="getRequestDetails(item.request_id)">
+          @click="getRequestDetails(item.request_id) + selectActiveRow(item.request_id)"
+          selected-class="activated" :class="{ activated: isActiveRow == item.request_id }">
             {{ item.request_id }}
           </v-btn>
         </template>
@@ -126,9 +127,9 @@ limitations under the License.
         <template v-slot:expanded-row="{ columns, item }">
           <tr>
             <td :colspan="columns.length">
-              <task-list :request-id="item.request_id" :key="item.request_id" 
-              :filterRunning="this.filterRunning" :filterFailed="this.filterFailed" 
-              :filterSuccess="this.filterSuccess" :filterJobs="this.filterJobs" :radioFilter="this.radioFilter"> 
+              <task-list :request-id="item.request_id" :key="this.filterJobs + this.filterRunning + this.filterFailed + this.filterSuccess"
+              :filterRunning="this.filterRunning" :filterFailed="this.filterFailed" :filterSuccess="this.filterSuccess" :filterJobs="this.filterJobs" 
+              :radioFilter="this.radioFilter" :isActiveRow="this.isActiveRow"> 
               </task-list>
             </td>
           </tr>
@@ -149,7 +150,7 @@ export default {
   inject: ['getRequestDetails'],
   provide() {
     return {
-      selectActiveStatusReq: this.selectActiveStatusReq,
+      selectActiveRow: this.selectActiveRow,
     }
   },
   data() {
@@ -176,6 +177,7 @@ export default {
       filterSuccess: false,
       openDialog: false,
       radioFilter: true,
+      isActiveRow: null,
     }
   },
   methods: {
@@ -251,6 +253,10 @@ export default {
     }
     this.openDialog = false
    },
+   selectActiveRow: function(id) {
+    // Accepts Request ID or Task ID
+    this.isActiveRow = id
+   }
   },
   mounted() {
     this.getRequestList()
@@ -258,3 +264,11 @@ export default {
   },
 }
 </script>
+
+<style scoped>
+
+.activated {
+  background-color: rgba(128, 128, 128, 0.4);
+}
+
+</style>

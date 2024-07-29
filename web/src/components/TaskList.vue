@@ -14,7 +14,10 @@ limitations under the License.
 <template>
   <div>
     <v-list density="compact">
-      <v-virtual-scroll :items="taskList" :item-height="40" :height="400">
+      <v-empty-state v-if="taskList.length === 0"
+        text="No Tasks are available. Try adjusting your filters."
+      </v-empty-state>
+      <v-virtual-scroll :items="taskList" :item-height="40" :height="400" v-else>
         <template v-slot:default="{ item }">
           <v-list-item :key="item.task_id" v-slot:prepend>
             <div v-if="item.task_success">
@@ -31,8 +34,8 @@ limitations under the License.
             <div>
               <v-list-item-action>
                 <v-btn variant="text" :ripple="true" :key="item.task_id" selected-class="activated"
-                  :class="{ activated: isActive == item.task_id }"
-                  @click="getTaskDetails(item.task_id) + selectActiveStatus(item.task_id)">
+                  :class="{ activated: isActiveRow == item.task_id }"
+                  @click="getTaskDetails(item.task_id) + selectActiveRow(item.task_id)">
                   {{ item.task_id }}
                 </v-btn>
               </v-list-item-action>
@@ -52,8 +55,8 @@ limitations under the License.
 import ApiClient from '../utils/RestApiClient.js'
 
 export default {
-  props: ['requestId', 'filterFailed', 'filterSuccess', 'filterRunning', 'filterJobs', 'radioFilter'],
-  inject: ['getTaskDetails'],
+  props: ['requestId', 'filterFailed', 'filterSuccess', 'filterRunning', 'filterJobs', 'radioFilter', 'isActiveRow'],
+  inject: ['getTaskDetails', 'selectActiveRow'],
   data() {
     return {
       headers: [
@@ -61,7 +64,6 @@ export default {
         { text: 'Status', value: 'task_status' },
       ],
       taskList: [],
-      isActive: false,
     }
   },
   methods: {
@@ -79,7 +81,6 @@ export default {
             }
             if (this.filterJobs.length > 0) {
               let jobName = task_dict.job_name.toLowerCase()
-              console.log(this.radioFilter)
               if ( this.radioFilter && !this.filterJobs.includes(jobName)) {
                 continue;
               } else if ( !this.radioFilter && this.filterJobs.includes(jobName)) {
@@ -120,9 +121,6 @@ export default {
         .catch((e) => {
           console.error(e)
         })
-    },
-    selectActiveStatus: function (task_id) {
-      this.isActive = task_id
     },
   },
   created() {
