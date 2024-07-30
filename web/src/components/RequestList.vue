@@ -164,7 +164,7 @@ export default {
         { title: 'Evidence Name', key: 'evidence_name', width: '25%'},
         { title: 'Requester', key: 'requester', width: '12%' },
         { title: 'Reason', key: 'request_id_reason', width: '10%' },
-        { title: 'Status', key: 'status', width: '8%' },
+        { title: 'Status', key: 'status', width: '10%' },
       ],
       requestSummary: [],
       sortBy: [{ key: 'last_task_update_time', order: 'desc' }],
