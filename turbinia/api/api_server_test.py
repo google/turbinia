@@ -424,7 +424,6 @@ class testTurbiniaAPIServer(unittest.TestCase):
     testTaskData.return_value = []
     result = self.client.get(f"/api/task/{self._TASK_TEST_DATA.get('id')}")
     result = json.loads(result.content)
-
     self.assertEqual(expected_result, result)
 
   def testGetJobs(self):
