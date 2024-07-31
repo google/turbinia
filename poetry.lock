@@ -5154,4 +5154,4 @@ worker = ["dfDewey", "dfimagetools", "plaso", "pyhindsight"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "a1e5a1362f8c68f98baff65244f2ef0b0cf6a01767d97913b64c9fc141e7cce5"
+content-hash = "6a91ba1965f7cd36c5c62c02b03e0146acdf9d8b43f28601358b9ce9b81f71e0"
