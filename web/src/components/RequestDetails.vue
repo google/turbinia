@@ -79,7 +79,7 @@ limitations under the License.
               <v-list-item title="Running:">
                   {{ requestDetails.running_tasks }} Tasks
               </v-list-item>
-              <v-list-item title="Queued:">
+              <v-list-item title="Pending:">
                   {{ requestDetails.queued_tasks }} Tasks
               </v-list-item>
               <v-list-item title="Successful:">

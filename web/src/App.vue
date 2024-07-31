@@ -101,7 +101,13 @@ export default {
     getRequestDetails: function (request_id) {
       ApiClient.getRequestDetails(request_id)
         .then((response) => {
-          this.requestDetails = response.data
+          let data = response.data
+          Object.keys(data).forEach(function(key) {
+            if(data[key] === "") {
+                data[key] = 'N/A';
+              }
+          })
+          this.requestDetails = data
           this.taskDetails = {}
         })
         .catch((e) => {
@@ -129,7 +135,7 @@ body {
   overflow: auto;
   font-family: 'Roboto';
 }
-
+/* Fix text overflow from tables */
 .v-table__wrapper {
   overflow: hidden;
   word-break: break-all;

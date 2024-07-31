@@ -75,9 +75,9 @@ export default {
           for (const task in data) {
             let task_dict = data[task]
             let taskStatusTemp = task_dict.status
-            // As queued status requests show as null
-            if (taskStatusTemp === null) {
-              taskStatusTemp = 'queued'
+            // As pending status requests show as null or pending
+            if (taskStatusTemp === null || taskStatusTemp === "pending") {
+              taskStatusTemp = 'pending on server.'
             }
             if (this.filterJobs.length > 0) {
               let jobName = task_dict.job_name.toLowerCase()

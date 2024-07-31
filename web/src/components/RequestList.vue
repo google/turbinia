@@ -53,7 +53,7 @@ limitations under the License.
                 <v-chip v-bind="props" text="Running" filter @click="this.filterRunning = !this.filterRunning">
                 </v-chip>
               </template>
-              Filter by running or queued Tasks
+              Filter by running or pending Tasks
             </v-tooltip>
             <v-tooltip location="top">
               <template v-slot:activator="{ props }">
