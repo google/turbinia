@@ -14,12 +14,12 @@ limitations under the License.
 <template>
     <div>
       <v-card-title>
-          Request Details
-          <v-snackbar timeout="5000" color="primary" location="top" height="55">
+        Request Details
+        <v-snackbar timeout="5000" color="primary" location="top" height="55">
           Request output is <strong>downloading in the background</strong>, please wait
           <v-progress-circular color="white" indeterminate></v-progress-circular>
           <template v-slot:activator="{ props: snackbar }">
-            <v-tooltip top text="Download request output">
+            <v-tooltip location="top" text="Download request output">
               <template v-slot:activator="{ props: tooltip }">
                 <v-btn icon="mdi-folder-arrow-down-outline" variant="text" v-bind="mergeProps(snackbar, tooltip)"
                   @click="getRequestOutput(requestDetails.request_id)">
@@ -28,8 +28,15 @@ limitations under the License.
             </v-tooltip>
           </template>
         </v-snackbar>
+        <v-tooltip location="top" text="View request report">
+          <template v-slot:activator="{ props: tooltip }">
+            <v-btn icon="mdi-file-document-outline" variant="text" v-bind="tooltip"
+              @click="getMarkdownReport(requestDetails.request_id)">
+            </v-btn>
+          </template>
+        </v-tooltip>
       </v-card-title>
-      <v-alert v-if="requestDetails.status === 'success'" type="success" prominent>
+      <v-alert v-if="requestDetails.status === 'success'" type="successful" prominent>
           Request <strong>{{ requestDetails.request_id }}</strong> completed successfully.
       </v-alert>
       <v-alert v-else-if="requestDetails.status === 'running'" type="info" prominent>
@@ -91,18 +98,23 @@ limitations under the License.
             </v-list-group>
           </v-list>
       </v-card>
+     <request-report v-if="markdownReport !== ''" :markdownReport="this.markdownReport" :key="this.currentRequestID"> </request-report>
     </div>
   </template>
   
   <script>
   import ApiClient from '../utils/RestApiClient.js'
   import { mergeProps } from 'vue'
+  import RequestReport from './RequestReport.vue';
 
   export default {
+    components: { RequestReport },
     props: ['requestDetails'],
     data() {
       return {
-        openGroups: ['ids', 'details']
+        openGroups: ['ids', 'details'],
+        markdownReport: '',
+        currentRequestID: ''
       }
     },
     methods: {
@@ -122,6 +134,21 @@ limitations under the License.
               console.error(e)
             })
         },
+      getMarkdownReport: function (request_id) {
+        ApiClient.getRequestReport(request_id)
+          .then(({ data }) => { 
+            this.markdownReport = data
+            // To allow for re-click if user requests same report
+            if (this.currentRequestID === request_id) {
+              this.currentRequestID = request_id + Math.random()
+            } else {
+              this.currentRequestID = request_id
+            }
+          })
+          .catch((e) => {
+            console.error(e)
+          })
+      },
     }
   }
   </script>
