@@ -19,6 +19,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from click import echo as click_echo
+from httpx import Response
 from typing import Any
 from collections import defaultdict
 
@@ -53,8 +54,11 @@ def echo_json(data: Any) -> None:
 
 def decode_api_response(data: Any) -> str:
   """Decodes ApiResponse data into a Python object"""
-  if isinstance(data, str) or isinstance(data, bytes):
+  print('xxxx')
+  print(type(data))
+  if isinstance(data, str) or isinstance(data, Response):
     return data
+
   data_attribute = None
   response = ''
   try:
