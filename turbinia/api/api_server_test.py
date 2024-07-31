@@ -181,6 +181,8 @@ class testTurbiniaAPIServer(unittest.TestCase):
       ]
   }
 
+  _REQUEST_REPORT = b'## Request ID: 41483253079448e59685d88f37ab91f7\n* Last Update: 2022-04-01T19:17:14.791074Z\n* Requester: root\n* Reason:\n* Status: successful\n* Failed tasks: 0\n* Running tasks: 0\n* Successful tasks: 1\n* Task Count: 1\n* Queued tasks: 0\n* Evidence Name: test_data/artifact_disk.dd\n* Evidence ID: 084d5904f3d2412b99dc29ed34853a16\n\n### YaraAnalysisTask (LOW PRIORITY): No issues found in crontabs'
+
   _COUNT_SUMMARY = 3
 
   @mock.patch('redis.StrictRedis')
@@ -380,6 +382,41 @@ class testTurbiniaAPIServer(unittest.TestCase):
     result = json.loads(result.content)
     self.assertEqual(expected_result, result)
 
+  @mock.patch('turbinia.state_manager.RedisStateManager.get_request_data')
+  @mock.patch('turbinia.state_manager.RedisStateManager.get_task_data')
+  @mock.patch('turbinia.redis_client.RedisClient.key_exists')
+  def testGetRequestReport(self, testKeyExists, testTaskData, testRequestData):
+    """Test getting Turbinia Request Report."""
+    self.maxDiff = None
+    redis_client = fakeredis.FakeStrictRedis()
+    input_task = TurbiniaTask().deserialize(self._TASK_TEST_DATA)
+    input_task_serialized = input_task.serialize()
+    expected_result = self._REQUEST_REPORT
+    input_request = self._REQUEST_TEST_DATA
+    testKeyExists.return_value = True
+
+    redis_client.set(
+        'TurbiniaRequest:41483253079448e59685d88f37ab91f7',
+        json.dumps(input_request))
+
+    redis_client.set(
+        'TurbiniaTask:c8f73a5bc5084086896023c12c7cc026',
+        json.dumps(input_task_serialized))
+
+    testRequestData.return_value = json.loads(
+        redis_client.get('TurbiniaRequest:41483253079448e59685d88f37ab91f7'))
+
+    testTaskData.return_value = [
+        json.loads(
+            redis_client.get('TurbiniaTask:c8f73a5bc5084086896023c12c7cc026'))
+    ]
+
+    result = self.client.get(
+        f"/api/request/report?request_id={self._REQUEST_STATUS_TEST_DATA.get('request_id')}"
+    )
+    result = result.content
+    self.assertEqual(expected_result, result)
+
   @mock.patch('turbinia.state_manager.RedisStateManager.get_task_data')
   def testTaskNotFound(self, testTaskData):
     """Test getting invalid Turbinia task status."""
@@ -387,6 +424,7 @@ class testTurbiniaAPIServer(unittest.TestCase):
     testTaskData.return_value = []
     result = self.client.get(f"/api/task/{self._TASK_TEST_DATA.get('id')}")
     result = json.loads(result.content)
+
     self.assertEqual(expected_result, result)
 
   def testGetJobs(self):

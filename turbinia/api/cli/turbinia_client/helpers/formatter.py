@@ -54,8 +54,6 @@ def echo_json(data: Any) -> None:
 
 def decode_api_response(data: Any) -> str:
   """Decodes ApiResponse data into a Python object"""
-  print('xxxx')
-  print(type(data))
   if isinstance(data, str) or isinstance(data, Response):
     return data
 
