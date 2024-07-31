@@ -452,9 +452,9 @@ class TurbiniaTask:
 
   # The list of attributes that we will persist into storage
   STORED_ATTRIBUTES = [
-      'id', 'job_id', 'start_time', 'last_update', 'name', 'evidence_name',
-      'evidence_id', 'request_id', 'requester', 'group_name', 'reason',
-      'group_id'
+      'id', 'job_id', 'job_name', 'start_time', 'last_update', 'name',
+      'evidence_name', 'evidence_id', 'request_id', 'requester', 'group_name',
+      'reason', 'group_id'
   ]
 
   # The list of evidence states that are required by a Task in order to run.

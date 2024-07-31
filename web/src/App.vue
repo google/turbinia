@@ -44,9 +44,12 @@ limitations under the License.
             <v-card rounded v-if="Object.keys(taskDetails).length">
               <task-details :taskDetails="taskDetails"></task-details>
             </v-card>
+            <v-card rounded v-else-if="Object.keys(requestDetails).length">
+              <request-details :requestDetails="requestDetails"></request-details>
+            </v-card>
             <v-card rounded v-else>
-              <v-card-title> Task Details </v-card-title>
-              <v-card-subtitle> No Task Selected. Please click on a Task ID to see its details. </v-card-subtitle>
+              <v-card-title> Request or Task Details </v-card-title>
+              <v-card-subtitle> Please click on a Request ID or Task ID to see its details. </v-card-subtitle>
             </v-card>
           </v-col>
         </v-row>
@@ -57,6 +60,7 @@ limitations under the License.
 
 <script>
 import RequestList from './components/RequestList.vue'
+import RequestDetails from './components/RequestDetails.vue';
 import TaskDetails from './components/TaskDetails.vue'
 import ApiClient from './utils/RestApiClient.js'
 
@@ -70,15 +74,17 @@ export function truncate(text, length, suffix) {
 
 export default {
   name: 'app',
-  components: { RequestList, TaskDetails },
+  components: { RequestList, RequestDetails, TaskDetails },
   provide() {
     return {
       getTaskDetails: this.getTaskDetails,
+      getRequestDetails: this.getRequestDetails,
     }
   },
   data() {
     return {
       taskDetails: {},
+      requestDetails: {},
     }
   },
   methods: {
@@ -86,6 +92,23 @@ export default {
       ApiClient.getTaskDetails(task_id)
         .then((response) => {
           this.taskDetails = response.data
+          this.requestDetails = {}
+        })
+        .catch((e) => {
+          console.error(e)
+        })
+    },
+    getRequestDetails: function (request_id) {
+      ApiClient.getRequestDetails(request_id)
+        .then((response) => {
+          let data = response.data
+          Object.keys(data).forEach(function(key) {
+            if(data[key] === "") {
+                data[key] = 'N/A';
+              }
+          })
+          this.requestDetails = data
+          this.taskDetails = {}
         })
         .catch((e) => {
           console.error(e)
@@ -112,4 +135,11 @@ body {
   overflow: auto;
   font-family: 'Roboto';
 }
+/* Fix text overflow from tables */
+.v-table__wrapper {
+  overflow: hidden;
+  word-break: break-all;
+  text-overflow: ellipsis
+}
+
 </style>

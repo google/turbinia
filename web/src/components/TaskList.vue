@@ -14,7 +14,10 @@ limitations under the License.
 <template>
   <div>
     <v-list density="compact">
-      <v-virtual-scroll :items="taskList" :item-height="40" :height="400" :width="auto">
+      <v-empty-state v-if="taskList.length === 0"
+        text="No Tasks are available. Try adjusting your filters."
+      </v-empty-state>
+      <v-virtual-scroll :items="taskList" :item-height="40" :height="400" v-else>
         <template v-slot:default="{ item }">
           <v-list-item :key="item.task_id" v-slot:prepend>
             <div v-if="item.task_success">
@@ -31,13 +34,13 @@ limitations under the License.
             <div>
               <v-list-item-action>
                 <v-btn variant="text" :ripple="true" :key="item.task_id" selected-class="activated"
-                  :class="{ activated: isActive == item.task_id }"
-                  @click="getTaskDetails(item.task_id) + selectActiveStatus(item.task_id)">
+                  :class="{ activated: isActiveRow == item.task_id }"
+                  @click="getTaskDetails(item.task_id) + selectActiveRow(item.task_id)">
                   {{ item.task_id }}
                 </v-btn>
               </v-list-item-action>
             </div>
-            <v-list-item>
+            <v-list-item :max-width="800">
               {{ item.task_name }} {{ $filters.truncate(item.task_status, 128, '...') }}
             </v-list-item>
           </v-list-item>
@@ -52,8 +55,8 @@ limitations under the License.
 import ApiClient from '../utils/RestApiClient.js'
 
 export default {
-  props: ['requestId'],
-  inject: ['getTaskDetails'],
+  props: ['requestId', 'filterFailed', 'filterSuccess', 'filterRunning', 'filterJobs', 'radioFilter', 'isActiveRow'],
+  inject: ['getTaskDetails', 'selectActiveRow'],
   data() {
     return {
       headers: [
@@ -61,7 +64,6 @@ export default {
         { text: 'Status', value: 'task_status' },
       ],
       taskList: [],
-      isActive: false,
     }
   },
   methods: {
@@ -72,24 +74,53 @@ export default {
           let data = response.data['tasks']
           for (const task in data) {
             let task_dict = data[task]
-            taskList.push({
-              task_name: task_dict.name,
-              task_id: task_dict.id,
-              task_status: task_dict.status,
-              task_success: task_dict.successful,
-              evidence_name: task_dict.evidence_name,
-              evidence_id: task_dict.evidence_id,
-              evidence_size: task_dict.evidence_size,
-            })
+            let taskStatusTemp = task_dict.status
+            // As pending status requests show as null or pending
+            if (taskStatusTemp === null || taskStatusTemp === "pending") {
+              taskStatusTemp = 'pending on server.'
+            }
+            if (this.filterJobs.length > 0) {
+              let jobName = task_dict.job_name.toLowerCase()
+              if ( this.radioFilter && !this.filterJobs.includes(jobName)) {
+                continue;
+              } else if ( !this.radioFilter && this.filterJobs.includes(jobName)) {
+                continue
+              }
+            }
+            let taskListTemp = {
+                job_name: task_dict.job_name,
+                task_name: task_dict.name,
+                task_id: task_dict.id,
+                task_status: taskStatusTemp,
+                task_success: task_dict.successful,
+                evidence_name: task_dict.evidence_name,
+                evidence_id: task_dict.evidence_id,
+                evidence_size: task_dict.evidence_size,
+              }
+            // When Failed filter chip is applied
+            if (task_dict.successful === false && this.filterFailed) {
+              taskList.push(taskListTemp)
+            }
+            // When Success filter chip is applied
+            if (task_dict.successful && this.filterSuccess) {
+              taskList.push(taskListTemp)
+            }
+            // When Running filter chip is applied
+            if (task_dict.successful === null && this.filterRunning) {
+              taskList.push(taskListTemp)
+            }
+            // When no filter chip is applied
+            if (!this.filterRunning && !this.filterSuccess && !this.filterFailed) {
+              taskList.push(taskListTemp)
+            }
           }
+          // Sort by task name
+          taskList = taskList.sort((a, b) => (a.task_name > b.task_name ? 1 : -1))
           this.taskList = taskList
         })
         .catch((e) => {
           console.error(e)
         })
-    },
-    selectActiveStatus: function (task_id) {
-      this.isActive = task_id
     },
   },
   created() {

@@ -14,7 +14,7 @@ limitations under the License.
 <template>
   <div>
     <v-card-title>
-      {{ taskDetails.name }}
+      Task Details
       <v-snackbar timeout="5000" color="primary" location="top" height="55">
         Task output is <strong>downloading in the background</strong>, please wait
         <v-progress-circular color="white" indeterminate></v-progress-circular>
@@ -79,6 +79,18 @@ limitations under the License.
           <template v-slot:activator="{ props }">
             <v-list-item v-bind="props" title="Processing Details"></v-list-item>
           </template>
+          <v-list-item title="Task Name:">
+            <div v-if="taskDetails.name">
+              {{ taskDetails.name }}
+            </div>
+            <div v-else>N/A</div>
+          </v-list-item>
+          <v-list-item title="Job Name:">
+            <div v-if="taskDetails.job_name">
+              {{ taskDetails.job_name }}
+            </div>
+            <div v-else>N/A</div>
+          </v-list-item>
           <v-list-item title="Evidence Name:">
             <div v-if="taskDetails.evidence_name">
               {{ taskDetails.evidence_name }}
