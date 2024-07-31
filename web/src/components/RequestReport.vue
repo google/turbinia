@@ -40,9 +40,6 @@ export default {
   mounted() {
     this.openReportDialog = true
   },
-  beforeUnmount() {
-    this.openReportDialog = false
-  },
 }
 </script>
 
