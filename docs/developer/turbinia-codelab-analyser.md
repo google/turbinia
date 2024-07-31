@@ -403,6 +403,52 @@ $ $ turbinia-client status request e2eaf1c503234a7abef249e7d7f98c72
 
 We fixed the bug and have a working analyser now, congratulations!
 
+## Adding a unit test
+As a good citizin of the Turbinia code we will also want to write a small unit test for our code. Create a new file at `turbinia/workers/analysis/os_info_test.py`
+
+```
+"""Tests for the OS Info analysis task."""
+
+import unittest
+
+from turbinia import config
+from turbinia.workers.analysis import os_info
+
+_OS_RELEASE_CONTENT = """
+NAME=Fedora
+VERSION="17 (Beefy Miracle)"
+PRETTY_NAME="Fedora 17 (Beefy Miracle)"
+"""
+
+class OSInfoAnalysisTaskTest(unittest.TestCase):
+  """Test for the OS Info analysis task."""
+
+  @patch("builtins.open", new=unittest.mock.mock_open(read_data=_OS_RELEASE_CONTENT), create=True)
+  def test_run(self):
+    """Test OSInfoAnalysisTask task run."""
+    self.task.setup(self.task)
+
+    result = self.task.run(self.evidence, self.result)
+
+    self.assertIsInstance(result, TurbiniaTaskResult)
+    self.assertEqual(
+        result.report_data,
+        'OS Found - "Fedora 17 (Beefy Miracle)"')
+
+if __name__ == '__main__':
+  unittest.main()
+```
+
+Now let's run this specific test from the root turbinia folder.
+```
+$ PYTHONPATH=. python -m unittest turbinia.workers.analysis.os_info_test
+Using fallback source config Copy turbinia/config/turbinia_config_tmpl.py to ~/.turbiniarc or /etc/turbinia/turbinia.conf, edit, and re-run.
+....
+----------------------------------------------------------------------
+Ran 1 tests in 0.001s
+
+OK 
+```
 
 ## Tips & Tricks
 
