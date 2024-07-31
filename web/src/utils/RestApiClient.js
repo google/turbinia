@@ -47,7 +47,6 @@ export default {
     return RestApiClient.get('/api/request/report?request_id=' + request_id)
   },
 
-
   // Task List
   getTaskList(request_id) {
     return RestApiClient.get('/api/request/' + request_id)

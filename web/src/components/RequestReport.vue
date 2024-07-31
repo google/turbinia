@@ -52,9 +52,4 @@ export default {
   max-width: 125ch;
 }
 
-.markdown-body ul {
-  padding-left: 20%;
-  padding-right: 20%;
-}
-
 </style>
