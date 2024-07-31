@@ -410,30 +410,34 @@ As a good citizin of the Turbinia code we will also want to write a small unit t
 """Tests for the OS Info analysis task."""
 
 import unittest
+import mock
 
-from turbinia import config
+from turbinia.evidence import CompressedDirectory
+from turbinia.workers import TurbiniaTaskResult
 from turbinia.workers.analysis import os_info
 
-_OS_RELEASE_CONTENT = """
-NAME=Fedora
-VERSION="17 (Beefy Miracle)"
-PRETTY_NAME="Fedora 17 (Beefy Miracle)"
-"""
+_OS_RELEASE_CONTENT = """NAME=Fedora
+VERSION='17 (Beefy Miracle)'
+PRETTY_NAME='Fedora 17 (Beefy Miracle)'"""
+
 
 class OSInfoAnalysisTaskTest(unittest.TestCase):
   """Test for the OS Info analysis task."""
 
-  @patch("builtins.open", new=unittest.mock.mock_open(read_data=_OS_RELEASE_CONTENT), create=True)
-  def test_run(self):
+  @mock.patch(
+      "builtins.open", new=mock.mock_open(read_data=_OS_RELEASE_CONTENT),
+      create=True)
+  @mock.patch('os.path.join', return_value='/etc/os-release')
+  def test_run(self, os_join_mock):
     """Test OSInfoAnalysisTask task run."""
-    self.task.setup(self.task)
+    task = os_info.OSInfoAnalysisTask()
+    evidence = CompressedDirectory()
+    result = TurbiniaTaskResult()
 
-    result = self.task.run(self.evidence, self.result)
+    task.run(evidence, result)
 
-    self.assertIsInstance(result, TurbiniaTaskResult)
-    self.assertEqual(
-        result.report_data,
-        'OS Found - "Fedora 17 (Beefy Miracle)"')
+    self.assertEqual(result.status, "OS Found - 'Fedora 17 (Beefy Miracle)'")
+
 
 if __name__ == '__main__':
   unittest.main()
