@@ -22,8 +22,6 @@ from click import echo as click_echo
 from typing import Any
 from collections import defaultdict
 
-from turbinia_api_lib.api_response import ApiResponse
-
 import logging
 import json
 import pandas
@@ -55,7 +53,7 @@ def echo_json(data: Any) -> None:
 
 def decode_api_response(data: Any) -> str:
   """Decodes ApiResponse data into a Python object"""
-  if not isinstance(data, ApiResponse):
+  if isinstance(data, str) or isinstance(data, bytes):
     return data
   data_attribute = None
   response = ''
