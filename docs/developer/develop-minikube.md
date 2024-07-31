@@ -164,7 +164,7 @@ You can check the Turbinia WebUI at http://localhost:8000 or use the turbinia-cl
 
 
 ### Next
-Try our Turbinia minikube development 101 codelab [here](develop-codelab.md)
+Try our Turbinia minikube development 101 Codelab [here](turbinia-codelab-analyser.md)
 
 ### Cleanup development environment
 * Remove all minikube clusters `minikube delete --all --purge`
