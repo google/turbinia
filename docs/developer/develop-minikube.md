@@ -142,7 +142,7 @@ NOTE: As python hot reloading of code into an already running process is tricky 
 Keep in mind that hot-reloading:
 * will load a changed Python source code file as Python byte code in memory of a running process
 * will not re-execute any change code automatically
-* means that you need to execute something to trigger the code path and code you changed and was hot reloaded
+* means that you need to execute something to trigger the code path and code you changed 
 
 ## Test Run
 Let's test the whole setup by executing a request with a disk image located at `test_data/artifact_disk.dd`.
