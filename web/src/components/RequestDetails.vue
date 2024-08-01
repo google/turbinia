@@ -36,7 +36,7 @@ limitations under the License.
           </template>
         </v-tooltip>
       </v-card-title>
-      <v-alert v-if="requestDetails.status === 'success'" type="successful" prominent>
+      <v-alert v-if="requestDetails.status === 'successful'" type="success" prominent>
           Request <strong>{{ requestDetails.request_id }}</strong> completed successfully.
       </v-alert>
       <v-alert v-else-if="requestDetails.status === 'running'" type="info" prominent>
