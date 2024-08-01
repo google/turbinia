@@ -32,7 +32,7 @@ build:
         infer:
         - turbinia/**
 deploy:
-  statusCheckDeadlineSeconds: 30
+  statusCheckDeadlineSeconds: 90
   helm:
     releases:
     - name: dev-release
