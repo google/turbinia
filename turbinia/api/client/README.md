@@ -110,6 +110,7 @@ Class | Method | HTTP request | Description
 *TurbiniaRequestsApi* | [**get_request_report**](docs/TurbiniaRequestsApi.md#get_request_report) | **GET** /api/request/report/{request_id} | Get Request Markdown Report
 *TurbiniaRequestsApi* | [**get_request_status**](docs/TurbiniaRequestsApi.md#get_request_status) | **GET** /api/request/{request_id} | Get Request Status
 *TurbiniaRequestsApi* | [**get_requests_summary**](docs/TurbiniaRequestsApi.md#get_requests_summary) | **GET** /api/request/summary | Get Requests Summary
+*TurbiniaTasksApi* | [**get_task_report**](docs/TurbiniaTasksApi.md#get_task_report) | **GET** /api/task/report/{task_id} | Get Task Report
 *TurbiniaTasksApi* | [**get_task_statistics**](docs/TurbiniaTasksApi.md#get_task_statistics) | **GET** /api/task/statistics | Get Task Statistics
 *TurbiniaTasksApi* | [**get_task_status**](docs/TurbiniaTasksApi.md#get_task_status) | **GET** /api/task/{task_id} | Get Task Status
 *TurbiniaTasksApi* | [**get_workers_status**](docs/TurbiniaTasksApi.md#get_workers_status) | **GET** /api/task/workers | Get Workers Status
