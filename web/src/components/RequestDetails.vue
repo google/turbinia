@@ -166,4 +166,3 @@ export default {
   margin-bottom: 0;
 }
 </style>
-./MarkdownReport.vue/index.js
