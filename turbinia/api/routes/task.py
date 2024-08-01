@@ -106,7 +106,7 @@ async def get_task_status(request: Request, task_id: str):
 
 @router.get('/report/{task_id}')
 async def get_task_report(request: Request, task_id: str):
-  """Retrieves the MarkDown report of a Turbinia request.
+  """Retrieves the MarkDown report of a Turbinia task.
 
   Raises:
     HTTPException: if another exception is caught.
