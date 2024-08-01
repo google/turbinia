@@ -64,35 +64,35 @@ We will now start the minikube k8s cluster
 
 NOTE: If you want to change the default cluster CPU and Memory usage, you can set those before starting the cluster
 
-    $ minikube config set cpus 4
-    $ minikube config set memory 16384
+    minikube config set cpus 4
+    minikube config set memory 16384
 
 ### Turbinia source and deployment code 
 Now we have VSCode setup we are going to get a copy of the Turbinia source and deployment code.
 Clone the [Turbinia repository](https://github.com/google/turbinia) by forking the Turbinia repository into your own Github account and clone it locally from there.
 
-    $ git clone ssh://git@github.com:[YOUR_GITHUB_ACCOUNT]/turbinia.git
+    git clone ssh://git@github.com:[YOUR_GITHUB_ACCOUNT]/turbinia.git
 
 Let's get the helm charts for the Turbinia deployment. In your cloned turbinia repository
 
-    $ mkdir charts && cd charts
-    $ helm repo add osdfir-charts https://google.github.io/osdfir-infrastructure
-    $ helm pull osdfir-charts/turbinia --untar && cd ..
+    mkdir charts && cd charts
+    helm repo add osdfir-charts https://google.github.io/osdfir-infrastructure
+    helm pull osdfir-charts/turbinia --untar && cd ..
 
 Open up the turbinia folder in VSCode.
 
 ### Prepare Cluster
 Open a terminal (inside VSCode is the easiest, but any terminal will do) and let's configure skaffold, the local cluster and the additional helm repository for Redis.
 
-    $ skaffold config set --global local-cluster true
-    $ eval $(minikube -p minikube docker-env)
-    $ helm repo add bitnami https://charts.bitnami.com/bitnami
-    $ helm repo add kube-prometheus-stack https://prometheus-community.github.io/helm-charts
+    skaffold config set --global local-cluster true
+    eval $(minikube -p minikube docker-env)
+    helm repo add bitnami https://charts.bitnami.com/bitnami
+    helm repo add kube-prometheus-stack https://prometheus-community.github.io/helm-charts
 
 ### Verify Setup
 Execute a build with skaffold (from the root of the cloned Turbinia Github repository)
 
-    $ skaffold build
+    skaffold build
 
 This will build a Turbinia Server container image succesfully if skaffold has been correctlty setup and configured as described above.
 
@@ -101,11 +101,11 @@ This will build a Turbinia Server container image succesfully if skaffold has be
 ### Install the Turbinia Client
 We will install the Turbinia client into a Python virtual environment to be able to control Turbinia during our development workflow.
 
-    $ python -m venv .venv (or use your favorite virtual env manager)
-    $ source .venv/bin/activate
-    $ pip install poetry
-    $ cd turbinia/api/cli
-    $ poetry install
+    python -m venv .venv (or use your favorite virtual env manager)
+    source .venv/bin/activate
+    pip install poetry
+    cd turbinia/api/cli
+    poetry install
 
 Create the Turbinia Client configuration file in `$HOME/.turbinia_api_config.json` using the base configuration from [here](
 https://pypi.org/project/turbinia-client/).
@@ -115,7 +115,7 @@ https://pypi.org/project/turbinia-client/).
 ### Run
 Now we are ready to run the development cluster of Turbinia. This will startup the Turbinia API server, the worker and the server in the local minikube k8s cluster.
 
-    $ skaffold dev
+    skaffold dev
 
 NOTE: if one of the services fails to deploy, try again. Sometimes a time-out occurs due to Redis starting too slow.
 
@@ -149,18 +149,18 @@ Let's test the whole setup by executing a request with a disk image located at `
 
 Copy the disk to one of the containers in the shared `/mnt/turbiniavolume` folder.
 
-    $ kubectl cp artifact_disk.dd dev-release-turbinia-server-6d6:/mnt/turbiniavolume/
+    kubectl cp artifact_disk.dd dev-release-turbinia-server-6d6:/mnt/turbiniavolume/
 
 Start a Turbinia rawdisk request.
 
-    $ turbinia-client submit rawdisk --source_path /mnt/turbiniavolume/artifact_disk.dd
+    turbinia-client submit rawdisk --source_path /mnt/turbiniavolume/artifact_disk.dd
    
     Sending request: {'evidence': {'type': 'RawDisk', 'source_path': '/mnt/turbiniavolume/artifact_disk.dd'}, 'request_options': {}} 
     Received response: {'request_id': '4d76df84849c484a835d37fbc7668122'}
 
 You can check the Turbinia WebUI at http://localhost:8000 or use the turbinia-client to verify the status of the request.
 
-    $ turbinia-client status request 4d76df84849c484a835d37fbc7668122
+    turbinia-client status request 4d76df84849c484a835d37fbc7668122
 
 
 ### Next
