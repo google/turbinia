@@ -44,9 +44,7 @@ export default {
 </script>
 
 <style scoped>
-
 .markdown-body {
   max-width: 125ch;
 }
-
 </style>
