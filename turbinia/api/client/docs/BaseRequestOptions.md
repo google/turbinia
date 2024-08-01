@@ -32,7 +32,7 @@ print BaseRequestOptions.to_json()
 # convert the object into a dict
 base_request_options_dict = base_request_options_instance.to_dict()
 # create an instance of BaseRequestOptions from a dict
-base_request_options_form_dict = base_request_options.from_dict(base_request_options_dict)
+base_request_options_from_dict = BaseRequestOptions.from_dict(base_request_options_dict)
 ```
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
 
