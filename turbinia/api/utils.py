@@ -156,13 +156,13 @@ async def create_tarball(output_path: str) -> AsyncGenerator[bytes, Any]:
       file_path = os.path.join(root, filename)
       # skip empty files
       if os.stat(file_path).st_size > 0:
-        log.info(f'Adding {file_path} to tarball.')
         file_paths.append(file_path)
 
   with ByteStream() as stream:
     with tarfile.TarFile.open(fileobj=stream, mode='w:gz',
                               compresslevel=1) as tar:
       for file_path in file_paths:
+        log.info(f'Adding {file_path} to tarball.')
         tar_info = tar.gettarinfo(name=file_path)
         tar.addfile(tar_info)
         # Yield the header for the tarinfo file.
