@@ -147,9 +147,15 @@ Keep in mind that hot-reloading:
 ## Test Run
 Let's test the whole setup by executing a request with a disk image located at `test_data/artifact_disk.dd`.
 
-Copy the disk to one of the containers in the shared `/mnt/turbiniavolume` folder.
+Upload the disk to the shared `/mnt/turbiniavolume` folder using the `evidence upload` command.
 
-    kubectl cp artifact_disk.dd dev-release-turbinia-server-6d6:/mnt/turbiniavolume/
+    turbinia-client evidence upload -p test_data/artifact_disk.dd  12345
+    
+    # /home/user/turbinia/test_data/artifact_disk.dd:
+    * Original Name: artifact_disk.dd
+    * File Name: artifact_disk_2024-08-01T06:46:51.610412Z.dd
+    * File Path: /mnt/turbiniavolume/upload/12345/artifact_disk_2024-08-01T06:46:51.610412Z.dd
+    * Size: 20971520
 
 Start a Turbinia rawdisk request.
 
