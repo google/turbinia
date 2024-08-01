@@ -28,6 +28,13 @@ limitations under the License.
           </v-tooltip>
         </template>
       </v-snackbar>
+      <v-tooltip location="top" text="View task report">
+        <template v-slot:activator="{ props: tooltip }">
+          <v-btn icon="mdi-file-document-outline" variant="text" v-bind="tooltip"
+            @click="getMarkdownReport(taskDetails.id)">
+          </v-btn>
+        </template>
+      </v-tooltip>
     </v-card-title>
     <v-alert v-if="taskDetails.successful === true" type="success" prominent>
       {{ taskDetails.status }}
@@ -146,18 +153,24 @@ limitations under the License.
         </div>
       </v-list>
     </v-card>
+    <request-report v-if="markdownReport !== ''" :markdownReport="this.markdownReport" :key="this.currentTaskID">
+    </request-report>
   </div>
 </template>
 
 <script>
 import ApiClient from '../utils/RestApiClient.js'
 import { mergeProps } from 'vue'
+import RequestReport from './RequestReport.vue';
 
 export default {
+  components: { RequestReport },
   props: ['taskDetails'],
   data() {
     return {
       openGroups: ['ids', 'details'],
+      markdownReport: '',
+      currentTaskID: ''
     }
   },
   methods: {
@@ -172,6 +185,21 @@ export default {
           document.body.appendChild(link)
           link.click()
           link.remove()
+        })
+        .catch((e) => {
+          console.error(e)
+        })
+    },
+    getMarkdownReport: function (task_id) {
+      ApiClient.getTaskReport(task_id)
+        .then(({ data }) => {
+          this.markdownReport = data
+          // To allow for re-click if user requests same report
+          if (this.currentTaskID === task_id) {
+            this.currentTaskID = task_id + Math.random()
+          } else {
+            this.currentTaskID = task_id
+          }
         })
         .catch((e) => {
           console.error(e)
