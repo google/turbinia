@@ -159,9 +159,9 @@ Upload the disk to the shared `/mnt/turbiniavolume` folder using the `evidence u
 
 Start a Turbinia rawdisk request.
 
-    turbinia-client submit rawdisk --source_path /mnt/turbiniavolume/artifact_disk.dd
+    turbinia-client submit rawdisk --source_path /mnt/turbiniavolume/upload/12345/artifact_disk_2024-08-01T06:46:51.610412Z.dd
    
-    Sending request: {'evidence': {'type': 'RawDisk', 'source_path': '/mnt/turbiniavolume/artifact_disk.dd'}, 'request_options': {}} 
+    Sending request: {'evidence': {'type': 'RawDisk', 'source_path': '/mnt/turbiniavolume/upload/12345/artifact_disk_2024-08-01T06:46:51.610412Z.dd'}, 'request_options': {}} 
     Received response: {'request_id': '4d76df84849c484a835d37fbc7668122'}
 
 You can check the Turbinia WebUI at http://localhost:8000 or use the turbinia-client to verify the status of the request.
