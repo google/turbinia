@@ -44,15 +44,11 @@ $ minikube start
 We will add our new analyser name to the template configuration file. Add the following to `turbinia/config/turbinia_config_tmpl.py`
 
 ```
-
-...
 }, {
     'job': 'OSInfoAnalysisJob',
     'programs': ['grep'],
     'docker_image': None,
     'timeout': 3600
-},
-...
 ```
 
 We will import our new job into the job management init code. Add the following to `​​turbinia/jobs/__init__.py`
@@ -61,23 +57,16 @@ We will import our new job into the job management init code. Add the following 
 from turbinia.jobs import os_info
 ```
 
-We will add our new task name and import that task in the task management code. Add the task name to `turbinia/taskutils.py`
+We will add our new task name and import that task in the task management code. Add the task name to `TASK_LIST` in turbinia/taskutils.py`
 
 ```
-TASK_LIST = [
-      ...
-      'OSInfoAnalysisTask'
-...
-]
+      'OSInfoAnalysisTask',
 ```
 
 and in the same file in the function `gettask()` add
 
 ```
-# Late imports to minimize what loads all Tasks
-...
 from turbinia.workers.analysis.os_info import OSInfoAnalysisTask
-...
 ```
 
 Create the boilerplate code for the job. Create a new file at `turbinia/jobs/os_info.py`
@@ -296,14 +285,11 @@ $ turbinia-client config download > charts/turbinia/turbinia.conf
 Add the new `OSInfoAnalyserJob` configuration to that file as well.
 
 ```
-...
 }, {
     'job': 'OSInfoAnalysisJob',
     'programs': ['grep'],
     'docker_image': None,
     'timeout': 3600
-},
-...
 ```
 
 ## Run, debug and fix analyser
