@@ -14,7 +14,7 @@ NOTE: This setup has been tested by the Turbinia developers in the following con
 * If you want to develop with a full VSCode web interface you can use the [GCP Cloud Shell Editor](https://shell.cloud.google.com/)
    * This setup has all the dependecies and VSCode extensions neeeded for Turbinia development pre-installed and configured. You can continue the setup at the section [here](#start-minkube-cluster).
    * Take note of the limitations [here](https://cloud.google.com/shell/docs/quotas-limits)
-   * If the limitations are an issue for you, have a look into at the (paid) version called [Google Cloud Workstation](https://cloud.google.com/workstations/).
+   * If the limitations are an issue for you, have a look into the (paid) version called [Google Cloud Workstation](https://cloud.google.com/workstations/).
 
 ## Components
 ### Minikube
