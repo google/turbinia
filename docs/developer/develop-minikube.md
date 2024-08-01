@@ -101,7 +101,7 @@ This will build a Turbinia Server container image succesfully if skaffold has be
 ### Install the Turbinia Client
 We will install the Turbinia client into a Python virtual environment to be able to control Turbinia during our development workflow.
 
-    python -m venv .venv (or use your favorite virtual env manager)
+    python -m venv .venv
     source .venv/bin/activate
     pip install poetry
     cd turbinia/api/cli
