@@ -418,7 +418,7 @@ class OSInfoAnalysisTaskTest(unittest.TestCase):
   @mock.patch(
       "builtins.open", new=mock.mock_open(read_data=_OS_RELEASE_CONTENT),
       create=True)
-  @mock.patch('os.path.join', return_value='/etc/os-release')
+  @mock.patch('os.path.join', return_value='etc/os-release')
   def test_run(self, os_join_mock):
     """Test OSInfoAnalysisTask task run."""
     task = os_info.OSInfoAnalysisTask()
