@@ -59,7 +59,6 @@ def setup_submit(ctx: click.Context):
   try:
     ctx.obj.evidence_mapping = ctx.obj.get_evidence_arguments()
     ctx.obj.request_options = ctx.obj.get_request_options()
-
     # Build all the commands based on responses from the API server.
     request_commands = factory.CommandFactory.create_dynamic_objects(
         evidence_mapping=ctx.obj.evidence_mapping,
@@ -82,3 +81,4 @@ def submit_group(ctx: click.Context):
   of available evidence types.
   """
   ctx.invoke(setup_submit)
+  click.echo(submit_group.get_help(ctx))
