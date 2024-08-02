@@ -49,6 +49,11 @@ def jobs_group():
   """Get a list of enabled Turbinia jobs."""
 
 
+@click.group('report')
+def report_group():
+  """Get reports for Tasks or Requests."""
+
+
 @click.pass_context
 def setup_submit(ctx: click.Context):
   try:

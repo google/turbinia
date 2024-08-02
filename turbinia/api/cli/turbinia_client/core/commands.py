@@ -68,6 +68,21 @@ def get_api_server_version(ctx: click.Context) -> None:
         f'when calling get_version: {exception.body}')
 
 
+@groups.config_group.command('download')
+@click.pass_context
+def get_config_download(ctx: click.Context) -> None:
+  """Downloads current Turbinia config from the API server."""
+  client: api_client.ApiClient = ctx.obj.api_client
+  api_instance = turbinia_configuration_api.TurbiniaConfigurationApi(client)
+  try:
+    api_response = api_instance.download_config()
+    click.echo(api_response)
+  except exceptions.ApiException as exception:
+    log.error(
+        f'Received status code {exception.status} '
+        f'when calling download_config: {exception.body}')
+
+
 @groups.result_group.command('request')
 @click.pass_context
 @click.argument('request_id')
@@ -501,3 +516,40 @@ def version():
   """Returns the turbinia-client package distribution version."""
   cli_version = importlib_version('turbinia-client')
   click.echo(f'turbinia-client version {cli_version}')
+
+
+@groups.report_group.command('request')
+@click.pass_context
+@click.argument('request_id')
+def get_request_report(ctx: click.Context, request_id: str) -> None:
+  """Gets Turbinia request Markdown report.
+  
+  This command will not do any filtering since this is provided in
+  the `status request` command via --priority_filter
+
+  """
+  client: api_client.ApiClient = ctx.obj.api_client
+  api_instance = turbinia_requests_api.TurbiniaRequestsApi(client)
+  try:
+    api_response = api_instance.get_request_report(request_id)
+    click.echo(api_response)
+  except exceptions.ApiException as exception:
+    log.error(
+        f'Received status code {exception.status} '
+        f'when calling get_request_report: {exception.body}')
+
+
+@groups.report_group.command('task')
+@click.pass_context
+@click.argument('task_id')
+def get_task_report(ctx: click.Context, task_id: str) -> None:
+  """Gets Turbinia task Markdown report."""
+  client: api_client.ApiClient = ctx.obj.api_client
+  api_instance = turbinia_tasks_api.TurbiniaTasksApi(client)
+  try:
+    api_response = api_instance.get_task_report(task_id)
+    click.echo(api_response)
+  except exceptions.ApiException as exception:
+    log.error(
+        f'Received status code {exception.status} '
+        f'when calling get_request_report: {exception.body}')

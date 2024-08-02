@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "turbinia-client"
-version = "1.0.7"
+version = "1.0.8"
 description = "Turbinia command-line tool"
 authors = ["Turbinia Developers <turbinia-dev@googlegroups.com>"]
 maintainers = ["Turbinia Developers <turbinia-dev@googlegroups.com>"]
@@ -15,7 +15,7 @@ turbinia-client = "turbinia_client.turbiniacli_tool:main"
 [tool.poetry.dependencies]
 python = "^3.9"
 click = "^8.1.7"
-turbinia-api-lib = "^1.0.3"
+turbinia-api-lib = "^1.0.5"
 google-auth-oauthlib = "^1.1.0"
 pandas = "^2.1.0"
 httpx = "^0.27.0"
