@@ -14,7 +14,7 @@ NOTE: This setup has been tested by the Turbinia developers in the following con
 * If you want to develop with a full VSCode web interface you can use the [GCP Cloud Shell Editor](https://shell.cloud.google.com/)
    * This setup has all the dependecies and VSCode extensions neeeded for Turbinia development pre-installed and configured. You can continue the setup at the section [here](#start-minkube-cluster).
    * Take note of the limitations [here](https://cloud.google.com/shell/docs/quotas-limits)
-   * If the limitations are an issue for you, have a look into at the (paid) version called [Google Cloud Workstation](https://cloud.google.com/workstations/).
+   * If the limitations are an issue for you, have a look into the (paid) version called [Google Cloud Workstation](https://cloud.google.com/workstations/).
 
 ## Components
 ### Minikube
@@ -64,35 +64,35 @@ We will now start the minikube k8s cluster
 
 NOTE: If you want to change the default cluster CPU and Memory usage, you can set those before starting the cluster
 
-    $ minikube config set cpus 4
-    $ minikube config set memory 16384
+    minikube config set cpus 4
+    minikube config set memory 16384
 
 ### Turbinia source and deployment code 
 Now we have VSCode setup we are going to get a copy of the Turbinia source and deployment code.
 Clone the [Turbinia repository](https://github.com/google/turbinia) by forking the Turbinia repository into your own Github account and clone it locally from there.
 
-    $ git clone ssh://git@github.com:[YOUR_GITHUB_ACCOUNT]/turbinia.git
+    git clone ssh://git@github.com:[YOUR_GITHUB_ACCOUNT]/turbinia.git
 
 Let's get the helm charts for the Turbinia deployment. In your cloned turbinia repository
 
-    $ mkdir charts && cd charts
-    $ helm repo add osdfir-charts https://google.github.io/osdfir-infrastructure
-    $ helm pull osdfir-charts/turbinia --untar && cd ..
+    mkdir charts && cd charts
+    helm repo add osdfir-charts https://google.github.io/osdfir-infrastructure
+    helm pull osdfir-charts/turbinia --untar && cd ..
 
 Open up the turbinia folder in VSCode.
 
 ### Prepare Cluster
 Open a terminal (inside VSCode is the easiest, but any terminal will do) and let's configure skaffold, the local cluster and the additional helm repository for Redis.
 
-    $ skaffold config set --global local-cluster true
-    $ eval $(minikube -p minikube docker-env)
-    $ helm repo add bitnami https://charts.bitnami.com/bitnami
-    $ helm repo add kube-prometheus-stack https://prometheus-community.github.io/helm-charts
+    skaffold config set --global local-cluster true
+    eval $(minikube -p minikube docker-env)
+    helm repo add bitnami https://charts.bitnami.com/bitnami
+    helm repo add kube-prometheus-stack https://prometheus-community.github.io/helm-charts
 
 ### Verify Setup
 Execute a build with skaffold (from the root of the cloned Turbinia Github repository)
 
-    $ skaffold build
+    skaffold build
 
 This will build a Turbinia Server container image succesfully if skaffold has been correctlty setup and configured as described above.
 
@@ -101,11 +101,11 @@ This will build a Turbinia Server container image succesfully if skaffold has be
 ### Install the Turbinia Client
 We will install the Turbinia client into a Python virtual environment to be able to control Turbinia during our development workflow.
 
-    $ python -m venv .venv (or use your favorite virtual env manager)
-    $ source .venv/bin/activate
-    $ pip install poetry
-    $ cd turbinia/api/cli
-    $ poetry install
+    python -m venv .venv
+    source .venv/bin/activate
+    pip install poetry
+    cd turbinia/api/cli
+    poetry install
 
 Create the Turbinia Client configuration file in `$HOME/.turbinia_api_config.json` using the base configuration from [here](
 https://pypi.org/project/turbinia-client/).
@@ -115,7 +115,7 @@ https://pypi.org/project/turbinia-client/).
 ### Run
 Now we are ready to run the development cluster of Turbinia. This will startup the Turbinia API server, the worker and the server in the local minikube k8s cluster.
 
-    $ skaffold dev
+    skaffold dev
 
 NOTE: if one of the services fails to deploy, try again. Sometimes a time-out occurs due to Redis starting too slow.
 
@@ -142,25 +142,31 @@ NOTE: As python hot reloading of code into an already running process is tricky 
 Keep in mind that hot-reloading:
 * will load a changed Python source code file as Python byte code in memory of a running process
 * will not re-execute any change code automatically
-* means that you need to execute something to trigger the code path and code you changed and was hot reloaded
+* means that you need to execute something to trigger the code path and code you changed 
 
 ## Test Run
 Let's test the whole setup by executing a request with a disk image located at `test_data/artifact_disk.dd`.
 
-Copy the disk to one of the containers in the shared `/mnt/turbiniavolume` folder.
+Upload the disk to the shared `/mnt/turbiniavolume` folder using the `evidence upload` command.
 
-    $ kubectl cp artifact_disk.dd dev-release-turbinia-server-6d6:/mnt/turbiniavolume/
+    turbinia-client evidence upload -p test_data/artifact_disk.dd  12345
+    
+    # /home/user/turbinia/test_data/artifact_disk.dd:
+    * Original Name: artifact_disk.dd
+    * File Name: artifact_disk_2024-08-01T06:46:51.610412Z.dd
+    * File Path: /mnt/turbiniavolume/upload/12345/artifact_disk_2024-08-01T06:46:51.610412Z.dd
+    * Size: 20971520
 
 Start a Turbinia rawdisk request.
 
-    $ turbinia-client submit rawdisk --source_path /mnt/turbiniavolume/artifact_disk.dd
+    turbinia-client submit rawdisk --source_path /mnt/turbiniavolume/upload/12345/artifact_disk_2024-08-01T06:46:51.610412Z.dd
    
-    Sending request: {'evidence': {'type': 'RawDisk', 'source_path': '/mnt/turbiniavolume/artifact_disk.dd'}, 'request_options': {}} 
+    Sending request: {'evidence': {'type': 'RawDisk', 'source_path': '/mnt/turbiniavolume/upload/12345/artifact_disk_2024-08-01T06:46:51.610412Z.dd'}, 'request_options': {}} 
     Received response: {'request_id': '4d76df84849c484a835d37fbc7668122'}
 
 You can check the Turbinia WebUI at http://localhost:8000 or use the turbinia-client to verify the status of the request.
 
-    $ turbinia-client status request 4d76df84849c484a835d37fbc7668122
+    turbinia-client status request 4d76df84849c484a835d37fbc7668122
 
 
 ### Next

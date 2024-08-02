@@ -44,15 +44,11 @@ $ minikube start
 We will add our new analyser name to the template configuration file. Add the following to `turbinia/config/turbinia_config_tmpl.py`
 
 ```
-
-...
 }, {
     'job': 'OSInfoAnalysisJob',
     'programs': ['grep'],
     'docker_image': None,
     'timeout': 3600
-},
-...
 ```
 
 We will import our new job into the job management init code. Add the following to `​​turbinia/jobs/__init__.py`
@@ -61,23 +57,16 @@ We will import our new job into the job management init code. Add the following 
 from turbinia.jobs import os_info
 ```
 
-We will add our new task name and import that task in the task management code. Add the task name to `turbinia/taskutils.py`
+We will add our new task name and import that task in the task management code. Add the task name to `TASK_LIST` in turbinia/taskutils.py`
 
 ```
-TASK_LIST = [
-      ...
-      'OSInfoAnalysisTask'
-...
-]
+      'OSInfoAnalysisTask',
 ```
 
 and in the same file in the function `gettask()` add
 
 ```
-# Late imports to minimize what loads all Tasks
-...
 from turbinia.workers.analysis.os_info import OSInfoAnalysisTask
-...
 ```
 
 Create the boilerplate code for the job. Create a new file at `turbinia/jobs/os_info.py`
@@ -265,6 +254,7 @@ Your Turbinia stack is now deployed with your new Job and Task. The stack can be
 
 ```
 $ kubectl get pods
+
 NAME                                           READY   STATUS    RESTARTS      AGE
 dev-release-redis-master-0                     1/1     Running   0             45s
 dev-release-turbinia-api-7dfd8988b8-bprxd      1/1     Running   0             45s
@@ -296,14 +286,11 @@ $ turbinia-client config download > charts/turbinia/turbinia.conf
 Add the new `OSInfoAnalyserJob` configuration to that file as well.
 
 ```
-...
 }, {
     'job': 'OSInfoAnalysisJob',
     'programs': ['grep'],
     'docker_image': None,
     'timeout': 3600
-},
-...
 ```
 
 ## Run, debug and fix analyser
@@ -314,6 +301,7 @@ Now upload this evidence file to Turbinia giving a fake ticket ID `12345`.
 
 ```
 $ turbinia-client evidence upload -p osrelease.tgz 12345
+
 # /home/user/osrelease.tgz:
     * Original Name: osrelease.tgz
     * File Name: osrelease_2024-07-24T09:36:58.045255Z.tgz
@@ -337,6 +325,7 @@ We can check the status of the request in the Turbinia WebUI or via the cli.
 
 ```
 $ turbinia-client status request 42d715d298c24e22ba1f4e88d25d4a44
+
 ## Request ID: 42d715d298c24e22ba1f4e88d25d4a44
 * Last Update: 2024-07-24T10:22:10.792302
 * Requester: user_unspecified
@@ -364,7 +353,7 @@ Error opening OSRelease file: [Errno 2] No such file or directory: '/tmp/42d715d
 
 We seem to have incorrectly constructed the path to the `/etc/os-release` file.
 
-Let's set two breakpoints (why only do 1, when you can have 2 ;) ) in our code to see what is going on and attach to the running worker.
+Let's set two breakpoints (why only do 1, when you can have 2 ;) ) in our code to see what is going on and attach the debugger to the running worker using the VSCode debug panel.
 
 ![Attach Debugger](../images/codelab-debug.png)
 
@@ -377,6 +366,8 @@ Let's step through the code and keep an eye on how we build the evidence path to
 We made a typo in `osrelease_path`, it should be `'etc/os-release'`. Fixing and saving that in the source code file will sync and hot-reload the file to the running worker. 
 
 Now let's submit a new request again.
+
+NOTE: make sure to exit past the breakpoints in the debugger to enable the worker to continue before submitting the new request.
 
 ```
 $ turbinia-client submit compresseddirectory --jobs_allowlist OSInfoAnalysisJob --source_path /mnt/turbiniavolume/12345/osrelease_2024-07-24T09:36:58.045255Z.tgz
@@ -427,7 +418,7 @@ class OSInfoAnalysisTaskTest(unittest.TestCase):
   @mock.patch(
       "builtins.open", new=mock.mock_open(read_data=_OS_RELEASE_CONTENT),
       create=True)
-  @mock.patch('os.path.join', return_value='/etc/os-release')
+  @mock.patch('os.path.join', return_value='etc/os-release')
   def test_run(self, os_join_mock):
     """Test OSInfoAnalysisTask task run."""
     task = os_info.OSInfoAnalysisTask()
@@ -443,9 +434,11 @@ if __name__ == '__main__':
   unittest.main()
 ```
 
-Now let's run this specific test from the root turbinia folder.
+Now let's install the test requirements and run this specific test from the root turbinia folder.
 ```
+$ pip install -f requirements-test.txt
 $ PYTHONPATH=. python -m unittest turbinia.workers.analysis.os_info_test
+
 Using fallback source config Copy turbinia/config/turbinia_config_tmpl.py to ~/.turbiniarc or /etc/turbinia/turbinia.conf, edit, and re-run.
 ....
 ----------------------------------------------------------------------
@@ -456,6 +449,6 @@ OK
 
 ## Tips & Tricks
 
-### Unexplainable reloads
+### Unexplainable reloads or failed hot-reloads of code
 
 Restart deployment with `skaffold dev` (ctrl-c the running instance)
