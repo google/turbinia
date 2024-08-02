@@ -1,0 +1,6 @@
+{
+  "python.analysis.extraPaths": [
+    "./turbinia/api/client",
+    "./turbinia/api/cli"
+  ]
+}

@@ -41,25 +41,44 @@ class testTurbiniaAPIServer(unittest.TestCase):
   """ Test Turbinia API server."""
 
   _TASK_TEST_DATA = {
-      'id': 'c8f73a5bc5084086896023c12c7cc026',
-      'evidence_name': 'test_data/artifact_disk.dd',
-      'evidence_id': '084d5904f3d2412b99dc29ed34853a16',
-      'job_id': '1db0dc47d8f244f5b4fa7e15b8a87861',
-      'start_time': '2022-04-01T19:15:14.791074Z',
-      'last_update': '2022-04-01T19:17:14.791074Z',
-      'name': 'YaraAnalysisTask',
-      'request_id': '41483253079448e59685d88f37ab91f7',
-      'requester': 'root',
-      'group_id': '1234',
-      'worker_name': '95153920ab11',
-      'report_data': 'No issues found in crontabs',
-      'report_priority': 80,
-      'run_time': 46.003234,
-      'status': 'No issues found in crontabs',
-      'saved_paths': '/tmp/worker-log.txt',
-      'successful': True,
-      'output_manager': '',
-      'instance': 'turbinia-jleaniz-test'
+      'id':
+          'c8f73a5bc5084086896023c12c7cc026',
+      'evidence_name':
+          'test_data/artifact_disk.dd',
+      'evidence_id':
+          '084d5904f3d2412b99dc29ed34853a16',
+      'job_id':
+          '1db0dc47d8f244f5b4fa7e15b8a87861',
+      'start_time':
+          '2022-04-01T19:15:14.791074Z',
+      'last_update':
+          '2022-04-01T19:17:14.791074Z',
+      'name':
+          'YaraAnalysisTask',
+      'request_id':
+          '41483253079448e59685d88f37ab91f7',
+      'requester':
+          'root',
+      'group_id':
+          '1234',
+      'worker_name':
+          '95153920ab11',
+      'report_data':
+          '### YaraAnalysisTask (LOW PRIORITY): No issues found in crontabs',
+      'report_priority':
+          80,
+      'run_time':
+          46.003234,
+      'status':
+          'No issues found in crontabs',
+      'saved_paths':
+          '/tmp/worker-log.txt',
+      'successful':
+          True,
+      'output_manager':
+          '',
+      'instance':
+          'turbinia-jleaniz-test'
   }
 
   _REQUEST_TEST_DATA = {
@@ -181,8 +200,7 @@ class testTurbiniaAPIServer(unittest.TestCase):
       ]
   }
 
-  _REQUEST_REPORT = b'## Request ID: 41483253079448e59685d88f37ab91f7\n* Last Update: 2022-04-01T19:17:14.791074Z\n* Requester: root\n* Reason:\n* Status: successful\n* Failed tasks: 0\n* Running tasks: 0\n* Successful tasks: 1\n* Task Count: 1\n* Queued tasks: 0\n* Evidence Name: test_data/artifact_disk.dd\n* Evidence ID: 084d5904f3d2412b99dc29ed34853a16\n\n### YaraAnalysisTask (LOW PRIORITY): No issues found in crontabs'
-
+  _REQUEST_REPORT = '## Request ID: 41483253079448e59685d88f37ab91f7\n* Last Update: 2022-04-01T19:17:14.791074Z\n* Requester: root\n* Reason:\n* Status: successful\n* Failed tasks: 0\n* Running tasks: 0\n* Successful tasks: 1\n* Task Count: 1\n* Queued tasks: 0\n* Evidence Name: test_data/artifact_disk.dd\n* Evidence ID: 084d5904f3d2412b99dc29ed34853a16\n\n### YaraAnalysisTask (LOW PRIORITY): No issues found in crontabs'
   _COUNT_SUMMARY = 3
 
   @mock.patch('redis.StrictRedis')
@@ -252,11 +270,11 @@ class testTurbiniaAPIServer(unittest.TestCase):
     expected_result_str = json.dumps(expected_result_dict)
 
     redis_client.set(
-        'TurbiniaTask:41483253079448e59685d88f37ab91f7', expected_result_str)
+        'TurbiniaTask:c8f73a5bc5084086896023c12c7cc026', expected_result_str)
 
     testTaskData.return_value = [
         json.loads(
-            redis_client.get('TurbiniaTask:41483253079448e59685d88f37ab91f7'))
+            redis_client.get('TurbiniaTask:c8f73a5bc5084086896023c12c7cc026'))
     ]
 
     result = self.client.get(f"/api/task/{self._TASK_TEST_DATA.get('id')}")
@@ -420,10 +438,29 @@ class testTurbiniaAPIServer(unittest.TestCase):
     ]
 
     result = self.client.get(
-        f"/api/request/report?request_id={self._REQUEST_STATUS_TEST_DATA.get('request_id')}"
+        f"/api/request/report/{self._REQUEST_STATUS_TEST_DATA.get('request_id')}"
     )
     result = result.content
-    self.assertEqual(expected_result, result)
+    self.assertEqual(expected_result, result.decode())
+
+  @mock.patch('turbinia.state_manager.RedisStateManager.get_task')
+  def testGetTaskReport(self, testTaskData):
+    """Test getting task report."""
+    redis_client = fakeredis.FakeStrictRedis()
+    input_task = TurbiniaTask().deserialize(self._TASK_TEST_DATA)
+    task_data_dict = input_task.serialize()
+    task_data_str = json.dumps(task_data_dict)
+    expected_result = task_data_dict.get('report_data')
+
+    redis_client.set(
+        'TurbiniaTask:c8f73a5bc5084086896023c12c7cc026', task_data_str)
+
+    testTaskData.return_value = json.loads(
+        redis_client.get('TurbiniaTask:c8f73a5bc5084086896023c12c7cc026'))
+
+    result = self.client.get(
+        f"/api/task/report/{self._TASK_TEST_DATA.get('id')}")
+    self.assertEqual(expected_result, result.content.decode())
 
   @mock.patch('turbinia.state_manager.RedisStateManager.get_task_data')
   def testTaskNotFound(self, testTaskData):

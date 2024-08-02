@@ -42,6 +42,11 @@ export default {
     return RestApiClient.get('/api/result/request/' + request_id, { responseType: 'blob' })
   },
 
+  // Request Report
+  getRequestReport(request_id) {
+    return RestApiClient.get('/api/request/report/' + request_id)
+  },
+
   // Task List
   getTaskList(request_id) {
     return RestApiClient.get('/api/request/' + request_id)
@@ -50,6 +55,11 @@ export default {
   // Task Details
   getTaskDetails(task_id) {
     return RestApiClient.get('/api/task/' + task_id)
+  },
+
+  // Task Report
+  getTaskReport(task_id) {
+    return RestApiClient.get('/api/task/report/' + task_id)
   },
 
   // Task Output

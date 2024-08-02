@@ -11,23 +11,26 @@
 	"postStartCommand": "/etc/init.d/redis-server start",
 	// Set *default* container specific settings.json values on container create.
 	"mounts": ["source=/dev,target=/dev,type=bind"],
-	"settings": {
-		"terminal.integrated.shell.linux": "/bin/bash",
-		"terminal.integrated.env.linux": {
-			"PYTHONPATH": "${workspaceFolder}",
-		},
-		"python.pythonPath": "/usr/bin/python3",
-		"python.linting.pylintEnabled": true,
-		"python.linting.enabled": true,
-		"editor.formatOnSave": true,
-		"python.formatting.provider": "yapf",
-		"python.formatting.yapfArgs": [
-			"--style",
-			"${workspaceRoot}/.style.yapf"
-		],
-	},
-	// Add the IDs of extensions you want installed when the container is created.
-	"extensions": [
-		"ms-python.python"
-	],
+	"customizations": {
+		"vscode": {
+			"settings": {
+				"terminal.integrated.shell.linux": "/bin/bash",
+				"terminal.integrated.env.linux": {
+					"PYTHONPATH": "${workspaceFolder}",
+				},
+				"python.pythonPath": "/usr/bin/python3",
+				"python.linting.enabled": true,
+				"editor.formatOnSave": true,
+				"python.formatting.provider": "yapf",
+				"python.formatting.yapfArgs": [
+					"--style",
+					"${workspaceRoot}/.style.yapf"
+				]
+			},
+			// Add the IDs of extensions you want installed when the container is created.
+			"extensions": [
+				"ms-python.python"
+			]
+		}
+	}
 }

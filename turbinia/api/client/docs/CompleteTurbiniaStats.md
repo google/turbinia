@@ -28,7 +28,7 @@ print CompleteTurbiniaStats.to_json()
 # convert the object into a dict
 complete_turbinia_stats_dict = complete_turbinia_stats_instance.to_dict()
 # create an instance of CompleteTurbiniaStats from a dict
-complete_turbinia_stats_form_dict = complete_turbinia_stats.from_dict(complete_turbinia_stats_dict)
+complete_turbinia_stats_from_dict = CompleteTurbiniaStats.from_dict(complete_turbinia_stats_dict)
 ```
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
 

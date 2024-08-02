@@ -20,7 +20,7 @@ import json
 from collections import OrderedDict
 
 from fastapi import HTTPException, APIRouter
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, PlainTextResponse
 from fastapi.requests import Request
 from fastapi.encoders import jsonable_encoder
 
@@ -29,6 +29,8 @@ from turbinia import config as turbinia_config
 from turbinia import state_manager
 from turbinia.api.models import workers_status
 from turbinia.api.models import tasks_statistics
+from turbinia.api.models import request_status
+from turbinia.api.cli.turbinia_client.helpers.formatter import TaskMarkdownReport
 
 log = logging.getLogger(__name__)
 
@@ -100,3 +102,26 @@ async def get_task_status(request: Request, task_id: str):
     raise HTTPException(
         status_code=500,
         detail='Error retrieving task information') from exception
+
+
+@router.get('/report/{task_id}')
+async def get_task_report(request: Request, task_id: str):
+  """Retrieves the MarkDown report of a Turbinia task.
+
+  Raises:
+    HTTPException: if another exception is caught.
+  """
+  try:
+    task_data = state_manager.get_state_manager().get_task(task_id=task_id)
+    if not task_data:
+      raise HTTPException(status_code=404, detail='Task not found.')
+    markdownreport = TaskMarkdownReport(
+        request_data=task_data).generate_markdown()
+
+    return PlainTextResponse(content=markdownreport, status_code=200)
+  except (json.JSONDecodeError, TypeError, ValueError, AttributeError,
+          ValidationError) as exception:
+    log.error(f'Error retrieving markdown report: {exception!s}', exc_info=True)
+    raise HTTPException(
+        status_code=500,
+        detail='Error retrieving markdown report') from exception

@@ -667,6 +667,33 @@ paths:
       summary: Get Task Output
       tags:
       - Turbinia Request Results
+  /api/task/report/{task_id}:
+    get:
+      description: "Retrieves the MarkDown report of a Turbinia task.\n\nRaises:\n\
+        \  HTTPException: if another exception is caught."
+      operationId: get_task_report
+      parameters:
+      - in: path
+        name: task_id
+        required: true
+        schema:
+          title: Task Id
+          type: string
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: Get Task Report
+      tags:
+      - Turbinia Tasks
   /api/task/statistics:
     get:
       description: "Retrieves  statistics for Turbinia execution.\n\nArgs:\n  days\
