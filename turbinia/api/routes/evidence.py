@@ -21,7 +21,7 @@ import os
 from datetime import datetime
 from fastapi import HTTPException, APIRouter, UploadFile, Query, Form
 from fastapi.requests import Request
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, FileResponse
 from typing import List, Annotated
 
 from turbinia import evidence
@@ -111,6 +111,27 @@ async def upload_file(
     if calculate_hash:
       file_info['hash'] = sha_hash.hexdigest()
   return file_info
+
+@router.get('/download/{file_path:path}')
+async def download_evidence(request: Request, file_path):
+  """Downloads evidence file path.
+  
+  Args:
+    file_path (str): Path to file.
+  """
+
+  # clean path to prevent path traversals
+  # check if path is below the configured output folder
+  # check if file exists
+  configured_output_path = turbinia_config.OUTPUT_DIR
+  abspath = os.path.abspath(file_path)
+  if configured_output_path != os.path.commonpath((configured_output_path, abspath)) or not os.path.isfile(abspath):
+    raise HTTPException(
+        status_code=404,
+        detail='File path: access denied or file does not exist')
+
+  return FileResponse(file_path)
+
 
 
 @router.get('/types')

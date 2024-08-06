@@ -217,6 +217,35 @@ paths:
         summary: Download Configuration
         tags:
         - Turbinia Configuration
+  /api/evidence/download/{file_path}:
+    get:
+      description: "Download evidence by path.\n\nRaises:\nHTTPException: if another\
+        \ exception is caught."
+      operationId: download_evidence
+      parameters:
+      - in: path
+        name: file_path
+        required: true
+        schema:
+          title: File Path
+          type: string
+      responses:
+        '200':
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: Get Task Report
+      tags:
+      - Turbinia Tasks
   /api/evidence/query:
     get:
       description: "Queries evidence in Redis that have the specified attribute value.\n\
