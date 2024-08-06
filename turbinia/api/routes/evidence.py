@@ -112,6 +112,7 @@ async def upload_file(
       file_info['hash'] = sha_hash.hexdigest()
   return file_info
 
+
 @router.get('/download/{file_path:path}')
 async def download_evidence(request: Request, file_path):
   """Downloads evidence file path.
@@ -125,13 +126,13 @@ async def download_evidence(request: Request, file_path):
   # check if file exists
   configured_output_path = turbinia_config.OUTPUT_DIR
   abspath = os.path.abspath(file_path)
-  if configured_output_path != os.path.commonpath((configured_output_path, abspath)) or not os.path.isfile(abspath):
+  if configured_output_path != os.path.commonpath(
+      (configured_output_path, abspath)) or not os.path.isfile(abspath):
     raise HTTPException(
         status_code=404,
         detail='File path: access denied or file does not exist')
 
   return FileResponse(file_path)
-
 
 
 @router.get('/types')
