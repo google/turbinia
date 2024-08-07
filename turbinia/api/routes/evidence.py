@@ -17,6 +17,7 @@
 import hashlib
 import logging
 import os
+import pathlib
 
 from datetime import datetime
 from fastapi import HTTPException, APIRouter, UploadFile, Query, Form
@@ -123,16 +124,15 @@ async def download_evidence(request: Request, file_path):
 
   # clean path to prevent path traversals
   # check if path is below the configured output folder
-  # check if file exists
-  configured_output_path = turbinia_config.OUTPUT_DIR
-  abspath = os.path.abspath(file_path)
-  if configured_output_path != os.path.commonpath(
-      (configured_output_path, abspath)) or not os.path.isfile(abspath):
-    raise HTTPException(
-        status_code=404,
-        detail='File path: access denied or file does not exist')
+  # check if exists and is file
+  config_output_dir = pathlib.Path(turbinia_config.OUTPUT_DIR)
+  requested_file = pathlib.Path(file_path).resolve()
+  if requested_file.is_relative_to(
+      config_output_dir) and requested_file.is_file():
+    return FileResponse(file_path)
 
-  return FileResponse(file_path)
+  raise HTTPException(
+      status_code=404, detail='Access denied or file not found!')
 
 
 @router.get('/types')
