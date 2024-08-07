@@ -22,7 +22,6 @@ import datetime
 import unittest
 import json
 import os
-import pathlib
 import fakeredis
 import mock
 from urllib.request import pathname2url

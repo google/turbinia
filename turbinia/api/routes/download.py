@@ -37,7 +37,6 @@ async def download_file_path(request: Request, file_path):
   # clean path to prevent path traversals
   # check if path is below the configured output folder
   # check if exists and is file
-  print('start')
   config_output_dir = pathlib.Path(turbinia_config.OUTPUT_DIR)
   requested_file = pathlib.Path(file_path).resolve()
   if requested_file.is_relative_to(
