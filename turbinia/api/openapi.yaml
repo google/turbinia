@@ -217,11 +217,11 @@ paths:
         summary: Download Configuration
         tags:
         - Turbinia Configuration
-  /api/evidence/download/{file_path}:
+  /api/download/{file_path}:
     get:
-      description: "Download evidence by path.\n\nRaises:\nHTTPException: if another\
+      description: "Download by path.\n\nRaises:\nHTTPException: if another\
         \ exception is caught."
-      operationId: download_evidence
+      operationId: download_file_path
       parameters:
       - in: path
         name: file_path

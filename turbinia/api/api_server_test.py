@@ -484,18 +484,18 @@ class testTurbiniaAPIServer(unittest.TestCase):
     result = json.loads(result.content)
     self.assertEqual(expected_result, result)
 
-  def testDownloadEvidenceNotFound(self):
-    """Test downloading non existent evidence file path."""
+  def testDownloadNotFound(self):
+    """Test downloading non existent file path."""
     file_path = pathname2url('/non-existing/path with space/does-not-exist.txt')
-    response = self.client.get(f'/api/evidence/download/{file_path}')
+    response = self.client.get(f'/api/download/output/{file_path}')
     self.assertEqual(response.status_code, 404)
 
-  def testDownloadEvidence(self):
-    """Test downloading evidence file path."""
+  def testDownload(self):
+    """Test downloading file path."""
     turbinia_config.OUTPUT_DIR = str(
         os.path.dirname(os.path.realpath(__file__)))
     file_path = pathname2url(f'{turbinia_config.OUTPUT_DIR}/api_server_test.py')
-    response = self.client.get(f'/api/evidence/download/{file_path}')
+    response = self.client.get(f'/api/download/output/{file_path}')
     self.assertEqual(response.status_code, 200)
 
   @mock.patch('turbinia.api.routes.evidence.redis_manager.get_evidence_data')
