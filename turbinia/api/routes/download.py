@@ -28,8 +28,8 @@ router = APIRouter(prefix='/download', tags=['Turbinia Download'])
 
 
 @router.get('/output/{file_path:path}')
-async def download_file_path(request: Request, file_path):
-  """Downloads evidence file path.
+async def download_output_path(request: Request, file_path):
+  """Downloads output file path.
   
   Args:
     file_path (str): Path to file.

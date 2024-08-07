@@ -221,7 +221,7 @@ paths:
     get:
       description: "Download by path.\n\nRaises:\nHTTPException: if another\
         \ exception is caught."
-      operationId: download_file_path
+      operationId: download_output_path
       parameters:
       - in: path
         name: file_path

@@ -483,14 +483,14 @@ class testTurbiniaAPIServer(unittest.TestCase):
     result = json.loads(result.content)
     self.assertEqual(expected_result, result)
 
-  def testDownloadNotFound(self):
-    """Test downloading non existent file path."""
+  def testDownloadOutputNotFound(self):
+    """Test downloading non existent output file path."""
     file_path = '/non-existing/path with space/does-not-exist.txt'
     response = self.client.get(f'/api/download/output/{file_path}')
     self.assertEqual(response.status_code, 404)
 
-  def testDownload(self):
-    """Test downloading file path."""
+  def testDownloadOutput(self):
+    """Test downloading output file path."""
     turbinia_config.OUTPUT_DIR = str(
         os.path.dirname(os.path.realpath(__file__)))
     file_path = f'{turbinia_config.OUTPUT_DIR}/api_server_test.py'
