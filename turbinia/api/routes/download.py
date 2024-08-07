@@ -26,6 +26,7 @@ from turbinia import config as turbinia_config
 log = logging.getLogger(__name__)
 router = APIRouter(prefix='/download', tags=['Turbinia Download'])
 
+
 @router.get('/output/{file_path:path}')
 async def download_file_path(request: Request, file_path):
   """Downloads evidence file path.
@@ -45,6 +46,3 @@ async def download_file_path(request: Request, file_path):
 
   raise HTTPException(
       status_code=404, detail='Access denied or file not found!')
-
-
-
