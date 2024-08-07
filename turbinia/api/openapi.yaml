@@ -217,7 +217,7 @@ paths:
         summary: Download Configuration
         tags:
         - Turbinia Configuration
-  /api/download/{file_path}:
+  /api/download/output/{file_path}:
     get:
       description: "Download by path.\n\nRaises:\nHTTPException: if another\
         \ exception is caught."

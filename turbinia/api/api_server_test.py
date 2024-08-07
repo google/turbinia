@@ -24,7 +24,6 @@ import json
 import os
 import fakeredis
 import mock
-from urllib.request import pathname2url
 
 from fastapi.testclient import TestClient
 

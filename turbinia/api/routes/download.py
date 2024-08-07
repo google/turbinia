@@ -23,7 +23,7 @@ from fastapi.requests import Request
 
 from turbinia import config as turbinia_config
 
-log = logging.getLogger(__name__)
+#log = logging.getLogger(__name__)
 router = APIRouter(prefix='/download', tags=['Turbinia Download'])
 
 
