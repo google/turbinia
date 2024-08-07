@@ -129,7 +129,7 @@ async def download_evidence(request: Request, file_path):
   requested_file = pathlib.Path(file_path).resolve()
   if requested_file.is_relative_to(
       config_output_dir) and requested_file.is_file():
-    return FileResponse(file_path)
+    return FileResponse(requested_file)
 
   raise HTTPException(
       status_code=404, detail='Access denied or file not found!')

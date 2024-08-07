@@ -22,6 +22,7 @@ import datetime
 import unittest
 import json
 import os
+import pathlib
 import fakeredis
 import mock
 from urllib.request import pathname2url
@@ -491,10 +492,9 @@ class testTurbiniaAPIServer(unittest.TestCase):
 
   def testDownloadEvidence(self):
     """Test downloading evidence file path."""
-    # set OUTPUT_DIR to current folder
-    turbinia_config.OUTPUT_DIR = os.path.dirname(os.path.realpath(__file__)) 
-    # set file_path to filename of current test script
-    file_path = pathname2url(os.path.basename(__file__))
+    turbinia_config.OUTPUT_DIR = str(
+        os.path.dirname(os.path.realpath(__file__)))
+    file_path = pathname2url(f'{turbinia_config.OUTPUT_DIR}/api_server_test.py')
     response = self.client.get(f'/api/evidence/download/{file_path}')
     self.assertEqual(response.status_code, 200)
 
