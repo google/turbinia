@@ -24,6 +24,7 @@ import json
 import os
 import fakeredis
 import mock
+from urllib.request import pathname2url
 
 from fastapi.testclient import TestClient
 
@@ -481,6 +482,21 @@ class testTurbiniaAPIServer(unittest.TestCase):
     result = self.client.get('/api/jobs')
     result = json.loads(result.content)
     self.assertEqual(expected_result, result)
+
+  def testDownloadEvidenceNotFound(self):
+    """Test downloading non existent evidence file path."""
+    file_path = pathname2url('/non-existing/path with space/does-not-exist.txt')
+    response = self.client.get(f'/api/evidence/download/{file_path}')
+    self.assertEqual(response.status_code, 404)
+
+  def testDownloadEvidence(self):
+    """Test downloading evidence file path."""
+    # set OUTPUT_DIR to current folder
+    turbinia_config.OUTPUT_DIR = os.path.dirname(os.path.realpath(__file__)) 
+    # set file_path to filename of current test script
+    file_path = pathname2url(os.path.basename(__file__))
+    response = self.client.get(f'/api/evidence/download/{file_path}')
+    self.assertEqual(response.status_code, 200)
 
   @mock.patch('turbinia.api.routes.evidence.redis_manager.get_evidence_data')
   def testGetEvidence(self, testGetEvidence):
