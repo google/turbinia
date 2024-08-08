@@ -210,7 +210,6 @@ def tail_log(log_path, max_lines=500) -> str:
     return ''
 
   fsize = os.path.getsize(log_path)
-  print(fsize)
   buffsize = 8192
   nlines = 0
   log_lines = []
