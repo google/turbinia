@@ -178,6 +178,9 @@ Try our Turbinia minikube development 101 Codelab [here](turbinia-codelab-analys
 * Remove the Google Cloud Code Extension from VSCode
 
 ### Troubleshooting and Tips
+#### Debugging API Server
+You can enable debugging by uncommenting the API Server `build` and `setValueTemplates` sections in the `skaffold.yaml` file.
+
 #### Google Cloud Code tools not found (minikube, skaffold, kubectl)
 The extension will add the PATH automatically to your config. But if you have a different or custom shell configuration this may fail. Add the path manually to your PATH.
 * Linux: `$HOME/.cache/cloud-code/installer/google-cloud-sdk/bin`
