@@ -651,6 +651,7 @@ class testTurbiniaAPIServer(unittest.TestCase):
     evidence_id = '084d5904f3d2412b99dc29ed34853a16'
     testKeyExists.return_value = True
     testEvidenceData.return_value = self._EVIDENCE_TEST_DATA
+    self._EVIDENCE_TEST_DATA['copyable'] = True
     turbinia_config.OUTPUT_DIR = str(
         os.path.dirname(os.path.realpath(__file__)))
     response = self.client.get(f'/api/evidence/download/{evidence_id}')
@@ -659,6 +660,9 @@ class testTurbiniaAPIServer(unittest.TestCase):
     with open(f'{test_data_dir}/artifact_disk.dd', 'rb') as f:
       expected = f.read()
     self.assertEqual(response.content, expected)
+    self._EVIDENCE_TEST_DATA['copyable'] = False
+    response = self.client.get(f'/api/evidence/download/{evidence_id}')
+    self.assertEqual(response.status_code, 400)
 
   def testGetTurbiniaLogs(self):
     """Test the /logs API endpoint."""
