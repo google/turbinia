@@ -28,19 +28,6 @@ from turbinia import state_manager
 
 log = logging.getLogger(__name__)
 
-ATTACHMENT_RESPONSE = {
-    '200': {
-        'content': {
-            'application/octet-stream': {
-                'schema': {
-                    'type': 'string',
-                    'format': 'binary'
-                }
-            }
-        }
-    }
-}
-
 
 def get_task_objects(task_id: str) -> List[Any]:
   """Returns a list of Turbinia tasks.

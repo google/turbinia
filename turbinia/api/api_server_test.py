@@ -670,6 +670,8 @@ class testTurbiniaAPIServer(unittest.TestCase):
       expected = f.read()
     response = self.client.get(f'/api/logs/{hostname}/20')
     self.assertEqual(response.content, expected)
+    response = self.client.get(f'/api/logs/{hostname}/10')
+    self.assertNotEqual(response.content, expected)
     hostname = 'invalid_hostname'
     response = self.client.get(f'/api/logs/{hostname}/20')
     self.assertEqual(response.status_code, 404)

@@ -266,10 +266,9 @@ async def upload_evidence(
   return JSONResponse(content=evidences, status_code=200)
 
 
-@router.get('/download/{evidence_id}')
+@router.get('/download/{evidence_id}', response_class=FileResponse)
 async def download_by_evidence_id(
-    request: Request, evidence_id,
-    responses=api_utils.ATTACHMENT_RESPONSE) -> FileResponse:
+    request: Request, evidence_id) -> FileResponse:
   """Downloads an evidence file based in its UUID.
 
   Args:
@@ -286,6 +285,8 @@ async def download_by_evidence_id(
   if redis_manager.redis_client.key_exists(evidence_key):
     data: dict = redis_manager.get_evidence_data(evidence_id)
     file_path: str = None
+    if not data['copyable']:
+      raise HTTPException(status_code=400, detail='Evidence is not copyable.')
     if data['source_path']:
       file_path = data['source_path']
     elif data['local_path']:

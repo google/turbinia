@@ -67,7 +67,8 @@ async def get_turbinia_logs(
 
   if 'NODE_NAME' in os.environ:
     log_name = f'{hostname}.{os.environ["NODE_NAME"]!s}'
-  log_name = f'{hostname}.log'
+  else:
+    log_name = f'{hostname}.log'
   log_path = Path(config.LOG_DIR, log_name)
   log_lines = utils.tail_log(log_path, num_lines)
   if log_lines:
