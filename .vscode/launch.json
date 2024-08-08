@@ -8,7 +8,7 @@
             "language": "Python",
             "debugPort": 10000,
             "podSelector": {
-               "app.kubernetes.io/component": "worker"
+                "app.kubernetes.io/component": "worker"
             },
             "localRoot": "${workspaceFolder}",
             "remoteRoot": "/home/turbinia"
@@ -20,7 +20,19 @@
             "language": "Python",
             "debugPort": 20000,
             "podSelector": {
-               "app.kubernetes.io/component": "server"
+                "app.kubernetes.io/component": "server"
+            },
+            "localRoot": "${workspaceFolder}",
+            "remoteRoot": "/home/turbinia"
+        },
+        {
+            "name": "Attach to API Server",
+            "type": "cloudcode.kubernetes",
+            "request": "attach",
+            "language": "Python",
+            "debugPort": 30000,
+            "podSelector": {
+                "app.kubernetes.io/component": "api"
             },
             "localRoot": "${workspaceFolder}",
             "remoteRoot": "/home/turbinia"

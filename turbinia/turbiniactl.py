@@ -196,6 +196,7 @@ def process_args(args):
         jobs_denylist=args.jobs_denylist, jobs_allowlist=args.jobs_allowlist)
     server.start()
   elif args.command == 'api_server':
+    initialize_debugmode_if_requested()
     # pylint: disable=import-outside-toplevel
     from turbinia.api.api_server import TurbiniaAPIServer
     api_server = TurbiniaAPIServer()
