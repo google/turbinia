@@ -97,8 +97,6 @@ def setup(need_file_handler=True, need_stream_handler=True, log_file_path=None):
   for handler in root_log.handlers:
     root_log.removeHandler(handler)
   root_log.addHandler(console_handler)
-  if need_file_handler:
-    root_log.addHandler(file_handler)
 
   # Set up uvicorn loggers
   uvicron_error = logging.getLogger('uvicorn.error')
