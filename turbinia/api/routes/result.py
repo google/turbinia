@@ -27,23 +27,10 @@ log = logging.getLogger(__name__)
 
 router = APIRouter(prefix='/result', tags=['Turbinia Request Results'])
 
-ATTACHMENT_RESPONSE = {
-    '200': {
-        'content': {
-            'application/octet-stream': {
-                'schema': {
-                    'type': 'string',
-                    'format': 'binary'
-                }
-            }
-        }
-    }
-}
-
 
 @router.get(
     '/task/{task_id}', response_class=StreamingResponse,
-    responses=ATTACHMENT_RESPONSE)
+    responses=api_utils.ATTACHMENT_RESPONSE)
 async def get_task_output(request: Request, task_id: str) -> StreamingResponse:
   """Retrieves a task's output files."""
   # Get the request_id for the task. This is needed to find the right path.
@@ -67,7 +54,7 @@ async def get_task_output(request: Request, task_id: str) -> StreamingResponse:
 
 @router.get(
     '/request/{request_id}', response_class=StreamingResponse,
-    responses=ATTACHMENT_RESPONSE)
+    responses=api_utils.ATTACHMENT_RESPONSE)
 async def get_request_output(
     request: Request, request_id: str) -> StreamingResponse:
   """Retrieve request output."""
@@ -89,7 +76,7 @@ async def get_request_output(
 
 @router.get(
     '/plasofile/{task_id}', response_class=FileResponse,
-    responses=ATTACHMENT_RESPONSE)
+    responses=api_utils.ATTACHMENT_RESPONSE)
 async def get_plaso_file(request: Request, task_id: str) -> FileResponse:
   """Retrieves a task's Plaso file."""
   if not task_id:

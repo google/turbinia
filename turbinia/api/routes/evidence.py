@@ -21,13 +21,14 @@ import os
 from datetime import datetime
 from fastapi import HTTPException, APIRouter, UploadFile, Query, Form
 from fastapi.requests import Request
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, FileResponse
 from typing import List, Annotated
 
 from turbinia import evidence
 from turbinia import config as turbinia_config
 from turbinia import state_manager
 from turbinia import TurbiniaException
+from turbinia.api import utils as api_utils
 
 log = logging.getLogger(__name__)
 router = APIRouter(prefix='/evidence', tags=['Turbinia Evidence'])
@@ -263,3 +264,36 @@ async def upload_evidence(
     else:
       evidences.append(file_info)
   return JSONResponse(content=evidences, status_code=200)
+
+
+@router.get('/download/{evidence_id}')
+async def download_by_evidence_id(
+    request: Request, evidence_id,
+    responses=api_utils.ATTACHMENT_RESPONSE) -> FileResponse:
+  """Downloads an evidence file based in its UUID.
+
+  Args:
+    evidence_id (str): The UUID of the evidence.
+  
+  Raises:
+    HTTPException: if the evidence is not found.
+
+  Returns:
+    FileResponse: The evidence file.
+  """
+  evidence_key = redis_manager.redis_client.build_key_name(
+      'evidence', evidence_id)
+  if redis_manager.redis_client.key_exists(evidence_key):
+    data: dict = redis_manager.get_evidence_data(evidence_id)
+    file_path: str = None
+    if data['source_path']:
+      file_path = data['source_path']
+    elif data['local_path']:
+      file_path = data['local_path']
+
+    if file_path and os.path.exists(file_path):
+      filename = os.path.basename(file_path)
+      return FileResponse(file_path, filename=filename)
+  raise HTTPException(
+      status_code=404,
+      detail=f'UUID {evidence_id} not found or it had no associated evidence.')

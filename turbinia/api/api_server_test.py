@@ -14,8 +14,6 @@
 # limitations under the License.
 """Turbinia API server unit tests."""
 
-import importlib
-
 from collections import OrderedDict
 
 import datetime
@@ -639,3 +637,25 @@ class testTurbiniaAPIServer(unittest.TestCase):
       mocked_file.assert_called_with(expected_evidence_2_path, 'wb')
     self.assertEqual(response.status_code, 200)
     self.assertEqual(json.loads(response.content), expected_response)
+
+  def testDownloadEvidenceByIdNotFound(self):
+    """Test downloading non existent evidence by its UUID."""
+    evidence_id = 'invalid_id'
+    response = self.client.get(f'/api/download/output/{evidence_id}')
+    self.assertEqual(response.status_code, 404)
+
+  @mock.patch('turbinia.state_manager.RedisStateManager.get_evidence_data')
+  @mock.patch('turbinia.redis_client.RedisClient.key_exists')
+  def testDownloadEvidenceById(self, testKeyExists, testEvidenceData):
+    """Test downloading evidence by its UUID."""
+    evidence_id = '084d5904f3d2412b99dc29ed34853a16'
+    testKeyExists.return_value = True
+    testEvidenceData.return_value = self._EVIDENCE_TEST_DATA
+    turbinia_config.OUTPUT_DIR = str(
+        os.path.dirname(os.path.realpath(__file__)))
+    response = self.client.get(f'/api/evidence/download/{evidence_id}')
+    filedir = os.path.dirname(os.path.realpath(__file__))
+    test_data_dir = os.path.join(filedir, '..', '..', 'test_data')
+    with open(f'{test_data_dir}/artifact_disk.dd', 'rb') as f:
+      expected = f.read()
+    self.assertEqual(response.content, expected)

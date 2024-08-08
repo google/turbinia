@@ -22,13 +22,16 @@ from fastapi.responses import FileResponse
 from fastapi.requests import Request
 
 from turbinia import config as turbinia_config
+from turbinia.api import utils as api_utils
 
-#log = logging.getLogger(__name__)
+log = logging.getLogger(__name__)
 router = APIRouter(prefix='/download', tags=['Turbinia Download'])
 
 
 @router.get('/output/{file_path:path}')
-async def download_output_path(request: Request, file_path):
+async def download_output_path(
+    request: Request, file_path,
+    response=api_utils.ATTACHMENT_RESPONSE) -> FileResponse:
   """Downloads output file path.
   
   Args:
