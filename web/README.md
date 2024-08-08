@@ -9,7 +9,7 @@ npm install
 ### Compiles and hot-reloads for development
 
 ```text
-npm run serve
+npm run dev
 ```
 
 ### Compiles and minifies for production

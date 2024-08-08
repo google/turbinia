@@ -40,8 +40,11 @@ build:
     #       TURBINIA_DEBUG: 1
     #       TURBINIA_DEBUG_PORT: 30000
     #   sync:
-    #     infer:
-    #     - turbinia/**
+    #     manual:
+    #     - src: turbinia/**
+    #       dest: .
+    #     - src: web/**
+    #       dest: .
 
 deploy:
   statusCheckDeadlineSeconds: 90

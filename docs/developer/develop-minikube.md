@@ -181,6 +181,9 @@ Try our Turbinia minikube development 101 Codelab [here](turbinia-codelab-analys
 #### Debugging API Server
 You can enable debugging by uncommenting the API Server `build` and `setValueTemplates` sections in the `skaffold.yaml` file.
 
+#### Developing and debuggin the WebUI
+The WebUI is developed with Vue and build using node/npm. This means there is no easy way to debug this in the container. We suggest developing with a local running WebUI using `npm run dev` in the `web/` folder. This will spinup a development web server for the WebUI that will talk to the API server managed by skaffold.
+
 #### Google Cloud Code tools not found (minikube, skaffold, kubectl)
 The extension will add the PATH automatically to your config. But if you have a different or custom shell configuration this may fail. Add the path manually to your PATH.
 * Linux: `$HOME/.cache/cloud-code/installer/google-cloud-sdk/bin`
