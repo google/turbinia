@@ -531,6 +531,7 @@ paths:
         required: false
         schema:
           default: 500
+          exclusiveMinimum: 0.0
           title: Num Lines
           type: integer
       responses:
@@ -558,6 +559,7 @@ paths:
         required: false
         schema:
           default: 500
+          exclusiveMinimum: 0.0
           title: Num Lines
           type: integer
       responses:
@@ -601,6 +603,7 @@ paths:
         required: false
         schema:
           default: 500
+          exclusiveMinimum: 0.0
           title: Num Lines
           type: integer
       responses:
