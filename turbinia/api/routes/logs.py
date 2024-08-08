@@ -19,7 +19,7 @@ import os
 
 from pathlib import Path
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Query
 from fastapi.responses import JSONResponse, PlainTextResponse
 from fastapi.requests import Request
 from turbinia import config
@@ -32,7 +32,8 @@ router = APIRouter(prefix='/logs', tags=['Turbinia Logs'])
 
 @router.get('/server')
 async def get_server_logs(
-    request: Request, num_lines: int | None = 500) -> PlainTextResponse:
+    request: Request, num_lines: int | None = Query(default=500, gt=0)
+) -> PlainTextResponse:
   """Retrieve log data."""
   return JSONResponse(
       content={'detail': 'Not implemented yet.'}, status_code=200)
@@ -40,7 +41,8 @@ async def get_server_logs(
 
 @router.get('/api_server')
 async def get_api_server_logs(
-    request: Request, num_lines: int | None = 500) -> PlainTextResponse:
+    request: Request, num_lines: int | None = Query(default=500, gt=0)
+) -> PlainTextResponse:
   """Retrieve log data."""
   hostname = os.uname().nodename
   log_name = f'{hostname}.log'
@@ -54,8 +56,9 @@ async def get_api_server_logs(
 
 @router.get('/{hostname}')
 async def get_turbinia_logs(
-    request: Request, hostname: str,
-    num_lines: int | None = 500) -> PlainTextResponse:
+    request: Request, hostname: str, num_lines: int | None = Query(
+        default=500, gt=0)
+) -> PlainTextResponse:
   """Retrieve log data.
   
   Turbinia currently stores logs on plaintext files. The log files are named

@@ -672,10 +672,10 @@ class testTurbiniaAPIServer(unittest.TestCase):
     turbinia_config.LOG_DIR = test_data_dir
     with open(f'{test_data_dir}/turbinia_logs.log', 'rb') as f:
       expected = f.read()
-    response = self.client.get(f'/api/logs/{hostname}/10')
+    response = self.client.get(f'/api/logs/{hostname}?num_lines=10')
     self.assertEqual(response.content, expected)
-    response = self.client.get(f'/api/logs/{hostname}/5')
+    response = self.client.get(f'/api/logs/{hostname}?num_lines=5')
     self.assertNotEqual(response.content, expected)
     hostname = 'invalid_hostname'
-    response = self.client.get(f'/api/logs/{hostname}/10')
+    response = self.client.get(f'/api/logs/{hostname}?num_lines=10')
     self.assertEqual(response.status_code, 404)
