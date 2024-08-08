@@ -40,9 +40,12 @@ def setup(need_file_handler=True, need_stream_handler=True, log_file_path=None):
       'ignore', 'Your application has authenticated using end user credentials')
 
   logger = logging.getLogger('turbinia')
+  uvicorn_error = logging.getLogger('uvicorn.error')
+  uvicorn_access = logging.getLogger('uvicorn.access')
   # Eliminate double logging from root logger
   logger.propagate = False
-
+  uvicorn_error.propagate = False
+  uvicorn_access.propagate = False
   # We only need a handler if one of that type doesn't exist already
   if logger.handlers:
     for handler in logger.handlers:
@@ -82,6 +85,8 @@ def setup(need_file_handler=True, need_stream_handler=True, log_file_path=None):
     file_handler.setFormatter(formatter)
     file_handler.setLevel(logging.DEBUG)
     logger.addHandler(file_handler)
+    uvicorn_error.addHandler(file_handler)
+    uvicorn_access.addHandler(file_handler)
 
   console_handler = logging.StreamHandler(sys.stdout)
   formatter = logging.Formatter(
@@ -89,7 +94,8 @@ def setup(need_file_handler=True, need_stream_handler=True, log_file_path=None):
   console_handler.setFormatter(formatter)
   if need_stream_handler:
     logger.addHandler(console_handler)
-
+    uvicorn_error.addHandler(console_handler)
+    uvicorn_access.addHandler(console_handler)
   # Configure the root logger to use exactly our handlers because other modules
   # like PSQ use this, and we want to see log messages from it when executing
   # from CLI.
@@ -98,13 +104,8 @@ def setup(need_file_handler=True, need_stream_handler=True, log_file_path=None):
     root_log.removeHandler(handler)
   root_log.addHandler(console_handler)
 
-  # Set up uvicorn loggers
-  uvicron_error = logging.getLogger('uvicorn.error')
-  uvicorn_access = logging.getLogger('uvicorn.access')
-  for handler in logger.handlers:
-    if isinstance(handler, logging.FileHandler):
-      uvicron_error.addHandler(handler)
-      uvicorn_access.addHandler(handler)
+  if need_file_handler:
+    root_log.addHandler(file_handler)
 
   # Set filelock logging to ERROR due to log spam
   logging.getLogger('filelock').setLevel(logging.ERROR)
