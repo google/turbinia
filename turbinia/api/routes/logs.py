@@ -20,7 +20,7 @@ import os
 from pathlib import Path
 
 from fastapi import APIRouter
-from fastapi.responses import JSONResponse, PlainTextResponse, StreamingResponse
+from fastapi.responses import JSONResponse, PlainTextResponse
 from fastapi.requests import Request
 from turbinia import config
 from turbinia.api import utils
@@ -31,14 +31,15 @@ router = APIRouter(prefix='/logs', tags=['Turbinia Logs'])
 
 
 @router.get('/server')
-async def get_server_logs(request: Request, lines=500):
+async def get_server_logs(request: Request, lines=500) -> PlainTextResponse:
   """Retrieve log data."""
   return JSONResponse(
       content={'detail': 'Not implemented yet.'}, status_code=200)
 
 
 @router.get('/api_server/{num_lines}')
-async def get_api_server_logs(request: Request, num_lines: int = 500):
+async def get_api_server_logs(
+    request: Request, num_lines: int = 500) -> PlainTextResponse:
   """Retrieve log data."""
   hostname = os.uname().nodename
   log_name = f'{hostname}.log'
