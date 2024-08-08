@@ -31,15 +31,16 @@ router = APIRouter(prefix='/logs', tags=['Turbinia Logs'])
 
 
 @router.get('/server')
-async def get_server_logs(request: Request, lines=500) -> PlainTextResponse:
+async def get_server_logs(
+    request: Request, num_lines: int | None = 500) -> PlainTextResponse:
   """Retrieve log data."""
   return JSONResponse(
       content={'detail': 'Not implemented yet.'}, status_code=200)
 
 
-@router.get('/api_server/{num_lines}')
+@router.get('/api_server')
 async def get_api_server_logs(
-    request: Request, num_lines: int = 500) -> PlainTextResponse:
+    request: Request, num_lines: int | None = 500) -> PlainTextResponse:
   """Retrieve log data."""
   hostname = os.uname().nodename
   log_name = f'{hostname}.log'
@@ -51,9 +52,10 @@ async def get_api_server_logs(
       content={'detail': f'No logs found for {hostname}'}, status_code=404)
 
 
-@router.get('/{hostname}/{num_lines}')
+@router.get('/{hostname}')
 async def get_turbinia_logs(
-    request: Request, hostname: str, num_lines: int = 500) -> PlainTextResponse:
+    request: Request, hostname: str,
+    num_lines: int | None = 500) -> PlainTextResponse:
   """Retrieve log data.
   
   Turbinia currently stores logs on plaintext files. The log files are named

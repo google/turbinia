@@ -521,15 +521,16 @@ paths:
       summary: Read Jobs
       tags:
       - Turbinia Jobs
-  /api/logs/api_server/{num_lines}:
+  /api/logs/api_server:
     get:
       description: Retrieve log data.
       operationId: get_api_server_logs
       parameters:
-      - in: path
+      - in: query
         name: num_lines
-        required: true
+        required: false
         schema:
+          default: 500
           title: Num Lines
           type: integer
       responses:
@@ -547,7 +548,34 @@ paths:
       summary: Get Api Server Logs
       tags:
       - Turbinia Logs
-  /api/logs/{hostname}/{num_lines}:
+  /api/logs/server:
+    get:
+      description: Retrieve log data.
+      operationId: get_server_logs
+      parameters:
+      - in: query
+        name: num_lines
+        required: false
+        schema:
+          default: 500
+          title: Num Lines
+          type: integer
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: Get Server Logs
+      tags:
+      - Turbinia Logs
+  /api/logs/{hostname}:
     get:
       description: 'Retrieve log data.
 
@@ -568,10 +596,11 @@ paths:
         schema:
           title: Hostname
           type: string
-      - in: path
+      - in: query
         name: num_lines
-        required: true
+        required: false
         schema:
+          default: 500
           title: Num Lines
           type: integer
       responses:
@@ -587,32 +616,6 @@ paths:
                 $ref: '#/components/schemas/HTTPValidationError'
           description: Validation Error
       summary: Get Turbinia Logs
-      tags:
-      - Turbinia Logs
-  /api/logs/server:
-    get:
-      description: Retrieve log data.
-      operationId: get_server_logs
-      parameters:
-      - in: query
-        name: lines
-        required: false
-        schema:
-          default: 500
-          title: Lines
-      responses:
-        '200':
-          content:
-            application/json:
-              schema: {}
-          description: Successful Response
-        '422':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/HTTPValidationError'
-          description: Validation Error
-      summary: Get Server Logs
       tags:
       - Turbinia Logs
   /api/request/:
