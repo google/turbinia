@@ -659,3 +659,17 @@ class testTurbiniaAPIServer(unittest.TestCase):
     with open(f'{test_data_dir}/artifact_disk.dd', 'rb') as f:
       expected = f.read()
     self.assertEqual(response.content, expected)
+
+  def testGetTurbiniaLogs(self):
+    """Test the /logs API endpoint."""
+    hostname = 'turbinia_logs'
+    filedir = os.path.dirname(os.path.realpath(__file__))
+    test_data_dir = os.path.join(filedir, '..', '..', 'test_data')
+    turbinia_config.LOG_DIR = test_data_dir
+    with open(f'{test_data_dir}/turbinia_logs.log', 'rb') as f:
+      expected = f.read()
+    response = self.client.get(f'/api/logs/{hostname}/20')
+    self.assertEqual(response.content, expected)
+    hostname = 'invalid_hostname'
+    response = self.client.get(f'/api/logs/{hostname}/20')
+    self.assertEqual(response.status_code, 404)

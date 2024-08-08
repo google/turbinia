@@ -50,7 +50,7 @@ async def get_api_server_logs(request: Request, num_lines: int = 500):
       content={'detail': f'No logs found for {hostname}'}, status_code=404)
 
 
-@router.get('/logs/{hostname}/{num_lines}')
+@router.get('/{hostname}/{num_lines}')
 async def get_turbinia_logs(
     request: Request, hostname: str, num_lines: int = 500) -> PlainTextResponse:
   """Retrieve log data.
@@ -69,7 +69,7 @@ async def get_turbinia_logs(
   log_name = f'{hostname}.log'
   log_path = Path(config.LOG_DIR, log_name)
   log_lines = utils.tail_log(log_path, num_lines)
-  if log_path:
+  if log_lines:
     return PlainTextResponse(log_lines)
   return JSONResponse(
       content={'detail': f'No logs found for {hostname}'}, status_code=404)

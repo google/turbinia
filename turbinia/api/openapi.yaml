@@ -547,7 +547,7 @@ paths:
       summary: Get Api Server Logs
       tags:
       - Turbinia Logs
-  /api/logs/logs/{hostname}/{num_lines}:
+  /api/logs/{hostname}/{num_lines}:
     get:
       description: 'Retrieve log data.
 
