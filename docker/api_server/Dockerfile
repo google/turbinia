@@ -46,6 +46,12 @@ RUN chmod +rwx /home/turbinia/start.sh
 # Install Turbinia package -- will skip dependencies if installed
 RUN poetry install --no-interaction --no-ansi
 
+# Create debug and env variables
+ARG TURBINIA_DEBUG
+ARG TURBINIA_DEBUG_PORT
+ENV TURBINIA_DEBUG ${TURBINIA_DEBUG:-0}
+ENV TURBINIA_DEBUG_PORT ${TURBINIA_DEBUG_PORT:-30000}
+
 CMD ["/home/turbinia/start.sh"]
 # Expose Prometheus and API endpoints.
 EXPOSE 9200/tcp
