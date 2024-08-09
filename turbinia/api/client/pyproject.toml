@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "turbinia-api-lib"
-version = "1.0.5"
+version = "1.0.6"
 description = "Turbinia API Server"
 authors = ["OpenAPI Generator Community <team@openapitools.org>"]
 license = "Apache License 2.0"
