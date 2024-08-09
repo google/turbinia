@@ -18,9 +18,9 @@ import warnings
 
 from pydantic import validate_arguments, ValidationError
 
-from pydantic import StrictStr
+from pydantic import StrictInt, StrictStr
 
-from typing import Any
+from typing import Optional
 
 
 from turbinia_api_lib.api_client import ApiClient
@@ -44,18 +44,18 @@ class TurbiniaLogsApi:
         self.api_client = api_client
 
     @validate_arguments
-    def get_logs(self, query : StrictStr, **kwargs) -> object:  # noqa: E501
-        """Get Logs  # noqa: E501
+    def get_api_server_logs(self, num_lines : Optional[StrictInt] = None, **kwargs) -> str:  # noqa: E501
+        """Get Api Server Logs  # noqa: E501
 
         Retrieve log data.  # noqa: E501
         This method makes a synchronous HTTP request by default. To make an
         asynchronous HTTP request, please pass async_req=True
 
-        >>> thread = api.get_logs(query, async_req=True)
+        >>> thread = api.get_api_server_logs(num_lines, async_req=True)
         >>> result = thread.get()
 
-        :param query: (required)
-        :type query: str
+        :param num_lines:
+        :type num_lines: int
         :param async_req: Whether to execute the request asynchronously.
         :type async_req: bool, optional
         :param _request_timeout: timeout setting for this request.
@@ -65,27 +65,27 @@ class TurbiniaLogsApi:
         :return: Returns the result object.
                  If the method is called asynchronously,
                  returns the request thread.
-        :rtype: object
+        :rtype: str
         """
         kwargs['_return_http_data_only'] = True
         if '_preload_content' in kwargs:
-            message = "Error! Please call the get_logs_with_http_info method with `_preload_content` instead and obtain raw data from ApiResponse.raw_data"  # noqa: E501
+            message = "Error! Please call the get_api_server_logs_with_http_info method with `_preload_content` instead and obtain raw data from ApiResponse.raw_data"  # noqa: E501
             raise ValueError(message)
-        return self.get_logs_with_http_info(query, **kwargs)  # noqa: E501
+        return self.get_api_server_logs_with_http_info(num_lines, **kwargs)  # noqa: E501
 
     @validate_arguments
-    def get_logs_with_http_info(self, query : StrictStr, **kwargs) -> ApiResponse:  # noqa: E501
-        """Get Logs  # noqa: E501
+    def get_api_server_logs_with_http_info(self, num_lines : Optional[StrictInt] = None, **kwargs) -> ApiResponse:  # noqa: E501
+        """Get Api Server Logs  # noqa: E501
 
         Retrieve log data.  # noqa: E501
         This method makes a synchronous HTTP request by default. To make an
         asynchronous HTTP request, please pass async_req=True
 
-        >>> thread = api.get_logs_with_http_info(query, async_req=True)
+        >>> thread = api.get_api_server_logs_with_http_info(num_lines, async_req=True)
         >>> result = thread.get()
 
-        :param query: (required)
-        :type query: str
+        :param num_lines:
+        :type num_lines: int
         :param async_req: Whether to execute the request asynchronously.
         :type async_req: bool, optional
         :param _preload_content: if False, the ApiResponse.data will
@@ -108,13 +108,13 @@ class TurbiniaLogsApi:
         :return: Returns the result object.
                  If the method is called asynchronously,
                  returns the request thread.
-        :rtype: tuple(object, status_code(int), headers(HTTPHeaderDict))
+        :rtype: tuple(str, status_code(int), headers(HTTPHeaderDict))
         """
 
         _params = locals()
 
         _all_params = [
-            'query'
+            'num_lines'
         ]
         _all_params.extend(
             [
@@ -133,7 +133,7 @@ class TurbiniaLogsApi:
             if _key not in _all_params:
                 raise ApiTypeError(
                     "Got an unexpected keyword argument '%s'"
-                    " to method get_logs" % _key
+                    " to method get_api_server_logs" % _key
                 )
             _params[_key] = _val
         del _params['kwargs']
@@ -142,12 +142,12 @@ class TurbiniaLogsApi:
 
         # process the path parameters
         _path_params = {}
-        if _params['query'] is not None:
-            _path_params['query'] = _params['query']
-
 
         # process the query parameters
         _query_params = []
+        if _params.get('num_lines') is not None:  # noqa: E501
+            _query_params.append(('num_lines', _params['num_lines']))
+
         # process the header parameters
         _header_params = dict(_params.get('_headers', {}))
         # process the form parameters
@@ -157,18 +157,308 @@ class TurbiniaLogsApi:
         _body_params = None
         # set the HTTP header `Accept`
         _header_params['Accept'] = self.api_client.select_header_accept(
-            ['application/json'])  # noqa: E501
+            ['application/text', 'application/json'])  # noqa: E501
 
         # authentication setting
         _auth_settings = ['oAuth2']  # noqa: E501
 
         _response_types_map = {
-            '200': "object",
+            '200': "str",
             '422': "HTTPValidationError",
         }
 
         return self.api_client.call_api(
-            '/api/logs/{query}', 'GET',
+            '/api/logs/api_server', 'GET',
+            _path_params,
+            _query_params,
+            _header_params,
+            body=_body_params,
+            post_params=_form_params,
+            files=_files,
+            response_types_map=_response_types_map,
+            auth_settings=_auth_settings,
+            async_req=_params.get('async_req'),
+            _return_http_data_only=_params.get('_return_http_data_only'),  # noqa: E501
+            _preload_content=_params.get('_preload_content', True),
+            _request_timeout=_params.get('_request_timeout'),
+            collection_formats=_collection_formats,
+            _request_auth=_params.get('_request_auth'))
+
+    @validate_arguments
+    def get_server_logs(self, num_lines : Optional[StrictInt] = None, **kwargs) -> str:  # noqa: E501
+        """Get Server Logs  # noqa: E501
+
+        Retrieve log data.  # noqa: E501
+        This method makes a synchronous HTTP request by default. To make an
+        asynchronous HTTP request, please pass async_req=True
+
+        >>> thread = api.get_server_logs(num_lines, async_req=True)
+        >>> result = thread.get()
+
+        :param num_lines:
+        :type num_lines: int
+        :param async_req: Whether to execute the request asynchronously.
+        :type async_req: bool, optional
+        :param _request_timeout: timeout setting for this request.
+               If one number provided, it will be total request
+               timeout. It can also be a pair (tuple) of
+               (connection, read) timeouts.
+        :return: Returns the result object.
+                 If the method is called asynchronously,
+                 returns the request thread.
+        :rtype: str
+        """
+        kwargs['_return_http_data_only'] = True
+        if '_preload_content' in kwargs:
+            message = "Error! Please call the get_server_logs_with_http_info method with `_preload_content` instead and obtain raw data from ApiResponse.raw_data"  # noqa: E501
+            raise ValueError(message)
+        return self.get_server_logs_with_http_info(num_lines, **kwargs)  # noqa: E501
+
+    @validate_arguments
+    def get_server_logs_with_http_info(self, num_lines : Optional[StrictInt] = None, **kwargs) -> ApiResponse:  # noqa: E501
+        """Get Server Logs  # noqa: E501
+
+        Retrieve log data.  # noqa: E501
+        This method makes a synchronous HTTP request by default. To make an
+        asynchronous HTTP request, please pass async_req=True
+
+        >>> thread = api.get_server_logs_with_http_info(num_lines, async_req=True)
+        >>> result = thread.get()
+
+        :param num_lines:
+        :type num_lines: int
+        :param async_req: Whether to execute the request asynchronously.
+        :type async_req: bool, optional
+        :param _preload_content: if False, the ApiResponse.data will
+                                 be set to none and raw_data will store the
+                                 HTTP response body without reading/decoding.
+                                 Default is True.
+        :type _preload_content: bool, optional
+        :param _return_http_data_only: response data instead of ApiResponse
+                                       object with status code, headers, etc
+        :type _return_http_data_only: bool, optional
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the authentication
+                              in the spec for a single request.
+        :type _request_auth: dict, optional
+        :type _content_type: string, optional: force content-type for the request
+        :return: Returns the result object.
+                 If the method is called asynchronously,
+                 returns the request thread.
+        :rtype: tuple(str, status_code(int), headers(HTTPHeaderDict))
+        """
+
+        _params = locals()
+
+        _all_params = [
+            'num_lines'
+        ]
+        _all_params.extend(
+            [
+                'async_req',
+                '_return_http_data_only',
+                '_preload_content',
+                '_request_timeout',
+                '_request_auth',
+                '_content_type',
+                '_headers'
+            ]
+        )
+
+        # validate the arguments
+        for _key, _val in _params['kwargs'].items():
+            if _key not in _all_params:
+                raise ApiTypeError(
+                    "Got an unexpected keyword argument '%s'"
+                    " to method get_server_logs" % _key
+                )
+            _params[_key] = _val
+        del _params['kwargs']
+
+        _collection_formats = {}
+
+        # process the path parameters
+        _path_params = {}
+
+        # process the query parameters
+        _query_params = []
+        if _params.get('num_lines') is not None:  # noqa: E501
+            _query_params.append(('num_lines', _params['num_lines']))
+
+        # process the header parameters
+        _header_params = dict(_params.get('_headers', {}))
+        # process the form parameters
+        _form_params = []
+        _files = {}
+        # process the body parameter
+        _body_params = None
+        # set the HTTP header `Accept`
+        _header_params['Accept'] = self.api_client.select_header_accept(
+            ['application/text', 'application/json'])  # noqa: E501
+
+        # authentication setting
+        _auth_settings = ['oAuth2']  # noqa: E501
+
+        _response_types_map = {
+            '200': "str",
+            '422': "HTTPValidationError",
+        }
+
+        return self.api_client.call_api(
+            '/api/logs/server', 'GET',
+            _path_params,
+            _query_params,
+            _header_params,
+            body=_body_params,
+            post_params=_form_params,
+            files=_files,
+            response_types_map=_response_types_map,
+            auth_settings=_auth_settings,
+            async_req=_params.get('async_req'),
+            _return_http_data_only=_params.get('_return_http_data_only'),  # noqa: E501
+            _preload_content=_params.get('_preload_content', True),
+            _request_timeout=_params.get('_request_timeout'),
+            collection_formats=_collection_formats,
+            _request_auth=_params.get('_request_auth'))
+
+    @validate_arguments
+    def get_turbinia_logs(self, hostname : StrictStr, num_lines : Optional[StrictInt] = None, **kwargs) -> str:  # noqa: E501
+        """Get Turbinia Logs  # noqa: E501
+
+        Retrieve log data.  Turbinia currently stores logs on plaintext files. The log files are named <hostname>.log for each instance of a worker, server or API server.  In some deployments, the same file can contain all logs (e.g. running all services locally in the same container).  # noqa: E501
+        This method makes a synchronous HTTP request by default. To make an
+        asynchronous HTTP request, please pass async_req=True
+
+        >>> thread = api.get_turbinia_logs(hostname, num_lines, async_req=True)
+        >>> result = thread.get()
+
+        :param hostname: (required)
+        :type hostname: str
+        :param num_lines:
+        :type num_lines: int
+        :param async_req: Whether to execute the request asynchronously.
+        :type async_req: bool, optional
+        :param _request_timeout: timeout setting for this request.
+               If one number provided, it will be total request
+               timeout. It can also be a pair (tuple) of
+               (connection, read) timeouts.
+        :return: Returns the result object.
+                 If the method is called asynchronously,
+                 returns the request thread.
+        :rtype: str
+        """
+        kwargs['_return_http_data_only'] = True
+        if '_preload_content' in kwargs:
+            message = "Error! Please call the get_turbinia_logs_with_http_info method with `_preload_content` instead and obtain raw data from ApiResponse.raw_data"  # noqa: E501
+            raise ValueError(message)
+        return self.get_turbinia_logs_with_http_info(hostname, num_lines, **kwargs)  # noqa: E501
+
+    @validate_arguments
+    def get_turbinia_logs_with_http_info(self, hostname : StrictStr, num_lines : Optional[StrictInt] = None, **kwargs) -> ApiResponse:  # noqa: E501
+        """Get Turbinia Logs  # noqa: E501
+
+        Retrieve log data.  Turbinia currently stores logs on plaintext files. The log files are named <hostname>.log for each instance of a worker, server or API server.  In some deployments, the same file can contain all logs (e.g. running all services locally in the same container).  # noqa: E501
+        This method makes a synchronous HTTP request by default. To make an
+        asynchronous HTTP request, please pass async_req=True
+
+        >>> thread = api.get_turbinia_logs_with_http_info(hostname, num_lines, async_req=True)
+        >>> result = thread.get()
+
+        :param hostname: (required)
+        :type hostname: str
+        :param num_lines:
+        :type num_lines: int
+        :param async_req: Whether to execute the request asynchronously.
+        :type async_req: bool, optional
+        :param _preload_content: if False, the ApiResponse.data will
+                                 be set to none and raw_data will store the
+                                 HTTP response body without reading/decoding.
+                                 Default is True.
+        :type _preload_content: bool, optional
+        :param _return_http_data_only: response data instead of ApiResponse
+                                       object with status code, headers, etc
+        :type _return_http_data_only: bool, optional
+        :param _request_timeout: timeout setting for this request. If one
+                                 number provided, it will be total request
+                                 timeout. It can also be a pair (tuple) of
+                                 (connection, read) timeouts.
+        :param _request_auth: set to override the auth_settings for an a single
+                              request; this effectively ignores the authentication
+                              in the spec for a single request.
+        :type _request_auth: dict, optional
+        :type _content_type: string, optional: force content-type for the request
+        :return: Returns the result object.
+                 If the method is called asynchronously,
+                 returns the request thread.
+        :rtype: tuple(str, status_code(int), headers(HTTPHeaderDict))
+        """
+
+        _params = locals()
+
+        _all_params = [
+            'hostname',
+            'num_lines'
+        ]
+        _all_params.extend(
+            [
+                'async_req',
+                '_return_http_data_only',
+                '_preload_content',
+                '_request_timeout',
+                '_request_auth',
+                '_content_type',
+                '_headers'
+            ]
+        )
+
+        # validate the arguments
+        for _key, _val in _params['kwargs'].items():
+            if _key not in _all_params:
+                raise ApiTypeError(
+                    "Got an unexpected keyword argument '%s'"
+                    " to method get_turbinia_logs" % _key
+                )
+            _params[_key] = _val
+        del _params['kwargs']
+
+        _collection_formats = {}
+
+        # process the path parameters
+        _path_params = {}
+        if _params['hostname'] is not None:
+            _path_params['hostname'] = _params['hostname']
+
+
+        # process the query parameters
+        _query_params = []
+        if _params.get('num_lines') is not None:  # noqa: E501
+            _query_params.append(('num_lines', _params['num_lines']))
+
+        # process the header parameters
+        _header_params = dict(_params.get('_headers', {}))
+        # process the form parameters
+        _form_params = []
+        _files = {}
+        # process the body parameter
+        _body_params = None
+        # set the HTTP header `Accept`
+        _header_params['Accept'] = self.api_client.select_header_accept(
+            ['application/text', 'application/json'])  # noqa: E501
+
+        # authentication setting
+        _auth_settings = ['oAuth2']  # noqa: E501
+
+        _response_types_map = {
+            '200': "str",
+            '422': "HTTPValidationError",
+        }
+
+        return self.api_client.call_api(
+            '/api/logs/{hostname}', 'GET',
             _path_params,
             _query_params,
             _header_params,

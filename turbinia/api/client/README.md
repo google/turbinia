@@ -95,6 +95,7 @@ Class | Method | HTTP request | Description
 *TurbiniaConfigurationApi* | [**get_request_options**](docs/TurbiniaConfigurationApi.md#get_request_options) | **GET** /api/config/request_options | Get Request Options
 *TurbiniaConfigurationApi* | [**get_version**](docs/TurbiniaConfigurationApi.md#get_version) | **GET** /api/config/version | Get Version
 *TurbiniaConfigurationApi* | [**read_config**](docs/TurbiniaConfigurationApi.md#read_config) | **GET** /api/config/ | Read Config
+*TurbiniaEvidenceApi* | [**download_by_evidence_id**](docs/TurbiniaEvidenceApi.md#download_by_evidence_id) | **GET** /api/evidence/download/{evidence_id} | Download By Evidence Id
 *TurbiniaEvidenceApi* | [**get_evidence_attributes**](docs/TurbiniaEvidenceApi.md#get_evidence_attributes) | **GET** /api/evidence/types/{evidence_type} | Get Evidence Attributes
 *TurbiniaEvidenceApi* | [**get_evidence_by_id**](docs/TurbiniaEvidenceApi.md#get_evidence_by_id) | **GET** /api/evidence/{evidence_id} | Get Evidence By Id
 *TurbiniaEvidenceApi* | [**get_evidence_summary**](docs/TurbiniaEvidenceApi.md#get_evidence_summary) | **GET** /api/evidence/summary | Get Evidence Summary
@@ -102,7 +103,9 @@ Class | Method | HTTP request | Description
 *TurbiniaEvidenceApi* | [**query_evidence**](docs/TurbiniaEvidenceApi.md#query_evidence) | **GET** /api/evidence/query | Query Evidence
 *TurbiniaEvidenceApi* | [**upload_evidence**](docs/TurbiniaEvidenceApi.md#upload_evidence) | **POST** /api/evidence/upload | Upload Evidence
 *TurbiniaJobsApi* | [**read_jobs**](docs/TurbiniaJobsApi.md#read_jobs) | **GET** /api/jobs/ | Read Jobs
-*TurbiniaLogsApi* | [**get_logs**](docs/TurbiniaLogsApi.md#get_logs) | **GET** /api/logs/{query} | Get Logs
+*TurbiniaLogsApi* | [**get_api_server_logs**](docs/TurbiniaLogsApi.md#get_api_server_logs) | **GET** /api/logs/api_server | Get Api Server Logs
+*TurbiniaLogsApi* | [**get_server_logs**](docs/TurbiniaLogsApi.md#get_server_logs) | **GET** /api/logs/server | Get Server Logs
+*TurbiniaLogsApi* | [**get_turbinia_logs**](docs/TurbiniaLogsApi.md#get_turbinia_logs) | **GET** /api/logs/{hostname} | Get Turbinia Logs
 *TurbiniaRequestResultsApi* | [**get_plaso_file**](docs/TurbiniaRequestResultsApi.md#get_plaso_file) | **GET** /api/result/plasofile/{task_id} | Get Plaso File
 *TurbiniaRequestResultsApi* | [**get_request_output**](docs/TurbiniaRequestResultsApi.md#get_request_output) | **GET** /api/result/request/{request_id} | Get Request Output
 *TurbiniaRequestResultsApi* | [**get_task_output**](docs/TurbiniaRequestResultsApi.md#get_task_output) | **GET** /api/result/task/{task_id} | Get Task Output
@@ -110,6 +113,7 @@ Class | Method | HTTP request | Description
 *TurbiniaRequestsApi* | [**get_request_report**](docs/TurbiniaRequestsApi.md#get_request_report) | **GET** /api/request/report/{request_id} | Get Request Markdown Report
 *TurbiniaRequestsApi* | [**get_request_status**](docs/TurbiniaRequestsApi.md#get_request_status) | **GET** /api/request/{request_id} | Get Request Status
 *TurbiniaRequestsApi* | [**get_requests_summary**](docs/TurbiniaRequestsApi.md#get_requests_summary) | **GET** /api/request/summary | Get Requests Summary
+*TurbiniaTasksApi* | [**download_output_path**](docs/TurbiniaTasksApi.md#download_output_path) | **GET** /api/download/output/{file_path} | Get Task Report
 *TurbiniaTasksApi* | [**get_task_report**](docs/TurbiniaTasksApi.md#get_task_report) | **GET** /api/task/report/{task_id} | Get Task Report
 *TurbiniaTasksApi* | [**get_task_statistics**](docs/TurbiniaTasksApi.md#get_task_statistics) | **GET** /api/task/statistics | Get Task Statistics
 *TurbiniaTasksApi* | [**get_task_status**](docs/TurbiniaTasksApi.md#get_task_status) | **GET** /api/task/{task_id} | Get Task Status

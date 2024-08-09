@@ -4,11 +4,86 @@ All URIs are relative to *http://localhost*
 
 Method | HTTP request | Description
 ------------- | ------------- | -------------
+[**download_output_path**](TurbiniaTasksApi.md#download_output_path) | **GET** /api/download/output/{file_path} | Get Task Report
 [**get_task_report**](TurbiniaTasksApi.md#get_task_report) | **GET** /api/task/report/{task_id} | Get Task Report
 [**get_task_statistics**](TurbiniaTasksApi.md#get_task_statistics) | **GET** /api/task/statistics | Get Task Statistics
 [**get_task_status**](TurbiniaTasksApi.md#get_task_status) | **GET** /api/task/{task_id} | Get Task Status
 [**get_workers_status**](TurbiniaTasksApi.md#get_workers_status) | **GET** /api/task/workers | Get Workers Status
 
+
+# **download_output_path**
+> bytearray download_output_path(file_path)
+
+Get Task Report
+
+Download by path.  Raises: HTTPException: if another exception is caught.
+
+### Example
+
+* OAuth Authentication (oAuth2):
+```python
+import time
+import os
+import turbinia_api_lib
+from turbinia_api_lib.rest import ApiException
+from pprint import pprint
+
+# Defining the host is optional and defaults to http://localhost
+# See configuration.py for a list of all supported configuration parameters.
+configuration = turbinia_api_lib.Configuration(
+    host = "http://localhost"
+)
+
+# The client must configure the authentication and authorization parameters
+# in accordance with the API server security policy.
+# Examples for each auth method are provided below, use the example that
+# satisfies your auth use case.
+
+configuration.access_token = os.environ["ACCESS_TOKEN"]
+
+# Enter a context with an instance of the API client
+with turbinia_api_lib.ApiClient(configuration) as api_client:
+    # Create an instance of the API class
+    api_instance = turbinia_api_lib.TurbiniaTasksApi(api_client)
+    file_path = 'file_path_example' # str | 
+
+    try:
+        # Get Task Report
+        api_response = api_instance.download_output_path(file_path)
+        print("The response of TurbiniaTasksApi->download_output_path:\n")
+        pprint(api_response)
+    except Exception as e:
+        print("Exception when calling TurbiniaTasksApi->download_output_path: %s\n" % e)
+```
+
+
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **file_path** | **str**|  | 
+
+### Return type
+
+**bytearray**
+
+### Authorization
+
+[oAuth2](../README.md#oAuth2)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/octet-stream, application/json
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+**200** | Successful Response |  -  |
+**422** | Validation Error |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **get_task_report**
 > object get_task_report(task_id)

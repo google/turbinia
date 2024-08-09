@@ -4,6 +4,7 @@ All URIs are relative to *http://localhost*
 
 Method | HTTP request | Description
 ------------- | ------------- | -------------
+[**download_by_evidence_id**](TurbiniaEvidenceApi.md#download_by_evidence_id) | **GET** /api/evidence/download/{evidence_id} | Download By Evidence Id
 [**get_evidence_attributes**](TurbiniaEvidenceApi.md#get_evidence_attributes) | **GET** /api/evidence/types/{evidence_type} | Get Evidence Attributes
 [**get_evidence_by_id**](TurbiniaEvidenceApi.md#get_evidence_by_id) | **GET** /api/evidence/{evidence_id} | Get Evidence By Id
 [**get_evidence_summary**](TurbiniaEvidenceApi.md#get_evidence_summary) | **GET** /api/evidence/summary | Get Evidence Summary
@@ -11,6 +12,80 @@ Method | HTTP request | Description
 [**query_evidence**](TurbiniaEvidenceApi.md#query_evidence) | **GET** /api/evidence/query | Query Evidence
 [**upload_evidence**](TurbiniaEvidenceApi.md#upload_evidence) | **POST** /api/evidence/upload | Upload Evidence
 
+
+# **download_by_evidence_id**
+> bytearray download_by_evidence_id(evidence_id)
+
+Download By Evidence Id
+
+Retrieves an evidence in Redis by using its UUID.  Args:   evidence_id (str): The UUID of the evidence.  Raises:   HTTPException: if the evidence is not found.  Returns:   FileResponse: The evidence file.
+
+### Example
+
+* OAuth Authentication (oAuth2):
+```python
+import time
+import os
+import turbinia_api_lib
+from turbinia_api_lib.rest import ApiException
+from pprint import pprint
+
+# Defining the host is optional and defaults to http://localhost
+# See configuration.py for a list of all supported configuration parameters.
+configuration = turbinia_api_lib.Configuration(
+    host = "http://localhost"
+)
+
+# The client must configure the authentication and authorization parameters
+# in accordance with the API server security policy.
+# Examples for each auth method are provided below, use the example that
+# satisfies your auth use case.
+
+configuration.access_token = os.environ["ACCESS_TOKEN"]
+
+# Enter a context with an instance of the API client
+with turbinia_api_lib.ApiClient(configuration) as api_client:
+    # Create an instance of the API class
+    api_instance = turbinia_api_lib.TurbiniaEvidenceApi(api_client)
+    evidence_id = None # object | 
+
+    try:
+        # Download By Evidence Id
+        api_response = api_instance.download_by_evidence_id(evidence_id)
+        print("The response of TurbiniaEvidenceApi->download_by_evidence_id:\n")
+        pprint(api_response)
+    except Exception as e:
+        print("Exception when calling TurbiniaEvidenceApi->download_by_evidence_id: %s\n" % e)
+```
+
+
+
+### Parameters
+
+Name | Type | Description  | Notes
+------------- | ------------- | ------------- | -------------
+ **evidence_id** | [**object**](.md)|  | 
+
+### Return type
+
+**bytearray**
+
+### Authorization
+
+[oAuth2](../README.md#oAuth2)
+
+### HTTP request headers
+
+ - **Content-Type**: Not defined
+ - **Accept**: application/octet-stream, application/json
+
+### HTTP response details
+| Status code | Description | Response headers |
+|-------------|-------------|------------------|
+**200** | Successful Response |  -  |
+**422** | Validation Error |  -  |
+
+[[Back to top]](#) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to Model list]](../README.md#documentation-for-models) [[Back to README]](../README.md)
 
 # **get_evidence_attributes**
 > object get_evidence_attributes(evidence_type)
