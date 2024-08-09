@@ -22,7 +22,6 @@ from fastapi.responses import FileResponse
 from fastapi.requests import Request
 
 from turbinia import config as turbinia_config
-from turbinia.api import utils as api_utils
 
 log = logging.getLogger(__name__)
 router = APIRouter(prefix='/download', tags=['Turbinia Download'])

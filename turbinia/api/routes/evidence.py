@@ -28,7 +28,6 @@ from turbinia import evidence
 from turbinia import config as turbinia_config
 from turbinia import state_manager
 from turbinia import TurbiniaException
-from turbinia.api import utils as api_utils
 
 log = logging.getLogger(__name__)
 router = APIRouter(prefix='/evidence', tags=['Turbinia Evidence'])

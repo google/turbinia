@@ -537,8 +537,9 @@ paths:
       responses:
         '200':
           content:
-            application/json:
-              schema: {}
+            application/text:
+              schema:
+                type: string
           description: Successful Response
         '422':
           content:
@@ -565,8 +566,9 @@ paths:
       responses:
         '200':
           content:
-            application/json:
-              schema: {}
+            application/text:
+              schema:
+                type: string
           description: Successful Response
         '422':
           content:
@@ -609,8 +611,9 @@ paths:
       responses:
         '200':
           content:
-            application/json:
-              schema: {}
+            application/text:
+              schema:
+                type: string
           description: Successful Response
         '422':
           content:
