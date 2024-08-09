@@ -21,29 +21,15 @@ from fastapi import HTTPException, APIRouter
 from fastapi.responses import StreamingResponse, FileResponse
 from fastapi.requests import Request
 
+from turbinia import TurbiniaException
 from turbinia.api import utils as api_utils
 
 log = logging.getLogger(__name__)
 
 router = APIRouter(prefix='/result', tags=['Turbinia Request Results'])
 
-ATTACHMENT_RESPONSE = {
-    '200': {
-        'content': {
-            'application/octet-stream': {
-                'schema': {
-                    'type': 'string',
-                    'format': 'binary'
-                }
-            }
-        }
-    }
-}
 
-
-@router.get(
-    '/task/{task_id}', response_class=StreamingResponse,
-    responses=ATTACHMENT_RESPONSE)
+@router.get('/task/{task_id}', response_class=StreamingResponse)
 async def get_task_output(request: Request, task_id: str) -> StreamingResponse:
   """Retrieves a task's output files."""
   # Get the request_id for the task. This is needed to find the right path.
@@ -59,15 +45,13 @@ async def get_task_output(request: Request, task_id: str) -> StreamingResponse:
         api_utils.create_tarball(output_path), headers={
             'Content-Disposition': f'attachment;filename={task_id}.tgz',
             'Transfer-Encoding': 'chunked'
-        })
+        }, media_type='application/octet-stream')
   else:
     raise HTTPException(
         status_code=404, detail='The requested file was not found.')
 
 
-@router.get(
-    '/request/{request_id}', response_class=StreamingResponse,
-    responses=ATTACHMENT_RESPONSE)
+@router.get('/request/{request_id}', response_class=StreamingResponse)
 async def get_request_output(
     request: Request, request_id: str) -> StreamingResponse:
   """Retrieve request output."""
@@ -81,23 +65,24 @@ async def get_request_output(
         api_utils.create_tarball(request_output_path), headers={
             'Content-Disposition': f'attachment;filename={request_id}.tgz',
             'Transfer-Encoding': 'chunked'
-        })
+        }, media_type='application/octet-stream')
   else:
     raise HTTPException(
         status_code=404, detail='The requested file was not found.')
 
 
-@router.get(
-    '/plasofile/{task_id}', response_class=FileResponse,
-    responses=ATTACHMENT_RESPONSE)
+@router.get('/plasofile/{task_id}', response_class=FileResponse)
 async def get_plaso_file(request: Request, task_id: str) -> FileResponse:
   """Retrieves a task's Plaso file."""
   if not task_id:
     raise HTTPException(status_code=400, detail='Task identifier not provided.')
 
-  plaso_file_path = api_utils.get_plaso_file_path(task_id)
-  filename = f'{task_id}.plaso'
+  try:
+    plaso_file_path = api_utils.get_plaso_file_path(task_id)
+  except TurbiniaException as exception:
+    raise HTTPException(status_code=404, detail=str(exception)) from exception
 
+  filename = f'{task_id}.plaso'
   if os.path.exists(plaso_file_path):
     log.info(f'Sending {plaso_file_path} to client.')
     return FileResponse(plaso_file_path, filename=filename)

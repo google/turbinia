@@ -246,6 +246,36 @@ paths:
       summary: Get Task Report
       tags:
       - Turbinia Tasks
+  /api/evidence/download/{evidence_id}:
+    get:
+      description: "Retrieves an evidence in Redis by using its UUID.\n\nArgs:\n \
+        \ evidence_id (str): The UUID of the evidence.\n\nRaises:\n  HTTPException:\
+        \ if the evidence is not found.\n\nReturns:\n  FileResponse: The evidence\
+        \ file."
+      operationId: download_by_evidence_id
+      parameters:
+      - in: path
+        name: evidence_id
+        required: true
+        schema:
+          title: Evidence Id
+      responses:
+        '200':
+          content:
+            application/octet-stream:
+              schema:
+                format: binary
+                type: string
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: Download By Evidence Id
+      tags:
+      - Turbinia Evidence
   /api/evidence/query:
     get:
       description: "Queries evidence in Redis that have the specified attribute value.\n\
@@ -491,22 +521,25 @@ paths:
       summary: Read Jobs
       tags:
       - Turbinia Jobs
-  /api/logs/{query}:
+  /api/logs/api_server:
     get:
       description: Retrieve log data.
-      operationId: get_logs
+      operationId: get_api_server_logs
       parameters:
-      - in: path
-        name: query
-        required: true
+      - in: query
+        name: num_lines
+        required: false
         schema:
-          title: Query
-          type: string
+          default: 500
+          exclusiveMinimum: 0.0
+          title: Num Lines
+          type: integer
       responses:
         '200':
           content:
-            application/json:
-              schema: {}
+            application/text:
+              schema:
+                type: string
           description: Successful Response
         '422':
           content:
@@ -514,7 +547,81 @@ paths:
               schema:
                 $ref: '#/components/schemas/HTTPValidationError'
           description: Validation Error
-      summary: Get Logs
+      summary: Get Api Server Logs
+      tags:
+      - Turbinia Logs
+  /api/logs/server:
+    get:
+      description: Retrieve log data.
+      operationId: get_server_logs
+      parameters:
+      - in: query
+        name: num_lines
+        required: false
+        schema:
+          default: 500
+          exclusiveMinimum: 0.0
+          title: Num Lines
+          type: integer
+      responses:
+        '200':
+          content:
+            application/text:
+              schema:
+                type: string
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: Get Server Logs
+      tags:
+      - Turbinia Logs
+  /api/logs/{hostname}:
+    get:
+      description: 'Retrieve log data.
+
+
+        Turbinia currently stores logs on plaintext files. The log files are named
+
+        <hostname>.log for each instance of a worker, server or API server.
+
+
+        In some deployments, the same file can contain all logs (e.g. running all
+
+        services locally in the same container).'
+      operationId: get_turbinia_logs
+      parameters:
+      - in: path
+        name: hostname
+        required: true
+        schema:
+          title: Hostname
+          type: string
+      - in: query
+        name: num_lines
+        required: false
+        schema:
+          default: 500
+          exclusiveMinimum: 0.0
+          title: Num Lines
+          type: integer
+      responses:
+        '200':
+          content:
+            application/text:
+              schema:
+                type: string
+          description: Successful Response
+        '422':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+          description: Validation Error
+      summary: Get Turbinia Logs
       tags:
       - Turbinia Logs
   /api/request/:
