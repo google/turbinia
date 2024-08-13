@@ -67,6 +67,11 @@ export default {
     return RestApiClient.get('/api/result/task/' + task_id, { responseType: 'blob' })
   },
 
+  // Download Evidence
+  downloadEvidence(evidence_id) {
+    return RestApiClient.get('/api/evidence/download/' + evidence_id, { responseType: 'blob' })
+  },
+  
   // Jobs List
   getAvailableJobs() {
     return RestApiClient.get('/api/jobs/')
