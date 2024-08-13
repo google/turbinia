@@ -99,10 +99,10 @@ limitations under the License.
             <div v-else>N/A</div>
           </v-list-item>
           <v-list-item title="Evidence Name:">
-            <template v-slot:append>
+            <template v-if="taskDetails.evidence_name" v-slot:append>
               <v-tooltip location="top" text="Download Evidence output">
                 <template v-slot:activator="{ props: tooltip }">
-                  <v-btn icon="mdi-download" v-bind="tooltip" @click="downloadEvidence(taskDetails.evidence_id)">
+                  <v-btn icon="mdi-magnify-plus" v-bind="tooltip" @click="downloadEvidence(taskDetails.evidence_id)">
                   </v-btn>
                 </template>
               </v-tooltip>
