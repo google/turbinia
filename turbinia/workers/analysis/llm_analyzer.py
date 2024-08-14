@@ -154,18 +154,17 @@ class LLMAnalyzerTask(workers.TurbiniaTask):
     (_, history_session) = client.prompt_with_history(CONTEXT_PROMPT)
     (_, history_session) = client.prompt_with_history(
         REQUEST_PROMPT.format(artifact_name=artifact_name), history_session)
-    # TODO: Remove when Gemini 1.5 is released and used by Turbinia!
-    # Max input token limit of Gemini 1.0 is 30720, see
-    # https://ai.google.dev/models/gemini#model-variations
+    # Max input token limit of Gemini 1.5 Pro is 2,097,152, see
+    # https://cloud.google.com/vertex-ai/generative-ai/docs/learn/models
     # This will make sure we send the full content of a very long config file
     if turbinia_config.LLM_PROVIDER == "vertexai":
-      chunks = self.split_into_chunks(artifact_content, max_size=30200)
+      chunks = self.split_into_chunks(artifact_content, max_size=2090000)
     else:
       chunks = [artifact_content]
     for i, chunk in enumerate(chunks):
       content_prompt_chunk = CONTENT_PROMPT.format(
           i=i + 1, chunks_len=len(chunks), chunk=chunk)
-      # Send 'prompt' to your Gemini-1.0-pro model
+      # Send 'prompt' to the LLM model
       (chunk_report, history_session) = client.prompt_with_history(
           content_prompt_chunk, history_session)
       report += (
