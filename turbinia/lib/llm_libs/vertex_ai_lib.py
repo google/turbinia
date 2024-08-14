@@ -12,8 +12,8 @@ from turbinia.lib.llm_libs import llm_lib_base
 CALL_LIMIT = 20  # Number of calls to allow within a period
 ONE_MINUTE = 60  # One minute in seconds
 TEN_MINUTE = 10 * ONE_MINUTE
-MODEL_NAME = "gemini-1.0-pro"
-MAX_OUTOUT_TOKEN = 2048
+MODEL_NAME = "gemini-1.5-pro"
+MAX_OUTOUT_TOKEN = 8192
 MODEL_TEMPRATURE = 0.2
 # GCP_GENERATIVE_LANGUAGE_API_KEY must be defined in turbinia_config
 GENERATIVE_CONFIG = {
