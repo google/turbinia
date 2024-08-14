@@ -71,7 +71,7 @@ async def get_turbinia_logs(
     return JSONResponse(content={'detail': 'Invalid hostname'}, status_code=404)
 
   if 'NODE_NAME' in os.environ:
-    log_name = f'{hostname}.{os.environ["NODE_NAME"]!s}'
+    log_name = f'{hostname}.{os.environ["NODE_NAME"]!s}.log'
   else:
     log_name = f'{hostname}.log'
   log_path = Path(config.LOG_DIR, log_name)

@@ -137,6 +137,23 @@ limitations under the License.
             <div v-else>N/A</div>
           </v-list-item>
           <v-list-item title="Worker:">
+            <template v-if="taskDetails.worker_name" v-slot:append>
+              <v-tooltip location="top" text="View Worker Logs">
+                <template v-slot:activator="{ props: tooltip }">
+                  <v-btn icon="mdi-database-outline" v-bind="tooltip" @click="getWorkerLogs(taskDetails.worker_name)">
+                  </v-btn>
+                </template>
+              </v-tooltip>
+            </template>
+            <v-dialog v-if="this.workerLogs" v-model="openReportDialog" width="auto">
+              <v-card class="markdown-body pa-4 ps-12 ga-3">
+                <pre>
+                  <code>
+                    {{ this.workerLogs  }}
+                  </code>
+                </pre>
+              </v-card>
+            </v-dialog>
             <div v-if="taskDetails.worker_name">
               {{ taskDetails.worker_name }}
             </div>
@@ -185,8 +202,10 @@ export default {
       openGroups: ['ids', 'details'],
       markdownReport: '',
       currentTaskID: '',
+      workerLogs: '',
       evidenceSnackbar: false,
       notCopyable: false,
+      openReportDialog: false,
     }
   },
   methods: {
@@ -237,6 +256,16 @@ export default {
           console.error(e)
           this.evidenceSnackbar = false
           this.notCopyable = true
+        })
+    },
+    getWorkerLogs: function (worker_name) {
+      ApiClient.getWorkerLogs(worker_name)
+        .then(({ data }) => {
+          this.workerLogs = data
+          this.openReportDialog = true
+        })
+        .catch((e) => {
+          console.error(e)
         })
     },
   },
