@@ -18,6 +18,7 @@ import logging
 import os
 import tarfile
 import io
+import mmap
 
 from typing import Any, AsyncGenerator, List
 
@@ -193,32 +194,23 @@ async def create_tarball(output_path: str) -> AsyncGenerator[bytes, Any]:
 
 def tail_log(log_path, max_lines=500) -> str:
   """Reads a log file and returns the last max_lines."""
-  if not os.path.exists(log_path) and not os.path.isfile(log_path):
+  if not os.path.isfile(log_path):
     return ''
 
-  fsize = os.path.getsize(log_path)
-  buffsize = 8192
   nlines = 0
-  log_lines = []
+  log_lines: bytes = b''
 
-  with open(log_path, 'rb') as file:
-    offset = fsize
-    while nlines < max_lines:
-      diff = offset - buffsize
-      if diff > 0:
-        offset = file.seek(offset - buffsize)
+  with open(log_path, 'r', encoding='utf-8') as file:
+    with mmap.mmap(file.fileno(), 0, prot=mmap.PROT_READ) as memfile:
+      pos = len(memfile)
+      while (nlines <= max_lines and pos > -1):
+        pos -= 1
+        if memfile[pos:pos + 1] == '\n'.encode():
+          nlines += 1
+      log_lines = memfile[pos + 1:]
 
-      current_lines = file.readlines()
-      nlines += len(current_lines)
-
-      if nlines > max_lines:
-        current_lines = current_lines[-max_lines:]
-
-      log_lines.extend(current_lines)
-      if diff > 0:
-        offset = file.seek(-buffsize, 1)
-
-  for i in range(len(log_lines)):
-    log_lines[i] = log_lines[i].decode()
-
-  return ''.join(log_lines)
+  try:
+    return log_lines.decode('utf-8')
+  except ValueError as exception:
+    raise TurbiniaException(
+        f'Error decoding log line: {exception}') from exception
