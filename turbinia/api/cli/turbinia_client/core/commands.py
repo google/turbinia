@@ -30,6 +30,7 @@ from turbinia_api_lib.api import turbinia_configuration_api
 from turbinia_api_lib.api import turbinia_jobs_api
 from turbinia_api_lib.api import turbinia_request_results_api
 from turbinia_api_lib.api import turbinia_evidence_api
+from turbinia_api_lib.api import turbinia_logs_api
 from turbinia_client.core import groups
 from turbinia_client.helpers import formatter
 
@@ -553,3 +554,40 @@ def get_task_report(ctx: click.Context, task_id: str) -> None:
     log.error(
         f'Received status code {exception.status} '
         f'when calling get_request_report: {exception.body}')
+
+
+@groups.logs_group.command('system')
+@click.pass_context
+@click.argument('hostname')
+@click.option(
+    '--num_lines', '-n', help='Maximum number of log lines to retrieve.',
+    required=False, is_flag=False, default=500)
+def get_logs(ctx: click.Context, hostname: str, num_lines: int) -> None:
+  """Gets Turbinia system logs."""
+  client: api_client.ApiClient = ctx.obj.api_client
+  api_instance = turbinia_logs_api.TurbiniaLogsApi(client)
+  try:
+    api_response = api_instance.get_turbinia_logs(hostname, num_lines)
+    click.echo(api_response)
+  except exceptions.ApiException as exception:
+    log.error(
+        f'Received status code {exception.status} '
+        f'when calling get_turbinia_logs: {exception.body}')
+
+
+@groups.logs_group.command('api')
+@click.pass_context
+@click.option(
+    '--num_lines', '-n', help='Maximum number of log lines to retrieve.',
+    required=False, is_flag=False, default=500)
+def get_api_server_logs(ctx: click.Context, num_lines: int) -> None:
+  """Gets Turbinia system logs."""
+  client: api_client.ApiClient = ctx.obj.api_client
+  api_instance = turbinia_logs_api.TurbiniaLogsApi(client)
+  try:
+    api_response = api_instance.get_api_server_logs(num_lines)
+    click.echo(api_response)
+  except exceptions.ApiException as exception:
+    log.error(
+        f'Received status code {exception.status} '
+        f'when calling get_turbinia_logs: {exception.body}')
