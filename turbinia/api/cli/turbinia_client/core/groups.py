@@ -54,6 +54,12 @@ def report_group():
   """Get reports for Tasks or Requests."""
 
 
+@click.group('logs')
+def logs_group():
+  """Get Turbinia logs."""
+
+
+@click.group('submit')
 @click.pass_context
 def setup_submit(ctx: click.Context):
   try:

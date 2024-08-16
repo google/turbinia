@@ -91,6 +91,7 @@ def main():
   cli.add_command(groups.result_group)
   cli.add_command(groups.status_group)
   cli.add_command(groups.report_group)
+  cli.add_command(groups.logs_group)
   cli.add_command(version)
   try:
     cli.main()
