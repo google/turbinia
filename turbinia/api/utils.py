@@ -201,16 +201,16 @@ def tail_log(log_path, max_lines=500) -> str:
   log_lines: bytes = b''
 
   with open(log_path, 'r', encoding='utf-8') as file:
-    with mmap.mmap(file.fileno(), 0, prot=mmap.PROT_READ) as memfile:
-      pos = len(memfile)
-      while (nlines <= max_lines and pos > -1):
-        pos -= 1
-        if memfile[pos:pos + 1] == '\n'.encode():
-          nlines += 1
-      log_lines = memfile[pos + 1:]
+    try:
+      with mmap.mmap(file.fileno(), 0, prot=mmap.PROT_READ) as memfile:
+        pos = len(memfile)
+        while (nlines <= max_lines and pos > -1):
+          pos -= 1
+          if memfile[pos:pos + 1] == '\n'.encode():
+            nlines += 1
+        log_lines = memfile[pos + 1:]
 
-  try:
-    return log_lines.decode('utf-8')
-  except ValueError as exception:
-    raise TurbiniaException(
-        f'Error decoding log line: {exception}') from exception
+      return log_lines.decode('utf-8')
+    except ValueError as exception:
+      raise TurbiniaException(
+          f'Error decoding log line: {exception}') from exception
