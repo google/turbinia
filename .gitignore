@@ -12,6 +12,7 @@
 */_build/
 /_sources/
 /.tox
+charts/
 
 # And don't care about the 'egg'.
 /turbinia.egg-info

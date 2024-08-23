@@ -99,6 +99,20 @@ limitations under the License.
             <div v-else>N/A</div>
           </v-list-item>
           <v-list-item title="Evidence Name:">
+            <template v-if="taskDetails.evidence_name" v-slot:append>
+              <v-tooltip location="top" text="Download Evidence output">
+                <template v-slot:activator="{ props: tooltip }">
+                  <v-btn icon="mdi-magnify-plus" v-bind="tooltip" @click="downloadEvidence(taskDetails.evidence_id)">
+                  </v-btn>
+                </template>
+              </v-tooltip>
+            </template>
+            <v-snackbar v-model="evidenceSnackbar" color="primary" location="top" height="55" timeout="2000"> 
+              Evidence output is downloading...
+            </v-snackbar>
+            <v-snackbar v-model="notCopyable" color="red" location="top" height="55" timeout="2000"> 
+              Evidence type is not supported for downloading.
+            </v-snackbar>
             <div v-if="taskDetails.evidence_name">
               {{ taskDetails.evidence_name }}
             </div>
@@ -123,6 +137,14 @@ limitations under the License.
             <div v-else>N/A</div>
           </v-list-item>
           <v-list-item title="Worker:">
+            <template v-if="taskDetails.worker_name" v-slot:append>
+              <v-tooltip location="top" text="Download Worker Logs (defaults to most recent 500 entries)">
+                <template v-slot:activator="{ props: tooltip }">
+                  <v-btn icon="mdi-database-outline" v-bind="tooltip" @click="downloadWorkerLogs(taskDetails.worker_name)">
+                  </v-btn>
+                </template>
+              </v-tooltip>
+            </template>
             <div v-if="taskDetails.worker_name">
               {{ taskDetails.worker_name }}
             </div>
@@ -170,7 +192,10 @@ export default {
     return {
       openGroups: ['ids', 'details'],
       markdownReport: '',
-      currentTaskID: ''
+      currentTaskID: '',
+      evidenceSnackbar: false,
+      notCopyable: false,
+      openReportDialog: false,
     }
   },
   methods: {
@@ -200,6 +225,39 @@ export default {
           } else {
             this.currentTaskID = task_id
           }
+        })
+        .catch((e) => {
+          console.error(e)
+        })
+    },
+    downloadEvidence: function (evidence_id) {
+      ApiClient.downloadEvidence(evidence_id)
+        .then(({ data }) => {
+          this.evidenceSnackbar = true
+          const downloadObj = window.URL.createObjectURL(new Blob([data]))
+          const link = document.createElement('a')
+          link.href = downloadObj
+          link.setAttribute('download', evidence_id)
+          document.body.appendChild(link)
+          link.click()
+          link.remove()
+        })
+        .catch((e) => {
+          console.error(e)
+          this.evidenceSnackbar = false
+          this.notCopyable = true
+        })
+    },
+    downloadWorkerLogs: function (worker_name) {
+      ApiClient.getWorkerLogs(worker_name)
+        .then(({ data }) => {
+          const downloadObj = window.URL.createObjectURL(new Blob([data]))
+          const link = document.createElement('a')
+          link.href = downloadObj
+          link.setAttribute('download', worker_name + '.log')
+          document.body.appendChild(link)
+          link.click()
+          link.remove()
         })
         .catch((e) => {
           console.error(e)

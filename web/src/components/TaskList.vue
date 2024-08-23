@@ -15,7 +15,7 @@ limitations under the License.
   <div>
     <v-list density="compact">
       <v-empty-state v-if="taskList.length === 0"
-        text="No Tasks are available. Try adjusting your filters."
+        text="No Tasks are available. Try adjusting your filters.">
       </v-empty-state>
       <v-virtual-scroll :items="taskList" :item-height="40" :height="400" v-else>
         <template v-slot:default="{ item }">
