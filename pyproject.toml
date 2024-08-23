@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "turbinia"
-version = "20240614.2"
+version = "20240820"
 description = "Automation and Scaling of Digital Forensics Tools"
 authors = ["Turbinia Developers <turbinia-dev@googlegroups.com>"]
 maintainers = ["Turbinia Developers <turbinia-dev@googlegroups.com>"]
@@ -41,6 +41,7 @@ urllib3 = [
 ]
 debugpy = "^1.8.0"
 jurigged = "^0.5.7"
+
 [tool.poetry.group.test]
 optional = true
 
@@ -51,7 +52,7 @@ google-auth-oauthlib = "^1.1.0"
 mock = "*"
 pytest = "*"
 tabulate = "*"
-turbinia-api-lib = "^1.0.3"
+turbinia-api-lib = "^1.0.6"
 yapf = "*"
 
 [tool.poetry.extras]

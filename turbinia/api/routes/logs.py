@@ -22,7 +22,7 @@ from pathlib import Path
 from fastapi import APIRouter, Query
 from fastapi.responses import JSONResponse, PlainTextResponse
 from fastapi.requests import Request
-from turbinia import config
+from turbinia import config, TurbiniaException
 from turbinia.api import utils
 
 log = logging.getLogger(__name__)
@@ -75,8 +75,13 @@ async def get_turbinia_logs(
   else:
     log_name = f'{hostname}.log'
   log_path = Path(config.LOG_DIR, log_name)
-  log_lines = utils.tail_log(log_path, num_lines)
-  if log_lines:
-    return PlainTextResponse(log_lines)
+  try:
+    log_lines = utils.tail_log(log_path, num_lines)
+    if log_lines:
+      return PlainTextResponse(log_lines)
+  except TurbiniaException:
+    return JSONResponse(
+        content={'detail': 'Error reading log data.'}, status_code=500)
+
   return JSONResponse(
       content={'detail': f'No logs found for {hostname}'}, status_code=404)
