@@ -138,22 +138,13 @@ limitations under the License.
           </v-list-item>
           <v-list-item title="Worker:">
             <template v-if="taskDetails.worker_name" v-slot:append>
-              <v-tooltip location="top" text="View Worker Logs">
+              <v-tooltip location="top" text="Download Worker Logs (defaults to most recent 500 entries)">
                 <template v-slot:activator="{ props: tooltip }">
-                  <v-btn icon="mdi-database-outline" v-bind="tooltip" @click="getWorkerLogs(taskDetails.worker_name)">
+                  <v-btn icon="mdi-database-outline" v-bind="tooltip" @click="downloadWorkerLogs(taskDetails.worker_name)">
                   </v-btn>
                 </template>
               </v-tooltip>
             </template>
-            <v-dialog v-if="this.workerLogs" v-model="openReportDialog" width="auto">
-              <v-card class="markdown-body pa-4 ps-12 ga-3">
-                <pre>
-                  <code>
-                    {{ this.workerLogs  }}
-                  </code>
-                </pre>
-              </v-card>
-            </v-dialog>
             <div v-if="taskDetails.worker_name">
               {{ taskDetails.worker_name }}
             </div>
@@ -202,7 +193,6 @@ export default {
       openGroups: ['ids', 'details'],
       markdownReport: '',
       currentTaskID: '',
-      workerLogs: '',
       evidenceSnackbar: false,
       notCopyable: false,
       openReportDialog: false,
@@ -258,11 +248,16 @@ export default {
           this.notCopyable = true
         })
     },
-    getWorkerLogs: function (worker_name) {
+    downloadWorkerLogs: function (worker_name) {
       ApiClient.getWorkerLogs(worker_name)
         .then(({ data }) => {
-          this.workerLogs = data
-          this.openReportDialog = true
+          const downloadObj = window.URL.createObjectURL(new Blob([data]))
+          const link = document.createElement('a')
+          link.href = downloadObj
+          link.setAttribute('download', worker_name + '.log')
+          document.body.appendChild(link)
+          link.click()
+          link.remove()
         })
         .catch((e) => {
           console.error(e)
