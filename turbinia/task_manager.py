@@ -692,10 +692,10 @@ class CeleryTaskManager(BaseTaskManager):
         message = (
             f'Celery task {celery_task.id:s} associated with Turbinia '
             f'task {task.id} was revoked. This could be caused if the task is '
-            f'not started before the CELERY_EXPIRATION_TIME or if the user '
-            f'forces the task to be revoked. Task will not be processed.')
+            f'not started before the CELERY_TASK_EXPIRATION_TIME or if the '
+            f'task is manually revoked. Task will not be processed.')
         log.warning(message)
-        task = self.timeout_task(task, config.CELERY_EXPIRATION_TIME)
+        task = self.timeout_task(task, config.CELERY_TASK_EXPIRATION_TIME)
         task.result.status = message
         completed_tasks.append(task)
       else:
@@ -778,4 +778,4 @@ class CeleryTaskManager(BaseTaskManager):
     task.stub = self.celery_runner.apply_async(
         (task.serialize(), evidence_.serialize()), retry=False,
         soft_time_limit=celery_soft_timeout, time_limit=celery_hard_timeout,
-        expires=config.CELERY_EXPIRATION_TIME)
+        expires=config.CELERY_TASK_EXPIRATION_TIME)

@@ -70,7 +70,7 @@ REQUIRED_VARS = [
     'API_EVIDENCE_UPLOAD_DIR',
     'API_MAX_UPLOAD_SIZE',
     'WEBUI_PATH',
-    'CELERY_EXPIRATION_TIME'
+    'CELERY_TASK_EXPIRATION_TIME'
 ]
 
 # Optional config vars.  Some may be mandatory depending on the configuration
