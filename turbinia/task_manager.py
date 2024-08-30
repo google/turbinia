@@ -697,7 +697,6 @@ class CeleryTaskManager(BaseTaskManager):
         log.warning(message)
         task = self.timeout_task(task, config.CELERY_EXPIRATION_TIME)
         task.result.status = message
-        task.result.close(self, success=False, status=message)
         completed_tasks.append(task)
       else:
         check_timeout = True
