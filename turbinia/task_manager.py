@@ -690,7 +690,6 @@ class CeleryTaskManager(BaseTaskManager):
       elif celery_task.status == celery_states.PENDING:
         task.status = 'pending'
         log.debug(f'Task {celery_task.id:s} status pending.')
-
       elif celery_task.status == celery_states.REVOKED:
         message = (
             f'Celery task {celery_task.id:s} associated with Turbinia '
