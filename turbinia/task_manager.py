@@ -480,7 +480,7 @@ class BaseTaskManager:
     """
     raise NotImplementedError
 
-  def process_result(self, task_result):
+  def process_result(self, task_result: workers.TurbiniaTaskResult):
     """Runs final task results recording.
 
     self.process_tasks handles things that have failed at the task queue layer
@@ -527,7 +527,8 @@ class BaseTaskManager:
     if not job:
       log.warning(
           f'Received task results for unknown Job from Task ID '
-          f'{task_result.task_id:s}')
+          f'{task_result.task_id:s}. This could indicate the task did not run '
+          f'(e.g. if it was revoked).')
 
     # Reprocess new evidence and save instance for later consumption by finalize
     # tasks.
@@ -669,6 +670,7 @@ class CeleryTaskManager(BaseTaskManager):
       list[TurbiniaTask]: all completed tasks
     """
     completed_tasks = []
+    task: workers.TurbiniaTask = None
     for task in self.tasks:
       check_timeout = False
       celery_task = task.stub
@@ -683,6 +685,19 @@ class CeleryTaskManager(BaseTaskManager):
         completed_tasks.append(task)
       elif celery_task.status == celery_states.SUCCESS:
         task.result = workers.TurbiniaTaskResult.deserialize(celery_task.result)
+        completed_tasks.append(task)
+      elif celery_task.status == celery_states.PENDING:
+        task.status = 'pending'
+      elif celery_task.status == celery_states.REVOKED:
+        message = (
+            f'Celery task {celery_task.id:s} associated with Turbinia '
+            f'task {task.id} was revoked. This could be caused if the task is '
+            f'not started before the CELERY_EXPIRATION_TIME or if the user '
+            f'forces the task to be revoked. Task will not be processed.')
+        log.warning(message)
+        task = self.timeout_task(task, config.CELERY_EXPIRATION_TIME)
+        task.result.status = message
+        task.result.close(self, success=False, status=message)
         completed_tasks.append(task)
       else:
         check_timeout = True
@@ -764,4 +779,4 @@ class CeleryTaskManager(BaseTaskManager):
     task.stub = self.celery_runner.apply_async(
         (task.serialize(), evidence_.serialize()), retry=False,
         soft_time_limit=celery_soft_timeout, time_limit=celery_hard_timeout,
-        expires=celery_hard_timeout)
+        expires=config.CELERY_EXPIRATION_TIME)

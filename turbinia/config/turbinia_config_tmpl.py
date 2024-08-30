@@ -319,6 +319,11 @@ CELERY_BROKER = f'redis://{REDIS_HOST}'
 # Storage for task results/status
 CELERY_BACKEND = f'redis://{REDIS_HOST}'
 
+# Task expiration (in seconds). Tasks will be revoked
+# after the expiration time elapses. Revoked tasks will not
+# be processed by Turbinia workers
+CELERY_EXPIRATION_TIME = 86400  # 24 hours
+
 # Can be the same as CELERY_BROKER
 KOMBU_BROKER = CELERY_BROKER
 
