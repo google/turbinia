@@ -526,9 +526,9 @@ class BaseTaskManager:
     job = self.get_job(task_result.job_id)
     if not job:
       log.warning(
-          f'Received task results for unknown Job from Task ID '
-          f'{task_result.task_id:s}. This could indicate the task did not run '
-          f'(e.g. if it was revoked).')
+          f'Received task results from Task ID {task_result.task_id:s} '
+          f'with no associated Job ID. This could indicate the task did '
+          f'not run (e.g. if it was revoked).')
 
     # Reprocess new evidence and save instance for later consumption by finalize
     # tasks.
@@ -674,11 +674,12 @@ class CeleryTaskManager(BaseTaskManager):
     for task in self.tasks:
       check_timeout = False
       celery_task = task.stub
+      # ref: https://docs.celeryq.dev/en/stable/reference/celery.states.html
       if not celery_task:
-        log.debug(f'Task {task.stub.task_id:s} not yet created')
+        log.debug(f'Task {task.stub.task_id:s} not yet created.')
         check_timeout = True
       elif celery_task.status == celery_states.STARTED:
-        log.debug(f'Task {celery_task.id:s} not finished')
+        log.debug(f'Task {celery_task.id:s} not finished.')
         check_timeout = True
       elif celery_task.status == celery_states.FAILURE:
         log.warning(f'Task {celery_task.id:s} failed.')
@@ -688,6 +689,8 @@ class CeleryTaskManager(BaseTaskManager):
         completed_tasks.append(task)
       elif celery_task.status == celery_states.PENDING:
         task.status = 'pending'
+        log.debug(f'Task {celery_task.id:s} status pending.')
+
       elif celery_task.status == celery_states.REVOKED:
         message = (
             f'Celery task {celery_task.id:s} associated with Turbinia '
@@ -700,7 +703,7 @@ class CeleryTaskManager(BaseTaskManager):
         completed_tasks.append(task)
       else:
         check_timeout = True
-        log.debug(f'Task {celery_task.id:s} status unknown')
+        log.debug(f'Task {celery_task.id:s} status unknown.')
 
       # For certain Task states we want to check whether the Task has timed out
       # or not.

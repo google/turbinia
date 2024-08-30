@@ -14,8 +14,7 @@ limitations under the License.
 <template>
   <div>
     <v-list density="compact">
-      <v-empty-state v-if="taskList.length === 0"
-        text="No Tasks are available. Try adjusting your filters.">
+      <v-empty-state v-if="taskList.length === 0" text="No Tasks are available. Try adjusting your filters.">
       </v-empty-state>
       <v-virtual-scroll :items="taskList" :item-height="40" :height="400" v-else>
         <template v-slot:default="{ item }">
@@ -41,7 +40,7 @@ limitations under the License.
               </v-list-item-action>
             </div>
             <v-list-item :max-width="800">
-              {{ item.task_name }} {{ $filters.truncate(item.task_status, 128, '...') }}
+              {{ item.task_name }}: {{ $filters.truncate(item.task_status, 384, '...') }}
             </v-list-item>
           </v-list-item>
           <v-divider> </v-divider>
@@ -77,26 +76,26 @@ export default {
             let taskStatusTemp = task_dict.status
             // As pending status requests show as null or pending
             if (taskStatusTemp === null || taskStatusTemp === "pending") {
-              taskStatusTemp = 'pending on server.'
+              taskStatusTemp = 'is pending on server.'
             }
             if (this.filterJobs.length > 0) {
               let jobName = task_dict.job_name.toLowerCase()
-              if ( this.radioFilter && !this.filterJobs.includes(jobName)) {
+              if (this.radioFilter && !this.filterJobs.includes(jobName)) {
                 continue;
-              } else if ( !this.radioFilter && this.filterJobs.includes(jobName)) {
+              } else if (!this.radioFilter && this.filterJobs.includes(jobName)) {
                 continue
               }
             }
             let taskListTemp = {
-                job_name: task_dict.job_name,
-                task_name: task_dict.name,
-                task_id: task_dict.id,
-                task_status: taskStatusTemp,
-                task_success: task_dict.successful,
-                evidence_name: task_dict.evidence_name,
-                evidence_id: task_dict.evidence_id,
-                evidence_size: task_dict.evidence_size,
-              }
+              job_name: task_dict.job_name,
+              task_name: task_dict.name,
+              task_id: task_dict.id,
+              task_status: taskStatusTemp,
+              task_success: task_dict.successful,
+              evidence_name: task_dict.evidence_name,
+              evidence_id: task_dict.evidence_id,
+              evidence_size: task_dict.evidence_size,
+            }
             // When Failed filter chip is applied
             if (task_dict.successful === false && this.filterFailed) {
               taskList.push(taskListTemp)
