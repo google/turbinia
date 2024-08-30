@@ -1097,7 +1097,8 @@ class TurbiniaTask:
         self._evidence_config = evidence.config
         self.task_config = self.get_task_recipe(evidence.config)
         self.worker_start_time = datetime.now()
-        self.update_task_status(self, 'running')
+        updated_status = f'{self.id} is running on worker {self.worker_name}'
+        self.update_task_status(self, updated_status)
         self.result = self.run(evidence, self.result)
 
       # pylint: disable=broad-except

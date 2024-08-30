@@ -480,7 +480,7 @@ class BaseTaskManager:
     """
     raise NotImplementedError
 
-  def process_result(self, task_result):
+  def process_result(self, task_result: workers.TurbiniaTaskResult):
     """Runs final task results recording.
 
     self.process_tasks handles things that have failed at the task queue layer
@@ -526,8 +526,9 @@ class BaseTaskManager:
     job = self.get_job(task_result.job_id)
     if not job:
       log.warning(
-          f'Received task results for unknown Job from Task ID '
-          f'{task_result.task_id:s}')
+          f'Received task results from Task ID {task_result.task_id:s} '
+          f'with no associated Job ID. This could indicate the task did '
+          f'not run (e.g. if it was revoked).')
 
     # Reprocess new evidence and save instance for later consumption by finalize
     # tasks.
@@ -669,14 +670,16 @@ class CeleryTaskManager(BaseTaskManager):
       list[TurbiniaTask]: all completed tasks
     """
     completed_tasks = []
+    task: workers.TurbiniaTask = None
     for task in self.tasks:
       check_timeout = False
       celery_task = task.stub
+      # ref: https://docs.celeryq.dev/en/stable/reference/celery.states.html
       if not celery_task:
-        log.debug(f'Task {task.stub.task_id:s} not yet created')
+        log.debug(f'Task {task.stub.task_id:s} not yet created.')
         check_timeout = True
       elif celery_task.status == celery_states.STARTED:
-        log.debug(f'Task {celery_task.id:s} not finished')
+        log.debug(f'Task {celery_task.id:s} not finished.')
         check_timeout = True
       elif celery_task.status == celery_states.FAILURE:
         log.warning(f'Task {celery_task.id:s} failed.')
@@ -684,9 +687,22 @@ class CeleryTaskManager(BaseTaskManager):
       elif celery_task.status == celery_states.SUCCESS:
         task.result = workers.TurbiniaTaskResult.deserialize(celery_task.result)
         completed_tasks.append(task)
+      elif celery_task.status == celery_states.PENDING:
+        task.status = 'pending'
+        log.debug(f'Task {celery_task.id:s} status pending.')
+      elif celery_task.status == celery_states.REVOKED:
+        message = (
+            f'Celery task {celery_task.id:s} associated with Turbinia '
+            f'task {task.id} was revoked. This could be caused if the task is '
+            f'not started before the CELERY_TASK_EXPIRATION_TIME or if the '
+            f'task is manually revoked. Task will not be processed.')
+        log.warning(message)
+        task = self.timeout_task(task, config.CELERY_TASK_EXPIRATION_TIME)
+        task.result.status = message
+        completed_tasks.append(task)
       else:
         check_timeout = True
-        log.debug(f'Task {celery_task.id:s} status unknown')
+        log.debug(f'Task {celery_task.id:s} status unknown.')
 
       # For certain Task states we want to check whether the Task has timed out
       # or not.
@@ -764,4 +780,4 @@ class CeleryTaskManager(BaseTaskManager):
     task.stub = self.celery_runner.apply_async(
         (task.serialize(), evidence_.serialize()), retry=False,
         soft_time_limit=celery_soft_timeout, time_limit=celery_hard_timeout,
-        expires=celery_hard_timeout)
+        expires=config.CELERY_TASK_EXPIRATION_TIME)
