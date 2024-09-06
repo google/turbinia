@@ -1,8 +1,8 @@
 # Build 1 - Turbinia Worker
-FROM ubuntu:22.04
+FROM ubuntu:24.04
 ENV DEBIAN_FRONTEND=noninteractive \
     PIP_NO_CACHE_DIR=1
-ARG PPA_TRACK=stable
+ARG PPA_TRACK=staging
 
 RUN apt-get update && apt-get -y upgrade && apt-get -y install \
     apt-transport-https \
@@ -20,29 +20,37 @@ RUN apt-get update && apt-get -y upgrade && apt-get -y install \
     pocl-opencl-icd \
     p7zip-full \
     python3-pip \
+    python3-poetry \
     software-properties-common \
     sudo \
     testdisk \
     wget \
     && apt-get clean && rm -rf /var/cache/apt/* /var/lib/apt/lists/*
 
-RUN pip3 install pip --upgrade
-RUN pip3 install poetry
+# RUN pip3 install pip --upgrade 
+# RUN pip3 install poetry 
 
 # Install various packages from the GIFT PPA
+#   plaso and deps
 #   bulkextractor
 #   docker-explorer
 #   Sleuthkit
 #   bdemount, apfs and luks tools
 RUN add-apt-repository -y ppa:gift/$PPA_TRACK
 RUN apt-get update && apt-get -y install \
-    bulk-extractor \
-    docker-explorer-tools \
+    #bulk-extractor \
+    #docker-explorer-tools \
+    dfimagetools-tools \
     libbde-tools \
+    libewf \
+    libewf-python3 \
+    libewf-tools \
     libfsapfs-tools \
     libluksde-tools \
-    sleuthkit \
-    libewf-tools \
+    plaso-tools \
+    python3-dfimagetools \
+    python3-dfvfs \
+    python3-plaso \
     && apt-get clean && rm -rf /var/cache/apt/* /var/lib/apt/lists/*
 
 # Add turbinia user to system and sudoers
@@ -106,7 +114,7 @@ WORKDIR /home/turbinia
 # Copy requirements and install dependencies to cache them in docker layer
 COPY --chown=turbinia:turbinia ./pyproject.toml ./poetry.toml ./poetry.lock /home/turbinia/
 RUN poetry install --no-interaction --no-ansi -E worker --no-root
-RUN poetry run pip3 install impacket --no-deps 
+#RUN poetry run pip3 install impacket --no-deps 
 ENV PATH="/home/turbinia/.venv/bin:$PATH" \
     VIRTUAL_ENV=/home/turbinia/.venv
 
