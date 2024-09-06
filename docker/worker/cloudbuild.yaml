@@ -7,7 +7,7 @@ steps:
         "-t",
         "us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-worker:$TAG_NAME",
         "-t",
-        "us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-worker:latest",
+        "us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-worker:${_LATEST}",
         "--build-arg",
         "PPA_TRACK=${_PPA_TRACK}",
         "-f",
@@ -17,5 +17,5 @@ steps:
     timeout: 4800s
 timeout: 4800s
 images:
-  - us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-worker:latest
+  - us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-worker:${_LATEST}
   - us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-worker:$TAG_NAME
