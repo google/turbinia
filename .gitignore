@@ -13,6 +13,8 @@
 /_sources/
 /.tox
 charts/
+conf/
+evidence/
 
 # And don't care about the 'egg'.
 /turbinia.egg-info
