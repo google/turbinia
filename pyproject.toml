@@ -15,6 +15,7 @@ turbiniactl = "turbinia.turbiniactl:main"
 [tool.poetry.dependencies]
 python = "^3.10"
 acstore = { version = "20240128" }
+asn1crypto = { version = ">= 0.24.0" }
 backoff = { version = ">=2.2.1" }
 celery = { version = "^5.2.2" }
 dfDewey = { version = "^20231016", optional = true }
