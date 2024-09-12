@@ -1,5 +1,6 @@
 """Task for analysing Mach-O Information."""
 
+import json
 import lief
 import os
 
@@ -16,6 +17,21 @@ from turbinia.evidence import ReportText
 from turbinia.lib import text_formatter as fmt
 from turbinia.workers import Priority
 from turbinia.workers import TurbiniaTask
+
+class ParsedMacho(object):
+  def __init__(self):
+        self.request = ""
+        self.evidence = ""
+        self.name = ""
+        self.type = ""
+        self.cpu = ""
+        self.size = 0
+        self.entropy = ""
+        self.md5 = ""
+        self.sha256 = ""
+        self.symhash = ""
+        self.apple_team_id = ""
+        self.signer_info = ""
 
 class MachoAnalysisTask(TurbiniaTask):
   """Task to analyse Mach-O Information"""
@@ -38,7 +54,6 @@ class MachoAnalysisTask(TurbiniaTask):
     Args:
       hasher (BaseHasher): hasher to execute.
       data (bytestring) : data to be hashed.
-
      Returns:
       digest (str): digest returned by hasher.
     """
@@ -49,7 +64,6 @@ class MachoAnalysisTask(TurbiniaTask):
     """Retrieves Mach-O segment names.
     Args:
       binary (lief.MachO.Binary): binary to be parsed.
-
     Returns:
       symhash (str): symhash of the binary.
     """
@@ -67,7 +81,6 @@ class MachoAnalysisTask(TurbiniaTask):
     Args:
       segment (lief.MachO.SegmentCommand): binary to be parsed.
       result (TurbiniaTaskResult): The object to place task results into.
-
     Returns:
       list[str]: names of the segments.
     """
@@ -84,7 +97,6 @@ class MachoAnalysisTask(TurbiniaTask):
     Args:
       binary (lief.MachO.Binary): binary to be parsed.
       result (TurbiniaTaskResult): The object to place task results into.
-
     Returns:
       list[str]: names of the segments.
     """
@@ -106,7 +118,6 @@ class MachoAnalysisTask(TurbiniaTask):
     Args:
       code_signature (lief.MachO.CodeSignature): code signature to be parsed.
       result (TurbiniaTaskResult): The object to place task results into.
-
     Returns:
     """
     signature_bytes = code_signature.content.tobytes()
@@ -154,68 +165,104 @@ class MachoAnalysisTask(TurbiniaTask):
           encap_content_info = signed_data['encap_content_info']
           signer = signed_data['signer_infos'][0]
           signer_version = signer['version']
-          result.log(f'----------- signer info -----------')
-          result.log(f'{signer.native}')
-          result.log(f'-------- signer identifier --------')
+          #result.log(f'----------- signer info -----------')
+          #result.log(f'{signer.native}')
+          #result.log(f'-------- signer identifier --------')
           signer = signer['sid'].native
-          result.log(f'{signer}')
-          result.log(f'-----------------------------------')
+          #result.log(f'{signer}')
+          #result.log(f'-----------------------------------')
           #result.log(f'-------- signed attributes --------')
           #attrs = signer['signed_attrs'].native
           #result.log(f'{attrs}')
 
-  def _ParseMachoFatBinary(self, macho_fd, result, macho_path, file_name):
+  def _CpuType(self, cpu_type):
+    """Translates CPU type identifier to string.
+    Args:
+      cpu_type (int): CPU type identifier.
+    Returns:
+      (str): CPU type string.
+    """
+    if cpu_type == lief.MachO.Header.CPU_TYPE.ANY:
+      return "ANY"
+    elif cpu_type == lief.MachO.Header.CPU_TYPE.ARM:
+      return "ARM"
+    elif cpu_type == lief.MachO.Header.CPU_TYPE.ARM64:
+      return "ARM64"
+    elif cpu_type == lief.MachO.Header.CPU_TYPE.MC98000:
+      return "MC98000"
+    elif cpu_type == lief.MachO.Header.CPU_TYPE.MIPS:
+      return "MIPS"
+    elif cpu_type == lief.MachO.Header.CPU_TYPE.POWERPC:
+      return "POWERPC"
+    elif cpu_type == lief.MachO.Header.CPU_TYPE.POWERPC64:
+        return "POWERPC64"
+    elif cpu_type == lief.MachO.Header.CPU_TYPE.SPARC:
+        return "SPARC"
+    elif cpu_type == lief.MachO.Header.CPU_TYPE.X86:
+        return "X86"
+    elif cpu_type == lief.MachO.Header.CPU_TYPE.X86_64:
+      return "X86_64"
+    else:
+      return ""
+    
+  def _ParseMachoFatBinary(self, macho_fd, evidence, result, macho_path, file_name):
     """Parses a Mach-O fat binary.
     Args:
       macho_fd (int): file descriptor to the fat binary.
+      evidence (Evidence object):  The evidence to process
       result (TurbiniaTaskResult): The object to place task results into.
       macho_path (str): path to the fat binary.
       file_name (str): file name of the fat binary.
+    Returns:
+      (ParsedMacho): the parsed Mach-O details.
     """
     result.log(f'---------- start fat binary ------------')
+    parsed_macho = ParsedMacho()
+    parsed_macho.evidence = evidence.id
+    parsed_macho.request = evidence.request_id
+    parsed_macho.name = file_name
+    parsed_macho.type = "fat_binary"
     fat_binary_stats = os.stat(macho_path)
-    fat_binary_size = fat_binary_stats.st_size
-    result.log(f'fat binary size in Bytes is {fat_binary_size}')
+    parsed_macho.size = fat_binary_stats.st_size
     macho_fd.seek(0)
     data = macho_fd.read()
-    ent = self._GetDigest(entropy.EntropyHasher(), data)
-    md5_hash = self._GetDigest(md5.MD5Hasher(), data)
-    sha256_hash = self._GetDigest(sha256.SHA256Hasher(), data)
-    result.log(f'entropy: {ent}')
-    result.log(f'md5: {md5_hash}')
-    result.log(f'sha256: {sha256_hash}')
-    result.log(f'----------- end fat binary -------------')
+    parsed_macho.entropy = self._GetDigest(entropy.EntropyHasher(), data)
+    parsed_macho.md5 = self._GetDigest(md5.MD5Hasher(), data)
+    parsed_macho.sha256 = self._GetDigest(sha256.SHA256Hasher(), data)
+    return parsed_macho
 
-  def _ParseMachoBinary(self, macho_fd, binary, result, file_name):
+  def _ParseMachoBinary(self, macho_fd, evidence, binary, result, file_name):
     """Parses a Mach-O binary.
     Args:
       macho_fd (int): file descriptor to the fat binary.
+      evidence (Evidence object):  The evidence to process
       binary (lief.MachO.Binary): binary to be parsed.
       result (TurbiniaTaskResult): The object to place task results into.
       filename (str): file name of the binary.
+    Returns:
+      (ParsedMacho): the parsed Mach-O details.
     """
     result.log(f'------------ start binary --------------')
-    result.log(f'{binary.header.cpu_type}')
+    parsed_macho = ParsedMacho()
+    parsed_macho.evidence = evidence.id
+    parsed_macho.request = evidence.request_id
+    parsed_macho.name = file_name
+    parsed_macho.type = "binary"
+    parsed_macho.cpu = self._CpuType(binary.header.cpu_type)
     fat_offset = binary.fat_offset
-    original_size = binary.original_size
-    result.log(f'fat offset: {fat_offset}')
-    result.log(f'size: {original_size}')
+    parsed_macho.size = binary.original_size
     macho_fd.seek(fat_offset)
-    data = macho_fd.read(original_size)
-    ent = self._GetDigest(entropy.EntropyHasher(), data)
-    md5_hash = self._GetDigest(md5.MD5Hasher(), data)
-    sha256_hash = self._GetDigest(sha256.SHA256Hasher(), data)
-    sym_hash = self._GetSymhash(binary)
-    result.log(f'entropy: {ent}')
-    result.log(f'md5: {md5_hash}')
-    result.log(f'sha256: {sha256_hash}')
-    result.log(f'symhash: {sym_hash}')
+    data = macho_fd.read(parsed_macho.size)
+    parsed_macho.entropy = self._GetDigest(entropy.EntropyHasher(), data)
+    parsed_macho.md5 = self._GetDigest(md5.MD5Hasher(), data)
+    parsed_macho.sha256 = self._GetDigest(sha256.SHA256Hasher(), data)
+    parsed_macho.symhash = self._GetSymhash(binary)
     if binary.has_code_signature:
       # TODO: Do something useful with the signarure
-      result.log(f'signature size: {binary.code_signature.data_size}')
+      #result.log(f'signature size: {binary.code_signature.data_size}')
       self._ParseCodeSignature(binary.code_signature, result)
     segment_names = self._GetSegmentNames(binary, result)
-    result.log(f'------------- end binary ---------------')
+    return parsed_macho
 
   def run(self, evidence, result):
     """Run the Mach-O worker.
@@ -239,9 +286,8 @@ class MachoAnalysisTask(TurbiniaTask):
     
     for root, dirs, files in os.walk(evidence.local_path):
       for file in files:
-        #result.log(f'root: {root}, file: {file}')
         macho_path = os.path.join(root, file)
-        result.log(f'macho_path: {macho_path}')
+        #result.log(f'macho_path: {macho_path}')
         try:
           macho_binary = lief.MachO.parse(macho_path, config=lief.MachO.ParserConfig.quick)
           macho_fd = open(macho_path, 'rb')
@@ -250,16 +296,17 @@ class MachoAnalysisTask(TurbiniaTask):
           break
 
         if isinstance(macho_binary, lief.MachO.FatBinary):
-          macho_info = 'Mach-O is lief.MachO.FatBinary'
-          self._ParseMachoFatBinary(macho_fd, result, macho_path, file)
+          parsed_macho = self._ParseMachoFatBinary(macho_fd, evidence, result, macho_path, file)
           parsed_fat_binaries += 1
+          result.log(f'{json.dumps(parsed_macho.__dict__)}')
           for binary in macho_binary:
-            self._ParseMachoBinary(macho_fd, binary, result, file)
+            parsed_macho = self._ParseMachoBinary(macho_fd, evidence, binary, result, file)
             parsed_binaries += 1
+            result.log(f'{json.dumps(parsed_macho.__dict__)}')
         elif isinstance(macho_binary, lief.MachO.Binary):
-          macho_info = 'Mach-O is lief.MachO.Binary'
-          self._ParseMachoBinary(macho_fd, macho_binary, result, file)
+          parsed_macho = self._ParseMachoBinary(macho_fd, evidence, macho_binary, result, file)
           parsed_binaries += 1
+          result.log(f'{json.dumps(parsed_macho.__dict__)}')
         macho_fd.close()
         result.log(f'------------------------')
 
