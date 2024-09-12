@@ -225,7 +225,6 @@ class MachoAnalysisTask(TurbiniaTask):
     Returns:
         TurbiniaTaskResult object.
     """
-
     # Where to store the resulting output file.
     output_file_name = 'macho_analysis.txt'
     output_file_path = os.path.join(self.output_dir, output_file_name)
@@ -233,35 +232,41 @@ class MachoAnalysisTask(TurbiniaTask):
     # We output a report.
     output_evidence = ReportText(source_path=output_file_path)
 
-    evidence_file_name = 'ls.mac'
-    # We will extract the OS information from os-release
-    macho_path = os.path.join(evidence.local_path, evidence_file_name)
+    # traverse root directory, and list directories as dirs and files as files
     macho_info = ''
-    result.log(f'macho_path: {macho_path}')
-    try:
-      macho_binary = lief.MachO.parse(macho_path, config=lief.MachO.ParserConfig.quick)
-      macho_fd = open(macho_path, 'rb')
-    except IOError as e:
-      result.close(
-           self, success=False,
-           status='Error opening Mach-O file: {0:s}'.format(str(e)))
-      return result
+    parsed_binaries = 0
+    parsed_fat_binaries = 0
+    
+    for root, dirs, files in os.walk(evidence.local_path):
+      for file in files:
+        #result.log(f'root: {root}, file: {file}')
+        macho_path = os.path.join(root, file)
+        result.log(f'macho_path: {macho_path}')
+        try:
+          macho_binary = lief.MachO.parse(macho_path, config=lief.MachO.ParserConfig.quick)
+          macho_fd = open(macho_path, 'rb')
+        except IOError as e:
+           # 'Error opening Mach-O file: {0:s}'.format(str(e)))
+          break
 
-    if isinstance(macho_binary, lief.MachO.FatBinary):
-      macho_info = 'Mach-O is lief.MachO.FatBinary'
-      self._ParseMachoFatBinary(macho_fd, result, macho_path, evidence_file_name)
-      for binary in macho_binary:
-        self._ParseMachoBinary(macho_fd, binary, result, evidence_file_name)
-    elif isinstance(macho_binary, lief.MachO.Binary):
-      macho_info = 'Mach-O is lief.MachO.Binary'
-      self._ParseMachoBinary(macho_fd, macho_binary, result, evidence_file_name)
-
-    macho_fd.close()
+        if isinstance(macho_binary, lief.MachO.FatBinary):
+          macho_info = 'Mach-O is lief.MachO.FatBinary'
+          self._ParseMachoFatBinary(macho_fd, result, macho_path, file)
+          parsed_fat_binaries += 1
+          for binary in macho_binary:
+            self._ParseMachoBinary(macho_fd, binary, result, file)
+            parsed_binaries += 1
+        elif isinstance(macho_binary, lief.MachO.Binary):
+          macho_info = 'Mach-O is lief.MachO.Binary'
+          self._ParseMachoBinary(macho_fd, macho_binary, result, file)
+          parsed_binaries += 1
+        macho_fd.close()
+        result.log(f'------------------------')
 
     output_evidence.text_data = os.linesep.join(macho_info) 
     result.report_data = os.linesep.join(macho_info)
     result.report_priority = Priority.LOW
-    summary = macho_info
+    summary = f'Parsed {parsed_fat_binaries} lief.MachO.FatBinary and {parsed_binaries} lief.MachO.Binary'
 
     # Write the Mach-O Info to the output file.
     with open(output_file_path, 'wb') as fh:
