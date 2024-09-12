@@ -214,7 +214,7 @@ class MachoAnalysisTask(TurbiniaTask):
       macho_path (str): path to the fat binary.
       file_name (str): file name of the fat binary.
     Returns:
-      (ParsedMacho): the parsed Mach-O details.
+      ParsedMacho: the parsed Mach-O details.
     """
     result.log(f'---------- start fat binary ------------')
     parsed_macho = ParsedMacho()
@@ -240,7 +240,7 @@ class MachoAnalysisTask(TurbiniaTask):
       result (TurbiniaTaskResult): The object to place task results into.
       filename (str): file name of the binary.
     Returns:
-      (ParsedMacho): the parsed Mach-O details.
+      ParsedMacho: the parsed Mach-O details.
     """
     result.log(f'------------ start binary --------------')
     parsed_macho = ParsedMacho()
@@ -263,6 +263,24 @@ class MachoAnalysisTask(TurbiniaTask):
       self._ParseCodeSignature(binary.code_signature, result)
     segment_names = self._GetSegmentNames(binary, result)
     return parsed_macho
+
+  def _WriteParsedMachoResults(self, parsed_macho):
+    """Outputs the parsed Mach-O results.
+    Args:
+        parsed_macho(ParsedMacho): the parsed Mach-O details
+    Returns:
+        TurbiniaTaskResult object.
+    """
+    # Write the Mach-O Info to the output file.
+    output_file_name = ""
+    if parsed_macho.type == "binary":
+      output_file_name = f'{parsed_macho.name}-{parsed_macho.type}-{parsed_macho.cpu}.json'
+    else:
+      output_file_name = f'{parsed_macho.name}-{parsed_macho.type}.json'
+    output_file_path=os.path.join(self.output_dir, output_file_name)
+    with open(output_file_path, 'w') as fh:
+      fh.write(f'{json.dumps(parsed_macho.__dict__)}\n')
+      fh.close()
 
   def run(self, evidence, result):
     """Run the Mach-O worker.
@@ -287,7 +305,6 @@ class MachoAnalysisTask(TurbiniaTask):
     for root, dirs, files in os.walk(evidence.local_path):
       for file in files:
         macho_path = os.path.join(root, file)
-        #result.log(f'macho_path: {macho_path}')
         try:
           macho_binary = lief.MachO.parse(macho_path, config=lief.MachO.ParserConfig.quick)
           macho_fd = open(macho_path, 'rb')
@@ -298,14 +315,17 @@ class MachoAnalysisTask(TurbiniaTask):
         if isinstance(macho_binary, lief.MachO.FatBinary):
           parsed_macho = self._ParseMachoFatBinary(macho_fd, evidence, result, macho_path, file)
           parsed_fat_binaries += 1
+          self._WriteParsedMachoResults(parsed_macho)
           result.log(f'{json.dumps(parsed_macho.__dict__)}')
           for binary in macho_binary:
             parsed_macho = self._ParseMachoBinary(macho_fd, evidence, binary, result, file)
             parsed_binaries += 1
+            self._WriteParsedMachoResults(parsed_macho)
             result.log(f'{json.dumps(parsed_macho.__dict__)}')
         elif isinstance(macho_binary, lief.MachO.Binary):
           parsed_macho = self._ParseMachoBinary(macho_fd, evidence, macho_binary, result, file)
           parsed_binaries += 1
+          self._WriteParsedMachoResults(parsed_macho)
           result.log(f'{json.dumps(parsed_macho.__dict__)}')
         macho_fd.close()
         result.log(f'------------------------')
@@ -319,6 +339,7 @@ class MachoAnalysisTask(TurbiniaTask):
     with open(output_file_path, 'wb') as fh:
       fh.write(output_evidence.text_data.encode('utf8'))
       fh.write('\n'.encode('utf8'))
+      fh.close()
 
     # Add the output evidence to the result object.
     result.add_evidence(output_evidence, evidence.config)
