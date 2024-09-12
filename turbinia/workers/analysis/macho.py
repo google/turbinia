@@ -20,18 +20,20 @@ from turbinia.workers import TurbiniaTask
 
 class ParsedMacho(object):
   def __init__(self):
-        self.request = ""
-        self.evidence = ""
-        self.name = ""
-        self.type = ""
-        self.cpu = ""
-        self.size = 0
-        self.entropy = ""
-        self.md5 = ""
-        self.sha256 = ""
-        self.symhash = ""
         self.apple_team_id = ""
+        self.cpu = ""
+        self.entropy = ""
+        self.evidence = ""
+        self.md5 = ""
+        self.name = ""
+        self.request = ""
+        self.sections = []
+        self.segments = []
+        self.sha256 = ""
         self.signer_info = ""
+        self.size = 0
+        self.symhash = ""
+        self.type = ""
 
 class MachoAnalysisTask(TurbiniaTask):
   """Task to analyse Mach-O Information"""
@@ -106,7 +108,6 @@ class MachoAnalysisTask(TurbiniaTask):
       section_names = []
       #result.log(f'{segment.name}')
       segment_names.append(segment.name)
-      section_names = self._GetSectionNames(binary, result)
       # TODO: How do we want to surface the section names
     #result.log(f'-----------------------------------')
     return segment_names
@@ -261,7 +262,8 @@ class MachoAnalysisTask(TurbiniaTask):
       # TODO: Do something useful with the signarure
       #result.log(f'signature size: {binary.code_signature.data_size}')
       self._ParseCodeSignature(binary.code_signature, result)
-    segment_names = self._GetSegmentNames(binary, result)
+    parsed_macho.segments = self._GetSegmentNames(binary, result)
+    parsed_macho.sections = self._GetSectionNames(binary, result)
     return parsed_macho
 
   def _WriteParsedMachoResults(self, parsed_macho):
@@ -296,12 +298,10 @@ class MachoAnalysisTask(TurbiniaTask):
 
     # We output a report.
     output_evidence = ReportText(source_path=output_file_path)
-
-    # traverse root directory, and list directories as dirs and files as files
-    macho_info = ''
     parsed_binaries = 0
     parsed_fat_binaries = 0
-    
+
+    # traverse root directory, and list directories as dirs and files as files
     for root, dirs, files in os.walk(evidence.local_path):
       for file in files:
         macho_path = os.path.join(root, file)
@@ -330,10 +330,10 @@ class MachoAnalysisTask(TurbiniaTask):
         macho_fd.close()
         result.log(f'------------------------')
 
-    output_evidence.text_data = os.linesep.join(macho_info) 
-    result.report_data = os.linesep.join(macho_info)
-    result.report_priority = Priority.LOW
     summary = f'Parsed {parsed_fat_binaries} lief.MachO.FatBinary and {parsed_binaries} lief.MachO.Binary'
+    output_evidence.text_data = os.linesep.join(summary) 
+    result.report_data = os.linesep.join(summary)
+    result.report_priority = Priority.LOW
 
     # Write the Mach-O Info to the output file.
     with open(output_file_path, 'wb') as fh:
