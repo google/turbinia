@@ -72,11 +72,11 @@ class MachoAnalysisTask(TurbiniaTask):
       list[str]: names of the segments.
     """
     section_names = []
-    result.log(f'----------- sections --------------')
+    #result.log(f'----------- sections --------------')
     for section in segment.sections:
-      result.log(f'  {section.name}')
+      #result.log(f'  {section.name}')
       section_names.append(section.name)
-    result.log(f'-----------------------------------')
+    #result.log(f'-----------------------------------')
     return section_names
 
   def _GetSegmentNames(self, binary, result):
@@ -89,14 +89,14 @@ class MachoAnalysisTask(TurbiniaTask):
       list[str]: names of the segments.
     """
     segment_names = []
-    result.log(f'----------- segments --------------')
+    #result.log(f'----------- segments --------------')
     for segment in binary.segments:
       section_names = []
-      result.log(f'{segment.name}')
+      #result.log(f'{segment.name}')
       segment_names.append(segment.name)
       section_names = self._GetSectionNames(binary, result)
       # TODO: How do we want to surface the section names
-    result.log(f'-----------------------------------')
+    #result.log(f'-----------------------------------')
     return segment_names
 
   def _ParseCodeSignature(self, code_signature, result):
@@ -111,8 +111,8 @@ class MachoAnalysisTask(TurbiniaTask):
     """
     signature_bytes = code_signature.content.tobytes()
     #result.log(f'{code_signature.content.hex()}')
-    result.log(f'data_offset: {code_signature.data_offset}')
-    result.log(f'signature_bytes size: {len(signature_bytes)}')
+    #result.log(f'data_offset: {code_signature.data_offset}')
+    #result.log(f'signature_bytes size: {len(signature_bytes)}')
     super_blob_magic = signature_bytes[0:4]
     if super_blob_magic != self._CSMAGIC_EMBEDDED_SIGNATURE:
       result.log(f'*** no embedded code signature detected ***')
