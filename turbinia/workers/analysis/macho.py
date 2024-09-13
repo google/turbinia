@@ -281,7 +281,7 @@ class MachoAnalysisTask(TurbiniaTask):
       output_file_name = f'{parsed_macho.name}-{parsed_macho.type}.json'
     output_file_path=os.path.join(self.output_dir, output_file_name)
     with open(output_file_path, 'w') as fh:
-      fh.write(f'{json.dumps(parsed_macho.__dict__)}\n')
+      fh.write(f'{json.dumps(parsed_macho.__dict__, indent=2)}\n')
       fh.close()
 
   def run(self, evidence, result):
