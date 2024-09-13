@@ -13,7 +13,7 @@ class MachoAnalysisJob(interface.TurbiniaJob):
   """Mach-O analysis job."""
 
   evidence_input = [
-      Directory, RawDisk, CompressedDirectory
+      Directory, CompressedDirectory
   ]
   evidence_output = [ReportText]
 
