@@ -27,7 +27,6 @@ from turbinia import TurbiniaException
 from turbinia import job_utils
 from turbinia.lib import docker_manager
 from turbinia.jobs import manager as job_manager
-from turbinia.tcelery import TurbiniaCelery
 
 config.LoadConfig()
 task_manager_type = config.TASK_MANAGER.lower()
@@ -249,7 +248,6 @@ class TurbiniaCeleryWorker(TurbiniaWorkerBase):
     # no apparent benefit from having this enabled at the moment.
     self.worker.task(task_utils.task_runner, name='task_runner')
     argv = [
-        'worker', '--loglevel=info', '--concurrency=1', '--without-gossip',
-        '--without-mingle'
+        'worker', '--loglevel=info', '--concurrency=1', '--without-gossip', '-E'
     ]
     self.worker.start(argv)

@@ -533,7 +533,7 @@ class Evidence:
       if self.resource_tracked:
         # Track resource and task id in state file
         log.debug(
-            'Evidence {0:s} is resource tracked. Acquiring filelock for'
+            'Evidence {0:s} is resource tracked. Acquiring filelock for '
             'preprocessing'.format(self.name))
         with filelock.FileLock(config.RESOURCE_FILE_LOCK):
           resource_manager.PreprocessResourceState(self.resource_id, task_id)
@@ -565,7 +565,7 @@ class Evidence:
 
     if self.resource_tracked:
       log.debug(
-          'Evidence: {0:s} is resource tracked. Acquiring filelock for '
+          'Evidence {0:s} is resource tracked. Acquiring filelock for '
           'postprocessing.'.format(self.name))
       with filelock.FileLock(config.RESOURCE_FILE_LOCK):
         # Run postprocess to either remove task_id or resource_id.

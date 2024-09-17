@@ -40,7 +40,7 @@ limitations under the License.
               </v-list-item-action>
             </div>
             <v-list-item :max-width="800">
-              {{ item.task_name }}: {{ $filters.truncate(item.task_status, 384, '...') }}
+              {{ item.task_name }} {{ $filters.truncate(item.task_status, 384, '...') }}
             </v-list-item>
           </v-list-item>
           <v-divider> </v-divider>

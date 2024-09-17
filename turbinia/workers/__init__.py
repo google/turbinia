@@ -454,7 +454,7 @@ class TurbiniaTask:
   STORED_ATTRIBUTES = [
       'id', 'job_id', 'job_name', 'start_time', 'last_update', 'name',
       'evidence_name', 'evidence_id', 'request_id', 'requester', 'group_name',
-      'reason', 'group_id'
+      'reason', 'group_id', 'celery_id'
   ]
 
   # The list of evidence states that are required by a Task in order to run.
@@ -482,6 +482,7 @@ class TurbiniaTask:
       self.base_output_dir = config.OUTPUT_DIR
 
     self.id = uuid.uuid4().hex
+    self.celery_id = None
     self.is_finalize_task = False
     self.job_id = None
     self.job_name = None
@@ -507,7 +508,6 @@ class TurbiniaTask:
     self.group_name = group_name
     self.reason = reason
     self.group_id = group_id
-    self.worker_name = platform.node()
 
   def serialize(self):
     """Converts the TurbiniaTask object into a serializable dict.
@@ -1097,7 +1097,13 @@ class TurbiniaTask:
         self._evidence_config = evidence.config
         self.task_config = self.get_task_recipe(evidence.config)
         self.worker_start_time = datetime.now()
-        updated_status = f'{self.id} is running on worker {self.worker_name}'
+        # Update task status so we know which worker the task executed on.
+        worker_name = platform.node()
+        updated_status = f'Task is running on {worker_name}'
+        task_key = self.state_manager.redis_client.build_key_name(
+            'task', self.id)
+        self.state_manager.redis_client.set_attribute(
+            task_key, 'worker_name', json.dumps(worker_name))
         self.update_task_status(self, updated_status)
         self.result = self.run(evidence, self.result)
 
@@ -1194,9 +1200,8 @@ class TurbiniaTask:
       status (str): Brief word or phrase for Task state. If not supplied, the
           existing Task status will be used.
     """
-    if status:
-      task.status = 'Task {0!s} is {1!s} on {2!s}'.format(
-          self.name, status, self.worker_name)
+    if not status:
+      return
     if not self.state_manager:
       self.state_manager = state_manager.get_state_manager()
     if self.state_manager:
