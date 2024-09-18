@@ -91,7 +91,7 @@ class DfdeweyTask(TurbiniaTask):
         result.log(status_summary)
     else:
       status_summary = (
-          'Not running dfDewey. Case was not provided in task config.')
+          'dfDewey will not execute. Case was not provided in task config.')
       result.log(status_summary)
 
     result.close(self, success=success, status=status_summary)

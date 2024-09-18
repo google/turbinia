@@ -45,7 +45,7 @@ class FsstatTask(TurbiniaTask):
     # Since fsstat does not support some filesystems, we won't run it when we
     # know the partition is not supported.
     elif evidence.path_spec.type_indicator in ("APFS", "XFS"):
-      message = 'Not running fsstat since partition is not supported'
+      message = 'Not processing since partition is not supported'
       result.log(message)
       result.close(self, success=True, status=message)
     else:
