@@ -60,8 +60,8 @@ class TurbiniaCelery:
         worker_cancel_long_running_tasks_on_connection_loss=True,
         worker_concurrency=1,
         worker_prefetch_multiplier=1,
-        # Avoid task duplication
-        worker_deduplicate_successful_tasks=True)
+        task_reject_on_worker_lost=True,  # Re-queue task if celery worker abruptly exists
+        worker_deduplicate_successful_tasks=True)  # avoid task duplication
 
 
 class TurbiniaKombu(TurbiniaMessageBase):

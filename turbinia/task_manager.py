@@ -705,7 +705,6 @@ class CeleryTaskManager(BaseTaskManager):
       elif celery_task.status == celery_states.STARTED:
         # Task status will be set to running when the worker executes run_wrapper()
         log.debug(f'Task {celery_task.id:s} not finished.')
-        # set status here too
         check_timeout = True
       elif celery_task.status == celery_states.FAILURE:
         log.warning(f'Task {celery_task.id:s} failed.')
