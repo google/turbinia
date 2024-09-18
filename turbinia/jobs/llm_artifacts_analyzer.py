@@ -111,7 +111,7 @@ class LLMArtifactsExtractionJob(interface.TurbiniaJob):
           'LLM_PROVIDER used is vertexai while GCP_GENERATIVE_LANGUAGE_API_KEY'
           ' config is not set, llm_analyzer tasks will be skipped.')
       return tasks
-    # To avoid redundent processing between LLM analyzer and other
+    # To avoid redundant processing between LLM analyzer and other
     # analyzers using same evidence type. LLM analyzer uses evidence
     # type `ExportedFileArtifactLLM` supported by
     # FileArtifactExtractionTask when llm_artifacts=True.
@@ -125,8 +125,8 @@ class LLMArtifactsExtractionJob(interface.TurbiniaJob):
 class LLMAnalysisJob(interface.TurbiniaJob):
   """LLM analysis job for selected history, logs and config files."""
 
-  # To avoid redundent processing between LLM analyzer and other
-  # analyzers using same evidence type. LLM analyzer uses seperate
+  # To avoid redundant processing between LLM analyzer and other
+  # analyzers using same evidence type. LLM analyzer uses separate
   # evidence type supported by FileArtifactExtractionTask when
   # llm_artifacts=True.
   evidence_input = [evidence_module.ExportedFileArtifactLLM]

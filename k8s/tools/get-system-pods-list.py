@@ -14,7 +14,7 @@
 """Script to enumerate system pods.
 
 This is to generate a list of containers that we can filter out by default in
-the containr/docker enumeration tasks.
+the container/docker enumeration tasks.
 """
 
 import json

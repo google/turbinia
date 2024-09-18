@@ -38,7 +38,7 @@ class TurbiniaRequest:
     failed_tasks (list): List of failed tasks.
     group_id(str): A client specified group id for this request.
     group_name (str): Name for grouping evidence.
-    last_update (datetime.datetime): Last modification timestmap. 
+    last_update (datetime.datetime): Last modification timestamp. 
     queued_tasks (list): List of queued tasks.
     reason (str): Reason or justification for Turbinia requests.
     recipe(dict): Recipe to use when processing this request.
