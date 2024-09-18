@@ -2,7 +2,7 @@
 # Turbinia GKE e2e tests
 # The e2e test will test Turbinia googleclouddisk processing
 # Requirements:
-# TODO: Have seperate checks for each of the requirements
+# TODO: Have separate checks for each of the requirements
 # - have 'kubectl', 'jq', and 'uuid-runtime' packages installed
 # - have the 'turbinia-client' CLI installed
 # - have authenticated to your GKE cluster via `gcloud container clusters get-credentials [clustername] --zone [zone] --project [project_name]`

@@ -98,8 +98,8 @@ class FileArtifactExtractionTask(TurbiniaTask):
         result.log(f'image_export failed for artifact {artifact_name:s}.')
         err_cnt += 1
 
-      # LLM analyzer uses a seperate version of ExportedFileArtifact to avoid
-      # redundent processing of artifacts exported several times by LLM Analyzer
+      # LLM analyzer uses a separate version of ExportedFileArtifact to avoid
+      # redundant processing of artifacts exported several times by LLM Analyzer
       # and other analyzers.
       artifact_type = getattr(evidence_module, 'ExportedFileArtifact')
       if self.llm_artifacts:
