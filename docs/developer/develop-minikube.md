@@ -12,7 +12,7 @@ NOTE: This setup has been tested by the Turbinia developers in the following con
    * Setting up the VSCode Remote-SSH extension is outside of scope for this documentation but more information can be found [here](https://code.visualstudio.com/docs/remote/ssh).
    * NOTE: The GCE machine is used as a local machine running in GCP where you will install minikube and the other dependencies on.
 * If you want to develop with a full VSCode web interface you can use the [GCP Cloud Shell Editor](https://shell.cloud.google.com/)
-   * This setup has all the dependecies and VSCode extensions neeeded for Turbinia development pre-installed and configured. You can continue the setup at the section [here](#start-minkube-cluster).
+   * This setup has all the dependencies and VSCode extensions needed for Turbinia development pre-installed and configured. You can continue the setup at the section [here](#start-minkube-cluster).
    * Take note of the limitations [here](https://cloud.google.com/shell/docs/quotas-limits)
    * If the limitations are an issue for you, have a look into the (paid) version called [Google Cloud Workstation](https://cloud.google.com/workstations/).
 
@@ -24,7 +24,7 @@ As the main supported way to run Turbinia is on k8s it makes sense to also devel
 [Skaffold](https://skaffold.dev/) is a development workflow manager that takes care of building and deploying and monitoring for code changes so you can focus on writing code instead of manually building or restarting containers after every code change.
 
 ### VSCode + [Gemini Code Assist/Google Cloud Code extension](https://marketplace.visualstudio.com/items?itemName=GoogleCloudTools.cloudcode)
-VSCode is an IDE that combined with the Google Cloud Code extension will manage the dependencies needed for the development workflow and provide an interface to debug through breakpoints and watches. The extension will manage minikube, skaffold, kubectl and their setup and configuration in a seperate folder as not to interfere with your system configuration.
+VSCode is an IDE that combined with the Google Cloud Code extension will manage the dependencies needed for the development workflow and provide an interface to debug through breakpoints and watches. The extension will manage minikube, skaffold, kubectl and their setup and configuration in a separate folder as not to interfere with your system configuration.
 
 NOTE: Gemini Code Assist is disabled by default and can be enabled through the extension setting Cloudcode -> Duet AI -> Enable. This will give you LLM supported code advice. See [here](https://cloud.google.com/products/gemini/code-assist?hl=en) for further details about Gemini Code Assist.
 
@@ -43,7 +43,7 @@ Start VSCode and install the following extensions:
 * [Python](https://marketplace.visualstudio.com/items?itemName=ms-python.python)
 * [Gemini Code Assist + Google Cloud Code](https://marketplace.visualstudio.com/items?itemName=GoogleCloudTools.cloudcode)
 
-Restart VSCode. Once VSCode has restarted let's install the development dependencies (minikube, skaffold and kubectl). We will let the Google Cloud Code extension manage the dependencies and they will be installed in a seperate folder, not in your system folders. In VSCode:
+Restart VSCode. Once VSCode has restarted let's install the development dependencies (minikube, skaffold and kubectl). We will let the Google Cloud Code extension manage the dependencies and they will be installed in a separate folder, not in your system folders. In VSCode:
  * Control-Shift-P (or Command-Shift-P on Macs) to open the command menu
  * Choose `Cloud Code:  Control Minikube`
  * Choose `Continue with Managed dependencies`
@@ -94,7 +94,7 @@ Execute a build with skaffold (from the root of the cloned Turbinia Github repos
 
     skaffold build
 
-This will build a Turbinia Server container image succesfully if skaffold has been correctlty setup and configured as described above.
+This will build a Turbinia Server container image successfully if skaffold has been correctlty setup and configured as described above.
 
 ![Skaffold Build](../images/cloudcode-skaffoldbuild.png)
 
@@ -181,7 +181,7 @@ Try our Turbinia minikube development 101 Codelab [here](turbinia-codelab-analys
 #### Debugging API Server
 You can enable debugging by uncommenting the API Server `build` and `setValueTemplates` sections in the `skaffold.yaml` file.
 
-#### Developing and debuggin the WebUI
+#### Developing and debugging the WebUI
 The WebUI is developed with Vue and build using node/npm. This means there is no easy way to debug this in the container. We suggest developing with a local running WebUI using `npm run dev` in the `web/` folder. This will spinup a development web server for the WebUI that will talk to the API server managed by skaffold.
 
 #### Google Cloud Code tools not found (minikube, skaffold, kubectl)

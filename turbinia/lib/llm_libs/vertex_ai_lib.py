@@ -102,7 +102,7 @@ class TurbiniaVertexAILib(llm_lib_base.TurbiniaLLMLibBase):
       # can't be empty else the proto validators will complain behind the scene.
       # However in some cases the model sends an empty content, we patch it and
       # replace it with an ack message to avoid erroring out when re-sending the
-      # empty content in hostory with the next message.
+      # empty content in history with the next message.
       history = chat.history
       history_patched = []
       for content in history:

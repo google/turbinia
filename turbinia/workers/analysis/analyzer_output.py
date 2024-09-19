@@ -25,7 +25,7 @@ class AnalyzerOutput:
   """A class to record analyzer output.
 
   Attributes:
-    platform (str): [Required] Analyzer platfrom.
+    platform (str): [Required] Analyzer platform.
     analyzer_identifier (str): [Required] Unique analyzer identifier. This
       value may be platform specific.
     analyzer_name (str): [Required] Analyzer name.

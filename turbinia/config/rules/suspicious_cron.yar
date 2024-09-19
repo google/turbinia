@@ -1,6 +1,6 @@
 rule suspicious_cron {
     meta:
-        description = "Rule to find persistance in Cron files"
+        description = "Rule to find persistence in Cron files"
         author = "Fry"
         date = "2022-07-01"
         score = 90

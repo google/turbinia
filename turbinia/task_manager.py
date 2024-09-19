@@ -145,7 +145,7 @@ class BaseTaskManager:
       jobs_denylist (list): Jobs that will be excluded from running
       jobs_allowlist (list): The only Jobs will be included to run
     """
-    # Both client and server isntances of the task  manager require backends.
+    # Both client and server instances of the task  manager require backends.
     self._backend_setup(*args, **kwargs)
     # Only server instances of the task manager need to set up jobs.
     if kwargs.get('server') is False:

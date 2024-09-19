@@ -14,7 +14,7 @@ class TurbiniaLLMClient(PROVIDERS_MAP.get(turbinia_config.LLM_PROVIDER,
                                           object)):
   """Library to call LLM APIs.
 
-  The library inherets the implementation class for the `LLM_PROVIDER` in
+  The library inherits the implementation class for the `LLM_PROVIDER` in
   configs. If no provider specified, the basic `object` type will be used
   to fail gracefully.
   """

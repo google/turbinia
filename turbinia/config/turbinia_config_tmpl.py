@@ -398,7 +398,7 @@ GCP_GENERATIVE_LANGUAGE_API_KEY = ''
 ###############################################################################
 #                           LLM Providers
 #
-# Specify the choosen LLm provider to be used with LLM analyzer
+# Specify the chosen LLm provider to be used with LLM analyzer
 ###############################################################################
 
 # To add a new LLM provider, first add a new implementation class
