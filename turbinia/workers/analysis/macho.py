@@ -46,12 +46,12 @@ class Section():
 
 class Segment():
     def __init__(self, sections: List[Section]):
-        self.command = ""
+        #self.command = ""
         self.name = ""
         self.offset = ""
         self.size = 0
         self.vaddr = ""
-        self.vsize = 0
+        self.vsize = ""
         self.sections = sections
 
 class ParsedBinary(object):
@@ -192,7 +192,7 @@ class MachoAnalysisTask(TurbiniaTask):
       segment.offset = hex(seg.file_offset)
       segment.size = seg.file_size
       segment.vaddr = hex(seg.virtual_address)
-      segment.vsize = seg.virtual_size
+      segment.vsize = hex(seg.virtual_size)
       segments.append(segment)
     #result.log(f'-----------------------------------')
     return segments
@@ -353,6 +353,8 @@ class MachoAnalysisTask(TurbiniaTask):
     parsed_binary.entropy = self._GetDigest(entropy.EntropyHasher(), data)
     parsed_binary.size = binary_size
     parsed_binary.fat_offset = fat_offset
+    parsed_binary.magic = hex(binary.header.magic.value)
+    parsed_binary.flags = binary.header.flags
     parsed_binary.segments = self._GetSegments(binary, result)
     parsed_binary.symbols = self._GetSymbols(binary, result)
     #if binary.has_code_signature:
