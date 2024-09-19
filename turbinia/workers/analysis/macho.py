@@ -3,6 +3,7 @@
 import json
 import lief
 import os
+import time
 
 from typing import List
 
@@ -374,6 +375,9 @@ class MachoAnalysisTask(TurbiniaTask):
       fh.write(f'{json.dumps(parsed_macho.__dict__, default=lambda o: o.__dict__, indent=2)}\n')
       fh.close()
 
+  def _CurrentTimeMillis(self):
+    return round(time.time() * 1000)
+
   def run(self, evidence, result):
     """Run the Mach-O worker.
     Args:
@@ -383,6 +387,7 @@ class MachoAnalysisTask(TurbiniaTask):
         TurbiniaTaskResult object.
     """
     # Where to store the resulting output file.
+    start_time = self._CurrentTimeMillis()
     output_file_name = 'macho_analysis.txt'
     output_file_path = os.path.join(self.output_dir, output_file_name)
 
@@ -403,6 +408,7 @@ class MachoAnalysisTask(TurbiniaTask):
           break
 
         if isinstance(macho_binary, lief.MachO.FatBinary):
+          architecture = Architecture()
           parsed_macho = ParsedMacho(signature=None, architecture=None, iocs=None, imports=None, exports=None, fat_binary=None, arm64=None, x86_64=None)
           parsed_macho.evidence = evidence.id
           parsed_macho.request = evidence.request_id
@@ -415,8 +421,12 @@ class MachoAnalysisTask(TurbiniaTask):
             parsed_binaries += 1
             if binary.header.cpu_type == lief.MachO.Header.CPU_TYPE.ARM64:
               parsed_macho.arm64 = parsed_binary
+              architecture.arm64 = True
             elif binary.header.cpu_type == lief.MachO.Header.CPU_TYPE.X86_64:
               parsed_macho.x86_64 = parsed_binary
+              architecture.x86_64 = True
+          parsed_macho.architecture = architecture
+          parsed_macho.processing_time = self._CurrentTimeMillis() - start_time
           self._WriteParsedMachoResults(file, parsed_macho)
           result.log(f'{json.dumps(parsed_macho.__dict__, default=lambda o: o.__dict__)}')
         elif isinstance(macho_binary, lief.MachO.Binary):
