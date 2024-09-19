@@ -167,7 +167,6 @@ class MachoAnalysisTask(TurbiniaTask):
     sections = []
     #result.log(f'----------- sections --------------')
     for sec in segment.sections:
-      #result.log(f'  {section.name}')
       flags = []
       section = Section(flags)
       section.name = sec.name
@@ -194,9 +193,23 @@ class MachoAnalysisTask(TurbiniaTask):
       segment.vaddr = hex(seg.virtual_address)
       segment.vsize = seg.virtual_size
       segments.append(segment)
-      # TODO: How do we want to surface the section names
     #result.log(f'-----------------------------------')
     return segments
+
+  def _GetSymbols(self, binary, result):
+    """Retrieves Mach-O symbols.
+    Args:
+      binary (lief.MachO.Binary): binary to be parsed.
+      result (TurbiniaTaskResult): The object to place task results into.
+    Returns:
+      List[str]: List of the symbols.
+    """
+    symbols = []
+    #result.log(f'----------- symbols --------------')
+    for sym in binary.symbols:
+      symbols.append(sym.demangled_name)
+    #result.log(f'-----------------------------------')
+    return symbols
 
   def _ParseCodeSignature(self, code_signature, result):
     """Parses Mach-O code signature.
@@ -340,12 +353,11 @@ class MachoAnalysisTask(TurbiniaTask):
     parsed_binary.size = binary_size
     parsed_binary.fat_offset = fat_offset
     parsed_binary.segments = self._GetSegments(binary, result)
+    parsed_binary.symbols = self._GetSymbols(binary, result)
     #if binary.has_code_signature:
     #  # TODO: Do something useful with the signarure
     #  #result.log(f'signature size: {binary.code_signature.data_size}')
     #  self._ParseCodeSignature(binary.code_signature, result)
-    #parsed_macho.segments = self._GetSegmentNames(binary, result)
-    #parsed_macho.sections = self._GetSectionNames(binary, result)
     return parsed_binary
 
   def _WriteParsedMachoResults(self, file_name, parsed_macho):
@@ -398,7 +410,6 @@ class MachoAnalysisTask(TurbiniaTask):
           parsed_macho.source_type = "file"
           parsed_macho.fat_binary = self._ParseMachoFatBinary(macho_fd, evidence, result, macho_path, file)
           parsed_fat_binaries += 1
-
           for binary in macho_binary:
             parsed_binary = self._ParseMachoBinary(macho_fd, evidence, binary, result, file)
             parsed_binaries += 1
@@ -406,8 +417,6 @@ class MachoAnalysisTask(TurbiniaTask):
               parsed_macho.arm64 = parsed_binary
             elif binary.header.cpu_type == lief.MachO.Header.CPU_TYPE.X86_64:
               parsed_macho.x86_64 = parsed_binary
-            #self._WriteParsedMachoResults(parsed_macho)
-            #result.log(f'{json.dumps(parsed_macho.__dict__, default=lambda o: o.__dict__)}')
           self._WriteParsedMachoResults(file, parsed_macho)
           result.log(f'{json.dumps(parsed_macho.__dict__, default=lambda o: o.__dict__)}')
         elif isinstance(macho_binary, lief.MachO.Binary):
