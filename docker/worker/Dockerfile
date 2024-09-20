@@ -1,5 +1,5 @@
 # Build 1 - Turbinia Worker
-FROM ubuntu:22.04
+FROM --platform=linux/amd64 ubuntu:22.04
 ENV DEBIAN_FRONTEND=noninteractive \
     PIP_NO_CACHE_DIR=1
 ARG PPA_TRACK=stable
@@ -52,9 +52,9 @@ RUN echo "Defaults secure_path=\"/home/turbinia/.venv/bin:/opt/fraken:/usr/local
 
 # Install yara rules and fraken binary.
 RUN cd /opt \
-    && git clone https://github.com/Neo23x0/signature-base.git \
-    && sudo chown -R turbinia:turbinia /opt/signature-base \
-    && find /opt/signature-base -type f -not -iname '*.yar' -not -iname '*.yara' -not -iname 'file-type-signatures.txt' -delete
+&& git clone https://github.com/Neo23x0/signature-base.git --depth=1\
+&& sudo chown -R turbinia:turbinia /opt/signature-base \
+&& find signature-base -type f -not -path '*.git/*' -not -iname '*.yar' -not -iname '*.yara' -not -iname 'file-type-signatures.txt' -delete
 COPY turbinia/config/rules/*.yar /opt/signature-base/yara/
 RUN mkdir -p /opt/fraken && chown -R turbinia:turbinia /opt/fraken
 COPY --from=us-docker.pkg.dev/osdfir-registry/turbinia/release/fraken:latest --chown=turbinia:turbinia /bin/fraken /opt/fraken/fraken
