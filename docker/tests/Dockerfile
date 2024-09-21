@@ -59,7 +59,7 @@ RUN echo "Defaults secure_path=\"/home/turbinia/.venv/bin:/usr/local/sbin:/usr/l
 RUN cd /opt \
     && git clone https://github.com/Neo23x0/signature-base.git --depth=1\
     && sudo chown -R turbinia:turbinia /opt/signature-base \
-    && git config --global --add safe.directory /opt/signature-base
+    && sudo git config --global --add safe.directory /opt/signature-base
     && find /opt/signature-base -type f -not -path '*.git/*' -not -iname '*.yar' -not -iname '*.yara' -not -iname 'file-type-signatures.txt' -delete
 COPY turbinia/config/rules/*.yar /opt/signature-base/yara/
 RUN mkdir -p /opt/fraken && chown -R turbinia:turbinia /opt/fraken
