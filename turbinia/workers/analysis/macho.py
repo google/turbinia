@@ -34,7 +34,7 @@ class Hashes(object):
         self.tlsh = ""
         self.symhash = ""
 
-class Section():
+class Section(object):
     def __init__(self, flags: List[str]):
         self.name = ""
         self.entropy = 0
@@ -44,7 +44,7 @@ class Section():
         self.section_type = ""
         self.flags = flags
 
-class Segment():
+class Segment(object):
     def __init__(self, sections: List[Section]):
         #self.command = ""
         self.name = ""
@@ -93,10 +93,14 @@ class Signature(object):
         self.organization_unit_name = ""
         self.common_name = ""
         self.identifier = ""
-        self.team_identifier = ""
+        self.team_identifier = "not set"
         self.signed_time = ""
         self.size = 0
         self.cd_hash = 0
+        self.hash_type = ""
+        self.hash_size = 0
+        self.platform_identifier = 0
+        self.pagesize = 0
 
 class ParsedMacho(object):
   def __init__(self, signature: Signature, architecture: Architecture, iocs: Iocs, imports: List[Import], exports: List[Export], fat_binary: ParsedFatBinary, arm64: ParsedBinary, x86_64: ParsedBinary):
@@ -122,13 +126,19 @@ class MachoAnalysisTask(TurbiniaTask):
   ]
 
   _MAGIC_MULTI_SIGNATURE = b'\xca\xfe\xba\xbe'
-  _MAGIC_32_SIGNATURE = b'\xce\xfa\xed\xfe'
-  _MAGIC_64_SIGNATURE = b'\xcf\xfa\xed\xfe'
+  _MAGIC_32_SIGNATURE    = b'\xce\xfa\xed\xfe'
+  _MAGIC_64_SIGNATURE    = b'\xcf\xfa\xed\xfe'
 
   # Code signature constants
+  # https://github.com/apple-oss-distributions/xnu/blob/main/osfmk/kern/cs_blobs.h
   _CSMAGIC_EMBEDDED_SIGNATURE = b'\xfa\xde\x0c\xc0' # embedded form of signature data
-  _CSMAGIC_CODEDIRECTORY = b'\xfa\xde\x0c\x02'      # CodeDirectory blob
-  _CSMAGIC_BLOBWRAPPER = b'\xfa\xde\x0b\x01'        # CMS Signature, among other things
+  _CSMAGIC_CODEDIRECTORY      = b'\xfa\xde\x0c\x02' # CodeDirectory blob
+  _CSMAGIC_BLOBWRAPPER        = b'\xfa\xde\x0b\x01' # Wrapper blob used for CMS Signature, among other things
+
+  # Slot numbers
+  # https://github.com/apple-oss-distributions/xnu/blob/main/osfmk/kern/cs_blobs.h
+  _CSSLOT_CODEDIRECTORY = b'\x00\x00\x00\x00' # Code Directory slot
+  _CSSLOT_SIGNATURESLOT = b'\x00\x01\x00\x00' # CMS Signature slot
 
   def _GetDigest(self, hasher, data):
     """Executes a hasher and returns the digest.
@@ -212,6 +222,24 @@ class MachoAnalysisTask(TurbiniaTask):
     #result.log(f'-----------------------------------')
     return symbols
 
+  def _CSHashType(self, cs_hash_type):
+    """Translates CS hash type to a string.
+    Args:
+      cs_hash_type (int): CS hash type.
+    Returns:
+      (str): CS hash type string.
+    """
+    if cs_hash_type == 1:
+      return "SHA1"
+    elif cs_hash_type == 2:
+      return "SHA256"
+    elif cs_hash_type == 3:
+      return "SHA256_TRUNCATED"
+    elif cs_hash_type == 4:
+      return "SHA384"
+    else:
+      return ""
+
   def _ParseCodeSignature(self, code_signature, result):
     """Parses Mach-O code signature.
        Details about the code signature structure on GitHub
@@ -219,92 +247,109 @@ class MachoAnalysisTask(TurbiniaTask):
     Args:
       code_signature (lief.MachO.CodeSignature): code signature to be parsed.
       result (TurbiniaTaskResult): The object to place task results into.
-    Returns:
+    Returns: Signature or None if not found
     """
+    signature = None
     signature_bytes = code_signature.content.tobytes()
-    #result.log(f'{code_signature.content.hex()}')
+    #result.log(f'code_signature.data_size = {code_signature.data_size}')
+    #result.log(f'{signature_bytes.hex()}')
     #result.log(f'data_offset: {code_signature.data_offset}')
     #result.log(f'signature_bytes size: {len(signature_bytes)}')
-    super_blob_magic = signature_bytes[0:4]
-    if super_blob_magic != self._CSMAGIC_EMBEDDED_SIGNATURE:
-      result.log(f'*** no embedded code signature detected ***')
-    else:
-      #result.log(f'*** found embedded signature ***')
-      super_blob_length = int.from_bytes(signature_bytes[5:8], "big")
-      generic_blob_count = int.from_bytes(signature_bytes[9:12], "big")
-      #result.log(f'super_blob_length: ' + str(super_blob_length))
-      #result.log(f'generic_blob_count: ' + str(generic_blob_count))
+    super_blob_magic = signature_bytes[0:4] # uint32_t magic
+    if super_blob_magic == self._CSMAGIC_EMBEDDED_SIGNATURE:
+      # SuperBlob called EmbeddedSignatureBlob found which contains the code signature data
+      # struct EmbeddedSignatureBlob {
+      #   uint32_t magic = 0xfade0cc0;
+      #   uint32_t length;
+      #   uint32_t count; // Count of contained blob entries
+      #   IndexEntry entries[]; // Has `count` entries
+      #   Blob blobs[]; // Has `count` blobs
+      # }
+      signature = Signature()
+      result.log(f'*** found embedded signature ***')
+      result.log(f'_CSSLOT_SIGNATURESLOT: {self._CSSLOT_SIGNATURESLOT}')
+      super_blob_length = int.from_bytes(signature_bytes[4:8], "big") # uint32_t length
+      generic_blob_count = int.from_bytes(signature_bytes[8:12], "big") # uint32_t count: Count of contained blob entries
+      result.log(f'super_blob_length: ' + str(super_blob_length))
+      result.log(f'generic_blob_count: ' + str(generic_blob_count))
       for i in range(generic_blob_count):
         # lets walk through the CS_BlobIndex index[] entries
         # https://github.com/apple-oss-distributions/xnu/blob/94d3b452840153a99b38a3a9659680b2a006908e/osfmk/kern/cs_blobs.h#L280C15-L280C22
-        ind = 'index_' + str(i)
+        #ind = 'index_' + str(i)
         #result.log(f' {ind}')
-        start_type = 13 + i*8 # uint32_t type
-        start_offset = start_type + 4 # uint32_t offset
-        #result.log(f' start_type:  {start_type}')
-        #result.log(f' start_offset: {start_offset}')
-        blob_index_type = signature_bytes[start_type:start_type+4]
-        blob_index_offset = int.from_bytes(signature_bytes[start_offset:start_offset+3], "big")
-        #result.log(f'   type  : {blob_index_type}')
-        #result.log(f'   offset: {blob_index_offset}')
+        start_index_entry_type = 12 + i*8 # uint32_t type
+        start_index_entry_offset = start_index_entry_type + 4 # uint32_t offset
+        result.log(f' start_type:  {start_index_entry_type}')
+        result.log(f' start_index_entry_offset: {start_index_entry_offset}')
+        blob_index_type = signature_bytes[start_index_entry_type:start_index_entry_type+4]
+        blob_index_offset = int.from_bytes(signature_bytes[start_index_entry_offset:start_index_entry_offset+4], "big")
+        result.log(f'   type  : {blob_index_type}')
+        result.log(f'   offset: {blob_index_offset}')
         generic_blob_magic = signature_bytes[blob_index_offset:blob_index_offset+4]
         generic_blob_length = int.from_bytes(signature_bytes[blob_index_offset+4:blob_index_offset+8], "big")
-        #result.log(f'     magic : {generic_blob_magic}')
-        #result.log(f'     length: {generic_blob_length}')
-        if generic_blob_magic == self._CSMAGIC_CODEDIRECTORY:
-          # TODO: extract team_id_offset pointing to team_id string
-          result.log(f'     found CSMAGIC_CODEDIRECTORY, TODO: extract team_id string')
-        elif generic_blob_magic == self._CSMAGIC_BLOBWRAPPER:
-          result.log(f'     found CSMAGIC_BLOBWRAPPER, TODO: decide on signer info to extract')
+        result.log(f'     magic : {generic_blob_magic}')
+        result.log(f'     length: {generic_blob_length}')
+        if generic_blob_magic == self._CSMAGIC_CODEDIRECTORY and blob_index_type == self._CSSLOT_CODEDIRECTORY:
+          # CodeDirectory is a Blob the describes the binary being signed
+          result.log(f'     found CSMAGIC_CODEDIRECTORY (0xfade0c02) with Code Directory slot')
+          code_directory = signature_bytes[blob_index_offset:blob_index_offset+generic_blob_length]
+          cd_length = int.from_bytes(code_directory[4:8], "big")
+          cd_hash_offset = int.from_bytes(code_directory[16:20], "big")
+          cd_ident_offset = int.from_bytes(code_directory[20:24], "big")
+          cd_hash_size = int.from_bytes(code_directory[36:37], "big")
+          cd_hash_type = self._CSHashType(int.from_bytes(code_directory[37:38], "big"))
+          cd_platform = int.from_bytes(code_directory[38:39], "big")
+          cd_pagesize = 2**int.from_bytes(code_directory[39:40], "big")
+          cd_team_id_offset = int.from_bytes(code_directory[48:52], "big")
+          result.log(f'     cd_length         : {cd_length}')
+          result.log(f'     cd_hash_offset    : {cd_hash_offset}')
+          result.log(f'     cd_hash_size      : {cd_hash_size}')
+          result.log(f'     cd_hash_type      : {cd_hash_type}')
+          result.log(f'     cd_platform       : {cd_platform}')
+          result.log(f'     cd_pagesize       : {cd_pagesize}')
+          result.log(f'     cd_ident_offset   : {cd_ident_offset}')
+          result.log(f'     cd_team_id_offset : {cd_team_id_offset}')
+          signature.hash_type = cd_hash_type
+          signature.hash_size = cd_hash_size
+          signature.platform_identifier = cd_platform
+          signature.pagesize = cd_pagesize
+          if cd_ident_offset > 0:
+            cd_ident = code_directory[cd_ident_offset:-1].split(b'\0')[0].decode()
+            result.log(f'     cd_ident          : {cd_ident}')
+            signature.identifier = cd_ident
+          if cd_team_id_offset > 0:
+            cd_team_id = code_directory[cd_team_id_offset:-1].split(b'\0')[0].decode()
+            result.log(f'     cd_team_id        : {cd_team_id}')
+            signature.team_identifier = cd_team_id
+        elif generic_blob_magic == self._CSMAGIC_BLOBWRAPPER and blob_index_type == self._CSSLOT_SIGNATURESLOT:
+          result.log(f'     found CSMAGIC_BLOBWRAPPER (0xfade0b01) with CMS Signature slot')
+          signature.size = generic_blob_length
           blobwrapper_base = blob_index_offset+8
           cert = signature_bytes[blobwrapper_base:blobwrapper_base+generic_blob_length]
           #result.log(f'{cert}')
           content_info = cms.ContentInfo.load(cert)
-          #result.log(f'{content_info}')
-          signed_data = content_info['content']
-          signed_data_version = signed_data['version']
-          encap_content_info = signed_data['encap_content_info']
-          signer = signed_data['signer_infos'][0]
-          signer_version = signer['version']
-          #result.log(f'----------- signer info -----------')
-          #result.log(f'{signer.native}')
-          #result.log(f'-------- signer identifier --------')
-          signer = signer['sid'].native
-          #result.log(f'{signer}')
-          #result.log(f'-----------------------------------')
-          #result.log(f'-------- signed attributes --------')
-          #attrs = signer['signed_attrs'].native
-          #result.log(f'{attrs}')
-
-  def _CpuType(self, cpu_type):
-    """Translates CPU type identifier to string.
-    Args:
-      cpu_type (int): CPU type identifier.
-    Returns:
-      (str): CPU type string.
-    """
-    if cpu_type == lief.MachO.Header.CPU_TYPE.ANY:
-      return "ANY"
-    elif cpu_type == lief.MachO.Header.CPU_TYPE.ARM:
-      return "ARM"
-    elif cpu_type == lief.MachO.Header.CPU_TYPE.ARM64:
-      return "ARM64"
-    elif cpu_type == lief.MachO.Header.CPU_TYPE.MC98000:
-      return "MC98000"
-    elif cpu_type == lief.MachO.Header.CPU_TYPE.MIPS:
-      return "MIPS"
-    elif cpu_type == lief.MachO.Header.CPU_TYPE.POWERPC:
-      return "POWERPC"
-    elif cpu_type == lief.MachO.Header.CPU_TYPE.POWERPC64:
-        return "POWERPC64"
-    elif cpu_type == lief.MachO.Header.CPU_TYPE.SPARC:
-        return "SPARC"
-    elif cpu_type == lief.MachO.Header.CPU_TYPE.X86:
-        return "X86"
-    elif cpu_type == lief.MachO.Header.CPU_TYPE.X86_64:
-      return "X86_64"
+          #result.log(f'content_info: {content_info.native}')
+          if content_info['content_type'].native == 'signed_data':
+            signed_data = content_info['content']
+            #result.log(f'----------- signed data -----------')
+            #result.log(f'signed_data: {signed_data.native}')
+            #result.log(f'------------------------------------')
+            signer_infos = signed_data['signer_infos']
+            #encap_content_info = signed_data['encap_content_info']
+            #result.log(f'----------- signer infos -----------')
+            #result.log(f'signer_infos: {signer_infos.native}')
+            #result.log(f'------------------------------------')
+            #result.log(f'----------- signer infos -----------')
+            for signer_info in signer_infos:
+              result.log(f'signer_info: {signer_info.native}')
+              sid = signer_info['sid']
+              result.log(f'sid: {sid.native}')
+              #issuer = sid['issuer_and_serial_number']
+              #result.log(f'issuer: {issuer.native}')
+              result.log(f'-----------------------------------')
     else:
-      return ""
+      result.log(f'*** no embedded code signature detected ***')
+    return signature
     
   def _ParseMachoFatBinary(self, macho_fd, evidence, result, macho_path, file_name):
     """Parses a Mach-O fat binary.
@@ -357,10 +402,8 @@ class MachoAnalysisTask(TurbiniaTask):
     parsed_binary.flags = binary.header.flags
     parsed_binary.segments = self._GetSegments(binary, result)
     parsed_binary.symbols = self._GetSymbols(binary, result)
-    #if binary.has_code_signature:
-    #  # TODO: Do something useful with the signarure
-    #  #result.log(f'signature size: {binary.code_signature.data_size}')
-    #  self._ParseCodeSignature(binary.code_signature, result)
+    if binary.has_code_signature:
+      parsed_binary.signature = self._ParseCodeSignature(binary.code_signature, result)
     return parsed_binary
 
   def _WriteParsedMachoResults(self, file_name, parsed_macho):
@@ -453,5 +496,3 @@ class MachoAnalysisTask(TurbiniaTask):
     # Add the output evidence to the result object.
     result.add_evidence(output_evidence, evidence.config)
     result.close(self, success=True, status=summary)
-
-    return result
