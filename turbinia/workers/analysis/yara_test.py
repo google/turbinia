@@ -14,6 +14,7 @@
 # limitations under the License.
 """Tests for the Yara analysis task."""
 
+import git
 import logging
 import os
 import mock
@@ -73,6 +74,16 @@ class YaraAnalysisTaskTest(TestTurbiniaTaskBase):
     self.assertRaisesRegex(
         TurbiniaException, '.*Unknown \(no stderr\).*', self.task.runFraken,
         self.result, self.evidence)
+
+  def test_update_rules(self):
+    """Tests the update_rules method"""
+    ret = self.task.update_rules(None)
+    self.assertEqual(ret, True)
+
+    error_rules = {'http://dummy': '/'}
+    ret = self.task.update_rules(error_rules)
+    self.assertRaises(git.exc.InvalidGitRepositoryError)
+    self.assertEqual(ret, False)
 
 
 if __name__ == '__main__':

@@ -14,11 +14,11 @@
 # limitations under the License.
 """Task for running Yara on drives & directories."""
 
+import git
 import json
 import logging
 import os
 import re
-import git
 
 from turbinia import config
 from turbinia import TurbiniaException
@@ -47,16 +47,22 @@ class YaraAnalysisTask(TurbiniaTask):
       'minscore': None
   }
 
-  def update_rules(self):
+  RULES = {
+      'https://github.com/Neo23x0/signature-base.git': '/opt/signature-base'
+  }
+
+  def update_rules(self, rules):
     """Update the Yara rules.
 
-    Args: None
+    Args: 
+        rules (dict): dict with repo url -> path mapping
         
-    Returns: None
+    Returns:  
+        bool: True if success, False if error
     """
-    rules = {
-        'https://github.com/Neo23x0/signature-base.git': '/opt/signature-base'
-    }
+    if rules is None:
+      rules = self.RULES
+
     log.debug('Updating Yara rules')
     for repo, path in rules.items():
       try:
@@ -64,8 +70,15 @@ class YaraAnalysisTask(TurbiniaTask):
         origin = repository.remotes.origin
         origin.pull(depth=1)
         log.debug('Successfully updated rules from %s in %s', repo, path)
+      except git.exc.InvalidGitRepositoryError as e:
+        log.debug(
+            'InvalidGitRepositoryError updating rules in %s: %s', path, str(e))
+        return False
       except Exception as e:
-        log.debug('Error updating rules in %s: %s', path, str(e))
+        log.debug('Unknown error updating rules in %s: %s', path, str(e))
+        return False
+
+    return True
 
   def run(self, evidence, result):
     """Run the Yara worker.
@@ -77,7 +90,7 @@ class YaraAnalysisTask(TurbiniaTask):
         TurbiniaTaskResult object.
     """
     # Let's update the Yara rules
-    self.update_rules()
+    self.update_rules(rules=self.RULES)
 
     # Where to store the resulting output file.
     output_file_name = 'yara_analysis.txt'
