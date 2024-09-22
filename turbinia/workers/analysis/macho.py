@@ -5,6 +5,8 @@ import lief
 import os
 import time
 
+import tlsh
+
 from asn1crypto import cms
 from time import strftime
 from turbinia import TurbiniaException
@@ -373,6 +375,7 @@ class MachoAnalysisTask(TurbiniaTask):
     hashes = Hashes()
     hashes.md5 = self._GetDigest(md5.MD5Hasher(), data)
     hashes.sha256 = self._GetDigest(sha256.SHA256Hasher(), data)
+    hashes.tlsh = tlsh.hash(data)
     parsed_fat_binary = ParsedFatBinary(hashes)
     parsed_fat_binary.entropy = self._GetDigest(entropy.EntropyHasher(), data)
     fat_binary_stats = os.stat(macho_path)
@@ -399,6 +402,7 @@ class MachoAnalysisTask(TurbiniaTask):
     hashes.md5 = self._GetDigest(md5.MD5Hasher(), data)
     hashes.sha256 = self._GetDigest(sha256.SHA256Hasher(), data)
     hashes.symhash = self._GetSymhash(binary)
+    hashes.tlsh = tlsh.hash(data)
     parsed_binary = ParsedBinary(hashes=hashes, segments=None, symbols=None)
     parsed_binary.entropy = self._GetDigest(entropy.EntropyHasher(), data)
     parsed_binary.size = binary_size
