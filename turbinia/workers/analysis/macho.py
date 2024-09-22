@@ -255,10 +255,6 @@ class MachoAnalysisTask(TurbiniaTask):
     """
     signature = None
     signature_bytes = code_signature.content.tobytes()
-    #result.log(f'code_signature.data_size = {code_signature.data_size}')
-    #result.log(f'{signature_bytes.hex()}')
-    #result.log(f'data_offset: {code_signature.data_offset}')
-    #result.log(f'signature_bytes size: {len(signature_bytes)}')
     super_blob_magic = signature_bytes[0:4] # uint32_t magic
     if super_blob_magic == self._CSMAGIC_EMBEDDED_SIGNATURE:
       # SuperBlob called EmbeddedSignatureBlob found which contains the code signature data
@@ -270,7 +266,6 @@ class MachoAnalysisTask(TurbiniaTask):
       #   Blob blobs[]; // Has `count` blobs
       # }
       signature = Signature(signer_infos=[])
-      result.log(f'*** found embedded signature ***')
       result.log(f'_CSSLOT_SIGNATURESLOT: {self._CSSLOT_SIGNATURESLOT}')
       super_blob_length = int.from_bytes(signature_bytes[4:8], "big") # uint32_t length
       generic_blob_count = int.from_bytes(signature_bytes[8:12], "big") # uint32_t count: Count of contained blob entries
@@ -279,8 +274,6 @@ class MachoAnalysisTask(TurbiniaTask):
       for i in range(generic_blob_count):
         # lets walk through the CS_BlobIndex index[] entries
         # https://github.com/apple-oss-distributions/xnu/blob/94d3b452840153a99b38a3a9659680b2a006908e/osfmk/kern/cs_blobs.h#L280C15-L280C22
-        #ind = 'index_' + str(i)
-        #result.log(f' {ind}')
         start_index_entry_type = 12 + i*8 # uint32_t type
         start_index_entry_offset = start_index_entry_type + 4 # uint32_t offset
         result.log(f' start_type:  {start_index_entry_type}')
@@ -305,83 +298,51 @@ class MachoAnalysisTask(TurbiniaTask):
           cd_platform = int.from_bytes(code_directory[38:39], "big")
           cd_pagesize = 2**int.from_bytes(code_directory[39:40], "big")
           cd_team_id_offset = int.from_bytes(code_directory[48:52], "big")
-          result.log(f'     cd_length         : {cd_length}')
-          result.log(f'     cd_hash_offset    : {cd_hash_offset}')
-          result.log(f'     cd_hash_size      : {cd_hash_size}')
-          result.log(f'     cd_hash_type      : {cd_hash_type}')
-          result.log(f'     cd_platform       : {cd_platform}')
-          result.log(f'     cd_pagesize       : {cd_pagesize}')
-          result.log(f'     cd_ident_offset   : {cd_ident_offset}')
-          result.log(f'     cd_team_id_offset : {cd_team_id_offset}')
           signature.hash_type = cd_hash_type
           signature.hash_size = cd_hash_size
           signature.platform_identifier = cd_platform
           signature.pagesize = cd_pagesize
           if cd_ident_offset > 0:
             cd_ident = code_directory[cd_ident_offset:-1].split(b'\0')[0].decode()
-            result.log(f'     cd_ident          : {cd_ident}')
             signature.identifier = cd_ident
           if cd_team_id_offset > 0:
             cd_team_id = code_directory[cd_team_id_offset:-1].split(b'\0')[0].decode()
-            result.log(f'     cd_team_id        : {cd_team_id}')
             signature.team_identifier = cd_team_id
         elif generic_blob_magic == self._CSMAGIC_BLOBWRAPPER and blob_index_type == self._CSSLOT_SIGNATURESLOT:
           result.log(f'     found CSMAGIC_BLOBWRAPPER (0xfade0b01) with CMS Signature slot')
           signature.size = generic_blob_length
           blobwrapper_base = blob_index_offset+8
           cert = signature_bytes[blobwrapper_base:blobwrapper_base+generic_blob_length]
-          #result.log(f'{cert}')
           content_info = cms.ContentInfo.load(cert)
-          #result.log(f'content_info: {content_info.native}')
           if content_info['content_type'].native == 'signed_data':
             signed_data = content_info['content']
-            #result.log(f'----------- signed data -----------')
-            #result.log(f'signed_data: {signed_data.native}')
-            #result.log(f'------------------------------------')
             signer_infos = signed_data['signer_infos']
-            #encap_content_info = signed_data['encap_content_info']
-            #result.log(f'----------- signer infos -----------')
-            #result.log(f'signer_infos: {signer_infos.native}')
-            #result.log(f'------------------------------------')
-            #result.log(f'----------- signer infos -----------')
+            #result.log(f'signer_infos : {signer_infos.native}')
             for signer_info in signer_infos:
+              #result.log(f'signer_info : {signer_info.native}')
+              #result.log(f'------------------------------------')
               signer = SignerInfo()
-              #result.log(f'signer_info: {signer_info.native}')
               signed_attrs = signer_info['signed_attrs']
-              result.log(f'signed_attrs: {signed_attrs.native}')
               for signed_attr in signed_attrs:
-                #if signed_attrs['content_type'].native == 'data':
-                #  signing_time = signed_attrs['signing_time']
-                #result.log(f'signed_attr: {signed_attr.native}')
                 signed_attr_type = signed_attr['type']
-                result.log(f'signed_attr_type: {signed_attr_type.native}')
                 signed_attr_values = signed_attr['values']
-                result.log(f'signed_attr_values: {signed_attr_values.native}')
                 if signed_attr_type.native == 'signing_time':
-                  #result.log(f'signed_attr_values[0]: {signed_attr_values.native[0]}')
                   signer.signing_time = str(signed_attr_values.native[0])
                 elif signed_attr_type.native == 'message_digest':
                   # https://forums.developer.apple.com/forums/thread/702351
-                  result.log(f'signed_attr_values[0]: {signed_attr_values.native[0]}')
                   signer.message_digest = signed_attr_values.native[0].hex()
                   if len(signed_attr_values.native[0]) > 20:
                     signer.cd_hash = signed_attr_values.native[0][0:20].hex()
                   else:
                     signer.cd_hash = signed_attr_values.native[0].hex()
               sid = signer_info['sid']
-              result.log(f'sid: {sid.native}')
               issuer = sid.chosen['issuer'].chosen
-              result.log(f'issuer: {issuer.native}')
               for entry in issuer:
                 # https://datatracker.ietf.org/doc/html/rfc5652#section-10.2.4
-                #result.log(f'entry: {entry.native}')
                 for sub_entry in entry:
                   # https://datatracker.ietf.org/doc/html/rfc5280#section-4.1.2.4
-                  result.log(f'sub_entry: {sub_entry.native}')
                   name_type = sub_entry['type']
-                  result.log(f'name_type: {name_type.native}')
                   val = sub_entry['value']
-                  result.log(f'value: {val.native}')
                   if name_type.native == 'country_name':
                     signer.country_name = val.native
                   elif name_type.native == 'common_name':
@@ -390,7 +351,6 @@ class MachoAnalysisTask(TurbiniaTask):
                     signer.organization_name = val.native
                   elif name_type.native == 'organizational_unit_name':
                     signer.organizational_unit_name = val.native
-                  result.log(f'-----------------------------------')
               signature.signer_infos.append(signer)
     else:
       result.log(f'*** no embedded code signature detected ***')
@@ -518,14 +478,10 @@ class MachoAnalysisTask(TurbiniaTask):
           parsed_macho.architecture = architecture
           parsed_macho.processing_time = self._CurrentTimeMillis() - start_time
           self._WriteParsedMachoResults(file, parsed_macho)
-          result.log(f'{json.dumps(parsed_macho.__dict__, default=lambda o: o.__dict__)}')
-        elif isinstance(macho_binary, lief.MachO.Binary):
-          #parsed_macho = self._ParseMachoBinary(macho_fd, evidence, macho_binary, result, file)
-          parsed_binaries += 1
-          #self._WriteParsedMachoResults(parsed_macho)
           #result.log(f'{json.dumps(parsed_macho.__dict__, default=lambda o: o.__dict__)}')
+        elif isinstance(macho_binary, lief.MachO.Binary):
+          parsed_binaries += 1
         macho_fd.close()
-        result.log(f'------------------------')
 
     summary = f'Parsed {parsed_fat_binaries} lief.MachO.FatBinary and {parsed_binaries} lief.MachO.Binary'
     output_evidence.text_data = os.linesep.join(summary) 
