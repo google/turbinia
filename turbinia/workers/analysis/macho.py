@@ -5,11 +5,10 @@ import lief
 import os
 import time
 
-from typing import List
-
-from turbinia import TurbiniaException
-
 from asn1crypto import cms
+from time import strftime
+from turbinia import TurbiniaException
+from typing import List
 
 from plaso.analyzers.hashers import entropy
 from plaso.analyzers.hashers import md5
@@ -87,16 +86,21 @@ class Iocs(object):
         self.urls = urls
         self.ips = ips
 
-class Signature(object):
+class SignerInfo(object):
     def __init__(self):
         self.organization_name = ""
-        self.organization_unit_name = ""
+        self.organizational_unit_name = ""
         self.common_name = ""
+        self.signing_time = ""
+        self.cd_hash = ""
+        self.message_digest = ""
+
+class Signature(object):
+    def __init__(self, signer_infos: List[SignerInfo]):
+        self.signer_infos = signer_infos
         self.identifier = ""
         self.team_identifier = "not set"
-        self.signed_time = ""
         self.size = 0
-        self.cd_hash = 0
         self.hash_type = ""
         self.hash_size = 0
         self.platform_identifier = 0
@@ -265,7 +269,7 @@ class MachoAnalysisTask(TurbiniaTask):
       #   IndexEntry entries[]; // Has `count` entries
       #   Blob blobs[]; // Has `count` blobs
       # }
-      signature = Signature()
+      signature = Signature(signer_infos=[])
       result.log(f'*** found embedded signature ***')
       result.log(f'_CSSLOT_SIGNATURESLOT: {self._CSSLOT_SIGNATURESLOT}')
       super_blob_length = int.from_bytes(signature_bytes[4:8], "big") # uint32_t length
@@ -341,12 +345,53 @@ class MachoAnalysisTask(TurbiniaTask):
             #result.log(f'------------------------------------')
             #result.log(f'----------- signer infos -----------')
             for signer_info in signer_infos:
-              result.log(f'signer_info: {signer_info.native}')
+              signer = SignerInfo()
+              #result.log(f'signer_info: {signer_info.native}')
+              signed_attrs = signer_info['signed_attrs']
+              result.log(f'signed_attrs: {signed_attrs.native}')
+              for signed_attr in signed_attrs:
+                #if signed_attrs['content_type'].native == 'data':
+                #  signing_time = signed_attrs['signing_time']
+                #result.log(f'signed_attr: {signed_attr.native}')
+                signed_attr_type = signed_attr['type']
+                result.log(f'signed_attr_type: {signed_attr_type.native}')
+                signed_attr_values = signed_attr['values']
+                result.log(f'signed_attr_values: {signed_attr_values.native}')
+                if signed_attr_type.native == 'signing_time':
+                  #result.log(f'signed_attr_values[0]: {signed_attr_values.native[0]}')
+                  signer.signing_time = str(signed_attr_values.native[0])
+                elif signed_attr_type.native == 'message_digest':
+                  # https://forums.developer.apple.com/forums/thread/702351
+                  result.log(f'signed_attr_values[0]: {signed_attr_values.native[0]}')
+                  signer.message_digest = signed_attr_values.native[0].hex()
+                  if len(signed_attr_values.native[0]) > 20:
+                    signer.cd_hash = signed_attr_values.native[0][0:20].hex()
+                  else:
+                    signer.cd_hash = signed_attr_values.native[0].hex()
               sid = signer_info['sid']
               result.log(f'sid: {sid.native}')
-              #issuer = sid['issuer_and_serial_number']
-              #result.log(f'issuer: {issuer.native}')
-              result.log(f'-----------------------------------')
+              issuer = sid.chosen['issuer'].chosen
+              result.log(f'issuer: {issuer.native}')
+              for entry in issuer:
+                # https://datatracker.ietf.org/doc/html/rfc5652#section-10.2.4
+                #result.log(f'entry: {entry.native}')
+                for sub_entry in entry:
+                  # https://datatracker.ietf.org/doc/html/rfc5280#section-4.1.2.4
+                  result.log(f'sub_entry: {sub_entry.native}')
+                  name_type = sub_entry['type']
+                  result.log(f'name_type: {name_type.native}')
+                  val = sub_entry['value']
+                  result.log(f'value: {val.native}')
+                  if name_type.native == 'country_name':
+                    signer.country_name = val.native
+                  elif name_type.native == 'common_name':
+                    signer.common_name = val.native
+                  elif name_type.native == 'organization_name':
+                    signer.organization_name = val.native
+                  elif name_type.native == 'organizational_unit_name':
+                    signer.organizational_unit_name = val.native
+                  result.log(f'-----------------------------------')
+              signature.signer_infos.append(signer)
     else:
       result.log(f'*** no embedded code signature detected ***')
     return signature
@@ -496,3 +541,5 @@ class MachoAnalysisTask(TurbiniaTask):
     # Add the output evidence to the result object.
     result.add_evidence(output_evidence, evidence.config)
     result.close(self, success=True, status=summary)
+
+    return result
