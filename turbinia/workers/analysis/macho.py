@@ -50,7 +50,7 @@ class Segment(object):
         #self.command = ""
         self.name = ""
         self.offset = ""
-        self.size = 0
+        self.size = ""
         self.vaddr = ""
         self.vsize = ""
         self.sections = sections
@@ -206,7 +206,7 @@ class MachoAnalysisTask(TurbiniaTask):
       segment = Segment(sections)
       segment.name = seg.name
       segment.offset = hex(seg.file_offset)
-      segment.size = seg.file_size
+      segment.size = hex(seg.file_size)
       segment.vaddr = hex(seg.virtual_address)
       segment.vsize = hex(seg.virtual_size)
       segments.append(segment)
