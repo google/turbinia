@@ -74,11 +74,15 @@ server = [
   "asn1crypto",
   "lief",
   "plaso",
+  "ppdeep",
+  "py-tlsh",
 ]
 api_server = [
   "asn1crypto",
   "lief",
   "plaso",
+  "ppdeep",
+  "py-tlsh",
 ]
 
 [tool.yapfignore]

@@ -5349,11 +5349,11 @@ files = [
 ]
 
 [extras]
-api-server = ["asn1crypto", "lief", "plaso"]
-server = ["asn1crypto", "lief", "plaso"]
+api-server = ["asn1crypto", "lief", "plaso", "ppdeep", "py-tlsh"]
+server = ["asn1crypto", "lief", "plaso", "ppdeep", "py-tlsh"]
 worker = ["asn1crypto", "dfDewey", "dfimagetools", "lief", "plaso", "ppdeep", "py-tlsh", "pyhindsight"]
 
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "2e1175dd015eec063529888cff380cada9723b32c86faf67261d007f740fcb0a"
+content-hash = "9103ae2c1d6597079909ee3f3c915dac9763e918275716f3e79d252d11cd83fd"
