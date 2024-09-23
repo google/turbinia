@@ -146,6 +146,12 @@ class MachoAnalysisTask(TurbiniaTask):
   _CSSLOT_CODEDIRECTORY = b'\x00\x00\x00\x00' # Code Directory slot
   _CSSLOT_SIGNATURESLOT = b'\x00\x01\x00\x00' # CMS Signature slot
 
+  # n_type masks from /usr/include/mach-o/nlist.h
+  _N_STAB = 0xe0 # 0b11100000 : Mask to get the stab information
+  _N_PEXT = 0x10 # 0b00010000 : private external symbol bit
+  _N_TYPE = 0x0e # 0b00001110 : Mask to get the type bits
+  _N_EXT  = 0x01 # 0b00000001 : external symbol bit, set for external symbols
+
   def _GetDigest(self, hasher, data):
     """Executes a hasher and returns the digest.
     Args:
@@ -158,7 +164,8 @@ class MachoAnalysisTask(TurbiniaTask):
     return hasher.GetStringDigest()
 
   def _GetSymhash(self, binary):
-    """Retrieves Mach-O segment names.
+    """Calculates Mach-O SymHash.
+       https://www.anomali.com/fr/blog/symhash
     Args:
       binary (lief.MachO.Binary): binary to be parsed.
     Returns:
@@ -166,7 +173,11 @@ class MachoAnalysisTask(TurbiniaTask):
     """
     symbol_list = []
     for symbol in binary.imported_symbols:
-      if symbol.type == 0 and symbol.origin == lief._lief.MachO.Symbol.ORIGIN.LC_SYMTAB:
+      n_type = symbol.raw_type
+      is_stab = n_type & self._N_STAB != 0
+      is_external = n_type & self._N_EXT == self._N_EXT
+      is_ntype = n_type & self._N_TYPE != 0
+      if symbol.origin == lief._lief.MachO.Symbol.ORIGIN.LC_SYMTAB and not is_stab and is_external and not is_ntype:
         symbol_list.append(symbol.demangled_name)
     hasher = md5.MD5Hasher()
     hasher.Update(','.join(sorted(symbol_list)).encode())
@@ -460,6 +471,7 @@ class MachoAnalysisTask(TurbiniaTask):
     # traverse root directory, and list directories as dirs and files as files
     for root, dirs, files in os.walk(evidence.local_path):
       for file in files:
+        result.log(f'========== file: {file}')
         macho_path = os.path.join(root, file)
         try:
           macho_binary = lief.MachO.parse(macho_path, config=lief.MachO.ParserConfig.quick)
