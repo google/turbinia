@@ -62,12 +62,12 @@ class Import(object):
         self.offset = ""
 
 class ParsedBinary(object):
-    def __init__(self, hashes: Hashes, segments: List[Segment], symbols: List[str], imports: List[Import]):
+    def __init__(self, hashes: Hashes, segments: List[Segment], symbols: List[str], imports: List[Import], flags: List[str]):
         self.entropy = 0
         self.size = 0
         self.fat_offset = 0
         self.magic = ""
-        self.flags = 0
+        self.flags = flags
         self.hashes = hashes
         self.segments = segments
         self.symbols = symbols
@@ -199,6 +199,14 @@ class MachoAnalysisTask(TurbiniaTask):
       flags = []
       section = Section(flags)
       section.name = sec.name
+      section.entropy = sec.entropy
+      section.address = hex(sec.virtual_address)
+      section.size = hex(sec.size)
+      section.offset = hex(sec.offset)
+      section.section_type = str(sec.type).split(".")[-1]
+      for flag in sec.flags_list:
+        flags.append(str(flag).split(".")[-1])
+      section.flags = flags
       sections.append(section)
     #result.log(f'-----------------------------------')
     return sections
@@ -417,14 +425,17 @@ class MachoAnalysisTask(TurbiniaTask):
     hashes.symhash = self._GetSymhash(binary)
     hashes.tlsh = tlsh.hash(data)
     hashes.ssdeep = ppdeep.hash(data)
-    parsed_binary = ParsedBinary(hashes=hashes, segments=None, symbols=None, imports=None)
+    parsed_binary = ParsedBinary(hashes=hashes, segments=None, symbols=None, imports=None, flags=None)
     parsed_binary.entropy = self._GetDigest(entropy.EntropyHasher(), data)
     parsed_binary.size = binary_size
     parsed_binary.fat_offset = fat_offset
     parsed_binary.magic = hex(binary.header.magic.value)
-    parsed_binary.flags = binary.header.flags
     parsed_binary.segments = self._GetSegments(binary, result)
     parsed_binary.symbols = self._GetSymbols(binary, result)
+    flags = []
+    for flag in binary.header.flags_list:
+      flags.append(str(flag).split(".")[-1])
+    parsed_binary.flags = flags
     imports = []
     for lib in binary.libraries:
       imp = Import()
