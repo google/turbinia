@@ -412,7 +412,14 @@ class MachoAnalysisTask(TurbiniaTask):
     parsed_binary.segments = self._GetSegments(binary, result)
     parsed_binary.symbols = self._GetSymbols(binary, result)
     if binary.has_code_signature:
-      parsed_binary.signature = self._ParseCodeSignature(binary.code_signature, result)
+      try:
+        # we went knee-deep into asn1 parsing to get our hands on the signature details.
+        # it is very easy to get this wrong and shoot ourselves in the foot.
+        # so for the time being we want to monitor to see how we went and catch any exception if needed.
+        # once we have confidence that we got it right we can narrow down the catching of the exceptions.
+        parsed_binary.signature = self._ParseCodeSignature(binary.code_signature, result)
+      except Exception as e:
+        result.log(f'-- signature parsing failed: {e.message}')
     return parsed_binary
 
   def _WriteParsedMachoResults(self, file_name, parsed_macho):
