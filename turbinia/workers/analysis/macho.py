@@ -55,8 +55,14 @@ class Segment(object):
         self.vsize = ""
         self.sections = sections
 
+class Import(object):
+    def __init__(self):
+        self.name = ""
+        self.size = ""
+        self.offset = ""
+
 class ParsedBinary(object):
-    def __init__(self, hashes: Hashes, segments: List[Segment], symbols: List[str]):
+    def __init__(self, hashes: Hashes, segments: List[Segment], symbols: List[str], imports: List[Import]):
         self.entropy = 0
         self.size = 0
         self.fat_offset = 0
@@ -65,6 +71,7 @@ class ParsedBinary(object):
         self.hashes = hashes
         self.segments = segments
         self.symbols = symbols
+        self.imports = imports
 
 class Export(object):
     def __init__(self):
@@ -75,12 +82,7 @@ class ParsedFatBinary(object):
     def __init__(self, hashes: Hashes):
         self.size = 0
         self.entropy = 0
-        self.hashes = hashes
-
-class Import(object):
-    def __init__(self):
-        self.dylib = ""
-        self.name = "" 
+        self.hashes = hashes 
 
 class Iocs(object):
     def __init__(self, domains: List[str], urls: List[str], ips: List[str]):
@@ -109,7 +111,7 @@ class Signature(object):
         self.pagesize = 0
 
 class ParsedMacho(object):
-  def __init__(self, signature: Signature, architecture: Architecture, iocs: Iocs, imports: List[Import], exports: List[Export], fat_binary: ParsedFatBinary, arm64: ParsedBinary, x86_64: ParsedBinary):
+  def __init__(self, signature: Signature, architecture: Architecture, iocs: Iocs, exports: List[Export], fat_binary: ParsedFatBinary, arm64: ParsedBinary, x86_64: ParsedBinary):
         self.request = ""
         self.evidence = ""
         self.source_path = ""
@@ -118,7 +120,6 @@ class ParsedMacho(object):
         self.signature = signature
         self.architecture = architecture
         self.iocs = iocs
-        self.imports = imports
         self.exports = exports
         self.fat_binary = fat_binary
         self.arm64 = arm64
@@ -190,7 +191,7 @@ class MachoAnalysisTask(TurbiniaTask):
       segment (lief.MachO.SegmentCommand): segment to be parsed for sections.
       result (TurbiniaTaskResult): The object to place task results into.
     Returns:
-      List[Sections]: Sections of the segments.
+      List[Section]: Sections of the segments.
     """
     sections = []
     #result.log(f'----------- sections --------------')
@@ -208,7 +209,7 @@ class MachoAnalysisTask(TurbiniaTask):
       binary (lief.MachO.Binary): binary to be parsed.
       result (TurbiniaTaskResult): The object to place task results into.
     Returns:
-      List[Segments]: List of the segments.
+      List[Segment]: List of the segments.
     """
     segments = []
     #result.log(f'----------- segments --------------')
@@ -416,7 +417,7 @@ class MachoAnalysisTask(TurbiniaTask):
     hashes.symhash = self._GetSymhash(binary)
     hashes.tlsh = tlsh.hash(data)
     hashes.ssdeep = ppdeep.hash(data)
-    parsed_binary = ParsedBinary(hashes=hashes, segments=None, symbols=None)
+    parsed_binary = ParsedBinary(hashes=hashes, segments=None, symbols=None, imports=None)
     parsed_binary.entropy = self._GetDigest(entropy.EntropyHasher(), data)
     parsed_binary.size = binary_size
     parsed_binary.fat_offset = fat_offset
@@ -424,6 +425,15 @@ class MachoAnalysisTask(TurbiniaTask):
     parsed_binary.flags = binary.header.flags
     parsed_binary.segments = self._GetSegments(binary, result)
     parsed_binary.symbols = self._GetSymbols(binary, result)
+    imports = []
+    for lib in binary.libraries:
+      imp = Import()
+      imp.name = lib.name
+      imp.size = hex(lib.size)
+      imp.offset = hex(lib.command_offset)
+      imports.append(imp)
+    parsed_binary.imports = imports
+
     if binary.has_code_signature:
       try:
         # we went knee-deep into asn1 parsing to get our hands on the signature details.
@@ -484,7 +494,7 @@ class MachoAnalysisTask(TurbiniaTask):
 
         if isinstance(macho_binary, lief.MachO.FatBinary):
           architecture = Architecture()
-          parsed_macho = ParsedMacho(signature=None, architecture=None, iocs=None, imports=None, exports=None, fat_binary=None, arm64=None, x86_64=None)
+          parsed_macho = ParsedMacho(signature=None, architecture=None, iocs=None, exports=None, fat_binary=None, arm64=None, x86_64=None)
           parsed_macho.evidence = evidence.id
           parsed_macho.request = evidence.request_id
           parsed_macho.source_path = file
