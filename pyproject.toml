@@ -30,6 +30,7 @@ lief = { version = ">= 0.15.1", optional = true }
 opensearch-py = {version = "2.4.2"}
 pandas = { version = "^2.1.0" }
 plaso = { version = "20240308", optional = true }
+ppdeep = { version = "20200505", optional = true }
 prometheus_client = { version = "^0.17.1" }
 protobuf = { version = ">=3.19.0", optional = true }
 pydantic = { version = "^1.10.5,<2"}
@@ -65,6 +66,7 @@ worker = [
   "dfDewey",
   "lief",
   "plaso",
+  "ppdeep",
   "pyhindsight",
   "py-tlsh",
 ]

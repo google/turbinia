@@ -3557,6 +3557,17 @@ redis = ["redis"]
 tests = ["pytest (>=5.4.1)", "pytest-cov (>=2.8.1)", "pytest-mypy (>=0.8.0)", "pytest-timeout (>=2.1.0)", "redis", "sphinx (>=6.0.0)", "types-redis"]
 
 [[package]]
+name = "ppdeep"
+version = "20200505"
+description = "Pure-Python library for computing fuzzy hashes (ssdeep)"
+optional = true
+python-versions = "*"
+files = [
+    {file = "ppdeep-20200505-py3-none-any.whl", hash = "sha256:0335063cc96edfb2f90f546a5812c4a47d122dc7bd764b3eef48303d2bf41939"},
+    {file = "ppdeep-20200505.tar.gz", hash = "sha256:acc74bb902e6d21b03d39aed740597093c6562185bfe06da9b5272e01c80a1ff"},
+]
+
+[[package]]
 name = "prometheus-client"
 version = "0.17.1"
 description = "Python client for the Prometheus monitoring system."
@@ -5340,9 +5351,9 @@ files = [
 [extras]
 api-server = ["asn1crypto", "lief", "plaso"]
 server = ["asn1crypto", "lief", "plaso"]
-worker = ["asn1crypto", "dfDewey", "dfimagetools", "lief", "plaso", "py-tlsh", "pyhindsight"]
+worker = ["asn1crypto", "dfDewey", "dfimagetools", "lief", "plaso", "ppdeep", "py-tlsh", "pyhindsight"]
 
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "a49e2050dd11bf081656d0c2563d6292bb622e70595be31f871b67537193978f"
+content-hash = "2e1175dd015eec063529888cff380cada9723b32c86faf67261d007f740fcb0a"
