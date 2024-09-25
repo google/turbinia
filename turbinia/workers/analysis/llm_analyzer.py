@@ -105,6 +105,7 @@ class LLMAnalyzerTask(workers.TurbiniaTask):
       open_function = gzip.open
 
     # Read the input file
+    artifact_content = None
     try:
       with open_function(evidence.local_path, "rb") as input_file:
         artifact_content = input_file.read().decode("utf-8")
