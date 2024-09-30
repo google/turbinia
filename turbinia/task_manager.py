@@ -620,6 +620,15 @@ class BaseTaskManager:
       time.sleep(config.SLEEP_TIME)
 
   def close_failed_task(self, task):
+    """Sets status and result data for failed Task.
+
+    Args:
+      task(TurbiniaTask): The Task that will be closed.
+
+    Returns:
+      TurbiniaTask: The updated Task.
+    """
+    
     result = workers.TurbiniaTaskResult(
         request_id=task.request_id, no_output_manager=True,
         no_state_manager=True)
