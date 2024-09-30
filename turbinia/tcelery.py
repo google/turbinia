@@ -50,14 +50,18 @@ class TurbiniaCelery:
     self.app = celery.Celery(
         'turbinia', broker=config.CELERY_BROKER, backend=config.CELERY_BACKEND)
     self.app.conf.update(
-        broker_connection_retry_on_startup=True,
-        task_default_queue=config.INSTANCE_ID,
         accept_content=['json'],
+        broker_connection_retry_on_startup=True,
+        # Store Celery task results metadata
+        result_backend=config.CELERY_BACKEND,
+        task_default_queue=config.INSTANCE_ID,
+        # Re-queue task if Celery worker abruptly exists
+        task_reject_on_worker_lost=True,
         worker_cancel_long_running_tasks_on_connection_loss=True,
         worker_concurrency=1,
         worker_prefetch_multiplier=1,
-        task_reject_on_worker_lost=True,  # Re-queue task if celery worker abruptly exists
-        worker_deduplicate_successful_tasks=True)  # avoid task duplication
+        # Avoid task duplication
+        worker_deduplicate_successful_tasks=True)
 
 
 class TurbiniaKombu(TurbiniaMessageBase):
