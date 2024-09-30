@@ -628,7 +628,6 @@ class BaseTaskManager:
     Returns:
       TurbiniaTask: The updated Task.
     """
-    
     result = workers.TurbiniaTaskResult(
         request_id=task.request_id, no_output_manager=True,
         no_state_manager=True)
