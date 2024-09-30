@@ -41,6 +41,7 @@ urllib3 = [
 ]
 debugpy = "^1.8.0"
 jurigged = "^0.5.7"
+gitpython = "^3.1.43"
 
 [tool.poetry.group.test]
 optional = true

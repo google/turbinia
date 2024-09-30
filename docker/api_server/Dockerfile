@@ -7,7 +7,7 @@ COPY web/. .
 RUN npm run build
 
 # Build Turbinia API Server, copy from build, and setup rest of requirements
-FROM ubuntu:22.04 as build-stage2
+FROM --platform=linux/amd64 ubuntu:22.04 as build-stage2
 
 ENV DEBIAN_FRONTEND=noninteractive \
     PIP_NO_CACHE_DIR=1 
