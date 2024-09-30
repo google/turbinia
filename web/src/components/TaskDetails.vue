@@ -164,6 +164,9 @@ limitations under the License.
             <div v-if="taskDetails.successful">
               {{ taskDetails.successful }}
             </div>
+            <div v-else-if="taskDetails.successful == false">
+              False
+            </div>
             <div v-else>N/A</div>
           </v-list-item>
           <v-list-item title="Run Time:">

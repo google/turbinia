@@ -713,7 +713,11 @@ class CeleryTaskManager(BaseTaskManager):
       elif celery_task.status == celery_states.PENDING:
         task.status = 'pending'
         check_timeout = True
-        log.debug(f'Task {celery_task.id:s} status pending.')
+        log.debug(f'Task {celery_task.id:s} is pending.')
+      elif celery_task.status == celery_states.RECEIVED:
+        task.status = 'queued'
+        check_timeout = True
+        log.debug(f'Task {celery_task.id:s} is queued.')
       elif celery_task.status == celery_states.REVOKED:
         message = (
             f'Celery task {celery_task.id:s} associated with Turbinia '

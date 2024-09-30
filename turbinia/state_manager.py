@@ -616,7 +616,8 @@ class RedisStateManager(BaseStateManager):
       request_status = 'successful'
     elif len(request_data['task_ids']) == len(request_data['failed_tasks']):
       request_status = 'failed'
-    elif len(request_data['running_tasks']) > 0:
+    elif len(request_data['running_tasks']) > 0 or len(
+        request_data['queued_tasks']) > 0:
       request_status = 'running'
     elif len(request_data['failed_tasks']) > 0 and all_tasks_finished:
       request_status = 'completed_with_errors'

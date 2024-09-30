@@ -1039,10 +1039,14 @@ class TurbiniaTask:
 
     log.debug(f'Task {self.name:s} {self.id:s} awaiting execution')
     failure_message = None
+    worker_name = platform.node()
     try:
       evidence = evidence_decode(evidence)
       self.result = self.setup(evidence)
       self.update_task_status(self, 'queued')
+      task_key = self.state_manager.redis_client.build_key_name('task', self.id)
+      self.state_manager.redis_client.set_attribute(
+          task_key, 'worker_name', json.dumps(worker_name))
       turbinia_worker_tasks_queued_total.inc()
       task_runtime_metrics = self.get_metrics()
     except TurbiniaException as exception:
@@ -1098,12 +1102,7 @@ class TurbiniaTask:
         self.task_config = self.get_task_recipe(evidence.config)
         self.worker_start_time = datetime.now()
         # Update task status so we know which worker the task executed on.
-        worker_name = platform.node()
         updated_status = f'Task is running on {worker_name}'
-        task_key = self.state_manager.redis_client.build_key_name(
-            'task', self.id)
-        self.state_manager.redis_client.set_attribute(
-            task_key, 'worker_name', json.dumps(worker_name))
         self.update_task_status(self, updated_status)
         self.result = self.run(evidence, self.result)
 

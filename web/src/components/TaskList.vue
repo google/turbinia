@@ -78,6 +78,9 @@ export default {
             if (taskStatusTemp === null || taskStatusTemp === "pending") {
               taskStatusTemp = 'is pending on server.'
             }
+            else if (taskStatusTemp == "queued") {
+              taskStatusTemp = 'is queued for execution.'
+            }
             if (this.filterJobs.length > 0) {
               let jobName = task_dict.job_name.toLowerCase()
               if (this.radioFilter && !this.filterJobs.includes(jobName)) {
