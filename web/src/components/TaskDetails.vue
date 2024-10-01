@@ -39,11 +39,17 @@ limitations under the License.
     <v-alert v-if="taskDetails.successful === true" type="success" prominent>
       {{ taskDetails.status }}
     </v-alert>
-    <v-alert v-else-if="taskDetails.successful === null" type="info" prominent>
-      <div v-if="taskDetails.status">
-        {{ taskDetails.status }}
-      </div>
-      <div v-else>Task {{ taskDetails.id }} is pending</div>
+    <v-alert v-else-if="taskDetails.successful === false" type="error" prominent>
+      {{ taskDetails.status }}
+    </v-alert>
+    <v-alert v-else-if="taskDetails.celery_state === 'STARTED'" type="info" prominent>
+      Task {{ taskDetails.id }} is running on {{ taskDetails.worker_name }}
+    </v-alert>
+    <v-alert v-else-if="taskDetails.celery_state === 'PENDING'" type="info" prominent>
+      Task {{ taskDetails.id }} is pending.
+    </v-alert>
+    <v-alert v-else-if="taskDetails.celery_state === 'RECEIVED'" type="info" prominent>
+      Task {{ taskDetails.id }} is queued.
     </v-alert>
     <v-alert v-else type="error" prominent>
       {{ taskDetails.status }}
@@ -69,6 +75,12 @@ limitations under the License.
           <v-list-item title="Celery ID:">
             <div v-if="taskDetails.celery_id">
               {{ taskDetails.celery_id }}
+            </div>
+            <div v-else>N/A</div>
+          </v-list-item>
+          <v-list-item title="Celery State:">
+            <div v-if="taskDetails.celery_state">
+              {{ taskDetails.celery_state }}
             </div>
             <div v-else>N/A</div>
           </v-list-item>

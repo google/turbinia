@@ -129,8 +129,8 @@ class TurbiniaTaskResult:
 
   # The list of attributes that we will persist into storage
   STORED_ATTRIBUTES = [
-      'worker_name', 'report_data', 'report_priority', 'run_time', 'status',
-      'saved_paths', 'successful', 'evidence_size'
+      'report_data', 'report_priority', 'run_time', 'status', 'saved_paths',
+      'successful', 'evidence_size'
   ]
 
   def __init__(
@@ -454,7 +454,7 @@ class TurbiniaTask:
   STORED_ATTRIBUTES = [
       'id', 'job_id', 'job_name', 'start_time', 'last_update', 'name',
       'evidence_name', 'evidence_id', 'request_id', 'requester', 'group_name',
-      'reason', 'group_id', 'celery_id'
+      'reason', 'group_id', 'celery_id', 'celery_state', 'worker_name'
   ]
 
   # The list of evidence states that are required by a Task in order to run.
@@ -483,6 +483,7 @@ class TurbiniaTask:
 
     self.id = uuid.uuid4().hex
     self.celery_id = None
+    self.celery_state = None
     self.is_finalize_task = False
     self.job_id = None
     self.job_name = None
@@ -508,6 +509,7 @@ class TurbiniaTask:
     self.group_name = group_name
     self.reason = reason
     self.group_id = group_id
+    self.worker_name = None
 
   def serialize(self):
     """Converts the TurbiniaTask object into a serializable dict.
@@ -821,6 +823,7 @@ class TurbiniaTask:
       TurbiniaException: If the evidence can not be found.
     """
     self.setup_metrics()
+    self.state_manager = state_manager.get_state_manager()
     self.output_manager.setup(self.name, self.id, self.request_id)
     self.tmp_dir, self.output_dir = self.output_manager.get_local_output_dirs()
     if not self.result:
@@ -1039,21 +1042,10 @@ class TurbiniaTask:
 
     log.debug(f'Task {self.name:s} {self.id:s} awaiting execution')
     failure_message = None
-    worker_name = platform.node()
+    self.worker_name = platform.node()
     try:
       evidence = evidence_decode(evidence)
       self.result = self.setup(evidence)
-      # Call update_task_status to update status
-      # We cannot call update_task() here since it will clobber previously
-      # stored data by the Turbinia server when the task was created, which is
-      # not present in the TurbiniaTask object the worker currently has in its
-      # runtime.
-      self.update_task_status(self, 'queued')
-      # Beucase of the same reason, we perform a single attribute update
-      # for the worker name.
-      task_key = self.state_manager.redis_client.build_key_name('task', self.id)
-      self.state_manager.redis_client.set_attribute(
-          task_key, 'worker_name', json.dumps(worker_name))
       turbinia_worker_tasks_queued_total.inc()
       task_runtime_metrics = self.get_metrics()
     except TurbiniaException as exception:
@@ -1108,9 +1100,6 @@ class TurbiniaTask:
         self._evidence_config = evidence.config
         self.task_config = self.get_task_recipe(evidence.config)
         self.worker_start_time = datetime.now()
-        # Update task status so we know which worker the task executed on.
-        updated_status = f'Task is running on {worker_name}'
-        self.update_task_status(self, updated_status)
         self.result = self.run(evidence, self.result)
 
       # pylint: disable=broad-except
@@ -1161,7 +1150,7 @@ class TurbiniaTask:
         failure_message = (
             'Task Result was auto-closed from task executor on {0:s} likely '
             'due to previous failures.  Previous status: [{1:s}]'.format(
-                self.result.worker_name, status))
+                self.worker_name, status))
       self.result.log(failure_message)
       try:
         self.result.close(self, False, failure_message)
@@ -1197,23 +1186,3 @@ class TurbiniaTask:
         TurbiniaTaskResult object.
     """
     raise NotImplementedError
-
-  def update_task_status(self, task, status=None):
-    """Updates the task status and pushes it directly to datastore.
-
-    Args:
-      task (TurbiniaTask): The calling Task object
-      status (str): Brief word or phrase for Task state. If not supplied, the
-          existing Task status will be used.
-    """
-    if not status:
-      return
-    if not self.state_manager:
-      self.state_manager = state_manager.get_state_manager()
-    if self.state_manager:
-      task_key = self.state_manager.redis_client.build_key_name('task', task.id)
-      self.state_manager.redis_client.set_attribute(
-          task_key, 'status', json.dumps(status))
-      self.state_manager.update_request_task(task)
-    else:
-      log.info('No state_manager initialized, not updating Task info')

@@ -73,13 +73,19 @@ export default {
           let data = response.data['tasks']
           for (const task in data) {
             let task_dict = data[task]
-            let taskStatusTemp = task_dict.status
+            let taskStatusTemp = task_dict.celery_state
             // As pending status requests show as null or pending
-            if (taskStatusTemp === null || taskStatusTemp === "pending") {
+            if (taskStatusTemp === null || taskStatusTemp === "PENDING") {
               taskStatusTemp = 'is pending on server.'
             }
-            else if (taskStatusTemp == "queued") {
+            else if (taskStatusTemp == "RECEIVED") {
               taskStatusTemp = 'is queued for execution.'
+            }
+            else if (taskStatusTemp == "STARTED") {
+              taskStatusTemp = 'is running on ' + task_dict.worker_name
+            }
+            else {
+              taskStatusTemp = task_dict.status
             }
             if (this.filterJobs.length > 0) {
               let jobName = task_dict.job_name.toLowerCase()
