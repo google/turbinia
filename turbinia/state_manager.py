@@ -22,6 +22,7 @@ import codecs
 import json
 import logging
 import sys
+from celery import states as celery_states
 from datetime import datetime
 from datetime import timedelta
 from typing import Any, List, Dict, Optional
@@ -269,7 +270,6 @@ class RedisStateManager(BaseStateManager):
       task (TurbiniaTask): Turbinia task object.
     """
     request_key = self.redis_client.build_key_name('request', task.request_id)
-    task_key = self.redis_client.build_key_name('task', task.id)
     try:
       self.redis_client.add_to_list(request_key, 'task_ids', task.id)
       request_last_update = datetime.strptime(
@@ -291,12 +291,12 @@ class RedisStateManager(BaseStateManager):
         elif task.result.successful is False:
           self.redis_client.add_to_list(request_key, 'failed_tasks', task.id)
           statuses_to_remove.remove('failed_tasks')
-      task_status = self.redis_client.get_attribute(task_key, 'status')
-      if task_status and 'Task is running' in task_status:
+      task_status = task.celery_state
+      if task_status == celery_states.STARTED:
         self.redis_client.add_to_list(request_key, 'running_tasks', task.id)
         statuses_to_remove.remove('running_tasks')
-      elif (task_status is None or task_status == 'queued' or
-            task_status == 'pending'):
+      elif (task_status is None or task_status == celery_states.RECEIVED or
+            task_status == celery_states.PENDING):
         self.redis_client.add_to_list(request_key, 'queued_tasks', task.id)
         statuses_to_remove.remove('queued_tasks')
       for status_name in statuses_to_remove:

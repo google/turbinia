@@ -687,6 +687,14 @@ class CeleryTaskManager(BaseTaskManager):
       self.celery_runner = self.celery.app.task(
           task_utils.task_runner, name='task_runner')
 
+  def _get_worker_name(self, celery_stub):
+    """Gets the Celery worker name from the AsyncResult object."""
+    worker_name = celery_stub.result.get('hostname', None)
+    if worker_name:
+      # example hostname: celery@turbinia-hostname
+      worker_name = worker_name.split('@')[1]
+    return worker_name
+
   def process_tasks(self):
     """Determine the current state of our tasks.
 
@@ -700,28 +708,33 @@ class CeleryTaskManager(BaseTaskManager):
       celery_task = task.stub
       # ref: https://docs.celeryq.dev/en/stable/reference/celery.states.html
       if not celery_task:
-        log.debug(f'Task {task.stub.task_id:s} not yet created.')
+        log.info(f'Task {task.stub.task_id:s} not yet created.')
         check_timeout = True
       elif celery_task.status == celery_states.STARTED:
-        # Task status will be set to running when the worker executes run_wrapper()
-        log.debug(f'Task {celery_task.id:s} not finished.')
+        log.warning(f'Task {celery_task.id:s} {task.id} started.')
+        task.worker_name = self._get_worker_name(celery_task)
+        task.celery_state = celery_states.STARTED
         check_timeout = True
       elif celery_task.status == celery_states.FAILURE:
-        log.warning(f'Task {celery_task.id:s} failed.')
+        log.info(f'Task {celery_task.id:s} failed.')
+        task.celery_state = celery_states.FAILURE
         self.close_failed_task(task)
         completed_tasks.append(task)
       elif celery_task.status == celery_states.SUCCESS:
+        task.celery_state = celery_states.SUCCESS
         task.result = workers.TurbiniaTaskResult.deserialize(celery_task.result)
         completed_tasks.append(task)
       elif celery_task.status == celery_states.PENDING:
-        task.status = 'pending'
+        log.info(f'Task {celery_task.id:s} is pending.')
+        task.celery_state = celery_states.PENDING
         check_timeout = True
-        log.debug(f'Task {celery_task.id:s} is pending.')
       elif celery_task.status == celery_states.RECEIVED:
-        task.status = 'queued'
+        log.info(f'Task {celery_task.id:s} is queued.')
+        task.worker_name = self._get_worker_name(celery_task)
+        task.celery_state = celery_states.RECEIVED
         check_timeout = True
-        log.debug(f'Task {celery_task.id:s} is queued.')
       elif celery_task.status == celery_states.REVOKED:
+        task.celery_state = celery_states.REVOKED
         message = (
             f'Celery task {celery_task.id:s} associated with Turbinia '
             f'task {task.id} was revoked. This could be caused if the task is '
@@ -745,6 +758,9 @@ class CeleryTaskManager(BaseTaskManager):
               f'{timeout} seconds. Auto-closing Task')
           task = self.timeout_task(task, timeout)
           completed_tasks.append(task)
+
+      # Update task metadata so we have an up to date state.
+      self.state_manager.update_task(task)
 
     outstanding_task_count = len(self.tasks) - len(completed_tasks)
     if outstanding_task_count > 0:

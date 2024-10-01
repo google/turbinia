@@ -106,7 +106,6 @@ class TestTurbiniaTaskBase(unittest.TestCase):
 
     self.result.input_evidence = evidence.RawDisk()
     self.result.status = 'TestStatus'
-    self.update_task_status = mock.MagicMock()
     self.result.close = mock.MagicMock()
     self.task.setup = mock.MagicMock(return_value=setup)
     self.result.worker_name = 'worker1'
@@ -147,8 +146,10 @@ class TestTurbiniaTask(TestTurbiniaTaskBase):
     self.assertEqual(out_obj.__dict__, self.plaso_task.__dict__)
 
   @mock.patch('turbinia.redis_client.RedisClient.set_attribute')
-  @mock.patch('turbinia.workers.TurbiniaTask.update_task_status')
-  def testTurbiniaTaskRunWrapper(self, _, __):
+  def testTurbiniaTaskRunWrapper(
+      self,
+      _,
+  ):
     """Test that the run wrapper executes task run."""
     self.setResults()
     self.result.closed = True
@@ -159,8 +160,10 @@ class TestTurbiniaTask(TestTurbiniaTaskBase):
     self.result.close.assert_not_called()
 
   @mock.patch('turbinia.redis_client.RedisClient.set_attribute')
-  @mock.patch('turbinia.workers.TurbiniaTask.update_task_status')
-  def testTurbiniaTaskRunWrapperAutoClose(self, _, __):
+  def testTurbiniaTaskRunWrapperAutoClose(
+      self,
+      _,
+  ):
     """Test that the run wrapper closes the task."""
     self.setResults()
     new_result = self.task.run_wrapper(self.evidence.__dict__)
@@ -170,8 +173,7 @@ class TestTurbiniaTask(TestTurbiniaTaskBase):
 
   @mock.patch('turbinia.state_manager.get_state_manager')
   @mock.patch('turbinia.redis_client.RedisClient.set_attribute')
-  @mock.patch('turbinia.workers.TurbiniaTask.update_task_status')
-  def testTurbiniaTaskRunWrapperBadResult(self, _, __, ___):
+  def testTurbiniaTaskRunWrapperBadResult(self, _, __):
     """Test that the run wrapper recovers from run returning bad result."""
     bad_result = 'Not a TurbiniaTaskResult'
     checked_result = TurbiniaTaskResult(base_output_dir=self.base_output_dir)
@@ -185,8 +187,7 @@ class TestTurbiniaTask(TestTurbiniaTaskBase):
     self.assertIn('CheckedResult', new_result.status)
 
   @mock.patch('turbinia.redis_client.RedisClient.set_attribute')
-  @mock.patch('turbinia.workers.TurbiniaTask.update_task_status')
-  def testTurbiniaTaskJobUnavailable(self, _, __):
+  def testTurbiniaTaskJobUnavailable(self, _):
     """Test that the run wrapper can fail if the job doesn't exist."""
     self.setResults()
     self.task.job_name = 'non_exist'
@@ -198,8 +199,7 @@ class TestTurbiniaTask(TestTurbiniaTaskBase):
     self.assertEqual(new_result.status, canary_status)
 
   @mock.patch('turbinia.redis_client.RedisClient.set_attribute')
-  @mock.patch('turbinia.workers.TurbiniaTask.update_task_status')
-  def testTurbiniaTaskRunWrapperExceptionThrown(self, _, __):
+  def testTurbiniaTaskRunWrapperExceptionThrown(self, _):
     """Test that the run wrapper recovers from run throwing an exception."""
     self.setResults()
     self.task.run = mock.MagicMock(side_effect=TurbiniaException)
@@ -253,9 +253,7 @@ class TestTurbiniaTask(TestTurbiniaTaskBase):
 
   @mock.patch('turbinia.workers.evidence_decode')
   @mock.patch('turbinia.redis_client.RedisClient.set_attribute')
-  @mock.patch('turbinia.workers.TurbiniaTask.update_task_status')
-  def testTurbiniaTaskEvidenceValidationFailure(
-      self, _, __, evidence_decode_mock):
+  def testTurbiniaTaskEvidenceValidationFailure(self, _, evidence_decode_mock):
     """Tests Task fails when evidence validation fails."""
     self.setResults()
     test_evidence = evidence.RawDisk()
