@@ -1043,7 +1043,14 @@ class TurbiniaTask:
     try:
       evidence = evidence_decode(evidence)
       self.result = self.setup(evidence)
+      # Call update_task_status to update status
+      # We cannot call update_task() here since it will clobber previously
+      # stored data by the Turbinia server when the task was created, which is
+      # not present in the TurbiniaTask object the worker currently has in its
+      # runtime.
       self.update_task_status(self, 'queued')
+      # Beucase of the same reason, we perform a single attribute update
+      # for the worker name.
       task_key = self.state_manager.redis_client.build_key_name('task', self.id)
       self.state_manager.redis_client.set_attribute(
           task_key, 'worker_name', json.dumps(worker_name))

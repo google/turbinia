@@ -518,11 +518,6 @@ class BaseTaskManager:
           f'from {task_result.worker_name} executed with status '
           f'[{task_result.status}]')
 
-    task_key = self.state_manager.redis_client.build_key_name(
-        'task', task_result.id)
-    self.state_manager.redis_client.set_attribute(
-        task_key, 'successful', 'false')
-
     if not isinstance(task_result.evidence, list):
       log.warning(
           f'Task {task_result.task_id} {task_result.task_name} '
