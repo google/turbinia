@@ -130,7 +130,7 @@ class TurbiniaTaskResult:
   # The list of attributes that we will persist into storage
   STORED_ATTRIBUTES = [
       'report_data', 'report_priority', 'run_time', 'status', 'saved_paths',
-      'successful', 'evidence_size'
+      'successful', 'evidence_size', 'worker_name'
   ]
 
   def __init__(
