@@ -174,7 +174,7 @@ class RedisStateManager(BaseStateManager):
       task_id (str): The ID of the stored task.
 
     Returns:
-      task_dict (dict): Dict containing task attributes. 
+      task_dict (dict): Dict containing task attributes.
     """
     task_key = ':'.join(('TurbiniaTask', task_id))
     task_dict = {}
@@ -265,7 +265,7 @@ class RedisStateManager(BaseStateManager):
 
   def update_request_task(self, task) -> None:
     """Adds a Turbinia task to the corresponding request list.
-    
+
     Args:
       task (TurbiniaTask): Turbinia task object.
     """
@@ -315,7 +315,9 @@ class RedisStateManager(BaseStateManager):
     Returns:
       task_key Optional[str]: The key corresponding for the task.
     """
-    log.info(f'Writing metadata for new task {task.name:s} with id {task.id:s}')
+    log.info(
+        f'Writing metadata for new task {task.name:s} with id {task.id:s} '
+        f'and request ID {task.request_id}')
     try:
       task_key = self.redis_client.build_key_name('task', task.id)
     except ValueError as exception:
@@ -359,7 +361,7 @@ class RedisStateManager(BaseStateManager):
 
   def update_task(self, task) -> Optional[str]:
     """Updates a Turbinia task key.
-    
+
     Args:
       task: A TurbiniaTask object.
 
@@ -400,7 +402,7 @@ class RedisStateManager(BaseStateManager):
 
     Returns:
       evidence_key (str): The key corresponding to the evidence in Redis
-    
+
     Raises:
       TurbiniaException: If the attribute deserialization fails.
     """
@@ -443,7 +445,7 @@ class RedisStateManager(BaseStateManager):
       evidence_id (str): The ID of the stored evidence.
 
     Returns:
-      evidence_dict (dict): Dict containing evidence attributes. 
+      evidence_dict (dict): Dict containing evidence attributes.
     """
     evidence_key = ':'.join(('TurbiniaEvidence', evidence_id))
     evidence_dict = {}
@@ -462,7 +464,7 @@ class RedisStateManager(BaseStateManager):
       output (str): Output of the function (keys | content | count).
 
     Returns:
-      summary (dict | list | int): Object containing evidences. 
+      summary (dict | list | int): Object containing evidences.
     """
     if output == 'count' and not group:
       return sum(1 for _ in self.redis_client.iterate_keys('Evidence'))
@@ -494,7 +496,7 @@ class RedisStateManager(BaseStateManager):
       output (str): Output of the function (keys | content | count).
 
     Returns:
-      query_result (list | int): Result of the query. 
+      query_result (list | int): Result of the query.
     """
     keys = []
     for evidence_key in self.redis_client.iterate_keys('Evidence'):
@@ -517,7 +519,7 @@ class RedisStateManager(BaseStateManager):
       file_hash (str): The hash of the stored evidence.
 
     Returns:
-      key (str | None): Key of the stored evidence. 
+      key (str | None): Key of the stored evidence.
     """
     try:
       if file_hash:
@@ -533,7 +535,7 @@ class RedisStateManager(BaseStateManager):
       file_hash (str): The hash of the stored evidence.
 
     Returns:
-      evidence_dict (dict): Dict containing evidence attributes. 
+      evidence_dict (dict): Dict containing evidence attributes.
     """
     evidence_id = self.get_evidence_key_by_hash(file_hash).split(':')[1]
     return self.get_evidence_data(evidence_id)
@@ -544,12 +546,12 @@ class RedisStateManager(BaseStateManager):
     Args:
       request_dict (dict[str]): A dictionary containing the serialized
         request attributes that will be saved.
-      overwrite (bool): Allows overwriting previous key and blocks writing new 
+      overwrite (bool): Allows overwriting previous key and blocks writing new
         ones.
 
     Returns:
       request_key (str): The key corresponding to the evidence in Redis
-    
+
     Raises:
       TurbiniaException: If the attribute deserialization fails or tried to
           overwrite an existing key without overwrite=True
@@ -589,7 +591,7 @@ class RedisStateManager(BaseStateManager):
       request_id (str): The ID of the stored request.
 
     Returns:
-      request_dict (dict): Dict containing request attributes. 
+      request_dict (dict): Dict containing request attributes.
     """
     request_key = self.redis_client.build_key_name('request', request_id)
     request_dict = {}
@@ -637,7 +639,7 @@ class RedisStateManager(BaseStateManager):
       output (str): Output of the function (keys | content | count).
 
     Returns:
-      query_result (list | int): Result of the query. 
+      query_result (list | int): Result of the query.
     """
     keys = []
     for request_key in self.redis_client.iterate_keys('request'):
