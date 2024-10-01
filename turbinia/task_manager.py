@@ -78,6 +78,9 @@ turbinia_server_request_total = Counter(
 turbinia_server_task_timeout_total = Counter(
     'turbinia_server_task_timeout_total',
     'Total number of Tasks that have timed out on the Server.')
+turbinia_server_task_fail_total = Counter(
+    'turbinia_server_task_fail_total',
+    'Total number of Tasks that have failed according to the Server.')
 turbinia_result_success_invalid = Counter(
     'turbinia_result_success_invalid',
     'The result returned from the Task had an invalid success status of None')
@@ -623,18 +626,30 @@ class BaseTaskManager:
     Returns:
       TurbiniaTask: The updated Task.
     """
-    result = workers.TurbiniaTaskResult(
-        request_id=task.request_id, no_output_manager=True,
-        no_state_manager=True)
-    result.setup(task)
-    if task.stub.traceback:
-      result.status = (
-          f'Task {task.id} failed with exception: {task.stub.traceback}')
-    else:
-      result.status = f'Task {task.id} failed.'
-    result.successful = False
-    result.closed = True
-    task.result = result
+    if not task.result:
+      result = workers.TurbiniaTaskResult(
+          request_id=task.request_id, no_output_manager=True,
+          no_state_manager=True)
+      result.setup(task)
+      task.result = result
+
+    if not task.result.status:
+      if task.stub.traceback:
+        task.result.status = (
+            f'Task {task.id} failed with exception: {task.stub.traceback}')
+      else:
+        task.result.status = f'Task {task.id} failed.'
+    # Record the traceback in the status if we have one otherwise it won't
+    # be visible for the user.
+    elif task.result.status and task.stub.traceback:
+      new_status = (
+          f'{task.result.status} (Task failure exception: '
+          f'{task.stub.traceback})')
+      task.result.status = new_status
+
+    task.result.successful = False
+    task.result.closed = True
+    turbinia_server_task_fail_total.inc()
     return task
 
   def timeout_task(self, task, timeout):
@@ -813,8 +828,9 @@ class CeleryTaskManager(BaseTaskManager):
 
   def enqueue_task(self, task, evidence_, timeout):
     log.info(
-        f'Adding Celery task {task.name:s} with evidence {evidence_.name:s}'
-        f' to queue with base task timeout {timeout}')
+        f'Adding Celery task {task.name:s} for request id {task.request_id} '
+        f'with evidence {evidence_.name:s} to queue with base task '
+        f'timeout {timeout}')
     # https://docs.celeryq.dev/en/stable/userguide/configuration.html#task-time-limit
     # Hard limit in seconds, the worker processing the task will be killed and
     # replaced with a new one when this is exceeded.
