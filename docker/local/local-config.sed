@@ -1,5 +1,5 @@
 s/CELERY_BROKER = .*/CELERY_BROKER = 'redis:\/\/redis'/g
-s/CELERY_BACKEND = .*/CELERY_BACKEND = 'redis:\/\/redis'/g
+s/CELERY_BACKEND = .*/CELERY_BACKEND = 'redis:\/\/redis\/1'/g
 s/REDIS_HOST = .*/REDIS_HOST = 'redis'/g
 s/PROMETHEUS_ENABLED = .*/PROMETHEUS_ENABLED = False/g
 s/STATE_MANAGER = .*/STATE_MANAGER = 'Redis'/g

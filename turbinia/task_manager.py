@@ -37,6 +37,7 @@ config.LoadConfig()
 
 if config.TASK_MANAGER.lower() == 'celery':
   from celery import states as celery_states
+  from kombu import exceptions as kombu_exceptions
   from turbinia import tcelery as turbinia_celery
 
 log = logging.getLogger(__name__)
@@ -514,8 +515,8 @@ class BaseTaskManager:
     else:
       log.info(
           f'Task {task_result.task_id} {task_result.task_name} '
-          f'from {task_result.worker_name} executed with status [{task_result.status}]'
-      )
+          f'from {task_result.worker_name} executed with status '
+          f'[{task_result.status}]')
 
     if not isinstance(task_result.evidence, list):
       log.warning(
@@ -613,6 +614,29 @@ class BaseTaskManager:
 
       time.sleep(config.SLEEP_TIME)
 
+  def close_failed_task(self, task):
+    """Sets status and result data for failed Task.
+
+    Args:
+      task(TurbiniaTask): The Task that will be closed.
+
+    Returns:
+      TurbiniaTask: The updated Task.
+    """
+    result = workers.TurbiniaTaskResult(
+        request_id=task.request_id, no_output_manager=True,
+        no_state_manager=True)
+    result.setup(task)
+    if task.stub.traceback:
+      result.status = (
+          f'Task {task.id} failed with exception: {task.stub.traceback}')
+    else:
+      result.status = f'Task {task.id} failed.'
+    result.successful = False
+    result.closed = True
+    task.result = result
+    return task
+
   def timeout_task(self, task, timeout):
     """Sets status and result data for timed out Task.
 
@@ -679,17 +703,24 @@ class CeleryTaskManager(BaseTaskManager):
         log.debug(f'Task {task.stub.task_id:s} not yet created.')
         check_timeout = True
       elif celery_task.status == celery_states.STARTED:
+        # Task status will be set to running when the worker executes run_wrapper()
         log.debug(f'Task {celery_task.id:s} not finished.')
         check_timeout = True
       elif celery_task.status == celery_states.FAILURE:
         log.warning(f'Task {celery_task.id:s} failed.')
+        self.close_failed_task(task)
         completed_tasks.append(task)
       elif celery_task.status == celery_states.SUCCESS:
         task.result = workers.TurbiniaTaskResult.deserialize(celery_task.result)
         completed_tasks.append(task)
       elif celery_task.status == celery_states.PENDING:
         task.status = 'pending'
-        log.debug(f'Task {celery_task.id:s} status pending.')
+        check_timeout = True
+        log.debug(f'Task {celery_task.id:s} is pending.')
+      elif celery_task.status == celery_states.RECEIVED:
+        task.status = 'queued'
+        check_timeout = True
+        log.debug(f'Task {celery_task.id:s} is queued.')
       elif celery_task.status == celery_states.REVOKED:
         message = (
             f'Celery task {celery_task.id:s} associated with Turbinia '
@@ -777,7 +808,14 @@ class CeleryTaskManager(BaseTaskManager):
     self.celery_runner.task_time_limit = celery_hard_timeout
     # Time limits described here:
     #     https://docs.celeryq.dev/en/stable/userguide/workers.html#time-limits
-    task.stub = self.celery_runner.apply_async(
-        (task.serialize(), evidence_.serialize()), retry=False,
-        soft_time_limit=celery_soft_timeout, time_limit=celery_hard_timeout,
-        expires=config.CELERY_TASK_EXPIRATION_TIME)
+    try:
+      task.stub = self.celery_runner.apply_async(
+          (task.serialize(), evidence_.serialize()), retry=True,
+          soft_time_limit=celery_soft_timeout, time_limit=celery_hard_timeout,
+          expires=config.CELERY_TASK_EXPIRATION_TIME)
+      # Save the celery task identifier for traceability between
+      # Turbinia tasks and Celery tasks.
+      task.celery_id = task.stub.id
+      self.state_manager.update_task(task)
+    except kombu_exceptions.OperationalError as exception:
+      log.error(f'Error queueing task: {exception}')

@@ -17,14 +17,14 @@ limitations under the License.
       <div class="text-center pa-4">
         <v-dialog v-model="openDialog" width="auto">
           <v-card max-width="400" prepend-icon="mdi-filter-menu"
-            text="You may filter by Job Name either including or excluding Jobs."
-            title="Filter by Job Name">
+            text="You may filter by Job Name either including or excluding Jobs." title="Filter by Job Name">
             <v-form @submit.prevent>
               <v-radio-group v-model="radioFilter">
                 <v-radio label="Including Jobs" :value="true"></v-radio>
                 <v-radio label="Excluding Jobs" :value="false"></v-radio>
               </v-radio-group>
-              <v-select clearable chips label="Select" :items="this.availableJobs" v-model="filterJobs" multiple></v-select>
+              <v-select clearable chips label="Select" :items="this.availableJobs" v-model="filterJobs"
+                multiple></v-select>
             </v-form>
             <template v-slot:actions>
               <v-btn type="submit" @click="filterSelectedJobs" class="ms-auto" text="Submit"></v-btn>
@@ -38,7 +38,8 @@ limitations under the License.
       <template v-slot:append>
         <v-tooltip right>
           <template v-slot:activator="{ props }">
-            <v-btn icon="mdi-refresh" color="blue lighten-2" @click="getRequestList()" v-bind="props" class="justify-left">
+            <v-btn icon="mdi-refresh" color="blue lighten-2" @click="getRequestList()" v-bind="props"
+              class="justify-left">
             </v-btn>
           </template>
           Refresh Request List
@@ -65,7 +66,7 @@ limitations under the License.
             <v-tooltip location="top">
               <template v-slot:activator="{ props }">
                 <v-chip v-bind="props" text="Failed" filter @click="this.filterFailed = !this.filterFailed">
-                </v-chip> 
+                </v-chip>
               </template>
               Filter by failed Tasks
             </v-tooltip>
@@ -73,7 +74,7 @@ limitations under the License.
           <v-tooltip location="right">
             <template v-slot:activator="{ props }">
               <v-btn v-bind="props" variant="text" icon="mdi-filter" @click="openDialog = true"
-              selected-class="activated" :class="{ activated: jobFilterActive == true }">
+                selected-class="activated" :class="{ activated: jobFilterActive == true }">
               </v-btn>
             </template>
             Filter by Job Name
@@ -85,9 +86,9 @@ limitations under the License.
         item-value="request_id" :footer-props="{ itemsPerPageOptions: [10, 20, 40, -1] }" :loading="isLoading"
         :sort-by="sortBy" multi-sort show-expand hover>
         <template v-slot:[`item.request_id`]="{ item }">
-          <v-btn variant="text" :ripple="true" :key="item.request_id" 
-          @click="getRequestDetails(item.request_id) + selectActiveRow(item.request_id)"
-          selected-class="activated" :class="{ activated: isActiveRow == item.request_id }">
+          <v-btn variant="text" :ripple="true" :key="item.request_id"
+            @click="getRequestDetails(item.request_id) + selectActiveRow(item.request_id)" selected-class="activated"
+            :class="{ activated: isActiveRow == item.request_id }">
             {{ item.request_id }}
           </v-btn>
         </template>
@@ -127,9 +128,11 @@ limitations under the License.
         <template v-slot:expanded-row="{ columns, item }">
           <tr>
             <td :colspan="columns.length">
-              <task-list :request-id="item.request_id" :key="this.filterJobs + this.filterRunning + this.filterFailed + this.filterSuccess"
-              :filterRunning="this.filterRunning" :filterFailed="this.filterFailed" :filterSuccess="this.filterSuccess" :filterJobs="this.filterJobs" 
-              :radioFilter="this.radioFilter" :isActiveRow="this.isActiveRow"> 
+              <task-list :request-id="item.request_id"
+                :key="this.filterJobs + this.filterRunning + this.filterFailed + this.filterSuccess"
+                :filterRunning="this.filterRunning" :filterFailed="this.filterFailed"
+                :filterSuccess="this.filterSuccess" :filterJobs="this.filterJobs" :radioFilter="this.radioFilter"
+                :isActiveRow="this.isActiveRow">
               </task-list>
             </td>
           </tr>
@@ -160,8 +163,8 @@ export default {
       headers: [
         { title: '', key: 'data-table-expand', width: '1%' },
         { title: 'Request', key: 'request_id', width: '15%' },
-        { title: 'Last Task Update Time', key: 'last_task_update_time', width:'20%' },
-        { title: 'Evidence Name', key: 'evidence_name', width: '25%'},
+        { title: 'Last Task Update Time', key: 'last_task_update_time', width: '20%' },
+        { title: 'Evidence Name', key: 'evidence_name', width: '25%' },
         { title: 'Requester', key: 'requester', width: '12%' },
         { title: 'Reason', key: 'request_id_reason', width: '10%' },
         { title: 'Status', key: 'status', width: '10%' },
@@ -189,7 +192,7 @@ export default {
           let requestSummary = []
           let data = response.data['requests_status']
           for (const req in data) {
-            let outstanding_perc = Math.round(
+            let outstanding_perc = Math.floor(
               ((data[req].failed_tasks + data[req].successful_tasks) / data[req].task_count) * 100
             )
             let reason = null
@@ -235,28 +238,28 @@ export default {
           console.error(e)
         })
     },
-   getAvailableJobs: function() {
-    ApiClient.getAvailableJobs()
-      .then((response) => {
-        let available = response.data
-        this.availableJobs = available.sort()
-      })
-      .catch((e) => {
-        console.error(e)
-      })
-   },
-   filterSelectedJobs: function() {
-    if (this.filterJobs.length > 0) {
-      this.jobFilterActive = true
-    } else {
-      this.jobFilterActive = false
+    getAvailableJobs: function () {
+      ApiClient.getAvailableJobs()
+        .then((response) => {
+          let available = response.data
+          this.availableJobs = available.sort()
+        })
+        .catch((e) => {
+          console.error(e)
+        })
+    },
+    filterSelectedJobs: function () {
+      if (this.filterJobs.length > 0) {
+        this.jobFilterActive = true
+      } else {
+        this.jobFilterActive = false
+      }
+      this.openDialog = false
+    },
+    selectActiveRow: function (id) {
+      // Accepts Request ID or Task ID
+      this.isActiveRow = id
     }
-    this.openDialog = false
-   },
-   selectActiveRow: function(id) {
-    // Accepts Request ID or Task ID
-    this.isActiveRow = id
-   }
   },
   mounted() {
     this.getRequestList()
@@ -266,9 +269,7 @@ export default {
 </script>
 
 <style scoped>
-
 .activated {
   background-color: rgba(128, 128, 128, 0.4);
 }
-
 </style>

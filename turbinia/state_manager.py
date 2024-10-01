@@ -292,10 +292,11 @@ class RedisStateManager(BaseStateManager):
           self.redis_client.add_to_list(request_key, 'failed_tasks', task.id)
           statuses_to_remove.remove('failed_tasks')
       task_status = self.redis_client.get_attribute(task_key, 'status')
-      if task_status == 'running':
+      if task_status and 'Task is running' in task_status:
         self.redis_client.add_to_list(request_key, 'running_tasks', task.id)
         statuses_to_remove.remove('running_tasks')
-      elif task_status is None or task_status == 'queued':
+      elif (task_status is None or task_status == 'queued' or
+            task_status == 'pending'):
         self.redis_client.add_to_list(request_key, 'queued_tasks', task.id)
         statuses_to_remove.remove('queued_tasks')
       for status_name in statuses_to_remove:
@@ -615,7 +616,8 @@ class RedisStateManager(BaseStateManager):
       request_status = 'successful'
     elif len(request_data['task_ids']) == len(request_data['failed_tasks']):
       request_status = 'failed'
-    elif len(request_data['running_tasks']) > 0:
+    elif len(request_data['running_tasks']) > 0 or len(
+        request_data['queued_tasks']) > 0:
       request_status = 'running'
     elif len(request_data['failed_tasks']) > 0 and all_tasks_finished:
       request_status = 'completed_with_errors'

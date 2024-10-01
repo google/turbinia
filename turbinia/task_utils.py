@@ -189,6 +189,9 @@ def task_deserialize(input_dict):
 def task_runner(obj, *args, **kwargs):
   """Wrapper function to run specified TurbiniaTask object.
 
+  This is the method Celery tasks will execute. Any Python exceptions
+  raised from this method will cause the Celery task to fail.
+  
   Args:
     obj: An instantiated TurbiniaTask object.
     *args: Any Args to pass to obj.
@@ -198,14 +201,15 @@ def task_runner(obj, *args, **kwargs):
     Output from TurbiniaTask (should be TurbiniaTaskResult).
   """
   obj = task_deserialize(obj)
-  # Celery is configured to receive only one Task per worker
-  # so no need to create a FileLock.
+  lock = None
   try:
     lock = filelock.FileLock(config.LOCK_FILE)
     with lock.acquire(timeout=10):
       run = obj.run_wrapper(*args, **kwargs)
+      return run
   except filelock.Timeout:
-    raise TurbiniaException(f'Could not acquire lock on {config.LOCK_FILE}')
+    log.error(f'Could not acquire lock on {config.LOCK_FILE}')
   finally:
-    lock.release()
-  return run
+    if lock:
+      lock.release()
+  return
