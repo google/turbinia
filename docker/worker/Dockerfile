@@ -127,6 +127,6 @@ ENV TURBINIA_DEBUG ${TURBINIA_DEBUG:-0}
 ENV TURBINIA_HOTRELOAD ${TURBINIA_HOTRELOAD:-0}
 ENV TURBINIA_DEBUG_PORT ${TURBINIA_DEBUG_PORT:-10000}
 
-CMD ["/home/turbinia/start.sh"]
+CMD ["celery","--app","turbinia.tcelery","worker","-l","DEBUG","--without-gossip","-E"]
 # Expose Prometheus endpoint.
 EXPOSE 9200/tcp

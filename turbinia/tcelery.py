@@ -28,41 +28,12 @@ from kombu.exceptions import OperationalError
 from amqp.exceptions import ChannelError
 
 from turbinia import config
+from turbinia import debug
+from turbinia import task_utils
 from turbinia.message import TurbiniaMessageBase
+from turbinia.worker import TurbiniaWorkerBase
 
 log = logging.getLogger(__name__)
-
-
-class TurbiniaCelery:
-  """Celery app object.
-
-  Attributes:
-    app (Celery): The Celery app itself.
-  """
-
-  def __init__(self):
-    """Celery configurations."""
-    self.app = None
-
-  def setup(self):
-    """Set up Celery"""
-    config.LoadConfig()
-    self.app = celery.Celery(
-        'turbinia', broker=config.CELERY_BROKER, backend=config.CELERY_BACKEND)
-    self.app.conf.update(
-        accept_content=['json'],
-        broker_connection_retry_on_startup=True,
-        # Store Celery task results metadata
-        result_backend=config.CELERY_BACKEND,
-        task_default_queue=config.INSTANCE_ID,
-        # Re-queue task if Celery worker abruptly exists
-        task_reject_on_worker_lost=True,
-        task_track_started=True,
-        worker_cancel_long_running_tasks_on_connection_loss=True,
-        worker_concurrency=1,
-        worker_prefetch_multiplier=1,
-        # Avoid task duplication
-        worker_deduplicate_successful_tasks=True)
 
 
 class TurbiniaKombu(TurbiniaMessageBase):
@@ -124,3 +95,31 @@ class TurbiniaKombu(TurbiniaMessageBase):
     data = message.encode('utf-8')
     self.queue.put(data)
     log.info('Sent message to queue')
+
+
+config.TURBINIA_COMMAND = 'celeryworker'
+debug.initialize_debugmode_if_requested()
+base_worker = TurbiniaWorkerBase()
+base_worker._monitoring_setup()
+
+app = celery.Celery(
+    'turbinia', broker=config.CELERY_BROKER, backend=config.CELERY_BACKEND)
+app.conf.update(
+    accept_content=['json'],
+    broker_connection_retry_on_startup=True,
+    # Store Celery task results metadata
+    result_backend=config.CELERY_BACKEND,
+    task_default_queue=config.INSTANCE_ID,
+    # Re-queue task if Celery worker abruptly exists
+    task_reject_on_worker_lost=True,
+    task_track_started=True,
+    worker_cancel_long_running_tasks_on_connection_loss=True,
+    worker_concurrency=1,
+    worker_prefetch_multiplier=1,
+    # Avoid task duplication
+    worker_deduplicate_successful_tasks=True)
+app.autodiscover_tasks()
+app.task(task_utils.task_runner, name='task_runner')
+
+if __name__ == '__main__':
+  app.start()
