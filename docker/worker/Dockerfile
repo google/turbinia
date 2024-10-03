@@ -124,6 +124,11 @@ ARG TURBINIA_DEBUG_PORT
 ENV TURBINIA_DEBUG ${TURBINIA_DEBUG:-0}
 ENV TURBINIA_DEBUG_PORT ${TURBINIA_DEBUG_PORT:-10000}
 
+# Extra Turbinia args
+# Only '-d' is supported to enable DEBUG logging.
+ARG TURBINIA_EXTRA_ARGS
+ENV TURBINIA_EXTRA_ARGS ${TURBINIA_EXTRA_ARGS:-""}
+
 CMD ["celery","--app","turbinia.app","worker","-l","DEBUG","--without-gossip","-E"]
 # Use below CMD instead to enable hot reloading of celery when code changes.
 # CMD ["watchmedo","auto-restart","--directory=./","--pattern=*.py","--recursive","--","celery","--app","turbinia.app","worker","-l","DEBUG","--without-gossip","-E"]
