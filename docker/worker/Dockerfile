@@ -126,8 +126,9 @@ ARG TURBINIA_DEBUG_PORT
 ENV TURBINIA_DEBUG ${TURBINIA_DEBUG:-0}
 ENV TURBINIA_DEBUG_PORT ${TURBINIA_DEBUG_PORT:-10000}
 
-#CMD ["celery","--app","turbinia.app","worker","-l","DEBUG","--without-gossip","-E"]
+CMD ["celery","--app","turbinia.app","worker","-l","DEBUG","--without-gossip","-E"]
 # Use below CMD instead to enable hot reloading of celery when code changes.
-CMD ["watchmedo","auto-restart","--directory=./","--pattern=*.py","--recursive","--","celery","--app","turbinia.app","worker","-l","DEBUG","--without-gossip","-E"]
+# CMD ["watchmedo","auto-restart","--directory=./","--pattern=*.py","--recursive","--","celery","--app","turbinia.app","worker","-l","DEBUG","--without-gossip","-E"]
+
 # Expose Prometheus endpoint.
 EXPOSE 9200/tcp
