@@ -20,6 +20,8 @@ import celery
 import logging
 import os
 
+from celery import signals
+
 from turbinia import celeryconfig
 from turbinia import config
 from turbinia import debug
@@ -31,10 +33,12 @@ config.LoadConfig()
 
 config.TURBINIA_COMMAND = 'celeryworker'
 
-debug.initialize_debugmode_if_requested()
-if os.getenv('TURBINIA_EXTRA_ARGS', '') == '-d':
-  log.setLevel(logging.DEBUG)
-  os.environ['CELERY_LOG_LEVEL'] = 'DEBUG'
+@signals.setup_logging.connect
+def setup_celery_logging(**kwargs):
+  debug.initialize_debugmode_if_requested()
+  if os.getenv('TURBINIA_EXTRA_ARGS', '') == '-d':
+    log.setLevel(logging.DEBUG)
+    os.environ['CELERY_LOG_LEVEL'] = 'DEBUG'
 
 app = celery.Celery(
     'turbinia', broker=config.CELERY_BROKER, backend=config.CELERY_BACKEND)
