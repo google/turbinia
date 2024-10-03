@@ -33,12 +33,14 @@ config.LoadConfig()
 
 config.TURBINIA_COMMAND = 'celeryworker'
 
+
 @signals.setup_logging.connect
 def setup_celery_logging(**kwargs):
   debug.initialize_debugmode_if_requested()
   if os.getenv('TURBINIA_EXTRA_ARGS', '') == '-d':
     log.setLevel(logging.DEBUG)
     os.environ['CELERY_LOG_LEVEL'] = 'DEBUG'
+
 
 app = celery.Celery(
     'turbinia', broker=config.CELERY_BROKER, backend=config.CELERY_BACKEND)
