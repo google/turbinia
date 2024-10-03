@@ -14,7 +14,7 @@
 # limitations under the License.
 """Celery worker app.
 
-Configures and Starts the Turinia Celery worker.
+Configures and Starts the Turbinia Celery worker.
 """
 import celery
 
