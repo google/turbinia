@@ -20,32 +20,33 @@ import celery
 import logging
 import os
 
-from celery import signals
-
+from turbinia import debug
 from turbinia import celeryconfig
 from turbinia import config
-from turbinia import debug
 from turbinia import task_utils
-
-log = logging.getLogger(__name__)
+from turbinia.config import logger
 
 config.LoadConfig()
 
 config.TURBINIA_COMMAND = 'celeryworker'
 
 
-@signals.setup_logging.connect
-def setup_celery_logging(**kwargs):
-  debug.initialize_debugmode_if_requested()
-  if os.getenv('TURBINIA_EXTRA_ARGS', '') == '-d':
-    log.setLevel(logging.DEBUG)
-    os.environ['CELERY_LOG_LEVEL'] = 'DEBUG'
+@celery.signals.setup_logging.connect
+def on_setup_logging(**kwargs):
+  """Setup Turbinia logging as Celery overrides all handlers."""
+  logger.setup()
+  turbinia_log = logging.getLogger('turbinia')
+  turbinia_log.setLevel('INFO')
+  if os.getenv('TURBINIA_DEBUG', '') == '1':
+    turbinia_log.setLevel('DEBUG')
 
 
 app = celery.Celery(
     'turbinia', broker=config.CELERY_BROKER, backend=config.CELERY_BACKEND)
 app.config_from_object(celeryconfig)
 app.task(task_utils.task_runner, name='task_runner')
+
+debug.initialize_debugmode_if_requested()
 
 if __name__ == '__main__':
   app.start()
