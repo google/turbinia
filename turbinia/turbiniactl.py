@@ -184,7 +184,7 @@ def process_args(args):
   elif args.command == 'celeryworker':
     log.error(
         '''Deprecated: Please start celery worker
-           directly with `celery -A turbinia.app worker''')
+           directly with `celery -A turbinia.app worker`''')
   elif args.command == 'server':
     initialize_debugmode_if_requested()
     # pylint: disable=import-outside-toplevel
