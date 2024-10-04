@@ -113,8 +113,6 @@ ENV PATH="/home/turbinia/.venv/bin:$PATH" \
 
 # Copy the source directory to the container
 COPY --chown=turbinia:turbinia . /home/turbinia/
-COPY --chown=turbinia:turbinia docker/worker/start.sh /home/turbinia/start.sh
-RUN chmod +rwx /home/turbinia/start.sh
 
 # Install Turbinia package -- will skip dependencies if installed
 RUN poetry install --no-interaction --no-ansi -E worker
@@ -124,9 +122,11 @@ ARG TURBINIA_DEBUG
 ARG TURBINIA_HOTRELOAD
 ARG TURBINIA_DEBUG_PORT
 ENV TURBINIA_DEBUG ${TURBINIA_DEBUG:-0}
-ENV TURBINIA_HOTRELOAD ${TURBINIA_HOTRELOAD:-0}
 ENV TURBINIA_DEBUG_PORT ${TURBINIA_DEBUG_PORT:-10000}
 
-CMD ["/home/turbinia/start.sh"]
+CMD ["celery","--app","turbinia.app","worker","-l","INFO","--without-gossip","-E"]
+# Use below CMD instead to enable hot reloading of celery when code changes.
+# CMD ["watchmedo","auto-restart","--directory=./","--pattern=*.py","--recursive","--","celery","--app","turbinia.app","worker","-l","INFO","--without-gossip","-E"]
+
 # Expose Prometheus endpoint.
 EXPOSE 9200/tcp
