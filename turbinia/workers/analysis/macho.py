@@ -84,12 +84,6 @@ class ParsedFatBinary(object):
         self.entropy = 0
         self.hashes = hashes 
 
-class Iocs(object):
-    def __init__(self, domains: List[str], urls: List[str], ips: List[str]):
-        self.domains = domains
-        self.urls = urls
-        self.ips = ips
-
 class SignerInfo(object):
     def __init__(self):
         self.organization_name = ""
@@ -111,7 +105,7 @@ class Signature(object):
         self.pagesize = 0
 
 class ParsedMacho(object):
-  def __init__(self, signature: Signature, architecture: Architecture, iocs: Iocs, exports: List[Export], fat_binary: ParsedFatBinary, arm64: ParsedBinary, x86_64: ParsedBinary):
+  def __init__(self, signature: Signature, architecture: Architecture, exports: List[Export], fat_binary: ParsedFatBinary, arm64: ParsedBinary, x86_64: ParsedBinary):
         self.request = ""
         self.evidence = ""
         self.source_path = ""
@@ -119,7 +113,6 @@ class ParsedMacho(object):
         self.processing_time = 0
         self.signature = signature
         self.architecture = architecture
-        self.iocs = iocs
         self.exports = exports
         self.fat_binary = fat_binary
         self.arm64 = arm64
@@ -505,7 +498,7 @@ class MachoAnalysisTask(TurbiniaTask):
 
         if isinstance(macho_binary, lief.MachO.FatBinary):
           architecture = Architecture()
-          parsed_macho = ParsedMacho(signature=None, architecture=None, iocs=None, exports=None, fat_binary=None, arm64=None, x86_64=None)
+          parsed_macho = ParsedMacho(signature=None, architecture=None, exports=None, fat_binary=None, arm64=None, x86_64=None)
           parsed_macho.evidence = evidence.id
           parsed_macho.request = evidence.request_id
           parsed_macho.source_path = file
