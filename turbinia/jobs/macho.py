@@ -1,6 +1,6 @@
 """Job to execute macho analysis task."""
 
-from turbinia.evidence import CompressedDirectory
+from turbinia.evidence import MachoExtraction
 from turbinia.evidence import Directory
 from turbinia.evidence import RawDisk
 from turbinia.evidence import ReportText
@@ -13,7 +13,7 @@ class MachoAnalysisJob(interface.TurbiniaJob):
   """Mach-O analysis job."""
 
   evidence_input = [
-      CompressedDirectory
+      MachoExtraction
   ]
   evidence_output = [ReportText]
 
