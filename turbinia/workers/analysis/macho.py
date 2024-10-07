@@ -449,16 +449,21 @@ class MachoAnalysisTask(TurbiniaTask):
         result.log(f'-- signature parsing failed: {e.message}')
     return parsed_binary
 
-  def _WriteParsedMachoResults(self, file_name, parsed_macho):
+  def _WriteParsedMachoResults(self, file_name, parsed_macho, base_dir):
     """Outputs the parsed Mach-O results.
     Args:
+        file_name(str): the name of the parsed Mach-O file
         parsed_macho(ParsedMacho): the parsed Mach-O details
+        base_dir(str): the base directory for the parsed Mach-O file
     Returns:
         TurbiniaTaskResult object.
     """
     # Write the Mach-O Info to the output file.
     output_file_name = f'{file_name}.json'
-    output_file_path=os.path.join(self.output_dir, output_file_name)
+    output_dir_path=os.path.join(self.output_dir, 'reports', base_dir)
+    if not os.path.exists(output_dir_path):
+      os.makedirs(output_dir_path)
+    output_file_path=os.path.join(output_dir_path, output_file_name)
     with open(output_file_path, 'w') as fh:
       fh.write(f'{json.dumps(parsed_macho.__dict__, default=lambda o: o.__dict__, indent=2)}\n')
       fh.close()
@@ -487,7 +492,7 @@ class MachoAnalysisTask(TurbiniaTask):
     # traverse root directory, and list directories as dirs and files as files
     for root, dirs, files in os.walk(evidence.local_path):
       for file in files:
-        result.log(f'========== file: {file}')
+        base_dir = root.replace(evidence.local_path, "").replace(os.sep, '', 1)
         macho_path = os.path.join(root, file)
         try:
           macho_binary = lief.MachO.parse(macho_path, config=lief.MachO.ParserConfig.quick)
@@ -516,10 +521,10 @@ class MachoAnalysisTask(TurbiniaTask):
               architecture.x86_64 = True
           parsed_macho.architecture = architecture
           parsed_macho.processing_time = self._CurrentTimeMillis() - start_time
-          self._WriteParsedMachoResults(file, parsed_macho)
-          #result.log(f'{json.dumps(parsed_macho.__dict__, default=lambda o: o.__dict__)}')
+          self._WriteParsedMachoResults(file, parsed_macho, base_dir)
         elif isinstance(macho_binary, lief.MachO.Binary):
-          parsed_binaries += 1
+          result.log(f'========== found top level lief.MachO.Binary: {file}, skipped parsing, implment this later if needed.')
+          #parsed_binaries += 1
         macho_fd.close()
 
     summary = f'Parsed {parsed_fat_binaries} lief.MachO.FatBinary and {parsed_binaries} lief.MachO.Binary'
