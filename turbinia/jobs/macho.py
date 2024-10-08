@@ -12,9 +12,7 @@ from turbinia.workers.analysis import macho
 class MachoAnalysisJob(interface.TurbiniaJob):
   """Mach-O analysis job."""
 
-  evidence_input = [
-      MachoExtraction
-  ]
+  evidence_input = [MachoExtraction]
   evidence_output = [ReportText]
 
   NAME = 'MachoAnalysisJob'

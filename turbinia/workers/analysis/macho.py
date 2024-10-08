@@ -22,129 +22,154 @@ from turbinia.lib import text_formatter as fmt
 from turbinia.workers import Priority
 from turbinia.workers import TurbiniaTask
 
+
 class Architecture(object):
-    def __init__(self):
-        self.x86_64 = False
-        self.arm64 = False
+
+  def __init__(self):
+    self.x86_64 = False
+    self.arm64 = False
+
 
 class Hashes(object):
-    def __init__(self):
-        self.sha256 = ""
-        self.md5 = ""
-        self.ssdeep = ""
-        self.tlsh = ""
-        self.symhash = ""
+
+  def __init__(self):
+    self.sha256 = ""
+    self.md5 = ""
+    self.ssdeep = ""
+    self.tlsh = ""
+    self.symhash = ""
+
 
 class Section(object):
-    def __init__(self, flags: List[str]):
-        self.name = ""
-        self.entropy = 0
-        self.address = ""
-        self.size = ""
-        self.offset = ""
-        self.section_type = ""
-        self.flags = flags
+
+  def __init__(self, flags: List[str]):
+    self.name = ""
+    self.entropy = 0
+    self.address = ""
+    self.size = ""
+    self.offset = ""
+    self.section_type = ""
+    self.flags = flags
+
 
 class Segment(object):
-    def __init__(self, sections: List[Section]):
-        #self.command = ""
-        self.name = ""
-        self.offset = ""
-        self.size = ""
-        self.vaddr = ""
-        self.vsize = ""
-        self.sections = sections
+
+  def __init__(self, sections: List[Section]):
+    self.name = ""
+    self.offset = ""
+    self.size = ""
+    self.vaddr = ""
+    self.vsize = ""
+    self.sections = sections
+
 
 class Import(object):
-    def __init__(self):
-        self.name = ""
-        self.size = ""
-        self.offset = ""
+
+  def __init__(self):
+    self.name = ""
+    self.size = ""
+    self.offset = ""
+
 
 class ParsedBinary(object):
-    def __init__(self, hashes: Hashes, segments: List[Segment], symbols: List[str], imports: List[Import], flags: List[str]):
-        self.entropy = 0
-        self.size = 0
-        self.fat_offset = 0
-        self.magic = ""
-        self.flags = flags
-        self.hashes = hashes
-        self.segments = segments
-        self.symbols = symbols
-        self.imports = imports
+
+  def __init__(
+      self, hashes: Hashes, segments: List[Segment], symbols: List[str],
+      imports: List[Import], flags: List[str]):
+    self.entropy = 0
+    self.size = 0
+    self.fat_offset = 0
+    self.magic = ""
+    self.flags = flags
+    self.hashes = hashes
+    self.segments = segments
+    self.symbols = symbols
+    self.imports = imports
+
 
 class Export(object):
-    def __init__(self):
-        self.name = ""
-        self.offset = ""
+
+  def __init__(self):
+    self.name = ""
+    self.offset = ""
+
 
 class ParsedFatBinary(object):
-    def __init__(self, hashes: Hashes):
-        self.size = 0
-        self.entropy = 0
-        self.hashes = hashes 
+
+  def __init__(self, hashes: Hashes):
+    self.size = 0
+    self.entropy = 0
+    self.hashes = hashes
+
 
 class SignerInfo(object):
-    def __init__(self):
-        self.organization_name = ""
-        self.organizational_unit_name = ""
-        self.common_name = ""
-        self.signing_time = ""
-        self.cd_hash = ""
-        self.message_digest = ""
+
+  def __init__(self):
+    self.organization_name = ""
+    self.organizational_unit_name = ""
+    self.common_name = ""
+    self.signing_time = ""
+    self.cd_hash = ""
+    self.message_digest = ""
+
 
 class Signature(object):
-    def __init__(self, signer_infos: List[SignerInfo]):
-        self.signer_infos = signer_infos
-        self.identifier = ""
-        self.team_identifier = "not set"
-        self.size = 0
-        self.hash_type = ""
-        self.hash_size = 0
-        self.platform_identifier = 0
-        self.pagesize = 0
+
+  def __init__(self, signer_infos: List[SignerInfo]):
+    self.signer_infos = signer_infos
+    self.identifier = ""
+    self.team_identifier = "not set"
+    self.size = 0
+    self.hash_type = ""
+    self.hash_size = 0
+    self.platform_identifier = 0
+    self.pagesize = 0
+
 
 class ParsedMacho(object):
-  def __init__(self, signature: Signature, architecture: Architecture, exports: List[Export], fat_binary: ParsedFatBinary, arm64: ParsedBinary, x86_64: ParsedBinary):
-        self.request = ""
-        self.evidence = ""
-        self.source_path = ""
-        self.source_type = ""
-        self.processing_time = 0
-        self.signature = signature
-        self.architecture = architecture
-        self.exports = exports
-        self.fat_binary = fat_binary
-        self.arm64 = arm64
-        self.x86_64 = x86_64
+
+  def __init__(
+      self, signature: Signature, architecture: Architecture,
+      exports: List[Export], fat_binary: ParsedFatBinary, arm64: ParsedBinary,
+      x86_64: ParsedBinary):
+    self.request = ""
+    self.evidence = ""
+    self.source_path = ""
+    self.source_type = ""
+    self.processing_time = 0
+    self.signature = signature
+    self.architecture = architecture
+    self.exports = exports
+    self.fat_binary = fat_binary
+    self.arm64 = arm64
+    self.x86_64 = x86_64
+
 
 class MachoAnalysisTask(TurbiniaTask):
   """Task to analyse Mach-O Information"""
 
-  REQUIRED_STATES = [
-      state.ATTACHED, state.CONTAINER_MOUNTED, state.DECOMPRESSED
-  ]
+  REQUIRED_STATES = [state.ATTACHED, state.DECOMPRESSED]
 
   _MAGIC_MULTI_SIGNATURE = b'\xca\xfe\xba\xbe'
-  _MAGIC_32_SIGNATURE    = b'\xce\xfa\xed\xfe'
-  _MAGIC_64_SIGNATURE    = b'\xcf\xfa\xed\xfe'
+  _MAGIC_32_SIGNATURE = b'\xce\xfa\xed\xfe'
+  _MAGIC_64_SIGNATURE = b'\xcf\xfa\xed\xfe'
 
   # Code signature constants
   # https://github.com/apple-oss-distributions/xnu/blob/main/osfmk/kern/cs_blobs.h
-  _CSMAGIC_EMBEDDED_SIGNATURE = b'\xfa\xde\x0c\xc0' # embedded form of signature data
-  _CSMAGIC_CODEDIRECTORY      = b'\xfa\xde\x0c\x02' # CodeDirectory blob
-  _CSMAGIC_BLOBWRAPPER        = b'\xfa\xde\x0b\x01' # Wrapper blob used for CMS Signature, among other things
+  _CSMAGIC_EMBEDDED_SIGNATURE = b'\xfa\xde\x0c\xc0'  # embedded form of signature data
+  _CSMAGIC_CODEDIRECTORY = b'\xfa\xde\x0c\x02'  # CodeDirectory blob
+  _CSMAGIC_BLOBWRAPPER = b'\xfa\xde\x0b\x01'  # Wrapper blob used for CMS Signature, among other things
 
   # Slot numbers
   # https://github.com/apple-oss-distributions/xnu/blob/main/osfmk/kern/cs_blobs.h
-  _CSSLOT_CODEDIRECTORY = b'\x00\x00\x00\x00' # Code Directory slot
-  _CSSLOT_SIGNATURESLOT = b'\x00\x01\x00\x00' # CMS Signature slot
+  _CSSLOT_CODEDIRECTORY = b'\x00\x00\x00\x00'  # Code Directory slot
+  _CSSLOT_SIGNATURESLOT = b'\x00\x01\x00\x00'  # CMS Signature slot
 
   # n_type masks from /usr/include/mach-o/nlist.h
-  _N_STAB = 0xe0 # 0b11100000 : Mask to get the stab information
-  _N_PEXT = 0x10 # 0b00010000 : private external symbol bit
-  _N_TYPE = 0x0e # 0b00001110 : Mask to get the type bits
-  _N_EXT  = 0x01 # 0b00000001 : external symbol bit, set for external symbols
+  _N_STAB = 0xe0  # 0b11100000 : Mask to get the stab information
+  _N_PEXT = 0x10  # 0b00010000 : private external symbol bit
+  _N_TYPE = 0x0e  # 0b00001110 : Mask to get the type bits
+  _N_EXT = 0x01  # 0b00000001 : external symbol bit, set for external symbols
 
   def _GetDigest(self, hasher, data):
     """Executes a hasher and returns the digest.
@@ -177,7 +202,7 @@ class MachoAnalysisTask(TurbiniaTask):
     hasher.Update(','.join(sorted(symbol_list)).encode())
     symhash = hasher.GetStringDigest()
     return symhash
-  
+
   def _GetSections(self, segment, result):
     """Retrieves Mach-O segment section names.
     Args:
@@ -270,7 +295,7 @@ class MachoAnalysisTask(TurbiniaTask):
     """
     signature = None
     signature_bytes = code_signature.content.tobytes()
-    super_blob_magic = signature_bytes[0:4] # uint32_t magic
+    super_blob_magic = signature_bytes[0:4]  # uint32_t magic
     if super_blob_magic == self._CSMAGIC_EMBEDDED_SIGNATURE:
       # SuperBlob called EmbeddedSignatureBlob found which contains the code signature data
       # struct EmbeddedSignatureBlob {
@@ -282,34 +307,46 @@ class MachoAnalysisTask(TurbiniaTask):
       # }
       signature = Signature(signer_infos=[])
       result.log(f'_CSSLOT_SIGNATURESLOT: {self._CSSLOT_SIGNATURESLOT}')
-      super_blob_length = int.from_bytes(signature_bytes[4:8], "big") # uint32_t length
-      generic_blob_count = int.from_bytes(signature_bytes[8:12], "big") # uint32_t count: Count of contained blob entries
+      super_blob_length = int.from_bytes(
+          signature_bytes[4:8], "big")  # uint32_t length
+      generic_blob_count = int.from_bytes(
+          signature_bytes[8:12],
+          "big")  # uint32_t count: Count of contained blob entries
       result.log(f'super_blob_length: ' + str(super_blob_length))
       result.log(f'generic_blob_count: ' + str(generic_blob_count))
       for i in range(generic_blob_count):
         # lets walk through the CS_BlobIndex index[] entries
         # https://github.com/apple-oss-distributions/xnu/blob/94d3b452840153a99b38a3a9659680b2a006908e/osfmk/kern/cs_blobs.h#L280C15-L280C22
-        start_index_entry_type = 12 + i*8 # uint32_t type
-        start_index_entry_offset = start_index_entry_type + 4 # uint32_t offset
+        start_index_entry_type = 12 + i * 8  # uint32_t type
+        start_index_entry_offset = start_index_entry_type + 4  # uint32_t offset
         result.log(f' start_type:  {start_index_entry_type}')
         result.log(f' start_index_entry_offset: {start_index_entry_offset}')
-        blob_index_type = signature_bytes[start_index_entry_type:start_index_entry_type+4]
-        blob_index_offset = int.from_bytes(signature_bytes[start_index_entry_offset:start_index_entry_offset+4], "big")
+        blob_index_type = signature_bytes[
+            start_index_entry_type:start_index_entry_type + 4]
+        blob_index_offset = int.from_bytes(
+            signature_bytes[start_index_entry_offset:start_index_entry_offset +
+                            4], "big")
         result.log(f'   type  : {blob_index_type}')
         result.log(f'   offset: {blob_index_offset}')
-        generic_blob_magic = signature_bytes[blob_index_offset:blob_index_offset+4]
-        generic_blob_length = int.from_bytes(signature_bytes[blob_index_offset+4:blob_index_offset+8], "big")
+        generic_blob_magic = signature_bytes[
+            blob_index_offset:blob_index_offset + 4]
+        generic_blob_length = int.from_bytes(
+            signature_bytes[blob_index_offset + 4:blob_index_offset + 8], "big")
         result.log(f'     magic : {generic_blob_magic}')
         result.log(f'     length: {generic_blob_length}')
         if generic_blob_magic == self._CSMAGIC_CODEDIRECTORY and blob_index_type == self._CSSLOT_CODEDIRECTORY:
           # CodeDirectory is a Blob the describes the binary being signed
-          result.log(f'     found CSMAGIC_CODEDIRECTORY (0xfade0c02) with Code Directory slot')
-          code_directory = signature_bytes[blob_index_offset:blob_index_offset+generic_blob_length]
+          result.log(
+              f'     found CSMAGIC_CODEDIRECTORY (0xfade0c02) with Code Directory slot'
+          )
+          code_directory = signature_bytes[blob_index_offset:blob_index_offset +
+                                           generic_blob_length]
           cd_length = int.from_bytes(code_directory[4:8], "big")
           cd_hash_offset = int.from_bytes(code_directory[16:20], "big")
           cd_ident_offset = int.from_bytes(code_directory[20:24], "big")
           cd_hash_size = int.from_bytes(code_directory[36:37], "big")
-          cd_hash_type = self._CSHashType(int.from_bytes(code_directory[37:38], "big"))
+          cd_hash_type = self._CSHashType(
+              int.from_bytes(code_directory[37:38], "big"))
           cd_platform = int.from_bytes(code_directory[38:39], "big")
           cd_pagesize = 2**int.from_bytes(code_directory[39:40], "big")
           cd_team_id_offset = int.from_bytes(code_directory[48:52], "big")
@@ -318,24 +355,26 @@ class MachoAnalysisTask(TurbiniaTask):
           signature.platform_identifier = cd_platform
           signature.pagesize = cd_pagesize
           if cd_ident_offset > 0:
-            cd_ident = code_directory[cd_ident_offset:-1].split(b'\0')[0].decode()
+            cd_ident = code_directory[cd_ident_offset:-1].split(
+                b'\0')[0].decode()
             signature.identifier = cd_ident
           if cd_team_id_offset > 0:
-            cd_team_id = code_directory[cd_team_id_offset:-1].split(b'\0')[0].decode()
+            cd_team_id = code_directory[cd_team_id_offset:-1].split(
+                b'\0')[0].decode()
             signature.team_identifier = cd_team_id
         elif generic_blob_magic == self._CSMAGIC_BLOBWRAPPER and blob_index_type == self._CSSLOT_SIGNATURESLOT:
-          result.log(f'     found CSMAGIC_BLOBWRAPPER (0xfade0b01) with CMS Signature slot')
+          result.log(
+              f'     found CSMAGIC_BLOBWRAPPER (0xfade0b01) with CMS Signature slot'
+          )
           signature.size = generic_blob_length
-          blobwrapper_base = blob_index_offset+8
-          cert = signature_bytes[blobwrapper_base:blobwrapper_base+generic_blob_length]
+          blobwrapper_base = blob_index_offset + 8
+          cert = signature_bytes[blobwrapper_base:blobwrapper_base +
+                                 generic_blob_length]
           content_info = cms.ContentInfo.load(cert)
           if content_info['content_type'].native == 'signed_data':
             signed_data = content_info['content']
             signer_infos = signed_data['signer_infos']
-            #result.log(f'signer_infos : {signer_infos.native}')
             for signer_info in signer_infos:
-              #result.log(f'signer_info : {signer_info.native}')
-              #result.log(f'------------------------------------')
               signer = SignerInfo()
               signed_attrs = signer_info['signed_attrs']
               for signed_attr in signed_attrs:
@@ -370,8 +409,9 @@ class MachoAnalysisTask(TurbiniaTask):
     else:
       result.log(f'*** no embedded code signature detected ***')
     return signature
-    
-  def _ParseMachoFatBinary(self, macho_fd, evidence, result, macho_path, file_name):
+
+  def _ParseMachoFatBinary(
+      self, macho_fd, evidence, result, macho_path, file_name):
     """Parses a Mach-O fat binary.
     Args:
       macho_fd (int): file descriptor to the fat binary.
@@ -418,7 +458,8 @@ class MachoAnalysisTask(TurbiniaTask):
     hashes.symhash = self._GetSymhash(binary)
     hashes.tlsh = tlsh.hash(data)
     hashes.ssdeep = ppdeep.hash(data)
-    parsed_binary = ParsedBinary(hashes=hashes, segments=None, symbols=None, imports=None, flags=None)
+    parsed_binary = ParsedBinary(
+        hashes=hashes, segments=None, symbols=None, imports=None, flags=None)
     parsed_binary.entropy = self._GetDigest(entropy.EntropyHasher(), data)
     parsed_binary.size = binary_size
     parsed_binary.fat_offset = fat_offset
@@ -444,7 +485,8 @@ class MachoAnalysisTask(TurbiniaTask):
         # it is very easy to get this wrong and shoot ourselves in the foot.
         # so for the time being we want to monitor to see how we went and catch any exception if needed.
         # once we have confidence that we got it right we can narrow down the catching of the exceptions.
-        parsed_binary.signature = self._ParseCodeSignature(binary.code_signature, result)
+        parsed_binary.signature = self._ParseCodeSignature(
+            binary.code_signature, result)
       except Exception as e:
         result.log(f'-- signature parsing failed: {e.message}')
     return parsed_binary
@@ -460,12 +502,14 @@ class MachoAnalysisTask(TurbiniaTask):
     """
     # Write the Mach-O Info to the output file.
     output_file_name = f'{file_name}.json'
-    output_dir_path=os.path.join(self.output_dir, 'reports', base_dir)
+    output_dir_path = os.path.join(self.output_dir, 'reports', base_dir)
     if not os.path.exists(output_dir_path):
       os.makedirs(output_dir_path)
-    output_file_path=os.path.join(output_dir_path, output_file_name)
+    output_file_path = os.path.join(output_dir_path, output_file_name)
     with open(output_file_path, 'w') as fh:
-      fh.write(f'{json.dumps(parsed_macho.__dict__, default=lambda o: o.__dict__, indent=2)}\n')
+      fh.write(
+          f'{json.dumps(parsed_macho.__dict__, default=lambda o: o.__dict__, indent=2)}\n'
+      )
       fh.close()
 
   def _CurrentTimeMillis(self):
@@ -495,23 +539,28 @@ class MachoAnalysisTask(TurbiniaTask):
         base_dir = root.replace(evidence.local_path, "").replace(os.sep, '', 1)
         macho_path = os.path.join(root, file)
         try:
-          macho_binary = lief.MachO.parse(macho_path, config=lief.MachO.ParserConfig.quick)
+          macho_binary = lief.MachO.parse(
+              macho_path, config=lief.MachO.ParserConfig.quick)
           macho_fd = open(macho_path, 'rb')
         except IOError as e:
-           # 'Error opening Mach-O file: {0:s}'.format(str(e)))
+          # 'Error opening Mach-O file: {0:s}'.format(str(e)))
           break
 
         if isinstance(macho_binary, lief.MachO.FatBinary):
           architecture = Architecture()
-          parsed_macho = ParsedMacho(signature=None, architecture=None, exports=None, fat_binary=None, arm64=None, x86_64=None)
+          parsed_macho = ParsedMacho(
+              signature=None, architecture=None, exports=None, fat_binary=None,
+              arm64=None, x86_64=None)
           parsed_macho.evidence = evidence.id
           parsed_macho.request = evidence.request_id
           parsed_macho.source_path = file
           parsed_macho.source_type = "file"
-          parsed_macho.fat_binary = self._ParseMachoFatBinary(macho_fd, evidence, result, macho_path, file)
+          parsed_macho.fat_binary = self._ParseMachoFatBinary(
+              macho_fd, evidence, result, macho_path, file)
           parsed_fat_binaries += 1
           for binary in macho_binary:
-            parsed_binary = self._ParseMachoBinary(macho_fd, evidence, binary, result, file)
+            parsed_binary = self._ParseMachoBinary(
+                macho_fd, evidence, binary, result, file)
             parsed_binaries += 1
             if binary.header.cpu_type == lief.MachO.Header.CPU_TYPE.ARM64:
               parsed_macho.arm64 = parsed_binary
@@ -523,12 +572,14 @@ class MachoAnalysisTask(TurbiniaTask):
           parsed_macho.processing_time = self._CurrentTimeMillis() - start_time
           self._WriteParsedMachoResults(file, parsed_macho, base_dir)
         elif isinstance(macho_binary, lief.MachO.Binary):
-          result.log(f'========== found top level lief.MachO.Binary: {file}, skipped parsing, implment this later if needed.')
+          result.log(
+              f'========== found top level lief.MachO.Binary: {file}, skipped parsing, implment this later if needed.'
+          )
           #parsed_binaries += 1
         macho_fd.close()
 
     summary = f'Parsed {parsed_fat_binaries} lief.MachO.FatBinary and {parsed_binaries} lief.MachO.Binary'
-    output_evidence.text_data = os.linesep.join(summary) 
+    output_evidence.text_data = os.linesep.join(summary)
     result.report_data = os.linesep.join(summary)
     result.report_priority = Priority.LOW
 
