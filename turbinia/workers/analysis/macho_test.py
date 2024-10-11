@@ -22,7 +22,8 @@ import tempfile
 import unittest
 
 from turbinia import TurbiniaException
-from turbinia.evidence import MachoExtraction
+from turbinia.evidence import MachoExtraction, EvidenceState
+from turbinia.processors import archive
 from turbinia.workers import TurbiniaTaskResult
 from turbinia.workers.analysis import macho
 from turbinia.workers.workers_test import TestTurbiniaTaskBase
@@ -38,16 +39,21 @@ class MachoAnalysisTaskTest(TestTurbiniaTaskBase):
     self.setResults(mock_run=False)
 
     self.task.tmp_dir = tempfile.gettempdir()
-    self.task.output_dir = self.task.base_output_dir
+    self.task.output_dir = tempfile.gettempdir()
 
   def testRun(self):
     """Tests the run method."""
     filedir = os.path.dirname(os.path.realpath(__file__))
     self.evidence.compressed_directory = os.path.join(
-        filedir, '..', '..', '..', 'test_data', 'macho-3.tgz'),
+        filedir, '..', '..', '..', 'test_data', 'macho-3.tgz')
+    self.evidence.uncompressed_directory = archive.UncompressTarFile(
+        self.evidence.compressed_directory, self.task.tmp_dir)
+    self.evidence.local_path = self.evidence.uncompressed_directory
     self.task.run(self.evidence, self.result)
-    logging.getLogger('turbinia').error(self.result)
-    self.assertIsInstance(self.result, TurbiniaTaskResult)
+    logging.getLogger('turbinia').info(self.result.report_data)
+    self.assertEqual(
+        self.result.report_data,
+        "Parsed 3 lief.MachO.FatBinary and 6 lief.MachO.Binary")
 
 
 if __name__ == '__main__':
