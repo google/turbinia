@@ -3,7 +3,7 @@
 import json
 import lief
 import os
-import ppdeep
+import pyssdeep
 import time
 import tlsh
 
@@ -429,7 +429,7 @@ class MachoAnalysisTask(TurbiniaTask):
     hashes.md5 = self._GetDigest(md5.MD5Hasher(), data)
     hashes.sha256 = self._GetDigest(sha256.SHA256Hasher(), data)
     hashes.tlsh = tlsh.hash(data)
-    hashes.ssdeep = ppdeep.hash(data)
+    hashes.ssdeep = pyssdeep.get_hash_buffer(data)
     parsed_fat_binary = ParsedFatBinary(hashes)
     parsed_fat_binary.entropy = self._GetDigest(entropy.EntropyHasher(), data)
     fat_binary_stats = os.stat(macho_path)
@@ -457,7 +457,7 @@ class MachoAnalysisTask(TurbiniaTask):
     hashes.sha256 = self._GetDigest(sha256.SHA256Hasher(), data)
     hashes.symhash = self._GetSymhash(binary)
     hashes.tlsh = tlsh.hash(data)
-    hashes.ssdeep = ppdeep.hash(data)
+    hashes.ssdeep = pyssdeep.get_hash_buffer(data)
     parsed_binary = ParsedBinary(
         hashes=hashes, segments=None, symbols=None, imports=None, flags=None)
     parsed_binary.entropy = self._GetDigest(entropy.EntropyHasher(), data)
