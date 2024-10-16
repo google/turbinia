@@ -124,6 +124,7 @@ class Signature(object):
     self.hash_size = 0
     self.platform_identifier = 0
     self.pagesize = 0
+    self.cd_hash_calculated = ""
 
 
 class ParsedMacho(object):
@@ -341,6 +342,9 @@ class MachoAnalysisTask(TurbiniaTask):
           )
           code_directory = signature_bytes[blob_index_offset:blob_index_offset +
                                            generic_blob_length]
+          cd_hash_calculated = self._GetDigest(sha256.SHA256Hasher(), code_directory)
+          if len(cd_hash_calculated) > 40:
+            signature.cd_hash_calculated = cd_hash_calculated[0:40]
           cd_length = int.from_bytes(code_directory[4:8], "big")
           cd_hash_offset = int.from_bytes(code_directory[16:20], "big")
           cd_ident_offset = int.from_bytes(code_directory[20:24], "big")
