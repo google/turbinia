@@ -32,6 +32,15 @@
             ]
         },
         {
+            "name": "Turbinia API Client",
+            "type": "debugpy",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "program": "turbinia/api/cli/turbinia_client/turbiniacli_tool.py",
+            "args": "${input:apiClientCommand}",
+            "console": "integratedTerminal",
+        },
+        {
             "name": "Attach k8s Worker",
             "type": "cloudcode.kubernetes",
             "request": "attach",
@@ -67,5 +76,13 @@
             "localRoot": "${workspaceFolder}",
             "remoteRoot": "/home/turbinia"
         }
-    ]
+    ],
+    "inputs": [
+    {
+      "id": "apiClientCommand",
+      "type": "promptString",
+      "description": "API Client Command",
+      "default": "config list"
+    }
+  ]
 }
