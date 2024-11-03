@@ -32,6 +32,21 @@
             ]
         },
         {
+            "name": "Attach debugpy API Server",
+            "type": "debugpy",
+            "request": "attach",
+            "connect": {
+                "host": "localhost",
+                "port":30000
+            },
+            "pathMappings": [
+                {
+                    "localRoot": "${workspaceFolder}",
+                    "remoteRoot": "/home/turbinia"
+                }
+            ]
+        },
+        {
             "name": "Turbinia API Client",
             "type": "debugpy",
             "request": "launch",
