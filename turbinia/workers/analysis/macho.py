@@ -204,16 +204,14 @@ class MachoAnalysisTask(TurbiniaTask):
     symhash = hasher.GetStringDigest()
     return symhash
 
-  def _GetSections(self, segment, result):
+  def _GetSections(self, segment):
     """Retrieves Mach-O segment section names.
     Args:
       segment (lief.MachO.SegmentCommand): segment to be parsed for sections.
-      result (TurbiniaTaskResult): The object to place task results into.
     Returns:
       List[Section]: Sections of the segments.
     """
     sections = []
-    #result.log(f'----------- sections --------------')
     for sec in segment.sections:
       flags = []
       section = Section(flags)
@@ -227,21 +225,18 @@ class MachoAnalysisTask(TurbiniaTask):
         flags.append(str(flag).split(".")[-1])
       section.flags = flags
       sections.append(section)
-    #result.log(f'-----------------------------------')
     return sections
 
-  def _GetSegments(self, binary, result):
+  def _GetSegments(self, binary):
     """Retrieves Mach-O segments.
     Args:
       binary (lief.MachO.Binary): binary to be parsed.
-      result (TurbiniaTaskResult): The object to place task results into.
     Returns:
       List[Segment]: List of the segments.
     """
     segments = []
-    #result.log(f'----------- segments --------------')
     for seg in binary.segments:
-      sections = self._GetSections(seg, result)
+      sections = self._GetSections(seg)
       segment = Segment(sections)
       segment.name = seg.name
       segment.offset = hex(seg.file_offset)
@@ -249,22 +244,18 @@ class MachoAnalysisTask(TurbiniaTask):
       segment.vaddr = hex(seg.virtual_address)
       segment.vsize = hex(seg.virtual_size)
       segments.append(segment)
-    #result.log(f'-----------------------------------')
     return segments
 
-  def _GetSymbols(self, binary, result):
+  def _GetSymbols(self, binary):
     """Retrieves Mach-O symbols.
     Args:
       binary (lief.MachO.Binary): binary to be parsed.
-      result (TurbiniaTaskResult): The object to place task results into.
     Returns:
       List[str]: List of the symbols.
     """
     symbols = []
-    #result.log(f'----------- symbols --------------')
     for sym in binary.symbols:
       symbols.append(sym.demangled_name)
-    #result.log(f'-----------------------------------')
     return symbols
 
   def _CSHashType(self, cs_hash_type):
@@ -307,39 +298,27 @@ class MachoAnalysisTask(TurbiniaTask):
       #   Blob blobs[]; // Has `count` blobs
       # }
       signature = Signature(signer_infos=[])
-      result.log(f'_CSSLOT_SIGNATURESLOT: {self._CSSLOT_SIGNATURESLOT}')
       super_blob_length = int.from_bytes(
           signature_bytes[4:8], "big")  # uint32_t length
       generic_blob_count = int.from_bytes(
           signature_bytes[8:12],
           "big")  # uint32_t count: Count of contained blob entries
-      result.log(f'super_blob_length: ' + str(super_blob_length))
-      result.log(f'generic_blob_count: ' + str(generic_blob_count))
       for i in range(generic_blob_count):
         # lets walk through the CS_BlobIndex index[] entries
         # https://github.com/apple-oss-distributions/xnu/blob/94d3b452840153a99b38a3a9659680b2a006908e/osfmk/kern/cs_blobs.h#L280C15-L280C22
         start_index_entry_type = 12 + i * 8  # uint32_t type
         start_index_entry_offset = start_index_entry_type + 4  # uint32_t offset
-        result.log(f' start_type:  {start_index_entry_type}')
-        result.log(f' start_index_entry_offset: {start_index_entry_offset}')
         blob_index_type = signature_bytes[
             start_index_entry_type:start_index_entry_type + 4]
         blob_index_offset = int.from_bytes(
             signature_bytes[start_index_entry_offset:start_index_entry_offset +
                             4], "big")
-        result.log(f'   type  : {blob_index_type}')
-        result.log(f'   offset: {blob_index_offset}')
         generic_blob_magic = signature_bytes[
             blob_index_offset:blob_index_offset + 4]
         generic_blob_length = int.from_bytes(
             signature_bytes[blob_index_offset + 4:blob_index_offset + 8], "big")
-        result.log(f'     magic : {generic_blob_magic}')
-        result.log(f'     length: {generic_blob_length}')
         if generic_blob_magic == self._CSMAGIC_CODEDIRECTORY and blob_index_type == self._CSSLOT_CODEDIRECTORY:
           # CodeDirectory is a Blob the describes the binary being signed
-          result.log(
-              f'     found CSMAGIC_CODEDIRECTORY (0xfade0c02) with Code Directory slot'
-          )
           code_directory = signature_bytes[blob_index_offset:blob_index_offset +
                                            generic_blob_length]
           cd_hash_calculated = self._GetDigest(sha256.SHA256Hasher(), code_directory)
@@ -367,9 +346,6 @@ class MachoAnalysisTask(TurbiniaTask):
                 b'\0')[0].decode()
             signature.team_identifier = cd_team_id
         elif generic_blob_magic == self._CSMAGIC_BLOBWRAPPER and blob_index_type == self._CSSLOT_SIGNATURESLOT:
-          result.log(
-              f'     found CSMAGIC_BLOBWRAPPER (0xfade0b01) with CMS Signature slot'
-          )
           signature.size = generic_blob_length
           blobwrapper_base = blob_index_offset + 8
           cert = signature_bytes[blobwrapper_base:blobwrapper_base +
@@ -411,22 +387,20 @@ class MachoAnalysisTask(TurbiniaTask):
                     signer.organizational_unit_name = val.native
               signature.signer_infos.append(signer)
     else:
-      result.log(f'*** no embedded code signature detected ***')
+      result.log(f'no embedded code signature detected')
     return signature
 
   def _ParseMachoFatBinary(
-      self, macho_fd, evidence, result, macho_path, file_name):
+      self, macho_fd, evidence, macho_path, file_name):
     """Parses a Mach-O fat binary.
     Args:
       macho_fd (int): file descriptor to the fat binary.
       evidence (Evidence object):  The evidence to process
-      result (TurbiniaTaskResult): The object to place task results into.
       macho_path (str): path to the fat binary.
       file_name (str): file name of the fat binary.
     Returns:
       FatBinary: the parsed Mach-O Fat Binary details.
     """
-    result.log(f'---------- start fat binary ------------')
     macho_fd.seek(0)
     data = macho_fd.read()
     hashes = Hashes()
@@ -451,7 +425,6 @@ class MachoAnalysisTask(TurbiniaTask):
     Returns:
       ParsedBinary: the parsed binary details.
     """
-    result.log(f'------------ start binary --------------')
     fat_offset = binary.fat_offset
     binary_size = binary.original_size
     macho_fd.seek(fat_offset)
@@ -468,8 +441,8 @@ class MachoAnalysisTask(TurbiniaTask):
     parsed_binary.size = binary_size
     parsed_binary.fat_offset = fat_offset
     parsed_binary.magic = hex(binary.header.magic.value)
-    parsed_binary.segments = self._GetSegments(binary, result)
-    parsed_binary.symbols = self._GetSymbols(binary, result)
+    parsed_binary.segments = self._GetSegments(binary)
+    parsed_binary.symbols = self._GetSymbols(binary)
     flags = []
     for flag in binary.header.flags_list:
       flags.append(str(flag).split(".")[-1])
@@ -484,15 +457,8 @@ class MachoAnalysisTask(TurbiniaTask):
     parsed_binary.imports = imports
 
     if binary.has_code_signature:
-      try:
-        # we went knee-deep into asn1 parsing to get our hands on the signature details.
-        # it is very easy to get this wrong and shoot ourselves in the foot.
-        # so for the time being we want to monitor to see how we went and catch any exception if needed.
-        # once we have confidence that we got it right we can narrow down the catching of the exceptions.
-        parsed_binary.signature = self._ParseCodeSignature(
-            binary.code_signature, result)
-      except Exception as e:
-        result.log(f'-- signature parsing failed: {e.message}')
+      parsed_binary.signature = self._ParseCodeSignature(
+          binary.code_signature, result)
     return parsed_binary
 
   def _WriteParsedMachoResults(self, file_name, parsed_macho, base_dir):
@@ -560,7 +526,7 @@ class MachoAnalysisTask(TurbiniaTask):
           parsed_macho.source_path = file
           parsed_macho.source_type = "file"
           parsed_macho.fat_binary = self._ParseMachoFatBinary(
-              macho_fd, evidence, result, macho_path, file)
+              macho_fd, evidence, macho_path, file)
           parsed_fat_binaries += 1
           for binary in macho_binary:
             parsed_binary = self._ParseMachoBinary(
@@ -577,9 +543,8 @@ class MachoAnalysisTask(TurbiniaTask):
           self._WriteParsedMachoResults(file, parsed_macho, base_dir)
         elif isinstance(macho_binary, lief.MachO.Binary):
           result.log(
-              f'========== found top level lief.MachO.Binary: {file}, skipped parsing, implment this later if needed.'
+              f'Skipping unsupported top level lief.MachO.Binary: {file}'
           )
-          #parsed_binaries += 1
         macho_fd.close()
 
     summary = f'Parsed {parsed_fat_binaries} lief.MachO.FatBinary and {parsed_binaries} lief.MachO.Binary'
