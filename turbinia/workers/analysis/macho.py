@@ -321,7 +321,8 @@ class MachoAnalysisTask(TurbiniaTask):
           # CodeDirectory is a Blob the describes the binary being signed
           code_directory = signature_bytes[blob_index_offset:blob_index_offset +
                                            generic_blob_length]
-          cd_hash_calculated = self._GetDigest(sha256.SHA256Hasher(), code_directory)
+          cd_hash_calculated = self._GetDigest(
+              sha256.SHA256Hasher(), code_directory)
           if len(cd_hash_calculated) > 40:
             signature.cd_hash_calculated = cd_hash_calculated[0:40]
           cd_length = int.from_bytes(code_directory[4:8], "big")
@@ -390,8 +391,7 @@ class MachoAnalysisTask(TurbiniaTask):
       result.log(f'no embedded code signature detected')
     return signature
 
-  def _ParseMachoFatBinary(
-      self, macho_fd, evidence, macho_path, file_name):
+  def _ParseMachoFatBinary(self, macho_fd, evidence, macho_path, file_name):
     """Parses a Mach-O fat binary.
     Args:
       macho_fd (int): file descriptor to the fat binary.
@@ -508,7 +508,7 @@ class MachoAnalysisTask(TurbiniaTask):
     # traverse root directory, and list directories as dirs and files as files
     for root, dirs, files in os.walk(evidence.local_path):
       for file in files:
-        base_dir = root.replace(evidence.local_path, "").replace(os.sep, '', 1)
+        base_dir = os.path.relpath(root, evidence.local_path)
         macho_path = os.path.join(root, file)
         try:
           macho_binary = lief.MachO.parse(
@@ -545,8 +545,7 @@ class MachoAnalysisTask(TurbiniaTask):
           self._WriteParsedMachoResults(file, parsed_macho, base_dir)
         elif isinstance(macho_binary, lief.MachO.Binary):
           result.log(
-              f'Skipping unsupported top level lief.MachO.Binary: {file}'
-          )
+              f'Skipping unsupported top level lief.MachO.Binary: {file}')
         macho_fd.close()
 
     summary = f'Parsed {parsed_fat_binaries} lief.MachO.FatBinary and {parsed_binaries} lief.MachO.Binary'
