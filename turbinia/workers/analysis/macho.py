@@ -477,6 +477,8 @@ class MachoAnalysisTask(TurbiniaTask):
       os.makedirs(output_dir_path)
     output_file_path = os.path.join(output_dir_path, output_file_name)
     with open(output_file_path, 'w') as fh:
+      # Plain vanilla json.dumps() doesn't support custom classes.
+      # https://stackoverflow.com/questions/3768895/how-to-make-a-class-json-serializable
       fh.write(
           f'{json.dumps(parsed_macho.__dict__, default=lambda o: o.__dict__, indent=2)}\n'
       )
