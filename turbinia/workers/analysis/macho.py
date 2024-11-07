@@ -550,7 +550,7 @@ class MachoAnalysisTask(TurbiniaTask):
         macho_fd.close()
 
     summary = f'Parsed {parsed_fat_binaries} lief.MachO.FatBinary and {parsed_binaries} lief.MachO.Binary'
-    output_evidence.text_data = os.linesep.join(summary)
+    output_evidence.text_data = summary
     result.report_data = summary
     result.report_priority = Priority.LOW
 
