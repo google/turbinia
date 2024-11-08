@@ -54,6 +54,19 @@ class MachoAnalysisTaskTest(TestTurbiniaTaskBase):
     self.assertEqual(
         self.result.report_data,
         "Parsed 3 lief.MachO.FatBinary and 6 lief.MachO.Binary")
+    self.assertTrue(
+        os.path.exists(
+            os.path.join(self.task.output_dir, 'reports', 'bin', 'ln.json')),
+        "ln.json report missing")
+    self.assertTrue(
+        os.path.exists(
+            os.path.join(self.task.output_dir, 'reports', 'bin', 'ls.json')),
+        "ls.json report missing")
+    self.assertTrue(
+        os.path.exists(
+            os.path.join(
+                self.task.output_dir, 'reports', 'usr', 'bin', 'ld.json')),
+        "ld.json report missing")
 
 
 if __name__ == '__main__':
