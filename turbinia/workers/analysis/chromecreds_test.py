@@ -25,7 +25,15 @@ class ChromeCredsAnalysisTaskTest(unittest.TestCase):
   """Tests for ChromeCredentialsAnslysisTask."""
 
   EXPECTED_CREDENTIALS = {'http://test.com': ['testuser']}
+  TWO_CREDENTIALS = {
+    'http://test.com': ['testuser'],
+    'http://example.com': ['exampleuser', 'admin']
+  }
   TEST_SQL = None
+  CREDS_REPORT = """#### **2 saved credentials found in Chrome Login Data**
+* **Credentials:**
+    * Site 'http://test.com' with users '['testuser']'
+    * Site 'http://example.com' with users '['exampleuser', 'admin']'"""
 
   def setUp(self):
     super(ChromeCredsAnalysisTaskTest, self).setUp()
@@ -41,3 +49,15 @@ class ChromeCredsAnalysisTaskTest(unittest.TestCase):
     # pylint: disable=protected-access
     credentials = task._extract_chrome_creds(self.TEST_SQL)
     self.assertEqual(credentials, self.EXPECTED_CREDENTIALS)
+
+  def test_summarise_creds(self):
+    """Tests the summarise_creds method."""
+    config.LoadConfig()
+    task = chromecreds.ChromeCredsAnalysisTask()
+
+    (report, priority, summary) = task.summarise_creds(self.TWO_CREDENTIALS)
+    self.assertEqual(report, self.CREDS_REPORT)
+    self.assertEqual(priority, 50)
+    self.assertEqual(
+        summary, '2 saved credentials found in Chrome Login Data')
+

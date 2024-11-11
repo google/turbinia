@@ -21,7 +21,9 @@ from turbinia import TurbiniaException
 
 from turbinia.evidence import EvidenceState as state
 from turbinia.evidence import ReportText
+from turbinia.lib import text_formatter as fmt
 from turbinia.lib.utils import extract_artifacts
+from turbinia.workers import Priority
 from turbinia.workers import TurbiniaTask
 
 
@@ -82,6 +84,38 @@ class ChromeCredsAnalysisTask(TurbiniaTask):
     return result
 
   @staticmethod
+  def summarise_creds(creds):
+    """Summarise the sum total of extracted credentials.
+    
+    Args:
+      creds (dict[List[str]]): dict mapping domain to a list of usernames.
+
+    Returns:
+      Tuple(
+        report_text(str): The report data
+        report_priority(int): The priority of the report (0 - 100)
+        summary(str): A summary of the report (used for task status)
+      )
+    """
+    report = []
+    summary = 'No saved credentials found'
+    priority = Priority.LOW
+
+    if creds:
+      priority = Priority.MEDIUM
+      summary = f'{len(creds)} saved credentials found in Chrome Login Data'
+      report.insert(0, fmt.heading4(fmt.bold(summary)))
+      report.append(fmt.bullet(fmt.bold(f'Credentials:')))
+
+    for k, v in creds.items():
+      line = f"""Site '{k}' with users '{v}'"""
+      report.append(fmt.bullet(line, level=2))
+
+    report = '\n'.join(report)
+    return report, priority, summary
+
+
+  @staticmethod
   def _extract_chrome_creds(filepath):
     """Extract saved credentials from a Chrome Login Database file.
     
@@ -95,11 +129,14 @@ class ChromeCredsAnalysisTask(TurbiniaTask):
 
     con = sqlite3.connect(filepath)
     cur = con.cursor()
-    for row in cur.execute('SELECT origin_url, username_value FROM logins'):
-      if not row[1]:
-        continue
-      if row[0] not in ret:
-        ret[row[0]] = []
-      ret[row[0]].append(row[1])
+    try:
+      for row in cur.execute('SELECT origin_url, username_value FROM logins'):
+        if not row[1]:
+          continue
+        if row[0] not in ret:
+          ret[row[0]] = []
+        ret[row[0]].append(row[1])
+    except sqlite3.OperationalError:
+      return {}
 
     return ret
