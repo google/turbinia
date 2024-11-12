@@ -70,20 +70,6 @@ worker = [
   "pyhindsight",
   "py-tlsh",
 ]
-server = [
-  "asn1crypto",
-  "lief",
-  "plaso",
-  "pyssdeep",
-  "py-tlsh",
-]
-api_server = [
-  "asn1crypto",
-  "lief",
-  "plaso",
-  "pyssdeep",
-  "py-tlsh",
-]
 
 [tool.yapfignore]
 ignore_patterns = [

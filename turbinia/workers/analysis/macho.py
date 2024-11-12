@@ -1,20 +1,12 @@
 """Task for analysing Mach-O Information."""
 
 import json
-import lief
 import os
-import pyssdeep
 import time
-import tlsh
 
-from asn1crypto import cms
 from time import strftime
 from turbinia import TurbiniaException
 from typing import List
-
-from plaso.analyzers.hashers import entropy
-from plaso.analyzers.hashers import md5
-from plaso.analyzers.hashers import sha256
 
 from turbinia.evidence import EvidenceState as state
 from turbinia.evidence import ReportText
@@ -172,6 +164,29 @@ class MachoAnalysisTask(TurbiniaTask):
   _N_TYPE = 0x0e  # 0b00001110 : Mask to get the type bits
   _N_EXT = 0x01  # 0b00000001 : external symbol bit, set for external symbols
 
+  def __init__(self, *args, **kwargs):
+    super(MachoAnalysisTask, self).__init__(*args, **kwargs)
+    if TurbiniaTask.check_worker_role():
+      try:
+        import lief
+        import tlsh
+        import pyssdeep
+        from asn1crypto import cms
+        from plaso.analyzers.hashers import entropy
+        from plaso.analyzers.hashers import md5
+        from plaso.analyzers.hashers import sha256
+
+        self._cms = cms
+        self._entropy = entropy
+        self._lief = lief
+        self._md5 = md5
+        self._pyssdeep = pyssdeep
+        self._sha256 = sha256
+        self._tlsh = tlsh
+      except ImportError as exception:
+        message = f'Could not import libraries: {exception!s}'
+        raise TurbiniaException(message)
+
   def _GetDigest(self, hasher, data):
     """Executes a hasher and returns the digest.
     Args:
@@ -197,9 +212,9 @@ class MachoAnalysisTask(TurbiniaTask):
       is_stab = n_type & self._N_STAB != 0
       is_external = n_type & self._N_EXT == self._N_EXT
       is_ntype = n_type & self._N_TYPE != 0
-      if symbol.origin == lief._lief.MachO.Symbol.ORIGIN.LC_SYMTAB and not is_stab and is_external and not is_ntype:
+      if symbol.origin == self._lief._lief.MachO.Symbol.ORIGIN.LC_SYMTAB and not is_stab and is_external and not is_ntype:
         symbol_list.append(symbol.demangled_name)
-    hasher = md5.MD5Hasher()
+    hasher = self._md5.MD5Hasher()
     hasher.Update(','.join(sorted(symbol_list)).encode())
     symhash = hasher.GetStringDigest()
     return symhash
@@ -322,7 +337,7 @@ class MachoAnalysisTask(TurbiniaTask):
           code_directory = signature_bytes[blob_index_offset:blob_index_offset +
                                            generic_blob_length]
           cd_hash_calculated = self._GetDigest(
-              sha256.SHA256Hasher(), code_directory)
+              self._sha256.SHA256Hasher(), code_directory)
           if len(cd_hash_calculated) > 40:
             signature.cd_hash_calculated = cd_hash_calculated[0:40]
           cd_length = int.from_bytes(code_directory[4:8], "big")
@@ -351,7 +366,7 @@ class MachoAnalysisTask(TurbiniaTask):
           blobwrapper_base = blob_index_offset + 8
           cert = signature_bytes[blobwrapper_base:blobwrapper_base +
                                  generic_blob_length]
-          content_info = cms.ContentInfo.load(cert)
+          content_info = self._cms.ContentInfo.load(cert)
           if content_info['content_type'].native == 'signed_data':
             signed_data = content_info['content']
             signer_infos = signed_data['signer_infos']
@@ -404,12 +419,13 @@ class MachoAnalysisTask(TurbiniaTask):
     macho_fd.seek(0)
     data = macho_fd.read()
     hashes = Hashes()
-    hashes.md5 = self._GetDigest(md5.MD5Hasher(), data)
-    hashes.sha256 = self._GetDigest(sha256.SHA256Hasher(), data)
-    hashes.tlsh = tlsh.hash(data)
-    hashes.ssdeep = pyssdeep.get_hash_buffer(data)
+    hashes.md5 = self._GetDigest(self._md5.MD5Hasher(), data)
+    hashes.sha256 = self._GetDigest(self._sha256.SHA256Hasher(), data)
+    hashes.tlsh = self._tlsh.hash(data)
+    hashes.ssdeep = self._pyssdeep.get_hash_buffer(data)
     parsed_fat_binary = ParsedFatBinary(hashes)
-    parsed_fat_binary.entropy = self._GetDigest(entropy.EntropyHasher(), data)
+    parsed_fat_binary.entropy = self._GetDigest(
+        self._entropy.EntropyHasher(), data)
     fat_binary_stats = os.stat(macho_path)
     parsed_fat_binary.size = fat_binary_stats.st_size
     return parsed_fat_binary
@@ -430,14 +446,14 @@ class MachoAnalysisTask(TurbiniaTask):
     macho_fd.seek(fat_offset)
     data = macho_fd.read(binary_size)
     hashes = Hashes()
-    hashes.md5 = self._GetDigest(md5.MD5Hasher(), data)
-    hashes.sha256 = self._GetDigest(sha256.SHA256Hasher(), data)
+    hashes.md5 = self._GetDigest(self._md5.MD5Hasher(), data)
+    hashes.sha256 = self._GetDigest(self._sha256.SHA256Hasher(), data)
     hashes.symhash = self._GetSymhash(binary)
-    hashes.tlsh = tlsh.hash(data)
-    hashes.ssdeep = pyssdeep.get_hash_buffer(data)
+    hashes.tlsh = self._tlsh.hash(data)
+    hashes.ssdeep = self._pyssdeep.get_hash_buffer(data)
     parsed_binary = ParsedBinary(
         hashes=hashes, segments=None, symbols=None, imports=None, flags=None)
-    parsed_binary.entropy = self._GetDigest(entropy.EntropyHasher(), data)
+    parsed_binary.entropy = self._GetDigest(self._entropy.EntropyHasher(), data)
     parsed_binary.size = binary_size
     parsed_binary.fat_offset = fat_offset
     parsed_binary.magic = hex(binary.header.magic.value)
@@ -511,14 +527,14 @@ class MachoAnalysisTask(TurbiniaTask):
         base_dir = os.path.relpath(root, evidence.local_path)
         macho_path = os.path.join(root, file)
         try:
-          macho_binary = lief.MachO.parse(
-              macho_path, config=lief.MachO.ParserConfig.quick)
+          macho_binary = self._lief.MachO.parse(
+              macho_path, config=self._lief.MachO.ParserConfig.quick)
           macho_fd = open(macho_path, 'rb')
         except IOError as e:
           # 'Error opening Mach-O file: {0:s}'.format(str(e)))
           break
 
-        if isinstance(macho_binary, lief.MachO.FatBinary):
+        if isinstance(macho_binary, self._lief.MachO.FatBinary):
           architecture = Architecture()
           parsed_macho = ParsedMacho(
               signature=None, architecture=None, exports=None, fat_binary=None,
@@ -534,16 +550,16 @@ class MachoAnalysisTask(TurbiniaTask):
             parsed_binary = self._ParseMachoBinary(
                 macho_fd, evidence, binary, result, file)
             parsed_binaries += 1
-            if binary.header.cpu_type == lief.MachO.Header.CPU_TYPE.ARM64:
+            if binary.header.cpu_type == self._lief.MachO.Header.CPU_TYPE.ARM64:
               parsed_macho.arm64 = parsed_binary
               architecture.arm64 = True
-            elif binary.header.cpu_type == lief.MachO.Header.CPU_TYPE.X86_64:
+            elif binary.header.cpu_type == self._lief.MachO.Header.CPU_TYPE.X86_64:
               parsed_macho.x86_64 = parsed_binary
               architecture.x86_64 = True
           parsed_macho.architecture = architecture
           parsed_macho.processing_time = self._CurrentTimeMillis() - start_time
           self._WriteParsedMachoResults(file, parsed_macho, base_dir)
-        elif isinstance(macho_binary, lief.MachO.Binary):
+        elif isinstance(macho_binary, self._lief.MachO.Binary):
           result.log(
               f'Skipping unsupported top level lief.MachO.Binary: {file}')
         macho_fd.close()
