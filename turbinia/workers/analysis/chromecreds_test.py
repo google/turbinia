@@ -26,8 +26,8 @@ class ChromeCredsAnalysisTaskTest(unittest.TestCase):
 
   EXPECTED_CREDENTIALS = {'http://test.com': ['testuser']}
   TWO_CREDENTIALS = {
-    'http://test.com': ['testuser'],
-    'http://example.com': ['exampleuser', 'admin']
+      'http://test.com': ['testuser'],
+      'http://example.com': ['exampleuser', 'admin']
   }
   TEST_SQL = None
   CREDS_REPORT = """#### **2 saved credentials found in Chrome Login Data**
@@ -58,6 +58,4 @@ class ChromeCredsAnalysisTaskTest(unittest.TestCase):
     (report, priority, summary) = task.summarise_creds(self.TWO_CREDENTIALS)
     self.assertEqual(report, self.CREDS_REPORT)
     self.assertEqual(priority, 50)
-    self.assertEqual(
-        summary, '2 saved credentials found in Chrome Login Data')
-
+    self.assertEqual(summary, '2 saved credentials found in Chrome Login Data')

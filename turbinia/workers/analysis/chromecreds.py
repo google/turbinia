@@ -114,7 +114,6 @@ class ChromeCredsAnalysisTask(TurbiniaTask):
     report = '\n'.join(report)
     return report, priority, summary
 
-
   @staticmethod
   def _extract_chrome_creds(filepath):
     """Extract saved credentials from a Chrome Login Database file.
