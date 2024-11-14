@@ -22,7 +22,7 @@ from turbinia import TurbiniaException
 from turbinia.evidence import EvidenceState as state
 from turbinia.evidence import ReportText
 from turbinia.lib import text_formatter as fmt
-from turbinia.lib.utils import extract_artifacts
+from turbinia.lib.utils import extract_data_stream
 from turbinia.workers import Priority
 from turbinia.workers import TurbiniaTask
 
@@ -30,7 +30,7 @@ from turbinia.workers import TurbiniaTask
 class ChromeCredsAnalysisTask(TurbiniaTask):
   """Task to analyze a Chrome Login Data file."""
 
-  # Does not need to be MOUNTED as this Task uses extract_files()
+  # Does not need to be MOUNTED as this Task uses extract_data_stream()
   REQUIRED_STATES = [state.ATTACHED, state.CONTAINER_MOUNTED]
 
   def run(self, evidence, result):
@@ -52,7 +52,7 @@ class ChromeCredsAnalysisTask(TurbiniaTask):
     output_evidence = ReportText(source_path=output_file_path)
 
     try:
-      collected_artifacts = extract_artifacts(
+      collected_artifacts = extract_data_stream(
           artifact_names=['ChromiumBasedBrowsersLoginDataDatabaseFile'],
           disk_path=evidence.local_path, output_dir=self.output_dir,
           credentials=evidence.credentials)
@@ -105,7 +105,7 @@ class ChromeCredsAnalysisTask(TurbiniaTask):
       priority = Priority.MEDIUM
       summary = f'{len(creds)} saved credentials found in Chrome Login Data'
       report.insert(0, fmt.heading4(fmt.bold(summary)))
-      report.append(fmt.bullet(fmt.bold(f'Credentials:')))
+      report.append(fmt.bullet(fmt.bold('Credentials:')))
 
     for k, v in creds.items():
       line = f"""Site '{k}' with users '{v}'"""
@@ -137,6 +137,8 @@ class ChromeCredsAnalysisTask(TurbiniaTask):
           ret[row[0]] = []
         ret[row[0]].append(row[1])
     except sqlite3.OperationalError:
+      return {}
+    except sqlite3.DatabaseError:
       return {}
 
     return ret

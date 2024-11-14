@@ -41,6 +41,7 @@ RUN apt-get update && apt-get -y install \
     libbde-tools \
     libfsapfs-tools \
     libluksde-tools \
+    python3-dfimagetools \
     sleuthkit \
     libewf-tools \
     && apt-get clean && rm -rf /var/cache/apt/* /var/lib/apt/lists/*
