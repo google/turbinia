@@ -69,13 +69,16 @@ class YaraAnalysisTask(TurbiniaTask):
         repository = git.Repo(path)
         origin = repository.remotes.origin
         origin.pull(depth=1)
-        log.debug('Successfully updated rules from %s in %s', repo, path)
+        log.info('Successfully updated rules from %s in %s', repo, path)
       except git.exc.InvalidGitRepositoryError as e:
-        log.debug(
-            'InvalidGitRepositoryError updating rules in %s: %s', path, str(e))
+        log.error(
+            'InvalidGitRepositoryError updating rules in %s: %s', path, str(e),
+            exc_info=True)
         return False
       except Exception as e:
-        log.debug('Unknown error updating rules in %s: %s', path, str(e))
+        log.error(
+            'Unknown error updating rules in %s: %s', path, str(e),
+            exc_info=True)
         return False
 
     return True
