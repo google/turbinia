@@ -108,7 +108,7 @@ class ChromeCredsAnalysisTask(TurbiniaTask):
       report.append(fmt.bullet(fmt.bold('Credentials:')))
 
     for k, v in creds.items():
-      line = f"""Site '{k}' with users '{v}'"""
+      line = f"Site '{k}' with users '{v}'"
       report.append(fmt.bullet(line, level=2))
 
     report = '\n'.join(report)
