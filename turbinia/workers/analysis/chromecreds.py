@@ -135,9 +135,12 @@ class ChromeCredsAnalysisTask(TurbiniaTask):
         if row[0] not in ret:
           ret[row[0]] = []
         ret[row[0]].append(row[1])
+    # Database path not found.
     except sqlite3.OperationalError:
-      return {}
+      return ret
+    # Not a valid SQLite DB.
     except sqlite3.DatabaseError:
-      return {}
+      return ret
 
+    con.close()
     return ret
