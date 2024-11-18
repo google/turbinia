@@ -33,7 +33,7 @@ WORKDIR /home/turbinia
 RUN python3 -m venv .venv
 ENV PATH="/home/turbinia/.local/bin:/home/turbinia/.venv/bin:$PATH" \
     VIRTUAL_ENV=/home/turbinia/.venv
-RUN curl -sSL https://install.python-poetry.org | python3 -
+RUN python3 -m pip install poetry
 
 # Copy requirements and install dependencies to cache them in docker layer
 COPY --chown=turbinia:turbinia ./pyproject.toml ./poetry.toml ./poetry.lock /home/turbinia/
