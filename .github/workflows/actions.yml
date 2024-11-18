@@ -10,7 +10,7 @@ jobs:
       matrix:
         os:
           - ubuntu-24.04
-        gift_ppa_track: ["stable"]
+        gift_ppa_track: ["staging", "stable"]
     steps:
       - name: checkout
         uses: actions/checkout@v4
