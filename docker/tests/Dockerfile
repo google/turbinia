@@ -1,4 +1,4 @@
-FROM --platform=linux/amd64 ubuntu:22.04
+FROM --platform=linux/amd64 ubuntu:24.04
 ENV DEBIAN_FRONTEND=noninteractive \
     PIP_NO_CACHE_DIR=1 
 ARG PPA_TRACK=stable
@@ -22,18 +22,13 @@ RUN apt-get update && apt-get -y upgrade && apt-get -y install \
     p7zip-full \
     pkg-config \
     python3-pip \
-    python3.10-venv \
+    python3.12-venv \
     software-properties-common \
     sudo \
     testdisk \
     tox \
     wget \
     && apt-get clean && rm -rf /var/cache/apt/* /var/lib/apt/lists/*
-
-# Install Poetry
-RUN pip3 install pip --upgrade
-RUN pip3 install poetry
-RUN pip3 install -U packaging
 
 # Install various packages from the GIFT PPA
 #   bulkextractor
@@ -103,13 +98,15 @@ WORKDIR /home/turbinia
 # Copy only requirements, to cache them in docker layer
 COPY --chown=turbinia:turbinia ./pyproject.toml ./poetry.toml ./poetry.lock /home/turbinia/
 
+# Install poetry
+RUN python3 -m venv .venv
+ENV PATH="/home/turbinia/.local/bin:/home/turbinia/.venv/bin:$PATH" \
+    VIRTUAL_ENV=/home/turbinia/.venv
+RUN curl -sSL https://install.python-poetry.org | python3 -
+
 # Install dependencies using Poetry
 RUN poetry install --no-interaction --no-ansi -E worker --with test --no-root
 RUN poetry run python3 -m pip install impacket --no-deps
-
-# Activate the virtualenv
-ENV PATH="/home/turbinia/.venv/bin:$PATH" \
-    VIRTUAL_ENV=/home/turbinia/.venv
 
 # Install Turbinia and dependencies in /home/turbinia/.venv using Poetry
 ADD . /home/turbinia/

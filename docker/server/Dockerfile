@@ -1,4 +1,4 @@
-FROM --platform=linux/amd64 ubuntu:22.04
+FROM --platform=linux/amd64 ubuntu:24.04
 
 ENV DEBIAN_FRONTEND=noninteractive 
 ENV PIP_NO_CACHE_DIR=1
@@ -9,12 +9,10 @@ RUN apt-get update && apt-get -y upgrade && apt-get -y install \
     git \
     libterm-readline-gnu-perl \
     python3-pip \
+    python3.12-venv \
     software-properties-common \
     sudo \
     && apt-get clean && rm -rf /var/cache/apt/* /var/lib/apt/lists/*
-
-RUN pip3 install pip --upgrade
-RUN pip3 install poetry
 
 RUN useradd -r -s /sbin/nologin -u 999 turbinia
 
@@ -30,12 +28,15 @@ RUN mkdir /etc/turbinia && mkdir -p /mnt/turbinia/ && mkdir -p /var/lib/turbinia
 USER turbinia
 WORKDIR /home/turbinia
 
+# Install poetry
+RUN python3 -m venv .venv
+ENV PATH="/home/turbinia/.local/bin:/home/turbinia/.venv/bin:$PATH" \
+    VIRTUAL_ENV=/home/turbinia/.venv
+RUN curl -sSL https://install.python-poetry.org | python3 -
+
 # Copy requirements and install dependencies to cache them in docker layer
 COPY --chown=turbinia:turbinia ./pyproject.toml ./poetry.toml ./poetry.lock /home/turbinia/
 RUN poetry install --no-interaction --no-ansi --no-root
-
-ENV PATH="/home/turbinia/.venv/bin:$PATH" \
-    VIRTUAL_ENV=/home/turbinia/.venv
 
 # Copy the source directory to the container
 COPY --chown=turbinia:turbinia . /home/turbinia/
