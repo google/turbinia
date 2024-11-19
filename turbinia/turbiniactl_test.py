@@ -39,21 +39,6 @@ class TestTurbiniactl(unittest.TestCase):
     self.assertRaises((argparse.ArgumentError, SystemExit),
                       turbiniactl.process_args, [args.command])
 
-  @mock.patch('turbinia.worker.TurbiniaCeleryWorker')
-  def testCeleryWorkerCommand(self, mock_worker):
-    """Test CeleryWorker command."""
-    args = argparse.Namespace(command='celeryworker')
-    turbiniactl.process_args([args.command])
-    mock_worker.assert_called_once_with(jobs_denylist=[], jobs_allowlist=[])
-
-  @mock.patch('turbinia.config.ParseDependencies')
-  @mock.patch('turbinia.worker.TurbiniaCeleryWorker.start')
-  def testCeleryWorkerCommandStart(self, mock_worker, _):
-    """Test CeleryWorker start."""
-    args = argparse.Namespace(command='celeryworker')
-    turbiniactl.process_args([args.command])
-    mock_worker.assert_called_once_with()
-
   @mock.patch('turbinia.server.TurbiniaServer')
   def testServerCommand(self, mock_server):
     """Test Server command."""

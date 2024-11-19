@@ -41,11 +41,15 @@ limitations under the License.
     </v-alert>
     <v-alert v-else-if="requestDetails.status === 'running'" type="info" prominent>
       Request <strong>{{ requestDetails.request_id }}</strong> has <strong>{{ requestDetails.task_count -
-          requestDetails.successful_tasks - requestDetails.failed_tasks }}</strong> Tasks remaining.
+        requestDetails.successful_tasks - requestDetails.failed_tasks }}</strong> Tasks remaining.
     </v-alert>
     <v-alert v-else-if="requestDetails.status === 'completed_with_errors'" type="warning" prominent>
       Request <strong>{{ requestDetails.request_id }}</strong> completed with <strong>{{ requestDetails.failed_tasks
         }}</strong> failed Tasks.
+    </v-alert>
+    <v-alert v-else-if="requestDetails.status === 'pending'" type="info" prominent>
+      Request <strong>{{ requestDetails.request_id }}</strong> has <strong>{{ requestDetails.queued_tasks
+       }}</strong> Tasks pending.
     </v-alert>
     <v-alert v-else type="error" prominent>
       Request <strong>{{ requestDetails.request_id }}</strong> was not successful.

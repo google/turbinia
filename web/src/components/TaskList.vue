@@ -40,7 +40,7 @@ limitations under the License.
               </v-list-item-action>
             </div>
             <v-list-item :max-width="800">
-              {{ item.task_name }}: {{ $filters.truncate(item.task_status, 384, '...') }}
+              {{ item.task_name }} {{ $filters.truncate(item.task_status, 384, '...') }}
             </v-list-item>
           </v-list-item>
           <v-divider> </v-divider>
@@ -73,10 +73,19 @@ export default {
           let data = response.data['tasks']
           for (const task in data) {
             let task_dict = data[task]
-            let taskStatusTemp = task_dict.status
+            let taskStatusTemp = task_dict.celery_state
             // As pending status requests show as null or pending
-            if (taskStatusTemp === null || taskStatusTemp === "pending") {
+            if (taskStatusTemp === null || taskStatusTemp === "PENDING") {
               taskStatusTemp = 'is pending on server.'
+            }
+            else if (taskStatusTemp == "RECEIVED") {
+              taskStatusTemp = 'is queued for execution.'
+            }
+            else if (taskStatusTemp == "STARTED") {
+              taskStatusTemp = 'is running on ' + task_dict.worker_name
+            }
+            else {
+              taskStatusTemp = task_dict.status
             }
             if (this.filterJobs.length > 0) {
               let jobName = task_dict.job_name.toLowerCase()

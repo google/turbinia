@@ -436,7 +436,7 @@ if __name__ == '__main__':
 
 Now let's install the test requirements and run this specific test from the root turbinia folder.
 ```
-$ pip install -f requirements-test.txt
+$ poetry install --with test
 $ PYTHONPATH=. python -m unittest turbinia.workers.analysis.os_info_test
 
 Using fallback source config Copy turbinia/config/turbinia_config_tmpl.py to ~/.turbiniarc or /etc/turbinia/turbinia.conf, edit, and re-run.

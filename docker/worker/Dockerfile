@@ -1,5 +1,5 @@
 # Build 1 - Turbinia Worker
-FROM ubuntu:22.04
+FROM --platform=linux/amd64 ubuntu:22.04
 ENV DEBIAN_FRONTEND=noninteractive \
     PIP_NO_CACHE_DIR=1
 ARG PPA_TRACK=stable
@@ -52,9 +52,10 @@ RUN echo "Defaults secure_path=\"/home/turbinia/.venv/bin:/opt/fraken:/usr/local
 
 # Install yara rules and fraken binary.
 RUN cd /opt \
-    && git clone https://github.com/Neo23x0/signature-base.git \
+    && git clone https://github.com/Neo23x0/signature-base.git --depth=1\
     && sudo chown -R turbinia:turbinia /opt/signature-base \
-    && find /opt/signature-base -type f -not -iname '*.yar' -not -iname '*.yara' -not -iname 'file-type-signatures.txt' -delete
+    && sudo git config --global --add safe.directory /opt/signature-base \
+    && find /opt/signature-base -type f -not -path '*.git/*' -not -iname '*.yar' -not -iname '*.yara' -not -iname 'file-type-signatures.txt' -delete
 COPY turbinia/config/rules/*.yar /opt/signature-base/yara/
 RUN mkdir -p /opt/fraken && chown -R turbinia:turbinia /opt/fraken
 COPY --from=us-docker.pkg.dev/osdfir-registry/turbinia/release/fraken:latest --chown=turbinia:turbinia /bin/fraken /opt/fraken/fraken
@@ -112,8 +113,6 @@ ENV PATH="/home/turbinia/.venv/bin:$PATH" \
 
 # Copy the source directory to the container
 COPY --chown=turbinia:turbinia . /home/turbinia/
-COPY --chown=turbinia:turbinia docker/worker/start.sh /home/turbinia/start.sh
-RUN chmod +rwx /home/turbinia/start.sh
 
 # Install Turbinia package -- will skip dependencies if installed
 RUN poetry install --no-interaction --no-ansi -E worker
@@ -123,9 +122,11 @@ ARG TURBINIA_DEBUG
 ARG TURBINIA_HOTRELOAD
 ARG TURBINIA_DEBUG_PORT
 ENV TURBINIA_DEBUG ${TURBINIA_DEBUG:-0}
-ENV TURBINIA_HOTRELOAD ${TURBINIA_HOTRELOAD:-0}
 ENV TURBINIA_DEBUG_PORT ${TURBINIA_DEBUG_PORT:-10000}
 
-CMD ["/home/turbinia/start.sh"]
+CMD ["celery","--app","turbinia.app","worker","-l","INFO","--without-gossip","-E"]
+# Use below CMD instead to enable hot reloading of celery when code changes.
+# CMD ["watchmedo","auto-restart","--directory=./","--pattern=*.py","--recursive","--","celery","--app","turbinia.app","worker","-l","INFO","--without-gossip","-E"]
+
 # Expose Prometheus endpoint.
 EXPOSE 9200/tcp

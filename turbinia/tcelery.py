@@ -28,6 +28,7 @@ from kombu.exceptions import OperationalError
 from amqp.exceptions import ChannelError
 
 from turbinia import config
+from turbinia import celeryconfig
 from turbinia.message import TurbiniaMessageBase
 
 log = logging.getLogger(__name__)
@@ -49,14 +50,7 @@ class TurbiniaCelery:
     config.LoadConfig()
     self.app = celery.Celery(
         'turbinia', broker=config.CELERY_BROKER, backend=config.CELERY_BACKEND)
-    self.app.conf.update(
-        broker_connection_retry_on_startup=True,
-        task_default_queue=config.INSTANCE_ID,
-        accept_content=['json'],
-        worker_cancel_long_running_tasks_on_connection_loss=True,
-        worker_concurrency=1,
-        worker_prefetch_multiplier=1,
-    )
+    self.app.config_from_object(celeryconfig)
 
 
 class TurbiniaKombu(TurbiniaMessageBase):

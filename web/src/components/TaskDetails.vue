@@ -39,8 +39,17 @@ limitations under the License.
     <v-alert v-if="taskDetails.successful === true" type="success" prominent>
       {{ taskDetails.status }}
     </v-alert>
-    <v-alert v-else-if="taskDetails.successful === null" type="info" prominent>
+    <v-alert v-else-if="taskDetails.successful === false" type="error" prominent>
       {{ taskDetails.status }}
+    </v-alert>
+    <v-alert v-else-if="taskDetails.celery_state === 'STARTED'" type="info" prominent>
+      Task {{ taskDetails.id }} is running on {{ taskDetails.worker_name }}
+    </v-alert>
+    <v-alert v-else-if="taskDetails.celery_state === 'PENDING'" type="info" prominent>
+      Task {{ taskDetails.id }} is pending.
+    </v-alert>
+    <v-alert v-else-if="taskDetails.celery_state === 'RECEIVED'" type="info" prominent>
+      Task {{ taskDetails.id }} is queued.
     </v-alert>
     <v-alert v-else type="error" prominent>
       {{ taskDetails.status }}
@@ -60,6 +69,18 @@ limitations under the License.
           <v-list-item title="Request ID:">
             <div v-if="taskDetails.request_id">
               {{ taskDetails.request_id }}
+            </div>
+            <div v-else>N/A</div>
+          </v-list-item>
+          <v-list-item title="Celery ID:">
+            <div v-if="taskDetails.celery_id">
+              {{ taskDetails.celery_id }}
+            </div>
+            <div v-else>N/A</div>
+          </v-list-item>
+          <v-list-item title="Celery State:">
+            <div v-if="taskDetails.celery_state">
+              {{ taskDetails.celery_state }}
             </div>
             <div v-else>N/A</div>
           </v-list-item>
@@ -107,10 +128,10 @@ limitations under the License.
                 </template>
               </v-tooltip>
             </template>
-            <v-snackbar v-model="evidenceSnackbar" color="primary" location="top" height="55" timeout="2000"> 
+            <v-snackbar v-model="evidenceSnackbar" color="primary" location="top" height="55" timeout="2000">
               Evidence output is downloading...
             </v-snackbar>
-            <v-snackbar v-model="notCopyable" color="red" location="top" height="55" timeout="2000"> 
+            <v-snackbar v-model="notCopyable" color="red" location="top" height="55" timeout="2000">
               Evidence type is not supported for downloading.
             </v-snackbar>
             <div v-if="taskDetails.evidence_name">
@@ -140,7 +161,8 @@ limitations under the License.
             <template v-if="taskDetails.worker_name" v-slot:append>
               <v-tooltip location="top" text="Download Worker Logs (defaults to most recent 500 entries)">
                 <template v-slot:activator="{ props: tooltip }">
-                  <v-btn icon="mdi-database-outline" v-bind="tooltip" @click="downloadWorkerLogs(taskDetails.worker_name)">
+                  <v-btn icon="mdi-database-outline" v-bind="tooltip"
+                    @click="downloadWorkerLogs(taskDetails.worker_name)">
                   </v-btn>
                 </template>
               </v-tooltip>
@@ -153,6 +175,9 @@ limitations under the License.
           <v-list-item title="Successful:">
             <div v-if="taskDetails.successful">
               {{ taskDetails.successful }}
+            </div>
+            <div v-else-if="taskDetails.successful == false">
+              False
             </div>
             <div v-else>N/A</div>
           </v-list-item>

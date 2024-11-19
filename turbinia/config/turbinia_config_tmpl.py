@@ -322,7 +322,7 @@ REDIS_DB = '0'
 CELERY_BROKER = f'redis://{REDIS_HOST}'
 
 # Storage for task results/status
-CELERY_BACKEND = f'redis://{REDIS_HOST}'
+CELERY_BACKEND = f'redis://{REDIS_HOST}/1'
 
 # Task expiration (in seconds). Tasks will be revoked
 # after the expiration time elapses. Revoked tasks will not
