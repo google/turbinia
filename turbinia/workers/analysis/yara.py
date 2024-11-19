@@ -68,7 +68,7 @@ class YaraAnalysisTask(TurbiniaTask):
       try:
         repository = git.Repo(path)
         origin = repository.remotes.origin
-        origin.pull(depth=1)
+        origin.pull(ff=True, depth=1)
         log.info('Successfully updated rules from %s in %s', repo, path)
       except git.exc.InvalidGitRepositoryError as e:
         log.error(

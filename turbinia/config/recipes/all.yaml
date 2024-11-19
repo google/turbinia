@@ -6,6 +6,7 @@ globals:
   jobs_allowlist:
     - BinaryExtractorJob
     - BulkExtractorJob
+    - ChromeCredsAnalysisTask
     - FileSystemTimelineJob
     - FsstatJob
     - GrepJob

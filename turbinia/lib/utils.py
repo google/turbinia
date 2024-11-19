@@ -118,6 +118,38 @@ def extract_artifacts(artifact_names, disk_path, output_dir, credentials=[]):
   return _image_export(image_export_cmd, output_dir, disk_path)
 
 
+def extract_data_stream(artifact_names, disk_path, output_dir, credentials=[]):
+  """Extract artifacts using extract_data_streams from dfImageTools.
+
+  Args:
+    artifact_names: List of artifact definition names.
+    disk_path: Path to either a raw disk image or a block device.
+    output_dir: Path to directory to store the extracted files.
+    credentials: List of credentials to use for decryption.
+
+  Returns:
+    list: paths to extracted files.
+
+  Raises:
+    TurbiniaException: If an error occurs when running image_export.
+  """
+  # Expects artifact names as a comma separated string.
+  artifacts = ','.join(artifact_names)
+  export_data_stream_cmd = [
+      'extract_data_streams', '--artifact_filters', artifacts, '-t', output_dir,
+      '--partitions', 'all', '--volumes', 'all'
+  ]
+
+  if credentials:
+    for credential_type, credential_data in credentials:
+      export_data_stream_cmd.extend(
+          ['--credential', f'{credential_type:s}:{credential_data:s}'])
+
+  export_data_stream_cmd.append(disk_path)
+
+  return _image_export(export_data_stream_cmd, output_dir, disk_path)
+
+
 def extract_files(file_name, disk_path, output_dir, credentials=[]):
   """Extract files using image_export from Plaso.
 
