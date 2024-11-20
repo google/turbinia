@@ -1,5 +1,5 @@
 # Build 1 - Turbinia Worker
-FROM --platform=linux/amd64 ubuntu:22.04
+FROM --platform=linux/amd64 ubuntu:24.04
 ENV DEBIAN_FRONTEND=noninteractive \
     PIP_NO_CACHE_DIR=1
 ARG PPA_TRACK=stable
@@ -20,14 +20,12 @@ RUN apt-get update && apt-get -y upgrade && apt-get -y install \
     pocl-opencl-icd \
     p7zip-full \
     python3-pip \
+    python3.12-venv \
     software-properties-common \
     sudo \
     testdisk \
     wget \
     && apt-get clean && rm -rf /var/cache/apt/* /var/lib/apt/lists/*
-
-RUN pip3 install pip --upgrade
-RUN pip3 install poetry
 
 # Install various packages from the GIFT PPA
 #   bulkextractor
@@ -104,12 +102,16 @@ COPY --chown=turbinia:turbinia k8s/tools/check-lockfile.py /home/turbinia/check-
 USER turbinia
 WORKDIR /home/turbinia
 
+# Install poetry
+RUN python3 -m venv .venv
+ENV PATH="/home/turbinia/.local/bin:/home/turbinia/.venv/bin:$PATH" \
+    VIRTUAL_ENV=/home/turbinia/.venv
+RUN python3 -m pip install poetry
+
 # Copy requirements and install dependencies to cache them in docker layer
 COPY --chown=turbinia:turbinia ./pyproject.toml ./poetry.toml ./poetry.lock /home/turbinia/
 RUN poetry install --no-interaction --no-ansi -E worker --no-root
 RUN poetry run pip3 install impacket --no-deps 
-ENV PATH="/home/turbinia/.venv/bin:$PATH" \
-    VIRTUAL_ENV=/home/turbinia/.venv
 
 # Copy the source directory to the container
 COPY --chown=turbinia:turbinia . /home/turbinia/
