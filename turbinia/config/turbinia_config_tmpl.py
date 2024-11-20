@@ -220,6 +220,11 @@ DEPENDENCIES = [{
     'docker_image': None,
     'timeout': 1200
 }, {
+    'job': 'MachoAnalysisJob',
+    'programs': ['grep'],
+    'docker_image': None,
+    'timeout': 3600
+}, {
     'job': 'YaraAnalysisJob',
     'programs': ['/opt/fraken/fraken'],
     'docker_image': None,

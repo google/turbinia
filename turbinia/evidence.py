@@ -1201,6 +1201,11 @@ class BinaryExtraction(CompressedDirectory):
   pass
 
 
+class MachoExtraction(CompressedDirectory):
+  """Mach-O details extracted from evidence."""
+  pass
+
+
 class DockerContainer(Evidence):
   """Evidence object for a DockerContainer filesystem.
 

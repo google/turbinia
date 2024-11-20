@@ -29,6 +29,7 @@ from turbinia.jobs import jenkins
 from turbinia.jobs import jupyter
 from turbinia.jobs import linux_acct
 from turbinia.jobs import llm_artifacts_analyzer
+from turbinia.jobs import macho
 from turbinia.jobs import yara
 from turbinia.jobs import partitions
 from turbinia.jobs import photorec

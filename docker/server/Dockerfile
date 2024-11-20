@@ -56,4 +56,3 @@ ENV TURBINIA_DEBUG_PORT ${TURBINIA_DEBUG_PORT:-20000}
 CMD ["/home/turbinia/start.sh"]
 # Expose Prometheus endpoint.
 EXPOSE 9200/tcp
-
