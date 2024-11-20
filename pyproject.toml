@@ -19,7 +19,7 @@ asn1crypto = { version = ">= 0.24.0", optional = true }
 backoff = { version = ">=2.2.1" }
 celery = { version = "^5.2.2" }
 dfDewey = { version = "^20231016", optional = true }
-dfimagetools = { version = "^20240301", optional = true }
+dfimagetools = { version = "^20241116", optional = true }
 docker = { version = "^6.1.3" }
 fastapi = {extras = ["all"], version = ">=0.75.0,<0.99.0"}
 filelock = { version = "*" }
