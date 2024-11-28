@@ -351,6 +351,10 @@ func filesystemScan(wait chan struct{}, c chan *Detection, minimumScore int) {
 	}
 	var wg sync.WaitGroup
 	err := filepath.Walk(*scanPathFlag, func(filePath string, fileInfo os.FileInfo, err error) error {
+		if err != nil {
+			log.Printf("Error walking dir %v: %v\n", filePath, err)
+			return err
+		}
 		if !fileInfo.Mode().IsRegular() {
 			return nil
 		}
