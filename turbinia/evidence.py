@@ -1201,6 +1201,11 @@ class BinaryExtraction(CompressedDirectory):
   pass
 
 
+class ElfExtraction(CompressedDirectory):
+  """ELF details extracted from evidence."""
+  pass
+
+
 class MachoExtraction(CompressedDirectory):
   """Mach-O details extracted from evidence."""
   pass

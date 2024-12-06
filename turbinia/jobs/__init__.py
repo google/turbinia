@@ -19,6 +19,7 @@ from turbinia.jobs import chromecreds
 from turbinia.jobs import containerd
 from turbinia.jobs import dfdewey
 from turbinia.jobs import docker
+from turbinia.jobs import elf
 from turbinia.jobs import file_system_timeline
 from turbinia.jobs import finalize_request
 from turbinia.jobs import fsstat

@@ -185,6 +185,11 @@ DEPENDENCIES = [{
     'docker_image': None,
     'timeout': 1200
 }, {
+    'job': 'ElfAnalysisJob',
+    'programs': ['grep'],
+    'docker_image': None,
+    'timeout': 3600
+}, {
     'job': 'FileArtifactExtractionJob',
     'programs': ['image_export'],
     'docker_image': None,
