@@ -40,6 +40,8 @@ from datetime import datetime
 config.LoadConfig()
 if config.CLOUD_PROVIDER.lower() == 'gcp':
   from turbinia.processors import google_cloud
+elif config.CLOUD_PROVIDER.lower() == 'aws':
+  from turbinia.processors import aws
 
 log = logging.getLogger(__name__)
 
@@ -924,6 +926,56 @@ class DiskPartition(Evidence):
       else:
         mount_local.PostprocessDeleteLosetup(self.device_path, self.lv_uuid)
         self.state[EvidenceState.ATTACHED] = False
+
+
+class AwsEbsVolume(Evidence):
+  """Evidence object for an AWS EBS Disk.
+
+  Attributes:
+    zone: The geographic zone.
+    volume_id: The unique volume id for the disk.
+    disk_name: Optional name for the disk.
+  """
+
+  REQUIRED_ATTRIBUTES = ['volume_id', 'zone']
+  POSSIBLE_STATES = [EvidenceState.ATTACHED, EvidenceState.MOUNTED]
+
+  def __init__(
+      self, zone, volume_id, disk_name=None, mount_partition=1, *args,
+      **kwargs):
+    """Initialization for AWS EBS Disk."""
+    super(AwsEbsVolume, self).__init__(*args, **kwargs)
+    self.zone = zone
+    self.volume_id = volume_id
+    self.disk_name = disk_name
+    self.mount_partition = mount_partition
+    self.partition_paths = None
+    self.cloud_only = True
+    self.resource_tracked = True
+    self.resource_id = self.volume_id
+    self.device_path = None
+
+  @property
+  def name(self):
+    if self._name:
+      return self._name
+    elif self.disk_name:
+      return ':'.join((self.type, self.disk_name, self.volume_id))
+    else:
+      return ':'.join((self.type, self.volume_id))
+
+  def _preprocess(self, _, required_states):
+    if EvidenceState.ATTACHED in required_states:
+      self.device_path, partition_paths = aws.PreprocessAttachDisk(
+          self.volume_id)
+      self.partition_paths = partition_paths
+      self.local_path = self.device_path
+      self.state[EvidenceState.ATTACHED] = True
+
+  def _postprocess(self):
+    if self.state[EvidenceState.ATTACHED]:
+      aws.PostprocessDetachDisk(self.volume_id)
+      self.state[EvidenceState.ATTACHED] = False
 
 
 class GoogleCloudDisk(Evidence):
