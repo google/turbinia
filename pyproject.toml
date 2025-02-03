@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "turbinia"
-version = "20240930"
+version = "20250131"
 description = "Automation and Scaling of Digital Forensics Tools"
 authors = ["Turbinia Developers <turbinia-dev@googlegroups.com>"]
 maintainers = ["Turbinia Developers <turbinia-dev@googlegroups.com>"]
