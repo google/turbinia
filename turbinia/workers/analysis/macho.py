@@ -117,6 +117,7 @@ class Signature(object):
     self.platform_identifier = 0
     self.pagesize = 0
     self.cd_hash_calculated = ""
+    self.error = "none"
 
 
 class ParsedMacho(object):
@@ -366,42 +367,48 @@ class MachoAnalysisTask(TurbiniaTask):
           blobwrapper_base = blob_index_offset + 8
           cert = signature_bytes[blobwrapper_base:blobwrapper_base +
                                  generic_blob_length]
-          content_info = self._cms.ContentInfo.load(cert)
-          if content_info['content_type'].native == 'signed_data':
-            signed_data = content_info['content']
-            signer_infos = signed_data['signer_infos']
-            for signer_info in signer_infos:
-              signer = SignerInfo()
-              signed_attrs = signer_info['signed_attrs']
-              for signed_attr in signed_attrs:
-                signed_attr_type = signed_attr['type']
-                signed_attr_values = signed_attr['values']
-                if signed_attr_type.native == 'signing_time':
-                  signer.signing_time = str(signed_attr_values.native[0])
-                elif signed_attr_type.native == 'message_digest':
-                  # https://forums.developer.apple.com/forums/thread/702351
-                  signer.message_digest = signed_attr_values.native[0].hex()
-                  if len(signed_attr_values.native[0]) > 20:
-                    signer.cd_hash = signed_attr_values.native[0][0:20].hex()
-                  else:
-                    signer.cd_hash = signed_attr_values.native[0].hex()
-              sid = signer_info['sid']
-              issuer = sid.chosen['issuer'].chosen
-              for entry in issuer:
-                # https://datatracker.ietf.org/doc/html/rfc5652#section-10.2.4
-                for sub_entry in entry:
-                  # https://datatracker.ietf.org/doc/html/rfc5280#section-4.1.2.4
-                  name_type = sub_entry['type']
-                  val = sub_entry['value']
-                  if name_type.native == 'country_name':
-                    signer.country_name = val.native
-                  elif name_type.native == 'common_name':
-                    signer.common_name = val.native
-                  elif name_type.native == 'organization_name':
-                    signer.organization_name = val.native
-                  elif name_type.native == 'organizational_unit_name':
-                    signer.organizational_unit_name = val.native
-              signature.signer_infos.append(signer)
+          try:
+            content_info = self._cms.ContentInfo.load(cert)
+            if content_info['content_type'].native == 'signed_data':
+              signed_data = content_info['content']
+              signer_infos = signed_data['signer_infos']
+              for signer_info in signer_infos:
+                signer = SignerInfo()
+                signed_attrs = signer_info['signed_attrs']
+                for signed_attr in signed_attrs:
+                  signed_attr_type = signed_attr['type']
+                  signed_attr_values = signed_attr['values']
+                  if signed_attr_type.native == 'signing_time':
+                    try:
+                      signer.signing_time = str(signed_attr_values.native[0])
+                    except ValueError as ve:
+                      signer.signing_time = 'Error parsing signing_time: {0:s}'.format(str(ve))
+                  elif signed_attr_type.native == 'message_digest':
+                    # https://forums.developer.apple.com/forums/thread/702351
+                    signer.message_digest = signed_attr_values.native[0].hex()
+                    if len(signed_attr_values.native[0]) > 20:
+                      signer.cd_hash = signed_attr_values.native[0][0:20].hex()
+                    else:
+                      signer.cd_hash = signed_attr_values.native[0].hex()
+                sid = signer_info['sid']
+                issuer = sid.chosen['issuer'].chosen
+                for entry in issuer:
+                  # https://datatracker.ietf.org/doc/html/rfc5652#section-10.2.4
+                  for sub_entry in entry:
+                    # https://datatracker.ietf.org/doc/html/rfc5280#section-4.1.2.4
+                    name_type = sub_entry['type']
+                    val = sub_entry['value']
+                    if name_type.native == 'country_name':
+                      signer.country_name = val.native
+                    elif name_type.native == 'common_name':
+                      signer.common_name = val.native
+                    elif name_type.native == 'organization_name':
+                      signer.organization_name = val.native
+                    elif name_type.native == 'organizational_unit_name':
+                      signer.organizational_unit_name = val.native
+                signature.signer_infos.append(signer)
+          except Exception as e:
+            signature.error = 'Error parsing signer_info: {0:s}'.format(str(e))
     else:
       result.log(f'no embedded code signature detected')
     return signature
