@@ -3,6 +3,9 @@
 
 ## Summary
 
+**Note: Turbinia will not develop new features anymore and is in maintenance 
+mode. Users should have a look at [OpenRelik](https://openrelik.org/).**
+
 Turbinia is an open-source framework for deploying, managing, and running
 distributed forensic workloads. It is intended to automate running of common
 forensic processing tools (i.e. Plaso, TSK, strings, etc) to help with
