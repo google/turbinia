@@ -60,7 +60,7 @@ async def get_requests_summary(request: Request):
         detail='Error retrieving requests summary') from exception
 
 
-@router.get('/report/{request_id}')
+@router.get('/report/{request_id:path}')
 async def get_request_report(request: Request, request_id: str):
   """Retrieves the MarkDown report of a Turbinia request.
 
@@ -86,7 +86,7 @@ async def get_request_report(request: Request, request_id: str):
         detail='Error retrieving markdown report') from exception
 
 
-@router.get('/{request_id}')
+@router.get('/{request_id:path}')
 async def get_request_status(request: Request, request_id: str):
   """Retrieves status for a Turbinia Request.
 
