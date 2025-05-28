@@ -382,7 +382,8 @@ class MachoAnalysisTask(TurbiniaTask):
                     try:
                       signer.signing_time = str(signed_attr_values.native[0])
                     except ValueError as ve:
-                      signer.signing_time = 'Error parsing signing_time: {0:s}'.format(str(ve))
+                      signer.signing_time = 'Error parsing signing_time: {0:s}'.format(
+                          str(ve))
                   elif signed_attr_type.native == 'message_digest':
                     # https://forums.developer.apple.com/forums/thread/702351
                     signer.message_digest = signed_attr_values.native[0].hex()
