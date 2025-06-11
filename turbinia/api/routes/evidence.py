@@ -28,6 +28,7 @@ from turbinia import evidence
 from turbinia import config as turbinia_config
 from turbinia import state_manager
 from turbinia import TurbiniaException
+from pathlib import Path
 
 log = logging.getLogger(__name__)
 router = APIRouter(prefix='/evidence', tags=['Turbinia Evidence'])
@@ -54,9 +55,11 @@ async def get_file_path(file_name: str, ticket_id: str) -> str:
     file_path (str): Path where the file will be saved.
   """
   try:
-    file_name_without_ext, file_extension = os.path.splitext(file_name)
+    p = Path(file_name)
+    file_stem = p.stem
+    full_extension = ''.join(p.suffixes)
     current_time = datetime.now().strftime(turbinia_config.DATETIME_FORMAT)
-    new_name = f'{file_name_without_ext}_{current_time}{file_extension}'
+    new_name = f"{file_stem}_{current_time}{full_extension}"
     os.makedirs(
         f'{turbinia_config.API_EVIDENCE_UPLOAD_DIR}/{ticket_id}', exist_ok=True)
     return os.path.join(
