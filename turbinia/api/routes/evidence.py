@@ -53,7 +53,17 @@ async def get_file_path(file_name: str, ticket_id: str) -> str:
   Returns:
     file_path (str): Path where the file will be saved.
   """
+
+  def safe_file_name(input_path: str) -> bool:
+    target_upload_dir = os.path.abspath(turbinia_config.API_EVIDENCE_UPLOAD_DIR)
+    normalized_path = os.path.abspath(
+        os.path.join(target_upload_dir, input_path))
+    return os.path.commonpath([target_upload_dir,
+                               normalized_path]) == target_upload_dir
+
   try:
+    if not safe_file_name(file_name):
+      raise TurbiniaException(f'File name {file_name} is not safe')
     file_name_without_ext, file_extension = os.path.splitext(file_name)
     current_time = datetime.now().strftime(turbinia_config.DATETIME_FORMAT)
     new_name = f'{file_name_without_ext}_{current_time}{file_extension}'
