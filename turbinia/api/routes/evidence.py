@@ -56,9 +56,10 @@ async def get_file_path(file_name: str, ticket_id: str) -> str:
 
   def safe_file_name(input_path: str) -> bool:
     target_upload_dir = os.path.abspath(turbinia_config.API_EVIDENCE_UPLOAD_DIR)
-    normalized_path = os.path.abspath(os.path.join(target_upload_dir,
-                                      input_path))
-    return os.path.commonpath([target_upload_dir, normalized_path]) == target_upload_dir
+    normalized_path = os.path.abspath(
+        os.path.join(target_upload_dir, input_path))
+    return os.path.commonpath([target_upload_dir,
+                               normalized_path]) == target_upload_dir
 
   try:
     if not safe_file_name(file_name):
