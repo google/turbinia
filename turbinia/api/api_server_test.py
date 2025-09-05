@@ -624,8 +624,8 @@ class testTurbiniaAPIServer(unittest.TestCase):
         'hash': 'b5cfa74c1c6e1ba459c7ef68fc1bf3725d2c0a9bb63923350a13ea76'
     }]
 
-    files = [('files', open(evidence_1_path, 'rb')),
-             ('files', open(evidence_2_path, 'rb'))]
+    files = [('files', (evidence_1_name, open(evidence_1_path, 'rb'))),
+             ('files', (evidence_2_name, open(evidence_2_path, 'rb')))]
     with mock.patch('turbinia.api.routes.evidence.open',
                     mock.mock_open()) as mocked_file:
       response = self.client.post(
