@@ -13,7 +13,7 @@ documentation = "https://turbinia.readthedocs.io/en/latest/"
 turbinia-client = "turbinia_client.turbiniacli_tool:main"
 
 [tool.poetry.dependencies]
-python = "^3.9"
+python = "^3.11"
 click = "^8.1.7"
 turbinia-api-lib = "^1.0.6"
 google-auth-oauthlib = "^1.1.0"
