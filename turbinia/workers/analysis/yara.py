@@ -66,7 +66,7 @@ class YaraAnalysisTask(TurbiniaTask):
     log.debug('Updating Yara rules')
     for repo, path in rules.items():
       try:
-        repository = git.Repo(path)
+        repository = git.Repo.clone_fome(repo, path)
         origin = repository.remotes.origin
         origin.pull(ff=True, depth=1)
         log.info('Successfully updated rules from %s in %s', repo, path)
