@@ -70,6 +70,9 @@ class YaraAnalysisTask(TurbiniaTask):
         origin = repository.remotes.origin
         origin.pull(ff=True, depth=1)
         log.info('Successfully updated rules from %s in %s', repo, path)
+      except git.exc.GitCommandError as e:
+        log.error('Error cloning Yara rules: {0!s}'.format(e))
+        return False
       except git.exc.InvalidGitRepositoryError as e:
         log.error(
             'InvalidGitRepositoryError updating rules in %s: %s', path, str(e),
