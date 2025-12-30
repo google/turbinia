@@ -65,24 +65,33 @@ class YaraAnalysisTask(TurbiniaTask):
 
     log.debug('Updating Yara rules')
     for repo, path in rules.items():
-      try:
-        repository = git.Repo.clone_fome(repo, path)
-        origin = repository.remotes.origin
-        origin.pull(ff=True, depth=1)
-        log.info('Successfully updated rules from %s in %s', repo, path)
-      except git.exc.GitCommandError as e:
-        log.error('Error cloning Yara rules: {0!s}'.format(e))
-        return False
-      except git.exc.InvalidGitRepositoryError as e:
-        log.error(
-            'InvalidGitRepositoryError updating rules in %s: %s', path, str(e),
-            exc_info=True)
-        return False
-      except Exception as e:
-        log.error(
-            'Unknown error updating rules in %s: %s', path, str(e),
-            exc_info=True)
-        return False
+      log.info('Processing Yara rules for: {0:s}'.format(repo))
+
+      # If dir not exists, git clone; else git pull
+      if not os.path.exists(path):
+        log.info('Rules directory {0:s} does not exist. Cloning...'.format(path))
+        try:
+          git.Repo.clone_from(repo, path)
+          log.info('Yara rules cloned successfully.')
+        except git.exc.GitCommandError as e:
+          log.error('Error cloning Yara rules from {0:s}: {1!s}'.format(repo, e))
+          continue  # Skip to git pull if this one fails
+      else:
+        try:
+          repository = git.Repo(path)
+          origin = repository.remotes.origin
+          origin.pull(ff=True, depth=1)
+          log.info('Successfully updated rules from %s in %s', repo, path)
+          except git.exc.InvalidGitRepositoryError as e:
+            log.error(
+                'InvalidGitRepositoryError updating rules in %s: %s', path, str(e),
+                exc_info=True)
+            return False
+          except Exception as e:
+            log.error(
+                'Unknown error updating rules in %s: %s', path, str(e),
+                exc_info=True)
+            return False
 
     return True
 
