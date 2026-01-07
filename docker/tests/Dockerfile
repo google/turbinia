@@ -113,14 +113,14 @@ ENV PATH="/home/turbinia/.local/bin:/home/turbinia/.venv/bin:$PATH" \
 RUN python3 -m pip install poetry
 
 # Install dependencies using Poetry
-RUN poetry install --no-interaction --no-ansi -E worker --with test --no-root
+RUN poetry install -vvv --no-interaction --no-ansi -E worker --with test --no-root
 RUN poetry run python3 -m pip install impacket --no-deps
 
 # Copy the source directory to the container
 COPY --chown=turbinia:turbinia . /home/turbinia/
 
-RUN poetry install --no-interaction --no-ansi -E worker --with test
+RUN poetry install -vvv --no-interaction --no-ansi -E worker --with test
 
 # We need to install the current dev version of turbinia-api-lib for the cli tool test in case the API client changes
-RUN cd turbinia/api/client && poetry install
+RUN cd turbinia/api/client && poetry install -vvv
 CMD ["/bin/bash"]
