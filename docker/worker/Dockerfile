@@ -110,14 +110,14 @@ RUN python3 -m pip install poetry
 
 # Copy requirements and install dependencies to cache them in docker layer
 COPY --chown=turbinia:turbinia ./pyproject.toml ./poetry.toml ./poetry.lock /home/turbinia/
-RUN poetry install --no-interaction --no-ansi -E worker --no-root
+RUN poetry install -vvv --no-interaction --no-ansi -E worker --no-root
 RUN poetry run pip3 install impacket --no-deps 
 
 # Copy the source directory to the container
 COPY --chown=turbinia:turbinia . /home/turbinia/
 
 # Install Turbinia package -- will skip dependencies if installed
-RUN poetry install --no-interaction --no-ansi -E worker
+RUN poetry install -vvv --no-interaction --no-ansi -E worker
 
 # Debug and hot reload env
 ARG TURBINIA_DEBUG
