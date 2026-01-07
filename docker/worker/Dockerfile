@@ -19,6 +19,7 @@ RUN apt-get update && apt-get -y upgrade && apt-get -y install \
     lvm2 \
     pocl-opencl-icd \
     p7zip-full \
+    pkg-config \
     python3-pip \
     python3.12-venv \
     software-properties-common \
