@@ -547,12 +547,11 @@ class TurbiniaTask:
     log.info(f'DDDD Debug: turbinia command when checking role is {config.TURBINIA_COMMAND}')
     log.info(f'DDDD Debug: Unit test in sys.modules.keys() {'unittest' in sys.modules.keys()}')
     # DO NOT SUBMIT
-    #if config.TURBINIA_COMMAND in ('celeryworker', 'psqworker'):
-    #  return True
+    if config.TURBINIA_COMMAND in ('celeryworker', 'psqworker'):
+      return True
 
-    #if 'unittest' in sys.modules.keys():
-    #  return True
-
+    if config.TURBINIA_COMMAND != 'server' and 'unittest' in sys.modules.keys():
+      return True
 
     return False
 
