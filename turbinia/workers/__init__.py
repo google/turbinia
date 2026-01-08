@@ -544,11 +544,14 @@ class TurbiniaTask:
       bool: If the current execution is in a worker or nosetests.
     """
     config.LoadConfig()
-    if config.TURBINIA_COMMAND in ('celeryworker', 'psqworker'):
-      return True
+    print(f'DDDD Debug: turbinia command when checking role is {config.TURBINIA_COMMAND}'
+    # DO NOT SUBMIT
+    #if config.TURBINIA_COMMAND in ('celeryworker', 'psqworker'):
+    #  return True
 
-    if 'unittest' in sys.modules.keys():
-      return True
+    #if 'unittest' in sys.modules.keys():
+    #  return True
+
 
     return False
 
