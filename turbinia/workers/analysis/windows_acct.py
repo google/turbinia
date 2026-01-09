@@ -150,9 +150,14 @@ class WindowsAccountAnalysisTask(TurbiniaTask):
     ]
 
     impacket_log = os.path.join(self.output_dir, 'impacket.log')
-    self.execute(cmd, result, stdout_file=impacket_log)
+    stderr_log = os.path.join(self.output_dir, 'stderr.log')
+    self.execute(cmd, result, stdout_file=impacket_log, stderr_file=stderr_log)
+    self.log(f'DDDD stderr: {open(stderr_log, "r", encoding="utf-8").read()}')
+
+    # DONOTSUBMIT
+    self.log(f'Saved files [{len(result.saved_paths)}]: {result.saved_paths}')
     for path in result.saved_paths:
-      print(f'DDDD saved output file: {path}')
+      self.log(f'DDDD saved output file: {path}')
       self.log(open(path, 'r', encoding='utf-8').read())
 
     creds = []
