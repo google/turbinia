@@ -151,11 +151,15 @@ class WindowsAccountAnalysisTask(TurbiniaTask):
 
     impacket_log = os.path.join(self.output_dir, 'impacket.log')
     self.execute(cmd, result, stdout_file=impacket_log)
+    for path in result.saved_paths:
+      print(f'DDDD saved output file: {path}')
+      self.log(open(path, 'r', encoding='utf-8').read())
 
     creds = []
     hashnames = {}
     hash_file = hash_file + '.sam'
     if os.path.isfile(hash_file):
+      self.log(f'Processing output hash file {hash_file}')
       with open(hash_file, 'r') as fh:
         for line in fh:
           (username, _, _, passwdhash, _, _, _) = line.split(':')
