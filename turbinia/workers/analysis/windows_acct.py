@@ -156,7 +156,7 @@ class WindowsAccountAnalysisTask(TurbiniaTask):
     hashnames = {}
     hash_file = hash_file + '.sam'
     if os.path.isfile(hash_file):
-      self.log(f'Processing output hash file {hash_file}')
+      result.log(f'Processing output hash file {hash_file}')
       with open(hash_file, 'r') as fh:
         for line in fh:
           (username, _, _, passwdhash, _, _, _) = line.split(':')
