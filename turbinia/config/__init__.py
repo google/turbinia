@@ -31,8 +31,6 @@ CONFIGFILES = ['.turbiniarc', 'turbinia.conf', 'turbinia_config_tmpl.py']
 CONFIGPATH = [
     os.path.expanduser('~'),
     '/etc/turbinia',
-    # DONOTSUBMIT test
-    '/tmp/turbinia',
     os.path.dirname(os.path.abspath(__file__)),
 ]
 # Config setup reminder for cleaner error handling on empty configs.
