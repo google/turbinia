@@ -150,9 +150,7 @@ class WindowsAccountAnalysisTask(TurbiniaTask):
     ]
 
     impacket_log = os.path.join(self.output_dir, 'impacket.log')
-    stderr_log = os.path.join(self.output_dir, 'stderr.log')
-    self.execute(cmd, result, stdout_file=impacket_log, stderr_file=stderr_log)
-    result.log(f'DDDD stderr: {open(stderr_log, "r", encoding="utf-8").read()}')
+    self.execute(cmd, result, stdout_file=impacket_log)
 
     creds = []
     hashnames = {}
