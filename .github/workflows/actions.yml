@@ -71,4 +71,4 @@ jobs:
           docker exec -u root -t turbinia-docs bash -c "/usr/bin/python -V"
       - name: Run Tests
         run: |
-          docker exec -u root -t turbinia-docs bash -c "tox --sitepackages ${TOXENV}"
+          docker exec -u root -t turbinia-docs bash -c "tox ${TOXENV}"
