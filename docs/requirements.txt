@@ -1,5 +1,5 @@
-docutils
-pyparsing
-recommonmark
-sphinx
-sphinx_rtd_theme
+docutils>=0.20
+pyparsing>=3.0.0
+recommonmark>=0.7.1
+sphinx>=7.0.0
+sphinx_rtd_theme>=2.0.0
