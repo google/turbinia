@@ -23,8 +23,7 @@ jobs:
           context: .
           load: true
           tags: turbinia-api-server-dev
-          cache-from: type=gha,scope=api-server
-          cache-to: type=gha,mode=max,scope=api-server
+          no-cache: true
       - name: Build Turbinia Server Docker image
         uses: docker/build-push-action@v5
         with:
@@ -32,8 +31,7 @@ jobs:
           context: .
           load: true
           tags: turbinia-server-dev
-          cache-from: type=gha,scope=server
-          cache-to: type=gha,mode=max,scope=server
+          no-cache: true
       - name: Buid Turbinia Worker Docker image
         uses: docker/build-push-action@v5
         with:
@@ -43,8 +41,7 @@ jobs:
             "PPA_TRACK=${{ matrix.gift_ppa_track }}"
           load: true
           tags: turbinia-worker-dev
-          cache-from: type=gha,scope=worker
-          cache-to: type=gha,mode=max,scope=worker
+          no-cache: true
       - name: Prepare Turbinia configuration
         run: |
           mkdir ./conf
