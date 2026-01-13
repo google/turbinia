@@ -14,7 +14,7 @@ Please follow the [instructions](install.md) for deploying Turbinia to Kubernete
 Note that the Turbinia API server requires access to the Turbinia output directory (```OUTPUT_DIR```)
 
 ### Configuration and UI
-If you plan on making the Turbinia API Server and Web UI externally accessible (e.g. internet access), follow the instructions for [external access and authentication](https://github.com/google/osdfir-infrastructure/tree/main/charts/turbinia)
+If you plan on making the Turbinia API Server and Web UI externally accessible (e.g. internet access), follow the instructions for [external access and authentication](https://github.com/google/osdfir-infrastructure/tree/osdfir-infrastructure-1.0.9/charts/turbinia)
 
 ### Usage
 You may access the API server at ```http://<API_SERVER_ADDRESS>:<API_SERVER_PORT>```, or via https if you deployed Turbinia for external access using a domain and HTTPS certificate.
@@ -24,6 +24,6 @@ Because the Turbinia API Server is built using the FastAPI framework, it provide
 We also provide a [command-line tool](https://github.com/google/turbinia/tree/master/turbinia/api/cli) and a [Python library](https://github.com/google/turbinia/tree/master/turbinia/api/client) to interact with the API server.
 
 ### Authentication
-Turbinia API Server uses OAuth2-proxy to provide OpenID Connect and OAuth2 authentication support. If you deployed Turbinia using GCP and GKE cluster instructions, follow the guide for [external access and authentication](https://github.com/google/osdfir-infrastructure/tree/main/charts/turbinia) to complete the authentication configuration.
+Turbinia API Server uses OAuth2-proxy to provide OpenID Connect and OAuth2 authentication support. If you deployed Turbinia using GCP and GKE cluster instructions, follow the guide for [external access and authentication](https://github.com/google/osdfir-infrastructure/tree/osdfir-infrastructure-1.0.9/charts/turbinia) to complete the authentication configuration.
 
 For Turbinia deployments using the [Docker Installation method](install.md), or a non-Google identity provider, make sure to edit the ```oauth2_proxy.cfg``` configuration file in ```docker/oauth2_proxy``` with the appropriate identity provider information such as ```client_id``` and ```client_secret``` prior to deploying the Docker containers in the local stack. If your deployment will use an identity provider other than Google, you will also need to change the ```provider``` and related settings. For more information and how to configure OAuth2-proxy for different providers, refer to the [OAuth2-Proxy Documentation](https://oauth2-proxy.github.io/oauth2-proxy/configuration/providers/google).

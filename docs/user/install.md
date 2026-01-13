@@ -14,7 +14,7 @@ To get started quickly, ensure you have [Helm](https://helm.sh/docs/intro/instal
 and [Kubectl](https://kubernetes.io/docs/tasks/tools/) installed and are authenticated
 to your Kubernetes cluster.
 > **Note**: To simplify the process of initializing a Google Kubernetes Engine Cluster (GKE),
-use the [init-gke.sh](https://github.com/google/osdfir-infrastructure/blob/main/tools/init-gke.sh)
+use the [init-gke.sh](https://github.com/google/osdfir-infrastructure/blob/osdfir-infrastructure-1.0.9/tools/init-gke.sh)
 script. Alternatively, for local installations, consider using [KIND](https://kind.sigs.k8s.io/docs/user/quick-start/) or [Minikube](https://minikube.sigs.k8s.io/docs/start/).
 
 Once complete, add the repo containing the Helm charts as follows:
@@ -42,7 +42,7 @@ helm uninstall my-release
 For instructions on installing Turbinia along with our other integrated DFIR tools,
 refer to the main [OSDFIR Infrastructure](https://github.com/google/osdfir-infrastructure)
 repository. Additionally, refer to the Turbinia Helm chart
-[README](https://github.com/google/osdfir-infrastructure/tree/main/charts/turbinia)
+[README](https://github.com/google/osdfir-infrastructure/tree/osdfir-infrastructure-1.0.9/charts/turbinia)
 for a comprehensive list of configuration options.
 
 ## Docker Installation
