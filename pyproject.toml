@@ -83,6 +83,7 @@ worker = [
   "py-tlsh",
 ]
 
+# These are for the docs build/test
 docs = [
   "docutils",
   "pyparsing",
