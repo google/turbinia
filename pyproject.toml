@@ -13,7 +13,7 @@ documentation = "https://turbinia.readthedocs.io/en/latest/"
 turbiniactl = "turbinia.turbiniactl:main"
 
 [tool.poetry.dependencies]
-python = "^3.10"
+python = "^3.12"
 acstore = { version = "20240128" }
 asn1crypto = { version = ">= 0.24.0", optional = true }
 backoff = { version = ">=2.2.1" }
