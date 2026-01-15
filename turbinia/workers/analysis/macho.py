@@ -213,7 +213,7 @@ class MachoAnalysisTask(TurbiniaTask):
       is_stab = n_type & self._N_STAB != 0
       is_external = n_type & self._N_EXT == self._N_EXT
       is_ntype = n_type & self._N_TYPE != 0
-      if symbol.origin == self._lief._lief.MachO.Symbol.ORIGIN.LC_SYMTAB and not is_stab and is_external and not is_ntype:
+      if symbol.origin == self._lief._lief.MachO.Symbol.ORIGIN.SYMTAB and not is_stab and is_external and not is_ntype:
         symbol_list.append(symbol.demangled_name)
     hasher = self._md5.MD5Hasher()
     hasher.Update(','.join(sorted(symbol_list)).encode())

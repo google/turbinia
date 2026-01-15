@@ -33,6 +33,9 @@ class TestTurbiniactl(unittest.TestCase):
     super(TestTurbiniactl, self).setUp()
     config.TASK_MANAGER = 'celery'
 
+  def tearDown(self):
+    config.TURBINIA_COMMAND = None
+
   def testInvalidCommand(self):
     """Test an invalid command."""
     args = argparse.Namespace(command='badCommand')

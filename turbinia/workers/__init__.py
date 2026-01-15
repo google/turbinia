@@ -547,7 +547,7 @@ class TurbiniaTask:
     if config.TURBINIA_COMMAND in ('celeryworker', 'psqworker'):
       return True
 
-    if 'unittest' in sys.modules.keys():
+    if config.TURBINIA_COMMAND != 'server' and 'unittest' in sys.modules.keys():
       return True
 
     return False
