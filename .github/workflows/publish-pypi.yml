@@ -79,7 +79,7 @@ jobs:
       # sigstore-produced signatures and certificates.
       run: >-
         gh release upload
-        '${{ github.ref_name }}' dist/**
+        '${GITHUB_REF_NAME}' dist/**
         --repo '${{ github.repository }}'
 
   publish-to-testpypi:
