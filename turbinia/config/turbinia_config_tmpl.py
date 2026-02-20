@@ -24,8 +24,7 @@
 # separate when running with the same Cloud projects or backend servers.
 INSTANCE_ID = 'turbinia-instance1'
 
-# Which Cloud provider to use. Valid options are 'Local' and 'GCP'. Use 'GCP'
-# for GCP or hybrid installations, and 'Local' for local installations.
+# Which Cloud provider to use. Valid options are 'Local', 'GCP' or 'AWS'.
 CLOUD_PROVIDER = 'Local'
 
 # Task manager only supports 'Celery'.
@@ -289,13 +288,11 @@ DEPENDENCIES = [{
 ################################################################################
 #                        Google Cloud Platform (GCP)
 #
-# Options in this section are required if the TASK_MANAGER is set to 'PSQ'.
+# Options in this section are required if the CLOUD_PROVIDER is set to 'GCP'.
 ################################################################################
 
 # GCP project, region and zone where Turbinia will run.  Note that Turbinia does
-# not currently support multi-zone operation.  Even if you are running Turbinia
-# in Hybrid mode (with the Server and Workers running on local machines), you
-# will still need to provide these three parameters.
+# not currently support multi-zone operation.
 TURBINIA_PROJECT = None
 TURBINIA_ZONE = None
 TURBINIA_REGION = None
@@ -311,6 +308,15 @@ GCS_OUTPUT_PATH = None
 
 # Set this to True if you would like to enable Google Cloud Error Reporting.
 STACKDRIVER_TRACEBACK = False
+
+################################################################################
+#                        Amazon Web Services (AWS)
+#
+# Options in this section are required if the CLOUD_PROVIDER is set to 'AWS'.
+################################################################################
+
+# The default AWS zone being used.
+AWS_ZONE = None
 
 ################################################################################
 #                           Celery / Redis / Kombu
