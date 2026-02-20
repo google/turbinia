@@ -64,24 +64,42 @@ class YaraAnalysisTask(TurbiniaTask):
       rules = self.RULES
 
     log.debug('Updating Yara rules')
-    for repo, path in rules.items():
-      try:
-        repository = git.Repo(path)
-        origin = repository.remotes.origin
-        origin.pull(ff=True, depth=1)
-        log.info('Successfully updated rules from %s in %s', repo, path)
-      except git.exc.InvalidGitRepositoryError as e:
-        log.error(
-            'InvalidGitRepositoryError updating rules in %s: %s', path, str(e),
-            exc_info=True)
-        return False
-      except Exception as e:
-        log.error(
-            'Unknown error updating rules in %s: %s', path, str(e),
-            exc_info=True)
-        return False
+    update_success = True
 
-    return True
+    for repo, path in rules.items():
+      log.info('Processing Yara rules for: {0:s}'.format(repo))
+
+      # If dir not exists, git clone; else git pull
+      if not os.path.exists(path):
+        log.info('Rules directory {0:s} does not exist. Cloning...'.format(path))
+        try:
+          git.Repo.clone_from(repo, path)
+          log.info('Yara rules cloned successfully.')
+        except git.exc.GitCommandError as e:
+          log.error('Error cloning Yara rules from {0:s}: {1!s}'.format(repo, e))
+	  update_success = False
+          continue  # Skip to next repo
+      else:
+        try:
+          repository = git.Repo(path)
+          origin = repository.remotes.origin
+          origin.pull(ff=True, depth=1)
+          log.info('Successfully updated rules from %s in %s', repo, path)
+        except git.exc.InvalidGitRepositoryError as e:
+          log.error(
+              'InvalidGitRepositoryError updating rules in %s: %s', path, str(e),
+                exc_info=True)
+	  update_success = False
+	except git.exc.GitCommandError as e:
+          log.error('Error pulling Yara rules in {0:s}: {1!s}'.format(path, e))
+          update_success = False
+        except Exception as e:
+          log.error(
+              'Unknown error updating rules in %s: %s', path, str(e),
+              exc_info=True)
+	  update_success = False
+
+    return update_success 
 
   def run(self, evidence, result):
     """Run the Yara worker.
