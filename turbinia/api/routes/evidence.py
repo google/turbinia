@@ -17,6 +17,7 @@
 import hashlib
 import logging
 import os
+import re
 
 from datetime import datetime
 from fastapi import HTTPException, APIRouter, UploadFile, Query, Form
@@ -64,6 +65,11 @@ async def get_file_path(file_name: str, ticket_id: str) -> str:
   try:
     if not safe_file_name(file_name):
       raise TurbiniaException(f'File name {file_name} is not safe')
+    # Validate ticket_id to prevent path traversal
+    if not re.match(r'^[a-zA-Z0-9_-]+$', ticket_id):
+      raise TurbiniaException(
+          f'Invalid ticket_id: {ticket_id}. '
+          'Only alphanumeric characters, hyphens, and underscores are allowed.')
     file_name_without_ext, file_extension = os.path.splitext(file_name)
     current_time = datetime.now().strftime(turbinia_config.DATETIME_FORMAT)
     new_name = f'{file_name_without_ext}_{current_time}{file_extension}'

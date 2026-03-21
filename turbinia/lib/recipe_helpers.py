@@ -23,8 +23,7 @@ import os
 import tempfile
 
 from yaml.parser import ParserError as yaml_error
-from yaml import Loader
-from yaml import load
+from yaml import safe_load
 from turbinia import TurbiniaException, config
 from turbinia.lib.file_helpers import file_to_str
 from turbinia.lib.file_helpers import file_to_list
@@ -90,7 +89,7 @@ def load_recipe_from_file(recipe_file, validate=True):
     log.info(f'Loading recipe file from {recipe_file:s}')
     with open(recipe_file, 'r', encoding='utf-8') as r_file:
       recipe_file_contents = r_file.read()
-      recipe_dict = load(recipe_file_contents, Loader=Loader)
+      recipe_dict = safe_load(recipe_file_contents)
       if validate:
         success, _ = validate_recipe(recipe_dict)
         if success:
@@ -209,6 +208,10 @@ def get_recipe_path_from_name(recipe_name):
     str: a recipe's file system path.
   """
   recipe_path = ''
+  # Sanitize recipe_name to prevent path traversal
+  recipe_name = os.path.basename(recipe_name)
+  if not recipe_name:
+    raise TurbiniaException('Invalid recipe name.')
   if not recipe_name.endswith('.yaml'):
     recipe_name = recipe_name + '.yaml'
 
