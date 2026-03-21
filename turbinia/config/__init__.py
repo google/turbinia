@@ -246,6 +246,18 @@ def ParseDependencies():
   return dependencies
 
 
+SENSITIVE_VARS = frozenset([
+    'EMAIL_PASSWORD',
+    'GCP_GENERATIVE_LANGUAGE_API_KEY',
+    'CELERY_BROKER',
+    'CELERY_BACKEND',
+    'KOMBU_BROKER',
+    'DFDEWEY_OS_URL',
+    'OIDC_KEYS',
+    'WEBUI_CLIENT_SECRETS_FILE',
+])
+
+
 def toDict():
   """Returns a dictionary representing the current config."""
   _config = dict()
@@ -254,6 +266,9 @@ def toDict():
 
   for attribute_key in config_dict.keys():
     if attribute_key in config_vars:
-      _config[attribute_key] = config_dict[attribute_key]
+      if attribute_key in SENSITIVE_VARS and config_dict[attribute_key]:
+        _config[attribute_key] = '***REDACTED***'
+      else:
+        _config[attribute_key] = config_dict[attribute_key]
 
   return _config

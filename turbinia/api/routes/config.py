@@ -62,11 +62,12 @@ async def get_version(request: Request):
 
 @router.get('/download')
 async def download_config(request: Request):
-  """Downloads Turbinia configuration."""
+  """Downloads Turbinia configuration (redacted)."""
   try:
-    path = turbinia_config.CONFIG.__file__
-    return FileResponse(path)
-  except Exception as exception:
+    current_config = turbinia_config.toDict()
+    if current_config:
+      return JSONResponse(content=current_config, status_code=200)
+  except (json.JSONDecodeError, TypeError) as exception:
     log.error(f'Error reading configuration file: {exception!s}')
     raise HTTPException(
         status_code=500,
