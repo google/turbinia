@@ -249,10 +249,6 @@ def ParseDependencies():
 SENSITIVE_VARS = frozenset([
     'EMAIL_PASSWORD',
     'GCP_GENERATIVE_LANGUAGE_API_KEY',
-    'CELERY_BROKER',
-    'CELERY_BACKEND',
-    'KOMBU_BROKER',
-    'DFDEWEY_OS_URL',
     'OIDC_KEYS',
     'WEBUI_CLIENT_SECRETS_FILE',
 ])
