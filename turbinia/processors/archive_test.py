@@ -14,6 +14,7 @@
 # limitations under the License.
 """Tests for the Archive processor to compress and decompress folders."""
 
+import io
 import os
 import tarfile
 import unittest
@@ -52,6 +53,26 @@ class ArchiveProcessorTest(unittest.TestCase):
       self.test_files.append(file_name)
     archive.CompressDirectory(self.tmp_files_dir)
 
+  def _CreateTarFile(self, members):
+    """Create a test tar file with the supplied member definitions."""
+    tar_path = os.path.join(
+        self.base_output_dir, f'test-{randint(0, 1000000):d}.tar.gz')
+    with tarfile.open(tar_path, 'w:gz') as tar:
+      for member in members:
+        tar_info = tarfile.TarInfo(member['name'])
+        if 'type' in member:
+          tar_info.type = member['type']
+        if 'linkname' in member:
+          tar_info.linkname = member['linkname']
+        data = member.get('data')
+        if data is not None:
+          data = data.encode('utf-8')
+          tar_info.size = len(data)
+          tar.addfile(tar_info, io.BytesIO(data))
+        else:
+          tar.addfile(tar_info)
+    return tar_path
+
   def tearDown(self):
     # Remove testing directory for this unit test.
     if os.path.exists(self.base_output_dir):
@@ -80,6 +101,71 @@ class ArchiveProcessorTest(unittest.TestCase):
     # Raise exception for a file with unsupported extension.
     with self.assertRaises(TurbiniaException):
       archive.ValidateTarFile(self.tmp_files_dir)
+
+  def test_uncompress_tarfile(self):
+    """Tests that valid tar files are decompressed."""
+    tar_path = self._CreateTarFile([{
+        'name': 'safe.txt',
+        'data': 'safe file'
+    }])
+
+    output_dir = archive.UncompressTarFile(tar_path, self.base_output_dir)
+
+    self.assertTrue(os.path.exists(os.path.join(output_dir, 'safe.txt')))
+
+  def test_uncompress_tarfile_rejects_parent_path(self):
+    """Tests that parent directory traversal members are rejected."""
+    tar_path = self._CreateTarFile([
+        {
+            'name': 'safe.txt',
+            'data': 'safe file'
+        },
+        {
+            'name': '../escape.txt',
+            'data': 'escaped file'
+        },
+    ])
+
+    with self.assertRaises(TurbiniaException):
+      archive.UncompressTarFile(tar_path, self.base_output_dir)
+
+    self.assertFalse(os.path.exists(
+        os.path.join(self.base_output_dir, 'escape.txt')))
+
+  def test_uncompress_tarfile_rejects_absolute_path(self):
+    """Tests that absolute path members are rejected."""
+    escaped_path = os.path.join(self.base_output_dir, 'absolute-escape.txt')
+    tar_path = self._CreateTarFile([{
+        'name': escaped_path,
+        'data': 'escaped file'
+    }])
+
+    with self.assertRaises(TurbiniaException):
+      archive.UncompressTarFile(tar_path, self.base_output_dir)
+
+    self.assertFalse(os.path.exists(escaped_path))
+
+  def test_uncompress_tarfile_rejects_symlink_escape(self):
+    """Tests that symlinks pointing outside the output directory are rejected."""
+    tar_path = self._CreateTarFile([{
+        'name': 'escape-link',
+        'type': tarfile.SYMTYPE,
+        'linkname': '..'
+    }])
+
+    with self.assertRaises(TurbiniaException):
+      archive.UncompressTarFile(tar_path, self.base_output_dir)
+
+  def test_uncompress_tarfile_rejects_hardlink_escape(self):
+    """Tests hardlinks pointing outside the output directory are rejected."""
+    tar_path = self._CreateTarFile([{
+        'name': 'escape-link',
+        'type': tarfile.LNKTYPE,
+        'linkname': '../escape.txt'
+    }])
+
+    with self.assertRaises(TurbiniaException):
+      archive.UncompressTarFile(tar_path, self.base_output_dir)
 
 
 if __name__ == '__main__':
