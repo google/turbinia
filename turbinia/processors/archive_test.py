@@ -104,10 +104,7 @@ class ArchiveProcessorTest(unittest.TestCase):
 
   def test_uncompress_tarfile(self):
     """Tests that valid tar files are decompressed."""
-    tar_path = self._CreateTarFile([{
-        'name': 'safe.txt',
-        'data': 'safe file'
-    }])
+    tar_path = self._CreateTarFile([{'name': 'safe.txt', 'data': 'safe file'}])
 
     output_dir = archive.UncompressTarFile(tar_path, self.base_output_dir)
 
@@ -129,8 +126,8 @@ class ArchiveProcessorTest(unittest.TestCase):
     with self.assertRaises(TurbiniaException):
       archive.UncompressTarFile(tar_path, self.base_output_dir)
 
-    self.assertFalse(os.path.exists(
-        os.path.join(self.base_output_dir, 'escape.txt')))
+    self.assertFalse(
+        os.path.exists(os.path.join(self.base_output_dir, 'escape.txt')))
 
   def test_uncompress_tarfile_rejects_absolute_path(self):
     """Tests that absolute path members are rejected."""
