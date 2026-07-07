@@ -1,0 +1,36 @@
+Thank you for installing {{ .Chart.Name }}:{{ .Chart.Version }}
+
+Your release is named {{ .Release.Name }}.
+
+To learn more about the release, try:
+
+  $ helm status {{ .Release.Name }}
+  $ helm get all {{ .Release.Name }}
+  $ kubectl get pods
+
+To connect to the Turbinia URL, run:
+  {{- if and (.Values.ingress.enabled) (.Values.ingress.host) }}
+  $ echo "Visit https://{{ .Values.ingress.host }} to access Turbinia externally"
+  {{- end }}
+  {{- if .Values.oauth2proxy.enabled }}
+  $ kubectl --namespace {{ .Release.Namespace }} port-forward service/{{ .Release.Name }}-oauth2proxy {{ .Values.oauth2proxy.service.port }}:{{ .Values.oauth2proxy.service.port }}
+  $ echo "Visit http://127.0.0.1:{{ .Values.oauth2proxy.service.port }} to access Turbinia through port-forwarding"
+  {{- else }}
+  $ kubectl --namespace {{ .Release.Namespace }} port-forward service/{{ .Release.Name }}-turbinia {{ include "turbinia.service.port" . }}:{{ include "turbinia.service.port" . }}
+  $ echo "Visit http://127.0.0.1:{{ include "turbinia.service.port" . }} to access Turbinia through port-forwarding"
+  {{- end }}
+
+To install the Turbinia client, run:
+  $ pip3 install turbinia-client
+  $ kubectl get secret --namespace {{ .Release.Namespace }} {{ include "turbinia.fullname" . }}-secret -o jsonpath="{.data.turbinia-secret}" | base64 -d > ~/.turbinia_api_config.json
+
+Run the following commands on your workstation to orchestrate collection and processing of forensic data with dfTimewolf:
+  $ git clone https://github.com/log2timeline/dftimewolf && cd dftimewolf
+  $ pip3 install poetry
+  $ poetry install && poetry shell
+  $ dftimewolf -h
+  {{- if and .Values.oauth2proxy.enabled .Values.oauth2proxy.configuration.existingSecret }}
+  $ If using Turbinia with the Oauth2 Proxy, use the command below to generate the necessary config
+    $ kubectl get secret --namespace {{ .Release.Namespace }} {{ include "turbinia.fullname" . }}-secret -o jsonpath="{.data.dftimewolf-secret}" | base64 -d > ~/.dftimewolf_turbinia_secrets.json
+    $ Replace `client_secret` in `~/.dftimewolf_turbinia_secrets.json` with the secret from your configured native or desktop OAuth app.
+  {{- end }}

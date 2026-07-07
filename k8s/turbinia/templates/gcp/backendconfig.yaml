@@ -1,0 +1,24 @@
+{{- if or (and (.Values.ingress.enabled) (eq .Values.ingress.className "gce") (not .Values.oauth2proxy.enabled)) (and (.Values.global.ingress.enabled) (eq .Values.global.ingress.className "gce") (not .Values.oauth2proxy.enabled)) }}
+apiVersion: cloud.google.com/v1
+kind: BackendConfig
+metadata:
+  name: "{{ .Release.Name }}-backend-config"
+  namespace: {{ .Release.Namespace | quote }}
+  labels:
+    {{- include "turbinia.labels" . | nindent 4 }}
+spec:
+  timeoutSec: 900
+  healthCheck:
+    checkIntervalSec: 5
+    timeoutSec: 5
+    healthyThreshold: 2
+    unhealthyThreshold: 2
+    type: HTTP
+    {{- if .Values.oauth2proxy.enabled }}
+    requestPath: /ping
+    port: 4180
+    {{- else }}
+    requestPath: /web
+    port: 8000
+    {{- end }}
+{{- end }}

@@ -1,0 +1,119 @@
+## dfDewey Helm Chart
+## This Helm chart is for deploying dfDewey alongside Turbinia to a Kubernetes environment
+##
+## @section Third Party Configuration
+## This section contains all the main configuration for third party dependencies
+## dfDewey requires to run
+##
+## @section Postgresql Configuration Parameters
+## IMPORTANT: Postgresql is deployed with Auth enabled by default
+##
+postgresql:
+  ## @param postgresql.enabled Enables the Postgresql deployment
+  ##
+  enabled: true
+  ## @param postgresql.nameOverride String to partially override common.names.fullname template
+  ##
+  nameOverride: dfdewey-postgresql
+  ## PostgreSQL Authentication parameters
+  ##
+  auth:
+    ## @param postgresql.auth.username Name for a custom user to create
+    ##
+    username: "dfdewey"
+    ## @param postgresql.auth.password Password for the custom user to create. Ignored if auth.existingSecret is provided
+    ##
+    password: "password"
+    ## @param postgresql.auth.database Name for a custom database to create
+    ##
+    database: "dfdewey"
+  ## PostgreSQL Primary configuration parameters
+  ##
+  primary:
+    ## PostgreSQL Primary persistence configuration
+    ##
+    persistence:
+      ## @param postgresql.primary.persistence.size PostgreSQL Persistent Volume size
+      ##
+      size: 500Gi
+    ## PostgreSQL Primary resource requests and limits
+    ## @param postgresql.primary.resources.requests.cpu Requested cpu for the PostgreSQL Primary containers
+    ## @param postgresql.primary.resources.requests.memory Requested memory for the PostgreSQL Primary containers
+    ## @param postgresql.primary.resources.limits Resource limits for the PostgreSQL Primary containers
+    ##
+    resources:
+      requests:
+        cpu: 250m
+        memory: 256Mi
+      limits: {}
+## @section Opensearch Configuration Parameters
+## IMPORTANT: The Opensearch Security Plugin / TLS has not yet been configured by default
+## ref on steps required https://opensearch.org/docs/1.1/security-plugin/configuration/index/
+##
+opensearch:
+  ## @param opensearch.enabled Enables the Opensearch deployment
+  ##
+  enabled: true
+  ## @param opensearch.nameOverride Overrides the clusterName when used in the naming of resources
+  ##
+  nameOverride: dfdewey-opensearch
+  ## @param opensearch.masterService The service name used to connect to the masters
+  ##
+  masterService: dfdewey-opensearch
+  ## @param opensearch.singleNode Replicas will be forced to 1
+  ##
+  singleNode: true
+  ## @param opensearch.sysctlInit.enabled Sets optimal sysctl's through privileged initContainer
+  ##
+  sysctlInit:
+    enabled: true
+  ## @param opensearch.opensearchJavaOpts Sets the size of the Opensearch Java heap
+  ## It is recommended to use at least half the system's available ram
+  ##
+  opensearchJavaOpts: "-Xms32g -Xmx32g"
+  ## @param opensearch.config.opensearch.yml Opensearch configuration file. Can be appended for additional configuration options
+  ## Values must be YAML literal style scalar / YAML multiline string
+  ## <filename>: |
+  ##   <formatted-value(s)>
+  ##
+  config:
+    opensearch.yml: |
+      discovery:
+        type: single-node
+      plugins:
+        security:
+          disabled: true
+  extraEnvs:
+  ## @param opensearch.extraEnvs[0].name Environment variable to set the initial admin password
+  ##
+  - name: OPENSEARCH_INITIAL_ADMIN_PASSWORD
+  ## @param opensearch.extraEnvs[0].value The initial admin password
+  ##
+    value: KyfwJExU2!2MvU6j
+  ## @param opensearch.extraEnvs[1].name Environment variable to disable Opensearch Demo config
+  ##
+  - name: DISABLE_INSTALL_DEMO_CONFIG
+  ## @param opensearch.extraEnvs[1].value Disables Opensearch Demo config
+  ##
+    value: "true"
+  ## @param opensearch.extraEnvs[2].name Environment variable to disable Opensearch Security plugin given that
+  ## certificates were not setup as part of this deployment
+  ##
+  - name: DISABLE_SECURITY_PLUGIN
+  ## @param opensearch.extraEnvs[2].value Disables Opensearch Security plugin
+  ##
+    value: "true"
+  ## Opensearch persistence configuration
+  ##
+  persistence:
+    ## @param opensearch.persistence.size Opensearch Persistent Volume size
+    ##
+    size: 6Ti
+  ## Opensearch resource requests
+  ## @param opensearch.resources.requests.cpu Requested cpu for the Opensearch containers
+  ## @param opensearch.resources.requests.memory Requested memory for the Opensearch containers
+  ##
+  resources:
+    requests:
+      cpu: 8000m
+      memory: 32Gi

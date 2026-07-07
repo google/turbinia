@@ -1,0 +1,18 @@
+{{- if .Values.metrics.enabled -}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "turbinia.fullname" . }}-worker-metrics
+  labels:
+    monitoring: enabled
+    {{- include "turbinia.labels" . | nindent 4 }}
+spec:
+  ports:
+    - port: {{ .Values.metrics.port }}
+      targetPort: {{ .Values.metrics.port }}
+      protocol: TCP
+      name: http-metrics
+  selector:
+    app.kubernetes.io/component: worker
+    {{- include "turbinia.selectorLabels" . | nindent 4 }}
+{{- end }}

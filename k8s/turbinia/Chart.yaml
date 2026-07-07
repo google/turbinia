@@ -1,0 +1,36 @@
+apiVersion: v2
+name: turbinia
+version: 1.2.0
+description: A Helm chart for Turbinia Kubernetes deployments.
+keywords:
+- turbinia
+- dfir
+- processing
+- scaling
+- security
+home: "https://github.com/google/turbinia"
+dependencies:
+- condition: redis.enabled
+  name: redis
+  version: 19.3.2
+  repository: https://charts.bitnami.com/bitnami
+- condition: oauth2proxy.enabled
+  name: oauth2-proxy
+  alias: oauth2proxy
+  version: 5.3.0
+  repository: https://charts.bitnami.com/bitnami
+- condition: global.dfdewey.enabled
+  name: dfdewey
+  repository: https://google.github.io/osdfir-infrastructure/
+  version: 1.0.0
+maintainers:
+  - name: Open Source DFIR
+    email: osdfir-maintainers@googlegroups.com
+    url: https://github.com/google/osdfir-infrastructure
+sources:
+- https://github.com/google/osdfir-infrastructure
+icon: https://raw.githubusercontent.com/google/turbinia/master/web/src/assets/turbinia-logo-mark.png
+appVersion: "20240820"
+annotations:
+  category: Security
+  licenses: Apache-2.0

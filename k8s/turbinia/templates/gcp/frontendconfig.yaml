@@ -1,0 +1,12 @@
+{{- if and (.Values.ingress.enabled) (eq .Values.ingress.className "gce") }}
+apiVersion: networking.gke.io/v1beta1
+kind: FrontendConfig
+metadata:
+  name: {{ include "turbinia.fullname" . }}-frontend-config
+  namespace: {{ .Release.Namespace | quote }}
+  labels:
+    {{- include "turbinia.labels" . | nindent 4 }}
+spec:
+  redirectToHttps:
+    enabled: true
+{{- end }}

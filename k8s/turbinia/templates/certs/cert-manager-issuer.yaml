@@ -1,0 +1,20 @@
+{{- if and .Values.ingress.enabled .Values.ingress.certManager }}
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: {{ include "turbinia.fullname" . }}-letsencrypt-production
+  labels:
+    {{- include "turbinia.labels" . | nindent 4 }}
+  annotations:
+    helm.sh/hook: "pre-install"
+    helm.sh/hook-delete-policy: "before-hook-creation"
+spec:
+  acme:
+    server: https://acme-v02.api.letsencrypt.org/directory
+    privateKeySecretRef:
+      name: {{ include "turbinia.fullname" . }}-letsencrypt-production
+    solvers:
+    - http01:
+        ingress:
+          name: {{ include "turbinia.fullname" . }}-ingress
+{{- end }}
