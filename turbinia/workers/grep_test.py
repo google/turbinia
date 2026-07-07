@@ -33,8 +33,7 @@ class GrepTaskTest(unittest.TestCase):
       task.output_dir = output_dir
       task.task_config = {'filter_patterns': ['needle']}
       evidence = SimpleNamespace(
-          local_path=os.path.join(output_dir, 'input;touch'),
-          name='input')
+          local_path=os.path.join(output_dir, 'input;touch'), name='input')
       result = mock.MagicMock()
       task.execute = mock.MagicMock(return_value=(0, result))
 

@@ -60,7 +60,10 @@ class PhotorecTask(TurbiniaTask):
       result.log(f'Running photorec as [{cmd!s}]')
       # Actually execute the binary
       self.execute(
-          cmd, result, log_files=[photorec_log], new_evidence=[output_evidence],
+          cmd,
+          result,
+          log_files=[photorec_log],
+          new_evidence=[output_evidence],
       )
       status = ''
       if os.path.exists(output_evidence.local_path):
