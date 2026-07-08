@@ -1,0 +1,18 @@
+{{- if not (.Values.global.existingPVC) }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  annotations: 
+    helm.sh/resource-policy: keep
+  name: {{ include "turbinia.pvc.name"  . }}
+  namespace: {{ .Release.Namespace | quote }}
+spec:
+  {{- include "turbinia.storage.class" . | nindent 2 }}
+  accessModes:
+    {{- range .Values.persistence.accessModes }}
+    - {{ . | quote }}
+    {{- end }}
+  resources:
+    requests:
+      storage: {{ .Values.persistence.size | quote }}
+{{- end }}

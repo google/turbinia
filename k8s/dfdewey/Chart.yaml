@@ -1,0 +1,29 @@
+apiVersion: v2
+name: dfdewey
+version: 1.0.0
+description: A Helm chart for dfDewey datastore Kubernetes deployments.
+keywords:
+- dfdewey
+- dfir
+- processing
+- indexing
+- security
+home: "https://github.com/google/dfdewey"
+dependencies:
+- name: postgresql
+  version: 14.3.1
+  repository: https://charts.bitnami.com/bitnami
+- name: opensearch
+  version: 2.18.0
+  repository: https://opensearch-project.github.io/helm-charts/
+maintainers:
+  - name: Open Source DFIR
+    email: osdfir-maintainers@googlegroups.com
+    url: https://github.com/google/osdfir-infrastructure
+sources:
+- https://github.com/google/osdfir-infrastructure
+icon: https://user-images.githubusercontent.com/52063018/101560727-fc827900-3a17-11eb-93a1-f2a0589b6b6b.png
+appVersion: "latest"
+annotations:
+  category: Security
+  licenses: Apache-2.0

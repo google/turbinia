@@ -1,0 +1,112 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name:  {{ include "turbinia.fullname" . }}-worker
+  namespace: {{ .Release.Namespace | quote }}
+  labels:
+    app.kubernetes.io/component: worker
+    {{- include "turbinia.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.worker.autoscaling.enabled }}
+  replicas: {{ .Values.worker.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: worker
+      {{- include "turbinia.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+        # Restart pod if values.yaml parameters that affect the config were changed
+        checksum/config: {{  include (print $.Template.BasePath "/init-configmap.yaml") . | sha256sum }}
+        {{- if .Values.metrics.enabled }}
+        prometheus.io/port: {{ .Values.metrics.port | quote }}
+        prometheus.io/scrape: "true"
+        {{- end }}
+      labels:
+        app.kubernetes.io/component: worker
+        {{- include "turbinia.selectorLabels" . | nindent 8 }}
+    spec:
+      serviceAccountName: {{ include "turbinia.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.worker.podSecurityContext | nindent 8 }}
+      initContainers:
+      {{- include "turbinia.initContainer" . | nindent 8 }} 
+      # The grace period needs to be set to the largest task timeout as
+      # set in the turbinia configuration file plus five seconds.
+      terminationGracePeriodSeconds: 86405
+      containers:
+        - name: worker
+          securityContext:
+              {{- toYaml .Values.worker.securityContext | nindent 12 }}
+          image: "{{ .Values.worker.image.repository }}:{{ .Values.worker.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.worker.image.pullPolicy }}
+          lifecycle:
+            preStop:
+              exec:
+                command:
+                  - "/bin/sh"
+                  - "-c"
+                  - "touch /tmp/turbinia-to-scaledown.lock && sleep 5 && /usr/bin/python3 /home/turbinia/check-lockfile.py"
+          env:
+            - name: TURBINIA_EXTRA_ARGS
+              value: "-d"
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+          volumeMounts:
+            {{- if .Values.gcp.enabled }}
+            - mountPath: "/dev"
+              name: dev
+              readOnly: true
+            - mountPath: "/var/run/lock"
+              name: lockfolder
+              readOnly: false
+            {{- end }}
+            - mountPath: /mnt/turbiniavolume
+              name: turbiniavolume
+            - mountPath: /etc/turbinia
+              name: turbinia-configs
+          ports:
+            {{- if .Values.metrics.enabled }}
+            - containerPort: {{ .Values.metrics.port }}
+            {{- end }}
+          resources:
+            {{- toYaml .Values.worker.resources | nindent 12 }}
+      volumes:
+        {{- if .Values.gcp.enabled }}
+        - name: dev
+          hostPath:
+            path: /dev
+        - name: lockfolder
+          hostPath:
+            path: /var/run/lock
+        {{- end }}
+        - name: turbiniavolume
+          persistentVolumeClaim:
+            claimName: {{ include "turbinia.pvc.name"  . }}
+            readOnly: false
+        - name: init-turbinia
+          configMap:
+            name: {{ include "turbinia.fullname" . }}-init-configmap
+            defaultMode: 0744
+        - name: turbinia-configs
+          emptyDir: {}
+        - name: user-configs
+          configMap:
+            name: {{ include "turbinia.configmap" . }}
+            optional: true
+      {{- with .Values.worker.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.worker.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.worker.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+

@@ -1,0 +1,117 @@
+{{- if .Values.ingress.enabled -}}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name:  {{ include "turbinia.fullname" . }}-ingress
+  namespace: {{ .Release.Namespace | quote }}
+  labels:
+    {{- include "turbinia.labels" . | nindent 4 }}
+  annotations:
+    kubernetes.io/ingressClassName: {{ .Values.ingress.className }}
+    {{- if .Values.ingress.gcp.managedCertificates }}
+    networking.gke.io/managed-certificates: {{ include "turbinia.fullname" . }}-managed-ssl
+    {{- end }}
+    {{- if .Values.ingress.certManager }}
+    kubernetes.io/tls-acme: "true"
+    cert-manager.io/issuer: {{ include "turbinia.fullname" . }}-letsencrypt-production
+    {{- end }}
+    {{- if (eq .Values.ingress.className "gce") }}
+    {{- if .Values.ingress.gcp.staticIPName }}
+    kubernetes.io/ingress.global-static-ip-name: {{ .Values.ingress.gcp.staticIPName }}
+    networking.gke.io/v1beta1.FrontendConfig: {{ include "turbinia.fullname" . }}-frontend-config
+    {{- end }}
+    {{- end }}
+spec:
+  {{- if or .Values.ingress.selfSigned .Values.ingress.certManager }}
+  tls:
+    - hosts:
+        - {{ .Values.ingress.host | quote }}
+      secretName: {{ include "turbinia.fullname" . }}-tls
+  {{- end }}
+  rules:
+    - host: {{ .Values.ingress.host }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                {{- if .Values.oauth2proxy.enabled }}
+                name: {{ .Release.Name }}-oauth2proxy
+                port:
+                  number: {{ .Values.oauth2proxy.service.port }}
+                {{- else }}
+                name: {{ include "turbinia.fullname" . }}
+                port:
+                  number: {{ include "turbinia.service.port" . }}
+                {{- end }}
+  defaultBackend:
+    service:
+      {{- if .Values.oauth2proxy.enabled }} 
+      name: {{ .Release.Name }}-oauth2proxy # Name of the Service targeted by the Ingress
+      port:
+        number: {{ .Values.oauth2proxy.service.port }} # Should match the port used by the Service
+      {{- else }}
+      name: {{ include "turbinia.fullname" . }}
+      port:
+        number: {{ include "turbinia.service.port" . }}
+      {{- end }}
+{{- end }}
+{{- if and .Values.ingress.enabled .Values.ingress.gcp.staticIPV6Name }}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name:  {{ include "turbinia.fullname" . }}-ingress-ipv6
+  namespace: {{ .Release.Namespace | quote }}
+  labels:
+    {{- include "turbinia.labels" . | nindent 4 }}
+  annotations:
+    kubernetes.io/ingressClassName: {{ .Values.ingress.className }}
+    {{- if .Values.ingress.gcp.managedCertificates }}
+    networking.gke.io/managed-certificates: {{ include "turbinia.fullname" . }}-managed-ssl
+    networking.gke.io/v1beta1.FrontendConfig: {{ include "turbinia.fullname" . }}-frontend-config
+    {{- end }}
+    {{- if .Values.ingress.certManager }}
+    kubernetes.io/tls-acme: "true"
+    cert-manager.io/issuer: {{ include "turbinia.fullname" . }}-letsencrypt-production
+    {{- end }}
+    {{- if .Values.ingress.gcp.staticIPV6Name }}
+    kubernetes.io/ingress.global-static-ip-name: {{ .Values.ingress.gcp.staticIPV6Name }}
+    {{- end }}
+spec:
+  {{- if or .Values.ingress.selfSigned .Values.ingress.certManager }}
+  tls:
+    - hosts:
+        - {{ .Values.ingress.host | quote }}
+      secretName: {{ include "turbinia.fullname" . }}-tls
+  {{- end }}
+  rules:
+    - host: {{ .Values.ingress.host }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                {{- if .Values.oauth2proxy.enabled }}
+                name: {{ .Release.Name }}-oauth2proxy
+                port:
+                  number: {{ .Values.oauth2proxy.service.port }}
+                {{- else }}
+                name: {{ include "turbinia.fullname" . }}
+                port:
+                  number: {{ include "turbinia.service.port" . }}
+                {{- end }}
+  defaultBackend:
+    service:
+      {{- if .Values.oauth2proxy.enabled }} 
+      name: {{ .Release.Name }}-oauth2proxy # Name of the Service targeted by the Ingress
+      port:
+        number: {{ .Values.oauth2proxy.service.port }} # Should match the port used by the Service
+      {{- else }}
+      name: {{ include "turbinia.fullname" . }}
+      port:
+        number: {{ include "turbinia.service.port" . }}
+      {{- end }}
+{{- end }}

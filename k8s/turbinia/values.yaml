@@ -1,0 +1,704 @@
+## Turbinia Helm Chart
+## Please use this Helm chart for deploying Turbinia to a Kubernetes environment
+##
+## @section Global parameters
+## Please, note that this will override the parameters configured to use the global value
+##
+global:
+  ## Global Persistence Configuration
+  ##
+  timesketch:
+    ## @param global.timesketch.enabled Enables the Timesketch deployment (only used in the main OSDFIR Infrastructure Helm chart)
+    ##
+    enabled: false
+    ## @param global.timesketch.servicePort Timesketch service port (overrides `timesketch.service.port`)
+    ##
+    servicePort:
+  turbinia:
+    ## @param global.turbinia.enabled Enables the Turbinia deployment (only used within the main OSDFIR Infrastructure Helm chart)
+    ##
+    enabled: false
+    ## @param global.turbinia.servicePort Turbinia API service port (overrides `turbinia.service.port`)
+    ##
+    servicePort:
+  dfdewey:
+    ## @param global.dfdewey.enabled Enables the dfDewey deployment along with Turbinia
+    ##
+    enabled: false
+  yeti:
+    ## @param global.yeti.enabled Enables the Yeti deployment (only used in the main OSDFIR Infrastructure Helm chart)
+    ##
+    enabled: false
+    ## @param global.yeti.servicePort Yeti API service port (overrides `yeti.api.service.port`)
+    ##
+    servicePort:
+  ## Global ingress parameters used to configure Turbinia, Timesketch, Yeti under a single loadbalancer
+  ##
+  ingress:
+    ## @param global.ingress.enabled Enable the global loadbalancer for external access
+    ##
+    enabled: false
+  ## @param global.existingPVC Existing claim for Turbinia persistent volume (overrides `persistent.name`)
+  ##
+  existingPVC: ""
+  ## @param global.storageClass StorageClass for the Turbinia persistent volume (overrides `persistent.storageClass`)
+  ##
+  storageClass: ""
+## @section Turbinia configuration
+## The following section covers configuration parameters for Turbinia
+##
+## @section Turbinia server configuration
+##
+server:
+  image:
+    ## @param server.image.repository Turbinia image repository
+    ##
+    repository: us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-server
+    ## @param server.image.pullPolicy Turbinia image pull policy
+    ## ref https://kubernetes.io/docs/concepts/containers/images/#image-pull-policy
+    ##
+    pullPolicy: IfNotPresent
+    ## @param server.image.tag Overrides the image tag whose default is the chart appVersion
+    ##
+    tag: "20240820"
+    ## @param server.image.imagePullSecrets Specify secrets if pulling from a private repository
+    ## ref https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
+    ## e.g.
+    ## imagePullSecrets:
+    ##   - myRegistryKeySecretName
+    ##
+    imagePullSecrets: []
+  ## @param server.podSecurityContext Holds pod-level security attributes and common server container settings
+  ## Some fields are also present in container.securityContext. Field values of container.securityContext take precedence over field values of PodSecurityContext
+  ## ref https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#podsecuritycontext-v1-core
+  ## e.g.
+  ## fsgroup: 2000
+  ##
+  podSecurityContext: {}
+  ## @param server.securityContext Holds security configuration that will be applied to the server container
+  ## Some fields are present in both SecurityContext and PodSecurityContext. When both are set, the values in SecurityContext take precedence
+  ## ref https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#securitycontext-v1-core
+  ## e.g.
+  ## capabilities
+  ##   drop:
+  ##   - ALL
+  ## readOnlyRootFilesystem: true
+  ## runAsNonRoot: true
+  ## runAsUser: 1000
+  ##
+  securityContext: {}
+  ## Turbinia Server resource requests and limits
+  ## ref: https://kubernetes.io/docs/user-guide/compute-resources/
+  ## We leave the default resources as a choice for the user in order to increase
+  ## the chances charts run on environments with little resources, such as Minikube.
+  ## If you want to specify resources, uncomment the following lines, adjust them as
+  ## necessary, and remove the curly braces after 'resources:'.
+  ## @param server.resources.limits Resource limits for the server container
+  ## @param server.resources.requests Requested resources for the server container
+  resources:
+    ## Example:
+    ## limits:
+    ##    cpu: 500m
+    ##    memory: 1Gi
+    limits: {}
+    ## Example:
+    ## requests:
+    ##    cpu: 500m
+    ##    memory: 1Gi
+    requests: {}
+  ## @param server.nodeSelector Node labels for Turbinia server pods assignment
+  ## ref: https://kubernetes.io/docs/user-guide/node-selection/
+  ##
+  nodeSelector: {}
+  ## @param server.tolerations Tolerations for Turbinia server pods assignment
+  ## ref https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/
+  ##
+  tolerations: []
+  ## @param server.affinity Affinity for Turbinia server pods assignment
+  ## ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity
+  ##
+  affinity: {}
+## @section Turbinia worker configuration
+##
+worker:
+  image:
+    ## @param worker.image.repository Turbinia image repository
+    ##
+    repository: us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-worker
+    ## @param worker.image.pullPolicy Turbinia image pull policy
+    ## ref https://kubernetes.io/docs/concepts/containers/images/#image-pull-policy
+    ##
+    pullPolicy: IfNotPresent
+    ## @param worker.image.tag Overrides the image tag whose default is the chart appVersion
+    ##
+    tag: "20240820"
+    ## @param worker.image.imagePullSecrets Specify secrets if pulling from a private repository
+    ## ref https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
+    ## e.g.
+    ## imagePullSecrets:
+    ##   - myRegistryKeySecretName
+    ##
+    imagePullSecrets: []
+  ## @param worker.replicaCount Number of worker pods to run at once
+  ## Disabled if the value worker.autoscaling.enabled is enabled.
+  replicaCount: 1
+  ## Worker autoscaler configuration
+  ## ref https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/
+  ##
+  autoscaling:
+    ## @param worker.autoscaling.enabled Enables Turbinia Worker autoscaling
+    ##
+    enabled: false
+    ## @param worker.autoscaling.minReplicas Minimum amount of worker pods to run at once
+    ##
+    minReplicas: 5
+    ## @param worker.autoscaling.maxReplicas Maximum amount of worker pods to run at once
+    ##
+    maxReplicas: 500
+    ## @param worker.autoscaling.targetCPUUtilizationPercentage CPU scaling metric workers will scale based on
+    ##
+    targetCPUUtilizationPercentage: 80
+  ## @param worker.podSecurityContext Holds pod-level security attributes and common worker container settings
+  ## Some fields are also present in container.securityContext. Field values of container.securityContext take precedence over field values of PodSecurityContext
+  ## ref https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#podsecuritycontext-v1-core
+  ## e.g.
+  ## fsgroup: 2000
+  ##
+  podSecurityContext: {}
+  ## Worker Security Context Configuration
+  ## Some fields are present in both SecurityContext and PodSecurityContext. When both are set, the values in SecurityContext take precedence
+  ## ref https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#securitycontext-v1-core
+  ##
+  securityContext:
+    ## @param worker.securityContext.privileged Runs the container as priveleged. Due to Turbinia attaching and detaching disks, a priveleged container is required for the worker container.
+    ##
+    privileged: true
+  ## Turbinia Worker resource requests and limits
+  ## @param worker.resources.limits Resources limits for the worker container
+  ## @param worker.resources.requests.cpu Requested cpu for the worker container
+  ## @param worker.resources.requests.memory Requested memory for the worker container
+  ##
+  resources:
+    ## Example:
+    ## limits:
+    ##    cpu: 500m
+    ##    memory: 1Gi
+    limits: {}
+    requests:
+      cpu: 250m
+      memory: 256Mi
+  ## @param worker.nodeSelector Node labels for Turbinia worker pods assignment
+  ## ref: https://kubernetes.io/docs/user-guide/node-selection/
+  ##
+  nodeSelector: {}
+  ## @param worker.tolerations Tolerations for Turbinia worker pods assignment
+  ## ref https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/
+  ##
+  tolerations: []
+  ## @param worker.affinity Affinity for Turbinia worker pods assignment
+  ## ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity
+  ##
+  affinity: {}
+## @section Turbinia API / Web configuration
+##
+api:
+  image:
+    ## @param api.image.repository Turbinia image repository for API / Web server
+    ##
+    repository: us-docker.pkg.dev/osdfir-registry/turbinia/release/turbinia-api-server
+    ## @param api.image.pullPolicy Turbinia image pull policy
+    ## ref https://kubernetes.io/docs/concepts/containers/images/#image-pull-policy
+    ##
+    pullPolicy: IfNotPresent
+    ## @param api.image.tag Overrides the image tag whose default is the chart appVersion
+    ##
+    tag: "20240820"
+    ## @param api.image.imagePullSecrets Specify secrets if pulling from a private repository
+    ## ref https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
+    ## e.g.
+    ## imagePullSecrets:
+    ##   - myRegistryKeySecretName
+    ##
+    imagePullSecrets: []
+  ## @param api.podSecurityContext Holds pod-level security attributes that will be applied to the API / Web container
+  ## Some fields are also present in container.securityContext. Field values of container.securityContext take precedence over field values of PodSecurityContext
+  ## ref https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#podsecuritycontext-v1-core
+  ## e.g.
+  ## fsgroup: 2000
+  ##
+  podSecurityContext: {}
+  ## @param api.securityContext Holds security configuration that will be applied to the API / Web container
+  ## Some fields are present in both SecurityContext and PodSecurityContext. When both are set, the values in SecurityContext take precedence
+  ## ref https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#securitycontext-v1-core
+  ## e.g.
+  ## capabilities
+  ##   drop:
+  ##   - ALL
+  ## readOnlyRootFilesystem: true
+  ## runAsNonRoot: true
+  ## runAsUser: 1000
+  ##
+  securityContext: {}
+  ## Turbinia API / Web resource requests and limits
+  ## @param api.resources.limits Resource limits for the api container
+  ## @param api.resources.requests Requested resources for the api container
+  resources:
+    ## Example:
+    ## limits:
+    ##    cpu: 500m
+    ##    memory: 1Gi
+    limits: {}
+    ## Example:
+    ## requests:
+    ##    cpu: 500m
+    ##    memory: 1Gi
+    requests: {}
+  ## @param api.nodeSelector Node labels for Turbinia api pods assignment
+  ## ref: https://kubernetes.io/docs/user-guide/node-selection/
+  ##
+  nodeSelector: {}
+  ## @param api.tolerations Tolerations for Turbinia api pods assignment
+  ## ref https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/
+  ##
+  tolerations: []
+  ## @param api.affinity Affinity for Turbinia api pods assignment
+  ## ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity
+  ##
+  affinity: {}
+## @section Common Parameters
+##
+## Turbinia configuration parameters
+## ref: https://github.com/google/turbinia/blob/master/turbinia/config/turbinia_config_tmpl.py
+##
+config:
+  ## @param config.existingConfigMap Use an existing ConfigMap as the default Turbinia config.
+  ## Please ensure that the ConfigMap has been created prior to deployment
+  ## (e.g. kubectl create configmap turbinia-config --from-file=turbinia.conf)
+  ##
+  existingConfigMap: ""
+  ## @param config.disabledJobs List of Turbinia Jobs to disable. Overrides DISABLED_JOBS in the Turbinia config.
+  ##
+  disabledJobs: "['BinaryExtractorJob', 'BulkExtractorJob', 'HindsightJob', 'PhotorecJob', 'VolatilityJob']"
+  ## @param config.existingVertexSecret Name of existing secret containing Vertex API Key in order to enable the Turbinia LLM Artifacts Analyzer. The secret must contain the key `turbinia-vertexapi`
+  ## Please see https://ai.google.dev/tutorials/setup to generate your own API key.
+  ## e.g. kubectl create secret generic turbinia-vertexapi-secret --from-literal=turbinia-vertexapi=VERTEX_API_KEY
+  ##
+  existingVertexSecret: ""
+## GCP configuration parameters
+## IMPORTANT: Enable GCP when running Turbinia in a GKE cluster
+##
+gcp:
+  ## @param gcp.enabled Enables Turbinia to run within a GCP project. When enabling, please ensure you have run the supplemental script `create-gcp-sa.sh` to create a Turbinia GCP service account required for attaching persistent disks.
+  ##
+  enabled: false
+  ## @param gcp.projectID GCP Project ID where your cluster is deployed. Required when `.Values.gcp.enabled` is set to `true`
+  ##
+  projectID: ""
+  ## @param gcp.projectRegion Region where your cluster is deployed. Required when `.Values.gcp.enabled` is set to `true`
+  ##
+  projectRegion: ""
+  ## @param gcp.projectZone Zone where your cluster is deployed. Required when `.Values.gcp.enabled` is set to `true`
+  ##
+  projectZone: ""
+  ## @param gcp.gcpLogging Enables GCP Cloud Logging
+  ## ref https://cloud.google.com/logging
+  ##
+  gcpLogging: false
+  ## @param gcp.gcpErrorReporting Enables GCP Cloud Error Reporting
+  ## ref https://cloud.google.com/error-reporting/docs/grouping-errors
+  ##
+  gcpErrorReporting: false
+## Turbinia service account parameters
+##
+serviceAccount:
+  ## @param serviceAccount.create Specifies whether a service account should be created
+  ##
+  create: true
+  ## @param serviceAccount.annotations Annotations to add to the service account
+  ##
+  annotations: {}
+  ## @param serviceAccount.name The name of the Kubernetes service account to use
+  ## If not set and create is true, a name is generated using the fullname template
+  ##
+  name: "turbinia"
+## Turbinia service parameters
+##
+service:
+  ## @param service.type Turbinia service type
+  ##
+  type: ClusterIP
+  ## @param service.port Turbinia api service port
+  ##
+  port: &turbiniaSvcPort 8000
+## Turbinia metrics parameters
+## IMPORTANT: Turbinia can scrape metrics through Prometheus annotations or through the Prometheus operator using a ServiceMonitor CRD
+## Please ensure the Prometheus server is also installed to the cluster for metrics to scrape properly
+##
+metrics:
+  ## @param metrics.enabled Enables metrics scraping
+  ##
+  enabled: true
+  ## @param metrics.port Port to scrape metrics from
+  ##
+  port: 9200
+versioncheck:
+  ## @param versioncheck.enabled Enable Turbinia runtime version checking
+  ##
+  enabled: true
+## Turbinia persistence storage parameters
+##
+persistence:
+  ## @param persistence.name Turbinia persistent volume name
+  ##
+  name: turbiniavolume
+  ## @param persistence.size Turbinia persistent volume size
+  ##
+  size: 2Gi
+  ## @param persistence.storageClass PVC Storage Class for Turbinia volume
+  ## If set to "-", storageClassName: "", which disables dynamic provisioning
+  ## If undefined or set to null, no storageClassName spec is
+  ##   set, choosing the default provisioner.  (gp2 on AWS, standard on
+  ##   GKE, AWS & OpenStack)
+  ## ref https://kubernetes.io/docs/concepts/storage/dynamic-provisioning/#using-dynamic-provisioning
+  ##
+  storageClass: ""
+  ## @param persistence.accessModes PVC Access Mode for Turbinia volume
+  ## Access mode may need to be updated based on the StorageClass
+  ## ref https://kubernetes.io/docs/concepts/storage/persistent-volumes/#access-modes
+  ##
+  accessModes:
+    - ReadWriteOnce
+## Turbinia ingress parameters
+##
+ingress:
+  ## @param ingress.enabled Enable the Turbinia loadbalancer for external access (only used in the main OSDFIR Infrastructure Helm chart)
+  ##
+  enabled: false
+  ## @param ingress.host The domain name Turbinia will be hosted under
+  ## Please ensure this value is set when enabling Ingress. If using "gce" for
+  ## ingress.className, please ensure you have a DNS record set for the IP address
+  ## registered under ingress.gcp.staticIPName
+  ##
+  host: ""
+  ## @param ingress.selfSigned Create a TLS secret for this ingress record using self-signed certificates generated by Helm
+  ##
+  selfSigned: false
+  ## @param ingress.certManager Add the corresponding annotations for cert-manager integration
+  ##
+  certManager: false
+  ## @param ingress.className IngressClass that will be be used to implement the Ingress
+  ## ref https://kubernetes.io/docs/concepts/services-networking/ingress-controllers/
+  ##
+  className: ""
+  ## GCP ingress configuration
+  ##
+  gcp:
+    ## @param ingress.gcp.managedCertificates Enabled GCP managed certificates for your domain
+    ## ref https://cloud.google.com/load-balancing/docs/ssl-certificates/google-managed-certs
+    ##
+    managedCertificates: false
+    ## @param ingress.gcp.staticIPName Name of the static IP address you reserved in GCP
+    ## ref https://cloud.google.com/compute/docs/ip-addresses/reserve-static-external-ip-address
+    ##
+    staticIPName: ""
+    ## @param ingress.gcp.staticIPV6Name Name of the static IPV6 address you reserved. This can be optionally provided to deploy a loadbalancer with an IPV6 address in GCP.
+    ## ref https://cloud.google.com/compute/docs/ip-addresses/reserve-static-external-ip-address
+    ##
+    staticIPV6Name: ""
+## Turbinia dfDewey parameters
+##
+dfdewey:
+  ## @section dfDewey PostgreSQL Configuration Parameters
+  ##
+  postgresql:
+    ## @param dfdewey.postgresql.enabled Enables the Postgresql deployment
+    ##
+    enabled: true
+    ## @param dfdewey.postgresql.nameOverride String to partially override common.names.fullname template
+    ##
+    nameOverride: dfdewey-postgresql
+    ## PostgreSQL Authentication parameters
+    ##
+    auth:
+      ## @param dfdewey.postgresql.auth.username Name for a custom user to create
+      ##
+      username: "dfdewey"
+      ## @param dfdewey.postgresql.auth.password Password for the custom user to create. Ignored if auth.existingSecret is provided
+      ##
+      password: "password"
+      ## @param dfdewey.postgresql.auth.database Name for a custom database to create
+      ##
+      database: "dfdewey"
+    ## PostgreSQL Primary configuration parameters
+    ##
+    primary:
+      ## PostgreSQL Primary persistence configuration
+      ##
+      persistence:
+        ## @param dfdewey.postgresql.primary.persistence.size PostgreSQL Persistent Volume size
+        ##
+        size: 8Gi
+      ## PostgreSQL Primary resource requests and limits
+      ## @param dfdewey.postgresql.primary.resources.requests.cpu Requested cpu for the PostgreSQL Primary containers
+      ## @param dfdewey.postgresql.primary.resources.requests.memory Requested memory for the PostgreSQL Primary containers
+      ## @param dfdewey.postgresql.primary.resources.limits Resource limits for the PostgreSQL Primary containers
+      ##
+      resources:
+        requests:
+          cpu: 250m
+          memory: 256Mi
+        limits: {}
+  ## @section dfDewey Opensearch Configuration Parameters
+  ## IMPORTANT: The Opensearch Security Plugin / TLS has not yet been configured by default
+  ## ref on steps required https://opensearch.org/docs/1.1/security-plugin/configuration/index/
+  ##
+  opensearch:
+    ## @param dfdewey.opensearch.enabled Enables the Opensearch deployment
+    ##
+    enabled: true
+    ## @param dfdewey.opensearch.nameOverride Overrides the clusterName when used in the naming of resources
+    ##
+    nameOverride: dfdewey-opensearch
+    ## @param dfdewey.opensearch.masterService The service name used to connect to the masters
+    ##
+    masterService: dfdewey-opensearch
+    ## @param dfdewey.opensearch.singleNode Replicas will be forced to 1
+    ##
+    singleNode: true
+    ## @param dfdewey.opensearch.sysctlInit.enabled Sets optimal sysctl's through privileged initContainer
+    ##
+    sysctlInit:
+      enabled: true
+    ## @param dfdewey.opensearch.opensearchJavaOpts Sets the size of the Opensearch Java heap
+    ## It is recommended to use at least half the system's available ram
+    ##
+    opensearchJavaOpts: "-Xms512m -Xmx512m"
+    ## @param dfdewey.opensearch.config.opensearch.yml Opensearch configuration file. Can be appended for additional configuration options
+    ## Values must be YAML literal style scalar / YAML multiline string
+    ## <filename>: |
+    ##   <formatted-value(s)>
+    ##
+    config:
+      opensearch.yml: |
+        discovery:
+          type: single-node
+        plugins:
+          security:
+            disabled: true
+    extraEnvs:
+    ## @param dfdewey.opensearch.extraEnvs[0].name Environment variable to set the initial admin password
+    ##
+    - name: OPENSEARCH_INITIAL_ADMIN_PASSWORD
+    ## @param dfdewey.opensearch.extraEnvs[0].value The initial admin password
+    ##
+      value: KyfwJExU2!2MvU6j
+    ## @param dfdewey.opensearch.extraEnvs[1].name Environment variable to disable Opensearch Demo config
+    ##
+    - name: DISABLE_INSTALL_DEMO_CONFIG
+    ## @param dfdewey.opensearch.extraEnvs[1].value Disables Opensearch Demo config
+    ##
+      value: "true"
+    ## @param dfdewey.opensearch.extraEnvs[2].name Environment variable to disable Opensearch Security plugin given that
+    ## certificates were not setup as part of this deployment
+    ##
+    - name: DISABLE_SECURITY_PLUGIN
+    ## @param dfdewey.opensearch.extraEnvs[2].value Disables Opensearch Security plugin
+    ##
+      value: "true"
+    ## Opensearch persistence configuration
+    ##
+    persistence:
+      ## @param dfdewey.opensearch.persistence.size Opensearch Persistent Volume size. A persistent volume would be created for each Opensearch replica running
+      ##
+      size: 2Gi
+    ## Opensearch resource requests
+    ## @param dfdewey.opensearch.resources.requests.cpu Requested cpu for the Opensearch containers
+    ## @param dfdewey.opensearch.resources.requests.memory Requested memory for the Opensearch containers
+    ##
+    resources:
+      requests:
+        cpu: 250m
+        memory: 512Mi
+## @section Third Party Configuration
+##
+## @section Redis configuration parameters
+## IMPORTANT: Redis is deployed with Auth enabled by default
+## To see a full list of available values, run helm show values charts/redis*
+##
+redis:
+  ## @param redis.enabled enabled Enables the Redis deployment
+  ##
+  enabled: true
+  ## Redis Authentication parameters
+  ##
+  auth:
+    ## @param redis.auth.enabled Enables Redis Authentication. Disabled due to incompatibility with Turbinia
+    ##
+    enabled: false
+  ## @param redis.sentinel.enabled Enables Redis Sentinel on Redis pods
+  ## IMPORTANT: This has not been tested for Turbinia so would leave this disabled
+  ##
+  sentinel:
+    enabled: false
+  ## @param redis.architecture Specifies the Redis architecture. Allowed values: `standalone` or `replication`
+  ##
+  architecture: standalone
+  ## Master Redis Service configuration
+  ##
+  master:
+    ## @param redis.master.count Number of Redis master instances to deploy (experimental, requires additional configuration)
+    ##
+    count: 1
+    ## Redis master service parameters
+    ##
+    service:
+      ## @param redis.master.service.type Redis master service type
+      ##
+      type: ClusterIP
+      ## @param redis.master.service.ports.redis Redis master service port
+      ##
+      ports:
+        redis: 6379
+    ## Redis master persistence configuration
+    ##
+    persistence:
+      ## @param redis.master.persistence.size Persistent Volume size
+      ##
+      size: 2Gi
+    ## Redis master resource requests and limits
+    ## @param redis.master.resources.limits Resource limits for the Redis master containers
+    ## @param redis.master.resources.requests Requested resources for the Redis master containers
+    resources:
+      ## Example:
+      ## limits:
+      ##    cpu: 500m
+      ##    memory: 1Gi
+      limits: {}
+      ## Example:
+      ## requests:
+      ##    cpu: 500m
+      ##    memory: 1Gi
+      requests: {}
+  ## Redis replicas configuration parameters
+  ##
+  replica:
+    ## @param redis.replica.replicaCount Number of Redis replicas to deploy
+    ##
+    replicaCount: 0
+    ## Redis replicas service parameters
+    ##
+    service:
+      ## @param redis.replica.service.type Redis replicas service type
+      ##
+      type: ClusterIP
+      ## @param redis.replica.service.ports.redis Redis replicas service port
+      ##
+      ports:
+        redis: 6379
+    ## Redis replicas persistence configuration
+    ##
+    persistence:
+      ## @param redis.replica.persistence.size Persistent Volume size
+      ##
+      size: 2Gi
+    ## Redis Replica resource requests and limits
+    ## @param redis.replica.resources.limits Resources limits for the Redis replica containers
+    ## @param redis.replica.resources.requests Requested resources for the Redis replica containers
+    resources:
+      ## Example:
+      ## limits:
+      ##    cpu: 500m
+      ##    memory: 1Gi
+      limits: {}
+      ## Example:
+      ## requests:
+      ##    cpu: 500m
+      ##    memory: 1Gi
+      requests: {}
+## @section Oauth2 Proxy configuration parameters
+## To see a full list of available values, run helm show values charts/oauth2-proxy*
+##
+oauth2proxy:
+  ## @param oauth2proxy.enabled Enables the Oauth2 Proxy deployment
+  ##
+  enabled: false
+  ## @param oauth2proxy.containerPort Oauth2 Proxy container port
+  ##
+  containerPort: 4180
+  ## OAuth2 Proxy service parameters
+  ##
+  service:
+    ## @param oauth2proxy.service.type OAuth2 Proxy service type
+    ##
+    type: ClusterIP
+    ## @param oauth2proxy.service.port OAuth2 Proxy service HTTP port
+    ##
+    port: 8080
+  ## Used to pass OIDC desktop client to deployment
+  ## @param oauth2proxy.extraEnvVars[0].name Name of the environment variable to pass to Oauth2 Proxy
+  ## @param oauth2proxy.extraEnvVars[0].valueFrom.secretKeyRef.name Name of the secret containing native client id
+  ## @param oauth2proxy.extraEnvVars[0].valueFrom.secretKeyRef.key Name of the secret key containing native client id
+  ## @param oauth2proxy.extraEnvVars[0].valueFrom.secretKeyRef.optional Set to optional if native client id is not provided
+  ##
+  extraEnvVars:
+    - name: OAUTH2_PROXY_OIDC_EXTRA_AUDIENCES
+      valueFrom:
+        secretKeyRef:
+          name: '{{ template "oauth2-proxy.secretName" . }}'
+          key: client-id-native
+          optional: true
+  ## Configuration section
+  ##
+  configuration:
+    ## @param oauth2proxy.configuration.turbiniaSvcPort Turbinia service port referenced from `.Values.service.port` to be used in Oauth setup
+    ##
+    turbiniaSvcPort: *turbiniaSvcPort
+    ## @param oauth2proxy.configuration.existingSecret Secret with the client ID, client secret, client native id (optional) and cookie secret
+    ##
+    existingSecret: ""
+    ## Custom configuration file: oauth2_proxy.cfg
+    ## content: |
+    ##   pass_basic_auth = false
+    ##   pass_access_token = true
+    ##
+    ## @param oauth2proxy.configuration.content [string] Oauth2 proxy configuration. Please see the [official docs](https://oauth2-proxy.github.io/oauth2-proxy/docs/configuration/overview) for a list of configurable values
+    ##
+    content: |
+      provider="oidc"
+      oidc_jwks_url="https://accounts.google.com/.well-known/openid-configuration"
+      scope="https://www.googleapis.com/auth/userinfo.email"
+      skip_jwt_bearer_tokens=true
+      force_code_challenge_method='S256'
+      logging_filename = "/tmp/oauth2proxy.log"
+      standard_logging = true
+      request_logging = true
+      auth_logging = true
+      show_debug_on_error=true
+      upstreams=["http://{{ .Release.Name }}-turbinia:{{ .Values.configuration.turbiniaSvcPort }}"]
+    ## Authorize individual email addresses
+    ## @param oauth2proxy.configuration.authenticatedEmailsFile.enabled Enable authenticated emails file
+    ## @param oauth2proxy.configuration.authenticatedEmailsFile.content Restricted access list (one email per line). At least one email address is required for the Oauth2 Proxy to properly work
+    ## @param oauth2proxy.configuration.authenticatedEmailsFile.existingSecret Secret with the authenticated emails file
+    ##
+    authenticatedEmailsFile:
+      enabled: true
+      ## One email per line
+      ## e.g:
+      ## content: |-
+      ##   name1@domain
+      ##   name2@domain
+      ## If you override the config with restricted_access it will configure a user list within this chart what takes care of the configmap
+      ##
+      content: ""
+      ## @param oauth2proxy.configuration.authenticatedEmailsFile.existingSecret Secret with the authenticated emails file
+      ##
+      existingSecret: ""
+    ## @param oauth2proxy.configuration.oidcIssuerUrl OpenID Connect issuer URL
+    ##
+    oidcIssuerUrl: "https://accounts.google.com"
+  ## Oauth2 Proxy Redis Subchart
+  ##
+  redis:
+    ## @param oauth2proxy.redis.enabled Enable Redis for OAuth Session Storage
+    ##
+    enabled: false

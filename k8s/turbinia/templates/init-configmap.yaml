@@ -1,0 +1,85 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "turbinia.fullname" . }}-init-configmap
+  namespace: {{ .Release.Namespace | quote }}
+  labels:
+    {{- include "turbinia.labels" . | nindent 4 }}
+data:
+  init-turbinia.sh: |
+    #!/bin/sh
+    set -e
+    apk add jq
+
+    # Fix Filestore permissions
+    chmod go+w /mnt/turbiniavolume
+
+    # Create turbinia config directory
+    mkdir -p /etc/turbinia
+    cd /etc/turbinia
+
+    if [  $(ls /tmp/turbinia/ | wc -l) -gt 0 ]; then
+      echo "Using exisiting configuration file provided."
+      cp /tmp/turbinia/* /etc/turbinia/turbinia.conf
+    else
+      # Pull default config if one is not already provided
+      echo -n "* Fetching the latest Turbinia configuration file..." 
+      wget "https://raw.githubusercontent.com/google/turbinia/master/turbinia/config/turbinia_config_tmpl.py" -O turbinia.conf
+      echo "OK"
+    fi
+
+    # Set up the Redis connection
+    sed -i -e "s/^TASK_MANAGER = .*$/TASK_MANAGER = 'Celery'/g" turbinia.conf
+    sed -i -e "s/^STATE_MANAGER = .*$/STATE_MANAGER = 'Redis'/g" turbinia.conf
+    sed -i -e 's#^REDIS_HOST =.*#REDIS_HOST = {{ (include "turbinia.redis.url.noport" .) | quote }}#' turbinia.conf 
+    sed -i -e 's#^CELERY_BROKER =.*#CELERY_BROKER = {{ (include "turbinia.redis.url" .) | quote }}#' turbinia.conf
+    sed -i -e 's#^CELERY_BACKEND =.*#CELERY_BACKEND = {{ (include "turbinia.redis.url" .) | quote }}#' turbinia.conf
+    sed -i -e "s/^DEBUG_TASKS = .*$/DEBUG_TASKS = True/g" turbinia.conf
+    
+    {{- if .Values.gcp.enabled }}
+    # Set up Cloud provider (only supported option is GCP)
+    sed -i -e "s/^CLOUD_PROVIDER = .*$/CLOUD_PROVIDER = 'GCP'/g" turbinia.conf
+    sed -i -e "s/^TURBINIA_PROJECT = .*$/TURBINIA_PROJECT = '{{ include "turbinia.gcp.project" . }}'/g" turbinia.conf
+    sed -i -e "s/^TURBINIA_ZONE = .*$/TURBINIA_ZONE = '{{ include "turbinia.gcp.zone" . }}'/g" turbinia.conf
+    sed -i -e "s/^TURBINIA_REGION = .*$/TURBINIA_REGION = '{{ include "turbinia.gcp.region" . }}'/g" turbinia.conf
+    {{- end }}
+
+    {{- if .Values.global.dfdewey.enabled }}
+    # Set up dfDewey config
+    sed -i -e "s/^DFDEWEY_PG_HOST = .*$/DFDEWEY_PG_HOST = \'{{- printf "%s-%s" .Release.Name .Values.dfdewey.postgresql.nameOverride -}}\'/g" turbinia.conf
+    sed -i -e "s/^DFDEWEY_OS_HOST = .*$/DFDEWEY_OS_HOST = \'{{ .Values.dfdewey.opensearch.masterService }}\'/g" turbinia.conf
+    {{- end}}
+    
+    # Setup logging, mount, and output paths
+    sed -i -e "s/^SHARED_FILESYSTEM = .*$/SHARED_FILESYSTEM = True/g" turbinia.conf
+    sed -i -e "s/^LOG_DIR = .*$/LOG_DIR = '\/mnt\/{{ .Values.persistence.name }}\/logs'/g" turbinia.conf
+    sed -i -e "s/^MOUNT_DIR_PREFIX = .*$/MOUNT_DIR_PREFIX = '\/mnt\/turbinia'/g" turbinia.conf
+    sed -i -e "s/^OUTPUT_DIR = .*$/OUTPUT_DIR = '\/mnt\/{{ .Values.persistence.name }}\/output'/g" turbinia.conf
+    sed -i -e "s/^API_EVIDENCE_UPLOAD_DIR = .*$/API_EVIDENCE_UPLOAD_DIR = '\/mnt\/{{ .Values.persistence.name }}\/upload'/g" turbinia.conf
+    
+    # Disable Turbinia Jobs
+    sed -i -e "s/^DISABLED_JOBS = .*$/DISABLED_JOBS = {{ .Values.config.disabledJobs }}/g" turbinia.conf
+
+    {{- if .Values.metrics.enabled }}
+    # Set up Prometheus metrics
+    sed -i -e "s/^PROMETHEUS_ENABLED = .*$/PROMETHEUS_ENABLED = True/g" turbinia.conf
+    {{- end }}
+
+    {{- if not .Values.versioncheck.enabled }}
+    # Set up Turbinia server/worker version runtime check
+    sed -i -e "s/^VERSION_CHECK = .*$/VERSION_CHECK = False/g" turbinia.conf
+    {{- end }}
+    
+    {{- if and .Values.gcp.gcpLogging .Values.gcp.enabled }}
+    # Set up GCP Stackdriver Logging
+    sed -i -e "s/^STACKDRIVER_LOGGING = .*$/STACKDRIVER_LOGGING = True/g" turbinia.conf
+    {{- end }}
+    {{- if and .Values.gcp.gcpErrorReporting .Values.gcp.enabled }}
+    # Set up GCP Stackdriver Traceback
+    sed -i -e "s/^STACKDRIVER_TRACEBACK = .*$/STACKDRIVER_TRACEBACK = True/g" turbinia.conf
+    {{- end }}
+
+    {{- if and .Values.config.existingVertexSecret .Values.gcp.enabled }}
+    # Set up VertexAI API key from secret key reference
+    sed -i -e "s/^GCP_GENERATIVE_LANGUAGE_API_KEY = .*$/GCP_GENERATIVE_LANGUAGE_API_KEY = '$VERTEX_APIKEY'/g" turbinia.conf
+    {{- end -}}
