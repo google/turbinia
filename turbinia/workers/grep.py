@@ -49,7 +49,9 @@ class GrepTask(TurbiniaTask):
     output_file_path = os.path.join(self.output_dir, f'{base_name:s}.filtered')
 
     output_evidence = FilteredTextFile(source_path=output_file_path)
-    cmd = ['grep', '-E', '-b', '-n', '-f', patterns_file_path, evidence.local_path]
+    cmd = [
+        'grep', '-E', '-b', '-n', '-f', patterns_file_path, evidence.local_path
+    ]
 
     result.log(f'Running [{cmd!s}]')
     ret, result = self.execute(
