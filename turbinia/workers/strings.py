@@ -43,12 +43,13 @@ class StringsAsciiTask(TurbiniaTask):
     output_evidence = TextFile(source_path=output_file_path)
 
     # Generate the command we want to run.
-    cmd = f'strings -a -t d {evidence.device_path:s} > {output_file_path:s}'
+    cmd = ['strings', '-a', '-t', 'd', evidence.device_path]
     # Add a log line to the result that will be returned.
-    result.log(f'Running strings as [{cmd:s}]')
+    result.log(f'Running strings as [{cmd!s}]')
     # Actually execute the binary
     self.execute(
-        cmd, result, new_evidence=[output_evidence], close=True, shell=True)
+        cmd, result, new_evidence=[output_evidence], close=True,
+        stdout_file=output_file_path)
 
     return result
 
@@ -75,11 +76,12 @@ class StringsUnicodeTask(TurbiniaTask):
     output_evidence = TextFile(source_path=output_file_path)
 
     # Generate the command we want to run.
-    cmd = f'strings -a -t d -e l {evidence.device_path:s} > {output_file_path:s}'
+    cmd = ['strings', '-a', '-t', 'd', '-e', 'l', evidence.device_path]
     # Add a log line to the result that will be returned.
-    result.log(f'Running strings as [{cmd:s}]')
+    result.log(f'Running strings as [{cmd!s}]')
     # Actually execute the binary
     self.execute(
-        cmd, result, new_evidence=[output_evidence], close=True, shell=True)
+        cmd, result, new_evidence=[output_evidence], close=True,
+        stdout_file=output_file_path)
 
     return result

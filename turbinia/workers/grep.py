@@ -49,13 +49,14 @@ class GrepTask(TurbiniaTask):
     output_file_path = os.path.join(self.output_dir, f'{base_name:s}.filtered')
 
     output_evidence = FilteredTextFile(source_path=output_file_path)
-    cmd = 'grep -E -b -n -f {0:s} {1:s} > {2:s}'.format(
-        patterns_file_path, evidence.local_path, output_file_path)
+    cmd = [
+        'grep', '-E', '-b', '-n', '-f', patterns_file_path, evidence.local_path
+    ]
 
-    result.log(f'Running [{cmd:s}]')
+    result.log(f'Running [{cmd!s}]')
     ret, result = self.execute(
-        cmd, result, new_evidence=[output_evidence], shell=True,
-        success_codes=[0, 1])
+        cmd, result, new_evidence=[output_evidence],
+        stdout_file=output_file_path, success_codes=[0, 1])
 
     # Grep returns 0 on success and 1 if no results are found.
     if ret == 0:
