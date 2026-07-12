@@ -47,10 +47,10 @@ class RedisAnalysisTask(TurbiniaTask):
     output_evidence = ReportText(source_path=output_file_path)
 
     # Read the input file
-    with open(evidence.local_path, 'r') as input_file:
-      redis_config = input_file.read()
+    with open(evidence.local_path, 'r', errors='ignore') as input_file:
+      redis_data = input_file.read()
 
-    (report, priority, summary) = self.analyse_redis_config(redis_config)
+    (report, priority, summary) = self.analyse_redis(redis_data)
     output_evidence.text_data = report
     result.report_priority = priority
     result.report_data = report
@@ -64,8 +64,8 @@ class RedisAnalysisTask(TurbiniaTask):
     result.close(self, success=True, status=summary)
     return result
 
-  def analyse_redis_config(self, config):
-    """Analyses a Redis configuration.
+  def analyse_redis(self, config):
+    """Analyses a Redis configuration or log file.
 
     Args:
       config (str): configuration file content.
@@ -80,12 +80,22 @@ class RedisAnalysisTask(TurbiniaTask):
     findings = []
     bind_everywhere_re = re.compile(
         r'^\s*bind[\s"]*0\.0\.0\.0', re.IGNORECASE | re.MULTILINE)
+    
+    # CVE-2022-0543 Lua sandbox escape indicators
+    lua_sandbox_escape_re = re.compile(
+        r'(package\.loadlib|os\.execute|io\.popen)', re.IGNORECASE)
 
     if re.search(bind_everywhere_re, config):
       findings.append(fmt.bullet('Redis listening on every IP'))
 
+    if re.search(lua_sandbox_escape_re, config):
+      findings.append(
+          fmt.bullet(
+              'Redis Lua sandbox escape (CVE-2022-0543) exploitation indicators '
+              'found (e.g. package.loadlib, os.execute)'))
+
     if findings:
-      summary = 'Insecure Redis configuration found.'
+      summary = 'Redis analysis found potential issues.'
       findings.insert(0, fmt.heading4(fmt.bold(summary)))
       report = '\n'.join(findings)
       return (report, Priority.HIGH, summary)

@@ -28,9 +28,9 @@ port 6379
 bind 0.0.0.0 ::1
 """
 
-  REDIS_BIND_EVERYWHERE_SUMMARY = """Insecure Redis configuration found."""
+  REDIS_BIND_EVERYWHERE_SUMMARY = """Redis analysis found potential issues."""
 
-  REDIS_BIND_EVERYWHERE_REPORT = """#### **Insecure Redis configuration found.**
+  REDIS_BIND_EVERYWHERE_REPORT = """#### **Redis analysis found potential issues.**
 * Redis listening on every IP"""
 
   REDIS_BIND_NOWHERE = """# If port 0 is specified Redis will not listen
@@ -38,19 +38,33 @@ port 6379
 """
   REDIS_BIND_NOWHERE_REPORT = 'No issues found in Redis configuration'
 
-  def test_analyse_redis_config(self):
-    """Tests the analyze_redis_config method."""
+  REDIS_EXPLOIT_LOG = (
+      '123:M 12 Mar 2022 10:00:00.000 * Background rewriting started\n'
+      '456:C 12 Mar 2022 10:00:01.000 * eval "package.loadlib(\'lib\', \'io\')" 0\n'
+  )
+  REDIS_EXPLOIT_REPORT = (
+      '#### **Redis analysis found potential issues.**\n'
+      '* Redis Lua sandbox escape (CVE-2022-0543) exploitation indicators '
+      'found (e.g. package.loadlib, os.execute)')
+
+  def test_analyse_redis(self):
+    """Tests the analyse_redis method."""
     config.LoadConfig()
     task = redis.RedisAnalysisTask()
 
-    (report, priority, summary) = task.analyse_redis_config(
-        self.REDIS_BIND_EVERYWHERE)
+    (report, priority, summary) = task.analyse_redis(self.REDIS_BIND_EVERYWHERE)
     self.assertEqual(report, self.REDIS_BIND_EVERYWHERE_REPORT)
     self.assertEqual(priority, 20)
     self.assertEqual(summary, self.REDIS_BIND_EVERYWHERE_SUMMARY)
 
-    report = task.analyse_redis_config(self.REDIS_BIND_NOWHERE)[0]
+    report = task.analyse_redis(self.REDIS_BIND_NOWHERE)[0]
     self.assertEqual(report, self.REDIS_BIND_NOWHERE_REPORT)
+
+    # Test exploitation log
+    (report, priority, summary) = task.analyse_redis(self.REDIS_EXPLOIT_LOG)
+    self.assertEqual(report, self.REDIS_EXPLOIT_REPORT)
+    self.assertEqual(priority, 20)
+    self.assertEqual(summary, self.REDIS_BIND_EVERYWHERE_SUMMARY)
 
 
 if __name__ == '__main__':
