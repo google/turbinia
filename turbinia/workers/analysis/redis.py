@@ -80,7 +80,7 @@ class RedisAnalysisTask(TurbiniaTask):
     findings = []
     bind_everywhere_re = re.compile(
         r'^\s*bind[\s"]*0\.0\.0\.0', re.IGNORECASE | re.MULTILINE)
-    
+
     # CVE-2022-0543 Lua sandbox escape indicators
     lua_sandbox_escape_re = re.compile(
         r'(package\.loadlib|os\.execute|io\.popen)', re.IGNORECASE)
