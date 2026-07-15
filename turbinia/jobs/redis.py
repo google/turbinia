@@ -53,7 +53,8 @@ class RedisExtractionJob(interface.TurbiniaJob):
     tasks = []
     for _ in evidence:
       tasks.append(artifact.FileArtifactExtractionTask('RedisConfigFile'))
-      tasks.append(artifact.FileArtifactExtractionTask('RedisConfigurationFile'))
+      tasks.append(
+          artifact.FileArtifactExtractionTask('RedisConfigurationFile'))
       tasks.append(artifact.FileArtifactExtractionTask('RedisLogFiles'))
     return tasks
 
@@ -77,8 +78,9 @@ class RedisAnalysisJob(interface.TurbiniaJob):
     """
     tasks = []
     for evidence_item in evidence:
-      if evidence_item.artifact_name in (
-          'RedisConfigFile', 'RedisConfigurationFile', 'RedisLogFiles'):
+      if evidence_item.artifact_name in ('RedisConfigFile',
+                                         'RedisConfigurationFile',
+                                         'RedisLogFiles'):
         tasks.append(redis.RedisAnalysisTask())
     return tasks
 
