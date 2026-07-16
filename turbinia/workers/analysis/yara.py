@@ -77,7 +77,7 @@ class YaraAnalysisTask(TurbiniaTask):
           log.info('Yara rules cloned successfully.')
         except git.exc.GitCommandError as e:
           log.error('Error cloning Yara rules from {0:s}: {1!s}'.format(repo, e))
-	  update_success = False
+          update_success = False
           continue  # Skip to next repo
       else:
         try:
@@ -88,18 +88,18 @@ class YaraAnalysisTask(TurbiniaTask):
         except git.exc.InvalidGitRepositoryError as e:
           log.error(
               'InvalidGitRepositoryError updating rules in %s: %s', path, str(e),
-                exc_info=True)
-	  update_success = False
-	except git.exc.GitCommandError as e:
+              exc_info=True)
+          update_success = False
+        except git.exc.GitCommandError as e:
           log.error('Error pulling Yara rules in {0:s}: {1!s}'.format(path, e))
           update_success = False
         except Exception as e:
           log.error(
               'Unknown error updating rules in %s: %s', path, str(e),
               exc_info=True)
-	  update_success = False
+          update_success = False
 
-    return update_success 
+    return update_success
 
   def run(self, evidence, result):
     """Run the Yara worker.
