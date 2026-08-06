@@ -8,7 +8,7 @@
   },
   "dependencies": {
     "@mdi/font": "7.4.47",
-    "axios": "^1.16.0",
+    "axios": "^1.18.0",
     "dompurify": "^3.4.11",
     "marked": "^13.0.3",
     "streamsaver": "^2.0.6",
