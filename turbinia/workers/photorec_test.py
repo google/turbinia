@@ -19,7 +19,7 @@ import unittest
 import textwrap
 import mock
 
-from turbinia.evidence import PhotorecOutput
+from turbinia import evidence
 from turbinia.workers import photorec
 from turbinia.workers.workers_test import TestTurbiniaTaskBase
 from turbinia.workers import TurbiniaTaskResult
@@ -31,7 +31,7 @@ class PhotorecTaskTest(TestTurbiniaTaskBase):
   def setUp(self):
     # pylint: disable=arguments-differ
     super(PhotorecTaskTest, self).setUp(
-        task_class=photorec.PhotorecTask, evidence_class=PhotorecOutput)
+        task_class=photorec.PhotorecTask, evidence_class=evidence.RawDisk)
     self.setResults(mock_run=False)
     self.task.output_dir = self.task.base_output_dir
 

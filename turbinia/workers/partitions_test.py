@@ -20,6 +20,7 @@ from dfvfs.lib import definitions as dfvfs_definitions
 from dfvfs.path import factory as path_spec_factory
 import mock
 
+from turbinia import evidence
 from turbinia.lib import text_formatter as fmt
 from turbinia.workers import partitions
 from turbinia.workers import TurbiniaTaskResult
@@ -33,7 +34,7 @@ class PartitionEnumerationTaskTest(TestTurbiniaTaskBase):
     # pylint: disable=arguments-differ
     super(PartitionEnumerationTaskTest, self).setUp(
         task_class=partitions.PartitionEnumerationTask,
-        evidence_class=partitions.DiskPartition)
+        evidence_class=evidence.RawDisk)
     self.setResults(mock_run=False)
     self.task.task_config['minimum_size'] = 104857600
 
