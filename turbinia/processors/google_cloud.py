@@ -17,7 +17,6 @@
 import glob
 import logging
 import os
-import stat
 import time
 
 from six.moves import urllib
@@ -25,6 +24,7 @@ from six.moves import urllib
 from libcloudforensics.providers.gcp.internal import project as gcp_project
 from prometheus_client import Counter
 from turbinia import config
+from turbinia.lib import util
 from turbinia import TurbiniaException
 
 log = logging.getLogger(__name__)
@@ -36,21 +36,6 @@ DETACH_SLEEP_TIME = 5
 turbinia_nonexisting_disk_path = Counter(
     'turbinia_nonexisting_disk_path',
     'Total number of non existing disk paths after attempts to attach')
-
-
-def IsBlockDevice(path):
-  """Checks path to determine whether it is a block device.
-
-  Args:
-      path: String of path to check.
-
-  Returns:
-      Bool indicating success.
-  """
-  if not os.path.exists(path):
-    return False
-  mode = os.stat(path).st_mode
-  return stat.S_ISBLK(mode)
 
 
 def GetLocalInstanceName():
@@ -95,7 +80,7 @@ def PreprocessAttachDisk(disk_name):
     TurbiniaException: If the device is not a block device.
   """
   path = f'/dev/disk/by-id/google-{disk_name:s}'
-  if IsBlockDevice(path):
+  if util.is_block_device(path):
     log.info(f'Disk {disk_name:s} already attached!')
     return (path, sorted(glob.glob(f'{path:s}-part*')))
 
@@ -111,7 +96,7 @@ def PreprocessAttachDisk(disk_name):
 
   # Make sure we have a proper block device
   for _ in range(RETRY_MAX):
-    if IsBlockDevice(path):
+    if util.is_block_device(path):
       log.info(f'Block device {path:s} successfully attached')
       break
     if os.path.exists(path):
@@ -125,7 +110,7 @@ def PreprocessAttachDisk(disk_name):
   if not os.path.exists(path):
     turbinia_nonexisting_disk_path.inc()
     message = f'Device path {path:s} does not exist'
-  elif not IsBlockDevice(path):
+  elif not util.is_block_device(path):
     message = f'Device path {path:s} is not a block device'
   if message:
     log.error(message)
@@ -147,7 +132,7 @@ def PostprocessDetachDisk(disk_name, local_path):
   else:
     path = f'/dev/disk/by-id/google-{disk_name:s}'
 
-  if not IsBlockDevice(path):
+  if not util.is_block_device(path):
     log.info(f'Disk {disk_name:s} already detached!')
     return
 

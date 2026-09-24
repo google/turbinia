@@ -17,6 +17,7 @@
 import logging
 import os
 import subprocess
+import stat
 import tempfile
 import threading
 
@@ -201,6 +202,21 @@ def get_exe_path(filename):
       break
 
   return binary
+
+
+def is_block_device(path):
+  """Checks path to determine whether it is a block device.
+
+  Args:
+      path: String of path to check.
+
+  Returns:
+      Bool indicating success.
+  """
+  if not os.path.exists(path):
+    return False
+  mode = os.stat(path).st_mode
+  return stat.S_ISBLK(mode)
 
 
 def bruteforce_password_hashes(
