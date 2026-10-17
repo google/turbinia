@@ -9,7 +9,7 @@
   "dependencies": {
     "@mdi/font": "7.4.47",
     "axios": "^1.18.0",
-    "dompurify": "^3.4.11",
+    "dompurify": "^3.4.13",
     "marked": "^13.0.3",
     "streamsaver": "^2.0.6",
     "vue": "^3.4.34",
