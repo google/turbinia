@@ -136,9 +136,9 @@ numpy==1.22.0 ; python_version >= "3.7" and python_version < "4.0" \
     --hash=sha256:bece0a4a49e60e472a6d1f70ac6cdea00f9ab80ff01132f96bd970cdd8a9e5a9 \
     --hash=sha256:e41e8951749c4b5c9a2dc5fdbc1a4eec6ab2a140fdae9b460b0f557eed870f4d \
     --hash=sha256:f71d57cc8645f14816ae249407d309be250ad8de93ef61d9709b45a0ddf4050c
-oauthlib==3.2.2 ; python_version >= "3.7" and python_version < "4.0" \
-    --hash=sha256:8139f29aac13e25d502680e9e19963e83f16838d48a0d71c287fe40e7067fbca \
-    --hash=sha256:9859c40929662bec5d64f34d01c99e093149682a3f38915dc0655d5a633dd918
+oauthlib==4.0.0 ; python_version >= "3.7" and python_version < "4.0" \
+    --hash=sha256:624c28c13a0a59cabf9747dfa52af63be3e512a7f2714df16e91b5b3a145e6cd \
+    --hash=sha256:efb274799819440f95b4ab3b818869f1ce9ae26c5beacba0201d1a1b76b54f86
 pandas==1.1.5 ; python_version >= "3.7" and python_version < "4.0" \
     --hash=sha256:0a643bae4283a37732ddfcecab3f62dd082996021b980f580903f4e8e01b3c5b \
     --hash=sha256:0de3ddb414d30798cbf56e642d82cac30a80223ad6fe484d66c0ce01a84d6f2f \
