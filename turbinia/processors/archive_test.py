@@ -164,6 +164,107 @@ class ArchiveProcessorTest(unittest.TestCase):
     with self.assertRaises(TurbiniaException):
       archive.UncompressTarFile(tar_path, self.base_output_dir)
 
+  def test_uncompress_tarfile_rejects_chained_symlink_escape(self):
+    """Tests that chained symlinks escaping the output dir are rejected."""
+    # Lexically resolves inside the extraction directory ('a/a/..' -> 'a'),
+    # but at extraction time 'a' -> '.' collapses 'a/a' to the extraction root
+    # so 'escape' -> '..' points to self.base_output_dir.
+    tar_path = self._CreateTarFile([
+        {
+            'name': 'a',
+            'type': tarfile.SYMTYPE,
+            'linkname': '.'
+        },
+        {
+            'name': 'a/a/escape',
+            'type': tarfile.SYMTYPE,
+            'linkname': '..'
+        },
+        {
+            'name': 'a/a/escape/chained-escape.txt',
+            'data': 'escaped file'
+        },
+    ])
+
+    with self.assertRaises(TurbiniaException):
+      archive.UncompressTarFile(tar_path, self.base_output_dir)
+
+    self.assertFalse(
+        os.path.exists(
+            os.path.join(self.base_output_dir, 'chained-escape.txt')))
+
+  def test_uncompress_tarfile_rejects_internal_symlink(self):
+    """Tests that symlinks inside the output directory are rejected."""
+    tar_path = self._CreateTarFile([
+        {
+            'name': 'safe.txt',
+            'data': 'safe file'
+        },
+        {
+            'name': 'internal-link',
+            'type': tarfile.SYMTYPE,
+            'linkname': 'safe.txt'
+        },
+    ])
+
+    extract_parent = tempfile.mkdtemp(dir=self.base_output_dir)
+    with self.assertRaises(TurbiniaException):
+      archive.UncompressTarFile(tar_path, extract_parent)
+    self.assertEqual(os.listdir(extract_parent), [])
+
+  def test_uncompress_tarfile_rejects_internal_hardlink(self):
+    """Tests that hardlinks inside the output directory are rejected."""
+    tar_path = self._CreateTarFile([
+        {
+            'name': 'safe.txt',
+            'data': 'safe file'
+        },
+        {
+            'name': 'internal-hardlink',
+            'type': tarfile.LNKTYPE,
+            'linkname': 'safe.txt'
+        },
+    ])
+
+    extract_parent = tempfile.mkdtemp(dir=self.base_output_dir)
+    with self.assertRaises(TurbiniaException):
+      archive.UncompressTarFile(tar_path, extract_parent)
+    self.assertEqual(os.listdir(extract_parent), [])
+
+  def test_uncompress_tarfile_rejects_special_file(self):
+    """Tests that special tar member types like FIFOs are rejected."""
+    tar_path = self._CreateTarFile([
+        {
+            'name': 'safe.txt',
+            'data': 'safe file'
+        },
+        {
+            'name': 'named-pipe',
+            'type': tarfile.FIFOTYPE
+        },
+    ])
+
+    extract_parent = tempfile.mkdtemp(dir=self.base_output_dir)
+    with self.assertRaises(TurbiniaException):
+      archive.UncompressTarFile(tar_path, extract_parent)
+    self.assertEqual(os.listdir(extract_parent), [])
+
+  def test_validate_tar_member_rejects_absolute_path_within_target(self):
+    """Tests that absolute paths are rejected even inside the target dir."""
+    target_dir = os.path.join(self.base_output_dir, 'target')
+    tar_info = tarfile.TarInfo(os.path.join(target_dir, 'inside.txt'))
+
+    with self.assertRaises(TurbiniaException):
+      archive._ValidateTarMember(tar_info, target_dir)
+
+  def test_uncompress_tarfile_roundtrip_compress_directory(self):
+    """Tests that archives created by CompressDirectory extract cleanly."""
+    output_dir = archive.UncompressTarFile(
+        self.tmp_archive, self.base_output_dir)
+
+    for file_name in self.test_files:
+      self.assertTrue(os.path.exists(os.path.join(output_dir, file_name)))
+
 
 if __name__ == '__main__':
   unittest.main()
