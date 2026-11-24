@@ -190,8 +190,8 @@ class ArchiveProcessorTest(unittest.TestCase):
       archive.UncompressTarFile(tar_path, self.base_output_dir)
 
     self.assertFalse(
-        os.path.exists(os.path.join(self.base_output_dir,
-                                    'chained-escape.txt')))
+        os.path.exists(
+            os.path.join(self.base_output_dir, 'chained-escape.txt')))
 
   def test_uncompress_tarfile_rejects_internal_symlink(self):
     """Tests that symlinks inside the output directory are rejected."""
