@@ -25,16 +25,34 @@ log = logging.getLogger(__name__)
 
 
 def _ValidateTarMember(tar_info, uncompressed_directory):
-  """Validate that a tar member extracts inside the target directory.
+  """Validate that a tar member is safe and extracts inside the target dir.
 
   Args:
     tar_info (tarfile.TarInfo): Metadata for the tar member.
     uncompressed_directory (str): The target extraction directory.
 
   Raises:
-    TurbiniaException: If the tar member could write outside the target
-        extraction directory.
+    TurbiniaException: If the tar member is a disallowed type or could write
+        outside the target extraction directory.
   """
+  # Reject link members outright. Because validation runs before extraction
+  # (when the target directory is empty), realpath-based checks on link
+  # targets are purely lexical and can be bypassed by chaining symlinks
+  # inside the archive. Evidence archives have no need for links.
+  if tar_info.issym() or tar_info.islnk():
+    raise TurbiniaException(
+        f'Tar file contains a link member which is not permitted: '
+        f'{tar_info.name:s}')
+
+  if not (tar_info.isreg() or tar_info.isdir()):
+    raise TurbiniaException(
+        f'Tar file contains an unsupported member type: {tar_info.name:s}')
+
+  if os.path.isabs(tar_info.name):
+    raise TurbiniaException(
+        f'Tar file member path is absolute and not permitted: '
+        f'{tar_info.name:s}')
+
   base_directory = os.path.realpath(uncompressed_directory)
   member_path = os.path.realpath(os.path.join(base_directory, tar_info.name))
 
@@ -42,14 +60,6 @@ def _ValidateTarMember(tar_info, uncompressed_directory):
     raise TurbiniaException(
         f'Tar file member path is outside the extraction directory: '
         f'{tar_info.name:s}')
-
-  if tar_info.issym() or tar_info.islnk():
-    link_path = os.path.realpath(
-        os.path.join(os.path.dirname(member_path), tar_info.linkname))
-    if os.path.commonpath([base_directory, link_path]) != base_directory:
-      raise TurbiniaException(
-          f'Tar file link target is outside the extraction directory: '
-          f'{tar_info.name:s}')
 
 
 def ValidateTarFile(compressed_directory):
@@ -136,7 +146,7 @@ def UncompressTarFile(compressed_directory, output_tmp):
     with tarfile.TarFile.open(compressed_directory) as tar:
       for tar_info in tar.getmembers():
         _ValidateTarMember(tar_info, uncompressed_directory)
-      tar.extractall(path=uncompressed_directory)
+      tar.extractall(path=uncompressed_directory, filter='data')
     log.info(
         'The tar file has been uncompressed to the following directory: {0:s}'
         .format(uncompressed_directory))
