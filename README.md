@@ -3,8 +3,10 @@
 
 ## Summary
 
-**Note: Turbinia will not develop new features anymore and is in maintenance 
-mode. Users should have a look at [OpenRelik](https://openrelik.org/).**
+**Note: The Turbinia project is concluding maintenance mode and will be
+archived with no further updates on 2027-01-01. Users should check out
+[OpenRelik](https://openrelik.org/) as the official replacement.**
+
 
 Turbinia is an open-source framework for deploying, managing, and running
 distributed forensic workloads. It is intended to automate running of common
